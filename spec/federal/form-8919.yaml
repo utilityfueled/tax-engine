@@ -1,0 +1,106 @@
+form: "Form 8919"
+fullName: "Uncollected Social Security and Medicare Tax on Wages"
+taxYear: 2025
+irsReference: "https://www.irs.gov/pub/irs-pdf/f8919.pdf"
+
+notes: |
+  This supported slice accepts validated Form 8919 summary totals instead of
+  rebuilding every employer and reason-code worksheet entry. It covers the
+  amounts that materially affect the individual federal return: the wages on
+  Form 8919 line 6 that must be included in Form 1040 line 1, the Social
+  Security wage-base computation on lines 8 through 10, the Medicare tax on the
+  supported wages, the Schedule 2 tax carryforward, the Form 8959 Additional
+  Medicare Tax interaction, and the Schedule SE wage-base interaction. When a
+  validated override for Form 8919 line 8 is absent, the supported path
+  defaults that line to the sum of W-2 Box 3 Social Security wages, W-2 Box 7
+  Social Security tips, any supported Form 4137 line 10 Social
+  Security-taxable tips already subject to Social Security tax, and any
+  validated RRTA compensation subject to the 6.2% Social Security rate, with
+  the RRTA component itself limited to the 2025 Social Security wage base
+  before it is added to the line 8 default.
+
+lines:
+  - line: "1040-1"
+    description: "Form 8919 wages added to Form 1040 line 1"
+    formula: "Validated Form 8919 line 6 wages that must be included in Form 1040 line 1"
+    irsRef: "Form 8919 Instructions, Line 6; Form 1040 Instructions, Line 1"
+    inputs:
+      - "Validated wages not reported on Form W-2 but treated as employee wages"
+    notes: "This supported slice carries the validated Form 8919 wage amount directly into the simplified Form 1040 line 1 wage aggregation."
+    testRef: "tests/engine/federal.test.ts::Form 1040 Line 1 - supported Form 8919 wages increase wages, Schedule 2 tax, and Additional Medicare exposure"
+
+  - line: "6"
+    description: "Employee wages subject to Form 8919 tax"
+    formula: "Use the validated wages not reported on Form W-2 that are treated as employee wages for Form 8919"
+    irsRef: "Form 8919 Instructions, Line 6"
+    inputs:
+      - "Validated wages not reported on Form W-2 but treated as employee wages"
+    testRef: "tests/engine/forms/form-8919.test.ts::Form 8919 Line 13 - computes Social Security and Medicare tax from supported summary inputs"
+
+  - line: "8"
+    description: "Social Security wages and tips already subject to tax"
+    formula: "Use the validated Form 8919 line 8 override when provided; otherwise default to the sum of W-2 Box 3 Social Security wages, W-2 Box 7 Social Security tips, any supported Form 4137 Line 10 Social Security-taxable tips already subject to Social Security tax, and any validated RRTA compensation subject to the 6.2% Social Security rate, limiting the RRTA component itself to the 2025 Social Security wage base before adding it to the default total"
+    irsRef: "Form 8919 Instructions, Line 8"
+    inputs:
+      - "Validated Form 8919 line 8 override"
+      - "W-2 Box 3 Social Security wages"
+      - "W-2 Box 7 Social Security tips"
+      - "Supported Form 4137 Line 10 Social Security-taxable tips"
+      - "Validated RRTA compensation subject to the 6.2% Social Security rate"
+    notes: "The supported RRTA amount is capped at the annual Social Security wage base before being added to the default Line 8 total because the instructions tell filers not to include RRTA compensation above that amount on Line 8. A validated direct Line 8 override remains authoritative over the supported W-2, Form 4137, and RRTA default components."
+    testRef: "tests/engine/forms/form-8919.test.ts::Form 8919 Line 8 - validated RRTA compensation defaults into the wage-base room calculation and is capped at the annual Social Security wage base"
+
+  - line: "9"
+    description: "Remaining Social Security wage-base room"
+    formula: "2025 Social Security wage base of $176,100 minus Line 8, floored at $0"
+    irsRef: "Form 8919 Instructions, Line 9"
+    inputs:
+      - "Form 8919 Line 8"
+      - "2025 Social Security wage base"
+    edgeCases:
+      - "Wages already meet or exceed the Social Security wage base"
+      - "Validated line 8 override exceeds the wage base"
+      - "A validated Line 8 override above the wage base wins over lower default W-2 or Form 4137 totals and leaves no Social Security wage-base room"
+    testRef: "tests/engine/forms/form-8919.test.ts::Form 8919 Line 10 - Social Security-taxable wages are capped by the remaining wage base"
+
+  - line: "10"
+    description: "Wages subject to Social Security tax"
+    formula: "Smaller of Line 6 or Line 9"
+    irsRef: "Form 8919 Instructions, Line 10; Schedule SE Instructions, Line 8c"
+    inputs:
+      - "Form 8919 Line 6"
+      - "Form 8919 Line 9"
+    notes: "This is the supported amount that reduces the remaining Social Security wage-base room before Schedule SE computes the Social Security portion."
+    edgeCases:
+      - "Remaining wage-base room caps the Social Security-taxable wage amount"
+      - "Supported Form 4137 tips already subject to Social Security tax reduce the remaining room before Form 8919 computes Line 10"
+    testRef: "tests/engine/forms/form-8919.test.ts::Form 8919 Line 10 - Social Security-taxable wages are capped by the remaining wage base"
+
+  - line: "11"
+    description: "Social Security tax on Form 8919 wages"
+    formula: "Line 10 multiplied by 6.2%, rounded to the nearest dollar"
+    irsRef: "Form 8919 Instructions, Line 11"
+    inputs:
+      - "Form 8919 Line 10"
+    edgeCases:
+      - "When only $1 of wage-base room remains, Line 11 rounds down to $0"
+      - "When the capped Line 10 amount is $9, Line 11 rounds up to $1"
+    testRef: "tests/engine/forms/form-8919.test.ts::Form 8919 Line 11 - one dollar of remaining wage-base room rounds the Social Security tax down to zero"
+
+  - line: "12"
+    description: "Medicare tax on Form 8919 wages"
+    formula: "Line 6 multiplied by 1.45%, rounded to the nearest dollar"
+    irsRef: "Form 8919 Instructions, Line 12"
+    inputs:
+      - "Form 8919 Line 6"
+    testRef: "tests/engine/forms/form-8919.test.ts::Form 8919 Line 13 - computes Social Security and Medicare tax from supported summary inputs"
+
+  - line: "13"
+    description: "Total Social Security and Medicare tax on Form 8919 wages"
+    formula: "Line 11 plus Line 12"
+    irsRef: "Form 8919 Instructions, Line 13; Schedule 2 Instructions, Line 6"
+    inputs:
+      - "Form 8919 Line 11"
+      - "Form 8919 Line 12"
+    notes: "The supported result flows to Schedule 2 line 6."
+    testRef: "tests/engine/forms/form-8919.test.ts::Form 8919 Line 13 - computes Social Security and Medicare tax from supported summary inputs"

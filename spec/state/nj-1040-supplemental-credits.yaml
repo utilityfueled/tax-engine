@@ -1,0 +1,74 @@
+form: "NJ-1040 Supplemental Nonrefundable Credits"
+fullName: "New Jersey NJ-1040 Lines 46-49 Supplemental Nonrefundable Credits"
+taxYear: 2025
+reference: "https://www.nj.gov/treasury/taxation/pdf/current/1040i.pdf"
+
+notes: |
+  NJ-1040 lines 46 through 49 cover three additional nonrefundable credits
+  that apply after the credit for taxes paid to other jurisdictions and before
+  use tax, installment interest, and the shared responsibility payment.
+
+  Line 46 is the current-year Sheltered Workshop Tax Credit from Form GIT-317
+  Part IV line 12. Part-year residents prorate the current-year credit by the
+  number of months they were New Jersey residents.
+
+  Line 47 is the Gold Star Family Counseling Credit. The 2025 NJ-1040
+  instructions compute the credit as the number of qualifying counseling hours
+  multiplied by the applicable TRICARE rate. Part-year residents include only
+  hours provided while they were New Jersey residents.
+
+  Line 48 is the Credit for Employer of Organ/Bone Marrow Donor. Eligible
+  employers may claim 25% of the employee salary paid during the donor leave,
+  limited to 30 days of missed work for each donation. This module models the
+  line using per-donation compensation and days-missed inputs so the 30-day cap
+  is enforced by the engine instead of upstream preprocessing.
+
+lines:
+  - line: "46"
+    description: "Sheltered Workshop Tax Credit"
+    formula: |
+      shelteredWorkshopCurrentYearCredit for full-year residents.
+      Part-year residents: shelteredWorkshopCurrentYearCredit / 12 × monthsOfResidency.
+    inputs:
+      - "Form GIT-317 Part IV line 12 current-year credit"
+      - "Months of New Jersey residency"
+    edgeCases:
+      - "No GIT-317 credit: line 46 = $0"
+      - "Part-year residents prorate by months of residency"
+    testRef: "tests/engine/state/nj-1040-supplemental-credits.test.ts::NJ-1040 supplemental credits - sheltered workshop credit is prorated for part-year residents"
+
+  - line: "47"
+    description: "Gold Star Family Counseling Credit"
+    formula: "goldStarCounselingHours × goldStarTricareRate"
+    inputs:
+      - "Qualifying counseling hours provided through the program"
+      - "TRICARE rate for the service"
+    edgeCases:
+      - "No qualifying hours or no TRICARE rate: line 47 = $0"
+      - "Part-year residents include only resident-period counseling hours"
+    testRef: "tests/engine/state/nj-1040-supplemental-credits.test.ts::NJ-1040 supplemental credits - Gold Star counseling credit equals hours times TRICARE rate"
+
+  - line: "48"
+    description: "Credit for Employer of Organ/Bone Marrow Donor"
+    formula: |
+      Sum over each supported donation:
+      25% × paidLeaveCompensation × min(daysMissed, 30) / daysMissed
+    inputs:
+      - "Paid leave compensation for each qualifying donation"
+      - "Missed work days for each qualifying donation"
+    edgeCases:
+      - "No qualifying donor-leave events: line 48 = $0"
+      - "Each donation is capped at 30 days of missed work"
+    testRef: "tests/engine/state/nj-1040-supplemental-credits.test.ts::NJ-1040 supplemental credits - organ donor credit caps each donation at 30 days"
+
+  - line: "49"
+    description: "Total supplemental nonrefundable credits"
+    formula: "Line 46 + Line 47 + Line 48"
+    inputs:
+      - "Sheltered Workshop Tax Credit"
+      - "Gold Star Family Counseling Credit"
+      - "Credit for Employer of Organ/Bone Marrow Donor"
+    edgeCases:
+      - "Any missing line contributes $0"
+      - "Credits add together before being applied against line 45"
+    testRef: "tests/engine/state/nj-1040-supplemental-credits.test.ts::NJ-1040 supplemental credits - line 49 sums all supported nonrefundable credits"

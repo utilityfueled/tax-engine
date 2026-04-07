@@ -1,0 +1,89 @@
+form: "Form 8959"
+fullName: "Additional Medicare Tax"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i8959"
+
+lines:
+  - line: "1"
+    description: "Medicare wages from W-2s"
+    formula: "Sum of W-2 Box 5"
+    irsRef: "Form 8959 Instructions, Line 1"
+    testRef: "tests/engine/forms/form-8959.test.ts::Form 8959 Line 1 - Medicare wages from W-2s"
+
+  - line: "2"
+    description: "Unreported tips subject to Medicare tax"
+    formula: "Supported Form 4137 Line 6"
+    irsRef: "Form 8959 Instructions, Line 2"
+    testRef: "tests/engine/forms/form-8959.test.ts::Form 8959 Line 2 - supported Form 4137 unreported tips increase the Additional Medicare base"
+
+  - line: "3"
+    description: "Form 8919 wages subject to Medicare tax"
+    formula: "Supported Form 8919 Line 6"
+    irsRef: "Form 8959 Instructions, Line 3"
+    testRef: "tests/engine/forms/form-8959.test.ts::Form 8959 Line 3 - supported Form 8919 wages increase the Additional Medicare base"
+
+  - line: "5"
+    description: "Self-employment earnings subject to Additional Medicare Tax (post-multiplier)"
+    formula: "Schedule SE earnings carried into the supported Form 8959 computation; the overall Additional Medicare base is Form 8959 Line 1 + Line 2 + Line 3 + Line 5. Per Form 8959 Line 8: 'Enter the amount from Schedule SE, Section A, line 4a.' Line 4a is the POST-multiplier amount (after × 0.9235)."
+    irsRef: "Form 8959 Instructions, Line 5; Schedule SE Line 4a"
+    notes: >
+      Form 8959 Line 8 says: "Enter the amount from Schedule SE, Section A, line 4a."
+      Line 4a is the POST-multiplier amount (after × 0.9235). Using the pre-multiplier
+      amount overstates the SE contribution and inflates the Additional Medicare Tax.
+      Per IRC §1402(a)(12), "net earnings from self-employment" includes the 0.9235
+      reduction. Negative SE amounts are floored to zero — SE losses do not offset
+      wage-based Additional Medicare Tax per the IRS two-part (Parts I/II) structure.
+    edgeCases:
+      - "SE input must be post-multiplier (× 0.9235), not raw Schedule C profit"
+      - "Negative SE floored to zero — does not offset wages for Additional Medicare Tax"
+    testRef: "tests/engine/forms/form-8959.test.ts::Form 8959 Line 2 - supported Form 4137 unreported tips increase the Additional Medicare base"
+
+  - line: "7"
+    description: "Threshold amount"
+    formula: "MFJ: $250,000; Single/HoH/QSS: $200,000; MFS: $125,000"
+    notes: >
+      Per IRC §3101(b)(2), the $250K threshold applies only "in the case of a joint return."
+      QSS (IRC §2(a)) is NOT a joint return. QSS falls under (C) "any other individual" = $200K.
+      This differs from NIIT (IRC §1411(b)(1)) which explicitly includes "surviving spouse" at $250K.
+    edgeCases:
+      - "QSS uses $200K threshold (same as single/HoH), NOT $250K (MFJ) — IRC §3101(b)(2)(C)"
+    irsRef: "Form 8959 Instructions, Line 7"
+    testRef: "tests/engine/forms/form-8959.test.ts::Form 8959 Line 7 - single threshold $200K"
+
+  - line: "18"
+    description: "Additional Medicare Tax"
+    formula: "(Medicare wages + supported Form 4137 unreported tips + supported Form 8919 wages + SE earnings - threshold) × 0.9%"
+    irsRef: "Form 8959 Instructions, Line 18"
+    edgeCases:
+      - "Below threshold: $0"
+      - "Only earnings above threshold are taxed"
+    testRef: "tests/engine/forms/form-8959.test.ts::Form 8959 Line 18 - tax on wages over threshold"
+
+  - line: "18-se"
+    description: "SE income interaction with Additional Medicare Tax"
+    formula: "(Medicare wages + supported Form 4137 unreported tips + supported Form 8919 wages + SE earnings - threshold) × 0.9%"
+    irsRef: "Form 8959 Instructions, Lines 5-6"
+    edgeCases:
+      - "SE income alone triggers tax when over threshold"
+      - "W-2 + SE income combine against single threshold"
+      - "MFJ spouse wages combine then compared to $250K threshold"
+    testRef: "tests/edge-cases/medicare-tax-edge-cases.test.ts::Form 8959 - SE income interaction"
+
+  - line: "18-boundary"
+    description: "Threshold boundary behavior"
+    formula: "Zero tax at exactly the threshold; tax begins at $1 over"
+    irsRef: "Form 8959 Instructions, Line 7"
+    edgeCases:
+      - "Exactly at threshold = $0 tax"
+      - "HoH uses $200K threshold (same as single)"
+    testRef: "tests/edge-cases/medicare-tax-edge-cases.test.ts::Form 8959 - threshold boundaries"
+
+  - line: "19"
+    description: "Additional Medicare Tax withholding credit"
+    formula: "W-2 Medicare withheld - (Medicare wages × 1.45%)"
+    irsRef: "Form 8959 Instructions, Line 19"
+    notes: "Employers withhold 0.9% on wages over $200K regardless of filing status"
+    edgeCases:
+      - "Multi-employer: both withhold additional Medicare → credit for excess"
+      - "Single employer below $200K: no excess withholding"
+    testRef: "tests/engine/forms/form-8959.test.ts::Form 8959 Line 19 - credit for employer excess withholding"

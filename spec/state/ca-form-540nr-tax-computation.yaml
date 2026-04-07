@@ -1,0 +1,345 @@
+form: "California Form 540NR Tax Computation"
+fullName: "California Form 540NR Tax Computation and Total Tax Assembly Through Line 74"
+taxYear: 2025
+irsReference: "https://www.ftb.ca.gov/forms/2025/2025-540nr-booklet.html"
+
+notes: |
+  This module covers the supported California nonresident and part-year
+  resident Form 540NR path through line 74 after total taxable income,
+  California taxable income, federal AGI, and exemption counts are known. The
+  official 2025 Form 540NR computes:
+  - Line 31 tax on total taxable income from all sources using the same 2025
+    California Tax Table and Tax Rate Schedules used for resident Form 540
+  - Line 35 California taxable income from Schedule CA (540NR), Part IV, line 5
+  - Line 36 California tax rate as line 31 divided by line 19 total taxable
+    income, carried to four decimal places
+  - Line 37 California tax before exemption credits as line 35 multiplied by
+    line 36, rounded to whole dollars
+  - Line 38 California exemption credit percentage as line 35 divided by line
+    19, capped at 1.0000 and carried to four decimal places
+  - Line 39 California prorated exemption credits as the supported California
+    exemption-credit amount multiplied by line 38, rounded to whole dollars
+  - Line 40 California regular tax before credits as line 37 minus line 39,
+    floored at zero
+  - Line 41 additional tax from Schedule G-1 and/or FTB 5870A as a supported
+    upstream input
+  - Line 42 subtotal tax before credits as line 40 plus line 41
+  - Line 50 nonrefundable child and dependent care expenses credit from either
+    the supported FTB 3506 computation or a supported upstream line 50 amount,
+    then uses the supported Schedule P (540NR) Part III line 5 limitation path
+    when that worksheet payload is supplied
+  - Line 51 Joint Custody Head of Household credit using the published 30%,
+    $610-cap worksheet, but with the official nonresident base of line 31 less
+    the supported line 11 or AGI-limited worksheet amount, plus line 41
+  - Line 52 Dependent Parent credit using the same nonresident base and the
+    published 30%, $610-cap worksheet
+  - Line 53 Senior Head of Household credit using total taxable income from line
+    19, the published 2% rate, the $1,860 cap, and the $98,652 AGI
+    qualification limit
+  - Line 54 credit percentage copied from line 38
+  - Line 55 prorated special credits as the sum of the supported line 51, line
+    52, and line 53 credit amounts multiplied by line 54 and rounded to whole
+    dollars line by line, unless the supported Schedule P (540NR) Part III line
+    12 through line 14 limitation path is supplied
+  - Lines 58 through 60 additional special credits as supported upstream line
+    58 and line 59 amounts, optionally including a supported FTB 3510 Prior Year
+    Alternative Minimum Tax credit code 188 result on either line 58 or line
+    59, plus either a supported upstream line 60 amount or the supported
+    Schedule P (540NR) Part III line 16 through line 21 used amounts total,
+    including supported upstream FTB 3503 Natural Heritage Preservation Credit
+    code 213, FTB 3523 Research Credit code 183, FTB 3592 College Access Tax
+    Credit code 235, and other supported blank B2 source worksheets
+  - Line 61 nonrefundable renter's credit as either a supported upstream credit
+    amount or the supported Schedule P (540NR) Part III line 15 used amount
+  - Line 62 total credits as line 50 plus lines 55 through 61
+  - Line 63 tax after credits as line 42 minus line 62, floored at zero
+  - Line 71 alternative minimum tax as either a supported upstream input or the
+    supported Schedule P (540NR) Part III line 25 adjusted AMT
+  - Line 72 Behavioral Health Services Tax using Form 540NR line 35 California
+    taxable income
+  - Line 73 other taxes and credit recapture as a supported upstream input
+  - Line 74 total tax as line 63 plus lines 71 through 73
+  The line 39 instructions reuse the same filing-status AGI limitation
+  thresholds, divisors, and $6-per-exemption reduction rules already supported
+  for Form 540 line 32 exemption credits, but apply the line 38 California
+  percentage after that limitation is computed.
+  The supported slice intentionally keeps most unsupported Schedule P (540NR)
+  source worksheets upstream, but it now accepts either direct upstream
+  Schedule P Part II line 43 and line 45 amounts or a supported local
+  Schedule P (540NR) AMT worksheet payload that computes those amounts from the
+  same 2025 Part I and Part II formulas used by the companion
+  `ca-schedule-p-540nr` module before applying the supported Part III line 5,
+  line 12 through line 21, and line 23 through line 25 limitation path. This
+  slice also supports California credit code 197 Child Adoption Costs as an
+  upstream line 60 Schedule P (540NR) source by feeding the worksheet's
+  current-year credit amount into a supported blank Section B2 line and adding
+  the worksheet carryover to that credit's resulting line 16 through line 19
+  carryover output. It also supports California credit code 235 College Access
+  Tax Credit from FTB 3592 by feeding line 5 total available credit into an
+  assigned blank Section B2 line and preserving the worksheet line 7 carryover
+  after Schedule P determines the credit used this year. It also supports
+  California credit code 213 Natural Heritage Preservation Credit from FTB 3503
+  by feeding line 6 total available credit into an assigned blank Section B2
+  line, excluding any supported line 7c elected refundable amount from future
+  carryover, and preserving worksheet line 8 carryover after Schedule P
+  determines the credit used this year. It also supports
+  California credit code 183 Research Credit from FTB 3523 by feeding line 38
+  total credit available into an assigned blank Section B2 line, excluding any
+  supported line 41 elected refundable amount from future carryover, and
+  preserving worksheet line 42 carryover after Schedule P determines the credit
+  used this year.
+
+lines:
+  - line: "31"
+    description: "Tax on total taxable income"
+    formula: "If Form 540NR line 19 total taxable income is $100,000 or less, use the supported 2025 Form 540 Tax Table amount; otherwise use the supported 2025 Form 540 Tax Rate Schedules amount"
+    inputs:
+      - "Form 540NR line 19 total taxable income"
+      - "Filing status"
+    edgeCases:
+      - "$100,000 uses the Tax Table"
+      - "$100,001 uses the Tax Rate Schedules"
+    testRef: "tests/engine/state/ca-form-540nr-tax-computation.test.ts::CA Form 540NR tax computation Line 31 - taxable income at $100,000 stays on the tax-table path"
+
+  - line: "35"
+    description: "California taxable income"
+    formula: "Supported input from Schedule CA (540NR), Part IV, line 5"
+    inputs:
+      - "California taxable income"
+    testRef: "tests/engine/state/ca-form-540nr-tax-computation.test.ts::CA Form 540NR tax computation Line 38 - California taxable income above total taxable income caps the exemption-credit percentage at 1.0000"
+
+  - line: "36"
+    description: "California tax rate"
+    formula: "If line 19 is greater than 0, round(Line 31 / Line 19, 4 decimal places); otherwise 0.0000"
+    inputs:
+      - "Form 540NR line 31"
+      - "Form 540NR line 19 total taxable income"
+    edgeCases:
+      - "Zero total taxable income produces a zero tax rate instead of dividing by zero"
+      - "The effective tax rate is carried to four decimal places before line 37"
+    testRef: "tests/engine/state/ca-form-540nr-tax-computation.test.ts::CA Form 540NR tax computation Line 36 - the effective tax rate is rounded to four decimals before line 37"
+
+  - line: "37"
+    description: "California tax before exemption credits"
+    formula: "Round(Line 35 × Line 36 to the nearest whole dollar)"
+    inputs:
+      - "Form 540NR line 35"
+      - "Form 540NR line 36"
+    edgeCases:
+      - "Line 37 uses the four-decimal line 36 percentage, not the unrounded raw division result"
+    testRef: "tests/engine/state/ca-form-540nr-tax-computation.test.ts::CA Form 540NR tax computation Line 36 - the effective tax rate is rounded to four decimals before line 37"
+
+  - line: "38"
+    description: "California exemption credit percentage"
+    formula: "If line 19 is greater than 0, min(1.0000, round(Line 35 / Line 19, 4 decimal places)); otherwise 0.0000"
+    inputs:
+      - "Form 540NR line 35"
+      - "Form 540NR line 19 total taxable income"
+    edgeCases:
+      - "If line 35 is more than line 19, enter 1.0000"
+      - "Zero total taxable income produces a zero exemption-credit percentage instead of dividing by zero"
+    testRef: "tests/engine/state/ca-form-540nr-tax-computation.test.ts::CA Form 540NR tax computation Line 38 - California taxable income above total taxable income caps the exemption-credit percentage at 1.0000"
+
+  - line: "39"
+    description: "California prorated exemption credits"
+    formula: "Use the supported California exemption-credit amount after the AGI limitation worksheet when applicable, then round(that amount × Line 38 to the nearest whole dollar)"
+    inputs:
+      - "Form 540NR line 38"
+      - "Federal AGI"
+      - "Filing status"
+      - "Personal exemption count"
+      - "Blind exemption count"
+      - "Senior exemption count"
+      - "Dependent exemption count"
+    edgeCases:
+      - "If federal AGI exceeds the published filing-status threshold, apply the AGI limitation before the line 38 proration"
+      - "If federal AGI does not exceed the threshold, use line 11 exemption amount before the line 38 proration"
+    testRef: "tests/engine/state/ca-form-540nr-tax-computation.test.ts::CA Form 540NR tax computation Line 39 - AGI limitation applies before the California proration percentage"
+
+  - line: "40"
+    description: "California regular tax before credits"
+    formula: "max(0, Line 37 - Line 39)"
+    inputs:
+      - "Form 540NR line 37"
+      - "Form 540NR line 39"
+    edgeCases:
+      - "If prorated exemption credits exceed line 37, enter 0"
+    testRef: "tests/engine/state/ca-form-540nr-tax-computation.test.ts::CA Form 540NR tax computation Line 40 - prorated exemption credits cannot reduce tax below zero"
+
+  - line: "41"
+    description: "Tax from Schedule G-1 and/or FTB 5870A"
+    formula: "Supported upstream input for Form 540NR line 41"
+    inputs:
+      - "Line 41 tax amount from supported upstream worksheets"
+    testRef: "tests/engine/state/ca-form-540nr-tax-computation.test.ts::CA Form 540NR tax computation Line 42 - line 41 additional tax adds to the regular-tax subtotal before credits"
+
+  - line: "42"
+    description: "Subtotal tax before credits"
+    formula: "Line 40 + Line 41"
+    inputs:
+      - "Form 540NR line 40"
+      - "Form 540NR line 41"
+    testRef: "tests/engine/state/ca-form-540nr-tax-computation.test.ts::CA Form 540NR tax computation Line 42 - line 41 additional tax adds to the regular-tax subtotal before credits"
+
+  - line: "50"
+    description: "Nonrefundable child and dependent care expenses credit"
+    formula: "If the supported FTB 3506 Part III inputs are supplied, use the supported child and dependent care credit calculation; otherwise use the supported upstream Form 540NR line 50 amount. If the supported Schedule P (540NR) Part III payload is supplied, use the supported Schedule P line 5 used-this-year amount instead of the full available credit amount."
+    inputs:
+      - "Either the supported FTB 3506 Part III inputs or the supported upstream line 50 amount"
+      - "Optional supported Schedule P (540NR) Part III payload"
+    edgeCases:
+      - "Do not accept both a supported worksheet payload and a direct line 50 amount for the same return"
+      - "When the supported Schedule P (540NR) payload is supplied, line 50 cannot exceed Schedule P line 3 excess tax"
+    testRef: "tests/engine/state/ca-form-540nr-tax-computation.test.ts::CA Form 540NR tax computation Line 74 - total tax adds credits, alternative minimum tax, Behavioral Health Services Tax, and other taxes"
+
+  - line: "51"
+    description: "Credit for Joint Custody Head of Household"
+    formula: "If the supported qualification inputs are supplied, use the published 30% worksheet with line 1 equal to max(0, Line 31 - supported California exemption-credit amount) plus Line 41, capped at $610; otherwise use the supported upstream Form 540NR line 51 amount"
+    inputs:
+      - "Either the supported Joint Custody Head of Household credit inputs or the supported upstream line 51 amount"
+      - "Form 540NR line 31"
+      - "Supported California exemption-credit amount from line 11 or the AGI limitation worksheet"
+      - "Form 540NR line 41"
+    edgeCases:
+      - "Do not accept both a supported Joint Custody Head of Household worksheet payload and a direct line 51 amount for the same return"
+    testRef: "tests/engine/state/ca-form-540nr-tax-computation.test.ts::CA Form 540NR tax computation Line 55 - line 38 prorates supported line 51 through line 53 credits with whole-dollar rounding"
+
+  - line: "52"
+    description: "Credit for Dependent Parent"
+    formula: "If the supported qualification inputs are supplied, use the published 30% worksheet with line 1 equal to max(0, Line 31 - supported California exemption-credit amount) plus Line 41, capped at $610; otherwise use the supported upstream Form 540NR line 52 amount"
+    inputs:
+      - "Either the supported Dependent Parent credit inputs or the supported upstream line 52 amount"
+      - "Form 540NR line 31"
+      - "Supported California exemption-credit amount from line 11 or the AGI limitation worksheet"
+      - "Form 540NR line 41"
+    edgeCases:
+      - "Do not accept both a supported Dependent Parent worksheet payload and a direct line 52 amount for the same return"
+    testRef: "tests/engine/state/ca-form-540nr-tax-computation.test.ts::CA Form 540NR tax computation Line 55 - line 38 prorates supported line 51 through line 53 credits with whole-dollar rounding"
+
+  - line: "53"
+    description: "Credit for Senior Head of Household"
+    formula: "If the supported qualification inputs are supplied, use the published 2% worksheet with line 1 equal to Form 540NR line 19 total taxable income, capped at $1,860 and subject to the $98,652 AGI limit; otherwise use the supported upstream Form 540NR line 53 amount"
+    inputs:
+      - "Either the supported Senior Head of Household credit inputs or the supported upstream line 53 amount"
+      - "Form 540NR line 19 total taxable income"
+      - "Federal AGI for qualification"
+    edgeCases:
+      - "Do not accept both a supported Senior Head of Household worksheet payload and a direct line 53 amount for the same return"
+    testRef: "tests/engine/state/ca-form-540nr-tax-computation.test.ts::CA Form 540NR tax computation Line 55 - line 38 prorates supported line 51 through line 53 credits with whole-dollar rounding"
+
+  - line: "54"
+    description: "Credit percentage"
+    formula: "Copy Line 38; if more than 1, enter 1.0000"
+    inputs:
+      - "Form 540NR line 38"
+    testRef: "tests/engine/state/ca-form-540nr-tax-computation.test.ts::CA Form 540NR tax computation Line 55 - line 38 prorates supported line 51 through line 53 credits with whole-dollar rounding"
+
+  - line: "55"
+    description: "Credit amount"
+    formula: "If the supported Schedule P (540NR) Part III payload is supplied, use the supported Schedule P line 12 through line 14 used-this-year total; otherwise round(Line 51 × Line 54) + round(Line 52 × Line 54) + round(Line 53 × Line 54)"
+    inputs:
+      - "Either the supported Schedule P (540NR) Part III payload or the supported line 51 through line 53 amounts"
+      - "Form 540NR line 54"
+    edgeCases:
+      - "Each supported line 51 through line 53 amount is rounded to whole dollars after multiplying by line 54"
+      - "Do not accept both a direct line 55 amount and supported line 51 through line 53 inputs for the same return"
+      - "When the supported Schedule P (540NR) payload is supplied, line 55 equals the line 12 through line 14 used-this-year total after both proration and tax-balance limitation"
+    testRef: "tests/engine/state/ca-form-540nr-tax-computation.test.ts::CA Form 540NR tax computation Line 55 - line 38 prorates supported line 51 through line 53 credits with whole-dollar rounding"
+
+  - line: "58-60"
+    description: "Additional special credits"
+    formula: "For line 58 and line 59, use either the supported upstream direct amount for that line or a supported FTB 3510 Prior Year Alternative Minimum Tax code 188 worksheet result assigned to that line. For line 60, if a supported Child Adoption Costs worksheet input, supported Natural Heritage Preservation Credit FTB 3503 input, supported Research Credit FTB 3523 input, supported Low-Income Housing Credit FTB 3521 input, supported California Competes Tax Credit FTB 3531 input, supported College Access Tax Credit FTB 3592 input, and/or other supported Schedule P (540NR) Part III inputs are supplied, use the supported Schedule P line 16 through line 21 used-this-year total, with code 197 contributing its worksheet line 4 current-year credit amount to the assigned blank Section B2 line and its worksheet line 5 carryover to that credit's carryover output, code 213 contributing its supported FTB 3503 line 6 total available credit to the assigned blank Section B2 line while preserving worksheet line 8 carryover after the Schedule P used-this-year amount is known, code 183 contributing its supported FTB 3523 line 38 total available credit to the assigned blank Section B2 line while preserving worksheet line 42 carryover after the Schedule P used-this-year amount is known, code 172 contributing its supported FTB 3521 line 11 total available credit to the assigned blank Section B2 line while preserving worksheet line 13 carryover after the Schedule P used-this-year amount is known, code 233 contributing its supported FTB 3531 line 7 total available credit to the assigned blank Section B2 line, and code 235 contributing its supported FTB 3592 line 5 total available credit to the assigned blank Section B2 line while preserving the worksheet line 7 carryover after the Schedule P used-this-year amount is known; otherwise use the supported upstream Form 540NR line 60 amount."
+    inputs:
+      - "Optional supported upstream Form 540NR line 58 amount"
+      - "Optional supported upstream Form 540NR line 59 amount"
+      - "Optional supported FTB 3510 Prior Year Alternative Minimum Tax worksheet input for line 58 code 188"
+      - "Optional supported FTB 3510 Prior Year Alternative Minimum Tax worksheet input for line 59 code 188"
+      - "Optional supported Child Adoption Costs worksheet input for code 197"
+      - "Optional supported Natural Heritage Preservation Credit FTB 3503 input for code 213"
+      - "Optional supported Research Credit FTB 3523 input for code 183"
+      - "Optional supported Low-Income Housing Credit FTB 3521 input for code 172"
+      - "Optional supported California Competes Tax Credit FTB 3531 input for code 233"
+      - "Optional supported College Access Tax Credit FTB 3592 input for code 235"
+      - "Either the supported Schedule P (540NR) Part III payload for line 60 or the supported upstream Form 540NR line 60 amount"
+    edgeCases:
+      - "Do not accept both a direct line 58 amount and a supported FTB 3510 input for line 58"
+      - "Do not accept both a direct line 59 amount and a supported FTB 3510 input for line 59"
+      - "Do not accept supported FTB 3510 inputs for both line 58 and line 59 on the same return"
+      - "Do not accept both a direct line 60 amount and supported Schedule P (540NR) line 16 through line 21 inputs for the same return"
+      - "A supported code 197 worksheet input cannot be combined with a duplicate manual code 197 Schedule P (540NR) additional carryover-credit input"
+      - "A supported code 213 FTB 3503 input cannot be combined with a duplicate manual code 213 Schedule P (540NR) additional carryover-credit input"
+      - "A supported code 183 FTB 3523 input cannot be combined with a duplicate manual code 183 Schedule P (540NR) additional carryover-credit input"
+      - "A supported code 172 FTB 3521 input cannot be combined with a duplicate manual code 172 Schedule P (540NR) additional carryover-credit input"
+      - "A supported code 233 FTB 3531 input cannot be combined with a duplicate manual code 233 Schedule P (540NR) additional carryover-credit input"
+      - "A supported code 235 FTB 3592 input cannot be combined with a duplicate manual code 235 Schedule P (540NR) additional carryover-credit input"
+    testRef: "tests/engine/state/ca-form-540nr-tax-computation.test.ts::CA Form 540NR tax computation Line 74 - total tax adds credits, alternative minimum tax, Behavioral Health Services Tax, and other taxes"
+
+  - line: "61"
+    description: "Nonrefundable renter's credit"
+    formula: "If the supported Schedule P (540NR) Part III payload is supplied, use the supported Schedule P line 15 used-this-year amount; otherwise use the supported upstream Form 540NR line 61 amount"
+    inputs:
+      - "Supported upstream Form 540NR line 61 amount"
+      - "Optional supported Schedule P (540NR) Part III payload"
+    testRef: "tests/engine/state/ca-form-540nr-tax-computation.test.ts::CA Form 540NR tax computation Line 74 - total tax adds credits, alternative minimum tax, Behavioral Health Services Tax, and other taxes"
+
+  - line: "62"
+    description: "Total credits"
+    formula: "Line 50 + Line 55 + Line 58 + Line 59 + Line 60 + Line 61"
+    inputs:
+      - "Form 540NR line 50"
+      - "Form 540NR line 55"
+      - "Form 540NR line 58"
+      - "Form 540NR line 59"
+      - "Form 540NR line 60"
+      - "Form 540NR line 61"
+    testRef: "tests/engine/state/ca-form-540nr-tax-computation.test.ts::CA Form 540NR tax computation Line 74 - total tax adds credits, alternative minimum tax, Behavioral Health Services Tax, and other taxes"
+
+  - line: "63"
+    description: "Tax after credits"
+    formula: "max(0, Line 42 - Line 62)"
+    inputs:
+      - "Form 540NR line 42"
+      - "Form 540NR line 62"
+    edgeCases:
+      - "If total credits exceed line 42, enter 0"
+    testRef: "tests/engine/state/ca-form-540nr-tax-computation.test.ts::CA Form 540NR tax computation Line 74 - total tax adds credits, alternative minimum tax, Behavioral Health Services Tax, and other taxes"
+
+  - line: "71"
+    description: "Alternative minimum tax"
+    formula: "If supported Schedule P (540NR) Part III inputs are supplied, use the supported Schedule P line 25 adjusted AMT, where Schedule P line 25 can be driven either by direct supported Part II line 45 input or by a supported local Schedule P (540NR) AMT worksheet payload that computes Part II line 43 and line 45 from the published 2025 Part I and Part II formulas; otherwise use the supported upstream Form 540NR line 71 amount"
+    inputs:
+      - "Either the supported Schedule P (540NR) Part III payload, including optional local AMT worksheet inputs, or the supported upstream Form 540NR line 71 amount"
+    edgeCases:
+      - "Do not accept both a direct line 71 amount and supported Schedule P (540NR) Section C inputs for the same return"
+      - "When direct Schedule P Part II line 43 and line 45 amounts are absent, a supported local Schedule P (540NR) AMT worksheet payload can still compute line 71"
+    testRef: "tests/engine/state/ca-form-540nr-tax-computation.test.ts::CA Form 540NR tax computation Line 74 - total tax adds credits, alternative minimum tax, Behavioral Health Services Tax, and other taxes"
+
+  - line: "72"
+    description: "Behavioral Health Services Tax"
+    formula: "Use the supported nonresident Behavioral Health Services Tax worksheet amount based on Form 540NR line 35 California taxable income"
+    inputs:
+      - "Form 540NR line 35 California taxable income"
+    edgeCases:
+      - "$1,000,000 of California taxable income produces zero line 72 tax"
+      - "$1,000,050 of California taxable income rounds line 72 up to $1"
+    testRef: "tests/engine/state/ca-form-540nr-tax-computation.test.ts::CA Form 540NR tax computation Line 74 - total tax adds credits, alternative minimum tax, Behavioral Health Services Tax, and other taxes"
+
+  - line: "73"
+    description: "Other taxes and credit recapture"
+    formula: "Supported upstream Form 540NR line 73 amount plus any supported California Competes Tax Credit FTB 3531 line 10b previously used recaptured credit amount"
+    inputs:
+      - "Supported upstream Form 540NR line 73 amount"
+      - "Optional supported California Competes Tax Credit FTB 3531 line 10b previously used recaptured credit amount"
+    edgeCases:
+      - "Do not duplicate a California Competes recapture amount in both the supported FTB 3531 input and the direct upstream line 73 amount"
+    testRef: "tests/engine/state/ca-form-540nr-tax-computation.test.ts::CA Form 540NR tax computation Line 74 - total tax adds credits, alternative minimum tax, Behavioral Health Services Tax, and other taxes"
+
+  - line: "74"
+    description: "Total tax"
+    formula: "Line 63 + Line 71 + Line 72 + Line 73"
+    inputs:
+      - "Form 540NR line 63"
+      - "Form 540NR line 71"
+      - "Form 540NR line 72"
+      - "Form 540NR line 73"
+    testRef: "tests/engine/state/ca-form-540nr-tax-computation.test.ts::CA Form 540NR tax computation Line 74 - total tax adds credits, alternative minimum tax, Behavioral Health Services Tax, and other taxes"

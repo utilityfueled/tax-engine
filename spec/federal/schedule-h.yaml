@@ -1,0 +1,132 @@
+form: "Schedule H"
+fullName: "Schedule H (Form 1040) — Household Employment Taxes"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i1040sh"
+
+notes: |
+  Schedule H is filed by taxpayers who paid cash wages of $2,800 or more
+  to any single household employee during 2025 (IRC §3121(a)(7)(B);
+  Rev. Proc. 2024-40 §3.28). Household employees include housekeepers,
+  maids, babysitters, gardeners, cooks, and others who work in or around
+  your private home.
+
+  The form computes:
+  - Part I: Social Security tax (12.4% combined), Medicare tax (2.9%
+    combined), and Additional Medicare Tax withholding (0.9% employee-only
+    on wages > $200,000), plus any voluntarily withheld federal income tax.
+  - Part II: Federal Unemployment Tax (FUTA) at 6.0% on the first $7,000
+    per employee, with up to 5.4% credit for timely state unemployment tax
+    payments, yielding a typical net rate of 0.6%. FUTA applies only if
+    total cash wages to all household employees were $1,000 or more in any
+    calendar quarter. Credit reduction states (CA, USVI for 2025) reduce
+    the maximum FUTA credit.
+
+  The total flows to Schedule 2 Line 9 → Form 1040 Line 23.
+
+  Per IRS Publication 926, the following are exempt from the $2,800 Social
+  Security and Medicare threshold:
+  - Your spouse
+  - Your child under age 21
+  - Your parent (with narrow exceptions for childcare situations)
+  - Any employee under age 18 for whom household work is not their
+    principal occupation (e.g., a high school student babysitting)
+
+  FUTA exemptions are broader: spouse, child under 21, and parent wages
+  are fully excluded regardless of amount.
+
+  Social Security wages per employee are capped at $176,100 for 2025.
+  Medicare wages have no cap. Additional Medicare Tax applies only to the
+  employee share on wages exceeding $200,000 (per IRC §3101(b)(2)).
+
+lines:
+  - line: "1"
+    description: "Total cash wages subject to Social Security tax"
+    formula: "Sum of each employee's qualifying wages, capped at $176,100 per employee"
+    irsRef: "Schedule H Line 1; IRC §3121(a)(1); Rev. Proc. 2024-40 §3.01"
+    edgeCases:
+      - "Exclude exempt workers: spouse, child under 21, parent, under-18 non-principal"
+      - "Cap each employee's wages at $176,100 (2025 SS wage base)"
+      - "Only include employees whose total wages meet the $2,800 cash threshold"
+    testRef: "tests/engine/forms/schedule-h.test.ts::Schedule H - single employee with $10,000 wages computes correct SS, Medicare, and FUTA"
+
+  - line: "2"
+    description: "Social Security tax"
+    formula: "Line 1 × 12.4% (combined employer + employee 6.2% + 6.2%)"
+    irsRef: "IRC §3101(a), §3111(a)"
+    testRef: "tests/engine/forms/schedule-h.test.ts::Schedule H - employee at exactly $2,800 threshold triggers Schedule H"
+
+  - line: "3"
+    description: "Total cash wages subject to Medicare tax"
+    formula: "Sum of each qualifying employee's total wages (no cap)"
+    irsRef: "Schedule H Line 3; IRC §3101(b)(1), §3111(b)(1)"
+    edgeCases:
+      - "No wage base cap for Medicare"
+      - "Same exemption rules as Social Security (spouse, child <21, parent, under-18)"
+    testRef: "tests/engine/forms/schedule-h.test.ts::Schedule H - SS wages capped at $176,100 per employee"
+
+  - line: "4"
+    description: "Medicare tax"
+    formula: "Line 3 × 2.9% (combined employer + employee 1.45% + 1.45%)"
+    irsRef: "IRC §3101(b)(1), §3111(b)(1)"
+    testRef: "tests/engine/forms/schedule-h.test.ts::Schedule H - multiple employees aggregate correctly with per-employee caps"
+
+  - line: "5"
+    description: "Total cash wages subject to Additional Medicare Tax withholding"
+    formula: "Sum of each qualifying employee's wages exceeding $200,000"
+    irsRef: "IRC §3101(b)(2); Schedule H Instructions"
+    edgeCases:
+      - "Per-employee $200,000 threshold (not aggregate)"
+      - "Employee share only — no employer match for Additional Medicare"
+    testRef: "tests/engine/forms/schedule-h.test.ts::Schedule H - Additional Medicare Tax applies on wages above $200,000"
+
+  - line: "6"
+    description: "Additional Medicare Tax withholding"
+    formula: "Line 5 × 0.9%"
+    irsRef: "IRC §3101(b)(2)"
+    testRef: "tests/engine/forms/schedule-h.test.ts::Schedule H - no Additional Medicare Tax when wages at or below $200,000"
+
+  - line: "7"
+    description: "Federal income tax withheld"
+    formula: "Sum of voluntarily withheld federal income tax across employees"
+    irsRef: "Schedule H Instructions Line 7"
+    edgeCases:
+      - "Household employers are not required to withhold federal income tax"
+      - "Withholding is optional if both employer and employee agree (W-4)"
+    testRef: "tests/engine/forms/schedule-h.test.ts::Schedule H - federal income tax withheld included in Line 8 total"
+
+  - line: "8"
+    description: "Total Social Security, Medicare, and income taxes"
+    formula: "Line 2 + Line 4 + Line 6 + Line 7"
+    irsRef: "Schedule H Instructions Line 8"
+    testRef: "tests/engine/forms/schedule-h.test.ts::Schedule H total flows to Schedule 2 Line 9"
+
+  - line: "15"
+    description: "Total cash wages subject to FUTA tax"
+    formula: "Sum of each qualifying employee's wages capped at $7,000 per employee; exclude spouse, child <21, and parent"
+    irsRef: "IRC §3306(a)(3), §3306(c)(5); Schedule H Line 15"
+    edgeCases:
+      - "FUTA exemptions: spouse, child under 21, and parent are excluded"
+      - "FUTA wage base is $7,000 per employee per year"
+      - "Only applies if total quarterly wages to all employees ≥ $1,000 in any quarter"
+    testRef: "tests/engine/forms/schedule-h.test.ts::Schedule H - FUTA wages capped at $7,000 per employee"
+
+  - line: "16"
+    description: "FUTA tax (Section A — no credit reduction state)"
+    formula: "Line 15 × 0.6%"
+    irsRef: "IRC §3301, §3302(c); Schedule H Section A"
+    edgeCases:
+      - "Section A applies when: paid all state unemployment taxes by due date, all wages were taxable in one state, and no credit reduction state"
+      - "Section B applies otherwise and computes FUTA as Line 15 × 6.0% minus allowable credit"
+    testRef: "tests/engine/forms/schedule-h.test.ts::Schedule H - FUTA Section A uses net 0.6% rate"
+
+  - line: "21"
+    description: "Gross FUTA tax (Section B)"
+    formula: "FUTA wages × 6.0%"
+    irsRef: "Schedule H Section B Line 21"
+    testRef: "tests/engine/forms/schedule-h.test.ts::Schedule H - FUTA Section B uses gross rate minus allowable credit"
+
+  - line: "26"
+    description: "Total household employment taxes"
+    formula: "Line 8 + FUTA tax (Line 16 or Line 24)"
+    irsRef: "Schedule H Line 26 → Schedule 2 Line 9"
+    testRef: "tests/engine/forms/schedule-h.test.ts::Schedule H total flows to Schedule 2 Line 9"

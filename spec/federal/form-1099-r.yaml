@@ -1,0 +1,295 @@
+form: "Form 1099-R"
+fullName: "Distributions From Pensions, Annuities, Retirement or Profit-Sharing Plans, IRAs, Insurance Contracts, etc."
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i1099r"
+
+notes: |
+  This worksheet aggregates Form 1099-R data into the Form 1040 retirement
+  distribution lines. It currently supports basic gross-versus-taxable reporting,
+  direct rollovers, taxable rollover routing from Box 2a, IRA versus non-IRA
+  routing, Box 4 withholding, IRA qualified charitable distribution (QCD)
+  exclusions when the excludable amount is provided as validated input, and
+  validated traditional/SEP/SIMPLE IRA to Roth IRA conversions that keep the
+  full gross distribution visible on Form 1040 Line 4a even when the taxable
+  amount equals Box 1. It also treats Roth IRA distribution code Q as a
+  qualified Roth IRA distribution that
+  stays gross on Form 1040 Line 4a and is reported as $0 taxable on Line 4b
+  when Box 2a is blank, following the 2025 Form 1040 instructions. It also
+  supports the same instructions' code T safe harbor when validated input
+  confirms the taxpayer made a Roth IRA contribution or conversion for 2020 or
+  an earlier year, allowing the gross distribution to stay on Line 4a while
+  Line 4b reports $0 taxable without requiring Form 8606. It also supports a
+  validated Box 7 code T qualified Roth IRA distribution branch. When
+  validated input confirms the full code T distribution was actually
+  qualified, the gross amount likewise stays on Form 1040 Line 4a while Line
+  4b reports $0 taxable, and the supported federal pipeline can default that
+  amount into the Form 8606 Line 19 qualified-distribution exclusion path when
+  a Form 8606 payload is present. Any Roth IRA
+  distribution reported with Box 7 code J, Q, or T is kept visible on Form
+  1040 Line 4a because the 2025 Form 1040 instructions route Roth IRA
+  distributions through Line 4a even when Form 8606 is still needed to finish
+  the taxable-amount determination. It also supports a validated standalone
+  Box 7 code J qualified Roth IRA distribution branch. When validated input
+  confirms the full standalone code J distribution was actually qualified, the
+  gross amount stays on Form 1040 Line 4a while Line 4b reports $0 taxable,
+  and the supported federal pipeline can default that amount into the Form
+  8606 Line 19 qualified-distribution exclusion path when a Form 8606 payload
+  is present. Box 7 code J records paired with code 8, P, or S stay on their
+  corrective-distribution or SIMPLE IRA paths instead, because the 2025 Form
+  1099-R instructions use those combinations for nonqualified branches such as
+  returned contributions and say the taxable amount is the earnings reported
+  in Box 2a.
+  For
+  non-IRA distributions only, when Box 2a is blank and a Box 5 employee
+  contribution recovery amount is provided, this slice treats Box 1 minus Box 5
+  as the taxable amount before any direct-rollover fallback because the Form
+  1040 instructions tell filers to reduce the distribution by employee
+  contributions before entering the taxable rollover remainder on Line 5b.
+  It also supports validated Simplified Method worksheet inputs for non-IRA
+  annuity basis recovery. When the payer leaves Box 2a blank or checks taxable
+  amount not determined and the engine receives the worksheet inputs for cost in
+  the plan, current-year payments received, and prior-year tax-free recovery,
+  the taxable pension amount uses the worksheet's current-year excludable amount
+  instead of treating all of Box 1 or all remaining Box 5 contributions as
+  taxable at once. The expected number of monthly payments can be entered
+  directly, or when that field is omitted the engine can derive it from the IRS
+  Simplified Method tables using the annuity starting date plus the primary
+  annuitant's age at that date and, for annuity starting dates in 1998 or later,
+  the secondary annuitant's age when the annuity is payable over joint lives.
+  Simplified Method support begins only for annuity starting dates on or after
+  July 2, 1986. Earlier annuity starting dates, including the exact July 1,
+  1986 boundary, remain unsupported General Rule cases even if a worksheet
+  expected-payment count is supplied manually. For annuity starting dates after
+  July 1, 1986 and before 1998, the supported derived branch follows IRS
+  Publication 575 and uses only the primary annuitant's age even if joint-life
+  ages are present. The current-year
+  tax-free amount is limited to the smaller of (a) the per-payment exclusion
+  times the current-year payments received and (b) the unrecovered cost left
+  after prior-year exclusions, so basis cannot be recovered twice.
+  It also supports a validated Box 7 code B qualified designated Roth account
+  distribution branch for non-IRA retirement plans. When validated input
+  confirms the full designated Roth account distribution was qualified, the
+  gross amount stays on Form 1040 Line 5a while Line 5b reports $0 taxable,
+  even when the payer left Box 2a blank, because the 2025 Form 1040
+  instructions say qualified designated Roth account distributions are tax
+  free.
+  It also supports the Form 1040 instructions' retired public safety officer
+  branch for non-IRA pension and annuity distributions, including disability
+  pensions that are reported as wages on Form 1040 Line 1 because the taxpayer
+  had not yet reached minimum retirement age. When validated input provides the
+  amount of accident, health, or long-term care insurance premiums paid
+  directly from an eligible retirement plan to the insurer, the supported slice
+  reduces the combined taxable disability-pension-wage and pension-line amount
+  by the smaller of those validated premiums, $3,000, or the taxable amount
+  otherwise included in income from the eligible distributions. Because that
+  exclusion makes the supported non-IRA distribution not fully taxable, the
+  gross non-IRA pension distribution remains visible on Form 1040 Line 5a even
+  if Box 2a otherwise matched Box 1, while supported disability pensions carry
+  the exclusion on Form 1040 Line 1 instead of Lines 5a and 5b.
+  It also supports the Form 8606 instructions' excess-contribution-return case:
+  when a validated traditional IRA distribution is identified as a return of an
+  excess contribution made after the due date with no earnings, Box 2a remains
+  blank, Box 2b is checked, and the amount is reported gross on Line 4a but as
+  $0 taxable on Line 4b.
+  It also supports the Form 1040 and Form 8606 instructions' timely-return
+  branch for current-year IRA contributions returned by the due date. In that
+  case, the full Form 1099-R Box 1 amount stays visible on Line 4a, only the
+  related earnings reported in Box 2a stay taxable on Line 4b, and the gross
+  distribution can be auto-excluded from Form 8606 Line 7 because the Form 8606
+  instructions say not to include that distribution on the basis-allocation
+  worksheet. When the validated return-of-contribution branch is instead
+  reported with distribution code P, the Form 1099-R instructions treat the
+  amount as taxable on the prior-year return, so this current-year aggregation
+  excludes that gross and taxable amount from Form 1040 Lines 4a and 4b or 5a
+  and 5b while still preserving current-year Box 4 withholding.
+  For tax year 2025, this slice also supports the new optional Box 7 code Y
+  for qualified charitable distributions (QCDs). When code Y is present, the
+  distribution is treated as IRA reporting even if the IRA/SEP/SIMPLE checkbox
+  is blank, and the full gross distribution defaults to the excludable QCD
+  amount on Form 1040 Line 4b because the 2025 Form 1099-R instructions say
+  code Y identifies a direct IRA-to-charity QCD and must be paired with code
+  4, 7, or K.
+  It also treats Box 7 code S as SIMPLE IRA reporting even when the
+  IRA/SEP/SIMPLE checkbox is blank, because the 2025 Form 1099-R instructions
+  define code S as an early distribution from a SIMPLE IRA in the first 2
+  years with no known exception.
+  The supported parser also enforces the 2025 Form 1099-R Box 7 combination
+  guardrails that matter for this retirement-distribution slice: Code Q and
+  Code T cannot be combined with any other distribution codes, and Code J can
+  only be combined with Code 8, P, or S. When optional code Y is used, it must
+  be paired only with code 4, 7, or K. This keeps impossible Roth IRA, SIMPLE
+  IRA, or QCD code combinations from silently flowing into the downstream Form
+  1040, Form 8606, and Form 5329 calculations.
+  It also carries validated net traditional/SEP/SIMPLE IRA-to-Roth conversion
+  amounts forward for the federal pipeline so Form 8606 Line 8 can default from
+  attached Forms 1099-R when the user has basis-recovery inputs but did not
+  separately type the conversion amount into Form 8606.
+  It also supports the Form 1040 instructions' disability-pension branch for
+  non-IRA Forms 1099-R: when validated input confirms the taxpayer had not yet
+  reached minimum retirement age for a disability pension, the taxable amount
+  is excluded from the pension aggregation because it belongs on Form 1040 Line
+  1 as wages instead of Lines 5a and 5b. If the same validated disability
+  pension also carries supported retired-public-safety-officer insurance
+  premiums, the Line 1 wage amount is reduced by that branch's share of the
+  same $3,000 annual exclusion cap used for supported pension-line
+  distributions.
+  The Form 1099-R instructions also say the IRA/SEP/SIMPLE checkbox is not
+  required for Roth IRA distributions, IRA recharacterizations, or code Y QCDs
+  reported with Box 7 codes J, Q, T, N, R, or Y. This slice therefore treats
+  those codes as IRA reporting even when the checkbox is blank.
+  For tax year 2025, the aggregate QCD exclusion per IRA owner is capped at
+  $105,000 (IRC §408(d)(8)(A), indexed for inflation under SECURE 2.0 Act §307,
+  Rev. Proc. 2024-40 §3.27). If total QCDs across all Forms 1099-R exceed the
+  annual limit, only the first $105,000 is excludable and the remainder is
+  taxable IRA income on Form 1040 Line 4b. On a joint return, each spouse has
+  their own $105,000 limit applied against their own IRA distributions. The
+  engine enforces the aggregate limit after per-form QCD resolution and before
+  computing the final IRA taxable amount.
+
+  Basis recovery and full Form 8606 interactions are still handled separately.
+
+businessRuleValidation:
+  - rule: "reference-summary-packet"
+    description: "Inventory support counts this form as business-rule validated only when regression coverage proves the emitted packet artifact stays labeled as a non-filing reference summary and only surfaces the supported deterministic Form 1040 line outputs for Lines 4a, 4b, 5a, 5b, and 25b."
+    testRef: "tests/pdf/fill-form-1099-r.test.ts::fillForm1099RReference keeps the packet artifact reference-only and limited to supported federal line outputs"
+
+lines:
+  - line: "1"
+    description: "IRA gross distributions reported on Form 1040 Line 4a"
+    formula: "If any IRA/SEP/SIMPLE distribution that is taxable on the current-year return is not fully taxable, is reported with a direct-rollover code, includes an excludable qualified charitable distribution, is validated as a traditional/SEP/SIMPLE IRA amount converted to a Roth IRA, is a Roth IRA distribution reported with Box 7 code J, Q, or T, is a Box 7 code Y qualified charitable distribution, is a Box 7 code S SIMPLE IRA distribution, or is an IRA recharacterization reported with Box 7 code N or R, sum Box 1 for all such IRA Forms 1099-R; for Box 7 code S, treat the amount as IRA reporting even when the IRA/SEP/SIMPLE checkbox is blank because the code definition itself identifies a SIMPLE IRA distribution, and for Box 7 codes J, Q, T, N, R, and Y, treat the amount as IRA reporting even when the IRA/SEP/SIMPLE checkbox is blank because the Form 1099-R instructions do not require that box for Roth IRA distributions, IRA recharacterizations, or code Y qualified charitable distributions; exclude validated code P prior-year taxable returns of contributions or excess deferrals from this current-year gross aggregation; otherwise report $0 to represent a blank line"
+    irsRef: "Form 1040 Instructions, Lines 4a and 4b"
+    inputs:
+      - "Form 1099-R Box 1"
+      - "IRA/SEP/SIMPLE checkbox"
+      - "Form 1099-R Box 2a"
+      - "Form 1099-R Box 7 distribution code"
+      - "Validated traditional/SEP/SIMPLE IRA to Roth IRA conversion amount"
+      - "Validated IRA qualified charitable distribution amount"
+      - "IRA recharacterization codes N and R"
+    notes: "Code S SIMPLE IRA distributions, Roth IRA distribution codes J, Q, and T, IRA recharacterization codes N and R, and code Y qualified charitable distributions stay on the IRA lines even when the IRA/SEP/SIMPLE checkbox is blank. The audit trail preserves the gross recharacterized IRA contribution subtotal separately so current-year code N and prior-year code R branches are traceable."
+    testRef: "tests/engine/forms/form-1099-r.test.ts::Form 1099-R Line 1 - Roth conversions keep the gross IRA distribution visible on 4a even before Form 8606 is present"
+
+  - line: "2"
+    description: "IRA taxable distributions reported on Form 1040 Line 4b"
+    formula: "Sum taxable IRA/SEP/SIMPLE distributions using Box 2a when present, except treat Roth IRA distribution code Q as $0 taxable because the 2025 Form 1040 instructions say qualified Roth IRA distributions reported with code Q go on Line 4a with $0 on Line 4b, treat Roth IRA distribution code T as $0 taxable when validated input confirms either the taxpayer made a Roth IRA contribution or conversion for 2020 or an earlier year or the full distribution was actually qualified, treat a standalone Box 7 code J Roth IRA distribution as $0 taxable when validated input confirms the full distribution was a qualified Roth IRA distribution, but do not apply that qualified-distribution override when code J is paired with code 8, P, or S because those combinations stay on the returned-contribution, prior-year corrective, or SIMPLE IRA branches, treat Box 7 code Y qualified charitable distributions as fully excludable on Line 4b because the 2025 Form 1099-R instructions say code Y identifies a direct IRA-to-charity QCD, and treat IRA recharacterization codes N and R as $0 taxable because the recharacterized contribution stays on Line 4a but not Line 4b; for Box 7 code S, treat the amount as IRA reporting even when the IRA/SEP/SIMPLE checkbox is blank because the code definition itself identifies a SIMPLE IRA distribution, and for Box 7 codes J, Q, T, N, R, and Y, treat the amount as IRA reporting even when the IRA/SEP/SIMPLE checkbox is blank because the Form 1099-R instructions do not require that box for Roth IRA distributions, IRA recharacterizations, or code Y qualified charitable distributions; if a validated excess-contribution return without earnings after the due date applies, use $0 taxable; if validated input marks a current-year IRA contribution return by the due date, or Box 7 code 8 identifies current-year taxable earnings on that corrective IRA return, use only Box 2a taxable earnings and do not fall back to Box 1 when Box 2a is blank; if the return-of-contribution branch is reported with code P, exclude that amount from the current-year taxable aggregation because it belongs on the prior-year return; otherwise if Box 2a is blank, default direct-rollover codes to $0 taxable and use Box 1 for the remaining supported cases; then reduce the taxable IRA amount by any validated excludable qualified charitable distributions or the full gross amount for a supported Box 7 code Y QCD, without going below $0"
+    irsRef: "Form 1040 Instructions, Lines 4a and 4b"
+    inputs:
+      - "Form 1099-R Box 1"
+      - "Form 1099-R Box 2a"
+      - "Validated excess contribution return without earnings after the due date"
+      - "Validated current-year IRA contribution returned by the due date or Form 1099-R Box 7 code 8"
+      - "IRA/SEP/SIMPLE checkbox"
+      - "Form 1099-R Box 7 distribution code"
+      - "Validated Roth IRA contribution or conversion made for 2020 or an earlier year"
+      - "Validated qualified Roth IRA distribution reported with Box 7 code J or code T"
+      - "Validated IRA qualified charitable distribution amount"
+      - "IRA recharacterization codes N and R"
+    notes: "Code S SIMPLE IRA distributions remain on the IRA lines even when the checkbox is blank. Because Box 5 employee-contribution recovery applies only to non-IRA pension or annuity reporting, implicit IRA-reporting codes such as S, J, Q, T, N, R, and Y still use the IRA taxable-amount rules when the IRA/SEP/SIMPLE checkbox is blank instead of reducing Line 4b by Box 5. A validated qualified Roth IRA Box 7 code J or code T branch gives the same gross-on-Line-4a and zero-on-Line-4b treatment that the Form 1040 instructions explicitly give to code Q qualified distributions, while still preserving the audit trail that the payer used code J or code T. That qualified code J branch applies only when code J stands alone; if code J is paired with code 8, P, or S, the record stays on the corrective-distribution or SIMPLE IRA path and any inconsistent qualified-distribution flag must not zero out the Box 2a taxable earnings. When Box 7 code 8 appears on an IRA record, the engine treats it as the payer-coded current-year corrective-distribution branch for contribution returns by the due date even if the caller did not set a separate manual flag, while code P still keeps prior-year taxable returns off the current-year IRA lines. When validated input identifies a SIMPLE IRA excess contribution returned after the due date without earnings, that branch still stays gross on Line 4a but nontaxable on Line 4b even though Box 7 code S continues to identify the record as a SIMPLE IRA distribution. IRA recharacterization codes N and R remain fully nontaxable on Line 4b, and the audit trail preserves their separate subtotal so that a zero taxable result can still be traced back to the recharacterization branch. Box 7 code Y also remains fully excludable when it is paired with code 4 on an inherited IRA Form 1099-R, because the direct IRA-to-charity QCD still belongs on Form 1040 Line 4a with $0 on Line 4b."
+    testRef: "tests/engine/forms/form-1099-r.test.ts::Form 1099-R Line 2 - Box 7 code Y defaults the full IRA distribution to a nontaxable QCD"
+
+  - line: "3"
+    description: "Pension and annuity gross distributions reported on Form 1040 Line 5a"
+    formula: "If any supported non-IRA distribution that remains on the pension lines is not fully taxable, is reported with a direct-rollover code, is reported with Box 7 code 6 for a section 1035 exchange and Box 2a is blank, is a validated qualified designated Roth account distribution reported with Box 7 code B, has Box 2b taxable amount not determined checked, has Box 2a blank with a Box 5 employee-contribution recovery amount that reduces the taxable amount below Box 1, or is part of an aggregate retired-public-safety-officer insurance-premium exclusion that reduces the taxable pension total below the otherwise taxable amount, sum Box 1 for those non-IRA Forms 1099-R; exclude validated disability pensions received before minimum retirement age because those amounts are taxed as wages on Form 1040 Line 1; otherwise report $0 to represent a blank line"
+    irsRef: "Form 1040 Instructions, Lines 5a and 5b"
+    inputs:
+      - "Form 1099-R Box 1"
+      - "IRA/SEP/SIMPLE checkbox"
+      - "Form 1099-R Box 2a"
+      - "Form 1099-R Box 2b taxable amount not determined"
+      - "Form 1099-R Box 5"
+      - "Form 1099-R Box 7 distribution code"
+      - "Validated qualified designated Roth account distribution reported with Box 7 code B"
+      - "Validated disability pension received before minimum retirement age"
+    notes: "Validated Box 7 code P prior-year taxable returns of excess deferrals or other pension-plan contributions stay off the current-year Form 1040 pension lines even though the current-year Form 1099-R Box 4 withholding still flows through the engine's aggregated Form 1040 withholding line. Box 7 code 6 section 1035 exchange amounts also stay visible on Line 5a when Box 2a is blank because the 2025 Form 1099-R instructions say those tax-free exchanges should carry $0 in Box 2a. A validated qualified designated Roth account distribution reported with Box 7 code B also stays gross on Line 5a because the 2025 Form 1040 instructions say the qualified amount is tax free and therefore not fully taxable on Line 5b even when the payer left Box 2a blank. Box 7 code H designated Roth direct rollovers likewise stay gross on Line 5a, and the audit trail should preserve that subtotal separately from qualified designated Roth account code B distributions so the gross-but-nontaxable pension reporting branch is traceable by payer type. The retired-public-safety-officer premium exclusion is modeled as a validated aggregate premium amount for supported non-IRA distributions, but only the portion allocated to distributions that remain on Lines 5a and 5b keeps gross pension reporting visible on Line 5a."
+    testRef: "tests/engine/forms/form-1099-r.test.ts::Form 1099-R Lines 3 and 4 - box 7 code 6 section 1035 exchanges stay gross on 5a and zero on 5b even when Box 2a is blank"
+
+  - line: "4"
+    description: "Pension and annuity taxable distributions reported on Form 1040 Line 5b"
+    formula: "Sum taxable supported non-IRA distributions that remain on the pension lines using Box 2a when present, unless validated Simplified Method worksheet inputs are present; treat a validated qualified designated Roth account distribution reported with Box 7 code B as $0 taxable because the 2025 Form 1040 instructions say qualified designated Roth account distributions are tax free; treat a Box 7 code H direct rollover from a designated Roth account to a Roth IRA as $0 taxable even if the payer populated Box 2a, because the 2025 Form 1099-R instructions require 0 in Box 2a for that direct-rollover branch; when the payer leaves Box 2a blank or checks taxable amount not determined and validated Simplified Method inputs are present, compute the excludable amount as the smaller of (a) (cost in the plan at annuity starting date divided by the expected number of monthly payments) times the number of current-year payments received and (b) cost in the plan minus prior-year tax-free recovery, then subtract that excludable amount from Box 1 without going below $0; the expected number of monthly payments can be entered directly or, when omitted, derived from the IRS Simplified Method tables using the annuity starting date and the annuitant ages that apply under Publication 575; otherwise if Box 2a is blank and Box 7 code 6 identifies a section 1035 exchange, use $0 taxable because the 2025 Form 1099-R instructions say those tax-free exchanges carry $0 in Box 2a; otherwise if Box 2a is blank and Box 7 has a direct-rollover code, use $0 taxable because the 2025 Form 1040 instructions subtract the rollover amount after any Box 5 employee-contribution basis and a full direct rollover leaves no taxable remainder; otherwise if Box 2a is blank and Box 5 is provided, use Box 1 minus Box 5 without going below $0; if Box 2a is blank and Box 5 is not provided, use Box 1; after computing the otherwise taxable non-IRA pension total, subtract the smaller of validated retired-public-safety-officer accident, health, or long-term care insurance premiums paid directly from eligible pension-plan distributions that remain on the pension lines, the remaining share of the $3,000 annual retired-public-safety-officer exclusion after any supported disability-pension wage exclusion on Form 1040 Line 1, or the otherwise taxable pension total; exclude validated disability pensions received before minimum retirement age because those taxable amounts are wages on Form 1040 Line 1"
+    irsRef: "Form 1040 Instructions, Lines 5a and 5b"
+    inputs:
+      - "Form 1099-R Box 1"
+      - "Form 1099-R Box 2a"
+      - "Form 1099-R Box 5"
+      - "Validated Simplified Method cost in the plan at annuity starting date"
+      - "Validated Simplified Method current-year payments received"
+      - "Validated Simplified Method prior-year tax-free recovery"
+      - "Validated Simplified Method expected number of monthly payments or supported IRS-table derivation inputs"
+      - "Validated Simplified Method annuity starting date"
+      - "Validated Simplified Method primary annuitant age at the annuity starting date"
+      - "Validated Simplified Method secondary annuitant age at the annuity starting date when the annuity starting date is in 1998 or later and the annuity is payable over joint lives"
+      - "Validated retired public safety officer insurance premiums paid directly from an eligible retirement plan"
+      - "Validated qualified designated Roth account distribution reported with Box 7 code B"
+      - "IRA/SEP/SIMPLE checkbox"
+      - "Form 1099-R Box 7 distribution code"
+      - "Validated disability pension received before minimum retirement age"
+    notes: "This supported branch still relies on validated Simplified Method worksheet inputs for cost in the plan, current-year payments received, and prior-year recovery, but it can now derive the expected-payment count from the IRS Simplified Method tables when the annuity starting date and the relevant annuitant ages are available. Publication 575 limits the Simplified Method to annuity starting dates on or after July 2, 1986, so earlier dates remain unsupported General Rule cases even when a caller supplies an expected-payment count manually. For annuity starting dates after July 1, 1986 and before 1998, the supported derivation uses only the primary annuitant's age, matching the Publication 575 table for those start dates. For annuity starting dates in 1998 or later, the supported derivation uses the Publication 575 single-life table when no secondary annuitant age is provided and the joint-life table when both annuitant ages are provided. When multiple Simplified Method Forms 1099-R are aggregated onto one Form 1040 Line 5b amount, the audit trail should preserve each payer's expected-payment count and derivation source separately so mixed-table results remain traceable form by form instead of only as undifferentiated totals. The official 2025 Publication 575 Bill Smith joint-and-survivor example is a supported regression fixture for the 1998-or-later joint-life table: combined age 130 yields 310 expected payments, a $100 monthly exclusion, and $13,200 taxable pension income on a $14,400 annual pension with $31,000 cost in the plan. If the caller supplies an explicit expected-payment count, that validated worksheet value remains authoritative for otherwise supported Simplified Method dates. When Box 2b says taxable amount not determined, the supported Simplified Method result also stays authoritative even if the payer still populated Box 2a, because the Form 1040 instructions say to use the worksheet amount on Line 5b when it is lower than the amount shown on Form 1099-R. A validated qualified designated Roth account distribution reported with Box 7 code B is treated as $0 taxable on Line 5b even when the payer left Box 2a blank, because the 2025 Form 1040 instructions say qualified designated Roth account distributions are tax free. A Box 7 code H direct rollover from a designated Roth account to a Roth IRA is likewise treated as $0 taxable on Line 5b even if the payer populated Box 2a, because the 2025 Form 1099-R instructions say that reporting branch should show zero in Box 2a, and the audit trail should preserve the code H subtotal separately from qualified designated Roth account code B amounts. When Box 2a is blank on a Box 7 code 6 section 1035 exchange, the supported path defaults the taxable amount to $0 instead of falling back to Box 1 because the 2025 Form 1099-R instructions say those tax-free exchanges should report zero in Box 2a. When Box 2a is blank on a Box 7 direct-rollover record, the supported path also defaults the taxable amount to $0 even if Box 5 shows employee contributions, because the 2025 Form 1040 rollover instructions subtract those contributions before subtracting the rollover amount and a full direct rollover leaves no Line 5b remainder. Validated Box 7 code P prior-year taxable returns of excess deferrals or other pension-plan contributions stay off current-year Form 1040 Line 5b even though the current-year Form 1099-R Box 4 withholding still flows through the engine's aggregated Form 1040 withholding line. The retired-public-safety-officer premium exclusion is applied after the taxable pension amount is otherwise determined and is capped at the smaller of the eligible validated premium amount, the remaining share of the $3,000 annual exclusion after any supported disability-pension wage exclusion, or the taxable pension total."
+    edgeCases:
+      - "A validated qualified designated Roth account distribution reported with Box 7 code B stays gross on Line 5a and zero on Line 5b even when Box 2a is blank, because qualified designated Roth account distributions are tax free"
+      - "A direct rollover reported with Box 7 code G or H and blank Box 2a stays at $0 taxable on Line 5b even when Box 5 shows after-tax employee contributions, because the full rollover amount is subtracted after basis under the Form 1040 instructions"
+      - "Annuity starting dates on July 1, 1986 stay outside the supported Simplified Method slice entirely because Publication 575 treats dates before July 2, 1986 as General Rule cases"
+      - "Annuity starting dates on July 2, 1986 enter the earlier Publication 575 single-life table branch and can derive expected payments from only the primary annuitant age"
+      - "Annuity starting dates on November 18, 1996 still use the earlier pre-November-19 Publication 575 single-life table, so a later-table switch does not happen until the next day"
+      - "For the earlier post-July-1-1986 single-life table, Publication 575 keeps age 60 at 260 expected payments but switches age 61 to 240 on the next bracket"
+      - "Before-1998 annuity starting dates ignore any secondary annuitant age in the supported derivation because Publication 575 Table 2 applies only to 1998-or-later joint-life annuities"
+      - "A December 31, 1997 joint-life annuity still uses Publication 575 Table 1 from only the primary annuitant age, but the same annuity starting one day later on January 1, 1998 switches to Table 2 and can therefore derive a different expected-payment count"
+      - "Annuity starting dates on November 19, 1996 switch to the later pre-1998 Publication 575 Table 1 on that exact boundary"
+      - "Annuity starting dates on January 1, 1998 enter the 1998-or-later Publication 575 table set on that exact boundary, so joint-life annuities can use Table 2"
+      - "For the 1998-or-later joint-life table, combined age 140 still yields 260 expected payments but combined age 141 drops to 210 on the next bracket"
+    testRef: "tests/engine/forms/form-1099-r.test.ts::Form 1099-R Lines 3 and 4 - validated qualified designated Roth account code B distributions stay gross on 5a and zero on 5b even when Box 2a is blank"
+
+  - line: "5"
+    description: "Federal income tax withheld from retirement distributions"
+    formula: "Sum Form 1099-R Box 4 withholding for all Forms 1099-R"
+    irsRef: "Form 1099-R Instructions, Box 4"
+    inputs:
+      - "Form 1099-R Box 4"
+    testRef: "tests/engine/forms/form-1099-r.test.ts::Form 1099-R Line 5 - withholding aggregates across forms"
+
+  - line: "qcdCap"
+    description: "QCD annual limit enforcement"
+    formula: "If aggregate QCD exclusion across IRA Forms 1099-R exceeds the annual per-individual limit ($105,000 for 2025 under IRC §408(d)(8)(A), SECURE 2.0 Act §307, Rev. Proc. 2024-40 §3.27), cap the exclusion at the annual limit for each known IRA owner separately when all IRA Forms 1099-R are owner-attributed, otherwise cap the combined exclusion at one annual limit, and add any excess back to IRA taxable income on Line 4b; the capped QCD amount replaces the uncapped amount in the result so downstream consumers see only the allowable exclusion"
+    irsRef: "IRC §408(d)(8)(A); SECURE 2.0 Act §307; Rev. Proc. 2024-40 §3.27"
+    inputs:
+      - "Aggregate QCD from all IRA Forms 1099-R"
+      - "Annual QCD limit from tax-year constants"
+    edgeCases:
+      - "QCD under the annual limit: no adjustment needed"
+      - "QCD exactly at the annual limit: no excess, borderline test"
+      - "QCD over the annual limit: excess becomes taxable IRA income"
+      - "Multiple QCDs from separate IRA custodians aggregating past the limit"
+      - "Single large QCD exceeding the limit on one Form 1099-R"
+      - "MFJ returns: each spouse has their own $105,000 limit when per-owner Form 1099-R separation is available"
+    testRef: "tests/engine/forms/form-1099-r.test.ts::Form 1099-R QCD annual limit - QCDs exceeding $105,000 are capped and excess is taxable"
+
+  - line: "simplifiedMethodCarryforward"
+    description: "Per-payer Simplified Method cost recovery carryforward for automated year-over-year basis tracking"
+    formula: "For each pension payer-and-plan combination that has one or more Simplified Method Forms 1099-R, aggregate all payments received in the current year from forms that share the same annuity plan. The supported engine uses an explicit validated Simplified Method plan identifier when provided; otherwise it falls back to the shared plan parameters (payer, cost in plan, expected payments, and prior-year recovery) as the plan key. Compute a single payer-level excludable amount using the shared plan cost and expected payments, and output the payer name, cost in plan, prior-year cumulative recovery, current-year payer-level tax-free exclusion, updated cumulative recovery (prior + current), remaining unrecovered cost, and a fullyRecovered flag that is true when cumulative recovery >= cost in plan. When cost is fully recovered, all future payments from that payer-and-plan combination are fully taxable. When a single payer has multiple Simplified Method Forms 1099-R for the same plan, the engine sums paymentsReceivedThisYear across those forms, computes one payer-level exclusion, and distributes that exclusion proportionally to each form based on its share of total payments so each form's taxable amount is correct and the carryforward emits exactly one entry per payer-and-plan combination rather than one entry per form."
+    irsRef: "Publication 575, Simplified Method Worksheet"
+    inputs:
+      - "Per-payer aggregated Simplified Method payments received this year"
+      - "Per-payer Simplified Method cost in plan"
+      - "Per-payer Simplified Method prior-year recovery"
+      - "Per-payer Simplified Method current-year excludable amount"
+      - "Validated Simplified Method plan identifier when the same payer issues more than one annuity contract"
+    notes: "This structured carryforward enables the engine to provide next year's simplifiedMethodPriorYearRecovered input automatically from the prior year's output. The fullyRecovered flag signals that the Simplified Method exclusion is exhausted and future Form 1099-R distributions from this payer-and-plan combination should be fully taxable without needing to recalculate the worksheet. Under IRS Publication 575, the Simplified Method worksheet treats all payments from a single annuity plan as a single stream. The per-payment exclusion is calculated once for that plan, then multiplied by the total number of current-year payments across all Forms 1099-R from that same plan. When two Forms 1099-R have the same payer name but different plan parameters, including different cost in plan, different expected-payment factors, or different prior-year cumulative recovery states, the engine treats them as separate plans and tracks each independently. When the same payer issues more than one separate annuity contract that happens to share the same worksheet parameters, an explicit plan identifier keeps those contracts from being over-aggregated into one recovery pool."
+    edgeCases:
+      - "Cost fully recovered in current year — fullyRecovered is true, remaining cost is zero"
+      - "Partial recovery — cumulative recovery is less than cost, fullyRecovered is false"
+      - "No Simplified Method forms — carryforward array is empty"
+      - "Multiple payers — each payer has independent basis tracking"
+      - "Zero prior-year recovery (first year of distributions) — cumulative recovery equals current-year exclusion only"
+      - "Same payer, two forms, partial recovery — payments are summed across forms; single payer-level exclusion is computed and distributed proportionally; carryforward emits one entry per payer"
+      - "Same payer but different expected-payment factors — forms stay in separate plan groups even when cost in plan matches"
+      - "Same payer, same cost in plan, same expected-payment factor, but different prior-year recovery states — forms stay in separate plan groups because the remaining unrecovered basis differs by annuity"
+      - "Same payer, same worksheet parameters, but different validated plan identifiers — forms stay in separate annuity groups instead of sharing one recovery cap"
+      - "Same payer, two forms, full recovery crosses threshold on second form — first form exhausts remaining basis; second form is fully taxable; carryforward shows fullyRecovered true"
+      - "Same payer, different cost in plan — treated as separate plans with independent tracking since different plan parameters imply separate annuity contracts"
+    testRef: "tests/engine/forms/form-1099-r.test.ts::Form 1099-R Simplified Method carryforward - outputs per-payer cumulative recovery and full-recovery detection"
+
+  - line: "packet"
+    description: "Packet reference summary for supported Form 1099-R effects"
+    formula: "When the return includes one or more supported Form 1099-R inputs, include a reference-summary PDF in the packet that identifies itself as non-filing support and lists the deterministic Form 1099-R results that feed Form 1040 Lines 4a, 4b, 5a, 5b, and 25b"
+    irsRef: "Form 1040 Instructions, Lines 4a, 4b, 5a, 5b, and 25b"
+    notes: "This packet slice is intentionally a reference summary instead of a recreated payer-issued Form 1099-R, so the PDF stays honest about the supported retirement-distribution coverage while still surfacing the computed federal line impacts."
+    testRef: "tests/pdf/fill-form-1099-r.test.ts::fillReturn includes a Form 1099-R reference summary when retirement statements are present"

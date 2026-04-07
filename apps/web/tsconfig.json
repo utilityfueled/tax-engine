@@ -1,0 +1,55 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "jsx": "preserve",
+    "lib": [
+      "DOM",
+      "DOM.Iterable",
+      "ES2022"
+    ],
+    "allowJs": false,
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": [
+        "../../src/*"
+      ],
+      "@spec/*": [
+        "../../spec/*"
+      ],
+      "@/app/*": [
+        "./src/app/*"
+      ],
+      "@/components/*": [
+        "./src/components/*"
+      ],
+      "@/lib/*": [
+        "./src/lib/*"
+      ],
+      "@tax-engine/contracts": [
+        "../../packages/contracts/src/index.ts"
+      ],
+      "@tax-engine/engine": [
+        "../../packages/engine/src/index.ts"
+      ],
+      "@tax-engine/engine/src/*": [
+        "../../packages/engine/src/*"
+      ]
+    },
+    "noEmit": true,
+    "isolatedModules": true
+  },
+  "include": [
+    "next-env.d.ts",
+    "src/**/*",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

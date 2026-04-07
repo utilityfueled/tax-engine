@@ -1,0 +1,252 @@
+form: "Ohio Lump Sum Retirement Credit Worksheet"
+fullName: "Ohio Schedule of Credits Line 3 Worksheet"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf"
+
+notes: |
+  This worksheet computes the Ohio Schedule of Credits line 3 lump sum
+  retirement credit. The 2025 Ohio IT 1040 booklet page 27 says the credit
+  applies when the taxpayer:
+    - has MAGI less exemptions under $100,000;
+    - received a total lump sum distribution on account of retirement;
+    - included that distribution in Ohio AGI;
+    - received it from a qualified pension, retirement, or profit-sharing plan; and
+    - has not previously claimed the credit.
+
+  The official worksheet on page 43 computes a per-recipient credit using the
+  recipient's age multiple from Table 1 and a derived retirement income credit
+  from Table 2. If filing jointly and both spouses qualify, each spouse is
+  computed separately and the two credits are added together for Schedule of
+  Credits line 3. The worksheet only provides Column A and Column B, so this
+  supported slice accepts at most two qualifying recipients per return.
+
+  This engine supports both the current-year worksheet amount reported on
+  Schedule of Credits line 3 (worksheet lines 1 through 6) and, when the
+  caller supplies the needed Schedule of Credits context, the official
+  future-year carryforward shown on worksheet lines 7 through 10. The carryforward
+  only applies when the current-year lump sum retirement credit exceeds the
+  tax still available for it on Schedule of Credits line 7.
+
+  Supported tax years: 2024 and 2025. The worksheet text, Table 1 age
+  multiples, and Table 2 retirement-income tiers are unchanged across those
+  two booklets.
+
+packetRules:
+  packetBehavior: "reference-summary-pdf"
+  includeWhen:
+    - "Ohio Schedule of Credits line 3 is computed from qualifying recipients using this worksheet"
+  suppressWhen:
+    - "No qualifying lump sum retirement recipients are provided"
+    - "The return uses a direct line 3 override instead of the supported worksheet"
+  notes: |
+    When the Ohio packet relies on the supported line 3 worksheet calculation,
+    attach a reference-summary page for the worksheet so the recipient-level age
+    and retirement-income computation remains auditable. Suppress the worksheet
+    packet when the credit is absent or when the return only carries a direct
+    override that bypasses the worksheet math.
+
+businessRuleValidation:
+  - rule: "reference-summary-packet"
+    description: "Inventory support counts this worksheet as business-rule validated only when regression coverage proves the Ohio lump sum retirement credit reference summary is emitted for worksheet-driven line 3 credits and stays suppressed when the worksheet is not used."
+    testRef: "tests/pdf/fill-oh-reference-forms.test.ts::fillOhioReferenceForms includes the Ohio lump sum retirement credit worksheet reference summary only when the supported worksheet drives line 3"
+
+lines:
+  - line: "1"
+    description: "Recipient retirement income included in Ohio AGI"
+    formula: "Per qualifying recipient, enter total income received on account of retirement and included in Ohio AGI"
+    inputs:
+      - "Recipient lump sum retirement income amount included in Ohio AGI"
+    notes: |
+      Do not include rollovers excluded from federal AGI, amounts deducted on
+      Ohio Schedule of Adjustments lines 16, 17, 34, 42, or 43, or Social
+      Security benefits.
+    testRef: "tests/engine/state/oh-lump-sum-retirement-credit.test.ts::OH Lump Sum Retirement Credit Line 1 - recipient retirement income flows through"
+
+  - line: "2"
+    description: "Age multiple for each qualifying lump sum retirement recipient"
+    formula: |
+      Look up the recipient's age as of the last day of the tax year in Table 1.
+      Supported table ages are 46 through 105.
+    inputs:
+      - "Recipient age on December 31"
+    notes: |
+      Table 1 age multiples used for supported years:
+        46: 36.8
+        47: 35.9
+        48: 34.9
+        49: 34.0
+        50: 33.1
+        51: 32.2
+        52: 31.3
+        53: 30.4
+        54: 29.5
+        55: 28.6
+        56: 27.7
+        57: 26.8
+        58: 25.9
+        59: 25.0
+        60: 24.2
+        61: 23.3
+        62: 22.5
+        63: 21.6
+        64: 20.8
+        65: 20.0
+        66: 19.2
+        67: 18.4
+        68: 17.6
+        69: 16.8
+        70: 16.0
+        71: 15.3
+        72: 14.6
+        73: 13.9
+        74: 13.2
+        75: 12.5
+        76: 11.9
+        77: 11.2
+        78: 10.6
+        79: 10.0
+        80: 9.5
+        81: 8.9
+        82: 8.4
+        83: 7.9
+        84: 7.4
+        85: 6.9
+        86: 6.5
+        87: 6.1
+        88: 5.7
+        89: 5.3
+        90: 5.0
+        91: 4.7
+        92: 4.4
+        93: 4.1
+        94: 3.9
+        95: 3.7
+        96: 3.4
+        97: 3.2
+        98: 3.0
+        99: 2.8
+        100: 2.7
+        101: 2.5
+        102: 2.3
+        103: 2.1
+        104: 1.9
+        105: 1.8
+    edgeCases:
+      - "Age 46 uses the 36.8 multiple"
+      - "Ages below 46 or above 105 are unsupported and should throw rather than guess"
+      - "More than two recipients are unsupported because the worksheet only has Column A and Column B"
+    testRef: "tests/engine/state/oh-lump-sum-retirement-credit.test.ts::OH Lump Sum Retirement Credit Line 2 - age 46 uses the 36.8 multiple"
+
+  - line: "3"
+    description: "Derived retirement income amount for Table 2"
+    formula: "Line 1 ÷ Line 2"
+    inputs:
+      - "Line 1"
+      - "Line 2"
+    notes: |
+      This derived amount is used to select the Table 2 retirement income
+      credit tier for line 4.
+    testRef: "tests/engine/state/oh-lump-sum-retirement-credit.test.ts::OH Lump Sum Retirement Credit Line 3 - line 1 divided by line 2 determines the Table 2 tier"
+
+  - line: "4"
+    description: "Retirement income credit based on the line 3 amount"
+    formula: |
+      Using Table 2 on page 44:
+        $0–$500: $0
+        $501–$1,500: $25
+        $1,501–$3,000: $50
+        $3,001–$5,000: $80
+        $5,001–$8,000: $130
+        $8,001 or more: $200
+    inputs:
+      - "Line 3"
+    testRef: "tests/engine/state/oh-lump-sum-retirement-credit.test.ts::OH Lump Sum Retirement Credit Line 4 - Table 2 uses the derived line 3 amount"
+
+  - line: "5"
+    description: "Per-recipient lump sum retirement credit"
+    formula: "Line 2 × Line 4"
+    inputs:
+      - "Line 2"
+      - "Line 4"
+    testRef: "tests/engine/state/oh-lump-sum-retirement-credit.test.ts::OH Lump Sum Retirement Credit Line 5 - line 2 multiplied by line 4 computes the recipient credit"
+
+  - line: "6"
+    description: "Total lump sum retirement credit"
+    formula: "Add line 5 for all qualifying recipients"
+    inputs:
+      - "Per-recipient line 5 credits"
+    notes: |
+      For MFJ returns with two qualifying recipients, add both worksheet columns
+      and report the total on Ohio Schedule of Credits line 3. Returns with more
+      than two recipients are invalid for this worksheet and should throw.
+    testRef: "tests/engine/state/oh-lump-sum-retirement-credit.test.ts::OH Lump Sum Retirement Credit Line 6 - qualifying spouses add together"
+
+  - line: "7"
+    description: "Current-year Ohio tax available for the lump sum retirement credit"
+    formula: |
+      If Schedule of Credits line 1 tax liability and line 2 retirement income
+      credit are provided:
+        max(0, Schedule of Credits line 1 - Schedule of Credits line 2)
+      Otherwise:
+        $0
+    inputs:
+      - "Ohio Schedule of Credits line 1 tax liability before credits"
+      - "Ohio Schedule of Credits line 2 retirement income credit"
+    notes: |
+      The official worksheet instructs the taxpayer to subtract Schedule of
+      Credits line 2 from Schedule of Credits line 1. The engine allows the
+      worksheet to be computed standalone, so callers that do not have those
+      schedule values may omit them and receive a $0 future-year carryforward.
+    edgeCases:
+      - "If line 2 exceeds line 1, line 7 floors at $0"
+      - "When line 3 is claimed on the same return, Schedule of Credits line 2 is typically $0"
+    testRef: "tests/engine/state/oh-lump-sum-retirement-credit.test.ts::OH Lump Sum Retirement Credit Line 7 - schedule tax available for the worksheet carryforward"
+
+  - line: "8"
+    description: "Excess lump sum retirement credit not used in the current year"
+    formula: |
+      If line 6 > line 7:
+        line 6 - line 7
+      Otherwise:
+        $0
+    inputs:
+      - "Line 6"
+      - "Line 7"
+    notes: "Only computed when the worksheet credit exceeds the current-year tax available for it."
+    testRef: "tests/engine/state/oh-lump-sum-retirement-credit.test.ts::OH Lump Sum Retirement Credit Line 8 - excess current-year credit becomes carryforward basis"
+
+  - line: "9"
+    description: "Future-year divisor"
+    formula: |
+      For each qualifying recipient column:
+        line 2 - 1
+      For the worksheet carryforward:
+        use the sum of the per-recipient (line 2 - 1) divisors
+    inputs:
+      - "Per-recipient line 2 age multiples"
+    notes: |
+      The Ohio booklet says not to round this line. The engine sums the
+      recipient-level divisors so the worksheet can be represented as one
+      combined future-year credit amount for the return.
+    edgeCases:
+      - "A single age-65 recipient uses a divisor of 19 (20 - 1)"
+      - "Two qualifying recipients add their separate divisors together"
+    testRef: "tests/engine/state/oh-lump-sum-retirement-credit.test.ts::OH Lump Sum Retirement Credit Line 9 - future-year divisor is the sum of recipient multiples minus one"
+
+  - line: "10"
+    description: "Lump sum retirement credit for future tax years"
+    formula: |
+      If line 8 > 0 and line 9 > 0:
+        line 8 ÷ line 9
+      Otherwise:
+        $0
+    inputs:
+      - "Line 8"
+      - "Line 9"
+    notes: |
+      The 2025 booklet instructs taxpayers to report this amount in each
+      subsequent tax year as their lump sum retirement credit.
+    edgeCases:
+      - "No current-year excess credit means no future-year carryforward"
+      - "Standalone worksheet use without schedule context yields $0 carryforward"
+    testRef: "tests/engine/state/oh-lump-sum-retirement-credit.test.ts::OH Lump Sum Retirement Credit Line 10 - future-year credit equals line 8 divided by line 9"

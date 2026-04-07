@@ -1,0 +1,126 @@
+form: "Form 8815"
+fullName: "Exclusion of Interest from Series EE and I U.S. Savings Bonds Issued After 1989"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i8815"
+
+notes: |
+  Form 8815 calculates the excludable interest from qualified US savings bonds
+  used to pay higher education expenses. The exclusion is subject to an income
+  phase-out. MFS filers are NOT eligible.
+  Result flows to Schedule B Line 3.
+
+businessRuleValidation:
+  - rule: "reference-summary-packet"
+    description: "Inventory support counts this form as business-rule validated only when regression coverage proves the emitted packet artifact stays labeled as a non-filing reference summary and only surfaces the supported savings-bond redemption inputs, the computed Form 8815 Lines 2 through 13 outputs, and the resulting Schedule B Line 3 exclusion."
+    testRef: "tests/pdf/fill-form-8815.test.ts::buildForm8815ReferenceSummary keeps the packet artifact reference-only and limited to supported savings-bond outputs"
+
+lines:
+  - line: "1"
+    description: "Name of person who was a qualified beneficiary"
+    formula: "Taxpayer, spouse, or dependent"
+    irsRef: "Form 8815 Instructions, Line 1"
+    testRef: "tests/engine/forms/form-8815.test.ts::Form 8815 - basic exclusion calculation"
+
+  - line: "2"
+    description: "Total qualified higher education expenses paid"
+    formula: "Tuition + fees, reduced by tax-free scholarships/grants"
+    irsRef: "Form 8815 Instructions, Line 2"
+    testRef: "tests/engine/forms/form-8815.test.ts::Form 8815 Line 2 - qualified expenses"
+
+  - line: "3"
+    description: "Total proceeds (principal + interest) from qualified bonds redeemed"
+    formula: "Sum of all qualified bond redemption amounts"
+    irsRef: "Form 8815 Instructions, Line 3"
+    testRef: "tests/engine/forms/form-8815.test.ts::Form 8815 Line 3 - total proceeds"
+
+  - line: "4"
+    description: "Interest included in Line 3 proceeds"
+    formula: "Only the interest portion of the redemption"
+    irsRef: "Form 8815 Instructions, Line 4"
+    testRef: "tests/engine/forms/form-8815.test.ts::Form 8815 Line 4 - interest portion"
+
+  - line: "5"
+    description: "Expenses-to-proceeds ratio"
+    formula: "min(1, Line 2 / Line 3)"
+    irsRef: "Form 8815 Instructions, Line 5"
+    notes: "Cannot exceed 1.0"
+    testRef: "tests/engine/forms/form-8815.test.ts::Form 8815 Line 5 - ratio capped at 1"
+
+  - line: "6"
+    description: "Excludable interest before phase-out"
+    formula: "Line 4 × Line 5"
+    irsRef: "Form 8815 Instructions, Line 6"
+    testRef: "tests/engine/forms/form-8815.test.ts::Form 8815 Line 6 - excludable before phase-out"
+
+  - line: "7"
+    description: "Modified AGI"
+    formula: "AGI + student loan interest deduction + foreign earned income exclusion + other add-backs"
+    irsRef: "Form 8815 Instructions, Line 7"
+    notes: |
+      Per IRS Form 8815 Instructions, Line 7: "Add to your adjusted gross income
+      (Form 1040, line 11) any of the following: ... The deduction for student loan interest."
+      Engine adds back the student loan interest deduction from Schedule 1 Line 21.
+      Other add-backs (foreign earned income/housing exclusion, Puerto Rico exclusion)
+      are not currently in the input model.
+    edgeCases:
+      - "Filer with $2,500 SLI and MAGI near phase-out: SLI add-back pushes MAGI into phase-out range"
+      - "MFJ at $152K AGI with $2,500 SLI: MAGI = $154.5K (in phase-out), not $152K (below phase-out)"
+    testRef: "tests/engine/forms/form-8815.test.ts::Form 8815 Line 7 - modified AGI"
+
+  - line: "8"
+    description: "Phase-out threshold"
+    formula: "MFJ: $149,250; Single/HoH/QSS: $99,500"
+    irsRef: "IRS Pub 970 (2025) Ch. 9; IRC §135(b)(2)(B)"
+    notes: |
+      MFS cannot use Form 8815 (IRC §135(d)(1)).
+      QSS is NOT a joint return per IRC §135(b)(2)(B) — uses single/HoH threshold.
+      IRS Pub 970 (2025): "Single, head of household, or qualifying surviving spouse: $99,500"
+    edgeCases:
+      - "QSS filer at $120K MAGI: fully phased out (single upper limit $114,500), not MFJ treatment"
+    testRef: "tests/engine/forms/form-8815.test.ts::Form 8815 Line 8 - phase-out threshold"
+
+  - line: "9"
+    description: "Excess over phase-out threshold"
+    formula: "max(0, Line 7 - Line 8)"
+    irsRef: "Form 8815 Instructions, Line 9"
+    testRef: "tests/engine/forms/form-8815.test.ts::Form 8815 - full phase-out above upper limit"
+
+  - line: "10"
+    description: "Phase-out range"
+    formula: "MFJ: $30,000; Single/HoH/QSS: $15,000"
+    irsRef: "IRS Pub 970 (2025) Ch. 9; IRC §135(b)(2)"
+    notes: "QSS uses single/HoH range ($15,000) since QSS is not a joint return"
+    testRef: "tests/engine/forms/form-8815.test.ts::Form 8815 - partial phase-out"
+
+  - line: "11"
+    description: "Phase-out ratio"
+    formula: "min(1, Line 9 / Line 10)"
+    irsRef: "Form 8815 Instructions, Line 11"
+    testRef: "tests/engine/forms/form-8815.test.ts::Form 8815 - partial phase-out"
+
+  - line: "12"
+    description: "Phase-out reduction amount"
+    formula: "Line 6 × Line 11"
+    irsRef: "Form 8815 Instructions, Line 12"
+    testRef: "tests/engine/forms/form-8815.test.ts::Form 8815 - partial phase-out"
+
+  - line: "13"
+    description: "Excludable savings bond interest"
+    formula: "Line 6 - Line 12"
+    irsRef: "Form 8815 Instructions, Line 13"
+    notes: "Flows to Schedule B Line 3"
+    edgeCases:
+      - "MFS filers get $0 exclusion (not eligible)"
+      - "Below phase-out threshold: full exclusion"
+      - "Above upper phase-out limit: $0 exclusion"
+      - "Expenses exceed proceeds: ratio capped at 1"
+      - "No qualified expenses: $0 exclusion"
+      - "Zero bond interest: $0 exclusion"
+    testRef: "tests/engine/forms/form-8815.test.ts::Form 8815 Line 13 - final exclusion below phase-out"
+
+  - line: "packet"
+    description: "Draft packet inclusion rule for supported Form 8815 savings-bond exclusions"
+    formula: "When supported savings-bond redemption inputs produce a positive Form 8815 Line 13 exclusion, include a non-filing reference-summary PDF in the packet that lists each supported redemption's proceeds, interest, and qualified-expense inputs plus the computed Form 8815 Lines 2 through 13 outputs and the resulting Schedule B Line 3 exclusion. Suppress the packet artifact when no exclusion is allowed."
+    irsRef: "Form 8815 Instructions; About Schedule B (Form 1040); Publication 550, Education Savings Bond Program"
+    notes: "This packet slice intentionally emits a deterministic reference summary instead of attempting to recreate a filed Form 8815, so the draft packet stays honest about the supported savings-bond exclusion scope while still surfacing the computed federal effect when the taxpayer is actually claiming the exclusion."
+    testRef: "tests/pdf/fill-form-8815.test.ts::fillReturn includes a Form 8815 reference summary when savings bond redemptions produce an exclusion claim"

@@ -1,0 +1,117 @@
+form: "PA-Schedule-RK1"
+fullName: "Pennsylvania PA-20S/PA-65 Schedule RK-1 / NRK-1 Statement Aggregation"
+taxYear: 2025
+reference: "https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/pass-through-entities"
+
+notes: |
+  Pennsylvania pass-through entities furnish PA-20S/PA-65 Schedule RK-1
+  statements to resident owners and PA-20S/PA-65 Schedule NRK-1 statements to
+  nonresident owners. The Pennsylvania Personal Income Tax Guide states that
+  these statements already report the owner's share of income and loss in the
+  correct Pennsylvania income classes, and that a federal Schedule K-1 does
+  not classify income for Pennsylvania purposes.
+
+  This module aggregates already-classified statement amounts so the resident
+  PA orchestrator can use Pennsylvania-source classifications instead of
+  heuristic federal K-1 box mapping when a PA statement is available for the
+  same entity.
+
+  References consulted:
+    - PA Personal Income Tax Guide, Pass Through Entities:
+      "The income and losses are already classed and apportioned for
+      Pennsylvania purposes as reported on the Schedule RK-1 and NRK-1
+      received from the pass through entity."
+    - 2025 PA-40 Instructions, Line 17:
+      "Enter the PA tax withheld by your partnership, PA S corporation...
+      as reported on Line 6 of your PA Schedule(s) NRK-1"
+    - 2024 PA-20S/PA-65 Information Return summary cross-reference:
+      resident RK-1 Lines 1-7 map to business, interest, dividends, net gain,
+      rents/royalties, estates/trusts, and gambling respectively; nonresident
+      NRK-1 Lines 1-5 map only to business, net gain, rents/royalties,
+      estates/trusts, and gambling.
+
+packetRules:
+  packetBehavior: "included-on-pa-40"
+  includeWhen:
+    - "A Pennsylvania resident return packet is being assembled and supported PA Schedule RK-1 or NRK-1 statements contribute Pennsylvania income-class amounts or creditable NRK-1 withholding to the resident return."
+  suppressWhen:
+    - "No resident Pennsylvania return packet is being assembled."
+    - "No supported PA Schedule RK-1 or NRK-1 statements are present."
+  notes: |
+    The current packet path does not emit a separate RK-1 aggregation PDF.
+    Instead, supported RK-1 and NRK-1 amounts feed the official PA-40 income
+    lines and, for NRK-1 withholding, PA-40 Line 17. Packet validation for
+    this slice therefore depends on the PA-40 inclusion rule.
+
+businessRuleValidation:
+  - rule: "pa-schedule-rk1-pa40-inclusion"
+    description: "Inventory support counts the Pennsylvania Schedule RK-1 packet path as validated only when regression coverage proves supported statement income and NRK-1 withholding are carried onto official PA-40 lines."
+    testRef: "tests/pdf/fill-pa-40.test.ts::fillPA40 includes Pennsylvania Schedule RK-1 and NRK-1 statement amounts on the supported PA-40 lines"
+
+lines:
+  - line: "statement-lines"
+    description: "Map each supported RK-1 or NRK-1 statement to Pennsylvania income classes"
+    formula: |
+      For each statement:
+        - preserve sourceDocument, entity identity, and accountHolder for auditability
+        - if sourceDocument = "pa_rk_1", carry the provided class amounts:
+          businessIncome, interestIncome, dividendIncome, netGainOrLoss,
+          netRentalIncome, estateTrustIncome, gamblingIncome
+        - if sourceDocument = "pa_nrk_1", carry only:
+          businessIncome, netGainOrLoss, netRentalIncome, estateTrustIncome,
+          gamblingIncome
+          and treat interestIncome and dividendIncome as 0
+    notes: |
+      Pennsylvania's official cross-reference shows that resident RK-1
+      statements include all seven relevant personal-income-tax classes, while
+      nonresident NRK-1 statements do not include the intangible income lines.
+      The module therefore ignores any interest or dividend values supplied on
+      an NRK-1 input.
+    edgeCases:
+      - "Resident RK-1 contributes amounts to all supported classes"
+      - "Nonresident NRK-1 contributes no interest or dividend income"
+      - "Negative business, gain, or rental amounts are preserved for downstream PA class rules"
+    testRef: "tests/engine/state/pa-schedule-rk1.test.ts::PA Schedule RK-1/NRK-1 statement lines map to the supported Pennsylvania income classes"
+
+  - line: "withholding"
+    description: "Aggregate creditable nonresident withholding from PA Schedule NRK-1 statements"
+    formula: |
+      For each statement:
+        - if sourceDocument = "pa_nrk_1" and nonresidentTaxWithheld is positive,
+          include that amount
+        - otherwise include 0
+      totalNonresidentTaxWithheld = sum of included amounts
+    notes: |
+      The 2025 PA-40 instructions direct resident taxpayers to claim PA tax
+      withheld by partnerships and PA S corporations from Line 6 of PA
+      Schedule(s) NRK-1 on PA-40 Line 17. Resident RK-1 statements do not
+      contribute Line 17 withholding. Negative withholding values are treated
+      as zero.
+    edgeCases:
+      - "PA Schedule NRK-1 withholding is included"
+      - "PA Schedule RK-1 statements do not contribute withholding"
+      - "Negative NRK-1 withholding is treated as 0"
+    testRef: "tests/engine/state/pa-schedule-rk1.test.ts::PA Schedule RK-1/NRK-1 withholding sums only positive NRK-1 withholding amounts"
+
+  - line: "totals"
+    description: "Aggregate per-class totals across all supported statements"
+    formula: |
+      Sum each class separately across all statements:
+        totalBusinessIncome = Σ businessIncome
+        totalInterestIncome = Σ interestIncome
+        totalDividendIncome = Σ dividendIncome
+        totalNetGainOrLoss = Σ netGainOrLoss
+        totalNetRentalIncome = Σ netRentalIncome
+        totalEstateTrustIncome = Σ estateTrustIncome
+        totalGamblingIncome = Σ gamblingIncome
+        totalNonresidentTaxWithheld = Σ included withholding amounts from NRK-1 statements
+    notes: |
+      Totals stay separated by Pennsylvania income class so the orchestrator
+      can add them directly to PA-40 class mapping without cross-class netting.
+      The withholding total stays separate because it affects PA-40 Line 17
+      payments rather than any Pennsylvania income class.
+    edgeCases:
+      - "Multiple statements from different entities sum by class"
+      - "An empty statement list yields zero totals in every class"
+      - "2024 and 2025 use the same supported statement rules"
+    testRef: "tests/engine/state/pa-schedule-rk1.test.ts::PA Schedule RK-1/NRK-1 totals sum each Pennsylvania income class independently"

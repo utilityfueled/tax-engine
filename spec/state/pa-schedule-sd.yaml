@@ -1,0 +1,153 @@
+form: "PA-40 SD"
+fullName: "Pennsylvania School District Personal Income Tax Return"
+taxYear: 2025
+reference: "https://www.revenue.pa.gov/FormsandPublications/FormsforIndividuals/PIT/Pages/default.aspx"
+
+notes: |
+  Pennsylvania school districts may levy a personal income tax on resident individuals.
+  About 470 of PA's ~500 school districts impose this tax. Rates range from 0% to ~3.2%.
+
+  Two tax base methods exist:
+    - Earned Income (EI) method: Tax base is earned income only
+      (W-2 compensation + net positive self-employment/farm income).
+      School districts using EI method are the majority.
+    - PSD (PA Taxable Income) method: Tax base is total PA taxable income
+      from PA-40 (all 8 income classes, after zero-flooring).
+
+  The method is determined by the school district, not the taxpayer.
+  Each school district has a 4-digit PSD code and a published rate.
+
+  Tax Forgiveness applies: the same Schedule SP forgiveness percentage
+  from the PA-40 return reduces the school district tax proportionally.
+
+  Withholding: Some employers withhold school district tax (may appear
+  in W-2 local fields). Estimated payments may also apply.
+
+  References:
+    - PA Act 511 (Local Tax Enabling Act)
+    - PA School Code §679.1
+    - PA Revenue: School District Personal Income Tax instructions
+    - PSD code lookup: https://www.hab-inc.com/psd-codes/
+
+packetRules:
+  packetBehavior: "reference-summary-pdf"
+  includeWhen:
+    - "A Pennsylvania resident return packet is being assembled and the supported resident return computes a PA-40 SD school district personal income tax result."
+    - "The packet path emits a supported Schedule SD reference summary derived from the validated resident PA-40 SD result, including zero-tax or fully forgiven outcomes when a supported school district computation was requested."
+  suppressWhen:
+    - "No Pennsylvania resident return packet is being assembled."
+    - "The resident return does not include supported PA-40 SD school district inputs, so no school district computation is present."
+  notes: |
+    The Pennsylvania Department of Revenue requires taxpayers to report the
+    correct school district code on the PA-40, and it uses state personal
+    income tax returns to provide each district's Pennsylvania taxable income
+    totals to the Department of Education. Until an official PA-40 SD filler
+    exists, the packet path emits `pa-schedule-sd-reference.pdf` as a
+    reference summary only. Packet disclosures must therefore keep
+    Pennsylvania packet completeness partial whenever this reference summary
+    is attached.
+
+businessRuleValidation:
+  - rule: "pa-schedule-sd-reference-packet"
+    description: "Inventory support counts the Pennsylvania Schedule SD packet path as validated only when fillReturn emits `pa-schedule-sd-reference.pdf` whenever a supported resident return computes a school district tax result."
+    testRef: "tests/pdf/fill-pa-schedule-sd.test.ts::fillReturn includes the Pennsylvania Schedule SD reference summary when the resident return computes school district tax"
+  - rule: "pa-schedule-sd-reference-suppression"
+    description: "Inventory support counts the Pennsylvania Schedule SD suppression rule as validated only when regression coverage proves fillReturn omits the reference summary when no supported school district computation is present."
+    testRef: "tests/pdf/fill-pa-schedule-sd.test.ts::fillReturn suppresses the Pennsylvania Schedule SD reference summary when no school district computation is present"
+  - rule: "pa-schedule-sd-reference-disclosure"
+    description: "Inventory support counts the Pennsylvania Schedule SD packet disclosure as validated only when readiness regression coverage keeps packet completeness partial while only the Schedule SD reference summary is available beyond PA-40."
+    testRef: "tests/utils/return-readiness.test.ts::marks Pennsylvania packets partial when a PA Schedule SD reference summary is attached"
+
+lines:
+  - line: "1"
+    description: "PA-40 taxable income from all 8 classes (PSD method)"
+    formula: "PA-40 total PA taxable income (after zero-flooring each class)"
+    notes: "Used only for PSD-method school districts."
+    testRef: "tests/engine/state/pa-schedule-sd.test.ts::PSD method uses PA-40 total taxable income"
+
+  - line: "2"
+    description: "Earned income (EI method)"
+    formula: "Compensation (PA-40 Line 1a - Line 1b) + max(0, net business/farm income)"
+    notes: |
+      Used only for EI-method school districts.
+      Compensation = W-2 wages minus unreimbursed expenses (PA-40 net compensation).
+      Business/farm income = PA Class 4 net, floored to zero (losses excluded).
+    testRef: "tests/engine/state/pa-schedule-sd.test.ts::EI method uses compensation plus net positive business income"
+
+  - line: "3"
+    description: "Tax base (Line 1 or Line 2 depending on method)"
+    formula: "If PSD method: Line 1; If EI method: Line 2"
+    testRef: "tests/engine/state/pa-schedule-sd.test.ts::selects correct tax base for method"
+
+  - line: "4"
+    description: "Other deductions (IRC §529 contributions, etc.)"
+    formula: "Same other deductions as PA-40 Line 9a"
+    notes: |
+      For PSD method, the deductions are already reflected in total PA taxable income.
+      For EI method, §529 contributions reduce earned income base.
+    testRef: "tests/engine/state/pa-schedule-sd.test.ts::EI method applies other deductions"
+
+  - line: "5"
+    description: "Adjusted tax base"
+    formula: "max(0, Line 3 - Line 4 for EI method; Line 3 for PSD method)"
+    notes: "For PSD method, deductions are already in PA-40 Line 9a and reflected in total taxable income."
+    testRef: "tests/engine/state/pa-schedule-sd.test.ts::adjusted tax base cannot go negative"
+
+  - line: "6"
+    description: "School district income tax"
+    formula: "Line 5 × school district tax rate"
+    notes: "Rounded to the nearest dollar."
+    testRef: "tests/engine/state/pa-schedule-sd.test.ts::computes tax at school district rate"
+
+  - line: "7"
+    description: "Tax Forgiveness credit"
+    formula: "Line 6 × Schedule SP forgiveness percentage / 100"
+    notes: |
+      The same forgiveness percentage from the PA-40 Schedule SP applies
+      to the school district tax. If the taxpayer has 100% forgiveness,
+      the entire school district tax is forgiven.
+    testRef: "tests/engine/state/pa-schedule-sd.test.ts::applies Schedule SP forgiveness to school district tax"
+
+  - line: "8"
+    description: "Net school district tax after forgiveness"
+    formula: "max(0, Line 6 - Line 7)"
+    testRef: "tests/engine/state/pa-schedule-sd.test.ts::net tax after forgiveness"
+
+  - line: "9"
+    description: "School district tax withheld"
+    formula: "Sum of school district withholding from W-2s or other sources"
+    notes: "Caller provides this; extracted from employer withholding records."
+    testRef: "tests/engine/state/pa-schedule-sd.test.ts::applies withholding"
+
+  - line: "10"
+    description: "Estimated payments for school district tax"
+    formula: "Sum of estimated payments made for school district tax"
+    testRef: "tests/engine/state/pa-schedule-sd.test.ts::applies estimated payments"
+
+  - line: "11"
+    description: "Total payments and credits"
+    formula: "Line 7 + Line 9 + Line 10"
+    notes: "Tax forgiveness credit + withholding + estimated payments."
+    testRef: "tests/engine/state/pa-schedule-sd.test.ts::sums all payments and credits"
+
+  - line: "12"
+    description: "Overpayment (refund)"
+    formula: "If Line 11 > Line 6: Line 11 - Line 6; else 0"
+    testRef: "tests/engine/state/pa-schedule-sd.test.ts::computes overpayment when payments exceed tax"
+
+  - line: "13"
+    description: "Amount owed"
+    formula: "If Line 6 > Line 11: Line 6 - Line 11; else 0"
+    testRef: "tests/engine/state/pa-schedule-sd.test.ts::computes balance due when tax exceeds payments"
+
+edgeCases:
+  - "Zero school district rate: tax is $0"
+  - "EI method with only W-2 income: tax base = net compensation"
+  - "EI method with business loss: business income floored to $0"
+  - "PSD method includes all 8 income classes"
+  - "100% Tax Forgiveness eliminates school district tax"
+  - "Partial forgiveness reduces tax proportionally"
+  - "Withholding exceeds tax: refund generated"
+  - "No withholding on self-employment income: full balance due"
+  - "§529 deductions reduce EI method tax base"
+  - "Zero income: zero tax regardless of rate or method"

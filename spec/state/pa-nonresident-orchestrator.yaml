@@ -1,0 +1,300 @@
+form: "PA-Nonresident-Orchestrator"
+fullName: "Pennsylvania Nonresident and Part-Year Resident Return Orchestrator"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf"
+
+notes: |
+  Supported scope for this slice:
+    - assemble a nonresident or part-year resident PA-40 from explicit
+      Pennsylvania-taxable class amounts plus optional PA Schedule NRH
+      apportionment for compensation and business income
+    - carry already-classified Pennsylvania income and withholding from
+      PA-20S/PA-65 Schedule RK-1 / NRK-1 statements and PA Schedule J
+      estate-or-trust statements into the PA-40
+    - compute Schedule SP Tax Forgiveness using PA Schedule SP eligibility
+      rules for nonresidents and part-year residents
+    - compute Schedule G-L only for part-year residents when the caller
+      supplies resident-period double-taxed income amounts
+    - settle withholding, estimated payments, extension payments,
+      nonresident withholding, use tax, credits, refund, and amount due
+
+  This slice intentionally does not auto-derive every nonresident or part-year
+  allocation from normalized federal documents. The caller must provide the
+  Pennsylvania-taxable amounts for income classes that cannot be derived
+  mechanically from the current shared input model, plus any all-source
+  eligibility income that is outside PA taxable income for Schedule SP.
+
+packetRules:
+  packetBehavior: "filled-pa-40-pdf"
+  includeWhen:
+    - "Pennsylvania is the selected state for the workspace packet and the validated input carries `paNonresidentReturn`"
+    - "The Pennsylvania nonresident or part-year orchestrator result has been computed for the packet"
+  suppressWhen:
+    - "No Pennsylvania nonresident or part-year return is being assembled for the packet"
+    - "The packet is using the resident Pennsylvania orchestrator path instead"
+  notes: |
+    The current packet path attaches the computed nonresident or part-year
+    Pennsylvania return as `pa-40-filled.pdf` through the workspace packet
+    builder. The cover page must continue to disclose that e-file and
+    business-rule validation have not been run for the emitted Pennsylvania
+    packet.
+
+businessRuleValidation:
+  - rule: "workspace-pa-nonresident-packet-disclosure"
+    description: "Inventory support counts this orchestrator as business-rule validated only when regression coverage proves a Pennsylvania nonresident or part-year workspace packet includes `pa-40-filled.pdf` and keeps the cover-page e-file/business-rule label at not-validated."
+    testRef: "tests/apps/web/pa-nonresident-state-packet.test.ts::buildWorkspaceFilledReturnDownload includes the Pennsylvania PA-40 packet for a nonresident return and keeps the business-rule disclosure honest"
+
+lines:
+  - line: "resolve-pa-nonresident-inputs"
+    description: "Resolve Pennsylvania nonresident/part-year supplemental inputs from validated TaxYearInput before running the return"
+    formula: |
+      For each supported PA-only field:
+        - use input.paNonresidentReturn.<field> when present
+        - if overrides.<field> is also present, use the explicit override instead
+
+      Supported supplemental fields include:
+        - residencyStatus
+        - optional Schedule NRH compensation and/or business apportionment input
+        - direct Pennsylvania-taxable class amounts for PA-40 Lines 1a, 1b,
+          2, 3, 4, 5, 6, 7, and 8
+        - other deductions, payments, withholding, direct use tax, supported
+          use-tax worksheet input, refundable credits, other credits, late
+          penalties, and late-payment interest
+        - Schedule SP eligibility additions, including nontaxable income,
+          additional all-source eligibility income not otherwise taxed by
+          Pennsylvania, spouse-only eligibility income, and dependent/separation flags
+        - Schedule G-L other-state credit entries for supported part-year returns
+    notes: |
+      Explicit overrides always win so callers can patch a validated input
+      document at runtime without mutating the source JSON. For PA-40 Line 25,
+      precedence is:
+        1. overrides.useTax
+        2. overrides.useTaxWorksheet
+        3. input.paNonresidentReturn.useTax
+        4. input.paNonresidentReturn.useTaxWorksheet
+      Optional decimal fields that are absent in the parsed PA nonresident
+      input remain absent rather than being coerced to zero, so downstream
+      statement-derived defaults such as NRK-1 and Schedule J withholding still
+      apply when no explicit override is supplied.
+    testRef: "tests/engine/state/pa-nonresident-orchestrator.test.ts::PA nonresident orchestrator resolves nested supplemental input and lets explicit overrides win"
+
+  - line: "resolve-line-17-nonresident-withholding"
+    description: "Resolve PA-40 Line 17 nonresident withholding from explicit input or Pennsylvania statements"
+    formula: |
+      Let statementNonresidentWithholding equal:
+        - total NRK-1 nonresident withholding from supported PA Schedule RK-1 /
+          NRK-1 statements; plus
+        - total nonresident withholding from supported PA Schedule J statements
+
+      Then:
+        - if explicit nonresidentTaxWithheld input or override is supplied,
+          use that explicit amount on PA-40 Line 17
+        - otherwise use statementNonresidentWithholding
+    notes: |
+      The supported nonresident/part-year slice treats explicit Line 17 input
+      as a manual override because callers may need to reconcile Pennsylvania
+      statement withholding outside the normalized statement payloads. Explicit
+      zero must still override statement-derived withholding rather than fall
+      back to the statement total.
+    edgeCases:
+      - "Explicit Line 17 amount of $0 still overrides positive NRK-1 or Schedule J withholding"
+      - "When no explicit amount is supplied, NRK-1 and Schedule J withholding totals are combined"
+    testRef: "tests/engine/state/pa-nonresident-orchestrator.test.ts::PA nonresident orchestrator lets explicit Line 17 withholding override statement-derived withholding"
+
+  - line: "compute-schedule-nrh"
+    description: "Compute PA Schedule NRH when apportionment data is provided and carry the result into PA-40 Lines 1a, 1b, and 4"
+    formula: |
+      If Schedule NRH input is provided:
+        - compute PA Schedule NRH using the official compensation and/or
+          business apportionment sections
+        - add Schedule NRH total PA gross-taxable compensation to direct
+          PA-40 Line 1a compensation
+        - add Schedule NRH apportioned employee business expenses to direct
+          PA-40 Line 1b unreimbursed expenses
+        - add Schedule NRH Pennsylvania net profits to direct PA-40 Line 4
+          business income
+
+      If no Schedule NRH input is provided:
+        - use only the direct Pennsylvania-taxable line amounts
+    notes: |
+      The 2025 PA Schedule NRH instructions say nonresident employees use
+      Schedule NRH when the employer does not correctly report PA wages or when
+      apportioning unreimbursed employee business expenses, and nonresident
+      businesses use it when Pennsylvania net profits must be apportioned.
+    testRef: "tests/engine/state/pa-nonresident-orchestrator.test.ts::PA nonresident orchestrator computes Schedule NRH compensation and settles the PA-40"
+
+  - line: "default-nonresident-w2-compensation"
+    description: "Default full-year nonresident PA-40 Line 1a compensation from correctly reported Pennsylvania W-2 wages when no direct override or Schedule NRH compensation input is supplied"
+    formula: |
+      If all of the following are true:
+        - residencyStatus = nonresident
+        - no explicit paTaxableCompensation amount is supplied
+        - no Schedule NRH compensation section is supplied
+
+      Then:
+        - if the taxpayer's resident state is one of Pennsylvania's
+          compensation-reciprocity states (IN, MD, NJ, OH, VA, WV), default
+          PA-40 Line 1a compensation to 0 because the compensation is not
+          taxable to Pennsylvania
+        - otherwise sum the Pennsylvania-reported W-2 compensation amounts and
+          use that total as PA-40 Line 1a compensation
+
+      Pennsylvania-reported W-2 compensation for each W-2 equals:
+        - Box 16 state wages when the W-2 state code is PA and Box 16 is nonzero
+        - otherwise, when the W-2 state code is PA, federal Box 1 wages plus
+          PA-taxable elective deferrals reported in Box 12 codes D, E, F, G,
+          H, and S
+        - otherwise 0
+    notes: |
+      The PA Schedule NRH instructions say a nonresident employee's employer
+      should report PA gross-taxable compensation in the PA state box of Form
+      W-2, and the schedule is required only when the employer did not report
+      PA wages correctly or when unreimbursed employee business expenses must
+      be apportioned. The PA withholding guidance also says compensation paid
+      to a resident of a reciprocal-agreement state for services performed in
+      Pennsylvania is not subject to PA withholding when reciprocity is
+      claimed, so the supported engine keeps the reciprocal-state default at
+      zero taxable compensation even if a PA W-2 wage amount is present.
+    edgeCases:
+      - "A full-year nonresident resident of a nonreciprocal state defaults PA Line 1a compensation from PA W-2 wages when no explicit compensation input is supplied"
+      - "A full-year nonresident resident of a reciprocal-agreement state keeps default PA Line 1a compensation at $0 even when a PA W-2 wage amount exists"
+      - "Schedule NRH compensation input suppresses the W-2 fallback because NRH already determines the PA compensation amount"
+    testRef: "tests/engine/state/pa-nonresident-orchestrator.test.ts::PA nonresident orchestrator defaults nonreciprocal-state compensation from PA W-2 wages"
+
+  - line: "compute-pass-through-and-estate-trust-statements"
+    description: "Carry supported PA Schedule RK-1 / NRK-1 and PA Schedule J statement income into the Pennsylvania-taxable income classes"
+    formula: |
+      If PA-20S/PA-65 Schedule RK-1 / NRK-1 statements are present:
+        - compute the validated PA Schedule RK-1 / NRK-1 aggregation
+        - add totalBusinessIncome to direct PA-40 Line 4 business income
+        - add totalInterestIncome to direct PA-40 Line 2 interest income
+        - add totalDividendIncome to direct PA-40 Line 3 dividend income
+        - add totalNetGainOrLoss to direct PA-40 Line 5 net gain or loss
+        - add totalNetRentalIncome to direct PA-40 Line 6 rents, royalties,
+          patents, and copyrights
+        - add totalGamblingIncome to direct PA-40 Line 8 gambling and lottery winnings
+        - add totalEstateTrustIncome to PA-40 Line 7 estate or trust income
+
+      If PA Schedule J statements are present:
+        - compute the validated PA Schedule J total
+        - use Schedule J total estate or trust income plus any Schedule RK-1 /
+          NRK-1 estate or trust income as PA-40 Line 7 estate or trust income
+        - when no explicit nonresident withholding override is supplied,
+          add Schedule J nonresident withholding to any NRK-1 withholding for
+          PA-40 Line 17
+    notes: |
+      The 2025 PA-40 Schedule J instructions direct beneficiaries to enter the
+      positive income reported on PA-41 Schedules RK-1 and NRK-1 on PA-40 Line 7.
+      The PA Schedule RK-1 / NRK-1 aggregation already handles the Pennsylvania
+      line-class mapping, including the rule that NRK-1 statements do not create
+      Pennsylvania interest or dividend income.
+    testRef: "tests/engine/state/pa-nonresident-orchestrator.test.ts::PA part-year orchestrator carries PA statement income classes and withholding into the PA-40"
+
+  - line: "compute-part-year-resident-credit"
+    description: "Allow Schedule G-L only for part-year resident returns"
+    formula: |
+      If residencyStatus = part_year:
+        - compute Schedule G-L from the supplied other-state credit entries
+          using the current PA-40 Line 12 tax liability as the Pennsylvania cap
+        - carry Schedule G-L total credit to PA-40 Line 22
+
+      If residencyStatus = nonresident:
+        - Schedule G-L total credit is 0
+    notes: |
+      Nonresidents do not claim a resident credit. Part-year residents may
+      claim the credit only for supported resident-period income taxed by both
+      Pennsylvania and another jurisdiction, so the caller must supply the
+      already-allocated Schedule G-L entries.
+    edgeCases:
+      - "A nonresident return ignores supplied other-state credit entries and keeps Schedule G-L at $0"
+      - "A part-year return may carry a positive Schedule G-L credit when supported resident-period entries are supplied"
+    testRef: "tests/engine/state/pa-nonresident-orchestrator.test.ts::PA nonresident orchestrator ignores Schedule G-L entries for nonresident returns"
+
+  - line: "map-schedule-sp-filing-category"
+    description: "Map federal filing status to the PA Schedule SP married or unmarried table"
+    formula: |
+      Filing category for Schedule SP is:
+        - married filing jointly -> married
+        - married filing separately -> unmarried when either:
+          - the supported PA separated-status override is true; or
+          - taxpayer.livedWithSpouseAtAnyTimeDuringYear = false
+        - married filing separately -> married otherwise
+        - all other federal filing statuses -> unmarried
+    notes: |
+      The PA Schedule SP tables use only married versus unmarried categories.
+      The supported nonresident/part-year engine allows the caller to force the
+      separated-status path for married-filing-separately returns when the
+      validated federal filing-status shape does not fully express the PA
+      Schedule SP separated-spouse facts.
+    edgeCases:
+      - "Married filing separately with separated-status support uses the unmarried threshold table"
+      - "Married filing separately without separated-status support stays on the married table"
+    testRef: "tests/engine/state/pa-nonresident-orchestrator.test.ts::PA nonresident orchestrator maps married filing separately to the correct Schedule SP filing category"
+
+  - line: "compute-schedule-sp-additional-eligibility"
+    description: "Compute Schedule SP Tax Forgiveness for nonresidents and part-year residents using all-source eligibility income"
+    formula: |
+      Build Schedule SP using:
+        - PA taxable income from the first-pass PA-40 Line 9
+        - nontaxableIncome from the resolved PA nonresident/part-year input;
+          when no explicit nontaxableIncome is supplied, add supported
+          reciprocal-state nonresident W-2 compensation that is not taxable to
+          Pennsylvania so it still counts in Schedule SP eligibility income
+        - additionalEligibilityIncome from the resolved PA nonresident/part-year
+          input, plus spouseEligibilityIncome when the filing category is married
+        - filing category mapped from the taxpayer filing status and any
+          PA separated-status override
+        - dependent count determined under the existing PA Schedule SP child rules
+
+      Then:
+        - use Schedule SP tax forgiveness credit on PA-40 Line 21
+    notes: |
+      The 2025 PA-40 instructions say nonresidents and part-year residents may
+      claim Tax Forgiveness if otherwise eligible, but they must include all
+      eligibility income whether earned within or outside Pennsylvania. The PA
+      Personal Income Tax Guide's Tax Forgiveness chapter also says eligibility
+      income includes income earned while residing outside Pennsylvania that is
+      not taxable for Pennsylvania personal income tax purposes, including
+      compensation that Pennsylvania does not tax because the taxpayer is a
+      resident of a reciprocal-agreement state. The same 2025 PA-40
+      instructions also say that when one spouse is claimed as a dependent on
+      another person's federal income tax return, otherwise qualifying married
+      taxpayers must file separately, so the nonresident/part-year
+      orchestrator rejects a married-filing-jointly Schedule SP path when
+      either spouse-dependent flag is set.
+    edgeCases:
+      - "Married filing jointly is invalid for Schedule SP when either spouse is claimed as a dependent on another person's federal return"
+      - "Spouse eligibility income is included only when the mapped filing category is married"
+      - "Separated-status married-filing-separately returns exclude spouse-only eligibility income from Schedule SP"
+      - "A full-year nonresident resident of a reciprocal-agreement state still includes reciprocal-exempt PA compensation in Schedule SP eligibility income when no explicit nontaxableIncome override is supplied"
+      - "An explicit nontaxableIncome override of $0 suppresses the reciprocal-state default rather than falling back to PA W-2 compensation"
+    testRef: "tests/engine/state/pa-nonresident-orchestrator.test.ts::PA nonresident orchestrator defaults reciprocal-state PA wages into Schedule SP nontaxable income"
+
+  - line: "final-pa40-settlement"
+    description: "Settle the final PA-40 after nonresident or part-year credits, use tax, and payments are known"
+    formula: |
+      Compute a final PA-40 with:
+        - Lines 1 through 10 from the resolved direct Pennsylvania-taxable
+          class amounts plus any Schedule NRH-apportioned compensation,
+          unreimbursed expenses, and net profits
+        - Line 21 from Schedule SP
+        - Line 22 from Schedule G-L for part-year residents, otherwise 0
+        - Line 23 from supported direct otherCredits input, treated as the
+          already-allowed PA-40 Line 23 amount for this simplified slice
+        - Line 18a from supported direct refundableCredits input
+        - Line 25 from, in order:
+          - supported direct useTax input; otherwise
+          - supported useTaxWorksheet input computed through the validated
+            PA Use Tax Worksheet module using the first-pass PA-40 Line 9
+            taxable income; otherwise
+          - 0
+        - Lines 13 through 17 from Pennsylvania withholding and payment inputs
+        - Line 27 from supported direct penalty and interest inputs
+    notes: |
+      This slice reuses the validated PA-40 module for tax-rate, payment, and
+      settlement math so the nonresident/part-year flow keeps the same audit
+      trail semantics as the resident engine. The 2025 PA-40 instructions say
+      nonresidents and part-year residents use the same PA-40 form as
+      residents, so the same Line 25 use-tax worksheet path remains available
+      in this supported slice.
+    testRef: "tests/engine/state/pa-nonresident-orchestrator.test.ts::PA nonresident orchestrator computes use tax from the supported worksheet and preserves raw Line 25 override precedence"

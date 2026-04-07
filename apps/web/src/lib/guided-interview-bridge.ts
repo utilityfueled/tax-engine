@@ -1,0 +1,962 @@
+/**
+ * Bridge between guided interview section data and the tax engine.
+ *
+ * Converts GuidedFlowState → TaxYearInput. Pure functions — no React, no side
+ * effects.  The heavy preview computation (which pulls in the full tax engine
+ * + decimal.js) lives in guided-preview-compute.ts so it can be loaded
+ * on-demand via dynamic import without bloating the initial client bundle.
+ */
+
+import type {
+  AdjustmentData,
+  BrokerageEntryData,
+  CreditsData,
+  DeductionData,
+  DependentEntryData,
+  DividendEntryData,
+  EducationStudentData,
+  FilingStatus,
+  GuidedFlowState,
+  InterestEntryData,
+  NecEntryData,
+  OtherTaxesData,
+  PaymentData,
+  PersonalInfoData,
+  RentalPropertyEntryData,
+  RetirementEntryData,
+  ScheduleCExpenseData,
+  SocialSecurityData,
+  UnemploymentData,
+  W2SuggestedField,
+  W2EntryData,
+} from "./guided-interview-flow";
+
+// ── Filing-status mapping ───────────────────────────────────────────────────
+
+const engineFilingStatus: Record<FilingStatus, string> = {
+  single: "single",
+  mfj: "married_filing_jointly",
+  mfs: "married_filing_separately",
+  hoh: "head_of_household",
+  qss: "qualifying_surviving_spouse",
+};
+
+export function mapFilingStatus(
+  fs: FilingStatus,
+): "single" | "married_filing_jointly" | "married_filing_separately" | "head_of_household" | "qualifying_surviving_spouse" {
+  return engineFilingStatus[fs] as ReturnType<typeof mapFilingStatus>;
+}
+
+// ── Section-data → engine input converters ──────────────────────────────────
+
+function toDecimalString(value: string): string {
+  const trimmed = value.trim().replace(/,/g, "");
+  if (trimmed === "" || Number.isNaN(Number(trimmed))) return "0";
+  return trimmed;
+}
+
+function hasValue(value: string | undefined): boolean {
+  const n = Number((value ?? "").trim().replace(/,/g, ""));
+  return !Number.isNaN(n) && n !== 0;
+}
+
+function combineGivenNameWithMiddleInitial(
+  firstName: string | undefined,
+  middleName: string | undefined,
+) {
+  const first = firstName?.trim() ?? "";
+  const middle = middleName?.trim() ?? "";
+
+  if (!first) {
+    return "Taxpayer";
+  }
+
+  if (!middle) {
+    return first;
+  }
+
+  const middleInitial = middle.replace(/[^A-Za-z]/g, "").charAt(0).toUpperCase();
+  return middleInitial ? `${first} ${middleInitial}` : first;
+}
+
+function getConfirmedW2FieldValue(
+  entry: W2EntryData,
+  field: W2SuggestedField,
+): string {
+  return entry.aiSuggestedFields?.[field]?.status === "pending-confirmation"
+    ? ""
+    : entry[field];
+}
+
+function stripPendingW2Suggestions(entry: W2EntryData): W2EntryData {
+  return {
+    ...entry,
+    employerName: getConfirmedW2FieldValue(entry, "employerName"),
+    employerEin: getConfirmedW2FieldValue(entry, "employerEin"),
+    wages: getConfirmedW2FieldValue(entry, "wages"),
+    federalWithheld: getConfirmedW2FieldValue(entry, "federalWithheld"),
+    socialSecurityWages: getConfirmedW2FieldValue(entry, "socialSecurityWages"),
+    socialSecurityWithheld: getConfirmedW2FieldValue(entry, "socialSecurityWithheld"),
+    medicareWages: getConfirmedW2FieldValue(entry, "medicareWages"),
+    medicareWithheld: getConfirmedW2FieldValue(entry, "medicareWithheld"),
+    stateWages: getConfirmedW2FieldValue(entry, "stateWages"),
+    stateWithheld: getConfirmedW2FieldValue(entry, "stateWithheld"),
+  };
+}
+
+export function buildW2Inputs(
+  entries: W2EntryData[] | undefined,
+  defaultState?: string | null,
+) {
+  if (!entries || entries.length === 0) return [];
+  return entries
+    .map(stripPendingW2Suggestions)
+    .filter((e) => hasValue(e.wages) || hasValue(e.federalWithheld))
+    .map((e) => ({
+      employer: {
+        name: e.employerName || "Employer",
+        ein: e.employerEin || "00-0000000",
+      },
+      wages: toDecimalString(e.wages),
+      federalWithheld: toDecimalString(e.federalWithheld),
+      socialSecurityWages: toDecimalString(e.socialSecurityWages),
+      socialSecurityWithheld: toDecimalString(e.socialSecurityWithheld),
+      medicareWages: toDecimalString(e.medicareWages),
+      medicareWithheld: toDecimalString(e.medicareWithheld),
+      stateWages: toDecimalString(e.stateWages),
+      stateTaxWithheld: toDecimalString(e.stateWithheld),
+      state: defaultState?.trim().toUpperCase() || undefined,
+    }));
+}
+
+export function buildNecInputs(entries: NecEntryData[] | undefined) {
+  if (!entries || entries.length === 0) return [];
+  return entries
+    .filter((e) => hasValue(e.nonemployeeCompensation))
+    .map((e) => ({
+      payer: e.payerName || "Client",
+      payerTin: e.payerTin || undefined,
+      nonemployeeCompensation: toDecimalString(e.nonemployeeCompensation),
+      federalWithheld: toDecimalString(e.federalWithheld),
+      stateWithheld: "0",
+    }));
+}
+
+export function buildScheduleCInput(
+  necEntries: NecEntryData[] | undefined,
+  manualGrossReceipts: string | undefined,
+  expenses: ScheduleCExpenseData | undefined,
+) {
+  const necGross = (necEntries ?? []).reduce((sum, e) => {
+    const val = Number(e.nonemployeeCompensation?.trim().replace(/,/g, ""));
+    return sum + (Number.isNaN(val) ? 0 : val);
+  }, 0);
+  const manualGross = Number(manualGrossReceipts?.trim().replace(/,/g, "") ?? "");
+  const totalGross = necGross + (Number.isNaN(manualGross) ? 0 : manualGross);
+
+  if (totalGross === 0 && !expenses) return undefined;
+
+  return {
+    grossReceipts: String(totalGross),
+    expenses: expenses
+      ? {
+          advertising: toDecimalString(expenses.advertising),
+          carAndTruck: toDecimalString(expenses.carAndTruck),
+          insurance: toDecimalString(expenses.insurance),
+          officeExpense: toDecimalString(expenses.officeExpense),
+          supplies: toDecimalString(expenses.supplies),
+          travel: toDecimalString(expenses.travel),
+          meals: toDecimalString(expenses.meals),
+          utilities: toDecimalString(expenses.utilities),
+          otherExpenses: toDecimalString(expenses.otherExpenses),
+        }
+      : undefined,
+  };
+}
+
+// ── Investment income converters ──────────────────────────────────────────
+
+export function buildInterestInputs(entries: InterestEntryData[] | undefined) {
+  if (!entries || entries.length === 0) return [];
+  return entries
+    .filter((e) => hasValue(e.interestIncome))
+    .map((e) => ({
+      payer: e.payer || "Financial Institution",
+      interestIncome: toDecimalString(e.interestIncome),
+      federalWithheld: toDecimalString(e.federalWithheld),
+    }));
+}
+
+export function buildDividendInputs(entries: DividendEntryData[] | undefined) {
+  if (!entries || entries.length === 0) return [];
+  return entries
+    .filter((e) => hasValue(e.ordinaryDividends) || hasValue(e.capitalGainDistributions))
+    .map((e) => ({
+      payer: e.payer || "Brokerage",
+      ordinaryDividends: toDecimalString(e.ordinaryDividends),
+      qualifiedDividends: toDecimalString(e.qualifiedDividends),
+      totalCapitalGainDistributions: toDecimalString(e.capitalGainDistributions),
+      federalWithheld: toDecimalString(e.federalWithheld),
+      section199ADividends: toDecimalString(e.section199ADividends),
+      foreignTaxPaid: toDecimalString(e.foreignTaxPaid),
+    }));
+}
+
+export function buildBrokerageInputs(entries: BrokerageEntryData[] | undefined) {
+  if (!entries || entries.length === 0) return [];
+  return entries
+    .filter((e) => e.transactions.some((t) => hasValue(t.proceeds) || hasValue(t.costBasis)))
+    .map((e) => ({
+      broker: e.broker || "Broker",
+      transactions: e.transactions
+        .filter((t) => hasValue(t.proceeds) || hasValue(t.costBasis))
+        .map((t) => ({
+          description: t.description || "Securities",
+          dateAcquired: t.dateAcquired || "VARIOUS",
+          dateSold: t.dateSold || new Date().toISOString().slice(0, 10),
+          proceeds: toDecimalString(t.proceeds),
+          costBasis: toDecimalString(t.costBasis),
+          holdingPeriod: t.holdingPeriod,
+          basisReportedToIRS: t.basisReportedToIRS,
+          digitalAsset: t.digitalAsset,
+        })),
+    }));
+}
+
+export function buildDependents(
+  countStr: string | undefined,
+  detailedDependents?: DependentEntryData[],
+) {
+  // Use detailed dependent data when available
+  if (detailedDependents && detailedDependents.length > 0) {
+    return detailedDependents
+      .filter((d) => d.firstName.trim() !== "" || d.lastName.trim() !== "")
+      .map((d) => ({
+        firstName: d.firstName || "Dependent",
+        lastName: d.lastName || "",
+        ssn: d.ssn || "000-00-0000",
+        dateOfBirth: d.dateOfBirth || "2015-01-01",
+        relationship: d.relationship || "child",
+        monthsLivedWithYou: Number(d.monthsLivedWithYou) || 12,
+        qualifiesForCTC: d.qualifiesForCTC,
+        qualifiesForODC: d.qualifiesForODC,
+        qualifiesForEIC: d.qualifiesForEIC,
+      }));
+  }
+
+  // Fallback: generate placeholder dependents from count
+  const count = Number(countStr ?? "0");
+  if (Number.isNaN(count) || count <= 0) return [];
+  return Array.from({ length: Math.min(count, 20) }, (_, i) => ({
+    firstName: `Dependent`,
+    lastName: `${i + 1}`,
+    ssn: "000-00-0000",
+    dateOfBirth: "2015-01-01",
+    relationship: "child" as const,
+    monthsLivedWithYou: 12,
+    qualifiesForCTC: true,
+    qualifiesForODC: false,
+    qualifiesForEIC: false,
+  }));
+}
+
+// ── Schedule A (itemized deductions) converter ──────────────────────────────
+
+export function buildScheduleAInput(deductionData: DeductionData | undefined) {
+  if (!deductionData || deductionData.method !== "itemized") return undefined;
+
+  const medicalExpenses = toDecimalString(deductionData.medicalExpenses);
+  const stateLocalTaxes = toDecimalString(deductionData.stateLocalTaxes);
+  const realEstateTaxes = toDecimalString(deductionData.realEstateTaxes);
+  const personalPropertyTaxes = String(
+    Number(stateLocalTaxes) + Number(realEstateTaxes)
+  );
+  const investmentInterestExpense = toDecimalString(deductionData.otherItemized);
+
+  if (
+    medicalExpenses === "0" &&
+    personalPropertyTaxes === "0" &&
+    investmentInterestExpense === "0"
+  ) {
+    return undefined;
+  }
+
+  return {
+    medicalExpenses,
+    personalPropertyTaxes,
+    investmentInterestExpense,
+  };
+}
+
+// ── Mortgage interest (Form 1098) converter ──────────────────────────────────
+
+export function buildForm1098Inputs(deductionData: DeductionData | undefined) {
+  if (!deductionData || deductionData.method !== "itemized") return [];
+  if (!hasValue(deductionData.mortgageInterest)) return [];
+
+  return [{
+    lender: "Mortgage Lender",
+    mortgageInterestReceived: toDecimalString(deductionData.mortgageInterest),
+    outstandingMortgagePrincipal: "250000",
+  }];
+}
+
+// ── Charitable donations converter ──────────────────────────────────────────
+
+export function buildDonationsInput(deductionData: DeductionData | undefined) {
+  if (!deductionData || deductionData.method !== "itemized") return [];
+  if (!hasValue(deductionData.charitableContributions)) return [];
+
+  return [{
+    organization: "Charitable Organization",
+    type: "cash" as const,
+    amount: toDecimalString(deductionData.charitableContributions),
+    dateOfDonation: "2025-12-31",
+  }];
+}
+
+// ── Adjustments converter ───────────────────────────────────────────────────
+
+export function buildAdjustmentsInput(adjustmentData: AdjustmentData | undefined) {
+  if (!adjustmentData) return undefined;
+
+  const hsaDeduction = toDecimalString(adjustmentData.hsaDeduction);
+  const studentLoanInterest = toDecimalString(adjustmentData.studentLoanInterest);
+  const selfEmployedHealthInsurance = toDecimalString(adjustmentData.selfEmployedHealthInsurance);
+  const educatorExpenses = toDecimalString(adjustmentData.educatorExpenses);
+
+  if (
+    hsaDeduction === "0" &&
+    studentLoanInterest === "0" &&
+    selfEmployedHealthInsurance === "0" &&
+    educatorExpenses === "0"
+  ) {
+    return undefined;
+  }
+
+  return {
+    hsaDeduction,
+    studentLoanInterest,
+    selfEmployedHealthInsurance,
+    primaryEducatorExpenses: educatorExpenses,
+  };
+}
+
+// ── Estimated payments converter ────────────────────────────────────────────
+
+export function buildEstimatedPaymentsInput(paymentData: PaymentData | undefined) {
+  if (!paymentData) return [];
+
+  return paymentData.estimatedPayments
+    .filter((entry) => hasValue(entry.amount))
+    .map((entry) => ({
+      date: entry.date || "2025-04-15",
+      amount: toDecimalString(entry.amount),
+      type: "federal" as const,
+    }));
+}
+
+// ── Retirement income (1099-R) converter ──────────────────────────────────
+
+export function buildRetirementInputs(entries: RetirementEntryData[] | undefined) {
+  if (!entries || entries.length === 0) return [];
+  return entries
+    .filter((e) => hasValue(e.grossDistribution) || hasValue(e.taxableAmount))
+    .map((e) => ({
+      payer: e.payer || "Retirement Plan",
+      grossDistribution: toDecimalString(e.grossDistribution),
+      taxableAmount: toDecimalString(e.taxableAmount),
+      federalWithheld: toDecimalString(e.federalWithheld),
+      isIraSepSimple: e.isIraSepSimple,
+      distributionCode: e.distributionCode || "7",
+    }));
+}
+
+// ── Social Security (SSA-1099) converter ─────────────────────────────────
+
+export function buildSocialSecurityInputs(data: SocialSecurityData | undefined) {
+  if (!data || !hasValue(data.netBenefits)) return [];
+  return [{
+    netBenefits: toDecimalString(data.netBenefits),
+    federalWithheld: toDecimalString(data.federalWithheld),
+  }];
+}
+
+// ── Unemployment (1099-G) converter ──────────────────────────────────────
+
+export function buildUnemploymentInputs(data: UnemploymentData | undefined) {
+  if (!data || !hasValue(data.compensation)) return [];
+  return [{
+    payer: "State Unemployment",
+    unemploymentCompensation: toDecimalString(data.compensation),
+    federalWithheld: toDecimalString(data.federalWithheld),
+  }];
+}
+
+// ── Rental property (Schedule E) converter ─────────────────────────────────
+
+export function buildRentalPropertyInputs(entries: RentalPropertyEntryData[] | undefined) {
+  if (!entries || entries.length === 0) return [];
+  return entries
+    .filter((e) => hasValue(e.rents))
+    .map((e) => ({
+      description: e.description || "Rental Property",
+      propertyType: e.propertyType,
+      rents: toDecimalString(e.rents),
+      mortgageInterest: toDecimalString(e.mortgageInterest),
+      taxes: toDecimalString(e.taxes),
+      insurance: toDecimalString(e.insurance),
+      repairs: toDecimalString(e.repairs),
+      utilities: toDecimalString(e.utilities),
+      depreciation: toDecimalString(e.depreciation),
+      otherExpenses: toDecimalString(e.otherExpenses),
+    }));
+}
+
+// ── Credits converters ────────────────────────────────────────────────────
+
+export function buildDependentCareInput(creditsData: CreditsData | undefined) {
+  if (!creditsData) return undefined;
+  const { dependentCare } = creditsData;
+  if (!hasValue(dependentCare.expenses)) return undefined;
+
+  const qualifyingIndividuals = Number.parseInt(dependentCare.qualifyingIndividuals, 10);
+  if (Number.isNaN(qualifyingIndividuals) || qualifyingIndividuals < 1) return undefined;
+
+  return {
+    expenses: toDecimalString(dependentCare.expenses),
+    qualifyingIndividuals: qualifyingIndividuals >= 2 ? 2 : 1,
+  };
+}
+
+export function buildEducationInput(creditsData: CreditsData | undefined) {
+  if (!creditsData) return undefined;
+  const { education } = creditsData;
+
+  const filledStudents = education.aocStudents.filter(
+    (s: EducationStudentData) => hasValue(s.qualifiedExpenses)
+  );
+  const hasLlc = hasValue(education.llcExpenses);
+
+  if (filledStudents.length === 0 && !hasLlc) return undefined;
+
+  return {
+    aocStudents: filledStudents.map((s: EducationStudentData) => ({
+      name: s.name || "Student",
+      qualifiedExpenses: toDecimalString(s.qualifiedExpenses),
+      priorYearsClaimed: Number(s.priorYearsClaimed) || 0,
+    })),
+    llcExpenses: hasLlc ? toDecimalString(education.llcExpenses) : undefined,
+  };
+}
+
+export function buildEnergyCreditsInput(creditsData: CreditsData | undefined) {
+  if (!creditsData) return undefined;
+  const { energy } = creditsData;
+
+  const solarElectricCost = toDecimalString(energy.solarElectricCost);
+  const solarWaterHeatingCost = toDecimalString(energy.solarWaterHeatingCost);
+  const insulationCost = toDecimalString(energy.insulationCost);
+  const exteriorDoorsWindowsCost = toDecimalString(energy.exteriorDoorsWindowsCost);
+  const roofCost = toDecimalString(energy.roofCost);
+  const energyEfficientHvacCost = toDecimalString(energy.energyEfficientHvacCost);
+  const waterHeaterHeatPumpCost = toDecimalString(energy.waterHeaterHeatPumpCost);
+
+  if (
+    solarElectricCost === "0" &&
+    solarWaterHeatingCost === "0" &&
+    insulationCost === "0" &&
+    exteriorDoorsWindowsCost === "0" &&
+    roofCost === "0" &&
+    energyEfficientHvacCost === "0" &&
+    waterHeaterHeatPumpCost === "0"
+  ) {
+    return undefined;
+  }
+
+  // Map guided interview fields to engine schema.
+  // The engine's Part II lumps doors/windows/roof into insulationCost and
+  // HVAC + water-heater/heat-pump into energyPropertyCost.
+  const part2InsulationCost = String(
+    Number(insulationCost) + Number(exteriorDoorsWindowsCost) + Number(roofCost)
+  );
+  const part2EnergyPropertyCost = String(
+    Number(energyEfficientHvacCost) + Number(waterHeaterHeatPumpCost)
+  );
+
+  return {
+    solarElectricCost: solarElectricCost !== "0" ? solarElectricCost : undefined,
+    solarWaterHeatingCost: solarWaterHeatingCost !== "0" ? solarWaterHeatingCost : undefined,
+    insulationCost: part2InsulationCost !== "0" ? part2InsulationCost : undefined,
+    energyPropertyCost: part2EnergyPropertyCost !== "0" ? part2EnergyPropertyCost : undefined,
+  };
+}
+
+// ── Household employment tax (Schedule H) converter ─────────────────────────
+
+export function buildScheduleHInput(otherTaxesData: OtherTaxesData | undefined) {
+  if (!otherTaxesData) return undefined;
+  if (!hasValue(otherTaxesData.householdEmploymentWages)) return undefined;
+
+  const wages = toDecimalString(otherTaxesData.householdEmploymentWages);
+  if (wages === "0") return undefined;
+
+  return {
+    employees: [
+      {
+        name: "Household Employee",
+        cashWages: wages,
+      },
+    ],
+  };
+}
+
+// ── Main builder ────────────────────────────────────────────────────────────
+
+export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
+  const { segmentation, sectionData } = state;
+
+  if (!segmentation.filingStatus) return null;
+
+  const personalInfo = sectionData["personal-info"] as PersonalInfoData | undefined;
+  const w2Data = sectionData["income-w2"] as { entries: W2EntryData[] } | undefined;
+  const seData = sectionData["income-self-employment"] as
+    | { necEntries: NecEntryData[]; manualGrossReceipts: string; expenses: ScheduleCExpenseData }
+    | undefined;
+  const investData = sectionData["income-investments"] as
+    | { interestEntries: InterestEntryData[]; dividendEntries: DividendEntryData[]; brokerageEntries: BrokerageEntryData[] }
+    | undefined;
+  const retirementData = sectionData["income-retirement"] as { entries: RetirementEntryData[] } | undefined;
+  const rentalData = sectionData["income-rental"] as { entries: RentalPropertyEntryData[] } | undefined;
+  const socialSecurityData = sectionData["income-social-security"] as SocialSecurityData | undefined;
+  const unemploymentData = sectionData["income-unemployment"] as UnemploymentData | undefined;
+  const deductionData = sectionData["deductions"] as DeductionData | undefined;
+  const adjustmentData = sectionData["adjustments"] as AdjustmentData | undefined;
+  const creditsData = sectionData["credits"] as CreditsData | undefined;
+  const otherTaxesData = sectionData["other-taxes"] as OtherTaxesData | undefined;
+  const paymentData = sectionData["payments"] as PaymentData | undefined;
+
+  const stateCode = personalInfo?.state || segmentation.stateCode || null;
+  const w2s = buildW2Inputs(w2Data?.entries, stateCode);
+  const necs = buildNecInputs(seData?.necEntries);
+  const scheduleC = buildScheduleCInput(seData?.necEntries, seData?.manualGrossReceipts, seData?.expenses);
+  const form1099Int = buildInterestInputs(investData?.interestEntries);
+  const form1099Div = buildDividendInputs(investData?.dividendEntries);
+  const form1099B = buildBrokerageInputs(investData?.brokerageEntries);
+  const form1099R = buildRetirementInputs(retirementData?.entries);
+  const rentalProperties = buildRentalPropertyInputs(rentalData?.entries);
+  const formSSA1099 = buildSocialSecurityInputs(socialSecurityData);
+  const form1099G = buildUnemploymentInputs(unemploymentData);
+  const scheduleA = buildScheduleAInput(deductionData);
+  const form1098 = buildForm1098Inputs(deductionData);
+  const donations = buildDonationsInput(deductionData);
+  const adjustments = buildAdjustmentsInput(adjustmentData);
+  const dependentCare = buildDependentCareInput(creditsData);
+  const educationExpenses = buildEducationInput(creditsData);
+  const energyCredits = buildEnergyCreditsInput(creditsData);
+  const scheduleH = buildScheduleHInput(otherTaxesData);
+  const estimatedPayments = buildEstimatedPaymentsInput(paymentData);
+
+  return {
+    taxpayer: {
+      taxYear: 2025,
+      filingStatus: mapFilingStatus(segmentation.filingStatus),
+      primary: {
+        firstName: combineGivenNameWithMiddleInitial(
+          personalInfo?.firstName,
+          personalInfo?.middleName
+        ),
+        lastName: personalInfo?.lastName || "Preview",
+        ssn: personalInfo?.ssn || "000-00-0000",
+        dateOfBirth: "1990-01-01",
+      },
+      address: {
+        street: personalInfo?.addressLine1 || "123 Main St",
+        city: personalInfo?.city || "Anytown",
+        state: stateCode || "TX",
+        zip: personalInfo?.zip || "00000",
+      },
+      dependents: buildDependents(personalInfo?.dependentCount, personalInfo?.dependents),
+    },
+    w2s,
+    form1099Nec: necs,
+    scheduleC: scheduleC ?? undefined,
+    form1099Int,
+    form1099Div,
+    form1099B,
+    form1099R,
+    formSSA1099,
+    form1099G,
+    rentalProperties,
+    scheduleA,
+    form1098,
+    donations,
+    dependentCare,
+    educationExpenses,
+    energyCredits,
+    scheduleH,
+    adjustments: adjustments
+      ? {
+          ...adjustments,
+          estimatedTaxPayments: estimatedPayments,
+        }
+      : estimatedPayments.length > 0
+        ? { estimatedTaxPayments: estimatedPayments }
+        : undefined,
+  };
+}
+
+// ── Preview metrics ─────────────────────────────────────────────────────────
+
+export interface StatePreviewMetrics {
+  stateCode: string;
+  stateName: string;
+  stateTax: string;
+  stateRefund: string;
+  stateAmountOwed: string;
+  stateWithholding: string;
+}
+
+export interface GuidedPreviewMetrics {
+  totalIncome: string;
+  agi: string;
+  taxableIncome: string;
+  totalTax: string;
+  totalPayments: string;
+  refund: string;
+  amountOwed: string;
+  state: StatePreviewMetrics | null;
+}
+
+// ── Guided → workspace fact sync ─────────────────────────────────────────
+
+/**
+ * Maps guided section data → seeded fact IDs and answer text.
+ * Returns only facts that have meaningful data entered.
+ */
+export function buildGuidedFactAnswers(
+  state: GuidedFlowState,
+): { factId: string; answerText: string }[] {
+  const answers: { factId: string; answerText: string }[] = [];
+
+  // W-2 wages → "wages" and "withholding" facts
+  const w2Data = state.sectionData["income-w2"] as { entries: W2EntryData[] } | undefined;
+  if (w2Data?.entries) {
+    const filled = w2Data.entries
+      .map(stripPendingW2Suggestions)
+      .filter((e) => hasValue(e.wages) || hasValue(e.federalWithheld));
+    if (filled.length > 0) {
+      const totalWages = filled.reduce((sum, e) => sum + numVal(e.wages), 0);
+      const totalWithheld = filled.reduce((sum, e) => sum + numVal(e.federalWithheld), 0);
+      answers.push({
+        factId: "wages",
+        answerText: `${filled.length} W-2(s) confirmed. Total wages: $${fmtNum(totalWages)}.`,
+      });
+      answers.push({
+        factId: "withholding",
+        answerText: `Federal withholding from ${filled.length} W-2(s): $${fmtNum(totalWithheld)}.`,
+      });
+    }
+  }
+
+  // 1099-NEC → "nonemployee-compensation" and "schedule-c-expense-review"
+  const seData = state.sectionData["income-self-employment"] as
+    | { necEntries: NecEntryData[]; manualGrossReceipts: string; expenses: ScheduleCExpenseData }
+    | undefined;
+  if (seData) {
+    const filled = seData.necEntries.filter((e) => hasValue(e.nonemployeeCompensation));
+    const necTotal = filled.reduce((sum, e) => sum + numVal(e.nonemployeeCompensation), 0);
+    const manualGross = numVal(seData.manualGrossReceipts);
+
+    if (filled.length > 0 || manualGross > 0) {
+      const summaryParts: string[] = [];
+
+      if (filled.length > 0) {
+        summaryParts.push(`${filled.length} 1099-NEC(s) confirmed: $${fmtNum(necTotal)}`);
+      }
+
+      if (manualGross > 0) {
+        summaryParts.push(`manual Schedule C gross receipts: $${fmtNum(manualGross)}`);
+      }
+
+      answers.push({
+        factId: "nonemployee-compensation",
+        answerText: `${summaryParts.join("; ")}.`,
+      });
+      answers.push({
+        factId: "schedule-c-expense-review",
+        answerText: "Schedule C expenses entered via guided interview.",
+      });
+    } else if (Object.values(seData.expenses).some((value) => hasValue(value))) {
+      answers.push({
+        factId: "schedule-c-expense-review",
+        answerText: "Schedule C expenses entered via guided interview.",
+      });
+    }
+  }
+
+  // Interest → "taxable-interest"
+  const investData = state.sectionData["income-investments"] as
+    | { interestEntries: InterestEntryData[]; dividendEntries: DividendEntryData[]; brokerageEntries: BrokerageEntryData[] }
+    | undefined;
+  if (investData?.interestEntries) {
+    const filled = investData.interestEntries.filter((e) => hasValue(e.interestIncome));
+    if (filled.length > 0) {
+      const total = filled.reduce((sum, e) => sum + numVal(e.interestIncome), 0);
+      answers.push({
+        factId: "taxable-interest",
+        answerText: `Taxable interest confirmed: $${fmtNum(total)}.`,
+      });
+    }
+  }
+
+  // Dividends → "ordinary-dividends", "qualified-dividends", "capital-gain-distributions"
+  if (investData?.dividendEntries) {
+    const filled = investData.dividendEntries.filter(
+      (e) => hasValue(e.ordinaryDividends) || hasValue(e.capitalGainDistributions),
+    );
+    if (filled.length > 0) {
+      const totalOrd = filled.reduce((sum, e) => sum + numVal(e.ordinaryDividends), 0);
+      const totalQual = filled.reduce((sum, e) => sum + numVal(e.qualifiedDividends), 0);
+      const totalCG = filled.reduce((sum, e) => sum + numVal(e.capitalGainDistributions), 0);
+      answers.push({
+        factId: "ordinary-dividends",
+        answerText: `Ordinary dividends confirmed: $${fmtNum(totalOrd)}.`,
+      });
+      if (totalQual > 0) {
+        answers.push({
+          factId: "qualified-dividends",
+          answerText: `Qualified dividends confirmed: $${fmtNum(totalQual)}.`,
+        });
+      }
+      if (totalCG > 0) {
+        answers.push({
+          factId: "capital-gain-distributions",
+          answerText: `Capital gain distributions confirmed: $${fmtNum(totalCG)}.`,
+        });
+      }
+    }
+  }
+
+  // Brokerage → "broker-proceeds" and "cost-basis-review"
+  if (investData?.brokerageEntries) {
+    const filled = investData.brokerageEntries.filter((e) =>
+      e.transactions.some((t) => hasValue(t.proceeds) || hasValue(t.costBasis)),
+    );
+    if (filled.length > 0) {
+      const totalProceeds = filled.reduce(
+        (sum, b) => sum + b.transactions.reduce((tSum, t) => tSum + numVal(t.proceeds), 0),
+        0,
+      );
+      answers.push({
+        factId: "broker-proceeds",
+        answerText: `Broker proceeds confirmed: $${fmtNum(totalProceeds)}.`,
+      });
+      answers.push({
+        factId: "cost-basis-review",
+        answerText: "Cost basis and holding periods entered via guided interview.",
+      });
+    }
+  }
+
+  // Retirement → "retirement-distribution-review"
+  const retData = state.sectionData["income-retirement"] as { entries: RetirementEntryData[] } | undefined;
+  if (retData?.entries) {
+    const filled = retData.entries.filter((e) => hasValue(e.grossDistribution) || hasValue(e.taxableAmount));
+    if (filled.length > 0) {
+      const totalTaxable = filled.reduce((sum, e) => sum + numVal(e.taxableAmount), 0);
+      answers.push({
+        factId: "retirement-distribution-review",
+        answerText: `${filled.length} 1099-R(s) confirmed. Taxable: $${fmtNum(totalTaxable)}.`,
+      });
+    }
+  }
+
+  // Social Security → "social-security-benefits-review"
+  const ssData = state.sectionData["income-social-security"] as SocialSecurityData | undefined;
+  if (ssData && hasValue(ssData.netBenefits)) {
+    answers.push({
+      factId: "social-security-benefits-review",
+      answerText: `SSA-1099 confirmed. Net benefits: $${fmtNum(numVal(ssData.netBenefits))}.`,
+    });
+  }
+
+  // Unemployment → "government-payments-review"
+  const unemplData = state.sectionData["income-unemployment"] as UnemploymentData | undefined;
+  if (unemplData && hasValue(unemplData.compensation)) {
+    answers.push({
+      factId: "government-payments-review",
+      answerText: `1099-G confirmed. Unemployment: $${fmtNum(numVal(unemplData.compensation))}.`,
+    });
+  }
+
+  return answers;
+}
+
+function numVal(s: string | undefined): number {
+  const n = Number((s ?? "").trim().replace(/,/g, ""));
+  return Number.isNaN(n) ? 0 : n;
+}
+
+function fmtNum(n: number): string {
+  return n.toLocaleString("en-US", { maximumFractionDigits: 0 });
+}
+
+/**
+ * Build synthetic WorkspaceDocumentRecords from guided interview data.
+ * These represent the user-entered data as if they had uploaded documents.
+ */
+export function buildGuidedSyntheticDocuments(
+  state: GuidedFlowState,
+): import("@tax-engine/contracts").WorkspaceDocumentRecord[] {
+  type DocRecord = import("@tax-engine/contracts").WorkspaceDocumentRecord;
+  const docs: DocRecord[] = [];
+  const now = new Date().toISOString();
+
+  const w2Data = state.sectionData["income-w2"] as { entries: W2EntryData[] } | undefined;
+  if (w2Data?.entries?.map(stripPendingW2Suggestions).some((e) => hasValue(e.wages) || hasValue(e.federalWithheld))) {
+    docs.push({
+      id: "guided:w2",
+      name: "Guided Interview — W-2",
+      size: 0,
+      uploadedAt: now,
+      kind: "w2",
+      coverage: "supported",
+      label: "W-2 (guided interview)",
+      notes: "Entered via guided interview.",
+      matchedFixtureId: null,
+      seededFactIds: ["wages", "withholding"],
+    });
+  }
+
+  const seData = state.sectionData["income-self-employment"] as
+    | { necEntries: NecEntryData[]; manualGrossReceipts: string; expenses: ScheduleCExpenseData }
+    | undefined;
+  if (seData?.necEntries?.some((e) => hasValue(e.nonemployeeCompensation))) {
+    docs.push({
+      id: "guided:1099-nec",
+      name: "Guided Interview — 1099-NEC",
+      size: 0,
+      uploadedAt: now,
+      kind: "1099-nec",
+      coverage: "supported",
+      label: "1099-NEC (guided interview)",
+      notes: "Entered via guided interview.",
+      matchedFixtureId: null,
+      seededFactIds: ["nonemployee-compensation", "schedule-c-expense-review"],
+    });
+  }
+  if (seData && (hasValue(seData.manualGrossReceipts) || Object.values(seData.expenses).some((value) => hasValue(value)))) {
+    docs.push({
+      id: "guided:schedule-c",
+      name: "Guided Interview — Schedule C",
+      size: 0,
+      uploadedAt: now,
+      kind: "schedule-c-support",
+      coverage: "supported",
+      label: "Schedule C (guided interview)",
+      notes: "Manual Schedule C gross receipts and expenses entered via guided interview.",
+      matchedFixtureId: null,
+      seededFactIds: ["nonemployee-compensation", "schedule-c-expense-review"],
+    });
+  }
+
+  const investData = state.sectionData["income-investments"] as
+    | { interestEntries: InterestEntryData[]; dividendEntries: DividendEntryData[]; brokerageEntries: BrokerageEntryData[] }
+    | undefined;
+
+  if (investData?.interestEntries?.some((e) => hasValue(e.interestIncome))) {
+    docs.push({
+      id: "guided:1099-int",
+      name: "Guided Interview — 1099-INT",
+      size: 0,
+      uploadedAt: now,
+      kind: "1099-int",
+      coverage: "supported",
+      label: "1099-INT (guided interview)",
+      notes: "Entered via guided interview.",
+      matchedFixtureId: null,
+      seededFactIds: ["taxable-interest"],
+    });
+  }
+
+  if (investData?.dividendEntries?.some((e) => hasValue(e.ordinaryDividends) || hasValue(e.capitalGainDistributions))) {
+    docs.push({
+      id: "guided:1099-div",
+      name: "Guided Interview — 1099-DIV",
+      size: 0,
+      uploadedAt: now,
+      kind: "1099-div",
+      coverage: "supported",
+      label: "1099-DIV (guided interview)",
+      notes: "Entered via guided interview.",
+      matchedFixtureId: null,
+      seededFactIds: ["ordinary-dividends", "qualified-dividends", "capital-gain-distributions"],
+    });
+  }
+
+  if (investData?.brokerageEntries?.some((e) => e.transactions.some((t) => hasValue(t.proceeds) || hasValue(t.costBasis)))) {
+    docs.push({
+      id: "guided:1099-b",
+      name: "Guided Interview — 1099-B",
+      size: 0,
+      uploadedAt: now,
+      kind: "1099-b",
+      coverage: "supported",
+      label: "1099-B (guided interview)",
+      notes: "Entered via guided interview.",
+      matchedFixtureId: null,
+      seededFactIds: ["broker-proceeds", "cost-basis-review"],
+    });
+  }
+
+  const retData = state.sectionData["income-retirement"] as { entries: RetirementEntryData[] } | undefined;
+  if (retData?.entries?.some((e) => hasValue(e.grossDistribution) || hasValue(e.taxableAmount))) {
+    docs.push({
+      id: "guided:1099-r",
+      name: "Guided Interview — 1099-R",
+      size: 0,
+      uploadedAt: now,
+      kind: "1099-r",
+      coverage: "supported",
+      label: "1099-R (guided interview)",
+      notes: "Entered via guided interview.",
+      matchedFixtureId: null,
+      seededFactIds: ["retirement-distribution-review"],
+    });
+  }
+
+  const ssData = state.sectionData["income-social-security"] as SocialSecurityData | undefined;
+  if (ssData && hasValue(ssData.netBenefits)) {
+    docs.push({
+      id: "guided:ssa-1099",
+      name: "Guided Interview — SSA-1099",
+      size: 0,
+      uploadedAt: now,
+      kind: "ssa-1099",
+      coverage: "supported",
+      label: "SSA-1099 (guided interview)",
+      notes: "Entered via guided interview.",
+      matchedFixtureId: null,
+      seededFactIds: ["social-security-benefits-review"],
+    });
+  }
+
+  const unemplData = state.sectionData["income-unemployment"] as UnemploymentData | undefined;
+  if (unemplData && hasValue(unemplData.compensation)) {
+    docs.push({
+      id: "guided:1099-g",
+      name: "Guided Interview — 1099-G",
+      size: 0,
+      uploadedAt: now,
+      kind: "1099-g",
+      coverage: "supported",
+      label: "1099-G (guided interview)",
+      notes: "Entered via guided interview.",
+      matchedFixtureId: null,
+      seededFactIds: ["government-payments-review"],
+    });
+  }
+
+  return docs;
+}

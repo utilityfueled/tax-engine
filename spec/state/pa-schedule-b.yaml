@@ -1,0 +1,181 @@
+form: "PA-Schedule-B"
+fullName: "Pennsylvania Schedule B — Dividend Income"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40b.pdf"
+
+notes: |
+  PA Schedule B computes PA-taxable dividend income that flows to PA-40 Line 3.
+  For the supported resident slice, the engine models the printed 2024 and 2025
+  line structure using validated inputs already available in the tax engine:
+
+    - federal taxable dividend income reported on the return
+    - federal Schedule K-1 dividends removed from the federal subtotal and then
+      added back using Pennsylvania pass-through classifications
+    - federal Form 1099-DIV Box 12 exempt-interest dividends that Pennsylvania
+      taxes unless they are attributable to Pennsylvania, its political
+      subdivisions, or direct U.S. government obligations
+    - capital gains distributions reported on Form 1099-DIV Box 2a
+    - manual increase and decrease adjustments for line items that cannot yet
+      be derived from normalized inputs
+    - optional current-year foreign repatriation cash receipts on Line 9c
+
+  The paper form uses whole dollars. The engine rounds each line input and
+  adjustment amount to the nearest dollar, preserves the printed negative Line 6
+  subtotal, and floors the final Line 12 at zero.
+
+packetRules:
+  packetBehavior: "reference-summary-pdf"
+  includeWhen:
+    - "A Pennsylvania resident return packet is being assembled and the resident orchestrator computes Schedule B"
+    - "The official 2025 Pennsylvania dividend-income filing trigger is met: at least one amount appears on Schedule B Lines 2 through 11, excluding Line 6"
+  suppressWhen:
+    - "No Pennsylvania resident return packet is being assembled"
+    - "Schedule B exists only as a simple resident dividend computation with no amounts on Lines 2 through 11 except the derived Line 6 subtotal"
+  notes: |
+    The 2025 PA-40 Schedule B filing instructions on the official form say the
+    schedule is not required when the taxpayer's PA-taxable dividend and
+    capital gains distributions income matches the federal-return amount and
+    there are no amounts on Lines 2 through 11 other than the Line 6 subtotal.
+    Until an official PA-40 Schedule B filler exists, the packet path emits
+    `pa-schedule-b-reference.pdf` as a reference summary only. Packet
+    disclosures must therefore keep Pennsylvania packet completeness partial
+    whenever this reference summary is attached.
+
+businessRuleValidation:
+  - rule: "pa-schedule-b-reference-packet"
+    description: "Inventory support counts the Pennsylvania Schedule B packet path as validated only when fillReturn emits `pa-schedule-b-reference.pdf` whenever the official 2025 Schedule B filing trigger is met."
+    testRef: "tests/pdf/fill-pa-schedule-b.test.ts::fillReturn includes the Pennsylvania Schedule B reference summary when the official filing trigger is met"
+  - rule: "pa-schedule-b-reference-suppression"
+    description: "Inventory support counts the Pennsylvania Schedule B suppression rule as validated only when regression coverage proves fillReturn omits the reference summary for resident returns that have no Schedule B filing trigger amounts on Lines 2 through 11 except the derived Line 6 subtotal."
+    testRef: "tests/pdf/fill-pa-schedule-b.test.ts::fillReturn suppresses the Pennsylvania Schedule B reference summary when the official filing trigger is not met"
+  - rule: "pa-schedule-b-reference-disclosure"
+    description: "Inventory support counts the Pennsylvania Schedule B packet disclosure as validated only when readiness regression coverage keeps packet completeness partial while only the Schedule B reference summary is available beyond PA-40."
+    testRef: "tests/utils/return-readiness.test.ts::marks Pennsylvania packets partial when a PA Schedule B reference summary is attached"
+
+lines:
+  - line: "1"
+    description: "Dividend income from the federal return"
+    formula: "Rounded federal dividend income amount supplied for Schedule B Line 1"
+    notes: |
+      The supported resident orchestrator builds this baseline from Form
+      1099-DIV Box 1a ordinary dividends plus federal Schedule K-1 Box 6a
+      dividends that are reported on the federal return, matching the way the
+      printed schedule starts from federal dividend income before Pennsylvania
+      reclassifications.
+    testRef: "tests/engine/state/pa-schedule-b.test.ts::PA Schedule B Line 12 removes federal Schedule K-1 dividends before adding Pennsylvania-classified pass-through dividends back"
+
+  - line: "2"
+    description: "Dividend income from federal Schedule(s) K-1"
+    formula: "Rounded federal Schedule K-1 dividend income included in the Line 1 baseline"
+    notes: |
+      This line removes federal pass-through dividend income from the federal
+      subtotal so Pennsylvania-classified dividend income can be added back on
+      Line 11.
+    testRef: "tests/engine/state/pa-schedule-b.test.ts::PA Schedule B Line 12 removes federal Schedule K-1 dividends before adding Pennsylvania-classified pass-through dividends back"
+
+  - line: "3"
+    description: "Pennsylvania-exempt interest dividend income"
+    formula: "Rounded amount of Pennsylvania- and U.S.-government exempt-interest dividend income supplied for Schedule B, defaulting to the supported Form 1099-DIV Pennsylvania exemption allocation when no explicit schedule amount is provided"
+    notes: |
+      The 2025 instructions direct taxpayers to subtract the portion of
+      tax-exempt fund or money-market dividends attributable to direct
+      obligations of Pennsylvania, its political subdivisions, and direct U.S.
+      government obligations. The supported slice accepts this amount as an
+      explicit schedule input and also allows a Pennsylvania-specific
+      allocation on normalized Form 1099-DIV records for common mutual-fund
+      reporting. Explicit schedule detail still overrides the derived amount.
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator defaults Schedule B Line 3 from Form 1099-DIV Pennsylvania exemption allocations"
+
+  - line: "4"
+    description: "Other reduction adjustments"
+    formula: "Sum of rounded, non-negative reduction adjustment entries"
+    notes: |
+      Examples from the 2025 instructions include nonresident-period dividend
+      income, nominee capital gains distributions, and grantor-trust dividend
+      income reported on PA-41.
+    testRef: "tests/engine/state/pa-schedule-b.test.ts::PA Schedule B Line 4 totals manual reduction adjustments"
+
+  - line: "5"
+    description: "Total reductions from federal dividend income"
+    formula: "Line 2 + Line 3 + Line 4"
+    testRef: "tests/engine/state/pa-schedule-b.test.ts::PA Schedule B Line 12 removes federal Schedule K-1 dividends before adding Pennsylvania-classified pass-through dividends back"
+
+  - line: "6"
+    description: "Dividend subtotal after federal-to-PA reductions"
+    formula: "Line 1 - Line 5"
+    notes: |
+      The printed instructions allow this intermediate subtotal to be negative.
+      The supported engine preserves the negative value on Line 6 and floors the
+      final Line 12 at zero.
+    testRef: "tests/engine/state/pa-schedule-b.test.ts::PA Schedule B Line 12 floors the final PA-taxable dividend income at zero"
+
+  - line: "7"
+    description: "Exempt-interest dividends reported on federal Form 1099-DIV Box 12"
+    formula: "Rounded total of Form 1099-DIV Box 12 exempt-interest dividends supplied for Schedule B"
+    notes: |
+      Under the 2025 instructions, exempt-interest dividends reported in Box 12
+      are added to Pennsylvania dividend income. The supported slice uses Line 3
+      to subtract the portion attributable to Pennsylvania, its political
+      subdivisions, or direct U.S. government obligations so the net Line 3/7
+      effect taxes only the non-exempt portion.
+    testRef: "tests/engine/state/pa-schedule-b.test.ts::PA Schedule B Line 12 taxes Box 12 exempt-interest dividends while subtracting the Pennsylvania-exempt portion"
+
+  - line: "8"
+    description: "Other increase adjustments"
+    formula: "Sum of rounded, non-negative addition adjustment entries"
+    notes: |
+      Examples from the 2025 instructions include excessive salary paid to a
+      shareholder, nominee capital gains distributions, and distributions from
+      non-Pennsylvania S corporations.
+    testRef: "tests/engine/state/pa-schedule-b.test.ts::PA Schedule B Line 8 totals manual addition adjustments"
+
+  - line: "9a"
+    description: "IRC Section 965 deemed foreign earnings and profits"
+    formula: "Rounded Schedule B repatriation transition-tax base supplied for audit support"
+    notes: |
+      The printed line documents the historic 2017 Section 965 transition-tax
+      deemed dividend base. Only Line 9c affects current-year PA taxable
+      dividend income in the supported slice.
+    testRef: "tests/engine/state/pa-schedule-b.test.ts::PA Schedule B Line 9c carries only current-year repatriation cash receipts into taxable dividends"
+
+  - line: "9b"
+    description: "Prior-year cash payments attributable to Line 9a"
+    formula: "Rounded Schedule B prior-year repatriation cash payments supplied for audit support"
+    notes: |
+      The printed line tracks prior-year cash receipts already reported as
+      Pennsylvania dividend income. Only Line 9c affects current-year PA
+      taxable dividend income in the supported slice.
+    testRef: "tests/engine/state/pa-schedule-b.test.ts::PA Schedule B Line 9c carries only current-year repatriation cash receipts into taxable dividends"
+
+  - line: "9c"
+    description: "Current-year cash payments attributable to foreign repatriation income"
+    formula: "Rounded current-year repatriation cash payments supplied for Schedule B"
+    notes: |
+      The 2025 instructions direct current-year cash receipts attributable to
+      the historic Section 965 deemed dividend base to be included as
+      Pennsylvania dividend income even if no federal Form 1099-DIV is issued.
+    testRef: "tests/engine/state/pa-schedule-b.test.ts::PA Schedule B Line 9c carries only current-year repatriation cash receipts into taxable dividends"
+
+  - line: "10"
+    description: "Capital gains distributions"
+    formula: "Rounded total of Form 1099-DIV Box 2a capital gains distributions supplied for Schedule B"
+    notes: |
+      The 2025 instructions direct taxpayers to report mutual-fund capital
+      gains distributions as Pennsylvania dividend income rather than on
+      Pennsylvania net-gains schedules.
+    testRef: "tests/engine/state/pa-schedule-b.test.ts::PA Schedule B Line 10 carries Form 1099-DIV capital gains distributions into PA dividend income"
+
+  - line: "11"
+    description: "Dividend income from PA S corporations and partnerships"
+    formula: "Rounded Pennsylvania-classified pass-through dividend income supplied for Schedule B"
+    notes: |
+      The resident orchestrator uses resident PA Schedule RK-1 totals when
+      available and otherwise falls back to the remaining federal Schedule K-1
+      dividends after excluding entities with Pennsylvania statements.
+    testRef: "tests/engine/state/pa-schedule-b.test.ts::PA Schedule B Line 12 removes federal Schedule K-1 dividends before adding Pennsylvania-classified pass-through dividends back"
+
+  - line: "12"
+    description: "Total PA-taxable dividend income"
+    formula: "max(0, Line 6 + Line 7 + Line 8 + Line 9c + Line 10 + Line 11)"
+    notes: "Flows to PA-40 Line 3."
+    testRef: "tests/engine/state/pa-schedule-b.test.ts::PA Schedule B Line 12 floors the final PA-taxable dividend income at zero"

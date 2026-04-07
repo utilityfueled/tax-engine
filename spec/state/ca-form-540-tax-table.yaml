@@ -1,0 +1,81 @@
+form: "California Form 540 Tax Table"
+fullName: "California Form 540 Line 31 Tax Table"
+taxYear: 2025
+irsReference: "https://www.ftb.ca.gov/forms/2025/2025-540-instructions.html"
+
+notes: |
+  California Form 540 line 31 uses the published 2025 Tax Table when Form 540
+  line 19 taxable income is $100,000 or less. The taxpayer selects the printed
+  income row containing taxable income and then reads across the correct filing
+  status column:
+  - 1 or 3 for single and married/RDP filing separately
+  - 2 or 5 for married/RDP filing jointly and qualifying surviving spouse/RDP
+  - 4 for head of household
+  Implementation note: the 2025 published table values can be reproduced exactly
+  by computing the Schedule X, Y, or Z tax on the row's representative income,
+  defined as floor((row lower bound + row upper bound) / 2). That midpoint rule
+  is an inference from the official table PDF, not a formula stated in the
+  instructions, and should stay traceable in the audit trail.
+
+lines:
+  - line: "1"
+    description: "Form 540 taxable income"
+    formula: "Form 540 line 19 taxable income"
+    inputs:
+      - "California taxable income"
+    notes: "This module applies only when taxable income is $100,000 or less."
+    edgeCases:
+      - "$0 taxable income produces $0 tax without looking up a published table row"
+      - "$100,001 must use the tax-rate schedules instead"
+    testRef: "tests/engine/state/ca-form-540-tax-table.test.ts::CA Form 540 tax table Line 1 - zero taxable income returns zero tax"
+
+  - line: "2"
+    description: "Selected published tax-table row"
+    formula: "If Line 1 is greater than $0, choose the printed 2025 Tax Table row containing Line 1 and use the filing-status column for the return"
+    inputs:
+      - "Form 540 tax table Line 1"
+      - "Filing status"
+    notes: "The published table uses a special $1-$50 first row, then mostly $100-wide rows through the final $99,951-$100,000 row."
+    edgeCases:
+      - "$50 stays in the first printed row"
+      - "$51 moves into the $51-$150 row"
+      - "$100,000 uses the final printed row"
+    testRef: "tests/engine/state/ca-form-540-tax-table.test.ts::CA Form 540 tax table Line 2 - $51 moves into the $51-$150 published row"
+
+  - line: "3"
+    description: "Representative income for the selected row"
+    formula: "If Line 2 selected a published row, floor((row lower bound + row upper bound) / 2); otherwise use $0 for the zero-income case"
+    inputs:
+      - "Selected row lower bound"
+      - "Selected row upper bound"
+    notes: "Implementation inference verified against every row in the official 2025 Tax Table PDF."
+    testRef: "tests/engine/state/ca-form-540-tax-table.test.ts::CA Form 540 tax table Line 3 - the final $99,951-$100,000 row uses a floor midpoint representative income of $99,975"
+
+  - line: "4"
+    description: "Selected California tax-rate schedule row for the representative income"
+    formula: "Choose Schedule X, Y, or Z from filing status, then choose the published tax-rate-schedule row containing Line 3"
+    inputs:
+      - "Form 540 tax table Line 3"
+      - "Filing status"
+    notes: "Schedule X applies to single and married filing separately; Schedule Y applies to married filing jointly and qualifying surviving spouse; Schedule Z applies to head of household."
+    testRef: "tests/engine/state/ca-form-540-tax-table.test.ts::CA Form 540 tax table Line 4 - head of household uses Schedule Z for a high tax-table row"
+
+  - line: "5"
+    description: "Tax before whole-dollar rounding"
+    formula: "Selected schedule-row base tax + ((Line 3 - selected schedule-row lower threshold) × selected schedule-row rate), rounded to two decimals"
+    inputs:
+      - "Form 540 tax table Line 3"
+      - "Selected schedule-row base tax"
+      - "Selected schedule-row lower threshold"
+      - "Selected schedule-row rate"
+    testRef: "tests/engine/state/ca-form-540-tax-table.test.ts::CA Form 540 tax table Line 5 - the $33,451-$33,550 single row produces the official pre-rounding amount"
+
+  - line: "6"
+    description: "Form 540 line 31 tax from the tax table"
+    formula: "Round Line 5 to the nearest whole dollar; if Line 1 is $0, the tax is $0"
+    inputs:
+      - "Form 540 tax table Line 5"
+    edgeCases:
+      - "The final $99,951-$100,000 row produces the printed $5,736 single, $3,068 joint, and $3,708 head-of-household tax amounts"
+      - "$100,001 is outside the Tax Table and must not be computed here"
+    testRef: "tests/engine/state/ca-form-540-tax-table.test.ts::CA Form 540 tax table Line 6 - $100,000 uses the final published row and returns the official filing-status taxes"

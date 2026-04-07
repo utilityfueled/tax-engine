@@ -1,0 +1,97 @@
+form: "California FTB 3531 California Competes Tax Credit"
+fullName: "California FTB 3531 California Competes Tax Credit Upstream Personal-Filer Slice"
+taxYear: 2025
+irsReference: "https://www.ftb.ca.gov/forms/2025/2025-3531-instructions.html"
+
+notes: |
+  This slice models the upstream 2025 Form FTB 3531 lines needed to support
+  California individual-return parity for credit code 233 on Form 540NR
+  Schedule P (540NR) Section B2 and Form 540NR line 73 recapture handling.
+  The official 2025 FTB 3531 instructions direct taxpayers to:
+  - report up to two current-year California Competes Tax Credit agreements on
+    line 1a and line 1b, then add them on line 2
+  - carry line 2 to Part II line 3
+  - add any Schedule K-1 pass-through California Competes credit on line 4a
+  - add line 3 and line 4a on line 5a
+  - add prior-year carryover on line 6
+  - for non-S-corporation personal filers, add line 5a and line 6 on line 7
+  - report credit recapture on line 10a and the amount of previously used
+    recaptured credit on line 10b, with line 10b entered on Form 540NR line 73
+  This upstream slice intentionally leaves Form FTB 3531 line 5b S-corporation
+  math, line 8 through line 9 claim-versus-carryover resolution, and Part IV
+  agreement-level line 11 claiming mechanics to downstream return and Schedule P
+  limitation logic.
+
+lines:
+  - line: "1a-1b"
+    description: "Current-year agreement credits"
+    formula: "Use the supported current-year California Competes agreement credit-earned inputs for up to two agreement numbers approved by the California Competes Tax Credit Committee"
+    inputs:
+      - "Optional ordered list of up to two current-year California Competes agreement credits, each with agreement number and credit earned amount"
+    edgeCases:
+      - "Do not accept more than two current-year agreements because Form FTB 3531 only provides line 1a and line 1b"
+    testRef: "tests/engine/state/ca-ftb-3531-california-competes-tax-credit.test.ts::CA FTB 3531 California Competes Tax Credit Line 7 - current-year agreements, pass-through credit, and prior-year carryover add to total available credit"
+
+  - line: "2"
+    description: "Total credit earned in 2025"
+    formula: "Line 1a + Line 1b"
+    inputs:
+      - "Form FTB 3531 line 1a credit earned"
+      - "Form FTB 3531 line 1b credit earned"
+    testRef: "tests/engine/state/ca-ftb-3531-california-competes-tax-credit.test.ts::CA FTB 3531 California Competes Tax Credit Line 7 - current-year agreements, pass-through credit, and prior-year carryover add to total available credit"
+
+  - line: "3"
+    description: "Current-year credit from Part I"
+    formula: "Copy line 2"
+    inputs:
+      - "Form FTB 3531 line 2 total credit earned"
+    testRef: "tests/engine/state/ca-ftb-3531-california-competes-tax-credit.test.ts::CA FTB 3531 California Competes Tax Credit Line 7 - current-year agreements, pass-through credit, and prior-year carryover add to total available credit"
+
+  - line: "4a"
+    description: "Pass-through California Competes Tax Credit"
+    formula: "Add the supported Schedule K-1 pass-through California Competes credit amounts"
+    inputs:
+      - "Optional list of pass-through California Competes credits with agreement number, year earned, and passed-through amount"
+    testRef: "tests/engine/state/ca-ftb-3531-california-competes-tax-credit.test.ts::CA FTB 3531 California Competes Tax Credit Line 7 - current-year agreements, pass-through credit, and prior-year carryover add to total available credit"
+
+  - line: "5a"
+    description: "Current-year credit"
+    formula: "Line 3 + Line 4a"
+    inputs:
+      - "Form FTB 3531 line 3"
+      - "Form FTB 3531 line 4a"
+    testRef: "tests/engine/state/ca-ftb-3531-california-competes-tax-credit.test.ts::CA FTB 3531 California Competes Tax Credit Line 7 - current-year agreements, pass-through credit, and prior-year carryover add to total available credit"
+
+  - line: "6"
+    description: "Credit carryover from prior year(s)"
+    formula: "Supported prior-year California Competes credit carryover input"
+    inputs:
+      - "Prior-year California Competes credit carryover"
+    testRef: "tests/engine/state/ca-ftb-3531-california-competes-tax-credit.test.ts::CA FTB 3531 California Competes Tax Credit Line 7 - current-year agreements, pass-through credit, and prior-year carryover add to total available credit"
+
+  - line: "7"
+    description: "Total available California Competes Tax Credit"
+    formula: "For the supported personal-filer slice, Line 5a + Line 6"
+    inputs:
+      - "Form FTB 3531 line 5a"
+      - "Form FTB 3531 line 6"
+    notes: "Form FTB 3531 line 5b S-corporation math is unsupported in this slice"
+    testRef: "tests/engine/state/ca-ftb-3531-california-competes-tax-credit.test.ts::CA FTB 3531 California Competes Tax Credit Line 7 - current-year agreements, pass-through credit, and prior-year carryover add to total available credit"
+
+  - line: "10a"
+    description: "Credit recapture"
+    formula: "Supported California Competes credit recapture input"
+    inputs:
+      - "California Competes credit recapture"
+    testRef: "tests/engine/state/ca-ftb-3531-california-competes-tax-credit.test.ts::CA FTB 3531 California Competes Tax Credit Line 10b - previously used recaptured credit flows to the return"
+
+  - line: "10b"
+    description: "Amount of previously used recaptured credit"
+    formula: "Supported input for the portion of line 10a previously used on prior tax returns; this amount cannot exceed line 10a"
+    inputs:
+      - "Form FTB 3531 line 10a"
+      - "Previously used recaptured credit amount"
+    edgeCases:
+      - "Do not allow line 10b to exceed line 10a recapture"
+      - "Form 540NR line 73 receives the supported line 10b amount"
+    testRef: "tests/engine/state/ca-ftb-3531-california-competes-tax-credit.test.ts::CA FTB 3531 California Competes Tax Credit Line 10b - previously used recaptured credit cannot exceed total recapture"

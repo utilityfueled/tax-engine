@@ -1,0 +1,177 @@
+form: "New York IT-270 Income Tax Elimination Credit"
+fullName: "New York State Form IT-270 — New York City Income Tax Elimination Credit"
+taxYear: 2025
+irsReference: "https://www.tax.ny.gov/pdf/current_forms/it/it270i.pdf"
+
+notes: |
+  Form IT-270 is new for tax years beginning on or after January 1, 2025.
+  It allows certain full-year or part-year New York City residents with at
+  least one dependent to eliminate or reduce their remaining New York City
+  personal income tax after the refundable NYC child and dependent care credit
+  and NYC earned income credit.
+
+  This module implements the supported resident IT-201 slice only:
+  - full-year NYC resident path carried to IT-201 line 70a
+  - threshold lookup by filing status and dependent count
+  - partial-credit phase-down when federal AGI is up to $5,000 above the threshold
+  - disqualification for zero NYC tax, excess investment income, no dependents,
+    and NYC/NYS PTET credit claims
+
+  It does not implement:
+  - IT-203 nonresident or part-year resident line mapping
+  - spouse-by-spouse part-year New York City residency allocation
+  - automatic computation of investment income from federal source documents
+    (supported as an upstream input)
+
+lines:
+  - line: "A"
+    description: "Dependent eligibility"
+    formula: "Eligible only if at least one dependent is claimed on IT-201 item H"
+    inputs:
+      - "Number of dependents claimed"
+    notes: |
+      Form IT-270 Part 1 line A stops the credit when the filer does not claim
+      any dependents. The resident engine uses the IT-201 dependent count input.
+    edgeCases:
+      - "Zero dependents disqualifies the credit even if income is below threshold"
+      - "Seven or more dependents still use a single capped threshold row for MFJ/QSS"
+      - "Eight or more dependents still use a single capped threshold row for single/MFS/HoH"
+    testRef: "tests/engine/state/ny-it270-income-tax-elimination-credit.test.ts::Part 1 line A - zero dependents disqualify the credit"
+
+  - line: "B"
+    description: "NYC tax must be greater than zero"
+    formula: "Eligible only if IT-201 line 54 is greater than zero"
+    inputs:
+      - "NYC tax after nonrefundable credits (IT-201 line 54)"
+    notes: |
+      Form IT-270 Part 1 line B stops when the amount on IT-201 line 54 is zero.
+      The full-return orchestrator supplies its computed line 54 total NYC tax.
+    edgeCases:
+      - "Zero NYC tax disqualifies the credit"
+      - "Positive NYC tax remains eligible for later tests"
+    testRef: "tests/engine/state/ny-it270-income-tax-elimination-credit.test.ts::Part 1 line B - zero NYC tax disqualifies the credit"
+
+  - line: "C / 2 / 3 / 4 / 5"
+    description: "Income-threshold lookup and phase-down percentage"
+    formula: |
+      Line 2 = threshold from the 2025 IT-270 table based on filing status and dependent count:
+        MFJ/QSS: 1 36789; 2 46350; 3 54545; 4 61071; 5 68403; 6 75204; 7+ 91902
+        Single/MFS/HoH: 1 31503; 2 36824; 3 46512; 4 53711; 5 59928; 6 65712; 7 74565; 8+ 88361
+      Line 3 = if line 1 <= line 2 then 0 else line 1 - line 2
+      Stop if line 3 > 5000
+      Line 4 = 5000 - line 3
+      Line 5 = round4(line 4 / 5000)
+    inputs:
+      - "Federal adjusted gross income"
+      - "Filing status"
+      - "Number of dependents"
+    notes: |
+      A filer at or below the threshold receives a full credit because line 3 is
+      zero, line 4 is $5,000, and line 5 is 1.0000. The partial-credit band ends
+      once federal AGI exceeds the threshold by more than $5,000.
+    edgeCases:
+      - "Exactly at the threshold yields a 1.0000 ratio"
+      - "Exactly $5,000 above the threshold still qualifies with a 0.0000 ratio"
+      - "More than $5,000 above the threshold disqualifies the credit"
+      - "Threshold row is capped at 7+ for MFJ/QSS and 8+ for single/MFS/HoH"
+    testRef: "tests/engine/state/ny-it270-income-tax-elimination-credit.test.ts::Part 2 lines 2 through 5 - AGI $2,500 above the threshold yields a 0.5000 phase-down ratio"
+
+  - line: "D"
+    description: "Investment income limit"
+    formula: "Eligible only if investment income is $10,000 or less"
+    inputs:
+      - "Investment income under IRC §32(i) / Pub. 596 Worksheet 1"
+    notes: |
+      The 2025 IT-270 instructions define the $10,000 investment-income limit
+      using the same concepts as the federal earned income credit rules.
+      This module expects the computed investment-income total as validated input.
+    edgeCases:
+      - "Exactly $10,000 remains eligible"
+      - "$10,000.01 disqualifies the credit"
+    testRef: "tests/engine/state/ny-it270-income-tax-elimination-credit.test.ts::Part 1 line D - investment income above $10,000 disqualifies the credit"
+
+  - line: "E"
+    description: "PTET credit disqualification"
+    formula: "Eligible only if no NYC or NYS pass-through entity tax credit is claimed"
+    inputs:
+      - "Boolean indicator that NYC or NYS PTET credit is claimed"
+    notes: |
+      Form IT-270 Part 1 line E disqualifies filers who claim either the New York
+      City or New York State pass-through entity tax credit.
+    edgeCases:
+      - "Claiming PTET credit forces the IT-270 credit to zero"
+      - "No PTET claim allows the remaining tests to control eligibility"
+    testRef: "tests/engine/state/ny-it270-income-tax-elimination-credit.test.ts::Part 1 line E - PTET credit claim disqualifies the credit"
+
+  - line: "6"
+    description: "NYC tax before IT-270"
+    formula: "Amount from IT-201 line 54"
+    inputs:
+      - "IT-201 line 54 NYC tax after nonrefundable credits"
+    notes: |
+      The resident slice uses the full-return orchestrator's computed line 54
+      amount as the starting NYC tax to be reduced or eliminated.
+    testRef: "tests/engine/state/ny-it270-income-tax-elimination-credit.test.ts::Part 2 lines 6 through 11 - full credit eliminates the remaining NYC tax when income is at the threshold"
+
+  - line: "7"
+    description: "Refundable NYC child and dependent care credit"
+    formula: "Amount from IT-216 line 24 or line 28"
+    inputs:
+      - "Refundable NYC child and dependent care credit amount"
+    notes: |
+      This is the NYC portion only, not the combined line 64 amount that also
+      includes the New York State child and dependent care credit.
+    testRef: "tests/engine/state/ny-it270-income-tax-elimination-credit.test.ts::Part 2 lines 6 through 11 - other refundable NYC credits reduce the remaining tax before IT-270 applies"
+
+  - line: "8"
+    description: "NYC earned income credit"
+    formula: "Amount from IT-215 line 27 or IT-209 line 45"
+    inputs:
+      - "NYC earned income credit amount"
+    notes: |
+      For the supported IT-201 resident path, this is typically the IT-215
+      amount computed for IT-201 line 70.
+    testRef: "tests/engine/state/ny-it270-income-tax-elimination-credit.test.ts::Part 2 lines 6 through 11 - other refundable NYC credits reduce the remaining tax before IT-270 applies"
+
+  - line: "9"
+    description: "Other refundable NYC credits applied before IT-270"
+    formula: "Line 7 + Line 8"
+    inputs:
+      - "Refundable NYC child and dependent care credit (line 7)"
+      - "NYC earned income credit (line 8)"
+    notes: |
+      Form IT-270 reduces the remaining NYC tax by the refundable child care
+      credit and NYC earned income credit before applying the elimination ratio.
+    testRef: "tests/engine/state/ny-it270-income-tax-elimination-credit.test.ts::Part 2 lines 6 through 11 - other refundable NYC credits reduce the remaining tax before IT-270 applies"
+
+  - line: "10"
+    description: "Remaining NYC tax after other refundable NYC credits"
+    formula: "Line 6 - Line 9"
+    inputs:
+      - "Line 6 NYC tax"
+      - "Line 9 refundable NYC credits already applied"
+    notes: |
+      The IT-270 instructions state that if line 10 is zero or less, the filer
+      is not eligible to claim the credit. The supported engine returns a zero
+      line 11 credit in that case.
+    edgeCases:
+      - "Line 10 exactly zero yields no IT-270 credit"
+      - "Line 10 negative yields no IT-270 credit"
+    testRef: "tests/engine/state/ny-it270-income-tax-elimination-credit.test.ts::Part 2 line 10 - zero or negative remaining NYC tax yields no credit"
+
+  - line: "11 / IT-201-70a"
+    description: "NYC income tax elimination credit"
+    formula: "Round to cents: max(0, line 10) × line 5"
+    inputs:
+      - "Line 10 remaining NYC tax"
+      - "Line 5 phase-down ratio"
+    notes: |
+      At or below the threshold, line 5 is 1.0000 and the credit fully
+      eliminates the remaining NYC tax. In the partial band, only the computed
+      fraction of the remaining NYC tax is allowed. The form carries this amount
+      to IT-201 line 70a for resident filers.
+    edgeCases:
+      - "At threshold, the credit equals the remaining NYC tax"
+      - "A 0.5000 ratio cuts the remaining NYC tax in half"
+      - "If line 10 is zero or less, the line 11 credit is zero"
+    testRef: "tests/engine/state/ny-it270-income-tax-elimination-credit.test.ts::Part 2 lines 6 through 11 - full credit eliminates the remaining NYC tax when income is at the threshold"

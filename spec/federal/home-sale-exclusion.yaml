@@ -1,0 +1,190 @@
+form: "Home Sale Exclusion Worksheet"
+fullName: "IRC §121 Exclusion of Gain from Sale of Principal Residence"
+taxYear: 2025
+irsReference: "https://www.irs.gov/publications/p523"
+
+notes: |
+  IRC §121 allows a taxpayer to exclude up to $250,000 ($500,000 for MFJ
+  if both spouses meet the use test and at least one meets the ownership test)
+  of gain from the sale of a principal residence.
+
+  Eligibility requires:
+  - Ownership test: owned the home for at least 2 of the 5 years before the sale
+  - Use test: used the home as principal residence for at least 2 of the 5 years
+  - Frequency test: have not excluded gain on another home sale in the 2 years
+    before this sale
+
+  If the full tests are not met, a reduced maximum exclusion may be available
+  when the sale is due to a change in employment, health, or unforeseen
+  circumstances (IRC §121(c)). The reduced exclusion is prorated based on
+  the shorter of days owned or days used, divided by 730 (2 years in days).
+
+  Gain = Amount realized − Adjusted basis
+  Adjusted basis = Original cost + Improvements − Depreciation − Casualty loss deductions
+  Excludable gain = min(Gain, Maximum exclusion)
+  Taxable gain = max(0, Gain − Excludable gain)
+  Taxable gain is reported on Schedule D as long-term capital gain.
+
+  Loss on personal-use property is not deductible. If Amount realized < Adjusted basis,
+  no loss is reported.
+
+  If the home was used partly for business or rental (e.g., home office, rental room),
+  depreciation after May 6, 1997 is not excludable ("unrecaptured Section 1250 gain")
+  and must be reported separately. The business-use portion of gain attributable to a
+  separate structure may not qualify for the exclusion.
+
+  For MFJ returns where only one spouse meets both tests, the maximum exclusion is
+  $250,000 (not $500,000). For MFS, each spouse can exclude up to $250,000 on their
+  own qualifying sale.
+
+businessRuleValidation:
+  - rule: "reference-summary-packet"
+    description: "Inventory support counts this worksheet as business-rule validated only when regression coverage proves the emitted packet artifact stays labeled as a non-filing reference summary and only surfaces the supported per-sale eligibility checks, exclusion lines, depreciation recapture, and Schedule D carry totals."
+    testRef: "tests/pdf/fill-home-sale-exclusion.test.ts::buildHomeSaleExclusionReferenceSummary keeps the packet artifact reference-only and limited to supported home sale exclusion outputs"
+
+lines:
+  - line: "1"
+    description: "Amount realized from sale"
+    formula: "Sale price − selling expenses (commissions, fees, etc.)"
+    irsRef: "Pub 523, Figuring Your Gain or Loss"
+    inputs:
+      - "Sale price"
+      - "Selling expenses"
+    testRef: "tests/engine/forms/home-sale-exclusion.test.ts::Home Sale Line 1 - amount realized equals sale price minus selling expenses"
+
+  - line: "2"
+    description: "Adjusted basis of home"
+    formula: "Original purchase price + improvements + other basis additions − depreciation − casualty loss deductions − other basis reductions"
+    irsRef: "Pub 523, Figuring Your Adjusted Basis"
+    inputs:
+      - "Original purchase price"
+      - "Cost of improvements"
+      - "Depreciation allowed or allowable (after May 6, 1997)"
+      - "Casualty loss deductions claimed"
+      - "Other basis adjustments"
+    edgeCases:
+      - "Inherited property uses FMV at date of death (stepped-up basis)"
+      - "Gift property uses donor's basis (carryover basis)"
+      - "1031 exchange property carries over deferred gain"
+    testRef: "tests/engine/forms/home-sale-exclusion.test.ts::Home Sale Line 2 - adjusted basis includes improvements and subtracts depreciation"
+
+  - line: "3"
+    description: "Gain or loss on sale"
+    formula: "Line 1 − Line 2"
+    irsRef: "Pub 523, Figuring Your Gain or Loss"
+    inputs:
+      - "Line 1 amount realized"
+      - "Line 2 adjusted basis"
+    notes: "If negative (loss), no deduction is allowed for personal-use property. The worksheet stops here."
+    testRef: "tests/engine/forms/home-sale-exclusion.test.ts::Home Sale Line 3 - gain is amount realized minus adjusted basis"
+
+  - line: "ownership-test"
+    description: "Ownership test"
+    formula: "Taxpayer owned the home for at least 730 days (2 years) during the 5-year period ending on the date of sale"
+    irsRef: "IRC §121(a); Pub 523, Eligibility Test"
+    inputs:
+      - "Days of ownership during 5-year lookback period"
+    edgeCases:
+      - "Inherited property: ownership period includes decedent's ownership period"
+      - "Divorce transfer: receiving spouse inherits transferring spouse's ownership period"
+    testRef: "tests/engine/forms/home-sale-exclusion.test.ts::Home Sale ownership test - requires at least 730 days"
+
+  - line: "use-test"
+    description: "Use test"
+    formula: "Taxpayer used the home as principal residence for at least 730 days (2 years) during the 5-year period ending on the date of sale, or during the extended lookback period when a qualified official extended duty suspension applies. Ownership and use periods need not be concurrent. When the taxpayer becomes physically or mentally incapable of self-care during the lookback period, time spent in a licensed care facility while still owning the property counts as use of the home as a principal residence (IRC §121(d)(7))."
+    irsRef: "IRC §121(a); IRC §121(d)(7); IRC §121(d)(9); Pub 523, Eligibility Test"
+    inputs:
+      - "Days of use as principal residence during lookback period"
+      - "Days in licensed care facility while owning the property (when incapable of self-care)"
+      - "Qualified official extended duty days (military/Foreign Service/intelligence, max 3650)"
+    edgeCases:
+      - "Temporary absences (vacations, illness) count as use"
+      - "Military, Foreign Service, or intelligence community members may suspend the 5-year period for up to 10 years of qualified official extended duty (IRC §121(d)(9)), extending the lookback to a maximum of 15 years. The 730-day ownership and use requirements still apply within the extended window."
+      - "Nursing home or licensed care facility exception (IRC §121(d)(7)): when the taxpayer becomes physically or mentally incapable of self-care, days in a State-licensed care facility while owning the property count as days of use. The taxpayer must have at least some actual use as a principal residence; the facility days supplement that actual use toward the 730-day threshold."
+      - "The nursing home exception and military suspension can both apply to the same sale if the taxpayer qualifies for both"
+      - "Nursing home days only count during the lookback period and only while the taxpayer still owns the property"
+      - "Military suspension extends only the lookback window, not the 730-day use requirement"
+      - "Qualified official extended duty requires more than 90 consecutive days at a duty station 50+ miles from the home or under government orders to live in government quarters"
+    testRef: "tests/engine/forms/home-sale-exclusion.test.ts::Home Sale use test - requires at least 730 days"
+
+  - line: "frequency-test"
+    description: "Frequency limitation"
+    formula: "Taxpayer has not excluded gain on another home sale within the 2-year period ending on the date of this sale"
+    irsRef: "IRC §121(b)(3); Pub 523"
+    inputs:
+      - "Whether exclusion was used for another home in the prior 2 years"
+    testRef: "tests/engine/forms/home-sale-exclusion.test.ts::Home Sale frequency test - cannot use exclusion twice in 2 years"
+
+  - line: "4"
+    description: "Maximum exclusion amount"
+    formula: |
+      Full exclusion: $250,000 for single/HoH/MFS/QSS; $500,000 for MFJ
+      where both spouses meet the use test and at least one meets the ownership test.
+      MFJ where only one spouse qualifies: $250,000.
+      Reduced exclusion (IRC §121(c)): Maximum × (shorter of days owned or days used ÷ 730),
+      available when sale is due to change in employment, health, or unforeseen circumstances
+      and taxpayer does not meet the full 2-year ownership, use, or frequency test.
+    irsRef: "IRC §121(b)(1)-(2); IRC §121(c); Pub 523; Treas. Reg. §1.121-3"
+    inputs:
+      - "Filing status"
+      - "Whether both spouses meet use test (MFJ)"
+      - "Whether at least one spouse meets ownership test (MFJ)"
+      - "Whether sale qualifies for reduced exclusion"
+      - "Days owned or used (for reduced exclusion proration)"
+    edgeCases:
+      - "MFJ with one qualifying spouse gets $250,000, not $500,000"
+      - "MFS each get up to $250,000 on their own sale"
+      - "Reduced exclusion prorates the maximum based on days owned/used out of 730"
+      - "Reduced exclusion for frequency: prorate based on days since last exclusion out of 730"
+    testRef: "tests/engine/forms/home-sale-exclusion.test.ts::Home Sale Line 4 - MFJ both qualifying gets $500,000 exclusion"
+
+  - line: "5"
+    description: "Excludable gain"
+    formula: "min(Line 3 gain, Line 4 maximum exclusion)"
+    irsRef: "IRC §121(a); Pub 523"
+    inputs:
+      - "Line 3 gain"
+      - "Line 4 maximum exclusion"
+    testRef: "tests/engine/forms/home-sale-exclusion.test.ts::Home Sale Line 5 - excludable gain is lesser of gain or maximum exclusion"
+
+  - line: "6"
+    description: "Taxable gain"
+    formula: "max(0, Line 3 gain − Line 5 excludable gain)"
+    irsRef: "Pub 523, Reporting Your Home Sale"
+    inputs:
+      - "Line 3 gain"
+      - "Line 5 excludable gain"
+    notes: "Reported on Schedule D as long-term capital gain if the home was owned for more than 1 year."
+    testRef: "tests/engine/forms/home-sale-exclusion.test.ts::Home Sale Line 6 - taxable gain flows to Schedule D"
+
+  - line: "depreciation-recapture"
+    description: "Depreciation recapture (unrecaptured Section 1250 gain)"
+    formula: "Depreciation allowed or allowable after May 6, 1997 is not excludable and is taxed at a maximum 25% rate as unrecaptured Section 1250 gain"
+    irsRef: "IRC §121(d)(6); Pub 523; Schedule D Instructions"
+    inputs:
+      - "Post-May-6-1997 depreciation amount"
+    notes: |
+      This applies to home office or rental portions of the home. The depreciation
+      recapture is reported separately from the excludable gain. The recapture amount
+      flows into the QDCG worksheet as unrecaptured Section 1250 gain alongside
+      1099-DIV and K-1 Section 1250 amounts, ensuring it is taxed at the 25% maximum
+      rate rather than the 15%/20% preferential LTCG rate.
+    edgeCases:
+      - "Depreciation recapture reduces the excludable gain: excludable gain = min(gain - depreciation recapture, maximum exclusion)"
+      - "If total gain is less than depreciation, all gain is treated as depreciation recapture"
+      - "Depreciation recapture aggregates with 1099-DIV and K-1 unrecaptured Section 1250 gain in the QDCG worksheet"
+    testRef: "tests/engine/forms/home-sale-exclusion.test.ts::Home Sale depreciation recapture - post-1997 depreciation is not excludable"
+
+  - line: "loss-rule"
+    description: "Loss on personal-use property"
+    formula: "No deduction is allowed for a loss on the sale of a personal-use home"
+    irsRef: "IRC §165(c); Pub 523"
+    notes: "If the sale results in a loss, the loss is not deductible and nothing is reported on the return."
+    testRef: "tests/engine/forms/home-sale-exclusion.test.ts::Home Sale loss - no deduction for personal-use property loss"
+
+  - line: "packet"
+    description: "Draft packet inclusion rule for supported home sale exclusion activity"
+    formula: "When the return includes one or more supported principal-residence sale inputs, include a non-filing reference-summary PDF in the packet that lists each supported sale's ownership, use, and frequency test results; Lines 1 through 6; any supported depreciation recapture amount; and the aggregate Schedule D carry totals."
+    irsRef: "Pub 523, Reporting Your Home Sale; Schedule D Instructions"
+    notes: "This packet slice intentionally emits a deterministic reference summary instead of attempting to recreate a filed worksheet or substitute Form 8949 attachment, so the draft packet stays honest about the supported principal-residence sale scope while still surfacing the federal effects that flow to Schedule D."
+    testRef: "tests/pdf/fill-home-sale-exclusion.test.ts::fillReturn includes a home sale exclusion reference summary when supported home sale inputs are present"

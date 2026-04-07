@@ -1,0 +1,278 @@
+form: "Schedule F"
+fullName: "Profit or Loss From Farming"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i1040sf"
+
+notes: |
+  Schedule F reports income and expenses from farming operations where the
+  taxpayer materially participates. Net farm profit or loss (Line 34) flows
+  to Schedule 1 Line 6 and Schedule SE Line 1a/4a for self-employment tax.
+  This slice implements the cash-method path (Part I and Part II). The
+  accrual method (Part III) is documented but not yet computed. Form 4835
+  (Farm Rental Income) is a separate form reported on Schedule E for
+  landlords who do NOT materially participate.
+
+  Conservation expenses (Line 12) are capped at 25% of gross farm income
+  per IRC section 175. Excess carries forward to future years.
+
+  Farm income is subject to SE tax (Schedule SE) and qualifies for farm
+  income averaging (Schedule J, IRC section 1301) — implemented.
+
+  The farm optional method for SE tax (IRC section 1402(a)) allows low-
+  income farmers to use 2/3 of gross farm income as deemed SE earnings —
+  handled in Schedule SE, not here.
+
+lines:
+  # ── Part I: Farm Income — Cash Method ────────────────────
+  - line: "1a"
+    description: "Sales of purchased livestock and other resale items"
+    formula: "Gross sales of purchased livestock and other items bought for resale"
+    irsRef: "Schedule F Instructions, Line 1a"
+    testRef: "tests/engine/schedules/schedule-f.test.ts::Schedule F Line 1c - net purchased livestock equals sales minus cost"
+
+  - line: "1b"
+    description: "Cost or other basis of purchased livestock and other items on line 1a"
+    formula: "Cost basis of resale items"
+    irsRef: "Schedule F Instructions, Line 1b"
+    testRef: "tests/engine/schedules/schedule-f.test.ts::Schedule F Line 1c - net purchased livestock equals sales minus cost"
+
+  - line: "1c"
+    description: "Subtract line 1b from line 1a"
+    formula: "Line 1a - Line 1b"
+    irsRef: "Schedule F Instructions, Line 1c"
+    testRef: "tests/engine/schedules/schedule-f.test.ts::Schedule F Line 1c - net purchased livestock equals sales minus cost"
+
+  - line: "2"
+    description: "Sales of livestock, produce, grains, and other products you raised"
+    formula: "Direct input — gross sales of products the farmer raised"
+    irsRef: "Schedule F Instructions, Line 2"
+    testRef: "tests/engine/schedules/schedule-f.test.ts::Schedule F Line 9 - gross farm income sums all income lines"
+
+  - line: "3b"
+    description: "Cooperative distributions — taxable amount"
+    formula: "Taxable portion of cooperative distributions (Form 1099-PATR)"
+    irsRef: "Schedule F Instructions, Line 3b"
+    testRef: "tests/engine/schedules/schedule-f.test.ts::Schedule F Line 9 - gross farm income sums all income lines"
+
+  - line: "4b"
+    description: "Agricultural program payments — taxable amount"
+    formula: "Taxable agricultural program payments (PLC, ARC, MFP, etc.)"
+    irsRef: "Schedule F Instructions, Line 4b"
+    testRef: "tests/engine/schedules/schedule-f.test.ts::Schedule F Line 9 - gross farm income sums all income lines"
+
+  - line: "5a"
+    description: "Commodity Credit Corporation (CCC) loans reported under election"
+    formula: "CCC loan proceeds elected as income in year received"
+    irsRef: "Schedule F Instructions, Line 5a"
+    testRef: "tests/engine/schedules/schedule-f.test.ts::Schedule F Line 9 - gross farm income sums all income lines"
+
+  - line: "5c"
+    description: "CCC loans forfeited — taxable amount"
+    formula: "Taxable amount from forfeited CCC loans"
+    irsRef: "Schedule F Instructions, Line 5c"
+    testRef: "tests/engine/schedules/schedule-f.test.ts::Schedule F Line 9 - gross farm income sums all income lines"
+
+  - line: "6b"
+    description: "Crop insurance proceeds — taxable amount"
+    formula: "Taxable crop insurance and disaster payments (after deferral election)"
+    irsRef: "Schedule F Instructions, Line 6b"
+    edgeCases:
+      - "All-or-nothing deferral election: if any eligible proceeds are deferred, all must be"
+      - "Deferred amounts from prior year (Line 6d) are included in current-year income"
+    testRef: "tests/engine/schedules/schedule-f.test.ts::Schedule F Line 9 - gross farm income includes crop insurance and prior-year deferred amounts"
+
+  - line: "6d"
+    description: "Amount deferred from prior year"
+    formula: "Prior-year crop insurance proceeds deferred to current year"
+    irsRef: "Schedule F Instructions, Line 6d"
+    testRef: "tests/engine/schedules/schedule-f.test.ts::Schedule F Line 9 - gross farm income includes crop insurance and prior-year deferred amounts"
+
+  - line: "7"
+    description: "Custom hire (machine work) income"
+    formula: "Income from providing custom farming services with own equipment"
+    irsRef: "Schedule F Instructions, Line 7"
+    testRef: "tests/engine/schedules/schedule-f.test.ts::Schedule F Line 9 - gross farm income sums all income lines"
+
+  - line: "8"
+    description: "Other farm income"
+    formula: "Includes bartering, canceled debt, commodity futures, fuel tax credits"
+    irsRef: "Schedule F Instructions, Line 8"
+    testRef: "tests/engine/schedules/schedule-f.test.ts::Schedule F Line 9 - gross farm income sums all income lines"
+
+  - line: "9"
+    description: "Gross farm income"
+    formula: "Line 1c + Line 2 + Line 3b + Line 4b + Line 5a + Line 5c + Line 6b + Line 6d + Line 7 + Line 8"
+    irsRef: "Schedule F Instructions, Line 9"
+    testRef: "tests/engine/schedules/schedule-f.test.ts::Schedule F Line 9 - gross farm income sums all income lines"
+
+  # ── Part II: Farm Expenses ──────────────────────────────
+  - line: "10"
+    description: "Car and truck expenses"
+    formula: "Actual expenses or standard mileage ($0.70/mile for 2025)"
+    irsRef: "Schedule F Instructions, Line 10"
+    testRef: "tests/engine/schedules/schedule-f.test.ts::Schedule F Line 33 - total farm expenses sums all expense lines"
+
+  - line: "11"
+    description: "Chemicals"
+    formula: "Pesticides, herbicides, fungicides, and other agricultural chemicals"
+    irsRef: "Schedule F Instructions, Line 11"
+    testRef: "tests/engine/schedules/schedule-f.test.ts::Schedule F Line 33 - total farm expenses sums all expense lines"
+
+  - line: "12"
+    description: "Conservation expenses"
+    formula: "Capped at 25% of gross farm income per IRC section 175; excess carries forward"
+    irsRef: "Schedule F Instructions, Line 12; IRC section 175"
+    edgeCases:
+      - "Cannot exceed 25% of gross farm income"
+      - "Excess over cap carries forward to future years"
+      - "Requires NRCS-approved soil and water conservation plan"
+    testRef: "tests/engine/schedules/schedule-f.test.ts::Schedule F Line 12 - conservation expenses capped at 25% gross income"
+
+  - line: "13"
+    description: "Custom hire (machine work)"
+    formula: "Payments for custom farming services using operator-furnished equipment"
+    irsRef: "Schedule F Instructions, Line 13"
+    testRef: "tests/engine/schedules/schedule-f.test.ts::Schedule F Line 33 - total farm expenses sums all expense lines"
+
+  - line: "14"
+    description: "Depreciation and section 179 expense"
+    formula: "Validated depreciation and section 179 deduction amounts"
+    irsRef: "Schedule F Instructions, Line 14; Form 4562"
+    testRef: "tests/engine/schedules/schedule-f.test.ts::Schedule F Line 33 - total farm expenses sums all expense lines"
+
+  - line: "15"
+    description: "Employee benefit programs"
+    formula: "Employer contributions to employee benefit plans (not self-employed health insurance)"
+    irsRef: "Schedule F Instructions, Line 15"
+    testRef: "tests/engine/schedules/schedule-f.test.ts::Schedule F Line 33 - total farm expenses sums all expense lines"
+
+  - line: "16"
+    description: "Feed"
+    formula: "Cost of feed for livestock"
+    irsRef: "Schedule F Instructions, Line 16"
+    testRef: "tests/engine/schedules/schedule-f.test.ts::Schedule F Line 33 - total farm expenses sums all expense lines"
+
+  - line: "17"
+    description: "Fertilizers and lime"
+    formula: "Cost of fertilizers, lime, and soil conditioners"
+    irsRef: "Schedule F Instructions, Line 17"
+    testRef: "tests/engine/schedules/schedule-f.test.ts::Schedule F Line 33 - total farm expenses sums all expense lines"
+
+  - line: "18"
+    description: "Freight and trucking"
+    formula: "Shipping costs for farm products and supplies"
+    irsRef: "Schedule F Instructions, Line 18"
+    testRef: "tests/engine/schedules/schedule-f.test.ts::Schedule F Line 33 - total farm expenses sums all expense lines"
+
+  - line: "19"
+    description: "Gasoline, fuel, and oil"
+    formula: "Fuel costs for farm equipment and vehicles"
+    irsRef: "Schedule F Instructions, Line 19"
+    testRef: "tests/engine/schedules/schedule-f.test.ts::Schedule F Line 33 - total farm expenses sums all expense lines"
+
+  - line: "20"
+    description: "Insurance (other than health)"
+    formula: "Farm property and liability insurance premiums"
+    irsRef: "Schedule F Instructions, Line 20"
+    testRef: "tests/engine/schedules/schedule-f.test.ts::Schedule F Line 33 - total farm expenses sums all expense lines"
+
+  - line: "21a"
+    description: "Mortgage interest paid to financial institutions"
+    formula: "Farm mortgage interest (Form 1098)"
+    irsRef: "Schedule F Instructions, Line 21a"
+    testRef: "tests/engine/schedules/schedule-f.test.ts::Schedule F Line 33 - total farm expenses sums all expense lines"
+
+  - line: "21b"
+    description: "Other interest"
+    formula: "Other farm-related interest not on Form 1098"
+    irsRef: "Schedule F Instructions, Line 21b"
+    testRef: "tests/engine/schedules/schedule-f.test.ts::Schedule F Line 33 - total farm expenses sums all expense lines"
+
+  - line: "22"
+    description: "Labor hired"
+    formula: "Wages paid to farm employees (less employment credits)"
+    irsRef: "Schedule F Instructions, Line 22"
+    testRef: "tests/engine/schedules/schedule-f.test.ts::Schedule F Line 33 - total farm expenses sums all expense lines"
+
+  - line: "23"
+    description: "Pension and profit-sharing plans"
+    formula: "Employer contributions to employee retirement plans"
+    irsRef: "Schedule F Instructions, Line 23"
+    testRef: "tests/engine/schedules/schedule-f.test.ts::Schedule F Line 33 - total farm expenses sums all expense lines"
+
+  - line: "24a"
+    description: "Rent or lease — vehicles, machinery, equipment"
+    formula: "Lease payments for farm equipment and vehicles"
+    irsRef: "Schedule F Instructions, Line 24a"
+    testRef: "tests/engine/schedules/schedule-f.test.ts::Schedule F Line 33 - total farm expenses sums all expense lines"
+
+  - line: "24b"
+    description: "Rent or lease — other (land, animals, etc.)"
+    formula: "Lease payments for land, pasture, and other farm property"
+    irsRef: "Schedule F Instructions, Line 24b"
+    testRef: "tests/engine/schedules/schedule-f.test.ts::Schedule F Line 33 - total farm expenses sums all expense lines"
+
+  - line: "25"
+    description: "Repairs and maintenance"
+    formula: "Repair costs for farm buildings, equipment, and fences"
+    irsRef: "Schedule F Instructions, Line 25"
+    testRef: "tests/engine/schedules/schedule-f.test.ts::Schedule F Line 33 - total farm expenses sums all expense lines"
+
+  - line: "26"
+    description: "Seeds and plants"
+    formula: "Cost of seeds, seedlings, plants, and rootstock"
+    irsRef: "Schedule F Instructions, Line 26"
+    testRef: "tests/engine/schedules/schedule-f.test.ts::Schedule F Line 33 - total farm expenses sums all expense lines"
+
+  - line: "27"
+    description: "Storage and warehousing"
+    formula: "Grain storage, cold storage, and warehousing costs"
+    irsRef: "Schedule F Instructions, Line 27"
+    testRef: "tests/engine/schedules/schedule-f.test.ts::Schedule F Line 33 - total farm expenses sums all expense lines"
+
+  - line: "28"
+    description: "Supplies"
+    formula: "Farm supplies consumed during the year"
+    irsRef: "Schedule F Instructions, Line 28"
+    testRef: "tests/engine/schedules/schedule-f.test.ts::Schedule F Line 33 - total farm expenses sums all expense lines"
+
+  - line: "29"
+    description: "Taxes"
+    formula: "Real estate, personal property, FICA, FUTA taxes (not income or SE tax)"
+    irsRef: "Schedule F Instructions, Line 29"
+    testRef: "tests/engine/schedules/schedule-f.test.ts::Schedule F Line 33 - total farm expenses sums all expense lines"
+
+  - line: "30"
+    description: "Utilities"
+    formula: "Electricity, water, telephone (second line), and other utility costs"
+    irsRef: "Schedule F Instructions, Line 30"
+    testRef: "tests/engine/schedules/schedule-f.test.ts::Schedule F Line 33 - total farm expenses sums all expense lines"
+
+  - line: "31"
+    description: "Veterinary, breeding, and medicine"
+    formula: "Animal health and breeding costs"
+    irsRef: "Schedule F Instructions, Line 31"
+    testRef: "tests/engine/schedules/schedule-f.test.ts::Schedule F Line 33 - total farm expenses sums all expense lines"
+
+  - line: "32f"
+    description: "Total other expenses"
+    formula: "Sum of Lines 32a-32e (miscellaneous farm expenses)"
+    irsRef: "Schedule F Instructions, Line 32f"
+    testRef: "tests/engine/schedules/schedule-f.test.ts::Schedule F Line 33 - total farm expenses sums all expense lines"
+
+  - line: "33"
+    description: "Total expenses"
+    formula: "Sum of Lines 10 through 32f"
+    irsRef: "Schedule F Instructions, Line 33"
+    testRef: "tests/engine/schedules/schedule-f.test.ts::Schedule F Line 33 - total farm expenses sums all expense lines"
+
+  - line: "34"
+    description: "Net farm profit or loss"
+    formula: "Line 9 - Line 33"
+    irsRef: "Schedule F Instructions, Line 34"
+    notes: "Flows to Schedule 1 Line 6 and Schedule SE Line 1a/4a"
+    edgeCases:
+      - "Farm loss may be limited by at-risk rules (Form 6198) and passive activity rules (Form 8582)"
+      - "Excess business loss limitation applies ($313,000 single / $626,000 MFJ for 2025)"
+      - "Net farm profit qualifies for farm income averaging (Schedule J)"
+    testRef: "tests/engine/schedules/schedule-f.test.ts::Schedule F Line 34 - net farm profit flows to Schedule 1 Line 6"

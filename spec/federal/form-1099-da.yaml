@@ -1,0 +1,114 @@
+form: "Form 1099-DA"
+fullName: "Digital Asset Proceeds from Broker Transactions"
+taxYear: 2025
+irsReference: "https://www.irs.gov/forms-pubs/about-form-1099-da"
+
+notes: |
+  Form 1099-DA is used by brokers to report digital asset (cryptocurrency)
+  transactions beginning tax year 2025. It replaces the informal 1099-B
+  reporting some exchanges used previously for crypto.
+
+  Key IRS references:
+  - IRS Notice 2014-21: Virtual currency is property for tax purposes
+  - Rev. Rul. 2019-24: Tax treatment of hard forks and airdrops
+  - Rev. Rul. 2023-14: Staking rewards taxable when received
+  - Notice 2024-56: Broker reporting requirements for digital assets
+  - IRC §6045(g)(3)(D): Digital asset definition for broker reporting
+
+  Transactions flow to Form 8949 and Schedule D identically to 1099-B
+  transactions. The digitalAsset flag on Form 8949 entries triggers the
+  Form 1040 digital asset question (Line 1a) to be answered "Yes".
+
+lines:
+  - line: "Box 6"
+    description: "Name of digital asset"
+    formula: "Reported by broker — name of cryptocurrency or token"
+    irsRef: "Form 1099-DA Instructions, Box 6"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::1099-DA transactions flow through Form 8949 to Schedule D"
+
+  - line: "Box 7"
+    description: "Digital asset ticker or symbol"
+    formula: "Reported by broker — ticker (e.g., BTC, ETH)"
+    irsRef: "Form 1099-DA Instructions, Box 7"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::1099-DA transactions flow through Form 8949 to Schedule D"
+
+  - line: "Box 8"
+    description: "Date acquired"
+    formula: "Date the digital asset was originally acquired"
+    irsRef: "Form 1099-DA Instructions, Box 8"
+    edgeCases:
+      - "VARIOUS if multiple acquisition dates for a single disposition"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::FIFO multi-lot consumption: sale spans across two lots"
+
+  - line: "Box 9"
+    description: "Date of sale or disposition"
+    formula: "Date the digital asset was sold, exchanged, or disposed of"
+    irsRef: "Form 1099-DA Instructions, Box 9"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::1099-DA transactions flow through Form 8949 to Schedule D"
+
+  - line: "Box 10"
+    description: "Gross proceeds"
+    formula: "Total amount realized from the disposition"
+    irsRef: "Form 1099-DA Instructions, Box 10"
+    edgeCases:
+      - "Includes FMV of property received in exchange transactions"
+      - "For crypto-to-crypto exchanges, FMV in USD at time of exchange"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Uses broker-reported cost basis when provided"
+
+  - line: "Box 11"
+    description: "Cost or other basis"
+    formula: "Adjusted basis of the digital asset disposed of"
+    irsRef: "Form 1099-DA Instructions, Box 11"
+    edgeCases:
+      - "May be $0 if basis not tracked by broker"
+      - "For mined coins: basis = FMV at receipt (Notice 2014-21 Q&A 6)"
+      - "For airdrop coins: basis = FMV at receipt (Rev. Rul. 2019-24)"
+      - "For hard fork coins: basis = FMV at fork or $0 if indeterminable"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Uses broker-reported cost basis when provided"
+
+  - line: "Box 12"
+    description: "Gain or loss"
+    formula: "proceeds - costBasis + adjustments"
+    irsRef: "Form 1099-DA Instructions, Box 12"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Uses broker-reported cost basis when provided"
+
+  - line: "Box G"
+    description: "Basis reported to IRS indicator"
+    formula: "Boolean: whether the broker reported cost basis to the IRS"
+    irsRef: "Form 1099-DA Instructions, Box G"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Uses broker-reported cost basis when provided"
+
+  # ── Processing Rules ──────────────────────────────────
+  - line: "8949-routing"
+    description: "Route 1099-DA transactions to Form 8949"
+    formula: |
+      Each 1099-DA transaction creates a Form 8949 entry:
+      - Short-term + basis reported → Box A
+      - Short-term + basis not reported → Box B
+      - Long-term + basis reported → Box D
+      - Long-term + basis not reported → Box E
+      Digital asset flag set to true for all entries.
+    irsRef: "Form 8949 Instructions"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::1099-DA transactions flow through Form 8949 to Schedule D"
+
+  - line: "cost-basis-method"
+    description: "Cost basis method election for lot matching"
+    formula: |
+      When broker does not report cost basis, taxpayer elects method:
+      - FIFO (default): First In, First Out
+      - LIFO: Last In, First Out
+      - HIFO: Highest In, First Out
+      - Specific ID: Match by specific lot identifier
+      Per IRS Notice 2014-21 Q&A 7 and general property rules.
+    irsRef: "IRS Notice 2014-21 Q&A 7"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::FIFO sells earliest acquired lot first"
+
+  - line: "1040-digital-asset"
+    description: "Form 1040 digital asset question derivation"
+    formula: |
+      Answer "Yes" if any of:
+      - form1099DA array has entries
+      - Any capitalTransaction has digitalAsset = true
+      - cryptoIncome has any mining/staking/airdrop entries
+    irsRef: "Form 1040 Instructions, Line 1a Digital Assets"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Yes when form1099DA entries exist"

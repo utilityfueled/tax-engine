@@ -1,0 +1,91 @@
+form: "Form 8960"
+fullName: "Net Investment Income Tax"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i8960"
+
+lines:
+  - line: "1"
+    description: "Taxable interest"
+    formula: "1040 Line 2b"
+    irsRef: "Form 8960 Instructions, Line 1"
+    testRef: "tests/engine/forms/form-8960.test.ts::Form 8960 Line 1 - taxable interest"
+
+  - line: "4a"
+    description: "Dividends"
+    formula: "1040 Line 3b (ordinary dividends)"
+    irsRef: "Form 8960 Instructions, Line 4a"
+    testRef: "tests/engine/forms/form-8960.test.ts::Form 8960 Line 4a - dividends"
+
+  - line: "4b"
+    description: "Net gain/loss from capital assets (investment property)"
+    formula: "max(0, Schedule D Line 7) + max(0, Schedule D Line 15)"
+    irsRef: "Form 8960 Instructions, Line 4b"
+    notes: |
+      Per IRS Form 8960 Instructions, Line 4b: "This amount is generally the sum
+      of Schedule D, line 7 and Schedule D, line 15. However, if either amount is
+      a loss, enter only the gain, if any."
+      Each category (ST/LT) is independently zero-floored BEFORE summing.
+      This prevents cross-category netting: ST losses do NOT reduce LT gains
+      (and vice versa) for NII purposes. This differs from Schedule D Line 16
+      (total net) and from the QDCG Worksheet Line 3 (min of Lines 15/16).
+    edgeCases:
+      - "Both ST and LT gains: sum of both (same as Schedule D Line 16)"
+      - "ST loss, LT gain: enter LT gain only (ST loss ignored for NII)"
+      - "ST gain, LT loss: enter ST gain only (LT loss ignored for NII)"
+      - "Both losses: $0"
+      - "ST -$10K, LT +$30K: NII capital gain = $30K (not $20K net)"
+    testRef: "tests/edge-cases/niit-edge-cases.test.ts::NIIT - capital gain no cross-netting (Form 8960 Line 4b)"
+
+  - line: "other-investment"
+    description: "Other investment income (passive activity net)"
+    formula: "netPassive + netRental + suspendedLoss (from Form 8582)"
+    irsRef: "Form 8960 Instructions, Lines 3-7; IRC §1411(c)(1)(A)(iii)"
+    notes: |
+      Per IRS Form 8960 instructions, allowed passive losses (after Form 8582
+      limitations) reduce NII. Suspended losses do NOT reduce NII.
+      Formula: net passive activities (income + all losses) + suspended loss amount.
+      This equals: gross passive income - allowed passive losses.
+      When passive activities have net income (no Form 8582 limitation), the full
+      net income flows through. When losses are partially suspended, only the
+      allowed portion reduces NII.
+    edgeCases:
+      - "No passive activities: $0 contribution to NII"
+      - "Net positive passive (no limitation): full net income added to NII"
+      - "Net loss with partial suspension: only allowed loss reduces NII"
+      - "All losses suspended (MFS, high AGI): $0 contribution to NII"
+    testRef: "tests/edge-cases/niit-edge-cases.test.ts::NIIT - passive losses reduce net investment income"
+
+  - line: "8"
+    description: "Net investment income"
+    formula: "Lines 1 + 4a + 5a + other investment income - investment expenses, floor at 0"
+    irsRef: "Form 8960 Instructions, Line 8"
+    testRef: "tests/engine/forms/form-8960.test.ts::Form 8960 Line 8 - net investment income"
+
+  - line: "11"
+    description: "MAGI threshold"
+    formula: "MFJ: $250,000; Single/HoH: $200,000; MFS: $125,000"
+    irsRef: "Form 8960 Instructions, Line 11"
+    testRef: "tests/engine/forms/form-8960.test.ts::Form 8960 Line 11 - single threshold $200K"
+
+  - line: "13"
+    description: "Excess of MAGI over threshold"
+    formula: "MAGI - threshold, floor at 0"
+    irsRef: "Form 8960 Instructions, Line 13"
+    testRef: "tests/engine/forms/form-8960.test.ts::Form 8960 Line 13 - MAGI excess"
+
+  - line: "14"
+    description: "Taxable base"
+    formula: "min(Line 8, Line 13)"
+    irsRef: "Form 8960 Instructions, Line 14"
+    notes: "Tax applies to lesser of NII or MAGI excess"
+    testRef: "tests/engine/forms/form-8960.test.ts::Form 8960 Line 14 - taxable base uses lesser of NII or excess"
+
+  - line: "17"
+    description: "Net Investment Income Tax"
+    formula: "Line 14 × 3.8%"
+    irsRef: "Form 8960 Instructions, Line 17"
+    edgeCases:
+      - "MAGI below threshold: $0"
+      - "NII is $0: $0 regardless of MAGI"
+      - "Uses lesser of NII and MAGI excess"
+    testRef: "tests/engine/forms/form-8960.test.ts::Form 8960 Line 17 - tax on investment income"

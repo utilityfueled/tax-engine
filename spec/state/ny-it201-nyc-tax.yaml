@@ -1,0 +1,241 @@
+form: "New York IT-201 NYC Tax Computation"
+fullName: "New York State Form IT-201 Lines 47-54 — NYC Resident Tax"
+taxYear: 2025
+irsReference: "https://www.tax.ny.gov/forms/current-forms/it/it201i.htm"
+
+notes: |
+  Full-year New York City residents compute NYC personal income tax on IT-201
+  lines 47 through 54. NYC taxable income is generally the same as NYS taxable
+  income (line 38), except when the charitable gifts trust addback worksheet on
+  line 47 applies. This helper expects the already-determined line 47 taxable
+  income as input.
+
+  The 2025 household credit rule follows the official IT-201 line 48
+  instructions: eligibility is based on federal adjusted gross income (with an
+  override path for the adjusted/combined amount used by the instructions), not
+  NYC taxable income.
+
+  NYC uses a 4-bracket progressive tax rate schedule with rates: 3.078%, 3.762%,
+  3.819%, and 3.876%. Bracket thresholds differ by filing status.
+
+  This helper computes the full-year resident path directly and also supports
+  carrying the official part-year NYC resident tax amount from Form IT-360.1
+  into IT-201 line 50 when the caller marks the return as part-year NYC.
+  It does not compute Form IT-360.1 itself.
+
+  Supported paths:
+  - Line 47a: NYC resident tax from the tax table or rate schedule
+  - Line 48: NYC household credit
+  - Line 50: Part-year NYC resident tax passthrough from Form IT-360.1
+  - Line 51: Other NYC taxes from IT-201-ATT Part 3 line 34, plus the
+    instructions' mixed-residency joint-return worksheet path when supplied as a
+    passthrough amount
+  - Line 53: NYC nonrefundable credits from IT-201-ATT line 10
+  - Line 54: Total NYC tax after the household credit and line 53 credits
+
+  The 2025 NYC school tax credit is not part of lines 47 through 54. It is
+  claimed later in the refundable-credit section of IT-201 on lines 69 and 69a,
+  so this helper does not net any school-tax credit against line 54.
+
+  For taxable incomes below $65,000 and NYC taxable income ≤ $107,650, the NYC
+  tax table may be used (deferred — rate schedule gives equivalent result).
+
+  NYC tax rate schedule for 2025:
+
+  Single / Married filing separately:
+    3.078% on first $12,000
+    3.762% on $12,001 to $25,000
+    3.819% on $25,001 to $50,000
+    3.876% on income over $50,000
+
+  Married filing jointly / Qualifying surviving spouse:
+    3.078% on first $21,600
+    3.762% on $21,601 to $45,000
+    3.819% on $45,001 to $90,000
+    3.876% on income over $90,000
+
+  Head of household:
+    3.078% on first $14,400
+    3.762% on $14,401 to $30,000
+    3.819% on $30,001 to $60,000
+    3.876% on income over $60,000
+
+  NYC household credit table:
+  Single:
+    Federal AGI up to $10,000: $15
+    $10,001 - $12,500: $10
+    Over $12,500: $0
+
+  Married filing jointly / Head of household / Qualifying surviving spouse:
+    Uses federal AGI and household-size tables.
+    Household size equals dependents on IT-201 item H plus one for the filer
+    (plus one spouse for MFJ only).
+
+    Federal AGI up to $15,000:
+      1: $30, 2: $60, 3: $90, 4: $120, 5: $150, 6: $180, 7: $210, each over 7: +$30
+    $15,001 - $17,500:
+      1: $25, 2: $50, 3: $75, 4: $100, 5: $125, 6: $150, 7: $175, each over 7: +$25
+    $17,501 - $20,000:
+      1: $15, 2: $30, 3: $45, 4: $60, 5: $75, 6: $90, 7: $105, each over 7: +$15
+    $20,001 - $22,500:
+      1: $10, 2: $20, 3: $30, 4: $40, 5: $50, 6: $60, 7: $70, each over 7: +$10
+    Over $22,500: $0
+
+  Married filing separately:
+    Uses the official combined-return table based on combined federal AGI from
+    both spouses and combined household size from both returns, plus one for
+    each spouse. The engine supports exact MFS results via explicit override
+    inputs passed to the NYC household-credit helper.
+
+lines:
+  - line: "47"
+    description: "NYC taxable income"
+    formula: "NYC taxable income worksheet result, usually equal to NYS taxable income on line 38"
+    inputs:
+      - "NYC taxable income"
+    notes: |
+      For most full-year residents, line 47 equals NYS taxable income on IT-201
+      line 38. If the line 47 charitable gifts trust worksheet applies, the
+      upstream worksheet result must be supplied here.
+    testRef: "tests/engine/state/ny-it201-nyc-tax.test.ts::Line 47 - NYC taxable income carries through the supplied full-year resident amount"
+
+  - line: "47a"
+    description: "NYC resident tax"
+    formula: "Apply NYC tax rate schedule to NYC taxable income (= NYS taxable income line 38)"
+    inputs:
+      - "NYC taxable income (line 47)"
+      - "Filing status"
+    notes: |
+      Uses the NYC tax rate schedule (4 brackets: 3.078%, 3.762%, 3.819%, 3.876%).
+      Bracket thresholds differ by filing status group:
+      - Single/MFS: $12,000 / $25,000 / $50,000
+      - MFJ/QSS: $21,600 / $45,000 / $90,000
+      - HoH: $14,400 / $30,000 / $60,000
+    edgeCases:
+      - "Zero taxable income: zero tax"
+      - "Income exactly at bracket boundary"
+      - "Very high income: all in top bracket at 3.876%"
+    testRef: "tests/engine/state/ny-it201-nyc-tax.test.ts::Line 47a - single filer $75,000 NYC tax rounded to $2,782"
+
+  - line: "48"
+    description: "NYC household credit"
+    formula: "Lookup table based on federal AGI, filing status, and official household-size tables; zero if claimable as dependent"
+    inputs:
+      - "Federal adjusted gross income (or adjusted/combined override used by IT-201 instructions)"
+      - "Filing status"
+      - "Number of dependents"
+      - "Whether the filer can be claimed as a dependent"
+      - "Optional household-size override for the official MFS combined-return table"
+    notes: |
+      Non-refundable credit for low-income NYC residents.
+      Cannot exceed NYC tax on line 48.
+
+      The official 2025 line 48 household credit is determined from federal
+      adjusted gross income, not NYC taxable income. If the taxpayer can be
+      claimed as a dependent on another federal return, no NYC household credit
+      is allowed.
+
+      Single:
+        Federal AGI up to $10,000: $15
+        $10,001 - $12,500: $10
+        Over $12,500: $0
+
+      MFJ / QSS / HoH:
+        Use the table keyed by federal AGI and household size
+        (dependents + one filer, plus spouse for MFJ).
+
+      MFS:
+        Use the official combined-return table based on combined AGI and
+        combined household size from both spouses' returns.
+    edgeCases:
+      - "Claimable as dependent: no credit"
+      - "Single filer with low NYC taxable income but federal AGI above $12,500 gets no credit"
+      - "MFJ household-size table scales beyond seven members using the per-person increment"
+      - "MFS exact result can be supplied with combined-return override inputs"
+      - "Credit capped at NYC tax"
+    testRef: "tests/engine/state/ny-it201-nyc-tax.test.ts::Line 48 - MFJ federal AGI $20,000 with household size 4 gets $60 credit"
+
+  - line: "50"
+    description: "Part-year New York City resident tax"
+    formula: "If part-year NYC resident path is selected: passthrough amount from Form IT-360.1; otherwise 0"
+    inputs:
+      - "Part-year NYC resident flag"
+      - "Form IT-360.1 tax amount"
+    notes: |
+      IT-201 line 50 is populated from Form IT-360.1 for part-year NYC
+      residents. This helper now accepts that already-computed amount as a
+      passthrough while still leaving Form IT-360.1 itself upstream. If the
+      part-year NYC path is selected, the caller must provide the official
+      Form IT-360.1 tax amount explicitly rather than allowing the helper to
+      default it to zero.
+    edgeCases:
+      - "Part-year NYC resident with zero IT-360.1 tax still carries 0 to line 50"
+      - "Part-year NYC resident missing the IT-360.1 amount is invalid"
+      - "Full-year NYC resident keeps line 50 at zero"
+    testRef: "tests/engine/state/ny-it201-nyc-tax.test.ts::Line 50 - part-year NYC resident tax flows from Form IT-360.1 passthrough"
+
+  - line: "51"
+    description: "Other New York City taxes"
+    formula: |
+      Either:
+        passthrough amount from IT-201-ATT Part 3 line 34
+      Or, for the instructions' mixed-residency joint-return worksheet:
+        max(0, NYC tax on the full-year city resident spouse's separate-return city taxable income
+          - applicable NYC household credit)
+        + part-year city resident spouse tax from Form IT-360.1, if any
+    inputs:
+      - "Other NYC taxes from IT-201-ATT Part 3 line 34"
+      - "Full-year city resident spouse NYC taxable income as if separate federal returns were filed"
+      - "Combined federal adjusted gross income used by NYC household credit table 6"
+      - "Combined household members used by NYC household credit table 6"
+      - "Optional part-year city resident spouse tax from Form IT-360.1"
+    notes: |
+      This line carries other NYC taxes, including the instructions' special
+      worksheet results for joint returns where spouses have different NYC
+      residency periods. It can apply on the full-year or part-year NYC paths.
+
+      Official 2025 line 51 instructions:
+      - If one spouse was a full-year NYC resident and the other spouse was a
+        full-year NYC nonresident, compute on a separate sheet the NYC resident
+        tax on the city resident's New York State taxable income as if separate
+        federal returns had been filed, reduced by the NYC household credit if
+        applicable, and transfer that amount to line 51.
+      - If one spouse was a full-year NYC resident and the other spouse was a
+        part-year NYC resident, compute the same separate-sheet full-year city
+        resident amount and add the spouse's Form IT-360.1 tax before carrying
+        the combined amount to line 51.
+
+      Implementation note:
+      - The mixed-residency worksheet helper applies the full-year city
+        resident spouse tax using the married-filing-separately NYC rate
+        schedule and applies the household credit through NYC table 6 using the
+        official combined-return AGI and household-size inputs. This is an
+        inference from the line 51 worksheet instructions together with the line
+        48 table 6 instructions for filing status 3.
+    testRef: "tests/engine/state/ny-it201-nyc-tax.test.ts::Line 51 - mixed-residency worksheet computes the full-year city resident spouse tax and optional part-year spouse carryover"
+
+  - line: "53"
+    description: "New York City nonrefundable credits"
+    formula: "Passthrough amount from IT-201-ATT line 10"
+    inputs:
+      - "NYC nonrefundable credits from IT-201-ATT line 10"
+    notes: "These credits reduce line 54 but cannot reduce it below zero."
+    testRef: "tests/engine/state/ny-it201-nyc-tax.test.ts::Line 53 - NYC nonrefundable credits pass through"
+
+  - line: "54"
+    description: "Total NYC tax"
+    formula: "max(0, Line 47a - Line 48 + Line 50 + Line 51 - Line 53)"
+    inputs:
+      - "NYC resident tax (line 47a)"
+      - "NYC household credit (line 48)"
+      - "Part-year NYC resident tax (line 50)"
+      - "Other NYC taxes (line 51)"
+      - "NYC nonrefundable credits (line 53)"
+    notes: |
+      For this full-year resident helper, line 50 is always zero. The result is
+      the NYC tax amount that flows into IT-201 line 58 and the IT-270
+      limitation.
+    edgeCases:
+      - "Household credit and line 53 credits cannot reduce line 54 below zero"
+      - "Line 51 other NYC taxes can increase the final line 54 amount"
+    testRef: "tests/engine/state/ny-it201-nyc-tax.test.ts::Line 54 - total NYC tax includes line 51 taxes and line 53 credits"

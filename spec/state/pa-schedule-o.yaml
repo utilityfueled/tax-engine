@@ -1,0 +1,177 @@
+form: "PA-Schedule-O"
+fullName: "Pennsylvania Schedule O — Other Deductions"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40o.pdf"
+
+notes: |
+  PA Schedule O reports deductions that flow to PA-40 Line 10 / engine
+  normalized PA-40 Line 9a. For the supported resident slice, the engine
+  calculates the schedule using the 2024 and 2025 printed form rules:
+
+    - IRC Section 529 qualified tuition program contributions are deductible
+      up to the per-beneficiary, per-taxpayer/per-spouse limit.
+    - Pennsylvania ABLE contributions are deductible subject to the annual
+      federal gift-tax exclusion amount.
+    - Medical Savings Account and Health Savings Account deductions follow the
+      federally allowed deduction amounts.
+    - Beginning in tax year 2025, student loan interest is also deductible,
+      limited to $2,500 for the taxable year and only to the extent allowed
+      for federal income tax purposes.
+    - Schedule O Line 10 limits each taxpayer/spouse column to that person's
+      separately computed PA-40 Line 9 income.
+
+  The paper form rounds to whole dollars. The engine rounds each Schedule O
+  line to the nearest dollar before applying caps and limitations.
+
+packetRules:
+  packetBehavior: "reference-summary-pdf"
+  includeWhen:
+    - "A Pennsylvania resident return packet is being assembled and Schedule O has any non-zero supported deduction amount or allowable deduction"
+  suppressWhen:
+    - "No Pennsylvania resident return packet is being assembled"
+    - "Schedule O is absent or every supported Schedule O deduction amount is zero"
+  notes: |
+    The 2025 PA-40 Schedule O instructions say Schedule O must be completed
+    and included with an originally filed PA-40 when the taxpayer or spouse
+    made eligible Medical Savings Account, Health Savings Account, IRC Section
+    529, or IRC Section 529A Pennsylvania ABLE contributions and wishes to
+    take a deduction on PA-40 Line 10, and also when claiming the student loan
+    interest deduction. Until an official PA-40 Schedule O PDF filler exists,
+    the packet path emits `pa-schedule-o-reference.pdf` as a reference summary
+    only. Packet disclosures must therefore keep Pennsylvania packet
+    completeness partial whenever this reference summary is attached.
+
+businessRuleValidation:
+  - rule: "pa-schedule-o-reference-packet"
+    description: "Inventory support counts the Pennsylvania Schedule O packet path as validated only when fillReturn emits `pa-schedule-o-reference.pdf` whenever the official Schedule O filing trigger is met."
+    testRef: "tests/pdf/fill-pa-schedule-o.test.ts::fillReturn includes the Pennsylvania Schedule O reference summary when the official filing trigger is met"
+  - rule: "pa-schedule-o-reference-suppression"
+    description: "Inventory support counts the Pennsylvania Schedule O suppression rule as validated only when regression coverage proves fillReturn omits the reference summary when every supported Schedule O deduction amount is zero."
+    testRef: "tests/pdf/fill-pa-schedule-o.test.ts::fillReturn suppresses the Pennsylvania Schedule O reference summary when the official filing trigger is not met"
+  - rule: "pa-schedule-o-reference-disclosure"
+    description: "Inventory support counts the Pennsylvania Schedule O packet disclosure as validated only when readiness regression coverage keeps packet completeness partial while only the Schedule O reference summary is available beyond PA-40."
+    testRef: "tests/utils/return-readiness.test.ts::marks Pennsylvania packets partial when a PA Schedule O reference summary is attached"
+
+lines:
+  - line: "1"
+    description: "IRC Section 529 qualified tuition program contributions by beneficiary"
+    formula: |
+      For each beneficiary:
+        - round taxpayer and spouse contribution amounts to whole dollars
+        - cap each contributor's amount at the annual per-beneficiary limit
+      Annual limit:
+        - 2024: $18,000 per beneficiary per taxpayer/spouse
+        - 2025: $19,000 per beneficiary per taxpayer/spouse
+    notes: |
+      The 2025 instructions say not to include more than $19,000 per
+      beneficiary in Column (c) or Column (d). The 2024 instructions use
+      $18,000. Contributions made after Dec. 31 belong to the following tax
+      year. Refund donations previously directed to a PA 529 account are also
+      included in this line when provided in the validated input.
+    testRef: "tests/engine/state/pa-schedule-o.test.ts::PA Schedule O Line 1 caps 529 contributions per beneficiary and contributor"
+
+  - line: "2"
+    description: "Total IRC Section 529 contributions"
+    formula: "Sum capped Line 1 beneficiary contributions separately for taxpayer Column (c) and spouse Column (d)"
+    testRef: "tests/engine/state/pa-schedule-o.test.ts::PA Schedule O Line 2 totals capped 529 contributions by column"
+
+  - line: "3"
+    description: "IRC Section 529A Pennsylvania ABLE contributions by beneficiary"
+    formula: |
+      For each beneficiary:
+        - round each beneficiary contribution to whole dollars
+        - reject the supported input when taxpayer Column (c) plus spouse
+          Column (d) for any one beneficiary exceeds the annual federal
+          gift-tax exclusion for that tax year
+      After beneficiary-level validation:
+        - total each contributor's ABLE contributions across beneficiaries
+        - reject the supported input when taxpayer Column (c) or spouse
+          Column (d) exceeds the annual federal gift-tax exclusion across
+          one or more ABLE accounts
+      Annual exclusion:
+        - 2024: $18,000
+        - 2025: $19,000
+    notes: |
+      The printed instructions also note an account-level annual federal
+      gift-tax exclusion limit. Because the supported input only reports the
+      taxpayer and spouse beneficiary-level amounts, the engine rejects a
+      beneficiary row when the combined taxpayer/spouse total exceeds the
+      annual exclusion instead of guessing how to reallocate the excess
+      between contributors. The same instructions also say the maximum
+      contributions by one contributor to one or more ABLE accounts cannot
+      exceed the annual exclusion amount, so the supported slice rejects an
+      over-limit taxpayer or spouse total rather than silently trimming it.
+    edgeCases:
+      - "A single beneficiary row whose taxpayer and spouse ABLE contributions exceed the annual exclusion is rejected"
+      - "A taxpayer contribution total across multiple beneficiaries that exceeds the annual exclusion is rejected"
+      - "A spouse contribution total across multiple beneficiaries that exceeds the annual exclusion is rejected"
+    testRef: "tests/engine/state/pa-schedule-o.test.ts::PA Schedule O Line 3 rejects ABLE beneficiary contributions that exceed the annual exclusion across contributors"
+
+  - line: "4"
+    description: "Total IRC Section 529A Pennsylvania ABLE contributions"
+    formula: "Sum validated Line 3 ABLE contributions for taxpayer Column (c) and spouse Column (d)"
+    notes: |
+      Once Line 3 validation passes, the supported slice carries the rounded
+      ABLE contribution totals through Line 4 without any additional silent
+      reduction because over-limit contributor totals are already rejected.
+    testRef: "tests/engine/state/pa-schedule-o.test.ts::PA Schedule O Line 4 totals validated ABLE contributions within the annual exclusion"
+
+  - line: "5"
+    description: "Medical Savings Account contributions allowed for federal purposes"
+    formula: "Rounded federally allowed Medical Savings Account deduction amount for taxpayer and spouse separately"
+    notes: |
+      The supported slice uses validated federally allowed Archer/Medical
+      Savings Account deduction amounts rather than recomputing federal Form
+      8853 inside the Pennsylvania schedule.
+    testRef: "tests/engine/state/pa-schedule-o.test.ts::PA Schedule O Lines 5 through 8 combine federal-allowed MSA HSA and student loan amounts"
+
+  - line: "6"
+    description: "Health Savings Account contributions allowed for federal purposes"
+    formula: "Rounded federally allowed Health Savings Account deduction amount for taxpayer and spouse separately"
+    notes: |
+      The supported slice uses the federally allowed HSA deduction amount,
+      whether supplied directly or derived from federal Schedule 1 Line 13.
+    testRef: "tests/engine/state/pa-schedule-o.test.ts::PA Schedule O Lines 5 through 8 combine federal-allowed MSA HSA and student loan amounts"
+
+  - line: "7"
+    description: "Student Loan Interest Deduction"
+    formula: |
+      Rounded federally allowed student loan interest deduction amount,
+      capped as follows:
+        - 2024: $0 (not an allowable PA Schedule O deduction in the supported slice)
+        - 2025: min(federally allowed amount, $2,500)
+    notes: |
+      The 2025 instructions describe student loan interest as a new allowable
+      deduction and instruct the taxpayer to enter the amount allowed for
+      federal income tax purposes, subject to the $2,500 taxable-year cap.
+    testRef: "tests/engine/state/pa-schedule-o.test.ts::PA Schedule O Line 7 caps student loan interest at 2500 for 2025 and disallows it for 2024"
+
+  - line: "8"
+    description: "Other deductions before income limitation"
+    formula: "Line 2 + Line 4 + Line 5 + Line 6 + Line 7, computed separately for taxpayer Column (c) and spouse Column (d)"
+    testRef: "tests/engine/state/pa-schedule-o.test.ts::PA Schedule O Lines 5 through 8 combine federal-allowed MSA HSA and student loan amounts"
+
+  - line: "9"
+    description: "Separate PA-40 Line 9 income for taxpayer and spouse"
+    formula: "Use the separately computed PA-40 Line 9 taxable income amounts for taxpayer Column (c) and spouse Column (d)"
+    notes: |
+      The 2025 instructions require Line 9 to be calculated separately for the
+      taxpayer and spouse, and the two columns should add up to PA-40 Line 9.
+      The supported resident orchestrator can derive the single-column amount
+      automatically for non-joint returns and accepts explicit split amounts
+      for joint returns.
+    testRef: "tests/engine/state/pa-schedule-o.test.ts::PA Schedule O Line 10 limits each spouse separately by their own PA income"
+
+  - line: "10"
+    description: "Allowed deduction after separate-income limitation"
+    formula: "For each column, enter the lesser of Line 8 or Line 9"
+    notes: |
+      This limitation is applied separately to the taxpayer and spouse columns,
+      not only on a combined-return basis.
+    testRef: "tests/engine/state/pa-schedule-o.test.ts::PA Schedule O Line 10 limits each spouse separately by their own PA income"
+
+  - line: "11"
+    description: "Total other deductions"
+    formula: "Line 10 Column (c) + Line 10 Column (d)"
+    notes: "Flows to PA-40 Line 10 on the printed 2025 return and the engine's normalized PA-40 Line 9a other-deductions slot."
+    testRef: "tests/engine/state/pa-schedule-o.test.ts::PA Schedule O Line 11 sums the allowed taxpayer and spouse deductions"

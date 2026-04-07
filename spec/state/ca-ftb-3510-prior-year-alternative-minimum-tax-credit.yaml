@@ -1,0 +1,275 @@
+form: "California FTB 3510 Prior Year Alternative Minimum Tax Credit"
+fullName: "California FTB 3510 Prior Year Alternative Minimum Tax Credit Upstream Nonresident Slice"
+taxYear: 2025
+irsReference: "https://www.ftb.ca.gov/forms/2025/2025-3510-instructions.html"
+
+notes: |
+  This slice models the supported 2025 California Form FTB 3510 path for
+  nonresident and part-year resident filers who use credit code 188 on Form
+  540NR line 58 or line 59. The official 2025 FTB 3510 instructions, revised
+  in January 2026, direct personal filers to:
+  - complete 2025 Schedule P (540NR) through Part II line 43 before figuring
+    the credit
+  - use Part I Section A to compute prior-year AMT attributable to exclusion
+    items, including the married/RDP-filing-separately line 4 adjustment once
+    the 2024 exclusion AMTI exceeds $465,231
+  - use Part I Section B to prorate the exclusion-only AMT for nonresident and
+    part-year resident filers who filed Schedule P (540NR) for 2024
+  - use Part II to combine the prior-year AMT attributable to deferral
+    preferences with any 2024 unused AMT credit carryover, then limit the 2025
+    claim to the amount by which current-year regular tax after exemption and
+    other allowable credits exceeds tentative minimum tax
+  - enter the resulting line 38 credit on Schedule P (540NR) Part III line 10
+    column (b), or on Form 540NR line 58 or line 59 when the filer claims only
+    one or two credits directly on the return
+  FTB later published a February 12, 2026 Tax News Flash and February 13, 2026
+  Public Service Bulletin clarifying that 2025 line 28 no longer requires a
+  reduction for prior-year solar energy credit carryover or commercial solar
+  energy credit carryover used against 2024 AMT. This supported slice follows
+  that updated line 28 instruction.
+  This upstream slice intentionally supports only the nonresident and
+  part-year resident path that feeds Form 540NR. Resident and fiduciary line 12
+  and line 13 handling remain outside this slice. The certain-child-under-age-24
+  limitation on line 9 also remains unsupported and must stay upstream.
+
+lines:
+  - line: "1-3"
+    description: "Prior-year exclusion-only AMTI base inputs"
+    formula: "Use the supported 2024 Schedule P (540NR) Part I exclusion-total input for line 1, the supported signed exclusion adjustments input for line 2, and the supported AMT credit NOL deduction input for line 3"
+    inputs:
+      - "2024 Schedule P (540NR) Part I line 15 through line 18 combined amount"
+      - "2024 exclusion adjustments and tax preference items treated as exclusions"
+      - "2024 AMT credit net operating loss deduction"
+    edgeCases:
+      - "Line 2 remains signed because exclusion adjustments may either increase or reduce exclusion-only AMTI"
+    testRef: "tests/engine/state/ca-ftb-3510-prior-year-alternative-minimum-tax-credit.test.ts::CA FTB 3510 Prior Year Alternative Minimum Tax Credit Line 38 - nonresident filers compute the current-year claim from prior-year deferral AMT and the 2025 limitation"
+
+  - line: "4"
+    description: "Prior-year exclusion-only alternative minimum taxable income"
+    formula: "max(0, Line 1 + Line 2 - Line 3), and if the 2024 filing status was married/RDP filing separately and the result exceeds $465,231, increase it by min(25% of the excess over $465,231, $60,029)"
+    inputs:
+      - "Form FTB 3510 line 1"
+      - "Form FTB 3510 line 2"
+      - "Form FTB 3510 line 3"
+      - "2024 filing status"
+    edgeCases:
+      - "The married/RDP filing separately adjustment starts only after $465,231"
+      - "The married/RDP filing separately adjustment cannot exceed $60,029"
+    testRef: "tests/engine/state/ca-ftb-3510-prior-year-alternative-minimum-tax-credit.test.ts::CA FTB 3510 Prior Year Alternative Minimum Tax Credit Line 4 - married filing separately applies the published 2024 threshold adjustment"
+
+  - line: "5-6"
+    description: "Prior-year exemption worksheet amounts"
+    formula: "Use the supported 2024 Schedule P (540NR) line 22 exemption worksheet line 1 amount for line 5 and line 3 amount for line 6"
+    inputs:
+      - "2024 Schedule P (540NR) line 22 exemption worksheet line 1 amount"
+      - "2024 Schedule P (540NR) line 22 exemption worksheet line 3 amount"
+    testRef: "tests/engine/state/ca-ftb-3510-prior-year-alternative-minimum-tax-credit.test.ts::CA FTB 3510 Prior Year Alternative Minimum Tax Credit Line 38 - nonresident filers compute the current-year claim from prior-year deferral AMT and the 2025 limitation"
+
+  - line: "7"
+    description: "Prior-year AMTI excess over the exemption threshold"
+    formula: "max(0, Line 4 - Line 6)"
+    inputs:
+      - "Form FTB 3510 line 4"
+      - "Form FTB 3510 line 6"
+    testRef: "tests/engine/state/ca-ftb-3510-prior-year-alternative-minimum-tax-credit.test.ts::CA FTB 3510 Prior Year Alternative Minimum Tax Credit Line 38 - nonresident filers compute the current-year claim from prior-year deferral AMT and the 2025 limitation"
+
+  - line: "8"
+    description: "Exemption phaseout reduction"
+    formula: "Line 7 × 25%"
+    inputs:
+      - "Form FTB 3510 line 7"
+    testRef: "tests/engine/state/ca-ftb-3510-prior-year-alternative-minimum-tax-credit.test.ts::CA FTB 3510 Prior Year Alternative Minimum Tax Credit Line 38 - nonresident filers compute the current-year claim from prior-year deferral AMT and the 2025 limitation"
+
+  - line: "9"
+    description: "Exemption amount allowed against exclusion-only AMTI"
+    formula: "max(0, Line 5 - Line 8)"
+    inputs:
+      - "Form FTB 3510 line 5"
+      - "Form FTB 3510 line 8"
+    edgeCases:
+      - "The supported slice does not apply the certain-child-under-age-24 limitation"
+    testRef: "tests/engine/state/ca-ftb-3510-prior-year-alternative-minimum-tax-credit.test.ts::CA FTB 3510 Prior Year Alternative Minimum Tax Credit Line 38 - nonresident filers compute the current-year claim from prior-year deferral AMT and the 2025 limitation"
+
+  - line: "10"
+    description: "Prior-year tentative minimum tax base on exclusions"
+    formula: "max(0, Line 4 - Line 9)"
+    inputs:
+      - "Form FTB 3510 line 4"
+      - "Form FTB 3510 line 9"
+    testRef: "tests/engine/state/ca-ftb-3510-prior-year-alternative-minimum-tax-credit.test.ts::CA FTB 3510 Prior Year Alternative Minimum Tax Credit Line 38 - nonresident filers compute the current-year claim from prior-year deferral AMT and the 2025 limitation"
+
+  - line: "11"
+    description: "Prior-year tentative minimum tax on exclusions"
+    formula: "Round(Line 10 × 7% to the nearest whole dollar)"
+    inputs:
+      - "Form FTB 3510 line 10"
+    testRef: "tests/engine/state/ca-ftb-3510-prior-year-alternative-minimum-tax-credit.test.ts::CA FTB 3510 Prior Year Alternative Minimum Tax Credit Line 38 - nonresident filers compute the current-year claim from prior-year deferral AMT and the 2025 limitation"
+
+  - line: "14-18"
+    description: "Prior-year California-source exclusion inputs for nonresident and part-year resident filers"
+    formula: "For the supported nonresident path, line 14 copies line 4, line 15 uses the supported 2024 Schedule P (540NR) Part II line 35 amount, line 17 uses the supported 2024 Schedule P (540NR) Part II line 28 amount, and line 18 uses the supported signed California-source exclusions input"
+    inputs:
+      - "Form FTB 3510 line 4"
+      - "2024 Schedule P (540NR) Part II line 35 amount"
+      - "2024 Schedule P (540NR) Part II line 28 amount"
+      - "2024 California-source exclusion adjustments and preferences"
+      - "Whether the taxpayer itemized deductions for 2024"
+    edgeCases:
+      - "Line 18 remains signed because California-source exclusion adjustments may either increase or reduce California AMTI"
+    testRef: "tests/engine/state/ca-ftb-3510-prior-year-alternative-minimum-tax-credit.test.ts::CA FTB 3510 Prior Year Alternative Minimum Tax Credit Line 38 - nonresident filers compute the current-year claim from prior-year deferral AMT and the 2025 limitation"
+
+  - line: "16"
+    description: "Prior-year total AMT adjusted gross income on exclusions"
+    formula: "Line 14 + Line 15"
+    inputs:
+      - "Form FTB 3510 line 14"
+      - "Form FTB 3510 line 15"
+    testRef: "tests/engine/state/ca-ftb-3510-prior-year-alternative-minimum-tax-credit.test.ts::CA FTB 3510 Prior Year Alternative Minimum Tax Credit Line 38 - nonresident filers compute the current-year claim from prior-year deferral AMT and the 2025 limitation"
+
+  - line: "20"
+    description: "Prior-year California AMT adjusted gross income on exclusions"
+    formula: "Line 17 + Line 18"
+    inputs:
+      - "Form FTB 3510 line 17"
+      - "Form FTB 3510 line 18"
+    testRef: "tests/engine/state/ca-ftb-3510-prior-year-alternative-minimum-tax-credit.test.ts::CA FTB 3510 Prior Year Alternative Minimum Tax Credit Line 38 - nonresident filers compute the current-year claim from prior-year deferral AMT and the 2025 limitation"
+
+  - line: "21"
+    description: "Prior-year AMT itemized deduction percentage on exclusions"
+    formula: "If the taxpayer itemized deductions for 2024 and line 16 is greater than 0, min(1.0000, round(Line 20 / Line 16, 4 decimal places)); otherwise 0.0000"
+    inputs:
+      - "Form FTB 3510 line 20"
+      - "Form FTB 3510 line 16"
+      - "Whether the taxpayer itemized deductions for 2024"
+    edgeCases:
+      - "Taxpayers who did not itemize skip line 21 and line 22"
+      - "Do not divide by zero when line 16 is zero or less"
+    testRef: "tests/engine/state/ca-ftb-3510-prior-year-alternative-minimum-tax-credit.test.ts::CA FTB 3510 Prior Year Alternative Minimum Tax Credit Line 38 - nonresident filers compute the current-year claim from prior-year deferral AMT and the 2025 limitation"
+
+  - line: "22"
+    description: "Prior-year prorated AMT itemized deductions on exclusions"
+    formula: "If the taxpayer itemized deductions for 2024, round(Line 15 × Line 21 to the nearest whole dollar); otherwise 0"
+    inputs:
+      - "Form FTB 3510 line 15"
+      - "Form FTB 3510 line 21"
+      - "Whether the taxpayer itemized deductions for 2024"
+    testRef: "tests/engine/state/ca-ftb-3510-prior-year-alternative-minimum-tax-credit.test.ts::CA FTB 3510 Prior Year Alternative Minimum Tax Credit Line 38 - nonresident filers compute the current-year claim from prior-year deferral AMT and the 2025 limitation"
+
+  - line: "23"
+    description: "Prior-year California alternative minimum taxable income on exclusions"
+    formula: "If the taxpayer itemized deductions for 2024, Line 20 - Line 22; otherwise copy Line 20"
+    inputs:
+      - "Form FTB 3510 line 20"
+      - "Form FTB 3510 line 22"
+      - "Whether the taxpayer itemized deductions for 2024"
+    testRef: "tests/engine/state/ca-ftb-3510-prior-year-alternative-minimum-tax-credit.test.ts::CA FTB 3510 Prior Year Alternative Minimum Tax Credit Line 38 - nonresident filers compute the current-year claim from prior-year deferral AMT and the 2025 limitation"
+
+  - line: "24"
+    description: "Prior-year California AMT rate on exclusions"
+    formula: "If line 4 is greater than 0, min(1.0000, round(Line 11 / Line 4, 4 decimal places)); otherwise 0.0000"
+    inputs:
+      - "Form FTB 3510 line 11"
+      - "Form FTB 3510 line 4"
+    edgeCases:
+      - "Do not divide by zero when line 4 is zero"
+    testRef: "tests/engine/state/ca-ftb-3510-prior-year-alternative-minimum-tax-credit.test.ts::CA FTB 3510 Prior Year Alternative Minimum Tax Credit Line 38 - nonresident filers compute the current-year claim from prior-year deferral AMT and the 2025 limitation"
+
+  - line: "25"
+    description: "Prior-year California tentative minimum tax on exclusions"
+    formula: "Round(Line 23 × Line 24 to the nearest whole dollar)"
+    inputs:
+      - "Form FTB 3510 line 23"
+      - "Form FTB 3510 line 24"
+    testRef: "tests/engine/state/ca-ftb-3510-prior-year-alternative-minimum-tax-credit.test.ts::CA FTB 3510 Prior Year Alternative Minimum Tax Credit Line 38 - nonresident filers compute the current-year claim from prior-year deferral AMT and the 2025 limitation"
+
+  - line: "26"
+    description: "Prior-year regular tax"
+    formula: "Use the supported 2024 Schedule P (540NR) Part II line 44 amount"
+    inputs:
+      - "2024 Schedule P (540NR) Part II line 44 regular tax"
+    testRef: "tests/engine/state/ca-ftb-3510-prior-year-alternative-minimum-tax-credit.test.ts::CA FTB 3510 Prior Year Alternative Minimum Tax Credit Line 38 - nonresident filers compute the current-year claim from prior-year deferral AMT and the 2025 limitation"
+
+  - line: "27"
+    description: "Prior-year net AMT on exclusions for nonresident and part-year resident filers"
+    formula: "max(0, Line 25 - Line 26)"
+    inputs:
+      - "Form FTB 3510 line 25"
+      - "Form FTB 3510 line 26"
+    testRef: "tests/engine/state/ca-ftb-3510-prior-year-alternative-minimum-tax-credit.test.ts::CA FTB 3510 Prior Year Alternative Minimum Tax Credit Line 38 - nonresident filers compute the current-year claim from prior-year deferral AMT and the 2025 limitation"
+
+  - line: "28"
+    description: "Prior-year AMT"
+    formula: "Use the supported 2024 Schedule P (540NR) Part II line 45 amount without reducing it for prior-year solar energy or commercial solar energy carryover usage"
+    inputs:
+      - "2024 Schedule P (540NR) Part II line 45 alternative minimum tax"
+    edgeCases:
+      - "Follow the February 2026 FTB line 28 revision and do not apply the now-deleted solar-credit reduction"
+    testRef: "tests/engine/state/ca-ftb-3510-prior-year-alternative-minimum-tax-credit.test.ts::CA FTB 3510 Prior Year Alternative Minimum Tax Credit Line 38 - nonresident filers compute the current-year claim from prior-year deferral AMT and the 2025 limitation"
+
+  - line: "29-32"
+    description: "Current-year available prior-year AMT credit before the 2025 limitation"
+    formula: "Line 29 copies nonresident line 27, line 30 is line 28 - line 29 and may be negative, line 31 uses the supported 2024 unused AMT credit carryover, and line 32 is line 30 + line 31"
+    inputs:
+      - "Form FTB 3510 line 27"
+      - "Form FTB 3510 line 28"
+      - "2024 unused AMT credit carryover from Schedule P (540NR) Part III line 10 column (d)"
+    edgeCases:
+      - "If line 32 is zero or less, the supported slice returns 0 on line 38 and 0 on line 39"
+    testRef: "tests/engine/state/ca-ftb-3510-prior-year-alternative-minimum-tax-credit.test.ts::CA FTB 3510 Prior Year Alternative Minimum Tax Credit Line 39 - no current-year credit or carryover remains when line 32 is zero or less"
+
+  - line: "33"
+    description: "Current-year regular tax"
+    formula: "Use the supported 2025 Form 540NR line 37 amount"
+    inputs:
+      - "2025 Form 540NR line 37 regular tax before exemption credits"
+    testRef: "tests/engine/state/ca-ftb-3510-prior-year-alternative-minimum-tax-credit.test.ts::CA FTB 3510 Prior Year Alternative Minimum Tax Credit Line 38 - nonresident filers compute the current-year claim from prior-year deferral AMT and the 2025 limitation"
+
+  - line: "34"
+    description: "Current-year exemption and other allowable credits"
+    formula: "Use the supported 2025 Form 540NR line 39 exemption and other allowable credits total, including the supported Schedule P (540NR) Section A1 and Section A2 used-this-year amounts other than the line 10 code 188 credit being computed here"
+    inputs:
+      - "2025 Form 540NR line 39 exemption and other allowable credits total for the FTB 3510 limitation"
+    edgeCases:
+      - "Exclude the current-year Form FTB 3510 credit itself from the supported line 34 total to avoid circularity"
+    testRef: "tests/engine/state/ca-ftb-3510-prior-year-alternative-minimum-tax-credit.test.ts::CA FTB 3510 Prior Year Alternative Minimum Tax Credit Line 38 - nonresident filers compute the current-year claim from prior-year deferral AMT and the 2025 limitation"
+
+  - line: "35"
+    description: "Current-year regular tax after exemption and other allowable credits"
+    formula: "Line 33 - Line 34"
+    inputs:
+      - "Form FTB 3510 line 33"
+      - "Form FTB 3510 line 34"
+    testRef: "tests/engine/state/ca-ftb-3510-prior-year-alternative-minimum-tax-credit.test.ts::CA FTB 3510 Prior Year Alternative Minimum Tax Credit Line 38 - nonresident filers compute the current-year claim from prior-year deferral AMT and the 2025 limitation"
+
+  - line: "36"
+    description: "Current-year tentative minimum tax"
+    formula: "Use the supported 2025 Schedule P (540NR) Part II line 43 amount"
+    inputs:
+      - "2025 Schedule P (540NR) Part II line 43 tentative minimum tax"
+    testRef: "tests/engine/state/ca-ftb-3510-prior-year-alternative-minimum-tax-credit.test.ts::CA FTB 3510 Prior Year Alternative Minimum Tax Credit Line 38 - nonresident filers compute the current-year claim from prior-year deferral AMT and the 2025 limitation"
+
+  - line: "37"
+    description: "Current-year limitation based on regular tax over tentative minimum tax"
+    formula: "max(0, Line 35 - Line 36)"
+    inputs:
+      - "Form FTB 3510 line 35"
+      - "Form FTB 3510 line 36"
+    testRef: "tests/engine/state/ca-ftb-3510-prior-year-alternative-minimum-tax-credit.test.ts::CA FTB 3510 Prior Year Alternative Minimum Tax Credit Line 38 - nonresident filers compute the current-year claim from prior-year deferral AMT and the 2025 limitation"
+
+  - line: "38"
+    description: "Prior-year AMT credit allowed for 2025"
+    formula: "If line 32 is greater than 0, min(Line 32, Line 37); otherwise 0"
+    inputs:
+      - "Form FTB 3510 line 32"
+      - "Form FTB 3510 line 37"
+    edgeCases:
+      - "A nonpositive line 32 produces no current-year credit even when line 37 is positive"
+    testRef: "tests/engine/state/ca-ftb-3510-prior-year-alternative-minimum-tax-credit.test.ts::CA FTB 3510 Prior Year Alternative Minimum Tax Credit Line 38 - nonresident filers compute the current-year claim from prior-year deferral AMT and the 2025 limitation"
+
+  - line: "39"
+    description: "Prior-year AMT credit carryover to 2026"
+    formula: "If line 32 is greater than 0, Line 32 - Line 38; otherwise 0"
+    inputs:
+      - "Form FTB 3510 line 32"
+      - "Form FTB 3510 line 38"
+    testRef: "tests/engine/state/ca-ftb-3510-prior-year-alternative-minimum-tax-credit.test.ts::CA FTB 3510 Prior Year Alternative Minimum Tax Credit Line 39 - no current-year credit or carryover remains when line 32 is zero or less"

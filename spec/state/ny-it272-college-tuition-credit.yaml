@@ -1,0 +1,97 @@
+form: "New York IT-272 College Tuition Credit"
+fullName: "New York State Form IT-272 Claim for College Tuition Tax Credit"
+taxYear: 2025
+irsReference: "https://www.tax.ny.gov/pdf/current_forms/it/it272i.pdf"
+
+notes: |
+  The NY college tuition credit is a refundable credit for qualifying undergraduate
+  tuition expenses paid by the taxpayer (or spouse on MFJ return) for themselves, their
+  spouse, or their dependents.
+
+  The credit equals 4% of qualifying tuition expenses, up to $10,000 per student,
+  yielding a maximum credit of $400 per student.
+
+  Taxpayers must choose between the college tuition credit (IT-272) and the college
+  tuition deduction (IT-201 line 30) for each student — they cannot claim both for
+  the same student. The engine should help determine which is more beneficial.
+
+  Key rules:
+  - Only undergraduate tuition at qualifying NY or recognized institutions qualifies
+  - Room, board, fees, and books do not qualify
+  - The credit is refundable; if it exceeds the tax for the year, the excess is refunded
+  - The credit flows to IT-201 line 68, not the line 42 nonrefundable credit bucket
+  - The credit reduces the amount available as a deduction dollar for dollar
+  - For MFJ, the credit is computed on a combined basis
+
+  Constants for 2025:
+  - Credit rate: 4%
+  - Maximum qualifying expenses per student: $10,000
+  - Maximum credit per student: $400
+
+lines:
+  - line: "1"
+    description: "Qualifying tuition expenses per student"
+    formula: "min(tuition paid, $10,000)"
+    inputs:
+      - "Tuition paid per student"
+    notes: |
+      For each eligible student, enter qualifying undergraduate tuition paid,
+      up to $10,000. Expenses beyond $10,000 per student are disregarded.
+    edgeCases:
+      - "Tuition under $10,000 uses actual amount"
+      - "Tuition over $10,000 is capped"
+      - "Zero tuition results in zero credit"
+    testRef: "tests/engine/state/ny-it272-college-tuition-credit.test.ts::Line 1 - qualifying expenses capped at $10,000 per student"
+
+  - line: "2"
+    description: "Total qualifying tuition expenses"
+    formula: "Sum of line 1 for all students"
+    inputs:
+      - "Per-student qualifying tuition (line 1 for each student)"
+    testRef: "tests/engine/state/ny-it272-college-tuition-credit.test.ts::Line 2 - total qualifying expenses summed across students"
+
+  - line: "3"
+    description: "College tuition credit"
+    formula: "Line 2 × 4%"
+    inputs:
+      - "Total qualifying tuition expenses (line 2)"
+    notes: |
+      The credit rate is 4% of total qualifying expenses. The maximum
+      credit is $400 per student ($10,000 × 4%).
+    edgeCases:
+      - "Multiple students: credit adds up (e.g., 2 students × $400 = $800)"
+      - "Low tuition: $5,000 × 4% = $200"
+      - "Credit is rounded to nearest dollar"
+    testRef: "tests/engine/state/ny-it272-college-tuition-credit.test.ts::Line 3 - credit is 4% of qualifying expenses"
+
+  - line: "4"
+    description: "Refundable college tuition credit amount"
+    formula: "Line 3"
+    inputs:
+      - "College tuition credit (line 3)"
+    notes: |
+      The 2025 IT-272 instructions state: if the credit is more than the tax
+      for the year, the excess credit is refunded without interest. The engine
+      therefore preserves the full computed credit amount for IT-201 line 68
+      instead of limiting it to line 39 tax.
+    edgeCases:
+      - "Credit exceeding tax remains fully refundable"
+      - "Zero tax still allows the computed credit"
+    testRef: "tests/engine/state/ny-it272-college-tuition-credit.test.ts::Line 4 - credit remains refundable even when it exceeds tax liability"
+
+  - line: "deduction_comparison"
+    description: "Credit vs. deduction comparison"
+    formula: "Compare credit benefit to deduction benefit"
+    inputs:
+      - "College tuition credit (line 3)"
+      - "College tuition deduction (IT-201 line 30 value)"
+      - "Marginal tax rate"
+    notes: |
+      The taxpayer should claim whichever produces a greater tax benefit.
+      The deduction value depends on the taxpayer's marginal rate, which can
+      range from 4% to 10.9%. At the lowest bracket (4%), the credit and
+      deduction produce equal benefit. At higher brackets, the deduction is
+      typically more valuable. For low-income filers in the 4% bracket or
+      where the household credit already eliminates tax, the credit and
+      deduction may produce identical results.
+    testRef: "tests/engine/state/ny-it272-college-tuition-credit.test.ts::deduction is more beneficial at higher marginal rates"

@@ -1,0 +1,107 @@
+form: "Form 4137"
+fullName: "Social Security and Medicare Tax on Unreported Tip Income"
+taxYear: 2025
+irsReference: "https://www.irs.gov/pub/irs-pdf/f4137.pdf"
+
+notes: |
+  This supported slice accepts validated Form 4137 summary totals instead of
+  rebuilding the employer-by-employer worksheet from every tip-reporting fact.
+  It covers the amounts that materially affect the individual federal return:
+  the unreported tip income that must be added to Form 1040 line 1, the
+  remaining Social Security wage-base computation used for Form 4137 line 10,
+  the Medicare tax on the supported unreported tips, the Schedule 2 line 5 tax
+  carryforward, the Form 8959 Additional Medicare Tax interaction, and the
+  Schedule SE wage-base interaction. When a validated override for Form 4137
+  line 8 is absent, the supported path defaults that line to the sum of W-2 Box
+  3 Social Security wages and W-2 Box 7 Social Security tips because the form
+  instructions require both wage types on line 8. RRTA compensation still
+  remains outside this supported default path.
+
+businessRuleValidation:
+  - rule: "official-form-packet"
+    description: "Inventory support counts this form as business-rule validated only when regression coverage proves the draft packet attaches the official Form 4137 PDF for supported unreported-tip scenarios that compute additional Social Security or Medicare tax and suppresses the form when the supported line 13 tax is zero."
+    testRef: "tests/pdf/fill-form-4137-8919.test.ts::fillReturn attaches Form 4137 only when supported unreported tips produce additional tax"
+
+lines:
+  - line: "1040-1"
+    description: "Unreported tip income added to Form 1040 line 1"
+    formula: "Validated unreported tip income amount that must be included in wages on Form 1040 line 1"
+    irsRef: "Form 4137 instructions; Form 1040 Instructions, Line 1"
+    inputs:
+      - "Validated unreported tip income"
+    notes: "This supported slice treats the validated unreported tip income as the amount added to Form 1040 line 1 instead of reconstructing the employer detail table."
+    testRef: "tests/engine/federal.test.ts::Form 1040 Line 1 - supported Form 4137 unreported tip income increases wages and total income"
+
+  - line: "6"
+    description: "Unreported tips subject to Medicare tax and Additional Medicare Tax"
+    formula: "Use the validated unreported tip income amount as the supported Form 4137 line 6 total"
+    irsRef: "Form 4137 Instructions, Line 6; Form 8959 Instructions, Line 2"
+    inputs:
+      - "Validated unreported tip income"
+    notes: "The official form can distinguish special government-employee tip cases. In this supported slice, the validated unreported tip income is the full line 6 amount, while any validated Medicare-only government-employee tip amount affects line 10 only."
+    testRef: "tests/engine/forms/form-4137.test.ts::Form 4137 Line 13 - computes Social Security and Medicare tax from supported summary inputs"
+
+  - line: "8"
+    description: "Social Security wages and tips already subject to tax"
+    formula: "Use the validated Form 4137 line 8 override when provided; otherwise default to the sum of W-2 Box 3 Social Security wages and W-2 Box 7 Social Security tips"
+    irsRef: "Form 4137 Instructions, Line 8"
+    inputs:
+      - "Validated Form 4137 line 8 override"
+      - "W-2 Box 3 Social Security wages"
+      - "W-2 Box 7 Social Security tips"
+    testRef: "tests/engine/forms/form-4137.test.ts::Form 4137 Line 8 - W-2 Box 7 Social Security tips default into the wage-base room calculation"
+
+  - line: "9"
+    description: "Remaining Social Security wage-base room"
+    formula: "2025 Social Security wage base of $176,100 minus Line 8, floored at $0"
+    irsRef: "Form 4137 Instructions, Line 9"
+    inputs:
+      - "Form 4137 Line 8"
+      - "2025 Social Security wage base"
+    edgeCases:
+      - "W-2 Social Security wages already meet or exceed the wage base"
+      - "Validated line 8 override exceeds the wage base"
+    testRef: "tests/engine/forms/form-4137.test.ts::Form 4137 Line 10 - Social Security taxable tips are capped by the remaining wage base"
+
+  - line: "10"
+    description: "Tips subject to Social Security tax"
+    formula: "Smaller of Line 9 or Line 6 after subtracting any validated Medicare-only government-employee tips, floored at $0"
+    irsRef: "Form 4137 Instructions, Line 10; Schedule SE Instructions, Line 8b"
+    inputs:
+      - "Form 4137 Line 6"
+      - "Form 4137 Line 9"
+      - "Validated Medicare-only government-employee tip amount"
+    notes: "This is the supported amount that reduces the remaining Social Security wage-base room before Schedule SE computes its Social Security portion."
+    edgeCases:
+      - "Medicare-only government-employee tips reduce Line 10 but not the Medicare-tax calculation"
+      - "Remaining wage-base room caps the Social Security-taxable tip amount"
+    testRef: "tests/engine/forms/form-4137.test.ts::Form 4137 Line 10 - Social Security taxable tips are capped by the remaining wage base"
+
+  - line: "11"
+    description: "Social Security tax on the taxable tip amount"
+    formula: "Line 10 multiplied by 6.2%, rounded to the nearest dollar"
+    irsRef: "Form 4137 Instructions, Line 11"
+    inputs:
+      - "Form 4137 Line 10"
+    edgeCases:
+      - "When only $1 of wage-base room remains, Line 11 rounds down to $0"
+      - "When the capped Line 10 amount is $9, Line 11 rounds up to $1"
+    testRef: "tests/engine/forms/form-4137.test.ts::Form 4137 Line 11 - one dollar of remaining wage-base room rounds the Social Security tax down to zero"
+
+  - line: "12"
+    description: "Medicare tax on unreported tips"
+    formula: "Line 6 multiplied by 1.45%, rounded to the nearest dollar"
+    irsRef: "Form 4137 Instructions, Line 12"
+    inputs:
+      - "Form 4137 Line 6"
+    testRef: "tests/engine/forms/form-4137.test.ts::Form 4137 Line 13 - computes Social Security and Medicare tax from supported summary inputs"
+
+  - line: "13"
+    description: "Additional Social Security and Medicare tax on unreported tips"
+    formula: "Line 11 plus Line 12"
+    irsRef: "Form 4137 Instructions, Line 13; Schedule 2 Instructions, Line 5"
+    inputs:
+      - "Form 4137 Line 11"
+      - "Form 4137 Line 12"
+    notes: "The supported result flows to Schedule 2 line 5."
+    testRef: "tests/engine/forms/form-4137.test.ts::Form 4137 Line 13 - computes Social Security and Medicare tax from supported summary inputs"

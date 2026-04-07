@@ -1,0 +1,133 @@
+form: "New York IT-201-ATT Nonrefundable Credits"
+fullName: "New York State Form IT-201-ATT Part 1 Sections A through C Nonrefundable Credits"
+taxYear: 2025
+irsReference: "https://www.tax.ny.gov/pdf/2025/inc/it201att_2025_fill_in.pdf"
+
+notes: |
+  Form IT-201-ATT Part 1 Sections A through C aggregate nonrefundable credits
+  that flow to Form IT-201 line 42 and line 53. The attachment itself does not
+  recompute the underlying credit forms; it carries line-level amounts from
+  supporting forms or code-based detail lines and totals them.
+
+  This supported slice is limited to tax year 2025. The module must reject
+  unsupported tax years instead of silently reusing 2025 attachment lines for
+  a different form revision.
+
+  This module covers the 2025 IT-201-ATT lines:
+  - Line 1: Accumulation distribution credit
+  - Line 2: Other nonrefundable, non-carryover credits (coded lines 2a and 2b)
+  - Line 3: Long-term care insurance credit
+  - Line 4: Investment credit
+  - Line 5: Solar energy system equipment credit
+  - Line 6: Other nonrefundable, carryover credits (coded lines 6a through 6n)
+  - Line 7: Total New York State nonrefundable credits used (flows to IT-201 line 42)
+  - Line 8: New York City resident UBT credit
+  - Line 9: New York City accumulation distribution credit
+  - Line 9a: Part-year resident nonrefundable NYC child and dependent care credit
+  - Line 10: Total other New York City nonrefundable credits used (flows to IT-201 line 53)
+
+lines:
+  - line: "1"
+    description: "Accumulation distribution credit"
+    formula: "Passthrough amount from the trust-beneficiary accumulation distribution computation"
+    inputs:
+      - "Computed New York State accumulation distribution credit amount"
+    notes: |
+      The underlying accumulation distribution credit computation remains on the
+      taxpayer's supporting worksheet. This module accepts the final allowable
+      line 1 amount and carries it into the section total.
+    testRef: "tests/engine/state/ny-it201-att-nonrefundables.test.ts::Line 1 through line 10 - sections A through C total state and city nonrefundable credits"
+
+  - line: "2"
+    description: "Other nonrefundable, non-carryover credits"
+    formula: "Sum of coded line items 2a and 2b, or direct total passthrough"
+    inputs:
+      - "Detailed code/amount entries for lines 2a and 2b"
+      - "Direct line 2 total passthrough"
+    notes: |
+      Section A provides two code-based slots for other nonrefundable,
+      non-carryover credits. If detailed entries are supplied, line 2 equals
+      their sum. Otherwise a direct line 2 total may be provided as a passthrough.
+    edgeCases:
+      - "At most 2 detailed line 2 entries are allowed"
+      - "Detailed line 2 entries override the direct total passthrough when both are provided"
+      - "With no entries and no passthrough, line 2 is zero"
+    testRef: "tests/engine/state/ny-it201-att-nonrefundables.test.ts::Line 2 - detailed line 2 entries override the direct passthrough total"
+
+  - line: "3"
+    description: "Long-term care insurance credit"
+    formula: "Passthrough amount from Form IT-249 or other applicable supporting computation"
+    inputs:
+      - "Long-term care insurance credit amount"
+    testRef: "tests/engine/state/ny-it201-att-nonrefundables.test.ts::Line 1 through line 10 - sections A through C total state and city nonrefundable credits"
+
+  - line: "4"
+    description: "Investment credit"
+    formula: "Passthrough amount from the applicable investment credit computation"
+    inputs:
+      - "Investment credit amount"
+    testRef: "tests/engine/state/ny-it201-att-nonrefundables.test.ts::Line 1 through line 10 - sections A through C total state and city nonrefundable credits"
+
+  - line: "5"
+    description: "Solar energy system equipment credit"
+    formula: "Passthrough amount from Form IT-255"
+    inputs:
+      - "Solar energy system equipment credit amount"
+    testRef: "tests/engine/state/ny-it201-att-nonrefundables.test.ts::Line 1 through line 10 - sections A through C total state and city nonrefundable credits"
+
+  - line: "6"
+    description: "Other nonrefundable, carryover credits"
+    formula: "Sum of coded line items 6a through 6n, or direct total passthrough"
+    inputs:
+      - "Detailed code/amount entries for lines 6a through 6n"
+      - "Direct line 6 total passthrough"
+    notes: |
+      Section B provides fourteen code-based slots for carryover credits.
+      If detailed entries are supplied, line 6 equals their sum. Otherwise a
+      direct line 6 total may be provided as a passthrough.
+    edgeCases:
+      - "At most 14 detailed line 6 entries are allowed"
+      - "Detailed line 6 entries override the direct total passthrough when both are provided"
+      - "With no entries and no passthrough, line 6 is zero"
+    testRef: "tests/engine/state/ny-it201-att-nonrefundables.test.ts::Line 6 - detailed line 6 entries override the direct passthrough total"
+
+  - line: "7"
+    description: "Total New York State nonrefundable credits used"
+    formula: "Line 1 + Line 2 + Line 3 + Line 4 + Line 5 + Line 6"
+    inputs:
+      - "Section A and Section B line totals"
+    notes: "Transfer line 7 to Form IT-201 line 42."
+    testRef: "tests/engine/state/ny-it201-att-nonrefundables.test.ts::Line 1 through line 10 - sections A through C total state and city nonrefundable credits"
+
+  - line: "8"
+    description: "New York City resident UBT credit"
+    formula: "Passthrough amount from Form IT-219"
+    inputs:
+      - "NYC resident UBT credit amount"
+    testRef: "tests/engine/state/ny-it201-att-nonrefundables.test.ts::Line 1 through line 10 - sections A through C total state and city nonrefundable credits"
+
+  - line: "9"
+    description: "New York City accumulation distribution credit"
+    formula: "Passthrough amount from the NYC accumulation distribution credit worksheet"
+    inputs:
+      - "Computed New York City accumulation distribution credit amount"
+    notes: |
+      The official worksheet in the 2025 IT-201 instructions limits the line 9
+      amount. This module accepts the resulting allowable line 9 value as an
+      input and carries it into the Section C total.
+    testRef: "tests/engine/state/ny-it201-att-nonrefundables.test.ts::Line 1 through line 10 - sections A through C total state and city nonrefundable credits"
+
+  - line: "9a"
+    description: "Part-year resident nonrefundable NYC child and dependent care credit"
+    formula: "Passthrough amount from the applicable part-year NYC child care credit computation"
+    inputs:
+      - "Part-year resident nonrefundable NYC child and dependent care credit amount"
+    testRef: "tests/engine/state/ny-it201-att-nonrefundables.test.ts::Line 1 through line 10 - sections A through C total state and city nonrefundable credits"
+
+  - line: "10"
+    description: "Total other New York City nonrefundable credits used"
+    formula: "Line 8 + Line 9 + Line 9a"
+    inputs:
+      - "Section C lines 8, 9, and 9a"
+    notes: "Transfer line 10 to Form IT-201 line 53."
+    testRef: "tests/engine/state/ny-it201-att-nonrefundables.test.ts::Line 1 through line 10 - sections A through C total state and city nonrefundable credits"

@@ -1,0 +1,142 @@
+form: "PA-Use-Tax"
+fullName: "Pennsylvania Use Tax Worksheet"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf"
+
+notes: |
+  The 2025 PA-40 instructions include a Use Tax Worksheet for Line 25. The
+  worksheet supports two inputs:
+    1. Actual taxable purchases and services multiplied by the applicable 6%,
+       7%, or 8% use-tax rate; and
+    2. An optional estimated use-tax amount from Table 1 based on PA-40
+       Line 9 total PA-taxable income when receipts for purchases under
+       $1,000 are incomplete or inaccurate.
+
+  This engine module supports the resident-return slice needed to populate
+  PA-40 Line 25:
+    - actual taxable item purchases
+    - actual taxable service purchases
+    - optional Table 1 estimate election
+    - prior sales tax paid offset
+    - locality-specific rate/table selection for remainder of PA,
+      Allegheny County, or Philadelphia
+
+  Verified against both the 2024 and 2025 PA-40 instructions. Table 1 uses
+  the same fixed-dollar amounts, high-income percentages, caps, and locality
+  rates in both tax years:
+    - remainder_of_pa: 6%, fixed amounts 6 / 12 / 17 / 23 / 32 / 44 / 57,
+      then lesser of 0.03% of Line 9 or 75
+    - allegheny_county: 7%, fixed amounts 7 / 14 / 19 / 26 / 37 / 52 / 66,
+      then lesser of 0.035% of Line 9 or 88
+    - philadelphia: 8%, fixed amounts 8 / 17 / 22 / 30 / 43 / 59 / 76,
+      then lesser of 0.04% of Line 9 or 100
+
+lines:
+  - line: "1"
+    description: "Taxable item purchases subject to PA use tax"
+    formula: "User-provided taxable item purchases, including shipping and handling"
+    testRef: "tests/engine/state/pa-use-tax.test.ts::PA Use Tax Worksheet Line 5 multiplies taxable purchases by the locality rate"
+
+  - line: "2"
+    description: "Taxable service purchases subject to PA use tax"
+    formula: "User-provided taxable service purchases"
+    testRef: "tests/engine/state/pa-use-tax.test.ts::PA Use Tax Worksheet Line 5 multiplies taxable purchases by the locality rate"
+
+  - line: "3"
+    description: "Total taxable purchases"
+    formula: "Line 1 + Line 2"
+    testRef: "tests/engine/state/pa-use-tax.test.ts::PA Use Tax Worksheet Line 5 multiplies taxable purchases by the locality rate"
+
+  - line: "4"
+    description: "Use-tax rate"
+    formula: |
+      Use the published rate by locality:
+        - remainder_of_pa: 0.06
+        - allegheny_county: 0.07
+        - philadelphia: 0.08
+    notes: |
+      The PA-40 instructions say the use-tax rate matches the sales-tax rate:
+      6 percent state tax, plus 1 percent local tax for Allegheny County and
+      2 percent local tax for Philadelphia.
+    testRef: "tests/engine/state/pa-use-tax.test.ts::PA Use Tax Worksheet Line 5 multiplies taxable purchases by the locality rate"
+
+  - line: "5"
+    description: "Use tax on actual purchases"
+    formula: "Round to the nearest dollar: Line 3 × Line 4"
+    testRef: "tests/engine/state/pa-use-tax.test.ts::PA Use Tax Worksheet Line 5 multiplies taxable purchases by the locality rate"
+
+  - line: "6"
+    description: "Additional estimated use tax from Table 1"
+    formula: |
+      If the taxpayer elects the Table 1 estimate:
+        - use the locality-specific fixed amount when PA-40 Line 9 is
+          $200,000 or less
+        - for income above $200,000, use the lesser of:
+          - locality-specific percentage of PA-40 Line 9, or
+          - locality-specific cap
+      Otherwise, Line 6 = 0
+    notes: |
+      2024 and 2025 Table 1 values:
+        - $15,000 and less: Philadelphia 8, Allegheny 7, remainder 6
+        - $15,001-$30,000: Philadelphia 17, Allegheny 14, remainder 12
+        - $30,001-$50,000: Philadelphia 22, Allegheny 19, remainder 17
+        - $50,001-$75,000: Philadelphia 30, Allegheny 26, remainder 23
+        - $75,001-$100,000: Philadelphia 43, Allegheny 37, remainder 32
+        - $100,001-$150,000: Philadelphia 59, Allegheny 52, remainder 44
+        - $150,001-$200,000: Philadelphia 76, Allegheny 66, remainder 57
+        - more than $200,000:
+          - Philadelphia: lesser of 0.04% of Line 9 or 100
+        - Allegheny: lesser of 0.035% of Line 9 or 88
+        - remainder: lesser of 0.03% of Line 9 or 75
+    edgeCases:
+      - "Table 1 may be used without any actual-purchase amount"
+      - "Income above $200,000 applies the percentage formula but respects the cap"
+      - "No Table 1 election keeps Line 6 at zero"
+    testRef: "tests/engine/state/pa-use-tax.test.ts::PA Use Tax Worksheet Line 6 follows the 2025 Table 1 brackets and caps by locality"
+
+  - line: "7"
+    description: "Sales tax previously paid"
+    formula: |
+      If itemized prior-tax entries are provided:
+        - for each taxable purchase amount included on Lines 1 or 2, allow the
+          lesser of:
+          - sales tax already paid on that purchase; or
+          - the applicable Pennsylvania use tax on that purchase amount at the
+            selected locality rate
+        - Line 7 = the sum of those capped per-item offsets
+      Otherwise:
+        - Line 7 = the user-provided aggregate sales tax already paid amount
+    notes: |
+      The worksheet allows an offset for sales tax already paid to another
+      jurisdiction or to Pennsylvania at a lower rate, up to the applicable
+      Pennsylvania use-tax rate. The 2025 worksheet labels Line 7 as sales tax
+      paid on amounts included on Lines 1 and 2, "up to 0.07 per item for
+      Allegheny County, 0.08 for Philadelphia or 0.06 state." The supported
+      resident engine therefore accepts optional itemized prior-tax entries so
+      the cap can be enforced when detailed purchase information is available.
+    testRef: "tests/engine/state/pa-use-tax.test.ts::PA Use Tax Worksheet Line 7 caps itemized prior sales tax offsets at the applicable PA rate"
+
+  - line: "8"
+    description: "Total use tax liability"
+    formula: "Round to the nearest dollar and floor at 0: Line 5 + Line 6 - Line 7"
+    notes: "This amount flows to PA-40 Line 25 when the resident orchestrator uses the worksheet."
+    testRef: "tests/engine/state/pa-use-tax.test.ts::PA Use Tax Worksheet Line 8 subtracts prior sales tax paid and floors at zero"
+
+packetRules:
+  packetBehavior: "included-on-pa-40"
+  includeWhen:
+    - "A Pennsylvania resident return packet is being assembled and the supported resident orchestrator computes a nonzero use-tax amount for PA-40 Line 25."
+    - "The use-tax amount was provided directly or derived from the supported PA Use Tax Worksheet inputs."
+  suppressWhen:
+    - "No Pennsylvania resident return packet is being assembled."
+    - "The supported resident return computes zero use tax for PA-40 Line 25."
+  notes: |
+    The current packet path does not emit a standalone Pennsylvania Use Tax
+    worksheet PDF. Instead, the supported packet includes the computed amount
+    directly on official PA-40 Line 25, which is the filing line the
+    instructions require for resident use tax.
+
+businessRuleValidation:
+  - rule: "pa-use-tax-line-25-packet"
+    description: "Inventory support counts the Pennsylvania Use Tax packet path as validated only when regression coverage proves the supported worksheet amount is carried onto official PA-40 Line 25."
+    testRef: "tests/pdf/fill-pa-40.test.ts::fillPA40 includes Pennsylvania use tax on Line 25 when the resident packet uses the supported worksheet"

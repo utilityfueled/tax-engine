@@ -1,0 +1,230 @@
+form: "Form 8880"
+fullName: "Credit for Qualified Retirement Savings Contributions"
+taxYear: 2025
+irsReference: "https://www.irs.gov/forms-pubs/about-form-8880"
+
+notes: |
+  This slice implements Form 8880 for tax year 2025 using validated retirement
+  savings inputs for each spouse column, the taxpayer's filing status, Form
+  1040 line 11a amount, and the Line 11 tax-liability limitation. It supports
+  traditional and Roth IRA contributions, designated-beneficiary ABLE
+  contributions, elective deferrals, voluntary after-tax employee
+  contributions, and the form's recent-distribution reduction by taking a
+  validated per-person reduction amount for Line 4 instead of rebuilding every
+  distribution-year lookback inside this slice.
+  The 2025 form layout differs from older versions: IRA and ABLE contributions
+  are entered on Line 1, elective deferrals move to Line 2, the post-reduction
+  amount is shown on Line 5, the eligible contribution amount is capped on
+  Line 6, Form 1040 line 11a feeds Line 8, the applicable decimal is on Line
+  9, and the tax-liability limitation is on Line 11.
+  In the supported federal engine path, Line 8 uses the same Form 1040 line
+  11a amount shown on the return. Because this repo does not yet implement
+  Form 2555, Form 4563, or the related territory exclusions that can force the
+  Form 8880 worksheet to refigure Line 8, the supported path uses the engine's
+  AGI/Line 11a amount directly.
+  The supported Line 11 limitation derives from the current engine's
+  implemented credits that precede the saver's credit on Schedule 3: foreign
+  tax credit, child and dependent care credit, and education credits.
+  Unsupported Schedule 3 Line 6d and Line 6l amounts are treated as zero in
+  the current engine.
+  In the supported federal engine path, Line 2 can also default from attached
+  W-2 Box 12 retirement-contribution codes D, E, F, G, H, S, AA, BB, and EE
+  when the explicit Line 2 input is omitted. On joint returns, those defaults
+  require owner-tagged W-2 records so the taxpayer and spouse columns stay
+  attributable to the correct person; untagged joint-return retirement W-2
+  amounts stay manual instead of being guessed into either spouse column.
+  Taxpayer eligibility rules for age 18 or older, not a dependent, and not a
+  full-time student are applied per person on Line 6 after the Line 5
+  reduction amount is computed.
+
+lines:
+  - line: "1a"
+    description: "Primary taxpayer IRA and ABLE contributions"
+    formula: "Validated traditional IRA, Roth IRA, and designated-beneficiary ABLE contributions made by the primary taxpayer"
+    irsRef: "Form 8880, Line 1, column (a)"
+    inputs:
+      - "Primary taxpayer IRA contributions"
+      - "Primary taxpayer designated-beneficiary ABLE contributions"
+    testRef: "tests/engine/forms/form-8880.test.ts::Form 8880 Line 1a - primary IRA and ABLE contributions flow into the column total"
+
+  - line: "1b"
+    description: "Spouse IRA and ABLE contributions"
+    formula: "Validated traditional IRA, Roth IRA, and designated-beneficiary ABLE contributions made by the spouse"
+    irsRef: "Form 8880, Line 1, column (b)"
+    inputs:
+      - "Spouse IRA contributions"
+      - "Spouse designated-beneficiary ABLE contributions"
+    testRef: "tests/engine/forms/form-8880.test.ts::Form 8880 Line 1b - spouse IRA and ABLE contributions flow into the joint-return column total"
+
+  - line: "2a"
+    description: "Primary taxpayer qualified retirement plan contributions"
+    formula: "Validated elective deferrals, voluntary after-tax employee contributions, or section 501(c)(18)(D) contributions made by the primary taxpayer; when the explicit Line 2a input is omitted, the supported federal engine may default the amount from attached W-2 Box 12 retirement-contribution codes D, E, F, G, H, S, AA, BB, and EE attributable to the primary taxpayer"
+    irsRef: "Form 8880, Line 2, column (a)"
+    inputs:
+      - "Primary taxpayer elective deferrals and other qualified plan contributions"
+      - "Supported attached W-2 Box 12 retirement-contribution codes D, E, F, G, H, S, AA, BB, and EE for the primary taxpayer when Line 2a is omitted"
+    notes: "On non-joint returns, untagged supported W-2 retirement-contribution amounts can default into Line 2a because they belong to the primary taxpayer's return. On joint returns, only owner-tagged W-2 records are auto-attributed; untagged retirement-contribution amounts remain manual."
+    testRef: "tests/engine/forms/form-8880.test.ts::Form 8880 Line 2a - W-2 Box 12 retirement contributions default into the primary column when Line 2a is omitted"
+
+  - line: "2b"
+    description: "Spouse qualified retirement plan contributions"
+    formula: "Validated elective deferrals, voluntary after-tax employee contributions, or section 501(c)(18)(D) contributions made by the spouse; when the explicit Line 2b input is omitted on a joint return, the supported federal engine may default the amount from owner-tagged attached W-2 Box 12 retirement-contribution codes D, E, F, G, H, S, AA, BB, and EE attributable to the spouse"
+    irsRef: "Form 8880, Line 2, column (b)"
+    inputs:
+      - "Spouse elective deferrals and other qualified plan contributions"
+      - "Owner-tagged attached W-2 Box 12 retirement-contribution codes D, E, F, G, H, S, AA, BB, and EE for the spouse when Line 2b is omitted"
+    notes: "The supported spouse-column default is available only on joint returns and only from owner-tagged W-2 records; untagged joint-return retirement contributions stay manual so the engine does not guess which spouse made them."
+    testRef: "tests/engine/forms/form-8880.test.ts::Form 8880 Line 2b - owner-tagged W-2 Box 12 retirement contributions default into the spouse column when Line 2b is omitted"
+
+  - line: "3a"
+    description: "Primary taxpayer total current-year contributions"
+    formula: "Line 1a + Line 2a"
+    irsRef: "Form 8880, Line 3, column (a)"
+    inputs:
+      - "Form 8880 Line 1a"
+      - "Form 8880 Line 2a"
+    testRef: "tests/engine/forms/form-8880.test.ts::Form 8880 Line 3a - primary contribution sources combine before the distribution reduction"
+
+  - line: "3b"
+    description: "Spouse total current-year contributions"
+    formula: "Line 1b + Line 2b"
+    irsRef: "Form 8880, Line 3, column (b)"
+    inputs:
+      - "Form 8880 Line 1b"
+      - "Form 8880 Line 2b"
+    testRef: "tests/engine/forms/form-8880.test.ts::Form 8880 Line 3b - spouse contribution sources combine before the distribution reduction"
+
+  - line: "4a"
+    description: "Primary taxpayer recent-distribution reduction"
+    formula: "Validated recent retirement-plan, IRA, or ABLE distribution reduction amount allocable to the primary taxpayer for the Form 8880 testing-period rules"
+    irsRef: "Form 8880, Line 4, column (a)"
+    inputs:
+      - "Primary taxpayer validated recent-distribution reduction amount"
+    notes: "This slice takes the already-validated reduction amount directly instead of rebuilding the full multi-year distribution lookback from raw documents."
+    testRef: "tests/engine/forms/form-8880.test.ts::Form 8880 Line 4a - recent distributions reduce the primary taxpayer contribution base"
+
+  - line: "4b"
+    description: "Spouse recent-distribution reduction"
+    formula: "Validated recent retirement-plan, IRA, or ABLE distribution reduction amount allocable to the spouse for the Form 8880 testing-period rules"
+    irsRef: "Form 8880, Line 4, column (b)"
+    inputs:
+      - "Spouse validated recent-distribution reduction amount"
+    testRef: "tests/engine/forms/form-8880.test.ts::Form 8880 Line 4b - recent distributions reduce the spouse contribution base"
+
+  - line: "5a"
+    description: "Primary taxpayer contributions after recent-distribution reduction"
+    formula: "Max($0, Line 3a - Line 4a)"
+    irsRef: "Form 8880, Line 5, column (a)"
+    inputs:
+      - "Form 8880 Line 3a"
+      - "Form 8880 Line 4a"
+    edgeCases:
+      - "Recent distributions larger than current-year contributions floor the amount at $0"
+    testRef: "tests/engine/forms/form-8880.test.ts::Form 8880 Line 5a - recent distributions cannot reduce the primary taxpayer below zero before the eligibility cap"
+
+  - line: "5b"
+    description: "Spouse contributions after recent-distribution reduction"
+    formula: "If filing jointly, max($0, Line 3b - Line 4b); otherwise $0"
+    irsRef: "Form 8880, Line 5, column (b)"
+    inputs:
+      - "Form 8880 Line 3b"
+      - "Form 8880 Line 4b"
+      - "Filing status"
+    edgeCases:
+      - "The spouse column stays at $0 on non-joint returns"
+      - "Recent distributions larger than current-year contributions floor the spouse amount at $0"
+    testRef: "tests/engine/forms/form-8880.test.ts::Form 8880 Line 5b - the spouse reduction column floors at zero on joint returns and stays blank otherwise"
+
+  - line: "6a"
+    description: "Primary taxpayer eligible contributions after age, dependency, student, and dollar caps"
+    formula: "If the primary taxpayer is age 18 or older at the end of the tax year, is not a dependent, and is not a full-time student, enter the smaller of $2,000 or Line 5a; otherwise $0"
+    irsRef: "Form 8880, Line 6, column (a)"
+    inputs:
+      - "Form 8880 Line 5a"
+      - "Primary taxpayer date of birth"
+      - "Primary taxpayer dependent status"
+      - "Primary taxpayer student status"
+    edgeCases:
+      - "A taxpayer who turns age 18 on December 31 is eligible for the credit"
+      - "A taxpayer who is still age 17 on December 31 is not eligible for the credit"
+      - "Recent distributions larger than current-year contributions floor the eligible amount at $0 before the $2,000 cap is tested"
+    testRef: "tests/engine/forms/form-8880.test.ts::Form 8880 Line 6a - ineligible taxpayers and the $2,000 cap limit the primary taxpayer column"
+
+  - line: "6b"
+    description: "Spouse eligible contributions after age, dependency, student, and dollar caps"
+    formula: "If filing jointly and the spouse is age 18 or older at the end of the tax year, is not a dependent, and is not a full-time student, enter the smaller of $2,000 or Line 5b; otherwise $0"
+    irsRef: "Form 8880, Line 6, column (b)"
+    inputs:
+      - "Form 8880 Line 5b"
+      - "Spouse date of birth"
+      - "Spouse dependent status"
+      - "Spouse student status"
+      - "Filing status"
+    edgeCases:
+      - "The spouse column stays at $0 when the spouse is a dependent or a full-time student even if the primary taxpayer is eligible"
+    testRef: "tests/engine/forms/form-8880.test.ts::Form 8880 Line 6b - joint-return spouse contributions are capped at $2,000 only when the spouse is eligible"
+
+  - line: "7"
+    description: "Total eligible contributions"
+    formula: "Line 6a + Line 6b"
+    irsRef: "Form 8880, Line 7"
+    inputs:
+      - "Form 8880 Line 6a"
+      - "Form 8880 Line 6b"
+    testRef: "tests/engine/forms/form-8880.test.ts::Form 8880 Line 7 - both spouse columns combine into the total eligible contribution base"
+
+  - line: "8"
+    description: "Form 1040 line 11a amount used for the rate table"
+    formula: "Form 1040 line 11a; in the supported federal engine path, use the same AGI/Line 11a amount shown on the return because Form 2555, Form 4563, and territory exclusion refiguring are not yet implemented"
+    irsRef: "Form 8880, Line 8"
+    inputs:
+      - "Form 1040 Line 11a"
+    testRef: "tests/engine/forms/form-8880.test.ts::Form 8880 Line 8 - the supported engine uses Form 1040 line 11a for the 2025 rate table input"
+
+  - line: "9"
+    description: "Applicable credit rate"
+    formula: "50% / 20% / 10% / 0% based on 2025 Form 8880 Line 8 and filing status: MFJ 50% up to $47,500, 20% up to $51,000, 10% up to $79,000; HOH 50% up to $35,625, 20% up to $38,250, 10% up to $59,250; single, MFS, and QSS 50% up to $23,750, 20% up to $25,500, 10% up to $39,500"
+    irsRef: "Form 8880, Line 9"
+    inputs:
+      - "Form 8880 Line 8"
+      - "Filing status"
+    edgeCases:
+      - "Single, married filing separately, and qualifying surviving spouse use the same 2025 rate thresholds"
+      - "Head of household uses the separate 2025 $35,625 / $38,250 / $59,250 thresholds, and the rate steps down immediately when Line 8 exceeds any breakpoint by $1"
+      - "Married filing jointly uses the 2025 $47,500 / $51,000 / $79,000 thresholds, and the rate steps down immediately when Line 8 exceeds any breakpoint by $1"
+      - "The credit rate steps down immediately when Line 8 exceeds a threshold by $1"
+    testRef: "tests/engine/forms/form-8880.test.ts::Form 8880 Line 9 - 2025 line 8 thresholds switch the saver's credit rate at the exact boundary amounts"
+
+  - line: "10"
+    description: "Tentative saver's credit"
+    formula: "Line 7 × Line 9, rounded to the nearest whole dollar"
+    irsRef: "Form 8880, Line 10"
+    inputs:
+      - "Form 8880 Line 7"
+      - "Form 8880 Line 9"
+    edgeCases:
+      - "A 50-cent tentative credit amount rounds up to the next whole dollar"
+    testRef: "tests/engine/forms/form-8880.test.ts::Form 8880 Line 10 - the tentative saver's credit multiplies the eligible base by the applicable decimal"
+
+  - line: "11"
+    description: "Tax-liability limitation"
+    formula: "Use the Form 8880 line 11 worksheet amount; in the supported federal engine path, derive it as Form 1040 line 18, including both Form 1040 Line 16 regular tax and Schedule 2 Line 3 Part I additional taxes such as excess advance premium tax credit repayment, minus the implemented nonrefundable credits that precede the saver's credit on Schedule 3 (Lines 1 through 3, with unsupported Line 6d and Line 6l treated as zero), not below zero"
+    irsRef: "Form 8880, Line 11"
+    inputs:
+      - "Form 1040 Line 18"
+      - "Schedule 3 Lines 1-3"
+      - "Schedule 3 Line 6d"
+      - "Schedule 3 Line 6l"
+    notes: "In the supported engine path, this worksheet-equivalent limitation keeps Schedule 2 Line 3 excess APTC repayment in the Line 11 base and subtracts only currently implemented earlier credits."
+    edgeCases:
+      - "Implemented earlier Schedule 3 Line 1 through Line 3 credits reduce the Line 11 limitation dollar-for-dollar before the saver's credit is allowed"
+    testRef: "tests/engine/federal.test.ts::Form 8880 Line 11 - the federal engine includes Schedule 2 Line 3 excess APTC repayment in the saver's credit limitation base"
+
+  - line: "12"
+    description: "Retirement savings contributions credit"
+    formula: "Smaller of Line 10 or Line 11"
+    irsRef: "Form 8880, Line 12"
+    inputs:
+      - "Form 8880 Line 10"
+      - "Form 8880 Line 11"
+    testRef: "tests/engine/forms/form-8880.test.ts::Form 8880 Line 12 - the final credit is limited by the remaining tax after earlier nonrefundable credits"

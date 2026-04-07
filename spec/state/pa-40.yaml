@@ -1,0 +1,345 @@
+form: "PA-40"
+fullName: "Pennsylvania Personal Income Tax Return"
+taxYear: 2025
+reference: "https://www.revenue.pa.gov/FormsandPublications/FormsforIndividuals/PIT/Pages/default.aspx"
+
+notes: |
+  Pennsylvania imposes a flat 3.07% income tax on 8 classes of taxable income.
+  PA does NOT start from federal AGI — it computes its own income independently.
+  Key differences from federal:
+    - No standard deduction
+    - No personal exemption (for tax computation; exemptions affect Tax Forgiveness only)
+    - No progressive brackets — flat 3.07% rate for all filers
+    - 8 classes of income computed separately
+    - Net losses in one class CANNOT offset income in another class
+    - Tax Forgiveness (Schedule SP) replaces standard deduction/personal exemptions
+
+  The 8 classes of income:
+    1. Compensation (wages, salaries, tips, commissions)
+    2. Interest
+    3. Dividends (all dividends taxed equally — no qualified dividend distinction)
+    4. Net income (loss) from business, profession, or farm
+    5. Net gain (loss) from disposition of property
+    6. Net income (loss) from rents, royalties, patents, copyrights
+    7. Estate or trust income
+    8. Gambling and lottery winnings
+
+packetRules:
+  packetBehavior: "official-filled-pdf"
+  includeWhen:
+    - "A Pennsylvania resident return result is present in the packet build"
+  suppressWhen:
+    - "No Pennsylvania resident return result is available for the packet"
+  notes: |
+    The supported packet path emits the official filled Pennsylvania return as
+    `pa-40-filled.pdf`. The summary cover must continue to disclose that
+    e-file and business-rule validation have not been run for the packet.
+
+businessRuleValidation:
+  - rule: "workspace-pa-40-packet-disclosure"
+    description: "Inventory support counts this form as business-rule validated only when regression coverage proves the emitted packet includes pa-40-filled.pdf for a Pennsylvania resident return and keeps the cover-page e-file/business-rule status labeled not-validated."
+    testRef: "tests/apps/web/pa-state-packet.test.ts::buildWorkspaceFilledReturnDownload includes the Pennsylvania PA-40 packet and keeps the business-rule disclosure honest"
+
+lines:
+  # Part A — Income and Adjustments
+
+  - line: "1a"
+    description: "Compensation"
+    formula: "Total wages, salaries, tips, commissions, bonuses, fees, and similar compensation"
+    notes: |
+      For resident returns, compensation includes taxable wages from all states.
+      Use W-2 Box 16 when the W-2 reports Pennsylvania wages and that line is
+      available. Otherwise, reconstruct Pennsylvania compensation from federal
+      Box 1 plus PA-taxable pre-tax deferrals reported in Box 12 codes
+      D/E/F/G/H/S. Another state's Box 16 is not a Pennsylvania wage line.
+      PA does not exclude 401(k)/403(b) elective deferrals from compensation
+      (unlike federal). Employer HSA contributions (Box 12 Code W) are
+      excluded.
+    testRef: "tests/engine/state/pa-40.test.ts::PA-40 Line 1a - compensation from W-2 wages"
+
+  - line: "1b"
+    description: "Unreimbursed employee business expenses"
+    formula: "Allowable PA Schedule UE expenses (entered as positive, subtracted from Line 1a)"
+    notes: "PA still allows unreimbursed employee business expenses as a deduction from compensation."
+    testRef: "tests/engine/state/pa-40.test.ts::PA-40 Line 1b - unreimbursed expenses reduce compensation"
+
+  - line: "2"
+    description: "Interest income"
+    formula: "Total taxable interest income"
+    notes: "Same as federal interest income for most filers. PA taxes interest from other states' bonds but exempts PA municipal bond interest."
+    testRef: "tests/engine/state/pa-40.test.ts::PA-40 Line 2 - interest income"
+
+  - line: "3"
+    description: "Dividend income"
+    formula: "Total dividend income, including capital gains distributions from mutual funds (ordinary + qualified — PA makes no distinction)"
+    notes: |
+      PA taxes all dividends at the flat 3.07% rate. There is no preferential
+      rate for qualified dividends (unlike federal treatment). Capital gains
+      distributions from Form 1099-DIV Box 2a are also reported on Line 3 as
+      dividend income rather than on PA Schedule D.
+    testRef: "tests/engine/state/pa-40.test.ts::PA-40 Line 3 - dividend income"
+
+  - line: "4"
+    description: "Net income (loss) from the operation of a business, profession, or farm"
+    formula: "Net business/profession/farm income or loss"
+    notes: |
+      From PA Schedule C. Losses allowed within class. Net class loss cannot
+      offset income in other classes but may carry forward.
+    testRef: "tests/engine/state/pa-40.test.ts::PA-40 Line 4 - business income"
+
+  - line: "5"
+    description: "Net gain (loss) from the sale, exchange, or disposition of property"
+    formula: "Net capital gains/losses from property dispositions"
+    notes: |
+      From PA Schedule D. Includes gains from stocks, bonds, real estate.
+      PA does not have preferential capital gains rates — all taxed at 3.07%.
+      Losses allowed within class. Net class loss cannot offset other classes.
+    testRef: "tests/engine/state/pa-40.test.ts::PA-40 Line 5 - net gains/losses"
+
+  - line: "6"
+    description: "Net income (loss) from rents, royalties, patents, and copyrights"
+    formula: "Net rental/royalty income or loss"
+    notes: "From PA Schedule E. Net losses in this class do not offset other income classes."
+    testRef: "tests/engine/state/pa-40.test.ts::PA-40 Line 6 - rental income"
+
+  - line: "7"
+    description: "Estate or trust income"
+    formula: "Beneficiary's share of estate or trust income"
+    notes: "From PA Schedule J (not federal Schedule J). Income distributed to beneficiaries from estates and trusts."
+    testRef: "tests/engine/state/pa-40.test.ts::PA-40 Line 7 - estate/trust income"
+
+  - line: "8"
+    description: "Gambling and lottery winnings"
+    formula: "Total gambling and lottery winnings"
+    notes: |
+      From PA Schedule T. Pennsylvania taxes gambling and lottery winnings from
+      any source, including cash Pennsylvania Lottery prizes paid on or after
+      January 1, 2016. Only noncash Pennsylvania Lottery prizes remain exempt.
+      Direct wagering and lottery ticket costs may offset taxable winnings on
+      PA Schedule T, but personal expenses such as travel and lodging are not
+      deductible.
+    testRef: "tests/engine/state/pa-40.test.ts::PA-40 Line 8 - gambling income"
+
+  - line: "9"
+    description: "Total PA taxable income"
+    formula: "Sum of Lines 1a through 8, with loss limitation"
+    notes: |
+      Each income class is computed separately. A net loss in one class
+      CANNOT offset income in another class. Only positive class amounts
+      contribute to the total. Net class losses carry forward to future years.
+      Line 1a is reduced by Line 1b (unreimbursed expenses) before summing,
+      but the net compensation cannot go below zero for this sum.
+    edgeCases:
+      - "All classes negative: total PA taxable income is $0"
+      - "Mix of positive and negative classes: only positive classes contribute"
+      - "Single class with income: total equals that class only"
+    testRef: "tests/engine/state/pa-40.test.ts::PA-40 Line 9 - total PA taxable income with loss limitation"
+
+  - line: "10"
+    description: "Other deductions"
+    formula: "PA Schedule O Line 11 or supported raw other-deductions override"
+    notes: |
+      Limited set of deductions allowed against PA taxable income. In the
+      supported resident engine, detailed PA Schedule O input is preferred and
+      raw overrides remain as a backward-compatible fallback.
+    testRef: "tests/engine/state/pa-40.test.ts::PA-40 Line 10 - other deductions reduce total taxable income"
+
+  - line: "11"
+    description: "Adjusted PA taxable income"
+    formula: "Line 9 - Line 10, floor at 0"
+    testRef: "tests/engine/state/pa-40.test.ts::PA-40 Line 11 - adjusted taxable income cannot go below zero"
+
+  # Part B — Tax, Payments, Credits, and Refund
+
+  - line: "12"
+    description: "Tax liability"
+    formula: "Line 11 × 3.07%"
+    notes: "Flat 3.07% rate applies to all PA taxable income regardless of filing status or income level."
+    edgeCases:
+      - "Zero taxable income: $0 tax"
+      - "Very large income: still flat 3.07%"
+      - "Same rate for all filing statuses"
+    testRef: "tests/engine/state/pa-40.test.ts::PA-40 Line 12 - tax liability at 3.07%"
+
+  - line: "13"
+    description: "Total PA tax withheld"
+    formula: "Sum of PA state tax withheld from W-2s, 1099s, W-2Gs"
+    testRef: "tests/engine/state/pa-40.test.ts::PA-40 Line 13 - state withholding"
+
+  - line: "14"
+    description: "Credit from prior year overpayment"
+    formula: "Amount applied from prior year PA return"
+    testRef: "tests/engine/state/pa-40.test.ts::PA-40 Line 14 - credit from prior year"
+
+  - line: "15"
+    description: "Estimated installment payments"
+    formula: "Total PA estimated tax payments made for the current tax year"
+    testRef: "tests/engine/state/pa-40.test.ts::PA-40 - total payments include all payment sources"
+
+  - line: "16"
+    description: "Extension payment"
+    formula: "Amount paid with extension request"
+    testRef: "tests/engine/state/pa-40.test.ts::PA-40 - total payments include all payment sources"
+
+  - line: "17"
+    description: "Nonresident tax withheld from PA Schedule(s) NRK-1"
+    formula: "Sum of nonresident withholding reported from PA Schedule NRK-1 statements"
+    notes: |
+      The 2025 PA-40 instructions direct taxpayers not to include entity-level
+      nonresident withholding on Line 13. Instead, withholding from PA
+      Schedule NRK-1 statements is claimed on Line 17 and then included with
+      estimated payments and other payment-side credits.
+    testRef: "tests/engine/state/pa-40.test.ts::PA-40 Line 17 - nonresident tax withheld increases total payments"
+
+  - line: "18a"
+    description: "Refundable credits"
+    formula: "Sum of refundable PA credits carried on the payment side of the return"
+    notes: |
+      The current resident engine uses this bucket for credits that may increase
+      the refund even when they exceed PA tax liability. For tax year 2025 this
+      includes the Working Pennsylvanians Tax Credit and any future supported
+      refundable credits that are not printed directly on the PA-40. This
+      remains an internal engine line used to make supported refundable credits
+      explicit and auditable even when the printed PA-40 routes them through
+      other labels.
+    testRef: "tests/engine/state/pa-40.test.ts::PA-40 refundable credits increase total payments and refund"
+
+  - line: "18"
+    description: "Total estimated payments and credits"
+    formula: "Line 14 + Line 15 + Line 16 + Line 17"
+    notes: "Matches the printed 2025 PA-40 subtotal before Line 13 withholding and supported credits are added on Line 24."
+    testRef: "tests/engine/state/pa-40.test.ts::PA-40 - total payments include all payment sources"
+
+  - line: "20"
+    description: "Total eligibility income"
+    formula: "From PA Schedule SP Section III Line 11"
+    notes: |
+      Eligibility income combines PA taxable income and supported nontaxable
+      additions for Tax Forgiveness threshold testing. The supported resident
+      engine carries this value from Schedule SP into the PA-40 audit trail.
+    testRef: "tests/engine/state/pa-40.test.ts::PA-40 Line 20 - tax forgiveness eligibility income flows from Schedule SP"
+
+  - line: "21"
+    description: "Tax forgiveness credit"
+    formula: "From Schedule SP (eligibility income-based poverty exemption)"
+    notes: |
+      Tax forgiveness is PA's version of a low-income exemption. Computed on
+      Schedule SP based on eligibility income and family size.
+    testRef: "tests/engine/state/pa-40.test.ts::PA-40 Line 21 - tax forgiveness credit reduces tax owed"
+
+  - line: "22"
+    description: "Resident credit"
+    formula: "From Schedule G-L (credit for income taxes paid to other states)"
+    notes: |
+      Available only to PA residents who paid income tax to another state on
+      income also taxable by PA. Computed on Schedule G-L. Total credit cannot
+      exceed PA-40 Line 12 tax liability.
+    testRef: "tests/engine/state/pa-40.test.ts::PA-40 Line 22 - resident credit from Schedule G-L"
+
+  - line: "23"
+    description: "Other credits"
+    formula: "Total allowable credits reported on PA-40 Line 23 after any upstream schedule-specific limitations are applied"
+    notes: |
+      Includes various PA tax credits claimed on Line 23, including
+      restricted credits reported through PA Schedule OC and the refundable
+      PA Schedule DC child and dependent care enhancement credit. The PA-40
+      module assumes callers provide the already-allowed Line 23 amount for
+      settlement and does not re-compute Schedule OC-style liability caps at
+      the return level. Restricted Schedule OC credits must be capped upstream
+      to the remaining liability after Lines 21 and 22, while refundable
+      Schedule DC may exceed the remaining liability and increase the refund.
+      Engine-only refundable credits that are not printed on PA-40 Line 23
+      remain in the internal Line 18a bucket instead.
+    edgeCases:
+      - "When upstream restricted credits are reduced to $0, other refundable Line 23 credits may still create an overpayment"
+      - "Refundable Schedule DC may exceed remaining liability and increase the refund"
+    testRef: "tests/engine/state/pa-40.test.ts::PA-40 Line 23 - other credits from Schedule OC, Schedule DC, and related PA credit schedules"
+
+  - line: "24"
+    description: "Total payments and credits"
+    formula: "Line 13 + Line 18 + Line 21 + Line 22 + Line 23, plus supported Line 18a engine-only refundable credits"
+    notes: |
+      The printed 2025 PA-40 adds withholding, estimated-payment credits, and
+      supported credits on Line 24. The current resident engine also carries an
+      internal refundable-credit helper bucket (Line 18a) into this settlement
+      total so Working Pennsylvanians Tax Credit and any other supported
+      engine-only refundable credits remain explicit and auditable. Restricted
+      Schedule OC credits must already be capped before being placed on
+      Line 23, but refundable Schedule DC may still increase Line 24 beyond
+      the remaining PA tax liability.
+    testRef: "tests/engine/state/pa-40.test.ts::PA-40 Line 24 - total payments and credits include withholding payments and supported credits"
+
+  - line: "22a"
+    description: "Internal total credits helper"
+    formula: "Line 21 + Line 22 + Line 23"
+    notes: "Engine-only subtotal used to derive the internal net-tax helper output from the already-allowed Line 23 amount supplied to the PA-40 module."
+    testRef: "tests/engine/state/pa-40.test.ts::PA-40 Line 22a - total credits sum"
+
+  - line: "23a"
+    description: "Net tax liability after credits"
+    formula: "Line 12 - Line 22a, floor at 0"
+    notes: |
+      Engine-only helper value. The printed 2025 PA-40 does not show this
+      intermediate subtotal, but the resident engine keeps it to separate
+      payment-side amounts from nonrefundable credit reductions.
+    edgeCases:
+      - "Credits exceed tax: net tax is $0"
+      - "No credits: net tax equals Line 12"
+      - "Partial credits: net tax is reduced but positive"
+    testRef: "tests/engine/state/pa-40.test.ts::PA-40 Line 23a - net tax liability after credits"
+
+  - line: "25"
+    description: "Use tax"
+    formula: "Use tax from the resident-return input or the supported PA Use Tax Worksheet"
+    notes: |
+      Pennsylvania use tax is due on taxable goods purchased from out-of-state
+      retailers that did not collect PA sales tax. Rate equals the local sales
+      tax rate (6% state + 1-2% local). The resident engine accepts either a
+      direct Line 25 amount or a computed amount from the supported PA Use Tax
+      Worksheet / Table 1 module.
+    testRef: "tests/engine/state/pa-40.test.ts::PA-40 Line 25 - use tax increases total tax due"
+
+  - line: "26"
+    description: "Tax due"
+    formula: "If Line 12 + Line 25 > Line 24: tax due = (Line 12 + Line 25) - Line 24"
+    notes: |
+      The printed 2025 PA-40 tax-due line includes use tax before penalties and
+      interest are considered. The resident engine also keeps a legacy helper
+      named amountOwed that excludes Line 25 so existing consumers are not
+      broken while the form-aligned Line 26 value is exposed separately.
+    testRef: "tests/engine/state/pa-40.test.ts::PA-40 Line 26 - tax due includes use tax before penalties"
+
+  - line: "27"
+    description: "Penalties and interest"
+    formula: "REV-1630 underpayment interest plus late filing/payment penalty plus late filing/payment interest"
+    notes: |
+      The 2025 PA-40 instructions say Line 27 includes penalties and interest
+      from filing a return late and/or failing to pay tax by the due date, and
+      also includes any estimated-tax underpayment amount from REV-1630. The
+      supported resident engine therefore keeps late filing/payment penalty and
+      late filing/payment interest separate from the REV-1630 component while
+      summing them into the printed Line 27 amount.
+    testRef: "tests/engine/state/pa-40.test.ts::PA-40 Line 27 - penalties and interest combine REV-1630 with late filing and payment charges"
+
+  - line: "28"
+    description: "Total amount due"
+    formula: "If Line 26 + Line 27 > 0: total amount due = Line 26 + Line 27"
+    notes: |
+      Total amount the taxpayer must remit with their return. Includes the
+      printed tax due amount and penalties/interest. When credits and payments
+      exceed tax, use tax, and penalties, Line 28 is $0 and the excess is
+      reported on Line 29 instead.
+    edgeCases:
+      - "No amount owed + no penalty: total due is $0"
+      - "Amount owed with penalty: both added"
+      - "Overpayment with penalty: penalty still owed (reduces refund)"
+    testRef: "tests/engine/state/pa-40.test.ts::PA-40 Line 28 - total amount due with all additions"
+
+  - line: "29"
+    description: "Overpayment"
+    formula: "If Line 24 > Line 12 + Line 25 + Line 27: overpayment = Line 24 - Line 12 - Line 25 - Line 27"
+    notes: |
+      This is the printed PA-40 overpayment after use tax and penalties are
+      absorbed. The engine preserves a legacy pre-additions overpayment helper
+      separately for backward compatibility.
+    testRef: "tests/engine/state/pa-40.test.ts::PA-40 Line 29 - overpayment is net of use tax and penalties"

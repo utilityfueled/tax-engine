@@ -1,0 +1,236 @@
+form: "Schedule A"
+fullName: "Itemized Deductions"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i1040sca"
+
+lines:
+  - line: "1"
+    description: "Medical and dental expenses"
+    formula: "Total unreimbursed medical/dental expenses"
+    irsRef: "Schedule A Instructions, Line 1"
+    testRef: "tests/engine/schedules/schedule-a.test.ts::Schedule A Line 1 - medical expenses pass through"
+
+  - line: "4"
+    description: "Medical deduction (AGI threshold)"
+    formula: "Line 1 - (7.5% × AGI), floor at 0"
+    irsRef: "Schedule A Instructions, Line 4"
+    notes: "Only the amount exceeding 7.5% of AGI is deductible"
+    edgeCases:
+      - "7.5% threshold applies to all filers"
+      - "No deduction if expenses under threshold"
+      - "Deduction cannot be negative"
+    testRef: "tests/engine/schedules/schedule-a.test.ts::Schedule A Line 4 - medical deduction exceeds 7.5% AGI"
+
+  - line: "5a"
+    description: "State and local income taxes OR general sales taxes"
+    formula: |
+      Income tax path: Sum of W-2 Box 17 (state) + W-2 Box 19 (local) + state estimated tax payments.
+      Sales tax path: IRS Optional State Sales Tax Table amount (by AGI, state, exemptions, local rate)
+        + actual sales tax on specific large purchases (vehicles, boats, etc.).
+      When autoCompare is enabled, use whichever is larger.
+    irsRef: "Schedule A Instructions, Line 5a; IRC §164(b)(5)(I)"
+    inputs:
+      - "W-2 Box 17 (state tax withheld)"
+      - "W-2 Box 19 (local tax withheld)"
+      - "State estimated tax payments (input.adjustments.estimatedTaxPayments where type='state')"
+      - "salesTaxDeduction.state (for IRS table lookup)"
+      - "salesTaxDeduction.localSalesTaxRate"
+      - "salesTaxDeduction.specificPurchaseSalesTax (motor vehicles, boats, etc.)"
+    notes: |
+      Per IRC §164(b)(5)(I), taxpayers may elect to deduct state and local general
+      sales taxes instead of state/local income taxes. The election is especially
+      valuable for residents of states without an income tax (AK, FL, NV, NH, SD,
+      TN, TX, WA, WY). Two methods: IRS Optional Sales Tax Table lookup from AGI,
+      state rate, local rate, and number of exemptions; or actual receipts total.
+      Specific large-purchase sales tax (vehicles, boats, aircraft, homes) is added
+      on top of either method.
+    edgeCases:
+      - "autoCompare automatically selects the larger of income tax or sales tax"
+      - "Local rate is capped at the state rate per IRS instructions"
+      - "States without general sales tax (AK, DE, MT, NH, OR) produce $0"
+      - "MFS SALT cap ($5,000) applies to whichever method is elected"
+      - "Sales tax on specific purchases is added to the table/actual amount"
+      - "State tax refunds may be taxable if itemized prior year (see Taxable Refund Worksheet)"
+    testRef: "tests/engine/forms/state-sales-tax-deduction-worksheet.test.ts::Sales tax worksheet — table method"
+
+  - line: "5b"
+    description: "State and local personal property taxes"
+    formula: "Vehicle registration fees, etc."
+    irsRef: "Schedule A Instructions, Line 5b"
+    notes: "Passed via ScheduleAInput.personalPropertyTaxes"
+    testRef: "tests/engine/schedules/schedule-a.test.ts::Schedule A Line 5b - personal property taxes"
+
+  - line: "5c"
+    description: "Real estate taxes"
+    formula: "Sum of Form 1098 property tax amounts"
+    irsRef: "Schedule A Instructions, Line 5c"
+    inputs:
+      - "Form 1098 property tax field"
+    testRef: "tests/engine/schedules/schedule-a.test.ts::Schedule A Line 5d - SALT capped at $10K"
+
+  - line: "5d"
+    description: "Total SALT deduction"
+    formula: "min(Line 5a + 5b + 5c, $10,000)"
+    irsRef: "Schedule A Instructions, Line 5d"
+    notes: "SALT cap is $10,000 ($5,000 MFS). Cap was set by TCJA 2017."
+    edgeCases:
+      - "MFS filers: cap is $5,000"
+      - "Pre-TCJA marriages grandfathered (no longer applicable)"
+    testRef: "tests/utils/tax-math.test.ts::SALT deduction capped at $10,000"
+
+  - line: "8a"
+    description: "Home mortgage interest and points (Form 1098)"
+    formula: |
+      AGGREGATE all Form 1098 entries:
+        1. Separate by origination date: grandfathered (pre-12/16/2017) vs post-TCJA
+        2. Grandfathered limited = min(total grandfathered principal, $1M / $500K MFS)
+        3. Post-TCJA room = max(0, $750K/$375K MFS - grandfathered limited)
+        4. Post-TCJA limited = min(total post-TCJA principal, post-TCJA room)
+        5. Total limited = grandfathered limited + post-TCJA limited
+        6. Total principal = sum of all outstanding principals
+        7. If total principal > total limited: ratio = total limited / total principal
+           deductible = roundDollar(total interest × ratio)
+        8. If total principal ≤ total limited: deductible = total interest
+      For 2025, Form 1098 Box 3 refunds of overpaid interest are NOT netted
+      against line 8a; the Schedule A instructions direct taxpayers to review
+      Schedule 1 line 8z separately instead. Per IRS Pub 936 Home Mortgage
+      Interest Deduction Worksheet, the limit is applied to the COMBINED
+      balance of all mortgages, not per-mortgage.
+    irsRef: "Schedule A Instructions, Line 8a; Pub 936; IRC §163(h)(3)(B)(ii)"
+    inputs:
+      - "Form 1098 Box 1 (mortgage interest)"
+      - "Form 1098 Box 2 (outstanding principal)"
+    edgeCases:
+      - "Debt over $750,000 ($375,000 MFS): interest deduction prorated — IRC §163(h)(3)(B)(ii)"
+      - "Pre-12/15/2017 mortgages: $1M limit ($500K MFS)"
+      - "Multiple mortgages: AGGREGATE principal for limit (not per-mortgage) — IRS Pub 936 worksheet"
+      - "MFS limit is half of standard limit per IRC §163(h)(3)(B)(ii): $375K post-TCJA, $500K pre-TCJA"
+      - "Mixed origination dates: grandfathered debt gets priority up to $1M, post-TCJA fills remaining room under $750K"
+      - "Two $500K post-TCJA mortgages: combined $1M > $750K → ratio 75%, each mortgage prorated"
+      - "For 2025, Form 1098 Box 3 refund of overpaid interest is not subtracted on line 8a"
+    testRef: "tests/edge-cases/schedule-a-edge-cases.test.ts::Schedule A - multiple mortgages aggregate debt limit (IRS Pub 936)"
+
+  - line: "8c"
+    description: "Points paid on purchase of principal residence"
+    formula: "Sum of Form 1098 Box 6 (points paid)"
+    irsRef: "Schedule A Instructions, Line 8c"
+    inputs:
+      - "Form 1098 Box 6 (points paid)"
+    testRef: "tests/engine/schedules/schedule-a.test.ts::Schedule A Line 8c - points paid on purchase of principal residence"
+
+  - line: "8d"
+    description: "Reserved for future use"
+    formula: "0 for tax year 2025 because Schedule A line 8d is reserved for future use"
+    irsRef: "Schedule A Instructions, Line 8d"
+    notes: |
+      Mortgage insurance premiums reported on Form 1098 Box 5 do not create a
+      2025 Schedule A deduction in this tax-year slice because the published
+      2025 instructions mark line 8d as reserved for future use.
+    edgeCases:
+      - "Form 1098 Box 5 PMI is ignored for 2025 itemized-deduction totals"
+      - "Audit trail should still preserve that line 8d is zero under the 2025 instructions"
+    testRef: "tests/engine/schedules/schedule-a.test.ts::Schedule A Line 8d - reserved for future use in 2025"
+
+  - line: "9"
+    description: "Investment interest expense"
+    formula: "Form 4952 deductible amount when Form 4952 input is provided, otherwise validated manual input"
+    irsRef: "Schedule A Instructions, Line 9; Form 4952"
+    notes: |
+      When the taxpayer provides Form 4952 input, the engine computes
+      the deductible investment interest expense (limited to net investment
+      income) and flows it to this line. Without Form 4952 input, the engine
+      accepts a raw manual amount.
+    edgeCases:
+      - "Zero when no investment interest input is provided"
+      - "Form 4952 limits deduction to net investment income"
+    testRef: "tests/engine/forms/form-4952.test.ts::Form 4952 Line 5 - deduction limited to net investment income"
+
+  - line: "15"
+    description: "Casualty and theft losses"
+    formula: "Form 4684 Section A Line 20 deductible loss amount"
+    irsRef: "Schedule A Instructions, Line 15; Form 4684; IRC §165(h)"
+    notes: |
+      Post-TCJA (2018–2025): only personal casualty/theft losses from
+      federally declared disasters qualify (IRC §165(h)(5)). The amount
+      here is after the per-event $100 floor, gains netting, and 10% AGI
+      threshold. Form 4684 computes this amount.
+    edgeCases:
+      - "Zero when no Form 4684 input is provided"
+      - "Only federally declared disaster losses qualify post-TCJA"
+      - "Net casualty gains go to Form 8949, not Schedule A"
+    testRef: "tests/engine/forms/form-4684.test.ts::Form 4684 aggregate - deductible loss flows to Schedule A Line 15"
+
+  - line: "12"
+    description: "Gifts to charity (cash)"
+    formula: "min(totalCash + carryforward, 60% AGI - totalNonCashAllowed)"
+    irsRef: "IRC §170(b)(1)(G); Schedule A Instructions, Line 12; Pub 526"
+    notes: |
+      Per IRC §170(b)(1)(G), cash contributions to 50% organizations are limited to
+      60% of AGI MINUS property contributions already allowed under (A)/(C).
+      Cash can exceed the 50% overall limit only to the extent the 60% headroom
+      is not consumed by non-cash property deductions.
+    edgeCases:
+      - "Cash-only: limited to 60% of AGI (no reduction)"
+      - "Cash + non-cash: cash reduced by non-cash property allowed"
+      - "Effective maximum total deduction (all categories) is 60% of AGI"
+      - "Carryforward from prior year added to current cash before stacking limit"
+      - "K-1 Box 13 Code A pass-through cash charitable aggregates with personal cash donations"
+    testRef: "tests/engine/schedules/schedule-a.test.ts::Schedule A Line 12 - cash charitable"
+
+  - line: "13"
+    description: "Gifts to charity (non-cash)"
+    formula: "FMV of donated non-cash property, limited by contribution category: long-term capital gain property donated to a supported public charity is limited to 30% of AGI, long-term capital gain property validated as donated to a second-category/private foundation is limited to the smallest of 20% of AGI, the remaining 30%-bucket headroom after the supported 30% capital-gain-property bucket, and the remaining 50%-bucket headroom after the supported 60%, 50%, and 30% buckets already deducted, and other non-cash property is limited to 50% of AGI"
+    irsRef: "Schedule A Instructions, Line 13; Pub. 526 (2025), Limit Based on 20% of AGI and How To Figure Your Deduction When Limits Apply; IRC §170(b)(1)(A),(C)"
+    notes: |
+      Per IRC §170(b)(1)(A), total contributions to 50% organizations (excluding
+      cash under (G)) are limited to 50% of AGI. Capital gain property has a 30%
+      sub-limit under (C). Other non-cash property gets the remaining 50% capacity
+      after capital gain property is allocated. Total non-cash cannot exceed 50% AGI.
+      Long-term capital gain property donated to a validated private foundation uses the 20% AGI limit branch.
+    edgeCases:
+      - "Appreciated stock: deduct FMV, no capital gains"
+      - "Long-term capital gain property: limited to 30% of AGI"
+      - "Long-term capital gain property donated to a validated private foundation uses the 20% AGI limit branch"
+      - "Short-term gain property: limited to cost basis"
+      - "Other non-cash only: limited to 50% of AGI"
+      - "Both LTCG + other: LTCG limited to 30%, other limited to remaining 50% capacity"
+      - "K-1 Box 13 Code B pass-through capital gain property aggregates with personal appreciated-property donations (30% limit)"
+      - "K-1 Box 13 Code C pass-through capital gain property aggregates with personal private-foundation donations (20% limit)"
+    testRef: "tests/engine/schedules/schedule-a.test.ts::Schedule A Line 13 - private-foundation LTCG property uses the 20% AGI limit"
+
+  - line: "17"
+    description: "Total itemized deductions"
+    formula: "Line 4 + 5d + 8a + 8c + 9 + 12 + 13 + 15 + 28"
+    irsRef: "Schedule A Instructions, Line 17"
+    testRef: "tests/engine/schedules/schedule-a.test.ts::Schedule A Line 17 - total itemized deductions"
+
+  - line: "carryforward"
+    description: "Charitable contribution carryforward to next year (IRC §170(d))"
+    formula: "max(0, totalRawCash + priorCarryforward - deductibleCash) + max(0, totalRawNonCash - deductibleNonCash)"
+    irsRef: "IRC §170(d)(1); Pub 526, Carryovers"
+    notes: |
+      Excess charitable contributions that exceed the AGI-based limits carry
+      forward for up to 5 years under IRC §170(d)(1). The engine computes the
+      total excess across cash and non-cash categories and returns it in
+      ScheduleAResult.charitableCarryforward and FederalTaxResult.carryforwards.
+      The carryforward includes unused prior-year amounts that could not be
+      absorbed in the current year.
+      When per-year carryforward entries are provided, the engine uses FIFO
+      ordering (oldest year first) and expires entries older than 5 years from
+      the current tax year. This matches the expected carryforward treatment in IRS Pub 526's
+      5-year carryover rule. When only a single aggregate carryforward is
+      provided (legacy mode), it is treated as originating in the prior year
+      for backward compatibility. The per-year remaining carryforward is
+      returned alongside the aggregate amount so multi-year returns can track
+      vintage expiration correctly.
+    edgeCases:
+      - "Zero when all donations are within AGI limits"
+      - "Cash carryforward when cash + prior carryforward exceeds 60% AGI"
+      - "Non-cash carryforward when appreciated property exceeds 30% AGI"
+      - "Combined cash and non-cash carryforward"
+      - "Per-year FIFO ordering uses oldest carryforward first before newer vintages"
+      - "Carryforward entries older than 5 years expire and are not available for deduction"
+      - "Partial use of a vintage year carries the remainder into the next year"
+      - "Current-year excess creates a new carryforward vintage for the current tax year"
+      - "Legacy single aggregate carryforward is treated as prior-year vintage for backward compatibility"
+    testRef: "tests/engine/schedules/schedule-a.test.ts::Schedule A - Charitable Carryforward"

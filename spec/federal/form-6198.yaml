@@ -1,0 +1,192 @@
+form: "Form 6198"
+fullName: "At-Risk Limitations"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i6198"
+
+notes: |
+  Form 6198 limits deductible losses from an activity to the amount the
+  taxpayer has "at risk" in the activity under IRC §465. The at-risk rules
+  apply before the passive activity rules (Form 8582). Losses exceeding
+  the at-risk amount are suspended and carried forward indefinitely.
+
+  The at-risk rules apply to:
+  - Holding, producing, or distributing motion picture films or videotapes
+  - Farming
+  - Leasing any section 1245 property
+  - Exploring for, or exploiting, oil and gas resources
+  - Exploring for, or exploiting, geothermal deposits
+  - Any other activity carried on as a trade or business or for profit
+
+  Amounts at risk include:
+  - Cash and adjusted basis of property contributed to the activity
+  - Amounts borrowed for use in the activity for which the taxpayer is
+    personally liable (recourse financing)
+  - Qualified nonrecourse financing for real property activities secured
+    by the real property used in the activity (IRC §465(b)(6))
+  - The net fair market value of personal assets pledged as security for
+    nonrecourse borrowing (not from related persons or persons with an
+    interest in the activity)
+
+  Amounts NOT at risk include:
+  - Nonrecourse loans (except qualified nonrecourse financing for real
+    estate)
+  - Amounts protected by guarantees, stop-loss agreements, or other
+    similar arrangements
+  - Amounts borrowed from persons who have an interest in the activity
+    or who are related to a person with an interest in the activity
+    (other than qualified nonrecourse financing)
+
+  Recapture rule: If the amount at risk is reduced below zero (e.g.,
+  due to distributions, assumption of nonrecourse financing, or
+  conversion of recourse to nonrecourse debt), the taxpayer must
+  recognize ordinary income equal to the negative amount. This
+  recharacterized income is treated as a deduction in the next year
+  for at-risk purposes.
+
+  This implementation covers Part I (current year profit/loss), Part II
+  (simplified at-risk computation), and Part IV (deductible loss
+  determination). Part III (detailed computation) is documented but
+  deferred — most partnership/S corporation investors use Part II.
+
+businessRuleValidation:
+  - rule: "reference-summary-packet"
+    description: "Inventory support counts this form as business-rule validated only when regression coverage proves the emitted packet artifact stays labeled as a non-filing reference summary and only surfaces the supported Form 6198 at-risk limitation outputs, while the draft packet includes it only when supported Schedule K-1 at-risk inputs are present."
+    testRef: "tests/pdf/fill-form-6198.test.ts::fillReturn includes the Form 6198 reference summary only when supported Schedule K-1 at-risk inputs are present"
+
+lines:
+  # ── Part I: Current Year Profit (Loss) From the Activity ──
+  - line: "1"
+    description: "Ordinary income (loss) from the activity"
+    formula: "Net ordinary income or loss from the activity (K-1 Box 1 for partnerships, Box 1 for S corporations)"
+    irsRef: "Form 6198 Instructions, Line 1"
+    notes: "Include net rental real estate income/loss, royalties, and other ordinary amounts allocable to the activity. Do not include capital gains/losses here."
+    testRef: "tests/engine/forms/form-6198.test.ts::Form 6198 Line 1 - ordinary income from the activity"
+
+  - line: "2"
+    description: "Gain (loss) from sale or disposition of assets used in the activity"
+    formula: "Net gain or loss from disposition of activity assets placed in service after 1986"
+    irsRef: "Form 6198 Instructions, Line 2"
+    notes: "Includes capital gains/losses and section 1231 gains/losses from dispositions of activity assets. From K-1 Boxes 8-10 when allocable to this activity."
+    testRef: "tests/engine/forms/form-6198.test.ts::Form 6198 Line 2 - gain/loss from asset dispositions"
+
+  - line: "3"
+    description: "Other income and gains from the activity"
+    formula: "Other income not included on Lines 1 or 2 (guaranteed payments, interest, etc.)"
+    irsRef: "Form 6198 Instructions, Line 3"
+    testRef: "tests/engine/forms/form-6198.test.ts::Form 6198 Line 3 - other income and gains"
+
+  - line: "4"
+    description: "Other deductions and losses from the activity"
+    formula: "Other deductions not included on Lines 1 or 2 (investment interest expense allocable to activity, etc.)"
+    irsRef: "Form 6198 Instructions, Line 4"
+    testRef: "tests/engine/forms/form-6198.test.ts::Form 6198 Line 4 - other deductions and losses"
+
+  - line: "5"
+    description: "Current year profit (loss) from the activity"
+    formula: "Line 1 + Line 2 + Line 3 - Line 4"
+    irsRef: "Form 6198 Instructions, Line 5"
+    notes: "If this is a profit (positive), the at-risk limitation does not apply and the full profit flows through. If a loss, Part IV limits the deductible loss to the amount at risk."
+    edgeCases:
+      - "Prior year suspended at-risk losses are included via the K-1 or activity-level input for the current year (they flow into Line 1)"
+      - "If Line 5 is positive, skip Part IV — no limitation needed"
+    testRef: "tests/engine/forms/form-6198.test.ts::Form 6198 Line 5 - current year profit bypasses limitation"
+
+  # ── Part II: Simplified Computation of Amount At Risk ──────
+  - line: "6"
+    description: "Adjusted basis in the activity at the effective date"
+    formula: "Adjusted basis as determined by IRC §1011 in the activity (or interest) on the effective date; do not enter less than zero"
+    irsRef: "Form 6198 Instructions, Line 6; IRC §1011"
+    notes: "The effective date is the later of: (a) the date the activity began, or (b) the date the at-risk rules first applied to the activity. For most post-1986 activities, this is the date the taxpayer first invested."
+    edgeCases:
+      - "Cannot be less than zero"
+      - "For first year of activity, this is the initial investment basis"
+      - "For subsequent years, use the beginning-of-year at-risk amount instead (Line 10a)"
+    testRef: "tests/engine/forms/form-6198.test.ts::Form 6198 Line 6 - adjusted basis floored at zero"
+
+  - line: "7"
+    description: "Increases for the current tax year"
+    formula: "Sum of: additional cash contributed, adjusted basis of additional property contributed, amounts borrowed for which taxpayer is personally liable (recourse), qualified nonrecourse financing for real property, net FMV of personal assets pledged as security"
+    irsRef: "Form 6198 Instructions, Line 7"
+    notes: "Qualified nonrecourse financing (IRC §465(b)(6)) is financing from a qualified lender (bank, insurance company, etc.) that is secured by real property used in the activity and not convertible to equity."
+    edgeCases:
+      - "Recourse borrowing from related parties still counts if market-rate terms"
+      - "Qualified nonrecourse financing only for real property activities"
+    testRef: "tests/engine/forms/form-6198.test.ts::Form 6198 Line 7 - increases include contributions and recourse borrowing"
+
+  - line: "9"
+    description: "Decreases for the current tax year"
+    formula: "Sum of: withdrawals/distributions, nonrecourse financing (except qualified for real estate), protected amounts (guarantees, stop-loss), amounts from persons with interest in activity"
+    irsRef: "Form 6198 Instructions, Line 9"
+    notes: "A distribution that exceeds the at-risk amount reduces it below zero, triggering recapture."
+    edgeCases:
+      - "Conversion of recourse to nonrecourse debt is a decrease"
+      - "Cash distributions are the most common decrease"
+    testRef: "tests/engine/forms/form-6198.test.ts::Form 6198 Line 9 - decreases for distributions and nonrecourse financing"
+
+  - line: "10a"
+    description: "Amount at risk at close of preceding tax year"
+    formula: "Prior year ending at-risk amount; zero if first year of activity"
+    irsRef: "Form 6198 Instructions, Line 10a"
+    edgeCases:
+      - "First year: enter zero"
+      - "If prior year at-risk was negative (recapture occurred), this can be negative"
+    testRef: "tests/engine/forms/form-6198.test.ts::Form 6198 Line 10a - prior year at-risk amount"
+
+  - line: "10b"
+    description: "Amount at risk"
+    formula: "Line 10a + Line 7 - Line 9; for first year also add Line 6"
+    irsRef: "Form 6198 Instructions, Line 10b"
+    notes: "This is the simplified at-risk amount. If negative, the absolute value is recognized as ordinary income under the recapture rule."
+    edgeCases:
+      - "Can be negative — triggers recapture"
+      - "First year: Line 6 + Line 7 - Line 9"
+      - "Subsequent years: Line 10a + Line 7 - Line 9"
+    testRef: "tests/engine/forms/form-6198.test.ts::Form 6198 Line 10b - subsequent year at-risk = prior + increases - decreases"
+
+  # ── Part IV: Deductible Loss ───────────────────────────────
+  - line: "20"
+    description: "Amount at risk"
+    formula: "From Part II Line 10b (or Part III if detailed computation used)"
+    irsRef: "Form 6198 Instructions, Line 20"
+    notes: "This is the at-risk amount used to limit the deductible loss."
+    testRef: "tests/engine/forms/form-6198.test.ts::Form 6198 Line 20 - at-risk amount for loss limitation"
+
+  - line: "21"
+    description: "Deductible loss"
+    formula: "If Line 5 is a profit, no limitation; if Line 5 is a loss, deductible loss = min(abs(Line 5), max(0, Line 20))"
+    irsRef: "Form 6198 Instructions, Line 21; IRC §465(a)"
+    notes: |
+      The deductible loss cannot exceed the amount at risk. Any excess loss
+      is suspended and carries forward to the next tax year. The suspended
+      loss flows into the next year's Part I amounts. If the at-risk amount
+      is negative, no loss is deductible (the recapture takes priority).
+    edgeCases:
+      - "Zero at-risk amount: no loss deductible"
+      - "At-risk exceeds loss: full loss deductible"
+      - "Loss exceeds at-risk: loss capped at at-risk amount"
+      - "Positive Line 5 (profit): full amount passes through, no limitation"
+      - "Negative at-risk: no loss deductible, recapture income recognized"
+    testRef: "tests/engine/forms/form-6198.test.ts::Form 6198 Line 21 - deductible loss capped by at-risk amount"
+
+  - line: "suspended"
+    description: "Suspended at-risk loss carried forward"
+    formula: "abs(Line 5) - Line 21 when Line 5 is a loss"
+    irsRef: "Form 6198 Instructions, Part IV"
+    notes: "This amount carries forward to the next tax year and is included in the next year's Part I computation."
+    testRef: "tests/engine/forms/form-6198.test.ts::Form 6198 suspended loss - excess carries forward"
+
+  - line: "recapture"
+    description: "At-risk recapture income"
+    formula: "abs(Line 10b) when Line 10b is negative"
+    irsRef: "IRC §465(e); Form 6198 Instructions, Recapture Rule"
+    notes: |
+      When the at-risk amount becomes negative, the taxpayer must recognize
+      ordinary income equal to the negative amount. This typically happens
+      when distributions or assumption of nonrecourse financing exceed
+      the taxpayer's remaining at-risk investment. The recapture income
+      is treated as a deduction from the activity in the following year.
+    edgeCases:
+      - "Only triggered when at-risk amount is negative"
+      - "Recognized as ordinary income in the current year"
+      - "Becomes a deduction in the next year for at-risk purposes"
+    testRef: "tests/engine/forms/form-6198.test.ts::Form 6198 recapture - negative at-risk triggers ordinary income"

@@ -1,0 +1,521 @@
+form: "California Schedule P (540NR) Supported AMT Computation and Part III Credit Ordering"
+fullName: "California Schedule P (540NR) Supported Part I, Part II, and Part III Slice"
+taxYear: 2025
+irsReference: "https://www.ftb.ca.gov/forms/2025/2025-540nr-p.pdf"
+
+notes: |
+  This module implements the supported 2025 nonresident and part-year resident
+  Schedule P (540NR) path for:
+  - Part I Alternative Minimum Taxable Income (AMTI) from direct supported
+    worksheet inputs for line 1 through line 20, including the published 2025
+    federal-AGI thresholds on line 18 and the married/RDP-filing-separately
+    special line 21 adjustment once AMTI exceeds $479,188
+  - Part II Alternative Minimum Tax (AMT) from direct supported worksheet
+    inputs for line 25 through line 44, including the published 2025 exemption
+    thresholds and amounts on line 22, the 7% tentative-minimum-tax rate on
+    line 24, the itemized-deduction proration path on line 33 through line 39,
+    the California AMT rate on line 42 carried to four decimals, and the line
+    45 AMT floor at zero
+  - Part III credit-limitation ordering for the California credits already
+    modeled elsewhere in the repo:
+  - Section A1 line 5 Child and Dependent Care Expenses Credit (code 232)
+  - Section B1 line 12 Joint Custody Head of Household credit (code 170)
+  - Section B1 line 13 Dependent Parent credit (code 173)
+  - Section B1 line 14 Senior Head of Household credit (code 163)
+  - Section B1 line 15 Nonrefundable renter's credit
+  - Section B2 lines 16 through 19 ordered carryover-credit slots for
+    additional California credits with carryover provisions, including the
+    supported Child Adoption Costs credit (code 197) when supplied upstream
+  - Section B3 line 20 Other state tax credit (code 187)
+  - Section B4 line 21 Pass-through entity elective tax credit (code 242)
+  - Section C line 23 Solar energy credit carryover (code 180)
+  - Section C line 24 Commercial solar energy credit carryover (code 181)
+  The published 2025 Schedule P (540NR) form directs filers who complete the
+  worksheet to:
+  - add back the standard deduction on line 1 when the taxpayer did not
+    itemize deductions, otherwise start Part I on line 2
+  - combine Part I line 14 through line 18 to line 19, limit line 20 and line
+    31 to the supported AMT NOL inputs, and floor Part II line 23 and line 45
+    at zero
+  - use the published 2025 line 22 exemption chart:
+    - single or head of household: full exemption $92,749 through $347,808 AMTI
+    - married/RDP filing jointly or qualifying surviving spouse/RDP:
+      full exemption $123,667 through $463,745 AMTI
+    - married/RDP filing separately: full exemption $61,830 through $231,868
+      AMTI
+  - reduce the line 22 exemption by 25% of the supported line 21 excess over
+    the filing-status threshold until the exemption reaches zero
+  - cap line 38 at 1.0000 and carry line 38 and line 42 to four decimal places
+  - start Part III line 1 from Form 540NR line 42 subtotal tax before credits
+  - start Part III line 2 from Schedule P (540NR) Part II line 43 California
+    tentative minimum tax, whether that amount is computed locally from the
+    supported Part I and Part II inputs or supplied directly as a supported
+    upstream line 43 amount
+  - compute line 3 excess tax as the amount of regular tax above tentative
+    minimum tax that Section A credits may offset
+  - enter the Part III Section B1 line 12 through line 14 credits after first
+    multiplying the underlying Form 540NR line 51 through line 53 credit
+    amounts by the Form 540NR line 54 credit percentage, using whole dollars
+  - fill blank Section B2 lines 16 through 19 in taxpayer-selected order, with
+    each line's column (c) balance feeding the next supported B2 line or line
+    20 when no later B2 lines are supplied
+  - limit each credit's column (b) used-this-year amount to the prior line's
+    column (c) balance
+  - compute each supported B2 line's column (d) carryover as max(0, column (a)
+    credit amount - column (b) credit used this year - any elected refundable
+    amount supplied for that credit)
+  - start Part III Section C line 22 from Schedule P (540NR) Part II line 45
+    AMT, whether that amount is computed locally from the supported Part I and
+    Part II inputs or supplied directly as a supported upstream line 45 amount
+  - carry the remaining AMT balance from Section C line 24 column (c) to line
+    25 and then to Form 540NR line 71
+  Unsupported Schedule P (540NR) items, including line 4 Prison Inmate Labor
+  Credit, Section A2 lines 6 through 10 credits, credit-source worksheets for
+  blank B2 lines 16 through 19, the line 18 itemized-deduction limitation
+  worksheet itself, the line 20 or line 31 AMT NOL source worksheets, and the
+  special line 22 child-under-age-24 exemption limitation, remain upstream or
+  unsupported in this slice.
+
+lines:
+  - line: "1"
+    description: "Part I standard deduction addback when the taxpayer did not itemize deductions"
+    formula: "If the taxpayer did not itemize deductions, use the supported Form 540NR line 18 standard deduction input; otherwise 0"
+    inputs:
+      - "Whether the taxpayer itemized deductions"
+      - "Supported Form 540NR line 18 standard deduction when the taxpayer did not itemize deductions"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part I Line 1 through Line 24 - the supported AMT worksheet computes California tentative minimum tax from direct Part I and Part II inputs"
+
+  - line: "2-13"
+    description: "Part I AMTI adjustments and preferences before line 14"
+    formula: "Use the supported direct Schedule P (540NR) Part I line 2 through line 13 inputs; line 14 combines the signed amounts from line 1 through line 13"
+    inputs:
+      - "Supported Part I line 2 through line 13 inputs"
+    notes: "Signed adjustments remain signed; line 6 refunds and other preference lines may reduce AMTI"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part I Line 1 through Line 24 - the supported AMT worksheet computes California tentative minimum tax from direct Part I and Part II inputs"
+
+  - line: "14"
+    description: "Part I total adjustments and preferences"
+    formula: "Combine line 1 through line 13"
+    inputs:
+      - "Schedule P (540NR) Part I line 1 through line 13"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part I Line 1 through Line 24 - the supported AMT worksheet computes California tentative minimum tax from direct Part I and Part II inputs"
+
+  - line: "15"
+    description: "Part I taxable income"
+    formula: "Supported input from Form 540NR line 19"
+    inputs:
+      - "Form 540NR line 19 taxable income"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part I Line 1 through Line 24 - the supported AMT worksheet computes California tentative minimum tax from direct Part I and Part II inputs"
+
+  - line: "16"
+    description: "Part I net operating loss deduction"
+    formula: "Supported positive upstream input from Schedule CA (540NR) Part II Section B line 9b1 through line 9b3 column B"
+    inputs:
+      - "Supported Part I line 16 NOL deduction"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part I Line 1 through Line 24 - the supported AMT worksheet computes California tentative minimum tax from direct Part I and Part II inputs"
+
+  - line: "17"
+    description: "Part I AMTI exclusion"
+    formula: "Supported positive upstream AMTI exclusion input"
+    inputs:
+      - "Supported Part I line 17 AMTI exclusion"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part I Line 1 through Line 24 - the supported AMT worksheet computes California tentative minimum tax from direct Part I and Part II inputs"
+
+  - line: "18"
+    description: "Part I itemized deductions limitation"
+    formula: "Supported positive upstream line 18 amount after applying the published federal-AGI thresholds when required"
+    inputs:
+      - "Supported Part I line 18 itemized-deductions limitation amount"
+      - "Federal AGI threshold context from the official line 18 instructions"
+    edgeCases:
+      - "Single or married/RDP filing separately threshold: $252,203"
+      - "Married/RDP filing jointly or qualifying surviving spouse/RDP threshold: $504,411"
+      - "Head of household threshold: $378,310"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part I Line 1 through Line 24 - the supported AMT worksheet computes California tentative minimum tax from direct Part I and Part II inputs"
+
+  - line: "19"
+    description: "Part I combined AMTI before AMT NOL"
+    formula: "Combine line 14 through line 18"
+    inputs:
+      - "Schedule P (540NR) Part I line 14 through line 18"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part I Line 1 through Line 24 - the supported AMT worksheet computes California tentative minimum tax from direct Part I and Part II inputs"
+
+  - line: "20"
+    description: "Part I AMT NOL deduction"
+    formula: "Use the supported upstream AMT NOL deduction input, limited to 90% of line 19"
+    inputs:
+      - "Supported Part I line 20 AMT NOL deduction"
+      - "Schedule P (540NR) Part I line 19"
+    edgeCases:
+      - "Line 20 cannot exceed 90% of line 19"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part I Line 1 through Line 24 - the supported AMT worksheet computes California tentative minimum tax from direct Part I and Part II inputs"
+
+  - line: "21"
+    description: "Part I alternative minimum taxable income"
+    formula: "Line 19 - Line 20; if filing status is married/RDP filing separately and the result exceeds $479,188, increase the result by min(25% of the excess over $479,188, $61,830)"
+    inputs:
+      - "Schedule P (540NR) Part I line 19"
+      - "Schedule P (540NR) Part I line 20"
+      - "Filing status"
+    edgeCases:
+      - "Married/RDP filing separately uses the published special adjustment only when the unadjusted line 21 amount exceeds $479,188"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part II Line 22 - married filing separately reaches a zero exemption at the 2025 full phaseout threshold"
+
+  - line: "22"
+    description: "Part II exemption amount"
+    formula: "Use the published 2025 exemption amount for the filing status when line 21 is at or below the filing-status threshold; otherwise reduce the base exemption by 25% of the line 21 excess over the filing-status threshold, floor at 0, and optionally limit further under the unsupported child-under-age-24 rule"
+    inputs:
+      - "Schedule P (540NR) Part I line 21"
+      - "Filing status"
+    edgeCases:
+      - "Single or head of household: base exemption $92,749 through $347,808 AMTI"
+      - "Married/RDP filing jointly or qualifying surviving spouse/RDP: base exemption $123,667 through $463,745 AMTI"
+      - "Married/RDP filing separately: base exemption $61,830 through $231,868 AMTI"
+      - "The exemption is fully phased out when AMTI reaches $718,804 for single/head of household, $958,413 for married/RDP filing jointly or qualifying surviving spouse/RDP, and $479,188 for married/RDP filing separately"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part II Line 22 - married filing separately reaches a zero exemption at the 2025 full phaseout threshold"
+
+  - line: "23"
+    description: "Part II tentative minimum tax base"
+    formula: "max(0, Part I line 21 - Line 22)"
+    inputs:
+      - "Schedule P (540NR) Part I line 21"
+      - "Schedule P (540NR) Part II line 22"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part I Line 1 through Line 24 - the supported AMT worksheet computes California tentative minimum tax from direct Part I and Part II inputs"
+
+  - line: "24"
+    description: "Part II total tentative minimum tax"
+    formula: "Round(Line 23 × 7% to the nearest whole dollar)"
+    inputs:
+      - "Schedule P (540NR) Part II line 23"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part I Line 1 through Line 24 - the supported AMT worksheet computes California tentative minimum tax from direct Part I and Part II inputs"
+
+  - line: "25-31"
+    description: "Part II California-source AMTI inputs before line 32"
+    formula: "Use the supported direct line 25 through line 31 inputs, with line 31 limited to 90% of line 30"
+    inputs:
+      - "Supported Part II line 25 through line 31 inputs"
+    edgeCases:
+      - "Line 31 cannot exceed 90% of line 30"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part I Line 1 through Line 24 - the supported AMT worksheet computes California tentative minimum tax from direct Part I and Part II inputs"
+
+  - line: "32"
+    description: "Part II California AMT AGI"
+    formula: "Line 30 - Line 31"
+    inputs:
+      - "Schedule P (540NR) Part II line 30"
+      - "Schedule P (540NR) Part II line 31"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part I Line 1 through Line 24 - the supported AMT worksheet computes California tentative minimum tax from direct Part I and Part II inputs"
+
+  - line: "33-39"
+    description: "Part II itemized-deduction proration path"
+    formula: "If the taxpayer itemized deductions, line 33 is the supported Schedule CA (540NR) Part III line 28 amount, line 34 is the total of Part I line 2, line 3, line 4, line 5, and line 7, line 35 is line 33 + line 34, line 36 is Part I line 21, line 37 is line 35 + line 36, line 38 is min(1.0000, round(Line 32 / Line 37, 4 decimal places)) when line 37 is positive otherwise 0.0000, and line 39 is round(Line 35 × Line 38 to the nearest whole dollar). If the taxpayer did not itemize deductions, line 40 uses line 32 directly."
+    inputs:
+      - "Whether the taxpayer itemized deductions"
+      - "Supported Part II line 33 itemized deductions before limitation"
+      - "Schedule P (540NR) Part I line 2, line 3, line 4, line 5, and line 7"
+      - "Schedule P (540NR) Part II line 32"
+      - "Schedule P (540NR) Part I line 21"
+    edgeCases:
+      - "Line 38 is capped at 1.0000"
+      - "If line 37 is zero or less, line 38 is 0.0000 and line 39 is 0"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part I Line 1 through Line 24 - the supported AMT worksheet computes California tentative minimum tax from direct Part I and Part II inputs"
+
+  - line: "40"
+    description: "Part II California AMTI"
+    formula: "If the taxpayer itemized deductions, Line 32 - Line 39; otherwise copy Line 32"
+    inputs:
+      - "Schedule P (540NR) Part II line 32"
+      - "Schedule P (540NR) Part II line 39"
+      - "Whether the taxpayer itemized deductions"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part I Line 1 through Line 24 - the supported AMT worksheet computes California tentative minimum tax from direct Part I and Part II inputs"
+
+  - line: "41"
+    description: "Part II total tentative minimum tax"
+    formula: "Copy line 24"
+    inputs:
+      - "Schedule P (540NR) Part II line 24"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part I Line 1 through Line 24 - the supported AMT worksheet computes California tentative minimum tax from direct Part I and Part II inputs"
+
+  - line: "42"
+    description: "Part II California AMT rate"
+    formula: "If Part I line 21 is greater than 0, round(Line 41 / Part I line 21, 4 decimal places); otherwise 0.0000"
+    inputs:
+      - "Schedule P (540NR) Part II line 41"
+      - "Schedule P (540NR) Part I line 21"
+    edgeCases:
+      - "Do not divide by zero when Part I line 21 is zero or less"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part I Line 1 through Line 24 - the supported AMT worksheet computes California tentative minimum tax from direct Part I and Part II inputs"
+
+  - line: "43"
+    description: "Part II California tentative minimum tax"
+    formula: "Round(Line 40 × Line 42 to the nearest whole dollar)"
+    inputs:
+      - "Schedule P (540NR) Part II line 40"
+      - "Schedule P (540NR) Part II line 42"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part I Line 1 through Line 24 - the supported AMT worksheet computes California tentative minimum tax from direct Part I and Part II inputs"
+
+  - line: "44"
+    description: "Part II regular tax"
+    formula: "Supported input from Form 540NR line 37"
+    inputs:
+      - "Form 540NR line 37 regular tax"
+    testRef: "tests/engine/state/ca-form-540nr-tax-computation.test.ts::CA Form 540NR tax computation Line 71 - supported Schedule P (540NR) AMT worksheet input computes line 71 without direct line 43 or line 45 amounts"
+
+  - line: "45"
+    description: "Part II alternative minimum tax"
+    formula: "max(0, Line 43 - Line 44)"
+    inputs:
+      - "Schedule P (540NR) Part II line 43"
+      - "Schedule P (540NR) Part II line 44"
+    testRef: "tests/engine/state/ca-form-540nr-tax-computation.test.ts::CA Form 540NR tax computation Line 71 - supported Schedule P (540NR) AMT worksheet input computes line 71 without direct line 43 or line 45 amounts"
+
+  - line: "1"
+    description: "Subtotal tax before credits"
+    formula: "Supported input from Form 540NR line 42"
+    inputs:
+      - "Form 540NR line 42 subtotal tax before credits"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part III Line 1 - the supported ordering starts from Form 540NR line 42 subtotal tax before credits"
+
+  - line: "2"
+    description: "California tentative minimum tax"
+    formula: "Supported upstream input from Schedule P (540NR) Part II line 43; default to $0 when no supported tentative minimum tax amount is supplied"
+    inputs:
+      - "Optional Schedule P (540NR) Part II line 43 tentative minimum tax"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part III Line 11c - Section B starts from tentative minimum tax plus the final Section A balance when line 3 is positive"
+
+  - line: "3"
+    description: "Excess tax"
+    formula: "max(0, Line 1 - Line 2)"
+    inputs:
+      - "Schedule P (540NR) line 1"
+      - "Schedule P (540NR) line 2"
+    edgeCases:
+      - "When tentative minimum tax exceeds or equals subtotal tax before credits, line 3 is zero"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part III Line 5b - Section A1 credits are limited by excess tax"
+
+  - line: "5a"
+    description: "Child and dependent care expenses credit amount"
+    formula: "Supported input for Schedule P (540NR) line 5 code 232 credit amount"
+    inputs:
+      - "Form 540NR line 50 child and dependent care credit amount"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part III Line 5b - Section A1 credits are limited by excess tax"
+
+  - line: "5b"
+    description: "Child and dependent care expenses credit used this year"
+    formula: "min(Line 5a, Line 3)"
+    inputs:
+      - "Schedule P (540NR) line 5a"
+      - "Schedule P (540NR) line 3"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part III Line 5b - Section A1 credits are limited by excess tax"
+
+  - line: "5c"
+    description: "Excess tax remaining after Schedule P line 5"
+    formula: "Line 3 - Line 5b"
+    inputs:
+      - "Schedule P (540NR) line 3"
+      - "Schedule P (540NR) line 5b"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part III Line 11c - Section B starts from tentative minimum tax plus the final Section A balance when line 3 is positive"
+
+  - line: "11c"
+    description: "Section B starting tax balance that may be offset by credits"
+    formula: "If Line 3 is zero, Line 1; otherwise Line 2 + Line 5c"
+    inputs:
+      - "Schedule P (540NR) line 1"
+      - "Schedule P (540NR) line 2"
+      - "Schedule P (540NR) line 3"
+      - "Schedule P (540NR) line 5c"
+    edgeCases:
+      - "When line 3 is positive, Section B starts from tentative minimum tax plus the final Section A remaining balance"
+      - "When line 3 is zero, Section B starts from line 1 because Section A cannot reduce tax below tentative minimum tax"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part III Line 11c - Section B starts from tentative minimum tax plus the final Section A balance when line 3 is positive"
+
+  - line: "12a"
+    description: "Prorated Joint Custody Head of Household credit amount"
+    formula: "Round(Form 540NR line 51 credit amount × Form 540NR line 54 credit percentage to the nearest whole dollar)"
+    inputs:
+      - "Form 540NR line 51 credit amount"
+      - "Form 540NR line 54 credit percentage"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part III Line 12 through Line 14 - line 54 prorates each supported special credit before the Schedule P limitation"
+
+  - line: "12b"
+    description: "Joint Custody Head of Household credit used this year"
+    formula: "min(Line 12a, Line 11c)"
+    inputs:
+      - "Schedule P (540NR) line 12a"
+      - "Schedule P (540NR) line 11c"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part III Line 12 through Line 14 - line 54 prorates each supported special credit before the Schedule P limitation"
+
+  - line: "12c"
+    description: "Net tax remaining after Schedule P line 12"
+    formula: "Line 11c - Line 12b"
+    inputs:
+      - "Schedule P (540NR) line 11c"
+      - "Schedule P (540NR) line 12b"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part III Line 12 through Line 14 - line 54 prorates each supported special credit before the Schedule P limitation"
+
+  - line: "13a"
+    description: "Prorated Dependent Parent credit amount"
+    formula: "Round(Form 540NR line 52 credit amount × Form 540NR line 54 credit percentage to the nearest whole dollar)"
+    inputs:
+      - "Form 540NR line 52 credit amount"
+      - "Form 540NR line 54 credit percentage"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part III Line 12 through Line 14 - line 54 prorates each supported special credit before the Schedule P limitation"
+
+  - line: "13b"
+    description: "Dependent Parent credit used this year"
+    formula: "min(Line 13a, Line 12c)"
+    inputs:
+      - "Schedule P (540NR) line 13a"
+      - "Schedule P (540NR) line 12c"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part III Line 12 through Line 14 - line 54 prorates each supported special credit before the Schedule P limitation"
+
+  - line: "13c"
+    description: "Net tax remaining after Schedule P line 13"
+    formula: "Line 12c - Line 13b"
+    inputs:
+      - "Schedule P (540NR) line 12c"
+      - "Schedule P (540NR) line 13b"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part III Line 12 through Line 14 - line 54 prorates each supported special credit before the Schedule P limitation"
+
+  - line: "14a"
+    description: "Prorated Senior Head of Household credit amount"
+    formula: "Round(Form 540NR line 53 credit amount × Form 540NR line 54 credit percentage to the nearest whole dollar)"
+    inputs:
+      - "Form 540NR line 53 credit amount"
+      - "Form 540NR line 54 credit percentage"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part III Line 12 through Line 14 - line 54 prorates each supported special credit before the Schedule P limitation"
+
+  - line: "14b"
+    description: "Senior Head of Household credit used this year"
+    formula: "min(Line 14a, Line 13c)"
+    inputs:
+      - "Schedule P (540NR) line 14a"
+      - "Schedule P (540NR) line 13c"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part III Line 12 through Line 14 - line 54 prorates each supported special credit before the Schedule P limitation"
+
+  - line: "14c"
+    description: "Net tax remaining after Schedule P line 14"
+    formula: "Line 13c - Line 14b"
+    inputs:
+      - "Schedule P (540NR) line 13c"
+      - "Schedule P (540NR) line 14b"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part III Line 12 through Line 14 - line 54 prorates each supported special credit before the Schedule P limitation"
+
+  - line: "15a"
+    description: "Nonrefundable renter's credit amount"
+    formula: "Supported input for Schedule P (540NR) line 15 renter's credit amount"
+    inputs:
+      - "Form 540NR line 61 renter's credit amount"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part III Line 15 through Line 21 - additional special credits start after the renter's credit limitation"
+
+  - line: "15b"
+    description: "Nonrefundable renter's credit used this year"
+    formula: "min(Line 15a, Line 14c)"
+    inputs:
+      - "Schedule P (540NR) line 15a"
+      - "Schedule P (540NR) line 14c"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part III Line 15 through Line 21 - additional special credits start after the renter's credit limitation"
+
+  - line: "15c"
+    description: "Net tax remaining after Schedule P line 15"
+    formula: "Line 14c - Line 15b"
+    inputs:
+      - "Schedule P (540NR) line 14c"
+      - "Schedule P (540NR) line 15b"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part III Line 15 through Line 21 - additional special credits start after the renter's credit limitation"
+
+  - line: "16a-19d"
+    description: "Additional ordered B2 carryover-credit slots"
+    formula: "For each supplied additional B2 carryover credit in taxpayer-selected order, assign the next available blank Schedule P (540NR) line from 16 through 19. For each assigned line, column (b) credit used this year is min(column (a) credit amount, the prior supported line's column (c) balance); column (c) is the prior supported line's column (c) balance minus column (b); and column (d) carryover is the optional supported source-worksheet carryover amount for that credit plus max(0, column (a) credit amount - column (b) credit used this year - any elected refundable amount supplied for that credit)."
+    inputs:
+      - "Optional ordered list of up to four additional California Schedule P (540NR) Section B2 carryover credits, each with credit code, credit name, credit amount, optional source-worksheet carryover amount, and optional elected refundable amount"
+      - "Schedule P (540NR) line 15c"
+    edgeCases:
+      - "When one or more additional B2 credits are supplied, line 20 starts from the last supplied B2 line's column (c)"
+      - "When no additional B2 credits are supplied, line 20 starts from line 15c"
+      - "A supplied elected refundable amount cannot exceed the unused portion of that line's column (a) amount after column (b)"
+      - "When a supported upstream worksheet already produces its own carryover amount, add that worksheet carryover to the unused current-year amount on column (d)"
+      - "Do not accept more than four supported B2 credits because Schedule P (540NR) provides only blank lines 16 through 19"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part III Line 16 through Line 21 - additional B2 carryover credits consume net tax in order and preserve remaining carryovers"
+
+  - line: "20a"
+    description: "Other state tax credit amount"
+    formula: "Supported input from Schedule S (540) line 12"
+    inputs:
+      - "California Schedule S line 12 other state tax credit amount"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part III Line 16 through Line 21 - additional B2 carryover credits can limit code 187 and code 242 usage"
+
+  - line: "20b"
+    description: "Other state tax credit used this year"
+    formula: "min(Line 20a, the last supplied supported B2 line 16 through 19 column (c) balance when present; otherwise Line 15c)"
+    inputs:
+      - "Schedule P (540NR) line 20a"
+      - "Optional supported Schedule P (540NR) line 16 through line 19 carryover-credit ordering result"
+      - "Schedule P (540NR) line 15c"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part III Line 16 through Line 21 - additional B2 carryover credits can limit code 187 and code 242 usage"
+
+  - line: "20c"
+    description: "Net tax remaining after Schedule P line 20"
+    formula: "Starting balance used for Line 20b - Line 20b"
+    inputs:
+      - "Supported final line 16 through line 19 column (c) balance or Schedule P (540NR) line 15c"
+      - "Schedule P (540NR) line 20b"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part III Line 16 through Line 21 - additional B2 carryover credits can limit code 187 and code 242 usage"
+
+  - line: "21a"
+    description: "Pass-through entity elective tax credit amount"
+    formula: "Supported input from FTB 3804-CR available credit amount"
+    inputs:
+      - "FTB 3804-CR available pass-through entity elective tax credit amount"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part III Line 16 through Line 21 - additional B2 carryover credits can limit code 187 and code 242 usage"
+
+  - line: "21b"
+    description: "Pass-through entity elective tax credit used this year"
+    formula: "min(Line 21a, Line 20c)"
+    inputs:
+      - "Schedule P (540NR) line 21a"
+      - "Schedule P (540NR) line 20c"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part III Line 16 through Line 21 - additional B2 carryover credits can limit code 187 and code 242 usage"
+
+  - line: "21c"
+    description: "Net tax remaining after Schedule P line 21"
+    formula: "Line 20c - Line 21b"
+    inputs:
+      - "Schedule P (540NR) line 20c"
+      - "Schedule P (540NR) line 21b"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part III Line 16 through Line 21 - additional B2 carryover credits can limit code 187 and code 242 usage"
+
+  - line: "21d"
+    description: "Pass-through entity elective tax credit carryover"
+    formula: "max(0, Line 21a - Line 21b)"
+    inputs:
+      - "Schedule P (540NR) line 21a"
+      - "Schedule P (540NR) line 21b"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part III Line 16 through Line 21 - additional B2 carryover credits can limit code 187 and code 242 usage"
+
+  - line: "22"
+    description: "Alternative minimum tax"
+    formula: "Supported upstream input from Schedule P (540NR) Part II line 45"
+    inputs:
+      - "Optional Schedule P (540NR) Part II line 45 alternative minimum tax"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part III Line 25 - adjusted AMT remains after supported solar credit carryovers"
+
+  - line: "23a-24d"
+    description: "Supported AMT-reducing solar carryover credits"
+    formula: "For each supplied Section C solar carryover credit, column (b) credit used this year is min(column (a) credit amount, the prior line's column (c) AMT balance); column (c) is the prior line's column (c) AMT balance minus column (b); and column (d) carryover is max(0, column (a) credit amount - column (b))."
+    inputs:
+      - "Optional Schedule P (540NR) line 23 solar energy credit carryover amount"
+      - "Optional Schedule P (540NR) line 24 commercial solar energy credit carryover amount"
+      - "Schedule P (540NR) line 22 alternative minimum tax"
+    edgeCases:
+      - "When no supported solar carryover credits are supplied, line 25 equals line 22"
+      - "Line 24 starts from line 23 column (c) when a line 23 credit amount is supplied; otherwise it starts from line 22"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part III Line 25 - adjusted AMT remains after supported solar credit carryovers"
+
+  - line: "25"
+    description: "Adjusted AMT"
+    formula: "Enter the remaining Section C AMT balance after supported line 23 and line 24 credits; this equals line 24 column (c), or line 22 when no supported Section C credits are supplied"
+    inputs:
+      - "Schedule P (540NR) line 22"
+      - "Optional supported Schedule P (540NR) line 23 and line 24 results"
+    testRef: "tests/engine/state/ca-schedule-p-540nr.test.ts::CA Schedule P (540NR) Part III Line 25 - adjusted AMT remains after supported solar credit carryovers"

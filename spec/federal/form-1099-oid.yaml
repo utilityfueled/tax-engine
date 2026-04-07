@@ -1,0 +1,79 @@
+form: "Form 1099-OID"
+title: "Original Issue Discount"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i1099oid"
+
+notes: |
+  Reports original issue discount (OID) accrued on debt instruments such as
+  zero-coupon bonds, CDs issued at a discount, Treasury STRIPS, and TIPS.
+  OID is taxable interest income accrued annually even when no cash is received
+  (phantom income). Reported by brokers and issuers.
+
+  IRC §§1272–1273 govern OID inclusion. IRC §171 governs bond premium
+  amortization. IRC §§1276–1278 govern market discount.
+
+  The engine processes Form 1099-OID by:
+  1. Computing net OID: Box 1 minus min(Box 1, Box 6 acquisition premium)
+  2. Computing net stated interest: Box 2 minus min(Box 2, Box 11 bond premium)
+  3. Adding both net amounts as interest payers on Schedule B Part I
+  4. Aggregating Box 3 early withdrawal penalty into Schedule 1 Line 18
+  5. Computing net tax-exempt OID: max(0, Box 14 minus Box 13) for Line 2a
+  6. Aggregating Box 4 backup withholding into Line 25d
+
+lines:
+  - line: "1"
+    description: "Original issue discount — taxable OID accrued during the year"
+    formula: "Net reportable OID = Box 1 − min(Box 1, Box 6). Flows to Schedule B Part I as interest income."
+    irsRef: "IRC §1272(a)(1); Pub 1212"
+    testRef: "tests/engine/forms/form-1099-oid.test.ts::Box 1 OID flows to Schedule B Part I as interest income"
+
+  - line: "2"
+    description: "Other periodic interest (stated coupon interest)"
+    formula: "Net interest = Box 2 − min(Box 2, Box 11 bond premium). Flows to Schedule B Part I."
+    irsRef: "IRC §171; Pub 550 Ch. 1"
+    testRef: "tests/engine/forms/form-1099-oid.test.ts::Box 2 other periodic interest flows to Schedule B"
+
+  - line: "3"
+    description: "Early withdrawal penalty"
+    formula: "Deduction amount = Box 3. Flows to Schedule 1 Line 18 as above-the-line adjustment."
+    irsRef: "Schedule 1 Instructions, Line 18"
+    testRef: "tests/engine/forms/form-1099-oid.test.ts::Box 3 early withdrawal penalty flows to Schedule 1 Line 18"
+
+  - line: "4"
+    description: "Federal income tax withheld (backup withholding)"
+    formula: "Withholding amount = Box 4. Aggregated into Form 1040 Line 25d."
+    irsRef: "Form 1040 Instructions, Line 25b"
+    testRef: "tests/engine/forms/form-1099-oid.test.ts::multiple 1099-OID withholding amounts aggregate"
+
+  - line: "6"
+    description: "Acquisition premium — reduces taxable OID per IRC §1272(a)(7)"
+    formula: "Offset = min(Box 6, Box 1). Net OID = Box 1 − offset."
+    irsRef: "IRC §1272(a)(7)"
+    edgeCases:
+      - "Box 6 ≥ Box 1 → net OID is zero; no taxable OID reported"
+      - "Only reduces OID (Box 1), not stated interest (Box 2)"
+    testRef: "tests/engine/forms/form-1099-oid.test.ts::acquisition premium reduces Box 1 OID"
+
+  - line: "11"
+    description: "Amortizable bond premium — offsets stated interest under IRC §171"
+    formula: "Offset = min(Box 11, Box 2). Net interest = Box 2 − offset."
+    irsRef: "IRC §171"
+    edgeCases:
+      - "Box 11 > Box 2 → net interest is zero; excess premium not deductible under TCJA"
+      - "Only reduces stated interest (Box 2), not OID (Box 1)"
+    testRef: "tests/engine/forms/form-1099-oid.test.ts::bond premium reduces Box 2 stated interest"
+
+  - line: "14"
+    description: "Tax-exempt OID — flows to Form 1040 Line 2a"
+    formula: "Net tax-exempt OID = max(0, Box 14 − Box 13). Added to Line 2a tax-exempt interest."
+    irsRef: "IRC §1288; Form 1040 Instructions, Line 2a"
+    edgeCases:
+      - "Box 13 (tax-exempt bond premium) reduces Box 14 but cannot make it negative"
+      - "Private activity bond OID may be AMT preference under IRC §57(a)(5)"
+    testRef: "tests/engine/forms/form-1099-oid.test.ts::Box 14 tax-exempt OID flows to Form 1040 Line 2a"
+
+  - line: "agg"
+    description: "Aggregation: multiple 1099-OID forms are processed independently then summed"
+    formula: "Total interest = SUM(net OID per form) + SUM(net stated interest per form)"
+    irsRef: "Schedule B Instructions"
+    testRef: "tests/engine/forms/form-1099-oid.test.ts::multiple 1099-OID forms aggregate correctly"

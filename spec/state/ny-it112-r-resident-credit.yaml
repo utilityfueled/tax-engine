@@ -1,0 +1,167 @@
+form: "New York IT-112-R"
+fullName: "New York Resident Credit for Taxes Paid to Another State"
+taxYear: 2025
+irsReference: "https://www.tax.ny.gov/pdf/current_forms/it/it112ri.pdf"
+
+notes: |
+  The IT-112-R allows full-year NY residents to claim a credit against NY State
+  tax for income taxes paid to another state (or DC) on income that is also
+  taxed by New York. This prevents double taxation.
+
+  Key rules:
+  - Credit applies ONLY against NY State tax (NOT NYC or Yonkers tax)
+  - Separate IT-112-R for each state/jurisdiction (except state+local in same state)
+  - Canadian provinces use IT-112-C instead (not covered here)
+  - Credit = lesser of: tax paid to other state, OR proportionate NY tax
+  - Income ratio = (income sourced to other state) / (total NY income)
+  - Ratio can exceed 1.0000 (when other-state income > total NY income)
+  - Intangible income (interest, dividends) excluded from Column B unless
+    connected with trade/business in other jurisdiction
+  - PTET paid by entity on behalf of taxpayer is includable on line 24b
+
+  Authority: NY Tax Law Section 620
+
+lines:
+  - line: "22A"
+    description: "Total NY income (Column A)"
+    formula: "NY AGI + capital gain portion of lump-sum distributions"
+    inputs:
+      - "NY adjusted gross income (IT-201 line 33)"
+      - "Capital gain portion of lump-sum distributions (if any)"
+    notes: |
+      Column A represents total income reported on the NY State return.
+      For most filers this equals NY AGI from IT-201 line 33.
+    testRef: "tests/engine/state/ny-it112-r-resident-credit.test.ts::Line 22A - total NY income"
+
+  - line: "22B"
+    description: "Income sourced to other jurisdiction (Column B)"
+    formula: "Sum of income items sourced to and taxed by other state (AGI basis)"
+    inputs:
+      - "Income sourced to and taxed by other jurisdiction"
+    notes: |
+      Column B amounts must be on an adjusted gross income basis.
+      Do NOT include:
+      - Interest/dividend income from intangible assets (unless connected
+        with trade/business in the other jurisdiction)
+      - Income taxable to the other jurisdiction but NOT taxable to NY
+      May include negative amounts (e.g., business loss in other state).
+    edgeCases:
+      - "Negative sourced income results in zero or negative credit"
+      - "Column B can exceed Column A"
+      - "Intangible income excluded unless business-connected"
+    testRef: "tests/engine/state/ny-it112-r-resident-credit.test.ts::Line 22B - sourced income from other state"
+
+  - line: "24"
+    description: "Total income tax imposed by other jurisdiction"
+    formula: "Line 24a (taxpayer tax) + Line 24b (entity PTET)"
+    inputs:
+      - "Income tax paid by taxpayer to other state"
+      - "PTET paid by entity on taxpayer's behalf (if any)"
+    notes: |
+      Enter net tax imposed by the other jurisdiction:
+      - Include income tax minus credits allowed by that state
+      - Do NOT include use tax, penalties, interest
+      - Do NOT include tax on income not taxed by NY
+      - Line 24a can be negative (e.g., when PTET refund exceeds tax)
+    edgeCases:
+      - "Zero tax paid: no credit"
+      - "Negative net tax (PTET exceeds liability): no credit"
+    testRef: "tests/engine/state/ny-it112-r-resident-credit.test.ts::Line 24 - tax paid to other state"
+
+  - line: "25"
+    description: "NY State tax payable (for limitation)"
+    formula: "IT-201 line 39 - IT-201 line 40 (household credit)"
+    inputs:
+      - "NY State tax (IT-201 line 39)"
+      - "NY State household credit (IT-201 line 40)"
+    notes: |
+      From the Line 25 worksheet:
+      a = IT-201 line 39 (+ lump-sum tax if any)
+      b = IT-201 line 40 (household credit)
+      c = a - b = Line 25
+    testRef: "tests/engine/state/ny-it112-r-resident-credit.test.ts::Line 25 - NY State tax minus household credit"
+
+  - line: "26"
+    description: "Income ratio"
+    formula: "Line 22 Column B / Line 22 Column A (round to 4 decimal places)"
+    inputs:
+      - "Income sourced to other jurisdiction (line 22 Col B)"
+      - "Total NY income (line 22 Col A)"
+    notes: |
+      Ratio can exceed 1.0000 when Column B exceeds Column A.
+      If Column A is zero or negative, ratio is 0 (no credit).
+      Round to 4 decimal places (truncate, not round).
+    edgeCases:
+      - "Column A is zero: ratio is 0"
+      - "Column A is negative: ratio is 0"
+      - "Column B exceeds Column A: ratio > 1.0"
+      - "Column B is negative: ratio is negative → credit is 0"
+    testRef: "tests/engine/state/ny-it112-r-resident-credit.test.ts::Line 26 - income ratio rounded to 4 decimals"
+
+  - line: "27"
+    description: "Proportionate NY tax (NY State limitation)"
+    formula: "Line 25 × Line 26"
+    inputs:
+      - "NY State tax payable (line 25)"
+      - "Income ratio (line 26)"
+    notes: "This is the maximum credit NY will allow based on the proportion of income."
+    testRef: "tests/engine/state/ny-it112-r-resident-credit.test.ts::Line 27 - proportionate NY tax"
+
+  - line: "28"
+    description: "Allowable credit per jurisdiction"
+    formula: "min(Line 24, Line 27)"
+    inputs:
+      - "Tax paid to other state (line 24)"
+      - "Proportionate NY tax (line 27)"
+    notes: |
+      The credit is the lesser of:
+      1. Tax actually paid to the other state
+      2. What NY's proportionate tax would be on that income
+      Minimum is zero (no negative credit).
+    edgeCases:
+      - "Other state tax exceeds proportionate NY tax: credit = proportionate NY tax"
+      - "Proportionate NY tax exceeds other state tax: credit = other state tax"
+      - "Both negative: credit is zero"
+    testRef: "tests/engine/state/ny-it112-r-resident-credit.test.ts::Line 28 - credit is lesser of tax paid or proportionate NY tax"
+
+  - line: "30"
+    description: "Total resident credit (all jurisdictions)"
+    formula: "Sum of line 28 from all IT-112-R forms"
+    inputs:
+      - "Allowable credit from each jurisdiction"
+    notes: "When taxes are paid to multiple states, each gets its own computation."
+    testRef: "tests/engine/state/ny-it112-r-resident-credit.test.ts::Line 30 - total credit from multiple states"
+
+  - line: "31"
+    description: "Tax due before credits"
+    formula: "IT-201 line 39 + IT-201-ATT line 21"
+    inputs:
+      - "NY State tax from IT-201 line 39"
+      - "Additional tax from IT-201-ATT line 21, if any"
+    notes: |
+      For Form IT-201 filers, IT-112-R line 31 starts with the tax on
+      IT-201 line 39 and adds any amount on IT-201-ATT line 21 before applying
+      credits on lines 32 through 34.
+    edgeCases:
+      - "When IT-201-ATT line 21 is zero or omitted, line 31 equals IT-201 line 39"
+      - "Positive IT-201-ATT line 21 tax increases the resident-credit limitation ceiling"
+    testRef: "tests/engine/state/ny-it112-r-resident-credit.test.ts::Line 31 - IT-201-ATT line 21 tax increases the resident-credit limitation"
+
+  - line: "34"
+    description: "Final credit claimed (limited to remaining tax)"
+    formula: "min(Line 30, Line 33 [remaining tax liability])"
+    inputs:
+      - "Total credit (line 30)"
+      - "Tax due before credits including IT-201-ATT line 21 (line 31)"
+      - "Remaining tax after other credits (line 33)"
+    notes: |
+      Line 31 = IT-201 line 39 (+ IT-201-ATT line 21 if applicable)
+      Line 32 = household credit + other credits applied before resident credit
+      Line 33 = Line 31 - Line 32
+      Line 34 = min(Line 30, Line 33)
+      This is entered on IT-201 line 41.
+    edgeCases:
+      - "Other credits already exceed tax: no resident credit available"
+      - "IT-201-ATT line 21 can increase the final credit when line 30 exceeds the pre-credit tax on line 39"
+      - "Resident credit reduces remaining tax to zero"
+    testRef: "tests/engine/state/ny-it112-r-resident-credit.test.ts::Line 34 - final credit limited to remaining tax"

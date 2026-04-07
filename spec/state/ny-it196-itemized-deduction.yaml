@@ -1,0 +1,165 @@
+form: "New York IT-196 Itemized Deductions"
+fullName: "New York State Form IT-196 — Resident, Nonresident, and Part-Year Resident Itemized Deductions"
+taxYear: 2025
+irsReference: "https://www.tax.ny.gov/pdf/2025/inc/it196_2025_fill_in.pdf"
+
+notes: |
+  Form IT-196 computes the New York itemized deduction. Key differences from
+  federal Schedule A:
+
+  1. SALT cap removal: NY does NOT apply the federal $10,000/$40,000 SALT cap.
+     The full amount of state/local taxes paid is deductible.
+  2. Pre-TCJA rules: NY still allows casualty/theft losses (not limited to
+     declared disasters), unreimbursed employee expenses, tax preparation fees,
+     and other miscellaneous deductions subject to the 2% AGI floor.
+  3. Mortgage interest: NY uses pre-TCJA limits ($1M/$500K acquisition debt).
+  4. Pease limitation: For high federal AGI, a pre-TCJA-style 3%/80% overall
+     limitation applies (Line 40 worksheet).
+  5. State tax subtraction: Line 41 removes state/local income taxes (since
+     you cannot deduct your own state taxes on your state return).
+  6. High-income limitation: Lines 46-47 impose progressive limits on total
+     deductions based on NY AGI, from 25% reduction to, for $1M+ AGI,
+     limiting deductions to 50% or 25% of charitable contributions only.
+
+  This module accepts pre-computed deduction category subtotals (lines 4, 9,
+  15, 19, 20, 28, 39) and computes lines 40-49: the Pease limitation,
+  subtraction/addition adjustments, high-income limitation, and final
+  NY itemized deduction.
+
+lines:
+  - line: "40"
+    description: "Total itemized deductions (after Pease limitation if applicable)"
+    formula: |
+      If federal AGI ≤ threshold: sum of lines 4, 9, 15, 19, 20, 28, 39.
+      If federal AGI > threshold: apply Line 40 worksheet (3%/80% Pease limitation).
+      Worksheet: reduction = min(80% × subject-to-limit deductions, 3% × excess AGI).
+      Line 40 = total deductions - reduction.
+    inputs:
+      - "Medical deduction (line 4)"
+      - "Taxes paid (line 9)"
+      - "Interest deduction (line 15)"
+      - "Charitable gifts (line 19)"
+      - "Casualty/theft losses (line 20)"
+      - "Misc deductions after 2% floor (line 28)"
+      - "Other itemized deductions (line 39)"
+      - "Federal AGI (for Pease threshold check)"
+      - "Filing status"
+    notes: |
+      Pease limitation thresholds (2025):
+        Single: $340,700
+        MFJ/QSS: $408,850
+        HoH: $374,800
+        MFS: $204,400
+
+      Items NOT subject to Pease: medical (4), investment interest (14),
+      qualified contributions (16a), casualty losses (20), gambling losses (29),
+      casualty losses income-producing (30), federal disaster losses (37).
+    testRef: "tests/engine/state/ny-it196-itemized-deduction.test.ts::Line 40 - no reduction when AGI at threshold"
+
+  - line: "41"
+    description: "Subtraction adjustments"
+    formula: |
+      If federal AGI ≤ Pease threshold: sum of subtraction items A through F.
+      If federal AGI > Pease threshold: use Worksheet 2 to prorate by Pease ratio.
+    inputs:
+      - "State/local income taxes (item A, from line 5)"
+      - "Foreign income taxes included in line 8 (item A)"
+      - "Other subtraction adjustments (items B through F)"
+    notes: |
+      Item A: State and local income taxes (or general sales tax) from line 5
+      and any foreign income taxes included on line 8.
+      Items B-F: Expenses related to income exempt from NY tax, bond premium
+      amortization on NY-exempt bonds, interest expense on NY-exempt securities,
+      S corporation deductions, long-term care insurance premiums.
+
+      Table 1 thresholds (same as Pease, determines if Worksheet 2 is needed):
+        Single: $340,700
+        MFJ/QSS: $408,850
+        HoH: $374,800
+        MFS: $204,400
+    testRef: "tests/engine/state/ny-it196-itemized-deduction.test.ts::Line 41 - full subtraction when no Pease limitation"
+
+  - line: "42"
+    description: "Line 40 minus line 41"
+    formula: "Line 40 - Line 41 (if no entry on line 41, use line 40)"
+    testRef: "tests/engine/state/ny-it196-itemized-deduction.test.ts::Line 42 - subtraction exceeding line 40 floors to zero"
+
+  - line: "44"
+    description: "Addition adjustments (items H, I, J, K)"
+    formula: "Sum of addition adjustment items"
+    inputs:
+      - "Interest on NY-taxable but federally-exempt bonds (item H)"
+      - "Expenses for NY-taxable but federally-exempt income (item I)"
+      - "Bond premium amortization on NY-taxable bonds (item J)"
+      - "Disallowed union dues from 2% floor (item K)"
+    notes: "These add back deductions that NY allows but the IRC does not."
+    testRef: "tests/engine/state/ny-it196-itemized-deduction.test.ts::Line 49 - addition adjustments increase deductions"
+
+  - line: "45"
+    description: "Total before high-income adjustment"
+    formula: "Line 42 + Line 43 + Line 44"
+    notes: "Line 43 is for IT-203 filers only (college tuition). IT-201 filers leave blank."
+    testRef: "tests/engine/state/ny-it196-itemized-deduction.test.ts::Line 49 - basic itemizer below all thresholds"
+
+  - line: "46"
+    description: "Itemized deduction adjustment for higher income"
+    formula: |
+      Based on NY AGI:
+        ≤ $100,000: no adjustment (blank)
+        $100,001 - $475,000: Worksheet 3 (gradual phase-in of 25% limitation)
+        $475,001 - $525,000: Worksheet 4 (transition from 25% to 50%)
+        $525,001 - $1,000,000: 50% of line 45
+        > $1,000,000: blank (line 47 handles directly)
+    inputs:
+      - "NY AGI (IT-201 line 33)"
+      - "Line 45 (total before adjustment)"
+      - "Filing status"
+    notes: |
+      Worksheet 3 (NYAGI $100K-$475K):
+        Thresholds by filing status:
+          Single/MFS: $100,000
+          HoH: $150,000
+          MFJ/QSS: $200,000
+        excess = NYAGI - threshold (if positive)
+        capped_excess = min(excess, $50,000)
+        ratio = capped_excess / $50,000
+        base_reduction = 25% of line 45
+        adjustment = ratio × base_reduction
+
+      Worksheet 4 (NYAGI $475K-$525K):
+        excess = NYAGI - $475,000 (max $50,000)
+        ratio = excess / $50,000
+        base_25pct = 25% of line 45
+        incremental = ratio × base_25pct
+        adjustment = base_25pct + incremental
+    testRef: "tests/engine/state/ny-it196-itemized-deduction.test.ts::Line 46 - Worksheet 3 single at $125,000"
+
+  - line: "47"
+    description: "Itemized deduction after adjustment"
+    formula: |
+      Based on NY AGI:
+        ≤ $100,000: line 45
+        $100,001 - $1,000,000: line 45 - line 46
+        $1,000,001 - $10,000,000: 50% of charitable gifts (line 19)
+        > $10,000,000: 25% of charitable gifts (line 19)
+    notes: |
+      For very high income ($1M+), the deduction is limited to a percentage
+      of charitable contributions only. All other deduction categories are
+      effectively disallowed.
+    testRef: "tests/engine/state/ny-it196-itemized-deduction.test.ts::Line 47 - for NYAGI > $1M, limited to 50% of charitable gifts"
+
+  - line: "48"
+    description: "College tuition itemized deduction"
+    formula: "From Form IT-272 (IT-201 filers only)"
+    notes: |
+      Taxpayers may claim either the college tuition credit (IT-272 on IT-201)
+      or the college tuition itemized deduction (IT-196 line 48), but not both.
+    testRef: "tests/engine/state/ny-it196-itemized-deduction.test.ts::Line 49 - college tuition deduction adds to line 47"
+
+  - line: "49"
+    description: "New York itemized deduction"
+    formula: "Line 47 + Line 48"
+    notes: |
+      This is the final NY itemized deduction entered on IT-201 line 34.
+      Compare with the NY standard deduction to determine which is larger.
+    testRef: "tests/engine/state/ny-it196-itemized-deduction.test.ts::Line 49 - basic itemizer below all thresholds"

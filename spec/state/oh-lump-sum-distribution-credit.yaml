@@ -1,0 +1,120 @@
+form: "Ohio Lump Sum Distribution Credit Worksheet"
+fullName: "Ohio Schedule of Credits Line 5 Worksheet"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf"
+
+notes: |
+  This worksheet computes the Ohio Schedule of Credits line 5 lump sum
+  distribution credit. The 2025 Ohio IT 1040 booklet page 28 says the credit
+  applies when the taxpayer:
+    - was age 65 or older at the end of the tax year;
+    - received a total lump sum distribution from a qualified pension,
+      retirement, or profit-sharing plan; and
+    - has not previously claimed the credit.
+
+  The official worksheet on page 44 uses Table 1 age multiples. The credit does
+  not depend on the distribution amount once the taxpayer qualifies; it equals
+  the age multiple times $50 for each qualifying recipient. If filing jointly
+  and both spouses qualify, compute each spouse separately and add the results.
+  The worksheet only provides Column A and Column B, so this supported slice
+  accepts at most two qualifying recipients per return.
+
+  Supported tax years: 2024 and 2025. The worksheet text and Table 1 age
+  multiples are unchanged across those two booklets.
+
+packetRules:
+  packetBehavior: "reference-summary-pdf"
+  includeWhen:
+    - "Ohio Schedule of Credits line 5 is computed from qualifying recipient ages using this worksheet"
+  suppressWhen:
+    - "No qualifying recipient ages are provided"
+    - "The return uses a direct line 5 override instead of the supported worksheet"
+  notes: |
+    When the Ohio packet relies on the supported worksheet calculation instead
+    of a raw pass-through line 5 value, attach a reference-summary page for the
+    worksheet so the age-multiple computation remains auditable. Suppress the
+    worksheet packet when the credit is absent or when the return only carries
+    a direct override that bypasses the worksheet math.
+
+businessRuleValidation:
+  - rule: "reference-summary-packet"
+    description: "Inventory support counts this worksheet as business-rule validated only when regression coverage proves the Ohio lump sum distribution credit reference summary is emitted for worksheet-driven line 5 credits and stays suppressed when the worksheet is not used."
+    testRef: "tests/pdf/fill-oh-reference-forms.test.ts::fillOhioReferenceForms includes the Ohio lump sum distribution credit worksheet reference summary only when the supported worksheet drives line 5"
+
+lines:
+  - line: "1"
+    description: "Age multiple for each qualifying lump sum recipient"
+    formula: |
+      Look up the recipient's age as of the last day of the tax year in Table 1.
+      If age is under 65, the recipient does not qualify and the multiple is $0.
+      Supported table ages are 65 through 105.
+    inputs:
+      - "Recipient age on December 31"
+    notes: |
+      Table 1 age multiples used for supported years:
+        65: 20.0
+        66: 19.2
+        67: 18.4
+        68: 17.6
+        69: 16.8
+        70: 16.0
+        71: 15.3
+        72: 14.6
+        73: 13.9
+        74: 13.2
+        75: 12.5
+        76: 11.9
+        77: 11.2
+        78: 10.6
+        79: 10.0
+        80: 9.5
+        81: 8.9
+        82: 8.4
+        83: 7.9
+        84: 7.4
+        85: 6.9
+        86: 6.5
+        87: 6.1
+        88: 5.7
+        89: 5.3
+        90: 5.0
+        91: 4.7
+        92: 4.4
+        93: 4.1
+        94: 3.9
+        95: 3.7
+        96: 3.4
+        97: 3.2
+        98: 3.0
+        99: 2.8
+        100: 2.7
+        101: 2.5
+        102: 2.3
+        103: 2.1
+        104: 1.9
+        105: 1.8
+    edgeCases:
+      - "Age 64 or younger gets no credit"
+      - "Age 65 gets a 20.0 multiple"
+      - "Ages above 105 are unsupported and should throw rather than guess"
+      - "More than two recipients are unsupported because the worksheet only has Column A and Column B"
+    testRef: "tests/engine/state/oh-lump-sum-distribution-credit.test.ts::OH Lump Sum Distribution Credit Line 1 - age 65 uses the 20.0 multiple"
+
+  - line: "2"
+    description: "Per-recipient lump sum distribution credit"
+    formula: "Line 1 multiple × $50"
+    inputs:
+      - "Line 1 multiple"
+    notes: "The worksheet uses the same fixed $50 multiplier for each qualifying recipient."
+    testRef: "tests/engine/state/oh-lump-sum-distribution-credit.test.ts::OH Lump Sum Distribution Credit Line 2 - age 70 gets an $800 credit"
+
+  - line: "3"
+    description: "Total lump sum distribution credit"
+    formula: "Add line 2 for all qualifying recipients"
+    inputs:
+      - "Per-recipient line 2 credits"
+    notes: |
+      For MFJ returns with two qualifying recipients, add both worksheet columns
+      and report the total on Ohio Schedule of Credits line 5. Returns with more
+      than two recipients are invalid for this worksheet and should throw.
+    testRef: "tests/engine/state/oh-lump-sum-distribution-credit.test.ts::OH Lump Sum Distribution Credit Line 3 - qualifying spouses add together"

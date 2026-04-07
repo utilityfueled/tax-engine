@@ -1,0 +1,149 @@
+form: "NJ-1040-HW"
+fullName: "New Jersey Property Tax Credit / Wounded Warrior Caregivers Credit Application"
+taxYear: 2025
+reference: "https://www.nj.gov/treasury/taxation/pdf/current/1040hwi.pdf"
+
+notes: |
+  Form NJ-1040-HW is the application used by residents who do not file Form
+  NJ-1040 because their 2025 New Jersey gross income was at or below the filing
+  threshold. It allows two standalone refundable claims:
+
+  1. Property Tax Credit (Part I)
+  2. Wounded Warrior Caregivers Credit (Part II)
+
+  Page 49-51 of the 2025 NJ-1040-HW instructions state that the form is only
+  available when the taxpayer does not file Form NJ-1040. The filing-threshold
+  gate uses the same whole-year gross-income thresholds as page 3 of the
+  resident NJ-1040 instructions:
+
+    - Single / Married Filing Separately: $10,000
+    - Married Filing Jointly / Head of Household / Qualifying Surviving Spouse: $20,000
+
+  Part I additionally requires the taxpayer (or spouse on a joint application)
+  to be age 65 or older or blind or disabled on the last day of the tax year,
+  and to have been a homeowner or tenant in a New Jersey main home during the
+  year. The amount is the same property tax credit available on NJ-1040:
+  generally $50, reduced to $25 for married filing separately spouses who
+  maintained the same main home, and prorated for part-year residents. The
+  same resident-return exclusions still apply: no credit if the home had a
+  100% disabled-veteran property-tax exemption, the homeowner made P.I.L.O.T.
+  payments, or the tenant lived in tax-exempt property.
+
+  Part II uses the same base Wounded Warrior credit computation as NJ-1040
+  line 62, but NJ-1040-HW limits the standalone application to taxpayers who
+  are not filing NJ-1040 and whose whole-year income does not exceed the
+  filing-threshold amount above.
+
+lines:
+  - line: "filing-threshold"
+    description: "Whole-year income threshold for using NJ-1040-HW"
+    formula: |
+      Single / MFS: $10,000
+      MFJ / HOH / QSS: $20,000
+    inputs:
+      - "Filing status"
+    notes: |
+      The instructions on page 49 use the same gross-income thresholds that
+      determine whether a resident must file Form NJ-1040.
+    testRef: "tests/engine/state/nj-1040-hw.test.ts::NJ-1040-HW - single filer under the threshold can claim the property tax credit"
+
+  - line: "hw-eligible"
+    description: "Eligibility to use Form NJ-1040-HW at all"
+    formula: "not filing NJ-1040 AND NJ gross income <= filing threshold"
+    inputs:
+      - "Whether the taxpayer files Form NJ-1040"
+      - "NJ gross income for the entire year"
+      - "Filing threshold"
+    edgeCases:
+      - "Income exactly at the filing threshold remains eligible"
+      - "Any NJ-1040 filing blocks Form NJ-1040-HW"
+    testRef: "tests/engine/state/nj-1040-hw.test.ts::NJ-1040-HW - filing NJ-1040 makes the standalone application unavailable"
+
+  - line: "part-i-eligible"
+    description: "Property Tax Credit eligibility on Part I"
+    formula: |
+      hw-eligible
+      AND taxpayer was a homeowner or tenant in a New Jersey main home
+      AND (
+        taxpayerAge65OrOlder OR spouseAge65OrOlder
+        OR taxpayerBlindOrDisabled OR spouseBlindOrDisabled
+      )
+      AND property is not disqualified under the resident property-tax rules
+    inputs:
+      - "Form-level HW eligibility"
+      - "Homeowner/tenant status"
+      - "Age-65-or-older flags"
+      - "Blind/disabled flags"
+      - "Disabled-veteran property-tax-exemption flag"
+      - "P.I.L.O.T. payment flag"
+      - "Tax-exempt rental-property flag"
+    notes: |
+      The page-49 instructions require both the below-threshold/no-NJ-1040
+      gate and the age-65+/blind-disabled condition for Part I. Part I reuses
+      the resident property-tax credit rules, including the page-26
+      disqualification rules for exempt homes and tax-exempt rental property.
+    edgeCases:
+      - "A below-threshold filer without the age/disability condition gets no Part I credit"
+      - "Tenants are eligible on the same terms as homeowners"
+    testRef: "tests/engine/state/nj-1040-hw.test.ts::NJ-1040-HW - below-threshold filer without the age or disability condition gets no property tax credit"
+
+  - line: "part-i-credit"
+    description: "Property Tax Credit amount on Part I"
+    formula: |
+      if part-i-eligible:
+        property tax credit amount from the resident property-tax rules
+      else:
+        $0
+    inputs:
+      - "Part I eligibility"
+      - "Months of NJ residency"
+      - "Shared-main-home MFS flag"
+    notes: |
+      The amount tracks the resident property tax credit: $50 for a full-year
+      eligible filer, $25 for married filing separately spouses who maintained
+      the same main home, and prorated for part-year residents.
+    testRef: "tests/engine/state/nj-1040-hw.test.ts::NJ-1040-HW - part-year MFS same-home filer gets a prorated $13 property tax credit"
+
+  - line: "part-ii-eligible"
+    description: "Wounded Warrior Caregivers Credit eligibility on Part II"
+    formula: "hw-eligible AND providedCareToQualifyingServiceMember = true"
+    inputs:
+      - "Form-level HW eligibility"
+      - "Caregiver eligibility flag"
+    notes: |
+      Unlike Part I, the standalone Wounded Warrior credit does not require
+      age-65/blind-disabled status, but it still requires that the taxpayer not
+      file NJ-1040 and remain at or below the NJ-1040 filing threshold.
+    edgeCases:
+      - "A qualifying caregiver over the HW threshold must use NJ-1040 instead"
+      - "No caregiver eligibility means no Part II credit"
+    testRef: "tests/engine/state/nj-1040-hw.test.ts::NJ-1040-HW - below-threshold caregiver can claim the wounded warrior credit without the property tax credit"
+
+  - line: "part-ii-credit"
+    description: "Wounded Warrior Caregivers Credit amount on Part II"
+    formula: |
+      if part-ii-eligible:
+        wounded warrior base credit after caregiver apportionment
+      else:
+        $0
+    inputs:
+      - "Part II eligibility"
+      - "Service member federal disability compensation"
+      - "Only caregiver flag"
+      - "Care expense share percentage"
+    notes: |
+      The amount follows the same formula as NJ-1040 line 62:
+      min(disability compensation, $675), apportioned when multiple caregivers
+      shared the care.
+    testRef: "tests/engine/state/nj-1040-hw.test.ts::NJ-1040-HW - multiple caregivers prorate the wounded warrior credit on Part II"
+
+  - line: "total-credits"
+    description: "Total refundable claim on NJ-1040-HW"
+    formula: "Part I property tax credit + Part II wounded warrior credit"
+    inputs:
+      - "Part I property tax credit"
+      - "Part II wounded warrior credit"
+    edgeCases:
+      - "The taxpayer can qualify for both parts on one application"
+      - "If neither part is eligible, the total refundable claim is $0"
+    testRef: "tests/engine/state/nj-1040-hw.test.ts::NJ-1040-HW - eligible filer can claim both credits on one application"

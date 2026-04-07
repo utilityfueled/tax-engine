@@ -1,0 +1,213 @@
+form: "California Form 540 Resident Total Tax"
+fullName: "California Form 540 Resident Total Tax Assembly"
+taxYear: 2025
+irsReference: "https://www.ftb.ca.gov/forms/2025/2025-540-instructions.html"
+
+notes: |
+  This module assembles the resident California Form 540 total-tax path after
+  taxable income and exemption-count inputs are known. It integrates the
+  existing supported calculations for:
+  - Form 540 line 31 tax from the Tax Table when taxable income is $100,000 or less
+  - Form 540 line 31 tax from the Tax Rate Schedules when taxable income is more than $100,000
+  - Form 540 line 32 exemption credits
+  - Form 540 line 43 Senior Head of Household credit when the qualification inputs are supplied
+  - Form 540 line 44 Joint Custody Head of Household credit when the qualification inputs are supplied
+  - Form 540 line 45 Dependent Parent credit when the qualification inputs are supplied
+  - Form 540 line 45 Child Adoption Costs credit when the qualification inputs are supplied
+  - Form 540 line 45 ordered Schedule P blank B2 lines 17 through 19 carryover
+    credits when supported upstream credit code, name, and amount inputs are
+    supplied
+  - Form 540 line 45 supported aggregation of Schedule S other state tax credit
+    (code 187) and FTB 3804-CR pass-through entity elective tax credit
+    (code 242) amounts through Schedule P (540) Part III
+  - Form 540 line 46 nonrefundable renter's credit when the qualification inputs are supplied
+  - Form 540 line 62 Behavioral Health Services Tax
+  - The supported Schedule P (540) Part III ordering for the resident line 40,
+    line 43, line 44, line 45, and line 46 nonrefundable credits when those
+    supported worksheet inputs or credit amounts are present
+  The official 2025 Form 540 numbering skips lines 41 and 42 in the credits
+  section, so this module does not accept or emit resident line 41 or line 42
+  credit amounts.
+  The remaining resident tax lines in this slice are assembly lines that add or
+  subtract supported upstream amounts already computed elsewhere:
+  - Line 34 tax from Schedule G-1 and/or FTB 5870A
+  - Any unsupported residual amount on line 45 or line 46
+  - Optional Schedule P tentative minimum tax when credit ordering needs the
+    supported Part III limitation path
+  - Line 61 alternative minimum tax
+  - Line 63 other taxes and credit recapture
+
+lines:
+  - line: "31"
+    description: "Form 540 tax"
+    formula: "If Form 540 line 19 taxable income is $100,000 or less, use the supported 2025 Form 540 Tax Table amount; otherwise use the supported 2025 Form 540 Tax Rate Schedules amount"
+    inputs:
+      - "Form 540 line 19 taxable income"
+      - "Filing status"
+    edgeCases:
+      - "$100,000 uses the Tax Table"
+      - "$100,001 uses the Tax Rate Schedules"
+    testRef: "tests/engine/state/ca-form-540-total-tax.test.ts::CA Form 540 resident total tax Line 31 - taxable income at $100,000 stays on the tax-table path"
+
+  - line: "32"
+    description: "Exemption credits"
+    formula: "Use the supported Form 540 exemption-credit calculation from lines 7 through 11 and the line 32 AGI limitation worksheet"
+    inputs:
+      - "Filing status"
+      - "Federal AGI"
+      - "Personal exemption count"
+      - "Blind exemption count"
+      - "Senior exemption count"
+      - "Dependent exemption count"
+    testRef: "tests/engine/state/ca-form-540-total-tax.test.ts::CA Form 540 resident total tax Line 32 - low-income resident tax can be reduced to zero by exemption credits"
+
+  - line: "33"
+    description: "Tax after exemption credits"
+    formula: "max(0, Line 31 - Line 32)"
+    inputs:
+      - "Form 540 line 31"
+      - "Form 540 line 32"
+    edgeCases:
+      - "If exemption credits exceed line 31 tax, enter 0"
+    testRef: "tests/engine/state/ca-form-540-total-tax.test.ts::CA Form 540 resident total tax Line 33 - low-income resident tax can be reduced to zero by exemption credits"
+
+  - line: "34"
+    description: "Tax from Schedule G-1 and/or FTB 5870A"
+    formula: "Supported upstream input for Form 540 line 34"
+    inputs:
+      - "Line 34 tax amount from supported upstream worksheets"
+    testRef: "tests/engine/state/ca-form-540-total-tax.test.ts::CA Form 540 resident total tax Line 35 - line 34 additional tax adds to line 33"
+
+  - line: "35"
+    description: "Subtotal tax before credits"
+    formula: "Line 33 + Line 34"
+    inputs:
+      - "Form 540 line 33"
+      - "Form 540 line 34"
+    testRef: "tests/engine/state/ca-form-540-total-tax.test.ts::CA Form 540 resident total tax Line 35 - line 34 additional tax adds to line 33"
+
+  - line: "40"
+    description: "Nonrefundable child and dependent care expenses credit"
+    formula: "If the supported FTB 3506 Part III inputs are supplied, use the supported Form 540 line 40 child and dependent care expenses credit calculation; otherwise use the supported upstream input for Form 540 line 40. Then use the supported Schedule P Part III ordering to determine the line 40 credit used this year."
+    inputs:
+      - "Either the supported FTB 3506 Part III inputs or the supported upstream line 40 credit amount"
+      - "Optional supported Schedule P tentative minimum tax"
+    edgeCases:
+      - "When the supported FTB 3506 Part III inputs are supplied, line 40 uses the worksheet amount and carries worksheet provenance into the resident total-tax audit trail"
+      - "Schedule P line 40 usage cannot exceed the supported excess-tax amount"
+      - "Do not accept both a supported FTB 3506 input payload and a direct upstream line 40 amount for the same return"
+    testRef: "tests/engine/state/ca-form-540-total-tax.test.ts::CA Form 540 resident total tax Line 40 - child and dependent care worksheet input overrides the placeholder line 40 path"
+
+  - line: "43"
+    description: "Special credit"
+    formula: "If the supported Senior Head of Household credit inputs are supplied, use the supported California credit code 163 calculation on Form 540 line 43; otherwise use the supported upstream input for Form 540 line 43. Then use the supported Schedule P Part III ordering to determine the line 43 credit used this year."
+    inputs:
+      - "Either the supported Senior Head of Household credit inputs or the supported upstream line 43 credit amount"
+      - "Optional supported Schedule P tentative minimum tax"
+    edgeCases:
+      - "When the supported Senior Head of Household credit inputs are supplied, line 43 uses the worksheet amount and carries worksheet provenance into the resident total-tax audit trail"
+      - "Do not accept both the supported Senior Head of Household input payload and a direct upstream line 43 amount for the same return"
+    testRef: "tests/engine/state/ca-form-540-total-tax.test.ts::CA Form 540 resident total tax Line 43 - Senior Head of Household worksheet input overrides the placeholder line 43 path"
+
+  - line: "44"
+    description: "Special credit"
+    formula: "If the supported Joint Custody Head of Household credit inputs are supplied, use the supported California credit code 170 calculation on Form 540 line 44; otherwise use the supported upstream input for Form 540 line 44. Then use the supported Schedule P Part III ordering to determine the line 44 credit used this year."
+    inputs:
+      - "Either the supported Joint Custody Head of Household credit inputs or the supported upstream line 44 credit amount"
+      - "Optional supported Schedule P tentative minimum tax"
+    edgeCases:
+      - "When the supported Joint Custody Head of Household input payload is supplied, line 44 uses the worksheet amount and carries worksheet provenance into the resident total-tax audit trail"
+      - "Do not accept both the supported Joint Custody Head of Household input payload and a direct upstream line 44 amount for the same return"
+    testRef: "tests/engine/state/ca-form-540-total-tax.test.ts::CA Form 540 resident total tax Line 44 - Joint Custody Head of Household worksheet input overrides the placeholder line 44 path"
+
+  - line: "45"
+    description: "Additional nonrefundable credits"
+    formula: "If one or more supported line 45 credit inputs are supplied, use the supported California credit code 173 Dependent Parent calculation, credit code 197 Child Adoption Costs calculation, up to three ordered Schedule P blank B2 lines 17 through 19 carryover-credit inputs, Schedule S (540) line 12 other state tax credit amount, and/or FTB 3804-CR available pass-through entity elective tax credit amount as the available resident line 45 credit pool; otherwise use the supported upstream input for Form 540 line 45. Then use the supported Schedule P Part III ordering to determine the resident line 45 credit used this year, with any unused supported code 197 amount, any unused supported blank B2 line 17 through 19 carryover-credit amount, and any unused supported code 242 amount carried forward."
+    inputs:
+      - "Either one or more supported line 45 credit input payloads or the supported upstream line 45 amount"
+      - "Optional ordered list of up to three supported upstream Schedule P blank B2 carryover credits, each with credit code, credit name, credit amount, and optional elected refundable amount"
+      - "Optional Schedule S (540) line 12 other state tax credit amount"
+      - "Optional FTB 3804-CR available pass-through entity elective tax credit amount"
+      - "Optional upstream Schedule P line 19 column (c) remaining net tax before line 20"
+      - "Optional supported Schedule P tentative minimum tax"
+    edgeCases:
+      - "When supported line 45 worksheet payloads or supported upstream Schedule S / FTB 3804-CR inputs are supplied, line 45 uses the supported Schedule P used-this-year amounts and carries worksheet or upstream provenance into the resident total-tax audit trail"
+      - "Do not accept both any supported line 45 worksheet input payload or supported upstream Schedule S / FTB 3804-CR amount and a direct upstream line 45 amount for the same return"
+      - "When both supported credit code 173 and credit code 197 payloads are supplied, add them together on line 45"
+      - "Supported code 197 carryover includes both the Child Adoption Costs worksheet carryover and any unused current-year line 45 code 197 credit amount after Schedule P ordering"
+      - "Supported blank B2 carryover-credit inputs are applied after code 197 and before code 187, preserving taxpayer-selected order across Schedule P lines 17 through 19"
+      - "Supported blank B2 carryover-credit carryover equals each line's unused amount after Schedule P ordering and any elected refundable amount supplied for that credit"
+      - "Supported code 242 carryover equals any unused FTB 3804-CR available credit amount after Schedule P line 21"
+      - "Supported B1 credits are applied before supported code 197 because code 197 is a Section B2 credit"
+      - "Supported Schedule S code 187 usage can be limited by supported blank B2 lines 17 through 19 or by an upstream Schedule P line 19 column (c) balance before code 242 is considered"
+    testRef: "tests/engine/state/ca-form-540-total-tax.test.ts::CA Form 540 resident total tax Line 45 - additional Schedule P B2 carryover credits flow through resident line 45 before code 187 and code 242"
+
+  - line: "46"
+    description: "Nonrefundable renter's credit"
+    formula: "If the supported Form 540 renter's credit qualification inputs are supplied, use the supported line 46 renter's credit calculation; otherwise use the supported upstream input for Form 540 line 46. Then use the supported Schedule P Part III ordering to determine the line 46 credit used this year."
+    inputs:
+      - "Either the supported Form 540 renter's credit qualification inputs or the supported upstream line 46 renter's credit amount"
+      - "Optional supported Schedule P tentative minimum tax"
+    edgeCases:
+      - "When the renter's credit worksheet qualifies, line 46 uses the worksheet amount and carries worksheet provenance into the resident total-tax audit trail"
+      - "Supported B1 ordering can reduce line 46 below the worksheet amount when earlier supported credits exhaust net tax"
+      - "Do not accept both a supported worksheet input and a direct upstream line 46 amount for the same return"
+    testRef: "tests/engine/state/ca-form-540-total-tax.test.ts::CA Form 540 resident total tax Line 46 - renter's credit worksheet input overrides the placeholder line 46 path"
+
+  - line: "47"
+    description: "Total credits"
+    formula: "Line 40 + Line 43 + Line 44 + Line 45 + Line 46"
+    inputs:
+      - "Form 540 line 40"
+      - "Form 540 line 43"
+      - "Form 540 line 44"
+      - "Form 540 line 45"
+      - "Form 540 line 46"
+    edgeCases:
+      - "The official 2025 Form 540 skips lines 41 and 42, so only lines 40, 43, 44, 45, and 46 contribute to line 47"
+    testRef: "tests/engine/state/ca-form-540-total-tax.test.ts::CA Form 540 resident total tax Line 47 - total credits add only the real Form 540 credit lines"
+
+  - line: "48"
+    description: "Tax after nonrefundable credits"
+    formula: "max(0, Line 35 - Line 47)"
+    inputs:
+      - "Form 540 line 35"
+      - "Form 540 line 47"
+    edgeCases:
+      - "If total credits exceed line 35, enter 0"
+    testRef: "tests/engine/state/ca-form-540-total-tax.test.ts::CA Form 540 resident total tax Line 48 - nonrefundable credits cannot reduce tax below zero"
+
+  - line: "61"
+    description: "Alternative minimum tax"
+    formula: "Supported upstream input for Form 540 line 61"
+    inputs:
+      - "Line 61 alternative minimum tax amount"
+    testRef: "tests/engine/state/ca-form-540-total-tax.test.ts::CA Form 540 resident total tax Line 64 - resident total tax adds lines 48, 61, 62, and 63"
+
+  - line: "62"
+    description: "Behavioral Health Services Tax"
+    formula: "Use the supported resident Behavioral Health Services Tax worksheet amount based on Form 540 line 19 taxable income"
+    inputs:
+      - "Form 540 line 19 taxable income"
+      - "Filing status"
+    edgeCases:
+      - "$1,000,000 of taxable income produces zero line 62 tax"
+      - "$1,000,001 starts the worksheet but still rounds to zero"
+    testRef: "tests/engine/state/ca-form-540-total-tax.test.ts::CA Form 540 resident total tax Line 62 - taxable income above $1,000,000 adds the Behavioral Health Services Tax"
+
+  - line: "63"
+    description: "Other taxes and credit recapture"
+    formula: "Supported upstream input for Form 540 line 63"
+    inputs:
+      - "Line 63 other taxes and credit recapture amount"
+    testRef: "tests/engine/state/ca-form-540-total-tax.test.ts::CA Form 540 resident total tax Line 64 - resident total tax adds lines 48, 61, 62, and 63"
+
+  - line: "64"
+    description: "Total tax"
+    formula: "Line 48 + Line 61 + Line 62 + Line 63"
+    inputs:
+      - "Form 540 line 48"
+      - "Form 540 line 61"
+      - "Form 540 line 62"
+      - "Form 540 line 63"
+    testRef: "tests/engine/state/ca-form-540-total-tax.test.ts::CA Form 540 resident total tax Line 64 - resident total tax adds lines 48, 61, 62, and 63"

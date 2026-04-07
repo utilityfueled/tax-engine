@@ -1,0 +1,25 @@
+{
+  "extraKnownMarketplaces": {
+    "anthropics-skills": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/skills"
+      }
+    },
+    "openai-skills": {
+      "source": {
+        "source": "github",
+        "repo": "openai/skills"
+      }
+    },
+    "vercel-next-skills": {
+      "source": {
+        "source": "github",
+        "repo": "vercel-labs/next-skills"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "typescript-lsp@claude-plugins-official": true
+  }
+}

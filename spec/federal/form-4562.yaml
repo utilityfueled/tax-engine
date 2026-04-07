@@ -1,0 +1,419 @@
+form: "Form 4562"
+fullName: "Depreciation and Amortization (Including Information on Listed Property)"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i4562"
+
+notes: |
+  This slice implements Form 4562 with two computation paths:
+
+  1. Summary bridge (original): accepts validated aggregate line totals for
+     depreciation amounts when the caller has already computed per-asset
+     depreciation externally. This is the backward-compatible path.
+
+  2. Per-asset MACRS computation (new): when an `assets` array is provided,
+     the engine computes MACRS depreciation for each asset using IRS
+     Publication 946 percentage tables (Tables A-1, A-5, A-6, A-7a, A-8)
+     and aggregates the results into Lines 17, 19, and 20. Supported
+     property classes: 3, 5, 7, 10, 15, 20, 25, 27.5, and 39-year.
+     Supported methods: GDS 200% DB, GDS 150% DB, and straight-line.
+     Supported conventions: half-year and mid-month.
+
+  Part I (section 179) is unchanged: it uses the 2025 statutory dollar limit
+  ($2,500,000) and threshold reduction ($4,000,000) with direct override
+  support. Part VI amortization is excluded from line 22 per the official form.
+
+  Mid-quarter convention (IRC §168(d)(3)) is now supported: when more than
+  40% of the aggregate basis of all depreciable personal property placed in
+  service during the tax year is placed in service during Q4 (October–December),
+  all current-year personal property automatically switches from half-year to
+  mid-quarter convention. The engine applies the appropriate Pub 946 Tables
+  A-2 through A-5 (200% DB), 150% DB mid-quarter, or straight-line mid-quarter
+  tables based on the quarter the asset was placed in service.
+
+  Part V (Listed Property) is now supported: the engine computes listed-property
+  depreciation with IRC §280F passenger-automobile annual caps, business-use
+  percentage limitation, and the >50% business-use test for MACRS GDS versus
+  ADS straight-line. Listed property flows to Line 21, separate from Lines 17/19/20.
+
+  Part VI (Amortization) now supports per-asset computation: when amortizableAssets
+  are provided, the engine computes monthly straight-line amortization for each asset
+  using the code section's statutory period (§197=180mo, §195=180mo, §174 domestic=60mo
+  with mid-year convention, §174 foreign=180mo with mid-year convention, §709=180mo,
+  §169=60mo) and aggregates into Lines 42 and 43. The validated summary bridge is
+  preserved for backward compatibility.
+
+  §280F(b)(2) recapture is now supported: when a listed-property asset that
+  previously qualified for MACRS GDS (business use >50%) drops to ≤50% business
+  use in the current year, the engine computes the excess of cumulative prior-year
+  MACRS deductions over what ADS straight-line would have allowed. That excess is
+  recaptured as ordinary income per IRC §280F(b)(2) and IRS Form 4797 Part IV
+  Line 34. The recapture amount is separate from Line 22 depreciation and flows
+  to ordinary income through the federal orchestrator. In the current year and
+  going forward, the asset automatically uses ADS straight-line (already handled
+  by the ≤50% business-use test). The recapture computation uses a validated
+  summary bridge: the caller provides cumulative prior-year MACRS deductions
+  actually claimed and cumulative prior-year ADS deductions that would have been
+  allowed. The engine does not rebuild the year-by-year history from first
+  principles in this slice.
+
+businessRuleValidation:
+  - rule: "reference-summary-packet"
+    description: "Inventory support counts this form as business-rule validated only when regression coverage proves the emitted packet artifact stays labeled as a non-filing reference summary and only surfaces the supported Form 4562 line outputs and downstream Schedule C or Schedule E bridges for each supported activity."
+    testRef: "tests/pdf/fill-form-4562.test.ts::buildForm4562ReferenceSummary keeps the packet artifact reference-only and limited to supported depreciation, amortization, and recapture outputs"
+
+lines:
+  - line: "1"
+    description: "Maximum section 179 deduction limit"
+    formula: "Use the validated line 1 override when provided; otherwise use the 2025 statutory maximum section 179 deduction of $2,500,000"
+    irsRef: "Form 4562 Instructions, Part I, Worksheet for Lines 1, 2, and 3"
+    inputs:
+      - "Validated section 179 maximum deduction override"
+    notes: "A validated override can represent special allocations such as married-filing-separately or other upstream summary limitations."
+    testRef: "tests/engine/forms/form-4562.test.ts::Form 4562 Line 12 - section 179 deduction applies the 2025 limit, threshold reduction, and business-income cap"
+
+  - line: "2"
+    description: "Total cost of section 179 property placed in service"
+    formula: "Validated total cost of section 179 property placed in service during 2025"
+    irsRef: "Form 4562, Line 2"
+    inputs:
+      - "Validated total cost of section 179 property placed in service"
+    testRef: "tests/engine/forms/form-4562.test.ts::Form 4562 Line 12 - section 179 deduction applies the 2025 limit, threshold reduction, and business-income cap"
+
+  - line: "3"
+    description: "Threshold cost before reducing the section 179 limit"
+    formula: "Use the validated line 3 override when provided; otherwise use the 2025 threshold cost of $4,000,000"
+    irsRef: "Form 4562 Instructions, Part I, Worksheet for Lines 1, 2, and 3"
+    inputs:
+      - "Validated section 179 threshold override"
+    testRef: "tests/engine/forms/form-4562.test.ts::Form 4562 Line 12 - section 179 deduction applies the 2025 limit, threshold reduction, and business-income cap"
+
+  - line: "4"
+    description: "Reduction in the section 179 limit"
+    formula: "Line 2 - Line 3, floored at $0"
+    irsRef: "Form 4562, Line 4"
+    inputs:
+      - "Form 4562 Line 2"
+      - "Form 4562 Line 3"
+    edgeCases:
+      - "Total section 179 property cost exactly at the phaseout threshold keeps Line 4 at $0"
+      - "Total section 179 property cost $1 above the threshold reduces the available Line 5 amount by exactly $1"
+      - "Total section 179 property cost at or above the threshold plus the annual limit fully phases out the current-year Line 5 amount"
+    testRef: "tests/engine/forms/form-4562.test.ts::Form 4562 Line 12 - section 179 deduction applies the 2025 limit, threshold reduction, and business-income cap"
+
+  - line: "5"
+    description: "Section 179 dollar limitation for the year"
+    formula: "Line 1 - Line 4, floored at $0"
+    irsRef: "Form 4562, Line 5"
+    inputs:
+      - "Form 4562 Line 1"
+      - "Form 4562 Line 4"
+    edgeCases:
+      - "The annual limitation stays at the full $2,500,000 when Line 2 equals the $4,000,000 threshold"
+      - "The annual limitation drops to $2,499,999 when the validated total cost is $4,000,001"
+      - "The annual limitation is $0 when the validated total cost reaches $6,500,000 or more under the 2025 limits"
+      - "The annual limitation remains $1 when the validated total cost is $6,499,999, so one dollar of current-year section 179 deduction can still be claimed"
+    testRef: "tests/engine/forms/form-4562.test.ts::Form 4562 Line 12 - section 179 deduction applies the 2025 limit, threshold reduction, and business-income cap"
+
+  - line: "8"
+    description: "Total elected cost of section 179 property"
+    formula: "Validated aggregate elected section 179 cost from Form 4562 lines 6 and 7"
+    irsRef: "Form 4562, Line 8"
+    inputs:
+      - "Validated aggregate elected section 179 cost"
+    notes: "This supported slice does not rebuild the per-property Part I table and instead accepts the validated total elected cost."
+    testRef: "tests/engine/forms/form-4562.test.ts::Form 4562 Line 12 - section 179 deduction applies the 2025 limit, threshold reduction, and business-income cap"
+
+  - line: "9"
+    description: "Tentative section 179 deduction"
+    formula: "Smaller of Line 5 or Line 8"
+    irsRef: "Form 4562, Line 9"
+    inputs:
+      - "Form 4562 Line 5"
+      - "Form 4562 Line 8"
+    testRef: "tests/engine/forms/form-4562.test.ts::Form 4562 Line 12 - section 179 deduction applies the 2025 limit, threshold reduction, and business-income cap"
+
+  - line: "10"
+    description: "Carryover of disallowed section 179 deduction from 2024"
+    formula: "Validated prior-year section 179 carryover"
+    irsRef: "Form 4562, Line 10"
+    inputs:
+      - "Validated prior-year section 179 carryover"
+    testRef: "tests/engine/forms/form-4562.test.ts::Form 4562 Line 12 - section 179 deduction applies the 2025 limit, threshold reduction, and business-income cap"
+
+  - line: "11"
+    description: "Business income limitation"
+    formula: "Validated Form 4562 line 11 business income limitation, limited to Line 5"
+    irsRef: "Form 4562, Line 11"
+    inputs:
+      - "Validated section 179 business income limitation"
+      - "Form 4562 Line 5"
+    notes: "The caller supplies the already-validated line 11 limitation amount and the engine clamps it to the computed line 5 ceiling for auditability."
+    testRef: "tests/engine/forms/form-4562.test.ts::Form 4562 Line 12 - section 179 deduction applies the 2025 limit, threshold reduction, and business-income cap"
+
+  - line: "12"
+    description: "Section 179 expense deduction"
+    formula: "Use the validated direct line 12 override when provided; otherwise add Lines 9 and 10 and limit the result to Line 11"
+    irsRef: "Form 4562, Line 12"
+    inputs:
+      - "Validated direct section 179 expense deduction override"
+      - "Form 4562 Line 9"
+      - "Form 4562 Line 10"
+      - "Form 4562 Line 11"
+    notes: "A direct override supports business-specific allocations from a separate summary Form 4562, matching the instructions for multiple businesses or activities."
+    testRef: "tests/engine/forms/form-4562.test.ts::Form 4562 Line 12 - direct allocated section 179 overrides replace the computed amount"
+
+  - line: "13"
+    description: "Carryover of disallowed deduction to 2026"
+    formula: "Use the validated direct line 13 override when provided; otherwise add Lines 9 and 10, then subtract Line 12 and floor at $0"
+    irsRef: "Form 4562, Line 13"
+    inputs:
+      - "Validated direct section 179 carryover override"
+      - "Form 4562 Line 9"
+      - "Form 4562 Line 10"
+      - "Form 4562 Line 12"
+    edgeCases:
+      - "When the current-year section 179 limit is fully phased out, prior-year carryover remains on Line 13 because none of it can be deducted this year"
+      - "When the current-year section 179 limit is one dollar short of full phaseout, only that final $1 can be deducted and the remaining current-year elected cost plus prior-year carryover stays on Line 13"
+      - "When the business-income limitation is $0, the full tentative section 179 deduction plus prior-year carryover stays on Line 13"
+    testRef: "tests/engine/forms/form-4562.test.ts::Form 4562 Line 12 - direct allocated section 179 overrides replace the computed amount"
+
+  - line: "14"
+    description: "Special depreciation allowance for qualified property other than listed property"
+    formula: "Validated Form 4562 line 14 total"
+    irsRef: "Form 4562, Line 14"
+    inputs:
+      - "Validated special depreciation allowance for non-listed property"
+    testRef: "tests/engine/forms/form-4562.test.ts::Form 4562 Line 22 - total deduction sums section 179, depreciation, MACRS, and listed property"
+
+  - line: "15"
+    description: "Property subject to section 168(f)(1) election"
+    formula: "Validated Form 4562 line 15 total"
+    irsRef: "Form 4562, Line 15"
+    inputs:
+      - "Validated section 168(f)(1) depreciation amount"
+    testRef: "tests/engine/forms/form-4562.test.ts::Form 4562 Line 22 - total deduction sums section 179, depreciation, MACRS, and listed property"
+
+  - line: "16"
+    description: "Other depreciation including ACRS"
+    formula: "Validated Form 4562 line 16 total"
+    irsRef: "Form 4562, Line 16"
+    inputs:
+      - "Validated other depreciation amount"
+    testRef: "tests/engine/forms/form-4562.test.ts::Form 4562 Line 22 - total deduction sums section 179, depreciation, MACRS, and listed property"
+
+  - line: "17"
+    description: "MACRS deductions for assets placed in service before the current tax year"
+    formula: "When per-asset detail is provided: sum of MACRS depreciation for all assets with placedInServiceYear < taxYear using Pub 946 percentage tables. Otherwise: validated Form 4562 line 17 total."
+    irsRef: "Form 4562, Line 17; IRS Publication 946, Tables A-1, A-5, A-6, A-7a, A-8"
+    inputs:
+      - "Per-asset: costBasis, placedInServiceDate, recoveryPeriod, method, convention"
+      - "Fallback: validated MACRS depreciation for pre-current-year assets"
+    edgeCases:
+      - "A 5-year asset placed in 2023 computes year-3 depreciation (19.20% of basis under 200% DB half-year)"
+      - "A 27.5-year residential rental placed in March 2020 computes year-6 depreciation using mid-month Table A-6"
+      - "A 39-year nonresidential property placed in July 2024 computes year-2 depreciation using mid-month Table A-7a"
+      - "An asset beyond its recovery period contributes $0"
+    testRef: "tests/engine/forms/form-4562.test.ts::Form 4562 Lines 17, 19, 20 - per-asset computation replaces summary totals when assets provided"
+
+  - line: "19"
+    description: "Current-year MACRS depreciation under the general depreciation system"
+    formula: "When per-asset detail is provided: sum of MACRS depreciation for current-year GDS assets (200% DB or 150% DB, half-year convention). Otherwise: validated aggregate of line 19 column (g)."
+    irsRef: "Form 4562, Line 19, column (g); IRS Publication 946, Tables A-1, A-5"
+    inputs:
+      - "Per-asset: costBasis, placedInServiceDate, recoveryPeriod, method, convention"
+      - "Fallback: validated current-year MACRS GDS depreciation"
+    edgeCases:
+      - "A new 7-year asset placed in the current year gets 14.29% first-year depreciation under 200% DB half-year"
+      - "A new 5-year farm asset using 150% DB gets 15.00% first-year depreciation"
+    testRef: "tests/engine/forms/form-4562.test.ts::Form 4562 Lines 17, 19, 20 - per-asset computation replaces summary totals when assets provided"
+
+  - line: "20"
+    description: "Current-year MACRS depreciation under the alternative depreciation system"
+    formula: "When per-asset detail is provided: sum of MACRS depreciation for current-year ADS / straight-line assets and current-year real property. Otherwise: validated aggregate of line 20 column (g)."
+    irsRef: "Form 4562, Line 20, column (g); IRS Publication 946, Tables A-6, A-7a, A-8"
+    inputs:
+      - "Per-asset: costBasis, placedInServiceDate, recoveryPeriod, method, convention"
+      - "Fallback: validated current-year MACRS ADS depreciation"
+    edgeCases:
+      - "A new 39-year nonresidential building placed in January gets 2.461% first-year depreciation"
+      - "A new 27.5-year residential rental placed in June gets 1.970% first-year depreciation"
+    testRef: "tests/engine/forms/form-4562.test.ts::Form 4562 Lines 17, 19, 20 - per-asset computation replaces summary totals when assets provided"
+
+  - line: "21"
+    description: "Listed property depreciation"
+    formula: "Validated Form 4562 line 21 amount, which comes from Part V line 28"
+    irsRef: "Form 4562, Line 21"
+    inputs:
+      - "Validated listed property depreciation"
+    notes: "This supported slice accepts the Part V line 28 carryforward amount directly instead of rebuilding the listed-property detail tables."
+    testRef: "tests/engine/forms/form-4562.test.ts::Form 4562 Line 22 - total deduction sums section 179, depreciation, MACRS, and listed property"
+
+  - line: "22"
+    description: "Total depreciation and section 179 deduction"
+    formula: "Add Line 12, Lines 14 through 17, the aggregate line 19 column (g) amount, the aggregate line 20 column (g) amount, and Line 21"
+    irsRef: "Form 4562, Line 22"
+    inputs:
+      - "Form 4562 Line 12"
+      - "Form 4562 Line 14"
+      - "Form 4562 Line 15"
+      - "Form 4562 Line 16"
+      - "Form 4562 Line 17"
+      - "Form 4562 Line 19"
+      - "Form 4562 Line 20"
+      - "Form 4562 Line 21"
+    notes: "The official 2025 form does not include Part VI amortization in line 22, so amortization remains outside this Schedule C line 13 bridge."
+    testRef: "tests/engine/schedules/schedule-c.test.ts::Schedule C Line 13 - Form 4562 total deduction flows through the depreciation line"
+
+  - line: "packet"
+    description: "Draft packet inclusion rule for supported Form 4562 activities"
+    formula: "When a supported Schedule C activity uses the top-level Form 4562 input or a supported rental property uses its Form 4562 attachment, include a non-filing reference-summary PDF in the packet that lists the supported Form 4562 line outputs for each activity, including the downstream Schedule C Line 13 or Schedule E depreciation and amortization bridges plus any supported IRC Section 280F recapture amount."
+    irsRef: "Form 4562 Instructions, Lines 12-22 and 42-44; Schedule C (Form 1040) Instructions, Line 13; Schedule E (Form 1040) Instructions, Lines 18 and 19"
+    notes: "This packet slice intentionally emits a deterministic reference summary instead of attempting to recreate a filed Form 4562, so the draft packet stays honest about the supported depreciation and amortization scope across Schedule C and supported rental-property activity."
+    testRef: "tests/pdf/fill-form-4562.test.ts::fillReturn includes a Form 4562 reference summary when a supported Schedule C activity supplies Form 4562 input"
+
+  - line: "Part VI"
+    description: "Per-asset amortization computation for Form 4562 Part VI"
+    formula: |
+      Two computation paths:
+      1. Summary bridge (backward-compatible): accepts validated aggregate totals
+         for currentYearAmortization (Line 42) and priorYearAmortization (Line 43).
+      2. Per-asset computation: when amortizableAssets array is provided, computes
+         monthly straight-line amortization for each asset and aggregates into
+         Lines 42 (current-year starts) and 43 (prior-year starts).
+      Per-asset amortization = (amortizableAmount / periodMonths) × monthsInTaxYear.
+      For IRC §174, the mid-year convention overrides the start date to July 1 of
+      the year the expenses were incurred, regardless of when actually paid.
+    irsRef: "Form 4562 Part VI Instructions; IRC §197, §195, §174, §709, §169, §171"
+    inputs:
+      - "Per-asset: amortizableAmount, dateAmortizationBegins, codeSection"
+      - "Optional per-asset: amortizationPeriodMonths (overrides code section default)"
+    notes: |
+      Supported code sections and their default amortization periods:
+        §197 intangibles (goodwill, customer lists, covenants, etc.): 180 months (15 years)
+        §195 start-up costs (amount after any immediate deduction): 180 months
+        §709 partnership organization costs (amount after any immediate deduction): 180 months
+        §174 domestic R&E expenditures (post-TCJA): 60 months with mid-year convention
+        §174 foreign R&E expenditures (post-TCJA): 180 months with mid-year convention
+        §169 pollution control facilities: 60 months
+        §171 bond premium: period must be provided (remaining term of the bond)
+        "other": period must be provided
+      For §195 and §709, the immediate deduction (up to $5,000, phased down dollar-for-dollar
+      when total costs exceed $50,000, fully phased out at $55,000) is computed upstream by the
+      caller. The amortizableAmount input represents only the remainder after that immediate
+      deduction. The §195/$709 immediate deduction itself goes on Schedule C or other form,
+      not through Form 4562 Part VI.
+      For §174 (domestic and foreign), the TCJA requires capitalization and amortization
+      beginning at the midpoint of the taxable year. For calendar-year taxpayers, this means
+      amortization always starts July 1, giving 6 months in the first year and 6 months in
+      the final year, regardless of when the expenses were actually paid or incurred.
+    edgeCases:
+      - "§197 intangible placed in service mid-year gets proportional first-year deduction"
+      - "§197 intangible in its final year gets only the remaining months"
+      - "§174 domestic first year: 6 months = 10% of amortizable amount"
+      - "§174 domestic last year (year 6): 6 months = 10% of amortizable amount"
+      - "§174 foreign first year: 6 months ≈ 3.33% of amortizable amount"
+      - "Prior-year amortization start gets full 12 months if still within the period"
+      - "Fully amortized asset produces $0 deduction"
+      - "Per-asset and summary bridge paths cannot be mixed — per-asset replaces summary"
+    testRef: "tests/engine/forms/form-4562.test.ts::Form 4562 per-asset amortization"
+
+  - line: "42"
+    description: "Amortization deductions for costs that began in the current tax year"
+    formula: "Sum of per-asset amortization for assets whose amortization began in the current tax year, or validated aggregate when no per-asset detail is provided"
+    irsRef: "Form 4562, Line 42"
+    inputs:
+      - "Per-asset amortization results for current-year starts"
+      - "Validated current-year amortization deductions (fallback)"
+    testRef: "tests/engine/forms/form-4562.test.ts::Form 4562 per-asset amortization"
+
+  - line: "43"
+    description: "Amortization deductions for costs that began before the current tax year"
+    formula: "Sum of per-asset amortization for assets whose amortization began in a prior tax year, or validated aggregate when no per-asset detail is provided"
+    irsRef: "Form 4562, Line 43"
+    inputs:
+      - "Per-asset amortization results for prior-year starts"
+      - "Validated prior-year amortization deductions (fallback)"
+    testRef: "tests/engine/forms/form-4562.test.ts::Form 4562 per-asset amortization"
+
+  - line: "44"
+    description: "Total amortization deduction"
+    formula: "Line 42 + Line 43"
+    irsRef: "Form 4562, Line 44"
+    inputs:
+      - "Form 4562 Line 42"
+      - "Form 4562 Line 43"
+    notes: "Per the 2025 instructions, this total is reported on the return's 'Other Deductions' or 'Other Expenses' line rather than Form 4562 line 22."
+    edgeCases:
+      - "A return can have amortization on line 44 even when line 22 is $0 because amortization is routed outside the depreciation bridge"
+      - "Line 44 remains the sum of line 42 and line 43 without changing line 22"
+      - "Per-asset amortization correctly splits current-year and prior-year starts into Lines 42 and 43"
+    testRef: "tests/engine/forms/form-4562.test.ts::Form 4562 Lines 42 through 44 - amortization totals stay separate from the line 22 depreciation bridge"
+
+  - line: "mid-quarter-convention"
+    description: "Mid-quarter convention test and application per IRC §168(d)(3)"
+    formula: "If more than 40% of the aggregate depreciable basis of all personal property placed in service during the tax year is placed in service during Q4 (months 10–12), apply mid-quarter convention to ALL current-year personal property instead of half-year convention"
+    irsRef: "IRC §168(d)(3); IRS Publication 946, Chapter 4, Mid-Quarter Convention"
+    inputs:
+      - "Aggregate cost basis of all current-year personal property assets"
+      - "Aggregate cost basis of current-year personal property assets placed in service in Q4"
+    edgeCases:
+      - "Exactly 40% Q4 basis does NOT trigger mid-quarter (must be MORE than 40%)"
+      - "41% Q4 basis triggers mid-quarter for ALL current-year personal property, not just Q4 assets"
+      - "Real property (27.5-year and 39-year) is excluded from the 40% test and continues to use mid-month convention"
+      - "Prior-year assets are unaffected — they continue using whatever convention was in effect when placed in service"
+      - "Assets with an explicit convention override are excluded from the 40% test"
+      - "A single asset placed in Q4 as the only current-year personal property always triggers mid-quarter (100% > 40%)"
+      - "Q1 assets get 10.5/12 of the first year, Q4 assets get 1.5/12"
+    testRef: "tests/utils/macrs.test.ts::mid-quarter convention"
+
+  - line: "Part V"
+    description: "Listed Property (IRC §280F) — business-use percentage and depreciation"
+    formula: |
+      For each listed-property asset:
+      1. If business-use percentage > 50%: use MACRS GDS (200% DB for 5-year property).
+      2. If business-use percentage ≤ 50%: must use ADS straight-line (5-year for passenger autos).
+      3. Compute depreciation from Pub 946 percentage tables on full cost basis.
+      4. Multiply by business-use percentage.
+      5. For passenger automobiles: cap at IRC §280F annual limit for the recovery year.
+      Total listed-property depreciation flows to Line 21 → Line 22.
+    irsRef: "IRC §280F; IRS Publication 946, Chapter 5; Form 4562 Part V Instructions"
+    inputs:
+      - "Per-asset: costBasis, placedInServiceDate, recoveryPeriod, businessUsePercentage"
+      - "Per-asset flags: isListedProperty, isPassengerAutomobile, firstYearBonusEligible"
+    edgeCases:
+      - "Business use exactly 50% triggers ADS straight-line (must be MORE than 50% for MACRS GDS)"
+      - "Business use 51% qualifies for MACRS GDS with 200% DB"
+      - "Passenger automobile year-1 depreciation capped at $12,400 (without bonus) or $20,400 (with bonus) for 2025"
+      - "Passenger automobile year-2 cap: $19,800"
+      - "Passenger automobile year-3 cap: $11,900"
+      - "Passenger automobile year-4+ cap: $7,160 per year until basis recovered"
+      - "§280F cap applies after business-use percentage reduction"
+      - "Listed property excluded from Lines 17/19/20 — only flows through Line 21"
+      - "Listed property basis IS included in the mid-quarter convention 40% Q4 test"
+      - "Non-automobile listed property (e.g., camera equipment) has no annual cap but still requires >50% for MACRS GDS"
+    testRef: "tests/engine/forms/form-4562.test.ts::Part V listed property — Form 4562 integration"
+
+  - line: "section280FRecapture"
+    description: "IRC §280F(b)(2) recapture when listed property business use drops to 50% or less"
+    formula: |
+      For each listed-property asset where section280FRecaptureTriggered is true:
+        recapture = cumulativePriorMacrsDeductions - cumulativePriorAdsDeductions, floored at $0.
+      The total recapture across all listed-property assets is reported as ordinary
+      income on Form 4797 Part IV Line 34. It does not reduce or increase Line 22
+      because the recapture is not a depreciation deduction but an income item.
+      In the current year the asset already uses ADS straight-line because
+      businessUsePercentage ≤ 50%.
+    irsRef: "IRC §280F(b)(2); IRS Publication 946, Chapter 5; Form 4797 Part IV Instructions"
+    inputs:
+      - "Per-asset: section280FRecaptureTriggered (boolean)"
+      - "Per-asset: cumulativePriorMacrsDeductions (Decimal)"
+      - "Per-asset: cumulativePriorAdsDeductions (Decimal)"
+    edgeCases:
+      - "Recapture triggered with cumulative MACRS $15,000 and cumulative ADS $10,000 yields $5,000 ordinary income"
+      - "Recapture triggered but cumulative ADS exceeds cumulative MACRS — recapture is $0 (no excess)"
+      - "Recapture on a passenger automobile that hit §280F caps in prior years — user provides actual deductions claimed after caps"
+      - "Multiple listed-property assets with recapture triggered — recapture amounts aggregate"
+      - "Recapture triggered alongside current-year ADS depreciation — both coexist (recapture is income, ADS is deduction)"
+      - "Asset with 0% business use in current year still triggers recapture if prior use was >50%"
+      - "Only listed-property assets with the recapture flag produce recapture — other assets unaffected"
+    testRef: "tests/engine/forms/form-4562.test.ts::section 280F recapture"

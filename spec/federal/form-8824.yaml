@@ -1,0 +1,256 @@
+form: "Form 8824"
+fullName: "Like-Kind Exchanges"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i8824"
+irc_section: "§1031"
+reference:
+  - IRS Form 8824 Instructions (2025)
+  - IRS Publication 544, Sales and Other Dispositions of Assets
+  - IRC §1031 (as amended by TCJA 2017, effective 2018+)
+  - Treas. Reg. §1.1031(a)-1 through §1.1031(k)-1
+
+description: |
+  Reports like-kind exchanges of real property held for productive use in a
+  trade or business or for investment. Post-TCJA (2018+), §1031 applies only
+  to real property — personal property exchanges no longer qualify.
+
+  The core economic principle: when a taxpayer exchanges like-kind real property,
+  gain is deferred (not excluded) by embedding it in the replacement property's
+  reduced basis. Boot (cash, unlike property, net liability relief) triggers
+  recognition to the extent of the realized gain.
+
+  Federal routing in this supported slice uses an explicit
+  recognizedGainCharacter input:
+  - section1231: line 23 recognized gain or loss is treated as section 1231
+    gain or loss and routed through Form 4797 Part I, while line 21 ordinary
+    recapture is routed through Form 4797 ordinary-income lines
+  - capital: line 23 recognized gain or loss is treated as capital gain or
+    loss and routed to Schedule D, while line 21 ordinary recapture still
+    routes through Form 4797 because the IRS instructions report that portion
+    as ordinary income under the recapture rules
+  Without that explicit flag, the engine defaults recognized exchange gain or
+  loss to the section 1231 route because the common supported §1031 path in
+  this repo is business or rental real property.
+
+scope: Part III calculation only (Lines 12–25). Parts I and II are informational/tracking.
+
+businessRuleValidation:
+  - rule: "reference-summary-packet"
+    description: "Inventory support counts this form as business-rule validated only when regression coverage proves the emitted artifact stays labeled as a non-filing reference summary and only surfaces the supported Part III Form 8824 Lines 12 through 25 for each exchange, the related-party tracking flag, and the deterministic federal carry amounts routed to Form 4797 and Schedule D."
+    testRef: "tests/pdf/fill-form-8824.test.ts::buildForm8824ReferenceSummary keeps the packet artifact reference-only and limited to supported Part III exchange outputs"
+
+lines:
+  # ── Other (non-like-kind) property given up ──────────────
+  - line: "12"
+    description: FMV of other property given up
+    formula: "Input: fmvOtherPropertyGivenUp"
+    notes: |
+      Non-like-kind property included in the exchange (e.g., personal property
+      transferred with real property). Gain or loss is always recognized.
+    reference: "Form 8824 Line 12"
+    testRef: "tests/engine/forms/form-8824.test.ts::Line 14 — gain on other property given up is fully recognized"
+
+  - line: "13"
+    description: Adjusted basis of other property given up
+    formula: "Input: adjustedBasisOtherPropertyGivenUp"
+    reference: "Form 8824 Line 13"
+    testRef: "tests/engine/forms/form-8824.test.ts::Line 14 — gain on other property given up is fully recognized"
+
+  - line: "14"
+    description: Gain or (loss) recognized on other property
+    formula: "Line 12 - Line 13"
+    notes: Always recognized — not deferred by §1031.
+    reference: "Form 8824 Line 14"
+    testRef: "tests/engine/forms/form-8824.test.ts::Line 14 — loss on other property given up is recognized"
+
+  # ── Boot received ────────────────────────────────────────
+  - line: "15"
+    description: "Boot received: cash + FMV of non-like-kind property received + net liability relief, reduced by exchange expenses"
+    formula: |
+      cashReceived
+      + fmvOtherPropertyReceived
+      + max(liabilitiesRelinquished - liabilitiesAssumed, 0)
+      - exchangeExpenses
+      (floor at 0 — exchange expenses can reduce boot but not below zero)
+    notes: |
+      Boot netting: liability relief and liability assumption are netted first.
+      Exchange expenses (QI fees, title, recording) reduce boot dollar-for-dollar.
+    reference: "Form 8824 Line 15; IRC §1031(b), §1031(d)"
+    testRef: "tests/engine/forms/form-8824.test.ts::Line 15 — combined boot: cash + FMV other received + net liability relief - expenses"
+
+  - line: "16"
+    description: FMV of like-kind property received
+    formula: "Input: fmvLikeKindPropertyReceived"
+    reference: "Form 8824 Line 16"
+    testRef: "tests/engine/forms/form-8824.test.ts::pure like-kind swap defers entire realized gain"
+
+  - line: "17"
+    description: Total value received
+    formula: "Line 15 + Line 16"
+    reference: "Form 8824 Line 17"
+    testRef: "tests/engine/forms/form-8824.test.ts::recognized gain equals boot when boot < realized gain"
+
+  - line: "18"
+    description: Adjusted basis of like-kind property given up
+    formula: "Input: adjustedBasisLikeKindPropertyGivenUp"
+    notes: "Cost + improvements - accumulated depreciation"
+    reference: "Form 8824 Line 18"
+    testRef: "tests/engine/forms/form-8824.test.ts::pure like-kind swap defers entire realized gain"
+
+  # ── Realized gain ────────────────────────────────────────
+  - line: "19"
+    description: Realized gain or (loss) on the like-kind exchange
+    formula: "Line 17 - Line 18"
+    notes: |
+      Total economic gain including deferred and recognized portions.
+      If negative, the loss is not recognized (§1031 defers losses too).
+    reference: "Form 8824 Line 19"
+    testRef: "tests/engine/forms/form-8824.test.ts::realized loss is deferred, not recognized"
+
+  # ── Recognized gain ──────────────────────────────────────
+  - line: "20"
+    description: "Boot-limited recognized gain"
+    formula: "min(Line 15, max(Line 19, 0))"
+    notes: |
+      Recognized gain cannot exceed boot received, and cannot exceed realized gain.
+      If realized gain is zero or negative, recognized gain is zero.
+    reference: "Form 8824 Line 20; IRC §1031(b)"
+    testRef: "tests/engine/forms/form-8824.test.ts::recognized gain limited to realized gain, not boot amount"
+
+  - line: "21"
+    description: Ordinary income under depreciation recapture rules
+    formula: "min(depreciationRecapture, Line 20)"
+    notes: |
+      §1250 recapture for real property: the lesser of the recapture amount
+      (from Form 4797 Part III) or the boot-limited gain. This portion is
+      ordinary income; the remainder of Line 20 is capital gain.
+      For post-1986 real property using straight-line depreciation, §1250
+      recapture is typically zero (unrecaptured §1250 gain at 25% rate applies
+      instead, handled through the QDCG worksheet). The 2025 Form 8824
+      instructions report this amount on Form 4797 as ordinary income even
+      when the remaining recognized exchange gain follows the capital-asset
+      route.
+    reference: "Form 8824 Line 21; IRC §1250"
+    testRef: "tests/engine/federal.test.ts::Form 1040 Line 8 and Schedule 1 - Form 8824 line 21 ordinary recapture flows through Schedule 1 Line 4"
+
+  - line: "22"
+    description: Capital gain portion of recognized gain from like-kind exchange
+    formula: "max(Line 20 - Line 21, 0)"
+    notes: |
+      This is the recognized exchange gain remaining after ordinary recapture.
+      The 2025 Form 8824 instructions report trade-or-business/noncapital
+      property gain on Form 4797 and capital-asset gain on Schedule D. The
+      supported engine uses the explicit recognizedGainCharacter input to
+      select that route.
+    reference: "Form 8824 Line 22"
+    testRef: "tests/engine/federal.test.ts::Form 1040 Line 7 - Form 8824 capital-asset recognized gain flows to Schedule D instead of Form 4797"
+
+  - line: "23"
+    description: Total recognized gain
+    formula: "Line 21 + Line 22"
+    notes: |
+      Total recognized gain on the like-kind exchange itself: ordinary
+      recapture on Line 21 plus the remaining recognized exchange gain on
+      Line 22. Line 14 gain or loss from other property given up is recognized
+      separately and reported as if that property were sold; it is not part of
+      Form 8824 Line 23 or the replacement-property basis computation.
+      In the supported engine, that separately recognized Line 14 gain or loss
+      still follows the same recognizedGainCharacter routing bucket used for
+      the exchange result unless the caller models the non-like-kind property
+      on a separate form.
+    reference: "Form 8824 Line 23"
+    testRef: "tests/engine/forms/form-8824.test.ts::aggregate routing totals split Form 8824 recognized gain or loss by section 1231 versus capital character"
+
+  - line: "24"
+    description: Deferred gain or (loss)
+    formula: "Line 19 - Line 23"
+    notes: |
+      The deferred gain or loss from the like-kind exchange itself after
+      subtracting only the exchange gain recognized on Line 23. Gain or loss
+      from other property given up on Line 14 is already recognized separately
+      and does not reduce or increase the deferred exchange gain.
+      If the exchange produces a realized loss, the loss is deferred too
+      (enters as zero on the form; the loss lives in the inflated basis).
+    reference: "Form 8824 Line 24; IRC §1031(a)"
+    testRef: "tests/engine/forms/form-8824.test.ts::pure like-kind swap defers entire realized gain"
+
+  - line: "25"
+    description: Basis of like-kind property received
+    formula: "Line 18 + Line 23 - Line 15"
+    notes: |
+      Substituted basis: start with old basis, add total recognized gain
+      (to step up for gain already taxed), subtract boot received (to
+      step down for cash/property taken out).
+      For Form 8824, the recognized gain added back here is the Line 23
+      exchange gain only. Separately recognized gain or loss from other
+      property given up on Line 14 does not change the basis of the like-kind
+      property received.
+      Equivalently: FMV of property received - deferred gain.
+      The deferred gain is embedded in this reduced basis and will be
+      recognized when the replacement property is eventually sold.
+    reference: "Form 8824 Line 25; IRC §1031(d)"
+    testRef: "tests/engine/forms/form-8824.test.ts::basis with partial recognition: old basis + recognized - boot"
+
+  # ── Related party tracking (Part II) ────────────────────
+  - line: "related_party"
+    description: Related party exchange tracking
+    formula: "N/A — informational"
+    notes: |
+      If replacement property was acquired from a related party (IRC §267(b),
+      §707(b)(1)), both parties must hold their replacement properties for
+      2 years. If either disposes within 2 years, the exchange is retroactively
+      disqualified. Part II must be filed for 3 years (year of exchange + 2).
+    reference: "Form 8824 Part II; IRC §1031(f)"
+    testRef: "tests/engine/forms/form-8824.test.ts::related party flag is preserved"
+
+  - line: "packet"
+    description: "Draft packet inclusion rule for supported Form 8824 like-kind exchanges"
+    formula: "When one or more supported Form 8824 exchanges are present, include a non-filing reference-summary PDF in the packet that lists each exchange description, recognized-gain routing character, related-party flag, supported Part III Lines 12 through 25, and the resulting Form 4797 and Schedule D carry amounts."
+    reference: "2025 Instructions for Form 8824, Introductory Material and Lines 12 through 25"
+    notes: "This packet slice intentionally emits a deterministic reference summary instead of attempting to recreate a filed Form 8824, so the draft packet stays honest about the supported Part III calculations while still surfacing the federal line-routing effects produced by the engine."
+    testRef: "tests/pdf/fill-form-8824.test.ts::fillReturn includes a Form 8824 reference summary when supported like-kind exchange inputs are present"
+
+edge_cases:
+  - name: No boot exchange
+    description: "Pure like-kind swap with no cash or liability difference — full deferral"
+    expected: "Recognized gain = 0; deferred gain = full realized gain; basis = old basis"
+
+  - name: Cash boot received
+    description: "Taxpayer receives cash in exchange — triggers partial recognition"
+    expected: "Recognized gain = min(cash, realized gain)"
+
+  - name: Net liability relief boot
+    description: "Relinquished property had $500K mortgage, replacement has $300K — $200K debt boot"
+    expected: "Net liability relief treated as boot received"
+
+  - name: Exchange expenses reduce boot
+    description: "QI fees and closing costs reduce boot dollar-for-dollar"
+    expected: "Boot = gross boot - expenses, but not below zero"
+
+  - name: Boot exceeds realized gain
+    description: "Boot $50K but realized gain only $30K"
+    expected: "Recognized gain = $30K (limited to realized gain)"
+
+  - name: Realized loss
+    description: "FMV of like-kind property received less than basis given up"
+    expected: "No loss recognized; loss deferred in inflated basis"
+
+  - name: Other property given up
+    description: "Truck (personal property) included with real property in exchange"
+    expected: "Gain on truck is separately recognized on Line 14"
+
+  - name: Depreciation recapture
+    description: "§1250 recapture on relinquished property"
+    expected: "Recapture limited to boot-limited gain; classified as ordinary income"
+
+  - name: Federal routing by character
+    description: "Recognized gain from Line 23 uses explicit section 1231 versus capital routing"
+    expected: "section1231 routes through Form 4797 Part I; capital routes through Schedule D; Line 21 still routes through Form 4797 ordinary income"
+
+  - name: Multiple exchanges
+    description: "Two separate §1031 exchanges in same tax year"
+    expected: "Each exchange computed independently; gains do not offset"
+
+  - name: Post-TCJA real property only
+    description: "Personal property exchange attempted after 2017"
+    expected: "Does not qualify for §1031 deferral; full gain/loss recognized"

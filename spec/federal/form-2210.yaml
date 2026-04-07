@@ -1,0 +1,121 @@
+form: "Form 2210"
+fullName: "Underpayment of Estimated Tax by Individuals"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i2210"
+
+notes: |
+  Form 2210 determines if the taxpayer owes a penalty for underpaying
+  estimated taxes. Most taxpayers avoid the penalty by meeting one of
+  the safe harbor rules. The penalty flows to Schedule 2 Line 19.
+
+packetRules:
+  packetBehavior: "suppressed-by-default"
+  includeWhen:
+    - "Manual packet rule explicitly requests Form 2210 support pages"
+  suppressWhen:
+    - "Draft packet generation is running in default conservative mode"
+  notes: |
+    The current packet pipeline intentionally suppresses Form 2210 by default,
+    even when the engine computes an estimated tax penalty, so the draft packet
+    does not imply filing readiness. The cover page must disclose that the
+    penalty is present and that Form 2210 support is omitted.
+
+businessRuleValidation:
+  - rule: "suppressed-packet-disclosure"
+    description: "Inventory support counts this form as business-rule validated only when regression coverage proves the draft packet suppresses Form 2210 by default when an estimated tax penalty is present and keeps the cover-page e-file/business-rule label at not-validated."
+    testRef: "tests/apps/web/workspace-filled-return.test.ts::does not auto-attach Form 2210 even when the engine computes an estimated tax penalty and keeps business-rule validation disclosed as not-validated"
+
+lines:
+  - line: "1"
+    description: "Current year tax for Form 2210 (1040 Line 24 minus estimated tax penalty)"
+    formula: "taxAfterCredits + AMT + excessAPTCRepayment + SE + AdditionalMedicare + NIIT"
+    irsRef: "Form 2210 Instructions, Line 1: '1040 Line 22'; Line 2 adds Schedule 2 Part II"
+    notes: |
+      currentYearTax = 1040 Line 24 minus penalty (excluded to avoid circularity).
+      1040 Line 22 includes income tax + Schedule 2 Part I (AMT + excess APTC repayment)
+      minus nonrefundable credits. Form 2210 Line 2 adds Schedule 2 Part II (SE, Medicare, NIIT).
+      The excess APTC repayment (Schedule 2, Line 2) MUST be included — it is a real tax
+      liability, not the estimated tax penalty.
+    edgeCases:
+      - "Excess APTC repayment increases the tax base, making it harder to meet safe harbor"
+      - "Estimated tax penalty is NOT included (circular dependency — it's what we're computing)"
+    testRef: "tests/engine/forms/form-2210.test.ts::Form 2210 - refundable credits reduce tax shown for safe harbor"
+
+  - line: "tax_shown"
+    description: "Tax shown on the return per IRC §6654(d)(1)(C)"
+    formula: "zeroFloor(currentYearTax - refundableCredits)"
+    irsRef: "IRC §6654(d)(1)(C); Form 2210 Instructions"
+    notes: |
+      "Tax shown on the return" = total tax imposed minus credits allowable,
+      other than §31 (withholding). Refundable credits (EIC, ACTC, etc.) reduce
+      the tax base — they are NOT counted as payments.
+    edgeCases:
+      - "Refundable credits reduce the 90% required amount, not offset the underpayment directly"
+      - "If refundable credits exceed total tax, tax shown = $0"
+    testRef: "tests/engine/forms/form-2210.test.ts::Form 2210 - refundable credits reduce tax shown, not count as payments per IRC §6654(d)(1)(C)"
+
+  - line: "safe_harbor"
+    description: "Safe harbor test — no penalty if met"
+    formula: |
+      No penalty if any of:
+      1. taxShown - withholding < $1,000 (IRC §6654(e)(1)(A))
+      2. withholding + estimated ≥ 90% of taxShown
+      3. withholding + estimated ≥ 100% of prior year tax (110% if AGI > $150K, $75K MFS)
+      NOTE: Test 1 uses ONLY withholding, not estimated payments or refundable credits.
+      Tests 2 and 3 use withholding + estimated (not refundable credits).
+    irsRef: "IRC §6654(e)(1)(A); Form 2210 Instructions, General Rule"
+    edgeCases:
+      - "110% safe harbor applies when prior year AGI > $150K ($75K MFS)"
+      - "$1,000 test uses withholding only — estimated payments do NOT count"
+      - "Refundable credits reduce tax shown, not count as payments"
+      - "No prior year return → no safe harbor #3"
+    testRef: "tests/engine/forms/form-2210.test.ts::safe harbor - no penalty when payments exceed 100% prior year"
+
+  - line: "6"
+    description: "Required annual payment"
+    formula: "min(90% of taxShown, 100%/110% of prior year tax)"
+    irsRef: "IRC §6654(d)(1)(A); Form 2210 Instructions, Line 6"
+    notes: "90% base uses taxShown (after refundable credit reduction)"
+    testRef: "tests/engine/forms/form-2210.test.ts::Form 2210 Line 6 - required annual payment"
+
+  - line: "7"
+    description: "Tax payments (withholding + estimated)"
+    formula: "Federal withholding + estimated tax payments"
+    irsRef: "Form 2210 Instructions, Line 7"
+    notes: "Refundable credits reduce taxShown, not counted as payments"
+    testRef: "tests/engine/forms/form-2210.test.ts::Form 2210 Line 7 - total payments (withholding + estimated only)"
+
+  - line: "8"
+    description: "Underpayment amount"
+    formula: "Line 6 - Line 7 (if positive)"
+    irsRef: "Form 2210 Instructions, Line 8"
+    testRef: "tests/engine/forms/form-2210.test.ts::Form 2210 Line 8 - underpayment"
+
+  - line: "penalty"
+    description: "Estimated penalty using IRS Short Method"
+    formula: |
+      Per IRS Form 2210 Short Method: each quarter's underpayment accrues interest
+      from its installment due date to the filing deadline (4/15 of following year).
+      penalty = (underpayment / 4) × rate × days_q / 365, summed over 4 quarters.
+      Equivalently: underpayment × rate × totalQuarterDays / (4 × 365).
+
+      TY2025 quarter day counts (due date to 4/15/2026):
+        Q1 (4/15/2025): 365 days
+        Q2 (6/15/2025): 304 days
+        Q3 (9/15/2025): 212 days
+        Q4 (1/15/2026): 90 days
+        Total: 971 days
+
+      Short-method factor = 7% × 971 / 1460 ≈ 4.655%
+      (NOT 7% — the full annual rate overstates the penalty by ~50%)
+
+      2025 rate: 7% (Q1-Q2 confirmed per Rev. Rul. 2025-01; Q3-Q4 assumed same).
+      Denominator is always 365 per IRC §6621(b), even in leap years.
+    irsRef: "Form 2210 Instructions, Short Method; IRC §6654(a); IRC §6621(b); Rev. Rul. 2025-01"
+    edgeCases:
+      - "Rate changes quarterly based on federal short-term rate + 3%"
+      - "Each quarter's underpayment accrues separately for different durations"
+      - "Q1 underpayment accrues for 365 days but Q4 only for 90 days"
+      - "Annualized income method (Schedule AI) can reduce penalty"
+      - "Short method assumes equal quarterly underpayments (no per-quarter input data)"
+    testRef: "tests/engine/forms/form-2210.test.ts::Form 2210 - penalty calculation"

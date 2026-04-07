@@ -1,0 +1,106 @@
+form: "Form 6251"
+fullName: "Alternative Minimum Tax — Individuals"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i6251"
+
+notes: |
+  Form 6251 calculates the Alternative Minimum Tax (AMT). The AMT is a
+  parallel tax system that disallows certain deductions and adds back
+  preferences. The taxpayer pays the greater of regular tax or AMT.
+  AMT flows to Schedule 2 Line 1.
+
+  2025 AMT exemption amounts:
+  - Single/HoH: $88,100 (phase-out begins at $609,350)
+  - MFJ/QSS: $137,000 (phase-out begins at $1,252,700)
+  - MFS: $68,500 (phase-out begins at $626,350)
+
+  2025 AMT rates: 26% on the first $239,100 ($119,550 MFS), 28% on the remainder.
+  If qualified dividends or net long-term capital gain are present, Form 6251 Part III
+  applies the maximum capital gains rates to the preferential-income portion instead of
+  taxing the full AMT base at 26%/28%.
+
+lines:
+  - line: "1"
+    description: "Taxable income from Form 1040"
+    formula: "Form 1040 Line 15"
+    irsRef: "Form 6251 Instructions, Line 1"
+    testRef: "tests/engine/forms/form-6251.test.ts::Line 1 - taxable income passes through"
+
+  - line: "2a"
+    description: "SALT add-back"
+    formula: "State/local tax deduction (if itemized)"
+    irsRef: "Form 6251 Instructions, Line 2a"
+    notes: "SALT is not deductible for AMT purposes"
+    testRef: "tests/engine/forms/form-6251.test.ts::Line 2a - SALT add-back when itemizing"
+
+  - line: "2c"
+    description: "Depletion"
+    formula: "Excess of percentage depletion over cost depletion"
+    irsRef: "Form 6251 Instructions, Line 2c"
+    notes: "K-1 Box 17 Code C flows here. Positive increases AMTI."
+    testRef: "tests/engine/forms/form-6251.test.ts::Line 2c - depletion adjustment increases AMTI"
+
+  - line: "2k"
+    description: "Disposition of property"
+    formula: "AMT gain/loss adjustment from assets with different AMT basis"
+    irsRef: "Form 6251 Instructions, Line 2k"
+    notes: "K-1 Box 17 Code B flows here. Reflects basis differences from prior AMT depreciation adjustments."
+    testRef: "tests/engine/forms/form-6251.test.ts::Line 2k - disposition adjustment affects AMTI"
+
+  - line: "2l"
+    description: "Depreciation on assets placed in service after 1986"
+    formula: "Difference between AMT depreciation and regular depreciation"
+    irsRef: "Form 6251 Instructions, Line 2l"
+    notes: |
+      K-1 Box 17 Code A flows here. Most common K-1 AMT adjustment.
+      Positive amount means regular depreciation exceeds AMT depreciation (increases AMTI).
+      Negative amount means AMT depreciation exceeds regular (decreases AMTI).
+    testRef: "tests/engine/forms/form-6251.test.ts::Line 2l - depreciation adjustment increases AMTI"
+
+  - line: "3"
+    description: "Other adjustments"
+    formula: "Sum of other AMT preferences and adjustments"
+    irsRef: "Form 6251 Instructions, Line 3"
+    notes: "K-1 Box 17 Code F and other miscellaneous AMT items flow here."
+    testRef: "tests/engine/forms/form-6251.test.ts::Line 3 - other AMT adjustments increase AMTI"
+
+  - line: "7"
+    description: "Alternative minimum taxable income (AMTI)"
+    formula: "Line 1 + Lines 2a through 3 (SALT, depletion, depreciation, dispositions, other)"
+    irsRef: "Form 6251 Instructions, Line 7"
+    testRef: "tests/engine/forms/form-6251.test.ts::Line 7 - AMTI equals taxable income plus SALT add-back"
+
+  - line: "8"
+    description: "AMT exemption amount"
+    formula: "Varies by filing status; phases out at 25 cents per dollar over threshold"
+    irsRef: "Form 6251 Instructions, Line 8"
+    edgeCases:
+      - "Phase-out: exemption reduced by 25% of AMTI exceeding threshold"
+      - "MFS exemption is half of MFJ"
+      - "At very high income, exemption fully phased out"
+      - "ROUND_HALF_UP on 25% reduction shifts full phase-out 2 dollars earlier than neat algebraic boundary (e.g., single: $961,748 not $961,750)"
+      - "First $1 exemption reduction at AMTI $609,352 (single), not $609,351, because round(0.25)=0 but round(0.50)=1"
+    testRef: "tests/engine/forms/form-6251.test.ts::Line 8 - full exemption for single filer below phase-out"
+
+  - line: "9"
+    description: "AMT base (AMTI minus exemption)"
+    formula: "max(0, Line 7 - Line 8)"
+    irsRef: "Form 6251 Instructions, Line 9"
+    testRef: "tests/engine/forms/form-6251.test.ts::Line 9 - AMT base is AMTI minus exemption"
+
+  - line: "10"
+    description: "Tentative minimum tax"
+    formula: "If no preferential income, 26% on first $239,100 ($119,550 MFS) + 28% on remainder; otherwise use Form 6251 Part III maximum capital gains rates"
+    irsRef: "Form 6251 Instructions, Line 10"
+    edgeCases:
+      - "QDCG/capital gains taxed at preferential rates under AMT too"
+      - "Single/MFJ/HoH/QSS 26% breakpoint is $239,100"
+      - "MFS bracket threshold is $119,550"
+    testRef: "tests/engine/forms/form-6251.test.ts::Line 10 - tentative minimum tax at 26% for base under limit"
+
+  - line: "11"
+    description: "AMT (excess over regular tax)"
+    formula: "max(0, tentative minimum tax - regular tax)"
+    irsRef: "Form 6251 Instructions, Line 11"
+    notes: "This flows to Schedule 2 Line 1"
+    testRef: "tests/engine/forms/form-6251.test.ts::Line 11 - AMT is zero when regular tax exceeds tentative minimum"

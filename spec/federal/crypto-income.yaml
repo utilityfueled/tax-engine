@@ -1,0 +1,122 @@
+form: "Crypto Income Recognition"
+fullName: "Digital Asset Ordinary Income — Mining, Staking, Airdrops, and Hard Forks"
+taxYear: 2025
+irsReference: "https://www.irs.gov/individuals/international-taxpayers/frequently-asked-questions-on-virtual-currency-transactions"
+
+notes: |
+  This spec covers the ordinary income recognition rules for digital assets
+  received through mining, staking, airdrops, and hard forks. Capital gains
+  from subsequent disposal are handled by Form 1099-DA / Form 8949 / Schedule D.
+
+  Key IRS references:
+  - IRS Notice 2014-21: Virtual currency treated as property
+  - IRS Notice 2014-21 Q&A 8: Mining income = FMV at receipt
+  - Rev. Rul. 2019-24: Airdrop/hard fork income recognition
+  - Rev. Rul. 2023-14: Staking rewards = gross income when dominion/control gained
+  - IRS FAQ Q5: Self-employment tax applies if mining/staking is a trade or business
+
+lines:
+  # ── Mining Income ──────────────────────────────────────
+  - line: "mining-income"
+    description: "Mining income recognition"
+    formula: "quantity * fairMarketValuePerUnit at date of receipt"
+    irsRef: "IRS Notice 2014-21, Q&A 8"
+    edgeCases:
+      - "Pool mining: income recognized when credited to miner's account"
+      - "Solo mining: income recognized when block is validated and reward received"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Hobby mining income computed as quantity * FMV"
+
+  - line: "mining-routing-hobby"
+    description: "Hobby mining income routing"
+    formula: "If not a business: FMV income → Schedule 1 Line 8z (other income)"
+    irsRef: "IRS Notice 2014-21, Q&A 8; IRC §183"
+    edgeCases:
+      - "Hobby expenses not deductible under TCJA (2018-2025)"
+      - "Pool fees NOT deductible for hobby miners"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Crypto hobby income flows to otherIncome (Schedule 1 Line 8z)"
+
+  - line: "mining-routing-business"
+    description: "Business mining income routing"
+    formula: "If business: FMV income → Schedule C gross receipts; pool fees → Schedule C expenses"
+    irsRef: "IRS Notice 2014-21, Q&A 9; IRC §162"
+    edgeCases:
+      - "Subject to self-employment tax via Schedule SE"
+      - "Pool fees, electricity, hardware depreciation deductible as business expenses"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Business mining routes to Schedule C with deductible expenses"
+
+  - line: "mining-basis"
+    description: "Cost basis for mined coins"
+    formula: "Basis = FMV at date of receipt (establishes lot for future disposal)"
+    irsRef: "IRS Notice 2014-21, Q&A 6"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Mined coins establish basis lots at FMV (IRS Notice 2014-21 Q&A 6)"
+
+  # ── Staking Income ─────────────────────────────────────
+  - line: "staking-income"
+    description: "Staking rewards income recognition"
+    formula: "quantity * fairMarketValuePerUnit when taxpayer gains dominion and control"
+    irsRef: "Rev. Rul. 2023-14"
+    edgeCases:
+      - "Locked staking: income recognized when rewards become transferable"
+      - "Liquid staking (e.g., stETH): may be recognized when derivative token received"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Hobby staking income computed as quantity * FMV (Rev. Rul. 2023-14)"
+
+  - line: "staking-routing-hobby"
+    description: "Hobby staking income routing"
+    formula: "If not a business: FMV income → Schedule 1 Line 8z"
+    irsRef: "Rev. Rul. 2023-14; IRC §183"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Crypto hobby income flows to otherIncome (Schedule 1 Line 8z)"
+
+  - line: "staking-routing-business"
+    description: "Business staking income routing"
+    formula: "If business: FMV income → Schedule C gross receipts; validator expenses → Schedule C expenses"
+    irsRef: "Rev. Rul. 2023-14; IRC §162"
+    edgeCases:
+      - "Subject to self-employment tax via Schedule SE"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Business staking routes to Schedule C with validator expenses"
+
+  - line: "staking-basis"
+    description: "Cost basis for staking rewards"
+    formula: "Basis = FMV at date received"
+    irsRef: "Rev. Rul. 2023-14"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Staking rewards establish basis lots at FMV"
+
+  # ── Airdrop Income ─────────────────────────────────────
+  - line: "airdrop-income"
+    description: "Airdrop income recognition"
+    formula: "quantity * fairMarketValuePerUnit at receipt"
+    irsRef: "Rev. Rul. 2019-24, Situation 1"
+    edgeCases:
+      - "Unsolicited airdrops: taxable when received with dominion and control"
+      - "Promotional airdrops: treated as ordinary income"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Airdrop income = quantity * FMV at receipt (Rev. Rul. 2019-24)"
+
+  - line: "airdrop-routing"
+    description: "Airdrop income routing"
+    formula: "FMV income → Schedule 1 Line 8z (other income). Always ordinary income, never SE."
+    irsRef: "Rev. Rul. 2019-24"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Airdrop income always routes to Schedule 1 Line 8z (never SE)"
+
+  - line: "airdrop-basis"
+    description: "Cost basis for airdrop tokens"
+    formula: "Basis = FMV at receipt"
+    irsRef: "Rev. Rul. 2019-24"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Airdrop income = quantity * FMV at receipt (Rev. Rul. 2019-24)"
+
+  # ── Hard Fork Income ───────────────────────────────────
+  - line: "hard-fork-income"
+    description: "Hard fork income recognition"
+    formula: "quantity * fairMarketValuePerUnit at time chain splits (if determinable)"
+    irsRef: "Rev. Rul. 2019-24, Situation 2"
+    edgeCases:
+      - "If FMV not determinable at fork time: basis = $0, income = $0 until disposed"
+      - "Income recognized when taxpayer gains dominion and control of new coin"
+      - "Not taxable if taxpayer does not receive new cryptocurrency"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Hard fork with zero FMV has $0 income and $0 basis"
+
+  - line: "hard-fork-basis"
+    description: "Cost basis for hard fork tokens"
+    formula: "Basis = FMV at fork (or $0 if indeterminable)"
+    irsRef: "Rev. Rul. 2019-24"
+    edgeCases:
+      - "Zero-basis hard fork: full proceeds are gain on later sale"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Zero-cost-basis airdrop: full proceeds are gain on later sale"

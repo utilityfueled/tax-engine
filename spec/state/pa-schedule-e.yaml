@@ -1,0 +1,120 @@
+form: "PA-Schedule-E"
+fullName: "Pennsylvania Schedule E — Net Income (Loss) from Rents, Royalties, Copyrights and Patents"
+taxYear: 2025
+reference: "https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/net-income-loss-from-rents,-royalties,-copyrights-and-patents"
+
+notes: |
+  Pennsylvania Schedule E computes Class 6 income for rents, royalties,
+  copyrights, and patents. The Pennsylvania Personal Income Tax Guide states:
+    - Allowable expenses include ordinary and necessary costs of producing,
+      collecting, managing, conserving, or maintaining rental and royalty income.
+    - There are no passive-loss limitations or carryovers for Pennsylvania PIT.
+    - Gain or loss from selling rental or royalty property belongs on PA Schedule D,
+      not Schedule E.
+    - Short-term rentals, dealer property, and rentals with significant services
+      are business income and should be routed to PA business income instead of
+      this schedule.
+    - Federal Schedule E is not a substitute for PA Schedule E.
+
+packetRules:
+  packetBehavior: "reference-summary-pdf"
+  includeWhen:
+    - "A Pennsylvania resident return packet is being assembled and supported Schedule E rental, royalty, or pass-through activity is present."
+    - "The packet path emits a supported Schedule E reference summary derived from the validated resident PA Schedule E result, including zero-net detail when supported rental property activity is present."
+  suppressWhen:
+    - "No Pennsylvania resident return packet is being assembled."
+    - "No supported Schedule E rental, royalty, or pass-through activity is present on the return."
+  notes: |
+    The Pennsylvania Personal Income Tax Guide requires taxpayers with rents,
+    royalties, copyrights, or patents to report the activity on PA Schedule E.
+    Until an official PA Schedule E filler exists, the packet path emits
+    `pa-schedule-e-reference.pdf` as a reference summary only. Packet
+    disclosures must therefore keep Pennsylvania packet completeness partial
+    whenever this reference summary is attached.
+
+businessRuleValidation:
+  - rule: "pa-schedule-e-reference-packet"
+    description: "Inventory support counts the Pennsylvania Schedule E packet path as validated only when fillReturn emits `pa-schedule-e-reference.pdf` whenever supported resident Schedule E activity is present."
+    testRef: "tests/pdf/fill-pa-schedule-e.test.ts::fillReturn includes the Pennsylvania Schedule E reference summary when the resident return includes supported rental activity"
+  - rule: "pa-schedule-e-reference-zero-net-packet"
+    description: "Inventory support counts the Pennsylvania Schedule E packet trigger as validated only when regression coverage proves fillReturn still emits the reference summary when supported rental-property activity nets to zero."
+    testRef: "tests/pdf/fill-pa-schedule-e.test.ts::fillReturn includes the Pennsylvania Schedule E reference summary when supported rental-property activity nets to zero"
+  - rule: "pa-schedule-e-reference-suppression"
+    description: "Inventory support counts the Pennsylvania Schedule E suppression rule as validated only when regression coverage proves fillReturn omits the reference summary when no supported Schedule E activity is present."
+    testRef: "tests/pdf/fill-pa-schedule-e.test.ts::fillReturn suppresses the Pennsylvania Schedule E reference summary when no supported Schedule E activity is present"
+  - rule: "pa-schedule-e-reference-disclosure"
+    description: "Inventory support counts the Pennsylvania Schedule E packet disclosure as validated only when readiness regression coverage keeps packet completeness partial while only the Schedule E reference summary is available beyond PA-40."
+    testRef: "tests/utils/return-readiness.test.ts::marks Pennsylvania packets partial when a PA Schedule E reference summary is attached"
+
+lines:
+  - line: "1"
+    description: "Gross rents and royalties from directly owned property"
+    formula: |
+      Sum gross rents from each rental property activity classified to Schedule E.
+      Do not net gains or losses from property sales into this line.
+    testRef: "tests/engine/state/pa-schedule-e.test.ts::PA Schedule E Line 1 - computes property net income from gross rents less allowable expenses"
+
+  - line: "2"
+    description: "Allowable expenses for directly owned property"
+    formula: |
+      Sum only allowable expenses paid or incurred during the year for each
+      Schedule E property, including advertising, cleaning, commissions,
+      insurance, legal/professional fees, management fees, interest, repairs,
+      supplies, taxes, utilities, depreciation, and similar ordinary costs.
+    notes: |
+      No deduction is allowed for the taxpayer's own labor, capital investment,
+      capital improvements, or personal expenses.
+    testRef: "tests/engine/state/pa-schedule-e.test.ts::PA Schedule E Line 1 - computes property net income from gross rents less allowable expenses"
+
+  - line: "3"
+    description: "Net income (loss) from directly owned rental property"
+    formula: "Line 1 minus Line 2 for each Schedule E property; losses remain current-year losses"
+    notes: |
+      Pennsylvania does not apply IRC section 469 passive-loss carryovers to this
+      class of income.
+    testRef: "tests/engine/state/pa-schedule-e.test.ts::PA Schedule E - keeps current-year rental losses instead of deferring them"
+
+  - line: "4"
+    description: "Form 1099-MISC rents and royalties"
+    formula: |
+      Add Form 1099-MISC Box 1 rents and Box 2 royalties using their gross
+      amounts. Royalties reported net of expenses should be restated to gross
+      with expenses shown separately when available.
+    testRef: "tests/engine/state/pa-schedule-e.test.ts::PA Schedule E Line 4 - includes Form 1099-MISC rents and royalties at gross plus pass-through income"
+
+  - line: "5"
+    description: "Pass-through rental and royalty income"
+    formula: |
+      Add Schedule K-1 Box 2 net rental real estate income, Box 3 other net
+      rental income, and Box 7 royalties.
+      When married filing jointly and ownership is tagged in the validated
+      input, keep taxpayer-owned and spouse-owned pass-through amounts in
+      separate spouse buckets. Treat untagged amounts as joint amounts that
+      are split equally between taxpayer and spouse for the separate
+      Line 25 computation.
+    notes: |
+      The 2025 PA-40 instructions for Schedule E Line 24 direct taxpayers to
+      use PA Schedule RK-1/NRK-1 rent and royalty amounts, or the federal
+      Schedule K-1 when Pennsylvania schedules are unavailable, classified by
+      Pennsylvania rules.
+    testRef: "tests/engine/state/pa-schedule-e.test.ts::PA Schedule E Line 5 - keeps spouse-attributed pass-through rental income separate on joint returns"
+
+  - line: "6"
+    description: "Net PA Schedule E income (loss)"
+    formula: |
+      Sum direct-property net income (loss), Form 1099-MISC rents and royalties,
+      and Schedule K-1 rental and royalty amounts.
+      If filing status is Married, Filing Jointly:
+        - compute taxpayer and spouse Schedule E totals separately
+        - split joint amounts equally between them
+        - if both spouses have net income or both have net loss, combine the
+          separate totals for PA-40 Line 6
+        - if one spouse has net income and the other has a net loss, report
+          only the spouse's positive separately calculated amount on PA-40 Line 6
+    notes: |
+      This amount flows to PA-40 Line 6. The PA-40 loss-limitation rule is
+      applied later at the return level, so this schedule may be negative.
+      Per the 2025 PA-40 instructions, married joint filers must calculate
+      Schedule E Lines 22 and 25 separately and may not offset one spouse's
+      Class 6 income by the other spouse's Class 6 loss.
+    testRef: "tests/engine/state/pa-schedule-e.test.ts::PA Schedule E Line 6 - married joint filers do not offset one spouse's Class 6 loss against the other's income"

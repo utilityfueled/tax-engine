@@ -1,0 +1,111 @@
+form: "PA-Schedule-G-L"
+fullName: "Pennsylvania Schedule G-L — Credit for Taxes Paid to Other States (Resident)"
+taxYear: 2025
+reference: "https://www.revenue.pa.gov/FormsandPublications/FormsforIndividuals/PIT/Pages/default.aspx"
+
+notes: |
+  PA Schedule G-L provides a credit for PA residents who paid income tax to
+  another state on income that is also taxable by Pennsylvania.
+
+  Key rules:
+    - Available only to PA residents
+    - Computed separately for each state where tax was paid
+    - For each state:
+        Credit = lesser of (tax paid to other state, PA tax on that income)
+        PA tax on that income = income taxable by both × 3.07%
+    - Total credit = sum of per-state credits
+    - Total credit cannot exceed PA-40 Line 12 (PA tax liability)
+    - Income must be the SAME income taxable by both PA and the other state
+    - Does not include local/city taxes paid to other jurisdictions
+    - PA has reciprocal agreements with IN, MD, NJ, OH, VA, WV —
+      residents of those states working in PA (and vice versa) are
+      exempt from the other state's tax. If a PA resident paid tax to a
+      reciprocal state (e.g., failed to file exemption), they may still
+      claim the credit on Schedule G-L.
+    - If the other state allows a credit for PA tax, you cannot claim
+      credit in both states for the same income (no double-dipping).
+
+packetRules:
+  packetBehavior: "reference-summary-pdf"
+  includeWhen:
+    - "A Pennsylvania resident return packet is being assembled and the resident orchestrator computes a positive Schedule G-L credit"
+    - "The packet can also identify each supported other-state credit entry that contributes to the resident credit"
+  suppressWhen:
+    - "No Pennsylvania resident return packet is being assembled"
+    - "No supported other-state credit entry produces a positive Schedule G-L credit"
+  notes: |
+    The Pennsylvania Personal Income Tax Guide says residents who paid income
+    tax to another state on the same income should complete PA-40 Schedule
+    G-L and include a copy of the other state's return. Until an official PA
+    Schedule G-L PDF filler exists, the packet path emits
+    `pa-schedule-g-l-reference.pdf` as a reference summary only and cannot
+    attach the other state's return automatically. Packet disclosures must
+    therefore keep Pennsylvania packet completeness partial whenever this
+    reference summary is attached.
+
+businessRuleValidation:
+  - rule: "pa-schedule-g-l-reference-packet"
+    description: "Inventory support counts the Pennsylvania Schedule G-L packet path as validated only when fillReturn emits `pa-schedule-g-l-reference.pdf` whenever a resident return computes a positive Schedule G-L credit."
+    testRef: "tests/pdf/fill-pa-schedule-g-l.test.ts::fillReturn includes the Pennsylvania Schedule G-L reference summary when the resident return claims credit for taxes paid to another state"
+  - rule: "pa-schedule-g-l-reference-suppression"
+    description: "Inventory support counts the Pennsylvania Schedule G-L suppression rule as validated only when regression coverage proves fillReturn omits the reference summary when no Schedule G-L credit is allowed."
+    testRef: "tests/pdf/fill-pa-schedule-g-l.test.ts::fillReturn suppresses the Pennsylvania Schedule G-L reference summary when the resident return has no allowable resident credit"
+  - rule: "pa-schedule-g-l-reference-disclosure"
+    description: "Inventory support counts the Pennsylvania Schedule G-L packet disclosure as validated only when readiness regression coverage keeps packet completeness partial while only the Schedule G-L reference summary is available beyond PA-40."
+    testRef: "tests/utils/return-readiness.test.ts::marks Pennsylvania packets partial when a PA Schedule G-L reference summary is attached"
+
+lines:
+  # Per-state credit computation (repeated for each state)
+
+  - line: "1"
+    description: "Income subject to tax in both PA and the other state"
+    formula: "Amount of income taxable by both PA and the other state"
+    notes: |
+      This is the income earned/sourced in the other state that is also
+      included in PA taxable income. Must be the same income in both jurisdictions.
+    testRef: "tests/engine/state/pa-schedule-g-l.test.ts::PA Schedule G-L Line 1 - income taxable by both states"
+
+  - line: "2"
+    description: "Tax paid to the other state"
+    formula: "Actual income tax paid (not withheld, but net tax liability) to the other state on Line 1 income"
+    notes: |
+      This is the tax actually paid to the other state on the income reported
+      on Line 1. Should be the net tax liability, not gross withholding
+      (though withholding is often used as a practical proxy when the
+      other state return hasn't been filed yet).
+    testRef: "tests/engine/state/pa-schedule-g-l.test.ts::PA Schedule G-L Line 2 - tax paid to other state"
+
+  - line: "3"
+    description: "PA tax on the income taxable by both states"
+    formula: "Line 1 × 3.07%"
+    notes: "PA's flat tax rate applied to the income that is subject to tax in both states."
+    testRef: "tests/engine/state/pa-schedule-g-l.test.ts::PA Schedule G-L Line 3 - PA tax on shared income"
+
+  - line: "4"
+    description: "Credit for this state"
+    formula: "Lesser of Line 2 and Line 3"
+    notes: |
+      The credit for each state is limited to the lesser of:
+        (a) tax actually paid to the other state on the shared income, or
+        (b) PA tax on that same shared income.
+      This ensures PA gives credit only up to what PA would have collected.
+    edgeCases:
+      - "Other state tax > PA tax: credit limited to PA tax amount"
+      - "PA tax > other state tax: credit equals other state tax"
+      - "Zero income or zero tax: credit is $0"
+    testRef: "tests/engine/state/pa-schedule-g-l.test.ts::PA Schedule G-L Line 4 - credit is lesser of tax paid and PA tax (PA tax lower)"
+
+  # Total credit
+
+  - line: "total"
+    description: "Total resident credit"
+    formula: "Sum of Line 4 for all states, capped at PA-40 Line 12 tax liability"
+    notes: |
+      The total credit across all states cannot exceed the PA tax liability.
+      This prevents the credit from creating a negative tax.
+    edgeCases:
+      - "Single state: total = that state's credit"
+      - "Multiple states: sum of per-state credits"
+      - "Sum exceeds PA tax liability: capped at PA tax liability"
+      - "No other state taxes paid: $0 credit"
+    testRef: "tests/engine/state/pa-schedule-g-l.test.ts::PA Schedule G-L total credit capped at PA tax liability"

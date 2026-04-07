@@ -1,0 +1,119 @@
+form: "NJ-1040 Tax Rate Computation"
+fullName: "New Jersey NJ-1040 Tax Rate Computation (Lines 42-43)"
+taxYear: 2025
+reference: "https://www.nj.gov/treasury/taxation/pdf/current/1040i.pdf"
+
+notes: |
+  New Jersey imposes a progressive income tax using two rate tables based on
+  filing status. Table A applies to single and married filing separately filers.
+  Table B applies to married filing jointly, head of household, and qualifying
+  surviving spouse filers.
+
+  NJ computes taxable income independently from federal — it does NOT start
+  from federal AGI. NJ gross income (Line 29) minus exemptions and deductions
+  yields line-39 taxable income, and after the property tax deduction on line
+  41 the remaining amount becomes New Jersey taxable income on Line 42. The
+  tax is then computed from the applicable rate table and entered on Line 43.
+
+  For 2025, the published NJ-1040 instructions require two computation paths:
+  - If taxable income is less than $100,000, use the Tax Table on page 54.
+  - If taxable income is $100,000 or more, use the Tax Rate Schedules on page 63.
+
+  The Tax Table is published in $50 taxable-income bands and uses the tax for
+  that band rather than simply rounding the tax on the exact dollar of income.
+  In the supported implementation, this is reproduced by computing tax at the
+  midpoint of the applicable $50 table band and rounding to the nearest dollar.
+
+  NJ tax brackets have been stable since 2018 when the top bracket (10.75%
+  over $1M) was added. Rates range from 1.4% to 10.75%.
+
+  Key differences between Table A and Table B:
+  - Table B has an extra 2.45% bracket ($50,000-$70,000)
+  - Table B has higher thresholds for the 5.525% and 6.37% brackets
+  - Both tables share the same top brackets at $500K, $1M
+
+lines:
+  - line: "42"
+    description: "New Jersey taxable income"
+    formula: "Line 39 taxable income minus line 41 property tax deduction"
+    inputs:
+      - "Line 39 taxable income before property tax deduction"
+      - "Line 41 property tax deduction"
+    notes: "This is the starting amount for the tax rate computation."
+    testRef: "tests/engine/state/nj-1040-tax-rate.test.ts::NJ-1040 tax rate Line 42 - taxable income is passed through"
+
+  - line: "39-table-select"
+    description: "Select the applicable rate table"
+    formula: "Table A for single/MFS; Table B for MFJ/HOH/QSS"
+    inputs:
+      - "Filing status"
+    notes: |
+      Table A has 7 brackets; Table B has 8 brackets.
+
+      In the published 2025 NJ-1040 Tax Table on pages 55 through 63, filing
+      statuses 2, 4, and 5 share the same column:
+      - 2 = Married/CU couple, filing joint return
+      - 4 = Head of household
+      - 5 = Qualifying widow(er)/surviving CU partner
+
+      The published Tax Rate Schedules on page 64 likewise group those three
+      statuses together under Table B, so exact tax results must match across
+      those filing statuses for the same line-42 taxable income.
+    edgeCases:
+      - "Qualifying surviving spouse uses Table B (same as MFJ)"
+      - "Married filing separately uses Table A (same as single)"
+    testRef: "tests/engine/state/nj-1040-tax-rate.test.ts::NJ-1040 tax rate Line 43 - qualifying surviving spouse uses Table B"
+
+  - line: "43"
+    description: "Tax on amount on line 42"
+    formula: |
+      If Line 42 taxable income is less than $100,000, use the published 2025
+      NJ Tax Table for the applicable filing-status column.
+
+      Equivalent supported implementation:
+      1. Determine the $50 tax-table band containing Line 42.
+      2. Compute the progressive tax on the midpoint of that band.
+      3. Round to the nearest whole dollar.
+
+      If Line 42 taxable income is $100,000 or more, apply the published Tax
+      Rate Schedules for the applicable filing-status table and round to the
+      nearest whole dollar.
+    inputs:
+      - "NJ-1040 Line 42 taxable income"
+      - "Filing status"
+    notes: |
+      For taxable income below $100,000, direct marginal-bracket math on the
+      exact income can differ from the published tax table by $1 or more. For
+      example, the published single-filer tax-table amount for exactly $50,000
+      taxable income is $1,271, while direct progressive tax on $50,000 is
+      $1,270. The engine must follow the official table.
+
+      Table A (Single / Married Filing Separately):
+        $0 - $20,000:         1.400%
+        $20,000 - $35,000:    1.750%
+        $35,000 - $40,000:    3.500%
+        $40,000 - $75,000:    5.525%
+        $75,000 - $500,000:   6.370%
+        $500,000 - $1,000,000: 8.970%
+        Over $1,000,000:      10.750%
+
+      Table B (MFJ / HOH / QSS):
+        $0 - $20,000:         1.400%
+        $20,000 - $50,000:    1.750%
+        $50,000 - $70,000:    2.450%
+        $70,000 - $80,000:    3.500%
+        $80,000 - $150,000:   5.525%
+        $150,000 - $500,000:  6.370%
+        $500,000 - $1,000,000: 8.970%
+        Over $1,000,000:      10.750%
+    edgeCases:
+      - "Zero taxable income produces zero tax"
+      - "Taxable income below $100,000 must use the published tax table, not direct tax on the exact dollar"
+      - "$99,950 uses the tax table, while $100,000 switches to the rate schedules"
+      - "Income exactly at a bracket boundary pays nothing in the next bracket"
+      - "Single filer at $1,000,001 pays 10.75% on the $1 above $1M"
+      - "MFJ filer with $50,000 still uses the tax table because the switch happens at $100,000"
+      - "Head of household and qualifying surviving spouse must match the published Table B values used by MFJ for the same income band"
+      - "At $39,850 taxable income, the Table B published row ($39,850-$39,900) yields $628 for filing statuses 2, 4, and 5"
+      - "At $150,000 taxable income, the Table B rate schedule on page 64 yields round(($150,000 × 5.525%) - $2,775) = $5,513 for filing statuses 2, 4, and 5"
+    testRef: "tests/engine/state/nj-1040-tax-rate.test.ts::NJ-1040 tax rate Line 43 - single filer $50,000 uses the published tax table amount of $1,271"

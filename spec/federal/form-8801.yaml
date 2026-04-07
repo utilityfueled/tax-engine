@@ -1,0 +1,265 @@
+form: "Form 8801"
+fullName: "Credit for Prior Year Minimum Tax — Individuals, Estates, and Trusts"
+taxYear: 2025
+irsReference: "https://www.irs.gov/forms-pubs/about-form-8801"
+
+notes: |
+  Form 8801 allows taxpayers who paid AMT in a prior year due to deferral items
+  (timing differences such as ISO exercises, depreciation, depletion, or
+  disposition adjustments) to claim a credit in the current year. The credit is
+  limited to the amount by which the current year's regular tax exceeds the
+  current year's tentative minimum tax.
+
+  Key concepts:
+  - Exclusion items: permanent AMT differences (SALT add-back, medical
+    threshold, private activity bond interest, standard deduction). These do NOT
+    generate a minimum tax credit because the preference is permanent.
+  - Deferral items: timing AMT differences (depreciation, depletion, ISO
+    exercises, disposition basis differences, passive activity adjustments).
+    These DO generate a minimum tax credit because the preference reverses.
+
+  Part I recomputes the prior year's TMT using only exclusion items.
+  Part II calculates the allowable credit and any carryforward.
+  Part III recomputes the exclusion-only TMT using maximum capital gains
+  rates (0%/15%/20%/25%/28%) for the preferential-income portion of the
+  AMT base when the prior year had qualified dividends or net capital gains.
+  The resulting TMT is often lower than the flat 26%/28% AMT rates, which
+  increases the minimum tax credit by attributing more of the prior year
+  AMT to deferral items rather than exclusion items. If Part III produces
+  a lower TMT than Part I Line 11, the lower amount is used.
+
+  Prior year (2024) AMT constants used in Part I (Rev. Proc. 2023-34):
+  - Exemption: Single/HOH $85,700; MFJ/QSS $133,300; MFS $66,650
+  - Phase-out threshold: Single/HOH $609,350; MFJ/QSS $1,218,700; MFS $609,350
+  - 26% rate limit: $232,600 ($116,300 MFS)
+
+businessRuleValidation:
+  - rule: "reference-summary-packet"
+    description: "Inventory support counts this form as business-rule validated only when regression coverage proves the emitted packet artifact stays labeled as a non-filing reference summary and only surfaces the supported Form 8801 prior-year AMT credit computation lines, the allowable current-year credit that flows to Schedule 3, and the tracked carryforward."
+    testRef: "tests/pdf/fill-form-8801.test.ts::buildForm8801ReferenceSummary keeps the packet artifact reference-only and limited to supported prior-year minimum-tax-credit outputs"
+
+lines:
+  - line: "1"
+    description: "Exclusion items from prior year Form 6251"
+    formula: "Sum of prior year Form 6251 lines 2a-3 that are exclusion items (SALT add-back, medical threshold difference, private activity bond interest, standard deduction if applicable, other permanent AMT adjustments)"
+    inputs:
+      - "Prior year Form 6251 exclusion items total"
+    edgeCases:
+      - "SALT add-back is the most common exclusion item post-TCJA"
+      - "If the filer used the standard deduction in the prior year, the standard deduction itself is an exclusion item when it was an AMT adjustment"
+    testRef: "tests/engine/forms/form-8801.test.ts::Part I Line 3 - exclusion-only AMTI equals taxable income plus exclusion items"
+
+  - line: "2"
+    description: "Prior year taxable income"
+    formula: "Enter prior year Form 1040 Line 15"
+    inputs:
+      - "Prior year Form 1040 Line 15 taxable income"
+    testRef: "tests/engine/forms/form-8801.test.ts::Part I Line 3 - exclusion-only AMTI equals taxable income plus exclusion items"
+
+  - line: "3"
+    description: "Exclusion-only AMTI"
+    formula: "Prior year taxable income + Line 1 exclusion items"
+    inputs:
+      - "Prior year taxable income"
+      - "Form 8801 Line 1"
+    notes: "This is the AMTI that would have resulted if only exclusion items were preferences. Equals AMTI minus deferral items."
+    testRef: "tests/engine/forms/form-8801.test.ts::Part I Line 3 - exclusion-only AMTI when no exclusion items equals taxable income"
+
+  - line: "5"
+    description: "AMT exemption amount for prior year filing status"
+    formula: "Use the published 2024 AMT exemption for the prior year filing status: Single/HOH $85,700; MFJ/QSS $133,300; MFS $66,650"
+    inputs:
+      - "Prior year filing status"
+    testRef: "tests/engine/forms/form-8801.test.ts::Part I Line 9 - full exemption for single filer below phase-out"
+
+  - line: "6"
+    description: "Phase-out threshold for prior year filing status"
+    formula: "2024 phase-out thresholds: Single/HOH $609,350; MFJ/QSS $1,218,700; MFS $609,350"
+    inputs:
+      - "Prior year filing status"
+    testRef: "tests/engine/forms/form-8801.test.ts::Part I Line 9 - exemption phases out at 25 cents per dollar over threshold"
+
+  - line: "7"
+    description: "Excess of exclusion-only AMTI over phase-out threshold"
+    formula: "max(0, Line 3 - Line 6)"
+    inputs:
+      - "Form 8801 Line 3"
+      - "Form 8801 Line 6"
+    testRef: "tests/engine/forms/form-8801.test.ts::Part I Line 9 - exemption phases out at 25 cents per dollar over threshold"
+
+  - line: "8"
+    description: "Exemption reduction"
+    formula: "Line 7 × 25%"
+    inputs:
+      - "Form 8801 Line 7"
+    testRef: "tests/engine/forms/form-8801.test.ts::Part I Line 9 - exemption phases out at 25 cents per dollar over threshold"
+
+  - line: "9"
+    description: "Allowed AMT exemption on exclusion-only AMTI"
+    formula: "max(0, Line 5 - Line 8)"
+    inputs:
+      - "Form 8801 Line 5"
+      - "Form 8801 Line 8"
+    edgeCases:
+      - "Exemption fully phases out when exclusion-only AMTI exceeds threshold by 4× the base exemption"
+    testRef: "tests/engine/forms/form-8801.test.ts::Part I Line 9 - exemption fully phases out for very high AMTI"
+
+  - line: "10"
+    description: "AMT base on exclusion items"
+    formula: "max(0, Line 3 - Line 9)"
+    inputs:
+      - "Form 8801 Line 3"
+      - "Form 8801 Line 9"
+    testRef: "tests/engine/forms/form-8801.test.ts::Part I Line 11 - TMT uses 26 percent rate below breakpoint"
+
+  - line: "11"
+    description: "Tentative minimum tax on exclusion items"
+    formula: "26% on the first $232,600 ($116,300 MFS) of Line 10, plus 28% on any remainder. Round to the nearest dollar."
+    inputs:
+      - "Form 8801 Line 10"
+      - "Prior year filing status"
+    edgeCases:
+      - "MFS filers use $116,300 as the 26%/28% breakpoint"
+      - "If the taxpayer had qualified dividends or net capital gains, Part III produces a lower TMT using capital gains rates"
+    testRef: "tests/engine/forms/form-8801.test.ts::Part I Line 11 - TMT uses 26 percent and 28 percent rates with prior year breakpoint"
+
+  - line: "12"
+    description: "Prior year regular tax"
+    formula: "Enter prior year regular tax liability (before credits)"
+    inputs:
+      - "Prior year regular tax before credits"
+    testRef: "tests/engine/forms/form-8801.test.ts::Part I Line 13 - net minimum tax on exclusion items is TMT minus regular tax floored at zero"
+
+  - line: "13"
+    description: "Net minimum tax on exclusion items"
+    formula: "max(0, Line 11 - Line 12)"
+    inputs:
+      - "Form 8801 Line 11"
+      - "Form 8801 Line 12"
+    notes: "This is the AMT that would have been owed if only exclusion items were preferences. It represents the 'permanent' portion of prior year AMT."
+    testRef: "tests/engine/forms/form-8801.test.ts::Part I Line 13 - net minimum tax positive when exclusion TMT exceeds regular tax"
+
+  - line: "14"
+    description: "Prior year AMT"
+    formula: "Enter prior year Form 6251 line 11 (the actual AMT paid)"
+    inputs:
+      - "Prior year Form 6251 line 11"
+    testRef: "tests/engine/forms/form-8801.test.ts::Part II Line 16 - minimum tax credit equals prior year AMT minus net exclusion-item AMT"
+
+  - line: "15"
+    description: "Net minimum tax on exclusion items"
+    formula: "Enter Line 13 from Part I"
+    inputs:
+      - "Form 8801 Line 13"
+    testRef: "tests/engine/forms/form-8801.test.ts::Part II Line 16 - minimum tax credit equals prior year AMT minus net exclusion-item AMT"
+
+  - line: "16"
+    description: "Minimum tax credit from prior year"
+    formula: "max(0, Line 14 - Line 15)"
+    inputs:
+      - "Form 8801 Line 14"
+      - "Form 8801 Line 15"
+    notes: "This is the AMT attributable to deferral items — the amount that generates a credit."
+    edgeCases:
+      - "Zero when all of the prior year AMT was due to exclusion items"
+    testRef: "tests/engine/forms/form-8801.test.ts::Part II Line 16 - minimum tax credit is zero when all AMT was from exclusion items"
+
+  - line: "17"
+    description: "Unused minimum tax credit carryforward"
+    formula: "Enter unused minimum tax credit from years before the prior year (carryforward from prior Form 8801 Line 26)"
+    inputs:
+      - "Unused minimum tax credit carryforward from earlier years"
+    testRef: "tests/engine/forms/form-8801.test.ts::Part II Line 18 - carryforward adds to current-year available credit"
+
+  - line: "18"
+    description: "Total available minimum tax credit"
+    formula: "Line 16 + Line 17"
+    inputs:
+      - "Form 8801 Line 16"
+      - "Form 8801 Line 17"
+    testRef: "tests/engine/forms/form-8801.test.ts::Part II Line 18 - carryforward adds to current-year available credit"
+
+  - line: "22"
+    description: "Current year regular tax before credits"
+    formula: "Enter current year Form 1040 Line 16"
+    inputs:
+      - "Current year regular tax (Form 1040 Line 16)"
+    testRef: "tests/engine/forms/form-8801.test.ts::Part II Line 24 - current year limitation is regular tax minus TMT"
+
+  - line: "23"
+    description: "Current year tentative minimum tax"
+    formula: "Enter current year Form 6251 Line 10"
+    inputs:
+      - "Current year Form 6251 Line 10 tentative minimum tax"
+    testRef: "tests/engine/forms/form-8801.test.ts::Part II Line 24 - current year limitation is regular tax minus TMT"
+
+  - line: "24"
+    description: "Current year limitation"
+    formula: "max(0, Line 22 - Line 23)"
+    inputs:
+      - "Form 8801 Line 22"
+      - "Form 8801 Line 23"
+    notes: "The credit cannot exceed the amount by which current year regular tax exceeds current year TMT."
+    edgeCases:
+      - "Zero when current year TMT exceeds regular tax (meaning the taxpayer is in AMT this year)"
+    testRef: "tests/engine/forms/form-8801.test.ts::Part II Line 24 - limitation is zero when TMT exceeds regular tax"
+
+  - line: "25"
+    description: "Minimum tax credit allowed this year"
+    formula: "min(Line 18, Line 24)"
+    inputs:
+      - "Form 8801 Line 18"
+      - "Form 8801 Line 24"
+    notes: "Flows to Schedule 3 Line 6a as a nonrefundable credit."
+    testRef: "tests/engine/forms/form-8801.test.ts::Part II Line 25 - credit limited when available exceeds limitation"
+
+  - line: "26"
+    description: "Carryforward to next year"
+    formula: "Line 18 - Line 25"
+    inputs:
+      - "Form 8801 Line 18"
+      - "Form 8801 Line 25"
+    notes: "Unused minimum tax credit carries forward indefinitely."
+    testRef: "tests/engine/forms/form-8801.test.ts::Part II Line 26 - unused credit carries forward to next year"
+
+  - line: "packet"
+    description: "Draft packet inclusion rule for supported Form 8801 prior-year minimum tax credit outputs"
+    formula: "When the return includes supported Form 8801 input, include a non-filing reference-summary PDF in the packet that lists the supported prior-year exclusion-item recomputation lines, the current-year limitation and allowed minimum tax credit, and the carryforward to next year."
+    irsRef: "Form 8801 Instructions; Schedule 3 prior-year minimum tax credit line"
+    notes: "This packet slice intentionally emits a deterministic reference summary instead of attempting to recreate the official filed Form 8801, so the draft packet stays honest about what the product computed."
+    testRef: "tests/pdf/fill-form-8801.test.ts::fillReturn includes a Form 8801 reference summary when prior-year minimum tax credit input is present"
+
+  # ── Part III: Tax on Exclusion Items Using Maximum Capital Gains Rates ──
+
+  - line: "partIII"
+    description: "TMT on exclusion items recomputed using maximum capital gains rates"
+    formula: >
+      When the prior year had qualified dividends or net long-term capital gain,
+      separate the AMT base (Line 10) into ordinary and preferential portions.
+      Apply 26%/28% AMT rates to the ordinary portion. Apply 0%/15%/20%/25%/28%
+      capital gains rates to the preferential portion using the prior year
+      capital gains rate thresholds. Take the lesser of this mixed-rate TMT and
+      the flat-rate Line 11 TMT. Use the lower TMT for Line 13 onward, which
+      increases the minimum tax credit.
+    irsRef: "Form 8801 Instructions, Part III; IRC §1(h); Schedule D Tax Worksheet"
+    inputs:
+      - "Form 8801 Line 10 (AMT base on exclusion items)"
+      - "Prior year qualified dividends"
+      - "Prior year net long-term capital gain"
+      - "Prior year unrecaptured section 1250 gain"
+      - "Prior year collectibles (28% rate) gain"
+      - "Prior year capital gains rate thresholds"
+    notes: >
+      The preferential income for this computation is the smaller of the AMT base
+      (Line 10) and the sum of prior year qualified dividends plus net LTCG.
+      The ordinary portion (AMT base minus preferential) uses 26%/28% AMT rates.
+      The preferential portion stacks through 0%/15% brackets first, then 25%
+      (unrecaptured section 1250), 28% (collectibles), and 20% (remainder).
+      The 0% and 15% bracket thresholds are the prior year published thresholds.
+    edgeCases:
+      - "No prior year qualified dividends or LTCG: Part III does not apply, Line 11 is used as-is"
+      - "All AMT base is preferential income: ordinary portion is zero, entire amount uses capital gains rates"
+      - "Low AMT base within the 0% bracket: Part III TMT may be zero, significantly increasing the credit"
+      - "Unrecaptured section 1250 gain at 25% max rate is still lower than the 26% AMT rate"
+      - "Part III can never produce a TMT higher than Line 11 because of the lesser-of check"
+    testRef: "tests/engine/forms/form-8801.test.ts::Part III - capital gains rates produce lower TMT when prior year had qualified dividends"

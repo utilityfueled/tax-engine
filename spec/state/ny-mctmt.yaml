@@ -1,0 +1,108 @@
+form: "New York MCTMT (Self-Employed)"
+fullName: "Metropolitan Commuter Transportation Mobility Tax — Self-Employment"
+taxYear: 2025
+reference: "https://www.tax.ny.gov/bus/mctmt/selfemp.htm"
+
+notes: |
+  The MCTMT applies to self-employed individuals (including partners) with net
+  earnings from self-employment allocated to the Metropolitan Commuter
+  Transportation District (MCTD). The MCTD is split into two zones with
+  different rates:
+
+  Zone 1 — New York City (all five boroughs): 0.60%
+  Zone 2 — Suburban counties: Dutchess, Nassau, Orange, Putnam, Rockland,
+            Suffolk, Westchester: 0.34%
+
+  The $50,000 threshold is a cliff: once net SE earnings in a zone exceed $50K,
+  the rate applies to the ENTIRE amount, not just the excess.
+
+  Net SE earnings = IRC §1402(a), generally Schedule SE Part I Line 6 (net
+  profit × 0.9235). This is AFTER the 92.35% employer-half adjustment but
+  BEFORE the 50% SE tax deduction (Schedule 1 Line 15).
+
+  For full-year residents, MCTMT is computed on IT-201 lines 54a-54e.
+  The result flows to total NY State taxes.
+
+  On joint returns, each spouse's earnings are evaluated separately against
+  the $50,000 threshold.
+
+  Rate history:
+    TY 2022 and prior: Zone 1 = 0.34%, Zone 2 = 0.34%
+    TY 2023:           Zone 1 = 0.47%, Zone 2 = 0.34%
+    TY 2024-2025:      Zone 1 = 0.60%, Zone 2 = 0.34%
+
+lines:
+  - line: "54a"
+    description: "Net earnings from self-employment allocated to Zone 1 (NYC)"
+    formula: "Schedule SE Part I Line 6 × allocation percentage to Zone 1"
+    inputs:
+      - "Net self-employment earnings (Schedule SE Line 6)"
+      - "Percentage allocated to Zone 1"
+    notes: |
+      For individuals whose self-employment is entirely within NYC, allocation
+      is 100% to Zone 1. For multi-location businesses, allocation uses the
+      same rules as NY State business income allocation.
+    testRef: "tests/engine/state/ny-mctmt.test.ts::Zone 1 earnings $100,000: $600 tax"
+
+  - line: "54b"
+    description: "Net earnings from self-employment allocated to Zone 2 (suburban)"
+    formula: "Schedule SE Part I Line 6 × allocation percentage to Zone 2"
+    inputs:
+      - "Net self-employment earnings (Schedule SE Line 6)"
+      - "Percentage allocated to Zone 2"
+    testRef: "tests/engine/state/ny-mctmt.test.ts::Zone 2 earnings $100,000: $340 tax"
+
+  - line: "54c"
+    description: "MCTMT on Zone 1 earnings"
+    formula: "If line 54a > $50,000: line 54a × zone 1 rate; else $0"
+    inputs:
+      - "Zone 1 allocated earnings (line 54a)"
+    notes: |
+      The $50,000 threshold is a cliff. If earnings ≤ $50,000, tax is $0.
+      If earnings > $50,000, the rate applies to the full amount.
+    edgeCases:
+      - "Exactly $50,000: no tax"
+      - "$50,001: tax on full $50,001"
+    testRef: "tests/engine/state/ny-mctmt.test.ts::Zone 1 earnings exactly $50,000: no tax (cliff threshold)"
+
+  - line: "54d"
+    description: "MCTMT on Zone 2 earnings"
+    formula: "If line 54b > $50,000: line 54b × zone 2 rate; else $0"
+    inputs:
+      - "Zone 2 allocated earnings (line 54b)"
+    notes: "Same cliff threshold logic as Zone 1."
+    edgeCases:
+      - "Exactly $50,000: no tax"
+      - "$50,001: tax on full $50,001"
+    testRef: "tests/engine/state/ny-mctmt.test.ts::Zone 2 earnings exactly $50,000: no tax (cliff threshold)"
+
+  - line: "54e"
+    description: "Total MCTMT"
+    formula: "Line 54c + Line 54d"
+    inputs:
+      - "Zone 1 MCTMT (line 54c)"
+      - "Zone 2 MCTMT (line 54d)"
+    notes: |
+      This total flows to the IT-201 total NY State taxes section.
+      For full-year residents, reported directly on IT-201.
+    testRef: "tests/engine/state/ny-mctmt.test.ts::earnings in both zones: taxes sum independently"
+
+constants:
+  2025:
+    zone1Rate: "0.0060"
+    zone2Rate: "0.0034"
+    threshold: 50000
+    zone1Counties:
+      - "New York (Manhattan)"
+      - "Bronx"
+      - "Kings (Brooklyn)"
+      - "Queens"
+      - "Richmond (Staten Island)"
+    zone2Counties:
+      - "Dutchess"
+      - "Nassau"
+      - "Orange"
+      - "Putnam"
+      - "Rockland"
+      - "Suffolk"
+      - "Westchester"

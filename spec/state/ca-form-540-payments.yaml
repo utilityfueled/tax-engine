@@ -1,0 +1,229 @@
+form: "California Form 540 Resident Payments"
+fullName: "California Form 540 Resident Payments, Overpayment, Refund, and Balance-Due Assembly"
+taxYear: 2025
+irsReference: "https://www.ftb.ca.gov/forms/2025/2025-540-booklet.html"
+
+notes: |
+  This module assembles the resident California Form 540 payments and
+  refund-or-balance-due path after total tax on line 64 is known. It stays
+  within the resident return and treats upstream payment, contribution, use-tax,
+  and penalty worksheets as supported inputs where the state booklet points to a
+  separate schedule or worksheet.
+
+lines:
+  - line: "71"
+    description: "California income tax withheld"
+    formula: "Supported upstream input from Forms W-2, W-2G, 1099, 592-B, and 593 withholding"
+    inputs:
+      - "California withholding amount"
+    testRef: "tests/engine/state/ca-form-540-payments.test.ts::CA Form 540 resident payments Line 78 - lines 71 through 77 add into total payments"
+
+  - line: "72"
+    description: "2025 CA estimated tax and other payments"
+    formula: "Supported upstream input from estimated tax and extension payments"
+    inputs:
+      - "2025 California estimated tax and other payment amount"
+    testRef: "tests/engine/state/ca-form-540-payments.test.ts::CA Form 540 resident payments Line 78 - lines 71 through 77 add into total payments"
+
+  - line: "73"
+    description: "Real estate and other withholding"
+    formula: "Supported upstream input from Forms 592-B and 593"
+    inputs:
+      - "Real estate and other withholding amount"
+    testRef: "tests/engine/state/ca-form-540-payments.test.ts::CA Form 540 resident payments Line 78 - lines 71 through 77 add into total payments"
+
+  - line: "74"
+    description: "Refundable credits"
+    formula: "Supported upstream input for refundable motion picture and television production credits"
+    inputs:
+      - "Refundable credit amount"
+    testRef: "tests/engine/state/ca-form-540-payments.test.ts::CA Form 540 resident payments Line 78 - lines 71 through 77 add into total payments"
+
+  - line: "75"
+    description: "California Earned Income Tax Credit"
+    formula: "Supported upstream input from FTB 3514"
+    inputs:
+      - "California Earned Income Tax Credit amount"
+    testRef: "tests/engine/state/ca-form-540-payments.test.ts::CA Form 540 resident payments Line 78 - lines 71 through 77 add into total payments"
+
+  - line: "76"
+    description: "Young Child Tax Credit"
+    formula: "Supported upstream input from FTB 3514"
+    inputs:
+      - "Young Child Tax Credit amount"
+    testRef: "tests/engine/state/ca-form-540-payments.test.ts::CA Form 540 resident payments Line 78 - lines 71 through 77 add into total payments"
+
+  - line: "77"
+    description: "Foster Youth Tax Credit"
+    formula: "Supported upstream input from FTB 3514"
+    inputs:
+      - "Foster Youth Tax Credit amount"
+    testRef: "tests/engine/state/ca-form-540-payments.test.ts::CA Form 540 resident payments Line 78 - lines 71 through 77 add into total payments"
+
+  - line: "78"
+    description: "Total payments"
+    formula: "Line 71 + Line 72 + Line 73 + Line 74 + Line 75 + Line 76 + Line 77"
+    inputs:
+      - "Form 540 line 71"
+      - "Form 540 line 72"
+      - "Form 540 line 73"
+      - "Form 540 line 74"
+      - "Form 540 line 75"
+      - "Form 540 line 76"
+      - "Form 540 line 77"
+    testRef: "tests/engine/state/ca-form-540-payments.test.ts::CA Form 540 resident payments Line 78 - lines 71 through 77 add into total payments"
+
+  - line: "91"
+    description: "Use tax"
+    formula: "Supported upstream input from the Use Tax Worksheet or Use Tax Lookup Table"
+    inputs:
+      - "Use tax amount"
+    testRef: "tests/engine/state/ca-form-540-payments.test.ts::CA Form 540 resident payments Lines 93 and 94 - use tax determines whether payments remain or tax is due"
+
+  - line: "92"
+    description: "Individual Shared Responsibility penalty"
+    formula: "If the full-year health-care coverage box is checked, enter 0; otherwise use the supported upstream amount from FTB 3853"
+    inputs:
+      - "Full-year health-care coverage flag"
+      - "FTB 3853 Individual Shared Responsibility penalty amount"
+    edgeCases:
+      - "Full-year coverage forces line 92 to zero"
+    testRef: "tests/engine/state/ca-form-540-payments.test.ts::CA Form 540 resident payments Line 92 - full-year health coverage forces the penalty to zero"
+
+  - line: "93"
+    description: "Payments after use tax"
+    formula: "max(0, Line 78 - Line 91)"
+    inputs:
+      - "Form 540 line 78"
+      - "Form 540 line 91"
+    edgeCases:
+      - "If line 91 exceeds line 78, enter 0"
+    testRef: "tests/engine/state/ca-form-540-payments.test.ts::CA Form 540 resident payments Lines 93 and 94 - use tax determines whether payments remain or tax is due"
+
+  - line: "94"
+    description: "Use-tax balance due"
+    formula: "max(0, Line 91 - Line 78)"
+    inputs:
+      - "Form 540 line 78"
+      - "Form 540 line 91"
+    edgeCases:
+      - "If line 78 exceeds line 91, enter 0"
+    testRef: "tests/engine/state/ca-form-540-payments.test.ts::CA Form 540 resident payments Lines 93 and 94 - use tax determines whether payments remain or tax is due"
+
+  - line: "95"
+    description: "Payments after Individual Shared Responsibility penalty"
+    formula: "max(0, Line 93 - Line 92)"
+    inputs:
+      - "Form 540 line 93"
+      - "Form 540 line 92"
+    edgeCases:
+      - "If line 92 exceeds line 93, enter 0"
+    testRef: "tests/engine/state/ca-form-540-payments.test.ts::CA Form 540 resident payments Line 115 - refund is reduced when contributions and penalties stay below the available overpayment"
+
+  - line: "96"
+    description: "Individual Shared Responsibility penalty balance due"
+    formula: "max(0, Line 92 - Line 93)"
+    inputs:
+      - "Form 540 line 93"
+      - "Form 540 line 92"
+    edgeCases:
+      - "If line 93 exceeds line 92, enter 0"
+    testRef: "tests/engine/state/ca-form-540-payments.test.ts::CA Form 540 resident payments Line 114 - amount due adds the excess contributions and penalties when they outrun the refund"
+
+  - line: "97"
+    description: "Overpaid tax"
+    formula: "max(0, Line 95 - Line 64)"
+    inputs:
+      - "Form 540 line 95"
+      - "Form 540 line 64 total tax"
+    edgeCases:
+      - "If total tax exceeds line 95, enter 0"
+    testRef: "tests/engine/state/ca-form-540-payments.test.ts::CA Form 540 resident payments Lines 97 through 99 - overpayment can be split between next-year estimates and a refund"
+
+  - line: "98"
+    description: "Amount applied to 2026 estimated tax"
+    formula: "Supported taxpayer election input constrained to 0 through Line 97"
+    inputs:
+      - "Form 540 line 97"
+      - "Taxpayer election to apply overpayment to 2026 estimated tax"
+    edgeCases:
+      - "Election cannot exceed line 97"
+    testRef: "tests/engine/state/ca-form-540-payments.test.ts::CA Form 540 resident payments Lines 97 through 99 - overpayment can be split between next-year estimates and a refund"
+
+  - line: "99"
+    description: "Refund amount"
+    formula: "max(0, Line 97 - Line 98)"
+    inputs:
+      - "Form 540 line 97"
+      - "Form 540 line 98"
+    testRef: "tests/engine/state/ca-form-540-payments.test.ts::CA Form 540 resident payments Lines 97 through 99 - overpayment can be split between next-year estimates and a refund"
+
+  - line: "100"
+    description: "Tax due"
+    formula: "max(0, Line 64 - Line 95)"
+    inputs:
+      - "Form 540 line 64 total tax"
+      - "Form 540 line 95"
+    testRef: "tests/engine/state/ca-form-540-payments.test.ts::CA Form 540 resident payments Line 114 - amount due adds the excess contributions and penalties when they outrun the refund"
+
+  - line: "110"
+    description: "Total voluntary contributions"
+    formula: "Supported upstream input from Schedule CA (540) contribution designations and the booklet contribution funds"
+    inputs:
+      - "Total voluntary contributions amount"
+    testRef: "tests/engine/state/ca-form-540-payments.test.ts::CA Form 540 resident payments Line 115 - refund is reduced when contributions and penalties stay below the available overpayment"
+
+  - line: "111"
+    description: "Subtotal amount due before interest and penalties"
+    formula: "If Line 99 is zero, Line 94 + Line 96 + Line 100 + Line 110; otherwise max(0, Line 110 - Line 99)"
+    inputs:
+      - "Form 540 line 94"
+      - "Form 540 line 96"
+      - "Form 540 line 100"
+      - "Form 540 line 110"
+      - "Form 540 line 99"
+    edgeCases:
+      - "A refund fully absorbs contributions when line 99 is greater than or equal to line 110"
+      - "If no refund remains, contributions add directly to the amount due"
+    testRef: "tests/engine/state/ca-form-540-payments.test.ts::CA Form 540 resident payments Line 114 - amount due adds the excess contributions and penalties when they outrun the refund"
+
+  - line: "112"
+    description: "Interest, late return penalties, and late payment penalties"
+    formula: "Supported upstream input from the Form 540 late-filing and late-payment instructions"
+    inputs:
+      - "Interest and late-payment amount"
+    testRef: "tests/engine/state/ca-form-540-payments.test.ts::CA Form 540 resident payments Line 115 - refund is reduced when contributions and penalties stay below the available overpayment"
+
+  - line: "113"
+    description: "Underpayment of estimated tax"
+    formula: "Supported upstream input from FTB 5805"
+    inputs:
+      - "FTB 5805 underpayment amount"
+    testRef: "tests/engine/state/ca-form-540-payments.test.ts::CA Form 540 resident payments Line 115 - refund is reduced when contributions and penalties stay below the available overpayment"
+
+  - line: "114"
+    description: "Total amount due"
+    formula: "If Line 111 is greater than zero, Line 111 + Line 112 + Line 113; otherwise max(0, (Line 110 + Line 112 + Line 113) - Line 99)"
+    inputs:
+      - "Form 540 line 111"
+      - "Form 540 line 112"
+      - "Form 540 line 113"
+      - "Form 540 line 110"
+      - "Form 540 line 99"
+    edgeCases:
+      - "If contributions and penalties exceed line 99, the excess becomes line 114"
+      - "If line 99 exactly equals contributions and penalties, line 114 is zero"
+    testRef: "tests/engine/state/ca-form-540-payments.test.ts::CA Form 540 resident payments Line 114 - amount due adds the excess contributions and penalties when they outrun the refund"
+
+  - line: "115"
+    description: "Refund after voluntary contributions and penalties"
+    formula: "If Line 111 is greater than zero, enter 0; otherwise max(0, Line 99 - (Line 110 + Line 112 + Line 113))"
+    inputs:
+      - "Form 540 line 99"
+      - "Form 540 line 110"
+      - "Form 540 line 112"
+      - "Form 540 line 113"
+    edgeCases:
+      - "If contributions and penalties are less than line 99, the remainder stays refundable"
+      - "If contributions and penalties equal line 99, line 115 is zero"
+    testRef: "tests/engine/state/ca-form-540-payments.test.ts::CA Form 540 resident payments Line 115 - refund is reduced when contributions and penalties stay below the available overpayment"

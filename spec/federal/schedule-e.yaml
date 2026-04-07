@@ -1,0 +1,228 @@
+form: "Schedule E"
+fullName: "Supplemental Income and Loss"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i1040se"
+
+notes: |
+  Schedule E reports income/loss from rental real estate, royalties,
+  partnerships, S corporations, estates, and trusts.
+  Part II specifically handles K-1 income from partnerships and S corps.
+
+lines:
+  # ── Part I: Rental Real Estate and Royalties ─────────────
+  - line: "3"
+    description: "Rents received"
+    formula: "Gross rental income per property"
+    irsRef: "Schedule E Instructions, Part I Line 3"
+    testRef: "tests/engine/schedules/schedule-e.test.ts::Schedule E Line 3 - gross rents for single property"
+
+  - line: "18"
+    description: "Depreciation expense per property"
+    formula: "Use the supported rental-property Form 4562 depreciation subtotal when present by adding Lines 14, 15, 16, 17, 19, 20, and 21 while excluding Line 12 section 179 expense deduction; otherwise use the validated manual depreciation amount for the property"
+    irsRef: "Schedule E Instructions, Part I Line 18; Form 4562"
+    inputs:
+      - "Supported rental-property Form 4562 depreciation subtotal from Lines 14, 15, 16, 17, 19, 20, and 21"
+      - "Validated manual rental-property depreciation amount"
+    notes: "Schedule E line 18 is a depreciation or depletion line, so this supported bridge accepts a property-specific Form 4562 summary but excludes the Part I line 12 section 179 expense deduction from the amount that flows into rental depreciation."
+    testRef: "tests/engine/schedules/schedule-e.test.ts::Schedule E Line 18 - Form 4562 depreciation lines flow through the rental depreciation line while excluding section 179"
+
+  - line: "19"
+    description: "Other expenses per property"
+    formula: "Use the validated manual rental-property other-expense amount plus supported Form 4562 Line 44 amortization when a property-specific Form 4562 summary is present"
+    irsRef: "Schedule E Instructions, Part I Line 19; Form 4562 Instructions, Line 44"
+    inputs:
+      - "Validated manual rental-property other-expense amount"
+      - "Form 4562 Line 44"
+    notes: "Form 4562 Part VI amortization is not part of Schedule E line 18 depreciation. The 2025 Form 4562 instructions route line 44 to the return's other-deduction or other-expense line, so this supported rental bridge adds line 44 to Schedule E line 19 instead of line 18."
+    edgeCases:
+      - "When both manual other expenses and Form 4562 Line 44 amortization exist, both amounts are included on Schedule E line 19"
+      - "Ownership percentage scaling applies to the combined Schedule E line 19 subtotal after the supported Form 4562 Line 44 amount is added"
+    testRef: "tests/engine/schedules/schedule-e.test.ts::Schedule E Line 19 - Form 4562 amortization flows through rental other expenses"
+
+  - line: "20"
+    description: "Total expenses per property"
+    formula: "Sum of advertising + insurance + mortgage interest + repairs + taxes + Schedule E Line 18 depreciation + Schedule E Line 19 other expenses, using the supported property-specific Form 4562 depreciation subtotal that excludes section 179 when present and adding supported Form 4562 Line 44 amortization to line 19 when present"
+    irsRef: "Schedule E Instructions, Part I Line 20"
+    testRef: "tests/engine/schedules/schedule-e.test.ts::Schedule E Line 20 - total rental expenses"
+
+  - line: "21"
+    description: "Net rental income or loss per property"
+    formula: "Line 3 (rents) - Line 20 (expenses)"
+    irsRef: "Schedule E Instructions, Part I Line 21"
+    edgeCases:
+      - "Rental losses are passive and subject to Form 8582"
+      - "The net rental amount stays passive even when the taxpayer actively participates in the property"
+      - "Validated rental-property active participation controls whether the property's loss can enter Form 8582's special $25,000 rental allowance calculation"
+    testRef: "tests/engine/schedules/schedule-e.test.ts::Schedule E Line 21 - net rental income (profit)"
+
+  - line: "280A"
+    description: "Vacation home / mixed-use expense allocation"
+    formula: "If personal use > 14 days AND > 10% of rental days → expenses × (rental days / total days)"
+    irsRef: "IRC §280A; Pub 527 (Residential Rental Property)"
+    edgeCases:
+      - "Personal use ≤ 14 days → not mixed-use (full expenses)"
+      - "Personal use ≤ 10% of rental days → not mixed-use"
+      - "Both conditions must be exceeded for mixed-use classification"
+    testRef: "tests/edge-cases/rental-property-edge-cases.test.ts::mixed-use: 30 personal days + 200 rental days — expenses prorated"
+
+  - line: "ownership"
+    description: "Ownership percentage scaling for rental properties"
+    formula: "Rents and expenses scaled by ownershipPercentage / 100 (default 100%)"
+    irsRef: "Schedule E Instructions, Part I"
+    notes: "For co-owned property, each owner reports their proportional share"
+    edgeCases:
+      - "50% ownership halves both rents and expenses"
+      - "Default 100% when not specified"
+    testRef: "tests/engine/schedules/schedule-e.test.ts::Schedule E - 50% ownership halves rents and expenses"
+
+  - line: "4"
+    description: "Royalty income from 1099-MISC"
+    formula: "Sum of 1099-MISC Box 2 royalties"
+    irsRef: "Schedule E Instructions, Part I Line 4"
+    notes: "1099-MISC royalties flow through Schedule E Part I, not as other income"
+    testRef: "tests/engine/schedules/schedule-e.test.ts::Schedule E Line 4 - 1099-MISC royalties flow to Part I"
+
+  - line: "26"
+    description: "Total rental real estate and royalty income or loss"
+    formula: "Sum of all properties Line 21 + royalty income"
+    irsRef: "Schedule E Instructions, Part I Line 26"
+    testRef: "tests/engine/schedules/schedule-e.test.ts::Schedule E Line 26 - total from multiple properties"
+
+  # ── Part II: Partnerships and S Corporations ─────────────
+  - line: "28-col-A"
+    description: "Name of partnership or S corp"
+    formula: "Enumerate K-1 partnership names"
+    irsRef: "Schedule E Instructions, Part II Line 28"
+    testRef: "tests/engine/schedules/schedule-e.test.ts::Schedule E Line 28 - partnership names"
+
+  - line: "28-col-C"
+    description: "Check if foreign partnership"
+    formula: "Boolean indicator for foreign partnerships"
+    irsRef: "Schedule E Instructions, Part II Line 28, Column C"
+    notes: "K-1 schema includes isForeignPartnership boolean; defaults false"
+    testRef: "tests/engine/schedules/schedule-e.test.ts::Schedule E - foreign partnership indicator"
+
+  - line: "28-col-D"
+    description: "Employer ID number"
+    formula: "EIN from K-1"
+    testRef: "tests/engine/schedules/schedule-e.test.ts::Schedule E Line 28 - EINs"
+
+  - line: "28-col-F"
+    description: "Check if activity is passive"
+    formula: "K-1 isPassiveActivity flag"
+    irsRef: "Schedule E Instructions, Part II"
+    notes: "Passive losses limited by Form 8582"
+    testRef: "tests/engine/schedules/schedule-e.test.ts::Schedule E Line 28 - passive flag"
+
+  - line: "28-k1-fields"
+    description: "K-1 additional income fields flowing through Part II"
+    formula: "ordinary + guaranteed + rental + royalties + other - §179 - other deductions"
+    irsRef: "Schedule E Instructions, Part II"
+    notes: |
+      K-1 capital gains and interest/dividends flow through Schedule D and B respectively.
+      K-1 section 1231 gains and supported nonpassive losses flow through Form 4797 instead of Schedule E in this slice.
+      K-1 Box 9b (unrecaptured section 1250 gain) and Box 9c (collectibles 28% gain) do not flow through Schedule E;
+      they are aggregated alongside 1099-DIV special-rate amounts and fed directly into the QDCG worksheet / Schedule D
+      Tax Worksheet computation so the correct maximum 25% and 28% rates are applied instead of the ordinary 0%/15%/20%
+      capital gains rate tiers. The same amounts also flow to Form 6251 for the AMT preferential-rate computation.
+      The remaining implemented K-1 income and deduction items aggregate into the partnership total on Schedule E.
+    testRef: "tests/engine/schedules/schedule-e.test.ts::K-1 section 1231 amounts stay out of the Schedule E partnership total"
+
+  - line: "28-k1-special-rate-gains"
+    description: "K-1 Box 9b (unrecaptured section 1250 gain) and Box 9c (collectibles 28% gain) bypass Schedule E and flow to the QDCG tax computation"
+    formula: "Sum K-1 Box 9b amounts across all K-1 forms and add to 1099-DIV section 1250 gain for the 25% maximum rate tier; sum K-1 Box 9c amounts and add to 1099-DIV collectibles gain for the 28% maximum rate tier"
+    irsRef: "IRC §1(h)(1)(E) (unrecaptured section 1250 gain, max 25%); IRC §1(h)(1)(F) (collectibles gain, max 28%); Schedule D Tax Worksheet Lines 24 and 28; Form 6251 preferential-rate computation"
+    inputs:
+      - "K-1 Box 9b: Unrecaptured section 1250 gain"
+      - "K-1 Box 9c: Collectibles (28%) gain"
+    notes: "These amounts are already included in the K-1 Box 9a net long-term capital gain total that flows through Schedule D. The Box 9b and 9c sub-amounts identify the portions that receive the special maximum 25% and 28% rates respectively instead of the standard 0%/15%/20% long-term capital gains rate tiers. Without Box 9b/9c, the engine would apply the lower long-term rate to all of the K-1 long-term gain, potentially undertaxing depreciation recapture and collectibles income."
+    edgeCases:
+      - "K-1 Box 9b and 9c amounts that fall within the 0% or 15% bracket get the lower rate — the 25% and 28% are maximum rates, not minimum rates"
+      - "Multiple K-1 forms can each contribute section 1250 and collectibles amounts; all are summed"
+      - "K-1 and 1099-DIV special-rate amounts are combined for the same taxpayer"
+      - "Section 1250 gain from K-1 Box 9b is subject to the same 25% maximum rate as section 1250 gain from 1099-DIV Box 2b"
+    testRef: "tests/engine/federal.test.ts::K-1 Box 9b unrecaptured section 1250 gain applies the 25% maximum rate"
+
+  - line: "28-basis"
+    description: "K-1 loss limited by partner/shareholder basis (tier 1 of the three-tier loss limitation stack)"
+    formula: "When beginningBasis is provided on a K-1, call the Partner Basis Schedule to compute per-category allowed losses. Replace each K-1 loss amount flowing to Schedule E with its basis-allowed amount. Basis limitation is applied BEFORE at-risk and passive limitations."
+    irsRef: "IRC §704(d) (partnerships); IRC §1366(d) (S corporations); IRS K-1 Basis Worksheet; Form 7203"
+    inputs:
+      - "K-1 beginningBasis (adjusted basis at beginning of year)"
+      - "K-1 priorSuspendedLosses (from prior-year basis limitation)"
+      - "K-1 distributions (Box 19)"
+      - "K-1 nondeductibleExpenses (Box 18C)"
+      - "K-1 entityType (partnership or s_corporation)"
+      - "K-1 election1367 (S-corp §1367(a)(2)(B) election)"
+    notes: |
+      The three-tier loss limitation stack is: basis → at-risk → passive.
+      Losses exceeding basis are suspended per category and carried forward indefinitely.
+      Distributions exceeding basis produce capital gain (IRC §731/§1368).
+      Excess distribution gains from the basis schedule flow to Schedule D as LTCG.
+      Only the basis-allowed portion of each loss category continues to the at-risk test.
+      When beginningBasis is not provided, basis limitation is skipped (backward compatible).
+    edgeCases:
+      - "K-1 with zero basis suspends all losses and deductions"
+      - "Distributions exceeding basis produce capital gain even when there are losses"
+      - "Basis limitation may reduce passive losses, changing the suspended passive amount"
+      - "S-corp §1367(a)(2)(B) election changes ordering of nondeductible vs losses"
+      - "Prior-year suspended losses from basis limitation participate in current-year pro-rata allocation"
+    testRef: "tests/engine/schedules/schedule-e.test.ts::Schedule E - basis limitation suspends K-1 losses when beginningBasis is provided"
+
+  - line: "28-at-risk"
+    description: "K-1 loss limited by supported at-risk amount (tier 2 of the three-tier loss limitation stack)"
+    formula: "When a supported partnership or S corporation K-1 produces a net loss and a validated year-end at-risk amount is provided, limit the currently deductible loss to the smaller of the absolute net K-1 loss or the validated at-risk amount, and carry the excess forward as a suspended at-risk loss before passive-loss limitations are applied. The net loss tested here is the basis-adjusted amount when basis limitation was applied."
+    irsRef: "2025 Schedule E Instructions, At-Risk Rules; Form 6198 Instructions, Part IV, Line 21"
+    inputs:
+      - "Net K-1 income or loss after basis limitation (if applicable)"
+      - "Validated year-end at-risk amount for the activity"
+    notes: "This is tier 2. The input amount is already basis-limited when beginningBasis was provided. If no validated at-risk amount is provided, the engine leaves the amount unchanged."
+    testRef: "tests/engine/schedules/schedule-e.test.ts::Schedule E Line 28 - K-1 losses are capped by the validated at-risk amount before classification"
+
+  - line: "28-col-G"
+    description: "Nonpassive income from K-1"
+    formula: "K-1 ordinary income + guaranteed payments + rental + royalties + other - §179 - deductions (if not passive); OR guaranteed payments only (if passive — Box 4 always nonpassive)"
+    irsRef: "Schedule E Instructions, Part II Column G; K-1 Box 4 Instructions; Form 8582 Instructions"
+    edgeCases:
+      - "Guaranteed payments (K-1 Box 4) are ALWAYS nonpassive, even when the activity is passive"
+      - "Per IRS: 'Guaranteed payments from partnerships are NOT included in passive activity income or loss'"
+    testRef: "tests/engine/schedules/schedule-e.test.ts::Schedule E nonpassive income"
+
+  - line: "28-col-H"
+    description: "Nonpassive loss from K-1"
+    formula: "K-1 ordinary loss (if not passive, and negative)"
+    irsRef: "Schedule E Instructions, Part II Column H"
+    testRef: "tests/engine/schedules/schedule-e.test.ts::Schedule E nonpassive loss"
+
+  - line: "28-col-I"
+    description: "Passive income from K-1"
+    formula: "K-1 income EXCLUDING guaranteed payments (if passive activity, and positive)"
+    irsRef: "Schedule E Instructions, Part II Column I"
+    edgeCases:
+      - "Guaranteed payments subtracted before passive classification"
+      - "Removing guaranteed payments may flip the passive amount from income to loss"
+    testRef: "tests/engine/schedules/schedule-e.test.ts::Schedule E passive income"
+
+  - line: "28-col-J"
+    description: "Passive loss from K-1"
+    formula: "K-1 income EXCLUDING guaranteed payments (if passive, and negative, subject to Form 8582)"
+    irsRef: "Schedule E Instructions, Part II Column J"
+    edgeCases:
+      - "Passive losses cannot offset nonpassive income (Form 8582)"
+      - "Suspended losses carry forward"
+      - "$25,000 rental real estate exception (active participation)"
+      - "Removing guaranteed payments from total may create/increase passive loss"
+    testRef: "tests/engine/schedules/schedule-e.test.ts::Schedule E passive loss"
+
+  - line: "32"
+    description: "Total partnership and S corp income or loss"
+    formula: "Sum of columns G, H, I, J (with passive loss limitations applied)"
+    irsRef: "Schedule E Instructions, Line 32"
+    testRef: "tests/engine/schedules/schedule-e.test.ts::Schedule E Line 32 - total partnership income"
+
+  - line: "41"
+    description: "Total supplemental income or loss"
+    formula: "Sum of all parts (rental + partnership + estate/trust)"
+    irsRef: "Schedule E Instructions, Line 41"
+    notes: "This flows to Schedule 1 Line 5"
+    testRef: "tests/engine/schedules/schedule-e.test.ts::Schedule E Line 41 - total supplemental"

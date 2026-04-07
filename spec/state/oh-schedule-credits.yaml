@@ -1,0 +1,680 @@
+form: "Ohio Schedule of Credits"
+fullName: "Ohio Schedule of Credits (Nonrefundable and Refundable)"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf"
+
+notes: |
+  The Ohio Schedule of Credits aggregates all nonrefundable and refundable credits
+  that reduce the Ohio income tax liability. This module implements the most common
+  credits for W-2 wage earners and passes through less common credits as inputs.
+
+  Key concept: "MAGI less exemptions" gates many credits. It equals:
+    Ohio AGI + business income deduction - exemption amount (IT 1040 line 4)
+  This is equivalent to MAGI - line 4 exemptions.
+
+  Credits are applied in a specific order:
+  1. First batch (lines 2-9): retirement, senior, child care, exemption, etc.
+  2. Line 11 = tax minus first batch (min 0)
+  3. Second batch (lines 12-35): joint filing, EIC, home school, scholarship donation,
+     nonchartered school tuition, and certificate credits
+  4. Line 37 = line 11 minus second batch (min 0)
+  5. Nonresident/resident credits (lines 38-39)
+  6. Line 40 = total nonrefundable credits → IT 1040 line 9
+  7. Refundable certificate/PTE credits (lines 41-46)
+  8. Line 47 = total refundable credits → IT 1040 line 16
+
+  All nonrefundable credits cannot reduce tax below zero.
+  Refundable credits are not capped by line 1 and can generate a refund.
+
+packetRules:
+  packetBehavior: "reference-summary-pdf"
+  includeWhen:
+    - "Ohio nonrefundable credits total is nonzero"
+    - "Ohio refundable credits total is nonzero"
+  suppressWhen:
+    - "Both Ohio nonrefundable and refundable credit totals are zero"
+  notes: |
+    When Ohio credits materially affect the packet, the generator should attach
+    a reference-summary page for the Schedule of Credits so IT 1040 lines 9 and
+    16 remain auditable. Zero-value schedules should be suppressed.
+
+businessRuleValidation:
+  - rule: "reference-summary-packet"
+    description: "Inventory support counts this schedule as business-rule validated only when regression coverage proves the Ohio Schedule of Credits reference summary is emitted when nonrefundable or refundable credits are present and stays suppressed when both totals are zero."
+    testRef: "tests/pdf/fill-oh-reference-forms.test.ts::fillOhioReferenceForms includes the Ohio Schedule of Credits reference summary only when Ohio credits are present"
+
+lines:
+  - line: "1"
+    description: "Tax liability before credits"
+    formula: "IT 1040, line 8c"
+    inputs:
+      - "Total Ohio income tax before credits"
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Line 1 - tax liability flows from IT 1040"
+
+  - line: "2"
+    description: "Retirement income credit"
+    formula: |
+      If line 3 lump sum retirement credit is claimed for the return: $0
+      If MAGI less exemptions >= $100,000: $0
+      Otherwise, based on eligible retirement income in Ohio AGI:
+        $0–$500: $0
+        $501–$1,500: $25
+        $1,501–$3,000: $50
+        $3,001–$5,000: $80
+        $5,001–$8,000: $130
+        $8,001+: $200
+      Maximum $200 per return. R.C. 5747.055(B).
+    inputs:
+      - "MAGI less exemptions"
+      - "Eligible retirement income included in Ohio AGI"
+    notes: |
+      Eligible retirement income: pension, profit-sharing, retirement plan distributions
+      (traditional IRAs, 401(k)s, etc.) received on account of retirement and included
+      in Ohio AGI. Amounts deducted on Schedule of Adjustments (Social Security,
+      uniformed services retirement) do NOT qualify. Cannot be claimed if taxpayer
+      previously took the lump sum retirement credit.
+    edgeCases:
+      - "MAGI less exemptions exactly $100,000 does NOT qualify"
+      - "Retirement income of exactly $500 gets $0"
+      - "Retirement income of $501 gets $25"
+      - "Claiming line 3 on the same return forces line 2 to $0"
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Line 2 - retirement income credit"
+
+  - line: "3"
+    description: "Lump sum retirement credit"
+    formula: |
+      If qualifying lump sum retirement recipients are provided:
+        compute line 3 as the Ohio lump sum retirement credit worksheet total.
+      Otherwise:
+        use the pass-through input value (default $0).
+      If line 3 is claimed for the return, line 2 retirement income credit must be $0.
+      R.C. 5747.055(C), (D), and (E).
+    inputs:
+      - "Computed lump sum retirement credit amount override"
+      - "Qualifying lump sum retirement recipients with ages and retirement income amounts"
+    notes: |
+      The official worksheet is on page 43 of the 2025 Ohio IT 1040 booklet.
+      Ohio's instructions state that a taxpayer taking this credit cannot also
+      take the retirement income credit on the same return or any future return.
+      When qualifying recipients are supplied, line 3 uses the supported
+      worksheet module instead of relying on a raw pass-through amount. The
+      worksheet module also exposes the official line 10 future-year credit when
+      line 6 exceeds the current-year Schedule of Credits tax available for it.
+    edgeCases:
+      - "Nonzero line 3 suppresses line 2 on the same return"
+      - "Worksheet recipient ages below 46 are unsupported and should throw"
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Line 3 - worksheet calculation suppresses line 2"
+
+  - line: "4"
+    description: "Senior citizen credit"
+    formula: |
+      If line 5 lump sum distribution credit is claimed for the return: $0
+      If MAGI less exemptions >= $100,000: $0
+      If age < 65: $0
+      Otherwise: $50 per return (flat)
+      R.C. 5747.055(F).
+    inputs:
+      - "MAGI less exemptions"
+      - "Whether taxpayer (or spouse) is 65 or older"
+    notes: "Cannot be claimed if taxpayer previously took the lump sum distribution credit."
+    edgeCases:
+      - "MAGI less exemptions exactly $100,000 does NOT qualify"
+      - "Age 64 does not qualify"
+      - "Claiming line 5 on the same return forces line 4 to $0"
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Line 4 - senior citizen credit"
+
+  - line: "5"
+    description: "Lump sum distribution credit"
+    formula: |
+      If an Ohio lump sum distribution credit worksheet result is provided:
+        use that worksheet total.
+      Otherwise if qualifying recipient ages are provided:
+        compute line 5 as the Ohio lump sum distribution credit worksheet total.
+      Otherwise:
+        use the pass-through input value (default $0).
+      If line 5 is claimed for the return, line 4 senior citizen credit must be $0.
+      R.C. 5747.055(G).
+    inputs:
+      - "Ohio lump sum distribution credit worksheet total"
+      - "Qualifying lump sum distribution recipient ages"
+      - "Computed lump sum distribution credit amount override"
+    notes: |
+      The official worksheet is on page 44 of the 2025 Ohio IT 1040 booklet.
+      Ohio's instructions state that a taxpayer taking this credit cannot also
+      take the $50 senior citizen credit on the same return or any future return.
+    edgeCases:
+      - "Nonzero line 5 suppresses line 4 on the same return"
+      - "Worksheet recipient ages under 65 produce $0"
+      - "Worksheet recipient ages above 105 are unsupported and should throw"
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Line 5 - worksheet calculation suppresses line 4"
+
+  - line: "6"
+    description: "Child and dependent care credit"
+    formula: |
+      If MAGI >= $40,000: $0
+      If MAGI < $20,000: federal Form 2441 line 9c
+      If MAGI $20,000–$39,999: 25% of federal Form 2441 line 11
+      R.C. 5747.054.
+    inputs:
+      - "MAGI"
+      - "Federal Form 2441 line 9c (qualifying expenses)"
+      - "Federal Form 2441 line 11 (credit amount)"
+    notes: "Uses MAGI (not MAGI less exemptions) for this credit's income test."
+    edgeCases:
+      - "MAGI exactly $20,000 gets 25% of federal credit (not full expenses)"
+      - "MAGI exactly $40,000 does NOT qualify"
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Line 6 - child and dependent care credit"
+
+  - line: "7"
+    description: "Displaced worker training credit"
+    formula: |
+      If qualifying displaced worker recipients are supplied:
+        For each supported recipient column (taxpayer and spouse only):
+          min($500, 50% of that recipient's qualifying training expenses)
+          minus that recipient's displaced worker credit claimed on the prior year return
+          (but not below $0).
+        Line 7 = sum of the supported recipient column amounts.
+      Otherwise:
+        min($500, 50% of aggregate qualifying training expenses)
+        minus aggregate prior-year displaced worker credit claimed on the prior year return
+        (but not below $0).
+      R.C. 5747.27.
+    inputs:
+      - "Aggregate qualifying training expenses paid during the 12-month period"
+      - "Aggregate displaced worker credit claimed on prior year return"
+      - "Optional displaced worker recipient columns with per-recipient expenses and prior-year credit"
+    notes: |
+      The official 2025 worksheet on page 44 uses separate columns for taxpayer
+      and spouse and then adds the two column results. That means a married
+      filing jointly return can qualify for up to $500 per recipient rather than
+      a single $500 cap for the whole return. The aggregate fallback remains
+      available for callers that only know a single combined amount.
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Line 7 - displaced worker training credit"
+
+  - line: "8"
+    description: "Campaign contribution credit"
+    formula: |
+      Amount contributed, up to:
+        $50 single/$100 MFJ
+      Contributions must be to Ohio statewide or General Assembly campaign committees.
+      R.C. 5747.29. Repealed after tax year 2025.
+    inputs:
+      - "Filing status"
+      - "Campaign contributions to qualifying Ohio candidates"
+    edgeCases:
+      - "MFJ gets $100 max, all other statuses get $50 max"
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Line 8 - campaign contribution credit"
+
+  - line: "9"
+    description: "Exemption credit"
+    formula: |
+      If MAGI less exemptions >= $30,000: $0
+      Otherwise: $20 × number of exemptions
+      R.C. 5747.022.
+    inputs:
+      - "MAGI less exemptions"
+      - "Number of exemptions"
+    edgeCases:
+      - "MAGI less exemptions exactly $30,000 does NOT qualify"
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Line 9 - exemption credit"
+
+  - line: "10"
+    description: "Total first-batch credits"
+    formula: "Sum of lines 2 through 9"
+    inputs:
+      - "Lines 2-9"
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Line 10 - total first-batch credits"
+
+  - line: "11"
+    description: "Tax less first-batch credits"
+    formula: "max(0, Line 1 - Line 10)"
+    inputs:
+      - "Line 1"
+      - "Line 10"
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Line 11 - tax less first-batch credits"
+
+  - line: "12"
+    description: "Joint filing credit"
+    formula: |
+      MFJ only. Both spouses must have $500+ qualifying income.
+      MAGI less exemptions must be < $750,000.
+      If per-spouse qualifying income amounts are supplied:
+        primary qualifying income >= $500 AND spouse qualifying income >= $500
+      Otherwise:
+        use the boolean eligibility flag supplied by the caller/adapter
+      Credit = percentage of line 11, capped at $650:
+        MAGI less exemptions $0–$25,000: 20%
+        $25,001–$50,000: 15%
+        $50,001–$75,000: 10%
+        $75,001–$749,999: 5%
+      R.C. 5747.05(G).
+    inputs:
+      - "Filing status"
+      - "MAGI less exemptions"
+      - "Primary spouse qualifying income amount"
+      - "Spouse qualifying income amount"
+      - "Whether both spouses have $500+ qualifying income"
+      - "Line 11 (tax less first-batch credits)"
+    notes: |
+      "Qualifying income" is any income in Ohio AGI OTHER THAN: interest,
+      dividends/distributions, capital gains, rents, and royalties. Amounts
+      deducted on Schedule of Adjustments are not qualifying income. The 2025
+      booklet instructs taxpayers to include a separate statement listing the
+      qualifying income for each spouse. When the engine receives those
+      spouse-level amounts, it determines eligibility directly from them;
+      otherwise it falls back to a caller-provided boolean flag.
+    edgeCases:
+      - "Non-MFJ filers get $0"
+      - "MAGI less exemptions exactly $750,000 does NOT qualify"
+      - "Credit cannot exceed $650"
+      - "MAGI less exemptions exactly $25,000 gets 20%"
+      - "Explicit spouse-level qualifying income below $500 for either spouse disqualifies the credit even if the boolean flag is true"
+      - "Explicit spouse-level qualifying income of exactly $500 for each spouse qualifies"
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Line 12 - joint filing credit"
+
+  - line: "13"
+    description: "Earned income credit"
+    formula: |
+      30% of federal earned income credit (federal 1040 line 27a).
+      R.C. 5747.71.
+    inputs:
+      - "Federal earned income credit amount"
+    notes: "Nonrefundable — can reduce tax to zero but does not generate a refund."
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Line 13 - earned income credit"
+
+  - line: "14"
+    description: "Home school expenses credit"
+    formula: |
+      If no qualifying students or no qualifying expenses: $0
+      Otherwise:
+        min(educational expenses paid, $250 × number of qualifying students)
+      R.C. 5747.72.
+    inputs:
+      - "Educational expenses paid for Ohio home-schooled qualifying students"
+      - "Number of qualifying students exempt from compulsory attendance for home education"
+    notes: |
+      "Educational expenses" includes books, subscriptions, school supplies,
+      supplementary materials, and computer software or applications used directly
+      for home education. It does NOT include computers, similar electronic devices,
+      or accessories. Nonrefundable.
+      For supported tax year 2024, this line used the prior rule:
+      min(educational expenses paid, $250 per return).
+    edgeCases:
+      - "One student with $400 of expenses gets $250"
+      - "Two qualifying students with $600 of expenses gets $500"
+      - "Expenses below the per-student cap flow through in full"
+      - "Zero students or zero expenses results in $0"
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Line 14 - home school expenses credit"
+
+  - line: "15"
+    description: "Scholarship donation credit"
+    formula: |
+      Lesser of:
+        - Eligible scholarship donations made during the tax year (plus next-year donations made before the filing deadline that are elected back); or
+        - $750 for non-MFJ returns, $1,500 for MFJ returns
+      R.C. 5747.73.
+    inputs:
+      - "Filing status"
+      - "Total eligible donations to scholarship granting organizations"
+    notes: |
+      Eligible donations must be monetary donations made directly to an eligible
+      scholarship granting organization (SGO). MFJ returns may claim up to $750
+      per spouse, for a $1,500 return-level cap. The same contribution cannot be
+      used for two different tax years.
+    edgeCases:
+      - "Single filer donating $900 is capped at $750"
+      - "MFJ return donating $1,800 is capped at $1,500"
+      - "Zero donations results in $0"
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Line 15 - scholarship donation credit"
+
+  - line: "16"
+    description: "Nonchartered, nonpublic school tuition credit"
+    formula: |
+      Lesser of:
+        - Total qualifying tuition paid for all dependents to eligible nonchartered, nonpublic schools; or
+        - $1,000 if federal AGI < $50,000
+        - $1,500 if federal AGI >= $50,000
+      One credit per return. R.C. 5747.75.
+    inputs:
+      - "Federal AGI"
+      - "Total qualifying tuition paid for dependents"
+    notes: |
+      Uses federal AGI, not Ohio MAGI or Ohio AGI. The tuition amount is the
+      return-level total for all qualifying dependents. Only one credit may be
+      claimed per return regardless of filing status.
+    edgeCases:
+      - "Federal AGI exactly $50,000 gets the $1,500 cap"
+      - "Federal AGI below $50,000 is capped at $1,000"
+      - "Tuition below the applicable cap flows through in full"
+      - "Zero tuition results in $0"
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Line 16 - nonchartered school tuition credit"
+
+  - line: "17"
+    description: "Credit for Work-Based Learning Experiences"
+    formula: "Pass-through input from Ohio Schedule of Credits line 17 certificate amount"
+    inputs:
+      - "Ohio credit for work-based learning experiences certificate amount"
+    notes: |
+      Nonrefundable certificate-based credit granted by the Ohio Department of
+      Education. The engine records the reported line amount directly.
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Lines 17-35 - explicit pass-through credits flow to line 36"
+
+  - line: "18"
+    description: "Ohio adoption credit carryforward"
+    formula: "Pass-through input from Ohio Schedule of Credits line 18 carryforward amount"
+    inputs:
+      - "Unused Ohio adoption credit carryforward"
+    notes: |
+      The Ohio adoption credit was repealed, but unused carryforwards may
+      still be claimed during the remaining carryforward period.
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Lines 17-35 - explicit pass-through credits flow to line 36"
+
+  - line: "19"
+    description: "Nonrefundable job retention credit"
+    formula: "Pass-through input from Ohio Schedule of Credits line 19 certificate amount"
+    inputs:
+      - "Ohio nonrefundable job retention credit certificate amount"
+    notes: |
+      Nonrefundable certificate-based credit granted by the Ohio Department of
+      Development.
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Lines 17-35 - explicit pass-through credits flow to line 36"
+
+  - line: "20"
+    description: "Credit for new employees in an enterprise zone"
+    formula: "Pass-through input from Ohio Schedule of Credits line 20 certificate amount"
+    inputs:
+      - "Ohio credit for new employees in an enterprise zone certificate amount"
+    notes: |
+      Nonrefundable certificate-based credit granted by the Ohio Department of
+      Development.
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Lines 17-35 - explicit pass-through credits flow to line 36"
+
+  - line: "21"
+    description: "Credit for the beginning farmers financial management program"
+    formula: "Pass-through input from Ohio Schedule of Credits line 21 certificate amount"
+    inputs:
+      - "Ohio beginning farmers financial management program credit certificate amount"
+    notes: |
+      Nonrefundable certificate-based credit granted by the Ohio Department of
+      Agriculture.
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Lines 17-35 - explicit pass-through credits flow to line 36"
+
+  - line: "22"
+    description: "Credit for commercial vehicle operator training expenses"
+    formula: "Pass-through input from Ohio Schedule of Credits line 22 certificate amount"
+    inputs:
+      - "Ohio commercial vehicle operator training expenses credit certificate amount"
+    notes: |
+      Nonrefundable certificate-based credit granted by the Ohio Department of
+      Development.
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Lines 17-35 - explicit pass-through credits flow to line 36"
+
+  - line: "23"
+    description: "Welcome Home Ohio credit"
+    formula: "Pass-through input from Ohio Schedule of Credits line 23 certificate amount"
+    inputs:
+      - "Ohio Welcome Home Ohio credit certificate amount"
+    notes: |
+      Nonrefundable certificate-based credit granted by the Ohio Department of
+      Development.
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Lines 17-35 - explicit pass-through credits flow to line 36"
+
+  - line: "24"
+    description: "Credit for transformational mixed-use development"
+    formula: "Pass-through input from Ohio Schedule of Credits line 24 certificate amount"
+    inputs:
+      - "Ohio transformational mixed-use development credit certificate amount"
+    notes: |
+      Nonrefundable certificate-based credit granted by the Ohio Department of
+      Development. Certificates issued before Sept. 30, 2025 do not qualify.
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Lines 17-35 - explicit pass-through credits flow to line 36"
+
+  - line: "25"
+    description: "Credit for sale/rental of agricultural assets to beginning farmers"
+    formula: "Pass-through input from Ohio Schedule of Credits line 25 certificate amount"
+    inputs:
+      - "Ohio credit for sale/rental of agricultural assets to beginning farmers certificate amount"
+    notes: |
+      Nonrefundable certificate-based credit granted by the Ohio Department of
+      Agriculture.
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Lines 17-35 - explicit pass-through credits flow to line 36"
+
+  - line: "26"
+    description: "Grape production credit"
+    formula: |
+      If an explicit line 26 override amount is provided:
+        use the pass-through amount.
+      Otherwise if aggregate qualifying grape-production property cost is provided:
+        round to the nearest whole dollar:
+          10% of the cost of purchasing and installing or constructing
+          qualifying grape-production property used to produce grapes in Ohio.
+      Otherwise:
+        $0.
+    inputs:
+      - "Ohio grape production credit amount"
+      - "Aggregate qualifying grape-production property cost"
+    notes: |
+      The 2025 Ohio IT 1040 booklet line 26 instruction states the credit
+      equals 10% of qualifying grape-production property cost. Pass-through
+      entity investors may claim a proportionate share of the credit; callers
+      can continue using the explicit line amount override for pass-through
+      allocations or prior carryforward surfaces that are not separately
+      modeled here.
+    edgeCases:
+      - "Explicit line amount override takes precedence over the computed 10%-of-cost path"
+      - "$12,345 of qualifying cost produces a $1,235 credit after whole-dollar rounding"
+      - "No override and no qualifying cost results in $0"
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Line 26 - grape production credit supports direct cost-based computation"
+
+  - line: "27"
+    description: "InvestOhio credit"
+    formula: "Pass-through input from Ohio Schedule of Credits line 27 certificate amount"
+    inputs:
+      - "Ohio InvestOhio credit certificate amount"
+    notes: |
+      Nonrefundable certificate-based credit granted by the Ohio Department of
+      Development.
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Lines 17-35 - explicit pass-through credits flow to line 36"
+
+  - line: "28"
+    description: "Lead abatement credit"
+    formula: "Pass-through input from Ohio Schedule of Credits line 28 certificate amount"
+    inputs:
+      - "Ohio lead abatement credit certificate amount"
+    notes: |
+      Nonrefundable certificate-based credit granted by the Ohio Department of
+      Health.
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Lines 17-35 - explicit pass-through credits flow to line 36"
+
+  - line: "29"
+    description: "Opportunity zone investment credit"
+    formula: "Pass-through input from Ohio Schedule of Credits line 29 certificate amount"
+    inputs:
+      - "Ohio opportunity zone investment credit certificate amount"
+    notes: |
+      Nonrefundable certificate-based credit granted by the Ohio Department of
+      Development.
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Lines 17-35 - explicit pass-through credits flow to line 36"
+
+  - line: "30"
+    description: "Technology investment credit carryforward"
+    formula: "Pass-through input from Ohio Schedule of Credits line 30 carryforward amount"
+    inputs:
+      - "Unused technology investment credit carryforward"
+    notes: |
+      The technology investment credit was repealed, but unused carryforwards
+      may still be claimed during the remaining 15-year carryforward period.
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Lines 17-35 - explicit pass-through credits flow to line 36"
+
+  - line: "31"
+    description: "Enterprise zone day care and training credit"
+    formula: "Pass-through input from Ohio Schedule of Credits line 31 certificate amount"
+    inputs:
+      - "Ohio enterprise zone day care and training credit certificate amount"
+    notes: |
+      Nonrefundable certificate-based credit granted by the Ohio Department of
+      Development.
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Lines 17-35 - explicit pass-through credits flow to line 36"
+
+  - line: "32"
+    description: "Research and development credit"
+    formula: "Pass-through input from Ohio Schedule of Credits line 32 certificate amount"
+    inputs:
+      - "Ohio research and development credit certificate amount"
+    notes: |
+      Nonrefundable certificate-based credit granted by the Ohio Department of
+      Development.
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Lines 17-35 - explicit pass-through credits flow to line 36"
+
+  - line: "33"
+    description: "Nonrefundable Ohio historic preservation credit"
+    formula: "Pass-through input from Ohio Schedule of Credits line 33 nonrefundable certificate amount"
+    inputs:
+      - "Nonrefundable Ohio historic preservation credit certificate amount"
+    notes: |
+      Per the 2025 Ohio IT 1040 booklet, certain historic preservation credit
+      certificate amounts are claimed here as nonrefundable rather than on line
+      41 as refundable.
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Lines 17-35 - explicit pass-through credits flow to line 36"
+
+  - line: "34"
+    description: "Ohio low-income housing credit"
+    formula: "Pass-through input from Ohio Schedule of Credits line 34 certificate amount"
+    inputs:
+      - "Ohio low-income housing credit certificate amount"
+    notes: |
+      Nonrefundable credit granted by the Ohio Housing Finance Agency.
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Lines 17-35 - explicit pass-through credits flow to line 36"
+
+  - line: "35"
+    description: "Affordable single-family housing credit"
+    formula: "Pass-through input from Ohio Schedule of Credits line 35 certificate amount"
+    inputs:
+      - "Ohio affordable single-family housing credit certificate amount"
+    notes: |
+      Nonrefundable credit granted by the Ohio Housing Finance Agency.
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Lines 17-35 - explicit pass-through credits flow to line 36"
+
+  - line: "36"
+    description: "Total second-batch credits"
+    formula: "Sum of lines 12 through 35"
+    inputs:
+      - "Lines 12-35"
+    notes: |
+      Lines 12-16 are computed here. Lines 17-35 are modeled as explicit
+      certificate or carryforward inputs from the Ohio Schedule of Credits and
+      default to $0 when not supplied, except line 26 which can also be
+      computed directly from qualifying grape-production property cost.
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Line 36 - total second-batch credits"
+
+  - line: "37"
+    description: "Tax less all nonrefundable credits (before resident/nonresident)"
+    formula: "max(0, Line 11 - Line 36)"
+    inputs:
+      - "Line 11"
+      - "Line 36"
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Line 37 - tax less all credits"
+
+  - line: "38"
+    description: "Nonresident credit"
+    formula: "min(pass-through nonresident credit amount, Line 37)"
+    inputs:
+      - "Computed nonresident credit amount"
+      - "Line 37"
+    notes: |
+      The nonresident credit is applied after lines 2-36 and cannot exceed the
+      tax remaining on line 37. This preserves the statutory credit ordering on
+      the Ohio Schedule of Credits.
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Line 38 - nonresident credit capped at remaining tax"
+
+  - line: "39"
+    description: "Resident credit"
+    formula: "min(pass-through resident credit amount, max(0, Line 37 - Line 38))"
+    inputs:
+      - "Computed resident credit amount"
+      - "Line 37"
+      - "Line 38"
+    notes: |
+      The resident credit is applied after the credits that precede it,
+      including the nonresident credit on line 38. It cannot exceed the tax
+      remaining after lines 2-38. See R.C. 5747.05(D) and R.C. 5747.98.
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Line 39 - resident credit capped by remaining tax after line 38"
+
+  - line: "40"
+    description: "Total nonrefundable credits"
+    formula: "Line 10 + Line 36 + Line 38 + Line 39"
+    inputs:
+      - "Line 10"
+      - "Line 36"
+      - "Line 38 (nonresident credit)"
+      - "Line 39 (resident credit)"
+    notes: |
+      This flows to IT 1040, line 9. Because lines 38 and 39 are each capped by
+      the tax remaining after earlier credits, the total cannot exceed line 1.
+    edgeCases:
+      - "Total credits capped at tax liability (cannot create negative tax)"
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Line 40 - total nonrefundable credits capped at tax"
+
+  - line: "41"
+    description: "Refundable Ohio historic preservation credit"
+    formula: "Pass-through input from Ohio Schedule of Credits line 41 certificate amount"
+    inputs:
+      - "Historic preservation credit certificate amount eligible for refundable treatment"
+    notes: |
+      Per the 2025 Ohio IT 1040 booklet, this credit is refundable to the extent
+      it exceeds total Ohio tax liability. Certain certificates above $3,000,000
+      must instead be taken on line 33 as nonrefundable; this module assumes the
+      input has already been classified correctly.
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Line 47 - refundable credits sum lines 41 through 46"
+
+  - line: "42"
+    description: "Refundable job creation credit and job retention credit"
+    formula: "Pass-through input from Ohio Schedule of Credits line 42 certificate amount"
+    inputs:
+      - "Refundable ODOD job creation/job retention credit amount"
+    notes: "Refundable to the extent it exceeds total Ohio tax liability."
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Line 47 - refundable credits sum lines 41 through 46"
+
+  - line: "43"
+    description: "Pass-through entity credit"
+    formula: "Pass-through input from Ohio IT K-1 line 3 plus indirect PTE credits from Ohio IT K-1 line 4"
+    inputs:
+      - "Ohio IT K-1 direct PTE tax paid"
+      - "Ohio IT K-1 indirect PTE credits"
+    notes: |
+      This is the refundable PTE credit for taxes paid on the taxpayer's behalf
+      on Ohio forms IT 4708, IT 4738, and/or IT 1140. It is related to the
+      Schedule of Adjustments line 5 PTE add-back.
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Line 43 - pass-through entity credit passes through"
+
+  - line: "44"
+    description: "Motion picture and Broadway theatrical production credit"
+    formula: "Pass-through input from Ohio Schedule of Credits line 44 certificate amount"
+    inputs:
+      - "Refundable motion picture/Broadway theatrical production credit amount"
+    notes: "Refundable to the extent it exceeds total Ohio tax liability."
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Line 47 - refundable credits sum lines 41 through 46"
+
+  - line: "45"
+    description: "Credit for film and theater capital improvement projects"
+    formula: "Pass-through input from Ohio Schedule of Credits line 45 certificate amount"
+    inputs:
+      - "Refundable film and theater capital improvement projects credit amount"
+    notes: "Refundable to the extent it exceeds total Ohio tax liability."
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Line 47 - refundable credits sum lines 41 through 46"
+
+  - line: "46"
+    description: "Venture capital credit"
+    formula: "Pass-through input from Ohio Schedule of Credits line 46 certificate amount"
+    inputs:
+      - "Refundable venture capital credit certificate amount"
+    notes: "Refundable to the extent it exceeds total Ohio tax liability."
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Line 47 - refundable credits sum lines 41 through 46"
+
+  - line: "47"
+    description: "Total refundable credits"
+    formula: "Line 41 + Line 42 + Line 43 + Line 44 + Line 45 + Line 46"
+    inputs:
+      - "Lines 41-46"
+    notes: "Flows to IT 1040, line 16. Refundable credits are not limited by line 1."
+    testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Line 47 - refundable credits sum lines 41 through 46"

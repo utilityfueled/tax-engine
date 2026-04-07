@@ -1,0 +1,137 @@
+form: "California Form 540 Exemption Credits"
+fullName: "California Form 540 Lines 7-11 and 32 Exemption Credits"
+taxYear: 2025
+irsReference: "https://www.ftb.ca.gov/forms/2025/2025-540-instructions.html"
+
+notes: |
+  California Form 540 computes exemption credits by multiplying the counts entered
+  in the boxes on lines 7 through 10 by the pre-printed 2025 credit amounts:
+  - Line 7 personal exemptions: $153 each
+  - Line 8 blind exemptions: $153 each
+  - Line 9 senior exemptions: $153 each
+  - Line 10 dependent exemptions: $475 each
+  Form 540 line 32 normally equals line 11, but the 2025 instructions require an
+  AGI Limitation Worksheet when federal AGI on line 13 exceeds:
+  - $252,203 for single or married filing separately
+  - $504,411 for married filing jointly or qualifying surviving spouse
+  - $378,310 for head of household
+  The worksheet divides AGI excess by $2,500 ($1,250 if married filing separately),
+  rounds that quotient up to the next whole number, multiplies by $6, and reduces
+  the personal/blind/senior and dependent exemption pools separately, flooring each
+  reduced pool at zero before adding them back together for line 32.
+
+lines:
+  - line: "7"
+    description: "Personal exemption credit amount"
+    formula: "Form 540 line 7 box count × $153"
+    inputs:
+      - "Personal exemption count from the Form 540 line 7 box"
+    notes: "The line 7 count is determined upstream from filing-status and dependency-eligibility rules."
+    testRef: "tests/engine/state/ca-form-540-exemption-credits.test.ts::CA Form 540 exemption credits Line 7 - personal exemption count multiplies by $153"
+
+  - line: "8"
+    description: "Blind exemption credit amount"
+    formula: "Form 540 line 8 box count × $153"
+    inputs:
+      - "Blind exemption count from the Form 540 line 8 box"
+    testRef: "tests/engine/state/ca-form-540-exemption-credits.test.ts::CA Form 540 exemption credits Line 8 - blind exemption count multiplies by $153"
+
+  - line: "9"
+    description: "Senior exemption credit amount"
+    formula: "Form 540 line 9 box count × $153"
+    inputs:
+      - "Senior exemption count from the Form 540 line 9 box"
+    testRef: "tests/engine/state/ca-form-540-exemption-credits.test.ts::CA Form 540 exemption credits Line 9 - senior exemption count multiplies by $153"
+
+  - line: "10"
+    description: "Dependent exemption credit amount"
+    formula: "Form 540 line 10 box count × $475"
+    inputs:
+      - "Dependent exemption count from the Form 540 line 10 box"
+    notes: "Dependents must be listed on Form 540 line 10 or supported by the allowed no-ID process."
+    testRef: "tests/engine/state/ca-form-540-exemption-credits.test.ts::CA Form 540 exemption credits Line 10 - dependent exemption count multiplies by $475"
+
+  - line: "11"
+    description: "Exemption amount"
+    formula: "Line 7 + Line 8 + Line 9 + Line 10"
+    inputs:
+      - "Form 540 exemption credits Line 7"
+      - "Form 540 exemption credits Line 8"
+      - "Form 540 exemption credits Line 9"
+      - "Form 540 exemption credits Line 10"
+    testRef: "tests/engine/state/ca-form-540-exemption-credits.test.ts::CA Form 540 exemption credits Line 11 - the total exemption amount adds lines 7 through 10"
+
+  - line: "32a"
+    description: "Federal AGI for the AGI limitation worksheet"
+    formula: "Form 540 line 13 federal AGI"
+    inputs:
+      - "Federal AGI"
+    testRef: "tests/engine/state/ca-form-540-exemption-credits.test.ts::CA Form 540 exemption credits Line 32a - the AGI limitation worksheet starts from federal AGI"
+
+  - line: "32b"
+    description: "AGI limitation threshold"
+    formula: "Use the published threshold for the filing status: $252,203 single/MFS, $504,411 MFJ/QSS, $378,310 HOH"
+    inputs:
+      - "Filing status"
+    edgeCases:
+      - "Qualifying surviving spouse uses the same threshold as married filing jointly"
+      - "Married filing separately uses the lower $252,203 threshold and the $1,250 divisor on line 32d"
+    testRef: "tests/engine/state/ca-form-540-exemption-credits.test.ts::CA Form 540 exemption credits Line 32b - qualifying surviving spouse uses the joint threshold"
+
+  - line: "32c"
+    description: "AGI excess over the threshold"
+    formula: "max(0, Line 32a - Line 32b)"
+    inputs:
+      - "Form 540 exemption credits Line 32a"
+      - "Form 540 exemption credits Line 32b"
+    testRef: "tests/engine/state/ca-form-540-exemption-credits.test.ts::CA Form 540 exemption credits Line 32c - AGI below the threshold floors the excess at zero"
+
+  - line: "32d"
+    description: "AGI reduction units"
+    formula: "If Line 32c is greater than 0, divide by $2,500 ($1,250 if married filing separately) and round up to the next whole number; otherwise 0"
+    inputs:
+      - "Form 540 exemption credits Line 32c"
+      - "Filing status"
+    edgeCases:
+      - "$1 above the threshold still produces one reduction unit"
+      - "Married filing separately uses the $1,250 divisor"
+    testRef: "tests/engine/state/ca-form-540-exemption-credits.test.ts::CA Form 540 exemption credits Line 32d - $1 above the single threshold rounds up to one reduction unit"
+
+  - line: "32e"
+    description: "Per-exemption reduction amount"
+    formula: "Line 32d × $6"
+    inputs:
+      - "Form 540 exemption credits Line 32d"
+    testRef: "tests/engine/state/ca-form-540-exemption-credits.test.ts::CA Form 540 exemption credits Line 32e - each reduction unit is worth $6 per exemption"
+
+  - line: "32i"
+    description: "Allowed personal, blind, and senior exemption pool after AGI limitation"
+    formula: "max(0, (Line 7 + Line 8 + Line 9) - (Line 32e × total count from line 7, line 8, and line 9 boxes))"
+    inputs:
+      - "Form 540 exemption credits Line 7"
+      - "Form 540 exemption credits Line 8"
+      - "Form 540 exemption credits Line 9"
+      - "Form 540 exemption credits Line 32e"
+      - "Total count from the Form 540 line 7, line 8, and line 9 boxes"
+    testRef: "tests/engine/state/ca-form-540-exemption-credits.test.ts::CA Form 540 exemption credits Line 32i - AGI limitation reduces the personal blind senior pool"
+
+  - line: "32m"
+    description: "Allowed dependent exemption pool after AGI limitation"
+    formula: "max(0, Line 10 - (Line 32e × dependent count from the line 10 box))"
+    inputs:
+      - "Form 540 exemption credits Line 10"
+      - "Form 540 exemption credits Line 32e"
+      - "Dependent count from the Form 540 line 10 box"
+    testRef: "tests/engine/state/ca-form-540-exemption-credits.test.ts::CA Form 540 exemption credits Line 32m - AGI limitation reduces the dependent pool"
+
+  - line: "32"
+    description: "Form 540 line 32 exemption credits"
+    formula: "If federal AGI does not exceed the filing-status threshold, Line 11; otherwise Line 32i + Line 32m"
+    inputs:
+      - "Form 540 exemption credits Line 11"
+      - "Form 540 exemption credits Line 32i"
+      - "Form 540 exemption credits Line 32m"
+    edgeCases:
+      - "Threshold amounts are not limited; the limitation starts only when AGI is more than the threshold"
+      - "Very high AGI can reduce both exemption pools to zero"
+    testRef: "tests/engine/state/ca-form-540-exemption-credits.test.ts::CA Form 540 exemption credits Line 32 - very high AGI can fully eliminate the exemption credits"

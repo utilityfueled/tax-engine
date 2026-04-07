@@ -1,0 +1,291 @@
+form: "DeFi Advanced Transactions"
+fullName: "DeFi LP Positions, Yield Rewards, NFTs, Lending, Donations, and Wash Sale Carryforward"
+taxYear: 2025
+irsReference: "https://www.irs.gov/individuals/international-taxpayers/frequently-asked-questions-on-virtual-currency-transactions"
+
+notes: |
+  Phase 2 crypto tax support: advanced DeFi scenarios for power users.
+
+  Key IRS references:
+  - IRS Notice 2014-21: Virtual currency is property for all tax purposes
+  - Rev. Rul. 2019-24: Airdrops/hard forks — property principles apply
+  - Rev. Rul. 2023-14: Staking rewards taxable when received
+  - IRS Notice 2023-27: Certain NFTs treated as collectibles under IRC §408(m)
+  - Notice 2023-34: DeFi broker reporting (proposed, not yet final)
+  - IRC §170: Charitable contribution deduction for appreciated property
+  - IRC §1091: Wash sale rules apply to digital assets
+  - IRC §61(a)(4): Interest income from crypto lending
+
+  Treatment summary:
+  - LP entry: non-taxable (deposit); LP exit: taxable disposition
+  - Yield/farming rewards: ordinary income at FMV when received
+  - NFT sales: capital gain/loss; collectibles face 28% max LTCG rate
+  - Lending interest: ordinary income at FMV when received
+  - Collateral liquidation: taxable disposition of collateral
+  - Crypto donations: FMV deduction if held >1yr, basis deduction if ≤1yr
+  - Wash sale carryforward: disallowed loss increases replacement lot basis
+
+lines:
+  # ── DeFi LP Positions ──────────────────────────────────
+  - line: "lp-entry-nontaxable"
+    description: "LP pool entry — non-taxable event"
+    formula: |
+      Entering a liquidity pool (depositing assets for LP tokens) is treated
+      as a non-taxable deposit. LP token basis = sum of deposited asset bases
+      + entry gas fee (capitalized per IRC §1012).
+    irsRef: "IRS Notice 2014-21 (general property principles); IRC §1012"
+    edgeCases:
+      - "Single-sided LP deposits: same treatment"
+      - "Concentrated liquidity (Uniswap V3): each position is a separate LP token"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::LP entry is non-taxable and establishes LP token lot"
+
+  - line: "lp-exit-taxable"
+    description: "LP pool exit — taxable disposition"
+    formula: |
+      Exiting a liquidity pool (redeeming LP tokens for underlying assets):
+      - Proceeds = total FMV of received assets - exit gas fee
+      - Cost basis = LP token basis (lot-matched)
+      - Gain/loss = proceeds - cost basis
+      Generates Form 8949 entry.
+    irsRef: "IRC §1001 (disposition); IRC §1012 (basis)"
+    edgeCases:
+      - "Impermanent loss is embedded in gain/loss calculation, not separately deductible"
+      - "Receiving different assets than deposited: still taxable at exit FMV"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::LP exit generates taxable disposition with correct gain/loss"
+
+  - line: "lp-impermanent-loss"
+    description: "Impermanent loss tracking (informational)"
+    formula: |
+      Impermanent loss = basis of deposited assets - FMV of received assets.
+      Tracked for informational/audit purposes only.
+      NOT separately deductible under current IRS guidance.
+    irsRef: "No specific IRS guidance; embedded in overall gain/loss per IRC §1001"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::LP exit tracks impermanent loss (informational only)"
+
+  # ── DeFi Yield / Liquidity Mining Rewards ──────────────
+  - line: "yield-reward-income"
+    description: "Yield farming and liquidity mining reward income"
+    formula: |
+      quantity * fairMarketValuePerUnit at receipt = ordinary income.
+      Routes to Schedule 1 Line 8z (or Schedule C if business activity).
+    irsRef: "IRS Notice 2014-21 Q&A 8 (mining analogy); Rev. Rul. 2023-14 (staking analogy); IRC §61"
+    edgeCases:
+      - "Zero-value governance tokens: $0 income at receipt, basis = $0"
+      - "Auto-compounding rewards: income recognized when added to position"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Yield reward income = quantity × FMV at receipt"
+
+  - line: "yield-reward-basis"
+    description: "Basis for yield reward tokens"
+    formula: |
+      Basis of received reward tokens = FMV at receipt.
+      Establishes lot for future disposal (gain/loss on later sale).
+    irsRef: "IRS Notice 2014-21 Q&A 6"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Yield rewards establish basis lots at FMV"
+
+  - line: "yield-protocol-aggregation"
+    description: "Yield reward aggregation by protocol"
+    formula: |
+      Aggregate reward income by protocol for audit trail.
+      Each protocol's total reported separately.
+    irsRef: "General record-keeping requirements"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Yield rewards aggregate by protocol for audit trail"
+
+  # ── NFT Transactions ────────────────────────────────────
+  - line: "nft-buy-basis"
+    description: "NFT purchase — cost basis"
+    formula: "Basis = purchase price + gas fee (IRC §1012)"
+    irsRef: "IRC §1012; IRS Notice 2014-21"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::NFT purchase establishes lot with basis = price + gas"
+
+  - line: "nft-sell-gain-loss"
+    description: "NFT sale — gain/loss on Form 8949"
+    formula: |
+      Proceeds = sale price - gas fee.
+      Gain/loss = proceeds - cost basis.
+      Long-term if held >1 year, short-term otherwise.
+    irsRef: "IRC §1001; IRC §1222"
+    edgeCases:
+      - "Royalties received by original creator on resale: ordinary income"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::NFT sale generates Form 8949 disposition with correct gain/loss"
+
+  - line: "nft-collectible-rate"
+    description: "NFT collectible — 28% max LTCG rate"
+    formula: |
+      If NFT is classified as collectible (per IRS Notice 2023-27),
+      long-term capital gains face 28% maximum rate under IRC §1(h)(4).
+    irsRef: "IRS Notice 2023-27; IRC §1(h)(4); IRC §408(m)"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Collectible NFT long-term gain tracked at 28% max rate"
+
+  - line: "nft-airdrop-income"
+    description: "NFT airdrop — ordinary income"
+    formula: "FMV at receipt = ordinary income → Schedule 1 Line 8z. Basis = FMV."
+    irsRef: "Rev. Rul. 2019-24; IRC §61"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::NFT airdrop recognized as ordinary income at FMV"
+
+  - line: "nft-mint-creator"
+    description: "NFT mint and sale by creator"
+    formula: |
+      Creator selling own minted NFT: proceeds - gas = income → Schedule C if business.
+      If personal hobby: Schedule 1 Line 8z.
+    irsRef: "IRC §162 (business); IRC §61 (gross income)"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::NFT mint sale by creator routes to Schedule C income"
+
+  - line: "nft-gift"
+    description: "NFT received as gift"
+    formula: |
+      No income on receipt. Basis = donor's basis.
+      If sold later: gain/loss measured from donor's basis.
+    irsRef: "IRC §1015 (basis of gifted property)"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::NFT gift received has no income and uses donor basis"
+
+  # ── Crypto Lending Income ───────────────────────────────
+  - line: "lending-interest-income"
+    description: "Crypto lending interest earned"
+    formula: |
+      interestReceived * fairMarketValuePerUnit = ordinary income.
+      Routes to Schedule 1 Line 8z.
+    irsRef: "IRC §61(a)(4); IRS Notice 2014-21"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Crypto lending interest income = quantity × FMV"
+
+  - line: "lending-interest-basis"
+    description: "Basis for interest tokens received"
+    formula: "Basis = FMV at receipt. Establishes lot for future disposal."
+    irsRef: "IRS Notice 2014-21 Q&A 6"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Lending interest establishes basis lots at FMV"
+
+  - line: "lending-liquidation"
+    description: "Collateral liquidation — taxable disposition"
+    formula: |
+      When collateral is liquidated by lending protocol:
+      - Proceeds = FMV at liquidation
+      - Cost basis = lot-matched basis of collateral
+      - Gain/loss = proceeds - cost basis → Form 8949
+    irsRef: "IRC §1001 (disposition of property); IRS Notice 2014-21"
+    edgeCases:
+      - "Partial liquidation: only liquidated portion is a disposition"
+      - "Liquidation penalty: reduces proceeds (or is additional expense)"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Collateral liquidation generates taxable disposition"
+
+  # ── Crypto Donations ────────────────────────────────────
+  - line: "donation-long-term"
+    description: "Crypto donation held >1 year — FMV deduction"
+    formula: |
+      Donating appreciated crypto held >1 year to qualified charity:
+      - Deduction = FMV at donation
+      - No capital gains recognized on appreciation
+      - Subject to 30% AGI limitation (60% for cash donations)
+    irsRef: "IRC §170(b)(1)(C); IRC §170(e)(1)(A)"
+    edgeCases:
+      - "Donations over $5,000 require qualified appraisal (IRC §170(f)(11))"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Long-term crypto donation deducts FMV and avoids capital gains"
+
+  - line: "donation-short-term"
+    description: "Crypto donation held ≤1 year — basis deduction"
+    formula: |
+      Donating crypto held ≤1 year: deduction limited to cost basis.
+      Appreciation is not deductible.
+    irsRef: "IRC §170(e)(1)(A)"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Short-term crypto donation deducts basis only"
+
+  # ── Wash Sale Carryforward ──────────────────────────────
+  - line: "wash-sale-carryforward"
+    description: "Wash sale disallowed loss — basis adjustment carryforward"
+    formula: |
+      When IRC §1091 disallows a crypto loss (same/substantially identical asset
+      acquired within 30 days before/after sale):
+      - Disallowed loss amount is added to replacement lot's cost basis
+      - Adjusted basis carries forward to next tax year if not sold
+    irsRef: "IRC §1091; IRC §1091(d)"
+    edgeCases:
+      - "No identifiable replacement lot: loss still disallowed, tracked for carryforward"
+      - "Multiple replacement lots: allocated proportionally"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Wash sale disallowed loss carries forward to replacement lot basis"
+
+  - line: "wash-sale-holding-period"
+    description: "Wash sale replacement lot holding period"
+    formula: |
+      Holding period of replacement lot includes the holding period
+      of the original lot that triggered the wash sale.
+    irsRef: "IRC §1091(d); IRC §1223(4)"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Wash sale carryforward tracks total disallowed amount"
+
+  # ── Gas Fee Handling (Phase 2 contexts) ─────────────────
+  - line: "gas-fee-lp-entry"
+    description: "Gas fee on LP entry"
+    formula: "Gas fee on LP pool entry is capitalized into LP token basis (IRC §1012)"
+    irsRef: "IRC §1012"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::LP entry capitalizes gas fee into LP token basis"
+
+  - line: "gas-fee-lp-exit"
+    description: "Gas fee on LP exit"
+    formula: "Gas fee on LP pool exit reduces proceeds (same economic effect as adding to basis)"
+    irsRef: "IRC §1001(b)"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::LP exit gas fee reduces proceeds"
+
+  - line: "gas-fee-nft-buy"
+    description: "Gas fee on NFT purchase"
+    formula: "Gas fee on NFT purchase is capitalized into NFT basis (IRC §1012)"
+    irsRef: "IRC §1012"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::NFT purchase establishes lot with basis = price + gas"
+
+  - line: "gas-fee-nft-sell"
+    description: "Gas fee on NFT sale"
+    formula: "Gas fee on NFT sale reduces proceeds"
+    irsRef: "IRC §1001(b)"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::NFT sale gas fee reduces proceeds"
+
+  # ── Realistic DeFi Scenario Coverage ───────────────────
+  - line: "scenario-uniswap-lp"
+    description: "Realistic Uniswap V3 concentrated liquidity LP position"
+    formula: |
+      End-to-end test: ETH/USDC concentrated LP on Uniswap V3.
+      Entry: deposit ETH + USDC, receive LP token, capitalize gas into basis.
+      Exit: redeem LP token, compute gain/loss, track impermanent loss.
+    irsRef: "IRS Notice 2014-21; IRC §1001; IRC §1012"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Uniswap V3 concentrated liquidity: enter pool, earn fees, exit with impermanent loss"
+
+  - line: "scenario-opensea-nft"
+    description: "Realistic OpenSea NFT buy and sell (BAYC collectible)"
+    formula: |
+      Buy NFT on OpenSea: basis = purchase price + gas fee.
+      Sell later: proceeds = sale price - gas fee.
+      If collectible (per Notice 2023-27): 28% max LTCG rate.
+    irsRef: "IRS Notice 2023-27; IRC §1(h)(4); IRC §1012"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Buy BAYC on OpenSea, sell later at profit with gas fees"
+
+  - line: "scenario-aave-lending"
+    description: "Realistic Aave V3 lending interest accumulation"
+    formula: |
+      Multiple monthly interest payments from Aave V3 lending.
+      Each payment = ordinary income at FMV, establishes basis lot.
+    irsRef: "IRC §61(a)(4); IRS Notice 2014-21"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Aave lending: earn USDC interest over 6 months, multiple deposits"
+
+  - line: "scenario-aave-liquidation"
+    description: "Realistic Aave V3 partial collateral liquidation"
+    formula: |
+      Partial liquidation of ETH collateral on Aave V3.
+      Only liquidated portion is a taxable disposition.
+      Remaining collateral unaffected.
+    irsRef: "IRC §1001; IRS Notice 2014-21"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Aave collateral liquidation: ETH collateral partially liquidated"
+
+  - line: "edge-dust-yield"
+    description: "Sub-cent yield farming reward"
+    formula: "Even dust-amount yield rewards (< $0.01) are ordinary income."
+    irsRef: "IRC §61; IRS Notice 2014-21"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Dust yield reward (sub-cent value) still counted as income"
+
+  - line: "edge-dust-nft-airdrop"
+    description: "Dust-value NFT airdrop"
+    formula: "NFT airdrop with negligible FMV is still ordinary income at receipt."
+    irsRef: "Rev. Rul. 2019-24; IRC §61"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Dust amount NFT airdrop with $0.001 FMV is ordinary income"
+
+  - line: "scenario-donation-btc"
+    description: "Realistic BTC donation to qualified charity"
+    formula: |
+      Donate appreciated BTC (held >1 year) to 501(c)(3).
+      Deduction = FMV. Capital gains on appreciation avoided.
+    irsRef: "IRC §170(b)(1)(C); IRC §170(e)(1)(A)"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Donate BTC held >2 years to Red Cross: deduct FMV, avoid capital gains"

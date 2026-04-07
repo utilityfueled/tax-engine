@@ -1,0 +1,359 @@
+form: "PA-Schedule-C"
+fullName: "Pennsylvania Schedule C — Profit or Loss from Business or Profession"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/pa-40c.pdf"
+
+notes: |
+  PA Schedule C computes Pennsylvania Class 4 business income for a sole
+  proprietorship. This supported resident slice uses the printed PA-40 C line
+  structure together with the existing normalized Schedule C input fields
+  already present in the engine.
+
+  Supported lines in this slice:
+    - Section I income lines 1a through 5
+    - Section II deduction lines backed by normalized input fields:
+      6 through 38, including 13a and 13b, and Line 39
+
+  Important Pennsylvania-specific rules reflected here:
+    - PA Schedule C line amounts are reported in whole dollars, so the engine
+      rounds each supported input line to the nearest dollar before computing
+      totals.
+    - Line 31 uses travel and entertainment as entered; Pennsylvania allows
+      100 percent of ordinary, actual, reasonable, and necessary meals and
+      entertainment expenses.
+    - Depreciation inputs must already be Pennsylvania-adjusted. Pennsylvania
+      does not allow federal bonus depreciation and has its own Section 179
+      limits, so both Line 13a regular depreciation and Line 13b Section 179
+      expense must already be Pennsylvania-adjusted upstream of this module.
+    - This slice now supports direct normalized inputs for interest on
+      business indebtedness, commissions, depletion, employee benefit
+      programs, pension/profit-sharing plans for employees, rent on business
+      property, repairs and maintenance, taxes, telephone, and wages in
+      addition to the previously supported deduction lines.
+    - This slice also supports direct normalized inputs for amortization,
+      bad debts from sales or services, bank charges, dues and publications,
+      freight, laundry and cleaning, management fees, postage, current IDC
+      expensing, IDC amortization, and start-up costs.
+    - Business-use-of-home expenses from federal Form 8829 flow to PA
+      Schedule C Line 37 when the taxpayer uses actual costs. Pennsylvania
+      does not recognize the federal simplified home-office method, so any
+      simplified-method input must be ignored for PA purposes.
+    - Owner pension, profit-sharing, deferred compensation, and welfare
+      benefit plan payments are not deductible for Pennsylvania personal
+      income tax purposes; Line 23 only covers employee plans.
+    - The 2025 PA-40 instructions say taxpayers that directly incur
+      intangible drilling and development costs may elect to currently
+      expense up to one-third of the IDCs and amortize the remainder over
+      10 years. The PA Personal Income Tax Guide also says current
+      expensing under IRC Section 59(e)(2) is not otherwise allowable, so
+      Line 34 and Line 35 accept only the already-determined
+      Pennsylvania-allowable amounts.
+
+packetRules:
+  packetBehavior: "reference-summary-pdf"
+  includeWhen:
+    - "A Pennsylvania resident return packet is being assembled and validated input includes a supported Schedule C business"
+    - "The packet path computes the resident Pennsylvania Schedule C summary from the normalized Schedule C input"
+  suppressWhen:
+    - "No Pennsylvania resident return packet is being assembled"
+    - "No supported Schedule C input is present on the return"
+  notes: |
+    The Pennsylvania Personal Income Tax Guide says sole proprietors with net
+    income or loss from a business or profession must file PA-40 Schedule C.
+    Until an official PA-40 Schedule C filler exists, the packet path emits
+    `pa-schedule-c-reference.pdf` as a reference summary only. Packet
+    disclosures must therefore keep Pennsylvania packet completeness partial
+    whenever this reference summary is attached.
+
+businessRuleValidation:
+  - rule: "pa-schedule-c-reference-packet"
+    description: "Inventory support counts the Pennsylvania Schedule C packet path as validated only when fillReturn emits `pa-schedule-c-reference.pdf` whenever supported Schedule C input is present on a Pennsylvania resident return."
+    testRef: "tests/pdf/fill-pa-schedule-c.test.ts::fillReturn includes the Pennsylvania Schedule C reference summary when the resident return includes supported business income"
+  - rule: "pa-schedule-c-reference-suppression"
+    description: "Inventory support counts the Pennsylvania Schedule C suppression rule as validated only when regression coverage proves fillReturn omits the reference summary when no supported Schedule C input is present."
+    testRef: "tests/pdf/fill-pa-schedule-c.test.ts::fillReturn suppresses the Pennsylvania Schedule C reference summary when no supported business input is present"
+  - rule: "pa-schedule-c-reference-disclosure"
+    description: "Inventory support counts the Pennsylvania Schedule C packet disclosure as validated only when readiness regression coverage keeps packet completeness partial while only the Schedule C reference summary is available beyond PA-40."
+    testRef: "tests/utils/return-readiness.test.ts::marks Pennsylvania packets partial when a PA Schedule C reference summary is attached"
+
+lines:
+  - line: "1a"
+    description: "Gross receipts or sales"
+    formula: "Rounded gross receipts input, defaulting to zero"
+    testRef: "tests/engine/state/pa-schedule-c.test.ts::PA Schedule C Lines 1a through 5 compute business income before deductions"
+
+  - line: "1b"
+    description: "Returns and allowances"
+    formula: "Rounded returns and allowances input, defaulting to zero"
+    testRef: "tests/engine/state/pa-schedule-c.test.ts::PA Schedule C Lines 1a through 5 compute business income before deductions"
+
+  - line: "1c"
+    description: "Balance"
+    formula: "Line 1a - Line 1b"
+    testRef: "tests/engine/state/pa-schedule-c.test.ts::PA Schedule C Lines 1a through 5 compute business income before deductions"
+
+  - line: "2"
+    description: "Cost of goods sold and/or operations"
+    formula: "Rounded cost of goods sold input, defaulting to zero"
+    notes: |
+      This supported slice accepts the already-computed cost-of-goods-sold
+      amount instead of reproducing Schedule C-1 inventory lines 1 through 8.
+    testRef: "tests/engine/state/pa-schedule-c.test.ts::PA Schedule C Lines 1a through 5 compute business income before deductions"
+
+  - line: "3"
+    description: "Gross profit"
+    formula: "Line 1c - Line 2"
+    testRef: "tests/engine/state/pa-schedule-c.test.ts::PA Schedule C Lines 1a through 5 compute business income before deductions"
+
+  - line: "4"
+    description: "Other income"
+    formula: "Rounded other-income input, defaulting to zero"
+    notes: |
+      The PA Personal Income Tax Guide says this line includes items such as
+      interest from accounts receivable, temporary investment of working
+      capital, and gain from assets that serve an operational function in the
+      ordinary course of business. This slice accepts a normalized aggregate
+      other-income input for those Pennsylvania business-income items.
+    testRef: "tests/engine/state/pa-schedule-c.test.ts::PA Schedule C Line 4 carries supported other business income into total income"
+
+  - line: "5"
+    description: "Total income"
+    formula: "Line 3 + Line 4"
+    testRef: "tests/engine/state/pa-schedule-c.test.ts::PA Schedule C Line 4 carries supported other business income into total income"
+
+  - line: "6"
+    description: "Advertising"
+    formula: "Rounded advertising expense, defaulting to zero"
+    testRef: "tests/engine/state/pa-schedule-c.test.ts::PA Schedule C Line 38 totals the supported deduction lines including Pennsylvania Section 179 expense"
+
+  - line: "7"
+    description: "Amortization"
+    formula: "Rounded amortization expense, defaulting to zero"
+    notes: |
+      The PA Personal Income Tax Guide says any generally acceptable
+      amortization method may be used for Pennsylvania personal income tax
+      purposes.
+    testRef: "tests/engine/state/pa-schedule-c.test.ts::PA Schedule C Lines 7, 8, 9, 14, 16, 19, 21, and 24 carry additional printed deduction lines into total expenses"
+
+  - line: "8"
+    description: "Bad debts from sales or services"
+    formula: "Rounded bad-debts expense, defaulting to zero"
+    notes: |
+      This line accepts only business bad debts arising from sales or
+      services in the ordinary course of the business.
+    testRef: "tests/engine/state/pa-schedule-c.test.ts::PA Schedule C Lines 7, 8, 9, 14, 16, 19, 21, and 24 carry additional printed deduction lines into total expenses"
+
+  - line: "9"
+    description: "Bank charges"
+    formula: "Rounded bank-charges expense, defaulting to zero"
+    testRef: "tests/engine/state/pa-schedule-c.test.ts::PA Schedule C Lines 7, 8, 9, 14, 16, 19, 21, and 24 carry additional printed deduction lines into total expenses"
+
+  - line: "10"
+    description: "Car and truck expenses"
+    formula: "Rounded car-and-truck expense, defaulting to zero"
+    testRef: "tests/engine/state/pa-schedule-c.test.ts::PA Schedule C Line 38 totals the supported deduction lines including Pennsylvania Section 179 expense"
+
+  - line: "11"
+    description: "Commissions and fees"
+    formula: "Rounded commissions-and-fees expense, defaulting to zero"
+    notes: |
+      This line accepts only ordinary and necessary commissions or fees paid in
+      carrying on the business.
+    testRef: "tests/engine/state/pa-schedule-c.test.ts::PA Schedule C Lines 11, 12, 15, 25, and 26 carry additional printed deduction lines into total expenses"
+
+  - line: "12"
+    description: "Depletion"
+    formula: "Rounded depletion expense, defaulting to zero"
+    notes: |
+      The PA Personal Income Tax Guide says depletion is an allowable
+      deduction against income, with the exception of start-up expenses.
+    testRef: "tests/engine/state/pa-schedule-c.test.ts::PA Schedule C Lines 11, 12, 15, 25, and 26 carry additional printed deduction lines into total expenses"
+
+  - line: "13a"
+    description: "Regular depreciation"
+    formula: "Rounded depreciation expense, defaulting to zero"
+    notes: "Input must already reflect Pennsylvania depreciation rules."
+    testRef: "tests/engine/state/pa-schedule-c.test.ts::PA Schedule C Line 38 totals the supported deduction lines including Pennsylvania Section 179 expense"
+
+  - line: "13b"
+    description: "Section 179 expense"
+    formula: "Rounded Pennsylvania Section 179 expense input, defaulting to zero"
+    notes: |
+      The PA-40 C continuation lines feed the Pennsylvania Section 179 amount
+      to printed Line 13b. This engine accepts that already-limited
+      Pennsylvania amount as direct input.
+    testRef: "tests/engine/state/pa-schedule-c.test.ts::PA Schedule C Line 38 totals the supported deduction lines including Pennsylvania Section 179 expense"
+
+  - line: "14"
+    description: "Dues and publications"
+    formula: "Rounded dues-and-publications expense, defaulting to zero"
+    testRef: "tests/engine/state/pa-schedule-c.test.ts::PA Schedule C Lines 7, 8, 9, 14, 16, 19, 21, and 24 carry additional printed deduction lines into total expenses"
+
+  - line: "15"
+    description: "Employee benefit programs"
+    formula: "Rounded employee-benefit-program expense, defaulting to zero"
+    notes: |
+      This line covers benefits for employees. The PA Personal Income Tax Guide
+      says contributions to benefit plans established for sole proprietors and
+      partners are not deductible.
+    testRef: "tests/engine/state/pa-schedule-c.test.ts::PA Schedule C Lines 11, 12, 15, 25, and 26 carry additional printed deduction lines into total expenses"
+
+  - line: "16"
+    description: "Freight"
+    formula: "Rounded freight expense, defaulting to zero"
+    notes: |
+      This line excludes freight already capitalized in Schedule C-1 cost of
+      goods sold or operations.
+    testRef: "tests/engine/state/pa-schedule-c.test.ts::PA Schedule C Lines 7, 8, 9, 14, 16, 19, 21, and 24 carry additional printed deduction lines into total expenses"
+
+  - line: "17"
+    description: "Insurance"
+    formula: "Rounded insurance expense, defaulting to zero"
+    testRef: "tests/engine/state/pa-schedule-c.test.ts::PA Schedule C Line 38 totals the supported deduction lines including Pennsylvania Section 179 expense"
+
+  - line: "18"
+    description: "Interest on business indebtedness"
+    formula: "Rounded business-interest expense, defaulting to zero"
+    notes: |
+      This line covers deductible interest on business debt. It does not
+      create a Pennsylvania deduction for owner pension or other items the
+      PA instructions list as nondeductible.
+    testRef: "tests/engine/state/pa-schedule-c.test.ts::PA Schedule C Lines 18, 23, 29, 30, and 33 carry additional printed deduction lines into total expenses"
+
+  - line: "19"
+    description: "Laundry and cleaning"
+    formula: "Rounded laundry-and-cleaning expense, defaulting to zero"
+    testRef: "tests/engine/state/pa-schedule-c.test.ts::PA Schedule C Lines 7, 8, 9, 14, 16, 19, 21, and 24 carry additional printed deduction lines into total expenses"
+
+  - line: "20"
+    description: "Legal and professional services"
+    formula: "Rounded legal-and-professional expense, defaulting to zero"
+    testRef: "tests/engine/state/pa-schedule-c.test.ts::PA Schedule C Line 38 totals the supported deduction lines including Pennsylvania Section 179 expense"
+
+  - line: "21"
+    description: "Management fees"
+    formula: "Rounded management-fees expense, defaulting to zero"
+    testRef: "tests/engine/state/pa-schedule-c.test.ts::PA Schedule C Lines 7, 8, 9, 14, 16, 19, 21, and 24 carry additional printed deduction lines into total expenses"
+
+  - line: "22"
+    description: "Office supplies"
+    formula: "Rounded office-expense input, defaulting to zero"
+    testRef: "tests/engine/state/pa-schedule-c.test.ts::PA Schedule C Line 38 totals the supported deduction lines including Pennsylvania Section 179 expense"
+
+  - line: "23"
+    description: "Pension and profit-sharing plans for employees"
+    formula: "Rounded employee pension-and-profit-sharing expense, defaulting to zero"
+    notes: |
+      This supported input is limited to employee plans. The PA instructions
+      separately note that owner pension, profit-sharing, deferred, and
+      welfare benefit plan payments are not deductible.
+    testRef: "tests/engine/state/pa-schedule-c.test.ts::PA Schedule C Lines 18, 23, 29, 30, and 33 carry additional printed deduction lines into total expenses"
+
+  - line: "24"
+    description: "Postage"
+    formula: "Rounded postage expense, defaulting to zero"
+    testRef: "tests/engine/state/pa-schedule-c.test.ts::PA Schedule C Lines 7, 8, 9, 14, 16, 19, 21, and 24 carry additional printed deduction lines into total expenses"
+
+  - line: "25"
+    description: "Rent on business property"
+    formula: "Rounded rent expense, defaulting to zero"
+    testRef: "tests/engine/state/pa-schedule-c.test.ts::PA Schedule C Lines 11, 12, 15, 25, and 26 carry additional printed deduction lines into total expenses"
+
+  - line: "26"
+    description: "Repairs and maintenance"
+    formula: "Rounded repairs-and-maintenance expense, defaulting to zero"
+    testRef: "tests/engine/state/pa-schedule-c.test.ts::PA Schedule C Lines 11, 12, 15, 25, and 26 carry additional printed deduction lines into total expenses"
+
+  - line: "27"
+    description: "Subcontractor fees"
+    formula: "Rounded contract-labor expense, defaulting to zero"
+    testRef: "tests/engine/state/pa-schedule-c.test.ts::PA Schedule C Line 38 totals the supported deduction lines including Pennsylvania Section 179 expense"
+
+  - line: "28"
+    description: "Supplies"
+    formula: "Rounded supplies expense, defaulting to zero"
+    testRef: "tests/engine/state/pa-schedule-c.test.ts::PA Schedule C Line 38 totals the supported deduction lines including Pennsylvania Section 179 expense"
+
+  - line: "29"
+    description: "Taxes"
+    formula: "Rounded taxes expense, defaulting to zero"
+    notes: |
+      The PA instructions disallow taxes based upon gross or net income.
+      This module accepts only the already-filtered Pennsylvania-allowable
+      tax expense amount.
+    testRef: "tests/engine/state/pa-schedule-c.test.ts::PA Schedule C Lines 18, 23, 29, 30, and 33 carry additional printed deduction lines into total expenses"
+
+  - line: "30"
+    description: "Telephone"
+    formula: "Rounded telephone expense, defaulting to zero"
+    testRef: "tests/engine/state/pa-schedule-c.test.ts::PA Schedule C Lines 18, 23, 29, 30, and 33 carry additional printed deduction lines into total expenses"
+
+  - line: "31"
+    description: "Travel and entertainment"
+    formula: "Rounded travel expense + rounded meals expense"
+    notes: |
+      Pennsylvania permits 100 percent of customary and reasonable business
+      meals and entertainment, unlike the federal limitation.
+    testRef: "tests/engine/state/pa-schedule-c.test.ts::PA Schedule C Line 31 includes meals at 100 percent for Pennsylvania"
+
+  - line: "32"
+    description: "Utilities"
+    formula: "Rounded utilities expense, defaulting to zero"
+    testRef: "tests/engine/state/pa-schedule-c.test.ts::PA Schedule C Line 38 totals the supported deduction lines including Pennsylvania Section 179 expense"
+
+  - line: "33"
+    description: "Wages"
+    formula: "Rounded wages expense, defaulting to zero"
+    testRef: "tests/engine/state/pa-schedule-c.test.ts::PA Schedule C Lines 18, 23, 29, 30, and 33 carry additional printed deduction lines into total expenses"
+
+  - line: "34"
+    description: "IDCs (1/3 current expensing)"
+    formula: "Rounded Pennsylvania-allowable current IDC expense, defaulting to zero"
+    notes: |
+      The 2025 PA-40 instructions say taxpayers that directly incur IDCs may
+      elect to currently expense up to one-third of IDCs in tax years
+      beginning after Dec. 31, 2013. This line accepts the already-limited
+      Pennsylvania-allowable amount.
+    testRef: "tests/engine/state/pa-schedule-c.test.ts::PA Schedule C Lines 34, 35, and 36 carry Pennsylvania IDC and start-up-cost deductions into total expenses"
+
+  - line: "35"
+    description: "IDCs (amortization)"
+    formula: "Rounded Pennsylvania IDC amortization expense, defaulting to zero"
+    notes: |
+      The 2025 PA-40 instructions say the remaining IDCs may be amortized
+      over 10 years when the taxpayer elects current expensing of up to
+      one-third or may be amortized over 10 years if no current-expense
+      election is made.
+    testRef: "tests/engine/state/pa-schedule-c.test.ts::PA Schedule C Lines 34, 35, and 36 carry Pennsylvania IDC and start-up-cost deductions into total expenses"
+
+  - line: "36"
+    description: "Start-up costs (direct expense)"
+    formula: "Rounded Pennsylvania-allowable direct start-up-cost expense, defaulting to zero"
+    notes: |
+      The Pennsylvania Department of Revenue's start-up-cost guidance says
+      eligible business start-up costs may be directly expensed on PA
+      Schedule C when reported under Pennsylvania personal income tax rules.
+    testRef: "tests/engine/state/pa-schedule-c.test.ts::PA Schedule C Lines 34, 35, and 36 carry Pennsylvania IDC and start-up-cost deductions into total expenses"
+
+  - line: "37"
+    description: "Total other expenses"
+    formula: "Rounded other-expenses input + allowable actual home-office expense from the Schedule C homeOffice input, defaulting to zero"
+    notes: |
+      This slice currently supports only the aggregate normalized
+      `otherExpenses` amount and the allowable business-use-of-home amount.
+      When actual home-office costs are supplied, use either the provided
+      Pennsylvania-adjusted amount or the computed federal Form 8829 Line 36
+      amount as the actual-cost proxy. Pennsylvania does not allow the federal
+      simplified home-office method, so simplified-method input contributes 0.
+    testRef: "tests/engine/state/pa-schedule-c.test.ts::PA Schedule C Line 38 totals the supported deduction lines including Pennsylvania Section 179 expense"
+
+  - line: "38"
+    description: "Total expenses"
+    formula: "Line 6 + Line 7 + Line 8 + Line 9 + Line 10 + Line 11 + Line 12 + Line 13a + Line 13b + Line 14 + Line 15 + Line 16 + Line 17 + Line 18 + Line 19 + Line 20 + Line 21 + Line 22 + Line 23 + Line 24 + Line 25 + Line 26 + Line 27 + Line 28 + Line 29 + Line 30 + Line 31 + Line 32 + Line 33 + Line 34 + Line 35 + Line 36 + Line 37"
+    testRef: "tests/engine/state/pa-schedule-c.test.ts::PA Schedule C Line 38 totals the supported deduction lines including Pennsylvania Section 179 expense"
+
+  - line: "39"
+    description: "Net profit or loss"
+    formula: "Line 5 - Line 38"
+    notes: "Flows to PA Class 4 business income on the resident return."
+    testRef: "tests/engine/state/pa-schedule-c.test.ts::PA Schedule C Line 39 carries a net loss when expenses exceed income"

@@ -1,0 +1,413 @@
+form: "Form 8606"
+fullName: "Nondeductible IRAs"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i8606"
+
+notes: |
+  This slice implements the traditional IRA basis-allocation math needed to
+  determine the taxable and nontaxable portions of IRA distributions and Roth
+  conversions for Form 1040 Line 4b. It covers the Part I and Part II lines
+  needed for basis recovery from traditional, SEP, and SIMPLE IRAs, and now
+  adds the core Part III Roth IRA distribution ordering rules. Qualified
+  charitable distributions (QCDs), disaster distributions, and other special
+  adjustments remain only partially covered.
+  Per-spouse MFJ edge-case coverage now includes: independent per-owner QCD
+  annual limit enforcement (IRC §408(d)(8)(A), $105,000 per spouse for 2025)
+  with excess QCD flowing back only to the over-limit spouse's taxable income;
+  per-owner Form 8889ByOwner HSA qualified funding distribution routing
+  (traditional IRA → Line 7 exclusion, Roth IRA → Line 19 exclusion) with
+  independent per-spouse HSA funding amounts; mixed conversion + distribution
+  scenarios where one spouse converts while the other takes a standard
+  distribution, each with independent pro-rata ratios; and per-owner disaster
+  distribution allocation (Line 15b) and qualified repayment reduction
+  (Line 15c) operating independently per spouse.
+  Per-spouse MFJ support: On married-filing-jointly returns, each spouse files
+  a separate Form 8606 because IRA basis is tracked per-taxpayer, not per-return.
+  The engine supports a form8606ByOwner input that provides separate primary and
+  spouse Form 8606 inputs. When form8606ByOwner is provided, the engine filters
+  attached 1099-R forms by explicit accountHolder tag for each spouse's defaults,
+  calculates each spouse's Form 8606 independently, and combines the results for
+  Form 1040 Lines 4a and 4b. On a married-filing-jointly return, any attached IRA
+  Forms 1099-R that remain untagged stay outside both spouse-specific Form 8606
+  defaults instead of being assumed to belong to the primary spouse; until the
+  owner is validated manually, those untagged IRA distributions continue through
+  the ordinary Form 1099-R pipeline without IRA-basis recovery. This replaces the
+  owner-ambiguity suppression that previously zeroed out all defaults when MFJ
+  1099-R forms had mixed owners.
+  This slice now excludes validated QCD amounts from Line 7 so the charitable
+  portion does not consume IRA basis before the pro-rata allocation is applied.
+  When the federal engine has attached IRA Forms 1099-R and no explicit Line 7
+  rollover exclusion is supplied, it also defaults the rollover exclusion from
+  the excludable direct-rollover portion of those forms so nontaxable IRA
+  rollovers do not consume basis. When attached IRA Forms 1099-R are explicitly
+  marked as returns of current-year
+  IRA contributions made by the due date, this slice also defaults a separate
+  Line 7 exclusion from those gross distribution amounts because the Form 8606
+  instructions say not to include that distribution on Form 8606 even though
+  any Box 2a earnings still remain taxable on Form 1040 Line 4b outside the
+  Form 8606 basis-allocation flow. When the federal engine is also defaulting
+  from Form 8889 Line 10 qualified HSA funding distributions, it routes that
+  exclusion to Line 7 only when the validated funding source is traditional
+  IRA; validated Roth-source funding instead defaults to the separate Line 19
+  exclusion branch because the 2025 Form 8889 instructions do not allow a
+  qualified HSA funding distribution from an ongoing SEP or SIMPLE IRA. It
+  also allocates Line 15a proportionally to
+  2025 qualified disaster
+  distributions for Line 15b, following the 2025 instructions. It also applies
+  the 2025 Line 15c worksheet for repayments of qualified birth or adoption,
+  emergency personal expense, domestic abuse, and terminal illness
+  distributions that are treated as rollovers, including the associated Line 6
+  reduction for repayments of 2025 distributions made in 2025, capped so Line
+  6 does not go below zero, and the prior worksheet Line 6 basis adjustment
+  carryforward into Line 14. For Roth IRA distributions, this slice uses
+  validated inputs for the Line 22 contribution-basis worksheet and the Line 24
+  conversion-basis chart, applies the $10,000 lifetime first-time homebuyer
+  cap on Line 20 after reducing it for prior qualified first-time homebuyer
+  distributions, allocates qualified disaster distributions on Line 25b using
+  the instructions' Line 21 denominator, and applies the 2025 Line 25c
+  worksheet so qualifying repayments reduce current-year taxable income with any
+  excess carried into the next year's Line 22 basis. It also supports explicit
+  Line 19 exclusions for validated qualified Roth distributions, Roth rollover
+  amounts, Roth contributions returned by the due date, returned Roth excess
+  contributions, and one-time Roth IRA qualified HSA funding distributions
+  because the 2025 instructions say not to include those amounts in Part III.
+  When attached current-year Roth IRA Forms 1099-R use Box 7 code J or code T
+  and validated input confirms the distribution was actually qualified, the
+  supported federal pipeline can default that gross amount into the same Line
+  19 qualified-distribution exclusion branch instead of forcing Part III
+  taxable-ordering treatment.
+
+lines:
+  - line: "1"
+    description: "Nondeductible traditional IRA contributions for the tax year"
+    formula: "Current-year nondeductible traditional IRA contributions plus any repayments of qualified reservist distributions made in the tax year"
+    irsRef: "Form 8606 Instructions, Line 1"
+    inputs:
+      - "Current-year nondeductible traditional IRA contributions"
+      - "Repayments of qualified reservist distributions made in the tax year"
+    notes: "The 2025 instructions say to include qualified reservist distribution repayments on Line 1 with the year's nondeductible traditional IRA contributions because those repayments increase basis available for the pro-rata allocation."
+    testRef: "tests/engine/forms/form-8606.test.ts::Form 8606 Line 1 - qualified reservist repayments increase the current-year basis amount"
+
+  - line: "2"
+    description: "Basis in traditional IRAs from prior year"
+    formula: "Prior-year Form 8606 basis carryforward"
+    irsRef: "Form 8606 Instructions, Line 2"
+    inputs:
+      - "Prior-year traditional IRA basis"
+    testRef: "tests/engine/forms/form-8606.test.ts::Form 8606 Line 2 - prior-year basis carries into current-year total basis"
+
+  - line: "3"
+    description: "Total basis before current-year reductions"
+    formula: "Line 1 + Line 2"
+    irsRef: "Form 8606 Instructions, Line 3"
+    inputs:
+      - "Form 8606 Line 1"
+      - "Form 8606 Line 2"
+    testRef: "tests/engine/forms/form-8606.test.ts::Form 8606 Line 3 - total basis sums current and prior-year basis"
+
+  - line: "4"
+    description: "Contributions made in the following year and designated for the tax year"
+    formula: "Traditional IRA contributions made January 1 through the filing deadline and designated for the tax year"
+    irsRef: "Form 8606 Instructions, Line 4"
+    inputs:
+      - "Post-year-end traditional IRA contributions designated for the tax year"
+    testRef: "tests/engine/forms/form-8606.test.ts::Form 8606 Line 4 - post-year-end contributions reduce basis available for allocation"
+
+  - line: "5"
+    description: "Basis available for pro-rata allocation"
+    formula: "Line 3 - Line 4"
+    irsRef: "Form 8606 Instructions, Line 5"
+    inputs:
+      - "Form 8606 Line 3"
+      - "Form 8606 Line 4"
+    testRef: "tests/engine/forms/form-8606.test.ts::Form 8606 Line 5 - allocation basis excludes post-year-end designated contributions"
+
+  - line: "6"
+    description: "Value of all traditional, SEP, and SIMPLE IRAs at year end"
+    formula: "December 31 fair market value of all traditional, SEP, and SIMPLE IRAs plus any outstanding rollovers, reduced by repayments made in the tax year for tax-year qualified birth or adoption, emergency personal expense, domestic abuse, or terminal illness distributions that are treated as rollovers, but not below $0"
+    irsRef: "Form 8606 Instructions, Line 6"
+    inputs:
+      - "Year-end traditional/SEP/SIMPLE IRA value"
+      - "Outstanding traditional IRA rollovers"
+      - "Same-year repayments of certain tax-year retirement plan distributions treated as rollovers"
+    notes: "This slice adds outstanding rollovers to the December 31 IRA value and reduces the result for same-year repayments of qualifying tax-year distributions that the instructions treat as rollovers, limited so Line 6 cannot become negative."
+    testRef: "tests/engine/forms/form-8606.test.ts::Form 8606 Line 6 - outstanding rollovers increase the denominator value"
+
+  - line: "7"
+    description: "Traditional IRA distributions not converted to Roth"
+    formula: "Total distributions from traditional, SEP, and SIMPLE IRAs that are not included on Line 8, minus validated excludable qualified charitable distributions, rollover distributions, current-year IRA contributions returned by the due date, returned excess traditional IRA contributions, and one-time qualified HSA funding distributions because the Form 8606 instructions say not to include those amounts on Line 7; in the federal engine, if explicit gross non-conversion distributions are absent but a Form 8606 payload is present, default that pre-exclusion amount from attached IRA Forms 1099-R by summing each supported non-Roth IRA gross distribution that is taxable on the current-year return and subtracting any validated Roth conversion amount already routed to Line 8, then if explicit rollover distributions are absent, default that exclusion from attached IRA Forms 1099-R direct-rollover amounts to the extent the gross distribution exceeds the taxable amount, if explicit current-year contribution returns are absent, default that exclusion from attached IRA Forms 1099-R entries either marked as current-year IRA contributions returned by the due date or reported with Box 7 code 8 for that current-year corrective branch, but not from code P prior-year taxable returns, if explicit returned excess contributions are absent, default that exclusion from attached IRA Forms 1099-R entries marked as excess-contribution returns without earnings after the due date, and if explicit qualified HSA funding distributions are absent, default that exclusion from attached Form 8889 Line 10 amounts only when the validated funding source is explicitly traditional IRA"
+    irsRef: "Form 8606 Instructions, Line 7; Return of Excess Traditional IRA Contributions"
+    inputs:
+      - "Traditional/SEP/SIMPLE IRA distributions not converted to Roth"
+      - "Validated IRA qualified charitable distribution amount"
+      - "Traditional IRA distributions rolled over to another traditional IRA or qualified retirement plan"
+      - "Current-year IRA contributions returned by the due date"
+      - "Traditional IRA distributions treated as returned excess contributions"
+      - "One-time IRA distribution used to fund an HSA"
+    notes: "This slice excludes QCDs, rollovers, current-year contribution returns by the due date, returned excess traditional IRA contributions, and the once-per-lifetime qualified HSA funding distribution from Line 7 before the basis allocation ratio is applied. Each supported exclusion branch is capped at the remaining gross Line 7 distribution amount so the combined exclusions cannot exceed the supported traditional IRA distributions being tested. The federal pipeline can also auto-populate the pre-exclusion gross distribution amount from attached IRA Forms 1099-R when the taxpayer provides a Form 8606 payload for basis recovery but omits Line 7, ignoring Roth IRA distribution codes J, Q, and T, ignoring code P prior-year taxable returns, and subtracting any validated Roth conversion amount that already belongs on Line 8. It also auto-populates the rollover exclusion from attached IRA Forms 1099-R when those forms show a direct rollover with a nontaxable portion and no explicit Line 7 rollover amount was provided, plus current-year contribution returns by the due date and returned excess contributions from attached traditional, SEP, or SIMPLE IRA Forms 1099-R flagged for those branches. On supported IRA records, Box 7 code 8 is treated as the payer-coded current-year corrective-distribution branch for those due-date return exclusions even when the caller omitted a separate manual flag, while code P still suppresses the current-year default because the taxable earnings belong on the prior-year return. A validated SIMPLE IRA returned-excess branch still defaults into that Line 7 exclusion even when the payer used Box 7 code S, because the Form 8606 line still excludes returned excess SIMPLE IRA contributions rather than treating the code S marker as taxable by itself. Returned Roth IRA contributions by the due date and returned Roth excess contributions stay out of the Line 7 default path and instead belong in the separate Line 19 exclusion defaults so traditional IRA taxable income is not understated when both traditional and Roth records are attached. Qualified HSA funding distributions only auto-default into Line 7 when the validated funding source is explicitly traditional IRA; if the source is missing, or if the source would be an ineligible ongoing SEP or SIMPLE IRA, the engine preserves auditability by leaving both HSA-funding default branches at $0. IRS Form 8606 instructions require separate spouse-specific forms on a married-filing-jointly return, so when attached IRA Forms 1099-R carry mixed spouse-owner tags or mix tagged and untagged IRA ownership, the single supported Form 8606 path leaves the automatic Line 7 gross and exclusion defaults at $0 instead of combining potentially different spouses' IRA activity, and the downstream Form 1040 audit trail should say that the owner-specific defaults were suppressed. In the owner-specific `form8606ByOwner` path on a married-filing-jointly return, the engine instead defaults Line 7 only from IRA Forms 1099-R explicitly tagged to that same owner; any remaining untagged IRA records stay outside both spouse-specific Form 8606 defaults and continue through the ordinary Form 1099-R pipeline without basis recovery until the owner is validated. On a married-filing-jointly return with owner-specific `form8889ByOwner` statements for both spouses, or with a main `form8889` qualified funding distribution plus any owner-specific `form8889ByOwner` qualified funding statement, a single supported Form 8606 payload likewise cannot safely infer whether any qualified funding distribution belongs on that spouse's separate Form 8606 or another spouse-specific Form 8606, so the Line 7 automatic HSA-funding default stays at $0 whenever those mixed Form 8889 branches carry qualified funding dollars, and the downstream Form 1040 audit trail should surface that suppression reason instead of showing only zeroed defaults."
+    edgeCases:
+      - "QCD consuming all distributions leaves Line 7 at zero — no basis allocation to distributions, basis fully carries forward"
+      - "Multiple exclusion branches (QCD + rollover + returned + excess + HSA) all present in one year stack sequentially with each branch capped at the remaining distribution amount"
+      - "Total exclusions exceeding the gross distribution amount are clamped — Line 7 cannot be negative"
+    testRef: "tests/engine/federal.test.ts::Form 1040 Lines 4a and 4b - Roth returned contributions by the due date stay out of Form 8606 Line 7 defaults when traditional IRA distributions are also present"
+
+  - line: "8"
+    description: "Traditional IRA amounts converted to Roth IRAs"
+    formula: "Net amount converted from traditional, SEP, and SIMPLE IRAs to Roth IRAs; in the federal engine, if explicit Line 8 input is absent but a Form 8606 payload is present, default this amount from the sum of attached IRA Forms 1099-R amounts validated as traditional/SEP/SIMPLE IRA conversions to Roth IRAs"
+    irsRef: "Form 8606 Instructions, Line 8"
+    inputs:
+      - "Traditional/SEP/SIMPLE IRA amounts converted to Roth"
+      - "Validated attached IRA Form 1099-R Roth conversion amounts"
+    notes: "Only the amount actually converted to the Roth IRA belongs on Line 8. A validated attached Form 1099-R conversion amount can therefore differ from Box 1 gross distributions when withholding or another cash-out branch means the full distribution was not converted. IRS Form 8606 instructions require separate spouse-specific forms on a married-filing-jointly return, so a single supported Form 8606 payload does not auto-combine owner-tagged mixed-spouse Roth conversion amounts from attached IRA Forms 1099-R, and it also suppresses the automatic Line 8 default when attached IRA activity mixes owner-tagged and untagged records because the engine cannot safely attribute the conversion to one spouse's separate Form 8606. In the owner-specific `form8606ByOwner` path on a married-filing-jointly return, only Roth conversions from IRA Forms 1099-R explicitly tagged to that owner default into that spouse's Line 8; untagged IRA records stay outside both spouse-specific defaults and continue through the ordinary Form 1099-R pipeline until the owner is validated. The downstream Form 1040 audit trail should explicitly note when that owner-specific default was suppressed."
+    testRef: "tests/engine/forms/form-8606.test.ts::Form 8606 Line 8 - Roth conversions participate in the same basis ratio"
+
+  - line: "9"
+    description: "Total denominator for the pro-rata ratio"
+    formula: "Line 6 + Line 7 + Line 8"
+    irsRef: "Form 8606 Instructions, Line 9"
+    inputs:
+      - "Form 8606 Line 6"
+      - "Form 8606 Line 7"
+      - "Form 8606 Line 8"
+    testRef: "tests/engine/forms/form-8606.test.ts::Form 8606 Line 9 - denominator combines year-end value, distributions, and conversions"
+
+  - line: "10"
+    description: "Nontaxable percentage"
+    formula: "Line 5 divided by Line 9, rounded to three decimal places and limited to 1.000"
+    irsRef: "Form 8606 Instructions, Line 10"
+    inputs:
+      - "Form 8606 Line 5"
+      - "Form 8606 Line 9"
+    notes: "IRS instructions say to enter the result as a decimal rounded to at least three places. The engine rounds Line 10 to three decimals with standard half-up rounding before using it in downstream basis-allocation lines, and clamps the percentage at 1.000. At an exact 0.0005 rounding boundary, that half-up result can consume the final dollar of basis, so downstream carryforward lines must still floor at zero instead of going negative."
+    edgeCases:
+      - "Zero basis (no nondeductible contributions) produces a ratio of 0 — all distributions are fully taxable"
+      - "Basis exceeding the total IRA value plus distributions produces a ratio clamped at 1.000 — no distributions are taxable and excess basis carries forward"
+      - "Denominator is exactly zero (no IRA value, distributions, or conversions) — ratio defaults to zero and all basis carries forward"
+      - "Full IRA conversion to Roth (yearEndValue=0, no traditional distributions) concentrates the entire denominator in the conversion amount"
+    testRef: "tests/engine/forms/form-8606.test.ts::Form 8606 Line 10 - nontaxable percentage uses the pro-rata ratio and never exceeds 1"
+
+  - line: "11"
+    description: "Nontaxable portion of Roth conversions"
+    formula: "Line 8 × Line 10"
+    irsRef: "Form 8606 Instructions, Line 11"
+    inputs:
+      - "Form 8606 Line 8"
+      - "Form 8606 Line 10"
+    testRef: "tests/engine/forms/form-8606.test.ts::Form 8606 Line 11 - conversions receive their share of basis first"
+
+  - line: "12"
+    description: "Nontaxable portion of traditional IRA distributions"
+    formula: "Line 7 × Line 10"
+    irsRef: "Form 8606 Instructions, Line 12"
+    inputs:
+      - "Form 8606 Line 7"
+      - "Form 8606 Line 10"
+    testRef: "tests/engine/forms/form-8606.test.ts::Form 8606 Line 12 - non-conversion distributions receive the remaining pro-rata basis share"
+
+  - line: "13"
+    description: "Total nontaxable amount used this year"
+    formula: "Line 11 + Line 12"
+    irsRef: "Form 8606 Instructions, Line 13"
+    inputs:
+      - "Form 8606 Line 11"
+      - "Form 8606 Line 12"
+    testRef: "tests/engine/forms/form-8606.test.ts::Form 8606 Line 13 - total nontaxable amount sums conversions and distributions"
+
+  - line: "14"
+    description: "Basis to carry forward to next year"
+    formula: "Line 3 - Line 13, plus any prior-year Line 15c worksheet Line 6 basis adjustment carried into the current return"
+    irsRef: "Form 8606 Instructions, Line 14"
+    inputs:
+      - "Form 8606 Line 3"
+      - "Form 8606 Line 13"
+      - "Prior-year Line 15c worksheet Line 6 basis adjustment"
+    notes: "The current-year Line 15c worksheet Line 6 amount becomes a next-year basis adjustment and does not increase Line 14 until the following return. When Line 10 rounds up at the three-decimal boundary, the resulting Line 13 allocation can exhaust the final dollar of basis, but Line 14 still floors at zero."
+    testRef: "tests/engine/forms/form-8606.test.ts::Form 8606 Line 14 - unused basis carries forward"
+
+  - line: "15a"
+    description: "Traditional IRA distributions subject to tax test"
+    formula: "Line 7 - Line 12"
+    irsRef: "Form 8606 Instructions, Line 15a"
+    inputs:
+      - "Form 8606 Line 7"
+      - "Form 8606 Line 12"
+    notes: "Because QCDs are excluded from Line 7, the charitable portion is removed before the taxable-versus-nontaxable basis split is applied."
+    testRef: "tests/engine/forms/form-8606.test.ts::Form 8606 Line 15a - taxable traditional distributions are gross less nontaxable share"
+
+  - line: "15b"
+    description: "Qualified disaster distribution exclusion"
+    formula: "If there are no 2025 qualified disaster distributions from traditional IRAs, enter $0. If all Line 7 distributions are qualified disaster distributions, enter Line 15a. Otherwise enter Line 15a × (qualified disaster distributions / Line 7), limiting the qualified disaster distribution amount to Line 7."
+    irsRef: "Form 8606 Instructions, Line 15b"
+    inputs:
+      - "Form 8606 Line 7"
+      - "Form 8606 Line 15a"
+      - "Qualified disaster distributions from traditional IRAs reported for 2025"
+    notes: "This slice supports the 2025 qualified disaster distribution fraction described in the IRS instructions and integrates with the separate 2025 Line 15c worksheet for certain 3-year repayment categories."
+    testRef: "tests/engine/forms/form-8606.test.ts::Form 8606 Line 15b - mixed qualified disaster distributions receive a proportional exclusion"
+
+  - line: "15c"
+    description: "Taxable traditional IRA distributions reported on Form 1040 Line 4b"
+    formula: "Line 15a - Line 15b, reduced by the Line 15c worksheet repayment amount for qualified birth or adoption, emergency personal expense, domestic abuse, and terminal illness distributions that were repaid within the allowed rollover window, limited to the eligible taxable share with any excess carried as the next-year Line 14 basis adjustment; when validated input identifies a single applicable Form 5329 exception number for those Line 15c worksheet distributions, preserve that exception number for downstream Form 5329 Line 2 reporting"
+    irsRef: "Form 8606 Instructions, Line 15c"
+    inputs:
+      - "Form 8606 Line 15a"
+      - "Form 8606 Line 15b"
+      - "Line 7 distributions eligible for the Line 15c repayment worksheet"
+      - "Repayments of those eligible distributions made within the allowed rollover window"
+      - "Validated Form 5329 exception number for the supported Line 15c repayment category, if known"
+    notes: "When QCD or qualified disaster inputs are present, their exclusions are already embedded through Line 7 and Line 15b before the taxable amount reaches Line 15c. The worksheet reduction is limited to the eligible taxable share, and any excess repayment is preserved as the next-year basis adjustment described on worksheet Line 6. When the taxpayer validates that the repayment-eligible distributions belong to one Form 5329 category, the engine preserves exception numbers 19, 20, 22, 23, or 99 so the downstream Form 5329 audit trail can distinguish qualified birth or adoption, terminal illness, domestic abuse, emergency personal expense, or mixed-category treatment. The supported audit trail also preserves the worksheet's remaining eligible taxable share after the repayment reduction so downstream Form 5329 support can trace the exact dollars that still remain subject to the early-distribution exception path. The regression suite also locks both the 2025 instructions' first repayment example, where a $10,000 eligible traditional IRA distribution with a $7,500 taxable share and a $3,000 repayment leaves $4,500 taxable on Line 15c, and supported downstream exception-number propagation for domestic-abuse distributions."
+    testRef: "tests/engine/forms/form-8606.test.ts::Form 8606 Line 15c - Form 1040 taxable IRA distributions follow the allocated basis result"
+
+  - line: "16"
+    description: "Roth conversion amount carried into Part II"
+    formula: "Line 8"
+    irsRef: "Form 8606 Instructions, Line 16"
+    inputs:
+      - "Form 8606 Line 8"
+    testRef: "tests/engine/forms/form-8606.test.ts::Form 8606 Line 16 - Part II starts with the Roth conversion amount"
+
+  - line: "17"
+    description: "Nontaxable portion of Roth conversions"
+    formula: "Line 11"
+    irsRef: "Form 8606 Instructions, Line 17"
+    inputs:
+      - "Form 8606 Line 11"
+    testRef: "tests/engine/forms/form-8606.test.ts::Form 8606 Line 17 - Part II carries forward the nontaxable conversion amount"
+
+  - line: "18"
+    description: "Taxable amount of Roth conversions reported on Form 1040 Line 4b"
+    formula: "Line 16 - Line 17"
+    irsRef: "Form 8606 Instructions, Line 18"
+    inputs:
+      - "Form 8606 Line 16"
+      - "Form 8606 Line 17"
+    testRef: "tests/engine/forms/form-8606.test.ts::Form 8606 Line 18 - taxable Roth conversions are gross conversions less allocated basis"
+
+  - line: "19"
+    description: "Nonqualified Roth IRA distributions included in the ordering rules"
+    formula: "Validated Roth IRA distributions that must be tested under Part III after excluding transfers and other amounts not entered on Line 19, including validated qualified Roth IRA distributions, validated Roth IRA rollover distributions, Roth IRA contributions returned by the due date, returned Roth excess contributions, and one-time Roth IRA qualified HSA funding distributions; in the federal engine, if explicit Line 19 input is absent but a Form 8606 payload is present, default this amount from attached Roth IRA Forms 1099-R that still require Part III, including code J distributions and code T distributions that do not qualify for the Form 1040 instructions' validated pre-2021 safe harbor or validated qualified-distribution branch, default the qualified-distribution exclusion from attached code J or code T Roth IRA Forms 1099-R when validated input confirms the distribution was qualified, default the rollover exclusion from attached Roth IRA Forms 1099-R when validated input supplies the amount rolled over to another Roth IRA, and if explicit Roth qualified HSA funding distributions are absent, default that exclusion from attached Form 8889 Line 10 amounts when the validated funding source is Roth IRA"
+    irsRef: "Form 8606 Instructions, Line 19"
+    inputs:
+      - "Validated Roth IRA distributions subject to Part III"
+      - "Validated qualified Roth IRA distributions excluded from Line 19"
+      - "Validated Roth IRA rollover distributions excluded from Line 19"
+      - "Validated Roth IRA contributions returned by the due date excluded from Line 19"
+      - "Validated returned Roth excess contributions excluded from Line 19"
+      - "One-time Roth IRA qualified HSA funding distributions excluded from Line 19"
+    notes: "This slice assumes the base Roth distribution input excludes divorce transfers and other amounts the instructions say not to enter on Line 19, but it now also supports explicit Line 19 exclusions for validated qualified Roth distributions, validated Roth rollover amounts, Roth contributions returned by the due date, returned Roth excess contributions, and one-time Roth IRA qualified HSA funding distributions when the taxpayer starts from a gross Roth distribution total. Each supported exclusion branch is capped at the remaining Line 19 gross distribution amount so the combined exclusions cannot exceed the Roth distributions being tested under Part III. Any 2025 repayment-eligible distributions that still belong on Line 19 remain in the base amount before the worksheet reduction. When the federal engine defaults the gross Roth distribution input from attached current-year Roth IRA Forms 1099-R, it includes the attached returned-contribution and returned-excess branches in that gross subtotal and then auto-populates separate Line 19 exclusion subtotals for those branches so the final Line 19 amount still reflects only the distributions that must be tested under Part III. The same supported default path can also carry a validated attached Roth IRA rollover amount into the Line 19 rollover exclusion subtotal so distributions the instructions say were rolled over do not reenter Part III merely because the user omitted a duplicate manual Form 8606 exclusion field. Code Q qualified distributions, validated code J qualified-distribution branches, validated code T qualified-distribution branches, validated code T safe-harbor distributions, and recharacterization codes N and R stay out of that defaulted gross Line 19 subtotal because they already bypass Part III in the supported slice. IRS Form 8606 instructions require separate spouse-specific forms on a married-filing-jointly return, so when attached Roth IRA Forms 1099-R carry mixed spouse-owner tags or mix tagged and untagged IRA ownership, the single supported Form 8606 path leaves the automatic Line 19 gross and exclusion defaults at $0 instead of combining potentially different spouses' Roth IRA activity, and the downstream Form 1040 audit trail should say that the owner-specific defaults were suppressed. In the owner-specific `form8606ByOwner` path on a married-filing-jointly return, only Roth IRA Forms 1099-R explicitly tagged to that owner default into that spouse's Line 19 and Line 19 exclusion subtotals; any remaining untagged IRA records stay outside both spouse-specific defaults and continue through the ordinary Form 1099-R pipeline until the owner is validated. Qualified HSA funding distributions only auto-default into the Roth exclusion branch when the validated funding source is explicitly Roth IRA; if the source is missing, the engine preserves auditability by leaving both HSA-funding default branches at $0. On a married-filing-jointly return with owner-specific `form8889ByOwner` statements for both spouses, or with a main `form8889` qualified funding distribution plus any owner-specific `form8889ByOwner` qualified funding statement, a single supported Form 8606 payload cannot safely infer whether any Roth qualified funding distribution belongs on that spouse's separate Form 8606 or another spouse-specific Form 8606, so the Line 19 automatic HSA-funding exclusion stays at $0 whenever those mixed Form 8889 branches carry qualified funding dollars, and the downstream Form 1040 audit trail should surface that suppression reason instead of showing only zeroed defaults."
+    testRef: "tests/engine/federal.test.ts::Form 1040 Lines 4a and 4b - Form 8606 auto-defaults validated attached Roth IRA rollover amounts into Line 19 exclusions"
+
+  - line: "20"
+    description: "Qualified first-time homebuyer expenses allocable to Roth distributions"
+    formula: "The smaller of Form 8606 Line 19, validated qualified first-time homebuyer expenses, or $10,000 reduced by prior qualified first-time homebuyer distributions, but not below $0"
+    irsRef: "Form 8606 Instructions, Line 20"
+    inputs:
+      - "Form 8606 Line 19"
+      - "Validated qualified first-time homebuyer expenses"
+      - "Prior qualified first-time homebuyer distributions"
+    notes: "The 2025 instructions cap current-year homebuyer expenses at the remaining lifetime $10,000 limit after prior qualified first-time homebuyer distributions. The engine also limits Line 20 to Line 19 because the amount allocable to current-year Roth distributions cannot exceed the distributions being tested under Part III."
+    edgeCases:
+      - "Prior qualified first-time homebuyer distributions of $10,000 or more leave no remaining Line 20 exclusion"
+      - "Current-year homebuyer expenses are capped at the remaining lifetime limit even when the taxpayer distributes more than that amount"
+      - "Current-year homebuyer expenses cannot exceed the Form 8606 Line 19 Roth distributions being tested under Part III"
+    testRef: "tests/engine/forms/form-8606.test.ts::Form 8606 Line 20 - first-time homebuyer expenses are capped by the remaining lifetime limit"
+
+  - line: "21"
+    description: "Roth distributions remaining after the homebuyer exclusion"
+    formula: "Line 19 - Line 20, floored at $0"
+    irsRef: "Form 8606, Line 21"
+    inputs:
+      - "Form 8606 Line 19"
+      - "Form 8606 Line 20"
+    testRef: "tests/engine/forms/form-8606.test.ts::Form 8606 Line 21 - Part III removes qualified first-time homebuyer expenses before basis recovery"
+
+  - line: "22"
+    description: "Basis in regular Roth IRA contributions available for recovery"
+    formula: "When a per-year Roth contribution basis chart (rothContributionBasisByYear) is provided, sum each year's remaining basis (contributionAmount minus previouslyWithdrawnTaxFree, floored at $0) to compute the total regular Roth contribution basis; otherwise use the validated single rothContributionBasis input. Then add any prior-year Line 25c worksheet Line 5 carryforward. When distributions consume contribution basis (Line 21 exceeds Line 22), deplete the per-year chart in FIFO order (oldest contribution year first) and output the updated chart as rothContributionBasisByYearCarryforward for next-year automated basis tracking."
+    irsRef: "Form 8606 Instructions, Line 22"
+    inputs:
+      - "Per-year Roth contribution basis chart (rothContributionBasisByYear): array of {year, contributionAmount, previouslyWithdrawnTaxFree}"
+      - "Or: validated single remaining Roth contribution basis (rothContributionBasis) for backward compatibility"
+      - "Prior-year Line 25c worksheet Line 5 basis adjustment"
+    notes: "The per-year chart mirrors the Line 24 conversion basis chart pattern: each entry tracks the original contribution and cumulative prior withdrawals. The FIFO depletion ensures oldest contributions are recovered first, matching the Roth ordering rules (IRC §408A(d)(4)). Regular Roth contributions are always recovered tax-free and penalty-free regardless of age or holding period because they were made with after-tax dollars. The single rothContributionBasis input remains supported for backward compatibility when per-year records are not available."
+    edgeCases:
+      - "Single contribution year with partial basis recovery — only that year's record is updated"
+      - "Multiple contribution years with FIFO depletion — oldest contribution year is exhausted first before moving to the next"
+      - "All contribution basis exhausted — all per-year records show full withdrawal, remaining distributions test against conversion basis on Line 24"
+      - "No distributions touch contribution basis (Line 21 is zero) — all per-year records carry forward unchanged"
+      - "Backward compatibility: single rothContributionBasis input still works and produces the same result as before"
+      - "Both inputs provided: rothContributionBasisByYear takes precedence over rothContributionBasis"
+      - "Prior-year Line 25c basis adjustment is added on top of the chart-computed or single-input basis"
+      - "Prior-year records with fully recovered basis are preserved in the carryforward chart for audit trail completeness"
+    testRef: "tests/engine/forms/form-8606.test.ts::Form 8606 Line 22 per-year contribution basis chart - computes total remaining basis from per-year records"
+
+  - line: "23"
+    description: "Roth distributions remaining after regular contribution basis"
+    formula: "Line 21 - Line 22, floored at $0"
+    irsRef: "Form 8606, Line 23"
+    inputs:
+      - "Form 8606 Line 21"
+      - "Form 8606 Line 22"
+    testRef: "tests/engine/forms/form-8606.test.ts::Form 8606 Line 23 - regular contribution basis is recovered before conversion basis"
+
+  - line: "24"
+    description: "Basis in Roth conversions and rollovers from qualified plans"
+    formula: "When per-year conversion basis records are provided (rothConversionBasisByYear), compute the sum of each year's remaining basis (conversionAmount minus previouslyRecoveredTaxFree) across all conversion years; otherwise use the validated single rothConversionBasis input. After Part III determines how much conversion basis is consumed in the current year (the lesser of Line 23 and Line 24), deplete the per-year records in FIFO order (oldest conversion year first) so each year's cumulative recovery is updated for the next year's carryforward chart."
+    irsRef: "Form 8606 Instructions, Line 24"
+    inputs:
+      - "Per-year Roth conversion/rollover basis chart (rothConversionBasisByYear): array of {year, conversionAmount, previouslyRecoveredTaxFree}"
+      - "Or: validated single remaining Roth conversion basis (rothConversionBasis) for backward compatibility"
+    notes: "The IRS Form 8606 instructions require filers to maintain a per-year chart tracking each Roth conversion's original amount and cumulative basis recovered from prior-year distributions. When distributions exceed regular contribution basis (Line 22), conversion basis is consumed in FIFO order by conversion year. The per-year chart enables automatic basis tracking across tax years, matching the expected IRS worksheet behavior. The single rothConversionBasis input remains supported for callers who pre-compute the chart externally. When both inputs are provided, rothConversionBasisByYear takes precedence. The updated per-year chart is returned in the result as rothConversionBasisByYearCarryforward so the next year's return can use it directly."
+    edgeCases:
+      - "Single conversion year with partial basis recovery — only that year's record is updated"
+      - "Multiple conversion years with FIFO depletion — oldest conversion year is exhausted first before moving to the next"
+      - "All conversion basis exhausted — all per-year records show full recovery, taxable earnings remain on Line 25a"
+      - "No distributions touch conversion basis (Line 23 is zero) — all per-year records carry forward unchanged"
+      - "Backward compatibility: single rothConversionBasis input still works and produces the same result as before"
+      - "Both inputs provided: rothConversionBasisByYear takes precedence over rothConversionBasis"
+      - "Zero remaining basis in all conversion years — Line 24 is zero and all distributions beyond contribution basis are taxable"
+      - "Prior-year records with fully recovered basis are preserved in the carryforward chart for audit trail completeness"
+    testRef: "tests/engine/forms/form-8606.test.ts::Form 8606 Line 24 - remaining Roth conversion basis offsets distributions after contribution basis"
+
+  - line: "25a"
+    description: "Taxable Roth IRA distributions before disaster and repayment adjustments"
+    formula: "Line 23 - Line 24, floored at $0"
+    irsRef: "Form 8606, Line 25a"
+    inputs:
+      - "Form 8606 Line 23"
+      - "Form 8606 Line 24"
+    edgeCases:
+      - "Distribution exactly equals contribution basis — Line 23 is zero and conversion basis is not touched"
+      - "Distribution exceeds contribution basis but within conversion basis — no taxable amount, all basis recovered"
+      - "Distribution exceeds all basis (contribution + conversion) — remaining amount is taxable earnings"
+      - "Zero contribution and conversion basis — entire distribution is taxable"
+      - "Prior-year Line 25c carryforward adds to Line 22 contribution basis and can prevent taxation"
+    testRef: "tests/engine/forms/form-8606.test.ts::Form 8606 Line 25a - taxable Roth distributions remain only after both contribution and conversion basis are exhausted"
+
+  - line: "25b"
+    description: "Qualified disaster distribution exclusion for Roth IRAs"
+    formula: "If there are no qualified disaster distributions from Roth IRAs, enter $0. If all Line 21 distributions are qualified disaster distributions, enter Line 25a. Otherwise enter Line 25a × (qualified disaster distributions / Line 21), limiting qualified disaster distributions to Line 21."
+    irsRef: "Form 8606 Instructions, Line 25b"
+    inputs:
+      - "Form 8606 Line 21"
+      - "Form 8606 Line 25a"
+      - "Qualified disaster distributions from Roth IRAs reported for 2025"
+    notes: "The denominator follows the 2025 instructions and uses Line 21, not Line 19, so any Line 20 first-time homebuyer exclusion is removed before the disaster fraction is applied."
+    testRef: "tests/engine/forms/form-8606.test.ts::Form 8606 Line 25b - mixed qualified disaster Roth distributions use the Line 21 fraction"
+
+  - line: "25c"
+    description: "Taxable Roth IRA distributions reported on Form 1040 Line 4b"
+    formula: "Line 25a - Line 25b, reduced by the 2025 Line 25c worksheet repayments of qualified birth or adoption, emergency personal expense, domestic abuse, and terminal illness distributions made within the 3-year repayment period only when validated Line 21 distributions are eligible for those categories, limiting the worksheet repayment amount to the eligible Line 21 distributions, floored at $0, with any excess repayment above the eligible taxable share carried to the next year's Line 22 basis; when no validated Line 21 distributions are eligible for the Line 25c worksheet, do not complete the worksheet and keep Line 25c at Line 25a - Line 25b with no next-year Line 22 basis adjustment; when validated input identifies Line 21 distributions eligible for those Line 25c worksheet categories and a single applicable Form 5329 exception number, preserve the remaining taxable share and that exception number for downstream Form 5329 Line 2 reporting"
+    irsRef: "Form 8606 Instructions, Line 25c"
+    inputs:
+      - "Form 8606 Line 25a"
+      - "Form 8606 Line 25b"
+      - "Line 21 distributions eligible for the Line 25c repayment worksheet"
+      - "Qualified repayments entered on the 2025 Line 25c worksheet"
+      - "Validated Form 5329 exception number for the supported Line 25c repayment category, if known"
+    notes: "The worksheet subtracts qualifying repayments directly from the taxable amount after the Line 25b disaster exclusion, but only when the taxpayer both reported supported repayment-eligible Roth distributions on Line 21 and repaid those distributions within the 3-year period. If no validated Line 21 distributions are eligible for the worksheet, the instructions say not to complete it, so repayment dollars cannot reduce unrelated Roth taxable income or create a next-year Line 22 basis adjustment by themselves. If qualifying repayments exceed the eligible taxable share, the excess becomes the next-year Line 22 adjustment described on worksheet Line 5. When the taxpayer validates that only a portion of the remaining Line 21 Roth distributions belongs to one supported Form 5329 category, the engine first allocates that category's taxable share through the same Part III ordering rules, caps the worksheet repayment amount at that eligible gross distribution subtotal, and then limits the current-year Line 25c repayment reduction to the eligible taxable share. That prevents repayments from offsetting unrelated taxable Roth distributions or creating a next-year basis adjustment larger than the qualifying Roth distribution itself. The engine preserves exception numbers 19, 20, 22, 23, or 99 so the downstream Form 5329 audit trail can distinguish qualified birth or adoption, terminal illness, domestic abuse, emergency personal expense, or mixed-category treatment. The regression suite also locks both the 2025 instructions' second repayment example, where a $12,500 Roth distribution with $2,500 contribution basis and a $3,000 repayment leaves $7,000 taxable on Line 25c, and the no-eligible-distributions boundary where the Line 25c worksheet must stay unused."
+    edgeCases:
+      - "Repayments cannot reduce current-year taxable Roth distributions below $0"
+      - "Repayments above the current-year taxable amount carry into the next year's Line 22 basis instead of disappearing"
+      - "When only part of the Line 21 Roth distributions qualifies for the repayment worksheet, both the worksheet repayment amount and the Line 25c reduction are capped at that eligible distribution branch, and only the branch's nontaxable remainder can become next-year Line 22 basis"
+    testRef: "tests/engine/forms/form-8606.test.ts::Form 8606 Line 25c - Roth repayment worksheet reduces taxable income and carries excess into next-year basis"

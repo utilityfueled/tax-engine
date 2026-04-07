@@ -1,0 +1,164 @@
+form: "Ohio Resident Credit Worksheet"
+fullName: "Ohio Resident Credit — Credit for Taxes Paid to Another State"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf"
+
+notes: |
+  The Ohio resident credit allows full-year Ohio residents to claim a credit
+  against Ohio tax for income tax paid to another state on income that is also
+  included in Ohio adjusted gross income. This prevents double taxation when
+  an Ohio resident earns income sourced to another state.
+
+  The credit is computed per state using a worksheet from the IT 1040 instructions.
+  The total of all per-state credits flows to Schedule of Credits, line 39.
+
+  Key limitation: the credit for each state is the LESSER of:
+    (a) Tax actually paid to that state (net of credits received from that state)
+    (b) Ohio tax × (income taxed by both Ohio and the other state ÷ Ohio AGI)
+
+  This ensures Ohio gives credit only up to the Ohio tax attributable to the
+  double-taxed income, and never more than the tax actually paid elsewhere.
+
+  Additional rules:
+  - Only state-level income taxes qualify — city/local taxes paid to another
+    state do NOT count (Ohio R.C. 5747.05(B))
+  - The other state must impose the tax on the income because it was earned
+    or sourced there (not merely because the filer is a resident of both states)
+  - "Another state" means another U.S. state or the District of Columbia.
+    Ohio itself, territories, provinces, countries, and city taxes are not
+    valid resident-credit jurisdictions and should be rejected rather than guessed.
+  - Income must be included in Ohio AGI (line 3) to qualify
+  - Compensation earned while an Ohio resident in Indiana, Kentucky, Michigan,
+    Pennsylvania, or West Virginia is not eligible for the resident credit
+    because Ohio has reciprocity agreements with those states. Such wages,
+    salaries, and other compensation must not be entered on IT RC Column A.
+  - Ohio AGI of zero or negative: credit is $0 (division by zero protection)
+  - Total credit across all states cannot exceed IT 1040 line 8c (tax before credits)
+  - Entries for reciprocity states must identify whether the taxed income is
+    compensation or another income type so the engine can apply the exclusion
+    rule correctly.
+
+  R.C. 5747.05(B).
+
+packetRules:
+  packetBehavior: "reference-summary-pdf"
+  includeWhen:
+    - "Ohio resident credit result exists for taxes paid to another state"
+  suppressWhen:
+    - "No resident credit worksheet is needed"
+  notes: |
+    The packet generator should attach a resident-credit reference-summary page
+    only when an Ohio resident credit worksheet result exists.
+
+businessRuleValidation:
+  - rule: "reference-summary-packet"
+    description: "Inventory support counts this worksheet as business-rule validated only when regression coverage proves the Ohio resident-credit reference summary is attached only when another-state tax data produces a resident-credit worksheet."
+    testRef: "tests/pdf/fill-oh-reference-forms.test.ts::fillOhioReferenceForms includes the Ohio resident credit reference summary only when another-state credit worksheet is needed"
+
+lines:
+  - line: "W1"
+    description: "Income included in both Ohio AGI and the other state's taxable income"
+    formula: "Pass-through input per state"
+    inputs:
+      - "Double-taxed income amount for this state"
+    notes: |
+      The amount of income that is included in Ohio AGI (IT 1040 line 3) AND also
+      taxed by the other state. Common examples: wages earned in another state
+      (W-2 with other state in box 15), rental income from property in another state,
+      business income sourced to another state.
+      However, do NOT include compensation earned while an Ohio resident in
+      Indiana, Kentucky, Michigan, Pennsylvania, or West Virginia. The 2025
+      IT RC instructions explicitly exclude those reciprocity-state wages,
+      salaries, and other compensation from Column A.
+    testRef: "tests/engine/state/oh-resident-credit.test.ts::OH Resident Credit - double-taxed income flows through"
+
+  - line: "W2"
+    description: "Ohio adjusted gross income"
+    formula: "IT 1040, line 3"
+    inputs:
+      - "Ohio AGI"
+    notes: "Used as the denominator in the apportionment fraction."
+    testRef: "tests/engine/state/oh-resident-credit.test.ts::OH Resident Credit - Ohio AGI from IT 1040"
+
+  - line: "W3"
+    description: "Apportionment fraction"
+    formula: "min(1.0, Line W1 ÷ Line W2)"
+    inputs:
+      - "Line W1"
+      - "Line W2"
+    notes: |
+      The fraction of Ohio income that was also taxed by the other state.
+      Cannot exceed 1.0 (if double-taxed income exceeds Ohio AGI due to
+      deductions, the fraction caps at 100%).
+    edgeCases:
+      - "Ohio AGI of zero or negative: fraction is 0 (no credit)"
+      - "Double-taxed income exceeding Ohio AGI: capped at 1.0"
+      - "Compensation from reciprocity states (IN, KY, MI, PA, WV) uses fraction 0 because it is not credit-eligible"
+      - "Entries using Ohio itself, a territory, or a non-state code are rejected rather than guessed"
+    testRef: "tests/engine/state/oh-resident-credit.test.ts::OH Resident Credit - apportionment fraction capped at 1.0"
+
+  - line: "W4"
+    description: "Ohio tax available for the resident credit"
+    formula: "Ohio tax remaining after subtracting all nonrefundable credits that precede the resident credit under R.C. 5747.98"
+    inputs:
+      - "Ohio tax remaining after preceding credits"
+    notes: |
+      For line 39 ordering, the resident credit is calculated only against the
+      Ohio tax still remaining after earlier nonrefundable credits have been
+      applied. This available tax is capped at zero before computing the credit.
+      See R.C. 5747.05(D) and R.C. 5747.98.
+    testRef: "tests/engine/state/oh-resident-credit.test.ts::OH Resident Credit - Ohio tax before credits"
+
+  - line: "W5"
+    description: "Ohio tax attributable to other-state income"
+    formula: "Line W3 × Line W4 (round to nearest dollar)"
+    inputs:
+      - "Line W3"
+      - "Line W4"
+    notes: "The portion of Ohio tax that corresponds to the double-taxed income."
+    testRef: "tests/engine/state/oh-resident-credit.test.ts::OH Resident Credit - Ohio tax on other-state income"
+
+  - line: "W6"
+    description: "Tax paid to the other state"
+    formula: "Net state income tax paid (gross tax minus credits received from that state)"
+    inputs:
+      - "Income tax paid to the other state, net of credits"
+    notes: |
+      Must be actual state income tax paid, not estimated or accrued.
+      Subtract any credits received from the other state (nonrefundable
+      and refundable). Do not include local/city taxes — only state-level.
+    edgeCases:
+      - "Tax paid net of credits is zero or negative: credit for this state is $0"
+    testRef: "tests/engine/state/oh-resident-credit.test.ts::OH Resident Credit - tax paid to other state"
+
+  - line: "W7"
+    description: "Credit for this state"
+    formula: "min(Line W5, Line W6)"
+    inputs:
+      - "Line W5"
+      - "Line W6"
+    notes: |
+      The credit for each state is the lesser of the Ohio tax attributable to
+      the double-taxed income and the tax actually paid to the other state.
+    edgeCases:
+      - "Other state tax exceeds Ohio tax portion: capped at Ohio portion"
+      - "Ohio tax portion exceeds other state tax: capped at other state tax"
+      - "Compensation from reciprocity states yields $0 credit even if tax was withheld or paid in error"
+    testRef: "tests/engine/state/oh-resident-credit.test.ts::OH Resident Credit - per-state credit is lesser of Ohio portion and other state tax"
+
+  - line: "Total"
+    description: "Total resident credit"
+    formula: "min(sum of Line W7 across all states, Line W4)"
+    inputs:
+      - "Per-state credits"
+      - "Ohio tax available for the resident credit"
+    notes: |
+      Sum of per-state credits, capped at the Ohio tax still available for the
+      resident credit after earlier nonrefundable credits.
+      This flows to Schedule of Credits, line 39.
+    edgeCases:
+      - "Multiple states: sum of credits still capped at the tax remaining for line 39"
+      - "No other-state income: credit is $0"
+      - "A reciprocity-state entry without an explicit income type is rejected rather than guessed"
+      - "District of Columbia entries are allowed because the IT RC instructions mention D.C. explicitly"
+    testRef: "tests/engine/state/oh-resident-credit.test.ts::OH Resident Credit - total credit capped at Ohio tax before credits"

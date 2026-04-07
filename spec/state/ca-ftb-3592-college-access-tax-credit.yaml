@@ -1,0 +1,106 @@
+form: "California FTB 3592 College Access Tax Credit"
+fullName: "California FTB 3592 College Access Tax Credit Upstream Personal-Filer Slice"
+taxYear: 2025
+irsReference: "https://www.ftb.ca.gov/forms/2025/2025-3592.pdf"
+
+notes: |
+  This slice models the upstream 2025 Form FTB 3592 lines needed to support
+  California individual-return parity for credit code 235 on Form 540NR
+  Schedule P (540NR) Section B2. The official 2025 FTB 3592 instructions direct
+  taxpayers to:
+  - enter the current-year credit amount from the College Access Tax Credit
+    Certificate and the certificate number on line 1a and line 1b
+  - add pass-through College Access Tax Credit amounts from Schedule K-1 or
+    K-1 equivalent on line 2
+  - add line 1a and line 2 on line 3
+  - add prior-year carryover on line 4
+  - add line 3 and line 4 on line 5
+  - enter the amount claimed on the current return on line 6a
+  - enter 0 on line 6b unless the filer is a corporation that assigned credit,
+    which is outside this personal-filer slice
+  - optionally enter the elected refundable amount on line 6c when the filer
+    elects to treat a disallowed amount as refundable in future years
+  - subtract line 6a, line 6b, and line 6c from line 5 on line 7
+  This upstream slice intentionally leaves the statewide $5,000,000 limitation
+  analysis upstream and downstream of this worksheet. The supported state-return
+  path only uses line 5 as the available Schedule P credit amount and line 7 as
+  the resulting carryover after the Schedule P used-this-year amount is known.
+
+lines:
+  - line: "1a-1b"
+    description: "Current-year certificate credit amount and certificate number"
+    formula: "Use the supported current-year College Access Tax Credit certificate amount and certificate number"
+    inputs:
+      - "Current-year College Access Tax Credit certificate amount"
+      - "Current-year College Access Tax Credit certificate number"
+    edgeCases:
+      - "Certificate number is required when the current-year certificate amount is supplied"
+    testRef: "tests/engine/state/ca-ftb-3592-college-access-tax-credit.test.ts::CA FTB 3592 College Access Tax Credit Line 5 - certificate amount, pass-through credit, and prior-year carryover add to total available credit"
+
+  - line: "2"
+    description: "Pass-through College Access Tax Credit"
+    formula: "Add the supported pass-through College Access Tax Credit amounts from Schedule K-1 or K-1 equivalent"
+    inputs:
+      - "Optional list of pass-through College Access Tax Credit amounts with entity identification context"
+    testRef: "tests/engine/state/ca-ftb-3592-college-access-tax-credit.test.ts::CA FTB 3592 College Access Tax Credit Line 5 - certificate amount, pass-through credit, and prior-year carryover add to total available credit"
+
+  - line: "3"
+    description: "Total current-year College Access Tax Credit"
+    formula: "Line 1a + Line 2"
+    inputs:
+      - "Form FTB 3592 line 1a"
+      - "Form FTB 3592 line 2"
+    testRef: "tests/engine/state/ca-ftb-3592-college-access-tax-credit.test.ts::CA FTB 3592 College Access Tax Credit Line 5 - certificate amount, pass-through credit, and prior-year carryover add to total available credit"
+
+  - line: "4"
+    description: "Credit carryover from prior year"
+    formula: "Supported prior-year College Access Tax Credit carryover input"
+    inputs:
+      - "Prior-year College Access Tax Credit carryover"
+    testRef: "tests/engine/state/ca-ftb-3592-college-access-tax-credit.test.ts::CA FTB 3592 College Access Tax Credit Line 5 - certificate amount, pass-through credit, and prior-year carryover add to total available credit"
+
+  - line: "5"
+    description: "Total available College Access Tax Credit"
+    formula: "Line 3 + Line 4"
+    inputs:
+      - "Form FTB 3592 line 3"
+      - "Form FTB 3592 line 4"
+    testRef: "tests/engine/state/ca-ftb-3592-college-access-tax-credit.test.ts::CA FTB 3592 College Access Tax Credit Line 5 - certificate amount, pass-through credit, and prior-year carryover add to total available credit"
+
+  - line: "6a"
+    description: "Credit claimed on the current return"
+    formula: "Supported current-return claim amount, which in the supported Form 540NR slice comes from Schedule P (540NR) line 16 through line 19 credit used this year"
+    inputs:
+      - "Optional College Access Tax Credit amount claimed this year"
+    edgeCases:
+      - "Do not allow line 6a to exceed line 5"
+    testRef: "tests/engine/state/ca-ftb-3592-college-access-tax-credit.test.ts::CA FTB 3592 College Access Tax Credit Line 7 - claimed credit and refundable election reduce future carryover"
+
+  - line: "6b"
+    description: "Assigned credit to affiliated corporations"
+    formula: "0 for the supported personal-filer slice"
+    inputs:
+      - "No supported input; line 6b remains 0 for individual returns"
+    notes: "Corporate credit-assignment mechanics are unsupported in this slice"
+    testRef: "tests/engine/state/ca-ftb-3592-college-access-tax-credit.test.ts::CA FTB 3592 College Access Tax Credit Line 7 - claimed credit and refundable election reduce future carryover"
+
+  - line: "6c"
+    description: "Elected refundable credit amount"
+    formula: "Optional supported elected refundable amount to be excluded from future carryover"
+    inputs:
+      - "Optional elected refundable College Access Tax Credit amount"
+    edgeCases:
+      - "Do not allow line 6c to cause line 7 to drop below zero"
+    testRef: "tests/engine/state/ca-ftb-3592-college-access-tax-credit.test.ts::CA FTB 3592 College Access Tax Credit Line 7 - claimed credit and refundable election reduce future carryover"
+
+  - line: "7"
+    description: "College Access Tax Credit carryover available for future years"
+    formula: "Line 5 - Line 6a - Line 6b - Line 6c"
+    inputs:
+      - "Form FTB 3592 line 5"
+      - "Form FTB 3592 line 6a"
+      - "Form FTB 3592 line 6b"
+      - "Form FTB 3592 line 6c"
+    edgeCases:
+      - "Do not allow the combined line 6a through line 6c reductions to exceed line 5"
+    testRef: "tests/engine/state/ca-ftb-3592-college-access-tax-credit.test.ts::CA FTB 3592 College Access Tax Credit Line 7 - claimed credit and refundable election reduce future carryover"

@@ -1,0 +1,199 @@
+form: "Schedule ICR"
+fullName: "Illinois Credits — Property Tax, K-12 Education Expense, Volunteer Emergency Worker"
+taxYear: 2025
+reference: "https://tax.illinois.gov/forms/incometax/individual/schedule-icr.html"
+
+notes: |
+  Schedule ICR computes three nonrefundable credits applied in order against IL income tax:
+  1. Property Tax Credit: 5% of qualifying property taxes on principal residence
+  2. K-12 Education Expense Credit: 25% of expenses over $250, max $750
+  3. Volunteer Emergency Worker Credit: $500 per qualifying person
+  Each credit is limited to remaining tax after prior credits.
+  When another separate Illinois return already used part of the shared property-tax
+  or education-credit cap, the supported engine input reduces the available credit
+  before the remaining-tax limitation is applied.
+  Nonresidents cannot claim the property tax credit. The K-12 education expense
+  credit also requires the taxpayer and student to be Illinois residents when the
+  expenses are paid, so a supported return marked as explicitly nonresident does
+  not receive either Section A or Section B credit.
+  Property tax and education credits denied if AGI > $250,000 (single/HoH/MFS/QSS)
+  or > $500,000 (MFJ).
+  The official instructions tell the taxpayer to enter paid amounts and credit
+  amounts already claimed on other separate Illinois returns. The supported
+  engine therefore rejects negative dollar inputs for those fields, and it also
+  rejects a Line 4e business-expense amount that exceeds the Line 4a property
+  tax paid because Line 4e is a subset of the taxes reported on Line 4a.
+  The 2025 Schedule ICR instructions also require county and property-number
+  identifiers when claiming the property tax credit. The supported engine keeps
+  those identifiers as validated supporting input whenever a property-tax-credit
+  claim is made so attached Illinois returns retain the same parcel-level audit
+  trail the paper schedule requires.
+
+  The 2025 Form IL-1040 general instructions say to round cents to whole dollars
+  on Form IL-1040 and most schedules, dropping amounts under 50 cents and raising
+  amounts from 50 to 99 cents. The supported engine therefore rounds supported
+  Schedule ICR line inputs to whole dollars at the form-line boundary and then
+  applies the printed line formulas using those rounded values.
+
+lines:
+  - line: "1"
+    description: "Income tax from IL-1040, Line 14"
+    formula: "Round IL-1040, Line 14 to the nearest whole dollar"
+    testRef: "tests/engine/state/il-schedule-icr.test.ts::Schedule ICR Lines 1 through 3 - rounds IL-1040 sourced amounts to whole dollars before computing remaining tax"
+
+  - line: "2"
+    description: "Credit for tax paid to other states (IL-1040, Line 15)"
+    formula: "Round IL-1040, Line 15 (from Schedule CR) to the nearest whole dollar"
+    testRef: "tests/engine/state/il-schedule-icr.test.ts::Schedule ICR Lines 1 through 3 - rounds IL-1040 sourced amounts to whole dollars before computing remaining tax"
+
+  - line: "3"
+    description: "Remaining tax available for credits"
+    formula: "max(Line 1 - Line 2, 0)"
+    testRef: "tests/engine/state/il-schedule-icr.test.ts::Schedule ICR Line 3 - remaining tax floors at zero"
+
+  # Section A — Property Tax Credit
+  - line: "4a"
+    description: "Total Illinois property tax paid on principal residence"
+    formula: "Round the supported input amount to the nearest whole dollar"
+    testRef: "tests/engine/state/il-schedule-icr.test.ts::Schedule ICR Lines 4a through 4g - rounds property tax line amounts before computing the credit"
+
+  - line: "4b-4d"
+    description: "County and property number support for the property tax claimed on Line 4a"
+    formula: "Validated supporting input: at least one { county, propertyNumber } record is required when a supported resident or part-year return claims a property tax credit"
+    reference: "2025 Schedule ICR Instructions, Section A, Lines 4b through 4d"
+    notes: |
+      The official instructions direct taxpayers to enter the county and exact
+      property number for the property listed on Line 4a, and additional county /
+      property-number entries for any second residence or adjoining lots
+      included in the claimed tax total.
+
+      The supported engine preserves up to three property identifier records:
+      - first record corresponds to Line 4b
+      - second record corresponds to Line 4c when needed
+      - third record corresponds to Line 4d when needed
+
+      To avoid silently producing an unsupported property tax credit, the engine
+      rejects resident and part-year property-tax-credit claims that omit these
+      identifiers. Explicit nonresident returns still cannot claim the credit at all.
+    testRef: "tests/engine/state/il-schedule-icr.test.ts::Schedule ICR Line 4b through 4d - property tax claims require at least one county and property number"
+
+  - line: "4e"
+    description: "Property tax deducted as business expense on federal return"
+    formula: "Round the supported input amount to the nearest whole dollar"
+    notes: |
+      Must be a non-negative subset of the rounded property taxes entered on Line 4a.
+    testRef: "tests/engine/state/il-schedule-icr.test.ts::Schedule ICR Lines 4a through 4g - rounds property tax line amounts before computing the credit"
+
+  - line: "4f"
+    description: "Residential property tax"
+    formula: "Line 4a - Line 4e using the rounded whole-dollar line values"
+    testRef: "tests/engine/state/il-schedule-icr.test.ts::Schedule ICR Lines 4a through 4g - rounds property tax line amounts before computing the credit"
+
+  - line: "4g"
+    description: "Property tax credit amount"
+    formula: "Round(Line 4f × 5% (0.05)) to the nearest whole dollar"
+    reference: "35 ILCS 5/201(m)"
+    edgeCases:
+      - "Not allowed if AGI > $250,000 (single/HoH/MFS/QSS)"
+      - "Not allowed if AGI > $500,000 (MFJ)"
+      - "Not allowed on returns explicitly marked nonresident"
+      - "Only principal residence qualifies"
+    testRef: "tests/engine/state/il-schedule-icr.test.ts::Schedule ICR Lines 4a through 4g - rounds property tax line amounts before computing the credit"
+
+  - line: "5"
+    description: "Property tax credit (limited to remaining tax)"
+    formula: "min(max(Line 4g - credit claimed on another separate Illinois return, 0), Line 3)"
+    notes: |
+      The official form has no separate line for the other return's amount; the
+      engine accepts that amount as supporting input so the combined credit stays
+      within the statutory 5% cap. The claimed-on-other-return amount must be
+      non-negative.
+    testRef: "tests/engine/state/il-schedule-icr.test.ts::Schedule ICR property tax credit capped at remaining tax"
+
+  - line: "6"
+    description: "Remaining tax after property tax credit"
+    formula: "Line 3 - Line 5"
+    testRef: "tests/engine/state/il-schedule-icr.test.ts::Schedule ICR Line 6 - remaining after property tax"
+
+  # Section B — K-12 Education Expense Credit
+  - line: "7a"
+    description: "Total qualified K-12 education expenses"
+    formula: "K-12 Education Expense Worksheet, Line 15, or round the supported direct total input to the nearest whole dollar"
+    notes: |
+      Qualified: tuition, book rental, lab fees at IL K-12 schools.
+      Not qualified: daycare, preschool, college, tutoring.
+      The 2025 instructions require the taxpayer and student to be Illinois
+      residents when the expenses are paid, so an explicitly nonresident return
+      does not receive this credit in the supported engine.
+      When the worksheet is provided, the supported engine uses its Line 15 total
+      and ignores the direct Line 7a amount. Because the worksheet governs Line 7a
+      in that case, the direct total is not separately validated. Without a
+      worksheet, the supported direct total input must be non-negative and is
+      rounded to a whole-dollar Schedule ICR line amount.
+    testRef: "tests/engine/state/il-schedule-icr.test.ts::Schedule ICR Line 7a - rounds the direct K-12 expense input to a whole-dollar line amount before computing the credit"
+
+  - line: "7b"
+    description: "First $250 excluded"
+    formula: "$250"
+    testRef: "tests/engine/state/il-schedule-icr.test.ts::Schedule ICR education expense credit - no credit on first $250"
+
+  - line: "7c"
+    description: "Expenses over threshold"
+    formula: "max(Line 7a - Line 7b, 0) using the rounded whole-dollar Line 7a amount"
+    testRef: "tests/engine/state/il-schedule-icr.test.ts::Schedule ICR education expense credit - expenses below $250"
+
+  - line: "7d"
+    description: "Education credit amount"
+    formula: "min(Round(Line 7c × 25%), $750)"
+    reference: "35 ILCS 5/201(h)"
+    edgeCases:
+      - "Maximum credit is $750 for 2025"
+      - "Not allowed if AGI > $250,000 (single/HoH/MFS/QSS)"
+      - "Not allowed if AGI > $500,000 (MFJ)"
+      - "Not allowed on returns explicitly marked nonresident"
+      - "No credit on first $250 of expenses"
+    testRef: "tests/engine/state/il-schedule-icr.test.ts::Schedule ICR education expense credit - max $750"
+
+  - line: "8"
+    description: "Education credit (limited to remaining tax)"
+    formula: "min(max(Line 7d - credit claimed on another separate Illinois return, 0), Line 6)"
+    notes: |
+      The official form has no separate line for the other return's amount; the
+      engine accepts that amount as supporting input so the combined credit stays
+      within the $750 statutory cap. The claimed-on-other-return amount must be
+      non-negative.
+    testRef: "tests/engine/state/il-schedule-icr.test.ts::Schedule ICR education credit capped at remaining tax"
+
+  - line: "9"
+    description: "Remaining tax after education credit"
+    formula: "Line 6 - Line 8"
+    testRef: "tests/engine/state/il-schedule-icr.test.ts::Schedule ICR - credits applied in order, each limited to remaining tax"
+
+  # Section C — Volunteer Emergency Worker Credit
+  - line: "10"
+    description: "Volunteer emergency worker credit"
+    formula: "$500 per qualifying person; $1,000 if both spouses qualify (MFJ)"
+    reference: "20 ILCS 3005/7.5"
+    notes: |
+      Requires Volunteer Emergency Worker Credit Certificate from IDOR.
+      The supported engine input requires one certificate number per claimed person
+      so the credit is backed by the same support the return instructions require.
+      No AGI limitation (unlike property tax and education credits).
+    edgeCases:
+      - "No income limitation"
+      - "$500 per person, $1,000 MFJ if both qualify"
+      - "Single/HoH/MFS/QSS may claim at most one qualifying person"
+      - "MFJ may claim at most two qualifying people"
+      - "Claimed qualifying person count must match the number of certificate numbers provided"
+    testRef: "tests/engine/state/il-schedule-icr.test.ts::Schedule ICR volunteer emergency worker credit - $500 for one person"
+
+  - line: "11"
+    description: "Volunteer credit (limited to remaining tax)"
+    formula: "min(Line 10, Line 9)"
+    testRef: "tests/engine/state/il-schedule-icr.test.ts::Schedule ICR volunteer credit capped at remaining tax"
+
+  - line: "13"
+    description: "Total nonrefundable credits from Schedule ICR"
+    formula: "Line 5 + Line 8 + Line 11"
+    reference: "Flows to IL-1040, Line 16"
+    testRef: "tests/engine/state/il-schedule-icr.test.ts::Schedule ICR Line 13 - total credits"

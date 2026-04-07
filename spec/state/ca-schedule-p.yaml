@@ -1,0 +1,308 @@
+form: "California Schedule P (540) Supported Part III Credit Ordering"
+fullName: "California Schedule P (540) Part III Supported Credit Ordering"
+taxYear: 2025
+irsReference: "https://www.ftb.ca.gov/forms/2025/2025-540-p.pdf"
+
+notes: |
+  This module implements the supported 2025 resident Schedule P (540) Part III
+  credit-ordering path for the California credits already modeled elsewhere in
+  the repo:
+  - Section A1 line 5 Child and Dependent Care Expenses Credit (code 232)
+  - Section B1 line 12 Joint Custody Head of Household credit (code 170)
+  - Section B1 line 13 Dependent Parent credit (code 173)
+  - Section B1 line 14 Senior Head of Household credit (code 163)
+  - Section B1 line 15 Nonrefundable renter's credit
+  - Section B2 line 16 Child Adoption Costs credit (code 197)
+  - Section B2 lines 17 through 19 ordered carryover-credit slots for
+    additional California resident credits with carryover provisions
+  - Section B3 line 20 Other state tax credit (code 187)
+  - Section B4 line 21 Pass-through entity elective tax credit (code 242)
+  The published 2025 Schedule P form keeps the same Part III sections, columns,
+  and supported credit-code placement as the official 2024 Schedule P
+  instructions. This module therefore applies the official Part III column
+  ordering from those instructions to the 2025 supported credits:
+  - column (b) is the credit used this year and cannot exceed the prior column
+    (c) tax balance
+  - column (c) is the remaining tax balance after subtracting column (b)
+  - blank B2 lines 17 through 19 are filled in taxpayer-selected order, with
+    each line's column (c) feeding the next supported B2 line or line 20 when
+    no later B2 lines are supplied
+  - blank B2 lines 17 through 19 column (d) carryover equals
+    max(0, column (a) credit amount - column (b) credit used this year -
+    any elected refundable amount supplied for that credit)
+  - line 11 column (c) starts Section B at line 1 if line 3 is zero; otherwise
+    it starts at line 2 plus the last Section A column (c) balance
+  - B2 line 16 column (d) carryover equals the current-year worksheet carryover
+    plus any unused line 16 column (a) credit amount
+  - When no supported B2 lines 17 through 19 are supplied, line 20 starts from
+    line 16 column (c); otherwise line 20 starts from the last supported B2
+    line's column (c)
+  - B3 line 20 uses the Schedule S (540) line 12 other state tax credit amount
+    that already reflects the Schedule S net-tax limitations
+  - B4 line 21 column (d) carryover equals any unused portion of the available
+    FTB 3804-CR credit amount after line 21 column (b)
+  Unsupported Schedule P items, including additional Section A codes, blank
+  B2 credit-source worksheets, any upstream Schedule S or FTB 3804-CR credit
+  computations, and Section C AMT credits, remain upstream or unsupported in
+  this slice.
+
+lines:
+  - line: "1"
+    description: "Regular tax before credits"
+    formula: "Supported input from Form 540 line 35 subtotal tax before credits"
+    inputs:
+      - "Form 540 line 35 subtotal tax before credits"
+    testRef: "tests/engine/state/ca-schedule-p.test.ts::CA Schedule P Part III Line 1 - the supported ordering starts from Form 540 line 35 tax before credits"
+
+  - line: "2"
+    description: "Tentative minimum tax"
+    formula: "Supported input from Schedule P Part I line 24; default to $0 when no supported tentative minimum tax amount is supplied"
+    inputs:
+      - "Optional Schedule P tentative minimum tax"
+    testRef: "tests/engine/state/ca-schedule-p.test.ts::CA Schedule P Part III Line 11c - Section B starts from tentative minimum tax plus the final Section A balance when line 3 is positive"
+
+  - line: "3"
+    description: "Excess tax"
+    formula: "max(0, Line 1 - Line 2)"
+    inputs:
+      - "Schedule P line 1"
+      - "Schedule P line 2"
+    edgeCases:
+      - "When tentative minimum tax exceeds or equals regular tax, line 3 is zero"
+    testRef: "tests/engine/state/ca-schedule-p.test.ts::CA Schedule P Part III Line 5b - Section A1 credits are limited by excess tax"
+
+  - line: "5a"
+    description: "Child and dependent care expenses credit amount"
+    formula: "Supported input for Schedule P line 5 code 232 credit amount"
+    inputs:
+      - "Form 540 line 40 child and dependent care expenses credit amount"
+    testRef: "tests/engine/state/ca-schedule-p.test.ts::CA Schedule P Part III Line 5b - Section A1 credits are limited by excess tax"
+
+  - line: "5b"
+    description: "Child and dependent care expenses credit used this year"
+    formula: "min(Line 5a, Line 3)"
+    inputs:
+      - "Schedule P line 5a"
+      - "Schedule P line 3"
+    testRef: "tests/engine/state/ca-schedule-p.test.ts::CA Schedule P Part III Line 5b - Section A1 credits are limited by excess tax"
+
+  - line: "5c"
+    description: "Excess tax remaining after Schedule P line 5"
+    formula: "Line 3 - Line 5b"
+    inputs:
+      - "Schedule P line 3"
+      - "Schedule P line 5b"
+    testRef: "tests/engine/state/ca-schedule-p.test.ts::CA Schedule P Part III Line 11c - Section B starts from tentative minimum tax plus the final Section A balance when line 3 is positive"
+
+  - line: "11c"
+    description: "Section B starting tax balance that may be offset by credits"
+    formula: "If Line 3 is zero, Line 1; otherwise Line 2 + Line 5c"
+    inputs:
+      - "Schedule P line 1"
+      - "Schedule P line 2"
+      - "Schedule P line 3"
+      - "Schedule P line 5c"
+    edgeCases:
+      - "When line 3 is positive, Section B starts from tentative minimum tax plus the last Section A remaining balance"
+      - "When line 3 is zero, Section B starts from regular tax because Section A cannot reduce tax below tentative minimum tax"
+    testRef: "tests/engine/state/ca-schedule-p.test.ts::CA Schedule P Part III Line 11c - Section B starts from tentative minimum tax plus the final Section A balance when line 3 is positive"
+
+  - line: "12a"
+    description: "Joint Custody Head of Household credit amount"
+    formula: "Supported input for Schedule P line 12 code 170 credit amount"
+    inputs:
+      - "California Joint Custody Head of Household credit amount"
+    testRef: "tests/engine/state/ca-schedule-p.test.ts::CA Schedule P Part III Line 12 through Line 16 - B1 credits reduce net tax before code 197"
+
+  - line: "12b"
+    description: "Joint Custody Head of Household credit used this year"
+    formula: "min(Line 12a, Line 11c)"
+    inputs:
+      - "Schedule P line 12a"
+      - "Schedule P line 11c"
+    testRef: "tests/engine/state/ca-schedule-p.test.ts::CA Schedule P Part III Line 12 through Line 16 - B1 credits reduce net tax before code 197"
+
+  - line: "12c"
+    description: "Net tax remaining after Schedule P line 12"
+    formula: "Line 11c - Line 12b"
+    inputs:
+      - "Schedule P line 11c"
+      - "Schedule P line 12b"
+    testRef: "tests/engine/state/ca-schedule-p.test.ts::CA Schedule P Part III Line 12 through Line 16 - B1 credits reduce net tax before code 197"
+
+  - line: "13a"
+    description: "Dependent Parent credit amount"
+    formula: "Supported input for Schedule P line 13 code 173 credit amount"
+    inputs:
+      - "California Dependent Parent credit amount"
+    testRef: "tests/engine/state/ca-schedule-p.test.ts::CA Schedule P Part III Line 12 through Line 16 - B1 credits reduce net tax before code 197"
+
+  - line: "13b"
+    description: "Dependent Parent credit used this year"
+    formula: "min(Line 13a, Line 12c)"
+    inputs:
+      - "Schedule P line 13a"
+      - "Schedule P line 12c"
+    testRef: "tests/engine/state/ca-schedule-p.test.ts::CA Schedule P Part III Line 12 through Line 16 - B1 credits reduce net tax before code 197"
+
+  - line: "13c"
+    description: "Net tax remaining after Schedule P line 13"
+    formula: "Line 12c - Line 13b"
+    inputs:
+      - "Schedule P line 12c"
+      - "Schedule P line 13b"
+    testRef: "tests/engine/state/ca-schedule-p.test.ts::CA Schedule P Part III Line 12 through Line 16 - B1 credits reduce net tax before code 197"
+
+  - line: "14a"
+    description: "Senior Head of Household credit amount"
+    formula: "Supported input for Schedule P line 14 code 163 credit amount"
+    inputs:
+      - "California Senior Head of Household credit amount"
+    testRef: "tests/engine/state/ca-schedule-p.test.ts::CA Schedule P Part III Line 12 through Line 16 - B1 credits reduce net tax before code 197"
+
+  - line: "14b"
+    description: "Senior Head of Household credit used this year"
+    formula: "min(Line 14a, Line 13c)"
+    inputs:
+      - "Schedule P line 14a"
+      - "Schedule P line 13c"
+    testRef: "tests/engine/state/ca-schedule-p.test.ts::CA Schedule P Part III Line 12 through Line 16 - B1 credits reduce net tax before code 197"
+
+  - line: "14c"
+    description: "Net tax remaining after Schedule P line 14"
+    formula: "Line 13c - Line 14b"
+    inputs:
+      - "Schedule P line 13c"
+      - "Schedule P line 14b"
+    testRef: "tests/engine/state/ca-schedule-p.test.ts::CA Schedule P Part III Line 12 through Line 16 - B1 credits reduce net tax before code 197"
+
+  - line: "15a"
+    description: "Nonrefundable renter's credit amount"
+    formula: "Supported input for Schedule P line 15 renter's credit amount"
+    inputs:
+      - "California nonrefundable renter's credit amount"
+    testRef: "tests/engine/state/ca-schedule-p.test.ts::CA Schedule P Part III Line 12 through Line 16 - B1 credits reduce net tax before code 197"
+
+  - line: "15b"
+    description: "Nonrefundable renter's credit used this year"
+    formula: "min(Line 15a, Line 14c)"
+    inputs:
+      - "Schedule P line 15a"
+      - "Schedule P line 14c"
+    testRef: "tests/engine/state/ca-schedule-p.test.ts::CA Schedule P Part III Line 12 through Line 16 - B1 credits reduce net tax before code 197"
+
+  - line: "15c"
+    description: "Net tax remaining after Schedule P line 15"
+    formula: "Line 14c - Line 15b"
+    inputs:
+      - "Schedule P line 14c"
+      - "Schedule P line 15b"
+    testRef: "tests/engine/state/ca-schedule-p.test.ts::CA Schedule P Part III Line 12 through Line 16 - B1 credits reduce net tax before code 197"
+
+  - line: "16a"
+    description: "Child Adoption Costs credit amount"
+    formula: "Supported input for Schedule P Section B2 line 16 code 197 current-year credit amount"
+    inputs:
+      - "California Child Adoption Costs current-year credit amount"
+    testRef: "tests/engine/state/ca-schedule-p.test.ts::CA Schedule P Part III Line 12 through Line 16 - B1 credits reduce net tax before code 197"
+
+  - line: "16b"
+    description: "Child Adoption Costs credit used this year"
+    formula: "min(Line 16a, Line 15c)"
+    inputs:
+      - "Schedule P line 16a"
+      - "Schedule P line 15c"
+    testRef: "tests/engine/state/ca-schedule-p.test.ts::CA Schedule P Part III Line 12 through Line 16 - B1 credits reduce net tax before code 197"
+
+  - line: "16c"
+    description: "Net tax remaining after Schedule P line 16"
+    formula: "Line 15c - Line 16b"
+    inputs:
+      - "Schedule P line 15c"
+      - "Schedule P line 16b"
+    testRef: "tests/engine/state/ca-schedule-p.test.ts::CA Schedule P Part III Line 12 through Line 16 - B1 credits reduce net tax before code 197"
+
+  - line: "16d"
+    description: "Child Adoption Costs credit carryover"
+    formula: "Child Adoption Costs worksheet carryover from Form 540 code 197 Line 5 + max(0, Line 16a - Line 16b)"
+    inputs:
+      - "Schedule P line 16a"
+      - "Schedule P line 16b"
+      - "California Child Adoption Costs worksheet carryover"
+    edgeCases:
+      - "If net tax is exhausted before line 16, the entire current-year line 16a amount carries over in addition to the worksheet carryover"
+    testRef: "tests/engine/state/ca-schedule-p.test.ts::CA Schedule P Part III Line 12 through Line 16 - B1 credits reduce net tax before code 197"
+
+  - line: "17a-19d"
+    description: "Additional ordered B2 carryover-credit slots"
+    formula: "For each supplied additional B2 credit in taxpayer-selected order, assign the next available blank Schedule P line from 17 through 19. For each assigned line, column (b) credit used this year is min(column (a) credit amount, the prior supported line's column (c) balance); column (c) is the prior supported line's column (c) balance minus column (b); and column (d) carryover is max(0, column (a) - column (b) - any elected refundable amount supplied for that credit)."
+    inputs:
+      - "Optional ordered list of up to three additional California Schedule P Section B2 carryover credits, each with credit code, credit name, credit amount, and optional elected refundable amount"
+      - "Schedule P line 16c"
+    edgeCases:
+      - "When one or more additional B2 credits are supplied, line 20 starts from the last supplied B2 line's column (c)"
+      - "When no additional B2 credits are supplied, line 20 still starts from line 16c"
+      - "A supplied elected refundable amount cannot exceed the unused portion of that line's column (a) amount after column (b)"
+      - "Do not accept more than three additional B2 credits because Schedule P provides only blank lines 17 through 19"
+    testRef: "tests/engine/state/ca-schedule-p.test.ts::CA Schedule P Part III Line 17 through Line 19 - additional B2 carryover credits consume net tax in order and preserve remaining carryovers"
+
+  - line: "20a"
+    description: "Other state tax credit amount"
+    formula: "Supported input from Schedule S (540) line 12"
+    inputs:
+      - "California Schedule S line 12 other state tax credit amount"
+    testRef: "tests/engine/state/ca-schedule-p.test.ts::CA Schedule P Part III Line 20 and Line 21 - B3 and B4 credits follow the official order after supported B1 and B2 credits"
+
+  - line: "20b"
+    description: "Other state tax credit used this year"
+    formula: "min(Line 20a, the last supplied supported B2 line 17 through 19 column (c) balance when present; otherwise the supported upstream line 19 column (c) balance when supplied; otherwise Line 16c)"
+    inputs:
+      - "Schedule P line 20a"
+      - "Optional supported Schedule P line 17 through 19 carryover-credit ordering result"
+      - "Optional upstream Schedule P line 19 column (c) balance"
+      - "Schedule P line 16c"
+    edgeCases:
+      - "When supported B2 lines 17 through 19 are absent, line 20 starts from line 16c unless an upstream line 19 column (c) override is supplied"
+      - "When supported B2 lines 17 through 19 are present, they determine the line 20 starting balance and the upstream line 19 column (c) override is not used"
+    testRef: "tests/engine/state/ca-schedule-p.test.ts::CA Schedule P Part III Line 17 through Line 21 - additional B2 carryover credits can limit later code 187 and code 242 usage"
+
+  - line: "20c"
+    description: "Net tax remaining after Schedule P line 20"
+    formula: "Starting balance used for Line 20b - Line 20b"
+    inputs:
+      - "Supported upstream line 19 column (c) balance or Schedule P line 16c"
+      - "Schedule P line 20b"
+    testRef: "tests/engine/state/ca-schedule-p.test.ts::CA Schedule P Part III Line 20 and Line 21 - B3 and B4 credits follow the official order after supported B1 and B2 credits"
+
+  - line: "21a"
+    description: "Pass-through entity elective tax credit amount"
+    formula: "Supported input from FTB 3804-CR available credit amount"
+    inputs:
+      - "FTB 3804-CR available pass-through entity elective tax credit amount"
+    testRef: "tests/engine/state/ca-schedule-p.test.ts::CA Schedule P Part III Line 20 and Line 21 - B3 and B4 credits follow the official order after supported B1 and B2 credits"
+
+  - line: "21b"
+    description: "Pass-through entity elective tax credit used this year"
+    formula: "min(Line 21a, Line 20c)"
+    inputs:
+      - "Schedule P line 21a"
+      - "Schedule P line 20c"
+    testRef: "tests/engine/state/ca-schedule-p.test.ts::CA Schedule P Part III Line 20 and Line 21 - B3 and B4 credits follow the official order after supported B1 and B2 credits"
+
+  - line: "21c"
+    description: "Net tax remaining after Schedule P line 21"
+    formula: "Line 20c - Line 21b"
+    inputs:
+      - "Schedule P line 20c"
+      - "Schedule P line 21b"
+    testRef: "tests/engine/state/ca-schedule-p.test.ts::CA Schedule P Part III Line 20 and Line 21 - B3 and B4 credits follow the official order after supported B1 and B2 credits"
+
+  - line: "21d"
+    description: "Pass-through entity elective tax credit carryover"
+    formula: "max(0, Line 21a - Line 21b)"
+    inputs:
+      - "Schedule P line 21a"
+      - "Schedule P line 21b"
+    edgeCases:
+      - "Any available line 21 credit not used this year carries forward under the FTB 3804-CR rules"
+    testRef: "tests/engine/state/ca-schedule-p.test.ts::CA Schedule P Part III Line 20 and Line 21 - an upstream line 19 balance can limit B3 and push unused B4 credit into carryover"

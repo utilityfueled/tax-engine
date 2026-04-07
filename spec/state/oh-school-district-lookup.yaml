@@ -1,0 +1,139 @@
+form: "Ohio School District Metadata Lookup"
+fullName: "Ohio SD 100 District Rate and Tax-Type Lookup"
+taxYear: 2025
+reference: "https://thefinder.tax.ohio.gov/StreamlineSalesTaxWeb/default_schooldistrict.aspx"
+
+notes: |
+  This spec documents the official school district metadata lookup used by the
+  Ohio SD 100 engine. The Ohio Department of Taxation's The Finder publishes a
+  school district rate database table with effective date ranges, district
+  numbers, district names, and rates.
+
+  For tax years 2024 and 2025, the engine may resolve a school district's
+  tax type and rate from the official table when the caller supplies only the
+  district number. The lookup intentionally does not override explicit caller
+  inputs, because the current Ohio test fixtures include hypothetical district
+  combinations that are useful for formula testing.
+
+  Official rate database table:
+  https://thefinder.tax.ohio.gov/streamlinesalestaxweb/Download/BoundaryData/SD/OHSDRateTable.csv
+
+packetRules:
+  packetBehavior: "indirect-reference-summary-pdf"
+  includeWhen:
+    - "A unique taxable district number or SD-prefixed district name resolves through the Finder-backed lookup, causing Ohio SD 100 reference-summary output to be computed"
+  suppressWhen:
+    - "The district is non-taxing, unknown, or ambiguous, so Ohio SD 100 reference-summary output stays suppressed"
+  notes: |
+    This lookup does not render its own PDF. It controls whether school-
+    district locality labels can attach the Ohio SD 100 reference summary.
+
+businessRuleValidation:
+  - rule: "sd100-reference-summary-gating"
+    description: "Inventory support counts this lookup as business-rule validated only when regression coverage proves a unique SD-prefixed district name can auto-attach the Ohio SD 100 reference summary and ambiguous names stay suppressed."
+    testRef: "tests/pdf/fill-oh-reference-forms.test.ts::fillOhioReferenceForms auto-includes and suppresses the Ohio SD 100 reference summary based on official SD-prefixed district names"
+
+lines:
+  - line: "Lookup 1"
+    description: "Resolve district metadata from The Finder rate table"
+    formula: |
+      Find the taxable district row where:
+        districtNumber matches the normalized 4-digit district number
+        startDate <= taxYear0101 <= endDate
+        rate > 0
+
+      Tax type is derived from the district name:
+        contains "EARNED INCOME" -> earned_income
+        otherwise -> traditional
+    inputs:
+      - "Tax year"
+      - "School district number"
+      - "Ohio Finder SD rate database rows effective for that year"
+    edgeCases:
+      - "District numbers are left-padded to four digits before lookup"
+      - "A district can have different effective rates by year"
+      - "Non-taxing districts return no lookup result"
+    testRef: "tests/engine/state/oh-school-district-lookup.test.ts::Ohio school district lookup pads district numbers and resolves earned-income districts"
+
+  - line: "Lookup 1a"
+    description: "Resolve district metadata from an SD-prefixed locality label using official district names"
+    formula: |
+      If an Ohio W-2 locality label starts with "SD" but does not contain a
+      1- to 4-digit district number:
+        normalize the remaining locality text and compare it against normalized
+        official district names from The Finder rate table that are effective
+        for taxYear0101 and have rate > 0.
+
+      The comparison accepts two official-name forms:
+        - the full normalized district name; and
+        - a normalized abbreviated alias formed by removing a trailing district
+          type suffix ("LSD", "CSD", "EVSD", "MSD", or "PSD") and, when
+          present immediately before that suffix, the word "COMMUNITY".
+
+      District-name normalization:
+        - uppercase
+        - remove the leading "SD" token
+        - strip parenthetical tax-type suffixes such as "(TRADITIONAL)" and
+          "(EARNED INCOME)"
+        - replace punctuation with spaces
+        - collapse repeated whitespace
+
+      If exactly one taxable district name matches:
+        return that district's official districtNumber, taxType, and rate
+      Else:
+        return no lookup result.
+    inputs:
+      - "Tax year"
+      - "Ohio W-2 locality label beginning with SD"
+      - "Ohio Finder SD rate database rows effective for that year"
+    notes: |
+      This is an engine inference built from the official Finder district-name
+      table. It intentionally requires an "SD" prefix on the locality label so
+      municipal locality names are not misclassified as school districts. The
+      abbreviated-alias path is grounded in the Ohio booklet instruction that
+      box 20 can show "SD" and the abbreviated name of the school district.
+    edgeCases:
+      - "SD-prefixed locality labels with an embedded district number still use the numeric lookup path"
+      - "SD-prefixed abbreviated district names such as 'SD Bexley' resolve when exactly one official district matches"
+      - "Labels matching more than one taxable district after normalization return no lookup result"
+      - "Non-taxing district names return no lookup result"
+    testRef: "tests/engine/state/oh-school-district-lookup.test.ts::Ohio school district lookup resolves SD-prefixed abbreviated district names and rejects ambiguous aliases"
+
+  - line: "Lookup 2"
+    description: "SD 100 auto-fills missing district taxType and rate"
+    formula: |
+      If a SchoolDistrictEntry omits taxType and/or rate:
+        resolve missing fields from Lookup 1 before computing SD 100.
+
+      If taxType and rate are explicitly provided:
+        use the caller-supplied values as-is.
+    inputs:
+      - "SchoolDistrictEntry"
+      - "Lookup 1 result"
+    edgeCases:
+      - "District-number-only inputs compute with official metadata"
+      - "Explicit manual district metadata takes precedence over lookup"
+      - "Unknown or non-taxing districts with missing metadata throw"
+    testRef: "tests/engine/state/oh-sd-100.test.ts::OH SD 100 uses official district lookup when tax type and rate are omitted"
+
+  - line: "Lookup 3"
+    description: "Embedded taxable district snapshot stays aligned with The Finder"
+    formula: |
+      For each supported tax year:
+        take the official OHSDRateTable.csv row where
+          startDate <= taxYear0101 <= endDate
+          rate > 0
+
+      The embedded lookup table must return the same districtNumber, taxType,
+      and rate for every taxable district effective on January 1 of that year.
+      Tax type is derived from the official district name:
+        contains "EARNED INCOME" -> earned_income
+        otherwise -> traditional
+    inputs:
+      - "Supported tax year"
+      - "Ohio Finder SD rate database rows effective for that year"
+      - "Embedded Ohio lookup table"
+    edgeCases:
+      - "Taxable district counts can differ by year as rate periods change"
+      - "Zero-rate districts are intentionally excluded from the embedded lookup"
+    testRef: "tests/engine/state/oh-school-district-lookup.test.ts::Ohio school district lookup matches the official Finder taxable-rate snapshot for 2024 and 2025"

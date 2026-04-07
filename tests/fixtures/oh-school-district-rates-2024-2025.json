@@ -1,0 +1,1698 @@
+{
+  "sourceUrl": "https://thefinder.tax.ohio.gov/streamlinesalestaxweb/Download/BoundaryData/SD/OHSDRateTable.csv",
+  "generatedAt": "2026-03-19T04:39:55.454Z",
+  "taxYears": {
+    "2024": {
+      "1102": {
+        "taxType": "traditional",
+        "rate": "0.0150"
+      },
+      "1103": {
+        "taxType": "traditional",
+        "rate": "0.0150"
+      },
+      "1105": {
+        "taxType": "traditional",
+        "rate": "0.0175"
+      },
+      "1203": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "1204": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "1205": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "1303": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "1305": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "1401": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "1402": {
+        "taxType": "earned_income",
+        "rate": "0.0050"
+      },
+      "1502": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "1503": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "1505": {
+        "taxType": "earned_income",
+        "rate": "0.0050"
+      },
+      "1510": {
+        "taxType": "traditional",
+        "rate": "0.0050"
+      },
+      "1701": {
+        "taxType": "traditional",
+        "rate": "0.0150"
+      },
+      "1703": {
+        "taxType": "traditional",
+        "rate": "0.0125"
+      },
+      "1704": {
+        "taxType": "earned_income",
+        "rate": "0.0025"
+      },
+      "1901": {
+        "taxType": "traditional",
+        "rate": "0.0175"
+      },
+      "1902": {
+        "taxType": "traditional",
+        "rate": "0.0150"
+      },
+      "1903": {
+        "taxType": "traditional",
+        "rate": "0.0075"
+      },
+      "1904": {
+        "taxType": "traditional",
+        "rate": "0.0050"
+      },
+      "1905": {
+        "taxType": "traditional",
+        "rate": "0.0175"
+      },
+      "1906": {
+        "taxType": "traditional",
+        "rate": "0.0150"
+      },
+      "1907": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "2001": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "2002": {
+        "taxType": "traditional",
+        "rate": "0.0125"
+      },
+      "2003": {
+        "taxType": "traditional",
+        "rate": "0.0050"
+      },
+      "2004": {
+        "taxType": "traditional",
+        "rate": "0.0150"
+      },
+      "2101": {
+        "taxType": "traditional",
+        "rate": "0.0075"
+      },
+      "2102": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "2301": {
+        "taxType": "earned_income",
+        "rate": "0.0200"
+      },
+      "2302": {
+        "taxType": "earned_income",
+        "rate": "0.0200"
+      },
+      "2303": {
+        "taxType": "traditional",
+        "rate": "0.0125"
+      },
+      "2304": {
+        "taxType": "traditional",
+        "rate": "0.0200"
+      },
+      "2305": {
+        "taxType": "earned_income",
+        "rate": "0.0150"
+      },
+      "2306": {
+        "taxType": "traditional",
+        "rate": "0.0175"
+      },
+      "2307": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "2308": {
+        "taxType": "earned_income",
+        "rate": "0.0175"
+      },
+      "2402": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "2501": {
+        "taxType": "traditional",
+        "rate": "0.0075"
+      },
+      "2502": {
+        "taxType": "traditional",
+        "rate": "0.0075"
+      },
+      "2509": {
+        "taxType": "traditional",
+        "rate": "0.0050"
+      },
+      "2602": {
+        "taxType": "traditional",
+        "rate": "0.0150"
+      },
+      "2603": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "2604": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "2605": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "2606": {
+        "taxType": "traditional",
+        "rate": "0.0075"
+      },
+      "2607": {
+        "taxType": "earned_income",
+        "rate": "0.0175"
+      },
+      "2801": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "2902": {
+        "taxType": "traditional",
+        "rate": "0.0125"
+      },
+      "2903": {
+        "taxType": "traditional",
+        "rate": "0.0050"
+      },
+      "2904": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "2906": {
+        "taxType": "traditional",
+        "rate": "0.0050"
+      },
+      "2907": {
+        "taxType": "traditional",
+        "rate": "0.0200"
+      },
+      "3118": {
+        "taxType": "earned_income",
+        "rate": "0.0075"
+      },
+      "3122": {
+        "taxType": "traditional",
+        "rate": "0.0125"
+      },
+      "3201": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "3202": {
+        "taxType": "traditional",
+        "rate": "0.0175"
+      },
+      "3203": {
+        "taxType": "traditional",
+        "rate": "0.0175"
+      },
+      "3205": {
+        "taxType": "traditional",
+        "rate": "0.0075"
+      },
+      "3206": {
+        "taxType": "traditional",
+        "rate": "0.0150"
+      },
+      "3207": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "3208": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "3301": {
+        "taxType": "traditional",
+        "rate": "0.0150"
+      },
+      "3302": {
+        "taxType": "traditional",
+        "rate": "0.0175"
+      },
+      "3303": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "3304": {
+        "taxType": "traditional",
+        "rate": "0.0175"
+      },
+      "3305": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "3306": {
+        "taxType": "traditional",
+        "rate": "0.0050"
+      },
+      "3501": {
+        "taxType": "traditional",
+        "rate": "0.0150"
+      },
+      "3502": {
+        "taxType": "traditional",
+        "rate": "0.0175"
+      },
+      "3504": {
+        "taxType": "traditional",
+        "rate": "0.0175"
+      },
+      "3603": {
+        "taxType": "earned_income",
+        "rate": "0.0125"
+      },
+      "3604": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "3901": {
+        "taxType": "traditional",
+        "rate": "0.0050"
+      },
+      "3902": {
+        "taxType": "earned_income",
+        "rate": "0.0150"
+      },
+      "3903": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "3904": {
+        "taxType": "traditional",
+        "rate": "0.0050"
+      },
+      "3905": {
+        "taxType": "traditional",
+        "rate": "0.0125"
+      },
+      "3906": {
+        "taxType": "traditional",
+        "rate": "0.0125"
+      },
+      "3907": {
+        "taxType": "earned_income",
+        "rate": "0.0075"
+      },
+      "4201": {
+        "taxType": "traditional",
+        "rate": "0.0075"
+      },
+      "4202": {
+        "taxType": "traditional",
+        "rate": "0.0150"
+      },
+      "4501": {
+        "taxType": "traditional",
+        "rate": "0.0075"
+      },
+      "4503": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "4506": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "4507": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "4508": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "4509": {
+        "taxType": "traditional",
+        "rate": "0.0050"
+      },
+      "4510": {
+        "taxType": "traditional",
+        "rate": "0.0075"
+      },
+      "4604": {
+        "taxType": "traditional",
+        "rate": "0.0150"
+      },
+      "4712": {
+        "taxType": "traditional",
+        "rate": "0.0200"
+      },
+      "4715": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "4901": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "4902": {
+        "taxType": "earned_income",
+        "rate": "0.0125"
+      },
+      "4903": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "4904": {
+        "taxType": "earned_income",
+        "rate": "0.0125"
+      },
+      "5008": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "5010": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "5101": {
+        "taxType": "earned_income",
+        "rate": "0.0075"
+      },
+      "5103": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "5104": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "5105": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "5204": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "5401": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "5402": {
+        "taxType": "traditional",
+        "rate": "0.0050"
+      },
+      "5403": {
+        "taxType": "earned_income",
+        "rate": "0.0050"
+      },
+      "5405": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "5406": {
+        "taxType": "traditional",
+        "rate": "0.0150"
+      },
+      "5501": {
+        "taxType": "earned_income",
+        "rate": "0.0075"
+      },
+      "5502": {
+        "taxType": "traditional",
+        "rate": "0.0175"
+      },
+      "5503": {
+        "taxType": "traditional",
+        "rate": "0.0200"
+      },
+      "5504": {
+        "taxType": "earned_income",
+        "rate": "0.0175"
+      },
+      "5505": {
+        "taxType": "earned_income",
+        "rate": "0.0125"
+      },
+      "5506": {
+        "taxType": "traditional",
+        "rate": "0.0175"
+      },
+      "5507": {
+        "taxType": "traditional",
+        "rate": "0.0125"
+      },
+      "5509": {
+        "taxType": "earned_income",
+        "rate": "0.0150"
+      },
+      "5708": {
+        "taxType": "traditional",
+        "rate": "0.0125"
+      },
+      "5713": {
+        "taxType": "traditional",
+        "rate": "0.0175"
+      },
+      "5901": {
+        "taxType": "earned_income",
+        "rate": "0.0075"
+      },
+      "5902": {
+        "taxType": "traditional",
+        "rate": "0.0050"
+      },
+      "5903": {
+        "taxType": "traditional",
+        "rate": "0.0150"
+      },
+      "5904": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "6301": {
+        "taxType": "traditional",
+        "rate": "0.0150"
+      },
+      "6302": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "6303": {
+        "taxType": "traditional",
+        "rate": "0.0125"
+      },
+      "6501": {
+        "taxType": "earned_income",
+        "rate": "0.0075"
+      },
+      "6502": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "6503": {
+        "taxType": "earned_income",
+        "rate": "0.0150"
+      },
+      "6704": {
+        "taxType": "earned_income",
+        "rate": "0.0150"
+      },
+      "6802": {
+        "taxType": "traditional",
+        "rate": "0.0175"
+      },
+      "6803": {
+        "taxType": "traditional",
+        "rate": "0.0150"
+      },
+      "6804": {
+        "taxType": "traditional",
+        "rate": "0.0175"
+      },
+      "6805": {
+        "taxType": "traditional",
+        "rate": "0.0150"
+      },
+      "6806": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "6901": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "6902": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "6903": {
+        "taxType": "traditional",
+        "rate": "0.0075"
+      },
+      "6904": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "6905": {
+        "taxType": "traditional",
+        "rate": "0.0075"
+      },
+      "6906": {
+        "taxType": "traditional",
+        "rate": "0.0125"
+      },
+      "6907": {
+        "taxType": "traditional",
+        "rate": "0.0150"
+      },
+      "6908": {
+        "taxType": "traditional",
+        "rate": "0.0075"
+      },
+      "6909": {
+        "taxType": "traditional",
+        "rate": "0.0175"
+      },
+      "7001": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "7007": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "7008": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "7106": {
+        "taxType": "traditional",
+        "rate": "0.0050"
+      },
+      "7107": {
+        "taxType": "earned_income",
+        "rate": "0.0075"
+      },
+      "7201": {
+        "taxType": "earned_income",
+        "rate": "0.0150"
+      },
+      "7202": {
+        "taxType": "traditional",
+        "rate": "0.0125"
+      },
+      "7203": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "7204": {
+        "taxType": "traditional",
+        "rate": "0.0150"
+      },
+      "7403": {
+        "taxType": "earned_income",
+        "rate": "0.0050"
+      },
+      "7404": {
+        "taxType": "traditional",
+        "rate": "0.0150"
+      },
+      "7405": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "7406": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "7501": {
+        "taxType": "traditional",
+        "rate": "0.0150"
+      },
+      "7502": {
+        "taxType": "earned_income",
+        "rate": "0.0125"
+      },
+      "7503": {
+        "taxType": "traditional",
+        "rate": "0.0075"
+      },
+      "7504": {
+        "taxType": "traditional",
+        "rate": "0.0150"
+      },
+      "7505": {
+        "taxType": "traditional",
+        "rate": "0.0075"
+      },
+      "7506": {
+        "taxType": "earned_income",
+        "rate": "0.0150"
+      },
+      "7507": {
+        "taxType": "traditional",
+        "rate": "0.0075"
+      },
+      "7508": {
+        "taxType": "earned_income",
+        "rate": "0.0075"
+      },
+      "7612": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "7711": {
+        "taxType": "earned_income",
+        "rate": "0.0050"
+      },
+      "8001": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "8003": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "8101": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "8104": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "8301": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "8501": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "8502": {
+        "taxType": "traditional",
+        "rate": "0.0075"
+      },
+      "8503": {
+        "taxType": "earned_income",
+        "rate": "0.0050"
+      },
+      "8504": {
+        "taxType": "earned_income",
+        "rate": "0.0075"
+      },
+      "8505": {
+        "taxType": "traditional",
+        "rate": "0.0125"
+      },
+      "8509": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "8601": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "8602": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "8603": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "8604": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "8605": {
+        "taxType": "earned_income",
+        "rate": "0.0125"
+      },
+      "8607": {
+        "taxType": "traditional",
+        "rate": "0.0150"
+      },
+      "8701": {
+        "taxType": "traditional",
+        "rate": "0.0050"
+      },
+      "8702": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "8703": {
+        "taxType": "traditional",
+        "rate": "0.0125"
+      },
+      "8705": {
+        "taxType": "earned_income",
+        "rate": "0.0125"
+      },
+      "8706": {
+        "taxType": "earned_income",
+        "rate": "0.0025"
+      },
+      "8707": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "8708": {
+        "taxType": "traditional",
+        "rate": "0.0050"
+      },
+      "8801": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "8802": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "8803": {
+        "taxType": "traditional",
+        "rate": "0.0125"
+      },
+      "0203": {
+        "taxType": "traditional",
+        "rate": "0.0050"
+      },
+      "0204": {
+        "taxType": "traditional",
+        "rate": "0.0050"
+      },
+      "0209": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "0302": {
+        "taxType": "earned_income",
+        "rate": "0.0125"
+      },
+      "0303": {
+        "taxType": "traditional",
+        "rate": "0.0125"
+      },
+      "0404": {
+        "taxType": "earned_income",
+        "rate": "0.0125"
+      },
+      "0501": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "0502": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "0601": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "0602": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "0603": {
+        "taxType": "traditional",
+        "rate": "0.0125"
+      },
+      "0604": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "0605": {
+        "taxType": "traditional",
+        "rate": "0.0075"
+      },
+      "0606": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "0905": {
+        "taxType": "traditional",
+        "rate": "0.0050"
+      },
+      "0907": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "0908": {
+        "taxType": "earned_income",
+        "rate": "0.0125"
+      },
+      "0909": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      }
+    },
+    "2025": {
+      "1102": {
+        "taxType": "traditional",
+        "rate": "0.0150"
+      },
+      "1103": {
+        "taxType": "traditional",
+        "rate": "0.0150"
+      },
+      "1105": {
+        "taxType": "traditional",
+        "rate": "0.0175"
+      },
+      "1203": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "1204": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "1205": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "1303": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "1305": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "1401": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "1502": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "1503": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "1505": {
+        "taxType": "earned_income",
+        "rate": "0.0050"
+      },
+      "1510": {
+        "taxType": "traditional",
+        "rate": "0.0050"
+      },
+      "1701": {
+        "taxType": "traditional",
+        "rate": "0.0150"
+      },
+      "1703": {
+        "taxType": "traditional",
+        "rate": "0.0125"
+      },
+      "1704": {
+        "taxType": "earned_income",
+        "rate": "0.0025"
+      },
+      "1901": {
+        "taxType": "traditional",
+        "rate": "0.0175"
+      },
+      "1902": {
+        "taxType": "traditional",
+        "rate": "0.0150"
+      },
+      "1903": {
+        "taxType": "traditional",
+        "rate": "0.0075"
+      },
+      "1904": {
+        "taxType": "traditional",
+        "rate": "0.0050"
+      },
+      "1905": {
+        "taxType": "traditional",
+        "rate": "0.0175"
+      },
+      "1906": {
+        "taxType": "traditional",
+        "rate": "0.0150"
+      },
+      "1907": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "2001": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "2002": {
+        "taxType": "traditional",
+        "rate": "0.0125"
+      },
+      "2003": {
+        "taxType": "traditional",
+        "rate": "0.0050"
+      },
+      "2004": {
+        "taxType": "traditional",
+        "rate": "0.0150"
+      },
+      "2101": {
+        "taxType": "traditional",
+        "rate": "0.0075"
+      },
+      "2102": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "2301": {
+        "taxType": "earned_income",
+        "rate": "0.0200"
+      },
+      "2302": {
+        "taxType": "earned_income",
+        "rate": "0.0200"
+      },
+      "2303": {
+        "taxType": "traditional",
+        "rate": "0.0125"
+      },
+      "2304": {
+        "taxType": "traditional",
+        "rate": "0.0200"
+      },
+      "2305": {
+        "taxType": "earned_income",
+        "rate": "0.0150"
+      },
+      "2306": {
+        "taxType": "traditional",
+        "rate": "0.0175"
+      },
+      "2307": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "2308": {
+        "taxType": "earned_income",
+        "rate": "0.0175"
+      },
+      "2402": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "2501": {
+        "taxType": "traditional",
+        "rate": "0.0075"
+      },
+      "2502": {
+        "taxType": "traditional",
+        "rate": "0.0075"
+      },
+      "2509": {
+        "taxType": "traditional",
+        "rate": "0.0050"
+      },
+      "2602": {
+        "taxType": "traditional",
+        "rate": "0.0150"
+      },
+      "2603": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "2604": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "2605": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "2606": {
+        "taxType": "traditional",
+        "rate": "0.0075"
+      },
+      "2607": {
+        "taxType": "earned_income",
+        "rate": "0.0175"
+      },
+      "2801": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "2902": {
+        "taxType": "traditional",
+        "rate": "0.0125"
+      },
+      "2903": {
+        "taxType": "traditional",
+        "rate": "0.0050"
+      },
+      "2904": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "2906": {
+        "taxType": "traditional",
+        "rate": "0.0050"
+      },
+      "2907": {
+        "taxType": "traditional",
+        "rate": "0.0200"
+      },
+      "3118": {
+        "taxType": "earned_income",
+        "rate": "0.0075"
+      },
+      "3122": {
+        "taxType": "traditional",
+        "rate": "0.0125"
+      },
+      "3201": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "3202": {
+        "taxType": "traditional",
+        "rate": "0.0175"
+      },
+      "3203": {
+        "taxType": "traditional",
+        "rate": "0.0175"
+      },
+      "3205": {
+        "taxType": "traditional",
+        "rate": "0.0075"
+      },
+      "3206": {
+        "taxType": "traditional",
+        "rate": "0.0150"
+      },
+      "3207": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "3208": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "3301": {
+        "taxType": "traditional",
+        "rate": "0.0150"
+      },
+      "3302": {
+        "taxType": "traditional",
+        "rate": "0.0175"
+      },
+      "3303": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "3304": {
+        "taxType": "traditional",
+        "rate": "0.0175"
+      },
+      "3305": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "3306": {
+        "taxType": "traditional",
+        "rate": "0.0050"
+      },
+      "3501": {
+        "taxType": "traditional",
+        "rate": "0.0150"
+      },
+      "3502": {
+        "taxType": "traditional",
+        "rate": "0.0175"
+      },
+      "3504": {
+        "taxType": "traditional",
+        "rate": "0.0175"
+      },
+      "3603": {
+        "taxType": "earned_income",
+        "rate": "0.0125"
+      },
+      "3604": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "3901": {
+        "taxType": "traditional",
+        "rate": "0.0050"
+      },
+      "3902": {
+        "taxType": "earned_income",
+        "rate": "0.0150"
+      },
+      "3903": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "3904": {
+        "taxType": "traditional",
+        "rate": "0.0050"
+      },
+      "3905": {
+        "taxType": "traditional",
+        "rate": "0.0125"
+      },
+      "3906": {
+        "taxType": "traditional",
+        "rate": "0.0125"
+      },
+      "3907": {
+        "taxType": "earned_income",
+        "rate": "0.0075"
+      },
+      "4201": {
+        "taxType": "traditional",
+        "rate": "0.0075"
+      },
+      "4202": {
+        "taxType": "traditional",
+        "rate": "0.0175"
+      },
+      "4501": {
+        "taxType": "traditional",
+        "rate": "0.0075"
+      },
+      "4503": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "4506": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "4507": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "4508": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "4509": {
+        "taxType": "traditional",
+        "rate": "0.0050"
+      },
+      "4510": {
+        "taxType": "traditional",
+        "rate": "0.0075"
+      },
+      "4604": {
+        "taxType": "traditional",
+        "rate": "0.0150"
+      },
+      "4712": {
+        "taxType": "traditional",
+        "rate": "0.0200"
+      },
+      "4715": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "4901": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "4902": {
+        "taxType": "earned_income",
+        "rate": "0.0125"
+      },
+      "4903": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "4904": {
+        "taxType": "earned_income",
+        "rate": "0.0125"
+      },
+      "5008": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "5010": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "5101": {
+        "taxType": "earned_income",
+        "rate": "0.0075"
+      },
+      "5103": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "5104": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "5105": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "5204": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "5401": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "5402": {
+        "taxType": "traditional",
+        "rate": "0.0050"
+      },
+      "5403": {
+        "taxType": "earned_income",
+        "rate": "0.0050"
+      },
+      "5405": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "5406": {
+        "taxType": "traditional",
+        "rate": "0.0150"
+      },
+      "5501": {
+        "taxType": "earned_income",
+        "rate": "0.0075"
+      },
+      "5502": {
+        "taxType": "traditional",
+        "rate": "0.0175"
+      },
+      "5503": {
+        "taxType": "traditional",
+        "rate": "0.0200"
+      },
+      "5504": {
+        "taxType": "earned_income",
+        "rate": "0.0175"
+      },
+      "5505": {
+        "taxType": "earned_income",
+        "rate": "0.0125"
+      },
+      "5506": {
+        "taxType": "traditional",
+        "rate": "0.0175"
+      },
+      "5507": {
+        "taxType": "traditional",
+        "rate": "0.0125"
+      },
+      "5509": {
+        "taxType": "earned_income",
+        "rate": "0.0150"
+      },
+      "5708": {
+        "taxType": "traditional",
+        "rate": "0.0125"
+      },
+      "5713": {
+        "taxType": "traditional",
+        "rate": "0.0175"
+      },
+      "5901": {
+        "taxType": "earned_income",
+        "rate": "0.0075"
+      },
+      "5902": {
+        "taxType": "traditional",
+        "rate": "0.0050"
+      },
+      "5903": {
+        "taxType": "traditional",
+        "rate": "0.0075"
+      },
+      "5904": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "6301": {
+        "taxType": "traditional",
+        "rate": "0.0150"
+      },
+      "6302": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "6303": {
+        "taxType": "traditional",
+        "rate": "0.0125"
+      },
+      "6501": {
+        "taxType": "earned_income",
+        "rate": "0.0075"
+      },
+      "6502": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "6503": {
+        "taxType": "earned_income",
+        "rate": "0.0150"
+      },
+      "6704": {
+        "taxType": "earned_income",
+        "rate": "0.0150"
+      },
+      "6802": {
+        "taxType": "traditional",
+        "rate": "0.0175"
+      },
+      "6803": {
+        "taxType": "traditional",
+        "rate": "0.0150"
+      },
+      "6804": {
+        "taxType": "traditional",
+        "rate": "0.0175"
+      },
+      "6805": {
+        "taxType": "traditional",
+        "rate": "0.0150"
+      },
+      "6806": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "6901": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "6902": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "6903": {
+        "taxType": "traditional",
+        "rate": "0.0075"
+      },
+      "6904": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "6905": {
+        "taxType": "traditional",
+        "rate": "0.0075"
+      },
+      "6906": {
+        "taxType": "traditional",
+        "rate": "0.0125"
+      },
+      "6907": {
+        "taxType": "traditional",
+        "rate": "0.0150"
+      },
+      "6908": {
+        "taxType": "traditional",
+        "rate": "0.0075"
+      },
+      "6909": {
+        "taxType": "traditional",
+        "rate": "0.0175"
+      },
+      "7001": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "7007": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "7008": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "7106": {
+        "taxType": "traditional",
+        "rate": "0.0050"
+      },
+      "7107": {
+        "taxType": "earned_income",
+        "rate": "0.0075"
+      },
+      "7201": {
+        "taxType": "earned_income",
+        "rate": "0.0150"
+      },
+      "7202": {
+        "taxType": "traditional",
+        "rate": "0.0125"
+      },
+      "7203": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "7204": {
+        "taxType": "traditional",
+        "rate": "0.0150"
+      },
+      "7403": {
+        "taxType": "earned_income",
+        "rate": "0.0050"
+      },
+      "7404": {
+        "taxType": "traditional",
+        "rate": "0.0150"
+      },
+      "7405": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "7406": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "7501": {
+        "taxType": "traditional",
+        "rate": "0.0150"
+      },
+      "7502": {
+        "taxType": "earned_income",
+        "rate": "0.0125"
+      },
+      "7503": {
+        "taxType": "traditional",
+        "rate": "0.0075"
+      },
+      "7504": {
+        "taxType": "traditional",
+        "rate": "0.0150"
+      },
+      "7505": {
+        "taxType": "traditional",
+        "rate": "0.0075"
+      },
+      "7506": {
+        "taxType": "earned_income",
+        "rate": "0.0150"
+      },
+      "7507": {
+        "taxType": "traditional",
+        "rate": "0.0075"
+      },
+      "7508": {
+        "taxType": "earned_income",
+        "rate": "0.0075"
+      },
+      "7612": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "7711": {
+        "taxType": "earned_income",
+        "rate": "0.0050"
+      },
+      "8001": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "8003": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "8101": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "8104": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "8301": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "8501": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "8502": {
+        "taxType": "traditional",
+        "rate": "0.0075"
+      },
+      "8503": {
+        "taxType": "earned_income",
+        "rate": "0.0050"
+      },
+      "8504": {
+        "taxType": "earned_income",
+        "rate": "0.0075"
+      },
+      "8505": {
+        "taxType": "traditional",
+        "rate": "0.0125"
+      },
+      "8509": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "8601": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "8602": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "8603": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "8604": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "8605": {
+        "taxType": "earned_income",
+        "rate": "0.0125"
+      },
+      "8607": {
+        "taxType": "traditional",
+        "rate": "0.0150"
+      },
+      "8701": {
+        "taxType": "traditional",
+        "rate": "0.0050"
+      },
+      "8702": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "8703": {
+        "taxType": "traditional",
+        "rate": "0.0125"
+      },
+      "8705": {
+        "taxType": "earned_income",
+        "rate": "0.0125"
+      },
+      "8706": {
+        "taxType": "earned_income",
+        "rate": "0.0025"
+      },
+      "8707": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "8708": {
+        "taxType": "traditional",
+        "rate": "0.0050"
+      },
+      "8801": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "8802": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "8803": {
+        "taxType": "traditional",
+        "rate": "0.0125"
+      },
+      "0203": {
+        "taxType": "traditional",
+        "rate": "0.0050"
+      },
+      "0204": {
+        "taxType": "traditional",
+        "rate": "0.0050"
+      },
+      "0209": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "0302": {
+        "taxType": "earned_income",
+        "rate": "0.0125"
+      },
+      "0303": {
+        "taxType": "traditional",
+        "rate": "0.0125"
+      },
+      "0404": {
+        "taxType": "earned_income",
+        "rate": "0.0125"
+      },
+      "0502": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "0601": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "0602": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "0603": {
+        "taxType": "traditional",
+        "rate": "0.0125"
+      },
+      "0604": {
+        "taxType": "earned_income",
+        "rate": "0.0100"
+      },
+      "0605": {
+        "taxType": "traditional",
+        "rate": "0.0075"
+      },
+      "0606": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "0905": {
+        "taxType": "traditional",
+        "rate": "0.0050"
+      },
+      "0907": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      },
+      "0908": {
+        "taxType": "earned_income",
+        "rate": "0.0125"
+      },
+      "0909": {
+        "taxType": "traditional",
+        "rate": "0.0100"
+      }
+    }
+  }
+}

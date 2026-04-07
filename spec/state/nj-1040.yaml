@@ -1,0 +1,602 @@
+form: "NJ-1040"
+fullName: "New Jersey Resident Income Tax Return (NJ-1040) — Complete Return Orchestrator"
+taxYear: 2025
+reference: "https://www.nj.gov/treasury/taxation/pdf/current/1040i.pdf"
+
+notes: |
+  This is the main orchestrator for the NJ-1040 resident income tax return. It
+  assembles all sub-modules (gross income, exemptions, deductions, tax rate,
+  credits, payments) into a complete return flow.
+
+  NJ-1040 return flow:
+  1. Compute NJ Gross Income (Lines 14-29) independently from federal
+  2. Compute personal exemptions (Lines 30-37)
+  3. Compute deductions: property tax deduction + medical expense deduction
+  4. Derive taxable income on line 39, then subtract the property tax deduction
+     on line 41 to reach New Jersey taxable income on line 42
+  5. Apply the progressive rate table to get New Jersey tax on line 43
+  6. Apply nonrefundable credits beginning with the other-jurisdiction credit on line 44
+  7. Apply refundable credits (EITC, Child Tax Credit)
+  8. Apply withholding and estimated payments
+  9. Compute balance due or refund
+
+  Key NJ characteristics:
+  - NJ computes income INDEPENDENTLY from federal AGI
+  - No standard deduction — exemptions serve that role
+  - Alimony paid deduction (Line 26, pre-2019 agreements only)
+  - Pension exclusion for age 62+/disabled using the 2025 NJ-1040 worksheet phase-down on pension income
+  - Other retirement income exclusion using the 2025 Worksheet D full-year resident path, including the special exclusion for filers who will never be eligible for Social Security or Railroad Retirement
+  - Property tax deduction (up to $15,000) OR $50 credit
+  - Medical expense deduction with 2% of NJ gross income floor
+  - EITC is 40% of federal EITC (refundable)
+  - Child Tax Credit is refundable, income-bracketed
+  - Progressive tax rates from 1.4% to 10.75%
+
+lines:
+  - line: "29"
+    description: "NJ Gross Income"
+    formula: "Delegated to nj-1040-gross-income module"
+    inputs:
+      - "All income categories (Lines 14-24)"
+      - "Retirement exclusions (engine Lines 27a-27c; 2025 NJ-1040 lines 28a-28c)"
+      - "Other adjustments (Line 28)"
+    testRef: "tests/engine/state/nj-1040.test.ts::NJ-1040 orchestrator - single filer with wages only"
+
+  - line: "37"
+    description: "Total personal exemptions"
+    formula: "Delegated to nj-1040-exemptions module"
+    inputs:
+      - "Filing status, age, disability, taxpayer/spouse veteran status, dependents"
+    testRef: "tests/engine/state/nj-1040.test.ts::NJ-1040 orchestrator - exemptions reduce taxable income"
+
+  - line: "37a-37c"
+    description: "New Jersey College Affordability deductions"
+    formula: "Delegated to nj-1040-college-affordability module; sum NJBEST, NJCLASS, and tuition deductions subject to the $200,000 gross-income gate"
+    inputs:
+      - "NJ gross income (Line 29)"
+      - "NJBEST contributions"
+      - "NJCLASS principal and interest paid"
+      - "Qualified tuition paid to a New Jersey institution"
+      - "Months of NJ residency"
+    notes: |
+      The 2025 NJ-1040 added lines 37a through 37c. These deductions are
+      allowed only when line 29 gross income is $200,000 or less and are
+      prorated for part-year residents.
+    testRef: "tests/engine/state/nj-1040.test.ts::NJ-1040 orchestrator - college affordability deductions reduce taxable income"
+
+  - line: "38-deduction"
+    description: "Property tax deduction"
+    formula: |
+      Delegated to nj-1040-property-tax module.
+      Deduction path uses min(property taxes or 18% of rent, $15,000), except
+      married/CU partners filing separately who maintained the same main home
+      are capped at $7,500 per return.
+    inputs:
+      - "Homeowner/tenant status"
+      - "Property taxes paid or rent paid"
+    testRef: "tests/engine/state/nj-1040.test.ts::NJ-1040 orchestrator - property tax deduction reduces taxable income"
+
+  - line: "medical-deduction"
+    description: "Medical expense deduction"
+    formula: "Delegated to nj-1040-medical-expenses module; Worksheet F line 3 excess medical expenses plus Worksheet F lines 4 and 5"
+    inputs:
+      - "Medical expenses"
+      - "Insurance reimbursements"
+      - "NJ gross income"
+      - "Qualified Archer MSA contributions"
+      - "Self-employed health insurance deduction"
+    notes: |
+      The 2025 NJ-1040 Worksheet F adds Archer MSA contributions and the
+      self-employed health insurance deduction after computing the 2% floor on
+      unreimbursed medical expenses.
+    testRef: "tests/engine/state/nj-1040.test.ts::NJ-1040 orchestrator - medical deduction applied"
+
+  - line: "39"
+    description: "Taxable income before the property tax deduction"
+    formula: "max(0, Line 29 - Line 38)"
+    inputs:
+      - "NJ gross income (Line 29)"
+      - "Exemption amount (Line 30)"
+      - "Medical expense deduction (Line 31)"
+      - "Alimony deduction (Line 32)"
+      - "Qualified conservation contribution (Line 33)"
+      - "Health enterprise zone deduction (Line 34)"
+      - "Alternative business calculation adjustment (Line 35)"
+      - "Organ/Bone Marrow Donation Deduction (Line 36)"
+      - "College affordability deductions (Lines 37a-37c)"
+      - "Line 38 total exemptions and deductions"
+    notes: |
+      The 2025 NJ-1040 puts the property tax deduction after line 39. The
+      engine computes line 39 as max(0, line 29 minus the line-38 total from
+      lines 30 through 37c), then applies the property tax deduction on line
+      41 to arrive at line 42.
+    edgeCases:
+      - "Cannot be negative — floor at zero"
+      - "Filer with no deductions: line 39 equals line 29 gross income"
+    testRef: "tests/engine/state/nj-1040.test.ts::NJ-1040 orchestrator - taxable income floors at zero"
+
+  - line: "32"
+    description: "Alimony and separate maintenance payments paid"
+    formula: "Supported resident slice accepts the deductible pre-2019 alimony amount entered on line 32"
+    inputs:
+      - "Alimony paid amount"
+    notes: |
+      The 2025 NJ-1040 places deductible alimony and separate maintenance
+      payments on line 32, after line 29 gross income and after the Worksheet F
+      medical-expense deduction on line 31. This supported resident slice
+      accepts the already-validated deductible amount directly.
+    edgeCases:
+      - "Negative input is treated as zero"
+      - "If no deductible alimony is supplied, line 32 is zero"
+    testRef: "tests/engine/state/nj-1040.test.ts::NJ-1040 orchestrator - alimony paid reduces taxable income without changing gross income"
+
+  - line: "33"
+    description: "Qualified conservation contribution"
+    formula: "Supported resident slice accepts the already-computed New Jersey deduction amount entered on line 33"
+    inputs:
+      - "Qualified conservation contribution amount allowed as a federal deduction for New Jersey real property"
+    notes: |
+      Per the 2025 NJ-1040 instructions, line 33 equals the amount of a
+      qualified conservation contribution of New Jersey real property that is
+      allowed as a federal deduction. The supported resident slice accepts the
+      computed line-33 amount directly rather than recalculating Form 8283.
+    edgeCases:
+      - "Negative input is treated as zero"
+      - "If no contribution is supplied, the supported line-33 amount is zero"
+    testRef: "tests/engine/state/nj-1040.test.ts::NJ-1040 orchestrator - line 33 qualified conservation contribution reduces taxable income"
+
+  - line: "34"
+    description: "Health enterprise zone deduction"
+    formula: "Supported resident slice accepts the already-computed HEZ deduction entered on line 34"
+    inputs:
+      - "HEZ deduction amount from Schedule NJK-1 / Schedule NJ-K-1 or sole-proprietor worksheet"
+    notes: |
+      Per the 2025 NJ-1040 instructions, line 34 is the qualified Health
+      Enterprise Zone deduction. Partners and S corporation shareholders use
+      the amount reported on their New Jersey K-1; sole proprietors compute
+      the allowable amount separately. The supported resident slice accepts
+      that computed amount directly.
+    edgeCases:
+      - "Negative input is treated as zero"
+      - "If no HEZ deduction is supplied, the supported line-34 amount is zero"
+    testRef: "tests/engine/state/nj-1040.test.ts::NJ-1040 orchestrator - line 34 health enterprise zone deduction reduces taxable income"
+
+  - line: "35"
+    description: "Alternative business calculation adjustment"
+    formula: "Supported resident slice accepts the already-computed Schedule NJ-BUS-2 line 11 amount entered on line 35"
+    inputs:
+      - "Schedule NJ-BUS-2 line 11 amount"
+    notes: |
+      Per the 2025 NJ-1040 instructions, taxpayers with supported business-loss
+      categories or carryforwards complete Schedule NJ-BUS-2 and enter line 11
+      on line 35. The supported resident slice accepts the calculated line-35
+      amount directly instead of recalculating NJ-BUS-1 and NJ-BUS-2 here.
+    edgeCases:
+      - "Negative input is treated as zero"
+      - "If line 11 is zero, line 35 stays zero"
+    testRef: "tests/engine/state/nj-1040.test.ts::NJ-1040 orchestrator - line 35 alternative business calculation adjustment reduces taxable income"
+
+  - line: "36"
+    description: "Organ/Bone Marrow Donation Deduction"
+    formula: "Delegated to nj-1040-organ-donation-deduction module; min($10,000, qualified unreimbursed travel, lodging, and lost wages)"
+    inputs:
+      - "Qualified unreimbursed organ or bone marrow donation expenses"
+    notes: |
+      The 2025 NJ-1040 instructions allow a combined deduction of up to
+      $10,000 per return for eligible donation expenses incurred by the
+      taxpayer, spouse on a joint return, or dependents claimed on the return.
+    testRef: "tests/engine/state/nj-1040.test.ts::NJ-1040 orchestrator - organ donation deduction reduces taxable income before property tax"
+
+  - line: "41"
+    description: "Property tax deduction"
+    formula: |
+      Delegated to nj-1040-property-tax module.
+      Deduction path uses min(property taxes or 18% of rent, $15,000), except
+      married/CU partners filing separately who maintained the same main home
+      are capped at $7,500 per return, and the deduction is only available
+      when line 29 NJ gross income exceeds the filing threshold for the
+      filing status.
+    inputs:
+      - "Homeowner/tenant status"
+      - "Property taxes paid or rent paid"
+      - "NJ gross income (Line 29)"
+    testRef: "tests/engine/state/nj-1040.test.ts::NJ-1040 orchestrator - property tax deduction reduces taxable income"
+
+  - line: "42"
+    description: "New Jersey taxable income"
+    formula: "max(0, Line 39 - Line 41)"
+    inputs:
+      - "Line 39 taxable income before property tax deduction"
+      - "Line 41 property tax deduction"
+    notes: |
+      This is the taxable-income amount that feeds the page-2 tax calculation,
+      Schedule NJ-COJ limit, and the income-bracket tests for credits that use
+      NJ taxable income.
+    edgeCases:
+      - "Cannot be negative — floor at zero"
+      - "If no property tax deduction is claimed, line 42 equals line 39"
+    testRef: "tests/engine/state/nj-1040.test.ts::NJ-1040 orchestrator - taxable income floors at zero"
+
+  - line: "43"
+    description: "Tax on amount on line 42"
+    formula: "Delegated to nj-1040-tax-rate module; progressive rate table"
+    inputs:
+      - "NJ taxable income (Line 42)"
+      - "Filing status"
+    testRef: "tests/engine/state/nj-1040.test.ts::NJ-1040 orchestrator - tax computed from rate table"
+
+  - line: "44"
+    description: "Credit for income taxes paid to other jurisdictions (Schedule NJ-COJ)"
+    formula: "Delegated to nj-1040-other-jurisdiction-credit module; sum of per-jurisdiction credits, capped at NJ tax (Line 43)"
+    inputs:
+      - "NJ gross income (Line 29)"
+      - "NJ tax (Line 43) — NOT total tax"
+      - "Per-jurisdiction income and tax paid"
+    notes: |
+      Nonrefundable credit applied against income tax only (Line 43). Use tax,
+      interest, and the shared responsibility payment are added later in the
+      page-2 form flow.
+    testRef: "tests/engine/state/nj-1040.test.ts::NJ-1040 orchestrator - other jurisdiction credit reduces tax"
+
+  - line: "45"
+    description: "Balance of tax"
+    formula: "max(0, Line 43 income tax - Line 44 credit)"
+    inputs:
+      - "Line 43 income tax"
+      - "Line 44 OJC credit"
+    testRef: "tests/engine/state/nj-1040.test.ts::NJ-1040 orchestrator - other jurisdiction credit cannot exceed NJ tax"
+
+  - line: "31-37c"
+    description: "Other exemptions and deductions included before line 39"
+    formula: "Line 30 + Line 31 + Line 32 + supported line 33 through line 37c deductions"
+    inputs:
+      - "Exemption amount (Line 30)"
+      - "Medical expense deduction"
+      - "Alimony deduction (Line 32)"
+      - "Qualified conservation contribution (Line 33)"
+      - "Health enterprise zone deduction (Line 34)"
+      - "Alternative business calculation adjustment (Line 35)"
+      - "Organ/Bone Marrow Donation Deduction (Line 36)"
+      - "College affordability deductions (Lines 37a-37c)"
+    edgeCases:
+      - "The supported resident slice currently computes line 30, line 31, line 32, line 36, and lines 37a through 37c directly and accepts the already-computed line 33 through line 35 amounts as direct inputs"
+    testRef: "tests/engine/state/nj-1040.test.ts::NJ-1040 orchestrator - medical deduction applied"
+
+  - line: "53c"
+    description: "Shared Responsibility Payment (Health Insurance Mandate)"
+    formula: "Delegated to nj-1040-health-coverage module (Schedule NJ-HCC)"
+    inputs:
+      - "Total NJ income before exclusions/adjustments"
+      - "Tax-exempt interest"
+      - "Dependent income and tax-exempt interest"
+      - "Filing status"
+      - "Number of uninsured adults and children"
+      - "Months without coverage"
+    notes: |
+      NJ individual health insurance mandate (P.L. 2018, c.31). Penalty for
+      residents who lack minimum essential coverage. Modeled after federal ACA
+      mandate. Short gaps (≤2 months) are exempt. Worksheet L household income
+      equals taxpayer total income, plus tax-exempt interest, plus dependents'
+      income and tax-exempt interest. Penalty = max(flat dollar, 2.5% of excess
+      household income), capped at bronze plan cost, prorated by months.
+    testRef: "tests/engine/state/nj-1040.test.ts::NJ-1040 orchestrator - SRP added to total tax for uninsured filer"
+
+  - line: "51"
+    description: "Use Tax on out-of-state purchases"
+    formula: "Delegated to nj-1040-use-tax module; safe harbor table or actual amount"
+    inputs:
+      - "NJ gross income (for safe harbor lookup)"
+      - "Safe harbor election flag"
+      - "Actual use tax amount (if not using safe harbor)"
+    notes: |
+      NJ Use Tax is due on purchases where NJ sales tax was not charged.
+      Safe harbor table provides simplified amounts by income bracket.
+      Rate equals NJ sales tax rate (6.625% for 2025).
+    testRef: "tests/engine/state/nj-1040.test.ts::NJ-1040 orchestrator - use tax safe harbor adds to total tax"
+
+  - line: "total-tax"
+    description: "Engine totalTax result before NJ-2210 interest"
+    formula: "Line 50 balance of tax after credits + Line 51 use tax + Line 53c shared responsibility payment"
+    inputs:
+      - "Balance of tax after credits (Line 50)"
+      - "Use tax (Line 51)"
+      - "Shared responsibility payment (Line 53c)"
+    notes: |
+      The supported resident slice exposes NJ-2210 interest separately as
+      underpaymentPenalty. The totalTax result therefore tracks the completed
+      page-2 tax flow through line 53c, after nonrefundable credits and before
+      line 52 / final-balance adjustments.
+    testRef: "tests/engine/state/nj-1040.test.ts::NJ-1040 orchestrator - no SRP when fully covered"
+
+  - line: "52"
+    description: "Interest on underpayment of estimated tax"
+    formula: "Delegated to nj-2210 module; short-method interest amount carried to NJ-1040 line 52"
+    inputs:
+      - "Tax after nonrefundable credits (line 50 + line 51 + line 53c flow)"
+      - "NJ withholding"
+      - "Refundable credits treated as withholding equivalents on NJ-2210 line 2"
+      - "Estimated payments"
+      - "Prior year tax and full-year-return flag for the safe-harbor exception"
+    notes: |
+      The resident engine continues to expose the implementation-friendly
+      underpaymentPenalty field, but it now also surfaces the exact NJ-1040
+      line-52 amount so downstream form rendering and parity checks can read
+      the same line used on page 2 of the return.
+    testRef: "tests/engine/state/nj-1040.test.ts::NJ-1040 orchestrator - line 52 mirrors the NJ-2210 underpayment penalty"
+
+  - line: "54"
+    description: "Total tax due"
+    formula: "Line 50 + Line 51 + Line 52 + Line 53c"
+    inputs:
+      - "Tax after nonrefundable credits before NJ-2210 interest"
+      - "Line 52 underpayment interest"
+    notes: |
+      On the 2025 NJ-1040, line 54 is the amount compared against line 66 to
+      determine whether the filer owes on line 67 or has an overpayment on line
+      68. The engine already used this value internally for the overpayment
+      allocation flow; this line entry documents and exposes it explicitly.
+    testRef: "tests/engine/state/nj-1040.test.ts::NJ-1040 orchestrator - line 54 total tax due adds the line 52 underpayment interest"
+
+  - line: "49"
+    description: "Total supplemental nonrefundable credits"
+    formula: "Delegated to nj-1040-supplemental-credits module; Line 46 + Line 47 + Line 48"
+    inputs:
+      - "Sheltered Workshop Tax Credit"
+      - "Gold Star Family Counseling Credit"
+      - "Credit for Employer of Organ/Bone Marrow Donor"
+      - "Months of New Jersey residency"
+    notes: |
+      These are the additional nonrefundable credits on NJ-1040 lines 46
+      through 48. They apply after line 45 and before use tax, installment
+      interest, and the shared responsibility payment.
+    testRef: "tests/engine/state/nj-1040.test.ts::NJ-1040 orchestrator - supplemental nonrefundable credits reduce income tax before use tax"
+
+  - line: "50"
+    description: "Balance of tax after supplemental nonrefundable credits"
+    formula: "max(0, Line 45 - Line 49)"
+    inputs:
+      - "Line 45 balance of tax after OJC credit"
+      - "Line 49 supplemental nonrefundable credits"
+    edgeCases:
+      - "Line 50 cannot be negative"
+      - "Line 49 does not offset use tax or shared responsibility payment"
+    testRef: "tests/engine/state/nj-1040.test.ts::NJ-1040 orchestrator - supplemental nonrefundable credits do not reduce use tax"
+
+  - line: "property-tax-credit"
+    description: "Property tax credit (refundable, line 56)"
+    formula: |
+      Delegated to nj-1040-property-tax module.
+      If credit is chosen instead of the deduction, enter the refundable
+      property tax credit on line 56. Full-year credit is generally $50,
+      reduced to $25 for married filing separately spouses maintaining the
+      same main home, and prorated for part-year residents. Below-threshold
+      filers may claim this line only through the age-65+/blind-disabled
+      exception described on page 26 of the 2025 instructions.
+    inputs:
+      - "Property tax credit election"
+      - "NJ gross income"
+      - "Filing status"
+      - "Months of NJ residency"
+    notes: |
+      The 2025 NJ-1040 places the property tax credit on line 56 in the
+      payments/credits section. It is refundable and is not capped by income
+      tax remaining after line 44. When no explicit election is supplied, the
+      orchestrator compares the deduction and credit branches of the completed
+      return and keeps the more favorable benefit, mirroring Worksheet H or
+      Worksheet I.
+    testRef: "tests/engine/state/nj-1040.test.ts::NJ-1040 orchestrator - automatically selects the property tax credit when it produces a better refund"
+
+  - line: "tax-after-nonrefundable-credits"
+    description: "Tax after all nonrefundable credits (includes use tax and SRP)"
+    formula: "Line 50 + Line 51 + Line 53c"
+    inputs:
+      - "Line 50 balance of tax after supplemental nonrefundable credits"
+      - "Use tax (Line 51)"
+      - "Shared responsibility payment (Line 53c / NJ-HCC)"
+    notes: |
+      Per the 2025 NJ-1040 form flow, the property tax credit is not part of
+      nonrefundable tax reduction. It is claimed later on line 56 in the
+      payments/credits section. Use tax and SRP are added after line 50.
+    testRef: "tests/engine/state/nj-1040.test.ts::NJ-1040 orchestrator - property tax credit does not reduce tax after nonrefundable credits"
+
+  - line: "nj-eitc"
+    description: "NJ Earned Income Tax Credit (refundable)"
+    formula: |
+      Delegated to nj-1040-eitc module.
+      Primary path: 40% of prorated federal EITC.
+      Special 2025 childless path: fixed $260 (prorated for part-year residents)
+      when the filer is eligible under the NJ age-18 exception and federal EITC is zero.
+    inputs:
+      - "Federal EITC amount"
+      - "Months of NJ residency"
+      - "Childless age-18 exception eligibility flag"
+      - "Number of qualifying EIC children"
+      - "Taxpayer/spouse age-18 eligibility flag"
+    testRef: "tests/engine/state/nj-1040.test.ts::NJ-1040 orchestrator - EITC is refundable"
+
+  - line: "nj-ctc"
+    description: "NJ Child Tax Credit (refundable)"
+    formula: "Delegated to nj-1040-child-tax-credit module; income-bracketed and unavailable to married filing separately filers"
+    inputs:
+      - "Filing status"
+      - "NJ taxable income"
+      - "Number of qualifying children age 5 or younger"
+      - "Months of NJ residency"
+    testRef: "tests/engine/state/nj-1040.test.ts::NJ-1040 orchestrator - married filing separately is ineligible for the child tax credit"
+
+  - line: "nj-dcc"
+    description: "NJ Child and Dependent Care Credit (refundable)"
+    formula: "Delegated to nj-1040-dependent-care-credit module; percentage of federal Form 2441 credit"
+    inputs:
+      - "Federal Form 2441 credit amount"
+      - "NJ taxable income (Line 42)"
+      - "Months of NJ residency"
+    testRef: "tests/engine/state/nj-1040.test.ts::NJ-1040 orchestrator - dependent care credit applied at 50% bracket"
+
+  - line: "62"
+    description: "Wounded Warrior Caregivers Credit (refundable)"
+    formula: "Delegated to nj-1040-wounded-warrior-credit module; lesser of disability compensation or $675, apportioned for multiple caregivers"
+    inputs:
+      - "NJ gross income (Line 29)"
+      - "Filing status"
+      - "Provided care eligibility flag"
+      - "Service member federal disability compensation"
+      - "Only caregiver flag"
+      - "Share of total care expenses"
+    notes: |
+      For 2025, the credit is available only when gross income does not exceed
+      $100,000 for MFJ/HOH/QSS or $50,000 for single/MFS. If multiple caregivers
+      provided care to the same qualifying service member, the credit is reduced
+      to the taxpayer's share of total care expenses.
+    testRef: "tests/engine/state/nj-1040.test.ts::NJ-1040 orchestrator - wounded warrior credit is refundable"
+
+  - line: "63"
+    description: "Pass-Through Business Alternative Income Tax Credit"
+    formula: "Delegated to nj-1040-ptbait-credit module; sum of supported PTBAIT credit shares"
+    inputs:
+      - "Supported partnership PTBAIT credit amount"
+      - "Supported S corporation PTBAIT credit amount"
+      - "Supported estate or trust PTBAIT credit amount"
+    notes: |
+      NJ-1040 line 63 is in the payments and refundable credits section. Enter
+      the taxpayer's share of PTBAIT from Schedule NJ-BUS-1 Part II line 5,
+      Part III line 5, or a Schedule NJK-1 received from an estate or trust.
+    testRef: "tests/engine/state/nj-1040.test.ts::NJ-1040 orchestrator - PTBAIT credit increases total payments and refund"
+
+  - line: "total-refundable-credits"
+    description: "Total refundable credits"
+    formula: "NJ EITC + NJ Child Tax Credit + NJ Dependent Care Credit + Wounded Warrior Caregivers Credit"
+    inputs:
+      - "NJ EITC"
+      - "NJ Child Tax Credit"
+      - "NJ Dependent Care Credit"
+      - "Wounded Warrior Caregivers Credit"
+    testRef: "tests/engine/state/nj-1040.test.ts::NJ-1040 orchestrator - dependent care credit combined with all other credits"
+
+  - line: "59"
+    description: "UI/WF/SWF credit"
+    formula: "Delegated to nj-1040-excess-payroll module; NJ-2450 line 4 excess UI/WF/SWF contributions"
+    inputs:
+      - "Total UI/WF/SWF withheld across all W-2s"
+    notes: |
+      When a taxpayer has multiple NJ employers, each withholds independently up to
+      the wage base. Line 59 receives Form NJ-2450 line 4 for excess UI/WF/SWF
+      contributions only.
+    testRef: "tests/engine/state/nj-1040.test.ts::NJ-1040 orchestrator - excess payroll lines 59 through 61 map each category separately"
+
+  - line: "60"
+    description: "Disability insurance credit"
+    formula: "Delegated to nj-1040-excess-payroll module; NJ-2450 line 5 excess DI contributions"
+    inputs:
+      - "Total DI withheld across all W-2s"
+      - "Private-plan DI maximum override when applicable"
+    notes: |
+      Line 60 receives the disability insurance credit from Form NJ-2450 line 5.
+      The supported resident slice keeps the private-plan DI maximum override for
+      employers that did not participate in the State plan.
+    testRef: "tests/engine/state/nj-1040.test.ts::NJ-1040 orchestrator - excess payroll lines 59 through 61 map each category separately"
+
+  - line: "61"
+    description: "Family leave insurance credit"
+    formula: "Delegated to nj-1040-excess-payroll module; NJ-2450 line 6 excess FLI contributions"
+    inputs:
+      - "Total FLI withheld across all W-2s"
+    notes: |
+      Line 61 receives the family leave insurance credit from Form NJ-2450 line 6.
+    testRef: "tests/engine/state/nj-1040.test.ts::NJ-1040 orchestrator - excess payroll lines 59 through 61 map each category separately"
+
+  - line: "66"
+    description: "Total payments and refundable credits"
+    formula: |
+      NJ tax withheld + property tax credit + NJ-1040 line 57 payments +
+      total refundable credits + lines 59 through 61 payroll credits +
+      Pass-Through Business Alternative Income Tax credit
+    inputs:
+      - "NJ tax withheld (W-2 Box 17)"
+      - "Property tax credit (line 56)"
+      - "NJ-1040 line 57 payments: estimated payments + extension payment + prior-year credit carryforward"
+      - "Total refundable credits"
+      - "Line 59 UI/WF/SWF credit"
+      - "Line 60 DI credit"
+      - "Line 61 FLI credit"
+      - "Pass-Through Business Alternative Income Tax credit (line 63)"
+    testRef: "tests/engine/state/nj-1040.test.ts::NJ-1040 orchestrator - total payments include line 57 carryforward totals"
+
+  - line: "67-80"
+    description: "Overpayment allocation, charitable contributions, and final balance/refund"
+    formula: "Delegated to nj-1040-overpayment-allocation module using 2025 NJ-1040 lines 67 through 80"
+    inputs:
+      - "Total tax due (line 54 equivalent)"
+      - "Total withholdings, credits, and payments (line 66 equivalent)"
+      - "Requested credit to 2026 tax (line 69)"
+      - "Fixed and designated charitable contribution elections (lines 70-77)"
+    notes: |
+      The resident return does not end when tax and payments are netted. The
+      2025 NJ-1040 lets the filer apply part of any overpayment to 2026
+      estimated tax and make charitable contributions that either reduce the
+      refund or increase the balance due. See spec/state/nj-1040-overpayment-allocation.yaml.
+    testRef: "tests/engine/state/nj-1040.test.ts::NJ-1040 orchestrator - overpayment carryforward and charitable contributions adjust the final refund"
+
+  - line: "underpayment-penalty"
+    description: "Underpayment of estimated tax penalty (NJ-2210)"
+    formula: "Delegated to nj-2210 module; short method penalty based on underpayment amount"
+    inputs:
+      - "Tax after nonrefundable credits (current year tax / NJ-1040 line 50 equivalent)"
+      - "NJ-2210 line 2 withholding-equivalent credits: lines 55, 56, 58, 59, 60, 61, 62, 63, 64, and 65"
+      - "Estimated payments"
+      - "Prior year tax (optional, for safe harbor)"
+    notes: |
+      Per the 2025 NJ-2210 instructions, refundable line-2 credits are treated
+      like withholding for the threshold and short-method penalty computation.
+      The penalty form is triggered when line 1 minus line 2 is $400 or more,
+      and no safe harbor or exception removes the underpayment. Penalty is
+      added to balance due. See spec/state/nj-2210.yaml for the validated slice.
+    testRef: "tests/engine/state/nj-1040.test.ts::NJ-1040 orchestrator - penalty applies when no withholding on significant income"
+
+  - line: "balance-due-or-refund"
+    description: "Balance due or refund after line 67-80 allocations"
+    formula: |
+      First compute pre-allocation amount owed or overpayment.
+      Then apply line 69 carryforward and line 70-77 charitable contributions
+      through the nj-1040-overpayment-allocation module:
+      Balance due = max(0, pre-allocation balance due + line 78 - pre-allocation overpayment)
+      Refund = max(0, pre-allocation overpayment - line 78)
+    inputs:
+      - "Tax after nonrefundable credits"
+      - "Underpayment penalty"
+      - "Total payments"
+      - "Credit to 2026 tax"
+      - "Charitable contributions"
+    edgeCases:
+      - "Refundable credits can produce a refund even with zero withholding"
+      - "Carryforward to 2026 reduces the refund"
+      - "Charitable contributions can increase balance due"
+      - "Zero balance when line 78 exactly absorbs an overpayment"
+    testRef: "tests/engine/state/nj-1040.test.ts::NJ-1040 orchestrator - refundable credits produce refund with no withholding"
+
+  - line: "filing-requirement"
+    description: "Filing requirement determination"
+    formula: "Delegated to nj-1040-filing-requirement module; checks income threshold, withholding, refundable credit eligibility (including line 64 dependent care credit), SRP, use tax, and actual excess-payroll-credit eligibility"
+    inputs:
+      - "NJ gross income (Line 29)"
+      - "Filing status"
+      - "NJ withholding"
+      - "Estimated payments"
+      - "Federal EITC"
+      - "Qualifying children"
+      - "Federal child and dependent care credit"
+      - "Pass-Through Business Alternative Income Tax credit"
+      - "Use tax"
+      - "Health coverage months"
+      - "Payroll contributions"
+      - "Private-plan DI maximum override"
+      - "Self-employment earnings"
+    notes: |
+      Determines whether the taxpayer must file an NJ-1040. Filing is required
+      if NJ gross income exceeds the filing threshold ($10K single, $20K MFJ)
+      or if any filing trigger applies (withholding refund, refundable credits
+      such as EITC, child tax credit, dependent care credit, PTBAIT, SRP,
+      etc.). When no NJ-1040 trigger applies, the filing requirement module
+      may instead recommend Form NJ-1040-HW for the standalone
+      property-tax-credit / wounded-warrior-credit path.
+    testRef: "tests/engine/state/nj-1040.test.ts::NJ-1040 orchestrator - filing requirement included in result"

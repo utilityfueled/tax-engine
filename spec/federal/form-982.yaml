@@ -1,0 +1,171 @@
+form: "Form 982"
+fullName: "Reduction of Tax Attributes Due to Discharge of Indebtedness (and Section 1082 Basis Adjustment)"
+taxYear: 2025
+irsReference: "https://www.irs.gov/forms-pubs/about-form-982"
+
+notes: |
+  Form 982 is filed when a taxpayer excludes cancellation of debt (COD) income
+  under IRC §108. Part I identifies the applicable exclusion (handled by
+  Form 1099-C in this engine). Part II applies mandatory tax-attribute
+  reductions equal to the excluded amount per IRC §108(b).
+
+  The engine's Form 1099-C module computes the excluded amounts (bankruptcy,
+  insolvency, qualified principal residence, qualified farm, qualified real
+  property business). Form 982 then reduces the taxpayer's carryforward
+  attributes by those amounts in the statutory order defined by IRC §108(b)(2).
+
+  General reduction order (IRC §108(b)(2)):
+    1. NOL for the tax year and NOL carryovers (§108(b)(2)(A))
+    2. General business credit carryovers (§108(b)(2)(B))
+    3. Minimum tax credit under §53(b) (§108(b)(2)(C))
+    4. Capital loss for the year and carryovers (§108(b)(2)(D))
+    5. Basis reduction under §1017 (§108(b)(2)(E))
+    6. Passive activity loss and credit carryovers (§108(b)(2)(F))
+    7. Foreign tax credit carryovers (§108(b)(2)(G))
+
+  Special rules:
+    - Qualified principal residence indebtedness (§108(h)(1)):
+      The reduction is applied ONLY to the basis of the principal residence,
+      not to other tax attributes. If the excluded amount exceeds the
+      adjusted basis, the excess is simply not reducible — it does not
+      spill over to other attributes.
+    - Qualified real property business debt (§108(c)(1)(A)):
+      The reduction is applied ONLY to the basis of depreciable real property.
+    - Qualified farm indebtedness (§108(g)(2)):
+      The reduction is applied ONLY to the basis of qualified farm property
+      (IRC §1017(b)(4)), then to other tax attributes in the general order.
+    - §108(b)(5) election: the taxpayer may elect to reduce the basis of
+      depreciable property first (before reducing other tax attributes).
+      For general business credit, the reduction is $0.3333 of credit for
+      each $1 of excluded income (IRC §108(b)(3)(B)).
+
+businessRuleValidation:
+  - rule: "reference-summary-packet"
+    description: "Inventory support counts this form as business-rule validated only when regression coverage proves the emitted packet artifact stays labeled as a non-filing reference summary and only surfaces the supported exclusion categories together with the supported Form 982 attribute-reduction outputs."
+    testRef: "tests/pdf/fill-form-982.test.ts::buildForm982ReferenceSummary keeps the packet artifact reference-only and limited to supported exclusion and attribute-reduction outputs"
+
+lines:
+  - line: "part2-line4"
+    description: "NOL reduction"
+    formula: "Reduce NOL carryforward (but not below zero) by the applicable excluded COD amount"
+    irsRef: "IRC §108(b)(2)(A); Form 982 Part II Line 4"
+    inputs:
+      - "Current NOL carryforward"
+      - "Excluded COD amount (after any prior reductions)"
+    edgeCases:
+      - "If taxpayer elected §108(b)(5) basis reduction first, NOL reduction applies to remaining excluded amount"
+      - "NOL cannot go below zero"
+    testRef: "tests/engine/forms/form-982.test.ts::Form 982 general reduction order - NOL reduced first"
+
+  - line: "part2-line5"
+    description: "General business credit carryover reduction"
+    formula: "Reduce GBC carryforward by $0.3333 per $1 of remaining excluded COD (IRC §108(b)(3)(B))"
+    irsRef: "IRC §108(b)(2)(B), §108(b)(3)(B); Form 982 Part II Line 5"
+    inputs:
+      - "General business credit carryforward"
+      - "Remaining excluded COD amount"
+    notes: "The credit is reduced by one-third of each dollar of excluded income, not dollar-for-dollar."
+    edgeCases:
+      - "Fractional cents are rounded to nearest cent"
+      - "Cannot reduce below zero"
+    testRef: "tests/engine/forms/form-982.test.ts::Form 982 general reduction order - GBC reduced at 33.33 cents per dollar"
+
+  - line: "part2-line6"
+    description: "Minimum tax credit reduction"
+    formula: "Reduce MTC carryforward by $0.3333 per $1 of remaining excluded COD (IRC §108(b)(3)(B))"
+    irsRef: "IRC §108(b)(2)(C), §108(b)(3)(B); Form 982 Part II Line 6"
+    inputs:
+      - "Minimum tax credit carryforward"
+      - "Remaining excluded COD amount"
+    notes: "Same one-third-per-dollar rule as general business credit."
+    testRef: "tests/engine/forms/form-982.test.ts::Form 982 general reduction order - MTC reduced at 33.33 cents per dollar"
+
+  - line: "part2-line7"
+    description: "Capital loss carryover reduction"
+    formula: "Reduce capital loss carryforward (but not below zero) by the remaining excluded COD amount"
+    irsRef: "IRC §108(b)(2)(D); Form 982 Part II Line 7"
+    inputs:
+      - "Capital loss carryforward (short-term + long-term)"
+      - "Remaining excluded COD amount"
+    edgeCases:
+      - "Dollar-for-dollar reduction"
+      - "Cannot reduce below zero"
+    testRef: "tests/engine/forms/form-982.test.ts::Form 982 general reduction order - capital loss reduced after credits"
+
+  - line: "part2-line8"
+    description: "Basis of property reduction"
+    formula: "Reduce aggregate adjusted basis of property (but not below zero) by remaining excluded COD per §1017"
+    irsRef: "IRC §108(b)(2)(E), §1017; Form 982 Part II Line 8"
+    inputs:
+      - "Aggregate adjusted basis of property"
+      - "Remaining excluded COD amount"
+    notes: "The §1017 basis reduction is limited to the aggregate of the adjusted bases of property held at the beginning of the tax year following the tax year of discharge."
+    edgeCases:
+      - "Basis cannot be reduced below zero"
+      - "For qualified principal residence exclusion, ONLY the residence basis is reduced — see line part2-qpr"
+      - "For §108(b)(5) election, depreciable property basis is reduced first"
+    testRef: "tests/engine/forms/form-982.test.ts::Form 982 general reduction order - basis reduced after capital loss"
+
+  - line: "part2-line9"
+    description: "Passive activity loss and credit carryover reduction"
+    formula: "Reduce suspended passive losses (but not below zero) by remaining excluded COD amount"
+    irsRef: "IRC §108(b)(2)(F); Form 982 Part II Line 9"
+    inputs:
+      - "Suspended passive activity loss carryforward"
+      - "Remaining excluded COD amount"
+    testRef: "tests/engine/forms/form-982.test.ts::Form 982 general reduction order - passive losses reduced after basis"
+
+  - line: "part2-line10"
+    description: "Foreign tax credit carryover reduction"
+    formula: "Reduce FTC carryforward by $0.3333 per $1 of remaining excluded COD (IRC §108(b)(3)(B))"
+    irsRef: "IRC §108(b)(2)(G), §108(b)(3)(B); Form 982 Part II Line 10"
+    inputs:
+      - "Foreign tax credit carryforward"
+      - "Remaining excluded COD amount"
+    notes: "Same one-third-per-dollar rule as general business credit."
+    testRef: "tests/engine/forms/form-982.test.ts::Form 982 general reduction order - FTC reduced last"
+
+  - line: "part2-qpr"
+    description: "Qualified principal residence basis-only reduction"
+    formula: "For §108(a)(1)(E) exclusion: reduce ONLY the basis of the principal residence, not other attributes"
+    irsRef: "IRC §108(h)(1); Form 982 Part II Line 10b"
+    inputs:
+      - "Adjusted basis of principal residence"
+      - "Qualified principal residence excluded amount"
+    notes: "This overrides the general reduction order. If the excluded amount exceeds the residence basis, the excess is simply not applied — it does not reduce other attributes."
+    edgeCases:
+      - "Exclusion exceeds basis — basis goes to zero, no spillover"
+      - "Residence basis already zero — no reduction possible"
+    testRef: "tests/engine/forms/form-982.test.ts::Form 982 qualified principal residence - reduces only residence basis"
+
+  - line: "part2-qrpb"
+    description: "Qualified real property business basis-only reduction"
+    formula: "For §108(a)(1)(D) exclusion: reduce ONLY the basis of depreciable real property, not other attributes"
+    irsRef: "IRC §108(c)(1)(A); Form 982 Part II Line 10b"
+    inputs:
+      - "Adjusted basis of depreciable real property"
+      - "Qualified real property business excluded amount"
+    notes: "This overrides the general reduction order for qualified real property business indebtedness. If the excluded amount exceeds the depreciable real property basis, the excess is not applied to other attributes."
+    edgeCases:
+      - "Exclusion exceeds depreciable real property basis — basis goes to zero, no spillover"
+      - "Depreciable real property basis already zero — no reduction possible"
+    testRef: "tests/engine/forms/form-982.test.ts::Form 982 qualified real property business - reduces only depreciable real property basis"
+
+  - line: "part2-108b5"
+    description: "Section 108(b)(5) election — reduce depreciable property basis first"
+    formula: "If elected, reduce basis of depreciable property dollar-for-dollar before applying the general attribute order to any remainder"
+    irsRef: "IRC §108(b)(5); Form 982 Part I Line 1d checkbox"
+    inputs:
+      - "Adjusted basis of depreciable property"
+      - "Total excluded COD amount subject to general reduction"
+    edgeCases:
+      - "Election applies only to bankruptcy and insolvency exclusions"
+      - "After basis is exhausted, remaining excluded amount reduces other attributes in standard order"
+    testRef: "tests/engine/forms/form-982.test.ts::Form 982 section 108(b)(5) election - depreciable basis reduced first"
+
+  - line: "packet"
+    description: "Draft packet inclusion rule for supported Form 982 cancellation-of-debt exclusions"
+    formula: "When supported cancellation-of-debt exclusions produce a Form 982 computation, include a non-filing reference-summary PDF in the packet that lists the supported exclusion categories from Form 1099-C and the supported Form 982 attribute-reduction outputs."
+    irsRef: "Form 982; IRC §108(b); IRC §1017"
+    notes: "This packet slice intentionally emits a deterministic reference summary instead of attempting to recreate a filed Form 982, so the draft packet stays honest about the supported COD exclusion inputs and the resulting attribute reductions."
+    testRef: "tests/pdf/fill-form-982.test.ts::fillReturn includes a Form 982 reference summary when cancellation-of-debt exclusions produce a Form 982 computation"

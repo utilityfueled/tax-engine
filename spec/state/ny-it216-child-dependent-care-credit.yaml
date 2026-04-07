@@ -1,0 +1,156 @@
+form: IT-216
+name: Claim for Child and Dependent Care Credit
+state: New York
+year: 2025
+source: https://www.tax.ny.gov/pdf/current_forms/it/it216i.pdf
+
+description: |
+  Computes the New York State child and dependent care credit and,
+  for eligible NYC residents, the NYC child and dependent care credit.
+  The NYS credit is a refundable credit for full-year residents.
+  The credit equals the federal-style credit (from qualified expenses,
+  earned income limits, and federal percentage) multiplied by a NYS
+  limitation decimal that varies by NY AGI.
+
+lines:
+  - line: "3a"
+    description: Total qualified expenses paid
+    formula: Sum of qualified expenses for all qualifying persons
+    notes: |
+      Capped at $3,000 if one qualifying person, $6,000 if two or more.
+    testRef: "tests/engine/state/ny-it216-child-dependent-care-credit.test.ts::Line 3a - total qualified expenses paid preserved before caps"
+
+  - line: "5"
+    description: Dollar limit for qualified expenses
+    formula: |
+      $3,000 if 1 qualifying person; $6,000 if 2+ qualifying persons.
+    notes: |
+      The expanded limits ($7,500/$8,500/$9,000) apply only in
+      Worksheet 1 for dependent care benefits adjustments.
+    testRef: "tests/engine/state/ny-it216-child-dependent-care-credit.test.ts::1 qualifying person returns $3,000"
+
+  - line: "8"
+    description: Allowable expenses
+    formula: min(qualified expenses, expense limit, taxpayer earned income, spouse earned income)
+    testRef: "tests/engine/state/ny-it216-child-dependent-care-credit.test.ts::expenses capped by earned income when earned income is lower"
+
+  - line: "9"
+    description: Federal adjusted gross income
+    formula: From Form IT-201 line 19 or Form IT-203 line 19
+    testRef: "tests/engine/state/ny-it216-child-dependent-care-credit.test.ts::Line 9 - federal adjusted gross income captured for percentage lookup"
+
+  - line: "10"
+    description: Federal credit percentage
+    formula: |
+      Decimal from Table for line 10 based on FAGI:
+        $0-$15,000: .35
+        $15,001-$17,000: .34
+        (decreases by .01 per $2,000)
+        $43,001+: .20
+    irs_reference: Same table as federal Form 2441
+    testRef: "tests/engine/state/ny-it216-child-dependent-care-credit.test.ts::FAGI at or below $15,000 returns .35"
+
+  - line: "11"
+    description: Tentative federal-style credit
+    formula: Line 8 × Line 10
+    testRef: "tests/engine/state/ny-it216-child-dependent-care-credit.test.ts::Line 11 - tentative federal-style credit equals allowable expenses times federal decimal"
+
+  - line: "12"
+    description: Federal-style credit carried forward
+    formula: Line 11 (may include prior year expense adjustments)
+    testRef: "tests/engine/state/ny-it216-child-dependent-care-credit.test.ts::Line 12 - federal-style credit carried forward equals line 11 absent adjustments"
+
+  - line: "13"
+    description: NYS child and dependent care credit limitation decimal
+    testRef: "tests/engine/state/ny-it216-child-dependent-care-credit.test.ts::NY AGI $25,001 returns 1.099 (first $200 bracket)"
+    formula: |
+      From NYS limitation table based on NY AGI (IT-201 line 33):
+        $0-$25,000: 1.100 (110% of federal credit)
+        $25,001-$40,000: phases from 1.099 to 1.001 ($200 brackets)
+        $40,001-$50,000: 1.000 (100% of federal credit)
+        $50,001-$55,000: 1.162 to 0.863 ($200 brackets)
+        $55,001-$60,000: 0.927 to 0.601 ($200 brackets)
+        $60,001-$65,000: 1.070 to 0.476 ($200 brackets)
+        $65,001-$150,000: 0.600
+        $150,001+: 0.200
+    notes: |
+      The non-monotonic jumps at $50k, $55k, $60k compensate for
+      the interaction between the federal percentage and NY's desired
+      effective credit rate at different income levels.
+
+  - line: "14"
+    description: New York State child and dependent care credit
+    formula: Line 12 × Line 13
+    notes: |
+      Fully refundable for full-year residents.
+      Enter on IT-201 line 64 (other refundable credits).
+    testRef: "tests/engine/state/ny-it216-child-dependent-care-credit.test.ts::low-income single filer with maximum enhancement (110%)"
+
+  # NYC Child and Dependent Care Credit (Worksheet 2)
+  # Available to NYC residents with FAGI ≤ $30,000 who paid
+  # qualifying expenses for children under age 4.
+
+  - line: "WS2-1"
+    description: "NYC Worksheet 2 Line 1 - NYS credit amount (from line 14)"
+    formula: Same as Line 14
+    testRef: "tests/engine/state/ny-it216-child-dependent-care-credit.test.ts::NYC resident with FAGI <= $25,000 and child under 4 gets 75% of NYS credit"
+
+  - line: "WS2-4"
+    description: "NYC Worksheet 2 Line 4 - Ratio of under-4 expenses to total (max 1.0)"
+    formula: qualifiedExpensesForChildrenUnder4 / qualifiedExpenses (capped at 1.0)
+    testRef: "tests/engine/state/ny-it216-child-dependent-care-credit.test.ts::partial under-4 expenses reduce NYC credit proportionally"
+
+  - line: "WS2-5"
+    description: "NYC Worksheet 2 Line 5 - NYC credit base"
+    formula: WS2-1 × WS2-4
+    testRef: "tests/engine/state/ny-it216-child-dependent-care-credit.test.ts::partial under-4 expenses reduce NYC credit proportionally"
+
+  - line: "WS2-6"
+    description: "NYC Worksheet 2 Line 6 - NYC limitation decimal from table"
+    formula: |
+      Based on FAGI:
+        $0-$25,000: 0.750
+        $25,001-$30,000: phases from 0.735 to 0.015 ($200 brackets)
+        $30,001+: 0.000
+    testRef: "tests/engine/state/ny-it216-child-dependent-care-credit.test.ts::NYC FAGI $27,500 — phases down NYC decimal"
+
+  - line: "WS2-7"
+    description: "NYC Worksheet 2 Line 7 - NYC child and dependent care credit"
+    formula: WS2-5 × WS2-6
+    testRef: "tests/engine/state/ny-it216-child-dependent-care-credit.test.ts::NYC FAGI at $30,000 boundary gets very small credit"
+
+  # Edge cases
+
+  - line: "EC-1"
+    description: "Zero earned income — credit is zero"
+    formula: If either spouse's earned income is zero or less, no credit
+    testRef: "tests/engine/state/ny-it216-child-dependent-care-credit.test.ts::zero earned income returns zero credit"
+
+  - line: "EC-2"
+    description: "No qualifying persons — credit is zero"
+    formula: If numberOfQualifyingPersons is 0, no credit
+    testRef: "tests/engine/state/ny-it216-child-dependent-care-credit.test.ts::zero qualifying persons returns zero credit"
+
+  - line: "EC-3"
+    description: "Expenses capped at dollar limit"
+    formula: Expenses capped at $3,000 (1 person) or $6,000 (2+ persons) via Line 5
+    testRef: "tests/engine/state/ny-it216-child-dependent-care-credit.test.ts::single filer, 1 child, $5,000 expenses, $40,000 income — credit = $661"
+
+  - line: "EC-4"
+    description: "NYS credit is refundable — no cap against tax liability"
+    formula: Full NYS credit paid regardless of tax owed (full-year residents)
+    testRef: "tests/engine/state/ny-it216-child-dependent-care-credit.test.ts::low-income single filer with maximum enhancement (110%)"
+
+  - line: "EC-5"
+    description: "MFS filing status — treated as unmarried (spouse income defaults to taxpayer)"
+    formula: MFS filers treated as unmarried; spouse earned income = taxpayer earned income
+    notes: |
+      Per IRS rules, MFS filers can only claim credit if treated as unmarried
+      (lived apart from spouse for last 6 months of year). The calculator
+      assumes MFS filers who reach this form qualify under that exception.
+    testRef: "tests/engine/state/ny-it216-child-dependent-care-credit.test.ts::MFS filing status treated as unmarried — gets credit"
+
+  - line: "EC-6"
+    description: "NYC FAGI over $30,000 — no NYC credit"
+    formula: FAGI > $30,000 disqualifies from NYC credit entirely
+    testRef: "tests/engine/state/ny-it216-child-dependent-care-credit.test.ts::NYC resident with FAGI over $30,000 gets no NYC credit"

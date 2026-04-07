@@ -1,0 +1,183 @@
+form: "New York IT-225 New York State Modifications"
+fullName: "New York State Form IT-225 — New York State Modifications"
+taxYear: 2025
+irsReference: "https://www.tax.ny.gov/pdf/current_forms/it/it225i.pdf"
+
+notes: |
+  Form IT-225 is used to report New York State additions (lines 1-9) and
+  subtractions (lines 10-18) that flow to IT-201 lines 20 and 31 respectively.
+
+  NY decoupled from several federal provisions. Key modifications include:
+
+  Additions (increase NY income):
+  - Line 1: IRC §168(k) bonus depreciation addback — NY did not conform to
+    federal bonus depreciation. Taxpayers must add back the federal §168(k)
+    deduction and instead claim NY depreciation (computed without §168(k)).
+  - Line 18: IRC §199A qualified business income (QBI) deduction addback —
+    NY does not allow the federal 20% QBI deduction for pass-through income.
+    The entire amount from federal Form 1040 line 13 must be added back.
+  - Other additions: various IRC decoupling items (passthrough).
+
+  Subtractions (decrease NY income):
+  - Line 19: NY 529 plan contribution deduction — up to $5,000 per account
+    owner ($10,000 for MFJ if each spouse is an account owner) for
+    contributions to a New York 529 College Savings Program.
+  - Line 30: Long-term care insurance premiums — premiums paid for qualified
+    long-term care insurance that were NOT deducted on the federal return
+    (i.e., not already in Schedule A medical expenses).
+  - Other subtractions: START-UP NY, military pay, etc. (passthrough).
+
+  The IT-225 line numbers in the actual form are modification code numbers.
+  For clarity, this module uses descriptive identifiers for each modification
+  and computes the totals that feed IT-201 lines 20 and 31.
+
+  Constants for 2025:
+  - NY 529 plan contribution deduction: $5,000 per account owner
+  - Long-term care insurance premium deduction: 20% of premiums paid
+    (for premiums not already deducted federally)
+
+lines:
+  - line: "A-101"
+    description: "IRC §168(k) bonus depreciation addback"
+    formula: "Federal §168(k) depreciation claimed minus NY allowable depreciation (without §168(k))"
+    inputs:
+      - "Federal bonus depreciation amount (§168(k) portion only)"
+      - "NY allowable depreciation for the same assets (computed without §168(k))"
+    notes: |
+      NY did not conform to the federal bonus depreciation provisions of
+      IRC §168(k). Taxpayers who claimed bonus depreciation on their federal
+      return must add back the difference between:
+      - Federal depreciation with §168(k) bonus depreciation
+      - NY depreciation computed under pre-bonus rules (regular MACRS)
+
+      For simplicity, this module accepts:
+      - federalBonusDepreciation: the §168(k) amount claimed federally
+      - nyDepreciationAllowed: the NY-allowable depreciation for those assets
+
+      The addback = federalBonusDepreciation - nyDepreciationAllowed
+      (floored at zero — the subtraction for the NY portion is separate).
+
+      In practice, many filers report the full federal bonus amount as the
+      addition and the NY regular depreciation as a separate subtraction
+      (modification S-101). This module supports both approaches.
+    edgeCases:
+      - "No bonus depreciation claimed: zero addback"
+      - "NY depreciation exceeds federal bonus (unusual): addback floors at zero"
+      - "First-year placed-in-service: full bonus addback"
+      - "Subsequent years: may have NY subtraction for regular depreciation"
+    testRef: "tests/engine/state/ny-it225-ny-state-modifications.test.ts::A-101 - bonus depreciation addback"
+
+  - line: "S-101"
+    description: "NY depreciation subtraction for assets with §168(k) addback"
+    formula: "NY allowable depreciation for assets where bonus depreciation was added back"
+    inputs:
+      - "NY allowable depreciation amount (regular MACRS without §168(k))"
+    notes: |
+      When a taxpayer adds back federal bonus depreciation on A-101, they
+      may also claim the NY-allowable regular MACRS depreciation as a
+      subtraction. This is the "flip side" of the A-101 addback.
+
+      nyDepreciationForBonusAssets: the NY-allowable depreciation for assets
+      where §168(k) bonus depreciation was added back on A-101.
+    edgeCases:
+      - "First-year: regular MACRS first-year allowance"
+      - "Subsequent years: ongoing MACRS deduction"
+      - "Zero if no assets had bonus depreciation added back"
+    testRef: "tests/engine/state/ny-it225-ny-state-modifications.test.ts::S-101 - NY depreciation subtraction for bonus assets"
+
+  - line: "A-201"
+    description: "IRC §199A qualified business income deduction addback"
+    formula: "Federal Form 1040 line 13 (QBI deduction amount)"
+    inputs:
+      - "Federal QBI deduction amount"
+    notes: |
+      New York does not allow the federal qualified business income (QBI)
+      deduction under IRC §199A. The entire amount claimed on federal
+      Form 1040 line 13 must be added back for NY purposes.
+
+      This is one of the most common IT-225 modifications. Any filer with
+      pass-through business income (sole proprietors, S-corp shareholders,
+      partners, REIT/PTP income) who claimed the QBI deduction must add
+      it back for NY.
+
+      The addback is straightforward: the exact amount from 1040 line 13.
+    edgeCases:
+      - "No QBI deduction claimed: zero addback"
+      - "Partial QBI deduction (phase-out): add back actual amount claimed"
+      - "MFJ couple: combined QBI deduction amount"
+    testRef: "tests/engine/state/ny-it225-ny-state-modifications.test.ts::A-201 - QBI deduction addback"
+
+  - line: "S-201"
+    description: "NY 529 plan contribution deduction"
+    formula: "min(contributions to NY 529 plan, $5,000 per account owner)"
+    inputs:
+      - "NY 529 plan contributions for the tax year"
+      - "Filing status (MFJ gets two $5,000 limits if both spouses are owners)"
+    notes: |
+      NY allows a deduction of up to $5,000 ($10,000 for MFJ if each spouse
+      is an account owner of separate accounts) for contributions to a
+      New York 529 College Savings Program (Direct Plan or Advisor-Guided Plan).
+
+      Requirements:
+      - Must be contributions to a NY 529 plan (not other states' plans)
+      - Contributions must be made during the tax year
+      - Rollovers from other 529 plans do NOT qualify
+      - Recapture: if funds are rolled over to another state's plan within
+        certain years, previously deducted amounts must be added back
+
+      The $5,000 limit is per account owner, not per beneficiary. An account
+      owner contributing to multiple NY 529 accounts can only deduct $5,000 total.
+    edgeCases:
+      - "Single filer: max $5,000"
+      - "MFJ with both spouses as account owners: max $10,000 ($5,000 each)"
+      - "MFJ with only one spouse as owner: max $5,000"
+      - "Contributions exceed limit: capped at $5,000 per owner"
+      - "Zero contributions: zero deduction"
+      - "Contributions to non-NY 529 plan: not deductible"
+    testRef: "tests/engine/state/ny-it225-ny-state-modifications.test.ts::S-201 - NY 529 contribution deduction"
+
+  - line: "S-202"
+    description: "Long-term care insurance premium deduction"
+    formula: "20% × premiums paid (not already deducted federally)"
+    inputs:
+      - "Long-term care insurance premiums paid during the tax year"
+      - "Amount of LTC premiums already included in federal itemized deductions"
+    notes: |
+      NY allows a subtraction for 20% of premiums paid for qualifying
+      long-term care insurance policies, but only for the portion NOT
+      already deducted on the federal return.
+
+      If a taxpayer itemized deductions federally and included LTC premiums
+      in medical expenses (Schedule A), those premiums are already reflected
+      in the federal AGI reduction and should not be double-counted.
+
+      The subtraction is:
+      20% × (total LTC premiums paid - amount already deducted federally)
+
+      For filers who took the standard deduction federally, the full premium
+      amount qualifies for the 20% NY deduction.
+    edgeCases:
+      - "Standard deduction filer: 20% of full premiums"
+      - "Itemizer who deducted all LTC premiums: zero NY subtraction"
+      - "Itemizer who partially deducted LTC premiums: 20% of non-deducted portion"
+      - "No LTC insurance: zero"
+    testRef: "tests/engine/state/ny-it225-ny-state-modifications.test.ts::S-202 - LTC insurance premium deduction"
+
+  - line: "9"
+    description: "Total IT-225 additions (flows to IT-201 line 23)"
+    formula: "A-101 + A-201 + other IT-225 additions"
+    inputs:
+      - "Bonus depreciation addback (A-101)"
+      - "QBI deduction addback (A-201)"
+      - "Other IT-225 additions (passthrough)"
+    testRef: "tests/engine/state/ny-it225-ny-state-modifications.test.ts::Line 9 - total additions"
+
+  - line: "18"
+    description: "Total IT-225 subtractions (flows to IT-201 line 31)"
+    formula: "S-101 + S-201 + S-202 + other IT-225 subtractions"
+    inputs:
+      - "NY depreciation subtraction (S-101)"
+      - "NY 529 contribution deduction (S-201)"
+      - "LTC insurance premium deduction (S-202)"
+      - "Other IT-225 subtractions (passthrough)"
+    testRef: "tests/engine/state/ny-it225-ny-state-modifications.test.ts::Line 18 - total subtractions"

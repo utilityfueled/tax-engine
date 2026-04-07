@@ -1,0 +1,301 @@
+form: "PA-Schedule-F"
+fullName: "Pennsylvania Schedule F — Farm Income and Expenses"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/pa-40f.pdf"
+
+notes: |
+  PA Schedule F computes Pennsylvania Class 4 farm income. This validated slice
+  follows the printed PA-40 F line structure for the normalized farm-income
+  inputs already available in the engine.
+
+  Important Pennsylvania-specific rules reflected here:
+    - PA reports whole-dollar amounts, so each supported input is rounded to
+      the nearest dollar before line calculations.
+    - Prior-year deferred crop-insurance proceeds are excluded from current-year
+      Pennsylvania farm income because the PA instructions say Pennsylvania does
+      not generally follow federal elections that defer income across tax years.
+    - Conservation expenses remain limited to 25 percent of gross farm income,
+      and any excess carries forward.
+    - This slice directly supports printed Lines 13, 23b, and 24 because the
+      normalized farm-expense input already captures breeding fees, jobs credit,
+      and land-clearing amounts.
+    - Direct-entry Pennsylvania adjustments for cooperative non-income items,
+      agricultural-program materials and services, and PA-allowable Section 179
+      expense may be provided as normalized line-ready amounts. Omitted amounts
+      still default to zero.
+    - Cash-method taxpayers complete Sections I and II. Accrual-method
+      taxpayers complete Sections II and III, then carry Section III Line 51 to
+      Section I Line 12.
+    - For accrual-method input, the engine computes Section III Lines 40
+      through 51 from normalized line-ready amounts and inventory values, then
+      carries Line 51 into Section I Line 12 so the downstream Pennsylvania
+      expense and net-profit math remains on the printed form lines.
+
+packetRules:
+  packetBehavior: "reference-summary-pdf"
+  includeWhen:
+    - "A Pennsylvania resident return packet is being assembled and supported Schedule F farm-income or deduction input is present"
+    - "The packet path emits a supported farm-income reference summary derived from the resident PA Schedule F result"
+  suppressWhen:
+    - "No Pennsylvania resident return packet is being assembled"
+    - "No supported Schedule F farm-income or deduction input is present on the return"
+  notes: |
+    The PA-40 F instructions direct taxpayers with farm income or deductible
+    farm expenses to file Pennsylvania Schedule F. Until an official PA-40
+    Schedule F filler exists, the packet path emits
+    `pa-schedule-f-reference.pdf` as a reference summary only. Packet
+    disclosures must therefore keep Pennsylvania packet completeness partial
+    whenever this reference summary is attached.
+
+businessRuleValidation:
+  - rule: "pa-schedule-f-reference-packet"
+    description: "Inventory support counts the Pennsylvania Schedule F packet path as validated only when fillReturn emits `pa-schedule-f-reference.pdf` whenever supported resident Schedule F input is present."
+    testRef: "tests/pdf/fill-pa-schedule-f.test.ts::fillReturn includes the Pennsylvania Schedule F reference summary when the resident return includes supported farm income"
+  - rule: "pa-schedule-f-reference-suppression"
+    description: "Inventory support counts the Pennsylvania Schedule F suppression rule as validated only when regression coverage proves fillReturn omits the reference summary when no supported Schedule F input is present."
+    testRef: "tests/pdf/fill-pa-schedule-f.test.ts::fillReturn suppresses the Pennsylvania Schedule F reference summary when no supported farm input is present"
+  - rule: "pa-schedule-f-reference-disclosure"
+    description: "Inventory support counts the Pennsylvania Schedule F packet disclosure as validated only when readiness regression coverage keeps packet completeness partial while only the Schedule F reference summary is available beyond PA-40."
+    testRef: "tests/utils/return-readiness.test.ts::marks Pennsylvania packets partial when a PA Schedule F reference summary is attached"
+
+lines:
+  - line: "accounting-method"
+    description: "Accounting-method section selection"
+    formula: "Use Sections I and II when accountingMethod is cash; use Sections II and III and carry Line 51 to Line 12 when accountingMethod is accrual"
+    notes: |
+      The printed PA-40 F form says cash-method taxpayers complete Sections I
+      and II, while accrual-method taxpayers complete Sections II and III and
+      carry Section III Line 51 to Section I Line 12.
+    testRef: "tests/engine/state/pa-schedule-f.test.ts::PA Schedule F accrual method computes Section III gross income and carries Line 51 to Section I Line 12"
+
+  - line: "1"
+    description: "Sales of livestock and other items bought for resale"
+    formula: "Rounded sales-of-purchased-livestock input, defaulting to zero"
+    testRef: "tests/engine/state/pa-schedule-f.test.ts::PA Schedule F Lines 1 through 12 compute gross farm income and exclude prior-year deferred crop insurance from current-year PA income"
+
+  - line: "2"
+    description: "Cost or other basis of livestock and other items bought for resale"
+    formula: "Rounded cost-of-purchased-livestock input, defaulting to zero"
+    testRef: "tests/engine/state/pa-schedule-f.test.ts::PA Schedule F Lines 1 through 12 compute gross farm income and exclude prior-year deferred crop insurance from current-year PA income"
+
+  - line: "3"
+    description: "Net purchased livestock"
+    formula: "Line 1 - Line 2"
+    testRef: "tests/engine/state/pa-schedule-f.test.ts::PA Schedule F Lines 1 through 12 compute gross farm income and exclude prior-year deferred crop insurance from current-year PA income"
+
+  - line: "4"
+    description: "Sales of livestock, produce, grains, and other products raised"
+    formula: "Rounded sales-of-products-raised input, defaulting to zero"
+    testRef: "tests/engine/state/pa-schedule-f.test.ts::PA Schedule F Lines 1 through 12 compute gross farm income and exclude prior-year deferred crop insurance from current-year PA income"
+
+  - line: "5a"
+    description: "Total distributions received from cooperatives"
+    formula: "Rounded cooperative-distributions input, defaulting to zero"
+    testRef: "tests/engine/state/pa-schedule-f.test.ts::PA Schedule F Lines 1 through 12 compute gross farm income and exclude prior-year deferred crop insurance from current-year PA income"
+
+  - line: "5b"
+    description: "Less: non-income items"
+    formula: "Rounded cooperative non-income items input, defaulting to zero"
+    notes: |
+      The PA Schedule F instructions say Line 5b includes patronage dividends
+      from buying personal or family items, capital assets, or depreciable
+      assets. The resident engine accepts the already-classified Pennsylvania
+      Line 5b amount as direct input.
+    testRef: "tests/engine/state/pa-schedule-f.test.ts::PA Schedule F direct-entry cooperative non-income items, materials and services, and Section 179 expense flow through the printed lines"
+
+  - line: "6"
+    description: "Net cooperative distributions"
+    formula: "Line 5a - Line 5b"
+    testRef: "tests/engine/state/pa-schedule-f.test.ts::PA Schedule F Lines 1 through 12 compute gross farm income and exclude prior-year deferred crop insurance from current-year PA income"
+
+  - line: "7a"
+    description: "Agricultural program payments - cash"
+    formula: "Rounded agricultural-program-payments input, defaulting to zero"
+    testRef: "tests/engine/state/pa-schedule-f.test.ts::PA Schedule F Lines 1 through 12 compute gross farm income and exclude prior-year deferred crop insurance from current-year PA income"
+
+  - line: "7b"
+    description: "Agricultural program payments - materials and services"
+    formula: "Rounded agricultural-program materials-and-services input, defaulting to zero"
+    notes: |
+      The PA Schedule F instructions direct filers to include the fair market
+      value of agricultural-program materials and services, including supported
+      CCC market-gain amounts, on Line 7b. The engine accepts a normalized
+      Line 7b amount as direct input.
+    testRef: "tests/engine/state/pa-schedule-f.test.ts::PA Schedule F direct-entry cooperative non-income items, materials and services, and Section 179 expense flow through the printed lines"
+
+  - line: "8"
+    description: "Commodity credit loans under election (or forfeited)"
+    formula: "Rounded CCC-loans-elected plus rounded CCC-loans-forfeited"
+    testRef: "tests/engine/state/pa-schedule-f.test.ts::PA Schedule F Lines 1 through 12 compute gross farm income and exclude prior-year deferred crop insurance from current-year PA income"
+
+  - line: "9"
+    description: "Crop insurance proceeds"
+    formula: "Rounded current-year crop-insurance proceeds only"
+    notes: |
+      Prior-year deferred crop-insurance proceeds are tracked separately for
+      audit support and excluded from current-year Pennsylvania income.
+    testRef: "tests/engine/state/pa-schedule-f.test.ts::PA Schedule F Lines 1 through 12 compute gross farm income and exclude prior-year deferred crop insurance from current-year PA income"
+
+  - line: "excluded-prior-year-deferred-crop-insurance"
+    description: "Prior-year deferred crop-insurance proceeds excluded from current-year PA income"
+    formula: "Rounded prior-year-deferred-crop-insurance input, reported for audit support only"
+    notes: |
+      The PA instructions say federal elections that defer income across tax
+      years do not control Pennsylvania farm-income reporting, so the engine
+      does not carry prior-year deferred crop-insurance proceeds into current-
+      year Line 12 gross income.
+    testRef: "tests/engine/state/pa-schedule-f.test.ts::PA Schedule F Lines 1 through 12 compute gross farm income and exclude prior-year deferred crop insurance from current-year PA income"
+
+  - line: "10"
+    description: "Machine work"
+    formula: "Rounded custom-hire income input, defaulting to zero"
+    testRef: "tests/engine/state/pa-schedule-f.test.ts::PA Schedule F Lines 1 through 12 compute gross farm income and exclude prior-year deferred crop insurance from current-year PA income"
+
+  - line: "11"
+    description: "Other income"
+    formula: "Rounded other-farm-income input, defaulting to zero"
+    testRef: "tests/engine/state/pa-schedule-f.test.ts::PA Schedule F Lines 1 through 12 compute gross farm income and exclude prior-year deferred crop insurance from current-year PA income"
+
+  - line: "12"
+    description: "Gross income"
+    formula: "Cash method: Line 3 + Line 4 + Line 6 + Line 7a + Line 7b + Line 8 + Line 9 + Line 10 + Line 11; accrual method: Section III Line 51"
+    notes: "Flows into Class 4 farm income before farm deductions."
+    testRef: "tests/engine/state/pa-schedule-f.test.ts::PA Schedule F Lines 1 through 12 compute gross farm income and exclude prior-year deferred crop insurance from current-year PA income"
+
+  - line: "13"
+    description: "Breeding fees"
+    formula: "Rounded breeding-fees expense input, defaulting to zero"
+    testRef: "tests/engine/state/pa-schedule-f.test.ts::PA Schedule F direct-entry breeding fees, jobs credit, and land clearing flow through the printed expense lines"
+
+  - line: "14"
+    description: "Chemicals"
+    formula: "Rounded farm chemical expense, defaulting to zero"
+    testRef: "tests/engine/state/pa-schedule-f.test.ts::PA Schedule F Line 38 totals supported farm deductions and Line 39 carries a loss when expenses exceed income"
+
+  - line: "15"
+    description: "Conservation expenses"
+    formula: "min(Line 12 × 25%, rounded current-year conservation expense + rounded carryforward)"
+    notes: "Any excess above the 25 percent cap carries forward to a future year."
+    testRef: "tests/engine/state/pa-schedule-f.test.ts::PA Schedule F Line 15 limits conservation deductions to 25 percent of gross farm income and carries the excess forward"
+
+  - line: "16a"
+    description: "Regular depreciation"
+    formula: "Rounded Pennsylvania-adjusted depreciation expense, defaulting to zero"
+    testRef: "tests/engine/state/pa-schedule-f.test.ts::PA Schedule F Line 38 totals supported farm deductions and Line 39 carries a loss when expenses exceed income"
+
+  - line: "16b"
+    description: "Section 179 expense"
+    formula: "Rounded Pennsylvania-allowable Section 179 expense input, defaulting to zero"
+    notes: |
+      Pennsylvania allows a Section 179 deduction on Schedule F, but the
+      allowable amount may differ from federal because of Pennsylvania-specific
+      basis, depreciation, and historical dollar-limit rules. The resident
+      engine accepts the already-limited Pennsylvania Line 16b amount as direct
+      input.
+    testRef: "tests/engine/state/pa-schedule-f.test.ts::PA Schedule F direct-entry cooperative non-income items, materials and services, and Section 179 expense flow through the printed lines"
+
+  - line: "23b"
+    description: "Jobs credit"
+    formula: "Rounded jobs-credit reduction input, defaulting to zero"
+    notes: "Reduces Line 23a labor hired when computing Line 23c."
+    testRef: "tests/engine/state/pa-schedule-f.test.ts::PA Schedule F direct-entry breeding fees, jobs credit, and land clearing flow through the printed expense lines"
+
+  - line: "24"
+    description: "Land clearing"
+    formula: "Rounded land-clearing expense input, defaulting to zero"
+    testRef: "tests/engine/state/pa-schedule-f.test.ts::PA Schedule F direct-entry breeding fees, jobs credit, and land clearing flow through the printed expense lines"
+
+  - line: "37"
+    description: "Total other expenses"
+    formula: "Rounded other-expenses + rounded car-and-truck expense + rounded rent-lease-vehicles expense"
+    notes: |
+      These supported normalized federal farm-expense buckets do not have their
+      own printed Pennsylvania lines, so they are aggregated on Line 37.
+    testRef: "tests/engine/state/pa-schedule-f.test.ts::PA Schedule F Line 37 aggregates residual normalized expenses without dedicated Pennsylvania lines"
+
+  - line: "38"
+    description: "Total expenses"
+    formula: "Sum of supported Lines 13 through 37"
+    testRef: "tests/engine/state/pa-schedule-f.test.ts::PA Schedule F Line 38 totals supported farm deductions and Line 39 carries a loss when expenses exceed income"
+
+  - line: "39"
+    description: "Net farm profit or loss"
+    formula: "Line 12 - Line 38"
+    notes: "Flows to PA Class 4 business income on the resident return."
+    testRef: "tests/engine/state/pa-schedule-f.test.ts::PA Schedule F Line 38 totals supported farm deductions and Line 39 carries a loss when expenses exceed income"
+
+  - line: "40"
+    description: "Sales of livestock, produce, grains, and other products during year"
+    formula: "Rounded accrual-sales-during-year input, defaulting to zero"
+    notes: |
+      This is the Section III accrual-method sales line. The engine accepts the
+      already-determined Pennsylvania accrual-basis gross sales amount as a
+      normalized direct input.
+    testRef: "tests/engine/state/pa-schedule-f.test.ts::PA Schedule F accrual method computes Section III gross income and carries Line 51 to Section I Line 12"
+
+  - line: "41a"
+    description: "Agricultural program payments - cash"
+    formula: "Rounded agricultural-program-payments input, defaulting to zero"
+    notes: "For accrual-method filers this amount is reported in Section III Line 41a."
+    testRef: "tests/engine/state/pa-schedule-f.test.ts::PA Schedule F accrual method computes Section III gross income and carries Line 51 to Section I Line 12"
+
+  - line: "41b"
+    description: "Agricultural program payments - materials and services"
+    formula: "Rounded agricultural-program materials-and-services input, defaulting to zero"
+    testRef: "tests/engine/state/pa-schedule-f.test.ts::PA Schedule F accrual method computes Section III gross income and carries Line 51 to Section I Line 12"
+
+  - line: "42"
+    description: "Commodity credit loans under election (or forfeited)"
+    formula: "Rounded CCC-loans-elected plus rounded CCC-loans-forfeited"
+    testRef: "tests/engine/state/pa-schedule-f.test.ts::PA Schedule F accrual method computes Section III gross income and carries Line 51 to Section I Line 12"
+
+  - line: "43"
+    description: "Machine work"
+    formula: "Rounded custom-hire income input, defaulting to zero"
+    testRef: "tests/engine/state/pa-schedule-f.test.ts::PA Schedule F accrual method computes Section III gross income and carries Line 51 to Section I Line 12"
+
+  - line: "44"
+    description: "Other income, including federal and state gasoline tax credit or refund"
+    formula: "Rounded other-farm-income input, defaulting to zero"
+    notes: |
+      The PA instructions direct accrual-method filers to include Section III
+      other income that would appear on Federal Schedule F Line 43, including
+      supported gasoline tax credits or refunds and Pennsylvania-basis
+      transaction differences, in this normalized line-ready input.
+    testRef: "tests/engine/state/pa-schedule-f.test.ts::PA Schedule F accrual method computes Section III gross income and carries Line 51 to Section I Line 12"
+
+  - line: "45"
+    description: "Total accrual-method gross receipts before inventory adjustment"
+    formula: "Line 40 + Line 41a + Line 41b + Line 42 + Line 43 + Line 44"
+    testRef: "tests/engine/state/pa-schedule-f.test.ts::PA Schedule F accrual method computes Section III gross income and carries Line 51 to Section I Line 12"
+
+  - line: "46"
+    description: "Inventory of livestock, produce, grains, and other products at beginning of year"
+    formula: "Rounded beginning-inventory input, defaulting to zero"
+    testRef: "tests/engine/state/pa-schedule-f.test.ts::PA Schedule F accrual method computes Section III gross income and carries Line 51 to Section I Line 12"
+
+  - line: "47"
+    description: "Cost of livestock, produce, grains, and other products purchased during year"
+    formula: "Rounded purchases-during-year input, defaulting to zero"
+    testRef: "tests/engine/state/pa-schedule-f.test.ts::PA Schedule F accrual method computes Section III gross income and carries Line 51 to Section I Line 12"
+
+  - line: "48"
+    description: "Inventory plus purchases"
+    formula: "Line 46 + Line 47"
+    testRef: "tests/engine/state/pa-schedule-f.test.ts::PA Schedule F accrual method computes Section III gross income and carries Line 51 to Section I Line 12"
+
+  - line: "49"
+    description: "Inventory of livestock, produce, grains, and other products at end of year"
+    formula: "Rounded ending-inventory input, defaulting to zero"
+    testRef: "tests/engine/state/pa-schedule-f.test.ts::PA Schedule F accrual method computes Section III gross income and carries Line 51 to Section I Line 12"
+
+  - line: "50"
+    description: "Cost of livestock, produce, grains, and other products sold"
+    formula: "Line 48 - Line 49"
+    testRef: "tests/engine/state/pa-schedule-f.test.ts::PA Schedule F accrual method computes Section III gross income and carries Line 51 to Section I Line 12"
+
+  - line: "51"
+    description: "Gross income for accrual-method filers"
+    formula: "Line 45 - Line 50"
+    notes: "Carry to Section I Line 12 for accrual-method farm returns."
+    testRef: "tests/engine/state/pa-schedule-f.test.ts::PA Schedule F accrual method computes Section III gross income and carries Line 51 to Section I Line 12"

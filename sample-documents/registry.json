@@ -1,0 +1,137 @@
+[
+  {
+    "id": "irs-w2-2025",
+    "kind": "w2",
+    "title": "2025 Form W-2",
+    "taxYearHint": 2025,
+    "sourcePage": "https://www.irs.gov/prior-year-forms-and-instructions?find=W-2&items_per_page=200",
+    "downloadUrl": "https://www.irs.gov/pub/irs-prior/fw2--2025.pdf",
+    "notes": "Official IRS prior-year Form W-2 PDF from the IRS prior-year forms catalog."
+  },
+  {
+    "id": "irs-w2-2026",
+    "kind": "w2",
+    "title": "2026 Form W-2 (official info-copy PDF)",
+    "taxYearHint": 2026,
+    "sourcePage": "https://www.irs.gov/forms-pubs/about-form-w-2",
+    "downloadUrl": "https://www.irs.gov/pub/irs-pdf/fw2.pdf",
+    "notes": "Official IRS information-copy PDF for Form W-2."
+  },
+  {
+    "id": "irs-1099-int-2024",
+    "kind": "1099-int",
+    "title": "Form 1099-INT (Rev. January 2024)",
+    "taxYearHint": 2025,
+    "sourcePage": "https://www.irs.gov/forms-pubs/about-form-1099-int",
+    "downloadUrl": "https://www.irs.gov/pub/irs-pdf/f1099int.pdf",
+    "notes": "Official IRS PDF linked from the current About Form 1099-INT page."
+  },
+  {
+    "id": "irs-1099-g-2025",
+    "kind": "1099-g",
+    "title": "Form 1099-G (Rev. March 2024)",
+    "taxYearHint": 2025,
+    "sourcePage": "https://www.irs.gov/forms-pubs/about-form-1099-g",
+    "downloadUrl": "https://www.irs.gov/pub/irs-pdf/f1099g.pdf",
+    "notes": "Official IRS PDF linked from the About Form 1099-G page."
+  },
+  {
+    "id": "irs-1099-oid-2025",
+    "kind": "1099-oid",
+    "title": "Form 1099-OID (Rev. January 2024)",
+    "taxYearHint": 2025,
+    "sourcePage": "https://www.irs.gov/forms-pubs/about-form-1099-oid",
+    "downloadUrl": "https://www.irs.gov/pub/irs-pdf/f1099oid.pdf",
+    "notes": "Official IRS PDF linked from the About Form 1099-OID page."
+  },
+  {
+    "id": "irs-1099-div-2024",
+    "kind": "1099-div",
+    "title": "Form 1099-DIV (Rev. January 2024)",
+    "taxYearHint": 2025,
+    "sourcePage": "https://www.irs.gov/forms-pubs/about-form-1099-div",
+    "downloadUrl": "https://www.irs.gov/pub/irs-pdf/f1099div.pdf",
+    "notes": "Official IRS PDF linked from the current About Form 1099-DIV page."
+  },
+  {
+    "id": "irs-1099-b-2025",
+    "kind": "1099-b",
+    "title": "2025 Form 1099-B",
+    "taxYearHint": 2025,
+    "sourcePage": "https://www.irs.gov/forms-pubs/about-form-1099-b",
+    "downloadUrl": "https://www.irs.gov/pub/irs-pdf/f1099b--2025.pdf",
+    "notes": "Official IRS prior-year Form 1099-B PDF linked from the About Form 1099-B page."
+  },
+  {
+    "id": "irs-1095-a-2025",
+    "kind": "1095-a",
+    "title": "2025 Form 1095-A",
+    "taxYearHint": 2025,
+    "sourcePage": "https://www.irs.gov/form1095a",
+    "downloadUrl": "https://www.irs.gov/pub/irs-pdf/f1095a.pdf",
+    "notes": "Official IRS Form 1095-A PDF used for Marketplace statement coverage and Form 8962 preview support."
+  },
+  {
+    "id": "irs-1098-e-2025",
+    "kind": "1098-e",
+    "title": "Form 1098-E (Rev. January 2025)",
+    "taxYearHint": 2025,
+    "sourcePage": "https://www.irs.gov/forms-pubs/about-form-1098-e-student-loan-interest-statement",
+    "downloadUrl": "https://www.irs.gov/pub/irs-pdf/f1098e.pdf",
+    "notes": "Official IRS PDF linked from the About Form 1098-E page."
+  },
+  {
+    "id": "irs-1099-r-2025",
+    "kind": "1099-r",
+    "title": "Form 1099-R (Rev. January 2025)",
+    "taxYearHint": 2025,
+    "sourcePage": "https://www.irs.gov/forms-pubs/about-form-1099-r",
+    "downloadUrl": "https://www.irs.gov/pub/irs-pdf/f1099r.pdf",
+    "notes": "Official IRS PDF linked from the About Form 1099-R page."
+  },
+  {
+    "id": "irs-ssa-1099-2025",
+    "kind": "ssa-1099",
+    "title": "Form SSA-1099 benefit statement reference (2025)",
+    "taxYearHint": 2025,
+    "sourcePage": "https://www.irs.gov/publications/p915",
+    "downloadUrl": "https://www.irs.gov/pub/irs-pdf/p915.pdf",
+    "notes": "Publication 915 is the official IRS reference used for the seeded SSA-1099 fixture because the IRS does not publish a standalone SSA-1099 info-copy PDF in the same forms catalog."
+  },
+  {
+    "id": "irs-1099-sa-2025",
+    "kind": "1099-sa",
+    "title": "Form 1099-SA (Rev. January 2025)",
+    "taxYearHint": 2025,
+    "sourcePage": "https://www.irs.gov/forms-pubs/about-form-1099-sa",
+    "downloadUrl": "https://www.irs.gov/pub/irs-pdf/f1099sa.pdf",
+    "notes": "Official IRS PDF linked from the About Form 1099-SA page."
+  },
+  {
+    "id": "irs-1099-nec-2025",
+    "kind": "1099-nec",
+    "title": "Form 1099-NEC (Rev. April 2025)",
+    "taxYearHint": 2025,
+    "sourcePage": "https://www.irs.gov/forms-pubs/about-form-1099-nec",
+    "downloadUrl": "https://www.irs.gov/pub/irs-pdf/f1099nec.pdf",
+    "notes": "Official IRS PDF linked from the About Form 1099-NEC page."
+  },
+  {
+    "id": "irs-publication-4491-2025",
+    "kind": "training-scenario",
+    "title": "Publication 4491, VITA/TCE Training Guide",
+    "taxYearHint": 2025,
+    "sourcePage": "https://www.irs.gov/forms-pubs/irs-section-508-compliant-pdf-publications",
+    "downloadUrl": "https://www.irs.gov/pub/irs-pdf/p4491.pdf",
+    "notes": "Official IRS training guide with realistic volunteer-prep scenarios and document references."
+  },
+  {
+    "id": "irs-publication-4491x-2026",
+    "kind": "training-scenario",
+    "title": "Publication 4491-X (Rev. 1-2026)",
+    "taxYearHint": 2026,
+    "sourcePage": "https://www.irs.gov/pub/irs-pdf/p4491x.pdf",
+    "downloadUrl": "https://www.irs.gov/pub/irs-pdf/p4491x.pdf",
+    "notes": "Official IRS supplement with current-year scenario updates and sample-return references."
+  }
+]

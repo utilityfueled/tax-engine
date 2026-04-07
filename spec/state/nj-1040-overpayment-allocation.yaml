@@ -1,0 +1,130 @@
+form: "NJ-1040 Overpayment Allocation"
+fullName: "New Jersey NJ-1040 Overpayment Allocation and Charitable Contributions"
+taxYear: 2025
+reference: "https://www.nj.gov/treasury/taxation/pdf/current/1040i.pdf"
+
+notes: |
+  This module models the final resident-return allocation step after total tax
+  due (line 54) and total withholdings, credits, and payments (line 66) have
+  already been computed.
+
+  2025 NJ-1040 instruction references:
+  - Line 67: amount owed before adjustments
+  - Line 68: overpayment before adjustments
+  - Line 69: amount of the overpayment credited to 2026 estimated tax
+  - Lines 70-77: charitable contribution checkoffs
+  - Line 78: total adjustments to tax due/overpayment
+  - Line 79: final balance due after line 78 adjustments
+  - Line 80: final refund after line 78 adjustments
+
+  The amount entered on line 69 must come from line 68 overpayment. Charitable
+  contributions can either reduce a refund or increase balance due. Lines 75-77
+  accept up to three designated-fund codes from the 2025 instructions.
+
+lines:
+  - line: "67"
+    description: "Amount owed before refund allocations and charitable contributions"
+    formula: "max(0, total tax due - total payments)"
+    inputs:
+      - "Total tax due (line 54)"
+      - "Total withholdings, credits, and payments (line 66)"
+    testRef: "tests/engine/state/nj-1040-overpayment-allocation.test.ts::NJ-1040 overpayment allocation line 67 computes amount owed before adjustments"
+
+  - line: "68"
+    description: "Overpayment before refund allocations and charitable contributions"
+    formula: "max(0, total payments - total tax due)"
+    inputs:
+      - "Total tax due (line 54)"
+      - "Total withholdings, credits, and payments (line 66)"
+    testRef: "tests/engine/state/nj-1040-overpayment-allocation.test.ts::NJ-1040 overpayment allocation line 68 computes overpayment before adjustments"
+
+  - line: "69"
+    description: "Credit to 2026 tax"
+    formula: "User-elected amount from line 68; must not exceed the line 68 overpayment"
+    inputs:
+      - "Line 68 overpayment"
+      - "Requested carryforward to 2026 tax"
+    edgeCases:
+      - "No overpayment means line 69 must be zero"
+      - "Requested carryforward exceeding line 68 is invalid"
+    testRef: "tests/engine/state/nj-1040-overpayment-allocation.test.ts::NJ-1040 overpayment allocation line 69 credits part of an overpayment to 2026 tax"
+
+  - line: "70"
+    description: "Endangered Wildlife Fund contribution"
+    formula: "Positive elected amount for the fixed line 70 fund"
+    inputs:
+      - "Requested line 70 contribution amount"
+    testRef: "tests/engine/state/nj-1040-overpayment-allocation.test.ts::NJ-1040 overpayment allocation line 70 fixed charitable contributions reduce the refund"
+
+  - line: "71"
+    description: "Children's Trust Fund contribution"
+    formula: "Positive elected amount for the fixed line 71 fund"
+    inputs:
+      - "Requested line 71 contribution amount"
+    testRef: "tests/engine/state/nj-1040-overpayment-allocation.test.ts::NJ-1040 overpayment allocation line 70 fixed charitable contributions reduce the refund"
+
+  - line: "72"
+    description: "Vietnam Veterans' Memorial Fund contribution"
+    formula: "Positive elected amount for the fixed line 72 fund"
+    inputs:
+      - "Requested line 72 contribution amount"
+    testRef: "tests/engine/state/nj-1040-overpayment-allocation.test.ts::NJ-1040 overpayment allocation line 70 fixed charitable contributions reduce the refund"
+
+  - line: "73"
+    description: "Breast Cancer Research Fund contribution"
+    formula: "Positive elected amount for the fixed line 73 fund"
+    inputs:
+      - "Requested line 73 contribution amount"
+    testRef: "tests/engine/state/nj-1040-overpayment-allocation.test.ts::NJ-1040 overpayment allocation line 70 fixed charitable contributions reduce the refund"
+
+  - line: "74"
+    description: "U.S.S. New Jersey Educational Museum Fund contribution"
+    formula: "Positive elected amount for the fixed line 74 fund"
+    inputs:
+      - "Requested line 74 contribution amount"
+    testRef: "tests/engine/state/nj-1040-overpayment-allocation.test.ts::NJ-1040 overpayment allocation line 70 fixed charitable contributions reduce the refund"
+
+  - line: "75-77"
+    description: "Other designated contributions"
+    formula: |
+      Up to three designated contributions. Each entry must use a valid
+      2025 charitable-fund code from the NJ-1040 instructions and a positive
+      amount.
+    inputs:
+      - "Up to three designated-fund code and amount pairs"
+    edgeCases:
+      - "More than three designated contributions is invalid"
+      - "Unknown code is invalid"
+    testRef: "tests/engine/state/nj-1040-overpayment-allocation.test.ts::NJ-1040 overpayment allocation lines 75 through 77 accept valid designated contribution codes"
+
+  - line: "78"
+    description: "Total adjustments to tax due/overpayment"
+    formula: "Line 69 + line 70 + line 71 + line 72 + line 73 + line 74 + lines 75-77"
+    inputs:
+      - "Carryforward to 2026 tax"
+      - "All charitable contribution amounts"
+    testRef: "tests/engine/state/nj-1040-overpayment-allocation.test.ts::NJ-1040 overpayment allocation line 78 sums carryforward and all charitable contributions"
+
+  - line: "79"
+    description: "Final balance due after line 78 adjustments"
+    formula: |
+      max(0, line 67 + line 78 - line 68)
+      Equivalent to the 2025 instruction branching:
+      - If line 67 has an amount, add lines 67 and 78
+      - If line 68 is less than line 78, subtract line 68 from line 78
+      - If only line 78 has an amount, enter line 78
+    inputs:
+      - "Line 67 amount owed"
+      - "Line 68 overpayment"
+      - "Line 78 adjustments"
+    testRef: "tests/engine/state/nj-1040-overpayment-allocation.test.ts::NJ-1040 overpayment allocation line 79 turns an overpayment into tax due when adjustments exceed the refund"
+
+  - line: "80"
+    description: "Final refund after line 78 adjustments"
+    formula: "max(0, line 68 - line 78)"
+    inputs:
+      - "Line 68 overpayment"
+      - "Line 78 adjustments"
+    edgeCases:
+      - "Refund is zero when line 78 equals or exceeds line 68"
+    testRef: "tests/engine/state/nj-1040-overpayment-allocation.test.ts::NJ-1040 overpayment allocation line 80 reduces the refund by the carryforward and contributions"

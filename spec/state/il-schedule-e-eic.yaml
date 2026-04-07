@@ -1,0 +1,155 @@
+form: "Schedule IL-E/EIC"
+fullName: "Illinois Exemption and Earned Income Credit Schedule"
+taxYear: 2025
+reference: "https://tax.illinois.gov/forms/incometax/individual/schedule-il-e-eic.html"
+
+notes: |
+  Schedule IL-E/EIC is a required attachment for anyone claiming dependent exemptions,
+  the Illinois Earned Income Credit (IL EITC), or the Illinois Child Tax Credit (IL CTC).
+
+  Step 2 lists all dependents and computes the dependent exemption count for IL-1040, Line 10d.
+  Step 3 separately lists qualifying children that are not included in Step 2.
+  Step 4 computes the IL EITC using the amount entered on Schedule IL-E/EIC, Step 4, Line 6.
+  For most filers this is federal Form 1040 or 1040-SR, Line 27a. If any Step 4, Line 5 box
+  applies, Line 6 instead uses the Illinois Expanded EITC Worksheet, Line 23 amount.
+  The IL EITC is then allocated by the Schedule NR decimal for nonresidents/part-year residents.
+  Step 4 computes the IL CTC (40% of IL EITC) only for filers with at least one
+  Step 2 dependent child under age 12 as of December 31 of the tax year. A Step 3
+  qualifying child who is not also claimed as a dependent does not satisfy the
+  Illinois Child Tax Credit eligibility test.
+
+  The dependent listing provides the data for both the dependent exemption (Line 10d)
+  and the IL CTC eligibility check (dependent child under 12). Step 3 qualifying
+  children do not increase the dependent exemption count and do not by themselves
+  create Illinois Child Tax Credit eligibility.
+
+lines:
+  # Step 2 — Dependent Information
+  - line: "Step 2"
+    description: "List of dependents claimed on the return"
+    formula: "Dependent name, SSN, relationship, date of birth, months lived in home"
+    reference: "Schedule IL-E/EIC Instructions, Step 2"
+    notes: |
+      Each dependent must have a valid SSN or ATIN.
+      For part-year residents: only months of IL residency count.
+      Dependents must meet federal dependency tests.
+      The instructions state the months-lived-in-home entry cannot exceed 12.
+    edgeCases:
+      - "Dependent months lived in home must be a whole number from 0 through 12"
+    testRef: "tests/engine/state/il-schedule-e-eic.test.ts::Schedule IL-E/EIC Step 2 - dependent listing preserves relationship info"
+
+  - line: "1"
+    description: "Dependent exemption allowance"
+    formula: "Count of qualifying dependents listed in Step 2 × $2,850"
+    reference: "Schedule IL-E/EIC Instructions, Step 2"
+    notes: |
+      The form's Step 2, Line 1 is the dollar amount entered on IL-1040, Line 10d.
+      The supported engine also exposes the underlying dependent count so callers
+      can audit the Step 2 table that produced the Line 1 amount.
+    testRef: "tests/engine/state/il-schedule-e-eic.test.ts::Schedule IL-E/EIC Line 1 - dependent exemption allowance equals $2,850 per dependent"
+
+  - line: "Step 3"
+    description: "Qualifying children not listed in Step 2"
+    formula: "Child name, SSN/ITIN, relationship, date of birth, and months lived in home"
+    reference: "Schedule IL-E/EITC, Step 3"
+    notes: |
+      Step 3 is completed only for qualifying children not already included in Step 2.
+      These children can affect Illinois EITC qualification, but they do not change
+      the dependent count used for IL-1040, Line 10d and they do not by themselves
+      satisfy the Illinois Child Tax Credit dependent-under-12 requirement.
+      The instructions state the months-lived-in-home entry cannot exceed 12.
+    edgeCases:
+      - "Step 3 qualifying child months lived in home must be a whole number from 0 through 12"
+    testRef: "tests/engine/state/il-schedule-e-eic.test.ts::Schedule IL-E/EIC Step 3 - qualifying child under 12 does not trigger CTC without a dependent exemption"
+
+  # Step 3 — Illinois Earned Income Credit
+  - line: "2"
+    description: "Federal earned income credit input"
+    formula: "Federal Form 1040 or 1040-SR, Line 27a"
+    reference: "Schedule IL-E/EITC, Step 4, Line 6"
+    notes: |
+      Default Line 6 source when no Illinois Expanded EITC Worksheet amount applies.
+      The expanded worksheet amount can replace this input for Illinois-only EITC cases.
+    testRef: "tests/engine/state/il-schedule-e-eic.test.ts::Schedule IL-E/EIC Line 2 - federal EIC input flows through"
+
+  - line: "6"
+    description: "EITC base amount used for Illinois calculation"
+    formula: "Manual Expanded Worksheet Line 23 override if provided; otherwise calculated Illinois Expanded EITC Worksheet Line 23 if provided; otherwise federal Form 1040 or 1040-SR, Line 27a"
+    reference: "Schedule IL-E/EITC, Step 4, Line 6"
+    notes: |
+      Illinois expanded EITC filers may use the Illinois Expanded EITC Worksheet amount
+      even when federal EIC is zero or smaller.
+      The supported slice calculates the worksheet automatically when worksheet
+      inputs are supplied, including the federal Pub. 596 Worksheet 1
+      investment-income path when the computed Worksheet 1 Line 14 total is
+      provided. A manual Line 23 override remains available for backward
+      compatibility and caller-controlled overrides.
+    edgeCases:
+      - "Manual worksheet override takes precedence over the calculated worksheet result"
+      - "Calculated worksheet Line 23 takes precedence over the federal EIC input"
+      - "Expanded worksheet amount overrides the federal EIC input when provided"
+      - "Illinois-only EITC cases can have zero federal EIC but a positive Line 6 amount"
+    testRef: "tests/engine/state/il-schedule-e-eic.test.ts::Schedule IL-E/EIC Line 6 - calculated expanded worksheet amount overrides federal EIC when provided"
+
+  - line: "3a"
+    description: "Illinois EITC rate"
+    formula: "20% (0.20) for 2025"
+    reference: "35 ILCS 5/212; Schedule IL-E/EIC Instructions, Step 3"
+    testRef: "tests/engine/state/il-schedule-e-eic.test.ts::Schedule IL-E/EIC Line 3a - IL EITC rate is 20% for 2025"
+
+  - line: "3"
+    description: "Illinois Earned Income Credit"
+    formula: "Line 6 × Line 3a (× Schedule NR allocation decimal for NR/part-year)"
+    reference: "Schedule IL-E/EITC, Step 4, Lines 7-9"
+    notes: |
+      For full-year residents: Line 6 × 0.20.
+      For nonresidents/part-year: Line 6 × 0.20 × Schedule NR Line 48 allocation decimal.
+      Rounded to nearest dollar. Cannot be negative.
+    edgeCases:
+      - "Zero federal EIC → zero IL EITC"
+      - "Expanded worksheet amount can create IL EITC even when federal EIC is zero"
+      - "Part-year/nonresidents: allocated by Schedule NR decimal"
+      - "Schedule NR allocation decimal must be between 0 and 1 inclusive"
+      - "Zero allocation decimal → zero IL EITC"
+    testRef: "tests/engine/state/il-schedule-e-eic.test.ts::Schedule IL-E/EIC Line 3 - IL EITC is 20% of federal EIC"
+
+  # Step 4 — Illinois Child Tax Credit
+  - line: "4"
+    description: "Illinois EITC from Line 3"
+    formula: "Line 3"
+    testRef: "tests/engine/state/il-schedule-e-eic.test.ts::Schedule IL-E/EIC Line 4 - carries IL EITC from Line 3"
+
+  - line: "5a"
+    description: "Illinois Child Tax Credit rate"
+    formula: "40% (0.40) for 2025"
+    reference: "35 ILCS 5/212.1; Schedule IL-E/EIC Instructions, Step 4"
+    notes: "Increased from 20% to 40% for 2025"
+    testRef: "tests/engine/state/il-schedule-e-eic.test.ts::Schedule IL-E/EIC Line 5a - IL CTC rate is 40% for 2025"
+
+  - line: "5"
+    description: "Illinois Child Tax Credit"
+    formula: "Line 4 × Line 5a (if at least one Step 2 dependent child is under 12)"
+    reference: "Schedule IL-E/EIC Instructions, Step 4"
+    notes: |
+      Requires IL EITC > 0 AND at least one dependent child under age 12
+      as of December 31, 2025, listed in Step 2. A Step 3 qualifying child who is
+      not listed as a dependent does not satisfy this requirement. Rounded to nearest dollar.
+      For NR/part-year: uses already-allocated IL EITC amount (Line 3).
+    edgeCases:
+      - "No child under 12 → zero IL CTC"
+      - "Zero IL EITC → zero IL CTC even with child under 12"
+      - "A Step 3 qualifying child under 12 does not produce IL CTC when dependent count is zero"
+      - "Part-year/nonresidents: CTC based on NR-allocated EITC"
+      - "40% rate for 2025 (increased from prior years)"
+    testRef: "tests/engine/state/il-schedule-e-eic.test.ts::Schedule IL-E/EIC Line 5 - IL CTC is 40% of IL EITC with child under 12"
+
+  # Summary
+  - line: "summary"
+    description: "Schedule IL-E/EIC results"
+    formula: |
+      Dependent exemption allowance (Line 1) → IL-1040, Line 10d
+      Dependent count → audit/supporting output only
+      IL EITC (Line 3) → IL-1040, Line 29
+      IL CTC (Line 5) → IL-1040, Line 30
+    reference: "Schedule IL-E/EIC Instructions"
+    testRef: "tests/engine/state/il-schedule-e-eic.test.ts::Schedule IL-E/EIC summary - all outputs flow to IL-1040"

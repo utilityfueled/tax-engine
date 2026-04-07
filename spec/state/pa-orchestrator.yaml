@@ -1,0 +1,1298 @@
+form: "PA-Orchestrator"
+fullName: "Pennsylvania Personal Income Tax Return Orchestrator"
+taxYear: 2025
+reference: "https://www.revenue.pa.gov/FormsandPublications/FormsforIndividuals/PIT/Pages/default.aspx"
+
+notes: |
+  Orchestrates the full PA resident income tax return by:
+    1. Mapping TaxYearInput documents (W-2s, 1099s, etc.) to PA's 8 income classes
+    2. Computing PA-40 (core return) for gross tax liability
+    3. Computing Schedule G-L (resident credit for taxes paid to other states)
+    4. Computing Schedule SP (Tax Forgiveness credit) if eligible
+    5. Recomputing PA-40 final result with all credits
+    6. Optionally computing Schedule SD (school district personal income tax)
+    7. Returning consolidated PA return result
+
+  PA income class mapping from input documents:
+    Class 1 — Compensation: W-2 Box 16 when it already reflects PA wages;
+                             otherwise reconstruct PA compensation from
+                             federal Box 1 plus PA-taxable pre-tax deferrals
+                             (W-2 Box 12 codes D/E/F/G/H/S)
+                             + taxable early employer-plan 1099-R distributions
+                             + 1099-MISC Box 14 nonqualified deferred compensation
+    Class 2 — Interest: 1099-INT Box 1 + K-1 Box 5
+                        + taxable early IRA/SEP/SIMPLE 1099-R distributions
+                        + taxable Coverdell ESA distributions
+    Class 3 — Dividends: 1099-DIV Box 1a + 1099-DIV Box 2a capital gains distributions
+                           + K-1 Box 6a (PA taxes all dividends equally)
+    Class 4 — Business income: Schedule C net profit + Schedule F net profit
+                               + K-1 Box 1 + K-1 Box 4
+    Class 5 — Net gains/losses: 1099-B net gains + K-1 Boxes 8,9a,10
+    Class 6 — Rents/royalties: Rental property net income + 1099-MISC Box 1,2 + K-1 Boxes 2,3,7
+    Class 7 — Estate/trust income: Sum of PA Schedule J statement amounts
+                             (PA-41 RK-1 / NRK-1 Line 1, or adjusted federal 1041 K-1)
+    Class 8 — Gambling: PA Schedule T taxable winnings after allowable costs
+
+  PA retirement income exemption (1099-R):
+    PA exempts most retirement distributions from personal income tax:
+    - Normal distributions (code 7, age 59½+): EXEMPT
+    - Disability distributions (code 3): EXEMPT
+    - Death benefit distributions (code 4): EXEMPT
+    - Qualified Roth distributions (code Q, T, B with qualifiedRothDistribution): EXEMPT
+    - Direct rollovers (code G, H): NOT INCOME — excluded entirely
+    - Early distributions (code 1, 2, J, S): TAXABLE
+      - IRA/SEP/SIMPLE → Class 2 (interest)
+      - Employer plans → Class 1 (compensation)
+    Exempt retirement distributions do not automatically increase Schedule SP
+    eligibility income unless the 2025 Schedule SP instructions specifically
+    require the amount to be reported as nontaxable income. In the supported
+    slice, code 4 death benefits are included automatically, and code 7
+    qualified joint survivor annuities are included when the normalized
+    1099-R input marks the beneficiary-survivor-annuity indicator.
+
+  State withholding: W-2 Box 17 (PA state) + W-2G Box 13 (PA state) + 1099-G Box 11
+
+packetRules:
+  packetBehavior: "filled-pa-40-pdf"
+  includeWhen:
+    - "Pennsylvania is the selected resident state for the workspace packet"
+    - "The resident PA orchestrator result has been computed for the return"
+  suppressWhen:
+    - "No Pennsylvania resident return is being assembled for the packet"
+  notes: |
+    The current packet path attaches the computed resident return as
+    `pa-40-filled.pdf` through the workspace packet builder. The packet cover
+    page must continue to disclose that e-file and business-rule validation
+    have not been run for the emitted Pennsylvania packet.
+
+businessRuleValidation:
+  - rule: "workspace-pa-resident-packet-disclosure"
+    description: "Inventory support counts this orchestrator as business-rule validated only when regression coverage proves the workspace packet includes pa-40-filled.pdf for a Pennsylvania resident return and keeps the cover-page e-file/business-rule label at not-validated."
+    testRef: "tests/apps/web/pa-state-packet.test.ts::buildWorkspaceFilledReturnDownload includes the Pennsylvania PA-40 packet and keeps the business-rule disclosure honest"
+
+lines:
+  - line: "resolve-pa-resident-inputs"
+    description: "Resolve PA resident supplemental inputs from validated TaxYearInput before running the resident schedules"
+    formula: |
+      For each PA-only supplemental field:
+        - use input.paResidentReturn.<field> when present
+        - if overrides.<field> is also present, use the explicit override instead
+      Supported supplemental fields include:
+        - Schedule UE detail or raw unreimbursedExpenses
+        - Schedule T supplemental gambling entries
+        - Schedule D supplemental transactions, like-kind exchanges, and
+          special gain lines that do not come directly from normalized federal forms
+        - Schedule A detail for Pennsylvania interest-income adjustments
+        - Schedule B detail for Pennsylvania dividend-income adjustments
+        - Schedule O detail or raw other deductions, prior-year credit, extension payment, estimated payments, nonresident tax withheld
+        - Schedule G-L fallback other-state credit entries
+        - Schedule OC detail or raw other credits
+        - local EIT municipality/rate/nonresident credits
+        - Schedule SD inputs
+        - REV-1630 quarterly payments and prior-year exception inputs
+        - raw nontaxable income, generic Schedule SP additional eligibility
+          income, spouse-only Schedule SP eligibility income, estate/trust
+          fallback income, raw use tax or a use-tax worksheet election, late
+          filing/payment penalty, and late filing/payment interest
+    notes: |
+      This preserves the existing imperative override API while allowing parsed
+      JSON input to carry Pennsylvania-only resident return details. Explicit
+      overrides always win so callers can patch validated input at runtime
+      without mutating the source document.
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator resolves PA resident supplemental inputs from TaxYearInput and lets explicit overrides win"
+
+  - line: "compute-schedule-a"
+    description: "Compute PA interest income through PA Schedule A before carrying the result to PA-40 Line 2"
+    formula: |
+      Build PA Schedule A using supported inputs as follows:
+        - Line 1: supported federal interest baseline consisting of Form 1099-INT
+          Box 1 interest plus the federal Schedule K-1 Box 5 interest that is
+          included on the federal return
+        - Line 2: Form 1099-INT Box 8 tax-exempt interest included on the federal return
+        - Line 3: explicit Schedule A addition adjustments from overrides or paResidentReturn
+        - Line 5: total federal Schedule K-1 Box 5 interest included in the federal baseline
+        - Line 6: explicit Pennsylvania direct-obligation interest amount
+        - Line 7: Form 1099-INT Box 3 U.S. government interest
+        - Line 8: explicit Schedule A reduction adjustments from overrides or
+          paResidentReturn plus the supported Form 1099-INT Box 2
+          forfeited-interest penalty default described below
+        - Line 11: explicit Schedule A annuity/endowment amount plus supported
+          1099-R Box 7 code D paired-with-another-code taxable interest
+        - Line 12: explicit charitable gift annuity amount when provided
+        - Line 13: explicit non-educational IRC §529 distribution amount when
+          provided; otherwise use the supported Form 1099-Q defaults described
+          below so pure §529 input carries the full taxable amount and mixed
+          §529/Coverdell input carries only the §529 taxable share
+        - Line 14: explicit taxable health/medical savings distribution amount
+          when provided; otherwise default to the supported federal Form 8889
+          taxable HSA distribution amount on Line 16
+        - Line 15: Pennsylvania-classified pass-through interest:
+          resident PA Schedule RK-1 interest plus any remaining federal
+          Schedule K-1 Box 5 interest for entities without PA statements
+
+      Then:
+        - use PA Schedule A Line 16 as the base PA interest class amount
+        - add any remaining PA-taxable retirement interest that is mapped
+          outside the supported printed Schedule A Line 11 slice
+    notes: |
+      This lets the resident engine tax out-of-state municipal bond interest,
+      subtract federal Schedule K-1 interest before re-adding Pennsylvania
+      pass-through classifications, and accept explicit Schedule A reductions
+      such as federal Schedule K-1 U.S. government interest that the printed
+      instructions direct to Line 8 when no RK-1 is provided. It also lets the
+      engine reuse supported federal 1099-Q and Form 8889 results for printed
+      Schedule A Lines 13 and 14 without forcing duplicate Pennsylvania-only
+      data entry, while preserving explicit Schedule A override precedence.
+    edgeCases:
+      - "Explicit Schedule A Lines 13 and 14 override the derived federal defaults"
+      - "Schedule A Line 13 only auto-defaults when every supported 1099-Q record is an IRC §529 plan"
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator computes interest through PA Schedule A with Pennsylvania pass-through reclassification"
+
+  - line: "compute-schedule-a-line-8-forfeited-interest-default"
+    description: "Default PA Schedule A Line 8 from supported Form 1099-INT forfeited-interest penalties without over-deducting interest"
+    formula: |
+      When computing PA Schedule A:
+        - for each supported Form 1099-INT record, take the lesser of:
+            - Box 2 forfeited-interest penalty
+            - Box 1 interest income
+        - sum those per-record supported penalty amounts
+        - add that derived amount to any explicit Schedule A reduction
+          adjustments supplied by overrides or paResidentReturn
+
+      The resident engine starts Schedule A Line 1 from gross Form 1099-INT
+      Box 1 interest instead of a federal Schedule 1 net amount, so it does
+      not separately add back the same supported penalty on Schedule A Line 3.
+      Any supported penalty that exceeds the normalized 1099-INT interest total
+      remains outside this automatic resident default and may be modeled
+      manually through Pennsylvania Schedule D inputs when needed.
+    notes: |
+      The Pennsylvania Personal Income Tax Guide says a forfeited-interest
+      penalty may offset only the interest from the redeemed certificate or
+      account and that any excess penalty belongs on Schedule D as a property
+      loss. The normalized input model currently exposes Box 2 at the
+      1099-INT-record level but does not capture redeemed-account dates or
+      spouse ownership for an automatic Schedule D loss entry, so this slice
+      limits the resident default to the supported Schedule A portion.
+    edgeCases:
+      - "If a supported Form 1099-INT Box 2 penalty exceeds that same record's Box 1 interest, Schedule A only deducts the supported Box 1 interest amount for that record"
+      - "If there are no supported Form 1099-INT penalties, Schedule A Line 8 falls back to the explicit reduction adjustments only"
+      - "Explicit reduction-adjustment entries still stack with the supported forfeited-interest penalty default"
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator defaults Schedule A Line 8 from supported Form 1099-INT forfeited-interest penalties without over-deducting interest"
+
+  - line: "compute-schedule-a-federal-defaults"
+    description: "Default PA Schedule A Lines 13 and 14 from supported federal computations when explicit Pennsylvania inputs are absent"
+    formula: |
+      When Schedule A detail omits:
+        - Line 13, and every supported Form 1099-Q record is accountType = '529',
+          use the federal Form 1099-Q taxable earnings amount
+        - Line 13, and the supported Form 1099-Q set mixes §529 plans and
+          Coverdell ESAs, compute the federal Form 1099-Q result once, then:
+            - allocate adjusted qualified education expenses pro rata between
+              the taxable distributions as directed by PIT Bulletin 2006-04
+            - use the resulting §529 taxable-earnings share on Schedule A
+              Line 13
+            - carry the remaining Coverdell taxable share to Pennsylvania
+              Class 2 interest outside the printed Schedule A line because
+              the bulletin taxes Coverdell redemptions on the same basis as
+              early IRA distributions
+        - Line 14, use the sum of supported federal Form 8889 Line 16 taxable
+          HSA distributions from either the single-owner or owner-specific path
+
+      Explicit Pennsylvania Schedule A line inputs continue to override these
+      defaults for Schedule A itself, while any taxable Coverdell share still
+      maps automatically to Pennsylvania interest income.
+    notes: |
+      The 2025 PA Personal Income Tax Guide says non-educational IRC §529
+      distributions and taxable health/medical savings account distributions
+      included in federal taxable income are reported as Pennsylvania interest
+      income. PIT Bulletin 2006-04 further says that when a beneficiary
+      receives both Coverdell ESA and QTP distributions that together exceed
+      remaining qualified education expenses, the expenses must be allocated
+      pro rata between the distributions, and it taxes Coverdell redemptions
+      on the same basis as early IRA distributions. This lets the resident
+      orchestrator auto-split mixed federal 1099-Q sets without requiring a
+      manual Pennsylvania override.
+    edgeCases:
+      - "If neither Line 13 nor Line 14 needs a federal-derived default for the current return, the orchestrator skips the federal computation entirely"
+      - "Mixed §529/Coverdell federal 1099-Q inputs split taxable earnings between Schedule A Line 13 and extra Pennsylvania Class 2 interest"
+      - "Pure Coverdell ESA federal 1099-Q input bypasses Schedule A Line 13 and still increases Pennsylvania interest income"
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator defaults Schedule A Lines 13 and 14 from supported federal 529 and HSA computations"
+
+  - line: "compute-schedule-a-line-6-default"
+    description: "Default PA Schedule A Line 6 from normalized Form 1099-INT Pennsylvania direct-obligation allocations"
+    formula: |
+      When explicit Schedule A detail omits Line 6, sum the supported
+      Form 1099-INT Pennsylvania direct-obligation allocations and use that
+      amount as PA Schedule A Line 6. Explicit Schedule A Line 6 input from
+      overrides or paResidentReturn continues to override the derived amount.
+    notes: |
+      The 2025 PA-40 Schedule A instructions direct taxpayers to subtract
+      interest from direct obligations of the Commonwealth of Pennsylvania and
+      its political subdivisions on Line 6. This slice supports a normalized
+      1099-INT allocation so common Pennsylvania municipal-bond interest does
+      not require a manual schedule override.
+    edgeCases:
+      - "Derived Form 1099-INT Line 6 amount increases Schedule SP nontaxable income"
+      - "Explicit Schedule A Line 6 override still wins over the derived amount"
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator defaults Schedule A Line 6 from Form 1099-INT Pennsylvania direct-obligation allocations"
+
+  - line: "compute-schedule-b"
+    description: "Compute PA dividend income through PA Schedule B before carrying the result to PA-40 Line 3"
+    formula: |
+      Build PA Schedule B using supported inputs as follows:
+        - Line 1: supported federal dividend baseline consisting of Form
+          1099-DIV Box 1a ordinary dividends plus federal Schedule K-1 Box 6a
+          dividends reported on the federal return
+        - Line 2: total federal Schedule K-1 Box 6a dividends included in the
+          federal baseline
+        - Line 3: explicit Pennsylvania-exempt tax-exempt-dividend amount from
+          overrides or paResidentReturn
+        - Line 4: explicit Schedule B reduction adjustments from overrides or
+          paResidentReturn
+        - Line 7: Form 1099-DIV Box 12 exempt-interest dividends
+        - Line 8: explicit Schedule B addition adjustments from overrides or
+          paResidentReturn
+        - Line 9a through Line 9c: explicit foreign-repatriation inputs when
+          provided, with only Line 9c flowing into taxable dividends
+        - Line 10: Form 1099-DIV Box 2a capital gains distributions
+        - Line 11: Pennsylvania-classified pass-through dividends consisting of
+          resident PA Schedule RK-1 dividends plus any remaining federal
+          Schedule K-1 Box 6a dividends for entities without PA statements
+
+      Then:
+        - use PA Schedule B Line 12 as the PA dividend class amount
+        - include only the Pennsylvania-exempt Line 3 amount in Schedule SP
+          nontaxable income rather than all federal Box 12 dividends
+    notes: |
+      This lets the resident engine follow the printed Schedule B structure for
+      PA-40 Line 3, tax federally exempt out-of-state municipal-bond fund
+      dividends, preserve the Pennsylvania/U.S.-government exempt portion as a
+      reduction, and avoid double-counting taxable Box 12 dividends as
+      nontaxable Schedule SP income.
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator computes dividends through PA Schedule B and taxes federally exempt out-of-state bond dividends"
+
+  - line: "compute-schedule-b-line-3-default"
+    description: "Default PA Schedule B Line 3 from normalized Form 1099-DIV Pennsylvania exemption allocations"
+    formula: |
+      When explicit Schedule B detail omits Line 3, sum the supported
+      Form 1099-DIV Pennsylvania exemption allocations representing the
+      Pennsylvania- and U.S.-government share of Box 12 exempt-interest
+      dividends and use that amount as PA Schedule B Line 3. Explicit
+      Schedule B Line 3 input from overrides or paResidentReturn continues to
+      override the derived amount.
+    notes: |
+      The 2025 PA-40 Schedule B instructions direct taxpayers to subtract the
+      portion of tax-exempt fund and money-market dividends attributable to
+      direct obligations of Pennsylvania, its political subdivisions, and the
+      U.S. government on Line 3. This slice supports a normalized Form 1099-DIV
+      allocation so common exempt-bond funds do not require a manual
+      Pennsylvania override.
+    edgeCases:
+      - "Only the derived Line 3 amount is added to Schedule SP nontaxable income"
+      - "Explicit Schedule B Line 3 override still wins over the derived amount"
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator defaults Schedule B Line 3 from Form 1099-DIV Pennsylvania exemption allocations"
+
+  - line: "compute-use-tax"
+    description: "Compute PA-40 Line 25 from the supported PA Use Tax Worksheet when no raw Line 25 amount is provided"
+    formula: |
+      Resolve Line 25 in this priority order:
+        1. explicit overrides.useTax
+        2. explicit overrides.useTaxWorksheet computed through the PA Use Tax Worksheet module
+        3. input.paResidentReturn.useTax
+        4. input.paResidentReturn.useTaxWorksheet computed through the PA Use Tax Worksheet module
+        5. otherwise 0
+
+      When a worksheet path is used:
+        - derive PA-40 Line 9 from the provisional PA-40 pass
+        - pass the tax year, derived Line 9 amount, locality, actual purchases,
+          optional Table 1 election, and prior-tax-paid offset to the module
+        - use worksheet Line 8 as PA-40 Line 25
+    notes: |
+      This preserves backward compatibility for callers that already provide a
+      final Line 25 amount while adding a spec-driven way to compute the amount
+      from the official worksheet and Table 1.
+    edgeCases:
+      - "Raw useTax overrides a worksheet result"
+      - "An explicit worksheet override beats the parsed PA resident input worksheet"
+      - "Without a raw amount or worksheet, Line 25 remains zero"
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator computes use tax from the supported worksheet and preserves raw Line 25 override precedence"
+
+  - line: "compute-schedule-o"
+    description: "Compute PA Schedule O when detailed other-deduction input is provided"
+    formula: |
+      If overrides.scheduleO is provided:
+        - for non-joint returns, default any omitted federal-allowed deduction fields from the computed federal Schedule 1 sub-result:
+          - Schedule 1 Line 13 / schedule1.hsaDeduction → Health Savings Account deduction
+          - Schedule 1 Line 23 / schedule1.archerMSADeduction → Archer/Medical Savings Account deduction
+          - Schedule 1 Line 21 / schedule1.studentLoanInterest → Student loan interest deduction
+        - compute a first-pass PA-40 to obtain total PA Line 9 income
+        - derive Schedule O taxpayer/spouse Line 9 inputs as follows:
+          - use explicit Schedule O split-income inputs when provided
+          - otherwise, for supported non-joint cases, use the first-pass total
+            PA taxable income in the taxpayer column and zero in the spouse column
+        - compute PA Schedule O
+        - use Schedule O Line 11 as PA-40 other deductions
+      Else if the return is non-joint and the federal return reports any of
+      the supported federal-allowed Schedule O deductions above:
+        - synthesize a supported Schedule O input from the computed federal Schedule 1 sub-result
+        - use the first-pass PA-40 total as taxpayer Line 9 income and zero for spouse
+        - compute PA Schedule O and use its Line 11 total
+      For tax years not supported by the federal engine:
+        - fall back to raw input.adjustments values for the three supported
+          federal-allowed deductions
+        - do not synthesize Schedule O unless explicit Schedule O detail or
+          raw supported adjustment values are present
+      Else:
+        - use raw overrides.otherDeductions
+    notes: |
+      Detailed Schedule O input is preferred over the raw other-deductions
+      override because it preserves the beneficiary-level contribution caps,
+      federal-allowed deduction components, and the separate-income limitation.
+      The resident input schema mirrors this behavior through
+      input.paResidentReturn.scheduleO.
+      The 2025 PA-40 O instructions direct the taxpayer to enter the Medical
+      Savings Account, Health Savings Account, and Student Loan Interest
+      amounts "allowed for federal income tax purposes." For supported
+      non-joint returns, the orchestrator can therefore reuse the federal
+      Schedule 1 results for those lines when Pennsylvania-specific Schedule O
+      detail is absent or partial.
+    edgeCases:
+      - "Detailed Schedule O overrides raw otherDeductions when both are present"
+      - "Single-filer Schedule O can derive its Line 9 income from the first-pass PA-40"
+      - "Joint-return Schedule O may provide explicit taxpayer/spouse PA Line 9 split amounts"
+      - "Non-joint return without explicit Schedule O still computes Schedule O from federal Schedule 1 deductions"
+      - "Explicit Schedule O deduction amounts override the federal Schedule 1 defaults"
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator computes Schedule O and prefers it over raw other deductions"
+
+  - line: "map-compensation"
+    description: "Map W-2 wages to PA Class 1 compensation"
+    formula: |
+      Sum resident compensation from every W-2, plus any 1099-MISC Box 14
+      nonqualified deferred compensation distributions:
+        - if the W-2 is tagged as active-duty military compensation earned
+          outside Pennsylvania, exclude the wage amount from Class 1
+        - if the W-2 reports PA wages and Box 16 is nonzero, use Box 16
+        - otherwise, reconstruct PA compensation as:
+            Box 1
+            + Box 12 codes D/E/F/G/H/S
+    notes: |
+      This resident orchestrator includes compensation from all states, not just
+      Pennsylvania W-2s. Pennsylvania residents report all taxable compensation
+      and then claim Schedule G-L for taxes paid to other states on the same
+      income. When a W-2 reports PA wages, Box 16 is the best PA wage signal.
+      For non-PA W-2s, ignore that state's Box 16 because it reflects the other
+      state's wage base, not Pennsylvania's. Instead, rebuild PA compensation
+      from federal Box 1 plus PA-taxable retirement/deferred-compensation
+      deferrals that federal law excluded from Box 1.
+      Pennsylvania also treats distributions from nonqualified deferred
+      compensation plans as taxable compensation on Line 1a regardless of
+      whether paid during employment or retirement, to the extent the
+      distribution is not a previously taxed contribution recovered on the
+      PA-40 W-2 Reconciliation Worksheet. This iteration supports the
+      directly reported federal Form 1099-MISC Box 14 amount.
+      Active-duty military compensation earned outside Pennsylvania is not
+      taxable compensation for a Pennsylvania resident and is therefore
+      excluded from Line 1a. The excluded wages still count as Schedule SP
+      eligibility income unless they are combat pay or hazardous duty pay,
+      and any PA withholding on the same W-2 still carries to the payment
+      line.
+      Reference:
+        - PA DOR FAQ: a PA resident may be required to file in another state and
+          "also be required to file a Pennsylvania tax return"
+        - PA-40 instructions Line 1a: use the PA-taxable compensation amount
+          reported on the W-2 when available
+        - 2025 PA-40 Instructions, Line 1a overview: "distributions from
+          nonqualified deferred compensation plans"
+        - 2025 PA-40 Instructions, Non-Qualified Deferred Compensation
+          Programs: distributions attributable to elective deferrals are taxable
+          compensation regardless of employment or retirement
+        - 2025 PA-40 IN Page 10, Line 1a instruction 5: active-duty military
+          pay earned outside PA is not taxable compensation
+        - PA Personal Income Tax Guide, Compensation: begin with Box 1 and add
+          employee elective deferrals taxable to Pennsylvania
+        - REV-631 Tax Forgiveness brochure: military pay excluded from the
+          PA return increases Schedule SP eligibility income unless it is
+          combat pay or hazardous duty pay
+    edgeCases:
+      - "1099-MISC Box 14 nonqualified deferred compensation increases Class 1 compensation"
+      - "1099-MISC rents/royalties remain in Class 6 while Box 14 stays in Class 1"
+      - "Resident active-duty military wages earned outside PA are excluded from Class 1"
+      - "Excluded active-duty military wages still increase Schedule SP eligibility income"
+      - "Excluded combat-pay or hazardous-duty active-duty wages stay out of automatic Schedule SP eligibility income"
+      - "PA withholding on excluded active-duty military wages still flows to payments"
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator maps W-2 wages to compensation"
+
+  - line: "map-interest"
+    description: "Map supported interest inputs into the PA Schedule A baseline"
+    formula: "Form 1099-INT Box 1 interest feeds PA Schedule A Line 1, federal Schedule K-1 Box 5 interest feeds Line 5, Pennsylvania-classified pass-through interest feeds Line 15, and taxable Coverdell ESA amounts from the supported 1099-Q split are added to PA Class 2 interest outside the printed Schedule A line"
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator maps 1099-INT to interest"
+
+  - line: "map-dividends"
+    description: "Map raw dividend documents into the supported PA Schedule B inputs"
+    formula: "Form 1099-DIV Box 1a feeds Schedule B Line 1, federal Schedule K-1 Box 6a feeds Lines 1 and 2, Form 1099-DIV Box 12 feeds Line 7, Form 1099-DIV Box 2a feeds Line 10, and Pennsylvania-classified pass-through dividends feed Line 11"
+    notes: |
+      PA taxes all dividends at 3.07% with no qualified-dividend preference,
+      and the 2025 PA-40 Schedule B instructions require mutual-fund capital
+      gains distributions (Form 1099-DIV Box 2a) to be reported as dividend
+      income on Line 10 rather than on PA net-gains schedules.
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator maps 1099-DIV to dividends"
+
+  - line: "map-retirement"
+    description: "Map 1099-R retirement distributions with PA exemption rules"
+    formula: |
+      For each 1099-R:
+        - Resolve the federally taxable amount by this priority:
+          - supported federal Form 1099-R taxable amount derivation when Box 2a
+            is blank or Box 2b taxable amount not determined is checked
+            (including validated Simplified Method and Box 5 employee-basis recovery)
+          - otherwise explicit Box 2a taxable amount
+        - Code G/H (rollover): exclude entirely
+        - If the payer identifies one of PA's always-exempt public retirement
+          systems (State Employees' Retirement System, Pennsylvania School
+          Employees' Retirement System, Pennsylvania Municipal Employees'
+          Retirement System, or the U.S. Civil Service Commission Retirement
+          Disability Plan): EXEMPT from PA tax regardless of Box 7 code,
+          including any code D combination, and do not add gross to SP
+          nontaxable income unless the supported distribution is a code 4
+          death benefit or a code 7 qualified joint survivor annuity flagged
+          on the normalized input
+        - Code D paired with any other Box 7 code: add taxable amount to Class 2 interest
+        - Code E/N/R: EXEMPT from PA tax, do not add gross to SP nontaxable income
+        - Code 4: EXEMPT from PA tax, add gross to SP nontaxable income
+        - Code 7:
+          - if qualifiedJointSurvivorAnnuity = true: EXEMPT from PA tax, add gross to SP nontaxable income
+          - otherwise: EXEMPT from PA tax, do not add gross to SP nontaxable income
+        - Qualified Roth (Q/T/B): EXEMPT from PA tax, do not add gross to SP nontaxable income
+        - Code 3 disability:
+          - if disabilityPensionBeforeMinimumRetirementAge = true: add taxable amount to Class 1 compensation
+          - otherwise: EXEMPT from PA tax, do not add gross to SP nontaxable income
+        - Code 1/2/J/S (early/taxable): add taxable amount to Class 1 (employer) or Class 2 (IRA)
+        - Other codes: default to taxable treatment
+    notes: |
+      PA exempts most retirement income. The exemption applies to distributions
+      from qualifying plans received after retirement (age 59½+) or due to
+      disability or death. Disability pension payments received before minimum
+      retirement age are taxable as compensation. Early distributions before
+      qualifying are generally taxable unless the 1099-R is from one of the
+      public retirement systems that the PA-40 instructions exempt regardless
+      of distribution code.
+      qualifying are taxable. The 2025 PA-40 instructions also require any
+      Form 1099-R that reports Box 7 code D together with another code to be
+      treated as PA-taxable interest income to the extent federally taxable.
+      The 2025 PA Personal Income Tax Guide also says Box 7 code E EPCRS
+      distributions and code N or R IRA recharacterization records are not
+      taxable for Pennsylvania, so the resident mapper must not fall through
+      to the generic taxable path for those codes.
+      When Box 2a is blank, this slice reuses the supported federal Form 1099-R
+      taxable-amount computation so Pennsylvania taxes only the federally
+      taxable portion after validated employee-basis recovery or Simplified
+      Method exclusion, rather than defaulting to the gross distribution.
+      The 2025 Schedule SP instructions exclude Social Security, Railroad
+      Retirement, and retirement benefits from eligible retirement plans after
+      retirement from Eligibility Income, but they specifically require
+      qualified joint survivor annuity benefits reported on Form 1099-R with
+      Box 7 code 7 instead of code 4 to be included in eligibility income.
+      The supported slice therefore auto-includes printed Schedule SP
+      line-items that can be identified confidently from normalized 1099-R
+      data today: code 4 death benefits and code 7 qualified joint survivor
+      annuities when the input carries the survivor-annuity indicator.
+      References:
+        - 2025 PA-40 Instructions, "1099-R Filing Tips" items 5 and 7
+        - 2025 PA-40 Instructions, "1099-R Filing Tips" item 3
+        - 2025 PA Schedule A instructions, Line 11
+        - 2025 PA Schedule SP instructions, Section III Lines 4 and 10
+        - 2022 PA-40 Instructions Booklet, "1099-R Filing Tips" item 9
+        - 2019 PA Schedule W-2S instructions, bullet for qualified joint survivor annuity benefits reported with Box 7 code 7
+        - Commonwealth of Pennsylvania PSERS agency pages (official system name: "Public School Employees' Retirement System")
+    edgeCases:
+      - "Normal distribution (code 7): fully exempt from PA tax"
+      - "PSERS/SERS/PMRS/U.S. Civil Service disability-plan distributions stay exempt even with an otherwise taxable Box 7 code"
+      - "Official PSERS payer-name variants such as 'Public School Employees' Retirement System' stay exempt even when the older PA-40 wording is not used verbatim"
+      - "A public-retirement-system 1099-R with a code D combination remains exempt instead of being remapped to PA Schedule A interest"
+      - "Code 7D nonqualified annuity distributions are taxable as PA interest"
+      - "Disability distribution before minimum retirement age: taxable as compensation"
+      - "Disability distribution after minimum retirement age: exempt from PA tax and excluded from Schedule SP eligibility income"
+      - "Death benefit distribution (code 4): exempt from PA tax and included in Schedule SP eligibility income"
+      - "Code E EPCRS distributions remain exempt from PA tax"
+      - "Code N and code R IRA recharacterization records remain exempt from PA tax"
+      - "Qualified joint survivor annuity reported with code 7: exempt from PA tax and included in Schedule SP eligibility income"
+      - "Qualified Roth and ordinary post-retirement distributions stay out of Schedule SP eligibility income"
+      - "Early distribution (code 1) from employer plan: taxable as compensation"
+      - "Early IRA distribution (code 1, iraSepSimple): taxable as interest"
+      - "Blank Box 2a non-IRA early distribution uses employee-basis recovery before PA mapping"
+      - "Blank Box 2a code D annuity interest uses validated Simplified Method taxable amount"
+      - "Rollover (code G): not income at all"
+      - "Multiple 1099-Rs with mixed codes: each handled independently"
+      - "Qualified Roth (qualifiedRothDistribution flag): exempt"
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator exempts normal 1099-R distributions (code 7)"
+
+  - line: "map-business"
+    description: "Map Schedule C / Schedule F / K-1 to PA Class 4 business income"
+    formula: "Schedule C net profit + Schedule F net farm profit + sum of K-1 (Box 1 + Box 4)"
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator maps Schedule C to business income"
+
+  - line: "map-pa-pass-through-statements"
+    description: "Use PA-20S/PA-65 Schedule RK-1 / NRK-1 statement classifications when available"
+    formula: |
+      If input.paPassThroughStatements is provided:
+        - aggregate Pennsylvania-classified statement amounts by class using
+          the PA Schedule RK-1 / NRK-1 module
+        - for any entity that has a PA statement, exclude the matching federal
+          Schedule K-1 from heuristic PA class mapping to avoid double counting
+        - add the statement totals to the corresponding PA classes:
+          business, interest, dividends, net gains, rents/royalties,
+          estates/trusts, gambling
+        - for rents/royalties, feed the statement amounts through the existing
+          PA Schedule E path so married-filing-jointly spouse separation rules
+          still apply
+      Else:
+        - use the heuristic federal Schedule K-1 mapping only
+    notes: |
+      Pennsylvania's pass-through-entity guidance says RK-1 / NRK-1 statements
+      are already classed and apportioned for Pennsylvania purposes and that a
+      federal Schedule K-1 does not classify income for Pennsylvania. The
+      resident orchestrator therefore prefers the Pennsylvania statement when
+      both are present for the same entity.
+    edgeCases:
+      - "A PA statement for the same EIN prevents double counting of the federal Schedule K-1"
+      - "PA statement amounts from a different entity are additive to heuristic federal K-1 amounts"
+      - "Statement rental amounts still follow PA Schedule E spouse-separation behavior"
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator prefers PA pass-through statements over heuristic federal K-1 mapping for the same entity"
+
+  - line: "map-short-term-rental-business"
+    description: "Route supported short-term rental property activity to PA Class 4 business income"
+    formula: |
+      For each directly owned rental property input:
+        - if rentalDays is greater than 0 and less than 30, compute net income
+          as rents minus the same ordinary and necessary expense categories used
+          by PA Schedule E
+        - add that net amount to PA Class 4 business income
+        - exclude that property from the PA Class 6 / Schedule E calculation
+    notes: |
+      The PA-40 instructions direct taxpayers to report rental activity on
+      Line 4 / PA Schedule C when the average period of customer use is less
+      than 30 days. The validated input does not currently track each renter's
+      stay length, so this resident engine supports the subset that can be
+      determined directly from the input: a property recorded with fewer than
+      30 total rental days for the year is routed to Class 4 business income
+      instead of Class 6 rents.
+      References:
+        - 2025 PA-40 Instructions, "Reporting Rental Income (Loss) as
+          Business Activity on Line 4 or as Rents on Line 6"
+        - 2024 PA Schedule E instructions, Line c / Line 22 versus Line 23
+    edgeCases:
+      - "Property rented fewer than 30 total days moves from Schedule E to Class 4"
+      - "Property rented 30 days or more remains in Schedule E / Class 6"
+      - "Only the supported fewer-than-30-days subset is auto-routed from rental input"
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator routes supported short-term rentals under 30 days to business income"
+
+  - line: "map-farm"
+    description: "Map Schedule F farm income to PA Class 4 business income"
+    formula: "Schedule F net farm profit (gross farm income - farm expenses)"
+    notes: |
+      PA Class 4 includes farm income alongside business/profession income.
+      Schedule F net profit flows into the same class as Schedule C.
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator maps Schedule F farm income to business income"
+
+  - line: "map-business-joint-owner-separation"
+    description: "Carry only the positive spouse-specific PA Class 4 amounts to PA-40 Line 4 on joint returns when supported owner tags are available"
+    formula: |
+      If filingStatus = married_filing_jointly:
+        - total the taxpayer bucket from supported Class 4 sources tagged to
+          the primary filer (or left untagged):
+            - Schedule C
+            - Schedule F
+            - heuristic federal Schedule K-1 Box 1 + Box 4 amounts
+            - PA RK-1 / NRK-1 business income
+        - total the spouse bucket from the same supported Class 4 sources when
+          accountHolder = spouse
+        - carry max(primary bucket, 0) + max(spouse bucket, 0) to PA-40 Line 4
+      Otherwise:
+        - carry the combined Class 4 total
+    notes: |
+      The July 2025 Pennsylvania Personal Income Tax Guide says a loss by one
+      spouse on a joint return may not offset the other spouse's income.
+      Because the validated input model already supports spouse owner tags for
+      federal Schedule K-1 and Pennsylvania RK-1 / NRK-1 statements, and this
+      slice extends that support to direct Schedule C and Schedule F inputs,
+      the resident orchestrator now applies the published joint-return
+      separation rule before carrying PA-40 Line 4 for those owner-tagged
+      Class 4 sources. Untagged supported Class 4 sources continue to default
+      to the primary-filer bucket in this slice.
+    edgeCases:
+      - "Primary-filer Class 4 loss does not offset spouse Class 4 gain on a joint return"
+      - "An untagged Schedule C or Schedule F defaults to the primary bucket"
+      - "Non-joint returns still use the combined Class 4 total"
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator carries only the positive spouse Class 4 amount to PA-40 Line 4 on joint returns"
+
+  - line: "map-gains"
+    description: "Map 1099-B and other disposition gains to PA Class 5 net gains"
+    formula: |
+      Compute the supported PA Schedule D total from:
+        - Form 1099-B net gains or losses using Pennsylvania basis rules
+        - supported Form 6781 Section 1256 net gains or losses
+        - supported Form 6252 installment-sale gains
+        - federal Schedule K-1 Boxes 8, 9a, and 10 gains or losses for entities
+          without Pennsylvania RK-1 / NRK-1 statements
+        - Pennsylvania-classified pass-through net gains or losses from
+          supported RK-1 / NRK-1 statements
+        - supported taxable principal-residence gains
+      Carry the PA-40 Line 5 amount from the PA Schedule D result. For married
+      filing jointly returns, if one spouse has a Schedule D gain and the
+      other has a Schedule D loss, carry only the positive spouse amount.
+    notes: |
+      PA does not distinguish short-term vs long-term — all gains taxed at
+      3.07%. Capital gains distributions from mutual funds are not reported on
+      PA Schedule D; the 2025 PA-40 instructions treat those amounts as
+      dividend income on Line 3 instead. The 2025 PA Schedule D instructions
+      also require taxpayer and spouse gains or losses to be computed
+      separately on joint returns, and one spouse's loss may not reduce the
+      other spouse's gain.
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator carries only the positive spouse Schedule D amount to PA-40 Line 5 on joint returns"
+
+  - line: "map-rental"
+    description: "Map rental properties / 1099-MISC / K-1 to PA Class 6 rents/royalties"
+    formula: |
+      Sum of:
+        - rental property net income for supported rental properties with
+          rentalDays equal to 0 or at least 30
+        - 1099-MISC Box 1 (rents)
+        - 1099-MISC Box 2 (royalties)
+        - K-1 Boxes 2, 3, and 7
+    notes: |
+      1099-MISC rents (Box 1) and royalties (Box 2) flow directly to PA Class 6.
+      These are gross amounts — no expense netting (unlike rental property Schedule E).
+      Rental-property inputs with fewer than 30 total rental days are handled
+      as supported short-term business rentals and excluded from this Class 6
+      computation.
+      For married filing jointly returns, the underlying PA Schedule E
+      computation applies the 2025 separate-spouse rule before carrying the
+      Class 6 amount to PA-40 Line 6.
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator maps 1099-MISC rents and royalties to rental income"
+
+  - line: "map-estate-trust"
+    description: "Map PA Schedule J estate or trust income to PA Class 7"
+    formula: |
+      If input.paScheduleJStatements is provided:
+        compute the supported PA Schedule J total by summing each statement's
+        positive incomeAmount
+      Otherwise:
+        fall back to overrides.estateTrustIncome
+    notes: |
+      PA-40 Line 7 is reported from PA Schedule J. Schedule J Column (c) uses
+      PA-41 Schedule RK-1 Line 1, PA-41 Schedule NRK-1 Line 1, or an adjusted
+      federal Form 1041 Schedule K-1 amount when no PA statement was provided.
+      Only positive income figures are used; negative figures are disregarded.
+      When explicit Schedule J statements are present, they take precedence over
+      the raw estateTrustIncome override.
+      References:
+        - 2024 PA Schedule J instructions, Column (c)
+        - Pennsylvania Personal Individual Tax Preparation Guide, PA-40 Line 7
+    edgeCases:
+      - "Multiple PA Schedule J statements sum together"
+      - "Negative federal K-1 adjusted amount is disregarded"
+      - "When no Schedule J statements are present, fallback override still works"
+      - "Schedule J statements override the raw estateTrustIncome fallback"
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator maps PA Schedule J statements to estate/trust income"
+
+  - line: "map-nrk1-withholding"
+    description: "Map entity and estate-or-trust nonresident withholding from supported NRK-1 statements to PA-40 Line 17"
+    formula: |
+      Compute statement-derived nonresident withholding as:
+        - sum each input.paPassThroughStatements[i].nonresidentTaxWithheld when:
+          - statement.sourceDocument = "pa_nrk_1"
+          - the withholding amount is positive
+        - plus sum each input.paScheduleJStatements[i].nonresidentTaxWithheld when:
+          - statement.sourceDocument = "pa_nrk_1"
+          - the withholding amount is positive
+      Use that sum for PA-40 Line 17 unless overrides.nonresidentTaxWithheld
+      is explicitly provided, in which case the explicit override wins.
+      If there are no supported statement withholding amounts and no override,
+      use 0.
+    notes: |
+      The 2025 PA-40 instructions tell the taxpayer to report nonresident
+      withholding from partnership and PA S corporation Schedule NRK-1 Line 6
+      and from PA-41 Schedule NRK-1 Line 2 on PA-40 Line 17 rather than Line
+      13. This resident engine therefore sources Line 17 withholding directly
+      from both supported NRK-1 statement paths instead of requiring a raw
+      resident-return override.
+    edgeCases:
+      - "PA Schedule NRK-1 withholding from pass-through statements increases PA-40 Line 17 and total payments"
+      - "PA-41 Schedule NRK-1 withholding increases PA-40 Line 17 and total payments"
+      - "PA Schedule RK-1 and adjusted federal Schedule K-1 statements do not add Line 17 withholding"
+      - "Pass-through NRK-1 withholding and estate/trust NRK-1 withholding are additive"
+      - "Explicit nonresidentTaxWithheld override still wins over statement-derived withholding"
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator maps supported NRK-1 withholding to PA-40 Line 17"
+
+  - line: "map-unemployment"
+    description: "Exclude 1099-G unemployment compensation from PA taxable income"
+    formula: "Do not add 1099-G Box 1 (unemploymentCompensation) to any PA taxable income class"
+    notes: |
+      Pennsylvania excludes unemployment compensation from personal income tax.
+      It does not flow to PA Class 1 compensation or any other taxable class.
+      Pennsylvania also excludes unemployment compensation from Schedule SP
+      eligibility income. Any PA tax withheld on Form 1099-G Box 11 is still
+      claimed as withholding on the PA-40 return.
+      References:
+        - PA Personal Income Tax Guide, Gross Compensation / Compensation section
+        - PA Tax Forgiveness instructions: unemployment is not included in eligibility income
+    edgeCases:
+      - "Single 1099-G with unemployment only: no PA taxable income"
+      - "Multiple 1099-Gs from different agencies: still no PA taxable income"
+      - "1099-G with zero unemployment (state refund only): no income added"
+      - "Unemployment + W-2 wages: only W-2 wages are taxable compensation"
+      - "1099-G withholding still increases PA payments"
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator excludes 1099-G unemployment from compensation"
+
+  - line: "map-1099k"
+    description: "Map 1099-K payment settlement entity income to appropriate PA income class"
+    formula: |
+      For each 1099-K, route based on incomeType:
+        - "business" or "other" → Class 4 (business/profession income)
+        - "farm" → Class 4 (business/farm income)
+        - "rental" → Class 6 (rents/royalties/patents/copyrights)
+      Amount: grossAmount (Box 1a)
+    notes: |
+      1099-K reports gross payment card and third-party network transactions.
+      The incomeType field routes to the correct PA income class.
+      PA treats all 1099-K income the same as federal for classification.
+      When Schedule C is present, 1099-K business income may already be
+      included in grossReceipts (similar to 1099-NEC). When no Schedule C,
+      1099-K represents standalone business income.
+      1099-K state withholding (Box 8) is extracted to state withholding total.
+    edgeCases:
+      - "1099-K business income routes to Class 4"
+      - "1099-K farm income routes to Class 4"
+      - "1099-K rental income routes to Class 6"
+      - "Multiple 1099-Ks with mixed income types route correctly"
+      - "1099-K with state=PA withholding included in withholding total"
+      - "1099-K with no Schedule C: standalone business income"
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator maps 1099-K business income to Class 4"
+
+  - line: "map-gambling"
+    description: "Map PA Schedule T taxable winnings to PA Class 8 gambling"
+    formula: |
+      Build PA Schedule T from:
+        - Form W-2G winnings
+        - supplemental PA resident Schedule T entries
+      Then use Schedule T Line 3 taxable winnings after allowable direct costs.
+    notes: |
+      Pennsylvania taxes gambling and lottery winnings from any source,
+      including cash Pennsylvania Lottery prizes paid on or after January 1,
+      2016. Only noncash Pennsylvania Lottery prizes remain exempt. Direct
+      wagering costs may offset taxable winnings only within the same spouse's
+      own Schedule T column.
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator maps PA Schedule T taxable winnings to gambling income"
+
+  - line: "map-withholding"
+    description: "Map PA state withholding from all sources"
+    formula: |
+      Sum of:
+        W-2 Box 17 (PA) + W-2G Box 13 (PA) + 1099-G Box 11 (PA) +
+        1099-K Box 8 (PA) + 1099-R Box 12 (PA) + 1099-INT Box 13 (PA) +
+        1099-DIV Box 14 (PA) + 1099-MISC Box 16 (PA) +
+        1099-NEC Box 5 (PA)
+    notes: |
+      Includes withholding from all document types that carry PA state withholding.
+      Only includes documents where state = 'PA' or state is absent (assumed resident state).
+      1099-R, 1099-INT, 1099-DIV, 1099-MISC, and 1099-NEC state withholding
+      fields are mapped so PA-40 Line 13 captures nonwage withholding reported
+      on information returns, including independent-contractor withholding from
+      Form 1099-NEC Box 5.
+      References:
+        - PA-40 instructions, Line 13: include Form 1099-NEC Box 5 PA tax withheld
+    edgeCases:
+      - "1099-R with PA state withholding adds to total"
+      - "1099-INT with PA state withholding adds to total"
+      - "1099-DIV with PA state withholding adds to total"
+      - "1099-MISC with PA state withholding adds to total"
+      - "1099-NEC with PA state withholding adds to total"
+      - "Non-PA 1099-R/INT/DIV/MISC/NEC withholding excluded"
+      - "Mixed PA and non-PA documents across all types"
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator sums PA state withholding from W-2s"
+
+  - line: "schedule-ue"
+    description: "Compute Schedule UE (Unreimbursed Employee Business Expenses) when detailed input provided"
+    formula: "Vehicle expenses + travel expenses + other expenses - employer reimbursements → PA-40 Line 1b"
+    notes: |
+      Schedule UE is computed when overrides.scheduleUE is provided.
+      If not provided, falls back to raw overrides.unreimbursedExpenses.
+      PA still allows employee business expense deductions (federal eliminated post-TCJA).
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator computes Schedule UE when detailed input provided"
+
+  - line: "schedule-sp"
+    description: "Compute Schedule SP (Tax Forgiveness) from filing status and eligibility income"
+    formula: |
+      Resolve PA Schedule SP filing category as follows:
+        - married_filing_jointly -> married
+        - married_filing_separately:
+            - if overrides.scheduleSPSeparatedStatusApplies = true -> unmarried
+            - else if taxpayer.livedWithSpouseAtAnyTimeDuringYear = false -> unmarried
+            - else -> married
+        - all other filing statuses -> unmarried
+      Then:
+        - dependents = count only the federal dependents who qualify as PA
+          Schedule SP dependent children:
+            - the claimant's natural child, adopted child, or stepchild
+            - the claimant's grandchild
+            - the claimant's foster child
+        - do not count other federal dependents such as parents, siblings,
+          nieces, nephews, or unrelated children
+        - compute Schedule SP eligibility from PA taxable income + nontaxable
+          income + any supported additional eligibility-income supplement
+          (such as dependent-child support paid to a parent) + any supported
+          spouse-only eligibility-income supplement
+        - subtract total tax paid to other states or countries from PA tax
+          liability before applying the forgiveness percentage
+    notes: |
+      The PA-specific `scheduleSPSeparatedStatusApplies` override is used to
+      model the official 2025 PA Schedule SP "separated" test for
+      married-filing-separately taxpayers who lived apart during the last six
+      months of the year or were separated under a written agreement.
+      `livedWithSpouseAtAnyTimeDuringYear = false` still qualifies because
+      living apart for the entire year necessarily satisfies the PA test.
+      When the PA separated condition is not met, a married-filing-separately
+      taxpayer still follows the married Schedule SP threshold table. The
+      official Tax Forgiveness instructions also require tax paid to other
+      states or countries to be subtracted before the Schedule SP percentage
+      is applied, so the orchestrator feeds Schedule G-L statement totals into
+      Schedule SP. The 2025 instructions also define a dependent child using a
+      two-step test: the individual must be the claimant's child, grandchild,
+      or foster child and must also be claimable as a federal dependent. The
+      current resident engine applies the relationship-based portion of that
+      test from the validated dependent list and assumes any listed qualifying
+      child relationship is already claimable for federal purposes. For married
+      claimants who file separately, the 2025 PA-40 instructions require joint
+      eligibility income even when the spouse's data is not part of the same
+      return payload, so the resident supplements can also provide a
+      spouseEligibilityIncome amount that is added only when the Schedule SP
+      filing category remains married. The same resident supplement surface can
+      also carry other supported Schedule SP additions that are not modeled as
+      normal taxable or nontaxable income, such as child support paid to a
+      parent by a dependent-child claimant. Excluded active-duty military wages
+      also increase supported Schedule SP eligibility income because
+      Pennsylvania's Tax Forgiveness guidance treats military pay not reported
+      on the PA return as nontaxable eligibility income, except for combat pay
+      and hazardous duty pay. The 2025 PA-40 instructions also say that when
+      one spouse is claimed as a dependent on another person's federal income
+      tax return, otherwise qualifying married taxpayers must file separately,
+      so the resident orchestrator rejects a married-filing-jointly Schedule SP
+      path when either spouse-dependent flag is set.
+    edgeCases:
+      - "Married filing separately with a PA Schedule SP separation override uses unmarried thresholds even if the spouses lived together earlier in the year"
+      - "Married filing separately and still living with spouse uses married thresholds"
+      - "Married filing separately and living apart for the qualifying period uses unmarried thresholds"
+      - "Married filing jointly is invalid for Schedule SP when either spouse is claimed as a dependent on another person's federal return"
+      - "Married filing separately but still married for Schedule SP can lose full forgiveness when spouseEligibilityIncome pushes joint eligibility income above the married table base"
+      - "A dependent-child claimant's child support paid to a parent increases Schedule SP eligibility income through the resident supplement input"
+      - "A federal dependent parent or niece does not increase the Schedule SP dependent-child count"
+      - "An adult child, grandchild, or foster child can increase the Schedule SP dependent-child count when also claimed federally"
+      - "Other-state tax fully offsets PA tax before forgiveness, so Schedule SP credit is $0"
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator computes Schedule SP tax forgiveness"
+
+  - line: "schedule-sp-additional-eligibility-income"
+    description: "Add supported resident-only Schedule SP eligibility-income supplements before table lookup"
+    formula: |
+      Let residentAdditionalEligibilityIncome =
+        overrides.additionalEligibilityIncome
+        ?? input.paResidentReturn.additionalEligibilityIncome
+        ?? 0
+
+      Let spouseEligibilityIncome =
+        if the resolved Schedule SP filing category is married:
+          overrides.spouseEligibilityIncome
+          ?? input.paResidentReturn.spouseEligibilityIncome
+          ?? 0
+        else:
+          0
+
+      Then pass
+        residentAdditionalEligibilityIncome + spouseEligibilityIncome
+      to Schedule SP as additionalEligibilityIncome.
+    notes: |
+      This line preserves the existing spouse-only married supplement while
+      allowing resident returns to carry a general Schedule SP eligibility
+      addition that is not otherwise represented in taxable or nontaxable
+      income. A concrete supported use is the dependent-child claimant rule in
+      the PA Personal Income Tax Guide: a dependent child claiming tax
+      forgiveness must include any child support paid to a parent, grandparent,
+      or foster parent in eligibility income.
+    edgeCases:
+      - "Resident additionalEligibilityIncome increases Schedule SP eligibility income even for unmarried claimants"
+      - "Married Schedule SP calculations add both the resident supplement and spouseEligibilityIncome"
+      - "Separated taxpayers mapped to the unmarried table ignore spouseEligibilityIncome but still include resident additionalEligibilityIncome"
+      - "Without either supplement, Schedule SP additionalEligibilityIncome remains 0"
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator includes resident additional Schedule SP eligibility income for dependent-child claimants"
+
+  - line: "schedule-sp-spouse-eligibility-income"
+    description: "Add spouse-only eligibility income to married Schedule SP calculations when needed"
+    formula: |
+      When:
+        - the resolved Schedule SP filing category is married, and
+        - overrides.spouseEligibilityIncome or
+          input.paResidentReturn.spouseEligibilityIncome is present
+      then add that spouse-only amount to the Schedule SP eligibility-income
+      input before applying the married Tax Forgiveness table.
+      Otherwise ignore the supplement.
+    notes: |
+      The 2025 PA-40 instructions say married claimants, whether filing jointly
+      or separately, must use joint eligibility income on PA Schedule SP. This
+      supplemental amount is for separate-return workflows where the spouse's
+      own PA taxable and nontaxable income is not represented by the current
+      TaxYearInput object.
+    edgeCases:
+      - "Married filing separately living with spouse uses the supplement in Table 2"
+      - "Separated taxpayers mapped to the unmarried table ignore spouseEligibilityIncome"
+      - "A zero spouseEligibilityIncome supplement leaves the base return unchanged"
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator adds spouse eligibility income to married Schedule SP calculations when filing separately"
+
+  - line: "schedule-gl"
+    description: "Compute Schedule G-L (resident credit) from other-state taxes"
+    formula: |
+      If input.paScheduleGLStatements is provided:
+        map each statement to a Schedule G-L state entry:
+          - stateCode = statement.stateCode
+          - incomeTaxableByBothStates = statement.incomeTaxableByBothStates
+          - taxPaidToOtherState = statement.taxPaidToOtherState
+      Otherwise:
+        fall back to overrides.otherStateCredits
+      Then compute credit per Schedule G-L for each state entry.
+    notes: |
+      PA residents claim this credit from PA Schedule G-L using the income
+      taxed by both states and the actual tax paid to the other state on that
+      same income. The schedule is typically supported by a copy of the other
+      state's return. When explicit Schedule G-L statement inputs are present,
+      they take precedence over the raw otherStateCredits override.
+      References:
+        - 2024 PA-40 Schedule G-L instructions
+        - PA Personal Income Tax Guide, Determining Residency / Resident Credit
+    edgeCases:
+      - "Single Schedule G-L statement produces one resident-credit entry"
+      - "Multiple Schedule G-L statements sum across states"
+      - "When no Schedule G-L statements are present, fallback override still works"
+      - "Schedule G-L statements override the raw otherStateCredits fallback"
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator computes Schedule G-L resident credit"
+
+  - line: "schedule-oc"
+    description: "Compute Schedule OC (Other Credits) when detailed input provided"
+    formula: |
+      If overrides.scheduleOC is provided:
+        1. Compute the Schedule OC total from PTE credits and other supported credits
+        2. Cap that restricted-credit total to the remaining PA tax liability after
+           Schedule SP tax forgiveness and Schedule G-L resident credit
+        3. Carry the capped amount to PA-40 Line 23
+      Otherwise, use overrides.otherCredits as a precomputed PA-40 Line 23 amount.
+    notes: |
+      Schedule OC is computed when overrides.scheduleOC is provided.
+      If not provided, falls back to raw overrides.otherCredits.
+      Key credit: PTE (Pass-Through Entity) tax credit under Act 151 —
+      partners/shareholders of PA entities that elected entity-level taxation
+      receive credit for their share of PTE tax paid.
+    edgeCases:
+      - "Detailed Schedule OC with PTE credit"
+      - "Mixed PTE and non-PTE credits"
+      - "Schedule OC overrides raw otherCredits when both provided"
+      - "Empty Schedule OC produces $0"
+      - "Fallback to raw otherCredits Decimal"
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator computes Schedule OC when detailed input provided"
+
+  - line: "schedule-dc"
+    description: "Compute PA Schedule DC from the allowed federal child and dependent care credit"
+    formula: |
+      If dependentCare input is present:
+        1. Compute the federal child and dependent care credit from the same return input
+        2. Pass the federal Form 2441 credit amount, qualifying-person count,
+           and first-pass PA taxable income to PA Schedule DC
+        3. Apply the Schedule DC chart cap inside the schedule module
+        4. Add the Schedule DC credit to the PA-40 Line 23 other-credit bucket
+           without applying the restricted-credit cap used for Schedule OC
+      Otherwise omit Schedule DC from the PA result.
+    notes: |
+      Pennsylvania requires the taxpayer to claim the federal child and
+      dependent care credit in order to claim Schedule DC. The PA schedule
+      then applies the printed chart cap based on the number of qualifying
+      persons and Pennsylvania taxable income. The supported engine carries
+      the resulting refundable amount on PA-40 Line 23 because the printed
+      2025 PA-40 directs taxpayers to submit PA Schedule DC with Line 23
+      other credits, and the 2025 Schedule DC instructions state that the
+      credit is refundable and may exceed the remaining PA tax liability.
+      Engine-only refundable credits that are not printed directly on the form
+      still flow through `pa40.refundableCredits`.
+    edgeCases:
+      - "No dependent care input: no Schedule DC result"
+      - "Federal credit above the Schedule DC chart cap is reduced to the printed limit"
+      - "Schedule DC can create a refund even when it exceeds the remaining PA tax liability"
+      - "Federal credit disallowed or zero: Schedule DC credit is $0"
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator computes Schedule DC from the federal dependent care credit"
+
+  - line: "working-pennsylvanians-tax-credit"
+    description: "Compute the Working Pennsylvanians Tax Credit from the federal EITC"
+    formula: |
+      1. Compute supported Pennsylvania earned income as:
+         positive PA Class 1 compensation + positive PA Class 4 business income
+      2. Compute the federal Earned Income Credit from the federal return result
+      3. If the taxpayer is marked in PA resident supplements as claimed on
+         another person's federal return, force WPTC to 0
+      4. Otherwise, if Pennsylvania earned income > 0 and federal EITC > 0,
+         compute WPTC = round(federal EITC × 10%)
+      5. Add the WPTC amount to the PA-40 refundable-credit bucket
+    notes: |
+      The 2025 PA preparation guide states taxpayers who qualify for the
+      federal EITC automatically qualify for the state credit, that the credit
+      is refundable, and that the taxpayer must have earned income in
+      Pennsylvania consisting of wages, salary, and/or self-employment income.
+      The Department may calculate it automatically during filing, but the
+      engine computes it directly for a deterministic PA result. The refundable
+      amount is exposed through the orchestrator and PA-40 result objects so
+      reviewers can see the state-calculated amount without depending on the
+      Department's post-filing automation. The resident supplement flag for
+      "claimed as a dependent on another federal return" is also used as a
+      guard because that fact disqualifies the federal EITC even if the
+      embedded federal calculation was run without the supplemental dependency
+      metadata.
+    edgeCases:
+      - "Federal EITC is $0: no WPTC"
+      - "Federal EITC is positive but resident has no Pennsylvania earned income: no WPTC"
+      - "Small federal EITC rounds to the nearest dollar"
+      - "WPTC can create a refund even when PA tax is already zero"
+      - "PA resident supplement marks taxpayer as claimed on another federal return: no WPTC"
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator computes the Working Pennsylvanians Tax Credit from federal EITC"
+
+  - line: "map-local-withholding"
+    description: "Map local EIT withholding from W-2 Box 19"
+    formula: "Sum of W-2 Box 19 localTaxWithheld across all W-2s"
+    notes: |
+      Local withholding applies to local EIT, not PA-40 state tax.
+      Summed from all W-2s regardless of state (local withholding is
+      reported on the same W-2 as state withholding).
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator maps W-2 local withholding"
+
+  - line: "local-eit"
+    description: "Compute local EIT when municipality rate is provided"
+    formula: |
+      Earned income base for local EIT =
+        - sum of W-2 Box 18 local wages when a supported W-2 reports them
+        - plus the resident PA compensation mapping for any W-2 that does not
+          report Box 18 local wages
+        - plus net positive business income
+
+      Then:
+        local EIT = earned income base × local EIT rate
+    notes: |
+      Local EIT is computed only when the caller provides a municipality
+      name and EIT rate via overrides. Local withholding from W-2 Box 19
+      is automatically extracted. When a W-2 includes Box 18 local wages,
+      that local wage base controls the resident earned-income amount for
+      that W-2 because the annual local return reconciles employer-reported
+      local wages and local tax withheld together. The local EIT result is
+      separate from the PA-40 state return. Philadelphia remains excluded
+      from this path because the city imposes a separate Wage Tax rather than
+      the Act 32 / Act 511 resident EIT modeled here.
+    edgeCases:
+      - "Philadelphia municipality input is rejected because the city uses a separate wage-tax system"
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator local EIT uses W-2 Box 18 local wages when available"
+
+  - line: "schedule-sd"
+    description: "Compute Schedule SD when school district method and rate are provided"
+    formula: |
+      If overrides.scheduleSD is provided:
+        - method = overrides.scheduleSD.method
+        - schoolDistrictRate = overrides.scheduleSD.schoolDistrictRate
+        - paTotalTaxableIncome = final PA-40 total taxable income
+        - netCompensation = final PA-40 net compensation
+        - netBusinessIncome = mapped Class 4 business/farm income
+        - otherDeductions = PA-40 Line 9a other deductions
+        - forgivenessPercentage = Schedule SP forgiveness percentage
+        - schoolDistrictWithholding = overrides.scheduleSD.schoolDistrictWithholding
+        - estimatedPayments = overrides.scheduleSD.estimatedPayments
+      Then run Schedule SD and return the result alongside the PA return.
+    notes: |
+      Schedule SD is optional because school district tax depends on the
+      taxpayer's resident school district and local tax collector. The
+      orchestrator derives the tax base and Tax Forgiveness percentage
+      from the PA return, but does not guess school-district withholding
+      from W-2 local boxes because those local withholdings may represent
+      earned income tax or other local taxes instead of school district PIT.
+      References:
+        - PA-40 instructions: resident filers use the school district code
+          for where they lived on December 31
+        - PA school district personal income tax guidance: districts may use
+          either an earned-income base or PA-taxable-income base
+    edgeCases:
+      - "EI method uses net compensation plus positive business income only"
+      - "PSD method uses full PA taxable income from all 8 classes"
+      - "Schedule SP forgiveness percentage reduces school district tax"
+      - "Manual school district withholding and estimated payments flow through"
+      - "No scheduleSD override: orchestrator leaves school district result undefined"
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator computes Schedule SD when school district inputs are provided"
+
+  - line: "exclude-us-gov-interest"
+    description: "Exclude US government obligation interest from PA Class 2"
+    formula: "Subtract 1099-INT Box 3 (usSavingsBondInterest) from PA interest income"
+    notes: |
+      PA exempts interest on obligations of the US government from personal income tax.
+      This includes Treasury bills, notes, bonds, and US savings bonds.
+      1099-INT Box 3 reports this amount, which is included in Box 1 (total interest).
+      For PA, subtract Box 3 from Box 1 to get PA-taxable interest.
+      The excluded amount is added to Schedule SP nontaxable income.
+      Reference: PA-40 instructions, Class 2 income; 72 Pa.C.S. § 7303(a)(2).
+    edgeCases:
+      - "All interest from Treasury bonds: PA interest reduced to zero"
+      - "Partial US gov interest: only Box 3 amount excluded"
+      - "No US gov interest: interest unchanged"
+      - "Box 3 equals Box 1: all interest exempt for PA"
+      - "Multiple 1099-INTs with mixed US gov interest"
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator excludes US government interest from Class 2"
+
+  - line: "exclude-noncash-pa-lottery"
+    description: "Exclude only noncash Pennsylvania Lottery prizes from PA Class 8"
+    formula: |
+      For each Schedule T entry where isLottery = true and lotteryState = 'PA'
+      (or omitted for a Pennsylvania Lottery prize) and prizeType = 'noncash':
+        Subtract reportableWinnings from gambling income
+        Add the same amount to Schedule SP nontaxable income
+    notes: |
+      Cash Pennsylvania Lottery prizes are taxable under current law. The
+      exemption applies only to noncash Pennsylvania Lottery prizes. Other
+      states' lottery winnings are taxable for PA residents.
+      Exempt noncash Pennsylvania Lottery prizes are added to Schedule SP
+      nontaxable income.
+    edgeCases:
+      - "PA lottery cash prize: remains taxable"
+      - "Non-PA lottery: remains taxable"
+      - "Casino winnings: remain taxable"
+      - "Mixed gambling entries: only noncash PA lottery is excluded"
+      - "Zero gambling when all entries are noncash PA Lottery prizes"
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator excludes only noncash PA Lottery prizes from Class 8"
+
+  - line: "exclude-ssa-rrb-from-sp"
+    description: "Exclude Social Security and Railroad Retirement Tier 1 benefits from automatic SP nontaxable income"
+    formula: "Do not add Form SSA-1099 netBenefits or RRB-1099 Social Security equivalent benefits to automatic Schedule SP nontaxable income"
+    notes: |
+      The supported automatic Schedule SP mapping excludes Social Security and
+      Railroad Retirement benefits from nontaxable-income additions used to
+      compute Eligibility Income for Tax Forgiveness.
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator excludes Social Security and RRB-1099 from SP nontaxable income"
+
+  - line: "rev-1630"
+    description: "Compute REV-1630 underpayment penalty when quarterly payments provided"
+    formula: |
+      PA-40 tax liability, withholding + credits, and normalized quarterly
+      payment buckets feed REV-1630 as follows:
+        - Q1 = explicit quarterlyEstimatedPayments[0] + PA-40 Line 14 prior-year credit
+        - Q2 = explicit quarterlyEstimatedPayments[1]
+        - Q3 = explicit quarterlyEstimatedPayments[2]
+        - Q4 = explicit quarterlyEstimatedPayments[3] + PA-40 Line 16 extension payment
+    notes: |
+      REV-1630 is computed only when the caller provides quarterlyEstimatedPayments.
+      The withholdingAndCredits input is computed from the final PA-40 result:
+      state withholding + tax forgiveness credit + resident credit + other credits.
+      Supports prior year safe harbor (Exception 1) and prior year 100% forgiveness exemption.
+    edgeCases:
+      - "No quarterly payments provided: REV-1630 not computed"
+      - "Withholding covers all tax: no penalty"
+      - "Prior year 100% forgiveness: exempt from penalty"
+      - "Prior year safe harbor: exception applies per quarter"
+      - "Credits (tax forgiveness, resident, other) reduce penalty basis"
+      - "Prior-year overpayment credit increases the Q1 REV-1630 payment bucket"
+      - "Extension payment increases the Q4 REV-1630 payment bucket"
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator computes REV-1630 when quarterly payments provided"
+
+  - line: "map-unreported-tips"
+    description: "Map Form 4137 unreported tip income to PA Class 1 compensation"
+    formula: "Form 4137 unreportedTipIncome → add to Class 1 compensation"
+    notes: |
+      PA taxes unreported tip income as Class 1 compensation.
+      Tips not reported to the employer are subject to PA income tax.
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator maps Form 4137 unreported tips to compensation"
+
+  - line: "map-uncollected-wages"
+    description: "Map Form 8919 wages not on W-2 to PA Class 1 compensation"
+    formula: "Form 8919 wagesNotReportedOnW2 → add to Class 1 compensation"
+    notes: |
+      PA taxes wages received but not reported on a W-2 as Class 1 compensation.
+      Form 8919 is for workers who should have been employees but were misclassified.
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator maps Form 8919 uncollected wages to compensation"
+
+  - line: "map-home-sales"
+    description: "Map home sale taxable gains to PA Class 5 net gains"
+    formula: |
+      For each home sale: compute gain, apply IRC §121 exclusion,
+      net taxable gain + depreciation recapture → Class 5
+    notes: |
+      PA follows the federal IRC §121 exclusion for home sales:
+      $250K single, $500K MFJ. Taxable gain after exclusion plus
+      depreciation recapture flows to PA Class 5 at the flat 3.07% rate.
+      PA does not have its own separate home sale exclusion.
+    edgeCases:
+      - "Home sale with full §121 exclusion: zero gain to Class 5"
+      - "Home sale exceeding §121 exclusion: excess gain to Class 5"
+      - "Home sale with depreciation recapture: recapture added to Class 5"
+      - "No home sales: zero added"
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator maps home sale taxable gain to Class 5"
+
+  - line: "schedule-sp-home-sale-exclusion"
+    description: "Include IRC §121 excluded home-sale gain in Schedule SP eligibility income"
+    formula: |
+      For each supported principal-residence sale:
+        excludedGain = federal home sale exclusion result excludableGain
+      Sum all excludedGain amounts and add the total to Schedule SP
+      nontaxable income (Line 8 gain excluded from the sale of a residence)
+    notes: |
+      The 2025 PA-40 Schedule SP instructions say Line 8 must include gain
+      excluded from the sale of a residence. The taxable portion of the home
+      sale still flows to PA Class 5 through Schedule D, but the excluded
+      portion remains part of Eligibility Income for Tax Forgiveness.
+    edgeCases:
+      - "Fully excluded home sale: zero PA Class 5 income but excluded gain still increases Schedule SP eligibility income"
+      - "Partially excluded home sale: taxable excess stays in Class 5 while excluded gain increases Schedule SP eligibility income"
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator adds IRC §121 excluded home sale gain to Schedule SP eligibility income"
+
+  - line: "map-section-1256"
+    description: "Map Form 6781 Section 1256 contract gains/losses to PA Class 5"
+    formula: "section1256Gains - section1256Losses + adjustments → Class 5"
+    notes: |
+      PA does not use the federal 60/40 long-term/short-term split for
+      Section 1256 contracts. All gains/losses flow to Class 5 at 3.07%.
+    edgeCases:
+      - "Net section 1256 gain adds to Class 5"
+      - "Net section 1256 loss: negative amount to Class 5 (offset within class)"
+      - "No Form 6781: zero added"
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator maps Section 1256 gains to Class 5"
+
+  - line: "map-installment-sales"
+    description: "Map Form 6252 installment sale gains to PA Class 5"
+    formula: |
+      For each Form 6252: compute installment sale income.
+      All gain types (short-term, long-term, §1231, ordinary recapture) → Class 5
+    notes: |
+      PA treats all installment sale income as Class 5 net gains.
+      The federal distinction between short-term, long-term, §1231, and
+      ordinary recapture does not matter for PA — all taxed at 3.07%.
+    edgeCases:
+      - "Single installment sale: gain flows to Class 5"
+      - "Multiple installment sales aggregated to Class 5"
+      - "Year-of-sale installment with depreciation recapture"
+      - "No Form 6252: zero added"
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator maps installment sale gains to Class 5"
+
+  - line: "penalty-integration"
+    description: "Wire REV-1630 underpayment penalty into PA-40 total amount due"
+    formula: |
+      If quarterlyEstimatedPayments provided:
+        1. Compute REV-1630 using first-pass tax liability + all credits
+        2. Pass totalInterest as underpaymentPenalty to final PA-40
+      Final PA-40 Line 28 = amountOwed + useTax + underpaymentPenalty
+        + lateFilingOrPaymentPenalty + latePaymentInterest
+    notes: |
+      REV-1630 is computed before the final PA-40 pass so the penalty flows
+      into totalAmountDue. The income tax liability used by REV-1630 is from
+      the first pass (same as final since income doesn't change between passes).
+      Use tax and late filing/payment charges are passed through from
+      overrides or the validated PA resident supplemental input.
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator wires REV-1630 penalty into PA-40 totalAmountDue"
+
+  - line: "final-result"
+    description: "Assemble final PA-40 with all credits, penalty, use tax, and interest"
+    formula: "PA-40 with tax forgiveness + resident credit + penalty → refund or total amount due"
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator end-to-end: W-2 employee with withholding"

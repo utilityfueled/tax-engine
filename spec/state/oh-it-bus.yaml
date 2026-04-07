@@ -1,0 +1,122 @@
+form: "Ohio IT BUS"
+fullName: "Ohio Schedule of Business Income — Qualifying Business Income Breakdown"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf"
+
+notes: |
+  The Ohio IT BUS (Schedule of Business Income) breaks down qualifying business
+  income from federal tax documents into individual source lines. The total
+  qualifying business income flows to Schedule of Adjustments line 15 where
+  the business income deduction ($250,000 cap, $125,000 MFS) is applied.
+
+  Qualifying business income includes income from active participation in a
+  trade or business:
+    - Schedule C net profit/loss (self-employment)
+    - Schedule F net farm profit/loss
+    - K-1 guaranteed payments (Box 4)
+    - K-1 ordinary business income from active (non-passive) entities (Box 1)
+
+  Does NOT qualify:
+    - Passive rental income (unless from an active trade or business)
+    - Portfolio income (interest, dividends, capital gains)
+    - Passive K-1 income (investor not materially participating)
+
+  The IT BUS serves two purposes:
+    1. Provides a detailed source-level breakdown for the audit trail
+    2. Enables auto-extraction of qualifying business income from federal data
+       (eliminating the need for manual input)
+
+  R.C. 5747.01(A)(31) defines "qualifying business income" for the deduction.
+
+packetRules:
+  packetBehavior: "reference-summary-pdf"
+  includeWhen:
+    - "Ohio qualifying business income total is nonzero"
+  suppressWhen:
+    - "Ohio qualifying business income total is zero"
+  notes: |
+    The packet generator should include an Ohio IT BUS reference-summary page
+    whenever qualifying business income is present so the business-income
+    deduction has packet support. Zero-value business schedules should be
+    suppressed.
+
+businessRuleValidation:
+  - rule: "reference-summary-packet"
+    description: "Inventory support counts this form as business-rule validated only when regression coverage proves the Ohio IT BUS reference-summary page is emitted when qualifying business income is present and stays suppressed when the business-income worksheet is not needed."
+    testRef: "tests/pdf/fill-oh-reference-forms.test.ts::fillOhioReferenceForms includes the Ohio IT BUS reference summary only when qualifying business income is present"
+
+lines:
+  - line: "1"
+    description: "Schedule C net profit or loss"
+    formula: "Federal Schedule C, line 31 (net profit or loss)"
+    inputs:
+      - "ScheduleCResult.netProfit"
+    notes: |
+      Net self-employment income from sole proprietorship. Includes all
+      Schedule C businesses. Losses reduce qualifying business income.
+    testRef: "tests/engine/state/oh-it-bus.test.ts::IT BUS Line 1 - Schedule C net profit flows through"
+
+  - line: "2"
+    description: "Schedule F net farm profit or loss"
+    formula: "Federal Schedule F, line 34 (net farm profit or loss)"
+    inputs:
+      - "ScheduleFResult.netFarmProfit"
+    notes: |
+      Net farm income from farming operations. Losses reduce qualifying
+      business income.
+    testRef: "tests/engine/state/oh-it-bus.test.ts::IT BUS Line 2 - Schedule F net farm profit flows through"
+
+  - line: "3"
+    description: "K-1 guaranteed payments"
+    formula: "Sum of K-1 Box 4 (guaranteed payments) across all K-1s"
+    inputs:
+      - "ScheduleK1[].guaranteedPayments"
+    notes: |
+      Guaranteed payments are always business income regardless of whether
+      the partnership activity is passive. They represent compensation for
+      services or capital, not investment returns.
+    edgeCases:
+      - "Guaranteed payments from passive partnerships still qualify"
+      - "Zero or undefined guaranteed payments contribute $0"
+    testRef: "tests/engine/state/oh-it-bus.test.ts::IT BUS Line 3 - K-1 guaranteed payments from single entity"
+
+  - line: "4"
+    description: "K-1 ordinary business income from active entities"
+    formula: "Sum of K-1 Box 1 (ordinary income) where isPassiveActivity = false"
+    inputs:
+      - "ScheduleK1[].ordinaryIncome where !isPassiveActivity"
+    notes: |
+      Only includes ordinary business income from entities where the taxpayer
+      materially participates (active, non-passive). Passive K-1 ordinary
+      income does not qualify for the Ohio business income deduction.
+      Includes both partnership and S-corporation ordinary income.
+    edgeCases:
+      - "Passive K-1 ordinary income excluded"
+      - "Active K-1 losses reduce total qualifying business income"
+      - "S-corporation and partnership treated the same"
+    testRef: "tests/engine/state/oh-it-bus.test.ts::IT BUS Line 4 - active K-1 ordinary income qualifies"
+
+  - line: "5"
+    description: "Other qualifying business income"
+    formula: "Pass-through input for less common business income sources"
+    inputs:
+      - "Manual input (rental income from active trade/business, etc.)"
+    notes: |
+      Catch-all for business income not captured by lines 1-4. Includes
+      rental income attributable to an active trade or business (not
+      passive rental), Section 1231 gains from business assets, etc.
+    testRef: "tests/engine/state/oh-it-bus.test.ts::IT BUS Line 5 - other qualifying business income flows through"
+
+  - line: "6"
+    description: "Total qualifying business income"
+    formula: "Sum of lines 1 through 5"
+    inputs:
+      - "Lines 1-5"
+    notes: |
+      This total flows to Schedule of Adjustments as qualifyingBusinessIncome.
+      If negative, the business income deduction is $0 and there is no
+      taxable business income.
+    edgeCases:
+      - "Negative total results in $0 deduction and $0 taxable business income"
+      - "Total capped at $250,000/$125,000 MFS for the deduction"
+    testRef: "tests/engine/state/oh-it-bus.test.ts::IT BUS Line 6 - total qualifying business income is sum of lines 1-5"

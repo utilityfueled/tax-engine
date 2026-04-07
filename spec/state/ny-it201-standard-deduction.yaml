@@ -1,0 +1,87 @@
+form: "New York IT-201 Standard Deduction and Dependent Exemptions"
+fullName: "New York State Form IT-201 Lines 34-38 Deduction and Taxable Income"
+taxYear: 2025
+irsReference: "https://www.tax.ny.gov/pdf/current_forms/it/it201i.pdf"
+
+notes: |
+  New York State computes taxable income on IT-201 lines 34-38:
+  - Line 33: New York adjusted gross income (federal AGI + NY additions - NY subtractions)
+  - Line 34: Standard deduction or itemized deduction (the larger of the two)
+  - Line 35: Line 33 minus line 34
+  - Line 36: Dependent exemption amount ($1,000 per dependent)
+  - Line 37/38: Taxable income (line 35 minus line 36, but not less than zero)
+
+  Standard deduction amounts for 2025:
+  - Single (can be claimed as dependent, item C = Yes): $3,100
+  - Single (cannot be claimed as dependent, item C = No): $8,000
+  - Married filing jointly: $16,050
+  - Married filing separately: $8,000
+  - Head of household: $11,200
+  - Qualifying surviving spouse: $16,050
+
+  If married filing separately (filing status 3), both spouses must take the
+  standard deduction unless both choose to itemize.
+
+  The dependent exemption is $1,000 per dependent listed on IT-201 item H.
+
+lines:
+  - line: "34"
+    description: "Standard or itemized deduction"
+    formula: "Greater of NY standard deduction or NY itemized deduction (Form IT-196 line 49)"
+    inputs:
+      - "Filing status"
+      - "Whether taxpayer can be claimed as dependent"
+      - "NY itemized deduction amount (if applicable)"
+    notes: "Enter the larger of standard deduction or itemized deduction."
+    edgeCases:
+      - "Single dependent uses lower $3,100 standard deduction"
+      - "MFS must both use standard or both itemize"
+    testRef: "tests/engine/state/ny-it201-standard-deduction.test.ts::Line 34 - single filer (not dependent) standard deduction is $8,000"
+
+  - line: "34-validation"
+    description: "Married filing separately itemized deduction consistency rule"
+    formula: |
+      If filing status is married filing separately and the taxpayer's New York
+      itemized deduction is greater than the New York standard deduction, the
+      itemized deduction may be used only if the spouse also chooses to itemize
+      on their separate New York return.
+    inputs:
+      - "Filing status"
+      - "NY itemized deduction amount"
+      - "Spouse also itemizes on separate New York return"
+    notes: |
+      The IT-201 instructions state: if you are married filing separate returns,
+      both spouses must take the standard deduction unless both choose to itemize
+      deductions on their New York returns.
+    edgeCases:
+      - "MFS return with an itemized deduction above the standard amount must reject the itemized path unless the spouse also itemizes"
+      - "MFS return may still use the standard deduction when the itemized amount is not greater than the standard deduction"
+    testRef: "tests/engine/state/ny-it201-standard-deduction.test.ts::Line 34 validation - married filing separately itemized deduction over the standard amount requires spouse confirmation"
+
+  - line: "35"
+    description: "NY AGI minus deduction"
+    formula: "Line 33 - Line 34"
+    inputs:
+      - "New York adjusted gross income (line 33)"
+      - "Deduction amount (line 34)"
+    testRef: "tests/engine/state/ny-it201-standard-deduction.test.ts::Line 35 - AGI $75,000 minus $8,000 standard deduction = $67,000"
+
+  - line: "36"
+    description: "Dependent exemption amount"
+    formula: "Number of dependents × $1,000"
+    inputs:
+      - "Number of dependents"
+    notes: "The value of each NY State dependent exemption is $1,000."
+    testRef: "tests/engine/state/ny-it201-standard-deduction.test.ts::Line 36 - 2 dependents: exemption is $2,000"
+
+  - line: "37-38"
+    description: "New York taxable income"
+    formula: "max(0, Line 35 - Line 36)"
+    inputs:
+      - "Line 35"
+      - "Line 36"
+    notes: "If line 36 is more than line 35, taxable income is zero."
+    edgeCases:
+      - "Deduction exceeds AGI: taxable income is zero"
+      - "Dependent exemption exceeds remainder: taxable income is zero"
+    testRef: "tests/engine/state/ny-it201-standard-deduction.test.ts::Lines 37-38 - taxable income cannot go below zero when deduction exceeds AGI"

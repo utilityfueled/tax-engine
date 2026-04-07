@@ -1,0 +1,169 @@
+form: "Form 6781"
+fullName: "Gains and Losses From Section 1256 Contracts and Straddles"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i6781"
+
+notes: |
+  This slice implements the mark-to-market treatment for section 1256 contracts
+  under IRC §1256 and the straddle gain/loss rules under IRC §1092. Section 1256
+  contracts include regulated futures contracts, foreign currency contracts,
+  nonequity options (e.g., SPX index options), dealer equity options, and dealer
+  securities futures contracts. Regardless of actual holding period, all gains
+  and losses on section 1256 contracts are split 60% long-term / 40% short-term.
+
+  Part I handles mark-to-market treatment where contracts held at year end are
+  treated as sold at fair market value on the last business day of the tax year.
+  Wash sale rules do not apply to section 1256 contracts. The carryback election
+  (Box D) allows individuals to carry net section 1256 losses back up to 3 prior
+  years against section 1256 gains, but this is not available to corporations,
+  estates, or trusts.
+
+  Part II handles straddle gains and losses under IRC §1092. A loss from a
+  straddle position is only deductible to the extent it exceeds unrecognized
+  gain on offsetting positions. Section A reports losses, Section B reports gains,
+  and Section C (Part III on the form) reports unrecognized gains on positions
+  held at year end (memo entry only).
+
+  The 60/40 split from Part I flows to Schedule D Lines 4 (short-term) and 11
+  (long-term). Straddle gains and losses from Part II also flow to Schedule D
+  Lines 4 and 11 based on their actual holding period character.
+
+businessRuleValidation:
+  - rule: "reference-summary-packet"
+    description: "Inventory support counts this form as packet-complete only when regression coverage proves the emitted artifact stays labeled as a non-filing reference summary and only surfaces the supported Form 6781 Lines 3 through 9, 11a, 11b, 13a, and 13b plus the resulting Schedule D Line 4 and Line 11 carry amounts."
+    testRef: "tests/pdf/fill-form-6781.test.ts::buildForm6781ReferenceSummary keeps the packet artifact reference-only and limited to supported section 1256 and straddle outputs"
+
+lines:
+  - line: "3"
+    description: "Net gain or loss from section 1256 contracts"
+    formula: "Sum of all gains minus sum of all losses from section 1256 contracts marked to market"
+    irsRef: "Form 6781 Instructions, Lines 1-3"
+    inputs:
+      - "Section 1256 contract gains"
+      - "Section 1256 contract losses"
+    notes: "Includes unrealized gains/losses from mark-to-market at year end and realized gains/losses from positions closed during the year. Amounts typically come from Form 1099-B Box 11."
+    testRef: "tests/engine/forms/form-6781.test.ts::Form 6781 Line 3 - net gain combines all section 1256 gains and losses"
+
+  - line: "4"
+    description: "Adjustments to section 1256 contract gain or loss"
+    formula: "Net adjustments for mixed straddle elections, hedging transactions, or other regulatory adjustments"
+    irsRef: "Form 6781 Instructions, Line 4"
+    inputs:
+      - "Mixed straddle election adjustments"
+      - "Hedging transaction adjustments"
+    notes: "Adjustments may include: (1) section 1256 part of a mixed straddle if elections A, B, or C are made, (2) loss limited by unrecognized gain on the non-1256 part if no elections, (3) section 1256 part of a hedging transaction (ordinary income/loss). Most individual filers will have $0."
+    testRef: "tests/engine/forms/form-6781.test.ts::Form 6781 Line 4 - adjustments modify the net section 1256 result"
+
+  - line: "5"
+    description: "Combined section 1256 contracts gain or loss"
+    formula: "Line 3 + Line 4"
+    irsRef: "Form 6781 Instructions, Line 5"
+    inputs:
+      - "Form 6781 Line 3"
+      - "Form 6781 Line 4"
+    testRef: "tests/engine/forms/form-6781.test.ts::Form 6781 Line 5 - combined amount includes adjustments"
+
+  - line: "6"
+    description: "Net section 1256 contracts loss carryback election amount"
+    formula: "If Line 5 is a net loss and the Box D carryback election is made, the amount carried back (entered as a positive number); otherwise $0"
+    irsRef: "Form 6781 Instructions, Line 6"
+    inputs:
+      - "Form 6781 Line 5"
+      - "Carryback election (Box D)"
+      - "Carryback amount"
+    notes: "The carryback election is available only to individuals, not corporations, estates, or trusts. The carryback amount cannot exceed the net loss on Line 5 and can be carried back up to 3 prior tax years. The actual carryback computation (per-year limits based on prior-year section 1256 gains) requires amended returns and is not computed here; only the elected carryback amount is captured."
+    edgeCases:
+      - "Carryback amount cannot exceed the net loss amount"
+      - "If Line 5 is a gain, Line 6 must be $0 regardless of election"
+      - "Carryback election not available to corporations, estates, or trusts"
+    testRef: "tests/engine/forms/form-6781.test.ts::Form 6781 Line 6 - carryback reduces net loss when elected"
+
+  - line: "7"
+    description: "Net section 1256 gain or loss after carryback"
+    formula: "Line 5 + Line 6 (Line 6 is always $0 or positive, reducing a net loss)"
+    irsRef: "Form 6781 Instructions, Line 7"
+    inputs:
+      - "Form 6781 Line 5"
+      - "Form 6781 Line 6"
+    testRef: "tests/engine/forms/form-6781.test.ts::Form 6781 Line 7 - net section 1256 gain or loss after carryback"
+
+  - line: "8"
+    description: "Short-term capital gain or loss (40% of Line 7)"
+    formula: "Line 7 × 0.40"
+    irsRef: "Form 6781 Instructions, Line 8; IRC §1256(a)(3)"
+    inputs:
+      - "Form 6781 Line 7"
+    notes: "Regardless of actual holding period, 40% of the net section 1256 gain or loss is treated as short-term capital gain or loss. Flows to Schedule D Line 4."
+    testRef: "tests/engine/forms/form-6781.test.ts::Form 6781 Line 8 - 40% short-term split on net gain"
+
+  - line: "9"
+    description: "Long-term capital gain or loss (60% of Line 7)"
+    formula: "Line 7 × 0.60"
+    irsRef: "Form 6781 Instructions, Line 9; IRC §1256(a)(3)"
+    inputs:
+      - "Form 6781 Line 7"
+    notes: "Regardless of actual holding period, 60% of the net section 1256 gain or loss is treated as long-term capital gain or loss. Flows to Schedule D Line 11."
+    testRef: "tests/engine/forms/form-6781.test.ts::Form 6781 Line 9 - 60% long-term split on net gain"
+
+  - line: "11a"
+    description: "Short-term straddle losses"
+    formula: "Sum of recognized short-term losses from straddle positions in Part II Section A"
+    irsRef: "Form 6781 Instructions, Line 11a; IRC §1092"
+    inputs:
+      - "Short-term recognized straddle losses"
+    notes: "A straddle loss is only recognized to the extent it exceeds unrecognized gain on offsetting positions. The short-term portion flows to Schedule D Line 4."
+    testRef: "tests/engine/forms/form-6781.test.ts::Form 6781 Line 11a - short-term straddle losses flow to Schedule D"
+
+  - line: "11b"
+    description: "Long-term straddle losses"
+    formula: "Sum of recognized long-term losses from straddle positions in Part II Section A"
+    irsRef: "Form 6781 Instructions, Line 11b; IRC §1092"
+    inputs:
+      - "Long-term recognized straddle losses"
+    notes: "Long-term portion of recognized straddle losses. Flows to Schedule D Line 11."
+    testRef: "tests/engine/forms/form-6781.test.ts::Form 6781 Line 11b - long-term straddle losses flow to Schedule D"
+
+  - line: "13a"
+    description: "Short-term straddle gains"
+    formula: "Sum of short-term gains from straddle positions in Part II Section B"
+    irsRef: "Form 6781 Instructions, Line 13a"
+    inputs:
+      - "Short-term straddle gains"
+    notes: "Short-term straddle gains flow to Schedule D Line 4."
+    testRef: "tests/engine/forms/form-6781.test.ts::Form 6781 Line 13a - short-term straddle gains flow to Schedule D"
+
+  - line: "13b"
+    description: "Long-term straddle gains"
+    formula: "Sum of long-term gains from straddle positions in Part II Section B"
+    irsRef: "Form 6781 Instructions, Line 13b"
+    inputs:
+      - "Long-term straddle gains"
+    notes: "Long-term straddle gains flow to Schedule D Line 11."
+    testRef: "tests/engine/forms/form-6781.test.ts::Form 6781 Line 13b - long-term straddle gains flow to Schedule D"
+
+  - line: "schedule-d-short-term"
+    description: "Total short-term capital gain or loss from Form 6781 flowing to Schedule D Line 4"
+    formula: "Line 8 + Line 11a + Line 13a"
+    irsRef: "Schedule D Instructions, Line 4"
+    inputs:
+      - "Form 6781 Line 8"
+      - "Form 6781 Line 11a"
+      - "Form 6781 Line 13a"
+    testRef: "tests/engine/forms/form-6781.test.ts::Form 6781 total short-term flows to Schedule D Line 4"
+
+  - line: "schedule-d-long-term"
+    description: "Total long-term capital gain or loss from Form 6781 flowing to Schedule D Line 11"
+    formula: "Line 9 + Line 11b + Line 13b"
+    irsRef: "Schedule D Instructions, Line 11"
+    inputs:
+      - "Form 6781 Line 9"
+      - "Form 6781 Line 11b"
+      - "Form 6781 Line 13b"
+    testRef: "tests/engine/forms/form-6781.test.ts::Form 6781 total long-term flows to Schedule D Line 11"
+
+  - line: "packet"
+    description: "Draft packet inclusion rule for supported Form 6781 section 1256 and straddle activity"
+    formula: "When supported Form 6781 activity is present, include a non-filing reference-summary PDF in the packet that lists the supported Form 6781 Lines 3 through 9, 11a, 11b, 13a, and 13b, plus the resulting Schedule D Line 4 and Line 11 carry amounts."
+    irsRef: "About Form 6781; Form 6781 Instructions, Lines 8, 9, 11a, 11b, 13a, and 13b; Schedule D Instructions, Lines 4 and 11"
+    notes: "This packet slice intentionally emits a deterministic reference summary instead of attempting to recreate a filed Form 6781, so the draft packet stays honest about the supported section 1256 and straddle scope while still surfacing the Schedule D effects produced by the engine."
+    testRef: "tests/pdf/fill-form-6781.test.ts::fillReturn includes a Form 6781 reference summary when supported section 1256 or straddle activity is present"

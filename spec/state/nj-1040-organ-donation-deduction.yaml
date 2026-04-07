@@ -1,0 +1,45 @@
+form: "NJ-1040 Organ/Bone Marrow Donation Deduction"
+fullName: "New Jersey NJ-1040 Line 36 Organ/Bone Marrow Donation Deduction"
+taxYear: 2025
+reference: "https://www.nj.gov/treasury/taxation/pdf/current/1040i.pdf"
+
+notes: |
+  NJ-1040 line 36 allows a deduction for eligible unreimbursed costs related
+  to an organ or bone marrow donation for transplantation. The 2025
+  instructions allow up to $10,000 of travel, lodging, and lost wages related
+  to the donation.
+
+  The deduction is available for qualifying expenses incurred by the taxpayer,
+  spouse on a joint return, or dependents claimed on the return. The combined
+  deduction for the return cannot exceed $10,000.
+
+  This module accepts a single aggregated amount of already-qualified
+  unreimbursed expenses and applies the statutory return-level cap.
+
+lines:
+  - line: "eligible-expenses"
+    description: "Qualified unreimbursed organ or bone marrow donation expenses"
+    formula: "max(0, organDonationDeductionExpenses)"
+    inputs:
+      - "Total eligible unreimbursed travel, lodging, and lost wages"
+    notes: |
+      The deduction applies only to unreimbursed expenses related to the
+      transplant donation. The taxpayer must claim the deduction for the year
+      each expense was incurred.
+    edgeCases:
+      - "Negative input is floored at $0"
+      - "If there are no qualified unreimbursed expenses, the deduction is $0"
+    testRef: "tests/engine/state/nj-1040-organ-donation-deduction.test.ts::NJ-1040 organ donation deduction - eligible expenses floor at zero"
+
+  - line: "36"
+    description: "Organ/Bone Marrow Donation Deduction"
+    formula: "min($10,000, eligible-expenses)"
+    inputs:
+      - "Qualified unreimbursed organ or bone marrow donation expenses"
+    notes: |
+      The 2025 NJ-1040 instructions cap the combined deduction at $10,000 per
+      return even when multiple qualifying donors are included on the return.
+    edgeCases:
+      - "A return with $7,200 of qualified expenses deducts $7,200"
+      - "A return with $12,500 of qualified expenses deducts $10,000"
+    testRef: "tests/engine/state/nj-1040-organ-donation-deduction.test.ts::NJ-1040 organ donation deduction - line 36 caps the deduction at $10,000 per return"

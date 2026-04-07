@@ -1,0 +1,341 @@
+form: "Form 8889"
+fullName: "Health Savings Accounts (HSAs)"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i8889"
+
+notes: |
+  This slice implements Form 8889 Part I contribution-deduction math and the
+  core Form 8889 Part II distribution-taxability flow for the account
+  beneficiary's HSA. It covers the monthly contribution limit worksheet that
+  flows through Lines 1-13, including self-only versus family limits, age-55
+  catch-up treatment, Medicare disqualification, employer contributions,
+  Archer MSA contributions, and qualified HSA funding distributions. It also
+  covers Lines 14a-17b for HSA distributions sourced from Form 1099-SA Box 1,
+  including HSA rollover or returned-excess exclusions, qualified medical expense
+  offsets, the prohibited-transaction deemed distributions from Form 1099-SA
+  Box 3 code 5 that cannot be matched with qualified medical expenses, and
+  the 20% additional tax on the taxable amount that is not exempted under the
+  age-65, disability, or death exceptions. It also covers
+  Part III Lines 18-21 for the year the taxpayer fails the last-month-rule
+  testing period or must recapture a prior-year qualified HSA funding
+  distribution. The audit trail for this supported slice also carries the
+  selected account owner on each recorded Form 8889 line so spouse-owned forms
+  and supplemental owner-specific statement forms remain traceable after the
+  federal pipeline merges them into one return-level audit log. On married
+  filing jointly returns where both spouses have HSAs, the supported engine
+  path can now accept separate owner-specific Form 8889 inputs, merge each one
+  with owner-scoped Form 1099-SA and W-2 Box 12 code W support, and keep the
+  resulting spouse-specific Form 8889 calculations separate for downstream
+  Schedule 1 aggregation, matching the Form 8889 instructions' requirement to
+  complete a separate form for each spouse or HSA statement. In the document-
+  only mixed-owner path, owner-tagged W-2 Box 12 code W records can now also
+  synthesize owner-specific statement forms even when no Form 1099-SA is
+  attached, while contribution-side deduction amounts stay at $0 until the
+  return supplies explicit owner-specific coverage and contribution inputs.
+
+  Deferred in this slice:
+  - Custom non-equal dual-spouse family-coverage allocations beyond a direct Line 6 override
+  - Excess contribution carryovers and correction workflows: the Form 8889 →
+    Form 5329 Part VII auto-derivation bridge and the excess contribution
+    carryforward output are now done. The remaining gap is the correction
+    workflow for withdrawing excess contributions after the due date (with
+    earnings computation) and the multi-year excess tracking beyond the
+    current single-year prior-year-excess input path.
+  - Filing-status-change and other prior-year taxpayer-context branches that
+    still require a manual Part III redetermined-limit override when the current
+    return no longer carries enough prior-year spouse or filing context to
+    refigure the worksheet automatically
+
+lines:
+  - line: "1"
+    description: "Type of HDHP coverage for the account beneficiary"
+    formula: "Highest HDHP coverage type shown across eligible months after treating any month as family coverage when the spouse had family HDHP coverage for that month: family, self-only, or none"
+    irsRef: "Form 8889 Instructions, Line 1"
+    inputs:
+      - "Monthly HDHP coverage selections"
+      - "Months treated as family coverage because the spouse had family HDHP coverage"
+      - "Medicare enrollment months"
+      - "Dependent status"
+    testRef: "tests/engine/forms/form-8889.test.ts::Form 8889 Line 1 - coverage type reflects the eligible HDHP coverage reported for the year"
+
+  - line: "2"
+    description: "HSA contributions made by the filer outside payroll withholding"
+    formula: "Current-year HSA contributions made by the account beneficiary or on the beneficiary's behalf, excluding employer contributions and qualified HSA funding distributions"
+    irsRef: "Form 8889 Instructions, Line 2"
+    inputs:
+      - "After-tax HSA contributions"
+    testRef: "tests/engine/forms/form-8889.test.ts::Form 8889 Line 2 - after-tax contributions populate the deductible contribution amount"
+
+  - line: "3"
+    description: "Annual HSA contribution limit before Archer MSA and spouse allocation adjustments"
+    formula: "Compute the monthly worksheet total by summing the applicable HSA limit for each eligible month and dividing by 12, using $4,300 for self-only coverage months and $8,550 for family coverage months for tax year 2025, treating any month as family coverage when the spouse had family HDHP coverage for that month, and adding the age-55 catch-up amount where the instructions allow it; if the beneficiary is an eligible individual on December 1, apply the Form 8889 last-month rule and use the greater of that worksheet total or the full-year limit for the December 1 coverage type"
+    irsRef: "Form 8889 Instructions, Line 3; Line 3 Limitation Chart and Worksheet"
+    inputs:
+      - "Monthly HDHP coverage selections"
+      - "Months treated as family coverage because the spouse had family HDHP coverage"
+      - "Tax year HSA self-only limit"
+      - "Tax year HSA family limit"
+      - "Tax year HSA catch-up amount"
+      - "Account beneficiary date of birth"
+      - "Filing status"
+      - "Medicare enrollment months"
+      - "Dependent status"
+    edgeCases:
+      - "Self-only versus family coverage can change month by month"
+      - "If either spouse has family HDHP coverage for an eligible month, treat the beneficiary as family coverage for that month even when the beneficiary's separate plan is self-only"
+      - "Medicare months contribute $0 to the annual limit"
+      - "Married family coverage uses Line 7 for the catch-up amount rather than Line 3"
+      - "If a married beneficiary has any eligible family-coverage month during the year, the age-55 catch-up is deferred from Line 3 to Line 7 even for the self-only months"
+      - "If the beneficiary is eligible on December 1, the last-month rule can lift a partial-year limit to the full annual amount for the December 1 coverage type"
+      - "The last-month rule uses the December 1 coverage type — if December is family, the full family limit applies even when most months were self-only"
+      - "When December coverage is none, the last-month rule does not apply and the limit is strictly prorated"
+      - "A single eligible month prorates to 1/12 of the annual limit"
+      - "Head of household, MFS, and qualifying surviving spouse use the same self-only and family limits as single filers"
+    testRef: "tests/engine/forms/form-8889.test.ts::Form 8889 Line 3 - monthly eligibility prorates the annual contribution limit"
+
+  - line: "4"
+    description: "Archer MSA contributions"
+    formula: "Current-year Archer MSA contributions made by the filer"
+    irsRef: "Form 8889 Instructions, Line 4"
+    inputs:
+      - "Current-year Archer MSA contributions"
+    testRef: "tests/engine/forms/form-8889.test.ts::Form 8889 Line 4 - Archer MSA contributions reduce the HSA contribution ceiling"
+
+  - line: "5"
+    description: "Contribution limit after Archer MSA reduction"
+    formula: "Line 3 - Line 4, not below zero"
+    irsRef: "Form 8889 Instructions, Line 5"
+    inputs:
+      - "Form 8889 Line 3"
+      - "Form 8889 Line 4"
+    testRef: "tests/engine/forms/form-8889.test.ts::Form 8889 Line 5 - Archer MSA contributions cannot reduce the limit below zero"
+
+  - line: "6"
+    description: "Allocated contribution limit after spouse family-coverage split"
+    formula: "Use Line 5 unless a married filer reports that both spouses have separate HSAs and family coverage applies; if family coverage applies for each month, allocate Line 5 equally between the spouses by default, otherwise refigure the Line 5 amount attributable to family-coverage months, split only that portion equally, and add any remaining non-family contribution limit; if the spouses agree to a different allocation, a direct Line 6 override replaces the default split"
+    irsRef: "Form 8889 Instructions, Line 6"
+    inputs:
+      - "Form 8889 Line 5"
+      - "Indicator that both spouses have separate HSAs"
+      - "Months treated as family coverage because the spouse had family HDHP coverage"
+      - "Direct Line 6 override when spouse family allocation applies"
+    notes: "When both spouses have separate HSAs, the default allocation follows the instructions' equal split of the family-coverage portion, including months where the spouse's separate family plan causes family treatment for the beneficiary, while self-only months and other non-family limit components stay with the account beneficiary. An explicit Line 6 override remains available only for that spouse-allocation branch and is ignored when Line 6 should simply stay at Line 5."
+    testRef: "tests/engine/forms/form-8889.test.ts::Form 8889 Line 6 - default spouse allocation splits only the family-coverage portion when both spouses have HSAs"
+
+  - line: "7"
+    description: "Additional contribution amount for married account beneficiaries age 55 or older"
+    formula: "$1,000 multiplied by eligible family-coverage months and divided by 12 when the account beneficiary is married, age 55 or older by year end, and not enrolled in Medicare for those months, counting months treated as family coverage because the spouse had family HDHP coverage; if the last-month rule applies with family HDHP coverage on December 1, treat the beneficiary as having eligible family coverage for the full year when computing this line"
+    irsRef: "Form 8889 Instructions, Line 7"
+    inputs:
+      - "Tax year HSA catch-up amount"
+      - "Monthly family HDHP coverage selections"
+      - "Months treated as family coverage because the spouse had family HDHP coverage"
+      - "Account beneficiary date of birth"
+      - "Filing status"
+      - "Medicare enrollment months"
+    notes: "When a married account beneficiary has family HDHP coverage for any eligible month during the year, including a month treated as family because the spouse had family HDHP coverage, the additional contribution amount is computed on Line 7 instead of being added to Line 3. If the last-month rule applies with family coverage on December 1, the Line 7 month count is expanded to the full eligible year. When the HSA belongs to the spouse, the spouse's date of birth controls the age-55 test and the return must include spouse taxpayer data."
+    testRef: "tests/engine/forms/form-8889.test.ts::Form 8889 Line 7 - married family coverage catch-up is prorated by eligible months"
+
+  - line: "8"
+    description: "Contribution ceiling before employer contributions"
+    formula: "Line 6 + Line 7"
+    irsRef: "Form 8889 Instructions, Line 8"
+    inputs:
+      - "Form 8889 Line 6"
+      - "Form 8889 Line 7"
+    testRef: "tests/engine/forms/form-8889.test.ts::Form 8889 Line 8 - spouse allocation and catch-up combine into the final contribution ceiling"
+
+  - line: "9"
+    description: "Employer contributions made to the HSA"
+    formula: "Use the validated Form 8889 Line 9 employer-contribution input when provided; otherwise, in the supported federal engine path, default to the sum of attached W-2 Box 12 code W amounts for the account beneficiary's employer HSA contributions, including salary-reduction contributions made through a cafeteria plan; when the attached W-2 records include validated taxpayer-versus-spouse ownership tags, use only the selected Form 8889 account owner's explicitly tagged W-2 amounts and ignore any remaining untagged Box 12 code W records instead of combining both spouses' totals or treating the untagged amount as primary by default; if the selected Form 8889 account owner is the spouse on a joint return and no W-2 owner tags are present, or if a joint return supplies multiple untagged Box 12 code W records for an owner-specific Form 8889 without any owner tags, do not guess which spouse's HSA received those employer contributions and leave the automatic Line 9 default at $0"
+    irsRef: "Form 8889 Instructions, Line 9"
+    inputs:
+      - "Validated Form 8889 Line 9 employer contributions"
+      - "Attached W-2 Box 12 code W employer HSA contributions"
+    notes: "This slice defaults only the current-year same-tax-year W-2 Box 12 code W amount. On married filing jointly returns, the Form 8889 instructions require a separate spouse-specific form, so a spouse-owned supported Form 8889 only auto-defaults Box 12 code W amounts when the W-2 records are tagged to that spouse. The same owner-scoped Box 12 code W logic applies when the return supplies separate primary-versus-spouse Form 8889 inputs, so each spouse's explicit form can carry only that spouse's tagged employer contributions into Line 9. In the mixed-owner document-only path, those same owner-tagged W-2 records can now synthesize separate owner-specific Form 8889 statement forms even without any Form 1099-SA support, but the contribution-side deduction remains $0 until explicit coverage and contribution facts are provided for that owner. Once any owner-tagged W-2 records exist, the helper uses only explicitly tagged records for the selected account owner and leaves any untagged Box 12 code W records manual instead of silently attributing them to the primary owner. Likewise, when a joint return supplies multiple untagged Box 12 code W records for a single owner-specific Form 8889, the helper keeps Line 9 manual because the instructions' separate-spouse-form rule does not let the engine safely collapse both spouses' employer contributions into one owner's form without explicit attribution. The Employer Contribution Worksheet adjustments for prior-year amounts reported on the current W-2 or current-year amounts contributed in the following year remain a manual Line 9 override."
+    testRef: "tests/engine/federal.test.ts::Form 1040 Line 10 - primary-owned HSA keeps multiple untagged joint-return W-2 Box 12 code W amounts manual"
+
+  - line: "10"
+    description: "Qualified HSA funding distributions from an IRA"
+    formula: "Qualified HSA funding distributions for the tax year"
+    irsRef: "Form 8889 Instructions, Line 10"
+    inputs:
+      - "Qualified HSA funding distributions"
+      - "Validated source IRA type for the qualified funding distribution when the federal engine also defaults Form 8606 exclusions"
+    notes: "Form 8889 Line 10 itself uses only the funding amount, but the federal engine can use the validated source IRA type to default the amount into either Form 8606 Line 7 for traditional IRA funding or Form 8606 Line 19 for Roth IRA funding. The audit trail should preserve the validated source whenever one is supplied so downstream Form 8606 routing stays reviewable. The 2025 Form 8889 instructions do not allow the qualified HSA funding distribution to come from an ongoing SEP or SIMPLE IRA."
+    testRef: "tests/engine/forms/form-8889.test.ts::Form 8889 Line 10 - only traditional and Roth IRA funding sources are accepted for Form 8606 defaulting"
+
+  - line: "11"
+    description: "Total nontaxable HSA contributions"
+    formula: "Line 9 + Line 10"
+    irsRef: "Form 8889 Instructions, Line 11"
+    inputs:
+      - "Form 8889 Line 9"
+      - "Form 8889 Line 10"
+    testRef: "tests/engine/forms/form-8889.test.ts::Form 8889 Line 11 - employer contributions and funding distributions combine before the deduction cap"
+
+  - line: "12"
+    description: "Remaining deductible room after employer and funding contributions"
+    formula: "Line 8 - Line 11, not below zero"
+    irsRef: "Form 8889 Instructions, Line 12"
+    inputs:
+      - "Form 8889 Line 8"
+      - "Form 8889 Line 11"
+    edgeCases:
+      - "Employer contributions consuming the entire limit leave Line 12 at zero"
+      - "Employer contributions exceeding the limit still floor Line 12 at zero, not negative"
+      - "Qualified HSA funding distribution from an IRA reduces remaining room"
+    testRef: "tests/engine/forms/form-8889.test.ts::Form 8889 Line 12 - remaining deductible room floors at zero"
+
+  - line: "13"
+    description: "HSA deduction carried to Schedule 1 Line 13"
+    formula: "Smaller of Line 2 or Line 12"
+    irsRef: "Form 8889 Instructions, Line 13"
+    inputs:
+      - "Form 8889 Line 2"
+      - "Form 8889 Line 12"
+    edgeCases:
+      - "Contributions exceeding the limit are capped at Line 12"
+      - "Contributions exactly equal to the limit produce a full deduction"
+      - "Zero contributions with distributions present produce zero deduction"
+    notes: "This amount flows to Schedule 1 (Form 1040) Line 12."
+    testRef: "tests/engine/forms/form-8889.test.ts::Form 8889 Line 13 - deduction is limited to the smaller of personal contributions or remaining room"
+
+  - line: "14a"
+    description: "Total HSA distributions received during the year"
+    formula: "Use the validated HSA distribution amount provided to the form, defaulting in the federal engine to the aggregated Form 1099-SA Line 1 support total when explicit Form 8889 Line 14a input is absent; this supported slice includes Form 1099-SA Box 3 code 5 prohibited-transaction deemed distributions in that gross amount"
+    irsRef: "Form 8889 Instructions, Line 14a"
+    inputs:
+      - "Validated Form 8889 Line 14a input"
+      - "Form 1099-SA Line 1 support total"
+      - "Form 1099-SA Line 7 deemed-distribution amount"
+    notes: "Ordinary HSA distributions default from Form 1099-SA Box 1 amounts. Nonspouse-beneficiary and estate Box 3 codes 4 and 6 death records default from Form 1099-SA Box 4 fair market value on date of death, while a validated surviving-spouse year-of-death code 4 record stays on the ordinary Box 1 path because the spouse treats the HSA as their own account. Box 3 code 5 prohibited transactions still appear in the Line 14a gross distribution total. When the explicit Line 14a input is absent, the standalone Form 8889 helper should use the supported Form 1099-SA gross-distribution amount so the numeric result matches the audit trail and the federal-engine merged path."
+    testRef: "tests/engine/forms/form-8889.test.ts::Form 8889 Line 14a - HSA distributions populate the gross distribution amount"
+
+  - line: "14b"
+    description: "Excluded HSA distributions"
+    formula: "Use the validated Form 8889 Line 14b input when provided; otherwise sum any validated HSA rollover distributions and the aggregated Form 1099-SA returned-excess-contribution amount, then limit the result to Line 14a"
+    irsRef: "Form 8889 Instructions, Line 14b"
+    inputs:
+      - "Validated Form 8889 Line 14b input"
+      - "Validated HSA rollover distributions included on Form 8889 Line 14a"
+      - "Form 1099-SA Box 1 code 2 returned excess contributions"
+      - "Form 8889 Line 14a"
+    notes: "Line 14b covers both HSA rollover distributions and excess contributions withdrawn by the due date. The engine keeps the direct Line 14b override for full-manual cases, but otherwise adds the validated rollover amount to the supported Form 1099-SA returned-excess-contribution amount and clamps the total to Line 14a. In the supported workspace preview/input-builder path, when the structured fact ledger explicitly confirms an HSA rollover subtotal for the reviewed Form 1099-SA item and the owner attribution is safe, that confirmed subtotal can prefill the rollover branch instead of leaving it manual."
+    testRef: "tests/engine/forms/form-8889.test.ts::Form 8889 Line 14b - excluded distributions cannot exceed the gross HSA distributions"
+
+  - line: "14c"
+    description: "Net HSA distributions after exclusions"
+    formula: "Line 14a - Line 14b"
+    irsRef: "Form 8889 Instructions, Line 14c"
+    inputs:
+      - "Form 8889 Line 14a"
+      - "Form 8889 Line 14b"
+    testRef: "tests/engine/forms/form-8889.test.ts::Form 8889 Line 14c - net distributions equal gross distributions minus excluded amounts"
+
+  - line: "15"
+    description: "Qualified medical expenses paid from the HSA"
+    formula: "Add the smaller of (a) the validated ordinary qualified medical expenses and (b) the non-death-distribution portion of Line 14c that is not a deemed distribution from a prohibited transaction, plus the smaller of (c) the validated decedent qualified medical expenses paid within 1 year after death by a non-estate beneficiary and (d) the supported death-distribution portion of Line 14c after removing prohibited-transaction deemed distributions that is either explicitly validated on Form 1099-SA as belonging to an `other_beneficiary` or is reported on Form 1099-SA with Box 3 code 6, because code 6 identifies a nonspouse beneficiary other than an estate; supported estate-beneficiary death-distribution amounts and ambiguous code 4 death distributions cannot be offset on this line"
+    irsRef: "Form 8889 Instructions, Line 15"
+    inputs:
+      - "Ordinary qualified medical expenses paid from HSA distributions"
+      - "Decedent qualified medical expenses paid within 1 year after death by a non-estate beneficiary"
+      - "Form 1099-SA Line 7 deemed-distribution amount"
+      - "Supported `other_beneficiary` Form 1099-SA death-distribution amount, including inferred Box 3 code 6 records"
+      - "Supported estate-beneficiary Form 1099-SA death-distribution amount"
+    notes: "The engine separately tracks ordinary medical-expense offsets and the beneficiary-only post-death medical-expense offset so the generic qualified-medical-expenses field cannot absorb a death distribution by itself. The post-death branch requires both a validated amount of the decedent's qualified medical expenses paid within 1 year after death and supported Form 1099-SA death-distribution evidence that the beneficiary is not the estate. That support can come from an explicit `other_beneficiary` tag or from Box 3 code 6 by itself because the Form 1099-SA instructions define code 6 as a nonspouse beneficiary other than an estate after the year of death. Estate-beneficiary death distributions never use that special branch, and ambiguous code 4 death distributions with no validated beneficiary type stay conservative by remaining outside the beneficiary-only offset until the beneficiary type is confirmed. When the explicit deemed-distribution input is absent, the standalone Form 8889 helper defaults that prohibited-transaction amount from the supported Form 1099-SA Line 7 subtotal so the direct helper and the merged federal-engine path both keep those deemed distributions out of Line 15. In the supported workspace preview/input-builder path, when the structured fact ledger explicitly confirms ordinary qualified medical expenses for the reviewed Form 1099-SA item and the owner attribution is safe, that confirmed subtotal can prefill the ordinary Line 15 medical-expense branch instead of leaving it manual."
+    testRef: "tests/engine/forms/form-8889.test.ts::Form 8889 Line 15 - code 6 death distributions infer the beneficiary-only post-death medical-expense offset"
+
+  - line: "16"
+    description: "Taxable HSA distributions"
+    formula: "Line 14c - Line 15, not below zero"
+    irsRef: "Form 8889 Instructions, Line 16"
+    inputs:
+      - "Form 8889 Line 14c"
+      - "Form 8889 Line 15"
+    edgeCases:
+      - "All distributions used for qualified medical expenses leaves Line 16 at zero — no penalty"
+      - "No qualified medical expenses makes the entire net distribution taxable"
+      - "Rollover exclusions on Line 14b reduce the net distribution before medical offset"
+      - "Medical expenses exceeding net distributions are clamped at Line 14c"
+    notes: "This amount flows to Schedule 1 (Form 1040) Line 8f. Prohibited-transaction deemed distributions remain in Line 16 because Line 15 cannot absorb them."
+    testRef: "tests/engine/forms/form-8889.test.ts::Form 8889 Line 16 - prohibited-transaction deemed distributions remain taxable even when medical expenses are reported"
+
+  - line: "17a"
+    description: "Exception applies to part of the taxable HSA distribution"
+    formula: "Check the box when any portion of Line 16 is exempt from the additional 20% tax because of death, disability, or age 65 or older; when the beneficiary was already age 65 on January 1 of the tax year, treat all of Line 16 as exempt in this slice because every distribution in the year occurred after turning age 65; otherwise combine the supported Form 1099-SA Box 1 code 3 disability-distribution amount, the supported Form 1099-SA Box 4 code 4 or 6 death-distribution fair market value, and any validated taxable HSA distributions made after the beneficiary turned age 65 during the tax year with the validated Line 17a exception input, treating the validated input as already merged only to the extent it overlaps the supported Form 1099-SA subtotal plus the validated post-age-65 subtotal, and when attached Form 1099-SA support is merged into an existing Form 8889 draft do not re-add the same supported subtotal if the draft's Line 17a amount already includes it, then cap the result at Line 16"
+    irsRef: "Form 8889 Instructions, Line 17a"
+    inputs:
+      - "Amount of taxable distributions not subject to the additional tax"
+      - "Validated taxable HSA distributions made after the beneficiary turned age 65 during the tax year"
+      - "Form 1099-SA Box 1 code 3 disability distributions"
+      - "Form 1099-SA Box 4 code 4 or 6 death-distribution fair market value"
+      - "Form 8889 Line 16"
+      - "Account beneficiary date of birth"
+    edgeCases:
+      - "On a spouse-owned Form 8889, the spouse's January 1 age-65 boundary controls the automatic exception"
+    notes: "The engine records this as a boolean flag and clamps the exempt amount to Line 16. It automatically exempts all of Line 16 only when the beneficiary was already age 65 on January 1 of the tax year; otherwise the supported slice can still exempt a validated subtotal of taxable distributions made after the beneficiary turned age 65 during the year, without exempting pre-65 distributions from the same year. Supported Form 1099-SA disability or death distributions create the automatic exception base even when no separate Line 17a amount is entered manually. When a caller supplies both supported exception support and a separate validated Line 17a amount, the engine preserves any additional manual exception amount on top of the supported base while still avoiding double counting when an upstream merge has already folded the supported subtotal into the validated input. That means the merge step must carry forward an already-inclusive Line 17a amount unchanged instead of inflating it by the same disability, death, or post-age-65 subtotal a second time. The audit trail should preserve the disability, death, and validated post-age-65 subtotals separately in addition to their combined supported-exception subtotal. Validated surviving-spouse year-of-death Form 1099-SA code 4 records do not create the automatic death exception base because the spouse treats the HSA as their own account. When the Form 8889 account owner is the spouse, the spouse's date of birth controls this January 1 age-65 test and any validated post-age-65 subtotal must belong to that spouse-owned form."
+    testRef: "tests/engine/forms/form-8889.test.ts::Form 8889 Line 17a - validated post-age-65 distributions exempt the partial-year amount from the 20 percent tax"
+
+  - line: "17b"
+    description: "Additional tax on taxable HSA distributions"
+    formula: "20% of the portion of Line 16 that is not exempt under Line 17a; this is $0 when the beneficiary was already age 65 on January 1 of the tax year because the year's distributions are all treated as post-age-65 distributions in this slice, and for a beneficiary who turns 65 during the year the supported slice reduces the tax base by only the validated taxable distributions made after the beneficiary turned age 65"
+    irsRef: "Form 8889 Instructions, Line 17b"
+    inputs:
+      - "Form 8889 Line 16"
+      - "Amount of taxable distributions not subject to the additional tax"
+      - "Validated taxable HSA distributions made after the beneficiary turned age 65 during the tax year"
+      - "Form 1099-SA Box 1 code 3 disability distributions"
+      - "Form 1099-SA Box 4 code 4 or 6 death-distribution fair market value"
+      - "Account beneficiary date of birth"
+    edgeCases:
+      - "On a spouse-owned Form 8889, a spouse who turns 65 on January 2 still needs explicit exception support because the automatic age-65 exemption did not apply on January 1"
+      - "Full 20% penalty applies when no medical expenses or exceptions offset the distribution"
+      - "Partial medical offset results in 20% penalty only on the uncovered portion"
+      - "Disability exception zeros the penalty even with no medical expenses"
+    notes: "This amount flows to Schedule 2 (Form 1040) Line 17c. The supported slice still uses the January 1 rule to exempt the full year automatically, but it now also accepts a validated subtotal of taxable distributions made after the beneficiary turned age 65 during the year so the 20% tax applies only to the remaining pre-65 taxable portion. Supported Form 1099-SA disability and death-distribution exception amounts also reduce the 20% tax base even when the validated Line 17a input is blank, and any separately supplied manual exception amount is preserved unless the validated input already overlaps the supported subtotal. The audit trail should preserve the disability, death, and validated post-age-65 subtotals separately in addition to the combined supported-exception subtotal. Prohibited-transaction deemed distributions remain in the taxable base unless another supported exception applies. Validated surviving-spouse year-of-death Form 1099-SA code 4 records use ordinary HSA distribution rules instead of the automatic death exception. When the Form 8889 account owner is the spouse, the spouse's date of birth controls this January 1 age-65 test."
+    testRef: "tests/engine/forms/form-8889.test.ts::Form 8889 Line 17b - validated post-age-65 distributions reduce the tax base for mid-year age-65 cases"
+
+  - line: "18"
+    description: "Income recapture from failing the last-month-rule testing period"
+    formula: "If the testing period failed because the taxpayer died or became disabled, enter $0. Otherwise use the validated prior-year redetermined contribution limit when provided; if it is absent and supported prior-year worksheet inputs are present, recompute the contribution-year limit that would have applied without the last-month rule by using the prior-year Line 3 Limitation Chart and Worksheet month-by-month amount, subtracting prior-year Archer MSA contributions, applying the prior-year spouse family-coverage allocation and prior-year catch-up rules through the equivalent of contribution-year Lines 5-8, and then subtract that redetermined amount from the prior-year HSA contributions made under the last-month rule, not below zero. If neither a validated redetermined limit nor supported worksheet inputs are present, this supported slice leaves Line 18 at $0 rather than assuming the full prior-year contribution is recapture income."
+    irsRef: "Form 8889 Instructions, Line 18"
+    inputs:
+      - "Prior-year HSA contributions counted under the last-month rule"
+      - "Prior-year redetermined HSA contribution limit after testing-period failure"
+      - "Supported prior-year Line 18 recomputation worksheet inputs"
+      - "Testing-period failure caused by death or disability"
+    notes: "The explicit prior-year redetermined limit remains the authoritative override unless the instructions' death-or-disability exception applies, in which case this line is zero. When the exception does not apply and the manual limit is absent, the engine can refigure the contribution-year worksheet from supported prior-year coverage, Medicare, dependent, Archer MSA, spouse-allocation, annual-limit, and contribution-year filing-status inputs. When the supported prior-year worksheet supplies a filing status, the recomputation uses that contribution-year status rather than the current return status because the instructions require the contribution-year limitation chart and worksheet to be refigured for the year the last-month-rule contribution was made, and the audit trail should preserve both statuses so the override is reviewable. When both a validated manual redetermined limit and supported worksheet inputs are present, the audit trail should preserve both amounts and explicitly label the controlling source as the validated manual override so reviewers can see why the supported recomputation was not used. Other unsupported prior-year context changes still fall back to the manual override path. When neither data source is available, the engine does not invent a zero redetermined limit because that would overstate Line 18 recapture income."
+    testRef: "tests/engine/forms/form-8889.test.ts::Form 8889 Line 18 - missing redetermined-limit support does not invent recapture income"
+
+  - line: "19"
+    description: "Qualified HSA funding distribution recapture"
+    formula: "Qualified HSA funding distribution amount that must be included because the taxpayer failed the testing period for a prior-year IRA-to-HSA funding distribution; enter $0 if the testing period failed because the taxpayer died or became disabled"
+    irsRef: "Form 8889 Instructions, Line 19"
+    inputs:
+      - "Prior-year qualified HSA funding distribution subject to recapture"
+      - "Testing-period failure caused by death or disability"
+    notes: "When no qualified HSA funding distribution testing-period failure applies, or when the instructions excuse the failure because of death or disability, this line is zero."
+    testRef: "tests/engine/forms/form-8889.test.ts::Form 8889 Line 19 - death or disability testing-period failures also suppress qualified funding recapture"
+
+  - line: "20"
+    description: "Total HSA recapture income"
+    formula: "Line 18 + Line 19"
+    irsRef: "Form 8889 Instructions, Line 20"
+    edgeCases:
+      - "Last-month-rule recapture and qualified-funding-distribution recapture can both be present in the same year"
+      - "Death or disability exception zeroes both Line 18 and Line 19, so Line 20 is always $0 when excused"
+    inputs:
+      - "Form 8889 Line 18"
+      - "Form 8889 Line 19"
+    notes: "This amount flows to Schedule 1 (Form 1040) Line 8f and is zero when the testing-period failure is excused because of death or disability."
+    testRef: "tests/engine/forms/form-8889.test.ts::Form 8889 Line 20 - excused testing-period failures do not create Schedule 1 recapture income"
+
+  - line: "21"
+    description: "Additional tax on HSA recapture income"
+    formula: "10% of Line 18"
+    irsRef: "Form 8889 Instructions, Line 21"
+    inputs:
+      - "Form 8889 Line 18"
+    notes: "This amount flows to Schedule 2 (Form 1040) Line 17d. The 10% rate applies only to the Line 18 last-month-rule recapture amount, not to Line 19, and is zero when the death-or-disability testing-period exception keeps Line 18 at zero."
+    testRef: "tests/engine/forms/form-8889.test.ts::Form 8889 Line 21 - excused testing-period failures do not create recapture tax"

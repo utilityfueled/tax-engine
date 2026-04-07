@@ -1,0 +1,124 @@
+form: "PA-Schedule-OC"
+fullName: "Pennsylvania Schedule OC — Other Credits"
+taxYear: 2025
+reference: "https://www.revenue.pa.gov/FormsandPublications/FormsforIndividuals/PIT/Pages/default.aspx"
+
+notes: |
+  PA Schedule OC reports tax credits other than Tax Forgiveness (Schedule SP)
+  and Resident Credit (Schedule G-L). Credits flow to PA-40 Line 23 after the
+  PA-40 applies Pennsylvania's nonrefundable restricted-credit limitation.
+
+  Key credits for individual filers:
+
+  1. PTE (Pass-Through Entity) Tax Credit — Act 151 of 2022
+     Pennsylvania enacted elective PTE-level taxation. When a partnership,
+     S-corp, or LLC elects to pay PA income tax at the entity level (3.07%
+     on PA-source income), partners/shareholders/members receive a
+     proportionate credit on their individual PA-40 return.
+     The credit is nonrefundable and limited to the lesser of:
+       (a) Taxpayer's share of PTE tax actually paid to PA
+       (b) PA tax on the taxpayer's allocable PA-source income from the entity (at 3.07%)
+     Reference: 72 P.S. § 7303.2; Act 151 of 2022
+
+  2. Employment Incentive Payment Credit
+     Employers may claim credit for hiring individuals in certain targeted
+     groups (e.g., participants in PA job training programs). The credit is
+     a fixed dollar amount per qualifying hire. For partners/shareholders
+     of entities that earned this credit, the proportionate share flows
+     through the PA K-1 to Schedule OC.
+
+  3. Neighborhood Assistance Program (NAP) Credit
+     Businesses that invest in projects benefiting impoverished areas may
+     receive a credit of 55%–80% of the contribution. Partners/shareholders
+     receive their share via PA K-1.
+
+  4. Other PA credits — various smaller programs:
+     - Resource Enhancement and Protection (REAP) Tax Credit
+     - Jobs Creation Tax Credit
+     - Keystone Special Development Zone Credit
+     - Educational Improvement Tax Credit (EITC)
+     - Opportunity Scholarship Tax Credit (OSTC)
+     These are passed through as pre-computed amounts.
+
+  Total Schedule OC = sum of all individual credits before the PA-40 cap.
+  Pennsylvania's Personal Income Tax Guide states that restricted tax credits
+  are nonrefundable and that resident credit is applied first, followed by tax
+  forgiveness, before Schedule OC credits are allowed. As a result, PA-40
+  Line 23 can only use the lesser of the Schedule OC total and the remaining
+  PA tax liability after Lines 21 and 22.
+
+packetRules:
+  packetBehavior: "included-on-pa-40"
+  includeWhen:
+    - "A Pennsylvania resident return packet is being assembled and the supported resident orchestrator computes Schedule OC credits that remain allowable on PA-40 Line 23 after the restricted-credit limitation."
+  suppressWhen:
+    - "No resident Pennsylvania return packet is being assembled."
+    - "No detailed Schedule OC input is provided, or the supported Schedule OC result is fully limited away before PA-40 Line 23."
+  notes: |
+    The packet path currently represents supported Schedule OC output by
+    placing the allowed resident credit amount on official PA-40 Line 23.
+    No standalone Schedule OC PDF is emitted yet, so packet validation for
+    this slice is tied to the PA-40 inclusion rule.
+
+businessRuleValidation:
+  - rule: "pa-schedule-oc-line-23-packet"
+    description: "Inventory support counts the Pennsylvania Schedule OC packet path as validated only when regression coverage proves supported Schedule OC credits survive to official PA-40 Line 23."
+    testRef: "tests/pdf/fill-pa-40.test.ts::fillPA40 includes Pennsylvania Schedule OC credits on Line 23 when supported detailed credits survive the PA-40 cap"
+
+lines:
+  - line: "1"
+    description: "PTE (Pass-Through Entity) Tax Credit"
+    formula: |
+      For each entity electing PTE taxation:
+        Credit = lesser of:
+          (a) Taxpayer's share of PTE tax paid to PA
+          (b) Allocable PA-source income × 3.07%
+      Total PTE credit = sum across all entities
+    notes: |
+      Act 151 allows PTEs to elect entity-level PA tax. The individual
+      partner/shareholder/member receives a credit for their share of the
+      entity-level tax paid. The credit cannot exceed the PA tax the
+      individual would have owed on that income at 3.07%.
+      The PTE credit is nonrefundable.
+    edgeCases:
+      - "PTE tax paid exceeds PA tax on allocable income: credit capped at PA tax"
+      - "PTE tax paid is less than PA tax on allocable income: credit equals tax paid"
+      - "Multiple entities with PTE elections: each computed independently, then summed"
+      - "Allocable income is zero or negative: PTE credit is $0 for that entity"
+      - "PTE credit from single entity"
+    testRef: "tests/engine/state/pa-schedule-oc.test.ts::PA Schedule OC - PTE credit equals lesser of tax paid and PA tax on allocable income"
+
+  - line: "2"
+    description: "Employment Incentive Payment Credit"
+    formula: "Pre-computed credit amount from employer or entity K-1"
+    notes: "Passed through as a fixed amount. No individual-level computation needed."
+    testRef: "tests/engine/state/pa-schedule-oc.test.ts::PA Schedule OC - employment incentive credit passes through"
+
+  - line: "3"
+    description: "Neighborhood Assistance Program (NAP) Credit"
+    formula: "Pre-computed credit from approved NAP contribution"
+    notes: "55%–80% of qualifying contribution, pre-approved by DCED."
+    testRef: "tests/engine/state/pa-schedule-oc.test.ts::PA Schedule OC - NAP credit passes through"
+
+  - line: "4"
+    description: "Other PA tax credits"
+    formula: "Sum of other pre-computed PA tax credit amounts"
+    notes: |
+      Includes REAP, Jobs Creation, Keystone Zone, EITC, OSTC, and other
+      credits. Passed through as pre-computed amounts with credit name.
+    testRef: "tests/engine/state/pa-schedule-oc.test.ts::PA Schedule OC - other credits sum correctly"
+
+  - line: "total"
+    description: "Total other credits"
+    formula: "Line 1 + Line 2 + Line 3 + Line 4"
+    notes: |
+      Sum of all Schedule OC credits before PA-40 applies the restricted-credit
+      limitation on Line 23. This schedule total is nonrefundable and cannot
+      create or increase a refund once resident credit and tax forgiveness
+      have already reduced the PA-40 tax liability.
+    edgeCases:
+      - "No credits: total is $0"
+      - "Single credit type: total equals that credit"
+      - "Multiple credit types: all summed"
+      - "Very large credits: schedule total is not capped here, but PA-40 Line 23 later limits the allowed amount to remaining liability after resident credit and tax forgiveness"
+    testRef: "tests/engine/state/pa-schedule-oc.test.ts::PA Schedule OC - total credits sum all types"

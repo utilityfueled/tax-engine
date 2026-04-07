@@ -1,0 +1,202 @@
+form: "PA Schedule NRH"
+fullName: "Pennsylvania Non-Resident Apportionment"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/pa-40nrh.pdf"
+
+notes: |
+  PA Schedule NRH apportions Pennsylvania-source compensation and, when
+  needed, Pennsylvania-source net profits for nonresidents and part-year
+  residents. Section I covers employee compensation using either:
+    - a working-day fraction; or
+    - a business-volume fraction.
+
+  Section II covers business, profession, or farm income when the taxpayer's
+  books and records do not clearly reflect Pennsylvania-source income. The
+  apportionment fraction is the average of the applicable property, payroll,
+  and sales factors.
+
+  Key rules from the 2025 PA Schedule NRH instructions:
+    - Use either the working-day method or the business-volume method, not both.
+    - Working-day Line 5 = PA working days / total working days, carried to at
+      least six decimal places.
+    - Business-volume Line 8 = PA business volume / total business volume,
+      carried to at least six decimal places.
+    - Apportioned compensation and apportioned unreimbursed employee business
+      expenses use the selected fraction and flow to PA-40 compensation.
+    - Section II Line 5 divides the sum of applicable factors by the number of
+      factors with amounts in Column (A).
+
+packetRules:
+  packetBehavior: "reference-summary-pdf"
+  includeWhen:
+    - "A Pennsylvania nonresident or part-year resident return packet is being assembled and supported PA Schedule NRH input is present."
+    - "The packet path emits a supported nonresident apportionment reference summary derived from the validated Schedule NRH result, including zero-allocation disclosures when the taxpayer supplied supported apportionment input."
+  suppressWhen:
+    - "No Pennsylvania nonresident or part-year resident return packet is being assembled."
+    - "No supported PA Schedule NRH compensation or business-apportionment input is present on the return."
+  notes: |
+    Until an official PA Schedule NRH filler exists, the packet path emits
+    `pa-schedule-nrh-reference.pdf` as a reference summary only. Packet
+    disclosures must therefore keep Pennsylvania packet completeness partial
+    whenever this reference summary is attached.
+
+businessRuleValidation:
+  - rule: "pa-schedule-nrh-reference-packet"
+    description: "Inventory support counts the Pennsylvania Schedule NRH packet path as validated only when fillReturn emits `pa-schedule-nrh-reference.pdf` whenever supported nonresident apportionment input is present."
+    testRef: "tests/pdf/fill-pa-schedule-nrh.test.ts::fillReturn includes the Pennsylvania Schedule NRH reference summary when the nonresident return includes supported apportionment input"
+  - rule: "pa-schedule-nrh-reference-zero-allocation-packet"
+    description: "Inventory support counts the Pennsylvania Schedule NRH packet trigger as validated only when regression coverage proves fillReturn still emits the reference summary when supported apportionment input produces a zero Pennsylvania allocation."
+    testRef: "tests/pdf/fill-pa-schedule-nrh.test.ts::fillReturn includes the Pennsylvania Schedule NRH reference summary when supported apportionment input allocates zero Pennsylvania compensation"
+  - rule: "pa-schedule-nrh-reference-suppression"
+    description: "Inventory support counts the Pennsylvania Schedule NRH suppression rule as validated only when regression coverage proves fillReturn omits the reference summary when no supported Schedule NRH input is present."
+    testRef: "tests/pdf/fill-pa-schedule-nrh.test.ts::fillReturn suppresses the Pennsylvania Schedule NRH reference summary when no supported apportionment input is present"
+  - rule: "pa-schedule-nrh-reference-disclosure"
+    description: "Inventory support counts the Pennsylvania Schedule NRH packet disclosure as validated only when readiness regression coverage keeps packet completeness partial while only the Schedule NRH reference summary is available beyond PA-40."
+    testRef: "tests/utils/return-readiness.test.ts::marks Pennsylvania packets partial when a PA Schedule NRH reference summary is attached"
+
+lines:
+  - line: "A1"
+    description: "Total days worked for the employer during the year"
+    formula: "Input: total calendar days worked for the employer"
+    testRef: "tests/engine/state/pa-schedule-nrh.test.ts::PA Schedule NRH Part A - working-day apportionment computes Pennsylvania compensation"
+
+  - line: "A2"
+    description: "Nonworking days"
+    formula: "Input: weekends, holidays, vacation, sick leave, and other nonworking days"
+    testRef: "tests/engine/state/pa-schedule-nrh.test.ts::PA Schedule NRH Part A - working-day apportionment computes Pennsylvania compensation"
+
+  - line: "A3"
+    description: "Working days during the tax year"
+    formula: "Line A1 - Line A2, floor at 0"
+    notes: |
+      The instructions define Line 3 as total days worked minus nonworking
+      days. The supported engine floors negative data-entry combinations at
+      zero before computing the Line 5 fraction.
+    testRef: "tests/engine/state/pa-schedule-nrh.test.ts::PA Schedule NRH Part A - working-day apportionment computes Pennsylvania compensation"
+
+  - line: "A4"
+    description: "Days worked in Pennsylvania"
+    formula: "Input: days services were performed within Pennsylvania"
+    notes: |
+      Days worked outside Pennsylvania count as outside-PA days only when the
+      employer required the services to be performed outside Pennsylvania.
+    testRef: "tests/engine/state/pa-schedule-nrh.test.ts::PA Schedule NRH Part A - working-day apportionment computes Pennsylvania compensation"
+
+  - line: "A5"
+    description: "Working-day apportionment fraction"
+    formula: "Line A4 / Line A3, rounded to six decimal places and capped at 1.000000"
+    notes: "Carry the fraction to at least six decimal places per the instructions."
+    testRef: "tests/engine/state/pa-schedule-nrh.test.ts::PA Schedule NRH Part A - working-day apportionment computes Pennsylvania compensation"
+
+  - line: "B1"
+    description: "Total business transacted everywhere"
+    formula: "Input: total business volume attributable to the employee's services"
+    testRef: "tests/engine/state/pa-schedule-nrh.test.ts::PA Schedule NRH Part B - business-volume apportionment computes Pennsylvania compensation"
+
+  - line: "B2"
+    description: "Business transacted from services performed in Pennsylvania"
+    formula: "Input: business volume attributable to services performed in Pennsylvania"
+    testRef: "tests/engine/state/pa-schedule-nrh.test.ts::PA Schedule NRH Part B - business-volume apportionment computes Pennsylvania compensation"
+
+  - line: "B3"
+    description: "Business-volume apportionment fraction"
+    formula: "Line B2 / Line B1, rounded to six decimal places and capped at 1.000000"
+    notes: "Carry the fraction to at least six decimal places per the instructions."
+    testRef: "tests/engine/state/pa-schedule-nrh.test.ts::PA Schedule NRH Part B - business-volume apportionment computes Pennsylvania compensation"
+
+  - line: "C1"
+    description: "Gross compensation from Form W-2"
+    formula: "Input: gross compensation to apportion when the W-2 did not report the correct PA amount"
+    testRef: "tests/engine/state/pa-schedule-nrh.test.ts::PA Schedule NRH Part A - working-day apportionment computes Pennsylvania compensation"
+
+  - line: "C4"
+    description: "Apportioned Pennsylvania gross-taxable compensation"
+    formula: "Line C1 × selected apportionment fraction, rounded to nearest dollar"
+    notes: "Uses Line A5 for working-day or Line B3 for business-volume apportionment."
+    testRef: "tests/engine/state/pa-schedule-nrh.test.ts::PA Schedule NRH Part A - working-day apportionment computes Pennsylvania compensation"
+
+  - line: "D1"
+    description: "Total unreimbursed employee business expenses"
+    formula: "Input: total PA Schedule UE expenses incurred within and outside Pennsylvania"
+    testRef: "tests/engine/state/pa-schedule-nrh.test.ts::PA Schedule NRH Part D - apportioned employee business expenses reduce net compensation"
+
+  - line: "D4"
+    description: "Apportioned unreimbursed employee business expenses"
+    formula: "Line D1 × selected apportionment fraction, rounded to nearest dollar"
+    testRef: "tests/engine/state/pa-schedule-nrh.test.ts::PA Schedule NRH Part D - apportioned employee business expenses reduce net compensation"
+
+  - line: "E1"
+    description: "Correct PA gross-taxable compensation from Form W-2"
+    formula: "Input: employer-reported PA compensation already correct on the W-2"
+    notes: |
+      The form note says you should not usually have amounts on both Line 17
+      and Line 18 unless you received more than one W-2 from the same employer.
+    testRef: "tests/engine/state/pa-schedule-nrh.test.ts::PA Schedule NRH Part E - combines employer-reported wages, apportioned wages, and reimbursements"
+
+  - line: "E2"
+    description: "Apportioned PA gross-taxable compensation"
+    formula: "Line C4"
+    testRef: "tests/engine/state/pa-schedule-nrh.test.ts::PA Schedule NRH Part E - combines employer-reported wages, apportioned wages, and reimbursements"
+
+  - line: "E3"
+    description: "Apportioned expense reimbursements not included in Form W-2"
+    formula: "Employer reimbursements not in Form W-2 × selected apportionment fraction, rounded to nearest dollar"
+    testRef: "tests/engine/state/pa-schedule-nrh.test.ts::PA Schedule NRH Part E - combines employer-reported wages, apportioned wages, and reimbursements"
+
+  - line: "E4"
+    description: "Total PA gross-taxable compensation"
+    formula: "Line E1 + Line E2 + Line E3"
+    testRef: "tests/engine/state/pa-schedule-nrh.test.ts::PA Schedule NRH Part E - combines employer-reported wages, apportioned wages, and reimbursements"
+
+  - line: "E5"
+    description: "Apportioned employee business expenses"
+    formula: "Line D4"
+    testRef: "tests/engine/state/pa-schedule-nrh.test.ts::PA Schedule NRH Part D - apportioned employee business expenses reduce net compensation"
+
+  - line: "E6"
+    description: "Net Pennsylvania-taxable compensation"
+    formula: "Line E4 - Line E5, floor at 0"
+    notes: "The supported engine floors the result at zero before carrying it to PA-40 compensation."
+    testRef: "tests/engine/state/pa-schedule-nrh.test.ts::PA Schedule NRH Part D - apportioned employee business expenses reduce net compensation"
+
+  - line: "II-1"
+    description: "Property factor"
+    formula: "Pennsylvania property / total property, rounded to six decimal places"
+    notes: |
+      Property owned uses original cost. Property rented uses eight times the
+      gross annual rental rate. The supported engine accepts already-computed
+      everywhere and Pennsylvania property amounts.
+    testRef: "tests/engine/state/pa-schedule-nrh.test.ts::PA Schedule NRH Section II - business apportionment averages the applicable factors"
+
+  - line: "II-2"
+    description: "Payroll factor"
+    formula: "Pennsylvania compensation / total compensation, rounded to six decimal places"
+    testRef: "tests/engine/state/pa-schedule-nrh.test.ts::PA Schedule NRH Section II - business apportionment averages the applicable factors"
+
+  - line: "II-3"
+    description: "Sales factor"
+    formula: "Pennsylvania sales / total sales, rounded to six decimal places"
+    testRef: "tests/engine/state/pa-schedule-nrh.test.ts::PA Schedule NRH Section II - business apportionment averages the applicable factors"
+
+  - line: "II-4"
+    description: "Sum of applicable factors"
+    formula: "Line II-1 + Line II-2 + Line II-3"
+    testRef: "tests/engine/state/pa-schedule-nrh.test.ts::PA Schedule NRH Section II - business apportionment averages the applicable factors"
+
+  - line: "II-5"
+    description: "Allocating fraction"
+    formula: "Line II-4 / number of applicable factors, rounded to six decimal places"
+    notes: |
+      Divide by 3 when all three factors apply, by 2 when only two factors
+      apply, and by 1 when only one factor applies.
+    testRef: "tests/engine/state/pa-schedule-nrh.test.ts::PA Schedule NRH Section II - business apportionment averages the applicable factors"
+
+  - line: "II-6"
+    description: "Total net profits from business, profession, or farm income"
+    formula: "Input: total net profits from PA Schedule C or PA Schedule F"
+    testRef: "tests/engine/state/pa-schedule-nrh.test.ts::PA Schedule NRH Section II - business apportionment averages the applicable factors"
+
+  - line: "II-7"
+    description: "Net profits allocated to Pennsylvania"
+    formula: "Line II-6 × Line II-5, rounded to nearest dollar"
+    testRef: "tests/engine/state/pa-schedule-nrh.test.ts::PA Schedule NRH Section II - business apportionment averages the applicable factors"

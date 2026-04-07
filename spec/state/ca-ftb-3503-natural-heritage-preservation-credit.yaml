@@ -1,0 +1,115 @@
+form: "California FTB 3503 Natural Heritage Preservation Credit"
+fullName: "California FTB 3503 Natural Heritage Preservation Credit Upstream Personal-Filer Slice"
+taxYear: 2025
+irsReference: "https://www.ftb.ca.gov/forms/2025/2025-3503.pdf"
+
+notes: |
+  This slice models the upstream 2025 Form FTB 3503 lines needed to support
+  California individual-return parity for credit code 213 on Form 540NR
+  Schedule P (540NR) Section B2. The official 2025 FTB 3503 instructions direct
+  taxpayers to:
+  - enter the approved fair market value from the Wildlife Conservation Board
+    certificate on line 1
+  - multiply line 1 by 55% on line 2
+  - add pass-through Natural Heritage Preservation Credit amounts from
+    Schedule K-1 or K-1 equivalent on line 3
+  - add line 2 and line 3 on line 4
+  - enter prior-year carryover from the 2024 Form FTB 3503 on line 5
+  - add line 4 and line 5 on line 6
+  - enter the amount claimed on the current return on line 7a using credit code
+    213
+  - enter 0 on line 7b unless the filer is a corporation that assigned credit,
+    which is outside this supported personal-filer slice
+  - optionally enter the elected refundable amount on line 7c only for credits
+    disallowed by the statewide $5,000,000 business-credit limitation
+  - subtract line 7a, line 7b, and line 7c from line 6 on line 8
+  This upstream slice intentionally leaves WCB certificate issuance, the
+  statewide $5,000,000 business-credit limitation analysis, and corporate
+  credit-assignment mechanics upstream. The supported state-return path only
+  uses line 6 as the available Schedule P credit amount and line 8 as the
+  resulting carryover after the Schedule P used-this-year amount is known.
+
+lines:
+  - line: "1"
+    description: "Approved fair market value of the qualified contribution"
+    formula: "Supported fair market value from the Wildlife Conservation Board certificate"
+    inputs:
+      - "Approved fair market value from the WCB certificate"
+    edgeCases:
+      - "The supported slice starts from the certified fair market value and does not recompute valuation locally"
+    testRef: "tests/engine/state/ca-ftb-3503-natural-heritage-preservation-credit.test.ts::CA FTB 3503 Natural Heritage Preservation Credit Line 6 - fair market value, pass-through credit, and prior-year carryover add to total available credit"
+
+  - line: "2"
+    description: "Current-year Natural Heritage Preservation Credit"
+    formula: "Line 1 × 55%"
+    inputs:
+      - "Form FTB 3503 line 1"
+    testRef: "tests/engine/state/ca-ftb-3503-natural-heritage-preservation-credit.test.ts::CA FTB 3503 Natural Heritage Preservation Credit Line 6 - fair market value, pass-through credit, and prior-year carryover add to total available credit"
+
+  - line: "3"
+    description: "Pass-through Natural Heritage Preservation Credit"
+    formula: "Add the supported pass-through Natural Heritage Preservation Credit amounts from Schedule K-1 or K-1 equivalent"
+    inputs:
+      - "Optional list of pass-through Natural Heritage Preservation Credit amounts with entity identification context"
+    testRef: "tests/engine/state/ca-ftb-3503-natural-heritage-preservation-credit.test.ts::CA FTB 3503 Natural Heritage Preservation Credit Line 6 - fair market value, pass-through credit, and prior-year carryover add to total available credit"
+
+  - line: "4"
+    description: "Total current-year Natural Heritage Preservation Credit"
+    formula: "Line 2 + Line 3"
+    inputs:
+      - "Form FTB 3503 line 2"
+      - "Form FTB 3503 line 3"
+    testRef: "tests/engine/state/ca-ftb-3503-natural-heritage-preservation-credit.test.ts::CA FTB 3503 Natural Heritage Preservation Credit Line 6 - fair market value, pass-through credit, and prior-year carryover add to total available credit"
+
+  - line: "5"
+    description: "Credit carryover from prior year"
+    formula: "Supported prior-year Natural Heritage Preservation Credit carryover input"
+    inputs:
+      - "Optional prior-year Natural Heritage Preservation Credit carryover"
+    testRef: "tests/engine/state/ca-ftb-3503-natural-heritage-preservation-credit.test.ts::CA FTB 3503 Natural Heritage Preservation Credit Line 6 - fair market value, pass-through credit, and prior-year carryover add to total available credit"
+
+  - line: "6"
+    description: "Total available Natural Heritage Preservation Credit"
+    formula: "Line 4 + Line 5"
+    inputs:
+      - "Form FTB 3503 line 4"
+      - "Form FTB 3503 line 5"
+    testRef: "tests/engine/state/ca-ftb-3503-natural-heritage-preservation-credit.test.ts::CA FTB 3503 Natural Heritage Preservation Credit Line 6 - fair market value, pass-through credit, and prior-year carryover add to total available credit"
+
+  - line: "7a"
+    description: "Credit claimed on the current return"
+    formula: "Supported current-return claim amount, which in the supported Form 540NR slice comes from Schedule P (540NR) line 16 through line 19 credit used this year"
+    inputs:
+      - "Optional Natural Heritage Preservation Credit amount claimed this year"
+    edgeCases:
+      - "Do not allow line 7a to exceed line 6"
+    testRef: "tests/engine/state/ca-ftb-3503-natural-heritage-preservation-credit.test.ts::CA FTB 3503 Natural Heritage Preservation Credit Line 8 - claimed credit and refundable election reduce future carryover"
+
+  - line: "7b"
+    description: "Assigned credit to affiliated corporations"
+    formula: "0 for the supported personal-filer slice"
+    inputs:
+      - "No supported input; line 7b remains 0 for individual returns"
+    notes: "Corporate form FTB 3544 assignment mechanics are unsupported in this slice"
+    testRef: "tests/engine/state/ca-ftb-3503-natural-heritage-preservation-credit.test.ts::CA FTB 3503 Natural Heritage Preservation Credit Line 8 - claimed credit and refundable election reduce future carryover"
+
+  - line: "7c"
+    description: "Elected refundable credit amount"
+    formula: "Optional supported elected refundable amount to be excluded from future carryover"
+    inputs:
+      - "Optional elected refundable Natural Heritage Preservation Credit amount"
+    edgeCases:
+      - "Do not allow line 7c to cause line 8 to drop below zero"
+    testRef: "tests/engine/state/ca-ftb-3503-natural-heritage-preservation-credit.test.ts::CA FTB 3503 Natural Heritage Preservation Credit Line 8 - claimed credit and refundable election reduce future carryover"
+
+  - line: "8"
+    description: "Natural Heritage Preservation Credit carryover available for future years"
+    formula: "Line 6 - Line 7a - Line 7b - Line 7c"
+    inputs:
+      - "Form FTB 3503 line 6"
+      - "Form FTB 3503 line 7a"
+      - "Form FTB 3503 line 7b"
+      - "Form FTB 3503 line 7c"
+    edgeCases:
+      - "Do not allow the combined line 7a through line 7c reductions to exceed line 6"
+    testRef: "tests/engine/state/ca-ftb-3503-natural-heritage-preservation-credit.test.ts::CA FTB 3503 Natural Heritage Preservation Credit Line 8 - claimed credit and refundable election reduce future carryover"

@@ -1,0 +1,185 @@
+form: "Form 8582"
+fullName: "Passive Activity Loss Limitations"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i8582"
+
+notes: |
+  Form 8582 limits passive activity losses. Passive losses can only offset
+  passive income, with exceptions for rental real estate ($25,000 allowance
+  for active participants, phased out at $100K-$150K AGI).
+  Suspended losses carry forward to future years. In this supported summary
+  slice, prior-year unallowed losses are merged back into the current-year
+  limitation computation by matching them to same-named activities. When a
+  matched current-year activity is active-participant rental real estate, the
+  carryforward stays in the rental bucket; otherwise it is treated as a
+  non-rental passive loss. If no current-year activity is available to
+  establish the carryforward's rental-allowance classification, the helper
+  conservatively keeps that prior-year amount in the non-rental passive bucket
+  instead of giving it active-participant rental treatment.
+
+  LINE NUMBER MAPPING NOTE: The IRS Form 8582 (2024+) uses Lines 1a-1d for
+  rental real estate with active participation and Lines 2a-2d for all other
+  passive activities. This implementation uses a simplified internal mapping
+  (1a-1c for non-rental passive, 3a-3c for rental) that does not match the
+  actual IRS form line numbers. The computation is correct; only the line
+  labels differ. A future refactor should align internal labels to the IRS form.
+
+  ALLOCATION METHOD: Per-activity allocation follows the IRS two-step method
+  (Parts VI/VII): (1) special $25K allowance allocated proportionally among
+  rental loss activities only, (2) remaining unallowed loss allocated
+  proportionally among all loss activities by their remaining loss after step 1.
+
+lines:
+  - line: "1a"
+    description: "Activities with net income (passive)"
+    formula: "Sum of all passive activity income"
+    irsRef: "Form 8582 Instructions, Line 1a"
+    testRef: "tests/engine/forms/form-8582.test.ts::Form 8582 Line 1a - passive income"
+
+  - line: "1b"
+    description: "Activities with net loss (passive)"
+    formula: "Sum of all passive activity losses (negative), including prior-year unallowed losses carried into same-named non-rental passive activities and any unmatched prior-year suspended passive losses that must stay in the non-rental bucket in this supported slice"
+    irsRef: "Form 8582 Instructions, Line 1b"
+    testRef: "tests/engine/forms/form-8582.test.ts::Form 8582 Line 1b - passive losses"
+
+  - line: "1c"
+    description: "Net passive income or loss"
+    formula: "Line 1a + Line 1b"
+    irsRef: "Form 8582 Instructions, Line 1c"
+    testRef: "tests/engine/forms/form-8582.test.ts::Form 8582 Line 1c - net passive"
+
+  - line: "3a"
+    description: "Rental activities with net income"
+    formula: "Sum of rental activity income (if actively participating)"
+    irsRef: "Form 8582 Instructions, Line 3a"
+    notes: "Only for active participants in rental real estate"
+    testRef: "tests/engine/forms/form-8582.test.ts::Form 8582 Line 3a - rental income"
+
+  - line: "3b"
+    description: "Rental activities with net loss"
+    formula: "Sum of rental activity losses (if actively participating), including prior-year unallowed losses carried into same-named current-year rental real estate activities that are marked as active-participant rentals in this supported slice"
+    irsRef: "Form 8582 Instructions, Line 3b"
+    testRef: "tests/engine/forms/form-8582.test.ts::Form 8582 Line 3b - rental loss"
+
+  - line: "3c"
+    description: "Net rental income or loss"
+    formula: "Line 3a + Line 3b"
+    testRef: "tests/engine/forms/form-8582.test.ts::Form 8582 Line 3c - net rental"
+
+  - line: "5"
+    description: "Total combined passive and rental losses"
+    formula: "Line 1c + Line 3c (if negative)"
+    irsRef: "Form 8582 Instructions, Line 5"
+    notes: "If net is positive or zero, no limitation applies"
+    testRef: "tests/engine/forms/form-8582.test.ts::Form 8582 Line 5 - combined losses"
+
+  - line: "7"
+    description: "Special allowance for rental real estate"
+    formula: "min($25,000, rental loss) — phased out above $100K MODIFIED AGI"
+    irsRef: "Form 8582 Instructions, Lines 6-9; Pub 925"
+    notes: |
+      The phase-out uses MODIFIED AGI, not regular AGI. Per IRS Form 8582 Instructions:
+      MAGI = AGI without regard to passive activity losses, plus IRA deduction,
+      student loan interest deduction, and Form 8815 savings bond exclusion.
+      This prevents passive losses from reducing AGI and inflating the rental allowance.
+    edgeCases:
+      - "$25,000 max allowance for single, HoH, MFJ, QSS"
+      - "Phase-out: 50% of MAGI over $100,000, fully phased out at $150,000 MAGI"
+      - "MFS who lived with spouse at any time during the year: $0 allowance (IRC §469(i)(4))"
+      - "MFS who lived apart from spouse for the ENTIRE year: $12,500 max allowance, phased out at $50,000-$75,000 MAGI (IRC §469(i)(4)(B))"
+      - "Must be active participant (not mere investor)"
+      - "In the federal rental-property path, only properties flagged as actively participated can contribute to the special allowance bucket"
+      - "Matched prior-year suspended losses can enter the special allowance bucket only when the current-year activity is still classified as active-participant rental real estate"
+      - "MAGI adds back: passive losses, IRA deduction, SLI deduction, bond exclusion"
+    testRef: "tests/engine/forms/form-8582.test.ts::Form 8582 Line 7 - rental allowance under $100K AGI"
+
+  - line: "9"
+    description: "Allowed passive activity loss"
+    formula: "Passive income + rental allowance (limited by total passive loss)"
+    irsRef: "Form 8582 Instructions, Line 9"
+    testRef: "tests/engine/forms/form-8582.test.ts::Form 8582 Line 9 - allowed loss equals passive income when no rental"
+
+  - line: "10"
+    description: "Suspended passive activity loss"
+    formula: "Total passive loss, including matched prior-year unallowed losses carried into the current-year activity buckets, minus the allowed loss; the remaining disallowed amount carries forward by activity"
+    irsRef: "Form 8582 Instructions, Line 10"
+    edgeCases:
+      - "Two-step allocation per IRS Parts VI/VII: special allowance to rental first, then remaining unallowed proportional"
+      - "Released fully when activity is disposed in taxable event"
+    testRef: "tests/engine/forms/form-8582.test.ts::Form 8582 Line 10 - suspended loss"
+
+  # ── PTP segregation (IRC §469(k)) ─────────────────────────
+  - line: "ptp-segregation"
+    description: "Publicly traded partnership loss segregation"
+    formula: |
+      Per IRC §469(k), passive activity rules apply separately to each PTP.
+      PTP losses can only offset income from the SAME PTP, never other passive income.
+      For each PTP:
+        1. Compute current-year net income or loss
+        2. Add prior-year unallowed PTP losses for the same PTP
+        3. If net income: include in Form 8582 passive income pool (Line 1a or 3a)
+        4. If net loss: entire net loss is suspended per-PTP (NOT included in Lines 1-10)
+      Suspended PTP losses carry forward per-PTP indefinitely.
+      When a PTP interest is fully disposed of in a taxable transaction,
+      all suspended PTP losses become deductible as nonpassive losses per IRC §469(g)(1).
+    irsRef: "IRC §469(k); Form 8582 Instructions Worksheets 5, 6, 7"
+    edgeCases:
+      - "PTP losses cannot offset non-PTP passive income"
+      - "PTP losses cannot offset income from a different PTP"
+      - "PTP net income IS included in the regular passive income pool for Form 8582"
+      - "Prior-year suspended PTP losses only offset current-year income from the SAME PTP"
+      - "Multiple PTPs are handled independently — each has its own income/loss netting"
+      - "A PTP with both income and loss items nets to a single amount per IRC §469(k)"
+      - "PTP losses are subject to basis and at-risk limitations BEFORE the §469(k) segregation"
+    testRef: "tests/engine/forms/form-8582.test.ts::PTP with net loss — entire loss is suspended, not included in Lines 1-10"
+
+  - line: "ptp-carryforward"
+    description: "Per-PTP suspended loss carryforward"
+    formula: "Suspended PTP losses carry forward by PTP name until offset by future income from the same PTP or until the PTP interest is fully disposed of"
+    irsRef: "IRC §469(k)(2)"
+    testRef: "tests/engine/forms/form-8582.test.ts::PTP prior-year carryforward offsets current-year PTP income from same PTP"
+
+  - line: "ptp-disposition"
+    description: "PTP disposition — release of suspended losses (IRC §469(g)(1))"
+    formula: |
+      When a taxpayer fully disposes of an entire interest in a PTP in a
+      fully taxable transaction, ALL accumulated suspended PTP losses
+      become deductible as losses that are NOT from a passive activity.
+      For each disposed PTP:
+        1. Compute current-year net from K-1 activity (income minus loss)
+        2. Add gain/loss recognized on the disposition of the PTP interest
+           (treated as passive activity income/loss from the PTP per IRC §469(g)(1)(A))
+        3. Apply prior-year suspended PTP losses
+        4. If net loss remains: the entire net loss is released as a nonpassive loss
+        5. If net income: all suspended losses have been absorbed; no release needed
+      Released losses flow to Schedule E / Schedule 1 as nonpassive losses,
+      reducing AGI directly rather than being subject to passive loss limitation.
+    irsRef: "IRC §469(g)(1); IRC §469(k); Pub 925"
+    edgeCases:
+      - "Only applies to FULLY taxable dispositions — gifts, bequests, and related-party sales do not qualify"
+      - "Disposition gain from selling the PTP interest is itself passive activity income from that PTP for netting purposes"
+      - "If disposition gain fully absorbs suspended losses, no loss is released"
+      - "A PTP with no current-year K-1 activity but prior-year suspended losses can still release those losses on disposition"
+      - "Partial dispositions do not trigger §469(g)(1) — the taxpayer must dispose of their ENTIRE interest"
+      - "For MFJ returns, disposition applies per the disposing spouse's PTP interest only"
+      - "Released losses are NOT subject to Form 8582 passive limitation — they are nonpassive by operation of §469(g)(1)"
+      - "The disposed PTP should not appear in the ptpSuspendedLosses carryforward output"
+    testRef: "tests/engine/forms/form-8582.test.ts::PTP disposition releases all suspended losses as nonpassive"
+
+  - line: "agi-correction"
+    description: "AGI correction for Part I rental suspended losses"
+    formula: "correctedAGI = preliminaryAGI + Part I rental suspended losses (positive amount)"
+    irsRef: "IRS Form 1040 Instructions; Schedule E Instructions Line 26; Form 8582 Instructions"
+    notes: |
+      Per IRS instructions, Schedule E reports the ALLOWED rental income/loss
+      (after Form 8582 limitation), not the full amount. The allowed amount then
+      flows to Schedule 1 → 1040 Line 8 → AGI. Part I rental losses that are
+      suspended by Form 8582 should NOT be in AGI.
+      The correction adds back the suspended Part I rental loss amounts to AGI
+      so downstream computations (deductions, credits, NIIT, etc.) use the
+      correct AGI that reflects only the allowed passive loss.
+    edgeCases:
+      - "Only Part I (Schedule E) rental losses need correction — K-1 passive losses are already excluded from AGI by Schedule E's own computation"
+      - "Correction = sum of suspended losses for Part I rental activities from Form 8582 allocation"
+      - "No correction needed when all Part I rental losses are allowed (e.g., passive income exceeds losses)"
+    testRef: "tests/edge-cases/rental-property-edge-cases.test.ts::AGI corrected for Form 8582 suspended rental losses"

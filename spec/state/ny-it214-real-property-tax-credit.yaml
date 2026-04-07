@@ -1,0 +1,191 @@
+form: "New York IT-214 Real Property Tax Credit"
+fullName: "New York State Form IT-214 Claim for Real Property Tax Credit for Homeowners and Renters"
+taxYear: 2025
+irsReference: "https://www.tax.ny.gov/pdf/current_forms/it/it214i.pdf"
+
+notes: |
+  Refundable credit for qualifying NY residents who pay real property taxes
+  or rent and have federal AGI of $18,000 or less.
+
+  Eligibility (all must be true):
+  - Full-year NY State resident
+  - Occupied same residence 6+ months
+  - Cannot be claimed as dependent on another return
+  - Residence not completely exempt from property taxes
+  - Current market value of all owned real property ≤ $85,000
+  - For renters: average monthly adjusted rent ≤ $450
+
+  Credit is allowed only if real property taxes (or rent equivalent) EXCEED
+  the income-based threshold (FAGI × rate from Table 1). The credit amount
+  is a flat amount from Table A (65+ household) or Table B (under 65),
+  looked up by FAGI bracket.
+
+  For renters: 25% of adjusted rent is treated as property taxes paid.
+  Adjusted rent = gross rent minus charges for utilities/furnishings/board,
+  with percentage adjustments based on what's included in rent.
+
+  Constants for 2025:
+  - FAGI limit: $18,000
+  - Property value limit: $85,000
+  - Average monthly rent limit: $450
+  - Maximum credit (65+): $375
+  - Maximum credit (under 65): $75
+
+lines:
+  - line: "8"
+    description: "Federal adjusted gross income"
+    formula: "FAGI from federal return (zero floor)"
+    inputs:
+      - "Federal adjusted gross income"
+    notes: |
+      Must be $18,000 or less to qualify. If less than zero, enter 0.
+    edgeCases:
+      - "Negative FAGI is treated as zero"
+      - "FAGI over $18,000 disqualifies"
+    testRef: "tests/engine/state/ny-it214-real-property-tax-credit.test.ts::IT-214 Line 8 - FAGI over $18,000 disqualifies"
+
+  - line: "9"
+    description: "Rate from Table 1"
+    formula: "Lookup rate by FAGI bracket from Table 1"
+    inputs:
+      - "FAGI (line 8)"
+    notes: |
+      Table 1 rates for 2025:
+        $0-$3,000:     0.035
+        $3,001-$5,000: 0.040
+        $5,001-$7,000: 0.045
+        $7,001-$9,000: 0.050
+        $9,001-$11,000: 0.055
+        $11,001-$14,000: 0.060
+        $14,001-$18,000: 0.065
+    testRef: "tests/engine/state/ny-it214-real-property-tax-credit.test.ts::Line 9 - rate lookup from Table 1"
+
+  - line: "10"
+    description: "Income-based threshold"
+    formula: "Line 8 × Line 9"
+    inputs:
+      - "FAGI (line 8)"
+      - "Rate (line 9)"
+    notes: |
+      This is the portion of income deemed attributable to property taxes.
+      If this amount equals or exceeds actual property taxes (line 18),
+      no credit is allowed.
+    testRef: "tests/engine/state/ny-it214-real-property-tax-credit.test.ts::Line 10 - income threshold is FAGI times rate"
+
+  - line: "11"
+    description: "Total rent paid (renters only)"
+    formula: "Gross rent paid during tax year"
+    inputs:
+      - "Total rent paid"
+    notes: "Do not include subsidized portion of rental charge."
+    testRef: "tests/engine/state/ny-it214-real-property-tax-credit.test.ts::Lines 11-14 - renter computation"
+
+  - line: "12"
+    description: "Adjusted rent"
+    formula: "Line 11 × adjustment percentage"
+    inputs:
+      - "Total rent paid (line 11)"
+      - "Rent includes charges for (utilities/furnishings/board)"
+    notes: |
+      Adjustment percentages based on what rent includes:
+        Heat, gas, electricity, furnishings, and board: 50%
+        Heat, gas, electricity, and furnishings: 75%
+        Heat, gas, and electricity: 80%
+        Heat or heat and gas: 85%
+        None of the above: 100%
+    testRef: "tests/engine/state/ny-it214-real-property-tax-credit.test.ts::IT-214 Line 12 - adjusted rent 100% when no utilities included"
+
+  - line: "13"
+    description: "Average monthly adjusted rent"
+    formula: "Line 12 ÷ months of rent"
+    inputs:
+      - "Adjusted rent (line 12)"
+      - "Number of months rent was paid"
+    notes: "If > $450, no credit allowed."
+    edgeCases:
+      - "Monthly rent exactly $450: eligible"
+      - "Monthly rent $451: disqualified"
+    testRef: "tests/engine/state/ny-it214-real-property-tax-credit.test.ts::IT-214 Line 13 - average monthly rent over $450 disqualifies"
+
+  - line: "14"
+    description: "Rent-to-tax conversion"
+    formula: "Line 12 × 25%"
+    inputs:
+      - "Adjusted rent (line 12)"
+    notes: "25% of adjusted rent is treated as real property taxes paid."
+    testRef: "tests/engine/state/ny-it214-real-property-tax-credit.test.ts::IT-214 Line 14 - 25% of adjusted rent is property tax equivalent"
+
+  - line: "15"
+    description: "Real property taxes paid (homeowners only)"
+    formula: "Taxes paid to county, city, town, village, or school district"
+    inputs:
+      - "Real property taxes paid"
+    notes: |
+      Must reduce by STAR credit received. Do not include penalty/interest.
+      If property on more than one acre, only taxes for residence + one acre.
+    testRef: "tests/engine/state/ny-it214-real-property-tax-credit.test.ts::Lines 15-17 - homeowner computation"
+
+  - line: "16"
+    description: "Special assessments (homeowners only)"
+    formula: "Special assessments paid"
+    inputs:
+      - "Special assessments"
+    notes: "Do not include penalty and interest charges."
+    testRef: "tests/engine/state/ny-it214-real-property-tax-credit.test.ts::Lines 15-17 - homeowner computation"
+
+  - line: "17"
+    description: "Total property taxes (homeowners)"
+    formula: "Line 15 + Line 16"
+    inputs:
+      - "Real property taxes paid (line 15)"
+      - "Special assessments (line 16)"
+    testRef: "tests/engine/state/ny-it214-real-property-tax-credit.test.ts::Lines 15-17 - homeowner computation"
+
+  - line: "18"
+    description: "Real property taxes for credit computation"
+    formula: "Renters: Line 14. Homeowners: Line 17. Both: Line 14 + Line 17."
+    inputs:
+      - "Renter property tax equivalent (line 14)"
+      - "Homeowner property taxes (line 17)"
+    notes: "If zero or less, no credit is allowed."
+    edgeCases:
+      - "Part-year renter, part-year homeowner: sum both"
+      - "Zero property taxes: no credit"
+    testRef: "tests/engine/state/ny-it214-real-property-tax-credit.test.ts::Line 18 - combined renter and homeowner taxes"
+
+  - line: "19"
+    description: "Income-based threshold (from line 10)"
+    formula: "Line 10 value"
+    inputs:
+      - "Income threshold (line 10)"
+    notes: "If line 19 ≥ line 18, no credit is allowed."
+    edgeCases:
+      - "Threshold exactly equals property taxes: no credit"
+      - "Threshold exceeds property taxes: no credit"
+    testRef: "tests/engine/state/ny-it214-real-property-tax-credit.test.ts::Line 19 - threshold equal to or exceeding property taxes disqualifies"
+
+  - line: "20"
+    description: "Credit amount"
+    formula: "Table A (65+) or Table B (under 65) lookup by FAGI bracket"
+    inputs:
+      - "FAGI (line 8)"
+      - "Has person 65+ in household (line 7)"
+    notes: |
+      Table A (65+ in household):
+        $0-$3,000:     $375
+        $3,001-$5,000: $330
+        $5,001-$7,000: $300
+        $7,001-$9,000: $260
+        $9,001-$11,000: $230
+        $11,001-$14,000: $200
+        $14,001-$18,000: $150
+
+      Table B (all under 65):
+        $0-$5,000:     $75
+        $5,001-$9,000: $70
+        $9,001-$14,000: $60
+        $14,001-$18,000: $50
+    edgeCases:
+      - "FAGI at bracket boundary: uses the lower bracket (e.g., $3,000 → $375)"
+      - "65+ household gets significantly higher credit at same income"
+    testRef: "tests/engine/state/ny-it214-real-property-tax-credit.test.ts::Line 20 - credit amount from Table A (65+)"

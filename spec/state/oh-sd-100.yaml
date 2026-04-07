@@ -1,0 +1,395 @@
+form: "Ohio SD 100"
+fullName: "Ohio School District Income Tax Return"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/v1760476414/tax.ohio.gov/forms/ohio_individual/individual/2025/sd100-bundle.pdf"
+
+notes: |
+  The Ohio SD 100 is the school district income tax return. Ohio has approximately
+  210 taxing school districts (out of ~600+ total), each with its own rate (0.25%
+  to 2.00%) and tax type (traditional or earned income).
+
+  Two tax types:
+    - Traditional: tax base is MAGI less personal exemptions (same as IT 1040 line 5
+      concept, but computed as MAGI - exemptions on the SD 100 itself)
+    - Earned income: tax base is wages + net self-employment income, capped at MAGI
+
+  MAGI = Ohio AGI (IT 1040 line 3) + business income deduction (Schedule of
+  Adjustments line 15). This is the same MAGI used for IT 1040 credit eligibility.
+
+  Only one credit applies: $50 senior citizen credit per district (age 65+).
+  No other IT 1040 credits (retirement, joint filing, EIC, etc.) apply to SD 100.
+
+  A single SD 100 is filed regardless of how many districts the taxpayer resided in.
+  Part-year residents of a district use a residency factor (days / 365).
+
+  Filing status must match IT 1040. R.C. 5748.01–5748.06.
+
+packetRules:
+  packetBehavior: "reference-summary-pdf"
+  includeWhen:
+    - "Ohio school district return result exists"
+  suppressWhen:
+    - "No Ohio school district return is required"
+  notes: |
+    The packet generator should attach an SD 100 reference-summary page only
+    when a school district return is actually computed.
+
+businessRuleValidation:
+  - rule: "reference-summary-packet"
+    description: "Inventory support counts this return as business-rule validated only when regression coverage proves the Ohio SD 100 reference summary is emitted when a school district return is computed and stays suppressed when no school district return is required."
+    testRef: "tests/pdf/fill-oh-reference-forms.test.ts::fillOhioReferenceForms includes the Ohio SD 100 reference summary only when a school district return is computed"
+
+lines:
+  # =========================================================================
+  # MAIN RETURN (lines 1–21)
+  # =========================================================================
+
+  - line: "1"
+    description: "Ohio adjusted gross income"
+    formula: "IT 1040, line 3"
+    inputs:
+      - "Ohio AGI from IT 1040"
+    notes: "Same Ohio AGI used on the IT 1040."
+    testRef: "tests/engine/state/oh-sd-100.test.ts::OH SD 100 Line 1 - Ohio AGI flows from IT 1040"
+
+  - line: "2"
+    description: "Business income deduction add-back"
+    formula: "Ohio Schedule of Adjustments, line 15"
+    inputs:
+      - "Business income deduction from Schedule of Adjustments"
+    notes: "Add back the business income deduction to compute MAGI for school district purposes."
+    testRef: "tests/engine/state/oh-sd-100.test.ts::OH SD 100 Line 2 - business income deduction add-back"
+
+  - line: "3"
+    description: "Modified adjusted gross income (MAGI)"
+    formula: "max(0, Line 1 + Line 2)"
+    inputs:
+      - "SD 100 Line 1"
+      - "SD 100 Line 2"
+    notes: "If negative, enter zero. Same MAGI as used for IT 1040 credit eligibility."
+    edgeCases:
+      - "Negative Ohio AGI with no business income deduction produces zero MAGI"
+    testRef: "tests/engine/state/oh-sd-100.test.ts::OH SD 100 Line 3 - MAGI floors at zero"
+
+  - line: "4"
+    description: "Personal and dependent exemption amount"
+    formula: "IT 1040, line 4"
+    inputs:
+      - "Exemption amount from IT 1040"
+    notes: "Same exemption amount computed on IT 1040 (tiered by MAGI)."
+    testRef: "tests/engine/state/oh-sd-100.test.ts::OH SD 100 Line 4 - exemptions from IT 1040"
+
+  - line: "5"
+    description: "MAGI less exemptions"
+    formula: "max(0, Line 3 - Line 4)"
+    inputs:
+      - "SD 100 Line 3"
+      - "SD 100 Line 4"
+    notes: "Used as tax base for traditional districts. Cannot be negative."
+    edgeCases:
+      - "Exemptions exceeding MAGI produce zero"
+    testRef: "tests/engine/state/oh-sd-100.test.ts::OH SD 100 Line 5 - MAGI less exemptions floors at zero"
+
+  - line: "6"
+    description: "Total tax from traditional tax base districts"
+    formula: "Sum of line 27 across all traditional districts"
+    inputs:
+      - "Traditional tax base schedule results"
+    testRef: "tests/engine/state/oh-sd-100.test.ts::OH SD 100 Line 6 - traditional district tax"
+
+  - line: "7"
+    description: "Total tax from earned income tax base districts"
+    formula: "Sum of line 37 across all earned income districts"
+    inputs:
+      - "Earned income tax base schedule results"
+    testRef: "tests/engine/state/oh-sd-100.test.ts::OH SD 100 Line 7 - earned income district tax"
+
+  - line: "8"
+    description: "School district income tax liability after credits"
+    formula: "Line 6 + Line 7"
+    inputs:
+      - "SD 100 Line 6"
+      - "SD 100 Line 7"
+    testRef: "tests/engine/state/oh-sd-100.test.ts::OH SD 100 Line 8 - total SD tax liability"
+
+  - line: "9"
+    description: "Interest penalty on underpayment of estimated tax"
+    formula: "From IT/SD 2210 (pass-through input)"
+    inputs:
+      - "Underpayment penalty"
+    notes: "Generally zero for W-2 wage earners with adequate withholding."
+    testRef: "tests/engine/state/oh-sd-100.test.ts::OH SD 100 Line 9 - underpayment penalty defaults to zero"
+
+  - line: "10"
+    description: "Total SD tax liability before payments"
+    formula: "Line 8 + Line 9"
+    inputs:
+      - "SD 100 Line 8"
+      - "SD 100 Line 9"
+    testRef: "tests/engine/state/oh-sd-100.test.ts::OH SD 100 Line 10 - total liability before payments"
+
+  - line: "11"
+    description: "School district income tax withheld"
+    formula: "Sum of W-2 box 19 amounts for school district withholding"
+    inputs:
+      - "School district withholding from W-2s and 1099-Rs"
+    notes: "Only school district withholding — do not include city income tax."
+    testRef: "tests/engine/state/oh-sd-100.test.ts::OH SD 100 Line 11 - SD withholding"
+
+  - line: "12"
+    description: "Estimated and extension payments, credit carryforward"
+    formula: "Sum of SD estimated payments + extension payments + prior year credit carryforward"
+    inputs:
+      - "Estimated tax payments"
+      - "Extension payments"
+      - "Credit carryforward from prior year SD 100 line 20"
+    testRef: "tests/engine/state/oh-sd-100.test.ts::OH SD 100 Line 12 - estimated payments"
+
+  - line: "13"
+    description: "Total SD tax payments"
+    formula: "Line 11 + Line 12"
+    inputs:
+      - "SD 100 Line 11"
+      - "SD 100 Line 12"
+    testRef: "tests/engine/state/oh-sd-100.test.ts::OH SD 100 Line 13 - total payments"
+
+  - line: "14"
+    description: "Amended return prior overpayment"
+    formula: "Prior SD 100 line 19 (amended returns only)"
+    inputs:
+      - "Prior overpayment from original/amended SD 100"
+    notes: "$0 for original returns."
+    testRef: "tests/engine/state/oh-sd-100.test.ts::OH SD 100 Line 14 - amended overpayment defaults to zero"
+
+  - line: "15"
+    description: "Net payment position"
+    formula: "Line 13 - Line 14"
+    inputs:
+      - "SD 100 Line 13"
+      - "SD 100 Line 14"
+    notes: "If line 15 > line 10, skip to line 19 (overpayment). Otherwise continue to line 16."
+    testRef: "tests/engine/state/oh-sd-100.test.ts::OH SD 100 Line 15 - net payments"
+
+  - line: "16"
+    description: "Tax due"
+    formula: "Line 10 - Line 15 (when Line 15 ≤ Line 10)"
+    inputs:
+      - "SD 100 Line 10"
+      - "SD 100 Line 15"
+    notes: "If line 15 is negative, add absolute value to line 10."
+    edgeCases:
+      - "$0 when payments cover or exceed liability"
+      - "Negative line 15 increases amount due"
+    testRef: "tests/engine/state/oh-sd-100.test.ts::OH SD 100 Line 16 - tax due when payments insufficient"
+
+  - line: "17"
+    description: "Interest due on late payment"
+    formula: "Pass-through input (7% rate for calendar year 2026)"
+    inputs:
+      - "Late payment interest amount"
+    testRef: "tests/engine/state/oh-sd-100.test.ts::OH SD 100 Line 17 - late payment interest defaults to zero"
+
+  - line: "18"
+    description: "Total amount due"
+    formula: "If (Line 16 + Line 17) ≤ $1: $0; otherwise Line 16 + Line 17"
+    inputs:
+      - "SD 100 Line 16"
+      - "SD 100 Line 17"
+    notes: "If $1.00 or less, no payment is necessary (per SD 100 instructions)."
+    edgeCases:
+      - "$1 or less amount due is zeroed out"
+    testRef: "tests/engine/state/oh-sd-100.test.ts::OH SD 100 Line 18 - $1 or less amount due zeroed out"
+
+  - line: "19"
+    description: "Overpayment"
+    formula: "Line 15 - Line 10 (when Line 15 > Line 10)"
+    inputs:
+      - "SD 100 Line 15"
+      - "SD 100 Line 10"
+    edgeCases:
+      - "$0 when tax due exceeds payments"
+    testRef: "tests/engine/state/oh-sd-100.test.ts::OH SD 100 Line 19 - overpayment when payments exceed liability"
+
+  - line: "20"
+    description: "Credit carryforward to next year"
+    formula: "Taxpayer-elected amount (0 ≤ Line 20 ≤ Line 19)"
+    inputs:
+      - "Elected carryforward amount"
+    notes: "Original returns only. Not allowed on amended returns."
+    testRef: "tests/engine/state/oh-sd-100.test.ts::OH SD 100 Line 20 - credit carryforward capped at overpayment"
+
+  - line: "21"
+    description: "Refund"
+    formula: "If (Line 19 - Line 20) ≤ $1: $0; otherwise Line 19 - Line 20"
+    inputs:
+      - "SD 100 Line 19"
+      - "SD 100 Line 20"
+    notes: "If $1.00 or less, no refund is issued (per SD 100 instructions)."
+    edgeCases:
+      - "$1 or less refund is zeroed out"
+    testRef: "tests/engine/state/oh-sd-100.test.ts::OH SD 100 Line 21 - $1 or less refund zeroed out"
+
+  # =========================================================================
+  # TRADITIONAL TAX BASE SCHEDULE (lines 22–28)
+  # =========================================================================
+
+  - line: "22"
+    description: "Portion of MAGI less exemptions received while resident of district"
+    formula: "Line 5 × residency factor (days / 365)"
+    inputs:
+      - "SD 100 Line 5"
+      - "Residency factor for the district"
+    notes: "Full-year residents use factor 1.0. Part-year residents prorate."
+    edgeCases:
+      - "Full-year resident: line 22 = line 5"
+      - "Part-year resident: line 22 = line 5 × (days / 365)"
+      - "Residency factor must be between 0 and 1 inclusive because it represents days of district residency divided by 365"
+    testRef: "tests/engine/state/oh-sd-100.test.ts::OH SD 100 Line 22 - traditional tax base prorated by residency"
+
+  - line: "23"
+    description: "Taxable amount for traditional district"
+    formula: "min(Line 5, Line 22)"
+    inputs:
+      - "SD 100 Line 5"
+      - "SD 100 Line 22"
+    notes: "Cannot exceed total MAGI less exemptions."
+    testRef: "tests/engine/state/oh-sd-100.test.ts::OH SD 100 Line 23 - traditional taxable amount is min of line 5 and line 22"
+
+  - line: "24"
+    description: "School district tax rate"
+    formula: "From school district rate table (0.25%–2.00%)"
+    inputs:
+      - "School district number"
+    notes: |
+      The engine normalizes 1- to 4-digit numeric district identifiers to the
+      official 4-digit taxation number format before resolving the rate table.
+      When a caller supplies only an official school district name, the engine
+      resolves the unique taxing district number through the Finder-backed name
+      index before looking up the rate table entry.
+    edgeCases:
+      - "Short numeric district identifiers are normalized to 4 digits before lookup"
+      - "A uniquely matching official district name can resolve the district number, tax type, and rate"
+    testRef: "tests/engine/state/oh-sd-100.test.ts::OH SD 100 Line 24 - district tax rate"
+
+  - line: "25"
+    description: "School district tax (traditional)"
+    formula: "Line 23 × Line 24"
+    inputs:
+      - "SD 100 Line 23"
+      - "SD 100 Line 24"
+    testRef: "tests/engine/state/oh-sd-100.test.ts::OH SD 100 Line 25 - traditional district tax"
+
+  - line: "26"
+    description: "Senior citizen credit (traditional district)"
+    formula: "If age 65+: $50; otherwise $0"
+    inputs:
+      - "Whether taxpayer is 65 or older"
+    notes: "$50 per district, per return. No income limit for SD 100 senior credit."
+    testRef: "tests/engine/state/oh-sd-100.test.ts::OH SD 100 Line 26 - senior citizen credit"
+
+  - line: "27"
+    description: "Tax after credits (traditional district)"
+    formula: "max(0, Line 25 - Line 26)"
+    inputs:
+      - "SD 100 Line 25"
+      - "SD 100 Line 26"
+    testRef: "tests/engine/state/oh-sd-100.test.ts::OH SD 100 Line 27 - traditional tax after credits"
+
+  - line: "28"
+    description: "Total traditional district tax"
+    formula: "Sum of line 27 across all traditional districts"
+    notes: "Flows to line 6."
+    testRef: "tests/engine/state/oh-sd-100.test.ts::OH SD 100 Line 28 - total traditional tax to line 6"
+
+  # =========================================================================
+  # EARNED INCOME TAX BASE SCHEDULE (lines 29–38)
+  # =========================================================================
+
+  - line: "29"
+    description: "Wages, salaries, tips while resident of district"
+    formula: "W-2 Box 1 wages received while a resident of the district"
+    inputs:
+      - "Wages/salaries/tips for the district residency period"
+    notes: "Only compensation received while a resident of the school district."
+    testRef: "tests/engine/state/oh-sd-100.test.ts::OH SD 100 Line 29 - earned income wages"
+
+  - line: "30"
+    description: "Net self-employment earnings while resident"
+    formula: "Net SE income from federal return received while a resident"
+    inputs:
+      - "Net self-employment earnings for district residency period"
+    notes: "Can be negative (SE loss)."
+    testRef: "tests/engine/state/oh-sd-100.test.ts::OH SD 100 Line 30 - SE income"
+
+  - line: "31"
+    description: "Total earned income"
+    formula: "max(0, Line 29 + Line 30)"
+    inputs:
+      - "SD 100 Line 29"
+      - "SD 100 Line 30"
+    notes: "Cannot be negative."
+    edgeCases:
+      - "SE loss exceeding wages produces zero"
+    testRef: "tests/engine/state/oh-sd-100.test.ts::OH SD 100 Line 31 - total earned income floors at zero"
+
+  - line: "32"
+    description: "Portion of MAGI received while resident of district"
+    formula: "Line 3 × residency factor (days / 365)"
+    inputs:
+      - "SD 100 Line 3"
+      - "Residency factor for the district"
+    notes: "Caps earned income at MAGI to prevent taxing more than total income."
+    edgeCases:
+      - "Residency factor must be between 0 and 1 inclusive because it represents days of district residency divided by 365"
+    testRef: "tests/engine/state/oh-sd-100.test.ts::OH SD 100 Line 32 - MAGI portion for earned income district"
+
+  - line: "33"
+    description: "Taxable earned income"
+    formula: "min(Line 31, Line 32)"
+    inputs:
+      - "SD 100 Line 31"
+      - "SD 100 Line 32"
+    notes: "Earned income capped at prorated MAGI."
+    edgeCases:
+      - "Large deductions reducing MAGI below earned income: MAGI cap applies"
+    testRef: "tests/engine/state/oh-sd-100.test.ts::OH SD 100 Line 33 - taxable earned income capped at MAGI"
+
+  - line: "34"
+    description: "School district tax rate"
+    formula: "From school district rate table (0.25%–2.00%)"
+    inputs:
+      - "School district number"
+    notes: |
+      The engine normalizes 1- to 4-digit numeric district identifiers to the
+      official 4-digit taxation number format before resolving the rate table.
+    testRef: "tests/engine/state/oh-sd-100.test.ts::OH SD 100 Line 34 - earned income district rate"
+
+  - line: "35"
+    description: "School district tax (earned income)"
+    formula: "Line 33 × Line 34"
+    inputs:
+      - "SD 100 Line 33"
+      - "SD 100 Line 34"
+    testRef: "tests/engine/state/oh-sd-100.test.ts::OH SD 100 Line 35 - earned income district tax"
+
+  - line: "36"
+    description: "Senior citizen credit (earned income district)"
+    formula: "If age 65+: $50; otherwise $0"
+    inputs:
+      - "Whether taxpayer is 65 or older"
+    notes: "$50 per district, per return. R.C. 5748.06."
+    testRef: "tests/engine/state/oh-sd-100.test.ts::OH SD 100 Line 36 - senior citizen credit earned income"
+
+  - line: "37"
+    description: "Tax after credits (earned income district)"
+    formula: "max(0, Line 35 - Line 36)"
+    inputs:
+      - "SD 100 Line 35"
+      - "SD 100 Line 36"
+    testRef: "tests/engine/state/oh-sd-100.test.ts::OH SD 100 Line 37 - earned income tax after credits"
+
+  - line: "38"
+    description: "Total earned income district tax"
+    formula: "Sum of line 37 across all earned income districts"
+    notes: "Flows to line 7."
+    testRef: "tests/engine/state/oh-sd-100.test.ts::OH SD 100 Line 38 - total earned income tax to line 7"

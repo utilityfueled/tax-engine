@@ -1,0 +1,121 @@
+form: "NJ-1040 Earned Income Tax Credit (NJEITC)"
+fullName: "New Jersey Earned Income Tax Credit"
+taxYear: 2025
+reference: "https://www.nj.gov/treasury/taxation/eitc/howmucheitc.shtml"
+
+notes: |
+  New Jersey provides a refundable Earned Income Tax Credit equal to 40% of the
+  federal EITC amount for tax year 2025. This is one of the most generous state
+  EITCs in the nation.
+
+  The NJEITC is refundable — it reduces tax owed and can produce a refund even
+  if no NJ tax is due.
+
+  Part-year residents prorate their federal EITC based on months of NJ residency
+  (15+ days in a month counts as a full month), then apply the 40% rate.
+
+  Civil union couples who did not file a joint federal return should compute the
+  federal EITC as if they had filed married filing jointly.
+
+  Special childless age-18 rule (2025 NJ-1040 instructions, line 58):
+  - If the taxpayer did not have a qualifying child
+  - And was at least age 18 on the last day of 2025
+  - And met all federal EIC requirements except the age requirement
+  - And is not listed as a dependent on another return
+  then the taxpayer may claim a fixed $260 NJEITC even when the federal EITC is $0.
+  Part-year residents prorate the $260 amount by months of NJ residency.
+
+  Eligibility:
+  - Must be a NJ resident (full or part year) with earned income
+  - Must have a valid SSN (taxpayer, spouse, and qualifying children)
+  - Must qualify for the federal EITC
+  - Must not be claimed as a dependent on another return
+  - Must file Form NJ-1040
+  - MFS filers are generally excluded unless they lived apart from their spouse
+    for the last 6 months of the year AND have a qualifying child
+
+  Investment income must be $11,950 or less for 2025.
+
+  Federal EITC earned income limits for 2025:
+    Single/HOH/QSS:
+      0 children: $19,104
+      1 child:    $50,434
+      2 children: $57,310
+      3+ children: $61,555
+    MFJ:
+      0 children: $26,214
+      1 child:    $57,554
+      2 children: $64,430
+      3+ children: $68,675
+
+lines:
+  - line: "federal-eitc"
+    description: "Federal EITC amount from federal return"
+    formula: "Input from federal return (Form 1040 Line 27)"
+    inputs:
+      - "Federal EITC amount"
+    notes: "This module takes the federal EITC as input; it does not recompute it."
+    testRef: "tests/engine/state/nj-1040-eitc.test.ts::NJ-1040 EITC - zero federal EITC produces zero NJ EITC"
+
+  - line: "residency-months"
+    description: "Number of months of NJ residency"
+    formula: "Count of months with 15+ days of NJ residency; full-year = 12"
+    inputs:
+      - "Months of NJ residency"
+    notes: "15 or more days in a month counts as a full month of residency."
+    testRef: "tests/engine/state/nj-1040-eitc.test.ts::NJ-1040 EITC - part-year resident with 6 months gets half credit"
+
+  - line: "prorated-federal-eitc"
+    description: "Prorated federal EITC for part-year residents"
+    formula: "(federal EITC / 12) × months of NJ residency"
+    inputs:
+      - "Federal EITC amount"
+      - "Months of NJ residency"
+    notes: "Full-year residents (12 months) get the full federal EITC amount."
+    edgeCases:
+      - "Full-year resident: prorated amount equals federal EITC"
+      - "Part-year resident with 6 months: prorated amount is half of federal EITC"
+      - "Part-year resident with 1 month: prorated amount is 1/12 of federal EITC"
+    testRef: "tests/engine/state/nj-1040-eitc.test.ts::NJ-1040 EITC - part-year resident with 6 months gets half credit"
+
+  - line: "nj-eitc"
+    description: "New Jersey EITC (40% of prorated federal EITC)"
+    formula: "prorated federal EITC × 0.40, rounded to nearest dollar"
+    inputs:
+      - "Prorated federal EITC"
+    notes: |
+      The NJ EITC rate has been 40% since tax year 2020.
+      Prior years: 39% (2019), 37% (2018).
+      The credit is refundable.
+    edgeCases:
+      - "Zero federal EITC produces zero NJ EITC"
+      - "Full-year resident: NJ EITC = federal EITC × 40%"
+      - "Part-year resident: NJ EITC = (federal EITC / 12 × months) × 40%"
+      - "MFS filers generally ineligible (excluded at input validation)"
+      - "Rounding: result rounded to nearest dollar"
+    testRef: "tests/engine/state/nj-1040-eitc.test.ts::NJ-1040 EITC - full-year resident gets 40% of federal EITC"
+
+  - line: "childless-age-exception"
+    description: "Special NJ-only childless EITC amount when federal EITC is disallowed solely by age"
+    formula: |
+      If federalEITC = 0 AND qualifiesForChildlessAge18Exception = true AND
+      qualifyingEICChildren = 0 AND taxpayerAge18OrOlder = true,
+      base NJ EITC = $260 for 2025.
+      If part-year resident, prorate: ($260 / 12) × monthsOfResidency, rounded to nearest dollar.
+    inputs:
+      - "Federal EITC amount"
+      - "qualifiesForChildlessAge18Exception eligibility flag"
+      - "Number of qualifying EIC children"
+      - "Taxpayer/spouse age-18 eligibility flag"
+      - "Months of NJ residency"
+    notes: |
+      This rule comes directly from the 2025 NJ-1040 instructions for line 58.
+      The eligibility flag represents the interview determination that the filer
+      met all federal EIC requirements except the federal childless age rule and
+      is not listed as a dependent on another return.
+    edgeCases:
+      - "Full-year resident eligible under the exception gets $260"
+      - "Part-year resident with 6 months gets $130"
+      - "If federal EITC is positive, normal 40%-of-federal computation applies"
+      - "If the filer has any qualifying EIC child, this exception does not apply"
+    testRef: "tests/engine/state/nj-1040-eitc.test.ts::NJ-1040 EITC - childless age-18 exception gives fixed $260 when federal EITC is zero"

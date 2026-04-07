@@ -1,0 +1,108 @@
+form: "Schedule CR"
+fullName: "Illinois Credit for Tax Paid to Other States"
+taxYear: 2025
+reference: "https://tax.illinois.gov/forms/incometax/individual/schedule-cr.html"
+
+notes: |
+  Schedule CR computes the credit available to Illinois residents who paid income tax to
+  another state on income earned while an Illinois resident. The credit prevents double
+  taxation. The credit equals the lesser of:
+  1. Tax actually paid to the other state (liability, not withholding)
+  2. Illinois income tax attributable to the non-Illinois income
+
+  The form uses two columns: Column A (total amounts as reported on federal/IL returns)
+  and Column B (non-Illinois portion). The ratio Column B / Column A produces the
+  "Schedule CR decimal" used to allocate Illinois tax.
+
+  Reciprocal agreements: Illinois has reciprocal agreements with Iowa, Kentucky, Michigan,
+  and Wisconsin for wages/salaries/tips. If you earned compensation in these states, you
+  should claim a refund from that state rather than a credit on Schedule CR. Non-wage
+  income (business, rental, etc.) from reciprocal states IS eligible for Schedule CR.
+
+  Publication 111 contains detailed "comparison formulas" for multi-state situations.
+
+lines:
+  # Column A/B Income Allocation (Lines 1-41)
+  # These lines mirror federal/IL income items. For engine purposes, we accept
+  # pre-computed Column A and Column B totals.
+
+  - line: "42a"
+    description: "Column A — Total base income (all income)"
+    formula: "Should equal IL-1040 base income (Line 9)"
+    reference: "Schedule CR Instructions, Line 42"
+    notes: "Sum of all Column A income items minus adjustments, plus IL additions, minus IL subtractions"
+    testRef: "tests/engine/state/il-schedule-cr.test.ts::Schedule CR Line 42 - base income totals flow through"
+
+  - line: "42b"
+    description: "Column B — Non-Illinois portion of base income"
+    formula: "Sum of Column B income items minus adjustments, plus IL additions, minus IL subtractions"
+    reference: "Schedule CR Instructions, Line 42"
+    notes: "Income earned in or sourced to other states while an IL resident"
+    testRef: "tests/engine/state/il-schedule-cr.test.ts::Schedule CR Line 42b - non-Illinois base income flows through"
+
+  - line: "43"
+    description: "Schedule CR decimal"
+    formula: "Column B Line 42 ÷ Column A Line 42 (capped at 1.0)"
+    reference: "Schedule CR Instructions, Line 43"
+    edgeCases:
+      - "Cannot exceed 1.0000"
+      - "If Column A is zero, decimal is 0"
+      - "Carried to 4 decimal places"
+    testRef: "tests/engine/state/il-schedule-cr.test.ts::Schedule CR Line 43 - decimal computation"
+
+  # Part-year adjustments (Lines 44-49) — skipped for resident-only implementation
+
+  - line: "50"
+    description: "Final decimal (full-year residents use Line 43)"
+    formula: "Line 43 for full-year residents"
+    reference: "Schedule CR Instructions, Line 50"
+    testRef: "tests/engine/state/il-schedule-cr.test.ts::Schedule CR Line 50 - final decimal equals Line 43 for residents"
+
+  - line: "51"
+    description: "Total income tax paid to other states"
+    formula: "If detailed tax entries are provided: sum of creditable taxes after reciprocal-state filtering; otherwise direct input amount"
+    reference: "Schedule CR Instructions, Line 51; Publication 111"
+    notes: |
+      Must be actual tax liability (not withholding or estimated payments).
+      For multiple states, enter total of all states' tax liabilities.
+      Does not include local/city taxes unless the state allows local tax as a credit.
+      When detailed tax entries are provided, state-level wage tax paid to Iowa,
+      Kentucky, Michigan, or Wisconsin while an Illinois resident is excluded from
+      the credit because Illinois requires the taxpayer to seek a refund from the
+      reciprocal state instead. Local tax imposed by a city or county in those
+      states remains creditable, and dual-resident cases can still qualify.
+    edgeCases:
+      - "Must be actual liability, not withholding"
+      - "Reciprocal state wage tax should be refunded, not credited here"
+      - "Local tax imposed by a city or county in a reciprocal state is still creditable"
+      - "Dual-resident reciprocal-state income tax remains creditable"
+    testRef: "tests/engine/state/il-schedule-cr.test.ts::Schedule CR Line 51 - tax paid to other states"
+
+  - line: "52"
+    description: "Illinois income tax from IL-1040, Line 14"
+    formula: "IL-1040, Line 14"
+    reference: "Schedule CR Instructions, Line 52"
+    testRef: "tests/engine/state/il-schedule-cr.test.ts::Schedule CR Line 52 - IL income tax"
+
+  - line: "53"
+    description: "Illinois tax attributable to non-Illinois income"
+    formula: "Line 50 × Line 52"
+    reference: "Schedule CR Instructions, Line 53"
+    notes: "The portion of IL income tax that is attributable to income earned in other states"
+    testRef: "tests/engine/state/il-schedule-cr.test.ts::Schedule CR Line 53 - IL tax on non-IL income"
+
+  - line: "54"
+    description: "Credit for tax paid to other states"
+    formula: "min(Line 51, Line 53)"
+    reference: "Schedule CR Instructions, Line 54"
+    notes: "The credit is the lesser of tax paid to other state or IL tax on that income"
+    edgeCases:
+      - "Cannot exceed actual tax paid to other state"
+      - "Cannot exceed IL tax attributable to non-IL income"
+    testRef: "tests/engine/state/il-schedule-cr.test.ts::Schedule CR Line 54 - credit is lesser of tax paid vs IL tax (tax paid lower)"
+
+  - line: "55"
+    description: "Credit to IL-1040, Line 15"
+    formula: "Line 54 (flows to IL-1040, Line 15)"
+    reference: "Schedule CR Instructions, Line 55"
+    testRef: "tests/engine/state/il-schedule-cr.test.ts::Schedule CR Line 55 - credit flows to IL-1040 Line 15"

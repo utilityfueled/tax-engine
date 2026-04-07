@@ -1,0 +1,146 @@
+form: "Form 8915-F"
+fullName: "Qualified Disaster Retirement Plan Distributions and Repayments"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i8915f"
+
+notes: |
+  Form 8915-F reports qualified disaster distributions from retirement plans
+  and tracks 3-year income spreading and repayments under IRC §72(t)(2)(J)
+  as made permanent by the Secure 2.0 Act §331 (effective for disasters
+  declared after January 26, 2021, with distributions made within 180 days
+  of the later of the declaration date or the disaster start date).
+
+  Key rules:
+  - Maximum $22,000 per disaster per individual (IRC §72(t)(2)(J)(ii))
+  - The 10% early distribution penalty under §72(t) does not apply
+  - Taxpayer may elect to include the entire distribution in income in the
+    year received, or spread it ratably over 3 years (year of distribution
+    plus the next 2 years)
+  - Repayments can be made within 3 years of the distribution date and are
+    treated as eligible rollover contributions (IRC §72(t)(2)(J)(iv))
+  - Repayments reduce the includable amount; excess repayments may require
+    an amended return for a prior year (deferred in this slice)
+  - If no election to include all in year of distribution, the default is
+    3-year spread
+
+  This slice covers:
+  - Per-disaster qualified distribution identification with $22,000 cap
+  - 3-year income spread vs full-inclusion election
+  - Current-year repayment offset
+  - Prior-year deferred income inclusion from caller-provided records
+  - Penalty exception amount for Form 5329
+  - Per-disaster carryforward output for year-over-year tracking
+  - Separate IRA vs non-IRA tracking for Form 1040 Lines 4b/5b
+
+  Deferred in this slice:
+  - Amended-return logic for prior-year repayments exceeding current-year
+    includable amounts
+  - First-time homebuyer distributions in disaster areas (§72(t)(2)(J)(v))
+
+businessRuleValidation:
+  - rule: "reference-summary-packet"
+    description: "Inventory support counts this form as business-rule validated only when regression coverage proves the emitted packet artifact stays labeled as a non-filing reference summary and only surfaces the supported Form 8915-F Lines 1 through 10 outputs, per-disaster breakdowns, and normalized carryforward records tied to the current filing year."
+    testRef: "tests/pdf/fill-form-8915-f.test.ts::buildForm8915FReferenceSummary keeps the packet artifact reference-only and limited to supported qualified disaster distribution outputs"
+
+lines:
+  - line: "1"
+    description: "Total qualified disaster distributions for the current year across all disasters"
+    formula: "Sum of per-disaster grossDistribution amounts, each capped at $22,000"
+    irsRef: "Form 8915-F Instructions, Part I"
+    inputs:
+      - "Per-disaster gross distribution amounts"
+      - "Per-disaster $22,000 cap"
+    testRef: "tests/engine/forms/form-8915-f.test.ts::Form 8915-F Line 1 - current-year distributions capped at $22,000 per disaster"
+
+  - line: "2"
+    description: "Current-year repayments allocated to current-year distributions"
+    formula: "Sum of per-disaster currentYearRepayments, each limited to the qualified amount for that disaster"
+    irsRef: "Form 8915-F Instructions, Part II; IRC §72(t)(2)(J)(iv)"
+    inputs:
+      - "Per-disaster current-year repayments"
+    testRef: "tests/engine/forms/form-8915-f.test.ts::Form 8915-F Line 2 - repayments reduce current-year includable amount"
+
+  - line: "3"
+    description: "Net current-year distributions after repayments"
+    formula: "Line 1 minus Line 2"
+    irsRef: "Form 8915-F Instructions"
+    testRef: "tests/engine/forms/form-8915-f.test.ts::Form 8915-F Line 3 - net distributions equal gross minus repayments"
+
+  - line: "4"
+    description: "Current-year includable amount"
+    formula: "If full-inclusion elected: Line 3. Otherwise: Line 3 divided by 3, rounded to the nearest dollar"
+    irsRef: "Form 8915-F Instructions, 3-year spread election"
+    inputs:
+      - "Full-inclusion election per disaster"
+    testRef: "tests/engine/forms/form-8915-f.test.ts::Form 8915-F Line 4 - 3-year spread includes one-third in current year"
+
+  - line: "5"
+    description: "Prior-year deferred amounts includable this year"
+    formula: "Sum of prior-year per-disaster deferred records: for each, the lesser of (original 1/3 annual amount) and (remaining deferred amount minus any current-year repayments allocated to that prior year)"
+    irsRef: "Form 8915-F Instructions, Part III"
+    inputs:
+      - "Prior-year disaster distribution records"
+      - "Prior-year repayments applied this year"
+    testRef: "tests/engine/forms/form-8915-f.test.ts::Form 8915-F Line 5 - prior-year deferred amounts flow into current-year income"
+
+  - line: "6"
+    description: "Total amount includable in income this year"
+    formula: "Line 4 plus Line 5"
+    irsRef: "Form 8915-F Instructions"
+    testRef: "tests/engine/forms/form-8915-f.test.ts::Form 8915-F Line 6 - total includable combines current and prior year amounts"
+
+  - line: "7"
+    description: "IRA portion of current-year includable amount"
+    formula: "Prorate Line 6 between IRA and non-IRA sources based on qualified distribution source mix"
+    irsRef: "Form 8915-F Instructions; Form 1040 Line 4b"
+    testRef: "tests/engine/forms/form-8915-f.test.ts::Form 8915-F Line 7 - IRA portion prorated from source mix"
+
+  - line: "8"
+    description: "Non-IRA (pension) portion of current-year includable amount"
+    formula: "Line 6 minus Line 7"
+    irsRef: "Form 8915-F Instructions; Form 1040 Line 5b"
+    testRef: "tests/engine/forms/form-8915-f.test.ts::Form 8915-F Line 8 - pension portion is remainder after IRA portion"
+
+  - line: "9"
+    description: "Penalty exception amount"
+    formula: "Total qualified disaster distributions (Line 1 plus gross prior-year deferred distributions) — exempt from IRC §72(t) 10% early distribution penalty"
+    irsRef: "IRC §72(t)(2)(J)(i)"
+    testRef: "tests/engine/forms/form-8915-f.test.ts::Form 8915-F Line 9 - full distribution amount is exempt from early penalty"
+
+  - line: "10"
+    description: "Total deferred to future years"
+    formula: "For current-year distributions with 3-year spread: Line 3 minus Line 4 (the remaining 2/3). Zero for full-inclusion elections."
+    irsRef: "Form 8915-F Instructions"
+    testRef: "tests/engine/forms/form-8915-f.test.ts::Form 8915-F Line 10 - deferred amount equals 2/3 of net distribution for 3-year spread"
+
+  - line: "packet"
+    description: "Draft packet inclusion rule for supported Form 8915-F qualified disaster retirement distribution activity"
+    formula: "When supported qualified disaster retirement distributions or prior-year deferrals are present, include a non-filing reference-summary PDF in the packet that lists Form 8915-F Lines 1 through 10, per-disaster current-year and prior-year supported computations, and normalized carryforward records for later filing years."
+    irsRef: "Form 8915-F Instructions, Parts I-III"
+    notes: "This packet slice intentionally emits a deterministic reference summary instead of a filed Form 8915-F so the draft packet stays honest about the supported disaster-distribution scope."
+    testRef: "tests/pdf/fill-form-8915-f.test.ts::fillReturn includes a Form 8915-F reference summary when qualified disaster distribution activity is present"
+
+edgeCases:
+  - name: "Multiple disasters in same year"
+    description: "Each disaster has its own $22,000 cap. A taxpayer affected by two disasters can exclude up to $44,000 total."
+    testRef: "tests/engine/forms/form-8915-f.test.ts::Form 8915-F - multiple disasters each get independent $22,000 cap"
+
+  - name: "Repayment exceeds current-year includable amount"
+    description: "If repayment exceeds the current year's includable portion, the excess cannot offset future deferred amounts on this year's return (requires amended return for the prior year — deferred in this slice)."
+    testRef: "tests/engine/forms/form-8915-f.test.ts::Form 8915-F - repayment capped at current-year includable amount per disaster"
+
+  - name: "Prior-year distribution fully repaid"
+    description: "If a prior-year deferred amount has been fully repaid, the current-year includable amount for that disaster is zero."
+    testRef: "tests/engine/forms/form-8915-f.test.ts::Form 8915-F - fully repaid prior-year distribution includes zero"
+
+  - name: "Mixed IRA and non-IRA distributions for same disaster"
+    description: "The $22,000 cap applies to total distributions per disaster regardless of source. IRA and non-IRA amounts are tracked separately for Form 1040 Lines 4b/5b routing."
+    testRef: "tests/engine/forms/form-8915-f.test.ts::Form 8915-F - mixed IRA and non-IRA sources are tracked and prorated"
+
+  - name: "Full inclusion election for one disaster, spread for another"
+    description: "Each disaster's election is independent. One disaster can use full inclusion while another uses 3-year spread."
+    testRef: "tests/engine/forms/form-8915-f.test.ts::Form 8915-F - per-disaster election allows mixed spread and full inclusion"
+
+  - name: "Third year of 3-year spread"
+    description: "In the final year, the remaining deferred amount (which may differ from exactly 1/3 due to rounding) is fully included."
+    testRef: "tests/engine/forms/form-8915-f.test.ts::Form 8915-F - third year of spread includes remaining deferred balance"

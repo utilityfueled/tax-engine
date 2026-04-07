@@ -1,0 +1,249 @@
+form: "Ohio Resident Return — Orchestrator"
+fullName: "Ohio IT 1040 Full Return (Schedule of Adjustments + IT 1040 + Schedule of Credits + Resident Credit + IT/SD 2210 + SD 100)"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf"
+
+notes: |
+  This spec documents the orchestrator that wires together all Ohio resident
+  return modules into a single computation. The orchestrator is NOT a separate
+  IRS/Ohio form — it is the engine's top-level entry point that ensures data
+  flows correctly between modules and that the two-pass IT 1040 computation
+  (first pass for MAGI → credits, final pass with credits) is performed.
+
+  Computation flow:
+    Step 1: Schedule of Adjustments → additions, deductions, business income deduction, taxable business income
+    Step 2: IT 1040 first pass (zero credits) → tax before credits, MAGI, exemptions
+    Step 3a: Resident Credit worksheet (if otherStateTaxes provided and no pass-through override)
+    Step 3b: Schedule of Credits (using first-pass tax and MAGI)
+    Step 3c: IT/SD 2210 underpayment penalty (if computeUnderpaymentPenalty = true)
+    Step 4: IT 1040 final pass (with nonrefundable credits + penalty) → complete return
+    Step 5: SD 100 School District Income Tax (if school districts provided)
+
+  The two-pass IT 1040 design is necessary because:
+    - The Schedule of Credits needs the tax before credits (line 8c) and MAGI from IT 1040
+    - IT 1040 lines 9–26 need the total nonrefundable credits from the Schedule of Credits
+    - This creates a circular dependency that the two-pass approach resolves
+
+  Data flow between modules:
+    Schedule of Adjustments → IT 1040:
+      line14_totalAdditions → IT 1040 line 2a
+      line36_totalDeductions → IT 1040 line 2b
+      line15_businessIncomeDeduction → MAGI computation
+      taxableBusinessIncome → IT 1040 line 6
+
+    IT 1040 (first pass) → Schedule of Credits:
+      line8c_totalTax → taxBeforeCredits
+      magi → magi
+      magi - line4_exemptions → magiLessExemptions
+      federalAgi (from return input) → federalAgi for tuition-credit threshold
+
+    IT 1040 (first pass) → Resident Credit:
+      line3_ohioAgi → ohioAgi
+      line8c_totalTax → ohioTaxBeforeCredits
+
+    IT 1040 (first pass) → IT/SD 2210:
+      line8c_totalTax - credits → currentYearTaxLiability (preview)
+
+    Schedule of Credits → IT 1040 (final pass):
+      line40_totalNonrefundableCredits → nonrefundableCredits (line 9)
+      line47_totalRefundableCredits → refundableCredits (line 16)
+
+    IT/SD 2210 → IT 1040 (final pass):
+      line17_totalPenalty → underpaymentPenalty (line 11)
+
+    Resident Credit → Schedule of Credits:
+      totalResidentCredit → residentCredit (line 39)
+
+    IT 1040 (final pass) → SD 100:
+      line3_ohioAgi → ohioAgi (line 1)
+      line4_exemptions → exemptionAmount (line 4)
+      businessIncomeDeduction → businessIncomeDeduction (line 2)
+
+  Supported tax years: 2024 and 2025.
+
+businessRuleValidation:
+  - rule: "workspace-ohio-packet-disclosure"
+    description: "Inventory support counts the Ohio resident-return orchestrator as business-rule validated only when regression coverage proves workspace packets keep Ohio output disclosed as partial, reference-only, and not yet e-file validated when the Ohio packet is attached."
+    testRef: "tests/apps/web/oh-state-packet.test.ts::buildWorkspaceFilledReturnDownload keeps Ohio packet disclosures honest when only reference-summary state forms are attached"
+
+lines:
+  - line: "Step 1"
+    description: "Schedule of Adjustments — additions, deductions, business income deduction"
+    formula: "calculateOhioScheduleOfAdjustments(input) → additions, deductions, businessIncomeDeduction, taxableBusinessIncome"
+    module: "oh-schedule-adjustments.ts"
+    testRef: "tests/engine/state/oh-return.test.ts::adjustments additions and deductions flow to IT 1040 lines 2a/2b"
+
+  - line: "Step 2"
+    description: "IT 1040 first pass — compute tax before credits (zero credits)"
+    formula: "calculateOhioIT1040({...input, nonrefundableCredits: 0}) → line8c_totalTax, magi, exemptions"
+    module: "oh-it-1040.ts"
+    notes: |
+      First pass uses zero credits to compute the base tax. The tax before
+      credits (line 8c) and MAGI are needed by the Schedule of Credits to
+      determine credit amounts and eligibility.
+    testRef: "tests/engine/state/oh-return.test.ts::business income deduction flows from adjustments to IT 1040 MAGI"
+
+  - line: "Step 3a"
+    description: "Resident Credit worksheet (conditional: otherStateTaxes provided, no pass-through)"
+    formula: "calculateOhioResidentCredit({ohioAgi, ohioTaxBeforeCredits, otherStates}) → totalResidentCredit"
+    module: "oh-resident-credit.ts"
+    notes: |
+      Computes credit for taxes paid to other states. For each state:
+        fraction = doubleTaxedIncome / ohioAgi (capped at 1.0)
+        ohioPortion = fraction × ohioTaxBeforeCredits
+        credit = min(ohioPortion, taxPaid)
+      Compensation earned while an Ohio resident in reciprocity states
+      (IN, KY, MI, PA, WV) is excluded from the resident credit and must be
+      flagged explicitly so the worksheet does not treat it as eligible.
+      Skipped when residentCredit is explicitly provided (pass-through).
+    testRef: "tests/engine/state/oh-return.test.ts::computed resident credit from otherStateTaxes flows to Schedule of Credits"
+
+  - line: "Step 3b"
+    description: "Schedule of Credits — nonrefundable credits in two batches"
+    formula: "calculateOhioScheduleOfCredits({taxBeforeCredits, magi, ...}) → line40_totalNonrefundableCredits, line47_totalRefundableCredits"
+    module: "oh-schedule-credits.ts"
+    notes: |
+      Credits applied in two batches. First: retirement, lump sum, senior,
+      child/dependent care, displaced worker, campaign, exemption. Second:
+      joint filing, EIC, home school, scholarship donation, nonchartered
+      school tuition, and other lines 17-35. Resident/nonresident credits
+      applied last. Refundable certificate/PTE credits on lines 41-46 are
+      summed separately on line 47 and flow to IT 1040 line 16.
+      When lump sum retirement recipients are supplied, Schedule of Credits
+      line 3 is computed from the official worksheet instead of relying on a
+      raw pass-through amount.
+      When lump sum distribution recipient ages are supplied, Schedule of
+      Credits line 5 is computed from the official worksheet instead of relying
+      on a raw pass-through amount.
+      When spouse-level qualifying income amounts are supplied, Schedule of
+      Credits line 12 uses those amounts directly to determine joint filing
+      credit eligibility instead of relying on the adapter's boolean proxy.
+      Nonrefundable total is capped at tax before credits.
+    testRef: "tests/engine/state/oh-return.test.ts::nonrefundable credits from Schedule of Credits flow to IT 1040 line 9"
+
+  - line: "Step 3c"
+    description: "IT/SD 2210 underpayment penalty (conditional: computeUnderpaymentPenalty = true)"
+    formula: "calculateOhioITSD2210({currentYearTaxLiability, withholding, priorYear, ...}) → line17_totalPenalty"
+    module: "oh-it-sd-2210.ts"
+    notes: |
+      Three safe harbors: A (90% current year), B (100% prior year), C (≤$500 shortfall).
+      If none met, quarterly penalty via annualized interest factors.
+      The orchestrator computes the IT 1040 penalty when underpaymentPenalty is omitted.
+      If schoolDistricts are also provided and sdUnderpaymentPenalty is omitted, the
+      orchestrator computes a second IT/SD 2210 result in SD 100 mode using SD 100
+      line 8 as current-year liability and SD 100 lines 11 and 12 as taxes paid.
+    testRef: "tests/engine/state/oh-return.test.ts::itsd2210 result is returned when computeUnderpaymentPenalty is true"
+
+  - line: "Step 4"
+    description: "IT 1040 final pass — complete return with credits, penalty, payments"
+    formula: "calculateOhioIT1040({...input, nonrefundableCredits, refundableCredits, underpaymentPenalty, payments}) → full IT 1040"
+    module: "oh-it-1040.ts"
+    notes: |
+      Final pass produces the complete IT 1040. Lines 1–8c identical to first
+      pass. By default, IT 1040 line 16 comes from Schedule of Credits line 47;
+      an explicit refundableCredits input may override this pass-through.
+    testRef: "tests/engine/state/oh-return.test.ts::refundables from Schedule of Credits flow to IT 1040 line 16"
+
+  - line: "Step 5"
+    description: "SD 100 School District Income Tax (conditional: schoolDistricts provided)"
+    formula: "calculateOhioSD100({ohioAgi, exemptionAmount, businessIncomeDeduction, districts}) → SD tax/refund"
+    module: "oh-sd-100.ts"
+    notes: |
+      Traditional method: (MAGI - exemptions) × rate. Earned income method:
+      earned income × rate. Part-year uses residency factor. Senior $50 credit.
+      When computeUnderpaymentPenalty is true and sdUnderpaymentPenalty is not
+      explicitly provided, SD 100 line 9 is auto-filled from a school-district-mode
+      IT/SD 2210 computation.
+    testRef: "tests/engine/state/oh-return.test.ts::SD 100 underpayment penalty auto-computed when requested"
+
+  # Edge cases — orchestrator invariants and data-flow plumbing
+
+  - line: "EC-1"
+    description: "Two-pass consistency — lines 1–8c identical in both IT 1040 passes"
+    formula: "First-pass and final-pass IT 1040 produce identical lines 1–8c; only lines 9+ differ"
+    testRef: "tests/engine/state/oh-return.test.ts::nonrefundable credits from Schedule of Credits flow to IT 1040 line 9"
+
+  - line: "EC-2"
+    description: "Zero tax wipes all credits"
+    formula: "When tax before credits is $0, all nonrefundable credits are $0 regardless of eligibility"
+    testRef: "tests/engine/state/oh-return.test.ts::credits cannot exceed tax liability"
+
+  - line: "EC-3"
+    description: "Negative Ohio AGI floors at $0 taxable income"
+    formula: "Large deductions can produce negative Ohio AGI; taxable income floors at $0"
+    testRef: "tests/engine/state/oh-return.test.ts::large deductions produce negative Ohio AGI but zero taxable income"
+
+  - line: "EC-4"
+    description: "Resident credit pass-through override"
+    formula: "When residentCredit is explicitly provided, otherStateTaxes computation is skipped"
+    testRef: "tests/engine/state/oh-return.test.ts::pass-through residentCredit overrides otherStateTaxes computation"
+
+  - line: "EC-5"
+    description: "Underpayment penalty pass-through"
+    formula: "When underpaymentPenalty is explicitly provided, IT/SD 2210 computation is skipped even if computeUnderpaymentPenalty is true"
+    testRef: "tests/engine/state/oh-return.test.ts::pass-through underpaymentPenalty skips itsd2210 computation"
+
+  - line: "EC-6"
+    description: "SD underpayment penalty pass-through override"
+    formula: "When sdUnderpaymentPenalty is explicitly provided, school-district IT/SD 2210 auto-computation is skipped"
+    testRef: "tests/engine/state/oh-return.test.ts::SD 100 pass-through underpayment penalty skips school district IT/SD 2210 computation"
+
+  - line: "EC-7"
+    description: "Stacked credits exceed tax — capped at tax"
+    formula: "Credits ordered: lines 2-36 first, then line 38, then resident credit on line 39 against remaining tax"
+    testRef: "tests/engine/state/oh-return.test.ts::resident credit + other credits exceeding tax are capped at tax"
+
+  - line: "EC-8"
+    description: "Home school credit plumbing"
+    formula: "Home school expenses and qualifying student count flow through Schedule of Credits line 14 into IT 1040 line 9"
+    testRef: "tests/engine/state/oh-return.test.ts::home school expenses credit flows through Schedule of Credits line 14"
+
+  - line: "EC-9"
+    description: "STABLE deduction plumbing"
+    formula: "STABLE contributions and carryforwards flow through Schedule of Adjustments line 20 into Ohio AGI and taxable income"
+    testRef: "tests/engine/state/oh-return.test.ts::STABLE contributions flow through Schedule of Adjustments into Ohio AGI"
+
+  - line: "EC-10"
+    description: "Medical savings account worksheet plumbing"
+    formula: "MSA contributions, earnings, and nonmedical withdrawals flow through Schedule of Adjustments lines 6 and 45 into Ohio AGI"
+    testRef: "tests/engine/state/oh-return.test.ts::medical savings account worksheet flows through Schedule of Adjustments into Ohio AGI"
+
+  - line: "EC-11"
+    description: "Medical and health care expense worksheet plumbing"
+    formula: "Medical insurance premiums and care expenses flow through Schedule of Adjustments medical worksheet line (2024 line 43 / 2025 line 44) into Ohio AGI"
+    testRef: "tests/engine/state/oh-return.test.ts::medical and health care expense worksheet flows through Schedule of Adjustments into Ohio AGI"
+
+  - line: "EC-12"
+    description: "Qualified organ donor expense plumbing"
+    formula: "Organ donor expenses flow through Schedule of Adjustments organ donor deduction line (2024 line 45 / 2025 line 46) into Ohio AGI"
+    testRef: "tests/engine/state/oh-return.test.ts::qualified organ donor expenses flow through Schedule of Adjustments into Ohio AGI"
+
+  - line: "EC-13"
+    description: "Ohio Homebuyer Plus deduction plumbing"
+    formula: "Homebuyer Plus contributor/account entries flow through Schedule of Adjustments line 24 into Ohio AGI and taxable income"
+    testRef: "tests/engine/state/oh-return.test.ts::Ohio Homebuyer Plus deduction flows through Schedule of Adjustments into Ohio AGI"
+
+  - line: "EC-14"
+    description: "Education credit plumbing"
+    formula: "Scholarship donations and nonchartered school tuition flow through Schedule of Credits lines 15 and 16 into IT 1040 line 9"
+    testRef: "tests/engine/state/oh-return.test.ts::education credits flow through Schedule of Credits lines 15 and 16"
+
+  - line: "EC-15"
+    description: "Displaced worker worksheet plumbing"
+    formula: "Per-recipient displaced worker worksheet inputs flow through Schedule of Credits line 7; separate taxpayer/spouse credits on MFJ"
+    testRef: "tests/engine/state/oh-return.test.ts::displaced worker worksheet inputs flow through the orchestrator"
+
+  - line: "EC-16"
+    description: "Lump sum distribution worksheet plumbing"
+    formula: "Qualifying lump sum distribution recipient ages compute Schedule of Credits line 5 and suppress senior citizen credit on line 4"
+    testRef: "tests/engine/state/oh-return.test.ts::lump sum distribution worksheet credit flows through and suppresses senior credit"
+
+  - line: "EC-17"
+    description: "Lump sum retirement worksheet plumbing"
+    formula: "Qualifying lump sum retirement recipients compute Schedule of Credits line 3 and suppress retirement income credit on line 2"
+    testRef: "tests/engine/state/oh-return.test.ts::lump sum retirement worksheet credit flows through and suppresses retirement income credit"
+
+  - line: "EC-18"
+    description: "High income ($750K+) zero exemptions"
+    formula: "MAGI ≥ $750,000 produces $0 per exemption, eliminating all MAGI-dependent credits"
+    testRef: "tests/engine/state/oh-return.test.ts::high income $750K+ gets zero exemptions"

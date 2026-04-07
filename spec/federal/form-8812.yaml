@@ -1,0 +1,95 @@
+form: "Form 8812"
+fullName: "Credits for Qualifying Children and Other Dependents"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i1040s8812"
+
+notes: |
+  Schedule 8812 calculates both the nonrefundable CTC (Line 14 → 1040 Line 19)
+  and the Additional Child Tax Credit (ACTC), the refundable portion (Line 27 → 1040 Line 28).
+  ACTC = 15% of earned income over $2,500, capped at the unused CTC amount.
+  Maximum refundable per child: $1,700 (2025).
+
+lines:
+  - line: "5"
+    description: "Phase-out threshold"
+    formula: "$400,000 if MFJ; $200,000 for all other filing statuses (single, HoH, MFS, QSS)"
+    irsRef: "IRC §24(b)(2); Schedule 8812 Instructions, Line 5"
+    notes: |
+      IRC §24(b)(2): "increased to $400,000 in the case of a joint return."
+      QSS (IRC §2(a)) is NOT a joint return — uses $200,000 threshold.
+      IRS confirms: "$400,000 if married filing jointly; $200,000 for all other filing statuses."
+    edgeCases:
+      - "QSS uses $200K, not $400K — QSS is not a joint return per IRC §6013"
+    testRef: "tests/edge-cases/filing-status-edge-cases.test.ts::CTC phase-out: MFJ at $400K, all others (incl QSS) at $200K — IRC §24(b)(2)"
+
+  - line: "12"
+    description: "CTC and ODC before limitation"
+    formula: "$2,000 × qualifying children + $500 × other dependents, after phase-out"
+    irsRef: "Schedule 8812 Instructions, Line 12"
+    testRef: "tests/engine/forms/form-8812.test.ts::Form 8812 Line 12 - CTC before limitation"
+
+  - line: "14"
+    description: "Nonrefundable CTC (limited to tax liability)"
+    formula: "min(Line 12, tax liability after other credits)"
+    irsRef: "Schedule 8812 Instructions, Line 14"
+    notes: "This amount goes to Form 1040 Line 19"
+    testRef: "tests/engine/forms/form-8812.test.ts::Form 8812 Line 14 - nonrefundable limited to tax"
+
+  - line: "15"
+    description: "Unused CTC"
+    formula: "Line 12 - Line 14"
+    irsRef: "Schedule 8812 Instructions, Line 15"
+    testRef: "tests/engine/forms/form-8812.test.ts::Form 8812 Line 15 - unused CTC"
+
+  - line: "18/20"
+    description: "Earned income for ACTC"
+    formula: "W-2 wages + net SE earnings - deductible half of SE tax (Schedule 1, Line 15)"
+    irsRef: "Schedule 8812 Instructions, Lines 18a-18f; IRC §24(d)(1)(B)(i) → §32(c)(2)(A)(i)(II)"
+    notes: |
+      Per IRC §32(c)(2)(A)(i)(II), earned income includes "net earnings from self-employment
+      (within the meaning of section 1402(a)), but such net earnings shall be determined with
+      regard to the deduction allowed to the taxpayer by section 164(f)."
+      §164(f) = deductible half of SE tax. Per IRS Form 8812 Lines 18a-18f:
+        18a = wages (1040 Line 1z)
+        18c = Schedule 1 lines 3+6 (Schedule C/F profit or loss — can be negative)
+        18e = Schedule 1 line 15 (deductible half of SE tax)
+        Earned income = 18a + 18c - 18e
+      SE losses reduce earned income (no zero-floor on SE component).
+    edgeCases:
+      - "Schedule C loss reduces earned income — SE losses are NOT floored at zero"
+      - "Deductible half of SE tax subtracted from earned income per §164(f)"
+      - "If SE < $400 post-multiplier, no SE tax → deductible half = $0, but SE income (or loss) still counts"
+    testRef: "tests/edge-cases/ctc-actc-edge-cases.test.ts::ACTC earned income subtracts deductible half of SE tax — IRC §32(c)(2)"
+
+  - line: "21"
+    description: "Earned income excess over $2,500"
+    formula: "max(0, earned income - $2,500)"
+    irsRef: "Schedule 8812 Instructions, Line 21"
+    edgeCases:
+      - "Earned income ≤ $2,500: no ACTC"
+      - "$2,501 earned income: $0.15 ACTC"
+    testRef: "tests/engine/forms/form-8812.test.ts::Form 8812 Line 21 - earned income excess"
+
+  - line: "24"
+    description: "15% of earned income excess"
+    formula: "Line 21 × 15%"
+    irsRef: "Schedule 8812 Instructions, Line 24"
+    testRef: "tests/engine/forms/form-8812.test.ts::Form 8812 Line 24 - 15% calculation"
+
+  - line: "27"
+    description: "Additional Child Tax Credit (refundable)"
+    formula: "min(Line 15 total unused, Line 24 earned income amount, Line 25 = $1,700 × qualifying children)"
+    irsRef: "Schedule 8812 Instructions, Line 27; IRC §24(d)(1)"
+    notes: |
+      Goes to Form 1040 Line 28. Max $1,700 per child refundable (2025).
+      Line 15 is the TOTAL unused credit (CTC + ODC combined, after phase-out
+      and nonrefundable limitation). The $1,700 per child cap (Line 25) is
+      the mechanism that prevents ODC from being refunded in normal cases.
+      When phase-out exceeds the per-child CTC amount, any remaining combined
+      credit (partly ODC-sourced) can still flow into ACTC, limited by the cap.
+    edgeCases:
+      - "No qualifying children: no ACTC ($1,700 × 0 = $0 cap)"
+      - "High earners with full CTC used: no ACTC needed (Line 15 = $0)"
+      - "Very low income: ACTC limited by 15% earned income formula"
+      - "Phase-out > CTC, ODC remains: ACTC uses Line 15 total, not CTC-only subset"
+    testRef: "tests/engine/forms/form-8812.test.ts::Form 8812 Line 27 - ACTC refundable amount"

@@ -1,0 +1,221 @@
+form: "NJ-1040 Filing Requirement"
+fullName: "New Jersey NJ-1040 Filing Requirement Determination"
+taxYear: 2025
+reference: "https://www.nj.gov/treasury/taxation/pdf/current/1040i.pdf"
+
+notes: |
+  Determines whether a New Jersey resident must file an NJ-1040 return. NJ uses
+  a gross income filing threshold that varies by filing status. Even if gross
+  income is below the threshold, filing may be required or advantageous to claim
+  refundable credits or a refund of NJ withholding.
+
+  When no NJ-1040 trigger applies, the engine also checks whether the taxpayer
+  should be steered to Form NJ-1040-HW instead of being told that nothing needs
+  to be filed. The 2025 NJ-1040-HW instructions say the standalone application
+  is available only when the taxpayer does not file Form NJ-1040, is at or
+  below the same filing threshold, and is claiming the Property Tax Credit
+  and/or the Wounded Warrior Caregivers Credit.
+
+  Gross income filing thresholds (2025, per NJ-1040 instructions page 3):
+    - Single:                        $10,000
+    - Married Filing Separately:     $10,000
+    - Married Filing Jointly:        $20,000
+    - Head of Household:             $20,000
+    - Qualifying Surviving Spouse:   $20,000
+
+  Filing is also required if:
+    1. NJ gross income exceeds the filing threshold
+    2. NJ income tax was withheld and taxpayer wants a refund
+    3. Taxpayer paid NJ estimated taxes and is due a refund
+    4. Taxpayer qualifies for NJ Earned Income Tax Credit
+    5. Taxpayer qualifies for NJ Child Tax Credit (children age 5 or under and not married filing separately)
+    6. Taxpayer qualifies for the refundable NJ Child and Dependent Care Credit
+    7. Taxpayer owes use tax on out-of-state purchases
+    8. Taxpayer owes shared responsibility payment (NJ health coverage mandate)
+    9. Taxpayer has excess NJ payroll contributions to reclaim
+    10. Taxpayer has a Pass-Through Business Alternative Income Tax credit to claim
+
+  Note: NJ does NOT have a separate self-employment filing threshold (unlike
+  the federal $400 rule). Self-employment income is included in NJ gross income
+  and tested against the standard thresholds above.
+
+  These thresholds have been stable for many years and are published in the
+  NJ-1040 instructions (page 3, "Who Must File a Return").
+
+lines:
+  - line: "filing-threshold"
+    description: "Gross income filing threshold by filing status"
+    formula: |
+      Single / MFS: $10,000
+      MFJ / HOH / QSS: $20,000
+    inputs:
+      - "Filing status"
+    notes: |
+      NJ gross income (Line 29 of NJ-1040) is compared against the threshold.
+      This is AFTER the pension exclusion and other adjustments, but BEFORE
+      exemptions and deductions.
+    testRef: "tests/engine/state/nj-1040-filing-requirement.test.ts::NJ filing requirement - single filer threshold is $10,000"
+
+  - line: "required-by-income"
+    description: "Filing required because NJ gross income exceeds threshold"
+    formula: "NJ gross income > filing threshold for filing status"
+    inputs:
+      - "NJ gross income (Line 29)"
+      - "Filing threshold"
+    edgeCases:
+      - "Income exactly at threshold: NOT required (threshold is exclusive)"
+      - "Income $1 over threshold: required"
+      - "Zero income: not required by income alone"
+    testRef: "tests/engine/state/nj-1040-filing-requirement.test.ts::NJ filing requirement - income exactly at threshold not required by income"
+
+  - line: "required-for-refund"
+    description: "Filing required to claim refund of NJ withholding or estimated payments"
+    formula: "njWithholding > 0 OR estimatedPayments > 0"
+    inputs:
+      - "NJ income tax withheld (W-2, 1099-R, etc.)"
+      - "NJ estimated tax payments for the year"
+    notes: |
+      Must file to receive a refund of NJ income tax withheld or NJ estimated
+      tax payments. The 2025 NJ-1040 instructions list both withholding and
+      estimated tax payments as separate refund triggers for filers at or below
+      the filing threshold.
+    testRef: "tests/engine/state/nj-1040-filing-requirement.test.ts::NJ filing requirement - must file to claim estimated tax refund"
+
+  - line: "required-for-eitc"
+    description: "Filing required to claim NJ EITC"
+    formula: "federalEITC > 0 OR qualifiesForChildlessAge18Exception = true"
+    inputs:
+      - "Federal EITC amount"
+      - "Childless age-18 exception eligibility flag"
+    notes: |
+      NJ EITC generally equals 40% of federal EITC, but 2025 instructions also
+      allow a fixed $260 credit for certain childless filers age 18+ who meet
+      all federal EIC requirements except the age rule and are not dependents.
+      Must file NJ-1040 to claim either path.
+    testRef: "tests/engine/state/nj-1040-filing-requirement.test.ts::NJ filing requirement - must file to claim EITC"
+
+  - line: "required-for-ctc"
+    description: "Filing required to claim NJ Child Tax Credit"
+    formula: "qualifyingChildrenAge5OrUnder > 0 AND filingStatus != married_filing_separately"
+    inputs:
+      - "Filing status"
+      - "Number of qualifying children age 5 or under"
+    notes: |
+      The New Jersey Child Tax Credit requires the taxpayer to file Form
+      NJ-1040 even when gross income is below the filing threshold, but the
+      official credit rules exclude married filing separately. In the supported
+      resident filing-requirement slice, below-threshold filers are already
+      within the $80,000 taxable-income cap, so the branch only needs to
+      filter out married filing separately.
+    edgeCases:
+      - "Married filing separately with qualifying children does not create a CTC filing reason"
+    testRef: "tests/engine/state/nj-1040-filing-requirement.test.ts::NJ filing requirement - must file to claim child tax credit"
+
+  - line: "required-for-dependent-care-credit"
+    description: "Filing required to claim NJ Child and Dependent Care Credit"
+    formula: "federalDependentCareCredit > 0"
+    inputs:
+      - "Federal Form 2441 child and dependent care credit"
+    notes: |
+      The 2025 NJ-1040 instructions tell below-threshold residents to file if
+      they are eligible for "other credit" refunds, and the New Jersey Child
+      and Dependent Care Credit is refundable. In the supported resident
+      filing-requirement slice, any taxpayer with a positive federal Form 2441
+      credit has a filing reason because the state credit is claimed directly
+      on NJ-1040 line 64 and can produce a refund.
+    edgeCases:
+      - "Zero federal dependent care credit does not create a filing reason"
+      - "A below-threshold filer with only the dependent care credit must still file NJ-1040"
+    testRef: "tests/engine/state/nj-1040-filing-requirement.test.ts::NJ filing requirement - must file to claim dependent care credit"
+
+  - line: "required-for-use-tax"
+    description: "Filing required because use tax is owed"
+    formula: "useTax > 0 OR actualUseTax > 0"
+    inputs:
+      - "Use tax amount"
+    testRef: "tests/engine/state/nj-1040-filing-requirement.test.ts::NJ filing requirement - must file if use tax owed"
+
+  - line: "required-for-srp"
+    description: "Filing required because shared responsibility payment is owed"
+    formula: "healthCoverageUncoveredMonths > 0 AND healthCoverageExemptAllUncoveredMonths = false"
+    inputs:
+      - "Months without minimum essential health coverage"
+      - "Boolean indicating whether all uncovered months are exempt from SRP"
+    notes: |
+      Schedule NJ-HCC instructions provide a short-gap exemption for a gap of
+      2 months or less. A taxpayer who has uncovered months but owes no shared
+      responsibility payment because every uncovered month is exempt does not
+      need to file under this branch alone.
+    testRef: "tests/engine/state/nj-1040-filing-requirement.test.ts::NJ filing requirement - must file if SRP applies"
+
+  - line: "required-for-excess-payroll"
+    description: "Filing required to claim excess payroll contribution credit"
+    formula: "Calculated excess payroll credit > 0 using NJ-2450 annual maximums for UI/WF/SWF, DI, and FLI"
+    inputs:
+      - "Total UI/WF/SWF, DI, FLI withheld across all employers"
+      - "Private-plan DI maximum override, if applicable"
+    notes: |
+      Mere NJ payroll withholding does not create a filing trigger. Filing is
+      required under this branch only when the taxpayer's combined withholding
+      actually exceeds the applicable annual maximum for at least one category,
+      producing a refundable excess-payroll credit on the NJ-1040. The same
+      2025 maximums used by Form NJ-2450 govern this determination.
+    testRef: "tests/engine/state/nj-1040-filing-requirement.test.ts::NJ filing requirement - must file to claim excess payroll credit"
+
+  - line: "required-for-ptbait-credit"
+    description: "Filing required to claim Pass-Through Business Alternative Income Tax credit"
+    formula: "passThroughBusinessAlternativeIncomeTaxCredit > 0"
+    inputs:
+      - "Line 63 Pass-Through Business Alternative Income Tax credit"
+    notes: |
+      The credit is claimed directly on NJ-1040 line 63 in the payments and
+      credits section, so the taxpayer must file NJ-1040 to receive it.
+    testRef: "tests/engine/state/nj-1040-filing-requirement.test.ts::NJ filing requirement - must file to claim PTBAIT credit"
+
+  - line: "hw-recommendation"
+    description: "Recommend Form NJ-1040-HW when no NJ-1040 trigger applies but the standalone application has a refundable claim"
+    formula: |
+      if filingRequired:
+        recommendedForm = "NJ-1040"
+        nj1040hwTotalCredits = $0
+      else:
+        compute NJ-1040-HW with isFilingNJ1040 = false
+        if totalCredits > 0:
+          recommendedForm = "NJ-1040-HW"
+          nj1040hwTotalCredits = Part I property tax credit + Part II wounded warrior credit
+        else:
+          recommendedForm = "none"
+          nj1040hwTotalCredits = $0
+    inputs:
+      - "Overall NJ-1040 filingRequired flag"
+      - "NJ gross income"
+      - "Filing status"
+      - "Property tax credit eligibility inputs used by NJ-1040-HW Part I"
+      - "Wounded Warrior credit eligibility inputs used by NJ-1040-HW Part II"
+    notes: |
+      2025 NJ-1040-HW instructions page 1 direct below-threshold residents who
+      are not filing NJ-1040 to use NJ-1040-HW for the Property Tax Credit
+      and/or the Wounded Warrior Caregivers Credit. This is a recommendation,
+      not an NJ-1040 filing trigger, so filingRequired remains false when the
+      only action is to file the standalone application.
+    edgeCases:
+      - "A below-threshold senior homeowner can be told to file NJ-1040-HW even though NJ-1040 is not required"
+      - "Any NJ-1040 trigger suppresses the HW recommendation because the taxpayer must file NJ-1040 instead"
+      - "If the taxpayer is below threshold but has no standalone HW credit, recommendedForm is 'none'"
+    testRef: "tests/engine/state/nj-1040-filing-requirement.test.ts::NJ filing requirement - below-threshold senior homeowner is directed to NJ-1040-HW for the property tax credit"
+
+  - line: "determination"
+    description: "Overall filing requirement determination"
+    formula: |
+      required = requiredByIncome OR requiredForRefund OR requiredForEITC
+                 OR requiredForCTC OR requiredForDependentCareCredit
+                 OR requiredForUseTax OR requiredForSRP
+                 OR requiredForExcessPayroll OR requiredForPTBAITCredit
+    inputs:
+      - "All individual requirement flags"
+    notes: |
+      Returns the NJ-1040 filingRequired flag, the recommended form
+      ("NJ-1040", "NJ-1040-HW", or "none"), and explanatory reasons so the
+      engine can explain why the taxpayer must file NJ-1040 or why the
+      taxpayer should instead use NJ-1040-HW.
+    testRef: "tests/engine/state/nj-1040-filing-requirement.test.ts::NJ filing requirement - multiple reasons aggregated"

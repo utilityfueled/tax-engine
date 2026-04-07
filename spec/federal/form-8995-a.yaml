@@ -1,0 +1,489 @@
+form: "Form 8995-A"
+fullName: "Qualified Business Income Deduction"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i8995a"
+
+notes: |
+  Form 8995-A computes the Section 199A QBI deduction for taxpayers with taxable
+  income above the simplified threshold ($197,300 single/$394,600 MFJ for 2025,
+  per Rev. Proc. 2024-40 §3.01). Above that threshold, the deduction is subject
+  to W-2 wage and UBIA limitations, and specified service trades or businesses
+  (SSTBs) phase out entirely over a $50,000/$100,000 range.
+
+  This slice covers Parts I–III (per-business QBI deduction with W-2/UBIA limits
+  and SSTB phase-out), Part IV (aggregation elections per Reg. §1.199A-4),
+  Schedule D (patron reduction for specified agricultural/horticultural
+  cooperatives under IRC §199A(b)(7) and §199A(g)), and the total QBI deduction
+  computation including the cooperative DPAD add-back.
+
+  Part IV allows taxpayers to elect to aggregate two or more qualified trades or
+  businesses into a single trade or business for the W-2 wage/UBIA limitation.
+  When businesses are aggregated, their QBI, W-2 wages, and UBIA are combined
+  and the Lines 1–15 computation runs once on the combined amounts. Aggregation
+  requirements per Reg. §1.199A-4(b)(1):
+    (i)   Each trade or business is a qualified trade or business
+    (ii)  The same person or group of persons directly or indirectly owns 50%+
+          of each trade or business to be aggregated
+    (iii) At least two of three factors are satisfied: (a) same products/property/
+          services; (b) share facilities or centralized business elements;
+          (c) operated in coordination with or reliance upon each other
+    (iv)  None of the trades or businesses is an SSTB
+    (v)   All businesses are reported on returns with the same tax year end
+  The engine validates rule (iv) — SSTBs cannot be aggregated — and trusts the
+  taxpayer/preparer for the ownership and operational tests.
+
+  The engine auto-selects Form 8995 (simplified) or Form 8995-A (detailed)
+  based on whether taxable income before QBI exceeds the simplified threshold.
+
+businessRuleValidation:
+  - rule: "reference-summary-packet"
+    description: "Inventory support counts this slice as packet-complete only when regression coverage proves the emitted artifact stays labeled as a non-filing reference summary and only surfaces the supported Form 8995-A business and PTP computations, aggregation and patronage disclosures, overall deduction-limitation lines, and tracked QBI loss carryforward."
+    testRef: "tests/pdf/fill-form-8995-a.test.ts::buildForm8995AReferenceSummary keeps the packet artifact reference-only and limited to supported Form 8995-A outputs"
+
+thresholds:
+  simplifiedThreshold:
+    single: 197300
+    married_filing_jointly: 394600
+    married_filing_separately: 197300
+    head_of_household: 197300
+    qualifying_surviving_spouse: 197300
+  phaseInRange:
+    single: 50000
+    married_filing_jointly: 100000
+    married_filing_separately: 50000
+    head_of_household: 50000
+    qualifying_surviving_spouse: 50000
+  upperThreshold:
+    single: 247300
+    married_filing_jointly: 494600
+    married_filing_separately: 247300
+    head_of_household: 247300
+    qualifying_surviving_spouse: 247300
+
+lines:
+  - line: "1"
+    description: "Qualified business income or (loss) from the trade or business"
+    formula: "QBI as determined for the trade or business (Schedule C net profit minus allocated SE adjustments for sole proprietorships, or K-1 Box 20 Code Z for pass-throughs)"
+    irsRef: "Form 8995-A Instructions, Line 1"
+    inputs:
+      - "Schedule C QBI (net profit minus allocated deductible half SE tax and SE health insurance)"
+      - "K-1 Box 20 Code Z (entity-reported Section 199A QBI)"
+    testRef: "tests/engine/forms/form-8995-a.test.ts::Form 8995-A Line 1 - QBI from trade or business"
+
+  - line: "2"
+    description: "Adjusted QBI after SSTB reduction"
+    formula: "Line 1 × applicable SSTB percentage"
+    irsRef: "Form 8995-A Instructions, Line 2"
+    notes: |
+      For non-SSTB businesses: applicable SSTB % = 100% (no reduction).
+      For SSTB businesses:
+        - Below threshold: 100% (use simplified Form 8995 instead)
+        - In phase-in range: (upper threshold - taxable income) / phase-in range
+        - Above upper threshold: 0% (SSTB excluded entirely)
+    testRef: "tests/engine/forms/form-8995-a.test.ts::Form 8995-A Line 2 - non-SSTB has 100% applicable percentage"
+
+  - line: "3"
+    description: "W-2 wages from the trade or business"
+    formula: "Total W-2 wages paid by the qualified trade or business"
+    irsRef: "Form 8995-A Instructions, Line 3; IRC §199A(b)(4)"
+    inputs:
+      - "W-2 wages paid by the business (reported by entity or Schedule C filer)"
+    notes: |
+      For K-1 entities, W-2 wages are reported by the entity (typically on a
+      supplemental Section 199A statement with the K-1). For sole proprietors,
+      these are wages the owner paid to employees of the Schedule C business.
+    testRef: "tests/engine/forms/form-8995-a.test.ts::Form 8995-A Line 3 - W-2 wages from business"
+
+  - line: "4"
+    description: "Adjusted W-2 wages after SSTB reduction"
+    formula: "Line 3 × applicable SSTB percentage"
+    irsRef: "Form 8995-A Instructions, Line 4"
+    testRef: "tests/engine/forms/form-8995-a.test.ts::SSTB mid-phase-in - QBI W-2 UBIA reduced by 50%"
+
+  - line: "5"
+    description: "UBIA of qualified property"
+    formula: "Unadjusted basis immediately after acquisition of all qualified property held at close of tax year"
+    irsRef: "Form 8995-A Instructions, Line 5; IRC §199A(b)(6)"
+    notes: |
+      UBIA is the cost basis of tangible depreciable property held at year-end
+      that is still within the applicable recovery period (or 10 years if longer).
+      For K-1 entities, this is reported on the Section 199A statement.
+    testRef: "tests/engine/forms/form-8995-a.test.ts::Form 8995-A Line 5 - UBIA of qualified property"
+
+  - line: "6"
+    description: "Adjusted UBIA after SSTB reduction"
+    formula: "Line 5 × applicable SSTB percentage"
+    irsRef: "Form 8995-A Instructions, Line 6"
+    testRef: "tests/engine/forms/form-8995-a.test.ts::HoH with SSTB in phase-in range"
+
+  - line: "7"
+    description: "50% of W-2 wages"
+    formula: "Line 4 × 50%"
+    irsRef: "Form 8995-A Instructions, Line 7; IRC §199A(b)(2)(B)(i)"
+    testRef: "tests/engine/forms/form-8995-a.test.ts::Form 8995-A Line 7 - 50% of W-2 wages"
+
+  - line: "8"
+    description: "25% of W-2 wages plus 2.5% of UBIA"
+    formula: "Line 4 × 25% + Line 6 × 2.5%"
+    irsRef: "Form 8995-A Instructions, Line 8; IRC §199A(b)(2)(B)(ii)"
+    testRef: "tests/engine/forms/form-8995-a.test.ts::Form 8995-A Line 8 - 25% of W-2 wages plus 2.5% of UBIA"
+
+  - line: "9"
+    description: "W-2/UBIA limitation"
+    formula: "Greater of Line 7 or Line 8"
+    irsRef: "Form 8995-A Instructions, Line 9; IRC §199A(b)(2)(B)"
+    testRef: "tests/engine/forms/form-8995-a.test.ts::Form 8995-A Line 9 - W-2/UBIA limit is greater of Line 7 or Line 8"
+
+  - line: "10"
+    description: "20% of adjusted QBI"
+    formula: "Line 2 × 20%"
+    irsRef: "Form 8995-A Instructions, Line 10; IRC §199A(a)(1)(A)"
+    testRef: "tests/engine/forms/form-8995-a.test.ts::Form 8995-A Line 10 - 20% of adjusted QBI"
+
+  - line: "11"
+    description: "QBI deduction before phase-in"
+    formula: "Lesser of Line 9 or Line 10"
+    irsRef: "Form 8995-A Instructions, Line 11"
+    notes: |
+      Above the upper threshold, this is the final per-business QBI component.
+      In the phase-in range, the excess (Line 10 - Line 11, if positive)
+      is partially added back via Lines 12-14.
+    testRef: "tests/engine/forms/form-8995-a.test.ts::Form 8995-A Line 11 - lesser of W-2/UBIA limit or 20% QBI"
+
+  - line: "12"
+    description: "Excess over W-2/UBIA limit"
+    formula: "Line 10 - Line 11 (if positive, else 0)"
+    irsRef: "Form 8995-A Instructions, Line 12"
+    testRef: "tests/engine/forms/form-8995-a.test.ts::Form 8995-A Line 12 - excess over W-2/UBIA limit"
+
+  - line: "13"
+    description: "Phase-in percentage"
+    formula: "(Taxable income before QBI - threshold) / phase-in range"
+    irsRef: "Form 8995-A Instructions, Line 13"
+    notes: |
+      This goes from 0% at the threshold to 100% above the upper threshold.
+      It measures how much of the W-2/UBIA limitation has phased in.
+    edgeCases:
+      - "At threshold exactly: 0% (no W-2/UBIA limitation applies)"
+      - "At upper threshold: 100% (full W-2/UBIA limitation applies)"
+      - "Above upper threshold: 100% (full limitation; SSTB excluded)"
+    testRef: "tests/engine/forms/form-8995-a.test.ts::Form 8995-A Line 13 - phase-in percentage at midpoint"
+
+  - line: "14"
+    description: "Phase-in reduction"
+    formula: "Line 12 × Line 13"
+    irsRef: "Form 8995-A Instructions, Line 14"
+    notes: |
+      The portion of the excess that is disallowed. As income increases through
+      the phase-in range, more of the excess is disallowed.
+    testRef: "tests/engine/forms/form-8995-a.test.ts::Form 8995-A Line 14 - phase-in reduction at midpoint"
+
+  - line: "15"
+    description: "QBI deduction component for this business"
+    formula: "Line 10 - Line 14"
+    irsRef: "Form 8995-A Instructions, Line 15"
+    notes: |
+      Equivalently: Line 11 + (Line 12 - Line 14).
+      At threshold: Line 10 (full 20% of QBI, no limitation).
+      Above upper threshold: Line 11 (W-2/UBIA limited).
+      If Line 2 is negative, this business contributes a negative component.
+    edgeCases:
+      - "Business with loss: negative component reduces total QBI deduction"
+      - "SSTB above upper threshold: $0 (adjusted QBI is 0)"
+      - "Non-SSTB above upper threshold: lesser of 20% QBI or W-2/UBIA limit"
+    testRef: "tests/engine/forms/form-8995-a.test.ts::Form 8995-A Line 15 - component equals 20% QBI at threshold"
+
+  - line: "16"
+    description: "Total QBI component"
+    formula: "Sum of Line 15 across all businesses (floor at 0 for total deduction computation)"
+    irsRef: "Form 8995-A Instructions, Line 16"
+    notes: |
+      Losses from one business reduce the total but cannot make the QBI component
+      negative. If total is negative, the QBI deduction is $0 and the net negative
+      becomes a QBI loss carryforward.
+    testRef: "tests/engine/forms/form-8995-a.test.ts::multiple non-SSTB businesses - components sum"
+
+  # ═══════════════════════════════════════════════════════════
+  # Part IV: Aggregation Elections (Reg. §1.199A-4)
+  # ═══════════════════════════════════════════════════════════
+
+  - line: "Part IV"
+    description: "Aggregation elections — taxpayer elects to treat two or more qualified trades or businesses as a single trade or business for the W-2 wage/UBIA limitation"
+    formula: "For each aggregation group: combined QBI = sum of component QBIs; combined W-2 = sum of component W-2 wages; combined UBIA = sum of component UBIAs. The aggregate is processed as a single entry in Lines 1–15."
+    irsRef: "Form 8995-A Instructions, Part IV; Reg. §1.199A-4; IRC §199A(b)(5)"
+    notes: |
+      Aggregation combines the QBI, W-2 wages, and UBIA of the component businesses
+      into a single trade-or-business entry for Lines 1–15. This can increase the
+      deduction when one business has high W-2 wages and another has high UBIA,
+      since the combined W-2/UBIA limit (Line 9) uses the greater-of test on the
+      combined amounts.
+
+      Validation rules enforced by the engine:
+        - Each component business name must match an entry in qbiSources
+        - No component business may be an SSTB (Reg. §1.199A-4(b)(1)(v))
+        - A business cannot appear in more than one aggregation group
+        - An aggregation group must contain at least two businesses
+
+      The aggregation election is made on the original timely-filed return and
+      applies to all subsequent years unless the facts and circumstances change.
+      The engine does not enforce the multi-year continuity requirement.
+    edgeCases:
+      - "Two businesses with complementary W-2 and UBIA yield higher combined limit than separate"
+      - "Business with QBI loss aggregated with profitable business: loss offsets within aggregate"
+      - "Single-business aggregation group is rejected (minimum two components)"
+      - "SSTB business in aggregation group is rejected"
+      - "Business appearing in two groups is rejected"
+      - "All businesses aggregated into one group: equivalent to single combined entry"
+    testRef: "tests/engine/forms/form-8995-a.test.ts::Form 8995-A Part IV - aggregation elections"
+
+  # ═══════════════════════════════════════════════════════════
+  # REIT Dividends and Qualified PTP Income
+  # ═══════════════════════════════════════════════════════════
+
+  - line: "17"
+    description: "Qualified REIT dividends"
+    formula: "Sum of qualified REIT dividends from 1099-DIV Box 5 and K-1 Section 199A statements"
+    irsRef: "Form 8995-A Instructions, Line 17; IRC §199A(e)(3)"
+    inputs:
+      - "1099-DIV Box 5 (Section 199A dividends)"
+      - "K-1 Section 199A statement qualified REIT dividends"
+    notes: |
+      Per IRC §199A(b)(3), qualified REIT dividends are NOT subject to the W-2 wage / UBIA
+      limitation that applies to trade or business QBI above the threshold. The REIT component
+      is simply 20% of qualified REIT dividends regardless of income level.
+    testRef: "tests/engine/forms/form-8995-a.test.ts::Form 8995-A Line 17 - qualified REIT dividends"
+
+  - line: "18-31"
+    description: "Qualified PTP income — per-PTP computation with W-2/UBIA limits"
+    formula: "Each PTP is subject to the same per-entity W-2/UBIA limitation and SSTB phase-out as trade/business QBI in Lines 1-15"
+    irsRef: "Form 8995-A Instructions, Lines 18-31; IRC §199A(b)(2)"
+    inputs:
+      - "K-1 Section 199A statement qualified PTP income"
+      - "K-1 Section 199A statement PTP W-2 wages"
+      - "K-1 Section 199A statement PTP UBIA"
+      - "K-1 Section 199A statement PTP SSTB designation"
+    notes: |
+      PTPs above the simplified threshold are subject to the same W-2/UBIA limitations
+      as trade or business QBI. Each PTP is treated as a separate entry with its own
+      W-2 wages, UBIA, and SSTB designation from the K-1 Section 199A statement.
+      The per-PTP computation mirrors the Part I per-business computation.
+    testRef: "tests/engine/forms/form-8995-a.test.ts::Form 8995-A Lines 18-31 - PTP with W-2/UBIA limits"
+
+  - line: "32"
+    description: "Total REIT and qualified PTP component"
+    formula: "20% of Line 17 qualified REIT dividends (floor 0) + sum of per-PTP components from Lines 18-31 (floor 0 for total)"
+    irsRef: "Form 8995-A Instructions, Line 32"
+    notes: |
+      REIT dividends contribute a flat 20% component (no W-2/UBIA limit).
+      PTP income above the threshold contributes per-PTP W-2/UBIA-limited components.
+      The combined REIT/PTP component is floored at zero.
+    testRef: "tests/engine/forms/form-8995-a.test.ts::Form 8995-A Line 32 - REIT and PTP component"
+
+  - line: "33"
+    description: "Taxable income before QBI deduction"
+    formula: "AGI - standard/itemized deduction"
+    irsRef: "Form 8995-A Instructions, Line 33"
+    testRef: "tests/engine/forms/form-8995-a.test.ts::Form 8995-A Line 33 - taxable income before QBI"
+
+  - line: "34"
+    description: "Net capital gain"
+    formula: "min(Schedule D Line 15, Schedule D Line 16) (floor 0) + qualified dividends"
+    irsRef: "Form 8995-A Instructions, Line 34; IRC §1222(11)"
+    testRef: "tests/engine/forms/form-8995-a.test.ts::Form 8995-A Line 34 - net capital gain includes qualified dividends"
+
+  - line: "35"
+    description: "Income limitation"
+    formula: "(Line 33 - Line 34) × 20%"
+    irsRef: "Form 8995-A Instructions, Line 35"
+    testRef: "tests/engine/forms/form-8995-a.test.ts::Form 8995-A Line 35 - income limitation with capital gains"
+
+  - line: "36"
+    description: "Total QBI, REIT, and PTP combined"
+    formula: "Line 16 (total QBI component) + Line 32 (REIT/PTP component)"
+    irsRef: "Form 8995-A Instructions, Line 36"
+    notes: "Combined trade/business QBI deduction component plus REIT and PTP deduction component"
+    testRef: "tests/engine/forms/form-8995-a.test.ts::Form 8995-A Line 36 - combined QBI and REIT/PTP"
+
+  # ═══════════════════════════════════════════════════════════
+  # Schedule D: Patron Reduction for Specified Cooperatives
+  # ═══════════════════════════════════════════════════════════
+
+  - line: "Schedule D Line 2"
+    description: "QBI properly allocable to qualified payments received from the cooperative"
+    formula: "Portion of Form 8995-A Line 2 (adjusted QBI) allocable to patronage dividends and per-unit retains from the specified agricultural or horticultural cooperative"
+    irsRef: "Schedule D (Form 8995-A) Instructions, Line 2; IRC §199A(b)(7)"
+    inputs:
+      - "Qualified payments from the cooperative (1099-PATR Box 7)"
+      - "QBI from the trade or business allocable to those payments"
+    testRef: "tests/engine/forms/form-8995-a.test.ts::Schedule D Line 2 - QBI allocable to qualified payments"
+
+  - line: "Schedule D Line 3"
+    description: "9% of QBI allocable to qualified payments"
+    formula: "Schedule D Line 2 × 9%"
+    irsRef: "Schedule D (Form 8995-A) Instructions, Line 3; IRC §199A(b)(7)(A)"
+    testRef: "tests/engine/forms/form-8995-a.test.ts::Schedule D Line 3 - 9% of allocable QBI"
+
+  - line: "Schedule D Line 4"
+    description: "W-2 wages from the trade or business allocable to qualified payments"
+    formula: "Portion of W-2 wages (Form 8995-A Line 4) allocable to the qualified payments"
+    irsRef: "Schedule D (Form 8995-A) Instructions, Line 4; IRC §199A(b)(7)(B)"
+    testRef: "tests/engine/forms/form-8995-a.test.ts::Schedule D Line 4 - W-2 wages allocable to qualified payments"
+
+  - line: "Schedule D Line 5"
+    description: "50% of W-2 wages allocable to qualified payments"
+    formula: "Schedule D Line 4 × 50%"
+    irsRef: "Schedule D (Form 8995-A) Instructions, Line 5; IRC §199A(b)(7)(B)"
+    testRef: "tests/engine/forms/form-8995-a.test.ts::Schedule D Line 5 - 50% of allocable W-2 wages"
+
+  - line: "Schedule D Line 6"
+    description: "Patron reduction for the cooperative"
+    formula: "Lesser of Schedule D Line 3 or Schedule D Line 5"
+    irsRef: "Schedule D (Form 8995-A) Instructions, Line 6; IRC §199A(b)(7)"
+    notes: |
+      The patron reduction is the lesser of 9% of QBI allocable to qualified
+      payments or 50% of W-2 wages allocable to qualified payments. If the patron
+      pays no W-2 wages, the patron reduction is $0 (the 50% W-2 limit is $0), so
+      sole proprietor farmers with no employees receive no reduction. The total
+      patron reduction across all cooperatives reduces the QBI deduction before the
+      cooperative DPAD is added back.
+    edgeCases:
+      - "Patron with no W-2 wages: patron reduction = $0 (50% of $0 = $0)"
+      - "Patron with high W-2 wages: patron reduction = 9% of QBI allocable (the 9% cap is binding)"
+      - "Patron with very low W-2 wages: patron reduction = 50% of W-2 allocable (the W-2 cap is binding)"
+      - "Multiple cooperatives: patron reductions are computed per cooperative and summed"
+    testRef: "tests/engine/forms/form-8995-a.test.ts::Schedule D Line 6 - patron reduction is lesser of 9% QBI or 50% W-2"
+
+  # ═══════════════════════════════════════════════════════════
+  # Final Computation (Lines 37–39) with Patron Reduction and DPAD
+  # ═══════════════════════════════════════════════════════════
+
+  - line: "37"
+    description: "QBI deduction before DPAD"
+    formula: "min(Line 36 combined QBI/REIT/PTP minus total patron reduction, Line 35 income limitation)"
+    irsRef: "Form 8995-A Instructions, Line 37"
+    notes: |
+      The total patron reduction from Schedule D reduces the combined QBI/REIT/PTP
+      amount before comparison with the income limitation. When no patronage sources
+      exist, Line 37 equals min(Line 36, Line 35) — the same result as before.
+    edgeCases:
+      - "No patronage sources: Line 37 = min(Line 36, Line 35)"
+      - "Patron reduction exceeds combined component: Line 37 = 0"
+      - "Income limitation binding: Line 37 = Line 35 income limitation"
+    testRef: "tests/engine/forms/form-8995-a.test.ts::Line 37 - QBI deduction before DPAD with no patronage"
+
+  - line: "38"
+    description: "Section 199A(g) DPAD from specified cooperatives"
+    formula: "Sum of DPAD amounts from Form 1099-PATR Box 6 across all cooperatives, capped at Line 33 minus Line 37"
+    irsRef: "Form 8995-A Instructions, Line 38; IRC §199A(g)"
+    notes: |
+      The DPAD is the domestic production activities deduction that the specified
+      agricultural or horticultural cooperative passes through to the patron on
+      Form 1099-PATR Box 6. The DPAD cannot exceed taxable income before QBI
+      minus the QBI deduction before DPAD (Line 33 - Line 37), ensuring the total
+      deduction does not exceed taxable income.
+    edgeCases:
+      - "No cooperatives: DPAD = $0"
+      - "DPAD exceeds cap: capped at taxable income minus QBI deduction before DPAD"
+      - "Zero taxable income after QBI deduction: DPAD = $0"
+    testRef: "tests/engine/forms/form-8995-a.test.ts::Line 38 - DPAD from cooperative capped at TI minus QBI deduction"
+
+  - line: "39"
+    description: "Total Section 199A deduction"
+    formula: "Line 37 (QBI deduction before DPAD) + Line 38 (cooperative DPAD)"
+    irsRef: "Form 8995-A Instructions, Line 39; Form 1040 Line 13"
+    notes: |
+      Flows to Form 1040 Line 13. When no patronage sources exist, Line 38 is $0
+      and Line 39 equals Line 37, which equals min(Line 36, Line 35) — identical
+      to the pre-Schedule D behavior.
+    edgeCases:
+      - "Zero QBI and zero REIT/PTP → zero deduction"
+      - "REIT-only investor above threshold still gets 20% of REIT dividends (no W-2/UBIA limit)"
+      - "Income limitation is binding when capital gains are large relative to taxable income"
+      - "SSTB fully phased out above upper threshold but REIT component unaffected"
+      - "Non-SSTB limited by W-2 wages and UBIA above upper threshold"
+      - "PTP with SSTB above upper threshold: PTP component = $0 but REIT component preserved"
+      - "Patron with cooperative: deduction = QBI deduction before DPAD + DPAD"
+    testRef: "tests/engine/forms/form-8995-a.test.ts::Form 8995-A Line 39 - deduction limited by income limitation"
+
+  - line: "40"
+    description: "QBI loss carryforward"
+    formula: "If total QBI across all businesses is negative, the absolute value carries forward"
+    irsRef: "Form 8995-A Instructions, Line 40"
+    notes: "Applied in future years to reduce QBI before computing the deduction"
+    testRef: "tests/engine/forms/form-8995-a.test.ts::Form 8995-A Line 40 - QBI loss carryforward from loss business"
+
+edgeCases:
+  - description: "SSTB in mid-phase-in"
+    scenario: "SSTB with taxable income halfway through phase-in range"
+    expected: "QBI, W-2, UBIA all reduced by 50%; W-2/UBIA limit partially applies"
+    testRef: "tests/engine/forms/form-8995-a.test.ts::SSTB mid-phase-in - QBI W-2 UBIA reduced by 50%"
+
+  - description: "SSTB above upper threshold"
+    scenario: "SSTB with taxable income above upper threshold"
+    expected: "QBI deduction component = $0 (SSTB excluded entirely)"
+    testRef: "tests/engine/forms/form-8995-a.test.ts::SSTB above upper threshold - completely excluded"
+
+  - description: "Non-SSTB above upper threshold with W-2 limit binding"
+    scenario: "Non-SSTB with 20% QBI exceeding W-2/UBIA limit"
+    expected: "Deduction limited to greater of 50% W-2 or 25% W-2 + 2.5% UBIA"
+    testRef: "tests/engine/forms/form-8995-a.test.ts::non-SSTB above threshold W-2 limit - deduction limited by W-2 wages"
+
+  - description: "Non-SSTB with zero W-2 wages and zero UBIA above threshold"
+    scenario: "Consultant with no employees and no tangible property, income above upper threshold"
+    expected: "QBI deduction = $0 (W-2/UBIA limit is $0)"
+    testRef: "tests/engine/forms/form-8995-a.test.ts::non-SSTB zero W-2 zero UBIA - deduction is zero above threshold"
+
+  - description: "Mixed SSTB and non-SSTB businesses"
+    scenario: "Taxpayer with one SSTB and one non-SSTB, income above upper threshold"
+    expected: "SSTB component = $0; non-SSTB component = W-2/UBIA limited amount"
+    testRef: "tests/engine/forms/form-8995-a.test.ts::mixed SSTB and non-SSTB - SSTB excluded, non-SSTB limited"
+
+  - description: "UBIA-heavy business"
+    scenario: "Business with low W-2 wages but high UBIA, above upper threshold"
+    expected: "25% W-2 + 2.5% UBIA path produces higher limit than 50% W-2"
+    testRef: "tests/engine/forms/form-8995-a.test.ts::UBIA-heavy business - 25% W-2 + 2.5% UBIA exceeds 50% W-2"
+
+  - description: "QBI loss with mixed businesses"
+    scenario: "One profitable business and one with QBI loss"
+    expected: "Loss reduces total QBI component; net negative becomes carryforward"
+    testRef: "tests/engine/forms/form-8995-a.test.ts::Form 8995-A Line 40 - QBI loss carryforward from loss business"
+
+  - description: "Aggregation increases deduction via combined W-2/UBIA"
+    scenario: "Two non-SSTB businesses above upper threshold: one has W-2 wages, the other has UBIA. Separately each gets a small limit; aggregated the combined limit is larger."
+    expected: "Aggregated deduction exceeds sum of separate deductions"
+    testRef: "tests/engine/forms/form-8995-a.test.ts::aggregation increases deduction - complementary W-2 and UBIA"
+
+  - description: "Aggregation with intra-group loss netting"
+    scenario: "Two aggregated businesses, one profitable and one with a loss. The loss nets within the aggregate before the W-2/UBIA limit."
+    expected: "Combined QBI is net of both; W-2/UBIA limit applies to the net"
+    testRef: "tests/engine/forms/form-8995-a.test.ts::aggregation with intra-group loss netting"
+
+  - description: "SSTB in aggregation group rejected"
+    scenario: "Taxpayer attempts to aggregate an SSTB with a non-SSTB"
+    expected: "Error thrown: SSTBs cannot be aggregated per Reg. §1.199A-4(b)(1)(v)"
+    testRef: "tests/engine/forms/form-8995-a.test.ts::aggregation rejects SSTB business"
+
+  - description: "Mixed aggregated and non-aggregated businesses"
+    scenario: "Three businesses: two aggregated into a group, one standalone"
+    expected: "Aggregate processed as single entry; standalone processed normally; total is sum"
+    testRef: "tests/engine/forms/form-8995-a.test.ts::mixed aggregated and non-aggregated businesses"
+
+  - description: "Farmer with cooperative and no W-2 wages"
+    scenario: "Schedule F farmer sells grain through a specified cooperative, has no employees"
+    expected: "Patron reduction = $0 (50% of $0 W-2); full 20% QBI deduction + cooperative DPAD"
+    testRef: "tests/engine/forms/form-8995-a.test.ts::patron with no W-2 wages gets zero patron reduction"
+
+  - description: "Farmer with cooperative and W-2 employees"
+    scenario: "Schedule F farmer with hired help sells through cooperative"
+    expected: "Patron reduction = min(9% of allocable QBI, 50% of allocable W-2); deduction reduced then DPAD added"
+    testRef: "tests/engine/forms/form-8995-a.test.ts::patron with W-2 wages gets patron reduction"
+
+  - description: "DPAD exceeds taxable income cap"
+    scenario: "Cooperative passes through DPAD exceeding remaining taxable income after QBI deduction"
+    expected: "DPAD capped at taxable income minus QBI deduction before DPAD"
+    testRef: "tests/engine/forms/form-8995-a.test.ts::Line 38 - DPAD from cooperative capped at TI minus QBI deduction"
+
+  - description: "Multiple cooperatives aggregate patron reduction and DPAD"
+    scenario: "Farmer receives qualified payments from two different cooperatives"
+    expected: "Per-cooperative patron reductions sum; per-cooperative DPADs sum (subject to overall cap)"
+    testRef: "tests/engine/forms/form-8995-a.test.ts::multiple cooperatives aggregate patron reduction and DPAD"

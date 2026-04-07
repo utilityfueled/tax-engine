@@ -1,0 +1,105 @@
+form: "IRA Deduction Worksheet"
+fullName: "Worksheet 1-1 and 1-2 — Figuring Your Reduced IRA Deduction"
+taxYear: 2025
+irsReference: "https://www.irs.gov/publications/p590a"
+
+notes: |
+  This worksheet implements the IRA deduction phase-out calculation from
+  IRS Publication 590-A for tax year 2025. It determines the deductible
+  portion of traditional IRA contributions based on the taxpayer's modified
+  adjusted gross income, filing status, and whether the taxpayer (or spouse)
+  is an active participant in an employer retirement plan.
+
+  Per Pub 590-A, if neither the taxpayer nor spouse is an active participant
+  in an employer plan, the full contribution (up to the annual limit) is
+  deductible regardless of income. If the taxpayer IS an active participant,
+  the deduction is phased out based on MAGI. If the taxpayer is NOT an active
+  participant but their spouse IS, the phase-out depends on filing status:
+  for MFJ/QSS, a separate higher $236K-$246K threshold applies; for MFS who
+  lived with their spouse, the same $0-$10K range as an active MFS participant
+  applies.
+
+  MFS filers who lived apart from their spouse for the entire tax year are
+  treated as single for IRA deduction purposes per Pub 590-A. This affects
+  both the active-participant phase-out range ($79K-$89K instead of $0-$10K)
+  and the spouse-active-participant rule (no phase-out applies because they
+  are treated as a single non-participant).
+
+  The 2025 contribution limit is $7,000 (under age 50) or $8,000 (age 50+).
+  Phase-out thresholds are from Rev. Proc. 2024-40 §3.20.
+
+  Modified AGI for IRA deduction purposes is AGI computed without the IRA
+  deduction, plus certain add-backs (student loan interest deduction, foreign
+  earned income exclusion, etc.). The engine computes this in the federal
+  orchestration layer.
+
+  On a married filing jointly return, each spouse computes their own IRA
+  deduction independently. The total flows to Schedule 1 Line 20.
+
+lines:
+  - line: "contributionLimit"
+    description: "Maximum allowable IRA contribution for the taxpayer"
+    formula: "$7,000 base limit plus $1,000 catch-up if age 50 or older by year end"
+    irsRef: "IRC §219(b)(5)(A); Rev. Proc. 2024-40 §3.19"
+    edgeCases:
+      - "Under age 50: $7,000"
+      - "Age 50 or older by December 31: $8,000"
+      - "Contribution cannot exceed taxable compensation for the year"
+    testRef: "tests/engine/forms/ira-deduction-worksheet.test.ts::IRA Deduction Worksheet - age 50+ gets $8,000 contribution limit"
+
+  - line: "deductibleAmount"
+    description: "Deductible traditional IRA contribution after phase-out"
+    formula: |
+      If not an active participant and (not MFJ or spouse not active participant):
+        Deduction = min(contributions, contributionLimit)
+      If active participant:
+        1. excess = MAGI - phaseOutStart[filingStatus]
+        2. If excess <= 0: full deduction = min(contributions, contributionLimit)
+        3. If excess >= phaseOutRange[filingStatus]: deduction = $0
+        4. Otherwise: ratio = excess / phaseOutRange; reduction = round_up_to_$10(ratio × contributionLimit); deduction = max($200, contributionLimit - reduction); capped at contributions
+      If not active participant but spouse is (MFJ/QSS):
+        Same formula using spouseActiveParticipant thresholds ($236K-$246K)
+      If not active participant but spouse is (MFS, lived with spouse):
+        Same formula using MFS active-participant thresholds ($0-$10K)
+      If MFS and lived apart from spouse all year:
+        Treated as single for phase-out purposes per Pub 590-A
+    irsRef: "Pub 590-A Worksheet 1-1 and 1-2; Rev. Proc. 2024-40 §3.20"
+    inputs:
+      - "MAGI for IRA deduction purposes"
+      - "Filing status"
+      - "Traditional IRA contributions"
+      - "Active participant status"
+      - "Spouse active participant status"
+      - "Whether MFS filer lived with spouse at any time during the year"
+    edgeCases:
+      - "Single active participant MAGI $79,000: full deduction"
+      - "Single active participant MAGI $84,000: partial deduction"
+      - "Single active participant MAGI $89,000 or above: $0 deduction"
+      - "MFJ active participant MAGI $126,000: full deduction"
+      - "MFJ active participant MAGI $136,000: partial deduction"
+      - "MFJ active participant MAGI $146,000 or above: $0 deduction"
+      - "MFJ non-participant with active spouse MAGI $236,000: full deduction"
+      - "MFJ non-participant with active spouse MAGI $241,000: partial deduction"
+      - "MFJ non-participant with active spouse MAGI $246,000 or above: $0 deduction"
+      - "MFS active participant (lived with spouse): $0-$10,000 phase-out range"
+      - "MFS non-participant with active spouse (lived with spouse): $0-$10,000 phase-out range"
+      - "MFS active participant (lived apart all year): uses single $79K-$89K phase-out range"
+      - "MFS non-participant with active spouse (lived apart all year): full deduction (treated as single non-participant)"
+      - "Partial phase-out reduction is rounded up to the next $10 multiple"
+      - "The $200 minimum floor applies when partially phased out but not fully"
+      - "Contributions less than the limit: deduction capped at actual contributions"
+    testRef: "tests/engine/forms/ira-deduction-worksheet.test.ts::IRA Deduction Worksheet - single active participant mid-phase-out gets partial deduction"
+
+  - line: "totalDeduction"
+    description: "Combined IRA deduction for Schedule 1 Line 20"
+    formula: "Primary deduction + spouse deduction (MFJ)"
+    irsRef: "Schedule 1 Instructions, Line 20"
+    testRef: "tests/engine/forms/ira-deduction-worksheet.test.ts::IRA Deduction Worksheet - MFJ combines both spouses deductions"
+
+businessRuleValidation:
+  - scenario: "Reference summary packet disclosure"
+    description: "Inventory support counts this worksheet as business-rule validated only when regression coverage proves the emitted packet artifact stays labeled as a non-filing reference summary and only surfaces the supported Pub. 590-A contribution limits, deductible amounts, and Schedule 1 Line 20 total."
+    testRef: "tests/pdf/fill-ira-deduction-worksheet.test.ts::buildIraDeductionWorksheetReferenceSummary keeps the packet artifact reference-only and limited to supported IRA worksheet outputs"
+  - scenario: "Reference summary inclusion rule"
+    description: "Inventory support counts this worksheet as business-rule validated only when regression coverage proves the draft packet emits the IRA deduction worksheet reference summary when worksheet inputs are provided and suppresses it when no worksheet is present."
+    testRef: "tests/pdf/fill-ira-deduction-worksheet.test.ts::fillReturn includes the IRA deduction worksheet reference summary only when worksheet inputs are present"

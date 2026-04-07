@@ -1,0 +1,337 @@
+form: "NJ-1040 Gross Income"
+fullName: "New Jersey NJ-1040 Gross Income Computation (Lines 14-29)"
+taxYear: 2025
+reference: "https://www.nj.gov/treasury/taxation/pdf/current/1040i.pdf"
+
+notes: |
+  New Jersey computes gross income INDEPENDENTLY from federal AGI. NJ has its
+  own income categories on Lines 14-24 of the NJ-1040. These are summed to
+  arrive at total NJ income (Line 25). After the retirement exclusion and other
+  gross-income adjustments, Line 29 is NJ Gross Income.
+
+  Key NJ differences from federal:
+  - NJ taxes all wages/salaries (similar to federal Line 1)
+  - NJ taxes taxable interest and dividends (similar to federal)
+  - NJ taxes business, partnership, S corporation, rental, and property-disposition income by category
+  - Losses may be netted within a category schedule, but a net loss is not entered on Form NJ-1040
+  - Pensions/annuities/IRA withdrawals reported in full (with possible exclusion)
+  - Partnership and S-corp income reported separately
+  - Net rental/royalty income
+  - Net gambling winnings
+  - Alimony received (for agreements before 2019, per NJ rules)
+  - Other income
+
+  Pension/retirement income exclusion (engine Line 27a; 2025 NJ-1040 Line 28a)
+  is available for taxpayers 62+ or disabled. For full-year residents, the 2025
+  NJ-1040 instructions phase the exclusion by total NJ income:
+  - Single/HOH/QSS:
+    - $0-$100,000 income: lesser of pension income or $75,000
+    - $100,001-$125,000 income: 37.5% of pension income
+    - $125,001-$150,000 income: 18.75% of pension income
+  - MFJ:
+    - $0-$100,000 income: lesser of pension income or $100,000
+    - $100,001-$125,000 income: 50% of pension income
+    - $125,001-$150,000 income: 25% of pension income
+  - MFS:
+    - $0-$100,000 income: lesser of pension income or $50,000
+    - $100,001-$125,000 income: 25% of pension income
+    - $125,001-$150,000 income: 12.5% of pension income
+  - Over $150,000 income: no regular exclusion
+
+  Other retirement income exclusion (engine Line 27b; 2025 NJ-1040 Line 28b)
+  uses Worksheet D for full-year residents age 62+:
+  - Compute the maximum exclusion using total NJ income:
+    - MFJ: $100,000 / 50% of total NJ income / 25% of total NJ income
+    - Single/HOH/QSS: $75,000 / 37.5% of total NJ income / 18.75% of total NJ income
+    - MFS: $50,000 / 25% of total NJ income / 12.5% of total NJ income
+  - Subtract the pension exclusion already claimed on engine Line 27a
+  - If joint earned income (wages + net business income + partnership income +
+    S corporation income) is $3,000 or less, the unused amount is the
+    unclaimed exclusion
+  - A separate special exclusion of $6,000 (MFJ/HOH/QSS) or $3,000
+    (single/MFS) is allowed when the filer(s) age 62+ will never be eligible
+    for Social Security or Railroad Retirement because the employer did not
+    participate in either program
+  - The special exclusion is allowed even when total NJ income exceeds $150,000
+  - When only one spouse is age 62+ on a joint return, only that spouse's
+    income may be excluded; the engine accepts an override cap for this case
+
+  Current implementation scope is the resident/full-year worksheet path. The
+  part-year proration rules from Worksheet E remain a later iteration.
+
+lines:
+  - line: "14"
+    description: "Wages, salaries, tips, and other compensation"
+    formula: "Sum of all W-2 wages and other compensation"
+    inputs:
+      - "W-2 wage amounts"
+    notes: "Includes all Box 16 (state wages) from W-2s for NJ; if not present, use Box 1."
+    testRef: "tests/engine/state/nj-1040-gross-income.test.ts::NJ-1040 gross income Line 14 - wages from single W-2"
+
+  - line: "15a"
+    description: "Taxable interest income"
+    formula: "Sum of all taxable interest (1099-INT Box 1, etc.)"
+    inputs:
+      - "1099-INT amounts"
+    notes: "NJ follows federal treatment of interest income for most purposes."
+    testRef: "tests/engine/state/nj-1040-gross-income.test.ts::NJ-1040 gross income Line 15a - taxable interest"
+
+  - line: "15b"
+    description: "Tax-exempt interest/dividend income from other states"
+    formula: "Interest or dividend income from obligations of states other than NJ that is excluded from federal taxable income"
+    inputs:
+      - "Tax-exempt interest from other states' obligations (from 1099-INT Box 8 breakdown)"
+    notes: |
+      NJ taxes interest and dividend income from obligations of states other than
+      New Jersey or their political subdivisions. This income is federally tax-exempt
+      (reported in 1099-INT Box 8) but taxable in NJ. The taxpayer must determine
+      the out-of-state portion from supplementary statements provided by mutual funds.
+      NJ's own municipal bond interest remains exempt from NJ tax.
+      Line 15b is ADDED to the Line 25 total NJ income computation.
+    edgeCases:
+      - "Taxpayer holds only NJ municipal bonds: Line 15b = $0"
+      - "Taxpayer holds national muni fund: Line 15b = non-NJ portion of tax-exempt interest"
+      - "Taxpayer holds single other-state bond: Line 15b = full tax-exempt interest amount"
+    testRef: "tests/engine/state/nj-1040-gross-income.test.ts::NJ-1040 gross income Line 15b - other state tax-exempt interest adds to total income"
+
+  - line: "16"
+    description: "Dividend income"
+    formula: "Sum of all ordinary dividends (1099-DIV Box 1a)"
+    inputs:
+      - "1099-DIV amounts"
+    notes: "NJ does not have a preferential rate for qualified dividends — all dividends are taxed as ordinary income."
+    testRef: "tests/engine/state/nj-1040-gross-income.test.ts::NJ-1040 gross income Line 16 - dividends"
+
+  - line: "17"
+    description: "Net profits from business"
+    formula: "Net income from self-employment (Schedule NJ-BUS-1); if the netted amount is a loss, enter zero on Form NJ-1040"
+    inputs:
+      - "Schedule C net profit/loss"
+    notes: |
+      Schedule NJ-BUS-1 Part I permits netting profits and losses across the
+      taxpayer's businesses, but the 2025 NJ-1040 instructions state: "If the
+      netted amount is a loss, make no entry on line 18."
+    edgeCases:
+      - "Net Schedule NJ-BUS-1 loss: Line 17 = $0"
+    testRef: "tests/engine/state/nj-1040-gross-income.test.ts::NJ-1040 gross income Line 17 - business income"
+
+  - line: "18"
+    description: "Net gains or net income from disposition of property"
+    formula: "Net gains from sale of property (Schedule NJ-DOP); if the netted amount is a loss, enter zero on Form NJ-1040"
+    inputs:
+      - "Capital gains/losses"
+      - "Property sale gains/losses"
+    notes: |
+      NJ does not have preferential capital gains rates. All gains are taxed as
+      ordinary income. Schedule NJ-DOP allows gains and losses to be netted
+      within the schedule, but if the final netted amount is a loss, the 2025
+      instructions say to enter zero on Form NJ-1040.
+    edgeCases:
+      - "Net Schedule NJ-DOP loss: Line 18 = $0"
+    testRef: "tests/engine/state/nj-1040-gross-income.test.ts::NJ-1040 gross income Line 18 - net gains from property"
+
+  - line: "19"
+    description: "Pensions, annuities, and IRA withdrawals"
+    formula: "Total taxable pension/annuity/IRA distributions"
+    inputs:
+      - "1099-R amounts"
+    notes: |
+      Report the taxable amount of pensions, annuities, and IRA withdrawals.
+      NJ allows a pension exclusion on Line 27a for qualifying taxpayers (age 62+
+      or disabled) — but the full amount is reported here first.
+    testRef: "tests/engine/state/nj-1040-gross-income.test.ts::NJ-1040 gross income Line 19 - pension income"
+
+  - line: "20a"
+    description: "Distributive share of partnership income"
+    formula: "Income from partnerships (NJ-K-1, Line 1); if the netted amount is a loss, enter zero on Form NJ-1040"
+    inputs:
+      - "K-1 partnership income"
+    notes: |
+      Schedule NJ-BUS-1 Part II nets partnership income and losses, but if the
+      final amount is a loss, the 2025 NJ-1040 instructions say to make no
+      entry on line 21.
+    testRef: "tests/engine/state/nj-1040-gross-income.test.ts::NJ-1040 gross income Line 20a - partnership income"
+
+  - line: "20b"
+    description: "Net pro rata share of S corporation income"
+    formula: "Income from S corporations (NJ-K-1, Line 1); if the netted amount is a loss, enter zero on Form NJ-1040"
+    inputs:
+      - "K-1 S-corp income"
+    notes: |
+      Schedule NJ-BUS-1 Part III nets S corporation income and usable losses,
+      but if the final amount is a loss, the 2025 NJ-1040 instructions say to
+      make no entry on line 22.
+    testRef: "tests/engine/state/nj-1040-gross-income.test.ts::NJ-1040 gross income Line 20b - S corp income"
+
+  - line: "21"
+    description: "Net rental, royalty income"
+    formula: "Net rental and royalty income; if the netted amount is a loss, enter zero on Form NJ-1040"
+    inputs:
+      - "Schedule E rental/royalty income"
+    notes: |
+      Schedule NJ-BUS-1 Part IV allows netting gains and losses within this
+      category, but if the final amount is a loss, the 2025 NJ-1040
+      instructions say to make no entry on line 23.
+    edgeCases:
+      - "Net rental or royalty loss: Line 21 = $0"
+    testRef: "tests/engine/state/nj-1040-gross-income.test.ts::NJ-1040 gross income Line 21 - rental income"
+
+  - line: "22"
+    description: "Net gambling winnings"
+    formula: "Gambling winnings minus losses (losses limited to winnings)"
+    inputs:
+      - "Gambling winnings (W-2G)"
+      - "Gambling losses"
+    notes: "NJ allows gambling losses to offset gambling winnings but not below zero."
+    edgeCases:
+      - "Losses exceeding winnings are capped at zero (no negative)"
+    testRef: "tests/engine/state/nj-1040-gross-income.test.ts::NJ-1040 gross income Line 22 - gambling net limited to zero floor"
+
+  - line: "23"
+    description: "Alimony and separate maintenance payments received"
+    formula: "Alimony received under pre-2019 agreements"
+    inputs:
+      - "Alimony received amount"
+    notes: "NJ follows federal treatment: alimony from pre-2019 agreements is taxable; post-2018 agreements are not."
+    testRef: "tests/engine/state/nj-1040-gross-income.test.ts::NJ-1040 gross income Line 23 - alimony"
+
+  - line: "24"
+    description: "Other income"
+    formula: "Any income not reported on Lines 14-23"
+    inputs:
+      - "Other NJ-taxable income"
+    testRef: "tests/engine/state/nj-1040-gross-income.test.ts::NJ-1040 gross income Line 24 - other income"
+
+  - line: "25"
+    description: "Total NJ income"
+    formula: "Sum of Lines 14 through 24 after flooring any loss-only entry lines to zero"
+    inputs:
+      - "NJ-1040 Lines 14-24"
+    edgeCases:
+      - "A net loss on lines 17, 18, 20a, 20b, or 21 does not reduce total NJ income below the sum of the positive lines"
+    testRef: "tests/engine/state/nj-1040-gross-income.test.ts::NJ-1040 gross income Line 25 - total income sums all categories"
+
+  - line: "27a"
+    description: "Pension/retirement exclusion"
+    formula: |
+      Full-year resident worksheet logic from the 2025 NJ-1040 instructions:
+        If total NJ income ≤ $100,000:
+          - Single/HOH/QSS: min(pension income, $75,000)
+          - MFJ: min(pension income, $100,000)
+          - MFS: min(pension income, $50,000)
+        If total NJ income is $100,001-$125,000:
+          - Single/HOH/QSS: 37.5% of pension income
+          - MFJ: 50% of pension income
+          - MFS: 25% of pension income
+        If total NJ income is $125,001-$150,000:
+          - Single/HOH/QSS: 18.75% of pension income
+          - MFJ: 25% of pension income
+          - MFS: 12.5% of pension income
+        If total NJ income > $150,000:
+          - Exclusion = $0
+    inputs:
+      - "Filing status"
+      - "Taxpayer age 62+ or disabled"
+      - "Pension/annuity/IRA income (Line 19)"
+      - "Total NJ income (Line 25)"
+    notes: |
+      The 2025 instructions apply common income breakpoints ($100K/$125K/$150K)
+      across filing statuses, but the exclusion percentage in the higher-income
+      tiers is applied to pension income itself, not to the filing-status cap.
+      The exclusion applies to taxpayers age 62+ or disabled as defined by
+      Social Security. This module currently models the full-year resident path.
+    edgeCases:
+      - "Filer under 62 and not disabled gets no exclusion"
+      - "MFJ with $90,000 income and $80,000 pension: ≤$100K → full → min($80K, $100K) = $80,000"
+      - "MFJ with $120,000 income and $80,000 pension: 50% tier → $40,000"
+      - "Single at exactly $100,000: full tier → min(pension, $75,000)"
+      - "Single at $100,001 with $40,000 pension: 37.5% tier → $15,000"
+      - "Income over $150,000: $0 regardless of filing status"
+    testRef: "tests/engine/state/nj-1040-gross-income.test.ts::NJ-1040 gross income Line 27a - MFJ under $100K gets full exclusion"
+
+  - line: "27b"
+    description: "Other retirement income exclusion"
+    formula: |
+      Full-year resident Worksheet D path from the 2025 NJ-1040 instructions:
+        Maximum exclusion:
+          If total NJ income ≤ $100,000:
+            - Single/HOH/QSS: $75,000
+            - MFJ: $100,000
+            - MFS: $50,000
+          If total NJ income is $100,001-$125,000:
+            - Single/HOH/QSS: 37.5% of total NJ income
+            - MFJ: 50% of total NJ income
+            - MFS: 25% of total NJ income
+          If total NJ income is $125,001-$150,000:
+            - Single/HOH/QSS: 18.75% of total NJ income
+            - MFJ: 25% of total NJ income
+            - MFS: 12.5% of total NJ income
+          If total NJ income > $150,000:
+            - Unclaimed exclusion = $0
+
+        Unclaimed exclusion:
+          unused maximum = max(0, maximum exclusion - pension exclusion on line 27a)
+          if earned income (wages + business + partnership + S corp) ≤ $3,000:
+            use unused maximum
+          otherwise:
+            use $0
+
+        Special exclusion:
+          if the qualifying age-62+ filer(s) will never be eligible for Social
+          Security or Railroad Retirement:
+            - MFJ/HOH/QSS: $6,000
+            - Single/MFS: $3,000
+
+        Engine line 27b = unclaimed exclusion + special exclusion
+    inputs:
+      - "Filing status"
+      - "Total NJ income"
+      - "Pension exclusion already claimed on line 27a"
+      - "Earned income (wages, business, partnership, S corp)"
+      - "Age-62+ eligibility for line 28b"
+      - "Special exclusion eligibility"
+      - "Optional cap for mixed-age joint returns where only one spouse is eligible"
+    notes: |
+      The special exclusion is not conditioned on the $150,000 income ceiling.
+      For mixed-age joint returns, New Jersey only allows the exclusion against
+      the age-62+ spouse's income. The engine models this with an explicit cap
+      input instead of making ownership assumptions for jointly held income.
+    edgeCases:
+      - "Single age-66 filer with earned income of $0 can use the unused maximum exclusion from Worksheet D"
+      - "Joint filer with earned income of $3,001 loses the unclaimed exclusion but may still receive the special exclusion"
+      - "Income above $150,000 still allows the special exclusion when otherwise eligible"
+      - "One-spouse age-62+ joint return is capped to the eligible spouse's attributable income when provided"
+    testRef: "tests/engine/state/nj-1040-gross-income.test.ts::NJ-1040 gross income Line 27b - unclaimed exclusion allowed when earned income is $3,000 or less"
+
+  - line: "27c"
+    description: "Total retirement exclusion"
+    formula: "Line 27a + Line 27b"
+    inputs:
+      - "Pension exclusion"
+      - "Other retirement income exclusion"
+    testRef: "tests/engine/state/nj-1040-gross-income.test.ts::NJ-1040 gross income Line 27c - total retirement exclusion adds pension and other retirement exclusions"
+
+  - line: "28"
+    description: "Other adjustments/exclusions"
+    formula: "Other NJ-specific adjustments (disability exclusion, etc.)"
+    inputs:
+      - "Other adjustment amounts"
+    notes: "Placeholder for other adjustments. Detailed sub-modules may be added later."
+    testRef: "tests/engine/state/nj-1040-gross-income.test.ts::NJ-1040 gross income Line 28 - other adjustments"
+
+  - line: "29"
+    description: "NJ Gross Income"
+    formula: "Line 25 minus Line 27c minus Line 28"
+    inputs:
+      - "NJ-1040 Line 25"
+      - "Engine Line 27c total retirement exclusion"
+      - "NJ-1040 Line 28"
+    notes: |
+      The 2025 resident return places alimony and separate maintenance payments
+      paid on line 32, after line 29 gross income. That deduction is handled by
+      the main NJ-1040 return module, not this gross-income worksheet.
+    edgeCases:
+      - "NJ Gross Income cannot be negative — floor at zero"
+      - "Filer with only wage income and no adjustments: Line 29 = Line 25"
+      - "Deductible alimony paid does not change line 29 gross income"
+    testRef: "tests/engine/state/nj-1040-gross-income.test.ts::NJ-1040 gross income Line 29 - NJ gross income equals total minus adjustments"

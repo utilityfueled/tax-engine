@@ -1,0 +1,49 @@
+form: "Ohio Resident Engine"
+fullName: "Ohio Resident Return Entry Point from Validated Federal Input"
+taxYear: 2025
+
+notes: |
+  This spec documents the end-to-end Ohio resident entry point that consumes
+  validated TaxYearInput plus the federal TaxReturnResult, builds the Ohio
+  resident input via the adapter, and then runs the Ohio resident orchestrator.
+
+  The purpose of this module is integration, not new tax math. It provides a
+  single state-engine call site for applications that already have validated
+  federal input and a completed federal result.
+
+packetRules:
+  packetBehavior: "workspace-includes-reference-summaries"
+  includeWhen:
+    - "Ohio is the selected resident state for the workspace packet"
+    - "The federal return has been computed and the Ohio engine can derive the resident-state result from validated input"
+  suppressWhen:
+    - "No Ohio resident packet is being assembled"
+  notes: |
+    The Ohio engine itself does not render PDFs. Packet support is satisfied
+    when the workspace packet path invokes the Ohio state packet builder to add
+    the deterministic Ohio reference-summary PDFs produced from the engine
+    inputs and results.
+
+businessRuleValidation:
+  - rule: "workspace-ohio-engine-packet-disclosure"
+    description: "Inventory support counts the Ohio engine integration path as business-rule validated only when regression coverage proves the workspace packet attaches the Ohio reference-summary forms and discloses the packet as partial and not yet e-file validated."
+    testRef: "tests/apps/web/oh-state-packet.test.ts::buildWorkspaceFilledReturnDownload keeps Ohio packet disclosures honest when only reference-summary state forms are attached"
+
+lines:
+  - line: "1"
+    description: "Build Ohio resident return input from validated federal input and optional overlay"
+    formula: "buildOhioResidentReturnInput(taxInput, federalResult, overlay)"
+    module: "oh-input-adapter.ts"
+    testRef: "tests/engine/state/oh-engine.test.ts::Ohio engine builds Ohio resident input from validated federal input"
+
+  - line: "2"
+    description: "Compute full Ohio resident return from the adapter output"
+    formula: "calculateOhioResidentReturn(buildOhioResidentReturnInput(...))"
+    module: "oh-return.ts"
+    testRef: "tests/engine/state/oh-engine.test.ts::Ohio engine computes the same result as manual adapter plus orchestrator composition"
+
+  - line: "3"
+    description: "Optional overlay values flow through the adapter into the final Ohio return"
+    formula: "overlay fields override or augment extracted data before orchestrator execution"
+    module: "oh-input-adapter.ts + oh-return.ts"
+    testRef: "tests/engine/state/oh-engine.test.ts::Ohio engine overlay drives withholding override and SD 100 computation"

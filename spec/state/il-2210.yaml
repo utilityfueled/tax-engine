@@ -1,0 +1,282 @@
+form: "IL-2210"
+fullName: "Computation of Penalties for Individuals"
+taxYear: 2025
+reference: "https://tax.illinois.gov/forms/incometax/individual/il-2210.html"
+
+notes: |
+  IL-2210 computes the underpayment penalty for individuals who did not pay enough
+  estimated tax or withholding during the tax year. Illinois uses a quarterly
+  installment method with a daily penalty rate.
+
+  No penalty is required if:
+  1. Net tax (total tax minus refundable credits) is less than $1,000 ($500 MFS)
+  2. Withholding and estimated payments met the required annual payment
+     (lesser of 90% of current year tax or 100% of prior year tax)
+  3. The taxpayer qualifies for one of the IL-1040 Step 10 checkbox exemptions:
+     farmer (Line 34a), age 65+ and permanently in a nursing home (Line 34b),
+     or not required to file Form IL-1040 for the prior year (Line 34d)
+
+  The penalty rate is set annually by IDOR. For 2025 tax year the underpayment
+  rate is 7% (daily rate = 7% / 365).
+
+  Quarterly due dates:
+  - Q1: April 15
+  - Q2: June 15
+  - Q3: September 15
+  - Q4: January 15 of the following year
+
+  The penalty for each quarter accrues from the quarter's due date through
+  April 15 of the following year (or the date the underpayment was paid,
+  whichever is earlier).
+
+  This implementation covers the Regular Installment Method and the Step 6
+  Annualized Income Installment Method worksheet used to override Step 2,
+  Line 9b when income was earned unevenly during the year.
+
+lines:
+  # Step 1 — Figure Your Required Annual Payment
+  - line: "1"
+    description: "Total tax from IL-1040, Line 24"
+    formula: "IL-1040, Line 24"
+    reference: "IL-2210 Instructions, Step 1"
+    testRef: "tests/engine/state/il-2210.test.ts::IL-2210 Line 1 - total tax flows through"
+
+  - line: "2"
+    description: "Refundable credits (IL EITC + IL Child Tax Credit)"
+    formula: "IL-1040, Line 29 + Line 30"
+    reference: "IL-2210 Instructions, Step 1"
+    testRef: "tests/engine/state/il-2210.test.ts::IL-2210 Line 2 - refundable credits"
+
+  - line: "3"
+    description: "Net tax liability"
+    formula: "max(Line 1 - Line 2, 0)"
+    reference: "IL-2210 Instructions, Step 1"
+    edgeCases:
+      - "If less than $1,000 ($500 MFS), no penalty required"
+    testRef: "tests/engine/state/il-2210.test.ts::IL-2210 Line 3 - net tax liability"
+
+  - line: "4"
+    description: "90% of current year net tax"
+    formula: "Line 3 × 0.90"
+    reference: "IL-2210 Instructions, Step 1"
+    testRef: "tests/engine/state/il-2210.test.ts::IL-2210 Line 4 - 90 percent of current year tax"
+
+  - line: "5"
+    description: "Prior year tax liability"
+    formula: "Prior year IL-1040 tax (or Line 4 if no prior year return)"
+    reference: "IL-2210 Instructions, Step 1"
+    edgeCases:
+      - "If no prior year return was filed, use Line 4"
+      - "If prior year was less than 12 months, use Line 4"
+    testRef: "tests/engine/state/il-2210.test.ts::IL-2210 Line 5 - prior year tax"
+
+  - line: "6"
+    description: "Required annual payment"
+    formula: "min(Line 4, Line 5)"
+    reference: "IL-2210 Instructions, Step 1"
+    testRef: "tests/engine/state/il-2210.test.ts::IL-2210 Line 6 - required annual payment is min of Line 4 and Line 5"
+
+  - line: "7"
+    description: "Illinois income tax withheld"
+    formula: "IL-1040, Line 25"
+    reference: "IL-2210 Instructions, Step 1"
+    testRef: "tests/engine/state/il-2210.test.ts::IL-2210 Line 7 - IL withholding"
+
+  - line: "8"
+    description: "Estimated tax required"
+    formula: "max(Line 6 - Line 7, 0)"
+    reference: "IL-2210 Instructions, Step 1"
+    notes: "If zero or less, no penalty is required"
+    testRef: "tests/engine/state/il-2210.test.ts::IL-2210 Line 8 - estimated tax required"
+
+  # Step 2 — Determine if penalty applies
+  - line: "penalty_required"
+    description: "Whether penalty computation is needed"
+    formula: "Line 3 >= $1,000 ($500 MFS) AND Line 8 > 0 AND taxpayer did not check IL-1040 Line 34a, 34b, or 34d"
+    reference: "IL-2210 Instructions, Step 2, Line 7"
+    edgeCases:
+      - "No penalty if net tax < $1,000 ($500 MFS)"
+      - "No penalty if withholding >= required annual payment"
+      - "No penalty if taxpayer qualifies as a farmer (IL-1040 Line 34a)"
+      - "No penalty if taxpayer or spouse is age 65+ and permanently in a nursing home (IL-1040 Line 34b)"
+      - "No penalty if taxpayer was not required to file Form IL-1040 for the prior year (IL-1040 Line 34d)"
+    testRef: "tests/engine/state/il-2210.test.ts::IL-2210 no penalty when net tax below threshold"
+
+  # Step 3 — Regular Installment Method
+  - line: "9"
+    description: "Required installment per quarter"
+    formula: "Line 6 ÷ 4 (rounded to nearest dollar)"
+    reference: "IL-2210 Instructions, Step 3"
+    testRef: "tests/engine/state/il-2210.test.ts::IL-2210 Line 9 - quarterly installment amount"
+
+  - line: "9b"
+    description: "Required installment for each quarter"
+    formula: "Line 9 for regular method; Step 6, Line 56 for each quarter if annualizing income"
+    reference: "IL-2210 Instructions, Step 2, Line 9b"
+    notes: |
+      When the taxpayer elects the annualized income installment method, all four
+      quarterly required installments must come from Step 6, Line 56 columns A-D.
+    testRef: "tests/engine/state/il-2210.test.ts::IL-2210 Line 9b - annualized worksheet required installments replace equal quarterly installments"
+
+  - line: "quarterly"
+    description: "Quarterly underpayment computation"
+    formula: |
+      For each quarter (Q1-Q4):
+      - Column A: Required installment (Line 9) + prior quarter carryover
+      - Column B: Payments applied (estimated payments + withholding credit for quarter)
+      - Column C: Underpayment = max(Column A - Column B, 0)
+      - Column D: Overpayment carry to next quarter = max(Column B - Column A, 0)
+    reference: "IL-2210 Instructions, Step 3"
+    notes: |
+      Withholding is allocated equally across quarters (25% each).
+      Estimated payments are applied to their respective quarters.
+      Overpayments carry forward to subsequent quarters.
+    testRef: "tests/engine/state/il-2210.test.ts::IL-2210 quarterly underpayment computation - no payments"
+
+  - line: "penalty"
+    description: "Total penalty amount"
+    formula: |
+      Sum of penalties for each quarter:
+      Penalty per quarter = underpayment × daily rate × days
+      Days = from quarter due date to April 15 of following year
+      Daily rate = annual rate / 365
+    reference: "IL-2210 Instructions, Step 3"
+    notes: |
+      Quarter due dates: April 15, June 15, September 15, January 15
+      Penalty days: Q1=365, Q2=304, Q3=212, Q4=90 (to April 15 of next year)
+      2025 underpayment rate: 7%
+    edgeCases:
+      - "Penalty rounds to nearest dollar"
+      - "No penalty for quarters with no underpayment"
+    testRef: "tests/engine/state/il-2210.test.ts::IL-2210 penalty computation with underpayment"
+
+  # Step 6 — Annualized Income Installment Method
+  - line: "38"
+    description: "Illinois base income for each annualization period"
+    formula: "Input amount for first 3 months, first 5 months, first 8 months, and full year"
+    reference: "IL-2210 Instructions, Step 6, Line 38"
+    notes: |
+      Residents use the amount that would appear on IL-1040, Line 9 at the end of
+      each period. Nonresidents and part-year residents use the period-end Schedule NR
+      Step 5, Line 46 amount.
+    testRef: "tests/engine/state/il-2210.test.ts::IL-2210 Line 9b - annualized worksheet required installments replace equal quarterly installments"
+
+  - line: "39"
+    description: "Annualization factors"
+    formula: "Columns A-D = 4, 2.4, 1.5, 1"
+    reference: "2025 Form IL-2210, Step 6, Line 39"
+    testRef: "tests/engine/state/il-2210.test.ts::IL-2210 Step 6 Line 39 through Line 56 - annualized worksheet carries prior excess regular installments forward"
+
+  - line: "40"
+    description: "Annualized income"
+    formula: "Line 38 × Line 39"
+    reference: "2025 Form IL-2210, Step 6, Line 40"
+    testRef: "tests/engine/state/il-2210.test.ts::IL-2210 Step 6 Line 39 through Line 56 - annualized worksheet carries prior excess regular installments forward"
+
+  - line: "41"
+    description: "Exemptions for each annualization period"
+    formula: "Input amount that would appear on IL-1040, Line 10 at the end of each period"
+    reference: "IL-2210 Instructions, Step 6, Line 41"
+    testRef: "tests/engine/state/il-2210.test.ts::IL-2210 Step 6 Line 39 through Line 56 - annualized worksheet carries prior excess regular installments forward"
+
+  - line: "42"
+    description: "Illinois net income"
+    formula: "max(Line 40 - Line 41, 0)"
+    reference: "2025 Form IL-2210, Step 6, Line 42"
+    testRef: "tests/engine/state/il-2210.test.ts::IL-2210 Step 6 Line 39 through Line 56 - annualized worksheet carries prior excess regular installments forward"
+
+  - line: "43"
+    description: "Tax on annualized net income"
+    formula: "Line 42 × 4.95%"
+    reference: "IL-2210 Instructions, Step 6, Line 43"
+    testRef: "tests/engine/state/il-2210.test.ts::IL-2210 Step 6 Line 39 through Line 56 - annualized worksheet carries prior excess regular installments forward"
+
+  - line: "44"
+    description: "Annualized surcharges"
+    formula: "Input amount that would appear on IL-1040, Line 22 at the end of each period"
+    reference: "IL-2210 Instructions, Step 6, Line 44"
+    testRef: "tests/engine/state/il-2210.test.ts::IL-2210 Step 6 Line 39 through Line 56 - annualized worksheet carries prior excess regular installments forward"
+
+  - line: "45"
+    description: "Tax plus surcharges"
+    formula: "Line 43 + Line 44"
+    reference: "2025 Form IL-2210, Step 6, Line 45"
+    testRef: "tests/engine/state/il-2210.test.ts::IL-2210 Step 6 Line 39 through Line 56 - annualized worksheet carries prior excess regular installments forward"
+
+  - line: "46"
+    description: "Credits for each annualization period"
+    formula: "Input amount that would appear on Step 2, Line 2, Column A at the end of each period; for tax year 2025, exclude the restored Illinois Child Tax Credit in Columns A and B because the law restoring the credit was not in effect as of May 31, 2025, and include it in Columns C and D when applicable"
+    reference: "2025 Form IL-2210, Step 6, Line 46"
+    notes: |
+      The 2025 IL-2210 instructions direct taxpayers to compute pre-enactment
+      annualized periods under the law in effect at the end of that period.
+      Because the Illinois Child Tax Credit restoration was not effective as of
+      May 31, 2025, Columns A and B must not include that credit on Line 46.
+      Columns C and D may include the restored credit.
+    testRef: "tests/engine/state/il-2210.test.ts::IL-2210 Step 6 Line 46 - 2025 restored Illinois Child Tax Credit is excluded before June and included afterward"
+
+  - line: "47"
+    description: "Net tax after credits"
+    formula: "max(Line 45 - Line 46, 0)"
+    reference: "2025 Form IL-2210, Step 6, Line 47"
+    testRef: "tests/engine/state/il-2210.test.ts::IL-2210 Step 6 Line 39 through Line 56 - annualized worksheet carries prior excess regular installments forward"
+
+  - line: "48"
+    description: "Applicable percentage"
+    formula: "Columns A-D = 22.5%, 45%, 67.5%, 90%"
+    reference: "2025 Form IL-2210, Step 6, Line 48"
+    testRef: "tests/engine/state/il-2210.test.ts::IL-2210 Step 6 Line 39 through Line 56 - annualized worksheet carries prior excess regular installments forward"
+
+  - line: "49"
+    description: "Annualized installment"
+    formula: "Line 47 × Line 48"
+    reference: "2025 Form IL-2210, Step 6, Line 49"
+    notes: |
+      For 2025, the published instructions require tax rates and credits to be
+      applied based on the law in effect at the end of each annualization
+      period. The restored Illinois Child Tax Credit therefore reduces Line 49
+      only in Columns C and D, not Columns A and B.
+    testRef: "tests/engine/state/il-2210.test.ts::IL-2210 Step 6 Line 46 - 2025 restored Illinois Child Tax Credit is excluded before June and included afterward"
+
+  - line: "50"
+    description: "Prior required installments from annualized worksheet"
+    formula: "Sum of Line 56 amounts from preceding columns"
+    reference: "2025 Form IL-2210, Step 6, Line 50"
+    testRef: "tests/engine/state/il-2210.test.ts::IL-2210 Step 6 Line 39 through Line 56 - annualized worksheet carries prior excess regular installments forward"
+
+  - line: "51"
+    description: "Remaining annualized installment"
+    formula: "max(Line 49 - Line 50, 0)"
+    reference: "2025 Form IL-2210, Step 6, Line 51"
+    testRef: "tests/engine/state/il-2210.test.ts::IL-2210 Step 6 Line 39 through Line 56 - annualized worksheet carries prior excess regular installments forward"
+
+  - line: "52"
+    description: "Regular-installment comparison amount"
+    formula: "Amount that would have been entered on Step 2, Line 9b without annualization"
+    reference: "2025 Form IL-2210, Step 6, Line 52"
+    testRef: "tests/engine/state/il-2210.test.ts::IL-2210 Step 6 Line 39 through Line 56 - annualized worksheet carries prior excess regular installments forward"
+
+  - line: "53"
+    description: "Prior excess regular installments"
+    formula: "Line 55 from preceding column; zero in Column A"
+    reference: "2025 Form IL-2210, Step 6, Line 53"
+    testRef: "tests/engine/state/il-2210.test.ts::IL-2210 Step 6 Line 39 through Line 56 - annualized worksheet carries prior excess regular installments forward"
+
+  - line: "54"
+    description: "Regular-installment cap"
+    formula: "Line 52 + Line 53"
+    reference: "2025 Form IL-2210, Step 6, Line 54"
+    testRef: "tests/engine/state/il-2210.test.ts::IL-2210 Step 6 Line 39 through Line 56 - annualized worksheet carries prior excess regular installments forward"
+
+  - line: "55"
+    description: "Excess regular installments carried to next column"
+    formula: "If Line 54 > Line 51, Line 54 - Line 51; otherwise 0"
+    reference: "2025 Form IL-2210, Step 6, Line 55"
+    testRef: "tests/engine/state/il-2210.test.ts::IL-2210 Step 6 Line 39 through Line 56 - annualized worksheet carries prior excess regular installments forward"
+
+  - line: "56"
+    description: "Required installment from annualized worksheet"
+    formula: "min(Line 51, Line 54)"
+    reference: "2025 Form IL-2210, Step 6, Line 56"
+    notes: "Flows back to Step 2, Line 9b for each quarter when annualizing income."
+    testRef: "tests/engine/state/il-2210.test.ts::IL-2210 Line 9b - annualized worksheet required installments replace equal quarterly installments"

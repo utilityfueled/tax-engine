@@ -1,0 +1,21 @@
+# Nightshift Project Configuration
+# Location: nightshift.yaml (project root)
+
+tasks:
+  enabled:
+    - security-footgun             # Security foot-gun finder
+    - test-gap                     # Test coverage gaps
+    - dead-code                    # Dead code detector
+    - lint-fix                     # Linter fixes
+    - doc-drift                    # Doc drift detector
+    - spec-coverage                # Custom: verify spec→test coverage
+  priorities:
+    security-footgun: 1
+    test-gap: 2
+    spec-coverage: 3
+    dead-code: 4
+    lint-fix: 5
+
+integrations:
+  claude_md: true
+  agents_md: true

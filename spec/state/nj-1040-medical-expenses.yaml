@@ -1,0 +1,96 @@
+form: "NJ-1040 Medical Expenses Deduction"
+fullName: "New Jersey NJ-1040 Medical Expenses Deduction"
+taxYear: 2025
+reference: "https://www.nj.gov/treasury/taxation/pdf/current/1040i.pdf"
+
+notes: |
+  New Jersey Worksheet F computes line 31 as the sum of:
+  - Unreimbursed medical and dental expenses that exceed 2% of NJ gross income
+  - Qualified Archer MSA contributions from Worksheet F line 4
+  - The self-employed health insurance deduction from Worksheet F line 5
+
+  This is significantly more generous than the federal threshold (7.5% of
+  AGI), and it places Archer MSA and self-employed health insurance amounts in
+  the medical-deduction section of the return rather than the line 28 gross
+  income adjustment bucket.
+
+  Qualifying expenses include:
+  - Doctor, dentist, hospital, and nursing facility expenses
+  - Prescription drugs and insulin
+  - Health insurance premiums (not deducted pre-tax from wages)
+  - Long-term care insurance premiums
+  - Medical equipment and supplies
+  - Transportation for medical care
+  - Certain home improvements for medical reasons
+
+  NJ follows federal guidance (IRS Publication 502) for what qualifies as a
+  medical expense, but uses the 2% threshold instead of 7.5%.
+
+  The deduction is subtracted from NJ gross income (along with exemptions and
+  property tax deduction) to arrive at NJ taxable income.
+
+lines:
+  - line: "medical-total"
+    description: "Total unreimbursed medical and dental expenses before Worksheet F lines 4 and 5"
+    formula: "Sum of all qualifying medical/dental expenses minus insurance reimbursements"
+    inputs:
+      - "Medical and dental expenses"
+      - "Insurance reimbursements"
+    notes: "Only expenses actually paid during the tax year qualify."
+    testRef: "tests/engine/state/nj-1040-medical-expenses.test.ts::NJ-1040 medical expenses total unreimbursed expenses"
+
+  - line: "threshold"
+    description: "2% of NJ gross income threshold"
+    formula: "NJ gross income (Line 29) × 0.02"
+    inputs:
+      - "NJ gross income"
+    notes: |
+      NJ uses a 2% floor, not the federal 7.5% floor. This means NJ filers
+      can deduct a much larger portion of their medical expenses.
+    edgeCases:
+      - "NJ gross income of $50,000: threshold is $1,000"
+      - "NJ gross income of $0: threshold is $0 (all medical expenses deductible)"
+    testRef: "tests/engine/state/nj-1040-medical-expenses.test.ts::NJ-1040 medical expenses 2% threshold on $50,000 income is $1,000"
+
+  - line: "worksheet-f-line-4"
+    description: "Qualified Archer MSA contributions"
+    formula: "Carry the supported federal Archer MSA deduction into Worksheet F line 4"
+    inputs:
+      - "Federal Form 8853 / Schedule 1 Archer MSA deduction"
+    notes: |
+      The 2025 NJ-1040 instructions direct filers to enter qualified Archer
+      MSA contributions on Worksheet F line 4 and add them to line 31.
+    edgeCases:
+      - "No Archer MSA deduction: line 4 = $0"
+      - "A $900 federal Archer MSA deduction carries through unchanged"
+    testRef: "tests/engine/state/nj-1040-medical-expenses.test.ts::NJ-1040 medical expenses Worksheet F line 4 adds Archer MSA contributions after the 2% floor"
+
+  - line: "worksheet-f-line-5"
+    description: "Self-employed health insurance deduction"
+    formula: "Carry the supported federal self-employed health insurance deduction into Worksheet F line 5"
+    inputs:
+      - "Federal Schedule 1 self-employed health insurance deduction"
+    notes: |
+      The 2025 NJ-1040 instructions direct filers to enter the self-employed
+      health insurance deduction on Worksheet F line 5 and add it to line 31.
+    edgeCases:
+      - "No self-employed health insurance deduction: line 5 = $0"
+      - "A $1,500 federal self-employed health insurance deduction carries through unchanged"
+    testRef: "tests/engine/state/nj-1040-medical-expenses.test.ts::NJ-1040 medical expenses Worksheet F line 5 adds self-employed health insurance after the 2% floor"
+
+  - line: "deduction"
+    description: "NJ medical expense deduction"
+    formula: "max(0, total unreimbursed expenses - 2% of NJ gross income) + Worksheet F line 4 + Worksheet F line 5"
+    inputs:
+      - "Total unreimbursed medical expenses"
+      - "2% threshold"
+      - "Qualified Archer MSA contributions"
+      - "Self-employed health insurance deduction"
+    notes: "The deduction cannot be negative. If expenses do not exceed the 2% floor, the deduction is zero."
+    edgeCases:
+      - "Expenses exactly equal to 2% threshold: deduction is $0"
+      - "Expenses $1 over threshold: deduction is $1"
+      - "No medical expenses: deduction is $0"
+      - "Zero NJ gross income with $5,000 expenses: full $5,000 deduction"
+      - "A filer with no excess medical expenses still deducts Worksheet F lines 4 and 5"
+    testRef: "tests/engine/state/nj-1040-medical-expenses.test.ts::NJ-1040 medical expenses deduction equals expenses minus 2% floor"

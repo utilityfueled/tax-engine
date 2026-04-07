@@ -1,0 +1,220 @@
+form: "Schedule K-1 (Form 1041)"
+fullName: "Beneficiary's Share of Income, Deductions, Credits, etc."
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i1041sk1"
+
+notes: |
+  Schedule K-1 (Form 1041) reports a beneficiary's share of income,
+  deductions, credits, and other items from an estate or trust.
+  Unlike the partnership/S-corp K-1 (Form 1065/1120S), trust/estate
+  K-1 income is generally NOT subject to self-employment tax.
+
+  The estate or trust fiduciary issues this form to each beneficiary.
+  Income retains its character — interest remains interest, dividends
+  remain dividends, capital gains remain capital gains — and is reported
+  on the beneficiary's individual return in the same locations as if
+  received directly.
+
+  IRC References:
+  - §652: Simple trust — beneficiary includes DNI in income
+  - §662: Complex trust/estate — beneficiary includes amount required
+    to be distributed plus other amounts properly paid or credited
+  - §691(c): Deduction for estate tax attributable to IRD
+  - §67(e): Above-the-line deductions unique to trust administration
+  - §642(h): Excess deductions on termination pass to beneficiaries
+
+lines:
+  # ── Income Boxes (1–8) ────────────────────────────────────
+
+  - line: "1"
+    description: "Interest income"
+    formula: "Beneficiary's share of taxable interest earned by the estate or trust"
+    irsRef: "Schedule K-1 (Form 1041) Instructions, Box 1"
+    routing: "Schedule B Part I → Form 1040 Line 2b"
+    notes: "Include on Schedule B alongside 1099-INT amounts."
+    testRef: "tests/engine/forms/schedule-k-1-1041.test.ts::K-1 1041 Box 1 interest flows to Schedule B"
+
+  - line: "2a"
+    description: "Ordinary dividends"
+    formula: "Beneficiary's share of ordinary dividends earned by the estate or trust"
+    irsRef: "Schedule K-1 (Form 1041) Instructions, Box 2a"
+    routing: "Schedule B Part II → Form 1040 Line 3b"
+    notes: "Include on Schedule B alongside 1099-DIV amounts."
+    testRef: "tests/engine/forms/schedule-k-1-1041.test.ts::K-1 1041 Box 2a dividends flow to Schedule B"
+
+  - line: "2b(1)"
+    description: "Qualified dividends"
+    formula: "Subset of Box 2a that qualifies for preferential capital gains rates"
+    irsRef: "Schedule K-1 (Form 1041) Instructions, Box 2b(1)"
+    routing: "Form 1040 Line 3a"
+    notes: "Included in the qualified dividends total for the QDCG preferential-rate worksheet."
+    testRef: "tests/engine/forms/schedule-k-1-1041.test.ts::K-1 1041 Box 2b qualified dividends flow to Form 1040 Line 3a"
+
+  - line: "3"
+    description: "Net short-term capital gain"
+    formula: "Beneficiary's share of net short-term capital gain or loss from the estate or trust"
+    irsRef: "Schedule K-1 (Form 1041) Instructions, Box 3"
+    routing: "Schedule D Line 5"
+    testRef: "tests/engine/forms/schedule-k-1-1041.test.ts::K-1 1041 Box 3 short-term capital gain flows to Schedule D"
+
+  - line: "4a"
+    description: "Net long-term capital gain"
+    formula: "Beneficiary's share of net long-term capital gain or loss from the estate or trust"
+    irsRef: "Schedule K-1 (Form 1041) Instructions, Box 4a"
+    routing: "Schedule D Line 12"
+    testRef: "tests/engine/forms/schedule-k-1-1041.test.ts::K-1 1041 Box 4a long-term capital gain flows to Schedule D"
+
+  - line: "4b"
+    description: "28% rate gain"
+    formula: "Beneficiary's share of gain from collectibles and other assets taxed at the 28% maximum rate"
+    irsRef: "Schedule K-1 (Form 1041) Instructions, Box 4b; IRC §1(h)(5)"
+    routing: "QDCG worksheet 28% rate gain line"
+    notes: "Long-term gain from collectibles (art, antiques, coins, stamps, gems, metals) and pre-1996 §1202 small business stock gain."
+    testRef: "tests/engine/forms/schedule-k-1-1041.test.ts::K-1 1041 Box 4b collectibles gain flows to QDCG 28% rate"
+
+  - line: "4c"
+    description: "Unrecaptured section 1250 gain"
+    formula: "Beneficiary's share of unrecaptured section 1250 gain from depreciated real property"
+    irsRef: "Schedule K-1 (Form 1041) Instructions, Box 4c; IRC §1(h)(6)"
+    routing: "QDCG worksheet unrecaptured section 1250 gain line"
+    notes: "Gain attributable to depreciation on section 1250 real property, taxed at a maximum 25% rate."
+    testRef: "tests/engine/forms/schedule-k-1-1041.test.ts::K-1 1041 Box 4c unrecaptured section 1250 gain flows to QDCG"
+
+  - line: "5"
+    description: "Other portfolio and nonbusiness income"
+    formula: "Beneficiary's share of other portfolio income (royalties, annuities, etc.) from the estate or trust"
+    irsRef: "Schedule K-1 (Form 1041) Instructions, Box 5"
+    routing: "Schedule 1 Line 8z (other income)"
+    notes: "May include royalties, annuity income, or other nonbusiness income that does not fit in Boxes 1–4."
+    testRef: "tests/engine/forms/schedule-k-1-1041.test.ts::K-1 1041 Box 5 other portfolio income increases AGI and appears in audit trail"
+
+  # Boxes 6–8 (business, rental, farm) are deferred — they require
+  # Schedule E Part III support which is not yet implemented.
+
+  # ── Deduction Boxes (9–11) ────────────────────────────────
+
+  - line: "9"
+    description: "Directly apportioned deductions"
+    formula: "Deductions the fiduciary apportions directly to the beneficiary (depreciation, depletion, amortization)"
+    irsRef: "Schedule K-1 (Form 1041) Instructions, Box 9"
+    notes: "Deferred — requires per-activity attachment. The engine accepts a summary amount for informational tracking but does not route it to a specific deduction line."
+    testRef: "tests/engine/forms/schedule-k-1-1041.test.ts::K-1 1041 with only optional fields provided"
+
+  - line: "10"
+    description: "Estate tax deduction (IRC §691(c))"
+    formula: "Beneficiary's share of estate tax attributable to income in respect of a decedent (IRD)"
+    irsRef: "Schedule K-1 (Form 1041) Instructions, Box 10; IRC §691(c); Pub 559"
+    routing: "Schedule A Line 16 (other itemized deductions)"
+    notes: |
+      IRC §691(c) allows a deduction for the estate tax paid on income that
+      was earned by the decedent but taxed to the beneficiary (IRD). This
+      prevents double taxation. The deduction goes to Schedule A as an
+      itemized deduction not subject to the 2% floor. It is available only
+      when estate tax was actually paid on the IRD — not when exemptions or
+      deductions eliminated the estate tax liability.
+    edgeCases:
+      - "Only available when estate tax was actually paid on IRD"
+      - "Not subject to the 2% miscellaneous itemized deduction floor"
+      - "Must be prorated if the IRD item spans multiple beneficiaries"
+    testRef: "tests/engine/forms/schedule-k-1-1041.test.ts::K-1 1041 Box 10 estate tax deduction appears in audit trail as Schedule A Line 16"
+
+  - line: "11"
+    description: "Final year deductions (excess deductions on termination)"
+    formula: "Excess deductions from the final tax year of an estate or trust that pass through to beneficiaries under IRC §642(h)"
+    irsRef: "Schedule K-1 (Form 1041) Instructions, Box 11; IRC §642(h); TD 9918"
+    routing: |
+      Code A (§67(e) excess deductions): Schedule 1 Line 24z — above-the-line
+      Code B (non-miscellaneous itemized): Schedule A applicable lines
+      Code C (short-term capital loss carryover): Schedule D Line 5
+      Code D (long-term capital loss carryover): Schedule D Line 12
+      Code E (NOL carryover): Schedule 1 Line 8a
+    notes: |
+      Only applies in the final year of an estate or trust. TD 9918 (May 2020)
+      clarifies that excess deductions retain their character:
+      - §67(e) expenses (trust administration costs unique to trust) are
+        above-the-line deductions — NOT suspended by TCJA §67(g)
+      - Non-miscellaneous itemized deductions retain their character
+      - Miscellaneous itemized deductions subject to 2% floor are suspended
+        under TCJA §67(g) for 2018–2025 and NOT deductible by beneficiary
+      - Capital loss and NOL carryovers pass through at full value
+      Beneficiary cannot carry over unused final-year excess deductions;
+      they must all be claimed in the termination year.
+    edgeCases:
+      - "Code A (§67(e)) is above-the-line — deductible even if beneficiary uses standard deduction"
+      - "Codes C/D capital loss carryovers are still subject to the $3,000/$1,500 annual limit"
+      - "Code E NOL carryover is subject to the 80% taxable income limitation (IRC §172)"
+      - "Miscellaneous itemized deductions (if any) are not deductible under TCJA 2018–2025"
+    testRef: "tests/engine/forms/schedule-k-1-1041.test.ts::K-1 1041 Box 11 Code A §67(e) deductions reduce AGI as above-the-line adjustment"
+
+  # ── AMT, Credits, Other (12–14) ──────────────────────────
+
+  - line: "12"
+    description: "Alternative minimum tax adjustment"
+    formula: "Beneficiary's share of AMT adjustment items from the estate or trust"
+    irsRef: "Schedule K-1 (Form 1041) Instructions, Box 12; Form 6251"
+    routing: "Form 6251 Line 2j (other adjustments)"
+    notes: |
+      Code A is the aggregate adjustment. Codes B–F break it down by
+      component (qualified dividends, short/long-term capital gain,
+      unrecaptured §1250, 28% rate gain) but those are already included
+      in Code A. Codes G–I are specific depreciation/depletion/amortization
+      adjustments.
+    testRef: "tests/engine/forms/schedule-k-1-1041.test.ts::K-1 1041 Box 12 AMT adjustment flows to Form 6251"
+
+  - line: "13"
+    description: "Credits and credit recapture"
+    formula: "Beneficiary's share of credits from the estate or trust"
+    irsRef: "Schedule K-1 (Form 1041) Instructions, Box 13"
+    notes: |
+      Various codes: A (estimated tax payments credited to beneficiary),
+      B (backup withholding), C (low-income housing credit), and others.
+      Deferred in this slice — most trust-level credits are uncommon for
+      individual beneficiaries and require Form 3800 routing.
+    testRef: "tests/engine/forms/schedule-k-1-1041.test.ts::K-1 1041 with all zero amounts has no effect"
+
+  - line: "14"
+    description: "Other information"
+    irsRef: "Schedule K-1 (Form 1041) Instructions, Box 14"
+    notes: |
+      Code A: Tax-exempt interest → Form 1040 Line 2a (informational)
+      Code B: Foreign taxes paid or accrued → Form 1116 or direct credit
+      Code I: Section 199A QBI information → Form 8995/8995-A
+      Other codes are informational or relate to specialized situations.
+    testRef: "tests/engine/forms/schedule-k-1-1041.test.ts::K-1 1041 Box 14 Code I QBI flows through Form 8995 simplified"
+    lines:
+      - code: "A"
+        description: "Tax-exempt interest"
+        routing: "Form 1040 Line 2a"
+        testRef: "tests/engine/forms/schedule-k-1-1041.test.ts::K-1 1041 Box 14 Code A tax-exempt interest flows to Line 2a"
+      - code: "B"
+        description: "Foreign taxes paid or accrued"
+        routing: "Form 1116 or Schedule 3 Line 1 (direct credit)"
+        testRef: "tests/engine/forms/schedule-k-1-1041.test.ts::K-1 1041 Box 14 Code B foreign taxes flow to Form 1116"
+      - code: "I"
+        description: "Section 199A qualified business income information"
+        formula: |
+          The fiduciary provides a statement with the beneficiary's allocable
+          share of QBI from each qualified trade or business held by the trust
+          or estate. The statement mirrors the partnership K-1 Box 20 Code Z
+          Section 199A information and includes:
+          - QBI (or loss) from each qualified trade/business
+          - W-2 wages allocable to QBI
+          - UBIA of qualified property
+          - SSTB designation
+          - Qualified REIT dividends
+          - Qualified PTP income (or loss)
+
+          Trust/estate QBI retains its character and flows through
+          Form 8995 (simplified, below threshold) or Form 8995-A
+          (detailed, above threshold) alongside Schedule C, K-1 1065/1120S,
+          and rental QBI sources. The same W-2 wage/UBIA limitations and
+          SSTB phase-out rules apply as for partnership K-1 QBI.
+        irsRef: "Schedule K-1 (Form 1041) Instructions, Box 14 Code I; IRC §199A; Form 8995/8995-A Instructions"
+        routing: "Form 8995 (simplified) or Form 8995-A (detailed) → Form 1040 Line 13"
+        edgeCases:
+          - "Trust QBI may come from multiple businesses held by the trust — each is a separate QBI source"
+          - "Qualified REIT dividends and PTP income from the trust aggregate with other sources"
+          - "Trust QBI is NOT self-employment income — no SE tax adjustment is needed"
+          - "If the trust is an SSTB, the SSTB phase-out applies at the beneficiary level based on beneficiary's taxable income"
+          - "The beneficiary should include trust QBI in aggregation elections (Form 8995-A Part IV) if applicable"
+        testRef: "tests/engine/forms/schedule-k-1-1041.test.ts::K-1 1041 Box 14 Code I QBI flows through Form 8995 simplified"

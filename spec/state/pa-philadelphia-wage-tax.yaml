@@ -1,0 +1,101 @@
+form: "PA-Philadelphia-Wage-Tax"
+fullName: "Philadelphia Wage Tax / Earnings Tax"
+taxYear: 2025
+reference: "https://www.phila.gov/services/payments-assistance-taxes/taxes/income-taxes/wage-tax-employers/"
+
+notes: |
+  Philadelphia imposes a city wage tax on:
+    - residents on taxable compensation regardless of where earned, and
+    - nonresidents on taxable compensation for services performed in Philadelphia.
+
+  This module covers the supported annual reconciliation slice for tax year 2025:
+    - taxable compensation paid from January 1, 2025 through June 30, 2025
+    - taxable compensation paid on or after July 1, 2025
+    - resident vs. nonresident rate selection
+    - the income-based 1.5% reduced rate for taxpayers approved for PA Schedule SP
+    - withholding reconciliation
+
+  Official 2025 rates:
+    - Residents: 3.75% through June 30, 2025; 3.74% on and after July 1, 2025
+    - Nonresidents: 3.44% through June 30, 2025; 3.43% on and after July 1, 2025
+    - Income-based reduced rate: 1.5% when the taxpayer is approved for PA Schedule SP
+
+  The city materials describe this as a refund/reduced-rate mechanism for low-income
+  taxpayers. In the supported engine slice, the reduced rate is modeled as the final
+  annual liability when the taxpayer is approved for PA Schedule SP.
+
+lines:
+  - line: "1"
+    description: "Taxable compensation paid January 1 through June 30, 2025"
+    formula: "Input taxable compensation for the pre-July-1 2025 rate period, floor at 0"
+    notes: |
+      Taxable compensation includes salaries, wages, commissions, tips, bonuses,
+      severance pay, sick/vacation pay, noncash compensation, and military reserve
+      pay excluding active duty. Employee retirement-plan deferrals such as 401(k)
+      contributions remain taxable for Philadelphia Wage/Earnings Tax purposes.
+    testRef: "tests/engine/state/pa-philadelphia-wage-tax.test.ts::Philadelphia Wage Tax Line 1 uses pre-July taxable compensation"
+
+  - line: "2"
+    description: "Taxable compensation paid on or after July 1, 2025"
+    formula: "Input taxable compensation for the post-June-30 2025 rate period, floor at 0"
+    testRef: "tests/engine/state/pa-philadelphia-wage-tax.test.ts::Philadelphia Wage Tax Line 2 uses post-July taxable compensation"
+
+  - line: "3"
+    description: "Applicable annual rates by residency and pay period"
+    formula: |
+      If resident:
+        pre-July rate = 3.75%
+        post-July rate = 3.74%
+      Else if nonresident:
+        pre-July rate = 3.44%
+        post-July rate = 3.43%
+    notes: |
+      The City of Philadelphia changed both resident and nonresident rates effective
+      July 1, 2025. The annual reconciliation must therefore compute tax separately
+      for the two 2025 pay periods.
+    testRef: "tests/engine/state/pa-philadelphia-wage-tax.test.ts::Philadelphia Wage Tax Line 3 selects the 2025 resident and nonresident rates"
+
+  - line: "4"
+    description: "Standard Philadelphia Wage/Earnings Tax"
+    formula: "(Line 1 × pre-July rate) + (Line 2 × post-July rate), rounded to cents"
+    edgeCases:
+      - "All taxable compensation in one pay period uses only that period's rate"
+      - "Zero compensation in both periods yields $0.00 standard tax"
+    testRef: "tests/engine/state/pa-philadelphia-wage-tax.test.ts::Philadelphia Wage Tax Line 4 computes standard resident tax across the 2025 rate change"
+
+  - line: "5"
+    description: "Income-based reduced-rate eligibility"
+    formula: "True when the taxpayer is approved for PA Schedule SP; otherwise false"
+    notes: |
+      The 2025 Annual Reconciliation of Earnings Tax instructions say a taxpayer
+      must file PA Schedule SP and be approved to receive the decreased resident
+      or nonresident rate.
+    testRef: "tests/engine/state/pa-philadelphia-wage-tax.test.ts::Philadelphia Wage Tax Line 5 recognizes Schedule SP reduced-rate eligibility"
+
+  - line: "6"
+    description: "Income-based reduced-rate tax"
+    formula: "(Line 1 + Line 2) × 1.5%, rounded to cents"
+    notes: |
+      This engine models the city’s approved low-income reduced rate as a final
+      1.5% annual tax on the supported taxable compensation base.
+    testRef: "tests/engine/state/pa-philadelphia-wage-tax.test.ts::Philadelphia Wage Tax Line 6 computes the approved 1.5% reduced-rate tax"
+
+  - line: "7"
+    description: "Final Philadelphia Wage/Earnings Tax liability"
+    formula: "If Line 5 is true, Line 6; otherwise Line 4"
+    testRef: "tests/engine/state/pa-philadelphia-wage-tax.test.ts::Philadelphia Wage Tax Line 7 uses the reduced rate when Schedule SP is approved"
+
+  - line: "8"
+    description: "Philadelphia Wage Tax withheld or paid"
+    formula: "Input Philadelphia Wage Tax withholding/payments, floor at 0"
+    testRef: "tests/engine/state/pa-philadelphia-wage-tax.test.ts::Philadelphia Wage Tax Line 8 carries withholding into reconciliation"
+
+  - line: "9"
+    description: "Overpayment"
+    formula: "If Line 8 > Line 7, Line 8 - Line 7; otherwise 0, rounded to cents"
+    testRef: "tests/engine/state/pa-philadelphia-wage-tax.test.ts::Philadelphia Wage Tax Line 9 computes an overpayment when withholding exceeds liability"
+
+  - line: "10"
+    description: "Balance due"
+    formula: "If Line 7 > Line 8, Line 7 - Line 8; otherwise 0, rounded to cents"
+    testRef: "tests/engine/state/pa-philadelphia-wage-tax.test.ts::Philadelphia Wage Tax Line 10 computes a balance due when liability exceeds withholding"

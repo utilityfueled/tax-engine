@@ -1,0 +1,168 @@
+form: "Schedule R"
+fullName: "Credit for the Elderly or the Disabled"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i1040sr"
+statute: "IRC §22"
+
+notes: |
+  Schedule R computes a nonrefundable credit for taxpayers who are:
+  - Age 65 or older, OR
+  - Under 65, retired on permanent and total disability, and received taxable disability income.
+
+  The credit flows to Schedule 3 Line 6d → Form 1040 Line 20.
+
+  MFS filers must have lived apart from their spouse for the entire tax year.
+  The base amounts and AGI thresholds are set by statute (IRC §22) and are NOT
+  inflation-adjusted — they have been unchanged since 1984.
+
+  The credit is 15% of the initial amount after subtracting nontaxable Social
+  Security/pension benefits and half the excess AGI over filing-status thresholds.
+
+lines:
+  # ── Part I: Filing Status and Eligibility ─────────────────
+  - line: "Part I"
+    description: "Filing status eligibility determination"
+    formula: "Determine qualifying box (1-9) based on filing status, age (65+), and disability status"
+    irsRef: "Schedule R Instructions, Part I"
+    edgeCases:
+      - "MFS filers must have lived apart from spouse for the entire tax year"
+      - "Under-65 filers must have retired on permanent and total disability"
+      - "Under-65 disabled filers must have received taxable disability income"
+      - "MFJ: both spouses can independently qualify via age or disability"
+    testRef: "tests/engine/forms/schedule-r.test.ts::Part I — eligibility"
+
+  # ── Part III: Figure Your Credit ──────────────────────────
+  - line: "10"
+    description: "Initial amount based on filing status box"
+    formula: |
+      Box 1 (single/HoH/QSS, 65+): $5,000
+      Box 2 (single/HoH/QSS, under 65, disabled): $5,000
+      Box 3 (MFJ, both 65+): $7,500
+      Box 4 (MFJ, both under 65, one disabled): $5,000
+      Box 5 (MFJ, both under 65, both disabled): $7,500
+      Box 6 (MFJ, one 65+, other under 65 and not disabled): $5,000
+      Box 7 (MFJ, one 65+, other under 65 and disabled): $7,500
+      Box 8 (MFS, 65+): $3,750
+      Box 9 (MFS, under 65, disabled): $3,750
+    irsRef: "Schedule R Instructions, Line 10; IRC §22(c)(1)"
+    notes: "One qualifying person = $5,000 ($3,750 MFS). Both qualifying = $7,500."
+    testRef: "tests/engine/forms/schedule-r.test.ts::Line 10 — initial amount"
+
+  - line: "11"
+    description: "Taxable disability income (for under-65 disabled filers)"
+    formula: "Total taxable disability income received during the year, per qualifying disabled person"
+    irsRef: "Schedule R Instructions, Line 11; IRC §22(c)(2)(B)(iii)"
+    edgeCases:
+      - "Only applies if Box 2, 4, 5, 7, or 9 is checked (disability-based eligibility)"
+      - "If 65+, disability income is not a limiting factor"
+      - "MFJ Box 5 or 7: sum of both qualifying spouses' disability income"
+    testRef: "tests/engine/forms/schedule-r.test.ts::Line 11-12 — disability income cap"
+
+  - line: "12"
+    description: "Adjusted initial amount"
+    formula: |
+      If Box 2, 4, 5, 7, or 9: min(Line 10, Line 11)
+      Otherwise (Box 1, 3, 6, 8): Line 10
+    irsRef: "Schedule R Instructions, Line 12; IRC §22(c)(2)(B)"
+    notes: "Disability income caps the credit base for under-65 disabled filers"
+    testRef: "tests/engine/forms/schedule-r.test.ts::Line 11-12 — disability income cap"
+
+  - line: "13a"
+    description: "Nontaxable Social Security benefits"
+    formula: "Form 1040 Line 6a minus Line 6b (gross SS benefits minus taxable SS benefits)"
+    irsRef: "Schedule R Instructions, Line 13a; IRC §22(c)(3)(A)"
+    testRef: "tests/engine/forms/schedule-r.test.ts::Lines 13-14 — nontaxable benefits reduction"
+
+  - line: "13b"
+    description: "Nontaxable pensions, annuities, or disability income"
+    formula: "Nontaxable portion of pensions/annuities/disability not included in income"
+    irsRef: "Schedule R Instructions, Line 13b; IRC §22(c)(3)(A)"
+    notes: "Includes tax-exempt pensions, VA disability, etc."
+    testRef: "tests/engine/forms/schedule-r.test.ts::Lines 13-14 — nontaxable benefits reduction"
+
+  - line: "13c"
+    description: "Total nontaxable benefits"
+    formula: "Line 13a + Line 13b"
+    irsRef: "Schedule R Instructions, Line 13c"
+    testRef: "tests/engine/forms/schedule-r.test.ts::Lines 13-14 — nontaxable benefits reduction"
+
+  - line: "14"
+    description: "Net initial amount after nontaxable benefits"
+    formula: "max(0, Line 12 - Line 13c)"
+    irsRef: "Schedule R Instructions, Line 14; IRC §22(c)(3)"
+    edgeCases:
+      - "If Line 13c >= Line 12, no credit is available"
+    testRef: "tests/engine/forms/schedule-r.test.ts::Lines 13-14 — nontaxable benefits reduction"
+
+  - line: "15"
+    description: "AGI"
+    formula: "Form 1040 Line 11"
+    irsRef: "Schedule R Instructions, Line 15"
+    testRef: "tests/engine/forms/schedule-r.test.ts::Lines 16-18 — AGI reduction"
+
+  - line: "16"
+    description: "AGI threshold by filing status"
+    formula: |
+      Single, HoH, QSS: $7,500
+      MFJ: $10,000
+      MFS: $5,000
+    irsRef: "Schedule R Instructions, Line 16; IRC §22(d)(1)"
+    notes: "These thresholds are statutory and NOT inflation-adjusted"
+    testRef: "tests/engine/forms/schedule-r.test.ts::Lines 16-18 — AGI reduction"
+
+  - line: "17"
+    description: "Excess AGI over threshold"
+    formula: "max(0, Line 15 - Line 16)"
+    irsRef: "Schedule R Instructions, Line 17"
+    testRef: "tests/engine/forms/schedule-r.test.ts::Lines 16-18 — AGI reduction"
+
+  - line: "18"
+    description: "AGI reduction"
+    formula: "Line 17 × 0.5"
+    irsRef: "Schedule R Instructions, Line 18; IRC §22(d)"
+    notes: "Half of the excess AGI reduces the credit base"
+    testRef: "tests/engine/forms/schedule-r.test.ts::Lines 16-18 — AGI reduction"
+
+  - line: "19"
+    description: "Credit base"
+    formula: "max(0, Line 14 - Line 18)"
+    irsRef: "Schedule R Instructions, Line 19"
+    edgeCases:
+      - "If AGI reduction exceeds the net initial amount, credit is zero"
+      - "High-income taxpayers are phased out entirely"
+    testRef: "tests/engine/forms/schedule-r.test.ts::Line 20 — credit calculation"
+
+  - line: "20"
+    description: "Tentative credit"
+    formula: "Line 19 × 0.15"
+    irsRef: "Schedule R Instructions, Line 20; IRC §22(a)"
+    notes: "The 15% rate is set by statute"
+    testRef: "tests/engine/forms/schedule-r.test.ts::Line 20 — credit calculation"
+
+  - line: "22"
+    description: "Credit for the elderly or the disabled"
+    formula: "min(Line 20, tax liability after other credits)"
+    irsRef: "Schedule R Instructions, Line 22; IRC §22"
+    notes: "Nonrefundable — cannot exceed remaining tax liability. Tax liability limit is enforced at the Schedule 3/federal.ts level in this engine."
+    testRef: "tests/engine/forms/schedule-r.test.ts::Line 20 — credit calculation"
+
+  # ── Edge Cases ──────────────────────────────────────────────
+  - line: "phase-out"
+    description: "Credit phases out via AGI reduction and nontaxable benefits"
+    formula: "Credit reaches zero when nontaxable benefits + 0.5 × excess AGI >= initial amount"
+    irsRef: "IRC §22(c)(3), §22(d)"
+    edgeCases:
+      - "Single filer, 65+, AGI $17,500, no SS: credit = 15% × max(0, $5,000 - 0.5 × ($17,500 - $7,500)) = 15% × $0 = $0"
+      - "Single filer, 65+, AGI $7,500 or below: full credit $750 (before nontaxable SS reduction)"
+      - "MFJ, both 65+, AGI $25,000, no SS: credit = 15% × max(0, $7,500 - 0.5 × ($25,000 - $10,000)) = 15% × $0 = $0"
+      - "MFS filer who lived with spouse: ineligible"
+    testRef: "tests/engine/forms/schedule-r.test.ts::Single filer, 65+, AGI $17,500 phases out completely"
+
+  - line: "disability-cap"
+    description: "Under-65 disabled filers capped by disability income"
+    formula: "If disability income < initial amount, credit base is reduced to disability income"
+    irsRef: "IRC §22(c)(2)(B)(iii)"
+    edgeCases:
+      - "Disability income of $3,000 caps base to $3,000 even though initial amount is $5,000"
+      - "Disability income of $0 means no credit even if otherwise eligible"
+    testRef: "tests/engine/forms/schedule-r.test.ts::Disabled filer with disability income less than initial amount is capped"

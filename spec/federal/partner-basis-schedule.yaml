@@ -1,0 +1,395 @@
+form: "Partner/Shareholder Basis Schedule"
+fullName: "Worksheet for Adjusting the Basis of a Partner's Interest / Form 7203 S Corporation Shareholder Stock Basis"
+taxYear: 2025
+irsReference:
+  - "https://www.irs.gov/instructions/i1065sk1 (Partner's Basis Worksheet)"
+  - "https://www.irs.gov/forms-pubs/about-form-7203 (S Corporation Shareholder Stock and Debt Basis)"
+  - "IRC §705 (Partnership outside basis)"
+  - "IRC §704(d) (Partnership loss limitation)"
+  - "IRC §731 (Partnership distribution gain)"
+  - "IRC §1367 (S corporation shareholder stock basis)"
+  - "IRC §1366(d) (S corporation loss limitation)"
+  - "IRC §1368 (S corporation distribution treatment)"
+
+notes: |
+  This module computes the year-end adjusted basis for a partner's interest in a
+  partnership or a shareholder's stock basis in an S corporation, using K-1 data.
+
+  The basis schedule is the FIRST tier of the three-tier loss limitation stack:
+    1. Basis limitation (IRC §704(d) / §1366(d)) — this module
+    2. At-risk limitation (IRC §465 / Form 6198) — existing module
+    3. Passive activity limitation (IRC §469 / Form 8582) — existing module
+
+  Losses exceeding basis are suspended and carried forward indefinitely until
+  basis is restored. Distributions exceeding basis produce capital gain.
+
+  Partnership and S-corporation basis share the same high-level ordering:
+    1. Begin with prior-year adjusted basis
+    2. ADD all income and gain items, tax-exempt income
+    3. SUBTRACT distributions (excess → capital gain)
+    4. SUBTRACT nondeductible expenses
+    5. SUBTRACT losses and deductions (pro-rata if basis insufficient)
+
+  Key differences between entity types:
+    - S-corps have a two-tier system: stock basis then debt basis (Form 7203)
+    - S-corps offer an IRC §1367(a)(2)(B) election to swap steps 4 and 5
+    - Partnership excess distributions → capital gain per §731 (subject to §751 hot assets)
+    - S-corp excess distributions → capital gain per §1368
+
+  S-corp shareholders with direct loans to the S-corporation can also track
+  debt basis (Form 7203 Part II). Losses exceeding stock basis can further
+  reduce debt basis and remain deductible. Only losses exceeding BOTH stock
+  and debt basis are suspended. In future years, net income first restores
+  previously-reduced debt basis before increasing stock basis per
+  IRC §1367(b)(2)(B) and Treas. Reg. §1.1367-1(g).
+
+businessRuleValidation:
+  - rule: "packet-inclusion-supported-basis-schedules"
+    description: "Inventory support counts this module as business-rule validated only when regression coverage proves the draft packet emits the partner/shareholder basis reference summary exactly for supported Schedule K-1 entries that provide beginning basis data and suppresses the packet artifact when no supported basis schedule applies."
+    testRef: "tests/pdf/fill-partner-basis-schedule.test.ts::fillReturn includes the partner basis reference summary only when supported Schedule K-1 basis inputs are present"
+
+lines:
+  # ── Beginning Basis ──────────────────────────────────────────
+  - line: "1"
+    description: "Adjusted basis at beginning of tax year"
+    formula: "User-provided or carryforward from prior year (not less than zero)"
+    irsRef: "K-1 Basis Worksheet Line 1; Form 7203 Line 1"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::beginning basis flows to computation"
+
+  # ── Increases (Income Items) ─────────────────────────────────
+  - line: "income-ordinary"
+    description: "Ordinary business income (Box 1, positive only)"
+    formula: "max(0, K-1 Box 1)"
+    irsRef: "K-1 Basis Worksheet Line 4a"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::income items increase basis correctly"
+
+  - line: "income-rental"
+    description: "Net rental real estate income (Box 2, positive only)"
+    formula: "max(0, K-1 Box 2)"
+    irsRef: "K-1 Basis Worksheet Line 4b"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::net rental income and other net rental income increase basis"
+
+  - line: "income-other-rental"
+    description: "Other net rental income (Box 3, positive only)"
+    formula: "max(0, K-1 Box 3)"
+    irsRef: "K-1 Basis Worksheet Line 4c"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::net rental income and other net rental income increase basis"
+
+  - line: "income-guaranteed"
+    description: "Guaranteed payments (Box 4)"
+    formula: "K-1 Box 4 (always positive for partnership recipients)"
+    irsRef: "K-1 Basis Worksheet Line 4d (allocated among income lines)"
+    notes: "Guaranteed payments increase partner's basis regardless of passive classification"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::guaranteed payments increase basis"
+
+  - line: "income-interest"
+    description: "Interest income (Box 5)"
+    formula: "max(0, K-1 Box 5)"
+    irsRef: "K-1 Basis Worksheet Line 4d"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::income items increase basis correctly"
+
+  - line: "income-dividends"
+    description: "Ordinary dividends (Box 6a)"
+    formula: "max(0, K-1 Box 6a)"
+    irsRef: "K-1 Basis Worksheet Line 4e"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::income items increase basis correctly"
+
+  - line: "income-royalties"
+    description: "Royalties (Box 7)"
+    formula: "max(0, K-1 Box 7)"
+    irsRef: "K-1 Basis Worksheet Line 4g"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::royalties and section 1231 gains increase basis"
+
+  - line: "income-stcg"
+    description: "Net short-term capital gain (Box 8, positive only)"
+    formula: "max(0, K-1 Box 8)"
+    irsRef: "K-1 Basis Worksheet Line 4h"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::short-term and long-term capital gains both increase basis"
+
+  - line: "income-ltcg"
+    description: "Net long-term capital gain (Box 9a, positive only)"
+    formula: "max(0, K-1 Box 9a)"
+    irsRef: "K-1 Basis Worksheet Line 4i"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::short-term and long-term capital gains both increase basis"
+
+  - line: "income-1231"
+    description: "Net section 1231 gain (Box 10, positive only)"
+    formula: "max(0, K-1 Box 10)"
+    irsRef: "K-1 Basis Worksheet Line 4j"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::royalties and section 1231 gains increase basis"
+
+  - line: "income-other"
+    description: "Other income (Box 11, positive only)"
+    formula: "max(0, K-1 Box 11)"
+    irsRef: "K-1 Basis Worksheet Line 4k"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::other income (Box 11) increases basis when positive"
+
+  - line: "income-tax-exempt"
+    description: "Tax-exempt income (Box 18 Code A + Code B)"
+    formula: "K-1 Box 18 Code A + Code B"
+    irsRef: "K-1 Basis Worksheet Line 4l; Form 7203 Line 3k"
+    notes: "Tax-exempt income increases basis even though it is not taxable"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::tax-exempt income increases basis (Box 18 Codes A and B)"
+
+  - line: "total-increases"
+    description: "Total income and gain items that increase basis"
+    formula: "Sum of all positive income items + tax-exempt income"
+    irsRef: "K-1 Basis Worksheet Line 4o; Form 7203 Line 4"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::income items increase basis correctly"
+
+  - line: "basis-before-decreases"
+    description: "Adjusted basis before decreases"
+    formula: "Line 1 + total increases"
+    irsRef: "K-1 Basis Worksheet Line 7"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::income items increase basis correctly"
+
+  # ── Distributions (First Decrease) ──────────────────────────
+  - line: "distributions"
+    description: "Cash and property distributions (Box 19)"
+    formula: "K-1 Box 19 Code A"
+    irsRef: "K-1 Basis Worksheet Line 8; Form 7203 Line 6"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::distributions reduce basis"
+
+  - line: "basis-after-distributions"
+    description: "Basis after distributions (not less than zero)"
+    formula: "max(0, basis-before-decreases - distributions)"
+    irsRef: "K-1 Basis Worksheet Line 11a"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::distributions reduce basis"
+
+  - line: "excess-distributions"
+    description: "Capital gain from distributions exceeding basis"
+    formula: "max(0, distributions - basis-before-decreases)"
+    irsRef: "IRC §731(a)(1); IRC §1368(b)(2)"
+    notes: |
+      Partnership: gain is capital gain from deemed sale of partnership interest (IRC §731).
+      Subject to IRC §751 hot assets recharacterization (not implemented in this module).
+      S-corporation: gain is capital gain per IRC §1368(b)(2).
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::excess distributions produce capital gain (IRC §731 partnership)"
+
+  # ── Nondeductible Expenses (Second Decrease) ────────────────
+  - line: "nondeductible-expenses"
+    description: "Nondeductible, non-capitalizable expenses (Box 18 Code C)"
+    formula: "K-1 Box 18 Code C"
+    irsRef: "K-1 Basis Worksheet Line 12; Form 7203 Line 8a"
+    notes: |
+      Nondeductible expenses reduce basis before losses in the standard ordering.
+      For S-corps with the IRC §1367(a)(2)(B) election, this step comes AFTER losses.
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::nondeductible expenses reduce basis before losses"
+
+  - line: "basis-after-nondeductible"
+    description: "Basis after nondeductible expenses (not less than zero)"
+    formula: "max(0, basis-after-distributions - nondeductible-expenses)"
+    irsRef: "K-1 Basis Worksheet Line 14"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::nondeductible expenses reduce basis before losses"
+
+  - line: "suspended-nondeductible"
+    description: "Nondeductible expenses exceeding remaining basis"
+    formula: "max(0, nondeductible-expenses - basis-after-distributions)"
+    notes: "Suspended nondeductible expenses carry forward as additional basis reductions"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::nondeductible expenses exceeding remaining basis are suspended"
+
+  # ── Losses and Deductions (Third Decrease, Pro-Rata) ────────
+  - line: "loss-ordinary"
+    description: "Ordinary business loss (Box 1, negative amount)"
+    formula: "max(0, -K-1 Box 1)"
+    irsRef: "K-1 Basis Worksheet Line 15a"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::negative income boxes do not increase basis (only losses side)"
+
+  - line: "loss-rental"
+    description: "Net rental real estate loss (Box 2, negative amount)"
+    formula: "max(0, -K-1 Box 2)"
+    irsRef: "K-1 Basis Worksheet Line 15b"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::losses exceeding basis are suspended"
+
+  - line: "loss-other-rental"
+    description: "Other net rental loss (Box 3, negative amount)"
+    formula: "max(0, -K-1 Box 3)"
+    irsRef: "K-1 Basis Worksheet Line 15c"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::losses exceeding basis are suspended"
+
+  - line: "loss-stcl"
+    description: "Net short-term capital loss (Box 8, negative amount)"
+    formula: "max(0, -K-1 Box 8)"
+    irsRef: "K-1 Basis Worksheet Line 15e"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::each box category participates as net income or net loss"
+
+  - line: "loss-ltcl"
+    description: "Net long-term capital loss (Box 9a, negative amount)"
+    formula: "max(0, -K-1 Box 9a)"
+    irsRef: "K-1 Basis Worksheet Line 15f"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::each box category participates as net income or net loss"
+
+  - line: "loss-1231"
+    description: "Net section 1231 loss (Box 10, negative amount)"
+    formula: "max(0, -K-1 Box 10)"
+    irsRef: "K-1 Basis Worksheet Line 15g"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::section 1231 loss reduces basis (negative Box 10)"
+
+  - line: "loss-other"
+    description: "Other losses (Box 11, negative amount)"
+    formula: "max(0, -K-1 Box 11)"
+    irsRef: "K-1 Basis Worksheet Line 15h"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::each box category participates as net income or net loss"
+
+  - line: "loss-section179"
+    description: "Section 179 deduction (Box 12)"
+    formula: "K-1 Box 12"
+    irsRef: "K-1 Basis Worksheet Line 15i"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::losses exceeding basis are suspended"
+
+  - line: "loss-charitable"
+    description: "Charitable contributions (Box 13 Codes A/B/C)"
+    formula: "K-1 Box 13 Code A + Code B + Code C"
+    irsRef: "K-1 Basis Worksheet Line 15j"
+    notes: "Charitable contributions reduce basis even though they flow to Schedule A, not Schedule E"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::charitable contributions reduce basis (Box 13 Codes A/B/C)"
+
+  - line: "loss-other-deductions"
+    description: "Other deductions (Box 13 Code W + aggregate)"
+    formula: "K-1 Box 13 other deductions"
+    irsRef: "K-1 Basis Worksheet Line 15p"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::other deductions reduce basis (Box 13 aggregate)"
+
+  - line: "loss-investment-interest"
+    description: "Investment interest expense (Box 13 Code D)"
+    formula: "K-1 Box 13 Code D"
+    irsRef: "K-1 Basis Worksheet Line 15k"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::investment interest expense reduces basis (Box 13 Code D)"
+
+  - line: "loss-ebie"
+    description: "Excess business interest expense (Box 13 Code K)"
+    formula: "K-1 Box 13 Code K"
+    irsRef: "K-1 Basis Worksheet Line 15n"
+    notes: "EBIE reduces basis even though it is tracked separately for §163(j) purposes"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::excess business interest expense reduces basis (Box 13 Code K)"
+
+  - line: "total-losses"
+    description: "Total loss and deduction items"
+    formula: "Sum of all loss/deduction categories"
+    irsRef: "K-1 Basis Worksheet Line 15s"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::losses exceeding basis are suspended"
+
+  - line: "pro-rata-allocation"
+    description: "Pro-rata loss allocation when total losses exceed available basis"
+    formula: "Each category allowed = (category loss / total losses) × available basis"
+    irsRef: "K-1 Basis Worksheet Part II Column (d); IRC §704(d); IRC §1366(d)"
+    notes: |
+      When total losses exceed basis after distributions and nondeductible expenses,
+      each loss category is allowed proportionally. The suspended portion of each
+      category carries forward indefinitely.
+    edgeCases:
+      - "When losses exactly equal available basis, all losses are fully allowed"
+      - "When total losses are zero, no pro-rata allocation needed"
+      - "Each category's allowed amount is rounded to the nearest dollar"
+      - "If rounding causes total allowed to exceed available basis, reduce the largest category by the excess"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::pro-rata allocation distributes losses proportionally"
+
+  - line: "total-allowed-losses"
+    description: "Total losses allowed against basis"
+    formula: "min(total-losses, basis-after-nondeductible)"
+    irsRef: "K-1 Basis Worksheet Part II Column (d) total"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::sufficient basis allows all losses without pro-rata"
+
+  - line: "total-suspended-losses"
+    description: "Total losses suspended due to basis limitation"
+    formula: "total-losses - total-allowed-losses"
+    irsRef: "K-1 Basis Worksheet Part II Column (e) total"
+    notes: "Suspended losses carry forward indefinitely (IRC §704(d) / §1366(d))"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::losses exceeding basis are suspended"
+
+  # ── Ending Basis ─────────────────────────────────────────────
+  - line: "ending-basis"
+    description: "Adjusted basis at end of tax year"
+    formula: "basis-after-nondeductible - total-allowed-losses (not less than zero)"
+    irsRef: "K-1 Basis Worksheet ending basis; Form 7203 Line 14"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::zero beginning basis suspends all losses"
+
+  # ── S-Corp §1367(a)(2)(B) Election ──────────────────────────
+  - line: "election-1367"
+    description: "IRC §1367(a)(2)(B) election to apply losses before nondeductible expenses"
+    formula: "When elected, swap the ordering: losses reduce basis before nondeductible expenses"
+    irsRef: "IRC §1367(a)(2)(B); Form 7203 Instructions"
+    notes: |
+      This election is only available for S-corporation shareholders. When elected:
+      - Losses/deductions reduce basis BEFORE nondeductible expenses
+      - The election applies to the election year and all future years (irrevocable)
+      - This is beneficial when the shareholder expects to have basis restored in future
+        years before incurring additional losses, allowing more losses to be deducted now
+    edgeCases:
+      - "Election only valid for S-corporations (entityType = 's_corporation')"
+      - "Election does not change the overall result when basis is sufficient for all items"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::S-corp election reorders losses before nondeductible expenses"
+
+  # ── S-Corp Debt Basis (Form 7203 Part II) ────────────────────
+  - line: "debt-15"
+    description: "Adjusted basis of loans at beginning of year"
+    formula: "User-provided or carryforward from prior year (not less than zero)"
+    irsRef: "Form 7203 Part II Line 15"
+    notes: "Only applicable for S-corporation shareholders with direct loans to the S-corp"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::S-corp excess losses reduce debt basis"
+
+  - line: "debt-16"
+    description: "Additional loans made during the year"
+    formula: "User-provided new direct loans to the S-corporation"
+    irsRef: "Form 7203 Part II Line 16"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::additional loans increase available debt basis for losses"
+
+  - line: "debt-17"
+    description: "Debt basis before adjustments"
+    formula: "Line debt-15 + Line debt-16"
+    irsRef: "Form 7203 Part II Line 17"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::additional loans increase available debt basis for losses"
+
+  - line: "debt-18"
+    description: "Net increase applied to restore debt basis"
+    formula: "min(max(0, ending-stock-basis-pre-restoration - beginning-stock-basis), prior-debt-basis-reduction)"
+    irsRef: "Form 7203 Part II Line 18; IRC §1367(b)(2)(B); Treas. Reg. §1.1367-2(c)"
+    notes: |
+      When there is a net increase to stock basis (income items > total decreases
+      at the stock level), the net increase first restores previously-reduced debt
+      basis before increasing stock basis per Treas. Reg. §1.1367-1(g).
+      Restoration and loss-overflow to debt basis are mutually exclusive in any
+      given year: a net increase means all losses fit within stock basis.
+      The restoration is limited to the cumulative prior debt basis reduction.
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::debt basis restored from net income reduces stock basis"
+
+  - line: "debt-20"
+    description: "Losses and deductions applied to debt basis"
+    formula: "min(total-suspended-losses-from-stock, debt-basis-available)"
+    irsRef: "Form 7203 Part II Line 20; IRC §1367(b)(2)(A)"
+    notes: |
+      Losses that exceed stock basis can further reduce debt basis.
+      These losses ARE deductible (unlike losses beyond both stock and debt basis
+      which are suspended). Pro-rata allocation across loss categories is applied
+      using the same proportional method as the stock basis allocation.
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::S-corp excess losses reduce debt basis"
+
+  - line: "debt-21"
+    description: "Adjusted basis of loans at end of year"
+    formula: "debt-basis-available + restoration - losses-applied (not less than zero)"
+    irsRef: "Form 7203 Part II Line 21"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::S-corp excess losses reduce debt basis"
+
+edgeCases:
+  - description: "Zero beginning basis — all items produce suspended losses or excess distribution gain"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::zero beginning basis suspends all losses"
+  - description: "Distributions exactly equal basis — no gain, no remaining basis for losses"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::distributions exactly equal basis produces zero gain and zero remaining"
+  - description: "Mixed income and loss in same box categories — only net amounts participate"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::each box category participates as net income or net loss"
+  - description: "Prior-year suspended losses from basis limitation should be added to current-year losses"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::prior-year suspended losses are included in current-year computation"
+  - description: "All losses allowed when basis sufficient — no pro-rata needed"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::sufficient basis allows all losses without pro-rata"
+  - description: "Partnership versus S-corp produces different results only with §1367(a)(2)(B) election"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::partnership and S-corp produce same results without election"
+  - description: "S-corp debt basis absorbs excess losses beyond stock basis (IRC §1367(b)(2)(A))"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::S-corp excess losses reduce debt basis"
+  - description: "Debt basis restoration from net income reduces ending stock basis (IRC §1367(b)(2)(B))"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::debt basis restored from net income reduces stock basis"
+  - description: "No restoration when there is no net increase (losses exceed income)"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::no debt restoration when losses exceed income"
+  - description: "Losses exceeding both stock and debt basis are suspended"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::losses exceeding stock and debt basis are suspended"
+  - description: "Debt basis fields ignored for partnerships"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::debt basis fields ignored for partnerships"

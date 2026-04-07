@@ -1,0 +1,86 @@
+form: "NJ-1040 Excess Payroll Contributions"
+fullName: "New Jersey NJ-1040 Credit for Excess UI/WF/SWF, DI, and FLI Contributions"
+taxYear: 2025
+reference: "https://www.nj.gov/treasury/taxation/pdf/current/2450.pdf"
+
+notes: |
+  When a taxpayer has multiple employers in a tax year, each employer independently
+  withholds NJ payroll contributions (UI/WF/SWF, DI, FLI) up to the applicable
+  wage base. If total wages across all employers exceed the wage base, the taxpayer
+  may have overpaid. The excess is claimed as a credit on the NJ-1040.
+
+  Three separate contribution categories:
+  1. UI/WF/SWF (Unemployment Insurance / Workforce Development / Supplemental WF)
+     - Wage base: $44,200 (2025)
+     - Maximum combined employee contribution published annually
+  2. DI (Disability Insurance — state plan)
+     - Wage base: $165,900 (2025)
+     - Maximum employee contribution published annually
+  3. FLI (Family Leave Insurance)
+     - Wage base: $165,900 (2025)
+     - Maximum employee contribution published annually
+
+  For each category: excess = max(0, total withheld - maximum contribution)
+  These credits appear in the "Payments" section of the NJ-1040 and reduce
+  balance due or increase refund.
+
+  Official 2025 maximums:
+  - UI/WF/SWF: $184.02
+  - DI: $380.42
+  - FLI: $545.82
+
+  Source support:
+  - Form NJ-2450 line 3 prints the correct 2025 per-category maximums and routes
+    the three excess amounts to NJ-1040 lines 59, 60, and 61.
+  - The NJ Division of Taxation "Income Tax Changes for Tax Year 2025" page repeats
+    the same maximums and instructs taxpayers with multiple employers to complete
+    Form NJ-2450.
+
+  Private plan disability withholding may use a different maximum than the state-plan
+  amount shown on Form NJ-2450, so the engine continues to allow a private-plan DI
+  override when the taxpayer has employer-specific support.
+
+lines:
+  - line: "59"
+    description: "UI/WF/SWF credit from Form NJ-2450 line 4"
+    formula: "max(0, total UI/WF/SWF withheld across all W-2s - maximum annual employee contribution)"
+    inputs:
+      - "Total UI/WF/SWF withheld from all W-2s"
+      - "Maximum annual UI/WF/SWF employee contribution for the year"
+      - "Form NJ-2450 line 4 routing to NJ-1040 line 59"
+    edgeCases:
+      - "Single employer: cannot have excess (each employer caps at wage base)"
+      - "Multiple employers with combined wages under wage base: no excess"
+      - "Excess cannot be negative"
+    testRef: "tests/engine/state/nj-1040-excess-payroll.test.ts::NJ-1040 excess payroll - excess UI/WF/SWF with two employers"
+
+  - line: "60"
+    description: "Disability insurance credit from Form NJ-2450 line 5"
+    formula: "max(0, total DI withheld across all W-2s - maximum annual DI employee contribution)"
+    inputs:
+      - "Total DI withheld from all W-2s"
+      - "Maximum annual DI employee contribution for the year"
+      - "Form NJ-2450 line 5 routing to NJ-1040 line 60"
+    notes: |
+      Form NJ-2450 line 3 column B sets the 2025 state-plan disability insurance
+      maximum at $380.42. A private-plan override is allowed when supported by the
+      taxpayer's W-2/private-plan records.
+    testRef: "tests/engine/state/nj-1040-excess-payroll.test.ts::NJ-1040 excess payroll - excess DI with private plan"
+
+  - line: "61"
+    description: "Family leave insurance credit from Form NJ-2450 line 6"
+    formula: "max(0, total FLI withheld across all W-2s - maximum annual FLI employee contribution)"
+    inputs:
+      - "Total FLI withheld from all W-2s"
+      - "Maximum annual FLI employee contribution for the year"
+      - "Form NJ-2450 line 6 routing to NJ-1040 line 61"
+    testRef: "tests/engine/state/nj-1040-excess-payroll.test.ts::NJ-1040 excess payroll - excess FLI with two employers"
+
+  - line: "59-61-total"
+    description: "Total excess NJ payroll contributions credit across lines 59-61"
+    formula: "excess UI/WF/SWF + excess DI + excess FLI"
+    inputs:
+      - "NJ-1040 line 59 UI/WF/SWF credit"
+      - "NJ-1040 line 60 DI credit"
+      - "NJ-1040 line 61 FLI credit"
+    testRef: "tests/engine/state/nj-1040-excess-payroll.test.ts::NJ-1040 excess payroll - total excess sums all categories"

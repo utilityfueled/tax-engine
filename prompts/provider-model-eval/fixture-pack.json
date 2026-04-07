@@ -1,0 +1,818 @@
+{
+  "version": 1,
+  "sourcePath": "../../prompts/provider-model-eval/fixture-pack.json",
+  "pricingRetrievedAt": "2026-03-12",
+  "fixtureCount": 4,
+  "taskTypes": [
+    "workspace-summary",
+    "interview-assist",
+    "unsupported-route",
+    "explanation-draft"
+  ],
+  "fixtures": [
+    {
+      "id": "workspace-summary-supported",
+      "title": "Supported workspace summary",
+      "task": "workspace-summary",
+      "prompt": "Summarize return readiness in 2 short paragraphs. Mention pending interview work and whether the workspace is ready for deterministic recompute.",
+      "payload": {
+        "workspace": {
+          "id": "workspace-[person-name-1]",
+          "createdAt": "2026-03-12T00:00:00.000Z",
+          "updatedAt": "2026-03-12T00:00:00.000Z",
+          "storageMode": "local-browser",
+          "documents": [
+            {
+              "id": "doc-w2",
+              "name": "[person-name-1]-[ssn-1]-w2.pdf",
+              "size": 1024,
+              "uploadedAt": "2026-03-12T00:00:00.000Z",
+              "kind": "w2",
+              "coverage": "supported",
+              "label": "2026 Form W-2 (official info-copy PDF)",
+              "notes": "Uploaded by [person-name-1] from [email-1].",
+              "matchedFixtureId": "irs-w2-2026",
+              "seededFactIds": [
+                "wages",
+                "withholding"
+              ]
+            }
+          ],
+          "summary": {
+            "totalDocuments": 1,
+            "officialFixtureMatches": 1,
+            "supportedDocuments": 1,
+            "pendingReviewDocuments": 0,
+            "interviewQuestionsRemaining": 1
+          },
+          "seededReturn": {
+            "status": "ready-for-interview",
+            "taxYearHints": [
+              2026
+            ],
+            "facts": [
+              {
+                "id": "wages",
+                "label": "Wages",
+                "status": "answered",
+                "answeredAt": "2026-03-12T00:00:00.000Z",
+                "answerText": "[person-name-1] confirmed the W-2 is final.",
+                "sourceDocumentIds": [
+                  "doc-w2"
+                ]
+              },
+              {
+                "id": "withholding",
+                "label": "Federal withholding",
+                "status": "pending",
+                "answeredAt": null,
+                "answerText": null,
+                "sourceDocumentIds": [
+                  "doc-w2"
+                ]
+              }
+            ],
+            "interviewQuestions": [
+              {
+                "id": "wages",
+                "factId": "wages",
+                "prompt": "Confirm whether every W-2 is final and whether any boxes require follow-up questions.",
+                "status": "answered",
+                "answeredAt": "2026-03-12T00:00:00.000Z",
+                "answerText": "[person-name-1] confirmed the W-2 is final.",
+                "sourceDocumentIds": [
+                  "doc-w2"
+                ]
+              },
+              {
+                "id": "withholding",
+                "factId": "withholding",
+                "prompt": "Confirm federal and state withholding amounts from each wage statement.",
+                "status": "pending",
+                "answeredAt": null,
+                "answerText": null,
+                "sourceDocumentIds": [
+                  "doc-w2"
+                ]
+              }
+            ],
+            "interviewQueue": [
+              "Confirm federal and state withholding amounts from each wage statement."
+            ],
+            "nextQuestionId": "withholding",
+            "reviewNotes": [
+              "Mail a follow-up summary to [person-name-1] at [street-address-1], Austin TX [postal-code-1]."
+            ]
+          },
+          "structuredFacts": [
+            {
+              "id": "wages:interview-answer",
+              "factId": "wages",
+              "label": "Wages",
+              "kind": "interview-answer",
+              "value": "[person-name-1] confirmed the W-2 is final.",
+              "sourceType": "user-answer",
+              "confidence": "high",
+              "sourceDocumentIds": [
+                "doc-w2"
+              ],
+              "questionId": "wages",
+              "updatedAt": "2026-03-12T00:00:00.000Z"
+            }
+          ],
+          "returnSummary": {
+            "status": "awaiting-interview",
+            "targetTaxYear": 2025,
+            "taxYearState": "single",
+            "answeredFactCount": 1,
+            "totalFactCount": 2,
+            "readyItemCount": 0,
+            "itemCount": 1,
+            "blockers": [
+              {
+                "id": "needs-answer:wages-and-withholding",
+                "message": "Wages and withholding still has 1 unanswered interview confirmation(s).",
+                "relatedFactIds": [
+                  "wages",
+                  "withholding"
+                ],
+                "sourceDocumentIds": [
+                  "doc-w2"
+                ]
+              }
+            ],
+            "items": [
+              {
+                "id": "wages-and-withholding",
+                "label": "Wages and withholding",
+                "status": "needs-answer",
+                "engineTargets": [
+                  "Form 1040 Lines 1 and 25a"
+                ],
+                "relatedFactIds": [
+                  "wages",
+                  "withholding"
+                ],
+                "sourceDocumentIds": [
+                  "doc-w2"
+                ],
+                "answeredFactCount": 1,
+                "factCount": 2
+              }
+            ]
+          },
+          "enginePreview": null,
+          "checklist": [
+            {
+              "id": "documents",
+              "label": "Upload tax documents",
+              "status": "ready"
+            },
+            {
+              "id": "coverage",
+              "label": "Check document support",
+              "status": "ready"
+            },
+            {
+              "id": "interview",
+              "label": "Answer missing questions",
+              "status": "needs-input"
+            }
+          ],
+          "auditTrail": [
+            {
+              "id": "interview-answered:wages",
+              "occurredAt": "2026-03-12T00:00:00.000Z",
+              "kind": "interview-answered",
+              "message": "[person-name-1] answered the wage confirmation call from [phone-1].",
+              "documentIds": [
+                "doc-w2"
+              ],
+              "questionId": "wages",
+              "answerText": "[person-name-1] confirmed the W-2 is final."
+            }
+          ]
+        },
+        "unsupportedRoutes": [],
+        "redactions": [
+          {
+            "token": "[person-name-1]",
+            "kind": "person-name"
+          },
+          {
+            "token": "[ssn-1]",
+            "kind": "ssn"
+          },
+          {
+            "token": "[email-1]",
+            "kind": "email"
+          },
+          {
+            "token": "[street-address-1]",
+            "kind": "street-address"
+          },
+          {
+            "token": "[postal-code-1]",
+            "kind": "postal-code"
+          },
+          {
+            "token": "[phone-1]",
+            "kind": "phone"
+          }
+        ],
+        "replacementCount": 14
+      },
+      "estimatedInputTokens": 938,
+      "estimatedOutputTokens": 180,
+      "requiredSignals": [
+        "mentions 1 pending interview confirmation",
+        "notes the workspace is not ready for deterministic recompute",
+        "does not expose raw direct identifiers"
+      ]
+    },
+    {
+      "id": "interview-assist-withholding",
+      "title": "Interview assist for withholding follow-up",
+      "task": "interview-assist",
+      "prompt": "Recommend the next interview question and explain why it is the highest-value blocker to resolve next.",
+      "payload": {
+        "interview": {
+          "workspaceId": "workspace-[person-name-1]",
+          "returnSummary": {
+            "status": "awaiting-interview",
+            "targetTaxYear": 2025,
+            "taxYearState": "single",
+            "answeredFactCount": 1,
+            "totalFactCount": 2,
+            "readyItemCount": 0,
+            "itemCount": 1,
+            "blockers": [
+              {
+                "id": "needs-answer:wages-and-withholding",
+                "message": "Wages and withholding still has 1 unanswered interview confirmation(s).",
+                "relatedFactIds": [
+                  "wages",
+                  "withholding"
+                ],
+                "sourceDocumentIds": [
+                  "doc-w2"
+                ]
+              }
+            ],
+            "items": [
+              {
+                "id": "wages-and-withholding",
+                "label": "Wages and withholding",
+                "status": "needs-answer",
+                "engineTargets": [
+                  "Form 1040 Lines 1 and 25a"
+                ],
+                "relatedFactIds": [
+                  "wages",
+                  "withholding"
+                ],
+                "sourceDocumentIds": [
+                  "doc-w2"
+                ],
+                "answeredFactCount": 1,
+                "factCount": 2
+              }
+            ]
+          },
+          "questions": [
+            {
+              "id": "wages",
+              "factId": "wages",
+              "prompt": "Confirm whether every W-2 is final and whether any boxes require follow-up questions.",
+              "status": "answered",
+              "answeredAt": "2026-03-12T00:00:00.000Z",
+              "answerText": "[person-name-1] confirmed the W-2 is final.",
+              "sourceDocumentIds": [
+                "doc-w2"
+              ]
+            },
+            {
+              "id": "withholding",
+              "factId": "withholding",
+              "prompt": "Confirm federal and state withholding amounts from each wage statement.",
+              "status": "pending",
+              "answeredAt": null,
+              "answerText": null,
+              "sourceDocumentIds": [
+                "doc-w2"
+              ]
+            }
+          ],
+          "structuredFacts": [
+            {
+              "id": "wages:interview-answer",
+              "factId": "wages",
+              "label": "Wages",
+              "kind": "interview-answer",
+              "value": "[person-name-1] confirmed the W-2 is final.",
+              "sourceType": "user-answer",
+              "confidence": "high",
+              "sourceDocumentIds": [
+                "doc-w2"
+              ],
+              "questionId": "wages",
+              "updatedAt": "2026-03-12T00:00:00.000Z"
+            }
+          ],
+          "auditTrail": [
+            {
+              "id": "interview-answered:wages",
+              "occurredAt": "2026-03-12T00:00:00.000Z",
+              "kind": "interview-answered",
+              "message": "[person-name-1] answered the wage confirmation call from [phone-1].",
+              "documentIds": [
+                "doc-w2"
+              ],
+              "questionId": "wages",
+              "answerText": "[person-name-1] confirmed the W-2 is final."
+            }
+          ]
+        },
+        "redactions": [
+          {
+            "token": "[person-name-1]",
+            "kind": "person-name"
+          },
+          {
+            "token": "[phone-1]",
+            "kind": "phone"
+          }
+        ],
+        "replacementCount": 6
+      },
+      "estimatedInputTokens": 512,
+      "estimatedOutputTokens": 140,
+      "requiredSignals": [
+        "recommends the withholding question",
+        "keeps the answer grounded in the queued interview facts",
+        "does not expose raw direct identifiers"
+      ]
+    },
+    {
+      "id": "unsupported-route-side-gig",
+      "title": "Unsupported route handoff for side-gig bookkeeping",
+      "task": "unsupported-route",
+      "prompt": "Explain the unsupported blocker and recommend the safest next action for the user without pretending the return is filing-ready.",
+      "payload": {
+        "workspace": {
+          "id": "workspace-[person-name-1]",
+          "createdAt": "2026-03-12T00:00:00.000Z",
+          "updatedAt": "2026-03-12T00:00:00.000Z",
+          "storageMode": "local-browser",
+          "documents": [
+            {
+              "id": "doc-w2",
+              "name": "[person-name-1]-[ssn-1]-w2.pdf",
+              "size": 1024,
+              "uploadedAt": "2026-03-12T00:00:00.000Z",
+              "kind": "w2",
+              "coverage": "supported",
+              "label": "2026 Form W-2 (official info-copy PDF)",
+              "notes": "Uploaded by [person-name-1] from [email-1].",
+              "matchedFixtureId": "irs-w2-2026",
+              "seededFactIds": [
+                "wages",
+                "withholding"
+              ]
+            },
+            {
+              "id": "doc-nec",
+              "name": "[person-name-1]-1099-nec.pdf",
+              "size": 1024,
+              "uploadedAt": "2026-03-12T00:00:00.000Z",
+              "kind": "1099-nec",
+              "coverage": "partially-supported",
+              "label": "Form 1099-NEC (Rev. April 2025)",
+              "notes": "[person-name-1] uploaded a side-gig income statement that may need manual review.",
+              "matchedFixtureId": "irs-1099-nec-2025",
+              "seededFactIds": [
+                "nonemployee-compensation",
+                "schedule-c-expense-review"
+              ]
+            }
+          ],
+          "summary": {
+            "totalDocuments": 2,
+            "officialFixtureMatches": 2,
+            "supportedDocuments": 1,
+            "pendingReviewDocuments": 1,
+            "interviewQuestionsRemaining": 1
+          },
+          "seededReturn": {
+            "status": "ready-for-interview",
+            "taxYearHints": [
+              2026
+            ],
+            "facts": [
+              {
+                "id": "wages",
+                "label": "Wages",
+                "status": "answered",
+                "answeredAt": "2026-03-12T00:00:00.000Z",
+                "answerText": "[person-name-1] confirmed the W-2 is final.",
+                "sourceDocumentIds": [
+                  "doc-w2"
+                ]
+              },
+              {
+                "id": "withholding",
+                "label": "Federal withholding",
+                "status": "pending",
+                "answeredAt": null,
+                "answerText": null,
+                "sourceDocumentIds": [
+                  "doc-w2"
+                ]
+              }
+            ],
+            "interviewQuestions": [
+              {
+                "id": "wages",
+                "factId": "wages",
+                "prompt": "Confirm whether every W-2 is final and whether any boxes require follow-up questions.",
+                "status": "answered",
+                "answeredAt": "2026-03-12T00:00:00.000Z",
+                "answerText": "[person-name-1] confirmed the W-2 is final.",
+                "sourceDocumentIds": [
+                  "doc-w2"
+                ]
+              },
+              {
+                "id": "withholding",
+                "factId": "withholding",
+                "prompt": "Confirm federal and state withholding amounts from each wage statement.",
+                "status": "pending",
+                "answeredAt": null,
+                "answerText": null,
+                "sourceDocumentIds": [
+                  "doc-w2"
+                ]
+              }
+            ],
+            "interviewQueue": [
+              "Confirm federal and state withholding amounts from each wage statement."
+            ],
+            "nextQuestionId": "withholding",
+            "reviewNotes": [
+              "Mail a follow-up summary to [person-name-1] at [street-address-1], Austin TX [postal-code-1]."
+            ]
+          },
+          "structuredFacts": [
+            {
+              "id": "wages:interview-answer",
+              "factId": "wages",
+              "label": "Wages",
+              "kind": "interview-answer",
+              "value": "[person-name-1] confirmed the W-2 is final.",
+              "sourceType": "user-answer",
+              "confidence": "high",
+              "sourceDocumentIds": [
+                "doc-w2"
+              ],
+              "questionId": "wages",
+              "updatedAt": "2026-03-12T00:00:00.000Z"
+            }
+          ],
+          "returnSummary": {
+            "status": "needs-review",
+            "targetTaxYear": 2025,
+            "taxYearState": "single",
+            "answeredFactCount": 1,
+            "totalFactCount": 3,
+            "readyItemCount": 0,
+            "itemCount": 2,
+            "blockers": [
+              {
+                "id": "needs-answer:wages-and-withholding",
+                "message": "Wages and withholding still has 1 unanswered interview confirmation(s).",
+                "relatedFactIds": [
+                  "wages",
+                  "withholding"
+                ],
+                "sourceDocumentIds": [
+                  "doc-w2"
+                ]
+              },
+              {
+                "id": "unsupported:schedule-c-bookkeeping",
+                "message": "The side-gig records still need manual bookkeeping review before a deterministic Schedule C can be trusted.",
+                "relatedFactIds": [
+                  "nonemployee-compensation",
+                  "schedule-c-expense-review"
+                ],
+                "sourceDocumentIds": [
+                  "doc-nec"
+                ]
+              }
+            ],
+            "items": [
+              {
+                "id": "wages-and-withholding",
+                "label": "Wages and withholding",
+                "status": "needs-answer",
+                "engineTargets": [
+                  "Form 1040 Lines 1 and 25a"
+                ],
+                "relatedFactIds": [
+                  "wages",
+                  "withholding"
+                ],
+                "sourceDocumentIds": [
+                  "doc-w2"
+                ],
+                "answeredFactCount": 1,
+                "factCount": 2
+              },
+              {
+                "id": "side-gig-income",
+                "label": "Side gig income",
+                "status": "needs-review",
+                "engineTargets": [
+                  "Schedule C",
+                  "Schedule SE"
+                ],
+                "relatedFactIds": [
+                  "nonemployee-compensation",
+                  "schedule-c-expense-review"
+                ],
+                "sourceDocumentIds": [
+                  "doc-nec"
+                ],
+                "answeredFactCount": 0,
+                "factCount": 2
+              }
+            ]
+          },
+          "enginePreview": null,
+          "checklist": [
+            {
+              "id": "documents",
+              "label": "Upload tax documents",
+              "status": "ready"
+            },
+            {
+              "id": "coverage",
+              "label": "Check document support",
+              "status": "ready"
+            },
+            {
+              "id": "interview",
+              "label": "Answer missing questions",
+              "status": "needs-input"
+            }
+          ],
+          "auditTrail": [
+            {
+              "id": "interview-answered:wages",
+              "occurredAt": "2026-03-12T00:00:00.000Z",
+              "kind": "interview-answered",
+              "message": "[person-name-1] answered the wage confirmation call from [phone-1].",
+              "documentIds": [
+                "doc-w2"
+              ],
+              "questionId": "wages",
+              "answerText": "[person-name-1] confirmed the W-2 is final."
+            }
+          ]
+        },
+        "unsupportedRoutes": [
+          {
+            "id": "continue-interview",
+            "urgency": "now",
+            "title": "Answer remaining questions",
+            "description": "You have 1 unanswered question that may affect your return.",
+            "blockerIds": [
+              "needs-answer:wages-and-withholding"
+            ],
+            "relatedFactIds": [
+              "wages",
+              "withholding"
+            ],
+            "sourceDocumentIds": [
+              "doc-w2"
+            ],
+            "reasons": [
+              "Wages and withholding still has 1 unanswered interview confirmation(s).",
+              "Confirm federal and state withholding amounts from each wage statement."
+            ]
+          },
+          {
+            "id": "review-filing-pack",
+            "urgency": "next",
+            "title": "Download your draft return packet",
+            "description": "Re-download your draft packet after making changes so the notes and action items stay up to date.",
+            "blockerIds": [
+              "needs-answer:wages-and-withholding",
+              "unsupported:schedule-c-bookkeeping"
+            ],
+            "relatedFactIds": [
+              "wages",
+              "withholding",
+              "nonemployee-compensation",
+              "schedule-c-expense-review"
+            ],
+            "sourceDocumentIds": [
+              "doc-w2",
+              "doc-nec"
+            ],
+            "reasons": [
+              "Wages and withholding still has 1 unanswered interview confirmation(s).",
+              "The side-gig records still need manual bookkeeping review before a deterministic Schedule C can be trusted.",
+              "Form 1099-NEC (Rev. April 2025) is marked partially-supported."
+            ]
+          },
+          {
+            "id": "partner-review-later",
+            "urgency": "later",
+            "title": "Consider a professional review",
+            "description": "Download a summary you can share with a tax professional. This app does not contact, assign, or engage a reviewer for you.",
+            "blockerIds": [
+              "unsupported:schedule-c-bookkeeping"
+            ],
+            "relatedFactIds": [
+              "nonemployee-compensation",
+              "schedule-c-expense-review"
+            ],
+            "sourceDocumentIds": [
+              "doc-nec"
+            ],
+            "reasons": [
+              "The side-gig records still need manual bookkeeping review before a deterministic Schedule C can be trusted.",
+              "Form 1099-NEC (Rev. April 2025) is marked partially-supported."
+            ]
+          }
+        ],
+        "redactions": [
+          {
+            "token": "[person-name-1]",
+            "kind": "person-name"
+          },
+          {
+            "token": "[ssn-1]",
+            "kind": "ssn"
+          },
+          {
+            "token": "[email-1]",
+            "kind": "email"
+          },
+          {
+            "token": "[street-address-1]",
+            "kind": "street-address"
+          },
+          {
+            "token": "[postal-code-1]",
+            "kind": "postal-code"
+          },
+          {
+            "token": "[phone-1]",
+            "kind": "phone"
+          }
+        ],
+        "replacementCount": 16
+      },
+      "estimatedInputTokens": 1592,
+      "estimatedOutputTokens": 220,
+      "requiredSignals": [
+        "mentions the side-gig bookkeeping blocker",
+        "routes the user toward the filing pack or later partner review",
+        "does not claim deterministic readiness"
+      ]
+    },
+    {
+      "id": "explanation-draft-ready-preview",
+      "title": "Export draft explanation for a ready preview",
+      "task": "explanation-draft",
+      "prompt": "Explain whether the export draft contains a deterministic preview and what checklist items still need user review.",
+      "payload": {
+        "exportDraft": {
+          "workspaceId": "workspace-[person-name-1]",
+          "returnSummary": {
+            "status": "ready-to-recompute",
+            "targetTaxYear": 2025,
+            "taxYearState": "single",
+            "answeredFactCount": 2,
+            "totalFactCount": 2,
+            "readyItemCount": 1,
+            "itemCount": 1,
+            "blockers": [],
+            "items": [
+              {
+                "id": "wages-and-withholding",
+                "label": "Wages and withholding",
+                "status": "ready",
+                "engineTargets": [
+                  "Form 1040 Lines 1 and 25a"
+                ],
+                "relatedFactIds": [
+                  "wages",
+                  "withholding"
+                ],
+                "sourceDocumentIds": [
+                  "doc-w2"
+                ],
+                "answeredFactCount": 2,
+                "factCount": 2
+              }
+            ]
+          },
+          "enginePreview": {
+            "mode": "engine-recompute",
+            "title": "[person-name-1] 2025 filing preview",
+            "taxYear": 2025,
+            "filingStatus": "single",
+            "sourceDocumentIds": [
+              "doc-w2"
+            ],
+            "sourceFixtureIds": [
+              "irs-w2-2026"
+            ],
+            "assumptions": [
+              "Call [person-name-1] at [phone-1] before mailing the packet to [street-address-1], Austin TX [postal-code-1]."
+            ],
+            "metrics": {
+              "totalIncome": "52000",
+              "agi": "52000",
+              "taxableIncome": "38150",
+              "totalTax": "4300",
+              "totalPayments": "5000",
+              "refund": "700",
+              "amountOwed": "0"
+            },
+            "highlightedLines": [
+              {
+                "id": "form-1040-line-1",
+                "form": "Form 1040",
+                "line": "1",
+                "label": "Wages",
+                "value": "52000",
+                "formula": "W-2 Box 1 total",
+                "sourceFactIds": []
+              }
+            ]
+          },
+          "checklist": [
+            {
+              "id": "documents",
+              "label": "Upload tax documents",
+              "status": "ready"
+            },
+            {
+              "id": "coverage",
+              "label": "Check document support",
+              "status": "ready"
+            },
+            {
+              "id": "review",
+              "label": "Review summary and completed return",
+              "status": "needs-input"
+            }
+          ],
+          "auditTrail": [
+            {
+              "id": "interview-answered:withholding",
+              "occurredAt": "2026-03-12T00:00:00.000Z",
+              "kind": "interview-answered",
+              "message": "[person-name-1] confirmed the mailing copy should go to [street-address-1].",
+              "documentIds": [
+                "doc-w2"
+              ],
+              "questionId": "withholding",
+              "answerText": "Mail the packet to [person-name-1] at [street-address-1]."
+            }
+          ]
+        },
+        "redactions": [
+          {
+            "token": "[person-name-1]",
+            "kind": "person-name"
+          },
+          {
+            "token": "[street-address-1]",
+            "kind": "street-address"
+          },
+          {
+            "token": "[postal-code-1]",
+            "kind": "postal-code"
+          },
+          {
+            "token": "[phone-1]",
+            "kind": "phone"
+          }
+        ],
+        "replacementCount": 10
+      },
+      "estimatedInputTokens": 511,
+      "estimatedOutputTokens": 170,
+      "requiredSignals": [
+        "mentions the deterministic preview",
+        "notes the remaining checklist review item",
+        "does not expose raw direct identifiers"
+      ]
+    }
+  ]
+}

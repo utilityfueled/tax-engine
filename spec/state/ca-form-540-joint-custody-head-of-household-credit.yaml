@@ -1,0 +1,68 @@
+form: "California Form 540 Joint Custody Head of Household Credit"
+fullName: "California Form 540 Credit for Joint Custody Head of Household (Code 170)"
+taxYear: 2025
+irsReference: "https://www.ftb.ca.gov/forms/2025/2025-540-instructions.html"
+
+notes: |
+  California allows the Joint Custody Head of Household credit, code 170, for
+  tax year 2025 when all of the following are true:
+  - The taxpayer is not filing jointly, as head of household, or as a qualifying
+    surviving spouse.
+  - The taxpayer was unmarried and not in a registered domestic partnership on
+    December 31, 2025, or was married / in a registered domestic partnership but
+    lived apart from the spouse or registered domestic partner for all of 2025
+    and filed married filing separately.
+  - The taxpayer furnished over one-half of the cost of keeping up the home.
+  - The home was the main home for the taxpayer's child, stepchild, or grandchild
+    for more than 145 days but less than 220 days in 2025.
+  - The taxpayer had a custody agreement under which the child was in one or
+    both parents' homes for more than one-half of the year.
+  - If the qualifying child was married or in a registered domestic partnership,
+    the taxpayer was entitled to the dependent exemption credit for that child.
+  If qualified, use the worksheet in the 2025 Form 540 instructions using whole
+  dollars only:
+  - Line 1: Form 540 line 35 subtotal tax before credits
+  - Line 2: 30%
+  - Line 3: min(round(Line 1 × Line 2), $610)
+  The official FTB credit page confirms that the credit amount is entered on
+  Form 540 line 43 or line 44.
+
+lines:
+  - line: "1"
+    description: "Form 540 line 35 subtotal tax before credits"
+    formula: "Supported input for Form 540 line 35 subtotal tax before credits"
+    inputs:
+      - "Form 540 line 35 subtotal tax before credits"
+    testRef: "tests/engine/state/ca-form-540-joint-custody-head-of-household-credit.test.ts::CA Form 540 Joint Custody Head of Household credit Line 1 - the worksheet starts from Form 540 line 35 subtotal tax before credits"
+
+  - line: "2"
+    description: "Credit percentage"
+    formula: "Use the published 2025 Joint Custody Head of Household credit percentage of 30%"
+    inputs:
+      - "Tax year"
+    testRef: "tests/engine/state/ca-form-540-joint-custody-head-of-household-credit.test.ts::CA Form 540 Joint Custody Head of Household credit Line 2 - the 2025 worksheet uses a 30% credit rate"
+
+  - line: "3"
+    description: "Credit amount"
+    formula: "If the taxpayer meets the filing-status, marital-status, household-cost, qualifying-child, qualifying-day-range, custody-agreement, and dependent-exemption rules, enter min(round(Line 1 × Line 2), $610); otherwise 0"
+    inputs:
+      - "Joint Custody Head of Household credit Line 1"
+      - "Joint Custody Head of Household credit Line 2"
+      - "Filing status"
+      - "Unmarried / not in a registered domestic partnership at year end"
+      - "Lived apart from spouse or registered domestic partner for all of 2025 when filing married filing separately"
+      - "Furnished over one-half the cost of keeping up the home"
+      - "Qualifying child relationship requirement"
+      - "Days qualifying child lived in the home during 2025"
+      - "Qualifying custody agreement requirement"
+      - "Qualifying child was married or in a registered domestic partnership"
+      - "Entitled to dependent exemption credit if the qualifying child was married or in a registered domestic partnership"
+    edgeCases:
+      - "146 qualifying days still qualify"
+      - "219 qualifying days still qualify"
+      - "145 qualifying days do not qualify"
+      - "220 qualifying days do not qualify"
+      - "The credit is capped at $610"
+      - "A married filing separately taxpayer must live apart from the spouse or registered domestic partner for the entire year"
+      - "A taxpayer who does not meet every qualification requirement receives 0"
+    testRef: "tests/engine/state/ca-form-540-joint-custody-head-of-household-credit.test.ts::CA Form 540 Joint Custody Head of Household credit Line 3 - 146 qualifying days and line 35 tax above the cap still produce the capped $610 credit"

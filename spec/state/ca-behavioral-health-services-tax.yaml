@@ -1,0 +1,55 @@
+form: "California Behavioral Health Services Tax"
+fullName: "California Form 540 / 540NR Behavioral Health Services Tax"
+taxYear: 2025
+irsReference: "https://www.ftb.ca.gov/forms/2025/2025-540-instructions.html"
+
+notes: |
+  California renamed the Mental Health Services Tax to the Behavioral Health
+  Services Tax for tax years beginning on or after January 1, 2025. For 2025,
+  Form 540 line 62 and Form 540NR line 72 impose a 1% tax on California taxable
+  income or nonresident California source taxable income above $1,000,000.
+  The published resident and nonresident instructions both use the same
+  $1,000,000 threshold and require whole-dollar computation.
+
+lines:
+  - line: "1"
+    description: "California taxable income base"
+    formula: "Form 540 line 19 taxable income or Form 540NR line 35 California taxable income"
+    inputs:
+      - "California taxable income"
+    notes: "The audit trail should preserve whether the base came from the resident Form 540 or nonresident Form 540NR path."
+    testRef: "tests/engine/state/ca-behavioral-health-services-tax.test.ts::CA BHST Line 1 - resident taxable income flows into the worksheet base"
+
+  - line: "2"
+    description: "Behavioral Health Services Tax threshold"
+    formula: "$1,000,000"
+    notes: "The 2025 resident and nonresident instructions use the same threshold."
+    edgeCases:
+      - "Exactly $1,000,000 produces zero tax"
+      - "Married filing separately does not get a reduced threshold on the Form 540/540NR tax line"
+    testRef: "tests/engine/state/ca-behavioral-health-services-tax.test.ts::CA BHST Line 2 - the threshold stays at $1,000,000 even for married filing separately"
+
+  - line: "3"
+    description: "Excess taxable income"
+    formula: "Max($0, Line 1 - Line 2)"
+    inputs:
+      - "Behavioral Health Services Tax Line 1"
+      - "Behavioral Health Services Tax Line 2"
+    edgeCases:
+      - "Amounts below the threshold floor at zero"
+    testRef: "tests/engine/state/ca-behavioral-health-services-tax.test.ts::CA BHST Line 3 - income below the threshold floors the excess at zero"
+
+  - line: "4"
+    description: "Behavioral Health Services Tax rate"
+    formula: "1%"
+    testRef: "tests/engine/state/ca-behavioral-health-services-tax.test.ts::CA BHST Line 4 - the worksheet uses a flat 1% rate"
+
+  - line: "5"
+    description: "California Behavioral Health Services Tax"
+    formula: "Line 3 × Line 4, rounded to the nearest whole dollar because the worksheet is computed using whole dollars only"
+    notes: "The final tax line should remain traceable to the resident or nonresident return path used for Line 1."
+    edgeCases:
+      - "$1 over the threshold rounds to $0 tax"
+      - "$50 over the threshold rounds to $1 tax"
+      - "Nonresident returns use California source taxable income with the same 1% formula"
+    testRef: "tests/engine/state/ca-behavioral-health-services-tax.test.ts::CA BHST Line 5 - nonresident California source taxable income above the threshold produces the same 1% tax"

@@ -1,0 +1,541 @@
+form: "Schedule K-1"
+fullName: "Partner's Share of Income, Deductions, Credits, etc."
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i1065sk1"
+
+notes: |
+  Schedule K-1 (Form 1065) reports each partner's share of income,
+  deductions, credits, and other items from a partnership or S corporation.
+  The engine also accepts K-1s from Form 1120-S and Form 1041 using the
+  same schema where box mappings align.
+
+  Each K-1 box flows to one or more downstream forms:
+    - Box 1 → Schedule E Part II (ordinary business income)
+    - Box 2 → Schedule E Part II (net rental real estate income)
+    - Box 3 → Schedule E Part II (other net rental income)
+    - Box 4 → Schedule E Part II + Schedule SE (guaranteed payments)
+    - Box 5 → Schedule B Part I (interest income)
+    - Box 6a/6b → Schedule B Part II / Form 1040 Line 3a (dividends)
+    - Box 7 → Schedule E Part II (royalties)
+    - Box 8 → Schedule D Line 5 (short-term capital gain)
+    - Box 9a → Schedule D Line 12 (long-term capital gain)
+    - Box 9b → QDCG Worksheet / Form 6251 (unrecaptured §1250 gain at 25%)
+    - Box 9c → QDCG Worksheet / Form 6251 (collectibles gain at 28%)
+    - Box 10 → Form 4797 Part I (§1231 gains/losses)
+    - Box 11 → Schedule E Part II (other income)
+    - Box 12 → Schedule E Part II (§179 deduction)
+    - Box 13 → Schedule E Part II (other deductions)
+    - Box 14 → Schedule SE (self-employment earnings)
+    - Box 15 → Form 3800 (general business credits — Codes A through F)
+    - Box 16 → Form 1116 (foreign taxes paid)
+    - Box 17 → Form 6251 (AMT items)
+    - Box 18 → Form 1040 Line 2a / basis tracking (tax-exempt income)
+    - Box 19 → Basis tracking (distributions)
+    - Box 20 Code Z → Form 8995 (§199A QBI)
+
+  Section 163(j) support in this slice follows the entity-level IRS code split:
+    - Partnership Schedule K-1 (Form 1065): Box 13 Code K = excess business
+      interest expense, Box 20 Code AE = excess taxable income, Box 20 Code AF
+      = excess business interest income.
+    - S corporation Schedule K-1 (Form 1120-S): Box 17 Code AA = excess
+      taxable income and Box 17 Code AB = excess business interest income.
+
+  Current engine support uses partnership Box 13 Code K plus partnership Box 20
+  Codes AE/AF to release prior-year suspended partnership EBIE from the same
+  entity. The S-corporation Box 17 Codes AA/AB amounts are retained in the
+  shared input model for future shareholder-level Form 8990 work, but they are
+  not yet routed through a taxpayer-level section 163(j) limitation module in
+  this slice.
+
+  Passive vs. nonpassive classification is controlled by the isPassiveActivity
+  flag on each K-1 entry. Passive losses are subject to Form 8582 limitations.
+
+lines:
+  # ── Box 1: Ordinary business income (loss) ──────────────
+  - line: "Box 1"
+    description: "Ordinary business income (loss)"
+    formula: "Partner's share of partnership ordinary trade/business income"
+    irsRef: "Form 1065 K-1 Instructions, Box 1"
+    destination: "Schedule E Part II Line 28 (passive or nonpassive column)"
+    testRef: "tests/engine/schedules/schedule-e.test.ts::K-1 rental income flows into partnership total"
+
+  # ── Box 2: Net rental real estate income (loss) ─────────
+  - line: "Box 2"
+    description: "Net rental real estate income (loss)"
+    formula: "Partner's share of net rental real estate income (loss)"
+    irsRef: "Form 1065 K-1 Instructions, Box 2"
+    destination: "Schedule E Part II (passive activity)"
+    testRef: "tests/engine/schedules/schedule-e.test.ts::K-1 rental income flows into partnership total"
+
+  # ── Box 3: Other net rental income (loss) ───────────────
+  - line: "Box 3"
+    description: "Other net rental income (loss)"
+    formula: "Partner's share of other net rental income (loss)"
+    irsRef: "Form 1065 K-1 Instructions, Box 3"
+    destination: "Schedule E Part II"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::net rental income and other net rental income increase basis"
+
+  # ── Box 4: Guaranteed payments ──────────────────────────
+  - line: "Box 4"
+    description: "Guaranteed payments for services and/or capital"
+    formula: "Always treated as nonpassive per IRS instructions"
+    irsRef: "Form 1065 K-1 Instructions, Box 4"
+    destination: "Schedule E Part II (nonpassive) + Schedule SE Line 4b"
+    notes: "Guaranteed payments are never passive, even if the underlying activity is passive"
+    testRef: "tests/engine/schedules/schedule-e.test.ts::passive K-1 with guaranteed payments only → all nonpassive, zero passive"
+
+  # ── Box 5: Interest income ─────────────────────────────
+  - line: "Box 5"
+    description: "Interest income"
+    formula: "Partner's share of interest income"
+    irsRef: "Form 1065 K-1 Instructions, Box 5"
+    destination: "Schedule B Part I"
+    testRef: "tests/engine/schedules/schedule-b.test.ts::Schedule B Line 1 - includes K-1 interest"
+
+  # ── Box 6a/6b: Dividends ──────────────────────────────
+  - line: "Box 6a"
+    description: "Ordinary dividends"
+    formula: "Partner's share of ordinary dividends"
+    irsRef: "Form 1065 K-1 Instructions, Box 6a"
+    destination: "Schedule B Part II"
+    testRef: "tests/engine/schedules/schedule-b.test.ts::Schedule B Line 6 - includes K-1 dividends"
+
+  - line: "Box 6b"
+    description: "Qualified dividends"
+    formula: "Partner's share of qualified dividends (subset of Box 6a)"
+    irsRef: "Form 1065 K-1 Instructions, Box 6b"
+    destination: "Form 1040 Line 3a"
+    testRef: "tests/engine/federal.test.ts::Form 1040 Line 3a - qualified dividends"
+
+  # ── Box 7: Royalties ───────────────────────────────────
+  - line: "Box 7"
+    description: "Royalties"
+    formula: "Partner's share of royalty income"
+    irsRef: "Form 1065 K-1 Instructions, Box 7"
+    destination: "Schedule E Part II"
+    testRef: "tests/engine/schedules/schedule-e.test.ts::K-1 royalties flow into partnership total"
+
+  # ── Box 8: Net short-term capital gain (loss) ──────────
+  - line: "Box 8"
+    description: "Net short-term capital gain (loss)"
+    formula: "Partner's share of short-term capital gains/losses"
+    irsRef: "Form 1065 K-1 Instructions, Box 8"
+    destination: "Schedule D Line 5"
+    testRef: "tests/engine/schedules/schedule-d.test.ts::Schedule D Line 7 - net short-term gain"
+
+  # ── Box 9a/9b/9c: Long-term capital gains ─────────────
+  - line: "Box 9a"
+    description: "Net long-term capital gain (loss)"
+    formula: "Partner's share of long-term capital gains/losses"
+    irsRef: "Form 1065 K-1 Instructions, Box 9a"
+    destination: "Schedule D Line 12"
+    testRef: "tests/engine/schedules/schedule-d.test.ts::Schedule D Line 15 - net long-term gain"
+
+  - line: "Box 9b"
+    description: "Unrecaptured section 1250 gain"
+    formula: "Partner's share of unrecaptured §1250 gain taxed at max 25%"
+    irsRef: "Form 1065 K-1 Instructions, Box 9b; IRC §1(h)(1)(E)"
+    destination: "QDCG Worksheet + Form 6251 Part III"
+    notes: "Aggregated with 1099-DIV §1250 gain for preferential 25% rate cap"
+    testRef: "tests/engine/federal.test.ts::K-1 Box 9b unrecaptured section 1250 gain applies the 25% maximum rate"
+
+  - line: "Box 9c"
+    description: "Collectibles (28%) gain (loss)"
+    formula: "Partner's share of collectibles gain taxed at max 28%"
+    irsRef: "Form 1065 K-1 Instructions, Box 9c; IRC §1(h)(5)"
+    destination: "QDCG Worksheet + Form 6251 Part III"
+    notes: "Aggregated with 1099-DIV collectibles gain for preferential 28% rate cap"
+    testRef: "tests/engine/federal.test.ts::K-1 Box 9c collectibles gain applies the 28% maximum rate"
+
+  # ── Box 10: Net section 1231 gain (loss) ───────────────
+  - line: "Box 10"
+    description: "Net section 1231 gain (loss)"
+    formula: "Partner's share of §1231 gains/losses"
+    irsRef: "Form 1065 K-1 Instructions, Box 10"
+    destination: "Form 4797 Part I"
+    notes: "Subject to 5-year nonrecaptured §1231 loss lookback"
+    testRef: "tests/engine/forms/form-4797.test.ts::Form 4797 Line 7 - supported Schedule K-1 box 10 gains and nonpassive losses default into Part I"
+
+  # ── Box 11: Other income (loss) ────────────────────────
+  - line: "Box 11"
+    description: "Other income (loss)"
+    formula: "Partner's share of other income (loss) — codes A through G"
+    irsRef: "Form 1065 K-1 Instructions, Box 11"
+    destination: "Schedule E Part II"
+    testRef: "tests/engine/schedules/schedule-e.test.ts::K-1 other income flows into partnership total"
+
+  # ── Box 12: Section 179 deduction ──────────────────────
+  - line: "Box 12"
+    description: "Section 179 deduction"
+    formula: "Partner's share of §179 expense deduction"
+    irsRef: "Form 1065 K-1 Instructions, Box 12"
+    destination: "Schedule E Part II"
+    notes: "Subject to partner-level §179 dollar and income limitations"
+    testRef: "tests/engine/schedules/schedule-e.test.ts::K-1 section 179 deduction reduces partnership total"
+
+  # ── Box 13: Other deductions ───────────────────────────
+  - line: "Box 13"
+    description: "Other deductions — code-level routing"
+    formula: "Partner's share of other deductions — codes A through W, routed to the appropriate forms"
+    irsRef: "Form 1065 K-1 Instructions, Box 13"
+    notes: |
+      Box 13 contains multiple deduction codes that flow to DIFFERENT forms.
+      Charitable contribution codes (A, B, C) flow to Schedule A, NOT Schedule E.
+      Excess business interest (Code K) is tracked for §163(j) carryforward.
+      Only Code W (other deductions) and the legacy aggregate otherDeductions
+      field flow to Schedule E Part II.
+    testRef: "tests/engine/federal.test.ts::K-1 Box 13 Code B charitable capital gain property flows to Schedule A"
+
+  - line: "Box 13 Code A"
+    description: "Charitable contributions — cash and non-capital-gain property (60% AGI limit)"
+    formula: "Partner's share of cash contributions and non-capital-gain property donations to 50% limit organizations"
+    irsRef: "Form 1065 K-1 Instructions, Box 13 Code A; IRC §170(b)(1)(A)"
+    destination: "Schedule A Line 12 (cash charitable)"
+    notes: |
+      Flows to Schedule A and is subject to the 60% of AGI limit for cash contributions.
+      Non-capital-gain property in Code A is subject to the 50% limit but is treated
+      conservatively as 60%-limit cash in the current implementation.
+    testRef: "tests/engine/federal.test.ts::K-1 Box 13 Code A charitable cash flows to Schedule A"
+
+  - line: "Box 13 Code B"
+    description: "Charitable contributions — capital gain property to 50% organizations (30% AGI limit)"
+    formula: "Partner's share of capital gain property donated to public charities and certain private foundations"
+    irsRef: "Form 1065 K-1 Instructions, Box 13 Code B; IRC §170(b)(1)(C)"
+    destination: "Schedule A Line 13 (non-cash charitable)"
+    notes: |
+      Long-term capital gain property donated to 50% limit organizations (public charities).
+      Subject to the 30% of AGI limit. Flows to the same bucket as personal
+      appreciated-property donations on Schedule A.
+    testRef: "tests/engine/federal.test.ts::K-1 Box 13 Code B charitable capital gain property flows to Schedule A"
+
+  - line: "Box 13 Code C"
+    description: "Charitable contributions — capital gain property to non-50% organizations (20% AGI limit)"
+    formula: "Partner's share of capital gain property donated to non-50% limit organizations"
+    irsRef: "Form 1065 K-1 Instructions, Box 13 Code C; IRC §170(b)(1)(D)"
+    destination: "Schedule A Line 13 (non-cash charitable)"
+    notes: |
+      Capital gain property donated to private foundations and other non-50% organizations.
+      Subject to the 20% of AGI limit. Flows to the private-foundation appreciated-property
+      bucket on Schedule A.
+    testRef: "tests/engine/federal.test.ts::K-1 Box 13 Code C charitable capital gain property flows to Schedule A"
+
+  - line: "Box 13 Code D"
+    description: "Investment interest expense"
+    formula: "Partner's share of investment interest expense from the partnership"
+    irsRef: "Form 1065 K-1 Instructions, Box 13 Code D; IRC §163(d)"
+    destination: "Form 4952 Line 1"
+    notes: |
+      Investment interest expense from partnerships is aggregated with the
+      taxpayer's own investment interest (margin interest, etc.) on Form 4952
+      Line 1. Subject to the net investment income limitation. Does NOT include
+      interest from passive activities or interest allocable to tax-exempt income.
+    testRef: "tests/engine/federal.test.ts::K-1 Box 13 Code D investment interest expense flows to Form 4952 Line 1"
+
+  - line: "Box 13 Code K"
+    description: "Excess business interest expense (§163(j))"
+    formula: "Partner's share of excess business interest expense from the partnership"
+    irsRef: "Form 1065 K-1 Instructions, Box 13 Code K; IRC §163(j)"
+    destination: "Tracked for carryforward — future Form 8990"
+    notes: |
+      Excess business interest expense is limited at the partnership level under
+      IRC §163(j). The partner tracks this amount and can deduct it in a future year
+      when the partner has excess taxable income or excess business interest income
+      from the same partnership. Currently tracked as a result field but does not
+      flow to a deduction form.
+    testRef: "tests/engine/federal.test.ts::K-1 Box 13 Code K excess business interest is tracked in audit trail"
+
+  - line: "Box 13 Code W"
+    description: "Other deductions"
+    formula: "Partner's share of other deductions not classified under codes A–K"
+    irsRef: "Form 1065 K-1 Instructions, Box 13 Code W"
+    destination: "Schedule E Part II"
+    notes: |
+      Catch-all for deductions not classified under specific codes.
+      Includes items like Section 59(e) expenditures, soil and water conservation
+      expenses, and other miscellaneous deductions. Flows to Schedule E Part II
+      as a reduction of partnership income. When code-level fields are used,
+      only Code W / unclassified amounts should be placed in otherDeductions.
+    testRef: "tests/engine/schedules/schedule-e.test.ts::K-1 other deductions reduce partnership total"
+
+  # ── Box 14: Self-employment earnings (loss) ────────────
+  - line: "Box 14"
+    description: "Self-employment earnings (loss)"
+    formula: "Partner's share of net self-employment earnings"
+    irsRef: "Form 1065 K-1 Instructions, Box 14"
+    destination: "Schedule SE Line 4b"
+    testRef: "tests/engine/schedules/schedule-se.test.ts::Schedule SE Line 4b - includes K-1 SE earnings and guaranteed payments"
+
+  # ── Box 15: Credits ───────────────────────────────────
+  - line: "Box 15 Code A"
+    description: "Low-income housing credit (Section 42(j)(5) partnerships)"
+    formula: "Partner's share of LIHC from pre-1990 buildings or partnerships with 10%+ interest"
+    irsRef: "Form 1065 K-1 Instructions, Box 15 Code A; IRC §42"
+    destination: "Form 3800 Part III"
+    testRef: "tests/engine/forms/form-3800.test.ts::K-1 Box 15 Code A low-income housing credit §42(j)(5)"
+
+  - line: "Box 15 Code B"
+    description: "Low-income housing credit (other)"
+    formula: "Partner's share of LIHC not reported under Code A"
+    irsRef: "Form 1065 K-1 Instructions, Box 15 Code B; IRC §42"
+    destination: "Form 3800 Part III"
+    testRef: "tests/engine/forms/form-3800.test.ts::K-1 Box 15 Code B low-income housing credit (other)"
+
+  - line: "Box 15 Code C"
+    description: "Qualified rehabilitation expenditures (rental real estate)"
+    formula: "Partner's share of rehabilitation credit"
+    irsRef: "Form 1065 K-1 Instructions, Box 15 Code C; IRC §47"
+    destination: "Form 3800 Part III"
+    testRef: "tests/engine/forms/form-3800.test.ts::K-1 Box 15 Code C rehabilitation credit"
+
+  - line: "Box 15 Code D"
+    description: "Other rental real estate credits"
+    formula: "Partner's share of other rental real estate credits"
+    irsRef: "Form 1065 K-1 Instructions, Box 15 Code D"
+    destination: "Form 3800 Part III"
+    testRef: "tests/engine/forms/form-3800.test.ts::all six Box 15 codes aggregate correctly"
+
+  - line: "Box 15 Code E"
+    description: "Other rental credits"
+    formula: "Partner's share of other rental credits"
+    irsRef: "Form 1065 K-1 Instructions, Box 15 Code E"
+    destination: "Form 3800 Part III"
+    testRef: "tests/engine/forms/form-3800.test.ts::all six Box 15 codes aggregate correctly"
+
+  - line: "Box 15 Code F"
+    description: "Other credits"
+    formula: "Partner's share of other business credits (work opportunity, research, etc.)"
+    irsRef: "Form 1065 K-1 Instructions, Box 15 Code F"
+    destination: "Form 3800 Part III"
+    testRef: "tests/engine/forms/form-3800.test.ts::K-1 Box 15 Code F other credits"
+
+  # ── Box 16: Foreign transactions ───────────────────────
+  - line: "Box 16 Codes O/P"
+    description: "Foreign taxes paid or accrued"
+    formula: "Partner's share of creditable foreign taxes paid or accrued"
+    irsRef: "Form 1065 K-1 Instructions, Box 16 Codes O/P"
+    destination: "Form 1116 Line 7"
+    notes: |
+      Creditable foreign taxes from the partnership. Routed to Form 1116
+      under the IRC §904(d) category specified by foreignTaxCategory
+      (default: general). K-1 foreign taxes disqualify the simplified
+      method — a full Form 1116 is always required.
+    testRef: "tests/engine/forms/form-1116.test.ts::K-1 foreign tax flows through federal pipeline"
+
+  - line: "Box 16 Codes D/E/F"
+    description: "Foreign source income by category"
+    formula: "Partner's share of gross foreign source taxable income — passive (Code D), general (Code E), or other (Code F)"
+    irsRef: "Form 1065 K-1 Instructions, Box 16 Codes D/E/F; IRC §904(d)"
+    destination: "Form 1116 Line 1a"
+    notes: |
+      When provided as foreignSourceIncome on the K-1, this explicit amount
+      is used for the Form 1116 foreign source income limitation (Line 1a)
+      instead of the heuristic that sums all K-1 income fields from entities
+      with foreignTaxPaid > 0. This produces a more accurate limitation when
+      only a portion of the K-1 income is from foreign sources.
+      The amount follows the same IRC §904(d) category as foreignTaxCategory.
+    testRef: "tests/engine/forms/form-1116.test.ts::K-1 explicit foreignSourceIncome used for Form 1116 limitation"
+
+  # ── Box 17: Alternative minimum tax (AMT) items ────────
+  - line: "Box 17 Code A"
+    description: "Post-1986 depreciation adjustment"
+    formula: "Difference between AMT and regular depreciation on assets placed in service after 1986"
+    irsRef: "Form 1065 K-1 Instructions, Box 17 Code A; Form 6251 Line 2l"
+    destination: "Form 6251 Line 2l"
+    notes: |
+      Positive amount increases AMTI (AMT depreciation is less than regular).
+      Negative amount decreases AMTI (AMT depreciation exceeds regular).
+      This is the most common K-1 AMT adjustment for partnerships
+      with depreciable assets.
+    testRef: "tests/engine/forms/form-6251.test.ts::Line 2l - depreciation adjustment increases AMTI"
+
+  - line: "Box 17 Code B"
+    description: "Adjusted gain or loss"
+    formula: "Difference between AMT and regular gain/loss on disposition of assets with AMT depreciation differences"
+    irsRef: "Form 1065 K-1 Instructions, Box 17 Code B; Form 6251 Line 2k"
+    destination: "Form 6251 Line 2k"
+    notes: "Reports gain/loss adjustments for AMT where the AMT basis differs from regular basis due to prior depreciation differences"
+    testRef: "tests/engine/forms/form-6251.test.ts::Line 2k - disposition adjustment affects AMTI"
+
+  - line: "Box 17 Code C"
+    description: "Depletion (other than oil and gas)"
+    formula: "Difference between AMT and regular depletion"
+    irsRef: "Form 1065 K-1 Instructions, Box 17 Code C; Form 6251 Line 2c"
+    destination: "Form 6251 Line 2c"
+    notes: "Excess of percentage depletion over cost depletion for AMT purposes"
+    testRef: "tests/engine/forms/form-6251.test.ts::Line 2c - depletion adjustment increases AMTI"
+
+  - line: "Box 17 Code F"
+    description: "Other AMT items"
+    formula: "Partner's share of other AMT preference and adjustment items"
+    irsRef: "Form 1065 K-1 Instructions, Box 17 Code F; Form 6251 Line 3"
+    destination: "Form 6251 Line 3 (other adjustments)"
+    notes: |
+      Catch-all for AMT items not covered by Codes A-E.
+      Includes items like intangible drilling costs, mining exploration/development,
+      and other partnership-level AMT preferences.
+    testRef: "tests/engine/forms/form-6251.test.ts::Line 3 - other AMT adjustments increase AMTI"
+
+  # ── Box 18: Tax-exempt income and nondeductible expenses ─
+  - line: "Box 18 Code A"
+    description: "Tax-exempt interest income"
+    formula: "Partner's share of tax-exempt interest income"
+    irsRef: "Form 1065 K-1 Instructions, Box 18 Code A"
+    destination: "Form 1040 Line 2a"
+    notes: |
+      Tax-exempt interest income is reported on Form 1040 Line 2a for
+      informational purposes. It is not included in taxable income but
+      affects Social Security benefit taxation and EIC investment income
+      disqualification thresholds.
+    testRef: "tests/engine/federal.test.ts::K-1 Box 18 Code A flows to Form 1040 Line 2a"
+
+  - line: "Box 18 Code B"
+    description: "Other tax-exempt income"
+    formula: "Partner's share of other tax-exempt income"
+    irsRef: "Form 1065 K-1 Instructions, Box 18 Code B"
+    destination: "Basis tracking only"
+    notes: |
+      Increases partner's basis in the partnership interest but is not
+      reported on any specific Form 1040 line. Includes items like
+      tax-exempt income from life insurance proceeds at the partnership level.
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::tax-exempt income increases basis (Box 18 Codes A and B)"
+
+  - line: "Box 18 Code C"
+    description: "Nondeductible expenses"
+    formula: "Partner's share of nondeductible expenses"
+    irsRef: "Form 1065 K-1 Instructions, Box 18 Code C"
+    destination: "Basis tracking only"
+    notes: |
+      Reduces partner's basis in the partnership interest but is not
+      deductible on the partner's return. Includes items like
+      50% of meals expenses, fines, penalties, and political contributions
+      at the partnership level.
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::nondeductible expenses reduce basis before losses"
+
+  # ── Box 19: Distributions ──────────────────────────────
+  - line: "Box 19 Code A"
+    description: "Cash and marketable securities distributions"
+    formula: "Cash and marketable securities distributed to partner"
+    irsRef: "Form 1065 K-1 Instructions, Box 19 Code A"
+    destination: "Basis tracking only"
+    notes: |
+      Reduces partner's basis. If distributions exceed basis, the excess
+      is treated as gain from sale of the partnership interest (capital gain).
+      Not reported on any specific Form 1040 line unless basis is exceeded.
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::distributions reduce basis"
+
+  - line: "Box 19 Code B"
+    description: "Distribution subject to section 737"
+    formula: "Property distributions subject to §737 precontribution gain recognition"
+    irsRef: "Form 1065 K-1 Instructions, Box 19 Code B"
+    destination: "Basis tracking only"
+    testRef: "tests/engine/schedules/schedule-e.test.ts::Schedule E - excess distributions produce capital gain (IRC §731)"
+
+  # ── Box 20 Codes A/B: Investment income and expenses ───
+  - line: "Box 20 Code A"
+    description: "Investment income"
+    formula: "Partner's share of investment income from the partnership"
+    irsRef: "Form 1065 K-1 Instructions, Box 20 Code A; Form 4952 Line 4a"
+    destination: "Form 4952 Line 4a (gross investment income)"
+    notes: |
+      Includes interest from working capital of a trade or business, royalties
+      derived in the ordinary course of business, and any other income from
+      the partnership that is properly allocable to investment activities.
+      Added to the taxpayer's own gross investment income on Form 4952 Line 4a.
+    testRef: "tests/engine/federal.test.ts::K-1 Box 20 Code A investment income flows to Form 4952 Line 4a"
+
+  - line: "Box 20 Code B"
+    description: "Investment expenses"
+    formula: "Partner's share of investment expenses from the partnership"
+    irsRef: "Form 1065 K-1 Instructions, Box 20 Code B; Form 4952 Line 4f"
+    destination: "Form 4952 Line 4f (investment expenses)"
+    notes: |
+      Expenses from the partnership that are directly connected with the
+      production of investment income. Under TCJA (2018-2025), most
+      miscellaneous itemized deductions are suspended, but pass-through
+      investment expenses that are clearly allocable to investment income
+      remain deductible for Form 4952 purposes. Added to the taxpayer's
+      own investment expenses on Form 4952 Line 4f.
+    testRef: "tests/engine/federal.test.ts::K-1 Box 20 Code B investment expenses flow to Form 4952 Line 4f"
+
+  # ── Box 20 Code Z: Section 199A QBI ────────────────────
+  - line: "Box 20 Code Z"
+    description: "Section 199A qualified business income"
+    formula: "Partner's share of qualified business income for §199A deduction"
+    irsRef: "Form 1065 K-1 Instructions, Box 20 Code Z; IRC §199A"
+    destination: "Form 8995"
+    notes: "Used to compute the qualified business income deduction on Form 8995"
+    testRef: "tests/edge-cases/qbi-edge-cases.test.ts::partnership K-1 with section199AQBI field generates QBI deduction"
+
+  # ── Partnership Box 20 Code AE / S-corp Box 17 Code AA ──
+  - line: "Partnership Box 20 Code AE / S-corp Box 17 Code AA"
+    description: "Excess taxable income"
+    formula: "Partnership or S-corporation excess taxable income reported under IRC §163(j)"
+    irsRef: "Form 1065 K-1 Instructions, Box 20 Code AE; Form 1120-S K-1 Instructions, Box 17 Code AA; IRC §163(j)(4)(B)(ii)"
+    destination: "Partnership slice: suspended-EBIE release + Form 4952 Line 4a investment income"
+    notes: |
+      Excess taxable income (ETI) is the entity's adjusted taxable income in
+      excess of what is needed to support its business interest expense
+      deduction. In the current engine slice, only partnership ETI (Form 1065
+      K-1 Box 20 Code AE) is used to release previously suspended partnership
+      excess business interest expense (EBIE) from the same partnership. Any
+      deducted EBIE is treated as business interest paid or accrued by the
+      partner in the current year under IRC §163(j)(4)(B)(ii)(II). S-corporation
+      ETI (Form 1120-S K-1 Box 17 Code AA) is not yet routed because the engine
+      does not yet implement shareholder-level Form 8990 limitation math.
+    testRef: "tests/engine/federal.test.ts::K-1 partnership Box 20 Code AE excess taxable income enables prior-year EBIE deduction"
+
+  # ── Partnership Box 20 Code AF / S-corp Box 17 Code AB ──
+  - line: "Partnership Box 20 Code AF / S-corp Box 17 Code AB"
+    description: "Excess business interest income"
+    formula: "Partnership or S-corporation excess business interest income reported under IRC §163(j)"
+    irsRef: "Form 1065 K-1 Instructions, Box 20 Code AF; Form 1120-S K-1 Instructions, Box 17 Code AB; IRC §163(j)(4)(B)(ii)"
+    destination: "Current slice: partnership-level suspended-EBIE release only"
+    notes: |
+      Partnership excess business interest income (EBII) on Form 1065 K-1 Box 20
+      Code AF allows the partner to deduct previously suspended EBIE from the
+      same partnership, together with any partnership ETI from Code AE. In the
+      current engine slice, S-corporation EBII on Form 1120-S K-1 Box 17 Code AB
+      is retained in the input model for future Form 8990 work but is not yet
+      routed through a shareholder-level limitation computation. Partnership
+      EBII is also included in investment income for Form 4952 Line 4a in the
+      supported slice so the investment-interest limitation sees the same
+      partnership EBII dollars that support the EBIE release.
+    testRef: "tests/engine/federal.test.ts::K-1 partnership Box 20 Code AF excess business interest income also increases Form 4952 Line 4a"
+
+  # ── Classification flags ───────────────────────────────
+  - line: "isPassiveActivity"
+    description: "Passive activity classification flag"
+    formula: "Determined by material participation test per IRC §469"
+    irsRef: "IRC §469; Pub 925"
+    destination: "Form 8582 passive loss limitation"
+    notes: "Controls whether losses are subject to passive activity limitations"
+    testRef: "tests/engine/schedules/schedule-e.test.ts::Schedule E - passive K-1 losses use the at-risk-limited amount before passive suspension is computed"
+
+  - line: "isPubliclyTradedPartnership"
+    description: "Publicly traded partnership (PTP) flag"
+    formula: "True if the partnership interest is in a publicly traded partnership per IRC §7704"
+    irsRef: "IRC §469(k); IRC §7704"
+    destination: "Form 8582 PTP segregation"
+    notes: |
+      A publicly traded partnership (PTP) is any partnership whose interests
+      are traded on an established securities market or are readily tradable
+      on a secondary market (or substantial equivalent). Most master limited
+      partnerships (MLPs) are PTPs. When this flag is set, passive losses from
+      this K-1 are subject to IRC §469(k) segregation: they can only offset
+      income from the same PTP, not other passive income. PTP net income is
+      still included in the regular passive income pool for Form 8582.
+    testRef: "tests/engine/forms/form-8582.test.ts::PTP with net loss — entire loss is suspended, not included in Lines 1-10"
+
+  - line: "isForeignPartnership"
+    description: "Foreign partnership flag"
+    formula: "True if partnership is organized outside the United States"
+    irsRef: "Form 8865"
+    destination: "Form 1116 foreign source income estimation"
+    testRef: "tests/engine/schedules/schedule-e.test.ts::Schedule E - foreign partnership indicator"
+
+  - line: "atRiskAmount"
+    description: "At-risk amount limitation"
+    formula: "Partner's amount at risk per IRC §465"
+    irsRef: "IRC §465; Form 6198"
+    destination: "Limits deductible losses before passive loss rules apply"
+    testRef: "tests/engine/schedules/schedule-e.test.ts::Schedule E Line 28 - K-1 losses are capped by the validated at-risk amount before classification"

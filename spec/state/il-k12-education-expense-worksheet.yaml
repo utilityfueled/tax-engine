@@ -1,0 +1,41 @@
+form: "Schedule ICR K-12 Education Expense Credit Worksheet"
+fullName: "Illinois Schedule ICR K-12 Education Expense Credit Worksheet"
+taxYear: 2025
+reference: "https://tax.illinois.gov/content/dam/soi/en/web/tax/forms/incometax/documents/currentyear/individual/il-1040-schedule-icr.pdf"
+
+notes: |
+  The worksheet on page 3 of Schedule ICR captures one row per qualifying
+  student-school combination. If a student attended more than one qualifying
+  Illinois school during the year, each school is listed separately. Home school
+  entries are allowed and use "home school" in the school-name column. Line 15
+  totals Column G across all worksheet rows (and any attached continuation pages)
+  and flows to Schedule ICR, Step 2, Line 7a.
+
+  The 2025 Form IL-1040 general instructions say to round cents to whole dollars
+  on Form IL-1040 and most schedules, dropping amounts under 50 cents and raising
+  amounts from 50 to 99 cents. The supported worksheet therefore sums any cents
+  entered in Column G and rounds only the Line 15 total.
+
+lines:
+  - line: "14"
+    description: "Qualifying student rows"
+    formula: "One row per qualifying student-school combination with Column G tuition/book/lab fees"
+    reference: "2025 Schedule ICR, page 3, K-12 Education Expense Credit Worksheet"
+    notes: |
+      Required worksheet columns are student name, student Social Security number,
+      grade K-12, Illinois school name (or 'home school'), Illinois city, school
+      type (public, non-public, or home school), and total tuition/book/lab fees.
+      The printed form shows 10 rows, but additional pages may be attached using
+      the same format.
+    edgeCases:
+      - "A student attending multiple qualifying schools is listed on separate rows"
+      - "Grades must be K through 12"
+      - "Home school rows use the home-school type"
+    testRef: "tests/engine/state/il-k12-education-expense-worksheet.test.ts::K-12 Worksheet Line 14 - preserves multiple qualifying student rows and sums their expenses"
+
+  - line: "15"
+    description: "Total qualified education expenses"
+    formula: "Round to the nearest whole dollar after summing Column G for Lines 14a-14j and any attached continuation pages"
+    reference: "2025 Schedule ICR, page 3, K-12 Education Expense Credit Worksheet, Line 15"
+    notes: "Flows to Schedule ICR, Step 2, Line 7a, using Illinois whole-dollar rounding."
+    testRef: "tests/engine/state/il-k12-education-expense-worksheet.test.ts::K-12 Worksheet Line 15 - rounds the summed tuition, book, and lab fees to the nearest whole dollar"

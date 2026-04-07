@@ -1,0 +1,196 @@
+form: "Illinois Expanded EITC Worksheet"
+fullName: "Illinois Expanded Earned Income Tax Credit Worksheet"
+taxYear: 2025
+reference: "https://tax.illinois.gov/content/dam/soi/en/web/tax/forms/incometax/documents/currentyear/individual/il-1040-schedule-il-e-eic.pdf"
+
+notes: |
+  The Illinois Expanded EITC Worksheet is completed only when Schedule IL-E/EIC
+  Step 4, Line 5 is checked. It determines the federal EITC-equivalent amount
+  used on Schedule IL-E/EIC, Step 4, Line 6 for Illinois-only EITC cases,
+  including filers using an ITIN and childless filers ages 18 through 24 or 65+.
+
+  The supported slice calculates the worksheet from direct worksheet-line inputs
+  plus questionnaire eligibility flags. When the Illinois questionnaire requires
+  federal Publication 596 Worksheet 1, the engine consumes the caller-supplied
+  Worksheet 1 Line 14 investment income total and applies the published
+  $11,950 ceiling.
+
+lines:
+  - line: "1"
+    description: "Wages, salaries, and tips"
+    formula: "Federal Form 1040 or 1040-SR, Line 1z"
+    reference: "2025 Schedule IL-E/EITC, Expanded Worksheet Part 1"
+    testRef: "tests/engine/state/il-expanded-eitc-worksheet.test.ts::Illinois Expanded EITC Worksheet Line 15 - childless age-18 filer computes earned income and credit"
+
+  - line: "2"
+    description: "Medicaid waiver payments excluded from earned income"
+    formula: "Federal Form 1040 or 1040-SR, Line 1d amounts elected out of earned income"
+    reference: "2025 Schedule IL-E/EITC, Expanded Worksheet Part 1"
+    testRef: "tests/engine/state/il-expanded-eitc-worksheet.test.ts::Illinois Expanded EITC Worksheet Line 15 - medicaid waiver payments reduce Part 1 earned income"
+
+  - line: "3"
+    description: "Adjusted wages after Medicaid waiver exclusion"
+    formula: "Line 1 - Line 2"
+    reference: "2025 Schedule IL-E/EITC, Expanded Worksheet Part 1"
+    testRef: "tests/engine/state/il-expanded-eitc-worksheet.test.ts::Illinois Expanded EITC Worksheet Line 15 - medicaid waiver payments reduce Part 1 earned income"
+
+  - line: "4"
+    description: "Nontaxable combat pay elected into earned income"
+    formula: "Federal Form 1040 or 1040-SR, Line 1i included by election"
+    reference: "2025 Schedule IL-E/EITC, Expanded Worksheet Part 1"
+    testRef: "tests/engine/state/il-expanded-eitc-worksheet.test.ts::Illinois Expanded EITC Worksheet Line 15 - nontaxable combat pay increases earned income when elected"
+
+  - line: "5"
+    description: "Part 1 earned income subtotal"
+    formula: "Line 3 + Line 4"
+    reference: "2025 Schedule IL-E/EITC, Expanded Worksheet Part 1"
+    testRef: "tests/engine/state/il-expanded-eitc-worksheet.test.ts::Illinois Expanded EITC Worksheet Line 15 - childless age-18 filer computes earned income and credit"
+
+  - line: "6"
+    description: "Schedule SE Part I, Line 3"
+    formula: "Direct worksheet input"
+    reference: "2025 Schedule IL-E/EITC, Expanded Worksheet Part 2"
+    testRef: "tests/engine/state/il-expanded-eitc-worksheet.test.ts::Illinois Expanded EITC Worksheet Line 15 - Schedule SE lines flow into earned income"
+
+  - line: "7"
+    description: "Schedule SE Part I, Lines 4b and 5a"
+    formula: "Direct worksheet input"
+    reference: "2025 Schedule IL-E/EITC, Expanded Worksheet Part 2"
+    testRef: "tests/engine/state/il-expanded-eitc-worksheet.test.ts::Illinois Expanded EITC Worksheet Line 15 - Schedule SE lines flow into earned income"
+
+  - line: "8"
+    description: "Schedule SE subtotal"
+    formula: "Line 6 + Line 7"
+    reference: "2025 Schedule IL-E/EITC, Expanded Worksheet Part 2"
+    testRef: "tests/engine/state/il-expanded-eitc-worksheet.test.ts::Illinois Expanded EITC Worksheet Line 15 - Schedule SE lines flow into earned income"
+
+  - line: "9"
+    description: "Schedule SE Part I, Line 13"
+    formula: "Direct worksheet input"
+    reference: "2025 Schedule IL-E/EITC, Expanded Worksheet Part 2"
+    testRef: "tests/engine/state/il-expanded-eitc-worksheet.test.ts::Illinois Expanded EITC Worksheet Line 15 - Schedule SE lines flow into earned income"
+
+  - line: "10"
+    description: "Net self-employment earned income from Schedule SE"
+    formula: "Line 8 - Line 9"
+    reference: "2025 Schedule IL-E/EITC, Expanded Worksheet Part 2"
+    testRef: "tests/engine/state/il-expanded-eitc-worksheet.test.ts::Illinois Expanded EITC Worksheet Line 15 - Schedule SE lines flow into earned income"
+
+  - line: "11"
+    description: "Net farm profit or loss for Part 3"
+    formula: "Direct worksheet input for Schedule F Line 34 and farm K-1 Box 14 Code A"
+    reference: "2025 Schedule IL-E/EITC, Expanded Worksheet Part 3"
+    testRef: "tests/engine/state/il-expanded-eitc-worksheet.test.ts::Illinois Expanded EITC Worksheet Line 15 - Part 3 self-employment inputs flow through"
+
+  - line: "12"
+    description: "Net nonfarm profit or loss for Part 3"
+    formula: "Direct worksheet input for Schedule C Line 31 and nonfarm K-1 Box 14 Code A"
+    reference: "2025 Schedule IL-E/EITC, Expanded Worksheet Part 3"
+    testRef: "tests/engine/state/il-expanded-eitc-worksheet.test.ts::Illinois Expanded EITC Worksheet Line 15 - Part 3 self-employment inputs flow through"
+
+  - line: "13"
+    description: "Statutory employee income"
+    formula: "Federal Schedule C, Line 1 amount reported as statutory employee income"
+    reference: "2025 Schedule IL-E/EITC, Expanded Worksheet Part 3"
+    testRef: "tests/engine/state/il-expanded-eitc-worksheet.test.ts::Illinois Expanded EITC Worksheet Line 15 - Part 3 self-employment inputs flow through"
+
+  - line: "14"
+    description: "Part 3 total"
+    formula: "Line 10 + Line 11 + Line 12 + Line 13"
+    reference: "2025 Schedule IL-E/EITC, Expanded Worksheet Part 4"
+    testRef: "tests/engine/state/il-expanded-eitc-worksheet.test.ts::Illinois Expanded EITC Worksheet Line 15 - Part 3 self-employment inputs flow through"
+
+  - line: "15"
+    description: "Total earned income"
+    formula: "If Line 14 is blank, Line 5; otherwise max(Line 5 + Line 14, 0)"
+    reference: "2025 Schedule IL-E/EITC, Expanded Worksheet Part 4"
+    edgeCases:
+      - "Negative totals are entered as zero"
+    testRef: "tests/engine/state/il-expanded-eitc-worksheet.test.ts::Illinois Expanded EITC Worksheet Line 15 - negative totals floor to zero"
+
+  - line: "16"
+    description: "Income limit test"
+    formula: "Line 15 must be less than the published Table 1 threshold for filing status and qualifying child count"
+    reference: "2025 Schedule IL-E/EITC, Expanded Worksheet Part 5"
+    edgeCases:
+      - "Use the 3-child threshold for 3 or more qualifying children"
+    testRef: "tests/engine/state/il-expanded-eitc-worksheet.test.ts::Illinois Expanded EITC Worksheet Line 16 - published income limits disqualify excess earned income"
+
+  - line: "17"
+    description: "Earned income used for EITC lookup"
+    formula: "Line 15"
+    reference: "2025 Schedule IL-E/EITC, Expanded Worksheet Part 6"
+    testRef: "tests/engine/state/il-expanded-eitc-worksheet.test.ts::Illinois Expanded EITC Worksheet Line 23 - additional ITIN child can increase the Illinois base credit above federal EIC"
+
+  - line: "18"
+    description: "Federal EITC amount from earned income"
+    formula: "Federal EIC table amount for Line 17 using filing status and qualifying child count"
+    reference: "2025 Schedule IL-E/EITC, Expanded Worksheet Part 6"
+    testRef: "tests/engine/state/il-expanded-eitc-worksheet.test.ts::Illinois Expanded EITC Worksheet Line 23 - additional ITIN child can increase the Illinois base credit above federal EIC"
+
+  - line: "19"
+    description: "Adjusted gross income"
+    formula: "Federal Form 1040 or 1040-SR, Line 11a"
+    reference: "2025 Schedule IL-E/EITC, Expanded Worksheet Part 6"
+    testRef: "tests/engine/state/il-expanded-eitc-worksheet.test.ts::Illinois Expanded EITC Worksheet Line 23 - AGI-based lookup caps the credit when AGI exceeds earned income"
+
+  - line: "20"
+    description: "Earned income equals AGI test"
+    formula: "Line 17 = Line 19"
+    reference: "2025 Schedule IL-E/EITC, Expanded Worksheet Part 6"
+    testRef: "tests/engine/state/il-expanded-eitc-worksheet.test.ts::Illinois Expanded EITC Worksheet Line 23 - AGI-based lookup caps the credit when AGI exceeds earned income"
+
+  - line: "21"
+    description: "AGI lookup threshold test"
+    formula: "If no qualifying children, Line 19 < $10,620 single / $17,730 MFJ; otherwise Line 19 < $23,350 single / $30,470 MFJ"
+    reference: "2025 Schedule IL-E/EITC, Expanded Worksheet Part 6"
+    testRef: "tests/engine/state/il-expanded-eitc-worksheet.test.ts::Illinois Expanded EITC Worksheet Line 23 - AGI-based lookup caps the credit when AGI exceeds earned income"
+
+  - line: "22"
+    description: "Federal EITC amount from AGI"
+    formula: "If Line 21 is No, federal EIC table amount for Line 19 using filing status and qualifying child count"
+    reference: "2025 Schedule IL-E/EITC, Expanded Worksheet Part 6"
+    testRef: "tests/engine/state/il-expanded-eitc-worksheet.test.ts::Illinois Expanded EITC Worksheet Line 23 - AGI-based lookup caps the credit when AGI exceeds earned income"
+
+  - line: "23"
+    description: "Federal EITC calculation used for Illinois Line 6"
+    formula: "If Line 22 is blank, Line 18; otherwise min(Line 18, Line 22)"
+    reference: "2025 Schedule IL-E/EITC, Expanded Worksheet Part 6"
+    notes: |
+      The worksheet result flows to Schedule IL-E/EITC, Step 4, Line 6 and then
+      to IL-1040 Line 29 after the Illinois 20% rate and any Schedule NR allocation.
+    testRef: "tests/engine/state/il-expanded-eitc-worksheet.test.ts::Illinois Expanded EITC Worksheet Line 15 - childless age-18 filer computes earned income and credit"
+
+  - line: "worksheet1-line14"
+    description: "Federal Pub. 596 Worksheet 1 investment income total"
+    formula: "Worksheet 1 Line 14 total supplied to the engine when Step 2 indicates Worksheet 1 is required"
+    reference: "IRS Publication 596 (2025), Worksheet 1, Line 14; 2025 Schedule IL-E/EITC Instructions, Step 2"
+    notes: |
+      The supported slice accepts the computed federal Worksheet 1 total as an
+      input and applies the Illinois $11,950 investment-income limitation
+      without recalculating the intermediate Worksheet 1 lines.
+    testRef: "tests/engine/state/il-expanded-eitc-worksheet.test.ts::Illinois Expanded EITC Worksheet qualification - complex investment-income path accepts Worksheet 1 total at or below the limit"
+
+  - line: "questionnaire-step1-q1"
+    description: "All-filers AGI income-limit screen"
+    formula: "Federal Form 1040 or 1040-SR, Line 11a must be less than the published Table 1 threshold for filing status and qualifying child count"
+    reference: "2025 Schedule IL-E/EITC Instructions, Page 4, EITC Qualifications Questionnaire, Step 1, Question 1"
+    notes: |
+      This questionnaire screen applies before the Illinois Expanded EITC Worksheet
+      credit lookup. A filer whose AGI is equal to or above the published threshold
+      cannot claim the Illinois EITC even if Worksheet Line 15 earned income is lower.
+    edgeCases:
+      - "AGI equal to the published threshold is disqualifying because the questionnaire asks whether Line 11a is less than the limit"
+    testRef: "tests/engine/state/il-expanded-eitc-worksheet.test.ts::Illinois Expanded EITC Worksheet qualification - questionnaire AGI limit disqualifies the credit even when earned income is lower"
+
+  - line: "questionnaire"
+    description: "Illinois Expanded EITC qualification questionnaire"
+    formula: |
+      Taxpayer must satisfy the Illinois questionnaire: income below the published
+      limit, investment income at or below $11,950, no federal Form 2555, U.S.
+      residency requirements, and the applicable qualifying-child or childless
+      filer conditions. When Step 2 indicates federal Pub. 596 Worksheet 1 is
+      required, use the provided Worksheet 1 Line 14 amount for the
+      investment-income test.
+    reference: "2025 Schedule IL-E/EITC Instructions, Pages 4-5"
+    testRef: "tests/engine/state/il-expanded-eitc-worksheet.test.ts::Illinois Expanded EITC Worksheet qualification - complex investment-income path accepts Worksheet 1 total at or below the limit"

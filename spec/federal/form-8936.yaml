@@ -1,0 +1,150 @@
+form: "Form 8936"
+fullName: "Clean Vehicle Credits"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i8936"
+
+notes: |
+  Form 8936 computes the clean vehicle credits under IRC §30D (new clean
+  vehicles) and IRC §25E (previously owned clean vehicles). For individual
+  returns the personal-use credits are nonrefundable and flow to Schedule 3.
+
+  The One Big Beautiful Bill (P.L. 119-21) terminates these credits for
+  vehicles acquired after September 30, 2025. Vehicles acquired on or before
+  that date but placed in service after it still qualify.
+
+  AGI eligibility uses the lesser of current-year or prior-year modified AGI.
+  If either year's MAGI is below the applicable filing-status threshold, the
+  taxpayer qualifies.
+
+  Credit ordering: the previously owned clean vehicle credit (Schedule 3
+  Line 6m) is computed before the new clean vehicle credit (Schedule 3
+  Line 6f). Both are nonrefundable, limited by tax liability minus other
+  credits, and cannot carry forward.
+
+lines:
+  # ── Part I: Modified Adjusted Gross Income ───────────────
+  - line: "2"
+    description: "Current-year modified AGI"
+    formula: "AGI + foreign earned income exclusion + foreign housing deduction"
+    irsRef: "Form 8936 Instructions, Part I"
+    notes: "For most individual filers without Form 2555, MAGI equals AGI."
+    testRef: "tests/engine/forms/form-8936.test.ts::Form 8936 MAGI defaults to AGI when no foreign exclusions"
+
+  - line: "4"
+    description: "Prior-year modified AGI"
+    formula: "Prior-year AGI + prior-year foreign earned income exclusion + prior-year foreign housing deduction"
+    irsRef: "Form 8936 Instructions, Part I"
+    testRef: "tests/engine/forms/form-8936.test.ts::Form 8936 uses prior-year MAGI when it is lower"
+
+  - line: "5"
+    description: "MAGI for eligibility"
+    formula: "Lesser of Line 2 (current-year) or Line 4 (prior-year)"
+    irsRef: "Form 8936 Instructions, Part I"
+    notes: "Taxpayer qualifies if either year's MAGI is below the threshold."
+    testRef: "tests/engine/forms/form-8936.test.ts::Form 8936 Line 5 uses lesser of current or prior year MAGI"
+
+  # ── New Clean Vehicle Credit (IRC §30D) ──────────────────
+  - line: "newVehicleCredit"
+    description: "Per-vehicle new clean vehicle credit"
+    formula: |
+      If the vehicle was acquired after 2025-09-30, credit = $0
+      criticalMineralsCredit = criticalMineralsRequirementMet ? $3,750 : $0
+      batteryComponentsCredit = batteryComponentsRequirementMet ? $3,750 : $0
+      maxCredit = criticalMineralsCredit + batteryComponentsCredit
+      credit = maxCredit × (personalUsePercentage / 100)
+    irsRef: "IRC §30D(b); Form 8936 Schedule A Part III"
+    edgeCases:
+      - "Credit is $0 if the vehicle was acquired after September 30, 2025"
+      - "Vehicles acquired on or before September 30, 2025 remain eligible even if placed in service later"
+      - "Credit is $0 if MSRP exceeds the applicable limit ($80,000 for SUVs/vans/pickups, $55,000 for other vehicles)"
+      - "Credit is $0 if MAGI exceeds threshold for filing status ($300,000 MFJ/QSS, $225,000 HoH, $150,000 single/MFS)"
+      - "Credit is $0 if credit was transferred to dealer (already received at point of sale)"
+      - "Neither requirement met → $0"
+      - "Only one requirement met → $3,750"
+      - "Both requirements met → $7,500"
+      - "Personal use percentage less than 100% reduces credit proportionally"
+    testRef: "tests/engine/forms/form-8936.test.ts::Form 8936 new vehicle acquired after September 30, 2025 is disqualified"
+
+  - line: "9"
+    description: "Total personal-use new clean vehicle credits"
+    formula: "Sum of per-vehicle credits for all new clean vehicles"
+    irsRef: "Form 8936 Part III Line 9"
+    testRef: "tests/engine/forms/form-8936.test.ts::Form 8936 Line 9 sums credits from multiple new vehicles"
+
+  - line: "13"
+    description: "Personal-use new clean vehicle credit (nonrefundable)"
+    formula: "Lesser of Line 9 or (tax liability minus other credits including previously owned credit)"
+    irsRef: "Form 8936 Part III Lines 10-13"
+    notes: "The nonrefundable limitation is applied in the federal engine when integrating with Schedule 3, not inside the Form 8936 calculation module. Unused credit cannot carry forward."
+    testRef: "tests/engine/forms/form-8936.test.ts::Form 8936 new vehicle full $7,500 credit when both requirements met"
+
+  # ── Previously Owned Clean Vehicle Credit (IRC §25E) ─────
+  - line: "previouslyOwnedCredit"
+    description: "Per-vehicle previously owned clean vehicle credit"
+    formula: |
+      If the vehicle was acquired after 2025-09-30, credit = $0
+      credit = min($4,000, salePrice × 30%)
+      adjustedCredit = credit × (personalUsePercentage / 100)
+    irsRef: "IRC §25E(a); Form 8936 Schedule A Part IV"
+    edgeCases:
+      - "Credit is $0 if the vehicle was acquired after September 30, 2025"
+      - "Sale price must be $25,000 or less; if exceeded, credit is $0"
+      - "Credit is $0 if MAGI exceeds threshold ($150,000 MFJ/QSS, $112,500 HoH, $75,000 single/MFS)"
+      - "Credit is $0 if credit was transferred to dealer"
+      - "30% of sale price: $25,000 × 0.30 = $7,500 → capped at $4,000"
+      - "30% of sale price: $10,000 × 0.30 = $3,000 → credit is $3,000"
+    testRef: "tests/engine/forms/form-8936.test.ts::Form 8936 previously owned vehicle acquired after September 30, 2025 is disqualified"
+
+  - line: "acquisitionCutoff"
+    description: "Credit termination for vehicles acquired after September 30, 2025"
+    formula: "No new clean vehicle credit or previously owned clean vehicle credit is allowed for any vehicle acquired after 2025-09-30. Vehicles acquired on or before 2025-09-30 are not disqualified by this cutoff even if placed in service later."
+    irsRef: "Form 8936 Instructions (2025), What's New; New Clean Vehicle Credit; Previously Owned Clean Vehicle Credit"
+    inputs:
+      - "Vehicle acquisition date"
+    notes: "The cutoff is based on acquisition date, not placement-in-service date."
+    testRef: "tests/engine/forms/form-8936.test.ts::Form 8936 new vehicle acquired after September 30, 2025 is disqualified"
+
+  - line: "18"
+    description: "Previously owned clean vehicle credit (nonrefundable)"
+    formula: "Lesser of total used vehicle credits or (tax liability minus other credits excluding previously owned)"
+    irsRef: "Form 8936 Part IV Lines 14-18"
+    notes: "Nonrefundable limitation applied in federal engine. Unused credit cannot carry forward."
+    testRef: "tests/engine/forms/form-8936.test.ts::Form 8936 previously owned credit is lesser of $4,000 or 30% of sale price"
+
+  # ── AGI Thresholds ───────────────────────────────────────
+  - line: "agiThresholds"
+    description: "MAGI thresholds for credit eligibility"
+    formula: |
+      New clean vehicle (IRC §30D):
+        MFJ/QSS: $300,000
+        HoH:     $225,000
+        Single/MFS: $150,000
+      Previously owned (IRC §25E):
+        MFJ/QSS: $150,000
+        HoH:     $112,500
+        Single/MFS: $75,000
+    irsRef: "IRC §30D(f)(10); IRC §25E(b)(2)"
+    notes: "These are statutory limits, not inflation-adjusted."
+    testRef: "tests/engine/forms/form-8936.test.ts::Form 8936 AGI over threshold disqualifies new vehicle credit - single"
+
+  # ── MSRP Limits ──────────────────────────────────────────
+  - line: "msrpLimits"
+    description: "Manufacturer's suggested retail price limits for new clean vehicles"
+    formula: |
+      Vans, SUVs, pickup trucks: $80,000
+      All other vehicles: $55,000
+    irsRef: "IRC §30D(f)(11)"
+    notes: "Statutory limits, not inflation-adjusted. MSRP is the base retail price without options, destination charges, or dealer markups that would appear on the Monroney sticker."
+    testRef: "tests/engine/forms/form-8936.test.ts::Form 8936 MSRP over limit disqualifies new vehicle credit - other vehicle"
+
+  # ── Transfer Election ────────────────────────────────────
+  - line: "transferElection"
+    description: "Credit transfer to dealer at point of sale"
+    formula: "If credit was transferred to dealer, personal credit is $0 (already received)"
+    irsRef: "IRC §30D(g); Form 8936 Schedule A Line 4a-4b"
+    notes: |
+      Starting 2024, buyers can elect to transfer the credit to the dealer for
+      an upfront price reduction. If the buyer later turns out to be ineligible,
+      the transferred amount is recaptured as additional tax on Schedule 2.
+      This recapture path is not modeled in the current engine slice.
+    testRef: "tests/engine/forms/form-8936.test.ts::Form 8936 transfer election yields $0 personal credit"

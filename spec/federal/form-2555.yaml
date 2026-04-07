@@ -1,0 +1,133 @@
+form: "Form 2555"
+fullName: "Foreign Earned Income"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i2555"
+
+notes: |
+  This slice implements the core foreign earned income exclusion (IRC §911)
+  and the foreign housing exclusion/deduction for tax year 2025. The maximum
+  exclusion amount is $130,000 per Rev. Proc. 2024-40 §3.35. The base housing
+  amount is 16% of the maximum exclusion and the default maximum housing
+  expense limit is 30% of the maximum exclusion. Taxpayers in high-cost
+  localities may provide a location-specific housing expense limit override.
+  The engine accepts validated inputs indicating the taxpayer has met the
+  bona fide residence test (IRC §911(d)(1)(A)) or physical presence test
+  (IRC §911(d)(1)(B)). Qualification determination itself is not computed
+  by the engine. The foreign earned income exclusion is prorated for partial
+  qualifying periods based on qualifying days in the tax year. The housing
+  exclusion applies to employees and reduces Form 1040 Line 1 income; the
+  housing deduction applies to self-employed individuals and flows through
+  Schedule 1 adjustments. When Form 2555 is present, the tax computation
+  uses the Foreign Earned Income Tax Worksheet stacking rule: tax is computed
+  on taxable income as if the exclusion had not been taken, then the tax
+  attributable to the excluded amount is subtracted. This ensures remaining
+  income is taxed at the higher bracket rates. Filing Form 2555 disqualifies
+  the taxpayer from claiming the Earned Income Credit (IRC §32(c)(1)(C)).
+
+businessRuleValidation:
+  - rule: "reference-summary-packet"
+    description: "Inventory support counts this form as business-rule validated only when regression coverage proves the emitted packet artifact stays labeled as a non-filing reference summary and only surfaces the supported Form 2555 exclusion and housing outputs that feed the federal return."
+    testRef: "tests/pdf/fill-form-2555.test.ts::fillForm2555Reference keeps the packet artifact reference-only and limited to supported exclusion outputs"
+
+lines:
+  # ── Part IV: All Sources of Foreign Earned Income ─────
+  - line: "19-24"
+    description: "Total foreign earned income"
+    formula: "Sum of foreign wages, allowances, noncash compensation, and other foreign earned income"
+    irsRef: "Form 2555 Instructions, Part IV"
+    notes: "The engine accepts a pre-validated total foreign earned income amount."
+    testRef: "tests/engine/forms/form-2555.test.ts::Form 2555 - foreign earned income passes through to exclusion calculation"
+
+  # ── Part V: Housing Amount ────────────────────────────
+  - line: "27"
+    description: "Base housing amount"
+    formula: "maximumExclusion × 0.16 × (qualifyingDays / totalDaysInYear)"
+    irsRef: "Form 2555 Instructions, Part V Line 27; IRC §911(c)(1)(B)"
+    notes: "16% of the maximum exclusion, prorated for partial qualifying periods."
+    edgeCases:
+      - "Leap year: 366 days"
+      - "Partial year: prorate by qualifying days"
+    testRef: "tests/engine/forms/form-2555.test.ts::Form 2555 - base housing amount prorated for partial year"
+
+  - line: "28"
+    description: "Excess housing expenses"
+    formula: "max(0, min(qualifiedHousingExpenses, housingExpenseLimit) - baseHousingAmount)"
+    irsRef: "Form 2555 Instructions, Part V Lines 28-30"
+    notes: "Housing expenses above the base amount, capped at the location-specific or default limit."
+    edgeCases:
+      - "Expenses below base: housing amount is zero"
+      - "Expenses above limit: capped at limit minus base"
+      - "No housing expenses provided: housing amount is zero"
+    testRef: "tests/engine/forms/form-2555.test.ts::Form 2555 - housing amount is expenses minus base capped at limit"
+
+  - line: "29"
+    description: "Housing expense limit"
+    formula: "locationSpecificLimit ?? (maximumExclusion × 0.30 × qualifyingDays / totalDaysInYear)"
+    irsRef: "Form 2555 Instructions, Part V Line 29; IRS Notice for high-cost localities"
+    notes: "Default is 30% of the prorated maximum exclusion. High-cost localities may have higher limits published by the IRS."
+    testRef: "tests/engine/forms/form-2555.test.ts::Form 2555 - location-specific housing limit overrides default"
+
+  # ── Part VI: Housing Deduction (Self-Employed) ────────
+  - line: "31-32"
+    description: "Housing deduction for self-employed taxpayers"
+    formula: "If self-employed: housingAmount (no employer-provided housing subtraction)"
+    irsRef: "Form 2555 Instructions, Part VI; IRC §911(c)(3)(A)"
+    notes: "Self-employed individuals take a housing deduction (above-the-line on Schedule 1) instead of a housing exclusion. Employer-provided housing does not apply."
+    testRef: "tests/engine/forms/form-2555.test.ts::Form 2555 - self-employed gets housing deduction not exclusion"
+
+  # ── Part VII: Foreign Earned Income Exclusion ─────────
+  - line: "42"
+    description: "Maximum foreign earned income exclusion"
+    formula: "$130,000 for tax year 2025 (Rev. Proc. 2024-40 §3.35)"
+    irsRef: "IRC §911(b)(2)(D)(i); Rev. Proc. 2024-40 §3.35"
+    testRef: "tests/engine/forms/form-2555.test.ts::Form 2555 - maximum exclusion is $130,000 for 2025"
+
+  - line: "43"
+    description: "Prorated maximum exclusion"
+    formula: "maximumExclusion × (qualifyingDays / totalDaysInYear)"
+    irsRef: "Form 2555 Instructions, Part VII Line 43"
+    edgeCases:
+      - "Full year: exclusion equals maximum"
+      - "Partial year (e.g., 183 days): $130,000 × 183/365 = $65,178"
+    testRef: "tests/engine/forms/form-2555.test.ts::Form 2555 - partial year prorates exclusion"
+
+  - line: "44-45"
+    description: "Foreign earned income exclusion"
+    formula: "min(foreignEarnedIncome - housingDeduction - housingExclusion, proratedMaximumExclusion)"
+    irsRef: "Form 2555 Instructions, Part VII Lines 44-45; IRC §911(a)(1)"
+    notes: "The exclusion is the lesser of the prorated maximum or foreign earned income after subtracting housing amounts. This amount reduces Form 1040 Line 1 income."
+    edgeCases:
+      - "Income below exclusion: full income excluded"
+      - "Income above exclusion: capped at prorated maximum"
+      - "Housing deduction reduces income available for exclusion"
+    testRef: "tests/engine/forms/form-2555.test.ts::Form 2555 - exclusion capped at prorated maximum when income exceeds it"
+
+  # ── Part VIII: Housing Exclusion (Employees) ──────────
+  - line: "43-45 (Part VIII)"
+    description: "Housing exclusion for employees"
+    formula: "housingAmount - employerProvidedHousingAmount (floored at zero)"
+    irsRef: "Form 2555 Instructions, Part VIII; IRC §911(a)(2)"
+    notes: "Employees subtract employer-provided housing amounts from the housing amount to derive the housing exclusion. This reduces Form 1040 Line 1 income alongside the foreign earned income exclusion."
+    edgeCases:
+      - "Employer-provided housing exceeds housing amount: exclusion is zero"
+      - "No employer-provided housing: full housing amount is the exclusion"
+    testRef: "tests/engine/forms/form-2555.test.ts::Form 2555 - employer-provided housing reduces housing exclusion"
+
+  # ── Foreign Earned Income Tax Worksheet (Stacking Rule) ─
+  - line: "stacking"
+    description: "Foreign Earned Income Tax Worksheet — stacking rule for tax computation"
+    formula: "tax = taxOnIncome(taxableIncome + totalExclusion) - taxOnIncome(totalExclusion)"
+    irsRef: "Form 1040 Instructions, Foreign Earned Income Tax Worksheet"
+    notes: |
+      When Form 2555 is filed, the tax is NOT computed using the regular tax table on the
+      reduced taxable income alone. Instead, the IRS requires the stacking method:
+      1. Compute tax as if the excluded income were still included (taxableIncome + exclusion)
+      2. Compute tax on just the excluded amount
+      3. Your actual tax = step 1 minus step 2
+      This ensures the remaining taxable income occupies the higher bracket positions,
+      preventing double-dipping into the lower brackets.
+    edgeCases:
+      - "When qualified dividends or capital gains exist, step 1 uses the QDCG worksheet with the stacked amount"
+      - "Step 2 always uses the ordinary tax bracket computation on the exclusion amount alone"
+      - "If the stacking result is less than zero, the tax is zero"
+    testRef: "tests/engine/forms/form-2555.test.ts::Form 2555 - stacking rule pushes remaining income into higher brackets"

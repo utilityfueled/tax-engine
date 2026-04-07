@@ -1,0 +1,149 @@
+form: "New York IT-209"
+fullName: "New York Form IT-209 Claim for Noncustodial Parent New York State Earned Income Credit"
+taxYear: 2025
+irsReference: "https://www.tax.ny.gov/pdf/current_forms/it/it209i.pdf"
+
+notes: |
+  Form IT-209 is the resident-return path for the noncustodial parent earned
+  income credit on IT-201 line 66. If the taxpayer also claimed the federal
+  earned income credit, Schedule B compares the regular New York State earned
+  income credit against the Schedule A noncustodial credit and only the larger
+  amount may flow to IT-201.
+
+  Implementation note:
+  - The published 2025 IT-209 instructions direct taxpayers to use the printed
+    2025 EIC table. This module reproduces those amounts from the federal EIC
+    parameters already used elsewhere in the engine rather than storing the
+    full printed table.
+  - For Schedule A, the one-child comparison uses the "without the benefit of
+    the joint return phase out amount" rule, so the single/other threshold set
+    is used even for married filing jointly.
+  - For the no-child 2.5x comparison, only married filing jointly uses the
+    joint threshold set; all other filing statuses use the single/other set
+    shown on the form.
+
+lines:
+  - line: "1-10"
+    description: "Eligibility screen for the noncustodial credit and IT-209 EIC routing"
+    formula: |
+      Noncustodial credit is eligible only if all of the following are true:
+      - Full-year New York resident
+      - Age 18 or older at year-end
+      - Parent of a minor child who did not live with the taxpayer
+      - Child support order through a New York SCU in effect for at least half the year
+      - Required child support fully paid
+      - Federal AGI is less than $50,434
+      - Valid SSN for work / EIC purposes
+      - If filing MFS, qualifies as considered unmarried for EIC purposes
+      - Not filing federal Form 2555
+      - Investment income is $11,950 or less
+    notes: |
+      The IT-209 instructions distinguish between:
+      - noncustodial-credit eligibility rules (for example the support-order and
+        child-support tests), and
+      - federal-EIC disqualifiers that also block the regular NYS / NYC EIC
+        routing on Form IT-209 (invalid SSN, Form 2555, excessive investment income).
+    edgeCases:
+      - "Federal AGI of exactly $50,434 fails line 6 because the form requires less than $50,434"
+      - "Investment income above $11,950 blocks both the noncustodial credit and the regular NYS EIC routing on IT-209"
+      - "MFS filer must meet the considered-unmarried exception to remain eligible for the noncustodial path"
+    testRef: "tests/engine/state/ny-it209-noncustodial-parent-earned-income-credit.test.ts::Part 1 - AGI of exactly $50,434 fails the line 6 eligibility test"
+
+  - line: "16"
+    description: "Total earned income"
+    formula: "Line 13 wages and combat-pay election minus line 14 earned income adjustment plus signed line 15 business income or loss"
+    inputs:
+      - "Line 13 wages, salaries, tips, and elected nontaxable combat pay"
+      - "Line 14 Medicaid waiver earned income exclusion"
+      - "Line 15 signed business income or loss"
+    notes: |
+      The engine accepts the already-assembled line 13 and line 15 values rather
+      than re-deriving federal Worksheet A / Worksheet B from source documents.
+      A negative line 15 amount reduces line 16 directly.
+    edgeCases:
+      - "Negative business income reduces earned income"
+      - "Zero or negative line 16 stops the noncustodial credit computation"
+    testRef: "tests/engine/state/ny-it209-noncustodial-parent-earned-income-credit.test.ts::Part 3 - signed business loss reduces line 16 earned income"
+
+  - line: "24"
+    description: "20% of the hypothetical federal EIC with one qualifying child"
+    formula: "Round to whole dollars: 20% × hypothetical federal EIC computed with one qualifying child and the single/other phaseout thresholds"
+    inputs:
+      - "Earned income (line 16)"
+      - "Federal AGI (line 17)"
+    notes: |
+      This reproduces lines 18 through 24 of Schedule A. Because the federal
+      EIC formula uses the greater of earned income or AGI in the phaseout, the
+      engine computes the same result directly rather than storing separate line
+      18 and line 21 table lookups.
+    edgeCases:
+      - "One-child comparison can exceed the 2.5x no-child path at higher earned income"
+      - "Whole-dollar IT-209 line 24 amount is rounded after multiplying by 20%"
+    testRef: "tests/engine/state/ny-it209-noncustodial-parent-earned-income-credit.test.ts::Schedule A line 24 - the one-child comparison uses 20% of the hypothetical one-child federal EIC"
+
+  - line: "31"
+    description: "2.5 times the hypothetical federal EIC without a qualifying child"
+    formula: "Round to whole dollars: 2.5 × hypothetical federal EIC computed with no qualifying children, using the MFJ threshold only for MFJ and the single/other threshold for all other filing statuses"
+    inputs:
+      - "Earned income (line 16)"
+      - "Federal AGI (line 17)"
+      - "Filing status"
+    notes: |
+      This reproduces lines 25 through 31 of Schedule A.
+    edgeCases:
+      - "The 2.5x no-child path can exceed the one-child comparison at lower incomes"
+      - "Non-MFJ filers use the single/other threshold set for the no-child comparison"
+    testRef: "tests/engine/state/ny-it209-noncustodial-parent-earned-income-credit.test.ts::Schedule A line 31 - the 2.5x no-child comparison can exceed the one-child comparison"
+
+  - line: "32"
+    description: "Noncustodial parent earned income credit"
+    formula: "Greater of line 24 or line 31"
+    inputs:
+      - "Schedule A line 24"
+      - "Schedule A line 31"
+    testRef: "tests/engine/state/ny-it209-noncustodial-parent-earned-income-credit.test.ts::Schedule A line 31 - the 2.5x no-child comparison can exceed the one-child comparison"
+
+  - line: "38e"
+    description: "Tax remaining after resident and accumulation distribution credits"
+    formula: "max(0, line 38a NY tax minus line 38b resident credit minus line 38c accumulation distribution credit)"
+    inputs:
+      - "IT-201 line 39 tax"
+      - "Resident credit"
+      - "Available accumulation distribution credit"
+    notes: |
+      IT-209 line 38c uses the available accumulation distribution credit, which
+      may exceed the amount actually claimed on IT-201-ATT line 1.
+    testRef: "tests/engine/state/ny-it209-noncustodial-parent-earned-income-credit.test.ts::Schedule B line 42 - household credit is limited by the tax remaining after resident and accumulation distribution credits"
+
+  - line: "41"
+    description: "Household credit allowed against the regular NYS EIC"
+    formula: "Lesser of line 38e or IT-201 line 40 household credit"
+    inputs:
+      - "Schedule B line 38e"
+      - "IT-201 line 40 household credit"
+    testRef: "tests/engine/state/ny-it209-noncustodial-parent-earned-income-credit.test.ts::Schedule B line 42 - household credit is limited by the tax remaining after resident and accumulation distribution credits"
+
+  - line: "42"
+    description: "Allowable New York State earned income credit"
+    formula: "max(0, round(Federal EIC claimed × 30%) minus line 41)"
+    inputs:
+      - "Federal EIC claimed on line 35"
+      - "Schedule B line 41"
+    notes: |
+      Schedule B is only available when the taxpayer claimed the federal EIC.
+    testRef: "tests/engine/state/ny-it209-noncustodial-parent-earned-income-credit.test.ts::Schedule B line 42 - household credit is limited by the tax remaining after resident and accumulation distribution credits"
+
+  - line: "43/IT-201"
+    description: "Route the greater credit to IT-201 line 65 or line 66"
+    formula: |
+      If federal EIC was claimed:
+        compare Schedule B line 42 against Schedule A line 32
+        - if line 42 is greater, send the amount to IT-201 line 65
+        - otherwise send the amount to IT-201 line 66
+      If federal EIC was not claimed:
+        send Schedule A line 32 to IT-201 line 66
+    edgeCases:
+      - "Claimed federal EIC can keep the benefit on line 65 when the regular NYS EIC is larger"
+      - "Without a federal EIC claim, the noncustodial credit flows directly to line 66"
+      - "Line 7, 9, and 10 disqualifiers zero out the regular IT-209 EIC routing as well"
+    testRef: "tests/engine/state/ny-it209-noncustodial-parent-earned-income-credit.test.ts::IT-201 routing - the regular NYS EIC stays on line 65 when it is larger than the noncustodial credit"

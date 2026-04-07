@@ -1,0 +1,78 @@
+form: "California Form 540 Tax Rate Schedules"
+fullName: "California Form 540 Line 31 Tax Rate Schedules"
+taxYear: 2025
+irsReference: "https://www.ftb.ca.gov/forms/2025/2025-540-booklet.html"
+
+notes: |
+  California Form 540 line 31 uses the Tax Table only when Form 540 line 19
+  taxable income is $100,000 or less. For taxable income above $100,000, the
+  2025 Franchise Tax Board instructions require taxpayers to use the published
+  California Tax Rate Schedules:
+  - Schedule X for single and married/RDP filing separately
+  - Schedule Y for married/RDP filing jointly and qualifying surviving spouse
+  - Schedule Z for head of household
+  The official instructions compute tax by finding the taxpayer's row, subtracting
+  the row's lower threshold from taxable income, multiplying that excess by the
+  row's marginal rate, adding the row's base tax amount, and rounding the final
+  result to the nearest whole dollar for Form 540 line 31.
+
+lines:
+  - line: "1"
+    description: "Form 540 taxable income"
+    formula: "Form 540 line 19 taxable income"
+    inputs:
+      - "California taxable income"
+    notes: "The tax-rate schedules apply only when taxable income is more than $100,000."
+    edgeCases:
+      - "$100,000 or less must use the Tax Table instead of this module"
+    testRef: "tests/engine/state/ca-form-540-tax-rate-schedules.test.ts::CA Form 540 tax rate schedules Line 1 - taxable income above $100,000 is accepted"
+
+  - line: "2"
+    description: "Selected California tax-rate schedule row"
+    formula: "Choose Schedule X, Y, or Z from filing status, then choose the published row containing Line 1 taxable income"
+    inputs:
+      - "Filing status"
+      - "California taxable income"
+    notes: "Schedule X applies to single and married filing separately; Schedule Y applies to married filing jointly and qualifying surviving spouse; Schedule Z applies to head of household."
+    edgeCases:
+      - "Married filing separately uses the same Schedule X rows as single"
+      - "Qualifying surviving spouse uses the same Schedule Y rows as married filing jointly"
+    testRef: "tests/engine/state/ca-form-540-tax-rate-schedules.test.ts::CA Form 540 tax rate schedules Line 2 - qualifying surviving spouse uses Schedule Y"
+
+  - line: "3"
+    description: "Excess taxable income within the selected row"
+    formula: "Line 1 - selected row lower threshold"
+    inputs:
+      - "Form 540 tax rate schedules Line 1"
+      - "Selected row lower threshold"
+    notes: "The instructions subtract the amount at the beginning of the row from taxable income."
+    testRef: "tests/engine/state/ca-form-540-tax-rate-schedules.test.ts::CA Form 540 tax rate schedules Line 3 - the official Schedule Y example computes the row excess"
+
+  - line: "4"
+    description: "Marginal tax on excess taxable income"
+    formula: "Line 3 × selected row marginal rate, rounded to two decimals"
+    inputs:
+      - "Form 540 tax rate schedules Line 3"
+      - "Selected row marginal rate"
+    notes: "The booklet says to round the Step 3 amount to two decimals if necessary before adding it to the row's base tax."
+    testRef: "tests/engine/state/ca-form-540-tax-rate-schedules.test.ts::CA Form 540 tax rate schedules Line 4 - the official Schedule Y example computes the marginal tax to cents"
+
+  - line: "5"
+    description: "Tax before whole-dollar rounding"
+    formula: "Selected row base tax + Line 4"
+    inputs:
+      - "Selected row base tax"
+      - "Form 540 tax rate schedules Line 4"
+    notes: "The row's printed base tax amount is added to the marginal tax from Line 4."
+    testRef: "tests/engine/state/ca-form-540-tax-rate-schedules.test.ts::CA Form 540 tax rate schedules Line 5 - the official Schedule Y example produces the booklet total before whole-dollar rounding"
+
+  - line: "6"
+    description: "Form 540 line 31 tax"
+    formula: "Round Line 5 to the nearest whole dollar"
+    inputs:
+      - "Form 540 tax rate schedules Line 5"
+    edgeCases:
+      - "A representative Schedule X income just over $100,000 rounds to the nearest whole dollar"
+      - "Head of household uses Schedule Z thresholds"
+      - "Top Schedule Y bracket applies the 12.3% rate above $1,485,906"
+    testRef: "tests/engine/state/ca-form-540-tax-rate-schedules.test.ts::CA Form 540 tax rate schedules Line 6 - the official Schedule Y example rounds to the Form 540 line 31 amount"

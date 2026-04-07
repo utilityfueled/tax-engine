@@ -1,0 +1,155 @@
+form: "Form 4952"
+fullName: "Investment Interest Expense Deduction"
+taxYear: 2025
+irsReference: "https://www.irs.gov/forms-pubs/about-form-4952"
+
+notes: |
+  Form 4952 limits the deduction for investment interest expense to the
+  taxpayer's net investment income. Excess investment interest is carried
+  forward to the next tax year. The deductible amount flows to Schedule A
+  Line 9.
+
+  Per IRS Publication 550 and the Form 4952 Instructions:
+  - Investment interest is interest paid on money borrowed to buy property
+    held for investment, such as margin interest on a brokerage account.
+  - Investment interest does NOT include interest from a passive activity
+    or interest allocable to tax-exempt income.
+  - Net investment income = gross investment income (interest, non-qualified
+    dividends, annuities, royalties) + non-preferential gain from investment
+    property dispositions + any elected preferential income − investment
+    expenses.
+  - The taxpayer may elect to include all or part of their net capital gain
+    and/or qualified dividends in investment income. Elected amounts lose
+    their preferential capital gain tax rate treatment.
+  - No inflation adjustments apply — the limitation is purely mathematical
+    (investment interest ≤ net investment income).
+
+lines:
+  # ── Part I: Total Investment Interest Expense ────────────
+  - line: "1"
+    description: "Investment interest expense paid or accrued during the tax year"
+    formula: "Validated investment interest expense input (margin interest, etc.) + K-1 Box 13 Code D aggregated investment interest expense"
+    irsRef: "Form 4952 Instructions, Line 1"
+    notes: |
+      Excludes passive activity interest and interest allocable to tax-exempt income.
+      K-1 Box 13 Code D amounts from all partnerships are aggregated and added to
+      the taxpayer's own investment interest expense.
+    testRef: "tests/engine/forms/form-4952.test.ts::Form 4952 Line 1 - current year investment interest expense"
+
+  - line: "2"
+    description: "Disallowed investment interest expense from prior year"
+    formula: "Carryforward from prior year Form 4952 Line 7"
+    irsRef: "Form 4952 Instructions, Line 2"
+    testRef: "tests/engine/forms/form-4952.test.ts::Form 4952 Line 2 - prior year disallowed carryforward"
+
+  - line: "3"
+    description: "Total investment interest expense"
+    formula: "Line 1 + Line 2"
+    irsRef: "Form 4952 Instructions, Line 3"
+    testRef: "tests/engine/forms/form-4952.test.ts::Form 4952 Line 3 - total investment interest expense"
+
+  # ── Part II: Net Investment Income ───────────────────────
+  - line: "4a"
+    description: "Gross income from property held for investment"
+    formula: "Interest + ordinary dividends + annuities + royalties from investment property + K-1 Box 20 Code A aggregated investment income + partnership K-1 Box 20 Code AF excess business interest income aggregated into investment income. Includes qualified dividends when the taxpayer reports them on this line."
+    irsRef: "Form 4952 Instructions, Line 4a; Pub 550"
+    notes: |
+      Per the form instructions, this should exclude net capital gain and
+      qualified dividends. In practice, filers often include ordinary
+      dividends (which contain qualified dividends) and subtract them on
+      Line 4b. K-1 Box 20 Code A amounts from all partnerships are
+      aggregated and added to the taxpayer's own gross investment income.
+      Partnership K-1 Box 20 Code AF excess business interest income is also
+      included in investment income for this line in the supported slice so
+      prior-year partnership EBIE release amounts and Form 4952 investment-
+      income capacity stay aligned.
+    testRef: "tests/engine/federal.test.ts::K-1 partnership Box 20 Code AF excess business interest income also increases Form 4952 Line 4a"
+
+  - line: "4b"
+    description: "Qualified dividends included on Line 4a"
+    formula: "Validated qualified dividends to subtract from gross investment income"
+    irsRef: "Form 4952 Instructions, Line 4b"
+    notes: "Qualified dividends are removed from investment income because they receive preferential tax rates unless the taxpayer elects to include them via Line 4e"
+    testRef: "tests/engine/forms/form-4952.test.ts::Form 4952 Line 4b - qualified dividends removed"
+
+  - line: "4c"
+    description: "Non-preferential gross investment income"
+    formula: "Line 4a - Line 4b"
+    irsRef: "Form 4952 Instructions, Line 4c"
+    testRef: "tests/engine/forms/form-4952.test.ts::Form 4952 Line 4c - gross income minus qualified dividends"
+
+  - line: "4d"
+    description: "Net gain from disposition of property held for investment"
+    formula: "Non-preferential net gain from investment property dispositions (short-term gains, section 1245 recapture, etc.)"
+    irsRef: "Form 4952 Instructions, Line 4d; Pub 550 definition of investment income"
+    notes: |
+      Per Pub 550, investment income automatically includes "the excess of
+      any net gain over any net capital gain" from the disposition of
+      investment property. Net capital gain (the preferential portion) is
+      only included if elected on Line 4e.
+    edgeCases:
+      - "If the net gain is zero or a loss, enter 0"
+      - "Only non-preferential gain portion is automatically included"
+    testRef: "tests/engine/forms/form-4952.test.ts::Form 4952 Line 4d - non-preferential investment gain"
+
+  - line: "4e"
+    description: "Elected preferential income to include in investment income"
+    formula: "Amount from qualified dividends (Line 4b) and/or net capital gain that the taxpayer elects to treat as investment income"
+    irsRef: "Form 4952 Instructions, Line 4e; IRC §163(d)(4)(B)"
+    notes: |
+      The taxpayer may elect to include all or part of their qualified
+      dividends and net capital gain as investment income. This increases
+      net investment income (allowing more investment interest deduction)
+      but those elected amounts lose their preferential capital gain rate
+      treatment and are taxed at ordinary income rates.
+    edgeCases:
+      - "Election of 0 is valid (default — keep preferential rates)"
+      - "Election cannot exceed qualified dividends + net capital gain"
+      - "Partial election is allowed"
+    testRef: "tests/engine/forms/form-4952.test.ts::Form 4952 Line 4e - election increases net investment income"
+
+  - line: "4f"
+    description: "Investment expenses"
+    formula: "Deductible expenses directly connected with the production of investment income + K-1 Box 20 Code B aggregated investment expenses"
+    irsRef: "Form 4952 Instructions, Line 4f; Pub 550"
+    notes: |
+      Under TCJA (2018-2025), most miscellaneous itemized deductions
+      (including investment advisory fees) are suspended. Remaining
+      deductible investment expenses include expenses from pass-through
+      entities (K-1) that are clearly allocable to investment income.
+      K-1 Box 20 Code B amounts from all partnerships are aggregated
+      and added to the taxpayer's own investment expenses.
+    edgeCases:
+      - "Most individuals will have 0 here under TCJA suspension"
+      - "K-1 pass-through investment expenses remain deductible for Form 4952 even under TCJA"
+    testRef: "tests/engine/forms/form-4952.test.ts::Form 4952 Line 4f - investment expenses reduce net income"
+
+  - line: "4g"
+    description: "Net investment income"
+    formula: "max(0, Line 4c + Line 4d + Line 4e - Line 4f)"
+    irsRef: "Form 4952 Instructions, Line 4g"
+    edgeCases:
+      - "Cannot be negative — floor at 0"
+      - "Zero net investment income means no deduction allowed"
+    testRef: "tests/engine/forms/form-4952.test.ts::Form 4952 Line 4g - net investment income floored at zero"
+
+  # ── Part III: Investment Interest Expense Deduction ──────
+  - line: "5"
+    description: "Deductible investment interest expense"
+    formula: "min(Line 3, Line 4g)"
+    irsRef: "Form 4952 Instructions, Line 5"
+    notes: "Flows to Schedule A Line 9"
+    edgeCases:
+      - "When expense exceeds income, only income amount is deductible"
+      - "When income exceeds expense, full expense is deductible"
+    testRef: "tests/engine/forms/form-4952.test.ts::Form 4952 Line 5 - deduction limited to net investment income"
+
+  - line: "7"
+    description: "Disallowed investment interest expense carried to next year"
+    formula: "Line 3 - Line 5"
+    irsRef: "Form 4952 Instructions, Line 7"
+    notes: "This carryforward becomes Line 2 of next year's Form 4952"
+    edgeCases:
+      - "Zero carryforward when income covers all expense"
+      - "Full carryforward when net investment income is zero"
+    testRef: "tests/engine/forms/form-4952.test.ts::Form 4952 Line 7 - carryforward to next year"

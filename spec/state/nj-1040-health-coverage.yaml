@@ -1,0 +1,106 @@
+form: "NJ-1040 Health Coverage (Schedule NJ-HCC)"
+fullName: "New Jersey Health Insurance Mandate — Shared Responsibility Payment"
+taxYear: 2025
+reference: "https://www.nj.gov/treasury/taxation/pdf/current/schedule-njhcc.pdf"
+
+notes: |
+  New Jersey requires all residents to maintain minimum essential health coverage
+  for every month of the year, or qualify for an exemption, or pay a Shared
+  Responsibility Payment (SRP). This mandate has been in effect since tax year 2019
+  (P.L. 2018, c.31, codified at N.J.S.A. 54A:11-1 et seq.).
+
+  The SRP is modeled after the federal individual mandate (IRC §5000A) as it was
+  in effect for tax year 2018. Key parameters:
+
+  Flat dollar amount (2025):
+  - $695 per uninsured adult (18+)
+  - $347.50 per uninsured child (under 18)
+  - Maximum flat dollar penalty: $2,085 (300% of the adult amount)
+
+  Income-based amount:
+  - 2.5% × max(0, household income − filing threshold)
+  - Filing thresholds are the NJ gross income filing thresholds
+
+  Worksheet L Part I household income inputs (2025 NJ-1040 instructions, page 39):
+  - Taxpayer total income from NJ-1040 line 27
+  - Taxpayer tax-exempt interest from NJ-1040 line 16b
+  - Total income and tax-exempt interest of dependents, including estimated
+    income for dependents who do not file a New Jersey return
+
+  Penalty = max(flat dollar, income-based), capped at the average annual
+  premium for a bronze-level qualified health plan for the household size.
+
+  Short coverage gap exemption:
+  - A gap in coverage of 2 months or less (≤2 consecutive months) is exempt.
+  - If the gap is 3+ months, penalty applies for all uncovered months.
+
+  The SRP is added to the NJ-1040 as an additional tax (Line 38b area) and
+  increases the total tax liability before credits are applied.
+
+  NJ filing thresholds for SRP income-based calculation (2025):
+  - Single: $10,000
+  - Married Filing Jointly: $20,000
+  - Head of Household: $10,000
+  - Qualifying Surviving Spouse: $20,000
+  - Married Filing Separately: $10,000
+
+  Average bronze plan cost per person (2025): $9,012
+
+lines:
+  - line: "flat-dollar"
+    description: "Flat dollar penalty amount"
+    formula: "min($695 × adults + $347.50 × children, $2,085)"
+    inputs:
+      - "Number of uninsured adults"
+      - "Number of uninsured children"
+    edgeCases:
+      - "Maximum flat penalty is $2,085 regardless of household size"
+      - "Child amount is exactly half the adult amount"
+    testRef: "tests/engine/state/nj-1040-health-coverage.test.ts::NJ-1040 health coverage - flat dollar penalty for single adult"
+
+  - line: "income-based"
+    description: "Income-based penalty amount"
+    formula: "2.5% × max(0, household income − filing threshold)"
+    inputs:
+      - "Taxpayer total income before exclusions/adjustments"
+      - "Tax-exempt interest"
+      - "Dependent income and tax-exempt interest"
+      - "Filing status (determines threshold)"
+    edgeCases:
+      - "Income below filing threshold produces $0 income-based penalty"
+      - "MFJ threshold is $20,000"
+      - "Pension exclusions and other NJ gross income adjustments do not reduce Worksheet L household income"
+    testRef: "tests/engine/state/nj-1040-health-coverage.test.ts::NJ-1040 health coverage - household income includes tax-exempt interest and dependent income"
+
+  - line: "annual-penalty"
+    description: "Annual household penalty before proration"
+    formula: "max(flat dollar, income-based), capped at bronze plan cost × household members"
+    inputs:
+      - "Flat dollar amount"
+      - "Income-based amount"
+      - "Average bronze plan cost"
+      - "Number of household members"
+    edgeCases:
+      - "Bronze plan cap prevents penalty from exceeding cost of actual insurance"
+      - "Family of 5 cap: 5 × $9,012 = $45,060"
+    testRef: "tests/engine/state/nj-1040-health-coverage.test.ts::NJ-1040 health coverage - penalty capped at bronze plan cost"
+
+  - line: "monthly-proration"
+    description: "Monthly proration for partial-year non-coverage"
+    formula: "Annual penalty × (uncovered months / 12)"
+    inputs:
+      - "Annual penalty"
+      - "Number of uncovered months (after short gap exemption)"
+    edgeCases:
+      - "Short gap exemption: ≤2 uncovered months → $0 penalty"
+      - "3 uncovered months → 3/12 of annual penalty"
+      - "12 uncovered months → full annual penalty"
+    testRef: "tests/engine/state/nj-1040-health-coverage.test.ts::NJ-1040 health coverage - penalty prorated for partial year"
+
+  - line: "srp-total"
+    description: "Total Shared Responsibility Payment"
+    formula: "Prorated penalty, rounded to nearest dollar"
+    inputs:
+      - "Monthly prorated penalty"
+    notes: "Added to NJ-1040 as additional tax, increasing liability before credits."
+    testRef: "tests/engine/state/nj-1040-health-coverage.test.ts::NJ-1040 health coverage - full year uninsured single filer"

@@ -1,0 +1,107 @@
+form: "PA-Schedule-J"
+fullName: "Pennsylvania Schedule J — Income from Estates or Trusts"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf"
+
+notes: |
+  Pennsylvania Schedule J reports a resident beneficiary's estate or trust
+  income for PA-40 Line 7.
+
+  Supported source statements:
+    - PA Schedule RK-1
+    - PA Schedule NRK-1
+    - Federal Form 1041 Schedule K-1 adjusted to Pennsylvania rules
+
+  Official Pennsylvania materials describe PA Schedule J column (c) as
+  "Income Amount (Positive amounts only)" and instruct the taxpayer to add
+  column (c) and enter the result on PA-40 Line 7. Recent PA-40 instruction
+  booklets also state PA Schedules A, B, and J do not show losses or expenses.
+  This module therefore treats negative beneficiary amounts as zero.
+
+  References consulted:
+    - PA Schedule J/T fill-in schedule (2008 revision), Schedule J heading and
+      total line
+    - 2023 PA-40 Instructions Booklet index and supporting schedule guidance
+    - 2025 PA-40 Instructions, Line 7 and PA Schedule J instructions
+
+packetRules:
+  packetBehavior: "reference-summary-pdf"
+  includeWhen:
+    - "A Pennsylvania resident or nonresident PA-40 packet is being assembled and the computed Pennsylvania return includes Schedule J estate-or-trust statements."
+    - "The official PA-40 instructions require the taxpayer to report estate-or-trust income on PA Schedule J and to include PA-41 Schedule NRK-1 copies when Line 17 nonresident withholding is claimed from an estate or trust."
+  suppressWhen:
+    - "No Pennsylvania return packet is being assembled."
+    - "The Pennsylvania return does not include any supported PA Schedule J statements."
+  notes: |
+    The 2025 PA-40 instructions direct beneficiaries to report estate-or-trust
+    income on PA Schedule J and state that PA Schedule J amounts must be
+    positive. The same instructions also require a copy of each PA-41 Schedule
+    NRK-1 when nonresident withholding from an estate or trust is claimed on
+    PA-40 Line 17. Until an official PA Schedule J PDF filler exists, the
+    packet path emits `pa-schedule-j-reference.pdf` as a reference summary
+    only. Packet disclosures must therefore keep Pennsylvania packet
+    completeness partial whenever this reference summary is attached, and the
+    packet must remain explicit that any required RK-1, NRK-1, or federal
+    Schedule K-1 copies are still external supporting documents.
+
+businessRuleValidation:
+  - rule: "pa-schedule-j-reference-packet"
+    description: "Inventory support counts the Pennsylvania Schedule J packet path as validated only when fillReturn emits `pa-schedule-j-reference.pdf` whenever supported estate-or-trust statement detail is present on a Pennsylvania return."
+    testRef: "tests/pdf/fill-pa-schedule-j.test.ts::fillReturn includes the Pennsylvania Schedule J reference summary when the Pennsylvania return includes estate or trust statement detail"
+  - rule: "pa-schedule-j-reference-suppression"
+    description: "Inventory support counts the Pennsylvania Schedule J suppression rule as validated only when regression coverage proves fillReturn omits the reference summary when no supported Schedule J statements are present."
+    testRef: "tests/pdf/fill-pa-schedule-j.test.ts::fillReturn suppresses the Pennsylvania Schedule J reference summary when no estate or trust statements are present"
+  - rule: "pa-schedule-j-reference-disclosure"
+    description: "Inventory support counts the Pennsylvania Schedule J packet disclosure as validated only when readiness regression coverage keeps packet completeness partial while only the Schedule J reference summary is available beyond PA-40."
+    testRef: "tests/utils/return-readiness.test.ts::marks Pennsylvania packets partial when a PA Schedule J reference summary is attached"
+
+lines:
+  - line: "c"
+    description: "Income amount for each estate or trust statement"
+    formula: "For each supported statement, use the beneficiary income amount if positive; otherwise enter 0"
+    notes: |
+      The supported input already assumes any federal Schedule K-1 amount has
+      been adjusted to Pennsylvania rules before it reaches this schedule.
+      The source document label is preserved in the result and audit trail so
+      the beneficiary income can be traced back to PA RK-1, PA NRK-1, or an
+      adjusted federal Schedule K-1.
+    edgeCases:
+      - "Positive PA RK-1 income is included"
+      - "Positive PA NRK-1 income is included"
+      - "Negative adjusted federal Schedule K-1 income is disregarded"
+      - "Zero income remains zero"
+    testRef: "tests/engine/state/pa-schedule-j.test.ts::PA Schedule J Column (c) - positive beneficiary income is included and negative income is disregarded"
+
+  - line: "withholding"
+    description: "Nonresident withholding reported on supported PA-41 Schedule NRK-1 statements"
+    formula: |
+      For each statement:
+        - if sourceDocument = "pa_nrk_1" and nonresidentTaxWithheld is positive,
+          include that amount
+        - otherwise include 0
+      Sum the included withholding amounts for the Schedule J withholding total.
+    notes: |
+      The 2025 PA-40 instructions direct taxpayers to claim estate-or-trust
+      nonresident withholding from PA-41 Schedule NRK-1 Line 2 on PA-40
+      Line 17, not Line 13. This supported Schedule J slice carries that
+      withholding alongside the beneficiary income detail so the resident
+      orchestrator can flow the amount to PA-40 Line 17.
+    edgeCases:
+      - "PA-41 Schedule NRK-1 withholding is included"
+      - "PA Schedule RK-1 statements do not contribute withholding"
+      - "Adjusted federal Schedule K-1 statements do not contribute withholding"
+      - "Negative withholding is treated as 0"
+    testRef: "tests/engine/state/pa-schedule-j.test.ts::PA Schedule J withholding - sums only positive PA-41 NRK-1 withholding amounts"
+
+  - line: "total"
+    description: "Total estate or trust income"
+    formula: "Add all supported positive column (c) amounts and carry the total to PA-40 Line 7"
+    notes: |
+      This supported slice focuses on the resident beneficiary total that flows
+      into PA-40 Line 7. Statement ordering is preserved only for auditability;
+      the tax result is the sum of the positive statement amounts.
+    edgeCases:
+      - "Multiple trusts and estates are summed together"
+      - "An empty statement list yields 0"
+      - "2024 and 2025 use the same supported rules"
+    testRef: "tests/engine/state/pa-schedule-j.test.ts::PA Schedule J Total - sums positive beneficiary income and carries it to PA-40 Line 7"

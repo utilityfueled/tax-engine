@@ -1,0 +1,85 @@
+form: "New York IT-201 Withholding"
+fullName: "New York State Form IT-201 Withholding Totals for Lines 72 through 74"
+taxYear: 2025
+irsReference: "https://www.tax.ny.gov/pdf/2025/inc/it201i_2025.pdf"
+
+notes: |
+  IT-201-I (2025) instructs taxpayers to total New York State, New York City,
+  and Yonkers withholding reported on:
+  - Form IT-2 / federal Forms W-2 and W-2c
+  - Form IT-1099-R / federal Forms 1099-R
+  - federal Form 1099-G
+  - federal Form W-2G
+
+  This module computes lines 72 through 74 from supported document records and
+  still allows direct line-level passthrough amounts for withholding that is not
+  represented in the structured documents. The passthrough amounts are added to
+  the document-derived totals rather than replacing them.
+
+  Supported classification rules in this iteration:
+  - State withholding contributes to line 72 only when the document state is NY
+    or New York.
+  - Local withholding contributes to line 73 only when the locality is clearly
+    New York City / NYC.
+  - Local withholding contributes to line 74 only when the locality is clearly
+    Yonkers.
+  - Unsupported or unrecognized localities are ignored instead of being guessed.
+
+lines:
+  - line: "72"
+    description: "Total New York State tax withheld"
+    formula: "Sum NY withholding from supported W-2, 1099-R, 1099-G, and W-2G records identified as NY, plus any direct line 72 adjustment amount"
+    inputs:
+      - "W-2 / W-2c state withholding with state code or name equal to NY / New York"
+      - "1099-R state withholding with state code or name equal to NY / New York"
+      - "1099-G state withholding with state code or name equal to NY / New York"
+      - "W-2G state withholding with state code or name equal to NY / New York"
+      - "Direct additional line 72 withholding amount"
+    notes: |
+      IT-201-I (2025) lines 72 through 74 direct taxpayers to total withholding
+      shown on Form IT-2, Form IT-1099-R, Forms 1099-G, and W-2G.
+
+      This implementation treats the direct line 72 input as an additional
+      supported amount for withholding not otherwise represented in the
+      structured source documents.
+    edgeCases:
+      - "Non-New York state withholding is excluded from line 72"
+      - "Direct line 72 amount is added on top of supported document totals"
+      - "Negative withholding amounts are invalid"
+    testRef: "tests/engine/state/ny-it201-withholding.test.ts::NY IT-201 withholding Line 72 - sums NY withholding from supported documents and direct additions"
+
+  - line: "73"
+    description: "Total New York City tax withheld"
+    formula: "Sum supported W-2 and 1099-R local withholding classified as NYC, plus any direct line 73 adjustment amount"
+    inputs:
+      - "W-2 / W-2c local withholding with locality equal to NYC / New York City"
+      - "1099-R local withholding with locality equal to NYC / New York City"
+      - "Direct additional line 73 withholding amount"
+    notes: |
+      IT-201-I (2025) directs taxpayers to total New York City withholding on
+      the appropriate withholding line. This iteration derives NYC withholding
+      from structured local withholding entries only when the locality is
+      explicitly recognized as New York City.
+    edgeCases:
+      - "Unrecognized localities are ignored rather than assumed to be NYC"
+      - "Direct line 73 amount is added on top of supported document totals"
+      - "Negative local withholding amounts are invalid"
+    testRef: "tests/engine/state/ny-it201-withholding.test.ts::NY IT-201 withholding Lines 73 and 74 - classifies NYC and Yonkers local withholding from supported documents"
+
+  - line: "74"
+    description: "Total Yonkers tax withheld"
+    formula: "Sum supported W-2 and 1099-R local withholding classified as Yonkers, plus any direct line 74 adjustment amount"
+    inputs:
+      - "W-2 / W-2c local withholding with locality equal to Yonkers"
+      - "1099-R local withholding with locality equal to Yonkers"
+      - "Direct additional line 74 withholding amount"
+    notes: |
+      IT-201-I (2025) directs taxpayers to total Yonkers withholding on the
+      appropriate withholding line. This iteration derives Yonkers withholding
+      only from structured local withholding entries whose locality is clearly
+      identified as Yonkers.
+    edgeCases:
+      - "Unrecognized localities are ignored rather than assumed to be Yonkers"
+      - "Direct line 74 amount is added on top of supported document totals"
+      - "Negative local withholding amounts are invalid"
+    testRef: "tests/engine/state/ny-it201-withholding.test.ts::NY IT-201 withholding Lines 73 and 74 - classifies NYC and Yonkers local withholding from supported documents"

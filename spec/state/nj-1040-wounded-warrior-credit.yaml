@@ -1,0 +1,84 @@
+form: "NJ-1040 Wounded Warrior Caregivers Credit"
+fullName: "New Jersey Wounded Warrior Caregivers Credit"
+taxYear: 2025
+reference: "https://www.nj.gov/treasury/taxation/pdf/current/1040i.pdf"
+
+notes: |
+  New Jersey provides a refundable Wounded Warrior Caregivers Credit on
+  NJ-1040 line 62 for taxpayers who provided care for a relative who is a
+  qualifying armed services member.
+
+  Eligibility:
+  - Taxpayer must have provided care for a qualifying armed services member.
+  - Gross income must be $100,000 or less for married filing jointly, head of
+    household, and qualifying surviving spouse.
+  - Gross income must be $50,000 or less for single and married filing
+    separately.
+  - Part-year residents use income for the entire year when determining
+    eligibility.
+
+  Base credit:
+  - Lesser of the service member's 2025 federal disability compensation or $675.
+
+  Multiple caregivers:
+  - If the taxpayer was the only caregiver, the credit equals the base credit.
+  - If two or more people cared for the same service member, the credit is
+    apportioned based on the taxpayer's share of total care expenses for the year.
+
+lines:
+  - line: "income-limit"
+    description: "Gross income limit for Wounded Warrior Caregivers Credit eligibility"
+    formula: |
+      if filingStatus in {married_filing_jointly, head_of_household, qualifying_surviving_spouse}: $100,000
+      else: $50,000
+    inputs:
+      - "Filing status"
+    edgeCases:
+      - "Single filer at exactly $50,000 remains eligible"
+      - "Joint filer at exactly $100,000 remains eligible"
+      - "Income over the limit produces no credit"
+    testRef: "tests/engine/state/nj-1040-wounded-warrior-credit.test.ts::NJ-1040 WWC - single filer at $50,000 remains eligible"
+
+  - line: "base-credit"
+    description: "Base credit before caregiver share apportionment"
+    formula: "min(service member federal disability compensation, $675)"
+    inputs:
+      - "2025 federal disability compensation of qualifying armed services member"
+    edgeCases:
+      - "Disability compensation below $675 uses the lower amount"
+      - "Disability compensation above $675 is capped at $675"
+    testRef: "tests/engine/state/nj-1040-wounded-warrior-credit.test.ts::NJ-1040 WWC - disability compensation above $675 caps the base credit"
+
+  - line: "apportioned-credit"
+    description: "Credit after multiple caregiver apportionment"
+    formula: |
+      if onlyCaregiver:
+        base credit
+      else:
+        round(base credit × care expenses share percentage)
+    inputs:
+      - "Base credit"
+      - "Whether taxpayer was the only caregiver"
+      - "Taxpayer share of total care expenses"
+    notes: "Share percentage is expressed as a percent from 0 to 100."
+    edgeCases:
+      - "Only caregiver receives the full base credit"
+      - "Two caregivers split the credit according to their care expense shares"
+      - "Share percentage below 0 is clamped to 0"
+      - "Share percentage above 100 is clamped to 100"
+    testRef: "tests/engine/state/nj-1040-wounded-warrior-credit.test.ts::NJ-1040 WWC - multiple caregivers prorate the credit by care expense share"
+
+  - line: "62"
+    description: "Wounded Warrior Caregivers Credit"
+    formula: |
+      if taxpayer is eligible and gross income does not exceed the filing-status limit:
+        apportioned credit
+      else:
+        $0
+    inputs:
+      - "NJ gross income"
+      - "Filing status"
+      - "Provided care eligibility flag"
+      - "Apportioned credit"
+    notes: "The credit is refundable and is reported on NJ-1040 line 62."
+    testRef: "tests/engine/state/nj-1040.test.ts::NJ-1040 orchestrator - wounded warrior credit is refundable"

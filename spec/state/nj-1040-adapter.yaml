@@ -1,0 +1,718 @@
+form: "NJ-1040 Adapter"
+fullName: "New Jersey NJ-1040 Input Adapter — TaxYearInput to NJ1040Input Bridge"
+taxYear: 2025
+reference: "https://www.nj.gov/treasury/taxation/pdf/current/1040i.pdf"
+
+notes: |
+  This adapter bridges the unified TaxYearInput (W-2s, 1099s, K-1s, etc.) and
+  the federal TaxReturnResult into the NJ1040Input required by the NJ-1040
+  engine. It automates what can be derived from documents and delegates
+  NJ-specific interview data through NJStateConfig.
+
+  Derivable from documents (TaxYearInput):
+  - Wages: For residents, include all W-2 wages from everywhere; use Box 16 for NJ W-2s and Box 1 for non-NJ or missing-state W-2s unless a separate NJ adjustment is supplied
+  - Interest: 1099-INT Box 1
+  - Tax-exempt interest: 1099-INT Box 3 (direct federal obligations) + Box 8 + 1099-DIV Box 12
+  - Dividends: 1099-DIV Box 1a (ordinary dividends — NJ has no preferential rate)
+  - Business income: Schedule C gross receipts minus COGS minus expenses
+  - Net gains from property: federal capital gain/loss (NJ taxes all gains as ordinary)
+  - Pension income: 1099-R taxable amount
+  - Partnership income: K-1 ordinary income (entity type = partnership)
+  - S-corp income: K-1 ordinary income (entity type = s_corporation)
+  - Rental income: Schedule E rental net from rental properties
+  - Gambling winnings: W-2G Box 1
+  - Gambling losses: Schedule A input gambling losses (capped at winnings for NJ)
+  - Alimony paid: adjustments.alimonyPaid
+  - NJ withholding: W-2 Box 17 plus NJ withholding reported on W-2G, 1099-G, 1099-K, 1099-R, 1099-INT, 1099-DIV, 1099-NEC, and 1099-MISC
+  - PTBAIT credit: sum Schedule K-1 NJ PTBAIT shares plus any NJStateConfig carry-in for estate/trust statements or manual adjustments
+  - NJ estimated payments: adjustments.estimatedTaxPayments where type = "state"
+  - NJ extension payments: adjustments.extensionPayments where type = "state"
+
+  Derivable from federal TaxReturnResult:
+  - Alimony received: TaxReturnResult.schedule1.alimonyReceived
+  - Federal EITC: TaxReturnResult.earnedIncomeCredit
+  - Federal dependent care credit: TaxReturnResult.schedule3.childDependentCareCredit
+
+  Derivable from taxpayer data:
+  - Filing status, tax year
+  - Dependent count: taxpayer.dependents.length
+  - Age 62+/65+ for pension exclusion and exemptions (from dateOfBirth)
+  - Qualifying children age 5 or under (from dependent dateOfBirth)
+  - Age-18 eligibility for the special childless NJEITC rule (from taxpayer/spouse dateOfBirth)
+
+  NJ-specific interview data (NJStateConfig):
+  - Months of NJ residency (default 12)
+  - Property tax / rent / homeowner-tenant status
+  - Whether married/CU separate filers maintained the same main home
+  - Medical expenses and reimbursements
+  - Health coverage mandate data
+  - Aggregate dependent household income for Schedule NJ-HCC Worksheet L
+  - Use tax election
+  - Additional NJ line 26 other income not derivable from the supported federal document set
+  - Taxpayer/spouse veteran status, blind/disabled flags
+  - Other jurisdiction credit entries
+  - College-attending dependents count
+  - NJBEST contributions, NJCLASS loan payments, and qualified New Jersey tuition paid
+  - Prior year NJ tax (for NJ-2210)
+  - Excess payroll contributions (UI/WF/SWF, DI, FLI)
+  - Private plan max DI override
+  - Special other-retirement exclusion eligibility
+  - Optional cap for mixed-age joint-return other retirement exclusion cases that cannot be derived from document ownership
+  - Childless NJEITC age-18 exception eligibility flag for the condition "met all federal EIC requirements except age and is not a dependent"
+  - Organ/bone marrow donation deduction amount for NJ-1040 line 36
+  - Sheltered workshop credit, Gold Star counseling inputs, and organ/bone marrow donor leave events for NJ-1040 lines 46-49
+
+lines:
+  - line: "wages"
+    description: "Map W-2s to NJ Line 14 wages"
+    formula: |
+      Sum all resident W-2 wages from everywhere.
+      For each W-2:
+      - If state = NJ and stateWages (Box 16) is present, use stateWages.
+      - Otherwise, use wages (Box 1).
+    inputs:
+      - "W-2 Box 16 (stateWages)"
+      - "W-2 state field"
+      - "W-2 Box 1 (wages) as fallback"
+    notes: |
+      New Jersey residents report income from all sources, regardless of where
+      earned. The adapter therefore includes every resident W-2 in line 14,
+      even when the W-2 is tagged to another state. This preserves the resident
+      return tax base while the Schedule NJ-COJ workflow handles double-taxed
+      wage income. The 2025 NJ-1040 instructions direct filers to use W-2 Box 16
+      state wages for NJ wages, but out-of-state wages may require separate NJ
+      adjustments. In the absence of a separate NJ wage-adjustment input, the
+      adapter uses Box 1 for non-NJ W-2s instead of another state's Box 16.
+    edgeCases:
+      - "Multiple W-2s with different states — all wages contribute for a resident return"
+      - "W-2 with no state field — included using Box 1 wages"
+      - "Mixed NJ and non-NJ W-2s — use Box 16 only for the NJ W-2s"
+      - "Mixed: some W-2s have Box 16 amounts and some do not — apply the NJ-specific Box 16 preference per W-2"
+    testRef: "tests/engine/state/nj-1040-adapter.test.ts::NJ-1040 adapter - resident wages use NJ Box 16 and non-NJ Box 1"
+
+  - line: "taxableInterest"
+    description: "Map 1099-INT to NJ Line 15a"
+    formula: "Sum of all 1099-INT interestIncome (Box 1)"
+    inputs:
+      - "1099-INT Box 1"
+    notes: |
+      NJ line 16a includes taxable interest only. Direct federal obligations
+      reported on 1099-INT Box 3 (such as U.S. Savings Bonds and Treasury
+      obligations) are exempt from New Jersey Gross Income Tax and belong on
+      NJ line 16b instead.
+    testRef: "tests/engine/state/nj-1040-adapter.test.ts::NJ-1040 adapter - interest from 1099-INT"
+
+  - line: "otherStateTaxExemptInterest"
+    description: "Map other-state tax-exempt interest to NJ Line 15b"
+    formula: "NJStateConfig.otherStateTaxExemptInterest (interview data — non-NJ portion of 1099-INT Box 8)"
+    inputs:
+      - "NJStateConfig.otherStateTaxExemptInterest"
+    notes: |
+      NJ taxes interest from obligations of other states that is federally tax-exempt.
+      The non-NJ portion is not derivable from the 1099-INT alone (requires supplementary
+      statements from mutual funds). Supplied via NJStateConfig interview data.
+    testRef: "tests/engine/state/nj-1040-adapter.test.ts::NJ-1040 adapter - other state tax-exempt interest from config"
+
+  - line: "taxExemptInterest"
+    description: "Map tax-exempt interest to NJ-HCC household income"
+    formula: "Sum of 1099-INT usSavingsBondInterest (Box 3) + 1099-INT taxExemptInterest (Box 8) + 1099-DIV exemptInterestDividends (Box 12)"
+    inputs:
+      - "1099-INT Box 3"
+      - "1099-INT Box 8"
+      - "1099-DIV Box 12"
+    notes: |
+      Schedule NJ-HCC Worksheet L includes tax-exempt interest from NJ-1040 line 16b
+      in household income even though it is not taxed as gross income. Per the
+      2025 NJ-1040 instructions, direct federal obligations such as U.S. Savings
+      Bonds and Treasury obligations are exempt and also belong on line 16b.
+    testRef: "tests/engine/state/nj-1040-adapter.test.ts::NJ-1040 adapter - 1099-INT box 3 federal obligations increase NJ tax-exempt interest"
+
+  - line: "dividends"
+    description: "Map 1099-DIV to NJ Line 16"
+    formula: "Sum of all 1099-DIV ordinaryDividends (Box 1a)"
+    inputs:
+      - "1099-DIV Box 1a"
+    notes: "NJ taxes all dividends as ordinary income — no qualified dividend preference."
+    testRef: "tests/engine/state/nj-1040-adapter.test.ts::NJ-1040 adapter - dividends from 1099-DIV"
+
+  - line: "businessIncome"
+    description: "Map Schedule C to NJ Line 17"
+    formula: "Federal Schedule C net profit from TaxReturnResult"
+    inputs:
+      - "TaxReturnResult.scheduleC.netProfit"
+    notes: "NJ generally follows federal for self-employment income."
+    testRef: "tests/engine/state/nj-1040-adapter.test.ts::NJ-1040 adapter - business income from Schedule C"
+
+  - line: "netGainsFromProperty"
+    description: "Map capital gains to NJ Line 18"
+    formula: "TaxReturnResult.capitalGainLoss"
+    inputs:
+      - "TaxReturnResult.capitalGainLoss"
+    notes: "NJ does not have preferential capital gains rates. All gains are ordinary."
+    testRef: "tests/engine/state/nj-1040-adapter.test.ts::NJ-1040 adapter - capital gains from federal result"
+
+  - line: "pensionIncome"
+    description: "Map 1099-R to NJ Line 19"
+    formula: |
+      If NJStateConfig.pensionIncomeOverride is provided, use that amount as the
+      NJ line 19 taxable pension/IRA input.
+
+      Otherwise, sum NJ-taxable 1099-R distributions:
+      Sum NJ-taxable 1099-R distributions:
+      - Exclude U.S. military pensions and military survivor benefit payments
+      - Exclude qualified Roth distributions
+      - Exclude direct rollovers (distribution code G/H) that qualify for federal deferral
+      - Exclude disability pension benefits before the year the recipient turns 65
+      - Otherwise use taxableAmount (Box 2a); if taxableAmountNotDetermined, use grossDistribution
+    inputs:
+      - "NJStateConfig.pensionIncomeOverride"
+      - "1099-R Box 2a (taxableAmount)"
+      - "1099-R Box 1 (grossDistribution) as fallback"
+      - "1099-R militaryPensionOrSurvivorBenefit flag"
+      - "1099-R Box 7 (distributionCode) for rollover detection"
+      - "1099-R disabilityPensionBeforeMinimumRetirementAge flag"
+      - "taxpayer/spouse dateOfBirth"
+    edgeCases:
+      - "Military pensions and military survivor benefits stay excluded even if Box 2a is taxable federally"
+      - "Roth qualified distributions (code Q/T) excluded — not taxable"
+      - "Direct rollovers with taxableAmountNotDetermined are still excluded from NJ line 19"
+      - "Disability pensions are excluded until the tax year the recipient turns 65"
+      - "taxableAmountNotDetermined: use grossDistribution"
+    notes: |
+      Per the 2025 NJ-1040 instructions and GIT-1, U.S. military pensions and
+      military survivor benefit payments are exempt from New Jersey Income Tax
+      and are not reported on the resident return. Qualifying rollovers are not
+      reported on lines 20a or 20b, and public or private disability pension
+      benefits are excluded until the year the recipient turns 65. This adapter
+      handles those exclusions at the document-mapping layer before the taxable
+      pension amount flows into the NJ-1040 engine.
+
+      The NJ Division of Taxation separately states that the taxable IRA or
+      pension amount for New Jersey can differ from the federal amount and that
+      resident filers may need the New Jersey IRA worksheet or New Jersey
+      pension methods to determine the exact taxable portion. When the taxpayer
+      already has that New Jersey-specific line-19 amount, the adapter accepts
+      NJStateConfig.pensionIncomeOverride so the resident engine is not forced
+      to reuse a document-derived federal approximation.
+    testRef: "tests/engine/state/nj-1040-adapter.test.ts::NJ-1040 adapter - military pension and survivor benefits are excluded from NJ pension income but keep withholding"
+
+  - line: "pensionIncomeOverride"
+    description: "Pass through an exact New Jersey taxable pension/IRA amount when state retirement worksheets differ from the federal document total"
+    formula: |
+      If NJStateConfig.pensionIncomeOverride is provided:
+      - pensionIncome = NJStateConfig.pensionIncomeOverride
+      - pensionIncomeEligibleForExclusion defaults to min(derived eligible-owner amount, pensionIncome)
+        unless NJStateConfig.pensionIncomeEligibleForExclusion separately overrides it
+    inputs:
+      - "NJStateConfig.pensionIncomeOverride"
+      - "Derived pensionIncomeEligibleForExclusion ownership-tag amount"
+      - "NJStateConfig.pensionIncomeEligibleForExclusion"
+    notes: |
+      New Jersey retirement reporting is not always derivable from federal
+      Box 2a amounts because New Jersey tracks previously taxed basis and uses
+      its own IRA worksheet and pension exclusion rules. This override allows a
+      validated state-interview or worksheet result to feed the resident return
+      adapter directly while preserving the existing mixed-age-joint-return
+      pension exclusion override when needed.
+    edgeCases:
+      - "Override replaces the derived 1099-R total for NJ line 19"
+      - "Without a separate pensionIncomeEligibleForExclusion override, the eligible-owner cap cannot exceed the overridden pensionIncome"
+    testRef: "tests/engine/state/nj-1040-adapter.test.ts::NJ-1040 adapter - pension income override replaces derived 1099-R income and caps default exclusion income"
+
+  - line: "partnershipIncome"
+    description: "Map K-1 partnership income to NJ Line 20a"
+    formula: "Sum K-1 ordinaryIncome where entityType = 'partnership'"
+    inputs:
+      - "K-1 Box 1 (ordinaryIncome)"
+      - "K-1 entityType"
+    testRef: "tests/engine/state/nj-1040-adapter.test.ts::NJ-1040 adapter - partnership income from K-1"
+
+  - line: "sCorpIncome"
+    description: "Map K-1 S-corp income to NJ Line 20b"
+    formula: "Sum K-1 ordinaryIncome where entityType = 's_corporation'"
+    inputs:
+      - "K-1 Box 1 (ordinaryIncome)"
+      - "K-1 entityType"
+    testRef: "tests/engine/state/nj-1040-adapter.test.ts::NJ-1040 adapter - S-corp income from K-1"
+
+  - line: "gamblingWinnings"
+    description: "Map W-2G to NJ Line 22 (winnings component)"
+    formula: |
+      Sum W-2G reportableWinnings (Box 1), excluding individual prizes of
+      $10,000 or less that are tagged as:
+      - New Jersey Lottery prizes; or
+      - Multistate lottery prizes from a game in which New Jersey participates
+    inputs:
+      - "W-2G Box 1"
+      - "W-2G winningsCategory"
+    notes: |
+      Per the 2025 NJ-1040 instructions for line 24, New Jersey Lottery prizes
+      and participating multistate lottery prizes are included only when the
+      individual prize exceeds $10,000. Other gambling winnings, bingo, casino
+      and track betting, and out-of-state lottery winnings remain taxable
+      regardless of amount.
+    edgeCases:
+      - "NJ Lottery prize of exactly $10,000 is excluded"
+      - "NJ Lottery prize of $10,001 is included"
+      - "Out-of-state lottery prize under $10,000 remains taxable"
+    testRef: "tests/engine/state/nj-1040-adapter.test.ts::NJ-1040 adapter - excludes sub-$10,001 New Jersey lottery prizes from gambling winnings"
+
+  - line: "gamblingLosses"
+    description: "Map Schedule A gambling losses to NJ Line 22 (loss offset)"
+    formula: "scheduleA.gamblingLosses (if provided)"
+    inputs:
+      - "Schedule A input gambling losses"
+    notes: "NJ allows losses to offset winnings but not below zero. The NJ engine handles the cap."
+    testRef: "tests/engine/state/nj-1040-adapter.test.ts::NJ-1040 adapter - gambling losses from Schedule A input"
+
+  - line: "alimonyReceived"
+    description: "Map federal Schedule 1 alimony received to NJ Line 23"
+    formula: "TaxReturnResult.schedule1?.alimonyReceived ?? 0"
+    inputs:
+      - "TaxReturnResult.schedule1.alimonyReceived"
+    notes: |
+      The 2025 NJ-1040 instructions include alimony and separate maintenance
+      payments received on line 23 when taxable under pre-2019 agreements.
+      The federal engine already computes this amount on Schedule 1 line 2a,
+      so the NJ adapter should carry it into the resident return when present.
+    edgeCases:
+      - "If the federal Schedule 1 result is absent, alimony received defaults to $0"
+      - "A positive federal Schedule 1 alimony amount flows directly to NJ line 23"
+    testRef: "tests/engine/state/nj-1040-adapter.test.ts::NJ-1040 adapter - alimony received from federal Schedule 1"
+
+  - line: "alimonyPaid"
+    description: "Map input adjustments alimony paid to NJ Line 26"
+    formula: "TaxYearInput.adjustments?.alimonyPaid ?? 0"
+    inputs:
+      - "TaxYearInput.adjustments.alimonyPaid"
+    notes: |
+      The NJ-1040 deduction for alimony paid is modeled from the validated
+      shared adjustments input because the current TaxReturnResult does not
+      carry a dedicated state-specific alimony-paid output.
+    edgeCases:
+      - "If adjustments are absent, alimony paid defaults to $0"
+    testRef: "tests/engine/state/nj-1040-adapter.test.ts::NJ-1040 adapter - alimony paid from adjustments"
+
+  - line: "njWithholding"
+    description: "Map NJ withholding from wage and information returns to NJ payments"
+    formula: |
+      Sum W-2 stateTaxWithheld (Box 17) where state = "NJ"
+      + Sum W-2G stateWithheld (Box 13) where state = "NJ"
+      + Sum 1099-G stateWithheld (Box 11) where state = "NJ"
+      + Sum 1099-K stateWithheld (Box 8) where state = "NJ"
+      + Sum 1099-R stateWithheld (Box 14) where state = "NJ"
+      + Sum 1099-INT stateWithheld (Box 17) where state = "NJ"
+      + Sum 1099-DIV stateWithheld (Box 16) where state = "NJ"
+      + Sum 1099-NEC stateWithheld (Box 5) where state = "NJ"
+      + Sum 1099-MISC stateWithheld (Box 16) where state = "NJ"
+      If no NJ-specific W-2s, sum all W-2 stateTaxWithheld.
+      Forms without a populated state field are treated as NJ withholding.
+    inputs:
+      - "W-2 Box 17 (stateTaxWithheld)"
+      - "W-2G Box 13 (stateWithheld)"
+      - "1099-G Box 11 (stateWithheld)"
+      - "1099-K Box 8 (stateWithheld)"
+      - "1099-R Box 14 (stateWithheld)"
+      - "1099-INT Box 17 (stateWithheld)"
+      - "1099-DIV Box 16 (stateWithheld)"
+      - "1099-NEC Box 5 (stateWithheld)"
+      - "1099-MISC Box 16 (stateWithheld)"
+    edgeCases:
+      - "W-2 with NJ state but no stateTaxWithheld: $0 contribution"
+      - "1099 forms with no state field are treated as NJ documents for this adapter path"
+    testRef: "tests/engine/state/nj-1040-adapter.test.ts::NJ-1040 adapter - combined withholding from all nine supported sources (W-2 + W-2G + 1099-G + 1099-K + 1099-R + 1099-INT + 1099-DIV + 1099-NEC + 1099-MISC)"
+
+  - line: "estimatedPayments"
+    description: "Sum NJ line 57 payments from estimates, extension payments, and the prior-year credit carryforward"
+    formula: |
+      Sum adjustments.estimatedTaxPayments where type = 'state' and
+      (state is blank/missing OR state = 'NJ')
+      + Sum adjustments.extensionPayments where type = 'state' and
+      (state is blank/missing OR state = 'NJ')
+      + Sum adjustments.priorYearAppliedCredits where sourceTaxYear = current tax year - 1,
+        type = 'state', and (state is blank/missing OR state = 'NJ')
+    inputs:
+      - "adjustments.estimatedTaxPayments (type='state')"
+      - "adjustments.estimatedTaxPayments.state"
+      - "adjustments.extensionPayments (type='state')"
+      - "adjustments.extensionPayments.state"
+      - "adjustments.priorYearAppliedCredits.sourceTaxYear"
+      - "adjustments.priorYearAppliedCredits (type='state')"
+      - "adjustments.priorYearAppliedCredits.state"
+    notes: |
+      NJ-1040 line 57 includes New Jersey estimated tax payments, any credit
+      carried from the immediately preceding resident return, and the amount
+      paid with an extension application. This adapter maps all three payment
+      components from validated structured input. Because the NJ-1040-ES,
+      NJ-630, and prior-year line 69 carryforward are specific to the New
+      Jersey return being paid, entries tagged to another state must not flow
+      into the NJ resident return. For backward compatibility, legacy
+      state-payment entries without a populated state code are still treated as
+      NJ payments by this adapter path.
+    testRef: "tests/engine/state/nj-1040-adapter.test.ts::NJ-1040 adapter - line 57 includes NJ prior-year credit carryforward, extension payments, and excludes other states"
+
+  - line: "organDonationDeduction"
+    description: "Pass through NJ-1040 line 36 organ/bone marrow donation deduction interview amount"
+    formula: "NJStateConfig.organDonationDeductionExpenses"
+    inputs:
+      - "NJStateConfig.organDonationDeductionExpenses"
+    notes: |
+      The eligible unreimbursed travel, lodging, and lost-wage amount for
+      NJ-1040 line 36 is not derivable from federal source documents in the
+      current engine shape, so the adapter accepts it as NJ interview data.
+    testRef: "tests/engine/state/nj-1040-adapter.test.ts::NJ-1040 adapter - organ donation deduction config passes through"
+
+  - line: "qualifiedConservationContribution"
+    description: "Pass through NJ-1040 line 33 qualified conservation contribution amount"
+    formula: "NJStateConfig.qualifiedConservationContribution"
+    inputs:
+      - "NJStateConfig.qualifiedConservationContribution"
+    notes: |
+      The supported resident slice accepts the already-computed line-33 amount
+      directly, matching the NJ-1040 instruction that line 33 equals the
+      qualified conservation contribution amount allowed as a federal
+      deduction for New Jersey real property.
+    testRef: "tests/engine/state/nj-1040-adapter.test.ts::NJ-1040 adapter - page-2 deduction config passes through supported direct-input deduction lines"
+
+  - line: "healthEnterpriseZoneDeduction"
+    description: "Pass through NJ-1040 line 34 health enterprise zone deduction amount"
+    formula: "NJStateConfig.healthEnterpriseZoneDeduction"
+    inputs:
+      - "NJStateConfig.healthEnterpriseZoneDeduction"
+    notes: |
+      The supported resident slice accepts the already-computed HEZ amount from
+      the taxpayer's K-1 or sole-proprietor worksheet directly.
+    testRef: "tests/engine/state/nj-1040-adapter.test.ts::NJ-1040 adapter - page-2 deduction config passes through supported direct-input deduction lines"
+
+  - line: "alternativeBusinessCalculationAdjustment"
+    description: "Pass through NJ-1040 line 35 alternative business calculation adjustment"
+    formula: "NJStateConfig.alternativeBusinessCalculationAdjustment"
+    inputs:
+      - "NJStateConfig.alternativeBusinessCalculationAdjustment"
+    notes: |
+      The supported resident slice accepts the already-computed Schedule
+      NJ-BUS-2 line 11 amount directly.
+    testRef: "tests/engine/state/nj-1040-adapter.test.ts::NJ-1040 adapter - page-2 deduction config passes through supported direct-input deduction lines"
+
+  - line: "ptbait-credit"
+    description: "Aggregate NJ PTBAIT credit support into NJ-1040 line 63 input"
+    formula: |
+      Sum scheduleK1.njPassThroughBusinessAlternativeIncomeTaxCredit for all K-1s
+      + NJStateConfig.passThroughBusinessAlternativeIncomeTaxCredit
+    inputs:
+      - "Schedule K-1 NJ PTBAIT credit shares"
+      - "NJStateConfig.passThroughBusinessAlternativeIncomeTaxCredit"
+    notes: |
+      This covers partnership and S corporation PTBAIT shares present on NJ
+      K-1/PTE-K-1 statements and allows an additional manual amount for estate
+      or trust NJK-1 statements or other supported interview carry-ins.
+    testRef: "tests/engine/state/nj-1040-adapter.test.ts::NJ-1040 adapter - PTBAIT credit sums K-1 amounts and config add-on"
+
+  - line: "supplemental-nonrefundable-credits"
+    description: "Pass through NJ-only interview inputs for NJ-1040 lines 46-49"
+    formula: |
+      shelteredWorkshopCurrentYearCredit = NJStateConfig.shelteredWorkshopCurrentYearCredit
+      goldStarCounselingHours = NJStateConfig.goldStarCounselingHours
+      goldStarTricareRate = NJStateConfig.goldStarTricareRate
+      organDonorLeaveEvents = NJStateConfig.organDonorLeaveEvents
+    inputs:
+      - "NJStateConfig.shelteredWorkshopCurrentYearCredit"
+      - "NJStateConfig.goldStarCounselingHours"
+      - "NJStateConfig.goldStarTricareRate"
+      - "NJStateConfig.organDonorLeaveEvents"
+    notes: |
+      These amounts are not derivable from federal source documents. They come
+      from New Jersey-only forms or interview answers tied to lines 46 through
+      48 of the NJ-1040.
+    testRef: "tests/engine/state/nj-1040-adapter.test.ts::NJ-1040 adapter - supplemental nonrefundable credits config passes through"
+
+  - line: "medical-deduction-inputs"
+    description: "Map federal Archer MSA and self-employed health insurance deductions into NJ Worksheet F lines 4 and 5"
+    formula: |
+      archerMSADeduction =
+        TaxReturnResult.schedule1?.archerMSADeduction
+        ?? TaxYearInput.adjustments?.archerMSADeduction
+        ?? 0
+      selfEmployedHealthInsuranceDeduction =
+        TaxReturnResult.schedule1?.seHealthInsurance
+        ?? TaxYearInput.adjustments?.selfEmployedHealthInsurance
+        ?? 0
+      otherAdjustments = NJStateConfig.otherAdjustments ?? 0
+    inputs:
+      - "TaxReturnResult.schedule1.archerMSADeduction"
+      - "TaxReturnResult.schedule1.seHealthInsurance"
+      - "TaxYearInput.adjustments.archerMSADeduction"
+      - "TaxYearInput.adjustments.selfEmployedHealthInsurance"
+      - "NJStateConfig.otherAdjustments"
+    notes: |
+      The 2025 NJ-1040 instructions place qualified Archer MSA contributions
+      and the self-employed health insurance deduction on Worksheet F lines 4
+      and 5, which flow into line 31. They are not line 28 gross-income
+      adjustments. NJStateConfig.otherAdjustments remains the bucket for other
+      NJ-only line 28 deductions that are not derived from the shared model.
+    testRef: "tests/engine/state/nj-1040-adapter.test.ts::NJ-1040 adapter - Worksheet F deductions map from Schedule 1 and config line 28 remains separate"
+
+  - line: "federalEITC"
+    description: "Federal earned income credit for NJ EITC computation"
+    formula: "TaxReturnResult.earnedIncomeCredit"
+    inputs:
+      - "TaxReturnResult.earnedIncomeCredit"
+    testRef: "tests/engine/state/nj-1040-adapter.test.ts::NJ-1040 adapter - federal EITC from federal result"
+
+  - line: "nj-eitc-age-exception"
+    description: "Pass through the special childless NJEITC age-18 exception eligibility input and derive supporting age/childless facts"
+    formula: |
+      qualifiesForChildlessAge18Exception = NJStateConfig.qualifiesForChildlessAge18Exception
+      hasAdult18OrOlderTaxpayer = taxpayer or spouse age >= 18 on Dec 31 of the tax year
+      qualifyingEICChildrenCount = count(dependents where qualifiesForEIC = true)
+    inputs:
+      - "NJStateConfig.qualifiesForChildlessAge18Exception"
+      - "taxpayer.primary.dateOfBirth"
+      - "taxpayer.spouse.dateOfBirth"
+      - "dependent.qualifiesForEIC"
+    notes: |
+      The shared input model does not fully encode every federal EIC eligibility
+      factor needed for the NJ childless age-18 exception, especially the
+      "not a dependent" condition. The adapter therefore accepts an interview
+      flag for that determination and combines it with derived age/child-count data.
+    testRef: "tests/engine/state/nj-1040-adapter.test.ts::NJ-1040 adapter - childless age-18 EITC exception config passes through"
+
+  - line: "federalDependentCareCredit"
+    description: "Federal child/dependent care credit for NJ credit computation"
+    formula: "TaxReturnResult.schedule3?.childDependentCareCredit ?? 0"
+    inputs:
+      - "TaxReturnResult.schedule3.childDependentCareCredit"
+    testRef: "tests/engine/state/nj-1040-adapter.test.ts::NJ-1040 adapter - federal dependent care credit from Schedule 3"
+
+  - line: "age-derivation"
+    description: "Derive age flags from taxpayer dateOfBirth"
+    formula: |
+      taxpayerAge65OrOlder = age(primary.dateOfBirth, Dec 31 of taxYear) >= 65
+      spouseAge65OrOlder = age(spouse.dateOfBirth, Dec 31 of taxYear) >= 65
+      qualifiesForPensionExclusion =
+        age 62+ or NJStateConfig blind/disabled flag for either spouse
+        (or NJStateConfig override)
+      qualifiesForOtherRetirementExclusion = age 62+ for either spouse (or NJStateConfig override)
+    inputs:
+      - "taxpayer.primary.dateOfBirth"
+      - "taxpayer.spouse.dateOfBirth"
+      - "NJStateConfig.taxpayerBlindOrDisabled"
+      - "NJStateConfig.spouseBlindOrDisabled"
+    notes: |
+      The 2025 NJ-1040 instructions for line 28a allow the pension/retirement
+      exclusion when the taxpayer or spouse is age 62 or older OR
+      blind/disabled as defined by Social Security guidelines. The separate
+      line 28b other retirement income exclusion still keeps the age-62-only
+      requirement.
+    testRef: "tests/engine/state/nj-1040-adapter.test.ts::NJ-1040 adapter - disabled taxpayer under 62 still qualifies for the pension exclusion"
+
+  - line: "retirement-exclusion-overrides"
+    description: "Pass NJ-specific other-retirement exclusion interview inputs through to the NJ-1040 engine"
+    formula: |
+      qualifiesForSpecialRetirementExclusion = NJStateConfig.qualifiesForSpecialRetirementExclusion
+      otherRetirementIncomeExclusionCap = NJStateConfig.otherRetirementIncomeExclusionCap
+      pensionIncomeEligibleForExclusion = NJStateConfig.pensionIncomeEligibleForExclusion override
+        or, for mixed-eligibility joint returns with tagged 1099-R ownership, the taxable
+        pension income of the spouse who is age 62+ or blind/disabled only,
+        after applying the same NJ line 19 exclusions used by pensionIncome
+        (military pensions/survivor benefits, qualified Roth distributions,
+        direct rollovers, and disability pensions before age 65)
+    inputs:
+      - "NJStateConfig.qualifiesForSpecialRetirementExclusion"
+      - "NJStateConfig.otherRetirementIncomeExclusionCap"
+      - "NJStateConfig.pensionIncomeEligibleForExclusion"
+      - "1099-R accountHolder ownership tags"
+    notes: |
+      The shared input model does not fully tag ownership for jointly held
+      interest, dividend, and capital-gain income. The adapter therefore accepts
+      an explicit cap override for the mixed-eligibility joint-return Worksheet D case.
+      When the adapter derives the eligible-spouse cap from tagged 1099-Rs, it
+      must use the same New Jersey taxable-pension filters as line 19 so the
+      cap is not overstated by excluded rollovers or military/disability items.
+    testRef: "tests/engine/state/nj-1040-adapter.test.ts::NJ-1040 adapter - mixed-age joint return ownership cap excludes NJ-nontaxable 1099-R items"
+
+  - line: "sharedMainHomeWithSpouse"
+    description: "Pass the married-filing-separately shared-main-home property tax flag through to the NJ-1040 engine"
+    formula: "sharedMainHomeWithSpouse = NJStateConfig.sharedMainHomeWithSpouse"
+    inputs:
+      - "NJStateConfig.sharedMainHomeWithSpouse"
+      - "taxpayer.filingStatus"
+    notes: |
+      New Jersey property tax guidance requires married/CU partners filing
+      separate returns but maintaining the same principal residence to use only
+      one-half of the property taxes or rent-derived property tax amount when
+      computing the deduction/credit, and the refundable credit amount is $25
+      instead of $50.
+    testRef: "tests/engine/state/nj-1040-adapter.test.ts::NJ-1040 adapter - MFS shared main home property tax credit flows through adapter"
+
+  - line: "healthCoverageDependentIncome"
+    description: "Pass Schedule NJ-HCC dependent household income through to the NJ-1040 engine"
+    formula: "healthCoverageDependentIncome = NJStateConfig.healthCoverageDependentIncome"
+    inputs:
+      - "NJStateConfig.healthCoverageDependentIncome"
+    notes: |
+      Worksheet L Part I line 3 includes dependents' total income and tax-exempt
+      interest, including estimated income for dependents who will not file a New
+      Jersey return. This amount is not derivable from the shared document model.
+    testRef: "tests/engine/state/nj-1040-adapter.test.ts::NJ-1040 adapter - dependent household income for health coverage passes through config"
+
+  - line: "college-affordability"
+    description: "Pass through NJ-only college affordability deduction inputs"
+    formula: |
+      njbestContributions = NJStateConfig.njbestContributions
+      njclassLoanPayments = NJStateConfig.njclassLoanPayments
+      tuitionPaidToNjInstitution = NJStateConfig.tuitionPaidToNjInstitution
+    inputs:
+      - "NJStateConfig.njbestContributions"
+      - "NJStateConfig.njclassLoanPayments"
+      - "NJStateConfig.tuitionPaidToNjInstitution"
+    notes: |
+      These 2025 deduction inputs are NJ-specific interview values and are not
+      derivable from the supported federal document set in this adapter.
+    testRef: "tests/engine/state/nj-1040-adapter.test.ts::NJ-1040 adapter - college affordability deduction config passes through"
+
+  - line: "dependentCount"
+    description: "Count qualifying dependents"
+    formula: "taxpayer.dependents.length"
+    inputs:
+      - "taxpayer.dependents array"
+    testRef: "tests/engine/state/nj-1040-adapter.test.ts::NJ-1040 adapter - dependent count from taxpayer"
+
+  - line: "qualifyingChildrenAge5OrUnder"
+    description: "Count qualifying children age 5 or under for NJ CTC"
+    formula: "Count dependents where age(dateOfBirth, Dec 31 of taxYear) <= 5 and qualifiesForCTC = true"
+    inputs:
+      - "taxpayer.dependents.dateOfBirth"
+      - "taxpayer.dependents.qualifiesForCTC"
+    testRef: "tests/engine/state/nj-1040-adapter.test.ts::NJ-1040 adapter - qualifying children age 5 or under"
+
+  - line: "unemploymentIncome"
+    description: "Exclude 1099-G unemployment compensation from NJ gross income"
+    formula: "Always 0 from 1099-G unemploymentCompensation (Box 1) for NJ purposes"
+    inputs:
+      - "1099-G Box 1 (unemploymentCompensation)"
+    notes: |
+      New Jersey does not tax unemployment compensation. Do not carry 1099-G
+      unemployment benefits into NJ-1040 Line 24 or any other taxable-income
+      line. NJ withholding reported on the 1099-G still flows to payments, but
+      the benefit amount itself is excluded from NJ gross income. State/local
+      tax refunds reported on 1099-G are also not taxable in NJ because there
+      is no New Jersey state-tax deduction recovery.
+    edgeCases:
+      - "No 1099-G forms: otherIncome unchanged"
+      - "Multiple 1099-G forms: all unemployment remains excluded"
+      - "1099-G with zero unemployment but state refund: no NJ income impact"
+    testRef: "tests/engine/state/nj-1040-adapter.test.ts::NJ-1040 adapter - unemployment from 1099-G is excluded from NJ other income"
+
+  - line: "1099MiscOtherIncome"
+    description: "Map taxable 1099-MISC Box 3 income to NJ-1040 other income"
+    formula: "Sum 1099-MISC otherIncome (Box 3) and carry the total to the NJ-1040 other-income bucket"
+    inputs:
+      - "1099-MISC Box 3 (otherIncome)"
+    notes: |
+      The 2025 NJ-1040 instructions include prizes, awards, fees for services,
+      and other taxable income with no other place on the return in the other
+      income bucket. The supported slice maps Form 1099-MISC Box 3 amounts into
+      the adapter's NJ other-income carry-in. New Jersey-specific exclusions, such as unemployment
+      compensation and cancellation of debt, remain excluded elsewhere in the
+      adapter and should not be passed through this line.
+    edgeCases:
+      - "Multiple 1099-MISC forms: sum Box 3 amounts"
+      - "No 1099-MISC Box 3 income: contribute zero"
+    testRef: "tests/engine/state/nj-1040-adapter.test.ts::NJ-1040 adapter - 1099-MISC other income flows to NJ line 24"
+
+  - line: "otherIncome"
+    description: "Pass through manual NJ line 26 other income carry-ins"
+    formula: "NJStateConfig.otherIncome ?? 0"
+    inputs:
+      - "NJStateConfig.otherIncome"
+    notes: |
+      The 2025 NJ-1040 instructions for line 26 include categories such as
+      estate and trust income, income in respect of a decedent, prizes and
+      awards, taxable scholarships, the value of lodging provided by an
+      employer, and fees for services such as jury duty. These items are not
+      all derivable from the currently supported federal document set, so the
+      adapter accepts an explicit New Jersey interview carry-in amount and adds
+      it to any supported 1099-MISC Box 3 other income.
+    edgeCases:
+      - "If no manual carry-in is supplied, only document-derived other income is used"
+      - "Manual carry-in stacks with 1099-MISC Box 3 income"
+    testRef: "tests/engine/state/nj-1040-adapter.test.ts::NJ-1040 adapter - manual other income config stacks with 1099-MISC Box 3 income"
+
+  - line: "1099GWithholding"
+    description: "Map 1099-G NJ state withholding to NJ payments"
+    formula: "Sum 1099-G stateWithheld (Box 11) where state = 'NJ' or no state specified"
+    inputs:
+      - "1099-G Box 11 (stateWithheld)"
+      - "1099-G state field"
+    notes: |
+      1099-G state withholding is added to total NJ withholding alongside
+      W-2 Box 17 and W-2G Box 13 withholding.
+    testRef: "tests/engine/state/nj-1040-adapter.test.ts::NJ-1040 adapter - 1099-G NJ state withholding included"
+
+  - line: "1099KWithholding"
+    description: "Map 1099-K NJ state withholding to NJ payments"
+    formula: "Sum 1099-K stateWithheld (Box 8) where state = 'NJ' or no state specified"
+    inputs:
+      - "1099-K Box 8 (stateWithheld)"
+      - "1099-K state field"
+    notes: |
+      1099-K state withholding is added to total NJ withholding. This occurs
+      when payment processors withhold NJ tax on behalf of the payee.
+    testRef: "tests/engine/state/nj-1040-adapter.test.ts::NJ-1040 adapter - 1099-K NJ state withholding included"
+
+  - line: "1099RWithholding"
+    description: "Map 1099-R NJ state withholding to NJ payments"
+    formula: "Sum 1099-R stateWithheld (Box 14) where state = 'NJ' or no state specified"
+    inputs:
+      - "1099-R Box 14 (stateWithheld)"
+      - "1099-R state field"
+    notes: |
+      1099-R state withholding is added to total NJ withholding. Many NJ retirees
+      have state tax withheld from pension distributions. Without this mapping,
+      refund/balance-due calculations would be incorrect for pension recipients.
+    testRef: "tests/engine/state/nj-1040-adapter.test.ts::NJ-1040 adapter - 1099-R NJ state withholding included"
+
+  - line: "1099IntWithholding"
+    description: "Map 1099-INT NJ state withholding to NJ payments"
+    formula: "Sum 1099-INT stateWithheld (Box 17) where state = 'NJ' or no state specified"
+    inputs:
+      - "1099-INT Box 17 (stateWithheld)"
+      - "1099-INT state field"
+    notes: |
+      1099-INT state withholding is added to total NJ withholding. Backup
+      withholding or state-mandated withholding on interest income.
+    testRef: "tests/engine/state/nj-1040-adapter.test.ts::NJ-1040 adapter - 1099-INT NJ state withholding included"
+
+  - line: "1099DivWithholding"
+    description: "Map 1099-DIV NJ state withholding to NJ payments"
+    formula: "Sum 1099-DIV stateWithheld (Box 16) where state = 'NJ' or no state specified"
+    inputs:
+      - "1099-DIV Box 16 (stateWithheld)"
+      - "1099-DIV state field"
+    notes: |
+      1099-DIV state withholding is added to total NJ withholding. Backup
+      withholding or state-mandated withholding on dividend income.
+    testRef: "tests/engine/state/nj-1040-adapter.test.ts::NJ-1040 adapter - 1099-DIV NJ state withholding included"
+
+  - line: "1099NecWithholding"
+    description: "Map 1099-NEC NJ state withholding to NJ payments"
+    formula: "Sum 1099-NEC stateWithheld (Box 5) where state = 'NJ' or no state specified"
+    inputs:
+      - "1099-NEC Box 5 (stateWithheld)"
+      - "1099-NEC state field"
+    notes: |
+      1099-NEC state withholding is added to total NJ withholding. This
+      captures NJ tax withheld from nonemployee compensation.
+    testRef: "tests/engine/state/nj-1040-adapter.test.ts::NJ-1040 adapter - 1099-NEC NJ state withholding included"
+
+  - line: "1099MiscWithholding"
+    description: "Map 1099-MISC NJ state withholding to NJ payments"
+    formula: "Sum 1099-MISC stateWithheld (Box 16) where state = 'NJ' or no state specified"
+    inputs:
+      - "1099-MISC Box 16 (stateWithheld)"
+      - "1099-MISC state field"
+    notes: |
+      1099-MISC state withholding is added to total NJ withholding. This
+      preserves NJ withholding reported on miscellaneous income statements.
+    testRef: "tests/engine/state/nj-1040-adapter.test.ts::NJ-1040 adapter - 1099-MISC NJ state withholding included"

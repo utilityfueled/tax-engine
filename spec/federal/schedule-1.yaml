@@ -1,0 +1,285 @@
+form: "Schedule 1"
+fullName: "Additional Income and Adjustments to Income"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i1040s1"
+
+notes: |
+  Schedule 1 collects additional income (Part I) and adjustments to income
+  (Part II) that don't fit on Form 1040 directly. Part I total goes to
+  1040 Line 8. Part II total goes to 1040 Line 10.
+
+lines:
+  # ── Part I: Additional Income ────────────────────────────
+  - line: "1"
+    description: "Taxable refunds of state/local taxes"
+    formula: "Prior-year state tax refund (if itemized prior year and deducted state taxes)"
+    irsRef: "Schedule 1 Instructions, Line 1"
+    edgeCases:
+      - "Only taxable if taxpayer itemized in the prior year"
+      - "Limited by amount of prior-year SALT benefit"
+    testRef: "tests/engine/schedules/schedule-1.test.ts::Schedule 1 Line 1 - taxable refunds"
+
+  - line: "3"
+    description: "Business income or loss"
+    formula: "Schedule C Line 31 (net profit or loss)"
+    irsRef: "Schedule 1 Instructions, Line 3"
+    inputs:
+      - "Schedule C net profit/loss"
+    testRef: "tests/engine/schedules/schedule-1.test.ts::Schedule 1 Line 3 - business income"
+
+  - line: "4"
+    description: "Other gains or losses"
+    formula: "Form 4797 combined ordinary gain or loss, which includes Part I section 1231 ordinary amounts (Line 11 loss plus Line 12 lookback recapture gain) plus Part II ordinary amounts (Line 17 depreciation recapture from Part III property sales plus Line 18a short-term property gains and losses)"
+    irsRef: "Schedule 1 Instructions, Line 4; Form 4797"
+    inputs:
+      - "Form 4797 Part I Line 11 ordinary section 1231 loss"
+      - "Form 4797 Part I Line 12 section 1231 lookback recapture as ordinary income"
+      - "Form 4797 Part II Line 17 depreciation recapture from Part III (sections 1245 and 1250)"
+      - "Form 4797 Part II Line 18a short-term property gains and losses"
+    notes: "When property sales are present, the combined ordinary amount includes both the Part I section 1231 ordinary treatment and the Part II recapture and short-term ordinary amounts. Section 1245 property (equipment, vehicles) recaptures ALL depreciation as ordinary income up to the gain. Section 1250 property (buildings) recaptures only the excess of actual depreciation over straight-line as ordinary income. The non-recapture section 1231 gain from Part III flows to Part I and then to Schedule D as long-term capital gain, not to Schedule 1 Line 4."
+    edgeCases:
+      - "Property sale with section 1245 recapture: recapture is ordinary income on Line 4, excess gain is section 1231 on Schedule D"
+      - "Rental building sale: typically $0 ordinary recapture (post-1986 MACRS straight-line), but unrecaptured section 1250 gain is taxed at 25% max rate through QDCG worksheet"
+      - "Short-term property sale (held one year or less): entire gain or loss is ordinary on Line 4"
+      - "Property sale at a loss: loss flows to Part I as section 1231 loss (held >1 year) or Part II as ordinary loss (held ≤1 year)"
+    testRef: "tests/engine/schedules/schedule-1.test.ts::Schedule 1 Line 4 - Form 4797 ordinary section 1231 amounts flow through other gains or losses"
+
+  - line: "5"
+    description: "Rental real estate, royalties, partnerships, S corps"
+    formula: "Schedule E Line 41"
+    irsRef: "Schedule 1 Instructions, Line 5"
+    inputs:
+      - "Schedule E total supplemental income"
+    testRef: "tests/engine/schedules/schedule-1.test.ts::Schedule 1 Line 5 - supplemental income"
+
+  - line: "6"
+    description: "Farm income or loss"
+    formula: "Schedule F Line 34"
+    irsRef: "Schedule 1 Instructions, Line 6; Schedule F"
+    inputs:
+      - "Schedule F net farm profit or loss"
+    notes: "Farm income from Schedule F where the taxpayer materially participates. Nonmaterially-participating farm rental income goes to Schedule E via Form 4835."
+    testRef: "tests/engine/schedules/schedule-1.test.ts::Schedule 1 Line 6 - farm income flows from Schedule F"
+
+  - line: "7"
+    description: "Unemployment compensation"
+    formula: "Sum of Form 1099-G Box 1 unemployment compensation amounts"
+    irsRef: "Schedule 1 Instructions, Line 7; IRC section 85"
+    inputs:
+      - "Form 1099-G Box 1: Unemployment compensation"
+    notes: "All unemployment compensation is taxable under IRC §85 for tax years after 2021. The American Rescue Plan Act exclusion ($10,200 for AGI under $150K) applied only to 2020. Form 1099-G Box 4 federal tax withheld flows to Form 1040 Line 25b withholding total."
+    edgeCases:
+      - "Multiple 1099-G forms are summed"
+      - "State tax withheld on Box 11 does not affect federal unemployment income but may be relevant for state returns"
+      - "Fraud cases where the taxpayer did not actually receive unemployment benefits should be excluded and reported to the issuing state"
+    testRef: "tests/engine/schedules/schedule-1.test.ts::Schedule 1 Line 7 - unemployment compensation from Form 1099-G"
+
+  - line: "2a"
+    description: "Alimony received"
+    formula: "Alimony received (pre-2019 divorce agreements only)"
+    irsRef: "Schedule 1 Instructions, Line 2a"
+    notes: "Post-2018 divorce agreements: alimony not taxable. Prior to 2024, the codebase mapped this to Line 8a, but the IRS Schedule 1 has placed alimony on Line 2a since the 2019 revision."
+    testRef: "tests/engine/schedules/schedule-1.test.ts::Schedule 1 Line 2a - alimony"
+
+  - line: "8a"
+    description: "Other income: net operating loss deduction"
+    formula: "Prior-year NOL carryforward, limited to 80% of taxable income computed without the NOL deduction (IRC §172(a)(2)), entered as a negative amount that reduces total additional income"
+    irsRef: "Schedule 1 Instructions, Line 8a; IRC §172; Pub 536"
+    inputs:
+      - "Available NOL carryforward from prior years (Form 461 excess business loss or other IRC §172 source)"
+      - "Taxable income computed without the NOL deduction (for the 80% limitation)"
+    notes: "For post-2017 NOLs, the deduction is limited to 80% of taxable income computed without regard to the NOL deduction itself. For individual taxpayers in 2025, the primary source of NOLs is excess business losses under IRC §461(l) that become NOL carryforwards under IRC §172. The NOL deduction is entered as a negative amount on Schedule 1 Line 8a, reducing Line 8z and Line 10. When taxable income before the NOL deduction is zero or negative, no NOL deduction is allowed and the full carryforward continues to the next year. The 80% limitation uses the pre-NOL taxable income from the federal engine's first-pass computation; AGI-dependent deductions are not recomputed in this slice."
+    edgeCases:
+      - "Zero or negative taxable income: no NOL deduction allowed, full carryforward continues"
+      - "NOL carryforward larger than 80% of taxable income: deduction limited to 80%"
+      - "NOL carryforward smaller than 80% of taxable income: full carryforward is deducted"
+      - "No available NOL carryforward: no deduction, line is $0"
+    testRef: "tests/engine/schedules/schedule-1.test.ts::Schedule 1 Line 8a - NOL deduction reduces total additional income"
+
+  - line: "8b"
+    description: "Other income: gambling income"
+    formula: "Sum of all W-2G Box 1 reportable winnings plus any manual gambling winnings from Schedule A input"
+    irsRef: "Schedule 1 Instructions, Line 8b; IRC §61(a); Pub. 525"
+    inputs:
+      - "Form W-2G Box 1: Reportable winnings"
+      - "Manual gambling winnings from Schedule A input"
+    notes: "All gambling income is taxable regardless of source. W-2G forms report certain gambling winnings above IRS thresholds, but all winnings must be reported. Gambling losses are deductible only on Schedule A Line 28 and only up to total gambling winnings (IRC §165(d)). W-2G Box 4 federal withholding flows to Form 1040 Line 25d."
+    edgeCases:
+      - "Multiple W-2Gs from different sources are summed"
+      - "Manual gambling winnings from Schedule A combine with W-2G winnings"
+      - "Zero gambling income when no W-2Gs and no manual winnings"
+    testRef: "tests/engine/forms/form-w2g.test.ts::W-2G gambling income - single W-2G reports winnings as income"
+
+  - line: "8f"
+    description: "Other income: taxable HSA distributions"
+    formula: "If one supported Form 8889 is present, start with that form's Line 16 taxable HSA distributions plus Line 20 HSA recapture income; if the return also includes supplemental owner-specific supported Form 8889 statements for mixed spouse-owned HSA documents, add each supplemental statement form's Line 16 and Line 20 amounts; if no main Form 8889 is present and the return includes separate owner-specific supported Form 8889 statements, sum each statement form's Line 16 and Line 20 amounts"
+    irsRef: "Schedule 1 Instructions, Line 8f"
+    notes: "This line carries both Form 8889 Part II taxable HSA distributions and Form 8889 Part III testing-period recapture income. In the supported HSA document flow, the engine may build the Form 8889 Part II input from Form 1099-SA data even when no manual `form8889` payload is present, and when mixed primary/spouse HSA documents are present it can either build separate owner-specific statement forms or supplement an explicit Form 8889 with the other owner's statement-form results."
+    testRef: "tests/engine/schedules/schedule-1.test.ts::Schedule 1 Line 8f - explicit Form 8889 inputs still aggregate the other spouse's tagged HSA documents"
+
+  - line: "10"
+    description: "Total additional income"
+    formula: "Sum of the implemented Part I income lines, including Line 4 other gains or losses, Line 7 unemployment compensation, Line 8a NOL deduction (as negative), Line 8b gambling income, and Line 8f HSA taxable distributions and recapture income"
+    irsRef: "Schedule 1 Instructions, Line 10"
+    notes: "Goes to Form 1040 Line 8"
+    testRef: "tests/engine/schedules/schedule-1.test.ts::Schedule 1 Line 10 - total additional income includes unemployment compensation"
+
+  # ── Part II: Adjustments to Income ──────────────────────
+  - line: "11"
+    description: "Educator expenses"
+    formula: "Use the validated eligible educator expense amounts that remain after any reimbursements and excluded bond-program or education-account funding offsets already reflected in the input. If owner-specific educator-expense amounts are supplied, allow up to $300 for the primary taxpayer plus, on a married filing jointly return, up to $300 for the spouse; otherwise use the legacy aggregate educator-expense input and cap that fallback amount at $300"
+    irsRef: "Schedule 1 Instructions, Line 11"
+    notes: "IRS Topic No. 458 allows up to $300 per eligible educator and up to $600 on a joint return if both spouses are eligible educators, but not more than $300 each. The supported split-input path models that per-spouse cap directly. The legacy aggregate input remains available as a conservative fallback and still caps at $300 because, without separate taxpayer and spouse amounts, the engine cannot safely infer that both joint filers are eligible educators."
+    edgeCases:
+      - "Single, head of household, qualifying surviving spouse, and married filing separately returns remain capped at $300"
+      - "Married filing jointly returns can deduct up to $600 only when separate primary and spouse educator-expense amounts are provided; each spouse is still capped at $300"
+      - "If both split amounts and the legacy aggregate amount are supplied, the split amounts control and the aggregate fallback is ignored to avoid double counting"
+    testRef: "tests/engine/schedules/schedule-1.test.ts::Schedule 1 Line 11 - MFJ caps each eligible educator at $300 for up to $600 total"
+
+  - line: "12"
+    description: "Certain business expenses of reservists, performing artists, and fee-basis officials"
+    formula: "Validated manual total of deductible business expenses reported on Form 2106 that flow to Schedule 1 Line 12 in the supported slice"
+    irsRef: "Schedule 1 Instructions, Line 12; Form 2106"
+    notes: "This slice accepts a validated aggregate Schedule 1 Line 12 amount instead of rebuilding Form 2106 category detail."
+    testRef: "tests/engine/schedules/schedule-1.test.ts::Schedule 1 Line 12 - business expense adjustments flow through Schedule 1 and the Social Security add-back path"
+
+  - line: "13"
+    description: "HSA deduction"
+    formula: "If one supported Form 8889 is present, start with Form 8889 Line 13; if the return also includes supplemental owner-specific supported Form 8889 statements for mixed spouse-owned HSA documents or owner-tagged W-2 Box 12 code W contribution support, add each supplemental statement form's Line 13 amount; if the return instead provides explicit owner-specific Form 8889 inputs for the primary and spouse owners, sum each owner's supported Form 8889 Line 13 amount; if no main Form 8889 is present and mixed spouse-owned HSA documents or owner-tagged W-2 Box 12 code W support produce multiple supported owner-specific Form 8889 statements, sum their Line 13 amounts; otherwise use the manual HSA adjustment fallback"
+    irsRef: "Schedule 1 Instructions, Line 13"
+    edgeCases:
+      - "Self-only: max $4,300 (2025)"
+      - "Family: max $8,550 (2025)"
+      - "Age 55+ catch-up: additional $1,000"
+      - "Employer contributions reduce limit"
+      - "Mixed-owner document-only HSA auto-build keeps contribution-side deduction defaults at $0 until explicit owner-specific Form 8889 inputs are supplied, including statement forms synthesized only from owner-tagged W-2 Box 12 code W support"
+    testRef: "tests/engine/schedules/schedule-1.test.ts::Schedule 1 Line 13 - HSA deduction"
+
+  - line: "14"
+    description: "Moving expenses for members of the Armed Forces"
+    formula: "When Form 3903 input is provided, compute the deductible moving expenses from the form (total expenses minus reimbursements excluded from income, aggregated across all PCS moves). Otherwise, use the validated manual Schedule 1 Line 14 amount."
+    irsRef: "Schedule 1 Instructions, Line 14; Form 3903; IRC §217(k)"
+    inputs:
+      - "Form 3903 input (preferred)"
+      - "Manual armedForcesMovingExpenses adjustment (fallback)"
+    notes: "Post-TCJA (2018–2025), only active-duty Armed Forces members moving pursuant to a military order for permanent change of station qualify. The manual pass-through is preserved for backward compatibility."
+    testRef: "tests/engine/forms/form-3903.test.ts::Form 3903 Schedule 1 integration"
+
+  - line: "15"
+    description: "Deductible part of self-employment tax"
+    formula: "Schedule SE Line 13 (50% of SE tax)"
+    irsRef: "Schedule 1 Instructions, Line 15"
+    inputs:
+      - "Schedule SE deductible portion"
+    testRef: "tests/engine/schedules/schedule-1.test.ts::Schedule 1 Line 15 - SE tax deduction"
+
+  - line: "16"
+    description: "Self-employed SEP, SIMPLE, and qualified plans"
+    formula: "Retirement plan contributions for self-employed individuals"
+    irsRef: "Schedule 1 Instructions, Line 16"
+    edgeCases:
+      - "SEP-IRA: up to 25% of net SE earnings (max $69,000 for 2025)"
+      - "SIMPLE IRA: employee max $16,500 + employer match"
+    testRef: "tests/engine/schedules/schedule-1.test.ts::Schedule 1 Line 16 - SE retirement contributions"
+
+  - line: "17"
+    description: "Self-employed health insurance deduction"
+    formula: "min(premiums_paid, max(0, net_profit - Line_15_deductible_SE_tax - Line_16_SE_retirement))"
+    irsRef: "Schedule 1 Instructions, Line 17; Self-Employed Health Insurance Deduction Worksheet (Pub 535); IRC §162(l)"
+    notes: |
+      Per IRS Schedule 1 Instructions, Line 17: "You can't deduct more than the net
+      profit you earned from the trade or business under which the insurance plan was
+      established (reduced by any deductions you claim on Schedule 1, lines 15 and 16)."
+      Line 15 = deductible half of SE tax (Schedule SE Line 13).
+      Line 16 = SE retirement contributions (SEP/SIMPLE/qualified plans).
+
+      The engine now supports two paths:
+      1. Manual: the user provides a pre-computed selfEmployedHealthInsurance amount in
+         adjustments. The engine caps it at net profit minus SE tax minus retirement.
+      2. Worksheet: the user provides a seHealthInsuranceWorksheet input with detailed
+         premium data (medical/dental/vision, long-term care with age-based limits per
+         IRC §213(d)(10), Medicare Part B/D/Medigap per Rev. Rul. 2010-13), eligible
+         months, and the earned-income limit. The engine computes the deduction from
+         the Pub 535 Self-Employed Health Insurance Deduction Worksheet and passes the
+         result to Schedule 1 Line 17 without re-capping.
+      The worksheet path computes the cap from combined Schedule C + Schedule F net
+      profit minus deductible SE tax minus retirement contributions.
+    edgeCases:
+      - "Premiums $20K, net profit $15K, deductible SE $1,060 → cap = $13,940, deduction = $13,940"
+      - "Business loss (negative net profit) → cap = $0, no deduction allowed"
+      - "Zero net profit → cap = $0, no deduction allowed"
+      - "Premiums below cap → full premiums deducted"
+      - "Worksheet path: months not eligible for employer plan prorate the deduction"
+      - "Worksheet path: long-term care premiums capped per person by age (IRC §213(d)(10))"
+      - "Worksheet path: Medicare Part B, D, and Medigap premiums deductible (Rev. Rul. 2010-13)"
+      - "Excess premiums not deductible here may still be claimed on Schedule A Line 1"
+    testRef: "tests/engine/schedules/schedule-1.test.ts::Schedule 1 Line 17 - SE health insurance"
+
+  - line: "18"
+    description: "Penalty on early withdrawal of savings"
+    formula: "1099-INT Box 2 (early withdrawal penalty) + manual adjustments"
+    irsRef: "Schedule 1 Instructions, Line 18"
+    notes: "Above-the-line deduction — deductible even if not itemizing"
+    testRef: "tests/engine/schedules/schedule-1.test.ts::Schedule 1 Line 18 - early withdrawal penalty"
+
+  - line: "19a"
+    description: "Alimony paid"
+    formula: "Alimony paid under pre-2019 divorce/separation agreement"
+    irsRef: "Schedule 1 Instructions, Line 19a"
+    notes: "Post-2018 agreements: alimony not deductible (TCJA)"
+    edgeCases:
+      - "Requires recipient SSN (Line 19b)"
+      - "Only deductible for pre-2019 agreements"
+    testRef: "tests/engine/schedules/schedule-1.test.ts::Schedule 1 Line 19a - alimony paid"
+
+  - line: "20"
+    description: "IRA deduction"
+    formula: "When the IRA Deduction Worksheet is provided, use the computed deductible amount from Pub 590-A Worksheets 1-1 and 1-2 based on MAGI, filing status, employer plan participation, and contribution limits; otherwise use the validated manual IRA deduction amount"
+    irsRef: "Schedule 1 Instructions, Line 20; Pub 590-A; Rev. Proc. 2024-40 §3.20"
+    notes: "The IRA Deduction Worksheet is now integrated into Schedule 1: when `iraDeductionWorksheet` input is provided, Schedule 1 computes the IRA MAGI from income and other adjustments, calls the worksheet for the primary (and spouse on MFJ returns), and uses the computed deduction. The IRA MAGI equals total income minus all adjustments except the IRA deduction and student loan interest, per Pub 590-A. Social Security taxable benefits are excluded from the IRA MAGI computation because they depend on the IRA deduction (circular); for the typical working-age taxpayer subject to IRA phase-out this is negligible. The computed IRA deduction flows into the student loan interest MAGI and total adjustments."
+    edgeCases:
+      - "Full deduction if no employer plan"
+      - "Phase-out if covered by employer plan: Single $79K-$89K, MFJ $126K-$146K (2025)"
+      - "Spouse not covered but other spouse is: MFJ $236K-$246K phase-out"
+      - "MFS active participant: $0-$10K phase-out"
+      - "Contribution limit: $7,000 (under 50), $8,000 (50+) for 2025"
+      - "Partial phase-out rounds reduction up to next $10 multiple with $200 minimum floor"
+      - "MFJ: each spouse computed separately, total is sum"
+      - "IRA worksheet deduction takes priority over manual iraDeduction adjustment"
+      - "Other adjustments (HSA, SE deductions) reduce IRA MAGI and can increase the deductible amount"
+    testRef: "tests/engine/schedules/schedule-1.test.ts::Schedule 1 Line 20 - single active participant mid-phase-out computes partial IRA deduction from worksheet"
+
+  - line: "21"
+    description: "Student loan interest deduction"
+    formula: "Qualified student loan interest paid, limited to $2,500 before phase-out; if filing separately, $0; otherwise use the smaller of the paid interest or $2,500, compute the 2025 modified-AGI worksheet fraction as excess MAGI over the filing-status threshold divided by $15,000 ($30,000 if married filing jointly) rounded to at least three decimals and capped at 1.000, multiply the capped interest by that fraction, subtract the reduction from the capped interest, and round the final Schedule 1 Line 21 deduction to the nearest whole dollar"
+    irsRef: "IRC §221(b)(2)(B); Rev. Proc. 2024-40 §2.30; Pub 970 Worksheet 4-1"
+    notes: "MAGI for SLI = AGI before student loan deduction (Pub 970: 'before subtracting any deduction for student loan interest'). The 2025 Form 1040 instructions Student Loan Interest Deduction Worksheet lines 7 through 9 require the worksheet fraction to be rounded to at least three decimal places before the final whole-dollar deduction is entered on Schedule 1 Line 21."
+    edgeCases:
+      - "Max deduction: $2,500"
+      - "2025 phase-out (Rev. Proc. 2024-40 §2.30): Single/HoH/QSS $85K-$100K ($15K range), MFJ $170K-$200K ($30K range)"
+      - "MFS: no deduction (IRC §221(e)(2))"
+      - "QSS uses single threshold — IRC §221(b)(2)(B) higher threshold is 'for joint returns' only"
+      - "Phase-out ratio: rounded to at least 3 decimal places per the 2025 Form 1040 instructions worksheet line 7"
+      - "Final Schedule 1 Line 21 deduction is rounded to the nearest whole dollar after the worksheet reduction"
+    testRef: "tests/engine/schedules/schedule-1.test.ts::Schedule 1 Line 21 - student loan interest capped at $2,500"
+
+  - line: "23"
+    description: "Archer MSA deduction"
+    formula: "Deduction from Form 8853 for Archer MSA contributions, using the supported manual adjustment input in this slice"
+    irsRef: "Schedule 1 Instructions, Line 23; Form 8853"
+    notes: "This deduction is part of the Social Security Benefits Worksheet Line 6 add-back even though the engine currently supports it only through a validated manual adjustment input."
+    testRef: "tests/engine/schedules/schedule-1.test.ts::Schedule 1 Line 23 - Archer MSA deduction flows through Schedule 1 and the Social Security add-back path"
+
+  - line: "25"
+    description: "Total other adjustments"
+    formula: "Supported manual total of other Schedule 1 Part II adjustments reported on Lines 24a through 24z"
+    irsRef: "Schedule 1 Instructions, Line 25"
+    notes: "This supported slice accepts a validated aggregate Line 25 amount instead of modeling each Line 24a-24z adjustment separately. That amount also feeds the Social Security Benefits Worksheet Line 6 add-back because the 2025 instructions explicitly add back Schedule 1 Line 25."
+    testRef: "tests/engine/schedules/schedule-1.test.ts::Schedule 1 Line 25 - manual total other adjustments flow through Schedule 1 and the Social Security add-back path"
+
+  - line: "26"
+    description: "Total adjustments to income"
+    formula: "Sum of the implemented Part II adjustment lines, including Line 11 educator expenses, Line 12 business-expense adjustments, Line 13 HSA deduction, Line 14 Armed Forces moving expenses, Line 23 Archer MSA deduction, and supported Line 25 total other adjustments"
+    irsRef: "Schedule 1 Instructions, Line 26"
+    notes: "Goes to Form 1040 Line 10"
+    testRef: "tests/engine/schedules/schedule-1.test.ts::Schedule 1 Line 26 - total adjustments"

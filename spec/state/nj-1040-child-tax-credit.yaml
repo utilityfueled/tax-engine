@@ -1,0 +1,101 @@
+form: "NJ-1040 Child Tax Credit"
+fullName: "New Jersey Child Tax Credit"
+taxYear: 2025
+reference: "https://www.nj.gov/treasury/taxation/individuals/childtaxcredit.shtml"
+
+notes: |
+  New Jersey provides a refundable Child Tax Credit for residents with qualifying
+  children age 5 or younger at the end of the tax year. The credit amount depends
+  on NJ taxable income, with higher credits for lower-income filers.
+
+  The credit is refundable — it reduces tax owed and can produce a refund.
+
+  Credit amounts per qualifying child (tax year 2025):
+    NJ taxable income ≤ $30,000:        $1,000 per child
+    NJ taxable income $30,001-$40,000:  $800 per child
+    NJ taxable income $40,001-$50,000:  $600 per child
+    NJ taxable income $50,001-$60,000:  $400 per child
+    NJ taxable income $60,001-$80,000:  $200 per child
+    NJ taxable income > $80,000:        $0
+
+  Eligibility:
+  - Must be a NJ resident (full or part year)
+  - Must have a valid SSN or ITIN
+  - Must be able to claim the child as a dependent for federal tax purposes
+  - Child must be age 5 or younger by December 31 of the tax year
+  - NJ taxable income must not exceed $80,000
+  - Filing status: single, MFJ, HOH, or QSS (not MFS)
+
+  Part-year residents prorate the credit based on months of NJ residency
+  (15+ days in a month counts as a full month).
+
+  Historical context:
+  - 2022: credit was 50% of current amounts ($500/$400/$300/$200/$100)
+  - 2023-2025: current amounts ($1,000/$800/$600/$400/$200)
+
+lines:
+  - line: "eligibility"
+    description: "NJ Child Tax Credit filing-status eligibility"
+    formula: |
+      Eligible filing statuses:
+      - single
+      - married filing jointly
+      - head of household
+      - qualifying surviving spouse
+      married filing separately: not eligible
+    inputs:
+      - "Filing status"
+    edgeCases:
+      - "Married filing separately is not eligible even if taxable income is $80,000 or less and qualifying children are present"
+    testRef: "tests/engine/state/nj-1040-child-tax-credit.test.ts::NJ-1040 CTC - married filing separately is ineligible even within income limit"
+
+  - line: "qualifying-children"
+    description: "Number of qualifying children age 5 or younger"
+    formula: "Count of dependents who are age 5 or younger by Dec 31"
+    inputs:
+      - "Number of qualifying children age ≤ 5"
+    notes: "Only children who can be claimed as dependents for federal purposes qualify."
+    testRef: "tests/engine/state/nj-1040-child-tax-credit.test.ts::NJ-1040 CTC - zero qualifying children produces zero credit"
+
+  - line: "credit-per-child"
+    description: "Credit amount per qualifying child based on NJ taxable income"
+    formula: |
+      if filingStatus = married_filing_separately: $0
+      if taxableIncome ≤ 30000: $1,000
+      if taxableIncome ≤ 40000: $800
+      if taxableIncome ≤ 50000: $600
+      if taxableIncome ≤ 60000: $400
+      if taxableIncome ≤ 80000: $200
+      else: $0
+    inputs:
+      - "Filing status"
+      - "NJ taxable income"
+    notes: "The income brackets use NJ taxable income (Line 42), not gross income."
+    edgeCases:
+      - "Married filing separately gets $0 even below $30,000"
+      - "Income exactly at $30,000 gets $1,000 per child"
+      - "Income at $30,001 drops to $800 per child"
+      - "Income exactly at $80,000 gets $200 per child"
+      - "Income at $80,001 gets $0"
+    testRef: "tests/engine/state/nj-1040-child-tax-credit.test.ts::NJ-1040 CTC - income at $30,000 boundary gets $1,000 per child"
+
+  - line: "total-credit"
+    description: "Total NJ Child Tax Credit before proration"
+    formula: "credit per child × number of qualifying children"
+    inputs:
+      - "Credit per child"
+      - "Number of qualifying children"
+    testRef: "tests/engine/state/nj-1040-child-tax-credit.test.ts::NJ-1040 CTC - two qualifying children doubles the credit"
+
+  - line: "prorated-credit"
+    description: "Prorated credit for part-year residents"
+    formula: "total credit × (months of NJ residency / 12), rounded to nearest dollar"
+    inputs:
+      - "Total credit"
+      - "Months of NJ residency"
+    notes: "Full-year residents (12 months) receive the full credit amount."
+    edgeCases:
+      - "Full-year resident gets full credit"
+      - "Part-year resident with 6 months gets half credit"
+      - "Part-year resident with 1 month gets 1/12 of credit"
+    testRef: "tests/engine/state/nj-1040-child-tax-credit.test.ts::NJ-1040 CTC - part-year resident with 6 months gets half credit"

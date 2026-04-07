@@ -1,0 +1,154 @@
+form: "Form 4684"
+fullName: "Casualties and Thefts"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i4684"
+
+notes: |
+  Form 4684 Section A computes the deductible personal casualty and theft
+  loss for individuals. Under TCJA (IRC §165(h)(5)), personal casualty
+  losses are only deductible for tax years 2018–2025 if attributable to a
+  federally declared disaster. The engine enforces this by requiring a
+  FEMA declaration number for each casualty event.
+  Events without a FEMA declaration number are rejected in this supported
+  2025 personal-use slice instead of being treated as deductible losses or
+  partially netted events.
+
+  Per-property: loss = min(basis, FMV decrease) − insurance reimbursement.
+  Per-event: aggregate property losses − $100 floor.
+  Aggregate: total net losses − total gains − 10% AGI → Schedule A Line 15.
+
+  Section B (business and income-producing property) is not implemented.
+
+businessRuleValidation:
+  - rule: "packet-inclusion-supported-disaster-scenarios"
+    description: "Inventory support counts this form as business-rule validated only when regression coverage proves `fillReturn` attaches the official Form 4684 PDF for supported federally declared disaster scenarios that produce either a deductible personal casualty loss or a net casualty gain, and suppresses the form when no deductible loss or gain remains."
+    testRef: "tests/pdf/fill-form-4684.test.ts::fillReturn attaches Form 4684 only when supported disaster scenarios produce a deductible loss or net casualty gain"
+
+lines:
+  # ── Per-Property Lines ────────────────────────────────
+  - line: "2"
+    description: "Cost or other basis of each property"
+    formula: "Property adjusted basis as reported by taxpayer"
+    irsRef: "Form 4684 Instructions, Line 2"
+    testRef: "tests/engine/forms/form-4684.test.ts::Form 4684 per-property - loss is smaller of basis or FMV decrease"
+
+  - line: "3"
+    description: "Insurance or other reimbursement"
+    formula: "Total insurance or other reimbursement received or expected"
+    irsRef: "Form 4684 Instructions, Line 3"
+    notes: "If reimbursement exceeds basis, the excess is a casualty gain (Line 4)"
+    testRef: "tests/engine/forms/form-4684.test.ts::Form 4684 per-property - gain when insurance exceeds basis"
+
+  - line: "4"
+    description: "Gain from casualty or theft"
+    formula: "max(0, Line 3 − Line 2)"
+    irsRef: "Form 4684 Instructions, Line 4"
+    notes: "Casualty gains may be reported on Form 8949/Schedule D"
+    testRef: "tests/engine/forms/form-4684.test.ts::Form 4684 per-property - gain when insurance exceeds basis"
+
+  - line: "5"
+    description: "Fair market value before casualty or theft"
+    formula: "FMV immediately before the event"
+    irsRef: "Form 4684 Instructions, Line 5"
+    testRef: "tests/engine/forms/form-4684.test.ts::Form 4684 per-property - loss is smaller of basis or FMV decrease"
+
+  - line: "6"
+    description: "Fair market value after casualty or theft"
+    formula: "FMV immediately after the event"
+    irsRef: "Form 4684 Instructions, Line 6"
+    testRef: "tests/engine/forms/form-4684.test.ts::Form 4684 per-property - loss is smaller of basis or FMV decrease"
+
+  - line: "7"
+    description: "Decrease in fair market value"
+    formula: "Line 5 − Line 6"
+    irsRef: "Form 4684 Instructions, Line 7"
+    testRef: "tests/engine/forms/form-4684.test.ts::Form 4684 per-property - loss is smaller of basis or FMV decrease"
+
+  - line: "8"
+    description: "Smaller of Line 2 or Line 7"
+    formula: "min(costOrBasis, fmvDecrease)"
+    irsRef: "Form 4684 Instructions, Line 8"
+    notes: "Loss basis cannot exceed the lesser of cost basis or actual FMV decline"
+    testRef: "tests/engine/forms/form-4684.test.ts::Form 4684 per-property - loss is smaller of basis or FMV decrease"
+
+  - line: "9"
+    description: "Net loss per property"
+    formula: "max(0, Line 8 − Line 3)"
+    irsRef: "Form 4684 Instructions, Line 9"
+    edgeCases:
+      - "Floors at zero — negative result means a gain, captured on Line 4"
+      - "If insurance claim is pending, loss is not deductible until settled"
+    testRef: "tests/engine/forms/form-4684.test.ts::Form 4684 per-property - net loss floors at zero"
+
+  # ── Per-Event Aggregation ─────────────────────────────
+  - line: "10"
+    description: "Total casualty loss for this event"
+    formula: "Sum of Line 9 for all properties in this event"
+    irsRef: "Form 4684 Instructions, Line 10"
+    testRef: "tests/engine/forms/form-4684.test.ts::Form 4684 per-event - $100 floor subtracted from aggregate loss"
+
+  - line: "11"
+    description: "Per-event floor"
+    formula: "$100"
+    irsRef: "Form 4684 Instructions, Line 11; IRC §165(h)(1)"
+    notes: "$100 floor applies per casualty event, not per property"
+    testRef: "tests/engine/forms/form-4684.test.ts::Form 4684 per-event - $100 floor subtracted from aggregate loss"
+
+  - line: "12"
+    description: "Net event loss after floor"
+    formula: "max(0, Line 10 − $100)"
+    irsRef: "Form 4684 Instructions, Line 12"
+    edgeCases:
+      - "$100 floor is per event, not per property"
+      - "Floors at zero"
+    testRef: "tests/engine/forms/form-4684.test.ts::Form 4684 per-event - $100 floor subtracted from aggregate loss"
+
+  # ── Section A Summary ────────────────────────────────
+  - line: "13"
+    description: "Total losses"
+    formula: "Sum of Line 12 across all casualty events"
+    irsRef: "Form 4684 Instructions, Line 13"
+    testRef: "tests/engine/forms/form-4684.test.ts::Form 4684 aggregate - total losses summed across events"
+
+  - line: "14"
+    description: "Total gains"
+    formula: "Sum of Line 4 across all properties in all events"
+    irsRef: "Form 4684 Instructions, Line 14"
+    testRef: "tests/engine/forms/form-4684.test.ts::Form 4684 aggregate - gains offset losses"
+
+  - line: "15"
+    description: "Net casualty gain"
+    formula: "If Line 14 > Line 13: Line 14 − Line 13 (reported on Form 8949)"
+    irsRef: "Form 4684 Instructions, Line 15"
+    notes: "Net casualty gain flows to Form 8949/Schedule D, not Schedule A"
+    testRef: "tests/engine/forms/form-4684.test.ts::Form 4684 aggregate - net gain when gains exceed losses"
+
+  - line: "16"
+    description: "Net casualty loss before AGI threshold"
+    formula: "If Line 13 > Line 14: Line 13 − Line 14"
+    irsRef: "Form 4684 Instructions, Line 16"
+    testRef: "tests/engine/forms/form-4684.test.ts::Form 4684 aggregate - net loss before 10% AGI threshold"
+
+  - line: "18"
+    description: "Net loss (same as Line 16 when losses exceed gains)"
+    formula: "Line 13 − Line 14 (when Line 13 ≥ Line 14)"
+    irsRef: "Form 4684 Instructions, Line 18"
+    notes: "Post-TCJA: only federally declared disaster losses qualify"
+    testRef: "tests/engine/forms/form-4684.test.ts::Form 4684 aggregate - 10% AGI threshold applied"
+
+  - line: "19"
+    description: "10% of AGI"
+    formula: "0.10 × AGI"
+    irsRef: "Form 4684 Instructions, Line 19; IRC §165(h)(2)(A)"
+    testRef: "tests/engine/forms/form-4684.test.ts::Form 4684 aggregate - 10% AGI threshold applied"
+
+  - line: "20"
+    description: "Deductible casualty loss"
+    formula: "max(0, Line 18 − Line 19)"
+    irsRef: "Form 4684 Instructions, Line 20"
+    notes: "This amount flows to Schedule A Line 15"
+    edgeCases:
+      - "Zero when losses do not exceed 10% of AGI"
+      - "Only federally declared disaster losses qualify post-TCJA"
+      - "Floors at zero"
+    testRef: "tests/engine/forms/form-4684.test.ts::Form 4684 aggregate - deductible loss flows to Schedule A Line 15"

@@ -1,0 +1,128 @@
+form: "California FTB 3523 Research Credit"
+fullName: "California FTB 3523 Research Credit Upstream Personal-Filer Carryover Slice"
+taxYear: 2025
+irsReference: "https://www.ftb.ca.gov/forms/2025/2025-3523.pdf"
+
+notes: |
+  This slice models the supported 2025 Form FTB 3523 lines needed to feed
+  California individual-return credit code 183 into Form 540NR Schedule P
+  (540NR) Section B2. The official 2025 FTB 3523 instructions direct taxpayers
+  to:
+  - enter pass-through research credit amounts from Schedule K-1, Schedule
+    K-1 (568), Schedule K-1 (100S), or other pass-through statements on line 32
+  - add the supported upstream current-year non-passive research credit amount
+    and line 32 pass-through credits on line 33
+  - enter the passive-activity portion of line 32 on line 34
+  - subtract line 34 from line 33 on line 35
+  - enter the allowable credit from passive activities on line 36
+  - enter prior-year carryover of non-passive research credit on line 37
+  - add line 35, line 36, and line 37 on line 38
+  - enter the amount claimed on the current return on line 39
+  - enter 0 on line 40 unless the filer is a corporation that assigned credit,
+    which is outside this supported personal-filer slice
+  - optionally enter the elected refundable credit amount on line 41
+  - subtract line 39, line 40, and line 41 from line 38 on line 42
+  This slice intentionally leaves the detailed Section A and Section B research
+  credit computations upstream. It starts from the supported current-year
+  non-passive research credit amount already computed on FTB 3523 line 17 or
+  line 31 and uses line 38 as the available Schedule P credit amount and line
+  42 as the resulting carryover after the Schedule P used-this-year amount is
+  known.
+
+lines:
+  - line: "32"
+    description: "Pass-through research credit"
+    formula: "Add the supported pass-through research credit amounts from Schedule K-1, Schedule K-1 (568), Schedule K-1 (100S), or similar pass-through statements"
+    inputs:
+      - "Optional list of pass-through research credit amounts with entity identification context"
+    testRef: "tests/engine/state/ca-ftb-3523-research-credit.test.ts::CA FTB 3523 Research Credit Line 38 - current-year credit, pass-through credits, allowable passive credit, and prior-year carryover add to total available credit"
+
+  - line: "33"
+    description: "Current-year non-passive plus pass-through research credit"
+    formula: "Supported upstream current-year non-passive research credit amount from line 17 or line 31 + Line 32"
+    inputs:
+      - "Supported upstream current-year non-passive research credit amount"
+      - "Form FTB 3523 line 32"
+    edgeCases:
+      - "The supported current-year amount may come from either the regular-credit or alternative-simplified-credit section of Form FTB 3523"
+    testRef: "tests/engine/state/ca-ftb-3523-research-credit.test.ts::CA FTB 3523 Research Credit Line 38 - current-year credit, pass-through credits, allowable passive credit, and prior-year carryover add to total available credit"
+
+  - line: "34"
+    description: "Passive activity credit included on line 32"
+    formula: "Supported passive-activity portion of the pass-through research credit included on line 32"
+    inputs:
+      - "Optional supported passive-activity research credit amount included on line 32"
+    edgeCases:
+      - "Line 34 cannot exceed line 32 pass-through research credit"
+    testRef: "tests/engine/state/ca-ftb-3523-research-credit.test.ts::CA FTB 3523 Research Credit Line 38 - current-year credit, pass-through credits, allowable passive credit, and prior-year carryover add to total available credit"
+
+  - line: "35"
+    description: "Current-year non-passive research credit"
+    formula: "Line 33 - Line 34"
+    inputs:
+      - "Form FTB 3523 line 33"
+      - "Form FTB 3523 line 34"
+    testRef: "tests/engine/state/ca-ftb-3523-research-credit.test.ts::CA FTB 3523 Research Credit Line 38 - current-year credit, pass-through credits, allowable passive credit, and prior-year carryover add to total available credit"
+
+  - line: "36"
+    description: "Allowable credit from passive activities"
+    formula: "Supported allowable passive-activity research credit amount"
+    inputs:
+      - "Optional supported allowable research credit from passive activities"
+    edgeCases:
+      - "Line 36 cannot exceed line 34 passive-activity credit"
+    testRef: "tests/engine/state/ca-ftb-3523-research-credit.test.ts::CA FTB 3523 Research Credit Line 38 - current-year credit, pass-through credits, allowable passive credit, and prior-year carryover add to total available credit"
+
+  - line: "37"
+    description: "Prior-year carryover of non-passive research credit"
+    formula: "Supported prior-year carryover of non-passive research credit"
+    inputs:
+      - "Optional prior-year carryover of non-passive research credit"
+    testRef: "tests/engine/state/ca-ftb-3523-research-credit.test.ts::CA FTB 3523 Research Credit Line 38 - current-year credit, pass-through credits, allowable passive credit, and prior-year carryover add to total available credit"
+
+  - line: "38"
+    description: "Total credit available"
+    formula: "Line 35 + Line 36 + Line 37"
+    inputs:
+      - "Form FTB 3523 line 35"
+      - "Form FTB 3523 line 36"
+      - "Form FTB 3523 line 37"
+    testRef: "tests/engine/state/ca-ftb-3523-research-credit.test.ts::CA FTB 3523 Research Credit Line 38 - current-year credit, pass-through credits, allowable passive credit, and prior-year carryover add to total available credit"
+
+  - line: "39"
+    description: "Credit claimed on current year's tax return"
+    formula: "Supported current-return claim amount, which in the supported Form 540NR slice comes from the Schedule P (540NR) line 16 through line 19 credit used this year"
+    inputs:
+      - "Optional research credit amount claimed this year"
+    edgeCases:
+      - "Do not allow line 39 to exceed line 38"
+    testRef: "tests/engine/state/ca-ftb-3523-research-credit.test.ts::CA FTB 3523 Research Credit Line 42 - claimed credit and refundable election reduce future carryover"
+
+  - line: "40"
+    description: "Assigned credit to affiliated corporations"
+    formula: "0 for the supported personal-filer slice"
+    inputs:
+      - "No supported input; line 40 remains 0 for individual returns"
+    notes: "Corporate credit-assignment mechanics are unsupported in this slice"
+    testRef: "tests/engine/state/ca-ftb-3523-research-credit.test.ts::CA FTB 3523 Research Credit Line 42 - claimed credit and refundable election reduce future carryover"
+
+  - line: "41"
+    description: "Elected refundable credit amount"
+    formula: "Optional supported elected refundable research credit amount to be excluded from future carryover"
+    inputs:
+      - "Optional elected refundable research credit amount"
+    edgeCases:
+      - "Do not allow line 41 to cause line 42 to drop below zero"
+    testRef: "tests/engine/state/ca-ftb-3523-research-credit.test.ts::CA FTB 3523 Research Credit Line 42 - claimed credit and refundable election reduce future carryover"
+
+  - line: "42"
+    description: "Credit carryover available for future years"
+    formula: "Line 38 - Line 39 - Line 40 - Line 41"
+    inputs:
+      - "Form FTB 3523 line 38"
+      - "Form FTB 3523 line 39"
+      - "Form FTB 3523 line 40"
+      - "Form FTB 3523 line 41"
+    edgeCases:
+      - "Do not allow the combined line 39 through line 41 reductions to exceed line 38"
+    testRef: "tests/engine/state/ca-ftb-3523-research-credit.test.ts::CA FTB 3523 Research Credit Line 42 - claimed credit and refundable election reduce future carryover"

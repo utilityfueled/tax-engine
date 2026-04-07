@@ -1,0 +1,190 @@
+form: "DeFi Transactions"
+fullName: "Decentralized Finance — Token Swaps, Wrapping, and Bridge Transactions"
+taxYear: 2025
+irsReference: "https://www.irs.gov/individuals/international-taxpayers/frequently-asked-questions-on-virtual-currency-transactions"
+
+notes: |
+  This spec covers the tax treatment of DeFi (decentralized finance) transactions
+  including DEX token-to-token swaps, wrapped token conversions, and cross-chain
+  bridge transactions.
+
+  Key IRS references:
+  - IRS Notice 2014-21: Virtual currency treated as property; exchanges are taxable
+  - IRC §1001: Recognition of gain/loss on disposition of property
+  - IRC §1012: Basis = cost of acquisition (includes capitalized fees)
+  - Rev. Rul. 2019-24: Applies property principles to all virtual currency
+  - Notice 2023-34: DeFi broker reporting (proposed, not yet final)
+
+  Treatment summary:
+  - DEX swaps (e.g., ETH→USDC on Uniswap): taxable disposition of sold token
+  - Wrapped token conversions (ETH→WETH): non-taxable, basis carryover
+  - Bridge transactions (ETH L1→ETH Arbitrum): non-taxable, basis carryover
+  - Gas fees on taxable swaps: capitalized into new token basis (IRC §1012)
+  - Gas fees on non-taxable events: personal expense, not deductible
+
+lines:
+  # ── DEX Token Swap (Taxable) ────────────────────────────
+  - line: "dex-swap-disposition"
+    description: "DEX swap — taxable disposition of sold token"
+    formula: |
+      Each token-to-token swap is a disposition of the fromAsset:
+      - Proceeds = fairMarketValueAtSwap (FMV of received tokens in USD)
+      - Cost basis = lot-matched basis of fromAsset (per elected method)
+      - Gain/loss = proceeds - cost basis
+      Flows to Form 8949 as a digital asset disposition.
+    irsRef: "IRS Notice 2014-21; IRC §1001(a)"
+    edgeCases:
+      - "Multi-hop swaps (router aggregation): each leg is a separate taxable event"
+      - "Failed/reverted transactions: no disposition if tokens returned"
+      - "Dust amounts (< $0.01): still taxable but often de minimis"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::DEX swap ETH→USDC generates taxable disposition with correct gain/loss"
+
+  - line: "dex-swap-acquisition"
+    description: "DEX swap — new lot for received token"
+    formula: |
+      Basis of received token = FMV at swap time + gas fee (capitalized).
+      Per IRC §1012, cost of acquisition includes transaction costs.
+      Date acquired = date of swap.
+    irsRef: "IRC §1012"
+    edgeCases:
+      - "Zero-value tokens received: basis = gas fee only"
+      - "Gas fee in non-ETH token: convert to USD at time of transaction"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::DEX swap capitalizes gas fee into new token basis"
+
+  - line: "dex-swap-holding-period"
+    description: "Holding period for DEX swap dispositions"
+    formula: |
+      Holding period of disposed token determined from lot(s) matched.
+      Long-term if held > 1 year (366+ days), short-term otherwise.
+      Multiple lots consumed → date acquired = "VARIOUS".
+    irsRef: "IRC §1222"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::DEX swap spanning multiple lots reports VARIOUS dateAcquired"
+
+  - line: "dex-swap-form-8949"
+    description: "DEX swap Form 8949 routing"
+    formula: |
+      Each taxable DEX swap generates a Form 8949 entry:
+      - Description: "FROMTICKER→TOTICKER swap via PROTOCOL"
+      - Short-term → Part I (Box B, basis not reported by broker)
+      - Long-term → Part II (Box E, basis not reported by broker)
+      Digital asset flag = true.
+    irsRef: "Form 8949 Instructions"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::DEX swap dispositions flow to Form 8949 with digitalAsset flag"
+
+  # ── Wrapped Token Conversion (Non-Taxable) ──────────────
+  - line: "wrap-nontaxable"
+    description: "Wrapped token conversion — non-taxable event"
+    formula: |
+      Wrapping (ETH→WETH, BTC→WBTC) is treated as non-taxable because
+      the wrapped token represents the same economic substance.
+      No gain/loss recognized. No Form 8949 entry.
+    irsRef: "IRS Notice 2014-21 (general property principles); IRC §1001 (no realization if same substance)"
+    edgeCases:
+      - "Liquid staking derivatives (stETH, rETH): NOT wrapping — may be taxable exchange"
+      - "Synthetic tokens: NOT wrapping if different economic exposure"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Wrapping ETH→WETH is non-taxable with basis carryover"
+
+  - line: "wrap-basis-carryover"
+    description: "Wrapped token basis carryover"
+    formula: |
+      Basis of wrapped token = basis of unwrapped token (carry over).
+      Holding period tacks (continues from original acquisition date).
+      Gas fee on wrapping is personal expense, not added to basis.
+    irsRef: "IRC §1012; general property principle of non-realization"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Wrapping preserves original acquisition date for holding period"
+
+  - line: "unwrap-nontaxable"
+    description: "Unwrapping conversion — non-taxable event"
+    formula: |
+      Unwrapping (WETH→ETH) receives same treatment as wrapping.
+      Basis carries over, no gain/loss recognized.
+    irsRef: "IRS Notice 2014-21; IRC §1001"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Unwrapping WETH→ETH is non-taxable with basis carryover"
+
+  # ── Bridge Transaction (Non-Taxable) ────────────────────
+  - line: "bridge-nontaxable"
+    description: "Cross-chain bridge — non-taxable transfer"
+    formula: |
+      Moving the same asset between chains (e.g., ETH mainnet → Arbitrum)
+      is not a taxable event. Same economic substance, different network.
+      No gain/loss recognized. No Form 8949 entry.
+    irsRef: "IRS Notice 2014-21 (general property principles)"
+    edgeCases:
+      - "Bridge exploits/hacks: if tokens are lost, may be treated as casualty loss"
+      - "Bridge wrapping (ETH → WETH on L2): non-taxable per both wrap and bridge rules"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Bridge transaction is non-taxable with basis carryover"
+
+  - line: "bridge-basis-carryover"
+    description: "Bridge transaction basis carryover"
+    formula: |
+      Basis of bridged token = basis of original token.
+      Holding period continues from original acquisition.
+      Gas fee on bridging is personal expense, not deductible.
+    irsRef: "IRC §1012; general property principle"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Bridge transaction preserves basis and holding period"
+
+  # ── Gas Fee Treatment ────────────────────────────────────
+  - line: "gas-fee-taxable-swap"
+    description: "Gas fee on taxable DEX swap"
+    formula: |
+      Gas fee paid on a taxable token swap is capitalized into the
+      cost basis of the received token per IRC §1012.
+      New lot basis = FMV of received token + gas fee.
+    irsRef: "IRC §1012; Treas. Reg. §1.263(a)-2(d)(1)"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::DEX swap capitalizes gas fee into new token basis"
+
+  - line: "gas-fee-nontaxable"
+    description: "Gas fee on non-taxable event"
+    formula: |
+      Gas fees on wrapping and bridging are personal expenses.
+      Not deductible and not added to basis (no realization event).
+    irsRef: "IRC §262 (personal expenses not deductible)"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Gas fee on wrapping is personal expense, not added to basis"
+
+  # ── Edge Cases ─────────────────────────────────────────
+  - line: "dex-swap-dust"
+    description: "Dust amount DEX swap (< $0.01) — still taxable"
+    formula: |
+      Even de minimis token swaps (< $0.01 FMV) are taxable dispositions.
+      No de minimis exception exists for digital asset transactions under current IRS guidance.
+    irsRef: "IRS Notice 2014-21; IRC §1001"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Dust amount DEX swap (< $0.01) is still a taxable disposition"
+
+  - line: "dex-swap-failed"
+    description: "Failed/reverted DEX swap — no disposition"
+    formula: |
+      If a transaction reverts (fromQuantity = 0), no disposition occurred.
+      Gas fee consumed on a failed transaction is a personal expense (IRC §262),
+      not deductible and not added to any basis.
+    irsRef: "IRC §262; IRC §1001 (no realization if no exchange)"
+    edgeCases:
+      - "Gas on failed approval transactions: personal expense"
+      - "Partial revert: if any tokens moved, that portion is a disposition"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Failed DEX swap (zero fromQuantity) produces no disposition"
+
+  - line: "dex-swap-gas-only"
+    description: "Gas-only transaction (approval, failed swap) — no taxable event"
+    formula: |
+      ERC-20 approvals and other gas-only transactions (no token exchange)
+      produce no taxable event. Gas fee is a personal expense.
+    irsRef: "IRC §262 (personal expenses not deductible)"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Gas-only approval transaction (no swap) produces no taxable event"
+
+  - line: "dex-swap-multi-hop"
+    description: "Multi-hop swap — each leg is a separate taxable event"
+    formula: |
+      Router aggregation (e.g., ETH→WETH→USDC via 1inch):
+      - Wrapping leg (ETH→WETH): non-taxable, basis carryover
+      - Swap leg (WETH→USDC): taxable disposition with carried-over basis
+      Each leg evaluated independently.
+    irsRef: "IRS Notice 2014-21; IRC §1001"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Multi-hop swap: each leg is a separate taxable event (ETH→WETH→USDC)"
+
+  # ── Digital Asset Question ──────────────────────────────
+  - line: "1040-digital-asset-defi"
+    description: "DeFi transactions trigger Form 1040 digital asset question"
+    formula: |
+      Answer "Yes" to Form 1040 digital asset question if any DeFi
+      token swaps (including wrapping/bridging) occurred during the year.
+    irsRef: "Form 1040 Instructions, Line 1a Digital Assets"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::DeFi token swaps trigger digitalAssetQuestion = true"

@@ -1,0 +1,487 @@
+form: "IL-1040"
+fullName: "Illinois Individual Income Tax Return"
+taxYear: 2025
+reference: "https://tax.illinois.gov/forms/incometax/individual/il-1040.html"
+
+notes: |
+  Illinois imposes a flat 4.95% income tax on net income. The return starts with
+  federal AGI (Form 1040, Line 11), applies Illinois additions and subtractions to
+  arrive at base income, deducts personal exemptions, and applies the flat rate.
+  Credits include property tax credit (5% of qualifying property taxes), K-12
+  education expense credit (25% of expenses over $250, max $750), IL EITC (20% of
+  federal EIC), and IL Child Tax Credit (40% of IL EITC for children under 12).
+  Exemption amount is $2,850 per person for 2025.
+
+lines:
+  # Step 2 — Income
+  - line: "1"
+    description: "Federal adjusted gross income"
+    formula: "Federal Form 1040, Line 11"
+    reference: "IL-1040 Instructions, Step 2"
+    testRef: "tests/engine/state/il-1040.test.ts::IL-1040 Line 1 - federal AGI flows through"
+
+  - line: "2"
+    description: "Federally tax-exempt interest and dividend income"
+    formula: "Federal Form 1040, Line 2a (tax-exempt interest)"
+    reference: "IL-1040 Instructions, Step 2"
+    notes: "Municipal bond interest exempt from federal tax but taxable in IL (except IL-issued bonds)"
+    testRef: "tests/engine/state/il-1040.test.ts::IL-1040 Line 2 - tax-exempt interest added"
+
+  - line: "3"
+    description: "Other additions from Schedule M"
+    formula: "Schedule M, Step 2, Line 12"
+    reference: "IL-1040 Instructions, Step 2"
+    notes: |
+      Common additions: other states' bond interest, IRC 529 non-IL plan earnings,
+      IL special depreciation addition, pass-through entity additions.
+      For initial implementation, accept as a single input amount.
+    testRef: "tests/engine/state/il-1040.test.ts::IL-1040 Line 3 - other additions"
+
+  - line: "4"
+    description: "Total income"
+    formula: "Line 1 + Line 2 + Line 3"
+    reference: "IL-1040 Instructions, Step 2"
+    testRef: "tests/engine/state/il-1040.test.ts::IL-1040 Line 4 - total income"
+
+  # Step 3 — Base Income
+  - line: "5"
+    description: "Social Security and retirement plan income subtraction"
+    formula: "Sum of qualifying retirement income included in federal AGI"
+    reference: "IL-1040 Instructions, Step 3"
+    notes: |
+      Includes: Social Security benefits (federal Line 6b), railroad retirement,
+      qualified 401(k)/IRA/self-employed plan distributions, government retirement/
+      disability plans, state/local deferred compensation distributions.
+      Illinois subtracts all retirement income that was included in federal AGI.
+      For 2025+, do not include certain retirement payments reported on
+      Schedule K-1-P or K-1-T here; the instructions direct those amounts to
+      Schedule M, Line 14.
+    testRef: "tests/engine/state/il-1040.test.ts::IL-1040 Line 5 - retirement income subtraction"
+
+  - line: "6"
+    description: "Illinois Income Tax overpayment included in federal AGI"
+    formula: "Prior-year IL tax refund if included in federal income"
+    reference: "IL-1040 Instructions, Step 3"
+    notes: "Only Illinois refund, not other states' refunds"
+    testRef: "tests/engine/state/il-1040.test.ts::IL-1040 Line 6 - IL refund subtraction"
+
+  - line: "7"
+    description: "Other subtractions from Schedule M"
+    formula: "Schedule M, Step 3, Line 42"
+    reference: "IL-1040 Instructions, Step 3"
+    notes: |
+      Common subtractions: IL 529 plan contributions (max $10,000/$20,000 MFJ),
+      U.S. government interest, military pay, IL municipal bond interest,
+      medical debt relief (new 2025). For initial implementation, accept as input.
+    testRef: "tests/engine/state/il-1040.test.ts::IL-1040 Line 7 - other subtractions"
+
+  - line: "8"
+    description: "Total subtractions"
+    formula: "Line 5 + Line 6 + Line 7"
+    reference: "IL-1040 Instructions, Step 3"
+    testRef: "tests/engine/state/il-1040.test.ts::IL-1040 Line 8 - total subtractions"
+
+  - line: "9"
+    description: "Illinois base income"
+    formula: "max(Line 4 - Line 8, 0)"
+    reference: "IL-1040 Instructions, Step 3"
+    edgeCases:
+      - "Cannot be less than zero"
+    testRef: "tests/engine/state/il-1040.test.ts::IL-1040 Line 9 - base income floors at zero"
+
+  # Step 4 — Exemptions
+  - line: "10a"
+    description: "Personal exemption allowance"
+    formula: "Based on filing status and dependent status — see exemption table"
+    reference: "IL-1040 Instructions, Step 4"
+    notes: |
+      2025: $2,850 per person ($5,700 MFJ).
+      Reduced/eliminated if claimed as dependent on another return.
+      Entirely eliminated if AGI > $250,000 (single/HoH/MFS/QSS) or > $500,000 (MFJ).
+    edgeCases:
+      - "MFJ: $5,700 if neither claimed as dependent"
+      - "Single/HoH/MFS/QSS: $2,850 if not claimed as dependent"
+      - "Claimed as dependent with base income <= $2,850: $2,850"
+      - "Claimed as dependent with base income > $2,850: $0"
+      - "AGI > $250,000 (single/HoH/MFS/QSS): $0 exemption"
+      - "AGI > $500,000 (MFJ): $0 exemption"
+    testRef: "tests/engine/state/il-1040.test.ts::Personal Exemption (Line 10a)"
+
+  - line: "10b"
+    description: "Additional exemption for age 65 or older"
+    formula: "$1,000 per qualifying person (taxpayer and/or spouse if MFJ)"
+    reference: "IL-1040 Instructions, Step 4"
+    notes: |
+      Only the taxpayer and, if filing jointly, the spouse can qualify.
+      Non-joint returns may claim at most one age-65 exemption; joint returns
+      may claim at most two.
+    edgeCases:
+      - "Single/HoH/MFS/QSS with count > 1 is invalid"
+      - "MFJ with count > 2 is invalid"
+    testRef: "tests/engine/state/il-1040.test.ts::IL-1040 Line 10b - age 65 exemption"
+
+  - line: "10c"
+    description: "Additional exemption for legally blind"
+    formula: "$1,000 per qualifying person (taxpayer and/or spouse if MFJ)"
+    reference: "IL-1040 Instructions, Step 4"
+    notes: |
+      Only the taxpayer and, if filing jointly, the spouse can qualify.
+      Non-joint returns may claim at most one blind exemption; joint returns
+      may claim at most two.
+    edgeCases:
+      - "Single/HoH/MFS/QSS with count > 1 is invalid"
+      - "MFJ with count > 2 is invalid"
+    testRef: "tests/engine/state/il-1040.test.ts::IL-1040 Line 10c - blind exemption"
+
+  - line: "10d"
+    description: "Dependent exemption allowance"
+    formula: "Schedule IL-E/EIC, Step 2, Line 1"
+    reference: "IL-1040 Instructions, Step 4; Schedule IL-E/EITC, Step 2, Line 1"
+    notes: |
+      Illinois instructs filers claiming dependent exemptions to complete
+      Schedule IL-E/EIC and enter the amount from Step 2, Line 1 on IL-1040,
+      Line 10d. The supported engine therefore requires Schedule IL-E/EIC when
+      Line 10d is nonzero and consumes the schedule's computed dollar amount
+      instead of recomputing the amount from a bare inline count.
+    testRef: "tests/engine/state/il-1040.test.ts::IL-1040 Line 10d - dependent exemptions"
+
+  - line: "10"
+    description: "Total exemptions"
+    formula: "Line 10a + Line 10b + Line 10c + Line 10d"
+    reference: "IL-1040 Instructions, Step 4"
+    notes: |
+      All exemptions eliminated if AGI exceeds threshold ($250K single/$500K MFJ).
+      Additional age/blind exemptions also eliminated by the AGI threshold.
+    testRef: "tests/engine/state/il-1040.test.ts::IL-1040 Line 10 - total exemptions"
+
+  # Step 5 — Net Income and Tax
+  - line: "11"
+    description: "Net income"
+    formula: "max(Line 9 - Line 10, 0)"
+    reference: "IL-1040 Instructions, Step 5"
+    edgeCases:
+      - "Cannot be less than zero"
+      - "If Schedule NR attached: uses Schedule NR Line 51 instead of standard formula"
+    testRef: "tests/engine/state/il-1040.test.ts::IL-1040 Line 11 - net income"
+
+  - line: "12"
+    description: "Illinois income tax"
+    formula: "Line 11 × 0.0495"
+    reference: "IL-1040 Instructions, Step 5; 35 ILCS 5/201(b)(5.4)"
+    notes: |
+      Flat 4.95% rate for 2025.
+      If Schedule NR attached: uses Schedule NR Line 52 instead of standard formula.
+    edgeCases:
+      - "Schedule NR overrides standard computation for nonresidents/part-year residents"
+    testRef: "tests/engine/state/il-1040.test.ts::IL-1040 Line 12 - flat rate tax"
+
+  - line: "13"
+    description: "Recapture of investment tax credits"
+    formula: "Schedule 4255 recapture amount"
+    reference: "IL-1040 Instructions, Step 5"
+    notes: |
+      Rare additional tax. The engine accepts the recapture amount as direct input
+      and surfaces it on the IL-1040 result so callers can audit the exact value
+      flowing into total income tax.
+    testRef: "tests/engine/state/il-1040.test.ts::IL-1040 Line 13 - investment credit recapture flows through"
+
+  - line: "14"
+    description: "Income tax (Line 12 + Line 13 recapture)"
+    formula: "Line 12 + Line 13"
+    reference: "IL-1040 Instructions, Step 5"
+    notes: "Line 13 is recapture of investment tax credits — rare, accept as input"
+    testRef: "tests/engine/state/il-1040.test.ts::IL-1040 Line 14 - income tax includes recapture"
+
+  # Step 6 — Nonrefundable Credits
+  - line: "15"
+    description: "Credit for income tax paid to other states"
+    formula: "From Schedule CR"
+    reference: "IL-1040 Instructions, Step 6"
+    notes: |
+      For IL residents taxed by other states. When Schedule CR is attached,
+      the supported engine recomputes Schedule CR Column A from the current
+      IL-1040 Line 9 base income instead of trusting any caller-supplied
+      placeholder total.
+    testRef: "tests/engine/state/il-1040.test.ts::IL-1040 Line 15 - attached Schedule CR uses the current return base income for Schedule CR Line 42a"
+
+  - line: "16"
+    description: "Property tax + K-12 education expense + volunteer emergency worker credits"
+    formula: "From Schedule ICR, Line 13"
+    reference: "IL-1040 Instructions, Step 6; Schedule ICR"
+    notes: |
+      Schedule ICR Section A and Section B credits are unavailable on supported
+      returns explicitly marked nonresident. The volunteer emergency worker
+      credit remains available subject to Schedule ICR rules.
+    testRef: "tests/engine/state/il-1040.test.ts::IL-1040 Line 16 - Schedule ICR credits"
+
+  - line: "17"
+    description: "Credit from Schedule 1299-C"
+    formula: "Schedule 1299-C, Line 43 if attached; otherwise supported direct input amount"
+    reference: "IL-1040 Instructions, Step 6"
+    notes: |
+      Supported slice accepts either an attached Schedule 1299-C Step 3 credit
+      grid or a direct Line 17 amount when the detailed schedule is not provided.
+    testRef: "tests/engine/state/il-1040.test.ts::IL-1040 Line 17 - attached Schedule 1299-C overrides the raw credit input"
+
+  - line: "18"
+    description: "Total nonrefundable credits"
+    formula: "min(Line 15 + Line 16 + Line 17, Line 14)"
+    reference: "IL-1040 Instructions, Step 6"
+    edgeCases:
+      - "Cannot exceed Line 14 (income tax)"
+    testRef: "tests/engine/state/il-1040.test.ts::IL-1040 Line 18 - total nonrefundable credits capped at income tax"
+
+  # Step 7 — Tax After Credits and Other Taxes
+  - line: "19"
+    description: "Tax after nonrefundable credits"
+    formula: "Line 14 - Line 18"
+    reference: "IL-1040 Instructions, Step 7"
+    testRef: "tests/engine/state/il-1040.test.ts::IL-1040 Line 19 - tax after credits"
+
+  - line: "20"
+    description: "Household employment tax"
+    formula: "From Schedule H"
+    notes: "Accept as input"
+    testRef: "tests/engine/state/il-1040.test.ts::IL-1040 Line 20 - household employment tax"
+
+  - line: "21"
+    description: "Use tax"
+    formula: "If Use Tax Worksheet attached: report worksheet Line 6 unless ST-44 is required, in which case enter 0; otherwise direct input"
+    reference: "2025 IL-1040 Instructions, Step 7, Line 21"
+    notes: |
+      When the worksheet net use tax is $600 or more ($1,200 or more if married filing jointly),
+      Illinois requires the taxpayer to file Form ST-44 instead of reporting that amount on
+      IL-1040 Line 21. In that case the supported slice keeps the worksheet result for audit
+      purposes but reports $0 on Line 21.
+    edgeCases:
+      - "Worksheet net use tax below the ST-44 threshold flows through to Line 21"
+      - "Worksheet net use tax at or above the ST-44 threshold reports 0 on Line 21"
+    testRef: "tests/engine/state/il-1040.test.ts::IL-1040 Line 21 - worksheet use tax above the ST-44 threshold is reported as zero"
+
+  - line: "22"
+    description: "Compassionate Use / gaming surcharge"
+    formula: "Input amount"
+    notes: "Medical cannabis surcharge or gaming licensee surcharge"
+    testRef: "tests/engine/state/il-1040.test.ts::IL-1040 Line 22 - surcharges"
+
+  - line: "23"
+    description: "Total tax"
+    formula: "Line 19 + Line 20 + Line 21 + Line 22"
+    reference: "2025 Form IL-1040, Step 7"
+    notes: |
+      On the official 2025 return this amount is computed on page 1, Step 7,
+      Line 23 and then carried to page 2, Line 24. The underpayment penalty
+      from Form IL-2210 does not increase Step 7 total tax; it is entered later
+      on Line 34.
+    testRef: "tests/engine/state/il-1040.test.ts::IL-1040 Line 23 - total tax excludes the IL-2210 penalty"
+
+  - line: "24"
+    description: "Total tax from page 1, Line 23"
+    formula: "Copy Line 23"
+    reference: "2025 Form IL-1040, page 2"
+    notes: "Page 2 Line 24 is a carryforward of page 1 Line 23."
+    testRef: "tests/engine/state/il-1040.test.ts::IL-1040 Line 24 - carries forward page 1 total tax"
+
+  # Step 8 — Payments and Refundable Credits
+  - line: "25"
+    description: "Illinois income tax withheld"
+    formula: "Schedule IL-WIT Line 11, if attached; otherwise direct input amount"
+    reference: "IL-1040 Instructions, Step 8"
+    notes: |
+      The 2025 instructions direct filers to use Schedule IL-WIT to support the
+      amount claimed on Line 25. When Schedule IL-WIT is provided, the supported
+      slice uses its Line 11 total and ignores the direct Line 25 input amount.
+    testRef: "tests/engine/state/il-1040.test.ts::IL-1040 Line 25 - Schedule IL-WIT Line 11 overrides direct withholding input"
+
+  - line: "26"
+    description: "Estimated income tax payments"
+    formula: "IL-1040-ES payments + prior year overpayment applied"
+    reference: "IL-1040 Instructions, Step 8"
+    testRef: "tests/engine/state/il-1040.test.ts::IL-1040 Line 26 - estimated payments"
+
+  - line: "27"
+    description: "Pass-through withholding"
+    formula: "From K-1-P or K-1-T"
+    notes: "Accept as input"
+    testRef: "tests/engine/state/il-1040.test.ts::IL-1040 Line 27 - pass-through withholding"
+
+  - line: "28"
+    description: "Pass-through entity tax credit"
+    formula: "From K-1-P or K-1-T"
+    notes: "Accept as input"
+    testRef: "tests/engine/state/il-1040.test.ts::IL-1040 Line 28 - pass-through entity tax credit"
+
+  - line: "29"
+    description: "Illinois Earned Income Credit"
+    formula: "Schedule IL-E/EITC Line 6 base amount × 20% (× Schedule NR allocation decimal for nonresidents/part-year)"
+    reference: "Schedule IL-E/EITC, Step 4"
+    notes: |
+      Refundable credit. For most filers, Schedule IL-E/EITC Line 6 is federal Form 1040 or
+      1040-SR Line 27a. Illinois expanded EITC filers may instead use the Illinois Expanded
+      EITC Worksheet Line 23 amount on Schedule IL-E/EITC Line 6.
+      Illinois requires Schedule IL-E/EITC to claim IL-1040 Line 29, so the
+      supported engine does not compute a resident fallback from bare IL-1040 inputs.
+    edgeCases:
+      - "Uses Schedule IL-E/EITC Line 6 amount, which may override federal EIC"
+      - "Part-year/nonresidents multiply by Schedule NR allocation decimal (Line 48)"
+      - "Zero allocation decimal → zero IL EITC"
+    testRef: "tests/engine/state/il-1040.test.ts::IL-1040 Line 29 - IL EITC uses expanded worksheet amount when Schedule IL-E/EITC provides one"
+
+  - line: "30"
+    description: "Illinois Child Tax Credit"
+    formula: "IL EITC (Line 29) × 40%"
+    reference: "Schedule IL-E/EITC, Step 5"
+    notes: |
+      Refundable credit. Requires qualifying for IL EITC AND having at least one
+      dependent child under age 12 as of December 31, 2025, listed in Schedule
+      IL-E/EITC Step 2. A Step 3 qualifying child alone does not satisfy the
+      Illinois Child Tax Credit requirement.
+      Illinois requires Schedule IL-E/EITC to claim IL-1040 Line 30.
+      Rate increased to 40% for 2025.
+      For nonresidents/part-year: uses allocated IL EITC (already reduced by NR decimal).
+    edgeCases:
+      - "Only available if IL EITC > 0 AND has child under 12"
+      - "A Step 3 qualifying child under 12 does not produce the credit without a Step 2 dependent exemption"
+      - "40% rate is new for 2025"
+      - "Part-year/nonresidents: CTC based on NR-allocated EITC amount"
+    testRef: "tests/engine/state/il-1040.test.ts::IL-1040 Line 30 - IL child tax credit is 40% of IL EITC"
+
+  - line: "31"
+    description: "Total payments and refundable credits"
+    formula: "Line 25 + Line 26 + Line 27 + Line 28 + Line 29 + Line 30"
+    reference: "IL-1040 Instructions, Step 8"
+    testRef: "tests/engine/state/il-1040.test.ts::IL-1040 Line 31 - total payments"
+
+  # Step 9 — Refund or Amount Owed
+  - line: "32"
+    description: "Overpayment"
+    formula: "If Line 31 > Line 24: Line 31 - Line 24; else 0"
+    reference: "IL-1040 Instructions, Step 9"
+    testRef: "tests/engine/state/il-1040.test.ts::IL-1040 Line 32 - overpayment when payments exceed tax"
+
+  - line: "33"
+    description: "Tax due"
+    formula: "If Line 24 > Line 31: Line 24 - Line 31; else 0"
+    reference: "IL-1040 Instructions, Step 9"
+    testRef: "tests/engine/state/il-1040.test.ts::IL-1040 Line 33 - tax due when tax exceeds payments"
+
+  # Step 10 — Underpayment of Estimated Tax Penalty and Donations
+  - line: "34"
+    description: "Late-payment penalty for underpayment of estimated tax"
+    formula: "From IL-2210"
+    reference: "2025 Form IL-1040, Step 10; IL-2210"
+    notes: |
+      Computed via IL-2210 when estimated payments and withholding are insufficient.
+      Optional — only computed when IL-2210 input is provided.
+      The penalty is zero when the taxpayer qualifies for an IL-1040 Step 10
+      checkbox exemption carried into IL-2210, including Line 34a (farmer),
+      Line 34b (age 65+ and permanently in a nursing home), or Line 34d
+      (not required to file the prior-year IL-1040).
+      This amount is entered after the Line 32/33 total and does not affect Line 24.
+    edgeCases:
+      - "IL-1040 Line 34a / 34b / 34d exemptions force the penalty to zero"
+    testRef: "tests/engine/state/il-1040.test.ts::IL-1040 Line 34 - underpayment penalty from IL-2210 does not change Line 24 total tax"
+
+  - line: "35"
+    description: "Voluntary charitable donations"
+    formula: "Schedule G, Line 2 if attached; otherwise supported direct input amount"
+    reference: "2025 Form IL-1040, Step 10; Schedule G"
+    notes: |
+      When Schedule G is provided, the supported slice uses Schedule G Line 2 and
+      ignores any direct Line 35 amount. Without the schedule, callers may still
+      provide the already-computed total donation amount directly.
+    testRef: "tests/engine/state/il-1040.test.ts::IL-1040 Line 35 - Schedule G Line 2 overrides the direct donation input"
+
+  - line: "36"
+    description: "Total penalty and donations"
+    formula: "Line 34 + Line 35"
+    reference: "2025 Form IL-1040, Step 10"
+    testRef: "tests/engine/state/il-1040.test.ts::IL-1040 Line 36 - total penalty and donations adds Lines 34 and 35"
+
+  # Step 11 — Refund or Amount You Owe
+  - line: "37"
+    description: "Overpayment after penalty and donations"
+    formula: "If Line 32 > Line 36: Line 32 - Line 36; else 0"
+    reference: "2025 Form IL-1040, Step 11"
+    notes: |
+      When Line 32 is positive but less than Line 36, the excess penalty and
+      donations create Line 41 amount owed instead of a refund.
+    testRef: "tests/engine/state/il-1040.test.ts::IL-1040 Line 37 - overpayment is reduced by penalty and donations"
+
+  - line: "38"
+    description: "Refund requested"
+    formula: "If Line 37 > 0: supported elected refund amount; otherwise 0"
+    reference: "2025 Form IL-1040, Step 11"
+    notes: |
+      The supported slice defaults to refunding the full Line 37 amount unless
+      the caller explicitly elects a split between refund and credit forward.
+      Refunds below $1 are reduced to $0 per the instructions.
+      Any sub-$1 refund amount is shifted to Line 40 so Lines 38 and 40 still
+      equal Line 37 after the Illinois no-small-refund rule is applied.
+    edgeCases:
+      - "Refunds below $1 are reduced to $0 and carried to Line 40"
+    testRef: "tests/engine/state/il-1040.test.ts::IL-1040 Line 38 - defaults to refunding the full remaining overpayment"
+
+  - line: "39"
+    description: "Refund method"
+    formula: "If Line 38 > 0: supported elected method ('paper_check' or 'direct_deposit')"
+    reference: "2025 Form IL-1040, Step 11"
+    notes: |
+      The supported slice records the elected refund method for audit purposes.
+      When direct deposit is elected, the engine also validates and stores the
+      page-2 routing number, account type, and account number fields.
+
+      Direct deposit into a standard checking or savings account requires:
+      - Routing number with nine digits after removing hyphens
+      - Checking routing number beginning with 01 through 12 or 21 through 32
+      - Account number containing only digits and optional hyphens
+      - Standard account number no longer than 17 digits after removing hyphens
+
+      Direct deposit into a Bright Start College Savings Pool account requires:
+      - Routing number 011001234
+      - Checking account type
+      - Account number equal to 822 plus the 11-digit Bright Start account number
+
+      Direct deposit into a Bright Directions College Savings Pool account requires:
+      - Routing number 104910795
+      - Savings account type
+      - Account number equal to 529 plus the 9-digit Bright Directions account number
+
+      If this is the first year filing Form IL-1040, the refund must be issued
+      as a paper check and direct deposit cannot be elected.
+    edgeCases:
+      - "Direct deposit requires routing number, account type, and account number"
+      - "First-year Illinois filers cannot elect direct deposit"
+      - "Bright Start uses routing number 011001234, checking, and account number 822 + 11 digits"
+      - "Bright Directions uses routing number 104910795, savings, and account number 529 + 9 digits"
+    testRef: "tests/engine/state/il-1040.test.ts::IL-1040 Line 39 - refund method defaults to paper check when a refund is issued"
+
+  - line: "40"
+    description: "Amount of overpayment to be credited forward"
+    formula: "Line 37 - Line 38"
+    reference: "2025 Form IL-1040, Step 11"
+    testRef: "tests/engine/state/il-1040.test.ts::IL-1040 Line 40 - remaining overpayment is credited forward"
+
+  - line: "41"
+    description: "Amount you owe"
+    formula: "If Line 33 > 0: Line 33 + Line 36; else if Line 32 > 0 and Line 32 < Line 36: Line 36 - Line 32; else if Line 32 = 0 and Line 33 = 0: Line 36; else 0"
+    reference: "2025 Form IL-1040, Step 11"
+    notes: |
+      This line can be positive even when Step 9 showed an overpayment on
+      Line 32, if Step 10 penalty and donations exceed that preliminary
+      overpayment.
+    testRef: "tests/engine/state/il-1040.test.ts::IL-1040 Line 41 - amount owed includes penalty and donations after Step 9"
+
+  - line: "42"
+    description: "Health insurance checkbox authorization"
+    formula: "Check the supported self / spouse / dependents uninsured boxes when the taxpayer authorizes IDOR to share return information with the Illinois Department of Healthcare and Family Services for health insurance outreach"
+    reference: "2025 IL-1040 Instructions, What's New for 2025; 2025 IL-1040 Alternate Filing Methods, Step 12 Line 42"
+    notes: |
+      Step 12, Line 42 is non-financial metadata and does not affect Illinois
+      tax, refund, or payment computations. The supported engine preserves the
+      checkbox selections on the IL-1040 result so callers can populate the
+      current-year return and audit whether the taxpayer marked Self, Spouse,
+      and/or Dependents for health-insurance outreach.
+
+      The spouse checkbox is only valid on a married filing jointly return.
+    testRef: "tests/engine/state/il-1040.test.ts::IL-1040 Line 42 - health insurance checkbox carries uninsured household selections"

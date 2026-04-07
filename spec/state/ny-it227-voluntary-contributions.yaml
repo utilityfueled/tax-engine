@@ -1,0 +1,56 @@
+form: "New York IT-227 Voluntary Contributions"
+fullName: "New York State Form IT-227 Voluntary Contributions"
+taxYear: 2025
+irsReference: "https://www.tax.ny.gov/pdf/2025/inc/it227_2025_fill_in.pdf"
+
+notes: |
+  Form IT-227 lets resident and nonresident filers reduce their refund or increase
+  their payment by making voluntary contributions to state-designated funds.
+
+  This module models the 2025 resident-return computation path needed for IT-201
+  line 60:
+  - Part 1 lines 1 through 36: individual fund contribution amounts
+  - Part 2 line 1: total voluntary contributions carried to Form IT-201 line 60
+
+  General 2025 rules from the form instructions:
+  - Enter whole-dollar contribution amounts on each selected line.
+  - Total contributions reduce the refund or increase the payment due.
+  - Line 5 Olympic Fund: each individual may contribute only $2.
+    On a married filing jointly return, line 5 may therefore be either $2 or $4.
+  - Line 27 New York State Campaign Finance Fund: each individual may contribute
+    only $40. On a married filing jointly return, line 27 may therefore be either
+    $40 or $80.
+
+lines:
+  - line: "1-36"
+    description: "Part 1 voluntary contribution entries"
+    formula: "Validated whole-dollar contribution amounts for each selected IT-227 fund line"
+    inputs:
+      - "Contribution entries keyed by IT-227 line number"
+      - "Filing status for lines with per-individual caps"
+    notes: |
+      Supported lines are the 2025 IT-227 Part 1 lines 1 through 36.
+
+      Special 2025 validation:
+      - Line 5 Olympic Fund: only $0 or $2 for non-MFJ filers; $0, $2, or $4 for MFJ
+      - Line 27 Campaign Finance Fund: only $0 or $40 for non-MFJ filers; $0, $40, or $80 for MFJ
+    edgeCases:
+      - "Duplicate line numbers are invalid because each IT-227 line appears once"
+      - "Unsupported line numbers outside 1 through 36 are invalid"
+      - "Negative contribution amounts are invalid"
+      - "Line 5 rejects unsupported amounts such as $1 or $3"
+      - "Line 27 rejects unsupported amounts such as $20 or $60"
+    testRef: "tests/engine/state/ny-it227-voluntary-contributions.test.ts::Part 1 - sums supported contribution lines after applying special caps"
+
+  - line: "Part 2 Line 1"
+    description: "Total voluntary contributions"
+    formula: "Add Part 1 lines 1 through 36"
+    inputs:
+      - "Validated Part 1 contribution amounts"
+    notes: |
+      This amount is transferred to Form IT-201 line 60 on a resident return.
+      It reduces the refund or increases the tax payment.
+    edgeCases:
+      - "No contribution entries means the total is zero"
+      - "Computed IT-227 total overrides the legacy direct line 60 passthrough when both are provided by the full-return orchestrator"
+    testRef: "tests/engine/state/ny-it201-full-return.test.ts::Line 60 - IT-227 computed total overrides the voluntary contributions passthrough"

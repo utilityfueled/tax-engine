@@ -1,0 +1,82 @@
+form: "Form 1098-E"
+fullName: "Student Loan Interest Statement"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i1098e"
+
+notes: |
+  Form 1098-E reports student loan interest received by a lender from a
+  borrower during the calendar year. Eligible lenders (banks, credit unions,
+  federal/state agencies, loan servicers) must file when interest received
+  exceeds $600. Borrowers use Box 1 to claim the student loan interest
+  deduction on Schedule 1 Line 21, subject to:
+  - $2,500 annual maximum (IRC §221(b)(1))
+  - Modified AGI phase-out (IRC §221(b)(2)(B)):
+      Single/HoH/QSS: $85,000–$100,000 (2025)
+      MFJ: $170,000–$200,000 (2025)
+  - MFS filers are disqualified entirely (IRC §221(e)(2))
+  - Only interest on "qualified education loans" qualifies (IRC §221(d)(1)):
+      Incurred solely to pay qualified higher education expenses for the
+      taxpayer, spouse, or dependent; the student must have been enrolled at
+      least half-time in a degree program at an eligible institution.
+  - Loan origination fees and capitalized interest count as interest paid
+    (IRC §221(e)(1); Pub 970 Ch. 4).
+
+  Multiple Form 1098-E statements are aggregated when a borrower has loans
+  with multiple servicers. The engine sums all Box 1 amounts and feeds the
+  total into the Schedule 1 Line 21 student loan interest deduction
+  computation. When both Form 1098-E inputs and the manual
+  adjustments.studentLoanInterest field are provided, the manual amount is
+  treated as an additional nonnegative add-on and then summed with the Box 1
+  total. Negative manual entries are floored at $0 in this supported
+  aggregation path so a malformed local adjustment cannot erase lender-
+  reported Form 1098-E interest. This allows reporting interest paid to
+  lenders who did not issue a 1098-E (e.g., interest under the $600
+  reporting threshold).
+
+businessRuleValidation:
+  - rule: "reference-summary-packet"
+    description: "Inventory support counts this form as business-rule validated only when regression coverage proves the emitted packet artifact stays labeled as a non-filing reference summary and only surfaces the supported Form 1098-E lender Box 1 amounts, the supported aggregation totals, and the resulting Schedule 1 Line 21 deduction."
+    testRef: "tests/pdf/fill-form-1098-e.test.ts::fillForm1098EReference keeps the packet artifact reference-only and limited to supported student loan interest outputs"
+
+lines:
+  - line: "1"
+    description: "Student loan interest received by lender"
+    formula: "Total qualified student loan interest paid by borrower to this lender during the year. Includes interest payments, loan origination fees allocated over the life of the loan, and capitalized interest. Does not include penalties or late charges."
+    irsRef: "Form 1098-E Instructions, Box 1"
+    testRef: "tests/engine/forms/form-1098-e.test.ts::single Form 1098-E returns correct total"
+
+  - line: "2"
+    description: "Checkbox — interest includes loan origination fees and/or capitalized interest"
+    formula: "Boolean indicator; if checked, Box 1 includes capitalized interest or origination fee amounts. Informational only — does not affect the deduction computation."
+    irsRef: "Form 1098-E Instructions, Box 2"
+    testRef: "tests/engine/forms/form-1098-e.test.ts::Box 2 capitalized interest flag appears in audit trail"
+
+  - line: "agg"
+    description: "Aggregation: sum Box 1 across all Form 1098-E statements plus any manual studentLoanInterest"
+    formula: "totalStudentLoanInterest = SUM(max(0, form1098E[].studentLoanInterestReceived)) + max(0, adjustments.studentLoanInterest)"
+    irsRef: "Pub 970 Chapter 4; IRC §221"
+    edgeCases:
+      - "Multiple lenders/servicers may each issue a 1098-E"
+      - "Interest below the $600 threshold may be entered manually"
+      - "A malformed negative manual studentLoanInterest entry is floored at $0 so it cannot reduce lender-reported Form 1098-E interest"
+      - "Combined total is capped at $2,500 before phase-out by the Schedule 1 Line 21 deduction"
+    testRef: "tests/engine/forms/form-1098-e.test.ts::multiple Form 1098-E statements are summed"
+
+  - line: "route"
+    description: "Route aggregated student loan interest to Schedule 1 Line 21"
+    formula: "min(totalStudentLoanInterest, $2,500) × (1 − phase-out fraction)"
+    irsRef: "Schedule 1 Line 21; IRC §221"
+    edgeCases:
+      - "MFS filers are disqualified — deduction is always $0 (IRC §221(e)(2))"
+      - "Single/HoH/QSS phase-out: $85,000–$100,000 MAGI (2025)"
+      - "MFJ phase-out: $170,000–$200,000 MAGI (2025)"
+      - "The Schedule 1 worksheet says the phase-out fraction is rounded to at least three decimal places, so the engine must not clamp it to exactly three decimals when additional precision leaves a small nonzero deduction just below the ceiling"
+    note: "Round the final deduction to the nearest whole dollar after applying the phase-out worksheet; preserving more than three decimal places in the phase-out fraction is allowed and prevents premature zeroing just below the statutory ceiling."
+    testRef: "tests/engine/forms/form-1098-e.test.ts::single 1098-E routes to Schedule 1 Line 21 deduction"
+
+  - line: "packet"
+    description: "Draft packet inclusion rule for supported Form 1098-E data"
+    formula: "When the return includes one or more supported Form 1098-E statements, include a non-filing reference-summary PDF in the packet that lists each lender Box 1 amount, the aggregated Form 1098-E total, any supported manual add-on interest, and the resulting Schedule 1 Line 21 deduction."
+    irsRef: "Form 1098-E Instructions, Box 1; Schedule 1 Line 21"
+    notes: "This packet slice intentionally emits a deterministic reference summary instead of attempting to recreate the lender-issued Form 1098-E, so the draft packet stays honest about what the product computed versus what the payer furnished."
+    testRef: "tests/pdf/fill-form-1098-e.test.ts::fillReturn includes a Form 1098-E reference summary when student loan interest statements are present"

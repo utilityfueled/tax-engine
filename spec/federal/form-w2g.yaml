@@ -1,0 +1,72 @@
+form: "Form W-2G"
+fullName: "Certain Gambling Winnings"
+taxYear: 2025
+irsReference: "https://www.irs.gov/forms-pubs/about-form-w-2g"
+
+notes: |
+  Form W-2G reports certain gambling winnings to the IRS. Payers must issue a
+  W-2G when winnings exceed reporting thresholds (e.g., $1,200 for bingo/slots,
+  $1,500 for keno, $5,000 for poker tournaments, $600 for other wagers if at
+  least 300× the wager). The engine does not enforce reporting thresholds —
+  it accepts any W-2G document as entered.
+
+  Gambling winnings are fully taxable and must be reported as income on
+  Schedule 1 Line 8b (Other income — Gambling income). The total flows to
+  Form 1040 Line 8 via Schedule 1 Line 10.
+
+  Federal income tax withheld (Box 4) flows to Form 1040 Line 25d.
+
+  Gambling losses are deductible ONLY as an itemized deduction on Schedule A
+  Line 28, and ONLY up to the amount of gambling winnings (IRC §165(d)).
+  Losses exceeding winnings are not deductible and cannot be carried forward.
+
+  All gambling income must be reported, not just amounts shown on W-2G.
+  The engine allows additional gambling winnings via Schedule A's manual
+  gamblingWinnings field, which is added to W-2G totals for the income and
+  loss-limitation calculations.
+
+  Per IRC §3402(q), withholding is required at 24% on certain gambling
+  winnings above specific thresholds (generally $5,000 net of wager for
+  sweepstakes, wagering pools, lotteries, and certain other wagers).
+
+  State income tax withheld (Box 13) is available for state return support.
+
+lines:
+  - line: "gamblingIncome"
+    description: "Total gambling winnings reported as income"
+    formula: "Sum of all W-2G Box 1 amounts plus any additional manual gambling winnings"
+    irsRef: "Schedule 1 Instructions, Line 8b; IRC §61(a); Pub. 525"
+    inputs:
+      - "W-2G Box 1 (Reportable winnings)"
+      - "Manual additional gambling winnings from Schedule A input"
+    edgeCases:
+      - "Multiple W-2Gs from different sources are summed"
+      - "Winnings below W-2G reporting thresholds must still be reported as income"
+      - "All gambling income is taxable regardless of the type of wager"
+    testRef: "tests/engine/forms/form-w2g.test.ts::W-2G gambling income - single W-2G reports winnings as income"
+
+  - line: "gamblingLossLimitation"
+    description: "Gambling losses limited to total gambling winnings"
+    formula: "min(gambling losses, total gambling winnings including W-2G)"
+    irsRef: "IRC §165(d); Schedule A Instructions, Line 28"
+    inputs:
+      - "Total gambling winnings (W-2G + manual)"
+      - "Total gambling losses (manual entry)"
+    edgeCases:
+      - "Losses exceeding winnings are disallowed"
+      - "Losses at exactly the winnings amount are fully allowed"
+      - "Zero winnings means zero deductible losses"
+      - "Gambling losses cannot be carried forward to future years"
+      - "Must itemize to deduct gambling losses"
+    testRef: "tests/engine/forms/form-w2g.test.ts::W-2G gambling income - losses limited to winnings on Schedule A"
+
+  - line: "withholding"
+    description: "Federal income tax withheld from gambling winnings"
+    formula: "Sum of all W-2G Box 4 amounts"
+    irsRef: "IRC §3402(q); Form 1040 Instructions, Line 25d"
+    inputs:
+      - "W-2G Box 4 (Federal income tax withheld)"
+    edgeCases:
+      - "Multiple W-2Gs may each have separate withholding"
+      - "Some W-2Gs have $0 withholding (below mandatory withholding threshold)"
+    testRef: "tests/engine/forms/form-w2g.test.ts::W-2G gambling income - withholding flows to Form 1040 Line 25d"

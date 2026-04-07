@@ -1,0 +1,195 @@
+form: "New York IT-217 Farmers' School Tax Credit"
+fullName: "New York State Form IT-217 Claim for Farmers' School Tax Credit"
+taxYear: 2025
+irsReference: "https://www.tax.ny.gov/pdf/2025/inc/it217_2025_fill_in.pdf"
+instructionsReference: "https://www.tax.ny.gov/pdf/2025/inc/it217i_2025.pdf"
+
+notes: |
+  This supported slice covers the 2025 resident current-year credit on Form
+  IT-217 Part 2 lines 1 through 19. The engine computes the refundable credit
+  that flows to IT-201-ATT line 11.
+
+  The module intentionally does not compute:
+  - Item D's website-only farm-income worksheets; instead it accepts the final
+    eligibility result as an input boolean.
+  - Part 6 recapture for property converted to nonqualified use; callers must
+    separately handle any addback that belongs on IT-201-ATT line 20.
+
+  Callers must provide acreage and school-tax inputs net of any property
+  converted to nonqualified use during the year, any tax reimbursements from a
+  buyer, and any STAR credit claimed under Tax Law section 606(eee), exactly as
+  required by the 2025 instructions.
+
+lines:
+  - line: "1"
+    description: "Qualified agricultural acres owned directly"
+    formula: "Input direct qualified agricultural acreage for the taxpayer after removing converted acreage"
+    inputs:
+      - "Directly owned qualified agricultural acreage"
+    notes: |
+      For married filing separately returns, this input must already reflect the
+      taxpayer's allocated ownership share.
+    testRef: "tests/engine/state/ny-it217-farmers-school-tax-credit.test.ts::Line 1 through line 14 - direct acres, passthrough acres, and eligible taxes produce the preliminary credit"
+
+  - line: "2"
+    description: "Qualified agricultural acres from partnerships, S corporations, and estates or trusts"
+    formula: "Input passthrough acreage share from Part 4 line 7 column A"
+    inputs:
+      - "Passthrough qualified agricultural acreage"
+    testRef: "tests/engine/state/ny-it217-farmers-school-tax-credit.test.ts::Line 1 through line 14 - direct acres, passthrough acres, and eligible taxes produce the preliminary credit"
+
+  - line: "3"
+    description: "Fiduciary acreage share"
+    formula: "Input fiduciary acreage share from Part 5 column C"
+    inputs:
+      - "Fiduciary qualified agricultural acreage"
+    testRef: "tests/engine/state/ny-it217-farmers-school-tax-credit.test.ts::Line 1 through line 14 - direct acres, passthrough acres, and eligible taxes produce the preliminary credit"
+
+  - line: "4"
+    description: "Total qualified agricultural acres"
+    formula: "Line 1 + Line 2 + Line 3"
+    inputs:
+      - "Direct qualified agricultural acreage"
+      - "Passthrough acreage"
+      - "Fiduciary acreage"
+    testRef: "tests/engine/state/ny-it217-farmers-school-tax-credit.test.ts::Line 1 through line 14 - direct acres, passthrough acres, and eligible taxes produce the preliminary credit"
+
+  - line: "5"
+    description: "Total base acreage amount"
+    formula: "350 + qualified conservation acreage, unless related-person allocation applies; when item E applies, use either the agreed allocated base acreage or the equal-share division of the total base acreage"
+    inputs:
+      - "Qualified conservation acreage"
+      - "Related-person ownership flag"
+      - "Related-person group count"
+      - "Allocated base acreage override"
+    notes: |
+      The 2025 line 5 worksheet starts with a 350-acre base and adds qualified
+      conservation acreage. If related persons each owned qualified
+      agricultural property on March 1, the total base acreage must be divided
+      equally unless everyone agrees to a different allocation.
+    edgeCases:
+      - "No related-person allocation: line 5 equals 350 plus qualified conservation acreage"
+      - "Related-person group count defaults the allocation to an equal share"
+      - "Allocated base acreage override replaces the equal-share result"
+    testRef: "tests/engine/state/ny-it217-farmers-school-tax-credit.test.ts::Line 5 - related-person allocation overrides the default equal-share base acreage"
+
+  - line: "6"
+    description: "Excess qualified agricultural acres over base acreage"
+    formula: "Line 4 - Line 5; if zero or less, use 0 and treat line 9 as 1.0000"
+    inputs:
+      - "Total qualified agricultural acres (line 4)"
+      - "Total base acreage amount (line 5)"
+    testRef: "tests/engine/state/ny-it217-farmers-school-tax-credit.test.ts::Line 6 through line 9 - acreage percentage stays at 100% when acres do not exceed the base acreage amount"
+
+  - line: "7"
+    description: "Half of the excess acreage"
+    formula: "Line 6 × 50%"
+    inputs:
+      - "Line 6 excess acreage"
+    testRef: "tests/engine/state/ny-it217-farmers-school-tax-credit.test.ts::Line 1 through line 14 - direct acres, passthrough acres, and eligible taxes produce the preliminary credit"
+
+  - line: "8"
+    description: "Adjusted acreage amount"
+    formula: "Line 5 + Line 7"
+    inputs:
+      - "Line 5 base acreage"
+      - "Line 7 half of excess acreage"
+    testRef: "tests/engine/state/ny-it217-farmers-school-tax-credit.test.ts::Line 1 through line 14 - direct acres, passthrough acres, and eligible taxes produce the preliminary credit"
+
+  - line: "9"
+    description: "Acreage percentage"
+    formula: "If line 6 is zero, 1.0000; otherwise round((Line 8 / Line 4), 4)"
+    inputs:
+      - "Line 8 adjusted acreage amount"
+      - "Line 4 total qualified agricultural acres"
+    notes: "The 2025 form instructs the percentage to be rounded to the fourth decimal place."
+    testRef: "tests/engine/state/ny-it217-farmers-school-tax-credit.test.ts::Line 6 through line 9 - acreage percentage stays at 100% when acres do not exceed the base acreage amount"
+
+  - line: "10"
+    description: "Eligible school taxes paid directly"
+    formula: "Input eligible school taxes paid directly by the taxpayer after reducing for STAR credits, converted-property taxes, and buyer reimbursements"
+    inputs:
+      - "Direct eligible school taxes"
+    testRef: "tests/engine/state/ny-it217-farmers-school-tax-credit.test.ts::Line 1 through line 14 - direct acres, passthrough acres, and eligible taxes produce the preliminary credit"
+
+  - line: "11"
+    description: "Eligible school taxes from partnerships, S corporations, and estates or trusts"
+    formula: "Input passthrough eligible school taxes from Part 4 line 7 column B"
+    inputs:
+      - "Passthrough eligible school taxes"
+    testRef: "tests/engine/state/ny-it217-farmers-school-tax-credit.test.ts::Line 1 through line 14 - direct acres, passthrough acres, and eligible taxes produce the preliminary credit"
+
+  - line: "12"
+    description: "Fiduciary eligible school taxes"
+    formula: "Input fiduciary eligible school taxes from Part 5 column D"
+    inputs:
+      - "Fiduciary eligible school taxes"
+    testRef: "tests/engine/state/ny-it217-farmers-school-tax-credit.test.ts::Line 1 through line 14 - direct acres, passthrough acres, and eligible taxes produce the preliminary credit"
+
+  - line: "13"
+    description: "Total eligible school taxes"
+    formula: "Line 10 + Line 11 + Line 12"
+    inputs:
+      - "Direct eligible school taxes"
+      - "Passthrough eligible school taxes"
+      - "Fiduciary eligible school taxes"
+    testRef: "tests/engine/state/ny-it217-farmers-school-tax-credit.test.ts::Line 1 through line 14 - direct acres, passthrough acres, and eligible taxes produce the preliminary credit"
+
+  - line: "14"
+    description: "Preliminary farmers' school tax credit"
+    formula: "Line 13 × Line 9"
+    inputs:
+      - "Line 13 total eligible school taxes"
+      - "Line 9 acreage percentage"
+    testRef: "tests/engine/state/ny-it217-farmers-school-tax-credit.test.ts::Line 1 through line 14 - direct acres, passthrough acres, and eligible taxes produce the preliminary credit"
+
+  - line: "15"
+    description: "Modified New York adjusted gross income"
+    formula: "(NY AGI + New York C corporation entire net income share + partnership/S corporation share of that entire net income) - principal paid on farm indebtedness"
+    inputs:
+      - "New York adjusted gross income"
+      - "New York C corporation entire net income share"
+      - "Partnership/S corporation share of electing C corporation entire net income"
+      - "Principal paid on farm indebtedness"
+    notes: |
+      Item C uses the instructions worksheet and must be less than $300,000 for
+      the taxpayer to qualify.
+    testRef: "tests/engine/state/ny-it217-farmers-school-tax-credit.test.ts::Line 19 - modified New York AGI over $200,000 phases down the credit"
+
+  - line: "16"
+    description: "Modified New York AGI over $200,000"
+    formula: "min(100000, max(0, line 15 - 200000))"
+    inputs:
+      - "Line 15 modified New York adjusted gross income"
+    testRef: "tests/engine/state/ny-it217-farmers-school-tax-credit.test.ts::Line 19 - modified New York AGI over $200,000 phases down the credit"
+
+  - line: "17"
+    description: "Phaseout percentage"
+    formula: "If line 16 is positive, round(line 16 / 100000, 4); otherwise 0.0000"
+    inputs:
+      - "Line 16 excess modified New York adjusted gross income"
+    notes: "The 2025 form instructs the percentage to be rounded to the fourth decimal place."
+    testRef: "tests/engine/state/ny-it217-farmers-school-tax-credit.test.ts::Line 19 - modified New York AGI over $200,000 phases down the credit"
+
+  - line: "18"
+    description: "Credit reduction"
+    formula: "Line 14 × Line 17"
+    inputs:
+      - "Line 14 preliminary credit"
+      - "Line 17 phaseout percentage"
+    testRef: "tests/engine/state/ny-it217-farmers-school-tax-credit.test.ts::Line 19 - modified New York AGI over $200,000 phases down the credit"
+
+  - line: "19"
+    description: "Farmers' school tax credit"
+    formula: "If the taxpayer meets the qualified-property test, the eligible-farmer test, and line 15 is less than 300000, line 14 - line 18; otherwise 0"
+    inputs:
+      - "Qualified-property eligibility boolean"
+      - "Eligible-farmer income-test boolean"
+      - "Line 14 preliminary credit"
+      - "Line 18 credit reduction"
+      - "Line 15 modified New York adjusted gross income"
+    edgeCases:
+      - "Line 15 at or above $300,000 yields no current-year credit"
+      - "If the acreage does not exceed the base acreage amount, line 19 can equal the full eligible school tax amount"
+      - "Failing either required eligibility test yields zero credit even if lines 1 through 18 are otherwise populated"
+    testRef: "tests/engine/state/ny-it217-farmers-school-tax-credit.test.ts::Line 19 - eligibility failures and the $300,000 ceiling reduce the credit to zero"

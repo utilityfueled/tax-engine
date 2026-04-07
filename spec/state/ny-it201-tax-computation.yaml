@@ -1,0 +1,185 @@
+form: "New York IT-201 Tax Computation"
+fullName: "New York State Form IT-201 Line 39 Tax Computation"
+taxYear: 2025
+irsReference: "https://www.tax.ny.gov/pdf/current_forms/it/it201i.pdf"
+
+notes: |
+  New York State computes income tax on IT-201, line 39 using three possible methods
+  depending on New York adjusted gross income (line 33) and taxable income (line 38):
+
+  1. Tax Table: If NY AGI (line 33) is $107,650 or less AND taxable income (line 38)
+     is less than $65,000, use the NY State Tax Table.
+  2. Tax Rate Schedule: If NY AGI (line 33) is $107,650 or less AND taxable income
+     (line 38) is $65,000 or more, use the NY State tax rate schedule.
+  3. Tax Computation Worksheets: If NY AGI (line 33) is more than $107,650, use the
+     appropriate tax computation worksheet for your filing status. These worksheets
+     apply the rate schedule tax plus a supplemental "recapture" amount that phases
+     in the benefit of lower brackets being eliminated at higher income levels.
+
+  This module implements all three methods, including the published 2025 NY State
+  tax table for lower-income filers.
+
+  Whole-dollar return-line rule:
+  - The IT-201 instructions require whole-dollar entries on the return. This means
+    the line 33 and line 38 amounts used to choose between the tax table, rate
+    schedule, and recapture worksheets must be rounded to the nearest dollar first.
+  - Example: NY AGI of $107,650.40 is entered on line 33 as $107,650, so it still
+    uses the non-recapture path. Taxable income of $64,999.60 is entered on line 38
+    as $65,000, so it must use the rate schedule rather than the tax table.
+
+  Tax table implementation note:
+  - The official 2025 NY State tax table is published as taxable-income ranges
+    with a tax amount by filing status.
+  - For whole-dollar taxable income under $65,000, the implementation reproduces
+    the published table by locating the official income band and using the table
+    value for that band.
+  - The published table values align with applying the NY rate schedule to the
+    midpoint of each printed band and rounding to the nearest dollar. This is an
+    implementation detail inferred from the official table and example, not a
+    separate formula stated by the department.
+
+  New York has 9 tax brackets with rates: 4%, 4.5%, 5.25%, 5.5%, 6%, 6.85%, 9.65%,
+  10.3%, and 10.9%. Bracket thresholds differ by filing status.
+
+  The recapture worksheets are grouped by filing status:
+  - Married filing jointly / Qualifying surviving spouse: worksheets 1-6
+  - Single / Married filing separately: worksheets 7-11
+  - Head of household: worksheets 12-16
+
+  Each worksheet targets a specific AGI range and taxable income range.
+  The recapture formula is:
+    1. Compute rate schedule tax on taxable income
+    2. For worksheets 1, 7, and 12: compute the simple-rate tax (5.5% or 6%)
+       and phase in only the difference between the simple-rate tax and the rate
+       schedule tax over the $50,000 AGI range; if AGI is at or above the stop
+       threshold, line 9 is the simple-rate tax directly
+    3. For the other recapture worksheets: add the recapture base amount and
+       phased-in incremental benefit over the $50,000 AGI range
+    4. Final tax = rate schedule tax plus the phased add-on, except the stop
+       condition for worksheets 1, 7, and 12 where final tax equals the
+       simple-rate amount
+  For the highest AGI level (>$25M), tax is simply taxable income × 10.9%.
+
+lines:
+  - line: "1"
+    description: "New York adjusted gross income"
+    formula: "IT-201 line 33 (federal AGI + NY additions - NY subtractions)"
+    inputs:
+      - "New York adjusted gross income"
+    notes: |
+      This determines which computation method to use. Because IT-201 amounts are
+      entered in whole dollars, the threshold comparison uses the rounded line 33
+      amount rather than an unrounded Decimal input.
+    testRef: "tests/engine/state/ny-it201-tax-computation.test.ts::Line 1 - AGI of $107,650.40 rounds down to the non-recapture threshold"
+
+  - line: "2"
+    description: "New York taxable income"
+    formula: "IT-201 line 38 (NY AGI - standard or itemized deduction - dependent exemptions)"
+    inputs:
+      - "New York taxable income"
+    notes: |
+      Taxable income is the base for the rate schedule computation. Because IT-201
+      amounts are entered in whole dollars, the tax-table cutoff uses the rounded
+      line 38 amount rather than an unrounded Decimal input.
+    testRef: "tests/engine/state/ny-it201-tax-computation.test.ts::Line 3 - taxable income of $64,999.60 rounds to $65,000 and uses the rate schedule"
+
+  - line: "3"
+    description: "Tax on taxable income from the tax table or rate schedule"
+    formula: |
+      If NY AGI ≤ $107,650 and taxable income < $65,000:
+        look up the official 2025 NY State tax table amount for the taxable-income range
+        and filing status.
+      Otherwise:
+        apply the NY State tax rate schedule brackets to taxable income.
+    inputs:
+      - "New York taxable income"
+      - "Filing status"
+      - "New York adjusted gross income"
+    notes: |
+      Tax table cutoff:
+      - NY AGI must be $107,650 or less
+      - Taxable income must be less than $65,000
+
+      Tax table examples from the official 2025 table:
+      - Single taxable income of $10,000 falls in the $10,000-$10,050 row: tax = $409
+      - Married filing jointly taxable income of $38,275 falls in the $38,250-$38,300 row: tax = $1,773
+
+      Rate schedule bracket groups:
+      - MFJ/QSS: 0-17150 (4%), 17150-23600 (4.5%), 23600-27900 (5.25%),
+        27900-161550 (5.5%), 161550-323200 (6%), 323200-2155350 (6.85%),
+        2155350-5000000 (9.65%), 5000000-25000000 (10.3%), 25000000+ (10.9%)
+      - Single/MFS: 0-8500 (4%), 8500-11700 (4.5%), 11700-13900 (5.25%),
+        13900-80650 (5.5%), 80650-215400 (6%), 215400-1077550 (6.85%),
+        1077550-5000000 (9.65%), 5000000-25000000 (10.3%), 25000000+ (10.9%)
+      - HoH: 0-12800 (4%), 12800-17650 (4.5%), 17650-20900 (5.25%),
+        20900-107650 (5.5%), 107650-269300 (6%), 269300-1616450 (6.85%),
+        1616450-5000000 (9.65%), 5000000-25000000 (10.3%), 25000000+ (10.9%)
+    edgeCases:
+      - "Zero taxable income produces zero tax"
+      - "AGI ≤ $107,650 and taxable income below $65,000 uses the published tax table"
+      - "Taxable income of exactly $65,000 switches to the rate schedule"
+      - "Taxable income of $64,999.60 rounds to $65,000 and switches to the rate schedule"
+      - "Taxable income at exact bracket boundary"
+    testRef: "tests/engine/state/ny-it201-tax-computation.test.ts::Line 3 - single filer $10,000 uses the published tax table"
+
+  - line: "4"
+    description: "Recapture amount (high-income computation)"
+    formula: "Rate schedule tax + recapture base + phased-in incremental benefit"
+    inputs:
+      - "New York adjusted gross income"
+      - "New York taxable income"
+      - "Filing status"
+    notes: |
+      When NY AGI exceeds $107,650, a supplemental recapture phases in over $50,000
+      AGI ranges. This effectively eliminates the benefit of lower tax brackets for
+      high-income filers. At the highest levels (AGI > $25M), tax is simply 10.9% × taxable income.
+
+      First-tier worksheet detail (worksheets 1, 7, and 12):
+      - Line 3 computes the simple-rate tax on taxable income (5.5% for MFJ/QSS,
+        6% for Single/MFS/HoH)
+      - Line 4 computes tax from the standard NY rate schedule
+      - Line 5 is line 3 minus line 4, which is the maximum additional recapture
+      - Line 8 phases in line 5 over the $50,000 AGI band
+      - Line 9 is line 4 plus line 8
+      - If AGI is at or above the stop threshold ($157,650), line 9 equals line 3 directly
+
+      Recapture parameters by filing status and AGI range:
+      MFJ/QSS:
+        WS1: AGI 107650-25M, TI ≤ 161550: multiply TI by 5.5% (0.055), stop if AGI ≥ 157650
+        WS2: AGI 161550-25M, TI 161550-323200: base=333, benefit=807, excess over 161550
+        WS3: AGI 323200-25M, TI 323200-2155350: base=1140, benefit=2747, excess over 323200
+        WS4: AGI 2155350-25M, TI 2155350-5000000: base=3887, benefit=60350, excess over 2155350
+        WS5: AGI 5M-25M, TI > 5M: base=64237, benefit=32500, excess over 5M
+        WS6: AGI > 25M: flat 10.9%
+
+      Single/MFS:
+        WS7: AGI 107650-25M, TI ≤ 215400: multiply TI by 6% (0.06), stop if AGI ≥ 157650
+        WS8: AGI 215400-25M, TI 215400-1077550: base=568, benefit=1831, excess over 215400
+        WS9: AGI 1077550-25M, TI 1077550-5000000: base=2399, benefit=30172, excess over 1077550
+        WS10: AGI 5M-25M, TI > 5M: base=32571, benefit=32500, excess over 5M
+        WS11: AGI > 25M: flat 10.9%
+
+      HoH:
+        WS12: AGI 107650-25M, TI ≤ 269300: multiply TI by 6% (0.06), stop if AGI ≥ 157650
+        WS13: AGI 269300-25M, TI 269300-1616450: base=787, benefit=2289, excess over 269300
+        WS14: AGI 1616450-25M, TI 1616450-5000000: base=3076, benefit=45261, excess over 1616450
+        WS15: AGI 5M-25M, TI > 5M: base=48337, benefit=32500, excess over 5M
+        WS16: AGI > 25M: flat 10.9%
+    edgeCases:
+      - "AGI exactly at $107,650 uses rate schedule only (no recapture)"
+      - "AGI of $107,650.40 rounds to $107,650 and does not trigger recapture"
+      - "AGI at $157,650 triggers stop condition in first worksheet"
+      - "AGI over $25M uses flat 10.9%"
+    testRef: "tests/engine/state/ny-it201-tax-computation.test.ts::Line 4 - MFJ worksheet 1: AGI $120,000, TI $100,000 in first tier"
+
+  - line: "5"
+    description: "IT-201 Line 39 New York State tax"
+    formula: "Final computed tax rounded to nearest dollar"
+    inputs:
+      - "Computed tax from tax table, rate schedule, or worksheet"
+    notes: "All amounts on the NY return are whole dollars."
+    edgeCases:
+      - "Low-income filer with AGI ≤ $107,650 and taxable income under $65,000 uses the tax table"
+      - "High-income filer uses worksheet with recapture"
+      - "Ultra-high AGI over $25M uses flat 10.9%"
+    testRef: "tests/engine/state/ny-it201-tax-computation.test.ts::Line 4 - MFJ worksheet 6: AGI over $25M uses flat 10.9%"

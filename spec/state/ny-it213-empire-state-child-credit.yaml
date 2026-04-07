@@ -1,0 +1,121 @@
+form: "New York IT-213"
+fullName: "New York State Form IT-213 — Empire State Child Credit"
+taxYear: 2025
+irsReference: "https://www.tax.ny.gov/forms/html-instructions/2025/it/it213i-2025.htm"
+
+notes: |
+  The Empire State child credit (ESCC) is a refundable credit available to
+  full-year New York residents who have at least one qualifying child under age 17.
+  It is reported on IT-201 line 63.
+
+  Supported tax years:
+  - 2025 only for now. The engine intentionally rejects unsupported years until
+    the NY Department of Taxation and Finance publishes the next-year IT-213
+    instructions and any updated credit amounts or phaseout thresholds are loaded.
+
+  For 2025, New York decoupled from the federal child tax credit. The credit
+  is now computed directly from the number of qualifying children in two age
+  bands and reduced by income:
+
+    - $1,000 for each qualifying child under age 4
+    - $330 for each qualifying child age 4 through 16
+    - minus $16.50 for each $1,000 of federal AGI above the filing-status threshold
+
+  Filing-status thresholds:
+    - Married filing jointly: $110,000
+    - Single, head of household, qualifying surviving spouse: $75,000
+    - Married filing separately: $55,000
+
+  Key rules:
+  - Credit is fully refundable
+  - Qualifying children may be identified with an SSN or an ITIN under the 2025 instructions
+  - Federal AGI on line 6 is rounded down to the nearest $1,000 before applying the phaseout
+  - If the computed line 9 amount is zero or less, no credit is allowed
+  - MFS filers are eligible
+
+lines:
+  - line: "1"
+    description: "Number of qualifying children under age 4"
+    formula: "Count qualifying children who are under age 4 on December 31"
+    inputs:
+      - "Qualifying child count under age 4"
+    testRef: "tests/engine/state/ny-it213-empire-state-child-credit.test.ts::IT-213 Line 1 - qualifying children under age 4 pass through"
+
+  - line: "2"
+    description: "Credit for qualifying children under age 4"
+    formula: "Line 1 × $1,000"
+    inputs:
+      - "Line 1 qualifying child count"
+    testRef: "tests/engine/state/ny-it213-empire-state-child-credit.test.ts::IT-213 Line 2 - under age 4 credit uses $1,000 per child"
+
+  - line: "3"
+    description: "Number of qualifying children age 4 through 16"
+    formula: "Count qualifying children who are at least age 4 but under age 17 on December 31"
+    inputs:
+      - "Qualifying child count age 4 through 16"
+    testRef: "tests/engine/state/ny-it213-empire-state-child-credit.test.ts::IT-213 Line 3 - qualifying children age 4 through 16 pass through"
+
+  - line: "4"
+    description: "Credit for qualifying children age 4 through 16"
+    formula: "Line 3 × $330"
+    inputs:
+      - "Line 3 qualifying child count"
+    testRef: "tests/engine/state/ny-it213-empire-state-child-credit.test.ts::IT-213 Line 4 - age 4 through 16 credit uses $330 per child"
+
+  - line: "5"
+    description: "Base Empire State child credit before phaseout"
+    formula: "Line 2 + Line 4"
+    inputs:
+      - "Line 2 under age 4 credit"
+      - "Line 4 age 4 through 16 credit"
+    testRef: "tests/engine/state/ny-it213-empire-state-child-credit.test.ts::IT-213 Line 5 - base credit sums both age bands"
+
+  - line: "6"
+    description: "Federal AGI rounded down to the nearest $1,000"
+    formula: "max(0, floor(Form IT-201 line 19 / 1000) × 1000)"
+    inputs:
+      - "Federal AGI from IT-201 line 19"
+    notes: "Negative or zero federal AGI is treated as 0 for this line."
+    testRef: "tests/engine/state/ny-it213-empire-state-child-credit.test.ts::IT-213 Line 6 - federal AGI rounds down to the nearest $1,000"
+
+  - line: "7"
+    description: "Federal AGI excess over filing-status threshold"
+    formula: "max(0, Line 6 - filing-status threshold)"
+    inputs:
+      - "Line 6 rounded federal AGI"
+      - "Filing-status threshold"
+    notes: |
+      Thresholds:
+      - Married filing jointly: $110,000
+      - Single, head of household, qualifying surviving spouse: $75,000
+      - Married filing separately: $55,000
+    testRef: "tests/engine/state/ny-it213-empire-state-child-credit.test.ts::IT-213 Line 7 - AGI excess uses the filing-status threshold"
+
+  - line: "8"
+    description: "Phaseout reduction"
+    formula: "Round(Line 7 × 1.65%)"
+    inputs:
+      - "Line 7 excess AGI"
+    notes: |
+      New York returns use whole-dollar entries, so the reduction is rounded to
+      the nearest dollar after applying the 1.65% rate.
+    testRef: "tests/engine/state/ny-it213-empire-state-child-credit.test.ts::IT-213 Line 8 - phaseout reduction uses 1.65% of excess AGI"
+
+  - line: "9"
+    description: "Empire State child credit"
+    formula: "Line 5 - Line 8"
+    inputs:
+      - "Line 5 base credit"
+      - "Line 8 phaseout reduction"
+    notes: |
+      If the result is zero or less, the taxpayer is not eligible for the credit
+      and the form should not be filed.
+    edgeCases:
+      - "No qualifying children: credit is $0"
+      - "Children under age 4 receive the higher $1,000 rate"
+      - "Children age 4 through 16 receive the $330 rate"
+      - "High income may fully phase the credit out"
+      - "Threshold comparison uses rounded-down federal AGI"
+      - "Credit is refundable — not limited by tax"
+      - "Unsupported tax year throws a clear error"
+    testRef: "tests/engine/state/ny-it213-empire-state-child-credit.test.ts::IT-213 Line 9 - final credit subtracts the phaseout reduction"

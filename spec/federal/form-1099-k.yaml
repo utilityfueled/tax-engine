@@ -1,0 +1,132 @@
+form: "Form 1099-K"
+fullName: "Payment Card and Third Party Network Transactions"
+taxYear: 2025
+irsReference: "https://www.irs.gov/forms-pubs/about-form-1099-k"
+
+notes: |
+  Form 1099-K reports gross payment card and third-party network transactions
+  to the IRS. Payment settlement entities (PSEs) such as Venmo, PayPal, Square,
+  Stripe, and credit card processors issue this form when the aggregate gross
+  amount of reportable payment transactions exceeds the reporting threshold.
+
+  For tax year 2025, the reporting threshold is $5,000 in aggregate gross
+  payments (Notice 2024-85 transition rule; the original ARPA $600 threshold
+  was further delayed). Prior to 2024, the threshold was $20,000 AND 200+
+  transactions.
+
+  Form 1099-K does NOT represent additional income — it is a reporting
+  mechanism for income that should already appear elsewhere on the return:
+  - Self-employment income → Schedule C Line 1 (gross receipts)
+  - Farm income → Schedule F
+  - Rental income → Schedule E
+  - Personal item sales → Schedule 1 Line 8z (gain over basis only)
+  - Other business/investment activity → appropriate schedule
+
+  The IRS matches 1099-K amounts against the return. Discrepancies between
+  1099-K gross and reported income may trigger correspondence.
+
+  Key boxes:
+  - Box 1a: Gross amount of payment card/third-party network transactions
+  - Box 1b: Card not present transactions (subset of Box 1a)
+  - Box 4: Federal income tax withheld (backup withholding at 24% per IRC §3406)
+  - Box 5a–5l: Gross amount by month (informational)
+  - Box 6: State / Payer's state number
+  - Box 7: State income (for state return)
+  - Box 8: State income tax withheld
+
+  Engine behavior:
+  - Accepts one or more 1099-K documents as input
+  - Aggregates Box 1a gross amounts by income type (business, farm, rental, other)
+  - Routes Box 4 federal withholding to Form 1040 Line 25d
+  - Provides a reconciliation summary showing total 1099-K gross versus
+    income reported on the return, so the taxpayer can verify completeness
+  - Does NOT double-count income: 1099-K amounts inform Schedule C gross
+    receipts but the taxpayer must ensure their gross receipts include (not
+    exceed) the 1099-K total
+
+businessRuleValidation:
+  - rule: "reference-summary-packet"
+    description: "Inventory support counts this form as business-rule validated only when regression coverage proves the emitted packet artifact stays labeled as a non-filing reference summary and only surfaces the supported Form 1099-K statement fields, routing labels, aggregated gross and withholding totals, and supported federal routing subtotals."
+    testRef: "tests/pdf/fill-form-1099-k.test.ts::buildForm1099KReferenceSummary keeps the packet artifact reference-only and limited to supported payment-platform outputs"
+
+lines:
+  - line: "grossAmount"
+    description: "Total gross amount of all payment card and third-party network transactions"
+    formula: "Sum of all 1099-K Box 1a amounts"
+    irsRef: "Form 1099-K Box 1a; IRC §6050W"
+    inputs:
+      - "1099-K Box 1a (Gross amount of payment card/third party network transactions)"
+    edgeCases:
+      - "Multiple 1099-Ks from different PSEs are summed"
+      - "Includes refunds and returns — the taxpayer's Schedule C should net these out"
+      - "Personal item sales at a loss should still appear on 1099-K but are not taxable income"
+    testRef: "tests/engine/forms/form-1099-k.test.ts::Form 1099-K - single 1099-K aggregates gross amount"
+
+  - line: "grossAmountByType"
+    description: "Gross amount broken down by income type for routing"
+    formula: "Sum of Box 1a grouped by incomeType (business, farm, rental, other)"
+    irsRef: "Schedule C Line 1; Schedule F; Schedule E; Schedule 1 Line 8z"
+    inputs:
+      - "1099-K Box 1a per form"
+      - "User-designated income type per 1099-K"
+    edgeCases:
+      - "A single 1099-K may contain mixed income types — user must split or assign the dominant type"
+      - "Default income type is 'business' (Schedule C) when not specified"
+    testRef: "tests/engine/forms/form-1099-k.test.ts::Form 1099-K - routes income by type"
+
+  - line: "cardNotPresent"
+    description: "Total card-not-present transactions (subset of gross amount)"
+    formula: "Sum of all 1099-K Box 1b amounts"
+    irsRef: "Form 1099-K Box 1b"
+    inputs:
+      - "1099-K Box 1b (Card not present transactions)"
+    edgeCases:
+      - "Box 1b is always <= Box 1a"
+      - "Informational — does not affect tax calculation"
+    testRef: "tests/engine/forms/form-1099-k.test.ts::Form 1099-K - tracks card-not-present as informational"
+
+  - line: "federalWithholding"
+    description: "Federal income tax withheld from payment transactions"
+    formula: "Sum of all 1099-K Box 4 amounts"
+    irsRef: "IRC §3406; Form 1040 Instructions, Line 25d"
+    inputs:
+      - "1099-K Box 4 (Federal income tax withheld)"
+    edgeCases:
+      - "Backup withholding at 24% applies when the payee fails to furnish a correct TIN"
+      - "Most 1099-Ks have $0 withholding — backup withholding is the exception"
+      - "Withholding flows to Form 1040 Line 25d regardless of income type"
+    testRef: "tests/engine/forms/form-1099-k.test.ts::Form 1099-K - withholding flows to Form 1040 Line 25d"
+
+  - line: "stateWithholding"
+    description: "State income tax withheld from payment transactions"
+    formula: "Sum of all 1099-K Box 8 amounts"
+    irsRef: "Form 1099-K Box 8"
+    inputs:
+      - "1099-K Box 8 (State income tax withheld)"
+    edgeCases:
+      - "State withholding is available for state return support"
+      - "Multiple states may appear across different 1099-K forms"
+    testRef: "tests/engine/forms/form-1099-k.test.ts::Form 1099-K - aggregates state withholding"
+
+  - line: "numberOfForms"
+    description: "Count of 1099-K forms processed"
+    formula: "Count of input 1099-K forms"
+    irsRef: "N/A"
+    inputs:
+      - "Number of 1099-K input documents"
+    edgeCases:
+      - "Zero forms is valid — result is all zeros"
+    testRef: "tests/engine/forms/form-1099-k.test.ts::Form 1099-K - zero forms produces zero result"
+
+  - line: "reconciliation"
+    description: "Comparison of 1099-K gross to reported income for audit trail"
+    formula: "Total 1099-K business gross versus Schedule C gross receipts (informational)"
+    irsRef: "Schedule C Instructions, Line 1"
+    inputs:
+      - "Total 1099-K gross amount by type"
+      - "Schedule C gross receipts (when available)"
+    edgeCases:
+      - "1099-K gross may exceed Schedule C gross receipts if personal items sold on same platform"
+      - "Schedule C gross receipts may exceed 1099-K if cash/check payments also received"
+      - "Reconciliation is advisory — does not change tax calculation"
+    testRef: "tests/engine/forms/form-1099-k.test.ts::Form 1099-K - provides reconciliation summary"

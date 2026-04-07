@@ -1,0 +1,92 @@
+form: "Schedule 1299-C"
+fullName: "Illinois Income Tax Subtractions and Credits"
+taxYear: 2025
+reference: "https://tax.illinois.gov/content/dam/soi/en/web/tax/forms/incometax/documents/currentyear/individual/il-1040-schedule-1299-c-instr.pdf"
+
+notes: |
+  Supported slice: Step 3 nonrefundable credit ordering for the amount that flows
+  to IL-1040 Line 17. Credit eligibility and current-year credit computation from
+  Schedule 1299-I and the Step 2 worksheets remain upstream; this schedule accepts
+  the resulting Step 3 credit rows as validated inputs.
+
+  The engine supports the printed Step 3 grid on Lines 21 through 41 (up to 21
+  credit rows). To preserve Illinois' required earliest-expiration ordering when
+  multiple credit families share the same "years left to carry", each input row
+  includes a normalized carryforward-period field (0, 2, 5, or 10 years). The
+  engine sorts rows by Column A years-left, then by carryforward period bucket,
+  then by four-digit credit code before applying Columns H through J.
+
+lines:
+  - line: "17"
+    description: "Income tax from IL-1040"
+    formula: "IL-1040, Line 14"
+    reference: "2025 Schedule 1299-C Instructions, Step 3"
+    testRef: "tests/engine/state/il-schedule-1299-c.test.ts::Schedule 1299-C Lines 17 through 20 - available tax is IL-1040 Line 14 minus prior Illinois credits"
+
+  - line: "18"
+    description: "Credits already claimed on IL-1040 Lines 15 and 16"
+    formula: "IL-1040 Line 15 + IL-1040 Line 16"
+    reference: "2025 Schedule 1299-C Instructions, Step 3"
+    testRef: "tests/engine/state/il-schedule-1299-c.test.ts::Schedule 1299-C Lines 17 through 20 - available tax is IL-1040 Line 14 minus prior Illinois credits"
+
+  - line: "19"
+    description: "Income tax available for Schedule 1299-C"
+    formula: "max(Line 17 - Line 18, 0)"
+    reference: "2025 Schedule 1299-C Instructions, Step 3"
+    edgeCases:
+      - "Floors at 0 when prior Illinois credits equal or exceed Line 17"
+    testRef: "tests/engine/state/il-schedule-1299-c.test.ts::Schedule 1299-C Lines 17 through 20 - available tax is IL-1040 Line 14 minus prior Illinois credits"
+
+  - line: "20"
+    description: "Carry Line 19 to the credit-application grid"
+    formula: "Line 19"
+    reference: "2025 Schedule 1299-C Instructions, Step 3"
+    testRef: "tests/engine/state/il-schedule-1299-c.test.ts::Schedule 1299-C Lines 17 through 20 - available tax is IL-1040 Line 14 minus prior Illinois credits"
+
+  - line: "21-41[G]"
+    description: "Per-row total credit"
+    formula: "Column E + Column F after Illinois expiration ordering is applied"
+    reference: "2025 Schedule 1299-C Instructions, Column G"
+    notes: |
+      The supported engine sorts Step 3 rows by Column A years-left, then by
+      carryforward bucket (no carryforward, then 2-year, 5-year, 10-year), then
+      by ascending credit code before computing Columns G through J.
+    testRef: "tests/engine/state/il-schedule-1299-c.test.ts::Schedule 1299-C Lines 21 through 42 - credits are sorted by Illinois expiration order before application"
+
+  - line: "21-41[H]"
+    description: "Per-row remaining tax after each credit"
+    formula: "Previous remainder minus current row Column G, starting from Line 20; stop once the remainder is 0 or negative"
+    reference: "2025 Schedule 1299-C Instructions, Column H"
+    edgeCases:
+      - "Rows after tax is exhausted leave Column H blank"
+    testRef: "tests/engine/state/il-schedule-1299-c.test.ts::Schedule 1299-C Lines 21 through 42 - credits are sorted by Illinois expiration order before application"
+
+  - line: "21-41[I]"
+    description: "Per-row credit applied"
+    formula: "If Column H is positive or 0, Column G; if Column H is negative, Column G + Column H; if Column H is blank, 0"
+    reference: "2025 Schedule 1299-C Instructions, Column I"
+    edgeCases:
+      - "The row that drives Column H negative only applies the remaining tax balance"
+      - "Rows after tax is exhausted apply 0"
+    testRef: "tests/engine/state/il-schedule-1299-c.test.ts::Schedule 1299-C Lines 21 through 42 - credits are sorted by Illinois expiration order before application"
+
+  - line: "21-41[J]"
+    description: "Per-row carryforward to next year"
+    formula: "If Column A = 0, 0; otherwise Column G - Column I"
+    reference: "2025 Schedule 1299-C Instructions, Column J"
+    edgeCases:
+      - "Credits in their final carryforward year lose any unused remainder"
+    testRef: "tests/engine/state/il-schedule-1299-c.test.ts::Schedule 1299-C Lines 21 through 42 - credits are sorted by Illinois expiration order before application"
+
+  - line: "42"
+    description: "Total credit applied"
+    formula: "Sum of Column I for Lines 21 through 41"
+    reference: "2025 Schedule 1299-C Instructions, Step 3"
+    testRef: "tests/engine/state/il-schedule-1299-c.test.ts::Schedule 1299-C Lines 21 through 42 - credits are sorted by Illinois expiration order before application"
+
+  - line: "43"
+    description: "Schedule 1299-C credit for IL-1040 Line 17"
+    formula: "min(Line 20, Line 42)"
+    reference: "2025 Schedule 1299-C Instructions, Step 3"
+    notes: "This amount flows to IL-1040, Line 17 when the schedule is attached."
+    testRef: "tests/engine/state/il-1040.test.ts::IL-1040 Line 17 - attached Schedule 1299-C overrides the raw credit input"

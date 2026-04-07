@@ -1,0 +1,495 @@
+/**
+ * Schedule A — Itemized Deductions
+ * Spec: spec/federal/schedule-a.yaml
+ *
+ * Computes itemized deductions: medical, SALT, mortgage interest,
+ * and charitable contributions. Compared against standard deduction.
+ */
+
+import Decimal from "decimal.js";
+import type { TaxYearInput } from "@/models/inputs.js";
+import type { CalculatedLine } from "@/models/outputs.js";
+import type { FilingStatus, YearConstants } from "@/models/constants.js";
+import { d, sum, zeroFloor, min, roundDollar } from "@/utils/decimal.js";
+import { AuditTrail } from "@/utils/audit.js";
+// calculateDeductibleMortgageInterest is no longer used here — mortgage interest
+// is now computed with aggregate debt limits per IRS Pub 936 (see Lines 8a-8d section).
+
+export interface ScheduleAInput {
+  medicalExpenses?: Decimal;
+  personalPropertyTaxes?: Decimal; // Line 5b: vehicle registration, etc.
+  investmentInterestExpense?: Decimal; // Line 9: net investment interest expense
+  casualtyLossDeduction?: Decimal; // Line 15: Form 4684 deductible casualty/theft loss
+  gamblingWinnings?: Decimal; // Line 21b: gambling winnings (limits gambling loss deduction)
+  gamblingLosses?: Decimal; // Line 28: gambling losses (capped at winnings)
+  // K-1 Box 13 charitable pass-through amounts
+  k1CashCharitable?: Decimal; // Code A: cash/non-capital-gain property (60% AGI limit)
+  k1AppreciatedProperty30?: Decimal; // Code B: capital gain property to 50% orgs (30% limit)
+  k1AppreciatedProperty20?: Decimal; // Code C: capital gain property to non-50% orgs (20% limit)
+  /** Pre-computed sales tax deduction amount from the sales tax worksheet.
+   *  When provided, Schedule A compares this to income taxes for Line 5a. */
+  salesTaxDeduction?: Decimal;
+  /** Whether the taxpayer elected the sales tax deduction (vs income tax).
+   *  When autoCompare is true, the engine uses whichever is larger. */
+  salesTaxElected?: boolean;
+}
+
+/** Per-year carryforward entry for charitable contribution vintage tracking (IRC §170(d)(1)) */
+export interface CharitableCarryforwardEntry {
+  taxYear: number;
+  amount: Decimal;
+}
+
+/** Reconciliation detail for a single carryforward vintage year */
+export interface CharitableCarryforwardYearDetail {
+  taxYear: number;
+  amountAvailable: Decimal;
+  amountUsed: Decimal;
+  amountExpired: Decimal;
+  amountRemaining: Decimal;
+}
+
+export interface ScheduleAResult {
+  medicalDeduction: Decimal; // Line 4
+  saltDeduction: Decimal; // Line 5d
+  /** Whether the general sales tax election was used for Line 5a (vs income taxes) */
+  salesTaxElected: boolean;
+  mortgageInterest: Decimal; // Line 8a
+  investmentInterestDeduction: Decimal; // Line 9
+  casualtyLossDeduction: Decimal; // Line 15
+  cashCharitable: Decimal; // Line 12
+  nonCashCharitable: Decimal; // Line 13
+  gamblingLossDeduction: Decimal; // Line 28
+  totalItemized: Decimal; // Line 17
+  /** Excess charitable contributions that carry forward to next year (IRC §170(d)) */
+  charitableCarryforward: Decimal;
+  /** Per-year remaining carryforward after FIFO reconciliation with 5-year expiration */
+  charitableCarryforwardByYear: CharitableCarryforwardEntry[];
+  /** Total expired carryforward from FIFO reconciliation */
+  charitableCarryforwardExpired: Decimal;
+  /** Year-by-year reconciliation detail */
+  charitableCarryforwardDetail: CharitableCarryforwardYearDetail[];
+  lines: CalculatedLine[];
+}
+
+/** SALT cap for MFS filers */
+const MFS_SALT_CAP = new Decimal(5000);
+
+/** Charitable carryforwards expire after 5 years per IRC §170(d)(1) */
+const CHARITABLE_CARRYFORWARD_YEARS = 5;
+
+const ZERO = new Decimal(0);
+
+/**
+ * Resolve per-year carryforward entries from input.
+ * If per-year entries are provided, use those (filtered for positive amounts).
+ * Otherwise, convert the legacy single aggregate into a single entry from taxYear-1.
+ */
+function resolveCharitableCarryforwardEntries(
+  input: TaxYearInput,
+): CharitableCarryforwardEntry[] {
+  const byYear = input.priorYear?.charitableCarryforwardByYear ?? [];
+  if (byYear.length > 0) {
+    return byYear
+      .filter((entry) => d(entry.amount).greaterThan(0))
+      .map((entry) => ({ taxYear: entry.taxYear, amount: d(entry.amount) }))
+      .sort((a, b) => a.taxYear - b.taxYear);
+  }
+
+  const legacy = d(input.priorYear?.charitableCarryforward);
+  if (legacy.isZero()) {
+    return [];
+  }
+
+  const currentTaxYear = input.taxpayer.taxYear;
+  return [{ taxYear: currentTaxYear - 1, amount: legacy }];
+}
+
+/**
+ * Apply FIFO ordering to charitable carryforward entries against available capacity.
+ * Entries older than 5 years from the current tax year expire (IRC §170(d)(1)).
+ */
+function reconcileCharitableCarryforward(
+  entries: CharitableCarryforwardEntry[],
+  currentTaxYear: number,
+  availableCapacity: Decimal,
+): {
+  detail: CharitableCarryforwardYearDetail[];
+  totalUsed: Decimal;
+  totalExpired: Decimal;
+  remaining: CharitableCarryforwardEntry[];
+} {
+  const detail: CharitableCarryforwardYearDetail[] = [];
+  const remaining: CharitableCarryforwardEntry[] = [];
+  let capacity = Decimal.max(ZERO, availableCapacity);
+  let totalUsed = ZERO;
+  let totalExpired = ZERO;
+
+  // Process FIFO — entries already sorted oldest first
+  for (const entry of entries) {
+    const age = currentTaxYear - entry.taxYear;
+    const expired = age > CHARITABLE_CARRYFORWARD_YEARS;
+
+    if (expired) {
+      detail.push({
+        taxYear: entry.taxYear,
+        amountAvailable: entry.amount,
+        amountUsed: ZERO,
+        amountExpired: entry.amount,
+        amountRemaining: ZERO,
+      });
+      totalExpired = totalExpired.plus(entry.amount);
+      continue;
+    }
+
+    const used = Decimal.min(entry.amount, capacity);
+    const remainder = entry.amount.minus(used);
+    capacity = capacity.minus(used);
+    totalUsed = totalUsed.plus(used);
+
+    detail.push({
+      taxYear: entry.taxYear,
+      amountAvailable: entry.amount,
+      amountUsed: used,
+      amountExpired: ZERO,
+      amountRemaining: remainder,
+    });
+
+    if (remainder.greaterThan(0)) {
+      remaining.push({ taxYear: entry.taxYear, amount: remainder });
+    }
+  }
+
+  return { detail, totalUsed, totalExpired, remaining };
+}
+
+export function calculateScheduleA(
+  input: TaxYearInput,
+  agi: Decimal,
+  filingStatus: FilingStatus,
+  constants: YearConstants,
+  extra?: ScheduleAInput
+): ScheduleAResult {
+  const audit = new AuditTrail();
+
+  // ── Medical (Lines 1-4) ────────────────────────────────
+  const medicalExpenses = extra?.medicalExpenses ?? new Decimal(0);
+  const medicalThreshold = roundDollar(agi.times(new Decimal(0.075)));
+  const medicalDeduction = zeroFloor(medicalExpenses.minus(medicalThreshold));
+  audit.record("Sched A", "1", "Medical expenses", medicalExpenses, "Total unreimbursed");
+  audit.record("Sched A", "4", "Medical deduction", medicalDeduction,
+    `Line 1 - (7.5% × AGI = ${medicalThreshold})`);
+
+  // ── SALT (Lines 5a-5d) ─────────────────────────────────
+  // Line 5a: State/local income taxes OR general sales taxes (taxpayer elects)
+  const stateTaxes = input.w2s.reduce(
+    (acc, w2) => acc.plus(d(w2.stateTaxWithheld)),
+    new Decimal(0)
+  );
+  const localTaxes = input.w2s.reduce(
+    (acc, w2) => acc.plus(d(w2.localTaxWithheld)),
+    new Decimal(0)
+  );
+  // Per IRS Schedule A Instructions Line 5a, state estimated tax payments
+  // made during the year are deductible as state/local income taxes.
+  const stateEstimatedPayments = input.adjustments?.estimatedTaxPayments
+    ?.filter((p) => p.type === "state")
+    .reduce((acc, p) => acc.plus(d(p.amount)), new Decimal(0)) ?? new Decimal(0);
+  const stateLocalIncomeTaxes = stateTaxes.plus(localTaxes).plus(stateEstimatedPayments);
+
+  // Determine whether to use income taxes or sales taxes for Line 5a
+  const salesTaxAmount = extra?.salesTaxDeduction ?? new Decimal(0);
+  const hasSalesTaxElection = salesTaxAmount.greaterThan(0) && (extra?.salesTaxElected ?? false);
+
+  let stateLocalTaxes: Decimal;
+  let line5aDescription: string;
+
+  if (hasSalesTaxElection) {
+    // Sales tax elected — use sales tax amount
+    stateLocalTaxes = salesTaxAmount;
+    line5aDescription = `General sales tax deduction $${salesTaxAmount} (elected over income taxes $${stateLocalIncomeTaxes})`;
+  } else {
+    // Default: income taxes
+    stateLocalTaxes = stateLocalIncomeTaxes;
+    line5aDescription = `Sum W-2 Box 17 (state ${stateTaxes}) + Box 19 (local ${localTaxes}) + state estimated (${stateEstimatedPayments})`;
+    if (salesTaxAmount.greaterThan(0)) {
+      line5aDescription += ` (income taxes $${stateLocalIncomeTaxes} used over sales taxes $${salesTaxAmount})`;
+    }
+  }
+
+  audit.record("Sched A", "5a",
+    hasSalesTaxElection ? "State/local general sales taxes" : "State/local income taxes",
+    stateLocalTaxes, line5aDescription);
+
+  const personalPropertyTaxes = extra?.personalPropertyTaxes ?? new Decimal(0);
+  audit.record("Sched A", "5b", "Personal property taxes", personalPropertyTaxes,
+    "Vehicle registration, etc.");
+
+  const propertyTaxes = input.form1098.reduce(
+    (acc, f) => acc.plus(d(f.propertyTax)),
+    new Decimal(0)
+  );
+  audit.record("Sched A", "5c", "Real estate taxes", propertyTaxes,
+    "Sum Form 1098 property tax");
+
+  // Apply SALT cap ($10K normally, $5K for MFS)
+  const saltTotal = stateLocalTaxes.plus(personalPropertyTaxes).plus(propertyTaxes);
+  const saltCap = filingStatus === "married_filing_separately" ? MFS_SALT_CAP : constants.saltCap;
+  const saltDeduction = min(saltTotal, saltCap);
+  audit.record("Sched A", "5d", "SALT deduction (capped)", saltDeduction,
+    `min(${saltTotal}, $${saltCap})`);
+
+  // ── Mortgage Interest (Lines 8a-8d) ────────────────────
+  // Per IRS Pub 936, the debt limit is applied to the AGGREGATE balance
+  // of all mortgages, not per-mortgage. Grandfathered (pre-12/16/2017)
+  // debt gets priority up to $1M/$500K MFS; post-TCJA fills remaining
+  // room under $750K/$375K MFS.
+  const TCJA_CUTOFF = "2017-12-15";
+  const GRANDFATHERED_LIMIT = new Decimal(1000000);
+
+  let totalGrandfatheredPrincipal = new Decimal(0);
+  let totalPostTCJAPrincipal = new Decimal(0);
+  let totalMortgageInterest = new Decimal(0);
+
+  for (const f of input.form1098) {
+    const principal = d(f.outstandingMortgagePrincipal);
+    const interest = d(f.mortgageInterestReceived);
+    totalMortgageInterest = totalMortgageInterest.plus(interest);
+    const isGrandfathered = f.mortgageOriginationDate !== undefined
+      && f.mortgageOriginationDate < TCJA_CUTOFF;
+    if (isGrandfathered) {
+      totalGrandfatheredPrincipal = totalGrandfatheredPrincipal.plus(principal);
+    } else {
+      totalPostTCJAPrincipal = totalPostTCJAPrincipal.plus(principal);
+    }
+  }
+
+  const totalPrincipal = totalGrandfatheredPrincipal.plus(totalPostTCJAPrincipal);
+  const mfsHalf = filingStatus === "married_filing_separately" ? new Decimal(2) : new Decimal(1);
+  const grandfatheredLimit = GRANDFATHERED_LIMIT.dividedBy(mfsHalf);
+  const postTCJAOverallLimit = constants.mortgageInterest.debtLimit.dividedBy(mfsHalf);
+
+  // Step 1: Grandfathered debt limited to $1M/$500K MFS
+  const grandfatheredLimited = min(totalGrandfatheredPrincipal, grandfatheredLimit);
+  // Step 2: Post-TCJA room = max(0, $750K/$375K - grandfathered used)
+  const postTCJARoom = zeroFloor(postTCJAOverallLimit.minus(grandfatheredLimited));
+  // Step 3: Post-TCJA limited to remaining room
+  const postTCJALimited = min(totalPostTCJAPrincipal, postTCJARoom);
+  // Step 4: Total limited debt
+  const totalLimited = grandfatheredLimited.plus(postTCJALimited);
+
+  let grossMortgageInterest: Decimal;
+  if (totalPrincipal.isZero() || totalPrincipal.lessThanOrEqualTo(totalLimited)) {
+    grossMortgageInterest = totalMortgageInterest;
+  } else {
+    const ratio = totalLimited.dividedBy(totalPrincipal);
+    grossMortgageInterest = roundDollar(totalMortgageInterest.times(ratio));
+  }
+
+  const refundOfOverpaidInterest = input.form1098.reduce(
+    (acc, f) => acc.plus(d(f.refundOfOverpaidInterest)),
+    new Decimal(0)
+  );
+  const mortgageInterest = grossMortgageInterest;
+  audit.record("Sched A", "8a", "Mortgage interest", mortgageInterest,
+    `Total interest ${totalMortgageInterest}, principal ${totalPrincipal}, limit ${totalLimited}` +
+    (totalPrincipal.greaterThan(totalLimited) ? ` → ratio ${totalLimited}/${totalPrincipal}` : "") +
+    (refundOfOverpaidInterest.greaterThan(0)
+      ? `; Form 1098 Box 3 refund $${refundOfOverpaidInterest} not netted on 2025 Schedule A line 8a`
+      : ""));
+
+  // Line 8c: Points paid on purchase of principal residence
+  const pointsPaid = input.form1098.reduce(
+    (acc, f) => acc.plus(d(f.pointsPaid)),
+    new Decimal(0)
+  );
+  audit.record("Sched A", "8c", "Points paid", pointsPaid,
+    "Sum Form 1098 Box 6");
+
+  // Line 8d: Mortgage insurance premiums (PMI)
+  const reportedMortgageInsurancePremiums = input.form1098.reduce(
+    (acc, f) => acc.plus(d(f.mortgageInsurancePremiums)),
+    new Decimal(0)
+  );
+  const mortgageInsurancePremiums = ZERO;
+  audit.record("Sched A", "8d", "Reserved for future use", mortgageInsurancePremiums,
+    reportedMortgageInsurancePremiums.greaterThan(0)
+      ? `2025 Schedule A line 8d is reserved for future use; ignored Form 1098 Box 5 PMI $${reportedMortgageInsurancePremiums}`
+      : "2025 Schedule A line 8d is reserved for future use");
+
+  // Line 9: Investment interest expense (from Form 4952 or manual input)
+  const investmentInterestDeduction = extra?.investmentInterestExpense ?? new Decimal(0);
+  audit.record("Sched A", "9", "Investment interest expense", investmentInterestDeduction,
+    investmentInterestDeduction.isZero()
+      ? "No investment interest expense"
+      : "Investment interest expense deduction (Form 4952 or validated manual input)");
+
+  // Line 15: Casualty and theft losses (from Form 4684)
+  const casualtyLossDeduction = extra?.casualtyLossDeduction ?? new Decimal(0);
+  audit.record("Sched A", "15", "Casualty and theft losses", casualtyLossDeduction,
+    casualtyLossDeduction.isZero()
+      ? "No casualty or theft losses"
+      : "Form 4684 Section A deductible casualty loss (federally declared disaster only, post-TCJA)");
+
+  // ── Charitable (Lines 12-13) with stacked AGI limits ──
+  // Per IRC §170(b)(1), charitable contribution limits interact (stack):
+  // Non-cash donations:
+  // - LTCG property to supported public charities: 30% of AGI
+  // - LTCG property to validated private foundations / second-category orgs:
+  //   smallest of 20% of AGI, remaining 30% bucket headroom, and remaining
+  //   50% bucket headroom after the supported higher-priority categories
+  // - other non-cash property: 50% of AGI
+  // Cash: 60% minus total non-cash property under (G)
+  const rawPublicAppreciatedPropertyDirect = input.donations
+    .filter((don) => don.type !== "cash" && don.isLongTermCapitalGain && !don.isPrivateFoundation)
+    .reduce((acc, don) => acc.plus(d(don.amount)), new Decimal(0));
+  const rawPublicAppreciatedProperty = rawPublicAppreciatedPropertyDirect
+    .plus(extra?.k1AppreciatedProperty30 ?? new Decimal(0));
+  const rawPrivateFoundationAppreciatedPropertyDirect = input.donations
+    .filter((don) => don.type !== "cash" && don.isLongTermCapitalGain && don.isPrivateFoundation)
+    .reduce((acc, don) => acc.plus(d(don.amount)), new Decimal(0));
+  const rawPrivateFoundationAppreciatedProperty = rawPrivateFoundationAppreciatedPropertyDirect
+    .plus(extra?.k1AppreciatedProperty20 ?? new Decimal(0));
+  const rawOtherNonCash = input.donations
+    .filter((don) => don.type !== "cash" && !don.isLongTermCapitalGain)
+    .reduce((acc, don) => acc.plus(d(don.amount)), new Decimal(0));
+  const appreciatedLimit = roundDollar(agi.times(new Decimal(0.3)));
+  const privateFoundationAppreciatedLimit = roundDollar(agi.times(new Decimal(0.2)));
+  const overallNonCashLimit = roundDollar(agi.times(new Decimal(0.5)));
+  const deductiblePublicAppreciatedProperty = min(rawPublicAppreciatedProperty, appreciatedLimit);
+  // Other non-cash gets remaining 50% capacity after LTCG
+  const otherNonCashCapacity = zeroFloor(overallNonCashLimit.minus(deductiblePublicAppreciatedProperty));
+  const deductibleOtherNonCash = min(rawOtherNonCash, otherNonCashCapacity);
+
+  // Cash limited to 60% minus non-cash property already allowed (IRC §170(b)(1)(G))
+  const rawCashCharitableDirect = input.donations
+    .filter((don) => don.type === "cash")
+    .reduce((acc, don) => acc.plus(d(don.amount)), new Decimal(0));
+  const rawCashCharitable = rawCashCharitableDirect
+    .plus(extra?.k1CashCharitable ?? new Decimal(0));
+  const cashAGILimit = roundDollar(agi.times(new Decimal(0.6)));
+  const preliminaryNonCash = deductiblePublicAppreciatedProperty.plus(deductibleOtherNonCash);
+  const cashCapacity = zeroFloor(cashAGILimit.minus(preliminaryNonCash));
+
+  // Resolve and reconcile per-year carryforward entries with FIFO and 5-year expiration
+  const currentTaxYear = input.taxpayer.taxYear;
+  const carryforwardEntries = resolveCharitableCarryforwardEntries(input);
+  const carryforwardCapacity = zeroFloor(cashCapacity.minus(rawCashCharitable));
+  const carryforwardReconciliation = reconcileCharitableCarryforward(
+    carryforwardEntries, currentTaxYear, carryforwardCapacity,
+  );
+  const carryforwardUsed = carryforwardReconciliation.totalUsed;
+
+  const totalCashCharitable = rawCashCharitable.plus(carryforwardUsed);
+  const cashCharitable = min(totalCashCharitable, cashCapacity);
+  const k1CashNote = (extra?.k1CashCharitable ?? new Decimal(0)).isZero()
+    ? ""
+    : ` + K-1 Box 13 Code A ${extra!.k1CashCharitable}`;
+  const carryforwardAuditNote = carryforwardReconciliation.totalExpired.greaterThan(0)
+    ? ` (carryforward used ${carryforwardUsed}, expired ${carryforwardReconciliation.totalExpired})`
+    : ` + carryforward ${carryforwardUsed}`;
+  audit.record("Sched A", "12", "Cash charitable", cashCharitable,
+    `Sum cash donations ${rawCashCharitableDirect}${k1CashNote}${carryforwardAuditNote} (limited to 60% AGI = $${cashAGILimit})`);
+
+  const remainingThirtyPercentHeadroom = zeroFloor(appreciatedLimit.minus(deductiblePublicAppreciatedProperty));
+  const remainingFiftyPercentHeadroom = zeroFloor(
+    overallNonCashLimit
+      .minus(cashCharitable)
+      .minus(deductiblePublicAppreciatedProperty)
+      .minus(deductibleOtherNonCash)
+  );
+  const deductiblePrivateFoundationAppreciatedProperty = Decimal.min(
+    rawPrivateFoundationAppreciatedProperty,
+    privateFoundationAppreciatedLimit,
+    remainingThirtyPercentHeadroom,
+    remainingFiftyPercentHeadroom
+  );
+  const nonCashCharitable = deductiblePublicAppreciatedProperty
+    .plus(deductiblePrivateFoundationAppreciatedProperty)
+    .plus(deductibleOtherNonCash);
+  audit.record("Sched A", "13", "Non-cash charitable", nonCashCharitable,
+    "Supported public-charity LTCG property (30% AGI limit) + supported private-foundation LTCG property (20% AGI branch with remaining 30% and 50% headroom limits) + other non-cash property (50% AGI limit)" +
+    ((extra?.k1AppreciatedProperty30 ?? new Decimal(0)).isZero() && (extra?.k1AppreciatedProperty20 ?? new Decimal(0)).isZero()
+      ? ""
+      : " + K-1 Box 13 Code B/C pass-through"), {
+      "Raw public-charity LTCG property (direct)": rawPublicAppreciatedPropertyDirect,
+      "K-1 Box 13 Code B (30% limit)": extra?.k1AppreciatedProperty30 ?? new Decimal(0),
+      "Raw public-charity LTCG property (total)": rawPublicAppreciatedProperty,
+      "Raw private-foundation LTCG property (direct)": rawPrivateFoundationAppreciatedPropertyDirect,
+      "K-1 Box 13 Code C (20% limit)": extra?.k1AppreciatedProperty20 ?? new Decimal(0),
+      "Raw private-foundation LTCG property (total)": rawPrivateFoundationAppreciatedProperty,
+      "Raw other non-cash property": rawOtherNonCash,
+      "30% AGI limit": appreciatedLimit,
+      "20% AGI limit": privateFoundationAppreciatedLimit,
+      "50% AGI limit": overallNonCashLimit,
+      "Deductible public-charity LTCG property": deductiblePublicAppreciatedProperty,
+      "Remaining 30% headroom for private-foundation LTCG property": remainingThirtyPercentHeadroom,
+      "Remaining 50% headroom for private-foundation LTCG property": remainingFiftyPercentHeadroom,
+      "Deductible private-foundation LTCG property": deductiblePrivateFoundationAppreciatedProperty,
+      "Deductible other non-cash property": deductibleOtherNonCash,
+    });
+
+  // Line 28: Gambling losses (limited to gambling winnings per IRC §165(d))
+  const gamblingWinnings = extra?.gamblingWinnings ?? new Decimal(0);
+  const rawGamblingLosses = extra?.gamblingLosses ?? new Decimal(0);
+  const gamblingLossDeduction = min(rawGamblingLosses, gamblingWinnings);
+  audit.record("Sched A", "28", "Gambling losses (limited to winnings)", gamblingLossDeduction,
+    `min(losses ${rawGamblingLosses}, winnings ${gamblingWinnings})`);
+
+  // ── Total (Line 17) ───────────────────────────────────
+  const totalItemized = sum(
+    medicalDeduction,
+    saltDeduction,
+    mortgageInterest,
+    pointsPaid,
+    mortgageInsurancePremiums,
+    investmentInterestDeduction,
+    casualtyLossDeduction,
+    cashCharitable,
+    nonCashCharitable,
+    gamblingLossDeduction
+  );
+  audit.record("Sched A", "17", "Total itemized deductions", totalItemized,
+    "Medical + SALT + mortgage + investment interest + casualty losses + charitable + gambling losses");
+
+  // ── Charitable carryforward (IRC §170(d)) ───────────
+  // Track excess contributions that carry forward up to 5 years.
+  // Cash excess: current-year cash offered minus deductible cash (excluding carryforward used)
+  // Non-cash excess: total non-cash offered minus deductible non-cash
+  // Unused prior-year carryforward vintages carry forward via reconciliation remaining
+  const totalRawNonCash = rawPublicAppreciatedProperty.plus(rawOtherNonCash).plus(rawPrivateFoundationAppreciatedProperty);
+  const currentYearExcessCash = zeroFloor(rawCashCharitable.minus(cashCapacity));
+  const excessNonCash = zeroFloor(totalRawNonCash.minus(nonCashCharitable));
+  const currentYearExcess = currentYearExcessCash.plus(excessNonCash);
+
+  // Build per-year carryforward: remaining prior-year vintages + new current-year vintage
+  const carryforwardByYear: CharitableCarryforwardEntry[] = [
+    ...carryforwardReconciliation.remaining,
+  ];
+  if (currentYearExcess.greaterThan(0)) {
+    carryforwardByYear.push({ taxYear: currentTaxYear, amount: currentYearExcess });
+  }
+
+  // Aggregate carryforward for backward compatibility
+  const newCharitableCarryforward = carryforwardByYear.reduce(
+    (acc, entry) => acc.plus(entry.amount), ZERO,
+  );
+
+  return {
+    medicalDeduction,
+    saltDeduction,
+    salesTaxElected: hasSalesTaxElection,
+    mortgageInterest,
+    investmentInterestDeduction,
+    casualtyLossDeduction,
+    cashCharitable,
+    nonCashCharitable,
+    gamblingLossDeduction,
+    totalItemized,
+    charitableCarryforward: newCharitableCarryforward,
+    charitableCarryforwardByYear: carryforwardByYear,
+    charitableCarryforwardExpired: carryforwardReconciliation.totalExpired,
+    charitableCarryforwardDetail: carryforwardReconciliation.detail,
+    lines: audit.getLines(),
+  };
+}

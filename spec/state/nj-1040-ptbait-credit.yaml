@@ -1,0 +1,55 @@
+form: "NJ-1040 Pass-Through Business Alternative Income Tax Credit"
+fullName: "New Jersey NJ-1040 Line 63 Pass-Through Business Alternative Income Tax Credit"
+taxYear: 2025
+reference: "https://www.nj.gov/treasury/taxation/pdf/current/1040i.pdf"
+
+notes: |
+  NJ-1040 line 63 is the refundable Pass-Through Business Alternative Income
+  Tax (PTBAIT) credit. The 2025 NJ-1040 instructions direct the taxpayer to
+  enter the share of tax from Schedule NJ-BUS-1 Part II line 5, Schedule
+  NJ-BUS-1 Part III line 5, or a Schedule NJK-1 received from an estate or
+  trust.
+
+  Schedule NJ-BUS-1 Part II line 5 aggregates the "Share of Pass-Through
+  Business Alternative Income Tax" reported for partnerships. Schedule
+  NJ-BUS-1 Part III line 5 does the same for S corporations. The Division's
+  PTBAIT guidance states that individual owners may claim a refundable gross
+  income tax credit equal to the member's tax on the share of distributive
+  proceeds paid by the pass-through entity.
+
+  This module models the resident-return line 63 computation as a straight sum
+  of supported PTBAIT credit amounts already computed on upstream statements.
+
+lines:
+  - line: "partnership-share"
+    description: "Partnership PTBAIT credit share from Schedule NJ-BUS-1 Part II line 5"
+    formula: "Supported partnership PTBAIT credit amount"
+    inputs:
+      - "Schedule NJ-K-1 or Schedule PTE-K-1 partnership PTBAIT share"
+    testRef: "tests/engine/state/nj-1040-ptbait-credit.test.ts::NJ-1040 PTBAIT credit - partnership amount flows to line 63"
+
+  - line: "s-corp-share"
+    description: "S corporation PTBAIT credit share from Schedule NJ-BUS-1 Part III line 5"
+    formula: "Supported S corporation PTBAIT credit amount"
+    inputs:
+      - "Schedule NJ-K-1 or Schedule PTE-K-1 S corporation PTBAIT share"
+    testRef: "tests/engine/state/nj-1040-ptbait-credit.test.ts::NJ-1040 PTBAIT credit - partnership and S corporation amounts add together"
+
+  - line: "estate-trust-share"
+    description: "Estate or trust PTBAIT credit share from Schedule NJK-1"
+    formula: "Supported estate or trust PTBAIT credit amount"
+    inputs:
+      - "Schedule NJK-1 PTBAIT share from estate or trust"
+    testRef: "tests/engine/state/nj-1040-ptbait-credit.test.ts::NJ-1040 PTBAIT credit - estate or trust credit is included"
+
+  - line: "63"
+    description: "Pass-Through Business Alternative Income Tax Credit"
+    formula: "partnership-share + s-corp-share + estate-trust-share"
+    inputs:
+      - "Supported partnership PTBAIT credit amount"
+      - "Supported S corporation PTBAIT credit amount"
+      - "Supported estate or trust PTBAIT credit amount"
+    edgeCases:
+      - "No PTBAIT support documents: line 63 = $0"
+      - "Multiple PTBAIT sources add together"
+    testRef: "tests/engine/state/nj-1040-ptbait-credit.test.ts::NJ-1040 PTBAIT credit - no supported PTBAIT amounts yields zero"

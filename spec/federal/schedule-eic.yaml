@@ -1,0 +1,107 @@
+form: "Schedule EIC / EIC Worksheet"
+fullName: "Earned Income Credit (EIC)"
+taxYear: 2025
+irsReference: "https://www.irs.gov/publications/p596"
+
+notes: |
+  Implements the Earned Income Credit calculation per IRC §32 and
+  Rev. Proc. 2024-40 §3.06 for tax year 2025. The credit phases in
+  with earned income, plateaus at the maximum, then phases out as the
+  greater of earned income or AGI rises above the phase-out threshold.
+
+  Schedule EIC itself is only the qualifying-child attachment. The
+  actual credit calculation is the EIC Worksheet in the Form 1040
+  instructions (or the EIC Table for manual filers). This module
+  implements the worksheet formula.
+
+  For 2025 the credit rates and phase-out rates are set by statute
+  (IRC §32(b)(1)); the earned income amounts, phase-out start amounts,
+  and investment income ceiling are inflation-adjusted per Rev. Proc.
+  2024-40 §3.06.
+
+  Filing status rules:
+  - MFS generally cannot claim EIC (IRC §32(d))
+  - Exception: separated spouses who lived apart for the last 6 months
+    of the year and have a qualifying child may claim EIC as MFS
+    (IRC §32(d)(2), made permanent by subsequent legislation)
+  - MFS filers using the exception apply single/HoH thresholds
+
+  Age requirement for childless filers:
+  - Must be age 25-64 (inclusive) by end of tax year (IRC §32(c)(1)(A)(ii))
+
+  Investment income disqualification:
+  - If investment income exceeds $11,950 for 2025, EIC = $0
+  - Investment income includes: taxable + tax-exempt interest, dividends,
+    capital gain net income (≥ $0), net rental/royalty income (if positive)
+
+lines:
+  - line: "earnedIncome"
+    description: "Earned income for EIC purposes"
+    formula: "W-2 wages + net self-employment earnings − deductible half of SE tax (per IRC §32(c)(2))"
+    irsRef: "IRC §32(c)(2); Form 1040 Instructions EIC Worksheet"
+    edgeCases:
+      - "SE losses reduce earned income — no zero-floor on SE component"
+      - "Nontaxable combat pay may be elected as earned income"
+    testRef: "tests/engine/forms/schedule-eic.test.ts::EIC - phase-in credit equals rate times earned income"
+
+  - line: "phaseInCredit"
+    description: "Credit from the phase-in portion"
+    formula: "credit_rate × min(earned_income, earned_income_amount)"
+    irsRef: "IRC §32(a)(1), §32(b)(1)"
+    edgeCases:
+      - "0 children: 7.65% × min(earned, $8,490)"
+      - "1 child: 34% × min(earned, $12,730)"
+      - "2 children: 40% × min(earned, $17,880)"
+      - "3+ children: 45% × min(earned, $17,880)"
+    testRef: "tests/engine/forms/schedule-eic.test.ts::EIC - phase-in credit equals rate times earned income"
+
+  - line: "phaseOutReduction"
+    description: "Reduction from the phase-out portion"
+    formula: "phase_out_rate × max(0, max(earned_income, agi) − phase_out_start)"
+    irsRef: "IRC §32(a)(2), §32(b)(1)"
+    edgeCases:
+      - "Phase-out uses the GREATER of earned income or AGI"
+      - "Single/HoH 0 children: phase-out starts at $10,620"
+      - "Single/HoH 1+ children: phase-out starts at $23,350"
+      - "MFJ 0 children: phase-out starts at $17,730"
+      - "MFJ 1+ children: phase-out starts at $30,470"
+    testRef: "tests/engine/forms/schedule-eic.test.ts::EIC - phase-out uses greater of earned income or AGI"
+
+  - line: "credit"
+    description: "Final Earned Income Credit (1040 Line 27a)"
+    formula: "max(0, floor(phase_in_credit − phase_out_reduction))"
+    irsRef: "IRC §32; Form 1040 Line 27a"
+    inputs:
+      - "Filing status"
+      - "Number of qualifying EIC children (0-3+)"
+      - "Earned income"
+      - "AGI"
+      - "Investment income"
+    edgeCases:
+      - "Credit is floored (rounded down) to the nearest dollar"
+      - "Investment income > $11,950: credit = $0"
+      - "MFS without exception: credit = $0"
+      - "Childless filer under 25 or 65+: credit = $0"
+      - "Credit cannot be negative"
+      - "At exact phase-out start: full maximum credit"
+      - "At exact phase-out end (income limit): credit = $0"
+      - "0 children single at $19,104: credit = $0"
+      - "1 child single at $50,434: credit = $0"
+      - "2 children single at $57,310: credit = $0"
+      - "3+ children single at $61,555: credit = $0"
+      - "0 children MFJ at $26,214: credit = $0"
+      - "1 child MFJ at $57,554: credit = $0"
+      - "2 children MFJ at $64,430: credit = $0"
+      - "3+ children MFJ at $68,675: credit = $0"
+    testRef: "tests/engine/forms/schedule-eic.test.ts::EIC - single with 1 child mid-phase-out gets correct credit"
+
+  - line: "maximumCredits"
+    description: "Maximum EIC amounts by number of qualifying children"
+    formula: "credit_rate × earned_income_amount"
+    irsRef: "IRC §32(b)(2); Rev. Proc. 2024-40 §3.06"
+    edgeCases:
+      - "0 children: $649"
+      - "1 child: $4,328"
+      - "2 children: $7,152"
+      - "3+ children: $8,046"
+    testRef: "tests/engine/forms/schedule-eic.test.ts::EIC - maximum credit amounts match IRS tables"

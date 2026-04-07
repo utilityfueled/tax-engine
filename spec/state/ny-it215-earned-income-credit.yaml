@@ -1,0 +1,202 @@
+form: "New York IT-215 Earned Income Credit"
+fullName: "New York State Form IT-215 / Worksheet B and Worksheet C — New York State and New York City Earned Income Credits"
+taxYear: 2025
+irsReference: "https://www.tax.ny.gov/pdf/2025/inc/it215i_2025.pdf"
+
+notes: |
+  Form IT-215 computes the New York State earned income credit and, for full-year
+  or part-year New York City residents, the separate New York City earned income
+  credit reported on IT-201 line 70.
+
+  This module implements the resident IT-201 slice only:
+  - IT-215 lines 11 through 16 for the regular New York State EIC on IT-201 line 65
+  - IT-215 line 17 allocation for joint-federal / New York MFS resident returns
+  - Worksheet B lines 1 through 5, as needed for residents, to cap the household-credit subtraction
+  - Full-year NYC resident credit on IT-215 line 27 / IT-201 line 70
+  - Worksheet C line 4 allocation for joint-federal / New York MFS NYC resident returns
+  - Worksheet C rate lookup using 2025 NYAGI bands
+  - Whole-dollar rounding on final credit amounts
+
+  It does not implement:
+  - The federal-eligibility screening questions on lines 1 through 9 beyond relying on the claimed federal EIC amount already supplied to the engine
+  - Part-year New York State resident lines 18 through 26
+  - Part-year NYC resident proration (Worksheet C lines 5 through 9)
+  - The separate noncustodial parent credit (Form IT-209)
+
+lines:
+  - line: "11"
+    description: "New York State earned income credit rate"
+    formula: "0.30"
+    inputs:
+      - "No variable inputs; fixed statutory percentage"
+    notes: |
+      The 2025 resident IT-215 uses a fixed 30% multiplier on line 11 for the
+      regular New York State earned income credit.
+    edgeCases:
+      - "The line 11 rate does not vary by filing status or AGI"
+    testRef: "tests/engine/state/ny-it215-earned-income-credit.test.ts::Line 11 - NYS EIC uses the fixed 30% rate"
+
+  - line: "12"
+    description: "Tentative New York State earned income credit"
+    formula: "Round to whole dollars: line 10 federal EIC × 0.30"
+    inputs:
+      - "Federal earned income credit claimed (IT-215 line 10 / federal Form 1040 line 27a)"
+    notes: |
+      Line 12 is the tentative New York State EIC before subtracting the amount
+      of household credit allowed through Worksheet B and line 15.
+    edgeCases:
+      - "Zero federal EIC yields zero tentative NYS EIC"
+      - "Whole-dollar rounding applies before the Worksheet B / line 15 subtraction"
+    testRef: "tests/engine/state/ny-it215-earned-income-credit.test.ts::Line 12 - tentative NYS EIC rounds 30% of the federal credit"
+
+  - line: "Worksheet B-5 / 13"
+    description: "Tax remaining after resident and accumulation distribution credits"
+    formula: "max(0, Worksheet B line 1 NY tax - Worksheet B line 2 resident credit - Worksheet B line 3 accumulation distribution credit)"
+    inputs:
+      - "New York State tax (IT-201 line 39)"
+      - "Resident credit (IT-112-R line 30 / IT-201 line 41)"
+      - "Accumulation distribution credit available for Worksheet B line 3"
+    notes: |
+      For residents, Worksheet B limits how much of the household credit can
+      reduce the refundable New York State EIC. The amount carried from
+      Worksheet B line 5 to IT-215 line 13 is the remaining New York tax after
+      resident-credit and accumulation-distribution-credit reductions, floored at zero.
+    edgeCases:
+      - "Resident and accumulation credits can reduce Worksheet B line 5 below the household credit"
+      - "Worksheet B line 5 floors at zero when resident and accumulation credits exceed line 1 tax"
+      - "No resident or accumulation credit leaves Worksheet B line 5 equal to NY tax"
+    testRef: "tests/engine/state/ny-it215-earned-income-credit.test.ts::Worksheet B line 5 - resident and accumulation credits cap the household-credit subtraction"
+
+  - line: "15"
+    description: "Allowable household credit reduction"
+    formula: "Smaller of line 13 and line 14 household credit"
+    inputs:
+      - "IT-215 line 13 amount from Worksheet B line 5"
+      - "Household credit from IT-201 line 40"
+    notes: |
+      The resident IT-215 does not always subtract the full household credit.
+      The line 15 reduction is limited to the remaining New York tax computed
+      on Worksheet B.
+    edgeCases:
+      - "Household credit larger than line 13 is capped at line 13"
+      - "Line 13 larger than household credit leaves the full household credit on line 15"
+    testRef: "tests/engine/state/ny-it215-earned-income-credit.test.ts::Line 15 - allowable household credit is limited by Worksheet B line 5"
+
+  - line: "16 / IT-201-65"
+    description: "Allowable New York State earned income credit"
+    formula: "max(0, line 12 tentative NYS EIC - line 15 allowable household credit)"
+    inputs:
+      - "IT-215 line 12 tentative NYS EIC"
+      - "IT-215 line 15 allowable household credit"
+    notes: |
+      For residents, line 16 transfers to IT-201 line 65. The credit remains
+      refundable and is not otherwise capped by tax, but the household-credit
+      subtraction is limited through Worksheet B.
+    edgeCases:
+      - "If line 15 equals zero, line 16 equals line 12"
+      - "Line 16 can remain positive even when the household credit exceeds the remaining tax after resident credits"
+      - "Line 16 floors at zero when line 15 exceeds line 12"
+    testRef: "tests/engine/state/ny-it215-earned-income-credit.test.ts::Line 16 - allowable NYS EIC subtracts only the capped household-credit amount"
+
+  - line: "17 / IT-201-65"
+    description: "Joint-federal / New York MFS claimed New York State earned income credit"
+    formula: |
+      If filing a joint federal return but separate New York returns:
+        Enter any non-negative portion of line 16 chosen by the spouses, not above line 16
+      Otherwise:
+        line 16
+    inputs:
+      - "IT-215 line 16 combined New York State earned income credit"
+      - "Claimed share entered on line 17 when filing a joint federal return but separate New York returns"
+      - "New York filing status"
+    notes: |
+      The 2025 IT-215 instructions state that a married couple filing a joint
+      federal return but separate New York State returns may split the line 16
+      combined New York State EIC in any manner they choose, as long as the
+      spouses' combined claimed amounts do not exceed line 16. The amount
+      entered on line 17 is the amount transferred to IT-201 line 65 for that
+      spouse's return.
+    edgeCases:
+      - "Claimed line 17 amount may be zero"
+      - "Claimed line 17 amount may equal the full line 16 combined credit"
+      - "Claimed line 17 amount greater than line 16 is invalid"
+    testRef: "tests/engine/state/ny-it215-earned-income-credit.test.ts::Line 17 - joint federal NY-MFS filers claim only their chosen share of line 16"
+
+  - line: "Worksheet C-2"
+    description: "NYC EIC rate"
+    formula: |
+      If not a full-year NYC resident: 0
+      Else use the 2025 Worksheet C table:
+        NYAGI < $5,000 => 0.30
+        $5,000 to < $7,500 => 0.30 - round4((NYAGI - 4,999) × 0.00002)
+        $7,500 to < $15,000 => 0.25
+        $15,000 to < $17,500 => 0.25 - round4((NYAGI - 14,999) × 0.00002)
+        $17,500 to < $20,000 => 0.20
+        $20,000 to < $22,500 => 0.20 - round4((NYAGI - 19,999) × 0.00002)
+        $22,500 to < $40,000 => 0.15
+        $40,000 to < $42,500 => 0.15 - round4((NYAGI - 39,999) × 0.00002)
+        $42,500 and over => 0.10
+    inputs:
+      - "New York adjusted gross income (IT-201 line 33)"
+      - "NYC residency flag"
+    notes: |
+      Worksheet C line 2 takes the decimal from the NYC EIC rate worksheet.
+      The 2025 instructions require line 4 of that worksheet to be rounded to
+      four decimal places before subtracting from the band rate.
+
+      2025 Worksheet C NYC EIC rate table:
+      - NYAGI under $5,000: 30%
+      - $5,000 to under $7,500: phase from 30% down to 25%
+      - $7,500 to under $15,000: 25%
+      - $15,000 to under $17,500: phase from 25% down to 20%
+      - $17,500 to under $20,000: 20%
+      - $20,000 to under $22,500: phase from 20% down to 15%
+      - $22,500 to under $40,000: 15%
+      - $40,000 to under $42,500: phase from 15% down to 10%
+      - $42,500 and over: 10%
+    edgeCases:
+      - "Exactly $5,000 remains in the first phase-down band"
+      - "Exactly $7,500 uses the flat 25% band"
+      - "Exactly $42,500 uses the 10% rate"
+      - "Non-NYC resident gets a zero rate"
+    testRef: "tests/engine/state/ny-it215-earned-income-credit.test.ts::Worksheet C line 2 - NYAGI $6,250 phases the rate down to 27.5%"
+
+  - line: "Worksheet C-3 / 27 / IT-201-70"
+    description: "Allowable NYC earned income credit"
+    formula: |
+      Round to whole dollars: federal EIC claimed on IT-215 line 10 × Worksheet C line 2 rate
+      If Worksheet C line 4 applies, this line 3 amount is the combined credit before spouse allocation.
+    inputs:
+      - "Federal earned income credit claimed (IT-215 line 10 / federal Form 1040 line 27a)"
+      - "Worksheet C line 2 NYC EIC rate"
+    notes: |
+      For a full-year NYC resident, Worksheet C line 3 flows directly to
+      IT-215 line 27 and then to IT-201 line 70 unless the Married filing
+      separate allocation on Worksheet C line 4 applies. This credit is refundable.
+    edgeCases:
+      - "Zero federal EIC yields zero NYC EIC"
+      - "Whole-dollar rounding applies to the final credit"
+      - "Non-NYC resident gets zero credit even with federal EIC"
+    testRef: "tests/engine/state/ny-it215-earned-income-credit.test.ts::Worksheet C line 3 - NYC credit is federal EIC times the computed rate"
+
+  - line: "Worksheet C-4 / 27 / IT-201-70"
+    description: "Joint-federal / New York MFS claimed NYC earned income credit"
+    formula: |
+      If NYC filing status is Married filing separate return:
+        Enter any non-negative portion of Worksheet C line 3 chosen by the spouses, not above line 3
+      Otherwise:
+        Worksheet C line 3
+    inputs:
+      - "Worksheet C line 3 combined NYC earned income credit"
+      - "Claimed share entered on Worksheet C line 4 when filing a joint federal return but separate New York returns"
+      - "New York City filing status"
+    notes: |
+      The 2025 Worksheet C instructions state that the NYC EIC on line 3 may
+      be divided between spouses in any manner they wish when the New York City
+      filing status is Married filing separate return. The amount entered on
+      line 4 is the amount transferred to IT-215 line 27 and IT-201 line 70.
+    edgeCases:
+      - "Claimed Worksheet C line 4 amount may be zero"
+      - "Claimed Worksheet C line 4 amount may equal the full line 3 combined credit"
+      - "Claimed Worksheet C line 4 amount greater than line 3 is invalid"
+    testRef: "tests/engine/state/ny-it215-earned-income-credit.test.ts::Worksheet C line 4 - joint federal NY-MFS NYC filers claim only their chosen share of line 3"

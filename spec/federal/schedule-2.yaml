@@ -1,0 +1,114 @@
+form: "Schedule 2"
+fullName: "Additional Taxes"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i1040s2"
+
+notes: |
+  Schedule 2 collects additional taxes beyond the base income tax.
+  Part I: AMT and excess premium tax credit repayment.
+  Part II: Other taxes (SE tax, Form 4137/8919 employment taxes, Form 5329
+  additional taxes, Medicare, NIIT, HSA taxes, etc.)
+  Total goes to Form 1040 Line 23.
+
+lines:
+  - line: "1"
+    description: "AMT (Form 6251)"
+    formula: "Alternative Minimum Tax amount"
+    irsRef: "Schedule 2 Instructions, Line 1"
+    notes: "Computed via Form 6251 and integrated into federal orchestrator"
+    testRef: "tests/engine/schedules/schedule-2.test.ts::Schedule 2 Line 1 - AMT from Form 6251"
+
+  - line: "2"
+    description: "Excess advance premium tax credit repayment"
+    formula: "Form 8962 excess APTC repayment"
+    irsRef: "Schedule 2 Instructions, Line 2"
+    testRef: "tests/engine/schedules/schedule-2.test.ts::Schedule 2 Line 2 - excess APTC"
+
+  - line: "3"
+    description: "Part I total"
+    formula: "Line 1 + Line 2"
+    irsRef: "Schedule 2 Instructions, Line 3"
+    testRef: "tests/engine/schedules/schedule-2.test.ts::Schedule 2 Line 3 - Part I total"
+
+  - line: "4"
+    description: "Self-employment tax"
+    formula: "Schedule SE Line 12"
+    irsRef: "Schedule 2 Instructions, Line 4"
+    testRef: "tests/engine/schedules/schedule-2.test.ts::Schedule 2 Line 4 - SE tax"
+
+  - line: "5"
+    description: "Additional Social Security and Medicare tax on tips"
+    formula: "In the supported federal engine path, use Form 4137 Line 13"
+    irsRef: "Schedule 2 Instructions, Line 5"
+    notes: "This slice carries supported Form 4137 unreported-tip tax to Schedule 2 line 5."
+    testRef: "tests/engine/schedules/schedule-2.test.ts::Schedule 2 Line 5 - additional Social Security and Medicare tax on tips or wages"
+
+  - line: "6"
+    description: "Uncollected Social Security and Medicare tax on wages"
+    formula: "In the supported federal engine path, use Form 8919 Line 13"
+    irsRef: "Schedule 2 Instructions, Line 6"
+    notes: "This slice carries supported Form 8919 employee-wage tax to Schedule 2 line 6."
+    testRef: "tests/engine/schedules/schedule-2.test.ts::Schedule 2 Line 6 - Form 8919 employee-wage tax flows separately from Form 4137 tax"
+
+  - line: "7"
+    description: "Total of lines 5 and 6"
+    formula: "Line 5 + Line 6"
+    irsRef: "Schedule 2 Instructions, Line 7"
+    testRef: "tests/engine/schedules/schedule-2.test.ts::Schedule 2 Line 7 - combines Form 4137 and Form 8919 tax before later Part II lines"
+
+  - line: "8"
+    description: "Additional tax on IRAs and other qualified retirement plans"
+    formula: "Form 5329 Line 4 additional tax on early distributions and other supported retirement-plan distributions"
+    irsRef: "Schedule 2 Instructions, Line 8"
+    testRef: "tests/engine/schedules/schedule-2.test.ts::Schedule 2 Line 8 - early distribution penalty tax"
+
+  - line: "13"
+    description: "Uncollected Social Security, Medicare, or RRTA tax"
+    formula: "Uncollected Social Security, Medicare, or RRTA tax on tips or group-term life insurance"
+    irsRef: "Schedule 2 Instructions, Line 13"
+    testRef: "tests/engine/schedules/schedule-2.test.ts::Schedule 2 Line 13 - uncollected Social Security tax"
+
+  - line: "11"
+    description: "Additional Medicare Tax"
+    formula: "Form 8959 Line 18"
+    irsRef: "Schedule 2 Instructions, Line 11"
+    testRef: "tests/engine/schedules/schedule-2.test.ts::Schedule 2 Line 11 - additional Medicare"
+
+  - line: "12"
+    description: "Net Investment Income Tax"
+    formula: "Form 8960 Line 17"
+    irsRef: "Schedule 2 Instructions, Line 12"
+    testRef: "tests/engine/schedules/schedule-2.test.ts::Schedule 2 Line 12 - NIIT"
+
+  - line: "17c"
+    description: "Additional tax on HSA distributions"
+    formula: "If one supported Form 8889 is present, start with Form 8889 Line 17b; if the return also includes supplemental owner-specific supported Form 8889 statements for mixed spouse-owned HSA documents, add each supplemental statement form's Line 17b; if no main Form 8889 is present and the return includes separate owner-specific supported Form 8889 statements, sum each statement form's Line 17b"
+    irsRef: "Schedule 2 Instructions, Line 17c"
+    notes: "Carries the 20% additional tax on taxable HSA distributions, including the aggregate of any supplemental owner-specific supported Form 8889 statement forms when mixed primary/spouse HSA documents are present."
+    testRef: "tests/engine/schedules/schedule-2.test.ts::Schedule 2 Line 17c - HSA additional tax flows from Form 8889 Line 17b"
+
+  - line: "17d"
+    description: "Additional tax from HSA testing-period failure"
+    formula: "If one supported Form 8889 is present, start with Form 8889 Line 21; if the return also includes supplemental owner-specific supported Form 8889 statements for mixed spouse-owned HSA documents, add each supplemental statement form's Line 21; if no main Form 8889 is present and the return includes separate owner-specific supported Form 8889 statements, sum each statement form's Line 21"
+    irsRef: "Schedule 2 Instructions, Line 17d"
+    notes: "Carries the 10% additional tax on Form 8889 Line 18 last-month-rule recapture income, including the aggregate of any supplemental owner-specific supported Form 8889 statement forms when mixed primary/spouse HSA documents are present."
+    testRef: "tests/engine/schedules/schedule-2.test.ts::Schedule 2 Line 17d - HSA testing-period failure tax flows from Form 8889 Line 21"
+
+  - line: "18"
+    description: "Total other taxes"
+    formula: "Sum of the implemented Part II other-tax lines, including Lines 4, 7, 8, 11, 12, 13, 17c, and 17d"
+    irsRef: "Schedule 2 Instructions, Line 18"
+    testRef: "tests/engine/schedules/schedule-2.test.ts::Schedule 2 Line 18 - total other taxes"
+
+  - line: "19"
+    description: "Estimated tax penalty"
+    formula: "Form 2210 estimated tax penalty"
+    irsRef: "Schedule 2 Instructions, Line 19"
+    testRef: "tests/engine/schedules/schedule-2.test.ts::Schedule 2 Line 19 - estimated tax penalty"
+
+  - line: "21"
+    description: "Total additional taxes"
+    formula: "Line 3 + Line 18 + Line 19"
+    irsRef: "Schedule 2 Instructions, Line 21"
+    notes: "Goes to Form 1040 Line 23"
+    testRef: "tests/engine/schedules/schedule-2.test.ts::Schedule 2 Line 21 - total to 1040"

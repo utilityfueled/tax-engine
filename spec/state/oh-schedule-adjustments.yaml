@@ -1,0 +1,569 @@
+form: "Ohio Schedule of Adjustments"
+fullName: "Ohio IT 1040 Schedule of Adjustments (Additions and Deductions)"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/v1735920104/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf"
+
+notes: |
+  The Schedule of Adjustments computes the additions to and deductions from
+  federal AGI that produce Ohio adjusted gross income. Ohio starts from federal
+  AGI and requires certain items to be added back (e.g., non-Ohio municipal bond
+  interest, bonus depreciation) and allows certain deductions (e.g., business
+  income deduction, Social Security, 529 contributions).
+
+  Key computation: the business income deduction (line 15) allows the first
+  $250,000 ($125,000 MFS) of qualifying business income to be deducted. This
+  is Ohio's most significant adjustment for business owners.
+
+  The total additions (line 14) flow to IT 1040 line 2a.
+  The total deductions (line 47) flow to IT 1040 line 2b.
+
+  This engine explicitly models the most common resident adjustments plus the
+  medical savings account worksheet, the new 2025 pregnancy resource center
+  deduction, the college-grant room-and-board deduction, the rural practice
+  incentive repayment deduction, the adopted-student grant deduction, and the
+  updated Ohio educator expense deduction. Less-common deduction lines continue
+  to be accepted as an aggregate pass-through input.
+
+  Ohio R.C. 5747.01(A) defines Ohio AGI adjustments.
+
+packetRules:
+  packetBehavior: "reference-summary-pdf"
+  includeWhen:
+    - "Ohio Schedule of Adjustments total additions are nonzero"
+    - "Ohio Schedule of Adjustments total deductions are nonzero"
+  suppressWhen:
+    - "Both additions and deductions are zero"
+  notes: |
+    The packet generator should include a reference-summary page for the Ohio
+    Schedule of Adjustments only when the schedule carries a material amount.
+    Blank adjustment schedules should be suppressed.
+
+businessRuleValidation:
+  - rule: "reference-summary-packet"
+    description: "Inventory support counts this schedule as business-rule validated only when regression coverage proves the Ohio Schedule of Adjustments reference summary is emitted when additions or deductions are present and stays suppressed when both totals are zero."
+    testRef: "tests/pdf/fill-oh-reference-forms.test.ts::fillOhioReferenceForms includes the Ohio Schedule of Adjustments reference summary only when additions or deductions are present"
+
+lines:
+  # =========================================================================
+  # ADDITIONS (lines 1–14)
+  # =========================================================================
+
+  - line: "1"
+    description: "Non-Ohio state/local government interest and dividends"
+    formula: "Sum of interest and dividends from other states' municipal bonds included in federal AGI"
+    inputs:
+      - "Interest/dividends from non-Ohio state or local government obligations"
+    notes: |
+      Interest and dividends from other states' and their political subdivisions'
+      obligations that are included in federal AGI. Ohio exempts its own obligations
+      but taxes other states'. Common example: California municipal bond interest.
+      R.C. 5747.01(A)(1).
+    testRef: "tests/engine/state/oh-schedule-adjustments.test.ts::OH Schedule of Adjustments Line 1 - non-Ohio state/local government interest"
+
+  - line: "2"
+    description: "Certain employee benefit plan distributions"
+    formula: "Pass-through input (distributions from employee benefit plans with Ohio basis differences)"
+    inputs:
+      - "Employee benefit plan distributions with Ohio basis differences"
+    notes: "Rare; applies when Ohio and federal basis in retirement plans differ. R.C. 5747.01(A)(2)."
+    testRef: "tests/engine/state/oh-schedule-adjustments.test.ts::OH Schedule of Adjustments Line 2 - employee benefit plan distributions"
+
+  - line: "3"
+    description: "Lump sum retirement/distribution credits from prior year"
+    formula: "Pass-through input"
+    inputs:
+      - "Lump sum credits taken on prior year Ohio return"
+    notes: "If lump sum retirement or distribution credit was claimed in a prior year. R.C. 5747.01(A)(3)."
+    testRef: "tests/engine/state/oh-schedule-adjustments.test.ts::OH Schedule of Adjustments Line 3 - lump sum credits from prior year"
+
+  - line: "4"
+    description: "Section 168(k) and 179 depreciation add-back"
+    formula: "Pass-through input (Ohio does not fully conform to federal bonus depreciation)"
+    inputs:
+      - "Federal section 168(k) bonus depreciation deducted on federal return"
+      - "Ohio requires 5/6 of section 168(k) amount to be added back in year 1"
+    notes: |
+      Ohio requires add-back of 5/6 of federal section 168(k) bonus depreciation
+      in the year the asset is placed in service. The add-back is then deducted
+      ratably over 5 years (1/6 per year for years 2-6). For most W-2 wage
+      earners this is $0. R.C. 5747.01(A)(15).
+    testRef: "tests/engine/state/oh-schedule-adjustments.test.ts::OH Schedule of Adjustments Line 4 - depreciation add-back"
+
+  - line: "5"
+    description: "Pass-through entity (PTE) add-back"
+    formula: "Ohio PTE tax deducted at entity level that must be added back to individual return"
+    inputs:
+      - "PTE tax add-back amount from K-1 or PTE entity"
+    notes: "When a PTE elects to pay Ohio tax at the entity level, the individual must add back the distributive share. R.C. 5747.01(A)(31)."
+    testRef: "tests/engine/state/oh-schedule-adjustments.test.ts::OH Schedule of Adjustments Line 5 - PTE add-back"
+
+  - line: "6"
+    description: "Medical savings account nonmedical withdrawals"
+    formula: |
+      Medical Savings Account Worksheet line 7:
+        line 1 = lesser of annual per-taxpayer cap or taxpayer MSA contributions
+        line 2 = if MFJ, lesser of annual per-taxpayer cap or spouse MSA contributions
+        line 3 = MSA investment earnings included in federal AGI
+        line 4 = line 1 + line 2 + line 3
+        line 5 = MSA withdrawals used for nonmedical purposes
+        line 7 = max(0, line 5 - line 4)
+      For supported years:
+        2024 annual cap = $5,846 per taxpayer
+        2025 annual cap = $6,003 per taxpayer
+    inputs:
+      - "Taxpayer MSA contributions not deducted on federal Schedule 1 line 13"
+      - "Spouse MSA contributions not deducted on federal Schedule 1 line 13"
+      - "MSA investment earnings included in federal AGI"
+      - "MSA withdrawals used for nonmedical purposes"
+      - "Tax year"
+      - "Filing status"
+    notes: |
+      Ohio uses a single worksheet for both the add-back line and the deduction
+      line. When nonmedical withdrawals exceed deductible contributions plus
+      earnings, the excess is added back on Schedule of Adjustments line 6.
+      For non-MFJ filers, spouse contributions are ignored. Ohio booklet page
+      18 and worksheet page 41 (2025 booklet) / page 41 (2024 booklet).
+      R.C. 5747.01(A)(13).
+    edgeCases:
+      - "Single filers use only worksheet line 1; spouse contributions do not increase the cap"
+      - "If worksheet line 4 equals line 5, both line 6 deduction and line 7 add-back are $0"
+      - "Large withdrawals can create an addition even when there is no deduction"
+    testRef: "tests/engine/state/oh-schedule-adjustments.test.ts::OH Schedule of Adjustments Line 6 - medical savings account nonmedical withdrawals"
+
+  - line: "7-13"
+    description: "Other additions"
+    formula: "Pass-through input (sum of other uncommon additions not modeled on line 6)"
+    inputs:
+      - "Other additions not individually listed"
+    notes: |
+      Includes items like: federal NOL carryback/carryforward differences,
+      IRC 199A deduction add-back (Ohio doesn't conform for certain filers),
+      required minimum distribution penalty, and other uncommon items.
+    testRef: "tests/engine/state/oh-schedule-adjustments.test.ts::OH Schedule of Adjustments Lines 7-13 - other additions"
+
+  - line: "14"
+    description: "Total additions"
+    formula: "Sum of lines 1 through 13"
+    inputs:
+      - "Lines 1-13"
+    notes: "This total flows to IT 1040 line 2a."
+    testRef: "tests/engine/state/oh-schedule-adjustments.test.ts::OH Schedule of Adjustments Line 14 - total additions"
+
+  # =========================================================================
+  # DEDUCTIONS (lines 15–47)
+  # =========================================================================
+
+  - line: "15"
+    description: "Business income deduction"
+    formula: |
+      min(qualifying business income, $250,000)
+      For MFS: min(qualifying business income, $125,000)
+      Qualifying business income = net income from Schedule C, farm income,
+      guaranteed payments, K-1 distributive share, rental income attributable
+      to active business operations, etc.
+      If qualifying business income ≤ $0: deduction is $0.
+      R.C. 5747.01(A)(31).
+    inputs:
+      - "Qualifying business income (net from all sources)"
+      - "Filing status (MFS gets half the threshold)"
+    notes: |
+      The business income deduction is the most significant Ohio-specific deduction
+      for business owners. Income exceeding the threshold ($250K/$125K MFS) is
+      taxed at the flat 3% business rate on IT 1040 line 8b.
+      Qualifying business income includes: Schedule C net profit/loss, Schedule F
+      net profit/loss, guaranteed payments from K-1s, distributive share from
+      partnerships/S-corps, and rental income from active trade or business.
+      Passive rental income and portfolio income do NOT qualify.
+    edgeCases:
+      - "Negative qualifying business income results in $0 deduction"
+      - "MFS threshold is $125,000"
+      - "Business income exactly at threshold gets full deduction"
+      - "Business income of $1 above threshold: deduction still capped at threshold"
+    testRef: "tests/engine/state/oh-schedule-adjustments.test.ts::OH Schedule of Adjustments Line 15 - business income deduction"
+
+  - line: "20"
+    description: "STABLE contributions"
+    formula: |
+      For each beneficiary:
+        deductible amount = min(
+          current-year STABLE contributions
+          + unused STABLE contribution carryforward from prior years,
+          $4,000
+        )
+      Total deduction = sum of deductible amount across all beneficiaries
+    inputs:
+      - "STABLE (Ohio ABLE) contributions by beneficiary"
+      - "Unused STABLE contribution carryforward by beneficiary from prior years"
+    notes: |
+      Ohio allows a deduction of up to $4,000 per beneficiary per year for
+      contributions to a STABLE (Ohio ABLE) account. Contributions exceeding the
+      annual limitation may be deducted on future years' returns until fully used,
+      still subject to the annual $4,000 per-beneficiary cap. Married taxpayers
+      share a combined $4,000 annual cap per beneficiary whether filing jointly
+      or separately.
+      2025 Ohio IT 1040 instructions page 20, line 20.
+    edgeCases:
+      - "$4,000 cap is per beneficiary, not per return"
+      - "Multiple beneficiaries each get a separate $4,000 cap"
+      - "Carryforward plus current-year contributions for the same beneficiary still caps at $4,000 for the year"
+      - "Carryforward for one beneficiary cannot be used for a different beneficiary"
+    testRef: "tests/engine/state/oh-schedule-adjustments.test.ts::OH Schedule of Adjustments Line 20 - STABLE contributions"
+
+  - line: "24"
+    description: "Ohio Homebuyer Plus accounts"
+    formula: |
+      For each contributor/account combination:
+        deductible amount = min(eligible annual amount for that contributor/account, $5,000)
+      Total deduction = sum of deductible amount across contributor/account combinations
+    inputs:
+      - "Eligible Ohio Homebuyer Plus annual amount by contributor and account"
+    notes: |
+      Ohio allows a deduction for qualifying Ohio Homebuyer Plus account amounts.
+      The current engine accepts a caller-supplied annual eligible amount for
+      each contributor/account combination after determining that the amount
+      qualifies under the account-ownership, five-year, and lifetime-limit rules.
+      On a joint return, both spouses may claim up to $5,000 each for the same
+      account, for a combined $10,000 annual deduction on that account.
+      2025 booklet page 21 line 24; R.C. 5747.01(A)(42) and 5747.85.
+    edgeCases:
+      - "A single contributor/account combination is capped at $5,000 even if the eligible amount is larger"
+      - "Multiple entries for the same contributor/account combination must be aggregated before applying the $5,000 cap"
+      - "A joint return can deduct up to $10,000 on one account when both spouses have separate qualifying amounts"
+    testRef: "tests/engine/state/oh-schedule-adjustments.test.ts::OH Schedule of Adjustments Line 24 - Ohio Homebuyer Plus accounts"
+
+  - line: "25"
+    description: "Contributions to a pregnancy resource center"
+    formula: |
+      For tax year 2025 only, only count contributions made on or after
+      September 30, 2025 and before January 1, 2026.
+      For each contributor:
+        deductible amount = min(contributions made by that contributor, $750)
+      Total deduction = sum of deductible amount across contributors
+      A joint return can claim up to $1,500 total only if both spouses made
+      eligible contributions.
+    inputs:
+      - "Contribution records grouped by contributor"
+      - "Contribution date for each entry (YYYY-MM-DD)"
+    notes: |
+      Deduct contributions made to a qualifying pregnancy resource center during
+      the limited statutory window for tax year 2025. The cap is $750 per
+      contributor, so a married couple filing jointly can deduct up to $1,500 if
+      both spouses separately made qualifying contributions.
+      Because eligibility depends on when the contribution was made, the engine
+      only counts entries with a contribution date inside the statutory window.
+      Undated entries are excluded rather than assumed to qualify.
+      R.C. 5180.71 and R.C. 5747.01(A)(44).
+    edgeCases:
+      - "Contributions dated before September 30, 2025 or on/after January 1, 2026 do not qualify"
+      - "Undated contributions do not qualify because the statutory window cannot be verified"
+      - "Tax years before 2025 do not allow this deduction"
+      - "Single contributor is capped at $750 even if total gifts exceed $750"
+      - "Joint return with contributions from both spouses can deduct up to $1,500 total"
+      - "Multiple payments by the same contributor must be aggregated before applying the $750 cap"
+    testRef: "tests/engine/state/oh-schedule-adjustments.test.ts::OH Schedule of Adjustments Line 25 - pregnancy resource center contributions"
+
+  - line: "26"
+    description: "Federal interest and dividends exempt from Ohio tax"
+    formula: "Interest and dividends from U.S. government obligations included in federal AGI"
+    inputs:
+      - "U.S. government bond interest (Treasury bills, notes, bonds, I/EE savings bonds)"
+    notes: |
+      Federal obligation interest is exempt from state taxation by federal law
+      (31 U.S.C. 3124). Includes Treasury securities, Series I/EE/HH savings bonds,
+      and GNMA/FNMA/FHLMC securities (though FNMA/FHLMC are debated — Ohio follows
+      the IRS position that they are NOT federal obligations).
+      R.C. 5747.01(A)(1).
+    testRef: "tests/engine/state/oh-schedule-adjustments.test.ts::OH Schedule of Adjustments Line 26 - federal interest exempt from Ohio"
+
+  - line: "27"
+    description: "Taxable Social Security and certain railroad retirement benefits"
+    formula: "Taxable Social Security benefits from federal 1040 line 6b"
+    inputs:
+      - "Taxable Social Security benefits"
+    notes: |
+      Ohio allows a full deduction of Social Security benefits that were included
+      in federal AGI. This means Ohio does not tax Social Security income at all.
+      Also includes Tier 1 and Tier 2 railroad retirement benefits taxed federally.
+      R.C. 5747.01(A)(3).
+    edgeCases:
+      - "If federal taxable Social Security is $0, deduction is $0"
+    testRef: "tests/engine/state/oh-schedule-adjustments.test.ts::OH Schedule of Adjustments Line 27 - Social Security deduction"
+
+  - line: "28"
+    description: "State/municipal income tax overpayments (refunds)"
+    formula: "State/local tax refunds included in federal AGI as income"
+    inputs:
+      - "State/municipal tax refunds included in federal AGI (1099-G)"
+    notes: |
+      If a taxpayer received a state/local tax refund that was included in federal
+      AGI (because they itemized in the prior year), Ohio allows a deduction since
+      Ohio already taxed that income. R.C. 5747.01(A)(4).
+    testRef: "tests/engine/state/oh-schedule-adjustments.test.ts::OH Schedule of Adjustments Line 28 - state tax refund deduction"
+
+  - line: "32"
+    description: "Military pay for active duty service outside Ohio"
+    formula: "Pass-through input"
+    inputs:
+      - "Military pay earned while stationed outside Ohio"
+    notes: "R.C. 5747.01(A)(26). Only for Ohio residents on active duty stationed outside Ohio."
+    testRef: "tests/engine/state/oh-schedule-adjustments.test.ts::OH Schedule of Adjustments Line 32 - military pay deduction"
+
+  - line: "34"
+    description: "Uniformed services retirement income"
+    formula: "Pass-through input"
+    inputs:
+      - "Retirement income from uniformed services"
+    notes: "R.C. 5747.01(A)(29). Full deduction for military retirement pay."
+    testRef: "tests/engine/state/oh-schedule-adjustments.test.ts::OH Schedule of Adjustments Line 34 - uniformed services retirement"
+
+  - line: "37"
+    description: "Ohio 529 plan contributions"
+    formula: |
+      For each beneficiary:
+        deductible amount = min(
+          current-year Ohio 529 contributions
+          + unused Ohio 529 contribution carryforward from prior years,
+          $4,000
+        )
+      Total deduction = sum of deductible amount across all beneficiaries
+    inputs:
+      - "529 contributions by beneficiary"
+      - "Unused Ohio 529 contribution carryforward by beneficiary from prior years"
+    notes: |
+      Ohio allows a deduction of up to $4,000 per beneficiary per year for
+      contributions to an Ohio 529 plan (CollegeAdvantage). No limit on the
+      number of beneficiaries. Contributions to non-Ohio 529 plans do NOT qualify.
+      Excess contributions above $4,000 per beneficiary can be carried forward
+      and used in later years, still subject to the annual $4,000 per-beneficiary
+      limit. Married taxpayers share a combined $4,000 annual cap per beneficiary
+      regardless of whether they file jointly or separately.
+      R.C. 5747.70.
+    edgeCases:
+      - "$4,000 cap is per beneficiary, not per return"
+      - "Multiple beneficiaries each get $4,000 cap"
+      - "Prior-year carryforward plus current-year contributions for the same beneficiary still caps at $4,000 for the year"
+      - "Carryforward for one beneficiary cannot be used for a different beneficiary"
+      - "Non-Ohio 529 plans do not qualify"
+    testRef: "tests/engine/state/oh-schedule-adjustments.test.ts::OH Schedule of Adjustments Line 37 - Ohio 529 contributions"
+
+  - line: "38"
+    description: "Portion of certain college grants used to pay room and board"
+    formula: |
+      For each supported grant entry:
+        deductible amount = min(
+          amount of the Pell grant or Ohio College Opportunity Grant included in federal AGI,
+          qualifying room and board expenses paid to the educational institution
+        )
+      Total deduction = sum of deductible amount across supported grant entries
+      For supported years:
+        2024 deduction lands on Schedule of Adjustments line 37
+        2025 deduction lands on Schedule of Adjustments line 38
+    inputs:
+      - "Grant entries for federal Pell grants or Ohio College Opportunity Grants"
+      - "Amount of each grant entry included in federal AGI"
+      - "Amount of qualifying room and board expenses for each grant entry"
+    notes: |
+      Ohio allows a deduction only for the overlap between the grant amount
+      included in federal AGI and the portion used to pay qualifying room and
+      board expenses. Qualifying room and board includes only amounts paid for
+      room and board, including meal plans, furnished by the educational
+      institution. The supported engine models each Pell or Ohio College
+      Opportunity Grant entry separately and sums the overlap across entries.
+      2025 booklet page 24; 2024 booklet page 23. R.C. 5747.01(A)(27).
+    edgeCases:
+      - "Grant amounts not included in federal AGI do not qualify"
+      - "Room and board amounts above the included-in-AGI grant amount do not increase the deduction"
+      - "Multiple supported grant entries may be combined"
+    testRef: "tests/engine/state/oh-schedule-adjustments.test.ts::OH Schedule of Adjustments Line 38 - college grants used to pay room and board"
+
+  - line: "39"
+    description: "Ohio educator expenses"
+    formula: |
+      For each qualifying Ohio educator:
+        deductible amount = min(eligible unreimbursed educator expenses, $300)
+      Total deduction = sum of deductible amount across qualifying educators
+    inputs:
+      - "Eligible educator expenses by qualifying Ohio educator"
+    notes: |
+      Deduct education expenses described in IRC section 62(a)(2)(D) to the
+      extent not otherwise deducted or excluded in computing Ohio AGI. The cap
+      is $300 per qualifying Ohio educator. A qualifying Ohio educator is a
+      K-12 Ohio public or private school teacher, instructor, counselor,
+      principal, or aide who worked at least 900 hours during the school year.
+      R.C. 5747.01(A)(31) and (JJ).
+    edgeCases:
+      - "One educator is capped at $300 even if expenses exceed $300"
+      - "Multiple expense entries for the same educator must be aggregated before applying the $300 cap"
+      - "Married joint return can claim up to $600 if both spouses are qualifying Ohio educators with sufficient expenses"
+    testRef: "tests/engine/state/oh-schedule-adjustments.test.ts::OH Schedule of Adjustments Line 39 - Ohio educator expenses"
+
+  - line: "40"
+    description: "Rural Practice Incentive Program repayments"
+    formula: |
+      Deduct governmental or other educational loan principal and interest
+      repayments made on the taxpayer's behalf by the Ohio Department of Higher
+      Education under the rural practice incentive program, to the extent the
+      repayments are included in federal AGI.
+      For supported years:
+        2024 deduction lands on Schedule of Adjustments line 39
+        2025 deduction lands on Schedule of Adjustments line 40
+    inputs:
+      - "ODHE rural practice incentive program repayments included in federal AGI"
+    notes: |
+      These repayments must be for qualifying expenses incurred while enrolled
+      in law school. The supported engine accepts the included-in-federal-AGI
+      amount as a direct line-specific input. 2025 booklet page 24; 2024
+      booklet page 24. R.C. 5747.01(A)(40), 3333.131, and 3333.135.
+    testRef: "tests/engine/state/oh-schedule-adjustments.test.ts::OH Schedule of Adjustments Line 40 - rural practice incentive repayments"
+
+  - line: "41"
+    description: "Grant payments for students who are adopted"
+    formula: |
+      Deduct grant payments made by the Ohio Department of Higher Education for
+      the benefit of the taxpayer, spouse, or dependents, to the extent the
+      grant payments are included in federal AGI.
+      For supported years:
+        2024 deduction lands on Schedule of Adjustments line 40
+        2025 deduction lands on Schedule of Adjustments line 41
+    inputs:
+      - "ODHE grant payments for adopted students included in federal AGI"
+    notes: |
+      The booklet describes this program as a one-time grant for adopted
+      students in Ohio. The supported engine accepts the included-in-federal-AGI
+      amount as a direct line-specific input. 2025 booklet page 24; 2024
+      booklet page 24. R.C. 5747.01(A)(38) and 3333.128.
+    testRef: "tests/engine/state/oh-schedule-adjustments.test.ts::OH Schedule of Adjustments Line 41 - adopted student grant payments"
+
+  - line: "42-43"
+    description: "Disability and survivorship benefits"
+    formula: "Pass-through input"
+    inputs:
+      - "Disability benefits included in federal AGI"
+      - "Survivor benefits included in federal AGI"
+    notes: |
+      The current engine accepts a combined pass-through amount for these two
+      adjacent deduction lines. R.C. 5747.01(A)(4) and Ohio Adm. Code 5703-7-08.
+    testRef: "tests/engine/state/oh-schedule-adjustments.test.ts::OH Schedule of Adjustments Lines 42-43 - disability and survivorship benefits"
+
+  - line: "43/44"
+    description: "Medical and health care expenses"
+    formula: |
+      Medical and Health Care Expenses Worksheet line 9:
+        line 1 = unreimbursed dental, vision, and health insurance premiums
+                 paid during periods when the taxpayer was NOT eligible for
+                 Medicare or an employer-paid health care plan through either spouse's employer
+        line 2 = unreimbursed long-term care insurance premiums
+        line 3 = unreimbursed dental, vision, and health insurance premiums
+                 paid during periods when the taxpayer WAS eligible for Medicare
+                 or an employer-paid health care plan through either spouse's employer
+        line 4 = medical care expenses paid during the year, excluding insurance premiums
+        line 5 = line 3 + line 4
+        line 6 = max(0, federal AGI)
+        line 7 = line 6 × 7.5%
+        line 8 = max(0, line 5 - line 7)
+        line 9 = line 1 + line 2 + line 8
+      For supported years:
+        2024 worksheet line 9 lands on Schedule of Adjustments line 43
+        2025 worksheet line 9 lands on Schedule of Adjustments line 44
+    inputs:
+      - "Federal AGI"
+      - "Insurance premiums paid while not eligible for Medicare/employer-paid coverage"
+      - "Long-term care insurance premiums"
+      - "Insurance premiums paid while eligible for Medicare/employer-paid coverage"
+      - "Other medical care expenses (excluding insurance premiums)"
+    notes: |
+      Only include unreimbursed amounts paid for the taxpayer, spouse, and
+      dependents. The worksheet applies the 7.5% of federal AGI threshold only
+      to worksheet lines 3 and 4 via line 8; worksheet lines 1 and 2 are added
+      in full. "Medical care" follows IRC section 213, excluding insurance
+      premiums already entered on worksheet lines 1-3. See the Ohio booklet's
+      medical and health care expenses instructions and worksheet (2025 pages
+      25 and 40; 2024 pages 25 and 41).
+    edgeCases:
+      - "Negative federal AGI is treated as $0 on worksheet line 6"
+      - "If worksheet line 5 does not exceed 7.5% of federal AGI, only worksheet lines 1 and 2 remain deductible"
+      - "Zero inputs across all worksheet lines results in $0"
+    testRef: "tests/engine/state/oh-schedule-adjustments.test.ts::OH Schedule of Adjustments Line 44 - medical and health care expenses"
+
+  - line: "45"
+    description: "Medical savings account deduction"
+    formula: |
+      Medical Savings Account Worksheet line 6:
+        line 1 = lesser of annual per-taxpayer cap or taxpayer MSA contributions
+        line 2 = if MFJ, lesser of annual per-taxpayer cap or spouse MSA contributions
+        line 3 = MSA investment earnings included in federal AGI
+        line 4 = line 1 + line 2 + line 3
+        line 5 = MSA withdrawals used for nonmedical purposes
+        line 6 = max(0, line 4 - line 5)
+      For supported years:
+        2024 annual cap = $5,846 per taxpayer and the deduction lands on line 44
+        2025 annual cap = $6,003 per taxpayer and the deduction lands on line 45
+    inputs:
+      - "Taxpayer MSA contributions not deducted on federal Schedule 1 line 13"
+      - "Spouse MSA contributions not deducted on federal Schedule 1 line 13"
+      - "MSA investment earnings included in federal AGI"
+      - "MSA withdrawals used for nonmedical purposes"
+      - "Tax year"
+      - "Filing status"
+    notes: |
+      Deduct capped taxpayer/spouse contributions plus MSA investment earnings,
+      reduced by nonmedical withdrawals. Ohio uses the same worksheet to
+      determine both the line 45 deduction and the line 6 addition. For
+      non-MFJ filers, spouse contributions are ignored. 2025 booklet page 25
+      and worksheet page 41; 2024 booklet page 25 and worksheet page 41.
+      R.C. 5747.01(A)(13).
+    edgeCases:
+      - "MFJ can claim the cap separately for each spouse"
+      - "Taxpayer contributions above the annual cap are limited before withdrawals are applied"
+      - "Withdrawals greater than deductible amount reduce the line 45 deduction to $0"
+    testRef: "tests/engine/state/oh-schedule-adjustments.test.ts::OH Schedule of Adjustments Line 45 - medical savings account deduction"
+
+  - line: "45/46"
+    description: "Qualified organ donor expenses"
+    formula: |
+      For each taxpayer incurring qualifying organ donor expenses:
+        deductible amount = min(qualified expenses for that taxpayer, $10,000)
+      Total deduction = sum of deductible amount across taxpayers on the return
+      For supported years:
+        2024 deduction lands on Schedule of Adjustments line 45
+        2025 deduction lands on Schedule of Adjustments line 46
+    inputs:
+      - "Qualified organ donor expense entries grouped by donor/taxpayer"
+    notes: |
+      Qualified organ donation expenses include travel expenses, lodging
+      expenses, and wages or salary forgone in connection with donating a
+      qualifying organ to another human being. A qualifying organ includes all
+      or any portion of a human liver, pancreas, kidney, intestine, lung, or
+      human bone marrow. Ohio's booklet describes this as a one-time deduction;
+      the supported engine slice does not track prior-year usage, so callers
+      must only supply expenses for taxpayers who remain eligible to claim the
+      deduction. 2025 booklet page 26 / 2024 booklet page 26. R.C.
+      5747.01(A)(22).
+    edgeCases:
+      - "Each taxpayer on an MFJ return has a separate $10,000 cap"
+      - "Multiple expense entries for the same donor must be aggregated before applying the cap"
+      - "Zero or omitted expense entries result in $0"
+    testRef: "tests/engine/state/oh-schedule-adjustments.test.ts::OH Schedule of Adjustments Line 46 - qualified organ donor expenses"
+
+  - line: "23,29-31,33,35-36"
+    description: "Other deductions"
+    formula: "Pass-through input (sum of other deductions)"
+    inputs:
+      - "Other deductions not individually listed"
+    notes: |
+      Includes uncommon deduction lines not modeled separately above, such as
+      Ohio depreciation deductions, refunds/reimbursements of itemized
+      deductions, and military injury relief or Ohio National Guard benefit
+      deductions. The medical and health care expenses worksheet is modeled
+      separately as line 43 in 2024 and line 44 in 2025, and qualified organ
+      donor expenses are modeled separately as line 45 in 2024 and line 46 in
+      2025.
+    testRef: "tests/engine/state/oh-schedule-adjustments.test.ts::OH Schedule of Adjustments Lines 23-35 - other deductions"
+
+  - line: "47"
+    description: "Total deductions"
+    formula: "Sum of modeled deduction lines plus aggregated other deductions"
+    inputs:
+      - "Lines 15, 20, 24, 25, 26, 27, 28, 32, 34, 37, 38, 39, 40, 41, 42-43, medical expenses worksheet line 43/44, medical savings account line 44/45, qualified organ donor line 45/46, and aggregated other deduction lines"
+    notes: "This total flows to IT 1040 line 2b."
+    testRef: "tests/engine/state/oh-schedule-adjustments.test.ts::OH Schedule of Adjustments Line 47 - total deductions"

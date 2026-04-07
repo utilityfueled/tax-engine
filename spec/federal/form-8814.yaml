@@ -1,0 +1,165 @@
+form: "Form 8814"
+fullName: "Parents' Election To Report Child's Interest and Dividends"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i8814"
+
+notes: |
+  Form 8814 allows a parent to include a qualifying child's interest,
+  ordinary dividends, and capital gain distributions on the parent's return
+  instead of the child filing a separate return. IRC §1(g)(7).
+
+  Eligibility: child under 19 (or under 24 if full-time student) at end of
+  the tax year, child's only income is interest/dividends/capital gain
+  distributions, gross income >= $1,350 and < $13,500, no estimated tax
+  payments or withholding, does not file a joint return.
+
+  The first $1,350 of child's income is not taxed (equivalent to the
+  child's standard deduction). The next $1,350 is taxed at a flat 10%
+  (maximum $135). Amounts above $2,700 are included in the parent's
+  income and taxed at the parent's marginal rate.
+
+  Multiple children: file a separate Form 8814 per child, sum Line 12
+  amounts on Schedule 1 Line 8z, and sum Line 15 amounts on Form 1040
+  Line 16.
+
+  Warning: electing Form 8814 taxes the $1,350-$2,700 bracket at a flat
+  10%. If the child has qualified dividends or capital gain distributions,
+  filing a separate return could result in a 0% rate on that bracket.
+
+businessRuleValidation:
+  - rule: "reference-summary-packet"
+    description: "Inventory support counts this form as business-rule validated only when regression coverage proves the draft packet emits a non-filing Form 8814 reference summary for supported parent-election scenarios and suppresses that artifact when no child qualifies for the election."
+    testRef: "tests/pdf/fill-form-8814.test.ts::buildForm8814ReferenceSummary keeps the packet artifact reference-only and limited to supported child-election outputs"
+
+lines:
+  # ── Part I: Child's Interest and Dividends To Report on Your Return ──
+
+  - line: "1a"
+    description: "Child's taxable interest"
+    formula: "Sum of child's Forms 1099-INT and 1099-OID"
+    irsRef: "Form 8814 Instructions, Line 1a"
+    testRef: "tests/engine/forms/form-8814.test.ts::Form 8814 Line 4 - total child income sums interest, dividends, and capital gains"
+
+  - line: "1b"
+    description: "Child's tax-exempt interest"
+    formula: "Tax-exempt interest from child's Forms 1099-INT Box 8 (informational)"
+    irsRef: "Form 8814 Instructions, Line 1b"
+    notes: "Not included in Line 4 total. May affect parent's AMT if from private activity bonds. Flows to parent's Form 1040 Line 2a."
+    testRef: "tests/engine/forms/form-8814.test.ts::Form 8814 tax-exempt interest tracked but not in Line 4"
+
+  - line: "2a"
+    description: "Child's ordinary dividends"
+    formula: "Sum of child's Forms 1099-DIV Box 1a"
+    irsRef: "Form 8814 Instructions, Line 2a"
+    testRef: "tests/engine/forms/form-8814.test.ts::Form 8814 Line 4 - total child income sums interest, dividends, and capital gains"
+
+  - line: "2b"
+    description: "Child's qualified dividends"
+    formula: "Subset of Line 2a from child's Forms 1099-DIV Box 1b"
+    irsRef: "Form 8814 Instructions, Line 2b"
+    notes: "Used to allocate qualified dividends proportionally. Do not report raw Line 2b on parent's 1040 Line 3a; use Line 9 result instead."
+    testRef: "tests/engine/forms/form-8814.test.ts::Form 8814 Line 9 - qualified dividends allocated proportionally"
+
+  - line: "3"
+    description: "Child's capital gain distributions"
+    formula: "Sum of child's Forms 1099-DIV Box 2a"
+    irsRef: "Form 8814 Instructions, Line 3"
+    testRef: "tests/engine/forms/form-8814.test.ts::Form 8814 Line 10 - capital gain distributions allocated proportionally"
+
+  - line: "4"
+    description: "Total child income"
+    formula: "Line 1a + Line 2a + Line 3"
+    irsRef: "Form 8814 Instructions, Line 4"
+    edgeCases:
+      - "If Line 4 >= $13,500, cannot use Form 8814; child must file own return using Form 8615"
+      - "If Line 4 <= $2,700, skip Lines 5-12 and go to Line 13"
+      - "If Line 4 < $1,350, child does not need to file"
+    testRef: "tests/engine/forms/form-8814.test.ts::Form 8814 Line 4 - total child income sums interest, dividends, and capital gains"
+
+  - line: "5"
+    description: "Base amount"
+    formula: "$2,700 (2025)"
+    irsRef: "Form 8814 Instructions, Line 5; Rev. Proc. 2024-40"
+    testRef: "tests/engine/forms/form-8814.test.ts::Form 8814 Line 6 - income above $2,700 base"
+
+  - line: "6"
+    description: "Income above base amount"
+    formula: "max(0, Line 4 - Line 5)"
+    irsRef: "Form 8814 Instructions, Line 6"
+    notes: "If Line 4 <= $2,700, Line 6 is zero and Lines 7-12 are skipped."
+    testRef: "tests/engine/forms/form-8814.test.ts::Form 8814 Line 6 - income above $2,700 base"
+
+  - line: "7"
+    description: "Qualified dividend ratio"
+    formula: "Line 2b / Line 4 (3 decimal places)"
+    irsRef: "Form 8814 Instructions, Line 7"
+    notes: "Only computed when Line 6 > 0 and Line 2b > 0."
+    testRef: "tests/engine/forms/form-8814.test.ts::Form 8814 Line 9 - qualified dividends allocated proportionally"
+
+  - line: "8"
+    description: "Capital gain distribution ratio"
+    formula: "Line 3 / Line 4 (3 decimal places)"
+    irsRef: "Form 8814 Instructions, Line 8"
+    notes: "Only computed when Line 6 > 0 and Line 3 > 0."
+    testRef: "tests/engine/forms/form-8814.test.ts::Form 8814 Line 10 - capital gain distributions allocated proportionally"
+
+  - line: "9"
+    description: "Qualified dividends to report on parent's return"
+    formula: "Line 6 × Line 7"
+    irsRef: "Form 8814 Instructions, Line 9"
+    notes: "Reports to parent's Form 1040 Lines 3a and 3b. Labeled 'Form 8814'."
+    testRef: "tests/engine/forms/form-8814.test.ts::Form 8814 Line 9 - qualified dividends allocated proportionally"
+
+  - line: "10"
+    description: "Capital gain distributions to report on parent's return"
+    formula: "Line 6 × Line 8"
+    irsRef: "Form 8814 Instructions, Line 10"
+    notes: "Reports to parent's Schedule D Line 13 or Form 1040 Line 7a. Labeled 'Form 8814'."
+    testRef: "tests/engine/forms/form-8814.test.ts::Form 8814 Line 10 - capital gain distributions allocated proportionally"
+
+  - line: "11"
+    description: "Sum of preferential-rate items"
+    formula: "Line 9 + Line 10"
+    irsRef: "Form 8814 Instructions, Line 11"
+    testRef: "tests/engine/forms/form-8814.test.ts::Form 8814 Line 12 - other income is remainder after preferential items"
+
+  - line: "12"
+    description: "Other interest/dividend income at ordinary rates"
+    formula: "Line 6 - Line 11"
+    irsRef: "Form 8814 Instructions, Line 12"
+    notes: "Reports to Schedule 1 Line 8z. If multiple Form 8814s, sum all Line 12 amounts."
+    testRef: "tests/engine/forms/form-8814.test.ts::Form 8814 Line 12 - other income is remainder after preferential items"
+
+  # ── Part II: Tax on the First $2,700 of Child's Interest and Dividends ──
+
+  - line: "13"
+    description: "Amount not taxed"
+    formula: "$1,350 (2025)"
+    irsRef: "Form 8814 Instructions, Line 13; Rev. Proc. 2024-40"
+    notes: "Equivalent to the child's standard deduction for unearned income."
+    testRef: "tests/engine/forms/form-8814.test.ts::Form 8814 Line 15 - zero tax when child income <= $1,350"
+
+  - line: "14"
+    description: "Taxable base tier"
+    formula: "max(0, Line 4 - Line 13)"
+    irsRef: "Form 8814 Instructions, Line 14"
+    testRef: "tests/engine/forms/form-8814.test.ts::Form 8814 Line 15 - tax at $1,800 income is $45"
+
+  - line: "15"
+    description: "Tax on first $2,700 of child's income"
+    formula: "If Line 14 >= $1,350: $135; otherwise Line 14 × 10%"
+    irsRef: "Form 8814 Instructions, Line 15; IRC §1(g)(7)"
+    notes: "Reports to Form 1040 Line 16 (check box 1). Maximum tax is $135. If multiple Form 8814s, sum all Line 15 amounts."
+    edgeCases:
+      - "When child income equals exactly $2,700, Line 14 = $1,350 and tax = $135"
+      - "When child income is $1,350, Line 14 = $0 and tax = $0"
+      - "When child income is $2,000, Line 14 = $650 and tax = $65"
+      - "When child income is $1,800, Line 14 = $450 and tax = $45"
+    testRef: "tests/engine/forms/form-8814.test.ts::Form 8814 Line 15 - maximum tax $135 when taxable base >= $1,350"
+
+  - line: "packet"
+    description: "Draft packet inclusion rule for supported Form 8814 parent elections"
+    formula: "When at least one child's supported Form 8814 computation applies under the official income window, include a non-filing reference-summary PDF in the draft packet showing the supported child-level and aggregate outputs that flow to the parent's Form 1040. Suppress the artifact when no child qualifies for the election because all supported children are at or below $1,350 or otherwise outside the supported election path."
+    irsRef: "Form 8814 Instructions, General Instructions; Form 8814 Instructions, Line 4"
+    notes: "The packet stays honest by emitting a reference summary rather than attempting to recreate a filed Form 8814 PDF. The summary may note children that were evaluated but did not produce a supported parent-election result."
+    testRef: "tests/pdf/fill-form-8814.test.ts::fillReturn includes a Form 8814 reference summary when at least one child qualifies for the parent election"

@@ -1,0 +1,51 @@
+form: "NJ-1040 Use Tax"
+fullName: "New Jersey NJ-1040 Use Tax Computation (Line 51)"
+taxYear: 2025
+reference: "https://www.nj.gov/treasury/taxation/pdf/current/1040i.pdf"
+
+notes: |
+  New Jersey Use Tax is due on purchases made from out-of-state sellers where
+  NJ sales tax was not charged. The use tax rate equals the NJ sales tax rate
+  (6.625% for 2025). Taxpayers may either:
+  1. Report the actual amount of use tax owed (if they have records), or
+  2. Use the safe harbor lookup table based on NJ gross income.
+
+  The safe harbor table provides a simplified amount that the Division of
+  Taxation will accept without further documentation. These amounts are
+  published annually in the NJ-1040 instructions.
+
+  Use tax is entered on Line 51 and included in the total tax computation on
+  Line 54 with the balance of tax after credits, line-52 interest, and any
+  shared responsibility payment.
+
+  Most taxpayers with no significant out-of-state purchases will owe $0 or
+  use the safe harbor table.
+
+lines:
+  - line: "51"
+    description: "Use Tax due on out-of-state purchases"
+    formula: |
+      If taxpayer elects safe harbor: look up in table by NJ gross income.
+      If taxpayer reports actual: use reported amount.
+      If neither applies (no out-of-state purchases): $0.
+    inputs:
+      - "NJ gross income (Line 29)"
+      - "Safe harbor election"
+      - "Actual use tax amount (if not using safe harbor)"
+    notes: |
+      Safe harbor table for 2025 (amounts from NJ-1040 instructions):
+        Under $15,000:       $0
+        $15,000 - $24,999:   $8
+        $25,000 - $34,999:   $17
+        $35,000 - $49,999:   $29
+        $50,000 - $74,999:   $48
+        $75,000 - $99,999:   $68
+        $100,000 - $149,999: $103
+        $150,000 - $199,999: $137
+        $200,000 and over:   $166
+    edgeCases:
+      - "Taxpayer with no out-of-state purchases owes $0"
+      - "Taxpayer electing safe harbor uses table regardless of actual purchases"
+      - "Actual amount can exceed safe harbor if taxpayer made large purchases"
+      - "Use tax cannot be negative"
+    testRef: "tests/engine/state/nj-1040-use-tax.test.ts::NJ-1040 use tax - safe harbor $8 for income $15,000-$24,999"

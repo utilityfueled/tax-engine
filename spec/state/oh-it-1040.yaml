@@ -1,0 +1,371 @@
+form: "Ohio IT 1040"
+fullName: "Ohio Individual Income Tax Return"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf"
+
+notes: |
+  Ohio IT 1040 is the resident individual income tax return. Ohio starts from
+  federal adjusted gross income (federal 1040 line 11a) and applies Ohio-specific
+  additions and deductions via the Schedule of Adjustments to arrive at Ohio
+  adjusted gross income. Personal and dependent exemptions reduce Ohio AGI to
+  Ohio taxable income. Income is split into nonbusiness and business components;
+  nonbusiness income is taxed at progressive rates, business income above the
+  deduction threshold at a flat 3%.
+
+  Supported tax years: 2024 and 2025.
+
+  Tax year 2024 (R.C. 5747.02(A)(3), per HB 33):
+    $0–$26,050: 0% (no tax)
+    $26,050–$100,000: $360.69 + 2.75% of amount over $26,050
+    Over $100,000: $2,394.32 + 3.50% of amount over $100,000
+
+  Tax year 2025 (R.C. 5747.02(A)(3), per HB 1):
+    $0–$26,050: 0% (no tax)
+    $26,050–$100,000: $342.00 + 2.75% of amount over $26,050
+    Over $100,000: $2,394.32 + 3.125% of amount over $100,000
+
+  Both years share the same bracket boundaries ($26,050 and $100,000) but differ
+  in the base tax at $26,050 ($360.69 vs $342.00) and the top marginal rate
+  (3.50% vs 3.125%).
+
+  Ohio uses "modified adjusted gross income" (MAGI) — Ohio AGI plus the business
+  income deduction — to determine exemption amounts and credit eligibility. Ohio
+  does not use a standard deduction; instead it provides per-exemption amounts
+  that phase down as MAGI increases.
+
+  Business income deduction: first $250,000 ($125,000 MFS) of business income
+  is deductible; excess is taxed at flat 3%. Business income split and Schedule
+  of Business Income are handled in a separate module.
+
+  This module implements the core resident return for taxpayers with only
+  nonbusiness income (the most common case for W-2 wage earners).
+
+packetRules:
+  packetBehavior: "reference-summary-pdf"
+  includeWhen:
+    - "Ohio is the selected resident state for the return packet"
+  suppressWhen:
+    - "No Ohio return is being assembled for the packet"
+  notes: |
+    Until official filled Ohio PDFs are mapped, the packet generator emits a
+    deterministic Ohio IT 1040 reference-summary page instead of a fillable
+    Ohio form. This page must be labeled reference-only and merged into the
+    packet whenever Ohio output is generated.
+
+businessRuleValidation:
+  - rule: "reference-summary-packet"
+    description: "Inventory support counts this form as business-rule validated only when regression coverage proves the emitted Ohio IT 1040 packet artifact stays labeled as a reference summary and only surfaces deterministic computed Ohio return lines."
+    testRef: "tests/pdf/fill-oh-reference-forms.test.ts::fillOhioReferenceForms keeps the Ohio IT 1040 packet artifact reference-only and limited to supported computed lines"
+
+lines:
+  - line: "1"
+    description: "Federal adjusted gross income"
+    formula: "Federal 1040, line 11a"
+    inputs:
+      - "Federal AGI"
+    notes: "Must match federal AGI as defined in the Internal Revenue Code."
+    edgeCases:
+      - "Zero or negative federal AGI is valid"
+    testRef: "tests/engine/state/oh-it-1040.test.ts::OH IT 1040 Line 1 - federal AGI flows through"
+
+  - line: "2a"
+    description: "Ohio Schedule of Adjustments — Additions"
+    formula: "Schedule of Adjustments, line 12"
+    inputs:
+      - "Ohio additions (non-Ohio state/local interest, pass-through entity add-back, etc.)"
+    notes: "Additions to federal AGI for Ohio purposes. Common items: non-Ohio state/local government interest, pass-through entity tax add-back, non-qualified 529 distributions."
+    testRef: "tests/engine/state/oh-it-1040.test.ts::OH IT 1040 Line 2a - additions increase Ohio AGI"
+
+  - line: "2b"
+    description: "Ohio Schedule of Adjustments — Deductions"
+    formula: "Schedule of Adjustments, line 47"
+    inputs:
+      - "Ohio deductions (business income deduction, Social Security, military pay, 529 contributions, etc.)"
+    notes: "Deductions from federal AGI for Ohio purposes. Common items: business income deduction (line 13), taxable Social Security (line 16), 529 contributions (line 37), medical savings account (line 45)."
+    testRef: "tests/engine/state/oh-it-1040.test.ts::OH IT 1040 Line 2b - deductions reduce Ohio AGI"
+
+  - line: "3"
+    description: "Ohio adjusted gross income"
+    formula: "Line 1 + Line 2a - Line 2b"
+    inputs:
+      - "OH IT 1040 Line 1"
+      - "OH IT 1040 Line 2a"
+      - "OH IT 1040 Line 2b"
+    notes: "Ohio AGI. Can be negative."
+    edgeCases:
+      - "Negative Ohio AGI results in zero taxable income"
+    testRef: "tests/engine/state/oh-it-1040.test.ts::OH IT 1040 Line 3 - Ohio AGI equals federal AGI plus additions minus deductions"
+
+  - line: "4"
+    description: "Personal and dependent exemptions"
+    formula: "Number of exemptions × exemption amount (based on MAGI table)"
+    inputs:
+      - "Number of exemptions"
+      - "Modified adjusted gross income (MAGI)"
+    notes: |
+      Exemption amount depends on MAGI (Ohio AGI + business income deduction):
+        MAGI ≤ $40,000: $2,400 per exemption
+        MAGI $40,001–$80,000: $2,150 per exemption
+        MAGI $80,001–$749,999: $1,900 per exemption
+        MAGI ≥ $750,000: $0 per exemption
+      Exemptions include: taxpayer (if not claimed on another return), spouse
+      (if MFJ and not claimed elsewhere), and federal dependents.
+    edgeCases:
+      - "MAGI at exact boundary ($40,000) uses the lower threshold amount ($2,400)"
+      - "MAGI of $750,000 or more results in $0 exemptions"
+      - "Zero exemptions (e.g., dependent filing own return) results in $0"
+    testRef: "tests/engine/state/oh-it-1040.test.ts::OH IT 1040 Line 4 - exemption amount varies by MAGI"
+
+  - line: "5"
+    description: "Ohio taxable income"
+    formula: "max(0, Line 3 - Line 4)"
+    inputs:
+      - "OH IT 1040 Line 3"
+      - "OH IT 1040 Line 4"
+    notes: "Cannot be negative. If exemptions exceed Ohio AGI, taxable income is zero."
+    edgeCases:
+      - "Exemptions exceeding Ohio AGI produce zero taxable income"
+    testRef: "tests/engine/state/oh-it-1040.test.ts::OH IT 1040 Line 5 - taxable income floors at zero"
+
+  - line: "6"
+    description: "Taxable business income"
+    formula: "min(Line 5, taxable business income from Schedule of Business Income exceeding the deduction threshold)"
+    inputs:
+      - "Taxable business income from Schedule of Business Income"
+    notes: |
+      For taxpayers with no business income, this is $0. Business income
+      deduction is $250,000 ($125,000 MFS); only the excess is taxed at flat
+      3%. Since line 7 is computed as line 5 less line 6, the taxable business
+      income reported on line 6 cannot exceed total Ohio taxable income on line
+      5.
+    edgeCases:
+      - "Line 6 is capped at line 5 so business and nonbusiness income do not exceed total Ohio taxable income"
+    testRef: "tests/engine/state/oh-it-1040.test.ts::OH IT 1040 Line 6 - taxable business income defaults to zero"
+
+  - line: "7"
+    description: "Taxable nonbusiness income"
+    formula: "max(0, Line 5 - Line 6)"
+    inputs:
+      - "OH IT 1040 Line 5"
+      - "OH IT 1040 Line 6"
+    notes: "Nonbusiness income is taxed using the progressive rate brackets."
+    edgeCases:
+      - "All income is nonbusiness for pure W-2 wage earners"
+      - "Cannot be negative"
+    testRef: "tests/engine/state/oh-it-1040.test.ts::OH IT 1040 Line 7 - nonbusiness income equals taxable income minus business income"
+
+  - line: "8a"
+    description: "Nonbusiness income tax"
+    formula: |
+      Year-keyed Ohio income tax brackets applied to Line 7:
+
+      2024 brackets (HB 33):
+        $0–$26,050: 0.000% (tax = $0)
+        $26,050–$100,000: $360.69 + 2.750% of amount over $26,050
+        Over $100,000: $2,394.32 + 3.500% of amount over $100,000
+
+      2025 brackets (HB 1):
+        $0–$26,050: 0.000% (tax = $0)
+        $26,050–$100,000: $342.00 + 2.750% of amount over $26,050
+        Over $100,000: $2,394.32 + 3.125% of amount over $100,000
+
+      Round to nearest dollar.
+    inputs:
+      - "OH IT 1040 Line 7"
+    notes: "The bracket base amounts are specified in Ohio R.C. 5747.02(A)(3). The 2024 base at $100,000 ($2,394.32) equals the cumulative tax from prior brackets ($360.69 + 2.75% × $73,950). The 2025 base at $100,000 was carried forward unchanged despite the lower $342 base."
+    edgeCases:
+      - "$26,050 exactly results in $0 tax (within first bracket)"
+      - "2025: $26,051 triggers second bracket: $342.00 + 2.75% × $1 = $342.03, rounds to $342"
+      - "2024: $26,051 triggers second bracket: $360.69 + 2.75% × $1 = $360.72, rounds to $361"
+      - "2025: $100,000 exactly: $342 + 2.75% × $73,950 = $2,375.63, rounds to $2,376"
+      - "2024: $100,000 exactly: $360.69 + 2.75% × $73,950 = $2,394.32, rounds to $2,394"
+      - "2025: $100,001 triggers third bracket: $2,394.32 + 3.125% × $1 = $2,394.35, rounds to $2,394"
+      - "2024: $100,001 triggers third bracket: $2,394.32 + 3.50% × $1 = $2,394.36, rounds to $2,394"
+    testRef: "tests/engine/state/oh-it-1040.test.ts::OH IT 1040 Line 8a - nonbusiness tax uses 2025 brackets"
+
+  - line: "8b"
+    description: "Business income tax"
+    formula: "Line 6 × 3%"
+    inputs:
+      - "OH IT 1040 Line 6"
+    notes: "Flat 3% rate on taxable business income from line 6. Zero if no taxable business income."
+    testRef: "tests/engine/state/oh-it-1040.test.ts::OH IT 1040 Line 8b - business income taxed at flat 3%"
+
+  - line: "8c"
+    description: "Total Ohio income tax before credits"
+    formula: "Line 8a + Line 8b"
+    inputs:
+      - "OH IT 1040 Line 8a"
+      - "OH IT 1040 Line 8b"
+    notes: "This is the total tax before applying credits from the Ohio Schedule of Credits."
+    testRef: "tests/engine/state/oh-it-1040.test.ts::OH IT 1040 Line 8c - total tax is sum of nonbusiness and business tax"
+
+  - line: "9"
+    description: "Ohio nonrefundable credits"
+    formula: "Schedule of Credits, line 40"
+    inputs:
+      - "Total nonrefundable credits from Ohio Schedule of Credits"
+    notes: "Cannot exceed line 8c. The Schedule of Credits already caps line 40 at line 1 (= IT 1040 line 8c)."
+    testRef: "tests/engine/state/oh-it-1040.test.ts::OH IT 1040 Line 9 - nonrefundable credits from Schedule of Credits"
+
+  - line: "10"
+    description: "Tax liability after nonrefundable credits"
+    formula: "max(0, Line 8c - Line 9)"
+    inputs:
+      - "OH IT 1040 Line 8c"
+      - "OH IT 1040 Line 9"
+    notes: "Cannot be negative. Since line 9 is already capped at line 8c, this normally won't go negative."
+    edgeCases:
+      - "Credits equal to tax produce zero liability"
+    testRef: "tests/engine/state/oh-it-1040.test.ts::OH IT 1040 Line 10 - tax after nonrefundable credits"
+
+  - line: "11"
+    description: "Interest penalty on underpayment of estimated tax"
+    formula: "Computed on form IT/SD 2210 (pass-through input)"
+    inputs:
+      - "Underpayment penalty from IT/SD 2210"
+    notes: "Generally zero for W-2 wage earners with adequate withholding. Computed separately on form IT/SD 2210. R.C. 5747.09(D)."
+    testRef: "tests/engine/state/oh-it-1040.test.ts::OH IT 1040 Line 11 - underpayment penalty defaults to zero"
+
+  - line: "12"
+    description: "Unpaid use tax"
+    formula: "Total untaxed purchases × county use tax rate (pass-through input)"
+    inputs:
+      - "Unpaid use tax amount"
+    notes: "For out-of-state/internet purchases where no sales tax was collected. County rates vary (e.g., 7.80%–8.00%). R.C. 5747.083."
+    testRef: "tests/engine/state/oh-it-1040.test.ts::OH IT 1040 Line 12 - use tax defaults to zero"
+
+  - line: "13"
+    description: "Total Ohio tax liability before payments"
+    formula: "Line 10 + Line 11 + Line 12"
+    inputs:
+      - "OH IT 1040 Line 10"
+      - "OH IT 1040 Line 11"
+      - "OH IT 1040 Line 12"
+    notes: "Total tax liability including penalties and use tax, before withholding or estimated payments."
+    testRef: "tests/engine/state/oh-it-1040.test.ts::OH IT 1040 Line 13 - total liability is tax plus penalty plus use tax"
+
+  - line: "14"
+    description: "Ohio income tax withheld"
+    formula: "Sum of Ohio withholding from Schedule of Ohio Withholding income statements, including W-2 box 17, W-2G box 15, and supported 1099 state withholding boxes such as 1099-G box 11, 1099-K box 8, 1099-R box 14, 1099-NEC box 5, and 1099-MISC box 16"
+    inputs:
+      - "Ohio income tax withheld from income statements"
+    notes: "Only Ohio state income tax withholding. Do not include city, school district, or other state withholding. Do not include PTE credits (those go on Schedule of Credits line 43). The 2025 booklet refers taxpayers to W-2, W-2G, and 1099 income statements on the Schedule of Ohio Withholding. The engine includes modeled 1099 statements that carry explicit Ohio withholding boxes, including 1099-NEC and 1099-MISC. R.C. 5747.08(H)."
+    testRef: "tests/engine/state/oh-it-1040.test.ts::OH IT 1040 Line 14 - Ohio withholding"
+
+  - line: "15"
+    description: "Estimated and extension payments, credit carryforward"
+    formula: "Sum of estimated payments + extension payments + prior year credit carryforward"
+    inputs:
+      - "Estimated tax payments for 2025"
+      - "Extension payments"
+      - "Credit carryforward from prior year IT 1040 line 24"
+    notes: "Do not include prior year refunds that were requested but not received. Do not include PTE credits. R.C. 5747.09(B)."
+    testRef: "tests/engine/state/oh-it-1040.test.ts::OH IT 1040 Line 15 - estimated payments and carryforward"
+
+  - line: "16"
+    description: "Refundable credits"
+    formula: "Schedule of Credits, line 47"
+    inputs:
+      - "Total refundable credits from Ohio Schedule of Credits"
+    notes: "Unlike nonrefundable credits, refundable credits can generate a refund. For typical W-2 wage earners this is $0 — Ohio's refundable credits are certificate-based business credits and PTE credits."
+    testRef: "tests/engine/state/oh-it-1040.test.ts::OH IT 1040 Line 16 - refundable credits default to zero"
+
+  - line: "17"
+    description: "Total Ohio tax payments"
+    formula: "Line 14 + Line 15 + Line 16"
+    inputs:
+      - "OH IT 1040 Line 14"
+      - "OH IT 1040 Line 15"
+      - "OH IT 1040 Line 16"
+    testRef: "tests/engine/state/oh-it-1040.test.ts::OH IT 1040 Line 17 - total payments"
+
+  - line: "18"
+    description: "Amended return prior overpayment"
+    formula: "Prior return line 23 (amended returns only; $0 for original returns)"
+    inputs:
+      - "Prior overpayment from original/amended 2025 return"
+    notes: "Only used on amended returns. For original returns this is $0."
+    testRef: "tests/engine/state/oh-it-1040.test.ts::OH IT 1040 Line 18 - amended overpayment defaults to zero"
+
+  - line: "19"
+    description: "Net payment position"
+    formula: "Line 17 - Line 18"
+    inputs:
+      - "OH IT 1040 Line 17"
+      - "OH IT 1040 Line 18"
+    notes: "Can be negative on amended returns. If line 19 > line 13, skip to line 23 (overpayment). Otherwise continue to line 20 (tax due)."
+    edgeCases:
+      - "Negative value possible on amended returns"
+    testRef: "tests/engine/state/oh-it-1040.test.ts::OH IT 1040 Line 19 - net payments"
+
+  - line: "20"
+    description: "Tax due"
+    formula: "Line 13 - Line 19 (only when Line 19 ≤ Line 13)"
+    inputs:
+      - "OH IT 1040 Line 13"
+      - "OH IT 1040 Line 19"
+    notes: "If line 19 is negative, subtracting it adds to the liability. Only applies when payments do not cover the full liability."
+    edgeCases:
+      - "Negative line 19 increases amount due"
+      - "$0 when payments cover or exceed liability"
+    testRef: "tests/engine/state/oh-it-1040.test.ts::OH IT 1040 Line 20 - tax due when payments insufficient"
+
+  - line: "21"
+    description: "Interest due on late payment"
+    formula: "Computed based on unpaid balance and days past due (pass-through input)"
+    inputs:
+      - "Late payment interest amount"
+    notes: "Interest rate for 2026 is 7%. Generally zero when filing on time. R.C. 5747.08(G)."
+    testRef: "tests/engine/state/oh-it-1040.test.ts::OH IT 1040 Line 21 - late payment interest defaults to zero"
+
+  - line: "22"
+    description: "Total amount due"
+    formula: "If (Line 20 + Line 21) ≤ $1: $0; otherwise Line 20 + Line 21"
+    inputs:
+      - "OH IT 1040 Line 20"
+      - "OH IT 1040 Line 21"
+    notes: "Amount owed to Ohio. Zero if overpayment. If $1.00 or less, no payment is necessary (per IT 1040 instructions)."
+    edgeCases:
+      - "$1 or less amount due is zeroed out"
+    testRef: "tests/engine/state/oh-it-1040.test.ts::OH IT 1040 Line 22 - $1 or less amount due zeroed out"
+
+  - line: "23"
+    description: "Overpayment"
+    formula: "Line 19 - Line 13 (only when Line 19 > Line 13)"
+    inputs:
+      - "OH IT 1040 Line 19"
+      - "OH IT 1040 Line 13"
+    notes: "Total amount available for refund, carryforward, or donation. Zero if tax due."
+    edgeCases:
+      - "$0 when tax due exceeds payments"
+    testRef: "tests/engine/state/oh-it-1040.test.ts::OH IT 1040 Line 23 - overpayment when payments exceed liability"
+
+  - line: "24"
+    description: "Credit carryforward to next year"
+    formula: "Taxpayer-elected amount (0 ≤ Line 24 ≤ Line 23)"
+    inputs:
+      - "Elected carryforward amount"
+    notes: "Only on timely filed original returns. Not allowed on amended returns. Carries forward to next year's line 15."
+    testRef: "tests/engine/state/oh-it-1040.test.ts::OH IT 1040 Line 24 - credit carryforward election"
+
+  - line: "25"
+    description: "Charitable donations from overpayment"
+    formula: "Sum of donations to qualifying Ohio funds (pass-through input)"
+    inputs:
+      - "Donation amounts to qualifying Ohio organizations"
+    notes: "Only on timely filed original returns. Donations reduce refund. Up to 6 funds (Nature Preserves, Breast/Cervical Cancer, Wishes for Sick Children, Wildlife Species, Military Injury Relief, Ohio History Fund). R.C. 5747.113."
+    testRef: "tests/engine/state/oh-it-1040.test.ts::OH IT 1040 Line 25 - donations reduce refund"
+
+  - line: "26"
+    description: "Refund"
+    formula: "If (Line 23 - Line 24 - Line 25) ≤ $1: $0; otherwise Line 23 - Line 24 - Line 25"
+    inputs:
+      - "OH IT 1040 Line 23"
+      - "OH IT 1040 Line 24"
+      - "OH IT 1040 Line 25"
+    notes: "If $1.00 or less, no refund is issued (per IT 1040 instructions). Refunds may be offset per R.C. 5747.12."
+    edgeCases:
+      - "Refund of $1 or less is zeroed out"
+      - "$0 when entire overpayment is carried forward or donated"
+    testRef: "tests/engine/state/oh-it-1040.test.ts::OH IT 1040 Line 26 - $1 or less refund zeroed out"

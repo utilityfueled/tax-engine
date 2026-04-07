@@ -1,0 +1,174 @@
+form: "Form 8995"
+fullName: "Qualified Business Income Deduction Simplified Computation"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i8995"
+
+notes: |
+  Form 8995 calculates the Section 199A QBI deduction for taxpayers with
+  taxable income at or below $197,300 (single/HoH/MFS/QSS) / $394,600 (MFJ).
+  Per IRC §199A(e)(2)(A)(ii), the doubled threshold applies only "in the case of
+  any taxpayer making a joint return under section 6013." QSS is not a joint return.
+  IRS Form 8995 Instructions: "$394,600 if married filing jointly, and $197,300
+  for all other returns." Above those thresholds, Form 8995-A is required and
+  is handled by the separate supported Form 8995-A module.
+  The deduction = min(20% of QBI, 20% of taxable income before QBI deduction).
+  QBI comes from Schedule C, Schedule F, S-corps (K-1), partnerships (K-1), and
+  qualifying rental real estate activities from Schedule E Part I.
+  SSTB phase-out and W-2/basis limitations only apply above the threshold.
+
+  Rental real estate activities qualify as a trade or business for §199A purposes
+  when the taxpayer meets the safe harbor under Rev. Proc. 2019-38 (250 hours of
+  rental services per year, separate books, contemporaneous records) or the activity
+  otherwise qualifies as a trade or business under general case law (see Curphey v.
+  Commissioner, T.C. Memo. 1980-406). The engine includes rental QBI only when
+  qualifiesForQBI is set to true on the rental property input.
+
+  For rental activities with passive losses, QBI is limited to the amount actually
+  included in taxable income after Form 8582 passive loss limitation. Fully suspended
+  losses produce $0 QBI for the current year. When suspended passive losses are
+  released in future years, they retain their QBI character if the activity was
+  QBI-eligible when the loss was originally generated.
+
+lines:
+  - line: "1-5"
+    description: "Qualified business income by trade/business"
+    formula: |
+      Schedule C QBI = Schedule C Line 31 - allocated deductible half SE tax (§164(f))
+                       - SE health insurance deduction (§162(l))
+      K-1 QBI = K-1 Box 20 Code Z (Section 199A amounts, as reported by entity)
+      Rental QBI = Schedule E Part I net rental income (when qualifiesForQBI is true),
+                   limited to the amount included in taxable income after Form 8582.
+                   Positive rental income is included in full. Passive losses are included
+                   only up to the amount allowed by Form 8582.
+    irsRef: "Form 8995 Instructions, Lines 1-5; IRS Form 8995 Instructions 'Qualified Business Income (QBI)' definition; Rev. Proc. 2019-38 (rental real estate safe harbor)"
+    inputs:
+      - "Schedule C Line 31 (net profit from sole proprietorship)"
+      - "K-1 Box 20 Code Z (Section 199A QBI)"
+      - "Schedule E Part I net rental income (when qualifiesForQBI = true)"
+      - "Deductible half of SE tax (Schedule 1 Line 15)"
+      - "SE health insurance deduction (Schedule 1 Line 17)"
+    notes: |
+      QBI includes net income from qualified businesses.
+      Excludes: W-2 wages, capital gains, interest, guaranteed payments for services.
+      Losses from one business reduce QBI from another.
+      Per IRS Form 8995 Instructions: "the deduction for one-half of self-employment tax
+      under section 164(f), the self-employed health insurance deduction under section 162(l),
+      and the deduction for contributions to qualified retirement plans for common-law employees
+      under section 404 are treated as attributable to a trade or business for purposes of
+      computing QBI." These deductions are allocated among businesses proportionally to
+      each business's positive SE earnings contribution.
+      SE health insurance is fully attributable to the Schedule C business under which the
+      plan is established (per IRS Pub 535).
+    edgeCases:
+      - "Schedule C only: full deductible half SE tax + SE health insurance reduce QBI"
+      - "Schedule C + K-1 SE: deductible half allocated proportionally by positive SE earnings"
+      - "Schedule C loss: no SE tax generated → no QBI reduction for SE deductions"
+      - "K-1 QBI accepted as-is from Box 20 Code Z (entity-reported, not further adjusted)"
+      - "Rental property with qualifiesForQBI = true and positive income → full income is QBI"
+      - "Rental property with qualifiesForQBI = true and passive loss fully allowed by Form 8582 → full loss is QBI"
+      - "Rental property with qualifiesForQBI = true and passive loss partially suspended by Form 8582 → only allowed loss is QBI"
+      - "Rental property with qualifiesForQBI = true and passive loss fully suspended → QBI is $0"
+      - "Rental property with qualifiesForQBI = false → excluded from QBI computation"
+      - "Multiple rental properties, mixed QBI and non-QBI → only QBI-flagged properties contribute"
+      - "Rental QBI combined with Schedule C QBI → both included in total QBI computation"
+    testRef: "tests/engine/forms/form-8995.test.ts::Form 8995 Lines 1-5 - QBI from Schedule C"
+
+  - line: "6"
+    description: "Total QBI"
+    formula: "Sum of Lines 1-5"
+    irsRef: "Form 8995 Instructions, Line 6"
+    testRef: "tests/engine/forms/form-8995.test.ts::Form 8995 Line 6 - total QBI"
+
+  - line: "7"
+    description: "QBI component (20% of total QBI)"
+    formula: "Line 6 × 20%"
+    irsRef: "Form 8995 Instructions, Line 7"
+    notes: "If total QBI is negative or zero, this is zero"
+    testRef: "tests/engine/forms/form-8995.test.ts::Form 8995 Line 7 - 20% of QBI"
+
+  - line: "8"
+    description: "Qualified REIT dividends and qualified publicly traded partnership (PTP) income or (loss)"
+    formula: "Sum of qualified REIT dividends (from 1099-DIV Box 5 and K-1 Section 199A statement) plus qualified PTP income or loss (from K-1 Section 199A statement)"
+    irsRef: "Form 8995 Instructions, Line 8; IRC §199A(e)(3) (qualified REIT dividends); IRC §199A(e)(4) (qualified PTP income)"
+    inputs:
+      - "1099-DIV Box 5 (Section 199A dividends — qualified REIT dividends)"
+      - "K-1 Section 199A statement qualified REIT dividends"
+      - "K-1 Section 199A statement qualified PTP income"
+    notes: |
+      Qualified REIT dividends include dividends received from REITs that are not capital gains
+      dividends or qualified dividend income. PTP income is the net amount of section 199A items
+      from a publicly traded partnership. Below the simplified threshold, REIT and PTP amounts
+      are combined on this line and not subject to W-2/UBIA limitations.
+    edgeCases:
+      - "PTP loss reduces the combined REIT/PTP amount"
+      - "If combined amount is zero or negative, Line 9 is zero"
+      - "1099-DIV Box 5 from multiple mutual funds holding REITs are summed"
+    testRef: "tests/engine/forms/form-8995.test.ts::Form 8995 Line 8 - REIT dividends and PTP income"
+
+  - line: "9"
+    description: "REIT and qualified PTP component"
+    formula: "Line 8 × 20% (floor at 0)"
+    irsRef: "Form 8995 Instructions, Line 9"
+    notes: "If Line 8 is zero or negative, this is zero"
+    testRef: "tests/engine/forms/form-8995.test.ts::Form 8995 Line 9 - 20% of REIT/PTP"
+
+  - line: "10"
+    description: "Total QBI, REIT, and PTP component"
+    formula: "Line 7 + Line 9"
+    irsRef: "Form 8995 Instructions, Line 10"
+    notes: "Combined QBI and REIT/PTP components before income limitation"
+    testRef: "tests/engine/forms/form-8995.test.ts::Form 8995 Line 10 - combined QBI and REIT/PTP components"
+
+  - line: "11"
+    description: "Taxable income before QBI deduction"
+    formula: "AGI - standard/itemized deduction (before QBI)"
+    irsRef: "Form 8995 Instructions, Line 11"
+    testRef: "tests/engine/forms/form-8995.test.ts::Form 8995 Line 11 - taxable income before QBI"
+
+  - line: "12"
+    description: "Net capital gain"
+    formula: "min(Schedule D Line 15, Schedule D Line 16) + qualified dividends; if either line is a loss, net capital gain = 0 + qualified dividends"
+    irsRef: "Form 8995 Instructions, Line 12; IRC §1222(11); IRC §1(h)(11)"
+    notes: |
+      "Net capital gain" per IRC §1222(11) = excess of net long-term capital gain over net short-term capital loss.
+      Short-term capital gains do NOT increase net capital gain — they are taxed as ordinary income.
+      The IRS instruction implements this as min(Schedule D Line 15 [net LT], Line 16 [total]).
+      If either line is a loss, enter 0. Qualified dividends are added per IRC §1(h)(11).
+    edgeCases:
+      - "STCG > 0 with LTCG > 0: net CG = LTCG only (STCG excluded)"
+      - "STCG > 0 with LTCG = 0: net CG = 0 (all gains are short-term, not 'net capital gain')"
+      - "STCG < 0 with LTCG > 0: net CG = total (ST loss reduces LT gain)"
+      - "Both negative: net CG = 0"
+    testRef: "tests/engine/forms/form-8995.test.ts::Form 8995 Line 12 - net capital gain"
+
+  - line: "14"
+    description: "Income limitation component"
+    formula: "(Line 11 - Line 12) × 20%"
+    irsRef: "Form 8995 Instructions, Line 14"
+    notes: "20% of taxable income excluding net capital gain"
+    edgeCases:
+      - "If Line 11 - Line 12 is zero or negative, QBI deduction is zero"
+      - "Large capital gains can eliminate QBI deduction entirely"
+    testRef: "tests/engine/forms/form-8995.test.ts::Form 8995 Line 14 - income limitation"
+
+  - line: "15"
+    description: "Section 199A deduction"
+    formula: "min(Line 10 total QBI/REIT/PTP component, Line 14 income limitation)"
+    irsRef: "Form 8995 Instructions, Line 15; Form 1040 Line 13"
+    notes: "This amount goes to Form 1040 Line 13"
+    edgeCases:
+      - "Zero QBI and zero REIT/PTP → zero deduction"
+      - "Negative QBI but positive REIT → deduction from REIT component only"
+      - "High capital gains reduce income limitation"
+      - "REIT-only investor (no trade/business QBI) gets 20% of REIT dividends"
+    testRef: "tests/engine/forms/form-8995.test.ts::Form 8995 Line 15 - QBI deduction"
+
+  - line: "16"
+    description: "Total Section 199A carryforward loss"
+    formula: "If total QBI is negative, the loss carries forward to reduce QBI in future years"
+    irsRef: "Form 8995 Instructions, Line 16"
+    notes: "QBI loss carryforward reduces future QBI dollar-for-dollar"
+    edgeCases:
+      - "Only arises when total QBI across all businesses is negative"
+      - "Prior year QBI carryforward loss reduces current year QBI"
+    testRef: "tests/engine/forms/form-8995.test.ts::Form 8995 Line 16 - QBI loss carryforward"

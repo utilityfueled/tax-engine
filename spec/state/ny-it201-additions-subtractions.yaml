@@ -1,0 +1,209 @@
+form: "New York IT-201 Additions and Subtractions"
+fullName: "New York State Form IT-201 Lines 19-33: NY Additions, Subtractions, and Adjusted Gross Income"
+taxYear: 2025
+irsReference: "https://www.tax.ny.gov/pdf/current_forms/it/it201i.pdf"
+
+notes: |
+  New York State begins with federal adjusted gross income (Form 1040, line 11)
+  and applies NY-specific additions and subtractions to arrive at New York adjusted
+  gross income (NY AGI) on IT-201, line 33.
+
+  For tax year 2025, the resident-return additions section uses official lines
+  20 through 23:
+  - Line 20: interest income on state and local bonds and obligations other than New York
+  - Line 21: public employee 414(h) retirement contributions
+  - Line 22: New York 529 college savings program nonqualified distributions
+  - Line 23: other additions, including Form IT-225 line 9
+
+  Additions increase federal AGI for NY purposes (for example, interest on
+  non-New York bonds that was excluded federally, or public employee retirement
+  contributions that were deducted federally but are taxable to New York).
+
+  Subtractions decrease federal AGI for NY purposes (e.g., state/local tax refunds
+  already included in federal income, government pensions exempt from NY tax,
+  Social Security benefits, US government bond interest).
+
+  NY AGI = Federal AGI + Total additions (line 24) - Total subtractions (line 32)
+
+  Key constants for 2025:
+  - Pension and annuity income exclusion: up to $20,000 per qualifying taxpayer
+    (age 59½ or older; does not apply to government pensions already excluded on line 26)
+  - College tuition deduction: up to $10,000 per eligible student for undergraduate
+    tuition paid to qualifying institutions
+
+lines:
+  - line: "19"
+    description: "Federal adjusted gross income"
+    formula: "Federal Form 1040 line 11"
+    inputs:
+      - "Federal adjusted gross income"
+    notes: "Starting point for NY income computation."
+    testRef: "tests/engine/state/ny-it201-additions-subtractions.test.ts::Line 19 - federal AGI flows through as starting point"
+
+  - line: "20"
+    description: "Interest income on state and local bonds (other than NYS or NYC)"
+    formula: "Sum of interest from non-NY state/local bonds"
+    inputs:
+      - "Interest from out-of-state municipal bonds"
+    notes: |
+      Interest income on obligations of other states and their political subdivisions
+      that was excluded from federal AGI must be added back for NY purposes.
+      Interest on NYS and NYC bonds remains exempt.
+    testRef: "tests/engine/state/ny-it201-additions-subtractions.test.ts::Line 20 - out-of-state muni bond interest added back"
+
+  - line: "21"
+    description: "Public employee 414(h) retirement contributions"
+    formula: "414(h) contributions shown on W-2"
+    inputs:
+      - "Public employee 414(h) retirement contributions"
+    notes: |
+      Contributions to public employee retirement systems under IRC §414(h).
+      These are excluded from federal wages but taxable by NYS. Amount is
+      shown in box 14 of Form W-2 or provided by employer.
+    testRef: "tests/engine/state/ny-it201-additions-subtractions.test.ts::Line 21 - 414(h) retirement contributions added"
+
+  - line: "22"
+    description: "College choice tuition savings program (529) distributions"
+    formula: "Non-qualified 529 distributions subject to NY addition"
+    inputs:
+      - "529 distributions not used for qualified expenses"
+    notes: |
+      Distributions from NY 529 plans not used for qualified higher education expenses
+      that were previously deducted from NY income when contributed.
+    testRef: "tests/engine/state/ny-it201-additions-subtractions.test.ts::Line 22 - 529 non-qualified distributions added"
+
+  - line: "23"
+    description: "Other NY additions"
+    formula: "NYC flexible benefits program (A-101) + Form IT-225, line 9 passthrough"
+    inputs:
+      - "NYC flexible benefits program (IRC §125) contributions"
+      - "Other NY addition amount from Form IT-225, line 9"
+    notes: |
+      Line 23 carries additions that are not entered directly on lines 20
+      through 22. For 2025, this includes the New York City flexible benefits
+      program addback (IT-225 modification A-101) and the total from Form IT-225,
+      line 9 for other applicable modifications.
+    edgeCases:
+      - "NYC flexible benefits addback contributes to line 23 even when Form IT-225 passthrough is zero"
+      - "Form IT-225 line 9 passthrough contributes to line 23 even when no NYC flexible benefits amount is present"
+      - "Line 23 aggregates both amounts when both are present"
+    testRef: "tests/engine/state/ny-it201-additions-subtractions.test.ts::Line 23 - other additions combines NYC flexible benefits and IT-225 passthrough"
+
+  - line: "24"
+    description: "Total New York additions"
+    formula: "Line 20 + 21 + 22 + 23"
+    inputs:
+      - "Lines 20 through 23"
+    testRef: "tests/engine/state/ny-it201-additions-subtractions.test.ts::Line 24 - total additions is sum of lines 20-23"
+
+  - line: "25"
+    description: "Taxable refunds, credits, or offsets of state and local income taxes"
+    formula: "State/local tax refunds from federal Schedule 1 line 1"
+    inputs:
+      - "State/local income tax refunds included in federal income"
+    notes: |
+      If state/local tax refunds were included in federal AGI (Schedule 1, line 1),
+      subtract them here since NY does not tax its own tax refunds.
+    testRef: "tests/engine/state/ny-it201-additions-subtractions.test.ts::Line 25 - state/local tax refunds subtracted"
+
+  - line: "26"
+    description: "Pensions of NYS and local governments and the federal government"
+    formula: "Government pension income from qualifying sources"
+    inputs:
+      - "NYS government pension income"
+      - "NYC government pension income"
+      - "Federal government pension income"
+    notes: |
+      Pension income from NYS, NYC, and their political subdivisions, and from the
+      US government, is exempt from NYS income tax. This includes pensions from
+      the NYS Teachers' Retirement System, NYS Employees' Retirement System,
+      NYC retirement systems, and federal Civil Service and military pensions.
+    testRef: "tests/engine/state/ny-it201-additions-subtractions.test.ts::Line 26 - government pension income subtracted"
+
+  - line: "27"
+    description: "Taxable amount of Social Security benefits"
+    formula: "Federal Form 1040 line 6b (taxable Social Security)"
+    inputs:
+      - "Taxable Social Security benefits from federal return"
+    notes: |
+      NYS does not tax Social Security benefits. The taxable amount included
+      in federal AGI is subtracted here.
+    testRef: "tests/engine/state/ny-it201-additions-subtractions.test.ts::Line 27 - taxable SS benefits subtracted"
+
+  - line: "28"
+    description: "Interest income on US government bonds"
+    formula: "Interest from US Treasury bonds, bills, notes"
+    inputs:
+      - "Interest on US government obligations"
+    notes: |
+      Interest on obligations of the United States government (Treasury bonds,
+      bills, notes, savings bonds) is exempt from state tax. This amount is
+      included in federal AGI and must be subtracted.
+    testRef: "tests/engine/state/ny-it201-additions-subtractions.test.ts::Line 28 - US government bond interest subtracted"
+
+  - line: "29"
+    description: "Pension and annuity income exclusion"
+    formula: "min(qualifying pension/annuity income, $20,000)"
+    inputs:
+      - "Pension and annuity income"
+      - "Taxpayer age (59½ or older)"
+    notes: |
+      NYS allows an exclusion of up to $20,000 of pension and annuity income
+      per qualifying taxpayer who is 59½ or older at the end of the tax year.
+      This does NOT apply to government pensions already excluded on line 26.
+      For MFJ, each spouse may claim up to $20,000 if both qualify.
+    edgeCases:
+      - "Taxpayer under 59½ gets no exclusion"
+      - "Pension income less than $20,000 uses actual amount"
+      - "MFJ: each qualifying spouse can exclude up to $20,000"
+      - "Government pensions (line 26) not double-counted"
+    testRef: "tests/engine/state/ny-it201-additions-subtractions.test.ts::Line 29 - pension exclusion capped at $20,000"
+
+  - line: "30"
+    description: "College tuition deduction"
+    formula: "min(qualifying tuition paid, $10,000 per student)"
+    inputs:
+      - "Qualifying undergraduate tuition paid"
+      - "Number of eligible students"
+    notes: |
+      NYS allows a deduction of up to $10,000 per eligible student for qualifying
+      undergraduate tuition paid to an institution of higher education. The student
+      must be enrolled at or attending a qualifying institution. Graduate tuition
+      does not qualify. Cannot claim both the college tuition deduction and the
+      college tuition credit (IT-272) for the same student.
+    edgeCases:
+      - "Multiple students: each gets up to $10,000"
+      - "Tuition less than $10,000 uses actual amount"
+      - "Cannot claim deduction and credit for same student"
+    testRef: "tests/engine/state/ny-it201-additions-subtractions.test.ts::Line 30 - college tuition deduction capped at $10,000 per student"
+
+  - line: "31"
+    description: "Other NY subtractions (from Form IT-225)"
+    formula: "Total from Form IT-225, line 18"
+    inputs:
+      - "Other NY subtraction amount"
+    notes: |
+      Various other subtractions reported on Form IT-225, including but not limited to:
+      START-UP NY program benefits, military pay, etc.
+    testRef: "tests/engine/state/ny-it201-additions-subtractions.test.ts::Line 31 - other subtractions from IT-225 passthrough"
+
+  - line: "32"
+    description: "Total New York subtractions"
+    formula: "Line 25 + 26 + 27 + 28 + 29 + 30 + 31"
+    inputs:
+      - "Lines 25 through 31"
+    testRef: "tests/engine/state/ny-it201-additions-subtractions.test.ts::Line 32 - total subtractions is sum of lines 25-31"
+
+  - line: "33"
+    description: "New York adjusted gross income"
+    formula: "Line 19 + Line 24 - Line 32"
+    inputs:
+      - "Federal AGI (line 19)"
+      - "Total additions (line 24)"
+      - "Total subtractions (line 32)"
+    notes: "This is the NY AGI used for all subsequent NY calculations."
+    edgeCases:
+      - "No additions or subtractions: NY AGI equals federal AGI"
+      - "Large subtractions can make NY AGI significantly lower than federal"
+      - "NY AGI can be negative"
+    testRef: "tests/engine/state/ny-it201-additions-subtractions.test.ts::Line 33 - NY AGI = federal AGI + additions - subtractions"

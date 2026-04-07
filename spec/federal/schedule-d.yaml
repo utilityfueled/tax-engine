@@ -1,0 +1,97 @@
+form: "Schedule D"
+fullName: "Capital Gains and Losses"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i1040sd"
+
+lines:
+  - line: "7"
+    description: "Net short-term capital gain or loss"
+    formula: "Sum of Form 8949 Part I totals + K-1 Box 8 + prior year ST carryforward + Form 6781 short-term (40% section 1256 + straddle short-term) + Form 6252 short-term installment sale capital gain"
+    irsRef: "Schedule D Instructions, Line 7"
+    inputs:
+      - "Form 8949 Part I (short-term) totals"
+      - "K-1 Box 8 (net ST capital gain)"
+      - "Prior year short-term capital loss carryforward"
+      - "Form 6781 short-term (Line 8 + Line 11a + Line 13a)"
+      - "Form 6252 short-term capital gain (installment sales with gainCharacter = short_term_capital)"
+    notes: "Audit trail should expose each contributing subtotal so carryforward-driven netting remains traceable."
+    testRef: "tests/engine/schedules/schedule-d.test.ts::Schedule D Line 7 - net short-term gain"
+
+  - line: "15"
+    description: "Net long-term capital gain or loss"
+    formula: "Sum of Form 8949 Part II totals + K-1 Box 9a + Form 4797 Line 9 section 1231 long-term capital gain + 1099-DIV Box 2a + prior year LT carryforward − Section 1202 exclusion + home sale taxable gain (IRC §121) + Form 6781 long-term (60% section 1256 + straddle long-term) + Form 6252 long-term installment sale capital gain"
+    irsRef: "Schedule D Instructions, Line 15"
+    inputs:
+      - "Form 8949 Part II (long-term) totals"
+      - "K-1 Box 9a (net LT capital gain)"
+      - "Form 4797 Line 9 section 1231 long-term capital gain"
+      - "1099-DIV Box 2a (capital gain distributions)"
+      - "Prior year long-term capital loss carryforward"
+      - "Section 1202 QSBS exclusion (Line 13, subtracted)"
+      - "Home sale taxable gain after IRC §121 exclusion (from home-sale-exclusion module)"
+      - "Form 6781 long-term (Line 9 + Line 11b + Line 13b)"
+      - "Form 6252 long-term capital gain (installment sales with gainCharacter = long_term_capital)"
+    notes: |
+      Audit trail should expose each contributing subtotal and the Section 1202 exclusion applied against long-term gain.
+      Home sale depreciation recapture (post-May-1997) is included in the taxable gain and reported separately as unrecaptured Section 1250 gain.
+    testRef: "tests/engine/schedules/schedule-d.test.ts::Schedule D Line 15 - includes Form 4797 section 1231 long-term gain"
+
+  - line: "16"
+    description: "Net capital gain or loss"
+    formula: "Line 7 + Line 15"
+    irsRef: "Schedule D Instructions, Line 16"
+    notes: "Audit trail should show the exact Line 7 and Line 15 values used in the cross-period netting result."
+    testRef: "tests/engine/schedules/schedule-d.test.ts::Schedule D Line 16 - net capital gain"
+
+  - line: "21"
+    description: "Capital loss deduction"
+    formula: "If Line 16 is a loss: max(Line 16, -$3,000) for MFJ/single; -$1,500 for MFS"
+    irsRef: "Schedule D Instructions, Line 21"
+    notes: "Audit trail should show the annual loss limit applied to Line 16 and record the resulting short-term and long-term carryforward character."
+    edgeCases:
+      - "MFS filers limited to $1,500"
+      - "Short-term gains offset long-term losses, and long-term gains offset short-term losses, before any carryforward is determined"
+      - "Unused loss carries forward (split ST/LT) per Capital Loss Carryover Worksheet"
+    testRef: "tests/engine/schedules/schedule-d.test.ts::Schedule D Line 21 - loss capped at $3,000"
+
+  - line: "carryforward"
+    description: "Capital loss carryforward to next year (IRS Capital Loss Carryover Worksheet)"
+    formula: |
+      Per IRS Capital Loss Carryover Worksheet (Schedule D Instructions):
+      1. Compute effective deduction (Lines 1-4):
+         - rawTaxableIncome = AGI - total deductions (before zero-floor)
+         - effectiveDeduction = max(0, min(|deduction|, rawTaxableIncome + |deduction|))
+         - When rawTaxableIncome ≤ -|deduction|, effectiveDeduction = 0 (deduction provided no tax benefit)
+      2. Cross-net: reduce each category's loss by opposite-category gains (Lines 5-6, 9-10)
+         - effective ST loss = max(0, |Line 7 loss| - max(0, Line 15))
+         - effective LT loss = max(0, |Line 15 loss| - max(0, Line 7))
+      3. Allocate effective deduction: ST first (Lines 7-8), then LT (Lines 11-13)
+         - ST reduction = effectiveDeduction + LT gain
+         - ST carry = max(0, effective ST loss - ST reduction)
+         - effectiveDeductionUsedOnST = min(effectiveDeduction, max(0, effective ST loss - LT gain))
+         - LT reduction = ST gain + (effectiveDeduction - effectiveDeductionUsedOnST)
+         - LT carry = max(0, effective LT loss - LT reduction)
+      4. Remaining effective loss in each category carries forward, retaining character
+    irsRef: "Schedule D Instructions, Capital Loss Carryover Worksheet; IRC §1212(b)"
+    edgeCases:
+      - "Cross-netting: ST gain reduces LT loss carryforward (and vice versa)"
+      - "When net loss equals deduction limit exactly, carryforward is zero"
+      - "Both categories negative: no cross-netting, deduction allocated ST-first"
+      - "Low-income taxpayer: when rawTaxableIncome < 0, some or all of the deduction was wasted (no tax benefit), so more loss carries forward"
+      - "Example: $12K wages, $8K LT loss, $15K std ded → raw TI = -$6K → effective ded = $0 → full $8K carries forward"
+    testRef: "tests/engine/schedules/schedule-d.test.ts::Schedule D - IRS carryover worksheet cross-netting"
+
+  - line: "13"
+    description: "Section 1202 gain exclusion (QSBS)"
+    formula: "Up to 100% exclusion for qualified small business stock held 5+ years"
+    irsRef: "Schedule D Instructions, Line 13; IRC §1202"
+    notes: |
+      For stock acquired after Sept 27, 2010: 100% exclusion.
+      Subject to per-issuer limit of greater of $10M or 10× adjusted basis.
+      Exclusion reduces long-term capital gains on Schedule D.
+      The excluded portion is NOT subject to AMT (for 100% exclusion).
+    edgeCases:
+      - "$10M lifetime per-issuer cap"
+      - "Only applies to C-corporation stock held 5+ years"
+      - "MFS filers get $5M per-issuer cap"
+    testRef: "tests/engine/schedules/schedule-d.test.ts::Schedule D Line 13 - QSBS exclusion reduces long-term gain"

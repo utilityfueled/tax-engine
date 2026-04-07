@@ -1,0 +1,107 @@
+form: "PA-Schedule-T"
+fullName: "Pennsylvania Schedule T — Gambling and Lottery Winnings"
+taxYear: 2025
+reference: "https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/gambling-and-lottery-winnings"
+
+notes: |
+  Pennsylvania Schedule T computes PA-40 Line 8 for gambling and lottery
+  winnings. Current Pennsylvania guidance requires these resident-return rules:
+    - Cash Pennsylvania Lottery prizes paid on or after January 1, 2016 are taxable.
+    - Noncash Pennsylvania Lottery prizes remain exempt.
+    - Residents are taxed on gambling and lottery winnings from every source.
+    - Documented wagering costs may offset winnings, but only up to that same
+      spouse's own taxable winnings.
+    - Travel, meals, lodging, parking, entry fees, and similar nonwagering
+      expenses are not deductible.
+
+packetRules:
+  packetBehavior: "reference-summary-pdf"
+  includeWhen:
+    - "A Pennsylvania resident return packet is being assembled and Schedule T has any taxable gambling winnings before or after wagering-cost offsets."
+    - "A Pennsylvania resident return packet is being assembled and Schedule T carries Pennsylvania withholding from Form W-2G into PA-40 Line 13."
+  suppressWhen:
+    - "No Pennsylvania resident return packet is being assembled."
+    - "Schedule T is absent or contains only exempt noncash Pennsylvania Lottery prizes with no Pennsylvania withholding."
+  notes: |
+    The Pennsylvania Personal Income Tax Guide directs taxpayers with gambling
+    and lottery winnings to report them on PA-40 Line 8 and to complete
+    Schedule T to determine the taxable amount after allowable wagering costs.
+    Until an official PA Schedule T PDF filler exists, the packet path emits
+    `pa-schedule-t-reference.pdf` as a reference summary only. Packet
+    disclosures must therefore keep Pennsylvania packet completeness partial
+    whenever this reference summary is attached.
+
+businessRuleValidation:
+  - rule: "pa-schedule-t-reference-packet"
+    description: "Inventory support counts the Pennsylvania Schedule T packet path as validated only when fillReturn emits `pa-schedule-t-reference.pdf` whenever Schedule T has taxable gambling winnings or Pennsylvania W-2G withholding."
+    testRef: "tests/pdf/fill-pa-schedule-t.test.ts::fillReturn includes the Pennsylvania Schedule T reference summary when the resident return has taxable gambling winnings or Pennsylvania withholding"
+  - rule: "pa-schedule-t-reference-suppression"
+    description: "Inventory support counts the Pennsylvania Schedule T suppression rule as validated only when regression coverage proves fillReturn omits the reference summary when Schedule T contains only exempt noncash Pennsylvania Lottery prizes and no Pennsylvania withholding."
+    testRef: "tests/pdf/fill-pa-schedule-t.test.ts::fillReturn suppresses the Pennsylvania Schedule T reference summary when only exempt noncash Pennsylvania Lottery prizes are present"
+  - rule: "pa-schedule-t-reference-disclosure"
+    description: "Inventory support counts the Pennsylvania Schedule T packet disclosure as validated only when readiness regression coverage keeps packet completeness partial while only the Schedule T reference summary is available beyond PA-40."
+    testRef: "tests/utils/return-readiness.test.ts::marks Pennsylvania packets partial when a PA Schedule T reference summary is attached"
+
+lines:
+  - line: "1"
+    description: "Forms W-2G winnings"
+    formula: |
+      For each spouse column:
+        Sum reportable winnings from Forms W-2G that are taxable for PA.
+      Exclude noncash Pennsylvania Lottery prizes.
+    notes: |
+      Cash Pennsylvania Lottery prizes paid on or after January 1, 2016 remain
+      taxable and belong on this line. Noncash Pennsylvania Lottery prizes are
+      excluded from PA taxable income.
+    testRef: "tests/engine/state/pa-schedule-t.test.ts::PA Schedule T Line 1 - includes taxable W-2G winnings and excludes noncash PA Lottery prizes"
+
+  - line: "2"
+    description: "Other gambling and lottery winnings"
+    formula: |
+      For each spouse column:
+        Sum taxable gambling and lottery winnings not reported on Form W-2G.
+      Exclude noncash Pennsylvania Lottery prizes.
+    notes: |
+      This captures supplemental cash or property winnings that still belong on
+      Schedule T even when no federal Form W-2G was issued.
+    testRef: "tests/engine/state/pa-schedule-t.test.ts::PA Schedule T Line 2 - includes supplemental taxable winnings"
+
+  - line: "3"
+    description: "Total winnings"
+    formula: "Line 1 + Line 2 for each spouse column"
+    testRef: "tests/engine/state/pa-schedule-t.test.ts::PA Schedule T Line 3 - totals each spouse's taxable winnings before costs"
+
+  - line: "4"
+    description: "Costs for tickets, bets, and other wagers"
+    formula: |
+      For each spouse column:
+        Sum documented wagering costs for the same tax year.
+      Exclude travel, meals, lodging, parking, entry fees, and other
+      nonwagering expenses.
+    notes: |
+      Pennsylvania Lottery ticket costs are deductible only for tax years
+      beginning on or after January 1, 2016. The engine assumes any provided
+      Pennsylvania Lottery ticket costs satisfy that timing rule. One spouse's
+      costs cannot reduce the other spouse's winnings.
+    testRef: "tests/engine/state/pa-schedule-t.test.ts::PA Schedule T Line 4 - uses only each spouse's own wagering costs"
+
+  - line: "5"
+    description: "Net gambling and lottery winnings"
+    formula: |
+      For each spouse column:
+        max(Line 3 - Line 4, 0)
+    notes: "A spouse's wagering costs may reduce only that spouse's winnings and never below zero."
+    testRef: "tests/engine/state/pa-schedule-t.test.ts::PA Schedule T Line 5 - floors each spouse net winnings at zero"
+
+  - line: "6"
+    description: "Total gambling and lottery winnings"
+    formula: "Add taxpayer and spouse Line 5 amounts; carry total to PA-40 Line 8"
+    testRef: "tests/engine/state/pa-schedule-t.test.ts::PA Schedule T Line 6 - sums taxpayer and spouse net winnings"
+
+  - line: "7"
+    description: "Pennsylvania tax withheld"
+    formula: "Sum Pennsylvania withholding reported on included Forms W-2G"
+    notes: |
+      This amount flows to PA-40 Line 13 for state withholding. Other-state
+      withholding does not appear on this line.
+    testRef: "tests/engine/state/pa-schedule-t.test.ts::PA Schedule T Line 7 - totals Pennsylvania withholding from W-2Gs"

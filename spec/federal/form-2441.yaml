@@ -1,0 +1,80 @@
+form: "Form 2441"
+fullName: "Child and Dependent Care Expenses"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i2441"
+
+notes: |
+  Form 2441 calculates the credit for child and dependent care expenses.
+  Credit percentage ranges from 20% to 35% based on AGI.
+  Maximum qualifying expenses: $3,000 for one qualifying individual,
+  $6,000 for two or more.
+
+businessRuleValidation:
+  - rule: "packet-inclusion-supported-credit"
+    description: "Inventory support counts this form as business-rule validated only when regression coverage proves the emitted packet attaches the official Form 2441 PDF only for supported dependent-care-credit scenarios that compute a positive credit and suppresses the form when the credit is unsupported or not allowed."
+    testRef: "tests/pdf/fill-form-2441.test.ts::fillReturn attaches Form 2441 only for supported credit-bearing scenarios"
+
+lines:
+  - line: "3"
+    description: "Qualifying expenses"
+    formula: "Lesser of actual expenses or $3,000/$6,000 limit"
+    irsRef: "Form 2441 Instructions, Line 3"
+    edgeCases:
+      - "One qualifying individual: max $3,000"
+      - "Two or more: max $6,000"
+    testRef: "tests/engine/forms/form-2441.test.ts::Form 2441 Line 3 - qualifying expenses capped at $3K for one"
+
+  - line: "4"
+    description: "Earned income limit"
+    formula: |
+      Lesser of qualifying expenses or earned income (lower-earning spouse for MFJ).
+      Earned income = wages (Form 1040 Line 1z) + SE earned income.
+      SE earned income = Schedule SE Line 3 (net SE earnings, pre-0.9235 multiplier)
+      minus Schedule 1 Line 15 (deductible half of SE tax).
+      Per IRC §21(d)(1) → §32(c)(2)(A)(i)(II): net SE earnings "shall be determined
+      with regard to the deduction allowed by section 164(f)" (deductible half).
+      SE losses reduce earned income (not floored at zero).
+    irsRef: "Form 2441 Instructions, Lines 4-5; IRC §21(d)(1); IRC §32(c)(2)(A)(i)(II)"
+    edgeCases:
+      - "MFJ: use lower-earning spouse's earned income"
+      - "Full-time student treated as $250/month (one) or $500/month (two+)"
+      - "SE earned income reduced by deductible half of SE tax"
+      - "SE losses reduce earned income base (not floored at zero)"
+    testRef: "tests/engine/forms/form-2441.test.ts::Form 2441 Line 4 - earned income limit applied"
+
+  - line: "8"
+    description: "Credit percentage"
+    formula: |
+      35% minus 1% for each $2,000 (or fraction thereof) of AGI over $15,000, floor at 20%.
+      IRS instructions: "Divide the result by $2,000. If the result isn't a whole number,
+      round it to the next higher whole number." This means ceiling (round UP), not floor.
+      IRS Pub 503 table confirms: $15,001–$17,000 → 34%, $17,001–$19,000 → 33%, etc.
+      The 20% floor is reached at AGI $43,001 (not $45,000).
+    irsRef: "Form 2441 Instructions, Line 8; IRS Pub 503 'Amount of Credit' table"
+    edgeCases:
+      - "AGI ≤ $15,000: 35%"
+      - "AGI $15,001–$17,000: 34% (any fraction of $2,000 counts as full step)"
+      - "AGI $17,001–$19,000: 33%"
+      - "AGI ≥ $43,001: floor at 20%"
+      - "Rounding: ceiling (round up), per IRS 'next higher whole number' instruction"
+    testRef: "tests/engine/forms/form-2441.test.ts::Form 2441 Line 8 - credit percentage 35% at $15K AGI"
+
+  - line: "9"
+    description: "Dependent care credit"
+    formula: "Line 4 × Line 8 percentage"
+    irsRef: "Form 2441 Instructions, Line 9"
+    testRef: "tests/engine/forms/form-2441.test.ts::Form 2441 Line 9 - credit amount calculated correctly"
+
+edgeCases:
+  - description: "Zero expenses yields zero credit"
+    testRef: "tests/engine/forms/form-2441.test.ts::Form 2441 Line 9 - zero expenses means zero credit"
+  - description: "Zero earned income yields zero credit"
+    testRef: "tests/engine/forms/form-2441.test.ts::Form 2441 Line 9 - zero earned income means zero credit"
+  - description: "Low AGI gets maximum 35% credit rate"
+    testRef: "tests/engine/forms/form-2441.test.ts::Form 2441 Line 8 - credit percentage at $10K AGI (below threshold)"
+  - description: "High AGI floors at 20% credit rate"
+    testRef: "tests/engine/forms/form-2441.test.ts::Form 2441 Line 8 - credit percentage 20% at very high AGI"
+  - description: "$6K cap for two qualifying individuals"
+    testRef: "tests/engine/forms/form-2441.test.ts::Form 2441 Line 3 - qualifying expenses capped at $6K for two+"
+  - description: "MFS filers cannot claim dependent care credit"
+    notes: "IRC §21(e)(2) — MFS restriction enforced in federal.ts orchestrator"

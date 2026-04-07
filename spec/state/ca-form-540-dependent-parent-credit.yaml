@@ -1,0 +1,55 @@
+form: "California Form 540 Dependent Parent Credit"
+fullName: "California Form 540 Credit for Dependent Parent (Code 173)"
+taxYear: 2025
+irsReference: "https://www.ftb.ca.gov/forms/2025/2025-540-instructions.html"
+
+notes: |
+  California allows the Dependent Parent credit, code 173, for tax year 2025
+  only when all of the following are true:
+  - The taxpayer used married/RDP filing separately.
+  - The taxpayer was married or in a registered domestic partnership on
+    December 31, 2025.
+  - The spouse or registered domestic partner was not a member of the
+    taxpayer's household during the last six months of 2025.
+  - The taxpayer furnished over one-half of the household expenses for the
+    dependent mother's or father's home, whether or not the parent lived in the
+    taxpayer's home.
+  The 2025 Form 540 instructions direct taxpayers to use the same worksheet as
+  the Joint Custody Head of Household credit using whole dollars only:
+  - Line 1: Form 540 line 35 subtotal tax before credits
+  - Line 2: 30%
+  - Line 3: min(round(Line 1 × Line 2), $610)
+  If the taxpayer qualifies for both code 170 and code 173, the instructions
+  say to claim only one credit, whichever produces the larger benefit.
+
+lines:
+  - line: "1"
+    description: "Form 540 line 35 subtotal tax before credits"
+    formula: "Supported input for Form 540 line 35 subtotal tax before credits"
+    inputs:
+      - "Form 540 line 35 subtotal tax before credits"
+    testRef: "tests/engine/state/ca-form-540-dependent-parent-credit.test.ts::CA Form 540 Dependent Parent credit Line 1 - the worksheet starts from Form 540 line 35 subtotal tax before credits"
+
+  - line: "2"
+    description: "Credit percentage"
+    formula: "Use the published 2025 Dependent Parent credit percentage of 30%"
+    inputs:
+      - "Tax year"
+    testRef: "tests/engine/state/ca-form-540-dependent-parent-credit.test.ts::CA Form 540 Dependent Parent credit Line 2 - the 2025 worksheet uses a 30% credit rate"
+
+  - line: "3"
+    description: "Credit amount"
+    formula: "If the taxpayer used married/RDP filing separately, was married or in a registered domestic partnership at year end, lived apart from the spouse or registered domestic partner during the last six months of 2025, and furnished over one-half of the household expenses for the dependent mother's or father's home, enter min(round(Line 1 × Line 2), $610); otherwise 0"
+    inputs:
+      - "Dependent Parent credit Line 1"
+      - "Dependent Parent credit Line 2"
+      - "Filing status"
+      - "Married or in a registered domestic partnership at year end"
+      - "Spouse or registered domestic partner not in household during last six months of 2025"
+      - "Furnished over one-half of the household expenses for the dependent mother's or father's home"
+    edgeCases:
+      - "The credit is capped at $610"
+      - "Single does not qualify"
+      - "A married filing separately taxpayer whose spouse or registered domestic partner remained in the household during the last six months does not qualify"
+      - "A taxpayer who does not meet every qualification requirement receives 0"
+    testRef: "tests/engine/state/ca-form-540-dependent-parent-credit.test.ts::CA Form 540 Dependent Parent credit Line 3 - married filing separately with a qualifying dependent parent household uses the capped $610 credit"

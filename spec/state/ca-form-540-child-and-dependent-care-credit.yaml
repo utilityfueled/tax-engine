@@ -1,0 +1,122 @@
+form: "California Form 540 Line 40 Child and Dependent Care Expenses Credit"
+fullName: "California Form FTB 3506 Part III for Form 540 line 40"
+taxYear: 2025
+irsReference: "https://www.ftb.ca.gov/forms/2025/2025-3506-instructions.html"
+
+notes: |
+  This module implements the resident Form 540 line 40 credit path from 2025
+  form FTB 3506 Part III. It assumes the caller already has validated the
+  qualifying-person and provider records that belong on FTB 3506 Part II and
+  Part III line 2, and that any nonresident or part-year California-source
+  earned-income allocation has already been handled upstream.
+  State-specific rules reflected here:
+  - Only care provided in California is eligible, so the input expenses must be
+    California-qualified care expenses.
+  - If the taxpayer completed FTB 3506 Part IV for dependent care benefits,
+    Part III line 3 must use Part IV line 33 instead of the raw Part III line 2
+    expense total.
+  - Part III line 5 requires the spouse's line-5 earned-income amount when
+    filing jointly, including any student-or-disabled deemed-income adjustments,
+    so this module accepts the line 5 amount as an input instead of recomputing
+    the monthly worksheet.
+  - Married-filing-separately taxpayers qualify only if they meet Section E of
+    the instructions and therefore may use their own earned income on line 5.
+  - Line 11 prior-year expenses paid in 2025 comes from the Side 2 worksheet
+    and is accepted as a supported upstream input.
+
+lines:
+  - line: "3"
+    description: "Qualified expenses for the current-year credit base"
+    formula: "If a supported Part IV line 33 override is supplied, use it; otherwise use min(sum of qualified California care expenses, $3,000 for one qualifying person, $6,000 for two or more)"
+    inputs:
+      - "Qualified California care expenses from FTB 3506 Part III line 2 column (e)"
+      - "Qualifying person count"
+      - "Optional FTB 3506 Part IV line 33 override"
+    edgeCases:
+      - "One qualifying person caps line 3 at $3,000"
+      - "Two or more qualifying persons cap line 3 at $6,000"
+      - "When dependent care benefits apply, Part IV line 33 replaces the raw expense total"
+    testRef: "tests/engine/state/ca-form-540-child-and-dependent-care-credit.test.ts::CA Form 540 line 40 Line 3 - one qualifying person is capped at $3,000"
+
+  - line: "4"
+    description: "Taxpayer earned income"
+    formula: "Supported input for FTB 3506 Part III line 4"
+    inputs:
+      - "Taxpayer earned income"
+    testRef: "tests/engine/state/ca-form-540-child-and-dependent-care-credit.test.ts::CA Form 540 line 40 Line 6 - the credit base uses the smallest of lines 3, 4, and 5"
+
+  - line: "5"
+    description: "Comparison earned income"
+    formula: "If filing status is married filing jointly, use the supported FTB 3506 line 5 spouse earned-income amount; otherwise use line 4. Married-filing-separately taxpayers may use line 4 only when they meet Section E."
+    inputs:
+      - "Filing status"
+      - "Taxpayer earned income"
+      - "Optional spouse line 5 earned-income amount"
+      - "Married filing separately Section E qualification flag"
+    edgeCases:
+      - "Single, head of household, qualifying surviving spouse, and Section E married-filing-separately taxpayers reuse line 4 on line 5"
+      - "Joint filers use the supported spouse line 5 amount"
+    testRef: "tests/engine/state/ca-form-540-child-and-dependent-care-credit.test.ts::CA Form 540 line 40 Line 5 - non-joint filers reuse line 4"
+
+  - line: "6"
+    description: "Current-year expense limit before percentages"
+    formula: "min(Line 3, Line 4, Line 5)"
+    inputs:
+      - "FTB 3506 line 3"
+      - "FTB 3506 line 4"
+      - "FTB 3506 line 5"
+    testRef: "tests/engine/state/ca-form-540-child-and-dependent-care-credit.test.ts::CA Form 540 line 40 Line 6 - the credit base uses the smallest of lines 3, 4, and 5"
+
+  - line: "7"
+    description: "Federal AGI decimal amount"
+    formula: "35% if federal AGI is $15,000 or less; otherwise reduce by 1 percentage point for each $2,000 or fraction thereof above $15,000, floor at 20%"
+    inputs:
+      - "Federal AGI"
+    edgeCases:
+      - "$15,000 uses .35"
+      - "$15,001 uses .34"
+      - "$43,000 and above use .20"
+    testRef: "tests/engine/state/ca-form-540-child-and-dependent-care-credit.test.ts::CA Form 540 line 40 Line 7 - federal AGI of $15,001 uses a .34 decimal"
+
+  - line: "8"
+    description: "Current-year base amount after the federal AGI decimal"
+    formula: "Round(Line 6 × Line 7) to the nearest dollar"
+    inputs:
+      - "FTB 3506 line 6"
+      - "FTB 3506 line 7"
+    testRef: "tests/engine/state/ca-form-540-child-and-dependent-care-credit.test.ts::CA Form 540 line 40 Line 12 - current-year credit computes through line 10"
+
+  - line: "9"
+    description: "California AGI percentage for the state credit"
+    formula: "0.50 when federal AGI is $40,000 or less; 0.43 when federal AGI is over $40,000 but not over $70,000; 0.34 when federal AGI is over $70,000 but not over $100,000; taxpayers over $100,000 do not qualify"
+    inputs:
+      - "Federal AGI"
+    edgeCases:
+      - "$40,000 uses .50"
+      - "$40,001 uses .43"
+      - "$70,001 uses .34"
+      - "$100,001 disqualifies the credit"
+    testRef: "tests/engine/state/ca-form-540-child-and-dependent-care-credit.test.ts::CA Form 540 line 40 Line 9 - federal AGI above $100,000 disqualifies the credit"
+
+  - line: "10"
+    description: "Current-year California child and dependent care credit"
+    formula: "Round(Line 8 × Line 9) to the nearest dollar; if the taxpayer is disqualified, enter 0"
+    inputs:
+      - "FTB 3506 line 8"
+      - "FTB 3506 line 9"
+    testRef: "tests/engine/state/ca-form-540-child-and-dependent-care-credit.test.ts::CA Form 540 line 40 Line 12 - current-year credit computes through line 10"
+
+  - line: "11"
+    description: "Credit for prior-year expenses paid in 2025"
+    formula: "Supported upstream input from the 2025 FTB 3506 Side 2 worksheet"
+    inputs:
+      - "FTB 3506 Side 2 worksheet result"
+    testRef: "tests/engine/state/ca-form-540-child-and-dependent-care-credit.test.ts::CA Form 540 line 40 Line 11 - prior-year expenses paid in 2025 add to the credit"
+
+  - line: "12"
+    description: "Form 540 line 40 credit"
+    formula: "Line 10 + Line 11"
+    inputs:
+      - "FTB 3506 line 10"
+      - "FTB 3506 line 11"
+    testRef: "tests/engine/state/ca-form-540-child-and-dependent-care-credit.test.ts::CA Form 540 line 40 Line 12 - current-year credit computes through line 10"

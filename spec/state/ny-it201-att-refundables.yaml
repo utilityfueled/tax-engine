@@ -1,0 +1,106 @@
+form: "New York IT-201-ATT Refundable Credits"
+fullName: "New York State Form IT-201-ATT Part 1 Section D Refundable Credits"
+taxYear: 2025
+irsReference: "https://www.tax.ny.gov/pdf/2025/inc/it201att_2025_fill_in.pdf"
+
+notes: |
+  Form IT-201-ATT Part 1 Section D aggregates refundable credits that flow to
+  Form IT-201 line 71. The attachment itself does not compute the underlying
+  credits; it carries amounts from supporting forms or code-based line items and
+  totals them.
+
+  This supported slice is limited to tax year 2025. The module must reject
+  unsupported tax years instead of silently reusing 2025 attachment lines for
+  a different form revision.
+
+  This module covers the 2025 IT-201-ATT Section D lines:
+  - Line 11: Farmers' school tax credit
+  - Line 12: Other refundable credits (code-based detail lines 12a through 12l)
+  - Line 13: Add lines 11 and 12
+  - Line 14: Carry line 13 to the back page
+  - Line 15: New York State claim of right credit
+  - Line 16: New York City claim of right credit
+  - Line 17: Yonkers claim of right credit
+  - Line 17a: MCTMT claim of right credit
+  - Line 18: Total refundable credits for Form IT-201 line 71
+
+lines:
+  - line: "11"
+    description: "Farmers' school tax credit"
+    formula: "Passthrough amount from the applicable farmers' school tax credit computation"
+    inputs:
+      - "Farmers' school tax credit amount"
+    notes: |
+      IT-201-ATT line 11 receives the refundable farmers' school tax credit.
+      This module treats that amount as an input and does not recompute the
+      underlying farm credit formula.
+    testRef: "tests/engine/state/ny-it201-att-refundables.test.ts::Line 11 through line 18 - Section D totals farmers credit, other refundable credits, and claim of right credits"
+
+  - line: "12"
+    description: "Other refundable credits"
+    formula: "Sum of code-based line items 12a through 12l, or direct total passthrough"
+    inputs:
+      - "Detailed code/amount entries for lines 12a through 12l"
+      - "Direct line 12 total passthrough"
+    notes: |
+      Section D provides twelve code-based slots (lines 12a through 12l).
+      If detailed entries are supplied, line 12 equals their sum. Otherwise a
+      direct line 12 total may be provided as a passthrough.
+    edgeCases:
+      - "At most 12 detailed line 12 entries are allowed"
+      - "Detailed line 12 entries override the direct total passthrough when both are provided"
+      - "With no entries and no passthrough, line 12 is zero"
+    testRef: "tests/engine/state/ny-it201-att-refundables.test.ts::Line 12 - detailed other refundable credit entries override the direct passthrough total"
+
+  - line: "13"
+    description: "Front-page refundable credit subtotal"
+    formula: "Line 11 + Line 12"
+    inputs:
+      - "Farmers' school tax credit (line 11)"
+      - "Other refundable credits (line 12)"
+    testRef: "tests/engine/state/ny-it201-att-refundables.test.ts::Line 13 and line 14 - line 14 carries forward the front-page subtotal"
+
+  - line: "14"
+    description: "Amount from line 13 on the front page"
+    formula: "Line 13"
+    inputs:
+      - "Front-page subtotal (line 13)"
+    notes: "The back page line 14 is a direct carryforward of line 13."
+    testRef: "tests/engine/state/ny-it201-att-refundables.test.ts::Line 13 and line 14 - line 14 carries forward the front-page subtotal"
+
+  - line: "15"
+    description: "New York State claim of right credit"
+    formula: "Passthrough amount"
+    inputs:
+      - "New York State claim of right credit amount"
+    testRef: "tests/engine/state/ny-it201-att-refundables.test.ts::Line 11 through line 18 - Section D totals farmers credit, other refundable credits, and claim of right credits"
+
+  - line: "16"
+    description: "New York City claim of right credit"
+    formula: "Passthrough amount"
+    inputs:
+      - "New York City claim of right credit amount"
+    testRef: "tests/engine/state/ny-it201-att-refundables.test.ts::Line 11 through line 18 - Section D totals farmers credit, other refundable credits, and claim of right credits"
+
+  - line: "17"
+    description: "Yonkers claim of right credit"
+    formula: "Passthrough amount"
+    inputs:
+      - "Yonkers claim of right credit amount"
+    testRef: "tests/engine/state/ny-it201-att-refundables.test.ts::Line 11 through line 18 - Section D totals farmers credit, other refundable credits, and claim of right credits"
+
+  - line: "17a"
+    description: "MCTMT claim of right credit"
+    formula: "Passthrough amount"
+    inputs:
+      - "MCTMT claim of right credit amount"
+    testRef: "tests/engine/state/ny-it201-att-refundables.test.ts::Line 11 through line 18 - Section D totals farmers credit, other refundable credits, and claim of right credits"
+
+  - line: "18"
+    description: "Total New York State, New York City, Yonkers, and MCTMT other refundable credits"
+    formula: "Line 14 + Line 15 + Line 16 + Line 17 + Line 17a"
+    inputs:
+      - "Line 14 carryforward"
+      - "Claim of right credits on lines 15, 16, 17, and 17a"
+    notes: "Transfer line 18 to Form IT-201 line 71."
+    testRef: "tests/engine/state/ny-it201-att-refundables.test.ts::Line 11 through line 18 - Section D totals farmers credit, other refundable credits, and claim of right credits"

@@ -1,0 +1,96 @@
+form: "NJ-1040 Schedule A"
+fullName: "New Jersey Credit for Income or Wage Tax Paid to Other Jurisdictions"
+taxYear: 2025
+reference: "https://www.nj.gov/treasury/taxation/pdf/current/1040i.pdf"
+
+notes: |
+  NJ residents who earn income in another state and pay income or wage tax to
+  that state may claim a credit on NJ-1040 Line 44 to avoid double taxation.
+
+  The credit is computed on NJ-1040 Schedule A (not to be confused with federal
+  Schedule A). Each other jurisdiction is listed separately, then credits are
+  summed.
+
+  For each jurisdiction:
+    Column A: Name of the other state/jurisdiction
+    Column B: Income subject to tax in that jurisdiction
+    Column C: Tax paid to that jurisdiction
+    Credit = lesser of:
+      (a) Tax actually paid to the other jurisdiction (Column C)
+      (b) (Column B / NJ gross income) × NJ tax (proportional share)
+
+  The total credit across all jurisdictions cannot exceed NJ tax (Line 43).
+
+  Reciprocal agreements:
+  - NJ has a reciprocal agreement with PA for WAGES ONLY. NJ residents who
+    earn wages in PA should not have PA tax withheld (they file for a refund).
+    If PA tax was withheld on wages, the filer should seek a PA refund rather
+    than claiming an NJ credit. However, non-wage income from PA (business,
+    rental, etc.) would qualify for the credit.
+
+  Local taxes:
+  - City wage taxes (e.g., Philadelphia wage tax, NYC city income tax) paid
+    by NJ residents MAY qualify for this credit if the local tax is an income
+    or wage tax (not a sales or property tax).
+
+  Key constraints:
+  - Credit is nonrefundable — cannot exceed NJ tax
+  - The income ratio is capped at 1.0 (other-state income cannot exceed NJ
+    gross income for credit purposes)
+  - If NJ gross income is zero, no credit is available (division by zero guard)
+  - Part-year residents may need to prorate
+
+lines:
+  - line: "column-b"
+    description: "Income subject to tax in other jurisdiction"
+    formula: "Total income earned in/sourced to the other state"
+    inputs:
+      - "Other state income allocation"
+    notes: |
+      This is the income that the other state taxes. For wages, it's the amount
+      on the other state's W-2 Box 16 (state wages). For business income, it's
+      the portion allocable to that state.
+    testRef: "tests/engine/state/nj-1040-other-jurisdiction-credit.test.ts::NJ-1040 Schedule A - single state with income less than NJ gross income"
+
+  - line: "column-c"
+    description: "Tax paid to other jurisdiction"
+    formula: "Actual income/wage tax paid to the other state"
+    inputs:
+      - "Other state tax withheld (W-2 Box 17)"
+      - "Other state tax payments"
+    notes: "Only income/wage taxes qualify. Property tax, sales tax, etc. do not."
+    testRef: "tests/engine/state/nj-1040-other-jurisdiction-credit.test.ts::NJ-1040 Schedule A - credit limited to tax actually paid"
+
+  - line: "proportional-limit"
+    description: "Maximum credit per jurisdiction (proportional limit)"
+    formula: "(Column B / NJ gross income) × NJ tax"
+    inputs:
+      - "Column B (income in other state)"
+      - "NJ gross income (Line 29)"
+      - "NJ tax (Line 43)"
+    edgeCases:
+      - "Ratio cannot exceed 1.0"
+      - "If NJ gross income is zero, credit is zero"
+    testRef: "tests/engine/state/nj-1040-other-jurisdiction-credit.test.ts::NJ-1040 Schedule A - proportional limit caps credit"
+
+  - line: "per-jurisdiction-credit"
+    description: "Credit for each jurisdiction"
+    formula: "min(Column C, proportional limit)"
+    inputs:
+      - "Column C (tax paid to other state)"
+      - "Proportional limit"
+    notes: "The credit is the lesser of the tax paid and the proportional limit."
+    testRef: "tests/engine/state/nj-1040-other-jurisdiction-credit.test.ts::NJ-1040 Schedule A - credit is lesser of tax paid and proportional limit"
+
+  - line: "44"
+    description: "Total credit for taxes paid to other jurisdictions"
+    formula: "Sum of per-jurisdiction credits, capped at NJ tax (Line 43)"
+    inputs:
+      - "Per-jurisdiction credits"
+      - "NJ tax (Line 43)"
+    edgeCases:
+      - "Total credit cannot exceed NJ tax"
+      - "Multiple states are each computed independently then summed"
+      - "Zero NJ gross income produces zero credit"
+      - "All income earned in another state (ratio = 1.0) → credit = min(other tax, NJ tax)"
+    testRef: "tests/engine/state/nj-1040-other-jurisdiction-credit.test.ts::NJ-1040 Schedule A - total credit capped at NJ tax"

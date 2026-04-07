@@ -1,0 +1,432 @@
+form: "IL-Orchestrator"
+fullName: "Illinois State Return Orchestrator — Federal-to-State Bridge"
+taxYear: 2025
+reference: "https://tax.illinois.gov/forms/incometax/individual/il-1040.html"
+
+notes: |
+  The IL orchestrator bridges the federal TaxReturnResult to the IL-1040 input
+  interface. It automatically extracts federal values (AGI, EIC, retirement income,
+  tax-exempt interest) and maps them to their IL-1040 counterparts so the caller
+  only needs to supply IL-specific inputs (property tax, 529 contributions,
+  withholding, etc.).
+
+  Automatic mappings from federal result:
+  - federalAGI ← TaxReturnResult.agi
+  - federalEIC ← TaxReturnResult.earnedIncomeCredit
+  - taxExemptInterest ← TaxReturnResult.taxExemptInterest (Form 1040 Line 2a)
+  - retirementIncomeSubtraction ← sum of socialSecurityBenefitsTaxable +
+    iraDistributionsTaxable + pensionDistributionsTaxable (IL-1040 Line 5)
+  - taxableSavingsBondInterest ← when TaxReturnResult.form8815 is present,
+    max(totalInterest - excludableSavingsBondInterest, 0) may flow to
+    Schedule M Line 22 if the caller did not explicitly supply that line
+  - illinoisExemptTaxExemptInterest ← optional IL-specific shortcut that feeds
+    Schedule M Line 34 so Illinois-exempt municipal bond interest is removed
+    from the Line 2 addback without requiring the caller to build a full
+    Schedule M payload
+  - k1RetirementPaymentsSubtraction ← optional IL-specific shortcut that feeds
+    Schedule M Line 14 for 2025+ K-1 retirement-payment subtractions that the
+    instructions exclude from IL-1040 Line 5
+
+  IL-specific inputs that must be provided separately:
+  - Filing status details (claimedAsDependent, age65, blind, dependents)
+  - Schedule M inputs (529 contributions, ABLE, US govt interest, etc.)
+  - K-1 retired-partner / beneficiary retirement payments reported on
+    Schedule M Line 14
+  - Schedule ICR inputs (property tax, K-12 expenses, volunteer credit)
+  - Schedule CR inputs (other-state income allocation and tax paid)
+  - Payment information (IL withholding, estimated payments, pass-through)
+  - IL-2210 underpayment penalty inputs, including the IL-1040 Step 10
+    no-penalty checkbox exemptions for farmers, nursing-home residents age 65+,
+    and taxpayers not required to file the prior-year IL-1040
+
+  Schedule IL-E/EIC auto-flow:
+  When scheduleEEIC is provided, the orchestrator automatically derives dependentCount
+  and the Step 2 dependent-under-12 flag from the schedule's dependent list. The caller
+  does not need to set these separately. Step 3 qualifying children that are not claimed
+  as dependents do not create Illinois Child Tax Credit eligibility. The IL-1040 also
+  uses the schedule's dependent count for Line 10d exemptions (per IL instructions:
+  "Enter the number from Schedule IL-E/EIC, Step 2, Line 1"). If the caller wants a
+  nonzero dependent exemption or Illinois EITC/Child Tax Credit, they must attach
+  Schedule IL-E/EIC; the supported engine no longer computes those lines from bare
+  dependent/EIC fields alone.
+
+lines:
+  - line: "AGI"
+    description: "Federal AGI flows to IL-1040 Line 1"
+    formula: "TaxReturnResult.agi → IL1040Input.federalAGI"
+    testRef: "tests/engine/state/il-orchestrator.test.ts::IL orchestrator maps federal AGI to IL-1040 Line 1"
+
+  - line: "EIC"
+    description: "Federal EIC flows to IL EITC calculation (Line 29)"
+    formula: "TaxReturnResult.earnedIncomeCredit → IL1040Input.federalEIC"
+    testRef: "tests/engine/state/il-orchestrator.test.ts::IL orchestrator maps federal EIC to IL EITC"
+
+  - line: "TaxExemptInterest"
+    description: "Federal Form 1040 Line 2a flows to IL-1040 Line 2"
+    formula: "TaxReturnResult.taxExemptInterest → IL1040Input.taxExemptInterest"
+    notes: |
+      Illinois first adds back the federal tax-exempt amount on IL-1040 Line 2.
+      Any Illinois-exempt municipal bond interest is then removed on Schedule M,
+      Line 34.
+    testRef: "tests/engine/state/il-orchestrator.test.ts::IL orchestrator maps tax-exempt interest to IL-1040 Line 2"
+
+  - line: "ScheduleMLine34Shortcut"
+    description: "Illinois-exempt municipal bond interest convenience mapping"
+    formula: "ILStateInput.illinoisExemptTaxExemptInterest → Schedule M Line 34 (create or augment Schedule M input)"
+    notes: |
+      The 2025 Schedule M instructions direct filers to subtract Illinois state
+      and local government bond interest on Line 34 after it was included in the
+      IL-1040 Line 2 addback. The orchestrator accepts a dedicated convenience
+      input so callers do not need to construct a mostly-empty Schedule M solely
+      to neutralize the Illinois-exempt portion of federal tax-exempt interest.
+      If both scheduleM and illinoisExemptTaxExemptInterest are provided, the
+      orchestrator adds the shortcut amount to the existing Schedule M Line 34
+      amount.
+    testRef: "tests/engine/state/il-orchestrator.test.ts::IL orchestrator maps Illinois-exempt municipal bond interest into Schedule M Line 34"
+
+  - line: "ScheduleMLine14K1RetirementShortcut"
+    description: "K-1 retired-partner / beneficiary retirement-payment convenience mapping"
+    formula: "ILStateInput.k1RetirementPaymentsSubtraction → Schedule M Line 14 (create or augment Schedule M input)"
+    reference: "2025 IL-1040 Instructions, Line 5; 2025 Schedule M Instructions, Line 14"
+    notes: |
+      The 2025 Illinois IL-1040 instructions direct filers not to enter on
+      Line 5 certain retirement payments made directly to retired partners on
+      Schedule K-1-P and beneficiary-share / retired-partner retirement
+      payments reported on Schedule K-1-T. Those amounts belong on Schedule M,
+      Line 14 instead.
+
+      The orchestrator accepts a dedicated convenience input so callers can
+      supply this 2025+ subtraction without constructing a full Schedule M
+      payload. If both scheduleM and k1RetirementPaymentsSubtraction are
+      provided, the orchestrator adds the shortcut amount to the existing
+      Schedule M Line 14 amount.
+    testRef: "tests/engine/state/il-orchestrator.test.ts::IL orchestrator maps K-1 retirement payments into Schedule M Line 14 instead of IL-1040 Line 5"
+
+  - line: "RetirementSubtraction"
+    description: "Sum of taxable retirement income in federal AGI subtracted on IL-1040 Line 5"
+    formula: "TaxReturnResult.socialSecurityBenefitsTaxable + iraDistributionsTaxable + pensionDistributionsTaxable"
+    notes: |
+      Illinois subtracts all retirement income that was included in federal AGI.
+      This includes Social Security (Line 6b), IRA distributions (Line 4b), and
+      pension distributions (Line 5b). Self-employed retirement plan distributions
+      and government pensions are also eligible but require user input.
+
+      Do not use Line 5 for the 2025+ K-1 retired-partner / beneficiary
+      retirement payments that the Illinois instructions route to Schedule M
+      Line 14.
+    testRef: "tests/engine/state/il-orchestrator.test.ts::IL orchestrator auto-computes retirement income subtraction"
+
+  - line: "ScheduleMLine22Federal8815Fallback"
+    description: "Federal Form 8815 taxable savings bond interest convenience mapping"
+    formula: "If TaxReturnResult.form8815 exists and ILStateInput.scheduleM.usGovernmentInterest is zero or Schedule M is omitted, flow max(form8815.totalInterest - form8815.excludableSavingsBondInterest, 0) into Schedule M Line 22"
+    reference: "2025 Schedule M Instructions, Line 22; 2025 IRS Form 8815, Line 14"
+    notes: |
+      Illinois Schedule M Line 22 subtracts U.S. government interest that was
+      included in federal AGI. When the federal return already computed Form
+      8815, the federal engine knows how much savings bond interest remained
+      taxable after the federal education exclusion.
+
+      The orchestrator uses that taxable remainder only as a fallback when the
+      caller did not explicitly provide a non-zero Schedule M Line 22 amount.
+      This improves Illinois default parity without double counting a manually
+      keyed full Line 22 amount.
+    testRef: "tests/engine/state/il-orchestrator.test.ts::IL orchestrator maps taxable federal savings bond interest from Form 8815 into Schedule M Line 22 when Line 22 is not provided"
+
+  - line: "FilingStatus"
+    description: "Filing status from federal return"
+    formula: "TaxReturnResult.filingStatus → IL1040Input.filingStatus"
+    testRef: "tests/engine/state/il-orchestrator.test.ts::IL orchestrator passes filing status through"
+
+  - line: "ScheduleILWIT"
+    description: "Schedule IL-WIT passthrough for IL-1040 Line 25"
+    formula: "ILStateInput.scheduleILWIT → IL1040Input.scheduleILWIT (passthrough)"
+    notes: |
+      The orchestrator passes withholding records through so IL-1040 can compute
+      Line 25 from Schedule IL-WIT Line 11 instead of requiring the caller to
+      pre-sum Illinois withholding manually.
+    testRef: "tests/engine/state/il-orchestrator.test.ts::IL orchestrator passes Schedule IL-WIT records through to IL-1040 Line 25"
+
+  - line: "ScheduleNR"
+    description: "Schedule NR passthrough for nonresidents and part-year residents"
+    formula: "ILStateInput.scheduleNR → IL1040Input.scheduleNR (passthrough)"
+    notes: |
+      Schedule NR computes the allocation decimal (IL income / total income),
+      which overrides IL-1040 Lines 11/12 and allocates EITC/CTC.
+      The orchestrator passes the Schedule NR input through to the IL-1040
+      calculation, which invokes calculateScheduleNR internally.
+
+      Key interactions tested through the orchestrator:
+      - Retirement income auto-mapping: the orchestrator auto-computes
+        retirement subtraction from federal SS/IRA/pension amounts. With NR,
+        Column B retirement is typically $0 for nonresidents (not IL-source).
+      - EITC/CTC allocation: the NR allocation decimal reduces IL EITC and
+        CTC for part-year/nonresidents.
+      - Schedule IL-E/EIC + NR: dependent count and CTC eligibility flow
+        from Schedule E-EIC while credits are NR-allocated.
+      - Schedule ICR + NR: property/education credits apply against NR tax.
+      - Schedule M + NR: additions/subtractions flow through both schedules.
+    edgeCases:
+      - "Nonresident with auto-mapped retirement — Column B retirement = $0"
+      - "Part-year resident with partial IL income — allocation decimal < 1.0"
+      - "NR allocation reduces EITC and CTC proportionally"
+      - "Multiple schedules (NR + ICR + M + E-EIC) through orchestrator"
+    testRef: "tests/engine/state/il-orchestrator.test.ts::Orchestrator Schedule NR — nonresident basic flow"
+
+  - line: "SharedInputPayload"
+    description: "Validated Illinois payload flows through the shared tax-year input"
+    formula: "TaxYearInput.stateReturns.illinois → normalize decimal strings/counts → calculateIllinoisReturn(federalResult, ilInputs)"
+    notes: |
+      The shared engine accepts an optional Illinois payload on the
+      validated TaxYearInput object. Monetary fields are validated as decimal
+      strings at the schema boundary, converted to Decimal inside the engine,
+      and then passed to the existing Illinois orchestrator.
+    testRef: "tests/engine/state/il-attached-return.test.ts::calculateFederalTax attaches an Illinois resident return from TaxYearInput.stateReturns.illinois"
+
+  - line: "SharedInputHealthInsuranceCheckbox"
+    description: "Validated Illinois shared payload carries the Step 12, Line 42 health insurance selections"
+    formula: "TaxYearInput.stateReturns.illinois.healthInsuranceCheckbox → calculateIllinoisReturn(...).healthInsuranceCheckbox"
+    reference: "2025 IL-1040 Alternate Filing Methods, Step 12 Line 42"
+    notes: |
+      The shared engine accepts the current-year Illinois health insurance
+      outreach selections on the validated Illinois payload and passes them
+      through unchanged to the attached IL-1040 result.
+
+      The spouse checkbox is only valid when the federal filing status is
+      married filing jointly.
+    testRef: "tests/engine/state/il-attached-return.test.ts::calculateFederalTax carries the Illinois health insurance checkbox selections through the attached return"
+
+  - line: "SharedInputAutoScheduleILWITW2"
+    description: "Shared Illinois payload auto-derives Schedule IL-WIT rows from qualifying W-2 withholding"
+    formula: "When stateReturns.illinois omits Line 25 and Schedule IL-WIT, map qualifying Illinois Form W-2 records into Schedule IL-WIT rows using employer EIN → Column B, Box 1 wages → Column C, Box 16 state wages → Column D, and Box 17 Illinois withholding → Column E"
+    reference: "2025 IL-1040 Schedule IL-WIT Instructions, Columns B-E Form Reference Tables (W-2)"
+    notes: |
+      The shared input layer already totals Illinois withholding from raw tax
+      documents. To keep Line 25 auditable, it should also auto-build matching
+      Schedule IL-WIT rows when the raw W-2 payload includes the Illinois
+      fields required by the 2025 instructions.
+
+      Supported auto-derivation preconditions for a W-2 row:
+      - Form W-2 state is Illinois and Box 17 withholding is positive
+      - employer EIN is present for Column B
+      - stateWages is present for Column D
+      - if filing jointly, accountHolder is present so the row can be assigned
+        to the taxpayer or spouse section of Schedule IL-WIT
+    testRef: "tests/engine/state/il-attached-return.test.ts::calculateFederalTax keeps Illinois Line 25 withholding but skips auto-attached Schedule IL-WIT rows for joint W-2 documents without owner tags"
+
+  - line: "SharedInputAutoScheduleILWIT1099R"
+    description: "Shared Illinois payload auto-derives Schedule IL-WIT rows from qualifying 1099-R withholding"
+    formula: "When stateReturns.illinois omits Line 25 and Schedule IL-WIT, map qualifying Form 1099-R records with Illinois withholding into Schedule IL-WIT rows using payer TIN → Column B, gross distribution → Column C, state distribution → Column D, and Illinois withholding → Column E"
+    reference: "2025 IL-1040 Schedule IL-WIT Instructions, Columns B-E Form Reference Tables (1099-R)"
+    notes: |
+      The shared input layer already totals Illinois withholding from raw tax
+      documents. To keep Line 25 auditable, it should also auto-build matching
+      Schedule IL-WIT rows when the raw 1099-R payload includes the Illinois
+      fields required by the 2025 instructions.
+
+      Supported auto-derivation preconditions for a 1099-R row:
+      - Form 1099-R state is Illinois and Box 14 withholding is positive
+      - payerTin is present for Column B
+      - stateDistribution is present for Column D
+      - if filing jointly, accountHolder is present so the row can be assigned
+        to the taxpayer or spouse section of Schedule IL-WIT
+    testRef: "tests/engine/state/il-attached-return.test.ts::calculateFederalTax auto-attaches Schedule IL-WIT from qualifying Illinois 1099-R documents when shared payload omits Illinois withholding"
+
+  - line: "SharedInputAutoScheduleILWITW2G"
+    description: "Shared Illinois payload auto-derives Schedule IL-WIT rows from qualifying W-2G withholding"
+    formula: "When stateReturns.illinois omits Line 25 and Schedule IL-WIT, map qualifying Illinois Form W-2G records into Schedule IL-WIT rows using payer TIN → Column B, Box 1 reportable winnings → Column C, Box 14 state winnings → Column D, and Box 15 Illinois withholding → Column E"
+    reference: "2025 IL-1040 Schedule IL-WIT Instructions, Columns B-E Form Reference Tables (W-2G)"
+    notes: |
+      Illinois' 2025 Schedule IL-WIT instructions specify that Form W-2G uses
+      the payer's TIN for Column B, Box 1 for Column C, Box 14 for Column D,
+      and Box 15 for Column E.
+
+      Supported auto-derivation preconditions for a W-2G row:
+      - Form W-2G state is Illinois and Box 15 withholding is positive
+      - payerTin is present for Column B
+      - stateWinnings is present for Column D
+      - if filing jointly, accountHolder is present so the row can be assigned
+        to the taxpayer or spouse section of Schedule IL-WIT
+
+      The downstream Schedule IL-WIT calculator already follows the official
+      instruction that more than five W-2Gs from the same payer may be
+      aggregated by payer FEIN after the rows are derived.
+    testRef: "tests/engine/state/il-attached-return.test.ts::calculateFederalTax auto-attaches Schedule IL-WIT from qualifying Illinois W-2G documents when shared payload omits Illinois withholding"
+
+  - line: "SharedInputScheduleNR"
+    description: "Validated Illinois shared payload supports attached Schedule NR data"
+    formula: "TaxYearInput.stateReturns.illinois.scheduleNR → normalize decimal-string dual columns → calculateIllinoisReturn(... scheduleNR)"
+    reference: "2025 IL-1040 Schedule NR Instructions, Step 5; 2025 IL-1040 Schedule IL-E/EITC Instructions, Step 4, Line 8"
+    notes: |
+      The shared input layer accepts Schedule NR for nonresident and part-year
+      Illinois returns. It normalizes every Column A / Column B amount to
+      Decimal and passes the result to the existing Illinois orchestrator.
+
+      The shared payload intentionally omits Schedule NR Line 47 full base
+      income and Line 49 total exemptions because IL-1040 already computes
+      those values from the attached federal return and exemption inputs before
+      invoking Schedule NR.
+
+      This allows calculateFederalTax to attach an Illinois nonresident or
+      part-year return that:
+      - overrides IL-1040 Lines 11 and 12 with Schedule NR Lines 51 and 52
+      - exposes Schedule NR Line 48 allocation decimal on the attached return
+      - supports downstream IL EITC / Child Tax Credit allocation when
+        Schedule IL-E/EIC is also attached
+    testRef: "tests/engine/state/il-attached-return.test.ts::calculateFederalTax attaches an Illinois part-year return from TaxYearInput.stateReturns.illinois.scheduleNR"
+
+  - line: "SharedInputScheduleICRK12Worksheet"
+    description: "Validated Illinois shared payload preserves the Schedule ICR K-12 worksheet"
+    formula: "TaxYearInput.stateReturns.illinois.scheduleICR.k12EducationExpenseWorksheet → normalize worksheet tuition strings to Decimal → calculateIllinoisReturn(... scheduleICR)"
+    reference: "2025 Schedule ICR, page 3, K-12 Education Expense Credit Worksheet; 2025 Schedule ICR Instructions, Step 2, Line 7a"
+    notes: |
+      Illinois directs taxpayers claiming the education expense credit to use
+      the page-3 worksheet total on Schedule ICR Line 7a. The shared Illinois
+      payload therefore needs to preserve the worksheet rows, not just a raw
+      Line 7a total, so attached returns can keep the same student-by-student
+      audit trail as the standalone Schedule ICR calculator.
+
+      When the worksheet is attached through the shared payload, the Illinois
+      engine should:
+      - validate each worksheet row at the schema boundary
+      - normalize Column G tuition/book/lab-fee amounts from decimal strings
+      - let the worksheet Line 15 total override any direct Line 7a placeholder
+      - expose the computed worksheet and resulting education credit on the
+        attached Illinois return
+    testRef: "tests/engine/state/il-attached-return.test.ts::calculateFederalTax attaches an Illinois Schedule ICR K-12 worksheet from the shared Illinois payload"
+
+  - line: "SharedInputIL2210AnnualizedChildTaxCredit"
+    description: "Validated Illinois shared payload preserves annualized IL-2210 child-credit timing"
+    formula: "TaxYearInput.stateReturns.illinois.il2210.annualizedInstallmentMethod.periods[*].ilChildTaxCredit → normalize decimal strings → calculateIllinoisReturn(... il2210)"
+    reference: "2025 Form IL-2210, Step 6, Line 46"
+    notes: |
+      The shared input layer must preserve the optional per-period Illinois Child
+      Tax Credit amounts used by the IL-2210 annualized income installment
+      method. For tax year 2025, the IL-2210 worksheet excludes the restored
+      Illinois Child Tax Credit in Columns A and B and allows it in Columns C
+      and D when applicable.
+
+      Without this passthrough, attached Illinois returns lose the line-46
+      period detail and incorrectly treat all four annualized columns as if the
+      child credit were never available.
+    testRef: "tests/engine/state/il-attached-return.test.ts::calculateFederalTax preserves IL-2210 annualized child tax credit timing from the shared Illinois payload"
+
+  - line: "SharedInputLine25Fallback"
+    description: "Shared Illinois payload falls back to supported raw-document withholding when Line 25 input is omitted"
+    formula: "If scheduleILWIT is absent and ilWithholding is 0, use sum of supported Illinois withholding from W-2 Box 17 + W-2G Box 15 + 1099-R Box 14 + 1099-G Box 11 + 1099-MISC Box 16 + 1099-K Box 8 + 1099-NEC Box 5 + 1099-INT Box 17 + 1099-DIV Box 16 + 1099-B Box 16 where the document state is IL"
+    reference: "2025 IL-1040 Instructions Step 8 Line 25; 2025 Schedule IL-WIT Instructions, Columns B-E form reference tables"
+    notes: |
+      This resident-focused fallback improves shared-input parity when the caller
+      attaches an Illinois return but does not separately key Line 25.
+
+      The current shared-input schemas expose enough Illinois withholding detail
+      to support:
+      - W-2 Box 17 when W-2 state = IL
+      - W-2G Box 15 when W-2G state = IL
+      - 1099-R Box 14 when 1099-R state = IL
+      - 1099-G Box 11 when 1099-G state = IL
+      - 1099-MISC Box 16 when 1099-MISC state = IL
+      - 1099-K Box 8 when 1099-K state = IL
+      - 1099-NEC Box 5 when 1099-NEC state = IL
+      - 1099-INT Box 17 when 1099-INT state = IL
+      - 1099-DIV Box 16 when 1099-DIV state = IL
+      - 1099-B Box 16 when 1099-B state = IL
+
+      If the caller supplies a non-zero ilWithholding amount or an explicit
+      Schedule IL-WIT payload, the engine preserves that manual amount instead
+      of overriding it with derived document totals.
+    testRef: "tests/engine/state/il-attached-return.test.ts::calculateFederalTax derives Illinois Line 25 withholding from supported raw tax documents including 1099-INT, 1099-DIV, and 1099-B when shared payload omits it"
+
+  - line: "SharedInputScheduleILWITFallback"
+    description: "Shared Illinois payload auto-attaches Schedule IL-WIT rows when raw documents expose the required schedule columns"
+    formula: "If scheduleILWIT is absent, ilWithholding is 0, and every derived withholding source exposes the Schedule IL-WIT Column B-E data, build scheduleILWIT.records from those documents and let IL-1040 Line 25 flow from Schedule IL-WIT Line 11"
+    reference: "2025 Schedule IL-WIT Instructions, General Information; Step-by-Step Instructions; Columns B-E form reference tables"
+    notes: |
+      Illinois instructs taxpayers who enter an amount on IL-1040 Line 25 to
+      attach Schedule IL-WIT and the withholding forms that support it. The
+      shared-input layer therefore upgrades the raw-document fallback to a full
+      schedule attachment when the source documents expose the values needed for
+      Schedule IL-WIT Columns B-E.
+
+      For the current supported slice, the shared-input schemas expose enough
+      column-level data to derive compliant Schedule IL-WIT rows from:
+      - W-2 Box b / Box 1 / Box 16 / Box 17
+      - W-2G payer TIN / Box 1 / Box 14 / Box 15 when the shared payload
+        includes joint-return ownership if needed
+      - 1099-R payer TIN / Box 1 / Box 16 / Box 14 when the shared payload
+        includes joint-return ownership if needed
+      - 1099-G issued by the Illinois Department of Employment Security when
+        the shared payload includes the payer TIN (Column B source), uses Box 1
+        for both Columns C and D as directed by the IL-WIT instructions, and
+        provides joint-return ownership when needed to place the row on the
+        taxpayer or spouse section correctly
+      - 1099-MISC payer TIN / total of Boxes 1, 2, and 3 / Box 18 / Box 16
+        when the shared payload includes the payer TIN, Illinois state-income
+        amount, and joint-return ownership if needed
+      - 1099-K Box 7 / Box 1a / Box 1a / Box 8 when the shared payload
+        includes the state payer number from Box 7 and joint-return ownership
+        if needed
+      - 1099-NEC payer TIN / Box 1 / Box 7 / Box 5 when the shared payload
+        includes the payer TIN, Illinois state-compensation amount, and
+        joint-return ownership if needed
+      - 1099-INT payer TIN / Box 1 / Box 1 / Box 17 when the shared payload
+        includes the payer TIN and joint-return ownership if needed
+      - 1099-DIV payer TIN / Box 1a / Box 1b / Box 16 when the shared payload
+        includes the payer TIN and joint-return ownership if needed
+      - 1099-B payer TIN / Box 1d / Box 1d / Box 16 when the shared payload
+        includes the payer TIN and joint-return ownership if needed; because
+        the shared schema stores transactions instead of a raw Box 1d total,
+        the engine infers Box 1d by summing transaction proceeds
+
+      If any derived withholding comes from a supported Line 25 source whose
+      shared schema does not carry the required Schedule IL-WIT Column B payer
+      identifier or Illinois column amount, the engine keeps the existing
+      total-only Line 25 fallback and does not fabricate incomplete schedule
+      rows.
+    testRef: "tests/engine/state/il-attached-return.test.ts::calculateFederalTax auto-attaches Schedule IL-WIT from qualifying Illinois 1099-INT, 1099-DIV, and 1099-B documents when shared payload omits Illinois withholding"
+
+  - line: "SharedInputAutoScheduleILWIT1099Misc1099K1099Nec"
+    description: "Shared Illinois payload auto-derives Schedule IL-WIT rows from qualifying 1099-MISC, 1099-K, and 1099-NEC withholding"
+    formula: "When stateReturns.illinois omits Line 25 and Schedule IL-WIT, map qualifying Illinois 1099-MISC, 1099-K, and 1099-NEC records into Schedule IL-WIT rows using the 2025 Column B-E reference tables"
+    reference: "2025 Schedule IL-WIT Instructions, Columns B-E form reference tables (1099-MISC, 1099-K, 1099-NEC)"
+    notes: |
+      Illinois' 2025 Schedule IL-WIT instructions specify:
+      - 1099-MISC: payer TIN → Column B, total of Boxes 1/2/3 → Column C,
+        Box 18 → Column D, Box 16 → Column E
+      - 1099-K: Box 7 → Column B, Box 1a → Columns C and D, Box 8 → Column E
+      - 1099-NEC: payer TIN → Column B, Box 1 → Column C, Box 7 → Column D,
+        Box 5 → Column E
+
+      The shared-input layer may auto-attach these rows only when the raw input
+      payload includes the required Column B identifier, the Illinois Column D
+      amount, and enough ownership tagging to place MFJ records on the primary
+      or spouse section of Schedule IL-WIT.
+    testRef: "tests/engine/state/il-attached-return.test.ts::calculateFederalTax auto-attaches Schedule IL-WIT from qualifying Illinois 1099-MISC, 1099-K, and 1099-NEC documents when shared payload omits Illinois withholding"
+
+  - line: "SharedInputAutoScheduleILWIT1099Int1099Div1099B"
+    description: "Shared Illinois payload auto-derives Schedule IL-WIT rows from qualifying 1099-INT, 1099-DIV, and 1099-B withholding"
+    formula: "When stateReturns.illinois omits Line 25 and Schedule IL-WIT, map qualifying Illinois 1099-INT, 1099-DIV, and 1099-B records into Schedule IL-WIT rows using the 2025 Column B-E reference tables"
+    reference: "2025 Schedule IL-WIT Instructions, Columns B-E form reference tables (1099-INT, 1099-DIV, 1099-B)"
+    notes: |
+      Illinois' 2025 Schedule IL-WIT instructions specify:
+      - 1099-INT: payer TIN → Column B, Box 1 → Columns C and D, Box 17 → Column E
+      - 1099-DIV: payer TIN → Column B, Box 1a → Column C, Box 1b → Column D,
+        Box 16 → Column E
+      - 1099-B: payer TIN → Column B, Box 1d → Columns C and D, Box 16 → Column E
+
+      The shared-input layer may auto-attach these rows only when the raw input
+      payload includes the required payer TIN and enough ownership tagging to
+      place MFJ records on the primary or spouse section of Schedule IL-WIT.
+      Because the shared 1099-B schema stores detailed transactions instead of a
+      raw Box 1d total, the supported engine treats the inferred Box 1d amount
+      as the sum of transaction proceeds.
+    testRef: "tests/engine/state/il-attached-return.test.ts::calculateFederalTax auto-attaches Schedule IL-WIT from qualifying Illinois 1099-INT, 1099-DIV, and 1099-B documents when shared payload omits Illinois withholding"
+
+  - line: "SharedOutputAttachment"
+    description: "Computed Illinois return is attached to the main tax result"
+    formula: "TaxReturnResult.stateReturns.illinois = calculateIllinoisReturn(baseFederalResult, normalizedIllinoisInput)"
+    notes: |
+      The shared engine first computes the federal result, then runs the
+      Illinois orchestrator against that federal result and attaches the
+      resulting IL-1040 output on TaxReturnResult.stateReturns.illinois.
+      When no Illinois payload is supplied, no state return is attached.
+    testRef: "tests/engine/state/il-attached-return.test.ts::calculateFederalTax leaves stateReturns undefined when no Illinois payload is supplied"

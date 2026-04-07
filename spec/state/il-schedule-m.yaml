@@ -1,0 +1,324 @@
+form: "Schedule M"
+fullName: "Illinois Other Additions and Subtractions for Individuals"
+taxYear: 2025
+reference: "https://tax.illinois.gov/forms/incometax/individual/il-1040-schedule-m.html"
+
+notes: |
+  Schedule M computes additional items that adjust federal AGI for Illinois purposes.
+  Step 2 computes additions (Line 12 → IL-1040 Line 3).
+  Step 3 computes subtractions (Line 42 → IL-1040 Line 7).
+  Tax year support in this engine:
+  - 2024 and 2025 share the same Illinois 529 and IL ABLE subtraction caps.
+  - 2024 does not use a Line 18 medical debt relief subtraction. The subtraction
+    subtotal on Line 32 therefore carries Lines 13-17 and 19-31, the printed
+    Line 33 remains unused, and Line 42 totals Line 32 plus Lines 34-41.
+  - 2025 adds medical debt relief on Line 18 and otherwise keeps the same
+    downstream line numbering used by this engine.
+  Key computed items:
+  - 529 plan contribution subtraction: max $10,000 ($20,000 MFJ) for Bright Start/Bright Directions/College Illinois
+  - ABLE account contribution subtraction: max $10,000 ($20,000 MFJ)
+  - US government interest subtraction
+  - IL municipal bond interest subtraction
+  Less common items are accepted as input amounts.
+  Input-validation rule for the supported engine:
+  - Direct Schedule M line amounts and detail components used to compute Line 7 or Line 9 recaptures must be non-negative.
+  - Computed recapture lines still floor at zero when prior deductions have already been fully recaptured.
+
+lines:
+  # Step 2 — Additions (flows to IL-1040 Line 3)
+  - line: "1"
+    description: "Child's federally tax-exempt interest and dividend income (federal Form 8814)"
+    formula: "Input amount"
+    reference: "Schedule M Instructions, Step 2"
+    testRef: "tests/engine/state/il-schedule-m.test.ts::Schedule M Line 1 - child tax-exempt interest"
+
+  - line: "2"
+    description: "Distributive share of additions from partnerships, S corporations, trusts, or estates"
+    formula: "Input amount (from IL Schedule K-1-P or K-1-T, Column A)"
+    reference: "Schedule M Instructions, Step 2"
+    testRef: "tests/engine/state/il-schedule-m.test.ts::Schedule M Line 2 - distributive share additions"
+
+  - line: "3"
+    description: "Lloyd's plan of operation loss"
+    formula: "Input amount"
+    reference: "Schedule M Instructions, Step 2"
+    testRef: "tests/engine/state/il-schedule-m.test.ts::Schedule M Line 3 - Lloyd's plan of operation loss"
+
+  - line: "4"
+    description: "Non-IL 529/530/ABLE plan earnings distributions not in AGI"
+    formula: "Input amount"
+    reference: "Schedule M Instructions, Step 2"
+    notes: "Excludes Bright Start, Bright Directions, College Illinois, and IL ABLE programs"
+    testRef: "tests/engine/state/il-schedule-m.test.ts::Schedule M Line 4 - non-IL 529 earnings"
+
+  - line: "5"
+    description: "Illinois special depreciation addition (Form IL-4562)"
+    formula: "Input amount (from Form IL-4562, Step 2, Line 4)"
+    reference: "Schedule M Instructions, Step 2"
+    testRef: "tests/engine/state/il-schedule-m.test.ts::Schedule M Line 5 - depreciation addition"
+
+  - line: "7"
+    description: "Recapture of 529/ABLE plan contributions transferred to out-of-state plan"
+    formula: "If recapture detail inputs are provided: min(max(prior deductions claimed - prior-year recaptures, 0), amount transferred during tax year); otherwise use explicit input amount"
+    reference: "Schedule M Instructions, Step 2"
+    notes: |
+      Illinois instructions require the smaller of
+      1. deductions previously claimed for Illinois 529/ABLE contributions minus any deductions recaptured in prior years, or
+      2. the amount transferred during the tax year from the Illinois plan to an out-of-state plan.
+      The engine computes this when detail inputs are available and otherwise accepts an already-computed line amount.
+      Direct line inputs and all detail components must be non-negative.
+    edgeCases:
+      - "Computed recapture floors at zero when prior deductions have already been fully recaptured"
+      - "Negative direct or detail inputs are invalid"
+    testRef: "tests/engine/state/il-schedule-m.test.ts::Schedule M Line 7 - 529 out-of-state recapture"
+
+  - line: "8"
+    description: "Student-Assistance Contribution Credit recapture"
+    formula: "Input amount"
+    reference: "Schedule M Instructions, Step 2"
+    notes: "Recapture of Student-Assistance Contribution Credit previously claimed"
+    testRef: "tests/engine/state/il-schedule-m.test.ts::Schedule M Line 12 - total additions sums all addition lines"
+
+  - line: "9"
+    description: "Recapture of 529/ABLE plan contributions for nonqualified withdrawals"
+    formula: "If recapture detail inputs are provided: min(max(prior deductions claimed - current-year Line 7 recapture - prior-year recaptures, 0), nonqualified withdrawal or refund amount); otherwise use explicit input amount"
+    reference: "Schedule M Instructions, Step 2"
+    notes: |
+      Illinois instructions require the smaller of
+      1. deductions previously claimed for Illinois 529/ABLE contributions minus the current-year Line 7 recapture and any deductions recaptured in prior years for that plan, or
+      2. the nonqualified withdrawal/refund amount for the tax year.
+      The engine computes this when detail inputs are available and otherwise accepts an already-computed line amount.
+      Direct line inputs and all detail components must be non-negative.
+    edgeCases:
+      - "Computed recapture floors at zero when prior deductions have already been fully recaptured"
+      - "Negative direct or detail inputs are invalid"
+    testRef: "tests/engine/state/il-schedule-m.test.ts::Schedule M Line 9 - 529 nonqualified recapture"
+
+  - line: "11"
+    description: "Other additions (includes pass-through entity tax add-back)"
+    formula: "Input amount"
+    reference: "Schedule M Instructions, Step 2"
+    testRef: "tests/engine/state/il-schedule-m.test.ts::Schedule M Line 11 - other additions"
+
+  - line: "12"
+    description: "Total additions"
+    formula: "Sum of Lines 1 through 11"
+    reference: "Schedule M Instructions, Step 2; flows to IL-1040, Line 3"
+    edgeCases:
+      - "Negative addition inputs are invalid"
+    testRef: "tests/engine/state/il-schedule-m.test.ts::Schedule M Line 12 - total additions sums all addition lines"
+
+  # Step 3 — Subtractions (flows to IL-1040 Line 7)
+  - line: "13"
+    description: "Contributions to Bright Start, Bright Directions, and College Illinois 529 plans"
+    formula: "min(total contributions, $10,000 single / $20,000 MFJ)"
+    reference: "Schedule M Instructions, Step 3"
+    notes: "Only IL-administered 529 plans qualify. Max $10,000 ($20,000 MFJ)."
+    edgeCases:
+      - "Single/HoH/MFS/QSS: max $10,000"
+      - "MFJ: max $20,000"
+      - "Only Bright Start, Bright Directions, College Illinois qualify"
+    testRef: "tests/engine/state/il-schedule-m.test.ts::Schedule M Line 13 - 529 contributions capped at $10,000 single"
+
+  - line: "14"
+    description: "Distributive share of subtractions from partnerships, S corporations, trusts, or estates"
+    formula: "Input amount (from IL Schedule K-1-P or K-1-T, Column A)"
+    reference: "Schedule M Instructions, Step 3"
+    notes: |
+      For 2025+, this line also includes the retirement-payment subtractions
+      that the IL-1040 instructions moved off Line 5, including certain
+      payments made directly to retired partners on Schedule K-1-P and
+      beneficiary-share / retired-partner retirement payments reported on
+      Schedule K-1-T.
+    testRef: "tests/engine/state/il-schedule-m.test.ts::Schedule M Line 14 - distributive share subtractions"
+
+  - line: "15"
+    description: "Restoration of amounts held under claim of right (IRC Section 1341)"
+    formula: "Input amount"
+    reference: "Schedule M Instructions, Step 3"
+    notes: "Restoration of income previously included under claim of right"
+    testRef: "tests/engine/state/il-schedule-m.test.ts::Schedule M Line 15 - restoration claim of right"
+
+  - line: "16"
+    description: "Contributions to a job training project"
+    formula: "Input amount"
+    reference: "Schedule M Instructions, Step 3"
+    testRef: "tests/engine/state/il-schedule-m.test.ts::Schedule M Line 16 - job training contributions"
+
+  - line: "17"
+    description: "Expenses related to federal credits or federally tax-exempt income"
+    formula: "Input amount"
+    reference: "Schedule M Instructions, Step 3"
+    notes: "Expenses attributable to income exempt from federal tax or used to compute federal credits"
+    testRef: "tests/engine/state/il-schedule-m.test.ts::Schedule M Line 17 - federal credit-related expenses"
+
+  - line: "18"
+    description: "Medical debt relief received under the Medical Debt Relief Act"
+    formula: "Input amount"
+    reference: "Schedule M Instructions, Step 3; PA 103-0647"
+    notes: "New for tax years beginning on/after 1/1/2025. For 2024, this line is not used and the engine rejects non-zero medical debt relief input."
+    testRef: "tests/engine/state/il-schedule-m.test.ts::Schedule M Line 18 - medical debt relief"
+
+  - line: "19"
+    description: "Illinois special depreciation subtraction (Form IL-4562)"
+    formula: "Input amount (from Form IL-4562, Step 3, Line 19)"
+    reference: "Schedule M Instructions, Step 3"
+    testRef: "tests/engine/state/il-schedule-m.test.ts::Schedule M Line 19 - depreciation subtraction"
+
+  - line: "20"
+    description: "Contributions to qualified Illinois ABLE account"
+    formula: "min(total contributions, $10,000 single / $20,000 MFJ)"
+    reference: "Schedule M Instructions, Step 3"
+    edgeCases:
+      - "Single/HoH/MFS/QSS: max $10,000"
+      - "MFJ: max $20,000"
+    testRef: "tests/engine/state/il-schedule-m.test.ts::Schedule M Line 20 - ABLE contributions capped at $10,000 single"
+
+  - line: "21"
+    description: "Military pay earned while serving outside Illinois"
+    formula: "Input amount"
+    reference: "Schedule M Instructions, Step 3"
+    testRef: "tests/engine/state/il-schedule-m.test.ts::Schedule M Line 21 - military pay subtraction"
+
+  - line: "22"
+    description: "U.S. government interest (Treasury bonds, bills, notes, savings bonds, agency interest)"
+    formula: "Input amount"
+    reference: "Schedule M Instructions, Step 3"
+    notes: "Interest from federal obligations is exempt from IL tax. Common subtraction item."
+    testRef: "tests/engine/state/il-schedule-m.test.ts::Schedule M Line 22 - US government interest"
+
+  - line: "23"
+    description: "August 1, 1969, valuation limitation"
+    formula: "Input amount (from Schedule F, Line 17)"
+    reference: "Schedule M Instructions, Step 3"
+    notes: "Pre-August 1, 1969 appreciation limitation carried from Illinois Schedule F."
+    testRef: "tests/engine/state/il-schedule-m.test.ts::Schedule M Line 23 - August 1, 1969 valuation limitation"
+
+  - line: "24"
+    description: "River edge redevelopment zone and high impact business dividend subtraction"
+    formula: "Input amount (from Schedule 1299-C, Step 1, Line 7)"
+    reference: "Schedule M Instructions, Step 3"
+    notes: |
+      Carries the subtraction for qualifying river edge redevelopment zone and
+      high impact business dividends from Schedule 1299-C.
+    testRef: "tests/engine/state/il-schedule-m.test.ts::Schedule M Line 24 - river edge redevelopment zone and high impact business dividend subtraction"
+
+  - line: "25"
+    description: "Recovery of items previously deducted (other state/local tax refunds)"
+    formula: "Input amount"
+    reference: "Schedule M Instructions, Step 3"
+    notes: "State/local income tax refunds (other than IL) included in federal AGI"
+    testRef: "tests/engine/state/il-schedule-m.test.ts::Schedule M Line 25 - recovery of items"
+
+  - line: "26"
+    description: "Ridesharing money and other benefits"
+    formula: "Input amount"
+    reference: "Schedule M Instructions, Step 3"
+    notes: "Ridesharing or vanpooling benefits from employer"
+    testRef: "tests/engine/state/il-schedule-m.test.ts::Schedule M Line 26 - ridesharing benefits"
+
+  - line: "27"
+    description: "Life insurance, endowment, or annuity payment"
+    formula: "Input amount"
+    reference: "Schedule M Instructions, Step 3"
+    notes: "Payments from life insurance, endowment, or annuity contracts to the extent included in federal AGI"
+    testRef: "tests/engine/state/il-schedule-m.test.ts::Schedule M Line 27 - life insurance payment"
+
+  - line: "28"
+    description: "Lloyd's plan of operation income"
+    formula: "Input amount"
+    reference: "Schedule M Instructions, Step 3"
+    notes: "Counterpart to Line 3 addition — income from Lloyd's plan of operation"
+    testRef: "tests/engine/state/il-schedule-m.test.ts::Schedule M Line 28 - Lloyd's plan of operation income"
+
+  - line: "29"
+    description: "Illinois pre-need funeral/burial/cemetery trust income"
+    formula: "Input amount"
+    reference: "Schedule M Instructions, Step 3"
+    notes: "Income from qualifying IL pre-need funeral, burial, or cemetery trusts"
+    testRef: "tests/engine/state/il-schedule-m.test.ts::Schedule M Line 29 - funeral trust income"
+
+  - line: "30"
+    description: "Health care provider loan repayment"
+    formula: "Input amount"
+    reference: "Schedule M Instructions, Step 3"
+    notes: "Student loan repayments received under the IL Rural Health Act or similar programs"
+    testRef: "tests/engine/state/il-schedule-m.test.ts::Schedule M Line 30 - health care provider loan repayment"
+
+  - line: "31"
+    description: "Nazi persecution reparations"
+    formula: "Input amount"
+    reference: "Schedule M Instructions, Step 3"
+    notes: "Reparation payments for victims of Nazi persecution included in federal AGI"
+    testRef: "tests/engine/state/il-schedule-m.test.ts::Schedule M Line 31 - Nazi persecution reparations"
+
+  - line: "32"
+    description: "Subtotal of subtractions (Lines 13-31)"
+    formula: "2025: Sum of Lines 13 through 31. 2024: Sum of Lines 13 through 17 and 19 through 31 because Line 18 is not used."
+    reference: "Schedule M Instructions, Step 3"
+    testRef: "tests/engine/state/il-schedule-m.test.ts::Schedule M Line 32 - subtraction subtotal (Lines 13-31)"
+
+  - line: "34"
+    description: "Interest on IL state and local government tax-exempt obligations"
+    formula: "Input amount (total of Lines 34a-34z)"
+    reference: "Schedule M Instructions, Step 3"
+    notes: |
+      26 categories of IL government bonds (34a-34z). Interest from these bonds is
+      subtracted because it was added back on IL-1040 Line 2 as federally tax-exempt
+      interest. Accept total as input.
+    testRef: "tests/engine/state/il-schedule-m.test.ts::Schedule M Line 34 - IL bond interest"
+
+  - line: "35"
+    description: "Interest on non-US government obligations (Guam, Puerto Rico, USVI, etc.)"
+    formula: "Input amount"
+    reference: "Schedule M Instructions, Step 3"
+    notes: "Interest from US territorial government obligations not included in federal tax-exempt interest"
+    testRef: "tests/engine/state/il-schedule-m.test.ts::Schedule M Line 35 - non-US government bond interest"
+
+  - line: "36"
+    description: "Child's US government and IL bond interest from Form 8814"
+    formula: "Input amount"
+    reference: "Schedule M Instructions, Step 3"
+    notes: "Child's US government/IL bond interest reported on Form 8814 (parent's election)"
+    testRef: "tests/engine/state/il-schedule-m.test.ts::Schedule M Line 36 - child US government interest"
+
+  - line: "37"
+    description: "Railroad sick pay and railroad unemployment income"
+    formula: "Input amount"
+    reference: "Schedule M Instructions, Step 3"
+    testRef: "tests/engine/state/il-schedule-m.test.ts::Schedule M Line 37 - railroad income subtraction"
+
+  - line: "38"
+    description: "Unjust imprisonment compensation"
+    formula: "Input amount"
+    reference: "Schedule M Instructions, Step 3"
+    notes: "Compensation received from the IL Court of Claims for unjust imprisonment"
+    testRef: "tests/engine/state/il-schedule-m.test.ts::Schedule M Line 38 - unjust imprisonment compensation"
+
+  - line: "39"
+    description: "529 distributions included in AGI due to claiming federal education credits"
+    formula: "Input amount"
+    reference: "Schedule M Instructions, Step 3"
+    notes: "Bright Start/College Illinois/Bright Directions distributions included in federal AGI because federal American Opportunity or Lifetime Learning Credit was claimed"
+    testRef: "tests/engine/state/il-schedule-m.test.ts::Schedule M Line 39 - 529 distributions for federal education credits"
+
+  - line: "40"
+    description: "Disallowed deductions under IRC Section 280E for cannabis establishments"
+    formula: "Input amount"
+    reference: "Schedule M Instructions, Step 3"
+    testRef: "tests/engine/state/il-schedule-m.test.ts::Schedule M Line 40 - cannabis IRC 280E disallowed deductions"
+
+  - line: "41"
+    description: "Fertility fraud award"
+    formula: "Input amount"
+    reference: "Schedule M Instructions, Step 3; IL Fertility Fraud Act"
+    notes: "Award received under the IL Fertility Fraud Act included in federal AGI"
+    testRef: "tests/engine/state/il-schedule-m.test.ts::Schedule M Line 41 - fertility fraud award"
+
+  - line: "42"
+    description: "Total subtractions"
+    formula: "2025: Line 32 + Lines 34 through 41. 2024: Line 32 carries to unused Line 33, and total subtractions still equal the subtotal plus Lines 34 through 41."
+    reference: "Schedule M Instructions, Step 3; flows to IL-1040, Line 7"
+    edgeCases:
+      - "Negative subtraction inputs are invalid"
+    testRef: "tests/engine/state/il-schedule-m.test.ts::Schedule M Line 42 - total subtractions includes page 3 items"

@@ -1,0 +1,30 @@
+name: Bug report
+description: Report a reproducible bug in the engine, web app, or tooling
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Include exact steps, relevant inputs, and expected versus actual behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Tax context
+      description: Include tax year, form or schedule, state, and whether this is engine-only or web-app behavior.
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional notes
+      description: Logs, screenshots, and any mitigation you found. Use synthetic data only.

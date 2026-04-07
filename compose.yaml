@@ -1,0 +1,58 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL}
+      MODEL_PROVIDER_API_KEY: ${MODEL_PROVIDER_API_KEY:-}
+      MODEL_PROVIDER_BASE_URL: ${MODEL_PROVIDER_BASE_URL:-https://api.openai.com/v1}
+      MODEL_PROVIDER_MODEL: ${MODEL_PROVIDER_MODEL:-gpt-5-mini}
+      TAX_ENGINE_DEPLOYMENT_MODE: ${TAX_ENGINE_DEPLOYMENT_MODE:-self-host}
+      # Local preview default only. Hosted production must set postgres-s3 explicitly.
+      TAX_ENGINE_HOSTED_PERSISTENCE_BACKEND: ${TAX_ENGINE_HOSTED_PERSISTENCE_BACKEND:-preview-memory}
+      TAX_ENGINE_BILLING_MODE: ${TAX_ENGINE_BILLING_MODE:-test}
+      # Local preview default only. Hosted production must set the public app origin.
+      TAX_ENGINE_APP_URL: ${TAX_ENGINE_APP_URL:-http://localhost:3000}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-}
+      BETTER_AUTH_TRUSTED_ORIGINS: ${BETTER_AUTH_TRUSTED_ORIGINS:-}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      STRIPE_PRICE_ID_STARTER_MONTHLY: ${STRIPE_PRICE_ID_STARTER_MONTHLY:-}
+      STRIPE_PRICE_ID_PLUS_MONTHLY: ${STRIPE_PRICE_ID_PLUS_MONTHLY:-}
+      STRIPE_PRICE_ID_AI_HELPER_TOP_UP: ${STRIPE_PRICE_ID_AI_HELPER_TOP_UP:-}
+      TAX_ENGINE_AI_HELPER_INCLUDED_BUDGET_CENTS: ${TAX_ENGINE_AI_HELPER_INCLUDED_BUDGET_CENTS:-1000}
+      TAX_ENGINE_AI_HELPER_TOP_UP_CREDIT_CENTS: ${TAX_ENGINE_AI_HELPER_TOP_UP_CREDIT_CENTS:-1000}
+      TAX_ENGINE_AI_HELPER_TOP_UP_PRICE_CENTS: ${TAX_ENGINE_AI_HELPER_TOP_UP_PRICE_CENTS:-1500}
+      NEXT_TELEMETRY_DISABLED: ${NEXT_TELEMETRY_DISABLED:-1}
+      PORT: 3000
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-bookworm
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-tax_engine}
+      POSTGRES_USER: ${POSTGRES_USER:-tax_engine}
+      # SECURITY: Override this in production — the default is for local dev only
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-tax_engine_dev_only}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    ports:
+      # Bind to localhost only — prevent external access to the database
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    restart: unless-stopped
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+volumes:
+  postgres-data:

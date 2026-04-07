@@ -1,0 +1,255 @@
+form: "Social Security Benefits Worksheet"
+fullName: "Social Security Benefits Worksheet (Form 1040 Instructions)"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i1040gi#en_US_2025_publink100010795"
+
+notes: |
+  This worksheet determines the taxable portion of Social Security and
+  tier 1 railroad retirement benefits reported on Form 1040 Line 6b.
+  It follows the standard worksheet in the 2025 Form 1040 instructions.
+  In the supported slice, Worksheet Line 6 adds back the implemented 2025
+  Schedule 1 categories that correspond to educator expenses, the Schedule 1
+  Line 12 business-expense adjustment, the HSA deduction, the Schedule 1 Line
+  14 Armed Forces moving-expense deduction, deductible self-employment tax,
+  self-employed retirement contributions, self-employed health insurance, the
+  penalty on early withdrawal of savings, alimony paid, the IRA deduction, the
+  Archer MSA deduction, and a supported manual Schedule 1 Line 25 total-other-
+  adjustments amount. Student loan interest stays excluded.
+  The supported slice now also accepts the Pub. 915 post-1993 lump-sum
+  election when validated prior-year inputs are provided for each earlier
+  year included in the current year's SSA-1099 or RRB-1099 payments. That
+  path computes Pub. 915 Worksheet 2 Line 21 for each earlier year, computes
+  Pub. 915 Worksheet 4 Line 21 for the current year using the current-year
+  benefits net of those earlier-year amounts, and uses the election only when
+  the resulting taxable-benefits total is less than the standard worksheet
+  amount. Pre-1994 lump-sum worksheets and broader Pub. 915 exclusion
+  interactions still remain unsupported. The validated earlier-year entries
+  must be earlier than the return's tax year, and their combined delayed
+  payment amounts cannot exceed the current-year SSA-1099 and RRB-1099
+  benefits because those delayed payments are a subset of the current-year
+  Box 5 benefit total.
+
+businessRuleValidation:
+  - rule: "reference-summary-packet"
+    description: "Inventory support counts this worksheet as business-rule validated only when regression coverage proves the emitted packet artifact stays labeled as a non-filing reference summary and only surfaces the supported worksheet lines, the supported SSA-1099 and RRB-1099 benefit totals, and any supported Pub. 915 lump-sum-election outputs that drive Form 1040 Line 6b."
+    testRef: "tests/pdf/fill-social-security-benefits-worksheet.test.ts::buildSocialSecurityBenefitsWorksheetReferenceSummary keeps the packet artifact reference-only and limited to supported worksheet outputs"
+
+lines:
+  - line: "1"
+    description: "Total Social Security benefits"
+    formula: "Sum SSA-1099 Box 5 and RRB-1099 tier 1 equivalent Box 5 benefits for taxpayer and spouse"
+    irsRef: "Form 1040 Instructions, Social Security Benefits Worksheet, Line 1"
+    inputs:
+      - "SSA-1099 Box 5"
+      - "RRB-1099 tier 1 equivalent Box 5"
+    testRef: "tests/engine/forms/social-security-benefits-worksheet.test.ts::Social Security Benefits Worksheet Line 1 - aggregates SSA-1099 and RRB-1099 equivalent Box 5 benefits"
+
+  - line: "2"
+    description: "One-half of benefits"
+    formula: "Line 1 ÷ 2"
+    irsRef: "Form 1040 Instructions, Social Security Benefits Worksheet, Line 2"
+    inputs:
+      - "Worksheet Line 1"
+    testRef: "tests/engine/forms/social-security-benefits-worksheet.test.ts::Social Security Benefits Worksheet Line 2 - uses half of total benefits"
+
+  - line: "3"
+    description: "Other income included in provisional income"
+    formula: "Form 1040 income other than Social Security benefits, using the pre-exclusion Schedule B interest amount instead of Form 1040 Line 2b when Form 8815 is filed"
+    irsRef: "Form 1040 Instructions, Social Security Benefits Worksheet, Line 3"
+    inputs:
+      - "Form 1040 Lines 1, 3b, 4b, 5b, 7, and 8"
+      - "Schedule B Line 2 when Form 8815 is filed; otherwise Form 1040 Line 2b"
+    testRef: "tests/engine/forms/social-security-benefits-worksheet.test.ts::Social Security Benefits Worksheet Line 3 - includes other taxable income before Social Security"
+
+  - line: "4"
+    description: "Tax-exempt interest"
+    formula: "Form 1040 Line 2a"
+    irsRef: "Form 1040 Instructions, Social Security Benefits Worksheet, Line 4"
+    inputs:
+      - "Form 1040 Line 2a"
+    testRef: "tests/engine/forms/social-security-benefits-worksheet.test.ts::Social Security Benefits Worksheet Line 4 - includes tax-exempt interest in provisional income"
+
+  - line: "5"
+    description: "Subtotal before adjustments"
+    formula: "Line 2 + Line 3 + Line 4"
+    irsRef: "Form 1040 Instructions, Social Security Benefits Worksheet, Line 5"
+    inputs:
+      - "Worksheet Line 2"
+      - "Worksheet Line 3"
+      - "Worksheet Line 4"
+    testRef: "tests/engine/forms/social-security-benefits-worksheet.test.ts::Social Security Benefits Worksheet Line 5 - sums half benefits, other income, and tax-exempt interest"
+
+  - line: "6"
+    description: "Adjustments added back for provisional income"
+    formula: "Sum of the supported 2025 Schedule 1 adjustment categories that the worksheet adds back to provisional income in this slice: educator expenses, Line 12 business-expense adjustments, the HSA deduction, Line 14 Armed Forces moving expenses, deductible self-employment tax, self-employed retirement contributions, self-employed health insurance, the penalty on early withdrawal of savings, alimony paid, the IRA deduction, the Archer MSA deduction, and the supported manual Schedule 1 Line 25 total-other-adjustments amount"
+    irsRef: "Form 1040 Instructions, Social Security Benefits Worksheet, Line 6"
+    inputs:
+      - "Educator expenses"
+      - "Business expense adjustments"
+      - "HSA deduction"
+      - "Armed Forces moving expenses"
+      - "Deductible part of self-employment tax"
+      - "Self-employed SEP, SIMPLE, and qualified plan contributions"
+      - "Self-employed health insurance deduction"
+      - "Penalty on early withdrawal of savings"
+      - "Alimony paid"
+      - "IRA deduction"
+      - "Archer MSA deduction"
+      - "Schedule 1 Line 25 total other adjustments"
+    notes: "Student loan interest stays excluded from Worksheet Line 6. The supported slice now includes the official 2025 Line 12 and Line 14 add-back categories through validated manual Schedule 1 amounts instead of rebuilding Form 2106 or Form 3903 detail."
+    testRef: "tests/engine/forms/social-security-benefits-worksheet.test.ts::Social Security Benefits Worksheet Line 6 - adds back the supported 2025 Schedule 1 adjustments including lines 12 and 14 plus line 25 total other adjustments"
+
+  - line: "7"
+    description: "Provisional income"
+    formula: "Line 5 - Line 6"
+    irsRef: "Form 1040 Instructions, Social Security Benefits Worksheet, Line 7"
+    inputs:
+      - "Worksheet Line 5"
+      - "Worksheet Line 6"
+    testRef: "tests/engine/forms/social-security-benefits-worksheet.test.ts::Social Security Benefits Worksheet Line 7 - computes provisional income after adjustment add-backs"
+
+  - line: "8"
+    description: "Base amount"
+    formula: "$32,000 MFJ; $25,000 single/HOH/QSS and MFS living apart all year; $0 for MFS who lived with spouse at any time during the year"
+    irsRef: "Form 1040 Instructions, Social Security Benefits Worksheet, Line 8"
+    inputs:
+      - "Filing status"
+      - "Whether an MFS filer lived with spouse during the tax year"
+    edgeCases:
+      - "Head of household and qualifying surviving spouse use the same $25,000 base amount as single filers"
+    testRef: "tests/engine/forms/social-security-benefits-worksheet.test.ts::Social Security Benefits Worksheet Line 8 - uses the correct filing-status base amount"
+
+  - line: "9"
+    description: "Excess over base amount"
+    formula: "max(0, Line 7 - Line 8)"
+    irsRef: "Form 1040 Instructions, Social Security Benefits Worksheet, Line 9"
+    inputs:
+      - "Worksheet Line 7"
+      - "Worksheet Line 8"
+    testRef: "tests/engine/forms/social-security-benefits-worksheet.test.ts::Social Security Benefits Worksheet Line 9 - zeroes out when provisional income does not exceed the base amount"
+
+  - line: "10"
+    description: "Second-tier width"
+    formula: "$12,000 MFJ; otherwise $9,000"
+    irsRef: "Form 1040 Instructions, Social Security Benefits Worksheet, Line 10"
+    inputs:
+      - "Filing status"
+    edgeCases:
+      - "Head of household and qualifying surviving spouse use the same $9,000 second-tier width as single filers"
+    testRef: "tests/engine/forms/social-security-benefits-worksheet.test.ts::Social Security Benefits Worksheet Line 10 - uses the correct second-tier width"
+
+  - line: "11"
+    description: "Excess over second-tier width"
+    formula: "max(0, Line 9 - Line 10)"
+    irsRef: "Form 1040 Instructions, Social Security Benefits Worksheet, Line 11"
+    inputs:
+      - "Worksheet Line 9"
+      - "Worksheet Line 10"
+    testRef: "tests/engine/forms/social-security-benefits-worksheet.test.ts::Social Security Benefits Worksheet Line 11 - starts the 85 percent tier only above the second-tier width"
+
+  - line: "12"
+    description: "Lower-tier amount subject to 50% inclusion"
+    formula: "min(Line 9, Line 10)"
+    irsRef: "Form 1040 Instructions, Social Security Benefits Worksheet, Line 12"
+    inputs:
+      - "Worksheet Line 9"
+      - "Worksheet Line 10"
+    testRef: "tests/engine/forms/social-security-benefits-worksheet.test.ts::Social Security Benefits Worksheet Line 12 - caps the lower-tier band before halving it"
+
+  - line: "13"
+    description: "Half of the lower-tier amount"
+    formula: "Line 12 ÷ 2"
+    irsRef: "Form 1040 Instructions, Social Security Benefits Worksheet, Line 13"
+    inputs:
+      - "Worksheet Line 12"
+    testRef: "tests/engine/forms/social-security-benefits-worksheet.test.ts::Social Security Benefits Worksheet Line 13 - halves the lower-tier amount"
+
+  - line: "14"
+    description: "50% inclusion amount"
+    formula: "min(Line 2, Line 13)"
+    irsRef: "Form 1040 Instructions, Social Security Benefits Worksheet, Line 14"
+    inputs:
+      - "Worksheet Line 2"
+      - "Worksheet Line 13"
+    testRef: "tests/engine/forms/social-security-benefits-worksheet.test.ts::Social Security Benefits Worksheet Line 14 - limits the lower-tier inclusion to one-half of benefits"
+
+  - line: "15"
+    description: "85% of the upper-tier excess"
+    formula: "Line 11 × 85%"
+    irsRef: "Form 1040 Instructions, Social Security Benefits Worksheet, Line 15"
+    inputs:
+      - "Worksheet Line 11"
+    testRef: "tests/engine/forms/social-security-benefits-worksheet.test.ts::Social Security Benefits Worksheet Line 15 - applies the 85 percent rate to the upper-tier excess"
+
+  - line: "16"
+    description: "Tentative taxable benefits"
+    formula: "If MFS and lived with spouse during the year, max(0, Line 7) × 85%; otherwise Line 14 + Line 15"
+    irsRef: "Form 1040 Instructions, Social Security Benefits Worksheet, Line 16"
+    inputs:
+      - "Worksheet Lines 7, 14, and 15"
+      - "Whether an MFS filer lived with spouse during the tax year"
+    notes: "The MFS lived-with-spouse branch is floored at zero because taxable benefits cannot be negative even when supported Schedule 1 add-backs exceed the subtotal on Line 5."
+    testRef: "tests/engine/forms/social-security-benefits-worksheet.test.ts::Social Security Benefits Worksheet Line 16 - MFS lived-with-spouse branch floors negative provisional income at zero"
+
+  - line: "17"
+    description: "Maximum taxable benefits"
+    formula: "Line 1 × 85%"
+    irsRef: "Form 1040 Instructions, Social Security Benefits Worksheet, Line 17"
+    inputs:
+      - "Worksheet Line 1"
+    testRef: "tests/engine/forms/social-security-benefits-worksheet.test.ts::Social Security Benefits Worksheet Line 17 - limits taxable benefits to 85 percent of total benefits"
+
+  - line: "18"
+    description: "Taxable Social Security benefits"
+    formula: "min(Line 16, Line 17)"
+    irsRef: "Form 1040 Instructions, Social Security Benefits Worksheet, Line 18"
+    inputs:
+      - "Worksheet Lines 16 and 17"
+    edgeCases:
+      - "Taxable benefits are zero when provisional income does not exceed the base amount"
+      - "The first dollar above the filing-status base amount starts the 50% inclusion band"
+      - "The first dollar above the filing-status second threshold starts the 85% inclusion band only on that excess"
+      - "Head of household and qualifying surviving spouse use the same 50% and 85% threshold bands as single filers"
+      - "Married filing separately taxpayers who lived apart all year use the same 50% and 85% threshold bands as single filers"
+      - "Taxable benefits top out at 85% of total benefits"
+      - "Married filing separately with spouse contact during the year uses a $0 threshold"
+      - "Married filing separately with spouse contact during the year still cannot produce negative taxable benefits when Line 7 is below zero"
+      - "When validated post-1993 Pub. 915 lump-sum election data is provided, the final taxable-benefits amount can be lower than standard Worksheet Line 18"
+    testRef: "tests/engine/forms/social-security-benefits-worksheet.test.ts::Social Security Benefits Worksheet Line 18 - computes taxable benefits across the 0 percent, 50 percent, and 85 percent ranges"
+
+  - line: "W2-21"
+    description: "Additional taxable benefits for an earlier year under the post-1993 lump-sum election"
+    formula: "For each validated earlier year after 1993 included in the current year's benefit payment, compute Pub. 915 Worksheet 2 using that earlier year's total benefits plus the delayed payment received in the current year, subtract the taxable benefits previously reported or previously refigured for that earlier year, and floor the additional taxable amount at zero"
+    irsRef: "Pub. 915 (2025), Lump-Sum Election Worksheet 2, Line 21"
+    inputs:
+      - "Earlier-year filing status"
+      - "Earlier-year total Social Security benefits actually received in that year"
+      - "Current-year delayed Social Security payment attributable to that earlier year"
+      - "Earlier-year adjusted gross income"
+      - "Earlier-year tax-exempt interest"
+      - "Earlier-year Pub. 915 exclusion-and-adjustment total"
+      - "Earlier-year taxable Social Security benefits previously reported or previously refigured"
+      - "Whether an earlier-year MFS filer lived with a spouse during that earlier year"
+    notes: "This supported slice handles only the Pub. 915 post-1993 Worksheet 2 branch. The earlier-year exclusion-and-adjustment amount is provided as a validated aggregate input instead of rebuilding each earlier-year exclusion source from raw forms. The audit trail should preserve the earlier-year benefit total, current-year delayed payment, adjusted gross income, tax-exempt interest, exclusion-and-adjustment total, previously reported taxable benefits, and any married-filing-separately lived-with-spouse flag so each additional-taxable-benefits amount can be traced back to the validated Pub. 915 inputs for that earlier year."
+    testRef: "tests/engine/forms/social-security-benefits-worksheet.test.ts::Social Security Benefits Worksheet W2-21 - computes the additional taxable benefits for a prior-year lump-sum payment"
+
+  - line: "W4-21"
+    description: "Taxable benefits under the post-1993 lump-sum election"
+    formula: "If validated post-1993 lump-sum election data is provided, subtract all earlier-year delayed payments from current-year total benefits, compute the current-year taxable-benefits amount on the remaining current-year benefits using Pub. 915 Worksheet 4, add the Worksheet 2 Line 21 additional taxable benefits for each earlier year, and use that lump-sum-election total only when it is less than standard Worksheet Line 18; otherwise keep the standard worksheet result"
+    irsRef: "Pub. 915 (2025), Lump-Sum Election Worksheet 4, Line 21"
+    inputs:
+      - "Current-year Social Security benefits"
+      - "Current-year other income"
+      - "Current-year tax-exempt interest"
+      - "Current-year Social Security adjustment add-backs"
+      - "Current-year validated Pub. 915 exclusion-and-adjustment total"
+      - "Validated earlier-year Worksheet 2 inputs for each earlier year included in the current-year payment"
+    notes: "The current-year Pub. 915 exclusion-and-adjustment amount is supported as a validated aggregate input because the current engine does not yet rebuild every Pub. 915 special exclusion directly from raw forms. The audit trail should preserve the current-year benefits net of earlier-year delayed payments, the current-year exclusion-and-adjustment total, the sum of earlier-year additional taxable benefits, the computed Worksheet 4 current-year taxable amount, the standard worksheet amount used for comparison, and whether the election was beneficial. Pre-1994 lump-sum election worksheets remain unsupported."
+    testRef: "tests/engine/forms/social-security-benefits-worksheet.test.ts::Social Security Benefits Worksheet W4-21 - uses the Pub. 915 lump-sum election when it lowers current-year taxable benefits"
+
+  - line: "packet"
+    description: "Draft packet inclusion rule for supported Social Security benefits worksheet data"
+    formula: "When the return includes supported SSA-1099 or RRB-1099 benefit inputs, include a non-filing reference-summary PDF in the packet that lists the supported Social Security Benefits Worksheet lines that drive Form 1040 Lines 6a and 6b, plus any supported Pub. 915 lump-sum election results used to reduce taxable benefits."
+    irsRef: "Form 1040 Instructions, Social Security Benefits Worksheet; Pub. 915 (2025), Lump-Sum Election Worksheets 2 and 4"
+    notes: "This packet slice intentionally emits a deterministic reference summary instead of attempting to recreate the instruction worksheet layout, so the draft packet stays honest about what the product computed from supported SSA-1099 and RRB-1099 data."
+    testRef: "tests/pdf/fill-social-security-benefits-worksheet.test.ts::fillReturn includes a Social Security Benefits Worksheet reference summary when benefits are present"

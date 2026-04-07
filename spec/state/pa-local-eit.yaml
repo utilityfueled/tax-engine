@@ -1,0 +1,152 @@
+form: "PA-Local-EIT"
+fullName: "Pennsylvania Local Earned Income Tax"
+taxYear: 2025
+reference: "https://dced.pa.gov/local-government/local-income-tax-information/"
+
+notes: |
+  Pennsylvania Act 511 authorizes municipalities and school districts to levy
+  a local earned income tax (EIT) on residents' earned income.
+
+  Key rules:
+    - Earned income = compensation (W-2 wages) + net self-employment income
+    - Net self-employment income: positive net business/profession/farm income
+      (negative business income contributes $0 to the earned income base)
+    - Each municipality sets its own rate (typically 0.5%–3.5%)
+    - Philadelphia has a separate wage tax system and is not an Act 32 / Act 511
+      local EIT jurisdiction for this module
+    - Total rate may be split between municipality and school district
+    - W-2 Box 19 reports local tax withheld; Box 18 reports local wages
+    - Local EIT is computed separately from PA-40 state income tax
+    - Local withholding is NOT subtracted from PA-40 — it applies to local tax only
+    - Under Act 32, PA employers generally withhold the higher of the
+      employee's total resident EIT rate or the work-location nonresident EIT
+      rate and remit to the work-location tax collector
+    - Residents who still have local tax paid to a work municipality on the
+      same earned income may receive a resident-side credit limited to the
+      resident tax on that same income
+
+  This module computes a single municipality's local EIT for a resident:
+    1. Determine earned income (compensation + positive net business income)
+    2. Apply the resident municipality's EIT rate
+    3. Compare computed tax to local withholding
+    4. Report overpayment or balance due
+
+  Future enhancements:
+    - Split between municipality and school district portions
+    - Multiple municipality support
+    - Philadelphia wage tax (separate module)
+    - PSD code lookup for municipality rates
+
+packetRules:
+  packetBehavior: "reference-summary-pdf"
+  includeWhen:
+    - "The resident Pennsylvania orchestrator computes a localEIT result from supported `paResidentReturn.localMunicipality` and `localEITRate` inputs"
+    - "A Pennsylvania resident return packet is being assembled"
+  suppressWhen:
+    - "No resident Pennsylvania local EIT reconciliation applies to the packet"
+  notes: |
+    The current packet path emits `pa-local-eit-reference.pdf` as a reference
+    summary only. It is not an official local earned income tax return, so the
+    packet cover page must continue to mark packet completeness as partial when
+    this local tax path applies.
+
+businessRuleValidation:
+  - rule: "pa-local-eit-reference-packet"
+    description: "Inventory support counts the Pennsylvania local EIT packet path as validated only when fillReturn emits `pa-local-eit-reference.pdf` whenever the resident return computes a supported local EIT reconciliation."
+    testRef: "tests/pdf/fill-pa-local-eit.test.ts::fillReturn includes the Pennsylvania local EIT reference summary when the resident return computes local EIT"
+  - rule: "pa-local-eit-reference-disclosure"
+    description: "Inventory support counts the Pennsylvania local EIT packet disclosure as validated only when readiness regression coverage keeps packet completeness partial while only the reference summary is available."
+    testRef: "tests/utils/return-readiness.test.ts::marks Pennsylvania packets partial when only a PA local EIT reference summary is available"
+
+lines:
+  - line: "1"
+    description: "Compensation (W-2 wages)"
+    formula: |
+      Sum of compensation subject to local EIT:
+        - use supported W-2 Box 18 local wages when available
+        - otherwise use the orchestrator's resident PA compensation mapping
+    notes: |
+      The standalone module receives a normalized compensation amount. When the
+      resident orchestrator builds that amount from W-2 input, Box 18 local
+      wages take precedence for local-tax reconciliation and the PA
+      compensation mapping is the fallback when Box 18 is not available.
+    testRef: "tests/engine/state/pa-local-eit.test.ts::PA Local EIT Line 1 - compensation"
+
+  - line: "2"
+    description: "Net self-employment income"
+    formula: "Positive net business/profession/farm income (floor at 0)"
+    notes: |
+      Includes net profit from Schedule C and Schedule F. Losses reduce within
+      the class but do not go below zero for local EIT purposes.
+    testRef: "tests/engine/state/pa-local-eit.test.ts::PA Local EIT Line 2 - net self-employment income"
+
+  - line: "3"
+    description: "Total earned income"
+    formula: "Line 1 + Line 2"
+    testRef: "tests/engine/state/pa-local-eit.test.ts::PA Local EIT Line 3 - total earned income sums both sources"
+
+  - line: "4"
+    description: "Local EIT rate"
+    formula: "Municipality-specific rate (varies; typically 0.5%–3.5%)"
+    notes: |
+      The rate is determined by the resident's municipality and school district.
+      Common rates: 1% total (0.5% municipality + 0.5% school district).
+      Some municipalities like Pittsburgh levy higher rates.
+    testRef: "tests/engine/state/pa-local-eit.test.ts::PA Local EIT Line 4 - local EIT rate"
+
+  - line: "4a"
+    description: "Philadelphia Wage Tax is outside the supported local EIT scope"
+    formula: "If the resident municipality is Philadelphia, reject this module input and require the separate Philadelphia Wage Tax path instead"
+    notes: |
+      DCED's Act 32 FAQ says Philadelphia is not included under Act 32 because
+      local wage taxes in the city are imposed and administered under the
+      Sterling Act. The official Philadelphia Earnings Tax instructions also
+      state that Philadelphia residents owe Philadelphia Wage Tax on all wages
+      regardless of where earned. This module therefore rejects Philadelphia
+      rather than treating it as a normal Act 32 local EIT municipality.
+    testRef: "tests/engine/state/pa-local-eit.test.ts::PA Local EIT rejects Philadelphia because the city uses a separate wage tax"
+
+  - line: "5"
+    description: "Local EIT computed"
+    formula: "Line 3 × Line 4, rounded to nearest dollar"
+    edgeCases:
+      - "Zero earned income: $0 tax"
+      - "Very small earned income with rounding: may round to $0"
+      - "High rate (3.5%) with high income: significant local tax"
+    testRef: "tests/engine/state/pa-local-eit.test.ts::PA Local EIT Line 5 - computed local tax at 1%"
+
+  - line: "6"
+    description: "Nonresident EIT credit"
+    formula: "Credit for local EIT paid to work municipality (lesser of tax paid and resident rate × that income)"
+    notes: |
+      If a resident works in another municipality and pays nonresident EIT there,
+      they may credit that against their resident EIT. Credit cannot exceed the
+      resident tax on the same income. The aggregate credit also cannot exceed
+      the computed resident local EIT for the year.
+      Under Act 32 employer withholding, this credit most often matters for
+      annual reconciliation when the resident has explicit work-municipality tax
+      paid data rather than relying solely on payroll withholding.
+    edgeCases:
+      - "Negative work-municipality income or tax-paid inputs are invalid"
+      - "Multiple credits sum together but cannot exceed the computed resident tax"
+    testRef: "tests/engine/state/pa-local-eit.test.ts::PA Local EIT Line 6 - nonresident credit when work municipality tax is lower"
+
+  - line: "7"
+    description: "Net local tax after credit"
+    formula: "Line 5 - Line 6, floor at 0"
+    testRef: "tests/engine/state/pa-local-eit.test.ts::PA Local EIT - withholding with nonresident credit reduces net tax"
+
+  - line: "8"
+    description: "Local EIT withheld"
+    formula: "Sum of W-2 Box 19 local tax withheld for resident municipality"
+    testRef: "tests/engine/state/pa-local-eit.test.ts::PA Local EIT Line 8 - local withholding"
+
+  - line: "9"
+    description: "Local EIT overpayment"
+    formula: "If Line 8 > Line 7: overpayment = Line 8 - Line 7"
+    testRef: "tests/engine/state/pa-local-eit.test.ts::PA Local EIT - overpayment when withholding exceeds tax"
+
+  - line: "10"
+    description: "Local EIT balance due"
+    formula: "If Line 7 > Line 8: balance due = Line 7 - Line 8"
+    testRef: "tests/engine/state/pa-local-eit.test.ts::PA Local EIT - balance due when tax exceeds withholding"

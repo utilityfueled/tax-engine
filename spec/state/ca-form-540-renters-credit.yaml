@@ -1,0 +1,108 @@
+form: "California Form 540 Nonrefundable Renter's Credit"
+fullName: "California Form 540 Line 46 Nonrefundable Renter's Credit"
+taxYear: 2025
+irsReference: "https://www.ftb.ca.gov/forms/2025/2025-540-booklet.html"
+
+notes: |
+  California Form 540 line 46 uses the Nonrefundable Renter's Credit
+  Qualification Record in the 2025 Form 540 booklet.
+  The supported engine path models the booklet's questions and credit amounts for
+  resident Form 540 filers:
+  - Question 1 requires California residency for the entire year.
+  - Question 2 limits California AGI to $53,994 for single or married filing
+    separately, and to $107,988 for married filing jointly, head of household,
+    or qualifying surviving spouse.
+  - Question 3 requires rent paid for at least half of 2025 on a California
+    principal residence, including a mobile home owned on rented land.
+  - Questions 4 and 5 disqualify a taxpayer who can be claimed as a dependent
+    and lived in the claimant's home for more than half of the year.
+  - Question 6 disqualifies tax-exempt rental property unless possessory
+    interest taxes were paid on the rented property.
+  - Questions 7 through 10 apply the homeowner's property tax exemption rules,
+    including the separate-residence exception for some married filers.
+  - Question 11 sets the line 46 amount at $60 for single filers, $120 for head
+    of household, qualifying surviving spouse, and most joint filers, and
+    $60/$120 for married filing separately depending on the shared-rental
+    election when both spouses qualify.
+
+lines:
+  - line: "1"
+    description: "California residency requirement"
+    formula: "Resident for the entire 2025 tax year"
+    inputs:
+      - "California residency status for all of 2025"
+    edgeCases:
+      - "A part-year resident does not qualify for Form 540 line 46 and should use Form 540NR rules instead"
+    testRef: "tests/engine/state/ca-form-540-renters-credit.test.ts::CA Form 540 renter's credit Line 1 - part-year residents do not qualify"
+
+  - line: "2"
+    description: "California AGI limitation"
+    formula: "California AGI must be $53,994 or less for single or married filing separately, or $107,988 or less for married filing jointly, head of household, or qualifying surviving spouse"
+    inputs:
+      - "California AGI"
+      - "Filing status"
+    edgeCases:
+      - "The threshold amount itself still qualifies"
+      - "$1 above the threshold disqualifies the credit"
+    testRef: "tests/engine/state/ca-form-540-renters-credit.test.ts::CA Form 540 renter's credit Line 2 - single filers qualify at the AGI threshold"
+
+  - line: "3"
+    description: "Qualifying rent period"
+    formula: "Rent must be paid for at least half of 2025 on a California principal residence"
+    inputs:
+      - "Months paying rent on a California principal residence"
+    edgeCases:
+      - "Six months satisfies the at-least-half-year rule"
+      - "Five months does not qualify"
+    testRef: "tests/engine/state/ca-form-540-renters-credit.test.ts::CA Form 540 renter's credit Line 3 - five months of rent is not enough"
+
+  - line: "4-5"
+    description: "Dependent residence rule"
+    formula: "Disallow the credit if the taxpayer can be claimed as a dependent and lived in the claimant's home for more than half of 2025"
+    inputs:
+      - "Whether the taxpayer can be claimed as a dependent"
+      - "Whether the taxpayer lived in the claimant's home for more than half of 2025"
+    testRef: "tests/engine/state/ca-form-540-renters-credit.test.ts::CA Form 540 renter's credit Line 4-5 - a dependent who lived with the claimant for most of the year does not qualify"
+
+  - line: "6"
+    description: "Property tax exemption rule"
+    formula: "Disallow the credit if the rented property was exempt from property tax for more than half of 2025, unless possessory interest taxes were paid on the rented property"
+    inputs:
+      - "Whether the rented property was exempt from property tax for more than half of 2025"
+      - "Whether possessory interest taxes were paid on the rented property"
+    edgeCases:
+      - "Tax-exempt property can still qualify when possessory interest taxes were paid"
+    testRef: "tests/engine/state/ca-form-540-renters-credit.test.ts::CA Form 540 renter's credit Line 6 - possessory interest tax keeps tax-exempt property eligible"
+
+  - line: "7-10"
+    description: "Homeowner's property tax exemption rules"
+    formula: "Disallow the credit when the taxpayer or spouse claimed the homeowner's property tax exemption unless the booklet's separate-residence exception applies"
+    inputs:
+      - "Whether the taxpayer claimed the homeowner's property tax exemption during 2025"
+      - "Whether the spouse claimed the homeowner's property tax exemption during 2025"
+      - "Whether the spouses maintained separate residences for the entire year"
+      - "Filing status"
+    edgeCases:
+      - "A joint return with exactly one homeowner's exemption and separate residences is limited to $60"
+      - "A married-filing-separately taxpayer who claimed the homeowner's exemption does not qualify"
+    testRef: "tests/engine/state/ca-form-540-renters-credit.test.ts::CA Form 540 renter's credit Line 7-10 - married filing jointly with one homeowner exemption and separate residences gets $60"
+
+  - line: "11"
+    description: "Credit amount"
+    formula: "Enter $60 if single, $120 if head of household or qualifying surviving spouse, $120 if married filing jointly except the separate-residence homeowner-exemption exception reduces it to $60, and $60 or $120 for married filing separately depending on the shared-rental election when both spouses qualify"
+    inputs:
+      - "Filing status"
+      - "Married filing separately shared-rental election, if applicable"
+      - "Results of questions 1 through 10"
+    edgeCases:
+      - "Married filing separately defaults to $60 unless the supported shared-rental full-credit election applies"
+      - "When both married-filing-separately spouses qualify in the same rental, one spouse may claim the full $120"
+    testRef: "tests/engine/state/ca-form-540-renters-credit.test.ts::CA Form 540 renter's credit Line 11 - married filing separately can elect the full $120 when both spouses qualify in the same rental"
+
+  - line: "46"
+    description: "Nonrefundable renter's credit"
+    formula: "If all qualification questions pass, use the supported question 11 amount; otherwise enter 0"
+    inputs:
+      - "Qualification results from questions 1 through 10"
+      - "Question 11 credit amount"
+    testRef: "tests/engine/state/ca-form-540-renters-credit.test.ts::CA Form 540 renter's credit Line 46 - audit trail records the qualification path and final credit amount"

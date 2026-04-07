@@ -1,0 +1,226 @@
+form: "Schedule J"
+fullName: "Income Averaging for Farmers and Fishermen"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i1040sj"
+irsStatute: "IRC §1301"
+
+notes: |
+  Schedule J allows individuals engaged in a farming or fishing business to
+  elect to spread ("average") the current year's farm/fishing income over the
+  three prior base years (2022, 2023, 2024 for a 2025 election). One-third
+  of the elected farm income is added to each base year's taxable income and
+  tax is recomputed at that year's rates. The result replaces Form 1040
+  Line 16.
+
+  Eligibility: the taxpayer must be engaged in a farming or fishing business
+  during the election year. There is no requirement to have been farming or
+  fishing in the base years. Estates and trusts may not use Schedule J.
+
+  Key rules:
+  - Elected farm income (EFI) cannot exceed taxable income (Line 1).
+  - EFI includes Schedule F net profit, Schedule C fishing, farm K-1 income,
+    Form 4797 farm property gains (excluding land), and attributable SE
+    deduction.
+  - If the taxpayer used Schedule J in a prior year, base year taxable income
+    is the adjusted amount from that prior Schedule J, not the original return.
+  - Each base year's tax is recomputed using that year's tax brackets and the
+    filing status used on that year's return.
+  - Income averaging does NOT apply to AMT. Form 6251 must use the regular
+    tax computed without Schedule J.
+  - The election is made by filing Schedule J and can be revoked by amending.
+
+lines:
+  # ── Part I: Taxable Income From Farming or Fishing ──────────
+  - line: "1"
+    description: "Taxable income from Form 1040, line 15"
+    formula: "taxableIncome"
+    irsRef: "Schedule J Instructions, Line 1"
+    testRef: "tests/engine/forms/schedule-j.test.ts::Schedule J Line 1 - taxable income from Form 1040"
+
+  - line: "2a"
+    description: "Elected farm income"
+    formula: "User-elected amount of taxable income attributable to farming/fishing, capped at Line 1"
+    irsRef: "Schedule J Instructions, Line 2a; IRC §1301(b)(1)"
+    testRef: "tests/engine/forms/schedule-j.test.ts::Schedule J Line 2a - elected farm income cannot exceed taxable income"
+
+  - line: "2b"
+    description: "Net capital gain from elected farm income"
+    formula: "min(net capital gain from farming, total net capital gain, Line 2a)"
+    irsRef: "Schedule J Instructions, Line 2b"
+    testRef: "tests/engine/forms/schedule-j.test.ts::Schedule J Line 2b - net capital gain portion of EFI"
+
+  - line: "2c"
+    description: "Unrecaptured section 1250 gain from elected farm income"
+    formula: "min(Line 2b, unrecaptured §1250 gain from farming)"
+    irsRef: "Schedule J Instructions, Line 2c"
+    testRef: "tests/engine/forms/schedule-j.test.ts::Schedule J Line 2c - unrecaptured section 1250 gain portion"
+
+  - line: "3"
+    description: "Non-farm taxable income"
+    formula: "Line 1 - Line 2a"
+    irsRef: "Schedule J Instructions, Line 3"
+    testRef: "tests/engine/forms/schedule-j.test.ts::Schedule J Line 3 - non-farm taxable income"
+
+  # ── Part II: Tax on Non-Farm Income (Current Year) ──────────
+  - line: "4"
+    description: "Tax on Line 3 using 2025 rates"
+    formula: "calculateTaxFromBrackets(Line 3, 2025 brackets[filingStatus]) or QDCG worksheet"
+    irsRef: "Schedule J Instructions, Line 4"
+    testRef: "tests/engine/forms/schedule-j.test.ts::elected farm income equals full taxable income"
+
+  # ── Part II: Base Year 1 (2022) ─────────────────────────────
+  - line: "5"
+    description: "2022 taxable income (adjusted for prior Schedule J use)"
+    formula: "Direct input: base year 2022 taxable income (adjusted if Schedule J was used in 2022-2024)"
+    irsRef: "Schedule J Instructions, Line 5"
+    testRef: "tests/engine/forms/schedule-j.test.ts::Schedule J Line 5 - 2022 base year taxable income"
+
+  - line: "6"
+    description: "One-third of elected farm income allocated to 2022"
+    formula: "Line 2a / 3"
+    irsRef: "Schedule J Instructions, Line 6"
+    testRef: "tests/engine/forms/schedule-j.test.ts::Schedule J Line 6 - one-third allocation"
+
+  - line: "7"
+    description: "2022 taxable income with allocation"
+    formula: "max(0, Line 5 + Line 6)"
+    irsRef: "Schedule J Instructions, Line 7"
+    testRef: "tests/engine/forms/schedule-j.test.ts::Schedule J Line 7 - 2022 income plus allocation floored at zero"
+
+  - line: "8"
+    description: "Tax on Line 7 using 2022 rates and 2022 filing status"
+    formula: "calculateTaxFromBrackets(Line 7, 2022 brackets[2022 filingStatus]); 0 if Line 7 ≤ 0"
+    irsRef: "Schedule J Instructions, Line 8"
+    testRef: "tests/engine/forms/schedule-j.test.ts::Schedule J Line 8 - tax at 2022 rates"
+
+  # ── Part II: Base Year 2 (2023) ─────────────────────────────
+  - line: "9"
+    description: "2023 taxable income (adjusted for prior Schedule J use)"
+    formula: "Direct input: base year 2023 taxable income"
+    irsRef: "Schedule J Instructions, Line 9"
+    testRef: "tests/engine/forms/schedule-j.test.ts::Schedule J Line 12 - tax at 2023 rates"
+
+  - line: "10"
+    description: "One-third of elected farm income allocated to 2023"
+    formula: "Line 2a / 3"
+    irsRef: "Schedule J Instructions, Line 10"
+    testRef: "tests/engine/forms/schedule-j.test.ts::Schedule J Line 6 - one-third allocation"
+
+  - line: "11"
+    description: "2023 taxable income with allocation"
+    formula: "Line 9 + Line 10 (can be negative)"
+    irsRef: "Schedule J Instructions, Line 11"
+    testRef: "tests/engine/forms/schedule-j.test.ts::negative base year income with partial offset from allocation"
+
+  - line: "12"
+    description: "Tax on Line 11 using 2023 rates and 2023 filing status"
+    formula: "calculateTaxFromBrackets(Line 11, 2023 brackets[2023 filingStatus]); 0 if Line 11 ≤ 0"
+    irsRef: "Schedule J Instructions, Line 12"
+    testRef: "tests/engine/forms/schedule-j.test.ts::Schedule J Line 12 - tax at 2023 rates"
+
+  # ── Part II: Base Year 3 (2024) ─────────────────────────────
+  - line: "13"
+    description: "2024 taxable income (adjusted for prior Schedule J use)"
+    formula: "Direct input: base year 2024 taxable income"
+    irsRef: "Schedule J Instructions, Line 13"
+    testRef: "tests/engine/forms/schedule-j.test.ts::Schedule J Line 16 - tax at 2024 rates"
+
+  - line: "14"
+    description: "One-third of elected farm income allocated to 2024"
+    formula: "Line 2a / 3"
+    irsRef: "Schedule J Instructions, Line 14"
+    testRef: "tests/engine/forms/schedule-j.test.ts::Schedule J Line 6 - one-third allocation"
+
+  - line: "15"
+    description: "2024 taxable income with allocation"
+    formula: "Line 13 + Line 14 (can be negative)"
+    irsRef: "Schedule J Instructions, Line 15"
+    testRef: "tests/engine/forms/schedule-j.test.ts::tax on negative combined income is zero (Lines 12/16)"
+
+  - line: "16"
+    description: "Tax on Line 15 using 2024 rates and 2024 filing status"
+    formula: "calculateTaxFromBrackets(Line 15, 2024 brackets[2024 filingStatus]); 0 if Line 15 ≤ 0"
+    irsRef: "Schedule J Instructions, Line 16"
+    testRef: "tests/engine/forms/schedule-j.test.ts::Schedule J Line 16 - tax at 2024 rates"
+
+  # ── Part III: Tax Computation ───────────────────────────────
+  - line: "17"
+    description: "Sum of tax computations"
+    formula: "Line 4 + Line 8 + Line 12 + Line 16"
+    irsRef: "Schedule J Instructions, Line 17"
+    testRef: "tests/engine/forms/schedule-j.test.ts::Schedule J Line 17 - sum of all four tax computations"
+
+  - line: "18"
+    description: "Equals Line 17"
+    formula: "Line 17"
+    irsRef: "Schedule J Instructions, Line 18"
+    testRef: "tests/engine/forms/schedule-j.test.ts::Schedule J Line 17 - sum of all four tax computations"
+
+  - line: "19"
+    description: "2022 original tax (from Form 1040 Line 16 or prior Schedule J)"
+    formula: "Direct input: original 2022 tax (adjusted for prior Schedule J)"
+    irsRef: "Schedule J Instructions, Line 19"
+    testRef: "tests/engine/forms/schedule-j.test.ts::Schedule J Line 22 - sum of base year original taxes"
+
+  - line: "20"
+    description: "2023 original tax (from Form 1040 Line 16 or prior Schedule J)"
+    formula: "Direct input: original 2023 tax"
+    irsRef: "Schedule J Instructions, Line 20"
+    testRef: "tests/engine/forms/schedule-j.test.ts::Schedule J Line 22 - sum of base year original taxes"
+
+  - line: "21"
+    description: "2024 original tax (from Form 1040 Line 16 or prior Schedule J)"
+    formula: "Direct input: original 2024 tax"
+    irsRef: "Schedule J Instructions, Line 21"
+    testRef: "tests/engine/forms/schedule-j.test.ts::Schedule J Line 22 - sum of base year original taxes"
+
+  - line: "22"
+    description: "Sum of base year original taxes"
+    formula: "Line 19 + Line 20 + Line 21"
+    irsRef: "Schedule J Instructions, Line 22"
+    testRef: "tests/engine/forms/schedule-j.test.ts::Schedule J Line 22 - sum of base year original taxes"
+
+  - line: "23"
+    description: "Averaged tax — replaces Form 1040 Line 16"
+    formula: "Line 18 - Line 22"
+    irsRef: "Schedule J Instructions, Line 23; IRC §1301(a)"
+    testRef: "tests/engine/forms/schedule-j.test.ts::Schedule J Line 23 - final averaged tax"
+
+edgeCases:
+  - name: "Negative base year income"
+    description: >
+      When a base year's taxable income is negative (loss year), the Taxable
+      Income Worksheet reconstructs the true negative amount by adding back
+      NOL carryovers and excess capital losses. The engine accepts the
+      pre-adjusted amount as input.
+
+  - name: "Consecutive Schedule J elections"
+    description: >
+      When Schedule J was used in prior years, base year taxable incomes are
+      the adjusted amounts from the prior Schedule J (not original return).
+      The caller is responsible for chaining correctly.
+
+  - name: "Different filing statuses across years"
+    description: >
+      Each base year uses its own filing status and tax rates. A taxpayer who
+      was single in 2022 but MFJ in 2025 has each year computed independently.
+
+  - name: "EFI includes net capital gain"
+    description: >
+      When elected farm income includes net capital gain (Line 2b > 0), each
+      base year should ideally use the Schedule D Tax Worksheet with 1/3 of
+      the capital gain allocated. The current implementation uses ordinary
+      bracket-based tax for base years as the primary path, with an optional
+      QDCG-aware path when base year capital gains thresholds are available.
+
+  - name: "AMT interaction"
+    description: >
+      Income averaging does not apply to AMT. Form 6251 must use the regular
+      tax computed without Schedule J (the engine exposes taxWithoutScheduleJ
+      for this purpose).
+
+  - name: "Zero or full election"
+    description: >
+      The taxpayer may elect any amount from $0 to the maximum eligible farm
+      income. An election of $0 produces no benefit. The optimal amount
+      depends on bracket analysis across all four years.

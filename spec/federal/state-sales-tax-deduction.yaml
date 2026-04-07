@@ -1,0 +1,105 @@
+form: "State and Local General Sales Tax Deduction Worksheet"
+fullName: "Optional Sales Tax Deduction — Schedule A Line 5a Alternative"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i1040sca"
+description: |
+  Per IRC §164(b)(5)(I) (extended through 2025 by the Tax Relief for American
+  Families and Workers Act), taxpayers who itemize may elect to deduct state and
+  local general sales taxes INSTEAD of state and local income taxes on Schedule A
+  Line 5a.  The election is especially valuable for residents of states without an
+  income tax (AK, FL, NV, NH, SD, TN, TX, WA, WY) and for any taxpayer whose
+  sales tax exceeds their income tax.
+
+  Two methods are available:
+  1.  IRS Optional Sales Tax Table — estimates the deduction from AGI, filing
+      status/exemptions, and the state + local sales tax rate using pre-computed
+      spending patterns.  Motor vehicles and other specific large purchases can
+      be added on top at the applicable rate.
+  2.  Actual receipts — total general sales tax paid from records, plus specific
+      large-purchase sales tax.
+
+  Either method feeds into Schedule A Line 5a and is subject to the same $10,000
+  SALT cap ($5,000 MFS) as the income-tax path.
+
+lines:
+  - line: "1"
+    description: "State general sales tax rate"
+    formula: "State rate from published 2025 state sales tax rates"
+    irsRef: "Schedule A Instructions, Line 5a; State and Local General Sales Tax Deduction Worksheet"
+    notes: "Expressed as a decimal (e.g. 0.0625 for 6.25%)"
+    testRef: "tests/engine/forms/state-sales-tax-deduction-worksheet.test.ts::Texas rate is 6.25%"
+
+  - line: "2"
+    description: "Average local sales tax rate"
+    formula: "User-supplied local rate (county/city surcharges)"
+    irsRef: "Schedule A Instructions, worksheet step 2"
+    notes: |
+      The IRS instructs: enter your local general sales tax rate, but DO NOT
+      enter more than your state rate. Capped at state rate per IRS instruction
+      for states with a statewide general sales tax. Alaska is the special case:
+      because it has no statewide sales tax but does have local general sales
+      taxes and a dedicated IRS local-sales-tax table, the entered Alaska local
+      rate remains available instead of being capped to zero.
+    testRef: "tests/engine/forms/state-sales-tax-deduction-worksheet.test.ts::Local rate adds to combined rate for table lookup"
+
+  - line: "3"
+    description: "Combined state + local sales tax rate"
+    formula: "Line 1 + min(Line 2, Line 1), except Alaska uses Line 2 when Line 1 is zero"
+    irsRef: "Schedule A Instructions, worksheet step 3"
+    testRef: "tests/engine/forms/state-sales-tax-deduction-worksheet.test.ts::Local rate adds to combined rate for table lookup"
+
+  - line: "4"
+    description: "IRS Optional Sales Tax Table amount"
+    formula: "Lookup from IRS table using AGI, number of exemptions, and state"
+    irsRef: "Schedule A Instructions, Optional State Sales Tax Table"
+    notes: |
+      The table provides a base deduction amount for 1 exemption, determined by
+      state and AGI bracket.  Base amounts reflect average consumer spending on
+      goods subject to general sales tax, weighted by income level, sourced from
+      BLS Consumer Expenditure Survey data.  The base amount is multiplied by an
+      exemption multiplier for family size.
+    edgeCases:
+      - "States without general sales tax other than Alaska (DE, MT, NH, OR) produce $0"
+      - "Alaska may still produce a positive table amount when a local general sales tax rate is provided"
+      - "Local rate adjustment multiplies the table amount by (1 + localRate/stateRate)"
+      - "Exemption multiplier from IRS exemption table: 1 → 1.000, 2 → 1.614, 3 → 1.756, 4 → 1.863, over 4 → add approximately 0.107 per additional"
+    testRef: "tests/engine/forms/state-sales-tax-deduction-worksheet.test.ts::Texas single filer with $75K AGI and 1 exemption produces positive deduction"
+
+  - line: "5"
+    description: "Table amount with local rate adjustment"
+    formula: "Line 4 × (1 + min(localRate, stateRate) / stateRate)"
+    irsRef: "Schedule A Instructions, worksheet step 5"
+    notes: "Adjusts the state-rate-based table amount upward for local taxes"
+    testRef: "tests/engine/forms/state-sales-tax-deduction-worksheet.test.ts::Local rate adds to combined rate for table lookup"
+
+  - line: "6"
+    description: "Sales tax on specific large purchases"
+    formula: "Sum of actual sales tax paid on motor vehicles, boats, aircraft, homes, and home building materials"
+    irsRef: "Schedule A Instructions, worksheet step 6"
+    notes: |
+      Taxpayers may add actual general sales tax paid on:
+      - Motor vehicles (not limited to tax at the general rate if tax rate did
+        not exceed the general sales tax rate)
+      - Boats, aircraft
+      - Home (including mobile home)
+      - Home building materials
+      Each purchase's tax is limited to the amount at the applicable general rate.
+    testRef: "tests/engine/forms/state-sales-tax-deduction-worksheet.test.ts::Vehicle purchase sales tax adds on top of table amount"
+
+  - line: "7"
+    description: "Total general sales tax deduction"
+    formula: "Line 5 + Line 6 (table method) OR actual total from receipts"
+    irsRef: "Schedule A Instructions, worksheet step 7"
+    notes: "This amount enters Schedule A Line 5a when the sales tax election is made"
+    testRef: "tests/engine/forms/state-sales-tax-deduction-worksheet.test.ts::Actual total replaces table lookup"
+
+  - line: "comparison"
+    description: "Income tax vs. sales tax comparison"
+    formula: "Greater of state/local income taxes OR general sales tax deduction"
+    irsRef: "Schedule A Instructions, Line 5a"
+    notes: |
+      The engine can auto-compare both methods and use the larger when
+      autoCompare is enabled.  Otherwise the taxpayer makes the election.
+    testRef: "tests/engine/forms/state-sales-tax-deduction-worksheet.test.ts::Texas filer with no income tax uses sales tax deduction via autoCompare"
+
+testRef: "tests/engine/forms/state-sales-tax-deduction-worksheet.test.ts::Sales tax worksheet — table method"

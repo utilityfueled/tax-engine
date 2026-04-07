@@ -1,0 +1,111 @@
+form: "QDCG Worksheet"
+fullName: "Qualified Dividends and Capital Gain Tax Worksheet"
+taxYear: 2025
+irsReference: "Form 1040 Instructions, QDCG Worksheet"
+
+lines:
+  - line: "1"
+    description: "Taxable income"
+    formula: "Form 1040 Line 15"
+    testRef: "tests/utils/tax-math.test.ts::QDCG worksheet - no preferential income uses ordinary rates only"
+
+  - line: "2"
+    description: "Qualified dividends"
+    formula: "Form 1040 Line 3a"
+    testRef: "tests/utils/tax-math.test.ts::QDCG worksheet - qualified dividends in 0% bracket"
+
+  - line: "3"
+    description: "Net capital gain eligible for preferential rates"
+    formula: "If filing Schedule D: lesser of Line 15 or Line 16. If either is blank or a loss, enter 0."
+    irsRef: "QDCG Worksheet Line 3; Form 1040 Instructions"
+    notes: |
+      Line 15 = net long-term capital gain/loss.
+      Line 16 = net capital gain/loss (ST + LT combined).
+      When short-term losses partially offset long-term gains, Line 16 < Line 15,
+      and only the net capital gain (Line 16) enters the preferential rate computation.
+      When net capital gain/loss is a loss, Line 3 = 0 (no preferential capital gain treatment).
+    edgeCases:
+      - "ST loss partially offsets LT gain: Line 3 = netCapitalGainLoss (< netLongTerm)"
+      - "ST loss exceeds LT gain (overall loss): Line 3 = 0"
+      - "No ST loss: Line 3 = netLongTerm (Line 15 = Line 16 or Line 15 < Line 16)"
+    testRef: "tests/edge-cases/schedule-d-edge-cases.test.ts::QDCG Line 3 - ST loss reduces preferential capital gain"
+
+  - line: "4"
+    description: "Total preferential income"
+    formula: "Line 2 + Line 3"
+    notes: "Income eligible for 0%/15%/20% rates"
+    testRef: "tests/utils/tax-math.test.ts::QDCG worksheet - combined preferential tax lower than ordinary"
+
+  - line: "5"
+    description: "Ordinary income portion"
+    formula: "Line 1 - Line 4, floor at 0"
+    notes: "Income taxed at regular bracket rates"
+    testRef: "tests/utils/tax-math.test.ts::QDCG worksheet - high income hits 20% rate"
+
+  - line: "10"
+    description: "Effective preferential income (capped at taxable income)"
+    formula: "min(Line 1, Line 4) — equivalently: Line 1 - Line 5"
+    irsRef: "QDCG Worksheet Line 10; Schedule D Tax Worksheet Line 22"
+    notes: |
+      When deductions consume part of the preferential income (Line 4 > Line 1),
+      the effective preferential income entering rate brackets is capped at taxable income.
+      This ensures total stacked income (ordinary + preferential) never exceeds taxable income.
+      Common scenario: retiree with $60K qualified dividends, $15K standard deduction → $44,650 taxable.
+      Only $44,650 (not $60K) enters the 0/15/20% rate computation.
+    edgeCases:
+      - "Preferential income exceeds taxable income — effective preferential = taxable income"
+      - "All income from qualified dividends below 0% threshold → $0 tax"
+      - "When preferential ≤ taxable, effective preferential = preferential (no cap)"
+    testRef: "tests/utils/tax-math.test.ts::QDCG worksheet - preferential income capped at taxable income (Line 10)"
+
+  - line: "stacking"
+    description: "Rate stacking for preferential income"
+    formula: |
+      Stack effective preferential income (Line 10) on top of ordinary income:
+      - 0% rate: preferential income filling the 0% bracket (up to threshold)
+      - 15% rate: preferential income filling from 0% threshold to 15% threshold
+      - 20% rate: remainder above 15% threshold
+    notes: |
+      2025 thresholds (MFJ): 0% up to $96,700; 15% up to $600,050; 20% above
+    edgeCases:
+      - "All preferential income in 0% bracket"
+      - "Preferential income spans multiple rate brackets"
+      - "High ordinary income pushes all preferential into 20%"
+      - "Zero ordinary income"
+    testRef: "tests/utils/tax-math.test.ts::QDCG worksheet - LTCG spanning 15% bracket"
+
+  - line: "lesser-of"
+    description: "Lesser-of check — cap at ordinary rates"
+    formula: |
+      Tax = lesser of (QDCG method tax) and (all-ordinary-rates tax on full taxable income).
+      Per IRC §1(h)(1): "the tax ... shall not exceed the sum of" the preferential computation.
+      This prevents §1250 (25%) or collectibles (28%) rates from exceeding the taxpayer's
+      marginal ordinary rate at low income levels.
+    irsRef: "IRC §1(h)(1); QDCG Worksheet Lines 25-26; Schedule D Tax Worksheet Lines 40-41"
+    edgeCases:
+      - "Single $30K income with $10K §1250 LTCG: QDCG gives $4,662 vs ordinary $3,362 → use $3,362"
+      - "Never triggers for standard 0/15/20% rates (always lower than ordinary brackets)"
+      - "May not trigger at high income even with §1250/collectibles (other preferential savings compensate)"
+    testRef: "tests/utils/tax-math.test.ts::QDCG worksheet - §1250 in 0% bracket produces zero preferential tax"
+
+  - line: "special-rates"
+    description: "Special capital gain rates for §1250 and collectibles"
+    formula: |
+      Per IRS Schedule D Tax Worksheet (Lines 11-31) and IRC §1(h)(1)(D)-(E):
+      ALL preferential income (including §1250 and collectibles) stacks for 0%/15% first.
+      25% (§1250) and 28% (collectibles) are MAXIMUM rates — gains that fall within
+      the 0% or 15% brackets get the lower rate. Only gains ABOVE the 15% threshold
+      receive the special rates, allocated in order: 28% (collectibles), then 25% (§1250),
+      then 20% (remainder).
+    irsRef: "IRC §1(h)(1)(B)-(F); Schedule D Tax Worksheet Lines 11-31"
+    inputs:
+      - "1099-DIV Box 2b (section 1250 gain)"
+      - "1099-DIV Box 2d (collectibles gain)"
+    edgeCases:
+      - "§1250 gain entirely within 0% bracket → taxed at 0%, not 25%"
+      - "§1250 gain spanning 15% threshold → partial 15%, partial 25%"
+      - "§1250 above 15% threshold → full 25% rate applies"
+      - "Collectibles gain within 15% bracket → taxed at 15%, not 28%"
+      - "Special gains capped at remaining preferential above 15% threshold"
+      - "No special gains → standard 0/15/20% only"
+    testRef: "tests/utils/tax-math.test.ts::QDCG worksheet - §1250 within 15% bracket gets 15% rate (not 25%)"

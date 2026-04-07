@@ -1,0 +1,141 @@
+form: "NJ-2210"
+fullName: "Underpayment of Estimated Tax by Individuals and Fiduciaries"
+taxYear: 2025
+reference: "https://www.nj.gov/treasury/taxation/pdf/current/2210.pdf"
+
+notes: |
+  NJ-2210 determines whether a taxpayer owes a penalty for underpayment of
+  estimated NJ income tax. Required when the tax owed after withholding and
+  credits exceeds $400.
+
+  For 2025, line 2 of NJ-2210 is the total of NJ-1040 lines 55, 56, 58, 59,
+  60, 61, 62, 63, 64, and 65. That means the underpayment test counts not only
+  NJ wage withholding, but also the property tax credit, NJ EITC, excess
+  payroll credits, Wounded Warrior Caregivers Credit, PTBAIT credit, child and
+  dependent care credit, and NJ Child Tax Credit. The instructions treat the
+  line-2 total as paid evenly across the four quarterly due dates unless the
+  taxpayer proves a different withholding pattern.
+
+  Safe harbor exceptions (no penalty if either is met in the supported slice):
+    1. Threshold exception: current year tax minus line-2 credits is less than $400
+    2. Prior year exception: total payments (line-2 credits + estimated) ≥ lesser of:
+       a. 80% of current year tax
+       b. 100% of prior year tax (if prior year return was filed, 12-month period)
+
+  If no exception applies, penalty is computed per quarter using the NJ
+  underpayment interest rate. NJ requires four equal quarterly installments
+  of 25% of the required annual payment, due:
+    - Q1: April 15
+    - Q2: June 15
+    - Q3: September 15
+    - Q4: January 15 of next year
+
+  Supported short method: assumes line-2 withholding-equivalent credits are
+  paid evenly (25% per quarter) and any estimated payments were timely.
+  For 2025, the published Option 1 worksheet multipliers are 0.018, 0.027,
+  0.036, and 0.025. When the supported slice models only an annual
+  underpayment amount, those quarterly multipliers collapse to an equivalent
+  annual multiplier of 0.0700.
+
+  Penalty interest rate is set by the NJ Division of Taxation. For recent years:
+    - 2025: 10.75% from 4/16/25-1/15/26, then 10.00% from 1/16/26-4/15/26
+    - 2024: 10.5%
+    - 2023: 7.0%
+
+  The penalty period runs from each quarterly due date to the earlier of:
+    a. The date the installment was paid
+    b. April 15 of the following year (filing deadline)
+
+  For the published 2025 Option 1 worksheet, the quarter multipliers are:
+    Q1: 0.018
+    Q2: 0.027
+    Q3: 0.036
+    Q4: 0.025
+  Those multipliers sum to an annual 0.0700 factor when the supported slice
+  computes only the annual shortfall and assumes each quarter was unpaid.
+
+  NJ-2210 penalty is added to balance due on NJ-1040 (Line 58/59).
+
+lines:
+  - line: "threshold-check"
+    description: "Check if underpayment penalty applies based on $400 threshold"
+    formula: |
+      line2Credits = NJ-1040 lines 55, 56, 58, 59, 60, 61, 62, 63, 64, and 65
+      thresholdAmount = currentYearTax - line2Credits
+      If thresholdAmount < $400, no penalty
+    inputs:
+      - "Current year tax (NJ-1040 line 50 equivalent: tax after nonrefundable credits)"
+      - "NJ-1040 line 55 withholding"
+      - "Property tax credit (line 56)"
+      - "NJ EITC (line 58)"
+      - "Excess UI/WF/SWF credit (line 59)"
+      - "Excess DI credit (line 60)"
+      - "Excess FLI credit (line 61)"
+      - "Wounded Warrior Caregivers Credit (line 62)"
+      - "PTBAIT credit (line 63)"
+      - "Child and Dependent Care Credit (line 64)"
+      - "NJ Child Tax Credit (line 65)"
+    edgeCases:
+      - "Tax exactly $399 after line-2 credits: no penalty"
+      - "Tax exactly $400 after line-2 credits: complete the rest of the form"
+      - "Refundable credits on lines 56 and 58-65 can reduce the threshold amount even with little or no wage withholding"
+      - "Zero tax: no penalty regardless"
+    testRef: "tests/engine/state/nj-2210.test.ts::NJ-2210 - no penalty when tax minus line 2 credits is less than $400"
+
+  - line: "required-annual-payment"
+    description: "Required annual payment"
+    formula: "lesser of (80% × current year tax, 100% × prior year tax)"
+    inputs:
+      - "Current year tax"
+      - "Prior year tax"
+    notes: |
+      If no prior year return was filed, required annual payment = 80% of current year tax.
+      The 80% threshold is NJ-specific (federal uses 90%).
+    edgeCases:
+      - "No prior year return: use 80% of current year only"
+      - "Prior year tax is zero: required payment is $0 → no penalty"
+      - "Prior year tax is lower than 80% of current: use prior year tax"
+    testRef: "tests/engine/state/nj-2210.test.ts::NJ-2210 - required annual payment is lesser of 80% current or 100% prior"
+
+  - line: "safe-harbor-check"
+    description: "Check if total payments meet required annual payment"
+    formula: "If (line-2 withholding-equivalent credits + estimatedPayments) ≥ requiredAnnualPayment, no penalty"
+    inputs:
+      - "Line-2 withholding-equivalent credits"
+      - "Estimated payments"
+      - "Required annual payment"
+    edgeCases:
+      - "Payments exactly equal required: no penalty"
+      - "Payments exceed required: no penalty"
+    testRef: "tests/engine/state/nj-2210.test.ts::NJ-2210 - no penalty when payments meet safe harbor"
+
+  - line: "underpayment"
+    description: "Compute total underpayment amount"
+    formula: "max(0, requiredAnnualPayment - totalPayments)"
+    inputs:
+      - "Required annual payment"
+      - "Total payments (line-2 withholding-equivalent credits + estimated)"
+    testRef: "tests/engine/state/nj-2210.test.ts::NJ-2210 - underpayment is shortfall from required payment"
+
+  - line: "penalty"
+    description: "Underpayment penalty (short method)"
+    formula: |
+      For the supported 2025 resident slice:
+      penalty = underpayment × 0.0700, rounded to the nearest dollar
+      This reproduces the published 2025 Option 1 quarter multipliers
+      (0.018, 0.027, 0.036, and 0.025) when only the annual shortfall is modeled.
+      Result is rounded to nearest dollar.
+    inputs:
+      - "Underpayment amount"
+      - "2025 Option 1 quarter multipliers"
+    notes: |
+      This supported slice still uses annual underpayment rather than the full
+      quarter-by-quarter Part I carryover worksheet, so it remains conservative
+      relative to filers with mixed payment timing. The important 2025
+      improvement is that the line-2 credits are treated as withholding-equivalent
+      payments for both the threshold check and the short-method penalty base.
+    edgeCases:
+      - "Zero underpayment: $0 penalty"
+      - "Penalty rounds to nearest dollar"
+      - "Very small underpayment may round to $0"
+    testRef: "tests/engine/state/nj-2210.test.ts::NJ-2210 - penalty computed using the published 2025 short-method factor"

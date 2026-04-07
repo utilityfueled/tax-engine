@@ -1,0 +1,251 @@
+form: "Form 4797"
+fullName: "Sales of Business Property"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i4797"
+
+notes: |
+  This module implements Form 4797 Parts I, II, and III for individual
+  taxpayers selling business or investment property.
+
+  Part I handles section 1231 gains and losses: property held more than one
+  year that is not subject to depreciation recapture. This includes K-1
+  box 10 defaults and the 5-year nonrecaptured loss lookback rule.
+
+  Part III computes per-property depreciation recapture under IRC sections
+  1245 and 1250 for depreciable business property. Section 1245 (tangible
+  personal property: equipment, vehicles, furniture) recaptures ALL
+  depreciation as ordinary income up to the amount of gain. Section 1250
+  (real property: buildings, improvements) recaptures only the EXCESS of
+  actual depreciation over straight-line as ordinary income. For post-1986
+  MACRS property using straight-line, the section 1250 ordinary recapture
+  is typically $0. However, the straight-line depreciation on section 1250
+  property becomes "unrecaptured section 1250 gain" taxed at a maximum
+  25% capital gains rate (IRC section 1(h)(6)).
+
+  Part II aggregates ordinary gains and losses from Part III recapture
+  amounts plus any short-term property sales (held one year or less).
+
+  Sections 1252 (farm land), 1254 (oil/gas/geothermal), and 1255
+  (section 126 property) recapture are documented but not yet computed.
+  Like-kind exchange (section 1031) and involuntary conversion (section
+  1033) coordination are not yet implemented.
+
+lines:
+  # ── Part I: Section 1231 Gains and Losses ──────────────────────
+
+  - line: "7"
+    description: "Net section 1231 gain or loss"
+    formula: >
+      Use the validated Form 4797 line 7 amount when provided; otherwise,
+      combine: (a) attached Schedule K-1 box 10 gains plus attached nonpassive
+      K-1 box 10 losses, and (b) non-recapture section 1231 gain from Part III
+      property sales held more than one year plus section 1231 losses from
+      property sales held more than one year with no gain
+    irsRef: "Form 4797 Instructions, Line 7; Partner's Instructions for Schedule K-1 (Form 1065), Box 10"
+    inputs:
+      - "Validated Form 4797 line 7 net section 1231 gain or loss"
+      - "Supported attached Schedule K-1 box 10 gains"
+      - "Supported attached nonpassive Schedule K-1 box 10 losses"
+      - "Part III non-recapture section 1231 gain from property sales"
+      - "Section 1231 losses from property sales"
+    notes: >
+      If a supported passive Schedule K-1 box 10 loss exists, that loss remains
+      manual instead of defaulting into line 7 without the required passive-loss
+      limitation work. When property sales are present, their section 1231
+      amounts add to the K-1 defaults unless the validated line 7 override is
+      provided.
+    edgeCases:
+      - "A validated Form 4797 line 7 override takes precedence over all computed defaults"
+      - "If the only attached K-1 box 10 losses are passive and no validated line 7 amount is provided, line 7 stays at the property sale section 1231 total and the passive losses remain deferred"
+      - "Property sales with losses and held more than one year contribute section 1231 losses to line 7"
+    testRef: "tests/engine/forms/form-4797.test.ts::Form 4797 Part I section 1231 summary"
+
+  - line: "8"
+    description: "Nonrecaptured net section 1231 losses from prior years"
+    formula: "Validated nonrecaptured net section 1231 losses from the 5 preceding tax years that have not yet been applied against a later net section 1231 gain"
+    irsRef: "Form 4797 Instructions, Line 8"
+    inputs:
+      - "Validated nonrecaptured net section 1231 losses from prior years"
+    testRef: "tests/engine/forms/form-4797.test.ts::Form 4797 Line 8 - prior-year nonrecaptured section 1231 losses limit the current-year capital-gain treatment"
+
+  - line: "9"
+    description: "Net section 1231 gain treated as long-term capital gain"
+    formula: "If Line 7 is a gain, enter Line 7 - Line 8, floored at $0; otherwise enter $0"
+    irsRef: "Form 4797 Instructions, Line 9"
+    inputs:
+      - "Form 4797 Line 7"
+      - "Form 4797 Line 8"
+    notes: "When line 9 is positive, this amount is reported as long-term capital gain on Schedule D."
+    testRef: "tests/engine/forms/form-4797.test.ts::Form 4797 Line 9 - the remaining section 1231 gain becomes long-term capital gain after the lookback recapture"
+
+  - line: "11"
+    description: "Net section 1231 loss treated as ordinary loss"
+    formula: "If Line 7 is a loss, enter Line 7; otherwise enter $0"
+    irsRef: "Form 4797 Part I"
+    inputs:
+      - "Form 4797 Line 7"
+    notes: "Carries to Schedule 1 line 4."
+    testRef: "tests/engine/forms/form-4797.test.ts::Form 4797 Line 11 - net section 1231 losses remain ordinary losses"
+
+  - line: "12"
+    description: "Current-year net section 1231 gain recaptured as ordinary income"
+    formula: "If Line 9 is greater than $0, enter the smaller of Line 7 or Line 8; otherwise, if Line 7 is a gain and Line 9 is $0, enter Line 7; else enter $0"
+    irsRef: "Form 4797 Instructions, Lines 8 through 12"
+    inputs:
+      - "Form 4797 Line 7"
+      - "Form 4797 Line 8"
+      - "Form 4797 Line 9"
+    notes: "Carries the line 12 ordinary gain to Schedule 1 line 4 while line 9 goes to Schedule D as long-term capital gain."
+    testRef: "tests/engine/forms/form-4797.test.ts::Form 4797 Line 12 - net section 1231 gains are recaptured as ordinary income up to prior nonrecaptured losses"
+
+  # ── Part III: Depreciation Recapture ───────────────────────────
+
+  - line: "20"
+    description: "Cost or other basis, plus expense of sale"
+    formula: "Per-property original cost plus capital improvements plus selling expenses"
+    irsRef: "Form 4797 Instructions, Line 20"
+    inputs:
+      - "Property cost or other basis"
+    testRef: "tests/engine/forms/form-4797.test.ts::Form 4797 audit trail"
+
+  - line: "21"
+    description: "Depreciation (or depletion) allowed or allowable"
+    formula: "Total depreciation claimed on the property"
+    irsRef: "Form 4797 Instructions, Line 21; IRC §1245(a)(2); IRC §1250(b)(3)"
+    inputs:
+      - "Depreciation allowed or allowable"
+    notes: "Uses the greater of depreciation allowed (actually claimed) or allowable (could have been claimed)."
+    testRef: "tests/engine/forms/form-4797.test.ts::Form 4797 audit trail"
+
+  - line: "22"
+    description: "Adjusted basis"
+    formula: "Line 20 minus Line 21"
+    irsRef: "Form 4797 Instructions, Line 22"
+    inputs:
+      - "Form 4797 Line 20"
+      - "Form 4797 Line 21"
+    testRef: "tests/engine/forms/form-4797.test.ts::Part III Line 25a - section 1245 recaptures all depreciation as ordinary income when gain exceeds depreciation"
+
+  - line: "24"
+    description: "Total gain"
+    formula: "Gross selling price minus Line 22 (adjusted basis). Part III only applies when there is a gain."
+    irsRef: "Form 4797 Instructions, Line 24"
+    inputs:
+      - "Gross selling price"
+      - "Form 4797 Line 22"
+    notes: "If there is a loss, Part III does not apply; the loss goes to Part I (held >1 year) or Part II (held ≤1 year)."
+    testRef: "tests/engine/forms/form-4797.test.ts::Part III Line 25a - section 1245 recaptures all depreciation as ordinary income when gain exceeds depreciation"
+
+  - line: "25a"
+    description: "Section 1245 depreciation recapture"
+    formula: "For section 1245 property: lesser of (a) total depreciation allowed or allowable (Line 21) or (b) total gain (Line 24)"
+    irsRef: "IRC §1245(a)(1); Form 4797 Instructions, Line 25a"
+    inputs:
+      - "Form 4797 Line 21"
+      - "Form 4797 Line 24"
+    notes: "Section 1245 recaptures ALL depreciation as ordinary income. Applies to tangible personal property (equipment, vehicles, furniture), certain intangible personal property, and single-purpose agricultural structures."
+    edgeCases:
+      - "When gain equals depreciation exactly, the entire gain is ordinary with no section 1231 remainder"
+      - "When gain exceeds depreciation, the excess is section 1231 gain"
+      - "When depreciation exceeds gain, recapture is limited to the gain amount"
+    testRef: "tests/engine/forms/form-4797.test.ts::Form 4797 Part III section 1245 recapture"
+
+  - line: "25b"
+    description: "Section 1250 ordinary income recapture"
+    formula: "For section 1250 property: lesser of (a) excess of actual depreciation over straight-line depreciation or (b) total gain (Line 24)"
+    irsRef: "IRC §1250(a)(1); IRC §1250(b)(1); Form 4797 Instructions, Line 25b"
+    inputs:
+      - "Form 4797 Line 21"
+      - "Form 4797 Line 24"
+      - "Straight-line depreciation"
+    notes: >
+      Section 1250 recaptures only the EXCESS of actual depreciation over
+      straight-line as ordinary income. For post-1986 MACRS real property
+      (which already uses straight-line), this is typically $0. The remaining
+      depreciation (straight-line portion) becomes unrecaptured section 1250
+      gain taxed at a maximum 25% rate under IRC section 1(h)(6).
+    edgeCases:
+      - "Post-1986 MACRS real property: excess over straight-line is $0, so section 1250 ordinary recapture is $0"
+      - "Pre-1987 accelerated depreciation on real property: excess over straight-line may be positive"
+      - "When straight-line depreciation is not provided, defaults to total depreciation (yielding $0 excess recapture, the common post-1986 case)"
+    testRef: "tests/engine/forms/form-4797.test.ts::Form 4797 Part III section 1250 recapture"
+
+  - line: "26"
+    description: "Total recapture amount"
+    formula: "Sum of Line 25a (section 1245) and Line 25b (section 1250)"
+    irsRef: "Form 4797 Instructions, Line 26"
+    inputs:
+      - "Form 4797 Line 25a"
+      - "Form 4797 Line 25b"
+    notes: "Sections 1252, 1254, 1255 recapture not yet implemented."
+    testRef: "tests/engine/forms/form-4797.test.ts::Part II Line 17 - aggregates recapture from multiple Part III properties"
+
+  - line: "27"
+    description: "Gain minus total recapture"
+    formula: "Line 24 minus Line 26"
+    irsRef: "Form 4797 Instructions, Line 27"
+    inputs:
+      - "Form 4797 Line 24"
+      - "Form 4797 Line 26"
+    notes: "For property held more than one year, this is section 1231 gain that flows to Part I."
+    testRef: "tests/engine/forms/form-4797.test.ts::Part III non-recapture section 1231 gain adds to Part I line 7 alongside K-1 defaults"
+
+  - line: "29"
+    description: "Section 1231 gain from Part III (for property held more than one year)"
+    formula: "If property held more than one year: Line 27; otherwise $0 (short-term non-recapture gain stays in Part II)"
+    irsRef: "Form 4797 Part III"
+    inputs:
+      - "Form 4797 Line 27"
+      - "Holding period"
+    testRef: "tests/engine/forms/form-4797.test.ts::Part II Line 18a - short-term property gain is entirely ordinary"
+
+  - line: "unrecapturedSection1250"
+    description: "Unrecaptured section 1250 gain for QDCG 25% maximum rate"
+    formula: "For section 1250 property: min(Line 24, depreciation allowed minus section 1250 ordinary recapture), representing the straight-line depreciation portion taxed at 25% max rate"
+    irsRef: "IRC §1(h)(6); QDCG Worksheet"
+    inputs:
+      - "Form 4797 Line 24"
+      - "Form 4797 Line 21"
+      - "Form 4797 Line 25b"
+    notes: >
+      This amount aggregates with unrecaptured section 1250 gain from 1099-DIV
+      and K-1 sources in the QDCG worksheet. It is the depreciation on section
+      1250 property that was not recaptured as ordinary income under section
+      1250 but is taxed at the 25% maximum capital gains rate instead of the
+      standard 15%/20% rate.
+    edgeCases:
+      - "When total gain is less than total depreciation, unrecaptured amount is limited to the gain minus any section 1250 ordinary recapture"
+      - "For section 1245 property, this is always $0 because all depreciation is recaptured as ordinary"
+    testRef: "tests/engine/forms/form-4797.test.ts::Form 4797 unrecaptured section 1250 gain"
+
+  # ── Part II: Ordinary Gains and Losses ─────────────────────────
+
+  - line: "17"
+    description: "Recapture amount from Part III"
+    formula: "Sum of Part III Line 26 (total recapture) for all properties"
+    irsRef: "Form 4797 Instructions, Line 17"
+    inputs:
+      - "Part III Line 26 for each property"
+    testRef: "tests/engine/forms/form-4797.test.ts::Part II Line 17 - aggregates recapture from multiple Part III properties"
+
+  - line: "18a"
+    description: "Short-term property gains and losses"
+    formula: "Sum of gains/losses from property sales held one year or less (not subject to Part III recapture)"
+    irsRef: "Form 4797 Part II"
+    inputs:
+      - "Property sale gains/losses where holding period is one year or less"
+    notes: "Short-term property sales are entirely ordinary. No section 1231 treatment."
+    testRef: "tests/engine/forms/form-4797.test.ts::Part II Line 18a - short-term property gain is entirely ordinary"
+
+  - line: "18b"
+    description: "Part II total ordinary gain or loss from property sales"
+    formula: "Line 17 + Line 18a + non-recapture gain from short-term Part III properties"
+    irsRef: "Form 4797 Part II"
+    inputs:
+      - "Form 4797 Line 17"
+      - "Form 4797 Line 18a"
+    notes: >
+      For individual returns, this combines recapture amounts from Part III
+      with short-term property gains/losses. This amount adds to the overall
+      Form 4797 ordinary gain or loss that flows to Schedule 1 Line 4.
+    testRef: "tests/engine/forms/form-4797.test.ts::Part II Line 18b - combines recapture and short-term amounts"

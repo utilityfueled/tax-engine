@@ -1,0 +1,71 @@
+form: "NJ-1040"
+section: "Child and Dependent Care Credit"
+fullName: "New Jersey Child and Dependent Care Credit (NJ-1040 Line 64)"
+taxYear: 2025
+reference: "https://www.nj.gov/treasury/taxation/depcarecred.shtml"
+legislation: "P.L.2021, c.308 (expanded from P.L.2018, c.45)"
+irsFormReference: "Federal Form 2441 (Child and Dependent Care Expenses)"
+
+notes: |
+  The NJ Child and Dependent Care Credit is a refundable credit equal to a
+  percentage of the taxpayer's federal child and dependent care credit (Form 2441).
+  The percentage depends on NJ taxable income (Line 42).
+
+  Key characteristics:
+  - Refundable since tax year 2021 (P.L.2021, c.308)
+  - No dollar cap on the credit (cap removed in 2021)
+  - Based on NJ taxable income, NOT federal AGI
+  - Hard cutoff at $150,000 NJ taxable income (not a phase-out)
+  - Part-year residents prorate by months of NJ residency / 12
+  - Requires the taxpayer to qualify for the federal Form 2441 credit
+
+  Income brackets (tax year 2021 and after):
+  - NJ taxable income ≤ $30,000: 50% of federal credit
+  - $30,001 to $60,000: 40% of federal credit
+  - $60,001 to $90,000: 30% of federal credit
+  - $90,001 to $120,000: 20% of federal credit
+  - $120,001 to $150,000: 10% of federal credit
+  - Over $150,000: not eligible ($0)
+
+lines:
+  - line: "64-federal-credit"
+    description: "Federal child and dependent care credit (Form 2441)"
+    formula: "Input from federal return; must be > $0 to qualify"
+    inputs:
+      - "Federal Form 2441 credit amount"
+    edgeCases:
+      - "If federal credit is $0 or taxpayer does not qualify for Form 2441, NJ credit is $0"
+    testRef: "tests/engine/state/nj-1040-dependent-care-credit.test.ts::NJ-1040 dependent care credit - zero federal credit produces zero NJ credit"
+
+  - line: "64-nj-percentage"
+    description: "NJ credit percentage based on NJ taxable income bracket"
+    formula: |
+      NJ taxable income ≤ $30,000 → 50%
+      $30,001–$60,000 → 40%
+      $60,001–$90,000 → 30%
+      $90,001–$120,000 → 20%
+      $120,001–$150,000 → 10%
+      Over $150,000 → 0% (not eligible)
+    inputs:
+      - "NJ taxable income (Line 42)"
+    edgeCases:
+      - "At exact boundary ($30,000): qualifies for higher bracket (50%)"
+      - "At $30,001: drops to 40%"
+      - "At exactly $150,000: still eligible (10%)"
+      - "At $150,001: not eligible (0%)"
+    testRef: "tests/engine/state/nj-1040-dependent-care-credit.test.ts::NJ-1040 dependent care credit - income at $30,000 boundary gets 50%"
+
+  - line: "64"
+    description: "NJ Child and Dependent Care Credit (Line 64)"
+    formula: "Federal Form 2441 credit × NJ percentage × (months of residency / 12)"
+    inputs:
+      - "Federal Form 2441 credit"
+      - "NJ credit percentage (from bracket)"
+      - "Months of NJ residency (for part-year proration)"
+    edgeCases:
+      - "Full-year resident: no proration"
+      - "Part-year resident with 6 months: credit × (6/12)"
+      - "Zero months of residency: $0 credit"
+      - "Rounded to nearest dollar"
+    notes: "Refundable — included in total refundable credits on the return"
+    testRef: "tests/engine/state/nj-1040-dependent-care-credit.test.ts::NJ-1040 dependent care credit - result includes all intermediate values"

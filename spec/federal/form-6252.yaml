@@ -1,0 +1,271 @@
+form: "Form 6252"
+fullName: "Installment Sale Income"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i6252"
+
+notes: |
+  Form 6252 reports income from an installment sale — a sale of property where
+  at least one payment is received after the tax year of the disposition.
+  Under IRC §453, the installment method spreads gain recognition over the
+  payment period proportionally using a fixed gross profit percentage.
+
+  The form is filed for EACH installment sale, in the year of sale and every
+  subsequent year a payment is received (or deemed received) until the
+  obligation is fully satisfied.
+
+  Depreciation recapture under IRC §§1245/1250 (Form 4797 Part III) is
+  recognized in full in the year of sale regardless of payments received.
+  Other recapture under §§1252/1254/1255 is recognized from installment
+  payments, capped at each year's installment sale income.
+
+  IRC §453(e) related-party rules require acceleration of gain if the related
+  party disposes of the property within 2 years. Part III tracks this.
+
+  IRC §453A imposes an interest charge on deferred tax when aggregate
+  outstanding nondealer installment obligations exceed $5,000,000. This
+  initial slice computes the core installment income but defers the §453A
+  interest charge and the pledge-as-collateral deemed payment rule to a
+  future iteration.
+
+  The installment method is NOT available for:
+    - Sales at a loss
+    - Dealer dispositions (inventory property)
+    - Stock/securities traded on an established market
+    - Depreciable property sold to a related party under §453(g) (unless
+      taxpayer can show tax avoidance was not a principal purpose)
+
+lines:
+  # Part I: Gross Profit and Contract Price
+  - line: "5"
+    description: "Selling price including mortgages and other debts"
+    formula: "Total consideration: cash + installment note face + FMV of other property + assumed mortgages"
+    irsRef: "Form 6252 Instructions, Line 5"
+    inputs:
+      - "Selling price of the property"
+    notes: "Excludes stated and unstated interest. Includes all forms of consideration."
+    testRef: "tests/engine/forms/form-6252.test.ts::Form 6252 Part I - selling price"
+
+  - line: "6"
+    description: "Mortgages, debts, and other liabilities the buyer assumed"
+    formula: "Pre-existing debts on the property assumed by buyer"
+    irsRef: "Form 6252 Instructions, Line 6"
+    inputs:
+      - "Assumed liabilities amount"
+    notes: "Only pre-existing debt. NOT new mortgages the buyer obtains from the seller or third parties."
+    testRef: "tests/engine/forms/form-6252.test.ts::Form 6252 Part I - assumed liabilities"
+
+  - line: "7"
+    description: "Payment portion of selling price"
+    formula: "Line 5 - Line 6"
+    irsRef: "Form 6252 Instructions, Line 7"
+    testRef: "tests/engine/forms/form-6252.test.ts::Form 6252 Part I - payment portion equals selling price minus assumed liabilities"
+
+  - line: "8"
+    description: "Cost or other basis of property sold"
+    formula: "Original cost + improvements"
+    irsRef: "Form 6252 Instructions, Line 8"
+    inputs:
+      - "Cost basis of property"
+    testRef: "tests/engine/forms/form-6252.test.ts::Form 6252 Part I - adjusted basis is cost minus depreciation"
+
+  - line: "9"
+    description: "Depreciation allowed or allowable"
+    formula: "All depreciation and amortization from purchase to sale, including Section 179"
+    irsRef: "Form 6252 Instructions, Line 9"
+    inputs:
+      - "Cumulative depreciation allowed"
+    testRef: "tests/engine/forms/form-6252.test.ts::Form 6252 Part I - adjusted basis is cost minus depreciation"
+
+  - line: "10"
+    description: "Adjusted basis"
+    formula: "Line 8 - Line 9"
+    irsRef: "Form 6252 Instructions, Line 10"
+    testRef: "tests/engine/forms/form-6252.test.ts::Form 6252 Part I - adjusted basis is cost minus depreciation"
+
+  - line: "11"
+    description: "Commissions and other expenses of sale"
+    formula: "Sales commissions + legal fees + other selling expenses"
+    irsRef: "Form 6252 Instructions, Line 11"
+    inputs:
+      - "Selling expenses"
+    testRef: "tests/engine/forms/form-6252.test.ts::Form 6252 Part I - selling expenses"
+
+  - line: "12"
+    description: "Income recapture from Form 4797 Part III"
+    formula: "Section 1245/1250 ordinary income recapture — recognized in full in year of sale"
+    irsRef: "Form 6252 Instructions, Line 12; IRC §§1245, 1250"
+    inputs:
+      - "Depreciation recapture amount from Form 4797 Part III (Line 31)"
+    notes: "This amount is recognized as ordinary income in the year of sale regardless of payments. It is added to basis so it does not get double-counted through the gross profit percentage."
+    edgeCases:
+      - "Recapture recognized even when zero payment received in year of sale"
+      - "Recapture reduces gross profit that gets spread over installment years"
+    testRef: "tests/engine/forms/form-6252.test.ts::Form 6252 Part I - depreciation recapture in year of sale"
+
+  - line: "13"
+    description: "Installment sale basis"
+    formula: "Line 10 + Line 11 + Line 12"
+    irsRef: "Form 6252 Instructions, Line 13"
+    notes: "Adjusted basis plus selling expenses plus year-of-sale recapture. If Line 5 <= Line 13, do not use Form 6252."
+    testRef: "tests/engine/forms/form-6252.test.ts::Form 6252 Part I - installment sale basis combines adjusted basis, expenses, and recapture"
+
+  - line: "14"
+    description: "Gross gain before exclusion"
+    formula: "Line 5 - Line 13"
+    irsRef: "Form 6252 Instructions, Line 14"
+    notes: "If zero or negative, the installment method does not apply. Report the sale on Form 4797 or Schedule D."
+    testRef: "tests/engine/forms/form-6252.test.ts::Form 6252 Part I - gross gain before exclusion"
+
+  - line: "15"
+    description: "Main home exclusion under IRC §121"
+    formula: "Section 121 exclusion amount ($250K single / $500K MFJ)"
+    irsRef: "Form 6252 Instructions, Line 15; IRC §121"
+    inputs:
+      - "Section 121 exclusion amount (0 if not main home)"
+    notes: "Only applies when the installment sale property was the taxpayer's main home and the §121 requirements are met."
+    testRef: "tests/engine/forms/form-6252.test.ts::Form 6252 Part I - main home exclusion reduces gross profit"
+
+  - line: "16"
+    description: "Gross profit"
+    formula: "Line 14 - Line 15"
+    irsRef: "Form 6252 Instructions, Line 16"
+    testRef: "tests/engine/forms/form-6252.test.ts::Form 6252 Part I - gross profit floored at zero"
+
+  - line: "17"
+    description: "Excess of liabilities over installment sale basis"
+    formula: "max(0, Line 6 - Line 13)"
+    irsRef: "Form 6252 Instructions, Line 17"
+    notes: "When assumed liabilities exceed the installment sale basis, the excess is treated as a deemed payment in the year of sale. This increases the contract price."
+    edgeCases:
+      - "Zero when liabilities <= basis"
+      - "Can make gross profit percentage = 100% when large mortgage is assumed"
+    testRef: "tests/engine/forms/form-6252.test.ts::Form 6252 Part I - excess liabilities over basis"
+
+  - line: "18"
+    description: "Contract price"
+    formula: "Line 7 + Line 17"
+    irsRef: "Form 6252 Instructions, Line 18"
+    notes: "The total amount the seller will or is deemed to receive. Used as the denominator of the gross profit percentage."
+    testRef: "tests/engine/forms/form-6252.test.ts::Form 6252 Part I - contract price includes excess liability"
+
+  # Part II: Installment Sale Income
+  - line: "19"
+    description: "Gross profit percentage"
+    formula: "Line 16 / Line 18"
+    irsRef: "Form 6252 Instructions, Line 19"
+    notes: "Fixed for the life of the installment agreement. Expressed as a decimal (e.g., 0.4000 for 40%). If contract price is zero, percentage is 0."
+    edgeCases:
+      - "100% when mortgage exceeds basis"
+      - "Can exceed 100% if there was already reporting — but capped at 100% in practice"
+    testRef: "tests/engine/forms/form-6252.test.ts::Form 6252 Part II - gross profit percentage for simple sale"
+
+  - line: "20"
+    description: "Year-of-sale mortgage excess (deemed payment)"
+    formula: "Line 17 (only in year of sale, 0 in subsequent years)"
+    irsRef: "Form 6252 Instructions, Line 20"
+    notes: "This deemed payment from assumed debt exceeding basis is only reported in the year of sale."
+    testRef: "tests/engine/forms/form-6252.test.ts::Form 6252 Part II - deemed payment from excess liabilities in year of sale"
+
+  - line: "21"
+    description: "Payments received during year"
+    formula: "Cash + FMV of property/services received this year, excluding interest"
+    irsRef: "Form 6252 Instructions, Line 21"
+    inputs:
+      - "Actual payments received during the tax year"
+    notes: "Excludes interest (reported separately). Includes amounts withheld to pay off existing debt. Does NOT include the buyer's installment note itself (unless payable on demand or readily tradable)."
+    testRef: "tests/engine/forms/form-6252.test.ts::Form 6252 Part II - payments received"
+
+  - line: "22"
+    description: "Total current-year payments"
+    formula: "Line 20 + Line 21"
+    irsRef: "Form 6252 Instructions, Line 22"
+    testRef: "tests/engine/forms/form-6252.test.ts::Form 6252 Part II - year of sale with down payment and excess liabilities"
+
+  - line: "23"
+    description: "Payments received in prior years"
+    formula: "Cumulative total from all prior years"
+    irsRef: "Form 6252 Instructions, Line 23"
+    inputs:
+      - "Total payments received in all prior years (including prior deemed payments)"
+    notes: "Tracked cumulatively for the Part III related-party computation."
+    testRef: "tests/engine/forms/form-6252.test.ts::Form 6252 Part II - prior year payments tracked cumulatively"
+
+  - line: "24"
+    description: "Installment sale income"
+    formula: "Line 22 × Line 19"
+    irsRef: "Form 6252 Instructions, Line 24; IRC §453"
+    notes: "Cannot be less than zero. This is the total income recognized this year from the installment sale."
+    edgeCases:
+      - "Zero when no payment received and not year of sale"
+      - "100% of payment when gross profit percentage is 100%"
+    testRef: "tests/engine/forms/form-6252.test.ts::Form 6252 Part II - installment sale income is payments times GP%"
+
+  - line: "25"
+    description: "Ordinary income under recapture rules (§§1252, 1254, 1255)"
+    formula: "min(remaining recapture amount, Line 24)"
+    irsRef: "Form 6252 Instructions, Line 25; IRC §§1252, 1254, 1255"
+    notes: "Unlike §1245/1250 recapture (Line 12, all in year of sale), these recapture types are spread over installment years. The remaining recapture amount carries forward; each year's Line 25 is capped at Line 24."
+    edgeCases:
+      - "Entire installment income is ordinary when recapture exceeds income"
+      - "Excess recapture carries to future years"
+    testRef: "tests/engine/forms/form-6252.test.ts::Form 6252 Part II - section 1252/1254/1255 recapture recognized from payments"
+
+  - line: "26"
+    description: "Capital gain or Section 1231 gain portion"
+    formula: "Line 24 - Line 25"
+    irsRef: "Form 6252 Instructions, Line 26"
+    notes: "Flows to Schedule D (capital assets) or Form 4797 (Section 1231 property). The character depends on the type of property sold and holding period."
+    testRef: "tests/engine/forms/form-6252.test.ts::Form 6252 Part II - capital gain is income minus ordinary recapture"
+
+  # Part III: Related Party Installment Sale Income
+  - line: "30"
+    description: "Selling price of property sold by related party"
+    formula: "Amount realized by the related party on the second disposition"
+    irsRef: "Form 6252 Instructions, Line 30; IRC §453(e)"
+    inputs:
+      - "Related party's second disposition selling price"
+    testRef: "tests/engine/forms/form-6252.test.ts::Form 6252 Part III - related party selling price triggers acceleration"
+
+  - line: "31"
+    description: "Contract price from year of first sale"
+    formula: "Line 18 from the year of the original installment sale"
+    irsRef: "Form 6252 Instructions, Line 31"
+    testRef: "tests/engine/forms/form-6252.test.ts::Form 6252 Part III - related party selling price triggers acceleration"
+
+  - line: "32"
+    description: "Lesser of related party's selling price or contract price"
+    formula: "min(Line 30, Line 31)"
+    irsRef: "Form 6252 Instructions, Line 32"
+    testRef: "tests/engine/forms/form-6252.test.ts::Form 6252 Part III - acceleration capped at contract price"
+
+  - line: "33"
+    description: "Total payments received by end of this tax year"
+    formula: "Line 22 + Line 23 from Part II"
+    irsRef: "Form 6252 Instructions, Line 33"
+    testRef: "tests/engine/forms/form-6252.test.ts::Form 6252 Part III - no acceleration when payments exceed lesser amount"
+
+  - line: "34"
+    description: "Accelerated amount"
+    formula: "max(0, Line 32 - Line 33)"
+    irsRef: "Form 6252 Instructions, Line 34; IRC §453(e)"
+    notes: "If the related party's sale price or original contract price minus payments already received is positive, the seller is deemed to have received additional payments."
+    testRef: "tests/engine/forms/form-6252.test.ts::Form 6252 Part III - related party selling price triggers acceleration"
+
+  - line: "35"
+    description: "Accelerated installment income"
+    formula: "Line 34 × Line 19 (gross profit percentage)"
+    irsRef: "Form 6252 Instructions, Line 35"
+    testRef: "tests/engine/forms/form-6252.test.ts::Form 6252 Part III - related party selling price triggers acceleration"
+
+  - line: "36"
+    description: "Ordinary income portion of accelerated amount"
+    formula: "min(remaining recapture, Line 35)"
+    irsRef: "Form 6252 Instructions, Line 36"
+    notes: "Same recapture rules as Line 25, applied to accelerated income."
+    testRef: "tests/engine/forms/form-6252.test.ts::Form 6252 Part III - accelerated income splits into ordinary and capital"
+
+  - line: "37"
+    description: "Capital gain portion of accelerated amount"
+    formula: "Line 35 - Line 36"
+    irsRef: "Form 6252 Instructions, Line 37"
+    testRef: "tests/engine/forms/form-6252.test.ts::Form 6252 Part III - accelerated income splits into ordinary and capital"

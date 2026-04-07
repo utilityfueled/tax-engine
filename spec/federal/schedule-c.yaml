@@ -1,0 +1,150 @@
+form: "Schedule C"
+fullName: "Profit or Loss From Business (Sole Proprietorship)"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i1040sc"
+
+notes: |
+  Schedule C reports income and expenses from a sole proprietorship or
+  single-member LLC. Net profit flows to Form 1040 Line 8 and Schedule SE.
+
+lines:
+  - line: "1"
+    description: "Gross receipts or sales"
+    formula: "Sum of 1099-NEC Box 1 + 1099-MISC Box 7 (pre-2020) + other business income"
+    irsRef: "Schedule C Instructions, Line 1"
+    inputs:
+      - "1099-NEC Box 1"
+      - "Other business income (cash, barter, etc.)"
+    testRef: "tests/engine/schedules/schedule-c.test.ts::Schedule C Line 1 - gross receipts from 1099-NEC"
+
+  - line: "2"
+    description: "Returns and allowances"
+    formula: "Refunds, rebates, etc. deducted from gross receipts"
+    irsRef: "Schedule C Instructions, Line 2"
+    testRef: "tests/engine/schedules/schedule-c.test.ts::Schedule C Line 2 - returns and allowances"
+
+  - line: "3"
+    description: "Cost of goods sold (from Line 42)"
+    formula: "For businesses that sell products: beginning inventory + purchases - ending inventory"
+    irsRef: "Schedule C Instructions, Line 3"
+    notes: "Most service businesses have $0 COGS"
+    testRef: "tests/engine/schedules/schedule-c.test.ts::Schedule C Line 3 - COGS"
+
+  - line: "5"
+    description: "Gross income"
+    formula: "Line 1 - Line 2 - Line 3"
+    irsRef: "Schedule C Instructions, Line 5"
+    testRef: "tests/engine/schedules/schedule-c.test.ts::Schedule C Line 5 - gross income"
+
+  - line: "7"
+    description: "Gross profit"
+    formula: "Line 5 (same as gross income for most service businesses)"
+    irsRef: "Schedule C Instructions, Line 7"
+    testRef: "tests/engine/schedules/schedule-c.test.ts::Schedule C Line 7 - gross profit equals gross income for services"
+
+  # ── Expenses ─────────────────────────────────────────────
+  - line: "8"
+    description: "Advertising"
+    formula: "Business advertising and marketing expenses"
+    testRef: "tests/engine/schedules/schedule-c.test.ts::Schedule C expenses - advertising"
+
+  - line: "9"
+    description: "Car and truck expenses"
+    formula: "Business use of vehicle (standard mileage or actual expenses)"
+    irsRef: "Schedule C Instructions, Line 9"
+    edgeCases:
+      - "Standard mileage rate: $0.70/mile for 2025"
+      - "Must keep mileage log"
+      - "Cannot use standard rate if used MACRS or Section 179 on vehicle"
+    testRef: "tests/engine/schedules/schedule-c.test.ts::Schedule C expenses - car and truck"
+
+  - line: "11"
+    description: "Contract labor"
+    formula: "Payments to independent contractors (reported on 1099-NEC if ≥$600)"
+    testRef: "tests/engine/schedules/schedule-c.test.ts::Schedule C expenses - contract labor"
+
+  - line: "13"
+    description: "Depreciation and section 179 expense deduction"
+    formula: "Use Form 4562 Line 22 when the supported Form 4562 summary slice is present; otherwise use the validated manual Schedule C depreciation amount"
+    irsRef: "Schedule C Instructions, Line 13; Form 4562"
+    inputs:
+      - "Form 4562 Line 22"
+      - "Validated manual Schedule C depreciation amount"
+    notes: "This supported slice prefers the dedicated Form 4562 summary result so depreciation and section 179 expense deductions remain auditable instead of being hidden inside Schedule C other expenses."
+    testRef: "tests/engine/schedules/schedule-c.test.ts::Schedule C Line 13 - Form 4562 total deduction flows through the depreciation line"
+
+  - line: "15"
+    description: "Insurance (other than health)"
+    formula: "Business insurance premiums"
+    testRef: "tests/engine/schedules/schedule-c.test.ts::Schedule C expenses - insurance"
+
+  - line: "17"
+    description: "Legal and professional services"
+    formula: "Attorney, accountant, and other professional fees"
+    testRef: "tests/engine/schedules/schedule-c.test.ts::Schedule C expenses - legal and professional"
+
+  - line: "18"
+    description: "Office expense"
+    formula: "Office supplies and small equipment"
+    testRef: "tests/engine/schedules/schedule-c.test.ts::Schedule C expenses - office expense"
+
+  - line: "22"
+    description: "Supplies"
+    formula: "Materials and supplies consumed during the year"
+    testRef: "tests/engine/schedules/schedule-c.test.ts::Schedule C expenses - supplies"
+
+  - line: "24a"
+    description: "Travel"
+    formula: "Business travel expenses (transportation, lodging)"
+    irsRef: "Schedule C Instructions, Line 24a"
+    notes: "Meals are separate (Line 24b at 50%)"
+    testRef: "tests/engine/schedules/schedule-c.test.ts::Schedule C expenses - travel"
+
+  - line: "24b"
+    description: "Deductible meals"
+    formula: "Business meals at 50% deduction rate"
+    irsRef: "Schedule C Instructions, Line 24b"
+    notes: "50% limitation applies to most business meals"
+    testRef: "tests/engine/schedules/schedule-c.test.ts::Schedule C expenses - meals at 50% deduction"
+
+  - line: "25"
+    description: "Utilities"
+    formula: "Business utility expenses"
+    testRef: "tests/engine/schedules/schedule-c.test.ts::Schedule C expenses - utilities"
+
+  - line: "27"
+    description: "Other expenses (from Line 48)"
+    formula: "Sum of other business expenses listed on Part V"
+    testRef: "tests/engine/schedules/schedule-c.test.ts::Schedule C expenses - other"
+
+  - line: "28"
+    description: "Total expenses before home office"
+    formula: "Sum of implemented expense lines, including Line 13 depreciation and section 179 expense deduction, Lines 8, 9, 11, 15, 17, 18, 22, 24a, 24b, 25, and 27"
+    irsRef: "Schedule C Instructions, Line 28"
+    testRef: "tests/engine/schedules/schedule-c.test.ts::Schedule C Line 28 - total expenses"
+
+  - line: "29"
+    description: "Tentative profit or loss"
+    formula: "Line 7 - Line 28"
+    irsRef: "Schedule C Instructions, Line 29"
+    testRef: "tests/engine/schedules/schedule-c.test.ts::Schedule C Line 29 - tentative profit"
+
+  - line: "30"
+    description: "Business use of home deduction (Form 8829)"
+    formula: "Simplified method: $5/sq ft × up to 300 sq ft = max $1,500. Or actual method via Form 8829."
+    irsRef: "Schedule C Instructions, Line 30; Form 8829"
+    edgeCases:
+      - "Simplified method: max $1,500, cannot create a loss"
+      - "Actual method: proportional share of rent/mortgage interest, utilities, insurance, repairs"
+      - "Deduction limited to net income from business (cannot create loss)"
+    testRef: "tests/engine/schedules/schedule-c.test.ts::Schedule C Line 30 - home office deduction simplified method"
+
+  - line: "31"
+    description: "Net profit or loss"
+    formula: "Line 29 - Line 30. If profit, enters 1040 Line 8 and Schedule SE. If loss, at-risk rules may apply."
+    irsRef: "Schedule C Instructions, Line 31"
+    edgeCases:
+      - "Net loss may be limited by at-risk rules (Form 6198)"
+      - "Hobby loss rules: must have profit motive"
+      - "SE tax only applies to net profit (losses reduce other income but not SE)"
+    testRef: "tests/engine/schedules/schedule-c.test.ts::Schedule C Line 31 - net profit or loss"

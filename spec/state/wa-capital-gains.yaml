@@ -1,0 +1,83 @@
+form: "Washington State Capital Gains Tax"
+fullName: "Washington Capital Gains Excise Tax"
+taxYear: 2025
+irsReference: "https://dor.wa.gov/taxes-rates/other-taxes/capital-gains-tax"
+
+notes: |
+  Washington State imposes a 7% excise tax on long-term capital gains exceeding $278,000
+  (2025 threshold, adjusted annually for inflation), plus an additional 2.90% on the
+  portion exceeding $1,000,000 (RCW 82.87.040, effective Jan 1, 2025).
+  This is an excise tax, not an income tax, per state classification.
+  Standard deduction is per individual, or per couple for married/domestic partners.
+
+lines:
+  - line: "1"
+    description: "Total long-term capital gains"
+    formula: "Federal Schedule D long-term gains (before loss offset)"
+    testRef: "tests/engine/state/wa-capital-gains.test.ts::WA CG - tax calculation on excess"
+
+  - line: "2"
+    description: "Allowable deductions"
+    formula: "Charitable donations of WA-sourced appreciated assets"
+    notes: |
+      Deduction for charitable donations of appreciated property — distinct from federal treatment.
+      Per RCW 82.87.080(2): "The deduction...may not exceed $100,000 for the taxable year"
+      (base amount, inflation-adjusted annually). WA DOR confirmed amounts:
+        2024: $108,000 cap
+        2025: $111,000 cap
+      Enforced inside calculateWACapitalGainsTax (capped before subtracting from LTCG).
+    edgeCases:
+      - "Only donations of long-term capital gain property qualify"
+      - "Must be to qualified WA organizations"
+      - "Cap: $108,000 for 2024, $111,000 for 2025 — per RCW 82.87.080(2), inflation-adjusted"
+      - "Donations in excess of $250 are deductible per RCW 82.87.080(1) — $250 floor applied by caller"
+    testRef: "tests/engine/state/wa-capital-gains.test.ts::WA CG - charitable deductions reduce taxable amount"
+
+  - line: "3"
+    description: "Net long-term capital gains"
+    formula: "Line 1 - Line 2"
+    testRef: "tests/engine/state/wa-capital-gains.test.ts::WA CG - charitable deductions reduce taxable amount"
+
+  - line: "4"
+    description: "Standard deduction"
+    formula: "$278,000 (2025 tax year), $270,000 (2024)"
+    notes: "Adjusted annually for inflation per RCW 82.87.020. Per individual, or per couple for married/domestic partners."
+    edgeCases:
+      - "2024: $270,000"
+      - "2025: $278,000"
+      - "Per couple for married filers — not doubled"
+    testRef: "tests/engine/state/wa-capital-gains.test.ts::WA CG - standard deduction is $278,000 for 2025"
+
+  - line: "5"
+    description: "Taxable capital gains (Washington capital gains)"
+    formula: "Line 3 - Line 4, floor at 0"
+    testRef: "tests/engine/state/wa-capital-gains.test.ts::WA CG - tax calculation on excess"
+
+  - line: "6"
+    description: "Base capital gains tax"
+    formula: "Line 5 × 7%"
+    irsRef: "RCW 82.87.040(1)"
+    testRef: "tests/engine/state/wa-capital-gains.test.ts::WA CG - tax calculation on excess"
+
+  - line: "7"
+    description: "Additional capital gains tax (2025+)"
+    formula: "2.90% × max(0, Line 5 - $1,000,000)"
+    irsRef: "RCW 82.87.040, 2025 c 421"
+    notes: "Effective January 1, 2025. $1,000,000 threshold is NOT inflation-adjusted."
+    edgeCases:
+      - "Only applies to 2025+ tax years"
+      - "Taxable gains ≤ $1M: $0 surtax"
+      - "Taxable gains $1,500,000: surtax = $500,000 × 2.90% = $14,500"
+    testRef: "tests/engine/state/wa-capital-gains.test.ts::WA CG - 2.90% surtax on taxable gains over $1M"
+
+  - line: "8"
+    description: "Total Washington capital gains tax"
+    formula: "Line 6 + Line 7"
+    irsRef: "RCW 82.87.040"
+    edgeCases:
+      - "Net gains under $278,000: $0 tax"
+      - "Only long-term gains; short-term excluded"
+      - "Real estate gains excluded"
+      - "Retirement account distributions excluded"
+      - "For years without surtax (pre-2025), total = base tax (Line 6 only)"
+    testRef: "tests/engine/state/wa-capital-gains.test.ts::WA CG - tax calculation on excess"

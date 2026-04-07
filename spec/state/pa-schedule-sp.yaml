@@ -1,0 +1,216 @@
+form: "PA-Schedule-SP"
+fullName: "Pennsylvania Schedule SP — Special Tax Forgiveness"
+taxYear: 2025
+reference: "https://www.pa.gov/en/agencies/revenue/resources/tax-types-and-information/personal-income-tax/tax-forgiveness.html"
+
+notes: |
+  PA Schedule SP computes the Tax Forgiveness credit — PA's poverty exemption
+  that replaces the standard deduction and personal exemptions used by most states.
+
+  Tax Forgiveness provides a percentage reduction (0%–100% in 10% increments)
+  of the PA-40 tax liability, based on:
+    1. Filing category (unmarried vs. married)
+    2. Number of dependent children
+    3. Eligibility income (broader than PA taxable income — includes nontaxable sources)
+
+  Key rules:
+    - Unmarried base threshold (0 dependents): $6,500 for 100% forgiveness
+    - Married base threshold (0 dependents): $13,000 for 100% forgiveness
+    - Each dependent adds $9,500 to all thresholds
+    - Thresholds step by $250 per 10% decrease in forgiveness
+    - If eligibility income exceeds the 10% threshold, forgiveness is 0%
+    - Forgiveness applies after subtracting tax paid to other states or countries
+      from PA-40 tax liability, as directed on the official Schedule SP
+      instructions before the percentage is applied
+    - A taxpayer who is claimed as a dependent on another person's federal
+      return only qualifies when the claiming household also qualifies for
+      PA Tax Forgiveness; otherwise the forgiveness percentage is 0%
+
+  Eligibility income includes:
+    - All 8 classes of PA taxable income (with same per-class loss limitation)
+    - Tax-exempt interest (PA/municipal bonds, US government obligations)
+    - Code 4 death-benefit distributions and other insurance proceeds
+    - Employer-paid benefits and other nontaxable cash and property received
+  Eligibility income excludes:
+    - Social Security and Railroad Retirement benefits
+    - Retirement benefits from eligible retirement plans after retirement
+    - Military pensions and Civil Service annuities
+    - Disability payments, workers' compensation
+    - Public assistance, unemployment compensation
+    - Military combat pay
+
+packetRules:
+  packetBehavior: "reference-summary-pdf"
+  includeWhen:
+    - "A Pennsylvania return packet is being assembled and the return claims Tax Forgiveness on PA-40 Line 21."
+    - "The packet path emits a supported Schedule SP reference summary derived from the validated resident or nonresident Schedule SP result."
+  suppressWhen:
+    - "No Pennsylvania return packet is being assembled."
+    - "The Pennsylvania return does not claim a Tax Forgiveness credit on PA-40 Line 21."
+  notes: |
+    The Pennsylvania Tax Forgiveness guidance says eligible taxpayers must file
+    a PA personal income tax return and complete PA Schedule SP to receive Tax
+    Forgiveness. Until an official PA Schedule SP filler exists, the packet
+    path emits `pa-schedule-sp-reference.pdf` as a reference summary only.
+    Packet disclosures must therefore keep Pennsylvania packet completeness
+    partial whenever this reference summary is attached.
+
+businessRuleValidation:
+  - rule: "pa-schedule-sp-reference-packet"
+    description: "Inventory support counts the Pennsylvania Schedule SP packet path as validated only when fillReturn emits `pa-schedule-sp-reference.pdf` whenever a Pennsylvania return claims Tax Forgiveness."
+    testRef: "tests/pdf/fill-pa-schedule-sp.test.ts::fillReturn includes the Pennsylvania Schedule SP reference summary when the return claims Tax Forgiveness"
+  - rule: "pa-schedule-sp-reference-suppression"
+    description: "Inventory support counts the Pennsylvania Schedule SP suppression rule as validated only when regression coverage proves fillReturn omits the reference summary when no Tax Forgiveness credit is claimed."
+    testRef: "tests/pdf/fill-pa-schedule-sp.test.ts::fillReturn suppresses the Pennsylvania Schedule SP reference summary when the return does not claim Tax Forgiveness"
+  - rule: "pa-schedule-sp-reference-disclosure"
+    description: "Inventory support counts the Pennsylvania Schedule SP packet disclosure as validated only when readiness regression coverage keeps packet completeness partial while only the Schedule SP reference summary is available beyond PA-40."
+    testRef: "tests/utils/return-readiness.test.ts::marks Pennsylvania packets partial when a PA Schedule SP reference summary is attached"
+
+lines:
+  # Part A — Eligibility Income
+
+  - line: "A-1"
+    description: "PA taxable income (from PA-40 Line 9)"
+    formula: "Sum of positive income classes from PA-40 (same loss limitation rules)"
+    notes: "Uses the same 8-class income with per-class loss clamping as PA-40 Line 9."
+    testRef: "tests/engine/state/pa-schedule-sp.test.ts::PA Schedule SP Line A-1 - PA taxable income from PA-40"
+
+  - line: "A-2"
+    description: "Nontaxable income additions"
+    formula: "Tax-exempt interest + other Schedule SP-includable nontaxable income"
+    notes: |
+      Includes sources not taxed by PA but counted for eligibility:
+      tax-exempt interest, employer-paid benefits, insurance proceeds,
+      gifts, inherited property, nontaxable military pay other than combat
+      or hazardous-duty pay, and other cash or property that the Schedule SP
+      instructions require on Section III Lines 2 through 10.
+      The supported direct `nontaxableIncome` input is therefore an already-
+      filtered Schedule SP eligibility amount rather than a bucket for all
+      exempt income.
+      Social Security, Railroad Retirement Tier 1 benefits, and retirement
+      benefits from eligible retirement plans after retirement stay excluded
+      from Schedule SP eligibility income even though they are exempt from PA
+      personal income tax.
+    testRef: "tests/engine/state/pa-schedule-sp.test.ts::PA Schedule SP Line A-2 - nontaxable income additions"
+
+  - line: "A-3"
+    description: "Total eligibility income"
+    formula: "Line A-1 + Line A-2 + any supported spouse/additional eligibility-income supplement, floor at 0"
+    notes: |
+      The printed Schedule SP uses total eligibility income for the table
+      lookup. The core schedule module therefore accepts an optional
+      supplemental amount so an orchestrator can include spouse-only
+      eligibility income for married claimants filing separately or other
+      supported eligibility-income items that are not represented elsewhere in
+      the normalized return payload. The 2025 PA-40 instructions say married
+      claimants, whether filing jointly or separately, use joint eligibility
+      income on Schedule SP, so this supplement exists for cases where the
+      spouse's income is not otherwise represented in the current return
+      payload. The PA Personal Income Tax Guide also says a dependent child
+      claimant must include any child support paid to the parent, grandparent,
+      or foster parent in the child's eligibility income, which can be routed
+      through this same supported supplement.
+    testRef: "tests/engine/state/pa-schedule-sp.test.ts::PA Schedule SP Line A-3 - total eligibility income"
+
+  # Part B — Forgiveness Determination
+
+  - line: "B-1"
+    description: "Filing category"
+    formula: "unmarried (Table 1) or married (Table 2)"
+    notes: |
+      Table 1 (Unmarried): single, divorced, widowed, legally separated,
+      or married filing separately when the taxpayer was separated for PA
+      Schedule SP purposes.
+      Table 2 (Married): married filing jointly, or married filing separately
+      when the taxpayer does not meet the PA separated test.
+      Under the 2025 PA-40 instructions, "separated" means the taxpayer
+      either lived apart from their spouse for all of the last six months of
+      the year or was separated under a written separation agreement. The
+      same 2025 PA-40 instructions also say that when one spouse is claimed as
+      a dependent on another person's federal income tax return, otherwise
+      qualifying married taxpayers must file separate Pennsylvania returns.
+    testRef: "tests/engine/state/pa-schedule-sp.test.ts::PA Schedule SP filing category selection - unmarried uses Table 1 thresholds"
+
+  - line: "B-2"
+    description: "Number of dependent children"
+    formula: "Count of qualifying dependent children"
+    notes: |
+      Schedule SP Section II counts only federal dependents who are the
+      claimant's child, adopted child, stepchild, grandchild, or foster child.
+      Other federal dependents do not count toward the Schedule SP table. The
+      count itself must be a whole number of at least 0; fractional or negative
+      dependent counts are invalid inputs.
+    edgeCases:
+      - "Negative dependent count is invalid"
+      - "Fractional dependent count is invalid"
+    testRef: "tests/engine/state/pa-schedule-sp.test.ts::PA Schedule SP dependent count affects thresholds - unmarried, 1 dep: base $16,000"
+
+  - line: "B-3"
+    description: "100% forgiveness threshold"
+    formula: "base_threshold + (dependents × $9,500)"
+    notes: |
+      Unmarried base: $6,500. Married base: $13,000.
+      Each dependent adds $9,500 to all thresholds.
+    edgeCases:
+      - "0 dependents, unmarried: $6,500"
+      - "0 dependents, married: $13,000"
+      - "3 dependents, unmarried: $35,000"
+      - "3 dependents, married: $41,500"
+    testRef: "tests/engine/state/pa-schedule-sp.test.ts::PA Schedule SP base threshold computation - unmarried, 0 deps: $6,500"
+
+  - line: "B-4"
+    description: "Tax forgiveness percentage"
+    formula: |
+      Lookup eligibility income against thresholds:
+        ≤ base: 100%
+        ≤ base + $250: 90%
+        ≤ base + $500: 80%
+        ≤ base + $750: 70%
+        ≤ base + $1,000: 60%
+        ≤ base + $1,250: 50%
+        ≤ base + $1,500: 40%
+        ≤ base + $1,750: 30%
+        ≤ base + $2,000: 20%
+        ≤ base + $2,250: 10%
+        > base + $2,250: 0%
+    edgeCases:
+      - "Income exactly at threshold boundary: gets the higher percentage"
+      - "Income $1 over threshold: drops to next lower percentage"
+      - "Income above max threshold: 0% forgiveness"
+      - "Zero income: 100% forgiveness"
+      - "Claimed as a dependent on another person's federal return and the claiming household does not qualify: 0% forgiveness even if income is otherwise within the table"
+      - "Claimed as a dependent on another person's federal return and the claiming household qualifies: use the normal table lookup"
+    testRef: "tests/engine/state/pa-schedule-sp.test.ts::PA Schedule SP forgiveness percentage lookup - at base threshold gets 100%"
+
+  # Part C — Credit Computation
+
+  - line: "C-1"
+    description: "PA-40 tax liability"
+    formula: "From PA-40 Line 12"
+    testRef: "tests/engine/state/pa-schedule-sp.test.ts::PA Schedule SP credit equals tax liability times forgiveness percentage - 100% forgiveness"
+
+  - line: "C-1a"
+    description: "Tax paid to other states or countries"
+    formula: "Sum of Schedule G-L / other-state tax amounts carried into Schedule SP before forgiveness is computed"
+    notes: |
+      The official Schedule SP instructions direct the taxpayer to subtract tax
+      paid to other states or countries from PA tax liability before applying
+      the forgiveness percentage.
+    testRef: "tests/engine/state/pa-schedule-sp.test.ts::PA Schedule SP subtracts tax paid to other states before computing forgiveness credit"
+
+  - line: "C-1b"
+    description: "Tax eligible for forgiveness"
+    formula: "Line C-1 - Line C-1a, floor at 0"
+    notes: "This is the amount of PA tax remaining after the other-state tax reduction and before the forgiveness percentage is applied."
+    testRef: "tests/engine/state/pa-schedule-sp.test.ts::PA Schedule SP subtracts tax paid to other states before computing forgiveness credit"
+
+  - line: "C-2"
+    description: "Tax forgiveness credit"
+    formula: "Line C-1b × forgiveness percentage (Line B-4), rounded to nearest dollar"
+    notes: "This amount transfers to PA-40 Line 19."
+    edgeCases:
+      - "100% forgiveness: credit equals full tax liability"
+      - "Tax paid to other states fully offsets PA tax before forgiveness: credit is $0"
+      - "0% forgiveness: credit is $0"
+      - "Partial forgiveness: credit is rounded portion of tax"
+    testRef: "tests/engine/state/pa-schedule-sp.test.ts::PA Schedule SP credit equals tax liability times forgiveness percentage - partial forgiveness"

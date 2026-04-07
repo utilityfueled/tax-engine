@@ -1,0 +1,795 @@
+form: "New York IT-201 Full Resident Return"
+fullName: "New York State Form IT-201 Full-Year Resident Income Tax Return — Orchestrator"
+taxYear: 2025
+irsReference: "https://www.tax.ny.gov/pdf/current_forms/it/it201i.pdf"
+
+notes: |
+  This module orchestrates all IT-201 sub-modules into a single end-to-end
+  resident return computation. It takes federal return output plus NY-specific
+  inputs, runs each computation in sequence, and produces a complete IT-201
+  result with payments and refund/balance due.
+
+  Flow:
+  1. Lines 19-33: Additions and subtractions → NY AGI
+  2. Lines 34-38: Standard/itemized deduction + dependent exemptions → taxable income
+  3. Line 39: NY State tax via rate schedule or recapture worksheet
+  4. Lines 40-46 and 59: Credits, net tax, state-tax subtotal, and sales/use tax
+  5. Lines 48-53: NYC resident tax (if applicable)
+  6. Lines 54a-54e and 55-57: MCTMT and Yonkers taxes (if applicable)
+  7. Line 58: Total NYC + Yonkers + MCTMT taxes
+  8. Line 59: Sales or use tax
+  9. Line 60: Voluntary contributions
+  10. Lines 61-62: Total taxes before refundable credits and payments
+  11. Lines 63-71: Refundable credits (real property tax, ESCC, child care, EIC, etc.)
+  12. Lines 72-76: Withholding, estimated payments, extension payments, and refundable-credit total
+  13. Lines 77-80: Overpayment, refund allocation, or amount owed
+
+  The orchestrator delegates to existing sub-modules:
+  - ny-it201-additions-subtractions (lines 19-33)
+  - ny-it201-standard-deduction (lines 34-38)
+  - ny-it201-tax-computation (line 39)
+  - ny-it201-credits (lines 40-46, 59, 63, 65)
+  - ny-it209-noncustodial-parent-earned-income-credit (IT-209 Schedule A/B comparison → lines 65 and 66 when it209 inputs are provided)
+  - ny-it215-earned-income-credit (line 70 when IT-215 inputs are provided)
+  - ny-it201-nyc-tax (lines 48-53)
+  - ny-it201-yonkers-tax (lines 55-57)
+  - ny-it213-empire-state-child-credit (IT-213 → line 63)
+  - ny-it112-r-resident-credit (IT-112-R → line 41, computed when it112r inputs provided)
+  - ny-mctmt (MCTMT lines 54a-54e → flows into line 58)
+  - ny-it225-ny-state-modifications (IT-225 → lines 23 and 31, computed when it225 inputs provided)
+  - ny-it119-star-credit-advance-payment-reconciliation (IT-119 line 3 → code 119 on IT-201-ATT line 12, IT-201 line 71, and the Yonkers worksheet STAR reconciliation line)
+  - ny-it201-att-refundables (IT-201-ATT Part 1 Section D → line 71, computed when it201attRefundableCredits inputs provided)
+  - ny-it201-withholding (lines 72-74 when structured withholding documents are provided)
+
+lines:
+  - line: "23-IT225"
+    description: "IT-225 New York State Modifications integration (additions)"
+    formula: "When it225 inputs provided: calculateNYIT225().totalAdditions → IT-201 line 23"
+    inputs:
+      - "IT-225 computed additions (QBI addback, bonus depreciation addback, etc.)"
+    notes: |
+      When it225 inputs are provided, the orchestrator computes IT-225 additions
+      and uses the total as IT-201 line 23 (other additions from IT-225).
+      This replaces the otherAdditions passthrough. Key modifications:
+      - A-101: IRC §168(k) bonus depreciation addback
+      - A-201: IRC §199A QBI deduction addback
+      When it225 is not provided, the otherAdditions passthrough is used.
+    edgeCases:
+      - "IT-225 replaces otherAdditions passthrough when provided"
+      - "No it225 inputs: otherAdditions passthrough still works"
+      - "QBI addback increases NY AGI and downstream tax"
+    testRef: "tests/engine/state/ny-it201-full-return.test.ts::IT-225 New York State Modifications integration"
+
+  - line: "31-IT225"
+    description: "IT-225 New York State Modifications integration (subtractions)"
+    formula: "When it225 inputs provided: calculateNYIT225().totalSubtractions → IT-201 line 31"
+    inputs:
+      - "IT-225 computed subtractions (529 deduction, LTC premiums, NY depreciation, etc.)"
+    notes: |
+      When it225 inputs are provided, the orchestrator computes IT-225 subtractions
+      and uses the total as IT-201 line 31 (other subtractions from IT-225).
+      This replaces the otherSubtractions passthrough. Key modifications:
+      - S-101: NY depreciation for bonus depreciation assets
+      - S-201: NY 529 plan contribution deduction ($5,000/owner)
+      - S-202: Long-term care insurance premium deduction (20%)
+      When it225 is not provided, the otherSubtractions passthrough is used.
+    edgeCases:
+      - "IT-225 replaces otherSubtractions passthrough when provided"
+      - "529 deduction reduces NY AGI and downstream tax"
+      - "MFJ: both spouses get $5,000 each for 529 contributions"
+    testRef: "tests/engine/state/ny-it201-full-return.test.ts::IT-225 529 deduction flows to line 31 (other subtractions)"
+
+  - line: "41"
+    description: "Resident credit (IT-112-R) — computed or passthrough"
+    formula: "When it112r inputs provided: calculateNYIT112R().finalCredit; otherwise passthrough"
+    inputs:
+      - "IT-112-R jurisdiction data (other-state income and taxes paid)"
+      - "NY State tax (line 39)"
+      - "NY household credit (line 40)"
+      - "IT-201-ATT line 21 additional tax when it affects the IT-112-R limitation"
+    notes: |
+      The resident credit prevents double taxation for NY residents who also pay
+      income tax to other states. When it112r inputs are provided, the orchestrator
+      computes the household credit first (needed as an IT-112-R input), then runs
+      IT-112-R and feeds the finalCredit to the credits module as line 41.
+      The IT-112-R limitation also includes any IT-201-ATT line 21 tax supplied
+      with the resident-credit inputs.
+      Common for NY residents working in NJ, CT, PA, etc.
+    edgeCases:
+      - "Multiple jurisdictions: each computed separately, summed and limited"
+      - "Credit limited to remaining tax after household and other credits"
+      - "IT-201-ATT line 21 tax can increase the remaining-tax ceiling used for the resident credit"
+      - "Zero other-state tax: no credit"
+      - "Other-state tax exceeds NY proportionate tax: limited to proportionate share"
+    testRef: "tests/engine/state/ny-it201-full-return.test.ts::IT-112-R limitation includes IT-201-ATT line 21 tax when provided"
+
+  - line: "42-IT201ATT"
+    description: "IT-201-ATT nonrefundable New York State credit integration"
+    formula: "When it201attNonrefundableCredits inputs provided: calculateNYIT201ATTNonrefundableCredits().totalNYStateNonrefundableCredits; otherwise passthrough Form IT-201 line 42 amount"
+    inputs:
+      - "Computed IT-201-ATT line 7 amount"
+      - "Direct Form IT-201 line 42 passthrough amount"
+    notes: |
+      The resident return may compute line 42 from Form IT-201-ATT Part 1
+      Sections A and B by summing the supported state nonrefundable credit
+      lines and coded detail entries. The legacy passthrough remains available
+      for externally prepared attachment totals.
+    edgeCases:
+      - "Computed IT-201-ATT line 7 overrides the direct line 42 passthrough when both are provided"
+      - "No IT-201-ATT nonrefundable input: passthrough amount still works"
+      - "Line 42 remains separate from refundable IT-272 line 68"
+    testRef: "tests/engine/state/ny-it201-full-return.test.ts::Line 42 - IT-201-ATT nonrefundable state credits override the passthrough amount"
+
+  - line: "42-IT249"
+    description: "Structured IT-249 long-term care insurance credit integration"
+    formula: "When it249 inputs are provided: calculateNYIT249().creditUsedThisYear replaces it201attNonrefundableCredits.longTermCareInsuranceCredit before IT-201-ATT line 7 is totaled"
+    inputs:
+      - "Structured IT-249 resident credit inputs"
+      - "IT-201 line 39 tax"
+      - "IT-201 line 40 household credit"
+      - "IT-201-ATT credits that precede IT-249 in the New York credit ordering rules"
+    notes: |
+      The resident-return orchestrator can compute IT-249 and feed the line 23
+      amount into IT-201-ATT line 3. When both structured IT-249 inputs and a
+      direct longTermCareInsuranceCredit passthrough are provided, the computed
+      IT-249 amount takes precedence.
+    edgeCases:
+      - "NYAGI at $250,000 zeros the current-year IT-249 amount but still allows prior-year carryover"
+      - "The IT-249 line 23 amount is limited by tax remaining after household, noncarryover, and limited-duration credits"
+      - "Computed IT-249 overrides the direct IT-201-ATT line 3 passthrough"
+    testRef: "tests/engine/state/ny-it201-full-return.test.ts::Line 42 - structured IT-249 overrides the direct long-term care insurance credit passthrough"
+
+  - line: "53-IT201ATT"
+    description: "IT-201-ATT nonrefundable New York City credit integration"
+    formula: "When it201attNonrefundableCredits inputs provided: calculateNYIT201ATTNonrefundableCredits().totalNYCNonrefundableCredits; otherwise passthrough Form IT-201 line 53 amount"
+    inputs:
+      - "Computed IT-201-ATT line 10 amount"
+      - "Direct Form IT-201 line 53 passthrough amount"
+    notes: |
+      The resident return may compute line 53 from Form IT-201-ATT Part 1
+      Section C by summing the supported New York City nonrefundable credit
+      lines. The legacy passthrough remains available for externally prepared
+      attachment totals.
+    edgeCases:
+      - "Computed IT-201-ATT line 10 overrides the direct line 53 passthrough when both are provided"
+      - "No IT-201-ATT nonrefundable input: passthrough amount still works"
+      - "Line 53 reduces the NYC line 54 total in the NYC tax module"
+    testRef: "tests/engine/state/ny-it201-full-return.test.ts::Line 53 - IT-201-ATT nonrefundable NYC credits override the passthrough amount"
+
+  - line: "47"
+    description: "NYC taxable income charitable-gifts-trust worksheet integration"
+    formula: |
+      If the taxpayer is a full-year NYC resident and claimed a New York
+      Charitable Gifts Trust Fund contribution as an itemized deduction on
+      Form IT-196:
+        max(0, (Line 33 + charitable gifts trust contribution addback) - Line 34 - Line 36)
+      Otherwise:
+        Line 38
+    inputs:
+      - "New York adjusted gross income (line 33)"
+      - "Line 34 deduction actually used on IT-201"
+      - "Line 36 dependent exemptions"
+      - "Charitable Gifts Trust Fund contribution claimed on IT-196"
+      - "Full-year NYC residency flag"
+    notes: |
+      The 2025 IT-201 line 47 worksheet applies when a full-year NYC resident
+      contributed to the Health Charitable Account or the Elementary and
+      Secondary Education Account and claimed that contribution as an itemized
+      deduction on Form IT-196. In that case, the contribution is added back to
+      line 33 to compute NYC taxable income for lines 47, 47a, and the full-year
+      line 69a school-tax rate reduction amount.
+    edgeCases:
+      - "Positive charitable-gifts-trust addback can make line 47 positive even when line 38 is zero after the state zero floor"
+      - "No charitable-gifts-trust addback: line 47 remains equal to line 38"
+    testRef: "tests/engine/state/ny-it201-full-return.test.ts::Line 47 - charitable gifts trust addback recomputes NYC taxable income and line 69a"
+
+  - line: "47-validation"
+    description: "Line 47 charitable-gifts-trust addback requires the itemized deduction path"
+    formula: "If the line 47 charitable-gifts-trust addback is provided but IT-201 line 34 is not itemized: reject input"
+    inputs:
+      - "Charitable Gifts Trust Fund contribution claimed on IT-196"
+      - "IT-201 line 34 deduction used"
+    notes: |
+      The line 47 worksheet exists only when the contribution was claimed as an
+      itemized deduction on Form IT-196. Reject the addback if the return does
+      not actually use the itemized deduction path on line 34.
+    edgeCases:
+      - "Standard-deduction filer cannot supply the line 47 charitable-gifts-trust addback"
+      - "Itemized filer may supply the addback even if line 38 is zero"
+    testRef: "tests/engine/state/ny-it201-full-return.test.ts::Line 47 validation - charitable gifts trust addback requires the itemized deduction path"
+
+
+  - line: "47a/54-56-validation"
+    description: "Unsupported mixed full-year NYC and Yonkers local-tax inputs are rejected"
+    formula: "If isNYCResident = true and yonkersResidencyStatus is not none: throw an error"
+    inputs:
+      - "Full-year NYC residency flag"
+      - "Yonkers residency status"
+    notes: |
+      In this orchestrator, isNYCResident models the full-year New York City
+      resident computation that stays on Form IT-201. Part-year New York City
+      or Yonkers resident-status changes are computed on Form IT-360.1 instead.
+      Reject combinations that would silently blend the full-year NYC path with
+      any Yonkers local-tax path in the same resident-return calculation.
+    edgeCases:
+      - "Full-year NYC resident plus Yonkers full-year resident is invalid"
+      - "Full-year NYC resident plus Yonkers nonresident earnings tax is invalid"
+      - "Full-year NYC resident plus no Yonkers status remains valid"
+    testRef: "tests/engine/state/ny-it201-full-return.test.ts::rejects unsupported full-year NYC plus Yonkers local-tax combination"
+
+  - line: "50-IT3601"
+    description: "Part-year NYC resident tax integration"
+    formula: "When the part-year NYC flag is set: pass the supplied Form IT-360.1 tax amount through IT-201 line 50 and include it in line 54 / line 58"
+    inputs:
+      - "Part-year NYC resident flag"
+      - "Form IT-360.1 tax amount"
+    notes: |
+      Full-year New York State residents who were New York City residents for
+      only part of 2025 complete Form IT-360.1 and transfer the resulting tax
+      amount to IT-201 line 50. The resident-return orchestrator does not
+      compute Form IT-360.1, but it now accepts the official line 50 amount and
+      includes it in total NYC tax and total local taxes.
+    edgeCases:
+      - "Part-year NYC resident with no full-year NYC tax still carries line 50 into line 54"
+      - "Full-year NYC resident keeps the line 50 passthrough at zero"
+    testRef: "tests/engine/state/ny-it201-full-return.test.ts::Line 50 - part-year NYC tax passthrough increases total local taxes"
+
+  - line: "58"
+    description: "Total New York City and Yonkers taxes / surcharges and MCTMT"
+    formula: "Line 54 + Line 54e + Line 55 + Line 56 + Line 57"
+    inputs:
+      - "Total NYC tax (line 54)"
+      - "Total MCTMT (line 54e)"
+      - "Total Yonkers tax (lines 55 through 57)"
+    notes: |
+      On the 2025 IT-201 page 3, line 58 explicitly combines the New York City
+      subtotal on line 54, the MCTMT on line 54e, and any Yonkers amounts on
+      lines 55 through 57. For part-year Yonkers residents, the line 57 amount
+      comes from Form IT-360.1 line 77, which uses the Part 5 line 73 income
+      percentage rather than a day-count proration.
+    testRef: "tests/engine/state/ny-it201-full-return.test.ts::Line 58 - total NYC and Yonkers taxes"
+
+  - line: "57-IT3601-validation"
+    description: "Part-year Yonkers income percentage must be non-negative"
+    formula: "If yonkersResidencyStatus = part_year and yonkersResidentIncomePercentage < 0: reject input"
+    inputs:
+      - "Yonkers residency status"
+      - "Yonkers resident income percentage from IT-360.1 line 73"
+    notes: |
+      The IT-360.1 Part 5 line 73 income percentage is the quotient of line 20
+      Column C divided by line 20 Column A, rounded to four decimals. The
+      resident-return boundary rejects negative percentages before the Yonkers
+      surcharge module runs so invalid local-tax inputs fail at parse time.
+    edgeCases:
+      - "Part-year Yonkers input with a negative line 73 percentage is invalid"
+      - "Zero line 73 percentage remains valid and yields no Yonkers surcharge"
+      - "Full-year or nonresident Yonkers paths ignore the line 73 percentage"
+    testRef: "tests/engine/state/ny-it201-full-return.test.ts::rejects a negative part-year Yonkers income percentage"
+
+  - line: "57-IT3601-daycount-validation"
+    description: "Legacy Yonkers day-count proration inputs are rejected"
+    formula: "If daysOfYonkersResidency or daysInTaxYear is provided: reject input"
+    inputs:
+      - "Legacy days-of-residency passthrough"
+      - "Legacy days-in-tax-year passthrough"
+    notes: |
+      For 2025 resident IT-201 returns, the supported part-year Yonkers path
+      follows Form IT-360.1 Part 5 lines 73 through 77 and uses the official
+      line 73 income percentage rather than any day-count proration. Accepting
+      legacy day-count fields would imply a computation that the resident
+      orchestrator does not perform, so these inputs are rejected.
+    edgeCases:
+      - "Part-year Yonkers input with the official line 73 percentage remains valid"
+      - "Providing either legacy day-count field is invalid even when the percentage is also supplied"
+      - "Full-year and nonresident Yonkers paths must also omit the legacy day-count fields"
+    testRef: "tests/engine/state/ny-it201-input-schema.test.ts::rejects legacy Yonkers day-count proration inputs"
+
+  - line: "59"
+    description: "Sales or use tax"
+    formula: "Exact amount from ST-141 or 2025 IT-201-I chart lookup"
+    inputs:
+      - "Computed sales/use tax amount from the credits helper"
+    notes: |
+      The 2025 IT-201 places sales or use tax on line 59, outside the line 46
+      New York State subtotal and outside the line 58 local-tax/MCTMT subtotal.
+    testRef: "tests/engine/state/ny-it201-full-return.test.ts::Line 59 - sales or use tax remains outside line 46 and line 58 subtotals"
+
+  - line: "60"
+    description: "Voluntary contributions"
+    formula: "When IT-227 inputs are provided: calculateNYIT227().totalVoluntaryContributions; otherwise passthrough line 60 amount"
+    inputs:
+      - "Computed IT-227 Part 2 line 1 total"
+      - "Direct Form IT-201 line 60 passthrough amount"
+    notes: |
+      The resident return may compute line 60 from Form IT-227 by summing the
+      supported 2025 voluntary contribution lines. The legacy passthrough remains
+      available for externally prepared IT-227 amounts.
+    edgeCases:
+      - "Computed IT-227 total overrides the direct line 60 passthrough when both are provided"
+      - "No IT-227 input: passthrough amount still works"
+      - "Olympic Fund line 5 respects the per-individual $2 cap"
+      - "Campaign Finance Fund line 27 respects the per-individual $40 cap"
+    testRef: "tests/engine/state/ny-it201-full-return.test.ts::Line 60 - IT-227 computed total overrides the voluntary contributions passthrough"
+
+  - line: "61"
+    description: "Total New York State, New York City, Yonkers, sales or use tax, MCTMT, and voluntary contributions"
+    formula: "Line 46 + Line 58 + Line 59 + Line 60"
+    inputs:
+      - "Total NY State taxes (line 46)"
+      - "Total NYC + Yonkers taxes and MCTMT (line 58)"
+      - "Sales or use tax (line 59)"
+      - "Voluntary contributions (line 60)"
+    notes: |
+      For tax year 2025, the combined liability before refundable credits and
+      payments is reported on line 61 and carried to line 62.
+      The audit trail for line 61 should reference line 46 as the New York State
+      subtotal source and line 59 separately as the sales/use tax source.
+    testRef: "tests/engine/state/ny-it201-full-return.test.ts::Line 61 - combined taxes include state, local, sales tax, and voluntary contributions"
+
+  - line: "62"
+    description: "Carryforward of total taxes before refundable credits and payments"
+    formula: "Line 61"
+    inputs:
+      - "Line 61 total taxes"
+    notes: |
+      The 2025 IT-201 carries line 61 to page 4 line 62. Refund and amount
+      owed computations compare line 76 against this carried amount.
+    testRef: "tests/engine/state/ny-it201-full-return.test.ts::Line 62 - carried total taxes match line 61"
+
+  - line: "63"
+    description: "Empire State child credit"
+    formula: "When qualifying children are provided: calculateNYIT213().empireStateChildCredit; otherwise 0"
+    inputs:
+      - "Qualifying children under age 4"
+      - "Qualifying children age 4 through 16"
+      - "Federal AGI"
+      - "Filing status"
+    notes: |
+      For tax year 2025, IT-213 no longer uses the federal child tax credit.
+      The refundable line 63 amount is computed from the official age-band
+      amounts and the federal-AGI phaseout.
+    testRef: "tests/engine/state/ny-it201-full-return.test.ts::Line 63 - ESCC uses 2025 age-band credit and AGI phaseout from IT-213"
+
+  - line: "64"
+    description: "New York State and New York City child and dependent care credit"
+    formula: "IT-216 NYS credit + IT-216 NYC credit"
+    inputs:
+      - "IT-216 NYS child and dependent care credit"
+      - "IT-216 NYC child and dependent care credit"
+    notes: |
+      For the 2025 IT-201, both the NYS and NYC components from Form IT-216
+      are reported together on line 64. They are no longer split across a
+      separate local refundable-credit line in the resident return.
+    edgeCases:
+      - "Non-NYC resident reports only the NYS component"
+      - "NYC resident reports NYS + NYC IT-216 amounts on line 64"
+      - "Direct childDependentCareCredit passthrough still lands on line 64"
+    testRef: "tests/engine/state/ny-it201-full-return.test.ts::Line 64 - IT-216 combines NYS and NYC child care credits"
+
+  - line: "65"
+    description: "New York State earned income credit"
+    formula: |
+      When it209 inputs are provided:
+        calculateNYIT209().selectedNysEarnedIncomeCredit
+      Otherwise:
+        When it215 inputs are provided:
+          calculateNYIT215().allowableNYSEarnedIncomeCredit
+        Otherwise:
+          IT-215 resident line 16:
+          max(0, round(Federal EIC × 30%) - min(household credit, max(0, NY tax - resident credit - accumulation distribution credit)))
+          when not claiming the legacy noncustodial parent path
+    inputs:
+      - "Federal earned income credit"
+      - "Household credit allowed on line 40"
+      - "Resident credit on line 41"
+      - "Accumulation distribution credit from IT-201-ATT / Worksheet B"
+      - "IT-209 Schedule B line 42 amount when IT-209 inputs are provided"
+    notes: |
+      For the 2025 form, the regular NYS earned income credit is reported on
+      line 65. Under the resident IT-209 path, Schedule B compares the regular
+      NYS EIC against the noncustodial credit and line 65 receives the amount
+      only when the regular credit is larger. Outside IT-209, the resident
+      return now follows the official IT-215 line 16 / Worksheet B limitation
+      instead of subtracting the household credit unconditionally. When the
+      filer is Married filing separately on New York after a joint federal
+      return and structured IT-215 inputs are provided, line 65 uses the
+      claimed IT-215 line 17 share rather than the combined line 16 amount.
+      The legacy boolean path remains available for compatibility when detailed
+      IT-209 inputs are omitted.
+    testRef: "tests/engine/state/ny-it201-full-return.test.ts::Line 65 - IT-215 joint federal NY-MFS allocation routes the claimed line 17 share to the return"
+
+  - line: "66"
+    description: "New York State noncustodial parent earned income credit"
+    formula: |
+      When it209 inputs are provided:
+        calculateNYIT209().selectedNoncustodialParentEic
+      Otherwise:
+        Federal EIC × 2.5 when the legacy noncustodial parent credit is elected
+    inputs:
+      - "Federal earned income credit"
+      - "IT-209 Schedule A line 32 noncustodial credit"
+    notes: |
+      The noncustodial parent EIC occupies its own line on the 2025 IT-201.
+      Under the detailed IT-209 path, line 66 receives the Schedule A credit
+      only when it exceeds the regular NYS EIC comparison amount (or when no
+      federal EIC was claimed). The legacy boolean path remains available for
+      compatibility when detailed IT-209 inputs are omitted.
+    testRef: "tests/engine/state/ny-it201-full-return.test.ts::Line 66 - IT-209 sends the greater noncustodial credit to line 66"
+
+  - line: "67"
+    description: "Real property tax credit"
+    formula: "From Form IT-214"
+    inputs:
+      - "Real property tax credit from IT-214"
+    notes: |
+      Refundable credit for qualifying homeowners and renters computed on
+      Form IT-214 and transferred to line 67 of the 2025 IT-201.
+    testRef: "tests/engine/state/ny-it201-full-return.test.ts::Line 67 - real property tax credit passes through"
+
+  - line: "68-IT272"
+    description: "College tuition credit integration (refundable)"
+    formula: "When collegeTuitionPreference = credit: calculateNYIT272().credit"
+    inputs:
+      - "IT-272 computed credit"
+      - "College tuition student detail"
+    notes: |
+      For 2025, IT-272 is a refundable credit claimed on IT-201 line 68.
+      The orchestrator must not route this amount through line 42 other
+      nonrefundable credits. If the IT-272 credit exceeds the filer’s tax,
+      the excess still contributes to refund.
+    edgeCases:
+      - "Low-tax filer still receives the full IT-272 credit as refundable"
+      - "IT-272 does not inflate line 42 other NY State credits"
+      - "Direct otherNYStateCredits passthrough remains separate from IT-272"
+    testRef: "tests/engine/state/ny-it201-full-return.test.ts::IT-272 credit remains refundable for low-tax filer"
+
+  - line: "69"
+    description: "NYC school tax credit (fixed amount)"
+    formula: |
+      If NYC resident or part-year NYC resident, not claimable as dependent, and
+      school-credit income is $250,000 or less:
+        Full-year NYC resident:
+          Single / MFS / HoH: $63
+          MFJ / QSS: $125
+        Part-year NYC resident:
+          Use the official 2025 Table 2 resident-period chart:
+            Single / MFS / HoH:
+              1:$5 2:$10 3:$16 4:$21 5:$26 6:$31 7:$36 8:$42 9:$47 10:$52 11:$57 12:$63
+            MFJ / QSS:
+              1:$10 2:$21 3:$31 4:$42 5:$52 6:$63 7:$73 8:$83 9:$94 10:$104 11:$115 12:$125
+      Otherwise: $0
+    inputs:
+      - "Federal adjusted gross income"
+      - "Taxable IRA distributions included in federal AGI (if provided)"
+      - "NYC residency flag or part-year NYC residency flag"
+      - "Dependent status"
+      - "Filing status"
+      - "Part-year NYC resident period in months from the official school-credit proration table"
+    notes: |
+      The 2025 fixed NYC school tax credit is no longer netted against the
+      NYC tax computation. It is claimed on line 69 in the refundable-credit section.
+      For part-year NYC residents, the supported slice uses the official Table 2
+      month-based proration amount supplied from the IT-360.1 workflow.
+      Mixed-residency married-filing-jointly worksheet cases remain upstream.
+    edgeCases:
+      - "Part-year NYC resident with 8 months of residency gets the Table 2 amount for the filing status"
+      - "Dependent taxpayer gets no fixed credit even when part-year NYC resident"
+      - "Income above $250,000 eliminates the credit for both full-year and part-year residents"
+    testRef: "tests/engine/state/ny-it201-full-return.test.ts::Line 69 - NYC resident below threshold gets fixed school tax credit"
+
+  - line: "69a"
+    description: "NYC school tax credit (rate reduction amount)"
+    formula: |
+      If NYC resident or part-year NYC resident, not claimable as dependent, and
+      school-credit income is $500,000 or less:
+        Single / MFS:
+          if NYC taxable income ≤ $12,000: 0.171% × NYC taxable income
+          else: $21 + 0.228% × (NYC taxable income − $12,000)
+        HoH:
+          if NYC taxable income ≤ $14,400: 0.171% × NYC taxable income
+          else: $25 + 0.228% × (NYC taxable income − $14,400)
+        MFJ / QSS:
+          if NYC taxable income ≤ $21,600: 0.171% × NYC taxable income
+          else: $37 + 0.228% × (NYC taxable income − $21,600)
+      Otherwise: $0
+    inputs:
+      - "Federal adjusted gross income"
+      - "Taxable IRA distributions included in federal AGI (if provided)"
+      - "NYC taxable income from IT-201 line 47 or IT-360.1 line 47"
+      - "NYC residency flag or part-year NYC residency flag"
+      - "Dependent status"
+      - "Filing status"
+    notes: |
+      The 2025 IT-201 reports the NYC school tax rate reduction amount on line 69a
+      instead of netting it inside the NYC tax section. Part-year NYC residents
+      use Form IT-360.1 line 47 city taxable income in the same rate schedule.
+      Full-year NYC residents use IT-201 line 47 taxable income, including the
+      charitable-gifts-trust worksheet result when that worksheet applies.
+      Mixed-residency married-filing-jointly worksheet cases remain upstream.
+    edgeCases:
+      - "Part-year NYC resident uses IT-360.1 line 47 taxable income for the rate reduction amount"
+      - "Income above $500,000 eliminates the rate reduction credit for both full-year and part-year residents"
+    testRef: "tests/engine/state/ny-it201-full-return.test.ts::Line 69a - NYC school tax rate reduction uses taxable income schedule"
+
+  - line: "70"
+    description: "New York City earned income credit"
+    formula: "When it215 inputs provided: calculateNYIT215().allowableNYCEarnedIncomeCredit; otherwise passthrough input from Form IT-215 or Form IT-209"
+    inputs:
+      - "Federal earned income credit"
+      - "New York adjusted gross income"
+      - "NYC residency flag"
+      - "NYC earned income credit passthrough amount"
+    notes: |
+      When resident IT-215 inputs are provided, line 70 is computed from the
+      official 2025 Worksheet C rate table using NYAGI and the federal earned
+      income credit. When the filer is Married filing separately on New York
+      after a joint federal return, the claimed Worksheet C line 4 share is
+      used instead of the combined line 3 amount. The direct passthrough
+      remains available for unsupported cases such as part-year NYC residency
+      or IT-209-only workflows.
+    edgeCases:
+      - "Computed IT-215 amount overrides the passthrough when both are provided"
+      - "Joint-federal / NY-MFS filer may claim less than the combined Worksheet C line 3 amount"
+      - "Non-NYC resident gets zero from computed IT-215 path"
+      - "Passthrough remains available when IT-215 inputs are omitted"
+    testRef: "tests/engine/state/ny-it201-full-return.test.ts::Line 70 - IT-215 joint federal NY-MFS allocation routes the claimed Worksheet C line 4 share to the return"
+
+  - line: "70a"
+    description: "New York City income tax elimination credit"
+    formula: "When it270 inputs provided: calculateNYIT270().credit; otherwise passthrough input from Form IT-270"
+    inputs:
+      - "Computed IT-270 credit amount"
+      - "NYC income tax elimination credit passthrough amount"
+    notes: |
+      When resident IT-270 inputs are provided, the orchestrator computes the
+      NYC income tax elimination credit from federal AGI, dependent count,
+      line 54 NYC tax, the refundable NYC child care credit, and the NYC earned
+      income credit. The direct passthrough remains available for unsupported
+      cases such as IT-203 workflows or externally prepared IT-270 amounts.
+    edgeCases:
+      - "Computed IT-270 amount overrides the passthrough when both are provided"
+      - "At-threshold filer can eliminate the full remaining NYC tax"
+      - "Other refundable NYC credits reduce the remaining tax before IT-270 applies"
+    testRef: "tests/engine/state/ny-it201-full-return.test.ts::Line 70a - IT-270 computes the NYC income tax elimination credit from line 54"
+
+  - line: "71"
+    description: "Other refundable credits"
+    formula: "When it217 inputs are provided, compute Form IT-217 line 19 and feed it to IT-201-ATT line 11; when it201attRefundableCredits inputs are provided, calculateNYIT201ATTRefundableCredits().totalOtherRefundableCredits; otherwise passthrough Form IT-201-ATT line 18 amount; then add calculateNYIT119().line3 when it119 inputs are provided"
+    inputs:
+      - "Computed IT-217 line 19 farmers' school tax credit"
+      - "Computed IT-201-ATT Part 1 Section D line 18 amount"
+      - "Computed IT-119 line 3 STAR reconciliation amount"
+      - "Other refundable credits passthrough from IT-201-ATT"
+    notes: |
+      The resident return can now compute line 71 from IT-201-ATT Part 1
+      Section D by aggregating the farmers' school tax credit, coded
+      refundable credits, and claim-of-right credits. When IT-217 inputs are
+      provided, the orchestrator computes the current-year farmers' school tax
+      credit and injects that amount onto IT-201-ATT line 11, overriding any
+      manual line 11 passthrough. When IT-119 inputs are provided, the STAR
+      credit advance-payment reconciliation amount from IT-119 line 3 is added
+      to line 71 and also fed to the Yonkers worksheet STAR reconciliation
+      line. The legacy passthrough remains available for unsupported attachment
+      lines.
+    edgeCases:
+      - "Computed IT-217 line 19 overrides a manual IT-201-ATT line 11 farmers' school tax credit passthrough"
+      - "Computed IT-201-ATT line 18 overrides the passthrough when both are provided"
+      - "Computed IT-119 line 3 increases line 71 even when no other IT-201-ATT refundable credits exist"
+      - "When both IT-119 and detailed IT-201-ATT line 12 entries are provided, code 119 must not be duplicated manually"
+      - "No IT-201-ATT inputs: passthrough amount still works"
+    testRef: "tests/engine/state/ny-it201-full-return.test.ts::Line 71 - IT-217 computed credit overrides the manual farmers credit passthrough"
+
+  - line: "64/71-legacy-validation"
+    description: "Legacy STAR and NYC/Yonkers refundable passthrough fields are rejected"
+    formula: "If starCredit or nycYonkersRefundableCredits is provided: reject input"
+    inputs:
+      - "Legacy standalone STAR credit passthrough"
+      - "Legacy standalone NYC/Yonkers refundable-credit passthrough"
+    notes: |
+      The 2025 resident IT-201 front page routes supported refundable amounts
+      through line 64 (combined NYS and NYC child and dependent care credit),
+      lines 69 through 70a (NYC refundable credits), and line 71 (other
+      refundable credits from IT-201-ATT Section D). STAR reconciliation is
+      handled through Form IT-119 and added to line 71. The resident-return
+      engine therefore rejects legacy passthrough fields that no longer map to
+      any 2025 IT-201 line, instead of silently ignoring them.
+    edgeCases:
+      - "Structured IT-119 STAR reconciliation remains valid and increases line 71"
+      - "IT-216 NYC child care credit remains on line 64 rather than a legacy local-credit field"
+      - "Legacy refundable passthrough fields are invalid even when set to zero"
+    testRef: "tests/engine/state/ny-it201-input-schema.test.ts::rejects legacy 2025-incompatible STAR and local refundable passthrough fields"
+
+  - line: "75"
+    description: "Total estimated tax payments and amount paid with Form IT-370"
+    formula: "Estimated tax payments + prior-year overpayment applied to current-year estimates + extension payment"
+    inputs:
+      - "Estimated tax payments"
+      - "2024 overpayment applied to 2025 estimated tax"
+      - "Extension payment"
+    notes: |
+      The 2025 IT-201 combines estimated tax payments, prior-year overpayment
+      applied, and Form IT-370 extension payments on line 75. The 2025
+      instructions say to enter the total of 2025 estimated payments, any
+      overpayment from the 2024 personal income tax return applied to 2025
+      estimated tax, and any amount paid with Form IT-370.
+    edgeCases:
+      - "No estimated payments, but a prior-year overpayment carryforward still increases line 75"
+      - "Prior-year overpayment and extension payment both contribute to line 75"
+      - "Zero inputs produce a zero line 75 amount"
+    testRef: "tests/engine/state/ny-it201-full-return.test.ts::Line 75 - estimated tax and extension payments combine"
+
+  - line: "76"
+    description: "Total payments and refundable credits"
+    formula: "Add lines 63 through 75"
+    inputs:
+      - "Refundable credits (lines 63 through 71)"
+      - "Withholding and payment amounts (lines 72 through 75)"
+    notes: |
+      On the 2025 IT-201, line 76 is the grand total of refundable credits,
+      withholding, and estimated payments. This value is compared against line 62.
+    testRef: "tests/engine/state/ny-it201-full-return.test.ts::Line 76 - total payments and refundable credits sum lines 63 through 75"
+
+  - line: "72"
+    description: "Total New York State tax withheld"
+    formula: "calculateNYIT201Withholding().nyStateTaxWithheld using supported W-2 / 1099 records plus any direct line 72 additions"
+    inputs:
+      - "Structured W-2, 1099-R, 1099-G, and W-2G withholding records"
+      - "Direct additional line 72 withholding amount"
+    testRef: "tests/engine/state/ny-it201-full-return.test.ts::Lines 72-75 - withholding and payment section"
+
+  - line: "73"
+    description: "Total New York City tax withheld"
+    formula: "calculateNYIT201Withholding().nycTaxWithheld using supported W-2 / 1099-R local withholding records plus any direct line 73 additions"
+    inputs:
+      - "Structured W-2 and 1099-R local withholding records"
+      - "Direct additional line 73 withholding amount"
+    testRef: "tests/engine/state/ny-it201-full-return.test.ts::Lines 72-75 - withholding and payment section"
+
+  - line: "74"
+    description: "Total Yonkers tax withheld"
+    formula: "calculateNYIT201Withholding().yonkersTaxWithheld using supported W-2 / 1099-R local withholding records plus any direct line 74 additions"
+    inputs:
+      - "Structured W-2 and 1099-R local withholding records"
+      - "Direct additional line 74 withholding amount"
+    testRef: "tests/engine/state/ny-it201-full-return.test.ts::Lines 72-75 - withholding and payment section"
+
+  - line: "77"
+    description: "Amount overpaid"
+    formula: "max(0, (Line 76 - Line 62) - Line 81)"
+    inputs:
+      - "Total payments and refundable credits (line 76)"
+      - "Total taxes before refundable credits and payments (line 62)"
+      - "Estimated tax penalty (line 81)"
+    notes: |
+      The 2025 IT-201 instructions require taxpayers who owe an estimated tax
+      penalty to subtract line 81 from any overpayment before entering line 77.
+      Other penalties and interest from line 82 do not reduce line 77. The net
+      overpayment on line 77 is then available for refund, 2026 estimated tax,
+      or NYS 529 allocation.
+    edgeCases:
+      - "Exact zero: no refund and no balance due"
+      - "High withholding + credits exceeds tax: refund"
+      - "No payments and no credits: zero overpayment"
+      - "Estimated tax penalty reduces overpayment dollar-for-dollar"
+    testRef: "tests/engine/state/ny-it201-full-return.test.ts::Line 77 - overpayment results in refund"
+
+  - line: "78"
+    description: "Amount of line 77 available for refund"
+    formula: "Line 77 - Line 79"
+    inputs:
+      - "Amount overpaid (line 77)"
+      - "Amount applied to next year estimated tax (line 79)"
+    notes: |
+      The 2025 IT-201 instructs taxpayers to subtract line 79 from line 77
+      to determine the amount available for refund before any optional NYS 529
+      college savings account allocation on line 78a.
+    edgeCases:
+      - "No line 79 allocation: line 78 equals line 77"
+      - "Partial line 79 allocation reduces the refund dollar-for-dollar"
+      - "Full line 77 allocation leaves no cash refund"
+    testRef: "tests/engine/state/ny-it201-full-return.test.ts::Line 78 - refund available is reduced by line 79 estimated tax allocation"
+
+  - line: "78a"
+    description: "NYS 529 account deposit"
+    formula: "Requested Form IT-195 line 4 amount, limited to line 78"
+    inputs:
+      - "Requested NYS 529 account deposit from Form IT-195 line 4"
+      - "Amount of line 77 available for refund (line 78)"
+    notes: |
+      The 2025 IT-201 instructions direct taxpayers who want to allocate part
+      of their refund to up to three NYS 529 college savings accounts to enter
+      on line 78a the amount from Form IT-195, line 4. This amount cannot
+      exceed the refund still available after the line 79 estimated-tax
+      allocation. The instructions state that the total of lines 78a through 79
+      should equal the amount on line 77.
+    edgeCases:
+      - "Zero line 78a leaves the full line 78 amount available as cash refund"
+      - "Partial line 78a allocation reduces the cash refund dollar-for-dollar"
+      - "Line 78a greater than line 78 is invalid"
+    testRef: "tests/engine/state/ny-it201-full-return.test.ts::Line 78a - NYS 529 deposit reduces the cash refund after line 79"
+
+  - line: "78b"
+    description: "Total refund after NYS 529 account deposit"
+    formula: "Line 78 - Line 78a"
+    inputs:
+      - "Amount of line 77 available for refund (line 78)"
+      - "NYS 529 account deposit (line 78a)"
+    notes: |
+      The 2025 IT-201 line 78b is the remaining refund payable to the taxpayer
+      after subtracting any NYS 529 account deposit reported on line 78a.
+    edgeCases:
+      - "No NYS 529 deposit: line 78b equals line 78"
+      - "Partial NYS 529 deposit leaves a reduced cash refund"
+      - "Full line 78 deposit leaves no cash refund"
+    testRef: "tests/engine/state/ny-it201-full-return.test.ts::Line 78b - cash refund equals line 78 minus the NYS 529 deposit"
+
+  - line: "79"
+    description: "Amount of overpayment applied to next year estimated tax"
+    formula: "Requested allocation to 2026 estimated tax, limited to line 77 overpayment"
+    inputs:
+      - "Requested applied-to-2026 estimated tax amount"
+      - "Amount overpaid (line 77)"
+    notes: |
+      The 2025 IT-201 allows taxpayers to direct part or all of line 77 to
+      their 2026 New York State, New York City, Yonkers, and MCTMT estimated
+      tax. The requested amount cannot exceed the gross overpayment on line 77.
+      Any remaining overpayment stays on line 78 as the amount available for
+      refund before any optional line 78a NYS 529 allocation.
+    edgeCases:
+      - "Default zero allocation preserves the full refund on line 78"
+      - "Partial allocation splits the overpayment between refund and next-year estimates"
+      - "Requested allocation greater than line 77 is invalid"
+    testRef: "tests/engine/state/ny-it201-full-return.test.ts::Line 79 - overpayment can be applied to next-year estimated tax"
+
+  - line: "80"
+    description: "Amount you owe"
+    formula: "max(0, Line 62 - Line 76 + Line 81) + Line 82"
+    inputs:
+      - "Total payments and refundable credits (line 76)"
+      - "Total taxes before refundable credits and payments (line 62)"
+      - "Estimated tax penalty (line 81)"
+      - "Other penalties and interest (line 82)"
+    notes: |
+      The 2025 IT-201 line 80 includes the base tax due plus any line 81
+      estimated tax penalty and any line 82 other penalties and interest. If
+      a taxpayer has an overpayment that is smaller than line 81, the excess
+      estimated tax penalty becomes part of line 80.
+    edgeCases:
+      - "Exact zero: no refund and no balance due"
+      - "High withholding + credits exceeds tax: no amount owed"
+      - "No payments and no credits: amount owed equals total tax"
+      - "Estimated tax penalty can turn a small refund into amount owed"
+      - "Other penalties and interest increase line 80 without reducing line 77"
+    testRef: "tests/engine/state/ny-it201-full-return.test.ts::Line 80 - underpayment results in amount owed"
+
+  - line: "81"
+    description: "Penalty for underpaying estimated tax"
+    formula: "Passthrough penalty from Form IT-2105.9"
+    inputs:
+      - "Estimated tax penalty amount"
+    notes: |
+      The 2025 IT-201 instructions direct taxpayers to compute the estimated tax
+      penalty on Form IT-2105.9, enter that amount on line 81, and add the same
+      amount to line 80. If the taxpayer also has an overpayment, the line 81
+      amount first reduces line 77.
+    edgeCases:
+      - "Positive line 81 reduces line 77 overpayment"
+      - "Positive line 81 increases line 80 when no overpayment remains"
+      - "Zero line 81 leaves the refund/balance-due math unchanged"
+    testRef: "tests/engine/state/ny-it201-full-return.test.ts::Line 81 - estimated tax penalty reduces overpayment before refund allocation"
+
+  - line: "82"
+    description: "Other penalties and interest"
+    formula: "Passthrough penalty/interest amount added to line 80"
+    inputs:
+      - "Late filing penalty, late payment penalty, and interest amount"
+    notes: |
+      The 2025 IT-201 instructions tell taxpayers to calculate any other
+      penalties and interest separately, enter the amount on line 82, and
+      include it in the total on line 80. Unlike line 81, line 82 does not
+      reduce line 77 overpayment.
+    edgeCases:
+      - "Other penalties increase amount owed"
+      - "Other penalties do not reduce line 77 refund"
+      - "Zero line 82 leaves line 80 unchanged"
+    testRef: "tests/engine/state/ny-it201-full-return.test.ts::Line 82 - other penalties and interest increase amount owed without reducing line 77"

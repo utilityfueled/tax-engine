@@ -1,0 +1,101 @@
+form: "Schedule B"
+fullName: "Interest and Ordinary Dividends"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i1040sb"
+
+notes: |
+  Schedule B is required if the taxpayer has:
+  - Over $1,500 of taxable interest (Part I)
+  - Over $1,500 of ordinary dividends (Part II)
+  - Any financial interest in or signature authority over a foreign financial account (Part III)
+
+lines:
+  # ── Part I: Interest ─────────────────────────────────────
+  - line: "1"
+    description: "List each payer's name and interest amount"
+    formula: "Enumerate each 1099-INT Box 1 amount, each net Form 1099-OID interest amount after Box 6 acquisition-premium and Box 11 bond-premium offsets, each Schedule K-1 Box 5 interest amount, and each Schedule K-1 (Form 1041) Box 1 interest amount"
+    irsRef: "Schedule B Instructions, Part I"
+    inputs:
+      - "1099-INT Box 1 (each payer)"
+      - "1099-OID Box 1 net of Box 6 acquisition premium (each payer)"
+      - "1099-OID Box 2 net of Box 11 bond premium (each payer)"
+      - "K-1 Box 5 (each partnership)"
+      - "K-1 (Form 1041) Box 1 (each estate or trust)"
+      - "Seller-financed mortgage interest received"
+    notes: "The audit trail should preserve payer-level listed amounts, including separate net OID and net stated-interest entries when the same Form 1099-OID contributes both components."
+    edgeCases:
+      - "Nominee interest — received on behalf of another"
+      - "OID (Original Issue Discount) adjustments"
+      - "Tax-exempt interest NOT included here (goes to 1040 Line 2a)"
+    testRef: "tests/engine/schedules/schedule-b.test.ts::Schedule B Line 1 - list interest payers"
+
+  - line: "2"
+    description: "Add amounts from Line 1"
+    formula: "Sum of all interest amounts listed in Line 1"
+    irsRef: "Schedule B Instructions, Line 2"
+    testRef: "tests/engine/schedules/schedule-b.test.ts::Schedule B Line 2 - total interest"
+
+  - line: "3"
+    description: "Excludable interest on Series EE and I US savings bonds issued after 1989"
+    formula: "Form 8815 amount (education savings bond exclusion)"
+    irsRef: "Schedule B Instructions, Line 3"
+    notes: "Must file Form 8815 to claim. Subject to income phase-out."
+    edgeCases:
+      - "MFJ AGI phase-out: $154,800–$184,800 (2025)"
+      - "Single AGI phase-out: $100,800–$115,800 (2025)"
+      - "Bond must be used for qualified higher education expenses"
+    testRef: "tests/engine/schedules/schedule-b.test.ts::Schedule B Line 3 - savings bond exclusion (Form 8815)"
+
+  - line: "4"
+    description: "Taxable interest"
+    formula: "Line 2 - Line 3"
+    irsRef: "Schedule B Instructions, Line 4"
+    notes: "This amount goes to Form 1040 Line 2b"
+    testRef: "tests/engine/schedules/schedule-b.test.ts::Schedule B Line 4 - taxable interest to 1040"
+
+  # ── Part II: Ordinary Dividends ──────────────────────────
+  - line: "5"
+    description: "List each payer's name and ordinary dividend amount"
+    formula: "Enumerate each 1099-DIV Box 1a amount, each Schedule K-1 Box 6a amount, and each Schedule K-1 (Form 1041) Box 2a amount"
+    irsRef: "Schedule B Instructions, Part II"
+    inputs:
+      - "1099-DIV Box 1a (each payer)"
+      - "K-1 Box 6a (each partnership)"
+      - "K-1 (Form 1041) Box 2a (each estate or trust)"
+    notes: "The audit trail should preserve payer-level dividend entries so each Schedule B amount remains traceable to the reporting statement."
+    edgeCases:
+      - "Nominee dividends — received on behalf of another"
+      - "Capital gain distributions from 1099-DIV Box 2a go to Schedule D, not here"
+    testRef: "tests/engine/schedules/schedule-b.test.ts::Schedule B Line 5 - list dividend payers"
+
+  - line: "6"
+    description: "Total ordinary dividends"
+    formula: "Sum of all dividend amounts listed in Line 5"
+    irsRef: "Schedule B Instructions, Line 6"
+    notes: "This amount goes to Form 1040 Line 3b"
+    testRef: "tests/engine/schedules/schedule-b.test.ts::Schedule B Line 6 - total dividends to 1040"
+
+  # ── Part III: Foreign Accounts and Trusts ────────────────
+  - line: "7a"
+    description: "Foreign financial account indicator"
+    formula: "Boolean: did taxpayer have a financial interest in or signature authority over a foreign financial account?"
+    irsRef: "Schedule B Instructions, Part III Line 7a"
+    notes: "If yes, may need to file FinCEN Form 114 (FBAR)"
+    edgeCases:
+      - "Threshold: aggregate value exceeds $10,000 at any time during year"
+      - "Includes bank accounts, securities accounts, and other financial accounts"
+      - "FBAR filed separately (not with tax return) — deadline April 15"
+    testRef: "tests/engine/schedules/schedule-b.test.ts::Schedule B Line 7a - foreign account indicator from 1099-DIV"
+
+  - line: "7b"
+    description: "Country of foreign account"
+    formula: "Name of country or countries where accounts are maintained"
+    irsRef: "Schedule B Instructions, Part III Line 7b"
+    testRef: "tests/engine/schedules/schedule-b.test.ts::Schedule B Line 7b - foreign account country"
+
+  - line: "8"
+    description: "Foreign trust indicator"
+    formula: "Boolean: did taxpayer receive a distribution from or was grantor/transferor to a foreign trust?"
+    irsRef: "Schedule B Instructions, Part III Line 8"
+    notes: "If yes, may need Forms 3520 and 3520-A"
+    testRef: "tests/engine/schedules/schedule-b.test.ts::Schedule B Line 8 - foreign trust indicator from K-1"

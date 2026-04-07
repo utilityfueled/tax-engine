@@ -1,0 +1,67 @@
+form: "New York IT-119 STAR Credit Advance Payment Reconciliation"
+fullName: "New York State Form IT-119 STAR Credit Advance Payment Reconciliation"
+taxYear: 2025
+irsReference: "https://www.tax.ny.gov/pdf/current_forms/it/it119_fill_in.pdf"
+
+notes: |
+  Form IT-119 lets a taxpayer claim a refundable credit when the Tax Department
+  later determines that the 2025-2026 STAR credit advance payment was
+  underpaid. The taxpayer must have received an official underpayment notice
+  and must claim the entire underpayment amount shown on that notice.
+
+  This module covers the 2025 IT-119 computation lines:
+  - Line 1d: Underpayment amount for the first property
+  - Line 2d: Underpayment amount for the second property, if applicable
+  - Line 3: Total underpayment amount to enter as code 119 on IT-201-ATT line 12
+
+  The 2025 form supports at most two properties. The second-property path is
+  only for joint filers reconciling separate properties owned before marriage;
+  all other claimants use only the first-property line.
+
+lines:
+  - line: "1d"
+    description: "First-property STAR credit advance payment underpayment"
+    formula: "Whole-dollar underpayment amount shown on the Tax Department notice for the first property"
+    inputs:
+      - "Received-underpayment-notice flag"
+      - "First-property underpayment amount from the IT-119 notice"
+    notes: |
+      IT-119 may only be filed when the taxpayer received a notice stating that
+      the 2025-2026 STAR credit advance payment was underpaid. The taxpayer
+      must claim the entire underpayment amount shown on the notice.
+    edgeCases:
+      - "If no notice was received, the module rejects the claim instead of returning zero"
+      - "Underpayment amounts are entered in whole dollars"
+      - "Negative underpayment amounts are invalid"
+    testRef: "tests/engine/state/ny-it119-star-credit-advance-payment-reconciliation.test.ts::Line 1d and line 3 - one property underpayment carries to the total reconciliation credit"
+
+  - line: "2d"
+    description: "Second-property STAR credit advance payment underpayment"
+    formula: "Whole-dollar underpayment amount shown on the Tax Department notice for the second property, or zero when no second property is reconciled"
+    inputs:
+      - "Optional second-property underpayment amount from the IT-119 notice"
+    notes: |
+      The second-property line is only used in the limited joint-return case
+      described in the IT-119 instructions. When no second property is present,
+      line 2d is zero.
+    edgeCases:
+      - "No second property leaves line 2d at zero"
+      - "At most two properties are supported"
+    testRef: "tests/engine/state/ny-it119-star-credit-advance-payment-reconciliation.test.ts::Line 2d and line 3 - two property underpayments are both included in the reconciliation total"
+
+  - line: "3"
+    description: "Total STAR credit advance payment reconciliation"
+    formula: "Line 1d + Line 2d"
+    inputs:
+      - "First-property underpayment amount (line 1d)"
+      - "Second-property underpayment amount (line 2d)"
+    notes: |
+      Transfer line 3 as code 119 on a line between lines 12a and 12l of
+      Form IT-201-ATT or IT-203-ATT. For resident IT-201 filers, this amount
+      therefore increases IT-201 line 71 and also serves as the Yonkers
+      worksheet STAR reconciliation amount.
+    edgeCases:
+      - "Single-property claims still flow through line 3"
+      - "Two-property claims sum both notice amounts"
+      - "Line 3 is the full notice amount; partial claims are not supported"
+    testRef: "tests/engine/state/ny-it119-star-credit-advance-payment-reconciliation.test.ts::Line 2d and line 3 - two property underpayments are both included in the reconciliation total"

@@ -1,0 +1,221 @@
+form: "Form 3800"
+fullName: "General Business Credit"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i3800"
+
+notes: |
+  Form 3800 aggregates all general business credits and limits the total
+  allowable credit based on the taxpayer's net income tax and tentative
+  minimum tax. For individual filers, the most common source is K-1 Box 15
+  pass-through credits from partnerships and S corporations.
+
+  The general business credit is a nonrefundable credit that flows to
+  Schedule 3 Line 6a (Form 1040 Line 20 via Schedule 3 Line 8).
+
+  IRC §38 defines the general business credit as the sum of credits
+  listed in §38(b). IRC §38(c) limits the credit to the excess of
+  net income tax over the greater of tentative minimum tax or
+  25% of net regular tax over $25,000.
+
+  Credits unused in the current year carry back 1 year and forward
+  20 years under IRC §39, though the 1-year carryback is uncommon
+  for individual filers and not implemented in this initial slice.
+
+  Eligible Small Business Credits (ESBC) under IRC §38(c)(5)(A) can
+  offset both regular tax and AMT. This initial implementation treats
+  all credits uniformly under the standard limitation; ESBC breakout
+  is deferred to a future iteration.
+
+businessRuleValidation:
+  - rule: "reference-summary-packet"
+    description: "Inventory support counts this form as business-rule validated only when regression coverage proves the emitted packet artifact stays labeled as a non-filing reference summary, limits itself to the supported Form 3800 aggregation and limitation outputs, and discloses the downstream Schedule 3 Line 6a bridge."
+    testRef: "tests/pdf/fill-form-3800.test.ts::buildForm3800ReferenceSummary keeps the packet artifact reference-only and limited to supported Form 3800 outputs"
+
+lines:
+  # ── Part I: Current Year Credit ────────────────────────────
+  - line: "Part I Line 1"
+    description: "General business credit from current year activities"
+    formula: "Sum of all current-year general business credit amounts from Part III or K-1 Box 15"
+    irsRef: "Form 3800 Instructions, Part I"
+    testRef: "tests/engine/forms/form-3800.test.ts::Part I Line 1 aggregates current year credits from K-1 Box 15"
+
+  - line: "Part I Line 2"
+    description: "Passive activity credits allowed"
+    formula: "Credits from passive activities allowed after Form 8582-CR limitation"
+    irsRef: "Form 3800 Instructions, Part I Line 2; Form 8582-CR"
+    notes: |
+      Currently accepted as a direct input. Full Form 8582-CR integration
+      is deferred to a future iteration.
+    testRef: "tests/engine/forms/form-3800.test.ts::Part I Line 2 adds passive activity credits"
+
+  - line: "Part I Line 3"
+    description: "Carryforward of general business credit"
+    formula: "Unused general business credit carried forward from prior years (20-year limit per IRC §39)"
+    irsRef: "IRC §39(a); Form 3800 Instructions, Part I Line 3"
+    testRef: "tests/engine/forms/form-3800.test.ts::Part I Line 3 includes prior year carryforward"
+
+  - line: "Part I Line 4"
+    description: "Carryback of general business credit"
+    formula: "Unused general business credit carried back from subsequent year (1-year per IRC §39)"
+    irsRef: "IRC §39(a); Form 3800 Instructions, Part I Line 4"
+    notes: "Not implemented in this initial slice. Carryback is uncommon for individual filers."
+    testRef: "tests/engine/forms/form-3800.test.ts::zero credits returns zero result"
+
+  - line: "Part I Line 5"
+    description: "Total current year general business credit"
+    formula: "Line 1 + Line 2 + Line 3 + Line 4"
+    irsRef: "Form 3800 Instructions, Part I Line 5"
+    testRef: "tests/engine/forms/form-3800.test.ts::Part I Line 5 sums all credit sources"
+
+  # ── Part II: Allowable Credit ──────────────────────────────
+  - line: "Part II Line 13"
+    description: "Regular tax before credits"
+    formula: "Form 1040 Line 18 (tax before credits including AMT)"
+    irsRef: "Form 3800 Instructions, Part II Line 13"
+    notes: "This is the combined regular tax + AMT base"
+    testRef: "tests/engine/forms/form-3800.test.ts::Part II Line 19 computes net income tax"
+
+  - line: "Part II Line 14"
+    description: "Personal nonrefundable credits"
+    formula: "Sum of child tax credit, foreign tax credit, and other Schedule 3 nonrefundable credits (excluding GBC)"
+    irsRef: "Form 3800 Instructions, Part II Line 14"
+    notes: |
+      Includes child tax credit (Form 1040 Line 19), foreign tax credit,
+      education credits, energy credits, retirement savings credit, and other
+      nonrefundable personal credits from Schedule 3.
+    testRef: "tests/engine/forms/form-3800.test.ts::Part II Line 14 totals personal credits"
+
+  - line: "Part II Line 15"
+    description: "Net regular tax"
+    formula: "max(0, Regular tax - Line 14)"
+    irsRef: "Form 3800 Instructions, Part II Line 15"
+    notes: "Regular tax here excludes AMT — it is the income tax from Form 1040 Line 16 only"
+    testRef: "tests/engine/forms/form-3800.test.ts::Part II Line 15 net regular tax floors at zero"
+
+  - line: "Part II Line 16"
+    description: "25% of net regular tax over $25,000"
+    formula: "0.25 × max(0, Line 15 - $25,000)"
+    irsRef: "Form 3800 Instructions, Part II Line 16; IRC §38(c)(1)"
+    notes: |
+      The $25,000 threshold applies to all filing statuses except MFS,
+      which uses $12,500. Estates and trusts use a different threshold
+      but are not supported in this engine.
+    testRef: "tests/engine/forms/form-3800.test.ts::Part II Line 16 applies 25% of net regular tax over $25,000 for single"
+
+  - line: "Part II Line 17"
+    description: "Tentative minimum tax"
+    formula: "Form 6251 tentative minimum tax (before the AMT = TMT - regular tax computation)"
+    irsRef: "Form 3800 Instructions, Part II Line 17; Form 6251"
+    testRef: "tests/engine/forms/form-3800.test.ts::Part II Line 17 uses TMT from Form 6251"
+
+  - line: "Part II Line 18"
+    description: "Greater of Line 16 or Line 17"
+    formula: "max(Line 16, Line 17)"
+    irsRef: "Form 3800 Instructions, Part II Line 18"
+    testRef: "tests/engine/forms/form-3800.test.ts::Part II Line 18 takes greater of 25% threshold or TMT"
+
+  - line: "Part II Line 19"
+    description: "Net income tax"
+    formula: "Regular tax + AMT - personal credits (Line 14)"
+    irsRef: "Form 3800 Instructions, Part II Line 19"
+    testRef: "tests/engine/forms/form-3800.test.ts::Part II Line 19 computes net income tax"
+
+  - line: "Part II Line 20"
+    description: "Credit limitation amount"
+    formula: "max(0, Line 19 - Line 18)"
+    irsRef: "Form 3800 Instructions, Part II Line 20; IRC §38(c)(1)"
+    testRef: "tests/engine/forms/form-3800.test.ts::Part II Line 20 computes credit limit as net income tax minus greater of threshold/TMT"
+
+  - line: "Part II Line 21"
+    description: "Allowable general business credit"
+    formula: "min(Line 5, Line 20)"
+    irsRef: "Form 3800 Instructions, Part II Line 21"
+    notes: "This is the actual credit allowed, limited by the tax liability"
+    testRef: "tests/engine/forms/form-3800.test.ts::Part II Line 21 takes lesser of total credit or limit"
+
+  # ── Carryforward ───────────────────────────────────────────
+  - line: "Carryforward"
+    description: "Unused general business credit carried forward"
+    formula: "Line 5 - Line 21"
+    irsRef: "IRC §39(a)(2)"
+    notes: "Unused credit carries forward 20 years. Oldest credits are used first (FIFO)."
+    testRef: "tests/engine/forms/form-3800.test.ts::carryforward equals total credit minus allowed"
+
+  # ── K-1 Box 15 Credit Codes ───────────────────────────────
+  - line: "K-1 Box 15 Code A"
+    description: "Low-income housing credit (Section 42(j)(5) partnerships)"
+    formula: "Partner's share of LIHC from pre-1990 buildings or partnerships with 10% or more interest"
+    irsRef: "Form 1065 K-1 Instructions, Box 15 Code A; IRC §42"
+    destination: "Form 3800 Part III"
+    testRef: "tests/engine/forms/form-3800.test.ts::K-1 Box 15 Code A low-income housing credit §42(j)(5)"
+
+  - line: "K-1 Box 15 Code B"
+    description: "Low-income housing credit (other)"
+    formula: "Partner's share of LIHC not reported under Code A"
+    irsRef: "Form 1065 K-1 Instructions, Box 15 Code B; IRC §42"
+    destination: "Form 3800 Part III"
+    testRef: "tests/engine/forms/form-3800.test.ts::K-1 Box 15 Code B low-income housing credit (other)"
+
+  - line: "K-1 Box 15 Code C"
+    description: "Qualified rehabilitation expenditures (rental real estate)"
+    formula: "Partner's share of rehabilitation credit"
+    irsRef: "Form 1065 K-1 Instructions, Box 15 Code C; IRC §47"
+    destination: "Form 3800 Part III"
+    testRef: "tests/engine/forms/form-3800.test.ts::K-1 Box 15 Code C rehabilitation credit"
+
+  - line: "K-1 Box 15 Code D"
+    description: "Other rental real estate credits"
+    formula: "Partner's share of other rental real estate credits"
+    irsRef: "Form 1065 K-1 Instructions, Box 15 Code D"
+    destination: "Form 3800 Part III"
+    testRef: "tests/engine/forms/form-3800.test.ts::all six Box 15 codes aggregate correctly"
+
+  - line: "K-1 Box 15 Code E"
+    description: "Other rental credits"
+    formula: "Partner's share of other rental credits"
+    irsRef: "Form 1065 K-1 Instructions, Box 15 Code E"
+    destination: "Form 3800 Part III"
+    testRef: "tests/engine/forms/form-3800.test.ts::all six Box 15 codes aggregate correctly"
+
+  - line: "K-1 Box 15 Code F"
+    description: "Other credits"
+    formula: "Partner's share of other business credits (work opportunity, research, etc.)"
+    irsRef: "Form 1065 K-1 Instructions, Box 15 Code F"
+    destination: "Form 3800 Part III"
+    testRef: "tests/engine/forms/form-3800.test.ts::K-1 Box 15 Code F other credits"
+
+edgeCases:
+  - case: "Credit exceeds limitation"
+    description: "When total GBC exceeds the tax liability limitation, excess carries forward"
+    rule: "IRC §39(a)(2) — 20-year carryforward"
+    testRef: "tests/engine/forms/form-3800.test.ts::credit exceeds limitation generates carryforward"
+
+  - case: "Low tax liability"
+    description: "When net income tax is low, the 25% threshold may further limit the credit"
+    rule: "IRC §38(c)(1) — 25% of net regular tax over $25,000"
+    testRef: "tests/engine/forms/form-3800.test.ts::25% threshold reduces credit when net regular tax is low"
+
+  - case: "AMT interaction"
+    description: "TMT sets a floor on the limitation amount, reducing the general business credit"
+    rule: "IRC §38(c)(1) — greater of TMT or 25% threshold"
+    testRef: "tests/engine/forms/form-3800.test.ts::TMT floor reduces allowable credit"
+
+  - case: "MFS threshold"
+    description: "Married filing separately uses $12,500 threshold instead of $25,000"
+    rule: "IRC §38(c)(3)(B)"
+    testRef: "tests/engine/forms/form-3800.test.ts::MFS uses $12,500 threshold"
+
+  - case: "Multiple K-1 sources"
+    description: "Credits from multiple partnerships are aggregated"
+    rule: "IRC §38(b) — sum of all credits"
+    testRef: "tests/engine/forms/form-3800.test.ts::multiple K-1 Box 15 credits are aggregated"
+
+  - case: "Zero credit"
+    description: "When no business credits exist, Form 3800 is not required"
+    rule: "Form 3800 is only filed when general business credits apply"
+    testRef: "tests/engine/forms/form-3800.test.ts::zero credits returns zero result"
+
+  - case: "Prior year carryforward"
+    description: "Unused credits from prior years are applied FIFO before current year credits"
+    rule: "IRC §39(a)(2) — oldest credits used first"
+    testRef: "tests/engine/forms/form-3800.test.ts::carryforward from prior year applied before current year"

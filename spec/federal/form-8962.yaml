@@ -1,0 +1,150 @@
+form: "Form 8962"
+fullName: "Premium Tax Credit (PTC)"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i8962"
+
+notes: |
+  Form 8962 reconciles advance premium tax credits (APTC) received through
+  the ACA marketplace with the actual PTC based on household income.
+  Net PTC (if PTC > APTC) flows to Schedule 3 Line 10.
+  Excess APTC repayment (if APTC > PTC) flows to Schedule 2 Line 2.
+  For 2025, the enhanced IRA subsidies from ARPA/IRA have been extended.
+  FPL: TY2025 uses the 2024 HHS Poverty Guidelines ($15,060 base, $5,380/person).
+  Per IRS Q&A: "the tax credit for 2025 is based on the 2024 FPL."
+  PTC computation uses the per-month method (IRS Lines 12-23), not the annual
+  shortcut (Line 11), to correctly handle partial-year and varying coverage.
+
+businessRuleValidation:
+  - rule: "reference-summary-packet"
+    description: "Inventory support counts this form as business-rule validated only when regression coverage proves the emitted packet artifact stays labeled as a non-filing reference summary and only surfaces the supported Form 1095-A marketplace policy totals together with the supported Form 8962 reconciliation lines that route to Schedule 2 and Schedule 3."
+    testRef: "tests/pdf/fill-form-8962.test.ts::fillForm8962Reference keeps the packet artifact reference-only and limited to supported Form 1095-A and Form 8962 reconciliation outputs"
+
+lines:
+  - line: "1"
+    description: "Tax family size"
+    formula: "Primary + spouse (if MFJ) + dependents claimed"
+    irsRef: "Form 8962 Instructions, Line 1"
+    testRef: "tests/engine/forms/form-8962.test.ts::Form 8962 Line 1 - family size"
+
+  - line: "2"
+    description: "Modified AGI"
+    formula: "AGI + tax-exempt foreign income + tax-exempt interest + non-taxable SS"
+    irsRef: "Form 8962 Instructions, Line 2"
+    notes: "For most taxpayers this equals AGI"
+    testRef: "tests/engine/forms/form-8962.test.ts::Form 8962 Line 2 - modified AGI"
+
+  - line: "3"
+    description: "Household income as % of Federal Poverty Line"
+    formula: "(Modified AGI / FPL for family size) × 100 — NOT rounded to whole number"
+    irsRef: "Form 8962 Instructions, Line 3"
+    notes: |
+      TY2025 uses 2024 HHS Poverty Guidelines (48 states): $15,060 (1 person),
+      $5,380 per additional person. NOT the 2025 guidelines ($15,650/$5,580).
+      Per IRS: "the tax credit for 2025 is based on the 2024 FPL."
+      IRS Form 8962 Line 3 shows "___.__%" (2 decimal places). The value must retain
+      decimal precision for accurate interpolation (Line 5) and repayment cap tier
+      classification (Table 5). Rounding to a whole number misclassifies taxpayers
+      near bracket boundaries (e.g., 199.8% → 200% changes repayment cap from $375
+      to $950 for single filers — a $575 error).
+    edgeCases:
+      - "If below 100% FPL, generally not eligible unless exception applies"
+      - "If above 400% FPL, PTC may be zero (pre-IRA) or limited (post-IRA)"
+      - "FPL for family of 4 (2024 HHS) = $31,200"
+      - "FPL% near bracket boundaries must use decimal precision (e.g., 199.8% stays in <200% tier)"
+    testRef: "tests/engine/forms/form-8962.test.ts::Form 8962 Line 3 - FPL percentage retains decimal precision"
+
+  - line: "5"
+    description: "Expected contribution percentage"
+    formula: "Based on FPL percentage using applicable figure table"
+    irsRef: "Form 8962 Instructions, Line 5; Table 2"
+    testRef: "tests/engine/forms/form-8962.test.ts::Form 8962 Line 5 - contribution rate at 0% below 150 FPL"
+
+  - line: "7"
+    description: "Expected annual contribution"
+    formula: "Line 2 × Line 5 (contribution rate)"
+    irsRef: "Form 8962 Instructions, Line 7"
+    testRef: "tests/engine/forms/form-8962.test.ts::Form 8962 Line 7 - expected contribution"
+
+  - line: "11a"
+    description: "Annual premium amount (enrollment premiums)"
+    formula: "Sum of monthly enrollment premiums from Form 1095-A"
+    irsRef: "Form 8962 Instructions, Line 11"
+    testRef: "tests/engine/forms/form-8962.test.ts::Form 8962 Line 11a - annual premium"
+
+  - line: "11b"
+    description: "Annual SLCSP premium"
+    formula: "Sum of monthly SLCSP amounts from Form 1095-A"
+    irsRef: "Form 8962 Instructions, Line 11"
+    testRef: "tests/engine/forms/form-8962.test.ts::Form 8962 Line 11b - annual SLCSP"
+
+  - line: "11c"
+    description: "Annual advance PTC"
+    formula: "Sum of monthly advance PTC from Form 1095-A"
+    irsRef: "Form 8962 Instructions, Line 11"
+    testRef: "tests/engine/forms/form-8962.test.ts::Form 8962 Line 11c - annual advance PTC"
+
+  - line: "24"
+    description: "Annual PTC allowed (sum of per-month PTC)"
+    formula: |
+      Sum over each covered month of:
+        min(max(0, monthly_SLCSP - monthly_expected_contribution), monthly_premium)
+      where monthly_expected_contribution = Line 7 ÷ 12 (IRS Lines 12-23 Column c).
+      This is the general monthly method; the annual shortcut (Line 11) only works
+      when coverage is constant for all 12 months.
+    irsRef: "Form 8962 Instructions, Lines 12-23 (monthly calculation), Line 24"
+    edgeCases:
+      - "PTC per month cannot exceed that month's enrollment premium (Column e = min of Column a and Column d)"
+      - "If SLCSP is 0 for any month, no PTC for that month"
+      - "For partial-year coverage, only covered months contribute; uncovered months add $0"
+      - "Monthly expected contribution is NOT prorated — always Line 7 ÷ 12, even for partial-year"
+      - "Annual method (Line 11) gives wrong result for partial-year coverage"
+    testRef: "tests/engine/forms/form-8962.test.ts::Form 8962 Line 24 - PTC allowed"
+
+  - line: "25"
+    description: "Advance PTC total"
+    formula: "Same as Line 11c — total APTC received"
+    irsRef: "Form 8962 Instructions, Line 25"
+    testRef: "tests/engine/forms/form-8962.test.ts::Form 8962 Line 25 - advance PTC total equals Line 11c"
+
+  - line: "26"
+    description: "Net PTC (if PTC > APTC)"
+    formula: "Line 24 - Line 25 (if positive)"
+    irsRef: "Form 8962 Instructions, Line 26"
+    notes: "Flows to Schedule 3 Line 10"
+    testRef: "tests/engine/forms/form-8962.test.ts::Form 8962 Line 26 - net PTC refundable"
+
+  - line: "27"
+    description: "Excess APTC repayment"
+    formula: "Line 25 - Line 24 (if positive), subject to repayment cap"
+    irsRef: "Form 8962 Instructions, Line 27; Table 5 repayment caps"
+    edgeCases:
+      - "Repayment is capped based on FPL percentage (Table 5)"
+      - "Below 200% FPL: $375 single / $750 other (Rev. Proc. 2024-40 §2.07)"
+      - "200-300% FPL: $975 single / $1,950 other (Rev. Proc. 2024-40 §2.07)"
+      - "300-400% FPL: $1,625 single / $3,250 other (Rev. Proc. 2024-40 §2.07)"
+      - "Above 400% FPL: no cap (full repayment)"
+      - "Filing status: only 'Single' uses the lower cap column per IRS Form 8962 Table 5. MFS uses 'any other filing status' (higher cap)."
+    testRef: "tests/engine/forms/form-8962.test.ts::Form 8962 Line 27 - excess APTC repayment"
+
+  - line: "packet"
+    description: "Draft packet inclusion rule for supported Form 8962 reconciliation data"
+    formula: "When the return includes one or more supported Form 1095-A marketplace statements, include a non-filing reference-summary PDF in the packet that lists each marketplace policy annual premium, annual SLCSP, annual APTC, and the supported Form 8962 reconciliation lines 1, 2, 3, 5, 7, 11a, 11b, 11c, 24, 25, 26, and 27."
+    irsRef: "Form 8962 Instructions, Lines 1, 11, 24, 25, 26, 27"
+    notes: "This packet slice intentionally emits a deterministic reference summary instead of attempting to recreate the IRS fillable Form 8962, so the draft packet stays honest about the supported reconciliation outputs and the marketplace data the engine consumed."
+    testRef: "tests/pdf/fill-form-8962.test.ts::fillReturn includes a Form 8962 reference summary when marketplace statements are present"
+
+  # ── Edge Cases ──────────────────────────────────────────
+  - line: "11a-partial"
+    description: "Partial-year coverage aggregation"
+    formula: "Sum only months with 1095-A entries"
+    irsRef: "Form 8962 Instructions, Lines 12-23"
+    edgeCases:
+      - "6-month coverage produces half the annual amounts"
+      - "Multiple 1095-A forms aggregate across all months"
+    testRef: "tests/edge-cases/ptc-edge-cases.test.ts::Form 8962 - partial-year coverage"
+
+  - line: "27-caps"
+    description: "Repayment cap tiers by FPL and filing status"
+    formula: "Table 5 caps: <200% single $375/other $750, 200-300% $975/$1950, 300-400% $1625/$3250 (Rev. Proc. 2024-40 §2.07)"
+    irsRef: "Form 8962 Instructions, Table 5"
+    testRef: "tests/edge-cases/ptc-edge-cases.test.ts::Form 8962 - repayment cap tiers"

@@ -1,0 +1,166 @@
+form: "New York IT-249 Long-Term Care Insurance Credit"
+fullName: "New York State Form IT-249 Claim for Long-Term Care Insurance Credit"
+taxYear: 2025
+irsReference: "https://www.tax.ny.gov/pdf/current_forms/it/it249i.pdf"
+
+notes: |
+  This resident slice of Form IT-249 computes the nonrefundable long-term care
+  insurance credit that flows to Form IT-201-ATT line 3 and then to IT-201
+  line 42.
+
+  For a full-year resident individual, the current-year credit equals 20% of
+  qualified premiums paid during the year plus any pass-through credit shares
+  received from partnerships, New York S corporations, and estates or trusts.
+  The resident current-year portion is allowed only when NYAGI is less than
+  $250,000, and that current-year portion is capped at $1,500. Prior-year
+  carryover is then added. The credit used for the year is limited to the net
+  tax remaining after credits applied before IT-249. Any unused amount carries
+  forward indefinitely.
+
+  Supported 2025 resident lines:
+  - Schedule A lines 1 through 3
+  - Schedule C lines 4 through 7
+  - Schedule E line 11
+  - Schedule F lines 12a through 14
+  - Schedule H lines 20 through 24
+
+lines:
+  - line: "1"
+    description: "Qualified long-term care insurance premiums paid"
+    formula: "Qualified long-term care insurance premiums paid during the current tax year"
+    inputs:
+      - "Qualified premiums paid directly by the resident taxpayer and spouse, if filing jointly"
+    notes: |
+      Include premiums paid as an individual and employer-paid premiums that
+      were included in federal Form W-2 box 1. Exclude employer-paid premiums
+      not included in wages and premiums paid with pretax dollars.
+    edgeCases:
+      - "Joint return includes both spouses' qualified premiums"
+      - "Pretax premiums excluded from wages are not includible"
+      - "Zero qualified premiums leaves line 1 at zero"
+    testRef: "tests/engine/state/ny-it249-long-term-care-insurance-credit.test.ts::Line 1, line 3, and line 11 - current-year credit equals 20% of premiums plus pass-through shares"
+
+  - line: "3"
+    description: "Current-year direct long-term care insurance credit"
+    formula: "Line 1 × 20%"
+    inputs:
+      - "Qualified premiums paid (line 1)"
+    notes: |
+      The statutory credit rate remains 20% for 2025. Monetary results are
+      rounded to the nearest dollar for the resident-return workflow.
+    edgeCases:
+      - "$6,000 of premiums yields a $1,200 direct credit"
+      - "Zero premiums yield zero direct credit"
+    testRef: "tests/engine/state/ny-it249-long-term-care-insurance-credit.test.ts::Line 1, line 3, and line 11 - current-year credit equals 20% of premiums plus pass-through shares"
+
+  - line: "7"
+    description: "Pass-through share of credit"
+    formula: "Line 4 + Line 5 + Line 6"
+    inputs:
+      - "Partner share of long-term care insurance credit"
+      - "S corporation shareholder share of long-term care insurance credit"
+      - "Beneficiary share of long-term care insurance credit"
+    notes: |
+      This resident-individual slice accepts the aggregate Schedule C shares
+      from partnerships, New York S corporations, and estates or trusts.
+    edgeCases:
+      - "No pass-through entities leave line 7 at zero"
+      - "Multiple entity shares add together"
+    testRef: "tests/engine/state/ny-it249-long-term-care-insurance-credit.test.ts::Line 1, line 3, and line 11 - current-year credit equals 20% of premiums plus pass-through shares"
+
+  - line: "11"
+    description: "Total credit available for the current year before NYAGI limitation"
+    formula: "Line 8 + Line 9"
+    inputs:
+      - "Current-year direct credit from Schedule A line 3"
+      - "Pass-through share of credit from Schedule C line 7"
+    notes: |
+      For the resident-individual slice, line 8 is the direct Schedule A credit
+      and line 9 is the aggregate Schedule C share.
+    edgeCases:
+      - "Direct and pass-through amounts both contribute to line 11"
+      - "Zero direct credit still allows pass-through credit"
+    testRef: "tests/engine/state/ny-it249-long-term-care-insurance-credit.test.ts::Line 1, line 3, and line 11 - current-year credit equals 20% of premiums plus pass-through shares"
+
+  - line: "12a"
+    description: "Resident NYAGI eligibility limitation"
+    formula: "If NYAGI is less than $250,000, enter line 11; otherwise enter 0"
+    inputs:
+      - "New York adjusted gross income"
+      - "Line 11 current-year credit"
+    notes: |
+      The 2025 resident form uses a strict less-than-$250,000 NYAGI test.
+      NYAGI equal to $250,000 does not qualify for a current-year credit.
+    edgeCases:
+      - "NYAGI $249,999 keeps the current-year credit"
+      - "NYAGI exactly $250,000 zeros line 12a"
+      - "Prior-year carryover is not lost by the NYAGI test"
+    testRef: "tests/engine/state/ny-it249-long-term-care-insurance-credit.test.ts::Line 12a through line 14 - NYAGI at $250,000 disallows the current-year credit but keeps carryover"
+
+  - line: "12b"
+    description: "Resident current-year credit cap"
+    formula: "Lesser of line 12a or $1,500"
+    inputs:
+      - "Eligible current-year resident credit from line 12a"
+    notes: |
+      The resident current-year piece is capped at $1,500 even if the 20%
+      premium calculation and pass-through shares exceed that amount.
+    edgeCases:
+      - "Large eligible current-year credit is limited to $1,500"
+      - "NYAGI disallowance keeps line 12b at zero"
+    testRef: "tests/engine/state/ny-it249-long-term-care-insurance-credit.test.ts::Line 12a through line 14 - NYAGI at $250,000 disallows the current-year credit but keeps carryover"
+
+  - line: "14"
+    description: "Total credit available including carryover"
+    formula: "Line 12b + Line 13"
+    inputs:
+      - "Resident current-year credit after the NYAGI and $1,500 limitations"
+      - "Prior-year carryover credit"
+    notes: |
+      Prior-year carryover is added after the resident current-year limitation.
+      The form allows indefinite carryforward of unused credit.
+    edgeCases:
+      - "Prior-year carryover remains available when line 12b is zero"
+      - "Large current-year credit is capped before the carryover is added"
+    testRef: "tests/engine/state/ny-it249-long-term-care-insurance-credit.test.ts::Line 12a through line 14 - NYAGI at $250,000 disallows the current-year credit but keeps carryover"
+
+  - line: "22"
+    description: "Net tax before the long-term care insurance credit"
+    formula: "max(0, Line 20 - Line 21)"
+    inputs:
+      - "Tax due before credits"
+      - "Credits applied before the long-term care insurance credit"
+    notes: |
+      Line 21 includes only credits that precede IT-249 in the New York credit
+      ordering sequence. Negative prior-credit totals are invalid.
+    edgeCases:
+      - "Prior credits exceeding tax floor line 22 at zero"
+      - "Negative credits-applied amount is rejected"
+    testRef: "tests/engine/state/ny-it249-long-term-care-insurance-credit.test.ts::Line 23 and line 24 - credit used is limited by tax remaining after prior credits"
+
+  - line: "23"
+    description: "Credit used for the current tax year"
+    formula: "Lesser of line 14 or line 22"
+    inputs:
+      - "Total available credit including carryover (line 14)"
+      - "Net tax before IT-249 (line 22)"
+    notes: |
+      For a resident IT-201 filer, line 23 is the amount carried to
+      IT-201-ATT line 3.
+    edgeCases:
+      - "Tax ceiling limits the current-year used credit"
+      - "Zero remaining tax means zero credit used this year"
+    testRef: "tests/engine/state/ny-it249-long-term-care-insurance-credit.test.ts::Line 23 and line 24 - credit used is limited by tax remaining after prior credits"
+
+  - line: "24"
+    description: "Carryover to next year"
+    formula: "Line 14 - Line 23"
+    inputs:
+      - "Total available credit including carryover (line 14)"
+      - "Credit used for the current tax year (line 23)"
+    notes: |
+      Unused credit carries forward indefinitely to a future year.
+    edgeCases:
+      - "When tax is insufficient, unused credit carries forward"
+      - "Full use of available credit leaves zero carryover"
+    testRef: "tests/engine/state/ny-it249-long-term-care-insurance-credit.test.ts::Line 23 and line 24 - credit used is limited by tax remaining after prior credits"

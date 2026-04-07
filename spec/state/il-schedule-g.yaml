@@ -1,0 +1,63 @@
+form: "Schedule G"
+fullName: "Illinois Voluntary Charitable Donations"
+taxYear: 2025
+reference: "https://tax.illinois.gov/forms/incometax/individual/schedule-g.html"
+
+notes: |
+  Schedule G lets the taxpayer designate whole-dollar voluntary charitable
+  donations to one or more Illinois funds. The 2025 schedule includes six funds:
+  Wildlife Preservation, Alzheimer's Disease Research/Care/Support, Assistance to
+  the Homeless, Diabetes Research, Hunger Relief, and Ronald McDonald House
+  Charities. Each positive line must be a whole-dollar amount of at least $1.
+  Line 2 totals Lines 1a through 1f and flows to IL-1040 Line 35, reducing any
+  refund or increasing the amount due.
+
+lines:
+  - line: "1a"
+    description: "Wildlife Preservation Fund donation"
+    formula: "Whole-dollar input amount or 0"
+    reference: "2025 Schedule G Instructions, Line 1a"
+    notes: "Positive amounts must be whole dollars and at least $1."
+    testRef: "tests/engine/state/il-schedule-g.test.ts::Schedule G Line 1a - wildlife preservation fund accepts a whole-dollar donation"
+
+  - line: "1b"
+    description: "Alzheimer’s Disease Research, Care, and Support Fund donation"
+    formula: "Whole-dollar input amount or 0"
+    reference: "2025 Schedule G Instructions, Line 1b"
+    notes: "Positive amounts must be whole dollars and at least $1."
+    testRef: "tests/engine/state/il-schedule-g.test.ts::Schedule G Line 1b - Alzheimer's fund donation is preserved"
+
+  - line: "1c"
+    description: "Assistance to the Homeless Fund donation"
+    formula: "Whole-dollar input amount or 0"
+    reference: "2025 Schedule G Instructions, Line 1c"
+    notes: "Positive amounts must be whole dollars and at least $1."
+    testRef: "tests/engine/state/il-schedule-g.test.ts::Schedule G Line 2 - total donation sums all six supported funds"
+
+  - line: "1d"
+    description: "Diabetes Research Fund donation"
+    formula: "Whole-dollar input amount or 0"
+    reference: "2025 Schedule G Instructions, Line 1d"
+    notes: "Positive amounts must be whole dollars and at least $1."
+    testRef: "tests/engine/state/il-schedule-g.test.ts::Schedule G Line 2 - total donation sums all six supported funds"
+
+  - line: "1e"
+    description: "Hunger Relief Fund donation"
+    formula: "Whole-dollar input amount or 0"
+    reference: "2025 Schedule G Instructions, Line 1e"
+    notes: "Positive amounts must be whole dollars and at least $1."
+    testRef: "tests/engine/state/il-schedule-g.test.ts::Schedule G Line 2 - total donation sums all six supported funds"
+
+  - line: "1f"
+    description: "Ronald McDonald House Charities Fund donation"
+    formula: "Whole-dollar input amount or 0"
+    reference: "2025 Schedule G Instructions, Line 1f"
+    notes: "Positive amounts must be whole dollars and at least $1."
+    testRef: "tests/engine/state/il-schedule-g.test.ts::Schedule G Line 2 - total donation sums all six supported funds"
+
+  - line: "2"
+    description: "Total voluntary charitable donations"
+    formula: "Line 1a + Line 1b + Line 1c + Line 1d + Line 1e + Line 1f"
+    reference: "2025 Schedule G Instructions, Line 2"
+    notes: "Flows to IL-1040 Line 35."
+    testRef: "tests/engine/state/il-schedule-g.test.ts::Schedule G Line 2 - total donation sums all six supported funds"

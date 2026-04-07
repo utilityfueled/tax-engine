@@ -1,0 +1,484 @@
+form: "Form 1040"
+fullName: "U.S. Individual Income Tax Return"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i1040"
+
+lines:
+  # ── Digital Asset Question ─────────────────────────────
+  - line: "1a-digital-asset"
+    description: "Digital asset question"
+    formula: |
+      Answer "Yes" if any of:
+      - form1099DA array has entries
+      - Any capitalTransaction has digitalAsset = true
+      - cryptoIncome has any mining, staking, or airdrop entries
+      Otherwise "No".
+    irsRef: "Form 1040 Instructions, Line 1a — At any time during the tax year, did you receive, sell, exchange, gift, or otherwise dispose of a digital asset?"
+    edgeCases:
+      - "Holding digital assets without disposing does not trigger 'Yes' unless received during the year"
+      - "NFT transactions count as digital asset activity"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Yes when form1099DA entries exist"
+
+  # ── Income ──────────────────────────────────────────────
+  - line: "1"
+    description: "Wages, salaries, tips, etc."
+    formula: "Sum of all W-2 Box 1 values plus any supported Form 4137 unreported tip income that must be included in wages on Form 1040 line 1, plus any supported Form 8919 line 6 employee wages that must be included in wages on Form 1040 line 1, plus any non-IRA Form 1099-R disability pension amounts that are taxable as wages because the taxpayer had not reached minimum retirement age on the date received; if validated retired-public-safety-officer accident, health, or long-term care insurance premiums were paid directly from the disability pension, reduce the disability-pension wage amount by the smaller of those validated premiums, the remaining share of the $3,000 annual retired-public-safety-officer exclusion after any supported pension-line exclusion, or the disability-pension taxable amount"
+    irsRef: "Form 1040 Instructions, Line 1"
+    inputs:
+      - "W-2 Box 1 (all employers)"
+      - "Supported Form 4137 unreported tip income included on Form 1040 line 1"
+      - "Supported Form 8919 line 6 employee wages included on Form 1040 line 1"
+      - "Non-IRA Form 1099-R disability pension taxable amount when received before minimum retirement age"
+      - "Validated retired public safety officer insurance premiums paid directly from an eligible disability-retirement plan"
+    edgeCases:
+      - "Multiple W-2s from same employer"
+      - "Corrected W-2c supersedes original"
+      - "Disability pensions reported on Form 1099-R move from the retirement lines to wages until minimum retirement age"
+      - "Retired public safety officer premiums can reduce disability-pension wages reported on Line 1 and share the same $3,000 annual cap used for pension-line exclusions"
+      - "Supported Form 4137 unreported tip income increases Form 1040 line 1 and total income"
+      - "Supported Form 8919 wages increase Form 1040 line 1 and total income"
+    testRef: "tests/engine/federal.test.ts::Form 1040 Line 1 - supported Form 8919 wages increase wages, Schedule 2 tax, and Additional Medicare exposure"
+
+  - line: "2a"
+    description: "Tax-exempt interest"
+    formula: "Sum of 1099-INT Box 8"
+    irsRef: "Form 1040 Instructions, Line 2a"
+    inputs:
+      - "1099-INT Box 8"
+    testRef: "tests/engine/federal.test.ts::Form 1040 Line 2a - tax-exempt interest (none)"
+
+  - line: "2b"
+    description: "Taxable interest"
+    formula: "Schedule B Line 4, which starts from the sum of 1099-INT Box 1 and K-1 Box 5 interest and then subtracts any Form 8815 savings bond exclusion reported on Schedule B Line 3"
+    irsRef: "Form 1040 Instructions, Line 2b"
+    inputs:
+      - "Schedule B Line 4"
+    edgeCases:
+      - "Interest from US savings bonds (1099-INT Box 3)"
+      - "Form 8815 exclusion reduces Form 1040 Line 2b through Schedule B Line 3 rather than as a separate AGI-only adjustment"
+      - "Early withdrawal penalty reduces income on Line 10"
+    testRef: "tests/engine/federal.test.ts::Form 1040 Line 2b - taxable interest (1099-INT + K-1)"
+
+  - line: "3a"
+    description: "Qualified dividends"
+    formula: "Sum of 1099-DIV Box 1b + K-1 Box 6b"
+    irsRef: "Form 1040 Instructions, Line 3a"
+    inputs:
+      - "1099-DIV Box 1b"
+      - "K-1 Box 6b"
+    notes: "Used in QDCG worksheet for preferential tax rates"
+    testRef: "tests/engine/federal.test.ts::Form 1040 Line 3a - qualified dividends"
+
+  - line: "3b"
+    description: "Ordinary dividends"
+    formula: "Sum of 1099-DIV Box 1a + K-1 Box 6a"
+    irsRef: "Form 1040 Instructions, Line 3b"
+    inputs:
+      - "1099-DIV Box 1a"
+      - "K-1 Box 6a"
+    testRef: "tests/engine/federal.test.ts::Form 1040 Line 3b - ordinary dividends"
+
+  - line: "4a"
+    description: "IRA distributions"
+    formula: "Report total IRA/SIMPLE/SEP gross distributions on Form 1040 Line 4a when any IRA amount is not fully taxable, is reported with a direct-rollover code, includes a validated qualified charitable distribution, includes a current-year IRA contribution returned by the due date, includes a returned excess traditional IRA contribution, includes an IRA recharacterization reported with Form 1099-R Box 7 code N or R, or is recomputed through Form 8606 basis allocation; for Form 1099-R Box 7 codes J, Q, T, N, and R, treat the amount as IRA reporting even when the IRA/SEP/SIMPLE checkbox is blank because the Form 1099-R instructions do not require that box for Roth IRA distributions or IRA recharacterizations; when Form 8606 is present, Line 4a must include the larger of (a) IRA Form 1099-R Box 1 gross distributions and (b) the Form 8606 distribution total represented by Line 7 plus Line 16 plus any validated QCD, rollover, timely-returned-contribution, returned-excess-contribution, and qualified HSA funding exclusions so Roth conversions, including attached Form 1099-R conversions auto-defaulted into Form 8606 Line 8, QCDs, timely returned contributions, returned excess contributions, nontaxable rollovers, basis-driven distributions, and recharacterized contributions remain fully visible; otherwise report a blank line"
+    irsRef: "Form 1040 Instructions, Lines 4a and 4b"
+    inputs:
+      - "Form 1099-R Box 1 for IRA/SEP/SIMPLE distributions"
+      - "Form 1099-R Box 2a for IRA/SEP/SIMPLE distributions"
+      - "Form 1099-R Box 7 distribution code"
+      - "Form 8606 taxable-versus-nontaxable IRA allocation when present"
+      - "Validated IRA qualified charitable distribution amount"
+    notes: "Engine records blank as $0 in the audit trail."
+    edgeCases:
+      - "Direct rollovers still report gross on 4a even when Box 2a makes the rollover fully taxable"
+      - "Direct rollovers with blank Box 2a report $0 taxable on 4b"
+      - "Fully taxable IRA distributions leave 4a blank and report amount on 4b"
+      - "A filed Form 8606 causes Line 4a gross IRA distributions to remain visible because the taxable amount is no longer determined solely from Form 1099-R Box 2a"
+      - "If Form 8606 distributions plus conversions exceed attached IRA Form 1099-R gross amounts, Line 4a still reflects the full Form 8606 gross distribution total"
+      - "Qualified charitable distributions remain visible on 4a even though they are excluded from 4b"
+      - "A current-year IRA contribution returned by the due date remains visible on 4a even though the gross distribution is excluded from Form 8606 Line 7"
+      - "Returned excess traditional IRA contributions remain visible on 4a even though they are excluded from Form 8606 Line 7 and 4b"
+      - "When Form 8606 is present, attached IRA Forms 1099-R can still keep nontaxable direct rollovers visible on 4a while excluding them from the Line 7 basis allocation"
+    testRef: "tests/engine/federal.test.ts::Form 1040 Line 4a - IRA gross distribution stays visible for rollovers and Form 8606 conversions"
+
+  - line: "4b"
+    description: "Taxable amount of IRA distributions"
+    formula: "Use Form 8606 Line 15c plus Line 18 plus Line 25c when IRA basis recovery inputs are present, and also add any taxable Box 2a earnings from attached IRA Forms 1099-R that represent current-year IRA contributions returned by the due date because those gross distributions stay off Form 8606 Line 7; otherwise sum taxable IRA/SIMPLE/SEP Form 1099-R amounts (use Box 2a when provided, use $0 for Roth IRA distribution code Q, use $0 for Roth IRA distribution code T when validated input confirms either the taxpayer made a Roth IRA contribution or conversion for 2020 or an earlier year or the full distribution was actually qualified, use $0 for a Box 7 code J Roth IRA distribution when validated input confirms the full distribution was actually qualified, use $0 for IRA recharacterization codes N and R, use $0 for validated excess-contribution returns without earnings after the due date, use only Box 2a earnings for validated current-year IRA contributions returned by the due date, otherwise use Box 1 unless a direct-rollover code with blank Box 2a makes the amount nontaxable); for Form 1099-R Box 7 codes J, Q, T, N, and R, treat the amount as IRA reporting even when the IRA/SEP/SIMPLE checkbox is blank because the Form 1099-R instructions do not require that box for Roth IRA distributions or IRA recharacterizations; in either path, reduce the taxable amount by validated excludable qualified charitable distributions, and when Form 8606 is present default its Line 7 rollover exclusion from attached IRA Form 1099-R direct-rollover amounts, its timely-returned-contribution exclusion from attached IRA Form 1099-R entries marked as current-year IRA contributions returned by the due date, its returned-excess-contribution exclusion from attached IRA Form 1099-R entries marked as excess-contribution returns without earnings after the due date, its qualified-distribution exclusion from attached code J or code T Roth IRA Forms 1099-R that are validated as qualified, and its Line 8 Roth conversion amount from attached IRA Form 1099-R amounts validated as traditional/SEP/SIMPLE IRA conversions to Roth IRAs if no explicit conversion amount was supplied, so only the taxable non-QCD, non-rollover, non-returned-contribution balance remains on Line 4b"
+    irsRef: "Form 1040 Instructions, Lines 4a and 4b"
+    inputs:
+      - "Form 1099-R Box 1"
+      - "Form 1099-R Box 2a"
+      - "Form 1099-R Box 7 distribution code"
+      - "Validated Roth IRA contribution or conversion made for 2020 or an earlier year"
+      - "Validated excess contribution return without earnings after the due date"
+      - "Validated current-year IRA contribution returned by the due date"
+      - "Form 8606 Line 15c"
+      - "Form 8606 Line 18"
+      - "Form 8606 Line 25c"
+      - "Validated IRA qualified charitable distribution amount"
+    edgeCases:
+      - "Distribution code G or H is treated as a direct rollover with $0 taxable only when Box 2a is blank"
+      - "A taxable rollover to a Roth account follows Box 2a when it is reported"
+      - "Traditional IRA basis recovery overrides the default Box 1 fallback when Form 8606 inputs are supplied"
+      - "Qualified charitable distributions reduce Line 4b even though the full gross amount stays on Line 4a"
+      - "A current-year IRA contribution returned by the due date stays visible on 4a, is excluded from Form 8606 Line 7, and leaves only the Box 2a earnings taxable on 4b"
+      - "A traditional IRA return of excess contributions made after the due date with no earnings stays visible on 4a but reports $0 on 4b"
+      - "A Roth IRA code T distribution with validated pre-2021 Roth contribution or conversion history stays visible on 4a and reports $0 on 4b without requiring Form 8606"
+      - "A Roth IRA code T distribution validated as fully qualified stays visible on 4a, reports $0 on 4b, and stays out of Form 8606 Part III"
+      - "When Form 8606 is present, attached IRA Forms 1099-R can still contribute taxable earnings from timely returned current-year IRA contributions even though the gross distribution is excluded from Line 7"
+      - "Attached IRA Forms 1099-R can automatically exclude nontaxable direct rollovers from the Form 8606 Line 7 basis allocation when no manual rollover amount is supplied"
+      - "Attached IRA Forms 1099-R can automatically exclude current-year IRA contributions returned by the due date from the Form 8606 Line 7 basis allocation when no manual timely-return amount is supplied"
+      - "Attached IRA Forms 1099-R can automatically exclude returned excess traditional IRA contributions from the Form 8606 Line 7 basis allocation when no manual returned-excess amount is supplied"
+      - "Attached IRA Forms 1099-R can automatically populate Form 8606 Line 8 with validated Roth conversion amounts when no manual conversion amount is supplied"
+    testRef: "tests/engine/federal.test.ts::Form 1040 Lines 4a and 4b - Form 8606 keeps taxable earnings from current-year IRA contributions returned by the due date"
+
+  - line: "5a"
+    description: "Pensions and annuities"
+    formula: "Sum of non-IRA Form 1099-R Box 1 amounts when any pension or annuity distribution is not fully taxable, is reported with a direct-rollover code, has taxable amount not determined checked, uses validated Simplified Method basis recovery that reduces the taxable amount below Box 1, or is part of a supported retired-public-safety-officer insurance-premium exclusion that reduces the taxable pension total below the otherwise taxable amount; otherwise reported as blank"
+    irsRef: "Form 1040 Instructions, Lines 5a and 5b"
+    inputs:
+      - "Form 1099-R Box 1 for non-IRA distributions"
+      - "Form 1099-R Box 2a for non-IRA distributions"
+      - "Form 1099-R Box 2b taxable amount not determined"
+      - "Validated Simplified Method worksheet inputs"
+      - "Validated retired public safety officer insurance premiums paid directly from an eligible retirement plan"
+      - "Form 1099-R Box 7 distribution code"
+    notes: "Engine records blank as $0 in the audit trail."
+    edgeCases:
+      - "Direct rollovers still report gross on 5a even when Box 2a makes the rollover fully taxable"
+      - "Direct rollovers with blank Box 2a report $0 taxable on 5b only when no Box 5 employee-contribution recovery amount applies"
+      - "A direct rollover with blank Box 2a and Box 5 basis still reports gross on 5a because the taxable amount is reduced, not eliminated, by the contribution recovery"
+      - "Validated Simplified Method inputs keep gross on 5a whenever the worksheet exclusion reduces the current-year taxable amount below Box 1"
+      - "Disability pensions received before minimum retirement age are excluded from 5a because they are taxed as wages on Line 1"
+      - "Retired public safety officer premiums on disability pensions consume part of the same $3,000 annual cap before any remaining exclusion reduces Line 5b"
+      - "Fully taxable pensions and annuities leave 5a blank and report amount on 5b"
+      - "Lump-sum averaging is not yet supported"
+    testRef: "tests/engine/federal.test.ts::Form 1040 Line 5a - pension gross distribution shown only when not fully taxable"
+
+  - line: "5b"
+    description: "Taxable amount of pensions and annuities"
+    formula: "Sum of taxable non-IRA Form 1099-R amounts (use Box 2a when provided, unless validated Simplified Method worksheet inputs are present and the payer left Box 2a blank or checked taxable amount not determined; in that supported Simplified Method branch, compute the tax-free amount as the smaller of (a) (cost in the plan at annuity starting date divided by expected number of monthly payments) times current-year payments received and (b) cost in the plan minus prior-year tax-free recovery, then subtract that amount from Box 1 without going below $0; otherwise if Box 2a is blank and Box 5 is provided, use Box 1 minus Box 5 without going below $0; if Box 2a is blank and Box 5 is not provided, use Box 1 unless a direct-rollover code makes the amount nontaxable); after that supported pension aggregation, subtract the smaller of the validated retired-public-safety-officer accident, health, or long-term care insurance premiums paid directly from an eligible retirement plan, the remaining share of the $3,000 annual retired-public-safety-officer exclusion after any supported disability-pension wage exclusion on Line 1, or the otherwise taxable pension total"
+    irsRef: "Form 1040 Instructions, Lines 5a and 5b"
+    inputs:
+      - "Form 1099-R Box 1"
+      - "Form 1099-R Box 2a"
+      - "Form 1099-R Box 5"
+      - "Validated Simplified Method cost in the plan at annuity starting date"
+      - "Validated Simplified Method expected number of monthly payments"
+      - "Validated Simplified Method current-year payments received"
+      - "Validated Simplified Method prior-year tax-free recovery"
+      - "Validated retired public safety officer insurance premiums paid directly from an eligible retirement plan"
+      - "Form 1099-R Box 7 distribution code"
+    edgeCases:
+      - "Distribution code G or H is treated as a direct rollover with $0 taxable only when Box 2a is blank and no Box 5 employee-contribution recovery amount applies"
+      - "A taxable rollover to a Roth account follows Box 2a when it is reported"
+      - "Validated Simplified Method recovery is capped at the unrecovered cost remaining after prior-year exclusions"
+      - "Disability pensions received before minimum retirement age are excluded from 5b because they are taxed as wages on Line 1"
+      - "Retired public safety officer premiums cannot reduce combined disability-pension wages and taxable pension income by more than $3,000 per return or below zero"
+      - "Validated Simplified Method inputs override the all-taxable fallback when Box 2b says taxable amount not determined"
+    testRef: "tests/engine/federal.test.ts::Form 1040 Lines 5a and 5b - retired public safety officer premiums reduce taxable pension income up to the annual cap"
+
+  - line: "6a"
+    description: "Social Security benefits"
+    formula: "Sum SSA-1099 Box 5 and RRB-1099 tier 1 equivalent Box 5 amounts for taxpayer and spouse"
+    irsRef: "Form 1040 Instructions, Line 6a"
+    inputs:
+      - "SSA-1099 Box 5"
+      - "RRB-1099 tier 1 equivalent Box 5"
+    notes: "Engine records the gross benefits reported on the return before the taxable-benefits worksheet is applied."
+    testRef: "tests/engine/federal.test.ts::Form 1040 Line 6a - Social Security gross benefits aggregate across SSA-1099 and RRB-1099 forms"
+
+  - line: "6b"
+    description: "Taxable amount of Social Security benefits"
+    formula: "Standard Social Security Benefits Worksheet Line 18 using filing-status thresholds of $25,000/$34,000 for single/HOH/QSS, $32,000/$44,000 for MFJ, and $0/$0 for MFS if the filer lived with a spouse during the year; if validated post-1993 Pub. 915 lump-sum election data is supplied, use the lower of that standard amount or Pub. 915 Worksheet 4 Line 21"
+    irsRef: "Form 1040 Instructions, Line 6b; Social Security Benefits Worksheet"
+    inputs:
+      - "SSA-1099 Box 5"
+      - "RRB-1099 tier 1 equivalent Box 5"
+      - "Form 1040 Lines 1, 2a, 2b, 3b, 4b, 5b, 7, and 8"
+      - "Supported 2025 Schedule 1 add-back categories: educator expenses, HSA deduction, deductible self-employment tax, self-employed retirement contributions, self-employed health insurance, the penalty on early withdrawal of savings, alimony paid, the IRA deduction, and the Archer MSA deduction"
+      - "Whether an MFS filer lived with spouse during the year"
+      - "Validated post-1993 Pub. 915 lump-sum election inputs when earlier-year benefits were paid in the current year"
+    edgeCases:
+      - "Tax-exempt interest increases provisional income even though it is not taxable"
+      - "Student loan interest remains excluded from the worksheet add-back"
+      - "The supported 2025 add-back categories include certain business expenses, Armed Forces moving expenses, and Part II write-in adjustments when they are provided through Schedule 1"
+      - "When Form 8815 is filed, provisional income uses the pre-exclusion Schedule B interest amount even though Form 1040 Line 2b is reduced by the savings bond exclusion"
+      - "RRB-1099 tier 1 equivalent railroad retirement benefits use the same worksheet as SSA-1099 benefits"
+      - "MFS living apart all year uses the same thresholds as single"
+      - "MFS taxpayers who lived with a spouse at any time during the year use the zero-dollar threshold branch and can reach the 85% inclusion limit immediately"
+      - "Validated post-1993 Pub. 915 lump-sum election data can reduce Line 6b below the standard worksheet amount"
+      - "Pre-1994 lump-sum worksheets and other unsupported Pub. 915 special-case interactions remain manual"
+    testRef: "tests/engine/federal.test.ts::Form 1040 Line 6b - Pub. 915 lump-sum election lowers taxable Social Security when beneficial"
+
+  - line: "7"
+    description: "Capital gain or (loss)"
+    formula: "Schedule D net gain/loss, limited to -$3,000 if net loss"
+    irsRef: "Form 1040 Instructions, Line 7; Schedule D Instructions"
+    inputs:
+      - "Schedule D Line 21 (net gain/loss)"
+    edgeCases:
+      - "Net loss capped at $3,000 ($1,500 MFS)"
+      - "Prior year carryforward applied before cap"
+      - "Wash sale adjustments"
+    testRef: "tests/engine/federal.test.ts::Form 1040 Line 7 - net capital gain (long + short + K-1)"
+
+  - line: "8"
+    description: "Other income from Schedule 1"
+    formula: "Schedule 1 Line 10, plus Form 1099-SA Box 2 returned-excess-contribution earnings, post-death HSA earnings, and any validated HSA excess-contribution correction earnings that the 2025 Form 5329 instructions require to be reported on an amended current-year return under section 301.9100-2"
+    irsRef: "Form 1040 Instructions, Line 8; Schedule 1"
+    inputs:
+      - "Schedule 1 Line 10"
+      - "Form 8889 Line 16"
+      - "Form 8889 Line 20"
+      - "Form 1099-SA Box 2 returned-excess-contribution earnings"
+      - "Form 1099-SA post-death earnings"
+      - "Validated HSA excess-contribution correction earnings reportable on the amended current-year return under section 301.9100-2"
+    edgeCases:
+      - "Form 8889 Part II taxable HSA distributions increase Form 1040 Line 8 through Schedule 1 Line 8f"
+      - "Form 8889 Part III testing-period recapture income also increases Form 1040 Line 8 through Schedule 1 Line 8f"
+      - "Form 1099-SA returned-excess-contribution earnings increase Line 8 even though they are not part of Schedule 1 Line 8f"
+      - "Form 1099-SA post-death earnings increase Line 8 separately from the Form 8889 death-distribution amount"
+      - "Section 301.9100-2 HSA excess-correction earnings increase Line 8 on the amended current-year return even though the corrective withdrawal happened after the original due date"
+      - "Schedule 1 business, rental, and capital-loss amounts can make Line 8 positive, zero, or negative"
+    testRef: "tests/engine/federal.test.ts::Form 1040 Lines 8 and 23 - HSA testing-period failure flows through Schedule 1 and Schedule 2"
+
+  - line: "9"
+    description: "Total income"
+    formula: "Line 1 + 2b + 3b + 4b + 5b + 6b + 7 + 8"
+    irsRef: "Form 1040 Instructions, Line 9"
+    inputs:
+      - "All income lines above"
+    testRef: "tests/engine/federal.test.ts::Form 1040 Line 9 - total income includes all sources"
+
+  # ── Adjustments ──────────────────────────────────────────
+  - line: "10"
+    description: "Adjustments to income"
+    formula: "Schedule 1, Part II total including Form 8889 HSA deduction, 50% SE tax, SE health insurance, student loan interest, IRA deduction, Archer MSA deduction, educator expenses, early withdrawal penalty, and alimony paid"
+    irsRef: "Form 1040 Instructions, Line 10; Schedule 1"
+    inputs:
+      - "50% of self-employment tax (Schedule SE)"
+      - "HSA deduction"
+      - "Self-employed health insurance"
+      - "Student loan interest (max $2,500)"
+      - "IRA deduction"
+      - "Archer MSA deduction"
+      - "Educator expenses (max $300)"
+      - "Early withdrawal penalty"
+    testRef: "tests/engine/federal.test.ts::Form 1040 Line 10 - no adjustments for simple W-2"
+
+  - line: "11"
+    description: "Adjusted gross income (AGI)"
+    formula: "Line 9 - Line 10"
+    irsRef: "Form 1040 Instructions, Line 11"
+    inputs:
+      - "Line 9 (total income)"
+      - "Line 10 (adjustments)"
+    notes: "AGI is the key threshold for many phase-outs and limitations"
+    testRef: "tests/engine/federal.test.ts::Form 1040 Line 11 - AGI accounts for SE deduction"
+
+  # ── Deductions ──────────────────────────────────────────
+  - line: "12"
+    description: "Standard deduction or itemized deductions"
+    formula: "Greater of: standard deduction for filing status, or Schedule A total"
+    irsRef: "Form 1040 Instructions, Line 12"
+    inputs:
+      - "Standard deduction (by filing status)"
+      - "Schedule A Line 17 (itemized total)"
+    notes: |
+      For tax year 2025, the basic federal standard deduction is $15,750 for single and MFS,
+      $31,500 for MFJ and QSS, and $23,625 for head of household before any age-65-or-blind additions.
+    edgeCases:
+      - "Additional standard deduction for age 65+ or blind"
+      - "Dependent cannot claim standard deduction exceeding earned income + $400"
+    testRef: "tests/engine/federal.test.ts::Form 1040 Line 12 - itemized deductions selected"
+
+  - line: "13"
+    description: "Section 199A qualified business income deduction"
+    formula: "Form 8995 Line 15 (simplified) or Form 8995-A (complex)"
+    irsRef: "Form 1040 Instructions, Line 13; IRC §199A"
+    notes: |
+      20% of QBI from qualified trades/businesses (sole proprietorships, partnerships, S-corps).
+      Simplified Form 8995 used when taxable income ≤ $197,300 (single) / $394,600 (MFJ).
+      Deduction limited to lesser of 20% QBI or 20% of taxable income minus net capital gain.
+    edgeCases:
+      - "Above income threshold: W-2/basis limitations apply (Form 8995-A)"
+      - "SSTB businesses phased out above threshold"
+      - "QBI loss carryforward reduces future QBI"
+    testRef: "tests/engine/forms/form-8995.test.ts::Form 8995 Line 15 - QBI deduction"
+
+  - line: "14"
+    description: "Total deductions"
+    formula: "Line 12 + Line 13"
+    irsRef: "Form 1040 Instructions, Line 14"
+    testRef: "tests/edge-cases/hoh-full-return.test.ts::taxable income = AGI - $23,625 standard deduction - QBI deduction"
+
+  - line: "15"
+    description: "Taxable income"
+    formula: "Line 11 (AGI) - Line 14 (total deductions), floor at 0"
+    irsRef: "Form 1040 Instructions, Line 15"
+    inputs:
+      - "Line 11 (AGI)"
+      - "Line 14 (total deductions)"
+    testRef: "tests/engine/federal.test.ts::Form 1040 Line 15 - taxable income"
+
+  # ── Tax ──────────────────────────────────────────────────
+  - line: "16"
+    description: "Tax"
+    formula: "QDCG worksheet if qualified dividends/LTCG > 0, else Tax Table/brackets"
+    irsRef: "Form 1040 Instructions, Line 16; QDCG Worksheet"
+    inputs:
+      - "Line 15 (taxable income)"
+      - "Line 3a (qualified dividends)"
+      - "Schedule D net LTCG"
+    notes: "Uses preferential rates (0%/15%/20%) for qualified dividends and LTCG"
+    testRef: "tests/engine/federal.test.ts::Form 1040 Line 16 - tax on $69,250 single"
+
+  - line: "17"
+    description: "Schedule 2 Part I (AMT + excess APTC repayment)"
+    formula: "Line 17 = Schedule 2 Line 3 = AMT (Form 6251) + excess APTC repayment (Form 8962 Line 27)"
+    irsRef: "Form 1040 Instructions, Line 17; Schedule 2 Part I"
+    notes: |
+      Line 17 is added to Line 16 BEFORE nonrefundable credits are subtracted.
+      This means nonrefundable credits (CTC, FTC, dependent care, education, energy) can offset
+      both regular income tax AND AMT + excess APTC. The code must include Line 17 in the credit
+      limitation base, otherwise credits that exceed Line 16 alone are wasted even though Line 18
+      (which includes AMT/APTC) would have room for them.
+    edgeCases:
+      - "Credits > income tax but < income tax + AMT: credits should absorb some AMT"
+      - "Excess APTC repayment is a real tax liability that credits can offset"
+      - "AMT and excess APTC are NOT 'additional taxes' like SE tax — they go BEFORE credits"
+    testRef: "tests/edge-cases/credit-stacking.test.ts::nonrefundable credits offset excess APTC repayment (Line 18 = Line 16 + Line 17)"
+
+  - line: "18"
+    description: "Tax before credits"
+    formula: "Line 16 + Line 17 (income tax + AMT + excess APTC)"
+    irsRef: "Form 1040 Instructions, Line 18"
+    notes: "This is the base that nonrefundable credits reduce. NOT just Line 16."
+    testRef: "tests/edge-cases/credit-stacking.test.ts::nonrefundable credits offset excess APTC repayment (Line 18 = Line 16 + Line 17)"
+
+  # ── Credits ──────────────────────────────────────────────
+  - line: "19"
+    description: "Child tax credit and other dependent credit"
+    formula: "$2,000 per CTC child + $500 per ODC dependent, phased out $50 per $1,000 AGI over threshold"
+    irsRef: "Form 1040 Instructions, Line 19; CTC Worksheet; IRC §24(h)(4)"
+    inputs:
+      - "Number of qualifying children (CTC)"
+      - "Number of other dependents (ODC)"
+      - "AGI"
+      - "Filing status (determines threshold)"
+    edgeCases:
+      - "Phase-out: MFJ $400,000; others $200,000"
+      - "ODC: $500 per dependent who doesn't qualify for CTC (age 17+, parents, etc.)"
+      - "Phase-out reduces CTC first, then ODC"
+      - "Additional CTC (refundable portion) on Schedule 8812"
+    testRef: "tests/engine/federal.test.ts::Form 1040 Line 19 - CTC + ODC combined"
+
+  - line: "20"
+    description: "Schedule 3 nonrefundable credits"
+    formula: "Schedule 3 Line 7 (foreign tax + dependent care + education + energy)"
+    irsRef: "Form 1040 Instructions, Line 20; Schedule 3"
+    inputs:
+      - "Form 1116 or direct method (foreign tax credit)"
+      - "Form 2441 (child/dependent care credit)"
+      - "Form 8863 (education credits, nonrefundable portion)"
+    testRef: "tests/engine/integration.test.ts::dependent care credit flows through Schedule 3 to otherCredits"
+
+  - line: "21"
+    description: "Total credits"
+    formula: "Line 19 (CTC) + Line 20 (Schedule 3 nonrefundable)"
+    irsRef: "Form 1040 Instructions, Line 21"
+    testRef: "tests/engine/integration.test.ts::no Schedule 3 credits when no dependent care or education"
+
+  - line: "22"
+    description: "Tax after credits"
+    formula: "max(0, Line 18 - Line 21)"
+    irsRef: "Form 1040 Instructions, Line 22"
+    notes: |
+      Line 18 includes income tax + AMT + excess APTC (Schedule 2 Part I).
+      Credits reduce this combined base. Line 22 = max(0, Line 18 - total nonrefundable credits).
+    testRef: "tests/edge-cases/credit-stacking.test.ts::nonrefundable credits offset excess APTC repayment (Line 18 = Line 16 + Line 17)"
+
+  # ── Additional Taxes ─────────────────────────────────────
+  - line: "23"
+    description: "Other taxes (Schedule 2)"
+    formula: "Schedule 2 total including AMT, excess advance premium tax credit repayment, SE tax, Form 5329 retirement-plan additional tax, Additional Medicare Tax, NIIT, Form 8889 HSA distribution additional tax, Form 8889 testing-period recapture tax, and other implemented additional taxes"
+    irsRef: "Form 1040 Instructions, Line 23; Schedule 2"
+    inputs:
+      - "Schedule 2 Line 3"
+      - "Schedule SE Line 12"
+      - "Form 5329 Line 4"
+      - "Form 8959 Line 18"
+      - "Form 8960 Line 17"
+      - "Form 8889 Line 17b"
+      - "Form 8889 Line 21"
+    notes: "AMT and excess APTC are on Line 17 (Schedule 2 Part I), NOT Line 23."
+    edgeCases:
+      - "Form 5329 early-distribution tax flows through Schedule 2 Line 8"
+      - "An IRA Form 1099-R code 5 prohibited transaction can create Form 5329 early-distribution tax when the owner was under age 59 1/2 on the first day of the tax year"
+      - "Form 8889 taxable HSA distributions add 20% tax on Schedule 2 Line 17c"
+      - "Form 8889 testing-period failure adds 10% tax on Schedule 2 Line 17d"
+    testRef: "tests/engine/federal.test.ts::Form 1040 Line 23 - additional taxes (AMT + SE + Medicare + NIIT)"
+
+  - line: "24"
+    description: "Total tax"
+    formula: "Line 22 (tax after credits) + Line 23 (additional taxes)"
+    irsRef: "Form 1040 Instructions, Line 24"
+    testRef: "tests/engine/federal.test.ts::Form 1040 Line 24 - total tax (no additional taxes)"
+
+  # ── Payments ─────────────────────────────────────────────
+  - line: "25d"
+    description: "Federal income tax withheld"
+    formula: "Sum of W-2 Box 2 + all 1099 withholding"
+    irsRef: "Form 1040 Instructions, Line 25"
+    inputs:
+      - "W-2 Box 2 (all)"
+      - "1099-INT Box 4"
+      - "1099-DIV Box 4"
+      - "1099-R Box 4"
+      - "SSA-1099 Box 6"
+      - "RRB-1099 Box 10"
+      - "1099-NEC Box 4"
+      - "1099-MISC Box 4"
+    testRef: "tests/engine/federal.test.ts::Form 1040 Line 25d - withholding includes SSA-1099, RRB-1099, and Form 1099-R Box 4 amounts"
+
+  - line: "26"
+    description: "Estimated tax payments"
+    formula: "Sum of federal estimated tax payments"
+    irsRef: "Form 1040 Instructions, Line 26"
+    testRef: "tests/engine/federal.test.ts::Form 1040 Line 26 - estimated tax payments"
+
+  - line: "31"
+    description: "Schedule 3 refundable credits and other payments"
+    formula: "Refundable AOC (40% of Form 8863) + excess SS withholding + net PTC"
+    irsRef: "Form 1040 Instructions, Line 31; Schedule 3 Part II"
+    inputs:
+      - "Form 8863 Line 14 (refundable AOC)"
+      - "Schedule 3 Line 13a (excess SS withholding)"
+      - "Form 8962 (net premium tax credit)"
+    testRef: "tests/engine/integration.test.ts::education refundable AOC flows into totalPayments"
+
+  - line: "28"
+    description: "Additional Child Tax Credit (refundable)"
+    formula: "Form 8812 Line 27"
+    irsRef: "Form 1040 Instructions, Line 28; Schedule 8812"
+    notes: "Refundable ACTC = min(unused CTC, 15% of earned income over $2,500, $1,700 × qualifying children)"
+    testRef: "tests/engine/forms/form-8812.test.ts::Form 8812 Line 27 - ACTC refundable amount"
+
+  - line: "33"
+    description: "Total payments"
+    formula: "Line 25d + Line 26 + Line 31 (refundable credits)"
+    irsRef: "Form 1040 Instructions, Line 33"
+    testRef: "tests/engine/federal.test.ts::Form 1040 Line 33 - total payments includes excess SS"
+
+  - line: "34"
+    description: "Overpayment (refund)"
+    formula: "Line 33 - Line 24, if positive"
+    irsRef: "Form 1040 Instructions, Line 34"
+    testRef: "tests/engine/federal.test.ts::Form 1040 Line 34 - refund (overpaid)"
+
+  - line: "37"
+    description: "Amount you owe"
+    formula: "Line 24 - Line 33, if positive"
+    irsRef: "Form 1040 Instructions, Line 37"
+    testRef: "tests/engine/federal.test.ts::Form 1040 Line 37 - amount owed when withholding is insufficient"

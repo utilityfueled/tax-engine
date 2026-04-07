@@ -1,0 +1,225 @@
+form: "NJ-1040 Property Tax Benefit"
+fullName: "New Jersey NJ-1040 Property Tax Deduction or Credit"
+taxYear: 2025
+reference: "https://www.nj.gov/treasury/taxation/pdf/current/1040i.pdf"
+
+notes: |
+  New Jersey allows homeowners and tenants to claim a property tax benefit on
+  their NJ-1040 return. The filer chooses ONE of two options:
+
+  Option 1 — Property Tax Deduction:
+  - Homeowners: Deduct property taxes paid on principal NJ residence, up to $15,000
+  - Tenants: 18% of rent paid on principal NJ residence is treated as property taxes
+  - Married/CU partners filing separately who maintained the same main home:
+    deduction is capped at $7,500 per return
+  - Taxpayer must otherwise meet the line-29 filing-threshold test for the
+    property-tax benefit; the low-income senior/blind-disabled exception does
+    not make the deduction available
+  - The deduction reduces NJ taxable income (subtracted before computing tax)
+  - No income limit for the deduction
+
+  Option 2 — Property Tax Credit:
+  - Refundable credit claimed on NJ-1040 line 56 (does not reduce taxable income)
+  - Available to homeowners and tenants
+  - Taxpayer normally must have line 29 NJ gross income above the filing
+    threshold amount for the filing status
+  - If line 29 is at or below the filing threshold, the credit remains
+    available only when the taxpayer or spouse on a joint return was age 65+
+    or blind/disabled on the last day of the year
+  - NJ gross income must be $250,000 or less
+  - Full-year residents generally receive $50
+  - Married/CU partner filing separately and maintaining the same main home:
+    $25 maximum credit per return
+  - Part-year residents prorate the credit by months of NJ residency in the
+    main home
+
+  For most filers with any meaningful property tax, the deduction is more
+  valuable. The $50 credit is mainly for very-low-income filers or those
+  with minimal property tax.
+
+  Tenants: 18% of annual rent paid counts as "property taxes paid." This
+  applies whether the tenant rents a house, apartment, or other dwelling
+  in NJ. Mobile home owners who rent the land also qualify.
+
+  Worksheet G also supports taxpayers who were both homeowners and tenants
+  during the same year. In that case, add:
+  - the taxpayer's share of property taxes paid while a homeowner; and
+  - 18% of the taxpayer's share of rent paid while a tenant.
+  The combined amount is entered on line 40a and then evaluated under
+  Worksheet H / Worksheet I the same way as a single-status filer.
+
+  The 2025 instructions require line 29 income to be more than the filing
+  threshold amount for the filing status before a filer may claim the property
+  tax deduction or credit on NJ-1040. The exception on page 26 is narrower:
+  taxpayers age 65+ or blind/disabled with line 29 income at or below the
+  filing threshold may still claim the refundable Property Tax Credit, but not
+  the deduction.
+
+  Only property taxes on the taxpayer's principal NJ residence qualify.
+  Special assessments, water/sewer charges, and penalties are excluded.
+  The benefit is also disallowed when the taxpayer's main home received a
+  100% disabled-veteran property-tax exemption, when a homeowner made
+  P.I.L.O.T. (payments in lieu of tax) payments, or when a tenant lived in a
+  tax-exempt property such as subsidized or campus housing.
+
+  2025 NJ-1040 instructions page 30 place the Property Tax Credit on line 56,
+  in the payments/credits section. That means the credit is refundable: it
+  increases overpayment/refund instead of being capped by remaining tax.
+
+lines:
+  - line: "residence-status"
+    description: "Supported property-tax residency-status combinations"
+    formula: |
+      Supported slice accepts:
+      - homeowner only
+      - tenant only
+      - both homeowner and tenant
+      - neither homeowner nor tenant
+    inputs:
+      - "Homeowner flag"
+      - "Tenant flag"
+    notes: |
+      Official 2025 Worksheet G instructs filers who were both owners and
+      tenants during the year to complete Part I and Part II, then add the
+      totals on line 10 before applying Worksheet H / Worksheet I.
+    testRef: "tests/engine/state/nj-1040-property-tax.test.ts::NJ-1040 property tax mixed homeowner and tenant status combines both amounts"
+
+  - line: "property-tax-paid"
+    description: "Property taxes paid on principal NJ residence"
+    formula: |
+      For homeowners only: actual property taxes paid
+      For tenants only: 18% of annual rent paid
+      For filers who were both homeowners and tenants:
+        property-tax amount = homeowner property taxes paid + (tenant rent paid × 18%)
+    inputs:
+      - "Homeowner flag"
+      - "Property taxes paid (homeowner)"
+      - "Rent paid (tenant)"
+    notes: |
+      The $15,000 cap applies to the deduction amount, not to line 40a. The
+      18% rent calculation is applied before the cap. For mixed homeowner/tenant
+      years, the homeowner and tenant components are combined under Worksheet G
+      Part III before comparing the deduction and credit. For MFS filers sharing
+      a residence, each claims only their own share of property tax and/or rent,
+      and the per-return deduction cap is reduced to $7,500.
+      Computing the raw line-40a amount does not itself establish eligibility;
+      the ineligible-property rules below can still force both the deduction and
+      credit to zero.
+    edgeCases:
+      - "Tenant paying $100,000 rent: 18% = $18,000, capped at $15,000"
+      - "Homeowner paying $5,000 property tax: full $5,000 deduction"
+      - "Mixed-status filer with $4,000 homeowner property tax and $10,000 rent: line 40a amount = $5,800"
+      - "MFS filer: claims only their proportional share"
+    testRef: "tests/engine/state/nj-1040-property-tax.test.ts::NJ-1040 property tax mixed homeowner and tenant status combines both amounts"
+
+  - line: "property-tax-ineligible-property"
+    description: "Property situations that disqualify both the deduction and the credit"
+    formula: |
+      If any of the following is true, no property-tax benefit is allowed:
+      - homeowner has a 100% disabled-veteran exemption from property tax on the main home
+      - homeowner made P.I.L.O.T. (payments in lieu of tax) payments on the main home
+      - tenant lived in a tax-exempt property
+    inputs:
+      - "Disabled-veteran property-tax-exemption flag"
+      - "P.I.L.O.T. payment flag"
+      - "Tax-exempt rental-property flag"
+    notes: |
+      The page-26 eligibility exclusions apply to both the line-41 deduction
+      and the line-56 refundable credit. A tenant in subsidized, campus, or
+      other tax-exempt housing cannot claim the benefit even if rent was paid.
+    edgeCases:
+      - "A disabled veteran with a full property-tax exemption gets no property tax deduction or credit on the exempt home"
+      - "A homeowner who made P.I.L.O.T. payments gets no property tax deduction or credit"
+      - "A tenant in tax-exempt housing gets no property tax deduction or credit"
+    testRef: "tests/engine/state/nj-1040-property-tax.test.ts::NJ-1040 property tax disabled-veteran exemption makes homeowner ineligible for deduction and credit"
+
+  - line: "deduction-amount"
+    description: "Property tax deduction amount"
+    formula: |
+      If NJ gross income on line 29 is more than the filing threshold for the
+      filing status, deduction = min(property taxes paid or 18% of rent, $15,000),
+      except use a $7,500 cap for married/CU partners filing separately who
+      maintained the same main home; if the property is disqualified under the
+      ineligible-property rules or the filing-threshold rule is not met,
+      deduction = $0
+    inputs:
+      - "Property taxes paid or computed from rent"
+      - "Filing status"
+      - "NJ gross income (Line 29)"
+      - "Whether spouses filing separately maintained the same main home"
+      - "Ineligible-property flags"
+    notes: |
+      This amount is subtracted from NJ gross income to reduce taxable income.
+      The below-threshold exception on page 26 is credit-only for taxpayers
+      age 65+ or blind/disabled and does not permit a line-41 deduction.
+    testRef: "tests/engine/state/nj-1040-property-tax.test.ts::NJ-1040 property tax deduction unavailable below filing threshold for non-senior filer"
+
+  - line: "credit-eligible"
+    description: "Property tax credit eligibility"
+    formula: |
+      (homeowner OR tenant) AND NJ gross income ≤ $250,000 AND
+      (
+        NJ gross income is more than the filing threshold for the filing status
+        OR
+        taxpayer or spouse on a joint return was age 65+ or blind/disabled and
+        NJ gross income is at or below that filing threshold
+      )
+      AND property is not disqualified under the ineligible-property rules
+    inputs:
+      - "NJ gross income"
+      - "Homeowner or tenant status"
+      - "Filing status"
+      - "Age-65+ flags"
+      - "Blind/disabled flags"
+      - "Ineligible-property flags"
+    notes: |
+      The $250,000 threshold applies to all filing statuses for 2025. The page
+      26 low-income exception is credit-only and applies when the taxpayer or
+      spouse if filing jointly was age 65+ or blind/disabled on the last day
+      of the tax year. The same page also denies the benefit entirely for
+      exempt disabled-veteran homes, homeowner P.I.L.O.T. payments, and
+      tenants in tax-exempt property.
+    edgeCases:
+      - "NJ gross income of exactly $250,000: eligible"
+      - "NJ gross income of $250,001: not eligible"
+      - "Single filer with $9,000 of line 29 income and no age/disability exception: not eligible"
+      - "Single filer age 65 with $9,000 of line 29 income: credit eligible"
+    testRef: "tests/engine/state/nj-1040-property-tax.test.ts::NJ-1040 property tax credit allowed for age-65 filer below filing threshold"
+
+  - line: "credit-amount"
+    description: "Property tax credit amount"
+    formula: |
+      $50 if eligible;
+      $25 if filing separately and spouses maintained the same main home;
+      prorate by months of NJ residency for part-year residents;
+      $0 otherwise
+    inputs:
+      - "Credit eligibility"
+      - "Filing status"
+      - "Whether spouses filing separately maintained the same main home"
+      - "Months of NJ residency"
+    notes: |
+      The Property Tax Credit is entered on NJ-1040 line 56. It is refundable:
+      it is added in the payments/credits section and is not limited by tax
+      liability. Part-year residents prorate the $50/$25 amount.
+    testRef: "tests/engine/state/nj-1040-property-tax.test.ts::NJ-1040 property tax credit is $50 when eligible"
+
+  - line: "benefit-choice"
+    description: "Optimal choice between deduction and credit"
+    formula: |
+      Compare the full-return outcome using the property tax deduction versus
+      the refundable property tax credit.
+      Worksheet H (or Worksheet I when Schedule NJ-COJ applies) determines
+      whether the tax reduction from the deduction is at least the available
+      $50/$25 credit; when no explicit election is supplied, the orchestrator
+      evaluates both permitted branches and keeps the more beneficial result.
+    inputs:
+      - "Deduction amount"
+      - "Credit amount"
+      - "Election (deduction or credit)"
+    notes: |
+      The property-tax module accepts an explicit election. If not specified,
+      it defaults to the deduction path for the standalone calculation. The
+      NJ-1040 orchestrator compares both permitted branches of the complete
+      return so the taxpayer receives the greater benefit automatically.
+    testRef: "tests/engine/state/nj-1040.test.ts::NJ-1040 orchestrator - automatically selects the property tax credit when it produces a better refund"

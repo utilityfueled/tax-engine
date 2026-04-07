@@ -1,0 +1,138 @@
+form: "Ohio Schedule of Withholding"
+fullName: "Ohio Schedule of Withholding (IT 1040 line 14 support)"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf"
+
+notes: |
+  Ohio IT 1040 line 14 is supported by the Schedule of Ohio Withholding. The
+  2025 Ohio IT 1040 booklet instructs taxpayers to include only Ohio state
+  income tax withheld from their income statements and to exclude withholding
+  reported for other states.
+
+  The booklet's sample income-statement pages specifically call out:
+    - W-2 box 17 when the W-2 state is Ohio
+    - W-2G box 15 when the W-2G state is Ohio
+    - 1099-R box 14 when the 1099-R state is Ohio
+
+  This engine also supports the modeled 1099 variants that carry Ohio state
+  withholding in the input schema:
+    - 1099-G box 11 when the 1099-G state is Ohio
+    - 1099-K box 8 when the 1099-K state is Ohio
+    - 1099-NEC box 5 when the 1099-NEC state is Ohio
+    - 1099-MISC box 16 when the 1099-MISC state is Ohio
+
+  School district withholding is not part of this schedule. W-2 local/school
+  district withholding belongs on SD 100, not IT 1040.
+
+packetRules:
+  packetBehavior: "reference-summary-pdf"
+  includeWhen:
+    - "Total Ohio withholding is greater than zero"
+  suppressWhen:
+    - "Total Ohio withholding is zero"
+  notes: |
+    The packet generator should emit an Ohio Schedule of Withholding
+    reference-summary page only when Ohio withholding exists. Blank withholding
+    support pages should be suppressed.
+
+businessRuleValidation:
+  - rule: "reference-summary-packet"
+    description: "Inventory support counts this schedule as business-rule validated only when regression coverage proves the Ohio Schedule of Withholding reference summary is emitted when Ohio withholding exists and stays suppressed when the total withholding is zero."
+    testRef: "tests/pdf/fill-oh-reference-forms.test.ts::fillOhioReferenceForms includes the Ohio Schedule of Withholding reference summary only when Ohio withholding exists"
+
+lines:
+  - line: "1"
+    description: "Ohio withholding from W-2 statements"
+    formula: "Sum W-2 box 17 amounts where W-2 state = 'OH' (case-insensitive)"
+    inputs:
+      - "W-2 state code"
+      - "W-2 box 17 state income tax withheld"
+    notes: |
+      The 2025 booklet's sample W-2 states that only Ohio amounts from boxes
+      16 and 17 belong on the Schedule of Ohio Withholding.
+    testRef: "tests/engine/state/oh-schedule-of-withholding.test.ts::Ohio Schedule of Withholding Line 1 - W-2 Ohio withholding"
+
+  - line: "2"
+    description: "Ohio withholding from W-2G statements"
+    formula: "Sum W-2G box 15 amounts where W-2G state = 'OH' (case-insensitive)"
+    inputs:
+      - "W-2G state code"
+      - "W-2G box 15 state income tax withheld"
+    notes: |
+      The 2025 booklet's sample W-2G states that only Ohio amounts from box 15
+      belong on the Schedule of Ohio Withholding.
+    testRef: "tests/engine/state/oh-schedule-of-withholding.test.ts::Ohio Schedule of Withholding Line 2 - W-2G Ohio withholding"
+
+  - line: "3"
+    description: "Ohio withholding from 1099-G statements"
+    formula: "Sum 1099-G box 11 amounts where 1099-G state = 'OH' (case-insensitive)"
+    inputs:
+      - "1099-G state code"
+      - "1099-G box 11 state income tax withheld"
+    notes: |
+      The engine accepts 1099-G box 11 state withholding because the Ohio
+      input schema models it and Ohio line 14 generally accepts Ohio amounts
+      from 1099 income statements.
+    testRef: "tests/engine/state/oh-schedule-of-withholding.test.ts::Ohio Schedule of Withholding Line 3 - 1099-G Ohio withholding"
+
+  - line: "4"
+    description: "Ohio withholding from 1099-K statements"
+    formula: "Sum 1099-K box 8 amounts where 1099-K state = 'OH' (case-insensitive)"
+    inputs:
+      - "1099-K state code"
+      - "1099-K box 8 state income tax withheld"
+    notes: |
+      The engine accepts 1099-K box 8 state withholding because the Ohio input
+      schema models it and Ohio line 14 generally accepts Ohio amounts from
+      1099 income statements.
+    testRef: "tests/engine/state/oh-schedule-of-withholding.test.ts::Ohio Schedule of Withholding Line 4 - 1099-K Ohio withholding"
+
+  - line: "5"
+    description: "Ohio withholding from 1099-R statements"
+    formula: "Sum 1099-R box 14 amounts where 1099-R state = 'OH' (case-insensitive)"
+    inputs:
+      - "1099-R state code"
+      - "1099-R box 14 state income tax withheld"
+    notes: |
+      The 2025 booklet's sample 1099-R states that only Ohio amounts from box
+      14 belong on the Schedule of Ohio Withholding.
+    testRef: "tests/engine/state/oh-schedule-of-withholding.test.ts::Ohio Schedule of Withholding Line 5 - 1099-R Ohio withholding"
+
+  - line: "5a"
+    description: "Ohio withholding from 1099-NEC statements"
+    formula: "Sum 1099-NEC box 5 amounts where 1099-NEC state = 'OH' (case-insensitive)"
+    inputs:
+      - "1099-NEC state code"
+      - "1099-NEC box 5 state income tax withheld"
+    notes: |
+      Ohio line 14 generally accepts Ohio amounts from 1099 income statements.
+      The IRS 2025 Instructions for Forms 1099-MISC and 1099-NEC describe box
+      5 as the state tax withheld field and box 6 as the state identifier for
+      Form 1099-NEC.
+    testRef: "tests/engine/state/oh-schedule-of-withholding.test.ts::Ohio Schedule of Withholding Line 5a - 1099-NEC Ohio withholding"
+
+  - line: "5b"
+    description: "Ohio withholding from 1099-MISC statements"
+    formula: "Sum 1099-MISC box 16 amounts where 1099-MISC state = 'OH' (case-insensitive)"
+    inputs:
+      - "1099-MISC state code"
+      - "1099-MISC box 16 state income tax withheld"
+    notes: |
+      Ohio line 14 generally accepts Ohio amounts from 1099 income statements.
+      The IRS 2025 Instructions for Forms 1099-MISC and 1099-NEC describe box
+      16 as the state tax withheld field and box 17 as the state identifier for
+      Form 1099-MISC.
+    testRef: "tests/engine/state/oh-schedule-of-withholding.test.ts::Ohio Schedule of Withholding Line 5b - 1099-MISC Ohio withholding"
+
+  - line: "6"
+    description: "Total Ohio withholding for IT 1040 line 14"
+    formula: "Line 1 + Line 2 + Line 3 + Line 4 + Line 5 + Line 5a + Line 5b"
+    inputs:
+      - "Ohio withholding from supported income statements"
+    edgeCases:
+      - "Statements for non-Ohio states are excluded"
+      - "Statements with no state code are excluded"
+      - "Lowercase 'oh' state codes are treated as Ohio"
+      - "Ohio withholding on 1099-NEC and 1099-MISC statements is included when the modeled state code is Ohio"
+      - "Zero withholding across all statements produces $0"
+    testRef: "tests/engine/state/oh-schedule-of-withholding.test.ts::Ohio Schedule of Withholding Line 6 - total Ohio withholding combines supported statements"

@@ -1,0 +1,92 @@
+form: "PA-Schedule-DC"
+fullName: "Pennsylvania Child and Dependent Care Enhancement Tax Credit"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40dc.pdf"
+
+notes: |
+  PA Schedule DC allows Pennsylvania residents to claim the Child and
+  Dependent Care Enhancement Tax Credit when they also receive the federal
+  child and dependent care credit under IRC §21.
+
+  For tax years 2024 and 2025, Pennsylvania starts from the allowed federal
+  child and dependent care credit amount on federal Form 2441 Line 9a, but
+  the printed Schedule DC chart limits the credit based on the number of
+  qualifying persons and the taxpayer's Pennsylvania taxable income.
+
+  Key rules:
+    - Taxpayer must also claim the federal credit on Form 2441 / Schedule 3
+    - Credit is claimed on PA-40 Line 23 with other credits
+    - The 2025 Schedule DC instructions state this credit is refundable, so
+      it may create or increase a refund even when it exceeds PA tax liability
+    - Schedule DC Line 2 uses the federal Line 9a amount, but it cannot exceed
+      the printed chart cap:
+        - 1 qualifying person: $1,050 when PA taxable income is $43,000 or less;
+          otherwise $600
+        - 2 or more qualifying persons: $2,100 when PA taxable income is
+          $43,000 or less; otherwise $1,200
+
+packetRules:
+  packetBehavior: "reference-summary-pdf"
+  includeWhen:
+    - "A Pennsylvania resident return packet is being assembled and the resident orchestrator computes a positive Schedule DC credit"
+    - "The resident return is claiming the refundable child and dependent care enhancement credit on PA-40 Line 23"
+  suppressWhen:
+    - "No Pennsylvania resident return packet is being assembled"
+    - "The supported Schedule DC computation is absent or the allowed credit is $0"
+  notes: |
+    The 2025 PA-40 instructions direct resident taxpayers who claim this
+    credit to complete PA Schedule DC and transfer the amount to PA-40 Line
+    23. Until an official PA Schedule DC PDF filler exists, the packet path
+    emits `pa-schedule-dc-reference.pdf` as a reference summary only. Packet
+    disclosures must therefore keep Pennsylvania packet completeness partial
+    whenever this reference summary is attached.
+
+businessRuleValidation:
+  - rule: "pa-schedule-dc-reference-packet"
+    description: "Inventory support counts the Pennsylvania Schedule DC packet path as validated only when fillReturn emits `pa-schedule-dc-reference.pdf` whenever a resident return computes a positive Schedule DC credit."
+    testRef: "tests/pdf/fill-pa-schedule-dc.test.ts::fillReturn includes the Pennsylvania Schedule DC reference summary when the resident return claims the credit"
+  - rule: "pa-schedule-dc-reference-suppression"
+    description: "Inventory support counts the Pennsylvania Schedule DC suppression rule as validated only when regression coverage proves fillReturn omits the reference summary when no Schedule DC credit is allowed."
+    testRef: "tests/pdf/fill-pa-schedule-dc.test.ts::fillReturn suppresses the Pennsylvania Schedule DC reference summary when the resident return has no allowed credit"
+  - rule: "pa-schedule-dc-reference-disclosure"
+    description: "Inventory support counts the Pennsylvania Schedule DC packet disclosure as validated only when readiness regression coverage keeps packet completeness partial while only the Schedule DC reference summary is available beyond PA-40."
+    testRef: "tests/utils/return-readiness.test.ts::marks Pennsylvania packets partial when a PA Schedule DC reference summary is attached"
+
+lines:
+  - line: "1"
+    description: "Qualifying persons"
+    formula: "Total number of qualifying persons from Schedule DC Section II"
+    notes: |
+      This is informational for the schedule and should match the number of
+      qualifying individuals used on federal Form 2441.
+    testRef: "tests/engine/state/pa-schedule-dc.test.ts::PA Schedule DC Line 1 - records qualifying persons"
+
+  - line: "2"
+    description: "Child and dependent care enhancement tax credit"
+    formula: |
+      lesser of:
+        - federal Form 2441 Line 9a child and dependent care credit, floored at 0
+        - the printed Schedule DC chart cap determined from:
+          - qualifying persons = 0: $0
+          - qualifying persons = 1 and PA taxable income ≤ $43,000: $1,050
+          - qualifying persons = 1 and PA taxable income > $43,000: $600
+          - qualifying persons ≥ 2 and PA taxable income ≤ $43,000: $2,100
+          - qualifying persons ≥ 2 and PA taxable income > $43,000: $1,200
+    notes: |
+      The 2025 instructions state the taxpayer enters the amount from federal
+      Form 2441 Line 9a and then enters the allowed amount on PA-40 Line 23.
+      The next-page chart limits the credit to $1,050 or $2,100 for taxpayers
+      with PA taxable income of $43,000 or less, and to $600 or $1,200 above
+      that threshold depending on the number of qualifying persons. The 2025
+      Schedule DC instructions also state this credit is refundable, so the
+      supported resident engine carries the full allowed Schedule DC amount on
+      PA-40 Line 23 without applying the restricted-credit cap used for
+      Schedule OC.
+    edgeCases:
+      - "Federal credit is $0: PA credit is $0"
+      - "One qualifying person with PA taxable income of $43,000 or less: the chart cap is $1,050"
+      - "One qualifying person with PA taxable income above $43,000: the chart cap is $600"
+      - "Two or more qualifying persons with PA taxable income above $43,000: the chart cap is $1,200"
+      - "A federal credit below the chart cap is unchanged"
+      - "Negative or invalid upstream amount is floored to $0 for safety"
+    testRef: "tests/engine/state/pa-schedule-dc.test.ts::PA Schedule DC Line 2 - applies the official chart cap to the federal child and dependent care credit"

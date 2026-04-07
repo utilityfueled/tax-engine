@@ -1,0 +1,72 @@
+form: "Form 8863"
+fullName: "Education Credits (American Opportunity and Lifetime Learning)"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i8863"
+
+notes: |
+  Form 8863 calculates two education credits:
+  - American Opportunity Credit (AOC): Up to $2,500 per student, 40% refundable.
+    100% of first $2,000 + 25% of next $2,000 = $2,500 max.
+    Phase-out: Single/HoH/QSS $80K-$90K, MFJ $160K-$180K.
+    QSS uses single thresholds per IRC §25A(d)(2) — "joint return" only.
+    Only first 4 years of post-secondary; at least half-time.
+    A student is ineligible once the credit was already claimed in 4 prior tax years.
+  - Lifetime Learning Credit (LLC): 20% of first $10,000 = $2,000 max per return.
+    Phase-out: Single/HoH/QSS $80K-$90K, MFJ $160K-$180K (same as AOC for 2025).
+    No limit on years; any post-secondary courses.
+
+lines:
+  - line: "1"
+    description: "AOC tentative credit per student"
+    formula: "100% of first $2,000 + 25% of next $2,000 of qualified expenses"
+    irsRef: "Form 8863 Instructions, Part III"
+    edgeCases:
+      - "Max $2,500 per student"
+      - "Student with 4 prior AOC years is ineligible; student with 3 prior years may still claim the current year"
+      - "Only tuition and required fees/materials qualify"
+    notes: "Audit trail should show qualified expenses, prior AOC years claimed, and whether the student remains eligible under the 4-year limit."
+    testRef: "tests/engine/forms/form-8863.test.ts::audit trail Line 1 exposes AOC year-limit eligibility inputs for an exhausted student"
+
+  - line: "2"
+    description: "AOC total tentative credit"
+    formula: "Sum of Line 1 for all students"
+    testRef: "tests/engine/forms/form-8863.test.ts::Form 8863 Line 2 - AOC total for multiple students"
+
+  - line: "7"
+    description: "AOC after phase-out"
+    formula: "Tentative credit × phase-out percentage"
+    irsRef: "Form 8863 Instructions, Line 7"
+    edgeCases:
+      - "Single/HoH/QSS: phase-out $80K-$90K"
+      - "MFJ: phase-out $160K-$180K"
+      - "QSS uses single/HoH thresholds, NOT MFJ — per IRC §25A(d)(2) 'joint return' only; confirmed by IRS Form 8863 Instructions"
+      - "MFS: no AOC allowed"
+    testRef: "tests/engine/forms/form-8863.test.ts::Form 8863 Line 7 - AOC no phase-out under threshold"
+
+  - line: "8"
+    description: "Nonrefundable AOC"
+    formula: "60% of Line 7"
+    testRef: "tests/engine/forms/form-8863.test.ts::Form 8863 Line 8 - nonrefundable AOC is 60%"
+
+  - line: "14"
+    description: "Refundable AOC"
+    formula: "40% of Line 7"
+    irsRef: "Form 8863 Instructions, Line 14"
+    testRef: "tests/engine/forms/form-8863.test.ts::Form 8863 Line 14 - refundable AOC is 40%"
+
+  - line: "10"
+    description: "Lifetime Learning Credit"
+    formula: "20% × min(qualified expenses, $10,000) × phase-out factor"
+    irsRef: "Form 8863 Instructions, Part II"
+    edgeCases:
+      - "Max $2,000 per return (not per student)"
+      - "Same phase-out as AOC for 2025"
+      - "MFS: no LLC allowed"
+    testRef: "tests/engine/forms/form-8863.test.ts::Form 8863 Line 10 - LLC basic calculation"
+
+  - line: "19"
+    description: "Total nonrefundable education credit"
+    formula: "Line 8 (nonrefundable AOC) + Line 10 (LLC)"
+    irsRef: "Form 8863 Instructions, Line 19"
+    notes: "Goes to Schedule 3 Line 3"
+    testRef: "tests/engine/forms/form-8863.test.ts::Form 8863 Line 19 - total nonrefundable (AOC + LLC)"

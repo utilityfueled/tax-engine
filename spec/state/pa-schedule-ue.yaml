@@ -1,0 +1,215 @@
+form: "PA Schedule UE"
+fullName: "Pennsylvania Allowable Employee Business Expenses"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf"
+
+notes: |
+  PA Schedule UE (Form PA-1700) computes unreimbursed employee business expenses.
+  PA still allows this deduction — federal eliminated it after TCJA (2017).
+  The net result flows to PA-40 Line 1b, reducing Class 1 compensation.
+
+  Key PA rules:
+    - Only W-2 employees may claim (not self-employed / Schedule C filers)
+    - Expenses must be ordinary, necessary, and unreimbursed
+    - Vehicle: choose standard mileage rate OR actual expenses (not both)
+    - Meals: limited to 50% (aligns with federal)
+    - Employer reimbursements reduce total expenses dollar for dollar
+    - Net unreimbursed expenses cannot exceed gross compensation
+
+  Standard mileage rates (IRS):
+    2024: $0.67 per business mile
+    2025: $0.70 per business mile
+
+packetRules:
+  packetBehavior: "reference-summary-pdf"
+  includeWhen:
+    - "A Pennsylvania resident return packet is being assembled and the taxpayer reports supported PA Schedule UE expenses or employer reimbursements for one employer."
+    - "The packet path keeps Schedule UE attached even when supported employer reimbursements fully offset the supported expenses, because the 2025 PA-40 instructions still require completing Schedule UE when reimbursements exceed allowable expenses."
+  suppressWhen:
+    - "No Pennsylvania resident return packet is being assembled"
+    - "PA Schedule UE is absent or every supported expense and reimbursement amount is zero"
+  notes: |
+    The 2025 PA-40 instructions for Line 1b and PA Schedule UE say taxpayers
+    must complete PA Schedule UE when they claim allowable unreimbursed
+    employee business expenses on PA-40 Line 1b and also when employer
+    reimbursements exceed allowable expenses, with the excess reimbursement
+    reported on PA-40 Line 1a. Until an official PA Schedule UE PDF filler
+    exists, the packet path emits `pa-schedule-ue-reference.pdf` as a
+    reference summary only. Packet disclosures must therefore keep
+    Pennsylvania packet completeness partial whenever this reference summary
+    is attached.
+
+businessRuleValidation:
+  - rule: "pa-schedule-ue-reference-packet"
+    description: "Inventory support counts the Pennsylvania Schedule UE packet path as validated only when fillReturn emits `pa-schedule-ue-reference.pdf` whenever supported Schedule UE expenses produce the official filing trigger."
+    testRef: "tests/pdf/fill-pa-schedule-ue.test.ts::fillReturn includes the Pennsylvania Schedule UE reference summary when the resident return reports supported employee business expenses"
+  - rule: "pa-schedule-ue-reference-reimbursement-packet"
+    description: "Inventory support counts the Pennsylvania Schedule UE packet trigger as validated only when regression coverage proves fillReturn still emits the reference summary when supported employer reimbursements fully offset the supported expenses."
+    testRef: "tests/pdf/fill-pa-schedule-ue.test.ts::fillReturn includes the Pennsylvania Schedule UE reference summary when employer reimbursements fully offset supported expenses"
+  - rule: "pa-schedule-ue-reference-suppression"
+    description: "Inventory support counts the Pennsylvania Schedule UE suppression rule as validated only when regression coverage proves fillReturn omits the reference summary when every supported Schedule UE amount is zero."
+    testRef: "tests/pdf/fill-pa-schedule-ue.test.ts::fillReturn suppresses the Pennsylvania Schedule UE reference summary when no supported employee business expense input is present"
+  - rule: "pa-schedule-ue-reference-disclosure"
+    description: "Inventory support counts the Pennsylvania Schedule UE packet disclosure as validated only when readiness regression coverage keeps packet completeness partial while only the Schedule UE reference summary is available beyond PA-40."
+    testRef: "tests/utils/return-readiness.test.ts::marks Pennsylvania packets partial when a PA Schedule UE reference summary is attached"
+
+lines:
+  # Part A — Vehicle Expenses
+
+  - line: "A1"
+    description: "Total miles driven during the year"
+    formula: "Input: total vehicle miles for the year"
+    testRef: "tests/engine/state/pa-schedule-ue.test.ts::PA Schedule UE Part A - vehicle expense using standard mileage rate"
+
+  - line: "A2"
+    description: "Business miles driven"
+    formula: "Input: miles driven for business purposes (excludes commuting)"
+    notes: "Commuting miles between home and regular workplace are NOT deductible."
+    testRef: "tests/engine/state/pa-schedule-ue.test.ts::PA Schedule UE Part A - vehicle expense using standard mileage rate"
+
+  - line: "A3"
+    description: "Business use percentage"
+    formula: "Line A2 / Line A1"
+    notes: "Used only for actual expense method. Clamped to [0, 1]."
+    testRef: "tests/engine/state/pa-schedule-ue.test.ts::PA Schedule UE Part A - actual vehicle expenses"
+
+  - line: "A4a"
+    description: "Standard mileage rate deduction"
+    formula: "Line A2 × standard mileage rate for the tax year"
+    notes: |
+      Standard mileage rate method. Cannot be used if:
+        - Taxpayer claims actual expenses (mutually exclusive)
+        - Vehicle is used for hire (taxi, rideshare)
+        - Fleet of 5+ vehicles used simultaneously
+    testRef: "tests/engine/state/pa-schedule-ue.test.ts::PA Schedule UE Part A - vehicle expense using standard mileage rate"
+
+  - line: "A4b"
+    description: "Actual vehicle expenses"
+    formula: "Total actual expenses (gas, oil, repairs, insurance, depreciation, etc.) × business use %"
+    notes: "Input total actual vehicle expenses; computation applies business use percentage."
+    testRef: "tests/engine/state/pa-schedule-ue.test.ts::PA Schedule UE Part A - actual vehicle expenses"
+
+  - line: "A5"
+    description: "Parking fees, tolls, and local transportation"
+    formula: "Input: parking, tolls, and other local transportation"
+    notes: "100% deductible for business (not commuting). Not subject to business use percentage."
+    testRef: "tests/engine/state/pa-schedule-ue.test.ts::PA Schedule UE Part A - parking and tolls"
+
+  - line: "A6"
+    description: "Total vehicle expenses"
+    formula: "(Line A4a or A4b) + Line A5"
+    testRef: "tests/engine/state/pa-schedule-ue.test.ts::PA Schedule UE Part A - vehicle expense using standard mileage rate"
+
+  # Part B — Travel Expenses Away From Home
+
+  - line: "B1"
+    description: "Lodging"
+    formula: "Input: lodging expenses while away from home overnight for business"
+    testRef: "tests/engine/state/pa-schedule-ue.test.ts::PA Schedule UE Part B - travel expenses with meal limitation"
+
+  - line: "B2"
+    description: "Meals (before limitation)"
+    formula: "Input: meal expenses while traveling away from home for business"
+    testRef: "tests/engine/state/pa-schedule-ue.test.ts::PA Schedule UE Part B - travel expenses with meal limitation"
+
+  - line: "B3"
+    description: "Meals (after 50% limitation)"
+    formula: "Line B2 × 50%"
+    notes: "PA limits employee business meal deduction to 50%, same as federal."
+    edgeCases:
+      - "Zero meals: $0 after limitation"
+      - "Odd-cent meals: round to nearest dollar"
+    testRef: "tests/engine/state/pa-schedule-ue.test.ts::PA Schedule UE Part B - travel expenses with meal limitation"
+
+  - line: "B4"
+    description: "Other travel expenses"
+    formula: "Input: airfare, car rental, train, taxi, etc."
+    testRef: "tests/engine/state/pa-schedule-ue.test.ts::PA Schedule UE Part B - travel expenses with meal limitation"
+
+  - line: "B5"
+    description: "Total travel expenses"
+    formula: "Line B1 + Line B3 + Line B4"
+    testRef: "tests/engine/state/pa-schedule-ue.test.ts::PA Schedule UE Part B - travel expenses with meal limitation"
+
+  # Part C — Other Employee Business Expenses
+
+  - line: "C1"
+    description: "Union and professional dues"
+    formula: "Input: union dues, professional organization memberships"
+    testRef: "tests/engine/state/pa-schedule-ue.test.ts::PA Schedule UE Part C - other employee expenses"
+
+  - line: "C2"
+    description: "Work tools and supplies"
+    formula: "Input: tools, supplies, and equipment required by employer"
+    testRef: "tests/engine/state/pa-schedule-ue.test.ts::PA Schedule UE Part C - other employee expenses"
+
+  - line: "C3"
+    description: "Work clothing and uniforms"
+    formula: "Input: required uniforms/clothing not suitable for everyday wear"
+    notes: "Must be required by employer and not adaptable for personal use."
+    testRef: "tests/engine/state/pa-schedule-ue.test.ts::PA Schedule UE Part C - other employee expenses"
+
+  - line: "C4"
+    description: "Education expenses"
+    formula: "Input: education to maintain/improve current job skills"
+    notes: |
+      Education must maintain or improve skills for current employment.
+      Education to qualify for a new trade or profession is NOT deductible.
+    testRef: "tests/engine/state/pa-schedule-ue.test.ts::PA Schedule UE Part C - other employee expenses"
+
+  - line: "C5"
+    description: "Professional licenses and regulatory fees"
+    formula: "Input: license fees, certification costs, regulatory fees"
+    testRef: "tests/engine/state/pa-schedule-ue.test.ts::PA Schedule UE Part C - other employee expenses"
+
+  - line: "C6"
+    description: "Professional subscriptions"
+    formula: "Input: trade journals, professional publications"
+    testRef: "tests/engine/state/pa-schedule-ue.test.ts::PA Schedule UE Part C - other employee expenses"
+
+  - line: "C7"
+    description: "Home office expenses"
+    formula: "Input: home office expenses for employer's convenience"
+    notes: |
+      PA allows employees a home office deduction if the home office is
+      maintained for the convenience of the employer (not just employee preference).
+      This is different from federal which eliminated employee home office post-TCJA.
+    testRef: "tests/engine/state/pa-schedule-ue.test.ts::PA Schedule UE Part C - home office expenses"
+
+  - line: "C8"
+    description: "Other unreimbursed expenses"
+    formula: "Input: any other qualifying unreimbursed employee business expenses"
+    testRef: "tests/engine/state/pa-schedule-ue.test.ts::PA Schedule UE Part C - other employee expenses"
+
+  - line: "C9"
+    description: "Total other employee expenses"
+    formula: "Sum of Lines C1 through C8"
+    testRef: "tests/engine/state/pa-schedule-ue.test.ts::PA Schedule UE Part C - other employee expenses"
+
+  # Part D — Summary
+
+  - line: "D1"
+    description: "Total expenses"
+    formula: "Line A6 + Line B5 + Line C9"
+    testRef: "tests/engine/state/pa-schedule-ue.test.ts::PA Schedule UE Part D - summary total and net"
+
+  - line: "D2"
+    description: "Employer reimbursements"
+    formula: "Input: total reimbursements received from employer"
+    notes: |
+      Reimbursements under an accountable plan (included in W-2 Box 12 Code L)
+      reduce total expenses dollar-for-dollar. Reimbursements under a
+      nonaccountable plan are already included in W-2 wages and not subtracted here.
+    testRef: "tests/engine/state/pa-schedule-ue.test.ts::PA Schedule UE Part D - employer reimbursements offset"
+
+  - line: "D3"
+    description: "Net unreimbursed employee business expenses"
+    formula: "Line D1 - Line D2, floor at 0"
+    notes: |
+      This amount flows to PA-40 Line 1b. Cannot go below zero.
+      Cannot exceed gross compensation (PA-40 Line 1a) — enforced at PA-40 level.
+    edgeCases:
+      - "Reimbursements exceed expenses: net is $0"
+      - "No expenses: $0 flows to PA-40 Line 1b"
+      - "Expenses with zero reimbursement: full amount flows through"
+    testRef: "tests/engine/state/pa-schedule-ue.test.ts::PA Schedule UE Part D - net cannot go below zero"

@@ -1,0 +1,53 @@
+form: "Ohio School District Name Index"
+fullName: "Ohio Finder School District Number-to-Name Index"
+taxYear: 2025
+reference: "https://thefinder.tax.ohio.gov/streamlinesalestaxweb/Download/BoundaryData/SD/OHSDRateTable.csv"
+
+notes: |
+  This spec documents the embedded Ohio school district name index used by the
+  locality-label lookup path for Ohio SD 100 support. The index stores the
+  official school district names published by the Ohio Department of Taxation's
+  The Finder, keyed by the 4-digit taxation district number.
+
+  The same official names appear in the 2025 Ohio IT 1040 / SD 100 booklet's
+  school district list. The embedded index is intentionally deterministic so
+  Ohio W-2 box 20 labels such as "SD Bexley" or "SD Geneva Area" can resolve
+  through the official district names without requiring a live network lookup.
+
+packetRules:
+  packetBehavior: "indirect-reference-summary-pdf"
+  includeWhen:
+    - "An Ohio W-2 or overlay district name resolves through the official index to a taxing district, causing Ohio SD 100 reference-summary output to be computed"
+  suppressWhen:
+    - "No official district name match exists or the match is ambiguous, so the Ohio SD 100 reference-summary page stays suppressed"
+  notes: |
+    This dataset does not generate a standalone packet artifact. Its packet
+    support is indirect: the official names determine whether school-district
+    locality labels can trigger or suppress the Ohio SD 100 reference summary.
+
+businessRuleValidation:
+  - rule: "sd100-reference-summary-gating"
+    description: "Inventory support counts this index as business-rule validated only when regression coverage proves SD-prefixed official district names can auto-attach the Ohio SD 100 reference summary, while ambiguous names stay suppressed."
+    testRef: "tests/pdf/fill-oh-reference-forms.test.ts::fillOhioReferenceForms auto-includes and suppresses the Ohio SD 100 reference summary based on official SD-prefixed district names"
+
+lines:
+  - line: "Index 1"
+    description: "Official district names are stored under zero-padded 4-digit taxation district numbers"
+    formula: "OHIO_SCHOOL_DISTRICT_NAMES[districtNumber] = official district name from The Finder OHSDRateTable.csv"
+    inputs:
+      - "4-digit Ohio school district taxation number"
+      - "Official district name from The Finder"
+    edgeCases:
+      - "District numbers remain zero-padded to four digits"
+      - "Non-taxing districts are still indexed because employer withholding labels can reference them"
+    testRef: "tests/engine/state/oh-school-district-name-index.test.ts::Ohio school district name index preserves official zero-padded district names from the Finder list"
+
+  - line: "Index 2"
+    description: "Official traditional and earned-income suffixes are preserved when the source publishes them"
+    formula: "Store the full official district name text, including '(TRADITIONAL)' or '(EARNED INCOME)' suffixes when present"
+    inputs:
+      - "Official district name from The Finder"
+    notes: |
+      Lookup normalization strips these suffixes later, but the embedded dataset
+      keeps the official text intact so the source snapshot remains auditable.
+    testRef: "tests/engine/state/oh-school-district-name-index.test.ts::Ohio school district name index keeps official traditional and earned-income suffixes"

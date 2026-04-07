@@ -1,0 +1,127 @@
+form: "Form 1099-C"
+fullName: "Cancellation of Debt"
+taxYear: 2025
+irsReference: "https://www.irs.gov/forms-pubs/about-form-1099-c"
+
+notes: |
+  Form 1099-C is issued by a lender when $600 or more of debt is cancelled,
+  forgiven, or discharged. Under IRC §61(a)(11), cancelled debt is generally
+  includable in gross income and reported on Schedule 1 Line 8c.
+
+  Common sources of 1099-C forms include credit card debt settlements, mortgage
+  modifications, auto loan deficiencies, student loan forgiveness (when taxable),
+  and medical debt settlements.
+
+  IRC §108 provides several exclusions from COD income:
+    (a)(1)(A) — Bankruptcy: debt discharged in a title 11 case is fully excludable.
+    (a)(1)(B) — Insolvency: excluded to the extent the taxpayer is insolvent
+                (total liabilities exceed FMV of total assets) immediately before
+                the discharge.
+    (a)(1)(C) — Qualified farm indebtedness (IRC §108(g)).
+    (a)(1)(D) — Qualified real property business indebtedness (IRC §108(c)).
+    (a)(1)(E) — Qualified principal residence indebtedness, extended through
+                12/31/2025 by the Consolidated Appropriations Act, 2021
+                (§108(a)(1)(E), §108(h)).
+
+  When an exclusion applies, Form 982 is filed. The excluded amount generally
+  requires a reduction of tax attributes (NOL, capital loss carryover, basis of
+  property, etc.) under IRC §108(b). The Form 982 Part II tax attribute
+  reduction is now implemented in `src/engine/forms/form-982.ts` and is
+  integrated into the federal orchestrator to modify carryforward outputs.
+
+  Box 3 interest: if the creditor included interest in the Box 2 amount, Box 3
+  shows that interest portion. The interest is NOT additional income — it may
+  create an interest deduction if the underlying debt was deductible (e.g.,
+  business or investment interest). This slice reports the interest amount but
+  does not auto-route it to a deduction.
+
+  Identifiable event codes (Box 6):
+    A — Bankruptcy
+    B — Expiration of statute of limitations for collection
+    C — Cancellation or extinguishment making debt unenforceable
+    D — Election of foreclosure remedies by creditor
+    E — Debt relief from probate or similar proceeding
+    F — By agreement (negotiated settlement)
+    G — Decision or policy to discontinue collection activity
+    H — Other actual cancellation of debt
+
+businessRuleValidation:
+  - rule: "reference-summary-packet"
+    description: "Inventory support counts this form as business-rule validated only when regression coverage proves the emitted packet artifact stays labeled as a non-filing reference summary and only surfaces the supported creditor statement inputs, supported IRC §108 exclusion inputs, and the resulting Schedule 1 Line 8c taxable COD amount."
+    testRef: "tests/pdf/fill-form-1099-c.test.ts::buildForm1099CReferenceSummary keeps the packet artifact reference-only and limited to supported cancellation-of-debt outputs"
+
+lines:
+  - line: "codIncome"
+    description: "Total cancellation of debt income before exclusions"
+    formula: "Sum of all Form 1099-C Box 2 amounts"
+    irsRef: "IRC §61(a)(11); Schedule 1 Instructions, Line 8c"
+    inputs:
+      - "Form 1099-C Box 2 (Amount of debt discharged)"
+    edgeCases:
+      - "Multiple 1099-C forms from different creditors are summed"
+      - "Box 3 interest included in Box 2 is part of the discharged amount but may separately create a deduction"
+      - "If Box 2 amount is disputed, the taxpayer reports the correct amount and may need to file a dispute with the creditor"
+    testRef: "tests/engine/forms/form-1099-c.test.ts::Form 1099-C COD income - single 1099-C reports cancelled debt as income"
+
+  - line: "bankruptcyExclusion"
+    description: "Amount excluded from COD income under the bankruptcy exclusion"
+    formula: "If taxpayer was in title 11 bankruptcy when debt was discharged, the full discharged amount is excludable"
+    irsRef: "IRC §108(a)(1)(A); Form 982 Part I Line 1a"
+    inputs:
+      - "Bankruptcy indicator"
+      - "Form 1099-C Box 2 amount"
+    notes: "The bankruptcy exclusion takes priority over other exclusions. If the discharge occurred in a title 11 case, the full amount is excluded regardless of solvency."
+    edgeCases:
+      - "Bankruptcy exclusion applies to all debt types"
+      - "Bankruptcy exclusion has no dollar limit"
+      - "Cannot combine bankruptcy and insolvency exclusions on the same discharged debt"
+    testRef: "tests/engine/forms/form-1099-c.test.ts::Form 1099-C exclusions - bankruptcy excludes full COD amount"
+
+  - line: "insolvencyExclusion"
+    description: "Amount excluded from COD income under the insolvency exclusion"
+    formula: "min(discharged amount not otherwise excluded, max(0, total liabilities - FMV of total assets))"
+    irsRef: "IRC §108(a)(1)(B), §108(a)(3); Form 982 Part I Line 1b; Pub. 4681"
+    inputs:
+      - "Total liabilities immediately before discharge"
+      - "FMV of total assets immediately before discharge"
+      - "Discharged amount"
+    notes: "Insolvency is measured immediately BEFORE the cancellation. Only the excess of liabilities over assets is excludable. Partial insolvency produces a partial exclusion."
+    edgeCases:
+      - "Taxpayer who is insolvent by less than the discharged amount gets a partial exclusion"
+      - "Taxpayer who is insolvent by more than the discharged amount excludes the full discharged amount"
+      - "Assets include the value of everything owned (including retirement accounts exempt from creditors)"
+      - "Liabilities include recourse and nonrecourse debts"
+      - "If insolvency amount is zero or negative (solvent), no exclusion"
+    testRef: "tests/engine/forms/form-1099-c.test.ts::Form 1099-C exclusions - insolvency excludes COD up to extent of insolvency"
+
+  - line: "qualifiedPrincipalResidenceExclusion"
+    description: "Amount excluded for qualified principal residence indebtedness"
+    formula: "Excluded amount for qualified principal residence debt discharged through 12/31/2025, up to $750,000 ($375,000 MFS)"
+    irsRef: "IRC §108(a)(1)(E), §108(h); Form 982 Part I Line 1e"
+    inputs:
+      - "Qualified principal residence indebtedness indicator"
+      - "Discharged amount attributable to qualified principal residence debt"
+    notes: "Applies to acquisition indebtedness on a principal residence. Does not apply to home equity debt used for non-acquisition purposes. Extended through 12/31/2025."
+    edgeCases:
+      - "Maximum exclusion is $750,000 ($375,000 for MFS)"
+      - "Only applies to acquisition indebtedness, not home equity lines used for other purposes"
+      - "The exclusion reduces basis in the principal residence"
+      - "Must be discharged before January 1, 2026 for tax year 2025"
+    testRef: "tests/engine/forms/form-1099-c.test.ts::Form 1099-C exclusions - qualified principal residence exclusion caps at $750,000"
+
+  - line: "taxableCodIncome"
+    description: "Net taxable cancellation of debt income after exclusions"
+    formula: "max(0, total COD income - bankruptcy exclusion - insolvency exclusion - qualified principal residence exclusion - qualified farm exclusion - qualified real property business exclusion)"
+    irsRef: "Schedule 1 Instructions, Line 8c"
+    inputs:
+      - "Total COD income"
+      - "All applicable exclusions"
+    notes: "The taxable amount flows to Schedule 1 Line 8c and is included in Form 1040 Line 8 via Schedule 1 Line 10."
+    testRef: "tests/engine/forms/form-1099-c.test.ts::Form 1099-C taxable COD income - net amount after exclusions flows to Schedule 1 Line 8c"
+
+  - line: "packet"
+    description: "Draft packet inclusion rule for supported Form 1099-C data"
+    formula: "When the return includes one or more supported Form 1099-C statements, include a non-filing reference-summary PDF in the packet that lists each creditor's supported Boxes 2 through 7 inputs, the supported IRC §108 exclusion inputs, aggregated cancelled-debt and interest totals, and the resulting Schedule 1 Line 8c taxable COD income."
+    irsRef: "Form 1099-C Instructions, Boxes 2-7; Schedule 1 Instructions, Line 8c"
+    notes: "This packet slice intentionally emits a deterministic reference summary instead of attempting to recreate the creditor-issued Form 1099-C, so the draft packet stays explicit about supported computed outputs and reminds filers that Form 982 may still be required when exclusions apply."
+    testRef: "tests/pdf/fill-form-1099-c.test.ts::fillReturn includes a Form 1099-C reference summary when cancellation-of-debt statements are present"

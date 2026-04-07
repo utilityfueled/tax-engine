@@ -1,0 +1,111 @@
+form: "Schedule IL-WIT"
+fullName: "Illinois Income Tax Withheld"
+taxYear: 2025
+reference: "https://tax.illinois.gov/forms/incometax/currentyear/individual/il-1040-schedule-il-wit-instr.html"
+
+notes: |
+  Schedule IL-WIT supports IL-1040 Line 25 by listing withholding records for the
+  taxpayer and spouse separately, then totaling Illinois income tax withheld.
+
+  This supported slice models the worksheet rows directly rather than reading the
+  underlying PDFs. Each record supplies the values reported in Columns A through E:
+    - Column A: official Illinois form type code
+    - Column B: employer or payer identification number
+    - Column C: federal wages, winnings, gross distributions, compensation, etc.
+    - Column D: Illinois wages, winnings, gross distributions, compensation, etc.
+    - Column E: Illinois income tax withheld
+
+  Official 2025 form type codes are:
+    - W-2 = W
+    - W-2G = WG
+    - 1099-R = R
+    - 1099-G = G
+    - 1099-MISC = M
+    - 1099-OID = O
+    - 1099-K = K
+    - 1099-DIV = D
+    - 1099-INT = I
+    - 1099-B = B
+    - 1042-S = S
+    - 1099-NEC = N
+    - 1099-DA = A
+
+  Step 1 reports the taxpayer's records on Lines 1 through 5.
+  Step 2 reports the spouse's records on Lines 6 through 10.
+  If filing status is married filing separately, do not include spouse records.
+  If more than five records exist for either person, additional Schedule IL-WIT
+  pages are required. Forms without Illinois withholding should not be listed.
+  If you received more than five W-2Gs from the same payer, add the Column C,
+  D, and E amounts from all W-2Gs issued by that payer FEIN and report a single
+  combined row for that payer instead of listing each form separately.
+
+lines:
+  - line: "Step 1"
+    description: "Primary taxpayer withholding records"
+    formula: "List up to five primary records with Columns A through E"
+    reference: "Schedule IL-WIT Instructions, Step 1"
+    notes: |
+      Use Lines 1 through 5 for the taxpayer named first on IL-1040.
+      If more than five W-2Gs were issued by the same payer, combine the
+      Column C through E amounts for that payer and report a single row.
+    edgeCases:
+      - "More than five W-2Gs from the same payer aggregate into one row for that taxpayer"
+    testRef: "tests/engine/state/il-schedule-il-wit.test.ts::Schedule IL-WIT Step 1 - more than five W-2G forms from the same payer aggregate into one row"
+
+  - line: "Step 2"
+    description: "Spouse withholding records"
+    formula: "List up to five spouse records with Columns A through E"
+    reference: "Schedule IL-WIT Instructions, Step 2"
+    notes: "Do not include spouse records when filing status is married filing separately."
+    testRef: "tests/engine/state/il-schedule-il-wit.test.ts::Schedule IL-WIT Step 2 - married filing separately rejects spouse withholding records"
+
+  - line: "A"
+    description: "Column A form type code"
+    formula: "Use the official code from the form reference chart"
+    reference: "Schedule IL-WIT Instructions, Columns B through E Form Reference Tables"
+    edgeCases:
+      - "Unsupported codes are rejected"
+      - "W-2G uses WG, not W"
+      - "2025 also supports 1099-OID = O, 1099-NEC = N, and 1099-DA = A"
+    testRef: "tests/engine/state/il-schedule-il-wit.test.ts::Schedule IL-WIT Column A - 2025 supported form codes map to official Illinois values"
+
+  - line: "B"
+    description: "Column B employer or payer identification number"
+    formula: "Input FEIN/TIN from the withholding form"
+    reference: "Schedule IL-WIT Instructions, Column B"
+    testRef: "tests/engine/state/il-schedule-il-wit.test.ts::Schedule IL-WIT Column B - payer IDs flow through to output rows"
+
+  - line: "C"
+    description: "Column C federal wages, winnings, gross distributions, compensation, etc."
+    formula: "Input federal amount from the form reference table for the selected form type"
+    reference: "Schedule IL-WIT Instructions, Column C"
+    testRef: "tests/engine/state/il-schedule-il-wit.test.ts::Schedule IL-WIT Column C - federal amounts flow through to output rows"
+
+  - line: "D"
+    description: "Column D Illinois wages, winnings, gross distributions, compensation, etc."
+    formula: "Input Illinois amount from the form reference table for the selected form type"
+    reference: "Schedule IL-WIT Instructions, Column D"
+    notes: "The supported slice accepts the Illinois-column amount directly."
+    testRef: "tests/engine/state/il-schedule-il-wit.test.ts::Schedule IL-WIT Column D - Illinois amounts flow through to output rows"
+
+  - line: "E"
+    description: "Column E Illinois income tax withheld"
+    formula: "Input Illinois withholding from the form reference table for the selected form type"
+    reference: "Schedule IL-WIT Instructions, Column E"
+    edgeCases:
+      - "Rows with zero or negative Illinois withholding are rejected"
+      - "Records without Illinois withholding should not be listed on the schedule"
+    testRef: "tests/engine/state/il-schedule-il-wit.test.ts::Schedule IL-WIT Column E - zero Illinois withholding is rejected"
+
+  - line: "11"
+    description: "Total Illinois withholding"
+    formula: "Sum of Column E for Lines 1 through 10 across all attached Schedule IL-WIT pages"
+    reference: "Schedule IL-WIT Instructions, Step 3"
+    notes: |
+      The supported slice returns primary and spouse subtotals, the combined total,
+      and a flag when more than five rows are needed for either person.
+    edgeCases:
+      - "Primary and spouse totals both contribute to Line 11"
+      - "More than five records for one person requires additional schedules"
+      - "More than five W-2Gs from the same payer are combined before counting lines"
+    testRef: "tests/engine/state/il-schedule-il-wit.test.ts::Schedule IL-WIT Line 11 - total Illinois withholding sums primary and spouse records"

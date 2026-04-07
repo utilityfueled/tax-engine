@@ -1,0 +1,149 @@
+form: "California FTB 3521 Low-Income Housing Credit"
+fullName: "California FTB 3521 Low-Income Housing Credit Upstream Personal-Filer Carryover Slice"
+taxYear: 2025
+irsReference: "https://www.ftb.ca.gov/forms/2025/2025-3521.pdf"
+
+notes: |
+  This slice models the upstream 2025 Form FTB 3521 lines needed to support
+  California individual-return parity for credit code 172 on Form 540NR
+  Schedule P (540NR) Section B2. The official 2025 FTB 3521 instructions direct
+  taxpayers to:
+  - enter the current-year low-income housing credit on line 2, where the
+    available credit is the smaller of the amount designated on form CTCAC
+    3521A, the amount computed in Part III line 20 if basis decreased, and for
+    taxable years beginning on or after January 1, 2023, the amount stated in
+    the taxpayer certification
+  - add affiliated-corporation and pass-through low-income housing credits from
+    other entities on line 3
+  - add line 2 and line 3 on line 4
+  - enter the passive-activity portion of line 4 on line 5
+  - subtract line 5 from line 4 on line 6
+  - enter the allowable low-income housing credit from passive activities on
+    line 7 after completing form FTB 3801-CR or FTB 3802 when required
+  - enter prior-year carryover on line 8
+  - add line 6, line 7, and line 8 on line 9
+  - enter 0 on line 10 unless the filer is a corporation allocating credit to
+    affiliated corporations, which is outside this supported personal-filer
+    slice
+  - subtract line 10 from line 9 on line 11
+  - enter the amount claimed on the current return on line 12a using credit
+    code 172
+  - enter 0 on line 12b unless the filer is a corporation assigning credit on
+    form FTB 3544, which is outside this supported personal-filer slice
+  - subtract line 12a and line 12b from line 11 on line 13
+  This upstream slice intentionally starts from the supported current-year line
+  2 amount instead of modeling form CTCAC 3521A, taxpayer certification, or
+  Part III basis recomputations locally. The supported state-return path only
+  uses line 11 as the available Schedule P credit amount and line 13 as the
+  resulting carryover after the Schedule P used-this-year amount is known.
+
+lines:
+  - line: "2"
+    description: "Current-year low-income housing credit"
+    formula: "Supported upstream current-year low-income housing credit amount after applying the official smaller-of rule from the 2025 FTB 3521 instructions"
+    inputs:
+      - "Supported upstream current-year low-income housing credit amount"
+    edgeCases:
+      - "The supported line 2 amount may reflect form CTCAC 3521A, Part III line 20, or taxpayer-certification limits, but those subcomputations stay upstream in this slice"
+    testRef: "tests/engine/state/ca-ftb-3521-low-income-housing-credit.test.ts::CA FTB 3521 Low-Income Housing Credit Line 11 - current-year credit, pass-through credits, passive limitation, and prior-year carryover add to total available credit"
+
+  - line: "3"
+    description: "Pass-through and affiliated-corporation low-income housing credit"
+    formula: "Add the supported pass-through and affiliated-corporation low-income housing credit amounts from other entities"
+    inputs:
+      - "Optional list of pass-through or affiliated-corporation low-income housing credit amounts with entity identification context"
+    testRef: "tests/engine/state/ca-ftb-3521-low-income-housing-credit.test.ts::CA FTB 3521 Low-Income Housing Credit Line 11 - current-year credit, pass-through credits, passive limitation, and prior-year carryover add to total available credit"
+
+  - line: "4"
+    description: "Current-year low-income housing credit"
+    formula: "Line 2 + Line 3"
+    inputs:
+      - "Form FTB 3521 line 2"
+      - "Form FTB 3521 line 3"
+    testRef: "tests/engine/state/ca-ftb-3521-low-income-housing-credit.test.ts::CA FTB 3521 Low-Income Housing Credit Line 11 - current-year credit, pass-through credits, passive limitation, and prior-year carryover add to total available credit"
+
+  - line: "5"
+    description: "Passive-activity portion of line 4"
+    formula: "Supported passive-activity portion of the low-income housing credit included on line 4"
+    inputs:
+      - "Optional supported passive-activity low-income housing credit amount included on line 4"
+    edgeCases:
+      - "Line 5 cannot exceed line 4"
+    testRef: "tests/engine/state/ca-ftb-3521-low-income-housing-credit.test.ts::CA FTB 3521 Low-Income Housing Credit Line 11 - current-year credit, pass-through credits, passive limitation, and prior-year carryover add to total available credit"
+
+  - line: "6"
+    description: "Current-year non-passive low-income housing credit"
+    formula: "Line 4 - Line 5"
+    inputs:
+      - "Form FTB 3521 line 4"
+      - "Form FTB 3521 line 5"
+    testRef: "tests/engine/state/ca-ftb-3521-low-income-housing-credit.test.ts::CA FTB 3521 Low-Income Housing Credit Line 11 - current-year credit, pass-through credits, passive limitation, and prior-year carryover add to total available credit"
+
+  - line: "7"
+    description: "Allowable credit from passive activities"
+    formula: "Supported allowable low-income housing credit from passive activities after the official passive-activity limitation worksheet"
+    inputs:
+      - "Optional supported allowable low-income housing credit from passive activities"
+    edgeCases:
+      - "Line 7 cannot exceed line 5 passive-activity credit"
+    testRef: "tests/engine/state/ca-ftb-3521-low-income-housing-credit.test.ts::CA FTB 3521 Low-Income Housing Credit Line 11 - current-year credit, pass-through credits, passive limitation, and prior-year carryover add to total available credit"
+
+  - line: "8"
+    description: "Low-income housing credit carryover from prior year"
+    formula: "Supported prior-year low-income housing credit carryover input"
+    inputs:
+      - "Optional prior-year low-income housing credit carryover"
+    testRef: "tests/engine/state/ca-ftb-3521-low-income-housing-credit.test.ts::CA FTB 3521 Low-Income Housing Credit Line 11 - current-year credit, pass-through credits, passive limitation, and prior-year carryover add to total available credit"
+
+  - line: "9"
+    description: "Total low-income housing credit before affiliated-corporation allocations"
+    formula: "Line 6 + Line 7 + Line 8"
+    inputs:
+      - "Form FTB 3521 line 6"
+      - "Form FTB 3521 line 7"
+      - "Form FTB 3521 line 8"
+    testRef: "tests/engine/state/ca-ftb-3521-low-income-housing-credit.test.ts::CA FTB 3521 Low-Income Housing Credit Line 11 - current-year credit, pass-through credits, passive limitation, and prior-year carryover add to total available credit"
+
+  - line: "10"
+    description: "Credit allocated to affiliated corporations"
+    formula: "0 for the supported personal-filer slice"
+    inputs:
+      - "No supported input; line 10 remains 0 for individual returns"
+    notes: "Corporate affiliated-allocation mechanics are unsupported in this slice"
+    testRef: "tests/engine/state/ca-ftb-3521-low-income-housing-credit.test.ts::CA FTB 3521 Low-Income Housing Credit Line 13 - claimed credit reduces future carryover"
+
+  - line: "11"
+    description: "Total available low-income housing credit"
+    formula: "Line 9 - Line 10"
+    inputs:
+      - "Form FTB 3521 line 9"
+      - "Form FTB 3521 line 10"
+    testRef: "tests/engine/state/ca-ftb-3521-low-income-housing-credit.test.ts::CA FTB 3521 Low-Income Housing Credit Line 11 - current-year credit, pass-through credits, passive limitation, and prior-year carryover add to total available credit"
+
+  - line: "12a"
+    description: "Credit claimed on the current return"
+    formula: "Supported current-return claim amount, which in the supported Form 540NR slice comes from Schedule P (540NR) line 16 through line 19 credit used this year"
+    inputs:
+      - "Optional low-income housing credit amount claimed this year"
+    edgeCases:
+      - "Do not allow line 12a to exceed line 11"
+    testRef: "tests/engine/state/ca-ftb-3521-low-income-housing-credit.test.ts::CA FTB 3521 Low-Income Housing Credit Line 13 - claimed credit reduces future carryover"
+
+  - line: "12b"
+    description: "Assigned credit to other corporations"
+    formula: "0 for the supported personal-filer slice"
+    inputs:
+      - "No supported input; line 12b remains 0 for individual returns"
+    notes: "Corporate form FTB 3544 assignment mechanics are unsupported in this slice"
+    testRef: "tests/engine/state/ca-ftb-3521-low-income-housing-credit.test.ts::CA FTB 3521 Low-Income Housing Credit Line 13 - claimed credit reduces future carryover"
+
+  - line: "13"
+    description: "Credit carryover available for future years"
+    formula: "Line 11 - Line 12a - Line 12b"
+    inputs:
+      - "Form FTB 3521 line 11"
+      - "Form FTB 3521 line 12a"
+      - "Form FTB 3521 line 12b"
+    edgeCases:
+      - "Do not allow the combined line 12a and line 12b reductions to exceed line 11"
+    testRef: "tests/engine/state/ca-ftb-3521-low-income-housing-credit.test.ts::CA FTB 3521 Low-Income Housing Credit Line 13 - claimed credit reduces future carryover"

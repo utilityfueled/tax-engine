@@ -1,0 +1,224 @@
+form: Generic State Resident Return
+description: >
+  Generic engine that produces best-effort draft state income tax returns
+  for any state with a standard income tax. Handles the common 80% pattern
+  shared by most states: federal AGI → state adjustments → deductions →
+  graduated brackets → exemptions → withholding → refund/balance due.
+
+confidence: best-effort
+note: >
+  This engine covers the standard graduated-bracket pattern. States with
+  unusual structures (e.g., PA flat tax with limited income classes, OH
+  municipal net profit) should eventually get dedicated engines.
+output_metadata:
+  line_confidence: >
+    Every calculated line emitted by the generic engine carries a
+    confidence tier. Generic-engine lines are marked "best-effort".
+    Dedicated state engines can emit "validated" lines when they fully
+    implement the state return.
+
+lines:
+  - line: "1"
+    description: Starting income — federal AGI or federal taxable income
+    formula: >
+      If state uses federal taxable income: Form 1040 Line 15.
+      If state uses federal AGI: Form 1040 Line 11.
+      If state has its own income definition but no dedicated engine yet:
+      best-effort approximation from Form 1040 Line 11.
+    testRef: "tests/engine/state/generic-resident-return.test.ts::CO Single - uses federal taxable income, flat 4.4%"
+    notes: >
+      Most states start from federal AGI. Colorado is a notable exception
+      (starts from federal taxable income). Some states (PA, NJ) have
+      their own income definitions entirely, so the generic engine uses
+      federal AGI only as a documented approximation there.
+
+  - line: "5"
+    description: State standard deduction
+    formula: >
+      Use the state's fixed deduction for the filing status unless the
+      state publishes an AGI-based standard deduction table, in which
+      case look up the deduction from that table using state adjusted
+      income and filing status, respecting the table's published range
+      boundaries exactly as written (for example, "at least X, but less
+      than Y" means the upper bound is exclusive). If the state publishes
+      an explicit value for a status like qualifying surviving spouse,
+      use that explicit filing-status entry instead of generic fallback
+      rules.
+    testRef: "tests/engine/state/generic-resident-return.test.ts::GA qualifying surviving spouse uses the explicit state standard deduction"
+    notes: >
+      Some states match federal standard deduction (CO), some have their
+      own amounts (DE, MD), and some have no standard deduction (itemize
+      only). Alabama uses an official income-based table rather than a
+      single fixed amount. A small number of states, such as Utah, use the federal
+      standard/itemized deduction as the base for a credit instead of
+      subtracting it from income. Indexed state amounts must track the
+      official current-year publication rather than federal assumptions;
+      for example, Arkansas's 2025 resident standard deduction is $2,470
+      single/HOH/QSS and $4,940 MFJ, Minnesota's 2025 standard deduction
+      is $14,950 single, $29,900 MFJ, and $22,500 HOH, while Maryland's
+      2025 resident standard deduction is a fixed $3,350
+      single/MFS/dependent and $6,700 MFJ/HOH/QSS. Virginia's 2025
+      resident standard deduction is $8,750 single/MFS and $17,500 MFJ,
+      while Wisconsin's 2025 resident standard deduction uses an
+      official income table with "at least / but less than" ranges rather
+      than a single fixed maximum amount. The District of Columbia's
+      2025 resident return uses its own basic standard deduction
+      amounts of $15,000 single/dependent/MFS, $22,500 HOH, and
+      $30,000 MFJ/QSS; these amounts no longer simply conform by
+      reference to the federal basic standard deduction.
+
+  - line: "7"
+    description: Deduction used
+    formula: >
+      Use the state standard deduction by default. If itemized deductions
+      are provided and are lower than the state standard deduction, use the
+      itemized amount instead as a conservative best-effort override.
+      If itemized deductions exceed the state standard deduction, keep the
+      state standard deduction.
+    testRef: "tests/engine/state/generic-resident-return.test.ts::itemized deductions only override when lower than the state standard deduction"
+    notes: >
+      The generic engine follows a lesser-of rule because state itemized
+      deduction conformity varies and several states tie their deduction
+      starting point to the federal choice or to separate state
+      limitations. This keeps the draft return conservative until a
+      dedicated state engine models the exact election rules.
+
+  - line: "8"
+    description: Personal exemptions
+    formula: >
+      If the state provides an income-based personal exemption table,
+      look up the filing-status base exemption from that table using
+      state adjusted income, then add dependent exemptions. Otherwise,
+      if the state provides filing-status-specific base exemptions, use
+      the base exemption for the filing status plus dependent exemptions.
+      Otherwise compute taxpayer exemption + spouse exemption (if
+      applicable) + dependent exemption × dependent count.
+    testRef: "tests/engine/state/generic-resident-return.test.ts::CT Single $35,000 AGI uses the Table A personal exemption"
+    notes: >
+      Some states have no personal exemption, some provide a per-person
+      deduction, and some use a filing-status base amount or an
+      income-based table. Alabama's 2025 resident return uses a $1,500
+      base exemption for single/MFS, $3,000 for MFJ/HOH, and $300 per
+      dependent. Connecticut's 2025 Table A phases the personal
+      exemption down by filing status as Connecticut AGI rises. West
+      Virginia's 2025 resident return allows $2,000 per exemption with a
+      $500 minimum line-6 amount when no exemptions are claimed,
+      Wisconsin's 2025 resident return uses $700 exemptions for the
+      taxpayer, spouse on a joint return, and each dependent, and the
+      District of Columbia's 2025 resident return does not provide a
+      general personal exemption deduction in the basic D-40
+      computation.
+
+  - line: "9"
+    description: State taxable income
+    formula: >
+      If exemptions are deductions: Line 4 - Line 7 - Line 8 (floor 0).
+      If exemptions are credits: Line 4 - Line 7 (floor 0).
+    testRef: "tests/engine/state/generic-resident-return.test.ts::DE Single $50,000 AGI - graduated rates with exemption credit"
+    notes: Rounded to nearest dollar.
+
+  - line: "10"
+    description: Tax from bracket schedule
+    formula: >
+      Apply graduated rates: for each bracket, tax +=
+      (min(income, bracket.max) - bracket.min) × bracket.rate
+    testRef: "tests/engine/state/generic-resident-return.test.ts::computeGraduatedTax - income spanning multiple brackets"
+    notes: >
+      Brackets are specific to filing status. If a filing status is not
+      explicitly defined, fallback logic applies. Any exact
+      filing-status entry in the state constants takes precedence:
+      HOH → Single, QSS → MFJ, MFS → Single. For example, Maine's 2025
+      resident schedule publishes a distinct head-of-household bracket
+      table, so the generic engine must use that explicit schedule
+      instead of falling back to the single thresholds.
+      South Carolina's 2025 top marginal rate is 6.0% after the latest
+      statutory reduction, and West Virginia's 2025 rate schedule is
+      2.22%, 2.96%, 3.33%, 4.44%, and 4.82%, with a separate married
+      filing separately schedule using halved thresholds.
+
+  - line: "11"
+    description: Personal exemption credit
+    formula: >
+      If exemptionsAreCredits: personal exemption amount, optionally plus
+      a credit-base deduction amount multiplied by a state credit rate,
+      less any configured phase-out, capped at tax.
+      Otherwise: 0 (already deducted from income).
+    testRef: "tests/engine/state/generic-resident-return.test.ts::AR Single $50,000 AGI - graduated rates with exemption credit"
+    notes: >
+      States vary between no exemption, per-person deductions, and
+      dependent-only deductions. For example, Michigan's 2025 per-person
+      exemption is $5,800, while Minnesota's 2025 generic treatment uses
+      a $5,200 dependent exemption with no taxpayer/spouse exemption.
+      Arkansas's 2025 resident return uses filing-status-specific base
+      credits on line 7A: single and MFS receive one $29 base credit,
+      MFJ receives two, and head of household or surviving spouse also
+      receive two before dependent credits are added on line 7B.
+
+  - line: "12"
+    description: State income tax
+    formula: Line 10 - Line 11 (floor 0)
+    testRef: "tests/engine/state/generic-resident-return.test.ts::CT Single $75,000 AGI - graduated rates (2%/4.5%/5.5%)"
+
+  - line: "16"
+    description: Balance due or refund
+    formula: >
+      If Line 12 > Line 15: balance due = Line 12 - Line 15.
+      If Line 15 > Line 12: refund = Line 15 - Line 12.
+    testRef: "tests/engine/state/generic-resident-return.test.ts::withholding + estimated exceeding tax produces refund"
+
+supported_states:
+  description: >
+    States with constants populated in state-constants.ts.
+    Added in alphabetical batches. For tax year 2025, the generic engine
+    covers 40 broad-based income-tax states plus the District of Columbia.
+    California is intentionally excluded here because it uses a dedicated
+    state engine, and states with no broad-based wage income tax are also
+    excluded. See each state's entry for source URLs and year coverage.
+  initial_batch:
+    - AL  # Alabama
+    - AZ  # Arizona
+    - AR  # Arkansas
+    - CO  # Colorado
+    - CT  # Connecticut
+    - DE  # Delaware
+    - GA  # Georgia
+    - HI  # Hawaii
+  second_batch:
+    - ID  # Idaho (flat 5.3% with zero bracket)
+    - IL  # Illinois (flat 4.95%)
+    - IN  # Indiana (flat 3.0%)
+    - IA  # Iowa (flat 3.8%)
+    - KS  # Kansas (graduated 2 brackets)
+    - KY  # Kentucky (flat 4.0%)
+    - LA  # Louisiana (flat 3%, 2025 reform)
+    - ME  # Maine (graduated 3 brackets)
+  third_batch:
+    - MD  # Maryland (graduated 8 brackets, 2%–5.75%)
+    - MA  # Massachusetts (flat 5%)
+    - MI  # Michigan (flat 4.25%)
+    - MN  # Minnesota (graduated 4 brackets, 5.35%–9.85%)
+    - MS  # Mississippi (0% bracket + flat 4.4%, HB 531 reform)
+    - MO  # Missouri (graduated to 4.7% top rate)
+    - MT  # Montana (2 brackets from federal taxable income, SB 399/SB 121)
+    - NE  # Nebraska (graduated, LB 754 rate reductions)
+  fourth_batch:
+    - NJ  # New Jersey (graduated 7 brackets, 1.4%–10.75%)
+    - NM  # New Mexico (2025 restructured 6 brackets, 1.5%–5.9%)
+    - NY  # New York (graduated 9 brackets, 4%–10.9%)
+    - NC  # North Carolina (flat 4.25%, HB 334 schedule)
+    - ND  # North Dakota (3 brackets with large 0% bracket, HB 1158)
+    - OH  # Ohio (3 brackets, 0%/2.75%/3.125%, HB 33)
+    - OK  # Oklahoma (graduated 6 brackets, 0.25%–4.75%)
+    - OR  # Oregon (graduated 4 brackets, 4.75%–9.9%)
+  fifth_batch:
+    - PA  # Pennsylvania (flat 3.07%, no deductions/exemptions)
+    - RI  # Rhode Island (graduated 3 brackets, 3.75%–5.99%)
+    - SC  # South Carolina (0% bracket + graduated to 6.0%, H.4880 reform)
+    - UT  # Utah (flat 4.5%, taxpayer credit phases out with income)
+    - VT  # Vermont (graduated 4 brackets, 3.35%–8.75%)
+    - VA  # Virginia (graduated 4 brackets, 2%–5.75%)
+    - WV  # West Virginia (graduated 5 brackets, 2.22%–4.82%)
+    - WI  # Wisconsin (graduated 4 brackets, 3.5%–7.65%)
+    - DC  # District of Columbia (graduated 7 brackets, 4%–10.75%)
+
+test_file: tests/engine/state/generic-resident-return.test.ts

@@ -1,0 +1,255 @@
+form: "Ohio IT/SD 2210"
+fullName: "Interest Penalty on Underpayment of Estimated Tax"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/v1762982566/tax.ohio.gov/forms/ohio_individual/individual/2025/itsd2210-fi.pdf"
+
+notes: |
+  The Ohio IT/SD 2210 computes the interest penalty for taxpayers who did not
+  pay enough estimated tax or have enough withholding during the year. The
+  same form handles both state income tax (IT 1040) and school district tax
+  (SD 100) penalties.
+
+  This module implements the IT 1040 / SD 100 individual filer version (page 2).
+  Pass-through entity filers (IT 1140 / IT 4738, page 3) have different quarterly
+  due dates and thresholds — not implemented here.
+
+  The same computation supports two personal-return modes:
+    - IT 1040 mode: line references map to IT 1040 lines 10, 14, and 15
+    - SD 100 mode: line references map to SD 100 lines 8, 11, and 12
+  The tax math is identical; only the source line references and audit trail labels differ.
+
+  Annual interest rate per R.C. 5703.47:
+    Formula: federal short-term rate (July, rounded to nearest %) + 3%
+    2024: 8%
+    2025: 8%
+    2026: 7%
+
+  Interest rate factors are pre-computed per quarter using:
+    factor = annual_rate × days_in_period / 365.25
+  When a period spans two calendar years with different rates:
+    factor = (rate_year1 × days_year1 + rate_year2 × days_year2) / 365.25
+
+  Three independent safe harbors — if ANY one is met, no penalty is owed:
+    A. Taxes paid >= 90% of current year tax liability
+    B. Taxes paid >= 100% of prior year tax liability (if timely filed)
+    C. Current year tax liability minus withholding <= $500
+
+  Withholding is treated as paid evenly across quarters (R.C. 5747.09).
+  Estimated payments are credited based on actual cumulative amounts paid
+  by each quarterly due date.
+
+  Quarterly due dates for 2025 (IT 1040 / SD 100):
+    Q1: April 15, 2025
+    Q2: June 16, 2025 (June 15 is Sunday)
+    Q3: September 15, 2025
+    Q4: January 15, 2026
+
+  Quarterly due dates for 2024 (IT 1040 / SD 100):
+    Q1: April 15, 2024
+    Q2: June 17, 2024 (June 15 is Saturday)
+    Q3: September 16, 2024 (September 15 is Sunday)
+    Q4: January 15, 2025
+
+packetRules:
+  packetBehavior: "reference-summary-pdf"
+  includeWhen:
+    - "Ohio IT/SD 2210 is computed for the state packet"
+  suppressWhen:
+    - "No Ohio underpayment-penalty worksheet result exists"
+  notes: |
+    The packet generator should attach an Ohio IT/SD 2210 reference-summary
+    page only when the worksheet result exists and affects the packet.
+
+businessRuleValidation:
+  - rule: "reference-summary-packet"
+    description: "Inventory support counts this worksheet as business-rule validated only when regression coverage proves the Ohio IT/SD 2210 reference summary is attached only when the underpayment worksheet is actually computed for the packet."
+    testRef: "tests/pdf/fill-oh-reference-forms.test.ts::fillOhioReferenceForms includes the Ohio IT/SD 2210 reference summary only when the underpayment worksheet is computed"
+
+lines:
+  - line: "1"
+    description: "Total taxes paid (withholding + estimated + carryforward)"
+    formula: "Withholding + timely paid estimated payments and carryforwards"
+    inputs:
+      - "Ohio income tax withheld"
+      - "Estimated and extension payments + prior year carryforward"
+    notes: |
+      Per the 2025 IT/SD 2210 instructions, this line only includes timely paid
+      estimated payments. Scheduled estimated payments made after the final
+      installment due date do not count on line 1 for the safe-harbor tests.
+      Does not include refundable credits for this line.
+      In SD 100 mode, this instead references SD 100 line 11 + line 12.
+    edgeCases:
+      - "Estimated payments made after the final quarterly due date are excluded from line 1"
+    testRef: "tests/engine/state/oh-it-sd-2210.test.ts::OH IT/SD 2210 Line 1 - total taxes paid"
+
+  - line: "2"
+    description: "Current year tax liability"
+    formula: "IT 1040 line 10 (tax after nonrefundable credits)"
+    inputs:
+      - "Tax liability after nonrefundable credits"
+    notes: |
+      This is the tax liability BEFORE payments but AFTER nonrefundable credits.
+      Refundable credits are not subtracted here — they are part of payments.
+      In SD 100 mode, this instead references SD 100 line 8.
+    testRef: "tests/engine/state/oh-it-sd-2210.test.ts::OH IT/SD 2210 Line 2 - current year liability"
+
+  - line: "3"
+    description: "Prior year tax liability"
+    formula: "Prior year IT 1040 line 10 (tax after nonrefundable credits)"
+    inputs:
+      - "Prior year tax liability after nonrefundable credits"
+    notes: |
+      Only used if prior year return was timely filed. Zero if no prior year return.
+      In SD 100 mode, this instead references prior year SD 100 line 8.
+    testRef: "tests/engine/state/oh-it-sd-2210.test.ts::OH IT/SD 2210 Line 3 - prior year liability"
+
+  - line: "4"
+    description: "Safe harbor A — 90% of current year"
+    formula: "0.90 × Line 2"
+    inputs:
+      - "Line 2"
+    testRef: "tests/engine/state/oh-it-sd-2210.test.ts::OH IT/SD 2210 safe harbor A - payments >= 90% current year"
+
+  - line: "5"
+    description: "Safe harbor A check"
+    formula: "If Line 1 >= Line 4, STOP — no penalty"
+    inputs:
+      - "Line 1"
+      - "Line 4"
+    testRef: "tests/engine/state/oh-it-sd-2210.test.ts::OH IT/SD 2210 safe harbor A - payments >= 90% current year"
+
+  - line: "7"
+    description: "Safe harbor B check"
+    formula: "If prior year timely filed AND Line 1 >= Line 3, STOP — no penalty"
+    inputs:
+      - "Line 1"
+      - "Line 3"
+      - "Whether prior year was timely filed"
+    notes: "Not applicable if no prior year return was filed."
+    testRef: "tests/engine/state/oh-it-sd-2210.test.ts::OH IT/SD 2210 safe harbor B - payments >= 100% prior year"
+
+  - line: "8"
+    description: "Safe harbor C — $500 threshold"
+    formula: "If (Line 2 - withholding) <= $500, STOP — no penalty"
+    inputs:
+      - "Line 2"
+      - "Ohio withholding"
+    notes: |
+      Uses withholding only (not estimated payments). The logic is: if the
+      balance due after withholding is $500 or less, the taxpayer was not
+      required to make estimated payments.
+    edgeCases:
+      - "Exactly $500 balance after withholding: no penalty"
+      - "Zero withholding with liability <= $500: no penalty"
+    testRef: "tests/engine/state/oh-it-sd-2210.test.ts::OH IT/SD 2210 safe harbor C - liability minus withholding <= $500"
+
+  - line: "9"
+    description: "Required annual payment"
+    formula: |
+      If prior year return was timely filed:
+        min(Line 3, 0.90 × Line 2)
+      If no timely prior year return:
+        0.90 × Line 2
+    inputs:
+      - "Line 2"
+      - "Line 3"
+      - "Whether prior year was timely filed"
+    testRef: "tests/engine/state/oh-it-sd-2210.test.ts::OH IT/SD 2210 Line 9 - required annual payment"
+
+  - line: "10"
+    description: "Cumulative required payment by quarter"
+    formula: |
+      Column A (Q1): 25% × Line 9
+      Column B (Q2): 50% × Line 9
+      Column C (Q3): 75% × Line 9
+      Column D (Q4): 100% × Line 9
+    inputs:
+      - "Line 9"
+    testRef: "tests/engine/state/oh-it-sd-2210.test.ts::OH IT/SD 2210 Line 10 - cumulative required payment"
+
+  - line: "11"
+    description: "Cumulative withholding by quarter (evenly spread)"
+    formula: |
+      Column A (Q1): 25% × total withholding
+      Column B (Q2): 50% × total withholding
+      Column C (Q3): 75% × total withholding
+      Column D (Q4): 100% × total withholding
+    inputs:
+      - "Total Ohio income tax withheld"
+    notes: "Per R.C. 5747.09, withholding is deemed paid evenly across quarters."
+    testRef: "tests/engine/state/oh-it-sd-2210.test.ts::OH IT/SD 2210 Line 11 - withholding spread evenly"
+
+  - line: "12"
+    description: "Cumulative estimated payments by quarter"
+    formula: "Actual cumulative estimated tax paid by each quarterly due date"
+    inputs:
+      - "Estimated payments with dates"
+    notes: |
+      Unlike withholding, estimated payments are credited based on actual
+      payment dates. Payments made before a due date count toward that quarter.
+      Payments made after the final quarterly due date do not count in any
+      quarter because line 12 only includes payments made by the dates shown at
+      the top of columns A through D.
+      If no estimated payment dates are provided, all estimated payments are
+      treated as paid by Q4 (January 15 of following year).
+    edgeCases:
+      - "Payments made after the final quarterly due date are excluded from all columns"
+    testRef: "tests/engine/state/oh-it-sd-2210.test.ts::OH IT/SD 2210 Line 12 - cumulative estimated payments"
+
+  - line: "13"
+    description: "Total cumulative payments by quarter"
+    formula: "Line 11 + Line 12 (per column)"
+    inputs:
+      - "Line 11"
+      - "Line 12"
+    testRef: "tests/engine/state/oh-it-sd-2210.test.ts::OH IT/SD 2210 Line 13 - total cumulative payments"
+
+  - line: "14"
+    description: "Underpayment by quarter"
+    formula: "max(0, Line 10 - Line 13) per column"
+    inputs:
+      - "Line 10"
+      - "Line 13"
+    notes: "Floored at zero — an overpayment in one quarter does not offset a later quarter."
+    edgeCases:
+      - "Overpayment in Q1 does not reduce Q2 underpayment"
+    testRef: "tests/engine/state/oh-it-sd-2210.test.ts::OH IT/SD 2210 Line 14 - quarterly underpayment"
+
+  - line: "15"
+    description: "Interest rate factor per quarter"
+    formula: |
+      Pre-computed factor = annual_rate × days / 365.25
+      2025 factors (IT 1040 / SD 100):
+        A: 0.013580 (62 days, 8%)
+        B: 0.019932 (91 days, 8%)
+        C: 0.026311 (122 days, 107 days @8% + 15 days @7%)
+        D: 0.017248 (90 days, 7%)
+      2024 factors (IT 1040 / SD 100):
+        A: 0.013799 (63 days, 8%)
+        B: 0.019932 (91 days, 8%)
+        C: 0.026502 (121 days, 8%)
+        D: 0.019713 (90 days, 8%)
+    notes: "Factors account for rate changes at calendar year boundaries."
+    testRef: "tests/engine/state/oh-it-sd-2210.test.ts::OH IT/SD 2210 Line 15 - interest rate factors"
+
+  - line: "16"
+    description: "Interest penalty per quarter"
+    formula: "Line 14 × Line 15 (per column, rounded to nearest cent)"
+    inputs:
+      - "Line 14"
+      - "Line 15"
+    testRef: "tests/engine/state/oh-it-sd-2210.test.ts::OH IT/SD 2210 Line 16 - quarterly interest penalty"
+
+  - line: "17"
+    description: "Total interest penalty"
+    formula: "Sum of Line 16 columns A through D, rounded to nearest dollar"
+    inputs:
+      - "Line 16 columns A-D"
+    notes: |
+      This amount flows to IT 1040 line 11 in IT 1040 mode.
+      This amount flows to SD 100 line 9 in SD 100 mode.
+    edgeCases:
+      - "Penalty of $0 when all safe harbors met"
+      - "Penalty rounds to nearest dollar"
+      - "SD 100 mode uses school district line references in the audit trail"
+    testRef: "tests/engine/state/oh-it-sd-2210.test.ts::OH IT/SD 2210 Line 17 - total penalty"

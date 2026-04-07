@@ -1,0 +1,110 @@
+form: "New York IT-201 Yonkers Tax"
+fullName: "New York State Form IT-201 Lines 55-57 — Yonkers Resident and Nonresident Tax"
+taxYear: 2025
+irsReference: "https://www.tax.ny.gov/pdf/current_forms/it/it201i.pdf"
+
+notes: |
+  Yonkers imposes a local income tax surcharge on its residents and a separate
+  earnings tax on nonresidents who work in Yonkers. These are reported on IT-201
+  lines 55-57. Yonkers and New York City are geographically and legally separate;
+  a taxpayer cannot be a resident of both simultaneously.
+
+  Yonkers resident income tax surcharge (line 55):
+    Full-year Yonkers residents complete the IT-201 worksheet using line 46
+    total New York State taxes less the refundable-credit offsets listed on the
+    worksheet, plus any STAR reconciliation amount from Form IT-119 line 3.
+    The resulting worksheet line m is multiplied by 16.75%.
+
+  Yonkers nonresident earnings tax (line 56):
+    Nonresidents who earn wages or net self-employment income from sources
+    within Yonkers pay a tax of 0.5% on those earnings. This is computed on
+    Form Y-203 (Yonkers Nonresident Earnings Tax Return) and transferred to
+    IT-201 line 56.
+
+  Part-year Yonkers resident income tax surcharge (line 57):
+    Part-year Yonkers residents compute the surcharge on Form IT-360.1 Part 5.
+    For full-year New York State residents, Form IT-360.1 line 65 subtracts the
+    supported refundable credits from the Form IT-201 line 46 state-tax total,
+    Form IT-360.1 line 73 computes an income percentage from line 20 Column C
+    divided by line 20 Column A, Form IT-360.1 line 74 multiplies line 65 by
+    that percentage, and Form IT-360.1 line 77 multiplies line 74 by the
+    Yonkers resident tax rate of 16.75%.
+
+  Key rules:
+  - Full-year Yonkers surcharge uses the IT-201 line 55 worksheet based on line 46
+  - Surcharge rate of 16.75% applies uniformly regardless of filing status
+  - All amounts round to nearest dollar
+  - Yonkers residency is mutually exclusive with NYC residency
+  - Only one of lines 55, 56, or 57 applies to a given taxpayer (or none)
+
+lines:
+  - line: "55"
+    description: "Yonkers resident income tax surcharge"
+    formula: "max(0, Line 46 - worksheet refundable-credit offsets + STAR reconciliation amount) × 16.75%"
+    inputs:
+      - "Total New York State taxes (IT-201 line 46)"
+      - "Empire State child credit (IT-201 line 63)"
+      - "Real property tax credit (IT-201 line 67)"
+      - "NYS child and dependent care credit component from IT-216"
+      - "NY earned income credit (IT-201 line 65)"
+      - "Noncustodial parent NY earned income credit (IT-201 line 66)"
+      - "College tuition credit (IT-201 line 68)"
+      - "NYC school tax credit fixed amount (IT-201 line 69)"
+      - "NYC school tax credit rate reduction amount (IT-201 line 69a)"
+      - "IT-201-ATT line 13 refundable-credit subtotal"
+      - "STAR reconciliation amount (Form IT-119 line 3)"
+    notes: |
+      Full-year Yonkers residents only. The surcharge is computed on the
+      worksheet printed in the IT-201 instructions. The engine models worksheet
+      lines a through o directly from line 46 and the listed refundable-credit
+      offsets. Round to nearest dollar.
+    edgeCases:
+      - "Zero line 46 total state taxes: zero surcharge"
+      - "Refundable-credit offsets can reduce the worksheet base to zero"
+      - "STAR reconciliation amount increases the worksheet base"
+      - "Very low remaining base: surcharge rounds to small amount"
+      - "High income: large surcharge (no cap)"
+    testRef: "tests/engine/state/ny-it201-yonkers-tax.test.ts::Line 55 - full-year Yonkers resident surcharge uses the IT-201 worksheet base"
+
+  - line: "56"
+    description: "Yonkers nonresident earnings tax"
+    formula: "Yonkers-source wages/self-employment income × 0.5%"
+    inputs:
+      - "Yonkers-source wages and net self-employment income"
+    notes: |
+      For nonresidents who work in Yonkers. Computed on Form Y-203.
+      Tax rate is 0.5% (one-half percent) on Yonkers-source earnings.
+      Round to nearest dollar.
+    edgeCases:
+      - "Zero Yonkers wages: zero tax"
+      - "Very small Yonkers wages: tax rounds to small amount"
+    testRef: "tests/engine/state/ny-it201-yonkers-tax.test.ts::Line 56 - nonresident earnings tax 0.5% of Yonkers wages"
+
+  - line: "57"
+    description: "Part-year Yonkers resident income tax surcharge"
+    formula: "max(0, line 56 - line 64) × line 73 income percentage × 16.75%"
+    inputs:
+      - "Total New York State taxes (Form IT-201 line 46 / IT-360.1 line 56)"
+      - "Empire State child credit (Form IT-201 line 63 / IT-360.1 line 57)"
+      - "NYS child and dependent care credit (Form IT-216 line 14 / IT-360.1 line 58)"
+      - "Earned income credit (Form IT-201 line 65 / IT-360.1 line 59)"
+      - "Noncustodial parent NYS earned income credit (Form IT-201 line 66 / IT-360.1 line 60)"
+      - "Real property tax credit (Form IT-201 line 67 / IT-360.1 line 61)"
+      - "College tuition credit (Form IT-201 line 68 / IT-360.1 line 62)"
+      - "New York State refundable credits net of IT-119 line 3 (IT-360.1 line 63)"
+      - "Yonkers resident income percentage from IT-360.1 line 73"
+    notes: |
+      Part-year Yonkers residents who are full-year New York State residents
+      complete Form IT-360.1 Part 5 lines 56 through 77. The helper models the
+      resident IT-201 path only: line 64 sums the refundable credits, line 65
+      floors line 56 minus line 64 at zero, line 73 provides the income
+      percentage from the IT-360.1 worksheet, line 74 multiplies line 65 by the
+      percentage, and line 77 multiplies that result by 16.75%. Round to the
+      nearest dollar after applying the Yonkers rate. Omitting the line 73
+      income percentage is invalid for the part-year Yonkers path.
+    edgeCases:
+      - "Lower Yonkers-period income can reduce line 57 below a simple time-based proration"
+      - "Income percentage of zero yields no surcharge even when line 65 is positive"
+      - "Refundable credits can reduce line 65 to zero before the percentage is applied"
+      - "Missing line 73 income percentage is invalid"
+    testRef: "tests/engine/state/ny-it201-yonkers-tax.test.ts::Line 57 - part-year Yonkers surcharge uses IT-360.1 line 65 and line 73 income percentage"

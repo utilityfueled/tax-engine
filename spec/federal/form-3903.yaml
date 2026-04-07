@@ -1,0 +1,126 @@
+form: "Form 3903"
+fullName: "Moving Expenses"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i3903"
+
+notes: |
+  Form 3903 computes the deductible moving expenses for members of the
+  Armed Forces on active duty who move pursuant to a military order calling
+  for a permanent change of station.
+
+  Post-TCJA (2018–2025), the moving expense deduction under IRC §217 is
+  suspended for all taxpayers EXCEPT active-duty members of the Armed
+  Forces. IRC §217(k) preserves the deduction for military moves that
+  satisfy the permanent-change-of-station requirement.
+
+  The deduction is an above-the-line adjustment on Schedule 1 Line 14.
+  It reduces AGI and is available regardless of whether the taxpayer
+  itemizes or takes the standard deduction.
+
+  Deductible expenses (IRC §217(b)):
+    (1) Transportation and storage of household goods and personal effects.
+    (2) Travel (including lodging) from the old home to the new home.
+    Meals are NOT deductible for moves after 2017.
+
+  Employer reimbursements:
+    - Reimbursements for qualified moving expenses under IRC §132(g) are
+      excluded from gross income and should not be included as income.
+    - Any reimbursement received for deductible expenses must reduce the
+      deduction dollar-for-dollar.
+    - If the reimbursement exceeds actual expenses, the excess is taxable
+      income (reported as wages on Form W-2).
+
+  The form has two boxes that must be checked when applicable:
+    Box A: Move related to start of work at a new principal workplace.
+    Box B: Member of the Armed Forces on active duty, moving pursuant
+           to a military order for permanent change of station.
+
+  Only Box B moves are deductible for 2018–2025 returns under TCJA.
+  The engine requires military = true on the input.
+
+businessRuleValidation:
+  - rule: "reference-summary-packet"
+    description: "Inventory support counts this form as business-rule validated only when regression coverage proves the emitted packet artifact stays labeled as a non-filing reference summary and only surfaces the supported per-move Form 3903 Lines 1 through 5 outputs plus the resulting Schedule 1 Line 14 deduction."
+    testRef: "tests/pdf/fill-form-3903.test.ts::buildForm3903ReferenceSummary keeps the packet artifact reference-only and limited to supported military moving-expense outputs"
+
+lines:
+  - line: "1"
+    description: "Transportation and storage of household goods and personal effects"
+    formula: "Sum of all qualified transportation and storage costs"
+    irsRef: "IRC §217(b)(1)(A); Form 3903 Instructions, Line 1"
+    inputs:
+      - "Validated transportation and storage costs"
+    notes: >
+      Includes packing, crating, shipping, in-transit storage, and insurance
+      of household goods and personal effects. Storage within 30 days of the
+      move date (the date items are moved from the old home) plus any period
+      of time the new duty station location is unavailable.
+    testRef: "tests/engine/forms/form-3903.test.ts::Form 3903 line-by-line"
+
+  - line: "2"
+    description: "Travel and lodging expenses from old home to new home"
+    formula: "Sum of all qualified travel and lodging costs"
+    irsRef: "IRC §217(b)(1)(B); Form 3903 Instructions, Line 2"
+    inputs:
+      - "Validated travel and lodging expenses"
+    notes: >
+      Includes the cost of transportation and lodging for the taxpayer and
+      household members traveling from the old home to the new home. Does
+      NOT include meals (suspended by TCJA for all taxpayers, military
+      included). Standard mileage rate for moving is 22 cents per mile for
+      2025. Only one trip per person is deductible.
+    edgeCases:
+      - "Meals are never deductible for post-2017 moves"
+      - "One trip per person; additional trips are not deductible"
+    testRef: "tests/engine/forms/form-3903.test.ts::Form 3903 line-by-line"
+
+  - line: "3"
+    description: "Total moving expenses"
+    formula: "Line 1 + Line 2"
+    irsRef: "Form 3903 Instructions, Line 3"
+    inputs:
+      - "Form 3903 Line 1"
+      - "Form 3903 Line 2"
+    testRef: "tests/engine/forms/form-3903.test.ts::Form 3903 line-by-line"
+
+  - line: "4"
+    description: "Reimbursements for moving expenses excluded from income"
+    formula: "Total employer/government reimbursements for qualified moving expenses that were excluded from W-2 wages"
+    irsRef: "IRC §132(g); Form 3903 Instructions, Line 4"
+    inputs:
+      - "Employer/government reimbursements excluded from income"
+    notes: >
+      Only enter reimbursements that were NOT included in Form W-2 Box 1.
+      If the reimbursement was included in W-2 wages, do NOT enter it here
+      (the full deduction on Line 3 offsets the W-2 inclusion). If the
+      employer reported reimbursements in W-2 Box 12 Code P, those amounts
+      are excluded from W-2 income and must be entered on Line 4.
+    edgeCases:
+      - "If reimbursement exceeds expenses, the excess should have been included in W-2 wages by the employer"
+      - "Government dislocation allowance (DLA) is a reimbursement"
+    testRef: "tests/engine/forms/form-3903.test.ts::Form 3903 line-by-line"
+
+  - line: "5"
+    description: "Deductible moving expenses"
+    formula: "max(0, Line 3 - Line 4)"
+    irsRef: "IRC §217; Form 3903 Instructions, Line 5; Schedule 1 Instructions, Line 14"
+    inputs:
+      - "Form 3903 Line 3"
+      - "Form 3903 Line 4"
+    notes: >
+      This amount flows to Schedule 1 Line 14 as an above-the-line
+      adjustment to income. If reimbursements exceed expenses, the deduction
+      is $0 (the excess reimbursement is taxable income on W-2, not handled
+      here).
+    edgeCases:
+      - "When reimbursements exceed expenses, the deduction is $0"
+      - "The excess reimbursement scenario is handled on W-2, not on Form 3903"
+      - "Multiple moves in the same year: file a separate Form 3903 for each move, sum deductions"
+    testRef: "tests/engine/forms/form-3903.test.ts::Form 3903 line-by-line"
+
+  - line: "packet"
+    description: "Draft packet inclusion rule for supported Form 3903 military moving-expense inputs"
+    formula: "When supported military moving-expense inputs are present, include a non-filing reference-summary PDF in the packet that lists each supported move's Form 3903 Lines 1 through 5 amounts and the resulting Schedule 1 Line 14 deduction."
+    irsRef: "Form 3903 Instructions, Lines 1-5; Schedule 1 Instructions, Line 14"
+    notes: "This packet slice intentionally emits a deterministic reference summary instead of attempting to recreate a filed Form 3903, so the draft packet stays honest about the supported military-only moving-expense scope."
+    testRef: "tests/pdf/fill-form-3903.test.ts::fillReturn includes a Form 3903 reference summary when supported military moving-expense inputs are present"

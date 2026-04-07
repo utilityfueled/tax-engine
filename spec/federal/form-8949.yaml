@@ -1,0 +1,71 @@
+form: "Form 8949"
+fullName: "Sales and Other Dispositions of Capital Assets"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i8949"
+
+notes: |
+  Form 8949 reports individual capital asset transactions. Transactions are
+  categorized by holding period (Part I: short-term, Part II: long-term) and
+  by whether cost basis was reported to the IRS (Box A/D: reported, Box B/E: not reported, Box C/F: no 1099-B).
+  Totals flow to Schedule D.
+
+lines:
+  # ── Part I: Short-Term ───────────────────────────────────
+  - line: "Part I Box A"
+    description: "Short-term transactions with basis reported to IRS"
+    formula: "Filter 1099-B transactions: holdingPeriod=short AND basisReportedToIRS=true"
+    irsRef: "Form 8949 Instructions, Part I"
+    inputs:
+      - "1099-B transactions (short-term, basis reported)"
+    testRef: "tests/engine/forms/form-8949.test.ts::Form 8949 Part I Box A - short-term basis reported"
+
+  - line: "Part I Box B"
+    description: "Short-term transactions with basis NOT reported to IRS"
+    formula: "Filter 1099-B transactions: holdingPeriod=short AND basisReportedToIRS=false"
+    irsRef: "Form 8949 Instructions, Part I"
+    testRef: "tests/engine/forms/form-8949.test.ts::Form 8949 Part I Box B - short-term basis not reported"
+
+  - line: "Part I totals"
+    description: "Short-term totals (proceeds, cost basis, adjustments, gain/loss)"
+    formula: "Sum of all Part I transactions: proceeds, cost, adjustments, gain/loss columns"
+    irsRef: "Form 8949 Instructions, Part I Line 2"
+    testRef: "tests/engine/forms/form-8949.test.ts::Form 8949 Part I totals - short-term summary"
+
+  # ── Part II: Long-Term ───────────────────────────────────
+  - line: "Part II Box D"
+    description: "Long-term transactions with basis reported to IRS"
+    formula: "Filter 1099-B transactions: holdingPeriod=long AND basisReportedToIRS=true"
+    irsRef: "Form 8949 Instructions, Part II"
+    testRef: "tests/engine/forms/form-8949.test.ts::Form 8949 Part II Box D - long-term basis reported"
+
+  - line: "Part II Box E"
+    description: "Long-term transactions with basis NOT reported to IRS"
+    formula: "Filter 1099-B transactions: holdingPeriod=long AND basisReportedToIRS=false"
+    irsRef: "Form 8949 Instructions, Part II"
+    testRef: "tests/engine/forms/form-8949.test.ts::Form 8949 Part II Box E - long-term basis not reported"
+
+  - line: "Part II totals"
+    description: "Long-term totals (proceeds, cost basis, adjustments, gain/loss)"
+    formula: "Sum of all Part II transactions"
+    irsRef: "Form 8949 Instructions, Part II Line 2"
+    testRef: "tests/engine/forms/form-8949.test.ts::Form 8949 Part II totals - long-term summary"
+
+  # ── Wash Sale Handling ───────────────────────────────────
+  - line: "adjustment-W"
+    description: "Wash sale loss disallowed (Code W)"
+    formula: "If wash sale, adjustment = washSaleDisallowed (positive, added back to reduce loss)"
+    irsRef: "Form 8949 Instructions, Column (g) Code W"
+    edgeCases:
+      - "Disallowed loss added to cost basis of replacement shares"
+      - "Wash sale: substantially identical security bought within 30 days before/after sale"
+      - "Applies to both short-term and long-term transactions"
+    testRef: "tests/engine/forms/form-8949.test.ts::Form 8949 wash sale adjustment"
+
+  # ── Flow to Schedule D ──────────────────────────────────
+  - line: "to-schedule-d"
+    description: "Totals flow to Schedule D"
+    formula: |
+      Part I totals → Schedule D Line 1a/1b/1c (short-term by box)
+      Part II totals → Schedule D Line 8a/8b/8c (long-term by box)
+    irsRef: "Schedule D Instructions, Lines 1-3 and 8-10"
+    testRef: "tests/engine/forms/form-8949.test.ts::Form 8949 totals flow to Schedule D"

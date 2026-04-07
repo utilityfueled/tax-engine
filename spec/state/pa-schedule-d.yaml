@@ -1,0 +1,156 @@
+form: "PA-Schedule-D"
+fullName: "Pennsylvania Schedule D — Sale, Exchange, or Disposition of Property"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40d.pdf"
+
+notes: |
+  Pennsylvania Schedule D computes Class 5 net gains or losses from the sale,
+  exchange, or other disposition of property. The supported resident slice
+  covers the property-disposition sources already normalized by the tax engine:
+
+    - Form 1099-B transactions reported using Pennsylvania basis rules
+    - Federal Schedule K-1 Boxes 8, 9a, and 10 when no Pennsylvania RK-1 or
+      NRK-1 statement was supplied for the same entity
+    - Pennsylvania-classified pass-through gains from PA RK-1 / NRK-1
+      statements
+    - Form 6781 Section 1256 net gains or losses
+    - Form 6252 installment-sale gains
+    - Taxable gain from the sale of a principal residence after the supported
+      IRC section 121 exclusion computation
+
+  The paper schedule uses whole dollars. The engine rounds the schedule-level
+  line totals to the nearest dollar. For married filing jointly returns, the
+  2025 instructions require separate taxpayer and spouse Schedule D
+  computations and prohibit using one spouse's loss to reduce the other
+  spouse's gain on PA-40 Line 5. The supported engine applies that rule to the
+  normalized Class 5 sources that can be owner-tagged or reasonably treated as
+  joint.
+
+packetRules:
+  packetBehavior: "reference-summary-pdf"
+  includeWhen:
+    - "A Pennsylvania return packet is being assembled and supported PA Schedule D activity is present through a non-zero supported line, validated zero-net transaction detail, a supported like-kind exchange detail row, or a Yes answer to the digital-asset question."
+    - "The packet path uses the validated Schedule D source inputs and computed result together so zero-net sales and exchanges still receive a reference summary when Pennsylvania disclosure is still required."
+  suppressWhen:
+    - "No Pennsylvania return packet is being assembled"
+    - "No supported PA Schedule D disclosure trigger is present on the return"
+  notes: |
+    Until an official PA Schedule D filler exists, the packet path emits
+    `pa-schedule-d-reference.pdf` as a reference summary only. Packet
+    disclosures must therefore keep Pennsylvania packet completeness partial
+    whenever this reference summary is attached.
+
+businessRuleValidation:
+  - rule: "pa-schedule-d-reference-packet"
+    description: "Inventory support counts the Pennsylvania Schedule D packet path as validated only when fillReturn emits `pa-schedule-d-reference.pdf` whenever supported Schedule D activity produces a packet trigger on a Pennsylvania return."
+    testRef: "tests/pdf/fill-pa-schedule-d.test.ts::fillReturn includes the Pennsylvania Schedule D reference summary when the return includes supported Schedule D activity"
+  - rule: "pa-schedule-d-reference-zero-net-packet"
+    description: "Inventory support counts the Pennsylvania Schedule D packet trigger as validated only when regression coverage proves fillReturn still emits the reference summary for zero-net supported transaction detail that Pennsylvania still requires on Schedule D."
+    testRef: "tests/pdf/fill-pa-schedule-d.test.ts::fillReturn includes the Pennsylvania Schedule D reference summary when supported 1099-B activity nets to zero"
+  - rule: "pa-schedule-d-reference-suppression"
+    description: "Inventory support counts the Pennsylvania Schedule D suppression rule as validated only when regression coverage proves fillReturn omits the reference summary when no supported Schedule D trigger is present."
+    testRef: "tests/pdf/fill-pa-schedule-d.test.ts::fillReturn suppresses the Pennsylvania Schedule D reference summary when no supported Schedule D trigger is present"
+  - rule: "pa-schedule-d-reference-disclosure"
+    description: "Inventory support counts the Pennsylvania Schedule D packet disclosure as validated only when readiness regression coverage keeps packet completeness partial while only the Schedule D reference summary is available beyond PA-40."
+    testRef: "tests/utils/return-readiness.test.ts::marks Pennsylvania packets partial when a PA Schedule D reference summary is attached"
+
+lines:
+  - line: "digital-assets"
+    description: "Digital asset question"
+    formula: |
+      Check Yes if, at any time during the tax year, the taxpayer:
+        - received a digital asset as a reward, award, or payment for property
+          or services; or
+        - sold, exchanged, or otherwise disposed of a digital asset or a
+          financial interest in a digital asset.
+      Otherwise check No.
+    notes: |
+      The supported engine marks the question Yes when the caller explicitly
+      reports digital-asset compensation or when a supported Schedule D
+      transaction or like-kind exchange is tagged as involving a digital asset.
+    testRef: "tests/engine/state/pa-schedule-d.test.ts::PA Schedule D digital asset question turns yes for digital-asset compensation and exchanges"
+
+  - line: "2"
+    description: "Recognized like-kind exchange gain or loss"
+    formula: |
+      Sum the recognized gain or loss from supported like-kind exchanges.
+      If a supported exchange omits the recognized gain or loss amount,
+      treat it as 0.
+    notes: |
+      The 2025 schedule added a specific area for like-kind exchanges and
+      instructs taxpayers to report all like-kind exchanges there. The
+      supported engine carries only the recognized amount into Line 2 and
+      preserves the per-exchange detail for auditability.
+    testRef: "tests/engine/state/pa-schedule-d.test.ts::PA Schedule D Line 2 reports recognized like-kind exchange gain and defaults omitted gain to zero"
+
+  - line: "1"
+    description: "General property dispositions"
+    formula: |
+      Sum Pennsylvania-basis gains and losses from supported Form 1099-B
+      transactions and supported Form 6781 Section 1256 activity.
+      For each Form 1099-B transaction:
+        proceeds - cost basis - adjustments + wash-sale disallowed amount
+      For supported Form 6781 activity:
+        section1256Gains - section1256Losses + adjustments
+    notes: |
+      Pennsylvania does not apply the federal short-term/long-term rate split;
+      all supported gains and losses remain in Class 5. Mutual-fund capital
+      gain distributions stay on PA-40 Line 3 through PA Schedule B and are
+      not included on Schedule D.
+    testRef: "tests/engine/state/pa-schedule-d.test.ts::PA Schedule D Line 1 and Line 3 combine 1099-B and Section 1256 gains and losses"
+
+  - line: "3"
+    description: "Net gain or loss from Lines 1 and 2"
+    formula: "Line 1 plus any supported Line 2 like-kind exchange amount"
+    notes: |
+      The supported resident slice defaults Line 2 to zero when no supported
+      like-kind exchange input is supplied.
+    testRef: "tests/engine/state/pa-schedule-d.test.ts::PA Schedule D Line 1 and Line 3 combine 1099-B and Section 1256 gains and losses"
+
+  - line: "4"
+    description: "Installment-sale gain"
+    formula: |
+      Sum the taxable gain from supported Form 6252 records using the
+      Pennsylvania rule that all recognized gain components, including federal
+      ordinary recapture, flow to Class 5.
+    notes: |
+      The PA-40 D instructions direct installment-sale gains from REV-1689 /
+      PA Schedule D-1 to this line. The supported engine derives the same gain
+      from normalized Form 6252 inputs.
+    testRef: "tests/engine/state/pa-schedule-d.test.ts::PA Schedule D Line 4 carries installment sale gain into the Class 5 total"
+
+  - line: "7"
+    description: "Pass-through entity gain or loss"
+    formula: |
+      Add Pennsylvania-classified net gain or loss from PA Schedule RK-1 /
+      NRK-1 statements. When no Pennsylvania statement was provided for an
+      entity, fall back to the federal Schedule K-1 Box 8, 9a, and 10 gain or
+      loss amounts for that entity.
+    notes: |
+      If a Pennsylvania statement and a federal Schedule K-1 identify the same
+      entity, the Pennsylvania statement controls and the federal K-1 is
+      excluded to avoid double counting.
+    testRef: "tests/engine/state/pa-schedule-d.test.ts::PA Schedule D Line 7 prefers Pennsylvania pass-through statements over duplicated federal K-1 gains"
+
+  - line: "8"
+    description: "Taxable gain from the sale of a principal residence"
+    formula: |
+      Sum supported taxable principal-residence gains after applying the
+      supported IRC section 121 exclusion computation. If a principal-residence
+      sale produces a loss, report zero for that sale on Line 8.
+    testRef: "tests/engine/state/pa-schedule-d.test.ts::PA Schedule D Line 8 reports taxable principal residence gain but not a principal residence loss"
+
+  - line: "12"
+    description: "Total PA taxable gain or loss"
+    formula: |
+      Add Lines 3 through 11.
+      If filing status is Married, Filing Jointly:
+        - compute taxpayer and spouse Schedule D totals separately
+        - split unowned supported transactions equally between taxpayer and spouse
+        - if both separate totals are gains or both are losses, combine them for PA-40 Line 5
+        - if one spouse has a gain and the other has a loss, report only the positive spouse total on PA-40 Line 5
+    notes: |
+      The supported engine exposes both the combined Schedule D total and the
+      PA-40-reportable Class 5 amount after the married-jointly separate-spouse
+      rule is applied.
+    testRef: "tests/engine/state/pa-schedule-d.test.ts::PA Schedule D Line 12 does not allow one spouse's loss to offset the other spouse's gain on a joint return"

@@ -1,0 +1,611 @@
+form: "Ohio Input Adapter"
+fullName: "Ohio Resident Return Input Adapter — Bridges Federal Documents to Ohio Engine"
+taxYear: 2025
+
+notes: |
+  The Ohio input adapter extracts Ohio-relevant data from the standard federal
+  tax documents (W-2s, 1099-Rs, SSA-1099s) and the federal TaxReturnResult to
+  produce a ready-to-use OhioResidentReturnInput.
+
+  This module bridges the gap between raw input documents and the Ohio engine's
+  structured input, enabling end-to-end tax calculation without manual
+  extraction of Ohio-specific values.
+
+  Auto-extracted fields:
+    - Ohio withholding from Ohio W-2 box 17, W-2G box 15, and supported 1099 state withholding boxes (1099-G box 11, 1099-K box 8, 1099-R box 14, 1099-NEC box 5, 1099-MISC box 16)
+    - School district withholding from W-2 box 19 (state = "OH")
+    - Taxable Social Security benefits (from federal result)
+    - Federal AGI (from federal result)
+    - Federal earned income credit (from federal result)
+    - Retirement income from 1099-R taxable amounts
+    - Senior citizen status (age 65+ as of Dec 31 of tax year)
+    - Exemption count (taxpayer + spouse if MFJ + dependents)
+    - Both-spouses qualifying income flag, with optional explicit spouse-level qualifying income inputs for the joint filing credit
+    - Qualifying business income via IT BUS (from Schedule C, F, K-1s)
+    - Federal interest exempt from Ohio from 1099-INT box 3 (US government obligations)
+    - State/municipal tax refunds from 1099-G box 2
+
+  User-provided Ohio-specific fields (cannot be derived from federal data):
+    - Medical savings account worksheet inputs (taxpayer/spouse contributions, earnings, nonmedical withdrawals)
+    - STABLE contributions
+    - STABLE contribution carryforwards from prior years
+    - Ohio 529 contributions
+    - Ohio 529 contribution carryforwards from prior years
+    - School district overrides for residency factors, multi-district moves, or manual corrections
+    - Campaign contributions
+    - Home school educational expenses and qualifying student count
+    - Scholarship donations to eligible SGOs
+    - Nonchartered, nonpublic school tuition paid for dependents
+    - Displaced worker training expenses
+    - Qualifying lump sum distribution recipient ages
+    - Non-Ohio state/local government interest
+    - Pass-through entity add-back
+    - Other additions/deductions
+    - Taxes paid to other states (for resident credit)
+    - IT/SD 2210 safe-harbor inputs (compute flag, prior-year liability, timely-filed flag, dated estimated payments)
+    - School-district IT/SD 2210 safe-harbor inputs (prior-year liability, timely-filed flag)
+
+packetRules:
+  packetBehavior: "indirect-reference-summary-pdf"
+  includeWhen:
+    - "Adapter-derived Ohio school districts produce an SD 100 result, causing the Ohio SD 100 reference-summary page to be attached"
+  suppressWhen:
+    - "No Ohio school district return is derived or ambiguous locality labels fail to resolve, so the Ohio SD 100 reference-summary page stays suppressed"
+  notes: |
+    The adapter does not render PDFs directly. Its school-district derivation is
+    the packet-inclusion gate for the Ohio SD 100 reference summary.
+
+businessRuleValidation:
+  - rule: "sd100-reference-summary-gating"
+    description: "Inventory support counts this adapter as business-rule validated only when regression coverage proves adapter-derived SD-prefixed district names can auto-attach the Ohio SD 100 reference summary and ambiguous names stay suppressed."
+    testRef: "tests/pdf/fill-oh-reference-forms.test.ts::fillOhioReferenceForms auto-includes and suppresses the Ohio SD 100 reference summary based on official SD-prefixed district names"
+
+lines:
+  - line: "filingStatus"
+    description: "Federal filing status mapped to Ohio engine filing status"
+    source: "TaxReturnResult.filingStatus"
+    formula: |
+      Accept and pass through only the supported filing statuses:
+        - single
+        - married_filing_jointly
+        - married_filing_separately
+        - head_of_household
+        - qualifying_surviving_spouse
+      Any other value must throw an error instead of defaulting.
+    notes: |
+      The Ohio resident engine only supports the standard federal filing-status
+      set. Silently coercing an unknown status to single would miscompute
+      exemptions, joint filing credit eligibility, and the overall return.
+    edgeCases:
+      - "Unsupported filing status strings must throw a clear error"
+    testRef: "tests/engine/state/oh-input-adapter.test.ts::filing status - unsupported status throws"
+
+  - line: "federalAgi"
+    description: "Federal AGI passed to Ohio engine"
+    source: "TaxReturnResult.agi"
+    formula: "Direct pass-through"
+    testRef: "tests/engine/state/oh-input-adapter.test.ts::extracts federal AGI from federal result"
+
+  - line: "ohioWithholding"
+    description: "Ohio state tax withholding from income statements"
+    source: |
+      Ohio Schedule of Withholding:
+        - Line 1: W-2 box 17 where W-2 state = 'OH'
+        - Line 2: W-2G box 15 where W-2G state = 'OH'
+        - Line 3: 1099-G box 11 where 1099-G state = 'OH'
+        - Line 4: 1099-K box 8 where 1099-K state = 'OH'
+        - Line 5: 1099-R box 14 where 1099-R state = 'OH'
+        - Line 5a: 1099-NEC box 5 where 1099-NEC state = 'OH'
+        - Line 5b: 1099-MISC box 16 where 1099-MISC state = 'OH'
+    formula: |
+      calculateOhioScheduleOfWithholding({
+        w2s,
+        formW2G,
+        form1099G,
+        form1099K,
+        form1099R,
+        form1099Nec,
+        form1099Misc
+      }).line6_totalOhioWithholding
+    notes: |
+      Ohio IT 1040 line 14 flows from the Schedule of Ohio Withholding. The
+      adapter now delegates this extraction to the dedicated Ohio Schedule of
+      Withholding module so the state withholding path has its own spec and
+      audit trail. In addition to the booklet's W-2, W-2G, and 1099 examples,
+      the engine supports the modeled 1099 forms that can carry Ohio
+      withholding: 1099-G, 1099-K, 1099-R, 1099-NEC, and 1099-MISC.
+    edgeCases:
+      - "No Ohio withholding statements -> $0"
+      - "Multiple Ohio W-2, W-2G, 1099-G, 1099-K, 1099-R, 1099-NEC, and 1099-MISC statements are summed together"
+      - "Statements for other states are excluded"
+      - "Statements with no state field are excluded"
+    testRef: "tests/engine/state/oh-input-adapter.test.ts::extracts Ohio withholding from W-2s W-2Gs and supported 1099s"
+
+  - line: "sdWithholding"
+    description: "School district withholding from Ohio W-2 and supported 1099-R statements"
+    source: |
+      Sum of:
+        - W-2 box 19 (localTaxWithheld) where W-2 state = 'OH' and box 20 locality name identifies a school district using a 1- to 4-digit school-district taxation number, an "SD ####" school-district label, or an "SD" plus official or abbreviated district-name label
+        - modeled 1099-R local school district withholding where 1099-R state = 'OH'
+    formula: |
+      sum(
+        w2.localTaxWithheld
+        for w2 in w2s
+        where w2.state == 'OH'
+        and (
+          matches(trim(w2.localityName), /^\d{1,4}$/)
+          or matches(trim(w2.localityName), /^SD\s*#?\s*\d{1,4}(?:\b.*)?$/i)
+        )
+      )
+      + sum(form1099R.localTaxWithheld for form1099R in form1099R where form1099R.state == 'OH')
+    notes: |
+      The 2025 Ohio SD 100 booklet's Schedule of School District Withholding
+      instructs taxpayers to report school district withholding from income
+      statements including W-2 and 1099 statements. Ohio W-2 box 19 typically
+      contains school district withholding, but the booklet's sample-statement
+      instructions also warn that box 19 can contain city withholding instead.
+      The Ohio Department of Taxation's Finder publishes school district tax
+      rates keyed by a 4-digit taxation school district number. Based on that
+      official numbering scheme and the booklet's instruction that school
+      district withholding is generally identified by the district number in
+      box 20 or box 14, the adapter only treats numeric labels, "SD ####"
+      labels, or "SD" plus official or abbreviated district names as school-
+      district withholding, and excludes blank or unrelated textual locality
+      labels such as municipal names or payroll processors.
+      The modeled engine also supports an explicit Form 1099-R local
+      withholding field for Ohio retirement statements that report school
+      district withholding.
+    edgeCases:
+      - "No Ohio W-2s or supported 1099-R statements -> $0"
+      - "W-2 with no localTaxWithheld -> excluded"
+      - "Ohio W-2 locality names containing only 1 to 4 digits are treated as school district codes and are included"
+      - "Ohio W-2 locality names prefixed with SD and a district code are treated as school district withholding and are included"
+      - "Ohio W-2 locality names prefixed with SD and a taxable official district name are treated as school district withholding and are included"
+      - "Ohio W-2 locality names prefixed with SD and a uniquely matching abbreviated district name are treated as school district withholding and are included"
+      - "Ohio W-2 locality names containing non-digit text without an SD prefix are treated as municipal withholding labels and are excluded"
+      - "Ohio W-2s with no locality name are excluded because the input does not identify whether the local withholding is school district or city tax"
+      - "1099-R with no localTaxWithheld -> excluded"
+      - "Statements for other states are excluded"
+    testRef: "tests/engine/state/oh-input-adapter.test.ts::SD withholding includes Ohio school district locality codes abbreviated names and excludes city locality labels"
+
+  - line: "schoolDistricts"
+    description: "Auto-derived or overlay-resolved school district entries from official Ohio district numbers and names"
+    source: |
+      OhioOverlayInput.schoolDistricts, otherwise derive from Ohio W-2 box 20
+      locality names that carry either an official school district number or an
+      SD-prefixed official or abbreviated district name from The Finder rate table.
+    formula: |
+      If overlay.schoolDistricts is supplied:
+        for each overlay entry:
+          if districtNumber is present:
+            keep the caller-supplied district number
+          else if districtName uniquely matches an official taxing district name
+          or supported abbreviated alias:
+            resolve districtNumber, taxType, and rate from the Finder-backed district table
+          else:
+            keep the entry as supplied for downstream validation
+      Else:
+        deduplicate by district number across Ohio W-2s where:
+          - localityName matches /^\d{1,4}$/; or
+          - localityName starts with "SD" followed by a 1- to 4-digit district number
+          - localityName starts with "SD" followed by text that uniquely matches an official taxable district name or supported abbreviated alias for the tax year
+        For each derived district:
+          - resolve the official district metadata from lookupOhioSchoolDistrictMetadata(taxYear, districtNumber)
+          - keep only districts that are taxing for that tax year
+          - set districtNumber, taxType, and rate from the official lookup
+          - for earned-income districts, sum the associated W-2 state wages (or W-2 box 1 wages when state wages are unavailable) into district wages
+    notes: |
+      The 2025 Ohio booklet's sample W-2 instructions state that box 20 for
+      school district withholding typically shows "SD" and a four-digit code or
+      "SD" and the abbreviated school district name, while a locality name that
+      begins with "R" followed by a three- or four-digit number indicates city
+      income tax instead. The booklet also directs taxpayers to The Finder and
+      the published school district number list to identify their taxation
+      district. This adapter supports both the deterministic code-based cases
+      and SD-prefixed official or abbreviated district-name labels by deriving
+      SD 100 district entries from Ohio W-2 locality values and resolving them
+      through the Finder-backed metadata lookup for district number, tax type,
+      and rate.
+      Callers can still override the derived list when they need part-year
+      residency factors, non-W-2 district residency, or manual corrections.
+      Manual overlay entries may also provide an official taxing district name
+      or supported abbreviated district alias instead of the 4-digit taxation
+      number; the adapter resolves uniquely matching names through the same
+      Finder-backed lookup so callers do not need to know the numeric code up
+      front.
+    edgeCases:
+      - "Explicit overlay.schoolDistricts takes precedence over auto-derived W-2 districts"
+      - "Overlay entries with blank districtNumber and a uniquely matching official or abbreviated districtName resolve official district number, tax type, and rate"
+      - "Ohio W-2 locality names with numeric district codes derive official district tax type and rate"
+      - "Ohio W-2 locality names prefixed with SD derive official district tax type and rate"
+      - "Ohio W-2 locality names prefixed with SD and a taxable official district name derive official district tax type and rate"
+      - "Ohio W-2 locality names prefixed with SD and a uniquely matching abbreviated district name derive official district tax type and rate"
+      - "Locality names beginning with R followed by 3 or 4 digits are city-tax codes and are excluded"
+      - "Non-taxing district codes are excluded because no SD 100 filing is required"
+      - "Bare locality names without an SD prefix remain excluded so municipal labels are not misclassified"
+      - "Multiple W-2s for the same earned-income district sum wages into one derived district entry"
+    testRef: "tests/engine/state/oh-input-adapter.test.ts::abbreviated school district names resolve through W-2 locality labels and overlay names"
+
+  - line: "taxableSocialSecurity"
+    description: "Taxable Social Security benefits from federal"
+    source: "TaxReturnResult.socialSecurityBenefitsTaxable"
+    formula: "Direct pass-through"
+    notes: "Ohio fully deducts taxable Social Security on Schedule of Adjustments line 17."
+    testRef: "tests/engine/state/oh-input-adapter.test.ts::extracts taxable Social Security from federal result"
+
+  - line: "federalEarnedIncomeCredit"
+    description: "Federal earned income credit from federal result"
+    source: "TaxReturnResult.earnedIncomeCredit"
+    formula: "Direct pass-through"
+    notes: "Ohio EIC = 30% of federal EIC."
+    testRef: "tests/engine/state/oh-input-adapter.test.ts::extracts federal EIC from federal result"
+
+  - line: "federal2441Line9c"
+    description: "Ohio child and dependent care credit worksheet line 2 input"
+    source: "OhioOverlayInput.federal2441Line9c or TaxReturnResult.form2441.qualifyingExpenses"
+    formula: |
+      If overlay.federal2441Line9c is supplied:
+        overlay.federal2441Line9c
+      Else:
+        federalResult.form2441?.qualifyingExpenses ?? $0
+    notes: |
+      Page 44 of the 2025 Ohio IT 1040 booklet instructs taxpayers claiming the
+      Ohio child and dependent care credit to enter federal Form 2441 line 9c
+      on worksheet line 2. When the federal engine has already computed Form
+      2441, the adapter should auto-fill this amount from the validated federal
+      result instead of requiring a separate overlay entry.
+    edgeCases:
+      - "No federal Form 2441 result and no overlay -> $0"
+      - "Explicit overlay overrides the federal result"
+    testRef: "tests/engine/state/oh-input-adapter.test.ts::extracts federal Form 2441 values from federal result"
+
+  - line: "federal2441Line11"
+    description: "Ohio child and dependent care credit worksheet line 3 input"
+    source: "OhioOverlayInput.federal2441Line11 or TaxReturnResult.form2441.credit"
+    formula: |
+      If overlay.federal2441Line11 is supplied:
+        overlay.federal2441Line11
+      Else:
+        federalResult.form2441?.credit ?? $0
+    notes: |
+      Page 44 of the 2025 Ohio IT 1040 booklet instructs taxpayers with MAGI of
+      $20,000 to $39,999 to use 25% of federal Form 2441 line 11. The engine's
+      stored federal Form 2441 result exposes the computed federal dependent
+      care credit as `form2441.credit`, which is the amount Ohio needs for this
+      worksheet input.
+    edgeCases:
+      - "No federal Form 2441 result and no overlay -> $0"
+      - "Explicit overlay overrides the federal result"
+    testRef: "tests/engine/state/oh-input-adapter.test.ts::federal Form 2441 overlay overrides auto-extracted values"
+
+  - line: "homeSchoolCreditOverlay"
+    description: "Home school expenses credit overlay fields"
+    source: "OhioOverlayInput.homeSchoolExpenses + OhioOverlayInput.homeSchoolQualifyingStudents"
+    formula: "Direct pass-through"
+    notes: |
+      The adapter cannot derive Ohio home school educational expenses or the
+      count of qualifying students from federal forms, so these fields must be
+      supplied by the caller when claiming Ohio Schedule of Credits line 14.
+    testRef: "tests/engine/state/oh-input-adapter.test.ts::passes through home school credit overlay fields"
+
+  - line: "educationCreditOverlays"
+    description: "Scholarship donation and nonchartered tuition overlay fields"
+    source: "OhioOverlayInput.scholarshipDonations + OhioOverlayInput.noncharteredSchoolTuition"
+    formula: "Direct pass-through"
+    notes: |
+      The adapter cannot derive Ohio scholarship donations or tuition paid to
+      eligible nonchartered, nonpublic schools from federal forms, so these
+      fields must be supplied by the caller when claiming Ohio Schedule of
+      Credits lines 15 and 16.
+    testRef: "tests/engine/state/oh-input-adapter.test.ts::passes through education credit overlay fields"
+
+  - line: "itSd2210Overlay"
+    description: "IT/SD 2210 underpayment-penalty overlay fields"
+    source: |
+      OhioOverlayInput.computeUnderpaymentPenalty
+      + OhioOverlayInput.priorYearTaxLiability
+      + OhioOverlayInput.priorYearTimelyFiled
+      + OhioOverlayInput.estimatedPaymentSchedule
+    formula: "Direct pass-through"
+    notes: |
+      The adapter cannot derive Ohio IT/SD 2210 safe-harbor elections,
+      prior-year liability, timely-filed status, or the dates/amounts of
+      estimated payments from the federal documents alone. When the caller wants
+      the wrapped Ohio engine to compute the IT/SD 2210 underpayment penalty,
+      these inputs must pass through unchanged to the resident-return
+      orchestrator. The 2025 Ohio booklet notes that taxpayers may owe an
+      interest penalty for underpayment of estimated taxes and directs them to
+      form IT/SD 2210. See booklet page 7 and R.C. 5747.09.
+    testRef: "tests/engine/state/oh-input-adapter.test.ts::passes through IT SD 2210 overlay fields"
+
+  - line: "sdItSd2210Overlay"
+    description: "School-district IT/SD 2210 overlay fields"
+    source: |
+      OhioOverlayInput.sdPriorYearTaxLiability
+      + OhioOverlayInput.sdPriorYearTimelyFiled
+      + OhioOverlayInput.sdEstimatedPayments
+      + OhioOverlayInput.sdUnderpaymentPenalty
+    formula: "Direct pass-through"
+    notes: |
+      The Ohio booklet uses the same IT/SD 2210 form for school district tax
+      underpayment penalties. These school-district-specific penalty inputs are
+      not derivable from federal documents and must therefore pass through the
+      adapter unchanged so the wrapped engine can either auto-compute or accept
+      an override for the SD 100 penalty path.
+    testRef: "tests/engine/state/oh-input-adapter.test.ts::passes through school district IT SD 2210 overlay fields"
+
+  - line: "displacedWorkerWorksheetOverlay"
+    description: "Displaced worker worksheet recipient inputs"
+    source: "OhioOverlayInput.displacedWorkerRecipients"
+    formula: "Direct pass-through"
+    notes: |
+      The adapter cannot derive from federal forms whether the taxpayer, the
+      spouse, or both qualify for the Ohio displaced worker training credit, or
+      how much prior-year displaced worker credit attaches to each person. When
+      the caller has that worksheet detail, it may pass the per-recipient
+      amounts through this overlay so Ohio Schedule of Credits line 7 can apply
+      the official two-column worksheet instead of the aggregate fallback.
+    testRef: "tests/engine/state/oh-input-adapter.test.ts::passes through displaced worker worksheet overlay fields"
+
+  - line: "lumpSumDistributionWorksheetOverlay"
+    description: "Lump sum distribution worksheet recipient ages"
+    source: "OhioOverlayInput.lumpSumDistributionRecipientAges"
+    formula: "Direct pass-through"
+    notes: |
+      The adapter cannot determine from federal forms whether a taxpayer took a
+      qualifying total lump sum distribution for Ohio Schedule of Credits line
+      5, so the caller must supply the ages of the qualifying recipients when
+      the worksheet should be computed automatically.
+    testRef: "tests/engine/state/oh-input-adapter.test.ts::passes through lump sum distribution worksheet overlay fields"
+
+  - line: "lumpSumRetirementWorksheetOverlay"
+    description: "Lump sum retirement worksheet recipient amounts"
+    source: "OhioOverlayInput.lumpSumRetirementRecipients"
+    formula: "Direct pass-through"
+    notes: |
+      The adapter cannot determine from federal forms whether a taxpayer took a
+      qualifying total lump sum retirement distribution for Ohio Schedule of
+      Credits line 3, or what portion of that distribution is the retirement
+      income amount used on worksheet line 1. The caller must therefore supply
+      the qualifying recipients' ages and Ohio-AGI retirement income amounts
+      when the worksheet should be computed automatically.
+    testRef: "tests/engine/state/oh-input-adapter.test.ts::passes through lump sum retirement worksheet overlay fields"
+
+  - line: "ohio529CarryforwardOverlay"
+    description: "Ohio 529 carryforward overlay fields"
+    source: "OhioOverlayInput.ohio529Carryforwards"
+    formula: "Direct pass-through"
+    notes: |
+      The adapter cannot derive unused Ohio 529 contribution carryforwards from
+      prior-year returns, so these beneficiary-level amounts must be supplied by
+      the caller when claiming the Schedule of Adjustments 529 deduction.
+    testRef: "tests/engine/state/oh-input-adapter.test.ts::passes through Ohio 529 carryforward overlay fields"
+
+  - line: "stableContributionOverlay"
+    description: "STABLE contribution and carryforward overlay fields"
+    source: "OhioOverlayInput.stableContributions + OhioOverlayInput.stableCarryforwards"
+    formula: "Direct pass-through"
+    notes: |
+      The adapter cannot derive current-year STABLE contributions or unused
+      STABLE carryforwards from federal forms, so these beneficiary-level
+      amounts must be supplied by the caller when claiming Schedule of
+      Adjustments line 20.
+    testRef: "tests/engine/state/oh-input-adapter.test.ts::passes through STABLE contribution overlay fields"
+
+  - line: "medicalSavingsAccountOverlay"
+    description: "Medical savings account worksheet overlay fields"
+    source: |
+      OhioOverlayInput.medicalSavingsAccountTaxpayerContributions
+      + OhioOverlayInput.medicalSavingsAccountSpouseContributions
+      + OhioOverlayInput.medicalSavingsAccountEarnings
+      + OhioOverlayInput.medicalSavingsAccountNonmedicalWithdrawals
+    formula: "Direct pass-through"
+    notes: |
+      The adapter cannot derive Ohio's medical savings account worksheet inputs
+      from federal forms. The caller must supply the capped-contribution
+      worksheet inputs and nonmedical withdrawals when claiming the Schedule of
+      Adjustments line 45 deduction or line 6 add-back.
+    testRef: "tests/engine/state/oh-input-adapter.test.ts::passes through medical savings account overlay fields"
+
+  - line: "medicalHealthCareExpenseOverlay"
+    description: "Medical and health care expense worksheet overlay fields"
+    source: |
+      OhioOverlayInput.medicalInsurancePremiumsBeforeMedicareOrEmployerEligibility
+      + OhioOverlayInput.medicalLongTermCareInsurancePremiums
+      + OhioOverlayInput.medicalInsurancePremiumsDuringMedicareOrEmployerEligibility
+      + OhioOverlayInput.medicalCareExpenses
+    formula: "Direct pass-through"
+    notes: |
+      The adapter cannot derive the Ohio medical and health care expense
+      worksheet buckets from federal forms. The caller must supply the
+      worksheet line 1, 2, 3, and 4 amounts when claiming the Schedule of
+      Adjustments medical deduction (line 43 for 2024, line 44 for 2025).
+    testRef: "tests/engine/state/oh-input-adapter.test.ts::passes through medical and health care expense overlay fields"
+
+  - line: "qualifiedOrganDonorExpenseOverlay"
+    description: "Qualified organ donor expense overlay fields"
+    source: "OhioOverlayInput.qualifiedOrganDonorExpenses"
+    formula: "Direct pass-through"
+    notes: |
+      The adapter cannot derive Ohio qualified organ donor expenses from
+      federal forms. The caller must supply donor-level qualifying expense
+      entries when claiming the Schedule of Adjustments organ donor deduction
+      (line 45 for 2024, line 46 for 2025).
+    testRef: "tests/engine/state/oh-input-adapter.test.ts::passes through qualified organ donor expense overlay fields"
+
+  - line: "homebuyerPlusOverlay"
+    description: "Ohio Homebuyer Plus overlay fields"
+    source: "OhioOverlayInput.homebuyerPlusAccounts"
+    formula: "Direct pass-through"
+    notes: |
+      The adapter cannot derive Ohio Homebuyer Plus account activity from the
+      federal input documents. The caller must supply contributor/account-level
+      eligible annual amounts when claiming Schedule of Adjustments line 24.
+    testRef: "tests/engine/state/oh-input-adapter.test.ts::passes through Ohio Homebuyer Plus overlay fields"
+
+  - line: "retirementIncome"
+    description: "Qualifying retirement income from 1099-R distributions"
+    source: "Sum of 1099-R taxable amounts (qualifying distributions)"
+    formula: "sum(f.taxableAmount for f in form1099R where isQualifyingRetirement(f))"
+    notes: |
+      Qualifying retirement income for the Ohio retirement credit includes
+      distributions from pensions, 401(k)s, IRAs, etc. that are included in Ohio AGI.
+      Excludes: Roth conversions (not retirement income), returned contributions,
+      and amounts deducted on Schedule of Adjustments (Social Security, uniformed
+      services retirement). When the caller supplies
+      overlay.uniformedServicesRetirement, the adapter reduces the auto-extracted
+      retirement income by that deducted amount, floored at $0, so the retirement
+      income credit does not include military retirement income that is separately
+      deducted on Ohio Schedule of Adjustments line 34.
+    edgeCases:
+      - "No 1099-Rs -> $0"
+      - "1099-R with taxableAmountNotDetermined -> uses grossDistribution"
+      - "Roth conversions excluded"
+      - "Returned contributions excluded"
+      - "Uniformed services retirement supplied in overlay is excluded from retirement-credit income"
+    testRef: "tests/engine/state/oh-input-adapter.test.ts::extracts retirement income from 1099-Rs"
+
+  - line: "isSenior"
+    description: "Senior citizen status (age 65+ as of Dec 31)"
+    source: "Taxpayer dateOfBirth (and spouse if MFJ)"
+    formula: "age(dateOfBirth, Dec 31 of taxYear) >= 65"
+    notes: "Either taxpayer OR spouse being 65+ qualifies."
+    edgeCases:
+      - "Born Dec 31 of (taxYear - 65) -> exactly 65, qualifies"
+      - "Born Jan 1 of (taxYear - 64) -> only 64, does not qualify"
+    testRef: "tests/engine/state/oh-input-adapter.test.ts::determines senior status from date of birth"
+
+  - line: "exemptions"
+    description: "Personal and dependent exemption count"
+    source: "Taxpayer + spouse (if MFJ) + dependents count"
+    formula: "1 + (1 if MFJ) + dependents.length"
+    notes: |
+      Ohio exemptions match federal: 1 for taxpayer, 1 for spouse on MFJ,
+      plus each federal dependent. Does not include taxpayer exemption if
+      the taxpayer can be claimed as a dependent on another return, but
+      we assume independent filing for this adapter.
+    testRef: "tests/engine/state/oh-input-adapter.test.ts::counts exemptions from taxpayer info"
+
+  - line: "bothSpousesHaveQualifyingIncome"
+    description: "Both-spouses qualifying income flag for joint filing credit"
+    source: "Spouse-attributed qualifying-income documents plus optional explicit overlay amounts"
+    formula: |
+      If overlay.primaryQualifyingIncome or overlay.spouseQualifyingIncome is supplied:
+        overlay.primaryQualifyingIncome >= $500 AND
+        overlay.spouseQualifyingIncome >= $500
+      Otherwise, MFJ only. First derive spouse-level qualifying income as:
+        wages from W-2 box 1
+        + unemployment compensation from 1099-G box 1
+        + reportable winnings from W-2G box 1
+        + 1099-MISC box 3 other income
+        + taxable disability pensions from 1099-R records treated as wages
+        + the residual portion of accountHolder-tagged 1099-NEC nonemployee
+          compensation that remains in Ohio AGI after the Schedule of
+          Adjustments business income deduction cap is applied
+      using each document's accountHolder tag.
+
+      Then:
+        primaryDerivedQualifyingIncome >= $500 AND
+        spouseDerivedQualifyingIncome >= $500
+    notes: |
+      Used for the joint filing credit. Per the 2025 Ohio IT 1040 booklet,
+      each spouse must have at least $500 of "qualifying income", and the
+      taxpayer should attach a separate statement listing the qualifying income
+      for each spouse. This adapter accepts those spouse-level amounts through
+      the overlay when available. If the caller does not provide them, the
+      adapter derives spouse-level qualifying income from supported
+      accountHolder-tagged federal income documents that are included in Ohio
+      AGI and are not among the booklet's excluded categories (interest,
+      dividends and distributions, capital gains, rents, and royalties).
+      The booklet also says amounts deducted on the Ohio Schedule of
+      Adjustments are not qualifying income. Because Ohio business income is
+      deducted there up to the Schedule of Adjustments cap, the derived-document
+      path excludes deducted business-income proxies such as 1099-NEC
+      nonemployee compensation but may include the residual amount that remains
+      in Ohio AGI when total qualifying business income exceeds the cap.
+      The residual business-income allocation is an engine inference from the
+      booklet's Ohio-AGI inclusion rule; callers can still provide exact
+      spouse-level amounts through the overlay when needed.
+    edgeCases:
+      - "Non-MFJ -> always false"
+      - "Explicit spouse-level qualifying income overrides the derived document amounts"
+      - "1099-NEC nonemployee compensation is excluded when the Ohio business income deduction absorbs it"
+      - "Only the residual documented business income above the Ohio deduction cap can count toward the derived spouse-level qualifying income amounts"
+      - "Rents, royalties, and retirement distributions remain excluded"
+      - "Missing accountHolder tags prevent spouse attribution and default the derived path to false"
+    testRef: "tests/engine/state/oh-input-adapter.test.ts::qualifying income includes only residual business income above the Ohio deduction cap"
+
+  - line: "jointFilingQualifyingIncomeOverlay"
+    description: "Optional spouse-level qualifying income inputs for joint filing credit"
+    source: "OhioOverlayInput.primaryQualifyingIncome + OhioOverlayInput.spouseQualifyingIncome"
+    formula: "Direct pass-through to the eligibility determination described above"
+    notes: |
+      These overlay fields let the caller provide the exact spouse-level
+      qualifying income amounts described in the Ohio booklet's separate
+      statement requirement, instead of relying on the adapter's derived
+      document-based amounts.
+    testRef: "tests/engine/state/oh-input-adapter.test.ts::qualifying income overlay overrides W-2 proxy"
+
+  - line: "qualifyingBusinessIncome"
+    description: "Qualifying business income auto-extracted via IT BUS"
+    source: "Federal Schedule C, F, and K-1s → IT BUS module"
+    formula: |
+      calculateOhioITBus({
+        scheduleCNetProfit: federalResult.scheduleC?.netProfit,
+        scheduleFNetFarmProfit: federalResult.scheduleF?.netFarmProfit,
+        k1Entries: scheduleK1[].{ordinaryIncome, guaranteedPayments, isPassiveActivity},
+        otherBusinessIncome: overlay.otherBusinessIncome
+      }).line6_totalQualifyingBusinessIncome
+    notes: |
+      Auto-extracted from federal schedule results and K-1 data using the
+      Ohio IT BUS (Schedule of Business Income) module. Includes:
+        - Schedule C net profit/loss (self-employment)
+        - Schedule F net farm profit/loss
+        - K-1 guaranteed payments (always qualifying)
+        - K-1 ordinary income from active entities only
+        - Other qualifying business income from overlay
+      Can be overridden by setting overlay.qualifyingBusinessIncome.
+    edgeCases:
+      - "No business income sources -> $0"
+      - "Passive K-1 ordinary income excluded"
+      - "Overlay qualifyingBusinessIncome overrides auto-extraction"
+    testRef: "tests/engine/state/oh-input-adapter.test.ts::auto-extracts qualifying business income when overlay does not provide it"
+
+  - line: "federalInterestExemptFromOhio"
+    description: "U.S. government obligation interest exempt from Ohio tax"
+    source: "Sum of 1099-INT box 3 (usSavingsBondInterest) across all 1099-INTs"
+    formula: "sum(f.usSavingsBondInterest for f in form1099Int)"
+    notes: |
+      Interest from U.S. Treasury bills, notes, bonds, and Series I/EE/HH
+      savings bonds is exempt from state taxation under 31 U.S.C. 3124.
+      Flows to Ohio Schedule of Adjustments line 16 as a deduction.
+      Can be overridden by setting overlay.federalInterestExemptFromOhio.
+    edgeCases:
+      - "No 1099-INTs -> $0"
+      - "1099-INT with no usSavingsBondInterest -> excluded"
+      - "Multiple 1099-INTs summed"
+      - "Overlay override takes precedence"
+    testRef: "tests/engine/state/oh-input-adapter.test.ts::extracts federal interest exempt from Ohio from 1099-INTs"
+
+  - line: "stateMunicipalTaxRefunds"
+    description: "Prior-year state/local tax refunds included in federal AGI"
+    source: "Sum of 1099-G box 2 (stateOrLocalTaxRefund) across all 1099-Gs"
+    formula: "sum(f.stateOrLocalTaxRefund for f in form1099G)"
+    notes: |
+      Prior-year state/local tax refunds are included in federal AGI when the
+      taxpayer itemized in the prior year. Ohio allows these as a deduction on
+      Schedule of Adjustments line 18 since Ohio already taxed the underlying
+      income. All 1099-G box 2 amounts are included regardless of issuing state.
+      Can be overridden by setting overlay.stateMunicipalTaxRefunds.
+    edgeCases:
+      - "No 1099-Gs -> $0"
+      - "1099-G with no stateOrLocalTaxRefund -> excluded"
+      - "Multiple 1099-Gs from different states summed"
+      - "Overlay override takes precedence"
+    testRef: "tests/engine/state/oh-input-adapter.test.ts::extracts state municipal tax refunds from 1099-Gs"
+
+  - line: "filingStatus"
+    description: "Filing status mapped from federal"
+    source: "TaxReturnResult.filingStatus"
+    formula: "Direct pass-through (mapped to Ohio-compatible status)"
+    testRef: "tests/engine/state/oh-input-adapter.test.ts::passes filing status through"

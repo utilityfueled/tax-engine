@@ -1,0 +1,184 @@
+form: "PA-REV-1630"
+fullName: "Underpayment of Estimated Tax by Individuals"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_rev-1630.pdf"
+
+notes: |
+  Computes the interest penalty for failing to make sufficient quarterly estimated
+  tax payments. Attaches to PA-40. PA treats the underpayment penalty as interest,
+  not a traditional penalty.
+
+  Packet support is intentionally limited to the penalty-bearing slice. The 2025
+  REV-1630 says taxpayers who qualified for 100% Tax Forgiveness in 2024 do not
+  complete or include the form, and the 2025 PA-40 instructions tie the Line 27
+  code workflow to returns that actually report a REV-1630 amount. To keep draft
+  packets conservative, the engine only emits a REV-1630 reference summary when
+  Line 16 computes a positive estimated-underpayment interest amount.
+
+  Key rules:
+    - Penalty applies when tax owed after withholding/credits >= $338 (TY2025)
+    - Quarterly due dates: April 15, June 16, September 15, January 15
+    - Required installment per quarter = (90% of tax - withholding/credits) / 4
+    - Overpayments roll forward to next quarter
+    - Interest = underpayment × daily rate × days unpaid
+    - Interest spans two rate periods: tax year (to Dec 31) and next year (to Apr 15)
+    - 100% Tax Forgiveness in prior year exempts from penalty entirely
+
+  Safe harbor exceptions (per quarter):
+    - Exception 1: Cumulative payments ≥ prior year tax at current rate
+    - Exception 2: Annualized income method (90% of tax on income earned per period)
+    - Special exception: Prior year tax < $338 AND started paying when income > $11,000
+
+  Interest rates (daily):
+    - TY2024: 0.000219/day (≈8% annual)
+    - TY2025: 0.000192/day (≈7% annual)
+    - TY2026: 0.000192/day (≈7% annual)
+
+  Day counts for calendar year filer filing by April 15 (TY2025):
+    Line 14a (due date → Dec 31): Q1=260, Q2=198, Q3=107
+    Line 14b (Q4 due date → Apr 15): Q4=90
+    Line 14c (Dec 31 → Apr 15): Q1-Q3=105
+
+lines:
+  - line: "1a"
+    description: "Tax liability from PA-40 Line 12"
+    formula: "PA-40 Line 12 tax liability"
+    testRef: "tests/engine/state/pa-rev-1630.test.ts::REV-1630 Section I Line 1a - tax liability"
+
+  - line: "1b"
+    description: "90% of tax liability"
+    formula: "Line 1a × 0.90"
+    testRef: "tests/engine/state/pa-rev-1630.test.ts::REV-1630 Section I Line 1b - 90% of tax"
+
+  - line: "2"
+    description: "Withholding and credits"
+    formula: "PA-40 Line 13 (withholding) + Line 19 (tax forgiveness) + Line 20 (resident credit) + Line 21 (other credits)"
+    notes: |
+      All non-payment credits that reduce the tax liability.
+      Does not include estimated payments, prior year credits, or extension payments.
+    testRef: "tests/engine/state/pa-rev-1630.test.ts::REV-1630 Section I Line 2 - withholding and credits"
+
+  - line: "3"
+    description: "Net tax owed (threshold test)"
+    formula: "Line 1a - Line 2. If < $338, no penalty. Stop."
+    notes: |
+      $338 for TY2025 ($11,000 × 3.07%). If less, taxpayer did not need
+      to make estimated payments. $292 for TY2024 ($9,500 × 3.07%).
+    edgeCases:
+      - "Tax exactly $338: penalty MAY apply, continue to Lines 4-10"
+      - "Tax $337: no penalty required"
+      - "All income covered by withholding: Line 3 will be zero"
+    testRef: "tests/engine/state/pa-rev-1630.test.ts::REV-1630 threshold test - no penalty when net tax < $338"
+
+  - line: "4"
+    description: "Underpayment base"
+    formula: "Line 1b - Line 2 (90% of tax minus withholding/credits)"
+    notes: |
+      If negative, withholding/credits already cover 90% of tax.
+      If positive, this is the total amount that should have been paid
+      via estimated payments.
+    testRef: "tests/engine/state/pa-rev-1630.test.ts::REV-1630 Section I Line 4 - underpayment base"
+
+  - line: "5"
+    description: "Required installment per quarter"
+    formula: "Line 4 ÷ 4"
+    testRef: "tests/engine/state/pa-rev-1630.test.ts::REV-1630 Section I Line 5 - required installment"
+
+  - line: "6"
+    description: "Estimated payments per quarter"
+    formula: "Actual estimated tax payments made by each quarterly due date"
+    notes: |
+      Column a: payments by April 15 (includes prior year overpayment credit)
+      Column b: payments by June 16
+      Column c: payments by September 15
+      Column d: payments by January 15 (includes extension payment)
+    testRef: "tests/engine/state/pa-rev-1630.test.ts::REV-1630 Section I Lines 6-10 - quarterly underpayment with no payments"
+
+  - line: "7"
+    description: "Overpayment from prior quarter"
+    formula: "Line 10 from prior column (Q1 has no carryover)"
+    testRef: "tests/engine/state/pa-rev-1630.test.ts::REV-1630 overpayment carries forward to next quarter"
+
+  - line: "8"
+    description: "Total payments for quarter"
+    formula: "Line 6 + Line 7"
+    testRef: "tests/engine/state/pa-rev-1630.test.ts::REV-1630 Section I Lines 6-10 - partial payments create underpayments"
+
+  - line: "9"
+    description: "Underpayment for quarter"
+    formula: "Line 5 - Line 8, floor at 0"
+    notes: "If zero for all quarters, no penalty. Stop."
+    testRef: "tests/engine/state/pa-rev-1630.test.ts::REV-1630 Section I Lines 6-10 - quarterly underpayment with equal payments"
+
+  - line: "10"
+    description: "Overpayment for quarter"
+    formula: "Line 8 - Line 5, floor at 0 (carries to next quarter's Line 7)"
+    testRef: "tests/engine/state/pa-rev-1630.test.ts::REV-1630 overpayment carries forward to next quarter"
+
+  - line: "exception-1"
+    description: "Exception 1 — prior year tax safe harbor"
+    formula: |
+      For each quarter: cumulative (withholding/4 + estimated payments) ≥ prior year tax at current rate
+      Prior year tax = prior year PA taxable income × current year rate (3.07%)
+      minus prior year Tax Forgiveness credit
+    notes: |
+      Does not apply if no prior year return filed or prior year was part-year.
+      Exception 1 Worksheet: Line A = Line 2 / 4 (quarterly withholding share)
+      Line B = estimated payments per quarter, Line C = cumulative A + B.
+      If cumulative C ≥ prior year tax amount, exception applies for that quarter.
+    edgeCases:
+      - "No prior year return: Exception 1 not available"
+      - "Prior year tax was zero: exception always met"
+      - "Prior year part-year: exception not available"
+    testRef: "tests/engine/state/pa-rev-1630.test.ts::REV-1630 Exception 1 - prior year safe harbor met for all quarters"
+
+  - line: "14a"
+    description: "Days from due date to Dec 31 (Q1-Q3)"
+    formula: "Q1: 260, Q2: 198, Q3: 107 (TY2025, calendar year, filing by Apr 15)"
+    notes: "Adjusted if taxpayer pays underpayment before Dec 31."
+    testRef: "tests/engine/state/pa-rev-1630.test.ts::REV-1630 Section III - interest calculation matches form example"
+
+  - line: "14b"
+    description: "Days from Q4 due date to Apr 15 of following year"
+    formula: "Q4: 90 (TY2025)"
+    testRef: "tests/engine/state/pa-rev-1630.test.ts::REV-1630 Section III - Q4 uses next year rate only"
+
+  - line: "14c"
+    description: "Days from Dec 31 to Apr 15 of following year (Q1-Q3)"
+    formula: "105 for each of Q1-Q3 (TY2025)"
+    testRef: "tests/engine/state/pa-rev-1630.test.ts::REV-1630 Section III - interest calculation matches form example"
+
+  - line: "15a"
+    description: "Interest for tax year period (Q1-Q3)"
+    formula: "Line 14a × daily rate (tax year) × Line 9 underpayment, rounded to dollar"
+    testRef: "tests/engine/state/pa-rev-1630.test.ts::REV-1630 Section III - interest calculation matches form example"
+
+  - line: "15b"
+    description: "Interest for next year period (Q4 only)"
+    formula: "Line 14b × daily rate (next year) × Line 9 underpayment, rounded to dollar"
+    testRef: "tests/engine/state/pa-rev-1630.test.ts::REV-1630 Section III - Q4 uses next year rate only"
+
+  - line: "15c"
+    description: "Interest for next year period (Q1-Q3)"
+    formula: "Line 14c × daily rate (next year) × Line 9 underpayment, rounded to dollar"
+    testRef: "tests/engine/state/pa-rev-1630.test.ts::REV-1630 Section III - interest calculation matches form example"
+
+  - line: "16"
+    description: "Total interest penalty"
+    formula: "Sum of all Lines 15a + 15b + 15c across all quarters"
+    notes: "This amount is added to PA-40 Line 27 (interest). Included on the return."
+    edgeCases:
+      - "All quarters have exceptions: $0 penalty"
+      - "Some quarters excepted, others not: partial penalty"
+      - "No estimated payments at all: maximum penalty"
+      - "All paid in Q1: overpayments eliminate Q2-Q4 underpayments"
+    testRef: "tests/engine/state/pa-rev-1630.test.ts::REV-1630 Section III - total interest penalty"
+
+businessRuleValidation:
+  - scenario: "Penalty-bearing REV-1630 packet inclusion"
+    description: "Inventory support counts REV-1630 as business-rule validated only when the packet emits `pa-rev-1630-reference.pdf` for a Pennsylvania return whose REV-1630 computes a positive Line 16 interest amount."
+    testRef: "tests/pdf/fill-pa-rev-1630.test.ts::fillReturn includes the Pennsylvania REV-1630 reference summary when quarterly estimated payments still leave an underpayment penalty"
+
+  - scenario: "100 percent forgiveness packet suppression"
+    description: "Inventory support also requires the packet to suppress the REV-1630 reference summary when the return computes REV-1630 only to document the official prior-year 100 percent Tax Forgiveness exemption."
+    testRef: "tests/pdf/fill-pa-rev-1630.test.ts::fillReturn omits the Pennsylvania REV-1630 reference summary when REV-1630 is only present because prior-year 100 percent Tax Forgiveness was checked"

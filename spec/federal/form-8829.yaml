@@ -1,0 +1,409 @@
+form: "Form 8829"
+fullName: "Expenses for Business Use of Your Home"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i8829"
+
+notes: |
+  This first Form 8829 slice implements the actual-expense home-office
+  calculation that feeds Schedule C line 30 for a single business. It supports
+  the standard exclusive-use percentage from Part I, the optional daycare
+  time-allocation branch on lines 4 through 7, Part II expense allocation and
+  gross-income limitation, Part III home depreciation using a validated line 41
+  depreciation percentage, and Part IV operating plus casualty/depreciation
+  carryovers.
+  To keep the slice auditable and compatible with the existing Schedule C
+  engine, inputs for lines 9, 10, 11, 16, 17, and 29 are treated as already
+  validated line-ready amounts after any Schedule A, SALT-limit, mortgage
+  interest, or casualty-loss worksheet allocation required by the IRS
+  instructions. The engine does not independently compute the Schedule A line
+  11 worksheet, Form 4684 worksheet, or Form 4562 statements in this slice.
+
+lines:
+  - line: "1"
+    description: "Area used regularly and exclusively for business, daycare, or qualifying storage"
+    formula: "Validated business-use area of the home"
+    irsRef: "Form 8829 Instructions, Lines 1 and 2"
+    inputs:
+      - "Business-use area"
+    testRef: "tests/engine/forms/form-8829.test.ts::Form 8829 Line 7 - exclusive-use percentage controls indirect expense allocation"
+
+  - line: "2"
+    description: "Total area of home"
+    formula: "Validated total home area"
+    irsRef: "Form 8829 Instructions, Lines 1 and 2"
+    inputs:
+      - "Total home area"
+    testRef: "tests/engine/forms/form-8829.test.ts::Form 8829 Line 7 - exclusive-use percentage controls indirect expense allocation"
+
+  - line: "3"
+    description: "Business-use area percentage"
+    formula: "Line 1 / Line 2"
+    irsRef: "Form 8829, Line 3"
+    inputs:
+      - "Form 8829 Line 1"
+      - "Form 8829 Line 2"
+    testRef: "tests/engine/forms/form-8829.test.ts::Form 8829 Line 7 - exclusive-use percentage controls indirect expense allocation"
+
+  - line: "4"
+    description: "Daycare hours used during the year"
+    formula: "Validated total daycare-use hours for the year"
+    irsRef: "Form 8829 Instructions, Line 4"
+    inputs:
+      - "Daycare-use hours"
+    testRef: "tests/engine/forms/form-8829.test.ts::Form 8829 Line 7 - daycare branch multiplies the space percentage by time percentage"
+
+  - line: "5"
+    description: "Hours home was available for daycare"
+    formula: "Validated total hours available for daycare during the year"
+    irsRef: "Form 8829 Instructions, Line 5"
+    inputs:
+      - "Daycare available hours"
+    testRef: "tests/engine/forms/form-8829.test.ts::Form 8829 Line 7 - daycare branch multiplies the space percentage by time percentage"
+
+  - line: "6"
+    description: "Daycare time-use decimal"
+    formula: "Line 4 / Line 5"
+    irsRef: "Form 8829, Line 6"
+    inputs:
+      - "Form 8829 Line 4"
+      - "Form 8829 Line 5"
+    testRef: "tests/engine/forms/form-8829.test.ts::Form 8829 Line 7 - daycare branch multiplies the space percentage by time percentage"
+
+  - line: "7"
+    description: "Business percentage"
+    formula: "For daycare facilities not used exclusively for business, Line 3 × Line 6. Otherwise Line 3."
+    irsRef: "Form 8829, Line 7"
+    inputs:
+      - "Form 8829 Line 3"
+      - "Form 8829 Line 6"
+    testRef: "tests/engine/forms/form-8829.test.ts::Form 8829 Line 7 - daycare branch multiplies the space percentage by time percentage"
+
+  - line: "8"
+    description: "Gross-income limitation base"
+    formula: "Schedule C line 29 plus home-use gains minus non-home-use losses allocable to the trade or business; this slice accepts the validated line-ready amount"
+    irsRef: "Form 8829 Instructions, Line 8"
+    inputs:
+      - "Validated Form 8829 gross-income limitation base"
+    testRef: "tests/engine/forms/form-8829.test.ts::Form 8829 Lines 27 through 44 - gross-income limitation creates operating and depreciation carryovers"
+
+  - line: "9"
+    description: "Casualty losses entered in Part II"
+    formula: "Validated direct and indirect casualty-loss amounts attributable to the home"
+    irsRef: "Form 8829 Instructions, Lines 9, 10, and 11"
+    inputs:
+      - "Direct casualty losses"
+      - "Indirect casualty losses"
+    testRef: "tests/engine/forms/form-8829.test.ts::Form 8829 Line 35 - casualty portion is carved out of the Schedule C deduction"
+
+  - line: "10"
+    description: "Deductible mortgage interest"
+    formula: "Validated direct and indirect deductible mortgage-interest amounts after the applicable Schedule A or standard-deduction allocation rules"
+    irsRef: "Form 8829 Instructions, Lines 10 and 16"
+    inputs:
+      - "Direct deductible mortgage interest"
+      - "Indirect deductible mortgage interest"
+    testRef: "tests/engine/forms/form-8829.test.ts::Form 8829 Line 36 - allowable home-office deduction includes allocated operating expenses and depreciation"
+
+  - line: "11"
+    description: "Real estate taxes"
+    formula: "Validated direct and indirect real-estate-tax amounts after the applicable Schedule A or standard-deduction allocation rules"
+    irsRef: "Form 8829 Instructions, Lines 11 and 17"
+    inputs:
+      - "Direct real estate taxes"
+      - "Indirect real estate taxes"
+    testRef: "tests/engine/forms/form-8829.test.ts::Form 8829 Line 36 - allowable home-office deduction includes allocated operating expenses and depreciation"
+
+  - line: "12"
+    description: "Total direct and indirect personal-type home expenses"
+    formula: "Lines 9 + 10 + 11 by column"
+    irsRef: "Form 8829, Line 12"
+    inputs:
+      - "Form 8829 Lines 9 through 11"
+    testRef: "tests/engine/forms/form-8829.test.ts::Form 8829 Line 36 - allowable home-office deduction includes allocated operating expenses and depreciation"
+
+  - line: "13"
+    description: "Allocated indirect personal-type home expenses"
+    formula: "Line 12 column (b) × Line 7, rounded to the nearest dollar"
+    irsRef: "Form 8829, Line 13"
+    inputs:
+      - "Form 8829 Line 12 indirect column"
+      - "Form 8829 Line 7"
+    testRef: "tests/engine/forms/form-8829.test.ts::Form 8829 Line 35 - casualty portion is carved out of the Schedule C deduction"
+
+  - line: "14"
+    description: "Allowed casualty, mortgage-interest, and tax amount before the gross-income limit"
+    formula: "Line 12 column (a) + Line 13"
+    irsRef: "Form 8829, Line 14"
+    inputs:
+      - "Form 8829 Line 12 direct column"
+      - "Form 8829 Line 13"
+    testRef: "tests/engine/forms/form-8829.test.ts::Form 8829 Line 35 - casualty portion is carved out of the Schedule C deduction"
+
+  - line: "15"
+    description: "Remaining gross-income limit after line 14 expenses"
+    formula: "Line 8 - Line 14, floored at $0"
+    irsRef: "Form 8829, Line 15"
+    inputs:
+      - "Form 8829 Line 8"
+      - "Form 8829 Line 14"
+    testRef: "tests/engine/forms/form-8829.test.ts::Form 8829 Lines 27 through 44 - gross-income limitation creates operating and depreciation carryovers"
+
+  - line: "16"
+    description: "Excess mortgage interest"
+    formula: "Validated direct and indirect excess mortgage-interest amounts not allowed on line 10"
+    irsRef: "Form 8829 Instructions, Line 16"
+    inputs:
+      - "Direct excess mortgage interest"
+      - "Indirect excess mortgage interest"
+    testRef: "tests/engine/forms/form-8829.test.ts::Form 8829 Lines 27 through 44 - gross-income limitation creates operating and depreciation carryovers"
+
+  - line: "17"
+    description: "Excess real estate taxes"
+    formula: "Validated direct and indirect excess real-estate-tax amounts not allowed on line 11"
+    irsRef: "Form 8829 Instructions, Line 17"
+    inputs:
+      - "Direct excess real estate taxes"
+      - "Indirect excess real estate taxes"
+    testRef: "tests/engine/forms/form-8829.test.ts::Form 8829 Lines 27 through 44 - gross-income limitation creates operating and depreciation carryovers"
+
+  - line: "18"
+    description: "Insurance"
+    formula: "Validated direct and indirect insurance amounts"
+    irsRef: "Form 8829, Line 18"
+    inputs:
+      - "Direct insurance"
+      - "Indirect insurance"
+    testRef: "tests/engine/forms/form-8829.test.ts::Form 8829 Line 36 - allowable home-office deduction includes allocated operating expenses and depreciation"
+
+  - line: "19"
+    description: "Rent"
+    formula: "Validated direct and indirect rent amounts"
+    irsRef: "Form 8829 Instructions, Line 19"
+    inputs:
+      - "Direct rent"
+      - "Indirect rent"
+    testRef: "tests/engine/forms/form-8829.test.ts::Form 8829 Line 36 - allowable home-office deduction includes allocated operating expenses and depreciation"
+
+  - line: "20"
+    description: "Repairs and maintenance"
+    formula: "Validated direct and indirect repair-and-maintenance amounts"
+    irsRef: "Form 8829, Line 20"
+    inputs:
+      - "Direct repairs and maintenance"
+      - "Indirect repairs and maintenance"
+    testRef: "tests/engine/forms/form-8829.test.ts::Form 8829 Line 36 - allowable home-office deduction includes allocated operating expenses and depreciation"
+
+  - line: "21"
+    description: "Utilities"
+    formula: "Validated direct and indirect utility amounts"
+    irsRef: "Form 8829, Line 21"
+    inputs:
+      - "Direct utilities"
+      - "Indirect utilities"
+    testRef: "tests/engine/forms/form-8829.test.ts::Form 8829 Line 36 - allowable home-office deduction includes allocated operating expenses and depreciation"
+
+  - line: "22"
+    description: "Other operating expenses"
+    formula: "Validated direct and indirect 2025 operating expenses not already reported on lines 9 through 21"
+    irsRef: "Form 8829 Instructions, Line 22"
+    inputs:
+      - "Direct other expenses"
+      - "Indirect other expenses"
+    testRef: "tests/engine/forms/form-8829.test.ts::Form 8829 Line 36 - allowable home-office deduction includes allocated operating expenses and depreciation"
+
+  - line: "23"
+    description: "Total current-year operating expenses subject to the second limitation"
+    formula: "Lines 16 through 22 by column"
+    irsRef: "Form 8829, Line 23"
+    inputs:
+      - "Form 8829 Lines 16 through 22"
+    testRef: "tests/engine/forms/form-8829.test.ts::Form 8829 Lines 27 through 44 - gross-income limitation creates operating and depreciation carryovers"
+
+  - line: "24"
+    description: "Allocated indirect operating expenses"
+    formula: "Line 23 column (b) × Line 7, rounded to the nearest dollar"
+    irsRef: "Form 8829, Line 24"
+    inputs:
+      - "Form 8829 Line 23 indirect column"
+      - "Form 8829 Line 7"
+    testRef: "tests/engine/forms/form-8829.test.ts::Form 8829 Lines 27 through 44 - gross-income limitation creates operating and depreciation carryovers"
+
+  - line: "25"
+    description: "Carryover of prior-year operating expenses"
+    formula: "Validated prior-year Form 8829 line 43 operating-expense carryover"
+    irsRef: "Form 8829 Instructions, Line 25"
+    inputs:
+      - "Prior-year operating expense carryover"
+    testRef: "tests/engine/forms/form-8829.test.ts::Form 8829 Lines 27 through 44 - gross-income limitation creates operating and depreciation carryovers"
+
+  - line: "26"
+    description: "Operating expenses available against the line 15 limit"
+    formula: "Line 23 column (a) + Line 24 + Line 25"
+    irsRef: "Form 8829, Line 26"
+    inputs:
+      - "Form 8829 Line 23 direct column"
+      - "Form 8829 Line 24"
+      - "Form 8829 Line 25"
+    testRef: "tests/engine/forms/form-8829.test.ts::Form 8829 Lines 27 through 44 - gross-income limitation creates operating and depreciation carryovers"
+
+  - line: "27"
+    description: "Allowable operating expenses"
+    formula: "Smaller of Line 15 or Line 26"
+    irsRef: "Form 8829, Line 27"
+    inputs:
+      - "Form 8829 Line 15"
+      - "Form 8829 Line 26"
+    testRef: "tests/engine/forms/form-8829.test.ts::Form 8829 Lines 27 through 44 - gross-income limitation creates operating and depreciation carryovers"
+
+  - line: "28"
+    description: "Limit remaining for excess casualty losses and depreciation"
+    formula: "Line 15 - Line 27, floored at $0"
+    irsRef: "Form 8829, Line 28"
+    inputs:
+      - "Form 8829 Line 15"
+      - "Form 8829 Line 27"
+    testRef: "tests/engine/forms/form-8829.test.ts::Form 8829 Lines 27 through 44 - gross-income limitation creates operating and depreciation carryovers"
+
+  - line: "29"
+    description: "Excess casualty losses"
+    formula: "Validated excess casualty-loss amount × Line 7, rounded to the nearest dollar"
+    irsRef: "Form 8829 Instructions, Line 29"
+    inputs:
+      - "Validated excess casualty losses attributable to the home"
+      - "Form 8829 Line 7"
+    testRef: "tests/engine/forms/form-8829.test.ts::Form 8829 Line 35 - casualty portion is carved out of the Schedule C deduction"
+
+  - line: "30"
+    description: "Depreciation of home from Part III"
+    formula: "Form 8829 Line 42"
+    irsRef: "Form 8829, Line 30"
+    inputs:
+      - "Form 8829 Line 42"
+    testRef: "tests/engine/forms/form-8829.test.ts::Form 8829 Line 36 - allowable home-office deduction includes allocated operating expenses and depreciation"
+
+  - line: "31"
+    description: "Carryover of prior-year excess casualty losses and depreciation"
+    formula: "Validated prior-year Form 8829 line 44 carryover, split in this slice between casualty-loss and depreciation sub-inputs for auditability"
+    irsRef: "Form 8829 Instructions, Line 31"
+    inputs:
+      - "Prior-year excess casualty loss carryover"
+      - "Prior-year depreciation carryover"
+    testRef: "tests/engine/forms/form-8829.test.ts::Form 8829 Lines 27 through 44 - gross-income limitation creates operating and depreciation carryovers"
+
+  - line: "32"
+    description: "Total casualty-loss and depreciation pool"
+    formula: "Line 29 + Line 30 + Line 31"
+    irsRef: "Form 8829, Line 32"
+    inputs:
+      - "Form 8829 Line 29"
+      - "Form 8829 Line 30"
+      - "Form 8829 Line 31"
+    testRef: "tests/engine/forms/form-8829.test.ts::Form 8829 Lines 27 through 44 - gross-income limitation creates operating and depreciation carryovers"
+
+  - line: "33"
+    description: "Allowable excess casualty losses and depreciation"
+    formula: "Smaller of Line 28 or Line 32"
+    irsRef: "Form 8829, Line 33"
+    inputs:
+      - "Form 8829 Line 28"
+      - "Form 8829 Line 32"
+    testRef: "tests/engine/forms/form-8829.test.ts::Form 8829 Lines 27 through 44 - gross-income limitation creates operating and depreciation carryovers"
+
+  - line: "34"
+    description: "Total allowable home-use expenses before removing casualty losses from Schedule C"
+    formula: "Line 14 + Line 27 + Line 33"
+    irsRef: "Form 8829, Line 34"
+    inputs:
+      - "Form 8829 Line 14"
+      - "Form 8829 Line 27"
+      - "Form 8829 Line 33"
+    testRef: "tests/engine/forms/form-8829.test.ts::Form 8829 Line 35 - casualty portion is carved out of the Schedule C deduction"
+
+  - line: "35"
+    description: "Casualty-loss portion carried to Form 4684"
+    formula: "Casualty-loss portion of Line 14 plus the casualty-loss share of Line 33, limited to the combined current and prior-year excess casualty-loss pool"
+    irsRef: "Form 8829 Instructions, Line 35"
+    inputs:
+      - "Casualty-loss portion of Form 8829 Line 14"
+      - "Form 8829 Line 33"
+      - "Current and prior-year excess casualty-loss pool"
+    notes: "This slice keeps prior-year excess casualty-loss carryovers separate from prior-year depreciation carryovers so the Form 4684 carryout on line 35 remains traceable."
+    testRef: "tests/engine/forms/form-8829.test.ts::Form 8829 Line 35 - casualty portion is carved out of the Schedule C deduction"
+
+  - line: "36"
+    description: "Allowable expenses for business use of home reported on Schedule C line 30"
+    formula: "Line 34 - Line 35"
+    irsRef: "Form 8829, Line 36"
+    inputs:
+      - "Form 8829 Line 34"
+      - "Form 8829 Line 35"
+    testRef: "tests/engine/forms/form-8829.test.ts::Form 8829 Line 36 - allowable home-office deduction includes allocated operating expenses and depreciation"
+
+  - line: "37"
+    description: "Smaller of home basis or fair market value when first used for business"
+    formula: "Validated smaller of home adjusted basis or fair market value, including land"
+    irsRef: "Form 8829 Instructions, Lines 37 through 40"
+    inputs:
+      - "Validated smaller of home basis or fair market value"
+    testRef: "tests/engine/forms/form-8829.test.ts::Form 8829 Line 36 - allowable home-office deduction includes allocated operating expenses and depreciation"
+
+  - line: "38"
+    description: "Land value included in line 37"
+    formula: "Validated land value, limited to Line 37"
+    irsRef: "Form 8829 Instructions, Lines 37 through 40"
+    inputs:
+      - "Land value"
+    testRef: "tests/engine/forms/form-8829.test.ts::Form 8829 Line 36 - allowable home-office deduction includes allocated operating expenses and depreciation"
+
+  - line: "39"
+    description: "Basis of building"
+    formula: "Line 37 - Line 38, floored at $0"
+    irsRef: "Form 8829, Line 39"
+    inputs:
+      - "Form 8829 Line 37"
+      - "Form 8829 Line 38"
+    testRef: "tests/engine/forms/form-8829.test.ts::Form 8829 Line 36 - allowable home-office deduction includes allocated operating expenses and depreciation"
+
+  - line: "40"
+    description: "Business basis of building"
+    formula: "Line 39 × Line 7, rounded to the nearest dollar"
+    irsRef: "Form 8829, Line 40"
+    inputs:
+      - "Form 8829 Line 39"
+      - "Form 8829 Line 7"
+    testRef: "tests/engine/forms/form-8829.test.ts::Form 8829 Line 36 - allowable home-office deduction includes allocated operating expenses and depreciation"
+
+  - line: "41"
+    description: "Depreciation percentage"
+    formula: "Validated IRS depreciation percentage for the home's placed-in-service month and recovery rule"
+    irsRef: "Form 8829 Instructions, Line 41"
+    inputs:
+      - "Validated Form 8829 depreciation percentage"
+    testRef: "tests/engine/forms/form-8829.test.ts::Form 8829 Line 36 - allowable home-office deduction includes allocated operating expenses and depreciation"
+
+  - line: "42"
+    description: "Depreciation allowable"
+    formula: "Line 40 × Line 41, rounded to the nearest dollar"
+    irsRef: "Form 8829 Instructions, Line 42"
+    inputs:
+      - "Form 8829 Line 40"
+      - "Form 8829 Line 41"
+    testRef: "tests/engine/forms/form-8829.test.ts::Form 8829 Line 36 - allowable home-office deduction includes allocated operating expenses and depreciation"
+
+  - line: "43"
+    description: "Operating expenses carried to next year"
+    formula: "Line 26 - Line 27, floored at $0"
+    irsRef: "Form 8829 Instructions, Line 43"
+    inputs:
+      - "Form 8829 Line 26"
+      - "Form 8829 Line 27"
+    testRef: "tests/engine/forms/form-8829.test.ts::Form 8829 Lines 27 through 44 - gross-income limitation creates operating and depreciation carryovers"
+
+  - line: "44"
+    description: "Excess casualty losses and depreciation carried to next year"
+    formula: "Line 32 - Line 33, floored at $0"
+    irsRef: "Form 8829 Instructions, Line 44"
+    inputs:
+      - "Form 8829 Line 32"
+      - "Form 8829 Line 33"
+    testRef: "tests/engine/forms/form-8829.test.ts::Form 8829 Lines 27 through 44 - gross-income limitation creates operating and depreciation carryovers"

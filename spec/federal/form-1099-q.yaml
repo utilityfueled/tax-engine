@@ -1,0 +1,167 @@
+form: "Form 1099-Q"
+fullName: "Payments From Qualified Education Programs (Under Sections 529 and 530)"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i1099q"
+
+notes: |
+  Form 1099-Q reports distributions from qualified tuition programs (QTPs/529 plans,
+  IRC §529) and Coverdell Education Savings Accounts (ESAs, IRC §530). Distributions
+  used for the beneficiary's qualified education expenses (QEE) are tax-free. If
+  distributions exceed adjusted QEE, the earnings portion of the excess is taxable
+  income and may be subject to a 10% additional tax via Form 5329 Part II.
+
+  Key rules:
+  - Box 1: Gross distribution amount
+  - Box 2: Earnings (or loss) portion of the distribution
+  - Box 3: Basis (after-tax contributions returned)
+  - Box 4: Trustee-to-trustee transfer indicator
+  - Box 5: Type of account (1=private 529, 2=state/political subdivision 529,
+            3=Coverdell ESA, 4=ABLE account)
+
+  Trustee-to-trustee transfers (Box 4 checked) and rollovers between eligible plans
+  within 60 days are not taxable and not subject to the additional tax.
+
+  ABLE account distributions (Box 5 type 4) are handled separately under IRC §529A
+  and are not covered by this calculation module.
+
+  The recipient of the 1099-Q (either the account owner or the beneficiary) is
+  responsible for determining the taxable amount. This engine computes the taxable
+  earnings based on user-provided qualified education expense totals.
+
+  Per Pub 970 Chapter 8 (QTPs) and Chapter 7 (Coverdell ESAs):
+  - Adjusted QEE = Total QEE - Tax-free educational assistance - Amounts used for AOTC/LLC
+  - If total distributions ≤ adjusted QEE → entirely tax-free
+  - If total distributions > adjusted QEE → taxable earnings = (excess / gross distribution) × earnings
+  - The 10% additional tax (Form 5329 Part II) applies to taxable earnings unless an exception applies
+
+  Qualified education expenses (529 plans, IRC §529(e)(3)):
+  - Tuition, fees, books, supplies, equipment for enrollment at eligible institutions
+  - Room and board if enrolled at least half-time (limited to school's cost of attendance)
+  - Computer, internet, and related technology
+  - K-12 tuition up to $10,000/year per beneficiary (state 529 only, since Tax Cuts and Jobs Act)
+  - Registered apprenticeship program expenses
+  - Student loan repayments up to $10,000 lifetime per beneficiary (SECURE Act)
+
+  Qualified education expenses (Coverdell ESAs, IRC §530(b)(2)):
+  - Same as 529, plus K-12 expenses without the $10,000 annual limit
+  - Also includes uniforms, tutoring, supplementary items
+
+  10% additional tax exceptions (IRC §530(d)(4)(B) for Coverdell, §529(c)(6) for 529):
+  - Beneficiary death
+  - Beneficiary disability
+  - Scholarship, allowance, or similar payment (taxable earnings not penalized to extent of scholarship)
+  - Attendance at US military academy (to extent of cost of advanced education)
+  - Rollover to ABLE account (up to ABLE annual contribution limit)
+  - Rollover to beneficiary's Roth IRA (SECURE 2.0 Act §126, new for 2024+; subject to
+    Roth IRA annual contribution limit and 15-year/lifetime $35K caps)
+
+businessRuleValidation:
+  - rule: "reference-summary-packet"
+    description: "Inventory support counts this form as business-rule validated only when regression coverage proves the emitted packet artifact stays labeled as a non-filing reference summary and only surfaces the supported Form 1099-Q payer Boxes 1 through 4 inputs, adjusted qualified education expense inputs, taxable-earnings outputs, and Form 5329 penalty-routing totals."
+    testRef: "tests/pdf/fill-form-1099-q.test.ts::buildForm1099QReferenceSummary keeps the packet artifact reference-only and limited to supported education-distribution outputs"
+
+lines:
+  - line: "gross-distribution"
+    description: "Total gross distributions from all Form 1099-Q documents"
+    formula: "Sum of Box 1 from each Form 1099-Q"
+    irsRef: "Form 1099-Q Box 1"
+    inputs:
+      - "Form 1099-Q Box 1: Gross distribution"
+    notes: "Trustee-to-trustee transfers (Box 4 checked) are excluded from the taxable computation."
+    testRef: "tests/engine/forms/form-1099-q.test.ts::Form 1099-Q aggregates gross distributions from multiple forms"
+
+  - line: "total-earnings"
+    description: "Total earnings portion of distributions"
+    formula: "Sum of Box 2 from each Form 1099-Q"
+    irsRef: "Form 1099-Q Box 2"
+    inputs:
+      - "Form 1099-Q Box 2: Earnings"
+    notes: "Earnings can be negative (loss). Negative earnings reduce the taxable amount."
+    testRef: "tests/engine/forms/form-1099-q.test.ts::Form 1099-Q aggregates earnings from multiple forms"
+
+  - line: "total-basis"
+    description: "Total basis (contributions) portion of distributions"
+    formula: "Sum of Box 3 from each Form 1099-Q"
+    irsRef: "Form 1099-Q Box 3"
+    testRef: "tests/engine/forms/form-1099-q.test.ts::Form 1099-Q tracks basis from distributions"
+
+  - line: "adjusted-qee"
+    description: "Adjusted Qualified Education Expenses"
+    formula: "max(0, Total QEE - Tax-free educational assistance - Amounts used for AOTC/LLC)"
+    irsRef: "Pub 970 Chapter 8 Worksheet 8-1; Pub 970 Chapter 7"
+    inputs:
+      - "Total qualified education expenses paid"
+      - "Tax-free educational assistance (scholarships, grants, employer assistance)"
+      - "Amounts used to claim AOTC or LLC (Form 8863)"
+    edgeCases:
+      - "Adjusted QEE cannot be negative"
+      - "QEE from Form 1098-T may differ from actual expenses paid"
+      - "Room and board limited to school's cost of attendance for half-time+ students"
+      - "K-12 tuition from 529 plans limited to $10,000/year per beneficiary"
+    testRef: "tests/engine/forms/form-1099-q.test.ts::Form 1099-Q adjusted QEE subtracts scholarships and credit amounts"
+
+  - line: "taxable-earnings"
+    description: "Taxable earnings from distributions exceeding adjusted QEE"
+    formula: "If gross distribution ≤ adjusted QEE: $0; otherwise: earnings × (gross distribution - adjusted QEE) / gross distribution"
+    irsRef: "Pub 970 Chapter 8 Worksheet 8-1 Line 7; IRC §529(c)(3)(A)"
+    inputs:
+      - "Gross distribution"
+      - "Total earnings"
+      - "Adjusted QEE"
+    edgeCases:
+      - "Zero distributions → $0 taxable"
+      - "Distributions equal to or less than adjusted QEE → $0 taxable"
+      - "All earnings, no basis → taxable equals excess distribution amount"
+      - "Negative earnings (loss) → taxable amount is $0 (no negative income)"
+      - "Very small excess → correctly prorated"
+      - "Multiple 1099-Q forms aggregated before comparison to QEE"
+    testRef: "tests/engine/forms/form-1099-q.test.ts::Form 1099-Q computes taxable earnings when distributions exceed adjusted QEE"
+
+  - line: "tax-free-earnings"
+    description: "Tax-free earnings allocable to qualified education expenses"
+    formula: "Total earnings - taxable earnings"
+    irsRef: "Pub 970 Chapter 8"
+    testRef: "tests/engine/forms/form-1099-q.test.ts::Form 1099-Q tax-free earnings are the complement of taxable earnings"
+
+  - line: "taxable-basis"
+    description: "Taxable basis from distributions exceeding adjusted QEE"
+    formula: "If gross distribution ≤ adjusted QEE: $0; otherwise: basis × (gross distribution - adjusted QEE) / gross distribution"
+    irsRef: "Pub 970 Chapter 8"
+    notes: "Basis is always returned tax-free, but this tracks how much of the excess is return of basis vs. earnings. The taxable basis itself is $0 (basis is never taxed), but the allocable basis reduces the reportable taxable amount."
+    testRef: "tests/engine/forms/form-1099-q.test.ts::Form 1099-Q allocates excess between earnings and basis"
+
+  - line: "penalty-amount"
+    description: "10% additional tax on taxable earnings (before exceptions)"
+    formula: "taxable earnings × 10%"
+    irsRef: "IRC §529(c)(6); IRC §530(d)(4); Form 5329 Part II"
+    inputs:
+      - "Taxable earnings"
+    notes: "This flows to Form 5329 Part II. Penalty exceptions reduce the amount subject to the 10% tax."
+    testRef: "tests/engine/forms/form-1099-q.test.ts::Form 1099-Q computes 10% penalty on taxable earnings"
+
+  - line: "penalty-exception-amount"
+    description: "Earnings exempt from the 10% additional tax due to exceptions"
+    formula: "Sum of earnings allocable to: scholarship/grant amount, death/disability (full earnings), military academy cost"
+    irsRef: "IRC §530(d)(4)(B); IRC §529(c)(6)"
+    inputs:
+      - "Scholarship/grant exception amount"
+      - "Death or disability flag"
+      - "Military academy cost exception amount"
+    edgeCases:
+      - "Death or disability exempts all taxable earnings from penalty"
+      - "Scholarship exception limited to actual scholarship amount"
+      - "Multiple exceptions can combine but total cannot exceed taxable earnings"
+    testRef: "tests/engine/forms/form-1099-q.test.ts::Form 1099-Q scholarship exception reduces penalty but earnings remain taxable"
+
+  - line: "net-penalty"
+    description: "Net 10% additional tax after exceptions"
+    formula: "max(0, (taxable earnings - penalty exception amount)) × 10%"
+    irsRef: "Form 5329 Part II Line 8"
+    testRef: "tests/engine/forms/form-1099-q.test.ts::Form 1099-Q net penalty is zero when death exception applies"
+
+  - line: "packet"
+    description: "Draft packet inclusion rule for supported Form 1099-Q statements"
+    formula: "When one or more supported Form 1099-Q statements are present, include a non-filing reference-summary PDF in the packet that lists each payer statement's Box 1 through Box 4 data, the supported adjusted qualified education expense inputs, and the computed taxable-earnings plus Form 5329 penalty-routing totals."
+    irsRef: "Form 1099-Q Instructions, Boxes 1-5; Pub. 970 Chapters 7-8; Form 5329 Part II"
+    notes: "This packet slice intentionally emits a deterministic reference summary instead of attempting to recreate the payer-issued Form 1099-Q. Trustee-to-trustee transfers stay visible in the summary but remain excluded from the taxable-distribution computation so the draft packet matches the supported federal calculation."
+    testRef: "tests/pdf/fill-form-1099-q.test.ts::fillReturn includes a Form 1099-Q reference summary when education distribution statements are present"

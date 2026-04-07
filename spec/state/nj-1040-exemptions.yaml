@@ -1,0 +1,102 @@
+form: "NJ-1040 Personal Exemptions"
+fullName: "New Jersey NJ-1040 Personal Exemptions (Lines 30-37)"
+taxYear: 2025
+reference: "https://www.nj.gov/treasury/taxation/pdf/current/1040i.pdf"
+
+notes: |
+  New Jersey allows personal exemptions that reduce NJ gross income to arrive
+  at NJ taxable income. There is no standard deduction in NJ — exemptions
+  serve a similar purpose. Exemption amounts are fixed regardless of income
+  level (no phase-out).
+
+  Exemption categories:
+  - Self: $1,000
+  - Spouse/CU partner (on joint return): $1,000
+  - 65 or older (self): additional $1,000
+  - 65 or older (spouse): additional $1,000
+  - Blind or disabled (self): additional $1,000
+  - Blind or disabled (spouse): additional $1,000
+  - Each qualifying dependent: $1,500
+  - Each dependent who is a full-time student under age 22: additional $1,000
+  - Veteran (honorably discharged): additional $6,000 per qualifying veteran on the return
+
+  Filing status determines which exemptions apply:
+  - Single: self only
+  - MFJ: self + spouse
+  - MFS: self only
+  - HOH: self only
+  - QSS: self only
+
+lines:
+  - line: "30"
+    description: "Regular exemption — self"
+    formula: "$1,000 for all filers"
+    inputs:
+      - "Filing status"
+    testRef: "tests/engine/state/nj-1040-exemptions.test.ts::NJ-1040 exemptions Line 30 - self exemption is $1,000 for all filing statuses"
+
+  - line: "31"
+    description: "Regular exemption — spouse/CU partner"
+    formula: "$1,000 if married filing jointly; $0 otherwise"
+    inputs:
+      - "Filing status"
+    edgeCases:
+      - "MFS filers do not claim the spouse exemption"
+      - "QSS filers do not claim the spouse exemption (spouse is deceased)"
+    testRef: "tests/engine/state/nj-1040-exemptions.test.ts::NJ-1040 exemptions Line 31 - spouse exemption only for MFJ"
+
+  - line: "32"
+    description: "Age 65 or older exemption"
+    formula: "$1,000 for each qualifying taxpayer/spouse who is 65+ by December 31"
+    inputs:
+      - "Taxpayer age 65+ flag"
+      - "Spouse age 65+ flag"
+      - "Filing status"
+    notes: "Only MFJ can claim the spouse age exemption."
+    testRef: "tests/engine/state/nj-1040-exemptions.test.ts::NJ-1040 exemptions Line 32 - age 65 exemption for both taxpayer and spouse"
+
+  - line: "33"
+    description: "Blind or disabled exemption"
+    formula: "$1,000 for each qualifying taxpayer/spouse who is blind or disabled"
+    inputs:
+      - "Taxpayer blind/disabled flag"
+      - "Spouse blind/disabled flag"
+      - "Filing status"
+    notes: "Only MFJ can claim the spouse blind/disabled exemption."
+    testRef: "tests/engine/state/nj-1040-exemptions.test.ts::NJ-1040 exemptions Line 33 - blind exemption for taxpayer"
+
+  - line: "34"
+    description: "Veteran exemption"
+    formula: "$6,000 multiplied by the number of qualifying veterans on the return (taxpayer plus spouse/CU partner on a joint return)"
+    inputs:
+      - "Taxpayer veteran flag"
+      - "Spouse/CU partner veteran flag"
+      - "Filing status"
+    notes: "Per N.J.S.A. 54A:3-1 and the 2025 NJ-1040 instructions, the spouse/CU partner exemption is allowed only on a joint return."
+    testRef: "tests/engine/state/nj-1040-exemptions.test.ts::NJ-1040 exemptions Line 34 - joint return counts both taxpayer and spouse veterans"
+
+  - line: "35"
+    description: "Qualifying dependents exemption"
+    formula: "Number of qualifying dependents × $1,500"
+    inputs:
+      - "Number of qualifying dependents"
+    testRef: "tests/engine/state/nj-1040-exemptions.test.ts::NJ-1040 exemptions Line 35 - each dependent gets $1,500"
+
+  - line: "36"
+    description: "College-attending dependents additional exemption"
+    formula: "Number of dependents who are full-time students under age 22 × $1,000"
+    inputs:
+      - "Number of college-attending dependents"
+    notes: "This is an additional exemption on top of the $1,500 per dependent."
+    testRef: "tests/engine/state/nj-1040-exemptions.test.ts::NJ-1040 exemptions Line 36 - college dependent adds $1,000"
+
+  - line: "37"
+    description: "Total personal exemptions"
+    formula: "Sum of Lines 30 through 36"
+    inputs:
+      - "NJ-1040 Lines 30-36"
+    edgeCases:
+      - "Single filer with no dependents gets only $1,000"
+      - "MFJ couple both 65+, 2 dependents (1 in college), veteran: $1K + $1K + $2K + $0 + $6K + $3K + $1K = $14,000"
+      - "MFJ couple where both spouses are qualifying veterans gets $12,000 on line 34"
+    testRef: "tests/engine/state/nj-1040-exemptions.test.ts::NJ-1040 exemptions Line 37 - total exemptions sum all categories"

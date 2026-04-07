@@ -1,0 +1,152 @@
+form: "Self-Employed Health Insurance Deduction Worksheet"
+fullName: "Self-Employed Health Insurance Deduction Worksheet (Pub 535)"
+taxYear: 2025
+irsReference: "https://www.irs.gov/publications/p535#en_US_2024_publink1000208981"
+
+notes: |
+  This worksheet determines the deductible amount of health insurance premiums
+  for self-employed individuals under IRC §162(l). The deduction is an
+  above-the-line adjustment on Schedule 1 Line 17.
+
+  Key rules:
+  - The taxpayer must have net self-employment earnings from the trade or
+    business under which the insurance plan was established.
+  - The deduction is NOT available for any month the taxpayer was eligible to
+    participate in a subsidized health plan maintained by any employer of the
+    taxpayer or the taxpayer's spouse.
+  - Long-term care insurance premiums are deductible but subject to age-based
+    limits under IRC §213(d)(10).
+  - Medicare premiums (Part B, Part D, and Medigap) are deductible for
+    self-employed individuals under IRC §162(l).
+  - The deduction cannot exceed the net profit from the business reduced by
+    the deductible portion of SE tax and SE retirement contributions
+    attributable to that business.
+  - Children under age 27 at end of tax year can be covered even if not
+    dependents.
+  - For MFJ returns, each self-employed spouse computes their own deduction
+    from their own business.
+
+businessRuleValidation:
+  - scenario: "Reference summary packet disclosure"
+    description: "Inventory support counts this worksheet as business-rule validated only when regression coverage proves the emitted packet artifact stays labeled as a non-filing reference summary and only surfaces the supported Pub. 535 worksheet outputs that drive Schedule 1 Line 17 plus any supported excess-premium carryover disclosed for Schedule A."
+    testRef: "tests/pdf/fill-se-health-insurance-worksheet.test.ts::buildSEHealthInsuranceWorksheetReferenceSummary keeps the packet artifact reference-only and limited to supported worksheet outputs"
+  - scenario: "Reference summary inclusion rule"
+    description: "Inventory support counts this worksheet as business-rule validated only when regression coverage proves the draft packet emits the self-employed health insurance worksheet reference summary when worksheet inputs are provided and suppresses it when no worksheet result is present."
+    testRef: "tests/pdf/fill-se-health-insurance-worksheet.test.ts::fillReturn includes the SE health insurance worksheet reference summary only when worksheet inputs are present"
+
+lines:
+  - line: "1"
+    description: "Medical and dental insurance premiums"
+    formula: "Sum of health, dental, and vision insurance premiums paid during the tax year for self, spouse, dependents, and children under 27"
+    irsRef: "Pub 535, Self-Employed Health Insurance Deduction; IRC §162(l)(1)"
+    inputs:
+      - "Health insurance premiums"
+      - "Dental insurance premiums"
+      - "Vision insurance premiums"
+    testRef: "tests/engine/forms/se-health-insurance-worksheet.test.ts::Line 1 - total medical/dental/vision premiums"
+
+  - line: "2"
+    description: "Qualified long-term care insurance premiums (age-limited)"
+    formula: "For each covered person: min(actual LTC premium, age-based limit per IRC §213(d)(10)). Sum all covered persons."
+    irsRef: "IRC §213(d)(10); Rev. Proc. 2024-40 §3.18"
+    inputs:
+      - "Long-term care premium per covered person"
+      - "Attained age of each covered person at end of tax year"
+    notes: |
+      2025 limits (Rev. Proc. 2024-40 §3.18):
+        Age 40 or under:  $480
+        Age 41–50:        $890
+        Age 51–60:        $1,790
+        Age 61–70:        $4,770
+        Age 71 or older:  $5,960
+    edgeCases:
+      - "Each covered person has their own age-based limit"
+      - "Attained age means age at end of tax year, not at policy inception"
+    testRef: "tests/engine/forms/se-health-insurance-worksheet.test.ts::Line 2 - LTC premiums capped by age (age 40 or under)"
+
+  - line: "3"
+    description: "Medicare premiums"
+    formula: "Medicare Part B + Part D + Medigap/Medicare supplement premiums for self and spouse if applicable"
+    irsRef: "IRC §162(l)(2)(C); Rev. Rul. 2010-13"
+    inputs:
+      - "Medicare Part B premiums"
+      - "Medicare Part D premiums"
+      - "Medigap (Medicare supplement) premiums"
+    notes: |
+      Self-employed individuals can deduct Medicare premiums under IRC §162(l)
+      for months they are self-employed and not eligible for employer-subsidized
+      coverage. Rev. Rul. 2010-13 confirmed that Medicare Part B and Part D
+      premiums qualify as health insurance under §162(l).
+    testRef: "tests/engine/forms/se-health-insurance-worksheet.test.ts::Line 3 - Medicare premiums (Part B + Part D + Medigap)"
+
+  - line: "4"
+    description: "Total premiums before proration"
+    formula: "Line 1 + Line 2 + Line 3"
+    irsRef: "Pub 535"
+    testRef: "tests/engine/forms/se-health-insurance-worksheet.test.ts::Line 4 - total premiums sums all premium types"
+
+  - line: "5"
+    description: "Number of months eligible for deduction"
+    formula: "Count of months (1-12) where the taxpayer was NOT eligible to participate in a subsidized health plan maintained by any employer of the taxpayer or spouse"
+    irsRef: "Pub 535; IRC §162(l)(2)(B)"
+    edgeCases:
+      - "Month-by-month determination: each month is independently evaluated"
+      - "Employer plan of either taxpayer or spouse disqualifies the month"
+      - "COBRA coverage from a prior employer does NOT count as employer coverage"
+      - "Being offered but declining employer coverage still disqualifies the month"
+    testRef: "tests/engine/forms/se-health-insurance-worksheet.test.ts::Line 5 - eligible months tracked"
+
+  - line: "6"
+    description: "Prorated premiums"
+    formula: "Line 4 × (Line 5 / 12)"
+    irsRef: "Pub 535"
+    edgeCases:
+      - "If eligible all 12 months, no proration needed"
+      - "Partial-year self-employment prorates the deduction"
+    testRef: "tests/engine/forms/se-health-insurance-worksheet.test.ts::Line 6 - full year eligible produces no proration"
+
+  - line: "7"
+    description: "Net profit from business"
+    formula: "Schedule C Line 31 (or Schedule F Line 34 for farm businesses)"
+    irsRef: "Pub 535; IRC §162(l)(2)(A)"
+    inputs:
+      - "Schedule C net profit"
+      - "Schedule F net farm profit (if applicable)"
+    testRef: "tests/engine/forms/se-health-insurance-worksheet.test.ts::Line 7 - net profit from business"
+
+  - line: "8"
+    description: "Deductible portion of self-employment tax"
+    formula: "Schedule SE Line 13 (50% of SE tax) attributable to this business"
+    irsRef: "Pub 535"
+    testRef: "tests/engine/forms/se-health-insurance-worksheet.test.ts::Line 8 - deductible SE tax"
+
+  - line: "9"
+    description: "Self-employed retirement plan contributions"
+    formula: "SEP, SIMPLE, or qualified plan contributions attributable to this business (Schedule 1 Line 16)"
+    irsRef: "Pub 535"
+    testRef: "tests/engine/forms/se-health-insurance-worksheet.test.ts::Line 9 - SE retirement contributions"
+
+  - line: "10"
+    description: "Earned income limit"
+    formula: "max(0, Line 7 - Line 8 - Line 9)"
+    irsRef: "Pub 535; IRC §162(l)(2)(A)"
+    notes: "The deduction cannot exceed net self-employment earnings reduced by the SE tax deduction and retirement contributions."
+    testRef: "tests/engine/forms/se-health-insurance-worksheet.test.ts::Line 10 - earned income limit equals net profit minus SE tax minus retirement"
+
+  - line: "11"
+    description: "Self-employed health insurance deduction"
+    formula: "min(Line 6, Line 10)"
+    irsRef: "Pub 535; IRC §162(l)"
+    notes: "This amount flows to Schedule 1 Line 17. Any excess premiums not deductible here may be deductible as medical expenses on Schedule A Line 1 (subject to 7.5% AGI floor)."
+    edgeCases:
+      - "If Line 10 is zero or negative (business loss), no deduction is available"
+      - "Excess premiums can still be claimed on Schedule A as medical expenses"
+      - "For MFJ returns, each spouse's deduction is computed independently from their own business"
+    testRef: "tests/engine/forms/se-health-insurance-worksheet.test.ts::Line 11 - deduction limited to prorated premiums when under earned income limit"
+
+  - line: "excessForScheduleA"
+    description: "Non-deductible excess available for Schedule A"
+    formula: "max(0, Line 6 - Line 11)"
+    irsRef: "Pub 535"
+    notes: "This amount can be included in Schedule A Line 1 medical expenses (subject to 7.5% AGI floor) but is NOT part of the above-the-line deduction."
+    testRef: "tests/engine/forms/se-health-insurance-worksheet.test.ts::Excess premiums for Schedule A computed correctly"

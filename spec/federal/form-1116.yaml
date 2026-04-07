@@ -1,0 +1,198 @@
+form: "Form 1116"
+fullName: "Foreign Tax Credit"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i1116"
+
+notes: |
+  Form 1116 computes the foreign tax credit limitation. The credit cannot
+  exceed the US tax attributable to foreign-source income. Taxpayers with
+  ≤ $300 single / $600 MFJ of creditable foreign tax from passive category
+  income reported on qualified payee statements such as Form 1099-DIV,
+  Form 1099-INT, and the supported K-1 statement paths may elect the
+  simplified method and skip Form 1116, subject to the official source and
+  carryover restrictions.
+
+  Multi-category support (IRC §904(d)):
+  The IRS requires a separate Form 1116 for each category of foreign income.
+  The two categories relevant to most individual filers are:
+  - Passive category income: dividends, interest, rents, royalties, and
+    capital gains from passive activities (IRC §904(d)(2)(B)). This is the
+    default category for Form 1099-DIV and Form 1099-INT foreign tax.
+  - General category income: wages, business income, and other active
+    income (IRC §904(d)(2)(A)). This is the default category for K-1
+    foreign tax from active partnership/S-corp operations.
+  Each K-1 may override its category with an explicit foreignTaxCategory
+  field (e.g., a K-1 from a passive PFIC partnership uses "passive").
+  The engine computes per-category limitations and carryforwards. When only
+  one category has activity, the behavior is identical to the prior
+  single-category path. When multiple categories have activity, each gets
+  its own Form 1116 limitation, and the credits are aggregated.
+  Per-category carryforwards use the same Schedule B FIFO reconciliation
+  as the single-category path, applied independently per category.
+
+businessRuleValidation:
+  - rule: "reference-summary-packet"
+    description: "Inventory support counts this form as business-rule validated only when regression coverage proves the emitted packet artifact stays labeled as a non-filing reference summary and only appears when the official filing instructions require Form 1116 rather than the no-form simplified election."
+    testRef: "tests/pdf/fill-form-1116.test.ts::buildForm1116ReferenceSummary keeps the packet artifact reference-only and limited to supported foreign tax credit outputs"
+
+lines:
+  - line: "simplified_eligible"
+    description: "Eligible for simplified (direct) method"
+    formula: |
+      All foreign tax from qualified payee statements only, passive category
+      only, no disqualifying K-1 or other nonqualified-source foreign tax
+      sources,
+      and total ≤ $300 (single/HoH/MFS) or ≤ $600 (MFJ/QSS)
+    irsRef: "Form 1116 Instructions, Who Can Take the Credit Without Filing Form 1116"
+    notes: "The returned simplifiedEligible audit flag must incorporate both the filing-status threshold and any source-based disqualifiers supplied to the calculation. Qualified payee statements include Form 1099-DIV and Form 1099-INT in the supported statement-source slice, so the threshold test must aggregate foreign tax reported on both forms before deciding whether the no-Form-1116 election is available."
+    edgeCases:
+      - "If any foreign income is from active business, must file Form 1116"
+      - "K-1 foreign tax requires Form 1116"
+      - "1099-INT foreign tax counts toward the same $300/$600 simplified-method threshold as 1099-DIV foreign tax"
+      - "Combined 1099-DIV and 1099-INT foreign tax over the threshold makes simplifiedEligible false even when each form alone is under the limit"
+      - "Returned simplifiedEligible is false when K-1 foreign tax exists even if total foreign tax is under the filing-status threshold"
+    testRef: "tests/engine/forms/form-1116.test.ts::simplified method - eligible when under threshold"
+
+  - line: "k1-foreign-tax"
+    description: "K-1 foreign tax aggregation"
+    formula: "Sum of K-1 Box 16 (foreign taxes paid) across all partnerships"
+    irsRef: "Schedule K-1 Box 16; Form 1116 Instructions"
+    notes: "K-1 foreign tax disqualifies from simplified method and requires Form 1116"
+    edgeCases:
+      - "K-1 foreign tax with no 1099-DIV foreign tax"
+      - "K-1 foreign tax combined with 1099-DIV foreign tax"
+    testRef: "tests/engine/forms/form-1116.test.ts::simplified method - not eligible with K-1 foreign tax"
+
+  - line: "1a"
+    description: "Taxable income from sources within country shown above"
+    formula: "Foreign-source gross income by category; in the supported federal pipeline, when explicit Line 1a input is not separately provided, estimate that gross income from attached foreign-tax-bearing Form 1099-DIV ordinary dividends plus capital gain distributions, attached foreign-tax-bearing Form 1099-INT interest, and supported positive Schedule K-1 income boxes that still feed taxable income, including ordinary income, net rental income, other net rental income, guaranteed payments, interest, ordinary dividends, royalties, net short-term capital gain, net long-term capital gain, section 1231 gain, and other income"
+    irsRef: "Form 1116 Instructions, Line 1a"
+    notes: "This supported Line 1a default is an inference from the instructions' gross-income requirement and the official K-3 reporting guidance, not full category-by-category K-3 parity. Qualified dividends are not added separately because they are already included in ordinary dividends, and negative K-1 loss or deduction boxes do not reduce this gross-income estimate."
+    testRef: "tests/engine/forms/form-1116.test.ts::Form 1116 Line 1a - federal pipeline estimates supported gross foreign income from foreign-tax-bearing 1099-DIV and K-1 components"
+
+  - line: "3e"
+    description: "Apportioned share of deductions"
+    formula: "deductionAmount × (foreignSourceIncome / AGI), capped at deductionAmount"
+    irsRef: "Form 1116 Instructions, Line 3e; IRS Line 3e Worksheet"
+    notes: |
+      Per IRS Form 1116 Instructions Line 3e Worksheet:
+      1. Enter standard or itemized deduction (Form 1040 Line 12 or 13)
+      2. Enter AGI (Form 1040 Line 11)
+      3. Divide foreign source income (Line 1a) by AGI
+      4. Multiply deduction by the ratio from step 3
+      This reduces the FTC limitation numerator to match the after-deduction basis
+      of the denominator (taxable income = AGI - deductions).
+    edgeCases:
+      - "Ratio capped at 1.0 (apportioned cannot exceed the deduction itself)"
+      - "Zero AGI: apportioned deductions = 0"
+      - "Zero foreign income: apportioned deductions = 0"
+    testRef: "tests/engine/forms/form-1116.test.ts::Form 1116 Line 3e - apportioned deductions with agi/deduction inputs"
+
+  - line: "3f"
+    description: "Net foreign source taxable income"
+    formula: "Line 1a - Line 3e"
+    irsRef: "Form 1116 Instructions, Line 3f"
+    testRef: "tests/engine/forms/form-1116.test.ts::Form 1116 Line 3f - net foreign source income"
+
+  - line: "7"
+    description: "Foreign taxes paid or accrued"
+    formula: "Sum of all creditable foreign taxes reported on supported qualified payee statements and other supported sources, including Form 1099-DIV Box 7, Form 1099-INT Box 6, K-1 foreign taxes, and any supported carryforward amount"
+    irsRef: "Form 1116 Instructions, Part II"
+    notes: "The supported federal pipeline must aggregate qualified payee-statement foreign tax across both Form 1099-DIV and Form 1099-INT before applying the simplified-method threshold or the Form 1116 limitation calculation."
+    testRef: "tests/engine/forms/form-1116.test.ts::Form 1116 Line 7 - total foreign taxes"
+
+  - line: "20"
+    description: "Limitation — US tax × (foreign source income / worldwide income)"
+    formula: "taxBeforeCredits × (Line 3f / taxableIncome)"
+    irsRef: "Form 1116 Instructions, Line 20"
+    edgeCases:
+      - "If foreign source income ≤ 0, limitation is 0"
+      - "If taxable income ≤ 0, limitation is 0"
+      - "Ratio cannot exceed 1.0"
+    testRef: "tests/engine/forms/form-1116.test.ts::Form 1116 Line 20 - limitation ratio"
+
+  - line: "21"
+    description: "Credit allowed"
+    formula: "min(Line 7, Line 20)"
+    irsRef: "Form 1116 Instructions, Line 21"
+    notes: "This is the actual foreign tax credit that flows to Schedule 3 Line 1"
+    testRef: "tests/engine/forms/form-1116.test.ts::Form 1116 Line 21 - credit allowed limited by taxes paid"
+
+  - line: "carryforward"
+    description: "Unused foreign tax credit carryforward"
+    formula: "Line 7 - Line 21 (excess taxes over limitation)"
+    irsRef: "Form 1116 Instructions, Carryback and Carryover"
+    notes: |
+      Can carry forward 10 years (carryback 1 year eliminated for post-2021).
+      Pipeline must invoke Form 1116 whenever prior-year carryforward exists,
+      even if no current-year foreign tax is paid. Without this, the carryforward
+      is silently dropped and the taxpayer loses the credit permanently.
+    edgeCases:
+      - "Prior-year carryforward with zero current-year foreign tax: carryforward preserved"
+      - "Prior-year carryforward with current-year foreign income but no tax (treaty-exempt): carryforward preserved"
+    testRef: "tests/engine/forms/form-1116.test.ts::Form 1116 - carryforward when limited"
+
+  # ── Schedule B: Foreign Tax Carryover Reconciliation ─────────
+  - line: "schedule-b"
+    description: "Per-year foreign tax credit carryover reconciliation"
+    formula: |
+      When per-year carryforward amounts are provided (mapping tax year → unused credit),
+      apply them FIFO (oldest year first) against the excess limitation (Line 20 - current-year
+      Line 7 credit used). Credits older than 10 years from the current tax year expire unused.
+      Current-year excess credit is added as a new carryforward entry for the current tax year.
+      The result includes a year-by-year breakdown of amounts used, expired, and remaining.
+    irsRef: "Form 1116 Schedule B; IRC §904(c); Reg. §1.904-2"
+    notes: |
+      IRC §904(c) allows unused foreign tax credits to be carried forward 10 tax years.
+      The 1-year carryback was repealed by the Tax Cuts and Jobs Act for tax years
+      beginning after December 31, 2017 (IRC §904(c) as amended by TCJA §14301).
+      Credits must be applied in chronological order — oldest first (FIFO).
+      A credit from tax year Y expires at the end of tax year Y+10.
+      When the legacy single priorYearCarryforward is used instead of per-year amounts,
+      the engine treats the entire amount as a single entry from the immediately prior year.
+    edgeCases:
+      - "Credits from exactly 10 years ago are still usable in the current year"
+      - "Credits from 11+ years ago expire and are reported as expired in the reconciliation"
+      - "FIFO ordering: 2016 carryforward is used before 2017 carryforward"
+      - "Partial usage: if limitation absorbs some but not all carryforward from a year, the remainder carries forward"
+      - "Current-year excess: unused current-year credit creates a new carryforward entry"
+      - "All carryforward years fully used: remaining carryforward by year is empty"
+      - "No excess limitation: all carryforward amounts carry forward unchanged (minus expirations)"
+      - "Mixed legacy and per-year input: per-year input takes precedence over legacy single amount"
+    testRef: "tests/engine/forms/form-1116.test.ts::Form 1116 Schedule B - FIFO carryforward uses oldest credits first"
+
+  # ── Multi-Category Support (IRC §904(d)) ─────────────────
+  - line: "multi-category"
+    description: "Per-category foreign tax credit limitation and aggregation"
+    formula: |
+      When foreign tax activity spans multiple IRC §904(d) categories (e.g.,
+      passive from 1099-DIV/INT and general from K-1), compute a separate
+      Form 1116 limitation for each category. The credit allowed per category
+      is min(category taxes, category limitation). The total credit is the
+      sum of per-category credits. Carryforwards are tracked per category
+      and per year using independent Schedule B FIFO reconciliation.
+      Default category routing:
+      - Form 1099-DIV and Form 1099-INT foreign tax → passive
+      - Schedule K-1 foreign tax → general (unless overridden by
+        foreignTaxCategory on the K-1 input)
+      When only one category has activity, the result is mathematically
+      identical to the single-category path.
+    irsRef: "IRC §904(d); Form 1116 Instructions, Category of Income"
+    inputs:
+      - "Per-category foreign source income"
+      - "Per-category foreign taxes paid"
+      - "Per-category carryforward by year"
+    edgeCases:
+      - "Only passive category: identical to single-category behavior"
+      - "Only general category: identical to single-category behavior"
+      - "High passive tax rate with low passive income: passive category is limited even though general has excess limitation"
+      - "Per-category carryforward preserves independent FIFO ordering"
+      - "K-1 overriding category to passive: foreign tax routes to passive instead of general"
+    testRef: "tests/engine/forms/form-1116.test.ts::Form 1116 multi-category - passive and general categories get separate limitations"
+
+  - line: "packet"
+    description: "Draft packet inclusion rule for supported Form 1116 foreign tax credit activity"
+    formula: "When supported foreign tax credit activity requires filing Form 1116 under the official instructions, include a non-filing reference-summary PDF in the packet that lists the supported Form 1116 audit lines for each active category, including Schedule B carryforward reconciliation outputs when present. Suppress the packet artifact when the taxpayer qualifies for the no-Form-1116 simplified election and has no carryforward activity."
+    irsRef: "Form 1116 Instructions, Who Can Take the Credit Without Filing Form 1116; Form 1116 Instructions, Lines 1a, 3e, 3f, 7, 20, and 21"
+    notes: "This packet slice intentionally emits a deterministic reference summary instead of attempting to recreate a filed Form 1116, so the draft packet stays honest about supported foreign tax credit calculations while still surfacing when the official filing path requires Form 1116."
+    testRef: "tests/pdf/fill-form-1116.test.ts::fillReturn includes a Form 1116 reference summary when foreign tax activity exceeds the simplified-election threshold"

@@ -1,0 +1,196 @@
+form: "PA-Schedule-A"
+fullName: "Pennsylvania Schedule A — Interest Income"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40a.pdf"
+
+notes: |
+  PA Schedule A computes PA-taxable interest income that flows to PA-40 Line 2.
+  For the supported resident slice, the engine models the printed 2024 and 2025
+  line structure and uses validated inputs already available in the tax engine:
+
+    - federal taxable interest amount reported on the return
+    - tax-exempt interest included on the federal return
+    - supported Form 1099-INT Box 2 forfeited-interest penalties, limited on
+      each normalized 1099-INT record to the Box 1 interest reported on that
+      same record
+    - federal Schedule K-1 interest removed from the federal amount and then
+      added back using Pennsylvania pass-through classifications
+    - direct U.S. government obligation interest excluded from PA tax
+    - supported Box 7 code D 1099-R annuity interest that the PA instructions
+      direct to Schedule A Line 11
+    - manual schedule-level additions and reductions for adjustments that
+      cannot yet be derived from normalized inputs
+
+  The paper form uses whole dollars. The engine rounds each line input and
+  adjustment amount to the nearest dollar and floors the final Line 16 at zero.
+
+packetRules:
+  packetBehavior: "reference-summary-pdf"
+  includeWhen:
+    - "A Pennsylvania resident return packet is being assembled and the resident orchestrator computes Schedule A"
+    - "The official Pennsylvania interest-income filing trigger is met: taxable interest exceeds $2,500 or any amount appears on Schedule A Lines 2, 3, 5, 6, 7, 8, 11, 12, 13, 14, or 15"
+  suppressWhen:
+    - "No Pennsylvania resident return packet is being assembled"
+    - "Schedule A exists only as a zero-adjustment resident computation with taxable interest of $2,500 or less"
+  notes: |
+    The Pennsylvania Personal Income Tax Guide says PA-40 Schedule A is
+    required when taxable interest income is more than $2,500 or when any
+    adjustment amount appears on Lines 2, 3, 5, 6, 7, 8, 11, 12, 13, 14, or
+    15. Until an official PA-40 Schedule A PDF filler exists, the packet path
+    emits `pa-schedule-a-reference.pdf` as a reference summary only. Packet
+    disclosures must therefore keep Pennsylvania packet completeness partial
+    whenever this reference summary is attached.
+
+businessRuleValidation:
+  - rule: "pa-schedule-a-reference-packet"
+    description: "Inventory support counts the Pennsylvania Schedule A packet path as validated only when fillReturn emits `pa-schedule-a-reference.pdf` whenever the official Schedule A filing trigger is met."
+    testRef: "tests/pdf/fill-pa-schedule-a.test.ts::fillReturn includes the Pennsylvania Schedule A reference summary when the resident return meets the official filing trigger"
+  - rule: "pa-schedule-a-reference-suppression"
+    description: "Inventory support counts the Pennsylvania Schedule A suppression rule as validated only when regression coverage proves fillReturn omits the reference summary for resident returns with taxable interest of $2,500 or less and no Schedule A adjustments."
+    testRef: "tests/pdf/fill-pa-schedule-a.test.ts::fillReturn suppresses the Pennsylvania Schedule A reference summary when the official filing trigger is not met"
+  - rule: "pa-schedule-a-reference-disclosure"
+    description: "Inventory support counts the Pennsylvania Schedule A packet disclosure as validated only when readiness regression coverage keeps packet completeness partial while only the Schedule A reference summary is available beyond PA-40."
+    testRef: "tests/utils/return-readiness.test.ts::marks Pennsylvania packets partial when a PA Schedule A reference summary is attached"
+
+lines:
+  - line: "1"
+    description: "Interest income reported on the federal return"
+    formula: "Rounded federal interest income amount supplied for Schedule A Line 1"
+    notes: |
+      The resident orchestrator uses the supported federal interest baseline
+      that includes Form 1099-INT Box 1 interest plus the federal Schedule K-1
+      Box 5 interest that is reported on the federal return and then removed on
+      Schedule A Line 5.
+    testRef: "tests/engine/state/pa-schedule-a.test.ts::PA Schedule A Line 16 subtracts federal Schedule K-1 and government-interest reductions before adding PA adjustments back"
+
+  - line: "2"
+    description: "Tax-exempt interest included in the federal return"
+    formula: "Rounded tax-exempt interest amount included in federal Form 1040 Line 2a, excluding exempt-interest dividends"
+    testRef: "tests/engine/state/pa-schedule-a.test.ts::PA Schedule A Line 16 subtracts federal Schedule K-1 and government-interest reductions before adding PA adjustments back"
+
+  - line: "3"
+    description: "Other addition adjustments"
+    formula: "Sum of rounded, non-negative addition adjustment entries"
+    notes: |
+      Examples from the 2025 instructions include PA ABLE taxable
+      distributions, self-charged interest, nominee interest, and bond-premium
+      amortization that increases PA-taxable interest.
+    testRef: "tests/engine/state/pa-schedule-a.test.ts::PA Schedule A Line 3 totals manual addition adjustments"
+
+  - line: "4"
+    description: "Adjusted federal interest subtotal"
+    formula: "Line 1 + Line 2 + Line 3"
+    testRef: "tests/engine/state/pa-schedule-a.test.ts::PA Schedule A Line 16 subtracts federal Schedule K-1 and government-interest reductions before adding PA adjustments back"
+
+  - line: "5"
+    description: "Interest income from federal Schedule(s) K-1"
+    formula: "Rounded federal Schedule K-1 interest amount included in the federal interest baseline"
+    notes: |
+      This line removes federal pass-through interest from the federal-interest
+      subtotal so Pennsylvania-classified pass-through interest can be added
+      back on Line 15.
+    testRef: "tests/engine/state/pa-schedule-a.test.ts::PA Schedule A Line 16 subtracts federal Schedule K-1 and government-interest reductions before adding PA adjustments back"
+
+  - line: "6"
+    description: "Interest income from direct obligations of Pennsylvania and its political subdivisions"
+    formula: "Rounded amount of Pennsylvania direct-obligation interest supplied for the schedule, defaulting to the supported Form 1099-INT Pennsylvania direct-obligation allocation when no explicit schedule amount is provided"
+    notes: |
+      The supported slice accepts this amount as explicit schedule input and
+      also allows normalized Form 1099-INT records to carry a
+      Pennsylvania-specific direct-obligation allocation for Schedule A Line 6.
+      Explicit schedule detail still overrides the derived amount.
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator defaults Schedule A Line 6 from Form 1099-INT Pennsylvania direct-obligation allocations"
+
+  - line: "7"
+    description: "Interest income from direct obligations of the U.S. government"
+    formula: "Rounded amount of direct U.S. government obligation interest supplied for the schedule"
+    notes: |
+      The resident orchestrator derives this from supported Form 1099-INT Box 3
+      amounts and leaves any federal Schedule K-1 U.S. government interest to
+      explicit reduction adjustments, matching the printed instructions.
+    testRef: "tests/engine/state/pa-schedule-a.test.ts::PA Schedule A Line 16 subtracts federal Schedule K-1 and government-interest reductions before adding PA adjustments back"
+
+  - line: "8"
+    description: "Other reduction adjustments"
+    formula: "Sum of rounded, non-negative reduction adjustment entries plus the rounded supported Form 1099-INT forfeited-interest penalty amount"
+    notes: |
+      Examples from the 2025 instructions include nonresident-period interest,
+      installment-sale interest already taxed as gain, and federal Schedule K-1
+      U.S. government interest when an RK-1 is not provided. The supported
+      resident orchestrator also defaults the Pennsylvania forfeited-interest
+      penalty from Form 1099-INT Box 2. Because the resident engine starts
+      Schedule A Line 1 from gross Form 1099-INT Box 1 interest rather than a
+      federal Schedule 1 net amount, it does not need a separate Line 3 add-back
+      for the same supported penalty. The automatic Line 8 default uses the
+      lesser of Box 1 interest and Box 2 forfeited-interest penalty on each
+      normalized 1099-INT record, so the schedule never deducts more than the
+      supported redeemed-account interest amount from any one record. Any
+      excess forfeited-interest penalty remains a Schedule D issue outside this
+      automatic default.
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator defaults Schedule A Line 8 from supported Form 1099-INT forfeited-interest penalties without over-deducting interest"
+
+  - line: "9"
+    description: "Total reductions from adjusted federal interest"
+    formula: "Line 5 + Line 6 + Line 7 + Line 8"
+    testRef: "tests/engine/state/pa-schedule-a.test.ts::PA Schedule A Line 16 subtracts federal Schedule K-1 and government-interest reductions before adding PA adjustments back"
+
+  - line: "10"
+    description: "Interest subtotal after federal-to-PA reductions"
+    formula: "Line 4 - Line 9"
+    notes: |
+      The printed form does not separately floor Line 10; the supported engine
+      preserves the intermediate amount and floors the final Line 16 at zero.
+    testRef: "tests/engine/state/pa-schedule-a.test.ts::PA Schedule A Line 16 floors the final PA-taxable interest at zero"
+
+  - line: "11"
+    description: "Life insurance, annuity, or endowment contract distributions included in federal taxable income"
+    formula: "Rounded Schedule A Line 11 amount supplied for the schedule"
+    notes: |
+      The resident orchestrator automatically includes supported Form 1099-R
+      distributions whose Box 7 codes include D together with another code,
+      because the 2025 instructions direct those amounts to Schedule A Line 11.
+    testRef: "tests/engine/state/pa-schedule-a.test.ts::PA Schedule A Line 11 includes supported 1099-R annuity interest and other schedule additions"
+
+  - line: "12"
+    description: "Charitable gift annuity income included in federal taxable income"
+    formula: "Rounded Schedule A Line 12 amount supplied for the schedule"
+    testRef: "tests/engine/state/pa-schedule-a.test.ts::PA Schedule A Line 11 includes supported 1099-R annuity interest and other schedule additions"
+
+  - line: "13"
+    description: "IRC Section 529 qualified tuition program distributions for non-educational purposes"
+    formula: "Rounded Schedule A Line 13 amount supplied for the schedule"
+    notes: |
+      The resident orchestrator can default this amount from the supported
+      federal Form 1099-Q taxable-earnings result when every 1099-Q record is
+      an IRC §529 plan. When a return contains both §529 and Coverdell ESA
+      distributions, the resident orchestrator allocates adjusted qualified
+      education expenses pro rata between the two account types as directed by
+      PIT Bulletin 2006-04 and carries only the §529 taxable-earnings share to
+      Schedule A Line 13. Any taxable Coverdell share remains outside the
+      printed Schedule A line and is added to Pennsylvania Class 2 interest by
+      the resident orchestrator.
+    testRef: "tests/engine/state/pa-schedule-a.test.ts::PA Schedule A Line 11 includes supported 1099-R annuity interest and other schedule additions"
+
+  - line: "14"
+    description: "Health/Medical Savings Account distributions included in federal taxable income"
+    formula: "Rounded Schedule A Line 14 amount supplied for the schedule"
+    notes: |
+      The resident orchestrator can default this amount from supported federal
+      Form 8889 Line 16 taxable HSA distributions while still allowing manual
+      input for unsupported Archer MSA or other Pennsylvania-only adjustments.
+    testRef: "tests/engine/state/pa-schedule-a.test.ts::PA Schedule A Line 11 includes supported 1099-R annuity interest and other schedule additions"
+
+  - line: "15"
+    description: "Interest income from PA S corporations and partnerships"
+    formula: "Rounded Pennsylvania-classified pass-through interest amount supplied for the schedule"
+    notes: |
+      The resident orchestrator uses resident PA Schedule RK-1 totals when
+      provided and otherwise falls back to the remaining federal Schedule K-1
+      interest after excluding entities with PA statements.
+    testRef: "tests/engine/state/pa-schedule-a.test.ts::PA Schedule A Line 15 uses Pennsylvania-classified pass-through interest"
+
+  - line: "16"
+    description: "Total PA-taxable interest income"
+    formula: "max(0, Line 10 + Line 11 + Line 12 + Line 13 + Line 14 + Line 15)"
+    notes: "Flows to PA-40 Line 2."
+    testRef: "tests/engine/state/pa-schedule-a.test.ts::PA Schedule A Line 16 floors the final PA-taxable interest at zero"

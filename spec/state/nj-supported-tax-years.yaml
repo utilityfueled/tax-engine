@@ -1,0 +1,159 @@
+form: "NJ Resident Engine Supported Tax Years"
+fullName: "New Jersey Resident Income Tax Engine — Supported Tax Year Validation"
+taxYear: 2025
+reference: "https://www.nj.gov/treasury/taxation/new2025.shtml"
+
+notes: |
+  The supported NJ resident-return slice is keyed to the published 2025 New
+  Jersey resident return instructions and schedules. Until a later iteration
+  adds constants, specs, and tests for additional filing years, the resident
+  modules must reject unsupported tax years with clear errors instead of
+  silently computing a partially valid return.
+
+lines:
+  - line: "gross-income"
+    description: "Gross income module supports only the validated 2025 resident rules"
+    formula: "Reject tax years other than 2025 with a clear error"
+    inputs:
+      - "Tax year"
+    testRef: "tests/engine/state/nj-supported-tax-year.test.ts::NJ supported tax years - gross income rejects unsupported years"
+
+  - line: "exemptions"
+    description: "Exemptions module supports only the validated 2025 resident rules"
+    formula: "Reject tax years other than 2025 with a clear error"
+    inputs:
+      - "Tax year"
+    testRef: "tests/engine/state/nj-supported-tax-year.test.ts::NJ supported tax years - exemptions rejects unsupported years"
+
+  - line: "college-affordability"
+    description: "College affordability deduction module supports only the validated 2025 resident rules"
+    formula: "Reject tax years other than 2025 with a clear error"
+    inputs:
+      - "Tax year"
+    testRef: "tests/engine/state/nj-supported-tax-year.test.ts::NJ supported tax years - college affordability rejects unsupported years"
+
+  - line: "medical-expenses"
+    description: "Medical expense deduction module supports only the validated 2025 resident rules"
+    formula: "Reject tax years other than 2025 with a clear error"
+    inputs:
+      - "Tax year"
+    testRef: "tests/engine/state/nj-supported-tax-year.test.ts::NJ supported tax years - medical expenses rejects unsupported years"
+
+  - line: "property-tax"
+    description: "Property tax benefit module supports only the validated 2025 resident rules"
+    formula: "Reject tax years other than 2025 with a clear error"
+    inputs:
+      - "Tax year"
+    testRef: "tests/engine/state/nj-supported-tax-year.test.ts::NJ supported tax years - property tax rejects unsupported years"
+
+  - line: "1040-hw"
+    description: "NJ-1040-HW module supports only the validated 2025 resident rules"
+    formula: "Reject tax years other than 2025 with a clear error"
+    inputs:
+      - "Tax year"
+    testRef: "tests/engine/state/nj-supported-tax-year.test.ts::NJ supported tax years - NJ-1040-HW rejects unsupported years"
+
+  - line: "other-jurisdiction-credit"
+    description: "Other-jurisdiction credit module supports only the validated 2025 resident rules"
+    formula: "Reject tax years other than 2025 with a clear error"
+    inputs:
+      - "Tax year"
+    testRef: "tests/engine/state/nj-supported-tax-year.test.ts::NJ supported tax years - other jurisdiction credit rejects unsupported years"
+
+  - line: "supplemental-credits"
+    description: "Supplemental credits module supports only the validated 2025 resident rules"
+    formula: "Reject tax years other than 2025 with a clear error"
+    inputs:
+      - "Tax year"
+    testRef: "tests/engine/state/nj-supported-tax-year.test.ts::NJ supported tax years - supplemental credits rejects unsupported years"
+
+  - line: "ptbait-credit"
+    description: "PTBAIT credit module supports only the validated 2025 resident rules"
+    formula: "Reject tax years other than 2025 with a clear error"
+    inputs:
+      - "Tax year"
+    testRef: "tests/engine/state/nj-supported-tax-year.test.ts::NJ supported tax years - PTBAIT credit rejects unsupported years"
+
+  - line: "tax-rate"
+    description: "Tax rate module supports only the validated 2025 resident rules"
+    formula: "Reject tax years other than 2025 with a clear error"
+    inputs:
+      - "Tax year"
+    testRef: "tests/engine/state/nj-supported-tax-year.test.ts::NJ supported tax years - tax rate rejects unsupported years"
+
+  - line: "eitc"
+    description: "EITC module supports only the validated 2025 resident rules"
+    formula: "Reject tax years other than 2025 with a clear error"
+    inputs:
+      - "Tax year"
+    testRef: "tests/engine/state/nj-supported-tax-year.test.ts::NJ supported tax years - EITC rejects unsupported years"
+
+  - line: "child-tax-credit"
+    description: "Child tax credit module supports only the validated 2025 resident rules"
+    formula: "Reject tax years other than 2025 with a clear error"
+    inputs:
+      - "Tax year"
+    testRef: "tests/engine/state/nj-supported-tax-year.test.ts::NJ supported tax years - child tax credit rejects unsupported years"
+
+  - line: "dependent-care-credit"
+    description: "Dependent care credit module supports only the validated 2025 resident rules"
+    formula: "Reject tax years other than 2025 with a clear error"
+    inputs:
+      - "Tax year"
+    testRef: "tests/engine/state/nj-supported-tax-year.test.ts::NJ supported tax years - dependent care credit rejects unsupported years"
+
+  - line: "health-coverage"
+    description: "Health coverage shared-responsibility-payment module supports only the validated 2025 resident rules"
+    formula: "Reject tax years other than 2025 with a clear error"
+    inputs:
+      - "Tax year"
+    testRef: "tests/engine/state/nj-supported-tax-year.test.ts::NJ supported tax years - health coverage rejects unsupported years"
+
+  - line: "use-tax"
+    description: "Use tax module supports only the validated 2025 resident rules"
+    formula: "Reject tax years other than 2025 with a clear error"
+    inputs:
+      - "Tax year"
+    testRef: "tests/engine/state/nj-supported-tax-year.test.ts::NJ supported tax years - use tax rejects unsupported years"
+
+  - line: "excess-payroll"
+    description: "Excess payroll module supports only the validated 2025 resident rules"
+    formula: "Reject tax years other than 2025 with a clear error"
+    inputs:
+      - "Tax year"
+    testRef: "tests/engine/state/nj-supported-tax-year.test.ts::NJ supported tax years - excess payroll rejects unsupported years"
+
+  - line: "wounded-warrior-credit"
+    description: "Wounded warrior credit module supports only the validated 2025 resident rules"
+    formula: "Reject tax years other than 2025 with a clear error"
+    inputs:
+      - "Tax year"
+    testRef: "tests/engine/state/nj-supported-tax-year.test.ts::NJ supported tax years - wounded warrior credit rejects unsupported years"
+
+  - line: "filing-requirement"
+    description: "Filing requirement module supports only the validated 2025 resident rules"
+    formula: "Reject tax years other than 2025 with a clear error"
+    inputs:
+      - "Tax year"
+    testRef: "tests/engine/state/nj-supported-tax-year.test.ts::NJ supported tax years - filing requirement rejects unsupported years"
+
+  - line: "overpayment-allocation"
+    description: "Overpayment allocation module supports only the validated 2025 resident rules"
+    formula: "Reject tax years other than 2025 with a clear error"
+    inputs:
+      - "Tax year"
+    testRef: "tests/engine/state/nj-supported-tax-year.test.ts::NJ supported tax years - overpayment allocation rejects unsupported years"
+
+  - line: "2210"
+    description: "NJ-2210 module supports only the validated 2025 resident rules"
+    formula: "Reject tax years other than 2025 with a clear error"
+    inputs:
+      - "Tax year"
+    testRef: "tests/engine/state/nj-supported-tax-year.test.ts::NJ supported tax years - NJ-2210 rejects unsupported years"
+
+  - line: "resident-return"
+    description: "Resident NJ-1040 orchestrator supports only the validated 2025 resident rules"
+    formula: "Reject tax years other than 2025 with a clear error before assembling the return"
+    inputs:
+      - "Tax year"
+    testRef: "tests/engine/state/nj-supported-tax-year.test.ts::NJ supported tax years - resident return rejects unsupported years"

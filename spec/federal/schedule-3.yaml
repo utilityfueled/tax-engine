@@ -1,0 +1,118 @@
+form: "Schedule 3"
+fullName: "Additional Credits and Payments"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i1040s3"
+
+notes: |
+  Schedule 3 collects nonrefundable credits (Part I) and other payments/
+  refundable credits (Part II). Part I total goes to 1040 Line 20.
+  Part II total goes to 1040 Line 31.
+
+lines:
+  - line: "1"
+    description: "Foreign tax credit"
+    formula: "Form 1116 or direct method (if ≤ $300 single / $600 MFJ)"
+    irsRef: "Schedule 3 Instructions, Line 1; Form 1116"
+    edgeCases:
+      - "Direct method: if all foreign tax from 1099-DIV/INT, passive only, and ≤ $300/$600"
+      - "Otherwise: Form 1116 limitation calculation"
+    testRef: "tests/engine/schedules/schedule-3.test.ts::Schedule 3 Line 1 - foreign tax credit"
+
+  - line: "2"
+    description: "Child and dependent care credit"
+    formula: "Form 2441 — percentage × qualified expenses"
+    irsRef: "Schedule 3 Instructions, Line 2; Form 2441"
+    notes: "Implemented via Form 2441 standalone module"
+    testRef: "tests/engine/schedules/schedule-3.test.ts::Schedule 3 Line 2 - dependent care credit"
+
+  - line: "3"
+    description: "Education credits"
+    formula: "Form 8863 — American Opportunity or Lifetime Learning Credit"
+    irsRef: "Schedule 3 Instructions, Line 3; Form 8863"
+    notes: "Implemented via Form 8863 standalone module"
+    testRef: "tests/engine/schedules/schedule-3.test.ts::Schedule 3 Line 3 - education credits"
+
+  - line: "4"
+    description: "Retirement savings contributions credit"
+    formula: "Form 8880 Line 12"
+    irsRef: "Schedule 3 Instructions, Line 4; Form 8880"
+    notes: "Saver's credit for eligible retirement contributions"
+    testRef: "tests/engine/schedules/schedule-3.test.ts::Schedule 3 Line 4 - retirement savings credit flows into total nonrefundable credits"
+
+  - line: "5a"
+    description: "Residential clean energy credit"
+    formula: "Form 5695 Part I — 30% of qualified expenses"
+    irsRef: "Schedule 3 Instructions, Line 5a; Form 5695"
+    notes: "Solar panels, wind turbines, geothermal, batteries, etc."
+    testRef: "tests/engine/schedules/schedule-3.test.ts::Schedule 3 Line 5a - clean energy credit"
+
+  - line: "5b"
+    description: "Energy efficient home improvement credit"
+    formula: "Form 5695 Part II — up to $3,200/year"
+    irsRef: "Schedule 3 Instructions, Line 5b; Form 5695"
+    testRef: "tests/engine/schedules/schedule-3.test.ts::Schedule 3 Line 5b - energy improvement credit"
+
+  - line: "6a"
+    description: "Credit for prior year minimum tax"
+    formula: "Form 8801 Line 25"
+    irsRef: "Schedule 3 Instructions, Line 6a; Form 8801"
+    notes: "Nonrefundable credit for AMT paid in a prior year due to deferral (timing) items such as ISO exercises, depreciation, or depletion"
+    testRef: "tests/engine/forms/form-8801.test.ts::Part II Line 25 - credit limited when available exceeds limitation"
+
+  - line: "6d"
+    description: "Credit for the elderly or the disabled"
+    formula: "Schedule R Line 22"
+    irsRef: "Schedule 3 Instructions, Line 6d; Schedule R"
+    notes: "Nonrefundable credit for taxpayers age 65+ or permanently disabled"
+    testRef: "tests/engine/forms/schedule-r.test.ts::Schedule R — Credit for the Elderly or the Disabled"
+
+  - line: "7"
+    description: "Total nonrefundable credits"
+    formula: "Sum of Lines 1-6"
+    irsRef: "Schedule 3 Instructions, Line 7"
+    notes: "Goes to Form 1040 Line 20"
+    testRef: "tests/engine/schedules/schedule-3.test.ts::Schedule 3 Line 7 - total nonrefundable"
+
+  # ── Part II: Other Payments and Refundable Credits ──────
+  - line: "10"
+    description: "Net premium tax credit"
+    formula: "Form 8962 — ACA premium assistance"
+    irsRef: "Schedule 3 Instructions, Line 10; Form 8962"
+    testRef: "tests/engine/schedules/schedule-3.test.ts::Schedule 3 Line 10 - premium tax credit"
+
+  - line: "13a"
+    description: "Excess Social Security tax withheld"
+    formula: "excess = max(0, totalSSWithheld - maxSSWithholding) where maxSSWithholding = SSWageBase × employeeRate (exact, not rounded)"
+    irsRef: "Schedule 3 Instructions, Line 13a; IRS Form 1040 Instructions: 'credit for the amount withheld in excess of $10,918.20'"
+    edgeCases:
+      - "2025 max SS withholding: $176,100 × 6.2% = $10,918.20 (exact — do NOT round to $10,918)"
+      - "Each employer withholds independently — can exceed if combined wages > base"
+      - "Single employer at exact max ($10,918.20 withheld): excess = $0, not $0.20"
+    testRef: "tests/engine/schedules/schedule-3.test.ts::Schedule 3 Line 13a - excess SS withholding"
+
+  - line: "15"
+    description: "Total other payments and refundable credits"
+    formula: "Sum of Lines 9-14"
+    irsRef: "Schedule 3 Instructions, Line 15"
+    notes: "Goes to Form 1040 Line 31"
+    testRef: "tests/engine/schedules/schedule-3.test.ts::Schedule 3 Line 15 - total refundable"
+
+  # ── Edge Cases ──────────────────────────────────────────
+  - line: "7-stacking"
+    description: "Multiple nonrefundable credits stacking"
+    formula: "Sum of FTC + dependent care + education + retirement savings credit + clean energy + improvement"
+    irsRef: "Schedule 3 Instructions, Line 7"
+    edgeCases:
+      - "All six supported nonrefundable credit types sum correctly"
+      - "Zero-value credits don't affect total"
+    testRef: "tests/edge-cases/credit-stacking.test.ts::Schedule 3 - multiple nonrefundable credits stacking"
+
+  - line: "pipeline"
+    description: "Credits flow through federal pipeline to reduce tax"
+    formula: "Each credit source module → Schedule 3 → Form 1040"
+    irsRef: "Schedule 3 Instructions"
+    edgeCases:
+      - "FTC + education + energy credits all reduce total tax"
+      - "ACA refundable credit flows through Line 10"
+      - "Excess SS withholding from multiple employers flows through Line 13a"
+    testRef: "tests/edge-cases/credit-stacking.test.ts::Schedule 3 - credit stacking in federal pipeline"
