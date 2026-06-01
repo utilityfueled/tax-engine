@@ -13,25 +13,25 @@
     "test:e2e:hosted:webhook": "node ./scripts/run-real-stripe-webhook-smoke.mjs"
   },
   "dependencies": {
-    "@sentry/nextjs": "^10.47.0",
+    "@sentry/nextjs": "^10.55.0",
     "@tax-engine/contracts": "workspace:*",
     "@tax-engine/engine": "workspace:*",
     "@upstash/ratelimit": "^2.0.8",
-    "@upstash/redis": "^1.37.0",
+    "@upstash/redis": "^1.38.0",
     "@vercel/analytics": "^2.0.1",
-    "better-auth": "^1.5.5",
-    "kysely": "^0.28.15",
+    "better-auth": "^1.6.13",
+    "kysely": "^0.29.2",
     "next": "^15.0.0",
     "pdfjs-dist": "^5.5.207",
-    "pg": "^8.20.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "pg": "^8.21.0",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
     "stripe": "^21.0.1"
   },
   "devDependencies": {
-    "@playwright/test": "^1.50.0",
+    "@playwright/test": "^1.60.0",
     "@types/pg": "^8.20.0",
-    "@types/react": "^19.0.0",
+    "@types/react": "^19.2.15",
     "@types/react-dom": "^19.0.0",
     "typescript": "^5.9.3"
   }
