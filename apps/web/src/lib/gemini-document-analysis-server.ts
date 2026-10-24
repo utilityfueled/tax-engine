@@ -1,4 +1,6 @@
 import "server-only";
+import Decimal from "decimal.js";
+import { resolveHostedAiMaxOutputTokens } from "./hosted-ai-helper-billing";
 
 import type { ParsedUploadedDocument } from "@/lib/uploaded-document-detection";
 import { containsUnsafeDirectIdentifier } from "@/lib/provider-request-privacy";
@@ -81,6 +83,8 @@ async function callGeminiForJson(
     `${geminiApiBaseUrl}/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`,
     {
       method: "POST",
+      signal: AbortSignal.timeout(30000),
+      redirect: "error",
       headers: {
         "Content-Type": "application/json",
       },
@@ -93,6 +97,7 @@ async function callGeminiForJson(
         }],
         generationConfig: {
           responseMimeType: "application/json",
+          maxOutputTokens: resolveHostedAiMaxOutputTokens(env),
           temperature: 0.1,
         },
       }),
@@ -129,7 +134,7 @@ async function classifyExpenseSuggestionsWithGemini(
 
   const model = getGeminiModel(env);
   const sorted = [...suggestions]
-    .sort((left, right) => Number(right.amount) - Number(left.amount))
+    .sort((left, right) => new Decimal(right.amount).comparedTo(new Decimal(left.amount)))
     .slice(0, maxAiExpenseClassifications);
   const byId = new Map<string, ScheduleCBankStatementSuggestion>();
 
@@ -143,6 +148,8 @@ async function classifyExpenseSuggestionsWithGemini(
       `${geminiApiBaseUrl}/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`,
       {
         method: "POST",
+      signal: AbortSignal.timeout(30000),
+      redirect: "error",
         headers: {
           "Content-Type": "application/json",
         },
@@ -188,6 +195,7 @@ async function classifyExpenseSuggestionsWithGemini(
           }],
           generationConfig: {
             responseMimeType: "application/json",
+          maxOutputTokens: resolveHostedAiMaxOutputTokens(env),
             temperature: 0.1,
           },
         }),

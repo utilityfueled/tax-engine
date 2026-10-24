@@ -609,7 +609,10 @@ describe("provider workspace request path", () => {
     expect(result.response.usage).toEqual({
       inputTokens: 120,
       outputTokens: 48,
-      estimatedCostCents: 1
+      estimatedCostCents: 1,
+      providerCostUsd: "0.000126",
+      pricingEffectiveFrom: "2026-10-24",
+      usageKind: "reported",
     });
   });
 

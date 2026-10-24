@@ -33,6 +33,9 @@ export interface ProviderWorkspaceRequest {
 }
 
 export interface ProviderUsageStats {
+  providerCostUsd?: string;
+  usageKind?: "reported" | "estimated";
+  pricingEffectiveFrom?: string;
   inputTokens: number;
   outputTokens: number;
   estimatedCostCents: number;

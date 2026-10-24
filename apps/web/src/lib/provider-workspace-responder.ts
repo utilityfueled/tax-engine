@@ -148,6 +148,7 @@ interface OpenAIResponsesApiResult {
   usage?: {
     input_tokens?: unknown;
     output_tokens?: unknown;
+    input_tokens_details?: { cached_tokens?: unknown };
   };
   output?: Array<{
     type?: unknown;
@@ -162,6 +163,7 @@ interface OpenAIResponsesApiResult {
 }
 
 interface GeminiGenerateContentResult {
+  usageMetadata?: { promptTokenCount?: unknown; candidatesTokenCount?: unknown; thoughtsTokenCount?: unknown; cachedContentTokenCount?: unknown };
   candidates?: Array<{
     content?: {
       parts?: Array<{ text?: string }>;
@@ -512,6 +514,7 @@ async function requestOpenAIWorkspaceSummary(
         model,
         store: false,
         reasoning: { effort: "minimal" },
+        max_output_tokens: resolveHostedAiMaxOutputTokens(env),
         instructions: [
           "You summarize tax workspace state for a privacy-first filing assistant.",
           "All direct identifiers are already redacted or tokenized.",
@@ -546,7 +549,8 @@ async function requestOpenAIWorkspaceSummary(
         responseText: parsed.summary,
         modelId: model,
         inputTokens: readUsageTokens(result.usage?.input_tokens),
-        outputTokens: readUsageTokens(result.usage?.output_tokens)
+        outputTokens: readUsageTokens(result.usage?.output_tokens),
+        cachedInputTokens: readUsageTokens(result.usage?.input_tokens_details?.cached_tokens) ?? 0,
       }, env)
     };
   } finally {
@@ -628,7 +632,8 @@ async function requestOpenAIWorkspaceHelp(
         responseText: parsed.answer,
         modelId: model,
         inputTokens: readUsageTokens(result.usage?.input_tokens),
-        outputTokens: readUsageTokens(result.usage?.output_tokens)
+        outputTokens: readUsageTokens(result.usage?.output_tokens),
+        cachedInputTokens: readUsageTokens(result.usage?.input_tokens_details?.cached_tokens) ?? 0,
       }, env)
     };
   } finally {
@@ -658,6 +663,8 @@ async function requestGeminiWorkspaceSummary(
     `${GEMINI_API_BASE_URL}/models/${encodeURIComponent(getGeminiModel(env))}:generateContent?key=${encodeURIComponent(apiKey)}`,
     {
       method: "POST",
+      signal: AbortSignal.timeout(PROVIDER_REQUEST_TIMEOUT_MS),
+      redirect: "error",
       headers: {
         "Content-Type": "application/json",
       },
@@ -685,6 +692,7 @@ async function requestGeminiWorkspaceSummary(
         }],
         generationConfig: {
           responseMimeType: "application/json",
+          maxOutputTokens: resolveHostedAiMaxOutputTokens(env),
           temperature: 0.1,
         },
       }),
@@ -718,7 +726,11 @@ async function requestGeminiWorkspaceSummary(
     usage: estimateHostedAiUsageCost({
       requestPayload: payload,
       responseText: parsed.summary,
-      modelId: getGeminiModel(env)
+      modelId: getGeminiModel(env),
+      inputTokens: readUsageTokens(result?.usageMetadata?.promptTokenCount),
+      outputTokens: readUsageTokens(result?.usageMetadata?.candidatesTokenCount) === null ? null
+        : (readUsageTokens(result?.usageMetadata?.candidatesTokenCount) ?? 0) + (readUsageTokens(result?.usageMetadata?.thoughtsTokenCount) ?? 0),
+      cachedInputTokens: readUsageTokens(result?.usageMetadata?.cachedContentTokenCount) ?? 0,
     }, env)
   };
 }
@@ -745,6 +757,8 @@ async function requestGeminiWorkspaceHelp(
     `${GEMINI_API_BASE_URL}/models/${encodeURIComponent(getGeminiModel(env))}:generateContent?key=${encodeURIComponent(apiKey)}`,
     {
       method: "POST",
+      signal: AbortSignal.timeout(PROVIDER_REQUEST_TIMEOUT_MS),
+      redirect: "error",
       headers: {
         "Content-Type": "application/json",
       },
@@ -773,6 +787,7 @@ async function requestGeminiWorkspaceHelp(
         }],
         generationConfig: {
           responseMimeType: "application/json",
+          maxOutputTokens: resolveHostedAiMaxOutputTokens(env),
           temperature: 0.1,
         },
       }),
@@ -806,7 +821,11 @@ async function requestGeminiWorkspaceHelp(
     usage: estimateHostedAiUsageCost({
       requestPayload: payload,
       responseText: parsed.answer,
-      modelId: getGeminiModel(env)
+      modelId: getGeminiModel(env),
+      inputTokens: readUsageTokens(result?.usageMetadata?.promptTokenCount),
+      outputTokens: readUsageTokens(result?.usageMetadata?.candidatesTokenCount) === null ? null
+        : (readUsageTokens(result?.usageMetadata?.candidatesTokenCount) ?? 0) + (readUsageTokens(result?.usageMetadata?.thoughtsTokenCount) ?? 0),
+      cachedInputTokens: readUsageTokens(result?.usageMetadata?.cachedContentTokenCount) ?? 0,
     }, env)
   };
 }

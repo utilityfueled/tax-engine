@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  estimateHostedAiUsageCost,
+  estimateHostedAiReserveCostCents,
   resolveHostedAiIncludedBudgetCents,
   resolveHostedAiMaxOutputTokens,
   resolveHostedAiTopUpCreditCents,
@@ -34,6 +36,21 @@ describe("hosted AI helper billing defaults", () => {
   it("falls back to the default max output tokens when the env var is blank", () => {
     expect(resolveHostedAiMaxOutputTokens({
       TAX_ENGINE_AI_HELPER_MAX_OUTPUT_TOKENS: ""
-    })).toBe(700);
+    })).toBe(4096);
+  });
+
+  it("accounts using exact published prices and rejects unknown prices", () => {
+    const input = { requestPayload: "test", modelId: "gpt-6-luna", inputTokens: 1000, outputTokens: 1000, at: "2026-10-24" };
+    expect(estimateHostedAiUsageCost(input, {})).toMatchObject({ providerCostUsd: "0.0006", estimatedCostCents: 1, usageKind: "reported" });
+    expect(() => estimateHostedAiUsageCost({ ...input, modelId: "unpriced" }, {})).toThrow(/No verified pricing/);
+    expect(estimateHostedAiUsageCost({ ...input, modelId: "custom" }, {
+      TAX_ENGINE_AI_HELPER_INPUT_USD_PER_MILLION: "0.125", TAX_ENGINE_AI_HELPER_OUTPUT_USD_PER_MILLION: "0.50",
+    }).providerCostUsd).toBe("0.000625");
+  });
+
+  it("reserves the configured output limit and rejects fractional cent configuration", () => {
+    const env = { TAX_ENGINE_AI_HELPER_MAX_OUTPUT_TOKENS: "8192" };
+    expect(estimateHostedAiReserveCostCents({ requestPayload: "test", modelId: "gpt-5-mini" }, env)).toBe(2);
+    expect(resolveHostedAiIncludedBudgetCents("plus", { TAX_ENGINE_AI_HELPER_INCLUDED_BUDGET_CENTS: "0.1" })).toBe(1000);
   });
 });

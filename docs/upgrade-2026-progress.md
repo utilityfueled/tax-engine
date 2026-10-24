@@ -176,3 +176,31 @@ checking pass. A shared-output race in older PDF tests was found and those
 fixtures now use isolated temporary directories. The existing blank-template
 files still need per-form revision/hash qualification and physical year
 versioning. These safeguards do not establish complete-data filing exports.
+
+## AI candidate registry and accounting groundwork
+
+Task profiles now record model/provider/effort, versioned prompt/schema IDs,
+input/output budgets, timeout, escalation and confirmation requirements. New
+profiles remain candidates: the registry returns deterministic fallback in
+production. No provider account capability or model quality is certified by this
+configuration. Cache-key components include owner, content, year, rules, task,
+model, effort and prompt/schema versions; no taxpayer cache was enabled.
+
+Pricing was refreshed against [OpenAI](https://developers.openai.com/api/docs/pricing)
+and [Google](https://ai.google.dev/gemini-api/docs/pricing) on 2026-10-24.
+Decimal accounting distinguishes exact provider USD cost from the minimum
+one-cent retail charge, handles supported cache/long-context/regional prices,
+and switches Google pricing on 2027-01-01 UTC. Unknown prices fail explicitly.
+Legacy helper billing uses this accounting and reports whether token counts are
+provider-reported or estimated. Workspace Responses requests and Gemini requests
+now enforce the configured output reservation (default 4,096, including reasoning);
+Gemini calls have bounded timeouts. Statement amount ordering uses Decimal.
+All 15,090 tests and web type checking pass at this checkpoint.
+
+Remaining AI work is substantial: the legacy live routing and hand-scored model
+benchmark still need replacement; document normalization must move behind the
+task adapter; 200–300 independently reviewed cases, held-out repeated live runs,
+citations, measured latency/cost, atomic credit reservation/settlement, database
+cost persistence and staged rollout/rollback are not complete. The new registry
+is groundwork, not a model promotion. Existing GPT-5 Mini is now marked deprecated
+in its official model documentation; actual account availability remains unchecked.
