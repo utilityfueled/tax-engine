@@ -20,6 +20,7 @@ import {
 import type { ProviderWorkspaceRequest } from "./provider-workspace-request";
 import {
   checkRateLimitForEnvironment,
+  rateLimitUnavailableResponse,
   createRateLimitStore,
   rateLimitTiers,
   registerStoreForCleanup,
@@ -126,6 +127,8 @@ export function createProviderWorkspaceRouteHandlers(
         rateLimitTiers.provider,
         env
       );
+
+      if (rateCheck.unavailable) return rateLimitUnavailableResponse();
 
       if (!rateCheck.allowed) {
         const retryAfterSeconds = Math.ceil(

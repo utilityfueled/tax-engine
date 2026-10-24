@@ -20,6 +20,7 @@ import {
 } from "./hosted-billing-state";
 import {
   checkRateLimitForEnvironment,
+  rateLimitUnavailableResponse,
   createRateLimitStore,
   rateLimitTiers,
   registerStoreForCleanup,
@@ -344,6 +345,8 @@ export function createHostedBillingWebhookRouteHandlers(
         rateLimitTiers.webhook,
         env
       );
+
+      if (rateCheck.unavailable) return rateLimitUnavailableResponse();
 
       if (!rateCheck.allowed) {
         const retryAfterSeconds = Math.ceil(

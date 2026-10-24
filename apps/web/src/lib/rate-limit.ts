@@ -31,6 +31,7 @@ export interface RateLimitResult {
   allowed: boolean;
   remaining: number;
   retryAfterMs: number | null;
+  unavailable?: true;
 }
 
 export interface RateLimitBackendConfig {
@@ -44,6 +45,29 @@ type RateLimitEnvironment = Record<string, string | undefined>;
 
 const DEFAULT_CLEANUP_INTERVAL_MS = 60_000;
 const DEFAULT_RATE_LIMIT_PREFIX = "tax-engine:ratelimit";
+const REDIS_TIMEOUT_MS = 2_000;
+
+export function requiresSharedRateLimit(env: RateLimitEnvironment): boolean {
+  return env.TAX_ENGINE_DEPLOYMENT_MODE?.trim().toLowerCase() === "hosted"
+    && env.NODE_ENV === "production";
+}
+
+export function validateHostedRateLimitConfig(env: RateLimitEnvironment = process.env): void {
+  if (requiresSharedRateLimit(env) && resolveRateLimitBackendConfig(env).backend !== "upstash-redis") {
+    throw new Error("Hosted production requires shared rate limits. Configure both Upstash Redis REST URL and token.");
+  }
+}
+
+export function rateLimitUnavailableResponse(): Response {
+  return Response.json(
+    { error: "Request protection is temporarily unavailable. Please try again later.", code: "rate-limit-unavailable" },
+    { status: 503, headers: { "Retry-After": "5", "Cache-Control": "no-store" } }
+  );
+}
+
+function unavailableRateLimit(): RateLimitResult {
+  return { allowed: false, remaining: 0, retryAfterMs: 5_000, unavailable: true };
+}
 
 const rateLimitRuntimeCache = globalThis as typeof globalThis & {
   __tax_engine_redis_rate_limiters__?: Map<string, Ratelimit>;
@@ -126,6 +150,7 @@ function getRedisRateLimiter(
   const cacheKey = [
     backend.prefix,
     backend.url ?? "",
+    backend.token ?? "",
     config.maxRequests,
     config.windowMs
   ].join("|");
@@ -143,14 +168,16 @@ function getRedisRateLimiter(
   const limiter = new Ratelimit({
     redis: new Redis({
       url: backend.url,
-      token: backend.token
+      token: backend.token,
+      retry: { retries: 0 }
     }),
     limiter: Ratelimit.slidingWindow(
       config.maxRequests,
       formatWindowDuration(config.windowMs)
     ),
     prefix: backend.prefix,
-    ephemeralCache: new Map()
+    ephemeralCache: new Map(),
+    timeout: REDIS_TIMEOUT_MS
   });
 
   cache.set(cacheKey, limiter);
@@ -230,6 +257,10 @@ function mapRedisRateLimitResult(
 ): RateLimitResult {
   void result.pending.catch(() => {});
 
+  // Upstash's timeout path can return success=true. It is not an authorization
+  // to run a paid operation without a shared limiter decision.
+  if (result.reason === "timeout") return unavailableRateLimit();
+
   return {
     allowed: result.success,
     remaining: result.remaining,
@@ -247,8 +278,10 @@ export async function checkRateLimitForEnvironment(
   now: number = Date.now()
 ): Promise<RateLimitResult> {
   const backend = resolveRateLimitBackendConfig(env);
+  const sharedRequired = requiresSharedRateLimit(env);
 
   if (backend.backend !== "upstash-redis") {
+    if (sharedRequired) return unavailableRateLimit();
     if ((backend.url && !backend.token) || (!backend.url && backend.token)) {
       warnOnce(
         "rate-limit-partial-upstash-config",
@@ -263,13 +296,17 @@ export async function checkRateLimitForEnvironment(
 
   try {
     const limiter = getRedisRateLimiter(config, backend);
-    return mapRedisRateLimitResult(await limiter.limit(key), now);
-  } catch (error) {
+    const result = mapRedisRateLimitResult(await limiter.limit(key), now);
+    if (result.unavailable && !sharedRequired) return checkRateLimit(store, key, config, now);
+    return result;
+  } catch {
+    if (sharedRequired) {
+      warnOnce("rate-limit-upstash-unavailable", "[security] Shared rate limiting is unavailable; hosted requests are blocked.");
+      return unavailableRateLimit();
+    }
     warnOnce(
       "rate-limit-upstash-fallback",
-      `[security] Upstash Redis rate limiting is unavailable. Falling back to in-memory limits. ${
-        error instanceof Error ? error.message : "Unknown error."
-      }`
+      "[security] Upstash Redis rate limiting is unavailable. Falling back to in-memory limits for this local deployment."
     );
 
     return checkRateLimit(store, key, config, now);

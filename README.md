@@ -34,13 +34,15 @@ forms/blank/        Blank PDF forms used for filling tests
 
 ### Prerequisites
 
-- Node.js 22+
-- pnpm 10+
+- Node.js 24.22.1 (`nvm use`, or a runtime manager reading `.node-version`)
+- pnpm 10.34.8 (pinned in `packageManager`)
+- Python 3.13+ with `venv` for PDF text assertions
 
 ### Install
 
 ```bash
 pnpm install
+pnpm test:setup
 ```
 
 ### Run the app
@@ -59,11 +61,27 @@ pnpm test
 
 ```bash
 pnpm build
+pnpm build:web
 pnpm lint
 pnpm typecheck
+pnpm typecheck:contracts
+pnpm typecheck:web
 pnpm spec:validate
+pnpm spec:inventory:check
+pnpm test:coverage
+pnpm --filter @tax-engine/web exec playwright install chromium
+pnpm sample-docs:fetch
 pnpm test:web
 ```
+
+`pnpm test:setup` creates an isolated `.local/pdf-test-venv` with hash-pinned
+`pypdf`. Tests use that interpreter; `TAX_ENGINE_PDF_TEST_PYTHON` may point to an
+equivalent environment. Regenerate the committed implementation inventory with
+`pnpm spec:inventory` after adding specs or test references. Inventory entries
+record code and reference existence, not tax-law review or filing qualification.
+The coverage gate remains 85% for branches. Hosted browser tests require the
+separate database and Stripe setup below; skipped hosted tests are not release
+evidence.
 
 ### Hosted billing webhook smoke
 
@@ -104,11 +122,15 @@ For Vercel staging on `staging.vivalatax.com`, set these environment variables i
 - `STRIPE_PRICE_ID_PLUS_MONTHLY=<stripe test price id>`
 - `STRIPE_PRICE_ID_AI_HELPER_TOP_UP=<stripe test price id>`
 
-For shared hosted rate limiting on Vercel, add one of these Redis configurations:
+Hosted production requires shared rate limiting. Add one of these Redis configurations:
 
 - Vercel KV / Upstash integration: Vercel injects `KV_REST_API_URL` and `KV_REST_API_TOKEN` automatically.
 - Direct Upstash REST credentials: set `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`.
 - Optional: `TAX_ENGINE_RATE_LIMIT_PREFIX=tax-engine:staging:ratelimit` so staging and production do not share buckets.
+
+Missing shared configuration blocks hosted production startup. During Redis
+errors or timeouts, protected routes return retryable HTTP 503 responses before
+auth, billing, upload, or AI work. Self-host mode can use process-local limits.
 
 Vercel Analytics is now wired into the app shell with `@vercel/analytics`; no extra app code is needed beyond deploying on Vercel.
 

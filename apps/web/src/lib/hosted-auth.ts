@@ -13,6 +13,7 @@ import {
 import { getHostedEntitlementByOwnerId } from "./hosted-billing-db";
 import {
   checkRateLimitForEnvironment,
+  rateLimitUnavailableResponse,
   createRateLimitStore,
   rateLimitTiers,
   registerStoreForCleanup,
@@ -672,6 +673,8 @@ export function createHostedAuthRouteHandlers(
         rateLimitTiers.auth,
         env
       );
+
+      if (result.unavailable) return rateLimitUnavailableResponse();
 
       if (!result.allowed) {
         return buildRateLimitResponse(result.retryAfterMs);

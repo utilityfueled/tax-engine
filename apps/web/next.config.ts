@@ -1,5 +1,5 @@
 import path from "node:path";
-import { withSentryConfig } from "@sentry/nextjs";
+import { withSentryConfig } from "@sentry/nextjs/config";
 import type { NextConfig } from "next";
 
 const cspDirectives = [
@@ -40,6 +40,9 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  outputFileTracingIncludes: {
+    "/api/workspace/filled-return": ["../../forms/blank/**/*"],
+  },
   poweredByHeader: false,
   reactStrictMode: true,
   compress: true,

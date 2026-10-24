@@ -73,6 +73,7 @@ export default tseslint.config(
       "dist/",
       "node_modules/",
       "coverage/",
+      ".local/",
       "apps/web/.next/",
       "apps/web/next-env.d.ts",
       "**/*.tsbuildinfo",

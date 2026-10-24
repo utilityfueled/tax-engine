@@ -359,7 +359,7 @@ describe("security: provider workspace route requires auth in hosted mode", () =
 
     expect(response.status).toBe(503);
     await expect(response.json()).resolves.toEqual({
-      error: "The AI helper is not configured right now. Please contact support before enabling hosted access.",
+      error: "The AI helper is not configured right now. Please email support@vivalatax.com before enabling hosted access.",
       code: "ai_provider_unavailable"
     });
   });

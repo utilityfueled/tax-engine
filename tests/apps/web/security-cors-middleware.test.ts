@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { createRequire } from "node:module";
 import {
   ALLOWED_HEADERS,
   ALLOWED_METHODS,
@@ -11,6 +12,9 @@ import {
   isCorsProtectedPath,
 } from "../../../apps/web/src/lib/cors";
 import { middleware } from "../../../apps/web/src/middleware";
+
+// Next is owned by the web workspace, not the engine package.
+const requireWeb = createRequire(new URL("../../../apps/web/package.json", import.meta.url));
 
 const TEST_ENV = {
   TAX_ENGINE_APP_URL: "https://tax.example",
@@ -457,7 +461,7 @@ describe("security: CORS Vary header prevents cache poisoning", () => {
     }
 
     // next/server's NextRequest expects a full Request-like object.
-    const { NextRequest } = require("next/server");
+    const { NextRequest } = requireWeb("next/server");
     return new NextRequest(new Request(url, { method, headers }));
   }
 

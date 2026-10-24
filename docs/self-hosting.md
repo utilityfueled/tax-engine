@@ -2,6 +2,13 @@
 
 The current self-host target is a single `docker compose` stack for the monorepo.
 
+The image uses Node 24.22.1 and includes public assets and blank PDF templates.
+`/api/health` reports process liveness; it does not certify database health,
+tax-law completeness, or filing readiness. CI builds the runtime image, smoke
+tests it without AI credentials, and produces a CycloneDX SBOM for that image.
+Local container checks require Docker: `docker build -t tax-engine:ci .` then
+`node scripts/smoke-container.mjs tax-engine:ci`.
+
 ## What this stack does
 
 - boots the Next.js app from `apps/web`

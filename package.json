@@ -16,11 +16,11 @@
     "self-host:down": "docker compose --env-file .env.docker down",
     "self-host:logs": "docker compose --env-file .env.docker logs -f web",
     "start": "node dist/index.js",
-    "test": "vitest run",
+    "test": "node ./scripts/run-tests.mjs run",
     "test:web": "pnpm --filter @tax-engine/web test:e2e",
     "test:pa": "vitest run tests/engine/state/pa-*.test.ts tests/edge-cases/pa-full-return.test.ts tests/public-api.test.ts tests/spec/spec-validator.test.ts",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage",
+    "test:coverage": "node ./scripts/run-tests.mjs run --coverage",
     "test:ui": "vitest --ui",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -40,12 +40,16 @@
     "eval:models:sync": "node --import tsx ./scripts/benchmark-model-stack.ts --sync",
     "eval:models:check": "node --import tsx ./scripts/benchmark-model-stack.ts --check",
     "eval:models:live-summary": "node --import tsx ./scripts/benchmark-model-stack.ts --live-summary",
-    "sample-docs:fetch": "tsx scripts/fetch-sample-tax-docs.ts"
+    "sample-docs:fetch": "tsx scripts/fetch-sample-tax-docs.ts",
+    "test:setup": "node ./scripts/setup-pdf-tests.mjs",
+    "typecheck:contracts": "tsc --noEmit -p packages/contracts/tsconfig.json",
+    "spec:inventory": "node --import tsx scripts/generate-coverage-inventory.ts",
+    "spec:inventory:check": "node --import tsx scripts/generate-coverage-inventory.ts --check"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=24.22.1 <25"
   },
-  "packageManager": "pnpm@10.33.0",
+  "packageManager": "pnpm@10.34.8",
   "license": "AGPL-3.0-only",
   "keywords": [
     "tax",
@@ -56,25 +60,27 @@
     "state-tax"
   ],
   "dependencies": {
-    "decimal.js": "^10.6.0",
-    "pdf-lib": "^1.17.1",
-    "yaml": "^2.8.2",
-    "zod": "^4.3.6"
+    "decimal.js": "10.6.0",
+    "pdf-lib": "1.17.1",
+    "yaml": "2.9.1",
+    "zod": "4.6.7"
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
-    "@next/eslint-plugin-next": "15.5.12",
-    "@types/node": "^25.4.0",
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
-    "@vitest/coverage-v8": "^4.0.18",
-    "@vitest/ui": "^4.0.18",
-    "eslint": "^10.0.3",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "tsx": "^4.21.0",
-    "typescript": "^5.9.3",
-    "typescript-eslint": "^8.57.0",
-    "vitest": "^4.0.18"
+    "@eslint/js": "10.0.1",
+    "@next/eslint-plugin-next": "15.5.28",
+    "@types/node": "24.19.2",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitest/coverage-v8": "4.1.12",
+    "@vitest/ui": "4.1.12",
+    "eslint": "10.13.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.72.0",
+    "vitest": "4.1.12",
+    "vite": "7.3.7",
+    "@opentelemetry/api": "1.9.0"
   }
 }

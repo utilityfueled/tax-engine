@@ -5,10 +5,10 @@
 .*-state
 .*-stop
 .vscode
+.local
 coverage
 data
 dist
-forms
 logs
 node_modules
 playwright-report
@@ -45,9 +45,9 @@ CLAUDE.md
 # Development-only files — not needed at runtime and increase attack surface
 tests
 spec
-forms
 data
 prompts
 vitest.config.ts
 CLAUDE.md
 AGENTS.md
+forms/filled/

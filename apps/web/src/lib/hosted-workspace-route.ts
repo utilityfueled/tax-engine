@@ -9,6 +9,7 @@ import {
 } from "./hosted-persistence-registry";
 import {
   checkRateLimitForEnvironment,
+  rateLimitUnavailableResponse,
   createRateLimitStore,
   rateLimitTiers,
   registerStoreForCleanup,
@@ -563,6 +564,8 @@ export function createHostedWorkspaceRouteHandlers(
     async list(request: Request) {
       const rateCheck = await applyApiRateLimit(request);
 
+      if (rateCheck.unavailable) return rateLimitUnavailableResponse();
+
       if (!rateCheck.allowed) {
         return buildRateLimitResponse(rateCheck.retryAfterMs);
       }
@@ -591,6 +594,8 @@ export function createHostedWorkspaceRouteHandlers(
       }
 
       const rateCheck = await applyApiRateLimit(request);
+
+      if (rateCheck.unavailable) return rateLimitUnavailableResponse();
 
       if (!rateCheck.allowed) {
         return buildRateLimitResponse(rateCheck.retryAfterMs);
@@ -641,6 +646,8 @@ export function createHostedWorkspaceRouteHandlers(
       }
 
       const rateCheck = await applyApiRateLimit(request);
+
+      if (rateCheck.unavailable) return rateLimitUnavailableResponse();
 
       if (!rateCheck.allowed) {
         return buildRateLimitResponse(rateCheck.retryAfterMs);
@@ -702,6 +709,8 @@ export function createHostedWorkspaceRouteHandlers(
 
       const rateCheck = await applyApiRateLimit(request);
 
+      if (rateCheck.unavailable) return rateLimitUnavailableResponse();
+
       if (!rateCheck.allowed) {
         return buildRateLimitResponse(rateCheck.retryAfterMs);
       }
@@ -736,6 +745,8 @@ export function createHostedWorkspaceRouteHandlers(
       }
 
       const rateCheck = await applyUploadRateLimit(request);
+
+      if (rateCheck.unavailable) return rateLimitUnavailableResponse();
 
       if (!rateCheck.allowed) {
         return buildRateLimitResponse(rateCheck.retryAfterMs);

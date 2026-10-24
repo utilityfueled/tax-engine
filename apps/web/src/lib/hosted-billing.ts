@@ -17,6 +17,7 @@ import {
 } from "./hosted-ai-helper-billing";
 import {
   checkRateLimitForEnvironment,
+  rateLimitUnavailableResponse,
   createRateLimitStore,
   rateLimitTiers,
   registerStoreForCleanup,
@@ -393,6 +394,8 @@ export function createHostedBillingCheckoutRouteHandlers(
         env
       );
 
+      if (rateCheck.unavailable) return rateLimitUnavailableResponse();
+
       if (!rateCheck.allowed) {
         const retryAfterSeconds = Math.ceil(
           (rateCheck.retryAfterMs ?? rateLimitTiers.api.windowMs) / 1000
@@ -592,6 +595,8 @@ export function createHostedAiCreditCheckoutRouteHandlers(
         env
       );
 
+      if (rateCheck.unavailable) return rateLimitUnavailableResponse();
+
       if (!rateCheck.allowed) {
         const retryAfterSeconds = Math.ceil(
           (rateCheck.retryAfterMs ?? rateLimitTiers.api.windowMs) / 1000
@@ -752,6 +757,8 @@ export function createHostedBillingPortalRouteHandlers(
         rateLimitTiers.api,
         env
       );
+
+      if (rateCheck.unavailable) return rateLimitUnavailableResponse();
 
       if (!rateCheck.allowed) {
         const retryAfterSeconds = Math.ceil(

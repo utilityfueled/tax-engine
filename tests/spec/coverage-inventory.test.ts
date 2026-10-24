@@ -9,7 +9,8 @@ interface CoverageInventoryEntry {
 }
 
 interface CoverageInventory {
-  generatedAt: string;
+  inventoryVersion: number;
+  purpose: string;
   entries: CoverageInventoryEntry[];
 }
 
@@ -19,7 +20,8 @@ const inventory = JSON.parse(
 
 describe("coverage inventory", () => {
   it("loads the regenerated 2025 coverage inventory", () => {
-    expect(new Date(inventory.generatedAt).toString()).not.toBe("Invalid Date");
+    expect(inventory.inventoryVersion).toBe(1);
+    expect(inventory.purpose).toContain("not legal review, filing qualification, or e-file support");
     expect(inventory.entries.length).toBeGreaterThan(0);
   });
 

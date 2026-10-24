@@ -1,5 +1,5 @@
-import { existsSync, readFileSync, readdirSync, writeFileSync } from "fs";
-import { basename, extname, join, relative, resolve } from "path";
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "fs";
+import { basename, dirname, extname, join, relative, resolve } from "path";
 import { parse } from "yaml";
 import { collectSpecFilePaths, loadSpecs, validateTestRef } from "../src/spec-validator.js";
 
@@ -383,13 +383,22 @@ function main() {
   }
 
   const output = {
-    generatedAt: new Date().toISOString(),
     inventoryVersion: 1,
+    purpose: "Implementation traceability only; not legal review, filing qualification, or e-file support.",
     entries: [...entries.values()].sort((left, right) => left.key.localeCompare(right.key)),
   };
 
   const outputPath = resolve(projectRoot, "spec/coverage/inventory-2025.json");
-  writeFileSync(outputPath, JSON.stringify(output, null, 2) + "\n");
+  const serialized = JSON.stringify(output, null, 2) + "\n";
+  if (process.argv.includes("--check")) {
+    if (!existsSync(outputPath) || readFileSync(outputPath, "utf8") !== serialized) {
+      console.error("Coverage inventory is missing or stale. Run pnpm spec:inventory.");
+      process.exitCode = 1;
+    }
+    return;
+  }
+  mkdirSync(dirname(outputPath), { recursive: true });
+  writeFileSync(outputPath, serialized);
   console.log(`Wrote ${relative(projectRoot, outputPath)} with ${output.entries.length} entries.`);
 }
 

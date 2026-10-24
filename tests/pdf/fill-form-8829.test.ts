@@ -22,7 +22,7 @@ async function makeOutputDir() {
 
 function extractPdfText(pdfPath: string) {
   return execFileSync(
-    "python",
+    process.env.TAX_ENGINE_PDF_TEST_PYTHON ?? "python3",
     [
       "-c",
       `

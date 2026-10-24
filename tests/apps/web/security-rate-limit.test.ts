@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   checkRateLimit,
   cleanupExpiredEntries,
@@ -16,6 +16,16 @@ import {
 import {
   createHostedBillingCheckoutRouteHandlers
 } from "../../../apps/web/src/lib/hosted-billing";
+
+// Exercise the application's request limiter without Better Auth's deliberate
+// password timing delay. Real auth behavior is covered in hosted-auth.test.ts.
+const authHandler = vi.hoisted(() => vi.fn(async () => new Response(null, { status: 401 })));
+vi.mock("../../../apps/web/node_modules/better-auth/next-js", () => ({
+  toNextJsHandler: () => ({
+    GET: authHandler, POST: authHandler, PATCH: authHandler,
+    PUT: authHandler, DELETE: authHandler
+  })
+}));
 
 describe("security: rate limiter core", () => {
   const config: RateLimitConfig = { maxRequests: 3, windowMs: 10_000 };
@@ -304,6 +314,7 @@ describe("security: auth route rate limiting", () => {
 
     const lastResponse = responses[responses.length - 1]!;
 
+    expect(responses.slice(0, 20).every((response) => response.status === 401)).toBe(true);
     expect(lastResponse.status).toBe(429);
 
     const body = await lastResponse.json() as { error: string };

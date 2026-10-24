@@ -165,7 +165,7 @@ async function extractPdfText(contents: Uint8Array) {
 
   try {
     const pdfTextScan = await vi.importActual<typeof import("node:child_process")>("node:child_process");
-    return pdfTextScan.execFileSync("python", ["-c", `
+    return pdfTextScan.execFileSync(process.env.TAX_ENGINE_PDF_TEST_PYTHON ?? "python3", ["-c", `
 from pypdf import PdfReader
 reader = PdfReader(r"${outputPath}")
 print("\\n".join((page.extract_text() or "") for page in reader.pages))
