@@ -292,6 +292,7 @@ function getLine7Buckets(input: PAScheduleDInput): OwnerBuckets {
 
 function getLine8Buckets(input: PAScheduleDInput): OwnerBuckets {
   const buckets = createOwnerBuckets();
+  if (!input.homeSales?.length) return buckets;
   const yearConstants = TAX_CONSTANTS[input.taxYear];
 
   if (!yearConstants) {

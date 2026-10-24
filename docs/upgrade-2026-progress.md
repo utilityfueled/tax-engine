@@ -89,3 +89,13 @@ derived; **independent human tax review remains pending**. This corrects the
 reported amounts and SALT phase-down, not all 2025 eligibility/ACTC branches.
 The taxable-refund worksheet still models the prior 2024 SALT regime; it must be
 made year-aware before using it for a 2026 return. No filing claim is enabled.
+
+## Explicit year boundary
+
+The 2026 alias is removed. The 2025 constants and nested Decimal values are
+frozen, with separate version/source/retrieval/review metadata for each year.
+The 2026 pack is explicitly incomplete and rejects federal calculations;
+unknown years also reject. This closes the silent fallback but does not yet
+implement 2026 law. Standalone empty PA Schedule D calculations no longer need
+federal constants; home-sale exclusions still reject unavailable rules.
+All 15,018 tests, engine type checking and spec validation pass.

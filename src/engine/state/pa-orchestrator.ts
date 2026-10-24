@@ -1139,7 +1139,7 @@ function mapExcludedHomeSaleGainForScheduleSP(input: TaxYearInput): Decimal {
   if (input.homeSales.length === 0) return new Decimal(0);
   const taxYear = input.taxpayer.taxYear;
   const constants = TAX_CONSTANTS[taxYear];
-  if (!constants) return new Decimal(0);
+  if (!constants) throw new Error(`Home-sale exclusion rules are unavailable for tax year ${taxYear}.`);
 
   const result = calculateHomeSales(
     input.homeSales,

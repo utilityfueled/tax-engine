@@ -4,6 +4,8 @@
  */
 
 import Decimal from "decimal.js";
+import { freezeRuleData, getRulePack } from "./rule-pack-metadata.js";
+export { getRulePack } from "./rule-pack-metadata.js";
 
 export type FilingStatus =
   | "single"
@@ -1565,7 +1567,9 @@ export const TAX_CONSTANTS: Record<number, YearConstants> = {
   },
 };
 
-TAX_CONSTANTS[2026] = TAX_CONSTANTS[2025];
+// A year is added only with its own complete implementation. Incomplete rule
+// packs are recorded in rule-pack-metadata.ts, never aliased to a prior year.
+freezeRuleData(TAX_CONSTANTS);
 
 // ---------------------------------------------------------------------------
 // MACRS Depreciation Tables — IRS Publication 946
@@ -2089,6 +2093,10 @@ export function getNYIT201ResidentConstants(
 export function getConstants(year: number): YearConstants {
   const constants = TAX_CONSTANTS[year];
   if (!constants) {
+    if (year === 2026) {
+      const pack = getRulePack(year);
+      throw new Error(`Tax year ${year} rule pack ${pack.ruleVersion} is incomplete; calculation is unavailable.`);
+    }
     throw new Error(
       `Tax constants not available for year ${year}. Available years: ${Object.keys(TAX_CONSTANTS).join(", ")}`
     );
