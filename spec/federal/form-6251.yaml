@@ -10,7 +10,7 @@ notes: |
   AMT flows to Schedule 2 Line 1.
 
   2025 AMT exemption amounts:
-  - Single/HoH: $88,100 (phase-out begins at $609,350)
+  - Single/HoH: $88,100 (phase-out begins at $626,350)
   - MFJ/QSS: $137,000 (phase-out begins at $1,252,700)
   - MFS: $68,500 (phase-out begins at $626,350)
 
@@ -78,8 +78,8 @@ lines:
       - "Phase-out: exemption reduced by 25% of AMTI exceeding threshold"
       - "MFS exemption is half of MFJ"
       - "At very high income, exemption fully phased out"
-      - "ROUND_HALF_UP on 25% reduction shifts full phase-out 2 dollars earlier than neat algebraic boundary (e.g., single: $961,748 not $961,750)"
-      - "First $1 exemption reduction at AMTI $609,352 (single), not $609,351, because round(0.25)=0 but round(0.50)=1"
+      - "ROUND_HALF_UP on 25% reduction shifts full phase-out 2 dollars earlier than neat algebraic boundary (e.g., single: $978,748 not $978,750)"
+      - "First $1 exemption reduction at AMTI $626,352 (single), not $626,351, because round(0.25)=0 but round(0.50)=1"
     testRef: "tests/engine/forms/form-6251.test.ts::Line 8 - full exemption for single filer below phase-out"
 
   - line: "9"
@@ -104,3 +104,9 @@ lines:
     irsRef: "Form 6251 Instructions, Line 11"
     notes: "This flows to Schedule 2 Line 1"
     testRef: "tests/engine/forms/form-6251.test.ts::Line 11 - AMT is zero when regular tax exceeds tentative minimum"
+
+  - line: "2025-exemption-threshold-regression"
+    description: "2025 single and HOH exemption phase-out starts at 626350, not the 2024 threshold"
+    formula: "Exemption = max(0, 88100 - roundDollar(max(0, AMTI - 626350) * 0.25))"
+    irsRef: "2025 Form 6251 Instructions, Line 5 Exemption Worksheet, lines 3-6"
+    testRef: "tests/engine/forms/form-6251-2025-regression.test.ts::matches the 2025 IRS exemption worksheet"

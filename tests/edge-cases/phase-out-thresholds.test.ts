@@ -516,17 +516,17 @@ describe("Savings bond exclusion (Form 8815) phase-out", () => {
 
 // ═══════════════════════════════════════════════════════════
 // AMT Exemption Phase-Out (Form 6251)
-// Single: $609,350 threshold, 25¢ per $1 reduction
+// Single: $626,350 threshold, 25¢ per $1 reduction
 // ═══════════════════════════════════════════════════════════
 
 describe("AMT exemption phase-out (Form 6251)", () => {
-  // Single base exemption = $88,100; phase-out starts at $609,350 AMTI
+  // Single base exemption = $88,100; phase-out starts at $626,350 AMTI
   // Phase-out fully exhausts exemption when reduction = $88,100
-  // $88,100 / 0.25 = $352,400 over threshold → AMTI = $609,350 + $352,400 = $961,750
+  // $88,100 / 0.25 = $352,400 over threshold → AMTI = $626,350 + $352,400 = $978,750
 
-  it("full exemption at AMTI exactly at phase-out threshold ($609,350 single)", () => {
+  it("full exemption at AMTI exactly at phase-out threshold ($626,350 single)", () => {
     const result = calculateForm6251(
-      { taxableIncome: d(609350), saltDeduction: d(0), regularTax: d(0), filingStatus: "single", isItemizing: false },
+      { taxableIncome: d(626350), saltDeduction: d(0), regularTax: d(0), filingStatus: "single", isItemizing: false },
       c
     );
     // Excess = $0 → reduction = $0 → exemption = $88,100
@@ -534,19 +534,19 @@ describe("AMT exemption phase-out (Form 6251)", () => {
   });
 
   it("AMT exemption reduced by 25% of AMTI excess (single $4K over threshold)", () => {
-    // Excess over $609,350 = $4,000. Reduction = $4,000 × 25% = $1,000.
+    // Excess over $626,350 = $4,000. Reduction = $4,000 × 25% = $1,000.
     // Exemption = $88,100 - $1,000 = $87,100
     const result = calculateForm6251(
-      { taxableIncome: d(613350), saltDeduction: d(0), regularTax: d(0), filingStatus: "single", isItemizing: false },
+      { taxableIncome: d(630350), saltDeduction: d(0), regularTax: d(0), filingStatus: "single", isItemizing: false },
       c
     );
     expect(result.exemption.toNumber()).toBe(87100);
   });
 
-  it("AMT exemption fully eliminated when AMTI exceeds phase-out range (single $961,750)", () => {
-    // Reduction = ($961,750 - $609,350) × 25% = $352,400 × 0.25 = $88,100 = full exemption
+  it("AMT exemption fully eliminated when AMTI exceeds phase-out range (single $978,750)", () => {
+    // Reduction = ($978,750 - $626,350) × 25% = $352,400 × 0.25 = $88,100 = full exemption
     const result = calculateForm6251(
-      { taxableIncome: d(961750), saltDeduction: d(0), regularTax: d(0), filingStatus: "single", isItemizing: false },
+      { taxableIncome: d(978750), saltDeduction: d(0), regularTax: d(0), filingStatus: "single", isItemizing: false },
       c
     );
     expect(result.exemption.toNumber()).toBe(0);
@@ -742,7 +742,7 @@ describe("Phase-out exact boundary behavior", () => {
       { taxableIncome: d(609349), saltDeduction: d(0), regularTax: d(0), filingStatus: "single", isItemizing: false },
       c
     );
-    // Excess = $0 (threshold is $609,350 so $609,349 < threshold → no reduction)
+    // Excess = $0 (threshold is $626,350 so $609,349 < threshold → no reduction)
     expect(result.exemption.toNumber()).toBe(88100);
   });
 });

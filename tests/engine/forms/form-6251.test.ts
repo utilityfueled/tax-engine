@@ -55,7 +55,7 @@ describe("Form 6251", () => {
   // ── Line 8: Exemption ──────────────────────────────────
   it("Line 8 - full exemption for single filer below phase-out", () => {
     const result = calculateForm6251(makeInput({ taxableIncome: d(200000) }), c);
-    // AMTI = 210000, well below phase-out of 609350
+    // AMTI = 210000, well below phase-out of 626350
     expect(result.exemption.toNumber()).toBe(88100);
   });
 
@@ -79,48 +79,48 @@ describe("Form 6251", () => {
   });
 
   it("Line 8 - exemption phases out at 25 cents per dollar over threshold (single)", () => {
-    // Single phase-out starts at 609350, exemption = 88100
-    // AMTI = 700000. Excess = 700000 - 609350 = 90650
-    // Reduction = 90650 * 0.25 = 22662.50 → rounded = 22663
-    // Exemption = 88100 - 22663 = 65437
+    // Single phase-out starts at 626350, exemption = 88100
+    // AMTI = 700000. Excess = 700000 - 626350 = 73650
+    // Reduction = 73650 * 0.25 = 18412.50 → rounded = 18413
+    // Exemption = 88100 - 18413 = 69687
     const result = calculateForm6251(makeInput({
       taxableIncome: d(690000),
       saltDeduction: d(10000),
     }), c);
     expect(result.amti.toNumber()).toBe(700000);
-    const excess = 700000 - 609350;
+    const excess = 700000 - 626350;
     const reduction = Math.round(excess * 0.25);
     expect(result.exemption.toNumber()).toBe(88100 - reduction);
   });
 
   it("Line 8 - exemption fully phased out at very high income", () => {
     // Full phase-out when reduction >= exemption
-    // 88100 / 0.25 = 352400 over threshold → AMTI = 609350 + 352400 = 961750
+    // 88100 / 0.25 = 352400 over threshold → AMTI = 626350 + 352400 = 978750
     const result = calculateForm6251(makeInput({
-      taxableIncome: d(960000),
+      taxableIncome: d(990000),
       saltDeduction: d(10000),
     }), c);
-    expect(result.amti.toNumber()).toBe(970000);
+    expect(result.amti.toNumber()).toBe(1000000);
     expect(result.exemption.toNumber()).toBe(0);
   });
 
   it("Line 8 - exemption at exact phase-out threshold", () => {
     // AMTI exactly at threshold → no reduction
     const result = calculateForm6251(makeInput({
-      taxableIncome: d(599350),
+      taxableIncome: d(616350),
       saltDeduction: d(10000),
     }), c);
-    expect(result.amti.toNumber()).toBe(609350);
+    expect(result.amti.toNumber()).toBe(626350);
     expect(result.exemption.toNumber()).toBe(88100);
   });
 
   it("Line 8 - exemption $1 over phase-out threshold", () => {
-    // AMTI = 609351, excess = 1, reduction = round(0.25) = 0
+    // AMTI = 626351, excess = 1, reduction = round(0.25) = 0
     const result = calculateForm6251(makeInput({
-      taxableIncome: d(599351),
+      taxableIncome: d(616351),
       saltDeduction: d(10000),
     }), c);
-    expect(result.amti.toNumber()).toBe(609351);
+    expect(result.amti.toNumber()).toBe(626351);
     // Reduction = round(1 * 0.25) = round(0.25) = 0
     expect(result.exemption.toNumber()).toBe(88100);
   });
@@ -155,9 +155,9 @@ describe("Form 6251", () => {
   it("Line 10 - tentative minimum tax with 26%/28% split", () => {
     // Need AMT base > 239100
     // Single: taxable=800000, SALT=10000 → AMTI=810000
-    // Exemption: 810000-609350=200650 excess, reduction=round(200650*0.25)=50163
-    // Exemption = 88100-50163 = 37937
-    // AMT base = 810000-37937 = 772063
+    // Exemption: 810000-626350=183650 excess, reduction=round(183650*0.25)=45913
+    // Exemption = 88100-45913 = 42187
+    // AMT base = 810000-42187 = 767813
     const result = calculateForm6251(makeInput({
       taxableIncome: d(800000),
       saltDeduction: d(10000),
@@ -323,14 +323,14 @@ describe("Form 6251", () => {
     expect(result.exemption.toNumber()).toBe(68500 - reduction);
   });
 
-  it("Line 8 - single exemption fully phased out boundary (AMTI = $961,750)", () => {
-    // Exact boundary: 88100 / 0.25 = 352400 → AMTI = 609350 + 352400 = 961750
+  it("Line 8 - single exemption fully phased out boundary (AMTI = $978,750)", () => {
+    // Exact boundary: 88100 / 0.25 = 352400 → AMTI = 626350 + 352400 = 978750
     // Reduction = round(352400 * 0.25) = 88100 → exemption = 0
     const result = calculateForm6251(makeInput({
-      taxableIncome: d(951750),
+      taxableIncome: d(968750),
       saltDeduction: d(10000),
     }), c);
-    expect(result.amti.toNumber()).toBe(961750);
+    expect(result.amti.toNumber()).toBe(978750);
     expect(result.exemption.toNumber()).toBe(0);
   });
 
@@ -645,7 +645,7 @@ describe("Form 6251", () => {
 
   // Very high income fully phasing out exemption
   it("Line 8 - single at AMTI $1,500,000 produces zero exemption and full 28% TMT on all base", () => {
-    // AMTI = 1,500,000, well past 961,750 phase-out point → exemption = 0
+    // AMTI = 1,500,000, well past 978,750 phase-out point → exemption = 0
     // AMT base = 1,500,000
     // TMT = 248,300*0.26 + (1,500,000 - 248,300)*0.28
     const result = calculateForm6251(makeInput({
@@ -666,39 +666,39 @@ describe("Form 6251", () => {
   // ROUND_HALF_UP on the 25% reduction shifts boundaries by $2 from the
   // "neat" algebraic values. These tests pin the actual rounding behavior.
 
-  it("Line 8 - first $1 exemption reduction at AMTI $609,352 (single) due to ROUND_HALF_UP of 0.50", () => {
-    // Excess = 609352 - 609350 = 2
+  it("Line 8 - first $1 exemption reduction at AMTI $626,352 (single) due to ROUND_HALF_UP of 0.50", () => {
+    // Excess = 626352 - 626350 = 2
     // Reduction = roundDollar(2 * 0.25) = roundDollar(0.50) = 1 (ROUND_HALF_UP)
     // Exemption = 88100 - 1 = 88099
     const result = calculateForm6251(makeInput({
-      taxableIncome: d(599352),
+      taxableIncome: d(616352),
       saltDeduction: d(10000),
     }), c);
-    expect(result.amti.toNumber()).toBe(609352);
+    expect(result.amti.toNumber()).toBe(626352);
     expect(result.exemption.toNumber()).toBe(88099);
   });
 
-  it("Line 8 - actual full phase-out boundary at AMTI $961,748 (single), 2 below neat $961,750", () => {
-    // Excess = 961748 - 609350 = 352398
+  it("Line 8 - actual full phase-out boundary at AMTI $978,748 (single), 2 below neat $978,750", () => {
+    // Excess = 978748 - 626350 = 352398
     // Reduction = roundDollar(352398 * 0.25) = roundDollar(88099.50) = 88100 (ROUND_HALF_UP)
     // Exemption = 88100 - 88100 = 0
     const result = calculateForm6251(makeInput({
-      taxableIncome: d(951748),
+      taxableIncome: d(968748),
       saltDeduction: d(10000),
     }), c);
-    expect(result.amti.toNumber()).toBe(961748);
+    expect(result.amti.toNumber()).toBe(978748);
     expect(result.exemption.toNumber()).toBe(0);
   });
 
-  it("Line 8 - $1 exemption remains at AMTI $961,747 (single), confirming rounding boundary", () => {
-    // Excess = 961747 - 609350 = 352397
+  it("Line 8 - $1 exemption remains at AMTI $978,747 (single), confirming rounding boundary", () => {
+    // Excess = 978747 - 626350 = 352397
     // Reduction = roundDollar(352397 * 0.25) = roundDollar(88099.25) = 88099
     // Exemption = 88100 - 88099 = 1
     const result = calculateForm6251(makeInput({
-      taxableIncome: d(951747),
+      taxableIncome: d(968747),
       saltDeduction: d(10000),
     }), c);
-    expect(result.amti.toNumber()).toBe(961747);
+    expect(result.amti.toNumber()).toBe(978747);
     expect(result.exemption.toNumber()).toBe(1);
   });
 
@@ -878,8 +878,8 @@ describe("Form 6251", () => {
   // ── HoH partial phase-out verification ──────────────────
   it("Line 8 - HoH partial phase-out matches single at same AMTI", () => {
     // HoH uses single thresholds. Verify partial phase-out gives identical results.
-    // AMTI = 700000, excess = 90650, reduction = round(22662.5) = 22663
-    // Exemption = 88100 - 22663 = 65437
+    // AMTI = 700000, excess = 73650, reduction = round(18412.5) = 18413
+    // Exemption = 88100 - 18413 = 69687
     const singleResult = calculateForm6251(makeInput({
       taxableIncome: d(690000),
       saltDeduction: d(10000),
@@ -891,7 +891,7 @@ describe("Form 6251", () => {
       filingStatus: "head_of_household",
     }), c);
     expect(hohResult.amti.toNumber()).toBe(700000);
-    expect(hohResult.exemption.toNumber()).toBe(65437);
+    expect(hohResult.exemption.toNumber()).toBe(69687);
     expect(hohResult.exemption.toNumber()).toBe(singleResult.exemption.toNumber());
     expect(hohResult.tentativeMinimumTax.toNumber()).toBe(singleResult.tentativeMinimumTax.toNumber());
   });

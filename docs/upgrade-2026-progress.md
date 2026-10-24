@@ -150,3 +150,12 @@ complete Form 1040/6251/EIC qualification, and full 2026 calculation remains
 blocked. Independent review, remaining law, form numbering and mappings remain
 required. The source check also identified a pre-existing 2025 single/HOH AMT
 phase-out threshold error; its correction is a separate change.
+
+## Additional 2025 AMT regression
+
+The single/HOH phase-out threshold is corrected from the 2024 amount to $626,350,
+as specified by the [2025 Form 6251 exemption worksheet](https://www.irs.gov/instructions/i6251).
+Sixteen literal boundary cases were added after the spec update; 12 failed before
+the correction. Existing fixtures now use the correct 2025 threshold. All 15,077
+tests pass. Prior-year Form 8801 amounts were preserved. This does not qualify
+the full Form 6251 mapping or all AMT adjustments.

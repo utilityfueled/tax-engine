@@ -25,14 +25,14 @@ function make(overrides: Partial<Form6251Input> = {}): Form6251Input {
 
 describe("AMT Edge Cases - Phase-out precision", () => {
   it("exemption phase-out: $4 over threshold reduces by $1", () => {
-    // Single threshold = 609350. AMTI = 609354 → excess = 4
+    // Single threshold = 626350. AMTI = 626354 → excess = 4
     // Reduction = round(4 * 0.25) = round(1) = 1
     // Exemption = 88100 - 1 = 88099
     const result = calculateForm6251(make({
-      taxableIncome: d(599354),
+      taxableIncome: d(616354),
       saltDeduction: d(10000),
     }), c);
-    expect(result.amti.toNumber()).toBe(609354);
+    expect(result.amti.toNumber()).toBe(626354);
     expect(result.exemption.toNumber()).toBe(88099);
   });
 
@@ -217,28 +217,28 @@ describe("AMT Edge Cases - Rate bracket boundary", () => {
 
 describe("AMT Edge Cases - Exemption boundaries", () => {
   it("single exemption at full $88,100 when AMTI is below phase-out threshold", () => {
-    // AMTI = 599350 < 609350 threshold → no reduction → full exemption
+    // AMTI = 616350 < 626350 threshold → no reduction → full exemption
     const result = calculateForm6251(make({
-      taxableIncome: d(599350),
+      taxableIncome: d(616350),
       saltDeduction: d(0),
       regularTax: d(0),
       isItemizing: false,
     }), c);
-    expect(result.amti.toNumber()).toBe(599350);
+    expect(result.amti.toNumber()).toBe(616350);
     expect(result.exemption.toNumber()).toBe(88100);
   });
 
   it("single exemption reduced to exactly $1 just before fully phased out", () => {
     // Reduction = round(excess * 0.25). Need reduction = 88099 → excess = 352396.
-    // AMTI = 609350 + 352396 = 961746. round(352396 * 0.25) = round(88099) = 88099.
+    // AMTI = 626350 + 352396 = 978746. round(352396 * 0.25) = round(88099) = 88099.
     // Exemption = 88100 - 88099 = 1.
     const result = calculateForm6251(make({
-      taxableIncome: d(961746),
+      taxableIncome: d(978746),
       saltDeduction: d(0),
       regularTax: d(0),
       isItemizing: false,
     }), c);
-    expect(result.amti.toNumber()).toBe(961746);
+    expect(result.amti.toNumber()).toBe(978746);
     expect(result.exemption.toNumber()).toBe(1);
   });
 
@@ -271,7 +271,7 @@ describe("AMT Edge Cases - Exemption boundaries", () => {
 describe("AMT Edge Cases - AMT applies and non-itemizer", () => {
   it("AMT applies when TMT exceeds regular tax (moderate income, high SALT add-back)", () => {
     // Single, taxable income $300K, SALT $10K itemized, low regular tax $50K.
-    // AMTI = 310000, exemption = 88100 (below 609350), base = 221900.
+    // AMTI = 310000, exemption = 88100 (below 626350), base = 221900.
     // TMT = round(221900 * 0.26) = 57694. AMT = 57694 - 50000 = 7694 > 0.
     const result = calculateForm6251(make({
       taxableIncome: d(300000),
@@ -441,7 +441,7 @@ describe("AMT Edge Cases - AMT vs regular tax", () => {
     expect(result.amt.toNumber()).toBe(0);
   });
 
-  it("HoH uses single exemption ($88,100) and single phase-out ($609,350)", () => {
+  it("HoH uses single exemption ($88,100) and single phase-out ($626,350)", () => {
     const result = calculateForm6251(make({
       taxableIncome: d(500000),
       saltDeduction: d(0),
@@ -527,29 +527,29 @@ describe("AMT Edge Cases - AMT vs regular tax", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("AMT Edge Cases - Exact phase-out thresholds", () => {
-  it("single exemption unchanged at exactly the $609,350 phase-out threshold", () => {
-    // AMTI = 609350 = exactly at threshold → excess = 0 → no reduction → full exemption
+  it("single exemption unchanged at exactly the $626,350 phase-out threshold", () => {
+    // AMTI = 626350 = exactly at threshold → excess = 0 → no reduction → full exemption
     const result = calculateForm6251(make({
-      taxableIncome: d(609350),
+      taxableIncome: d(626350),
       saltDeduction: d(0),
       regularTax: d(0),
       isItemizing: false,
     }), c);
-    expect(result.amti.toNumber()).toBe(609350);
+    expect(result.amti.toNumber()).toBe(626350);
     expect(result.exemption.toNumber()).toBe(88100);
   });
 
-  it("single exemption fully phased out at AMTI $961,750", () => {
+  it("single exemption fully phased out at AMTI $978,750", () => {
     // Need reduction = 88100. Excess = 88100 / 0.25 = 352400.
-    // AMTI = 609350 + 352400 = 961750. round(352400 * 0.25) = 88100.
+    // AMTI = 626350 + 352400 = 978750. round(352400 * 0.25) = 88100.
     // Exemption = 88100 - 88100 = 0.
     const result = calculateForm6251(make({
-      taxableIncome: d(961750),
+      taxableIncome: d(978750),
       saltDeduction: d(0),
       regularTax: d(0),
       isItemizing: false,
     }), c);
-    expect(result.amti.toNumber()).toBe(961750);
+    expect(result.amti.toNumber()).toBe(978750);
     expect(result.exemption.toNumber()).toBe(0);
   });
 
@@ -588,7 +588,7 @@ describe("AMT Edge Cases - Exact phase-out thresholds", () => {
   });
 
   it("QSS uses MFJ phase-out threshold ($1,252,700), not single threshold", () => {
-    // At AMTI just above single threshold (609350) but well below MFJ threshold (1252700),
+    // At AMTI just above single threshold (626350) but well below MFJ threshold (1252700),
     // QSS filer keeps full MFJ exemption while single filer starts losing theirs.
     const qssResult = calculateForm6251(make({
       taxableIncome: d(700000),
@@ -606,7 +606,7 @@ describe("AMT Edge Cases - Exact phase-out thresholds", () => {
     }), c);
     // QSS: AMTI 700000 < 1252700 threshold → full exemption 137000
     expect(qssResult.exemption.toNumber()).toBe(137000);
-    // Single: AMTI 700000 > 609350 threshold → reduced exemption
+    // Single: AMTI 700000 > 626350 threshold → reduced exemption
     expect(singleResult.exemption.toNumber()).toBeLessThan(88100);
   });
 });
@@ -722,7 +722,7 @@ describe("AMT Edge Cases - ISO and capital gains scenarios", () => {
     // Filer with $80K ordinary income + $400K LTCG = $480K taxable income.
     // Regular tax is lower due to preferential LTCG rates, making AMT more likely.
     // Simulate with low regularTax relative to the AMT Part III result.
-    // AMTI = 480000, exemption = 88100 (below 609350 threshold), base = 391900
+    // AMTI = 480000, exemption = 88100 (below 626350 threshold), base = 391900
     // Under Part III, the entire $391,900 AMT base is preferential income and
     // is taxed at 15% because $80K of ordinary income already fills the 0% bracket.
     // Tentative minimum tax = round(391900 * 0.15) = 58785.
@@ -877,13 +877,13 @@ describe("AMT Edge Cases - Part III section 1250 at 25%", () => {
 describe("AMT Edge Cases - Part III 20% rate bracket", () => {
   it("LTCG reaches 20% bracket when stacked income exceeds $533,400 threshold", () => {
     // taxableIncome = $700K, LTCG = $200K (no QDs), single, non-itemizer
-    // AMTI = 700000, exemption reduced (700000 > 609350)
-    //   excess = 700000 - 609350 = 90650, reduction = round(90650*0.25) = round(22662.50) = 22663
-    //   exemption = 88100 - 22663 = 65437
-    // amtBase = 700000 - 65437 = 634563
+    // AMTI = 700000, exemption reduced (700000 > 626350)
+    //   excess = 700000 - 626350 = 73650, reduction = round(73650*0.25) = round(18412.50) = 18413
+    //   exemption = 88100 - 18413 = 69687
+    // amtBase = 700000 - 69687 = 630313
     // preferentialIncome = 200000, preferentialAmtIncome = 200000
-    // ordinaryAmtPortion = 434563
-    // ordinaryAmtTax = round(239100*0.26) + round(195463*0.28) = 62166 + 54730 = 116896
+    // ordinaryAmtPortion = 430313
+    // ordinaryAmtTax = round(239100*0.26) + round(191213*0.28) = 62166 + 53540 = 115706
     // regularOrdinaryPortion = 500000
     // remainingPreferential = 200000, currentStack = 500000
     // 0% threshold 48350 → no room (500000 > 48350)
@@ -891,9 +891,9 @@ describe("AMT Edge Cases - Part III 20% rate bracket", () => {
     // preferentialTax = 33400 * 0.15 = 5010
     // remainingPreferential = 166600 → all at 20%
     // preferentialTax = 5010 + 166600 * 0.20 = 5010 + 33320 = 38330
-    // preferentialMethodTax = 116896 + round(38330) = 155226
-    // fullOrdinaryTax = round(239100*0.26) + round(395463*0.28) = 62166 + 110730 = 172896
-    // TMT = min(172896, 155226) = 155226
+    // preferentialMethodTax = 115706 + round(38330) = 154036
+    // fullOrdinaryTax = round(239100*0.26) + round(391213*0.28) = 62166 + 109540 = 171706
+    // TMT = min(171706, 154036) = 154036
     const result = calculateForm6251(make({
       taxableIncome: d(700000),
       saltDeduction: d(0),
@@ -901,9 +901,9 @@ describe("AMT Edge Cases - Part III 20% rate bracket", () => {
       isItemizing: false,
       netLongTermCapitalGain: d(200000),
     }), c);
-    expect(result.exemption.toNumber()).toBe(65437);
-    expect(result.amtBase.toNumber()).toBe(634563);
-    expect(result.tentativeMinimumTax.toNumber()).toBe(155226);
+    expect(result.exemption.toNumber()).toBe(69687);
+    expect(result.amtBase.toNumber()).toBe(630313);
+    expect(result.tentativeMinimumTax.toNumber()).toBe(154036);
   });
 });
 
@@ -1033,11 +1033,11 @@ describe("AMT Edge Cases - K-1 AMT adjustments", () => {
 
 describe("AMT Edge Cases - Phase-out rounding edge cases", () => {
   it("$1 over threshold: reduction rounds to $0 so exemption unchanged", () => {
-    // Single threshold = 609350. AMTI = 609351 → excess = 1
+    // Single threshold = 626350. AMTI = 626351 → excess = 1
     // reduction = roundHalfUp(1 * 0.25) = roundHalfUp(0.25) = 0
     // exemption = 88100 - 0 = 88100 (unchanged!)
     const result = calculateForm6251(make({
-      taxableIncome: d(609351),
+      taxableIncome: d(626351),
       saltDeduction: d(0),
       regularTax: d(0),
       isItemizing: false,
@@ -1046,10 +1046,10 @@ describe("AMT Edge Cases - Phase-out rounding edge cases", () => {
   });
 
   it("$2 over threshold: reduction rounds to $1 at the 0.50 boundary", () => {
-    // AMTI = 609352 → excess = 2 → reduction = roundHalfUp(0.50) = 1
+    // AMTI = 626352 → excess = 2 → reduction = roundHalfUp(0.50) = 1
     // exemption = 88100 - 1 = 88099
     const result = calculateForm6251(make({
-      taxableIncome: d(609352),
+      taxableIncome: d(626352),
       saltDeduction: d(0),
       regularTax: d(0),
       isItemizing: false,
@@ -1058,9 +1058,9 @@ describe("AMT Edge Cases - Phase-out rounding edge cases", () => {
   });
 
   it("$3 over threshold: reduction rounds to $1", () => {
-    // AMTI = 609353 → excess = 3 → reduction = roundHalfUp(0.75) = 1
+    // AMTI = 626353 → excess = 3 → reduction = roundHalfUp(0.75) = 1
     const result = calculateForm6251(make({
-      taxableIncome: d(609353),
+      taxableIncome: d(626353),
       saltDeduction: d(0),
       regularTax: d(0),
       isItemizing: false,
@@ -1069,9 +1069,9 @@ describe("AMT Edge Cases - Phase-out rounding edge cases", () => {
   });
 
   it("$4 over threshold: reduction is exactly $1", () => {
-    // AMTI = 609354 → excess = 4 → reduction = roundHalfUp(1.00) = 1
+    // AMTI = 626354 → excess = 4 → reduction = roundHalfUp(1.00) = 1
     const result = calculateForm6251(make({
-      taxableIncome: d(609354),
+      taxableIncome: d(626354),
       saltDeduction: d(0),
       regularTax: d(0),
       isItemizing: false,
@@ -1080,11 +1080,11 @@ describe("AMT Edge Cases - Phase-out rounding edge cases", () => {
   });
 
   it("single exemption $1 above full phase-out point → exemption still $0", () => {
-    // Full phase-out at AMTI = 961750 (exemption = 0)
-    // $1 over: AMTI = 961751 → excess = 352401, reduction = roundHalfUp(88100.25) = 88100
+    // Full phase-out at AMTI = 978750 (exemption = 0)
+    // $1 over: AMTI = 978751 → excess = 352401, reduction = roundHalfUp(88100.25) = 88100
     // exemption = max(0, 88100 - 88100) = 0
     const result = calculateForm6251(make({
-      taxableIncome: d(961751),
+      taxableIncome: d(978751),
       saltDeduction: d(0),
       regularTax: d(0),
       isItemizing: false,
@@ -1093,9 +1093,9 @@ describe("AMT Edge Cases - Phase-out rounding edge cases", () => {
   });
 
   it("HoH at exact phase-out threshold keeps full exemption", () => {
-    // HoH uses single thresholds: threshold = 609350, exemption = 88100
+    // HoH uses single thresholds: threshold = 626350, exemption = 88100
     const result = calculateForm6251(make({
-      taxableIncome: d(609350),
+      taxableIncome: d(626350),
       saltDeduction: d(0),
       filingStatus: "head_of_household",
       regularTax: d(0),

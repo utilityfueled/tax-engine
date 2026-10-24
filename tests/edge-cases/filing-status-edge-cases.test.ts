@@ -456,20 +456,20 @@ describe("AMT exemption differences across filing statuses — IRC §55", () => 
       .toBe(c.amt.exemption.married_filing_jointly.toNumber() / 2);
   });
 
-  it("Spec §55(d)(3): AMT phase-out thresholds — MFJ/QSS highest, Single=HoH in middle", () => {
+  it("Spec §55(d)(3): AMT phase-out thresholds — MFJ/QSS highest, Single=HoH=MFS", () => {
     const mfs = c.amt.phaseOutThreshold.married_filing_separately.toNumber();
     const single = c.amt.phaseOutThreshold.single.toNumber();
     const hoh = c.amt.phaseOutThreshold.head_of_household.toNumber();
     const mfj = c.amt.phaseOutThreshold.married_filing_jointly.toNumber();
     const qss = c.amt.phaseOutThreshold.qualifying_surviving_spouse.toNumber();
 
-    // MFS phase-out ($626,350) > Single/HoH ($609,350) because MFS = half of MFJ ($1,252,700)
+    // Single, HOH and MFS share the $626,350 threshold in 2025.
     expect(single).toBe(hoh);
-    expect(single).toBeLessThan(mfs);
+    expect(single).toBe(mfs);
     expect(mfs).toBeLessThan(mfj);
     expect(mfj).toBe(qss);
     expect(mfs).toBe(626350);
-    expect(single).toBe(609350);
+    expect(single).toBe(626350);
   });
 });
 

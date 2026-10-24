@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.2",
+    ruleVersion: "2025.3",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i6251", section: "Line 5, Exemption Worksheet", revision: "2025 instructions", retrievedAt: "2026-10-24" },
       { url: "https://www.irs.gov/instructions/i1040sca", section: "Line 5e, State and Local Tax Deduction Worksheet", revision: "2025 instructions", retrievedAt: "2026-10-24" },
       { url: "https://www.irs.gov/instructions/i1040s8", section: "Part I and Part II", revision: "2025 instructions", retrievedAt: "2026-10-24" },
     ],

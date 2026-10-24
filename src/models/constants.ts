@@ -1307,10 +1307,10 @@ export const TAX_CONSTANTS: Record<number, YearConstants> = {
         qualifying_surviving_spouse: d(137000),
       },
       phaseOutThreshold: {
-        single: d(609350),
+        single: d(626350),
         married_filing_jointly: d(1252700),
         married_filing_separately: d(626350),
-        head_of_household: d(609350),
+        head_of_household: d(626350),
         qualifying_surviving_spouse: d(1252700),
       },
       rate26Limit: {
