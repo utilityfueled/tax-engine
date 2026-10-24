@@ -16,13 +16,13 @@ import {
   type TaxYearInput,
 } from "@/models/inputs.js";
 import { supportedStates } from "@/lib/guided-interview-flow";
-import { buildWorkspaceEngineInput } from "@tax-engine/engine/src/workspace-engine-input";
 import { calculateFederalTax } from "@/engine/federal.js";
 import { calculatePANonresidentReturn } from "@/engine/state/pa-nonresident-orchestrator.js";
 import { calculatePAReturn } from "@/engine/state/pa-orchestrator.js";
 import { fillReturn } from "@/pdf/fill-return.js";
 import { fillOhioReferenceForms } from "@/pdf/fill-oh-reference-forms.js";
 import { loadPdfDocumentQuietly } from "@/pdf/pdf-utils.js";
+import { assertPdfExportAllowed, markReviewPdf, REVIEW_PDF_NOTICE } from "@/pdf/export-policy.js";
 import {
   buildTaxInputFromGuidedData,
 } from "@/lib/guided-interview-bridge";
@@ -160,6 +160,7 @@ async function mergePdfFiles(pdfPaths: string[]) {
   for (const pdfPath of pdfPaths) {
     const bytes = await readFile(pdfPath);
     const source = await loadPdfDocumentQuietly(bytes);
+    await markReviewPdf(source);
     const pages = await merged.copyPages(source, source.getPageIndices());
 
     for (const page of pages) {
@@ -167,6 +168,7 @@ async function mergePdfFiles(pdfPaths: string[]) {
     }
   }
 
+  merged.setSubject(REVIEW_PDF_NOTICE);
   return merged.save();
 }
 
@@ -398,7 +400,7 @@ function buildPacketSummary(
   }
 
   return {
-    headline: "AI SUMMARY OF THIS PACKET",
+    headline: "SUMMARY OF THIS REVIEW PACKET",
     compiledBullets,
     missingBullets,
   };
@@ -603,20 +605,6 @@ async function buildReturnSummaryCoverPage(summary: PacketSummary) {
   return doc.save();
 }
 
-function buildTaxInputFromWorkspacePreview(workspace: ReturnWorkspaceRecord) {
-  const engineInput = buildWorkspaceEngineInput(
-    workspace.documents,
-    workspace.returnSummary,
-    workspace.structuredFacts
-  );
-
-  if (!engineInput) {
-    return null;
-  }
-
-  return TaxYearInputSchema.parse(engineInput.taxInput);
-}
-
 function buildTaxInputFromGuidedInterview(guidedFlowState: GuidedFlowState | null | undefined) {
   if (!guidedFlowState) {
     return null;
@@ -635,11 +623,12 @@ function resolveFilledReturnTaxInput(
   workspace: ReturnWorkspaceRecord,
   guidedFlowState?: GuidedFlowState | null
 ) {
-  if (guidedFlowState && (guidedFlowState.taxYear == null || guidedFlowState.taxYear !== workspace.returnSummary.targetTaxYear)) {
+  if (!guidedFlowState) throw new Error("Complete the required taxpayer facts in the guided interview before exporting a review PDF.");
+  if (guidedFlowState.taxYear == null || guidedFlowState.taxYear !== workspace.returnSummary.targetTaxYear) {
     throw new Error("Confirm the interview year and make it agree with the workspace before exporting.");
   }
   const guidedTaxInput = buildTaxInputFromGuidedInterview(guidedFlowState);
-  if (guidedFlowState && !guidedTaxInput) throw new Error("Complete the required taxpayer facts before exporting.");
+  if (!guidedTaxInput) throw new Error("Complete the required taxpayer facts before exporting.");
 
   if (guidedTaxInput) {
     return {
@@ -648,16 +637,7 @@ function resolveFilledReturnTaxInput(
     };
   }
 
-  const previewTaxInput = buildTaxInputFromWorkspacePreview(workspace);
 
-  if (previewTaxInput) {
-    return {
-      source: { mode: "workspace-preview" } satisfies WorkspaceFilledReturnSource,
-      taxInput: previewTaxInput,
-    };
-  }
-
-  return null;
 }
 
 function redactPdfTaxInputIdentifiers(taxInput: TaxYearInput): TaxYearInput {
@@ -687,17 +667,11 @@ export async function buildWorkspaceFilledReturnDownload(
   workspace: ReturnWorkspaceRecord,
   guidedFlowState?: GuidedFlowState | null
 ): Promise<WorkspaceFilledReturnDownload> {
+  assertPdfExportAllowed(workspace.returnSummary.targetTaxYear ?? 0, workspace.returnSummary.targetTaxYear ?? 0);
   const resolved = resolveFilledReturnTaxInput(workspace, guidedFlowState);
 
   if (!resolved) {
     throw new Error("Could not build the structured return input from this workspace.");
-  }
-
-  if (
-    resolved.source.mode === "workspace-preview"
-    && workspace.returnSummary.status !== "ready-to-recompute"
-  ) {
-    throw new Error("The return is not ready to generate filled PDFs yet.");
   }
 
   const redactedTaxInput = redactPdfTaxInputIdentifiers(resolved.taxInput);
@@ -759,7 +733,7 @@ export async function buildWorkspaceFilledReturnDownload(
     const yearToken = workspace.returnSummary.targetTaxYear?.toString() ?? "draft";
 
     return {
-      fileName: `${sanitizeFileToken(workspace.id)}-${yearToken}-filled-return.pdf`,
+      fileName: `${sanitizeFileToken(workspace.id)}-${yearToken}-review-return.pdf`,
       contents: mergedPdf,
       includedForms,
     };

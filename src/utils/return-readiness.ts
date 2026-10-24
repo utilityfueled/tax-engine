@@ -16,6 +16,7 @@ import { shouldIncludePAScheduleDReferenceSummary } from "@/utils/pa-schedule-d-
 export type ReturnCompletenessStatus = "supported" | "partial" | "unsupported";
 
 export interface ReturnReadinessAssessment {
+  filingQualified: false;
   packetCompleteness: ReturnCompletenessStatus;
   lineCompleteness: ReturnCompletenessStatus;
   businessRuleValidation: "validated" | "not-validated";
@@ -632,6 +633,7 @@ export function assessReturnReadiness(
   );
 
   return {
+    filingQualified: false,
     packetCompleteness,
     lineCompleteness,
     businessRuleValidation: "not-validated",

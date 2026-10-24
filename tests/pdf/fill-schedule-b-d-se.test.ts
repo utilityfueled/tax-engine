@@ -1,3 +1,5 @@
+import { useTemporaryPdfOutput } from "./temporary-output.js";
+const testOutputDir = useTemporaryPdfOutput();
 /**
  * Tests for Schedule B, D, and SE PDF filling.
  * Verifies that engine results are correctly mapped to PDF form fields.
@@ -274,7 +276,7 @@ describe("fillReturn orchestrator with Schedule B, D, SE", () => {
     const result = calculateFederalTax(complexMFJFixture);
     const { filledForms } = await fillReturn(complexMFJFixture, result, {
       blankFormsDir: "forms/blank",
-      outputDir: "forms/filled",
+      outputDir: testOutputDir,
     });
     // Complex filer should have: 1040 + S1 + S2 + S3 + SB + SD + SSE
     expect(filledForms.length).toBeGreaterThanOrEqual(7);
@@ -288,7 +290,7 @@ describe("fillReturn orchestrator with Schedule B, D, SE", () => {
     const result = calculateFederalTax(simpleW2Fixture);
     const { filledForms } = await fillReturn(simpleW2Fixture, result, {
       blankFormsDir: "forms/blank",
-      outputDir: "forms/filled",
+      outputDir: testOutputDir,
     });
     // Simple W-2 filer: no self-employment income
     expect(filledForms.some((f) => f.includes("f1040sse-filled"))).toBe(false);

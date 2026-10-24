@@ -1,3 +1,5 @@
+import { useTemporaryPdfOutput } from "./temporary-output.js";
+const testOutputDir = useTemporaryPdfOutput();
 /**
  * Tests for Form 8936 — Clean Vehicle Credits PDF filling.
  * Verifies that engine results are correctly mapped to PDF form fields.
@@ -373,7 +375,7 @@ describe("fillReturn orchestrator with Form 8936", () => {
     const result = calculateFederalTax(mfjNewVehicleFixture);
     const { filledForms } = await fillReturn(mfjNewVehicleFixture, result, {
       blankFormsDir: BLANK_FORMS_DIR,
-      outputDir: "forms/filled",
+      outputDir: testOutputDir,
     });
 
     expect(filledForms.some((f) => f.includes("f8936"))).toBe(true);
@@ -383,7 +385,7 @@ describe("fillReturn orchestrator with Form 8936", () => {
     const result = calculateFederalTax(disqualifiedFixture);
     const { filledForms } = await fillReturn(disqualifiedFixture, result, {
       blankFormsDir: BLANK_FORMS_DIR,
-      outputDir: "forms/filled",
+      outputDir: testOutputDir,
     });
 
     expect(filledForms.some((f) => f.includes("f8936"))).toBe(false);

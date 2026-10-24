@@ -159,3 +159,20 @@ Sixteen literal boundary cases were added after the spec update; 12 failed befor
 the correction. Existing fixtures now use the correct 2025 threshold. All 15,077
 tests pass. Prior-year Form 8801 amounts were preserved. This does not qualify
 the full Form 6251 mapping or all AMT adjustments.
+
+## Review PDF boundary
+
+The return orchestrator rejects filing-purpose exports, mismatched calculation
+years and unavailable mapping years before reading/writing PDFs. Current 2025
+mapping metadata explicitly says review-only; 2026 mappings remain unavailable.
+Each exported page carries `FOR REVIEW ONLY - NOT FOR FILING`, including web
+cover pages and supplementary state summaries. Web downloads remain ID-redacted,
+use review filenames and no-store headers, and require guided taxpayer facts;
+the synthetic advanced preview can no longer become an exported return.
+Readiness responses explicitly report `filingQualified: false`.
+
+The full suite has 15,080 passes; focused PDF/readiness/route tests and web type
+checking pass. A shared-output race in older PDF tests was found and those
+fixtures now use isolated temporary directories. The existing blank-template
+files still need per-form revision/hash qualification and physical year
+versioning. These safeguards do not establish complete-data filing exports.

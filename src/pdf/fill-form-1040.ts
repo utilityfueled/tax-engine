@@ -12,6 +12,7 @@ import { PDFDocument } from "pdf-lib";
 import Decimal from "decimal.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
+import { assertPdfExportAllowed } from "./export-policy.js";
 import {
   loadBlankPdf,
   setTextField,
@@ -167,6 +168,7 @@ export async function fillForm1040(
   result: TaxReturnResult,
   blankPdfPath: string,
 ): Promise<PDFDocument> {
+  assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
   const doc = await loadBlankPdf(blankPdfPath);
   const form = doc.getForm();
 

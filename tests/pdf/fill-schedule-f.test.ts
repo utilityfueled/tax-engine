@@ -1,3 +1,5 @@
+import { useTemporaryPdfOutput } from "./temporary-output.js";
+const testOutputDir = useTemporaryPdfOutput();
 /**
  * Tests for Schedule F PDF filling.
  * Verifies that engine results are correctly mapped to PDF form fields.
@@ -283,7 +285,7 @@ describe("fillReturn orchestrator with Schedule F", () => {
     const result = calculateFederalTax(farmFixture);
     const { filledForms } = await fillReturn(farmFixture, result, {
       blankFormsDir: "forms/blank",
-      outputDir: "forms/filled",
+      outputDir: testOutputDir,
     });
     expect(filledForms.some((f) => f.includes("f1040sf-filled"))).toBe(true);
   });
@@ -293,7 +295,7 @@ describe("fillReturn orchestrator with Schedule F", () => {
     const result = calculateFederalTax(simpleW2Fixture);
     const { filledForms } = await fillReturn(simpleW2Fixture, result, {
       blankFormsDir: "forms/blank",
-      outputDir: "forms/filled",
+      outputDir: testOutputDir,
     });
     expect(filledForms.some((f) => f.includes("f1040sf-filled"))).toBe(false);
   });

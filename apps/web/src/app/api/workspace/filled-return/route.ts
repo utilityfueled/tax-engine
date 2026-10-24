@@ -49,6 +49,11 @@ export async function POST(request: Request) {
     );
   }
 
+  const purpose = (parsed.data as { purpose?: unknown } | null)?.purpose;
+  if (purpose !== undefined && purpose !== "review") {
+    return NextResponse.json({ error: "Filing exports are not qualified. Only review downloads are available." }, { status: 400 });
+  }
+
   const workspace = isReturnWorkspaceRecord(parsed.data)
     ? parsed.data
     : isReturnWorkspaceRecord((parsed.data as { workspace?: unknown } | null)?.workspace)
@@ -104,6 +109,8 @@ export async function POST(request: Request) {
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename="${download.fileName}"`,
         "X-Tax-Engine-Included-Forms": download.includedForms.join(","),
+        "X-Tax-Engine-Export-Purpose": "review",
+        "Cache-Control": "no-store, private",
       },
     });
   } catch (error) {

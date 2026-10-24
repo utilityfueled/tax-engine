@@ -951,7 +951,7 @@ export function ReturnWorkspaceScreen({
 
       const fileName = resolveDownloadFileName(
         response.headers,
-        `${workspace.id}-filled-return.pdf`
+        `${workspace.id}-review-return.pdf`
       );
       const includedForms = response.headers
         .get("X-Tax-Engine-Included-Forms")
@@ -1098,7 +1098,6 @@ export function ReturnWorkspaceScreen({
   const filingPackDownload = workspace.documents.length > 0
     ? buildWorkspaceFilingPackDownload(workspace)
     : null;
-  const filingPackReady = workspace.returnSummary.status === "ready-to-recompute";
   const canPresentCompletedBundle = canPresentCompletedReturnDownload({
     returnSummary: workspace.returnSummary,
     guidedFlowState: persistedGuidedFlowState,
@@ -1110,13 +1109,14 @@ export function ReturnWorkspaceScreen({
     pendingInterviewQuestionCount,
     guidedReviewIssueCount: guidedReviewIssues.length
   });
-  const canDownloadFilledReturnPdf = filingPackReady || persistedGuidedFlowState !== null;
+  const canDownloadFilledReturnPdf = persistedGuidedFlowState?.taxYear === 2025
+    && workspace.returnSummary.targetTaxYear === 2025;
   const filingPackPanelTitle = canPresentCompletedBundle ? "Return Bundle" : "Draft Return Bundle";
   const filingPackJumpLabel = canPresentCompletedBundle ? "Go to Return Bundle" : "Go to Draft Return Bundle";
   const filingPackIntroCopy = canPresentCompletedBundle
-    ? "Download a filled PDF packet for the federal forms and state artifacts we currently generate, or keep the local JSON bundle with the structured data and audit notes."
+    ? "Download a review PDF with taxpayer IDs removed, or save the local JSON bundle with your structured data and audit notes. Filing exports are not yet qualified."
     : canDownloadFilledReturnPdf
-      ? "Your return still has review items, but you can download a draft filled federal PDF based on your guided answers and keep the JSON bundle for audit notes."
+      ? "You can download a review PDF after completing the required taxpayer facts. It is not a filing copy. Save the JSON bundle to retain your structured data and audit notes."
       : "Your return is not filing-ready yet. Download a local draft return bundle with the current forms data, checklist, and review notes.";
   const filingPackButtonLabel = canPresentCompletedBundle ? "Download Return Bundle (.json)" : "Download Draft Return Bundle (.json)";
   const missingItemsMemoIncluded = filingPackDownload?.filingPack.files.some(
@@ -1336,7 +1336,7 @@ export function ReturnWorkspaceScreen({
                 {filledReturnPending
                   ? "Generating Filled Return PDF..."
                   : canPresentCompletedBundle
-                    ? "Download Filled Return PDF"
+                    ? "Download Review PDF"
                     : "Download Draft Filled Return PDF"}
               </button>
             ) : null}

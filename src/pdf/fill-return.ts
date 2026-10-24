@@ -155,7 +155,8 @@ import { fillNYIT201 } from "./fill-ny-it201.js";
 import { fillForm4684 } from "./fill-form-4684.js";
 import { fillForm8839 } from "./fill-form-8839.js";
 import { fillForm5695 } from "./fill-form-5695.js";
-import { savePdf, flattenForm } from "./pdf-utils.js";
+import { savePdf, flattenForm, loadBlankPdf } from "./pdf-utils.js";
+import { assertPdfExportAllowed, markReviewPdf, type PdfExportPurpose } from "./export-policy.js";
 import { calculatePAScheduleC } from "@/engine/state/pa-schedule-c.js";
 import { d } from "@/utils/decimal.js";
 import { shouldIncludePAScheduleDReferenceSummary } from "@/utils/pa-schedule-d-packet.js";
@@ -362,6 +363,8 @@ function hasPAScheduleSD(
 }
 
 export interface FillReturnOptions {
+  /** Review is the only enabled purpose until independent filing qualification. */
+  purpose?: PdfExportPurpose;
   /** Directory containing blank IRS PDF forms. */
   blankFormsDir: string;
   /** Directory to write filled PDF forms. */
@@ -385,6 +388,7 @@ export async function fillReturn(
   result: TaxReturnResult,
   options: FillReturnOptions,
 ): Promise<FillReturnResult> {
+  assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear, options.purpose);
   const filledForms: string[] = [];
   const { blankFormsDir, outputDir, flatten = false } = options;
 
@@ -1300,5 +1304,10 @@ export async function fillReturn(
     filledForms.push(outputPathNJ1040);
   }
 
+  for (const path of filledForms) {
+    const doc = await loadBlankPdf(path);
+    await markReviewPdf(doc);
+    await savePdf(doc, path);
+  }
   return { filledForms };
 }

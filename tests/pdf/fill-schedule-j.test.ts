@@ -1,3 +1,5 @@
+import { useTemporaryPdfOutput } from "./temporary-output.js";
+const testOutputDir = useTemporaryPdfOutput();
 /**
  * Tests for Schedule J PDF filling — Income Averaging for Farmers and Fishermen.
  * Verifies that engine results are correctly mapped to PDF form fields.
@@ -247,7 +249,7 @@ describe("fillReturn orchestrator with Schedule J", () => {
     const result = calculateFederalTax(farmIncomeAveragingFixture);
     const { filledForms } = await fillReturn(farmIncomeAveragingFixture, result, {
       blankFormsDir: "forms/blank",
-      outputDir: "forms/filled",
+      outputDir: testOutputDir,
     });
     expect(filledForms.some((f) => f.includes("f1040sj-filled"))).toBe(true);
   });
@@ -257,7 +259,7 @@ describe("fillReturn orchestrator with Schedule J", () => {
     const result = calculateFederalTax(simpleW2Fixture);
     const { filledForms } = await fillReturn(simpleW2Fixture, result, {
       blankFormsDir: "forms/blank",
-      outputDir: "forms/filled",
+      outputDir: testOutputDir,
     });
     expect(filledForms.some((f) => f.includes("f1040sj-filled"))).toBe(false);
   });

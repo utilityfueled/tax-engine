@@ -389,11 +389,13 @@ describe("workspace filled return download", () => {
     const pdf = await PDFDocument.load(download.contents);
     const pdfText = await extractPdfText(download.contents);
 
-    expect(download.fileName).toBe("workspace-northwind-review-2025-filled-return.pdf");
+    expect(download.fileName).toBe("workspace-northwind-review-2025-review-return.pdf");
     expect(download.includedForms).toContain("f1040-filled.pdf");
     expect(pdf.getPageCount()).toBeGreaterThan(0);
     expect(pdfText).toContain("EXPERIMENTAL TAX RETURN REFERENCE");
-    expect(pdfText).toContain("AI SUMMARY OF THIS PACKET");
+    expect(pdfText).toContain("SUMMARY OF THIS REVIEW PACKET");
+    expect(pdfText.match(/FOR REVIEW ONLY - NOT FOR FILING/g)).toHaveLength(pdf.getPageCount());
+    expect(pdfText).not.toContain("123-45-6789");
   });
 
   it("serves the merged PDF through the app route", async () => {
@@ -410,13 +412,15 @@ describe("workspace filled return download", () => {
 
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toBe("application/pdf");
-    expect(response.headers.get("content-disposition")).toContain("filled-return.pdf");
+    expect(response.headers.get("content-disposition")).toContain("review-return.pdf");
+    expect(response.headers.get("x-tax-engine-export-purpose")).toBe("review");
+    expect(response.headers.get("cache-control")).toBe("no-store, private");
 
     const pdf = await PDFDocument.load(new Uint8Array(await response.arrayBuffer()));
     expect(pdf.getPageCount()).toBeGreaterThan(0);
   });
 
-  it("still supports the legacy workspace-only route payload", async () => {
+  it("rejects the legacy workspace-only payload without actual taxpayer facts", async () => {
     const response = await POST(new Request("http://localhost/api/workspace/filled-return", {
       method: "POST",
       headers: {
@@ -425,8 +429,17 @@ describe("workspace filled return download", () => {
       body: JSON.stringify(createWorkspace()),
     }));
 
-    expect(response.status).toBe(200);
-    expect(response.headers.get("content-type")).toBe("application/pdf");
+    expect(response.status).toBe(400);
+    expect((await response.json()).error).toMatch(/taxpayer facts/);
+  });
+
+  it("rejects an explicit filing export request", async () => {
+    const response = await POST(new Request("http://localhost/api/workspace/filled-return", {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ workspace: createWorkspace(), guidedFlowState: createGuidedFlowState(), purpose: "filing" }),
+    }));
+    expect(response.status).toBe(400);
+    expect((await response.json()).error).toMatch(/not qualified/);
   });
 
   it("allows localhost filled-return downloads for local-browser workspaces during hosted development", async () => {

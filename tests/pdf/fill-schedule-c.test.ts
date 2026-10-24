@@ -3,7 +3,10 @@
  * Verifies that engine results are correctly mapped to PDF form fields.
  */
 
-import { describe, it, expect, beforeAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { PDFDocument, PDFTextField, PDFCheckBox } from "pdf-lib";
 import { calculateFederalTax } from "@/engine/federal.js";
 import { fillScheduleC, SCHEDULE_C_FIELDS } from "@/pdf/fill-schedule-c.js";
@@ -231,12 +234,15 @@ describe("Schedule C PDF fill — simple filer with no self-employment income", 
 // ─── Orchestrator integration ────────────────────────────────────────────
 
 describe("fillReturn orchestrator with Schedule C", () => {
+  let outputDir: string;
+  beforeAll(async () => { outputDir = await mkdtemp(join(tmpdir(), "schedule-c-return-")); });
+  afterAll(async () => { await rm(outputDir, { recursive: true, force: true }); });
   it("fills Schedule C for filer with 1099-NEC income", { timeout: 30_000 }, async () => {
     const { fillReturn } = await import("@/pdf/fill-return.js");
     const result = calculateFederalTax(complexMFJFixture);
     const { filledForms } = await fillReturn(complexMFJFixture, result, {
       blankFormsDir: "forms/blank",
-      outputDir: "forms/filled",
+      outputDir,
     });
     expect(filledForms.some((f) => f.includes("f1040sc-filled"))).toBe(true);
   }, 15_000);
@@ -246,7 +252,7 @@ describe("fillReturn orchestrator with Schedule C", () => {
     const result = calculateFederalTax(simpleW2Fixture);
     const { filledForms } = await fillReturn(simpleW2Fixture, result, {
       blankFormsDir: "forms/blank",
-      outputDir: "forms/filled",
+      outputDir,
     });
     // Simple W-2 filer: no 1099-NEC means scheduleC may be absent or have zero receipts
     // The orchestrator checks `result.scheduleC` existence
