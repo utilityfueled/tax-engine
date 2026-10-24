@@ -501,8 +501,6 @@ describe("Charitable AGI limits", () => {
 
   it("charitable donations interact correctly with SALT and mortgage deductions in totalItemized", () => {
     // Verify charitable deductions add to totalItemized alongside other Schedule A items.
-    // AGI = $200K. Cash donation $50K (under 60% = $120K, fully deductible).
-    // W-2 state tax $10K → SALT capped at $10K. Mortgage interest present.
     const input: TaxYearInput = {
       taxpayer: {
         taxYear: 2025,
@@ -552,12 +550,10 @@ describe("Charitable AGI limits", () => {
     const result = calculateScheduleA(input, d(200000), "single", c);
     // Cash charitable fully deductible (50K < 120K limit)
     expect(result.cashCharitable.toNumber()).toBe(50000);
-    // SALT: $12K state + $5K property = $17K → capped at $10K
-    expect(result.saltDeduction.toNumber()).toBe(10000);
+    expect(result.saltDeduction.toNumber()).toBe(17000);
     // Mortgage interest present
     expect(result.mortgageInterest.toNumber()).toBe(15000);
-    // Total = medical(0) + SALT(10K) + mortgage(15K) + points(0) + PMI(0) + cash(50K) + nonCash(0)
-    expect(result.totalItemized.toNumber()).toBe(75000);
+    expect(result.totalItemized.toNumber()).toBe(82000);
   });
 
   it("very high AGI ($10M) — limits scale linearly, small donation fully deductible", () => {

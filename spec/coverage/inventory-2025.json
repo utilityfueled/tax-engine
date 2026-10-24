@@ -632,7 +632,7 @@
       "key": "federal/form-8812",
       "jurisdiction": "federal",
       "taxYear": 2025,
-      "sourceAuthority": "https://www.irs.gov/instructions/i1040s8812",
+      "sourceAuthority": "https://www.irs.gov/instructions/i1040s8",
       "specPath": "spec/federal/form-8812.yaml",
       "enginePath": "src/engine/forms/form-8812.ts",
       "packetPath": "src/pdf/fill-form-8812.ts",

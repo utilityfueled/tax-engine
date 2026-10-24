@@ -12,12 +12,15 @@ import type { CalculatedLine } from "@/models/outputs.js";
 import type { FilingStatus, YearConstants } from "@/models/constants.js";
 import { d, sum, zeroFloor, min, roundDollar } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
+import { calculateSALTLimit } from "@/utils/tax-math.js";
 // calculateDeductibleMortgageInterest is no longer used here — mortgage interest
 // is now computed with aggregate debt limits per IRS Pub 936 (see Lines 8a-8d section).
 
 export interface ScheduleAInput {
   medicalExpenses?: Decimal;
-  personalPropertyTaxes?: Decimal; // Line 5b: vehicle registration, etc.
+  personalPropertyTaxes?: Decimal; // Line 5c: annual value-based taxes
+  /** Form 2555 lines 45 + 50, computed by the federal orchestrator. */
+  saltMagiAdditions?: Decimal;
   investmentInterestExpense?: Decimal; // Line 9: net investment interest expense
   casualtyLossDeduction?: Decimal; // Line 15: Form 4684 deductible casualty/theft loss
   gamblingWinnings?: Decimal; // Line 21b: gambling winnings (limits gambling loss deduction)
@@ -51,7 +54,7 @@ export interface CharitableCarryforwardYearDetail {
 
 export interface ScheduleAResult {
   medicalDeduction: Decimal; // Line 4
-  saltDeduction: Decimal; // Line 5d
+  saltDeduction: Decimal; // Line 5e
   /** Whether the general sales tax election was used for Line 5a (vs income taxes) */
   salesTaxElected: boolean;
   mortgageInterest: Decimal; // Line 8a
@@ -71,9 +74,6 @@ export interface ScheduleAResult {
   charitableCarryforwardDetail: CharitableCarryforwardYearDetail[];
   lines: CalculatedLine[];
 }
-
-/** SALT cap for MFS filers */
-const MFS_SALT_CAP = new Decimal(5000);
 
 /** Charitable carryforwards expire after 5 years per IRC §170(d)(1) */
 const CHARITABLE_CARRYFORWARD_YEARS = 5;
@@ -222,21 +222,33 @@ export function calculateScheduleA(
     stateLocalTaxes, line5aDescription);
 
   const personalPropertyTaxes = extra?.personalPropertyTaxes ?? new Decimal(0);
-  audit.record("Sched A", "5b", "Personal property taxes", personalPropertyTaxes,
+  audit.record("Sched A", "5c", "Personal property taxes", personalPropertyTaxes,
     "Vehicle registration, etc.");
 
   const propertyTaxes = input.form1098.reduce(
     (acc, f) => acc.plus(d(f.propertyTax)),
     new Decimal(0)
   );
-  audit.record("Sched A", "5c", "Real estate taxes", propertyTaxes,
+  audit.record("Sched A", "5b", "Real estate taxes", propertyTaxes,
     "Sum Form 1098 property tax");
 
-  // Apply SALT cap ($10K normally, $5K for MFS)
+  // Restore excluded income before applying the 2025 SALT MAGI phase-down.
+  if (input.form2555 && extra?.saltMagiAdditions === undefined) {
+    throw new Error("Schedule A requires computed Form 2555 exclusions and housing deduction for SALT MAGI.");
+  }
+  const saltMagi = agi.plus(extra?.saltMagiAdditions ?? ZERO)
+    .plus(d(input.scheduleA?.excludedPuertoRicoIncome))
+    .plus(d(input.scheduleA?.form4563ExcludedIncome));
   const saltTotal = stateLocalTaxes.plus(personalPropertyTaxes).plus(propertyTaxes);
-  const saltCap = filingStatus === "married_filing_separately" ? MFS_SALT_CAP : constants.saltCap;
-  const saltDeduction = min(saltTotal, saltCap);
-  audit.record("Sched A", "5d", "SALT deduction (capped)", saltDeduction,
+  const saltCap = calculateSALTLimit(saltMagi, filingStatus, constants);
+  const saltDeduction = roundDollar(min(zeroFloor(saltTotal), saltCap));
+  audit.record("SALT WS", "4", "MAGI for SALT limitation", saltMagi,
+    "AGI + excluded Puerto Rico income + Form 2555 lines 45 and 50 + Form 4563 line 15");
+  audit.record("SALT WS", "10-limit", "SALT limit after MAGI phase-down", saltCap,
+    "Worksheet line 9, halved after phase-down for MFS");
+  audit.record("Sched A", "5d", "State and local taxes before limitation", saltTotal,
+    "Line 5a + line 5b + line 5c");
+  audit.record("Sched A", "5e", "SALT deduction (capped)", saltDeduction,
     `min(${saltTotal}, $${saltCap})`);
 
   // ── Mortgage Interest (Lines 8a-8d) ────────────────────

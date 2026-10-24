@@ -86,7 +86,7 @@ describe("Schedule A - Medical Expenses", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("Schedule A - SALT", () => {
-  it("Schedule A Line 5b - personal property taxes", () => {
+  it("Schedule A Line 5c - personal property taxes", () => {
     const result = calculateScheduleA(simpleW2Fixture, d(85000), "single", c, {
       personalPropertyTaxes: d(500),
     });
@@ -94,7 +94,7 @@ describe("Schedule A - SALT", () => {
     expect(result.saltDeduction.toNumber()).toBe(500);
   });
 
-  it("Schedule A Line 5b - personal property included in SALT cap", () => {
+  it("Schedule A Line 5c - personal property included in 2025 SALT deduction", () => {
     const input = {
       ...complexMFJFixture,
       w2s: [{
@@ -105,17 +105,16 @@ describe("Schedule A - SALT", () => {
     const result = calculateScheduleA(input, d(300000), "married_filing_jointly", c, {
       personalPropertyTaxes: d(2000),
     });
-    // State $5K + personal property $2K + real estate $8.5K = $15.5K → capped at $10K
-    expect(result.saltDeduction.toNumber()).toBe(10000);
+    expect(result.saltDeduction.toNumber()).toBe(15500);
   });
 
-  it("Schedule A Line 5d - SALT capped at $10K", () => {
+  it("Schedule A Line 5e - 2025 SALT below the limit", () => {
     const result = calculateScheduleA(complexMFJFixture, d(300000), "married_filing_jointly", c);
     // State withholding $0 (WA) + property tax $8,500 = $8,500 (under cap)
     expect(result.saltDeduction.toNumber()).toBe(8500);
   });
 
-  it("Schedule A Line 5d - MFS capped at $5K", () => {
+  it("Schedule A Line 5e - MFS allows $12,500 below its 2025 limit", () => {
     const input = {
       ...complexMFJFixture,
       w2s: [{
@@ -124,8 +123,7 @@ describe("Schedule A - SALT", () => {
       }],
     };
     const result = calculateScheduleA(input, d(200000), "married_filing_separately", c);
-    // State tax $4K + property tax $8,500 = $12,500 → capped at $5K for MFS
-    expect(result.saltDeduction.toNumber()).toBe(5000);
+    expect(result.saltDeduction.toNumber()).toBe(12500);
   });
 
   it("Schedule A Line 5d - under cap passes through", () => {
@@ -381,7 +379,7 @@ describe("Schedule A - Medical 7.5% floor at various AGI levels", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("Schedule A - SALT cap edge cases", () => {
-  it("Schedule A Line 5d - state income tax + property tax combined capped at $10K", () => {
+  it("Schedule A Line 5e - 2025 state and property taxes of $13K are fully deductible", () => {
     const input = {
       ...simpleW2Fixture,
       w2s: [{
@@ -399,8 +397,7 @@ describe("Schedule A - SALT cap edge cases", () => {
       }],
     };
     const result = calculateScheduleA(input, d(150000), "single", c);
-    // State $6K + property $7K = $13K → capped at $10K
-    expect(result.saltDeduction.toNumber()).toBe(10000);
+    expect(result.saltDeduction.toNumber()).toBe(13000);
   });
 
   it("Schedule A Line 5d - SALT exactly at $10K cap is not reduced", () => {
@@ -596,12 +593,9 @@ describe("Schedule A - Itemized vs Standard Deduction comparison", () => {
       }],
     };
     const result = calculateScheduleA(input, d(120000), "single", c);
-    // SALT: $5K state + $6K property = $11K → capped at $10K
-    // Mortgage: $12K (under limit)
-    // Total = $10K + $12K = $22K > $15K standard deduction
-    expect(result.saltDeduction.toNumber()).toBe(10000);
+    expect(result.saltDeduction.toNumber()).toBe(11000);
     expect(result.mortgageInterest.toNumber()).toBe(12000);
-    expect(result.totalItemized.toNumber()).toBe(22000);
+    expect(result.totalItemized.toNumber()).toBe(23000);
     expect(result.totalItemized.toNumber()).toBeGreaterThan(
       c.standardDeduction.single.toNumber()
     );
@@ -721,8 +715,7 @@ describe("Schedule A - State income tax + local tax + property tax combined unde
     expect(result.saltDeduction.toNumber()).toBe(8500);
   });
 
-  it("Schedule A Line 5d - state + local + property taxes exceed cap and are capped at $10K", () => {
-    // State: $4,000, local: $2,500, property: $5,000 → total $11,500 → capped at $10K
+  it("Schedule A Line 5e - 2025 state, local and property taxes of $11,500 are fully deductible", () => {
     const input = {
       ...simpleW2Fixture,
       w2s: [{
@@ -741,7 +734,7 @@ describe("Schedule A - State income tax + local tax + property tax combined unde
       }],
     };
     const result = calculateScheduleA(input, d(150000), "single", c);
-    expect(result.saltDeduction.toNumber()).toBe(10000);
+    expect(result.saltDeduction.toNumber()).toBe(11500);
   });
 });
 
@@ -782,8 +775,7 @@ describe("Schedule A - State estimated tax payments in SALT", () => {
     expect(result.saltDeduction.toNumber()).toBe(9000);
   });
 
-  it("Schedule A Line 5a - state estimated payments push SALT over $10K cap", () => {
-    // State withholding $6K + state estimated $3K + property $5K = $14K → capped $10K
+  it("Schedule A Line 5a - estimated payments are included in 2025 SALT of $14K", () => {
     const input = {
       ...simpleW2Fixture,
       w2s: [{
@@ -808,7 +800,7 @@ describe("Schedule A - State estimated tax payments in SALT", () => {
       },
     };
     const result = calculateScheduleA(input, d(200000), "single", c);
-    expect(result.saltDeduction.toNumber()).toBe(10000);
+    expect(result.saltDeduction.toNumber()).toBe(14000);
   });
 
   it("Schedule A Line 5a - federal estimated payments excluded from SALT", () => {
@@ -869,8 +861,7 @@ describe("Schedule A - State estimated tax payments in SALT", () => {
     expect(result.saltDeduction.toNumber()).toBe(9000);
   });
 
-  it("Schedule A Line 5a - state estimated payments with MFS $5K cap", () => {
-    // MFS: state withholding $2K + state estimated $2K + property $3K = $7K → capped $5K
+  it("Schedule A Line 5a - MFS estimated payments below the 2025 $20K limit", () => {
     const input = {
       ...simpleW2Fixture,
       w2s: [{
@@ -895,7 +886,7 @@ describe("Schedule A - State estimated tax payments in SALT", () => {
       },
     };
     const result = calculateScheduleA(input, d(100000), "married_filing_separately", c);
-    expect(result.saltDeduction.toNumber()).toBe(5000);
+    expect(result.saltDeduction.toNumber()).toBe(7000);
   });
 });
 
@@ -1068,9 +1059,8 @@ describe("Schedule A - Itemized less than standard deduction", () => {
 // MFS SALT Cap $5,000
 // ═══════════════════════════════════════════════════════════
 
-describe("Schedule A - MFS SALT cap at $5,000", () => {
-  it("Schedule A Line 5d - MFS filer with state + local + property taxes above $5K is capped at $5,000", () => {
-    // State: $2,000, local: $1,500, property: $4,000 → total $7,500 → capped at $5K for MFS
+describe("Schedule A - MFS 2025 SALT maximum of $20,000", () => {
+  it("Schedule A Line 5e - MFS allows combined 2025 taxes of $7,500", () => {
     const input = {
       ...simpleW2Fixture,
       w2s: [{
@@ -1089,7 +1079,7 @@ describe("Schedule A - MFS SALT cap at $5,000", () => {
       }],
     };
     const result = calculateScheduleA(input, d(100000), "married_filing_separately", c);
-    expect(result.saltDeduction.toNumber()).toBe(5000);
+    expect(result.saltDeduction.toNumber()).toBe(7500);
   });
 });
 
@@ -1124,7 +1114,6 @@ describe("Schedule A - audit trail line values for each section", () => {
         costBasis: "0",
       }],
     };
-    // AGI = $120,000; 7.5% = $9,000; Medical = $11,000 → deduction $2,000
     const result = calculateScheduleA(input, d(120000), "single", c, {
       medicalExpenses: new Decimal(11000),
       investmentInterestExpense: new Decimal(800),
@@ -1136,29 +1125,19 @@ describe("Schedule A - audit trail line values for each section", () => {
 
     // Line 1: raw medical expenses
     expect(getLine("1")).toBe(11000);
-    // Line 4: medical deduction ($11K - $9K = $2K)
     expect(getLine("4")).toBe(2000);
-    // Line 5a: state $4,000 + local $500 = $4,500
     expect(getLine("5a")).toBe(4500);
     // Line 5b: no personal property taxes
-    expect(getLine("5b")).toBe(0);
-    // Line 5c: property tax $3,500
-    expect(getLine("5c")).toBe(3500);
-    // Line 5d: $4,500 + $0 + $3,500 = $8,000 (under $10K cap)
+    expect(getLine("5b")).toBe(3500);
+    expect(getLine("5c")).toBe(0);
     expect(getLine("5d")).toBe(8000);
-    // Line 8a: $14,000 mortgage interest (principal $450K ≤ $750K)
     expect(getLine("8a")).toBe(14000);
-    // Line 8c: $2,500 points paid
     expect(getLine("8c")).toBe(2500);
     // Line 8d: reserved for future use in 2025
     expect(getLine("8d")).toBe(0);
-    // Line 9: $800 investment interest
     expect(getLine("9")).toBe(800);
-    // Line 12: $4,000 cash charitable (under 60% AGI = $72K)
     expect(getLine("12")).toBe(4000);
-    // Line 28: gambling losses $2,000 = winnings $2,000
     expect(getLine("28")).toBe(2000);
-    // Line 17: total = $2K + $8K + $14K + $2.5K + $0.8K + $4K + $2K = $33,300
     expect(getLine("17")).toBe(33300);
   });
 });

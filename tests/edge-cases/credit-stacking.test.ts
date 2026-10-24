@@ -970,7 +970,6 @@ describe("Credit stacking - FTC ordering with other nonrefundable credits", () =
 
 describe("Credit stacking - CTC + ODC + education credits combined", () => {
   it("CTC children + ODC dependents + AOC all reduce tax (spec Form 8812 Line 12, Form 8863)", () => {
-    // MFJ with 2 CTC children + 1 ODC dependent + AOC student
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
       taxpayer: {
@@ -1003,15 +1002,13 @@ describe("Credit stacking - CTC + ODC + education credits combined", () => {
     };
     const result = calculateFederalTax(fixture);
 
-    // CTC before limitation: 2 × $2,000 + 1 × $500 = $4,500 (below MFJ $400K threshold)
-    expect(result.form8812!.ctcBeforeLimitation.toNumber()).toBe(4500);
+    expect(result.form8812!.ctcBeforeLimitation.toNumber()).toBe(4900);
 
     // Education nonrefundable credit (60% of AOC) flows through Sched 3
     const sched3Lines = result.allLines.filter((l) => l.form === "Sched 3");
     const line3 = sched3Lines.find((l) => l.line === "3");
     expect(line3!.value.greaterThan(0)).toBe(true);
 
-    // CTC (Line 19) + other credits (Line 20) = total credits (Line 21)
     expect(result.totalCredits.toNumber()).toBe(
       result.childTaxCredit.plus(result.otherCredits).toNumber()
     );
@@ -1439,7 +1436,6 @@ describe("Credit stacking - $0 earned income", () => {
 
 describe("Credit stacking - child care credit at various AGI levels with CTC", () => {
   it("low AGI ($20K) gets 32% care rate plus CTC (spec Form 2441 Line 8 — ceil rounding per IRS)", () => {
-    // $20K AGI → excess over $15K = $5K → $5K/$2K = 2.5 → ceil = 3 steps → 35% - 3% = 32%
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
       taxpayer: {
@@ -1471,17 +1467,14 @@ describe("Credit stacking - child care credit at various AGI levels with CTC", (
     };
     const result = calculateFederalTax(fixture);
 
-    // Care: min($5K, $3K) × 32% = $3,000 × 0.32 = $960
     const sched3Lines = result.allLines.filter((l) => l.form === "Sched 3");
     const line2 = sched3Lines.find((l) => l.line === "2");
     expect(line2!.value.toNumber()).toBe(960);
 
-    // CTC: $2,000 for 1 child, no phase-out at $20K
-    expect(result.form8812!.ctcBeforeLimitation.toNumber()).toBe(2000);
+    expect(result.form8812!.ctcBeforeLimitation.toNumber()).toBe(2200);
   });
 
   it("high AGI ($85K) gets minimum 20% care rate plus CTC (spec Form 2441 Line 8 floor)", () => {
-    // $85K AGI → excess over $15K = $70K → 35 steps → 35% - 35% = 0% → floor at 20%
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
       taxpayer: {
@@ -1499,13 +1492,11 @@ describe("Credit stacking - child care credit at various AGI levels with CTC", (
     };
     const result = calculateFederalTax(fixture);
 
-    // Care: min($10K, $6K) × 20% = $6,000 × 0.20 = $1,200
     const sched3Lines = result.allLines.filter((l) => l.form === "Sched 3");
     const line2 = sched3Lines.find((l) => l.line === "2");
     expect(line2!.value.toNumber()).toBe(1200);
 
-    // CTC: 2 × $2,000 = $4,000, no phase-out at $85K (threshold = $200K)
-    expect(result.form8812!.ctcBeforeLimitation.toNumber()).toBe(4000);
+    expect(result.form8812!.ctcBeforeLimitation.toNumber()).toBe(4400);
   });
 
   it("two qualifying individuals raises care expense cap to $6K (spec Form 2441 Line 3)", () => {
@@ -1706,8 +1697,6 @@ describe("Credit stacking - CTC applied after Schedule 3 other credits (spec 104
 
 describe("Credit stacking - all six credit types combined in one return", () => {
   it("CTC + ACTC + FTC + AOC education + child care + solar energy all present simultaneously", () => {
-    // MFJ, $80K wages, 2 children, AOC student, foreign dividends, solar, care
-    // Tax is moderate; credits span nonrefundable (Sched 3 + CTC) and refundable (ACTC)
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
       taxpayer: {
@@ -1767,10 +1756,8 @@ describe("Credit stacking - all six credit types combined in one return", () => 
     expect(sched3Lines.find((l) => l.line === "3")!.value.greaterThan(0)).toBe(true); // Education
     expect(sched3Lines.find((l) => l.line === "5a")!.value.toNumber()).toBe(3000);     // Solar
 
-    // CTC nonrefundable flows via Line 19 (2 children, income below threshold)
-    expect(result.form8812!.ctcBeforeLimitation.toNumber()).toBe(4000);
+    expect(result.form8812!.ctcBeforeLimitation.toNumber()).toBe(4400);
 
-    // ACTC is refundable — present because earned income > $2,500
     expect(result.form8812!.actc.greaterThan(0)).toBe(true);
 
     // totalCredits = childTaxCredit + otherCredits (1040 Line 21)
@@ -1904,9 +1891,6 @@ describe("Credit stacking - excess credits produce refund only via refundable cr
 
 describe("Credit stacking - MFS CTC phase-out at halved threshold", () => {
   it("MFS filer with $110K income loses CTC — threshold is $200K for MFS (same as single, spec Form 8812 phase-out)", () => {
-    // For MFS the phase-out threshold is $200K (same as single), not $400K MFJ
-    // $200K MFS income → excess = $0K → no phase-out reduction → CTC fully available
-    // But at $210K: excess = $10K → 5 × $50 = $250 reduction → CTC $2,000 - $250 = $1,750
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
       taxpayer: {
@@ -1934,12 +1918,9 @@ describe("Credit stacking - MFS CTC phase-out at halved threshold", () => {
     };
     const result = calculateFederalTax(fixture);
 
-    // Phase-out: excess = $10K → ceil(10) × $50 = $500 reduction
-    // CTC before limitation = max($2,000 - $500, 0) = $1,500
-    expect(result.form8812!.ctcBeforeLimitation.toNumber()).toBe(1500);
+    expect(result.form8812!.ctcBeforeLimitation.toNumber()).toBe(1700);
 
     // ACTC = 0 for MFS with high income (no earned income excess drives enough)
-    // (Nonrefundable CTC may consume available liability)
     expect(result.form8812!.ctcBeforeLimitation.lessThan(new Decimal(2000))).toBe(true);
   });
 

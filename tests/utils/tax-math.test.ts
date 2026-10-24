@@ -460,36 +460,46 @@ describe("Additional Medicare Tax", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("Child Tax Credit", () => {
-  it("CTC - $2,000 per qualifying child", () => {
+  it("CTC - $2,200 per qualifying child", () => {
     const result = calculateChildTaxCredit(2, 0, d(100000), "married_filing_jointly", constants);
-    expect(result.total.toNumber()).toBe(4000);
-    expect(result.ctc.toNumber()).toBe(4000);
+    // 2025 worksheet: child credit 4400 + ODC 0 = 4400.
+    // 2025 worksheet: child credit 4400 + ODC 0 = 4400.
+    expect(result.total.toNumber()).toBe(4400);
+    expect(result.ctc.toNumber()).toBe(4400);
     expect(result.odc.toNumber()).toBe(0);
   });
 
   it("CTC - phase-out above threshold", () => {
-    // MFJ threshold: $400,000. AGI: $420,000. Excess: $20,000
-    // Reduction: ceil(20) × $50 = $1,000
-    // Credit: $2,000 - $1,000 = $1,000
+
+
+
     const result = calculateChildTaxCredit(1, 0, d(420000), "married_filing_jointly", constants);
-    expect(result.total.toNumber()).toBe(1000);
+    // 2025 worksheet: child credit 1200 + ODC 0 = 1200.
+    // 2025 worksheet: child credit 1200 + ODC 0 = 1200.
+    expect(result.total.toNumber()).toBe(1200);
   });
 
   it("CTC - fully phased out at high AGI", () => {
-    // 1 child: $2,000 credit. Phased out at $40,000 over threshold
-    // Reduction: 40 × $50 = $2,000. Credit: $0
-    const result = calculateChildTaxCredit(1, 0, d(440000), "married_filing_jointly", constants);
+
+
+    const result = calculateChildTaxCredit(1, 0, d(444000), "married_filing_jointly", constants);
+    // 2025 worksheet: child credit 0 + ODC 0 = 0.
+    // 2025 worksheet: child credit 0 + ODC 0 = 0.
     expect(result.total.toNumber()).toBe(0);
   });
 
   it("CTC - zero children means zero credit", () => {
     const result = calculateChildTaxCredit(0, 0, d(50000), "single", constants);
+    // 2025 worksheet: child credit 0 + ODC 0 = 0.
+    // 2025 worksheet: child credit 0 + ODC 0 = 0.
     expect(result.total.toNumber()).toBe(0);
   });
 
   it("CTC - single filer threshold is $200,000", () => {
     const result = calculateChildTaxCredit(1, 0, d(190000), "single", constants);
-    expect(result.total.toNumber()).toBe(2000);
+    // 2025 worksheet: child credit 2200 + ODC 0 = 2200.
+    // 2025 worksheet: child credit 2200 + ODC 0 = 2200.
+    expect(result.total.toNumber()).toBe(2200);
 
     const reduced = calculateChildTaxCredit(1, 0, d(220000), "single", constants);
     expect(reduced.total.lessThan(d(2000))).toBe(true);
@@ -499,31 +509,39 @@ describe("Child Tax Credit", () => {
     const result = calculateChildTaxCredit(0, 2, d(100000), "single", constants);
     expect(result.ctc.toNumber()).toBe(0);
     expect(result.odc.toNumber()).toBe(1000);
+    // 2025 worksheet: child credit 0 + ODC 1000 = 1000.
+    // 2025 worksheet: child credit 0 + ODC 1000 = 1000.
     expect(result.total.toNumber()).toBe(1000);
   });
 
   it("CTC + ODC combined", () => {
-    // 2 CTC children ($4K) + 1 ODC dependent ($500) = $4,500
+
     const result = calculateChildTaxCredit(2, 1, d(100000), "married_filing_jointly", constants);
-    expect(result.ctc.toNumber()).toBe(4000);
+    expect(result.ctc.toNumber()).toBe(4400);
     expect(result.odc.toNumber()).toBe(500);
-    expect(result.total.toNumber()).toBe(4500);
+    // 2025 worksheet: child credit 4400 + ODC 500 = 4900.
+    // 2025 worksheet: child credit 4400 + ODC 500 = 4900.
+    expect(result.total.toNumber()).toBe(4900);
   });
 
   it("ODC - phase-out reduces CTC first then ODC", () => {
-    // 1 CTC child ($2K) + 1 ODC ($500) = $2,500 max
-    // AGI $430K, MFJ threshold $400K, excess $30K → reduction 30 × $50 = $1,500
-    // CTC: $2K - $1,500 = $500. ODC: $500 (untouched)
+
+
+
     const result = calculateChildTaxCredit(1, 1, d(430000), "married_filing_jointly", constants);
-    expect(result.ctc.toNumber()).toBe(500);
+    expect(result.ctc.toNumber()).toBe(700);
     expect(result.odc.toNumber()).toBe(500);
-    expect(result.total.toNumber()).toBe(1000);
+    // 2025 worksheet: child credit 700 + ODC 500 = 1200.
+    // 2025 worksheet: child credit 700 + ODC 500 = 1200.
+    expect(result.total.toNumber()).toBe(1200);
   });
 
   it("ODC - fully phased out at very high AGI", () => {
-    // 1 CTC child ($2K) + 1 ODC ($500) = $2,500 max
-    // AGI $450K, excess $50K → reduction 50 × $50 = $2,500
-    const result = calculateChildTaxCredit(1, 1, d(450000), "married_filing_jointly", constants);
+
+
+    const result = calculateChildTaxCredit(1, 1, d(454000), "married_filing_jointly", constants);
+    // 2025 worksheet: child credit 0 + ODC 0 = 0.
+    // 2025 worksheet: child credit 0 + ODC 0 = 0.
     expect(result.total.toNumber()).toBe(0);
   });
 });
@@ -581,18 +599,18 @@ describe("Mortgage interest deduction", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("SALT deduction", () => {
-  it("SALT deduction capped at $10,000", () => {
-    const deduction = calculateSALTDeduction(d(8000), d(6000), constants);
-    expect(deduction.toNumber()).toBe(10000);
+  it("SALT deduction capped at $40,000", () => {
+    const deduction = calculateSALTDeduction(d(38000), d(6000), constants, d(100000), "single");
+    expect(deduction.toNumber()).toBe(40000);
   });
 
   it("SALT deduction - under cap gets full amount", () => {
-    const deduction = calculateSALTDeduction(d(3000), d(4000), constants);
+    const deduction = calculateSALTDeduction(d(3000), d(4000), constants, d(100000), "single");
     expect(deduction.toNumber()).toBe(7000);
   });
 
   it("SALT deduction - zero taxes", () => {
-    const deduction = calculateSALTDeduction(d(0), d(0), constants);
+    const deduction = calculateSALTDeduction(d(0), d(0), constants, d(100000), "single");
     expect(deduction.toNumber()).toBe(0);
   });
 });

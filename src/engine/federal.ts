@@ -1908,6 +1908,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   const form4952DeductibleAmount = form4952?.deductibleAmount;
   const form4684DeductibleLoss = form4684?.deductibleLoss;
   const hasScheduleAExtra = input.scheduleA !== undefined
+    || input.form2555 !== undefined
     || form4952DeductibleAmount !== undefined
     || form4684DeductibleLoss !== undefined
     || hasK1Charitable
@@ -1922,6 +1923,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
       : {
         medicalExpenses: d(input.scheduleA?.medicalExpenses),
         personalPropertyTaxes: d(input.scheduleA?.personalPropertyTaxes),
+        saltMagiAdditions: form2555IncomeReduction.plus(form2555HousingDeduction),
         investmentInterestExpense: form4952DeductibleAmount ?? d(input.scheduleA?.investmentInterestExpense),
         casualtyLossDeduction: form4684DeductibleLoss,
         gamblingWinnings: totalGamblingWinnings,

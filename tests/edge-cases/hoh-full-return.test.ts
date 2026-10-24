@@ -139,8 +139,8 @@ describe("Head of Household full return", () => {
   });
 
   // ── Credits ───────────────────────────────────────────
-  it("CTC = $2,000 for one qualifying child", () => {
-    expect(federal.childTaxCredit.toNumber()).toBe(2000);
+  it("CTC = $2,200 for one qualifying child", () => {
+    expect(federal.childTaxCredit.toNumber()).toBe(2200);
   });
 
   it("Form 8812 sub-result available with ACTC", () => {
@@ -285,11 +285,10 @@ describe("HoH with multiple dependents — CTC scales per child", () => {
     },
   };
 
-  it("total CTC + ACTC = $4,000 for two qualifying children (2 × $2,000)", () => {
+  it("total CTC + ACTC = $4,400 for two qualifying children (2 × $2,200)", () => {
     const federal = calculateFederalTax(twoChildFixture);
-    // Nonrefundable CTC may be limited by tax liability; ACTC covers remainder
     const total = federal.form8812.nonrefundableCTC.plus(federal.form8812.actc);
-    expect(total.toNumber()).toBe(4000);
+    expect(total.toNumber()).toBe(4400);
   });
 
   it("two-child total credit is double the one-child credit", () => {

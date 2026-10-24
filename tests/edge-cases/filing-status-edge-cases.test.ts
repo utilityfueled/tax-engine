@@ -96,9 +96,11 @@ describe("Married Filing Separately half-limits", () => {
   });
 
   it("MFS CTC fully phased out at high income", () => {
-    // 1 child, $2K credit. Phase-out: ($250K - $200K) / $1K × $50 = $2,500
-    // Credit = max(0, $2K - $2,500) = $0
+
+
     const credit = calculateChildTaxCredit(1, 0, d(250000), "married_filing_separately", c);
+    // 2025 worksheet: child credit 0 + ODC 0 = 0.
+    // 2025 worksheet: child credit 0 + ODC 0 = 0.
     expect(credit.total.toNumber()).toBe(0);
   });
 
@@ -107,10 +109,9 @@ describe("Married Filing Separately half-limits", () => {
     expect(c.capitalGainsRates.fifteen.threshold.married_filing_jointly.toNumber()).toBe(600050);
   });
 
-  it("MFS SALT cap unchanged at $10K", () => {
-    // SALT cap is $10K for all statuses (not $5K for MFS under TCJA)
-    const salt = calculateSALTDeduction(d(8000), d(5000), c);
-    expect(salt.toNumber()).toBe(10000);
+  it("2025 MFS SALT allows $13K below its $20K limit", () => {
+    const salt = calculateSALTDeduction(d(8000), d(5000), c, d(100000), "single");
+    expect(salt.toNumber()).toBe(13000);
   });
 });
 
@@ -408,18 +409,17 @@ describe("Capital loss limit by filing status — IRC §1211(b)", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("SALT cap across filing statuses — IRC §164(b)(6)", () => {
-  it("Spec §164(b)(6): SALT cap is $10K for all statuses under TCJA", () => {
-    // Under TCJA (2018-2025), SALT cap is $10K for all filers including MFS
-    expect(c.saltCap.toNumber()).toBe(10000);
+  it("Spec 2025 SALT maximum before MAGI reduction is $40K, halved for MFS", () => {
+    expect(c.saltCap.toNumber()).toBe(40000);
   });
 
-  it("Spec §164(b)(6): SALT deduction capped at $10K even with $25K total", () => {
-    const salt = calculateSALTDeduction(d(15000), d(10000), c);
-    expect(salt.toNumber()).toBe(10000);
+  it("Spec 2025 SALT allows $25K below the $40K limit", () => {
+    const salt = calculateSALTDeduction(d(15000), d(10000), c, d(100000), "single");
+    expect(salt.toNumber()).toBe(25000);
   });
 
   it("Spec §164(b)(6): SALT under cap returns actual amount", () => {
-    const salt = calculateSALTDeduction(d(3000), d(2000), c);
+    const salt = calculateSALTDeduction(d(3000), d(2000), c, d(100000), "single");
     expect(salt.toNumber()).toBe(5000);
   });
 });

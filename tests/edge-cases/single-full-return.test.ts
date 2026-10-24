@@ -825,8 +825,8 @@ describe("Single filer - with dependent child (CTC)", () => {
   });
   const result = calculateFederalTax(input);
 
-  it("Form 8812 - CTC = $2,000 per qualifying child", () => {
-    expect(result.childTaxCredit.toNumber()).toBe(2000);
+  it("Form 8812 - CTC = $2,200 per qualifying child", () => {
+    expect(result.childTaxCredit.toNumber()).toBe(2200);
   });
 
   it("Form 1040 Line 19 - nonrefundable CTC applied against tax", () => {

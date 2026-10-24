@@ -321,10 +321,9 @@ describe("E2E Complex MFJ Return", () => {
     expect(federal.itemizedDeductions.greaterThan(d(30000))).toBe(true);
   });
 
-  it("SALT capped at $10K despite $26K of state taxes + property", () => {
+  it("2025 SALT allows $26K of state taxes and property below the $40K limit", () => {
     const schedA = calculateScheduleA(complexE2EFixture, federal.agi, "married_filing_jointly", c);
-    // State: $17K, Property: $9K = $26K → capped at $10K
-    expect(schedA.saltDeduction.toNumber()).toBe(10000);
+    expect(schedA.saltDeduction.toNumber()).toBe(26000);
   });
 
   // ── Tax Computation ─────────────────────────────────────
@@ -335,7 +334,7 @@ describe("E2E Complex MFJ Return", () => {
 
   // ── Credits ─────────────────────────────────────────────
   it("child tax credit for one qualifying child", () => {
-    expect(federal.childTaxCredit.toNumber()).toBe(2000);
+    expect(federal.childTaxCredit.toNumber()).toBe(2200);
   });
 
   it("foreign tax credit from 1099-DIV", () => {
@@ -1250,8 +1249,7 @@ describe("E2E QSS with Three CTC Dependents and Rental Property", () => {
   });
 
   it("CTC before phase-out equals $6,000 for three qualifying children", () => {
-    // 3 × $2,000 = $6,000; AGI ~$95K well below $400K QSS threshold
-    expect(federal.form8812!.ctcBeforeLimitation.toNumber()).toBe(6000);
+    expect(federal.form8812!.ctcBeforeLimitation.toNumber()).toBe(6600);
   });
 
   it("estimated payments of $12K are reflected in total payments", () => {
@@ -1282,10 +1280,9 @@ describe("E2E QSS with Three CTC Dependents and Rental Property", () => {
 describe("E2E MFS with Restricted Deductions", () => {
   const federal = calculateFederalTax(mfsRestrictedFixture);
 
-  it("MFS SALT deduction is capped at $5,000", () => {
+  it("2025 MFS SALT allows $10,000 below the $20,000 limit", () => {
     const schedA = calculateScheduleA(mfsRestrictedFixture, federal.agi, "married_filing_separately", c);
-    // State tax $6K + property tax $4K = $10K total → capped at $5K for MFS
-    expect(schedA.saltDeduction.toNumber()).toBe(5000);
+    expect(schedA.saltDeduction.toNumber()).toBe(10000);
   });
 
   it("MFS capital loss is capped at $1,500", () => {
@@ -1322,8 +1319,7 @@ describe("E2E HoH with Two CTC Dependents and ACTC", () => {
   });
 
   it("CTC before phase-out is $4,000 for two qualifying children", () => {
-    // 2 × $2,000 = $4,000; AGI $38K far below $200K HoH threshold
-    expect(federal.form8812!.ctcBeforeLimitation.toNumber()).toBe(4000);
+    expect(federal.form8812!.ctcBeforeLimitation.toNumber()).toBe(4400);
   });
 
   it("ACTC refundable credit is present for low-income HoH filer", () => {
@@ -1432,9 +1428,7 @@ describe("E2E All Credits Stacking: CTC + Education + Foreign Tax + Child Care",
   const federal = calculateFederalTax(allCreditsFixture);
 
   it("combined CTC plus ODC before phase-out is $2,500 (one child + one ODC dependent)", () => {
-    // 1 qualifying child × $2,000 CTC + 1 ODC dependent × $500 = $2,500 total
-    // AGI ~$144K well below $400K MFJ phase-out threshold
-    expect(federal.form8812!.ctcBeforeLimitation.toNumber()).toBe(2500);
+    expect(federal.form8812!.ctcBeforeLimitation.toNumber()).toBe(2700);
   });
 
   it("nonrefundable CTC is limited to tax liability after other credits", () => {

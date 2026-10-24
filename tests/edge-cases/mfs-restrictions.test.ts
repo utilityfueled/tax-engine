@@ -27,7 +27,7 @@ const d = (n: number | string) => new Decimal(n);
 const c = getConstants(2025);
 
 describe("MFS Restrictions — SALT", () => {
-  it("MFS SALT cap is $5,000 (half of normal $10K)", () => {
+  it("2025 MFS SALT allows $14,000 below the $20K limit", () => {
     const input: TaxYearInput = {
       ...simpleW2Fixture,
       taxpayer: { ...simpleW2Fixture.taxpayer, filingStatus: "married_filing_separately" },
@@ -46,8 +46,7 @@ describe("MFS Restrictions — SALT", () => {
       }],
     };
     const result = calculateScheduleA(input, d(100000), "married_filing_separately", c);
-    // Total SALT = $8K + $6K = $14K → capped at $5K for MFS
-    expect(result.saltDeduction.toNumber()).toBe(5000);
+    expect(result.saltDeduction.toNumber()).toBe(14000);
   });
 });
 
@@ -343,11 +342,11 @@ describe("MFS Restrictions — Student Loan Interest + Education Credits Combine
 });
 
 describe("MFS Restrictions — SALT Cap Reduces Itemized Deductions vs Single", () => {
-  it("MFS $5K SALT cap yields lower total itemized than single's $10K cap on same income", () => {
+  it("MFS $20K SALT cap yields lower total itemized than single's $40K cap on same income", () => {
     const sharedInputBase = {
       w2s: [{
         ...simpleW2Fixture.w2s[0],
-        stateTaxWithheld: "8000",
+        stateTaxWithheld: "40000",
       }],
       form1098: [{
         lender: "Bank",
@@ -375,16 +374,11 @@ describe("MFS Restrictions — SALT Cap Reduces Itemized Deductions vs Single", 
     const mfsResult = calculateScheduleA(mfsInput, agi, "married_filing_separately", c);
     const singleResult = calculateScheduleA(singleInput, agi, "single", c);
 
-    // MFS SALT = min($8K + $5K = $13K, $5K cap) = $5,000
-    expect(mfsResult.saltDeduction.toNumber()).toBe(5000);
-    // Single SALT = min($13K, $10K cap) = $10,000
-    expect(singleResult.saltDeduction.toNumber()).toBe(10000);
-    // MFS mortgage limited: $400K > $375K MFS limit → $12K × (375/400) = $11,250
+    expect(mfsResult.saltDeduction.toNumber()).toBe(20000);
+    expect(singleResult.saltDeduction.toNumber()).toBe(40000);
     expect(mfsResult.mortgageInterest.toNumber()).toBe(11250);
-    // Single mortgage: $400K < $750K → full $12K
     expect(singleResult.mortgageInterest.toNumber()).toBe(12000);
-    // MFS total itemized is $5K (SALT) + $750 (mortgage) = $5,750 less than single's
-    expect(singleResult.totalItemized.minus(mfsResult.totalItemized).toNumber()).toBe(5750);
+    expect(singleResult.totalItemized.minus(mfsResult.totalItemized).toNumber()).toBe(20750);
   });
 });
 
@@ -529,7 +523,7 @@ describe("MFS Restrictions — Lower Tax Thresholds", () => {
   });
 });
 
-describe("MFS Restrictions — SALT Cap $5K With Itemized Deductions", () => {
+describe("MFS Restrictions — 2025 SALT With Itemized Deductions", () => {
   it("MFS SALT cap at exactly $5,000 total SALT passes through uncapped (Sched A Line 5d)", () => {
     const input: TaxYearInput = {
       ...simpleW2Fixture,
@@ -553,7 +547,7 @@ describe("MFS Restrictions — SALT Cap $5K With Itemized Deductions", () => {
     expect(result.saltDeduction.toNumber()).toBe(5000);
   });
 
-  it("MFS SALT cap at $5,001 total SALT is capped to $5,000 (Sched A Line 5d)", () => {
+  it("2025 Schedule A Line 5e allows MFS taxes of $5,001 below the limit", () => {
     const input: TaxYearInput = {
       ...simpleW2Fixture,
       taxpayer: { ...simpleW2Fixture.taxpayer, filingStatus: "married_filing_separately" },
@@ -572,8 +566,7 @@ describe("MFS Restrictions — SALT Cap $5K With Itemized Deductions", () => {
       }],
     };
     const result = calculateScheduleA(input, d(100000), "married_filing_separately", c);
-    // Total SALT = $3,001 + $2K = $5,001 → capped at $5K for MFS
-    expect(result.saltDeduction.toNumber()).toBe(5000);
+    expect(result.saltDeduction.toNumber()).toBe(5001);
   });
 });
 
@@ -759,7 +752,6 @@ describe("MFS Restrictions — CTC Phase-Out at $200K (Same as Single)", () => {
   });
 
   it("MFS CTC fully available at $199,000 AGI, begins phasing out at $200K (Form 8812 Line 12)", () => {
-    // Below threshold: full $2K CTC for one child
     const belowResult = calculateForm8812({
       qualifyingChildren: 1,
       otherDependents: 0,
@@ -768,9 +760,8 @@ describe("MFS Restrictions — CTC Phase-Out at $200K (Same as Single)", () => {
       taxLiability: d(50000),
       filingStatus: "married_filing_separately",
     }, c);
-    expect(belowResult.ctcBeforeLimitation.toNumber()).toBe(2000);
+    expect(belowResult.ctcBeforeLimitation.toNumber()).toBe(2200);
 
-    // At $201,000: AGI excess = $1,000 → ceil($1K/$1K) × $50 = $50 reduction
     const aboveResult = calculateForm8812({
       qualifyingChildren: 1,
       otherDependents: 0,
@@ -779,7 +770,7 @@ describe("MFS Restrictions — CTC Phase-Out at $200K (Same as Single)", () => {
       taxLiability: d(50000),
       filingStatus: "married_filing_separately",
     }, c);
-    expect(aboveResult.ctcBeforeLimitation.toNumber()).toBe(1950);
+    expect(aboveResult.ctcBeforeLimitation.toNumber()).toBe(2150);
   });
 });
 

@@ -428,13 +428,13 @@ describe("Schedule A integration — sales tax election", () => {
   it("Sales tax replaces income tax on Line 5a when elected", () => {
     const input = makeMinimalInput() as Parameters<typeof calculateScheduleA>[0];
     const result = calculateScheduleA(input, d(75000), "single", {
-      saltCap: d(10000),
+      saltCap: d(40000),
+      saltPhaseDown: { magiThreshold: d(500000), minimumCap: d(10000), rate: d("0.30") },
       mortgageInterest: { debtLimit: d(750000) },
     } as Parameters<typeof calculateScheduleA>[3], {
       salesTaxDeduction: d(911),
       salesTaxElected: true,
     });
-    // Income taxes = $0 (TX has no income tax), sales tax = $911
     expect(result.saltDeduction.toNumber()).toBe(911);
     expect(result.salesTaxElected).toBe(true);
   });
@@ -444,7 +444,8 @@ describe("Schedule A integration — sales tax election", () => {
       w2s: [makeW2({ stateTaxWithheld: "3000", state: "NY" })],
     }) as Parameters<typeof calculateScheduleA>[0];
     const result = calculateScheduleA(input, d(75000), "single", {
-      saltCap: d(10000),
+      saltCap: d(40000),
+      saltPhaseDown: { magiThreshold: d(500000), minimumCap: d(10000), rate: d("0.30") },
       mortgageInterest: { debtLimit: d(750000) },
     } as Parameters<typeof calculateScheduleA>[3], {
       salesTaxDeduction: d(500),
@@ -454,38 +455,39 @@ describe("Schedule A integration — sales tax election", () => {
     expect(result.salesTaxElected).toBe(false);
   });
 
-  it("Sales tax still subject to SALT cap", () => {
+  it("2025 sales tax and property tax below the SALT limit are fully deductible", () => {
     const input = makeMinimalInput({
       form1098: [{ lender: "Bank", mortgageInterestReceived: "5000", outstandingMortgagePrincipal: "200000", refundOfOverpaidInterest: "0", mortgageInsurancePremiums: "0", pointsPaid: "0", propertyTax: "6000" }],
     }) as Parameters<typeof calculateScheduleA>[0];
     const result = calculateScheduleA(input, d(75000), "single", {
-      saltCap: d(10000),
+      saltCap: d(40000),
+      saltPhaseDown: { magiThreshold: d(500000), minimumCap: d(10000), rate: d("0.30") },
       mortgageInterest: { debtLimit: d(750000) },
     } as Parameters<typeof calculateScheduleA>[3], {
       salesTaxDeduction: d(8000),
       salesTaxElected: true,
     });
-    // Sales tax $8,000 + property tax $6,000 = $14,000, capped at $10,000
-    expect(result.saltDeduction.toNumber()).toBe(10000);
+    expect(result.saltDeduction.toNumber()).toBe(14000);
   });
 
-  it("MFS SALT cap applies to sales tax election", () => {
+  it("MFS sales tax election is below the 2025 $20K SALT limit", () => {
     const input = makeMinimalInput() as Parameters<typeof calculateScheduleA>[0];
     const result = calculateScheduleA(input, d(75000), "married_filing_separately", {
-      saltCap: d(10000),
+      saltCap: d(40000),
+      saltPhaseDown: { magiThreshold: d(500000), minimumCap: d(10000), rate: d("0.30") },
       mortgageInterest: { debtLimit: d(750000) },
     } as Parameters<typeof calculateScheduleA>[3], {
       salesTaxDeduction: d(8000),
       salesTaxElected: true,
     });
-    // MFS cap is $5,000
-    expect(result.saltDeduction.toNumber()).toBe(5000);
+    expect(result.saltDeduction.toNumber()).toBe(8000);
   });
 
   it("Default salesTaxElected is false when not provided", () => {
     const input = makeMinimalInput() as Parameters<typeof calculateScheduleA>[0];
     const result = calculateScheduleA(input, d(75000), "single", {
-      saltCap: d(10000),
+      saltCap: d(40000),
+      saltPhaseDown: { magiThreshold: d(500000), minimumCap: d(10000), rate: d("0.30") },
       mortgageInterest: { debtLimit: d(750000) },
     } as Parameters<typeof calculateScheduleA>[3]);
     expect(result.salesTaxElected).toBe(false);
@@ -588,13 +590,11 @@ describe("Federal orchestrator — sales tax deduction", () => {
       form1098: [{ lender: "Bank", mortgageInterestReceived: "8000", outstandingMortgagePrincipal: "200000", propertyTax: "6000" }],
     }) as Parameters<typeof calculateFederalTax>[0]);
 
-    // Sales tax + property tax could exceed SALT cap
     const saltAudit = result.allLines.find(
-      (l) => l.form === "Sched A" && l.line === "5d"
+      (l) => l.form === "Sched A" && l.line === "5e"
     );
     expect(saltAudit).toBeDefined();
-    // SALT total should be capped at $10,000
-    expect(Number(saltAudit!.value)).toBeLessThanOrEqual(10000);
+    expect(saltAudit!.value.lessThanOrEqualTo(40000)).toBe(true);
   });
 
   it("Exemption count includes spouse and dependents for MFJ", () => {

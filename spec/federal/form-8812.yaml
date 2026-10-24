@@ -1,9 +1,12 @@
 form: "Form 8812"
 fullName: "Credits for Qualifying Children and Other Dependents"
 taxYear: 2025
-irsReference: "https://www.irs.gov/instructions/i1040s8812"
+irsReference: "https://www.irs.gov/instructions/i1040s8"
 
 notes: |
+  Revision: 2025 instructions; retrieved 2026-10-24; rule version 2025.2.
+  Independent tax review remains pending. Eligible-child counts must be validated
+  upstream, including timely employment-valid SSNs under the 2025 rules.
   Schedule 8812 calculates both the nonrefundable CTC (Line 14 → 1040 Line 19)
   and the Additional Child Tax Credit (ACTC), the refundable portion (Line 27 → 1040 Line 28).
   ACTC = 15% of earned income over $2,500, capped at the unused CTC amount.
@@ -24,9 +27,9 @@ lines:
 
   - line: "12"
     description: "CTC and ODC before limitation"
-    formula: "$2,000 × qualifying children + $500 × other dependents, after phase-out"
+    formula: "$2,200 × qualifying children + $500 × other dependents, after phase-out"
     irsRef: "Schedule 8812 Instructions, Line 12"
-    testRef: "tests/engine/forms/form-8812.test.ts::Form 8812 Line 12 - CTC before limitation"
+    testRef: "tests/regression/obbba-2025.test.ts::2025 CTC independent worksheet fixtures"
 
   - line: "14"
     description: "Nonrefundable CTC (limited to tax liability)"

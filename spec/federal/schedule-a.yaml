@@ -48,35 +48,53 @@ lines:
       - "autoCompare automatically selects the larger of income tax or sales tax"
       - "Local rate is capped at the state rate per IRS instructions"
       - "States without general sales tax (AK, DE, MT, NH, OR) produce $0"
-      - "MFS SALT cap ($5,000) applies to whichever method is elected"
+      - "MFS SALT limit ($20,000 maximum; $5,000 floor) applies to whichever method is elected"
       - "Sales tax on specific purchases is added to the table/actual amount"
       - "State tax refunds may be taxable if itemized prior year (see Taxable Refund Worksheet)"
     testRef: "tests/engine/forms/state-sales-tax-deduction-worksheet.test.ts::Sales tax worksheet — table method"
 
   - line: "5b"
-    description: "State and local personal property taxes"
-    formula: "Vehicle registration fees, etc."
-    irsRef: "Schedule A Instructions, Line 5b"
-    notes: "Passed via ScheduleAInput.personalPropertyTaxes"
-    testRef: "tests/engine/schedules/schedule-a.test.ts::Schedule A Line 5b - personal property taxes"
+    description: "State and local real estate taxes"
+    formula: "Sum of eligible Form 1098 property tax amounts"
+    irsRef: "2025 Schedule A Instructions, Line 5b"
+    testRef: "tests/regression/obbba-2025.test.ts::2025 SALT audit follows the published line numbers"
 
   - line: "5c"
-    description: "Real estate taxes"
-    formula: "Sum of Form 1098 property tax amounts"
-    irsRef: "Schedule A Instructions, Line 5c"
-    inputs:
-      - "Form 1098 property tax field"
-    testRef: "tests/engine/schedules/schedule-a.test.ts::Schedule A Line 5d - SALT capped at $10K"
+    description: "State and local personal property taxes"
+    formula: "Eligible annually assessed value-based personal property taxes"
+    irsRef: "2025 Schedule A Instructions, Line 5c"
+    testRef: "tests/regression/obbba-2025.test.ts::2025 SALT audit follows the published line numbers"
 
   - line: "5d"
-    description: "Total SALT deduction"
-    formula: "min(Line 5a + 5b + 5c, $10,000)"
-    irsRef: "Schedule A Instructions, Line 5d"
-    notes: "SALT cap is $10,000 ($5,000 MFS). Cap was set by TCJA 2017."
+    description: "State and local taxes before limitation"
+    formula: "Line 5a + Line 5b + Line 5c"
+    irsRef: "2025 Schedule A, Line 5d"
+    testRef: "tests/regression/obbba-2025.test.ts::2025 SALT audit follows the published line numbers"
+
+  - line: "5e"
+    description: "State and local tax deduction after MAGI limitation"
+    formula: |
+      MAGI = AGI + excluded Puerto Rico income + Form 2555 lines 45 and 50
+        + Form 4563 line 15.
+      Threshold = $500,000 ($250,000 MFS).
+      Worksheet line 7 = roundDollar(max(0, MAGI - threshold) * 0.30).
+      Worksheet line 9 = max($10,000, $40,000 - line 7).
+      Limit = line 9 (HALF of line 9 for MFS).
+      Line 5e = roundDollar(min(line 5d, limit)).
+    irsRef: "2025 Schedule A Instructions, State and Local Tax Deduction Worksheet, lines 1-10; IRC 164(b)(6) as amended by P.L. 119-21"
+    notes: |
+      Retrieved 2026-10-24; rule version 2025.2; independent review pending.
+      MFS halves the result AFTER the 30% reduction and $10,000 floor.
+      Thus the MFS maximum is $20,000 and floor $5,000.
+      Sum source amounts using Decimal before rounding a reported line.
+      No filing qualification is inferred from these regression fixtures.
     edgeCases:
-      - "MFS filers: cap is $5,000"
-      - "Pre-TCJA marriages grandfathered (no longer applicable)"
-    testRef: "tests/utils/tax-math.test.ts::SALT deduction capped at $10,000"
+      - "$20,000 paid with $100,000 AGI is fully deductible"
+      - "MAGI at, below, and above each filing-status threshold"
+      - "Foreign exclusions and housing deduction are added back to AGI"
+      - "MFS MAGI $300,000 gives a $12,500 limit"
+      - "High-MAGI floors, zero taxes, cents, and all filing statuses"
+    testRef: "tests/regression/obbba-2025.test.ts::2025 SALT independent worksheet fixtures"
 
   - line: "8a"
     description: "Home mortgage interest and points (Form 1098)"
@@ -200,7 +218,7 @@ lines:
 
   - line: "17"
     description: "Total itemized deductions"
-    formula: "Line 4 + 5d + 8a + 8c + 9 + 12 + 13 + 15 + 28"
+    formula: "Line 4 + 5e + 8a + 8c + 9 + 12 + 13 + 15 + 28"
     irsRef: "Schedule A Instructions, Line 17"
     testRef: "tests/engine/schedules/schedule-a.test.ts::Schedule A Line 17 - total itemized deductions"
 

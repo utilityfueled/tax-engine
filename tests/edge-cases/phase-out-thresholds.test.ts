@@ -34,48 +34,64 @@ const c = getConstants(2025);
 describe("CTC phase-out threshold", () => {
   it("full credit at exactly $200K single", () => {
     const credit = calculateChildTaxCredit(2, 0, d(200000), "single", c);
-    expect(credit.total.toNumber()).toBe(4000); // 2 × $2,000
+    // 2025 worksheet: child credit 4400 + ODC 0 = 4400.
+    // 2025 worksheet: child credit 4400 + ODC 0 = 4400.
+    expect(credit.total.toNumber()).toBe(4400); // 2 × $2,000
   });
 
   it("$1 over threshold reduces by $50", () => {
-    // $200,001: excess = $1, rounds up to $1K → $50 reduction
+
     const credit = calculateChildTaxCredit(2, 0, d(200001), "single", c);
-    expect(credit.total.toNumber()).toBe(3950);
+    // 2025 worksheet: child credit 4350 + ODC 0 = 4350.
+    // 2025 worksheet: child credit 4350 + ODC 0 = 4350.
+    expect(credit.total.toNumber()).toBe(4350);
   });
 
   it("$1,000 over threshold reduces by $50", () => {
     const credit = calculateChildTaxCredit(2, 0, d(201000), "single", c);
-    expect(credit.total.toNumber()).toBe(3950);
+    // 2025 worksheet: child credit 4350 + ODC 0 = 4350.
+    // 2025 worksheet: child credit 4350 + ODC 0 = 4350.
+    expect(credit.total.toNumber()).toBe(4350);
   });
 
   it("$1,001 over threshold reduces by $100", () => {
     const credit = calculateChildTaxCredit(2, 0, d(201001), "single", c);
-    expect(credit.total.toNumber()).toBe(3900);
+    // 2025 worksheet: child credit 4300 + ODC 0 = 4300.
+    // 2025 worksheet: child credit 4300 + ODC 0 = 4300.
+    expect(credit.total.toNumber()).toBe(4300);
   });
 
   it("MFJ full credit at $400K", () => {
     const credit = calculateChildTaxCredit(3, 0, d(400000), "married_filing_jointly", c);
-    expect(credit.total.toNumber()).toBe(6000);
+    // 2025 worksheet: child credit 6600 + ODC 0 = 6600.
+    // 2025 worksheet: child credit 6600 + ODC 0 = 6600.
+    expect(credit.total.toNumber()).toBe(6600);
   });
 
   it("MFJ $1 over $400K reduces by $50", () => {
     const credit = calculateChildTaxCredit(3, 0, d(400001), "married_filing_jointly", c);
-    expect(credit.total.toNumber()).toBe(5950);
+    // 2025 worksheet: child credit 6550 + ODC 0 = 6550.
+    // 2025 worksheet: child credit 6550 + ODC 0 = 6550.
+    expect(credit.total.toNumber()).toBe(6550);
   });
 
   it("CTC cannot go negative", () => {
     const credit = calculateChildTaxCredit(1, 0, d(500000), "single", c);
+    // 2025 worksheet: child credit 0 + ODC 0 = 0.
+    // 2025 worksheet: child credit 0 + ODC 0 = 0.
     expect(credit.total.toNumber()).toBe(0);
   });
 
   it("zero children means zero credit regardless of income", () => {
     const credit = calculateChildTaxCredit(0, 0, d(50000), "single", c);
+    // 2025 worksheet: child credit 0 + ODC 0 = 0.
+    // 2025 worksheet: child credit 0 + ODC 0 = 0.
     expect(credit.total.toNumber()).toBe(0);
   });
 });
 
 // ═══════════════════════════════════════════════════════════
-// NIIT Threshold ($200K single, $250K MFJ)
+
 // ═══════════════════════════════════════════════════════════
 
 describe("NIIT threshold boundary", () => {
@@ -247,18 +263,22 @@ describe("Capital gains rate stacking edges", () => {
 
 describe("CTC phase-out with ODC and ACTC (Form 8812)", () => {
   it("phase-out reduces CTC first before ODC", () => {
-    // 1 child ($2,000) + 1 ODC ($500) = $2,500 max
-    // AGI $240K single → $40K over → ceil(40) = 40 × $50 = $2,000 reduction
-    // CTC reduced to $0, ODC untouched at $500
-    const credit = calculateChildTaxCredit(1, 1, d(240000), "single", c);
+
+
+
+    const credit = calculateChildTaxCredit(1, 1, d(244000), "single", c);
     expect(credit.ctc.toNumber()).toBe(0);
     expect(credit.odc.toNumber()).toBe(500);
+    // 2025 worksheet: child credit 0 + ODC 500 = 500.
+    // 2025 worksheet: child credit 0 + ODC 500 = 500.
     expect(credit.total.toNumber()).toBe(500);
   });
 
   it("phase-out eliminates both CTC and ODC at high income", () => {
-    // 1 child + 1 ODC = $2,500 max. AGI $260K → $60K over → 60 × $50 = $3,000 reduction
+
     const credit = calculateChildTaxCredit(1, 1, d(260000), "single", c);
+    // 2025 worksheet: child credit 0 + ODC 0 = 0.
+    // 2025 worksheet: child credit 0 + ODC 0 = 0.
     expect(credit.total.toNumber()).toBe(0);
     expect(credit.ctc.toNumber()).toBe(0);
     expect(credit.odc.toNumber()).toBe(0);
@@ -623,11 +643,9 @@ describe("Dependent care credit (Form 2441) percentage step-down", () => {
 describe("Multiple phase-outs at moderate high income ($230K single)", () => {
   const agi = d(230000);
 
-  it("CTC fully phased out at $230K single (30 steps × $50 = $1,500 > $2,000 for 1 child)", () => {
-    // $230K - $200K = $30K → ceil(30) = 30 steps × $50 = $1,500 reduction
-    // 1 child max = $2,000 → $2,000 - $1,500 = $500 remaining
+  it("CTC fully phased out at $230K single (30 steps × $50 = $1,500 > $2,200 for 1 child)", () => {
     const credit = calculateChildTaxCredit(1, 0, agi, "single", c);
-    expect(credit.total.toNumber()).toBe(500);
+    expect(credit.total.toNumber()).toBe(700);
   });
 
   it("NIIT applies at $230K single with investment income", () => {
@@ -658,16 +676,22 @@ describe("CTC phase-out comparison at $300K across filing statuses", () => {
 
   it("single at $300K: $300K - $200K = $100K over → 100 steps × $50 = $5,000 reduction → $0 CTC", () => {
     const credit = calculateChildTaxCredit(2, 0, d(300000), "single", c);
+    // 2025 worksheet: child credit 0 + ODC 0 = 0.
+    // 2025 worksheet: child credit 0 + ODC 0 = 0.
     expect(credit.total.toNumber()).toBe(0);
   });
 
   it("MFJ at $300K: $300K - $400K = below threshold → full $4,000 CTC", () => {
     const credit = calculateChildTaxCredit(2, 0, d(300000), "married_filing_jointly", c);
-    expect(credit.total.toNumber()).toBe(4000);
+    // 2025 worksheet: child credit 4400 + ODC 0 = 4400.
+    // 2025 worksheet: child credit 4400 + ODC 0 = 4400.
+    expect(credit.total.toNumber()).toBe(4400);
   });
 
   it("MFS at $300K: threshold same as single ($200K) → $100K over → $0 CTC", () => {
     const credit = calculateChildTaxCredit(2, 0, d(300000), "married_filing_separately", c);
+    // 2025 worksheet: child credit 0 + ODC 0 = 0.
+    // 2025 worksheet: child credit 0 + ODC 0 = 0.
     expect(credit.total.toNumber()).toBe(0);
   });
 });
@@ -680,10 +704,14 @@ describe("CTC phase-out comparison at $300K across filing statuses", () => {
 describe("Phase-out exact boundary behavior", () => {
   it("CTC: $1 below threshold gives full credit, $1 above starts reduction", () => {
     const below = calculateChildTaxCredit(1, 0, d(199999), "single", c);
-    expect(below.total.toNumber()).toBe(2000); // full credit
+    // 2025 worksheet: child credit 2200 + ODC 0 = 2200.
+    // 2025 worksheet: child credit 2200 + ODC 0 = 2200.
+    expect(below.total.toNumber()).toBe(2200); // full credit
 
     const above = calculateChildTaxCredit(1, 0, d(200001), "single", c);
-    expect(above.total.toNumber()).toBe(1950); // $50 reduction (rounds up 1 step)
+    // 2025 worksheet: child credit 2150 + ODC 0 = 2150.
+    // 2025 worksheet: child credit 2150 + ODC 0 = 2150.
+    expect(above.total.toNumber()).toBe(2150); // $50 reduction (rounds up 1 step)
   });
 
   it("NIIT: $1 below threshold produces zero tax, $1 above produces measurable tax at large investment income", () => {

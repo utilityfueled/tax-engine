@@ -2499,6 +2499,10 @@ export const AdjustmentsSchema = z.object({
 export const ScheduleAInputSchema = z.object({
   medicalExpenses: optionalDecimal,
   personalPropertyTaxes: optionalDecimal,
+  /** SALT MAGI worksheet line 3a. Not deducted from AGI by this adapter. */
+  excludedPuertoRicoIncome: optionalDecimal,
+  /** SALT MAGI worksheet line 3d; Form 4563 itself remains a separate scenario. */
+  form4563ExcludedIncome: optionalDecimal,
   investmentInterestExpense: optionalDecimal,
   gamblingWinnings: optionalDecimal,
   gamblingLosses: optionalDecimal,

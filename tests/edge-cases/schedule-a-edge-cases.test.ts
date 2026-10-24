@@ -33,14 +33,14 @@ function makeFixture(overrides: Partial<TaxYearInput>): TaxYearInput {
 // ═══════════════════════════════════════════════════════════
 
 describe("Schedule A - SALT cap", () => {
-  it("$10K cap: $15K state taxes capped at $10K", () => {
+  it("2025 SALT allows $15K state taxes below the $40K limit", () => {
     const result = calculateScheduleA(makeFixture({
       w2s: [{
         ...simpleW2Fixture.w2s[0],
         stateTaxWithheld: "15000",
       }],
     }), d(100000), "single", c);
-    expect(result.saltDeduction.toNumber()).toBe(10000);
+    expect(result.saltDeduction.toNumber()).toBe(15000);
   });
 
   it("under cap: $7K state taxes fully deductible", () => {
@@ -63,24 +63,24 @@ describe("Schedule A - SALT cap", () => {
     expect(result.saltDeduction.toNumber()).toBe(10000);
   });
 
-  it("MFS: $5K cap instead of $10K", () => {
+  it("2025 MFS SALT allows $8K below the $20K limit", () => {
     const result = calculateScheduleA(makeFixture({
       w2s: [{
         ...simpleW2Fixture.w2s[0],
         stateTaxWithheld: "8000",
       }],
     }), d(100000), "married_filing_separately", c);
-    expect(result.saltDeduction.toNumber()).toBe(5000);
+    expect(result.saltDeduction.toNumber()).toBe(8000);
   });
 
-  it("MFJ gets full $10K cap", () => {
+  it("2025 MFJ SALT allows $12K below the $40K limit", () => {
     const result = calculateScheduleA(makeFixture({
       w2s: [{
         ...simpleW2Fixture.w2s[0],
         stateTaxWithheld: "12000",
       }],
     }), d(200000), "married_filing_jointly", c);
-    expect(result.saltDeduction.toNumber()).toBe(10000);
+    expect(result.saltDeduction.toNumber()).toBe(12000);
   });
 
   it("SALT includes state income + property + personal property taxes", () => {
@@ -100,8 +100,7 @@ describe("Schedule A - SALT cap", () => {
         mortgageInsurancePremiums: "0",
       }],
     }), d(100000), "single", c, { personalPropertyTaxes: d(2000) });
-    // $5K + $4K + $2K = $11K → capped at $10K
-    expect(result.saltDeduction.toNumber()).toBe(10000);
+    expect(result.saltDeduction.toNumber()).toBe(11000);
   });
 
   it("zero taxes: zero SALT deduction", () => {
@@ -264,16 +263,11 @@ describe("Schedule A - total itemized deductions", () => {
         { recipient: "Charity", amount: "5000", type: "cash" },
       ],
     }), d(100000), "single", c, { medicalExpenses: d(10000) });
-    // Medical: $10K - $7.5K = $2.5K
-    // SALT: $8K + $3K = $11K → capped $10K
-    // Mortgage: $12K; PMI is ignored for 2025 because line 8d is reserved
-    // Charitable: $5K
-    // Total: $2.5K + $10K + $12K + $5K = $29,500
     expect(result.medicalDeduction.toNumber()).toBe(2500);
-    expect(result.saltDeduction.toNumber()).toBe(10000);
+    expect(result.saltDeduction.toNumber()).toBe(11000);
     expect(result.mortgageInterest.toNumber()).toBe(12000);
     expect(result.cashCharitable.toNumber()).toBe(5000);
-    expect(result.totalItemized.toNumber()).toBe(29500);
+    expect(result.totalItemized.toNumber()).toBe(30500);
   });
 
   it("zero everything: zero total", () => {
@@ -339,25 +333,24 @@ describe("Schedule A - SALT boundary edge cases", () => {
     expect(result.saltDeduction.toNumber()).toBeLessThanOrEqual(10000);
   });
 
-  it("SALT at $10,001 (single): capped at $10K — $1 lost", () => {
+  it("2025 single SALT allows $10,001 below the $40K limit", () => {
     const result = calculateScheduleA(makeFixture({
       w2s: [{
         ...simpleW2Fixture.w2s[0],
         stateTaxWithheld: "10001",
       }],
     }), d(120000), "single", c);
-    expect(result.saltDeduction.toNumber()).toBe(10000);
+    expect(result.saltDeduction.toNumber()).toBe(10001);
   });
 
-  it("very high SALT $50K (MFJ): still capped at $10K", () => {
-    // Combined state taxes far exceeding the cap should still be limited to $10K for MFJ
+  it("2025 MFJ SALT $50K is limited to $40K below the MAGI threshold", () => {
     const result = calculateScheduleA(makeFixture({
       w2s: [{
         ...simpleW2Fixture.w2s[0],
         stateTaxWithheld: "50000",
       }],
     }), d(400000), "married_filing_jointly", c);
-    expect(result.saltDeduction.toNumber()).toBe(10000);
+    expect(result.saltDeduction.toNumber()).toBe(40000);
   });
 });
 
@@ -391,12 +384,6 @@ describe("Schedule A - medical threshold boundary edge cases", () => {
 
 describe("Schedule A - all categories simultaneously", () => {
   it("medical + SALT + mortgage + charitable all active: each line computed independently", () => {
-    // AGI $150K → medical threshold $11,250. Expenses $15K → deduction $3,750
-    // State taxes $9K + property tax $2K = $11K → capped at $10K SALT
-    // Mortgage $600K → full interest ($24K); PMI is ignored for 2025
-    // Cash donations $7K
-    // Points $1K
-    // Total: $3,750 + $10,000 + $24,000 + $1,000 + $7,000 = $45,750
     const result = calculateScheduleA(makeFixture({
       w2s: [{
         ...simpleW2Fixture.w2s[0],
@@ -418,10 +405,10 @@ describe("Schedule A - all categories simultaneously", () => {
     }), d(150000), "single", c, { medicalExpenses: d(15000) });
 
     expect(result.medicalDeduction.toNumber()).toBe(3750);
-    expect(result.saltDeduction.toNumber()).toBe(10000);
+    expect(result.saltDeduction.toNumber()).toBe(11000);
     expect(result.mortgageInterest.toNumber()).toBe(24000);
     expect(result.cashCharitable.toNumber()).toBe(7000);
-    expect(result.totalItemized.toNumber()).toBe(45750);
+    expect(result.totalItemized.toNumber()).toBe(46750);
   });
 });
 
@@ -793,15 +780,14 @@ describe("Schedule A - multiple mortgages aggregate debt limit (IRS Pub 936)", (
 // ═══════════════════════════════════════════════════════════
 
 describe("Schedule A - SALT cap for HoH and QSS filing statuses", () => {
-  it("HoH: state taxes $12K capped at $10K SALT limit", () => {
-    // Head of Household uses the same $10K cap as single and MFJ
+  it("2025 HoH allows $12K state taxes below the $40K limit", () => {
     const result = calculateScheduleA(makeFixture({
       w2s: [{
         ...simpleW2Fixture.w2s[0],
         stateTaxWithheld: "12000",
       }],
     }), d(120000), "head_of_household", c);
-    expect(result.saltDeduction.toNumber()).toBe(10000);
+    expect(result.saltDeduction.toNumber()).toBe(12000);
   });
 
   it("HoH: state taxes exactly $10K — fully deductible, not capped", () => {
@@ -814,15 +800,14 @@ describe("Schedule A - SALT cap for HoH and QSS filing statuses", () => {
     expect(result.saltDeduction.toNumber()).toBe(10000);
   });
 
-  it("QSS: state taxes $15K capped at $10K SALT limit", () => {
-    // Qualifying Surviving Spouse uses the $10K cap (same as MFJ)
+  it("2025 QSS allows $15K state taxes below the $40K limit", () => {
     const result = calculateScheduleA(makeFixture({
       w2s: [{
         ...simpleW2Fixture.w2s[0],
         stateTaxWithheld: "15000",
       }],
     }), d(200000), "qualifying_surviving_spouse", c);
-    expect(result.saltDeduction.toNumber()).toBe(10000);
+    expect(result.saltDeduction.toNumber()).toBe(15000);
   });
 
   it("MFS: state taxes exactly $5K — fully deductible at MFS cap boundary", () => {
@@ -836,14 +821,14 @@ describe("Schedule A - SALT cap for HoH and QSS filing statuses", () => {
     expect(result.saltDeduction.toNumber()).toBe(5000);
   });
 
-  it("MFS: state taxes $5,001 capped at $5K — $1 lost to MFS SALT cap", () => {
+  it("2025 MFS allows $5,001 below the $20K limit", () => {
     const result = calculateScheduleA(makeFixture({
       w2s: [{
         ...simpleW2Fixture.w2s[0],
         stateTaxWithheld: "5001",
       }],
     }), d(100000), "married_filing_separately", c);
-    expect(result.saltDeduction.toNumber()).toBe(5000);
+    expect(result.saltDeduction.toNumber()).toBe(5001);
   });
 });
 
@@ -1045,13 +1030,7 @@ describe("Schedule A - itemized vs standard deduction in federal pipeline", () =
 // ═══════════════════════════════════════════════════════════
 
 describe("Schedule A - all categories simultaneously hitting caps and limits", () => {
-  it("SALT at $10K cap + mortgage at $750K debt limit + medical just over threshold + charitable at 60% AGI limit", () => {
-    // AGI $200,000
-    // Medical: $200K × 7.5% = $15K threshold. Expenses $16,500 → deduction $1,500
-    // SALT: state $8K + property tax $3K = $11K → capped at $10K
-    // Mortgage: $750K principal → full interest ($30K) with no proration
-    // Charitable: 60% × $200K = $120K limit. Cash donations $120K → exactly at limit
-    // Total: $1,500 + $10,000 + $30,000 + $120,000 = $161,500
+  it("2025 SALT plus mortgage debt limit, medical threshold and charitable AGI limit", () => {
     const result = calculateScheduleA(makeFixture({
       w2s: [{
         ...simpleW2Fixture.w2s[0],
@@ -1073,10 +1052,10 @@ describe("Schedule A - all categories simultaneously hitting caps and limits", (
     }), d(200000), "single", c, { medicalExpenses: d(16500) });
 
     expect(result.medicalDeduction.toNumber()).toBe(1500);
-    expect(result.saltDeduction.toNumber()).toBe(10000);
+    expect(result.saltDeduction.toNumber()).toBe(11000);
     expect(result.mortgageInterest.toNumber()).toBe(30000);
     expect(result.cashCharitable.toNumber()).toBe(120000);
-    expect(result.totalItemized.toNumber()).toBe(161500);
+    expect(result.totalItemized.toNumber()).toBe(162500);
   });
 });
 
@@ -1131,13 +1110,13 @@ describe("Schedule A - audit trail completeness", () => {
     expect(lineNumbers).toContain("17");  // Total itemized deductions
   });
 
-  it("each audit line carries the correct form identifier 'Sched A'", () => {
+  it("audit lines identify Schedule A and its SALT worksheet separately", () => {
     const result = calculateScheduleA(
       makeFixture({}), d(100000), "single", c,
       { medicalExpenses: d(10000) }
     );
     for (const line of result.lines) {
-      expect(line.form).toBe("Sched A");
+      expect(["Sched A", "SALT WS"]).toContain(line.form);
     }
   });
 

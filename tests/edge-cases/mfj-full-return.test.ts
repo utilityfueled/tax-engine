@@ -163,9 +163,8 @@ describe("MFJ Full Return - dual income with complex sources", () => {
   // 8. Child Tax Credit (MFJ phase-out at $400K)
   // ══════════════════════════════════════════════════════
 
-  it("CTC = $2,000 for one qualifying child (AGI under $400K MFJ threshold)", () => {
-    // AGI ~$293K < $400K → no phase-out → full $2,000
-    expect(federal.childTaxCredit.toNumber()).toBe(2000);
+  it("CTC = $2,200 for one qualifying child (AGI under $400K MFJ threshold)", () => {
+    expect(federal.childTaxCredit.toNumber()).toBe(2200);
   });
 
   it("ACTC = $0 (high-income filer, full CTC used nonrefundably)", () => {
@@ -360,15 +359,12 @@ describe("MFJ Full Return - dual income with complex sources", () => {
   // ══════════════════════════════════════════════════════
 
   it("CTC is not phased out because AGI ($293K) is below MFJ $400K threshold", () => {
-    // For single filers the phase-out starts at $200K — this couple benefits from
-    // the higher MFJ threshold.  Full $2,000 per child applies.
     expect(federal.form8812).toBeDefined();
-    expect(federal.form8812!.ctcBeforeLimitation.toNumber()).toBe(2000);
+    expect(federal.form8812!.ctcBeforeLimitation.toNumber()).toBe(2200);
   });
 
   it("CTC phase-out would reduce credit by $50 per $1,000 above $400K (not triggered here)", () => {
-    // AGI ~$293K < $400K threshold → reduction = 0 → before-limitation equals $2,000
-    expect(federal.childTaxCredit.toNumber()).toBe(2000);
+    expect(federal.childTaxCredit.toNumber()).toBe(2200);
   });
 
   // ══════════════════════════════════════════════════════

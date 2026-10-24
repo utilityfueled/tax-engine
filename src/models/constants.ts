@@ -56,6 +56,7 @@ export interface YearConstants {
     twenty: Record<string, never>; // remainder
   };
   saltCap: Decimal;
+  saltPhaseDown: { magiThreshold: Decimal; minimumCap: Decimal; rate: Decimal };
   childTaxCredit: {
     perChild: Decimal;
     otherDependentCredit: Decimal; // $500 per ODC-qualifying dependent
@@ -1247,9 +1248,10 @@ export const TAX_CONSTANTS: Record<number, YearConstants> = {
       },
       twenty: {},
     },
-    saltCap: d(10000),
+    saltCap: d(40000),
+    saltPhaseDown: { magiThreshold: d(500000), minimumCap: d(10000), rate: d("0.30") },
     childTaxCredit: {
-      perChild: d(2000),
+      perChild: d(2200),
       otherDependentCredit: d(500),
       phaseOutThreshold: {
         single: d(200000),

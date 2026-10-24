@@ -46,8 +46,8 @@ describe("Qualifying Surviving Spouse (QSS) filing status", () => {
     expect(federal.standardDeduction.toNumber()).toBe(31500);
   });
 
-  it("CTC = $2,000 for qualifying child", () => {
-    expect(federal.childTaxCredit.toNumber()).toBe(2000);
+  it("CTC = $2,200 for qualifying child", () => {
+    expect(federal.childTaxCredit.toNumber()).toBe(2200);
   });
 
   it("uses MFJ brackets (lower rates than single)", () => {
@@ -900,7 +900,7 @@ describe("QSS - additional edge cases", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("QSS - multiple dependents", () => {
-  it("QSS with 3 qualifying children gets $6,000 CTC", () => {
+  it("QSS with 3 qualifying children gets $6,600 CTC", () => {
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
       taxpayer: {
@@ -927,7 +927,7 @@ describe("QSS - multiple dependents", () => {
     };
     const federal = calculateFederalTax(fixture);
     const totalChildTaxBenefit = federal.childTaxCredit.plus(federal.form8812?.actc ?? d(0));
-    expect(totalChildTaxBenefit.toNumber()).toBe(6000);
+    expect(totalChildTaxBenefit.toNumber()).toBe(6600);
     expect(federal.standardDeduction.toNumber()).toBe(31500);
     // Filing status preserved
     expect(federal.filingStatus).toBe("qualifying_surviving_spouse");
@@ -959,9 +959,7 @@ describe("QSS - multiple dependents", () => {
       },
     };
     const federal = calculateFederalTax(fixture);
-    // 2 × $2,000 CTC + 1 × $500 ODC = $4,500 total credit
-    // CTC field should be $4,500 (CTC + ODC combined)
-    expect(federal.childTaxCredit.toNumber()).toBe(4500);
+    expect(federal.childTaxCredit.toNumber()).toBe(4900);
   });
 });
 
@@ -1221,16 +1219,14 @@ describe("QSS - itemized deductions exceeding $30K standard deduction", () => {
     expect(federal.filingStatus).toBe("qualifying_surviving_spouse");
   });
 
-  it("QSS SALT cap is $10K — same as MFJ, not $5K like MFS", () => {
-    // MFS SALT cap is $5,000; QSS SALT cap is $10,000
-    // Property tax alone = $15K → capped at $10K for QSS (not $5K)
+  it("2025 QSS SALT maximum is $40K; MFS maximum is $20K", () => {
     const qssFix: TaxYearInput = {
       ...qssFixture,
       form1098: [{
         lender: "Wells Fargo",
         mortgageInterestReceived: "0",
         outstandingMortgagePrincipal: "0",
-        propertyTax: "15000",
+        propertyTax: "45000",
         refundOfOverpaidInterest: "0",
         mortgageInsurancePremiums: "0",
         pointsPaid: "0",
@@ -1246,7 +1242,7 @@ describe("QSS - itemized deductions exceeding $30K standard deduction", () => {
         lender: "Wells Fargo",
         mortgageInterestReceived: "0",
         outstandingMortgagePrincipal: "0",
-        propertyTax: "15000",
+        propertyTax: "45000",
         refundOfOverpaidInterest: "0",
         mortgageInsurancePremiums: "0",
         pointsPaid: "0",
@@ -1254,9 +1250,8 @@ describe("QSS - itemized deductions exceeding $30K standard deduction", () => {
     };
     const qssResult = calculateFederalTax(qssFix);
     const mfsResult = calculateFederalTax(mfsFix);
-    // QSS SALT deduction should be $10K, MFS SALT deduction should be $5K
-    expect(qssResult.scheduleA?.saltDeduction.toNumber()).toBe(10000);
-    expect(mfsResult.scheduleA?.saltDeduction.toNumber()).toBe(5000);
+    expect(qssResult.scheduleA?.saltDeduction.toNumber()).toBe(40000);
+    expect(mfsResult.scheduleA?.saltDeduction.toNumber()).toBe(20000);
   });
 });
 
@@ -1783,17 +1778,12 @@ describe("QSS - with self-employment income", () => {
       }],
     };
     const federal = calculateFederalTax(fixture);
-    // Self-employment tax should be positive (on $40K NEC)
     expect(federal.selfEmploymentTax.greaterThan(0)).toBe(true);
     expect(federal.standardDeduction.toNumber()).toBe(31500);
     // SE tax deductible portion reduces AGI
-    // Net SE earnings = $40K × 0.9235 = $36,940
-    // SE tax = $36,940 × 15.3% = $5,651.82 → deductible half = $2,825.91
-    // AGI = $60K + $40K - $2,825.91 (half SE tax) = $97,174.09
     expect(federal.agi.lessThan(d(100000))).toBe(true);
     expect(federal.agi.greaterThan(d(95000))).toBe(true);
-    // CTC still applies
-    expect(federal.childTaxCredit.toNumber()).toBe(2000);
+    expect(federal.childTaxCredit.toNumber()).toBe(2200);
     // Total tax includes SE tax
     expect(federal.totalTax.greaterThan(federal.totalTaxBeforeCredits)).toBe(true);
   });

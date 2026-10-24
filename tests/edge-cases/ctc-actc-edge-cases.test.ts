@@ -103,7 +103,6 @@ function mfjWithChildren(
 describe("CTC ordering with Schedule 3 credits", () => {
   it("CTC is computed against tax liability after FTC reduction", () => {
     // Family has FTC from foreign dividends + 1 qualifying child.
-    // CTC should be limited to tax AFTER subtracting FTC, not full tax.
     const fixture: TaxYearInput = {
       ...singleWithChildren("80000", 1),
       form1099Div: [
@@ -126,18 +125,15 @@ describe("CTC ordering with Schedule 3 credits", () => {
 
     const result = calculateFederalTax(fixture);
 
-    // FTC should reduce available tax liability for CTC
     expect(result.foreignTaxCredit.greaterThan(0)).toBe(true);
 
-    // CTC nonrefundable should be limited to tax-after-FTC, not full tax
     const form8812 = result.form8812!;
     const taxAfterFTC = result.totalTaxBeforeCredits.minus(result.foreignTaxCredit);
     expect(form8812.nonrefundableCTC.toNumber()).toBeLessThanOrEqual(
       taxAfterFTC.toNumber()
     );
 
-    // Max CTC is $2,000 for 1 child — should still fit in remaining liability
-    expect(form8812.nonrefundableCTC.toNumber()).toBe(2000);
+    expect(form8812.nonrefundableCTC.toNumber()).toBe(2200);
   });
 });
 
@@ -172,26 +168,21 @@ describe("ACTC flows into total payments and refund", () => {
 
 describe("CTC phase-out at $200K boundary for single filers", () => {
   it("AGI exactly at $200,000 threshold - no phase-out", () => {
-    // Wages = $200K, standard deduction brings taxable income down,
-    // but AGI = $200K which is the threshold → no reduction
     const fixture = singleWithChildren("200000", 1);
 
     const result = calculateFederalTax(fixture);
     const form8812 = result.form8812!;
 
-    // Full CTC: $2,000 per child, no phase-out reduction
-    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(2000);
+    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(2200);
   });
 
   it("AGI at $200,001 - $50 reduction", () => {
-    // $1 over threshold → ceil($1 / $1000) = 1 → 1 × $50 = $50 reduction
     const fixture = singleWithChildren("200001", 1);
 
     const result = calculateFederalTax(fixture);
     const form8812 = result.form8812!;
 
-    // $2,000 - $50 = $1,950
-    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(1950);
+    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(2150);
   });
 });
 
@@ -206,8 +197,7 @@ describe("CTC phase-out at $400K boundary for MFJ filers", () => {
     const result = calculateFederalTax(fixture);
     const form8812 = result.form8812!;
 
-    // Full CTC: $2,000 × 2 = $4,000, no phase-out
-    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(4000);
+    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(4400);
   });
 
   it("AGI at $400,001 - $50 reduction", () => {
@@ -216,8 +206,7 @@ describe("CTC phase-out at $400K boundary for MFJ filers", () => {
     const result = calculateFederalTax(fixture);
     const form8812 = result.form8812!;
 
-    // $4,000 - $50 = $3,950
-    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(3950);
+    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(4350);
   });
 });
 
@@ -288,8 +277,6 @@ describe("ODC is not refundable", () => {
 
 describe("mixed qualifying children and other dependents", () => {
   it("2 qualifying children + 1 other dependent - ODC does not generate ACTC", () => {
-    // Low income so CTC exceeds tax → some goes to ACTC
-    // But only the CTC portion (from qualifying children) is refundable
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
       taxpayer: {
@@ -344,11 +331,8 @@ describe("mixed qualifying children and other dependents", () => {
     const result = calculateFederalTax(fixture);
     const form8812 = result.form8812!;
 
-    // CTC before limitation should include both CTC ($2K × 2) + ODC ($500 × 1) = $4,500
-    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(4500);
+    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(4900);
 
-    // ACTC should be based only on qualifying children's unused CTC,
-    // not on the ODC portion. Max ACTC = $1,700 × 2 = $3,400
     expect(form8812.actc.lessThanOrEqualTo(d(3400))).toBe(true);
     expect(form8812.actc.greaterThan(0)).toBe(true);
   });
@@ -518,10 +502,7 @@ describe("ACTC earned income subtracts deductible half of SE tax — IRC §32(c)
 
 describe("CTC phase-out — complete phase-out for single", () => {
   it("CTC fully phased out at very high income", () => {
-    // $240K AGI, 1 child. Excess = $240K - $200K = $40K.
-    // Reduction = ceil($40K / $1K) × $50 = 40 × $50 = $2,000
-    // CTC = $2,000 - $2,000 = $0
-    const fixture = singleWithChildren("240000", 1);
+    const fixture = singleWithChildren("244000", 1);
     const result = calculateFederalTax(fixture);
     const form8812 = result.form8812!;
     expect(form8812.ctcBeforeLimitation.toNumber()).toBe(0);
@@ -531,27 +512,21 @@ describe("CTC phase-out — complete phase-out for single", () => {
 
 describe("CTC phase-out — gradual reduction", () => {
   it("$210K AGI single with 1 child: $500 reduction", () => {
-    // $10K over threshold → ceil($10K / $1K) × $50 = $500
-    // CTC = $2,000 - $500 = $1,500
     const fixture = singleWithChildren("210000", 1);
     const result = calculateFederalTax(fixture);
     const form8812 = result.form8812!;
-    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(1500);
+    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(1700);
   });
 
   it("$440K AGI MFJ with 2 children: $2,000 reduction", () => {
-    // $40K over $400K threshold → 40 × $50 = $2,000
-    // CTC = $4,000 - $2,000 = $2,000
     const fixture = mfjWithChildren("440000", 2);
     const result = calculateFederalTax(fixture);
     const form8812 = result.form8812!;
-    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(2000);
+    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(2400);
   });
 
   it("many children require very high income to fully phase out", () => {
-    // 4 children: CTC = $8,000. Need $160K over threshold to fully phase out.
-    // $360K AGI single → $160K over → $8,000 reduction → CTC = $0
-    const fixture = singleWithChildren("360000", 4);
+    const fixture = singleWithChildren("376000", 4);
     const result = calculateFederalTax(fixture);
     const form8812 = result.form8812!;
     expect(form8812.ctcBeforeLimitation.toNumber()).toBe(0);
@@ -578,7 +553,7 @@ describe("ACTC earned income below $2,500 threshold", () => {
     expect(form8812.actc.toNumber()).toBe(0);
   });
 
-  it("$2,000 earned income: below threshold, zero ACTC", () => {
+  it("$2,200 earned income: below threshold, zero ACTC", () => {
     const fixture = singleWithChildren("2000", 1, {
       w2s: [{
         ...simpleW2Fixture.w2s[0],
@@ -639,14 +614,12 @@ describe("very low earned income just above ACTC threshold", () => {
 
 describe("MFJ CTC no phase-out at $399,999", () => {
   it("AGI $399,999 MFJ with 2 children — full CTC, no reduction", () => {
-    // $1 under $400K threshold → excess = $0 → no phase-out
-    // Full CTC = $2,000 × 2 = $4,000
     const fixture = mfjWithChildren("399999", 2);
 
     const result = calculateFederalTax(fixture);
     const form8812 = result.form8812!;
 
-    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(4000);
+    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(4400);
   });
 });
 
@@ -736,9 +709,8 @@ describe("child turning 17 during tax year — no CTC eligibility", () => {
     expect(form8812.actc.toNumber()).toBe(0);
   });
 
-  it("same child marked qualifiesForCTC: true gets $2,000 credit", () => {
+  it("same child marked qualifiesForCTC: true gets $2,200 credit", () => {
     // Contrasting test: if the same child were under 17, they would qualify.
-    // Using dateOfBirth 2018 (age 7 in 2025) to confirm CTC is generated.
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
       taxpayer: {
@@ -773,8 +745,7 @@ describe("child turning 17 during tax year — no CTC eligibility", () => {
     const result = calculateFederalTax(fixture);
     const form8812 = result.form8812!;
 
-    // 1 qualifying child → CTC = $2,000
-    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(2000);
+    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(2200);
   });
 });
 
@@ -783,25 +754,23 @@ describe("child turning 17 during tax year — no CTC eligibility", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("CTC with 5 or more qualifying children — linear scaling", () => {
-  it("5 qualifying children at moderate income: CTC = $10,000", () => {
-    // 5 children × $2,000 = $10,000 max CTC (before phase-out)
+  it("5 qualifying children at moderate income: CTC = $11,000", () => {
     // Income well below threshold → no phase-out
     const fixture = singleWithChildren("150000", 5);
 
     const result = calculateFederalTax(fixture);
     const form8812 = result.form8812!;
 
-    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(10000);
+    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(11000);
   });
 
-  it("6 qualifying children at moderate income: CTC = $12,000", () => {
-    // 6 children × $2,000 = $12,000 max CTC
+  it("6 qualifying children at moderate income: CTC = $13,200", () => {
     const fixture = mfjWithChildren("150000", 6);
 
     const result = calculateFederalTax(fixture);
     const form8812 = result.form8812!;
 
-    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(12000);
+    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(13200);
   });
 });
 
@@ -841,21 +810,17 @@ describe("CTC fully phased out at very high income — additional scenarios", ()
 
 describe("CTC phase-out $1K above threshold", () => {
   it("single $201,000 AGI with 1 child: $50 reduction (Line 12)", () => {
-    // $1,000 over $200K threshold → ceil($1K / $1K) = 1 → 1 × $50 = $50
-    // CTC = $2,000 - $50 = $1,950
     const fixture = singleWithChildren("201000", 1);
     const result = calculateFederalTax(fixture);
     const form8812 = result.form8812!;
-    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(1950);
+    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(2150);
   });
 
   it("MFJ $401,000 AGI with 2 children: $50 reduction (Line 12)", () => {
-    // $1,000 over $400K threshold → 1 × $50 = $50
-    // CTC = $4,000 - $50 = $3,950
     const fixture = mfjWithChildren("401000", 2);
     const result = calculateFederalTax(fixture);
     const form8812 = result.form8812!;
-    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(3950);
+    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(4350);
   });
 });
 
@@ -864,21 +829,14 @@ describe("CTC phase-out $1K above threshold", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("1 child CTC/ACTC maximums (Lines 12, 27)", () => {
-  it("1 qualifying child low income: max CTC = $2,000, ACTC capped at $1,700", () => {
-    // $30K wages, 1 child. Tax on ($30K - $15K std ded) = $15K taxable ≈ $1,598 tax.
-    // CTC = $2,000. Nonrefundable = min($2,000, $1,598) = $1,598.
-    // Unused CTC = $2,000 - $1,598 = $402.
-    // 15% of ($30K - $2.5K) = $4,125 (well above $402).
-    // ACTC = min($402, $4,125, $1,700) = $402 (limited by unused, not by $1,700 cap).
+  it("1 qualifying child low income: max CTC = $2,200, ACTC capped at $1,700", () => {
     const fixture = singleWithChildren("30000", 1);
     const result = calculateFederalTax(fixture);
     const form8812 = result.form8812!;
 
-    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(2000);
-    // ACTC must be ≤ $1,700 per-child cap
+    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(2200);
     expect(form8812.actc.lessThanOrEqualTo(d(1700))).toBe(true);
-    // Total nonrefundable + ACTC should not exceed $2,000
-    expect(form8812.nonrefundableCTC.plus(form8812.actc).lessThanOrEqualTo(d(2000))).toBe(true);
+    expect(form8812.nonrefundableCTC.plus(form8812.actc).lessThanOrEqualTo(d(2200))).toBe(true);
   });
 });
 
@@ -887,18 +845,13 @@ describe("1 child CTC/ACTC maximums (Lines 12, 27)", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("3 children total CTC calculation (Lines 12, 14, 27)", () => {
-  it("3 qualifying children at $50K income: CTC = $6,000, partial ACTC", () => {
-    // Max CTC = $2,000 × 3 = $6,000. No phase-out (income below $200K).
-    // Taxable income = $50K - $15K = $35K. Tax ≈ ~$3,998 (10% + 12% brackets).
-    // Nonrefundable = min($6,000, tax). Unused = $6,000 - nonrefundable.
-    // 15% of ($50K - $2.5K) = $7,125. Max refundable = $1,700 × 3 = $5,100.
-    // ACTC = min(unused, $7,125, $5,100).
+  it("3 qualifying children at $50K income: CTC = $6,600, partial ACTC", () => {
     const fixture = singleWithChildren("50000", 3);
     const result = calculateFederalTax(fixture);
     const form8812 = result.form8812!;
 
-    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(6000);
-    expect(form8812.nonrefundableCTC.plus(form8812.actc).lessThanOrEqualTo(d(6000))).toBe(true);
+    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(6600);
+    expect(form8812.nonrefundableCTC.plus(form8812.actc).lessThanOrEqualTo(d(6600))).toBe(true);
     expect(form8812.actc.lessThanOrEqualTo(d(5100))).toBe(true);
     expect(form8812.actc.greaterThan(0)).toBe(true);
   });
@@ -940,16 +893,13 @@ describe("zero tax liability — all CTC becomes ACTC (Lines 14, 15, 27)", () =>
 // ═══════════════════════════════════════════════════════════
 
 describe("tax liability absorbs full CTC — no ACTC (Lines 14, 27)", () => {
-  it("high earner with 1 child: full $2,000 CTC used nonrefundably, ACTC = $0", () => {
-    // $100K single, 1 child. Taxable = $100K - $15K = $85K.
-    // Tax well above $2,000 → full CTC used as nonrefundable.
-    // Unused CTC = $0 → ACTC = $0.
+  it("high earner with 1 child: full $2,200 CTC used nonrefundably, ACTC = $0", () => {
     const fixture = singleWithChildren("100000", 1);
     const result = calculateFederalTax(fixture);
     const form8812 = result.form8812!;
 
-    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(2000);
-    expect(form8812.nonrefundableCTC.toNumber()).toBe(2000);
+    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(2200);
+    expect(form8812.nonrefundableCTC.toNumber()).toBe(2200);
     expect(form8812.unusedCTC.toNumber()).toBe(0);
     expect(form8812.actc.toNumber()).toBe(0);
   });
@@ -961,20 +911,15 @@ describe("tax liability absorbs full CTC — no ACTC (Lines 14, 27)", () => {
 
 describe("tax liability less than CTC — partial ACTC (Lines 14, 15, 27)", () => {
   it("$25K single with 2 children: tax < CTC, remainder becomes ACTC", () => {
-    // Taxable = $25K - $15K = $10K. Tax ≈ $1,003 (10% on first $11,925 ≈ $1,000).
-    // CTC = $4,000. Nonrefundable = ~$1,003. Unused = ~$2,997.
-    // 15% of ($25K - $2.5K) = $3,375. Max refundable = $1,700 × 2 = $3,400.
-    // ACTC = min(~$2,997, $3,375, $3,400) ≈ $2,997.
     const fixture = singleWithChildren("25000", 2);
     const result = calculateFederalTax(fixture);
     const form8812 = result.form8812!;
 
-    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(4000);
+    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(4400);
     expect(form8812.nonrefundableCTC.lessThan(d(4000))).toBe(true);
     expect(form8812.unusedCTC.greaterThan(0)).toBe(true);
     expect(form8812.actc.greaterThan(0)).toBe(true);
-    // ACTC + nonrefundable should not exceed total CTC
-    expect(form8812.nonrefundableCTC.plus(form8812.actc).lessThanOrEqualTo(d(4000))).toBe(true);
+    expect(form8812.nonrefundableCTC.plus(form8812.actc).lessThanOrEqualTo(d(4400))).toBe(true);
   });
 });
 
@@ -1077,8 +1022,7 @@ describe("MFS phase-out at $200K — same threshold as single (Line 12)", () => 
     const result = calculateFederalTax(fixture);
     const form8812 = result.form8812!;
 
-    // MFS threshold = $200K, same as single. No phase-out at exactly $200K.
-    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(2000);
+    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(2200);
   });
 
   it("MFS at $201,000 AGI: $50 reduction", () => {
@@ -1118,8 +1062,7 @@ describe("MFS phase-out at $200K — same threshold as single (Line 12)", () => 
     const result = calculateFederalTax(fixture);
     const form8812 = result.form8812!;
 
-    // $1K over $200K → $50 reduction. CTC = $2,000 - $50 = $1,950.
-    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(1950);
+    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(2150);
   });
 });
 
@@ -1129,8 +1072,6 @@ describe("MFS phase-out at $200K — same threshold as single (Line 12)", () => 
 
 describe("mix of qualifying children + ODC dependents (Lines 12, 27)", () => {
   it("1 qualifying child + 2 ODC dependents: ACTC only from child portion", () => {
-    // CTC = $2,000 × 1 = $2,000. ODC = $500 × 2 = $1,000. Total = $3,000.
-    // Low income → tax small. Unused CTC-only portion generates ACTC.
     // ODC portion does NOT generate ACTC.
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
@@ -1184,11 +1125,8 @@ describe("mix of qualifying children + ODC dependents (Lines 12, 27)", () => {
     const result = calculateFederalTax(fixture);
     const form8812 = result.form8812!;
 
-    // Total before limitation = $2,000 + $1,000 = $3,000
-    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(3000);
-    // ACTC capped at $1,700 × 1 qualifying child = $1,700
+    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(3200);
     expect(form8812.actc.lessThanOrEqualTo(d(1700))).toBe(true);
-    // ACTC should be > 0 (low income means unused CTC from child)
     expect(form8812.actc.greaterThan(0)).toBe(true);
   });
 });
@@ -1247,7 +1185,7 @@ describe("very high earned income — ACTC capped at $1,700/child (Line 27)", ()
 // ═══════════════════════════════════════════════════════════
 
 describe("child without SSN gets ODC not CTC (Line 12)", () => {
-  it("child marked qualifiesForODC (no SSN) gets $500, not $2,000 CTC", () => {
+  it("child marked qualifiesForODC (no SSN) gets $500, not $2,200 CTC", () => {
     // A child without a valid SSN cannot get CTC but can get ODC.
     // qualifiesForCTC: false, qualifiesForODC: true.
     // Result: $500 ODC, no ACTC.
@@ -1289,8 +1227,7 @@ describe("child without SSN gets ODC not CTC (Line 12)", () => {
     expect(form8812.nonrefundableCTC.toNumber()).toBe(500);
   });
 
-  it("1 child with SSN + 1 child without SSN: $2,000 CTC + $500 ODC", () => {
-    // Mixed: one gets CTC ($2,000), one gets ODC ($500). Total = $2,500.
+  it("1 child with SSN + 1 child without SSN: $2,200 CTC + $500 ODC", () => {
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
       taxpayer: {
@@ -1333,9 +1270,7 @@ describe("child without SSN gets ODC not CTC (Line 12)", () => {
     const result = calculateFederalTax(fixture);
     const form8812 = result.form8812!;
 
-    // CTC $2,000 + ODC $500 = $2,500 before limitation
-    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(2500);
-    // ACTC only from the qualifying child portion, max $1,700 × 1 = $1,700
+    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(2700);
     expect(form8812.actc.lessThanOrEqualTo(d(1700))).toBe(true);
   });
 });
@@ -1384,9 +1319,6 @@ describe("no dependents — CTC and ACTC both zero (Line 12)", () => {
 
 describe("qualifying surviving spouse uses $200K phase-out threshold — IRC §24(b)(2) (Line 12)", () => {
   it("QSS at exactly $200,000 AGI with 1 child: no phase-out, full CTC = $2,000", () => {
-    // IRC §24(b)(2): "$400,000 in the case of a joint return" — QSS is NOT a joint return.
-    // QSS threshold = $200K (same as single/HoH).
-    // At exactly $200K → excess = $0 → no reduction → full $2,000 CTC.
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
       taxpayer: {
@@ -1417,13 +1349,10 @@ describe("qualifying surviving spouse uses $200K phase-out threshold — IRC §2
     const result = calculateFederalTax(fixture);
     const form8812 = result.form8812!;
 
-    // No phase-out at exactly $200K for QSS — full CTC preserved
-    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(2000);
+    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(2200);
   });
 
   it("QSS at $201,000 AGI with 1 child: $50 phase-out reduction", () => {
-    // $1,000 over $200K QSS threshold → ceil($1K / $1K) × $50 = $50 reduction.
-    // CTC = $2,000 - $50 = $1,950.
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
       taxpayer: {
@@ -1454,8 +1383,7 @@ describe("qualifying surviving spouse uses $200K phase-out threshold — IRC §2
     const result = calculateFederalTax(fixture);
     const form8812 = result.form8812!;
 
-    // $50 reduction → CTC = $1,950
-    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(1950);
+    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(2150);
   });
 
   it("QSS at $400,000 AGI with 1 child: fully phased out (not MFJ threshold)", () => {
@@ -1501,12 +1429,8 @@ describe("qualifying surviving spouse uses $200K phase-out threshold — IRC §2
 // ═══════════════════════════════════════════════════════════
 
 describe("phase-out exactly eliminates CTC — minimum income required (Line 12)", () => {
-  it("single filer at $240,000 AGI with 1 child: CTC reduced to exactly $0", () => {
-    // Per-child CTC = $2,000. Phase-out rate = $50 per $1K.
-    // To eliminate $2,000: need 40 × $50 = $2,000 reduction → 40K over threshold.
-    // $200K + $40K = $240K. Excess = $40K → ceil(40) × $50 = $2,000 reduction.
-    // CTC = $2,000 - $2,000 = $0.
-    const fixture = singleWithChildren("240000", 1);
+  it("single filer at $244,000 AGI with 1 child: CTC reduced to exactly $0", () => {
+    const fixture = singleWithChildren("244000", 1);
     const result = calculateFederalTax(fixture);
     const form8812 = result.form8812!;
 
@@ -1515,11 +1439,8 @@ describe("phase-out exactly eliminates CTC — minimum income required (Line 12)
     expect(form8812.actc.toNumber()).toBe(0);
   });
 
-  it("MFJ at $480,000 AGI with 2 children: CTC reduced to exactly $0", () => {
-    // 2 children × $2,000 = $4,000 max CTC.
-    // To eliminate $4,000: need 80 × $50 → 80K over $400K threshold → $480K AGI.
-    // Excess = $80K → 80 × $50 = $4,000 reduction. CTC = $0.
-    const fixture = mfjWithChildren("480000", 2);
+  it("MFJ at $488,000 AGI with 2 children: CTC reduced to exactly $0", () => {
+    const fixture = mfjWithChildren("488000", 2);
     const result = calculateFederalTax(fixture);
     const form8812 = result.form8812!;
 
@@ -1597,23 +1518,14 @@ describe("ACTC earned income threshold boundary — $2,500 line (Lines 21, 24)",
 
 describe("3 qualifying children — precise CTC/ACTC split (Lines 12, 14, 27)", () => {
   it("3 children at $20,000 wages: zero tax, ACTC = 15% formula capped at $5,100", () => {
-    // Taxable = $20K - $15K std ded = $5K. Tax ≈ $500 (10% × $5K).
-    // CTC = $6,000. Nonrefundable = min($6,000, ~$500) = ~$500.
-    // Unused CTC-only = $6,000 - ~$500 ≈ $5,500.
-    // 15% of ($20K - $2.5K) = 15% of $17.5K = $2,625.
-    // Max refundable = $1,700 × 3 = $5,100.
-    // ACTC = min(~$5,500, $2,625, $5,100) = $2,625.
     const fixture = singleWithChildren("20000", 3);
     const result = calculateFederalTax(fixture);
     const form8812 = result.form8812!;
 
-    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(6000);
-    // 15% of $17,500 = $2,625
+    expect(form8812.ctcBeforeLimitation.toNumber()).toBe(6600);
     expect(form8812.fifteenPercent.toNumber()).toBe(2625);
-    // ACTC limited by the 15% formula (not by unused CTC or $5,100 cap)
     expect(form8812.actc.toNumber()).toBe(2625);
-    // Nonrefundable + ACTC ≤ $6,000
-    expect(form8812.nonrefundableCTC.plus(form8812.actc).lessThanOrEqualTo(d(6000))).toBe(true);
+    expect(form8812.nonrefundableCTC.plus(form8812.actc).lessThanOrEqualTo(d(6600))).toBe(true);
   });
 });
 

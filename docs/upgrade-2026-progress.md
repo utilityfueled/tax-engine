@@ -69,3 +69,23 @@ The four browser landmark checks pass after removing nested main elements.
 The full browser baseline exposed obsolete onboarding helpers and was stopped
 after repeated failures; its upload/confirmation/export lifecycle is not yet
 qualified. Next's local generated agent guidance is retained.
+
+## 2025 SALT and child-credit correction
+
+Sources retrieved 2026-10-24: [2025 Schedule A instructions](https://www.irs.gov/instructions/i1040sca)
+and [2025 Schedule 8812 instructions](https://www.irs.gov/instructions/i1040s8).
+Specs were updated before 30 literal regression cases; 23 failed before the
+implementation. The child credit is $2,200, with the separate $1,700 ACTC cap.
+SALT uses the $40,000 maximum, MAGI phase-down and $10,000 floor. MFS halves the
+worksheet result after phase-down ($20,000 maximum/$5,000 floor). Form 2555
+exclusions and housing deduction are added back, with explicit Puerto Rico and
+Form 4563 addback inputs. Schedule A audit lines 5b–5e now match the published form.
+
+Older unit and integration fixtures were updated for the changed limits,
+including moving full phase-out and exact-tax-liability cases to the new credit
+boundaries. The full suite passes: 15,015 tests in 473 files. Spec validation,
+engine/web/contracts type checks pass. Expected worksheet literals are agent
+derived; **independent human tax review remains pending**. This corrects the
+reported amounts and SALT phase-down, not all 2025 eligibility/ACTC branches.
+The taxable-refund worksheet still models the prior 2024 SALT regime; it must be
+made year-aware before using it for a 2026 return. No filing claim is enabled.

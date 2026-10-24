@@ -167,14 +167,14 @@ describe("Qualifying Surviving Spouse full return", () => {
   });
 
   // ── Credits ───────────────────────────────────────────
-  it("CTC = $2,000 for one qualifying child", () => {
-    expect(federal.childTaxCredit.toNumber()).toBe(2000);
+  it("CTC = $2,200 for one qualifying child", () => {
+    expect(federal.childTaxCredit.toNumber()).toBe(2200);
   });
 
   it("CTC not phased out (AGI $123,500 well below QSS threshold of $200K)", () => {
     const threshold = c.childTaxCredit.phaseOutThreshold.qualifying_surviving_spouse;
     expect(federal.agi.lessThan(threshold)).toBe(true);
-    expect(federal.childTaxCredit.toNumber()).toBe(2000);
+    expect(federal.childTaxCredit.toNumber()).toBe(2200);
   });
 
   // ── Additional Taxes ──────────────────────────────────
@@ -293,8 +293,8 @@ describe("QSS with only W-2 income — simple return", () => {
     expect(federal.taxableIncome.toNumber()).toBe(43500);
   });
 
-  it("Form 1040 Line 19 — CTC = $2,000 for one child", () => {
-    expect(federal.childTaxCredit.toNumber()).toBe(2000);
+  it("Form 1040 Line 19 — CTC = $2,200 for one child", () => {
+    expect(federal.childTaxCredit.toNumber()).toBe(2200);
   });
 
   it("no capital gains tax, no investment income", () => {
@@ -727,8 +727,8 @@ describe("QSS with CTC for multiple children", () => {
 
   const federal = calculateFederalTax(input);
 
-  it("Form 8812 Line 12 — max CTC = $6,000 for three children", () => {
-    expect(federal.form8812!.ctcBeforeLimitation.toNumber()).toBe(6000);
+  it("Form 8812 Line 12 — max CTC = $6,600 for three children", () => {
+    expect(federal.form8812!.ctcBeforeLimitation.toNumber()).toBe(6600);
   });
 
   it("Form 8812 Line 14 — nonrefundable CTC limited to tax liability", () => {

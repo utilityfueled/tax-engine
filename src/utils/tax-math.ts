@@ -291,14 +291,27 @@ export function calculateDeductibleMortgageInterest(
 }
 
 /**
- * Calculate SALT deduction (capped).
- * Spec: Schedule A Line 5d
+ * Spec: spec/federal/schedule-a.yaml line 5e, 2025 worksheet lines 5-10.
+ * MFS halves line 9 AFTER the phase-down and minimum cap are applied.
  */
+export function calculateSALTLimit(
+  magi: Decimal,
+  filingStatus: FilingStatus,
+  constants: YearConstants,
+): Decimal {
+  const divisor = filingStatus === "married_filing_separately" ? 2 : 1;
+  const threshold = constants.saltPhaseDown.magiThreshold.dividedBy(divisor);
+  const reduction = roundDollar(zeroFloor(magi.minus(threshold)).times(constants.saltPhaseDown.rate));
+  return Decimal.max(constants.saltPhaseDown.minimumCap, constants.saltCap.minus(reduction)).dividedBy(divisor);
+}
+
 export function calculateSALTDeduction(
   stateLocalTaxes: Decimal,
   propertyTaxes: Decimal,
-  constants: YearConstants
+  constants: YearConstants,
+  magi: Decimal,
+  filingStatus: FilingStatus,
 ): Decimal {
   const total = stateLocalTaxes.plus(propertyTaxes);
-  return min(total, constants.saltCap);
+  return roundDollar(min(zeroFloor(total), calculateSALTLimit(magi, filingStatus, constants)));
 }

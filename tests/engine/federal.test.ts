@@ -2496,8 +2496,7 @@ describe("Complex MFJ filer", () => {
   });
 
   it("Form 1040 Line 19 - child tax credit for 1 child", () => {
-    // AGI under $400K threshold for MFJ
-    expect(result.childTaxCredit.toNumber()).toBe(2000);
+    expect(result.childTaxCredit.toNumber()).toBe(2200);
   });
 
   it("Schedule SE Line 12 - SE tax on consulting income", () => {
@@ -8088,8 +8087,7 @@ describe("ODC through federal pipeline", () => {
       },
     };
     const result = calculateFederalTax(fixture);
-    // CTC: $2K + ODC: $500 = $2,500
-    expect(result.childTaxCredit.toNumber()).toBe(2500);
+    expect(result.childTaxCredit.toNumber()).toBe(2700);
   });
 });
 
