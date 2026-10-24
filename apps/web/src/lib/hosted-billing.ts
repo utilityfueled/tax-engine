@@ -161,7 +161,7 @@ function getStripeCheckoutPaymentMethodTypes(env: BillingEnvironment) {
   const parsed = configured
     .split(",")
     .map((value) => value.trim().toLowerCase())
-    .filter((value): value is Stripe.Checkout.SessionCreateParams.PaymentMethodType => {
+    .filter((value): value is Stripe.Checkout.SessionCreateParams.AllowedPaymentMethodType => {
       return value === "card"
         || value === "link"
         || value === "cashapp";
@@ -176,7 +176,7 @@ function getStripeSecretKey(env: BillingEnvironment) {
 
 function createStripeClient(secretKey: string) {
   return new Stripe(secretKey, {
-    apiVersion: "2026-03-25.dahlia"
+    apiVersion: "2026-09-30.endive"
   });
 }
 
@@ -324,7 +324,7 @@ async function createStripeCheckoutSession(
   return stripe.checkout.sessions.create({
     mode: "subscription",
     customer: customerId,
-    payment_method_types: getStripeCheckoutPaymentMethodTypes(env),
+    allowed_payment_method_types: getStripeCheckoutPaymentMethodTypes(env),
     line_items: [
       {
         price: priceId,
@@ -539,7 +539,7 @@ async function createStripeAiCreditCheckoutSession(
   return stripe.checkout.sessions.create({
     mode: "payment",
     customer: customerId,
-    payment_method_types: getStripeCheckoutPaymentMethodTypes(env),
+    allowed_payment_method_types: getStripeCheckoutPaymentMethodTypes(env),
     line_items: [{
       price: priceId,
       quantity: 1

@@ -322,7 +322,7 @@ interface HostedBillingWebhookRouteDependencies {
 
 function createStripeClient(secretKey: string) {
   return new Stripe(secretKey, {
-    apiVersion: "2026-03-25.dahlia"
+    apiVersion: "2026-09-30.endive"
   });
 }
 

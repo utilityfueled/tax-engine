@@ -122,3 +122,15 @@ lint pass. Browser flows still need updating and rehearsal. This package does
 not yet replace the separate advanced-preview synthetic input, qualify credit
 eligibility, or remove all legacy mortgage/donation/payment defaults. Those
 remain blockers to complete filing exports.
+
+## Stripe 23 migration
+
+Stripe 23.0.1 is pinned with API `2026-09-30.endive` in both clients and the
+test-mode webhook rehearsal script. Checkout now uses
+`allowed_payment_method_types`, following the [Endive change](https://docs.stripe.com/changelog/endive/2026-09-30/remove-payment-method-types-checkout-sessions).
+Web type checking and 57 billing/auth tests pass, including retry/duplicate
+handling and credit-purchase event tests. No Stripe account or endpoint settings
+were changed. Before deployment, create a test-mode Endive endpoint, replay
+duplicate and failed credit events against the real database, reconcile credits,
+and rehearse reverting both the application commit and endpoint version. The
+previous Dahlia application and endpoint must be retained until that passes.
