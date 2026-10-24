@@ -43,3 +43,14 @@ Raw local logs are in ignored `.local/upgrade-evidence/`. No staging or producti
 deployment, live billing, provider quality evaluation, or independent tax review
 has been performed. Existing PDFs and state “supported” labels do not establish
 filing readiness or e-filing capability.
+
+## Next 16 migration
+
+Next and its ESLint plugin are pinned to 16.4.3. Development and production
+builds explicitly use webpack to preserve the source aliases, following the
+[official migration guide](https://nextjs.org/docs/app/guides/upgrading/version-16).
+Web type checking and the production build pass. The first full test run had
+14,981 passes and one obsolete Docker-context assertion; the corrected test now
+requires blank templates and excludes filled returns (48 focused tests pass).
+Browser qualification is in progress; nested main landmarks were reproduced.
+The generated Next type references are retained.
