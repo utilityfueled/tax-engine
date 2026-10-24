@@ -46,7 +46,7 @@ export interface Form6251Result {
 
 export function calculateForm6251(
   input: Form6251Input,
-  constants: YearConstants
+  constants: Pick<YearConstants, "amt" | "capitalGainsRates">
 ): Form6251Result {
   const audit = new AuditTrail();
   const amtConst = constants.amt;
@@ -102,8 +102,8 @@ export function calculateForm6251(
   const baseExemption = amtConst.exemption[input.filingStatus];
   const phaseOutThreshold = amtConst.phaseOutThreshold[input.filingStatus];
   const excessOverThreshold = zeroFloor(amti.minus(phaseOutThreshold));
-  // Exemption reduced by 25 cents per dollar over threshold
-  const exemptionReduction = roundDollar(excessOverThreshold.times(new Decimal(0.25)));
+  // 25% for 2025; 50% from 2026 under IRC 55(d)(4)(A)(ii)(IV).
+  const exemptionReduction = roundDollar(excessOverThreshold.times(amtConst.phaseOutRate));
   const exemption = zeroFloor(baseExemption.minus(exemptionReduction));
   audit.record("Form 6251", "8", "AMT exemption", exemption,
     `Base ${baseExemption} - phase-out reduction ${exemptionReduction}`);
@@ -186,7 +186,7 @@ function calculateAMTPreferentialTax(input: {
   section1250Gain: Decimal;
   collectiblesGain: Decimal;
   filingStatus: FilingStatus;
-  constants: YearConstants;
+  constants: Pick<YearConstants, "amt" | "capitalGainsRates">;
 }): Decimal {
   const preferentialIncome = zeroFloor(input.qualifiedDividends.plus(input.netLongTermCapitalGain));
   const preferentialAmtIncome = min(preferentialIncome, input.amtBase);

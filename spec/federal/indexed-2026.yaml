@@ -1,0 +1,43 @@
+form: "Federal indexed parameters"
+fullName: "2026 indexed amounts and AMT exemption worksheet"
+taxYear: 2026
+irsReference: "https://www.irs.gov/irb/2025-45_IRB"
+reviewStatus: "independent-review-pending"
+retrievedAt: "2026-10-24"
+notes: |
+  This is a partial rule pack, not an enabled federal return. The income tax
+  rate schedules are distinct from the Form 1040 Tax Table. EIC table amounts
+  are recorded independently; this does not qualify the existing EIC formula.
+  Final form numbering, all AMT adjustments, MFS additional AMTI, and foreign
+  tax credit rules require separate qualification before a 2026 return is enabled.
+lines:
+  - line: "standard-deduction"
+    description: "Basic, dependent and age/blind standard deduction amounts"
+    formula: "Basic single/MFS 16100, MFJ/QSS 32200, HOH 24150. Dependent floor 1350 and earned-income addition 450; additional age/blind amount 1650, or 2050 if unmarried and not QSS."
+    irsRef: "Rev. Proc. 2025-32 section 4.14"
+    testRef: "tests/models/federal-2026-indexed.test.ts::records 2026 standard deductions without mutating 2025"
+  - line: "rate-schedules"
+    description: "Ordinary income rate schedules"
+    formula: "Accumulate each bracket width times its rate using Decimal, then round the total to the nearest dollar. Rates 10, 12, 22, 24, 32, 35, 37 percent. MFJ/QSS breakpoints 24800,100800,211400,403550,512450,768700; single 12400,50400,105700,201775,256225,640600; MFS 12400,50400,105700,201775,256225,384350; HOH 17700,67450,105700,201750,256200,640600."
+    irsRef: "Rev. Proc. 2025-32 section 4.01 tables 1-4"
+    testRef: "tests/models/federal-2026-indexed.test.ts::matches independently transcribed IRS rate schedule totals"
+  - line: "capital-gains"
+    description: "Upper income thresholds for 0 and 15 percent capital gain rates"
+    formula: "0 percent: MFJ/QSS 98900, single/MFS 49450, HOH 66200. 15 percent: MFJ/QSS 613700, single 545500, MFS 306850, HOH 579600."
+    irsRef: "Rev. Proc. 2025-32 section 4.03"
+    testRef: "tests/models/federal-2026-indexed.test.ts::records distinct capital gains and EIC table amounts"
+  - line: "eitc-indexed"
+    description: "EIC table parameters by 0,1,2,3 or more qualifying children"
+    formula: "Earned income ceilings 8680,13020,18290,18290; maximum credit 664,4427,7316,8231. Phase-out starts single/HOH/QSS 10860,23890,23890,23890 and MFJ 18140,31160,31160,31160. Completed phase-out single/HOH/QSS 19540,51593,58629,62974 and MFJ 26820,58863,65899,70244. Investment income limit 12200."
+    irsRef: "Rev. Proc. 2025-32 section 4.06; separated spouses subject to IRC 32(d)"
+    testRef: "tests/models/federal-2026-indexed.test.ts::records distinct capital gains and EIC table amounts"
+  - line: "amt-exemption"
+    description: "AMT exemption and phase-out, with year-specific reduction rate"
+    formula: "Exemption single/HOH 90100, MFJ/QSS 140200, MFS 70100. Phase-out starts MFJ/QSS 1000000, all others 500000. Reduction is roundDollar(max(0, AMTI - start) * 0.50); exemption is max(0, base - reduction). 26 percent ceiling MFS 122250, others 244500; 28 percent above."
+    irsRef: "Rev. Proc. 2025-32 section 4.10; IRC 55(d)(4)(A)(ii)(IV), effective for years after 2025"
+    testRef: "tests/models/federal-2026-indexed.test.ts::applies 2026 AMT phase-out and rounding boundaries"
+  - line: "payroll"
+    description: "Social Security contribution and benefit base"
+    formula: "2026 wage base 184500; employee rate 0.062, self-employed combined rate 0.124. Medicare has no wage base ceiling."
+    irsRef: "https://www.ssa.gov/OACT/COLA/cbb.html, 2026 row"
+    testRef: "tests/models/federal-2026-indexed.test.ts::keeps the partial pack frozen and unavailable for full returns"

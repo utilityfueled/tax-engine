@@ -39,13 +39,14 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.0-draft",
+    ruleVersion: "2026.1-indexed-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
       { url: "https://www.irs.gov/irb/2025-45_IRB", section: "Rev. Proc. 2025-32, section 4", revision: "2025-32", retrievedAt: "2026-10-24" },
       { url: "https://www.ssa.gov/OACT/COLA/cbb.html", section: "2026 contribution and benefit base", revision: "2026 row", retrievedAt: "2026-10-24" },
+      { url: "https://uscode.house.gov/us/usc/119-118/t26/s55/", section: "55(d)(4)(A)(ii)(IV), AMT phase-out rate", revision: "Through Public Law 119-120", retrievedAt: "2026-10-24" },
     ],
     limitations: ["The complete 2026 federal calculation is not implemented or qualified. Do not substitute another year's rules.", "Schedule 1-A, other law changes, state conformity and final form mappings remain release gates."],
   },

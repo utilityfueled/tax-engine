@@ -88,6 +88,7 @@ export interface YearConstants {
   amt: {
     exemption: Record<FilingStatus, Decimal>;
     phaseOutThreshold: Record<FilingStatus, Decimal>;
+    phaseOutRate: Decimal;
     rate26Limit: Record<FilingStatus, Decimal>; // 26% rate applies up to this, 28% above
   };
   qbi: {
@@ -1297,6 +1298,7 @@ export const TAX_CONSTANTS: Record<number, YearConstants> = {
     capitalLossLimit: d(3000),
     estimatedTaxSafeHarbor: d(1.1),
     amt: {
+      phaseOutRate: d("0.25"),
       exemption: {
         single: d(88100),
         married_filing_jointly: d(137000),

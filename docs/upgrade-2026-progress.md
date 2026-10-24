@@ -134,3 +134,19 @@ were changed. Before deployment, create a test-mode Endive endpoint, replay
 duplicate and failed credit events against the real database, reconcile credits,
 and rehearse reverting both the application commit and endpoint version. The
 previous Dahlia application and endpoint must be retained until that passes.
+
+## 2026 indexed data (partial pack)
+
+Independent 2026 data now records ordinary brackets, standard deductions,
+capital-gain thresholds, EIC table parameters, AMT limits and the Social Security
+wage base. The AMT reduction rate is year-specific (25% in 2025, 50% in 2026).
+Sources: [Rev. Proc. 2025-32](https://www.irs.gov/irb/2025-45_IRB),
+[IRC 55](https://uscode.house.gov/us/usc/119-118/t26/s55/), and
+[SSA](https://www.ssa.gov/OACT/COLA/cbb.html), retrieved 2026-10-24.
+The spec preceded tests and implementation. All 42 new cases pass; the full
+suite has 15,061 passes after fixing two literal spec test-name references.
+Engine type checking passes. These rate-schedule and exemption cases are not a
+complete Form 1040/6251/EIC qualification, and full 2026 calculation remains
+blocked. Independent review, remaining law, form numbering and mappings remain
+required. The source check also identified a pre-existing 2025 single/HOH AMT
+phase-out threshold error; its correction is a separate change.
