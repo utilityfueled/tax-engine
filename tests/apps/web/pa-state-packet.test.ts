@@ -128,6 +128,7 @@ function createWorkspace(): ReturnWorkspaceRecord {
 
 function createGuidedFlowStateWithPennsylvaniaStateSelection(): GuidedFlowState {
   return {
+    taxYear: 2025,
     phase: "complete",
     segmentation: {
       filingStatus: "single",
@@ -146,6 +147,9 @@ function createGuidedFlowStateWithPennsylvaniaStateSelection(): GuidedFlowState 
     ],
     sectionData: {
       "personal-info": {
+        dateOfBirth: "1990-02-15",
+        usResidencyMonths: "12",
+        stateResidency: "full-year",
         firstName: "Jordan",
         lastName: "Northwind",
         ssn: "111-22-3333",
@@ -239,6 +243,7 @@ function createGuidedFlowStateWithPennsylvaniaTaxForgiveness(): GuidedFlowState 
 
 function createGuidedFlowStateWithPennsylvaniaScheduleAInterest(): GuidedFlowState {
   return {
+    taxYear: 2025,
     phase: "complete",
     segmentation: {
       filingStatus: "single",
@@ -275,6 +280,7 @@ function createGuidedFlowStateWithPennsylvaniaScheduleAInterest(): GuidedFlowSta
 
 function createGuidedFlowStateWithPennsylvaniaScheduleBDividends(): GuidedFlowState {
   return {
+    taxYear: 2025,
     phase: "complete",
     segmentation: {
       filingStatus: "single",
@@ -315,6 +321,7 @@ function createGuidedFlowStateWithPennsylvaniaScheduleBDividends(): GuidedFlowSt
 
 function createGuidedFlowStateWithPennsylvaniaScheduleCBusiness(): GuidedFlowState {
   return {
+    taxYear: 2025,
     phase: "complete",
     segmentation: {
       filingStatus: "single",

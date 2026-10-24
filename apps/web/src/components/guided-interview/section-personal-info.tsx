@@ -10,6 +10,7 @@ import {
   dependentRelationshipOptions,
   emptyDependentEntry,
   emptyPersonalInfo,
+  emptySpouseInfo,
   filingStatusOptions,
 } from "@/lib/guided-interview-flow";
 
@@ -99,6 +100,7 @@ function DependentCard({
             value={entry.relationship}
             onChange={(e) => onChange({ ...entry, relationship: e.target.value as DependentRelationship })}
           >
+            <option value="">Choose relationship</option>
             {dependentRelationshipOptions.map((opt) => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
             ))}
@@ -119,50 +121,27 @@ function DependentCard({
         />
       </label>
 
-      <fieldset className="guided-badge-row guided-fieldset">
+      <fieldset className="guided-fieldset">
         <legend className="guided-fieldset-legend">Credit eligibility</legend>
-        <label className="guided-checkbox-field">
-          <input
-            type="checkbox"
-            checked={entry.qualifiesForCTC}
-            onChange={(e) => onChange({ ...entry, qualifiesForCTC: e.target.checked })}
-          />
-          <span>Child tax credit (CTC)</span>
-        </label>
-        <label className="guided-checkbox-field">
-          <input
-            type="checkbox"
-            checked={entry.qualifiesForODC}
-            onChange={(e) => onChange({ ...entry, qualifiesForODC: e.target.checked })}
-          />
-          <span>Other dependent credit (ODC)</span>
-        </label>
-        <label className="guided-checkbox-field">
-          <input
-            type="checkbox"
-            checked={entry.qualifiesForEIC}
-            onChange={(e) => onChange({ ...entry, qualifiesForEIC: e.target.checked })}
-          />
-          <span>Earned income credit (EIC)</span>
-        </label>
+        {([ ["qualifiesForCTC", "Child tax credit (CTC)"], ["qualifiesForODC", "Other dependent credit (ODC)"], ["qualifiesForEIC", "Earned income credit (EIC)"] ] as const).map(([field, label]) => (
+          <label className="guided-field" key={field}>
+            <span className="guided-field-label">{label}</span>
+            <select className="guided-input" value={entry[field] == null ? "" : String(entry[field])}
+              onChange={(event) => onChange({ ...entry, [field]: event.target.value === "" ? null : event.target.value === "true" })} aria-required="true">
+              <option value="">Needs review</option>
+              <option value="true">Yes — requirements reviewed</option>
+              <option value="false">No</option>
+            </select>
+          </label>
+        ))}
       </fieldset>
 
       <details className="guided-expand">
         <summary className="guided-expand-trigger">Help with credit eligibility</summary>
         <div className="guided-expand-body">
-          <p>
-            <strong>Child Tax Credit (CTC):</strong> Your child must be under 17 at the end of the year,
-            be a U.S. citizen, and have lived with you for more than half the year.
-          </p>
-          <p>
-            <strong>Other Dependent Credit (ODC):</strong> For dependents who don&apos;t qualify for the CTC,
-            such as older children (17+), parents, or other qualifying relatives.
-          </p>
-          <p>
-            <strong>Earned Income Credit (EIC):</strong> Your qualifying child must meet age, residency,
-            and relationship requirements. Check CTC <em>and</em> EIC for children under 17 who
-            lived with you for more than half the year.
-          </p>
+          <p>Review the applicable year's requirements before answering. Age and residency alone do not establish eligibility. The child credit also has taxpayer and child identification requirements.</p>
+          <p><a href="https://www.irs.gov/instructions/i1040s8" target="_blank" rel="noreferrer">IRS Schedule 8812 instructions</a> and <a href="https://www.irs.gov/credits-deductions/individuals/earned-income-tax-credit" target="_blank" rel="noreferrer">IRS earned income credit requirements</a>.</p>
+
         </div>
       </details>
     </div>
@@ -289,8 +268,38 @@ export function SectionPersonalInfo({
             aria-required="true"
             aria-describedby="ssn-hint"
           />
-          <span className="guided-field-hint" id="ssn-hint">This stays in your browser and is never sent to any server.</span>
+          <span className="guided-field-hint" id="ssn-hint">Your taxpayer ID is sensitive. Review downloads omit it; complete filing exports are not yet available.</span>
         </label>
+
+        <div className="guided-form-grid">
+          <label className="guided-field"><span className="guided-field-label">Your date of birth</span>
+            <input type="date" className="guided-input" value={current.dateOfBirth ?? ""} onChange={(event) => update("dateOfBirth", event.target.value)} aria-required="true" autoComplete="bday" />
+          </label>
+          <label className="guided-field"><span className="guided-field-label">Months of U.S. residency</span>
+            <input type="number" min="0" max="12" className="guided-input" value={current.usResidencyMonths ?? ""} onChange={(event) => update("usResidencyMonths", event.target.value)} aria-required="true" />
+          </label>
+          <label className="guided-field"><span className="guided-field-label">State residency</span>
+            <select className="guided-input" value={current.stateResidency ?? ""} onChange={(event) => onDataChange({ ...current, stateResidency: (event.target.value || null) as PersonalInfoData["stateResidency"] })} aria-required="true">
+              <option value="">Choose residency</option><option value="full-year">Full-year resident</option><option value="part-year">Part-year resident</option><option value="nonresident">Nonresident</option>
+            </select>
+          </label>
+        </div>
+        {(filingStatus === "mfj" || filingStatus === "mfs") && (
+          <fieldset className="guided-fieldset">
+            <legend className="guided-fieldset-legend">Spouse details</legend>
+            {([ ["firstName", "Spouse first name", "text"], ["lastName", "Spouse last name", "text"], ["ssn", "Spouse taxpayer ID", "text"], ["dateOfBirth", "Spouse date of birth", "date"], ["usResidencyMonths", "Spouse months of U.S. residency", "number"] ] as const).map(([field, label, type]) => (
+              <label className="guided-field" key={field}><span className="guided-field-label">{label}</span>
+                <input type={type} className="guided-input" value={current.spouse?.[field] ?? ""} min={type === "number" ? 0 : undefined} max={type === "number" ? 12 : undefined} aria-required="true"
+                  onChange={(event) => onDataChange({ ...current, spouse: { ...(current.spouse ?? emptySpouseInfo), [field]: event.target.value } })} />
+              </label>
+            ))}
+            <label className="guided-field"><span className="guided-field-label">Did you live with your spouse at any time during the year?</span>
+              <select className="guided-input" value={current.livedWithSpouseAtAnyTimeDuringYear == null ? "" : String(current.livedWithSpouseAtAnyTimeDuringYear)} onChange={(event) => onDataChange({ ...current, livedWithSpouseAtAnyTimeDuringYear: event.target.value === "" ? undefined : event.target.value === "true" })} aria-required="true">
+                <option value="">Choose an answer</option><option value="true">Yes</option><option value="false">No</option>
+              </select>
+            </label>
+          </fieldset>
+        )}
 
         <label className="guided-field">
           <span className="guided-field-label">Address line 1</span>
@@ -371,7 +380,7 @@ export function SectionPersonalInfo({
             aria-describedby="dependent-count-hint"
           />
           <span className="guided-field-hint" id="dependent-count-hint">
-            We&apos;ll use this to estimate child tax credit and dependent deductions.
+            Enter details and review eligibility for each dependent. A count alone does not establish a credit.
           </span>
         </label>
 
@@ -382,7 +391,7 @@ export function SectionPersonalInfo({
             </h3>
             <p className="guided-hint">
               We need a few details for each dependent to calculate credits accurately.
-              The child tax credit is up to $2,000 per qualifying child under 17.
+              Eligibility must be confirmed separately for each credit.
             </p>
             {dependents.map((dep, i) => (
               <DependentCard

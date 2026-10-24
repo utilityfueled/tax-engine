@@ -635,7 +635,11 @@ function resolveFilledReturnTaxInput(
   workspace: ReturnWorkspaceRecord,
   guidedFlowState?: GuidedFlowState | null
 ) {
+  if (guidedFlowState && (guidedFlowState.taxYear == null || guidedFlowState.taxYear !== workspace.returnSummary.targetTaxYear)) {
+    throw new Error("Confirm the interview year and make it agree with the workspace before exporting.");
+  }
   const guidedTaxInput = buildTaxInputFromGuidedInterview(guidedFlowState);
+  if (guidedFlowState && !guidedTaxInput) throw new Error("Complete the required taxpayer facts before exporting.");
 
   if (guidedTaxInput) {
     return {

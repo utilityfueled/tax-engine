@@ -7,6 +7,10 @@
  * on-demand via dynamic import without bloating the initial client bundle.
  */
 
+import Decimal from "decimal.js";
+import { parseGuidedCurrency, hasGuidedCurrency, formatGuidedDollars } from "./guided-currency";
+import { dependentFactErrors, personalFactErrors } from "./guided-taxpayer-facts";
+
 import type {
   AdjustmentData,
   BrokerageEntryData,
@@ -49,16 +53,12 @@ export function mapFilingStatus(
 
 // ── Section-data → engine input converters ──────────────────────────────────
 
-function toDecimalString(value: string): string {
-  const trimmed = value.trim().replace(/,/g, "");
-  if (trimmed === "" || Number.isNaN(Number(trimmed))) return "0";
-  return trimmed;
+function toDecimalString(value: string | undefined): string {
+  parseGuidedCurrency(value);
+  return (value ?? "").trim().replace(/,/g, "") || "0";
 }
 
-function hasValue(value: string | undefined): boolean {
-  const n = Number((value ?? "").trim().replace(/,/g, ""));
-  return !Number.isNaN(n) && n !== 0;
-}
+const hasValue = hasGuidedCurrency;
 
 function combineGivenNameWithMiddleInitial(
   firstName: string | undefined,
@@ -68,7 +68,7 @@ function combineGivenNameWithMiddleInitial(
   const middle = middleName?.trim() ?? "";
 
   if (!first) {
-    return "Taxpayer";
+    return "";
   }
 
   if (!middle) {
@@ -114,8 +114,8 @@ export function buildW2Inputs(
     .filter((e) => hasValue(e.wages) || hasValue(e.federalWithheld))
     .map((e) => ({
       employer: {
-        name: e.employerName || "Employer",
-        ein: e.employerEin || "00-0000000",
+        name: e.employerName.trim(),
+        ein: e.employerEin.trim(),
       },
       wages: toDecimalString(e.wages),
       federalWithheld: toDecimalString(e.federalWithheld),
@@ -147,17 +147,12 @@ export function buildScheduleCInput(
   manualGrossReceipts: string | undefined,
   expenses: ScheduleCExpenseData | undefined,
 ) {
-  const necGross = (necEntries ?? []).reduce((sum, e) => {
-    const val = Number(e.nonemployeeCompensation?.trim().replace(/,/g, ""));
-    return sum + (Number.isNaN(val) ? 0 : val);
-  }, 0);
-  const manualGross = Number(manualGrossReceipts?.trim().replace(/,/g, "") ?? "");
-  const totalGross = necGross + (Number.isNaN(manualGross) ? 0 : manualGross);
-
-  if (totalGross === 0 && !expenses) return undefined;
+  const necGross = (necEntries ?? []).reduce((sum, entry) => sum.plus(parseGuidedCurrency(entry.nonemployeeCompensation)), new Decimal(0));
+  const totalGross = necGross.plus(parseGuidedCurrency(manualGrossReceipts));
+  if (totalGross.isZero() && !expenses) return undefined;
 
   return {
-    grossReceipts: String(totalGross),
+    grossReceipts: totalGross.toFixed(),
     expenses: expenses
       ? {
           advertising: toDecimalString(expenses.advertising),
@@ -212,8 +207,8 @@ export function buildBrokerageInputs(entries: BrokerageEntryData[] | undefined) 
         .filter((t) => hasValue(t.proceeds) || hasValue(t.costBasis))
         .map((t) => ({
           description: t.description || "Securities",
-          dateAcquired: t.dateAcquired || "VARIOUS",
-          dateSold: t.dateSold || new Date().toISOString().slice(0, 10),
+          dateAcquired: t.dateAcquired,
+          dateSold: t.dateSold,
           proceeds: toDecimalString(t.proceeds),
           costBasis: toDecimalString(t.costBasis),
           holdingPeriod: t.holdingPeriod,
@@ -227,37 +222,22 @@ export function buildDependents(
   countStr: string | undefined,
   detailedDependents?: DependentEntryData[],
 ) {
-  // Use detailed dependent data when available
-  if (detailedDependents && detailedDependents.length > 0) {
-    return detailedDependents
-      .filter((d) => d.firstName.trim() !== "" || d.lastName.trim() !== "")
-      .map((d) => ({
-        firstName: d.firstName || "Dependent",
-        lastName: d.lastName || "",
-        ssn: d.ssn || "000-00-0000",
-        dateOfBirth: d.dateOfBirth || "2015-01-01",
-        relationship: d.relationship || "child",
-        monthsLivedWithYou: Number(d.monthsLivedWithYou) || 12,
-        qualifiesForCTC: d.qualifiesForCTC,
-        qualifiesForODC: d.qualifiesForODC,
-        qualifiesForEIC: d.qualifiesForEIC,
-      }));
+  const entries = detailedDependents ?? [];
+  const count = countStr ?? String(entries.length);
+  if (!/^\d+$/.test(count) || Number(count) > 20 || Number(count) !== entries.length) {
+    throw new Error("Enter complete details for every dependent.");
   }
-
-  // Fallback: generate placeholder dependents from count
-  const count = Number(countStr ?? "0");
-  if (Number.isNaN(count) || count <= 0) return [];
-  return Array.from({ length: Math.min(count, 20) }, (_, i) => ({
-    firstName: `Dependent`,
-    lastName: `${i + 1}`,
-    ssn: "000-00-0000",
-    dateOfBirth: "2015-01-01",
-    relationship: "child" as const,
-    monthsLivedWithYou: 12,
-    qualifiesForCTC: true,
-    qualifiesForODC: false,
-    qualifiesForEIC: false,
-  }));
+  return entries.map((entry, index) => {
+    const errors = dependentFactErrors(entry, index);
+    if (Object.keys(errors).length) throw new Error(Object.values(errors)[0]);
+    return {
+      ...entry,
+      monthsLivedWithYou: Number(entry.monthsLivedWithYou),
+      qualifiesForCTC: entry.qualifiesForCTC as boolean,
+      qualifiesForODC: entry.qualifiesForODC as boolean,
+      qualifiesForEIC: entry.qualifiesForEIC as boolean,
+    };
+  });
 }
 
 // ── Schedule A (itemized deductions) converter ──────────────────────────────
@@ -268,9 +248,7 @@ export function buildScheduleAInput(deductionData: DeductionData | undefined) {
   const medicalExpenses = toDecimalString(deductionData.medicalExpenses);
   const stateLocalTaxes = toDecimalString(deductionData.stateLocalTaxes);
   const realEstateTaxes = toDecimalString(deductionData.realEstateTaxes);
-  const personalPropertyTaxes = String(
-    Number(stateLocalTaxes) + Number(realEstateTaxes)
-  );
+  const personalPropertyTaxes = new Decimal(stateLocalTaxes).plus(realEstateTaxes).toFixed();
   const investmentInterestExpense = toDecimalString(deductionData.otherItemized);
 
   if (
@@ -477,12 +455,8 @@ export function buildEnergyCreditsInput(creditsData: CreditsData | undefined) {
   // Map guided interview fields to engine schema.
   // The engine's Part II lumps doors/windows/roof into insulationCost and
   // HVAC + water-heater/heat-pump into energyPropertyCost.
-  const part2InsulationCost = String(
-    Number(insulationCost) + Number(exteriorDoorsWindowsCost) + Number(roofCost)
-  );
-  const part2EnergyPropertyCost = String(
-    Number(energyEfficientHvacCost) + Number(waterHeaterHeatPumpCost)
-  );
+  const part2InsulationCost = new Decimal(insulationCost).plus(exteriorDoorsWindowsCost).plus(roofCost).toFixed();
+  const part2EnergyPropertyCost = new Decimal(energyEfficientHvacCost).plus(waterHeaterHeatPumpCost).toFixed();
 
   return {
     solarElectricCost: solarElectricCost !== "0" ? solarElectricCost : undefined,
@@ -516,9 +490,10 @@ export function buildScheduleHInput(otherTaxesData: OtherTaxesData | undefined) 
 export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
   const { segmentation, sectionData } = state;
 
-  if (!segmentation.filingStatus) return null;
+  if (!segmentation.filingStatus || !Number.isInteger(state.taxYear) || state.taxYear == null) return null;
 
   const personalInfo = sectionData["personal-info"] as PersonalInfoData | undefined;
+  if (!personalInfo || Object.keys(personalFactErrors(personalInfo, segmentation.filingStatus, state.taxYear)).length) return null;
   const w2Data = sectionData["income-w2"] as { entries: W2EntryData[] } | undefined;
   const seData = sectionData["income-self-employment"] as
     | { necEntries: NecEntryData[]; manualGrossReceipts: string; expenses: ScheduleCExpenseData }
@@ -559,22 +534,25 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
 
   return {
     taxpayer: {
-      taxYear: 2025,
+      taxYear: state.taxYear,
       filingStatus: mapFilingStatus(segmentation.filingStatus),
       primary: {
         firstName: combineGivenNameWithMiddleInitial(
           personalInfo?.firstName,
           personalInfo?.middleName
         ),
-        lastName: personalInfo?.lastName || "Preview",
-        ssn: personalInfo?.ssn || "000-00-0000",
-        dateOfBirth: "1990-01-01",
+        lastName: personalInfo.lastName,
+        ssn: personalInfo.ssn,
+        dateOfBirth: personalInfo.dateOfBirth,
       },
+      spouse: segmentation.filingStatus === "mfj" || segmentation.filingStatus === "mfs" ? personalInfo.spouse : undefined,
+      livedWithSpouseAtAnyTimeDuringYear: personalInfo?.livedWithSpouseAtAnyTimeDuringYear,
       address: {
-        street: personalInfo?.addressLine1 || "123 Main St",
-        city: personalInfo?.city || "Anytown",
-        state: stateCode || "TX",
-        zip: personalInfo?.zip || "00000",
+        street: personalInfo.addressLine1,
+        apt: personalInfo.addressLine2 || undefined,
+        city: personalInfo.city,
+        state: stateCode,
+        zip: personalInfo.zip,
       },
       dependents: buildDependents(personalInfo?.dependentCount, personalInfo?.dependents),
     },
@@ -646,8 +624,8 @@ export function buildGuidedFactAnswers(
       .map(stripPendingW2Suggestions)
       .filter((e) => hasValue(e.wages) || hasValue(e.federalWithheld));
     if (filled.length > 0) {
-      const totalWages = filled.reduce((sum, e) => sum + numVal(e.wages), 0);
-      const totalWithheld = filled.reduce((sum, e) => sum + numVal(e.federalWithheld), 0);
+      const totalWages = filled.reduce((sum, e) => sum.plus(numVal(e.wages)), new Decimal(0));
+      const totalWithheld = filled.reduce((sum, e) => sum.plus(numVal(e.federalWithheld)), new Decimal(0));
       answers.push({
         factId: "wages",
         answerText: `${filled.length} W-2(s) confirmed. Total wages: $${fmtNum(totalWages)}.`,
@@ -665,17 +643,17 @@ export function buildGuidedFactAnswers(
     | undefined;
   if (seData) {
     const filled = seData.necEntries.filter((e) => hasValue(e.nonemployeeCompensation));
-    const necTotal = filled.reduce((sum, e) => sum + numVal(e.nonemployeeCompensation), 0);
+    const necTotal = filled.reduce((sum, e) => sum.plus(numVal(e.nonemployeeCompensation)), new Decimal(0));
     const manualGross = numVal(seData.manualGrossReceipts);
 
-    if (filled.length > 0 || manualGross > 0) {
+    if (filled.length > 0 || manualGross.gt(0)) {
       const summaryParts: string[] = [];
 
       if (filled.length > 0) {
         summaryParts.push(`${filled.length} 1099-NEC(s) confirmed: $${fmtNum(necTotal)}`);
       }
 
-      if (manualGross > 0) {
+      if (manualGross.gt(0)) {
         summaryParts.push(`manual Schedule C gross receipts: $${fmtNum(manualGross)}`);
       }
 
@@ -702,7 +680,7 @@ export function buildGuidedFactAnswers(
   if (investData?.interestEntries) {
     const filled = investData.interestEntries.filter((e) => hasValue(e.interestIncome));
     if (filled.length > 0) {
-      const total = filled.reduce((sum, e) => sum + numVal(e.interestIncome), 0);
+      const total = filled.reduce((sum, e) => sum.plus(numVal(e.interestIncome)), new Decimal(0));
       answers.push({
         factId: "taxable-interest",
         answerText: `Taxable interest confirmed: $${fmtNum(total)}.`,
@@ -716,20 +694,20 @@ export function buildGuidedFactAnswers(
       (e) => hasValue(e.ordinaryDividends) || hasValue(e.capitalGainDistributions),
     );
     if (filled.length > 0) {
-      const totalOrd = filled.reduce((sum, e) => sum + numVal(e.ordinaryDividends), 0);
-      const totalQual = filled.reduce((sum, e) => sum + numVal(e.qualifiedDividends), 0);
-      const totalCG = filled.reduce((sum, e) => sum + numVal(e.capitalGainDistributions), 0);
+      const totalOrd = filled.reduce((sum, e) => sum.plus(numVal(e.ordinaryDividends)), new Decimal(0));
+      const totalQual = filled.reduce((sum, e) => sum.plus(numVal(e.qualifiedDividends)), new Decimal(0));
+      const totalCG = filled.reduce((sum, e) => sum.plus(numVal(e.capitalGainDistributions)), new Decimal(0));
       answers.push({
         factId: "ordinary-dividends",
         answerText: `Ordinary dividends confirmed: $${fmtNum(totalOrd)}.`,
       });
-      if (totalQual > 0) {
+      if (totalQual.gt(0)) {
         answers.push({
           factId: "qualified-dividends",
           answerText: `Qualified dividends confirmed: $${fmtNum(totalQual)}.`,
         });
       }
-      if (totalCG > 0) {
+      if (totalCG.gt(0)) {
         answers.push({
           factId: "capital-gain-distributions",
           answerText: `Capital gain distributions confirmed: $${fmtNum(totalCG)}.`,
@@ -745,8 +723,8 @@ export function buildGuidedFactAnswers(
     );
     if (filled.length > 0) {
       const totalProceeds = filled.reduce(
-        (sum, b) => sum + b.transactions.reduce((tSum, t) => tSum + numVal(t.proceeds), 0),
-        0,
+        (sum, b) => sum.plus(b.transactions.reduce((tSum, t) => tSum.plus(numVal(t.proceeds)), new Decimal(0))),
+        new Decimal(0),
       );
       answers.push({
         factId: "broker-proceeds",
@@ -764,7 +742,7 @@ export function buildGuidedFactAnswers(
   if (retData?.entries) {
     const filled = retData.entries.filter((e) => hasValue(e.grossDistribution) || hasValue(e.taxableAmount));
     if (filled.length > 0) {
-      const totalTaxable = filled.reduce((sum, e) => sum + numVal(e.taxableAmount), 0);
+      const totalTaxable = filled.reduce((sum, e) => sum.plus(numVal(e.taxableAmount)), new Decimal(0));
       answers.push({
         factId: "retirement-distribution-review",
         answerText: `${filled.length} 1099-R(s) confirmed. Taxable: $${fmtNum(totalTaxable)}.`,
@@ -793,14 +771,8 @@ export function buildGuidedFactAnswers(
   return answers;
 }
 
-function numVal(s: string | undefined): number {
-  const n = Number((s ?? "").trim().replace(/,/g, ""));
-  return Number.isNaN(n) ? 0 : n;
-}
-
-function fmtNum(n: number): string {
-  return n.toLocaleString("en-US", { maximumFractionDigits: 0 });
-}
+const numVal = parseGuidedCurrency;
+const fmtNum = formatGuidedDollars;
 
 /**
  * Build synthetic WorkspaceDocumentRecords from guided interview data.

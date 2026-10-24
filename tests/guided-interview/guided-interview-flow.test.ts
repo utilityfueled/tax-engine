@@ -1,3 +1,4 @@
+import { completePersonalInfo } from "./complete-facts";
 import { describe, it, expect } from "vitest";
 import {
   type SegmentationAnswers,
@@ -423,7 +424,7 @@ describe("computeFlowProgress", () => {
       sectionData: {
         deductions: emptyDeductionData,
         "personal-info": {
-          ...emptyPersonalInfo,
+          ...completePersonalInfo,
           firstName: "Jane",
           lastName: "Doe",
         },
@@ -550,7 +551,7 @@ describe("summarizeFlowCompletion", () => {
       ],
       sectionData: {
         "personal-info": {
-          ...emptyPersonalInfo,
+          ...completePersonalInfo,
           firstName: "Jane",
           lastName: "Doe",
         },
@@ -943,7 +944,7 @@ describe("self-employment section routing", () => {
       sectionData: {
         deductions: emptyDeductionData,
         "personal-info": {
-          ...emptyPersonalInfo,
+          ...completePersonalInfo,
           firstName: "Jane",
           lastName: "Doe",
         },
@@ -1132,7 +1133,7 @@ describe("investment section routing", () => {
       sectionData: {
         deductions: emptyDeductionData,
         "personal-info": {
-          ...emptyPersonalInfo,
+          ...completePersonalInfo,
           firstName: "Jane",
           lastName: "Doe",
         },
@@ -2256,10 +2257,10 @@ describe("validateSection", () => {
     expect(result.fieldErrors).toHaveProperty("lastName");
   });
 
-  it("returns complete for personal-info with name filled", () => {
+  it("returns complete for personal-info with actual identity and residency facts", () => {
     let state = startInterview({ filingStatus: "single", incomeTypes: ["w2-wages"], lifeEvents: [], stateCode: null });
     state = updateSectionData(state, "personal-info", {
-      ...emptyPersonalInfo,
+      ...completePersonalInfo,
       firstName: "Jane",
       lastName: "Doe",
     });
@@ -2473,7 +2474,7 @@ describe("shouldPromptBeforeAdvance", () => {
   it("returns null when section is complete", () => {
     let state = startInterview({ filingStatus: "single", incomeTypes: ["w2-wages"], lifeEvents: [], stateCode: null });
     state = updateSectionData(state, "personal-info", {
-      ...emptyPersonalInfo,
+      ...completePersonalInfo,
       firstName: "Jane",
       lastName: "Doe",
     });
@@ -2574,27 +2575,27 @@ describe("shouldPromptBeforeAdvance", () => {
 
 describe("getStandardDeductionAmount", () => {
   it("returns 15750 for single filer", () => {
-    expect(getStandardDeductionAmount("single")).toBe(15750);
+    expect(getStandardDeductionAmount("single", 2025)).toBe(15750);
   });
 
   it("returns 31500 for married filing jointly", () => {
-    expect(getStandardDeductionAmount("mfj")).toBe(31500);
+    expect(getStandardDeductionAmount("mfj", 2025)).toBe(31500);
   });
 
   it("returns 15750 for married filing separately", () => {
-    expect(getStandardDeductionAmount("mfs")).toBe(15750);
+    expect(getStandardDeductionAmount("mfs", 2025)).toBe(15750);
   });
 
   it("returns 23625 for head of household", () => {
-    expect(getStandardDeductionAmount("hoh")).toBe(23625);
+    expect(getStandardDeductionAmount("hoh", 2025)).toBe(23625);
   });
 
   it("returns 31500 for qualifying surviving spouse", () => {
-    expect(getStandardDeductionAmount("qss")).toBe(31500);
+    expect(getStandardDeductionAmount("qss", 2025)).toBe(31500);
   });
 
   it("returns 0 for null filing status", () => {
-    expect(getStandardDeductionAmount(null)).toBe(0);
+    expect(getStandardDeductionAmount(null, 2025)).toBe(0);
   });
 });
 
@@ -2607,7 +2608,7 @@ describe("computeDeductionComparison", () => {
       method: "itemized",
       mortgageInterest: "8000",
       charitableContributions: "2000",
-    });
+    }, 2025);
     expect(result.standardAmount).toBe(15750);
     expect(result.itemizedTotal).toBe(10000);
     expect(result.recommendation).toBe("standard");
@@ -2621,7 +2622,7 @@ describe("computeDeductionComparison", () => {
       mortgageInterest: "10000",
       stateLocalTaxes: "5000",
       charitableContributions: "3000",
-    });
+    }, 2025);
     expect(result.standardAmount).toBe(15750);
     expect(result.itemizedTotal).toBe(18000);
     expect(result.recommendation).toBe("itemized");
@@ -2634,7 +2635,7 @@ describe("computeDeductionComparison", () => {
       method: "itemized",
       mortgageInterest: "10000",
       charitableContributions: "5000",
-    });
+    }, 2025);
     expect(result.standardAmount).toBe(15750);
     expect(result.itemizedTotal).toBe(15000);
     expect(result.recommendation).toBe("standard");
@@ -2646,7 +2647,7 @@ describe("computeDeductionComparison", () => {
       ...emptyDeductionData,
       method: "itemized",
       mortgageInterest: "20000",
-    });
+    }, 2025);
     expect(result.standardAmount).toBe(31500);
     expect(result.itemizedTotal).toBe(20000);
     expect(result.recommendation).toBe("standard");
@@ -2654,7 +2655,7 @@ describe("computeDeductionComparison", () => {
   });
 
   it("handles undefined deduction data gracefully", () => {
-    const result = computeDeductionComparison("single", undefined);
+    const result = computeDeductionComparison("single", undefined, 2025);
     expect(result.standardAmount).toBe(15750);
     expect(result.itemizedTotal).toBe(0);
     expect(result.recommendation).toBe("standard");
@@ -2666,21 +2667,15 @@ describe("computeDeductionComparison", () => {
       ...emptyDeductionData,
       method: "itemized",
       mortgageInterest: "10000",
-    });
+    }, 2025);
     expect(result.standardAmount).toBe(0);
     expect(result.itemizedTotal).toBe(10000);
     expect(result.recommendation).toBe("itemized");
     expect(result.savings).toBe(10000);
   });
 
-  it("ignores non-numeric values in deduction fields", () => {
-    const result = computeDeductionComparison("single", {
-      ...emptyDeductionData,
-      method: "itemized",
-      mortgageInterest: "abc",
-      charitableContributions: "5000",
-    });
-    expect(result.itemizedTotal).toBe(5000);
+  it("rejects malformed nonempty monetary inputs", () => {
+    expect(() => computeDeductionComparison("single", { ...emptyDeductionData, method: "itemized", mortgageInterest: "abc" }, 2025)).toThrow();
   });
 
   it("handles comma-formatted currency values", () => {
@@ -2689,7 +2684,7 @@ describe("computeDeductionComparison", () => {
       method: "itemized",
       mortgageInterest: "12,500",
       charitableContributions: "3,000",
-    });
+    }, 2025);
     expect(result.itemizedTotal).toBe(15500);
   });
 
@@ -2703,7 +2698,7 @@ describe("computeDeductionComparison", () => {
       charitableContributions: "5000",
       casualtyLosses: "1000",
       otherItemized: "1000",
-    });
+    }, 2025);
     expect(result.itemizedTotal).toBe(17000);
     expect(result.recommendation).toBe("itemized");
     expect(result.savings).toBe(1250);

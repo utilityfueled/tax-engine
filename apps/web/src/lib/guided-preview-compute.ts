@@ -5,6 +5,7 @@
  */
 
 import Decimal from "decimal.js";
+import { parseGuidedCurrency } from "./guided-currency";
 import { calculateFederalTax } from "@/engine/federal";
 import {
   calculateGenericStateReturn,
@@ -71,14 +72,12 @@ function collectStateWithholding(state: GuidedFlowState): Decimal {
 
   if (w2Data?.entries) {
     for (const e of w2Data.entries) {
-      const val = Number(e.stateWithheld?.trim().replace(/,/g, ""));
-      if (!Number.isNaN(val)) total = total.plus(val);
+      if (e.aiSuggestedFields?.stateWithheld?.status !== "pending-confirmation") total = total.plus(parseGuidedCurrency(e.stateWithheld));
     }
   }
 
   if (stateReturnData?.additionalStateWithholding) {
-    const val = Number(stateReturnData.additionalStateWithholding.trim().replace(/,/g, ""));
-    if (!Number.isNaN(val)) total = total.plus(val);
+    total = total.plus(parseGuidedCurrency(stateReturnData.additionalStateWithholding));
   }
 
   return total;
@@ -89,8 +88,7 @@ function collectStateEstimatedPayments(state: GuidedFlowState): Decimal {
   if (!stateReturnData?.stateEstimatedPayments) return new Decimal(0);
 
   return stateReturnData.stateEstimatedPayments.reduce((sum, entry) => {
-    const val = Number(entry.amount?.trim().replace(/,/g, ""));
-    return sum.plus(Number.isNaN(val) ? 0 : val);
+    return sum.plus(parseGuidedCurrency(entry.amount));
   }, new Decimal(0));
 }
 
@@ -134,16 +132,15 @@ export function computeGuidedPreview(state: GuidedFlowState | null | undefined):
     return null;
   }
 
-  const rawInput = buildTaxInputFromGuidedData(state);
-  if (!rawInput) return null;
-
   try {
+    const rawInput = buildTaxInputFromGuidedData(state);
+    if (!rawInput) return null;
     const taxInput = TaxYearInputSchema.parse(rawInput);
     const result = calculateFederalTax(taxInput);
 
     let stateResult: GenericStateReturnResult | null = null;
     const stateCode = state.segmentation.stateCode;
-    if (stateCode) {
+    if (stateCode && state.sectionData["personal-info"]?.stateResidency === "full-year") {
       const personalInfo = state.sectionData["personal-info"] as PersonalInfoData | undefined;
       const depCount = Number(personalInfo?.dependentCount ?? "0");
       if (!state.segmentation.filingStatus) return null;
@@ -154,7 +151,7 @@ export function computeGuidedPreview(state: GuidedFlowState | null | undefined):
 
       stateResult = tryComputeStatePreview(
         stateCode,
-        2025,
+        taxInput.taxpayer.taxYear,
         filingStatus,
         result.agi,
         result.taxableIncome,

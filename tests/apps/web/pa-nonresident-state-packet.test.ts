@@ -158,6 +158,7 @@ function createWorkspace(): ReturnWorkspaceRecord {
 
 function createGuidedFlowStateWithPennsylvaniaSelection(): GuidedFlowState {
   return {
+    taxYear: 2025,
     phase: "complete",
     segmentation: {
       filingStatus: "single",
@@ -176,6 +177,9 @@ function createGuidedFlowStateWithPennsylvaniaSelection(): GuidedFlowState {
     ],
     sectionData: {
       "personal-info": {
+        dateOfBirth: "1990-02-15",
+        usResidencyMonths: "12",
+        stateResidency: "full-year",
         firstName: "Taylor",
         lastName: "Northwind",
         ssn: "111-22-3333",

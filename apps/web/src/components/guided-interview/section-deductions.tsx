@@ -24,15 +24,17 @@ function formatUsd(amount: number): string {
 export function SectionDeductions({
   data,
   filingStatus,
+  taxYear,
   onDataChange,
 }: {
   data: DeductionData | undefined;
   filingStatus: FilingStatus | null;
+  taxYear?: number | null;
   onDataChange: (data: DeductionData) => void;
 }) {
   const current = data ?? emptyDeductionData;
-  const standardAmount = getStandardDeductionAmount(filingStatus);
-  const comparison = computeDeductionComparison(filingStatus, current);
+  const standardAmount = getStandardDeductionAmount(filingStatus, taxYear);
+  const comparison = computeDeductionComparison(filingStatus, current, taxYear);
 
   function setMethod(method: DeductionMethod) {
     onDataChange({ ...current, method });
@@ -54,7 +56,7 @@ export function SectionDeductions({
 
         {standardAmount > 0 && (
           <div className="guided-deduction-standard-callout">
-            Your standard deduction is <strong>{formatUsd(standardAmount)}</strong> based on your filing status.
+            Base standard deduction before age, blindness or dependent adjustments: <strong>{formatUsd(standardAmount)}</strong> based on your filing status.
           </div>
         )}
 
@@ -163,7 +165,7 @@ export function SectionDeductions({
               <div className="guided-deduction-comparison" style={{ marginTop: "16px" }} role="status" aria-live="polite">
                 <div className="guided-ticker-grid">
                   <div className="guided-ticker-item">
-                    <span className="guided-ticker-label">Itemized Total</span>
+                    <span className="guided-ticker-label">Expenses entered</span>
                     <strong className="guided-ticker-value">
                       {formatUsd(comparison.itemizedTotal)}
                     </strong>
@@ -178,35 +180,7 @@ export function SectionDeductions({
                   )}
                 </div>
 
-                {standardAmount > 0 && (
-                  <div
-                    className={`guided-deduction-recommendation ${
-                      comparison.recommendation === "itemized"
-                        ? "guided-deduction-recommendation-itemized"
-                        : comparison.recommendation === "standard"
-                          ? "guided-deduction-recommendation-standard"
-                          : ""
-                    }`}
-                  >
-                    {comparison.recommendation === "itemized" && (
-                      <>
-                        Itemizing saves you <strong>{formatUsd(comparison.savings)}</strong> over the standard deduction. Good call!
-                      </>
-                    )}
-                    {comparison.recommendation === "standard" && (
-                      <>
-                        The standard deduction is <strong>{formatUsd(comparison.savings)}</strong> higher.
-                        You may want to switch back to standard unless you expect to add more deductions.
-                      </>
-                    )}
-                    {comparison.recommendation === "equal" && (
-                      <>
-                        Your itemized deductions exactly match the standard deduction amount.
-                        Either option works — standard is simpler.
-                      </>
-                    )}
-                  </div>
-                )}
+                <p className="guided-hint">These are expenses before tax limits and income-based adjustments. The calculation determines the deductible amount after all required facts are confirmed.</p>
               </div>
             )}
           </div>

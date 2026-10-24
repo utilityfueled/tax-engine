@@ -99,3 +99,26 @@ unknown years also reject. This closes the silent fallback but does not yet
 implement 2026 law. Standalone empty PA Schedule D calculations no longer need
 federal constants; home-sale exclusions still reject unavailable rules.
 All 15,018 tests, engine type checking and spec validation pass.
+
+## Guided year, identity and money boundary
+
+Guided interviews now carry an explicit year through storage, federal/state
+preview and export validation. Legacy saved interviews without a year retain
+an unknown year until the user confirms it; a workspace mismatch blocks output.
+The form collects actual primary/spouse birth dates and residency, and requires
+complete dependent identities and explicit credit answers. No count-generated
+children, default birth dates, default addresses, or zero-to-twelve residency
+conversion remain in this adapter. Missing employer IDs and trade dates stay
+empty. Credit qualification itself still needs the broader eligibility work.
+
+Monetary parsing and aggregation in the guided bridge and preview use Decimal;
+malformed nonempty amounts reject instead of becoming zero. The deduction UI
+shows expenses before tax limits and no longer claims that raw totals are tax
+savings. Required-fact and year failures cannot fall back to a workspace preview
+PDF. Tests use explicit synthetic facts, not production defaults.
+
+Local results: 15,019 tests pass; web type checking, spec validation and focused
+lint pass. Browser flows still need updating and rehearsal. This package does
+not yet replace the separate advanced-preview synthetic input, qualify credit
+eligibility, or remove all legacy mortgage/donation/payment defaults. Those
+remain blockers to complete filing exports.

@@ -4,6 +4,10 @@
  * Pure functions, no React, no DOM. The UI components consume this module.
  */
 
+import Decimal from "decimal.js";
+import { parseGuidedCurrency, hasGuidedCurrency } from "./guided-currency";
+import { personalFactErrors } from "./guided-taxpayer-facts";
+
 import { formatPendingW2SuggestionValueLabel } from "@/lib/document-fixture-copy";
 
 // ── Filing status ──────────────────────────────────────────────────────────
@@ -156,8 +160,8 @@ const standardDeductionAmounts: Record<FilingStatus, number> = {
   qss: 31500,
 };
 
-export function getStandardDeductionAmount(filingStatus: FilingStatus | null): number {
-  if (!filingStatus) return 0;
+export function getStandardDeductionAmount(filingStatus: FilingStatus | null, taxYear?: number | null): number {
+  if (!filingStatus || taxYear !== 2025) return 0;
   return standardDeductionAmounts[filingStatus] ?? 0;
 }
 
@@ -171,8 +175,9 @@ export interface DeductionComparison {
 export function computeDeductionComparison(
   filingStatus: FilingStatus | null,
   deductions: DeductionData | undefined,
+  taxYear?: number | null,
 ): DeductionComparison {
-  const standardAmount = getStandardDeductionAmount(filingStatus);
+  const standardAmount = getStandardDeductionAmount(filingStatus, taxYear);
   const data = deductions ?? emptyDeductionData;
 
   const fields: string[] = [
@@ -185,21 +190,15 @@ export function computeDeductionComparison(
     data.otherItemized,
   ];
 
-  const itemizedTotal = fields.reduce((sum, val) => {
-    const num = Number((val ?? "").replace(/,/g, ""));
-    return sum + (Number.isNaN(num) ? 0 : num);
-  }, 0);
-
-  const diff = itemizedTotal - standardAmount;
-  const recommendation: DeductionComparison["recommendation"] =
-    diff > 0 ? "itemized" : diff < 0 ? "standard" : "equal";
-
+  const itemizedTotal = fields.reduce((sum, value) => sum.plus(parseGuidedCurrency(value)), new Decimal(0));
+  const diff = itemizedTotal.minus(standardAmount);
   return {
     standardAmount,
-    itemizedTotal,
-    recommendation,
-    savings: Math.abs(diff),
+    itemizedTotal: itemizedTotal.toNumber(), // Presentation only; never an engine input.
+    recommendation: diff.gt(0) ? "itemized" : diff.lt(0) ? "standard" : "equal",
+    savings: diff.abs().toNumber(),
   };
+
 }
 
 // ── Interview sections ─────────────────────────────────────────────────────
@@ -445,11 +444,11 @@ export interface DependentEntryData {
   lastName: string;
   ssn: string;
   dateOfBirth: string;
-  relationship: DependentRelationship;
+  relationship: DependentRelationship | "";
   monthsLivedWithYou: string;
-  qualifiesForCTC: boolean;
-  qualifiesForODC: boolean;
-  qualifiesForEIC: boolean;
+  qualifiesForCTC: boolean | null;
+  qualifiesForODC: boolean | null;
+  qualifiesForEIC: boolean | null;
 }
 
 export const emptyDependentEntry: DependentEntryData = {
@@ -457,14 +456,29 @@ export const emptyDependentEntry: DependentEntryData = {
   lastName: "",
   ssn: "",
   dateOfBirth: "",
-  relationship: "child",
-  monthsLivedWithYou: "12",
-  qualifiesForCTC: true,
-  qualifiesForODC: false,
-  qualifiesForEIC: false,
+  relationship: "",
+  monthsLivedWithYou: "",
+  qualifiesForCTC: null,
+  qualifiesForODC: null,
+  qualifiesForEIC: null,
 };
 
+export interface SpouseInfoData {
+  firstName: string;
+  lastName: string;
+  ssn: string;
+  dateOfBirth: string;
+  usResidencyMonths: string;
+}
+
+export const emptySpouseInfo: SpouseInfoData = { firstName: "", lastName: "", ssn: "", dateOfBirth: "", usResidencyMonths: "" };
+
 export interface PersonalInfoData {
+  dateOfBirth?: string;
+  usResidencyMonths?: string;
+  stateResidency?: "full-year" | "part-year" | "nonresident" | null;
+  spouse?: SpouseInfoData;
+  livedWithSpouseAtAnyTimeDuringYear?: boolean;
   firstName: string;
   middleName?: string;
   lastName: string;
@@ -479,6 +493,9 @@ export interface PersonalInfoData {
 }
 
 export const emptyPersonalInfo: PersonalInfoData = {
+  dateOfBirth: "",
+  usResidencyMonths: "",
+  stateResidency: null,
   firstName: "",
   middleName: "",
   lastName: "",
@@ -920,6 +937,8 @@ export type SelfEmploymentSectionData = NonNullable<SectionDataMap["income-self-
 export type GuidedFlowPhase = "segmentation" | "interview" | "complete";
 
 export interface GuidedFlowState {
+  /** Null or absent means the year has not been confirmed; never default in the adapter. */
+  taxYear?: number | null;
   phase: GuidedFlowPhase;
   segmentation: SegmentationAnswers;
   /** Index into the routed section list (0-based) */
@@ -931,6 +950,7 @@ export interface GuidedFlowState {
 }
 
 export const initialFlowState: GuidedFlowState = {
+  taxYear: null,
   phase: "segmentation",
   segmentation: emptySegmentation,
   currentSectionIndex: 0,
@@ -939,10 +959,7 @@ export const initialFlowState: GuidedFlowState = {
 };
 
 function addCurrencyStrings(left: string, right: string) {
-  const leftValue = Number((left || "0").replace(/,/g, ""));
-  const rightValue = Number((right || "0").replace(/,/g, ""));
-  const total = (Number.isFinite(leftValue) ? leftValue : 0) + (Number.isFinite(rightValue) ? rightValue : 0);
-  return total > 0 ? total.toFixed(2) : "";
+  return parseGuidedCurrency(left).plus(parseGuidedCurrency(right)).toFixed(2);
 }
 
 export function acceptSelfEmploymentIncomeSuggestion(
@@ -1106,9 +1123,10 @@ export function goToPreviousSection(state: GuidedFlowState): GuidedFlowState {
   };
 }
 
-export function startInterview(segmentation: SegmentationAnswers): GuidedFlowState {
+export function startInterview(segmentation: SegmentationAnswers, taxYear: number | null = null): GuidedFlowState {
   return {
     phase: "interview",
+    taxYear,
     segmentation,
     currentSectionIndex: 0,
     completedSections: [],
@@ -1273,28 +1291,17 @@ const EMPTY_SECTION = (label: string, allowSkip = true): SectionValidationResult
 });
 
 function hasNumericValue(value: string | undefined): boolean {
-  const n = Number((value ?? "").trim().replace(/,/g, ""));
-  return !Number.isNaN(n) && n !== 0;
+  try { return hasGuidedCurrency(value); } catch { return false; }
 }
 
 function hasTextValue(value: string | undefined): boolean {
   return typeof value === "string" && value.trim().length > 0;
 }
 
-function validatePersonalInfo(data: PersonalInfoData | undefined): SectionValidationResult {
+function validatePersonalInfo(data: PersonalInfoData | undefined, status: FilingStatus | null, taxYear?: number | null): SectionValidationResult {
   if (!data) return EMPTY_SECTION("personal info");
 
-  const errors: Record<string, string> = {};
-  if (!data.firstName.trim()) errors.firstName = "First name is required";
-  if (!data.lastName.trim()) errors.lastName = "Last name is required";
-
-  const depCount = Number(data.dependentCount) || 0;
-  const deps = data.dependents ?? [];
-  for (let i = 0; i < Math.min(depCount, deps.length); i++) {
-    if (!deps[i].firstName.trim() && !deps[i].lastName.trim()) {
-      errors[`dependent-${i}-name`] = `Dependent ${i + 1} needs a name`;
-    }
-  }
+  const errors = personalFactErrors(data, status, taxYear);
 
   if (Object.keys(errors).length > 0) {
     const hasAnyData = data.firstName.trim() || data.lastName.trim() || data.ssn.trim() || data.addressLine1.trim();
@@ -1649,7 +1656,7 @@ export function validateSection(
 ): SectionValidationResult {
   switch (sectionId) {
     case "personal-info":
-      return validatePersonalInfo(getSectionData(state, "personal-info"));
+      return validatePersonalInfo(getSectionData(state, "personal-info"), state.segmentation.filingStatus, state.taxYear);
     case "income-w2":
       return validateW2Section(getSectionData(state, "income-w2"));
     case "income-self-employment":
@@ -1845,6 +1852,7 @@ export function loadGuidedFlowState(storage: Storage, workspaceId: string): Guid
 
     return {
       ...parsed,
+      taxYear: Number.isInteger(parsed.taxYear) ? parsed.taxYear : null,
       sectionData: withDefaultSectionData(parsed.sectionData as SectionDataMap),
     };
   } catch {

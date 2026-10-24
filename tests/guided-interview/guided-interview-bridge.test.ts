@@ -1,3 +1,4 @@
+import { startCompleteInterview as startInterview, completePersonalInfo, completeDependent } from "./complete-facts";
 import { describe, it, expect } from "vitest";
 import {
   buildTaxInputFromGuidedData,
@@ -51,7 +52,6 @@ import {
   emptyUnemploymentData,
   emptyStateReturnData,
   emptyDependentEntry,
-  startInterview,
   updateSectionData,
 } from "@/lib/guided-interview-flow";
 
@@ -103,11 +103,11 @@ describe("buildW2Inputs", () => {
     expect(result[0].federalWithheld).toBe("5000");
   });
 
-  it("defaults employer name and EIN when empty", () => {
+  it("keeps missing employer identifiers empty", () => {
     const entry = { ...emptyW2Entry, wages: "50000" };
     const result = buildW2Inputs([entry]);
-    expect(result[0].employer.name).toBe("Employer");
-    expect(result[0].employer.ein).toBe("00-0000000");
+    expect(result[0].employer.name).toBe("");
+    expect(result[0].employer.ein).toBe("");
   });
 
   it("handles multiple W-2s", () => {
@@ -278,100 +278,21 @@ describe("buildScheduleCInput", () => {
 // ── Dependents ──────────────────────────────────────────────────────────────
 
 describe("buildDependents", () => {
-  it("returns empty array for zero or empty", () => {
+  it("returns an empty list only for an explicit zero or no entries", () => {
     expect(buildDependents("0")).toEqual([]);
-    expect(buildDependents("")).toEqual([]);
     expect(buildDependents(undefined)).toEqual([]);
+    expect(() => buildDependents("")).toThrow();
   });
-
-  it("creates the right number of dependents", () => {
-    expect(buildDependents("2")).toHaveLength(2);
-    expect(buildDependents("3")).toHaveLength(3);
+  it("rejects missing details rather than making eligible children", () => {
+    for (const count of ["1", "2", "100", "-1", "2.5"]) expect(() => buildDependents(count)).toThrow();
+    expect(() => buildDependents("1", [emptyDependentEntry])).toThrow();
+    expect(() => buildDependents("1", [{ ...completeDependent, dateOfBirth: "" }])).toThrow();
   });
-
-  it("caps at 20", () => {
-    expect(buildDependents("100")).toHaveLength(20);
-  });
-
-  it("creates dependents with required fields including qualifiesForCTC", () => {
-    const deps = buildDependents("1");
-    expect(deps[0].firstName).toBe("Dependent");
-    expect(deps[0].relationship).toBe("child");
-    expect(deps[0].monthsLivedWithYou).toBe(12);
-    expect(deps[0].qualifiesForCTC).toBe(true);
-    expect(deps[0].qualifiesForODC).toBe(false);
-    expect(deps[0].qualifiesForEIC).toBe(false);
-  });
-
-  it("uses detailed dependent data when provided", () => {
-    const detailed = [
-      {
-        ...emptyDependentEntry,
-        firstName: "Alice",
-        lastName: "Smith",
-        ssn: "123-45-6789",
-        dateOfBirth: "2018-03-15",
-        relationship: "child" as const,
-        monthsLivedWithYou: "12",
-        qualifiesForCTC: true,
-        qualifiesForODC: false,
-        qualifiesForEIC: true,
-      },
-    ];
-    const deps = buildDependents("1", detailed);
-    expect(deps).toHaveLength(1);
-    expect(deps[0].firstName).toBe("Alice");
-    expect(deps[0].lastName).toBe("Smith");
-    expect(deps[0].ssn).toBe("123-45-6789");
-    expect(deps[0].dateOfBirth).toBe("2018-03-15");
-    expect(deps[0].relationship).toBe("child");
-    expect(deps[0].monthsLivedWithYou).toBe(12);
-    expect(deps[0].qualifiesForCTC).toBe(true);
-    expect(deps[0].qualifiesForODC).toBe(false);
-    expect(deps[0].qualifiesForEIC).toBe(true);
-  });
-
-  it("filters out dependents with empty names", () => {
-    const detailed = [
-      { ...emptyDependentEntry, firstName: "Bob", lastName: "Jones" },
-      { ...emptyDependentEntry, firstName: "", lastName: "" },
-    ];
-    const deps = buildDependents("2", detailed);
-    expect(deps).toHaveLength(1);
-    expect(deps[0].firstName).toBe("Bob");
-  });
-
-  it("falls back to placeholder generation when detailed array is empty", () => {
-    const deps = buildDependents("2", []);
-    expect(deps).toHaveLength(2);
-    expect(deps[0].firstName).toBe("Dependent");
-    expect(deps[0].qualifiesForCTC).toBe(true);
-  });
-
-  it("uses default dateOfBirth when not provided in detailed data", () => {
-    const detailed = [
-      { ...emptyDependentEntry, firstName: "Carol", lastName: "Lee", dateOfBirth: "" },
-    ];
-    const deps = buildDependents("1", detailed);
-    expect(deps[0].dateOfBirth).toBe("2015-01-01");
-  });
-
-  it("ODC dependent does not qualify for CTC", () => {
-    const detailed = [
-      {
-        ...emptyDependentEntry,
-        firstName: "David",
-        lastName: "Park",
-        dateOfBirth: "2006-06-01",
-        relationship: "child" as const,
-        qualifiesForCTC: false,
-        qualifiesForODC: true,
-        qualifiesForEIC: false,
-      },
-    ];
-    const deps = buildDependents("1", detailed);
-    expect(deps[0].qualifiesForCTC).toBe(false);
-    expect(deps[0].qualifiesForODC).toBe(true);
+  it("preserves supplied dependent identity and eligibility", () => {
+    expect(buildDependents("1", [completeDependent])).toEqual([{ ...completeDependent, monthsLivedWithYou: 12 }]);
+    const older = { ...completeDependent, dateOfBirth: "2006-06-01", qualifiesForCTC: false, qualifiesForODC: true };
+    expect(buildDependents("1", [older])[0].qualifiesForCTC).toBe(false);
+    expect(buildDependents("1", [older])[0].qualifiesForODC).toBe(true);
   });
 });
 
@@ -584,7 +505,7 @@ describe("buildTaxInputFromGuidedData", () => {
     expect(buildTaxInputFromGuidedData(state)).toBeNull();
   });
 
-  it("builds a valid input with just filing status", () => {
+  it("builds an input from an explicit year and complete taxpayer facts", () => {
     const state = startInterview({
       filingStatus: "single",
       incomeTypes: ["w2-wages"],
@@ -606,7 +527,7 @@ describe("buildTaxInputFromGuidedData", () => {
       stateCode: "CA",
     });
     state = updateSectionData(state, "personal-info", {
-      ...emptyPersonalInfo,
+      ...completePersonalInfo,
       firstName: "Jane",
       middleName: "Quinn",
       lastName: "Doe",
@@ -672,7 +593,7 @@ describe("buildTaxInputFromGuidedData", () => {
     expect(input!.scheduleC?.expenses?.supplies).toBe("250");
   });
 
-  it("includes dependents from personal info", () => {
+  it("includes explicitly supplied dependents from personal info", () => {
     let state = startInterview({
       filingStatus: "hoh",
       incomeTypes: ["w2-wages"],
@@ -680,8 +601,9 @@ describe("buildTaxInputFromGuidedData", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "personal-info", {
-      ...emptyPersonalInfo,
+      ...completePersonalInfo,
       dependentCount: "2",
+      dependents: [completeDependent, { ...completeDependent, firstName: "Blair", ssn: "444-55-6666" }],
     });
     const input = buildTaxInputFromGuidedData(state);
     expect(input!.taxpayer.dependents).toHaveLength(2);
@@ -819,7 +741,7 @@ describe("computeGuidedPreview", () => {
     expect(preview!.refund).toBe("0");
   });
 
-  it("computes preview for filer with dependents (placeholder path)", () => {
+  it("computes preview for filer with explicitly supplied dependents", () => {
     let state = startInterview({
       filingStatus: "mfj",
       incomeTypes: ["w2-wages"],
@@ -827,10 +749,11 @@ describe("computeGuidedPreview", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "personal-info", {
-      ...emptyPersonalInfo,
+      ...completePersonalInfo,
       firstName: "Jane",
       lastName: "Doe",
       dependentCount: "2",
+      dependents: [completeDependent, { ...completeDependent, firstName: "Blair", ssn: "444-55-6666" }],
     });
     state = updateSectionData(state, "income-w2", {
       entries: [{ ...emptyW2Entry, wages: "80000", federalWithheld: "10000" }],
@@ -849,12 +772,12 @@ describe("computeGuidedPreview", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "personal-info", {
-      ...emptyPersonalInfo,
+      ...completePersonalInfo,
       firstName: "Jane",
       lastName: "Doe",
       dependentCount: "1",
       dependents: [{
-        ...emptyDependentEntry,
+        ...completeDependent,
         firstName: "Junior",
         lastName: "Doe",
         dateOfBirth: "2018-05-10",
@@ -2096,7 +2019,7 @@ describe("computeGuidedPreview with state return data", () => {
       stateCode: "PA",
     });
     state = updateSectionData(state, "personal-info", {
-      ...emptyPersonalInfo,
+      ...completePersonalInfo,
       firstName: "Jane",
       lastName: "Doe",
       state: "PA",

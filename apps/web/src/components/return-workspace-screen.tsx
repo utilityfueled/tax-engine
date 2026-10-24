@@ -577,6 +577,7 @@ export function ReturnWorkspaceScreen({
       )
       || workspace.returnSummary.targetTaxYear === null
       || !nextGuidedFlowState
+      || nextGuidedFlowState.taxYear !== workspace.returnSummary.targetTaxYear
       || nextGuidedFlowState.segmentation.filingStatus === null
     ) {
       setGuidedFallbackPreview(null);

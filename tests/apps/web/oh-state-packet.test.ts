@@ -128,6 +128,7 @@ function createWorkspace(): ReturnWorkspaceRecord {
 
 function createGuidedFlowStateWithOhioStateSelection(): GuidedFlowState {
   return {
+    taxYear: 2025,
     phase: "complete",
     segmentation: {
       filingStatus: "single",
@@ -146,6 +147,9 @@ function createGuidedFlowStateWithOhioStateSelection(): GuidedFlowState {
     ],
     sectionData: {
       "personal-info": {
+        dateOfBirth: "1990-02-15",
+        usResidencyMonths: "12",
+        stateResidency: "full-year",
         firstName: "Jordan",
         lastName: "Northwind",
         ssn: "111-22-3333",

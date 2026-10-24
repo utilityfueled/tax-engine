@@ -1,3 +1,4 @@
+import { completePersonalInfo } from "../../guided-interview/complete-facts";
 import { describe, expect, it } from "vitest";
 import type { WorkspaceReturnSummary } from "@tax-engine/contracts";
 import { createWorkspaceRecord, ingestFilesIntoWorkspace } from "../../../apps/web/src/lib/workspace-storage";
@@ -169,18 +170,7 @@ describe("workspace status copy", () => {
           casualtyLosses: "",
           otherItemized: ""
         },
-        "personal-info": {
-          firstName: "Jane",
-          lastName: "Doe",
-          ssn: "",
-          addressLine1: "",
-          addressLine2: "",
-          city: "",
-          state: "",
-          zip: "",
-          dependentCount: "0",
-          dependents: []
-        }
+        "personal-info": { ...completePersonalInfo }
       }
     };
 

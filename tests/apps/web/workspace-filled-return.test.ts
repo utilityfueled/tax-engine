@@ -213,6 +213,7 @@ function createNeedsReviewWorkspace(): ReturnWorkspaceRecord {
 
 function createGuidedFlowState(): GuidedFlowState {
   return {
+    taxYear: 2025,
     phase: "complete",
     segmentation: {
       filingStatus: "single",
@@ -231,6 +232,9 @@ function createGuidedFlowState(): GuidedFlowState {
     ],
     sectionData: {
       "personal-info": {
+        dateOfBirth: "1990-02-15",
+        usResidencyMonths: "12",
+        stateResidency: "full-year",
         firstName: "Jordan",
         lastName: "Northwind",
         ssn: "111-22-3333",
@@ -372,6 +376,14 @@ function createGuidedFlowStateWithUnderpayment(): GuidedFlowState {
 }
 
 describe("workspace filled return download", () => {
+  it("rejects missing facts and mismatched years instead of falling back to a preview", async () => {
+    const valid = createGuidedFlowState();
+    await expect(buildWorkspaceFilledReturnDownload(createWorkspace(), { ...valid, taxYear: null })).rejects.toThrow(/year/);
+    await expect(buildWorkspaceFilledReturnDownload(createWorkspace(), { ...valid, taxYear: 2026 })).rejects.toThrow(/year/);
+    await expect(buildWorkspaceFilledReturnDownload(createWorkspace(), { ...valid, sectionData: { ...valid.sectionData,
+      "personal-info": { ...valid.sectionData["personal-info"]!, dateOfBirth: "" },
+    } })).rejects.toThrow(/taxpayer facts/);
+  });
   it("builds a merged filled-PDF download from a ready workspace", async () => {
     const download = await buildWorkspaceFilledReturnDownload(createWorkspace(), createGuidedFlowState());
     const pdf = await PDFDocument.load(download.contents);

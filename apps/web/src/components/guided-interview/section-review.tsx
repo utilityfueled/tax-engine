@@ -268,9 +268,9 @@ function InvestmentSummary({
   );
 }
 
-function DeductionsSummary({ data, filingStatus }: { data: DeductionData | undefined; filingStatus: string | null }) {
+function DeductionsSummary({ data, filingStatus, taxYear }: { data: DeductionData | undefined; filingStatus: string | null; taxYear?: number | null }) {
   const current = data ?? emptyDeductionData;
-  const stdAmount = getStandardDeductionAmount(filingStatus as Parameters<typeof getStandardDeductionAmount>[0]);
+  const stdAmount = getStandardDeductionAmount(filingStatus as Parameters<typeof getStandardDeductionAmount>[0], taxYear);
 
   if (current.method === "standard") {
     return (
@@ -711,7 +711,7 @@ export function SectionReview({
       case "income-unemployment":
         return <UnemploymentSummary data={getSectionData(state, "income-unemployment")} />;
       case "deductions":
-        return <DeductionsSummary data={getSectionData(state, "deductions")} filingStatus={state.segmentation.filingStatus} />;
+        return <DeductionsSummary taxYear={state.taxYear} data={getSectionData(state, "deductions")} filingStatus={state.segmentation.filingStatus} />;
       case "adjustments":
         return <AdjustmentsSummary data={getSectionData(state, "adjustments")} />;
       case "credits":

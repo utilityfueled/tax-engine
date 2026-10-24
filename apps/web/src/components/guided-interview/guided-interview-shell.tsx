@@ -583,6 +583,7 @@ function SectionContent({
     case "deductions":
       return (
         <SectionDeductions
+          taxYear={state.taxYear}
           data={getSectionData(state, "deductions")}
           filingStatus={state.segmentation.filingStatus}
           onDataChange={(data: DeductionData) =>
@@ -1095,13 +1096,13 @@ export function GuidedInterviewShell({
 }) {
   const [flowState, setFlowState] = useState<GuidedFlowState>(() => {
     const browserStorage = getBrowserStorage();
-    return browserStorage ? loadGuidedFlowState(browserStorage, workspace.id) ?? initialFlowState : initialFlowState;
+    return browserStorage ? loadGuidedFlowState(browserStorage, workspace.id) ?? { ...initialFlowState, taxYear: workspace.returnSummary.targetTaxYear } : { ...initialFlowState, taxYear: workspace.returnSummary.targetTaxYear };
   });
 
   useEffect(() => {
     const browserStorage = getBrowserStorage();
-    setFlowState(browserStorage ? loadGuidedFlowState(browserStorage, workspace.id) ?? initialFlowState : initialFlowState);
-  }, [workspace.id]);
+    setFlowState(browserStorage ? loadGuidedFlowState(browserStorage, workspace.id) ?? { ...initialFlowState, taxYear: workspace.returnSummary.targetTaxYear } : { ...initialFlowState, taxYear: workspace.returnSummary.targetTaxYear });
+  }, [workspace.id, workspace.returnSummary.targetTaxYear]);
 
   useEffect(() => {
     if (!resumeSectionId) {
@@ -1125,15 +1126,15 @@ export function GuidedInterviewShell({
   // tax engine on every state change so the refund ticker updates in
   // real time as the user enters data.
   const guidedPreview = useMemo(
-    () => computeGuidedPreview(flowState),
-    [flowState],
+    () => workspace.returnSummary.targetTaxYear != null && flowState.taxYear !== workspace.returnSummary.targetTaxYear ? null : computeGuidedPreview(flowState),
+    [flowState, workspace.returnSummary.targetTaxYear],
   );
   const currentSection = flowState.phase === "interview"
     ? computeFlowProgress(flowState).currentSection
     : null;
 
   function handleSegmentationComplete(answers: SegmentationAnswers) {
-    handleFlowStateChange(startInterview(answers));
+    handleFlowStateChange(startInterview(answers, flowState.taxYear ?? null));
   }
 
   function handleRestart() {
@@ -1142,7 +1143,7 @@ export function GuidedInterviewShell({
     if (browserStorage) {
       clearGuidedFlowState(browserStorage, workspace.id);
     }
-    setFlowState(initialFlowState);
+    setFlowState({ ...initialFlowState, taxYear: workspace.returnSummary.targetTaxYear });
   }
 
   const handleSyncAndExit = useCallback(() => {
@@ -1162,6 +1163,20 @@ export function GuidedInterviewShell({
           Switch to advanced mode
         </button>
       </div>
+
+      <label className="guided-field">
+        <span className="guided-field-label">Tax year for this interview</span>
+        <select className="guided-input" value={flowState.taxYear ?? ""} onChange={(event) => handleFlowStateChange({ ...flowState, taxYear: event.target.value ? Number(event.target.value) : null })}>
+          <option value="">Confirm the tax year</option>
+          <option value="2025">2025 — filed in 2026</option>
+          <option value="2026">2026 — calculation not yet available</option>
+        </select>
+      </label>
+      {flowState.taxYear == null && <p role="status">This saved interview has no confirmed year. Confirm it before calculating.</p>}
+      {workspace.returnSummary.targetTaxYear != null && flowState.taxYear != null && flowState.taxYear !== workspace.returnSummary.targetTaxYear && (
+        <p role="alert">The interview year differs from this workspace's {workspace.returnSummary.targetTaxYear} return. Calculation and PDF download are unavailable until the years agree.</p>
+      )}
+      {flowState.taxYear === 2026 && <p role="status">You can save 2026 facts. The 2026 rules and filing forms are not yet qualified.</p>}
 
       <ReturnHelpDock
         workspace={workspace}
