@@ -37,6 +37,7 @@ async function extractPdfTextWithPdftotext(data: Uint8Array) {
     const { stdout } = await execFileAsync("pdftotext", [filePath, "-"], {
       maxBuffer: 10 * 1024 * 1024,
       encoding: "utf8",
+      timeout: 15_000,
     });
 
     return typeof stdout === "string" && stdout.trim().length > 0 ? stdout : null;
@@ -79,17 +80,20 @@ export async function extractPdfTextFromData(data: Uint8Array) {
   }
 
   const pdfjs = await loadPdfJs();
-  const pdf = await pdfjs.getDocument({ data }).promise;
-  const pageTexts: string[] = [];
-
-  for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
-    const page = await pdf.getPage(pageNumber);
-    const textContent = await page.getTextContent();
-
-    pageTexts.push(groupPageText(textContent.items as ExtractedTextItem[]));
+  const task = pdfjs.getDocument({ data, useWorkerFetch: false });
+  try {
+    const pdf = await task.promise;
+    const pageTexts: string[] = [];
+    for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+      const page = await pdf.getPage(pageNumber);
+      const textContent = await page.getTextContent();
+      pageTexts.push(groupPageText(textContent.items as ExtractedTextItem[]));
+      page.cleanup();
+    }
+    return pageTexts.join("\n\n");
+  } finally {
+    await task.destroy();
   }
-
-  return pageTexts.join("\n\n");
 }
 
 export async function detectUploadedDocumentFromData(

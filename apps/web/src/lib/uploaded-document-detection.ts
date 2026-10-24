@@ -33,7 +33,15 @@ let pdfJsPromise: Promise<typeof import("pdfjs-dist/legacy/build/pdf.mjs")> | nu
 
 async function loadPdfJs() {
   if (!pdfJsPromise) {
-    pdfJsPromise = import("pdfjs-dist/legacy/build/pdf.mjs");
+    pdfJsPromise = import("pdfjs-dist/legacy/build/pdf.mjs").then((pdfjs) => {
+      if (typeof window !== "undefined") {
+        pdfjs.GlobalWorkerOptions.workerPort = new Worker(
+          new URL("pdfjs-dist/legacy/build/pdf.worker.mjs", import.meta.url),
+          { type: "module" },
+        );
+      }
+      return pdfjs;
+    });
   }
 
   return pdfJsPromise;
@@ -69,17 +77,20 @@ export async function extractPdfTextFromFile(file: File) {
   const pdfjs = await loadPdfJs();
   const buffer = await file.arrayBuffer();
   const data = new Uint8Array(buffer);
-  const pdf = await pdfjs.getDocument({ data }).promise;
-  const pageTexts: string[] = [];
-
-  for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
-    const page = await pdf.getPage(pageNumber);
-    const textContent = await page.getTextContent();
-
-    pageTexts.push(groupPageText(textContent.items as ExtractedTextItem[]));
+  const task = pdfjs.getDocument({ data, useWorkerFetch: false });
+  try {
+    const pdf = await task.promise;
+    const pageTexts: string[] = [];
+    for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+      const page = await pdf.getPage(pageNumber);
+      const textContent = await page.getTextContent();
+      pageTexts.push(groupPageText(textContent.items as ExtractedTextItem[]));
+      page.cleanup();
+    }
+    return pageTexts.join("\n\n");
+  } finally {
+    await task.destroy();
   }
-
-  return pageTexts.join("\n\n");
 }
 
 function normalizeParsingText(text: string) {

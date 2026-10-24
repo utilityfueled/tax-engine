@@ -5,9 +5,6 @@ allowBuilds:
   esbuild: true
   sharp: true
 
-# Next 15 pins an older PostCSS; retain the compatible security patch until its
-# framework upgrade removes the need for this override.
 overrides:
-  'next>postcss': 8.5.23
   # The installed OTel SDK peers require <1.10.0 throughout Sentry's tree.
   '@opentelemetry/api': 1.9.0

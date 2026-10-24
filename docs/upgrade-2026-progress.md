@@ -54,3 +54,18 @@ Web type checking and the production build pass. The first full test run had
 requires blank templates and excludes filled returns (48 focused tests pass).
 Browser qualification is in progress; nested main landmarks were reproduced.
 The generated Next type references are retained.
+
+## PDF.js 6 security migration and browser baseline
+
+PDF.js is pinned to 6.4.299, with a matching bundled browser worker. Extraction
+releases pages/loading tasks, disables worker resource fetching, and bounds the
+optional `pdftotext` subprocess to 15 seconds. Providers still receive redacted
+text only. Two real-library synthetic tests check exact text, page order,
+malformed input and subsequent recovery. Web type checking and production build
+pass. The post-migration audit reports zero advisories (488 dependency entries).
+This is an advisory scan, not a security certification or deployed SBOM.
+
+The four browser landmark checks pass after removing nested main elements.
+The full browser baseline exposed obsolete onboarding helpers and was stopped
+after repeated failures; its upload/confirmation/export lifecycle is not yet
+qualified. Next's local generated agent guidance is retained.
