@@ -1033,19 +1033,19 @@ export function ReturnWorkspaceScreen({
 
   if (!workspace && !workspaceLookupComplete) {
     return (
-      <main className="workspace-grid">
+      <div className="workspace-grid">
         <section className="hero">
           <p className="hero-kicker">TAX RETURN</p>
           <h1>Loading your return...</h1>
           <p className="hero-copy">{storageMessage ?? "One moment while we load your tax return."}</p>
         </section>
-      </main>
+      </div>
     );
   }
 
   if (!workspace) {
     return (
-      <main className="workspace-grid">
+      <div className="workspace-grid">
       <section className="hero">
         <p className="hero-kicker">TAX RETURN</p>
         <h1>
@@ -1073,7 +1073,7 @@ export function ReturnWorkspaceScreen({
             </Link>
           </div>
         </section>
-      </main>
+      </div>
     );
   }
 
@@ -1525,7 +1525,7 @@ export function ReturnWorkspaceScreen({
 
   if (guidedMode) {
     return (
-      <main className="workspace-grid">
+      <div className="workspace-grid">
         <GuidedInterviewShell
           workspace={workspace}
           onExitGuided={() => {
@@ -1542,12 +1542,12 @@ export function ReturnWorkspaceScreen({
             setGuidedResumeSectionId(null);
           }}
         />
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="workspace-grid">
+    <div className="workspace-grid">
       <div className="guided-mode-toggle" style={{ justifyContent: "flex-start" }}>
         <button
           className="utility-button utility-button-small"
@@ -2319,6 +2319,6 @@ export function ReturnWorkspaceScreen({
         </div>
       </div>
 
-    </main>
+    </div>
   );
 }

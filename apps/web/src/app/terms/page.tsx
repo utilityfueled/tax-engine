@@ -129,7 +129,7 @@ const sections = [
 
 export default function TermsPage() {
   return (
-    <main className="workspace-grid">
+    <div className="workspace-grid">
       <section className="hero">
         <h1>Terms of Service</h1>
         <p className="hero-copy">
@@ -180,6 +180,6 @@ export default function TermsPage() {
           ))}
         </div>
       </section>
-    </main>
+    </div>
   );
 }

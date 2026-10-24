@@ -86,7 +86,7 @@ const supportedDocs = [
 
 export default function HelpPage() {
   return (
-    <main className="workspace-grid">
+    <div className="workspace-grid">
       <section className="hero">
         <h1>Help Center</h1>
         <p className="hero-copy">
@@ -190,6 +190,6 @@ export default function HelpPage() {
           </ul>
         </div>
       </section>
-    </main>
+    </div>
   );
 }

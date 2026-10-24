@@ -99,7 +99,7 @@ const sections = [
 
 export default function PrivacyPage() {
   return (
-    <main className="workspace-grid">
+    <div className="workspace-grid">
       <section className="hero">
         <h1>Privacy Policy</h1>
         <p className="hero-copy">
@@ -144,6 +144,6 @@ export default function PrivacyPage() {
           ))}
         </div>
       </section>
-    </main>
+    </div>
   );
 }

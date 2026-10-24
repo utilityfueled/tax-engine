@@ -43,7 +43,7 @@ export default async function HomePage() {
   });
 
   return (
-    <main className="workspace-grid">
+    <div className="workspace-grid">
       <section className="hero home-hero">
         <div className="home-hero-copy">
           <p className="hero-kicker">OPEN-SOURCE TAX SOFTWARE // AUDITABLE ENGINE // LOCAL-FIRST</p>
@@ -116,6 +116,6 @@ export default async function HomePage() {
           </article>
         ))}
       </section>
-    </main>
+    </div>
   );
 }
