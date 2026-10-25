@@ -1,9 +1,9 @@
 import * as Sentry from "@sentry/nextjs";
 import {
   resolvePublicSentryDsn,
-  resolveSentryEnvironment,
-  resolveSentryTracesSampleRate
+  resolveSentryEnvironment
 } from "@/lib/sentry";
+import { PRIVATE_TELEMETRY_OPTIONS } from "@/lib/telemetry-privacy";
 
 const dsn = resolvePublicSentryDsn();
 
@@ -11,9 +11,7 @@ Sentry.init({
   dsn: dsn || undefined,
   enabled: Boolean(dsn),
   environment: resolveSentryEnvironment(),
-  tracesSampleRate: resolveSentryTracesSampleRate(),
-  integrations: [Sentry.browserTracingIntegration()],
-  sendDefaultPii: false
+  ...PRIVATE_TELEMETRY_OPTIONS
 });
 
 export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
