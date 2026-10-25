@@ -6,6 +6,7 @@ import { mortgagePaymentAmounts } from "@/lib/guided-mortgage-worksheet";
 import { parseGuidedDisplayAmount } from "@/lib/guided-currency";
 import { CurrencyField } from "./currency-field";
 import { MortgageBalanceSourceFields } from "./mortgage-balance-source-fields";
+import { MortgagePointsHistoryFields } from "./mortgage-points-history-fields";
 
 function Fact({ label, value, onChange }: { label: string; value: boolean | null | undefined; onChange: (value: boolean | null) => void }) {
   return <label className="guided-field"><span className="guided-field-label">{label}</span><select className="guided-input" value={value == null ? "" : String(value)} onChange={event => onChange(event.target.value === "" ? null : event.target.value === "true")}><option value="">Confirm from actual records</option><option value="true">Yes</option><option value="false">No</option></select></label>;
@@ -40,7 +41,8 @@ export function MortgageSourceFields({ entry, onChange }: { entry: MortgageEntry
     <CurrencyField label="Prior-year interest refund (Box 4)" hint="Keep the actual refund. A positive amount requires a separate tax-benefit recovery worksheet." value={entry.refundOfOverpaidInterest ?? ""} onChange={refundOfOverpaidInterest => onChange({ refundOfOverpaidInterest })} required />
     <CurrencyField label="Mortgage insurance premiums reported (Box 5)" hint="This source amount may differ from premiums allocated to this year." value={entry.mortgageInsurancePremiums ?? ""} onChange={mortgageInsurancePremiums => onChange({ mortgageInsurancePremiums })} required />
     <CurrencyField label="Purchase points reported (Box 6)" value={entry.pointsPaid ?? ""} onChange={pointsPaid => onChange({ pointsPaid })} required />
-    {parseGuidedDisplayAmount(entry.pointsPaid).gt(0) && <fieldset className="guided-fieldset"><legend>Current-year purchase points</legend><p className="guided-hint">All conditions must be met for points allocable to this return. Other points require their actual amortization and allocation history.</p>
+    <MortgagePointsHistoryFields entry={entry} onChange={onChange} />
+    {entry.pointsMethod === "current_year" && <fieldset className="guided-fieldset"><legend>Current-year purchase points</legend><p className="guided-hint">All conditions must be met for points allocable to this return. Other points require their actual amortization and allocation history.</p>
       <Text label="Actual points payment date" type="date" value={entry.pointsPaidDate} onChange={pointsPaidDate => onChange({ pointsPaidDate })} />
       <label className="guided-field"><span className="guided-field-label">Actual main-home purpose for these points</span><select className="guided-input" value={entry.pointsUse ?? ""} onChange={event => onChange({ pointsUse: event.target.value as MortgageEntryData["pointsUse"] })}><option value="">Choose actual use</option><option value="purchase">Purchased the main home</option><option value="build">Built the main home</option></select></label>
       {Object.entries(mortgagePointFacts).map(([field, label]) => <Fact key={field} label={label} value={entry[field as keyof typeof mortgagePointFacts]} onChange={value => onChange({ [field]: value })} />)}</fieldset>}
@@ -58,6 +60,6 @@ export function MortgageSourceFields({ entry, onChange }: { entry: MortgageEntry
       </fieldset>}
     </>}
     <Fact label="Have you checked all mortgage source and qualification facts after the last edit?" value={entry.sourceFactsConfirmed} onChange={sourceFactsConfirmed => onChange({ sourceFactsConfirmed })} />
-    <p className="guided-hint">The actual balance worksheet applies debt limits to original loans and completed debt-category sources. Refinancing or home-equity debt requires its original use, balance and payment history. Reverse loans, special property uses, prior-year recoveries and points amortization still need their separate methods.</p>
+    <p className="guided-hint">The actual balance worksheet applies debt limits to original loans and completed debt-category sources. Refinancing and points claims require their original use, payment and amortization records. Reverse loans, special property uses and prior-year tax-benefit recoveries need their separate methods.</p>
   </>;
 }

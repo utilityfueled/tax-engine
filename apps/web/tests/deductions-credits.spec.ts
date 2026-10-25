@@ -113,7 +113,7 @@ test("actual mortgage worksheet survives entry correction and reopening", async 
   ] as const) await sourceInput(name).fill(value);
   for (const [name, value] of [
     ["Borrowers whose payments this return claims", "primary"], ["Actual home use", "main-home"], ["Actual loan type", "original"], ["Actual use of all loan proceeds", "acquisition"],
-    ["Balance method for the home-debt worksheet", "highest_balance"], ["Is the debt legally secured by this qualified home?", "true"],
+    ["Balance method for the home-debt worksheet", "highest_balance"], ["Actual points deduction method", "none"], ["Is the debt legally secured by this qualified home?", "true"],
     ["Do the borrowers claiming the deduction have an ownership interest in this home?", "true"], ["Do borrower and lender intend and require repayment?", "true"],
     ["Was the claimed interest share actually paid by taxpayers on this return?", "true"], ["Does the interest exclude prepaid amounts allocable to a later year?", "true"],
     ["Was any part of this home or debt used for rental or business purposes?", "false"], ["Do you have a mortgage credit certificate for this loan?", "false"],

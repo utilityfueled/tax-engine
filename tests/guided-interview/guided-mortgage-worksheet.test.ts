@@ -38,7 +38,7 @@ describe("actual guided mortgage worksheet", () => {
     }
   });
   it("requires actual points timing and binding contract facts without guessing", () => {
-    const data = facts(); const entry = { ...data.mortgageEntries[0]!, originationDate: "2025-03-01", pointsPaid: "2000", pointsPaidByReturnAmount: "2000", pointsPaidDate: "2025-03-02", pointsUse: "purchase" as const,
+    const data = facts(); const entry = { ...data.mortgageEntries[0]!, originationDate: "2025-03-01", pointsPaid: "2000", pointsPaidByReturnAmount: "2000", pointsPaidDate: "2025-03-02", pointsUse: "purchase" as const, pointsMethod: "current_year" as const,
       pointsOnMainHome: true, pointsEstablishedPractice: true, pointsWithinUsualAmount: true, pointsCashMethod: true, pointsNotServiceFees: true, pointsOwnFundsSufficient: true, pointsPurchaseMainHome: true, pointsPercentageOfPrincipal: true, pointsOnSettlementStatement: true, pointsFullDeductionElected: true };
     expect(buildGuidedMortgageInputs({ ...data, mortgageEntries: [entry] }, 2025, "single").mortgageInterestWorksheet?.loans[0]?.points).toMatchObject({ method: "current_year", paidDate: "2025-03-02", buyBuildOrImproveMainHome: "purchase" });
     expect(() => buildGuidedMortgageInputs({ ...data, mortgageEntries: [{ ...entry, pointsPaidDate: "" }] }, 2025, "single")).toThrow(/date|payment/i);
@@ -54,7 +54,7 @@ describe("actual guided mortgage worksheet", () => {
     const input = buildTaxInputFromGuidedData(state); expect(input?.mortgageInterestWorksheet?.sourceFactsConfirmed).toBe(true);
     const result = calculateFederalTax(TaxYearInputSchema.parse(input));
     expect(result.itemizedDeductions.toString()).toBe("22500"); expect(result.taxableIncome.toString()).toBe("77500");
-    const sellerPoints = { ...facts(), mortgageEntries: [{ ...facts().mortgageEntries[0]!, originationDate: "2025-03-01", pointsPaid: "2000", pointsPaidByReturnAmount: "2000", pointsPaidByOthers: "0", pointsPaidDate: "2025-03-01", pointsUse: "purchase" as const,
+    const sellerPoints = { ...facts(), mortgageEntries: [{ ...facts().mortgageEntries[0]!, originationDate: "2025-03-01", pointsPaid: "2000", pointsPaidByReturnAmount: "2000", pointsPaidByOthers: "0", pointsPaidDate: "2025-03-01", pointsUse: "purchase" as const, pointsMethod: "current_year" as const,
       pointsOnMainHome: true, pointsEstablishedPractice: true, pointsWithinUsualAmount: true, pointsCashMethod: true, pointsNotServiceFees: true, pointsOwnFundsSufficient: true, pointsPurchaseMainHome: true, pointsPercentageOfPrincipal: true, pointsOnSettlementStatement: true, pointsFullDeductionElected: true }] };
     const source = buildGuidedMortgageInputs(sellerPoints, 2025, "single");
     expect(calculateHomeMortgageInterest({ taxpayer: { taxYear: 2025, filingStatus: "single" }, ...source, form1099Misc: [] }).deductiblePoints.toString()).toBe("1500");

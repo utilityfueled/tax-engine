@@ -1,10 +1,11 @@
 import { Form1098Schema, MortgageInterestWorksheetSchema } from "@/models/inputs";
 import { calculateHomeMortgageInterest } from "@/engine/forms/home-mortgage-interest";
 import type { DeductionData, FilingStatus, MortgageEntryData } from "./guided-interview-flow";
-import { mortgageFactErrors, mortgagePointFacts } from "./guided-mortgage-facts";
+import { mortgageFactErrors } from "./guided-mortgage-facts";
 import { amountError, hasEnteredAmount, isActualDate } from "./guided-required-facts";
 import { parseGuidedCurrency } from "./guided-currency";
 import { buildGuidedMortgageBalance } from "./guided-mortgage-balances";
+import { buildGuidedMortgagePoints } from "./guided-mortgage-points";
 
 export interface MortgageWorksheetData {
   sourceTaxYear: string;
@@ -59,9 +60,7 @@ export function buildGuidedMortgageInputs(data: MortgageDeductionData | undefine
   const loans = data.mortgageEntries.map(entry => {
     const amounts = Object.fromEntries(Object.entries(mortgagePaymentAmounts).map(([field, label]) => [field, money(entry[field as keyof typeof mortgagePaymentAmounts], label)])) as Record<keyof typeof mortgagePaymentAmounts, string>;
     const balance = buildGuidedMortgageBalance(entry);
-    const positivePoints = parseGuidedCurrency(amounts.pointsPaidByReturnAmount).minus(amounts.pointsNotInterest).gt(0);
-    if (positivePoints && (!isActualDate(entry.pointsPaidDate) || !entry.pointsPaidDate!.startsWith(`${taxYear}-`) || !["purchase", "build"].includes(entry.pointsUse ?? ""))) throw new Error("Enter the actual points payment date in this tax year and whether the loan purchased or built the main home.");
-    if (positivePoints && Object.keys(mortgagePointFacts).some(field => entry[field as keyof typeof mortgagePointFacts] !== true)) throw new Error("Confirm every current-year points qualification condition.");
+    const points = buildGuidedMortgagePoints(entry, taxYear);
     const transition = entry.loanType === "original" && entry.originationDate >= "2017-12-16" && entry.originationDate < "2018-04-01";
     if (transition && typeof entry.bindingContractApplies !== "boolean") throw new Error("Confirm whether the actual 2017 binding-contract transition applies to this loan.");
     if (!transition && entry.bindingContractApplies === true) throw new Error("The saved binding-contract transition conflicts with this loan's origination date; reconcile the actual dates.");
@@ -74,9 +73,7 @@ export function buildGuidedMortgageInputs(data: MortgageDeductionData | undefine
       interestPaid: amounts.interestPaidByReturnAmount, interestPaidByOthers: amounts.interestPaidByOthers, interestDeductedElsewhere: amounts.interestDeductedElsewhere,
       sameYearInterestRefund: amounts.sameYearInterestRefund, nonqualifiedInterest: amounts.nonqualifiedInterest, pointsPaid: amounts.pointsPaidByReturnAmount,
       pointsPaidByOthers: amounts.pointsPaidByOthers, pointsNotInterest: amounts.pointsNotInterest,
-      points: positivePoints ? { method: "current_year", cashMethod: entry.pointsCashMethod, establishedPractice: entry.pointsEstablishedPractice, withinUsualAmount: entry.pointsWithinUsualAmount,
-        notServiceFees: entry.pointsNotServiceFees, ownFundsSufficient: entry.pointsOwnFundsSufficient, buyBuildOrImproveMainHome: entry.pointsUse, percentageOfPrincipal: entry.pointsPercentageOfPrincipal,
-        onSettlementStatement: entry.pointsOnSettlementStatement, fullDeductionElected: entry.pointsFullDeductionElected, paidDate: entry.pointsPaidDate } : { method: "none" }, balance,
+      points, balance,
       ...(bindingContract ? { bindingContract } : {}),
     };
   });

@@ -1,0 +1,47 @@
+form: "Guided mortgage points history"
+fullName: "Actual ratable and completed mortgage points sources"
+taxYear: 2026
+irsReference: "https://www.irs.gov/publications/p936"
+notes: |
+  Refreshed 2026-10-25. Publication 936 Points, Deduction Allowed Ratably,
+  Refinancing and Mortgage ending early control these original source records.
+  The published4800/240*3=60 and next-year240 examples remain independent
+  oracles. The original points, prior deductions and beginning balance are
+  actual records; the guide never infers prior deductions from elapsed time.
+  Completed worksheets retain their actual method/reference and current/prior
+  source identity. An early payoff permits the remaining points except a
+  same-lender refinance, which spreads that balance over the new term.
+  The existing core methods calculate the allowed amount and debt limitation.
+  Mixed prior unreported and current reported cohorts remain separate because
+  one completed source cannot invent a Schedule A8a/8c allocation.
+lines:
+  - line: "ratable"
+    description: "Actual original points and current payments"
+    formula: "Preserve the original4800 points,100000 principal,240-month term and actual3 monthly payments; forward to the existing ratable method for60. Actual next-year remaining4740 with12 payments gives240 without changing current Box6zero."
+    irsRef: "Publication936 Deduction Allowed Ratably published example"
+    testRef: "tests/guided-interview/guided-mortgage-points-history.test.ts::uses the published ratable points sources and retains prior history with zero current Box6"
+  - line: "completed"
+    description: "Completed source methods and early payoff"
+    formula: "Actual3000 original points less2200 previously deducted leaves800 available. A confirmed current-year loan ending with no same-lender refinancing allows the actual completed800; a same-lender refinance requires its new-loan term and completed spreading worksheet."
+    irsRef: "Publication936 Mortgage ending early published example; Refinancing"
+    testRef: "tests/guided-interview/guided-mortgage-points-history.test.ts::binds completed payoff and refinancing histories without accelerating same-lender points"
+  - line: "source-boundaries"
+    description: "Unknown history and source conservation"
+    formula: "Require an actual points method even when current Box6is0; the current statement cannot establish absence of prior history. Require actual year/reference, original loan identity and date, original points, prior deductions, beginning balance and qualification. Missing differs from zero; false differs from unknown; nonfinite and conflicting originals reject. Current and prior reporting cannot be combined into one invented allocation."
+    irsRef: "Publication936 Points; Form1098 and ScheduleA reported/unreported points"
+    testRef: "tests/guided-interview/guided-mortgage-points-history.test.ts::rejects unknown and contradictory points history while preserving exact actual amounts"
+  - line: "canonical"
+    description: "Prior points deduction reaches the return once"
+    formula: "The actual800 early-payoff balance adds to10000 actual interest, producing10800 itemized deduction and89200 taxable income on100000 wages; original Box6stays0."
+    irsRef: "Publication936 Mortgage ending early; ScheduleA8c and Form1040line12"
+    testRef: "tests/guided-interview/guided-mortgage-points-history.test.ts::transfers actual prior points through the canonical return once"
+  - line: "controls"
+    description: "History controls do not invent past amounts"
+    formula: "A zero current Box6 still exposes source-method controls. Blank records remain unknown; method changes retain actual history, amount and qualification edits revoke loan and annual confirmation."
+    irsRef: "Publication936 original records and amortization history"
+    testRef: "tests/apps/web/mortgage-points-history-interactions.test.tsx::preserves actual mortgage points history and invalidates changed confirmations"
+  - line: "persistence"
+    description: "Local points history stays private through reload"
+    formula: "Desktop and mobile retain exact history amounts and explicit false/unknown, preserve original current Box6, and keep source references and identifiers out of request bodies."
+    irsRef: "Publication936 supporting records; local workspace privacy contract"
+    testRef: "apps/web/tests/guided-mortgage-points-history.spec.ts::preserves actual mortgage points history across reload"

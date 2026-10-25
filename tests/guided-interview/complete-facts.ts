@@ -88,7 +88,7 @@ export const completeMortgageSource = {
   specialCircumstances: false, maximumBalanceDuringYear: "250000", sourceFactsConfirmed: true,
   balanceMethod: "highest_balance" as const, balanceSourceReference: "Synthetic complete annual balance history",
   interestPaidByReturnAmount: "100", interestPaidByOthers: "0", interestDeductedElsewhere: "0", sameYearInterestRefund: "0", nonqualifiedInterest: "0",
-  pointsPaidByReturnAmount: "0", pointsPaidByOthers: "0", pointsNotInterest: "0",
+  pointsPaidByReturnAmount: "0", pointsPaidByOthers: "0", pointsNotInterest: "0", pointsMethod: "none" as const,
   refundOfOverpaidInterest: "0", mortgageInsurancePremiums: "0", pointsPaid: "0", propertyTaxPaid: "0",
   hasMortgageInsuranceAllocation: false,
 };

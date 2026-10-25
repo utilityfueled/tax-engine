@@ -74,7 +74,7 @@ describe("actual mortgage source qualification", () => {
   it("requires the actual current-year purchase points conditions and preserves allocated taxes", () => {
     const state = flow();
     const entry = state.sectionData.deductions!.mortgageEntries![0]!;
-    Object.assign(entry, { originationDate: "2026-02-03", pointsPaid: "100.10", pointsPaidByReturnAmount: "100.10", pointsPaidDate: "2026-02-03", pointsUse: "purchase", pointsOnMainHome: true, pointsEstablishedPractice: true, pointsWithinUsualAmount: true, pointsCashMethod: true, pointsNotServiceFees: true, pointsOwnFundsSufficient: true, pointsPurchaseMainHome: true, pointsPercentageOfPrincipal: true, pointsOnSettlementStatement: true, pointsFullDeductionElected: true, propertyTaxPaid: "0.20", propertyTaxDisbursementConfirmed: true });
+    Object.assign(entry, { originationDate: "2026-02-03", pointsPaid: "100.10", pointsPaidByReturnAmount: "100.10", pointsPaidDate: "2026-02-03", pointsUse: "purchase", pointsMethod: "current_year", pointsOnMainHome: true, pointsEstablishedPractice: true, pointsWithinUsualAmount: true, pointsCashMethod: true, pointsNotServiceFees: true, pointsOwnFundsSufficient: true, pointsPurchaseMainHome: true, pointsPercentageOfPrincipal: true, pointsOnSettlementStatement: true, pointsFullDeductionElected: true, propertyTaxPaid: "0.20", propertyTaxDisbursementConfirmed: true });
     expect(buildTaxInputFromGuidedData(state)?.form1098?.[0]).toMatchObject({ pointsPaid: "100.1", propertyTax: "0.2" });
     expect(computeDeductionComparison("single", state.sectionData.deductions, 2026).itemizedTotal).toBe("200.4");
     entry.pointsOwnFundsSufficient = false;

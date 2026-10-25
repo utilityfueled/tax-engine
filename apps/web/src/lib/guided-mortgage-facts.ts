@@ -4,6 +4,7 @@ import { parseGuidedCurrency } from "./guided-currency";
 import { amountError, isActualDate } from "./guided-required-facts";
 import type { MortgageFirstLastData, MortgageMonthlyData, MortgageInterestRateData } from "./guided-mortgage-balances";
 import type { MortgageDebtCategoryData } from "./guided-mortgage-debt-categories";
+import type { MortgagePointsHistoryData } from "./guided-mortgage-points";
 
 export const mortgagePointFacts = {
   pointsOnMainHome: "Were the points for a loan secured by your main home?",
@@ -51,6 +52,8 @@ export type MortgageSourceData = {
   pointsPaidByOthers?: string;
   pointsNotInterest?: string;
   pointsPaidDate?: string;
+  pointsMethod?: "" | "none" | "current_year" | "ratable" | "completed_amortization";
+  pointsHistory?: MortgagePointsHistoryData;
   pointsUse?: "" | "purchase" | "build";
   bindingContractApplies?: boolean | null;
   bindingContractSignedDate?: string;
@@ -125,7 +128,7 @@ export function mortgageFactErrors(entries: MortgageEntryData[], taxYear?: numbe
     if (validAmount("propertyTaxPaid") && parseGuidedCurrency(entry.propertyTaxPaid).gt(0) && entry.propertyTaxDisbursementConfirmed !== true) error("property-tax", "Confirm actual qualified real estate tax disbursements, excluding escrow deposits, fees, assessments and amounts entered elsewhere.");
     const ownPoints = sourceWorksheet && !amountError(entry.pointsPaidByReturnAmount, "points") && !amountError(entry.pointsNotInterest, "point fees")
       ? parseGuidedCurrency(entry.pointsPaidByReturnAmount).minus(parseGuidedCurrency(entry.pointsNotInterest)) : parseGuidedCurrency(validAmount("pointsPaid") ? entry.pointsPaid : "0");
-    if (validAmount("pointsPaid") && ownPoints.gt(0)) {
+    if (validAmount("pointsPaid") && ownPoints.gt(0) && (!sourceWorksheet || !["ratable", "completed_amortization"].includes(entry.pointsMethod ?? ""))) {
       if (entry.loanType !== "original") error("points-history", "Refinancing points require their actual amortization or separately qualified improvement history before this route can calculate.");
       if (entry.propertyUse !== "main-home") error("points-home", "Purchase points on a second home need their actual amortization worksheet; they cannot use the main-home full-deduction route.");
       if (!year || !entry.originationDate.startsWith(`${year}-`)) error("points-year", "Prior-loan points need their actual amortization history; only qualifying current-year purchase points are supported here.");
