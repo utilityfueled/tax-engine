@@ -16,6 +16,7 @@ import { energyFactErrors } from "./guided-energy-facts";
 import { isStartedW2, w2FactErrors } from "./guided-w2-facts";
 import { investmentFactErrors, isStartedInvestment, type InvestmentSourceData } from "./guided-investment-facts";
 import { businessFactErrors, hasBusinessSourceData, type BusinessSourceData } from "./guided-business-facts";
+import { isStartedRental, rentalFactErrors, type RentalSourceData } from "./guided-rental-facts";
 import { vehicleFactErrors, type VehicleCreditData } from "./guided-vehicle-facts";
 import { adoptionFactErrors, type AdoptionCreditData } from "./guided-adoption-facts";
 
@@ -1468,9 +1469,9 @@ export const rentalPropertyTypeOptions: { value: RentalPropertyType; label: stri
   { value: "other", label: "Other" },
 ];
 
-export interface RentalPropertyEntryData {
+export interface RentalPropertyEntryData extends RentalSourceData {
   description: string;
-  propertyType: RentalPropertyType;
+  propertyType: RentalPropertyType | "";
   rents: string;
   mortgageInterest: string;
   taxes: string;
@@ -1484,7 +1485,7 @@ export interface RentalPropertyEntryData {
 
 export const emptyRentalPropertyEntry: RentalPropertyEntryData = {
   description: "",
-  propertyType: "single_family",
+  propertyType: "",
   rents: "",
   mortgageInterest: "",
   taxes: "",
@@ -1524,10 +1525,6 @@ const EMPTY_SECTION = (label: string, allowSkip = true): SectionValidationResult
 
 function hasNumericValue(value: string | undefined): boolean {
   try { return hasGuidedCurrency(value); } catch { return false; }
-}
-
-function hasTextValue(value: string | undefined): boolean {
-  return typeof value === "string" && value.trim().length > 0;
 }
 
 function validatePersonalInfo(data: PersonalInfoData | undefined, status: FilingStatus | null, taxYear?: number | null): SectionValidationResult {
@@ -1616,47 +1613,10 @@ function validateInvestmentSection(
   return VALID_SECTION;
 }
 
-function validateRentalSection(data: { entries: RentalPropertyEntryData[] } | undefined): SectionValidationResult {
-  if (!data?.entries || data.entries.length === 0) return EMPTY_SECTION("rental property info");
-
-  const filled = data.entries.filter((entry) =>
-    hasTextValue(entry.description)
-    || hasNumericValue(entry.rents)
-    || hasNumericValue(entry.mortgageInterest)
-    || hasNumericValue(entry.taxes)
-    || hasNumericValue(entry.insurance)
-    || hasNumericValue(entry.repairs)
-    || hasNumericValue(entry.utilities)
-    || hasNumericValue(entry.depreciation)
-    || hasNumericValue(entry.otherExpenses)
-  );
-  if (filled.length === 0) return EMPTY_SECTION("rental property info");
-
-  const errors: Record<string, string> = {};
-  filled.forEach((entry, index) => {
-    const hasAmounts = hasNumericValue(entry.rents)
-      || hasNumericValue(entry.mortgageInterest)
-      || hasNumericValue(entry.taxes)
-      || hasNumericValue(entry.insurance)
-      || hasNumericValue(entry.repairs)
-      || hasNumericValue(entry.utilities)
-      || hasNumericValue(entry.depreciation)
-      || hasNumericValue(entry.otherExpenses);
-    if (!hasAmounts) {
-      errors[`rental-${index}-amount`] = `Rental property #${index + 1} needs at least one rent or expense amount.`;
-    }
-  });
-
-  if (Object.keys(errors).length > 0) {
-    return {
-      status: "partial",
-      message: "Some rental entries were started but still need amount fields.",
-      fieldErrors: errors,
-      allowSkip: true,
-    };
-  }
-
-  return VALID_SECTION;
+function validateRentalSection(data: { entries: RentalPropertyEntryData[] } | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null): SectionValidationResult {
+  if (!data?.entries.some(isStartedRental)) return EMPTY_SECTION("rental property info");
+  const errors = rentalFactErrors(data.entries, filingStatus, taxYear);
+  return Object.keys(errors).length ? { status: "partial", message: "Complete the actual rental ownership, use and expense facts.", fieldErrors: errors, allowSkip: true } : VALID_SECTION;
 }
 
 function validateRequiredFacts(errors: Record<string, string>): SectionValidationResult {
@@ -1747,7 +1707,7 @@ export function validateSection(
     case "income-investments":
       return validateInvestmentSection(getSectionData(state, "income-investments"), state.segmentation.filingStatus, state.taxYear, getSectionData(state, "state-return"));
     case "income-rental":
-      return validateRentalSection(getSectionData(state, "income-rental"));
+      return validateRentalSection(getSectionData(state, "income-rental"), state.segmentation.filingStatus, state.taxYear);
     case "income-retirement":
       return validateRetirementSection(getSectionData(state, "income-retirement"));
     case "income-social-security":

@@ -1,4 +1,4 @@
-import { completeNecSource, completeBusinessSection, completeBusinessExpenses } from "./complete-facts";
+import { completeRentalSource, completeNecSource, completeBusinessSection, completeBusinessExpenses } from "./complete-facts";
 import { completeBrokerageSource, completeDividendSource, completeInterestSource, completeTransactionSource } from "./complete-facts";
 import { completeW2Entry, startCompleteInterview as startInterview, completePersonalInfo, completeDependent, completeAocEligibility, completeEducationClaimant, completeHouseholdEmployee } from "./complete-facts";
 import { describe, it, expect } from "vitest";
@@ -1812,12 +1812,12 @@ describe("buildRentalPropertyInputs", () => {
     expect(buildRentalPropertyInputs([])).toEqual([]);
   });
 
-  it("filters out entries with no rents value", () => {
+  it("preserves started entries with unknown or zero rents", () => {
     const entries = [
       { ...emptyRentalPropertyEntry, description: "123 Main St", rents: "" },
       { ...emptyRentalPropertyEntry, description: "456 Oak Ave", rents: "0" },
     ];
-    expect(buildRentalPropertyInputs(entries)).toEqual([]);
+    expect(buildRentalPropertyInputs(entries).map(entry => entry.rents)).toEqual([undefined, "0"]);
   });
 
   it("converts a single rental property with all fields", () => {
@@ -1850,22 +1850,22 @@ describe("buildRentalPropertyInputs", () => {
     });
   });
 
-  it("defaults description to 'Rental Property' when empty", () => {
+  it("preserves an unknown property description", () => {
     const entries = [{ ...emptyRentalPropertyEntry, rents: "12000" }];
     const result = buildRentalPropertyInputs(entries);
-    expect(result[0].description).toBe("Rental Property");
+    expect(result[0].description).toBe("");
   });
 
-  it("converts empty expense fields to '0'", () => {
+  it("preserves empty expense fields as unknown", () => {
     const entries = [{ ...emptyRentalPropertyEntry, rents: "18000" }];
     const result = buildRentalPropertyInputs(entries);
-    expect(result[0].mortgageInterest).toBe("0");
-    expect(result[0].taxes).toBe("0");
-    expect(result[0].insurance).toBe("0");
-    expect(result[0].repairs).toBe("0");
-    expect(result[0].utilities).toBe("0");
-    expect(result[0].depreciation).toBe("0");
-    expect(result[0].otherExpenses).toBe("0");
+    expect(result[0].mortgageInterest).toBeUndefined();
+    expect(result[0].taxes).toBeUndefined();
+    expect(result[0].insurance).toBeUndefined();
+    expect(result[0].repairs).toBeUndefined();
+    expect(result[0].utilities).toBeUndefined();
+    expect(result[0].depreciation).toBeUndefined();
+    expect(result[0].otherExpenses).toBeUndefined();
   });
 
   it("strips commas from monetary values", () => {
@@ -1888,9 +1888,10 @@ describe("buildRentalPropertyInputs", () => {
       { ...emptyRentalPropertyEntry, description: "Property C", rents: "36000" },
     ];
     const result = buildRentalPropertyInputs(entries);
-    expect(result).toHaveLength(2);
+    expect(result).toHaveLength(3);
     expect(result[0].description).toBe("Property A");
-    expect(result[1].description).toBe("Property C");
+    expect(result[1].description).toBe("Property B");
+    expect(result[2].description).toBe("Property C");
   });
 
   it("preserves propertyType for different property types", () => {
@@ -1914,7 +1915,7 @@ describe("buildTaxInputFromGuidedData — rental income", () => {
     });
     state = updateSectionData(state, "income-rental", {
       entries: [{
-        ...emptyRentalPropertyEntry,
+        ...completeRentalSource,
         description: "123 Oak St",
         rents: "30000",
         mortgageInterest: "10000",
@@ -1941,7 +1942,7 @@ describe("buildTaxInputFromGuidedData — rental income", () => {
     expect(input!.rentalProperties).toEqual([]);
   });
 
-  it("filters out rental entries with zero rents", () => {
+  it("keeps an actual zero-rent property", () => {
     let state = startInterview({
       filingStatus: "single",
       incomeTypes: ["rental"],
@@ -1950,13 +1951,14 @@ describe("buildTaxInputFromGuidedData — rental income", () => {
     });
     state = updateSectionData(state, "income-rental", {
       entries: [
-        { ...emptyRentalPropertyEntry, description: "A", rents: "20000" },
-        { ...emptyRentalPropertyEntry, description: "B", rents: "" },
+        { ...completeRentalSource, description: "A", rents: "20000" },
+        { ...completeRentalSource, description: "B", rents: "0" },
       ],
     });
     const input = buildTaxInputFromGuidedData(state);
-    expect(input!.rentalProperties).toHaveLength(1);
+    expect(input!.rentalProperties).toHaveLength(2);
     expect(input!.rentalProperties[0].description).toBe("A");
+    expect(input!.rentalProperties[1].rents).toBe("0");
   });
 });
 
@@ -1970,7 +1972,7 @@ describe("computeGuidedPreview — rental income", () => {
     });
     state = updateSectionData(state, "income-rental", {
       entries: [{
-        ...emptyRentalPropertyEntry,
+        ...completeRentalSource,
         description: "Rental House",
         rents: "30000",
         mortgageInterest: "5000",
@@ -1981,12 +1983,8 @@ describe("computeGuidedPreview — rental income", () => {
     const preview = computeGuidedPreview(state);
     expect(preview).not.toBeNull();
     // Net rental income = 30000 - 5000 - 3000 - 1200 = 20800
-    // Should produce non-zero total income
-    const totalIncome = Number(preview!.totalIncome);
-    expect(totalIncome).toBeGreaterThan(0);
-    // AGI should reflect rental income
-    const agi = Number(preview!.agi);
-    expect(agi).toBeGreaterThan(0);
+    expect(preview!.totalIncome).toBe("20800");
+    expect(preview!.agi).toBe("20800");
   });
 
   it("computes preview with rental loss", () => {
@@ -1998,7 +1996,7 @@ describe("computeGuidedPreview — rental income", () => {
     });
     state = updateSectionData(state, "income-rental", {
       entries: [{
-        ...emptyRentalPropertyEntry,
+        ...completeRentalSource,
         description: "Rental Condo",
         rents: "12000",
         mortgageInterest: "15000",
@@ -2011,7 +2009,7 @@ describe("computeGuidedPreview — rental income", () => {
     expect(preview).not.toBeNull();
     // This is a loss scenario (12000 - 24000 = -12000)
     // Active participation allows up to $25k deduction
-    expect(preview!.refund).toBeDefined();
+    expect(preview!.totalIncome).toBe("-12000");
   });
 });
 

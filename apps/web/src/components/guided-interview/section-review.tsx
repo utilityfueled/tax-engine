@@ -1,6 +1,7 @@
 "use client";
 
 import { isStartedNec, sumKnownBusinessAmounts, type BusinessSourceData } from "@/lib/guided-business-facts";
+import { isStartedRental, knownRentalExpenses } from "@/lib/guided-rental-facts";
 import { isStartedInvestment } from "@/lib/guided-investment-facts";
 import { hasEnteredAmount } from "@/lib/guided-required-facts";
 import { formatGuidedCurrency, parseGuidedDisplayAmount, sumGuidedDisplayAmounts } from "@/lib/guided-currency";
@@ -403,16 +404,14 @@ function UnemploymentSummary({ data }: { data: UnemploymentData | undefined }) {
 function RentalIncomeSummary({ entries }: { entries: RentalPropertyEntryData[] | undefined }) {
   if (!entries || entries.length === 0) return <p className="guided-review-empty">No rental properties entered.</p>;
 
-  const filledEntries = entries.filter((e) => hasValue(e.rents));
+  const filledEntries = entries.filter(isStartedRental);
   if (filledEntries.length === 0) return <p className="guided-review-empty">No rental properties with data entered.</p>;
 
   return (
     <div className="guided-review-card">
       {filledEntries.map((entry, i) => {
-        const totalExpenses = sumGuidedDisplayAmounts([
-          entry.mortgageInterest, entry.taxes, entry.insurance,
-          entry.repairs, entry.utilities, entry.depreciation, entry.otherExpenses,
-        ]);
+        const totalExpenses = knownRentalExpenses(entry);
+        const rents = sumKnownBusinessAmounts([entry.rents]);
 
         return (
           <div key={i} className="guided-review-row">
@@ -420,7 +419,7 @@ function RentalIncomeSummary({ entries }: { entries: RentalPropertyEntryData[] |
               {entry.description || `Property #${i + 1}`}
             </span>
             <span className="guided-review-value">
-              {formatCurrency(entry.rents)} rents{totalExpenses.gt(0) ? `, ${formatCurrency(totalExpenses)} expenses` : ""}
+              {rents === null ? "Unknown rents" : `${formatCurrency(rents)} rents`}, {totalExpenses === null ? "unknown expenses" : `${formatCurrency(totalExpenses)} entered expenses`} before ownership allocation and tax limits
             </span>
           </div>
         );

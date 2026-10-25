@@ -1,4 +1,4 @@
-import { emptyPersonalInfo, emptyW2Entry, emptyNecEntry, emptyScheduleCExpenses, emptyInterestEntry, emptyDividendEntry, emptyCapitalGainTransaction, startInterview, type PersonalInfoData, type SegmentationAnswers, type DependentEntryData, type W2EntryData } from "@/lib/guided-interview-flow";
+import { emptyPersonalInfo, emptyW2Entry, emptyNecEntry, emptyScheduleCExpenses, emptyInterestEntry, emptyDividendEntry, emptyCapitalGainTransaction, emptyRentalPropertyEntry, startInterview, type PersonalInfoData, type SegmentationAnswers, type DependentEntryData, type W2EntryData, type RentalPropertyEntryData } from "@/lib/guided-interview-flow";
 
 /** Explicit synthetic W-2 source facts; blank application fields stay unknown. */
 export const completeW2Entry: W2EntryData = { ...emptyW2Entry, employerName: "Synthetic Employer", employerEin: "12-3456789", accountHolder: "primary", wages: "0", federalWithheld: "0", socialSecurityWages: "0", socialSecurityWithheld: "0", medicareWages: "0", medicareWithheld: "0", stateTaxReporting: "none" };
@@ -64,3 +64,15 @@ export const completeNecSource = { ...emptyNecEntry, payerName: "Synthetic clien
 export const completeBusinessExpenses = Object.fromEntries(Object.keys(emptyScheduleCExpenses).map(key => [key, "0"])) as typeof emptyScheduleCExpenses;
 export const completeBusinessFacts = { accountHolder: "primary" as const, activityDescription: "Independent design services", businessCode: "541430", accountingMethod: "cash" as const, singleBusinessConfirmed: true, incomeReconciled: true, expensesReconciled: true, returnsAndAllowances: "0", costOfGoodsSold: "0", otherIncome: "0", contractLabor: "0", depreciation: "0", legalAndProfessional: "0", w2WagesPaid: "0", ubiaQualifiedProperty: "0", isSST: false, allInvestmentAtRisk: true, priorYearUnallowedLoss: "0", additionalWorksheetRequired: false, otherExpenseDescription: "Fictional qualified business expense", mealsEligibilityConfirmed: true, carExpenseWorksheetConfirmed: true, depreciationWorksheetConfirmed: true };
 export const completeBusinessSection = { necEntries: [], manualGrossReceipts: "0", expenses: completeBusinessExpenses, businessFacts: completeBusinessFacts, qbiMateriallyParticipated: true };
+
+/** Explicit synthetic rental records; none of these answers are application defaults. */
+export const completeRentalSource: RentalPropertyEntryData = {
+  ...emptyRentalPropertyEntry, description: "100 Actual Rental Road, Columbus OH 43215", propertyType: "single_family",
+  accountHolder: "primary", ownershipPercentage: "100", minimumOwnershipPercentage: "100", personalUseDays: "0", rentalDays: "300", sourceFactsConfirmed: true,
+  heldForRental: true, amountsAreWholeProperty: true, isActiveParticipant: true, allInvestmentAtRisk: true,
+  realEstateProfessional: false, substantialServices: false, selfRental: false, additionalWorksheetRequired: false,
+  priorYearUnallowedLoss: "0", priorYearUnallowedCredits: "0", qualifiesForQBI: false, qbiMateriallyParticipated: false,
+  advertising: "0", autoTravel: "0", cleaning: "0", commissions: "0", legalProfessional: "0", managementFees: "0", otherInterest: "0", supplies: "0",
+  rents: "0", mortgageInterest: "0", taxes: "0", insurance: "0", repairs: "0", utilities: "0", depreciation: "0", otherExpenses: "0",
+  depreciationWorksheetConfirmed: true, autoTravelWorksheetConfirmed: true, otherExpenseDescription: "Actual qualified miscellaneous costs",
+};

@@ -1,8 +1,8 @@
 // Spec: spec/federal/guided-input.yaml, care-and-qbi-qualification
 import { describe, expect, it } from "vitest";
 import { buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
-import { emptyCreditsData, emptyRentalPropertyEntry, validateSection } from "@/lib/guided-interview-flow";
-import { startCompleteInterview, completeBusinessSection } from "./complete-facts";
+import { emptyCreditsData, validateSection } from "@/lib/guided-interview-flow";
+import { startCompleteInterview, completeBusinessSection, completeRentalSource } from "./complete-facts";
 
 describe("credit and business qualification facts", () => {
   it("preserves actual care earned income benefits and ineligibility without household-income inference", () => {
@@ -23,7 +23,7 @@ describe("credit and business qualification facts", () => {
     for (const participation of [undefined, false, true]) {
       const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["self-employment", "rental"], lifeEvents: [], stateCode: null });
       state.sectionData["income-self-employment"] = { ...completeBusinessSection, manualGrossReceipts: "5000", qbiMateriallyParticipated: participation };
-      state.sectionData["income-rental"] = { entries: [{ ...emptyRentalPropertyEntry, description: "Example House", rents: "5000", qbiMateriallyParticipated: participation }] };
+      state.sectionData["income-rental"] = { entries: [{ ...completeRentalSource, description: "Example House", rents: "5000", qualifiesForQBI: true, qbiW2Wages: "0", qbiUBIA: "0", qbiIsSST: false, qbiMateriallyParticipated: participation }] };
       const input = buildTaxInputFromGuidedData(state);
       if (participation === undefined) { expect(input).toBeNull(); continue; }
       expect(input?.scheduleC?.qbiMateriallyParticipated).toBe(participation);

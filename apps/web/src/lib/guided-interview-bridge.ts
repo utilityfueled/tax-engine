@@ -21,6 +21,7 @@ import { careFactErrors } from "./guided-credit-facts";
 import { energyFactErrors } from "./guided-energy-facts";
 import { w2FactErrors } from "./guided-w2-facts";
 import { businessFactErrors, hasBusinessSourceData, isStartedNec, sumKnownBusinessAmounts, type BusinessSourceData } from "./guided-business-facts";
+import { isStartedRental, rentalFactErrors, rentalExpenseFields } from "./guided-rental-facts";
 import { investmentFactErrors, isStartedInvestment, type InvestmentSourceData } from "./guided-investment-facts";
 
 import type {
@@ -172,7 +173,10 @@ export function buildScheduleCInput(
 ) {
   const sources = (necEntries ?? []).filter(isStartedNec);
   if (!sources.length && !hasEnteredAmount(manualGrossReceipts) && !Object.values(expenses ?? {}).some(hasEnteredAmount) && !businessFacts) return undefined;
-  const totalGross = sumKnownBusinessAmounts([...sources.map(entry => entry.nonemployeeCompensation), manualGrossReceipts]);
+  const receiptAmounts = [...sources.map(entry => entry.nonemployeeCompensation), manualGrossReceipts]
+    .map(value => hasEnteredAmount(value) ? parseGuidedCurrency(value) : null);
+  const totalGross = receiptAmounts.every(value => value !== null)
+    ? receiptAmounts.reduce((sum, value) => sum.plus(value), new Decimal(0)) : null;
 
   return {
     grossReceipts: totalGross?.toFixed(),
@@ -427,19 +431,25 @@ export function buildUnemploymentInputs(data: UnemploymentData | undefined) {
 export function buildRentalPropertyInputs(entries: RentalPropertyEntryData[] | undefined) {
   if (!entries || entries.length === 0) return [];
   return entries
-    .filter((e) => hasValue(e.rents))
+    .filter(isStartedRental)
     .map((e) => ({
-      description: e.description || "Rental Property",
-      propertyType: e.propertyType,
-      rents: toDecimalString(e.rents),
-      mortgageInterest: toDecimalString(e.mortgageInterest),
-      taxes: toDecimalString(e.taxes),
-      insurance: toDecimalString(e.insurance),
-      repairs: toDecimalString(e.repairs),
-      utilities: toDecimalString(e.utilities),
-      depreciation: toDecimalString(e.depreciation),
-      otherExpenses: toDecimalString(e.otherExpenses),
+      description: e.description?.trim() ?? "",
+      propertyType: e.propertyType || undefined,
+      accountHolder: e.accountHolder || undefined,
+      sourceFactsConfirmed: e.sourceFactsConfirmed ?? undefined,
+      ownershipPercentage: toOptionalDecimalString(e.ownershipPercentage),
+      personalUseDays: /^\d+$/.test(e.personalUseDays ?? "") ? Number(e.personalUseDays) : undefined,
+      rentalDays: /^\d+$/.test(e.rentalDays ?? "") ? Number(e.rentalDays) : undefined,
+      isActiveParticipant: e.isActiveParticipant ?? undefined,
+      allInvestmentAtRisk: e.allInvestmentAtRisk ?? undefined,
+      rents: toOptionalDecimalString(e.rents),
+      ...Object.fromEntries(rentalExpenseFields.map(([field]) => [field, toOptionalDecimalString(e[field])])) as Record<typeof rentalExpenseFields[number][0], string | undefined>,
+      otherExpenseDescription: e.otherExpenseDescription?.trim() || undefined,
+      qualifiesForQBI: e.qualifiesForQBI ?? undefined,
       qbiMateriallyParticipated: e.qbiMateriallyParticipated ?? undefined,
+      qbiW2Wages: toOptionalDecimalString(e.qbiW2Wages),
+      qbiUBIA: toOptionalDecimalString(e.qbiUBIA),
+      qbiIsSST: e.qbiIsSST ?? undefined,
     }));
 }
 
@@ -541,6 +551,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     assertKnownFacts(w2FactErrors(w2Data?.entries, segmentation.filingStatus));
     assertKnownFacts(investmentFactErrors(investData, segmentation.filingStatus, state.taxYear, stateReturnData));
     assertKnownFacts(businessFactErrors(seData, segmentation.filingStatus, w2Data?.entries, stateReturnData));
+    assertKnownFacts(rentalFactErrors(rentalData?.entries, segmentation.filingStatus, state.taxYear));
     assertKnownFacts(deductionFactErrors(deductionData, state.taxYear));
     assertKnownFacts(allPaymentFactErrors(paymentData, state.taxYear));
     assertKnownFacts(retirementFactErrors(retirementData?.entries));
