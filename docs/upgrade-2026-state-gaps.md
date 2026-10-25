@@ -77,3 +77,22 @@ original scenario assertions. Engine types, spec references and scoped lint pass
 Evidence: `.local/upgrade-evidence/pa-interest-source-green.log`,
 `pa-bond-source-red.log`, `pa-interest-{nonresident,types,spec,lint}.log`.
 Independent review and 2026 state/form qualification remain outstanding.
+
+## Ohio investment withholding — 2026-10-25
+
+The withholding schedule, resident adapter and guided review-packet overlay now
+include actual Ohio amounts from 1099-INT Box 17 and 1099-DIV/1099-B Box 16.
+Other-state and unidentified-state amounts stay excluded. Decimal sums preserve
+cents and large values; an explicit zero override remains zero. Review reference
+pages include each source category in the audit, without filing qualification.
+
+Sources refreshed: [Ohio 2025 IT 1040 booklet, page 17, line 14](https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf),
+[IRS 1099-INT state information](https://www.irs.gov/instructions/i1099int),
+[1099-DIV state information](https://www.irs.gov/instructions/i1099div), and
+[1099-B state information](https://www.irs.gov/instructions/i1099b).
+Revisions and formulas are in the two Ohio specs. Four source/adapter/download
+regressions failed before the change. All 133 focused tests in five files now
+pass, including generated PDF text. Engine/web types and all 3,289 then-current
+spec references pass; scoped lint has zero errors and 13 existing test warnings.
+Evidence: `.local/upgrade-evidence/oh-investment-withholding-{red,green}.log`
+and `oh-investment-{types,spec,lint}.log`. This is local synthetic evidence.

@@ -18,6 +18,7 @@ import { describe, expect, it } from "vitest";
 import { calculateFederalTax } from "@/engine/federal.js";
 import { fillOhioReferenceForms } from "@/pdf/fill-oh-reference-forms.js";
 import { simpleW2Fixture } from "../fixtures/simple-w2.js";
+import { TaxYearInputSchema } from "@/models/inputs.js";
 
 async function makeOutputDir() {
   return mkdtemp(join(tmpdir(), "tax-engine-oh-packet-"));
@@ -83,6 +84,25 @@ function makeOhioUnderpaymentFixture() {
 }
 
 describe("Ohio reference packet summaries", () => {
+  it("renders investment statement withholding in the Ohio audit summary", async () => {
+    const outputDir = await makeOutputDir();
+    try {
+      const input = TaxYearInputSchema.parse({
+        ...makeOhioFixture(), w2s: [],
+        form1099Int: [{ payer: "Synthetic bank", interestIncome: "100", state: "OH", stateWithheld: "10.10" }],
+        form1099Div: [{ payer: "Synthetic fund", ordinaryDividends: "100", state: "OH", stateWithheld: "20.20" }],
+        form1099B: [{ broker: "Synthetic broker", state: "OH", stateWithheld: "30.30", transactions: [] }],
+      });
+      const packet = await fillOhioReferenceForms(input, calculateFederalTax(input), outputDir);
+      const withholding = packet.filledForms.find(path => basename(path) === "oh-schedule-of-withholding-reference.pdf");
+      expect(withholding).toBeDefined();
+      if (!withholding) throw new Error("Expected investment withholding summary");
+      const text = extractPdfText(withholding);
+      for (const source of ["1099-INT", "1099-DIV", "1099-B"]) expect(text).toContain(`Ohio withholding from ${source} statements`);
+      expect(text).toContain("Value: 60.6");
+    } finally { await rm(outputDir, { recursive: true, force: true }); }
+  });
+
   it("fillOhioReferenceForms keeps the Ohio IT 1040 packet artifact reference-only and limited to supported computed lines", async () => {
     const outputDir = await makeOutputDir();
 

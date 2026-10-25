@@ -20,6 +20,17 @@ notes: |
     - 1099-K box 8 when the 1099-K state is Ohio
     - 1099-NEC box 5 when the 1099-NEC state is Ohio
     - 1099-MISC box 16 when the 1099-MISC state is Ohio
+    - 1099-INT box 17, 1099-DIV box 16, and 1099-B box 16 when the state is Ohio
+
+  Investment source boxes refreshed 2026-10-25 from IRS continuous-use
+  Instructions for Forms 1099-INT/OID (01/2024), Form 1099-DIV (01/2024), and
+  Form 1099-B (2026), State Information sections:
+    https://www.irs.gov/instructions/i1099int
+    https://www.irs.gov/instructions/i1099div
+    https://www.irs.gov/instructions/i1099b
+  Ohio booklet page 17, line 14 includes Ohio withholding on 1099 statements.
+  These audit categories support its Part A total; they are not official
+  numbered rows of a filled Schedule of Ohio Withholding. Human review pending.
 
   School district withholding is not part of this schedule. W-2 local/school
   district withholding belongs on SD 100, not IT 1040.
@@ -124,9 +135,24 @@ lines:
       Form 1099-MISC.
     testRef: "tests/engine/state/oh-schedule-of-withholding.test.ts::Ohio Schedule of Withholding Line 5b - 1099-MISC Ohio withholding"
 
+  - line: "5c"
+    description: "Ohio withholding from 1099-INT statements"
+    formula: "Sum actual 1099-INT box 17 where state box 15 = OH (case-insensitive)"
+    testRef: "tests/engine/state/oh-investment-withholding.test.ts::Ohio includes only actual Ohio investment withholding in its audit and total"
+
+  - line: "5d"
+    description: "Ohio withholding from 1099-DIV statements"
+    formula: "Sum actual 1099-DIV box 16 where state box 14 = OH (case-insensitive)"
+    testRef: "tests/engine/state/oh-investment-withholding.test.ts::Ohio includes only actual Ohio investment withholding in its audit and total"
+
+  - line: "5e"
+    description: "Ohio withholding from 1099-B statements"
+    formula: "Sum actual 1099-B box 16 where state box 14 = OH (case-insensitive)"
+    testRef: "tests/engine/state/oh-investment-withholding.test.ts::Ohio includes only actual Ohio investment withholding in its audit and total"
+
   - line: "6"
     description: "Total Ohio withholding for IT 1040 line 14"
-    formula: "Line 1 + Line 2 + Line 3 + Line 4 + Line 5 + Line 5a + Line 5b"
+    formula: "Line 1 + Line 2 + Line 3 + Line 4 + Line 5 + Line 5a + Line 5b + Line 5c + Line 5d + Line 5e"
     inputs:
       - "Ohio withholding from supported income statements"
     edgeCases:

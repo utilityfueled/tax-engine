@@ -97,6 +97,9 @@ lines:
         - Line 5: 1099-R box 14 where 1099-R state = 'OH'
         - Line 5a: 1099-NEC box 5 where 1099-NEC state = 'OH'
         - Line 5b: 1099-MISC box 16 where 1099-MISC state = 'OH'
+        - Line 5c: 1099-INT box 17 where 1099-INT state = 'OH'
+        - Line 5d: 1099-DIV box 16 where 1099-DIV state = 'OH'
+        - Line 5e: 1099-B box 16 where 1099-B state = 'OH'
     formula: |
       calculateOhioScheduleOfWithholding({
         w2s,
@@ -105,7 +108,10 @@ lines:
         form1099K,
         form1099R,
         form1099Nec,
-        form1099Misc
+        form1099Misc,
+        form1099Int,
+        form1099Div,
+        form1099B
       }).line6_totalOhioWithholding
     notes: |
       Ohio IT 1040 line 14 flows from the Schedule of Ohio Withholding. The
@@ -113,7 +119,10 @@ lines:
       Withholding module so the state withholding path has its own spec and
       audit trail. In addition to the booklet's W-2, W-2G, and 1099 examples,
       the engine supports the modeled 1099 forms that can carry Ohio
-      withholding: 1099-G, 1099-K, 1099-R, 1099-NEC, and 1099-MISC.
+      withholding: 1099-G, 1099-K, 1099-R, 1099-NEC, 1099-MISC, 1099-INT,
+      1099-DIV, and 1099-B. The guided packet override includes those same
+      sources before adding separately confirmed state payments. Source revisions
+      and references are recorded in oh-schedule-of-withholding.yaml.
     edgeCases:
       - "No Ohio withholding statements -> $0"
       - "Multiple Ohio W-2, W-2G, 1099-G, 1099-K, 1099-R, 1099-NEC, and 1099-MISC statements are summed together"

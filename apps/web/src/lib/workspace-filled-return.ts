@@ -430,6 +430,9 @@ function buildOhioOverlayFromGuidedState(
     taxInput.form1099R,
     taxInput.form1099Nec,
     taxInput.form1099Misc,
+    taxInput.form1099Int,
+    taxInput.form1099Div,
+    taxInput.form1099B,
   );
 
   const overlay: OhioOverlayInput = {};

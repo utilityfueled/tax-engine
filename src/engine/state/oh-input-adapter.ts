@@ -20,6 +20,8 @@ import type {
   W2,
   Form1099R,
   Form1099Int,
+  Form1099Div,
+  Form1099B,
   Form1099G,
   Form1099K,
   Form1099Misc,
@@ -213,7 +215,7 @@ export interface OhioOverlayInput {
  * Ohio IT 1040 line 14 flows from the Schedule of Ohio Withholding, which
  * includes Ohio amounts from W-2, W-2G, and 1099 income statements. This
  * adapter supports the modeled 1099 variants that can carry state withholding:
- * 1099-G, 1099-K, 1099-R, 1099-NEC, and 1099-MISC.
+ * 1099-G, 1099-K, 1099-R, 1099-NEC, 1099-MISC, 1099-INT, 1099-DIV, and 1099-B.
  */
 export function extractOhioWithholding(
   w2s: W2[],
@@ -223,6 +225,9 @@ export function extractOhioWithholding(
   form1099Rs: Form1099R[] = [],
   form1099Necs: Form1099Nec[] = [],
   form1099Miscs: Form1099Misc[] = [],
+  form1099Ints: Form1099Int[] = [],
+  form1099Divs: Form1099Div[] = [],
+  form1099Bs: Form1099B[] = [],
 ): Decimal {
   return calculateOhioScheduleOfWithholding({
     w2s,
@@ -232,6 +237,9 @@ export function extractOhioWithholding(
     form1099Rs,
     form1099Necs,
     form1099Miscs,
+    form1099Ints,
+    form1099Divs,
+    form1099Bs,
   }).line6_totalOhioWithholding;
 }
 
@@ -733,6 +741,9 @@ export function buildOhioResidentReturnInput(
           form1099Rs,
           form1099Necs,
           form1099Miscs,
+          form1099Ints,
+          taxInput.form1099Div,
+          taxInput.form1099B,
         );
 
   const sdWithholding =

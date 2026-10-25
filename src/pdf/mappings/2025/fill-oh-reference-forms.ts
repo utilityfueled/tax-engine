@@ -10,6 +10,7 @@ import {
 } from "pdf-lib";
 import type { TaxYearInput } from "@/models/inputs.js";
 import type { CalculatedLine, TaxReturnResult } from "@/models/outputs.js";
+import { d } from "@/utils/decimal.js";
 import {
   buildOhioResidentReturnInput,
   extractOhioWithholding,
@@ -257,6 +258,9 @@ export async function fillOhioReferenceForms(
     form1099Rs: taxInput.form1099R,
     form1099Necs: taxInput.form1099Nec,
     form1099Miscs: taxInput.form1099Misc,
+    form1099Ints: taxInput.form1099Int,
+    form1099Divs: taxInput.form1099Div,
+    form1099Bs: taxInput.form1099B,
   });
   const lumpSumDistributionWorksheet = getLumpSumDistributionWorksheet(ohioInput);
 
@@ -310,10 +314,13 @@ export async function fillOhioReferenceForms(
     taxInput.form1099R,
     taxInput.form1099Nec,
     taxInput.form1099Misc,
+    taxInput.form1099Int,
+    taxInput.form1099Div,
+    taxInput.form1099B,
   );
   const totalWithholding = overlay.ohioWithholdingOverride ?? additionalWithholding;
 
-  if (withholdingResult.line6_totalOhioWithholding.gt(0) || Number(totalWithholding) > 0) {
+  if (withholdingResult.line6_totalOhioWithholding.gt(0) || d(totalWithholding).gt(0)) {
     filledForms.push(
       await createReferencePdf(
         {

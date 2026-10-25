@@ -13,7 +13,7 @@ import { buildWorkspaceStructuredFacts } from "@tax-engine/engine";
 import { buildWorkspaceFilledReturnDownload } from "../../../apps/web/src/lib/workspace-filled-return";
 import type { GuidedFlowState } from "../../../apps/web/src/lib/guided-interview-flow";
 import * as ohioReferenceForms from "../../../src/pdf/fill-oh-reference-forms";
-import { completePersonalInfo, completeW2Entry } from "../../guided-interview/complete-facts";
+import { completePersonalInfo, completeW2Entry, completeInterestSource, completeDividendSource, completeBrokerageSource } from "../../guided-interview/complete-facts";
 
 vi.mock("server-only", () => ({}));
 
@@ -249,6 +249,27 @@ print("\\n".join((page.extract_text() or "") for page in reader.pages))
 }
 
 describe("Ohio workspace packet disclosure", () => {
+  // Specs: spec/state/oh-input-adapter.yaml, spec/state/oh-schedule-of-withholding.yaml.
+  it("includes actual investment withholding before additional payment overlays", async () => {
+    const guidedState = createGuidedFlowStateWithOhioStateSelection();
+    guidedState.segmentation.incomeTypes.push("investments");
+    guidedState.sectionData["income-investments"] = {
+      interestEntries: [{ ...completeInterestSource, interestIncome: "100", stateTaxReporting: "single", state: "OH", stateWithheld: "0.10" }],
+      dividendEntries: [{ ...completeDividendSource, ordinaryDividends: "100", stateTaxReporting: "single", state: "OH", stateWithheld: "0.20" }],
+      brokerageEntries: [{ ...completeBrokerageSource, stateTaxReporting: "single", state: "OH", stateWithheld: "0.30" }],
+    };
+    guidedState.sectionData["state-return"] = {
+      additionalStateWithholding: "0.4",
+      additionalStateWithholdingEntries: [{ payer: "Other pension", documentType: "1099-R", state: "OH", taxYear: "2025", amount: "0.4" }],
+      stateEstimatedPayments: [],
+    };
+    const packet = vi.spyOn(ohioReferenceForms, "fillOhioReferenceForms").mockResolvedValue({ filledForms: [] });
+    try {
+      await buildWorkspaceFilledReturnDownload(createWorkspace(), guidedState);
+      expect(packet.mock.calls[0]?.[3]).toEqual({ ohioWithholdingOverride: "3751" });
+    } finally { packet.mockRestore(); }
+  });
+
   // Spec: spec/federal/guided-input.yaml, state-payment-sources
   it("passes exact classified state amounts to the review packet overlay", async () => {
     const guidedState = createGuidedFlowStateWithOhioStateSelection();
