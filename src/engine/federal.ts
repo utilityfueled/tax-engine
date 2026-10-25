@@ -53,7 +53,7 @@ import { calculateScheduleE } from "./schedules/schedule-e.js";
 import { calculateScheduleSE } from "./schedules/schedule-se.js";
 import { calculateHomeMortgageInterest } from "./forms/home-mortgage-interest.js";
 import { calculateScheduleA } from "./schedules/schedule-a.js";
-import { calculateSchedule1A } from "./schedules/schedule-1-a.js";
+import { calculateSchedule1AReturn } from "./forms/schedule-1-a-return.js";
 import { calculateItemizedDeductionLimit } from "./forms/itemized-deduction-limit.js";
 import { calculateStandardDeduction } from "./forms/standard-deduction.js";
 import { calculateStateLocalIncomeTaxDeduction } from "./forms/state-local-income-tax-deduction.js";
@@ -2224,22 +2224,6 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     ? "itemized" : "standard";
   let deductionAmount = deductionUsed === "itemized" ? itemizedDeductions : standardDeduction;
 
-  if (input.schedule1A?.businessTips.length) {
-    throw new Error("Schedule 1-A business tips require unsupported business-level QBI coordination");
-  }
-  const schedule1A = input.schedule1A ? calculateSchedule1A({
-    taxpayer: input.taxpayer,
-    agi,
-    foreignExcludedIncome: form2555IncomeReduction.plus(form2555HousingDeduction),
-    facts: input.schedule1A,
-    standardDeductionFacts: input.standardDeductionFacts,
-  }) : undefined;
-  let nonitemizerCharitableDeduction = deductionUsed === "standard" ? schedA.nonitemizerCharitableDeduction : d("0");
-  let additionalDeductions = (schedule1A?.totalDeduction ?? d("0")).plus(nonitemizerCharitableDeduction);
-  if (schedule1A) audit.merge(schedule1A.lines);
-  audit.record("1040", "13b", "Additional deductions from Schedule 1-A", schedule1A?.totalDeduction ?? d("0"),
-    "Schedule 1-A line 38; no change to AGI or payroll taxes");
-
   // Section 199A deductions follow the individual and the contributing trade.
   const ownerOf = (owner?: "primary" | "spouse") => owner ?? (filingStatus !== "married_filing_jointly" ? "primary" : undefined);
   const necOwnersForQBI = new Set(input.form1099Nec.filter(f => !d(f.nonemployeeCompensation).isZero()).map(f => f.accountHolder));
@@ -2264,7 +2248,21 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     sourceFactsVerified:schedSE.sourceFactsVerified,allocation:input.qbiDeductionAllocations,
     healthInsuranceSources:actualHealthInsurance?.healthSources,retirementPlanSources:actualHealthInsurance?.retirementSources});
   audit.merge(qbiSourceDeductions.lines);
-  const qbiSources: QBISource[] = qbiSourceDeductions.sources.filter(source=>!source.qbi.isZero());
+  const schedule1AReturn = input.schedule1A ? calculateSchedule1AReturn({
+    input, agi, foreignExcludedIncome: form2555IncomeReduction.plus(form2555HousingDeduction), tipPayroll, scheduleC: schedC,
+    businessSources: deductionSources, adjustedBusinessSources: qbiSourceDeductions.sources,
+    businessDeductionsVerified: qbiSourceDeductions.sourceFactsVerified,
+  }) : undefined;
+  const schedule1A = schedule1AReturn?.schedule1A;
+  let nonitemizerCharitableDeduction = deductionUsed === "standard" ? schedA.nonitemizerCharitableDeduction : d("0");
+  let additionalDeductions = (schedule1A?.totalDeduction ?? d("0")).plus(nonitemizerCharitableDeduction);
+  if (schedule1A) audit.merge(schedule1A.lines);
+  if (schedule1AReturn) audit.merge(schedule1AReturn.lines);
+  audit.record("1040", "13b", "Additional deductions from Schedule 1-A", schedule1A?.totalDeduction ?? d("0"),
+    "Schedule 1-A line 38; no change to AGI or payroll taxes");
+  const qbiSources: QBISource[] = qbiSourceDeductions.sources.map(source => ({ ...source,
+    qbi: source.qbi.minus(schedule1AReturn?.businessQbiExclusions.find(row => row.sourceId === source.id)?.amount ?? d("0")),
+  })).filter(source=>!source.qbi.isZero());
   // K-1 Form 1041 Box 14 Code I: QBI from estates/trusts
   // Trust QBI is NOT self-employment income — no SE tax adjustment needed
   for (const k1 of k1Form1041s) {

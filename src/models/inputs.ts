@@ -5320,7 +5320,7 @@ export const Schedule1ASchema = z.object({
     employer: z.string().trim().min(1),
     w2SourceIds: z.array(z.string().trim().min(1)).optional(),
     form4137EmployerSourceId: z.string().trim().min(1).optional(),
-    reportingMethod: z.enum(["w2", "employer_statement", "form4070"]).optional(),
+    reportingMethod: z.enum(["w2", "employer_statement", "form4070", "form4137"]).optional(),
     reportingSourceReference: z.string().trim().min(1).optional(),
     reportedEmployerTips: schedule1AMoney.optional(),
     qualifiedW2Tips: schedule1AMoney,
