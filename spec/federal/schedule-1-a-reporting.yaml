@@ -1,0 +1,19 @@
+form: "Schedule1-A source reporting"
+fullName: "Actual year-specific wage and information-return tip and overtime reporting"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/iw2w3"
+notes: |
+  Sources refreshed October25: final2026 W2 instructions; posted December2026
+  continuous-use1099MISC/NEC and1099K instructions explicitly apply to2026 returns.
+  TD10044 section1.224-1(d) permits aggregate reporting only for2025. Amounts
+  remain part of ordinary wages/compensation; these source fields add no income.
+lines:
+  - line: "W2-TP-TT-TTOC"
+    description: "Preserve actual W2 source year and new source reporting"
+    formula: "Optional taxYear, Box12TP cash tips, Box12TT qualified overtime and Box14b TTOC retain known zero and unknown separately. Do not manufacture reported source facts from a return-year selection or a deduction claim."
+    testRef: "tests/models/schedule-1-a-reporting.test.ts::preserves actual W2 year and reporting amounts without defaulting unknown"
+  - line: "1099-cash-overtime"
+    description: "Preserve actual2026 information-return reporting"
+    formula: "NEC1b and MISC13a cash tips, NEC1d and MISC14 overtime, and K1c cash tips are separate source fields already included in underlying gross income. TTOC metadata permits actual000 (nonqualifying occupation); it does not itself establish eligibility."
+    irsRef: "https://www.irs.gov/instructions/i1099mec ; https://www.irs.gov/instructions/i1099k"
+    testRef: "tests/models/schedule-1-a-reporting.test.ts::preserves the actual2026 information-return reporting boxes"

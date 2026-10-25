@@ -11,6 +11,8 @@ import { d } from "@/utils/decimal.js";
 const decimal = z.string().regex(/^-?\d+(\.\d+)?$/, "Must be a decimal number");
 const optionalDecimal = decimal.optional().default("0");
 const optionalDecimalInput = decimal.optional();
+const reportedTipOrOvertimeAmount = decimal.pipe(z.string().refine(value => d(value).isFinite() && d(value).gte(0), "Reported amount must be finite and nonnegative"));
+const reportedTippedOccupationCodes = z.array(z.string().regex(/^\d{3}$/)).max(2).refine(codes => new Set(codes).size === codes.length, "Duplicate reported occupation code");
 const ROTH_CODE_WITHOUT_COMPANIONS = new Set(["Q", "T"]);
 const CODE_J_ALLOWED_COMPANIONS = new Set(["8", "P", "S"]);
 const CODE_Y_ALLOWED_COMPANIONS = new Set(["4", "7", "K"]);
@@ -76,6 +78,7 @@ export const TaxpayerSchema = z.object({
 });
 
 export const W2Schema = z.object({
+  taxYear: z.number().int().optional(),
   employer: z.object({
     name: z.string(),
     ein: z.string(),
@@ -95,6 +98,9 @@ export const W2Schema = z.object({
   box12CodeBB: optionalDecimal, // Box 12 code BB designated Roth contributions under section 403(b)
   box12CodeEE: optionalDecimal, // Box 12 code EE designated Roth contributions under governmental section 457(b)
   box12CodeT: optionalDecimal, // Box 12 code T employer-provided adoption benefits
+  box12CodeTP: reportedTipOrOvertimeAmount.optional(), // 2026 Box12TP total reported cash tips; already included in wages.
+  box12CodeTT: reportedTipOrOvertimeAmount.optional(), // 2026 Box12TT qualified overtime; already included in wages.
+  treasuryTippedOccupationCodes: reportedTippedOccupationCodes.optional(), // 2026 Box14b; 000 is an actual nonqualifying occupation.
   socialSecurityWages: optionalDecimalInput, // Box 3; omitted is not a verified zero
   socialSecurityTips: optionalDecimalInput, // Box 7; omitted is not a verified zero
   allocatedTips: optionalDecimalInput, // Box8; actual source amount, distinct from Box1/7 income.
@@ -408,10 +414,14 @@ export const CryptoIncomeInputSchema = z.object({
 });
 
 export const Form1099NecSchema = z.object({
+  taxYear: z.number().int().optional(),
   payer: z.string(),
   payerTin: z.string().optional(), // Payer's TIN (used for IL Schedule IL-WIT Column B auto-attachment)
   accountHolder: z.enum(["primary", "spouse"]).optional(), // Local owner tag for taxpayer vs spouse attribution on shared returns
   nonemployeeCompensation: decimal, // Box 1
+  cashTips: reportedTipOrOvertimeAmount.optional(), // 2026 Box1b, included in Box1a compensation.
+  qualifiedOvertimeCompensation: reportedTipOrOvertimeAmount.optional(), // 2026 Box1d, included in Box1a compensation.
+  treasuryTippedOccupationCodes: reportedTippedOccupationCodes.optional(), // 2026 Box1c.
   federalWithheld: optionalDecimal, // Box 4
   stateWithheld: optionalDecimal, // Box 5
   state: z.string().optional(), // Box 6 (abbreviated state name and payer state identification number)
@@ -419,12 +429,16 @@ export const Form1099NecSchema = z.object({
 });
 
 export const Form1099MiscSchema = z.object({
+  taxYear: z.number().int().optional(),
   payer: z.string(),
   payerTin: z.string().optional(), // Payer's TIN (used for IL Schedule IL-WIT Column B auto-attachment)
   accountHolder: z.enum(["primary", "spouse"]).optional(), // Local owner tag for taxpayer vs spouse attribution on shared returns
   rents: optionalDecimal, // Box 1
   royalties: optionalDecimal, // Box 2
   otherIncome: optionalDecimal, // Box 3
+  cashTips: reportedTipOrOvertimeAmount.optional(), // 2026 Box13a, included in Box3 other income.
+  qualifiedOvertimeCompensation: reportedTipOrOvertimeAmount.optional(), // 2026 Box14, included in Box3 other income.
+  treasuryTippedOccupationCodes: reportedTippedOccupationCodes.optional(), // 2026 Box13b.
   federalWithheld: optionalDecimal, // Box 4
   fishingBoatProceeds: optionalDecimal, // Box 5
   medicalPayments: optionalDecimal, // Box 6
@@ -584,10 +598,13 @@ export const FormW2GSchema = z.object({
 });
 
 export const Form1099KSchema = z.object({
+  taxYear: z.number().int().optional(),
   pse: z.string(), // Payment Settlement Entity name (filer)
   statePayerNumber: z.string().optional(), // Box 7 — state payer number for IL Schedule IL-WIT Column B
   accountHolder: z.enum(["primary", "spouse"]).optional(), // Local owner tag for taxpayer vs spouse on shared state returns
   grossAmount: decimal, // Box 1a — gross amount of payment card/third-party network transactions
+  cashTips: reportedTipOrOvertimeAmount.optional(), // 2026 Box1c, included in Box1a gross amount.
+  treasuryTippedOccupationCodes: reportedTippedOccupationCodes.optional(), // 2026 Box1d.
   cardNotPresent: optionalDecimal, // Box 1b — card not present transactions (subset of 1a)
   federalWithheld: optionalDecimal, // Box 4 — federal income tax withheld (backup withholding)
   stateWithheld: optionalDecimal, // Box 8 — state income tax withheld
