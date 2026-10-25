@@ -216,3 +216,19 @@ Calculation evidence is separate from final-form qualification. The current 2026
   typecheck; scoped ESLint has zero errors and ten existing test assertions.
   `vehicle-2025-review.pdf` rendered and inspected: actual prior status S/zero AGI,
   line9/13 $7,500, audited tax limit, source detail and visible notices on both pages.
+
+### Adoption physical identity follow-up
+
+- Form 8839 Part I copies explicit first/last names, birth year and identifying
+  number. It never splits the display name, matches a household dependent or
+  restores a cleared identifier. Column (c) requires actual birth before 2008
+  and actual permanent disability, independently of special-needs classification.
+  Actual finality years must agree with the source finality indicator.
+- Missing physical facts stay blank and are listed on a review appendix. Every
+  page, including early-return paths, gets the visible review-only notice.
+- Official 2025 Form 8839 and instructions were refreshed; the printed positions
+  for multiword names, year, disability and identifying number were directly
+  inspected in `.local/upgrade-evidence/adoption-identity-review.png`.
+- 40 PDF tests pass, including two new cases observed red first; root TypeScript
+  and scoped ESLint pass without errors or warnings. Review export remains
+  unqualified for filing; no 2026 template is enabled.

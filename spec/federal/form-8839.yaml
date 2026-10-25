@@ -167,3 +167,14 @@ lines:
 exportValidation:
   description: "2025 review-only mapping takes monetary lines directly from the engine audit, including refund, carryforward, credit limit and signed benefits; never reimplements tax arithmetic or silently truncates more than three children."
   testRef: "tests/pdf/fill-form-8839.test.ts::maps audited refundable nonrefundable carryforward and signed benefits without recalculation"
+
+partIExportValidation:
+  description: >-
+    2025 review Part I copies explicit childFirstName, childLastName, childBirthYear
+    and childIdentifyingNumber. Do not split a display name, match a household
+    dependent, infer a birth year or recover an intentionally cleared identifier.
+    Column (c) requires both actual birth before 2008 and actual permanent
+    disability; disability alone does not establish a special-needs determination.
+    Actual finality year, where supplied, must agree with the finality indicator.
+    Missing physical-form facts remain blank and are listed on a review appendix.
+  testRef: "tests/pdf/fill-form-8839.test.ts::maps actual adopted child identity and disability without inferring household facts"

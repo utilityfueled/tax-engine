@@ -5,6 +5,7 @@
 
 import { describe, it, expect, beforeAll } from "vitest";
 import Decimal from "decimal.js";
+import { REVIEW_PDF_NOTICE } from "@/pdf/export-policy.js";
 import { calculateForm8839 } from "@/engine/forms/form-8839.js";
 import { TAX_CONSTANTS } from "@/models/constants.js";
 import { PDFDocument, PDFTextField, PDFCheckBox } from "pdf-lib";
@@ -105,6 +106,7 @@ const singleChildFixture: TaxYearInput = {
     children: [
       {
         childName: "Emma Wilson",
+        childFirstName: "Emma", childLastName: "Wilson",
         isSpecialNeeds: false,
         isForeignAdoption: false,
         adoptionBecameFinal: true,
@@ -493,4 +495,49 @@ it("rejects missing audited amounts and too many children for a single review fo
   await expect(fillForm8839(singleChildFixture,{...result,form8839:{...form8839,lines:form8839.lines.filter(l=>l.line!=="13")}},BLANK_8839)).rejects.toThrow(/audit/i);
   const input={...singleChildFixture,form8839:{children:Array.from({length:4},()=>({...singleChildFixture.form8839?.children[0]}))}} as TaxYearInput;
   await expect(fillForm8839(input,result,BLANK_8839)).rejects.toThrow(/three|3|attachment/i);
+});
+
+
+it("maps actual adopted child identity and disability without inferring household facts", async () => {
+  const result = calculateFederalTax(singleChildFixture);
+  const child = singleChildFixture.form8839?.children[0];
+  if (!child) throw new Error("Missing child fixture");
+  const input = { ...singleChildFixture, form8839: { children: [{ ...child,
+    childName: "Legacy Display Must Not Be Split", childFirstName: "Mary Ann", childLastName: "Van Buren",
+    childBirthYear: 2007, childIdentifyingNumber: "123-45-6789", childPermanentlyDisabled: true,
+    isSpecialNeeds: false, adoptionFinalizedYear: 2025,
+  }] } };
+  const doc = await fillForm8839(input, result, BLANK_8839);
+  expect(getFieldText(doc, F.child1FirstName)).toBe("Mary Ann");
+  expect(getFieldText(doc, F.child1LastName)).toBe("Van Buren");
+  expect(getFieldText(doc, F.child1YearOfBirth)).toBe("2007");
+  expect(getFieldText(doc, F.child1IdNumber)).toBe("123456789");
+  expect(isChecked(doc, F.child1BornBefore2008)).toBe(true);
+  expect(isChecked(doc, F.child1SpecialNeeds)).toBe(false);
+  expect(doc.getSubject()).toBe(REVIEW_PDF_NOTICE);
+  for (const [childBirthYear, childPermanentlyDisabled] of [[2008, true], [2007, false]] as const) {
+    const other = await fillForm8839({ ...input, form8839: { children: [{ ...input.form8839.children[0], childBirthYear, childPermanentlyDisabled }] } }, result, BLANK_8839);
+    expect(isChecked(other, F.child1BornBefore2008)).toBe(false);
+  }
+  const missing = await fillForm8839({ ...singleChildFixture, form8839: { children: [{ ...child,
+    childFirstName: undefined, childLastName: undefined, childBirthYear: undefined,
+    childIdentifyingNumber: undefined, childPermanentlyDisabled: undefined,
+  }] } }, result, BLANK_8839);
+  // A matching dependent name and DOB/SSN exist, but no identity is guessed or restored.
+  expect(getFieldText(missing, F.child1FirstName) ?? "").toBe("");
+  expect(getFieldText(missing, F.child1LastName) ?? "").toBe("");
+  expect(getFieldText(missing, F.child1YearOfBirth) ?? "").toBe("");
+  expect(getFieldText(missing, F.child1IdNumber) ?? "").toBe("");
+  expect(isChecked(missing, F.child1BornBefore2008)).toBe(false);
+  expect(missing.getPageCount()).toBe(3);
+  expect(missing.getSubject()).toBe(REVIEW_PDF_NOTICE);
+});
+
+it("rejects impossible or contradictory adopted child source facts", async () => {
+  const result = calculateFederalTax(singleChildFixture);
+  const child = singleChildFixture.form8839?.children[0];
+  if (!child) throw new Error("Missing child fixture");
+  for (const change of [{ childBirthYear: 2026 }, { childIdentifyingNumber: "123" }, { adoptionFinalizedYear: 2026, adoptionBecameFinal: true }]) {
+    await expect(fillForm8839({ ...singleChildFixture, form8839: { children: [{ ...child, ...change }] } }, result, BLANK_8839)).rejects.toThrow(/birth|identif|final/i);
+  }
 });

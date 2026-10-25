@@ -1,4 +1,4 @@
-import { assertPdfExportAllowed } from "../../export-policy.js";
+import { assertPdfExportAllowed, markReviewPdf } from "../../export-policy.js";
 /**
  * PDF filler for IRS Form 8839 — Qualified Adoption Expenses.
  * Maps engine result + input data to 2025 PDF form fields.
@@ -9,7 +9,7 @@ import { assertPdfExportAllowed } from "../../export-policy.js";
  * Field names verified against 2025 Form 8839 fillable PDF field inspection.
  */
 
-import { PDFDocument } from "pdf-lib";
+import { PDFDocument, StandardFonts } from "pdf-lib";
 import Decimal from "decimal.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
@@ -177,6 +177,7 @@ export async function fillForm8839(
   const form = doc.getForm();
   const F = FORM_8839_FIELDS;
   const f8839 = result.form8839;
+  const finish = async () => { await markReviewPdf(doc); return doc; };
 
   // ── Header ──
   const name = input.taxpayer.spouse
@@ -185,14 +186,14 @@ export async function fillForm8839(
   setTextField(form, F.name, name);
   setTextField(form, F.ssn, input.taxpayer.primary.ssn.replace(/-/g, ""));
 
-  if (!f8839 || !f8839.eligible || !input.form8839) return doc;
+  if (!f8839 || !f8839.eligible || !input.form8839) return finish();
 
   const children = input.form8839.children;
   if (children.length > 3) throw new Error("More than three adopted children require additional Form 8839 attachments");
   const numChildren = children.length;
   const audited = (line: string): Decimal => {
     const matches = f8839.lines.filter(entry => entry.form === "Form 8839" && entry.line === line);
-    if (matches.length !== 1) throw new Error(`Missing or duplicate Form 8839 audit entry ${line}`);
+    if (matches.length !== 1 || !matches[0].value.isFinite()) throw new Error(`Missing, duplicate or invalid Form 8839 audit entry ${line}`);
     return matches[0].value;
   };
 
@@ -200,30 +201,67 @@ export async function fillForm8839(
   const childPartIFields = [
     {
       firstName: F.child1FirstName, lastName: F.child1LastName,
+      birthYear: F.child1YearOfBirth, disabledBefore2008: F.child1BornBefore2008, id: F.child1IdNumber,
       specialNeeds: F.child1SpecialNeeds, foreign: F.child1Foreign,
       adoptionFinal: F.child1AdoptionFinal,
     },
     {
       firstName: F.child2FirstName, lastName: F.child2LastName,
+      birthYear: F.child2YearOfBirth, disabledBefore2008: F.child2BornBefore2008, id: F.child2IdNumber,
       specialNeeds: F.child2SpecialNeeds, foreign: F.child2Foreign,
       adoptionFinal: F.child2AdoptionFinal,
     },
     {
       firstName: F.child3FirstName, lastName: F.child3LastName,
+      birthYear: F.child3YearOfBirth, disabledBefore2008: F.child3BornBefore2008, id: F.child3IdNumber,
       specialNeeds: F.child3SpecialNeeds, foreign: F.child3Foreign,
       adoptionFinal: F.child3AdoptionFinal,
     },
   ];
 
+  const missingFacts: string[] = [];
   for (let i = 0; i < numChildren; i++) {
     const child = children[i];
     const pf = childPartIFields[i];
-    const nameParts = child.childName.split(/\s+/);
-    setTextField(form, pf.firstName, nameParts[0] ?? "");
-    setTextField(form, pf.lastName, nameParts.slice(1).join(" "));
-    setCheckBox(form, pf.specialNeeds, child.isSpecialNeeds);
-    setCheckBox(form, pf.foreign, child.isForeignAdoption);
-    setCheckBox(form, pf.adoptionFinal, child.adoptionBecameFinal);
+    const missing: string[] = [];
+    if (child.childFirstName?.trim()) setTextField(form, pf.firstName, child.childFirstName);
+    else missing.push("actual first name");
+    if (child.childLastName?.trim()) setTextField(form, pf.lastName, child.childLastName);
+    else missing.push("actual last name");
+    if (child.childBirthYear !== undefined) {
+      if (!Number.isInteger(child.childBirthYear) || child.childBirthYear < 1900 || child.childBirthYear > 2025) throw new Error("Form 8839 requires an actual valid child birth year");
+      setTextField(form, pf.birthYear, String(child.childBirthYear));
+      setCheckBox(form, pf.disabledBefore2008, child.childBirthYear < 2008 && child.childPermanentlyDisabled === true);
+    } else missing.push("actual birth year");
+    if ((child.childBirthYear === undefined || child.childBirthYear < 2008) && child.childPermanentlyDisabled === undefined) missing.push("actual permanent-disability fact");
+    if (child.childIdentifyingNumber) {
+      if (!/^\d{3}-?\d{2}-?\d{4}$/.test(child.childIdentifyingNumber)) throw new Error("Form 8839 requires the actual child identifying number");
+      setTextField(form, pf.id, child.childIdentifyingNumber.replace(/-/g, ""));
+    } else missing.push("identifying number (absent or redacted)");
+    // A legacy display name or matching household dependent does not prove these
+    // fields, and permanent disability does not establish government special needs.
+    setCheckBox(form, pf.specialNeeds, child.isSpecialNeeds === true);
+    setCheckBox(form, pf.foreign, child.isForeignAdoption === true);
+    if (child.adoptionFinalizedYear !== undefined) {
+      const finalized = child.adoptionFinalizedYear !== null && child.adoptionFinalizedYear <= 2025;
+      if ((child.adoptionFinalizedYear !== null && !Number.isInteger(child.adoptionFinalizedYear)) || finalized !== child.adoptionBecameFinal) throw new Error("Form 8839 adoption finality year and indicator disagree");
+      setCheckBox(form, pf.adoptionFinal, finalized);
+    } else setCheckBox(form, pf.adoptionFinal, child.adoptionBecameFinal === true);
+    if (child.sourceFactsComplete === false) missing.push("original classification and benefit facts");
+    if (missing.length) missingFacts.push(`Child ${i + 1}: ${missing.join(", ")}.`);
+  }
+  if (missingFacts.length) {
+    const font = await doc.embedFont(StandardFonts.Helvetica);
+    const page = doc.addPage();
+    let y = page.getHeight() - 45;
+    for (const text of ["FORM 8839 REVIEW DETAILS - incomplete physical-form facts", ...missingFacts,
+      "Missing facts remain blank. Names, birth years and identifiers are not inferred from display names or household dependents.",
+      "The original 2025 form and this appendix remain unqualified for filing."]) {
+      for (const line of text.match(/.{1,94}(?:\s|$)|.{1,94}/g) ?? [text]) {
+        page.drawText(line.trim(), { x: 32, y, size: 10, font }); y -= 15;
+      }
+      y -= 6;
+    }
   }
 
   // Copy only computed audit amounts; the PDF layer does not calculate tax.
@@ -241,7 +279,7 @@ export async function fillForm8839(
   if (magiExceeds) setDecimalFraction(form, F.line9Int, F.line9Dec, audited("9"));
 
   // Special-needs qualified-plan exclusions can exist with no current benefits.
-  if (f8839.totalEmployerBenefits.isZero() && f8839.allowableExclusion.isZero()) return doc;
+  if (f8839.totalEmployerBenefits.isZero() && f8839.allowableExclusion.isZero()) return finish();
   setCheckBox(form, children.some(c => d(c.priorYearExclusionsClaimed).gt(ZERO)) ? F.line20CheckboxYes : F.line20CheckboxNo, true);
   for (const line of ["19", "20", "21", "22", "24", "28", "29"] as const) {
     for (let index = 0; index < numChildren; index++) {
@@ -255,5 +293,5 @@ export async function fillForm8839(
   setCheckBox(form, exclusionMagiExceeds ? F.line26CheckboxYes : F.line26CheckboxNo, true);
   if (exclusionMagiExceeds) setDecimalFraction(form, F.line27Int, F.line27Dec, audited("27"));
   setCheckBox(form, audited("30").gt(audited("23")) ? F.line31CheckboxYes : F.line31CheckboxNo, true);
-  return doc;
+  return finish();
 }
