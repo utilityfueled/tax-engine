@@ -7,9 +7,44 @@ complete a checkbox.
 
 ## Current integration — 2026-10-25
 
-`fc46b8d` is the latest confirmed pushed integration on `upgrade/2026-baseline`. The goal remains active and the
+`7b7b761` is the latest confirmed pushed integration on `upgrade/2026-baseline`. The goal remains active and the
 upgrade is **not release-ready**. Unanswered external inputs are listed below;
 internal implementation and review continue in parallel.
+
+- `0834e46`: actual separate-owner IRA history/account/source binding. Exact
+  `c5298060` passes319 tests in27 files; separate16-case/probe review and four
+  reopened/rendered Form8606 pages pass. Guided intake is committed in `9e80414`:
+  `b870ac65` passes890 tests in86 files, production build, both desktop/mobile
+  cases with zero retries and eight independent review cases/probes. Screenshots
+  were inspected. Final integrated tree `e55725a3` passes13 focused source/intake
+  tests and web types with identical reviewed product blobs.
+- `029d5d9` and `a38c41e`: actual mortgage points and prior tax-benefit recovery
+  collectors. Exact packages pass931/1228 tests, seven/eight desktop/mobile
+  browser cases with zero retries, and separate15/six-case source reviews.
+- `febaf9c` and `e74436b`: actual current regular/AMT loss origins and ordinary
+  itemized sources. Exact packages pass320/372 tests and separate11/16-case
+  reviews; three-page review statements are reopened/rendered. Review caught
+  second-home prior points bypassing the AMT dwelling boundary; the corrected
+  package includes the original regression. Remaining named origin methods stay
+  internal work, distinct from missing taxpayer facts and human qualification.
+- `7b7b761`: Form172 computational amounts retain exact cents separately from
+  reported whole dollars. Exact `656c8eb3` passes47 tests in10 files, root types
+  and4,561 references; independent source review passes ten cases/probes. The
+  published historical1,775 example is unchanged. This prerequisite does not
+  enable a new capital-origin source method or qualify filing.
+- `f08eb0c` and `556cfe4`: approval-bound provider executor and actual application
+  contracts. Exact packages pass123/272 tests and parent44/24-case reviews.
+  Journal aliases, approved-policy mutation, fabricated source text and
+  unrestricted unsupported-route readiness prose were reproduced and fixed.
+  Actual evaluator binding remains in review: stale corpus provenance now rejects;
+  a second probe reproduced acceptance of mismatched or missing reported model
+  identity in imported measurements, which is being fixed. No live provider calls or
+  independently reviewed corpus results exist; all240 cases remain draft.
+- `d078cf4`: direct pinned browser-safe SHA256 dependency, matching the existing
+  transitive2.4.0 version. Strict frozen peers, three reference hash comparisons
+  and the refreshed package audit pass with zero findings across521 entries.
+- Current `7b7b761` CI40230955434/Web40230955481 are queued/pending. Final-head full verification,
+  runtime-image advisories/rehearsal and external qualification remain required.
 
 - `cc10a79`: complete QSBS Form 8949 categories and continuation pages, fund-only
   Schedule D line 10 and verified 6251 preference, original-or-redacted identity

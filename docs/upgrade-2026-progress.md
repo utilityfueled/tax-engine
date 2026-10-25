@@ -3,26 +3,40 @@
 ## Current checkpoint
 
 Execution remains active and **not release-ready**. Latest confirmed pushed
-integration is `8da947a` on `upgrade/2026-baseline`. Resume from
+integration is `7b7b761` on `upgrade/2026-baseline`. Resume from
 [the durable checklist](upgrade-2026-checklist.md) and `ongoingExecution` in the
 machine checkpoint. Older evidence applies only to its recorded code.
 
-Recent packages implement actual ScheduleD special-gain sources/regular+AMT
-worksheets (`2dbce45`), child4952 source reconciliation (`8da947a`), direct foreign
-credit election/unused prior vintages (`a996dbc`), actual QOF answers (`ec6d25f`),
-brokerage withholding (`35b8604`) and foreign-income intake (`b741741`). Each has
-isolated source/check evidence and bounded agent review in its package ledger.
-Child4952 and direct-FTC PDFs were saved, reopened and rendered for inspection.
-Those checks do not establish human qualification or final-year filing readiness.
+Recent packages bind actual separate-owner IRA basis (`0834e46`), collect
+mortgage points (`029d5d9`) and prior interest recoveries (`a38c41e`), compute
+actual regular/AMT current loss origins (`febaf9c`) and their ordinary itemized
+sources (`e74436b`), exact Form172 computational amounts (`7b7b761`) and guided
+IRA history/account collection (`9e80414`). The AI executor (`f08eb0c`) and actual application contracts
+(`556cfe4`) are also committed. Each has isolated checks and bounded agent review
+in its package ledger. Review reproduced and drove repairs for source text,
+readiness prose, journal aliases, request policy and second-home prior points.
+These checks do not establish human, provider or final-form qualification.
 
-Full coverage at `7695387` passed17,381 tests with86.84%branches and unchanged
-gates. Later packages need another full integrated run. Current8da947a remote
-CI40217507356 is running/Web40217507374 queued; no final remote green is claimed.
-The earlier6728ed2 run had two stale QSS600 expectations, corrected in a996dbc.
+Full verification at `1791979` passed17,577 tests,86.91%branch coverage against
+the unchanged85%gate, all required types/spec/build/lint checks and328 production
+browser cases with zero retries. Five hosted billing cases were skipped and
+provide no staging evidence. Later packages need another full integrated run.
+Current `7b7b761` CI40230955434 and Web40230955481 are queued/pending; no current
+remote green is claimed. Package advisories were refreshed for the separately
+committed browser-safe hashing dependency (`d078cf4`):
+zero findings across521 locked entries; OS advisories remain separately tracked.
 
-Internal work continues on actual QSBS history, positive-source intake, canonical
-NOL/AMT/NIIT, remaining Marketplace and other named methods. Final inventory,
-all builds/browser gates, native images/scans and recovery rehearsal remain.
+The IRA collector passes890 tests, both desktop/mobile cases with zero retries,
+eight independent review cases/probes and visual screenshot inspection. Final
+integrated source tests and web types pass; source changes revoke confirmation.
+
+Internal work continues on guided current-loss sources, remaining
+named federal and advanced source methods, and actual-schema AI evaluation.
+Parent review reproduced stale-corpus acceptance in the new AI scorer; that fix
+passes re-review. A second probe found mismatched or absent reported models can
+still pass imported result scoring, and its fix remains pending. All240 evaluation cases remain human-unreviewed,
+with zero live measurements. Final inventory, all integrated checks, native
+images/scans and recovery rehearsal remain.
 
 Staging credentials/authorization, synthetic provider budget/account access,
 independent human reviewers, launch-state demand and final forms remain external
