@@ -4,10 +4,12 @@
  */
 
 import { describe, it, expect, beforeAll } from "vitest";
+import Decimal from "decimal.js";
+import { calculateForm8839 } from "@/engine/forms/form-8839.js";
+import { TAX_CONSTANTS } from "@/models/constants.js";
 import { PDFDocument, PDFTextField, PDFCheckBox } from "pdf-lib";
 import { calculateFederalTax } from "@/engine/federal.js";
 import { fillForm8839, FORM_8839_FIELDS } from "@/pdf/fill-form-8839.js";
-import { formatCurrency } from "@/pdf/pdf-utils.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 
 /** Helper: get text value from a filled PDF field. */
@@ -465,4 +467,36 @@ describe("Form 8839 PDF filling — Special needs child, adoption final", () => 
   it("fills Line 14 — nonrefundable = $17,280 - $5,000 = $12,280", () => {
     expect(getFieldText(doc, F.line14)).toBe("12280");
   });
+});
+
+
+it("maps audited refundable nonrefundable carryforward and signed benefits without recalculation", async () => {
+  const result=calculateFederalTax(singleChildFixture);
+  const child={childName:"Synthetic Child",isSpecialNeeds:true,isForeignAdoption:false,adoptionBecameFinal:true,
+    qualifiedExpenses:"0",employerBenefits:"1000",priorYearCreditsClaimed:"0",priorYearExclusionsClaimed:"0",employerPlanQualified:true};
+  const form8839=calculateForm8839({filingStatus:"married_filing_jointly",agi:new Decimal("100000"),children:[child],
+    foreignEarnedIncomeExclusion:new Decimal(0),foreignHousingExclusion:new Decimal(0),constants:TAX_CONSTANTS[2025].adoptionCredit,
+    taxLiabilityLimit:new Decimal("100"),carryforwards:[{originTaxYear:2024,amount:new Decimal("700")}],exclusionMagi:new Decimal("100000")});
+  const doc=await fillForm8839({...singleChildFixture,form8839:{children:[child]}},{...result,form8839},BLANK_8839);
+  expect(getFieldText(doc,F.line13)).toBe("5000");
+  expect(getFieldText(doc,F.line15)).toBe("700");
+  expect(getFieldText(doc,F.line16)).toBe("12980");
+  expect(getFieldText(doc,F.line17)).toBe("100");
+  expect(getFieldText(doc,F.line18)).toBe("100");
+  expect(getFieldText(doc,F.line31)).toBe("(16280)");
+  expect(isChecked(doc,F.line31CheckboxYes)).toBe(true);
+  // Reopen serialized AcroForm rather than trusting only in-memory values.
+  const reopened=await PDFDocument.load(await doc.save());
+  expect(getFieldText(reopened,F.line18)).toBe("100");
+  expect(getFieldText(reopened,F.line31)).toBe("(16280)");
+});
+
+it("rejects missing audited amounts and too many children for a single review form", async () => {
+  const result=calculateFederalTax(singleChildFixture);
+  const form8839=result.form8839;
+  expect(form8839).toBeDefined();
+  if(!form8839) throw new Error("Missing fixture");
+  await expect(fillForm8839(singleChildFixture,{...result,form8839:{...form8839,lines:form8839.lines.filter(l=>l.line!=="13")}},BLANK_8839)).rejects.toThrow(/audit/i);
+  const input={...singleChildFixture,form8839:{children:Array.from({length:4},()=>({...singleChildFixture.form8839?.children[0]}))}} as TaxYearInput;
+  await expect(fillForm8839(input,result,BLANK_8839)).rejects.toThrow(/three|3|attachment/i);
 });

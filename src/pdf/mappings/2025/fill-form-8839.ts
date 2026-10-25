@@ -9,7 +9,7 @@ import { assertPdfExportAllowed } from "../../export-policy.js";
  * Field names verified against 2025 Form 8839 fillable PDF field inspection.
  */
 
-import { PDFDocument, PDFTextField } from "pdf-lib";
+import { PDFDocument } from "pdf-lib";
 import Decimal from "decimal.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
@@ -18,11 +18,9 @@ import {
   setTextField,
   setCurrencyField,
   setCheckBox,
-  formatCurrency,
 } from "../../pdf-utils.js";
 
 const ZERO = new Decimal(0);
-const REFUNDABLE_CAP_PER_CHILD = new Decimal(5000); // 2025: $5,000 per child
 
 // ─── PDF Field Name Helpers ────────────────────────────────────────────────
 
@@ -156,34 +154,11 @@ function d(val?: string | number | Decimal | null): Decimal {
   return new Decimal(val);
 }
 
-function roundDollar(val: Decimal): Decimal {
-  return val.toDecimalPlaces(0, Decimal.ROUND_HALF_UP);
-}
-
-/** Set a decimal fraction across two PDF fields (integer part . decimal part). */
-function setDecimalFraction(
-  form: import("pdf-lib").PDFForm,
-  intField: string,
-  decField: string,
-  value: Decimal,
-): void {
-  if (value.isZero()) return;
-  const str = value.toFixed(3);
-  const [intPart, decPart] = str.split(".");
-  try {
-    const f = form.getField(intField);
-    if (f instanceof PDFTextField) {
-      f.setMaxLength(undefined);
-      f.setText(intPart);
-    }
-  } catch { /* field not found */ }
-  try {
-    const f = form.getField(decField);
-    if (f instanceof PDFTextField) {
-      f.setMaxLength(undefined);
-      f.setText(decPart);
-    }
-  } catch { /* field not found */ }
+/** Strict field setters reject missing/wrong-type fields rather than hiding a mapping failure. */
+function setDecimalFraction(form: import("pdf-lib").PDFForm, intField: string, decField: string, value: Decimal): void {
+  const [integer, decimal] = value.toFixed(3).split(".");
+  setTextField(form, intField, integer);
+  setTextField(form, decField, decimal);
 }
 
 // ─── Fill Logic ────────────────────────────────────────────────────────────
@@ -213,9 +188,13 @@ export async function fillForm8839(
   if (!f8839 || !f8839.eligible || !input.form8839) return doc;
 
   const children = input.form8839.children;
-  const maxCredit = f8839.maxCreditPerChild;
-  const phaseOutFraction = f8839.phaseOutFraction;
-  const numChildren = Math.min(children.length, 3);
+  if (children.length > 3) throw new Error("More than three adopted children require additional Form 8839 attachments");
+  const numChildren = children.length;
+  const audited = (line: string): Decimal => {
+    const matches = f8839.lines.filter(entry => entry.form === "Form 8839" && entry.line === line);
+    if (matches.length !== 1) throw new Error(`Missing or duplicate Form 8839 audit entry ${line}`);
+    return matches[0].value;
+  };
 
   // ── Part I: Child Information ────────────────────────────────────────────
   const childPartIFields = [
@@ -247,189 +226,34 @@ export async function fillForm8839(
     setCheckBox(form, pf.adoptionFinal, child.adoptionBecameFinal);
   }
 
-  // ── Part II: Adoption Credit (Lines 2–18) ───────────────────────────────
-
-  // Per-child computation: Lines 2–6
-  const perChildLine6: Decimal[] = [];
-  const hasPriorYearCredits = children.some(
-    (c) => d(c.priorYearCreditsClaimed).gt(ZERO),
-  );
-
-  // Line 3 checkbox
-  setCheckBox(form, hasPriorYearCredits ? F.line3CheckboxYes : F.line3CheckboxNo, true);
-
-  for (let i = 0; i < numChildren; i++) {
-    const child = children[i];
-    const priorCredits = d(child.priorYearCreditsClaimed);
-
-    // Line 2: max credit
-    setCurrencyField(form, F.line2[i], maxCredit);
-
-    // Line 3: prior year credits
-    setCurrencyField(form, F.line3[i], priorCredits);
-
-    // Line 4: remaining max
-    const line4 = Decimal.max(ZERO, maxCredit.minus(priorCredits));
-    setCurrencyField(form, F.line4[i], line4);
-
-    // Line 5: qualified expenses (special rules apply)
-    let line5: Decimal;
-    if (child.isSpecialNeeds && child.adoptionBecameFinal) {
-      line5 = maxCredit; // special needs + final → full max
-    } else if (child.isForeignAdoption && !child.adoptionBecameFinal) {
-      line5 = ZERO; // foreign + not final → cannot claim yet
-    } else {
-      line5 = d(child.qualifiedExpenses);
+  // Copy only computed audit amounts; the PDF layer does not calculate tax.
+  setCheckBox(form, children.some(c => d(c.priorYearCreditsClaimed).gt(ZERO)) ? F.line3CheckboxYes : F.line3CheckboxNo, true);
+  for (const line of ["2", "3", "4", "5", "6", "10", "11a", "11b"] as const) {
+    for (let index = 0; index < numChildren; index++) {
+      setCurrencyField(form, F[`line${line}`][index], audited(`${line}-child-${index + 1}`));
     }
-    setCurrencyField(form, F.line5[i], line5);
-
-    // Line 6: smaller of Line 4 or Line 5
-    const line6 = Decimal.min(line4, line5);
-    setCurrencyField(form, F.line6[i], line6);
-    perChildLine6.push(line6);
   }
-
-  // Line 7: Modified AGI
-  setCurrencyField(form, F.line7, f8839.magi);
-
-  // Line 8: Is MAGI > threshold?
-  const magiExceeds = f8839.excessMagi.gt(ZERO);
+  for (const line of ["7", "8", "11c", "12", "13", "14", "15", "16", "17", "18"] as const) {
+    setCurrencyField(form, F[`line${line}`], audited(line));
+  }
+  const magiExceeds = audited("8").gt(0);
   setCheckBox(form, magiExceeds ? F.line8CheckboxYes : F.line8CheckboxNo, true);
-  if (magiExceeds) {
-    setCurrencyField(form, F.line8, f8839.excessMagi);
+  if (magiExceeds) setDecimalFraction(form, F.line9Int, F.line9Dec, audited("9"));
+
+  // Special-needs qualified-plan exclusions can exist with no current benefits.
+  if (f8839.totalEmployerBenefits.isZero() && f8839.allowableExclusion.isZero()) return doc;
+  setCheckBox(form, children.some(c => d(c.priorYearExclusionsClaimed).gt(ZERO)) ? F.line20CheckboxYes : F.line20CheckboxNo, true);
+  for (const line of ["19", "20", "21", "22", "24", "28", "29"] as const) {
+    for (let index = 0; index < numChildren; index++) {
+      setCurrencyField(form, F[`line${line}`][index], audited(`${line}-child-${index + 1}`));
+    }
   }
-
-  // Line 9: Phase-out fraction
-  if (magiExceeds) {
-    setDecimalFraction(form, F.line9Int, F.line9Dec, phaseOutFraction);
+  for (const line of ["23", "25", "26", "30", "31"] as const) {
+    setCurrencyField(form, F[`line${line}`], audited(line));
   }
-
-  // Per-child computation: Lines 10–11b
-  let totalLine11a = ZERO;
-  let totalLine11b = ZERO;
-  for (let i = 0; i < numChildren; i++) {
-    const line6 = perChildLine6[i];
-
-    // Line 10: phase-out per child (0 if MAGI below threshold)
-    const line10 = magiExceeds ? roundDollar(line6.times(phaseOutFraction)) : ZERO;
-    setCurrencyField(form, F.line10[i], line10);
-
-    // Line 11a: credit after phase-out
-    const line11a = Decimal.max(ZERO, line6.minus(line10));
-    setCurrencyField(form, F.line11a[i], line11a);
-    totalLine11a = totalLine11a.plus(line11a);
-
-    // Line 11b: refundable portion (capped at $5,000 per child, new for 2025)
-    const line11b = Decimal.min(line11a, REFUNDABLE_CAP_PER_CHILD);
-    setCurrencyField(form, F.line11b[i], line11b);
-    totalLine11b = totalLine11b.plus(line11b);
-  }
-
-  // Line 11c: total refundable
-  setCurrencyField(form, F.line11c, totalLine11b);
-
-  // Line 12: total of Line 11a
-  setCurrencyField(form, F.line12, totalLine11a);
-
-  // Line 13: refundable credit = Line 11c
-  setCurrencyField(form, F.line13, totalLine11b);
-
-  // Line 14: nonrefundable portion = Line 12 - Line 13
-  const line14 = Decimal.max(ZERO, totalLine11a.minus(totalLine11b));
-  setCurrencyField(form, F.line14, line14);
-
-  // Lines 15–18: carryforward and credit limit (filled if engine provides data)
-  // Line 15: credit carryforward from prior years — not tracked in engine result
-  // Line 16 = Line 14 + Line 15 → without carryforward, equals Line 14
-  setCurrencyField(form, F.line16, line14);
-
-  // Line 17–18: credit limit worksheet result — not available from engine
-  // The engine's adoptionCredit is the computed total; use it as Line 18 approximation
-  // when it's less than or equal to Line 16 (meaning limit was not binding)
-  if (f8839.adoptionCredit.lte(line14)) {
-    setCurrencyField(form, F.line18, f8839.adoptionCredit);
-  } else {
-    setCurrencyField(form, F.line18, line14);
-  }
-
-  // ── Part III: Employer-Provided Adoption Benefits (Lines 19–31) ─────────
-
-  const hasEmployerBenefits = f8839.totalEmployerBenefits.gt(ZERO);
-  if (!hasEmployerBenefits) return doc;
-
-  const hasPriorExclusions = children.some(
-    (c) => d(c.priorYearExclusionsClaimed).gt(ZERO),
-  );
-  setCheckBox(form, hasPriorExclusions ? F.line20CheckboxYes : F.line20CheckboxNo, true);
-
-  const perChildLine24: Decimal[] = [];
-  for (let i = 0; i < numChildren; i++) {
-    const child = children[i];
-    const priorExclusions = d(child.priorYearExclusionsClaimed);
-    const employerBenefits = d(child.employerBenefits);
-
-    // Line 19: max exclusion per child
-    setCurrencyField(form, F.line19[i], maxCredit);
-
-    // Line 20: prior year exclusions
-    setCurrencyField(form, F.line20[i], priorExclusions);
-
-    // Line 21: remaining max exclusion
-    const line21 = Decimal.max(ZERO, maxCredit.minus(priorExclusions));
-    setCurrencyField(form, F.line21[i], line21);
-
-    // Line 22: employer benefits received
-    setCurrencyField(form, F.line22[i], employerBenefits);
-
-    // Line 24: smaller of Line 21 or Line 22
-    // Special needs + final → enter Line 21 per form instructions
-    const line24 = (child.isSpecialNeeds && child.adoptionBecameFinal)
-      ? line21
-      : Decimal.min(line21, employerBenefits);
-    setCurrencyField(form, F.line24[i], line24);
-    perChildLine24.push(line24);
-  }
-
-  // Line 23: total employer benefits
-  setCurrencyField(form, F.line23, f8839.totalEmployerBenefits);
-
-  // Line 25: Modified AGI (same as Line 7)
-  setCurrencyField(form, F.line25, f8839.magi);
-
-  // Line 26: Is MAGI > threshold?
-  setCheckBox(form, magiExceeds ? F.line26CheckboxYes : F.line26CheckboxNo, true);
-  if (magiExceeds) {
-    setCurrencyField(form, F.line26, f8839.excessMagi);
-  }
-
-  // Line 27: Phase-out fraction (same as Line 9)
-  if (magiExceeds) {
-    setDecimalFraction(form, F.line27Int, F.line27Dec, phaseOutFraction);
-  }
-
-  // Per-child: Lines 28–29
-  let totalLine29 = ZERO;
-  for (let i = 0; i < numChildren; i++) {
-    const line24 = perChildLine24[i];
-
-    // Line 28: phase-out per child
-    const line28 = magiExceeds ? roundDollar(line24.times(phaseOutFraction)) : ZERO;
-    setCurrencyField(form, F.line28[i], line28);
-
-    // Line 29: excluded benefits
-    const line29 = Decimal.max(ZERO, line24.minus(line28));
-    setCurrencyField(form, F.line29[i], line29);
-    totalLine29 = totalLine29.plus(line29);
-  }
-
-  // Line 30: total excluded benefits
-  setCurrencyField(form, F.line30, totalLine29);
-
-  // Line 31: taxable benefits
-  const taxableBenefits = f8839.taxableEmployerBenefits;
-  const line30MoreThan23 = totalLine29.gte(f8839.totalEmployerBenefits);
-  setCheckBox(form, line30MoreThan23 ? F.line31CheckboxYes : F.line31CheckboxNo, true);
-  setCurrencyField(form, F.line31, taxableBenefits);
-
+  const exclusionMagiExceeds = audited("26").gt(0);
+  setCheckBox(form, exclusionMagiExceeds ? F.line26CheckboxYes : F.line26CheckboxNo, true);
+  if (exclusionMagiExceeds) setDecimalFraction(form, F.line27Int, F.line27Dec, audited("27"));
+  setCheckBox(form, audited("30").gt(audited("23")) ? F.line31CheckboxYes : F.line31CheckboxNo, true);
   return doc;
 }

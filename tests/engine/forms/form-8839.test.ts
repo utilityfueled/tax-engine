@@ -106,22 +106,22 @@ describe("Form 8839 — Qualified Adoption Expenses", () => {
       expect(result.netTentativeCredit.toNumber()).toBe(12280);
     });
 
-    it("Form 8839 Line 5 - net tentative credit is total minus prior year claims", () => {
+    it("Form 8839 Line 5 - remaining lifetime limits apply separately before aggregation", () => {
       const result = calculateForm8839(makeParams({
         children: [
           { qualifiedExpenses: "10000", priorYearCreditsClaimed: "10000" },
           { qualifiedExpenses: "8000" },
         ],
       }));
-      // Total tentative = 10000 + 8000 = 18000; prior = 10000; net = 8000
-      expect(result.netTentativeCredit.toNumber()).toBe(8000);
+      // IRS lines 4/6: min(10000,17280-10000) + min(8000,17280) = 15280
+      expect(result.netTentativeCredit.toNumber()).toBe(15280);
     });
 
-    it("Form 8839 Line 5 - prior year credits cannot make net credit negative", () => {
+    it("Form 8839 Line 5 - prior year usage reduces the cap not current expenses", () => {
       const result = calculateForm8839(makeParams({
         children: [{ qualifiedExpenses: "5000", priorYearCreditsClaimed: "10000" }],
       }));
-      expect(result.netTentativeCredit.toNumber()).toBe(0);
+      expect(result.netTentativeCredit.toNumber()).toBe(5000);
     });
   });
 
@@ -253,7 +253,7 @@ describe("Form 8839 — Qualified Adoption Expenses", () => {
         agi: 50000,
         children: [{ qualifiedExpenses: "10000", employerBenefits: "5000" }],
       }));
-      expect(result.taxableEmployerBenefits.toNumber()).toBe(0);
+      expect(result.taxableEmployerBenefits.toNumber()).toBe(5000); // Ineligible benefits remain taxable.
       expect(result.allowableExclusion.toNumber()).toBe(0);
     });
   });
@@ -318,13 +318,12 @@ describe("Form 8839 — Qualified Adoption Expenses", () => {
         agi: 100000,
         children: [
           { qualifiedExpenses: "17280", priorYearCreditsClaimed: "17280" }, // fully claimed
-          { qualifiedExpenses: "10000", priorYearCreditsClaimed: "3000" },  // 7000 remaining
+          { qualifiedExpenses: "10000", priorYearCreditsClaimed: "3000" },  // current10000 fits remaining14280
         ],
       }));
-      // Total tentative: 17280 + 10000 = 27280; total prior: 17280 + 3000 = 20280
-      // Net: 27280 - 20280 = 7000
-      expect(result.netTentativeCredit.toNumber()).toBe(7000);
-      expect(result.adoptionCredit.toNumber()).toBe(7000);
+      // IRS per-child remaining caps: 0 + min(10000,17280-3000) =10000
+      expect(result.netTentativeCredit.toNumber()).toBe(10000);
+      expect(result.adoptionCredit.toNumber()).toBe(10000);
     });
   });
 
@@ -343,24 +342,22 @@ describe("Form 8839 — Qualified Adoption Expenses", () => {
         agi: 100000,
         children: [{ qualifiedExpenses: "5000", employerBenefits: "20000" }],
       }));
-      // Per-child combined credit + exclusion cap = $17,280 (IRC §137)
+      // IRC sections23/137 have separate per-child limits for distinct expenses.
       // Tentative credit = min(5000, 17280) = 5000
-      // Remaining max for exclusion = 17280 - 5000 = 12280
-      // Tentative exclusion = min(20000, 12280) = 12280
-      // Taxable = 20000 - 12280 = 7720
-      expect(result.taxableEmployerBenefits.toNumber()).toBe(7720);
+      // Separate exclusion cap: min(20000,17280)=17280; taxable2720.
+      expect(result.taxableEmployerBenefits.toNumber()).toBe(2720);
     });
 
-    it("Form 8839 employer exclusion - combined credit + exclusion respects $17,280 per-child cap", () => {
+    it("Form 8839 employer exclusion - separate limits apply to unreimbursed and employer expenses", () => {
       // Child with $15,000 expenses and $10,000 employer benefits
-      // Credit uses $15,000 of the $17,280 cap → only $2,280 remains for exclusion
+      // Unreimbursed expenses and benefits each use their own lifetime limit.
       const result = calculateForm8839(makeParams({
         agi: 100000,
         children: [{ qualifiedExpenses: "15000", employerBenefits: "10000" }],
       }));
       expect(result.childResults[0].tentativeCredit.toNumber()).toBe(15000);
-      expect(result.childResults[0].tentativeExclusion.toNumber()).toBe(2280);
-      expect(result.taxableEmployerBenefits.toNumber()).toBe(7720); // 10000 - 2280
+      expect(result.childResults[0].tentativeExclusion.toNumber()).toBe(10000);
+      expect(result.taxableEmployerBenefits.toNumber()).toBe(0); // separate exclusion fully covers benefits
     });
 
     it("Form 8839 employer exclusion - zero expenses leaves full cap for exclusion", () => {
@@ -375,7 +372,7 @@ describe("Form 8839 — Qualified Adoption Expenses", () => {
       expect(result.taxableEmployerBenefits.toNumber()).toBe(2720);
     });
 
-    it("Form 8839 employer exclusion - special needs child at max credit leaves zero for exclusion", () => {
+    it("Form 8839 employer exclusion - special needs credit does not consume exclusion cap", () => {
       const result = calculateForm8839(makeParams({
         agi: 100000,
         children: [{
@@ -385,10 +382,10 @@ describe("Form 8839 — Qualified Adoption Expenses", () => {
           employerBenefits: "5000",
         }],
       }));
-      // Special needs gets full $17,280 credit → nothing left for exclusion
+      // Full credit does not consume the independent employer exclusion limit.
       expect(result.childResults[0].tentativeCredit.toNumber()).toBe(17280);
-      expect(result.childResults[0].tentativeExclusion.toNumber()).toBe(0);
-      expect(result.taxableEmployerBenefits.toNumber()).toBe(5000);
+      expect(result.childResults[0].tentativeExclusion.toNumber()).toBe(5000);
+      expect(result.taxableEmployerBenefits.toNumber()).toBe(0);
     });
 
     it("Form 8839 employer exclusion - phase-out reduces exclusion", () => {
@@ -450,5 +447,85 @@ describe("Form 8839 — Qualified Adoption Expenses", () => {
       expect(result.phaseOutFraction.toNumber()).toBe(1);
       expect(result.adoptionCredit.toNumber()).toBe(0);
     });
+  });
+});
+
+// Spec: spec/federal/form-8839.yaml (2025 final lines 2-31, 2026 indexed amounts).
+describe("Form 8839 year-aware credit and carryforward", () => {
+  const current = (children: import("@/engine/forms/form-8839.js").Form8839Params["children"], overrides: Partial<import("@/engine/forms/form-8839.js").Form8839Params> = {}) => ({
+    ...makeParams({children}), taxYear: 2026, eligibilityConfirmed: true,
+    taxLiabilityLimit: new Decimal("50000"),
+    constants: {maxCreditPerChild: new Decimal("17670"), phaseOutThreshold: new Decimal("265080"), phaseOutRange: new Decimal("40000"), refundablePerChild: new Decimal("5120")},
+    children, ...overrides,
+  });
+  const child = (overrides: Partial<import("@/engine/forms/form-8839.js").Form8839Params["children"][number]> = {}) => ({
+    ...makeParams({children:[{}]}).children[0], adoptionFinalizedYear: 2026,
+    expensesByYear: [{year: 2026, amount: "20000"}], ...overrides,
+  });
+  it("2026 splits refundable credit per child after phaseout", () => {
+    const r = calculateForm8839(current([child(), child({expensesByYear:[{year:2026,amount:"4000"}]})], {agi:new Decimal("285080")}));
+    expect(r.adoptionCredit.toString()).toBe("10835"); // 17670/2 + 4000/2
+    expect(r.refundableAdoptionCredit.toString()).toBe("7120"); // min(8835,5120)+2000
+    expect(r.nonrefundableAdoptionCredit.toString()).toBe("3715");
+    expect(r.lines.find(l=>l.line==="13")?.value.toString()).toBe("7120");
+    const old = calculateForm8839(makeParams({children:[{qualifiedExpenses:"17280"}]}));
+    expect(old.refundableAdoptionCredit.toString()).toBe("5000");
+    expect(old.nonrefundableAdoptionCredit.toString()).toBe("12280");
+  });
+  it("prior usage reduces the lifetime cap before current expenses", () => {
+    const r = calculateForm8839(current([child({priorYearCreditsClaimed:"10000",expensesByYear:[{year:2026,amount:"3000"}]}), child({priorYearCreditsClaimed:"20000",expensesByYear:[{year:2026,amount:"5000"}]})]));
+    expect(r.adoptionCredit.toString()).toBe("3000");
+    expect(r.childResults[0].netCredit.toString()).toBe("3000");
+    expect(r.childResults[1].netCredit.toString()).toBe("0");
+  });
+  it("2026 uses actual finality and payment years", () => {
+    const expensesByYear=[{year:2024,amount:"1000"},{year:2025,amount:"2000"},{year:2026,amount:"3000"}];
+    for (const [finalYear,foreign,expected] of [[null,false,"2000"],[2026,false,"5000"],[2025,false,"3000"],[null,true,"0"],[2026,true,"6000"],[2025,true,"3000"]] as const) {
+      expect(calculateForm8839(current([child({adoptionFinalizedYear:finalYear,isForeignAdoption:foreign,expensesByYear,priorYearForeignBenefits:"0"})])).adoptionCredit.toString()).toBe(expected);
+    }
+    const special=calculateForm8839(current([child({isSpecialNeeds:true,expensesByYear:[]})]));
+    expect(special.adoptionCredit.toString()).toBe("17670");
+    expect(calculateForm8839(current([child({isSpecialNeeds:true,isForeignAdoption:true,priorYearForeignBenefits:"0",expensesByYear:[]})])).adoptionCredit.toString()).toBe("0");
+  });
+  it("credit and employer exclusion have separate lifetime limits", () => {
+    const r=calculateForm8839(current([child({employerBenefits:"15000",employerPlanQualified:true,priorYearExclusionsClaimed:"5000"})],{exclusionMagi:new Decimal("100000")}));
+    expect(r.adoptionCredit.toString()).toBe("17670");
+    expect(r.allowableExclusion.toString()).toBe("12670");
+    expect(r.taxableEmployerBenefits.toString()).toBe("2330");
+    const noFinal=calculateForm8839(current([child({isForeignAdoption:true,adoptionFinalizedYear:null,employerBenefits:"5000",employerPlanQualified:true})],{exclusionMagi:new Decimal("100000")}));
+    expect(noFinal.taxableEmployerBenefits.toString()).toBe("5000");
+    const mfs=calculateForm8839(current([child({employerBenefits:"2000",employerPlanQualified:true})],{filingStatus:"married_filing_separately",exclusionMagi:new Decimal("100000")}));
+    expect(mfs.taxableEmployerBenefits.toString()).toBe("2000");
+  });
+  it("special needs employer exclusion can create negative taxable benefits", () => {
+    const r=calculateForm8839(current([child({isSpecialNeeds:true,employerPlanQualified:true,employerBenefits:"1000",expensesByYear:[]})],{exclusionMagi:new Decimal("100000")}));
+    expect(r.allowableExclusion.toString()).toBe("17670");
+    expect(r.taxableEmployerBenefits.toString()).toBe("-16670");
+  });
+  it("carryforwards stay nonrefundable and use oldest eligible vintage first", () => {
+    const r=calculateForm8839(current([child()],{taxLiabilityLimit:new Decimal("2500"),carryforwardReconciled2025:true,
+      carryforwards:[{originTaxYear:2025,amount:new Decimal("2000")},{originTaxYear:2021,amount:new Decimal("4000")},{originTaxYear:2020,amount:new Decimal("1000")}]}));
+    expect(r.refundableAdoptionCredit.toString()).toBe("5120");
+    expect(r.nonrefundableAdoptionCredit.toString()).toBe("2500");
+    expect(r.expiredCarryforward.toString()).toBe("2500"); // expired2020 plus unused2021 at yearend
+    expect(r.carryforwardRemaining.toString()).toBe("14550"); // 2000 + 17670-5120
+    expect(r.carryforwardByYear.map(c=>[c.originTaxYear,c.amount.toString()])).toEqual([[2025,"2000"],[2026,"12550"]]);
+    const carryOnly=calculateForm8839(current([],{agi:new Decimal("500000"),carryforwardReconciled2025:true,carryforwards:[{originTaxYear:2025,amount:new Decimal("2000")}]}));
+    expect(carryOnly.refundableAdoptionCredit.toString()).toBe("0");
+    expect(carryOnly.nonrefundableAdoptionCredit.toString()).toBe("2000"); // no repeatMAGIphaseout
+  });
+  it("aggregates expense cents before rounding each form line", () => {
+    const r=calculateForm8839(current([child({expensesByYear:[{year:2026,amount:"6000.25"},{year:2026,amount:"0.25"}]})],{agi:new Decimal("285080")}));
+    expect(r.netTentativeCredit.toString()).toBe("6001");
+    expect(r.phaseOutReduction.toString()).toBe("3001");
+    expect(r.adoptionCredit.toString()).toBe("3000");
+  });
+  it("rejects unknown adoption history and unreconciled carryforwards", () => {
+    for(const overrides of [{eligibilityConfirmed:undefined},{taxLiabilityLimit:undefined},{taxYear:2027},{carryforwards:[{originTaxYear:2025,amount:new Decimal("1")}]}]) {
+      expect(()=>calculateForm8839(current([child()],overrides))).toThrow();
+    }
+    for(const c of [child({adoptionFinalizedYear:undefined}),child({expensesByYear:undefined}),child({isForeignAdoption:true,priorYearForeignBenefits:undefined}),child({isForeignAdoption:true,priorYearForeignBenefits:"500"}),child({expensesByYear:[{year:2027,amount:"1"}]})]) {
+      expect(()=>calculateForm8839(current([c]))).toThrow();
+    }
   });
 });

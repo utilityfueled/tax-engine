@@ -1,143 +1,169 @@
 form: "Form 8839"
 fullName: "Qualified Adoption Expenses"
-taxYear: 2025
+taxYear: 2026
 irsReference: "https://www.irs.gov/instructions/i8839"
-
 notes: |
-  Form 8839 computes both the adoption credit (IRC §23) and the exclusion
-  for employer-provided adoption benefits (IRC §137). The maximum credit
-  and exclusion per eligible child is $17,280 for tax year 2025 (Rev. Proc.
-  2024-40 §3.01). Both are subject to the same modified AGI phase-out:
-  reduction begins at $259,190 and the credit/exclusion is fully phased out
-  at $299,190 (threshold + $40,000 statutory range from IRC §23(b)(2)(A)(ii)).
-  The credit is nonrefundable and flows to Schedule 3 Line 6c. Unused credit
-  carries forward for up to 5 years (IRC §23(c)). Married filing separately
-  filers cannot claim the credit (IRC §23(f)(1)) or the exclusion (IRC §137(d)).
-  Modified AGI equals AGI increased by amounts excluded under IRC §§911, 931,
-  and 933 (IRC §23(b)(2)(C)).
+  Reviewed for implementation 2026-10-25; independent tax review remains pending.
+  2025 final Form 8839 and instructions supply line formulas; 2026 indexed amounts
+  come from Rev. Proc. 2025-32 section 3.01, https://www.irs.gov/irb/2025-45_IRB.
+  https://www.irs.gov/credits-deductions/individuals/adoption-credit confirms 2026
+  maximum 17670, refundable cap 5120 and MAGI phaseout 265080 through 305080.
+  2025 values are 17280, 5000 and 259190 through 299190. Each child has separate
+  lifetime limits for credit and employer exclusion; expenses cannot be used for both.
+  Aggregate eligible expense records per child, then round each form monetary input to
+  the nearest dollar before percentage multiplication; do not round each expense record.
+  2026 requires confirmed eligibility, finality year (null if not final), unreimbursed
+  expenses by payment year, and actual tax-liability limit. US not-final claims prior-year
+  expenses; US final-this-year claims previous and current years; already-final claims
+  current year. Foreign final-this-year claims all eligible prior/current expenses,
+  but foreign not-final gets no current credit or employer exclusion. Special-needs
+  full credit is only for a US child with a state/tribal determination finalized this year.
+  The priorYearCreditsClaimed field means prior Form 8839 line 3 plus line 6, not just
+  the credit used against tax. Employer prior usage similarly means prior lines 20+24.
+  Foreign prior-year benefit exclusion requires the historical worksheet; nonzero prior
+  foreign benefits are explicitly unsupported until that historical calculation exists.
+  Schedule 3-A federal-public-benefit rules/final forms are a separate 2026 readiness gate;
+  these arithmetic results do not authorize filing or assume that eligibility.
+  IRS 2026-10 guidance on 2025 carryforward refunds instructs filers to keep completing
+  2025 Form 8839 under its published instructions. Its systemic account adjustment is
+  separate. For 2026, actual corrected carryforward balances must be confirmed from
+  the amended carryforward worksheet/notice, never inferred from the refund total:
+  https://www.irs.gov/faqs/questions-and-answers-about-adoption-tax-credit-carryforward
 
 lines:
   - line: "1"
-    description: "Maximum adoption credit per eligible child"
-    formula: "$17,280 for 2025 (Rev. Proc. 2024-40 §3.01)"
-    irsRef: "Form 8839 Instructions, Line 1"
-    inputs:
-      - "Tax year"
-    testRef: "tests/engine/forms/form-8839.test.ts::Form 8839 Line 1 - maximum credit per child is $17,280 for 2025"
-
+    description: "Eligible child and finality facts"
+    formula: "Confirm eligible child, adoption type, actual finality year and allowed expense years; MFS ordinary claim is ineligible"
+    testRef: "tests/engine/forms/form-8839.test.ts::2026 uses actual finality and payment years"
   - line: "2"
-    description: "Per-child qualified adoption expenses and tentative credit"
-    formula: "For each eligible child: if special needs and adoption became final, enter Line 1 maximum regardless of actual expenses; otherwise enter the smaller of qualified adoption expenses paid by taxpayer (not employer) or Line 1 maximum"
-    irsRef: "Form 8839 Instructions, Line 2"
-    inputs:
-      - "Whether child has special needs"
-      - "Whether adoption became final"
-      - "Qualified adoption expenses paid by taxpayer"
-      - "Maximum credit per child (Line 1)"
-    edgeCases:
-      - "Special needs children receive the full maximum credit even with $0 expenses when adoption is final"
-      - "Special needs children whose adoption has NOT become final use actual expenses, not the automatic maximum"
-      - "Foreign adoption expenses can only be claimed in the year the adoption becomes final"
-    testRef: "tests/engine/forms/form-8839.test.ts::Form 8839 Line 2 - special needs child gets full credit when adoption is final"
-
+    description: "Maximum credit per child"
+    formula: "2025 17280; 2026 17670; separate from the employer-exclusion maximum"
+    testRef: "tests/engine/forms/form-8839.test.ts::2026 splits refundable credit per child after phaseout"
   - line: "3"
-    description: "Total tentative credit for all children"
-    formula: "Sum of Line 2 amounts for all eligible children"
-    irsRef: "Form 8839 Instructions, Line 3"
-    inputs:
-      - "Form 8839 Line 2 per-child amounts"
-    testRef: "tests/engine/forms/form-8839.test.ts::Form 8839 Line 3 - total tentative credit sums across children"
-
+    description: "Previously consumed credit limit"
+    formula: "Prior Form 8839 line 3 plus line 6 for the same child"
+    testRef: "tests/engine/forms/form-8839.test.ts::prior usage reduces the lifetime cap before current expenses"
   - line: "4"
-    description: "Prior year adoption credits claimed for these children"
-    formula: "Sum of credits already claimed in prior years for the same children"
-    irsRef: "Form 8839 Instructions, Line 4"
-    inputs:
-      - "Prior year credits claimed per child"
-    notes: "The cumulative credit for any single child cannot exceed the maximum. Prior years' credits reduce the remaining available credit."
-    testRef: "tests/engine/forms/form-8839.test.ts::Form 8839 Line 4 - prior year credits reduce current year tentative credit"
-
+    description: "Remaining lifetime credit limit"
+    formula: "max(0, line 2 - line 3), separately per child"
+    testRef: "tests/engine/forms/form-8839.test.ts::prior usage reduces the lifetime cap before current expenses"
   - line: "5"
-    description: "Net tentative credit before phase-out"
-    formula: "max(0, Line 3 - Line 4)"
-    irsRef: "Form 8839 Instructions, Line 5"
-    inputs:
-      - "Form 8839 Line 3"
-      - "Form 8839 Line 4"
-    testRef: "tests/engine/forms/form-8839.test.ts::Form 8839 Line 5 - net tentative credit is total minus prior year claims"
-
+    description: "Expenses eligible this year"
+    formula: "Unreimbursed qualified expenses from eligible payment years; US special-needs finalized this year uses line 4"
+    testRef: "tests/engine/forms/form-8839.test.ts::2026 uses actual finality and payment years"
   - line: "6"
-    description: "Modified adjusted gross income"
-    formula: "AGI + foreign earned income exclusion (IRC §911) + foreign housing exclusion (IRC §911) + possession income exclusion (IRC §§931, 933)"
-    irsRef: "Form 8839 Instructions, Line 6; IRC §23(b)(2)(C)"
-    inputs:
-      - "AGI"
-      - "Foreign earned income exclusion"
-      - "Foreign housing exclusion"
-    testRef: "tests/engine/forms/form-8839.test.ts::Form 8839 Line 6 - MAGI includes foreign earned income exclusions"
-
+    description: "Current credit before income phaseout"
+    formula: "min(line 4, line 5) per child; no cross-child offset"
+    testRef: "tests/engine/forms/form-8839.test.ts::prior usage reduces the lifetime cap before current expenses"
   - line: "7"
-    description: "Phase-out threshold"
-    formula: "$259,190 for 2025 (Rev. Proc. 2024-40 §3.01)"
-    irsRef: "Form 8839 Instructions, Line 7"
-    testRef: "tests/engine/forms/form-8839.test.ts::Form 8839 Line 7 - phase-out threshold is $259,190 for 2025"
-
+    description: "Credit modified AGI"
+    formula: "AGI plus section 911 exclusions/deductions and sections 931/933 possession exclusion"
+    testRef: "tests/engine/forms/form-8839.test.ts::Form 8839 Line 6 - MAGI includes foreign earned income exclusions"
   - line: "8"
-    description: "Excess MAGI over threshold"
-    formula: "max(0, Line 6 - Line 7)"
-    irsRef: "Form 8839 Instructions, Line 8"
-    inputs:
-      - "Form 8839 Line 6"
-      - "Form 8839 Line 7"
-    testRef: "tests/engine/forms/form-8839.test.ts::Form 8839 Line 8 - excess MAGI is zero when below threshold"
-
+    description: "MAGI over indexed threshold"
+    formula: "max(0, MAGI - year threshold)"
+    testRef: "tests/engine/forms/form-8839.test.ts::2026 splits refundable credit per child after phaseout"
   - line: "9"
-    description: "Phase-out fraction"
-    formula: "min(1, Line 8 / $40,000) rounded to three decimal places"
-    irsRef: "Form 8839 Instructions, Line 9; IRC §23(b)(2)(A)(ii)"
-    inputs:
-      - "Form 8839 Line 8"
-    notes: "The $40,000 divisor is statutory (IRC §23(b)(2)(A)(ii)) and is NOT indexed for inflation."
-    testRef: "tests/engine/forms/form-8839.test.ts::Form 8839 Line 9 - phase-out fraction is capped at 1.000"
-
+    description: "Income phaseout fraction"
+    formula: "min(1, line 8 / 40000), round to three decimal places (IRS permits at least three)"
+    testRef: "tests/engine/forms/form-8839.test.ts::Form 8839 Line 9 - partial phase-out fraction rounded to 3 decimal places"
   - line: "10"
-    description: "Phase-out reduction"
-    formula: "Line 5 × Line 9"
-    irsRef: "Form 8839 Instructions, Line 10"
-    inputs:
-      - "Form 8839 Line 5"
-      - "Form 8839 Line 9"
-    testRef: "tests/engine/forms/form-8839.test.ts::Form 8839 Line 10 - phase-out reduces credit proportionally"
+    description: "Phaseout reduction per child"
+    formula: "roundDollar(line 6 * line 9), per child before aggregation"
+    testRef: "tests/engine/forms/form-8839.test.ts::2026 splits refundable credit per child after phaseout"
+  - line: "11a"
+    description: "Current allowed credit per child"
+    formula: "max(0, line 6 - line 10) rounded to dollars"
+    testRef: "tests/engine/forms/form-8839.test.ts::2026 splits refundable credit per child after phaseout"
+  - line: "11b"
+    description: "Refundable amount per child"
+    formula: "min(line 11a, year refundable cap), 5000 in 2025 or 5120 in 2026"
+    testRef: "tests/engine/forms/form-8839.test.ts::2026 splits refundable credit per child after phaseout"
+  - line: "11c"
+    description: "Total refundable amount"
+    formula: "sum per-child line 11b"
+    testRef: "tests/engine/forms/form-8839.test.ts::2026 splits refundable credit per child after phaseout"
+  - line: "12"
+    description: "Total current allowed credit"
+    formula: "sum per-child line 11a"
+    testRef: "tests/engine/forms/form-8839.test.ts::2026 splits refundable credit per child after phaseout"
+  - line: "13"
+    description: "Refundable adoption credit"
+    formula: "line 11c, flows to Form 1040 line 30 subject to separate year eligibility/readiness gates"
+    testRef: "tests/engine/forms/form-8839.test.ts::2026 splits refundable credit per child after phaseout"
+  - line: "14"
+    description: "Current nonrefundable credit"
+    formula: "max(0, line 12 - line 13)"
+    testRef: "tests/engine/forms/form-8839.test.ts::carryforwards stay nonrefundable and use oldest eligible vintage first"
+  - line: "15"
+    description: "Prior nonrefundable carryforward"
+    formula: "sum confirmed corrected balances with origin year within preceding five tax years"
+    testRef: "tests/engine/forms/form-8839.test.ts::carryforwards stay nonrefundable and use oldest eligible vintage first"
+  - line: "16"
+    description: "Available nonrefundable credit"
+    formula: "line 14 + line 15"
+    testRef: "tests/engine/forms/form-8839.test.ts::carryforwards stay nonrefundable and use oldest eligible vintage first"
+  - line: "17"
+    description: "Actual tax-liability limit"
+    formula: "max(0, Form 1040 line 18 less credits listed in IRS Credit Limit Worksheet); supplied by orchestrator"
+    testRef: "tests/engine/forms/form-8839.test.ts::carryforwards stay nonrefundable and use oldest eligible vintage first"
+  - line: "18"
+    description: "Nonrefundable adoption credit and carryforward"
+    formula: "min(line 16, line 17); consume oldest carryforward first then current nonrefundable credit; unused last-year vintage expires, other balances retain origin year"
+    testRef: "tests/engine/forms/form-8839.test.ts::carryforwards stay nonrefundable and use oldest eligible vintage first"
+  - line: "19"
+    description: "Maximum exclusion per child"
+    formula: "Same indexed dollar maximum as line 2; independently available on distinct expenses"
+    testRef: "tests/engine/forms/form-8839.test.ts::credit and employer exclusion have separate lifetime limits"
+  - line: "20"
+    description: "Previously consumed exclusion limit"
+    formula: "Prior Form 8839 lines 20 plus 24 for same child"
+    testRef: "tests/engine/forms/form-8839.test.ts::credit and employer exclusion have separate lifetime limits"
+  - line: "21"
+    description: "Remaining exclusion limit"
+    formula: "max(0, line 19 - line 20)"
+    testRef: "tests/engine/forms/form-8839.test.ts::credit and employer exclusion have separate lifetime limits"
+  - line: "22"
+    description: "Current employer benefits"
+    formula: "Actual qualified-plan benefits, not taxpayer's unreimbursed expense amount"
+    testRef: "tests/engine/forms/form-8839.test.ts::credit and employer exclusion have separate lifetime limits"
+  - line: "23"
+    description: "Total current benefits"
+    formula: "sum line 22"
+    testRef: "tests/engine/forms/form-8839.test.ts::credit and employer exclusion have separate lifetime limits"
+  - line: "24"
+    description: "Benefits within per-child lifetime limit"
+    formula: "min(line 21, line 22); qualified-plan US special-needs final this year uses line 21; foreign not final zero"
+    testRef: "tests/engine/forms/form-8839.test.ts::special needs employer exclusion can create negative taxable benefits"
+  - line: "25"
+    description: "Exclusion modified AGI"
+    formula: "AGI excluding adoption benefit adjustment, plus employer benefits and section 911/931/933 amounts; caller supplies exclusionMagi when benefits exist"
+    testRef: "tests/engine/forms/form-8839.test.ts::credit and employer exclusion have separate lifetime limits"
+  - line: "26"
+    description: "Exclusion MAGI excess"
+    formula: "max(0, line 25 - year threshold)"
+    testRef: "tests/engine/forms/form-8839.test.ts::credit and employer exclusion have separate lifetime limits"
+  - line: "27"
+    description: "Exclusion phaseout fraction"
+    formula: "min(1, line 26 / 40000), rounded to three decimal places"
+    testRef: "tests/engine/forms/form-8839.test.ts::credit and employer exclusion have separate lifetime limits"
+  - line: "28"
+    description: "Exclusion phaseout reduction"
+    formula: "roundDollar(line 24 * line 27) per child"
+    testRef: "tests/engine/forms/form-8839.test.ts::credit and employer exclusion have separate lifetime limits"
+  - line: "29"
+    description: "Allowed exclusion per child"
+    formula: "max(0, line 24 - line 28)"
+    testRef: "tests/engine/forms/form-8839.test.ts::credit and employer exclusion have separate lifetime limits"
+  - line: "30"
+    description: "Total allowed employer exclusion"
+    formula: "sum line 29"
+    testRef: "tests/engine/forms/form-8839.test.ts::credit and employer exclusion have separate lifetime limits"
+  - line: "31"
+    description: "Taxable employer benefit adjustment"
+    formula: "line 23 - line 30; may be negative for qualified-plan special-needs adoption; ineligible MFS or foreign not-final benefits remain taxable"
+    testRef: "tests/engine/forms/form-8839.test.ts::special needs employer exclusion can create negative taxable benefits"
 
-  - line: "11"
-    description: "Adoption credit after phase-out"
-    formula: "Line 5 - Line 10, rounded to nearest dollar"
-    irsRef: "Form 8839 Instructions, Line 11"
-    inputs:
-      - "Form 8839 Line 5"
-      - "Form 8839 Line 10"
-    notes: "This is the nonrefundable adoption credit flowing to Schedule 3 Line 6c. Unused credit carries forward for up to 5 years per IRC §23(c)."
-    testRef: "tests/engine/forms/form-8839.test.ts::Form 8839 Line 11 - credit flows to Schedule 3 Line 6c"
-
-  - line: "employer-exclusion"
-    description: "Employer-provided adoption benefit exclusion (Part III)"
-    formula: "For each child: min(employer-provided benefits, maximum exclusion $17,280 minus qualified expenses already used for credit); apply same MAGI phase-out; benefits exceeding excludable amount are taxable income"
-    irsRef: "Form 8839 Instructions, Part III; IRC §137"
-    inputs:
-      - "Employer-provided adoption benefits per child (W-2 Box 12 code T)"
-      - "Maximum exclusion per child (same $17,280)"
-      - "Modified AGI and phase-out"
-    notes: "The same per-child maximum applies to the combined credit plus exclusion. Employer benefits and taxpayer expenses for the same child share the $17,280 cap. Any employer benefits exceeding the exclusion after phase-out are included in taxable income."
-    edgeCases:
-      - "When employer benefits plus taxpayer expenses exceed $17,280 per child, the combined benefit is capped: exclusion = min(employerBenefits, $17,280 − tentativeCredit)"
-      - "Special needs child at full $17,280 credit leaves zero room for exclusion"
-      - "Phase-out reduces the exclusion the same way it reduces the credit"
-      - "Taxable employer benefits flow to Form 1040 Line 1 as additional wages"
-    testRef: "tests/engine/forms/form-8839.test.ts::Form 8839 employer exclusion - combined credit + exclusion respects $17,280 per-child cap"
-
-  - line: "mfs-ineligible"
-    description: "Married filing separately ineligibility"
-    formula: "Credit and exclusion are both $0 for MFS filers"
-    irsRef: "IRC §23(f)(1); IRC §137(d)"
-    notes: "MFS filers cannot claim the adoption credit or exclude employer-provided adoption benefits."
-    testRef: "tests/engine/forms/form-8839.test.ts::Form 8839 MFS - married filing separately cannot claim credit"
+exportValidation:
+  description: "2025 review-only mapping takes monetary lines directly from the engine audit, including refund, carryforward, credit limit and signed benefits; never reimplements tax arithmetic or silently truncates more than three children."
+  testRef: "tests/pdf/fill-form-8839.test.ts::maps audited refundable nonrefundable carryforward and signed benefits without recalculation"
