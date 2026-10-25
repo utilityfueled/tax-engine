@@ -1,0 +1,27 @@
+form: "PDF-Review-Policy"
+fullName: "Visible review-only PDF output boundaries"
+taxYear: 2025
+reference: "docs/upgrade-2026-execution-brief.md"
+notes: |
+  This is an output policy, not a tax computation or form qualification.
+  Every registered review template is stamped before it reaches a caller,
+  including early-return paths. Every added page is stamped when finalized.
+  Existing document Subject metadata never establishes a visible page notice.
+  Unchanged template hashes, year and filing gates remain mandatory.
+lines:
+  - line: "registered-template"
+    description: "Review templates are visibly marked before mapping"
+    formula: "Verify registered revision/year, load, visibly stamp every page, then return."
+    testRef: "tests/pdf/review-template-notice.test.ts::marks every registered template before callers can return it"
+  - line: "appended-pages"
+    description: "Pages added after the initial stamp remain review-only"
+    formula: "Stamp each newly added page at finalization; repeated calls do not add duplicate notices to unchanged pages."
+    testRef: "tests/pdf/review-template-notice.test.ts::marks appended pages and does not trust a matching metadata subject"
+  - line: "unavailable-year"
+    description: "Unavailable years cannot inspect a template path"
+    formula: "Reject unsupported mapping years before filesystem reads."
+    testRef: "tests/pdf/review-template-notice.test.ts::rejects an unavailable year before reading a template path"
+  - line: "saved-pages"
+    description: "Saved and merged pages retain one visible review notice"
+    formula: "Replace only the dedicated review-notice drawing stream on each finalization; reload/copy and arbitrary Subject metadata never suppress the visible notice or duplicate it."
+    testRef: "tests/pdf/review-template-notice.test.ts::replaces dedicated notice streams after saving and merging pages"

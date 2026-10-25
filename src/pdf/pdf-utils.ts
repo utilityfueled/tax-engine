@@ -8,6 +8,7 @@ import { readFile, writeFile, mkdir } from "fs/promises";
 import { basename, dirname } from "path";
 import Decimal from "decimal.js";
 import { assertReviewTemplateBytes } from "./template-registry.js";
+import { assertPdfExportAllowed, markReviewPdf } from "./export-policy.js";
 
 const PDF_LIB_XFA_WARNING =
   "Removing XFA form data as pdf-lib does not support reading or writing XFA";
@@ -125,9 +126,12 @@ export async function loadBlankPdf(pdfPath: string): Promise<PDFDocument> {
 
 /** A year-specific map must only use its registered, unchanged template revision. */
 export async function loadReviewTemplate(pdfPath: string, taxYear: number): Promise<PDFDocument> {
+  assertPdfExportAllowed(taxYear, taxYear);
   const bytes = await readFile(pdfPath);
   assertReviewTemplateBytes(basename(pdfPath), bytes, taxYear);
-  return loadPdfDocumentQuietly(bytes);
+  const doc = await loadPdfDocumentQuietly(bytes);
+  await markReviewPdf(doc);
+  return doc;
 }
 
 /** Save a filled PDF to disk, creating directories as needed. */

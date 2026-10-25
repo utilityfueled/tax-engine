@@ -109,3 +109,32 @@ newly available source is registered for export by this refresh. Existing 2025
 assets retain their pinned bytes. Independent final mapping review and the
 complete 2026 packet remain open. Raw downloaded responses and extraction
 checks are local evidence in `.local/upgrade-evidence/form-sources-current/`.
+
+## Visible review notices through every template and packet path — 2026-10-25
+
+Registered templates now receive the visible review notice before a mapper can
+return early. An unavailable mapping year fails before reading any supplied path;
+the original exact-byte registry and filing restrictions remain enforced.
+Document Subject metadata cannot establish that a notice is visible. Each
+finalization replaces only the dedicated notice drawing stream, keeping one
+notice on saved, reopened, appended and merged pages and preserving other page
+content and form fields. This also preserves the existing merged-packet test's
+strict one-notice-per-page assertion.
+
+The regressions first reproduced missing notices, metadata suppression, path I/O
+before the year gate and duplicate text after reload. The final focused run
+passes18 tests, including all41 registered templates and14 workspace PDF cases.
+Root types, all spec references and scoped lint pass. An independent agent
+review found no actionable findings and reran the4 policy cases; this is not
+human qualification. The final synthetic1040 plus appended-page PDF was saved,
+reopened and rendered:3 pages,229 canonical fields,one extracted and visibly
+rendered notice per page. Evidence is under `.local/upgrade-evidence/` with
+`pdf-review-notice-*` and `review-policy-independent-ai-agent.log` names.
+
+The immutable staged tree `95336b8bd2f664e17eb73ed247ada800f78b3ab2` passed the
+entire configured PDF suite and workspace download tests (1,028 tests,98 files).
+The log is `pdf-review-notice-staged-suite.log`.
+The first direct Vitest PDF run used the wrong Python environment and failed;
+the first configured suite caught the year-gate regression while it was being
+fixed. Neither is a passing gate. No output was newly qualified for filing or
+2026 export.
