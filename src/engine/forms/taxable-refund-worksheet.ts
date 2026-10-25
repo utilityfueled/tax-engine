@@ -105,6 +105,11 @@ export function calculateTaxableRefundWorksheet(
       ZERO, "No — took standard deduction; refund is not taxable");
     return buildZeroResult(audit, totalRefund, "Did not itemize in prior year");
   }
+  if (worksheet.priorYearStateLocalTaxElection === "sales") {
+    audit.record("Taxable Refund WS", "prior_tax_election", "Income taxes were not deducted",
+      ZERO, "Actual prior Schedule A general sales-tax election; IRS Schedule 1 line 1 instructions");
+    return buildZeroResult(audit, totalRefund, "Itemized general sales taxes instead of income taxes");
+  }
   if (worksheet.priorYearStateLocalTaxesPaid === undefined || worksheet.priorYearPropertyTaxesPaid === undefined) {
     throw new Error("Actual historical income and property taxes are required, including explicit zero when applicable.");
   }

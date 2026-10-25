@@ -4215,9 +4215,11 @@ export const TaxableRefundWorksheetSchema = z.object({
   priorYearSaltMagi: optionalDecimalInput,
   /** Whether the taxpayer itemized deductions on the prior-year return */
   priorYearItemized: z.boolean(),
+  /** Actual prior Schedule A tax election; omission preserves historical unknown. */
+  priorYearStateLocalTaxElection: z.enum(["income", "sales"]).optional(),
   /** Prior-year Schedule A Line 17 total itemized deductions */
   priorYearItemizedTotal: optionalDecimal,
-  /** Prior-year standard deduction amount (Form 1040 Line 12a) */
+  /** Actual standard deduction available in the recovery worksheet, including any mandatory-itemization restriction. */
   priorYearStandardDeduction: decimal,
   /** Total state/local income taxes actually paid in the prior year (before SALT cap) */
   priorYearStateLocalTaxesPaid: optionalDecimalInput,

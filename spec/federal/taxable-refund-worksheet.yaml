@@ -11,6 +11,26 @@ purpose: |
   reduced the prior-year deduction.
 
 lines:
+  - line: "prior_tax_election"
+    description: Actual prior general sales-tax election excludes the income-tax refund
+    formula: if priorYearItemized and priorYearStateLocalTaxElection = sales, taxable income-tax refund = 0; preserve the original refund and actual itemization election
+    reference: https://www.irs.gov/instructions/i1040gi — Schedule 1 line 1, Taxable Refunds, Credits, or Offsets of State and Local Income Taxes; IRC 111
+    note: |
+      The IRS states that none of an income-tax refund is taxable when the
+      taxpayer elected general sales taxes instead of income taxes. An omitted
+      election remains omitted for historical compatibility; it is not inferred
+      as income or sales. This is distinct from the alternative-sales-tax cap
+      when income taxes actually were deducted. Year/source consistency still
+      applies before the zero-income transfer.
+    testRef: "tests/engine/forms/taxable-refund-sales-election.test.ts::preserves an actual sales election and excludes the income-tax refund"
+  - line: "sales_election_transfer"
+    description: Transfer the actual sales-election zero once without changing itemization facts
+    formula: Schedule 1 line 1 receives zero from the actual elected-sales-tax recovery worksheet
+    testRef: "tests/engine/forms/taxable-refund-sales-election.test.ts::retains actual itemization and the sales election through the full return"
+  - line: "election_source_boundary"
+    description: Preserve absent historical election and validate the original recovery year
+    formula: omitted election remains unknown; source deduction years must match even when the final amount is zero
+    testRef: "tests/engine/forms/taxable-refund-sales-election.test.ts::preserves omitted election compatibility and rejects mismatched recovery years"
   - line: "origin_year"
     description: Explicit origin year controls the historical SALT limitation
     formula: require actual deduction priorTaxYear in 2018..2026 and priorTaxYear < receipt year; explicit refundExpenseTaxYear must match. Only historical unverified inputs may use Box3 as the former compatibility origin.

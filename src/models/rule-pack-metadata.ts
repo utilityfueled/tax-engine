@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.76",
+    ruleVersion: "2025.77",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i1040gi", section: "Schedule1 line1 actual prior general-sales-tax election excludes an income-tax refund without changing original itemization facts", revision: "Final2025 instructions and IRC111; historical omitted election remains unknown, source years and separate recovery methods retained", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/publications/p526", section: "Actual 2025 charitable category/vintage history, FIFO, fifth-year expiration, standard-year absorption and current recipient/payment-year validation", revision: "IRC170 and Reg1.170A-10; actual original-source reconciliation and exact ScheduleA media; 2026 floor/nonitemizer, binding modern cash/property and prior NOL methods remain separately bounded", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i982", section: "Actual insolvency sources and separate regular/AMT NOL attribute reductions after current tax, current origin first and prior vintages before residual expiry", revision: "IRC108(b), Reg1.108-7 and Pub4681; actual personal recourse sources, fixed originating1411 fraction and redacted review binding; distinct modified-absorption and later-attribute methods remain separate", retrievedAt: "2026-10-25" },
       { url: "https://uscode.house.gov/us/usc/119-118/t26/s6102/", section: "Exact charitable category capacities and carry before physical ScheduleA11/12/13 reporting; completed14 sums the three reported groups", revision: "IRC6102(c), final2025 ScheduleA and Pub526; original-source and exact-audit reconciliation, prior/mixed methods and independent qualification remain separate", retrievedAt: "2026-10-25" },
@@ -120,11 +121,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.72-law-integration-draft",
+    ruleVersion: "2026.73-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i1040gi", section: "Schedule1 line1 actual prior general-sales-tax election excludes an income-tax refund without changing original itemization facts", revision: "Final2025 instructions and IRC111; historical omitted election remains unknown, source years and separate recovery methods retained", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/publications/p526", section: "Actual 2025 charitable category/vintage history, FIFO, fifth-year expiration, standard-year absorption and current recipient/payment-year validation", revision: "IRC170 and Reg1.170A-10; actual original-source reconciliation and exact ScheduleA media; 2026 floor/nonitemizer, binding modern cash/property and prior NOL methods remain separately bounded", retrievedAt: "2026-10-25" },
       { url: "https://uscode.house.gov/us/usc/119-118/t26/s108/", section: "Actual insolvency-only current-tax-first regular/AMT loss-vintage reduction and fixed1411 origin character", revision: "Current108/56 and applicable Form982 instructions; source-only2026 validation does not open full-year or filing qualification, specialized ordering and later attributes remain separate", retrievedAt: "2026-10-25" },
       { url: "https://uscode.house.gov/us/usc/119-118/t26/s6102/", section: "Exact charitable category capacities and carry before physical ScheduleA11/12/13 reporting; completed14 sums the three reported groups", revision: "IRC6102(c), final2025 ScheduleA and Pub526; original-source and exact-audit reconciliation, prior/mixed methods and independent qualification remain separate", retrievedAt: "2026-10-25" },
