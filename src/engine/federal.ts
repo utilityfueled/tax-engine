@@ -1244,6 +1244,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
 
   // Line 7: Capital gains/losses via Schedule D (includes Form 8949)
   const schedD = calculateScheduleD(inputWithCrypto, filingStatus, constants, form4797, {
+    originalDigitalAssetSources: input.form1099DA,
     form8824CapitalGainLoss: form8824?.totalCapitalRecognizedGainOrLoss ?? new Decimal(0),
     childCapitalGainDistributions: form8814?.totalCapitalGains ?? new Decimal(0),
     childCollectiblesGain: form8814IncomeCharacter.collectiblesGain,

@@ -1,0 +1,30 @@
+form: "Schedule D digital source binding"
+fullName: "Original ordinary digital dispositions within actual capital worksheets"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i1040sd"
+sources:
+  - url: "https://www.irs.gov/instructions/i1040sd"
+    section: "Digital-asset reporting; long-term capital gains; lines18 and19"
+    retrieved: "2026-10-25"
+  - url: "https://www.irs.gov/instructions/i1099da"
+    section: "Original recipient statements, acquisition and basis records"
+    retrieved: "2026-10-25"
+notes: |
+  Actual ordinary DA transactions retain their original statement and row IDs.
+  Append-only capital normalization must not turn them into original B-index
+  sources. Revalidate the original DA facts and reconcile any normalized copy
+  before accepting the complete Schedule D source worksheet. No formula,
+  classification default, special digital-asset method or filing gate changes.
+lines:
+  - line: "ordinary-long-source"
+    description: "Preserve original DA links alongside original B sources"
+    formula: "Bind form1099DA:originalIndex:transaction:originalIndex to sourceReference containing the JSON pair of actual statement and disposition sourceIds, plus original year, owner, broker, dates and exact monetary amounts. Ordinary purchased DA remains ordinary gain; original B collectible and QSBS indexes remain unchanged."
+    testRef: "tests/engine/schedules/schedule-d-digital-sources.test.ts::binds original long-term DA sources in direct and canonical capital worksheets"
+  - line: "normalized-conservation"
+    description: "Reconcile transformed copies against complete original DA records"
+    formula: "Recalculate actual DA capital rows from original sources; normalized statement identity, owner, withholding, transaction count, classification, dates and amounts must match once. Missing originals, duplicate copies and equal-net changes reject."
+    testRef: "tests/engine/schedules/schedule-d-digital-sources.test.ts::rejects missing duplicated and stale normalized digital source copies"
+  - line: "unknown-and-special"
+    description: "Require complete original evidence and supported classifications"
+    formula: "Reject missing actual source facts, wrong year or owner, stale source references and unsupported collectible/QSBS digital classifications. Never use appended B indexes as a replacement original identity."
+    testRef: "tests/engine/schedules/schedule-d-digital-sources.test.ts::retains original digital identity and unsupported source boundaries"

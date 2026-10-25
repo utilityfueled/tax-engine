@@ -37,6 +37,8 @@ export interface ScheduleDResult {
 }
 
 export interface ScheduleDExtraInput {
+  /** Original source-only DA records when the calculation input has already been normalized. */
+  originalDigitalAssetSources?: TaxYearInput['form1099DA'];
   form8824CapitalGainLoss?: Decimal;
   /** Canonical actual Form8814 line10 transfers, before capital-loss netting. */
   childCapitalGainDistributions?: Decimal;
@@ -209,6 +211,7 @@ export function calculateScheduleD(
     childCollectiblesGain: extra?.childCollectiblesGain ?? new Decimal(0),
     childUnrecapturedSection1250Gain: extra?.childUnrecapturedSection1250Gain ?? new Decimal(0),
     section1202: form8949.section1202,
+    originalDigitalAssetSources: extra?.originalDigitalAssetSources,
   });
   const gainCondition = netLongTerm.gt(0) && netCapitalGainLoss.gt(0);
   const specialGainWorksheets = sourceWorksheets ? {
