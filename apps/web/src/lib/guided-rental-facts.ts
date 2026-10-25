@@ -1,8 +1,9 @@
 import Decimal from "decimal.js";
 import { parseGuidedCurrency } from "./guided-currency";
 import { amountError, hasEnteredAmount } from "./guided-required-facts";
-import type { FilingStatus, RentalPropertyEntryData } from "./guided-interview-flow";
+import type { FilingStatus, PersonalInfoData, RentalPropertyEntryData } from "./guided-interview-flow";
 import { paRentalWorksheetErrors, type PARentalIncomeExpensesData } from "./guided-pa-rental-facts";
+import { rentalCarrySourceErrors, type RentalCarryoverData } from "./guided-rental-carry-sources";
 
 export const paRentalBooleanFacts = [
   ["offeredToPublic", "Was this activity offered commercially to the public?"],
@@ -20,6 +21,7 @@ export type PARentalClassificationData = Partial<Record<typeof paRentalBooleanFa
 };
 
 export interface RentalSourceData {
+  priorLossSources?: RentalCarryoverData;
   paIncomeExpenses?: PARentalIncomeExpensesData;
   paClassification?: PARentalClassificationData;
   accountHolder?: "primary" | "spouse" | "joint" | "";
@@ -65,11 +67,11 @@ const types = ["single_family", "multi_family", "vacation", "commercial", "land"
 
 export function isStartedRental(entry: RentalPropertyEntryData): boolean {
   const entered = (value: unknown) => typeof value === "boolean" || (typeof value === "string" && value.trim() !== "");
-  return Object.values(entry).some(entered) || [entry.paClassification, entry.paIncomeExpenses].some(source => source && Object.values(source).some(entered));
+  return Object.values(entry).some(entered) || !!entry.priorLossSources || [entry.paClassification, entry.paIncomeExpenses].some(source => source && Object.values(source).some(entered));
 }
 
-export function rentalFactErrors(entries: RentalPropertyEntryData[] | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, stateCode?: string | null): Record<string, string> {
-  const errors: Record<string, string> = {};
+export function rentalFactErrors(entries: RentalPropertyEntryData[] | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, stateCode?: string | null, personal?: PersonalInfoData): Record<string, string> {
+  const errors: Record<string, string> = rentalCarrySourceErrors(entries, taxYear, filingStatus, personal);
   const names = new Set<string>();
   const maxDays = taxYear && new Date(Date.UTC(taxYear, 1, 29)).getUTCMonth() === 1 ? 366 : 365;
   (entries ?? []).forEach((entry, index) => {
@@ -106,7 +108,7 @@ export function rentalFactErrors(entries: RentalPropertyEntryData[] | undefined,
       }
     }
     for (const field of ["realEstateProfessional", "substantialServices", "selfRental", "additionalWorksheetRequired"] as const) if (entry[field] === true) errors[`${key}-${field}`] = "These facts need additional rental classification or limitation worksheets before calculation.";
-    for (const field of ["priorYearUnallowedLoss", "priorYearUnallowedCredits"] as const) if (!errors[`${key}-${field}`] && parseGuidedCurrency(entry[field]).gt(0)) errors[`${key}-${field}`] = "Prior-year losses or credits need their actual activity carryforward worksheets.";
+    if (!errors[`${key}-priorYearUnallowedCredits`] && parseGuidedCurrency(entry.priorYearUnallowedCredits).gt(0)) errors[`${key}-priorYearUnallowedCredits`] = "Prior-year credits need their separate actual activity carryforward worksheet method.";
     if (entry.isActiveParticipant === true && (amountError(entry.minimumOwnershipPercentage, "minimum combined ownership") || parseGuidedCurrency(entry.minimumOwnershipPercentage).lt(10) || parseGuidedCurrency(entry.minimumOwnershipPercentage).gt(100))) errors[`${key}-active-interest`] = "Active participation requires at least 10% combined taxpayer/spouse ownership by value throughout the year.";
     for (const [amount, field, label] of [[entry.depreciation, "depreciationWorksheetConfirmed", "depreciation"], [entry.autoTravel, "autoTravelWorksheetConfirmed", "vehicle and travel"]] as const) if (!amountError(amount, label) && parseGuidedCurrency(amount).gt(0) && entry[field] !== true) errors[`${key}-${field}`] = `Confirm the actual deductible ${label} worksheet amount.`;
     if (!errors[`${key}-otherExpenses`] && parseGuidedCurrency(entry.otherExpenses).gt(0) && !entry.otherExpenseDescription?.trim()) errors[`${key}-expense-description`] = "Describe the actual other deductible expenses.";

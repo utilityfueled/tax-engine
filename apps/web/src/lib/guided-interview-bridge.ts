@@ -48,6 +48,7 @@ import { buildActualEnergyInput, energyFactErrors } from "./guided-energy-facts"
 import { w2FactErrors } from "./guided-w2-facts";
 import { businessFactErrors, hasBusinessSourceData, isStartedNec, sumKnownBusinessAmounts, type BusinessSourceData } from "./guided-business-facts";
 import { isStartedRental, rentalFactErrors, rentalExpenseFields } from "./guided-rental-facts";
+import { buildGuidedRentalCarryovers } from "./guided-rental-carry-sources";
 import { paRentalAmountFields } from "./guided-pa-rental-facts";
 import { isStartedUnemployment, unemploymentEntries, unemploymentFactErrors, governmentSourceTotal } from "./guided-unemployment-facts";
 import { buildGovernmentPaymentSourceRecords } from "./guided-government-payment-inputs";
@@ -643,7 +644,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     assertKnownFacts(w2FactErrors(w2Data?.entries, segmentation.filingStatus, state.taxYear));
     assertKnownFacts(investmentFactErrors(investData, segmentation.filingStatus, state.taxYear, stateReturnData, segmentation.stateCode, personalInfo));
     assertKnownFacts(businessFactErrors(seData, segmentation.filingStatus, w2Data?.entries, stateReturnData, state.taxYear));
-    assertKnownFacts(rentalFactErrors(rentalData?.entries, segmentation.filingStatus, state.taxYear, segmentation.stateCode));
+    assertKnownFacts(rentalFactErrors(rentalData?.entries, segmentation.filingStatus, state.taxYear, segmentation.stateCode, personalInfo));
     assertKnownFacts(deductionFactErrors(deductionData, state.taxYear, segmentation.filingStatus, personalInfo.spouse));
     assertKnownFacts(investmentInterestFactErrors(deductionData, investData?.childElections, state.taxYear));
     assertKnownFacts(nonW2TaxAllocationErrors(state));
@@ -687,6 +688,8 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
   const form1099B = buildBrokerageInputs(investData?.brokerageEntries);
   const form1099R = buildRetirementInputs(retirementData?.entries, segmentation.filingStatus, state.taxYear, stateReturnData);
   const rentalProperties = buildRentalPropertyInputs(rentalData?.entries);
+  const rentalCarryovers = buildGuidedRentalCarryovers(rentalData?.entries, state.taxYear, segmentation.filingStatus, personalInfo);
+  const scheduleDInputs = buildGuidedScheduleDInputs(investData, state.taxYear, segmentation.filingStatus, personalInfo);
   const formSSA1099 = buildSocialSecurityInputs(socialSecurityData);
   const formRRB1099 = buildRailroadSocialSecurityInputs(socialSecurityData);
   const form1099G = buildUnemploymentInputs(unemploymentData);
@@ -772,7 +775,8 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     form1099Int,
     form8814: buildGuidedChildElections(investData?.childElections, state.taxYear),
     qofDispositionFacts: buildGuidedQofFacts(investData?.qofDispositionFacts, state.taxYear),
-    ...buildGuidedScheduleDInputs(investData, state.taxYear, segmentation.filingStatus, personalInfo),
+    ...scheduleDInputs,
+    priorYear: scheduleDInputs.priorYear || rentalCarryovers.length ? { ...scheduleDInputs.priorYear, ...(rentalCarryovers.length ? { suspendedPassiveLosses: rentalCarryovers } : {}) } : undefined,
     form1099OID,
     paResidentReturn: stateCode === "PA" && form1099OID.length ? { scheduleA: { oidSources: buildPaOidSources(investData?.oidEntries) } } : undefined,
     form1099Div,

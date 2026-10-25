@@ -7,12 +7,15 @@ import { CurrencyField } from "./currency-field";
 import { BooleanFact, TextFact } from "./fact-fields";
 import { PARentalExpenseDetails } from "./pa-rental-expense-details";
 import type { PARentalIncomeExpensesData } from "@/lib/guided-pa-rental-facts";
+import { RentalCarrySourceDetails } from "./rental-carry-source-details";
+import { guidedSourceValuesChanged } from "@/lib/guided-source-confirmation";
 
 function RentalPropertyCard({ entry, index, onEntryChange, onRemove, canRemove, stateCode }: {
   entry: RentalPropertyEntryData; index: number; onEntryChange: (entry: RentalPropertyEntryData) => void; onRemove: () => void; canRemove: boolean;
   stateCode?: string | null;
 }) {
   const patch = (values: Partial<RentalPropertyEntryData>, confirmationOnly = false) => onEntryChange({ ...entry, ...values,
+    priorLossSources: "priorLossSources" in values ? values.priorLossSources : (!confirmationOnly && !("sourceFactsConfirmed" in values) && entry.priorLossSources ? { ...entry.priorLossSources, sourceFactsConfirmed: null } : entry.priorLossSources),
     paClassification: values.paClassification ?? (!confirmationOnly && !("sourceFactsConfirmed" in values) && entry.paClassification ? { ...entry.paClassification, factsConfirmed: null } : entry.paClassification),
     paIncomeExpenses: values.paIncomeExpenses ?? (!confirmationOnly && !("sourceFactsConfirmed" in values) && entry.paIncomeExpenses ? { ...entry.paIncomeExpenses, factsConfirmed: null } : entry.paIncomeExpenses),
     sourceFactsConfirmed: "sourceFactsConfirmed" in values ? values.sourceFactsConfirmed : null });
@@ -43,6 +46,7 @@ function RentalPropertyCard({ entry, index, onEntryChange, onRemove, canRemove, 
     <BooleanFact label="Does this property require other special classification, interest-limit or loss worksheets?" value={entry.additionalWorksheetRequired} onChange={additionalWorksheetRequired => patch({ additionalWorksheetRequired })} />
     <CurrencyField label="Prior-year unallowed rental losses" value={entry.priorYearUnallowedLoss ?? ""} onChange={priorYearUnallowedLoss => patch({ priorYearUnallowedLoss })} />
     <CurrencyField label="Prior-year unallowed rental credits" value={entry.priorYearUnallowedCredits ?? ""} onChange={priorYearUnallowedCredits => patch({ priorYearUnallowedCredits })} />
+    <RentalCarrySourceDetails data={entry.priorLossSources} onChange={priorLossSources => patch({ priorLossSources }, !guidedSourceValuesChanged(entry.priorLossSources, priorLossSources))} />
     <details className="guided-expand"><summary className="guided-expand-trigger">Actual deductible rental expenses</summary>
       <p className="guided-hint">Enter each checked category, including actual zero. Exclude capital improvements, personal costs and amounts claimed elsewhere. Vehicle and depreciation amounts come from their completed deductible worksheets.</p>
       <div className="guided-expand-body guided-form-grid guided-form-grid-3">{rentalExpenseFields.map(([field, label]) => <CurrencyField key={field} label={label} value={entry[field] ?? ""} onChange={value => patch({ [field]: value })} />)}</div>

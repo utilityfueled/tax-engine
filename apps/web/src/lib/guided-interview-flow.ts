@@ -1515,6 +1515,8 @@ export function updateSectionData(
   const iraSourcesChanged = ["income-w2", "income-self-employment", "income-retirement"].includes(sectionId) && adjustments?.iraContributions;
   const hsaSourcesChanged = ["income-w2", "personal-info"].includes(sectionId) && adjustments?.hsaAccounts;
   const sourceValuesChanged = guidedSourceValuesChanged(state.sectionData[sectionId as keyof SectionDataMap], data);
+  const nextRentals = sectionId === "income-rental" ? data as SectionDataMap["income-rental"] : state.sectionData["income-rental"];
+  const rentalCarrySourcesChanged = sourceValuesChanged && sectionId !== "final-review" && nextRentals?.entries.some(entry => entry.priorLossSources);
   const nextPayments = sectionId === "payments" ? data as PaymentData : state.sectionData.payments;
   const estimatedTaxSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-social-security", "income-unemployment", "adjustments", "credits", "deductions", "payments", "additional-deductions", "other-taxes"].includes(sectionId) && nextPayments?.estimatedTaxFacts;
   const nextInvestments = sectionId === "income-investments" ? data as InvestmentData : state.sectionData["income-investments"];
@@ -1558,6 +1560,7 @@ export function updateSectionData(
     sectionData: {
       ...state.sectionData,
       [sectionId]: data,
+      ...(rentalCarrySourcesChanged && nextRentals ? { "income-rental": { ...nextRentals, entries: nextRentals.entries.map(entry => entry.priorLossSources ? { ...entry, priorLossSources: { ...entry.priorLossSources, sourceFactsConfirmed: null } } : entry) } } : {}),
       ...(estimatedTaxSourcesChanged && nextPayments ? { payments: { ...nextPayments, estimatedTaxFacts: { ...estimatedTaxSourcesChanged, sourceFactsConfirmed: null } } } : {}),
       ...((childElectionSourcesChanged || qofSourcesChanged || capitalSourcesChanged || qsbsSourcesChanged) && nextInvestments ? { "income-investments": { ...nextInvestments, ...(childElectionSourcesChanged ? { childElections: nextInvestments.childElections?.map(child => ({ ...child, sourceFactsConfirmed: null })) } : {}), ...(qofSourcesChanged ? { qofDispositionFacts: { ...qofSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(capitalSourcesChanged ? { scheduleDSources: { ...capitalSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(qsbsSourcesChanged ? { section1202Sources: { ...qsbsSourcesChanged, sourceFactsConfirmed: null } } : {}) } } : {}),
       ...((niitSourcesChanged || foreignTaxSourcesChanged) && nextOtherTaxes ? { "other-taxes": { ...nextOtherTaxes, ...(niitSourcesChanged ? { niitSources: { ...niitSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(foreignTaxSourcesChanged ? { foreignTaxElection: { ...foreignTaxSourcesChanged, sourceFactsConfirmed: null, ...(foreignTaxSourcesChanged.creditWithoutForm1116 ? { creditWithoutForm1116: { ...foreignTaxSourcesChanged.creditWithoutForm1116, sourceFactsConfirmed: null } } : {}), ...(foreignTaxSourcesChanged.creditWithForm1116 ? { creditWithForm1116: { ...foreignTaxSourcesChanged.creditWithForm1116, sourceFactsConfirmed: null } } : {}) } } : {}) } } : {}),
@@ -1819,9 +1822,9 @@ function validateInvestmentSection(
   return VALID_SECTION;
 }
 
-function validateRentalSection(data: { entries: RentalPropertyEntryData[] } | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, stateCode?: string | null): SectionValidationResult {
+function validateRentalSection(data: { entries: RentalPropertyEntryData[] } | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, stateCode?: string | null, personal?: PersonalInfoData): SectionValidationResult {
   if (!data?.entries.some(isStartedRental)) return EMPTY_SECTION("rental property info");
-  const errors = rentalFactErrors(data.entries, filingStatus, taxYear, stateCode);
+  const errors = rentalFactErrors(data.entries, filingStatus, taxYear, stateCode, personal);
   return Object.keys(errors).length ? { status: "partial", message: "Complete the actual rental ownership, use and expense facts.", fieldErrors: errors, allowSkip: true } : VALID_SECTION;
 }
 
@@ -1888,7 +1891,7 @@ export function validateSection(
     case "income-investments":
       return validateInvestmentSection(getSectionData(state, "income-investments"), state.segmentation.filingStatus, state.taxYear, getSectionData(state, "state-return"), state.segmentation.stateCode, getSectionData(state, "personal-info"));
     case "income-rental":
-      return validateRentalSection(getSectionData(state, "income-rental"), state.segmentation.filingStatus, state.taxYear, state.segmentation.stateCode);
+      return validateRentalSection(getSectionData(state, "income-rental"), state.segmentation.filingStatus, state.taxYear, state.segmentation.stateCode, state.sectionData["personal-info"]);
     case "income-retirement":
       return validateRetirementSection(getSectionData(state, "income-retirement"), state.segmentation.filingStatus, state.taxYear, getSectionData(state, "state-return"));
     case "income-social-security":

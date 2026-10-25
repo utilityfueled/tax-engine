@@ -1,0 +1,51 @@
+form: "Guided rental suspended loss sources"
+fullName: "Actual continuing rental passive loss and QBI history intake"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i8582"
+sources:
+  - url: "https://www.irs.gov/instructions/i8582"
+    section: "Parts IV and V, prior-year column(c), active participation in origin and current year"
+    retrieved: "2026-10-25"
+  - url: "https://www.irs.gov/instructions/i8995"
+    section: "Tracking Losses or Deductions Suspended by Other Provisions, original fixed qualified percentage"
+    retrieved: "2026-10-25"
+  - url: "https://www.irs.gov/instructions/i6251"
+    section: "Line2m independent passive activity computation and prior-year losses"
+    retrieved: "2026-10-25"
+notes: |
+  This bounded collector supplies the existing regular passive/QBI calculation,
+  without a current deduction override. Prior losses are the actual owner's
+  filed amounts, unlike current full-property rents and expenses. Require exact
+  property identity, continuing owner and unchanged household, whole-dollar
+  prior-year records, each originating qualified/nonqualified loss and actual
+  origin-year active participation. Known current active participation cannot
+  assign prior inactive losses to the special allowance. The supported AMT
+  branch requires an actual separate source comparison confirming identical
+  basis/depreciation, opening losses and current allowed losses. Missing or
+  differing AMT facts are not copied from regular tax. Dispositions, transfers,
+  regrouping, prior credits, CRD and other special methods remain explicit.
+lines:
+  - line: "canonical"
+    description: "Actual owner carry enters regular and QBI worksheets once"
+    formula: "120000 wages plus20000 full-property rents times50% minus3000 owner prior loss gives127000 AGI and7000 QBI; no second ownership allocation of prior carry"
+    testRef: "tests/guided-interview/guided-rental-carry-sources.test.ts::routes actual owner carry once and retains capital history"
+  - line: "history"
+    description: "Original qualified character and independent unknowns remain intact"
+    formula: "Require unique actual loss years and original/remaining qualified portions that sum to filed carry; pre2018 loss has zero qualified portions; reject unverified cents rather than round sources"
+    testRef: "tests/guided-interview/guided-rental-carry-sources.test.ts::preserves original loss character and rejects incomplete histories"
+  - line: "eligibility"
+    description: "Activity, household and AMT comparison boundaries are explicit"
+    formula: "Require continuing exact owner/property, all investment at risk, actual origin-year participation and separately confirmed zero AMT difference; do not infer unsupported grouping or transfer rules"
+    testRef: "tests/guided-interview/guided-rental-carry-sources.test.ts::requires matching owner history participation and independent AMT records"
+  - line: "confirmation"
+    description: "Changed current sources revoke the prior worksheet comparison"
+    formula: "Income, household and carry edits revoke confirmation without deleting original evidence; confirmation metadata edits preserve other valid answers"
+    testRef: "tests/guided-interview/guided-rental-carry-sources.test.ts::invalidates substantive return changes without confirmation cycles"
+  - line: "controls"
+    description: "Actual history controls retain blank zero and known false"
+    formula: "New histories contain no invented values; each vintage and independent AMT answer is editable; exact filed values persist and source edits revoke confirmation"
+    testRef: "tests/apps/web/rental-carry-source-interactions.test.tsx::collects actual loss history and preserves unknown comparison facts"
+  - line: "persistence"
+    description: "History survives desktop and mobile reopening privately"
+    formula: "Actual vintage edits and confirmation persist, unknown stays blank, and original reference/identity never enter request bodies"
+    testRef: "apps/web/tests/guided-rental-carry-sources.spec.ts::preserves actual rental carry history"
