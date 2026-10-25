@@ -145,6 +145,15 @@ export async function fillForm6251(
   if (!required("1b").eq(f6251.taxableIncome.plus(auditSenior))) {
     throw new Error("Form6251 line1b does not match its signed source income and senior deduction");
   }
+  if (audited.has("2c") && !required("2c").eq(f6251.investmentInterestAdjustment)) {
+    throw new Error("Form6251 line2c does not reconcile with its actual signed investment adjustment");
+  }
+  if (audited.has("40")) {
+    for (let line = 12; line <= 40; line++) required(String(line));
+    if (!required("40").eq(required("7")) || !required("12").eq(required("6"))) {
+      throw new Error("Form6251 PartIII does not reconcile with its AMT base and tax");
+    }
+  }
   for (const [key, field] of Object.entries(F)) {
     if (!key.startsWith("line")) continue;
     const value = audited.get(key.slice(4));

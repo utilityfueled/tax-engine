@@ -30,4 +30,25 @@ describe("Form6251 audited review fields",()=>{
     await expect(fillForm6251(simpleW2Fixture,{...r,form6251:{...r.form6251,lines:[...r.form6251.lines,row]}},path).then(()=>undefined)).rejects.toThrow(/unique|duplicate/i);
     await expect(fillForm6251(simpleW2Fixture,{...r,form6251:{...r.form6251,amt:r.form6251.amt.plus(1)}},path).then(()=>undefined)).rejects.toThrow(/reconcile|match/i);
   });
+  it("prints actual AMT investment adjustment and complete capital-gain worksheet",async()=>{
+    const source={sourceTaxYear:2025,sourceReference:"Synthetic actual investment source",sourceFactsConfirmed:true,
+      investmentInterestExpense:"10000",priorYearDisallowed:"0",grossInvestmentIncome:"20000",qualifiedDividendsIncluded:"20000",
+      netGainFromInvestmentProperty:"0",netCapitalGainFromInvestmentProperty:"0",electedPreferentialIncome:"5000",investmentExpenses:"0"};
+    const input=TaxYearInputSchema.parse({...simpleW2Fixture,deductionElection:"itemized",w2s:[{...simpleW2Fixture.w2s[0],wages:"150000"}],
+      form1099Div:[{payer:"Synthetic broker",ordinaryDividends:"20000",qualifiedDividends:"20000"}],
+      form4952:source,form4952Amt:{...source,grossInvestmentIncome:"23000"},
+      amtCapitalGains:{sourceTaxYear:2025,sourceReference:"Synthetic actual AMT basis sources",sourceFactsConfirmed:true,
+        qualifiedDividends:"20000",netCapitalGain:"0",section1250Gain:"0",collectiblesGain:"0"}});
+    const r=calculateFederalTax(input);
+    const doc=await fillForm6251(input,r,path),form=doc.getForm();
+    expect(form.getTextField(F.line2c).getText()).toBe("(3000)");
+    expect(form.getTextField(F.line13).getText()).toBe("15000");
+    expect(form.getTextField(F.line20).getText()).toBe("150000");
+    expect(form.getTextField(F.line27).getText()).toBe("150000");
+    expect(form.getTextField(F.line40).getText()).toBe("17564");
+    if(!r.form6251)throw new Error("Missing actual AMT result");
+    const bad={...r,form6251:{...r.form6251,lines:r.form6251.lines.map(l=>l.line==="40"?{...l,value:l.value.plus(1)}:l)}};
+    await expect(fillForm6251(input,bad,path)).rejects.toThrow(/reconcile|PartIII/i);
+  });
+
 });

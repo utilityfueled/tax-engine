@@ -1,0 +1,30 @@
+form: "AMT Investment Interest"
+fullName: "Separate actual Form4952 for alternative minimum tax"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i6251"
+retrievedAt: "2026-10-25"
+reviewStatus: "independent-review-pending"
+notes: |
+  Use separate actual AMT current interest, prior AMT carryover, income, net gain,
+  net capital gain and expense sources. Do not copy regular amounts as facts.
+  The completed AMT election must equal min(regular4g, AMT4b+AMT4e).
+  Nonitemizer Schedule E interest allocation remains unsupported without its
+  actual regular/AMT schedule allocation. Source-confirmed AMT gain amounts
+  represent completed basis/gain worksheets, not a substitute calculation.
+lines:
+  - line: "2c"
+    description: "Signed itemized investment interest adjustment"
+    formula: "Regular Form4952line8 minus AMT Form4952line8; no itemized adjustment when standard deduction selected"
+    testRef: "tests/engine/federal-amt-investment.test.ts::uses separate actual deductions and preserves both signs on line2c"
+  - line: "sources"
+    description: "Original AMT facts and current year remain required"
+    formula: "Validate separate AMT source confirmation/year and election reconciliation;2026 regular4952 requires actualAMT4952"
+    testRef: "tests/engine/federal-amt-investment.test.ts::rejects unknown or contradictory AMT sources rather than copying regular amounts"
+  - line: "election"
+    description: "AMT election and regular brackets use distinct source worksheets"
+    formula: "AMT preferential sources use actual AMT4952 election;6251lines20/27 retain regular-tax worksheet14/21, orQDCG5"
+    testRef: "tests/engine/federal-amt-investment.test.ts::uses actual AMT election and actual regular worksheet ordering"
+  - line: "review"
+    description: "Audit-backed signed adjustment and complete PartIII review fields"
+    formula: "Copy unique actual2c and12–40; reconcile40with7 and reject incomplete or contradictory source results"
+    testRef: "tests/pdf/form-6251-audit.test.ts::prints actual AMT investment adjustment and complete capital-gain worksheet"

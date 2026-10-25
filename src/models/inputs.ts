@@ -2982,6 +2982,17 @@ export const Form4952InputSchema = z.preprocess((value) => {
 }));
 export type Form4952Input = z.infer<typeof Form4952InputSchema>;
 
+/** Actual completed AMT gain/basis worksheets; omitted source answers stay unknown. */
+export const AMTCapitalGainsSchema = z.object({
+  sourceTaxYear: z.number().int().optional(),
+  sourceReference: z.string().trim().min(1).optional(),
+  sourceFactsConfirmed: z.boolean().optional(),
+  qualifiedDividends: optionalDecimalInput,
+  netCapitalGain: optionalDecimalInput,
+  section1250Gain: optionalDecimalInput,
+  collectiblesGain: optionalDecimalInput,
+});
+
 export const SavingsBondRedemptionSchema = z.preprocess((value) => {
   if (!value || typeof value !== "object" || Array.isArray(value)) return value;
   const record = value as Record<string, unknown>;
@@ -4942,6 +4953,8 @@ export const TaxYearInputSchema = z.object({
   form2555: Form2555Schema.optional(),
   form4684: Form4684Schema.optional(),
   form4952: Form4952InputSchema.optional(),
+  form4952Amt: Form4952InputSchema.optional(),
+  amtCapitalGains: AMTCapitalGainsSchema.optional(),
   form6252: z.array(Form6252Schema).default([]),
   form6781: Form6781Schema.optional(),
   form8615: Form8615Schema.optional(),

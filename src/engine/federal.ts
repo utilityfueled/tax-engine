@@ -56,7 +56,7 @@ import { calculateItemizedDeductionLimit } from "./forms/itemized-deduction-limi
 import { calculateStandardDeduction } from "./forms/standard-deduction.js";
 import { calculateStateLocalIncomeTaxDeduction } from "./forms/state-local-income-tax-deduction.js";
 import { calculateForm1099OID } from "./forms/form-1099-oid.js";
-import { calculateForm6251 } from "./forms/form-6251.js";
+import { calculateForm6251, type Form6251Input } from "./forms/form-6251.js";
 import { calculateForm8801 } from "./forms/form-8801.js";
 import { calculateForm8582 } from "./forms/form-8582.js";
 import type { PassiveActivity } from "./forms/form-8582.js";
@@ -1947,6 +1947,23 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   if (form4952) {
     audit.merge(form4952.lines);
   }
+  let form4952Amt: ReturnType<typeof calculateForm4952> | undefined;
+  if (input.form4952Amt) {
+    if (!form4952) throw new Error("AMT Form4952 requires the actual regular investment source worksheet");
+    const calculated = calculateForm4952(input.form4952Amt, year);
+    if (!calculated.sourceFactsVerified) throw new Error("AMT Form4952 actual source facts are required");
+    const requiredElection = min(form4952.line4g, calculated.line4b.plus(calculated.line4e));
+    if (!calculated.line4g.eq(requiredElection)) {
+      throw new Error("AMT Form4952 election must equal the regular election limited to actual AMT preferential income");
+    }
+    form4952Amt = {
+      ...calculated,
+      lines: calculated.lines.map(line => ({...line,form:line.form.replace("Form 4952","Form 4952 AMT")})),
+    };
+    audit.merge(form4952Amt.lines);
+  } else if (form4952 && year >= 2026) {
+    throw new Error("AMT Form4952 requires separate actual investment source facts");
+  }
   if (hasK1InvestmentAmounts) {
     audit.record("K-1", "inv", "K-1 investment amounts aggregated for Form 4952",
       k1InvestmentInterestExpense
@@ -2449,6 +2466,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   let incomeTax: Decimal;
   let ordinaryTax: Decimal;
   let preferentialTax: Decimal;
+  let regularCapitalGainsWorksheet: ReturnType<typeof calculateCapitalGainsTax>;
   const form2555WorksheetAmount = form2555IncomeReduction.plus(form2555HousingDeduction);
   const foreignDisallowedDeductionsInput = input.form2555?.foreignEarnedIncomeTaxWorksheetDisallowedDeductions;
   if (form2555 && year === 2026 && foreignDisallowedDeductionsInput === undefined) {
@@ -2475,6 +2493,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
         foreignCapitalGainExcess: capitalGainExcess,
       }
     );
+    regularCapitalGainsWorksheet = taxWithExclusion;
     const taxOnExcluded = calculateRegularIncomeTax(
       form2555StackingAmount, filingStatus, constants
     );
@@ -2501,6 +2520,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
       taxableIncome, qualifiedDividends, netLTCG, filingStatus, constants,
       { section1250Gain, collectiblesGain, investmentIncomeElection, electionCapitalGainAmount }
     );
+    regularCapitalGainsWorksheet = result;
     incomeTax = result.tax;
     ordinaryTax = result.ordinaryTax;
     preferentialTax = result.preferentialTax;
@@ -2574,6 +2594,51 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   const k1AmtDepletion = k1Agg.amtDepletion;
   const k1AmtOther = k1Agg.amtOtherItems;
 
+  let amtCapitalGainsSources: Form6251Input["capitalGainsSources"];
+  const amtGainFacts = input.amtCapitalGains;
+  if (amtGainFacts) {
+    if (amtGainFacts.sourceFactsConfirmed !== true || amtGainFacts.sourceTaxYear !== year || !amtGainFacts.sourceReference?.trim()) {
+      throw new Error("Actual AMT capital-gain source confirmation and matching source year are required");
+    }
+    if (form2555) throw new Error("Actual AMT foreign-income capital-gain source coordination is required");
+    if (form4952 && !form4952Amt) throw new Error("Actual AMT capital-gain sources require separate AMT Form4952");
+    const amount = (field: "qualifiedDividends" | "netCapitalGain" | "section1250Gain" | "collectiblesGain"): Decimal => {
+      const value = amtGainFacts[field];
+      if (value === undefined) throw new Error(`Actual AMT capital-gain source ${field} is unknown`);
+      const parsed = d(value);
+      if (!parsed.isFinite() || parsed.lt(0)) throw new Error(`Actual AMT capital-gain source ${field} must be finite and nonnegative`);
+      return roundDollar(parsed);
+    };
+    const amtQualifiedDividends = amount("qualifiedDividends");
+    const amtNetCapitalGain = amount("netCapitalGain");
+    const amt1250 = amount("section1250Gain");
+    const amtCollectibles = amount("collectiblesGain");
+    if (form4952Amt?.line4b.gt(amtQualifiedDividends)) {
+      throw new Error("AMT Form4952 dividend source exceeds the actual AMT gain worksheet");
+    }
+    const dividendsAfterElection = zeroFloor(amtQualifiedDividends.minus(form4952Amt?.electedQualifiedDividends ?? d("0")));
+    const gainsAfterElection = zeroFloor(amtNetCapitalGain.minus(form4952Amt?.electedNetCapitalGain ?? d("0")));
+    const totalPreferential = dividendsAfterElection.plus(gainsAfterElection);
+    const regularSource = (scheduleDLine: string): Decimal => {
+      if (regularCapitalGainsWorksheet.method === "ordinary") return taxableIncome;
+      const form = regularCapitalGainsWorksheet.method === "schedule-d" ? "Sched D Tax WS" : "QDCG WS";
+      const id = regularCapitalGainsWorksheet.method === "schedule-d" ? scheduleDLine : "5";
+      const entry = regularCapitalGainsWorksheet.lines.find(line => line.form === form && line.line === id);
+      if (!entry) throw new Error("Actual regular capital-gain tax worksheet is required for AMT");
+      return entry.value;
+    };
+    const preferentialIncome = totalPreferential.minus(min(gainsAfterElection,amt1250.plus(amtCollectibles)));
+    amtCapitalGainsSources = {
+      preferentialIncome,
+      section1250Gain: amt1250,
+      totalCapitalGainRatesIncome: min(preferentialIncome.plus(amt1250),totalPreferential),
+      regularZeroRateOrdinaryIncome: regularSource("14"),
+      regularFifteenRateOrdinaryIncome: regularSource("21"),
+    };
+  } else if (form4952Amt && qualifiedDividends.plus(netLTCG).gt(0)) {
+    throw new Error("Actual AMT capital-gain source worksheets are required with AMT investment interest");
+  }
+
   // Form 6251 feeds Schedule 2 Line 2, which in turn increases Form 1040 Line 18
   // before the saver's credit limitation on Form 8880 Line 11 is applied.
   const form6251 = calculateForm6251(
@@ -2584,6 +2649,9 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
       standardDeductionAmount: deductionUsed === "standard" ? deductionAmount : d("0"),
       seniorDeduction: schedule1A?.seniorDeduction,
       saltDeduction: schedA.saltDeduction,
+      investmentInterestAdjustment: form4952Amt && form4952
+        ? deductionUsed === "itemized" ? form4952.line8.minus(form4952Amt.line8) : d("0")
+        : undefined,
       depletionAdjustment: k1AmtDepletion,
       specifiedPrivateActivityBondInterest: form1099OID.privateActivityBondInterest,
       dispositionAdjustment: k1AmtDisposition,
@@ -2601,6 +2669,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
       netLongTermCapitalGain: netLTCG,
       section1250Gain,
       collectiblesGain,
+      capitalGainsSources: amtCapitalGainsSources,
     },
     constants
   );
@@ -3663,6 +3732,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     form8801,
     form4684,
     form4952,
+    form4952Amt,
     scheduleH,
     schedule2: sched2,
     schedule3: sched3,

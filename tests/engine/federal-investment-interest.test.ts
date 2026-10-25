@@ -40,7 +40,10 @@ describe("Investment interest federal source coordination",()=>{
       form4952:{...source(),investmentInterestExpense:"3000",grossInvestmentIncome:"5000",qualifiedDividendsIncluded:"0",electedPreferentialIncome:"0",investmentExpenses:"500",investmentExpensesDeductibleConfirmed:true}});
     expect(combined.form4952?.line1.toString()).toBe("3000");expect(combined.form4952?.line4a.toString()).toBe("5000");
     expect(combined.form4952?.line5.toString()).toBe("500");expect(combined.form4952?.sourceFactsVerified).toBe(true);
-    const current={...base,taxpayer:{...base.taxpayer,taxYear:2026},w2s:[{...base.w2s[0],wages:"40000"}],form4952:{...source(2026),investmentInterestExpense:"5000",electedPreferentialIncome:"5000"}};
+    const current={...base,taxpayer:{...base.taxpayer,taxYear:2026},w2s:[{...base.w2s[0],wages:"40000"}],form4952:{...source(2026),investmentInterestExpense:"5000",electedPreferentialIncome:"5000"},
+      form4952Amt:{...source(2026),investmentInterestExpense:"5000",electedPreferentialIncome:"5000"},
+      amtCapitalGains:{sourceTaxYear:2026,sourceReference:"Synthetic actual AMT worksheets",sourceFactsConfirmed:true,
+        qualifiedDividends:"10000",netCapitalGain:"0",section1250Gain:"0",collectiblesGain:"0"}};
     const result=calc(current);expect(result.form4952?.taxYear).toBe(2026);expect(line(result,"47")).toBe("4552");
     expect(()=>calc({...current,form4952:{...current.form4952,netCapitalGainFromInvestmentProperty:undefined}})).toThrow(/actual|source/i);
     expect(()=>calc({...current,form4952:{...current.form4952,sourceTaxYear:2025}})).toThrow(/year/i);

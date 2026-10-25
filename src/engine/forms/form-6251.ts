@@ -12,6 +12,7 @@ import type { CalculatedLine } from "@/models/outputs.js";
 import type { FilingStatus, YearConstants } from "@/models/constants.js";
 import { min, roundDollar, zeroFloor } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
+import { calculateAMTCapitalGains, type AMTCapitalGainsInput } from "./amt-capital-gains.js";
 
 export interface Form6251Input {
   taxableIncome: Decimal; // AGI less deductions before the 1040 zero floor
@@ -20,6 +21,7 @@ export interface Form6251Input {
   seniorDeduction?: Decimal; // Schedule 1-A line 37; personal exemption for AMT
   specifiedPrivateActivityBondInterest?: Decimal; // Actual line2g preference
   saltDeduction: Decimal; // Line 2a: SALT claimed on Sched A (add back)
+  investmentInterestAdjustment?: Decimal; // Actual signed regular-minus-AMT deduction on2c
   depletionAdjustment?: Decimal; // Line 2d: Depletion (excess over adjusted basis)
   dispositionAdjustment?: Decimal; // Line 2k: Adjusted gain/loss on property dispositions
   depreciationAdjustment?: Decimal; // Line 2l: Post-1986 depreciation adjustment
@@ -31,11 +33,13 @@ export interface Form6251Input {
   netLongTermCapitalGain?: Decimal; // Part III preferential-income path
   section1250Gain?: Decimal; // Special 25% rate portion
   collectiblesGain?: Decimal; // Special 28% rate portion
+  capitalGainsSources?: Omit<AMTCapitalGainsInput, "amtBase" | "filingStatus">;
 }
 
 export interface Form6251Result {
   taxableIncome: Decimal; // Original signed income before restoring senior deduction
   saltAddBack: Decimal; // Line 2a
+  investmentInterestAdjustment: Decimal; // Line2c; signed actual source difference
   depletionAdjustment: Decimal; // Line 2d
   dispositionAdjustment: Decimal; // Line 2k
   depreciationAdjustment: Decimal; // Line 2l
@@ -71,6 +75,13 @@ export function calculateForm6251(
   const standardAddBack = input.isItemizing ? new Decimal(0) : input.standardDeductionAmount ?? new Decimal(0);
   audit.record("Form 6251", "2a", "Taxes or standard deduction add-back", saltAddBack.plus(standardAddBack),
     "ScheduleA line7 if itemizing; otherwise actual Form1040 standard deduction");
+
+  const investmentInterestAdjustment = input.investmentInterestAdjustment ?? new Decimal(0);
+  if (!investmentInterestAdjustment.isFinite()) throw new Error("AMT investment interest adjustment must be finite");
+  if (input.investmentInterestAdjustment !== undefined) {
+    audit.record("Form 6251", "2c", "Investment interest adjustment", investmentInterestAdjustment,
+      "Actual regular allowed investment interest minus actual AMT allowed interest; preserve either sign");
+  }
 
   // Line 2d: Depletion adjustment (excess over adjusted basis)
   const depletionAdjustment = input.depletionAdjustment ?? new Decimal(0);
@@ -110,13 +121,14 @@ export function calculateForm6251(
     .plus(saltAddBack)
     .plus(standardAddBack)
     .plus(seniorAddBack)
+    .plus(investmentInterestAdjustment)
     .plus(depletionAdjustment)
     .plus(dispositionAdjustment)
     .plus(depreciationAdjustment)
     .plus(otherAdjustments)
     .plus(specifiedPrivateActivityBondInterest);
   audit.record("Form 6251", "4", "AMTI", amti,
-    "Taxable income + AMT adjustments (SALT/standard and senior add-backs, depreciation, depletion, dispositions, other)");
+    "Taxable income + signed investment adjustment and other AMT adjustments (SALT/standard and senior add-backs, depreciation, depletion, dispositions, other)");
 
   // Line 5: Exemption (with phase-out)
   const baseExemption = amtConst.exemption[input.filingStatus];
@@ -145,7 +157,14 @@ export function calculateForm6251(
   let tentativeMinimumTax = fullOrdinaryTax;
   let line7Source = "26% on first rate breakpoint + 28% on remainder";
 
-  if (preferentialIncome.greaterThan(0)) {
+  if (input.capitalGainsSources) {
+    const capitalGains = calculateAMTCapitalGains({
+      ...input.capitalGainsSources, amtBase, filingStatus: input.filingStatus,
+    }, constants);
+    audit.merge(capitalGains.lines);
+    tentativeMinimumTax = capitalGains.tax;
+    line7Source = "Actual Form6251 PartIII line40 using separate AMT and regular source worksheets";
+  } else if (preferentialIncome.greaterThan(0)) {
     const preferentialMethodTax = calculateAMTPreferentialTax({
       amtBase,
       regularTaxableIncome: input.taxableIncome,
@@ -176,6 +195,7 @@ export function calculateForm6251(
   return {
     taxableIncome: input.taxableIncome,
     saltAddBack,
+    investmentInterestAdjustment,
     depletionAdjustment,
     dispositionAdjustment,
     depreciationAdjustment,

@@ -11,7 +11,7 @@ notes: |
   Form 6251 calculates the Alternative Minimum Tax (AMT). The AMT is a
   parallel tax system that disallows certain deductions and adds back
   preferences. The taxpayer pays the greater of regular tax or AMT.
-  AMT flows to Schedule 2 Line 2b.
+  AMT flows to Schedule 2 Line 2.
 
   2025 AMT exemption amounts:
   - Single/HoH: $88,100 (phase-out begins at $626,350)
@@ -49,6 +49,11 @@ lines:
     irsRef: "Form 6251 Instructions, Line 2a"
     notes: "SALT is not deductible for AMT purposes"
     testRef: "tests/engine/forms/form-6251.test.ts::Line 2a - SALT add-back when itemizing"
+
+  - line: "2c"
+    description: "Actual signed investment interest adjustment"
+    formula: "Regular allowed investment interest minus AMT allowed investment interest; preserve either sign. Unknown source facts do not create a verified zero."
+    testRef: "tests/engine/federal-amt-investment.test.ts::uses separate actual deductions and preserves both signs on line2c"
 
   - line: "2d"
     description: "Depletion"
@@ -131,7 +136,7 @@ lines:
     description: "AMT (excess over regular tax)"
     formula: "max(0, tentative minimum tax - regular tax)"
     irsRef: "Form 6251 Instructions, Line 11"
-    notes: "This flows to Schedule 2 Line 2b"
+    notes: "This flows to Schedule 2 Line 2"
     testRef: "tests/engine/forms/form-6251.test.ts::Line 11 - AMT is zero when regular tax exceeds tentative minimum"
 
   - line: "2025-exemption-threshold-regression"
