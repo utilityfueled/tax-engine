@@ -370,9 +370,8 @@ describe("Form 4684 PDF - no casualty data", () => {
 });
 
 describe("Form 4684 packet inclusion", () => {
-  it("fillReturn attaches Form 4684 only when supported disaster scenarios produce a deductible loss or net casualty gain", async () => {
-    const outputDirs: string[] = [];
-
+  it("fillReturn attaches Form 4684 for a deductible disaster loss", async () => {
+    const outputDir = await makeOutputDir();
     try {
       const deductibleLossFixture = makeFixture({
         events: [{
@@ -390,18 +389,23 @@ describe("Form 4684 packet inclusion", () => {
       const deductibleLossResult = calculateFederalTax(deductibleLossFixture);
       expect(deductibleLossResult.form4684?.deductibleLoss.toNumber()).toBeGreaterThan(0);
 
-      const deductibleLossDir = await makeOutputDir();
-      outputDirs.push(deductibleLossDir);
       const deductibleLossPacket = await fillReturn(deductibleLossFixture, deductibleLossResult, {
         blankFormsDir: "forms/blank",
-        outputDir: deductibleLossDir,
+        outputDir,
       });
       const deductibleLossPath = deductibleLossPacket.filledForms.find((path) => path.endsWith("f4684-filled.pdf"));
 
       expect(deductibleLossPath).toBeDefined();
       await access(deductibleLossPath!);
       expect((await readFile(deductibleLossPath!)).length).toBeGreaterThan(0);
+    } finally {
+      await rm(outputDir, { recursive: true, force: true });
+    }
+  });
 
+  it("fillReturn attaches Form 4684 for a net casualty gain", async () => {
+    const outputDir = await makeOutputDir();
+    try {
       const netGainFixture = makeFixture({
         events: [{
           description: "Flood",
@@ -418,18 +422,23 @@ describe("Form 4684 packet inclusion", () => {
       const netGainResult = calculateFederalTax(netGainFixture);
       expect(netGainResult.form4684?.netCasualtyGain.toNumber()).toBeGreaterThan(0);
 
-      const netGainDir = await makeOutputDir();
-      outputDirs.push(netGainDir);
       const netGainPacket = await fillReturn(netGainFixture, netGainResult, {
         blankFormsDir: "forms/blank",
-        outputDir: netGainDir,
+        outputDir,
       });
       const netGainPath = netGainPacket.filledForms.find((path) => path.endsWith("f4684-filled.pdf"));
 
       expect(netGainPath).toBeDefined();
       await access(netGainPath!);
       expect((await readFile(netGainPath!)).length).toBeGreaterThan(0);
+    } finally {
+      await rm(outputDir, { recursive: true, force: true });
+    }
+  });
 
+  it("fillReturn omits Form 4684 when no residual loss or gain remains", async () => {
+    const outputDir = await makeOutputDir();
+    try {
       const noResidualFixture = makeFixture({
         events: [{
           description: "Minor wind damage",
@@ -447,17 +456,15 @@ describe("Form 4684 packet inclusion", () => {
       expect(noResidualResult.form4684?.deductibleLoss.toNumber()).toBe(0);
       expect(noResidualResult.form4684?.netCasualtyGain.toNumber()).toBe(0);
 
-      const noResidualDir = await makeOutputDir();
-      outputDirs.push(noResidualDir);
       const noResidualPacket = await fillReturn(noResidualFixture, noResidualResult, {
         blankFormsDir: "forms/blank",
-        outputDir: noResidualDir,
+        outputDir,
       });
       const noResidualPath = noResidualPacket.filledForms.find((path) => path.endsWith("f4684-filled.pdf"));
 
       expect(noResidualPath).toBeUndefined();
     } finally {
-      await Promise.all(outputDirs.map((outputDir) => rm(outputDir, { recursive: true, force: true })));
+      await rm(outputDir, { recursive: true, force: true });
     }
   });
 });

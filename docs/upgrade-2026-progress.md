@@ -280,3 +280,13 @@ An unversioned `fw2.pdf` filename no longer selects the 2026 sample fixture.
 The new deletion, stale-preview and ambiguous-filename regressions pass. This
 package does not complete every eligibility or residency rule, nor remove the
 remaining legacy mortgage, donation, retirement and education assumptions.
+
+## PDF test isolation under coverage
+
+A coverage run alongside the browser suite exceeded the default five-second
+limit in one test that built three full PDF packets in sequence. The loss, gain
+and no-residual cases are now separate tests with individual temporary outputs
+and matching spec references; no assertion or timeout was weakened. All 15,141
+tests pass under coverage after this split. Branch coverage remains **81.52%
+(16,261 / 19,946)**, below the unchanged 85% gate; the coverage command therefore
+fails. Statements 91.29%, lines 91.83% and functions 90.61% pass their gates.
