@@ -4,7 +4,7 @@
  *
  * Calculates AMT by adding back certain deductions to taxable income,
  * applying an exemption (with phase-out), and computing tax at 26%/28%.
- * AMT = max(0, tentative minimum tax - regular tax) → Schedule 2 Line 1.
+ * AMT = max(0, tentative minimum tax - regular tax) → Schedule 2 Line 2.
  */
 
 import Decimal from "decimal.js";
@@ -15,11 +15,12 @@ import { AuditTrail } from "@/utils/audit.js";
 
 export interface Form6251Input {
   taxableIncome: Decimal; // AGI less deductions before the 1040 zero floor
+  totalDeductions?: Decimal; // Actual Form1040 line14, before subtracting senior deduction
   standardDeductionAmount?: Decimal; // Actual standard deduction selected on Form 1040
   seniorDeduction?: Decimal; // Schedule 1-A line 37; personal exemption for AMT
   specifiedPrivateActivityBondInterest?: Decimal; // Actual line2g preference
   saltDeduction: Decimal; // Line 2a: SALT claimed on Sched A (add back)
-  depletionAdjustment?: Decimal; // Line 2c: Depletion (excess over adjusted basis)
+  depletionAdjustment?: Decimal; // Line 2d: Depletion (excess over adjusted basis)
   dispositionAdjustment?: Decimal; // Line 2k: Adjusted gain/loss on property dispositions
   depreciationAdjustment?: Decimal; // Line 2l: Post-1986 depreciation adjustment
   otherAdjustments?: Decimal; // Line 3: Other AMT adjustments
@@ -33,16 +34,16 @@ export interface Form6251Input {
 }
 
 export interface Form6251Result {
-  taxableIncome: Decimal; // Line 1
+  taxableIncome: Decimal; // Original signed income before restoring senior deduction
   saltAddBack: Decimal; // Line 2a
-  depletionAdjustment: Decimal; // Line 2c
+  depletionAdjustment: Decimal; // Line 2d
   dispositionAdjustment: Decimal; // Line 2k
   depreciationAdjustment: Decimal; // Line 2l
   otherAdjustments: Decimal; // Line 3
-  amti: Decimal; // Line 7: Alternative Minimum Taxable Income
-  exemption: Decimal; // Line 8
-  amtBase: Decimal; // Line 9
-  tentativeMinimumTax: Decimal; // Line 10
+  amti: Decimal; // Line 4: Alternative Minimum Taxable Income
+  exemption: Decimal; // Line 5
+  amtBase: Decimal; // Line 6
+  tentativeMinimumTax: Decimal; // Line 9
   amt: Decimal; // Line 11: excess over regular tax
   lines: CalculatedLine[];
 }
@@ -54,23 +55,27 @@ export function calculateForm6251(
   const audit = new AuditTrail();
   const amtConst = constants.amt;
 
-  // Line 1: Taxable income
-  audit.record("Form 6251", "1", "Taxable income", input.taxableIncome,
-    "AGI less deductions, before the Form 1040 zero floor");
-
-  // Line 2a: SALT add-back (only if itemizing)
-  const saltAddBack = input.isItemizing ? input.saltDeduction : new Decimal(0);
-  audit.record("Form 6251", "2a", "SALT add-back", saltAddBack,
-    "State/local tax deduction added back for AMT");
-  const standardAddBack = input.isItemizing ? new Decimal(0) : input.standardDeductionAmount ?? new Decimal(0);
   const seniorAddBack = input.seniorDeduction ?? new Decimal(0);
-  if (!standardAddBack.isZero()) audit.record("Form 6251", "2a-standard", "Standard deduction add-back", standardAddBack, "Actual Form 1040 standard deduction is not allowed for AMT");
-  if (!seniorAddBack.isZero()) audit.record("Form 6251", "1-senior", "Enhanced senior deduction add-back", seniorAddBack, "Schedule 1-A line 37 is not allowed for AMT");
+  if (!seniorAddBack.isFinite() || seniorAddBack.lt(0)) throw new Error("AMT senior deduction must be finite and nonnegative");
+  if (input.totalDeductions !== undefined) {
+    if (!input.totalDeductions.isFinite() || input.totalDeductions.lt(seniorAddBack)) {
+      throw new Error("AMT total deductions must be finite and at least the senior deduction");
+    }
+    audit.record("Form 6251", "1a", "Deductions excluding enhanced senior deduction", input.totalDeductions.minus(seniorAddBack),
+      "Form1040 line14 minus Schedule1A line37");
+  }
+  audit.record("Form 6251", "1b", "Taxable income after AMT-allowed deductions", input.taxableIncome.plus(seniorAddBack),
+    "Form1040 line11b minus Form6251 line1a; retain signed income before the1040 zero floor");
 
-  // Line 2c: Depletion adjustment (excess over adjusted basis)
+  const saltAddBack = input.isItemizing ? input.saltDeduction : new Decimal(0);
+  const standardAddBack = input.isItemizing ? new Decimal(0) : input.standardDeductionAmount ?? new Decimal(0);
+  audit.record("Form 6251", "2a", "Taxes or standard deduction add-back", saltAddBack.plus(standardAddBack),
+    "ScheduleA line7 if itemizing; otherwise actual Form1040 standard deduction");
+
+  // Line 2d: Depletion adjustment (excess over adjusted basis)
   const depletionAdjustment = input.depletionAdjustment ?? new Decimal(0);
   if (!depletionAdjustment.isZero()) {
-    audit.record("Form 6251", "2c", "Depletion", depletionAdjustment,
+    audit.record("Form 6251", "2d", "Depletion", depletionAdjustment,
       "Excess of percentage depletion over cost depletion (K-1 Box 17 Code C)");
   }
 
@@ -100,7 +105,7 @@ export function calculateForm6251(
       "Other AMT preference/adjustment items (K-1 Box 17 Code F and other sources)");
   }
 
-  // Line 7: AMTI
+  // Line 4: AMTI
   const amti = input.taxableIncome
     .plus(saltAddBack)
     .plus(standardAddBack)
@@ -110,22 +115,22 @@ export function calculateForm6251(
     .plus(depreciationAdjustment)
     .plus(otherAdjustments)
     .plus(specifiedPrivateActivityBondInterest);
-  audit.record("Form 6251", "7", "AMTI", amti,
+  audit.record("Form 6251", "4", "AMTI", amti,
     "Taxable income + AMT adjustments (SALT/standard and senior add-backs, depreciation, depletion, dispositions, other)");
 
-  // Line 8: Exemption (with phase-out)
+  // Line 5: Exemption (with phase-out)
   const baseExemption = amtConst.exemption[input.filingStatus];
   const phaseOutThreshold = amtConst.phaseOutThreshold[input.filingStatus];
   const excessOverThreshold = zeroFloor(amti.minus(phaseOutThreshold));
   // 25% for 2025; 50% from 2026 under IRC 55(d)(4)(A)(ii)(IV).
   const exemptionReduction = roundDollar(excessOverThreshold.times(amtConst.phaseOutRate));
   const exemption = zeroFloor(baseExemption.minus(exemptionReduction));
-  audit.record("Form 6251", "8", "AMT exemption", exemption,
+  audit.record("Form 6251", "5", "AMT exemption", exemption,
     `Base ${baseExemption} - phase-out reduction ${exemptionReduction}`);
 
-  // Line 9: AMT base
+  // Line 6: AMT base
   const amtBase = zeroFloor(amti.minus(exemption));
-  audit.record("Form 6251", "9", "AMT base", amtBase,
+  audit.record("Form 6251", "6", "AMT base", amtBase,
     "AMTI - exemption");
 
   const qualifiedDividends = input.qualifiedDividends ?? new Decimal(0);
@@ -134,11 +139,11 @@ export function calculateForm6251(
   const collectiblesGain = input.collectiblesGain ?? new Decimal(0);
   const preferentialIncome = zeroFloor(qualifiedDividends.plus(netLongTermCapitalGain));
 
-  // Line 10: Tentative minimum tax (26% / 28% rates or Part III preferential-income path)
+  // Line 7: Tax before AMT foreign tax credit (26% / 28% rates or Part III preferential-income path)
   const rate26Limit = amtConst.rate26Limit[input.filingStatus];
   const fullOrdinaryTax = calculateAMTOrdinaryTax(amtBase, rate26Limit);
   let tentativeMinimumTax = fullOrdinaryTax;
-  let line10Source = "26% on first rate breakpoint + 28% on remainder";
+  let line7Source = "26% on first rate breakpoint + 28% on remainder";
 
   if (preferentialIncome.greaterThan(0)) {
     const preferentialMethodTax = calculateAMTPreferentialTax({
@@ -152,17 +157,21 @@ export function calculateForm6251(
       constants,
     });
     tentativeMinimumTax = min(fullOrdinaryTax, preferentialMethodTax);
-    line10Source = tentativeMinimumTax.equals(preferentialMethodTax)
+    line7Source = tentativeMinimumTax.equals(preferentialMethodTax)
       ? "Form 6251 Part III maximum capital gains rates path"
       : "26%/28% AMT tax is lower than Part III result";
   }
-  audit.record("Form 6251", "10", "Tentative minimum tax", tentativeMinimumTax,
-    line10Source);
+  audit.record("Form 6251", "7", "Tax before AMT foreign tax credit", tentativeMinimumTax, line7Source);
+  // An actual AMTFTC worksheet is not represented. Do not create a verified-zero line8.
+  audit.record("Form 6251", "9", "Tentative minimum tax", tentativeMinimumTax,
+    "Preview line7 with no AMTFTC; source worksheet qualification remains pending");
+  audit.record("Form 6251", "10", "Regular tax comparison", input.regularTax,
+    "Actual caller-supplied regular-tax comparison; ScheduleJ averaging excluded");
 
   // Line 11: AMT = excess of tentative minimum over regular tax
   const amt = zeroFloor(tentativeMinimumTax.minus(input.regularTax));
   audit.record("Form 6251", "11", "Alternative Minimum Tax", amt,
-    "max(0, tentative minimum - regular tax) → Schedule 2 Line 1");
+    "max(0, tentative minimum - regular tax) → Schedule 2 Line 2");
 
   return {
     taxableIncome: input.taxableIncome,

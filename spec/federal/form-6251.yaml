@@ -2,12 +2,16 @@ form: "Form 6251"
 fullName: "Alternative Minimum Tax — Individuals"
 taxYear: 2025
 irsReference: "https://www.irs.gov/instructions/i6251"
+retrievedAt: "2026-10-25"
+reviewStatus: "independent-review-pending"
+limitations:
+  - "Printed-line correction does not qualify AMT foreign-tax credit, foreign-income stacking, MFS extra adjustment, AMT NOL or PartIII source worksheets."
 
 notes: |
   Form 6251 calculates the Alternative Minimum Tax (AMT). The AMT is a
   parallel tax system that disallows certain deductions and adds back
   preferences. The taxpayer pays the greater of regular tax or AMT.
-  AMT flows to Schedule 2 Line 1.
+  AMT flows to Schedule 2 Line 2b.
 
   2025 AMT exemption amounts:
   - Single/HoH: $88,100 (phase-out begins at $626,350)
@@ -20,30 +24,38 @@ notes: |
   taxing the full AMT base at 26%/28%.
 
 lines:
+  - line: "printed-line-audit"
+    description: "Use the final2025 form's actual line numbers and source amounts"
+    formula: "Line1a is actual1040line14 minus Schedule1Aline37; omit when total deductions are unknown. Line1b is signed income before the1040zero-floor plus the senior deduction. Line2a is actual standard deduction when selected, otherwise ScheduleA taxes. Depletion is2d. AMTI/exemption/base are4/5/6; computed AMT tax is7; tentative minimum tax is9; actual regular-tax comparison is10; excess tax is11. Do not infer line10 by subtracting AMT from tentative minimum tax. Unknown AMTFTC remains an unsupported blank, not an invented verified zero."
+    testRef: "tests/engine/forms/form-6251-audit.test.ts::Official Form6251 printed audit"
+  - line: "review-printed-fields"
+    description: "Copy audited amounts to corresponding physical fields"
+    formula: "Copy unique finite official audit values, preserve signed line1b and exact selected standard/senior adjustments, and check amount/result reconciliation. Unsupported PartIII and AMT source limitations remain disclosed on the review attachment; no filing qualification."
+    testRef: "tests/pdf/form-6251-audit.test.ts::Form6251 audited review fields"
   - line: "federal-standard-senior-addbacks"
     description: "Actual standard and enhanced senior deductions are not AMT deductions"
     formula: "In federal orchestration start with AGI minus actual deductions before the Form 1040 zero floor; add the actual standard deduction if selected, and Schedule 1-A senior deduction, when computing AMTI. Do not add back other Schedule 1-A deductions or the separate nonitemizer charitable deduction."
     irsRef: "2025 Form 6251 instructions Lines 1 and 2a; IRC 56(b)(1)(D)"
     testRef: "tests/engine/federal-amt-addbacks.test.ts::AMT standard and senior deduction addbacks"
-  - line: "1"
-    description: "Taxable income from Form 1040"
-    formula: "AGI less actual deductions before the Form 1040 zero floor; restore senior deduction separately"
-    irsRef: "Form 6251 Instructions, Line 1"
-    testRef: "tests/engine/forms/form-6251.test.ts::Line 1 - taxable income passes through"
+  - line: "1b"
+    description: "Signed income after deductions allowed for AMT"
+    formula: "AGI less Form1040line14 plus Schedule1Aline37; retain negative values"
+    irsRef: "Form 6251 Instructions, Line 1b"
+    testRef: "tests/engine/forms/form-6251.test.ts::Line 1b - taxable income passes through"
 
   - line: "2a"
     description: "SALT add-back"
-    formula: "State/local tax deduction (if itemized)"
+    formula: "ScheduleA taxes if itemizing; actual Form1040 standard deduction otherwise"
     irsRef: "Form 6251 Instructions, Line 2a"
     notes: "SALT is not deductible for AMT purposes"
     testRef: "tests/engine/forms/form-6251.test.ts::Line 2a - SALT add-back when itemizing"
 
-  - line: "2c"
+  - line: "2d"
     description: "Depletion"
     formula: "Excess of percentage depletion over cost depletion"
-    irsRef: "Form 6251 Instructions, Line 2c"
+    irsRef: "Form 6251 Instructions, Line 2d"
     notes: "K-1 Box 17 Code C flows here. Positive increases AMTI."
-    testRef: "tests/engine/forms/form-6251.test.ts::Line 2c - depletion adjustment increases AMTI"
+    testRef: "tests/engine/forms/form-6251.test.ts::Line 2d - depletion adjustment increases AMTI"
 
   - line: "2k"
     description: "Disposition of property"
@@ -69,45 +81,57 @@ lines:
     notes: "K-1 Box 17 Code F and other miscellaneous AMT items flow here."
     testRef: "tests/engine/forms/form-6251.test.ts::Line 3 - other AMT adjustments increase AMTI"
 
-  - line: "7"
+  - line: "4"
     description: "Alternative minimum taxable income (AMTI)"
-    formula: "Line 1 + Lines 2a through 3 (SALT, depletion, depreciation, dispositions, other)"
-    irsRef: "Form 6251 Instructions, Line 7"
-    testRef: "tests/engine/forms/form-6251.test.ts::Line 7 - AMTI equals taxable income plus SALT add-back"
+    formula: "Line 1b + Lines 2a through 3 (SALT, depletion, depreciation, dispositions, other)"
+    irsRef: "Form 6251 Instructions, Line 4"
+    testRef: "tests/engine/forms/form-6251.test.ts::Line 4 - AMTI equals taxable income plus SALT add-back"
 
-  - line: "8"
+  - line: "5"
     description: "AMT exemption amount"
     formula: "Varies by filing status; phases out at 25 cents per dollar over threshold"
-    irsRef: "Form 6251 Instructions, Line 8"
+    irsRef: "Form 6251 Instructions, Line 5"
     edgeCases:
       - "Phase-out: exemption reduced by 25% of AMTI exceeding threshold"
       - "MFS exemption is half of MFJ"
       - "At very high income, exemption fully phased out"
       - "ROUND_HALF_UP on 25% reduction shifts full phase-out 2 dollars earlier than neat algebraic boundary (e.g., single: $978,748 not $978,750)"
       - "First $1 exemption reduction at AMTI $626,352 (single), not $626,351, because round(0.25)=0 but round(0.50)=1"
-    testRef: "tests/engine/forms/form-6251.test.ts::Line 8 - full exemption for single filer below phase-out"
+    testRef: "tests/engine/forms/form-6251.test.ts::Line 5 - full exemption for single filer below phase-out"
 
-  - line: "9"
+  - line: "6"
     description: "AMT base (AMTI minus exemption)"
-    formula: "max(0, Line 7 - Line 8)"
-    irsRef: "Form 6251 Instructions, Line 9"
-    testRef: "tests/engine/forms/form-6251.test.ts::Line 9 - AMT base is AMTI minus exemption"
+    formula: "max(0, Line 4 - Line 5)"
+    irsRef: "Form 6251 Instructions, Line 6"
+    testRef: "tests/engine/forms/form-6251.test.ts::Line 6 - AMT base is AMTI minus exemption"
 
-  - line: "10"
+  - line: "7"
     description: "Tentative minimum tax"
     formula: "If no preferential income, 26% on first $239,100 ($119,550 MFS) + 28% on remainder; otherwise use Form 6251 Part III maximum capital gains rates"
-    irsRef: "Form 6251 Instructions, Line 10"
+    irsRef: "Form 6251 Instructions, Line 7"
     edgeCases:
       - "QDCG/capital gains taxed at preferential rates under AMT too"
       - "Single/MFJ/HoH/QSS 26% breakpoint is $239,100"
       - "MFS bracket threshold is $119,550"
-    testRef: "tests/engine/forms/form-6251.test.ts::Line 10 - tentative minimum tax at 26% for base under limit"
+    testRef: "tests/engine/forms/form-6251.test.ts::Line 7 - tentative minimum tax at 26% for base under limit"
 
+  - line: "8"
+    description: "AMT foreign tax credit"
+    formula: "Requires an actual AMT foreign-tax-credit worksheet; not implemented. Leave unproven physical field blank and disclose the review limitation."
+    testRef: "tests/engine/forms/form-6251-audit.test.ts::records senior and standard deductions in official1a1b2a without changing AMTI"
+  - line: "9"
+    description: "Tentative minimum tax"
+    formula: "Line7 minus actual line8. Current preview assumes no AMTFTC and remains unqualified."
+    testRef: "tests/engine/forms/form-6251-audit.test.ts::records senior and standard deductions in official1a1b2a without changing AMTI"
+  - line: "10"
+    description: "Regular tax comparison"
+    formula: "Actual caller-supplied comparison amount; never infer from tentative minimum tax minus AMT. Full source worksheet qualification remains pending."
+    testRef: "tests/pdf/form-6251-audit.test.ts::prints actual standard and senior adjustments and regular tax"
   - line: "11"
     description: "AMT (excess over regular tax)"
     formula: "max(0, tentative minimum tax - regular tax)"
     irsRef: "Form 6251 Instructions, Line 11"
-    notes: "This flows to Schedule 2 Line 1"
+    notes: "This flows to Schedule 2 Line 2b"
     testRef: "tests/engine/forms/form-6251.test.ts::Line 11 - AMT is zero when regular tax exceeds tentative minimum"
 
   - line: "2025-exemption-threshold-regression"

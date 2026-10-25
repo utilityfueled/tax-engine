@@ -2578,12 +2578,13 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   const k1AmtDepletion = k1Agg.amtDepletion;
   const k1AmtOther = k1Agg.amtOtherItems;
 
-  // Form 6251 feeds Schedule 2 Line 1, which in turn increases Form 1040 Line 18
+  // Form 6251 feeds Schedule 2 Line 2, which in turn increases Form 1040 Line 18
   // before the saver's credit limitation on Form 8880 Line 11 is applied.
   const form6251 = calculateForm6251(
     {
       // Form 6251 starts from AGI less deductions even when Form 1040 floors at zero.
       taxableIncome: rawTaxableIncome.minus(nolDeduction),
+      totalDeductions: totalDeduction,
       standardDeductionAmount: deductionUsed === "standard" ? deductionAmount : d("0"),
       seniorDeduction: schedule1A?.seniorDeduction,
       saltDeduction: schedA.saltDeduction,
@@ -2609,7 +2610,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   );
   const amt = form6251.amt;
   audit.merge(form6251.lines);
-  audit.record("Sched 2", "1", "Alternative Minimum Tax", amt, "Form 6251 Line 11");
+  audit.record("Sched 2", "2", "Alternative Minimum Tax", amt, "Form 6251 Line 11");
 
   // ── Form 8959: Additional Medicare Tax ────────────────
   // Form 8959 Line 8 requires each person's Schedule SE line6 after the filing threshold.

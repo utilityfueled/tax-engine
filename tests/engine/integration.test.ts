@@ -286,7 +286,7 @@ describe("Integration - AMT flows through federal calculation", () => {
   it("audit trail includes AMT entry", () => {
     const federal = calculateFederalTax(complexMFJFixture);
     const amtLine = federal.allLines.find(
-      (l) => l.form === "Sched 2" && l.line === "1"
+      (l) => l.form === "Sched 2" && l.line === "2"
     );
     expect(amtLine).toBeDefined();
     expect(amtLine!.description).toContain("Alternative Minimum Tax");

@@ -362,7 +362,7 @@ lines:
     irsRef: "Form 1065 K-1 Instructions, Box 17 Code C; Form 6251 Line 2c"
     destination: "Form 6251 Line 2c"
     notes: "Excess of percentage depletion over cost depletion for AMT purposes"
-    testRef: "tests/engine/forms/form-6251.test.ts::Line 2c - depletion adjustment increases AMTI"
+    testRef: "tests/engine/forms/form-6251.test.ts::Line 2d - depletion adjustment increases AMTI"
 
   - line: "Box 17 Code F"
     description: "Other AMT items"

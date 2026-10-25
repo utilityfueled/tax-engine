@@ -1,4 +1,4 @@
-import { assertPdfExportAllowed } from "../../export-policy.js";
+import { assertPdfExportAllowed, markReviewPdf } from "../../export-policy.js";
 /**
  * PDF filler for IRS Form 6251 — Alternative Minimum Tax (Individuals).
  *
@@ -7,7 +7,7 @@ import { assertPdfExportAllowed } from "../../export-policy.js";
  * Page 2: "topmostSubform[0].Page2[0]" (Part III — capital gains rates)
  */
 
-import { PDFDocument } from "pdf-lib";
+import { PDFDocument, StandardFonts } from "pdf-lib";
 import Decimal from "decimal.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
@@ -31,7 +31,7 @@ const FIELDS = {
   ssn: p1("f1_2[0]"),
 
   // ── Part I: Alternative Minimum Taxable Income ──
-  line1a: p1("f1_3[0]"),  // Schedule 1-A adjustment
+  line1a: p1("f1_3[0]"),  // Form1040 line14 minus Schedule1A line37
   line1b: p1("f1_4[0]"),  // Taxable income (1040 Line 11b minus Line 1a)
   line2a: p1("f1_5[0]"),  // SALT from Schedule A, line 7 (or standard deduction amount)
   line2b: p1("f1_6[0]"),  // Tax refund from Schedule 1 (parentheses)
@@ -123,59 +123,48 @@ export async function fillForm6251(
 
   if (!f6251) return doc;
 
-  // ── Part I: Alternative Minimum Taxable Income ──
-  // Line 1b: Taxable income (engine treats this as the starting point)
-  setCurrencyField(form, F.line1b, f6251.taxableIncome);
+  const audited = new Map<string, Decimal>();
+  for (const entry of f6251.lines) {
+    if (entry.form !== "Form 6251") continue;
+    if (audited.has(entry.line) || !Decimal.isDecimal(entry.value) || !entry.value.isFinite()) {
+      throw new Error(`Form6251 invalid or duplicate audit line ${entry.line}`);
+    }
+    audited.set(entry.line, entry.value);
+  }
+  const required = (id: string): Decimal => {
+    const value = audited.get(id);
+    if (!value) throw new Error(`Form6251 requires a unique finite audit line ${id}`);
+    return value;
+  };
+  for (const id of ["1b", "2a", "2g", "4", "5", "6", "7", "9", "10", "11"]) required(id);
+  for (const [id, value] of [["4", f6251.amti], ["5", f6251.exemption], ["6", f6251.amtBase],
+    ["9", f6251.tentativeMinimumTax], ["11", f6251.amt]] as const) {
+    if (!required(id).eq(value)) throw new Error(`Form6251 line${id} audit does not reconcile with its result`);
+  }
+  const auditSenior = result.schedule1A?.seniorDeduction ?? new Decimal(0);
+  if (!required("1b").eq(f6251.taxableIncome.plus(auditSenior))) {
+    throw new Error("Form6251 line1b does not match its signed source income and senior deduction");
+  }
+  for (const [key, field] of Object.entries(F)) {
+    if (!key.startsWith("line")) continue;
+    const value = audited.get(key.slice(4));
+    if (value !== undefined) setCurrencyField(form, field, value);
+  }
 
-  // Line 2a: SALT add-back (taxes from Schedule A when itemizing)
-  setCurrencyField(form, F.line2a, f6251.saltAddBack);
-
-  const preferenceAudit = f6251.lines.filter(line => line.form === "Form 6251" && line.line === "2g");
-  if (preferenceAudit.length !== 1 || !preferenceAudit[0].value.isFinite()) throw new Error("Form6251 line2g requires a unique finite source audit");
-  setCurrencyField(form, F.line2g, preferenceAudit[0].value);
-
-  // Line 2d: Depletion adjustment
-  setCurrencyField(form, F.line2d, f6251.depletionAdjustment);
-
-  // Line 2k: Disposition of property (AMT vs regular gain/loss difference)
-  setCurrencyField(form, F.line2k, f6251.dispositionAdjustment);
-
-  // Line 2l: Depreciation on post-1986 assets
-  setCurrencyField(form, F.line2l, f6251.depreciationAdjustment);
-
-  // Line 3: Other adjustments
-  setCurrencyField(form, F.line3, f6251.otherAdjustments);
-
-  // Line 4: AMTI (sum of lines 1b through 3)
-  setCurrencyField(form, F.line4, f6251.amti);
-
-  // ── Part II: Alternative Minimum Tax ──
-  // Line 5: Exemption amount (with phase-out applied)
-  setCurrencyField(form, F.line5, f6251.exemption);
-
-  // Line 6: AMTI minus exemption (AMT base)
-  setCurrencyField(form, F.line6, f6251.amtBase);
-
-  // Line 7: Tax computation (26%/28% rates or Part III capital gains path)
-  // The engine's tentativeMinimumTax is the computed tax before AMT FTC.
-  setCurrencyField(form, F.line7, f6251.tentativeMinimumTax);
-
-  // Line 8: AMT foreign tax credit (not modeled — leave blank)
-
-  // Line 9: Tentative minimum tax = Line 7 - Line 8
-  // With no AMT FTC, Line 9 equals Line 7.
-  setCurrencyField(form, F.line9, f6251.tentativeMinimumTax);
-
-  // Line 10: Regular tax for comparison
-  // Derived from engine: regularTax = tentativeMinimumTax - amt (when amt > 0)
-  // When amt = 0, regular tax >= tentative min tax; use totalTaxBeforeCredits.
-  const regularTax = f6251.amt.gt(0)
-    ? f6251.tentativeMinimumTax.minus(f6251.amt)
-    : result.totalTaxBeforeCredits;
-  setCurrencyField(form, F.line10, regularTax);
-
-  // Line 11: AMT = max(0, Line 9 - Line 10) → Schedule 2 Line 2
-  setCurrencyField(form, F.line11, f6251.amt);
+  const page = doc.addPage([612, 792]);
+  const font = await doc.embedFont(StandardFonts.Helvetica);
+  const notes = [
+    "FORM 6251 REVIEW LIMITATIONS - NOT FOR FILING",
+    "Printed amounts copy the calculation audit; this attachment does not qualify an AMT return.",
+    "AMT foreign-tax credit and its actual source worksheet are not implemented. Line8 is blank.",
+    "The preview assumes no AMT foreign-tax credit. Do not treat a blank field as a confirmed zero.",
+    "Foreign-income stacking, MFS additional AMTI, AMT NOL and full PartIII source worksheets",
+    "remain unqualified. PartIII is blank when no actual audited worksheet is available.",
+    "Regular-tax comparison copies the supplied audit; the mapper does not derive it from AMT.",
+    ...(audited.has("1a") ? [] : ["Actual total deductions were not supplied; line1a remains blank."]),
+  ];
+  notes.forEach((text, index) => page.drawText(text, {x:36,y:750-index*22,size:10,font}));
+  await markReviewPdf(doc);
 
   return doc;
 }

@@ -9830,8 +9830,8 @@ describe("K-1 Box 17 AMT items through federal pipeline", () => {
     expect(line2l!.value.toNumber()).toBe(15000);
 
     // AMTI should be $15K higher with the adjustment
-    const baseAmti = baseResult.allLines.find((l) => l.form === "Form 6251" && l.line === "7");
-    const withAmti = withK1Amt.allLines.find((l) => l.form === "Form 6251" && l.line === "7");
+    const baseAmti = baseResult.allLines.find((l) => l.form === "Form 6251" && l.line === "4");
+    const withAmti = withK1Amt.allLines.find((l) => l.form === "Form 6251" && l.line === "4");
     expect(baseAmti).toBeDefined();
     expect(withAmti).toBeDefined();
     expect(withAmti!.value.minus(baseAmti!.value).toNumber()).toBe(15000);
@@ -9873,7 +9873,7 @@ describe("K-1 Box 17 AMT items through federal pipeline", () => {
     expect(line2k!.value.toNumber()).toBe(8000);
   });
 
-  it("K-1 Box 17 Code C depletion adjustment appears in Form 6251 Line 2c", () => {
+  it("K-1 Box 17 Code C depletion adjustment appears in Form 6251 Line 2d", () => {
     const result = calculateFederalTax({
       ...simpleW2Fixture,
       w2s: [{
@@ -9904,7 +9904,7 @@ describe("K-1 Box 17 AMT items through federal pipeline", () => {
       }],
     });
 
-    const line2c = result.allLines.find((l) => l.form === "Form 6251" && l.line === "2c");
+    const line2c = result.allLines.find((l) => l.form === "Form 6251" && l.line === "2d");
     expect(line2c).toBeDefined();
     expect(line2c!.value.toNumber()).toBe(5000);
   });
@@ -9998,7 +9998,7 @@ describe("K-1 Box 17 AMT items through federal pipeline", () => {
     expect(line2k!.value.toNumber()).toBe(2000);
 
     // Depletion: 3000 + 0 = 3000
-    const line2c = result.allLines.find((l) => l.form === "Form 6251" && l.line === "2c");
+    const line2c = result.allLines.find((l) => l.form === "Form 6251" && l.line === "2d");
     expect(line2c).toBeDefined();
     expect(line2c!.value.toNumber()).toBe(3000);
 
@@ -10086,7 +10086,7 @@ describe("K-1 Box 17 AMT items through federal pipeline", () => {
     });
 
     // No adjustment audit lines should appear when all AMT amounts are zero
-    const line2c = result.allLines.find((l) => l.form === "Form 6251" && l.line === "2c");
+    const line2c = result.allLines.find((l) => l.form === "Form 6251" && l.line === "2d");
     const line2k = result.allLines.find((l) => l.form === "Form 6251" && l.line === "2k");
     const line2l = result.allLines.find((l) => l.form === "Form 6251" && l.line === "2l");
     const line3 = result.allLines.find((l) => l.form === "Form 6251" && l.line === "3");

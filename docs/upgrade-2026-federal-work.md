@@ -883,3 +883,12 @@ non-null warnings; diff reviewed. Four itemization-only 2026 fixtures additional
 prior-year no-tax-liability facts; their deduction/AGI/taxable-income assertions
 remain unchanged. Current 2026 source-fact and unpublished2027Q1 rate gates remain enforced.
 Rule versions2025.18/2026.13-law-integration-draft remain unqualified.
+
+## 2026-10-25 — Canonical Form6251 printed audit and review copy
+
+- Official final2025 form and instructions refreshed: <https://www.irs.gov/pub/irs-pdf/f6251.pdf>, <https://www.irs.gov/instructions/i6251>. Source line1a is actual1040line14 minus Schedule1A37; line1b retains signed income; line2a carries actual selected standard deduction or ScheduleA taxes. Depletion belongs2d, AMTI/exemption/base4/5/6, computed tax7, tentative tax9, actual comparison10, excess11 -> Schedule2line2.
+- Spec updated first; five new regressions failed before implementation (including an independently known senior/std source fixture:85000AGI,17750standard,5400senior ->1a17750/1b67250/2a17750/AMTI85000). Historical boundary assertions retain amounts and now use official audit IDs.
+- Calculation emits official audit lines and actual total deductions; unknown total deductions do not become a fabricated line1a. Review mapper copies unique finite audited amounts and checks result reconciliation instead of deriving the regular-tax comparison from AMT. Duplicate or inconsistent audits reject.
+- Added a review attachment identifying unimplemented AMT foreign-tax credit, foreign-income stacking, MFS additional AMTI, AMT NOL and full PartIII source worksheets. No verified-zero AMTFTC or qualification is claimed. Existing calculation amounts are unchanged in this printed-line package.
+- Verification:569 focused calculation/federal/OID/PDF/metadata tests passed; root typecheck and3356spec references passed; scoped lint and diff whitespace checks clean. Three-page senior/std PDF rendered; first page and limitation attachment visually checked, review notice text verified on all3pages. Local artifact `.local/upgrade-evidence/amt-review/6251-senior.pdf`.
+- Rule metadata now2025.19 and2026.14-law-integration-draft; all independent review/filing gates remain closed. Commit reference: this entry's package commit.
