@@ -1,0 +1,27 @@
+form: "Passive Income Ordering"
+fullName: "Allowed passive losses before income-dependent adjustments and exclusions"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i8582"
+notes: |
+  Form8582 modified AGI excludes passive net losses, taxable benefits, IRA/loan
+  deductions, deductible half of SE tax, bond and adoption exclusions. Its actual
+  allowed income is therefore calculated before the Social Security, IRA and
+  bond worksheets, with no iterative or user-supplied income approximation.
+  Marketplace special instructions retain their separate ordered method until
+  integrated; this prerequisite does not remove that method gate.
+lines:
+  - line: "benefits"
+    description: "Taxable benefits use actual post-passive income"
+    formula: "Wages50000 minus allowed rental25000 =25000 other income;20000benefits gives provisional35000 and taxable5350; AGI30350"
+    irsRef: "Form8582 line6; Pub915 Worksheet1 lines3-19"
+    testRef: "tests/engine/federal-passive-income-ordering.test.ts::calculates taxable benefits from allowed rental losses rather than suspended losses"
+  - line: "ira"
+    description: "IRA MAGI includes actual allowed passive loss"
+    formula: "Wages90000 minus allowed rental20000 =70000 MAGI; covered7000 contribution is fully deductible, AGI63000"
+    irsRef: "Form8582 line6; Pub590-A Worksheet1-1 and1-2"
+    testRef: "tests/engine/federal-passive-income-ordering.test.ts::calculates actual IRA deduction after passive loss allowance"
+  - line: "bond"
+    description: "Bond MAGI uses benefits computed after passive losses"
+    formula: "Wages50000 plus4000interest minus allowed rental25000 gives29000;20000benefits makes8750taxable; bond MAGI37750, exclusion4000, final AGI33750"
+    irsRef: "Form8815 modified AGI worksheet; Pub915 Worksheet1; Form8582 line6"
+    testRef: "tests/engine/federal-passive-income-ordering.test.ts::calculates the bond exclusion from post-passive income and taxable benefits"

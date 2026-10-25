@@ -1786,14 +1786,116 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       if (!d(value).isFinite() || d(value).lt(0)) throw new Error("Social Security possession exclusions must be finite and nonnegative");
     }
   }
+  // Form8582 MAGI excludes taxable benefits and the IRA, student-loan and
+  // savings-bond adjustments. Resolve allowed passive income first so those
+  // later worksheets never use suspended rental losses as current deductions.
+  const passiveSourceAgi = sum(totalWages, totalInterestBeforeSavingsBondExclusion, totalDividends,
+    iraTaxable, pensionTaxable, capitalGainLoss, schedCNetProfit, schedFNetProfit, adjustedScheduleETotal, otherIncome)
+    .minus(sched1.totalAdjustments).minus(k1Form1041Section67eDeductions);
+  // ── Form 8582: Passive Activity Loss Limitations ────────
+  // Build passive activities from K-1s marked as passive
+  const passiveActivities: PassiveActivity[] = schedE.partnerships
+    .filter((partnership) => partnership.isPassive)
+    .map((partnership) => ({
+      name: partnership.name,
+      reportingFormAndLine: "Schedule E, line 28",
+      income: partnership.passiveIncome,
+      loss: partnership.passiveLoss,
+      isRentalRealEstate: partnership.isRentalRealEstate,
+      isActiveParticipant: partnership.isRentalRealEstate, // simplified assumption
+      isPubliclyTradedPartnership: partnership.isPubliclyTradedPartnership,
+      ptpFullyDisposedInTaxableTransaction: partnership.ptpFullyDisposedInTaxableTransaction,
+      ptpDispositionGainOrLoss: partnership.ptpDispositionGainOrLoss,
+    }));
+
+  // Add rental properties from Schedule E Part I as passive activities
+  for (const rental of schedE.rentalProperties) {
+    const net = rental.netRentalIncome;
+    passiveActivities.push({
+      name: rental.description,
+      reportingFormAndLine: "Schedule E, line 22",
+      income: net.isPositive() ? net : new Decimal(0),
+      loss: net.isNegative() ? net : new Decimal(0),
+      isRentalRealEstate: true,
+      isActiveParticipant: rental.isActiveParticipant,
+    });
+  }
+
+  // Line6 removes the NET passive activity loss, not each property's gross
+  // loss. Replace the preliminary ScheduleE passive contribution before
+  // adding back the specifically excluded deductions and taxable benefits.
+  const k1PassiveCount = schedE.partnerships.filter(partnership => partnership.isPassive).length;
+  const preliminaryPassiveIncome = sum(...schedE.rentalProperties.map(rental => rental.netRentalIncome),
+    zeroFloor(schedE.totalPassiveIncome.plus(schedE.totalPassiveLoss)));
+  const regularPassiveNet = sum(...passiveActivities.filter(activity => !activity.isPubliclyTradedPartnership)
+    .map(activity => roundDollar(activity.income).plus(roundDollar(activity.loss))))
+    .minus(sum(...(input.priorYear?.suspendedPassiveLosses ?? []).map(loss => roundDollar(d(loss.amount)))));
+  // PTP net income includes its own prior losses before it enters regular
+  // Form8582 modified AGI. The PTP-only calculation never uses Part II; only
+  // the final combined calculation below contributes official form audits.
+  const ptpSourceResult = calculateForm8582({
+    activities: passiveActivities.filter(activity => activity.isPubliclyTradedPartnership),
+    agi: passiveSourceAgi, filingStatus,
+    priorYearPTPSuspendedLosses: input.priorYear?.suspendedPTPLosses?.map(loss => ({
+      name: loss.partnershipName, amount: d(loss.amount),
+    })),
+  });
+  // Disposition gain/loss source routing remains the separate existing path.
+  const currentPtpIncome = ptpSourceResult.ptpNetIncome.plus(sum(...passiveActivities
+    .filter(activity => activity.isPubliclyTradedPartnership && activity.ptpFullyDisposedInTaxableTransaction)
+    .map(activity => zeroFloor(activity.income.plus(activity.loss)))));
+  const form8582MAGI = eblSources?.passiveLossModifiedAgi !== undefined ? d(eblSources.passiveLossModifiedAgi) : passiveSourceAgi
+    .minus(preliminaryPassiveIncome).plus(zeroFloor(regularPassiveNet)).plus(currentPtpIncome)
+    .plus(sched1.iraDeduction).plus(sched1.studentLoanInterest).plus(schedSE.deductibleHalf)
+    .plus(adoptionBenefitResult?.allowableExclusion ?? new Decimal(0));
+
+  const form8582 = calculateForm8582({
+    activities: passiveActivities,
+    agi: form8582MAGI,
+    filingStatus,
+    mfsLivedApartFromSpouseAllYear:
+      filingStatus === "married_filing_separately"
+        && input.taxpayer.livedWithSpouseAtAnyTimeDuringYear === false,
+    priorYearSuspendedLosses: input.priorYear?.suspendedPassiveLosses?.map((s) => ({
+      name: s.partnershipName,
+      amount: d(s.amount),
+    })),
+    priorYearPTPSuspendedLosses: input.priorYear?.suspendedPTPLosses?.map((s) => ({
+      name: s.partnershipName,
+      amount: d(s.amount),
+    })),
+  });
+  if (marketplace && form8582.netRental.lt(0) && form8582.combinedLoss.lt(0)) throw new Error("Pub974 ordered special passive-loss deductions require their separate coordination.");
+  audit.merge(form8582.lines);
+
+  // Transfer all regular allowed current/prior losses once. The preliminary
+  // ScheduleE calculation has already limited K1 losses, but not rental losses.
+  // A signed replacement handles both suspended current losses and released
+  // prior losses, including activities whose current income is positive.
+  const allowedPassiveIncome = form8582.rentalIncome.plus(form8582.passiveIncome)
+    .minus(form8582.allowedLoss).plus(currentPtpIncome);
+  const passiveIncomeAdjustment = allowedPassiveIncome.minus(preliminaryPassiveIncome);
+  // ── PTP disposition: released losses reduce AGI (IRC §469(g)(1)) ──
+  // When a PTP is fully disposed of in a taxable transaction, accumulated
+  // suspended losses become nonpassive and reduce AGI directly.
+  const ptpReleasedTotal = form8582.ptpDispositionReleasedLosses.reduce(
+    (acc, p) => acc.plus(p.totalReleased), new Decimal(0)
+  );
+  if (ptpReleasedTotal.greaterThan(0)) {
+    audit.record("1040", "8-ptp-disposition", "PTP disposition released losses (nonpassive)",
+      ptpReleasedTotal.negated(),
+      `IRC §469(g)(1) — ${form8582.ptpDispositionReleasedLosses.length} PTP(s) fully disposed; $${ptpReleasedTotal} suspended losses released as nonpassive`,
+      Object.fromEntries(form8582.ptpDispositionReleasedLosses.map((p) => [p.name, p.totalReleased.negated()]))
+    );
+  }
+
+  const allowedScheduleETotal = adjustedScheduleETotal.plus(passiveIncomeAdjustment).minus(ptpReleasedTotal);
+
   const incomeBeforeSocialSecurity = sum(totalWages,totalInterestBeforeSavingsBondExclusion,totalDividends,
-    iraTaxable,pensionTaxable,capitalGainLoss,schedCNetProfit,schedFNetProfit,adjustedScheduleETotal,otherIncome);
+    iraTaxable,pensionTaxable,capitalGainLoss,schedCNetProfit,schedFNetProfit,allowedScheduleETotal,otherIncome);
   if (input.iraDeductionWorksheet && calculateOrdered("ira")) {
     const hasNol = sum(d(input.priorYear?.nolCarryforward),d(input.priorYear?.excessBusinessLossNOL),k1Form1041FinalNOL).gt(0);
     if (hasNol) throw new Error("IRA and NOL coordination requires a supported completed source worksheet");
-    const passiveInteraction = schedE.rentalProperties.some(p => p.netRentalIncome.lt(0))
-      || schedE.partnerships.some(p => p.passiveLoss.gt(0)) || (input.priorYear?.suspendedPassiveLosses ?? []).some(p => d(p.amount).gt(0));
-    if (passiveInteraction) throw new Error("IRA and passive-loss coordination requires a supported completed source worksheet");
     if (input.socialSecurityLumpSumElection) throw new Error("IRA and lump-sum Social Security coordination requires a supported completed source worksheet");
     if (iraGrossReported.gt(0) && (d(input.iraDeductionWorksheet.primaryContributions).gt(0) || d(input.iraDeductionWorksheet.spouseContributions).gt(0))) {
       throw new Error("IRA distributions and current contributions require Publication590-B taxable-distribution coordination");
@@ -1829,7 +1931,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
         capitalGainLoss,
         schedCNetProfit,
         schedFNetProfit,
-        adjustedScheduleETotal,
+        allowedScheduleETotal,
         otherIncome
       ),
       taxExemptInterest,
@@ -1896,7 +1998,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     capitalGainLoss,
     schedCNetProfit,
     schedFNetProfit,
-    adjustedScheduleETotal,
+    allowedScheduleETotal,
     otherIncome
   );
 
@@ -1977,120 +2079,11 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     capitalGainLoss,
     schedCNetProfit,
     schedFNetProfit,
-    adjustedScheduleETotal,
+    allowedScheduleETotal,
     otherIncome
   );
 
   let agi = totalIncome.minus(adjustments);
-
-  // ── Form 8582: Passive Activity Loss Limitations ────────
-  // Build passive activities from K-1s marked as passive
-  const passiveActivities: PassiveActivity[] = schedE.partnerships
-    .filter((partnership) => partnership.isPassive)
-    .map((partnership) => ({
-      name: partnership.name,
-      reportingFormAndLine: "Schedule E, line 28",
-      income: partnership.passiveIncome,
-      loss: partnership.passiveLoss,
-      isRentalRealEstate: partnership.isRentalRealEstate,
-      isActiveParticipant: partnership.isRentalRealEstate, // simplified assumption
-      isPubliclyTradedPartnership: partnership.isPubliclyTradedPartnership,
-      ptpFullyDisposedInTaxableTransaction: partnership.ptpFullyDisposedInTaxableTransaction,
-      ptpDispositionGainOrLoss: partnership.ptpDispositionGainOrLoss,
-    }));
-
-  // Add rental properties from Schedule E Part I as passive activities
-  for (const rental of schedE.rentalProperties) {
-    const net = rental.netRentalIncome;
-    passiveActivities.push({
-      name: rental.description,
-      reportingFormAndLine: "Schedule E, line 22",
-      income: net.isPositive() ? net : new Decimal(0),
-      loss: net.isNegative() ? net : new Decimal(0),
-      isRentalRealEstate: true,
-      isActiveParticipant: rental.isActiveParticipant,
-    });
-  }
-
-  // Line6 removes the NET passive activity loss, not each property's gross
-  // loss. Replace the preliminary ScheduleE passive contribution before
-  // adding back the specifically excluded deductions and taxable benefits.
-  const k1PassiveCount = schedE.partnerships.filter(partnership => partnership.isPassive).length;
-  const preliminaryPassiveIncome = sum(...schedE.rentalProperties.map(rental => rental.netRentalIncome),
-    zeroFloor(schedE.totalPassiveIncome.plus(schedE.totalPassiveLoss)));
-  const regularPassiveNet = sum(...passiveActivities.filter(activity => !activity.isPubliclyTradedPartnership)
-    .map(activity => roundDollar(activity.income).plus(roundDollar(activity.loss))))
-    .minus(sum(...(input.priorYear?.suspendedPassiveLosses ?? []).map(loss => roundDollar(d(loss.amount)))));
-  // PTP net income includes its own prior losses before it enters regular
-  // Form8582 modified AGI. The PTP-only calculation never uses Part II; only
-  // the final combined calculation below contributes official form audits.
-  const ptpSourceResult = calculateForm8582({
-    activities: passiveActivities.filter(activity => activity.isPubliclyTradedPartnership),
-    agi, filingStatus,
-    priorYearPTPSuspendedLosses: input.priorYear?.suspendedPTPLosses?.map(loss => ({
-      name: loss.partnershipName, amount: d(loss.amount),
-    })),
-  });
-  // Disposition gain/loss source routing remains the separate existing path.
-  const currentPtpIncome = ptpSourceResult.ptpNetIncome.plus(sum(...passiveActivities
-    .filter(activity => activity.isPubliclyTradedPartnership && activity.ptpFullyDisposedInTaxableTransaction)
-    .map(activity => zeroFloor(activity.income.plus(activity.loss)))));
-  const form8582MAGI = eblSources?.passiveLossModifiedAgi !== undefined ? d(eblSources.passiveLossModifiedAgi) : agi
-    .minus(preliminaryPassiveIncome).plus(zeroFloor(regularPassiveNet)).plus(currentPtpIncome)
-    .plus(sched1.iraDeduction).plus(sched1.studentLoanInterest).plus(schedSE.deductibleHalf)
-    .plus(savingsBondExclusion).plus(adoptionBenefitResult?.allowableExclusion ?? new Decimal(0))
-    .minus(socialSecurityBenefitsTaxable);
-
-  const form8582 = calculateForm8582({
-    activities: passiveActivities,
-    agi: form8582MAGI,
-    filingStatus,
-    mfsLivedApartFromSpouseAllYear:
-      filingStatus === "married_filing_separately"
-        && input.taxpayer.livedWithSpouseAtAnyTimeDuringYear === false,
-    priorYearSuspendedLosses: input.priorYear?.suspendedPassiveLosses?.map((s) => ({
-      name: s.partnershipName,
-      amount: d(s.amount),
-    })),
-    priorYearPTPSuspendedLosses: input.priorYear?.suspendedPTPLosses?.map((s) => ({
-      name: s.partnershipName,
-      amount: d(s.amount),
-    })),
-  });
-  if (marketplace && form8582.netRental.lt(0) && form8582.combinedLoss.lt(0)) throw new Error("Pub974 ordered special passive-loss deductions require their separate coordination.");
-  audit.merge(form8582.lines);
-
-  // Transfer all regular allowed current/prior losses once. The preliminary
-  // ScheduleE calculation has already limited K1 losses, but not rental losses.
-  // A signed replacement handles both suspended current losses and released
-  // prior losses, including activities whose current income is positive.
-  const allowedPassiveIncome = form8582.rentalIncome.plus(form8582.passiveIncome)
-    .minus(form8582.allowedLoss).plus(currentPtpIncome);
-  const passiveIncomeAdjustment = allowedPassiveIncome.minus(preliminaryPassiveIncome);
-  if (!passiveIncomeAdjustment.isZero()) {
-    agi = agi.plus(passiveIncomeAdjustment);
-    totalIncome = totalIncome.plus(passiveIncomeAdjustment);
-    audit.record("1040", "11-adj", "AGI corrected for allowed passive activity losses", agi,
-      "Replace preliminary ScheduleE passive contribution with current income minus allowed current and prior losses",
-      { "Preliminary passive income": preliminaryPassiveIncome, "Allowed passive income": allowedPassiveIncome,
-        "Signed income adjustment": passiveIncomeAdjustment });
-  }
-
-  // ── PTP disposition: released losses reduce AGI (IRC §469(g)(1)) ──
-  // When a PTP is fully disposed of in a taxable transaction, accumulated
-  // suspended losses become nonpassive and reduce AGI directly.
-  const ptpReleasedTotal = form8582.ptpDispositionReleasedLosses.reduce(
-    (acc, p) => acc.plus(p.totalReleased), new Decimal(0)
-  );
-  if (ptpReleasedTotal.greaterThan(0)) {
-    agi = agi.minus(ptpReleasedTotal);
-    totalIncome = totalIncome.minus(ptpReleasedTotal);
-    audit.record("1040", "8-ptp-disposition", "PTP disposition released losses (nonpassive)",
-      ptpReleasedTotal.negated(),
-      `IRC §469(g)(1) — ${form8582.ptpDispositionReleasedLosses.length} PTP(s) fully disposed; $${ptpReleasedTotal} suspended losses released as nonpassive`,
-      Object.fromEntries(form8582.ptpDispositionReleasedLosses.map((p) => [p.name, p.totalReleased.negated()]))
-    );
-  }
 
   if (eblSources && !form461.line5ScheduleE.eq(roundDollar(adjustedScheduleETotal.plus(passiveIncomeAdjustment).minus(ptpReleasedTotal)))) {
     throw new Error("Form461 actual supplemental income must reconcile with final post-passive Schedule1 line5");
