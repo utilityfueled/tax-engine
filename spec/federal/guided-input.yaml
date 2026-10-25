@@ -50,3 +50,8 @@ lines:
     formula: "For 2026 nonitemizer gifts collect qualified recipient, supporting organization and donor-advised-fund answers. Preserve qualified-appreciated-stock status for private-foundation property. Education captures taxpayer/spouse/student SSN eligibility and institutional EIN; unknown remains unknown and blocks the affected calculation. A positive 2026 Lifetime Learning aggregate without student identity and eligibility is incomplete; an explicit zero is not a credit claim."
     irsRef: "Publication 505 (2026), education credit SSN requirements and nonitemizer charitable contributions; IRC 170"
     testRef: "tests/guided-interview/guided-required-facts.test.ts::requires actual 2026 charity and education eligibility facts"
+  - line: "payment-categories"
+    description: "Classify payments by their actual source and year"
+    formula: "Keep federal estimated payments, extension payments and prior-year refund credits separate. Require actual payment dates and the immediately preceding source tax year for applied refunds. Preserve explicit zero. Reconcile a saved other-payment total to classified entries before using it; never silently drop it or infer a payment type."
+    irsRef: "Form 1040 instructions line 26; Schedule 3 extension-payment instructions"
+    testRef: "tests/guided-interview/guided-payment-facts.test.ts::preserves extension dates and prior-year credits with exact amounts and zero"

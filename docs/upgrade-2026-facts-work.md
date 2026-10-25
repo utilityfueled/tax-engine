@@ -156,3 +156,15 @@ Source-year/document-fidelity package commit: `70f8d17`.
 - Both new eligibility regressions were red before implementation. All 441 guided
   tests in nine files, web typecheck, scoped ESLint and diff checks pass.
 - Recovery review hardening commit: `937f4bf`. No required human review is claimed.
+
+## Classified payment facts
+
+- Added distinct federal extension payments and prior-year applied refunds, with
+  real dates/source years and Decimal amounts. Explicit zero survives. Legacy
+  other-payment totals must reconcile to classified entries before calculation.
+- Refreshed official [Form 1040 instructions](https://www.irs.gov/instructions/i1040gi),
+  currently titled 2025, for payment category/source-year semantics. This does not
+  qualify a 2026 filing form or bypass the existing year readiness gate.
+- Three new regressions failed before implementation. All 444 guided tests in ten
+  files pass; web typecheck, scoped lint and spec validation are checked with this
+  package. Organization/education package commit: `a70b823`.

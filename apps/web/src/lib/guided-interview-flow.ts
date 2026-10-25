@@ -7,7 +7,7 @@
 import Decimal from "decimal.js";
 import { parseGuidedCurrency, hasGuidedCurrency } from "./guided-currency";
 import { personalFactErrors } from "./guided-taxpayer-facts";
-import { deductionFactErrors, educationFactErrors, paymentFactErrors, retirementFactErrors } from "./guided-required-facts";
+import { allPaymentFactErrors, deductionFactErrors, educationFactErrors, retirementFactErrors } from "./guided-required-facts";
 
 import { formatPendingW2SuggestionValueLabel, isOfficialFixtureSourceType } from "@/lib/document-fixture-copy";
 
@@ -819,6 +819,8 @@ export const emptyEstimatedPayment: EstimatedPaymentEntry = {
 export interface PaymentData {
   estimatedPayments: EstimatedPaymentEntry[];
   otherPayments: string;
+  extensionPayments?: EstimatedPaymentEntry[];
+  priorYearAppliedCredits?: { sourceTaxYear: string; amount: string }[];
 }
 
 export const emptyPaymentData: PaymentData = {
@@ -1650,9 +1652,9 @@ function validateAdjustmentsSection(data: AdjustmentData | undefined): SectionVa
 
 function validatePaymentsSection(data: PaymentData | undefined, taxYear?: number | null): SectionValidationResult {
   if (!data) return EMPTY_SECTION("payments info", true);
-  const errors = paymentFactErrors(data.estimatedPayments, taxYear);
+  const errors = allPaymentFactErrors(data, taxYear);
   if (Object.keys(errors).length) return validateRequiredFacts(errors);
-  if (!data.estimatedPayments.length && !hasNumericValue(data.otherPayments)) return EMPTY_SECTION("payments info", true);
+  if (!data.estimatedPayments.length && !data.extensionPayments?.length && !data.priorYearAppliedCredits?.length && !hasNumericValue(data.otherPayments)) return EMPTY_SECTION("payments info", true);
   return VALID_SECTION;
 }
 

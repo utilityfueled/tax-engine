@@ -10,7 +10,7 @@
 import Decimal from "decimal.js";
 import { parseGuidedCurrency, hasGuidedCurrency, formatGuidedDollars } from "./guided-currency";
 import { dependentFactErrors, personalFactErrors } from "./guided-taxpayer-facts";
-import { assertKnownFacts, deductionFactErrors, educationFactErrors, hasEnteredAmount, paymentFactErrors, retirementFactErrors } from "./guided-required-facts";
+import { allPaymentFactErrors, assertKnownFacts, deductionFactErrors, educationFactErrors, hasEnteredAmount, paymentFactErrors, retirementFactErrors } from "./guided-required-facts";
 
 import type {
   AdjustmentData,
@@ -529,7 +529,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
 
   try {
     assertKnownFacts(deductionFactErrors(deductionData, state.taxYear));
-    assertKnownFacts(paymentFactErrors(paymentData?.estimatedPayments, state.taxYear));
+    assertKnownFacts(allPaymentFactErrors(paymentData, state.taxYear));
     assertKnownFacts(retirementFactErrors(retirementData?.entries));
     assertKnownFacts(educationFactErrors(creditsData, state.taxYear, segmentation.filingStatus));
   } catch { return null; }
@@ -554,6 +554,9 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
   const energyCredits = buildEnergyCreditsInput(creditsData);
   const scheduleH = buildScheduleHInput(otherTaxesData);
   const estimatedPayments = buildEstimatedPaymentsInput(paymentData);
+  const extensionPayments = (paymentData?.extensionPayments ?? []).map((entry) => ({ date: entry.date, amount: toDecimalString(entry.amount), type: "federal" as const }));
+  const priorYearAppliedCredits = (paymentData?.priorYearAppliedCredits ?? []).map((entry) => ({ sourceTaxYear: Number(entry.sourceTaxYear), amount: toDecimalString(entry.amount), type: "federal" as const }));
+  const paymentAdjustments = { estimatedTaxPayments: estimatedPayments, extensionPayments, priorYearAppliedCredits };
 
   return {
     taxpayer: {
@@ -602,10 +605,10 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     adjustments: adjustments
       ? {
           ...adjustments,
-          estimatedTaxPayments: estimatedPayments,
+          ...paymentAdjustments,
         }
-      : estimatedPayments.length > 0
-        ? { estimatedTaxPayments: estimatedPayments }
+      : estimatedPayments.length + extensionPayments.length + priorYearAppliedCredits.length > 0
+        ? paymentAdjustments
         : undefined,
   };
 }

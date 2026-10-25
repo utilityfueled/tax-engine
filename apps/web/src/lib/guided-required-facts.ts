@@ -1,5 +1,5 @@
 import Decimal from "decimal.js";
-import type { CreditsData, DeductionData, EstimatedPaymentEntry, RetirementEntryData, FilingStatus } from "./guided-interview-flow";
+import type { CreditsData, DeductionData, EstimatedPaymentEntry, RetirementEntryData, FilingStatus, PaymentData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
 
 export function isActualDate(value: string | undefined): boolean {
@@ -71,6 +71,26 @@ export function paymentFactErrors(entries: EstimatedPaymentEntry[] | undefined, 
     if (amount) errors[`payment-${index}-amount`] = amount;
     if (!isActualDate(entry.date) || (taxYear != null && ![taxYear, taxYear + 1].some((year) => entry.date.startsWith(`${year}-`)))) errors[`payment-${index}-date`] = "Enter the actual payment date in the tax year or following year.";
   });
+  return errors;
+}
+
+export function allPaymentFactErrors(data: PaymentData | undefined, taxYear?: number | null): Record<string, string> {
+  if (!data) return {};
+  const errors = paymentFactErrors(data.estimatedPayments, taxYear);
+  for (const [key, value] of Object.entries(paymentFactErrors(data.extensionPayments, taxYear))) errors[`extension-${key}`] = value;
+  (data.priorYearAppliedCredits ?? []).forEach((entry, index) => {
+    const error = amountError(entry.amount, "applied refund amount");
+    if (error) errors[`credit-${index}-amount`] = error;
+    if (!/^\d{4}$/.test(entry.sourceTaxYear) || (taxYear != null && Number(entry.sourceTaxYear) !== taxYear - 1)) errors[`credit-${index}-year`] = "Enter the immediately preceding tax year from the return that applied this refund.";
+  });
+  if (hasEnteredAmount(data.otherPayments)) {
+    const error = amountError(data.otherPayments, "saved other-payment total");
+    if (error) errors.otherPayments = error;
+    else if (!Object.keys(errors).length) {
+      const classified = [...data.extensionPayments ?? [], ...data.priorYearAppliedCredits ?? []].reduce((total, entry) => total.plus(parseGuidedCurrency(entry.amount)), new Decimal(0));
+      if (!classified.eq(parseGuidedCurrency(data.otherPayments))) errors.otherPayments = "Classify the saved other-payment total as extension payments or prior-year applied refunds. Other credits need their specific supporting forms.";
+    }
+  }
   return errors;
 }
 
