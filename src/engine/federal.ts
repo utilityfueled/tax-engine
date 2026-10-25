@@ -327,6 +327,11 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     .plus(form8919?.line6 ?? new Decimal(0))
     .plus(form1099R.disabilityPensionWages);
 
+  audit.record("1040", "1a", "W-2 wages", w2Agg.wages, "Sum W-2 box 1");
+  audit.record("1040", "1c", "Unreported tips", form4137?.unreportedTipIncome ?? new Decimal(0), "Supported Form 4137 tips not included in line 1a");
+  audit.record("1040", "1g", "Wages from Form 8919", form8919?.line6 ?? new Decimal(0), "Form 8919 line 6");
+  audit.record("1040", "1h", "Other earned income", form1099R.disabilityPensionWages, "Supported disability pensions before minimum retirement age");
+
   // ── Form 2555: Foreign Earned Income Exclusion ────────
   // Must be computed before Line 1 is finalized because the exclusion
   // reduces the wages amount entered on Form 1040 Line 1a.
@@ -2937,8 +2942,14 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   // Phase 5b: Withholding & Estimated Payments (needed by Form 2210)
   // ═══════════════════════════════════════════════════════════
 
-  const federalWithholding = sum(
-    w2Agg.federalWithheld,
+  // ── Form 8959: Additional Medicare Tax ────────────────
+  // Form 8959 Line 8 requires post-multiplier SE (Schedule SE Line 4a = earnings × 0.9235).
+  // Using pre-multiplier netSEEarnings would overstate the SE contribution.
+  const form8959 = calculateForm8959(input, schedSE.taxableEarnings, filingStatus, constants);
+  const additionalMedicareTax = form8959.additionalMedicareTax;
+  audit.merge(form8959.lines);
+
+  const withholdingFrom1099 = sum(
     intAgg.federalWithheld,
     divAgg.federalWithheld,
     ...(input.form1099OID ?? []).map((f) => d(f.federalWithheld)),
@@ -2948,15 +2959,21 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     necAgg.federalWithheld,
     miscAgg.federalWithheld,
     ...(input.form1099G ?? []).map((f) => d(f.federalWithheld)),
-    ...w2gForms.map((f) => d(f.federalWithheld)),
     form1099KResult.federalWithholding
   );
+  const k1FederalWithholding = [...input.scheduleK1, ...k1Form1041s].map(k1 => d(k1.federalIncomeTaxWithheld));
+  if (k1FederalWithholding.some(value => !value.isFinite() || value.lt(0))) throw new Error("K-1 federal withholding must be finite and nonnegative");
+  const withholdingFromOtherForms = sum(form8959.withholdingCredit, ...w2gForms.map(f => d(f.federalWithheld)), ...k1FederalWithholding);
+  const federalWithholding = sum(w2Agg.federalWithheld, withholdingFrom1099, withholdingFromOtherForms);
+  audit.record("1040", "25a", "Federal withholding from Forms W-2", w2Agg.federalWithheld, "Sum W-2 box 2");
+  audit.record("1040", "25b", "Federal withholding from Forms 1099", withholdingFrom1099, "Forms 1099, SSA-1099 and RRB-1099");
+  audit.record("1040", "25c", "Federal withholding from other forms", withholdingFromOtherForms, "W-2G, reported K-1 federal withholding and Form 8959 line 24");
   audit.record(
     "1040",
     "25d",
     "Federal tax withheld",
     federalWithholding,
-    "Sum all W-2 Box 2 plus withholding from Forms 1099, 1099-OID, 1099-G, W-2G, 1099-K, SSA-1099, and RRB-1099"
+    "Lines 25a + 25b + 25c"
   );
 
   const estimatedPayments = input.adjustments?.estimatedTaxPayments
@@ -2972,13 +2989,6 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
 
   const selfEmploymentTax = schedSE.totalSETax;
   audit.record("Sched SE", "12", "Self-employment tax", selfEmploymentTax, "SS portion + Medicare portion");
-
-  // ── Form 8959: Additional Medicare Tax ────────────────
-  // Form 8959 Line 8 requires post-multiplier SE (Schedule SE Line 4a = earnings × 0.9235).
-  // Using pre-multiplier netSEEarnings would overstate the SE contribution.
-  const form8959 = calculateForm8959(input, schedSE.taxableEarnings, filingStatus, constants);
-  const additionalMedicareTax = form8959.additionalMedicareTax;
-  audit.merge(form8959.lines);
 
   // ── Form 8960: Net Investment Income Tax ──────────────
   // Per IRS Form 8960 instructions, allowed passive losses (after Form 8582)

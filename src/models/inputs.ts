@@ -1704,6 +1704,8 @@ export const PANonresidentReturnSchema = z.object({
 });
 
 export const ScheduleK1Schema = z.object({
+  /** Actual federal tax withheld shown on Schedule K-1; not state withholding. */
+  federalIncomeTaxWithheld: optionalDecimalInput,
   partnershipName: z.string(),
   partnershipEIN: z.string(),
   accountHolder: z.enum(["primary", "spouse"]).optional(), // Local owner tag for spouse-separated PA class reporting
@@ -1846,6 +1848,8 @@ export const ScheduleK1Schema = z.object({
  * Ref: IRS Schedule K-1 (Form 1041) Instructions; IRC §§652, 662, 691(c), 642(h).
  */
 export const ScheduleK1Form1041Schema = z.object({
+  /** Actual federal tax withheld shown on Schedule K-1; not state withholding. */
+  federalIncomeTaxWithheld: optionalDecimalInput,
   /** Name of the estate or trust */
   estateTrustName: z.string(),
   /** EIN of the estate or trust */

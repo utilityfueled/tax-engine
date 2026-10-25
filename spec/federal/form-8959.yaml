@@ -78,12 +78,18 @@ lines:
       - "HoH uses $200K threshold (same as single)"
     testRef: "tests/edge-cases/medicare-tax-edge-cases.test.ts::Form 8959 - threshold boundaries"
 
-  - line: "19"
+  - line: "24"
     description: "Additional Medicare Tax withholding credit"
-    formula: "W-2 Medicare withheld - (Medicare wages × 1.45%)"
-    irsRef: "Form 8959 Instructions, Line 19"
+    formula: "Line 22 plus supported RRTA withholding, if any; the current non-RRTA implementation returns line 22"
+    irsRef: "Form 8959 Instructions, Lines 19–24"
     notes: "Employers withhold 0.9% on wages over $200K regardless of filing status"
     edgeCases:
       - "Multi-employer: both withhold additional Medicare → credit for excess"
       - "Single employer below $200K: no excess withholding"
     testRef: "tests/engine/forms/form-8959.test.ts::Form 8959 Line 19 - credit for employer excess withholding"
+
+  - line: "withholding-reconciliation"
+    description: "Source-backed withholding reconciliation and payment credit"
+    formula: "Line 19 = rounded total W-2 box 6, line 20 = rounded total box 5, line 21 = rounded line 20 times 1.45%, line 22 = max(0, line 19 minus 21). In the supported non-RRTA branch line 24 equals line 22 and flows to Form 1040 line 25c independently of liability."
+    irsRef: "https://www.irs.gov/pub/irs-pdf/f8959.pdf, Part V"
+    testRef: "tests/engine/federal-source-lines.test.ts::Form 1040 source classification"

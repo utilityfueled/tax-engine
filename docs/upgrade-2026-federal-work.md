@@ -302,3 +302,20 @@ review still pending; no readiness gate changed. Business-tip allocation and
 self-employed deduction attribution remain separate QBI integration work.
 Final package verification: 675 focused tests pass, including the carryover
 regression; engine typecheck, spec validation and whitespace checks pass.
+
+
+## Correction: source wage and withholding lines
+
+Official Form 1040 instructions and Form 8959 Part V establish separate W-2,
+1099 and other-form withholding. Additional Medicare withholding was computed
+but omitted from federal payments. It now reaches line 25c, including a joint
+return with withholding but no Additional Medicare liability. Actual K-1 federal
+withholding is preserved separately from state amounts. Form 8959 withholding
+reconciliation uses whole-dollar source totals and provides actual lines 19–24.
+Wage audit lines 1a, 1c, 1g and 1h now retain their source classification.
+
+Three source-classification regressions failed first; 597 focused tests and
+engine typecheck pass. Spec/whitespace checks and scoped diff reviewed before
+commit. Rule version advances to 2025.7. Remaining Form 8959 Part I/II audit
+positions and separate-part rounding need a separate source-backed correction;
+RRTA inputs remain unsupported. No qualification gate changed.

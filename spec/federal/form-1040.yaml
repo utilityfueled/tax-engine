@@ -499,3 +499,9 @@ lines:
     formula: "1040 line 23 equals Schedule 2 Part II only; line 24 excludes Form 2210 penalty. Report refundable AOC on line 29 and Schedule 3 payments on line 31. Line 34 is gross overpayment, line 35a is refund after penalty, line 37 includes any unpaid penalty, and line 38 shows the penalty separately. Digital asset audit identity does not reuse wage line 1a."
     irsRef: "https://www.irs.gov/instructions/i1040gi, Lines 29, 31 and 38"
     testRef: "tests/engine/federal-payment-routing.test.ts::Form 1040 payment and penalty routing"
+
+  - line: "source-wages-withholding"
+    description: "Preserve source categories on wage and withholding lines"
+    formula: "W-2 box 1 is line 1a; Form 4137 tips are 1c; Form 8919 wages are 1g; supported pre-retirement disability pensions are 1h. Withholding: W-2 box 2 on 25a; Forms 1099 including SSA/RRB on 25b; W-2G, reported K-1 withholding and Form 8959 line 24 on 25c. Line 25d sums the three. Additional Medicare withholding is a payment, including when joint liability is zero."
+    irsRef: "https://www.irs.gov/instructions/i1040gi, Lines 1a, 1c, 1g, 1h and 25"
+    testRef: "tests/engine/federal-source-lines.test.ts::Form 1040 source classification"

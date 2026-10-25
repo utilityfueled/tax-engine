@@ -24,7 +24,7 @@ export interface Form8959Result {
   threshold: Decimal; // Line 7
   excessOverThreshold: Decimal;
   additionalMedicareTax: Decimal; // Line 18
-  // Line 19: W-2 Medicare withholding in excess of regular 1.45%
+  // Line 24: Additional Medicare withholding credited to Form 1040 line 25c
   withholdingCredit: Decimal;
   lines: CalculatedLine[];
 }
@@ -95,15 +95,20 @@ export function calculateForm8959(
 
   // Line 19: Withholding credit — employers withhold Additional Medicare Tax
   // on wages over $200K regardless of filing status. Credit for excess withholding.
-  const regularMedicareRate = new Decimal(0.0145);
+  const regularMedicareRate = new Decimal("0.0145");
   const totalMedicareWithheld = input.w2s.reduce(
     (acc, w2) => acc.plus(d(w2.medicareWithheld)),
     new Decimal(0)
   );
-  const expectedRegularMedicare = roundDollar(medicareWages.times(regularMedicareRate));
-  const withholdingCredit = zeroFloor(totalMedicareWithheld.minus(expectedRegularMedicare));
-  audit.record("Form 8959", "19", "Additional Medicare withholding credit", withholdingCredit,
-    "W-2 Medicare withheld - (wages × 1.45%)");
+  const roundedMedicareWithheld = roundDollar(totalMedicareWithheld);
+  const roundedMedicareWages = roundDollar(medicareWages);
+  const expectedRegularMedicare = roundDollar(roundedMedicareWages.times(regularMedicareRate));
+  const withholdingCredit = zeroFloor(roundedMedicareWithheld.minus(expectedRegularMedicare));
+  audit.record("Form 8959", "19", "Medicare withholding", roundedMedicareWithheld, "Rounded sum W-2 box 6");
+  audit.record("Form 8959", "20", "Medicare wages for withholding reconciliation", roundedMedicareWages, "Rounded sum W-2 box 5");
+  audit.record("Form 8959", "21", "Regular Medicare withholding", expectedRegularMedicare, "Line 20 × 1.45%, rounded dollars");
+  audit.record("Form 8959", "22", "Additional Medicare withholding on wages", withholdingCredit, "max(0, line 19 - line 21)");
+  audit.record("Form 8959", "24", "Additional Medicare withholding credit", withholdingCredit, "Supported non-RRTA line 22 → Form 1040 line 25c");
 
   return {
     medicareWages,

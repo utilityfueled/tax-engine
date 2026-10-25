@@ -917,7 +917,7 @@ describe("Form 8959 - audit trail line values are accurate", () => {
     expect(line18!.value.toNumber()).toBe(result.additionalMedicareTax.toNumber());
   });
 
-  it("audit trail Line 19 value matches computed withholdingCredit", () => {
+  it("audit trail Line 24 value matches computed withholdingCredit", () => {
     // Employer withholds additional Medicare on wages over $200K
     const input = {
       ...simpleW2Fixture,
@@ -930,7 +930,7 @@ describe("Form 8959 - audit trail line values are accurate", () => {
       }],
     };
     const result = calculateForm8959(input, d(0), "single", c);
-    const line19 = result.lines.find((l) => l.line === "19");
+    const line19 = result.lines.find((l) => l.line === "24");
     expect(line19).toBeDefined();
     // Credit = $5,250 - $4,350 = $900
     expect(line19!.value.toNumber()).toBe(900);
