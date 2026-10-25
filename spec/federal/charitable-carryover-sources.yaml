@@ -10,8 +10,9 @@ notes: |
   Reg1.170A-10(b)/(c). The older regulation's cash50 and private-no-carry
   statements do not supersede subsequent statutes. This package initially
   implements ordinary2025 category history;2026 floor/nonitemizer coordination,
-  changed filing units, conservation/election changes and binding prior-G with
-  current public property remain separate methods, with all source facts retained.
+  changed filing units and conservation/election changes remain separate methods,
+  with all source facts retained. The historical2025 G carry/property order is
+  specified separately in charitable-public-cash-carry-2025.yaml.
 lines:
   - line: "history"
     description: "Actual source history conserves original excess"
@@ -43,11 +44,11 @@ lines:
     testRef: "tests/engine/schedules/schedule-a-charity-history.test.ts::retains actual standard-year absorption after the final deduction choice"
   - line: "unknown-methods"
     description: "Preserve unsupported source methods"
-    formula: "Unknown/changed membership, missing source confirmations, unsupported category/election/2026 floor transition, or binding prior G with current public property must reject with an actual-source requirement. When every public contribution fits within50percent and all public capital fits30percent, all are fully allowed without a disputed priority. No category is inferred from a monetary total."
+    formula: "Unknown/changed membership, missing source confirmations and unsupported category/election/2026 floor transitions reject with an actual-source requirement. Historical2025 G cash and its carry retain their separate60percent category before reducing property capacity. No category is inferred from a monetary total."
     testRef: "tests/engine/forms/charitable-carryover.test.ts::rejects unsupported methods and contradictory legacy balances"
   - line: "nonbinding-public"
     description: "Full allowance does not require an invented category priority"
-    formula: "If current plus eligible prior public cash and property together fit within50percent of base and public capital fits30percent, every public amount is allowed. Derived base100000,currentG20000.49,currentA10000.51,priorG1234.49 preserves all exact amounts. Binding mixed-G methods remain rejected."
+    formula: "If current plus eligible prior public cash and property together fit within50percent of base and public capital fits30percent, every public amount is allowed. Derived base100000,currentG20000.49,currentA10000.51,priorG1234.49 preserves all exact amounts under the same historical2025 G category ordering."
     testRef: "tests/engine/forms/charitable-carryover.test.ts::preserves fully allowed public gifts without inventing a binding priority"
   - line: "review"
     description: "Prior property review uses actual physical13 and exact source groups"

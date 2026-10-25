@@ -30,11 +30,6 @@ export function calculateCharitableCarryover(input: TaxYearInput, context: {
   const taxYear = input.taxpayer.taxYear;
   const base = zeroFloor(context.contributionBase), fifty = base.times("0.50"), thirty = base.times("0.30"), twenty = base.times("0.20");
   const raw = context.current;
-  const eligiblePublic = records.filter(row => row.taxYear + 5 >= taxYear && ["cash_60", "noncash_50", "capital_gain_30"].includes(row.category));
-  const allPublicFits = sum(raw.cashPublic, raw.noncashPublic, raw.capitalGainPublic, ...eligiblePublic.map(row => row.amount)).lte(fifty)
-    && raw.capitalGainPublic.plus(sum(...eligiblePublic.filter(row => row.category === "capital_gain_30").map(row => row.amount))).lte(thirty);
-  if (records.some(row => row.category === "cash_60" && row.amount.gt(0) && row.taxYear + 5 >= taxYear)
-    && (raw.noncashPublic.gt(0) || raw.capitalGainPublic.gt(0)) && !allPublicFits) throw new Error("Prior cash with binding current public property requires its separate modern category-ordering method");
   const consume = (category: CharitableCategory, capacity: Decimal): Decimal => {
     let remaining = zeroFloor(capacity), used = ZERO;
     for (const row of records.filter(record => record.category === category && record.taxYear + 5 >= taxYear)) {
@@ -43,6 +38,9 @@ export function calculateCharitableCarryover(input: TaxYearInput, context: {
     }
     return used;
   };
+  // Historical 2025 section170(G)(ii)/(iii): current G then G carry retain
+  // their own 60% category; their aggregate allowance reduces A's capacity.
+  // The amended 2026 G/A coordination has a separate effective-year method.
   const g = Decimal.min(raw.cashPublic, base.times("0.60"));
   const priorG = consume("cash_60", base.times("0.60").minus(g));
   const a = Decimal.min(raw.noncashPublic, zeroFloor(fifty.minus(g).minus(priorG)));

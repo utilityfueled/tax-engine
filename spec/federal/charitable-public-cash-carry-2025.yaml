@@ -1,0 +1,36 @@
+form: "2025 public cash carry coordination"
+fullName: "Historical section170 G carry before public property limits"
+taxYear: 2025
+irsReference: "https://www.govinfo.gov/content/pkg/USCODE-2024-title26/html/USCODE-2024-title26-subtitleA-chap1-subchapB-partVI-sec170.htm"
+retrievedAt: "2026-10-25"
+reviewStatus: "independent-review-pending"
+notes: |
+  Historical170(b)(1)(G)(i)-(iii) governs2025. G remains a separate60percent
+  cash category, including its carry; allowed current and prior G reduce the
+  A limitation. Final2025 Publication526 Carryovers orders current before carry
+  within each category and older origins first. Reg1.170A-10 A/C reservations
+  still apply after allowed G. These literal controls derive from those sources;
+  they are not represented as published mixed-G numeric examples.
+  PL119-21 section70425(c) makes its changed G/A/B and floor language effective
+  only after2025. This package does not open the2026 method or filing gates.
+lines:
+  - line: "g-before-a"
+    description: "Prior public cash reduces current public ordinary-property capacity"
+    formula: "Base100000,currentG0,priorG40000,currentA20000: priorG40000,Amin(20000,50000-40000)=10000,total50000,newAcarry10000. Do not reserve current A against G's separate60percent carry capacity."
+    testRef: "tests/engine/forms/charitable-public-cash-carry-2025.test.ts::applies the historical cash carry reduction to current ordinary property"
+  - line: "current-before-prior-g"
+    description: "Current cash precedes its own carry before property capacity"
+    formula: "Base100000,currentG40000,priorG30000,currentA20000: currentG40000,priorG20000,A0,total60000; priorGremaining10000 and newAcarry20000 retain their original categories and years."
+    testRef: "tests/engine/forms/charitable-public-cash-carry-2025.test.ts::uses current cash before prior cash without relabeling remaining property"
+  - line: "g-before-c"
+    description: "Equal total deductions cannot mask different source carry balances"
+    formula: "Base50000,currentG0,priorG20000,currentC40000: priorG20000,Cmin(15000,25000-20000)=5000,total25000,newCcarry35000. CurrentC-first would produce different source-year balances and is rejected as the2025 oracle."
+    testRef: "tests/engine/forms/charitable-public-cash-carry-2025.test.ts::preserves cash and capital-property identity when total deductions coincide"
+  - line: "cents-standard-expiry"
+    description: "Exact FIFO absorption and fifth-year expiry survive binding property"
+    formula: "Base1000.49,currentG500,currentA10.50,2020G1000.20,2024G500.10: priorG100.294 from2020,expiry899.906,2024remaining500.10,currentAcarry10.50. Standard selection deducts0 but retains the same treated-paid and carry balances. No early whole-dollar capacity rounding."
+    testRef: "tests/engine/forms/charitable-public-cash-carry-2025.test.ts::retains exact FIFO expiry and standard-year absorption in a binding mixed return"
+  - line: "canonical-review"
+    description: "Canonical current property and actual prior cash remain source-separated"
+    formula: "Actual50000 wages, actual public long-term property40000 and complete priorG20000 yield ScheduleA12=5000,13=20000,14=25000 and currentCcarry35000, with unchanged input and original prepared identity before redaction."
+    testRef: "tests/pdf/charitable-public-cash-carry-2025.test.ts::preserves the mixed cash and property sources through canonical review output"

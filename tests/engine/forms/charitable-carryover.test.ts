@@ -88,7 +88,13 @@ describe("actual charitable carryover sources", () => {
     expect(result.carryforwards).toEqual([]);
   });
   it("rejects unsupported methods and contradictory legacy balances", () => {
-    expect(() => calc([vintage()], { cashPublic: d("10000"), noncashPublic: d("1000") })).toThrow(/prior.*cash.*public.*property/i);
+    expect(() => calc([vintage(2024, "1000", "conservation_50", "noncash")])).toThrow(/separate.*conservation/i);
+    const future = fixture([vintage(2025)]);
+    future.taxpayer.taxYear = 2026;
+    if (!future.charitableCarryoverSources?.vintages?.[0]) throw new Error("Missing synthetic future history");
+    future.charitableCarryoverSources.sourceTaxYear = 2026;
+    future.charitableCarryoverSources.vintages[0].adjustedThroughTaxYear = 2025;
+    expect(() => calculateCharitableCarryover(future, { contributionBase: d("20000"), current: empty, itemizes: true })).toThrow(/2026.*separate.*method/i);
     const input = fixture();
     input.priorYear = TaxYearInputSchema.parse({ ...input, priorYear: { charitableCarryforward: "1001" } }).priorYear;
     expect(() => calculateCharitableCarryover(input, { contributionBase: d("20000"), current: empty, itemizes: true })).toThrow(/legacy.*reconcile/i);
