@@ -1,9 +1,23 @@
 form: "Form 8936"
 fullName: "Clean Vehicle Credits"
-taxYear: 2025
+taxYear: 2026
 irsReference: "https://www.irs.gov/instructions/i8936"
 
 notes: |
+  Sources refreshed 2026-10-25: final 2025 Form 8936/Schedule A and instructions,
+  IRC 30D and 25E, 26 CFR 1.30D-4 and IRS Topic H transfer FAQs.
+  https://www.irs.gov/pub/irs-pdf/f8936.pdf
+  https://www.irs.gov/pub/irs-pdf/f8936sa.pdf
+  https://www.ecfr.gov/current/title-26/section-1.30D-4
+  https://www.irs.gov/newsroom/topic-h-frequently-asked-questions-about-transfer-of-new-clean-vehicle-credit-and-previously-owned-clean-vehicles-credit
+  2026 drafts corroborate continuing acquisition/service-date rules only, not filing approval:
+  https://www.irs.gov/pub/irs-dft/i8936--dft.pdf
+  Detailed source records are required for 2026 and activated for 2025 records that
+  include a placed-in-service date. Legacy aggregate 2025 compatibility is review-only.
+  All dollar rounding in the detailed path uses nearest dollar; new personal credit
+  equals tentative less rounded business allocation. Previously-owned credit is
+  not prorated by business use: Schedule A Part IV has no such reduction.
+
   Form 8936 computes the clean vehicle credits under IRC §30D (new clean
   vehicles) and IRC §25E (previously owned clean vehicles). For individual
   returns the personal-use credits are nonrefundable and flow to Schedule 3.
@@ -22,6 +36,39 @@ notes: |
   credits, and cannot carry forward.
 
 lines:
+  - line: "verified-acquisition-and-service"
+    description: "Actual binding agreement, payment and possession dates"
+    formula: "Effective acquisition is later of bindingContractDate and paymentDate, both actual calendar dates on/before2025-09-30 and no later than possession. datePlacedInService must belong to taxYear. False binding contract/qualification or wrong year disallows; missing facts reject. Actual VINs cannot repeat."
+    testRef: "tests/engine/forms/form-8936.test.ts::2026 requires actual acquisition and service-year evidence"
+  - line: "verified-MAGI"
+    description: "Each year's actual filing-status threshold and known exclusions"
+    formula: "Eligible if current MAGI <= current-status threshold OR known prior MAGI <= prior-status threshold. MAGI includes AGI, Form2555 lines45/50 and excluded Puerto Rico/American Samoa income. Zero priorAGI is known, omission is unknown. Per-owner prior MAGI override required for newly-joint spouse if prior return not joint."
+    testRef: "tests/engine/forms/form-8936.test.ts::2026 uses known zero prior AGI and each years actual status"
+  - line: "verified-seller-report"
+    description: "Actual seller credit and individual eligibility"
+    formula: "Require actual VIN, owner, accepted ECO report confirmation, seller tentative credit, known resale/return facts and eligibility. Battery max is actual qualifying component sum, fuel-cell max7500. Report cannot exceed statutory maximum. Used credit=min(4000,round(actual saleprice times30%)), limited to actual reportamount; no personal-use proration."
+    testRef: "tests/engine/forms/form-8936.test.ts::2026 preserves actual seller credits and used credit without personal proration"
+  - line: "transfer-repayment"
+    description: "Transferred credits cannot create a second claim"
+    formula: "Actual full seller-reported transferred amount; no return credit. MAGI failure or resale within30days repays new credit onSchedule2line1b and used credit on1c. Tax liability below transferred credit causes no repayment. Return to dealer nullifies transfer and requires corrected seller report; repayment is dealer-side, not taxpayer tax. Other contradictory transfer records require reconciliation and cannot infer liability."
+    testRef: "tests/engine/forms/form-8936.test.ts::2026 reconciles transfers without double claims or invented taxpayer repayment"
+  - line: "17"
+    description: "Remaining tax before used vehicle credit"
+    formula: "Actual1040line18 minus allowed Schedule3lines1–4,5b,6d,6l; must be provided, never zero-defaulted"
+    testRef: "tests/engine/forms/form-8936.test.ts::2026 applies used then new credit limits and preserves business credit"
+  - line: "12"
+    description: "Remaining tax before new personal vehicle credit"
+    formula: "Line17 minus allowed used vehicle credit line18, floored0"
+    testRef: "tests/engine/forms/form-8936.test.ts::2026 applies used then new credit limits and preserves business credit"
+  - line: "6"
+    description: "Business portion of new vehicle credits"
+    formula: "Sum round(seller tentative credit times actual business-use percentage); flows toForm3800 separately, never personal tax-limit allocation"
+    testRef: "tests/engine/forms/form-8936.test.ts::2026 applies used then new credit limits and preserves business credit"
+  - line: "transfer-election-limits"
+    description: "Owner-specific transfer and used-credit limits"
+    formula: "No more than2 transfer elections per taxpayer/year, including at most1 used-credit transfer; no more than1 qualified used credit per owner in the return. Do not infer spouses or choose which conflicting claim to retain."
+    testRef: "tests/engine/forms/form-8936.test.ts::2026 rejects duplicate VINs and owner-specific election conflicts"
+
   # ── Part I: Modified Adjusted Gross Income ───────────────
   - line: "2"
     description: "Current-year modified AGI"
@@ -37,10 +84,10 @@ lines:
     testRef: "tests/engine/forms/form-8936.test.ts::Form 8936 uses prior-year MAGI when it is lower"
 
   - line: "5"
-    description: "MAGI for eligibility"
+    description: "Historical internal MAGI indicator; printed Form line 5 is actual prior filing status"
     formula: "Lesser of Line 2 (current-year) or Line 4 (prior-year)"
     irsRef: "Form 8936 Instructions, Part I"
-    notes: "Taxpayer qualifies if either year's MAGI is below the threshold."
+    notes: "Verified records compare each year against its own actual filing-status threshold. The numeric internal value is not a printed line 5 value."
     testRef: "tests/engine/forms/form-8936.test.ts::Form 8936 Line 5 uses lesser of current or prior year MAGI"
 
   # ── New Clean Vehicle Credit (IRC §30D) ──────────────────
@@ -75,7 +122,7 @@ lines:
     description: "Personal-use new clean vehicle credit (nonrefundable)"
     formula: "Lesser of Line 9 or (tax liability minus other credits including previously owned credit)"
     irsRef: "Form 8936 Part III Lines 10-13"
-    notes: "The nonrefundable limitation is applied in the federal engine when integrating with Schedule 3, not inside the Form 8936 calculation module. Unused credit cannot carry forward."
+    notes: "Verified records apply the actual remaining-tax limit in Form 8936 before Schedule 3; historical scalar API remains review-only. Unused personal credit cannot carry forward."
     testRef: "tests/engine/forms/form-8936.test.ts::Form 8936 new vehicle full $7,500 credit when both requirements met"
 
   # ── Previously Owned Clean Vehicle Credit (IRC §25E) ─────
@@ -83,8 +130,8 @@ lines:
     description: "Per-vehicle previously owned clean vehicle credit"
     formula: |
       If the vehicle was acquired after 2025-09-30, credit = $0
-      credit = min($4,000, salePrice × 30%)
-      adjustedCredit = credit × (personalUsePercentage / 100)
+      credit = min($4,000, round(salePrice × 30%)), bounded by actual accepted seller report
+      Verified Schedule A Part IV has no personal-use percentage reduction; historical scalar compatibility is review-only.
     irsRef: "IRC §25E(a); Form 8936 Schedule A Part IV"
     edgeCases:
       - "Credit is $0 if the vehicle was acquired after September 30, 2025"
@@ -108,7 +155,7 @@ lines:
     description: "Previously owned clean vehicle credit (nonrefundable)"
     formula: "Lesser of total used vehicle credits or (tax liability minus other credits excluding previously owned)"
     irsRef: "Form 8936 Part IV Lines 14-18"
-    notes: "Nonrefundable limitation applied in federal engine. Unused credit cannot carry forward."
+    notes: "Verified records apply the actual remaining-tax limit before new vehicle credit. Unused credit cannot carry forward."
     testRef: "tests/engine/forms/form-8936.test.ts::Form 8936 previously owned credit is lesser of $4,000 or 30% of sale price"
 
   # ── AGI Thresholds ───────────────────────────────────────

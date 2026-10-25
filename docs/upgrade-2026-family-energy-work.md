@@ -106,8 +106,47 @@ Calculation evidence is separate from final-form qualification. The current 2026
 - Review PDF mapping is being updated separately to consume these audited lines;
   the existing scalar recomputation cannot be used for detailed records.
 
+## Clean vehicles (Form 8936)
+
+- Refreshed [2025 final instructions](https://www.irs.gov/instructions/i8936),
+  [Schedule A](https://www.irs.gov/pub/irs-pdf/f8936sa.pdf),
+  [transfer FAQ](https://www.irs.gov/newsroom/topic-h-frequently-asked-questions-about-transfer-of-new-clean-vehicle-credit-and-previously-owned-clean-vehicles-credit),
+  and [26 CFR 1.30D-4](https://www.ecfr.gov/current/title-26/section-1.30D-4).
+  The [2026 draft](https://www.irs.gov/pub/irs-dft/i8936--dft.pdf) is research
+  corroboration only; no vehicle form is qualified for 2026 filing.
+- Verified 2026 records require actual binding-contract/payment/possession dates,
+  accepted seller report, VIN/owner, vehicle and buyer qualifications, resale/return
+  facts, use and transfer amounts. Acquisition is the later contract/payment date;
+  both must establish acquisition by September 30, 2025. Possession determines the
+  return year. Used acquisition before 2023 is ineligible. Duplicate VINs reject.
+- Current and prior MAGI use actual exclusions and each year's actual filing-status
+  threshold. Known zero prior AGI is preserved in both APIs. Newly-joint spouse
+  claims need owner-specific prior MAGI when relying on a separate prior return.
+- Seller-reported amounts cannot exceed statutory amounts. New fuel-cell/battery
+  paths and rounded business allocations are separate. Used credit has no personal
+  use proration in the official Schedule A. Actual worksheet balances allocate
+  nonrefundable credit to used vehicles before new vehicles; unused personal credit
+  is lost. Business credit is preserved separately and requires Form 3800 integration.
+- Transferred credits never produce a second return credit. MAGI failure or resale
+  within 30 days creates actual reported repayment: new to Schedule 2 line 1b,
+  used to line 1c. Low tax liability does not recapture a valid transfer. Returns
+  to the dealer require a corrected seller report and preserve dealer-side
+  reconciliation without inventing taxpayer tax. Conflicting transfer facts reject.
+  Per-owner limits prevent a third transfer or duplicate used-credit claims.
+- Red proof: `.local/upgrade-evidence/vehicle-source-red.log` (six new failures).
+  Green: 90/90 engine and edge tests, root types, scoped ESLint without warnings,
+  and 20/20 spec references. Reviewed the distinct refund/resale rules and corrected
+  the earlier proposed aggregate repayment destination against actual Schedule A.
+- Federal schema/orchestration must preserve pre-default missingness, pass both
+  income tax and remaining tax values, route the separate repayments, and gate
+  unintegrated Form 3800. Historical 2025 scalar records remain unverified; unresolved
+  transferred records explicitly return requiresTransferReconciliation=true.
+- Existing 8936 review PDF recomputes credit ordering and guesses prior-year filing
+  status. It must be migrated to audited source values before using verified records.
+
 ## Remaining assigned work
 
 - Map Form 5695 review PDF from audited values and actual source facts.
-- Vehicle acquisition/service-year transition, known-zero prior AGI, confirmed
-  qualification and transferred-credit reconciliation behavior.
+- Review-only vehicle PDF source mapping and per-vehicle Schedule A attachments.
+- Federal source/repayment/credit-ordering integration and independently reviewed
+  qualification remain tracked by the coordinating federal/parent agents.

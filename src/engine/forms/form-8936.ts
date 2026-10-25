@@ -15,14 +15,43 @@ import Decimal from "decimal.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import type { FilingStatus, YearConstants } from "@/models/constants.js";
 import { AuditTrail } from "@/utils/audit.js";
-import { d } from "@/utils/decimal.js";
+import { d, roundDollar, zeroFloor } from "@/utils/decimal.js";
+
+export interface VehicleSourceFacts {
+  owner?: "primary" | "spouse";
+  vin?: string;
+  datePlacedInService?: string;
+  bindingContractDate?: string;
+  paymentDate?: string;
+  bindingContractConfirmed?: boolean;
+  sellerReportReceived?: boolean;
+  sellerReportCreditAmount?: Decimal | string;
+  eligibilityConfirmed?: boolean;
+  creditTransferredAmount?: Decimal | string;
+  resoldWithin30Days?: boolean;
+  returnedToSellerWithin30Days?: boolean;
+  sellerReportUpdatedForReturn?: boolean;
+  priorYearMagi?: Decimal | string;
+  priorYearFilingStatus?: FilingStatus;
+  priorYearMagiConfirmed?: boolean;
+}
 
 export interface Form8936Input {
+  taxYear?: number;
+  priorYearFilingStatus?: FilingStatus;
+  agiAdjustmentsConfirmed?: boolean;
+  priorYearAgiAdjustmentsConfirmed?: boolean;
+  possessionIncomeExclusion?: Decimal | string;
+  priorYearPossessionIncomeExclusion?: Decimal | string;
+  /** Actual 1040 line 18 and remaining worksheet amount before used/new credits. */
+  incomeTaxBeforeCredits?: Decimal;
+  taxLiabilityLimit?: Decimal;
   filingStatus: FilingStatus;
   agi: Decimal | string;
   constants: YearConstants["cleanVehicleCredit"];
   /** Per-vehicle new clean vehicle claims */
-  newCleanVehicles: Array<{
+  newCleanVehicles: Array<VehicleSourceFacts & {
+    powertrain?: "battery" | "fuel_cell";
     dateAcquired: string;
     criticalMineralsRequirementMet: boolean;
     batteryComponentsRequirementMet: boolean;
@@ -32,7 +61,7 @@ export interface Form8936Input {
     creditTransferredToDealer: boolean;
   }>;
   /** Per-vehicle previously owned clean vehicle claims */
-  previouslyOwnedCleanVehicles: Array<{
+  previouslyOwnedCleanVehicles: Array<VehicleSourceFacts & {
     dateAcquired: string;
     salePrice: Decimal | string;
     personalUsePercentage: Decimal | string;
@@ -50,14 +79,21 @@ export interface Form8936Input {
   priorYearForeignHousingDeduction?: Decimal | string;
 }
 
-export interface NewVehicleCreditDetail {
+interface VehicleReconciliationDetail {
+  creditTransferred?: boolean;
+  transferredAmount?: Decimal;
+  repayment?: Decimal;
+  businessCredit?: Decimal;
+  basisReduction?: Decimal;
+}
+export interface NewVehicleCreditDetail extends VehicleReconciliationDetail {
   maxCredit: Decimal;
   personalCredit: Decimal;
   disqualified: boolean;
   disqualificationReason?: string;
 }
 
-export interface PreviouslyOwnedCreditDetail {
+export interface PreviouslyOwnedCreditDetail extends VehicleReconciliationDetail {
   rawCredit: Decimal;
   personalCredit: Decimal;
   disqualified: boolean;
@@ -65,6 +101,18 @@ export interface PreviouslyOwnedCreditDetail {
 }
 
 export interface Form8936Result {
+  sourceFactsVerified: boolean;
+  priorYearMagiKnown: boolean;
+  tentativeNewVehicleCredit: Decimal;
+  tentativePreviouslyOwnedCredit: Decimal;
+  businessInvestmentCredit: Decimal;
+  requiresForm3800: boolean;
+  transferredNewVehicleCreditRepayment: Decimal;
+  transferredPreviouslyOwnedCreditRepayment: Decimal;
+  transferredCreditRepayment: Decimal;
+  dealerTransferReconciliationAmount: Decimal;
+  requiresTransferReconciliation: boolean;
+  unusedPersonalCredit: Decimal;
   /** Part I: MAGI used for eligibility (lesser of current/prior year) */
   magi: Decimal;
   currentYearMagi: Decimal;
@@ -93,6 +141,11 @@ function isAcquiredAfterCleanVehicleCutoff(dateAcquired: string): boolean {
 }
 
 export function calculateForm8936(input: Form8936Input): Form8936Result {
+  const taxYear = input.taxYear ?? 2025;
+  if (taxYear !== 2025 && taxYear !== 2026) throw new Error("Unsupported Form 8936 tax year");
+  if (taxYear === 2026 || [...input.newCleanVehicles,...input.previouslyOwnedCleanVehicles].some(vehicle=>vehicle.datePlacedInService !== undefined)) {
+    return calculateFromSourceFacts(input,taxYear);
+  }
   const audit = new AuditTrail();
   const { constants: cv } = input;
 
@@ -108,7 +161,7 @@ export function calculateForm8936(input: Form8936Input): Form8936Result {
   const priorYearMagi = priorAgi.plus(priorForeignExclusion).plus(priorForeignHousing);
 
   // Use lesser of current or prior year MAGI; if no prior year provided, use current
-  const hasPriorYear = !priorAgi.isZero() || !priorForeignExclusion.isZero() || !priorForeignHousing.isZero();
+  const hasPriorYear = input.priorYearAgi !== undefined;
   const magi = hasPriorYear ? Decimal.min(currentYearMagi, priorYearMagi) : currentYearMagi;
 
   audit.record("Form 8936", "2", "Current-year modified AGI", currentYearMagi,
@@ -253,6 +306,13 @@ export function calculateForm8936(input: Form8936Input): Form8936Result {
     `Sum of ${input.previouslyOwnedCleanVehicles.length} previously owned vehicle credit(s)`);
 
   return {
+    sourceFactsVerified:false,priorYearMagiKnown:hasPriorYear,
+    tentativeNewVehicleCredit:totalNewVehicleCredit,tentativePreviouslyOwnedCredit:totalPreviouslyOwnedCredit,
+    businessInvestmentCredit:ZERO,requiresForm3800:false,
+    transferredNewVehicleCreditRepayment:ZERO,transferredPreviouslyOwnedCreditRepayment:ZERO,
+    transferredCreditRepayment:ZERO,dealerTransferReconciliationAmount:ZERO,
+    requiresTransferReconciliation:[...input.newCleanVehicles,...input.previouslyOwnedCleanVehicles].some(vehicle=>vehicle.creditTransferredToDealer),
+    unusedPersonalCredit:ZERO,
     magi,
     currentYearMagi,
     priorYearMagi,
@@ -264,4 +324,180 @@ export function calculateForm8936(input: Form8936Input): Form8936Result {
     previouslyOwnedAgiDisqualified,
     lines: audit.getLines(),
   };
+}
+
+
+/** Verified source path; historical scalar records cannot establish these facts. */
+function calculateFromSourceFacts(input: Form8936Input, taxYear: number): Form8936Result {
+  const audit = new AuditTrail();
+  const cv = input.constants;
+  const vehicles = [...input.newCleanVehicles,...input.previouslyOwnedCleanVehicles];
+  const finite = (amount: Decimal, label: string, nonnegative = true) => {
+    if (!amount.isFinite() || (nonnegative && amount.isNegative())) throw new Error(`${label} must be finite${nonnegative ? " and nonnegative" : ""}`);
+    return amount;
+  };
+  const actualDate = (date: string | undefined) => {
+    const parsed = new Date(`${date}T00:00:00Z`);
+    if (date === undefined || !/^\d{4}-\d{2}-\d{2}$/.test(date) || !Number.isFinite(parsed.getTime()) || parsed.toISOString().slice(0,10) !== date) throw new Error("Vehicle source date must be a real calendar date");
+    return date;
+  };
+  if (vehicles.length > 0 && input.agiAdjustmentsConfirmed !== true) throw new Error("Vehicle current-year MAGI adjustments must be confirmed");
+  const currentYearMagi = finite(d(input.agi),"AGI",false)
+    .plus(finite(d(input.foreignEarnedIncomeExclusion),"Foreign exclusion"))
+    .plus(finite(d(input.foreignHousingDeduction),"Foreign housing deduction"))
+    .plus(finite(d(input.possessionIncomeExclusion),"Possession income exclusion"));
+  const priorYearMagiKnown = input.priorYearAgi !== undefined;
+  if (priorYearMagiKnown && (!input.priorYearFilingStatus || input.priorYearAgiAdjustmentsConfirmed !== true)) throw new Error("Known prior-year AGI requires actual filing status and confirmed adjustments");
+  const priorYearMagi = finite(d(input.priorYearAgi),"Prior AGI",false)
+    .plus(finite(d(input.priorYearForeignEarnedIncomeExclusion),"Prior foreign exclusion"))
+    .plus(finite(d(input.priorYearForeignHousingDeduction),"Prior housing deduction"))
+    .plus(finite(d(input.priorYearPossessionIncomeExclusion),"Prior possession exclusion"));
+  if (vehicles.length > 0 && (input.taxLiabilityLimit === undefined || input.incomeTaxBeforeCredits === undefined)) throw new Error("Verified vehicle credits require actual tax-liability worksheet amounts");
+  const remainingTax = roundDollar(finite(input.taxLiabilityLimit ?? ZERO,"Vehicle tax-liability limit"));
+  const taxBeforeCredits = roundDollar(finite(input.incomeTaxBeforeCredits ?? ZERO,"Income tax before credits"));
+  if (remainingTax.gt(taxBeforeCredits)) throw new Error("Vehicle remaining tax exceeds actual income tax before credits");
+  const magi = priorYearMagiKnown ? Decimal.min(currentYearMagi,priorYearMagi) : currentYearMagi;
+  audit.record("Form 8936","2","Current-year MAGI",currentYearMagi,"Actual AGI plus foreign and possession exclusions/deductions");
+  if (priorYearMagiKnown) audit.record("Form 8936","4","Prior-year MAGI",priorYearMagi,"Actual prior-year AGI and confirmed adjustments");
+  const globalDisqualified = (kind: "newVehicle" | "previouslyOwned") => currentYearMagi.gt(cv[kind].magiLimit[input.filingStatus]) &&
+    (!priorYearMagiKnown || priorYearMagi.gt(cv[kind].magiLimit[input.priorYearFilingStatus ?? input.filingStatus]));
+  const seenVins = new Set<string>();
+  const transferCounts = new Map<string,number>();
+  const usedClaimCounts = new Map<string,number>();
+  const newVehicleDetails: NewVehicleCreditDetail[] = [];
+  const previouslyOwnedDetails: PreviouslyOwnedCreditDetail[] = [];
+  let tentativeNewVehicleCredit = ZERO;
+  let tentativePreviouslyOwnedCredit = ZERO;
+  let businessInvestmentCredit = ZERO;
+  let transferredNewVehicleCreditRepayment = ZERO;
+  let transferredPreviouslyOwnedCreditRepayment = ZERO;
+  let dealerTransferReconciliationAmount = ZERO;
+  for (const [kind, records] of [["newVehicle",input.newCleanVehicles],["previouslyOwned",input.previouslyOwnedCleanVehicles]] as const) {
+    for (const [index, vehicle] of records.entries()) {
+      if (!vehicle.owner || (vehicle.owner === "spouse" && input.filingStatus !== "married_filing_jointly")) throw new Error("Vehicle owner must be an actual taxpayer on this return");
+      const vin = vehicle.vin?.toUpperCase();
+      if (!vin || !/^[A-HJ-NPR-Z0-9]{17}$/.test(vin) || seenVins.has(vin)) throw new Error("Vehicle VIN must be valid and unique within the return");
+      seenVins.add(vin);
+      const serviceDate = actualDate(vehicle.datePlacedInService);
+      const contractDate = actualDate(vehicle.bindingContractDate);
+      const paymentDate = actualDate(vehicle.paymentDate);
+      if (contractDate > serviceDate || paymentDate > serviceDate) throw new Error("Vehicle contract/payment dates cannot follow possession");
+      for (const flag of [vehicle.bindingContractConfirmed,vehicle.sellerReportReceived,vehicle.eligibilityConfirmed,vehicle.resoldWithin30Days,vehicle.returnedToSellerWithin30Days]) {
+        if (typeof flag !== "boolean") throw new Error("Vehicle qualification, seller report and resale/return facts must be known");
+      }
+      if (vehicle.resoldWithin30Days && vehicle.returnedToSellerWithin30Days) throw new Error("Vehicle cannot be both returned to dealer and resold within30days");
+      if (vehicle.sellerReportCreditAmount === undefined) throw new Error("Actual seller report credit amount is required");
+      const reportedCredit = roundDollar(finite(d(vehicle.sellerReportCreditAmount),"Actual seller credit"));
+      if (typeof vehicle.creditTransferredToDealer !== "boolean" || vehicle.personalUsePercentage === undefined) throw new Error("Actual transfer election and use percentage are required");
+      const personalPct = finite(d(vehicle.personalUsePercentage),"Personal use percentage");
+      if (personalPct.gt(100)) throw new Error("Personal use percentage cannot exceed100");
+      let statutoryCredit: Decimal;
+      let priceDisqualified: boolean;
+      if ("msrp" in vehicle) {
+        if (vehicle.powertrain !== "battery" && vehicle.powertrain !== "fuel_cell") throw new Error("Actual new vehicle powertrain is required");
+        if (vehicle.msrp === undefined || !["suv_van_pickup","other"].includes(vehicle.vehicleType) || typeof vehicle.criticalMineralsRequirementMet !== "boolean" || typeof vehicle.batteryComponentsRequirementMet !== "boolean") throw new Error("New vehicle price, type and component facts must be known");
+        const msrp = finite(d(vehicle.msrp),"Vehicle MSRP");
+        priceDisqualified = msrp.gt(vehicle.vehicleType === "suv_van_pickup" ? cv.newVehicle.msrpLimitSuvVanPickup : cv.newVehicle.msrpLimitOther);
+        statutoryCredit = vehicle.powertrain === "fuel_cell" ? cv.newVehicle.criticalMineralsCredit.plus(cv.newVehicle.batteryComponentsCredit)
+          : (vehicle.criticalMineralsRequirementMet ? cv.newVehicle.criticalMineralsCredit : ZERO).plus(vehicle.batteryComponentsRequirementMet ? cv.newVehicle.batteryComponentsCredit : ZERO);
+      } else {
+        if (vehicle.salePrice === undefined) throw new Error("Actual used vehicle sale price is required");
+        const salePrice = finite(d(vehicle.salePrice),"Used vehicle sale price");
+        priceDisqualified = salePrice.gt(cv.previouslyOwned.maxSalePrice);
+        statutoryCredit = Decimal.min(cv.previouslyOwned.maxCredit,roundDollar(salePrice.times(cv.previouslyOwned.creditRate)));
+      }
+      if (reportedCredit.gt(statutoryCredit)) throw new Error("Actual seller credit exceeds the statutory vehicle maximum; reconcile the report");
+      let priorMagiForOwner = priorYearMagi;
+      let priorStatusForOwner = input.priorYearFilingStatus;
+      let hasPriorForOwner = priorYearMagiKnown;
+      if (vehicle.priorYearMagi !== undefined) {
+        if (vehicle.priorYearMagiConfirmed !== true || !vehicle.priorYearFilingStatus) throw new Error("Owner prior-year MAGI and filing status must be confirmed");
+        priorMagiForOwner = finite(d(vehicle.priorYearMagi),"Owner prior-year MAGI",false);
+        priorStatusForOwner = vehicle.priorYearFilingStatus;
+        hasPriorForOwner = true;
+      } else if (vehicle.owner === "spouse" && input.priorYearFilingStatus !== "married_filing_jointly") {
+        hasPriorForOwner = false;
+      }
+      const currentOver = currentYearMagi.gt(cv[kind].magiLimit[input.filingStatus]);
+      if (currentOver && !hasPriorForOwner) throw new Error("Vehicle owner needs actual prior-year MAGI before eligibility or repayment can be determined");
+      const agiDisqualified = currentOver && priorMagiForOwner.gt(cv[kind].magiLimit[priorStatusForOwner ?? input.filingStatus]);
+      const wrongYear = !serviceDate.startsWith(`${taxYear}-`);
+      const effectiveAcquisition = contractDate > paymentDate ? contractDate : paymentDate;
+      const acquiredAfterCutoff = effectiveAcquisition > CLEAN_VEHICLE_ACQUISITION_CUTOFF;
+      const usedAcquiredTooEarly = kind === "previouslyOwned" && effectiveAcquisition < "2023-01-01";
+      const otherDisqualified = wrongYear || usedAcquiredTooEarly || acquiredAfterCutoff || !vehicle.bindingContractConfirmed || !vehicle.sellerReportReceived || !vehicle.eligibilityConfirmed || priceDisqualified;
+      const returned = vehicle.returnedToSellerWithin30Days === true;
+      const resold = vehicle.resoldWithin30Days === true;
+      const disqualified = otherDisqualified || returned || resold || agiDisqualified;
+      const disqualificationReason = disqualified ? (wrongYear ? "Vehicle not placed in service in this tax year" : acquiredAfterCutoff ? "Vehicle acquired after2025-09-30" : returned ? "Vehicle returned to seller within30days" : resold ? "Vehicle resold within30days" : agiDisqualified ? "MAGI exceeds each applicable year's threshold" : "Actual vehicle or buyer qualification failed") : undefined;
+      let transferredAmount = ZERO;
+      let repayment = ZERO;
+      if (vehicle.creditTransferredToDealer) {
+        if (vehicle.creditTransferredAmount === undefined) throw new Error("Actual transferred amount from seller report is required");
+        transferredAmount = roundDollar(finite(d(vehicle.creditTransferredAmount),"Transferred credit"));
+        if (transferredAmount.lte(0) || !transferredAmount.eq(reportedCredit)) throw new Error("Transferred amount must equal the entire actual seller credit");
+        if (wrongYear) throw new Error("Transferred vehicle must be reconciled in its actual placed-in-service year");
+        if (kind === "newVehicle" && personalPct.lte(50)) throw new Error("New vehicle transfer requires predominantly personal use");
+        if (!returned) {
+          const transferCount = (transferCounts.get(vehicle.owner) ?? 0)+1;
+          transferCounts.set(vehicle.owner,transferCount);
+          if (transferCount > 2) throw new Error("Vehicle owner cannot make more than two transfer elections");
+        }
+        if (returned) {
+          if (vehicle.sellerReportUpdatedForReturn !== true) throw new Error("Returned vehicle requires the updated seller report and dealer reconciliation");
+          dealerTransferReconciliationAmount = dealerTransferReconciliationAmount.plus(transferredAmount);
+        } else {
+          if (otherDisqualified) throw new Error("Inconsistent transferred vehicle facts require seller-report reconciliation");
+          if (agiDisqualified || resold) repayment = transferredAmount;
+        }
+      } else if (vehicle.creditTransferredAmount !== undefined && !d(vehicle.creditTransferredAmount).isZero()) {
+        throw new Error("Transferred amount conflicts with the known nontransfer election");
+      }
+      if (kind === "previouslyOwned" && ((!disqualified && reportedCredit.gt(0)) || (vehicle.creditTransferredToDealer && !returned))) {
+        const count = (usedClaimCounts.get(vehicle.owner) ?? 0)+1;
+        usedClaimCounts.set(vehicle.owner,count);
+        if (count > 1) throw new Error("Vehicle owner has conflicting used vehicle credit claims within the same year");
+      }
+      const available = disqualified || vehicle.creditTransferredToDealer ? ZERO : reportedCredit;
+      const businessCredit = kind === "newVehicle" ? roundDollar(available.times(HUNDRED.minus(personalPct)).div(HUNDRED)) : ZERO;
+      const personalCredit = available.minus(businessCredit);
+      const basisReduction = returned || disqualified ? ZERO : reportedCredit;
+      const common = {personalCredit,disqualified,disqualificationReason,creditTransferred:vehicle.creditTransferredToDealer,transferredAmount,repayment,businessCredit,basisReduction};
+      if (kind === "newVehicle") {
+        newVehicleDetails.push({...common,maxCredit:reportedCredit});
+        tentativeNewVehicleCredit = tentativeNewVehicleCredit.plus(personalCredit);
+        businessInvestmentCredit = businessInvestmentCredit.plus(businessCredit);
+        transferredNewVehicleCreditRepayment = transferredNewVehicleCreditRepayment.plus(repayment);
+      } else {
+        previouslyOwnedDetails.push({...common,rawCredit:available});
+        tentativePreviouslyOwnedCredit = tentativePreviouslyOwnedCredit.plus(personalCredit);
+        transferredPreviouslyOwnedCreditRepayment = transferredPreviouslyOwnedCreditRepayment.plus(repayment);
+      }
+      const id = `${kind === "newVehicle" ? "NV" : "PO"}-${index+1}`;
+      audit.record("Form 8936",id,"Verified vehicle personal credit",personalCredit,disqualificationReason ?? "Actual seller credit less rounded business allocation; transferred credit not claimed twice");
+      audit.record("Form 8936",`${id}-transfer`,"Actual credit transferred",transferredAmount,"Actual seller report");
+      audit.record("Form 8936",`${id}-repayment`,"Taxpayer transfer repayment",repayment,"MAGI failure or resale within30days; return-to-dealer reconciliation excluded");
+    }
+  }
+  const totalPreviouslyOwnedCredit = Decimal.min(tentativePreviouslyOwnedCredit,remainingTax);
+  const newLimit = zeroFloor(remainingTax.minus(totalPreviouslyOwnedCredit));
+  const totalNewVehicleCredit = Decimal.min(tentativeNewVehicleCredit,newLimit);
+  const unusedPersonalCredit = tentativeNewVehicleCredit.plus(tentativePreviouslyOwnedCredit).minus(totalNewVehicleCredit).minus(totalPreviouslyOwnedCredit);
+  for (const [line,description,value] of [
+    ["6","Business new vehicle credit",businessInvestmentCredit],
+    ["9","Tentative personal new vehicle credit",tentativeNewVehicleCredit],
+    ["10","Tax before credits",taxBeforeCredits],["11","Credits before new vehicle",taxBeforeCredits.minus(newLimit)],
+    ["12","New vehicle tax limit",newLimit],["13","Allowed new personal vehicle credit",totalNewVehicleCredit],
+    ["14","Tentative previously owned credit",tentativePreviouslyOwnedCredit],["15","Tax before credits",taxBeforeCredits],
+    ["16","Credits before previously owned vehicle",taxBeforeCredits.minus(remainingTax)],["17","Used vehicle tax limit",remainingTax],
+    ["18","Allowed previously owned vehicle credit",totalPreviouslyOwnedCredit],
+    ["transfer-repayment-new","New vehicle repayment to Schedule2line1b",transferredNewVehicleCreditRepayment],
+    ["transfer-repayment-used","Used vehicle repayment to Schedule2line1c",transferredPreviouslyOwnedCreditRepayment],
+  ] as const) audit.record("Form 8936",line,description,value,"Actual source worksheet and owner-specific eligibility; used credit precedes new credit");
+  return {sourceFactsVerified:true,priorYearMagiKnown,magi,currentYearMagi,priorYearMagi,newVehicleDetails,previouslyOwnedDetails,
+    tentativeNewVehicleCredit,tentativePreviouslyOwnedCredit,totalNewVehicleCredit,totalPreviouslyOwnedCredit,businessInvestmentCredit,
+    requiresForm3800:businessInvestmentCredit.gt(0),transferredNewVehicleCreditRepayment,transferredPreviouslyOwnedCreditRepayment,
+    transferredCreditRepayment:transferredNewVehicleCreditRepayment.plus(transferredPreviouslyOwnedCreditRepayment),
+    dealerTransferReconciliationAmount,requiresTransferReconciliation:false,unusedPersonalCredit,
+    newVehicleAgiDisqualified:globalDisqualified("newVehicle"),previouslyOwnedAgiDisqualified:globalDisqualified("previouslyOwned"),lines:audit.getLines()};
 }

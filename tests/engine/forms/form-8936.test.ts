@@ -626,3 +626,81 @@ describe("Form 8936 audit trail", () => {
     expect(line14).toBeDefined();
   });
 });
+
+// Spec: spec/federal/form-8936.yaml verified source, transfer and ordering lines.
+describe("Form 8936 verified year transition", () => {
+  const evidence = {vin:"1ABCDEFGH23456789",owner:"primary" as const,datePlacedInService:"2026-01-02",bindingContractDate:"2025-09-30",paymentDate:"2025-09-30",bindingContractConfirmed:true,sellerReportReceived:true,sellerReportCreditAmount:"7500",eligibilityConfirmed:true,resoldWithin30Days:false,returnedToSellerWithin30Days:false,powertrain:"battery" as const};
+  const verifiedNew = (extra: Partial<Form8936Input["newCleanVehicles"][number]>={}) => newVehicle({...evidence,...extra});
+  const verifiedUsed = (extra: Partial<Form8936Input["previouslyOwnedCleanVehicles"][number]>={}) => usedVehicle({...evidence,vin:"2ABCDEFGH23456789",sellerReportCreditAmount:"4000",...extra});
+  const current = (extra: Partial<Form8936Input>={}) => makeInput({taxYear:2026,agi:"70000",agiAdjustmentsConfirmed:true,taxLiabilityLimit:new Decimal(20000),incomeTaxBeforeCredits:new Decimal(20000),...extra});
+  it("2026 requires actual acquisition and service-year evidence", () => {
+    expect(calculateForm8936(current({newCleanVehicles:[verifiedNew()]})).totalNewVehicleCredit.toString()).toBe("7500");
+    for(const overrides of [{datePlacedInService:undefined},{bindingContractDate:undefined},{paymentDate:undefined},{sellerReportReceived:undefined},{eligibilityConfirmed:undefined},{resoldWithin30Days:undefined},{vin:undefined},{owner:undefined},{datePlacedInService:"2026-02-30"},{paymentDate:"2026-01-03"}]) {
+      expect(()=>calculateForm8936(current({newCleanVehicles:[verifiedNew(overrides)]}))).toThrow();
+    }
+    for(const overrides of [{datePlacedInService:"2025-12-31"},{bindingContractConfirmed:false},{paymentDate:"2025-10-01"},{bindingContractDate:"2025-10-01"},{eligibilityConfirmed:false},{sellerReportReceived:false}]) {
+      expect(calculateForm8936(current({newCleanVehicles:[verifiedNew(overrides)]})).totalNewVehicleCredit.toString()).toBe("0");
+    }
+    expect(()=>calculateForm8936(current({agiAdjustmentsConfirmed:undefined,newCleanVehicles:[verifiedNew()]}))).toThrow();
+    expect(()=>calculateForm8936(current({taxLiabilityLimit:undefined,newCleanVehicles:[verifiedNew()]}))).toThrow();
+  });
+  it("2026 uses known zero prior AGI and each years actual status", () => {
+    const base=current({agi:"400000",priorYearAgi:"0",priorYearFilingStatus:"single",priorYearAgiAdjustmentsConfirmed:true,newCleanVehicles:[verifiedNew()]});
+    expect(calculateForm8936(base).totalNewVehicleCredit.toString()).toBe("7500");
+    expect(calculateForm8936(base).priorYearMagi.toString()).toBe("0");
+    expect(()=>calculateForm8936({...base,priorYearAgi:undefined})).toThrow(/prior/);
+    expect(()=>calculateForm8936({...base,priorYearFilingStatus:undefined})).toThrow(/status/);
+    expect(calculateForm8936({...base,filingStatus:"married_filing_jointly",priorYearAgi:"200000"}).totalNewVehicleCredit.toString()).toBe("0");
+    expect(calculateForm8936({...base,filingStatus:"single",priorYearAgi:"200000",priorYearFilingStatus:"married_filing_jointly"}).totalNewVehicleCredit.toString()).toBe("7500");
+    expect(calculateForm8936({...base,priorYearAgi:"149000",priorYearPossessionIncomeExclusion:"1001"}).totalNewVehicleCredit.toString()).toBe("0");
+    expect(calculateForm8936({...base,filingStatus:"married_filing_jointly",newCleanVehicles:[verifiedNew({owner:"spouse",priorYearMagi:"140000",priorYearFilingStatus:"single",priorYearMagiConfirmed:true})]}).totalNewVehicleCredit.toString()).toBe("7500");
+    expect(()=>calculateForm8936({...base,filingStatus:"married_filing_jointly",newCleanVehicles:[verifiedNew({owner:"spouse"})]})).toThrow(/owner/);
+  });
+  it("2026 preserves actual seller credits and used credit without personal proration", () => {
+    expect(calculateForm8936(current({newCleanVehicles:[verifiedNew({sellerReportCreditAmount:"3750",batteryComponentsRequirementMet:false})]})).totalNewVehicleCredit.toString()).toBe("3750");
+    expect(calculateForm8936(current({newCleanVehicles:[verifiedNew({powertrain:"fuel_cell",criticalMineralsRequirementMet:false,batteryComponentsRequirementMet:false})]})).totalNewVehicleCredit.toString()).toBe("7500");
+    expect(calculateForm8936(current({previouslyOwnedCleanVehicles:[verifiedUsed({salePrice:"13333",personalUsePercentage:"33"})]})).totalPreviouslyOwnedCredit.toString()).toBe("4000");
+    expect(()=>calculateForm8936(current({newCleanVehicles:[verifiedNew({sellerReportCreditAmount:"7501"})]}))).toThrow(/seller/);
+    expect(calculateForm8936(current({previouslyOwnedCleanVehicles:[verifiedUsed({bindingContractDate:"2022-12-31",paymentDate:"2022-12-31"})]})).totalPreviouslyOwnedCredit.toString()).toBe("0");
+    for(const overrides of [{msrp:"-1"},{personalUsePercentage:"101"},{personalUsePercentage:"-1"},{sellerReportCreditAmount:"NaN"}]) expect(()=>calculateForm8936(current({newCleanVehicles:[verifiedNew(overrides)]}))).toThrow();
+  });
+  it("2026 reconciles transfers without double claims or invented taxpayer repayment", () => {
+    const transfer=verifiedNew({creditTransferredToDealer:true,creditTransferredAmount:"7500"});
+    const zeroTax=calculateForm8936(current({taxLiabilityLimit:new Decimal(0),incomeTaxBeforeCredits:new Decimal(0),newCleanVehicles:[transfer]}));
+    expect(zeroTax.totalNewVehicleCredit.toString()).toBe("0");
+    expect(zeroTax.transferredCreditRepayment.toString()).toBe("0");
+    const high=current({agi:"400000",priorYearAgi:"400000",priorYearFilingStatus:"single",priorYearAgiAdjustmentsConfirmed:true,newCleanVehicles:[transfer],previouslyOwnedCleanVehicles:[verifiedUsed({creditTransferredToDealer:true,creditTransferredAmount:"4000"})]});
+    const r=calculateForm8936(high);
+    expect(r.transferredNewVehicleCreditRepayment.toString()).toBe("7500");
+    expect(r.transferredPreviouslyOwnedCreditRepayment.toString()).toBe("4000");
+    expect(r.transferredCreditRepayment.toString()).toBe("11500");
+    expect(calculateForm8936(current({newCleanVehicles:[{...transfer,resoldWithin30Days:true}]})).transferredCreditRepayment.toString()).toBe("7500");
+    const returned=calculateForm8936(current({newCleanVehicles:[{...transfer,returnedToSellerWithin30Days:true,sellerReportUpdatedForReturn:true}]}));
+    expect(returned.transferredCreditRepayment.toString()).toBe("0");
+    expect(returned.dealerTransferReconciliationAmount.toString()).toBe("7500");
+    for(const overrides of [{creditTransferredAmount:undefined},{creditTransferredAmount:"4000"},{returnedToSellerWithin30Days:true},{eligibilityConfirmed:false}]) expect(()=>calculateForm8936(current({newCleanVehicles:[{...transfer,...overrides}]}))).toThrow();
+  });
+  it("2026 applies used then new credit limits and preserves business credit", () => {
+    const r=calculateForm8936(current({taxLiabilityLimit:new Decimal("5000"),incomeTaxBeforeCredits:new Decimal("6000"),newCleanVehicles:[verifiedNew({personalUsePercentage:"33.33"})],previouslyOwnedCleanVehicles:[verifiedUsed()]}));
+    expect(r.tentativeNewVehicleCredit.toString()).toBe("2500");
+    expect(r.businessInvestmentCredit.toString()).toBe("5000");
+    expect(r.requiresForm3800).toBe(true);
+    expect(r.totalPreviouslyOwnedCredit.toString()).toBe("4000");
+    expect(r.totalNewVehicleCredit.toString()).toBe("1000");
+    expect(r.unusedPersonalCredit.toString()).toBe("1500");
+    expect(Object.fromEntries(r.lines.map(l=>[l.line,l.value.toString()]))).toMatchObject({"6":"5000","9":"2500","10":"6000","11":"5000","12":"1000","13":"1000","14":"4000","15":"6000","16":"1000","17":"5000","18":"4000"});
+  });
+  it("2026 rejects duplicate VINs and owner-specific election conflicts", () => {
+    expect(()=>calculateForm8936(current({newCleanVehicles:[verifiedNew(),verifiedNew()]}))).toThrow(/VIN/);
+    expect(()=>calculateForm8936(current({previouslyOwnedCleanVehicles:[verifiedUsed(),verifiedUsed({vin:"3ABCDEFGH23456789"})]}))).toThrow(/owner/);
+    const transfers=["1","2","3"].map(prefix=>verifiedNew({vin:`${prefix}ABCDEFGH23456789`,creditTransferredToDealer:true,creditTransferredAmount:"7500"}));
+    expect(()=>calculateForm8936(current({newCleanVehicles:transfers}))).toThrow(/two/);
+    expect(calculateForm8936(current({filingStatus:"married_filing_jointly",newCleanVehicles:[transfers[0],transfers[1],{...transfers[2],owner:"spouse"}]})).transferredCreditRepayment.toString()).toBe("0");
+  });
+});
+
+// Spec: spec/federal/form-8936.yaml verified-MAGI; known zero is not omission.
+it("known zero prior AGI remains known in the historical interface", () => {
+  expect(calculateForm8936(makeInput({agi:"200000",priorYearAgi:"0",newCleanVehicles:[newVehicle()]})).totalNewVehicleCredit.toString()).toBe("7500");
+  expect(calculateForm8936(makeInput({agi:"200000",newCleanVehicles:[newVehicle()]})).totalNewVehicleCredit.toString()).toBe("0");
+});
