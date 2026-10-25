@@ -285,3 +285,34 @@ the commit are recorded in the checklist. This is bounded code review and
 synthetic evidence, not state/form or independent human qualification. Evidence:
 `.local/upgrade-evidence/oh-government-{red,green}.log`,
 `parent-government-final-review.log` and `ai-oh-government-review.log`.
+
+## Isolated Ohio 2026 enacted baseline — 2026-10-25
+
+Refreshed [R.C.5747.02(A)(3)(c)/(4)](https://codes.ohio.gov/ohio-revised-code/section-5747.02/9-30-2025),
+[5747.025](https://codes.ohio.gov/ohio-revised-code/section-5747.025/9-30-2025),
+[5747.05(E)](https://codes.ohio.gov/ohio-revised-code/section-5747.05/9-30-2025),
+the [enacted HB96 comparison](https://www.lsc.ohio.gov/assets/legislation/136/hb96/en0/files/hb96-tax-comparison-document-as-enacted-136th-general-assembly.pdf)
+page8 (uncodified757.120), and the final2025 booklet pages17/29. The separately
+declared immutable candidate retains the published indexed exemption amounts
+because HB96 suspends2025/2026 indexing. The enacted2026 nonbusiness rate is
+2.75% above$26,050 with$332 base tax; both exemption and joint-credit MAGI
+ceilings are exclusive$500,000. The statutory text controls that exclusivity.
+
+The pure Decimal calculation takes completed actual Ohio income, business
+deduction, eligible-person count, qualifying incomes and preceding credits.
+It applies unused exemptions to business income once under5747.02(A)(4)(b).
+The spec preceded missing-module red tests, then separate red regressions for
+unused business exemptions and a jointly filing dependent's eligible spouse.
+Eligibility is assessed per person outside this bounded calculator; a claimable
+primary does not eliminate the independently eligible spouse's exemption.
+All181 candidate and historical tests pass, including cents around every rate,
+exemption and joint-credit boundary; root types and scoped lint pass. Independent
+agent source/software review reran all7 candidate tests and found no remaining
+actionable issue after those two corrections. Human tax review is still pending.
+
+No2026 state registry, full return, map, export or filing gate is enabled. Actual
+launch demand, conformity/residency/other source calculations and qualified final
+2026 forms remain separate requirements. Evidence is in
+`.local/upgrade-evidence/oh-2026-baseline-{red,expanded,final-green}.log`,
+`oh-2026-baseline-unused-exemptions-red.log`, `oh-2026-joint-spouse-red.log`,
+`oh-2026-{typecheck,lint}.log` and `ai-oh2026-final-review.log`.

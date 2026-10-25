@@ -1,0 +1,53 @@
+form: "Ohio 2026 enacted income-tax baseline"
+fullName: "Isolated statutory rate, exemption and joint-filing calculation candidate"
+taxYear: 2026
+irsReference: "https://codes.ohio.gov/ohio-revised-code/section-5747.02/9-30-2025"
+sources:
+  - "https://codes.ohio.gov/ohio-revised-code/section-5747.025/9-30-2025"
+  - "https://codes.ohio.gov/ohio-revised-code/section-5747.05/9-30-2025"
+  - "https://www.lsc.ohio.gov/assets/legislation/136/hb96/en0/files/hb96-tax-comparison-document-as-enacted-136th-general-assembly.pdf"
+  - "https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf"
+notes: |
+  Sources retrieved 2026-10-25. HB96 effective September 30, 2025;
+  RC5747.02(A)(3)(c)/(4), 5747.025(A)-(C), 5747.05(E), and uncodified
+  section757.120 (LSC enacted comparison printed page8). Indexing is suspended
+  for 2025 and 2026; retain the published 2025 indexed exemption amounts on
+  booklet page17, not the older unindexed amounts printed in the statute.
+  The codified MAGI ceiling is exclusive, despite the LSC prose saying or less.
+  Monetary calculations use Decimal and printed amounts round half-up to dollars.
+
+  This isolated component takes actual completed Ohio income, deduction,
+  eligible exemption count, qualifying-income and preceding-credit amounts.
+  It does not derive conformity adjustments, source eligibility, residency,
+  municipal/school-district tax, remaining credits, payments or carryovers.
+  No historical registry, full-return route, map or filing gate is enabled.
+  Independent review and final 2026 instructions/forms remain required.
+lines:
+  - line: "provenance"
+    description: "Immutable independent 2026 candidate data"
+    formula: "Explicit values with ruleVersion, source sections/revisions/retrieval dates, incomplete calculation status, pending independent review and filingQualified=false; historical registries remain unchanged"
+    testRef: "tests/engine/state/oh-2026-baseline.test.ts::retains independent immutable provenance and closed historical registries"
+  - line: "exemptions"
+    description: "Actual MAGI and enacted exemption ceiling"
+    formula: "MAGI=actual OhioAGI+actual business-income deduction. If MAGI>=500000, exemption=0; otherwise each actual eligible exemption is2400 at MAGI<=40000,2150 at<=80000,1900 above. The input is the completed eligible-person count; eligibility is not derived here. Section5747.025(B) zeroes only the claimable individual's exemption, so an independently eligible joint spouse remains in the count."
+    testRef: "tests/engine/state/oh-2026-baseline.test.ts::uses actual MAGI at every indexed exemption boundary"
+  - line: "joint-exemption"
+    description: "Retain an independently eligible spouse's exemption"
+    formula: "For an actual joint return with one eligible spouse and one claimable taxpayer, actual eligible count1 at OhioAGI1600 yields exemption2400. The completed count must not be replaced by a household-wide claimability inference; count0 remains zero and an unknown count rejects."
+    testRef: "tests/engine/state/oh-2026-baseline.test.ts::retains the completed eligible count for a jointly filing dependent"
+  - line: "rate"
+    description: "IT1040 nonbusiness income tax"
+    formula: "Taxable nonbusiness income=max(0,OhioAGI-exemptions-taxableBusinessIncome). Zero tax at<=26050; above26050 roundDollar(332+0.0275*(income-26050)); no100000 second tier. Under5747.02(A)(4)(b), unused exemptions=max(0,exemptions-(OhioAGI-taxableBusinessIncome)); business base=max(0,taxableBusinessIncome-unused exemptions), separately multiplied by0.03 and rounded once."
+    testRef: "tests/engine/state/oh-2026-baseline.test.ts::applies the enacted nonbusiness base and separate business rate"
+  - line: "unused-exemptions"
+    description: "Apply unused exemptions to taxable business income once"
+    formula: "At actual OhioAGI5000, business deduction250000, taxable business5000 and one eligible1900 exemption, nonbusiness income is0 and the business base is3100, tax93; a1000 postdeduction business is fully covered by the exemption. Partial nonbusiness use consumes exemptions before the business adjustment."
+    testRef: "tests/engine/state/oh-2026-baseline.test.ts::applies unused exemptions to actual business income once"
+  - line: "joint"
+    description: "Joint-filing credit uses actual MAGI before exemptions"
+    formula: "Only MFJ with each spouse actual qualifying income>=500 and actual MAGI<500000. Apply20/15/10/5percent to tax after actual preceding credits at MAGI-minus-exemptions tiers25000/50000/75000/above; roundDollar and cap650. Preserve known zero and reject missing joint source amounts."
+    testRef: "tests/engine/state/oh-2026-baseline.test.ts::keeps actual joint eligibility distinct from percentage tiers"
+  - line: "validation"
+    description: "Actual year, complete inputs and exact Decimal arithmetic"
+    formula: "Require2026, known filing status, actual completed nonnegative safe-integer exemption count, finite exact monetary inputs; signed AGI/qualifying income are retained, deductions/business tax/preceding credits cannot be negative; reject unknown fields rather than defaulting money to zero"
+    testRef: "tests/engine/state/oh-2026-baseline.test.ts::preserves cents and rejects missing invalid or wrong-year source amounts"
