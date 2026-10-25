@@ -613,3 +613,72 @@ software review, not independent human tax qualification. Logs:
 `bond-ui-staged-{tests,types,web-types,spec,lint}.log`.
 The staged shared flow/bridge changes contain only the bond integration and
 merged credit-source invalidation; the concurrent health intake stays separate.
+
+### Bounded Coverdell code6 whole-account method (2026-10-25)
+
+The bond intake is committed as `d5edc89`. Refreshed current
+[IRC530](https://uscode.house.gov/us/usc/119-124/t26/s530/), the official
+[IRC408 edition](https://www.govinfo.gov/content/pkg/USCODE-2024-title26/html/USCODE-2024-title26-subtitleA-chap1-subchapD-partI-subpartA-sec408.htm),
+[IRC72](https://www.govinfo.gov/content/pkg/USCODE-2024-title26/html/USCODE-2024-title26-subtitleA-chap1-subchapB-partII-sec72.htm),
+[Reg1.408-4(d)](https://www.ecfr.gov/current/title-26/chapter-I/subchapter-A/part-1/section-1.408-4),
+and the continuous [Form1099-Q instructions](https://www.irs.gov/instructions/i1099q).
+The parent independently checked the narrow method against the official sources.
+This is agent source/software review, not independent human qualification.
+
+The implemented branch uses actual January1 whole-account value and basis,
+requires an explicit Decimal total of zero qualified education expenses
+(including eligible QTP contributions under530(b)(2)(B)), and requires an actual
+full-year source review confirming no subsequent income, gains or losses. It
+rejects another statement for the terminated account, conflicting beneficiary
+expense/credit/QTP records, ordinary year-end account history and any claimed
+additional-tax exception. Basic code6 event completeness alone cannot enable it.
+Reported Boxes2/3, when supplied, must reconcile exactly to the actual basis
+and earnings. Actual source cents remain intact; only taxable income is rounded
+to the physical-line dollar. No ordinary annual Coverdell worksheet is reused.
+
+An independent synthetic1000 January1 value less700 basis gives300 taxable
+earnings and30 additional tax. With1000.50 value and700 basis, source earnings
+remain300.50 while taxable earnings round to301 and additional tax to30.
+Both2025 and2026 canonical returns route actual own-recipient income once to
+Schedule1line8z and actual owner Form5329PartII. Outside recipients remain outside
+this return's income and additional tax. The interview collects the actual zero
+total and later-activity facts without defaults; editing invalidates confirmation.
+The review reference requires the dedicated disqualification audit and matching
+source boundaries, and preserves exact source cents.
+
+Spec and tests preceded implementation. Four core tests initially failed against
+the existing block; two surface tests initially failed on the absent intake
+fields and ordinary-PDF rounding. Parent review found that a missing credit-
+student ID could be mistaken for a known different beneficiary. A new regression
+reproduced that error; missing/invalid AOC or LLC identities now reject while
+actual different-student expenses remain separate. Positive unassigned LLC
+aggregates also reject. Logs are `coverdell-disqualification-{red,surfaces-red,
+identity-red,identity-green,related,types,web-types,spec,lint}.log` under the local
+evidence directory. The initial related run passed149 tests across16 files;
+immutable final verification follows the review correction.
+
+The synthetic2025 reference was saved, reopened and rendered. Both pages have
+exactly one visible review notice; page2 was also inspected as a separate footer
+crop. The final2026 filing/export qualification remains unchanged. The first
+render attempt used an unavailable default font-cache path; rerendering with
+the repository's existing `.local/pdf-fonts.conf` succeeded. Evidence lives in
+`coverdell-disqualification-reference/`.
+
+Remaining finite methods: (1) code6 with positive qualified expenses, pledges,
+basis losses or subsequent income still needs its own controlling tax method
+and actual source routing; the new zero-expense whole-account branch does not
+claim those cases; (2) mixed/joint bond educator attribution needs actual income
+ownership and a supported allocation of final Form8815 exclusion; (3) prepaid
+in-kind QTP educator reductions need a supported treatment distinct from the
+implemented actual-cash earnings method. Current Pub550 Table1-2 identifies
+co-owner income by actual purchase funds/community-property treatment; it does
+not by itself establish an arbitrary split of the final education exclusion.
+Research and implementation of these bounded methods continue separately.
+
+Final immutable code tree `150d2363` passes150 tests across16 source, return,
+guided, DOM and PDF files; root/web types, all3,912 spec references and scoped
+lint pass. Logs: `coverdell-code6-staged-{tests,types,web-types,spec,lint}.log`.
+The exact staged shared model delta contains only the three optional
+disqualification facts and their comments; concurrent tips/Schedule1-A sources
+remain outside this package. This closes the narrow actual-zero-expense method,
+not the remaining broader methods or any independent qualification gate.

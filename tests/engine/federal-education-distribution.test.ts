@@ -9,6 +9,7 @@ vi.mock("@/models/constants.js",async(importOriginal)=>{
 import { calculateFederalTax } from "@/engine/federal.js";
 import { TaxYearInputSchema } from "@/models/inputs.js";
 import { simpleW2Fixture } from "../fixtures/simple-w2.js";
+import { disqualifiedEducationSource, disqualifiedEducationSummary } from "../fixtures/education-disqualification-source.js";
 const statement=(year=2026,overrides:Record<string,unknown>={})=>({sourceId:"q1",accountId:"account1",beneficiaryId:"student1",recipientOwner:"primary",taxYear:year,payerName:"Synthetic plan",accountType:"529",grossDistribution:"5300",earnings:"950",basis:"4350",isTrusteeToTrustee:false,isQtpToRoth:false,recipientNotBeneficiary:false,sourceFactsConfirmed:true,transfer:{kind:"none"},...overrides});
 const expense=(year=2026,overrides:Record<string,unknown>={})=>({id:"e1",beneficiaryId:"student1",category:"postsecondary_tuition",paidDate:`${year}-08-15`,amount:"8300",refundedAmount:"0",taxFreeAssistance:"3100",educationCreditAmount:"4000",otherTaxBenefitAmount:"0",qualificationConfirmed:true,...overrides});
 const facts=(year=2026,overrides:Record<string,unknown>={})=>({taxYear:year,sourceFactsConfirmed:true,allDistributionsReconciled:true,beneficiaries:[{id:"student1",name:"Jane Doe",studentTaxId:"123456789",outsideK12QualifiedDistributions:"0"}],expenses:[expense(year)],allocations:[{expenseId:"e1",sourceId:"q1",amount:"1200",creditAmount:"4000"}],loanBorrowers:[],coverdellAccounts:[],penaltyExceptions:[],...overrides});
@@ -17,6 +18,21 @@ const education={primarySsnEligible:true,primaryTinEligible:true,claimedAsDepend
 const raw=(year=2026)=>({...simpleW2Fixture,taxpayer:{...simpleW2Fixture.taxpayer,taxYear:year},w2s:[{...simpleW2Fixture.w2s[0],wages:"50000",socialSecurityWages:"50000",socialSecurityWithheld:"3100",socialSecurityTips:"0",medicareWages:"50000",medicareWithheld:"725",box12:[]}],form1099Q:[statement(year)],qualifiedEducationExpenses:{sourceFacts:facts(year)},educationExpenses:education});
 const calculate=(value:unknown)=>calculateFederalTax(TaxYearInputSchema.parse(value));
 describe("Federal education distribution source integration",()=>{
+  it("routes bounded whole-account disqualification once for actual recipients",()=>{
+    for (const year of [2025,2026]) {
+      const input={...raw(year),educationExpenses:undefined,form1099Q:[disqualifiedEducationSource({taxYear:year,prohibitedTransactionDate:`${year}-06-01`})],qualifiedEducationExpenses:disqualifiedEducationSummary({taxYear:year})};
+      const result=calculate(input);
+      expect(result.form1099Q?.taxableEarnings.toFixed()).toBe("300");
+      expect(result.form1099Q?.netPenalty.toFixed()).toBe("30");
+      expect(result.agi.toFixed()).toBe("50300");
+      expect(result.allLines.filter(line=>line.form==="Sched 1"&&line.line==="8z")).toHaveLength(1);
+      expect(result.allLines.find(line=>line.form==="Sched 1"&&line.line==="8z")?.value.toFixed()).toBe("300");
+      expect(result.allLines.find(line=>line.form==="Form5329 education"&&line.line==="primary:primary:8")?.value.toFixed()).toBe("30");
+      const other=calculate({...input,form1099Q:[{...input.form1099Q[0],recipientOwner:"other",recipientId:"actual-beneficiary"}]});
+      expect(other.agi.toFixed()).toBe("50000");
+      expect(other.form1099Q?.netPenalty.isZero()).toBe(true);
+    }
+  });
   it("uses actual return year for the2026 K12 cap and preserves unknown sources",()=>{
     const input={...raw(),educationExpenses:undefined,form1099Q:[statement(2026,{grossDistribution:"20000",earnings:"4000",basis:"16000"})],qualifiedEducationExpenses:{sourceFacts:facts(2026,{expenses:[expense(2026,{category:"k12_tuition",amount:"20000",taxFreeAssistance:"0",educationCreditAmount:"0"})],allocations:[{expenseId:"e1",sourceId:"q1",amount:"20000",creditAmount:"0"}]})}};
     const result=calculate(input);

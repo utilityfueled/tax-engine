@@ -12,10 +12,11 @@ notes: |
   the pledged portion as distributed. The reference408 text is the official
   2024 edition, corroborated by the current IRS instructions/current530(e).
   These source records are not a taxable-income election or an approval flag.
-  The supported calculator has no qualified method for the interaction of the
-  deemed amount, section72 basis and530(d)(2) education exclusions, or for
-  post-disqualification account income. That is an unresolved internal legal
-  and calculation gap, not an external qualification claimed completed.
+  The narrow whole-account method in form-1099-q-disqualification.yaml requires
+  actual zero qualified education expenses and no post-January1 income/gain/loss.
+  Pledged basis, positive education expenses, basis losses and subsequent income
+  retain explicit unresolved internal methods. Source completeness is not human
+  or filing qualification.
 lines:
   - line: "facts"
     description: "Preserve actual code6 event facts before defaults"
@@ -27,11 +28,11 @@ lines:
     testRef: "tests/engine/forms/form-1099-q-prohibited-source.test.ts::validates the actual deemed-distribution source before blocking unresolved treatment"
   - line: "blocked"
     description: "Preserve explicit unsupported calculation boundary"
-    formula: "Even complete reconciled facts reject with a subtype-specific unresolved treatment message. No zero-income fallback, invented taxable amount, transfer election or model/human approval bypass."
-    testRef: "tests/engine/forms/form-1099-q-prohibited-source.test.ts::keeps both actual code6 subtypes blocked from ordinary tax treatment"
+    formula: "Basic event facts alone do not enable a whole-account calculation; require the separately specified zero-expense and subsequent-activity facts. Pledges remain unresolved. No zero-income fallback, invented taxable amount, transfer election or model/human approval bypass."
+    testRef: "tests/engine/forms/form-1099-q-prohibited-source.test.ts::keeps incomplete whole-account and pledged source methods blocked"
   - line: "intake"
     description: "Actual source fields and durable blocked review"
-    formula: "Collect source facts conditionally for code6, preserve known zero versus unknown, and show that the source can be saved while calculation remains unavailable. Editing a source invalidates confirmation."
+    formula: "Collect source facts conditionally for code6, preserve known zero versus unknown, and explain the narrow whole-account calculation versus still-unresolved pledges, education exclusions, losses and subsequent income. Editing a source invalidates confirmation."
     testRef: "tests/apps/web/education-prohibited-source-interactions.test.tsx::retains prohibited source facts and explains the unresolved calculation"
   - line: "legacy-boundary"
     description: "New actual source fields cannot silently use historical aggregates"

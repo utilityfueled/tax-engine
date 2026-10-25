@@ -77,6 +77,30 @@ export function buildForm1099QReferenceSummary(forms: Form1099Q[], result: Form1
           || !row.earnings.eq(correction.netIncome) || !row.basis.eq(correction.returnedPrincipal)) throw new Error("Education reference correction source does not reconcile");
         for (const [line, amount] of [["returned-principal", correction.returnedPrincipal], ["returned-net-income", correction.netIncome], ["income-year-earnings", correction.taxableEarnings], ["previously-reported-earnings", correction.previouslyReportedEarnings], ["income-adjustment", correction.incomeAdjustment]] as const) sourceLines.push(describe(requireAudit("Form1099-Q", `${row.sourceId}:${line}`, amount), `Statement ${index + 1}: `));
       } else if (correction || ["2", "3"].includes(form.distributionCode ?? "") || row.incomeTaxYear !== result.taxYear) throw new Error("Education reference ordinary source year or correction identity does not reconcile");
+      if (row.treatment === "account_disqualification") {
+        const actualAmount = (value: string | undefined) => {
+          if (value === undefined) throw new Error("Education reference disqualification source amount is missing");
+          const amount = new Decimal(value);
+          if (!amount.isFinite() || amount.lt(0)) throw new Error("Education reference disqualification source amount is invalid");
+          return amount;
+        };
+        if (form.distributionCode !== "6" || form.accountType !== "coverdell_esa" || form.prohibitedTransactionKind !== "account_disqualification" || form.prohibitedTransactionSourceConfirmed !== true || !form.prohibitedTransactionSourceReference?.trim()
+          || form.prohibitedTransactionNoPostDisqualificationActivityConfirmed !== true || !form.prohibitedTransactionPostDisqualificationSourceReference?.trim()
+          || !actualAmount(form.prohibitedTransactionQualifiedEducationExpenses).isZero() || !actualAmount(form.prohibitedTransactionJanuary1Value).eq(row.grossDistribution)
+          || !actualAmount(form.prohibitedTransactionBasis).eq(row.basis) || !row.basis.plus(row.earnings).eq(row.grossDistribution) || row.earnings.lt(0) || !roundDollar(row.earnings).eq(row.taxableEarnings)
+          || form.transfer?.kind !== "none" || form.isTrusteeToTrustee || form.isQtpToRoth || form.recipientNotBeneficiary
+          || [row.validTransfers, row.adjustedQEE, row.taxFreeEarnings, row.educationExpenseExcludedEarnings, row.transferExcludedEarnings, row.creditException, row.penaltyException].some(value => !value.isZero())) throw new Error("Education reference disqualification source boundary disagrees with the calculation");
+        const facts = qeeSummary.sourceFacts;
+        const beneficiaries = facts.beneficiaries?.filter(item => item.id === row.beneficiaryId) ?? [];
+        if (beneficiaries.length !== 1 || !actualAmount(beneficiaries[0]?.outsideK12QualifiedDistributions).isZero()
+          || forms.some(other => other.accountId === row.accountId && other.sourceId !== row.sourceId)
+          || facts.coverdellAccounts?.some(item => item.accountId === row.accountId) || facts.expenses?.some(item => item.beneficiaryId === row.beneficiaryId)
+          || facts.allocations?.some(item => item.sourceId === row.sourceId) || facts.penaltyExceptions?.some(item => item.sourceId === row.sourceId)) throw new Error("Education reference disqualification has conflicting source facts");
+        const deemed = requireAudit("Coverdell disqualification", `${row.sourceId}:deemed-distribution`, row.grossDistribution);
+        if (deemed.inputs["Deemed distribution date"] !== `${result.taxYear}-01-01` || deemed.inputs["Actual transaction date"] !== form.prohibitedTransactionDate) throw new Error("Education reference disqualification date audit disagrees with the actual source");
+        sourceLines.push(describe(deemed, `Statement ${index + 1}: `));
+        for (const [line, value] of [["basis", row.basis], ["earnings", row.earnings], ["taxable-earnings", row.taxableEarnings], ["qualified-expenses", new Decimal(0)]] as const) sourceLines.push(describe(requireAudit("Coverdell disqualification", `${row.sourceId}:${line}`, value), `Statement ${index + 1}: `));
+      } else if (form.distributionCode === "6") throw new Error("Education reference code6 requires its actual disqualification method and audit");
       const hasReportedEarnings = form.earnings !== undefined;
       const hasReportedBasis = form.basis !== undefined;
       if (hasReportedEarnings !== hasReportedBasis || (form.accountType === "529" && !hasReportedEarnings)) throw new Error("Education reference reported source Boxes2/3 must be jointly reconciled");
@@ -87,8 +111,9 @@ export function buildForm1099QReferenceSummary(forms: Form1099Q[], result: Form1
           const expectedEarnings = correction.netIncome.lt(0) && form.finalDistribution !== true ? new Decimal(0) : correction.netIncome;
           if (!earnings.eq(expectedEarnings) || !basis.eq(row.grossDistribution.minus(expectedEarnings))) throw new Error("Education reference reported correction boxes disagree with the source calculation");
         } else {
-          const expectedEarnings = form.accountType === "coverdell_esa" ? roundDollar(earnings) : earnings;
-          const expectedBasis = form.accountType === "coverdell_esa" ? roundDollar(basis) : basis;
+          const roundedAccountWorksheet = form.accountType === "coverdell_esa" && row.treatment === "ordinary";
+          const expectedEarnings = roundedAccountWorksheet ? roundDollar(earnings) : earnings;
+          const expectedBasis = roundedAccountWorksheet ? roundDollar(basis) : basis;
           if (!expectedEarnings.eq(row.earnings) || !expectedBasis.eq(row.basis)) throw new Error("Education reference reported source boxes disagree with the calculation");
         }
       }

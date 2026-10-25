@@ -72,7 +72,7 @@ export interface ReturnedEducationContribution {
 export interface EducationDistributionResult {
   sourceTaxYear: number;
   incomeTaxYear: number;
-  treatment: "ordinary" | "returned_contribution";
+  treatment: "ordinary" | "returned_contribution" | "account_disqualification";
   sourceId: string;
   accountId: string;
   accountType: "529" | "coverdell_esa";
@@ -529,11 +529,14 @@ function actualReturnedContribution(form: SourceForm, audit: AuditTrail): Return
     returnedPrincipal, netIncome, taxableEarnings, previouslyReportedEarnings, incomeAdjustment };
 }
 function recordSourceDistribution(row: EducationDistributionResult, audit: AuditTrail): EducationDistributionResult {
-  for (const [line, description, amount] of [["gross", "Actual gross education distribution", row.grossDistribution], ["earnings", "Distributed earnings", row.earnings], ["basis", "Distributed basis", row.basis], ["adjusted-qee", "Allocated adjusted qualified expenses", row.adjustedQEE], ["taxable-earnings", "Distribution earnings taxable in the return year", row.taxableEarnings], ["education-excluded-earnings", "Earnings excluded for actual education expenses", row.educationExpenseExcludedEarnings], ["transfer-excluded-earnings", "Earnings excluded for actual valid transfers", row.transferExcludedEarnings], ["credit-exception", "Earnings taxable solely because expenses were allocated to education credit", row.creditException], ["exception", "Return-year taxable earnings exempt from additional tax", row.penaltyException]] as const) audit.record("Form1099-Q", `${row.sourceId}:${line}`, description, amount, "Actual linked source allocation, income year and Pub970 distribution calculation");
+  const formula = row.treatment === "account_disqualification" ? "Actual January1 whole-account value and basis under IRC530(e),408(e)(2); verified zero qualified expenses and no later income/gain/loss"
+    : row.treatment === "returned_contribution" ? "Actual returned contribution and attributable net income under IRC530(b)(4) and(d)(4)(C)"
+    : "Actual linked source allocation, income year and Pub970 distribution calculation";
+  for (const [line, description, amount] of [["gross", "Actual gross education distribution", row.grossDistribution], ["earnings", "Distributed earnings", row.earnings], ["basis", "Distributed basis", row.basis], ["adjusted-qee", "Allocated adjusted qualified expenses", row.adjustedQEE], ["taxable-earnings", "Distribution earnings taxable in the return year", row.taxableEarnings], ["education-excluded-earnings", "Earnings excluded for actual education expenses", row.educationExpenseExcludedEarnings], ["transfer-excluded-earnings", "Earnings excluded for actual valid transfers", row.transferExcludedEarnings], ["credit-exception", "Earnings taxable solely because expenses were allocated to education credit", row.creditException], ["exception", "Return-year taxable earnings exempt from additional tax", row.penaltyException]] as const) audit.record("Form1099-Q", `${row.sourceId}:${line}`, description, amount, formula);
   return row;
 }
 
-function blockProhibitedSource(form: Form1099Q, taxYear: number): never {
+function actualDisqualification(form: Form1099Q, taxYear: number): { earnings: Decimal; basis: Decimal } {
   if (form.accountType !== "coverdell_esa") throw new Error("Form1099Q code6 requires an actual Coverdell source");
   const kind = form.prohibitedTransactionKind;
   if (kind !== "account_disqualification" && kind !== "pledged_portion") throw new Error("Form1099Q code6 source reconciliation requires the actual prohibited transaction type");
@@ -541,12 +544,21 @@ function blockProhibitedSource(form: Form1099Q, taxYear: number): never {
   if (!form.prohibitedTransactionSourceReference?.trim()) throw new Error("Form1099Q prohibited transaction source reference is required");
   const date = actualDate(form.prohibitedTransactionDate, "prohibited transaction");
   if (date.getUTCFullYear() !== taxYear) throw new Error("Form1099Q prohibited transaction event year must match the statement and return");
-  actualAmount(form.prohibitedTransactionBasis, "prohibited transaction basis");
+  const basis = actualAmount(form.prohibitedTransactionBasis, "prohibited transaction basis");
   const label = kind === "account_disqualification" ? "January1 account value" : "pledged portion";
   const deemedAmount = actualAmount(kind === "account_disqualification" ? form.prohibitedTransactionJanuary1Value : form.prohibitedTransactionPledgedAmount, label);
   if (!actualAmount(form.grossDistribution, "Box1").eq(deemedAmount)) throw new Error(`Form1099Q Box1 must reconcile to the actual ${label}`);
   if (form.transfer?.kind !== "none" || form.isTrusteeToTrustee || form.isQtpToRoth) throw new Error("Form1099Q code6 cannot use ordinary transfer treatment");
-  throw new Error(`Form1099Q ${kind === "account_disqualification" ? "account disqualification" : "pledged portion"} has unresolved basis and education-expense treatment${kind === "account_disqualification" ? ", including income after disqualification" : ""}; this source cannot use the ordinary worksheet`);
+  if (kind === "pledged_portion") throw new Error("Form1099Q pledged portion has unresolved retained basis and education-expense treatment; this source cannot use the ordinary worksheet");
+  if (basis.gt(deemedAmount)) throw new Error("Form1099Q disqualification basis exceeds January1 value; loss treatment remains unresolved");
+  const qualifiedExpenses = actualAmount(form.prohibitedTransactionQualifiedEducationExpenses, "beneficiary total qualified education expenses including QTP contributions");
+  if (!qualifiedExpenses.isZero()) throw new Error("Form1099Q disqualification requires actual zero qualified education expenses including QTP contributions; education-exclusion treatment remains unresolved");
+  if (form.prohibitedTransactionNoPostDisqualificationActivityConfirmed !== true) throw new Error("Form1099Q disqualification requires verified absence of subsequent income, gain and loss; later activity requires separate source routing");
+  if (!form.prohibitedTransactionPostDisqualificationSourceReference?.trim()) throw new Error("Form1099Q disqualification subsequent-activity source reference is required");
+  const earnings = deemedAmount.minus(basis);
+  if ((form.earnings === undefined) !== (form.basis === undefined)) throw new Error("Form1099Q disqualification reported basis and earnings must be jointly reconciled");
+  if (form.earnings !== undefined && form.basis !== undefined && (!actualAmount(form.earnings, "reported deemed-distribution earnings").eq(earnings) || !actualAmount(form.basis, "reported deemed-distribution basis").eq(basis))) throw new Error("Form1099Q disqualification reported basis and earnings do not reconcile to the actual January1 source");
+  return { earnings, basis };
 }
 
 function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEducationExpenseSummary | undefined, options: Form1099QOptions & { taxYear: number }): Form1099QResult {
@@ -576,10 +588,28 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
     if (item.recipientOwner === "other" && !item.recipientId) throw new Error("Form1099Q actual other-recipient identity is required");
     if (!beneficiaries.has(item.beneficiaryId)) throw new Error("Form1099Q statement beneficiary source is missing");
     if (item.accountType === "coverdell_esa" && item.recipientNotBeneficiary && item.distributionCode !== "5") throw new Error("Form1099Q Coverdell recipient must be the designated beneficiary unless an actual death distribution is reported");
-    if (item.distributionCode === "6") blockProhibitedSource(item, options.taxYear);
-    if (Object.entries(item).some(([key, value]) => key.startsWith("prohibitedTransaction") && value !== undefined)) throw new Error("Form1099Q prohibited transaction source facts require actual code6 reconciliation");
+    if (item.distributionCode !== "6" && Object.entries(item).some(([key, value]) => key.startsWith("prohibitedTransaction") && value !== undefined)) throw new Error("Form1099Q prohibited transaction source facts require actual code6 reconciliation");
     return { ...item, sourceId: item.sourceId, accountId: item.accountId, beneficiaryId: item.beneficiaryId, recipientOwner: item.recipientOwner };
   });
+  const disqualifiedBySource = new Map<string, { earnings: Decimal; basis: Decimal }>();
+  for (const form of verifiedForms.filter(item => item.distributionCode === "6")) {
+    const amounts = actualDisqualification(form, options.taxYear);
+    if (verifiedForms.some(item => item.accountId === form.accountId && item.sourceId !== form.sourceId)) throw new Error("Form1099Q terminated account has another statement; subsequent source reconciliation is required");
+    if (coverdellFacts.has(form.accountId)) throw new Error("Form1099Q disqualification cannot use conflicting ordinary year-end account history");
+    const beneficiary = beneficiaries.get(form.beneficiaryId);
+    const outsideQualified = actualAmount(beneficiary?.outsideK12QualifiedDistributions, "beneficiary outside qualified K12 distributions");
+    if (!outsideQualified.isZero() || [...expenses.values()].some(item => item.beneficiaryId === form.beneficiaryId) || rawAllocations.some(item => item.sourceId === form.sourceId)) throw new Error("Form1099Q disqualification education/QTP allocation treatment remains unresolved; reconcile conflicting beneficiary source facts");
+    const creditStudents = [...(options.educationExpenses?.aocStudents ?? []), ...(options.educationExpenses?.llcStudents ?? [])];
+    const normalizedIdentity = (value: string | undefined) => value && /^\d{3}-?\d{2}-?\d{4}$/.test(value) ? value.replaceAll("-", "") : undefined;
+    const identity = normalizedIdentity(beneficiary?.studentTaxId);
+    const unassignedLlc = options.educationExpenses?.llcExpenses !== undefined && actualAmount(options.educationExpenses.llcExpenses, "LLC expense total").gt(0) && !options.educationExpenses.llcStudents?.length;
+    if (unassignedLlc || creditStudents.some(item => {
+      const studentIdentity = normalizedIdentity(item.studentTaxId);
+      return (!identity || !studentIdentity || studentIdentity === identity) && actualAmount(item.qualifiedExpenses, "education-credit student expenses").gt(0);
+    })) throw new Error("Form1099Q disqualification education-credit facts conflict with actual zero qualified expenses; treatment remains unresolved");
+    if (exceptions.some(item => item.sourceId === form.sourceId)) throw new Error("Form1099Q disqualification additional-tax exception treatment remains unresolved");
+    disqualifiedBySource.set(form.sourceId, amounts);
+  }
   const returnedContributions = verifiedForms.filter(isReturnedContribution).map(form => actualReturnedContribution(form, audit));
   const returnedBySource = new Map(returnedContributions.map(item => [item.sourceId, item]));
   for (const contributionId of new Set(returnedContributions.map(item => item.contributionId))) {
@@ -650,10 +680,10 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
   }
   const transferState: TransferState = { capacities: new Map(), baselines: new Map(), rolloverDates: new Map() };
   const transfers = new Map<string, Decimal>();
-  for (const form of [...verifiedForms].sort((a, b) => (a.distributionDate ?? "").localeCompare(b.distributionDate ?? ""))) transfers.set(form.sourceId, isReturnedContribution(form) ? ZERO : validTransfer(form, actualAmount(form.grossDistribution, "Box1"), options.taxYear, audit, transferState));
+  for (const form of [...verifiedForms].sort((a, b) => (a.distributionDate ?? "").localeCompare(b.distributionDate ?? ""))) transfers.set(form.sourceId, isReturnedContribution(form) || disqualifiedBySource.has(form.sourceId) ? ZERO : validTransfer(form, actualAmount(form.grossDistribution, "Box1"), options.taxYear, audit, transferState));
   const derived = new Map<string, { earnings: Decimal; basis: Decimal; taxFree: Decimal; transferTaxFree: Decimal; creditException: Decimal; creditGross: Decimal; allocated: Decimal }>();
   const accountResults: Form1099QResult["coverdellAccounts"] = [];
-  const ordinaryForms = verifiedForms.filter(item => !isReturnedContribution(item));
+  const ordinaryForms = verifiedForms.filter(item => !isReturnedContribution(item) && !disqualifiedBySource.has(item.sourceId));
   const esaAccounts = new Set(ordinaryForms.filter(item => item.accountType === "coverdell_esa").map(item => item.accountId));
   for (const accountId of esaAccounts) {
     const group = ordinaryForms.filter(item => item.accountType === "coverdell_esa" && item.accountId === accountId);
@@ -726,9 +756,20 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
       ["8", "Account distributions plus year-end value", denominator], ["9", "Account basis ratio", basisRatio], ["10", "Coverdell distributed basis", distributedBasis], ["11", "Coverdell distributed earnings", earnings],
       ["12", "Account qualified expense ratio", exemptRatio], ["13", "Account tax-free earnings", taxFree], ["14", "Account taxable earnings", earnings.minus(taxFree)], ["15", "Coverdell ending basis", basis.minus(distributedBasis)]] as const) audit.record(auditForm, `${accountId}:${line}`, description, amount, auditForm === "Pub970 WS6-3" ? "Actual account history and beneficiary Worksheet6-3 expense ratio; computed once per account" : "Separate rollover reconciliation: line3=line1+line2+incoming basis-outgoing basis; other account ratios follow Worksheet6-3");
   }
-  audit.record(accountResults.some(row => row.auditForm === "Coverdell rollover worksheet") ? "Coverdell rollover worksheet" : "Pub970 WS6-3", "16", "Total taxable Coverdell earnings", sum(...[...derived.values()].map(item => item.earnings.minus(item.taxFree))), "Sum each account line14 once; preserve statement split totals");
+  if (accountResults.length) audit.record(accountResults.some(row => row.auditForm === "Coverdell rollover worksheet") ? "Coverdell rollover worksheet" : "Pub970 WS6-3", "16", "Total taxable Coverdell earnings", sum(...[...derived.values()].map(item => item.earnings.minus(item.taxFree))), "Sum each account line14 once; preserve statement split totals");
   const perDistribution: EducationDistributionResult[] = verifiedForms.map(form => {
     const gross = actualAmount(form.grossDistribution, "Box1");
+    const disqualified = disqualifiedBySource.get(form.sourceId);
+    if (disqualified) {
+      const taxable = roundDollar(disqualified.earnings);
+      audit.record("Coverdell disqualification", `${form.sourceId}:deemed-distribution`, "Actual January1 whole-account deemed distribution", gross,
+        "IRC530(e),408(e)(2) and Reg1.408-4(d)(1): January1 account value", { "Deemed distribution date": `${options.taxYear}-01-01`, "Actual transaction date": form.prohibitedTransactionDate ?? "" });
+      for (const [line, description, value] of [["basis", "Actual January1 investment recovered", disqualified.basis], ["earnings", "Exact deemed-distribution earnings", disqualified.earnings], ["taxable-earnings", "Whole-dollar earnings included in income", taxable], ["qualified-expenses", "Actual total qualified education expenses including QTP contributions", ZERO]] as const) audit.record("Coverdell disqualification", `${form.sourceId}:${line}`, description, value, "Actual whole-account value less basis; zero qualified expenses and no subsequent income/gain/loss source facts verified");
+      return recordSourceDistribution({ sourceId: form.sourceId, accountId: form.accountId, accountType: form.accountType, distributionMedium: form.distributionMedium, beneficiaryId: form.beneficiaryId,
+        recipientOwner: form.recipientOwner, recipientId: form.recipientOwner === "other" ? (form.recipientId ?? "") : form.recipientOwner, sourceTaxYear: options.taxYear, incomeTaxYear: options.taxYear, treatment: "account_disqualification",
+        grossDistribution: gross, earnings: disqualified.earnings, basis: disqualified.basis, validTransfers: ZERO, adjustedQEE: ZERO,
+        taxableEarnings: taxable, taxFreeEarnings: ZERO, educationExpenseExcludedEarnings: ZERO, transferExcludedEarnings: ZERO, creditException: ZERO, penaltyException: ZERO }, audit);
+    }
     const correction = returnedBySource.get(form.sourceId);
     if (correction) {
       if (exceptions.some(item => item.sourceId === form.sourceId)) throw new Error("Form1099Q returned contribution already has its statutory exception and cannot reuse another exception source");

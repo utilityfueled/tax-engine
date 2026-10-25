@@ -684,6 +684,11 @@ export const Form1099QSchema = z.preprocess((value) => {
   prohibitedTransactionJanuary1Value: optionalDecimalInput,
   prohibitedTransactionBasis: optionalDecimalInput,
   prohibitedTransactionPledgedAmount: optionalDecimalInput,
+  /** Actual beneficiary total includes qualifying QTP contributions under530(b)(2)(B). */
+  prohibitedTransactionQualifiedEducationExpenses: optionalDecimalInput,
+  /** Full-year source review, covering interest, dividends and realized gains/losses after January1. */
+  prohibitedTransactionNoPostDisqualificationActivityConfirmed: z.boolean().optional(),
+  prohibitedTransactionPostDisqualificationSourceReference: z.string().optional(),
 }));
 
 const EducationDistributionExpenseSchema = z.object({

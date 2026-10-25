@@ -38,8 +38,8 @@ it("validates the actual deemed-distribution source before blocking unresolved t
   ] as const) expect(() => calculateForm1099Q([source({ ...facts, ...changes })], summary())).toThrow(error);
 });
 
-it("keeps both actual code6 subtypes blocked from ordinary tax treatment", () => {
-  expect(() => calculateForm1099Q([source(facts)], summary())).toThrow(/account disqualification.*unresolved.*basis.*education/i);
+it("keeps incomplete whole-account and pledged source methods blocked", () => {
+  expect(() => calculateForm1099Q([source(facts)], summary())).toThrow(/actual.*qualified education expenses/i);
   expect(() => calculateForm1099Q([source({ ...facts, prohibitedTransactionKind: "pledged_portion", prohibitedTransactionJanuary1Value: undefined, prohibitedTransactionPledgedAmount: "1000" })], summary())).toThrow(/pledged portion.*unresolved.*basis.*education/i);
 });
 
