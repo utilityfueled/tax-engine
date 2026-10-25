@@ -1,4 +1,4 @@
-import { reachFilingStatus } from "./guided-fixtures";
+import { fillRequiredTaxpayerFacts, fillRequiredW2Facts, reachFilingStatus } from "./guided-fixtures";
 import { expect, test, type Page } from "@playwright/test";
 
 /**
@@ -87,6 +87,68 @@ async function addSolarProperty(page: Page) {
   await page.getByRole("combobox", { name: "Clean-energy category", exact: true }).selectOption("solar_electric");
   return page.getByRole("textbox", { name: "Net qualified clean-energy cost", exact: true });
 }
+
+// Spec: spec/federal/guided-mortgage-worksheet.yaml, full-return/source-conservation.
+test("actual mortgage worksheet survives entry correction and reopening", async ({ page }) => {
+  const sourceInput = (name: string) => page.locator("label").filter({ has: page.getByText(name, { exact: true }) }).locator("input");
+  await createReturn(page);
+  await fillRequiredTaxpayerFacts(page);
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await page.getByRole("textbox", { name: /^Box 1 — Wages/ }).fill("100000");
+  await fillRequiredW2Facts(page);
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await page.getByRole("radio", { name: /^itemize deductions/i }).click();
+  await page.getByRole("button", { name: "Add mortgage", exact: true }).click();
+  for (const [name, value] of [
+    ["Mortgage lender", "Synthetic home lender"], ["Home mortgage interest", "40000.10"], ["Outstanding mortgage principal (Box 2)", "900000"],
+    ["Mortgage origination date (Box 3)", "2020-06-15"], ["Mortgage statement tax year", "2025"],
+    ["Loan account reference (last four digits or local statement label)", "synthetic-home-loan"], ["Address or description of the home securing the loan", "123 Example St, Austin TX"],
+    ["Maximum actual loan balance at any time during the tax year", "1000000"], ["Annual balance history or lender-average source reference", "synthetic-annual-balance-record"],
+    ["Actual Box 1 interest paid by taxpayers on this return", "30000.10"], ["Actual Box 1 interest paid by other returns", "10000"],
+    ["Interest from this return's share deducted on another schedule", "0"], ["Refund of this year's interest paid by this return", "0"],
+    ["Other ineligible interest in this return's paid share", "0"], ["Box 6 points allocable to this return, including qualifying seller-paid points", "0"],
+    ["Box 6 points allocable to another return", "0"], ["Service fees or other noninterest amounts in this return's points share", "0"],
+    ["Prior-year interest refund (Box 4)", "0"], ["Mortgage insurance premiums reported (Box 5)", "0"], ["Purchase points reported (Box 6)", "0"],
+    ["Qualified real estate taxes actually disbursed by this mortgage account", "0"],
+  ] as const) await sourceInput(name).fill(value);
+  for (const [name, value] of [
+    ["Borrowers whose payments this return claims", "primary"], ["Actual home use", "main-home"], ["Actual loan type", "original"], ["Actual use of all loan proceeds", "acquisition"],
+    ["Balance method for the home-debt worksheet", "highest_balance"], ["Is the debt legally secured by this qualified home?", "true"],
+    ["Do the borrowers claiming the deduction have an ownership interest in this home?", "true"], ["Do borrower and lender intend and require repayment?", "true"],
+    ["Was the claimed interest share actually paid by taxpayers on this return?", "true"], ["Does the interest exclude prepaid amounts allocable to a later year?", "true"],
+    ["Was any part of this home or debt used for rental or business purposes?", "false"], ["Do you have a mortgage credit certificate for this loan?", "false"],
+    ["Do cooperative, construction, ground-rent, changing-home or other special mortgage rules apply?", "false"],
+  ] as const) await page.getByRole("combobox", { name, exact: true }).selectOption(value);
+  const confirmLoan = page.getByRole("combobox", { name: "Have you checked all mortgage source and qualification facts after the last edit?", exact: true });
+  const confirmWorksheet = page.getByRole("combobox", { name: "Have you confirmed the complete annual home-debt worksheet after the last change?", exact: true });
+  await confirmLoan.selectOption("true");
+  await page.getByLabel("Home-debt worksheet tax year", { exact: true }).fill("2025");
+  await page.getByLabel("Annual home-debt record reference", { exact: true }).fill("synthetic-complete-debt-records");
+  await page.getByRole("combobox", { name: "Are all debts on the main and selected second home included?", exact: true }).selectOption("true");
+  await page.getByRole("combobox", { name: "Did you receive a refund or recovery of mortgage interest deducted in an earlier year?", exact: true }).selectOption("false");
+  const hero = page.locator(".guided-ticker-value-hero").first();
+  await expect(hero).toHaveText("Enter more info for an estimate");
+  await confirmWorksheet.selectOption("true");
+  await expect(hero).not.toHaveText("Enter more info for an estimate");
+  await page.getByRole("button", { name: "Expand Ticker", exact: true }).click();
+  await page.locator(".guided-ticker-clickable").first().focus();
+  await page.keyboard.press("Enter");
+  const taxable = page.locator(".guided-ticker-breakdown-row").filter({ hasText: "Taxable Income" });
+  // Pub936 Table1: $750,000/$1,000,000=.750; $30,000.10*.750 rounds to $22,500.
+  await expect(taxable).toContainText("$77,500");
+  await page.getByRole("combobox", { name: "Balance method for the home-debt worksheet", exact: true }).selectOption("lender_average");
+  await sourceInput("Actual lender-provided annual average loan balance").fill("600000");
+  await expect(confirmLoan).toHaveValue(""); await expect(confirmWorksheet).toHaveValue("");
+  await expect(hero).toHaveText("Enter more info for an estimate");
+  await confirmLoan.selectOption("true"); await confirmWorksheet.selectOption("true");
+  // Actual average below the debt cap allows this return's $30,000 rounded share.
+  await expect(taxable).toContainText("$70,000");
+  await page.reload();
+  await expect(page.getByRole("combobox", { name: "Balance method for the home-debt worksheet", exact: true })).toHaveValue("lender_average");
+  await expect(sourceInput("Actual lender-provided annual average loan balance")).toHaveValue("600000");
+  await expect(confirmWorksheet).toHaveValue("true");
+  await expect(hero).not.toHaveText("Enter more info for an estimate");
+});
 
 test.describe("Deductions section — layout and defaults", () => {
   test.beforeEach(async ({ page }) => {

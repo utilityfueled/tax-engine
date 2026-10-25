@@ -791,11 +791,15 @@ function InterviewPhase({
   // Keyboard shortcuts: Enter = continue, Escape = back / dismiss skip prompt
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
+      // A focused control may already have handled this key (for example the ticker).
+      if (e.defaultPrevented) return;
       // Don't intercept when user is typing in an input/textarea/select
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
 
       if (e.key === "Enter" && !e.metaKey && !e.ctrlKey && !e.shiftKey) {
+        // Let interactive elements receive their own native Enter activation.
+        if (e.target instanceof Element && e.target.closest('button, a[href], [role="button"], [contenteditable="true"]')) return;
         e.preventDefault();
         handleAdvance();
       } else if (e.key === "Escape") {

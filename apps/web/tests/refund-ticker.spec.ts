@@ -291,10 +291,20 @@ test.describe("Refund ticker — breakdown", () => {
     await page.keyboard.press("Enter");
 
     await expect(page.locator(".guided-ticker-breakdown")).toBeVisible();
+    await expect(page.getByText(/w-2 #1/i)).toBeVisible();
 
     // Press Enter again to collapse
     await page.keyboard.press("Enter");
     await expect(page.locator(".guided-ticker-breakdown")).not.toBeVisible();
+    await expect(page.getByText(/w-2 #1/i)).toBeVisible();
+  });
+
+  test("native ticker button handles Enter without advancing the interview", async ({ page }) => {
+    await page.getByRole("button", { name: "Expand Ticker", exact: true }).focus();
+    await page.keyboard.press("Enter");
+    await expect(page.getByRole("button", { name: "Minimize Ticker", exact: true })).toBeVisible();
+    await expect(page.getByText(/w-2 #1/i)).toBeVisible();
+    await expect(page.getByRole("button", { name: /skip this section/i })).not.toBeVisible();
   });
 
   test("breakdown is keyboard accessible via Space key", async ({ page }) => {
@@ -319,6 +329,7 @@ test.describe("Refund ticker — breakdown", () => {
     await heroItem.focus();
     await page.keyboard.press("Escape");
     await expect(page.locator(".guided-ticker-breakdown")).not.toBeVisible();
+    await expect(page.getByText(/w-2 #1/i)).toBeVisible();
   });
 
   test("hero item has correct aria-expanded attribute", async ({ page }) => {
