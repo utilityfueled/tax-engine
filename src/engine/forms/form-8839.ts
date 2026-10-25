@@ -5,12 +5,15 @@ import type { Form8839Child } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { d, sum, roundDollar, zeroFloor } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
+import { resolveForm8839PriorBenefits, type AdoptionSourceTaxpayer } from "./form-8839-prior-benefits.js";
 
 const ZERO = new Decimal(0);
 export interface AdoptionCarryforward { originTaxYear: number; amount: Decimal }
 export interface Form8839Params {
   taxYear?: number;
   eligibilityConfirmed?: boolean;
+  /** Original return identities used only for actual historical benefit binding. */
+  sourceTaxpayer?: AdoptionSourceTaxpayer;
   filingStatus: FilingStatus;
   agi: Decimal;
   children: (Form8839Child & {
@@ -71,13 +74,18 @@ export interface Form8839Result {
   carryforwardByYear: AdoptionCarryforward[];
   expiredCarryforward: Decimal;
   totalEmployerBenefits: Decimal;
+  currentEmployerBenefits: Decimal;
+  priorYearEmployerBenefits: Decimal;
   totalTentativeExclusion: Decimal;
   totalPriorYearExclusions: Decimal;
   netTentativeExclusion: Decimal;
   exclusionPhaseOutReduction: Decimal;
   allowableExclusion: Decimal;
-  /** Signed Form 1040 line 1f amount; special-needs exclusion can exceed benefits. */
+  /** Physical line31; the historical worksheet separates its prior-year exclusion. */
   taxableEmployerBenefits: Decimal;
+  priorYearExcludedBenefits: Decimal;
+  /** Signed current income adjustment; historical worksheet9 is subtracted once. */
+  adoptionIncomeAdjustment: Decimal;
   lines: CalculatedLine[];
 }
 
@@ -106,13 +114,22 @@ export function calculateForm8839(params: Form8839Params): Form8839Result {
   const exclusionMagi = params.exclusionMagi ?? magi;
   if (!exclusionMagi.isFinite()) throw new Error("Invalid adoption exclusion MAGI");
   const exclusionFraction = fraction(exclusionMagi);
+  const priorBenefitSources = resolveForm8839PriorBenefits({ taxYear, filingStatus,
+    eligibilityConfirmed: params.eligibilityConfirmed, sourceTaxpayer: params.sourceTaxpayer, children });
+  const historicalWorksheet = priorBenefitSources.some(value => value !== undefined && value.gt(0));
+  if (historicalWorksheet && params.exclusionMagi === undefined) throw new Error("Historical adoption requires the actual exclusion MAGI worksheet");
+  const priorYearEmployerBenefits = roundDollar(sum(...priorBenefitSources.map(value => value ?? ZERO)));
+  const currentEmployerBenefits = roundDollar(sum(...children.map(child => nonnegative(d(child.employerBenefits), "employer benefits"))));
   let totalEmployerBenefits = ZERO;
 
   const childResults = children.map((child, index): Form8839ChildResult => {
     const childName = child.childName || `Child ${index + 1}`;
     const priorCredits = roundDollar(nonnegative(d(child.priorYearCreditsClaimed), "prior credit limit usage"));
     const priorExclusions = roundDollar(nonnegative(d(child.priorYearExclusionsClaimed), "prior exclusion limit usage"));
-    const benefits = roundDollar(nonnegative(d(child.employerBenefits), "employer benefits"));
+    const priorBenefits = priorBenefitSources[index] ?? ZERO;
+    const childHistoryWorksheet = priorBenefits.gt(0);
+    const rawBenefits = nonnegative(d(child.employerBenefits), "employer benefits").plus(priorBenefits);
+    const benefits = roundDollar(rawBenefits);
     totalEmployerBenefits = totalEmployerBenefits.plus(benefits);
     const finalYear = child.adoptionFinalizedYear;
     if (taxYear === 2026 && (finalYear === undefined || child.expensesByYear === undefined)) {
@@ -124,9 +141,6 @@ export function calculateForm8839(params: Form8839Params): Form8839Result {
     const special = child.isSpecialNeeds && !child.isForeignAdoption && finalizedThisYear;
     if (taxYear === 2026 && child.isForeignAdoption && finalizedThisYear && child.priorYearForeignBenefits === undefined) {
       throw new Error("2026 foreign adoption requires prior-year employer-benefit history");
-    }
-    if (child.priorYearForeignBenefits !== undefined && !nonnegative(d(child.priorYearForeignBenefits), "foreign prior benefits").isZero()) {
-      throw new Error("Prior-year foreign adoption benefits require the historical exclusion worksheet");
     }
     if (taxYear === 2026 && (benefits.greaterThan(0) || (special && child.employerPlanQualified === true)) &&
         (child.employerPlanQualified === undefined || params.exclusionMagi === undefined)) {
@@ -147,7 +161,8 @@ export function calculateForm8839(params: Form8839Params): Form8839Result {
     }
     expenses = roundDollar(expenses);
     const remainingCredit = zeroFloor(maxCredit.minus(priorCredits));
-    const remainingExclusion = zeroFloor(maxCredit.minus(priorExclusions));
+    const exclusionLimit = childHistoryWorksheet ? Decimal.min(benefits, maxCredit) : maxCredit;
+    const remainingExclusion = zeroFloor(exclusionLimit.minus(priorExclusions));
     const claimAllowed = eligible && !(child.isForeignAdoption && !finalized);
     const tentativeCredit = claimAllowed ? Decimal.min(special ? maxCredit : expenses, maxCredit) : ZERO;
     const netCredit = claimAllowed ? Decimal.min(special ? remainingCredit : expenses, remainingCredit) : ZERO;
@@ -166,11 +181,19 @@ export function calculateForm8839(params: Form8839Params): Form8839Result {
       ["4", "Remaining credit limit", remainingCredit], ["5", "Eligible expenses", special ? remainingCredit : expenses],
       ["6", "Credit before MAGI", netCredit], ["10", "Credit phaseout reduction", reduction],
       ["11a", "Allowed current credit", creditAfterPhaseOut], ["11b", "Refundable credit", refundableCredit],
-      ["19", "Maximum exclusion", maxCredit], ["20", "Prior exclusion used", priorExclusions],
+      ["19", "Maximum exclusion", exclusionLimit], ["20", "Prior exclusion used", priorExclusions],
       ["21", "Remaining exclusion", remainingExclusion], ["22", "Employer benefits", benefits],
       ["24", "Benefits before phaseout", netExclusion], ["28", "Exclusion phaseout reduction", netExclusion.minus(exclusionAfterPhaseOut)],
       ["29", "Excluded benefits", exclusionAfterPhaseOut],
     ] as const) audit.record("Form 8839", `${line}-child-${index + 1}`, description, value, "Spec: Form 8839 per-child worksheet");
+    if (childHistoryWorksheet) {
+      audit.record("Form 8839", `prior-benefits-source-child-${index + 1}`, "Original current and prior benefit amounts", rawBenefits,
+        "Exact original source amounts before worksheet line rounding", { currentBenefits: d(child.employerBenefits), priorBenefits });
+      for (const [line, description, value] of [
+        ["1", "All current and prior benefits", benefits], ["2", "Finality-year limit", maxCredit],
+        ["3", "History-specific exclusion limit", exclusionLimit],
+      ] as const) audit.record("Form 8839", `prior-benefits-${line}-child-${index + 1}`, description, value, "Exclusion of Prior Year Benefits Worksheet");
+    }
     return { childName, isSpecialNeeds: child.isSpecialNeeds, tentativeCredit, priorYearCreditsClaimed: priorCredits,
       netCredit, tentativeExclusion, priorYearExclusionsClaimed: priorExclusions, netExclusion,
       creditAfterPhaseOut, refundableCredit, exclusionAfterPhaseOut };
@@ -211,7 +234,23 @@ export function calculateForm8839(params: Form8839Params): Form8839Result {
   const netTentativeExclusion = sum(...childResults.map(c => c.netExclusion));
   const allowableExclusion = sum(...childResults.map(c => c.exclusionAfterPhaseOut));
   const exclusionPhaseOutReduction = netTentativeExclusion.minus(allowableExclusion);
-  const taxableEmployerBenefits = roundDollar(totalEmployerBenefits.minus(allowableExclusion));
+  const taxableEmployerBenefits = historicalWorksheet
+    ? zeroFloor(totalEmployerBenefits.minus(allowableExclusion).minus(priorYearEmployerBenefits))
+    : roundDollar(totalEmployerBenefits.minus(allowableExclusion));
+  const priorYearExcludedBenefits = historicalWorksheet ? zeroFloor(allowableExclusion.minus(currentEmployerBenefits)) : ZERO;
+  const adoptionIncomeAdjustment = taxableEmployerBenefits.minus(priorYearExcludedBenefits);
+  if (historicalWorksheet) {
+    for (const [line, description, value] of [
+      ["4", "Benefits above allowed exclusion", zeroFloor(totalEmployerBenefits.minus(allowableExclusion))],
+      ["5", "Prior benefits already included in income", priorYearEmployerBenefits],
+      ["6", "Current taxable benefits to physical line31", taxableEmployerBenefits],
+      ["7", "Total allowed exclusion", allowableExclusion],
+      ["8", "Current-year employer benefits", currentEmployerBenefits],
+      ["9", "Prior-year benefits excluded this year", priorYearExcludedBenefits],
+    ] as const) audit.record("Form 8839", `prior-benefits-${line}`, description, value, "Exclusion of Prior Year Benefits Worksheet; aggregate all children");
+    audit.record("Form 8839", "prior-benefits-income-adjustment", "Signed adoption income adjustment", adoptionIncomeAdjustment,
+      "Physical line31 less historical worksheet9; reporting interpretation following final2023 instructions, retained separately from physical2025 line31");
+  }
   for (const [line, description, value] of [
     ["7", "Modified AGI", magi], ["8", "MAGI excess", excessMagi], ["9", "Phaseout fraction", phaseOutFraction],
     ["11c", "Total refundable credit", refundableAdoptionCredit], ["12", "Total current credit", adoptionCredit],
@@ -229,6 +268,8 @@ export function calculateForm8839(params: Form8839Params): Form8839Result {
     childResults, totalTentativeCredit, totalPriorYearCredits, netTentativeCredit, magi, phaseOutThreshold:threshold,
     excessMagi, phaseOutFraction, phaseOutReduction, adoptionCredit, refundableAdoptionCredit,
     nonrefundableAdoptionCredit, nonrefundableCreditAvailable, carryforwardRemaining, carryforwardByYear,
-    expiredCarryforward, totalEmployerBenefits, totalTentativeExclusion, totalPriorYearExclusions, netTentativeExclusion,
-    exclusionPhaseOutReduction, allowableExclusion, taxableEmployerBenefits, lines:audit.getLines()};
+    expiredCarryforward, totalEmployerBenefits, currentEmployerBenefits, priorYearEmployerBenefits,
+    totalTentativeExclusion, totalPriorYearExclusions, netTentativeExclusion,
+    exclusionPhaseOutReduction, allowableExclusion, taxableEmployerBenefits, priorYearExcludedBenefits, adoptionIncomeAdjustment,
+    lines:audit.getLines()};
 }

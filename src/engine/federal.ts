@@ -560,6 +560,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     ? calculateForm8839({
       ...input.form8839,
       taxYear: year, filingStatus, agi: creditAgi, taxLiabilityLimit,
+      sourceTaxpayer: input.taxpayer,
       foreignEarnedIncomeExclusion: form2555 ? form2555IncomeReduction : d(input.form8839.foreignEarnedIncomeExclusion),
       foreignHousingExclusion: form2555 ? form2555HousingDeduction : d(input.form8839.foreignHousingExclusion),
       possessionIncomeExclusion: d(input.form8839.possessionIncomeExclusion),
@@ -576,7 +577,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     throw new Error("Reported W-2 adoption benefits do not reconcile with actual child benefit amounts");
   }
   const hasAdoptionBenefitCalculation = input.form8839?.children.some(child =>
-    d(child.employerBenefits).gt(0) || (child.isSpecialNeeds && child.employerPlanQualified === true)) ?? false;
+    d(child.employerBenefits).gt(0) || d(child.priorYearForeignBenefits).gt(0) || child.priorYearForeignBenefitHistory !== undefined
+      || (child.isSpecialNeeds && child.employerPlanQualified === true)) ?? false;
   if (hasAdoptionBenefitCalculation && input.form8839?.exclusionMagi === undefined) {
     throw new Error("Adoption exclusion MAGI worksheet is unknown");
   }
@@ -587,8 +589,11 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   // discarded until final AGI and actual credit limits are known.
   const adoptionBenefitResult = hasAdoptionBenefitCalculation
     ? calculateAdoption(d(input.form8839?.exclusionMagi), new Decimal(0)) : undefined;
-  const taxableAdoptionBenefits = adoptionBenefitResult?.taxableEmployerBenefits ?? new Decimal(0);
-  audit.record("1040", "1f", "Taxable adoption benefits", taxableAdoptionBenefits, "Signed Form 8839 line 31");
+  const taxableAdoptionBenefits = adoptionBenefitResult?.adoptionIncomeAdjustment ?? new Decimal(0);
+  audit.record("1040", "1f", "Taxable adoption benefits", taxableAdoptionBenefits,
+    adoptionBenefitResult?.priorYearEmployerBenefits.gt(0)
+      ? "Form 8839 physical line31 less historical benefit worksheet9; signed reporting continuation from 2023 instructions"
+      : "Signed Form 8839 line 31");
   const totalWages = totalWagesBeforeExclusion.plus(taxableAdoptionBenefits).plus(foreignEmploymentNotOnW2).plus(taxableCareBenefits);
   audit.record("1040", "1", "Wages, salaries, tips", totalWages,
     [

@@ -1,0 +1,87 @@
+form: "Form 8839 Prior Benefits"
+fullName: "Foreign adoption exclusion of prior year employer benefits"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i8839"
+notes: |
+  Source review 2026-10-25. Final 2025 instructions, Exclusion of Prior Year
+  Benefits Worksheet, supply lines 1-9 and the finality-year rule. The indexed
+  maximum is 17280 for 2025 and 17670 for 2026; the latter uses the existing
+  independently indexed rule pack, without opening 2026 filing readiness.
+  https://www.irs.gov/pub/irs-prior/i8839--2023.pdf page 5 expressly subtracts
+  worksheet 9 from the otherwise reportable Form1040 line1f amount. The final
+  2024 and 2025 editions retain the exclusion and worksheet9 but omit that final
+  transfer paragraph. Continuing that signed transfer is a documented reporting
+  interpretation, pending independent qualification, not a quotation from 2025.
+  The physical Form8839 line31 remains separate from the signed income adjustment.
+  Source records retain exact cents; each target worksheet monetary line rounds
+  after its source amounts are added, and percentages follow existing PartIII.
+  Printed physical23 adds the printed per-child22 amounts. Worksheet5/8 each
+  round their own aggregate original sources. Consequently printed components
+  can differ from raw totals by a dollar. The100.40 current/100.40 prior example
+  yields physical22/30=201, worksheet8=100 and worksheet9=101; this is a derived
+  rounding example, not a published IRS example or a change to original sources.
+  The ordinary history method requires actual current foreign finality, unchanged
+  recipient membership, original employer benefit records, qualified plans,
+  prior inclusion in income and independently confirmed zero prior exclusion
+  limit usage. Other-adopter sharing needs its actual separately agreed limit;
+  this first source method does not invent that allocation. Employer benefits
+  are separate from unreimbursed credit expenses. The exclusion first applies to
+  current benefits, then any excess allowable exclusion reduces earlier benefits.
+  IRC137 began after1996: https://www.irs.gov/pub/irs-irbs/irb97-02.pdf.
+lines:
+  - line: "sources"
+    description: "Actual historical benefits and recipient identity"
+    formula: "Require complete confirmed prior-year records, child and owner identity, original amounts and qualified-plan/income inclusion facts; exact child allocations reconcile prior benefit scalar"
+    testRef: "tests/engine/forms/form-8839-prior-benefits.test.ts::binds every actual historical benefit source before calculating"
+  - line: "source-allocation"
+    description: "One original source may fund more than one child"
+    formula: "Identical source/year/employer/recipient snapshots may be allocated across children once; combined allocations cannot exceed original benefits; duplicate child-source allocations reject"
+    testRef: "tests/engine/forms/form-8839-prior-benefits.test.ts::conserves shared original statements across children and owners"
+  - line: "unknown"
+    description: "Unknown source facts remain unknown"
+    formula: "Absent history, amounts and confirmations are not defaulted; new source facts trigger strict validation even for known zero"
+    testRef: "tests/engine/forms/form-8839-prior-benefits.test.ts::preserves unknown source fields and rejects incomplete histories"
+  - line: "separate-owners"
+    description: "Actual joint recipients and source cents"
+    formula: "Bind each original statement to its actual primary or spouse identity; preserve exact allocations before line rounding and keep identifiers out of calculation audits"
+    testRef: "tests/engine/forms/form-8839-prior-benefits.test.ts::retains separate joint owners and exact cents without exposing source identities"
+  - line: "rounding"
+    description: "Target-line rounding with exact original records"
+    formula: "Aggregate sources for each target monetary line before rounding; physical23 sums printed22, while worksheet5/8 sum raw prior/current amounts across children"
+    testRef: "tests/engine/forms/form-8839-prior-benefits.test.ts::rounds each target line while retaining original cents across children"
+  - line: "1"
+    description: "All employer benefits for the foreign child"
+    formula: "Current plus all actual prior benefits for that child; preserve raw sum then round worksheet1 and physical22"
+    testRef: "tests/engine/forms/form-8839-prior-benefits.test.ts::excludes actual prior benefits in the year foreign adoption becomes final"
+  - line: "2"
+    description: "Current indexed per-child limit"
+    formula: "17280 for2025 or17670 for2026 in the ordinary no-other-adopter branch"
+    testRef: "tests/engine/forms/form-8839-prior-benefits.test.ts::applies the finality year limit and current MAGI to historical benefits"
+  - line: "3"
+    description: "History-specific physical line19 and line21"
+    formula: "min(worksheet1,worksheet2); physical20=0 from verified prior exclusion facts; physical22=worksheet1"
+    testRef: "tests/engine/forms/form-8839-prior-benefits.test.ts::excludes actual prior benefits in the year foreign adoption becomes final"
+  - line: "4"
+    description: "Benefits exceeding total allowed exclusion"
+    formula: "When physical30<physical23, physical23-physical30; otherwise skip4-6"
+    testRef: "tests/engine/forms/form-8839-prior-benefits.test.ts::separates physical taxable benefits from the signed prior-year adjustment"
+  - line: "5"
+    description: "Prior benefits included in physical22 for all children"
+    formula: "Round the sum of actual prior amounts included in the current historical worksheet"
+    testRef: "tests/engine/forms/form-8839-prior-benefits.test.ts::separates physical taxable benefits from the signed prior-year adjustment"
+  - line: "6"
+    description: "Physical Form8839 line31"
+    formula: "max(0,worksheet4-worksheet5); never reports earlier-year principal again as current taxable benefits"
+    testRef: "tests/engine/forms/form-8839-prior-benefits.test.ts::separates physical taxable benefits from the signed prior-year adjustment"
+  - line: "7"
+    description: "Total allowed exclusion"
+    formula: "Physical Form8839 line30 after per-child limits and current PartIII MAGI phaseout"
+    testRef: "tests/engine/forms/form-8839-prior-benefits.test.ts::applies the finality year limit and current MAGI to historical benefits"
+  - line: "8"
+    description: "Actual current-year benefits"
+    formula: "Round the sum of current benefits included in physical22, across all children"
+    testRef: "tests/engine/forms/form-8839-prior-benefits.test.ts::conserves shared original statements across children and owners"
+  - line: "9"
+    description: "Prior-year benefits excluded now"
+    formula: "max(0,worksheet7-worksheet8); signed adoption income adjustment=physical31-worksheet9"
+    testRef: "tests/engine/forms/form-8839-prior-benefits.test.ts::excludes actual prior benefits in the year foreign adoption becomes final"

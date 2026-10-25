@@ -10,6 +10,7 @@ import { d } from "@/utils/decimal.js";
 import { Form982NolSourcesSchema } from "@/models/cod-nol-sources.js";
 import { IraBasisSourcesSchema } from "@/models/ira-basis-sources.js";
 import { CharitableCarryoverSourcesSchema } from "@/models/charitable-carryover-sources.js";
+import { AdoptionPriorBenefitHistorySchema } from "@/models/adoption-prior-benefits.js";
 
 // Custom Zod type for decimal strings (validated as numbers, stored as strings for Decimal.js)
 const decimal = z.string().regex(/^-?\d+(\.\d+)?$/, "Must be a decimal number");
@@ -3984,6 +3985,7 @@ export const Form8839ChildSchema = z.preprocess(sourceFactPresence(["isSpecialNe
   expensesByYear: z.array(z.object({year: z.number().int(), amount: decimal})).optional(),
   employerPlanQualified: z.boolean().optional(),
   priorYearForeignBenefits: optionalDecimalInput,
+  priorYearForeignBenefitHistory: AdoptionPriorBenefitHistorySchema.optional(),
   /** Child's name (for audit trail) */
   childName: z.string().default(""),
   /** Whether the child has special needs as defined by IRC §23(d)(3) */

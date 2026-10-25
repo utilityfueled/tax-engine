@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.80",
+    ruleVersion: "2025.81",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i8839", section: "Actual foreign-adoption prior-benefit worksheet1-9, finality-year identity and original employer allocations; physical31 distinct from signed1040line1f", revision: "Final2025 worksheet; signed prior-exclusion reporting continues the explicit2023 instruction as a documented interpretation; original cents and physical30 MAGI addbacks retained, independent qualification pending", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/publications/p526", section: "Actual same-year private cash and property histories, grouped FIFO and exact zero/full allowance with source-specific outgoing carry", revision: "Final2025 Worksheet2 lines5/7/23-25 and carry rules; partial mixed-media allocation remains unresolved, no inferred cash-first method; separate2026 prior-carry and human qualification remain pending", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/irb/2026-39_irb", section: "Actual original and refinanced vehicle debt, pro-rata principal and interest, cash-out limitation and per-loan qualification", revision: "T.D.10054 final1.163-16(d)(2),(4),(6),g; publishedSeptember2026, effectiveNovember9,2026, applicable2025-2028; ordinary unchanged-borrower sources only, independent qualification remains pending", retrievedAt: "2026-10-25" },
       { url: "https://www.govinfo.gov/content/pkg/USCODE-2024-title26/html/USCODE-2024-title26-subtitleA-chap1-subchapB-partVI-sec170.htm", section: "Historical2025 G current and prior cash allowance reduces public-property capacity with original category FIFO and fifth-year expiry", revision: "IRC170(b)(1)(G)(ii)/(iii) and final2025 Pub526; derived mixed-source controls, distinct2026 effective-year methods and independent qualification remain separate", retrievedAt: "2026-10-25" },
@@ -124,11 +125,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.76-law-integration-draft",
+    ruleVersion: "2026.77-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i8839", section: "Actual indexed foreign-adoption prior-benefit worksheet and separate current/prior sources with household allocation conservation", revision: "Final2025 worksheet and documented2023 signed-reporting continuation with indexed2026 limits; final2026 full-return and filing gates remain closed, independent qualification pending", retrievedAt: "2026-10-25" },
       { url: "https://uscode.house.gov/us/usc/119-120/t26/s170/", section: "Current private cash/property source conservation after B limits and floor; actual media retained in zero/full carry outcomes", revision: "IRC170(b)(1)(B)/(I),170(d)(1)(C); partial mixed-media and prior-floor transition methods remain unresolved, no inferred cash-first allocation or filing qualification", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/irb/2026-39_irb", section: "Actual original and refinanced vehicle debt, pro-rata principal and interest, cash-out limitation and per-loan qualification", revision: "T.D.10054 final1.163-16(d)(2),(4),(6),g; publishedSeptember2026, effectiveNovember9,2026, applicable2025-2028; ordinary unchanged-borrower sources only, independent qualification remains pending", retrievedAt: "2026-10-25" },
       { url: "https://www.govinfo.gov/content/pkg/PLAW-119publ21/pdf/PLAW-119publ21.pdf", section: "Section70425(c) preserves the separate effective-year boundary for historical2025 G carry and amended2026 charity coordination", revision: "No2026 carry/floor method or full-return qualification inferred from the historical2025 source correction", retrievedAt: "2026-10-25" },
