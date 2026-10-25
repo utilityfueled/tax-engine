@@ -31,6 +31,7 @@ import {
   calculateTaxFromBrackets,
 } from "@/utils/tax-math.js";
 import { calculateForm8812 } from "./forms/form-8812.js";
+import { calculatePersonalCreditOrdering } from "./forms/personal-credit-ordering.js";
 import { calculateChildCreditEligibility } from "./forms/child-credit-eligibility.js";
 import { calculateForm8959 } from "./forms/form-8959.js";
 import { calculateForm8960 } from "./forms/form-8960.js";
@@ -345,10 +346,46 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   const form2555IncomeReduction = form2555?.totalIncomeReduction ?? new Decimal(0);
   const form2555HousingDeduction = form2555?.housingDeduction ?? new Decimal(0);
 
-  const totalWages = zeroFloor(totalWagesBeforeExclusion.minus(form2555IncomeReduction));
+  // Adoption benefit exclusion must precede AGI. The completed Part III MAGI
+  // worksheet is an actual input; final credit MAGI is calculated later from AGI.
+  const calculateAdoption = (creditAgi: Decimal, taxLiabilityLimit: Decimal) => input.form8839
+    ? calculateForm8839({
+      ...input.form8839,
+      taxYear: year, filingStatus, agi: creditAgi, taxLiabilityLimit,
+      foreignEarnedIncomeExclusion: form2555 ? form2555IncomeReduction : d(input.form8839.foreignEarnedIncomeExclusion),
+      foreignHousingExclusion: form2555 ? form2555HousingDeduction : d(input.form8839.foreignHousingExclusion),
+      possessionIncomeExclusion: d(input.form8839.possessionIncomeExclusion),
+      exclusionMagi: input.form8839.exclusionMagi === undefined ? undefined : d(input.form8839.exclusionMagi),
+      carryforwards: input.form8839.carryforwards?.map(entry => ({...entry,amount:d(entry.amount)})),
+      constants: constants.adoptionCredit,
+    }) : undefined;
+  if (year === 2026 && input.form8839?.children.some(child => child.sourceFactsComplete !== true)) {
+    throw new Error("Adoption classification, employer benefits or prior lifetime history is unknown");
+  }
+  const reportedAdoptionBenefits = sum(...input.w2s.map(w2 => d(w2.box12CodeT)));
+  if (reportedAdoptionBenefits.gt(0) && !input.form8839) throw new Error("Reported W-2 adoption benefits require actual Form 8839 facts");
+  if (reportedAdoptionBenefits.gt(0) && input.form8839 && !reportedAdoptionBenefits.eq(sum(...input.form8839.children.map(child => d(child.employerBenefits))))) {
+    throw new Error("Reported W-2 adoption benefits do not reconcile with actual child benefit amounts");
+  }
+  const hasAdoptionBenefitCalculation = input.form8839?.children.some(child =>
+    d(child.employerBenefits).gt(0) || (child.isSpecialNeeds && child.employerPlanQualified === true)) ?? false;
+  if (hasAdoptionBenefitCalculation && input.form8839?.exclusionMagi === undefined) {
+    throw new Error("Adoption exclusion MAGI worksheet is unknown");
+  }
+  if (year === 2026 && input.form8839 && input.form8839.possessionIncomeExclusion === undefined) {
+    throw new Error("2026 adoption possession-income exclusion is unknown");
+  }
+  // Only Part III exclusion is consumed here. Credit calculations and audit are
+  // discarded until final AGI and actual credit limits are known.
+  const adoptionBenefitResult = hasAdoptionBenefitCalculation
+    ? calculateAdoption(d(input.form8839?.exclusionMagi), new Decimal(0)) : undefined;
+  const taxableAdoptionBenefits = adoptionBenefitResult?.taxableEmployerBenefits ?? new Decimal(0);
+  audit.record("1040", "1f", "Taxable adoption benefits", taxableAdoptionBenefits, "Signed Form 8839 line 31");
+  const totalWages = zeroFloor(totalWagesBeforeExclusion.minus(form2555IncomeReduction)).plus(taxableAdoptionBenefits);
   audit.record("1040", "1", "Wages, salaries, tips", totalWages,
     [
       "Sum of all W-2 Box 1",
+      taxableAdoptionBenefits.isZero() ? undefined : `signed taxable adoption benefits $${taxableAdoptionBenefits}`,
       form4137?.unreportedTipIncome.greaterThan(0)
         ? "supported Form 4137 unreported tip income"
         : undefined,
@@ -2724,6 +2761,52 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     foreignTaxCreditCarryforward = totalCarryforward;
   }
 
+  // ── Form 8962: Premium Tax Credit ──────────────────────
+  let netPremiumTaxCredit = new Decimal(0);
+  let excessAPTCRepayment = new Decimal(0);
+  let form8962: ReturnType<typeof calculateForm8962> | undefined;
+  if (input.form1095A.length > 0) {
+    const taxFamilySize = 1 + (input.taxpayer.spouse ? 1 : 0) + input.taxpayer.dependents.length;
+    form8962 = calculateForm8962({
+      taxFamilySize,
+      modifiedAGI: agi,
+      filingStatus,
+      form1095A: input.form1095A,
+    });
+    netPremiumTaxCredit = form8962.netPTC;
+    excessAPTCRepayment = form8962.excessAPTCRepayment;
+    audit.merge(form8962.lines);
+  }
+
+  const vehicleClaims = [...(input.form8936?.newCleanVehicles ?? []), ...(input.form8936?.previouslyOwnedCleanVehicles ?? [])];
+  const verifiedVehicles = year === 2026 || vehicleClaims.some(vehicle => vehicle.datePlacedInService !== undefined);
+  if (verifiedVehicles && vehicleClaims.some(vehicle => vehicle.sourceFactsComplete !== true)) {
+    throw new Error("Original vehicle price, type, use or transfer facts are unknown");
+  }
+  const calculateVehicles = (taxLiabilityLimit: Decimal, incomeTaxBeforeCredits: Decimal) => input.form8936
+    ? calculateForm8936({
+      ...input.form8936, taxYear: year, filingStatus, agi,
+      foreignEarnedIncomeExclusion: form2555 ? form2555IncomeReduction : input.form8936.foreignEarnedIncomeExclusion,
+      foreignHousingDeduction: form2555 ? form2555HousingDeduction : input.form8936.foreignHousingDeduction,
+      constants: constants.cleanVehicleCredit, taxLiabilityLimit, incomeTaxBeforeCredits,
+    }) : undefined;
+  // Transfer repayments are independent of credit limits and enter Part I before
+  // credits. Discard this preliminary credit/audit; emit the final worksheet below.
+  const vehicleReconciliation = calculateVehicles(new Decimal(0), new Decimal(0));
+  if (vehicleReconciliation?.requiresTransferReconciliation) throw new Error("Actual vehicle transfer reconciliation facts are required");
+  const newVehicleTransferRepayment = vehicleReconciliation?.transferredNewVehicleCreditRepayment ?? new Decimal(0);
+  const usedVehicleTransferRepayment = vehicleReconciliation?.transferredPreviouslyOwnedCreditRepayment ?? new Decimal(0);
+  const partIAdditions = sum(excessAPTCRepayment, newVehicleTransferRepayment, usedVehicleTransferRepayment);
+
+  // ── Line 17-18: Tax before credits includes Schedule 2 Part I ──
+  // Per IRS Form 1040: Line 17 = AMT + excess APTC (Schedule 2 Part I)
+  // Line 18 = Line 16 + Line 17. Nonrefundable credits reduce Line 18.
+  const taxBeforeCredits = incomeTax.plus(amt).plus(partIAdditions);
+  audit.record("1040", "17", "Schedule 2 Part I", amt.plus(partIAdditions),
+    `AMT $${amt} + APTC and actual vehicle transfer repayments $${partIAdditions}`);
+  audit.record("1040", "18", "Tax before credits", taxBeforeCredits,
+    `Line 16 $${incomeTax} + Line 17 $${amt.plus(partIAdditions)}`);
+
   // ── Form 2441: Dependent Care Credit ────────────────────
   // MFS filers cannot claim dependent care credit (IRC §21(e)(2))
   let dependentCareCredit = new Decimal(0);
@@ -2744,6 +2827,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
       eligibilityConfirmed: input.dependentCare.eligibilityConfirmed,
       spouseEarnedIncome: input.dependentCare.spouseEarnedIncome === undefined ? undefined : d(input.dependentCare.spouseEarnedIncome),
       excludedDependentCareBenefits: input.dependentCare.excludedDependentCareBenefits === undefined ? undefined : d(input.dependentCare.excludedDependentCareBenefits),
+      taxLiabilityLimit: zeroFloor(taxBeforeCredits.minus(foreignTaxCredit)),
       careExpenses: d(input.dependentCare.expenses),
       qualifyingIndividuals: input.dependentCare.qualifyingIndividuals,
       earnedIncome,
@@ -2752,6 +2836,22 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     dependentCareCredit = form2441.credit;
     audit.merge(form2441.lines);
   }
+
+  // ── Schedule R: Credit for the Elderly or the Disabled ──
+  const scheduleR = input.scheduleR
+    ? calculateScheduleR({
+        filingStatus,
+        agi,
+        nontaxableSocialSecurity: zeroFloor(socialSecurityBenefitsGross.minus(socialSecurityBenefitsTaxable)),
+        scheduleRInput: input.scheduleR,
+        livedWithSpouse: input.taxpayer.livedWithSpouseAtAnyTimeDuringYear,
+        constants: constants.elderlyOrDisabledCredit,
+      })
+    : undefined;
+  if (scheduleR) {
+    audit.merge(scheduleR.lines);
+  }
+  const elderlyOrDisabledCredit = Decimal.min(scheduleR?.credit ?? new Decimal(0), zeroFloor(taxBeforeCredits.minus(foreignTaxCredit).minus(dependentCareCredit)));
 
   // ── Form 8863: Education Credits ────────────────────────
   let educationNonrefundable = new Decimal(0);
@@ -2766,36 +2866,10 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
       magi: agi,
       filingStatus,
     });
-    educationNonrefundable = form8863.totalNonrefundable;
+    educationNonrefundable = Decimal.min(form8863.totalNonrefundable, zeroFloor(taxBeforeCredits.minus(sum(foreignTaxCredit,dependentCareCredit,elderlyOrDisabledCredit))));
     educationRefundable = form8863.totalRefundable;
     audit.merge(form8863.lines);
   }
-
-  // ── Form 8962: Premium Tax Credit ──────────────────────
-  let netPremiumTaxCredit = new Decimal(0);
-  let excessAPTCRepayment = new Decimal(0);
-  let form8962: ReturnType<typeof calculateForm8962> | undefined;
-  if (input.form1095A.length > 0) {
-    const taxFamilySize = 1 + (input.taxpayer.spouse ? 1 : 0) + input.taxpayer.dependents.length;
-    form8962 = calculateForm8962({
-      taxFamilySize,
-      modifiedAGI: agi,
-      filingStatus,
-      form1095A: input.form1095A,
-    });
-    netPremiumTaxCredit = form8962.netPTC;
-    excessAPTCRepayment = form8962.excessAPTCRepayment;
-    audit.merge(form8962.lines);
-  }
-
-  // ── Line 17-18: Tax before credits includes Schedule 2 Part I ──
-  // Per IRS Form 1040: Line 17 = AMT + excess APTC (Schedule 2 Part I)
-  // Line 18 = Line 16 + Line 17. Nonrefundable credits reduce Line 18.
-  const taxBeforeCredits = incomeTax.plus(amt).plus(excessAPTCRepayment);
-  audit.record("1040", "17", "Schedule 2 Part I (AMT + excess APTC)", amt.plus(excessAPTCRepayment),
-    `AMT $${amt} + excess APTC $${excessAPTCRepayment}`);
-  audit.record("1040", "18", "Tax before credits", taxBeforeCredits,
-    `Line 16 $${incomeTax} + Line 17 $${amt.plus(excessAPTCRepayment)}`);
 
   // ── Excess Social Security Withholding ──────────────────
   const excessSSWithholding = calculateExcessSSWithholding(
@@ -2818,8 +2892,8 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
       primaryDateOfBirth: input.taxpayer.primary.dateOfBirth,
       spouseDateOfBirth: input.taxpayer.spouse?.dateOfBirth,
       ...normalizedForm8880Input,
-      taxLiabilityBeforeCredit: incomeTax.plus(amt).plus(excessAPTCRepayment),
-      priorNonrefundableCredits: sum(foreignTaxCredit, dependentCareCredit, educationNonrefundable),
+      taxLiabilityBeforeCredit: taxBeforeCredits,
+      priorNonrefundableCredits: sum(foreignTaxCredit, dependentCareCredit, elderlyOrDisabledCredit, educationNonrefundable),
     })
     : undefined;
   const retirementSavingsCredit = form8880?.line12 ?? new Decimal(0);
@@ -2827,98 +2901,18 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     audit.merge(form8880.lines);
   }
 
-  // ── Form 5695: Residential Energy Credits ───────────────
-  const form5695 = calculateForm5695(input.energyCredits);
-  audit.merge(form5695.lines);
-
-  // ── Form 8936: Clean Vehicle Credits ───────────────────
-  const form8936 = input.form8936
-    ? calculateForm8936({
-        filingStatus,
-        agi,
-        constants: constants.cleanVehicleCredit,
-        newCleanVehicles: input.form8936.newCleanVehicles,
-        previouslyOwnedCleanVehicles: input.form8936.previouslyOwnedCleanVehicles,
-        priorYearAgi: input.form8936.priorYearAgi,
-        foreignEarnedIncomeExclusion: input.form8936.foreignEarnedIncomeExclusion,
-        foreignHousingDeduction: input.form8936.foreignHousingDeduction,
-        priorYearForeignEarnedIncomeExclusion: input.form8936.priorYearForeignEarnedIncomeExclusion,
-        priorYearForeignHousingDeduction: input.form8936.priorYearForeignHousingDeduction,
-      })
-    : undefined;
-  if (form8936) {
-    audit.merge(form8936.lines);
-  }
-
-  // ── Schedule R: Credit for the Elderly or the Disabled ──
-  const scheduleR = input.scheduleR
-    ? calculateScheduleR({
-        filingStatus,
-        agi,
-        nontaxableSocialSecurity: zeroFloor(socialSecurityBenefitsGross.minus(socialSecurityBenefitsTaxable)),
-        scheduleRInput: input.scheduleR,
-        livedWithSpouse: input.taxpayer.livedWithSpouseAtAnyTimeDuringYear,
-        constants: constants.elderlyOrDisabledCredit,
-      })
-    : undefined;
-  if (scheduleR) {
-    audit.merge(scheduleR.lines);
-  }
-  const elderlyOrDisabledCredit = scheduleR?.credit ?? new Decimal(0);
-
-  // ── Form 8839: Qualified Adoption Expenses ────────────
-  const form8839 = input.form8839
-    ? calculateForm8839({
-        filingStatus,
-        agi,
-        children: input.form8839.children,
-        foreignEarnedIncomeExclusion: d(input.form8839.foreignEarnedIncomeExclusion),
-        foreignHousingExclusion: d(input.form8839.foreignHousingExclusion),
-        constants: constants.adoptionCredit,
-      })
-    : undefined;
-  if (form8839) {
-    audit.merge(form8839.lines);
-  }
-  const adoptionCredit = form8839?.adoptionCredit ?? new Decimal(0);
-
-  // ── Form 8801: Credit for Prior Year Minimum Tax ──────
-  let priorYearMinimumTaxCredit = new Decimal(0);
-  let form8801: ReturnType<typeof calculateForm8801> | undefined;
-  if (input.form8801) {
-    form8801 = calculateForm8801({
-      priorYearFilingStatus: input.form8801.priorYearFilingStatus,
-      priorYearTaxableIncome: d(input.form8801.priorYearTaxableIncome),
-      priorYearExclusionItemAdjustments: d(input.form8801.priorYearExclusionItemAdjustments),
-      priorYearAMT: d(input.form8801.priorYearAMT),
-      priorYearRegularTax: d(input.form8801.priorYearRegularTax),
-      unusedMinimumTaxCreditCarryforward: d(input.form8801.unusedMinimumTaxCreditCarryforward),
-      currentYearRegularTaxBeforeCredits: incomeTax,
-      currentYearTMT: form6251.tentativeMinimumTax,
-    });
-    priorYearMinimumTaxCredit = form8801.creditAllowed;
-    audit.merge(form8801.lines);
-  }
-
-  // ── Schedule 3: Aggregate Credits ──────────────────────
-  const sched3 = calculateSchedule3(input, {
-    foreignTaxCredit,
-    childDependentCareCredit: dependentCareCredit,
-    educationCredits: educationNonrefundable,
-    retirementSavingsCredit,
-    residentialCleanEnergyCredit: form5695.residentialCleanEnergyCredit,
-    energyImprovementCredit: form5695.energyImprovementCredit,
-    priorYearMinimumTaxCredit,
-    adoptionCredit,
-    elderlyOrDisabledCredit,
-    newCleanVehicleCredit: form8936?.totalNewVehicleCredit,
-    previouslyOwnedCleanVehicleCredit: form8936?.totalPreviouslyOwnedCredit,
-    netPremiumTaxCredit,
-    excessSocialSecurityWithholding: excessSSWithholding,
+  const improvementTaxLiabilityLimit = zeroFloor(taxBeforeCredits.minus(sum(
+    foreignTaxCredit, dependentCareCredit, elderlyOrDisabledCredit, educationNonrefundable, retirementSavingsCredit)));
+  // Preliminary energy calculation determines the independent improvement credit
+  // and available clean-energy amount; only final calculated lines are emitted.
+  const preliminaryEnergy = calculateForm5695(input.energyCredits, {
+    taxYear: year, taxLiabilityLimit: new Decimal(0), improvementTaxLiabilityLimit,
   });
-  audit.merge(sched3.lines);
-
-  const otherCredits = sched3.totalNonrefundableCredits;
+  const vehicleTaxLiabilityLimit = zeroFloor(improvementTaxLiabilityLimit.minus(preliminaryEnergy.energyImprovementCredit));
+  const form8936 = calculateVehicles(vehicleTaxLiabilityLimit, taxBeforeCredits);
+  if (form8936?.requiresTransferReconciliation) throw new Error("Actual vehicle transfer reconciliation facts are required");
+  if (form8936?.requiresForm3800) throw new Error("Business clean-vehicle credit requires supported Form 3800 attribution");
+  if (form8936) audit.merge(form8936.lines);
 
   // ── Form 8812: Child Tax Credit (nonrefundable + refundable ACTC) ──
   const {qualifyingChildren, otherDependents} = calculateChildCreditEligibility(input);
@@ -2928,9 +2922,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   if (year === 2026 && qualifyingChildren > 0 && input.childTaxCredit?.bonaFidePuertoRicoResident === undefined) {
     throw new Error("2026 child-credit Puerto Rico residency is unknown");
   }
-  // Per IRS Form 8812 Line 14: tax liability = Line 18 (tax before credits) - other credits
-  const taxAfterOtherCredits = zeroFloor(taxBeforeCredits.minus(otherCredits));
-  const form8812 = calculateForm8812({
+  const calculateChildCredit = (taxLiability: Decimal) => calculateForm8812({
     taxYear: year,
     filesForm2555: form2555 !== undefined,
     bonaFidePuertoRicoResident: input.childTaxCredit?.bonaFidePuertoRicoResident,
@@ -2949,13 +2941,38 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     // IRS Form 8812 Lines 18a-18f: 18a(wages) + 18c(Sched C/F) - 18e(deductible half).
     // SE losses reduce earned income — no zero-floor on SE component.
     earnedIncome: sum(totalWages, netSEEarnings, d(input.childTaxCredit?.nonTaxableCombatPayElection)).minus(schedSE.deductibleHalf),
-    taxLiability: taxAfterOtherCredits,
+    taxLiability,
     filingStatus,
   }, constants);
+
+  const potentialChildCredit = calculateChildCredit(new Decimal(0));
+  const preliminaryAdoption = calculateAdoption(agi, new Decimal(0));
+  const earlierPersonalCredits = sum(foreignTaxCredit, dependentCareCredit, elderlyOrDisabledCredit,
+    educationNonrefundable, retirementSavingsCredit, preliminaryEnergy.energyImprovementCredit,
+    form8936?.totalNewVehicleCredit ?? new Decimal(0), form8936?.totalPreviouslyOwnedCredit ?? new Decimal(0));
+  const personalCreditLimits = calculatePersonalCreditOrdering({
+    taxBeforeCredits, earlierCredits: earlierPersonalCredits,
+    ctcBeforeLimitation: potentialChildCredit.ctcBeforeLimitation, potentialActc: potentialChildCredit.potentialActc,
+    qualifyingChildren, filesForm2555: form2555 !== undefined,
+    adoptionAvailable: preliminaryAdoption?.nonrefundableCreditAvailable ?? new Decimal(0),
+    cleanEnergyAvailable: preliminaryEnergy.residentialCleanEnergyCreditBeforeLimit,
+  });
+  const form8839 = calculateAdoption(agi, personalCreditLimits.adoptionTaxLiability);
+  if (form8839) audit.merge(form8839.lines);
+  const adoptionCredit = form8839?.nonrefundableAdoptionCredit ?? new Decimal(0);
+  const refundableAdoptionCredit = form8839?.refundableAdoptionCredit ?? new Decimal(0);
+  const form5695 = calculateForm5695(input.energyCredits, {
+    taxYear: year, taxLiabilityLimit: personalCreditLimits.cleanEnergyTaxLiability, improvementTaxLiabilityLimit,
+  });
+  audit.merge(form5695.lines);
+  const form8812 = calculateChildCredit(personalCreditLimits.ctcTaxLiability);
   audit.merge(form8812.lines);
   const childTaxCredit = form8812.nonrefundableCTC;
   audit.record("1040", "19", "Child tax credit / ODC", childTaxCredit,
     `Nonrefundable CTC: ${childTaxCredit} (${qualifyingChildren} children, ${otherDependents} other dependents)`);
+
+
+  const otherCredits = sum(earlierPersonalCredits, adoptionCredit, form5695.residentialCleanEnergyCredit);
 
   // ── Form 3800: General Business Credit ──────────────────
   // Computed after CTC so the limitation can use CTC + other personal credits.
@@ -2999,9 +3016,33 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     audit.merge(form3800.lines);
   }
 
-  // Update Schedule 3 total with GBC (Line 6b)
-  const totalOtherCredits = otherCredits.plus(generalBusinessCredit);
-  audit.record("1040", "20", "Schedule 3 nonrefundable credits", totalOtherCredits, "Schedule 3 Line 7");
+  let priorYearMinimumTaxCredit = new Decimal(0);
+  let form8801: ReturnType<typeof calculateForm8801> | undefined;
+  if (input.form8801) {
+    form8801 = calculateForm8801({
+      priorYearFilingStatus: input.form8801.priorYearFilingStatus,
+      priorYearTaxableIncome: d(input.form8801.priorYearTaxableIncome),
+      priorYearExclusionItemAdjustments: d(input.form8801.priorYearExclusionItemAdjustments),
+      priorYearAMT: d(input.form8801.priorYearAMT),
+      priorYearRegularTax: d(input.form8801.priorYearRegularTax),
+      unusedMinimumTaxCreditCarryforward: d(input.form8801.unusedMinimumTaxCreditCarryforward),
+      currentYearRegularTaxBeforeCredits: zeroFloor(incomeTax.plus(partIAdditions).minus(sum(childTaxCredit,otherCredits,generalBusinessCredit))),
+      currentYearTMT: form6251.tentativeMinimumTax,
+    });
+    priorYearMinimumTaxCredit = form8801.creditAllowed;
+    audit.merge(form8801.lines);
+  }
+  const sched3 = calculateSchedule3(input, {
+    foreignTaxCredit, childDependentCareCredit: dependentCareCredit, educationCredits: educationNonrefundable,
+    retirementSavingsCredit, residentialCleanEnergyCredit: form5695.residentialCleanEnergyCredit,
+    energyImprovementCredit: form5695.energyImprovementCredit, priorYearMinimumTaxCredit, generalBusinessCredit,
+    adoptionCredit, elderlyOrDisabledCredit, newCleanVehicleCredit: form8936?.totalNewVehicleCredit,
+    previouslyOwnedCleanVehicleCredit: form8936?.totalPreviouslyOwnedCredit, netPremiumTaxCredit,
+    excessSocialSecurityWithholding: excessSSWithholding,
+  });
+  audit.merge(sched3.lines);
+  const totalOtherCredits = sched3.totalNonrefundableCredits;
+  audit.record("1040", "20", "Schedule 3 nonrefundable credits", totalOtherCredits, "Schedule 3 line 8");
 
   const totalCredits = childTaxCredit.plus(totalOtherCredits);
   audit.record("1040", "21", "Total credits", totalCredits, "Line 19 + Line 20");
@@ -3106,7 +3147,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     )),
     withholding: federalWithholding,
     estimatedPayments,
-    refundableCredits: sum(educationRefundable, sched3.totalRefundableCredits, form8812.actc, eic),
+    refundableCredits: sum(educationRefundable, refundableAdoptionCredit, sched3.totalRefundableCredits, form8812.actc, eic),
     priorYearTax: input.priorYear?.priorYearTax ? d(input.priorYear.priorYearTax) : undefined,
     priorYearAGI: input.priorYear?.priorYearAGI ? d(input.priorYear.priorYearAGI) : undefined,
     filingStatus,
@@ -3145,6 +3186,8 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   const sched2 = calculateSchedule2({
     amt,
     excessAPTCRepayment,
+    newVehicleTransferRepayment,
+    usedVehicleTransferRepayment,
     selfEmploymentTax,
     unreportedSSTax: form4137?.line13,
     form8919Tax: form8919?.line13,
@@ -3186,9 +3229,10 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     "Form 8812 Line 27 (refundable ACTC)");
 
   audit.record("1040", "29", "Refundable American opportunity credit", educationRefundable, "Form 8863 line 8");
+  audit.record("1040", "30", "Refundable adoption credit", refundableAdoptionCredit, "Form 8839 line 13; subject to applicable public-benefit limitations");
   audit.record("1040", "31", "Schedule 3 refundable credits and other payments", sched3.totalRefundableCredits,
     "Schedule 3 line 15; excludes American opportunity credit");
-  const refundableCredits = sum(educationRefundable, sched3.totalRefundableCredits);
+  const refundableCredits = sum(educationRefundable, refundableAdoptionCredit, sched3.totalRefundableCredits);
 
   const totalPayments = sum(federalWithholding, estimatedPayments, eic, actc, refundableCredits);
   audit.record("1040", "33", "Total payments", totalPayments, "Withholding + estimated + EIC + ACTC + refundable credits");
@@ -3440,6 +3484,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     form8615: form8615Result,
     form8814,
     form8839,
+    form5695,
     form461,
     scheduleJ: scheduleJResult,
     form3800,

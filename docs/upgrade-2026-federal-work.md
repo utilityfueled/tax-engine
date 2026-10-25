@@ -387,5 +387,38 @@ facts and current/prior MAGI confirmations. Missing prior-year AGI remains unkno
 known zero remains usable. Before legacy vehicle defaults, compute completeness
 from original price/type/personal-use/transfer fields and overwrite any supplied
 marker. Verified calculations will require that evidence rather than infer it.
-Four spec-linked contract tests failed first; 120 focused tests, root typecheck,
-spec validation and whitespace checks now pass. Scoped diff reviewed.
+Four spec-linked contract tests failed first; 120 focused tests, root typecheck and
+whitespace checks pass. Subsequent log inspection found malformed YAML in the new
+contract entry (the shell continued after validation failed); corrected in the
+return-integration package and reran validation. Scoped diff reviewed.
+
+### Federal personal-credit integration — 2026-10-25
+
+Integrated actual Form 2441/5695/8936 limits and Schedule 8812 Worksheets A/B.
+The dependent-care/elderly/education/saver/improvement/vehicle sequence now feeds
+actual remaining limits to adoption and residential clean energy, then CTC.
+Schedule 3 aggregates allowed credits after general-business and prior-AMT
+allocation; prior-AMT now sees actual net regular tax after earlier credits.
+
+Form 8839 uses actual Part III exclusion MAGI before AGI, includes signed taxable
+benefits on 1040 line 1f, sends refundable adoption to line 30, limits nonrefundable
+credit, and preserves year-tagged carryforward. Actual W-2 code T must reconcile
+when reported. 2026 original classification/benefit/prior-lifetime-use history is
+required before defaults. Form 5695 exposes allowed credit and next-year carry;
+2026 costs cannot become carryforward. Verified 8936 claims require original
+facts; actual new/used transfer repayments enter Schedule 2 lines 1b/1c and 1040
+line 17. Unresolved legacy transfers and unattributed business vehicle credits
+reject explicitly.
+
+Nine calculation/missing-fact regressions failed first, plus an adoption-history
+regression; eleven integration cases now pass, including child/adoption ordering.
+Expanded focused run: 918/919 passed; the remaining pre-existing vehicle assertion
+expected tentative $4,000 rather than the actual $3,872 tax limit. Corrected it with
+an independently derived bracket amount and additional $4,000 tentative/$128
+unused assertions. The affected 469 tests pass on rerun; root typecheck, 3,112
+spec references, and whitespace checks pass. Scoped ESLint has no errors and six
+pre-existing non-null warnings. Scoped diff reviewed.
+
+Still unqualified: 2026 Schedule 3-A public-benefit limitation/final IRS forms and
+independent tax review; Schedule R/8863 exact worksheet audit needs follow-up;
+prior-AMT year-aware prior constants remain next. No filing readiness gate changed.

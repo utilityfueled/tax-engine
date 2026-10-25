@@ -261,6 +261,7 @@ export interface TaxReturnResult {
   form2555?: import("@/engine/forms/form-2555.js").Form2555Result;
   form8615?: import("@/engine/forms/form-8615.js").Form8615Result;
   form8814?: import("@/engine/forms/form-8814.js").AggregatedForm8814;
+  form5695?: import("@/engine/forms/form-5695.js").Form5695Result;
   form8839?: import("@/engine/forms/form-8839.js").Form8839Result;
   form461?: import("@/engine/forms/form-461.js").Form461Result;
   scheduleJ?: import("@/engine/forms/schedule-j.js").ScheduleJResult;

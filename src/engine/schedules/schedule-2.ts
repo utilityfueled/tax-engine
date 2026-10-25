@@ -15,6 +15,8 @@ import { AuditTrail } from "@/utils/audit.js";
 export interface Schedule2Input {
   amt?: Decimal; // Line 2 (Form 6251)
   excessAPTCRepayment?: Decimal; // Line 1a
+  newVehicleTransferRepayment?: Decimal; // Line 1b
+  usedVehicleTransferRepayment?: Decimal; // Line 1c
   selfEmploymentTax: Decimal; // Line 4 (Schedule SE)
   additionalMedicareTax: Decimal; // Line 11 (Form 8959)
   niitTax: Decimal; // Line 12 (Form 8960)
@@ -60,8 +62,13 @@ export function calculateSchedule2(input: Schedule2Input): Schedule2Result {
   const excessAPTCRepayment = input.excessAPTCRepayment ?? new Decimal(0);
   audit.record("Sched 2", "1a", "Excess APTC repayment", excessAPTCRepayment, "Form 8962");
 
-  audit.record("Sched 2", "1z", "Additions to tax", excessAPTCRepayment, "Supported line 1a; other line 1 additions require separate support");
-  const partITotal = amt.plus(excessAPTCRepayment);
+  const newVehicleTransferRepayment = input.newVehicleTransferRepayment ?? new Decimal(0);
+  const usedVehicleTransferRepayment = input.usedVehicleTransferRepayment ?? new Decimal(0);
+  audit.record("Sched 2", "1b", "New clean vehicle transferred-credit repayment", newVehicleTransferRepayment, "Form 8936 Schedule A new-vehicle repayment");
+  audit.record("Sched 2", "1c", "Used clean vehicle transferred-credit repayment", usedVehicleTransferRepayment, "Form 8936 Schedule A used-vehicle repayment");
+  const additionsToTax = sum(excessAPTCRepayment, newVehicleTransferRepayment, usedVehicleTransferRepayment);
+  audit.record("Sched 2", "1z", "Additions to tax", additionsToTax, "Supported lines 1a + 1b + 1c");
+  const partITotal = amt.plus(additionsToTax);
   audit.record("Sched 2", "3", "Part I total", partITotal, "Line 1z + Line 2");
 
   // ── Part II ───────────────────────────────────────────

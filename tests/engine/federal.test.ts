@@ -9599,8 +9599,11 @@ describe("Form 8936 clean vehicle credits through federal engine", () => {
     };
     const result = calculateFederalTax(fixture);
     // AGI ~$50K, under $75K single threshold → qualifies
-    // $4,000 previously owned credit (30% of $20K = $6K, capped at $4K)
-    expect(result.form8936?.totalPreviouslyOwnedCredit.toNumber()).toBe(4000);
+    // Tentative $4,000 (30% of $20K capped at $4K), then actual tax-liability cap.
+    // 2025 bracket base: ($50,000 - $15,750) -> round($1,192.50 + $22,325 × 12%) = $3,872.
+    expect(result.form8936?.tentativePreviouslyOwnedCredit.toString()).toBe("4000");
+    expect(result.form8936?.totalPreviouslyOwnedCredit.toString()).toBe("3872");
+    expect(result.form8936?.unusedPersonalCredit.toString()).toBe("128");
   });
 
   it("Form 8936 AGI over threshold disqualifies credit in federal context", () => {

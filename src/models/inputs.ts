@@ -2657,7 +2657,7 @@ export const EnergyCreditsSchema = z.object({
 
 // Record whether original source facts existed before legacy schema defaults.
 // Recompute this marker; an imported `sourceFactsComplete: true` is never evidence.
-const vehicleSourceFacts = (required: string[]) => (value: unknown) => {
+const sourceFactPresence = (required: string[]) => (value: unknown) => {
   if (!value || typeof value !== "object" || Array.isArray(value)) return value;
   const record = value as Record<string, unknown>;
   return {...record, sourceFactsComplete: required.every(key => record[key] !== undefined)};
@@ -2682,7 +2682,7 @@ const VehicleSourceFactFields = {
   priorYearMagiConfirmed: z.boolean().optional(),
 };
 
-export const NewCleanVehicleSchema = z.preprocess(vehicleSourceFacts(["msrp", "vehicleType", "personalUsePercentage", "creditTransferredToDealer"]), z.object({
+export const NewCleanVehicleSchema = z.preprocess(sourceFactPresence(["msrp", "vehicleType", "personalUsePercentage", "creditTransferredToDealer"]), z.object({
   ...VehicleSourceFactFields,
   powertrain: z.enum(["battery", "fuel_cell"]).optional(),
   /** Date acquired (YYYY-MM-DD) */
@@ -2701,7 +2701,7 @@ export const NewCleanVehicleSchema = z.preprocess(vehicleSourceFacts(["msrp", "v
   creditTransferredToDealer: z.boolean().default(false),
 }));
 
-export const PreviouslyOwnedCleanVehicleSchema = z.preprocess(vehicleSourceFacts(["salePrice", "personalUsePercentage", "creditTransferredToDealer"]), z.object({
+export const PreviouslyOwnedCleanVehicleSchema = z.preprocess(sourceFactPresence(["salePrice", "personalUsePercentage", "creditTransferredToDealer"]), z.object({
   ...VehicleSourceFactFields,
   /** Date acquired (YYYY-MM-DD) */
   dateAcquired: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Must be YYYY-MM-DD"),
@@ -2867,7 +2867,8 @@ export type Form8615Input = z.infer<typeof Form8615Schema>;
  * Per-child inputs for the adoption credit (Part II) and employer-provided
  * adoption benefit exclusion (Part III). MFS filers are ineligible.
  */
-export const Form8839ChildSchema = z.object({
+export const Form8839ChildSchema = z.preprocess(sourceFactPresence(["isSpecialNeeds", "isForeignAdoption", "employerBenefits", "priorYearCreditsClaimed", "priorYearExclusionsClaimed"]), z.object({
+  sourceFactsComplete: z.boolean().optional(),
   adoptionFinalizedYear: z.number().int().nullable().optional(),
   expensesByYear: z.array(z.object({year: z.number().int(), amount: decimal})).optional(),
   employerPlanQualified: z.boolean().optional(),
@@ -2888,7 +2889,7 @@ export const Form8839ChildSchema = z.object({
   priorYearCreditsClaimed: optionalDecimal,
   /** Total employer benefit exclusions claimed for this child in prior tax years */
   priorYearExclusionsClaimed: optionalDecimal,
-});
+}));
 
 export const Form8839Schema = z.object({
   eligibilityConfirmed: z.boolean().optional(),

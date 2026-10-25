@@ -118,3 +118,9 @@ lines:
     formula: "AMT on line 2 and APTC on 1a enter line 3 to Form 1040 line 17. Line 18 sums only line 17 amounts; line 21 sums Part II to Form 1040 line 23. Form 2210 penalty is excluded from every Schedule 2 total."
     irsRef: "https://www.irs.gov/pub/irs-pdf/f1040s2.pdf"
     testRef: "tests/engine/federal-payment-routing.test.ts::Schedule 2 official line routing"
+
+  - line: "1b-1c-transfers"
+    description: "Repayment of actual new and used clean vehicle credit transfers"
+    formula: "New transfer repayment from Form 8936 Schedule A to line 1b; used transfer repayment to line 1c; include both in line 1z and Part I line 3, not Part II"
+    irsRef: "https://www.irs.gov/pub/irs-pdf/f8936sa.pdf"
+    testRef: "tests/engine/federal-credit-integration.test.ts::repays actual vehicle transfers in Schedule2 PartI"

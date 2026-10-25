@@ -211,6 +211,7 @@ export interface YearConstants {
   };
   /** Form 8839 — Qualified Adoption Expenses (IRC §23, §137) */
   adoptionCredit: {
+    refundablePerChild?: Decimal;
     /** Maximum adoption credit and exclusion per eligible child (Rev. Proc. 2024-40 §3.01) */
     maxCreditPerChild: Decimal;
     /** MAGI threshold above which credit/exclusion begins to phase out */
@@ -1469,6 +1470,7 @@ export const TAX_CONSTANTS: Record<number, YearConstants> = {
       taxRate: d("0.10"),
     },
     adoptionCredit: {
+      refundablePerChild: d(5000),
       maxCreditPerChild: d(17280),
       phaseOutThreshold: d(259190),
       phaseOutRange: d(40000),
