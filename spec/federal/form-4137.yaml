@@ -4,6 +4,12 @@ taxYear: 2025
 irsReference: "https://www.irs.gov/pub/irs-pdf/f4137.pdf"
 
 notes: |
+  Actual employer sources support both 2025 and 2026, with the selected year's
+  payroll constants. Refreshed 2026-10-25 against final2025 Form4137 pages1-2
+  and Publication531 (continuous-use December2024 revision). Actual sources
+  preserve owner, year, annual employer columns, monthly exceptions, noncash
+  income and canonical W2 reconciliation. Each spouse has a separate worksheet.
+  The following summary path is historical, unverified compatibility only.
   This supported slice accepts validated Form 4137 summary totals instead of
   rebuilding the employer-by-employer worksheet from every tip-reporting fact.
   It covers the amounts that materially affect the individual federal return:
@@ -23,6 +29,41 @@ businessRuleValidation:
     testRef: "tests/pdf/fill-form-4137-8919.test.ts::fillReturn attaches Form 4137 only when supported unreported tips produce additional tax: %s"
 
 lines:
+  - line: "actual-source"
+    description: "Actual owner employer and reporting-year sources"
+    formula: "Require actual source year/reference, confirmation, complete employer list and confirmed reporting-year treatment. Timely December tips belong to the following reporting year; late reports belong to the receipt year. No date or zero is inferred. Bind actual employer W2 source IDs, names, EINs and owner to canonical payroll. Explicit source adjustments reconcile annual reported tips with Box7; a difference is never silently assumed."
+    irsRef: "Form4137 instructions Line1 columns(a)-(d); Pub531 Reporting tips on your tax return"
+    testRef: "tests/engine/forms/form-4137-sources.test.ts::requires actual ownership reporting year and canonical employer sources"
+  - line: "1-3"
+    description: "Employer cash and charge tip source columns"
+    formula: "One distinct row per employer and owner; line2=sum actual column(c), line3=sum actual column(d). Reported amounts cannot exceed received amounts. More than five employers retain all rows, with totals calculated once. Actual allocated Box8 tips equal complete canonical Box8 totals and cannot be below known partial Box8 sources. Each reported-tip reconciliation component is bounded by its actual source. Lower unreported income requires actual adequate records."
+    irsRef: "Form4137 lines1-3 and Allocated tips instructions"
+    testRef: "tests/engine/forms/form-4137-sources.test.ts::conserves employer columns allocated tips and large exact amounts"
+  - line: "4-5"
+    description: "Separate unreported income and monthly payroll exclusion"
+    formula: "Line4=line2-line3. Line5 sums only unreported cash tips from an actual employer/month with total cash tips strictly less than20. Monthly records conserve received and reported annual sources and are unique per employer/month. Exactly20 is not exempt. Separate noncash income adds to wages but never enters the cash Form4137 payroll base."
+    irsRef: "Form4137 lines4-5; Pub531 Blue Ocean Restaurant example and noncash tips"
+    testRef: "tests/engine/forms/form-4137-sources.test.ts::separates the published eighteen dollar income example from payroll tips"
+  - line: "actual-6"
+    description: "Actual unreported tips subject to Medicare"
+    formula: "Line6=line4-line5. Medicare-only government tips remain in line6. Noncash tips are excluded. Report line6 to Form8959 and line4 plus actual noncash unreported income to Form1040line1c, each once."
+    irsRef: "Form4137 line6 and instructions; Pub531 Noncash tips"
+    testRef: "tests/engine/forms/form-4137-sources.test.ts::applies employer month exceptions independently at the twenty dollar threshold"
+  - line: "7-actual-8"
+    description: "Selected-year wage base and actual reported payroll"
+    formula: "Line7=selected-year SocialSecurity wage base. Line8=sum actual same-owner W2Boxes3+7 plus min(actual RRTAcompensation subjectto6.2percent,line7). RRTA-covered tips cannot be reported on Form4137. A missing canonical payroll amount is unknown, not zero."
+    irsRef: "Form4137 lines7-8 and RRTA instructions; SSA annual wage base"
+    testRef: "tests/engine/forms/form-4137-sources.test.ts::uses actual owner payroll and caps RRTA compensation before the wage base comparison"
+  - line: "actual-9-13"
+    description: "Payroll tax after actual monthly and government exclusions"
+    formula: "Line9=max(0,line7-line8). Line10=min(line9,line6-actual qualified Medicare-only government tips), without reducing line6. Line11=round(line10*.062); line12=round(line6*.0145); line13=line11+line12. Preserve source cents and round tax lines with Decimal."
+    irsRef: "Form4137 lines9-13 and line10 instructions"
+    testRef: "tests/engine/forms/form-4137-sources.test.ts::preserves government Medicare tips and selected year tax line rounding"
+  - line: "separate-owner-source"
+    description: "Separate spouse worksheets and unverified legacy compatibility"
+    formula: "Accept one actual source worksheet per owner, with no ambiguous mixture of single and per-owner representations. Preserve missing fields on parse. Until the separate canonical handoff is complete, the federal entrypoint explicitly rejects per-owner source input rather than ignore it. Legacy aggregate inputs retain historical results but report sourceFactsVerified=false and do not manufacture employer or monthly facts."
+    irsRef: "Form4137 heading, separate form for each spouse"
+    testRef: "tests/engine/forms/form-4137-sources.test.ts::preserves unknown source facts and separates the legacy and owner representations"
   - line: "1040-1"
     description: "Unreported tip income added to Form 1040 line 1"
     formula: "Validated unreported tip income amount that must be included in wages on Form 1040 line 1"

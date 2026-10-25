@@ -2660,13 +2660,49 @@ export const BusinessExpensesSchema = z.object({
   otherExpenses: optionalDecimal,
 });
 
+const form4137SourceAmount = decimal.refine(value => d(value).gte(0), "Actual tip amount must be nonnegative");
+/** Actual annual columns already reconciled to the IRS reporting-year rules. */
+export const Form4137SourceFactsSchema = z.object({
+  sourceTaxYear: z.number().int().optional(),
+  sourceReference: z.string().trim().min(1).optional(),
+  sourceFactsConfirmed: z.boolean().optional(),
+  allEmployersIncluded: z.boolean().optional(),
+  reportingYearTreatmentConfirmed: z.boolean().optional(),
+  railroadRetirementCompensation: form4137SourceAmount.optional(),
+  noncashTipsNotIncludedInWages: form4137SourceAmount.optional(),
+  employers: z.array(z.object({
+    sourceId: z.string().trim().min(1).optional(),
+    employerName: z.string().trim().min(1).optional(),
+    employerEin: z.string().optional(),
+    w2SourceIds: z.array(z.string().trim().min(1)).optional(),
+    cashAndChargeTipsReceived: form4137SourceAmount.optional(),
+    tipsReportedToEmployer: form4137SourceAmount.optional(),
+    allocatedTips: form4137SourceAmount.optional(),
+    adequateRecordsSupportUnreportedTips: z.boolean().optional(),
+    railroadRetirementCovered: z.boolean().optional(),
+    medicareOnlyGovernmentUnreportedTips: form4137SourceAmount.optional(),
+    medicareOnlyGovernmentQualificationConfirmed: z.boolean().optional(),
+    reportedTipsNotIncludedInBox7: form4137SourceAmount.optional(),
+    box7TipsExcludedFromReportedTotal: form4137SourceAmount.optional(),
+    reportedTipReconciliationReference: z.string().trim().min(1).optional(),
+    smallTipMonths: z.array(z.object({
+      month: z.number().int().min(1).max(12).optional(),
+      totalCashAndChargeTips: form4137SourceAmount.optional(),
+      tipsReportedToEmployer: form4137SourceAmount.optional(),
+    })).optional(),
+  })).optional(),
+});
 export const Form4137Schema = z.object({
   accountHolder: z.enum(["primary", "spouse"]).optional(),
-  unreportedTipIncome: decimal,
+  unreportedTipIncome: decimal.optional(),
   socialSecurityWagesAndTipsAlreadyReported: decimal.optional(),
-  medicareOnlyGovernmentEmployeeTips: optionalDecimal,
+  medicareOnlyGovernmentEmployeeTips: decimal.optional(),
+  sourceFacts: Form4137SourceFactsSchema.optional(),
 }).superRefine((value, ctx) => {
-  if (d(value.medicareOnlyGovernmentEmployeeTips).greaterThan(d(value.unreportedTipIncome))) {
+  if (value.sourceFacts === undefined && value.unreportedTipIncome === undefined) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["unreportedTipIncome"], message: "Form4137 requires actual source facts or a legacy summary" });
+  }
+  if (value.sourceFacts === undefined && d(value.medicareOnlyGovernmentEmployeeTips).greaterThan(d(value.unreportedTipIncome))) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       message: "Form 4137 Medicare-only government-employee tips cannot exceed unreported tip income",
@@ -5310,6 +5346,7 @@ export const TaxYearInputSchema = z.object({
   formSSA1099: z.array(FormSSA1099Schema).optional(),
   formRRB1099: z.array(FormRRB1099Schema).optional(),
   form4137: Form4137Schema.optional(),
+  form4137ByOwner: z.object({ primary: Form4137Schema.optional(), spouse: Form4137Schema.optional() }).optional(),
   form8919: Form8919Schema.optional(),
   socialSecurityLumpSumElection: SocialSecurityLumpSumElectionSchema.optional(),
   socialSecurityFacts: SocialSecurityFactsSchema.optional(),
@@ -5386,6 +5423,17 @@ export const TaxYearInputSchema = z.object({
     illinois: IllinoisStateReturnInputSchema.optional(),
   }).optional(),
 }).superRefine((value, ctx) => {
+  if (value.form4137 !== undefined && value.form4137ByOwner !== undefined) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["form4137ByOwner"], message: "Use either form4137 or form4137ByOwner, not both" });
+  }
+  if (value.form4137ByOwner?.spouse && (!value.taxpayer.spouse || value.taxpayer.filingStatus !== "married_filing_jointly")) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["form4137ByOwner", "spouse"], message: "A separate spouse Form4137 requires an actual spouse and joint return" });
+  }
+  for (const owner of ["primary", "spouse"] as const) {
+    if (value.form4137ByOwner?.[owner] && value.form4137ByOwner[owner].accountHolder !== owner) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["form4137ByOwner", owner], message: "Form4137 record owner must match its actual household owner" });
+    }
+  }
   if (value.form8606 !== undefined && value.form8606ByOwner !== undefined) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
@@ -5566,6 +5614,7 @@ export type Form1099SA = z.infer<typeof Form1099SASchema>;
 export type FormSSA1099 = z.infer<typeof FormSSA1099Schema>;
 export type FormRRB1099 = z.infer<typeof FormRRB1099Schema>;
 export type Form4137Input = z.infer<typeof Form4137Schema>;
+export type Form4137SourceFacts = z.infer<typeof Form4137SourceFactsSchema>;
 export type Form8919Input = z.infer<typeof Form8919Schema>;
 export type SocialSecurityLumpSumElection = z.infer<typeof SocialSecurityLumpSumElectionSchema>;
 export type SocialSecurityLumpSumElectionYear = z.infer<typeof SocialSecurityLumpSumElectionYearSchema>;

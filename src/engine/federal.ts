@@ -152,6 +152,7 @@ import { calculateIllinoisReturn, type ILStateInput } from "./state/il-orchestra
 import type { ILScheduleWITRecord } from "./state/il-schedule-il-wit.js";
 
 export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
+  if (input.form4137ByOwner !== undefined) throw new Error("Separate-owner Form4137 sources require the pending canonical payroll integration.");
   const year = input.taxpayer.taxYear;
   const constants = getConstants(year);
   const filingStatus = input.taxpayer.filingStatus as FilingStatus;
