@@ -2,8 +2,23 @@
 
 ## Current checkpoint
 
+Current additions: `ea2f422` fixes all five unchanged charitable review failures
+and delivers actual2025 category/vintage history (3,662tests/81files); `4332623`
+adds the actual collector (807tests,215rebase cases, two browser flows and
+nine separate review cases). `fcedf57` completes wagering-expense intake
+(834tests/82files,61rebase cases, two browser flows and four review cases).
+`2fdbb03` fixes the physical2025 ScheduleA itemization-election checkbox, with
+24PDF tests and separate five-boundary saved-PDF review.
+
+The full production browser run on exact`907b6db` now passes348cases, with
+five hosted skips, zero failures/retries in13.0minutes using the default pinned
+PDF reader. It excludes the subsequent packages and supplies no hosted evidence.
+The [named method audit](upgrade-2026-remaining-methods.md) records unfinished
+refinancing, Marketplace, adoption, charity, mixed-tip, education and QBI methods
+with current ownership. Unsupported guards do not count as implementation.
+
 Execution remains active and **not release-ready**. Latest confirmed pushed
-commit is `f006285` on `upgrade/2026-baseline`. Resume from
+commit is `2fdbb03` on `upgrade/2026-baseline`. Resume from
 [the durable checklist](upgrade-2026-checklist.md) and `ongoingExecution` in the
 machine checkpoint. Older evidence applies only to its recorded code.
 
@@ -79,7 +94,7 @@ and actual charitable history work continue. The subsequent frozen charity
 review on`7dac725` reproduces five additional current-method/identity defects:
 private cash limits, ordinary property basis and unknown basis, empty-history
 invariance, and original identity binding before PDF access.20package cases pass;
-all five failures are assigned for correction before commit.
+all five are fixed inea2f422 with unchanged parent regressions passing.
 
 Capital-origin intake is committed and pushed in `9d71c5f`: 795 adjacent
 tests, 32 post-COD integration checks, types/build and both desktop/mobile cases

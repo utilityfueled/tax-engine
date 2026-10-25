@@ -1638,33 +1638,31 @@
       "thresholdChanged": false,
       "evidence": ".local/upgrade-evidence/full-coverage-1791979.log"
     },
-    "lastPushedCommit": "f006285a0ec72c12183060abf26f7165845fba8f",
+    "lastPushedCommit": "2fdbb03710017cce5bcb389bfb5e6e6b6ea12a0e",
     "currentBrowserRun": {
-      "commit": "4aef633349dbb39c2481b914730c309785cc8c41",
-      "status": "completed-with-missing-pdf-runtime",
+      "commit": "907b6dbb431767cfa64452bfb75151179ff818e2",
+      "status": "passed-local-self-hosted",
+      "directory": "/private/tmp/tax-engine-checks-ap93htqg",
+      "buildSessionId": 70577,
+      "buildEvidence": ".local/upgrade-evidence/browser-build-907b6db.log",
+      "finalCode": false,
+      "stagingEvidence": false,
+      "purpose": "Verify the corrected pinned PDF-reader prerequisite across the full production browser suite; excludes ongoing charity changes.",
+      "sessionId": null,
+      "serverSessionId": null,
+      "productionBuild": "passed",
+      "productionBuildEvidence": ".local/upgrade-evidence/browser-build-907b6db.log",
+      "evidence": ".local/upgrade-evidence/full-browser-907b6db.log",
+      "readerOverride": false,
       "retries": 0,
       "workers": 1,
-      "sessionId": null,
-      "origin": "http://127.0.0.1:3127",
-      "evidence": ".local/upgrade-evidence/full-browser-4aef633.log",
-      "stagingEvidence": false,
-      "passed": 340,
-      "failed": 2,
-      "skipped": 5,
-      "durationMinutes": "13.2",
-      "evidenceSha256": "50260e0911bdc90a7a961c577e70542cd7b7cede73b9aa3900dfe97f6a118010",
-      "failure": "Both QSBS PDF readers selected system python3 without pypdf; review downloads returned successfully.",
-      "focusedRerun": {
-        "passed": 2,
-        "failed": 0,
-        "retries": 0,
-        "explicitPinnedPython": true,
-        "evidence": {
-          "path": ".local/upgrade-evidence/browser-4aef633-pdf-prerequisite-rerun.log",
-          "sha256": "3008d91b77dbde52bb02b27f1952580337cc46066a4a4eae175b6baa733f0d34"
-        }
-      },
-      "limitation": "A focused prerequisite rerun does not make the original full run green. Final integrated browser run still required."
+      "testsPassed": 348,
+      "testsSkipped": 5,
+      "testsFailed": 0,
+      "durationMinutes": "13.0",
+      "evidenceSha256": "b0c68536f142a49d315a77828c0c2cbde05db67be10f99dd473989a85ba2cde9",
+      "scope": "Exact907b6db production build with repaired default pinnedPDF launcher; excludes latercharity/wagering/refund work.",
+      "hostedQualification": false
     },
     "currentPackageAudit": {
       "date": "2026-10-25",
@@ -1769,16 +1767,31 @@
       "evidence": ".local/upgrade-evidence/oh-year-ceilings-staged-tests.log"
     },
     "previousBrowserRun": {
-      "commit": "1791979c3413516df211e3109d05d78ee0084a40",
-      "status": "passed-with-hosted-skips",
-      "passed": 328,
-      "skipped": 5,
-      "failed": 0,
+      "commit": "4aef633349dbb39c2481b914730c309785cc8c41",
+      "status": "completed-with-missing-pdf-runtime",
       "retries": 0,
       "workers": 1,
-      "minutes": "15.9",
-      "evidence": ".local/upgrade-evidence/full-1791979-browser.log",
-      "stagingEvidence": false
+      "sessionId": null,
+      "origin": "http://127.0.0.1:3127",
+      "evidence": ".local/upgrade-evidence/full-browser-4aef633.log",
+      "stagingEvidence": false,
+      "passed": 340,
+      "failed": 2,
+      "skipped": 5,
+      "durationMinutes": "13.2",
+      "evidenceSha256": "50260e0911bdc90a7a961c577e70542cd7b7cede73b9aa3900dfe97f6a118010",
+      "failure": "Both QSBS PDF readers selected system python3 without pypdf; review downloads returned successfully.",
+      "focusedRerun": {
+        "passed": 2,
+        "failed": 0,
+        "retries": 0,
+        "explicitPinnedPython": true,
+        "evidence": {
+          "path": ".local/upgrade-evidence/browser-4aef633-pdf-prerequisite-rerun.log",
+          "sha256": "3008d91b77dbde52bb02b27f1952580337cc46066a4a4eae175b6baa733f0d34"
+        }
+      },
+      "limitation": "A focused prerequisite rerun does not make the original full run green. Final integrated browser run still required."
     },
     "form4952FinalCandidate": {
       "commit": "00bcea1",
@@ -1794,13 +1807,11 @@
       "evidence": ".local/upgrade-evidence/form4952-candidate-staged-expanded.log"
     },
     "inventoryRefresh": {
-      "sourceCommit": "f006285a0ec72c12183060abf26f7165845fba8f",
-      "entries": 397,
-      "status": "passed",
-      "evidence": ".local/upgrade-evidence/inventory-f006285.log",
-      "inventorySha256": "134f1a652fad40a9b44db864135f461d46519032359b829d8c007035839df4b9",
-      "qualification": "Conservative inventory metadata; statuses and filing gates unchanged.",
-      "evidenceSha256": "29d0616763e7dd8b242b8654f5c75c25f9b2e36fe3920403b561fac86ef4bc54"
+      "sourceCommit": "2fdbb03710017cce5bcb389bfb5e6e6b6ea12a0e",
+      "entries": 405,
+      "freshness": "passed",
+      "evidence": ".local/upgrade-evidence/inventory-2fdbb03.log",
+      "sha256": "ebd7ae6cc3330ae1a698180838fc5d2d8d98e82984d4b021d60ba517b83fc30e"
     },
     "tickerKeyboardAndMortgageReview": {
       "commit": "603604b",
@@ -2602,38 +2613,21 @@
       "evidenceSha256": "df287c8516aa0838e1719ba5e6e67349b20c0f2bdb1a1a027f9fefb8b55d4e43"
     },
     "currentRemoteRuns": {
-      "commit": "59eae66434d71c485719795e4528a2f495672c8f",
+      "commit": "2fdbb03710017cce5bcb389bfb5e6e6b6ea12a0e",
       "ci": {
-        "run": 40240016950,
-        "status": "in_progress",
-        "unitStep": "passed",
-        "completedJobs": [
-          "Lint",
-          "Type Check",
-          "Spec Validate",
-          "Build"
-        ]
+        "run": 40242413319,
+        "status": "in_progress-when-observed"
       },
       "web": {
-        "run": 40240016965,
-        "status": "in_progress",
-        "completedJobs": [
-          "Build Web App"
-        ],
-        "containerCompletedSteps": [
-          "native image build",
-          "smoke",
-          "previous image build",
-          "isolated recovery"
-        ]
+        "run": 40242413334,
+        "status": "in_progress-when-observed"
       },
       "qualification": false,
-      "observedDate": "2026-10-25",
-      "limitation": "These were in-progress statuses when observed before subsequent package pushes; no completed coverage/browser run is inferred."
+      "limitation": "Preceding4332623/fcedf57 runs were cancelled by subsequent pushes. No completed remote result inferred."
     },
     "charityHistoryParentReview": {
       "tree": "7dac725be8526c9d18ce326b84187807cab03958",
-      "status": "five-reproduced-findings-assigned-to-ai",
+      "status": "fixed-and-rereviewed",
       "packageTestsPassed": 20,
       "independentProbesFailed": 5,
       "evidence": ".local/upgrade-evidence/parent-charity-history-review-7dac725.log",
@@ -2644,7 +2638,12 @@
         "An actual empty prior-history packet changes the same current cash/property deduction60000 to50000.",
         "Changing original prior-history taxpayer last4 is not rejected before review template access."
       ],
-      "humanTaxQualification": false
+      "humanTaxQualification": false,
+      "correctedCommit": "ea2f42209bf16a114fa4213fcc901ba623357ee3",
+      "correctedTree": "21386bbc446dd75d8028721eaaa38169662c692b",
+      "unchangedParentProbesPassed": 5,
+      "rereviewTestsPassed": 11,
+      "rereviewEvidence": ".local/upgrade-evidence/parent-charity-history-rereview-21386bbc.log"
     },
     "guidedCodNol": {
       "commit": "f006285a0ec72c12183060abf26f7165845fba8f",
@@ -2662,6 +2661,65 @@
       "independentReviewFiles": 3,
       "humanTaxQualification": false,
       "evidenceDocument": "docs/upgrade-2026-guided-cod-nol-work.md"
+    },
+    "charitableHistory": {
+      "commit": "ea2f42209bf16a114fa4213fcc901ba623357ee3",
+      "tests": 3662,
+      "files": 81,
+      "specReferences": 4703,
+      "rootAndWebTypes": "passed",
+      "boundedAgentReview": "passed",
+      "humanQualification": false,
+      "remainingMethods": [
+        "binding2025priorG/current-property",
+        "same-year mixed-mediumother30 history",
+        "2026 floor/nonitemizer carry",
+        "prior/mixed NOL coordination"
+      ]
+    },
+    "guidedCharitableHistory": {
+      "commit": "43326235a0c5029937d5f2d965e8dc2cb1f41214",
+      "tests": 807,
+      "finalIntegrationTests": 215,
+      "specReferences": 4710,
+      "browserPassed": 2,
+      "browserRetries": 0,
+      "independentAgentTests": 9,
+      "status": "passed-bounded-software-review"
+    },
+    "guidedWagering": {
+      "commit": "fcedf574abee4d40170cf476b0c6a36acc52b8ec",
+      "tests": 834,
+      "files": 82,
+      "rebaseTests": 61,
+      "browserPassed": 2,
+      "browserRetries": 0,
+      "independentAgentTests": 4,
+      "rootAndWebTypes": "passed",
+      "evidenceDocument": "docs/upgrade-2026-guided-wagering-work.md"
+    },
+    "scheduleAElection": {
+      "commit": "2fdbb03710017cce5bcb389bfb5e6e6b6ea12a0e",
+      "tests": 24,
+      "files": 4,
+      "parentSavedPdfTest": "passed-five-election-boundaries",
+      "evidence": ".local/upgrade-evidence/parent-schedule-a-election-review.log"
+    },
+    "namedMethodQueue": {
+      "audit": "docs/upgrade-2026-remaining-methods.md",
+      "owners": {
+        "vehicleRefinancing": "parent",
+        "ordinaryRefundIntake": "federal_law",
+        "marketplaceMethods": "federal_law",
+        "foreignAdoptionHistory": "complete_facts",
+        "charityMethods": "ai_billing"
+      },
+      "subsequent": [
+        "mixed-reducedemployee/business tips-to-QBI allocation",
+        "partial/in-kind529 and education coordination",
+        "non-rental suspendedQBI and postEBL character"
+      ],
+      "unsupportedIsComplete": false
     }
   },
   "historicalReleaseBlockers": {

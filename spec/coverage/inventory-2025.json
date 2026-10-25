@@ -180,12 +180,93 @@
       ]
     },
     {
+      "key": "federal/charitable-carryover",
+      "jurisdiction": "federal",
+      "taxYear": null,
+      "sourceAuthority": null,
+      "specPath": null,
+      "enginePath": "src/engine/forms/charitable-carryover.ts",
+      "packetPath": null,
+      "specExists": false,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": false,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing spec coverage",
+        "Missing packet generation or inclusion rule",
+        "Missing complete spec-linked regression coverage",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/charitable-carryover-source-validation",
+      "jurisdiction": "federal",
+      "taxYear": null,
+      "sourceAuthority": null,
+      "specPath": null,
+      "enginePath": "src/engine/forms/charitable-carryover-source-validation.ts",
+      "packetPath": null,
+      "specExists": false,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": false,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing spec coverage",
+        "Missing packet generation or inclusion rule",
+        "Missing complete spec-linked regression coverage",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/charitable-carryover-sources",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/publications/p526",
+      "specPath": "spec/federal/charitable-carryover-sources.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/charitable-contribution-worksheet",
       "jurisdiction": "federal",
       "taxYear": 2026,
       "sourceAuthority": "https://uscode.house.gov/us/usc/119-120/t26/s170/",
       "specPath": "spec/federal/charitable-contribution-worksheet.yaml",
       "enginePath": "src/engine/forms/charitable-contribution-worksheet.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/charitable-current-sources",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/publications/p526",
+      "specPath": "spec/federal/charitable-current-sources.yaml",
+      "enginePath": "src/engine/forms/charitable-current-sources.ts",
       "packetPath": null,
       "specExists": true,
       "engineExists": true,
@@ -2624,6 +2705,26 @@
       ]
     },
     {
+      "key": "federal/guided-charitable-carryover",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/publications/p526",
+      "specPath": "spec/federal/guided-charitable-carryover.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/guided-child-election",
       "jurisdiction": "federal",
       "taxYear": 2025,
@@ -3369,6 +3470,26 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.irs.gov/publications/p531",
       "specPath": "spec/federal/guided-tip-income.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/guided-wagering-expenses",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://uscode.house.gov/us/usc/119-118/t26/s165/",
+      "specPath": "spec/federal/guided-wagering-expenses.yaml",
       "enginePath": null,
       "packetPath": null,
       "specExists": true,
@@ -4247,6 +4368,26 @@
       ]
     },
     {
+      "key": "federal/schedule-a-review-election",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/instructions/i1040sca",
+      "specPath": "spec/federal/schedule-a-review-election.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/schedule-b",
       "jurisdiction": "federal",
       "taxYear": 2025,
@@ -4655,6 +4796,27 @@
       "status": "partial",
       "knownGaps": [
         "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/selected-charitable-carryover",
+      "jurisdiction": "federal",
+      "taxYear": null,
+      "sourceAuthority": null,
+      "specPath": null,
+      "enginePath": "src/engine/forms/selected-charitable-carryover.ts",
+      "packetPath": null,
+      "specExists": false,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": false,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing spec coverage",
+        "Missing packet generation or inclusion rule",
+        "Missing complete spec-linked regression coverage",
         "Missing e-file and business-rule validation coverage"
       ]
     },

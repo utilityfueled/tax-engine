@@ -7,7 +7,22 @@ complete a checkbox.
 
 ## Current integration — 2026-10-25
 
-`f006285` is the latest confirmed pushed commit on `upgrade/2026-baseline`. The goal remains active and the
+Current additions: `ea2f422` fixes all five unchanged charitable review failures
+and delivers actual2025 category/vintage history (3,662tests/81files); `4332623`
+adds the actual collector (807tests,215rebase cases, two browser flows and
+nine separate review cases). `fcedf57` completes wagering-expense intake
+(834tests/82files,61rebase cases, two browser flows and four review cases).
+`2fdbb03` fixes the physical2025 ScheduleA itemization-election checkbox, with
+24PDF tests and separate five-boundary saved-PDF review.
+
+The full production browser run on exact`907b6db` now passes348cases, with
+five hosted skips, zero failures/retries in13.0minutes using the default pinned
+PDF reader. It excludes the subsequent packages and supplies no hosted evidence.
+The [named method audit](upgrade-2026-remaining-methods.md) records unfinished
+refinancing, Marketplace, adoption, charity, mixed-tip, education and QBI methods
+with current ownership. Unsupported guards do not count as implementation.
+
+`2fdbb03` is the latest confirmed pushed commit on `upgrade/2026-baseline`. The goal remains active and the
 upgrade is **not release-ready**. Unanswered external inputs are listed below;
 internal implementation and review continue in parallel.
 
@@ -22,7 +37,7 @@ internal implementation and review continue in parallel.
 - `b31b5df`: browser and CI commands use the shared pinned PDF-reader
   prerequisite. Both unchanged download cases and 28 unit-path cases pass;
   separate argument/environment/failure-path review passes. The original
-  full browser run is still recorded as failed and needs final replacement.
+  failed run is retained historically; the later907b6db full run passes348cases.
 - `9d71c5f`: capital-origin guided collection passes 795 adjacent tests,
   32 post-COD integration checks, types/build and both desktop/mobile cases.
   Separate source/DOM review passes; screenshots are inspected.
@@ -56,8 +71,8 @@ internal implementation and review continue in parallel.
   work includes three newly reproduced2025 gift qualification/year defects.
   The source correction then exposed five more parent-review failures on
   `7dac725`: legacy current-only private limits/property basis, empty-history
-  arithmetic invariance, and original-identity review binding. All are assigned
-  to the charity owner before commit;20adjacent package cases pass.
+  arithmetic invariance, and original-identity review binding. All are fixed in
+  ea2f422 and the unchanged five parent probes pass; original failed evidence is retained.
 - `678fe38`: source-bound positive1202 current origins where the printed and
   statutory traces reconcile. Final12 affected cases,571 adjacent cases, root/web
   types and4,614 references pass after the separate reader repair; parent13-case
