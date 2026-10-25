@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.23",
+    ruleVersion: "2025.24",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/publications/p590a", section: "IRA Worksheet1-2 remaining-limit rounding, actual compensation/501c18 caps and separate excess contributions", revision: "Final2025 publication including indexed2026 amounts; return source coordination still in progress", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i2441", section: "Actual Part III source binding, wage line 1e and business deduction before SE/QBI; validated Part II handoff", revision: "2025 final instructions and amended IRC129 limits", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/pub/irs-pdf/p1040.pdf", section: "Published2025 Tax Table and verified2022-24 historical tables; actual ordinary worksheet steps", revision: "Final2025 publication;2026 table unavailable", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i1040sd", section: "Official ScheduleD Tax Worksheet1-47 and QDCG1-25; source gain/loss worksheets remain separately unqualified", revision: "2025 final instructions", retrievedAt: "2026-10-25" },
@@ -66,11 +67,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.18-law-integration-draft",
+    ruleVersion: "2026.19-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/publications/p590a", section: "IRA Worksheet1-2 remaining-limit rounding, actual compensation/501c18 caps and separate excess contributions", revision: "Final2025 publication including indexed2026 amounts; return source coordination still in progress", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i2441", section: "Actual Part III source binding, wage line 1e and business deduction before SE/QBI; validated Part II handoff", revision: "2025 final instructions and amended IRC129 limits", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/pub/irs-pdf/p1040.pdf", section: "Published2025 Tax Table and verified2022-24 historical tables; actual ordinary worksheet steps", revision: "Final2025 publication;2026 table unavailable", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i1040sd", section: "Official ScheduleD Tax Worksheet1-47 and QDCG1-25; source gain/loss worksheets remain separately unqualified", revision: "2025 final instructions", retrievedAt: "2026-10-25" },

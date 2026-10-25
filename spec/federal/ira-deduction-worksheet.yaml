@@ -2,6 +2,7 @@ form: "IRA Deduction Worksheet"
 fullName: "Worksheet 1-1 and 1-2 — Figuring Your Reduced IRA Deduction"
 taxYear: 2025
 irsReference: "https://www.irs.gov/publications/p590a"
+retrievedAt: "2026-10-25"
 
 notes: |
   This worksheet implements the IRA deduction phase-out calculation from
@@ -15,7 +16,7 @@ notes: |
   deductible regardless of income. If the taxpayer IS an active participant,
   the deduction is phased out based on MAGI. If the taxpayer is NOT an active
   participant but their spouse IS, the phase-out depends on filing status:
-  for MFJ/QSS, a separate higher $236K-$246K threshold applies; for MFS who
+  for MFJ, a separate higher $236K-$246K threshold applies; for MFS who
   lived with their spouse, the same $0-$10K range as an active MFS participant
   applies.
 
@@ -39,7 +40,7 @@ notes: |
 lines:
   - line: "contributionLimit"
     description: "Maximum allowable IRA contribution for the taxpayer"
-    formula: "$7,000 base limit plus $1,000 catch-up if age 50 or older by year end"
+    formula: "Indexed annual limit plus indexed age50 catch-up, reduced by actual section501(c)(18) contributions; deductible contributions also cannot exceed actual eligible compensation"
     irsRef: "IRC §219(b)(5)(A); Rev. Proc. 2024-40 §3.19"
     edgeCases:
       - "Under age 50: $7,000"
@@ -56,8 +57,8 @@ lines:
         1. excess = MAGI - phaseOutStart[filingStatus]
         2. If excess <= 0: full deduction = min(contributions, contributionLimit)
         3. If excess >= phaseOutRange[filingStatus]: deduction = $0
-        4. Otherwise: ratio = excess / phaseOutRange; reduction = round_up_to_$10(ratio × contributionLimit); deduction = max($200, contributionLimit - reduction); capped at contributions
-      If not active participant but spouse is (MFJ/QSS):
+        4. Otherwise: remaining = phaseOutCeiling - MAGI; reducedLimit = max($200, round_up_to_$10(remaining × indexedAnnualLimit / phaseOutRange)); deduction = min(reducedLimit, actual contributions, annual limit after section501c18, eligible compensation)
+      If not active participant but spouse is (MFJ):
         Same formula using spouseActiveParticipant thresholds ($236K-$246K)
       If not active participant but spouse is (MFS, lived with spouse):
         Same formula using MFS active-participant thresholds ($0-$10K)
@@ -85,10 +86,27 @@ lines:
       - "MFS non-participant with active spouse (lived with spouse): $0-$10,000 phase-out range"
       - "MFS active participant (lived apart all year): uses single $79K-$89K phase-out range"
       - "MFS non-participant with active spouse (lived apart all year): full deduction (treated as single non-participant)"
-      - "Partial phase-out reduction is rounded up to the next $10 multiple"
+      - "The remaining phase-out deduction limit is rounded up to the next $10 multiple, not its reduction"
       - "The $200 minimum floor applies when partially phased out but not fully"
       - "Contributions less than the limit: deduction capped at actual contributions"
     testRef: "tests/engine/forms/ira-deduction-worksheet.test.ts::IRA Deduction Worksheet - single active participant mid-phase-out gets partial deduction"
+
+  - line: "source-limits"
+    description: "Compensation, excess contributions and original source facts"
+    formula: "Allowable traditional contributions=min(actual contributions, annual limit minus actual501c18, actual eligible compensation after the source worksheet). Nondeductible basis=allowable contributions minus deduction; excess contributions=actual minus allowable and never become8606basis.2026 requires known compensation,501c18 and applicable MFS living arrangement; legacy omitted compensation is explicitly unverified."
+    testRef: "tests/engine/forms/ira-deduction-sources.test.ts::limits deduction and basis to actual compensation and separates excess"
+  - line: "remaining-phaseout-rounding"
+    description: "Follow Worksheet1-2 line4 rounding and indexed2026 values"
+    formula: "Round the remaining deduction limit up to the next10, apply200floor only inside the phaseout, then cap by actual contributions/compensation.2026 annual limits7500/8600 and phaseout ranges remain independently indexed."
+    testRef: "tests/engine/forms/ira-deduction-sources.test.ts::rounds the remaining deduction upward and uses indexed2026 limits"
+  - line: "known-source-contract"
+    description: "Preserve unknown eligibility and finite source amounts"
+    formula: "Reject missing required2026 compensation/501c18/living facts and nonfinite or negative contribution/compensation sources. QSS uses joint active-participant thresholds but has no current-spouse nonparticipant rule."
+    testRef: "tests/engine/forms/ira-deduction-sources.test.ts::preserves unknown facts and rejects invalid amounts"
+  - line: "reference-source-limits"
+    description: "Review summary retains actual compensation and excess status"
+    formula: "Copy reconciled audit amounts for actual compensation, eligible contributions, deductible/nondeductible and excess contributions. Disclose historical unknown sources; never label annual ceiling as compensation-qualified."
+    testRef: "tests/pdf/fill-ira-deduction-worksheet.test.ts::preserves compensation and excess separately and rejects contradictory review values"
 
   - line: "totalDeduction"
     description: "Combined IRA deduction for Schedule 1 Line 20"

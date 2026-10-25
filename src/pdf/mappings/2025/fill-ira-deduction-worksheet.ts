@@ -7,6 +7,7 @@ import {
   type PDFFont,
   type PDFPage,
 } from "pdf-lib";
+import type Decimal from "decimal.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 
 const PAGE_WIDTH = 612;
@@ -97,34 +98,58 @@ function drawWrappedText(
 
 function getFormula(
   result: IraDeductionWorksheetPacketResult["primary"],
-  line: "contributionLimit" | "deductibleAmount",
+  line: string,
+  value: Decimal,
 ) {
-  const formula = result.lines.find((entry) => entry.line === line)?.formula;
-  if (!formula) {
-    throw new Error(`IRA deduction worksheet result is missing ${line} audit metadata`);
+  const matches = result.lines.filter((entry) => entry.line === line);
+  if (matches.length !== 1 || !matches[0].formula || !matches[0].value.isFinite()
+    || !value.isFinite() || !matches[0].value.eq(value)) {
+    throw new Error(`IRA review amounts do not reconcile with unique audit ${line}`);
   }
-
-  return formula;
+  return matches[0].formula;
 }
 
 function buildTaxpayerSection(
   heading: string,
   result: IraDeductionWorksheetPacketResult["primary"],
 ): IraDeductionWorksheetReferenceSection {
+  if (!result.contributions.eq(result.deductibleAmount.plus(result.nondeductibleAmount).plus(result.excessContributions))) {
+    throw new Error("IRA review contributions do not reconcile with allowed and excess amounts");
+  }
   return {
     heading,
     lines: [
       {
-        line: "contributionLimit",
-        description: "Maximum allowable IRA contribution",
+        line: "contributionLimit", description: "Annual IRA contribution limit",
         value: result.contributionLimit.toString(),
-        formula: getFormula(result, "contributionLimit"),
+        formula: getFormula(result, "contributionLimit", result.contributionLimit),
       },
       {
-        line: "deductibleAmount",
-        description: "Deductible traditional IRA contribution",
+        line: "5", description: "Actual eligible compensation",
+        value: result.compensationLimit?.toString() ?? "Unknown",
+        formula: result.compensationLimit === undefined
+          ? "Historical preview cannot verify the missing compensation source"
+          : getFormula(result, "5", result.compensationLimit),
+      },
+      {
+        line: "deductibleAmount", description: "Deductible traditional IRA contribution",
         value: result.deductibleAmount.toString(),
-        formula: getFormula(result, "deductibleAmount"),
+        formula: getFormula(result, "deductibleAmount", result.deductibleAmount),
+      },
+      {
+        line: "8", description: "Valid nondeductible contribution",
+        value: result.nondeductibleAmount.toString(),
+        formula: getFormula(result, "8", result.nondeductibleAmount),
+      },
+      {
+        line: "excessContributions", description: "Excess contributions requiring separate treatment",
+        value: result.excessContributions.toString(),
+        formula: getFormula(result, "excessContributions", result.excessContributions),
+      },
+      {
+        line: "sourceFacts", description: "Source completeness",
+        value: result.sourceFactsVerified ? "Confirmed source facts" : "Unverified historical sources",
+        formula: "Source completeness does not establish independent review or filing qualification",
       },
     ],
   };
@@ -133,6 +158,10 @@ function buildTaxpayerSection(
 export function buildIraDeductionWorksheetReferenceSummary(
   result: IraDeductionWorksheetPacketResult,
 ): IraDeductionWorksheetReferenceSummary {
+  if (!result.totalDeduction.isFinite()
+    || !result.totalDeduction.eq(result.primary.deductibleAmount.plus(result.spouse?.deductibleAmount ?? 0))) {
+    throw new Error("IRA review total does not reconcile with separate taxpayer deductions");
+  }
   const sections: IraDeductionWorksheetReferenceSection[] = [
     buildTaxpayerSection("Primary taxpayer", result.primary),
   ];
@@ -174,6 +203,10 @@ export async function fillIraDeductionWorksheetReference(
   const newPage = () => {
     page = doc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
     y = PAGE_HEIGHT - PAGE_MARGIN;
+    page.drawText("IRA Deduction Worksheet - REFERENCE SUMMARY ONLY", {
+      x: PAGE_MARGIN, y, font: bold, size: 11, color: WARNING_COLOR,
+    });
+    y -= 24;
   };
 
   y = drawWrappedText(page, summary.title, {
