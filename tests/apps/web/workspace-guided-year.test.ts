@@ -4,7 +4,7 @@ import { createWorkspaceRecord, ensureWorkspace, getWorkspace, listWorkspaces, s
 import { reconcileWorkspaceGuidedState } from "@/lib/workspace-guided-state";
 import { buildSectionRoute, saveGuidedFlowState, type GuidedFlowState } from "@/lib/guided-interview-flow";
 import { buildGuidedFactAnswers, buildGuidedSyntheticDocuments } from "@/lib/guided-interview-bridge";
-import { formatWorkspaceTaxYearSummary, summarizeWorkspaceGuidedCompletion } from "@/lib/workspace-status-copy";
+import { canPresentCompletedReturnDownload, formatWorkspaceTaxYearSummary, summarizeGuidedSetupProgress, summarizeWorkspaceGuidedCompletion } from "@/lib/workspace-status-copy";
 import { completeW2Entry, startCompleteInterview } from "../../guided-interview/complete-facts";
 import { buildWorkspaceFilingPackDownload } from "@/lib/workspace-filing-pack";
 
@@ -125,6 +125,19 @@ it("counts unvisited sections as pending without claiming they were skipped", ()
   expect(restored.guidedCompletion).toEqual({ completedSectionCount: 0, totalSectionCount: 7, skippedSectionCount: 0, needsReviewSectionCount: 0 });
   expect(restored.summary.interviewQuestionsRemaining).toBe(7);
   expect(summarizeWorkspaceGuidedCompletion(restored.guidedCompletion)).toMatchObject({ progressLabel: "7 guided sections still need review", helperText: expect.stringContaining("incomplete") });
+});
+
+it("keeps saved interview progress separate from completed review metadata", () => {
+  const flow = completeFlow(); flow.phase = "interview"; flow.currentSectionIndex = 1;
+  flow.completedSections = ["personal-info"];
+  const restored = reconcileWorkspaceGuidedState(createWorkspaceRecord("saved-progress"), flow);
+  expect(restored.guidedCompletion).toBeNull();
+  expect(summarizeGuidedSetupProgress(flow)).toMatchObject({ statusLabel: "Guided setup saved", progressLabel: "1 guided section saved", helperText: "Your guided interview is ready to resume at W-2 Wages." });
+  expect(restored.summary.interviewQuestionsRemaining).toBe(6);
+  expect(restored.returnSummary.blockers.some(blocker => blocker.id === "guided:incomplete-facts")).toBe(true);
+  expect(restored.checklist.find(item => item.id === "review")?.status).toBe("blocked");
+  expect(canPresentCompletedReturnDownload({ returnSummary: restored.returnSummary, guidedFlowState: flow,
+    pendingInterviewQuestionCount: 0, guidedReviewIssueCount: 0, hasEnginePreview: true })).toBe(false);
 });
 
 it("restores completed actual W2 facts after syncing generated guided summaries", () => {

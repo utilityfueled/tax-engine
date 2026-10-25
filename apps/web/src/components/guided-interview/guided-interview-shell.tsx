@@ -1178,15 +1178,19 @@ export function GuidedInterviewShell({
     setFlowState({ ...initialFlowState, taxYear: workspace.returnSummary.targetTaxYear });
   }
 
-  const handleSyncAndExit = useCallback(() => {
+  const syncAndExit = useCallback((nextFlowState: GuidedFlowState) => {
+    if (nextFlowState !== flowState) handleFlowStateChange(nextFlowState);
     if (onSyncToWorkspace) {
-      const syntheticDocs = buildGuidedSyntheticDocuments(flowState);
-      const factAnswers = buildGuidedFactAnswers(flowState);
-      onSyncToWorkspace(syntheticDocs, factAnswers, flowState);
+      const syntheticDocs = buildGuidedSyntheticDocuments(nextFlowState);
+      const factAnswers = buildGuidedFactAnswers(nextFlowState);
+      onSyncToWorkspace(syntheticDocs, factAnswers, nextFlowState);
     } else {
       onExitGuided();
     }
-  }, [flowState, onSyncToWorkspace, onExitGuided]);
+  }, [flowState, handleFlowStateChange, onSyncToWorkspace, onExitGuided]);
+
+  const handleSyncAndExit = () => syncAndExit(flowState);
+  const handleFinishReview = () => syncAndExit(currentSection?.id === "final-review" ? goToNextSection(flowState) : flowState);
 
   return (
     <div className="guided-interview-shell">
@@ -1234,7 +1238,7 @@ export function GuidedInterviewShell({
           onStateChange={handleFlowStateChange}
           workspace={workspace}
           onUploadDocuments={onUploadDocuments}
-          onFinish={handleSyncAndExit}
+          onFinish={handleFinishReview}
         />
       )}
 

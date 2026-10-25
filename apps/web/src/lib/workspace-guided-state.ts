@@ -45,8 +45,8 @@ export function reconcileWorkspaceGuidedState(workspace: ReturnWorkspaceRecord, 
     // The stored preview has no digest tying it to these saved guided facts.
     // The guided preview can be recomputed from the actual local interview.
     enginePreview: null,
-    guidedCompletion: { completedSectionCount: completion.completedSections, totalSectionCount: completion.totalSections,
-      skippedSectionCount: completion.skippedSections, needsReviewSectionCount: completion.needsReviewSections },
+    guidedCompletion: flow.phase === "complete" ? { completedSectionCount: completion.completedSections, totalSectionCount: completion.totalSections,
+      skippedSectionCount: completion.skippedSections, needsReviewSectionCount: completion.needsReviewSections } : null,
     checklist: workspace.checklist.map(item => {
       if (item.id === "documents" && guidedOnly) return { ...item, label: "Guided facts saved", status: "ready" };
       if (item.id === "coverage" && guidedOnly) return { ...item, label: "Check tax year and source facts", status: yearKnown && yearSupported ? "ready" : "blocked" };

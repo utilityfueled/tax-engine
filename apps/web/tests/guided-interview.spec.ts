@@ -745,7 +745,7 @@ test.describe("Guided interview flow", () => {
 
     await expect(page.getByRole("heading", { name: /some guided sections still need review/i })).toBeVisible();
     await expect(page.getByText(/your return is ready to review/i)).toHaveCount(0);
-    await expect(page.locator(".guided-ticker-item").filter({ hasText: /sections complete/i })).toContainText("5");
+    await expect(page.locator(".guided-ticker-item").filter({ hasText: /sections complete/i })).toContainText("6");
     await expect(page.locator(".guided-ticker-item").filter({ hasText: /sections skipped/i })).toContainText("1");
   });
 
@@ -963,8 +963,8 @@ async function seedCompletedGuidedReviewState(
         lifeEvents: [],
         stateCode: null,
       },
-      currentSectionIndex: 5,
-      completedSections: ["personal-info", "income-w2", "deductions", "credits", "payments", "review"],
+      currentSectionIndex: 6,
+      completedSections: ["personal-info", "income-w2", "deductions", "credits", "payments", "review", "final-review"],
       sectionData: {
         deductions: {
           method: "standard",
