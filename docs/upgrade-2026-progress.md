@@ -497,3 +497,23 @@ from that exact archive. Remote CI at `00bcea1` still reports three source/round
 fixture or audit-selector failures plus stale inventory; these are being repaired
 without changing assertions' tax intent or readiness controls. Full final checks,
 human review, staging, provider and final-form qualification remain outstanding.
+
+The branch is now pushed through `603604b`, including source-backed mortgage/OID
+fixture corrections, educator eligibility, government-payment sources, Coverdell
+basis/rounding and the published 2025 long-term-care caps. A real ticker keyboard
+navigation bug is fixed after three failing browser regressions. The isolated
+production build/types/lint pass; 54 adjacent browser cases and the corrected
+mortgage entry/correction/reopen case pass. This remains scoped evidence, not a
+fresh complete suite or hosted qualification. The checklist and machine checkpoint
+record exact commits, evidence and the finite remaining implementation/release
+queue. Every external review, staging, provider and final-form gate stays closed.
+
+Canonical government payments and actual refund expense years (`0124905`),
+their guided worksheets (`e638184`) and Ohio qualifying-income conservation
+(`c98cc70`) now pass isolated packages of 674, 219 and 739 tests respectively,
+plus relevant types/spec/lint checks and bounded agent review. TIPS, expanded
+educator intake and Coverdell source/credit corrections are separately committed.
+The checklist and machine checkpoint retain exact trees, logs and limitations.
+Form 7206, educator exclusions and Form 8960 remain active implementation;
+current full checks, inventory, remote CI and final-image recovery evidence still
+must run. No human, provider, staging, filing or release qualification is claimed.

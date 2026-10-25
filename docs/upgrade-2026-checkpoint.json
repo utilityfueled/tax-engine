@@ -313,7 +313,7 @@
       "hosted staging and independent human reviews",
       "repeated live synthetic AI evaluation and account availability"
     ],
-    "latestIntegratedCommit": "affeef42929db167043ac84de5b7a67331e99adf",
+    "latestIntegratedCommit": "c98cc70f5f8f5d3dde4b06f01258940cf27b0b9d",
     "latestCoverageDiagnostic": {
       "status": "failed-tests-coverage-thresholds-met",
       "commit": "05ec24e10716cd6c4c8ccd8d2b6e3effc6e18d94",
@@ -475,7 +475,22 @@
       "canonicalStudentLoanInterest": "3fbaf48",
       "guidedStudentLoanSources": "ed915c1",
       "final2026Form4952Candidate": "00bcea1",
-      "returnedCoverdellSourceYears": "affeef4"
+      "returnedCoverdellSourceYears": "affeef4",
+      "mortgageWorksheetUi": "ffdb3e2",
+      "oidAuditSelector": "2ca86cf",
+      "educatorEligibilityAndItemizedCosts": "8c476b4",
+      "mortgageSourceFixtureReconciliation": "f309369",
+      "governmentPaymentSourceCore": "027a383",
+      "coverdellBasisRounding": "932d8a3",
+      "longTermCare2025IndexedCorrection": "8f7c622",
+      "interviewKeyboardAndMortgageBrowser": "603604b",
+      "tipsOrdinaryLossAndNiit": "3e766a7",
+      "expandedEducatorFacts": "cb41245",
+      "coverdellActualTransactionMedium": "6965daa",
+      "outsideRecipientCreditConservation": "475e96d",
+      "canonicalGovernmentAndRefundExpenseYear": "0124905",
+      "guidedGovernmentWorksheets": "e638184",
+      "ohioGovernmentQualifyingIncome": "c98cc70"
     },
     "remoteCi": {
       "commit": "054cd59f9d0c8a53fb5794bbebcfd10e110f213b",
@@ -526,10 +541,13 @@
       "limitation": "Applies to 5d32549 only. Newer source integration and final release checks require verification; this is local synthetic evidence, not human or staging qualification."
     },
     "remainingInternalWork": [
-      "Remaining bounded federal and complete-facts matrices including mortgage/points, student-loan and self-employed-health sources,529 coordination and specialized worksheets",
-      "Remaining dedicated-state source gaps and source/code reviews",
-      "Fresh full-suite/coverage/all exact-code gates, regenerated inventory, browser and native amd64 CI",
-      "Final exact-code arm64 image, SBOM, scan and recovery rerun"
+      "Finish actual Form7206 source core, guided collection and canonical computed-business integration",
+      "Finish educator exclusion conservation against final Form8815/1099Q source results",
+      "Finish bounded Form8960 signed capital netting, actual MAGI, audit and reference PDF corrections",
+      "Regenerate inventory and run all current-code full-suite, coverage, types, spec, build, lint and browser gates",
+      "Verify current remote CI and native amd64 container evidence",
+      "Rebuild final local arm64 runtime, SBOM/scan and complete recovery/rollback rehearsal",
+      "Review all remaining documented source boundaries against execution-brief scope; distinguish missing taxpayer facts, unsupported software and required external qualification without relabeling internal work as external blockers"
     ],
     "previousStableCoverageRun": {
       "commit": "2f8abd71206dd8483c167861f35c4c0bbecdad7a",
@@ -550,7 +568,7 @@
       "scope": "immutable tracked-file archive, locked dependencies, disposable local PostgreSQL16; unchanged coverage thresholds",
       "limitation": "Two PDF aggregate tests exceeded unchanged5000ms timeouts; no numeric tax failure. Commit76bb3a6 isolates identical template/state assertions into named independent cases. Its exact staged tree passes62tests and3682spec refs; fresh full gate required after newer packages."
     },
-    "lastPushedCommit": "00bcea1b399093de7b841b15ef56696c67d1fd05",
+    "lastPushedCommit": "c98cc70",
     "currentBrowserRun": {
       "commit": "ed915c1708cedc02e99ca12fb7383331a7f99bea",
       "status": "passed-with-hosted-skips",
@@ -625,23 +643,22 @@
       "limitation": "Actual React DOM callback checks; final production browser rerun required."
     },
     "remoteCiLatestObserved": {
-      "commit": "00bcea1b399093de7b841b15ef56696c67d1fd05",
-      "ciRun": 40180664222,
-      "webRun": 40180664290,
-      "ciStatus": "completed-failure",
-      "webStatus": "in_progress",
-      "unitPassed": 16813,
-      "unitFailed": 3,
-      "filesPassed": 681,
-      "filesFailed": 3,
-      "evidence": ".local/upgrade-evidence/ci-00bcea1-failed.log",
-      "failures": [
-        "MFS mortgage ratio fixture expects11250 instead of actual11256; official rounding review in progress.",
-        "OID ScheduleA audit lookup ignores form identity and selects another form line16.",
-        "2026 standard-election mortgage fixture lacks actual debt worksheet.",
-        "Generated coverage inventory stale."
+      "commit": "6965daa",
+      "ciRun": 40183934230,
+      "webRun": 40183934251,
+      "ciStatus": "cancelled-by-subsequent-push",
+      "webStatus": "superseded-no-qualified-result",
+      "passed": [
+        "spec validation",
+        "lint",
+        "root types",
+        "contract types"
       ],
-      "limitation": "No exact-current remote pass. Local full coverage and browser evidence remain scoped to their recorded commits."
+      "failures": [
+        "Generated inventory stale; regenerate after source integration converges."
+      ],
+      "evidence": ".local/upgrade-evidence/ci-6965daa-status.json",
+      "limitation": "No exact-current remote pass. Other jobs incomplete or cancelled; earlier full local evidence remains scoped to its recorded commits."
     },
     "remoteCi6b07529": {
       "run": 40176974652,
@@ -702,6 +719,86 @@
       "status": "passed",
       "evidence": ".local/upgrade-evidence/inventory-affeef4-refresh.log",
       "limitation": "Generated from immutable committed source; structural inventory is not tax, final-form or human qualification."
+    },
+    "tickerKeyboardAndMortgageReview": {
+      "commit": "603604b",
+      "stagedTree": "6df7f4ccbdb95c11fc274958942e74e638392981",
+      "build": "passed",
+      "webTypes": "passed",
+      "scopedLintErrors": 0,
+      "scopedLintWarnings": 0,
+      "redKeyboardCases": 3,
+      "adjacentBrowserCasesPassed": 54,
+      "initialMortgageCase": "failed-only-new-test-comma-format-expectation-after-all-numeric-and-reopen-actions-passed",
+      "correctedMortgageCasePassed": 1,
+      "correctedMortgageSeconds": "5.8",
+      "retries": 0,
+      "independentAgentReview": "no actionable findings",
+      "humanQualification": false,
+      "evidence": [
+        ".local/upgrade-evidence/ticker-mortgage-staged-browser.log",
+        ".local/upgrade-evidence/mortgage-final-staged-browser.log",
+        ".local/upgrade-evidence/ticker-keyboard-red.log"
+      ],
+      "cohortEvidenceSha256": "6bb37aa7a254f4191720210ec670148cbc03953fd0340ab76e202ebb77084aa3",
+      "limitation": "Immutable staged production application; test-only exact raw value expectation corrected and rerun separately. This is not a fresh complete browser suite or hosted staging evidence."
+    },
+    "governmentSourceCore": {
+      "commit": "027a383",
+      "stagedTree": "ee74f432762a836cff64c59d29f12cf97a130ca6",
+      "testsPassed": 226,
+      "files": 16,
+      "rootTypes": "passed",
+      "specReferences": 3760,
+      "scopedLintErrors": 0,
+      "independentAgentReview": "no actionable findings",
+      "humanQualification": false,
+      "evidence": ".local/upgrade-evidence/government-core-staged-tests.log",
+      "remaining": "Canonical return/refund-year and guided source integration are separate active packages."
+    },
+    "governmentCanonicalReturn": {
+      "commit": "0124905",
+      "stagedTree": "9e46609e5ac7a637778b59345fc720b699f780f6",
+      "testsPassed": 674,
+      "files": 11,
+      "rootTypes": "passed",
+      "specReferences": 3789,
+      "scopedLintErrors": 0,
+      "existingLintWarnings": 4,
+      "parentReviewTestsPassed": 175,
+      "independentHumanQualification": false,
+      "scope": "Actual refund expense year, source income and withholding conservation, canonical Schedule 1 and physical repayment checkbox; existing year/readiness gates retained."
+    },
+    "guidedGovernmentWorksheets": {
+      "commit": "e638184",
+      "stagedTree": "ffc130a5d6f4c600d91754e7b34ac772d874163b",
+      "testsPassed": 219,
+      "files": 6,
+      "rootTypes": "passed",
+      "webTypes": "passed",
+      "specReferences": 3794,
+      "scopedLintErrors": 0,
+      "lintWarnings": 22,
+      "independentAgentReview": "No remaining actionable findings; identity collision fixed red first.",
+      "independentHumanQualification": false,
+      "evidence": ".local/upgrade-evidence/guided-government-staged-tests.log",
+      "limitation": "Bounded source/control tests; final integrated browser run remains required. Positive refunds and separate unsupported worksheets stay gated.",
+      "evidenceSha256": "3b86127e35e532a237965f23f6ce46564dccfce663f4fbc9196d2daf7ead57fe"
+    },
+    "ohioGovernmentQualifyingIncome": {
+      "commit": "c98cc70",
+      "stagedTree": "fdd6ed47a9272ae9dd45abb836870bc3ba18b0ae",
+      "testsPassed": 739,
+      "files": 24,
+      "rootTypes": "passed",
+      "specReferences": 3797,
+      "scopedLintErrors": 0,
+      "existingLintWarnings": 2,
+      "independentAgentReview": "No actionable findings; three new source cases independently passed.",
+      "independentHumanQualification": false,
+      "evidence": ".local/upgrade-evidence/oh-government-staged-tests.log",
+      "limitation": "Source conservation for actual owner/year; state demand, final forms and filing qualification are unchanged.",
+      "evidenceSha256": "abcc58528010d3d2acbfc4a828551057de5e7683914dbcb27ed7ee5e261a5109"
     }
   }
 }

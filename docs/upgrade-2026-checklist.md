@@ -605,3 +605,74 @@ The inventory is also stale; its 270-entry refresh now passes in the isolated
 Web run was still in progress when observed. Parent owns OID selector correction;
 facts agent owns mortgage fixture reconciliation. All external prerequisites
 listed above remain pending while useful internal work continues.
+
+### Current source reconciliation and keyboard verification — 2026-10-25
+
+Pushed through `603604b`. The prior remote mortgage/OID assertion failures are
+corrected in `f309369` and `2ca86cf`; a fresh remote result is still required.
+Additional packages are educator eligibility/itemized costs `8c476b4`, actual
+government-payment source core `027a383`, Coverdell basis/rounding `932d8a3`,
+and the published 2025 long-term-care caps `8f7c622`. Each owner document retains
+the official source, spec-first tests and scoped evidence. Government core's
+exact staged archive passes 226 tests in 16 files, root types, 3,760 spec
+references and scoped lint. Canonical return/refund-year and guided integration
+remain separate active work.
+
+The actual mortgage browser workflow exposed a real keyboard navigation bug.
+Three regressions failed: Enter on the breakdown, Enter on the native expand
+button, and Escape on the breakdown also advanced or backed up the interview.
+`603604b` respects handled keyboard events and native button/link activation.
+Its isolated production build, web types and scoped lint pass with zero warnings.
+The browser cohort passes 54 adjacent cases; the new mortgage case failed only
+its final comma-format assumption, then passes after asserting the actual saved
+raw value. All mortgage numeric, confirmation reset and reopen checks remain:
+taxable income $77,500 using the highest balance and $70,000 using the actual
+lender average. Independent agent review found no actionable issues. This is
+local synthetic evidence, not a new complete-browser or hosted staging pass.
+Logs: `ticker-keyboard-red.log`, `ticker-mortgage-staged-browser.log` and
+`mortgage-final-staged-browser.log` in `.local/upgrade-evidence/`.
+
+Current internal queue: TIPS/NIIT, canonical government/refund-year integration,
+educator and Form 7206 actual sources, education coordination, Ohio joint-credit
+source conservation, then all current-code gates and final runtime/recovery
+evidence. Independent human reviews, authorized staging, approved provider
+budget/account access, actual state demand and final form qualification remain
+external prerequisites. No readiness, filing, model or release gate is opened.
+
+### Government source convergence and Ohio credit — 2026-10-25
+
+The separately reviewed packages now include TIPS ordinary loss/NIIT `3e766a7`,
+expanded educator intake `cb41245`, Coverdell actual transaction medium
+`6965daa`, and outside-recipient credit conservation `475e96d`. Their owner
+documents retain spec-first source and test evidence. No agent review is counted
+as independent human qualification.
+
+- Canonical government/refund integration `0124905`: exact tree `9e46609e`
+  passes 674 tests in 11 files, root types and 3,789 spec references. Lint has
+  zero errors and four existing warnings. The physical Schedule 1 repayment
+  checkbox was inspected. Parent review passes 175 adjacent checks, with no
+  remaining actionable finding.
+- Guided worksheets `e638184`: exact tree `ffc130a5` passes 219 tests in six
+  files, root/web types and 3,794 references. Lint has zero errors and 22
+  warnings, including test non-null assertions. Actual repayment/contribution
+  records and grant/family classifications are collected and confirmed. The
+  reviewed payer-identity collision was fixed with a red regression. Refunds
+  requiring historical worksheets remain explicitly gated in this UI.
+- Ohio qualifying income `c98cc70`: exact tree `fdd6ed47` passes 739 tests in
+  24 files, root types and 3,797 references. Lint has zero errors and two
+  existing warnings. Independently reviewed $499/$500, gross/net repayment,
+  pooled contribution and actual-owner cases pass. No state qualification is
+  inferred from these checks.
+
+Evidence is retained in `guided-government-staged-*`, `oh-government-staged-*`
+and `parent-government-final-review.log` under `.local/upgrade-evidence/`;
+hashes and exact trees are in the machine checkpoint. The last observed remote
+CI at `6965daa` passed lint/types/spec validation, failed stale inventory, then
+was cancelled by a subsequent push. There is no current remote pass claim.
+
+Active implementation is Form 7206 actual sources/UI/canonical context,
+educator source-exclusion reconciliation and Form 8960 signed capital/MAGI/
+audit/PDF corrections. All documented remaining source boundaries must be
+checked against the execution brief before deciding that only external work
+remains. Then regenerate inventory and rerun full local, remote and final-image
+recovery evidence. The active goal remains incomplete.
