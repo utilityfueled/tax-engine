@@ -1,12 +1,33 @@
 form: "Form 2210"
 fullName: "Underpayment of Estimated Tax by Individuals"
 taxYear: 2025
+supportedTaxYears: [2025, 2026]
 irsReference: "https://www.irs.gov/instructions/i2210"
+sourceRetrievedAt: "2026-10-25"
+reviewStatus: "implementation-reviewed; independent tax review and final 2026 qualification pending"
 
 notes: |
-  Form 2210 determines if the taxpayer owes a penalty for underpaying
-  estimated taxes. Most taxpayers avoid the penalty by meeting one of
-  the safe harbor rules. The penalty flows to Schedule 2 Line 19.
+  Implements the regular method for calendar-year resident individual returns.
+  Penalty flows to Form 1040 line 38, separately from line 24 total tax.
+  A late catch-up payment does not erase an earlier installment's underpayment.
+  Calendar dates and exact Decimal payments are retained; no aggregate payment
+  is allocated to invented dates. Historical aggregate prior-tax inputs remain
+  unverified 2025 compatibility only. New facts preserve unknown values.
+  The final 2026 Form 2210 and the 2027 first-quarter rate are not yet qualified.
+  Positive exposure in an unpublished rate period rejects calculation rather
+  than assuming a rate or reporting zero. A fully timely paid return can prove
+  zero without a future rate. Annualized-income Schedule AI, Form 2210-F,
+  nonresident/fiscal-year rules and relief/waiver decisions require separate
+  implementation or actual adjudicated evidence; they are explicitly blocked.
+
+sources:
+  - "https://www.irs.gov/instructions/i2210"
+  - "https://www.irs.gov/pub/irs-pdf/f2210.pdf"
+  - "https://www.irs.gov/pub/irs-pdf/f1040es.pdf"
+  - "https://www.irs.gov/payments/quarterly-interest-rates"
+  - "https://www.irs.gov/irm/part20/irm_20-001-003r#idm140505929672096"
+  - "https://www.govinfo.gov/content/pkg/USCODE-2024-title26/html/USCODE-2024-title26-subtitleF-chap67-subchapC-sec6621.htm"
+  - "https://www.govinfo.gov/content/pkg/USCODE-2024-title26/html/USCODE-2024-title26-subtitleF-chap68-subchapA-partI-sec6654.htm"
 
 packetRules:
   packetBehavior: "suppressed-by-default"
@@ -25,97 +46,180 @@ businessRuleValidation:
     description: "Inventory support counts this form as business-rule validated only when regression coverage proves the draft packet suppresses Form 2210 by default when an estimated tax penalty is present and keeps the cover-page e-file/business-rule label at not-validated."
     testRef: "tests/apps/web/workspace-filled-return.test.ts::does not auto-attach Form 2210 even when the engine computes an estimated tax penalty and keeps business-rule validation disclosed as not-validated"
 
-lines:
-  - line: "1"
-    description: "Current year tax for Form 2210 (1040 Line 24 minus estimated tax penalty)"
-    formula: "taxAfterCredits + AMT + excessAPTCRepayment + SE + AdditionalMedicare + NIIT"
-    irsRef: "Form 2210 Instructions, Line 1: '1040 Line 22'; Line 2 adds Schedule 2 Part II"
-    notes: |
-      currentYearTax = 1040 Line 24 minus penalty (excluded to avoid circularity).
-      1040 Line 22 includes income tax + Schedule 2 Part I (AMT + excess APTC repayment)
-      minus nonrefundable credits. Form 2210 Line 2 adds Schedule 2 Part II (SE, Medicare, NIIT).
-      The excess APTC repayment (Schedule 2, Line 2) MUST be included — it is a real tax
-      liability, not the estimated tax penalty.
-    edgeCases:
-      - "Excess APTC repayment increases the tax base, making it harder to meet safe harbor"
-      - "Estimated tax penalty is NOT included (circular dependency — it's what we're computing)"
-    testRef: "tests/engine/forms/form-2210.test.ts::Form 2210 - refundable credits reduce tax shown for safe harbor"
 
-  - line: "tax_shown"
-    description: "Tax shown on the return per IRC §6654(d)(1)(C)"
-    formula: "zeroFloor(currentYearTax - refundableCredits)"
-    irsRef: "IRC §6654(d)(1)(C); Form 2210 Instructions"
+lines:
+  - line: "source-facts"
+    description: "Actual payment and prior-year source contract"
+    formula: "Validate actual dates, amounts, payment reconciliation and applicable taxpayer facts before regular-method calculation."
+    irsRef: "Form 2210 instructions lines 8 and 11; IRC 6654(d), (e), (g), (h)"
     notes: |
-      "Tax shown on the return" = total tax imposed minus credits allowable,
-      other than §31 (withholding). Refundable credits (EIC, ACTC, etc.) reduce
-      the tax base — they are NOT counted as payments.
-    edgeCases:
-      - "Refundable credits reduce the 90% required amount, not offset the underpayment directly"
-      - "If refundable credits exceed total tax, tax shown = $0"
+      form2210 facts are optional at the storage boundary and have no fabricated
+      defaults. Current-year estimated and extension payments retain their
+      existing dated source records. Prior-year applied credits require actual
+      effective dates; return payments and actual withholding dates are separate.
+      Prior tax for line 8 is the instructions' tax computation, not unadjusted
+      Form 1040 line 24. Filing-status changes require the actual combined or
+      allocated prior-year computation and AGI. Zero remains distinct from missing.
+    testRef: "tests/engine/forms/form-2210-dated.test.ts::preserves missing source facts and explicit zero without defaults"
+
+  - line: "1"
+    description: "Income tax after nonrefundable credits"
+    formula: "Actual Form 1040 line 22 supplied as incomeTaxAfterCredits"
+    irsRef: "Form 2210 line 1 and instructions"
+    notes: "Aggregate-only historical inputs do not invent a physical line 1 or line 2 audit."
+    testRef: "tests/engine/forms/form-2210-dated.test.ts::audits official Part I lines from actual tax components"
+
+  - line: "2"
+    description: "Included other taxes"
+    formula: "currentYearTax - incomeTaxAfterCredits; caller supplies only taxes included by line 2 instructions"
+    irsRef: "Form 2210 instructions line 2"
+    notes: |
+      The orchestrator must apply the household-employment-tax exception and the
+      enumerated additional-tax inclusions. Neither estimated-tax penalty nor
+      excluded Schedule 2 taxes may enter this base.
+    testRef: "tests/engine/forms/form-2210-dated.test.ts::audits official Part I lines from actual tax components"
+
+  - line: "3"
+    description: "Refundable credits reducing the estimated-tax base"
+    formula: "Actual included refundable credits, excluding withholding"
+    irsRef: "Form 2210 instructions line 3; IRC 6654(f)"
     testRef: "tests/engine/forms/form-2210.test.ts::Form 2210 - refundable credits reduce tax shown, not count as payments per IRC §6654(d)(1)(C)"
 
-  - line: "safe_harbor"
-    description: "Safe harbor test — no penalty if met"
-    formula: |
-      No penalty if any of:
-      1. taxShown - withholding < $1,000 (IRC §6654(e)(1)(A))
-      2. withholding + estimated ≥ 90% of taxShown
-      3. withholding + estimated ≥ 100% of prior year tax (110% if AGI > $150K, $75K MFS)
-      NOTE: Test 1 uses ONLY withholding, not estimated payments or refundable credits.
-      Tests 2 and 3 use withholding + estimated (not refundable credits).
-    irsRef: "IRC §6654(e)(1)(A); Form 2210 Instructions, General Rule"
-    edgeCases:
-      - "110% safe harbor applies when prior year AGI > $150K ($75K MFS)"
-      - "$1,000 test uses withholding only — estimated payments do NOT count"
-      - "Refundable credits reduce tax shown, not count as payments"
-      - "No prior year return → no safe harbor #3"
-    testRef: "tests/engine/forms/form-2210.test.ts::safe harbor - no penalty when payments exceed 100% prior year"
+  - line: "4"
+    description: "Current-year tax after credits"
+    formula: "max(0, line1 + line2 - line3)"
+    irsRef: "Form 2210 line 4"
+    testRef: "tests/engine/forms/form-2210-dated.test.ts::audits official Part I lines from actual tax components"
+
+  - line: "5"
+    description: "Ninety percent of current-year tax"
+    formula: "roundDollar(line4 * Decimal('0.90'))"
+    irsRef: "Form 2210 line 5; IRC 6654(d)(1)(B)"
+    testRef: "tests/engine/forms/form-2210.test.ts::Form 2210 - payments exactly at 90% of tax shown from combined sources"
 
   - line: "6"
-    description: "Required annual payment"
-    formula: "min(90% of taxShown, 100%/110% of prior year tax)"
-    irsRef: "IRC §6654(d)(1)(A); Form 2210 Instructions, Line 6"
-    notes: "90% base uses taxShown (after refundable credit reduction)"
-    testRef: "tests/engine/forms/form-2210.test.ts::Form 2210 Line 6 - required annual payment"
+    description: "Withholding and included excess Social Security credit"
+    formula: "Actual withholding; excludes estimated payments"
+    irsRef: "Form 2210 instructions line 6"
+    testRef: "tests/engine/forms/form-2210-dated.test.ts::audits official Part I lines from actual tax components"
 
   - line: "7"
-    description: "Tax payments (withholding + estimated)"
-    formula: "Federal withholding + estimated tax payments"
-    irsRef: "Form 2210 Instructions, Line 7"
-    notes: "Refundable credits reduce taxShown, not counted as payments"
-    testRef: "tests/engine/forms/form-2210.test.ts::Form 2210 Line 7 - total payments (withholding + estimated only)"
+    description: "Tax remaining after withholding"
+    formula: "max(0, line4 - line6); less than 1000 establishes the small-tax exception"
+    irsRef: "Form 2210 line 7; IRC 6654(e)(1)"
+    testRef: "tests/engine/forms/form-2210.test.ts::Form 2210 - $1,000 exception uses withholding only per IRC §6654(e)(1)"
 
   - line: "8"
-    description: "Underpayment amount"
-    formula: "Line 6 - Line 7 (if positive)"
-    irsRef: "Form 2210 Instructions, Line 8"
-    testRef: "tests/engine/forms/form-2210.test.ts::Form 2210 Line 8 - underpayment"
+    description: "Prior-year required tax, when applicable"
+    formula: "roundDollar(actualPriorTax * (actualPriorAGI > threshold ? Decimal('1.10') : Decimal('1.00')))"
+    irsRef: "Form 2210 instructions line 8; IRC 6654(d)(1)(B)-(C), (e)(2)"
+    notes: |
+      Threshold is 150000, or 75000 for current married-filing-separately status.
+      No return or a short prior tax year disables this prior-year alternative.
+      The no-tax-liability exception additionally requires a full prior year and
+      citizenship/residence throughout that year. Unknown history is not zero.
+    testRef: "tests/engine/forms/form-2210-dated.test.ts::requires actual prior-year eligibility and tax computation"
 
-  - line: "penalty"
-    description: "Estimated penalty using IRS Short Method"
+  - line: "9"
+    description: "Required annual payment"
+    formula: "min(line5, applicable line8), otherwise line5"
+    irsRef: "Form 2210 line 9"
+    testRef: "tests/engine/forms/form-2210.test.ts::Form 2210 Line 9 - required annual payment"
+
+  - line: "10a-10d"
+    description: "Required regular installments"
+    formula: "line9 / 4 using Decimal; retain cents until final penalty rounding"
+    irsRef: "Form 2210 Part III line 10; IRC 6654(d)(1)(A)"
+    notes: |
+      Statutory dates are April 15, June 15, September 15 and following January15.
+      Under IRC 7503, qualifying June16 2025 payments are treated as June15;
+      the original due date still starts the penalty on a late payment.
+    testRef: "tests/engine/forms/form-2210-dated.test.ts::treats the June 2025 weekend payment as timely without moving a late accrual date"
+
+  - line: "11a-11d"
+    description: "Payments in each installment interval"
+    formula: "Actual eligible dated payments plus withholding deemed one-quarter on each statutory date, unless actual-date election supplied"
+    irsRef: "Form 2210 instructions line 11; IRC 6654(g)"
+    notes: |
+      Estimated-payment totals must match their dated sources. A prior-year
+      credit generated after April15 keeps its actual effective date. Withholding
+      is divided by law, not represented as actual payroll dates. Actual-date
+      election must reconcile all withholding. Return and extension payments
+      stop accrual on their actual effective dates; neither moves the April15 end.
+    testRef: "tests/engine/forms/form-2210-dated.test.ts::reproduces IRS line 11 Example 1 using dated credit and estimated payments"
+
+  - line: "12a-12d"
+    description: "Previous overpayment"
+    formula: "Previous column line18, zero in column a"
+    irsRef: "Form 2210 line 12"
+    testRef: "tests/engine/forms/form-2210-dated.test.ts::carries advance payments and applies catch-up payments to the oldest installment"
+  - line: "13a-13d"
+    description: "Available payments before prior shortfall"
+    formula: "line11 + line12"
+    irsRef: "Form 2210 line 13"
+    testRef: "tests/engine/forms/form-2210-dated.test.ts::carries advance payments and applies catch-up payments to the oldest installment"
+  - line: "14a-14d"
+    description: "Prior unpaid installments"
+    formula: "Previous column line16 + line17, zero in column a"
+    irsRef: "Form 2210 line 14"
+    testRef: "tests/engine/forms/form-2210-dated.test.ts::carries advance payments and applies catch-up payments to the oldest installment"
+  - line: "15a-15d"
+    description: "Payment available for current installment"
+    formula: "max(0, line13 - line14); column a equals line11"
+    irsRef: "Form 2210 line 15"
+    testRef: "tests/engine/forms/form-2210-dated.test.ts::carries advance payments and applies catch-up payments to the oldest installment"
+  - line: "16a-16d"
+    description: "Remaining prior installment shortfall"
+    formula: "max(0, line14 - line13)"
+    irsRef: "Form 2210 line 16"
+    testRef: "tests/engine/forms/form-2210-dated.test.ts::carries advance payments and applies catch-up payments to the oldest installment"
+  - line: "17a-17d"
+    description: "Current installment underpayment"
+    formula: "max(0, line10 - line15)"
+    irsRef: "Form 2210 line 17"
+    testRef: "tests/engine/forms/form-2210-dated.test.ts::a late annual catch-up does not erase earlier installment penalties"
+  - line: "18a-18d"
+    description: "Overpayment carried to following installment"
+    formula: "max(0, line15 - line10)"
+    irsRef: "Form 2210 line 18"
+    testRef: "tests/engine/forms/form-2210-dated.test.ts::carries advance payments and applies catch-up payments to the oldest installment"
+
+  - line: "19"
+    description: "Regular-method penalty from exact daily periods"
+    formula: "roundDollar(sum(each unpaid installment balance * published annual rate * days / 365))"
+    irsRef: "Form 2210 penalty worksheet line14; IRC6654(a)-(b); IRC6621(b)(2)(B)"
+    notes: |
+      Calendar 2025 and2026 have365days. No leap-year rate/day claim is made for
+      unimplemented years. The due date is excluded and payment/end date included.
+      Split days at every payment and rate change; payments retire oldest debt.
+      2025 accrual rates are7%; the2026Q1 7% rate continues throughApril15 for
+      2025 estimated-tax penalties under6621(b)(2)(B), despite the generalQ2 6%.
+      For2026, April-June6%, July-September7%, October-December7%;2027Q1 is
+      unavailable as of2026-10-25. Do not accept caller-supplied invented rates.
+      Timely filed and fully paid returns byFebruary2 2026 / February1 2027
+      eliminate only the fourth-installment penalty, not earlier unpaid periods.
+    testRef: "tests/engine/forms/form-2210-dated.test.ts::segments 2026 exposure across the actual six and seven percent rate periods"
+
+  - line: "qualification"
+    description: "Unavailable law or unsupported methods cannot become zero penalties"
+    formula: "Reject positive unknown-rate exposure and unsupported actual method/relief facts"
+    irsRef: "Form 2210 instructions; IRC6654(h)-(j); quarterly rate publications"
+    testRef: "tests/engine/forms/form-2210-dated.test.ts::rejects unpublished 2027 exposure but proves zero from fully timely payments"
+
+  - line: "Schedule AI 1-36"
+    description: "Annualized income and self-employment calculation remains unavailable"
     formula: |
-      Per IRS Form 2210 Short Method: each quarter's underpayment accrues interest
-      from its installment due date to the filing deadline (4/15 of following year).
-      penalty = (underpayment / 4) × rate × days_q / 365, summed over 4 quarters.
-      Equivalently: underpayment × rate × totalQuarterDays / (4 × 365).
-
-      TY2025 quarter day counts (due date to 4/15/2026):
-        Q1 (4/15/2025): 365 days
-        Q2 (6/15/2025): 304 days
-        Q3 (9/15/2025): 212 days
-        Q4 (1/15/2026): 90 days
-        Total: 971 days
-
-      Short-method factor = 7% × 971 / 1460 ≈ 4.655%
-      (NOT 7% — the full annual rate overstates the penalty by ~50%)
-
-      2025 rate: 7% (Q1-Q2 confirmed per Rev. Rul. 2025-01; Q3-Q4 assumed same).
-      Denominator is always 365 per IRC §6621(b), even in leap years.
-    irsRef: "Form 2210 Instructions, Short Method; IRC §6654(a); IRC §6621(b); Rev. Rul. 2025-01"
-    edgeCases:
-      - "Rate changes quarterly based on federal short-term rate + 3%"
-      - "Each quarter's underpayment accrues separately for different durations"
-      - "Q1 underpayment accrues for 365 days but Q4 only for 90 days"
-      - "Annualized income method (Schedule AI) can reduce penalty"
-      - "Short method assumes equal quarterly underpayments (no per-quarter input data)"
-    testRef: "tests/engine/forms/form-2210.test.ts::Form 2210 - penalty calculation"
+      Lines1-3: periodAGI times4,2.4,1.5,1. Lines4-8: annualized itemized
+      deductions compared with applicable standard deduction. Lines9-13 subtract
+      actual QBI and deductions to taxableincome. Lines14-19 compute annualized
+      income tax, SEtax and other taxes less credits. Lines20-23 apply22.5%,45%,
+      67.5%,90% and subtract prior requiredinstallments. Lines24-27 limit annualized
+      amount by quarter regularrequirement plus recaptured prior reductions.
+      Lines28-36 use actual periodSEincome and coveredwages, prorated wagebase,
+      and the printed SocialSecurity/Medicare annualization factors.
+    irsRef: "Form 2210 Schedule AI and instructions"
+    notes: |
+      Requires actual cumulative income, deductions, credits, SE and covered-wage
+      source data for March31, May31, August31 and December31. This package does
+      not fabricate period facts or claim to implement this alternate calculation.
+    testRef: "tests/engine/forms/form-2210-dated.test.ts::rejects unsupported annualized and special taxpayer methods explicitly"

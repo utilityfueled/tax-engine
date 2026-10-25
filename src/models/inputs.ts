@@ -2675,6 +2675,35 @@ export const EicConfigSchema = z.object({
   primaryIsFullTimeStudent: z.boolean().default(false),
 });
 
+/** Form 2210 regular-method facts. Unknown values intentionally have no defaults. */
+const Form2210DateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine((value) => {
+  const instant = new Date(`${value}T00:00:00Z`);
+  return Number.isFinite(instant.getTime()) && instant.toISOString().slice(0, 10) === value;
+}, "Must be an actual calendar date");
+const Form2210PaymentSchema = z.object({ date: Form2210DateSchema, amount: decimal });
+export const Form2210Schema = z.object({
+  calendarYearTaxpayer: z.boolean().optional(),
+  residentReturn: z.boolean().optional(),
+  farmerOrFisher: z.boolean().optional(),
+  disasterReliefClaimed: z.boolean().optional(),
+  waiverRequested: z.boolean().optional(),
+  calculationMethod: z.enum(["regular", "annualized"]).optional(),
+  withholdingMethod: z.enum(["equal-installments", "actual-dates"]).optional(),
+  withholdingPayments: z.array(Form2210PaymentSchema).optional(),
+  priorYearTaxStatus: z.enum(["return-filed", "no-return", "no-tax-liability"]).optional(),
+  priorYearFullYear: z.boolean().optional(),
+  priorYearResidentAllYear: z.boolean().optional(),
+  // Actual instructions line 8 computation, including filing-status allocation.
+  priorYearTaxForForm2210: decimal.optional(),
+  priorYearAgiForForm2210: decimal.optional(),
+  priorYearTaxComputationConfirmed: z.boolean().optional(),
+  // Effective applied-credit dates must come from actual payment/return history.
+  priorYearCreditPayments: z.array(Form2210PaymentSchema).optional(),
+  returnPayments: z.array(Form2210PaymentSchema).optional(),
+  returnFiledDate: Form2210DateSchema.optional(),
+  returnPaidInFullDate: Form2210DateSchema.optional(),
+});
+
 export const AdjustmentsSchema = z.object({
   estimatedTaxPayments: z
     .array(
@@ -4708,6 +4737,7 @@ export const TaxYearInputSchema = z.object({
   educationExpenses: EducationExpensesSchema.optional(),
   priorYear: PriorYearCarryforwardSchema.optional(),
   adjustments: AdjustmentsSchema.optional(),
+  form2210: Form2210Schema.optional(),
   scheduleA: ScheduleAInputSchema.optional(),
   schedule1A: Schedule1ASchema.optional(),
   salesTaxDeduction: SalesTaxDeductionSchema.optional(),

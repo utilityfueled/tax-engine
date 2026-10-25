@@ -19,6 +19,11 @@ function makeInput(overrides?: Partial<Form2210Input>): Form2210Input {
     estimatedPayments: d(0),
     refundableCredits: d(0),
     filingStatus: "single",
+    // These historical examples explicitly represent four equal timely payments.
+    // The production calculator never manufactures dates from an annual total.
+    payments: ["2025-04-15", "2025-06-16", "2025-09-15", "2026-01-15"].map((date) => ({
+      date, amount: (overrides?.estimatedPayments ?? d(0)).div(4), kind: "estimated" as const,
+    })),
     ...overrides,
   };
 }
@@ -105,7 +110,7 @@ describe("Form 2210 - Safe Harbor", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("Form 2210 - Penalty Calculation", () => {
-  it("Form 2210 Line 6 - required annual payment", () => {
+  it("Form 2210 Line 9 - required annual payment", () => {
     // Current tax $20K, 90% = $18K. Prior tax $15K, 100% = $15K
     // Required = min($18K, $15K) = $15K
     const result = calculateForm2210(makeInput({
@@ -117,7 +122,7 @@ describe("Form 2210 - Penalty Calculation", () => {
     expect(result.requiredAnnualPayment.toNumber()).toBe(15000);
   });
 
-  it("Form 2210 Line 7 - total payments (withholding + estimated only)", () => {
+  it("Form 2210 dated total payments (withholding + estimated only)", () => {
     // Refundable credits reduce tax shown, not count as payments
     const result = calculateForm2210(makeInput({
       currentYearTax: d(20000),
@@ -130,7 +135,7 @@ describe("Form 2210 - Penalty Calculation", () => {
     expect(result.totalPayments.toNumber()).toBe(13000);
   });
 
-  it("Form 2210 Line 8 - underpayment", () => {
+  it("Form 2210 remaining installment underpayment", () => {
     // Required = $15K, payments = $10K → underpayment = $5K
     const result = calculateForm2210(makeInput({
       currentYearTax: d(20000),
@@ -763,19 +768,19 @@ describe("Form 2210 - audit trail", () => {
     const lineIds = result.lines.map((l) => l.line);
     expect(lineIds).toContain("6");
     expect(lineIds).toContain("7");
-    expect(lineIds).toContain("8");
-    expect(lineIds).toContain("penalty");
+    expect(lineIds).toContain("9");
+    expect(lineIds).toContain("19");
     expect(lineIds).toContain("safe_harbor");
   });
 });
 
 // ═══════════════════════════════════════════════════════════
-// IRS Short Method Regression — time-weighted penalty
+// Regular Method Regression — equal timely payments
 // ═══════════════════════════════════════════════════════════
 
-describe("Form 2210 - IRS Short Method penalty (time-weighted)", () => {
-  it("Form 2210 - penalty uses short-method factor, not full annual rate", () => {
-    // IRS Form 2210 Short Method: each quarter's underpayment accrues interest
+describe("Form 2210 - regular method with equal timely payments", () => {
+  it("Form 2210 - penalty uses each installment duration, not a full year", () => {
+    // IRS Form 2210 regular method: each quarter's underpayment accrues interest
     // only from its due date to the filing deadline (4/15/2026 for TY2025).
     // Q1: 365d, Q2: 304d, Q3: 212d, Q4: 90d → total 971 days.
     // penalty = underpayment × rate × 971 / (4 × 365)
@@ -791,7 +796,7 @@ describe("Form 2210 - IRS Short Method penalty (time-weighted)", () => {
     // Required = min(90% × $50K, 100% × $50K) = $45K
     // Payments = $35K → underpayment = $10K
     expect(result.underpayment.toNumber()).toBe(10000);
-    // Short-method penalty: $10K × 0.07 × 971/1460 = $465.55 → $466
+    // Regular-method penalty: $10K × 0.07 × 971/1460 = $465.55 → $466
     expect(result.penalty.toNumber()).toBe(466);
   });
 });
