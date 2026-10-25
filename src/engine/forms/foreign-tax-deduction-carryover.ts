@@ -71,7 +71,8 @@ export function calculateForeignTaxDeductionCarryover(input:TaxYearInput,context
   if(grossForeign.gt(context.totalIncome))throw new Error('Foreign carryover gross income exceeds actual worldwide income');
   const currentQualifiedForeignTaxes=sum(...[...countries.values()].map(row=>roundDollar(row.tax)));
   if(!sum(...[...countries.values()].map(row=>row.tax)).eq(annual.scheduleAForeignIncomeTaxes))throw new Error('Foreign carryover current tax sources do not reconcile');
-  const sa=context.scheduleA;let nondirect=context.deductionAmount;let stateRelated=d('0');let mortgage=d('0');
+  const sa=context.scheduleA;let nondirect=context.deductionAmount;let mortgage=d('0');
+  const stateTaxByCountry=new Map<string,Decimal>();
   if(context.deductionUsed==='itemized'){
     const allocation=facts.itemizedAllocation;
     if(!allocation||allocation.sourceFactsConfirmed!==true||!allocation.sourceReference?.trim())throw new Error('Foreign carryover itemizing requires actual deduction source allocation');
@@ -81,7 +82,9 @@ export function calculateForeignTaxDeductionCarryover(input:TaxYearInput,context
     if(home.gt(0)&&allocation.allRealPropertyTaxesForPersonalResidenceConfirmed!==true)throw new Error('Foreign carryover requires actual personal residence tax use');
     if(sa.charitableContributions.gt(0)&&allocation.noTreatyCharitableDeductionConfirmed!==true)throw new Error('Foreign carryover charitable deductions require actual treaty classification');
     nondirect=sa.medical.plus(home).plus(personal).plus(sa.salesTaxElected?taxes:d('0'));
-    if(!sa.salesTaxElected&&taxes.gt(0)){
+    if((allocation.stateIncomeTaxes?.length??0)>1)throw new Error('Foreign carryover multiple-state income taxes require their separate actual income attribution method');
+    if(sa.salesTaxElected&&allocation.stateIncomeTaxes?.length)throw new Error('Foreign carryover state income-tax allocation conflicts with the actual sales-tax election');
+    if(!sa.salesTaxElected&&(taxes.gt(0)||allocation.stateIncomeTaxes!==undefined)){
       if(!allocation.stateIncomeTaxes)throw new Error('Foreign carryover requires actual state income-tax allocation worksheets');
       const states=new Set<string>();let stateTotal=d('0');const usGross=context.totalIncome.minus(grossForeign);
       for(const state of allocation.stateIncomeTaxes){
@@ -90,7 +93,28 @@ export function calculateForeignTaxDeductionCarryover(input:TaxYearInput,context
         const deductible=amount(state.deductibleAmount,'state tax deductible amount');const taxable=amount(state.stateTaxableIncome,'actual state taxable income');
         if(taxable.gt(context.totalIncome)||(taxable.isZero()&&deductible.gt(0))||(state.foreignIncomeSpecificallyExempt&&taxable.gt(usGross)))throw new Error('Foreign carryover state income needs its actual supported ordinary source reconciliation');
         const taxedForeign=state.foreignIncomeSpecificallyExempt?d('0'):zeroFloor(taxable.minus(usGross));
-        stateRelated=stateRelated.plus(taxable.isZero()?d('0'):deductible.times(taxedForeign).div(taxable));stateTotal=stateTotal.plus(deductible);
+        const needsCountrySources=state.countryIncome!==undefined||state.countryIncomeConfirmed!==undefined
+          ||(taxedForeign.gt(0)&&countries.size>1);
+        if(needsCountrySources){
+          if(state.countryIncomeConfirmed!==true||!state.countryIncome)throw new Error('Foreign carryover requires confirmed actual state country income sources');
+          const countrySeen=new Set<string>();let countryTotal=d('0');
+          for(const source of state.countryIncome){
+            const country=normal(source.foreignCountry);const original=country?countries.get(country):undefined;
+            if(!country||!original||countrySeen.has(country)||!source.sourceReference?.trim())throw new Error('Foreign carryover requires distinct actual state country source identities');
+            countrySeen.add(country);const income=amount(source.stateTaxableIncome,'state country taxable income');
+            if(income.gt(original.gross))throw new Error('Foreign carryover state country income exceeds its actual foreign source');
+            countryTotal=countryTotal.plus(income);
+            stateTaxByCountry.set(country,taxable.isZero()?d('0'):deductible.times(income).div(taxable));
+            audit.record('Foreign Deduction Carryover WS',`state-country-${countrySeen.size}:income`,'Actual foreign income taxed by state',income,
+              'Completed country source worksheet; not a relative-gross-income assumption');
+          }
+          if(countrySeen.size!==countries.size||!countryTotal.eq(taxedForeign))throw new Error('Foreign carryover state country income must reconcile every country and the supported foreign state-tax base');
+        }else if(taxedForeign.gt(0)){
+          const country=countries.keys().next().value;
+          if(!country)throw new Error('Foreign carryover state country income has no actual foreign source');
+          stateTaxByCountry.set(country,deductible.times(taxedForeign).div(taxable));
+        }
+        stateTotal=stateTotal.plus(deductible);
       }
       if(!stateTotal.eq(taxes))throw new Error('Foreign carryover state worksheet deductions must equal actual allowed income taxes');
     }
@@ -102,14 +126,16 @@ export function calculateForeignTaxDeductionCarryover(input:TaxYearInput,context
     }
     if(!sum(sa.medical,sa.saltDeduction,sa.mortgageInterest,sa.charitableContributions).eq(context.deductionAmount))throw new Error('Foreign carryover ordinary itemized sources must equal actual hypothetical deduction');
   }
-  if(stateRelated.gt(0)&&countries.size>1)throw new Error('Foreign carryover requires actual state country attribution before allocating foreign-related state taxes');
   let netForeignTaxableIncome=d('0');let countryIndex=0;
-  for(const group of countries.values()){
+  for(const [country,group] of countries){
     const countryRatio=ratio(group.gross,context.totalIncome);
     const apportioned=roundDollar(nondirect.times(countryRatio));const interest=roundDollar(mortgage.times(countryRatio));
-    const direct=roundDollar(grossForeign.isZero()?d('0'):stateRelated.times(group.gross).div(grossForeign));
+    const direct=roundDollar(stateTaxByCountry.get(country)??d('0'));
     const net=roundDollar(group.gross).minus(sum(apportioned,interest,direct));netForeignTaxableIncome=netForeignTaxableIncome.plus(net);
-    audit.record('Foreign Deduction Carryover WS',`country-${++countryIndex}:net-income`,'Hypothetical net ordinary foreign income',net,'Country gross less prescribed allowed direct and proportional deductions',{gross:group.gross,ratio:countryRatio,apportioned,interest,direct});
+    countryIndex++;
+    if(stateTaxByCountry.has(country))audit.record('Foreign Deduction Carryover WS',`country-${countryIndex}:state-tax`,'State income tax allocated to foreign country',direct,
+      'round(actual allowed state tax * actual state-taxed country income / actual state taxable income)');
+    audit.record('Foreign Deduction Carryover WS',`country-${countryIndex}:net-income`,'Hypothetical net ordinary foreign income',net,'Country gross less prescribed allowed direct and proportional deductions',{gross:group.gross,ratio:countryRatio,apportioned,interest,direct});
   }
   if(netForeignTaxableIncome.lt(0))throw new Error('Foreign carryover current overall foreign loss requires its separate actual loss-account method');
   const worldwide=zeroFloor(context.agi.minus(context.totalDeductions).plus(context.seniorDeduction));

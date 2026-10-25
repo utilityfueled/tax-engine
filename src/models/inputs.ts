@@ -4214,7 +4214,13 @@ const ForeignTaxDeductionCarryoverSchema = z.object({
     incomeOrSalesTaxes: decimal.optional(), homeRealPropertyTaxes: decimal.optional(), personalPropertyTaxes: decimal.optional(),
     allRealPropertyTaxesForPersonalResidenceConfirmed: z.boolean().optional(), noTreatyCharitableDeductionConfirmed: z.boolean().optional(),
     mortgageInterestMethod: z.enum(["gross_income", "us_source_small_foreign_income"]).optional(),
-    stateIncomeTaxes: z.array(z.object({ stateCode: z.string().optional(), deductibleAmount: decimal.optional(), stateTaxableIncome: decimal.optional(), foreignIncomeSpecificallyExempt: z.boolean().optional(), sourceReference: z.string().optional() }).strict()).optional(),
+    stateIncomeTaxes: z.array(z.object({
+      stateCode: z.string().optional(), deductibleAmount: decimal.optional(), stateTaxableIncome: decimal.optional(),
+      foreignIncomeSpecificallyExempt: z.boolean().optional(), sourceReference: z.string().optional(),
+      /** Actual single-state country attribution, including known-zero countries. */
+      countryIncomeConfirmed: z.boolean().optional(),
+      countryIncome: z.array(z.object({ foreignCountry: z.string().optional(), stateTaxableIncome: decimal.optional(), sourceReference: z.string().optional() }).strict()).optional(),
+    }).strict()).optional(),
   }).strict().optional(),
 }).strict();
 

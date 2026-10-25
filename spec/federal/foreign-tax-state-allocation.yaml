@@ -1,0 +1,55 @@
+form: "Foreign income state-tax allocation"
+fullName: "Actual country sources within the ordinary deduction-year credit-limit worksheet"
+taxYear: 2026
+irsReference: "https://www.irs.gov/publications/p514"
+sources:
+  - url: "https://www.irs.gov/publications/p514"
+    section: "State income taxes; single-state100000/75000/90000 example"
+    retrieved: "2026-10-25"
+  - url: "https://www.irs.gov/instructions/i1116"
+    section: "Line i country columns; line2 definite state-tax allocation"
+    retrieved: "2026-10-25"
+  - url: "https://www.ecfr.gov/current/title-26/section-1.861-8"
+    section: "(e)(6)(i), (ii)(A)/(C), examples25–27: actual state taxable income and multiple-state attribution"
+    retrieved: "2026-10-25"
+notes: |
+  This slice keeps the supported single-state ordinary personal-income
+  presumption: foreign income taxed=max(0,state taxable income-U.S. gross)
+  unless state law specifically exempts foreign income. Actual country amounts
+  reconcile that total and each country's actual foreign income. No allocation
+  is inferred from relative country gross income. Exact source cents are kept;
+  each country's total allocated state tax rounds once at its printed line2.
+  Multiple states cannot independently reuse the entire U.S. income denominator.
+  Their actual overlapping/nonoverlapping sources, state exemptions, credits and
+  any applicable prescribed method require a separate source integration. This
+  calculator rejects that unsupported combination, including zero-tax rows that
+  could affect the allocation method, rather than inventing an allocation.
+lines:
+  - line: "country-attribution"
+    description: "Use actual state-taxed foreign income by country"
+    formula: "For the single state's actual deductible tax T and state taxable income S, country deduction=T*actual state-taxed country income/S; require complete confirmed country ledger, sum equal to supported foreign state-tax base, each amount<=actual foreign income."
+    testRef: "tests/engine/forms/foreign-tax-state-allocation.test.ts::allocates actual country sources without a gross-income guess"
+  - line: "source-boundaries"
+    description: "No missing country, stale amount or exemption contradiction"
+    formula: "Reject missing confirmation, unknown/duplicate countries, missing known-zero countries, amounts beyond original income or an inconsistent aggregate; a known state exemption accepts only actual zero country income."
+    testRef: "tests/engine/forms/foreign-tax-state-allocation.test.ts::rejects unknown duplicate stale and conflicting country facts"
+  - line: "multiple-state-boundary"
+    description: "Do not repeat the single-state presumption across jurisdictions"
+    formula: "More than one state worksheet requires the separate actual multiple-state source method; do not independently subtract whole-return U.S. income in each state."
+    testRef: "tests/engine/forms/foreign-tax-state-allocation.test.ts::rejects multiple-state presumptions without source attribution"
+  - line: "known-zero"
+    description: "Preserve known exempt zeros and actual identities"
+    formula: "A known exemption permits only zero taxed-country amounts; reordering records must not alter the source allocation, omitted facts remain unknown, and calculation audits exclude local source references and country names."
+    testRef: "tests/engine/forms/foreign-tax-state-allocation.test.ts::preserves known exempt zeros and source order without inventing country facts"
+  - line: "guided-source"
+    description: "Preserve actual country cents and confirmation state"
+    formula: "Guided intake collects each country's actual taxable amount and source reference, keeps unknown distinct from zero, and clears nested/annual confirmation after edits."
+    testRef: "tests/guided-interview/guided-foreign-state-allocation.test.ts::preserves actual state country sources and rejects incomplete facts"
+  - line: "canonical-review"
+    description: "Actual state sources enter the canonical hypothetical return and review record"
+    formula: "Actual100000income less26600deductions gives zero current FTC; hypothetical credit uses26000itemized and published74000-74050single TaxTable11200. Netforeign24000/worldwide74000 ratio.3243 gives3632limit; prior4000 less3032absorption leaves968. The review record copies these audited values with no source identifiers."
+    testRef: "tests/pdf/foreign-state-allocation-reference.test.ts::preserves actual country allocation in the canonical review record"
+  - line: "interactive"
+    description: "Actual country records can be entered from an empty state row"
+    formula: "Source fields create no default income or confirmation; substantive edits revoke the country, itemized and annual confirmations."
+    testRef: "tests/apps/web/foreign-state-allocation-interactions.test.tsx::collects actual country source amounts and revokes confirmation"

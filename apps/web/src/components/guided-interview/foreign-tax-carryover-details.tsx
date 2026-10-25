@@ -10,7 +10,12 @@ function Choice({label,value,options,onChange}:{label:string;value?:string;optio
 export function ForeignTaxCarryoverDetails({data,investment,onChange}:{data?:ForeignCarryoverData;investment?:InvestmentData;onChange:(data:ForeignCarryoverData|undefined)=>void}) {
   if(!data)return <button type="button" className="utility-button" onClick={()=>onChange({})}>Add deduction-year carryover worksheet</button>;
   const statements=foreignCarryoverStatements(investment);
-  const update=(patch:Partial<ForeignCarryoverData>)=>onChange({...data,...patch,sourceFactsConfirmed:undefined});
+  const update=(patch:Partial<ForeignCarryoverData>)=>{
+    const next={...data,...patch,sourceFactsConfirmed:undefined};
+    if('incomeSources' in patch&&next.itemizedAllocation)next.itemizedAllocation={...next.itemizedAllocation,sourceFactsConfirmed:undefined,
+      stateIncomeTaxes:next.itemizedAllocation.stateIncomeTaxes?.map(row=>({...row,countryIncomeConfirmed:undefined}))};
+    onChange(next);
+  };
   const income=(index:number,patch:Partial<ForeignCarryoverIncomeData>)=>update({incomeSources:data.incomeSources?.map((row,i)=>i===index?{...row,...patch}:row)});
   const balance=(index:number,patch:Partial<ForeignCarryoverBalanceData>)=>update({carryovers:data.carryovers?.map((row,i)=>i===index?{...row,...patch}:row)});
   const allocation=data.itemizedAllocation;
@@ -55,20 +60,31 @@ export function ForeignTaxCarryoverDetails({data,investment,onChange}:{data?:For
       {data.carryovers===undefined&&<button type="button" className="utility-button" onClick={()=>update({carryovers:[]})}>Confirm no adjusted prior balance remains</button>}
     </fieldset>
     {allocation?<fieldset className="guided-fieldset"><legend>Hypothetical allowed itemized deduction sources</legend>
-      <p className="guided-hint">Complete this when the return would still itemize after removing the foreign income-tax deduction. Use the actual allowed state/local components, including any cap allocation. State taxes with foreign income from several countries need a separate country attribution method.</p>
+      <p className="guided-hint">Complete this when the return would still itemize after removing the foreign income-tax deduction. Use the actual allowed state/local components, including any cap allocation. For one state and several foreign countries, enter each country&apos;s actual income taxed by that state, including known zero. Multiple states require a separate income attribution method.</p>
       <TextFact label="Itemized allocation source reference" value={allocation.sourceReference??''} onChange={sourceReference=>updateAllocation({sourceReference})}/>
       {([['incomeOrSalesTaxes','Allowed income or sales taxes'],['homeRealPropertyTaxes','Allowed personal-home real estate taxes'],['personalPropertyTaxes','Allowed personal property taxes']] as const).map(([key,label])=><CurrencyField key={key} label={label} value={allocation[key]??''} onChange={value=>updateAllocation({[key]:value})}/>)}
       <BooleanFact label="All allocated real estate taxes are for a personal residence" value={allocation.allRealPropertyTaxesForPersonalResidenceConfirmed} onChange={value=>updateAllocation({allRealPropertyTaxesForPersonalResidenceConfirmed:value??undefined})}/>
       <BooleanFact label="No charitable deduction is allocated under a foreign treaty" value={allocation.noTreatyCharitableDeductionConfirmed} onChange={value=>updateAllocation({noTreatyCharitableDeductionConfirmed:value??undefined})}/>
       <Choice label="Actual mortgage-interest allocation method" value={allocation.mortgageInterestMethod} options={[["gross_income","Gross-income method"],["us_source_small_foreign_income","Elect U.S.-source interest allocation when gross foreign income is at most $5,000"]]} onChange={method=>updateAllocation({mortgageInterestMethod:method as NonNullable<ForeignCarryoverData['itemizedAllocation']>['mortgageInterestMethod']})}/>
       {(allocation.stateIncomeTaxes??[]).map((source,index)=>{
-        const updateState=(patch:Partial<typeof source>)=>updateAllocation({stateIncomeTaxes:allocation.stateIncomeTaxes?.map((row,i)=>i===index?{...row,...patch}:row)});
+        const updateState=(patch:Partial<typeof source>,preserveCountryConfirmation=false)=>updateAllocation({stateIncomeTaxes:allocation.stateIncomeTaxes?.map((row,i)=>i===index?{...row,...patch,...(preserveCountryConfirmation?{}:{countryIncomeConfirmed:undefined})}:row)});
         return <fieldset className="guided-fieldset" key={index}><legend>State allocation {index+1}</legend>
           <TextFact label={`State allocation ${index+1} state code`} value={source.stateCode??''} onChange={stateCode=>updateState({stateCode})}/>
           <CurrencyField label={`State allocation ${index+1} deductible tax`} value={source.deductibleAmount??''} onChange={deductibleAmount=>updateState({deductibleAmount})}/>
           <CurrencyField label={`State allocation ${index+1} actual taxable income`} value={source.stateTaxableIncome??''} onChange={stateTaxableIncome=>updateState({stateTaxableIncome})}/>
           <BooleanFact label={`State allocation ${index+1} specifically exempts foreign income`} value={source.foreignIncomeSpecificallyExempt} onChange={value=>updateState({foreignIncomeSpecificallyExempt:value??undefined})}/>
           <TextFact label={`State allocation ${index+1} source reference`} value={source.sourceReference??''} onChange={sourceReference=>updateState({sourceReference})}/>
+          {(source.countryIncome??[]).map((country,countryIndex)=>{
+            const updateCountry=(patch:Partial<typeof country>)=>updateState({countryIncome:source.countryIncome?.map((row,i)=>i===countryIndex?{...row,...patch}:row)});
+            return <fieldset className="guided-fieldset" key={countryIndex}><legend>State allocation {index+1} country {countryIndex+1}</legend>
+              <TextFact label={`State allocation ${index+1} country ${countryIndex+1} name`} value={country.foreignCountry??''} onChange={foreignCountry=>updateCountry({foreignCountry})}/>
+              <CurrencyField label={`State allocation ${index+1} country ${countryIndex+1} taxable income`} value={country.stateTaxableIncome??''} onChange={stateTaxableIncome=>updateCountry({stateTaxableIncome})}/>
+              <TextFact label={`State allocation ${index+1} country ${countryIndex+1} source reference`} value={country.sourceReference??''} onChange={sourceReference=>updateCountry({sourceReference})}/>
+              <button type="button" className="utility-button" onClick={()=>updateState({countryIncome:source.countryIncome?.filter((_,i)=>i!==countryIndex)})}>Remove state allocation {index+1} country {countryIndex+1}</button>
+            </fieldset>;
+          })}
+          <button type="button" className="utility-button" onClick={()=>updateState({countryIncome:[...(source.countryIncome??[]),{}]})}>Add state allocation {index+1} country</button>
+          <BooleanFact label={`State allocation ${index+1} country sources checked after the last edit`} value={source.countryIncomeConfirmed} onChange={value=>updateState({countryIncomeConfirmed:value??undefined},true)}/>
           <button type="button" className="utility-button" onClick={()=>updateAllocation({stateIncomeTaxes:allocation.stateIncomeTaxes?.filter((_,i)=>i!==index)})}>Remove state allocation {index+1}</button>
         </fieldset>;
       })}

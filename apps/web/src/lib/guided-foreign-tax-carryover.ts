@@ -74,15 +74,37 @@ export function buildGuidedForeignTaxCarryover(data: ForeignCarryoverData | unde
     return { ...source, originTaxYear, amount: money(source.amount, 'adjusted prior balance'), sourceReference: text(source.sourceReference, 'prior balance source reference') };
   });
   const allocation = data.itemizedAllocation;
+  const countryIncome = new Map<string, ReturnType<typeof parseGuidedCurrency>>();
+  for (const source of incomeSources) {
+    const country = normalize(source.foreignCountry);
+    if (!country) throw new Error('Enter the actual foreign country.');
+    countryIncome.set(country, (countryIncome.get(country) ?? parseGuidedCurrency('0')).plus(parseGuidedCurrency(source.foreignIncome)));
+  }
+  if ((allocation?.stateIncomeTaxes?.length ?? 0) > 1) throw new Error('Multiple-state income taxes require their separate actual income attribution method.');
   const itemizedAllocation = allocation ? {
     ...allocation, sourceReference: text(allocation.sourceReference, 'allowed itemized source worksheet'),
     incomeOrSalesTaxes: money(allocation.incomeOrSalesTaxes, 'allowed income or sales taxes'),
     homeRealPropertyTaxes: money(allocation.homeRealPropertyTaxes, 'allowed personal-home real estate taxes'),
     personalPropertyTaxes: money(allocation.personalPropertyTaxes, 'allowed personal property taxes'),
-    stateIncomeTaxes: allocation.stateIncomeTaxes?.map(source => ({ ...source,
-      stateCode: text(source.stateCode, 'state code').toUpperCase(), deductibleAmount: money(source.deductibleAmount, 'allowed state tax'),
-      stateTaxableIncome: money(source.stateTaxableIncome, 'actual state taxable income'), sourceReference: text(source.sourceReference, 'state allocation reference'),
-    })),
+    stateIncomeTaxes: allocation.stateIncomeTaxes?.map(source => {
+      const hasCountryFacts = source.countryIncome !== undefined || source.countryIncomeConfirmed !== undefined || countryIncome.size > 1;
+      if (hasCountryFacts && (source.countryIncomeConfirmed !== true || !source.countryIncome)) throw new Error('Confirm the actual state country-income source worksheet.');
+      const seenCountries = new Set<string>(); let totalCountryIncome = parseGuidedCurrency('0');
+      const actualCountries = source.countryIncome?.map(row => {
+        const foreignCountry = text(row.foreignCountry, 'state-taxed foreign country'), country = normalize(foreignCountry);
+        const original = country ? countryIncome.get(country) : undefined;
+        if (!country || original === undefined || seenCountries.has(country)) throw new Error('State country sources must match distinct actual foreign-income countries.');
+        seenCountries.add(country);
+        const stateTaxableIncome = money(row.stateTaxableIncome, 'state-taxed country income');
+        const income = parseGuidedCurrency(stateTaxableIncome); totalCountryIncome = totalCountryIncome.plus(income);
+        if (income.gt(original) || (source.foreignIncomeSpecificallyExempt === true && income.gt(0))) throw new Error('State country income contradicts its original source or exemption.');
+        return { ...row, foreignCountry, stateTaxableIncome, sourceReference: text(row.sourceReference, 'state country source reference') };
+      });
+      const stateTaxableIncome = money(source.stateTaxableIncome, 'actual state taxable income');
+      if (hasCountryFacts && (seenCountries.size !== countryIncome.size || totalCountryIncome.gt(parseGuidedCurrency(stateTaxableIncome)))) throw new Error('Reconcile every actual state country source, including known zero.');
+      return { ...source, stateCode: text(source.stateCode, 'state code').toUpperCase(), deductibleAmount: money(source.deductibleAmount, 'allowed state tax'),
+        stateTaxableIncome, sourceReference: text(source.sourceReference, 'state allocation reference'), countryIncome: actualCountries };
+    }),
   } : undefined;
   if (itemizedAllocation && itemizedAllocation.sourceFactsConfirmed !== true) throw new Error('Confirm the actual itemized allocation sources.');
   if (itemizedAllocation?.stateIncomeTaxes?.some(source => source.foreignIncomeSpecificallyExempt === undefined)) throw new Error('Confirm actual state foreign-income treatment.');
