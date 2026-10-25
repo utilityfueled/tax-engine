@@ -437,3 +437,23 @@ saved-return UI, AI-credit sales, provider-boundary and foreign-income packages.
 Implementation continues through source reconciliation, state interactions,
 remaining federal rules and final runtime/recovery verification. No release or
 external qualification is claimed.
+
+
+Execution now includes exact committed-image arm64 Compose upgrade/restart/
+backup restore/rollback and encrypted browser recovery (`a2f62e2`), with reviewed
+harness corrections and bounded privacy evidence. Native amd64 CI was added
+because the local emulator crashed during compilation. Current image advisories
+remain explicitly unresolved; staging and independent human review are absent.
+PA/OH source reconciliation, actual business sources, per-owner SE and audited
+bond/SSA outputs have passed their focused checks. The durable checklist and
+machine checkpoint identify the new commits, the running one-worker coverage
+snapshot and remaining internal Form2441, rental/OID, fact and federal work.
+No completion or release qualification is claimed.
+
+The `c0871d3` one-worker snapshot completed: 16,241 passes and 14 failures,
+with no fresh coverage report emitted. Eleven tax regressions are corrected by
+`8ca3655`, the malformed-source parser by `fce3094`, and the parent PA fixture
+and spec literal-name checker now pass their focused checks. The care core is
+`8262f40`. Native amd64 build/smoke and actual Compose recovery passed at
+`a2f62e2`; browser and scan results still need inspection. No final release
+qualification, staging or independent human review is claimed.

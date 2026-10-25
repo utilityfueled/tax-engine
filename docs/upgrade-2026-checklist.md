@@ -256,3 +256,62 @@ until the brief's criteria pass or only external actions remain.
 - Remote CI at `1858703` was in progress when inspected:
   https://github.com/utilityfueled/tax-engine/actions/runs/40161538848.
   Superseded pushes were cancelled; exact final-code CI success is still required.
+
+
+## Source integration and actual Compose recovery — 2026-10-25
+
+- `0c1c2b9` reconciles PA interest with actual disjoint source boxes and bond
+  exclusions; 399 focused checks pass. `9000ce3` carries actual Ohio investment
+  withholding through calculation, adapter and review PDF; 133 checks pass.
+- `ea34d6b` collects actual business/NEC facts; `94cc6bc` parses labelled NEC
+  sources and removes document-only assumed-zero-expense previews. Investment
+  sources are `4679852`; rental source contracts are `6bddb79` and guided work
+  continues. See the facts package's explicit remaining software checklist.
+- `1a815e0` corrects Schedule C other income/official fields; `c0871d3` separates
+  Schedule SE by actual owner, corrects interactive per-owner PDFs and resolves
+  the two old bond-interest source assertions. `e5696a2` corrects OID source
+  boxes; return/state integration is still active. Bond/SSA packages are
+  `acab62e`, `5604a87` and `da3e0fc`.
+- `a2f62e2` adds a local-only pinned-endpoint Compose rehearsal. Exact candidate
+  `da3e0fc` on arm64 passed upgrade, database restart, nine-table dump/restore,
+  rollback, re-upgrade, encrypted browser backup/restore and deletion. Actual
+  wrong-password/tamper checks pass after independent agent review corrections;
+  all 12 endpoint tests and scoped lint/syntax checks pass. Digests and bounded
+  raw-marker network evidence are in `upgrade-2026-self-host-rehearsal.json`.
+  This is not historical hosted-schema downgrade, staging or human approval.
+- The refreshed exact-image SBOM has 157 matches/67 distinct advisories, zero
+  critical/npm matches and no reported fixed matches. Every advisory remains
+  unresolved with owner confirmation pending and 2026-11-07 review deadline.
+  Current package audit has zero advisories across 519 entries.
+- Local amd64 QEMU compilation failed with signal 11. Native amd64 CI now builds
+  a pinned previous commit, runs actual-image browser/Compose recovery and saves
+  SBOM/scan evidence. No native result or artifact publication is yet claimed.
+- Remote CI at `9000ce3` failed only the two source assertions corrected by
+  `c0871d3` plus inventory freshness. New pushes include all commits through
+  `a2f62e2`. The stable one-worker run at `c0871d3` completed with 16,241 passes
+  and 14 failures; no fresh coverage percentages were emitted after failure.
+- Parent next: finish that fixture, regenerate inventory at a stable boundary,
+  correct Form2441 source/audit/PDF facts, adapt verified OID and actual rental
+  ownership to PA/OH, then complete final image/browser checks. Federal owner
+  continues OID/QBI/tax-table/IRA; the other agent owns bounded Form2210 work.
+  All external inputs listed above remain pending. The goal remains active.
+
+## Current integration corrections — 2026-10-25
+
+- `6ef58a2` integrates actual OID sources federally; `fce3094` collects actual
+  rental ownership/expenses; `b072884` preserves actual W-2 Box 7 and spouse
+  payroll. `44793ac` calculates penalties from dated payment sources.
+- `8262f40` preserves actual care incomes, prior-year worksheet credit and
+  tentative/limited audit amounts (76 focused checks). `8ca3655` attributes QBI
+  deductions by source/owner (215 focused checks) and fixes all eleven assigned
+  tax regressions without weakening the expected tax outcomes.
+- The PA business-packet fixture now states complete actual synthetic business
+  facts and all five original packet assertions pass. The spec test-name checker
+  now reads TypeScript literal names, including single quotes, while rejecting
+  commented examples and unrelated strings; six checker tests pass. Logs:
+  `pa-business-packet-facts-final.log`, `spec-literal-names.log` and
+  `integration-fixtures-lint.log` under `.local/upgrade-evidence/`.
+- Remote CI at `a2f62e2` has the same fourteen stable-run regressions and stale
+  inventory. Native amd64 image build, health smoke, previous-image build and
+  actual Compose upgrade/recovery/rollback passed; browser/SBOM/scan remained
+  running when inspected. Final exact-code checks are still required.

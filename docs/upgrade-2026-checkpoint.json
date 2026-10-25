@@ -204,7 +204,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "6ed4466",
+    "lastRecordedCommit": "8ca3655",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -308,7 +308,7 @@
       "hosted staging and independent human reviews",
       "repeated live synthetic AI evaluation and account availability"
     ],
-    "latestIntegratedCommit": "6ed4466",
+    "latestIntegratedCommit": "8ca3655",
     "latestCoverageDiagnostic": {
       "status": "failed-tests-coverage-thresholds-met",
       "commit": "05ec24e10716cd6c4c8ccd8d2b6e3effc6e18d94",
@@ -369,23 +369,69 @@
       "foreignIncomeLaw": "28ba63d",
       "foreignIncomeIntegration": "2e3fa87",
       "foreignIncomePdf": "05ec24e",
-      "disjointInterestBoxes": "26661ba"
+      "disjointInterestBoxes": "26661ba",
+      "runtimeDefaults": "0ace410",
+      "statePacketActualFacts": "fc282bd",
+      "paInterestSourceReconciliation": "0c1c2b9",
+      "ohInvestmentWithholding": "9000ce3",
+      "nonW2Salt": "8a5e4c5",
+      "bondSourceExclusion": "acab62e",
+      "bondSourceFederalIntegration": "5604a87",
+      "socialSecurityReferenceAudit": "da3e0fc",
+      "scheduleCOtherIncomeAndPdf": "1a815e0",
+      "investmentActualFacts": "4679852",
+      "businessActualFacts": "ea34d6b",
+      "necDocumentConfirmation": "94cc6bc",
+      "oidSourceBoxes": "e5696a2",
+      "rentalSourceContract": "6bddb79",
+      "perSpouseSEAndPdf": "c0871d3",
+      "containerComposeRecovery": "a2f62e2",
+      "oidFederalIntegration": "6ef58a2",
+      "rentalActualFacts": "fce3094",
+      "w2TipsAndSpousePayroll": "b072884",
+      "datedInstallmentPenalty": "44793ac",
+      "careActualAudit": "8262f40",
+      "qbiSourceDeductions": "8ca3655"
     },
     "remoteCi": {
-      "commit": "edd564b",
-      "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40160293322",
+      "commit": "a2f62e217f846a479701b3393606228c366d3410",
+      "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40164268771",
       "status": "failed",
       "failed": [
-        "legacy state input missing employer EIN",
-        "other unit regressions",
+        "Same fourteen regressions as stable c087 snapshot",
         "generated inventory freshness"
       ],
-      "evidence": ".local/upgrade-evidence/ci-edd564b-failed.log",
-      "latestQueuedCommit": "0eab56e",
-      "latestQueuedUrl": "https://github.com/utilityfueled/tax-engine/actions/runs/40160576899",
-      "latestInspectedCommit": "1858703",
-      "latestInspectedStatus": "in_progress",
-      "latestInspectedUrl": "https://github.com/utilityfueled/tax-engine/actions/runs/40161538848"
-    }
+      "evidence": ".local/upgrade-evidence/ci-a2f62e2-failed.log",
+      "webRun": "https://github.com/utilityfueled/tax-engine/actions/runs/40164268895",
+      "webStatus": "running when inspected; build, native amd64 image smoke and actual Compose upgrade/recovery/rollback succeeded; browser/SBOM/scan still pending"
+    },
+    "localSelfHostRehearsal": {
+      "status": "passed-intermediate-candidate",
+      "evidence": "docs/upgrade-2026-self-host-rehearsal.json",
+      "commit": "da3e0fc5e51184418f29e16f98faecd13d3ddbb3",
+      "platform": "linux/arm64",
+      "hostedStagingVerified": false,
+      "independentHumanReview": false,
+      "amd64": "local QEMU Next.js compilation failed with signal11; native CI rehearsal now configured"
+    },
+    "currentStableCoverageRun": {
+      "commit": "c0871d37884275baa960fba5ae2d7d5a21987a05",
+      "workers": 1,
+      "status": "failed-tests-no-fresh-coverage-report",
+      "passed": 16241,
+      "failed": 14,
+      "filesPassed": 576,
+      "filesFailed": 7,
+      "evidence": ".local/upgrade-evidence/stable-coverage-c0871d3.log",
+      "evidenceSha256": "4482510b966224eae5cfec7f4f12ea3aa7ec3c529d47706ef2f58922abc58384",
+      "limitation": "No fresh coverage percentages were emitted after test failure. Eleven tax failures corrected by 8ca3655; guided malformed source parser corrected by fce3094; PA complete-source fixture and spec literal-name checker corrected in next parent commit. Fresh stable full run still required."
+    },
+    "remainingInternalWork": [
+      "Form2441 actual source facts and audited physical fields; 5695 source/physical gaps",
+      "Remaining complete facts checklist and bounded federal rule checklist",
+      "OID verified-source PA/OH adaptation and PA whole-property rental ownership allocation",
+      "All exact-code checks, inventory regeneration, browser and native amd64 CI",
+      "Final exact-code arm64 image rebuild, SBOM, scan and recovery rerun"
+    ]
   }
 }

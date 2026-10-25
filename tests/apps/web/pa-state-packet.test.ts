@@ -12,7 +12,7 @@ import type {
 import { buildWorkspaceStructuredFacts } from "@tax-engine/engine";
 import { buildWorkspaceFilledReturnDownload } from "../../../apps/web/src/lib/workspace-filled-return";
 import type { GuidedFlowState } from "../../../apps/web/src/lib/guided-interview-flow";
-import { completePersonalInfo, completeW2Entry, completeInterestEntry, completeDividendEntry } from "../../guided-interview/complete-facts";
+import { completePersonalInfo, completeW2Entry, completeInterestEntry, completeDividendEntry, completeNecSource, completeBusinessSection, completeBusinessExpenses } from "../../guided-interview/complete-facts";
 
 vi.mock("server-only", () => ({}));
 
@@ -352,19 +352,22 @@ function createGuidedFlowStateWithPennsylvaniaScheduleCBusiness(): GuidedFlowSta
     sectionData: {
       ...createGuidedFlowStateWithPennsylvaniaStateSelection().sectionData,
       "income-self-employment": {
+        ...completeBusinessSection,
         necEntries: [
           {
+            ...completeNecSource,
             payerName: "Northwind Design Studio",
             payerTin: "12-3456789",
             nonemployeeCompensation: "18000",
             federalWithheld: "0",
           },
         ],
-        manualGrossReceipts: "",
+        manualGrossReceipts: "0",
         expenses: {
+          ...completeBusinessExpenses,
           advertising: "250",
-          carAndTruck: "",
-          insurance: "",
+          carAndTruck: "0",
+          insurance: "0",
           officeExpense: "600",
           supplies: "500",
           travel: "300",
