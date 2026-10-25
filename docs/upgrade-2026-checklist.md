@@ -7,11 +7,27 @@ complete a checkbox.
 
 ## Current integration — 2026-10-25
 
-`d6b8f5f` is pushed. The goal remains active and the upgrade is not release-ready.
-The external inputs below remain unanswered. Current implementation covers ordered
-Marketplace deductions, ordinary NIIT identity and intake, parent INT/DIV AMT
-sources, child election eligibility, and advanced guided sources/PDF handoffs.
+`36e0b72` is pushed. The goal remains active and the upgrade is not release-ready.
+The external inputs below remain unanswered. Active work includes child election
+eligibility, remaining Marketplace passive/NOL methods, foreign-tax elections and
+advanced guided sources/PDF handoffs. Completed package boundaries follow.
 
+- `6d533d2`: actual parent INT/DIV/OID bond preferences use one parent floor;
+  isolated tree 5c5f0e4 passes all 17,201 tests across 764 files, root types and
+  4,058 spec references. Independent review reproduced and fixed a split-source
+  flooring error. Existing fixture tax assertions remain unchanged.
+- `36e0b72`: actual parent bond source intake; isolated tree fd739f0 passes
+  672 guided/DOM tests, root/web types, production build and both desktop/mobile
+  Chromium cases without retries. Nine independent review cases pass.
+- `a6c5f3d` / `45d3839`: ordinary NIIT source calculation and actual intake;
+  exact trees pass 2,879 core and 687 guided tests respectively. Foreign-tax
+  elections and deduction-year carryover absorption remain separate work.
+- `c21b6ae`: ordered Marketplace IRA, bond and student-loan Y/Z worksheets;
+  2,652 isolated tests pass. Review corrected the final no-credit IRA refigure.
+  Passive/NOL, re-entry and other source boundaries remain in the federal ledger.
+- `bcb3a92`: actual Marketplace PTC intake, original/corrected benchmark and
+  household sources; 746 isolated tests and eight independent review cases pass.
+- `2f009c5`: guided-only redacted JSON/PDF review downloads retain year gates.
 - `894f7b9`: actual in-kind 529 distribution ordering; 167 exact-tree tests pass.
   Remaining education attribution decisions are in
   [the method memo](upgrade-2026-education-method-decisions.md).
@@ -32,7 +48,7 @@ sources, child election eligibility, and advanced guided sources/PDF handoffs.
 - `961f290`: saved guided tax year and actual readiness reconciliation; 801 unit
   tests, root/web types, spec references and two production browser cases pass.
   Parent review independently passes seven cases. Guided-only bundle controls
-  remain a separate follow-up.
+  subsequently landed in `2f009c5`.
 - `3ae750e`: actual child Form 8814 bond preferences reach parent AMT. Isolated
   tree 8702728 passes all 17,158 tests across 753 files, root types, 4,013 spec
   references and scoped lint. Independent agent source review passes; broader
@@ -46,9 +62,13 @@ sources, child election eligibility, and advanced guided sources/PDF handoffs.
   pass 300, fail two consent-origin cases fixed in 67e1d94, and skip five hosted
   cases. The later 67e1d94 coverage/browser runs were cancelled by a subsequent
   push; its other completed checks and native recovery pass.
-- Package audit at the previous integration: zero advisories across 521 entries.
+- Refreshed package audit on 2026-10-25: zero advisories across 521 entries.
   Image exposure is separate: 157 matches and 67 advisory records, with owner
   roles and a 2026-11-07 review deadline; maintainer disposition remains pending.
+
+Current remote runs for `36e0b72`: CI 40203702503 is in progress and Web
+40203702965 is queued. Preceding runs were cancelled by subsequent pushes;
+none is counted as final integrated qualification.
 
 Next: finish the source/UI packages, regenerate inventory and run every brief
 command against integrated code. Verify final native amd64/arm64 images, scans,

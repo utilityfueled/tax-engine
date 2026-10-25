@@ -10,13 +10,16 @@ document consent/cancellation and an inactive complete-data export pipeline.
 None of these supersedes the required full coverage, independent review, staging
 or final-form qualification gates.
 
-Latest recorded integration is `d6b8f5f`, pushed on `upgrade/2026-baseline`.
-Execution remains active and **not release-ready**. Separate packages now include
-historical Marketplace W/X, actual child AMT preferences, saved guided-year
-reconciliation, and a bounded image-cache mount for read-only containers.
-The child AMT tree passes all 17,158 tests; the guided-year tree passes 801 unit
-and two production browser cases. Exact source trees and limitations are in the
-checklist and machine checkpoint.
+Latest recorded integration is `36e0b72`, pushed on `upgrade/2026-baseline`.
+Execution remains active and **not release-ready**. New separate packages cover
+ordinary NIIT sources/intake, ordered Marketplace IRA/bond/loan worksheets,
+actual PTC intake, guided review downloads, and parent bond preferences/intake.
+The final isolated parent bond core passes all 17,201 tests across 764 files;
+its intake passes 672 guided/DOM cases, production build and desktop/mobile
+Chromium without retries. Source trees, review fixes and limitations are in the
+checklist and machine checkpoint. Child election eligibility, remaining
+Marketplace methods, foreign-tax elections/carryovers and advanced source
+intake remain active internal work.
 
 The prior single-write PDF tree passes 17,100 coverage tests with 86.59% branches.
 Remote c9e057c passes 17,119 unit tests but fails 12 coverage cases, mostly timeout

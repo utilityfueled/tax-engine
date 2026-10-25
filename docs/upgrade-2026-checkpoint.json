@@ -204,7 +204,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "d6b8f5f9212543e37761ec62e17e45a81f485ee8",
+    "lastRecordedCommit": "36e0b728c7dd445490d0f20e93e67a4ccfb5a708",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -289,6 +289,57 @@
         "passed": 7,
         "evidence": ".local/upgrade-evidence/oh-care-and-se-pdf-recheck.log",
         "scope": "Actual federal Form2441 audit fixture; existing self-employed health-insurance PDF test unchanged and passed in isolated rerun; no timeout increase"
+      },
+      "parentBondPreferences": {
+        "commit": "6d533d2",
+        "sourceTree": "5c5f0e43a0dc6664e0af3ecaafc446593deef9aa",
+        "testsPassed": 17201,
+        "files": 764,
+        "durationSeconds": "364.77",
+        "rootTypes": "passed",
+        "specReferences": 4058,
+        "lintErrors": 0,
+        "lintWarnings": 496,
+        "independentAgentReview": "Split-source floor corrected red-first; five source/canonical/reopened-PDF cases pass.",
+        "evidence": ".local/upgrade-evidence/parent-bond-final-unit.log",
+        "evidenceSha256": "53579ef4e84a2e27bce1e8d31288ec4a6a18bd2148d8a2494ec587d2a0281d20",
+        "boundary": "Exact isolated code; no human or release qualification."
+      },
+      "parentBondIntake": {
+        "commit": "36e0b72",
+        "sourceTree": "fd739f066547b24676eff11d16e577c2fc281a2b",
+        "testsPassed": 672,
+        "files": 52,
+        "rootWebTypes": "passed",
+        "productionBuild": "passed",
+        "specReferences": 4060,
+        "lintErrors": 0,
+        "lintWarnings": 6,
+        "productionChromiumCases": 2,
+        "browserRetries": 0,
+        "screenshotsInspected": true,
+        "independentAgentReviewCases": 9,
+        "browserEvidenceSha256": "a107280c3cbf4b05de94e2bc94044a4ee5bcb3c203c5925d1ba0474a914a0ea5",
+        "unitEvidenceSha256": "37478d7df0386aa17ed81f999381a9c137def6456a25d341e221ee3f722fe042",
+        "boundary": "Exact isolated code; not final integrated or staging proof."
+      },
+      "orderedMarketplaceDeductions": {
+        "commit": "c21b6ae",
+        "sourceTreePrefix": "195d239c",
+        "testsPassed": 2652,
+        "files": 68,
+        "rootTypes": "passed",
+        "specReferences": 4053,
+        "review": "Final no-credit ordinary IRA refigure corrected; re-entry remains explicit internal method work."
+      },
+      "actualMarketplacePtcIntake": {
+        "commit": "bcb3a92",
+        "sourceTreePrefix": "46a0ae6",
+        "testsPassed": 746,
+        "files": 55,
+        "rootWebTypes": "passed",
+        "specReferences": 4060,
+        "independentAgentReviewCases": 8
       }
     },
     "externalInputsStillPending": [
@@ -305,14 +356,14 @@
       "final multi-platform release images"
     ],
     "workInProgress": [
-      "Ordered Marketplace IRA/bond/student-loan/passive/NOL source deductions",
-      "Ordinary NIIT source identity and actual intake; parent INT/DIV AMT sources and child8814 election eligibility",
-      "Guided-only review/export controls and remaining advanced-source intake/PDF handoffs",
-      "Regenerated inventory and all required integrated checks; remote coverage stability",
-      "Final native amd64 and arm64 runtime images, SBOM/advisories, browser flows and recovery",
-      "External state demand, final forms, independent human tax/security/AI review, provider credentials/spend and hosted staging"
+      "Child8814 actual election eligibility and complete income sources",
+      "Marketplace passive/NOL ordering, re-entry, forgiven-advance and mixed-owner/family methods",
+      "Foreign-tax annual election and carryover absorption sources",
+      "Advanced guided2210/8801/2555 sources and actual Pub974 review pages",
+      "Current integrated coverage/inventory/all commands and native runtime release rehearsal",
+      "External staging/provider/review/state-demand/final-form inputs"
     ],
-    "latestIntegratedCommit": "d6b8f5f9212543e37761ec62e17e45a81f485ee8",
+    "latestIntegratedCommit": "36e0b728c7dd445490d0f20e93e67a4ccfb5a708",
     "latestCoverageDiagnostic": {
       "status": "failed-tests-coverage-thresholds-met",
       "commit": "e8e169a39a4917744c634378628f717af748759b",
@@ -509,7 +560,14 @@
       "boundedImageCache": "9cf5518",
       "persistedGuidedYear": "961f290",
       "childAmtSources": "3ae750e",
-      "coverageWorkerAllocation": "d6b8f5f"
+      "coverageWorkerAllocation": "d6b8f5f",
+      "ordinaryNiitCore": "a6c5f3d",
+      "ordinaryNiitIntake": "45d3839",
+      "guidedReviewDownloads": "2f009c5",
+      "orderedMarketplaceDeductions": "c21b6ae",
+      "actualMarketplacePtcIntake": "bcb3a92",
+      "parentBondPreferences": "6d533d2",
+      "parentBondIntake": "36e0b72"
     },
     "remoteCi": {
       "commit": "054cd59f9d0c8a53fb5794bbebcfd10e110f213b",
@@ -562,14 +620,12 @@
       "limitation": "Excludes newer in-kind education, Ohio and agent changes. Current integrated and final release gates still require a fresh run. Synthetic local evidence only."
     },
     "remainingInternalWork": [
-      "2026 Marketplace coupling implemented c499cab; finish2025 W/X and ordered IRA/bond/student-loan/passive/NOL coordination",
-      "Finish ordinary NIIT annuity/deduction sources, child8814 private-activity-bond AMT handoff and remaining federal source/method audit",
-      "Finish remaining source-supported education methods; in-kind529 ordering is implemented894f7b9 and unresolved legal attribution methods are documented for qualified review",
-      "Complete document context implemented cd54eb4; finish persisted guided-year/header reconciliation and bounded advanced-source UI",
-      "Container origin/browser synchronization implemented67e1d94; commit bounded runtime image cache and resolve remote coverage resource contention without changing assertions or deadlines",
-      "Regenerate inventory and run all current full tests/coverage/types/spec/builds/lint/browser checks; repair integration failures",
-      "Inspect current remote CI and verify final native amd64 and local arm64 images, SBOMs/scans and recovery rehearsal",
-      "Obtain confirmed advisory ownership/disposition and reconcile final artifact/support claims with evidence while independent human, provider, staging and form inputs remain pending"
+      "Finish remaining canonical federal source/method tasks listed in federal-work and education-method-decisions; completed source gates are not substitutes for implementation.",
+      "Finish advanced source intake and actual review-PDF handoffs; preserve unknowns, exact Decimal and year/readiness gates.",
+      "Finish selected-state candidate integration and support matrix within documented demand/final-form boundaries.",
+      "Regenerate inventory and run all current full tests/coverage/types/spec/builds/lint/browser checks; repair integration failures.",
+      "Inspect current remote CI and verify final native amd64/arm64 runtime images, SBOMs/current scans, upgrades and recovery.",
+      "Reconcile actual artifact/support claims and advisory ownership/disposition while external human, provider, staging and final-form evidence remains pending."
     ],
     "previousStableCoverageRun": {
       "commit": "2f8abd71206dd8483c167861f35c4c0bbecdad7a",
@@ -590,7 +646,7 @@
       "scope": "immutable tracked-file archive, locked dependencies, disposable local PostgreSQL16; unchanged coverage thresholds",
       "limitation": "Two PDF aggregate tests exceeded unchanged5000ms timeouts; no numeric tax failure. Commit76bb3a6 isolates identical template/state assertions into named independent cases. Its exact staged tree passes62tests and3682spec refs; fresh full gate required after newer packages."
     },
-    "lastPushedCommit": "d6b8f5f9212543e37761ec62e17e45a81f485ee8",
+    "lastPushedCommit": "36e0b728c7dd445490d0f20e93e67a4ccfb5a708",
     "currentBrowserRun": {
       "commit": "ed915c1708cedc02e99ca12fb7383331a7f99bea",
       "status": "passed-with-hosted-skips",
@@ -606,8 +662,8 @@
     },
     "currentPackageAudit": {
       "date": "2026-10-25",
-      "commit": "3adb1f0",
-      "evidence": ".local/upgrade-evidence/audit-current-integration.json",
+      "commit": "36e0b728c7dd445490d0f20e93e67a4ccfb5a708",
+      "evidence": ".local/upgrade-evidence/audit-2026-10-25-parent-bond.json",
       "evidenceSha256": "53e7d127130984cae97d554a54f7be42a21478066d94206e519540ab84119635",
       "metadata": {
         "vulnerabilities": {
@@ -666,32 +722,13 @@
       "limitation": "Actual React DOM callback checks; final production browser rerun required."
     },
     "remoteCiLatestObserved": {
-      "commit": "c9e057ce32385c8ebb3a9003ce3be4c90e3de2e6",
-      "ciRun": 40197402617,
-      "webRun": 40197402587,
-      "unit": {
-        "passed": 17119,
-        "files": 747
-      },
-      "coverage": {
-        "passed": 17107,
-        "failed": 12,
-        "files": 747,
-        "reason": "11 five-second timeouts and one state-packet assertion following timeout; no passing coverage result"
-      },
-      "inventory": "stale",
-      "typesBuildLint": "passed",
-      "webBuildAndStandaloneBrowser": "passed",
-      "nativeAmd64BuildSmokeRecovery": "passed",
-      "runtimeBrowser": {
-        "passed": 300,
-        "failed": 2,
-        "skippedHosted": 5,
-        "reason": "private consent request public origin; repaired in67e1d94"
-      },
-      "imageMatches": 157,
-      "artifactId": 12600704759,
-      "artifactSha256": "7e29c8cd14474d985ccdd653e0997bc44ddd112065191581fadf6ef3967b7493"
+      "commit": "36e0b728c7dd445490d0f20e93e67a4ccfb5a708",
+      "date": "2026-10-25",
+      "ciRun": 40203702503,
+      "ciStatus": "in_progress",
+      "webRun": 40203702965,
+      "webStatus": "queued",
+      "boundary": "Unfinished current runs; prior push runs cancelled, not passing."
     },
     "remoteCi6b07529": {
       "run": 40176974652,
@@ -1199,7 +1236,7 @@
       "rootTypes": "passed",
       "specReferences": 4020,
       "independentAgentReview": "Official Carla W/X example and 18 focused cases; no actionable finding.",
-      "remaining": "Ordered deductions and passive/NOL interaction"
+      "remaining": "Ordered IRA/bond/loan completec21b6ae; passive/NOL, re-entry and other methods remain."
     },
     "boundedImageCache": {
       "commit": "9cf5518",
@@ -1224,7 +1261,7 @@
       "rootWebTypes": "passed",
       "specReferences": 4026,
       "parentReviewTests": 7,
-      "remaining": "Guided-only return bundle control follow-up; advanced-source intake"
+      "remaining": "Advanced-source intake; guided-only review downloads completed2f009c5."
     }
   }
 }
