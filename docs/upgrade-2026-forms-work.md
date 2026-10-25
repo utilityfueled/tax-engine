@@ -170,3 +170,36 @@ candidate tests without actionable findings. This is agent review; the human
 qualification gate remains pending.
 Local evidence: `.local/upgrade-evidence/form4952-candidate-{red,green,expanded,types,lint,canonical}.log`
 (the canonical check is `.txt`), `form4952-2026-candidate.pdf` and its four PNGs.
+
+
+## Complete review packets without duplicate serialization — 2026-10-25
+
+`fillReturn` now applies the final visible notice while each completed template
+is still in memory, after any requested flattening, then writes it once. All44
+in-memory template paths use this finalizer. The per-packet path set records only
+successful writes. Reference generators that write their own files retain their
+separate reload/finalization step. There is no shared document cache or change to
+source values, year checks, exact template hashes, redaction or filing gates.
+
+The two new real-file tests first failed because each template was written
+twice. Both editable and flattened output now write once; independent pypdf text
+extraction checks exactly one visible review notice per page, and reopening the
+editable1040 preserves its85000 wage field. The focused64tests pass. Exact staged
+tree `77675b7487e023266807eff840774698d1b2c52b` passes all1,103PDF tests in111files,
+root types and scoped lint (zero errors, two existing non-null warnings).
+An independent agent reviewed the44 call sites and reran the two new tests with
+no actionable findings. This is bounded software review, not form qualification.
+
+The same immutable tree passes the full coverage run:17,100tests/744files,
+92.74%statements,86.59%branches,92.37%functions and94.70%lines. The85%branch gate,
+all other thresholds, test timeouts and covered source scope remain unchanged.
+The run uses Node24.22.1,pnpm10.34.8,pypdf6.10.0 and the disposable loopback
+PostgreSQL service, with one worker. It excludes concurrent uncommitted tax/facts
+work. Remote coverage on the resulting commit still requires verification; this
+local pass does not establish hosted staging or final release readiness.
+
+Evidence under `.local/upgrade-evidence/`:
+`pdf-single-write-focused-red.log`, `pdf-single-write-focused-green.log`,
+`pdf-single-write-broad.log`, `pdf-single-write-full-coverage.log`, and
+`ai-pdf-serialization-review.log`. Two earlier accidentally unfiltered WIP runs
+were aborted and are not evidence of a passing gate.

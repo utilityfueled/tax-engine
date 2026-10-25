@@ -4,6 +4,7 @@
  */
 
 import { join } from "path";
+import type { PDFDocument } from "pdf-lib";
 import Decimal from "decimal.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
@@ -157,7 +158,7 @@ import { fillNYIT201 } from "./fill-ny-it201.js";
 import { fillForm4684 } from "./fill-form-4684.js";
 import { fillForm8839 } from "./fill-form-8839.js";
 import { fillForm5695 } from "./fill-form-5695.js";
-import { savePdf, flattenForm, loadBlankPdf } from "./pdf-utils.js";
+import { savePdf as savePdfDocument, flattenForm, loadBlankPdf } from "./pdf-utils.js";
 import { assertPdfExportAllowed, markReviewPdf, type PdfExportPurpose } from "./export-policy.js";
 import { calculatePAScheduleC } from "@/engine/state/pa-schedule-c.js";
 import { d } from "@/utils/decimal.js";
@@ -393,6 +394,14 @@ export async function fillReturn(
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear, options.purpose);
   if (input.form7206 || result.form7206) assertForm7206ReviewSource(input, result);
   const filledForms: string[] = [];
+  const finalizedPaths = new Set<string>();
+  const savePacketPdf = async (doc: PDFDocument, outputPath: string) => {
+    // Finalize the visible notice while the completed form is still in memory.
+    // Track only successful writes, scoped to this packet rather than a cache.
+    await markReviewPdf(doc);
+    await savePdfDocument(doc, outputPath);
+    finalizedPaths.add(outputPath);
+  };
   const { outputDir, flatten = false } = options;
   const blankFormsDir = resolveReviewTemplateDirectory(options.blankFormsDir, result.taxYear);
 
@@ -401,7 +410,7 @@ export async function fillReturn(
   const doc1040 = await fillForm1040(input, result, f1040Path);
   if (flatten) await flattenForm(doc1040.getForm());
   const outputPath1040 = join(outputDir, "f1040-filled.pdf");
-  await savePdf(doc1040, outputPath1040);
+  await savePacketPdf(doc1040, outputPath1040);
   filledForms.push(outputPath1040);
 
   // ── Schedule 1 (if applicable) ──
@@ -410,7 +419,7 @@ export async function fillReturn(
     const docS1 = await fillSchedule1(input, result, s1Path);
     if (flatten) await flattenForm(docS1.getForm());
     const outputPathS1 = join(outputDir, "f1040s1-filled.pdf");
-    await savePdf(docS1, outputPathS1);
+    await savePacketPdf(docS1, outputPathS1);
     filledForms.push(outputPathS1);
   }
 
@@ -420,7 +429,7 @@ export async function fillReturn(
     const docS2 = await fillSchedule2(input, result, s2Path);
     if (flatten) await flattenForm(docS2.getForm());
     const outputPathS2 = join(outputDir, "f1040s2-filled.pdf");
-    await savePdf(docS2, outputPathS2);
+    await savePacketPdf(docS2, outputPathS2);
     filledForms.push(outputPathS2);
   }
 
@@ -430,7 +439,7 @@ export async function fillReturn(
     const docS3 = await fillSchedule3(input, result, s3Path);
     if (flatten) await flattenForm(docS3.getForm());
     const outputPathS3 = join(outputDir, "f1040s3-filled.pdf");
-    await savePdf(docS3, outputPathS3);
+    await savePacketPdf(docS3, outputPathS3);
     filledForms.push(outputPathS3);
 
   }
@@ -441,7 +450,7 @@ export async function fillReturn(
     const doc5695 = await fillForm5695(input, result, f5695Path);
     if (flatten) await flattenForm(doc5695.getForm());
     const outputPath5695 = join(outputDir, "f5695-filled.pdf");
-    await savePdf(doc5695, outputPath5695);
+    await savePacketPdf(doc5695, outputPath5695);
     filledForms.push(outputPath5695);
   }
 
@@ -451,7 +460,7 @@ export async function fillReturn(
     const docSA = await fillScheduleA(input, result, saPath);
     if (flatten) await flattenForm(docSA.getForm());
     const outputPathSA = join(outputDir, "f1040sa-filled.pdf");
-    await savePdf(docSA, outputPathSA);
+    await savePacketPdf(docSA, outputPathSA);
     filledForms.push(outputPathSA);
   }
 
@@ -461,7 +470,7 @@ export async function fillReturn(
     const docSB = await fillScheduleB(input, result, sbPath);
     if (flatten) await flattenForm(docSB.getForm());
     const outputPathSB = join(outputDir, "f1040sb-filled.pdf");
-    await savePdf(docSB, outputPathSB);
+    await savePacketPdf(docSB, outputPathSB);
     filledForms.push(outputPathSB);
   }
 
@@ -471,7 +480,7 @@ export async function fillReturn(
     const docSC = await fillScheduleC(input, result, scPath);
     if (flatten) await flattenForm(docSC.getForm());
     const outputPathSC = join(outputDir, "f1040sc-filled.pdf");
-    await savePdf(docSC, outputPathSC);
+    await savePacketPdf(docSC, outputPathSC);
     filledForms.push(outputPathSC);
   }
 
@@ -481,7 +490,7 @@ export async function fillReturn(
     const docSD = await fillScheduleD(input, result, sdPath);
     if (flatten) await flattenForm(docSD.getForm());
     const outputPathSD = join(outputDir, "f1040sd-filled.pdf");
-    await savePdf(docSD, outputPathSD);
+    await savePacketPdf(docSD, outputPathSD);
     filledForms.push(outputPathSD);
   }
 
@@ -491,7 +500,7 @@ export async function fillReturn(
     const docSE = await fillScheduleE(input, result, sePath);
     if (flatten) await flattenForm(docSE.getForm());
     const outputPathSE = join(outputDir, "f1040se-filled.pdf");
-    await savePdf(docSE, outputPathSE);
+    await savePacketPdf(docSE, outputPathSE);
     filledForms.push(outputPathSE);
   }
 
@@ -501,7 +510,7 @@ export async function fillReturn(
     const docSF = await fillScheduleF(input, result, sfPath);
     if (flatten) await flattenForm(docSF.getForm());
     const outputPathSF = join(outputDir, "f1040sf-filled.pdf");
-    await savePdf(docSF, outputPathSF);
+    await savePacketPdf(docSF, outputPathSF);
     filledForms.push(outputPathSF);
   }
 
@@ -511,7 +520,7 @@ export async function fillReturn(
     const docSJ = await fillScheduleJ(input, result, sjPath);
     if (flatten) await flattenForm(docSJ.getForm());
     const outputPathSJ = join(outputDir, "f1040sj-filled.pdf");
-    await savePdf(docSJ, outputPathSJ);
+    await savePacketPdf(docSJ, outputPathSJ);
     filledForms.push(outputPathSJ);
   }
 
@@ -521,7 +530,7 @@ export async function fillReturn(
     const docSSE = await fillScheduleSE(input, result, ssePath);
     if (flatten) await flattenForm(docSSE.getForm());
     const outputPathSSE = join(outputDir, "f1040sse-filled.pdf");
-    await savePdf(docSSE, outputPathSSE);
+    await savePacketPdf(docSSE, outputPathSSE);
     filledForms.push(outputPathSSE);
   }
 
@@ -533,7 +542,7 @@ export async function fillReturn(
       const doc8949 = await fillForm8949(input, f8949Path);
       if (flatten) await flattenForm(doc8949.getForm());
       const outputPath8949 = join(outputDir, "f8949-filled.pdf");
-      await savePdf(doc8949, outputPath8949);
+      await savePacketPdf(doc8949, outputPath8949);
       filledForms.push(outputPath8949);
     }
   }
@@ -544,7 +553,7 @@ export async function fillReturn(
     const doc8959 = await fillForm8959(input, result, f8959Path);
     if (flatten) await flattenForm(doc8959.getForm());
     const outputPath8959 = join(outputDir, "f8959-filled.pdf");
-    await savePdf(doc8959, outputPath8959);
+    await savePacketPdf(doc8959, outputPath8959);
     filledForms.push(outputPath8959);
   }
 
@@ -554,7 +563,7 @@ export async function fillReturn(
     const doc8960 = await fillForm8960(input, result, f8960Path);
     if (flatten) await flattenForm(doc8960.getForm());
     const outputPath8960 = join(outputDir, "f8960-filled.pdf");
-    await savePdf(doc8960, outputPath8960);
+    await savePacketPdf(doc8960, outputPath8960);
     filledForms.push(outputPath8960);
   }
 
@@ -565,7 +574,7 @@ export async function fillReturn(
     const doc4137 = await fillForm4137(input, result, f4137Path);
     if (flatten) await flattenForm(doc4137.getForm());
     const outputPath4137 = join(outputDir, "f4137-filled.pdf");
-    await savePdf(doc4137, outputPath4137);
+    await savePacketPdf(doc4137, outputPath4137);
     filledForms.push(outputPath4137);
   }
 
@@ -575,7 +584,7 @@ export async function fillReturn(
     const doc8919 = await fillForm8919(input, result, f8919Path);
     if (flatten) await flattenForm(doc8919.getForm());
     const outputPath8919 = join(outputDir, "f8919-filled.pdf");
-    await savePdf(doc8919, outputPath8919);
+    await savePacketPdf(doc8919, outputPath8919);
     filledForms.push(outputPath8919);
   }
 
@@ -585,7 +594,7 @@ export async function fillReturn(
     const doc8582 = await fillForm8582(input, result, f8582Path);
     if (flatten) await flattenForm(doc8582.getForm());
     const outputPath8582 = join(outputDir, "f8582-filled.pdf");
-    await savePdf(doc8582, outputPath8582);
+    await savePacketPdf(doc8582, outputPath8582);
     filledForms.push(outputPath8582);
   }
 
@@ -595,7 +604,7 @@ export async function fillReturn(
     const doc4684 = await fillForm4684(input, result, f4684Path);
     if (flatten) await flattenForm(doc4684.getForm());
     const outputPath4684 = join(outputDir, "f4684-filled.pdf");
-    await savePdf(doc4684, outputPath4684);
+    await savePacketPdf(doc4684, outputPath4684);
     filledForms.push(outputPath4684);
   }
 
@@ -605,7 +614,7 @@ export async function fillReturn(
     const doc4797 = await fillForm4797(input, result, f4797Path);
     if (flatten) await flattenForm(doc4797.getForm());
     const outputPath4797 = join(outputDir, "f4797-filled.pdf");
-    await savePdf(doc4797, outputPath4797);
+    await savePacketPdf(doc4797, outputPath4797);
     filledForms.push(outputPath4797);
   }
 
@@ -615,7 +624,7 @@ export async function fillReturn(
     const doc8995 = await fillForm8995(input, result, f8995Path);
     if (flatten) await flattenForm(doc8995.getForm());
     const outputPath8995 = join(outputDir, "f8995-filled.pdf");
-    await savePdf(doc8995, outputPath8995);
+    await savePacketPdf(doc8995, outputPath8995);
     filledForms.push(outputPath8995);
   }
 
@@ -625,7 +634,7 @@ export async function fillReturn(
     const doc8812 = await fillForm8812(input, result, f8812Path);
     if (flatten) await flattenForm(doc8812.getForm());
     const outputPath8812 = join(outputDir, "f1040s8-filled.pdf");
-    await savePdf(doc8812, outputPath8812);
+    await savePacketPdf(doc8812, outputPath8812);
     filledForms.push(outputPath8812);
   }
 
@@ -641,7 +650,7 @@ export async function fillReturn(
         if (flatten) await flattenForm(doc8889.getForm());
         const suffix = hsaOwners.length > 1 ? `-${ownerKey}` : "";
         const outputPath8889 = join(outputDir, `f8889${suffix}-filled.pdf`);
-        await savePdf(doc8889, outputPath8889);
+        await savePacketPdf(doc8889, outputPath8889);
         filledForms.push(outputPath8889);
       }
     }
@@ -650,7 +659,7 @@ export async function fillReturn(
     const doc8889 = await fillForm8889(input, result, f8889Path, "primary");
     if (flatten) await flattenForm(doc8889.getForm());
     const outputPath8889 = join(outputDir, "f8889-filled.pdf");
-    await savePdf(doc8889, outputPath8889);
+    await savePacketPdf(doc8889, outputPath8889);
     filledForms.push(outputPath8889);
   }
 
@@ -660,7 +669,7 @@ export async function fillReturn(
     const doc2441 = await fillForm2441(input, result, f2441Path);
     if (flatten) await flattenForm(doc2441.getForm());
     const outputPath2441 = join(outputDir, "f2441-filled.pdf");
-    await savePdf(doc2441, outputPath2441);
+    await savePacketPdf(doc2441, outputPath2441);
     filledForms.push(outputPath2441);
   }
 
@@ -672,7 +681,7 @@ export async function fillReturn(
     const doc8863 = await fillForm8863(input, result, f8863Path);
     if (flatten) await flattenForm(doc8863.getForm());
     const outputPath8863 = join(outputDir, "f8863-filled.pdf");
-    await savePdf(doc8863, outputPath8863);
+    await savePacketPdf(doc8863, outputPath8863);
     filledForms.push(outputPath8863);
   }
 
@@ -682,7 +691,7 @@ export async function fillReturn(
     const doc6251 = await fillForm6251(input, result, f6251Path);
     if (flatten) await flattenForm(doc6251.getForm());
     const outputPath6251 = join(outputDir, "f6251-filled.pdf");
-    await savePdf(doc6251, outputPath6251);
+    await savePacketPdf(doc6251, outputPath6251);
     filledForms.push(outputPath6251);
   }
 
@@ -692,7 +701,7 @@ export async function fillReturn(
     const doc8880 = await fillForm8880(input, result, f8880Path);
     if (flatten) await flattenForm(doc8880.getForm());
     const outputPath8880 = join(outputDir, "f8880-filled.pdf");
-    await savePdf(doc8880, outputPath8880);
+    await savePacketPdf(doc8880, outputPath8880);
     filledForms.push(outputPath8880);
   }
 
@@ -707,7 +716,7 @@ export async function fillReturn(
     const doc5329 = await fillForm5329(input, result, join(blankFormsDir, "f5329.pdf"), owner);
     if (flatten) await flattenForm(doc5329.getForm());
     const outputPath5329 = join(outputDir, `f5329-${owner}-filled.pdf`);
-    await savePdf(doc5329, outputPath5329);
+    await savePacketPdf(doc5329, outputPath5329);
     filledForms.push(outputPath5329);
   }
   if (source5329Owners.length === 0 && result.form5329 && result.form5329.totalAdditionalTax.gt(0)) {
@@ -715,7 +724,7 @@ export async function fillReturn(
     const doc5329 = await fillForm5329(input, result, f5329Path);
     if (flatten) await flattenForm(doc5329.getForm());
     const outputPath5329 = join(outputDir, "f5329-filled.pdf");
-    await savePdf(doc5329, outputPath5329);
+    await savePacketPdf(doc5329, outputPath5329);
     filledForms.push(outputPath5329);
   }
 
@@ -731,7 +740,7 @@ export async function fillReturn(
         if (flatten) await flattenForm(doc8606.getForm());
         const suffix = f8606Owners.length > 1 ? `-${ownerKey}` : "";
         const outputPath8606 = join(outputDir, `f8606${suffix}-filled.pdf`);
-        await savePdf(doc8606, outputPath8606);
+        await savePacketPdf(doc8606, outputPath8606);
         filledForms.push(outputPath8606);
       }
     }
@@ -740,7 +749,7 @@ export async function fillReturn(
     const doc8606 = await fillForm8606(input, result, f8606Path, "primary");
     if (flatten) await flattenForm(doc8606.getForm());
     const outputPath8606 = join(outputDir, "f8606-filled.pdf");
-    await savePdf(doc8606, outputPath8606);
+    await savePacketPdf(doc8606, outputPath8606);
     filledForms.push(outputPath8606);
   }
 
@@ -786,7 +795,7 @@ export async function fillReturn(
       const doc = await fillForm7206(input, result, join(blankFormsDir, "f7206.pdf"), business.businessSourceId, business.accountHolder);
       if (flatten) await flattenForm(doc.getForm());
       const outputPath = join(outputDir, `form-7206-${business.accountHolder}-${index + 1}.pdf`);
-      await savePdf(doc, outputPath); filledForms.push(outputPath);
+      await savePacketPdf(doc, outputPath); filledForms.push(outputPath);
     }
   }
 
@@ -1001,7 +1010,7 @@ export async function fillReturn(
     const docSEI = await fillScheduleEIC(input, result, seiPath);
     if (flatten) await flattenForm(docSEI.getForm());
     const outputPathSEI = join(outputDir, "f1040sei-filled.pdf");
-    await savePdf(docSEI, outputPathSEI);
+    await savePacketPdf(docSEI, outputPathSEI);
     filledForms.push(outputPathSEI);
   }
 
@@ -1011,7 +1020,7 @@ export async function fillReturn(
     const docSH = await fillScheduleH(input, result, shPath);
     if (flatten) await flattenForm(docSH.getForm());
     const outputPathSH = join(outputDir, "f1040sh-filled.pdf");
-    await savePdf(docSH, outputPathSH);
+    await savePacketPdf(docSH, outputPathSH);
     filledForms.push(outputPathSH);
   }
 
@@ -1021,7 +1030,7 @@ export async function fillReturn(
     const doc4952 = await fillForm4952(input, result, f4952Path);
     if (flatten) await flattenForm(doc4952.getForm());
     const outputPath4952 = join(outputDir, "f4952-filled.pdf");
-    await savePdf(doc4952, outputPath4952);
+    await savePacketPdf(doc4952, outputPath4952);
     filledForms.push(outputPath4952);
   }
 
@@ -1031,7 +1040,7 @@ export async function fillReturn(
     const docSR = await fillScheduleR(input, result, srPath);
     if (flatten) await flattenForm(docSR.getForm());
     const outputPathSR = join(outputDir, "f1040sr-filled.pdf");
-    await savePdf(docSR, outputPathSR);
+    await savePacketPdf(docSR, outputPathSR);
     filledForms.push(outputPathSR);
   }
 
@@ -1041,7 +1050,7 @@ export async function fillReturn(
     const doc8936 = await fillForm8936(input, result, f8936Path);
     if (flatten) await flattenForm(doc8936.getForm());
     const outputPath8936 = join(outputDir, "f8936-filled.pdf");
-    await savePdf(doc8936, outputPath8936);
+    await savePacketPdf(doc8936, outputPath8936);
     filledForms.push(outputPath8936);
   }
 
@@ -1051,7 +1060,7 @@ export async function fillReturn(
     const doc8839 = await fillForm8839(input, result, f8839Path);
     if (flatten) await flattenForm(doc8839.getForm());
     const outputPath8839 = join(outputDir, "f8839-filled.pdf");
-    await savePdf(doc8839, outputPath8839);
+    await savePacketPdf(doc8839, outputPath8839);
     filledForms.push(outputPath8839);
   }
 
@@ -1063,7 +1072,7 @@ export async function fillReturn(
     const docIL1040 = await fillIL1040(input, result, il1040Path);
     if (flatten) await flattenForm(docIL1040.getForm());
     const outputPathIL1040 = join(outputDir, "il-1040-filled.pdf");
-    await savePdf(docIL1040, outputPathIL1040);
+    await savePacketPdf(docIL1040, outputPathIL1040);
     filledForms.push(outputPathIL1040);
   }
 
@@ -1073,7 +1082,7 @@ export async function fillReturn(
     const docPA40 = await fillPA40(input, result, pa40Path);
     if (flatten) await flattenForm(docPA40.getForm());
     const outputPathPA40 = join(outputDir, "pa-40-filled.pdf");
-    await savePdf(docPA40, outputPathPA40);
+    await savePacketPdf(docPA40, outputPathPA40);
     filledForms.push(outputPathPA40);
 
     if (
@@ -1320,7 +1329,7 @@ export async function fillReturn(
     const docNYIT201 = await fillNYIT201(input, result, nyIT201Path);
     if (flatten) await flattenForm(docNYIT201.getForm());
     const outputPathNYIT201 = join(outputDir, "ny-it201-filled.pdf");
-    await savePdf(docNYIT201, outputPathNYIT201);
+    await savePacketPdf(docNYIT201, outputPathNYIT201);
     filledForms.push(outputPathNYIT201);
   }
 
@@ -1330,14 +1339,15 @@ export async function fillReturn(
     const docNJ1040 = await fillNJ1040(input, result, nj1040Path);
     if (flatten) await flattenForm(docNJ1040.getForm());
     const outputPathNJ1040 = join(outputDir, "nj-1040-filled.pdf");
-    await savePdf(docNJ1040, outputPathNJ1040);
+    await savePacketPdf(docNJ1040, outputPathNJ1040);
     filledForms.push(outputPathNJ1040);
   }
 
   for (const path of filledForms) {
+    if (finalizedPaths.has(path)) continue;
+    // Reference generators that write their own bytes still need finalization.
     const doc = await loadBlankPdf(path);
-    await markReviewPdf(doc);
-    await savePdf(doc, path);
+    await savePacketPdf(doc, path);
   }
   return { filledForms };
 }
