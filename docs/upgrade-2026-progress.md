@@ -427,3 +427,13 @@ post-calculation identifier redaction, document request guards and recovery UI
 cancellation packages passed focused checks. The checklist and `ongoingExecution`
 record their exact commits. Remote CI at `edd564b` still failed unit regressions
 and inventory freshness; further implementation and full verification continue.
+
+The later isolated `05ec24e` run reaches the unchanged coverage thresholds:
+85.15% branches, 91.25% functions, 92.49% statements and 93.65% lines. It records
+16,112 passing tests and 11 failures (ten stale complete-source fixtures and one
+five-second PDF timeout), so the full command is still failed. The current
+checklist separates this evidence from the newly passing request-stream,
+saved-return UI, AI-credit sales, provider-boundary and foreign-income packages.
+Implementation continues through source reconciliation, state interactions,
+remaining federal rules and final runtime/recovery verification. No release or
+external qualification is claimed.

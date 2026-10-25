@@ -222,3 +222,37 @@ until the brief's criteria pass or only external actions remain.
   billing UI checks, paid AI availability claims/purchase gating, then a stable
   rerun and final image/Compose rehearsal. Tax agents continue FEIE, credits and
   remaining actual income/source facts. All external inputs above remain pending.
+
+## Stable coverage threshold reached; integration remains active — 2026-10-25
+
+- Exact tracked snapshot `05ec24e`, Node 24, two workers and disposable PostgreSQL:
+  **16,112 passed / 11 failed / zero skipped**, 562 passing and five failing files.
+  Branches **85.15%**, functions **91.25%**, statements **92.49%**, lines **93.65%**
+  meet the unchanged thresholds. The command still failed: seven PA/OH review
+  packet fixtures and three CTC/source-ledger fixtures need explicit source facts;
+  one partner-basis PDF test exceeded its existing five-second timeout under
+  coverage. Do not claim a passing suite or weaken the timeout/assertions.
+  Evidence: `.local/upgrade-evidence/stable-coverage-05ec24e.log`;
+  snapshot metadata: `stable-snapshot-current.json`. Newer code needs a new run.
+- `6e795b5` bounds request-stream lifetime (150 focused checks); `4f20049`
+  prevents stale saved-return lists and overlapping deletions (61 focused checks).
+- `1858703` gates extra-credit sales on the actual qualified production executor
+  and provider configuration, fixes exact Decimal display, and corrects public
+  availability/storage claims. Combined billing/UI/security run: 316 passes;
+  contract/web types and scoped lint pass. No promotion or live spend occurred.
+- `6ed4466` contains provider HTTP outages, cancellation and caching boundaries:
+  104 focused checks, web types and lint pass. Nineteen initial regressions failed.
+- `1d3fd90` requires actual W-2 owner and state facts. Its source/DOM/storage/PDF
+  package has 616 passes and seven fresh production Chromium scenarios passing.
+- `28ba63d`/`2e3fa87` add actual Form 2555 sources, net exclusion/housing routing,
+  stacking and MAGI effects; `05ec24e` renders all audited foreign-income lines
+  with per-page review warnings. Four synthetic pages inspected; no final 2026
+  form qualification. `26661ba` corrects disjoint 1099-INT Boxes 1 and 3 federally.
+- Current parent work: PA interest source/education-exclusion reconciliation,
+  complete state-packet fixtures, clean full checks and final runtime/Compose
+  recovery. Agents continue remaining income facts, Form 8815, Social Security
+  exclusion worksheets and tax-table/capital-gain calculations. Independent
+  review and every external prerequisite above remain pending.
+- Remote CI at `1858703` was in progress when inspected:
+  https://github.com/utilityfueled/tax-engine/actions/runs/40161538848.
+  Superseded pushes were cancelled; exact final-code CI success is still required.

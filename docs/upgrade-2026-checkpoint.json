@@ -204,7 +204,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "0eab56e",
+    "lastRecordedCommit": "6ed4466",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -268,6 +268,22 @@
         "passed": 76,
         "renderedPages": 4,
         "scope": "synthetic 2025 review copies; no filing qualification"
+      },
+      "boundedRequestStreams": {
+        "passed": 150,
+        "scope": "synthetic streams, request guards and dependency failure tests"
+      },
+      "savedReturnLifecycle": {
+        "passed": 61,
+        "scope": "local DOM, persistence and recovery tests"
+      },
+      "qualifiedCreditSalesAndUi": {
+        "passed": 316,
+        "scope": "synthetic qualification/payment fixtures, real disabled gate, no live spend or promotion"
+      },
+      "providerHttpBoundaries": {
+        "passed": 104,
+        "scope": "synthetic cancellation, cache and outage tests; types/lint pass"
       }
     },
     "externalInputsStillPending": [
@@ -284,29 +300,30 @@
       "final multi-platform release images"
     ],
     "workInProgress": [
-      "remaining federal law and complete facts",
-      "stable full-suite coverage with meaningful failure and UI tests",
-      "request-body cancellation and billing availability claims",
+      "remaining federal law and complete income/source facts",
+      "PA interest and complete state-packet fixture reconciliation",
+      "clean full-suite coverage and all required checks",
       "selected-state demand and final form qualification",
       "final multi-platform release and recovery rehearsal",
       "hosted staging and independent human reviews",
       "repeated live synthetic AI evaluation and account availability"
     ],
-    "latestIntegratedCommit": "0eab56e",
+    "latestIntegratedCommit": "6ed4466",
     "latestCoverageDiagnostic": {
-      "status": "failed",
-      "commit": "2cb61b339de231ba74cedc2fd20853626dd5a4ec",
-      "passed": 15929,
-      "failed": 6,
+      "status": "failed-tests-coverage-thresholds-met",
+      "commit": "05ec24e10716cd6c4c8ccd8d2b6e3effc6e18d94",
+      "passed": 16112,
+      "failed": 11,
       "skipped": 0,
-      "filesPassed": 545,
+      "filesPassed": 562,
       "filesFailed": 5,
-      "branchesPercent": "84.06",
-      "functionsPercent": "89.81",
-      "statementsPercent": "91.85",
-      "linesPercent": "92.93",
-      "evidence": ".local/upgrade-evidence/stable-coverage-2cb61b3.log",
-      "limitation": "Isolated committed snapshot, bounded workers and disposable local PostgreSQL16. Six fixture/source regressions, plus unchanged 85% branch and 90% function gates failed. Newer commits require a new full run."
+      "branchesPercent": "85.15",
+      "functionsPercent": "91.25",
+      "statementsPercent": "92.49",
+      "linesPercent": "93.65",
+      "evidence": ".local/upgrade-evidence/stable-coverage-05ec24e.log",
+      "evidenceSha256": "2f076021900e9de943982fd772cdd33a5e00ff192e9ecca03113a04d6381a9b0",
+      "limitation": "Exact committed snapshot; ten stale complete-source fixtures and one partner-basis PDF timeout. Thresholds unchanged and met for this commit; full command failed. Newer code requires a fresh run."
     },
     "recentPackages": {
       "privacyHeaderRedaction": "2d16a94",
@@ -343,7 +360,16 @@
       "minimumTaxCreditIntegration": "45bb211",
       "documentRequestBoundaries": "935e0cc",
       "recoveryUiCancellation": "0eab56e",
-      "containerContext": "0c935f7"
+      "containerContext": "0c935f7",
+      "boundedRequestStreams": "6e795b5",
+      "savedReturnLifecycle": "4f20049",
+      "qualifiedCreditSalesAndUi": "1858703",
+      "providerHttpBoundaries": "6ed4466",
+      "actualW2OwnerAndState": "1d3fd90",
+      "foreignIncomeLaw": "28ba63d",
+      "foreignIncomeIntegration": "2e3fa87",
+      "foreignIncomePdf": "05ec24e",
+      "disjointInterestBoxes": "26661ba"
     },
     "remoteCi": {
       "commit": "edd564b",
@@ -356,7 +382,10 @@
       ],
       "evidence": ".local/upgrade-evidence/ci-edd564b-failed.log",
       "latestQueuedCommit": "0eab56e",
-      "latestQueuedUrl": "https://github.com/utilityfueled/tax-engine/actions/runs/40160576899"
+      "latestQueuedUrl": "https://github.com/utilityfueled/tax-engine/actions/runs/40160576899",
+      "latestInspectedCommit": "1858703",
+      "latestInspectedStatus": "in_progress",
+      "latestInspectedUrl": "https://github.com/utilityfueled/tax-engine/actions/runs/40161538848"
     }
   }
 }
