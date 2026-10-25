@@ -56,26 +56,92 @@ jobs:
             apps/web/test-results/
 
   container:
-    name: Container Smoke and SBOM
+    name: Container Recovery, Browser Flows and SBOM
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     permissions:
       contents: read
+    defaults:
+      run:
+        shell: bash
+    env:
+      NEXT_TELEMETRY_DISABLED: 1
+      TAX_ENGINE_DEPLOYMENT_MODE: self-host
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version-file: .node-version
-      - run: docker build --tag tax-engine:ci .
-      - run: node scripts/smoke-container.mjs tax-engine:ci
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @tax-engine/web exec playwright install --with-deps chromium
+      - run: pnpm sample-docs:fetch
+      - name: Install PostgreSQL 16 recovery client
+        run: |
+          if [ ! -x /usr/lib/postgresql/16/bin/pg_dump ]; then
+            sudo apt-get update
+            sudo apt-get install --yes postgresql-client-16
+          fi
+      - run: docker build --label org.opencontainers.image.revision="$GITHUB_SHA" --tag tax-engine:ci .
+      - run: node scripts/smoke-container.mjs tax-engine:ci | tee container-smoke.log
+      - name: Build immutable previous application for upgrade and rollback
+        run: |
+          previous_source=$(mktemp -d)
+          trap 'rm -rf "$previous_source"' EXIT
+          git archive d32cb8cf3d607c643c4c7f7e1b845fcace61563f | tar -x -C "$previous_source"
+          docker build --label org.opencontainers.image.revision=d32cb8cf3d607c643c4c7f7e1b845fcace61563f --tag tax-engine:previous "$previous_source"
+      - name: Rehearse isolated Compose upgrade, recovery and rollback
+        env:
+          TAX_ENGINE_TEST_POSTGRES_BIN: /usr/lib/postgresql/16/bin
+        run: node --import tsx scripts/rehearse-self-host-release.mjs tax-engine:previous tax-engine:ci | tee container-recovery.log
+      - name: Start isolated runtime for browser flows
+        run: |
+          docker run --detach --name tax-engine-browser-ci --read-only --cap-drop ALL \
+            --security-opt no-new-privileges --tmpfs /tmp:rw,noexec,nosuid,size=64m \
+            --publish 127.0.0.1:3109:3000 --env TAX_ENGINE_DEPLOYMENT_MODE=self-host tax-engine:ci
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:3109/api/health; then exit 0; fi
+            sleep 1
+          done
+          exit 1
+      - name: Browser flows against the actual runtime image
+        env:
+          PLAYWRIGHT_DISABLE_WEBSERVER: "true"
+          PLAYWRIGHT_BASE_URL: http://127.0.0.1:3109
+        run: pnpm test:web --retries=0 --timeout=30000
       - uses: anchore/sbom-action@v0
+        if: ${{ !cancelled() }}
         with:
           image: tax-engine:ci
           format: cyclonedx-json
           output-file: container.cdx.json
           upload-release-assets: false
           upload-artifact: false
-      - uses: actions/upload-artifact@v4
+      - uses: anchore/scan-action@v7
+        if: ${{ !cancelled() }}
         with:
-          name: container-sbom
-          path: container.cdx.json
+          sbom: container.cdx.json
+          grype-version: v0.121.0
+          output-format: json
+          output-file: container-vulnerabilities.json
+          # Keep every finding in the report. Noncritical findings still require
+          # the separate owned, expiring release disposition; CI is not approval.
+          fail-build: true
+          severity-cutoff: critical
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: container-runtime-evidence
+          path: |
+            container.cdx.json
+            container-vulnerabilities.json
+            container-smoke.log
+            container-recovery.log
+            apps/web/playwright-report/
+            apps/web/test-results/
+      - name: Remove this job's browser container
+        if: always()
+        run: docker rm --force tax-engine-browser-ci || true

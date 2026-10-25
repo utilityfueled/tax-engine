@@ -40,3 +40,21 @@ local image is retained for rollback rehearsal. No image was published.
 Evidence: `.local/upgrade-evidence/runtime-security-image.cdx.json`,
 `runtime-security-vulnerabilities.json`, `container-security-build.log`, and
 `image-security-tests.log`. Hashes of the scan and SBOM are in the register.
+
+## Exact committed candidate refresh — 2026-10-25
+
+The arm64 candidate built from tracked commit `da3e0fc5e51184418f29e16f98faecd13d3ddbb3`
+is `sha256:c018a5100f6553355472519c05694d4cd54a40e974abef62431d5e9eaafe6598`.
+Its actual Docker health check, read-only/non-root runtime, assets and all 41
+versioned templates passed. A new Syft SBOM and Grype scan reproduce exactly the
+previous 157 package/version findings and 67 distinct advisories, with no fixed
+matches reported. The register now binds those findings to this exact candidate
+and its SBOM/scan hashes. DB refresh found the same valid 2026-10-24T17:45:29Z data.
+No advisory was accepted or suppressed. The package audit refreshed separately
+with zero advisories across 519 entries.
+
+The [Compose evidence](upgrade-2026-self-host-rehearsal.json) records successful
+local synthetic upgrade/restart/backup restore/rollback and encrypted browser
+recovery. This intermediate candidate is not final code; amd64 and final-code
+qualification remain required. No image was published and no staging evidence
+or independent approval is implied.

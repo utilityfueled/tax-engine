@@ -5,11 +5,14 @@ The current self-host target is a single `docker compose` stack for the monorepo
 The image uses Node 24.22.1 and includes public assets and blank PDF templates.
 `/api/health` reports process liveness; it does not certify database health,
 tax-law completeness, or filing readiness. CI builds the runtime image, smoke
-tests it without AI credentials, and produces a CycloneDX SBOM for that image.
+tests it without AI credentials, exercises browser/recovery flows, and produces
+a CycloneDX SBOM and vulnerability report for that image. A passing CI check does
+not replace the separate advisory disposition or release qualification.
 Local container checks require Docker or Podman. For Docker, run
 `docker build -t tax-engine:ci .` then
 `node scripts/smoke-container.mjs tax-engine:ci`. For Podman, build the same
-Dockerfile and set `TAX_ENGINE_CONTAINER_RUNTIME=podman` for the smoke script.
+Dockerfile with `--format docker` so its health check is retained, and set
+`TAX_ENGINE_CONTAINER_RUNTIME=podman` for the smoke script.
 A build VM needs free memory in addition to other services. The compiler old-space heap
 is bounded by `NODE_BUILD_MAX_OLD_SPACE_MB` (default 2560); change it with
 `--build-arg` when needed. Type checking stays enabled. Runtime old-space remains
@@ -24,11 +27,10 @@ That setting is not a measured production capacity claim.
 - works without any hosted dependency
 
 For deterministic local operation, leave `MODEL_PROVIDER_API_KEY`,
-`OPENAI_API_KEY`, `GEMINI_API_KEY` and `GOOGLE_API_KEY` unset. The legacy workspace
-responder can use Google when only its key is present. Its migration and AI
-qualification remain unfinished; do not treat configured credentials as a
-qualified tax-assistance service. Candidate document routes are disabled in
-production pending evaluation.
+`OPENAI_API_KEY`, `GEMINI_API_KEY` and `GOOGLE_API_KEY` unset. Keys alone cannot
+enable AI. The task adapter requires an explicitly selected provider and a
+qualified rollout; the shipped rollout is empty. Candidate routes remain
+disabled pending independent evaluation and authorization.
 
 ## First run
 
@@ -58,7 +60,7 @@ pnpm self-host:logs
 ## Local development without Docker
 
 1. Copy `.env.example` to `.env.local`.
-2. Leave `MODEL_PROVIDER_API_KEY` blank for mock-local mode, or set it to enable the provider-safe summary route.
+2. Leave provider keys blank for deterministic local operation. A key does not enable an unqualified route.
 3. Start the app with `pnpm dev`.
 
 ## Deployment-mode boundary
@@ -90,3 +92,24 @@ The downloaded PDFs land in `sample-documents/downloads/` and are ignored by git
 - Hosted preview keeps using the in-memory adapter until a real Postgres/S3-backed store factory is registered or injected behind the hosted persistence boundary.
 - The Better Auth route is present for hosted preview work, but self-host mode bypasses it completely so local use never depends on hosted account setup.
 - No raw direct identifiers should cross the provider boundary; the provider route stays behind the existing redaction layer in both Docker and local dev modes.
+
+## Isolated release rehearsal
+
+With two locally built images for the same architecture, installed workspace
+dependencies, Playwright Chromium and PostgreSQL 16 client tools, run:
+
+```bash
+node --import tsx scripts/rehearse-self-host-release.mjs PREVIOUS_IMAGE CANDIDATE_IMAGE
+```
+
+For Podman, set `TAX_ENGINE_CONTAINER_RUNTIME=podman`. If PostgreSQL client tools
+are outside PATH, set `TAX_ENGINE_TEST_POSTGRES_BIN` to their directory. The script
+creates and removes only its own Compose project, volume and browser profile.
+It uses loopback ports, synthetic facts and no provider or payment keys. It checks
+upgrade, database restart, dump/restore, rollback, browser backup/restore and
+deletion, including original document bytes and exact values.
+
+This verifies local recovery with the current application schema. It does not
+verify historical hosted-schema downgrade, hosted authentication or staging.
+See [recorded candidate evidence](upgrade-2026-self-host-rehearsal.json) for the
+exact image, commit, platform and limits of the latest completed run.

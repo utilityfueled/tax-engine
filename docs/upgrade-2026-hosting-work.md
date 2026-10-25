@@ -248,7 +248,7 @@ document-route tests now pass, as do web types, scoped lint and diff checks.
 Logs: `.local/upgrade-evidence/provider-route-boundaries-{red,green,types}.log`.
 These are synthetic in-process failure/cancellation checks. No production route
 was enabled, no live provider was contacted, and staging evidence remains absent.
-# Runtime configuration cleanup — 2026-10-25
+## Runtime configuration cleanup — 2026-10-25
 
 Removed unused GPT-5 Mini and Gemini 3 Flash Preview model defaults from the
 example environments and Compose service. The examples now state that keys alone
@@ -259,3 +259,49 @@ Validation: 65 environment/security and workspace-provider tests passed; the
 checked-in example passed `podman compose --env-file .env.docker.example config`.
 Evidence: `.local/upgrade-evidence/runtime-env-defaults.log` and
 `runtime-compose-config.yaml`. No services started and no provider requests made.
+
+## Committed-image Compose recovery rehearsal — 2026-10-25
+
+The new `scripts/rehearse-self-host-release.mjs` creates a uniquely named local
+Compose project, loopback-only ports, a private browser profile and a disposable
+PostgreSQL volume. It uses synthetic records and clears provider/payment/telemetry
+credentials. Cleanup removes only its own resources. The strengthened container
+smoke also verifies a read-only root, uid 1001, actual Docker health status,
+versioned templates and absence of package tools/provider keys.
+
+The exact tracked commit `da3e0fc5e51184418f29e16f98faecd13d3ddbb3` built for
+linux/arm64 in Docker image format as
+`sha256:c018a5100f6553355472519c05694d4cd54a40e974abef62431d5e9eaafe6598`.
+Smoke passed with Node 24.22.1, all 41 templates, assets and self-host authentication.
+The Compose rehearsal passed previous-image startup, upgrade, database stop/restart,
+actual nine-table pg_dump/restore, rollback and re-upgrade. Checksums confirmed
+unchanged two-owner records, exact `0.0000006` provider cost, unknown year, explicit
+zero, large exact cents and original document bytes throughout. Encrypted browser
+backup, deletion/reload, restore under a new ID, reopening and final deletion passed;
+no synthetic private identifiers or source-file payload appeared in network requests.
+
+This is local synthetic evidence. Tables were initialized with the current schema;
+the previous web image used browser-local facts. Historical hosted-schema downgrade,
+authentication recovery and staging security are **not** established by this run.
+The candidate predates newer implementation commits and must be rebuilt for final
+qualification. Both scripts pass syntax checks, scoped ESLint and diff checks.
+[Recorded digests, hashes and limits](upgrade-2026-self-host-rehearsal.json).
+
+The image SBOM was scanned with refreshed Grype data: 157 matches, 67 distinct
+advisories, zero critical and zero npm matches. The package/version findings are
+identical to the earlier register; no available fixed-version matches were reported.
+Unresolved findings keep their release-maintainer owner role, pending confirmation
+and 2026-11-07 review deadline. The local amd64 build reached Next.js compilation
+but the QEMU process crashed with signal 11 (exit139). This is a failed emulated
+build, not amd64 qualification. Native amd64 CI and final-code reruns continue.
+
+
+An independent agent review found four harness evidence/safety gaps. The rerun
+now pins a verified local Docker socket or loopback Podman VM before mutations,
+keeps request observations from before upload, checks wrong-password and altered
+ciphertext rejection without restored records, and attempts every cleanup step
+even after another cleanup fails. All six persistence phases and encrypted
+recovery passed again. Privacy evidence covers raw synthetic markers in 407
+observed URLs/request bodies; it does not prove absence of encoded or binary PII.
+Twelve endpoint-boundary tests pass after failing before the helper existed.
+The agent review is separate from the still-required independent human review.

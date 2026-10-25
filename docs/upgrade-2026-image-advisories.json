@@ -1,7 +1,7 @@
 {
-  "recordedAt": "2026-10-24",
-  "scope": "intermediate local arm64 runtime image, not a qualified release artifact",
-  "imageId": "sha256:905d28422236c424b7a90bec9ff0d2d4d4d63fdc9ba689e51f38d0425549c393",
+  "recordedAt": "2026-10-25",
+  "scope": "exact committed intermediate arm64 runtime candidate; not a qualified release artifact",
+  "imageId": "sha256:c018a5100f6553355472519c05694d4cd54a40e974abef62431d5e9eaafe6598",
   "base": "node:24.22.1-trixie-slim",
   "scanner": "grype 0.121.0",
   "databaseBuilt": "2026-10-24T17:45:29Z",
@@ -12,8 +12,8 @@
     "Low": 10
   },
   "uniqueAdvisories": 67,
-  "sbomSha256": "5125f9eda76b8b6d4715315214ed96c1a4c07677dfcdc00d050f7e7121a816dd",
-  "scanSha256": "89568b9e4beb8fa226c4880aa0cc0e09b53a14a73c25d6c2e0d588b1b1c28c84",
+  "sbomSha256": "6be93818604d1ff44c92c185919d5779782276464573d374ab572b1480d68634",
+  "scanSha256": "0c058fa350f49217ca7c36d90c839d1d095cce8b573e08d6c358e27217c1196c",
   "advisories": [
     {
       "id": "CVE-2005-2541",
@@ -1918,5 +1918,6 @@
       "reviewBy": "2026-11-07",
       "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
     }
-  ]
+  ],
+  "sourceCommit": "da3e0fc5e51184418f29e16f98faecd13d3ddbb3"
 }
