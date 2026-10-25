@@ -946,9 +946,12 @@ describe("Schedule E - totalSupplementalIncome flows through federal pipeline to
     };
     const federal = calculateFederalTax(input);
     // Rental net: 10K - 37K = -27K
-    // W-2 $85K + rental loss -$27K = $58K total income
+    // Pub925 special allowance permits25000;2000of the27000source loss is suspended.
+    // W2 85000 minus25000allowed=60000on both1040lines9and11.
     expect(federal.scheduleE.totalRentalIncome.toNumber()).toBe(-27000);
-    expect(federal.totalIncome.toNumber()).toBe(58000);
+    expect(federal.totalIncome.toNumber()).toBe(60000);
+    expect(federal.otherIncome.toNumber()).toBe(-25000);
+    expect(federal.agi.toNumber()).toBe(60000);
   });
 
   it("combined rental, K-1, and royalty income all reflected in federal Line 9", () => {

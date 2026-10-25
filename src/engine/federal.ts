@@ -69,6 +69,7 @@ import { calculateForm4137 } from "./forms/form-4137.js";
 import { calculateForm8919 } from "./forms/form-8919.js";
 import { calculateSchedule3, calculateExcessSSWithholding } from "./schedules/schedule-3.js";
 import { calculateSchedule1 } from "./schedules/schedule-1.js";
+import { finalizeSchedule1 } from "./forms/schedule-1-return.js";
 import { calculateSchedule2 } from "./schedules/schedule-2.js";
 import { calculateForm2210 } from "./forms/form-2210.js";
 import { calculateForm3800 } from "./forms/form-3800.js";
@@ -1293,7 +1294,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
 
   // Other income (1099-MISC)
   // Note: royalties (Box 2) flow through Schedule E Part I, not here
-  // Crypto ordinary income → Schedule 1 Line 8z (or Schedule C if business)
+  // Crypto ordinary income → Schedule 1 Line 8v (or Schedule C if business)
   // Phase 1: mining/staking/airdrop hobby income
   // Phase 2: yield rewards, lending interest, NFT airdrop income
   const cryptoHobbyIncome = sum(
@@ -1305,9 +1306,9 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     nftResult?.airdropIncome ?? new Decimal(0),
   );
   if (cryptoHobbyIncome.greaterThan(0)) {
-    audit.record("Sched 1", "8z-crypto", "Crypto hobby income (mining/staking/airdrop)",
+    audit.record("Schedule1 Sources", "digital-assets", "Crypto hobby income (mining/staking/airdrop)",
       cryptoHobbyIncome,
-      "Digital asset ordinary income → Schedule 1 Line 8z (IRS Notice 2014-21, Rev. Rul. 2019-24, Rev. Rul. 2023-14)");
+      "Digital asset ordinary income → Schedule 1 Line 8v (IRS Notice 2014-21, Rev. Rul. 2019-24, Rev. Rul. 2023-14)");
   }
   const miscOtherIncome = sum(
     miscAgg.otherIncome,
@@ -1444,10 +1445,6 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   }, form4797);
   // Form 8814 Line 12 other income flows to Schedule 1 Line 8z
   const form8814OtherIncome = form8814?.totalOtherIncome ?? new Decimal(0);
-  if (form8814OtherIncome.greaterThan(0)) {
-    audit.record("Sched 1", "8z", "Form 8814 other income", form8814OtherIncome,
-      "Form 8814 Line 12 — interest/dividend income at ordinary rates from child(ren)'s election");
-  }
 
   // ── Form 461: Excess Business Loss Limitation (IRC §461(l)) ──
   // Computed after Schedule 1 so SE deductions are known. The excess
@@ -1471,10 +1468,6 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   );
   audit.merge(form461.lines);
   const excessBusinessLossAddback = form461.line16ExcessBusinessLoss;
-  if (excessBusinessLossAddback.greaterThan(0)) {
-    audit.record("Sched 1", "8p", "Excess business loss (Form 461)", excessBusinessLossAddback,
-      "IRC §461(l) disallowed excess added back as income");
-  }
 
   // ── Form 1099-Q: Qualified Education Program Distributions ──
   const form1099QForms = input.form1099Q ?? [];
@@ -1485,11 +1478,6 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     audit.merge(form1099Q.lines);
   }
   const form1099QTaxableEarnings = form1099Q?.taxableEarnings ?? new Decimal(0);
-  if (form1099QTaxableEarnings.greaterThan(0)) {
-    audit.record("Sched 1", "8q", "Taxable distributions from QTP/Coverdell ESA",
-      form1099QTaxableEarnings,
-      "Form 1099-Q taxable earnings from distributions exceeding adjusted qualified education expenses");
-  }
 
   // ── K-1 Form 1041: Estate/Trust Beneficiary Income ─────
   // Aggregate income items from trust/estate K-1s that route through
@@ -1498,19 +1486,12 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   const k1Form1041OtherPortfolio = sum(
     ...k1Form1041s.map((k) => d(k.otherPortfolioIncome))
   );
-  if (k1Form1041OtherPortfolio.greaterThan(0)) {
-    audit.record("Sched 1", "8z", "K-1 1041 other portfolio income", k1Form1041OtherPortfolio,
-      "K-1 (Form 1041) Box 5 — other portfolio and nonbusiness income from estates/trusts");
-  }
+
   // Box 11 Code A: §67(e) excess deductions on termination (above-the-line adjustment)
   const k1Form1041Section67eDeductions = sum(
     ...k1Form1041s.filter((k) => k.isFinalK1).map((k) => d(k.finalYearSection67eDeductions))
   );
-  if (k1Form1041Section67eDeductions.greaterThan(0)) {
-    audit.record("Sched 1", "24z", "K-1 1041 §67(e) excess deductions on termination",
-      k1Form1041Section67eDeductions.negated(),
-      "K-1 (Form 1041) Box 11 Code A — §67(e) above-the-line deduction per IRC §642(h) / TD 9918");
-  }
+
   // Box 11 Code E: NOL carryover from terminating estate/trust
   const k1Form1041FinalNOL = sum(
     ...k1Form1041s.filter((k) => k.isFinalK1).map((k) => d(k.finalYearNOLCarryover))
@@ -1568,14 +1549,6 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     k1Form1041OtherPortfolio,
     sched1.foreignIncomeExclusion.negated()
   );
-  audit.record("1040", "8", "Other income", otherIncome,
-    excessBusinessLossAddback.greaterThan(0)
-      ? "Schedule 1 income + Form 461 excess business loss add-back + miscellaneous"
-      : form1099QTaxableEarnings.greaterThan(0)
-        ? "Schedule 1 income + Form 1099-Q taxable education program distribution earnings + miscellaneous"
-        : form8814OtherIncome.greaterThan(0)
-          ? "Schedule 1 taxable refund/Form 4797 ordinary/unemployment/alimony/gambling/HSA distribution amounts, Form 1099-SA excess-contribution and post-death earnings, Form 8814 Line 12 child election income, plus miscellaneous other income"
-          : "Schedule 1 taxable refund/Form 4797 ordinary/unemployment/alimony/gambling/HSA distribution amounts, Form 1099-SA excess-contribution and post-death earnings, plus miscellaneous other income");
 
   const socialSecurityBenefitsGross = sum(
     ...(input.formSSA1099 ?? []).map((form) => d(form.netBenefits)),
@@ -1622,7 +1595,6 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
       "Full pre-bond income less non-IRA/non-student-loan adjustments plus AppendixB benefits before IRA and actual foreign/adoption addbacks");
     sched1 = calculateSchedule1(sched1Input,{ ...sched1Context,iraDeductionOverride:iraDeductionWorksheetResult.totalDeduction },form4797);
   }
-  audit.merge(sched1.lines);
   const socialSecurityBenefitsWorksheet = socialSecurityBenefitsGross.greaterThan(0)
     ? calculateSocialSecurityBenefitsWorksheet({
       filingStatus,
@@ -1660,7 +1632,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
         iraDeduction: sched1.iraDeduction,
         archerMSADeduction: sched1.archerMSADeduction,
         educatorExpenses: sched1.educatorExpenses,
-        otherAdjustmentsTotal: sum(sched1.otherAdjustmentsTotal, form2555HousingDeduction, k1Form1041Section67eDeductions),
+        otherAdjustmentsTotal: sum(sched1.otherAdjustmentsTotal, k1Form1041Section67eDeductions),
         studentLoanInterest: sched1.studentLoanInterest,
       },
       lumpSumElection: input.socialSecurityLumpSumElection === undefined
@@ -1778,14 +1750,8 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     adjustedScheduleETotal,
     otherIncome
   );
-  audit.record("1040", "9", "Total income", totalIncome,
-    totalSection163jDeduction.greaterThan(0)
-      ? `Sum of Lines 1-8 (Schedule E reduced by $${totalSection163jDeduction} §163(j) partner-level EBIE deduction)`
-      : "Sum of Lines 1-8");
 
   let agi = totalIncome.minus(adjustments);
-  audit.record("1040", "11", "Adjusted gross income", agi,
-    "Line 9 - Line 10");
 
   // ── Form 8582: Passive Activity Loss Limitations ────────
   // Build passive activities from K-1s marked as passive
@@ -1870,6 +1836,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   }
   if (partIRentalSuspended.greaterThan(0)) {
     agi = agi.plus(partIRentalSuspended);
+    totalIncome = totalIncome.plus(partIRentalSuspended);
     audit.record("1040", "11-adj", "AGI corrected for Form 8582 suspended rental losses",
       agi, `Added back $${partIRentalSuspended} suspended Part I rental losses`);
   }
@@ -2397,7 +2364,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     // Adjust AGI to reflect the NOL deduction for output purposes.
     // The NOL deduction enters Schedule 1 as negative other income, reducing AGI.
     agi = agi.minus(nolDeduction);
-    audit.record("Sched 1", "8a", "Net operating loss deduction", nolDeduction.negated(),
+    audit.record("NOL Deduction Worksheet", "deduction", "Net operating loss deduction", nolDeduction,
       "IRC §172 NOL deduction limited to 80% of pre-NOL taxable income",
       {
         "Available NOL carryforward": availableNOL,
@@ -2408,6 +2375,35 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     audit.record("1040", "11-nol", "AGI adjusted for NOL deduction", agi,
       `Reduced by $${nolDeduction} NOL deduction on Schedule 1 Line 8a`);
   }
+  sched1 = finalizeSchedule1(sched1, {
+    supplementalIncome: adjustedScheduleETotal.plus(partIRentalSuspended).minus(ptpReleasedTotal),
+    nolDeduction,
+    excessBusinessLoss: excessBusinessLossAddback,
+    digitalAssetIncome: cryptoHobbyIncome,
+    estateTerminationDeduction: k1Form1041Section67eDeductions,
+    otherIncomeItems: [
+      { source: "Form1099-MISC other income", amount: miscAgg.otherIncome },
+      { source: "Form1099-MISC unclassified rents", amount: miscAgg.rents },
+      { source: "HSA returned-excess earnings", amount: form1099SA.hsaReturnedExcessContributionEarnings },
+      { source: "HSA post-death earnings", amount: form1099SA.hsaPostDeathEarnings },
+      { source: "HSA9100 returned-excess earnings", amount: d(input.form5329?.supportedHsaReturnedExcessContributionEarningsUnder9100Relief) },
+      { source: "Form8814 child election income", amount: form8814OtherIncome },
+      { source: "QTP/Coverdell taxable earnings", amount: form1099QTaxableEarnings },
+      { source: "Section280F recapture compatibility", amount: section280FRecapture },
+      { source: "K1(Form1041) other portfolio income", amount: k1Form1041OtherPortfolio },
+    ],
+  });
+  totalIncome = totalIncome.minus(nolDeduction);
+  const reconciledTotalIncome = sum(totalWages,totalTaxableInterest,totalDividends,iraTaxable,
+    pensionTaxable,socialSecurityBenefitsTaxable,capitalGainLoss,sched1.totalAdditionalIncome);
+  if (!totalIncome.eq(reconciledTotalIncome) || !sched1.totalAdjustments.eq(adjustments)
+    || !totalIncome.minus(adjustments).eq(agi)) {
+    throw new Error("Final Schedule1 income and adjustments must reconcile with Form1040");
+  }
+  audit.merge(sched1.lines);
+  audit.record("1040", "8", "Additional income", sched1.totalAdditionalIncome, "Final Schedule1line10");
+  audit.record("1040", "9", "Total income", totalIncome, "Sum final Lines1z,2b,3b,4b,5b,6b,7,8");
+  audit.record("1040", "11", "Adjusted gross income", agi, "Final Line9 minus10");
   audit.record("1040", "15", "Taxable income", taxableIncome,
     nolDeduction.greaterThan(0)
       ? "AGI - total deductions - NOL deduction"
@@ -3545,9 +3541,9 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     socialSecurityBenefitsGross,
     socialSecurityBenefitsTaxable,
     capitalGainLoss,
-    otherIncome: otherIncome.minus(nolDeduction),
+    otherIncome: sched1.totalAdditionalIncome,
     nolDeduction,
-    totalIncome: totalIncome.minus(nolDeduction),
+    totalIncome,
 
     adjustmentsToIncome: adjustments,
     agi,
@@ -3688,9 +3684,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
 
     // Sub-results
     scheduleA: schedA,
-    schedule1: nolDeduction.greaterThan(0)
-      ? { ...sched1, nolDeduction, totalAdditionalIncome: sched1.totalAdditionalIncome.minus(nolDeduction) }
-      : sched1,
+    schedule1: sched1,
     scheduleB: schedB,
     scheduleC: schedC,
     scheduleD: schedD,

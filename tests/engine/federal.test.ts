@@ -2242,7 +2242,8 @@ describe("Simple W-2 single filer", () => {
         amount: d(-9000),
       },
     ]);
-    expect(result.otherIncome.toNumber()).toBe(0);
+    expect(result.otherIncome.toNumber()).toBe(-6000); // Canonical1040line8 includes allowedScheduleE loss.
+    expect(result.schedule1.totalAdditionalIncome.toNumber()).toBe(-6000);
     expect(result.totalIncome.toNumber()).toBe(79000);
     expect(result.agi.toNumber()).toBe(79000);
   });

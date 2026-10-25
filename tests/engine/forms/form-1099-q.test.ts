@@ -602,7 +602,7 @@ describe("Form 1099-Q Qualified Education Program Distributions", () => {
   // ── Federal Integration ─────────────────────────────────────────
 
   describe("Federal Integration Values", () => {
-    it("taxable earnings flow to Schedule 1 Line 8q as other income", () => {
+    it("taxable earnings flow to Schedule 1 Line 8z as other income", () => {
       const result = calculateForm1099Q(
         [q({ grossDistribution: "10000", earnings: "3000", basis: "7000" })],
         qee({ totalQualifiedExpenses: "0" })

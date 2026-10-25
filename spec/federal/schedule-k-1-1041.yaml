@@ -132,7 +132,7 @@ lines:
     formula: "Excess deductions from the final tax year of an estate or trust that pass through to beneficiaries under IRC §642(h)"
     irsRef: "Schedule K-1 (Form 1041) Instructions, Box 11; IRC §642(h); TD 9918"
     routing: |
-      Code A (§67(e) excess deductions): Schedule 1 Line 24z — above-the-line
+      Code A (§67(e) excess deductions): Schedule 1 Line 24k — positive above-the-line adjustment included in Lines25 and26
       Code B (non-miscellaneous itemized): Schedule A applicable lines
       Code C (short-term capital loss carryover): Schedule D Line 5
       Code D (long-term capital loss carryover): Schedule D Line 12

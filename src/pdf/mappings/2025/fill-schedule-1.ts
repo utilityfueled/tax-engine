@@ -1,11 +1,13 @@
-import { assertPdfExportAllowed } from "../../export-policy.js";
+import { assertPdfExportAllowed, markReviewPdf } from "../../export-policy.js";
 /**
  * PDF filler for IRS Schedule 1 (Form 1040) — Additional Income and Adjustments to Income.
  *
  * Field names from the official 2025 IRS fillable PDF, verified via debug label fill.
  */
 
-import { PDFDocument } from "pdf-lib";
+import { PDFDocument, StandardFonts } from "pdf-lib";
+import Decimal from "decimal.js";
+import { d, sum } from "@/utils/decimal.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import {
@@ -131,53 +133,72 @@ export async function fillSchedule1(
 
   if (!s1) return doc;
 
-  // ── Part I: Additional Income ──
-  setCurrencyField(form, F.line1, s1.taxableRefunds);
-  setCurrencyField(form, F.line2a, s1.alimonyReceived);
-  setCurrencyField(form, F.line3, s1.businessIncome);
-  setCurrencyField(form, F.line4, s1.otherGainsOrLosses);
-  setCurrencyField(form, F.line5, s1.supplementalIncome);
-  setCurrencyField(form, F.line6, s1.farmIncome);
-  setCurrencyField(form, F.line7, s1.unemploymentCompensation);
-
-  // Line 8 sub-items
-  setCurrencyField(form, F.line8a, s1.nolDeduction);
-  setCurrencyField(form, F.line8b, s1.gamblingIncome);
-  setCurrencyField(form, F.line8c, s1.cancelledDebtIncome);
-  setCurrencyField(form, F.line8f, s1.hsaTaxableDistributions);
-
-  setCurrencyField(form, F.line9, s1.totalAdditionalIncome.minus(
-    s1.taxableRefunds).minus(s1.alimonyReceived).minus(s1.businessIncome)
-    .minus(s1.otherGainsOrLosses).minus(s1.supplementalIncome)
-    .minus(s1.farmIncome).minus(s1.unemploymentCompensation));
-  // Use the audit trail for Line 9 if available
-  const line9 = getLineValue(result, "Sched 1", "9");
-  if (line9) setCurrencyField(form, F.line9, line9);
-
-  setCurrencyField(form, F.line10, s1.totalAdditionalIncome);
-
-  // ── Part II: Adjustments to Income ──
-  setCurrencyField(form, F.line11, s1.educatorExpenses);
-  setCurrencyField(form, F.line12, s1.businessExpenseAdjustments);
-  setCurrencyField(form, F.line13, s1.hsaDeduction);
-  setCurrencyField(form, F.line14, s1.armedForcesMovingExpenses);
-  setCurrencyField(form, F.line15, s1.seDeduction);
-  setCurrencyField(form, F.line16, s1.seRetirementContributions);
-  setCurrencyField(form, F.line17, s1.seHealthInsurance);
-  setCurrencyField(form, F.line18, s1.earlyWithdrawalPenalty);
-  setCurrencyField(form, F.line19a, s1.alimonyPaid);
-  setCurrencyField(form, F.line20, s1.iraDeduction);
-  setCurrencyField(form, F.line21, s1.studentLoanInterest);
-  setCurrencyField(form, F.line23, s1.archerMSADeduction);
-  setCurrencyField(form, F.line25, s1.otherAdjustmentsTotal);
-  setCurrencyField(form, F.line26, s1.totalAdjustments);
+  const audited = new Map<string, Decimal>();
+  for (const entry of s1.lines) {
+    if (entry.form !== "Sched 1") continue;
+    if (audited.has(entry.line) || !Decimal.isDecimal(entry.value) || !entry.value.isFinite()) {
+      throw new Error(`Schedule1 requires a unique finite audit for line${entry.line}`);
+    }
+    const global = result.allLines.filter(line => line.form === "Sched 1" && line.line === entry.line);
+    if (global.length !== 1 || !entry.value.eq(global[0].value)) {
+      throw new Error(`Schedule1 line${entry.line} audit does not reconcile with the return`);
+    }
+    audited.set(entry.line, entry.value);
+  }
+  const required = (id: string): Decimal => {
+    const value = audited.get(id);
+    if (value === undefined) throw new Error(`Schedule1 requires completed audit line${id}`);
+    return value;
+  };
+  for (const [id, amount] of [["3",s1.businessIncome],["5",s1.supplementalIncome],
+    ["9",s1.totalOtherIncome],["10",s1.totalAdditionalIncome],["25",s1.otherAdjustmentsTotal],
+    ["26",s1.totalAdjustments]] as const) {
+    if (!required(id).eq(amount)) throw new Error(`Schedule1 line${id} does not reconcile with its result`);
+  }
+  const total8 = sum(...[...audited].filter(([id]) => /^8[a-z]$/.test(id)).map(([,amount]) => amount));
+  const total10 = sum(...["1","2a","3","4","5","6","7","9"].map(required));
+  const total26 = sum(...["11","12","13","14","15","16","17","18","19a","20","21","23","25"].map(required));
+  if (!total8.eq(required("9")) || !total10.eq(required("10")) || !total26.eq(required("26"))
+    || !required("10").eq(result.otherIncome) || !required("26").eq(result.adjustmentsToIncome)) {
+    throw new Error("Schedule1 printed line totals do not reconcile with Form1040");
+  }
+  for (const [id, value] of [["8",required("10")],["10",required("26")]] as const) {
+    const lines = result.allLines.filter(line => line.form === "1040" && line.line === id);
+    if (lines.length !== 1 || !lines[0].value.eq(value)) {
+      throw new Error(`Schedule1 totals do not reconcile with1040line${id} audit`);
+    }
+  }
+  for (const [key, field] of Object.entries(F)) {
+    if (!/^line(?:[1-9]|1[0-9]|2[0-6])[a-z]?$/.test(key)) continue;
+    const id = key.slice(4);
+    const value = audited.get(id);
+    if (value !== undefined) {
+      // These two fields are inside parentheses already printed on the form.
+      setCurrencyField(form, field, id === "8a" || id === "8d" ? value.abs() : value);
+    }
+  }
+  const otherSources = s1.lines.find(line => line.form === "Sched 1" && line.line === "8z")?.inputs ?? {};
+  const sourceEntries = Object.entries(otherSources).filter(([,amount]) => Decimal.isDecimal(amount) && !amount.isZero());
+  const manualAdjustments = d(input.adjustments?.otherAdjustmentsTotal);
+  if (sourceEntries.length > 0 || !manualAdjustments.isZero()) {
+    if (sourceEntries.length > 0) setTextField(form, F.line8zDesc, "See review source attachment");
+    const page = doc.addPage([612, 792]);
+    const font = await doc.embedFont(StandardFonts.Helvetica);
+    const notes = [
+      "SCHEDULE 1 SOURCE REVIEW - NOT FOR FILING",
+      ...sourceEntries.map(([source,amount]) => `Line8z ${source}: ${amount.toString()}`),
+      ...(!manualAdjustments.isZero() ? [
+        `Line25 includes actual other-adjustment aggregate: ${manualAdjustments.toString()}`,
+        "Its individual Line24 source breakdown is unavailable; no classification has been invented.",
+      ] : []),
+      "Legacy unclassified receipts and special source worksheets remain unqualified.",
+      "This review copies completed calculation audits; it does not establish source eligibility.",
+    ];
+    notes.forEach((text,index) => page.drawText(text,{ x:36,y:750-index*22,size:10,font }));
+  }
+  await markReviewPdf(doc);
 
   return doc;
-}
-
-/** Look up a calculated line value from the audit trail. */
-function getLineValue(result: TaxReturnResult, form: string, line: string) {
-  return result.allLines.find((l) => l.form === form && l.line === line)?.value;
 }
 
 /** Exported field map for testing and inspection. */

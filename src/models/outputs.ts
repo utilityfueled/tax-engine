@@ -100,6 +100,7 @@ export interface TaxReturnResult {
   socialSecurityBenefitsGross: Decimal;
   socialSecurityBenefitsTaxable: Decimal;
   capitalGainLoss: Decimal;
+  /** Form1040line8: final Schedule1line10, including business/farm/rental income. */
   otherIncome: Decimal;
   nolDeduction: Decimal;
   totalIncome: Decimal;

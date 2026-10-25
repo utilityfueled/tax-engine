@@ -260,8 +260,8 @@ describe("Schedule 1 Part I - Additional Income", () => {
       recaptureQualifiedFundingDistribution: "1500",
     };
     const result = calculateSchedule1(input, extra);
-    // 200 + 30000 + 2500 + 5000 + 6000 + 8000 + (800 + 2700 + 1500) = 56700
-    expect(result.totalAdditionalIncome.toNumber()).toBe(56700);
+    // 200 + 30000 + 2500 + 5000 + 6000 + (800 + 2700 + 1500) =48700;8000capitalgain stays on1040line7.
+    expect(result.totalAdditionalIncome.toNumber()).toBe(48700);
   });
 
   it("Schedule 1 - zero additional income when no extras", () => {
@@ -866,7 +866,7 @@ describe("Schedule 1 - edge cases", () => {
       alimonyReceived: d(6000),
     });
     const result = calculateSchedule1(input, extra);
-    expect(result.totalAdditionalIncome.toNumber()).toBe(80200);
+    expect(result.totalAdditionalIncome.toNumber()).toBe(65200);
   });
 
   it("Schedule 1 Line 10 - negative components reduce total", () => {
@@ -876,8 +876,8 @@ describe("Schedule 1 - edge cases", () => {
       schedETotal: d(5000),
     });
     const result = calculateSchedule1(input, extra);
-    // -10000 + -3000 + 5000 = -8000
-    expect(result.totalAdditionalIncome.toNumber()).toBe(-8000);
+    // -10000 + 5000 = -5000; capital loss stays on1040line7.
+    expect(result.totalAdditionalIncome.toNumber()).toBe(-5000);
   });
 
   it("Schedule 1 Line 26 - all adjustments combined", () => {
@@ -1142,7 +1142,8 @@ describe("Schedule 1 - edge cases", () => {
       capitalGainLoss: d(5000),
     });
     const result = calculateSchedule1(input, extra);
-    expect(result.totalAdditionalIncome.toNumber()).toBe(80000);
+    expect(result.totalAdditionalIncome.toNumber()).toBe(75000);
+    expect(result.capitalGainLoss.toNumber()).toBe(5000);
     expect(result.totalAdjustments.toNumber()).toBe(0);
   });
 
@@ -1165,7 +1166,8 @@ describe("Schedule 1 - edge cases", () => {
       seDeductibleHalf: d("1234.56"),
     });
     const result = calculateSchedule1(input, extra);
-    expect(result.totalAdditionalIncome.equals(d("13235.79"))).toBe(true);
+    expect(result.totalAdditionalIncome.equals(d("12345.67"))).toBe(true);
+    expect(result.capitalGainLoss.equals(d("890.12"))).toBe(true);
     expect(result.totalAdjustments.equals(d("1234.56"))).toBe(true);
   });
 });
@@ -1406,24 +1408,24 @@ describe("Schedule 1 - additional edge cases", () => {
     expect(result.totalAdjustments.toNumber()).toBe(19650); // 14000 + 5650
   });
 
-  it("Schedule 1 Line 7 - capital gain flows into total additional income", () => {
+  it("Schedule 1 Line 10 excludes capital gain passthrough", () => {
     const { input, extra } = makeFixture(undefined, {
       capitalGainLoss: d(25000),
       taxableStateRefund: d(300),
     });
     const result = calculateSchedule1(input, extra);
     expect(result.capitalGainLoss.toNumber()).toBe(25000);
-    expect(result.totalAdditionalIncome.toNumber()).toBe(25300);
+    expect(result.totalAdditionalIncome.toNumber()).toBe(300);
   });
 
-  it("Schedule 1 Line 7 - capital loss reduces total additional income", () => {
+  it("Schedule 1 Line 10 excludes capital loss passthrough", () => {
     const { input, extra } = makeFixture(undefined, {
       capitalGainLoss: d(-3000),
       schedETotal: d(8000),
     });
     const result = calculateSchedule1(input, extra);
     expect(result.capitalGainLoss.toNumber()).toBe(-3000);
-    expect(result.totalAdditionalIncome.toNumber()).toBe(5000); // -3000 + 8000
+    expect(result.totalAdditionalIncome.toNumber()).toBe(8000); // Capital loss is reported separately.
   });
 
   it("Schedule 1 Line 19a - alimony paid from pre-2019 divorce reduces total adjustments", () => {

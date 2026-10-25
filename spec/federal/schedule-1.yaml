@@ -113,7 +113,7 @@ lines:
     inputs:
       - "Form W-2G Box 1: Reportable winnings"
       - "Manual gambling winnings from Schedule A input"
-    notes: "All gambling income is taxable regardless of source. W-2G forms report certain gambling winnings above IRS thresholds, but all winnings must be reported. Gambling losses are deductible only on Schedule A Line 28 and only up to total gambling winnings (IRC §165(d)). W-2G Box 4 federal withholding flows to Form 1040 Line 25d."
+    notes: "All gambling income is taxable regardless of source. W-2G forms report certain gambling winnings above IRS thresholds, but all winnings must be reported. Gambling losses are deductible only on Schedule A Line 16 and only up to total gambling winnings (IRC §165(d)). W-2G Box 4 federal withholding flows to Form 1040 Line 25c."
     edgeCases:
       - "Multiple W-2Gs from different sources are summed"
       - "Manual gambling winnings from Schedule A combine with W-2G winnings"
@@ -282,7 +282,7 @@ lines:
 
   - line: "25"
     description: "Total other adjustments"
-    formula: "Supported manual total of other Schedule 1 Part II adjustments reported on Lines 24a through 24z"
+    formula: "Actual other adjustment aggregate plus separately computed housing24j; final return also includes estate24k once"
     irsRef: "Schedule 1 Instructions, Line 25"
     notes: "This supported slice accepts a validated aggregate Line 25 amount instead of modeling each Line 24a-24z adjustment separately. That amount also feeds the Social Security Benefits Worksheet Line 6 add-back because the 2025 instructions explicitly add back Schedule 1 Line 25."
     testRef: "tests/engine/schedules/schedule-1.test.ts::Schedule 1 Line 25 - manual total other adjustments flow through Schedule 1 and the Social Security add-back path"

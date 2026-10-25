@@ -79,6 +79,7 @@ export interface Schedule1Result {
   cancelledDebtIncome: Decimal; // Line 8c
   foreignIncomeExclusion: Decimal; // Positive net Form2555line45, negative on8d
   hsaTaxableDistributions: Decimal; // Line 8f
+  totalOtherIncome: Decimal; // Line 9
   totalAdditionalIncome: Decimal; // Line 10
 
   // Part II
@@ -511,23 +512,16 @@ export function calculateSchedule1(
   if (extra?.form2555IncomeReduction !== undefined) {
     audit.record("Sched 1", "8d", "Foreign earned income and housing exclusion", foreignIncomeExclusion.negated(), "Negative net Form2555line45; gross wages remain on1040line1z");
   }
+  const totalOtherIncome = sum(gamblingIncome, cancelledDebtIncome, hsaTaxableDistributions)
+    .minus(nolDeduction).minus(foreignIncomeExclusion);
+  audit.record("Sched 1", "9", "Total other income", totalOtherIncome,
+    "Sum Lines 8a through 8z, including signed NOL and foreign exclusions");
   const totalAdditionalIncome = sum(
-    taxableRefunds,
-    businessIncome,
-    otherGainsOrLosses,
-    supplementalIncome,
-    farmIncome,
-    unemploymentCompensation,
-    capitalGainLoss,
-    alimonyReceived,
-    gamblingIncome,
-    cancelledDebtIncome,
-    hsaTaxableDistributions
-  ).minus(nolDeduction).minus(foreignIncomeExclusion);
+    taxableRefunds, alimonyReceived, businessIncome, otherGainsOrLosses,
+    supplementalIncome, farmIncome, unemploymentCompensation, totalOtherIncome
+  );
   audit.record("Sched 1", "10", "Total additional income", totalAdditionalIncome,
-    nolDeduction.greaterThan(0)
-      ? "Sum Lines 1-9 minus Line 8a NOL deduction → 1040 Line 8"
-      : "Sum Lines 1-9 → 1040 Line 8");
+    "Sum Lines 1 through 7 plus Line 9 → 1040 Line 8; Schedule D remains on 1040 Line 7");
 
   // ── Part II: Adjustments to Income ────────────────────
 
@@ -640,13 +634,15 @@ export function calculateSchedule1(
     educatorExpensesDeduction.inputs
   );
 
-  const otherAdjustmentsTotal = d(adjustments?.otherAdjustmentsTotal);
+  const form2555HousingDeduction = extra?.form2555HousingDeduction ?? new Decimal(0);
+  const otherAdjustmentsTotal = d(adjustments?.otherAdjustmentsTotal).plus(form2555HousingDeduction);
   audit.record(
     "Sched 1",
     "25",
     "Total other adjustments",
     otherAdjustmentsTotal,
-    "Supported manual total of other Schedule 1 Part II adjustments reported on Lines 24a through 24z"
+    "Other actual Lines 24a through 24z amounts plus Form2555 housing deduction on Line24j",
+    { "Other actual adjustment sources": d(adjustments?.otherAdjustmentsTotal), "Form2555 housing deduction": form2555HousingDeduction }
   );
 
   const earlyWithdrawalPenalty = extra?.earlyWithdrawalPenalty ?? d(adjustments?.earlyWithdrawalPenalty);
@@ -707,7 +703,7 @@ export function calculateSchedule1(
     archerMSADeduction,
     educatorExpenses,
     otherAdjustmentsTotal
-  );
+  ).minus(form2555HousingDeduction); // Pub590-A/Pub970 MAGI adds housing deduction back.
 
   let iraDeduction: Decimal;
   if (extra?.iraDeductionOverride !== undefined) {
@@ -829,8 +825,7 @@ export function calculateSchedule1(
     }
   );
 
-  // Form 2555 housing deduction (self-employed only) — Schedule 1 Line 24j
-  const form2555HousingDeduction = extra?.form2555HousingDeduction ?? new Decimal(0);
+  // Form 2555 housing deduction (self-employed only) — included in Line25 above.
   if (form2555HousingDeduction.greaterThan(0)) {
     audit.record("Sched 1", "24j", "Form 2555 housing deduction",
       form2555HousingDeduction,
@@ -850,8 +845,7 @@ export function calculateSchedule1(
     educatorExpenses,
     otherAdjustmentsTotal,
     earlyWithdrawalPenalty,
-    alimonyPaid,
-    form2555HousingDeduction
+    alimonyPaid
   );
   audit.record("Sched 1", "26", "Total adjustments", totalAdjustments, "Sum Lines 11-25 → 1040 Line 10");
 
@@ -869,6 +863,7 @@ export function calculateSchedule1(
     cancelledDebtIncome,
     foreignIncomeExclusion,
     hsaTaxableDistributions,
+    totalOtherIncome,
     totalAdditionalIncome,
     businessExpenseAdjustments,
     hsaDeduction,

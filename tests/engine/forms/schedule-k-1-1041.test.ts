@@ -320,10 +320,11 @@ describe("K-1 Form 1041 deductions and other items", () => {
       }],
     }));
 
-    const line24z = findLine(result, "Sched 1", "24z");
-    expect(line24z).toBeDefined();
-    // Deduction is negative (reduces income)
-    expect(new Decimal(line24z!.value).toNumber()).toBe(-4000);
+    const line24k = findLine(result, "Sched 1", "24k");
+    expect(line24k).toBeDefined();
+    // Positive PartII adjustment reduces AGI through1040line10.
+    expect(new Decimal(line24k!.value).toNumber()).toBe(4000);
+    expect(result.schedule1?.totalAdjustments.toNumber()).toBe(4000);
 
     // AGI should reflect the deduction: 50K wages + 10K interest - 4K §67(e) = 56K
     expect(result.agi.toNumber()).toBe(56000);
