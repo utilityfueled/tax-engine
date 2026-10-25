@@ -255,3 +255,13 @@ remain required. All 20 focused harness/CLI tests pass. They simulate measuremen
 records; no model was called. No recommendation is emitted from configuration,
 and even a passing report cannot activate production routes. See
 [the evaluation procedure](strategy/model-stack-eval.md).
+
+## Public support boundaries
+
+The new `/support` matrix reports year, jurisdiction, residency, scenario and
+output limits. All filing and electronic submission remain unavailable. Public
+help/home text and state labels now distinguish an existing implementation from
+qualification; the six dedicated state engines are not represented as reviewed
+filing support. The guided generic preview is explicitly unqualified too.
+The 78 focused support/copy tests pass. This status page is a disclosure, not
+completion of the state gap analysis or a selection of launch states.

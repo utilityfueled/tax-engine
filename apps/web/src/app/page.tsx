@@ -81,8 +81,8 @@ export default async function HomePage() {
             </a>
           </div>
           <div className="hero-bar home-hero-bar" aria-label="Product highlights">
-            <span>Federal + all 50 states</span>
-            <span>{latestEngineTargetYear} tax-year coverage</span>
+            <span>Federal and state previews</span>
+            <span>{latestEngineTargetYear} experimental calculations</span>
             <span>Reference PDFs, not e-file</span>
           </div>
         </div>

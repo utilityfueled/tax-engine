@@ -32,27 +32,27 @@ const faqItems = [
   },
   {
     q: "What tax situations do you support?",
-    a: "We support most individual federal tax situations including W-2 wages, self-employment (Schedule C), investments and capital gains (Schedule D), rental income (Schedule E), retirement distributions, HSA, education credits, child tax credit, crypto/digital assets, and many more. We cover all 50 states plus DC.",
+    a: "Tax year 2025 has experimental federal and state calculations for review. Coverage varies by form, residency and facts; no state or federal filing export is qualified. Tax year 2026 calculation remains unavailable while its rules and forms are being implemented and reviewed. Importing a document does not establish support for filing it.",
   },
   {
     q: "How accurate is this?",
     a: "The software is experimental. We use specs, IRS references, and more than 14,000 automated tests to improve coverage, but that is not a promise of correctness, completeness, or filing readiness. You should independently review every result before relying on it.",
   },
   {
-    q: "What's the difference between 'Validated' and 'Best-effort' state returns?",
-    a: "Validated states (CA, NY, NJ, IL, PA, OH) use dedicated state engines with deeper automated coverage. Best-effort states use a generic engine with published rates and common adjustments. Both tiers still require independent review before filing.",
+    q: "Are state returns qualified for filing?",
+    a: "No. Dedicated engines exist for CA, NY, NJ, IL, PA and OH, and other jurisdictions have generic calculations. These implementation differences are not evidence of filing qualification. State residency, conformity, local taxes, credits and official forms still need review before any state can be enabled for filing.",
   },
   {
     q: "Can I file my return electronically?",
-    a: "Not yet. Viva La Tax currently generates your completed return as a PDF you can print and mail, or use with an e-file service. E-file integration is on our roadmap.",
+    a: "No. Downloads are privacy-safe review copies with identifiers omitted and a review-only watermark. They cannot be filed or mailed as complete returns. Complete filing exports and electronic submission are unavailable.",
   },
   {
     q: "Do you support crypto and digital assets?",
-    a: "Yes. We support Form 1099-DA, capital gains from crypto trades (with FIFO, LIFO, HIFO, and specific ID lot matching), mining and staking income, airdrops, DeFi LP positions, NFT transactions, and more. You can also upload CSV exports from major exchanges.",
+    a: "Experimental imports and calculations exist for digital assets, including Form 1099-DA and exchange CSVs. Review cost basis, transaction classification and missing records carefully. These paths are not qualified for filing.",
   },
   {
     q: "What if my tax situation isn't supported?",
-    a: "We'll tell you upfront if we detect a situation we can't fully handle. You can export your data and continue with other software, or take the draft bundle to your own licensed professional outside this product.",
+    a: "Detected gaps are shown for review, but the software may not identify every unsupported situation. Keep your original documents and use qualified filing software or a licensed professional to prepare a complete return.",
   },
   {
     q: "How do I self-host Viva La Tax?",
@@ -93,6 +93,7 @@ export default function HelpPage() {
           Everything you need to know about using Viva La Tax as experimental tax software.
         </p>
         <div className="hero-actions">
+          <Link href="/support" className="utility-button">Year and scenario support</Link>
           <Link href="/" className="utility-button">
             Back to Home
           </Link>

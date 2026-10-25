@@ -281,7 +281,7 @@ describe("workspace status copy", () => {
   it("keeps touched workspaces visible once the filer has added real data", () => {
     const workspace = ingestFilesIntoWorkspace(
       createWorkspaceRecord("active-workspace"),
-      [{ name: "fw2.pdf", size: 10 }]
+      [{ name: "fw2--2026.pdf", size: 10 }]
     );
 
     expect(isUntouchedWorkspaceShell(workspace)).toBe(false);
