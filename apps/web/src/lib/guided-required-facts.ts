@@ -1,5 +1,5 @@
 import Decimal from "decimal.js";
-import type { DeductionData, EstimatedPaymentEntry, RetirementEntryData, PaymentData, FilingStatus } from "./guided-interview-flow";
+import type { DeductionData, EstimatedPaymentEntry, PaymentData, FilingStatus } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
 import { mortgageFactErrors } from "./guided-mortgage-facts";
 
@@ -110,23 +110,7 @@ export function allPaymentFactErrors(data: PaymentData | undefined, taxYear?: nu
   return errors;
 }
 
-export function retirementFactErrors(entries: RetirementEntryData[] | undefined, requireTaxableAmount = true): Record<string, string> {
-  const errors: Record<string, string> = {};
-  (entries ?? []).forEach((entry, index) => {
-    if (![entry.payer, entry.grossDistribution, entry.taxableAmount, entry.federalWithheld, entry.distributionCode].some((value) => value?.trim())) return;
-    if (!entry.payer.trim()) errors[`retirement-${index}-payer`] = "Enter the actual retirement payer.";
-    if (!/^[1-9ABCDEFGHJKLMNPQRSTUWY][1-9ABCDEFGHJKLMNPQRSTUWY]?$/.test(entry.distributionCode)) errors[`retirement-${index}-code`] = "Enter the actual Form 1099-R box 7 distribution code.";
-    if (entry.requiresCodeConfirmation) errors[`retirement-${index}-code`] = "Reconfirm the saved distribution code from the actual Form 1099-R; older versions prefilled code 7.";
-    for (const field of ["grossDistribution", ...(requireTaxableAmount ? ["taxableAmount" as const] : [])] as const) {
-      const error = amountError(entry[field], field === "taxableAmount" ? "taxable amount (unknown amounts require review)" : "gross distribution");
-      if (error) errors[`retirement-${index}-${field}`] = error;
-    }
-    if (hasEnteredAmount(entry.taxableAmount) && hasEnteredAmount(entry.grossDistribution)) {
-      try { if (parseGuidedCurrency(entry.taxableAmount).gt(parseGuidedCurrency(entry.grossDistribution))) errors[`retirement-${index}-taxableAmount`] = "Taxable amount cannot exceed gross distribution; review the source form."; } catch { /* Field error is reported above. */ }
-    }
-  });
-  return errors;
-}
+export { retirementFactErrors } from "./guided-retirement-facts";
 
 export { educationFactErrors } from "./guided-education-facts";
 

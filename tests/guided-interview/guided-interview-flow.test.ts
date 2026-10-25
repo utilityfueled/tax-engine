@@ -1550,7 +1550,7 @@ describe("retirement income section data", () => {
     expect(emptyRetirementEntry.grossDistribution).toBe("");
     expect(emptyRetirementEntry.taxableAmount).toBe("");
     expect(emptyRetirementEntry.federalWithheld).toBe("");
-    expect(emptyRetirementEntry.isIraSepSimple).toBe(false);
+    expect(emptyRetirementEntry.isIraSepSimple).toBeNull();
     expect(emptyRetirementEntry.distributionCode).toBe("");
   });
 });

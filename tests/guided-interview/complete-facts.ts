@@ -89,3 +89,15 @@ export const completeMortgageSource = {
   refundOfOverpaidInterest: "0", mortgageInsurancePremiums: "0", pointsPaid: "0", propertyTaxPaid: "0",
   hasMortgageInsuranceAllocation: false,
 };
+
+/** Explicit ordinary 1099-R facts for synthetic checks, not application defaults. */
+export const completeRetirementSource = {
+  payer: "Actual retirement payer", payerTin: "12-3456789", accountHolder: "primary" as const,
+  sourceTaxYear: "2025", accountReference: "synthetic-retirement-1", grossDistribution: "1000", taxableAmount: "1000", federalWithheld: "0", distributionCode: "7", isIraSepSimple: false,
+  taxableAmountNotDetermined: false, taxableAmountConfirmed: true, employeeContributions: "0",
+  capitalGainIncluded: "0", netUnrealizedAppreciation: "0", otherSourceAmount: "0", inPlanRothRolloverAmount: "0",
+  stateTaxReporting: "none" as const, localTaxReporting: "none" as const,
+  iraBasisConfirmedZero: true, eligibleGovernmental457bPlan: false, militaryPensionOrSurvivorBenefit: false,
+  qualifiedJointSurvivorAnnuity: false, additionalWorksheetRequired: false, sourceFactsConfirmed: true,
+  trumpAccount: false, excessContributionEarnings: "0",
+};

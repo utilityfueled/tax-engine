@@ -19,6 +19,7 @@ import { businessFactErrors, hasBusinessSourceData, type BusinessSourceData } fr
 import { isStartedRental, rentalFactErrors, type RentalSourceData } from "./guided-rental-facts";
 import { nonW2TaxAllocationErrors } from "./guided-salt-facts";
 import type { MortgageSourceData } from "./guided-mortgage-facts";
+import type { RetirementSourceData } from "./guided-retirement-facts";
 import { vehicleFactErrors, type VehicleCreditData } from "./guided-vehicle-facts";
 import { adoptionFactErrors, type AdoptionCreditData } from "./guided-adoption-facts";
 
@@ -1437,14 +1438,15 @@ export function resumeInterviewAtSection(
 
 // ── Retirement income data ──────────────────────────────────────────────────
 
-export interface RetirementEntryData {
+export interface RetirementEntryData extends RetirementSourceData {
   payer: string;
   grossDistribution: string;
   taxableAmount: string;
   federalWithheld: string;
-  isIraSepSimple: boolean;
+  isIraSepSimple: boolean | null;
   distributionCode: string;
   requiresCodeConfirmation?: boolean;
+  requiresIraConfirmation?: boolean;
 }
 
 export const emptyRetirementEntry: RetirementEntryData = {
@@ -1452,7 +1454,7 @@ export const emptyRetirementEntry: RetirementEntryData = {
   grossDistribution: "",
   taxableAmount: "",
   federalWithheld: "",
-  isIraSepSimple: false,
+  isIraSepSimple: null,
   distributionCode: "",
 };
 
@@ -1649,9 +1651,9 @@ function validateRequiredFacts(errors: Record<string, string>): SectionValidatio
   } : VALID_SECTION;
 }
 
-function validateRetirementSection(data: { entries: RetirementEntryData[] } | undefined): SectionValidationResult {
+function validateRetirementSection(data: { entries: RetirementEntryData[] } | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, stateData?: StateReturnData): SectionValidationResult {
   if (!data?.entries?.length) return EMPTY_SECTION("retirement info");
-  return validateRequiredFacts(retirementFactErrors(data.entries));
+  return validateRequiredFacts(retirementFactErrors(data.entries, true, filingStatus, taxYear, stateData));
 }
 
 function validateSocialSecuritySection(data: SocialSecurityData | undefined): SectionValidationResult {
@@ -1734,7 +1736,7 @@ export function validateSection(
     case "income-rental":
       return validateRentalSection(getSectionData(state, "income-rental"), state.segmentation.filingStatus, state.taxYear);
     case "income-retirement":
-      return validateRetirementSection(getSectionData(state, "income-retirement"));
+      return validateRetirementSection(getSectionData(state, "income-retirement"), state.segmentation.filingStatus, state.taxYear, getSectionData(state, "state-return"));
     case "income-social-security":
       return validateSocialSecuritySection(getSectionData(state, "income-social-security"));
     case "income-unemployment":
@@ -1919,6 +1921,9 @@ export function loadGuidedFlowState(storage: Storage, workspaceId: string): Guid
     }
 
     const sectionData = withDefaultSectionData(parsed.sectionData as SectionDataMap);
+    if (sectionData["income-retirement"]) {
+      sectionData["income-retirement"] = { ...sectionData["income-retirement"], entries: sectionData["income-retirement"].entries.map(entry => ({ ...entry, requiresIraConfirmation: entry.requiresIraConfirmation || (entry.isIraSepSimple === false && entry.sourceTaxYear === undefined && entry.sourceFactsConfirmed === undefined) })) };
+    }
     if (parsed.factsVersion !== 2) {
       if (sectionData["income-retirement"]) {
         sectionData["income-retirement"] = { ...sectionData["income-retirement"], entries: sectionData["income-retirement"].entries.map((entry) => ({ ...entry, requiresCodeConfirmation: entry.distributionCode === "7" || entry.requiresCodeConfirmation })) };

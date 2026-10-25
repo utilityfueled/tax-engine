@@ -1,5 +1,5 @@
 import { completeCareSource } from "./care-source-fixture";
-import { completeRentalSource, completeNecSource, completeBusinessSection, completeBusinessExpenses, completeMortgageSource } from "./complete-facts";
+import { completeRentalSource, completeNecSource, completeBusinessSection, completeBusinessExpenses, completeMortgageSource, completeRetirementSource } from "./complete-facts";
 import { completeBrokerageSource, completeDividendSource, completeInterestSource, completeTransactionSource } from "./complete-facts";
 import { completeW2Entry, startCompleteInterview as startInterview, completePersonalInfo, completeDependent, completeAocEligibility, completeEducationClaimant, completeHouseholdEmployee } from "./complete-facts";
 import { describe, it, expect } from "vitest";
@@ -1532,7 +1532,7 @@ describe("buildRetirementInputs", () => {
 
   it("converts a 1099-R entry with distribution data", () => {
     const entry = {
-      ...emptyRetirementEntry,
+      ...completeRetirementSource,
       payer: "Fidelity",
       grossDistribution: "25000",
       taxableAmount: "25000",
@@ -1557,8 +1557,8 @@ describe("buildRetirementInputs", () => {
 
   it("handles multiple 1099-Rs", () => {
     const entries = [
-      { ...emptyRetirementEntry, distributionCode: "7", payer: "Vanguard", grossDistribution: "20000", taxableAmount: "20000" },
-      { ...emptyRetirementEntry, distributionCode: "7", payer: "Schwab", grossDistribution: "15000", taxableAmount: "15000" },
+      { ...completeRetirementSource, accountReference: "Vanguard-source", distributionCode: "7", payer: "Vanguard", grossDistribution: "20000", taxableAmount: "20000" },
+      { ...completeRetirementSource, accountReference: "Schwab-source", distributionCode: "7", payer: "Schwab", grossDistribution: "15000", taxableAmount: "15000" },
     ];
     const result = buildRetirementInputs(entries);
     expect(result).toHaveLength(2);
@@ -1631,7 +1631,7 @@ describe("buildTaxInputFromGuidedData retirement and SS and unemployment", () =>
       stateCode: null,
     });
     state = updateSectionData(state, "income-retirement", {
-      entries: [{ ...emptyRetirementEntry, distributionCode: "7", payer: "Fidelity", grossDistribution: "30000", taxableAmount: "30000", federalWithheld: "4500" }],
+      entries: [{ ...completeRetirementSource, distributionCode: "7", payer: "Fidelity", grossDistribution: "30000", taxableAmount: "30000", federalWithheld: "4500" }],
     });
     const input = buildTaxInputFromGuidedData(state);
     expect(input).not.toBeNull();
@@ -1682,7 +1682,7 @@ describe("buildTaxInputFromGuidedData retirement and SS and unemployment", () =>
     });
     state = updateSectionData(state, "income-retirement", {
       entries: [{
-        ...emptyRetirementEntry,
+        ...completeRetirementSource,
         payer: "401k Plan",
         grossDistribution: "50000",
         taxableAmount: "50000",

@@ -23,6 +23,7 @@ import { w2FactErrors } from "./guided-w2-facts";
 import { businessFactErrors, hasBusinessSourceData, isStartedNec, sumKnownBusinessAmounts, type BusinessSourceData } from "./guided-business-facts";
 import { isStartedRental, rentalFactErrors, rentalExpenseFields } from "./guided-rental-facts";
 import { nonW2TaxAllocationErrors } from "./guided-salt-facts";
+import { isStartedRetirement } from "./guided-retirement-facts";
 import { investmentFactErrors, isStartedInvestment, type InvestmentSourceData } from "./guided-investment-facts";
 
 import type {
@@ -403,18 +404,27 @@ export function buildEstimatedPaymentsInput(paymentData: PaymentData | undefined
 
 // ── Retirement income (1099-R) converter ──────────────────────────────────
 
-export function buildRetirementInputs(entries: RetirementEntryData[] | undefined) {
+export function buildRetirementInputs(entries: RetirementEntryData[] | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, stateData?: StateReturnData) {
   if (!entries || entries.length === 0) return [];
-  assertKnownFacts(retirementFactErrors(entries, false));
+  assertKnownFacts(retirementFactErrors(entries, false, filingStatus, taxYear, stateData));
   return entries
-    .filter((e) => hasEnteredAmount(e.grossDistribution) || hasEnteredAmount(e.taxableAmount))
+    .filter(isStartedRetirement)
     .map((e) => ({
       payer: e.payer.trim(),
+      payerTin: e.payerTin?.trim(), accountHolder: e.accountHolder || undefined,
       grossDistribution: toDecimalString(e.grossDistribution),
       taxableAmount: hasEnteredAmount(e.taxableAmount) ? toDecimalString(e.taxableAmount) : undefined,
       federalWithheld: toDecimalString(e.federalWithheld),
-      iraSepSimple: e.isIraSepSimple,
-      distributionCode: e.distributionCode,
+      iraSepSimple: e.isIraSepSimple ?? undefined,
+      distributionCode: e.distributionCode.trim().toUpperCase(),
+      taxableAmountNotDetermined: e.taxableAmountNotDetermined ?? undefined,
+      employeeContributions: toOptionalDecimalString(e.employeeContributions),
+      eligibleGovernmental457bPlan: e.eligibleGovernmental457bPlan ?? undefined,
+      eligibleGovernmental457bTransferredFromQualifiedPlanTaxableAmount: e.eligibleGovernmental457bPlan === true ? toOptionalDecimalString(e.governmental457bTransferredTaxableAmount) : undefined,
+      militaryPensionOrSurvivorBenefit: e.militaryPensionOrSurvivorBenefit ?? undefined,
+      qualifiedJointSurvivorAnnuity: e.qualifiedJointSurvivorAnnuity ?? undefined,
+      ...(e.stateTaxReporting === "single" ? { state: e.state?.trim().toUpperCase(), stateWithheld: toOptionalDecimalString(e.stateWithheld), stateDistribution: toOptionalDecimalString(e.stateDistribution) } : {}),
+      ...(e.localTaxReporting === "single" ? { locality: e.locality?.trim(), localTaxWithheld: toOptionalDecimalString(e.localTaxWithheld) } : {}),
     }));
 }
 
@@ -586,7 +596,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     assertKnownFacts(deductionFactErrors(deductionData, state.taxYear, segmentation.filingStatus));
     assertKnownFacts(nonW2TaxAllocationErrors(state));
     assertKnownFacts(allPaymentFactErrors(paymentData, state.taxYear));
-    assertKnownFacts(retirementFactErrors(retirementData?.entries));
+    assertKnownFacts(retirementFactErrors(retirementData?.entries, true, segmentation.filingStatus, state.taxYear, stateReturnData));
     assertKnownFacts(educationFactErrors(creditsData, state.taxYear, segmentation.filingStatus, personalInfo));
     assertKnownFacts(adjustmentFactErrors(adjustmentData, segmentation.filingStatus, state.taxYear));
     assertKnownFacts(householdFactErrors(otherTaxesData, state.taxYear));
@@ -604,7 +614,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
   const form1099Int = buildInterestInputs(investData?.interestEntries);
   const form1099Div = buildDividendInputs(investData?.dividendEntries);
   const form1099B = buildBrokerageInputs(investData?.brokerageEntries);
-  const form1099R = buildRetirementInputs(retirementData?.entries);
+  const form1099R = buildRetirementInputs(retirementData?.entries, segmentation.filingStatus, state.taxYear, stateReturnData);
   const rentalProperties = buildRentalPropertyInputs(rentalData?.entries);
   const formSSA1099 = buildSocialSecurityInputs(socialSecurityData);
   const form1099G = buildUnemploymentInputs(unemploymentData);
@@ -796,12 +806,13 @@ export function buildGuidedFactAnswers(
   // Retirement → "retirement-distribution-review"
   const retData = state.sectionData["income-retirement"] as { entries: RetirementEntryData[] } | undefined;
   if (retData?.entries) {
-    const filled = retData.entries.filter((e) => hasValue(e.grossDistribution) || hasValue(e.taxableAmount));
+    const filled = retData.entries.filter(isStartedRetirement);
     if (filled.length > 0) {
-      const totalTaxable = filled.reduce((sum, e) => sum.plus(numVal(e.taxableAmount)), new Decimal(0));
+      const totalTaxable = sourceTotal(filled.map(entry => entry.taxableAmount));
+      const complete = Object.keys(retirementFactErrors(filled, true, state.segmentation.filingStatus, state.taxYear, state.sectionData["state-return"])).length === 0;
       answers.push({
         factId: "retirement-distribution-review",
-        answerText: `${filled.length} 1099-R(s) confirmed. Taxable: $${fmtNum(totalTaxable)}.`,
+        answerText: totalTaxable === null ? `${filled.length} retirement source record(s) entered; taxable amounts still need review.` : `${filled.length} retirement source record(s) ${complete ? "confirmed" : "entered; source facts need review"}. Taxable amount entered: $${fmtNum(totalTaxable)}.`,
       });
     }
   }
@@ -937,14 +948,14 @@ export function buildGuidedSyntheticDocuments(
   }
 
   const retData = state.sectionData["income-retirement"] as { entries: RetirementEntryData[] } | undefined;
-  if (retData?.entries?.some((e) => hasValue(e.grossDistribution) || hasValue(e.taxableAmount))) {
+  if (retData?.entries?.some(isStartedRetirement)) {
     docs.push({
       id: "guided:1099-r",
       name: "Guided Interview — 1099-R",
       size: 0,
       uploadedAt: now,
       kind: "1099-r",
-      coverage: "supported",
+      coverage: Object.keys(retirementFactErrors(retData.entries, true, state.segmentation.filingStatus, state.taxYear, state.sectionData["state-return"])).length ? "partially-supported" : "supported",
       label: "1099-R (guided interview)",
       notes: "Entered via guided interview.",
       matchedFixtureId: null,

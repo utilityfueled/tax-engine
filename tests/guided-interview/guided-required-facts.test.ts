@@ -2,11 +2,11 @@
 import { describe, expect, it } from "vitest";
 import { buildDonationsInput, buildEducationInput, buildEstimatedPaymentsInput, buildForm1098Inputs, buildRetirementInputs, buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
 import { emptyCreditsData, emptyDeductionData, emptyEducationStudent, emptyRetirementEntry, validateSection, loadGuidedFlowState } from "@/lib/guided-interview-flow";
-import { completePersonalInfo, startCompleteInterview, completeAocEligibility, completeEducationClaimant, completeMortgageSource } from "./complete-facts";
+import { completePersonalInfo, startCompleteInterview, completeAocEligibility, completeEducationClaimant, completeMortgageSource, completeRetirementSource } from "./complete-facts";
 
 const mortgage = { ...completeMortgageSource, lender: "Actual Bank", mortgageInterest: "123.45", outstandingPrincipal: "0", originationDate: "2016-06-05" };
 const donation = { organization: "Actual Charity", type: "cash" as const, amount: "12.34", date: "2025-02-28", costBasis: "", isLongTermCapitalGain: null, isPrivateFoundation: false };
-const retirement = { ...emptyRetirementEntry, payer: "Actual Plan", grossDistribution: "1000", taxableAmount: "0", distributionCode: "7" };
+const retirement = { ...completeRetirementSource, payer: "Actual Plan", grossDistribution: "1000", taxableAmount: "0", distributionCode: "7" };
 const stateWith = (section: string, data: unknown) => {
   const state = startCompleteInterview({ filingStatus: "single", incomeTypes: [], lifeEvents: [], stateCode: null });
   return { ...state, sectionData: { ...state.sectionData, [section]: data } };
