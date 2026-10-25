@@ -51,3 +51,10 @@ vitest.config.ts
 CLAUDE.md
 AGENTS.md
 forms/filled/
+
+# Apply secret exclusions to nested workspace directories too.
+**/.env*
+**/.aws
+**/.ssh
+**/.npmrc
+**/.pnpmrc

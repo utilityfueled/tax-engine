@@ -47,6 +47,9 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   compress: true,
   experimental: {
+    // Release webpack memory before the separate TypeScript build check.
+    webpackBuildWorker: true,
+    webpackMemoryOptimizations: true,
     optimizePackageImports: ["@tax-engine/contracts", "@tax-engine/engine"],
   },
   allowedDevOrigins: ["127.0.0.1"],

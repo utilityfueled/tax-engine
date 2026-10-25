@@ -2,7 +2,9 @@ import { execFileSync } from "node:child_process";
 import { setTimeout as delay } from "node:timers/promises";
 
 const image = process.argv[2] || "tax-engine:ci";
-const docker = (...args) => execFileSync("docker", args, { encoding: "utf8" }).trim();
+const runtime = process.env.TAX_ENGINE_CONTAINER_RUNTIME || "docker";
+if (!["docker", "podman"].includes(runtime)) throw new Error("Choose docker or podman for TAX_ENGINE_CONTAINER_RUNTIME.");
+const docker = (...args) => execFileSync(runtime, args, { encoding: "utf8" }).trim();
 const container = docker("run", "--detach", "--publish", "127.0.0.1::3000", "--env", "TAX_ENGINE_DEPLOYMENT_MODE=self-host", image);
 try {
   const port = docker("port", container, "3000/tcp").split(":").at(-1);

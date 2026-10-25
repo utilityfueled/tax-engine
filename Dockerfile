@@ -2,6 +2,7 @@
 
 FROM node:24.22.1-bookworm-slim AS base
 ENV PNPM_HOME="/pnpm"
+ENV NEXT_TELEMETRY_DISABLED=1
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
 WORKDIR /app
@@ -16,8 +17,10 @@ COPY packages/engine/package.json packages/engine/package.json
 RUN pnpm install --frozen-lockfile
 
 FROM deps AS builder
+# Bound each compiler heap; workers and native buffers need additional memory.
+ARG NODE_BUILD_MAX_OLD_SPACE_MB=2560
 COPY . .
-RUN pnpm --filter @tax-engine/web build
+RUN NODE_OPTIONS="--max-old-space-size=${NODE_BUILD_MAX_OLD_SPACE_MB}" pnpm --filter @tax-engine/web build
 
 # Production runner
 FROM node:24.22.1-bookworm-slim AS runner
