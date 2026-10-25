@@ -3,10 +3,12 @@
 import type { AdoptionChildData, AdoptionCreditData } from "@/lib/guided-adoption-facts";
 import { BooleanFact, TextFact } from "./fact-fields";
 import { CurrencyField } from "./currency-field";
+import { AdoptionPriorBenefitDetails } from "./adoption-prior-benefit-details";
+import { updateAdoptionSources } from "@/lib/guided-adoption-prior-benefits";
 
 export function AdoptionSourceDetails({ data, onChange }: { data: AdoptionCreditData | undefined; onChange: (data: AdoptionCreditData) => void }) {
   const current = data ?? { children: [] };
-  const update = (values: Partial<AdoptionCreditData>) => onChange({ ...current, ...values });
+  const update = (values: Partial<AdoptionCreditData>) => onChange(updateAdoptionSources(current, values));
   return <div className="guided-w2-card" style={{ padding: "12px" }}>
     <h3 className="guided-w2-card-title">Adoption Credit and Employer Benefits (Form 8839)</h3>
     <p className="guided-hint">Use actual child records, unreimbursed qualified expenses, employer benefits and prior returns. Expenses must exclude reimbursements, surrogate parenting and adoption of a spouse's child. Special needs require a qualifying state or tribal determination. <a href="https://www.irs.gov/instructions/i8839" target="_blank" rel="noreferrer">Review the IRS eligibility and expense timing rules.</a></p>
@@ -29,7 +31,7 @@ export function AdoptionSourceDetails({ data, onChange }: { data: AdoptionCredit
         <BooleanFact label="Is the complete unreimbursed expense history confirmed, including no expenses if applicable?" value={child.expensesConfirmed} onChange={(value) => change({ expensesConfirmed: value, expensesByYear: child.expensesByYear ?? [] })} />
         {([ ["employerBenefits", "Current-year employer adoption benefits for this child"], ["priorYearCreditsClaimed", "Prior adoption credit limit already used for this child"], ["priorYearExclusionsClaimed", "Prior employer-benefit exclusion limit already used for this child"] ] as const).map(([field, label]) => <CurrencyField key={field} label={label} value={child[field] ?? ""} onChange={(value) => change({ [field]: value })} />)}
         <BooleanFact label="Does the employer adoption assistance plan meet the IRS qualification requirements?" value={child.employerPlanQualified} onChange={(value) => change({ employerPlanQualified: value })} />
-        {child.isForeignAdoption && <><CurrencyField label="Prior-year foreign-adoption employer benefits" value={child.priorYearForeignBenefits ?? ""} onChange={(value) => change({ priorYearForeignBenefits: value })} /><p className="guided-hint">Positive historical foreign-adoption benefits need a historical exclusion worksheet that is not yet supported.</p></>}
+        {(child.isForeignAdoption || child.priorYearForeignBenefitHistory) && <><CurrencyField label="Prior-year foreign-adoption employer benefits" value={child.priorYearForeignBenefits ?? ""} onChange={(value) => change({ priorYearForeignBenefits: value })} /><AdoptionPriorBenefitDetails data={child.priorYearForeignBenefitHistory} onChange={priorYearForeignBenefitHistory => change({ priorYearForeignBenefitHistory })} /></>}
         <button type="button" className="utility-button" onClick={() => update({ children: current.children.filter((_, itemIndex) => itemIndex !== index) })}>Remove adopted child {index + 1}</button>
       </fieldset>;
     })}

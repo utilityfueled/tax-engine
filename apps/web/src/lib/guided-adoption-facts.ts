@@ -1,5 +1,8 @@
-import type { FilingStatus } from "./guided-interview-flow";
+import type { FilingStatus, PersonalInfoData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
+import { Form8839ChildSchema } from "@/models/inputs";
+import { resolveForm8839PriorBenefits } from "@/engine/forms/form-8839-prior-benefits";
+import { buildGuidedAdoptionHistory, type AdoptionPriorBenefitHistoryData } from "./guided-adoption-prior-benefits";
 
 export interface AdoptionChildData {
   childFirstName?: string; childLastName?: string; childBirthYear?: string; childIdentifyingNumber?: string;
@@ -8,6 +11,7 @@ export interface AdoptionChildData {
   expensesConfirmed?: boolean | null; expensesByYear?: { year: string; amount: string }[];
   employerBenefits?: string; employerPlanQualified?: boolean | null;
   priorYearCreditsClaimed?: string; priorYearExclusionsClaimed?: string; priorYearForeignBenefits?: string;
+  priorYearForeignBenefitHistory?: AdoptionPriorBenefitHistoryData;
 }
 export interface AdoptionCreditData {
   children: AdoptionChildData[];
@@ -25,7 +29,7 @@ function actualAmount(value: string | undefined, signed = false): boolean {
 function amount(value: string | undefined): string { parseGuidedCurrency(value); return (value ?? "").trim().replace(/,/g, ""); }
 function year(value: string | undefined, latest: number): boolean { return !!value && /^\d{4}$/.test(value) && Number(value) >= 1900 && Number(value) <= latest; }
 
-export function adoptionFactErrors(data: AdoptionCreditData | undefined, taxYear?: number | null, filingStatus?: FilingStatus | null): Record<string, string> {
+export function adoptionFactErrors(data: AdoptionCreditData | undefined, taxYear?: number | null, filingStatus?: FilingStatus | null, personal?: PersonalInfoData): Record<string, string> {
   const errors: Record<string, string> = {};
   if (!data?.children.length) return errors;
   const currentYear = taxYear ?? 0;
@@ -51,11 +55,12 @@ export function adoptionFactErrors(data: AdoptionCreditData | undefined, taxYear
       years.add(expense.year);
     }
     for (const field of ["employerBenefits", "priorYearCreditsClaimed", "priorYearExclusionsClaimed"] as const) if (!actualAmount(child[field])) errors[`${key}-${field}`] = "Enter actual benefits and prior credit/exclusion usage, including zero";
-    if ((actualAmount(child.employerBenefits) && parseGuidedCurrency(child.employerBenefits).gt(0)) || (child.isSpecialNeeds && child.employerPlanQualified)) {
+    if ((actualAmount(child.employerBenefits) && parseGuidedCurrency(child.employerBenefits).gt(0)) || (child.isSpecialNeeds && child.employerPlanQualified)
+      || child.priorYearForeignBenefitHistory || (actualAmount(child.priorYearForeignBenefits) && parseGuidedCurrency(child.priorYearForeignBenefits).gt(0))) {
       if (!actualAmount(data.exclusionMagi, true)) errors.adoptionExclusionMagi = "Enter the actual Form 8839 employer-benefit exclusion MAGI worksheet amount";
     }
     if (child.isForeignAdoption && !actualAmount(child.priorYearForeignBenefits)) errors[`${key}-foreignBenefits`] = "Enter actual prior-year foreign-adoption employer benefits, including zero";
-    if (present(child.priorYearForeignBenefits) && (!actualAmount(child.priorYearForeignBenefits) || !parseGuidedCurrency(child.priorYearForeignBenefits).isZero())) errors[`${key}-foreignBenefits`] = "Positive historical foreign-adoption benefits require the historical exclusion worksheet, which is not yet supported";
+    if (present(child.priorYearForeignBenefits) && !actualAmount(child.priorYearForeignBenefits)) errors[`${key}-foreignBenefits`] = "Enter the actual nonnegative prior-year foreign-adoption benefits";
   });
   const origins = new Set<string>();
   for (const carry of data.carryforwards ?? []) {
@@ -63,11 +68,22 @@ export function adoptionFactErrors(data: AdoptionCreditData | undefined, taxYear
     origins.add(carry.originTaxYear);
     if (taxYear === 2026 && actualAmount(carry.amount) && parseGuidedCurrency(carry.amount).gt(0) && data.carryforwardReconciled2025 !== true) errors.adoptionCarryforward = "Confirm carryforwards reconcile to the corrected 2025 refundable-credit worksheet";
   }
+  if (!Object.keys(errors).length && data.children.some(child => child.priorYearForeignBenefitHistory || (actualAmount(child.priorYearForeignBenefits) && parseGuidedCurrency(child.priorYearForeignBenefits).gt(0)))) {
+    try {
+      if (!filingStatus) throw new Error("Confirm the actual filing status for historical adoption sources");
+      const statuses = { single: "single", mfj: "married_filing_jointly", mfs: "married_filing_separately", hoh: "head_of_household", qss: "qualifying_surviving_spouse" } as const;
+      const middleInitial = personal?.middleName?.replace(/[^A-Za-z]/g, "").charAt(0).toUpperCase();
+      resolveForm8839PriorBenefits({ taxYear: currentYear, filingStatus: statuses[filingStatus], eligibilityConfirmed: data.eligibilityConfirmed ?? undefined,
+        sourceTaxpayer: personal ? { primary: { firstName: [personal.firstName.trim(), middleInitial].filter(Boolean).join(" "), lastName: personal.lastName, ssn: personal.ssn },
+          ...(filingStatus === "mfj" && personal.spouse ? { spouse: personal.spouse } : {}) } : undefined,
+        children: mapAdoptionChildren(data).map(child => Form8839ChildSchema.parse(child)) });
+    } catch (error) { errors.adoptionPriorBenefits = error instanceof Error ? error.message : "Reconcile the actual historical adoption sources"; }
+  }
   return errors;
 }
-export function buildAdoptionInput(data: AdoptionCreditData | undefined, taxYear?: number | null, status?: FilingStatus | null) {
+export function buildAdoptionInput(data: AdoptionCreditData | undefined, taxYear?: number | null, status?: FilingStatus | null, personal?: PersonalInfoData) {
   if (!data?.children.length) return undefined;
-  const errors = adoptionFactErrors(data, taxYear, status);
+  const errors = adoptionFactErrors(data, taxYear, status, personal);
   if (Object.keys(errors).length) throw new Error(Object.values(errors)[0]);
   return {
     eligibilityConfirmed: data.eligibilityConfirmed as boolean,
@@ -75,7 +91,11 @@ export function buildAdoptionInput(data: AdoptionCreditData | undefined, taxYear
     ...(present(data.exclusionMagi) ? { exclusionMagi: amount(data.exclusionMagi) } : {}),
     carryforwards: (data.carryforwards ?? []).map((entry) => ({ originTaxYear: Number(entry.originTaxYear), amount: amount(entry.amount) })),
     carryforwardReconciled2025: data.carryforwardReconciled2025 ?? undefined,
-    children: data.children.map((child) => ({
+    children: mapAdoptionChildren(data),
+  };
+}
+function mapAdoptionChildren(data: AdoptionCreditData) {
+  return data.children.map((child) => ({
       childName: `${child.childFirstName?.trim()} ${child.childLastName?.trim()}`, childFirstName: child.childFirstName?.trim(), childLastName: child.childLastName?.trim(), childBirthYear: Number(child.childBirthYear), childIdentifyingNumber: child.childIdentifyingNumber?.trim(), childPermanentlyDisabled: child.childPermanentlyDisabled as boolean,
       isSpecialNeeds: child.isSpecialNeeds as boolean, isForeignAdoption: child.isForeignAdoption as boolean,
       adoptionBecameFinal: child.adoptionFinalized as boolean, adoptionFinalizedYear: child.adoptionFinalized ? Number(child.adoptionFinalizedYear) : null,
@@ -83,6 +103,6 @@ export function buildAdoptionInput(data: AdoptionCreditData | undefined, taxYear
       employerBenefits: amount(child.employerBenefits), employerPlanQualified: child.employerPlanQualified as boolean,
       priorYearCreditsClaimed: amount(child.priorYearCreditsClaimed), priorYearExclusionsClaimed: amount(child.priorYearExclusionsClaimed),
       ...(present(child.priorYearForeignBenefits) ? { priorYearForeignBenefits: amount(child.priorYearForeignBenefits) } : {}),
-    })),
-  };
+      ...(child.priorYearForeignBenefitHistory ? { priorYearForeignBenefitHistory: buildGuidedAdoptionHistory(child.priorYearForeignBenefitHistory) } : {}),
+    }));
 }

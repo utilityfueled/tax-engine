@@ -670,7 +670,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     assertKnownFacts(careFactErrors(creditsData?.dependentCare, segmentation.filingStatus, { data: creditsData?.dependentCareBenefits, year: state.taxYear, sources: careBenefitSources }));
     assertKnownFacts(energyFactErrors(creditsData?.energy, state.taxYear, segmentation.filingStatus));
     assertKnownFacts(vehicleFactErrors(creditsData?.vehicles, state.taxYear, segmentation.filingStatus));
-    assertKnownFacts(adoptionFactErrors(creditsData?.adoption, state.taxYear, segmentation.filingStatus));
+    assertKnownFacts(adoptionFactErrors(creditsData?.adoption, state.taxYear, segmentation.filingStatus, personalInfo));
   } catch { return null; }
 
   const stateCode = segmentation.stateCode;
@@ -820,7 +820,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     ...studentLoans,
     energyCredits,
     form8936: buildVehicleCreditInput(creditsData?.vehicles, state.taxYear, segmentation.filingStatus),
-    form8839: buildAdoptionInput(creditsData?.adoption, state.taxYear, segmentation.filingStatus),
+    form8839: buildAdoptionInput(creditsData?.adoption, state.taxYear, segmentation.filingStatus, personalInfo),
     scheduleH,
     iraDeductionWorksheet,
     adjustments: adjustments
