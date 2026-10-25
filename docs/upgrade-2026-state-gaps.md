@@ -1,6 +1,6 @@
 # State scenario selection and qualification gaps
 
-Assessed 2026-10-24. Launch-state demand was requested and is still missing.
+Assessed 2026-10-25. Launch-state demand was requested and is still missing.
 No state is selected or filing-qualified. The comparison below supports the
 one-or-two-state decision; existing test counts and old verified labels do not
 establish demand, legal review or filing readiness.
@@ -8,7 +8,7 @@ establish demand, legal review or filing readiness.
 | Candidate | Existing 2025 implementation | Main remaining 2026 gaps |
 | --- | --- | --- |
 | Pennsylvania | Resident and separate explicit nonresident/part-year orchestrators; PA-40 review form; supporting class/local schedules mostly reference summaries | Separate PA income classes, federal decoupling, reciprocity and domicile/day-count facts; current local EIT/Philadelphia rates; care/working-family eligibility; prior-year payments/credits; final forms and every attachment |
-| Ohio | Full-year resident IT 1040, adjustment/business/credit/withholding and SD 100 modules; reference output only | HB 96 rates and exemption cutoff, annually adjusted thresholds/exemptions, conformity/addbacks, school-district identity and rates, actual payment/carryover facts; full official PDF packet; nonresident and municipal returns are outside current implementation |
+| Ohio | Full-year resident IT 1040, adjustment/business/credit/withholding and SD 100 modules; reference output only | Implement the enacted 2026 rate and $500,000 MAGI cutoff with frozen 2025/2026 indexed amounts; conformity/addbacks, school-district identity and rates, actual payment/carryover facts; full official PDF packet; nonresident and municipal returns are outside current implementation |
 | New York | IT-201 full-year state resident and NYC/Yonkers component modules | Conformity, indexed rates/credits, local residency changes and IT-360.1 inputs; supporting final forms. Existing code is not an IT-203 nonresident/part-year return |
 | New Jersey | NJ-1040 resident and months-of-residency branches; credit/health-coverage components | Conformity, residency allocations, credit thresholds, withholding/carryovers and final attachments. No NJ-1040NR path |
 | Illinois | IL-1040 and Schedule NR allocation/credit modules | Year-specific conformity, allocation/credit/withholding reconciliation, final schedules and filing qualification |
@@ -23,13 +23,21 @@ returns remain unavailable. No demand-based selection has been invented.
 
 - [Ohio R.C. 5747.02](https://codes.ohio.gov/ohio-revised-code/section-5747.02),
   effective September 30, 2025, HB 96: (A)(3)(c) states the 2026 nonbusiness
-  formula, (A)(4) treats taxable business income separately, and (A)(5) requires
-  annual adjustment review. Do not copy the 2025 bracket array or assume the
-  displayed statutory dollar values replace the commissioner's current values.
+  formula, (A)(4) treats taxable business income separately, and (A)(5) normally
+  indexes brackets. For 2026 the enacted formula is $332 plus 2.75% of taxable
+  nonbusiness income over $26,050; income at or below $26,050 has no tax.
 - [Ohio R.C. 5747.025](https://codes.ohio.gov/ohio-revised-code/section-5747.025),
   same effective date: (A) changes the exemption eligibility ceiling from
-  $750,000 in 2025 to $500,000 in 2026; (B)/(C) require annual exemption indexing.
-  Statutory base exemptions are not evidence of the final indexed 2026 amounts.
+  $750,000 in 2025 to $500,000 in 2026. Eligibility requires MAGI strictly below
+  the ceiling. The joint credit has the same actual-MAGI eligibility ceiling
+  under R.C. 5747.05(E); its percentage tiers still use MAGI less exemptions.
+- [Ohio LSC, H.B. 96 as enacted, printed pages 8–9](https://www.lsc.ohio.gov/assets/legislation/136/hb96/en0/files/hb96-tax-comparison-document-as-enacted-136th-general-assembly.pdf),
+  provision TAXCD103 and uncodified section 757.120: indexing of brackets and
+  personal exemptions is suspended for both 2025 and 2026. This corrects the
+  earlier unresolved-indexing note. The existing indexed exemption amounts
+  $2,400/$2,150/$1,900 remain the starting amounts before the new ceiling;
+  the unindexed figures displayed in R.C. 5747.025 must not replace them.
+  This enacted-law evidence does not qualify a final Ohio return or mapping.
 - [PA 2026 REV-413(I)](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2026/2026_rev-413i.pdf),
   revision 04-25, pages 1–3: 2026 estimated-income threshold $14,000/tax $430;
   90% current-year versus prior full-year PA taxable income times 3.07%; explicit

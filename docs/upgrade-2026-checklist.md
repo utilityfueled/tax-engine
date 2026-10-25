@@ -23,9 +23,8 @@ complete a checkbox.
   `upgrade-2026-telemetry-review.md`; version 10.76.2 retained.
 - [ ] Scan final runtime images with current vulnerability data; document any
   unresolved exposure with owner and expiry.
-- [x] Raise branch coverage to at least 85% using meaningful tests: immutable
-  `2f8abd7` reaches86.41%; full test/coverage command still failed twoPDFtimeouts
-  and every newer integrated commit requires fresh verification.
+- [x] Raise branch coverage to at least 85% using meaningful tests: immutable `5d32549` passes all 16,770 tests with 86.50% branches. Every newer
+  integrated commit and the final release still require fresh verification.
 
 ## Packages and file ownership
 
@@ -544,3 +543,65 @@ inventory remained stale. `05fd72a`adds audited education reference PDFs, with
 14isolated tests, types and3,692refs. Parent review identified source Box2/3 and
 recipient-link consistency gaps; both were reproduced red and corrected before
 commit. Fresh immutable full validation follows these integrated packages.
+
+
+### Passing full coverage and Ohio historical correction — 2026-10-25
+
+The immutable `5d32549` archive passes the complete coverage command: **16,770
+of 16,770 tests in 676 files**, zero skips/failures, 441.80 seconds, 86.50%
+branches, 92.02% functions, 92.81% statements and 94.41% lines. Thresholds and
+five-second test timeouts remain unchanged. The archive used locked modules,
+pinned Python/pypdf and disposable local PostgreSQL 16. Evidence:
+`.local/upgrade-evidence/stable-coverage-5d32549.log`; its hash is in the machine
+checkpoint. This resolves the prior PDF aggregate-case timeouts for that exact
+commit. Newer source packages and the final artifacts still require full checks.
+
+- `0433c87` derives mortgage interest from actual debt averages, ownership and
+  eligible payment sources. Parent review caught and the agent fixed a mismatch
+  between the interest/rate numerator and claimed interest. The parent ran 21
+  cross-source checks successfully; the package records 693 adjacent checks.
+- `4a8e8e2` emits separate Form 5329 review forms for actual education/HSA
+  owners. The parent reviewed owner routing, source/audit reconciliation and
+  ambiguous joint-return legacy rejection, then independently passed five new
+  PDF checks. Its immutable package passes 28 checks and 3,708 spec references.
+- `aea0779` preserves Ohio's actual 2024 exemption/joint-credit rules and uses
+  the exact 2025 MAGI cutoff before exemptions. The spec preceded eight failed
+  boundary cases. All 728 isolated Ohio checks, root types and 3,708 full spec
+  references pass; scoped lint has zero errors and one existing warning.
+  Independent agent source review and 12 boundary cases found no issues. This
+  does not constitute human tax review or state/form qualification.
+
+The branch push through `aea0779` is verified. Its CI/Web runs are in progress;
+previous runs at `5d32549` and `76bb3a6` were cancelled by later pushes. The latest
+package advisory refresh is recorded in `advisories-2026-10-25-current.json`.
+Current production-browser verification is next after the canonical student-loan
+core and dependent UI are integrated. Human review, live provider evaluation,
+hosted staging and final form/release qualification remain unproven.
+
+
+### Current browser pass and source packages — 2026-10-25
+
+Immutable `ed915c1` passes the production webpack build and complete local
+Chromium suite: **296 passed, zero failures, five hosted cases skipped**, 5.6
+minutes, retries disabled. It uses pinned tooling and synthetic sample documents
+without provider/billing credentials. The machine checkpoint records the log
+hash. Later mortgage controls require a fresh run; this is no staging claim.
+
+- `3fbaf48` and `ed915c1` connect canonical student-loan sources and guided
+  taxpayer entry. The UI's exact archive passes 624 tests and 3,722 references.
+- `00bcea1` prepares the isolated final 2026 Form 4952 physical candidate.
+  Its exact tree passes 63 tests, root types and 3,725 references; all four
+  pages were reopened/rendered. Independent agent review found no issues.
+  Human qualification is pending and every public 2026 export gate stays closed.
+- `affeef4` treats timely returned Coverdell contributions in their actual
+  income year, preserving custodian loss/earnings and prior reported amounts.
+  Its isolated archive passes 136 tests and 3,735 references. Parent source/code
+  review independently passed eight checks; no human qualification is implied.
+
+Remote CI at `00bcea1` passes 16,813 tests and fails three integration assertions
+(two mortgage-source/rounding fixtures and one ambiguous OID audit selector).
+The inventory is also stale; its 270-entry refresh now passes in the isolated
+`affeef4` archive. Fixture repairs and a new remote run remain necessary. The
+Web run was still in progress when observed. Parent owns OID selector correction;
+facts agent owns mortgage fixture reconciliation. All external prerequisites
+listed above remain pending while useful internal work continues.

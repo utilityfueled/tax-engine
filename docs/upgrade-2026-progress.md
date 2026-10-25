@@ -477,3 +477,23 @@ actual education UI, PAwithholding and ticker timestamp repair are pushed, and
 student-loan source core`d162f6c`has127isolated passes. Current exact-code full
 browser, inventory and release checks remain required; no human/staging/final
 form/provider qualification is claimed. See the checklist for package evidence.
+
+
+The complete immutable `5d32549` coverage run now passes: 16,770 tests in 676
+files, zero skips/failures, 86.50% branches and all other unchanged thresholds.
+Mortgage actual-source integration, owner-specific education/HSA review forms
+and the Ohio historical MAGI correction are pushed through `aea0779`, each with
+focused verification and bounded code review. The latest Ohio archive passes
+728 tests. Fresh browser and final integrated release checks remain required;
+local synthetic evidence does not supply human, staging, provider or final-form
+qualification. Exact logs, hashes and commit scopes are in the durable checklist
+and machine checkpoint. Work continues on the remaining packages.
+
+The immutable `ed915c1` production browser run passes 296 tests with no failures
+and five hosted-only skips (5.6 minutes, no retries). Student-loan canonical/UI
+work, final 2026 Form 4952 physical candidate and actual returned-Coverdell source
+years are committed through `affeef4`. The 270-entry inventory is regenerated
+from that exact archive. Remote CI at `00bcea1` still reports three source/rounding
+fixture or audit-selector failures plus stale inventory; these are being repaired
+without changing assertions' tax intent or readiness controls. Full final checks,
+human review, staging, provider and final-form qualification remain outstanding.

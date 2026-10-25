@@ -3,6 +3,45 @@
   "purpose": "Implementation traceability only; not legal review, filing qualification, or e-file support.",
   "entries": [
     {
+      "key": "federal/amt-capital-gains",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/pub/irs-pdf/f6251.pdf",
+      "specPath": "spec/federal/amt-capital-gains.yaml",
+      "enginePath": "src/engine/forms/amt-capital-gains.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/amt-investment-interest",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/instructions/i6251",
+      "specPath": "spec/federal/amt-investment-interest.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/charitable-contribution-worksheet",
       "jurisdiction": "federal",
       "taxYear": 2026,
@@ -39,6 +78,26 @@
         "Missing spec coverage",
         "Missing packet generation or inclusion rule",
         "Missing complete spec-linked regression coverage",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/crypto-charitable-integration",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/individuals/international-taxpayers/frequently-asked-questions-on-digital-asset-transactions",
+      "specPath": "spec/federal/crypto-charitable-integration.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -124,11 +183,32 @@
       ]
     },
     {
-      "key": "federal/energy-source-facts",
+      "key": "federal/dependent-care-benefit-sources",
+      "jurisdiction": "federal",
+      "taxYear": null,
+      "sourceAuthority": null,
+      "specPath": null,
+      "enginePath": "src/engine/forms/dependent-care-benefit-sources.ts",
+      "packetPath": null,
+      "specExists": false,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": false,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing spec coverage",
+        "Missing packet generation or inclusion rule",
+        "Missing complete spec-linked regression coverage",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/education-distribution-return",
       "jurisdiction": "federal",
       "taxYear": 2026,
-      "sourceAuthority": null,
-      "specPath": "spec/federal/2026/energy-source-facts.yaml",
+      "sourceAuthority": "https://www.irs.gov/publications/p970",
+      "specPath": "spec/federal/education-distribution-return.yaml",
       "enginePath": null,
       "packetPath": null,
       "specExists": true,
@@ -139,6 +219,106 @@
       "status": "unsupported",
       "knownGaps": [
         "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/educator-expense-limits",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/pub/irs-drop/rp-25-32.pdf",
+      "specPath": "spec/federal/educator-expense-limits.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/educator-expense-sources",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/instructions/i1040gi",
+      "specPath": "spec/federal/educator-expense-sources.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/educator-expenses",
+      "jurisdiction": "federal",
+      "taxYear": null,
+      "sourceAuthority": null,
+      "specPath": null,
+      "enginePath": "src/engine/forms/educator-expenses.ts",
+      "packetPath": null,
+      "specExists": false,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": false,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing spec coverage",
+        "Missing packet generation or inclusion rule",
+        "Missing complete spec-linked regression coverage",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/energy-return-sources",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/instructions/i5695",
+      "specPath": "spec/federal/energy-return-sources.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/energy-source-facts",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": null,
+      "specPath": "spec/federal/2026/energy-source-facts.yaml",
+      "enginePath": "src/engine/forms/energy-source-facts.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -208,7 +388,7 @@
       "key": "federal/form-1098-e",
       "jurisdiction": "federal",
       "taxYear": 2025,
-      "sourceAuthority": "https://www.irs.gov/instructions/i1098e",
+      "sourceAuthority": "https://www.irs.gov/pub/irs-prior/i1098et--2025.pdf",
       "specPath": "spec/federal/form-1098-e.yaml",
       "enginePath": "src/engine/forms/form-1098-e.ts",
       "packetPath": "src/pdf/fill-form-1098-e.ts",
@@ -308,6 +488,46 @@
       "knownGaps": []
     },
     {
+      "key": "federal/form-1099-q-corrections",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/instructions/i1099q",
+      "specPath": "spec/federal/form-1099-q-corrections.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/form-1099-q-source",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/publications/p970",
+      "specPath": "spec/federal/form-1099-q-source.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/form-1099-r",
       "jurisdiction": "federal",
       "taxYear": 2025,
@@ -386,6 +606,45 @@
       "efileBusinessRuleCoverageExists": true,
       "status": "supported",
       "knownGaps": []
+    },
+    {
+      "key": "federal/form-2441-benefits",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/instructions/i2441",
+      "specPath": "spec/federal/form-2441-benefits.yaml",
+      "enginePath": "src/engine/forms/form-2441-benefits.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/form-2441-return-integration",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/instructions/i2441",
+      "specPath": "spec/federal/form-2441-return-integration.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
     },
     {
       "key": "federal/form-2555",
@@ -491,7 +750,7 @@
     {
       "key": "federal/form-461",
       "jurisdiction": "federal",
-      "taxYear": 2025,
+      "taxYear": 2026,
       "sourceAuthority": "https://www.irs.gov/instructions/i461",
       "specPath": "spec/federal/form-461.yaml",
       "enginePath": "src/engine/forms/form-461.ts",
@@ -500,9 +759,11 @@
       "engineExists": true,
       "packetGenerationExists": true,
       "testCoverageExists": true,
-      "efileBusinessRuleCoverageExists": true,
-      "status": "supported",
-      "knownGaps": []
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing e-file and business-rule validation coverage"
+      ]
     },
     {
       "key": "federal/form-4684",
@@ -541,8 +802,8 @@
     {
       "key": "federal/form-4952",
       "jurisdiction": "federal",
-      "taxYear": 2025,
-      "sourceAuthority": "https://www.irs.gov/forms-pubs/about-form-4952",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/pub/irs-pdf/f4952.pdf",
       "specPath": "spec/federal/form-4952.yaml",
       "enginePath": "src/engine/forms/form-4952.ts",
       "packetPath": "src/pdf/fill-form-4952.ts",
@@ -553,6 +814,26 @@
       "efileBusinessRuleCoverageExists": false,
       "status": "partial",
       "knownGaps": [
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/form-4952-2026-template",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/pub/irs-pdf/f4952.pdf",
+      "specPath": "spec/federal/form-4952-2026-template.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -575,6 +856,67 @@
       ]
     },
     {
+      "key": "federal/form-5329-education-owner",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/instructions/i5329",
+      "specPath": "spec/federal/form-5329-education-owner.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/form-5329-hsa",
+      "jurisdiction": "federal",
+      "taxYear": null,
+      "sourceAuthority": null,
+      "specPath": null,
+      "enginePath": "src/engine/forms/form-5329-hsa.ts",
+      "packetPath": null,
+      "specExists": false,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": false,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing spec coverage",
+        "Missing packet generation or inclusion rule",
+        "Missing complete spec-linked regression coverage",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/form-5329-hsa-owner",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/instructions/i5329",
+      "specPath": "spec/federal/form-5329-hsa-owner.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/form-5695",
       "jurisdiction": "federal",
       "taxYear": 2026,
@@ -589,6 +931,26 @@
       "efileBusinessRuleCoverageExists": false,
       "status": "partial",
       "knownGaps": [
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/form-5695-source",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/instructions/i5695",
+      "specPath": "spec/federal/form-5695-source.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -905,6 +1267,26 @@
       ]
     },
     {
+      "key": "federal/form-8889-source",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/instructions/i8889",
+      "specPath": "spec/federal/form-8889-source.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/form-8915-f",
       "jurisdiction": "federal",
       "taxYear": 2025,
@@ -1099,6 +1481,46 @@
       ]
     },
     {
+      "key": "federal/guided-education-distributions",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/publications/p970",
+      "specPath": "spec/federal/guided-education-distributions.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/guided-hsa-distributions",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/pub/irs-prior/i1099sa--2025.pdf",
+      "specPath": "spec/federal/guided-hsa-distributions.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/guided-input",
       "jurisdiction": "federal",
       "taxYear": 2025,
@@ -1114,6 +1536,65 @@
       "status": "unsupported",
       "knownGaps": [
         "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/guided-oid-sources",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/instructions/i1099int",
+      "specPath": "spec/federal/guided-oid-sources.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/guided-student-loan",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/publications/p970",
+      "specPath": "spec/federal/guided-student-loan.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/home-mortgage-interest",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/publications/p936",
+      "specPath": "spec/federal/home-mortgage-interest.yaml",
+      "enginePath": "src/engine/forms/home-mortgage-interest.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -1155,6 +1636,26 @@
       ]
     },
     {
+      "key": "federal/investment-interest-return",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/instructions/i1040sd",
+      "specPath": "spec/federal/investment-interest-return.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/ira-deduction-worksheet",
       "jurisdiction": "federal",
       "taxYear": 2025,
@@ -1169,6 +1670,47 @@
       "efileBusinessRuleCoverageExists": true,
       "status": "supported",
       "knownGaps": []
+    },
+    {
+      "key": "federal/ira-return-integration",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/publications/p590a",
+      "specPath": "spec/federal/ira-return-integration.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/ira-return-worksheet",
+      "jurisdiction": "federal",
+      "taxYear": null,
+      "sourceAuthority": null,
+      "specPath": null,
+      "enginePath": "src/engine/forms/ira-return-worksheet.ts",
+      "packetPath": null,
+      "specExists": false,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": false,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing spec coverage",
+        "Missing packet generation or inclusion rule",
+        "Missing complete spec-linked regression coverage",
+        "Missing e-file and business-rule validation coverage"
+      ]
     },
     {
       "key": "federal/itemized-deduction-limit",
@@ -1204,6 +1746,26 @@
       "efileBusinessRuleCoverageExists": true,
       "status": "supported",
       "knownGaps": []
+    },
+    {
+      "key": "federal/pdf-review-policy",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "docs/upgrade-2026-execution-brief.md",
+      "specPath": "spec/federal/pdf-review-policy.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
     },
     {
       "key": "federal/personal-credit-ordering",
@@ -1288,7 +1850,7 @@
       "key": "federal/qdcg-worksheet",
       "jurisdiction": "federal",
       "taxYear": 2025,
-      "sourceAuthority": "Form 1040 Instructions, QDCG Worksheet",
+      "sourceAuthority": "https://www.irs.gov/instructions/i1040gi",
       "specPath": "spec/federal/qdcg-worksheet.yaml",
       "enginePath": null,
       "packetPath": null,
@@ -1389,6 +1951,25 @@
       "sourceAuthority": "https://www.irs.gov/instructions/i1040gi",
       "specPath": "spec/federal/schedule-1-a.yaml",
       "enginePath": "src/engine/schedules/schedule-1-a.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/schedule-1-return",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/pub/irs-pdf/f1040s1.pdf",
+      "specPath": "spec/federal/schedule-1-return.yaml",
+      "enginePath": "src/engine/forms/schedule-1-return.ts",
       "packetPath": null,
       "specExists": true,
       "engineExists": true,
@@ -1526,6 +2107,26 @@
       "efileBusinessRuleCoverageExists": false,
       "status": "partial",
       "knownGaps": [
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/schedule-d-tax-worksheet",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/instructions/i1040sd",
+      "specPath": "spec/federal/schedule-d-tax-worksheet.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -1728,6 +2329,26 @@
       "knownGaps": []
     },
     {
+      "key": "federal/social-security-source-facts",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/publications/p915",
+      "specPath": "spec/federal/social-security-source-facts.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/standard-deduction",
       "jurisdiction": "federal",
       "taxYear": 2026,
@@ -1826,6 +2447,87 @@
         "Missing spec coverage",
         "Missing packet generation or inclusion rule",
         "Missing complete spec-linked regression coverage",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/student-loan-interest",
+      "jurisdiction": "federal",
+      "taxYear": null,
+      "sourceAuthority": null,
+      "specPath": null,
+      "enginePath": "src/engine/forms/student-loan-interest.ts",
+      "packetPath": null,
+      "specExists": false,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": false,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing spec coverage",
+        "Missing packet generation or inclusion rule",
+        "Missing complete spec-linked regression coverage",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/student-loan-interest-return",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/publications/p970",
+      "specPath": "spec/federal/student-loan-interest-return.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/student-loan-interest-sources",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/publications/p970",
+      "specPath": "spec/federal/student-loan-interest-sources.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/tax-table",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/pub/irs-pdf/p1040.pdf",
+      "specPath": "spec/federal/tax-table.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -2261,6 +2963,46 @@
       "efileBusinessRuleCoverageExists": false,
       "status": "partial",
       "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "state/guided-ohio-interest",
+      "jurisdiction": "state",
+      "taxYear": 2026,
+      "sourceAuthority": "https://codes.ohio.gov/ohio-revised-code/section-5747.01",
+      "specPath": "spec/state/guided-ohio-interest.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "state/guided-state-routing",
+      "jurisdiction": "state",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/brief-overview-and-filing-requirements",
+      "specPath": "spec/state/guided-state-routing.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -3771,6 +4513,25 @@
       "knownGaps": []
     },
     {
+      "key": "state/pa-oid-sources",
+      "jurisdiction": "state",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/interest",
+      "specPath": "spec/state/pa-oid-sources.yaml",
+      "enginePath": "src/engine/state/pa-oid-sources.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "state/pa-orchestrator",
       "jurisdiction": "state",
       "taxYear": 2025,
@@ -3802,6 +4563,67 @@
       "status": "partial",
       "knownGaps": [
         "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "state/pa-rental-classification",
+      "jurisdiction": "state",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/net-income-loss-from-rents,-royalties,-copyrights-and-patents",
+      "specPath": "spec/state/pa-rental-classification.yaml",
+      "enginePath": "src/engine/state/pa-rental-classification.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "state/pa-rental-income-expenses",
+      "jurisdiction": "state",
+      "taxYear": null,
+      "sourceAuthority": null,
+      "specPath": null,
+      "enginePath": "src/engine/state/pa-rental-income-expenses.ts",
+      "packetPath": null,
+      "specExists": false,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": false,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing spec coverage",
+        "Missing packet generation or inclusion rule",
+        "Missing complete spec-linked regression coverage",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "state/pa-rental-ownership",
+      "jurisdiction": "state",
+      "taxYear": null,
+      "sourceAuthority": null,
+      "specPath": null,
+      "enginePath": "src/engine/state/pa-rental-ownership.ts",
+      "packetPath": null,
+      "specExists": false,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": false,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing spec coverage",
+        "Missing packet generation or inclusion rule",
+        "Missing complete spec-linked regression coverage",
         "Missing e-file and business-rule validation coverage"
       ]
     },
