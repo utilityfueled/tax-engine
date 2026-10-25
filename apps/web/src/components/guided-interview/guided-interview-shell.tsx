@@ -567,8 +567,10 @@ function SectionContent({
       return (
         <SectionRetirementIncome
           entries={entries}
+          basisSources={retData?.basisSources}
+          onBasisSourcesChange={basisSources => onStateChange(updateSectionData(state, "income-retirement", { ...retData, entries, basisSources }))}
           onEntriesChange={(next: RetirementEntryData[]) =>
-            onStateChange(updateSectionData(state, "income-retirement", { entries: next }))
+            onStateChange(updateSectionData(state, "income-retirement", { ...retData, entries: next }))
           }
         />
       );

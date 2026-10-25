@@ -1,0 +1,32 @@
+form: "Guided ordinary IRA basis sources"
+fullName: "Actual separate-owner basis history, account values and original1099-R links"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i8606"
+notes: |
+  Official final2025 Form8606 instructions and final2026 Forms1099-R/5498
+  instructions refreshed2026-10-25. This collector uses the existing ordinary
+  source binder, never a user-entered calculated taxable amount. Retain saved
+  unknowns and source years; Decimal alone normalizes money. Current contributions,
+  conversions, inherited sources and other special methods remain separate.
+  Existing year, filing and independent-review gates remain closed.
+lines:
+  - line: "source-packet"
+    description: "Collect original owner/account/history facts without inferring basis"
+    formula: "Blank drafts remain unknown. An explicit snapshot action copies only entered original1099-R facts, never prior basis, account balances or missing confirmations. Validate the resulting packet with the same canonical source binder and actual household."
+    testRef: "tests/guided-interview/guided-ira-basis.test.ts::builds actual original source links and preserves unknown printed amounts"
+  - line: "canonical-handoff"
+    description: "Resolve unknown taxable amounts only through validated ordinary basis sources"
+    formula: "Only original IRA distributions covered by the complete validated packet may omit printed Box2a with actual Box2b checked or have positive basis. Require explicit absence of other retirement methods. Carry source year, Trump-account/excess-earnings answers and the complete packet into the canonical input; never put calculated taxable income into the printed source field."
+    testRef: "tests/guided-interview/guided-ira-basis.test.ts::routes separate-owner basis through validation preview and the canonical return"
+  - line: "reconfirmation"
+    description: "Retain saved records and invalidate stale confirmations"
+    formula: "Edits to owner history, accounts, original distribution, household or contribution/HSA facts revoke packet confirmation. Rechecking confirmation alone does not revoke it. Original source conflicts still fail after rechecking; deleting the packet restores existing ordinary-source gates."
+    testRef: "tests/guided-interview/guided-ira-basis.test.ts::revokes stale packet confirmation and preserves history through reload"
+  - line: "input-controls"
+    description: "Actual source controls preserve unknowns and require explicit actions"
+    formula: "Separate owner/account/source controls do not prefill zero, false, identity, basis or statement links. Changes preserve saved values and revoke confirmation; adding/removing/capturing source records is an explicit user action."
+    testRef: "tests/apps/web/ira-basis-source-interactions.test.tsx::collects separate owner history and account values without filling unknown answers"
+  - line: "browser-persistence"
+    description: "Review and reopen actual basis sources on desktop and mobile"
+    formula: "Persist the explicit source packet, calculate only after complete confirmation, retain unknown printed taxable amounts, reload unchanged values, and return to incomplete after source edits. Full2026 and filing gates remain unchanged."
+    testRef: "apps/web/tests/guided-ira-basis.spec.ts::persists actual owner basis and original source amounts"

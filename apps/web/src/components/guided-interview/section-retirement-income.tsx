@@ -7,6 +7,8 @@ import {
 } from "@/lib/guided-interview-flow";
 import { CurrencyField } from "./currency-field";
 import { RetirementSourceFields } from "./retirement-source-fields";
+import { IraBasisSourceFields } from "./ira-basis-source-fields";
+import type { GuidedIraBasisData } from "@/lib/guided-ira-basis";
 
 function RetirementCard({
   index,
@@ -14,12 +16,14 @@ function RetirementCard({
   onUpdate,
   onRemove,
   removable,
+  basisMode,
 }: {
   index: number;
   entry: RetirementEntryData;
   onUpdate: <K extends keyof RetirementEntryData>(field: K, value: RetirementEntryData[K]) => void;
   onRemove: () => void;
   removable: boolean;
+  basisMode?: boolean;
 }) {
   return (
     <div className="guided-w2-card">
@@ -60,11 +64,11 @@ function RetirementCard({
           required
         />
         <CurrencyField
-          label="Taxable amount (Box 2a)"
-          hint="Use the actual taxable amount established by the source and applicable basis worksheet. A blank Box 2a is unknown; do not copy the gross distribution or assume zero."
+          label={basisMode ? "Printed taxable amount (Box 2a)" : "Taxable amount (Box 2a)"}
+          hint={basisMode ? "Copy only the amount printed on the original form. Leave it blank when Box 2b is checked and the source gives no taxable amount; the owner basis worksheet calculates taxability." : "Use the actual taxable amount established by the source and applicable basis worksheet. A blank Box 2a is unknown; do not copy the gross distribution or assume zero."}
           value={entry.taxableAmount}
           onChange={(v) => onUpdate("taxableAmount", v)}
-          required
+          required={!basisMode}
         />
         <CurrencyField
           label="Federal tax withheld (Box 4)"
@@ -87,7 +91,7 @@ function RetirementCard({
           </span>
         </label>
 
-        <RetirementSourceFields entry={entry} onUpdate={onUpdate} />
+        <RetirementSourceFields entry={entry} onUpdate={onUpdate} basisMode={basisMode} />
       </div>
     </div>
   );
@@ -96,9 +100,13 @@ function RetirementCard({
 export function SectionRetirementIncome({
   entries,
   onEntriesChange,
+  basisSources,
+  onBasisSourcesChange,
 }: {
   entries: RetirementEntryData[];
   onEntriesChange: (entries: RetirementEntryData[]) => void;
+  basisSources?: GuidedIraBasisData;
+  onBasisSourcesChange?: (value: GuidedIraBasisData | undefined) => void;
 }) {
   function updateEntry<K extends keyof RetirementEntryData>(
     index: number,
@@ -135,6 +143,7 @@ export function SectionRetirementIncome({
               key={index}
               index={index}
               entry={entry}
+              basisMode={!!basisSources && entry.isIraSepSimple === true}
               onUpdate={(field, value) => updateEntry(index, field, value)}
               onRemove={() => removeEntry(index)}
               removable={entries.length > 1}
@@ -151,6 +160,8 @@ export function SectionRetirementIncome({
         >
           + Add another 1099-R
         </button>
+
+        {onBasisSourcesChange && <IraBasisSourceFields data={basisSources} entries={entries} onChange={onBasisSourcesChange} />}
 
         <details className="guided-expand" style={{ marginTop: "16px" }}>
           <summary className="guided-expand-trigger">Learn more about 1099-R</summary>

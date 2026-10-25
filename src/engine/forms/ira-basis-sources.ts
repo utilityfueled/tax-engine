@@ -5,6 +5,10 @@ import { AuditTrail } from '@/utils/audit.js';
 import { d, sum } from '@/utils/decimal.js';
 
 type Owner = 'primary' | 'spouse';
+/** Source binding needs no fabricated address, income or unrelated return facts. */
+export type IraBasisSourceContext = Pick<TaxYearInput, 'form1099R' | 'iraBasisSources' | 'form8606' | 'form8606ByOwner' | 'iraDeductionWorksheet' | 'adjustments' | 'form8889' | 'form8889ByOwner'> & {
+  taxpayer: Pick<TaxYearInput['taxpayer'], 'taxYear' | 'filingStatus' | 'primary' | 'spouse'>;
+};
 const normalized = (value: string) => value.trim().replace(/\s+/g, ' ').toLowerCase();
 const digits = (value: string) => value.replace(/-/g, '');
 function fail(message: string): never { throw new Error(`IRA basis sources: ${message}`); }
@@ -18,7 +22,7 @@ function rejectPositive(values: Array<string | undefined>) {
   }
 }
 
-export function calculateIraBasisSources(input: TaxYearInput) {
+export function calculateIraBasisSources(input: IraBasisSourceContext) {
   if (input.iraBasisSources === undefined) return undefined;
   const facts = IraBasisSourcesSchema.parse(input.iraBasisSources);
   if (facts.taxYear !== input.taxpayer.taxYear || !facts.sourceFactsConfirmed || !facts.allIraOwnersAndAccountsIncluded || !facts.allDistributionsIncluded) {

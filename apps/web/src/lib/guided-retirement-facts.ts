@@ -1,6 +1,9 @@
 import type { FilingStatus, RetirementEntryData, StateReturnData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
 import { amountError, hasEnteredAmount } from "./guided-required-facts";
+import { buildGuidedIraBasisSources, type GuidedIraBasisContext } from "./guided-ira-basis";
+import { isStartedRetirement } from "./guided-retirement-source-inputs";
+export { isStartedRetirement } from "./guided-retirement-source-inputs";
 
 export interface RetirementSourceData {
   sourceTaxYear?: string;
@@ -31,6 +34,7 @@ export interface RetirementSourceData {
   trumpAccount?: boolean | null;
   excessContributionEarnings?: string;
   additionalWorksheetRequired?: boolean | null;
+  otherRetirementWorksheetRequired?: boolean | null;
   sourceFactsConfirmed?: boolean | null;
 }
 
@@ -42,15 +46,18 @@ export const retirementSourceAmounts = [
   ["inPlanRothRolloverAmount", "Amount allocable to in-plan Roth rollover within five years (Box 10)"],
 ] as const;
 
-export function isStartedRetirement(entry: RetirementEntryData): boolean {
-  return Object.entries(entry).some(([key, value]) => !["requiresCodeConfirmation", "requiresIraConfirmation"].includes(key) && (typeof value === "string" ? value.trim() !== "" : value === true));
-}
-
-export function retirementFactErrors(entries: RetirementEntryData[] | undefined, requireTaxableAmount = true, filingStatus?: FilingStatus | null, taxYear?: number | null, stateData?: StateReturnData): Record<string, string> {
+export function retirementFactErrors(entries: RetirementEntryData[] | undefined, requireTaxableAmount = true, filingStatus?: FilingStatus | null, taxYear?: number | null, stateData?: StateReturnData, basisContext?: GuidedIraBasisContext): Record<string, string> {
   const errors: Record<string, string> = {};
+  let basisBound = false;
+  if (basisContext?.data) {
+    try {
+      basisBound = !!buildGuidedIraBasisSources(basisContext.data, entries, taxYear, filingStatus, basisContext.personal, basisContext.adjustments);
+    } catch (error) { errors['retirement-basis-sources'] = error instanceof Error ? error.message : 'Complete and reconcile actual IRA basis sources.'; }
+  }
   const sourceIds = new Set<string>();
   (entries ?? []).forEach((entry, index) => {
     if (!isStartedRetirement(entry)) return;
+    const boundIra = basisBound && entry.isIraSepSimple === true;
     const fail = (key: string, message: string) => { errors[`retirement-${index}-${key}`] = message; };
     if (!entry.payer.trim()) fail("payer", "Enter the actual retirement payer.");
     if (!/^\d{9}$/.test(entry.payerTin?.replace(/-/g, "") ?? "")) fail("payer-tin", "Enter the actual nine-digit payer TIN from the source form.");
@@ -67,13 +74,13 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
     if (code.includes("D") && (entry.isIraSepSimple !== false || entry.eligibleGovernmental457bPlan !== false)) fail("nonqualified-plan", "Code D identifies a nonqualified source; reconcile the actual IRA and governmental-plan classifications.");
     if (entry.requiresIraConfirmation) fail("isIraSepSimple", "Reconfirm the actual IRA checkbox; older versions prefilled an unchecked answer.");
     if (entry.requiresCodeConfirmation) fail("code", "Reconfirm the saved distribution code from the actual Form 1099-R; older versions prefilled code 7.");
-    for (const [field, label] of [["grossDistribution", "gross distribution"], ...(requireTaxableAmount ? [["taxableAmount", "taxable amount; unknown amounts need their actual worksheet"]] : []), ["federalWithheld", "federal tax withheld"], ...retirementSourceAmounts] as [keyof RetirementEntryData, string][]) {
+    for (const [field, label] of [["grossDistribution", "gross distribution"], ...((requireTaxableAmount && !boundIra) || hasEnteredAmount(entry.taxableAmount) ? [["taxableAmount", "taxable amount; unknown amounts need their actual worksheet"]] : []), ["federalWithheld", "federal tax withheld"], ...retirementSourceAmounts] as [keyof RetirementEntryData, string][]) {
       const message = amountError(entry[field] as string | undefined, label); if (message) fail(field, message);
     }
     if (hasEnteredAmount(entry.taxableAmount) && !amountError(entry.taxableAmount, "taxable amount") && !amountError(entry.grossDistribution, "gross distribution") && parseGuidedCurrency(entry.taxableAmount).gt(parseGuidedCurrency(entry.grossDistribution))) fail("taxableAmount", "Taxable amount cannot exceed gross distribution; review the source form.");
     for (const field of ["isIraSepSimple", "taxableAmountNotDetermined", "eligibleGovernmental457bPlan", "militaryPensionOrSurvivorBenefit", "qualifiedJointSurvivorAnnuity"] as const) if (typeof entry[field] !== "boolean") fail(field, "Confirm the actual retirement source checkbox or classification; blank is not no.");
-    if (requireTaxableAmount && entry.taxableAmountConfirmed !== true) fail("taxable-confirmation", "Confirm taxability from the actual source and applicable basis records; Box 2a or a default zero alone cannot establish it.");
-    if (entry.isIraSepSimple === true && entry.iraBasisConfirmedZero !== true) fail("ira-basis", "An IRA with unknown or positive nondeductible basis requires the actual Form 8606 owner worksheet before calculation.");
+    if (requireTaxableAmount && !boundIra && entry.taxableAmountConfirmed !== true) fail("taxable-confirmation", "Confirm taxability from the actual source and applicable basis records; Box 2a or a default zero alone cannot establish it.");
+    if (entry.isIraSepSimple === true && !boundIra && entry.iraBasisConfirmedZero !== true) fail("ira-basis", "An IRA with unknown or positive nondeductible basis requires the actual Form 8606 owner worksheet before calculation.");
     if (entry.eligibleGovernmental457bPlan === true) {
       if (entry.isIraSepSimple !== false) fail("457-plan", "A governmental 457(b) distribution cannot also be an IRA distribution.");
       const message = amountError(entry.governmental457bTransferredTaxableAmount, "457(b) taxable amount attributable to transferred qualified-plan funds");
@@ -108,7 +115,7 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
       } else fail(`${location}-reporting`, reporting === "multiple" ? `Multiple ${location} retirement records need their separate source allocations.` : `Confirm actual ${location} reporting on the source form.`);
     }
     if (entry.stateTaxReporting === "single" && stateData?.additionalStateWithholdingEntries?.some(other => other.documentType === "1099-R" && other.payer.trim().toLowerCase() === entry.payer.trim().toLowerCase() && other.state === entry.state && other.taxYear === entry.sourceTaxYear)) fail("duplicate-withholding", "This retirement source withholding was also entered as additional state withholding. Reconcile it before counting the payment twice.");
-    if (entry.additionalWorksheetRequired !== false) fail("additional-worksheet", "Confirm whether basis, Roth/conversion, QCD, contribution returns, disaster relief, penalty exceptions or other retirement worksheets are needed. Those unresolved facts must be completed before the ordinary route can calculate.");
+    if (boundIra ? entry.otherRetirementWorksheetRequired !== false : entry.additionalWorksheetRequired !== false) fail("additional-worksheet", boundIra ? "Confirm whether another retirement method beyond the ordinary IRA basis records is needed." : "Confirm whether basis, Roth/conversion, QCD, contribution returns, disaster relief, penalty exceptions or other retirement worksheets are needed. Those unresolved facts must be completed before the ordinary route can calculate.");
     if (entry.sourceFactsConfirmed !== true) fail("confirmation", "Confirm the complete retirement source facts after the last edit.");
   });
   return errors;

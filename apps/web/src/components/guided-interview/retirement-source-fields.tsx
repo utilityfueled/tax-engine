@@ -11,7 +11,7 @@ function Text({ label, value, onChange }: { label: string; value: string | undef
   return <label className="guided-field"><span className="guided-field-label">{label}</span><input className="guided-input" value={value ?? ""} onChange={event => onChange(event.target.value)} /></label>;
 }
 
-export function RetirementSourceFields({ entry, onUpdate }: { entry: RetirementEntryData; onUpdate: <K extends keyof RetirementEntryData>(field: K, value: RetirementEntryData[K]) => void }) {
+export function RetirementSourceFields({ entry, onUpdate, basisMode = false }: { entry: RetirementEntryData; onUpdate: <K extends keyof RetirementEntryData>(field: K, value: RetirementEntryData[K]) => void; basisMode?: boolean }) {
   return <>
     <Text label="Retirement statement tax year" value={entry.sourceTaxYear} onChange={value => onUpdate("sourceTaxYear", value)} />
     <Text label="Payer TIN shown on the retirement form" value={entry.payerTin} onChange={value => onUpdate("payerTin", value)} />
@@ -19,9 +19,9 @@ export function RetirementSourceFields({ entry, onUpdate }: { entry: RetirementE
     <label className="guided-field"><span className="guided-field-label">Actual retirement distribution recipient</span><select className="guided-input" value={entry.accountHolder ?? ""} onChange={event => onUpdate("accountHolder", event.target.value as RetirementEntryData["accountHolder"])}><option value="">Choose actual recipient</option><option value="primary">Primary taxpayer</option><option value="spouse">Spouse</option></select></label>
     <Fact label={`IRA / SEP / SIMPLE checkbox (${entry.sourceTaxYear === "2026" ? "Box 7b" : "Box 7"})`} value={entry.requiresIraConfirmation ? null : entry.isIraSepSimple} onChange={value => onUpdate("isIraSepSimple", value)} />
     <Fact label="Is taxable amount not determined checked in Box 2b?" value={entry.taxableAmountNotDetermined} onChange={value => onUpdate("taxableAmountNotDetermined", value)} />
-    <Fact label="Have you established the actual taxable amount from the source and applicable basis records?" value={entry.taxableAmountConfirmed} onChange={value => onUpdate("taxableAmountConfirmed", value)} />
+    {!basisMode && <Fact label="Have you established the actual taxable amount from the source and applicable basis records?" value={entry.taxableAmountConfirmed} onChange={value => onUpdate("taxableAmountConfirmed", value)} />}
     {retirementSourceAmounts.map(([field, label]) => <CurrencyField key={field} label={label} value={entry[field] ?? ""} onChange={value => onUpdate(field, value)} required />)}
-    {entry.isIraSepSimple === true && <Fact label="Do actual owner records establish zero nondeductible IRA basis?" value={entry.iraBasisConfirmedZero} onChange={value => onUpdate("iraBasisConfirmedZero", value)} />}
+    {!basisMode && entry.isIraSepSimple === true && <Fact label="Do actual owner records establish zero nondeductible IRA basis?" value={entry.iraBasisConfirmedZero} onChange={value => onUpdate("iraBasisConfirmedZero", value)} />}
     <Fact label="Is this an eligible governmental section 457(b) distribution?" value={entry.eligibleGovernmental457bPlan} onChange={value => onUpdate("eligibleGovernmental457bPlan", value)} />
     {entry.eligibleGovernmental457bPlan === true && <CurrencyField label="457(b) taxable amount attributable to transferred qualified-plan funds" value={entry.governmental457bTransferredTaxableAmount ?? ""} onChange={value => onUpdate("governmental457bTransferredTaxableAmount", value)} required />}
     <Fact label="Is this a U.S. military pension or survivor benefit?" value={entry.militaryPensionOrSurvivorBenefit} onChange={value => onUpdate("militaryPensionOrSurvivorBenefit", value)} />
@@ -43,7 +43,7 @@ export function RetirementSourceFields({ entry, onUpdate }: { entry: RetirementE
       <CurrencyField label="Retirement local tax withheld (Box 17)" value={entry.localTaxWithheld ?? ""} onChange={value => onUpdate("localTaxWithheld", value)} required />
       <CurrencyField label="Retirement local distribution (Box 19)" value={entry.localDistribution ?? ""} onChange={value => onUpdate("localDistribution", value)} required />
     </>}
-    <Fact label="Are basis, Roth or conversion, QCD, contribution-return, disaster, penalty-exception or other additional retirement worksheets needed?" value={entry.additionalWorksheetRequired} onChange={value => onUpdate("additionalWorksheetRequired", value)} />
+    {basisMode ? <Fact label="Is another retirement method beyond the ordinary IRA basis records needed?" value={entry.otherRetirementWorksheetRequired} onChange={value => onUpdate("otherRetirementWorksheetRequired", value)} /> : <Fact label="Are basis, Roth or conversion, QCD, contribution-return, disaster, penalty-exception or other additional retirement worksheets needed?" value={entry.additionalWorksheetRequired} onChange={value => onUpdate("additionalWorksheetRequired", value)} />}
     <Fact label="Have you checked all retirement source and taxability facts after the last edit?" value={entry.sourceFactsConfirmed} onChange={value => onUpdate("sourceFactsConfirmed", value)} />
     <p className="guided-hint">Keep unknown amounts blank. Enter zero only when the source or completed worksheet establishes zero. Special distributions and unresolved basis, rollover or multi-state allocations stay saved for review until their source worksheets are supported.</p>
   </>;

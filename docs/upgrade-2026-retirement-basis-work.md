@@ -135,3 +135,57 @@ and noncanonical original indices reject. Logs: `facts-review-ira-basis.log`
 and `facts-review-ira-probes.log`. This remains bounded software/source review,
 not independent professional or final-form qualification. Guided collection is
 the next internal retirement package.
+## Guided ordinary IRA source intake — 2026-10-25
+
+The collector preserves actual separate-owner identity, prior Form 8606 history,
+all traditional/SEP/SIMPLE account values and explicit original distribution
+links. Adding records leaves unknown amounts and answers blank. An explicit copy
+action copies only entered original 1099-R facts; it never supplies history,
+account links, confirmations or calculated taxable amounts. The canonical source
+binder checks the actual household and every original distribution before the
+guided route can accept positive basis or an unknown printed Box 2a.
+
+The original source, source year and actual 2026 special-box answers reach the
+canonical return. Source and household/contribution changes invalidate packet
+confirmation while retaining saved records. A stale original link still fails
+after reconfirmation. Switching to zero-basis history cannot silently discard
+saved prior-form facts. Separate other-method answers preserve the ordinary
+route's existing retirement limitations. Full-year and filing gates are unchanged.
+
+Spec-first missing-module and missing-component failures are retained in
+`guided-ira-basis-red.log` and `guided-ira-basis-ui-red.log`. Four initial source,
+canonical, preview and persistence cases plus the real DOM collector pass;
+root/web types pass. The test fixture's section-status assertion was corrected
+from the nonexistent `valid` state to the actual `complete` state, and its DOM
+import path was corrected before the successful rerun. Further immutable checks,
+production desktop/mobile browser checks and independent review followed.
+
+Exact source tree `747d6333` passed root/web types, all4,549 spec references and
+scoped lint with zero errors/39 assertion warnings. Its890-case regression run
+found four existing source-string failures: the new converter shortened actual
+`0.10` to `0.1`. Decimal now validates the original decimal string while retaining
+its supplied precision. Corrected product tree `b870ac65` in
+`/private/tmp/tax-guided-ira-qrv9b8g5` passes all890 cases across86 files and the
+production webpack build. No existing expectation was weakened.
+
+Separate source/code review refreshed the official Form8606 instructions and
+passed six collector/DOM cases plus two independent probes for filtered source
+indices, exact decimals and original Box2a conflicts. No scoped finding remained.
+Both1280px/390px production-browser cases pass with retries0: separate-owner
+history and unknown printed taxable amounts survive reload; changed sources
+revoke confirmation; private source identifiers are absent from request bodies.
+The first browser assertion incorrectly expected comma formatting before the
+field had ever blurred; the corrected test checks the actual initial raw value
+and the subsequent formatted saved value. Product code is unchanged from the
+reviewed tree. Evidence is `guided-ira-{747,b870}-*.log`,
+`facts-review-guided-ira.log` and `facts-review-guided-ira-probes.log`.
+
+Both final desktop and mobile screenshots were visually inspected. Source labels,
+unknown answers and confirmation controls remain legible without horizontal
+overflow. This is local synthetic browser evidence; human tax review, final-form
+qualification and hosted deployment evidence remain separate requirements.
+
+Final staged tree `e55725a3` on dependency commit `d078cf4` retains all14 reviewed
+product/source/spec/test blobs exactly; only the browser assertion and this
+evidence changed. All13 focused collector/source cases and web types pass on that
+integrated tree (`guided-ira-e557-final-tests.log`, `guided-ira-e557-webtypes.log`).

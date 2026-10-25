@@ -40,6 +40,7 @@ import type { MortgageSourceData } from "./guided-mortgage-facts";
 import type { MortgageWorksheetData } from "./guided-mortgage-worksheet";
 import { socialSecurityFactErrors, socialSecurityEntries, isStartedSocialSecurity, type SocialSecuritySourceData } from "./guided-social-security-facts";
 import type { RetirementSourceData } from "./guided-retirement-facts";
+import type { GuidedIraBasisData, GuidedIraBasisContext } from "./guided-ira-basis";
 import { vehicleFactErrors, type VehicleCreditData } from "./guided-vehicle-facts";
 import { adoptionFactErrors, type AdoptionCreditData } from "./guided-adoption-facts";
 import { educationDistributionFactErrors, type EducationDistributionData } from "./guided-education-distributions";
@@ -1288,7 +1289,7 @@ export interface SectionDataMap {
     businessFacts?: BusinessSourceData;
   };
   "income-investments"?: InvestmentData;
-  "income-retirement"?: { entries: RetirementEntryData[] };
+  "income-retirement"?: { entries: RetirementEntryData[]; basisSources?: GuidedIraBasisData };
   "income-rental"?: { entries: RentalPropertyEntryData[] };
   "income-social-security"?: SocialSecurityData;
   "income-unemployment"?: UnemploymentData;
@@ -1519,6 +1520,8 @@ export function updateSectionData(
   const iraSourcesChanged = ["income-w2", "income-self-employment", "income-retirement"].includes(sectionId) && adjustments?.iraContributions;
   const hsaSourcesChanged = ["income-w2", "personal-info"].includes(sectionId) && adjustments?.hsaAccounts;
   const sourceValuesChanged = guidedSourceValuesChanged(state.sectionData[sectionId as keyof SectionDataMap], data);
+  const nextRetirement = sectionId === "income-retirement" ? data as SectionDataMap["income-retirement"] : state.sectionData["income-retirement"];
+  const iraBasisSourcesChanged = sourceValuesChanged && ["income-retirement", "personal-info", "adjustments"].includes(sectionId) && nextRetirement?.basisSources;
   const nextRentals = sectionId === "income-rental" ? data as SectionDataMap["income-rental"] : state.sectionData["income-rental"];
   const rentalCarrySourcesChanged = sourceValuesChanged && sectionId !== "final-review" && nextRentals?.entries.some(entry => entry.priorLossSources);
   const nextPayments = sectionId === "payments" ? data as PaymentData : state.sectionData.payments;
@@ -1564,6 +1567,7 @@ export function updateSectionData(
     sectionData: {
       ...state.sectionData,
       [sectionId]: data,
+      ...(iraBasisSourcesChanged && nextRetirement ? { "income-retirement": { ...nextRetirement, basisSources: { ...iraBasisSourcesChanged, sourceFactsConfirmed: null } } } : {}),
       ...(rentalCarrySourcesChanged && nextRentals ? { "income-rental": { ...nextRentals, entries: nextRentals.entries.map(entry => entry.priorLossSources ? { ...entry, priorLossSources: { ...entry.priorLossSources, sourceFactsConfirmed: null } } : entry) } } : {}),
       ...(estimatedTaxSourcesChanged && nextPayments ? { payments: { ...nextPayments, estimatedTaxFacts: { ...estimatedTaxSourcesChanged, sourceFactsConfirmed: null } } } : {}),
       ...((childElectionSourcesChanged || qofSourcesChanged || capitalSourcesChanged || qsbsSourcesChanged) && nextInvestments ? { "income-investments": { ...nextInvestments, ...(childElectionSourcesChanged ? { childElections: nextInvestments.childElections?.map(child => ({ ...child, sourceFactsConfirmed: null })) } : {}), ...(qofSourcesChanged ? { qofDispositionFacts: { ...qofSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(capitalSourcesChanged ? { scheduleDSources: { ...capitalSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(qsbsSourcesChanged ? { section1202Sources: { ...qsbsSourcesChanged, sourceFactsConfirmed: null } } : {}) } } : {}),
@@ -1838,9 +1842,9 @@ function validateRequiredFacts(errors: Record<string, string>): SectionValidatio
   } : VALID_SECTION;
 }
 
-function validateRetirementSection(data: { entries: RetirementEntryData[] } | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, stateData?: StateReturnData): SectionValidationResult {
-  if (!data?.entries?.length) return EMPTY_SECTION("retirement info");
-  return validateRequiredFacts(retirementFactErrors(data.entries, true, filingStatus, taxYear, stateData));
+function validateRetirementSection(data: SectionDataMap["income-retirement"], filingStatus?: FilingStatus | null, taxYear?: number | null, stateData?: StateReturnData, basisContext?: GuidedIraBasisContext): SectionValidationResult {
+  if (!data?.entries?.length && !data?.basisSources) return EMPTY_SECTION("retirement info");
+  return validateRequiredFacts(retirementFactErrors(data?.entries, true, filingStatus, taxYear, stateData, basisContext));
 }
 
 function validateSocialSecuritySection(data: SocialSecurityData | undefined, state: GuidedFlowState): SectionValidationResult {
@@ -1897,7 +1901,7 @@ export function validateSection(
     case "income-rental":
       return validateRentalSection(getSectionData(state, "income-rental"), state.segmentation.filingStatus, state.taxYear, state.segmentation.stateCode, state.sectionData["personal-info"]);
     case "income-retirement":
-      return validateRetirementSection(getSectionData(state, "income-retirement"), state.segmentation.filingStatus, state.taxYear, getSectionData(state, "state-return"));
+      return validateRetirementSection(getSectionData(state, "income-retirement"), state.segmentation.filingStatus, state.taxYear, getSectionData(state, "state-return"), { data: state.sectionData["income-retirement"]?.basisSources, personal: state.sectionData["personal-info"], adjustments: state.sectionData.adjustments });
     case "income-social-security":
       return validateSocialSecuritySection(getSectionData(state, "income-social-security"), state);
     case "income-unemployment":
