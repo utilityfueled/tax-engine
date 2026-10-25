@@ -353,6 +353,8 @@ export interface OhioIT1040YearConstants {
   businessTaxRate: Decimal;
   businessIncomeDeduction: Record<"default" | "married_filing_separately", Decimal>;
   exemptionTiers: OhioExemptionTier[];
+  /** Exclusive actual-MAGI ceiling; null before the statutory ceiling began. */
+  exemptionMagiLimit: Decimal | null;
 }
 
 export interface OhioScheduleOfAdjustmentsYearConstants {
@@ -397,7 +399,8 @@ export interface OhioScheduleOfCreditsYearConstants {
   exemptionCreditMagiLessExemptionsLimit: Decimal;
   jointFilingCreditTiers: JointFilingCreditTier[];
   jointFilingCreditMax: Decimal;
-  jointFilingCreditMagiLessExemptionsLimit: Decimal;
+  /** Eligibility uses actual MAGI; rate tiers separately use MAGI less exemptions. */
+  jointFilingCreditMagiLimit: Decimal | null;
   earnedIncomeCreditRate: Decimal;
   homeSchoolExpensesCreditMaxPerReturn: Decimal;
   homeSchoolExpensesCreditMaxPerStudent: Decimal;
@@ -644,9 +647,9 @@ export const OHIO_TAX_CONSTANTS: Record<number, OhioYearConstants> = {
       exemptionTiers: [
         { maxMagi: d(40000), amount: d(2400) },
         { maxMagi: d(80000), amount: d(2150) },
-        { maxMagi: d(749999), amount: d(1900) },
-        { maxMagi: null, amount: d(0) },
+        { maxMagi: null, amount: d(1900) },
       ],
+      exemptionMagiLimit: null,
     },
     scheduleAdjustments: {
       businessIncomeDeductionCap: {
@@ -689,7 +692,7 @@ export const OHIO_TAX_CONSTANTS: Record<number, OhioYearConstants> = {
         { maxMagiLessExemptions: null, rate: d("0.05") },
       ],
       jointFilingCreditMax: d(650),
-      jointFilingCreditMagiLessExemptionsLimit: d(750000),
+      jointFilingCreditMagiLimit: null,
       earnedIncomeCreditRate: d("0.30"),
       homeSchoolExpensesCreditMaxPerReturn: d(250),
       homeSchoolExpensesCreditMaxPerStudent: d(250),
@@ -729,9 +732,9 @@ export const OHIO_TAX_CONSTANTS: Record<number, OhioYearConstants> = {
       exemptionTiers: [
         { maxMagi: d(40000), amount: d(2400) },
         { maxMagi: d(80000), amount: d(2150) },
-        { maxMagi: d(749999), amount: d(1900) },
-        { maxMagi: null, amount: d(0) },
+        { maxMagi: null, amount: d(1900) },
       ],
+      exemptionMagiLimit: d(750000),
     },
     scheduleAdjustments: {
       businessIncomeDeductionCap: {
@@ -777,7 +780,7 @@ export const OHIO_TAX_CONSTANTS: Record<number, OhioYearConstants> = {
         { maxMagiLessExemptions: null, rate: d("0.05") },
       ],
       jointFilingCreditMax: d(650),
-      jointFilingCreditMagiLessExemptionsLimit: d(750000),
+      jointFilingCreditMagiLimit: d(750000),
       earnedIncomeCreditRate: d("0.30"),
       homeSchoolExpensesCreditMaxPerReturn: d(250),
       homeSchoolExpensesCreditMaxPerStudent: d(250),

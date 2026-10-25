@@ -633,9 +633,7 @@ export function calculateOhioScheduleOfCredits(
   if (
     input.filingStatus === "married_filing_jointly" &&
     spousesMeetQualifyingIncomeThreshold(input) &&
-    magiLessExemptionsVal.lessThan(
-      constants.jointFilingCreditMagiLessExemptionsLimit
-    )
+    (constants.jointFilingCreditMagiLimit === null || magiVal.lessThan(constants.jointFilingCreditMagiLimit))
   ) {
     const rate = getJointFilingCreditRate(
       magiLessExemptionsVal,
@@ -649,9 +647,10 @@ export function calculateOhioScheduleOfCredits(
     "12",
     "Joint filing credit",
     line12,
-    "Percentage of line 11 based on MAGI less exemptions, max $650",
+    "Year-specific actual MAGI eligibility; percentage of line 11 based on MAGI less exemptions, max $650",
     {
       "Filing status": input.filingStatus,
+      "Actual MAGI": magiVal,
       "MAGI less exemptions": magiLessExemptionsVal,
       "Line 11": line11,
       "Primary qualifying income": d(input.primaryQualifyingIncome),

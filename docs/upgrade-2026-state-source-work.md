@@ -231,3 +231,33 @@ in 35 files. Root types, all 384 PA spec references and scoped lint pass with no
 errors or warnings. Logs: `.local/upgrade-evidence/pa-withholding-source-{red,green,expanded}.log`.
 The diff was reviewed. Final 2026 form qualification and independent human review
 remain outstanding; this change does not open a filing or tax-year gate.
+
+## Ohio historical exemptions and exact MAGI ceilings — 2026-10-25
+
+The [2024 Ohio booklet](https://dam.assets.ohio.gov/image/upload/v1735920104/tax.ohio.gov/forms/ohio_individual/individual/2024/it1040-booklet.pdf),
+printed pages 17 and 29, has no upper-MAGI ceiling on exemptions or the joint
+filing credit. The [2025 booklet](https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf)
+adds a $750,000 exclusive ceiling to both. [R.C. 5747.025](https://codes.ohio.gov/ohio-revised-code/section-5747.025)
+and [R.C. 5747.05(E)](https://codes.ohio.gov/ohio-revised-code/section-5747.05)
+use actual MAGI before exemptions for eligibility; the joint-credit percentage
+continues to use MAGI less exemptions. Sources were refreshed on October 25.
+
+The constants now separate the exclusive ceiling from exemption and credit
+tiers. This preserves the 2024 high-income rules, accepts actual 2025 cents
+immediately below $750,000, and prevents exemptions from moving an ineligible
+MAGI below the credit ceiling. Audits identify the actual tax year and MAGI.
+No 2026 return or filing gate is enabled.
+
+Specs preceded 12 new boundary and complete-return cases: eight failed before
+the implementation. The expanded Ohio core, edge-case and reference-PDF run
+passes all 728 tests in 22 files. Root types and all 262 Ohio spec references
+pass; scoped lint reports zero errors and one existing non-null warning. Two
+older fixtures were corrected to supply actual MAGI and assert the new separate
+ceiling. Their tax expectations were retained.
+
+An independent agent reopened both official booklets and the statute, reviewed
+the scoped diff and ran the 12 new cases successfully, with no actionable
+findings. This is code review, not the required human tax qualification. Logs:
+`.local/upgrade-evidence/oh-year-ceilings-{red,expanded,types,spec,lint}.log`
+and `oh-exemption-independent-review.log`. Exact staged verification is recorded
+with the package commit in the durable checklist.

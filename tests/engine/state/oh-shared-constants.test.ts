@@ -134,7 +134,8 @@ describe("Ohio shared constants and public API", () => {
     expect(constants.it1040.nonbusinessBrackets[1]?.rate.toString()).toBe("0.0275");
     expect(constants.it1040.nonbusinessBrackets[2]?.rate.toString()).toBe("0.03125");
     expect(constants.it1040.exemptionTiers[0]?.amount.toNumber()).toBe(2400);
-    expect(constants.it1040.exemptionTiers[3]?.amount.toNumber()).toBe(0);
+    expect(constants.it1040.exemptionTiers[2]?.amount.toNumber()).toBe(1900);
+    expect(constants.it1040.exemptionMagiLimit?.toNumber()).toBe(750000);
   });
 
   it("exports the Ohio resident return orchestrator from the package entry point", () => {

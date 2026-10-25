@@ -513,10 +513,12 @@ describe("Ohio Schedule of Credits", () => {
     expect(result.line12_jointFilingCredit.toNumber()).toBe(0);
   });
 
-  it("OH Schedule of Credits Line 12 - joint filing credit $0 when MAGI less exemptions >= $750,000", () => {
+  it("OH Schedule of Credits Line 12 - joint filing credit $0 when actual MAGI >= $750,000", () => {
     const result = calculateOhioScheduleOfCredits(
       makeInput({
         filingStatus: "married_filing_jointly",
+        federalAgi: 750000,
+        magi: 750000,
         magiLessExemptions: 750000,
         taxBeforeCredits: 20000,
         bothSpousesHaveQualifyingIncome: true,
