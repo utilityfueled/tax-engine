@@ -2402,6 +2402,7 @@ describe("Form 8824 federal integration", () => {
   it("Form 1040 Line 8 and Schedule 1 - Form 8824 line 21 ordinary recapture flows through Schedule 1 Line 4", () => {
     const result = calculateFederalTax({
       ...simpleW2Fixture,
+      form8960Sources: {sourceTaxYear:2025,sourceReference:"Synthetic passive rental disposition worksheet",sourceFactsConfirmed:true,dispositions:{regularCapitalGainOrLoss:"30000",regularOrdinaryGainOrLoss:"10000",excludedGainOrLossAdjustment:"0",passthroughAdjustment:"0"}},
       form8824: [
         {
           description: "Rental duplex exchange",

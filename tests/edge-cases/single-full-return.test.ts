@@ -1,3 +1,4 @@
+import { niitDispositionSources } from "../fixtures/niit-sources.js";
 /**
  * Single filer end-to-end test.
  * Mid-income single filer with diverse income: W-2, interest, dividends,
@@ -1310,6 +1311,8 @@ describe("Single filer with business property sales", () => {
   // Exercises: Form 4797 Parts I/II/III → Schedule 1 Line 4 → Schedule D →
   // QDCG worksheet (unrecaptured §1250 at 25%) → correct final tax.
   const input = baseSingleFiler({
+    // Actual rental investment gain110,000; nonpassive equipment recapture8,000 excluded.
+    form8960Sources: niitDispositionSources("110000", "8000", "-8000"),
     w2s: [
       {
         employer: { name: "Employer Co", ein: "11-2233445" },
@@ -1386,6 +1389,7 @@ describe("Single filer with business property sales", () => {
   it("QDCG preferential rates produce lower tax than all-ordinary treatment", () => {
     // Compare against a hypothetical where $110K is ordinary instead of LTCG
     const allOrdinaryInput = baseSingleFiler({
+      form8960Sources: niitDispositionSources("0", "118000", "-118000"),
       w2s: [
         {
           employer: { name: "Employer Co", ein: "11-2233445" },
@@ -1414,7 +1418,7 @@ describe("Single filer with business property sales", () => {
             description: "All-ordinary hypothetical",
             costOrBasis: "250000",
             depreciationAllowed: "250000",
-            grossSalesPrice: "360000",
+            grossSalesPrice: "110000",
             propertyType: "section1245",
             heldMoreThanOneYear: true,
           },

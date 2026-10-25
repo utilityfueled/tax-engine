@@ -4063,6 +4063,24 @@ export const Form6252Schema = z.object({
 });
 export type Form6252Input = z.infer<typeof Form6252Schema>;
 
+/** Actual completed NIIT worksheet components that cannot be inferred from income totals. */
+export const Form8960SourcesSchema = z.object({
+  sourceTaxYear: z.number().int().optional(),
+  sourceReference: z.string().min(1).optional(),
+  sourceFactsConfirmed: z.boolean().optional(),
+  feieAllocableDeductions: decimal.optional(),
+  dispositions: z.object({
+    regularCapitalGainOrLoss: decimal,
+    regularOrdinaryGainOrLoss: decimal,
+    excludedGainOrLossAdjustment: decimal,
+    passthroughAdjustment: decimal,
+  }).optional(),
+  itemizedAllocation: z.object({
+    investmentInterest: decimal,
+    ordinaryLoss: decimal,
+  }).optional(),
+});
+
 export const Form2555Schema = z.preprocess(value => {
   if (!value || typeof value !== "object" || Array.isArray(value)) return value;
   const record = value as Record<string, unknown>;
@@ -5339,6 +5357,7 @@ export const TaxYearInputSchema = z.object({
   scheduleR: ScheduleRInputSchema.optional(),
   scheduleH: ScheduleHSchema.optional(),
   form2555: Form2555Schema.optional(),
+  form8960Sources: Form8960SourcesSchema.optional(),
   form4684: Form4684Schema.optional(),
   form461: Form461SourceSchema.optional(),
   form4952: Form4952InputSchema.optional(),

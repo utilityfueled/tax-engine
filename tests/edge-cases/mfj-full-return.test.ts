@@ -1,3 +1,4 @@
+import { niitDispositionSources } from "../fixtures/niit-sources.js";
 /**
  * Married Filing Jointly end-to-end test.
  * Dual-income MFJ couple with complex income: two W-2s, interest, dividends,
@@ -494,6 +495,9 @@ describe("MFJ Full Return - dual income with complex sources", () => {
 describe("MFJ Full Return - Form 4797 property sales", () => {
   const fixture: TaxYearInput = {
     ...complexMFJFixture,
+    // Actual synthetic worksheet: baseline capital13,000 plus155,000 rental gain;
+    // exclude only12,000 nonpassive equipment recapture, retaining passive rental lookback.
+    form8960Sources: niitDispositionSources("168000", "17000", "-12000"),
     form4797: {
       nonrecapturedNetSection1231Losses: "5000",
       propertySales: [

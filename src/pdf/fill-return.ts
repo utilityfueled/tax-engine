@@ -547,7 +547,7 @@ export async function fillReturn(
   }
 
   // ── Form 8960 (if applicable — Net Investment Income Tax) ──
-  if (result.form8960 && result.form8960.niitTax.gt(0)) {
+  if (result.form8960?.requiresForm8960) {
     const f8960Path = join(blankFormsDir, "f8960.pdf");
     const doc8960 = await fillForm8960(input, result, f8960Path);
     if (flatten) await flattenForm(doc8960.getForm());

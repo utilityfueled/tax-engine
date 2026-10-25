@@ -1,11 +1,4 @@
-/**
- * Form 8960 — Net Investment Income Tax (NIIT)
- * Spec: spec/federal/form-8960.yaml
- *
- * 3.8% tax on the lesser of net investment income or MAGI excess
- * over threshold. Threshold: $200K single/HoH, $250K MFJ, $125K MFS.
- */
-
+/** Form8960 — individual NIIT; spec/federal/form-8960.yaml. */
 import Decimal from "decimal.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import type { FilingStatus, YearConstants } from "@/models/constants.js";
@@ -13,100 +6,87 @@ import { zeroFloor, min, roundDollar, sum } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
 
 export interface Form8960Input {
-  taxableInterest: Decimal; // Line 1
-  ordinaryDividends: Decimal; // Line 4a
-  netCapitalGain: Decimal; // Line 5a (net gain, zero if loss)
-  otherInvestmentIncome?: Decimal; // Line 7 (rents, royalties, etc.)
-  investmentExpenses?: Decimal; // Line 9 deductions
-  additionalModifications?: Decimal; // Line10 properly allocable deductions
-  magi: Decimal; // Modified AGI
+  taxableInterest: Decimal;
+  ordinaryDividends: Decimal;
+  /** Actual signed Form1040line7a plus Schedule1line4, before lines5b/5c. */
+  netCapitalGain: Decimal;
+  annuityIncome?: Decimal;
+  tradeOrBusinessIncome?: Decimal;
+  nonInvestmentBusinessAdjustment?: Decimal;
+  excludedDispositionAdjustment?: Decimal;
+  passthroughDispositionAdjustment?: Decimal;
+  cfcPficInvestmentAdjustment?: Decimal;
+  otherModifications?: Decimal;
+  /** Historical direct-call alias for the already-net business component. */
+  otherInvestmentIncome?: Decimal;
+  investmentInterestExpense?: Decimal;
+  investmentIncomeTaxes?: Decimal;
+  miscellaneousInvestmentExpenses?: Decimal;
+  /** Historical aggregate. If components are supplied they must reconcile. */
+  investmentExpenses?: Decimal;
+  additionalModifications?: Decimal;
+  magi: Decimal;
 }
 
 export interface Form8960Result {
-  taxableInterest: Decimal; // Line 1
-  dividends: Decimal; // Line 4a
-  netCapitalGain: Decimal; // Line 5a
-  grossInvestmentIncome: Decimal; // Line8 before PartII
-  investmentExpenses: Decimal; // Actual supplied line9 deductions
-  additionalModifications: Decimal; // Line10
-  netInvestmentIncome: Decimal; // Line12
-  threshold: Decimal; // Line 11
-  magiExcess: Decimal; // Line 13
-  taxableBase: Decimal; // Line 14
-  niitTax: Decimal; // Line 17
+  taxableInterest: Decimal;
+  dividends: Decimal;
+  netCapitalGain: Decimal;
+  grossInvestmentIncome: Decimal;
+  investmentExpenses: Decimal;
+  additionalModifications: Decimal;
+  netInvestmentIncome: Decimal;
+  magi: Decimal;
+  threshold: Decimal;
+  magiExcess: Decimal;
+  taxableBase: Decimal;
+  niitTax: Decimal;
+  requiresForm8960: boolean;
   lines: CalculatedLine[];
 }
 
-export function calculateForm8960(
-  input: Form8960Input,
-  filingStatus: FilingStatus,
-  constants: YearConstants
-): Form8960Result {
+export function calculateForm8960(input: Form8960Input, filingStatus: FilingStatus, constants: YearConstants): Form8960Result {
   const audit = new AuditTrail();
-  const rate = constants.niit.rate;
-  const threshold = constants.niit.threshold[filingStatus];
-
-  // Line 1: Taxable interest
-  audit.record("Form 8960", "1", "Taxable interest", input.taxableInterest,
-    "1040 Line 2b");
-
-  // Line 4a: Dividends
-  audit.record("Form 8960", "4a", "Ordinary dividends", input.ordinaryDividends,
-    "1040 Line 3b");
-
-  // Line 5a: Net capital gain
-  audit.record("Form 8960", "5a", "Net gain from capital assets", input.netCapitalGain,
-    "Schedule D net gain (zero-floored)");
-
-  // Line 8: Net investment income
-  const grossInvestmentIncome = sum(
-    input.taxableInterest,
-    input.ordinaryDividends,
-    input.netCapitalGain,
-    input.otherInvestmentIncome ?? new Decimal(0)
-  );
-  const investmentExpenses = input.investmentExpenses ?? new Decimal(0);
-  const additionalModifications = input.additionalModifications ?? new Decimal(0);
-  if (![investmentExpenses, additionalModifications].every(value => value.isFinite() && value.gte(0))) {
-    throw new Error("NIIT deduction amounts must be finite and nonnegative");
+  const zero = new Decimal(0);
+  for (const [name, value] of Object.entries(input)) {
+    if (value !== undefined && (!Decimal.isDecimal(value) || !value.isFinite())) throw new Error(`Form8960 ${name} must be finite`);
   }
-  const netInvestmentIncome = zeroFloor(grossInvestmentIncome.minus(investmentExpenses).minus(additionalModifications));
-  audit.record("Form 8960", "10", "Additional modifications", additionalModifications,
-    "Actual properly allocable deductions not included on lines1-9");
-  audit.record("Form 8960", "8", "Net investment income", netInvestmentIncome,
-    "Gross investment income - expenses");
-
-  // Line 11: Threshold
-  audit.record("Form 8960", "11", "MAGI threshold", threshold,
-    `${filingStatus} threshold`);
-
-  // Line 13: Excess of MAGI over threshold
-  const magiExcess = zeroFloor(input.magi.minus(threshold));
-  audit.record("Form 8960", "13", "MAGI excess", magiExcess,
-    `MAGI ${input.magi} - threshold ${threshold}`);
-
-  // Line 14: Taxable base = lesser of NII or MAGI excess
-  const taxableBase = min(netInvestmentIncome, magiExcess);
-  audit.record("Form 8960", "14", "Taxable base", taxableBase,
-    "min(NII, MAGI excess)");
-
-  // Line 17: NIIT
-  const niitTax = roundDollar(taxableBase.times(rate));
-  audit.record("Form 8960", "17", "Net Investment Income Tax", niitTax,
-    `${taxableBase} × ${rate}`);
-
-  return {
-    taxableInterest: input.taxableInterest,
-    dividends: input.ordinaryDividends,
-    netCapitalGain: input.netCapitalGain,
-    grossInvestmentIncome,
-    investmentExpenses,
-    additionalModifications,
-    netInvestmentIncome,
-    threshold,
-    magiExcess,
-    taxableBase,
-    niitTax,
-    lines: audit.getLines(),
+  const deductions = [input.investmentInterestExpense, input.investmentIncomeTaxes, input.miscellaneousInvestmentExpenses, input.investmentExpenses, input.additionalModifications];
+  if (deductions.some(value => value?.lt(0))) throw new Error("NIIT deduction amounts must be finite and nonnegative");
+  const record = (line: string, description: string, value: Decimal, formula: string) => {
+    audit.record("Form 8960", line, description, value, formula); return value;
   };
+  const interest = record("1", "Taxable interest", input.taxableInterest, "Actual taxable interest");
+  const dividends = record("2", "Ordinary dividends", input.ordinaryDividends, "Form1040line3b, including qualified dividends");
+  const annuity = record("3", "Taxable investment annuities", input.annuityIncome ?? zero, "Actual nonqualified annuity income");
+  const business = record("4a", "Business and rental income", input.tradeOrBusinessIncome ?? input.otherInvestmentIncome ?? zero, "Actual potentially subject business income");
+  const businessAdjustment = record("4b", "Excluded business adjustment", input.nonInvestmentBusinessAdjustment ?? zero, "Actual non-section1411 business adjustment");
+  const netBusiness = record("4c", "Combined business income", business.plus(businessAdjustment), "Lines4a+4b");
+  if (input.otherInvestmentIncome !== undefined && input.tradeOrBusinessIncome !== undefined && !netBusiness.eq(input.otherInvestmentIncome)) throw new Error("Form8960 business sources must reconcile with the historical net alias");
+  record("5a", "Net disposition gain or loss", input.netCapitalGain, "Signed Form1040line7a plus Schedule1line4");
+  const excludedGain = record("5b", "Excluded disposition adjustment", input.excludedDispositionAdjustment ?? zero, "Actual excluded gains negative and losses positive");
+  const passThroughGain = record("5c", "Pass-through disposition adjustment", input.passthroughDispositionAdjustment ?? zero, "Actual section1411(c)(4) adjustment");
+  const netGains = record("5d", "Combined disposition income", sum(input.netCapitalGain, excludedGain, passThroughGain), "Lines5a+5b+5c");
+  const cfcPfic = record("6", "CFC and PFIC investment adjustment", input.cfcPficInvestmentAdjustment ?? zero, "Actual applicable foreign-entity worksheet");
+  const other = record("7", "Other investment modifications", input.otherModifications ?? zero, "Actual modifications not already reported");
+  const grossInvestmentIncome = record("8", "Total investment income", sum(interest, dividends, annuity, netBusiness, netGains, cfcPfic, other), "Lines1+2+3+4c+5d+6+7");
+  const hasComponents = input.investmentInterestExpense !== undefined || input.investmentIncomeTaxes !== undefined || input.miscellaneousInvestmentExpenses !== undefined;
+  const componentExpenses = sum(input.investmentInterestExpense ?? zero, input.investmentIncomeTaxes ?? zero, input.miscellaneousInvestmentExpenses ?? zero);
+  if (hasComponents && input.investmentExpenses !== undefined && !componentExpenses.eq(input.investmentExpenses)) throw new Error("Form8960 expense components must reconcile with their aggregate");
+  // An old aggregate proves no component allocation. Keep its printed components blank.
+  if (input.investmentExpenses === undefined || hasComponents) {
+    record("9a", "Investment interest", input.investmentInterestExpense ?? zero, "Actual allowed investment interest");
+    record("9b", "Allocable taxes", input.investmentIncomeTaxes ?? zero, "Actual allowable taxes allocated to investment income");
+    record("9c", "Other allowed investment expenses", input.miscellaneousInvestmentExpenses ?? zero, "Actual regularly deductible investment expenses");
+  }
+  const investmentExpenses = record("9d", "Investment expense total", input.investmentExpenses ?? componentExpenses, "Lines9a+9b+9c or retained historical aggregate");
+  const additionalModifications = record("10", "Additional modifications", input.additionalModifications ?? zero, "Actual properly allocable deductions not already included");
+  const totalDeductions = record("11", "Total deductions and modifications", investmentExpenses.plus(additionalModifications), "Lines9d+10");
+  const netInvestmentIncome = record("12", "Net investment income", zeroFloor(grossInvestmentIncome.minus(totalDeductions)), "max(0,line8-line11)");
+  const magi = record("13", "Modified adjusted gross income", input.magi, "Actual MAGI worksheet result");
+  const threshold = record("14", "Filing-status threshold", constants.niit.threshold[filingStatus], `${filingStatus} statutory threshold`);
+  const magiExcess = record("15", "MAGI excess", zeroFloor(magi.minus(threshold)), "max(0,line13-line14)");
+  const taxableBase = record("16", "Taxable base", min(netInvestmentIncome, magiExcess), "min(line12,line15)");
+  const niitTax = record("17", "Net investment income tax", roundDollar(taxableBase.times(constants.niit.rate)), "Round line16*0.038");
+  return { taxableInterest: interest, dividends, netCapitalGain: input.netCapitalGain, grossInvestmentIncome, investmentExpenses, additionalModifications, netInvestmentIncome, magi, threshold, magiExcess, taxableBase, niitTax, requiresForm8960: magi.gt(threshold), lines: audit.getLines() };
 }

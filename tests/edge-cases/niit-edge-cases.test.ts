@@ -332,9 +332,10 @@ describe("NIIT - capital loss impact on NIIT base", () => {
     };
     const federal = calculateFederalTax(fixture);
     // Capital loss of $20K, limited to $3K deduction on 1040
-    // Net cap gain for NIIT purposes = $0 (loss → zero-floored)
-    // NII is interest only ($5K), and MAGI excess drives the base
-    expect(federal.form8960.netCapitalGain.toNumber()).toBe(0);
+    // Official line5a retains the permitted $3K capital loss, reducing $5K interest.
+    expect(federal.form8960.netCapitalGain.toNumber()).toBe(-3000);
+    expect(federal.form8960.netInvestmentIncome.toNumber()).toBe(2000);
+    expect(federal.niitTax.toNumber()).toBe(76);
   });
 });
 
@@ -509,7 +510,7 @@ describe("NIIT - qualifying surviving spouse uses MFJ threshold", () => {
 describe("NIIT - qualified dividends only as NII (spec Line 4a)", () => {
   it("qualified dividends are included in NII via ordinary dividends", () => {
     // Qualified dividends are a subset of ordinary dividends.
-    // Form 8960 Line 4a uses ordinary dividends which includes qualified.
+    // Form 8960 Line 2 uses ordinary dividends which includes qualified.
     const result = calculateForm8960(makeInput({
       ordinaryDividends: d(80000), // all qualified
       magi: d(240000),
@@ -733,20 +734,17 @@ describe("NIIT - HoH uses $200K threshold (spec Line 11)", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("NIIT - capital losses reducing NII (spec Line 5a)", () => {
-  it("net capital gain zero-floored when losses exceed gains", () => {
-    // netCapitalGain on Form 8960 is zero-floored per spec Line 5a
-    // So we pass 0 when there's a net loss
+  it("permitted capital loss reduces other investment income", () => {
+    // Official line5a includes the permitted $3000 return capital loss.
     const result = calculateForm8960(makeInput({
       taxableInterest: d(30000),
       ordinaryDividends: d(20000),
-      netCapitalGain: d(0), // net loss → zero-floored
+      netCapitalGain: d(-3000), // Actual allowed return capital loss
       magi: d(260000),
     }), "single", c);
-    // NII = $30K + $20K + $0 = $50K
-    // Excess = $60K, base = min($50K, $60K) = $50K
-    // NIIT = $50K x 3.8% = $1,900
-    expect(result.netInvestmentIncome.toNumber()).toBe(50000);
-    expect(result.niitTax.toNumber()).toBe(1900);
+    // 30000+20000-3000=47000, below60000MAGIexcess;*.038=1786.
+    expect(result.netInvestmentIncome.toNumber()).toBe(47000);
+    expect(result.niitTax.toNumber()).toBe(1786);
   });
 
   it("partial capital gains offset by partial losses reduces NII", () => {
@@ -1097,12 +1095,12 @@ describe("NIIT - audit trail records all Form 8960 line entries", () => {
 
     // Form 8960 lines that must appear in the audit trail
     expect(lineNumbers).toContain("1");   // taxable interest
-    expect(lineNumbers).toContain("4a");  // ordinary dividends
+    expect(lineNumbers).toContain("2");   // ordinary dividends
     expect(lineNumbers).toContain("5a");  // net capital gain
-    expect(lineNumbers).toContain("8");   // net investment income
-    expect(lineNumbers).toContain("11");  // MAGI threshold
-    expect(lineNumbers).toContain("13");  // MAGI excess
-    expect(lineNumbers).toContain("14");  // taxable base
+    expect(lineNumbers).toContain("12");  // net investment income
+    expect(lineNumbers).toContain("14");  // MAGI threshold
+    expect(lineNumbers).toContain("15");  // MAGI excess
+    expect(lineNumbers).toContain("16");  // taxable base
     expect(lineNumbers).toContain("17");  // NIIT
   });
 
@@ -1278,18 +1276,15 @@ describe("NIIT - passive losses reduce net investment income", () => {
 });
 
 // ═══════════════════════════════════════════════════════════
-// Form 8960 Line 4b: No cross-category netting of ST/LT capital gains
-// Per IRS Form 8960 Instructions, Line 4b: "if either amount is a loss,
-// enter only the gain, if any" — each category zero-floored independently.
+// Form8960 line5a: signed Form1040line7a uses ScheduleD capital netting.
+// The earlier quotation about ignoring opposing losses was not in the IRS instructions.
 // ═══════════════════════════════════════════════════════════
 
-describe("NIIT - capital gain no cross-netting (Form 8960 Line 4b)", () => {
-  it("ST loss does NOT reduce LT gain for NII — pipeline via calculateFederalTax", () => {
+describe("NIIT - signed capital netting (Form8960 line5a)", () => {
+  it("ST loss reduces LT gain for NII — pipeline via calculateFederalTax", () => {
     // Single, $250K wages, ST -$10K loss, LT +$30K gain, $20K interest
     // Schedule D: Line 7 = -$10K, Line 15 = +$30K, Line 16 = +$20K
-    // Per IRS Form 8960 Line 4b: "if either amount is a loss, enter only the gain"
-    // Correct: max(0, -$10K) + max(0, +$30K) = $0 + $30K = $30K
-    // NOT: max(0, -$10K + $30K) = $20K (wrong — allows ST loss to offset LT gain)
+    // Line5a takes signed Form1040line7a: -10000+30000=20000.
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
       w2s: [{
@@ -1341,22 +1336,19 @@ describe("NIIT - capital gain no cross-netting (Form 8960 Line 4b)", () => {
     expect(federal.scheduleD.netShortTerm.toNumber()).toBe(-10000);
     expect(federal.scheduleD.netLongTerm.toNumber()).toBe(30000);
     expect(federal.scheduleD.netCapitalGainLoss.toNumber()).toBe(20000);
-    // Form 8960 netCapitalGain must be $30K (LT only), NOT $20K (netted)
-    expect(federal.form8960.netCapitalGain.toNumber()).toBe(30000);
-    // NII = $20K interest + $30K capital = $50K
-    expect(federal.form8960.netInvestmentIncome.toNumber()).toBe(50000);
+    expect(federal.form8960.netCapitalGain.toNumber()).toBe(20000);
+    // $20K interest plus $20K net capital gain.
+    expect(federal.form8960.netInvestmentIncome.toNumber()).toBe(40000);
     // AGI = $250K + $20K interest + $20K cap = $290K
     // MAGI excess = $290K - $200K = $90K
-    // base = min($50K, $90K) = $50K
-    // NIIT = $50K × 3.8% = $1,900
-    expect(federal.niitTax.toNumber()).toBe(1900);
+    // min(40000,90000)*.038=1520.
+    expect(federal.niitTax.toNumber()).toBe(1520);
   });
 
-  it("LT loss does NOT reduce ST gain for NII — pipeline via calculateFederalTax", () => {
+  it("LT loss reduces ST gain for NII — pipeline via calculateFederalTax", () => {
     // Single, $250K wages, ST +$15K gain, LT -$5K loss, $20K interest
     // Schedule D: Line 7 = +$15K, Line 15 = -$5K, Line 16 = +$10K
-    // Correct: max(0, +$15K) + max(0, -$5K) = $15K + $0 = $15K
-    // NOT: max(0, $15K - $5K) = $10K
+    // Line5a takes signed Form1040line7a: 15000-5000=10000.
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
       w2s: [{
@@ -1408,14 +1400,12 @@ describe("NIIT - capital gain no cross-netting (Form 8960 Line 4b)", () => {
     expect(federal.scheduleD.netShortTerm.toNumber()).toBe(15000);
     expect(federal.scheduleD.netLongTerm.toNumber()).toBe(-5000);
     expect(federal.scheduleD.netCapitalGainLoss.toNumber()).toBe(10000);
-    // Form 8960 netCapitalGain must be $15K (ST only), NOT $10K (netted)
-    expect(federal.form8960.netCapitalGain.toNumber()).toBe(15000);
-    // NII = $20K interest + $15K capital = $35K
-    expect(federal.form8960.netInvestmentIncome.toNumber()).toBe(35000);
+    expect(federal.form8960.netCapitalGain.toNumber()).toBe(10000);
+    // $20K interest plus $10K net capital gain.
+    expect(federal.form8960.netInvestmentIncome.toNumber()).toBe(30000);
     // AGI = $250K + $20K interest + $10K cap = $280K
     // MAGI excess = $280K - $200K = $80K
-    // base = min($35K, $80K) = $35K
-    // NIIT = $35K × 3.8% = $1,330
-    expect(federal.niitTax.toNumber()).toBe(1330);
+    // min(30000,80000)*.038=1140.
+    expect(federal.niitTax.toNumber()).toBe(1140);
   });
 });

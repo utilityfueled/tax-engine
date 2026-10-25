@@ -43,7 +43,7 @@ describe("Foreign income return routing",()=>{
   });
   it("uses net exclusions and actual disallowed deductions in the foreign income tax worksheet",()=>{
     const form2555=sourceFacts({qualifiedHousingExpenses:"30000",deductionsAllocableToExcludedIncome:"7000",foreignEarnedIncomeTaxWorksheetDisallowedDeductions:"2000"});
-    const result=calculateFederalTax({...simpleW2Fixture,w2s:[{...simpleW2Fixture.w2s[0],wages:"350000",socialSecurityWages:"176100",socialSecurityWithheld:"10918.20",medicareWages:"350000",medicareWithheld:"5075"}],form2555});
+    const result=calculateFederalTax({...simpleW2Fixture,w2s:[{...simpleW2Fixture.w2s[0],wages:"350000",socialSecurityWages:"176100",socialSecurityWithheld:"10918.20",medicareWages:"350000",medicareWithheld:"5075"}],form2555,form8960Sources:{sourceTaxYear:2025,sourceReference:"Synthetic FEIE allocation:5000FEIE and2000housing",sourceFactsConfirmed:true,feieAllocableDeductions:"5000"}});
     //139200 gross exclusion -7000 allocable deductions =132200 net45;
     //2c=132200-2000=130200; taxable202050; tax332250(85834.75)-tax130200(24095)=61739.75.
     expect(result.form2555?.totalIncomeReduction.toString()).toBe("132200");

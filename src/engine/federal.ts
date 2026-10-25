@@ -3485,21 +3485,74 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   const netAllowedPassive = sum(
     form8582.netPassive, form8582.netRental, form8582.suspendedLoss
   );
+  const niitSources = input.form8960Sources;
+  if (niitSources && (niitSources.sourceTaxYear !== year || niitSources.sourceFactsConfirmed !== true || !niitSources.sourceReference?.trim())) {
+    throw new Error("Form8960 requires actual source year, reference and confirmation");
+  }
+  const niitAmount = (value: string | undefined, name: string) => {
+    const amount = d(value);
+    if (value === undefined || !amount.isFinite()) throw new Error(`Form8960 requires actual finite ${name}`);
+    return amount;
+  };
+  let niitFeieDeduction = d("0");
+  if (form2555) {
+    const line44 = form2555.lines.find(line => line.form === "2555" && line.line === "44")?.value ?? d("0");
+    if (niitSources?.feieAllocableDeductions !== undefined) {
+      niitFeieDeduction = niitAmount(niitSources.feieAllocableDeductions, "FEIE deduction allocation");
+      if (niitFeieDeduction.lt(0) || niitFeieDeduction.gt(line44) || niitFeieDeduction.gt(form2555.foreignEarnedIncomeExclusion)
+        || (form2555.housingExclusion.isZero() && !niitFeieDeduction.eq(line44))) throw new Error("Form8960 FEIE deduction allocation must reconcile with Form2555line44");
+    } else if (line44.isZero() || form2555.foreignEarnedIncomeExclusion.isZero()) {
+      niitFeieDeduction = d("0");
+    } else if (form2555.housingExclusion.isZero()) {
+      niitFeieDeduction = line44;
+    } else {
+      throw new Error("Form8960 requires an actual FEIE deduction allocation when line44 also covers housing exclusion");
+    }
+  } else if (niitSources?.feieAllocableDeductions !== undefined && !niitAmount(niitSources.feieAllocableDeductions, "FEIE allocation").isZero()) {
+    throw new Error("Form8960 FEIE allocation requires an actual Form2555 source");
+  }
+  const niitMagi = agi.plus(form2555?.foreignEarnedIncomeExclusion ?? d("0")).minus(niitFeieDeduction);
+  audit.record("Form8960 MAGI WS", "1", "Adjusted gross income", agi, "Actual Form1040 AGI");
+  audit.record("Form8960 MAGI WS", "2a", "Foreign earned income exclusion", form2555?.foreignEarnedIncomeExclusion ?? d("0"), "Form2555line42 only");
+  audit.record("Form8960 MAGI WS", "2b", "FEIE-allocable deductions", niitFeieDeduction, "Actual Form2555line44 allocation; housing excluded");
+  audit.record("Form8960 MAGI WS", "4", "Modified adjusted gross income", niitMagi, "Line1+2a-2b; no represented CFC/PFIC source");
+  const disposition = niitSources?.dispositions;
+  const hasBusinessDisposition = !form4797.ordinaryGainOrLoss.isZero()
+    || !form4797.longTermCapitalGain.isZero()
+    || form4797.propertyResults.some(property => !property.totalGainOrLoss.isZero())
+    || !form4797.supportedK1Section1231Gains.isZero()
+    || !form4797.supportedK1Section1231NonpassiveLosses.isZero();
+  if (hasBusinessDisposition && !disposition) throw new Error("Form8960 business disposition sources require the actual completed adjustment worksheet");
+  if (disposition && (!niitAmount(disposition.regularCapitalGainOrLoss, "regular capital gain/loss").eq(capitalGainLoss)
+    || !niitAmount(disposition.regularOrdinaryGainOrLoss, "regular ordinary gain/loss").eq(sched1.otherGainsOrLosses))) {
+    throw new Error("Form8960 disposition sources must reconcile with actual Form1040line7a and Schedule1line4");
+  }
+  let niitInvestmentInterest = deductionUsed === "itemized" ? schedA.investmentInterestDeduction : d("0");
+  let niitOrdinaryLoss = deductionUsed === "itemized" ? schedA.oidOrdinaryLossDeduction : d("0");
+  const niitItemizedLimit = deductionUsed === "itemized" ? min(niitInvestmentInterest.plus(niitOrdinaryLoss), itemizedDeductions) : d("0");
+  if (niitSources?.itemizedAllocation) {
+    const interest = niitAmount(niitSources.itemizedAllocation.investmentInterest, "itemized interest allocation");
+    const loss = niitAmount(niitSources.itemizedAllocation.ordinaryLoss, "itemized ordinary-loss allocation");
+    if (interest.lt(0) || loss.lt(0) || interest.gt(niitInvestmentInterest) || loss.gt(niitOrdinaryLoss) || !interest.plus(loss).eq(niitItemizedLimit)) throw new Error("Form8960 itemized allocation must reconcile with allowed source deductions and their combined limit");
+    niitInvestmentInterest = interest; niitOrdinaryLoss = loss;
+  } else if (niitInvestmentInterest.plus(niitOrdinaryLoss).gt(niitItemizedLimit)) {
+    if (niitInvestmentInterest.gt(0) && niitOrdinaryLoss.gt(0)) throw new Error("Form8960 requires an actual itemized allocation when section68 limits multiple NIIT deductions");
+    niitInvestmentInterest = min(niitInvestmentInterest, niitItemizedLimit);
+    niitOrdinaryLoss = min(niitOrdinaryLoss, niitItemizedLimit);
+  }
+  const niitBusinessIncome = sum(sched1.businessIncome, sched1.supplementalIncome, sched1.farmIncome);
   const form8960 = calculateForm8960(
     {
       taxableInterest: totalTaxableInterest,
       ordinaryDividends: totalDividends,
-      // Per IRS Form 8960 Instructions, Line 4b: "This amount is generally the
-      // sum of Schedule D, line 7 and Schedule D, line 15. However, if either
-      // amount is a loss, enter only the gain, if any."
-      // Each category (ST/LT) is independently zero-floored before summing.
-      // This prevents cross-category netting for NII purposes.
-      netCapitalGain: zeroFloor(schedD.netShortTerm).plus(zeroFloor(schedD.netLongTerm)),
-      otherInvestmentIncome: netAllowedPassive,
-      // Reg1.1411-4(f)(5)/(7): only the actual itemized allowance, never the source carry.
-      additionalModifications: deductionUsed === "itemized"
-        ? min(schedA.oidOrdinaryLossDeduction, itemizedDeductions) : d("0"),
-      magi: agi,
+      netCapitalGain: capitalGainLoss.plus(sched1.otherGainsOrLosses),
+      excludedDispositionAdjustment: disposition ? niitAmount(disposition.excludedGainOrLossAdjustment, "excluded disposition adjustment") : d("0"),
+      passthroughDispositionAdjustment: disposition ? niitAmount(disposition.passthroughAdjustment, "pass-through disposition adjustment") : d("0"),
+      tradeOrBusinessIncome: niitBusinessIncome,
+      nonInvestmentBusinessAdjustment: netAllowedPassive.minus(niitBusinessIncome),
+      investmentInterestExpense: niitInvestmentInterest,
+      additionalModifications: niitOrdinaryLoss,
+      magi: niitMagi,
     },
     filingStatus,
     constants

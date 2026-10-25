@@ -7,6 +7,8 @@ import { assertPdfExportAllowed } from "../../export-policy.js";
  */
 
 import { PDFDocument } from "pdf-lib";
+import type Decimal from "decimal.js";
+import { min, sum, zeroFloor } from "@/utils/decimal.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import {
@@ -90,48 +92,46 @@ export async function fillForm8960(
 
   if (!f8960) return doc;
 
-  // ── Part I: Investment Income ──
-  setCurrencyField(form, F.line1, f8960.taxableInterest);
-  setCurrencyField(form, F.line2, f8960.dividends);
-
-  // Line 5a: Net capital gain (from Schedule D, zero-floored)
-  setCurrencyField(form, F.line5a, f8960.netCapitalGain);
-  // Line 5d: Same as 5a when 5b and 5c are zero
-  setCurrencyField(form, F.line5d, f8960.netCapitalGain);
-
-  // Line 8: Total investment income
-  setCurrencyField(form, F.line8, f8960.grossInvestmentIncome);
-
-  // ── Part II: Investment Expenses ──
-  const modificationAudit = f8960.lines.filter(line => line.form === "Form 8960" && line.line === "10");
-  if (modificationAudit.length !== 1 || !modificationAudit[0].value.eq(f8960.additionalModifications)) {
-    throw new Error("Form8960 additional modifications require a reconciled audit");
+  const retained: Record<string, Decimal> = {
+    "1": f8960.taxableInterest, "2": f8960.dividends, "5a": f8960.netCapitalGain,
+    "8": f8960.grossInvestmentIncome, "9d": f8960.investmentExpenses,
+    "10": f8960.additionalModifications, "12": f8960.netInvestmentIncome,
+    "13": f8960.magi, "14": f8960.threshold, "15": f8960.magiExcess,
+    "16": f8960.taxableBase, "17": f8960.niitTax,
+  };
+  const amounts = new Map<string, Decimal>();
+  for (const [key, field] of Object.entries(F)) {
+    if (!key.startsWith("line")) continue;
+    const lineId = key.slice(4);
+    const matches = f8960.lines.filter(line => line.form === "Form 8960" && line.line === lineId);
+    // Historical aggregate expenses do not establish a component allocation.
+    if (matches.length === 0 && ["9a", "9b", "9c"].includes(lineId)) continue;
+    if (matches.length !== 1 || !matches[0].value.isFinite()
+      || (retained[lineId] !== undefined && !retained[lineId].eq(matches[0].value))) {
+      throw new Error(`Form8960 line${lineId} requires a unique reconciled audit`);
+    }
+    amounts.set(lineId, matches[0].value);
+    setCurrencyField(form, field, matches[0].value);
   }
-  setCurrencyField(form, F.line9d, f8960.investmentExpenses);
-  setCurrencyField(form, F.line10, modificationAudit[0].value);
-  setCurrencyField(form, F.line11, f8960.investmentExpenses.plus(f8960.additionalModifications));
 
-  // ── Part III: Tax Computation ──
-  // Line 12: Net investment income
-  setCurrencyField(form, F.line12, f8960.netInvestmentIncome);
-
-  // Line 13: MAGI — reconstruct from threshold + excess, or use AGI as proxy
-  // The engine stores magiExcess = MAGI - threshold, so MAGI = threshold + magiExcess
-  const magi = f8960.threshold.plus(f8960.magiExcess);
-  setCurrencyField(form, F.line13, magi);
-
-  // Line 14: Threshold
-  setCurrencyField(form, F.line14, f8960.threshold);
-
-  // Line 15: MAGI excess
-  setCurrencyField(form, F.line15, f8960.magiExcess);
-
-  // Line 16: Taxable base (lesser of NII or MAGI excess)
-  setCurrencyField(form, F.line16, f8960.taxableBase);
-
-  // Line 17: NIIT (3.8%)
-  setCurrencyField(form, F.line17, f8960.niitTax);
-
+  const value = (id: string): Decimal => {
+    const amount = amounts.get(id);
+    if (!amount) throw new Error(`Form8960 line${id} is missing from the reconciled audit`);
+    return amount;
+  };
+  const reconciles = (id: string, expected: Decimal) => {
+    if (!value(id).eq(expected)) throw new Error(`Form8960 line${id} audit equation does not reconcile`);
+  };
+  reconciles("4c", value("4a").plus(value("4b")));
+  reconciles("5d", sum(value("5a"), value("5b"), value("5c")));
+  reconciles("8", sum(...["1", "2", "3", "4c", "5d", "6", "7"].map(value)));
+  const componentCount = ["9a", "9b", "9c"].filter(id => amounts.has(id)).length;
+  if (componentCount !== 0 && componentCount !== 3) throw new Error("Form8960 expense components must reconcile as a complete group");
+  if (componentCount === 3) reconciles("9d", sum(value("9a"), value("9b"), value("9c")));
+  reconciles("11", value("9d").plus(value("10")));
+  reconciles("12", zeroFloor(value("8").minus(value("11"))));
+  reconciles("15", zeroFloor(value("13").minus(value("14"))));
+  reconciles("16", min(value("12"), value("15")));
   return doc;
 }
 

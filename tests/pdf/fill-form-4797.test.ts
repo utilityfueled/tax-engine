@@ -12,6 +12,7 @@ import { describe, it, expect, beforeAll } from "vitest";
 import { PDFDocument, PDFTextField } from "pdf-lib";
 import Decimal from "decimal.js";
 import { calculateForm4797 } from "@/engine/forms/form-4797.js";
+import { niitDispositionSources } from "../fixtures/niit-sources.js";
 import { calculateFederalTax } from "@/engine/federal.js";
 import { fillForm4797, FORM_4797_FIELDS } from "@/pdf/fill-form-4797.js";
 import { simpleW2Fixture } from "../fixtures/simple-w2.js";
@@ -47,6 +48,7 @@ describe("Form 4797 PDF fill — Section 1245 equipment sale with K-1", () => {
   beforeAll(async () => {
     input = {
       ...simpleW2Fixture,
+      form8960Sources: niitDispositionSources("12000", "18000", "-30000"),
       scheduleK1: [
         {
           partnershipName: "Acme Capital LP",
@@ -165,6 +167,7 @@ describe("Form 4797 PDF fill — Section 1250 building sale (post-1986 MACRS)", 
   beforeAll(async () => {
     input = {
       ...simpleW2Fixture,
+      form8960Sources: niitDispositionSources("130000", "0", "0"),
       form4797: {
         nonrecapturedNetSection1231Losses: "0",
         propertySales: [
@@ -245,6 +248,7 @@ describe("Form 4797 PDF fill — multiple property sales", () => {
   beforeAll(async () => {
     input = {
       ...simpleW2Fixture,
+      form8960Sources: niitDispositionSources("100000", "7000", "-107000"),
       form4797: {
         nonrecapturedNetSection1231Losses: "0",
         propertySales: [

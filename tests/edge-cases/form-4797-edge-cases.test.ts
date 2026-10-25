@@ -10,6 +10,7 @@
 import { describe, expect, it } from "vitest";
 import Decimal from "decimal.js";
 import { calculateForm4797 } from "@/engine/forms/form-4797.js";
+import { niitDispositionSources } from "../fixtures/niit-sources.js";
 import { calculateFederalTax } from "@/engine/federal.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import { simpleW2Fixture } from "../fixtures/simple-w2.js";
@@ -105,6 +106,7 @@ describe("Form 4797 property sale federal integration — section 1245 equipment
   // All gain is section 1245 ordinary recapture → flows through Schedule 1 Line 4.
   const fixture: TaxYearInput = {
     ...simpleW2Fixture,
+      form8960Sources: niitDispositionSources("0", "12000", "-12000"),
     form4797: {
       propertySales: [{
         description: "Office laptop and monitors",
@@ -169,6 +171,7 @@ describe("Form 4797 property sale federal integration — section 1250 rental bu
   // Post-1986 MACRS: $0 ordinary recapture, unrecaptured §1250 at 25% max rate.
   const fixture: TaxYearInput = {
     ...simpleW2Fixture,
+      form8960Sources: niitDispositionSources("130000", "0", "0"),
     form4797: {
       propertySales: [{
         description: "Residential rental property",
@@ -220,6 +223,7 @@ describe("Form 4797 property sale federal integration — section 1250 rental bu
     // (i.e., the QDCG preferential rates are being applied)
     const ordinaryOnlyFixture: TaxYearInput = {
       ...simpleW2Fixture,
+      form8960Sources: niitDispositionSources("0", "130000", "-130000"),
       adjustments: {
         ...simpleW2Fixture.adjustments,
       },
@@ -229,7 +233,7 @@ describe("Form 4797 property sale federal integration — section 1250 rental bu
           description: "Hypothetical equipment (all ordinary)",
           costOrBasis: "200000",
           depreciationAllowed: "200000",
-          grossSalesPrice: "330000",
+          grossSalesPrice: "130000",
           propertyType: "section1245",
           heldMoreThanOneYear: true,
         }],
@@ -246,6 +250,7 @@ describe("Form 4797 property sale federal integration — mixed equipment and bu
   // with $8K of prior nonrecaptured section 1231 losses triggering lookback recapture.
   const fixture: TaxYearInput = {
     ...simpleW2Fixture,
+      form8960Sources: niitDispositionSources("187000", "68000", "-255000"),
     form4797: {
       nonrecapturedNetSection1231Losses: "8000",
       propertySales: [
@@ -317,6 +322,7 @@ describe("Form 4797 property sale federal integration — short-term property", 
   // Scenario: Equipment held less than one year. Entire gain is ordinary (no section 1231).
   const fixture: TaxYearInput = {
     ...simpleW2Fixture,
+      form8960Sources: niitDispositionSources("0", "7000", "-7000"),
     form4797: {
       propertySales: [{
         description: "Recently purchased equipment",
@@ -353,6 +359,7 @@ describe("Form 4797 property sale federal integration — loss reduces AGI", () 
   // Scenario: Equipment sold at a loss. Loss flows through Schedule 1 Line 4, reducing AGI.
   const fixture: TaxYearInput = {
     ...simpleW2Fixture,
+      form8960Sources: niitDispositionSources("0", "-10000", "10000"),
     form4797: {
       propertySales: [{
         description: "Obsolete manufacturing equipment",
@@ -391,6 +398,7 @@ describe("Form 4797 property sale federal integration — pre-1987 accelerated d
   // unrecaptured §1250 gain at the 25% max rate.
   const fixture: TaxYearInput = {
     ...simpleW2Fixture,
+      form8960Sources: niitDispositionSources("200000", "30000", "-230000"),
     form4797: {
       propertySales: [{
         description: "Pre-1987 commercial building",
@@ -435,6 +443,7 @@ describe("Form 4797 property sale federal integration — K-1 section 1231 combi
   // Scenario: K-1 box 10 gain + direct equipment sale, both contributing to Part I.
   const fixture: TaxYearInput = {
     ...simpleW2Fixture,
+      form8960Sources: niitDispositionSources("15000", "20000", "-35000"),
     scheduleK1: [{
       partnershipName: "Industrial Fund LP",
       partnershipEIN: "55-6677889",
@@ -485,6 +494,7 @@ describe("Form 4797 property sale federal integration — no property sales prod
   it("Form 4797 sub-result shows zero Part II/III amounts when only K-1 section 1231 is present", () => {
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
+      form8960Sources: niitDispositionSources("5000", "0", "-5000"),
       scheduleK1: [{
         partnershipName: "Operating LP",
         partnershipEIN: "11-2233445",
@@ -513,6 +523,7 @@ describe("Form 4797 — zero gain (sale price equals adjusted basis)", () => {
   it("§1245 property sold at exactly adjusted basis produces no gain, no recapture, no loss", () => {
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
+      form8960Sources: niitDispositionSources("0", "0", "0"),
       form4797: {
         propertySales: [{
           description: "Equipment sold at break-even",
@@ -535,6 +546,7 @@ describe("Form 4797 — zero gain (sale price equals adjusted basis)", () => {
   it("§1250 property sold at exactly adjusted basis produces no unrecaptured §1250 gain", () => {
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
+      form8960Sources: niitDispositionSources("0", "0", "0"),
       form4797: {
         propertySales: [{
           description: "Building sold at break-even",
@@ -560,6 +572,7 @@ describe("Form 4797 — §1245 gain exactly equals depreciation (full recapture 
     // Recapture = min(30000, 30000) = 30000 — all ordinary
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
+      form8960Sources: niitDispositionSources("0", "30000", "-30000"),
       form4797: {
         propertySales: [{
           description: "Equipment with gain matching depreciation",
@@ -587,6 +600,7 @@ describe("Form 4797 — §1245 gain less than depreciation (partial recapture)",
     // Recapture = min(5000, 90000) = 5000 — all ordinary but less than depreciation
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
+      form8960Sources: niitDispositionSources("0", "5000", "-5000"),
       form4797: {
         propertySales: [{
           description: "Heavily depreciated machinery",
@@ -613,6 +627,7 @@ describe("Form 4797 — lookback fully consumes §1231 gain", () => {
     // Line 9 = max(0, 10000 - 15000) = 0 (no LTCG)
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
+      form8960Sources: niitDispositionSources("0", "10000", "-10000"),
       form4797: {
         nonrecapturedNetSection1231Losses: "15000",
         propertySales: [{
@@ -645,6 +660,7 @@ describe("Form 4797 — lookback exactly equals §1231 gain", () => {
   it("lookback amount matching §1231 gain recaptures all as ordinary, zero LTCG", () => {
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
+      form8960Sources: niitDispositionSources("0", "10000", "-10000"),
       form4797: {
         nonrecapturedNetSection1231Losses: "10000",
         propertySales: [{
@@ -674,6 +690,7 @@ describe("Form 4797 — §1250 gain exactly equals depreciation", () => {
     // Unrecaptured = min(100000, 100000) = 100000
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
+      form8960Sources: niitDispositionSources("100000", "0", "0"),
       form4797: {
         propertySales: [{
           description: "Rental property gain = depreciation",
@@ -698,6 +715,7 @@ describe("Form 4797 — §1250 with zero depreciation", () => {
   it("no depreciation means no unrecaptured §1250, all gain is pure §1231 LTCG", () => {
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
+      form8960Sources: niitDispositionSources("50000", "0", "-50000"),
       form4797: {
         propertySales: [{
           description: "Vacant land held as business property",
@@ -725,6 +743,7 @@ describe("Form 4797 — short-term §1250 property sale", () => {
     // Non-recapture = 15000, but held ≤1 year → short-term ordinary
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
+      form8960Sources: niitDispositionSources("0", "15000", "-15000"),
       form4797: {
         propertySales: [{
           description: "Recently purchased office condo",
@@ -750,6 +769,7 @@ describe("Form 4797 — multiple properties: gain and loss netting in §1231", (
   it("§1231 loss on one property offsets §1231 gain on another", () => {
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
+      form8960Sources: niitDispositionSources("30000", "0", "-30000"),
       form4797: {
         propertySales: [
           {
@@ -786,6 +806,7 @@ describe("Form 4797 — multiple properties: gain and loss netting in §1231", (
   it("§1231 losses exceed gains producing net ordinary loss", () => {
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
+      form8960Sources: niitDispositionSources("0", "-90000", "90000"),
       form4797: {
         propertySales: [
           {
@@ -822,6 +843,7 @@ describe("Form 4797 — very small gain ($1) on §1245 property", () => {
   it("$1 gain is fully recaptured as ordinary when depreciation exceeds gain", () => {
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
+      form8960Sources: niitDispositionSources("0", "1", "-1"),
       form4797: {
         propertySales: [{
           description: "Laptop sold for $1 over basis",
@@ -846,6 +868,7 @@ describe("Form 4797 — §1231 gains exactly offset losses (net zero)", () => {
   it("net zero §1231 produces no ordinary gain/loss and no LTCG", () => {
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
+      form8960Sources: niitDispositionSources("0", "0", "0"),
       form4797: {
         propertySales: [
           {
@@ -882,6 +905,7 @@ describe("Form 4797 — multiple §1250 properties accumulating unrecaptured gai
   it("unrecaptured §1250 gain sums across multiple properties", () => {
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
+      form8960Sources: niitDispositionSources("275000", "0", "0"),
       form4797: {
         propertySales: [
           {
@@ -918,6 +942,7 @@ describe("Form 4797 — §1245 with zero depreciation", () => {
     // Equipment never depreciated (e.g., just purchased and immediately sold)
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
+      form8960Sources: niitDispositionSources("15000", "0", "-15000"),
       form4797: {
         propertySales: [{
           description: "Equipment flipped for profit",
@@ -946,6 +971,7 @@ describe("Form 4797 — partial lookback leaves residual LTCG", () => {
     // Line 12 = min(50000, 20000) = 20000 ordinary
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
+      form8960Sources: niitDispositionSources("30000", "20000", "-50000"),
       form4797: {
         nonrecapturedNetSection1231Losses: "20000",
         propertySales: [{
@@ -976,6 +1002,7 @@ describe("Form 4797 — §1250 gain less than depreciation (unrec §1250 limited
     // Unrec §1250 = min(20000, 120000) = 20000
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
+      form8960Sources: niitDispositionSources("20000", "0", "-20000"),
       form4797: {
         propertySales: [{
           description: "Building with modest appreciation",

@@ -31,7 +31,7 @@ describe("Form 8960 - Lines", () => {
     expect(result.taxableInterest.toNumber()).toBe(5000);
   });
 
-  it("Form 8960 Line 4a - dividends", () => {
+  it("Form 8960 Line 2 - dividends", () => {
     const result = calculateForm8960(makeInput({ ordinaryDividends: d(8000) }), "single", c);
     expect(result.dividends.toNumber()).toBe(8000);
   });
@@ -41,7 +41,7 @@ describe("Form 8960 - Lines", () => {
     expect(result.netCapitalGain.toNumber()).toBe(15000);
   });
 
-  it("Form 8960 Line 8 - net investment income", () => {
+  it("Form 8960 Line 8 - total investment income", () => {
     const result = calculateForm8960(makeInput({
       taxableInterest: d(3000),
       ordinaryDividends: d(5000),
@@ -50,7 +50,7 @@ describe("Form 8960 - Lines", () => {
     expect(result.netInvestmentIncome.toNumber()).toBe(18000);
   });
 
-  it("Form 8960 Line 8 - NII with expenses", () => {
+  it("Form 8960 Line 12 - NII with expenses", () => {
     const result = calculateForm8960(makeInput({
       taxableInterest: d(10000),
       investmentExpenses: d(2000),
@@ -58,22 +58,22 @@ describe("Form 8960 - Lines", () => {
     expect(result.netInvestmentIncome.toNumber()).toBe(8000);
   });
 
-  it("Form 8960 Line 11 - single threshold $200K", () => {
+  it("Form 8960 Line 14 - single threshold $200K", () => {
     const result = calculateForm8960(makeInput(), "single", c);
     expect(result.threshold.toNumber()).toBe(200000);
   });
 
-  it("Form 8960 Line 11 - MFS threshold $125K", () => {
+  it("Form 8960 Line 14 - MFS threshold $125K", () => {
     const result = calculateForm8960(makeInput(), "married_filing_separately", c);
     expect(result.threshold.toNumber()).toBe(125000);
   });
 
-  it("Form 8960 Line 13 - MAGI excess", () => {
+  it("Form 8960 Line 15 - MAGI excess", () => {
     const result = calculateForm8960(makeInput({ magi: d(250000) }), "single", c);
     expect(result.magiExcess.toNumber()).toBe(50000);
   });
 
-  it("Form 8960 Line 14 - taxable base uses lesser of NII or excess", () => {
+  it("Form 8960 Line 16 - taxable base uses lesser of NII or excess", () => {
     // NII = $30K, excess = $50K → base = $30K
     const result = calculateForm8960(makeInput({
       taxableInterest: d(10000),
@@ -83,7 +83,7 @@ describe("Form 8960 - Lines", () => {
     expect(result.taxableBase.toNumber()).toBe(30000);
   });
 
-  it("Form 8960 Line 14 - excess less than NII", () => {
+  it("Form 8960 Line 16 - excess less than NII", () => {
     // NII = $100K, excess = $10K → base = $10K
     const result = calculateForm8960(makeInput({
       taxableInterest: d(50000),
@@ -343,9 +343,10 @@ describe("Form 8960 - threshold boundary precision", () => {
     // NII = $30K, threshold = $200K, excess = $40K, base = $30K, tax = $1,140
     const findLine = (id: string) => result.lines.find((l) => l.line === id);
     expect(findLine("8")?.value.toNumber()).toBe(30000);
-    expect(findLine("11")?.value.toNumber()).toBe(200000);
-    expect(findLine("13")?.value.toNumber()).toBe(40000);
-    expect(findLine("14")?.value.toNumber()).toBe(30000);
+    expect(findLine("14")?.value.toNumber()).toBe(200000);
+    expect(findLine("13")?.value.toNumber()).toBe(240000);
+    expect(findLine("15")?.value.toNumber()).toBe(40000);
+    expect(findLine("16")?.value.toNumber()).toBe(30000);
     expect(findLine("17")?.value.toNumber()).toBe(1140);
   });
 
