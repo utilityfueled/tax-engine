@@ -48,7 +48,7 @@ describe("guarded repeated provider executor", () => {
   it("keeps expected answers private and normalization gaps unqualified", async () => {
     const state = setup(); const requests: unknown[] = [];
     const result = await executeProviderEval({ ...state, transport: async request => { requests.push(request);
-      return { ...good, payload: requests.length === 1 ? { probe: "ok" } : { applicationOutput: JSON.stringify({ label: "Statement", payer: "[organization-1]", documentPeriod: "2026", summary: "Unconfirmed extraction", suggestions: [] }), disposition: "answer", fields: [], category: null, sourceIds: ["case-income-w2-zero-withholding:source"], engineValues: [], filingReady: false } }; } });
+      return { ...good, payload: requests.length === 1 ? { probe: "ok" } : { applicationOutput: JSON.stringify({ disposition: "answer", sourceIds: ["case-income-w2-zero-withholding:source"], facts: [], label: "Statement", payer: "[organization-1]", documentPeriod: "2026", summary: "Unconfirmed extraction", suggestions: [] }), disposition: "answer", fields: [], category: null, sourceIds: ["case-income-w2-zero-withholding:source"], engineValues: [], filingReady: false } }; } });
     expect(requests).toHaveLength(4);
     expect(JSON.stringify(requests)).not.toContain("reviewCriteria");
     expect(JSON.stringify(requests)).not.toContain('"expected"');

@@ -20,7 +20,7 @@ function request(value: unknown = envelope(), headers: Record<string,string> = {
   return new Request("https://tax.example/api/workspace/tax-explanation", { method: "POST", headers: { "content-type": "application/json", origin: "https://tax.example", ...headers }, body: JSON.stringify(value), signal });
 }
 function setup(hosted = false) {
-  const fetchFn = vi.fn().mockResolvedValue(Response.json({ status: "completed", output: [{ type: "message", content: [{ type: "output_text", text: JSON.stringify({ answer: "Adjusted gross income is $85,000.", sourceIds: ["spec:2025:1040:11", "audit:2025:1040:11"], engineValues: [{ id: "audit:2025:1040:11", value: "85000" }] }) }] }], usage: { input_tokens: 100, output_tokens: 100 } }));
+  const fetchFn = vi.fn().mockResolvedValue(Response.json({ status: "completed", output: [{ type: "message", content: [{ type: "output_text", text: JSON.stringify({ disposition: "answer", answer: "Adjusted gross income is $85,000.", sourceIds: ["spec:2025:1040:11", "audit:2025:1040:11"], engineValues: [{ id: "audit:2025:1040:11", value: "85000" }] }) }] }], usage: { input_tokens: 100, output_tokens: 100 } }));
   const resolveActor = vi.fn().mockResolvedValue(owner);
   const getEntitlementByOwnerId = vi.fn().mockResolvedValue({ subscription: { planId: "starter" }, entitlement: { workspaceAccess: true } });
   const beforeAttempt = vi.fn(), recordAttempt = vi.fn();
@@ -177,7 +177,7 @@ describe("private transient AI calculation contract", () => {
   });
   it("rejects a provider answer containing a known source identity while accounting for its usage", async () => {
     const s = setup(true);
-    s.fetchFn.mockResolvedValue(Response.json({ status: "completed", output: [{ type: "message", content: [{ type: "output_text", text: JSON.stringify({ answer: "Tech Corp paid $85,000.", sourceIds: ["spec:2025:1040:11", "audit:2025:1040:11"], engineValues: [{ id: "audit:2025:1040:11", value: "85000" }] }) }] }], usage: { input_tokens: 100, output_tokens: 100 } }));
+    s.fetchFn.mockResolvedValue(Response.json({ status: "completed", output: [{ type: "message", content: [{ type: "output_text", text: JSON.stringify({ disposition: "answer", answer: "Tech Corp paid $85,000.", sourceIds: ["spec:2025:1040:11", "audit:2025:1040:11"], engineValues: [{ id: "audit:2025:1040:11", value: "85000" }] }) }] }], usage: { input_tokens: 100, output_tokens: 100 } }));
     const response = await s.handler.POST(request());
     const value = await response.json();
     expect(response.status).toBe(200); expect(value).toMatchObject({ provider: "mock-local", usage: { inputTokens: 100, outputTokens: 100 } });

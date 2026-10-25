@@ -843,7 +843,7 @@ describe("security: external API call timeout protection", () => {
 
       return new Response(JSON.stringify({
         status: "completed", usage: { input_tokens: 100, output_tokens: 100 },
-        output_text: JSON.stringify({ sourceIds: ["workspace:status"], summary: "test summary" })
+        output_text: JSON.stringify({ disposition: "answer", sourceIds: ["workspace:status"], summary: "test summary" })
       }), { status: 200 });
     };
 

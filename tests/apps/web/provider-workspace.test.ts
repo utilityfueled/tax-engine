@@ -453,7 +453,7 @@ describe("provider workspace request path", () => {
 
   it("sends minimal redacted workflow facts through the explicit Luna evaluation route", async () => {
     const fetchFn = vi.fn().mockResolvedValue(Response.json({ status: "completed", usage: { input_tokens: 120, output_tokens: 48 },
-      output_text: JSON.stringify({ summary: "Review the withholding question.", sourceIds: ["workspace:questions"] }) }));
+      output_text: JSON.stringify({ disposition: "answer", summary: "Review the withholding question.", sourceIds: ["workspace:questions"] }) }));
     const { POST: route } = createProviderWorkspaceRouteHandlers({ execution: { mode: "evaluation", syntheticFixtureId: "workspace-synthetic", apiKey: "fixture-key" }, fetchFn });
     const response = await route(new Request("http://localhost/api/provider/workspace", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(buildProviderWorkspaceRequest(createWorkspace())) }));
     expect(response.status).toBe(200);
@@ -468,7 +468,7 @@ describe("provider workspace request path", () => {
   });
 
   it("uses Gemini only when the trusted evaluation explicitly selects it", async () => {
-    const fetchFn = vi.fn().mockResolvedValue(Response.json({ candidates: [{ finishReason: "STOP", content: { parts: [{ text: JSON.stringify({ summary: "Review the withholding question.", sourceIds: ["workspace:questions"] }) }] } }],
+    const fetchFn = vi.fn().mockResolvedValue(Response.json({ candidates: [{ finishReason: "STOP", content: { parts: [{ text: JSON.stringify({ disposition: "answer", summary: "Review the withholding question.", sourceIds: ["workspace:questions"] }) }] } }],
       usageMetadata: { promptTokenCount: 120, candidatesTokenCount: 48, thoughtsTokenCount: 20 } }));
     const { POST: route } = createProviderWorkspaceRouteHandlers({ execution: { mode: "evaluation", provider: "google", syntheticFixtureId: "workspace-synthetic", apiKey: "fixture-key" }, fetchFn });
     const response = await route(new Request("http://localhost/api/provider/workspace", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(buildProviderWorkspaceRequest(createWorkspace())) }));
@@ -479,7 +479,7 @@ describe("provider workspace request path", () => {
 
   it("requires server-verified year-specific citations for Sol tax explanations", async () => {
     const fetchFn = vi.fn().mockResolvedValue(Response.json({ status: "completed", usage: { input_tokens: 120, output_tokens: 48 },
-      output_text: JSON.stringify({ answer: "The verified audit shows $2,200.", sourceIds: ["spec:ctc", "audit:ctc"], engineValues: [{ id: "audit:ctc", value: "2200" }] }) }));
+      output_text: JSON.stringify({ disposition: "answer", answer: "The verified audit shows $2,200.", sourceIds: ["spec:ctc", "audit:ctc"], engineValues: [{ id: "audit:ctc", value: "2200" }] }) }));
     const request = buildProviderWorkspaceRequest(createWorkspace(), { task: "workspace-help", question: "Explain the credit." });
     const deps = { execution: { mode: "evaluation" as const, syntheticFixtureId: "workspace-help-synthetic", apiKey: "fixture-key" }, fetchFn };
     const first = createProviderWorkspaceRouteHandlers(deps);

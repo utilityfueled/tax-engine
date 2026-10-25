@@ -8,7 +8,7 @@ Updated 2026-10-25 UTC. This is a durable package checklist, not release approva
 | Task adapter/responder | Implemented; focused tests passing | Fixed providers, explicit task profiles, structured response/schema versions, bounded usage/timeouts/cancellation, actual usage hooks, local fallback |
 | Local opt-out | Implemented | Workspace-scoped default local help, failed-write fail-closed behavior, conversation clear on workspace change |
 | Tax grounding | Confirmed transient transport implemented; production disabled | Separate private endpoint recomputes actual input, binds owner/workspace/revision/year/rules, redacts source identities and verifies output;2026 incomplete and client previews rejected |
-| Evaluation | Infrastructure implemented; qualification blocked | 270 draft cases: 240 template variants and 30 distinct source-layout/decision scenarios, 88 held-out; **zero independently reviewed cases** and **zero measured provider runs** |
+| Evaluation | Infrastructure implemented; qualification blocked | 240 individually authored draft cases across eight tasks, 80 fixed held-out; **zero independently reviewed cases** and **zero measured provider runs** |
 | Rollout | Implemented and disabled | Empty production config; qualification hashes/version/account evidence/owner approval, 5/25/100 observations, immediate prior-route/deterministic rollback |
 
 Software contract and operator migration/rollback procedure: [AI routing and accounting](ai-routing-accounting-spec.md). The overall completion checklist remains in the parent upgrade progress/checkpoint files.
@@ -154,3 +154,41 @@ probes; the journal stayed byte-for-byte unchanged and changed request policy
 rejected. No remaining actionable finding in that bounded agent review
 (`parent-ai-executor-5777-review.log`, `parent-ai-executor-{alias,policy}-fixed.log`).
 This documentation append does not add a provider result or human approval.
+
+## Actual application source contracts
+
+The separate application contract slice adds explicit abstention, actual source
+citations, signed decimal strings and null unknowns to the real task schemas.
+Document callers validate proposals against literal supplied source text before
+accepting a response. Suggestions retain unconfirmed business purpose; source
+facts survive normalization and display separately without seeding engine input
+or changing income/expense totals. Explanations and explicit cancellable
+reconciliation require matching-year source/audit context and unchanged values.
+Task prompt/schema versions change; production routing remains disabled.
+
+Independent parent review found two acceptance gaps despite the initial passing
+286-case cohort: arbitrary text fact values were not compared with their quote,
+and unsupported-route prose could imply permission to file. Both were reproduced
+in failing regressions before correction. Known text now requires nonempty literal
+source text; unknown remains null. Unsupported assistance can select only a
+bounded reason code, and the application renders its readable review message.
+Model-authored unsupported prose is rejected, including the original filing claim.
+The targeted corrected cohort passes24 tests across4 files in
+`.local/upgrade-evidence/ai-bindings-review-{red,green}.log`. Final exact-tree
+checks and independent re-review follow; this is not human or provider evidence.
+
+Evaluation still has an explicit normalization blocker at this package boundary.
+The next separate slice will send the actual schemas directly, derive observations
+from accepted application output and independently authored synthetic request
+context, and remove the model-authored evaluation sidecar. A passing normalized
+benchmark object is never substituted for application-schema or grounding validity.
+
+Final application tree `992da9c155fd688f146689b8e5ff2aa6de2a68c7` passes272
+checks across16 files, root/web/executor types,4,537 spec references, generated
+artifact freshness and the production webpack build. Scoped lint has0 errors
+and18 unchanged assertion warnings. The first archive test command lacked the
+pinned PDF prerequisite and a later command named the wrong script tsconfig;
+explicit pinned Python and the correct config passed without code changes.
+Parent independently reran24 cases across4 files and inspected both original
+review findings (`parent-ai-bindings-992-review.log`), with no remaining
+scoped finding. This final evidence append changes documentation only.

@@ -749,6 +749,8 @@ export interface ScheduleCBankStatementAnalysis {
   institution?: string;
   statementPeriod?: string;
   suggestions: ScheduleCBankStatementSuggestion[];
+  /** Unconfirmed source proposals; never included in expense totals automatically. */
+  sourceFacts?: import("@tax-engine/engine/src/ai-application-schemas").AiSourceFact[];
 }
 
 export interface SelfEmploymentIncomeDocumentSuggestion {
@@ -772,6 +774,8 @@ export interface SelfEmploymentIncomeDocumentAnalysis {
   payer?: string;
   documentPeriod?: string;
   suggestions: SelfEmploymentIncomeDocumentSuggestion[];
+  /** Unconfirmed source proposals; never included in gross receipts automatically. */
+  sourceFacts?: import("@tax-engine/engine/src/ai-application-schemas").AiSourceFact[];
 }
 
 // ── Investment income data ────────────────────────────────────────────────

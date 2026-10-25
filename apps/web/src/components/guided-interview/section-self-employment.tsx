@@ -34,6 +34,7 @@ import { CurrencyField } from "./currency-field";
 import { CompensationReportingFields } from "./compensation-reporting-fields";
 import { BooleanFact, TextFact } from "./fact-fields";
 import { BusinessSourceDetails } from "./business-source-details";
+import { DocumentSourceFacts } from "./document-source-facts";
 import { isStartedNec, sumKnownBusinessAmounts, type BusinessSourceData } from "@/lib/guided-business-facts";
 
 function toCurrencyInput(value: string | undefined) {
@@ -793,6 +794,7 @@ export function SectionSelfEmployment({
 
           {currentIncomeAnalyses.length > 0 ? (
             <div className="guided-bank-analysis-stack" style={{ marginTop: "12px" }}>
+              {currentIncomeAnalyses.map(analysis => <DocumentSourceFacts key={analysis.id} label={analysis.label} facts={analysis.sourceFacts} />)}
               <div className="guided-bank-analysis-summary">
                 <div className="guided-bank-analysis-total">
                   <span className="guided-bank-analysis-total-label">Suggested additional income</span>
@@ -1020,6 +1022,7 @@ export function SectionSelfEmployment({
 
             {currentAnalyses.length > 0 ? (
               <div className="guided-bank-analysis-stack">
+                {currentAnalyses.map(analysis => <DocumentSourceFacts key={analysis.id} label={analysis.label} facts={analysis.sourceFacts} />)}
                 {suggestedTotals.length > 0 ? (
                   <div className="guided-bank-analysis-summary">
                     {suggestedTotals.map((entry) => (

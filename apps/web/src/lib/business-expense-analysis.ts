@@ -1,6 +1,7 @@
 import { redactTextForAiAnalysis } from "@/lib/ai-document-redaction";
 import { containsUnsafeDirectIdentifier } from "@/lib/provider-request-privacy";
 import Decimal from "decimal.js";
+import { normalizeDocumentSourceFacts } from "./document-source-facts";
 import { parseGuidedCurrency } from "./guided-currency";
 import type {
   ScheduleCBankStatementAnalysis,
@@ -553,6 +554,7 @@ export function normalizeBankStatementAnalysis(payload: unknown, fileName: strin
     institution: normalizeText(candidate.institution) || undefined,
     statementPeriod: normalizeText(candidate.statementPeriod) || undefined,
     suggestions: normalizedSuggestions,
+    sourceFacts: normalizeDocumentSourceFacts(candidate),
   };
 }
 
@@ -602,6 +604,7 @@ export function normalizeSelfEmploymentIncomeDocumentAnalysis(
     payer: normalizeText(candidate.payer) || undefined,
     documentPeriod: normalizeText(candidate.documentPeriod) || undefined,
     suggestions: normalizedSuggestions,
+    sourceFacts: normalizeDocumentSourceFacts(candidate),
   };
 }
 

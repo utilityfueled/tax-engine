@@ -36,18 +36,18 @@ export interface AiTaskPolicy {
   requiresVerifiedTaxContext: boolean;
 }
 function policy(task: AiTask, profile: AiProfileId, maxOutputTokens: number, extra: Partial<AiTaskPolicy> = {}): AiTaskPolicy {
-  return Object.freeze({ task, profile, promptVersion: `${task}/1`, schemaVersion: `${task}/1`, maxInputTokens: 24000,
+  return Object.freeze({ task, profile, promptVersion: `${task}/2`, schemaVersion: `${task}/2`, maxInputTokens: 24000,
     maxOutputTokens, timeoutMs: 30000, execution: "request", fallback: "deterministic-or-user",
     maxEscalations: 0, requiresUserConfirmation: false, requiresVerifiedTaxContext: false, ...extra });
 }
 export const AI_TASKS: Readonly<Record<AiTask, AiTaskPolicy>> = Object.freeze({
-  "workspace-summary": policy("workspace-summary", "luna-high", 4096, { promptVersion: "workspace-summary/2", schemaVersion: "workspace-summary/2" }),
+  "workspace-summary": policy("workspace-summary", "luna-high", 4096, { promptVersion: "workspace-summary/3", schemaVersion: "workspace-summary/3" }),
   "interview-wording": policy("interview-wording", "luna-high", 4096),
   "unsupported-route": policy("unsupported-route", "luna-high", 4096),
   "document-classification": policy("document-classification", "luna-high", 4096, { requiresUserConfirmation: true, maxEscalations: 1 }),
   "income-extraction": policy("income-extraction", "luna-high", 8192, { requiresUserConfirmation: true, maxEscalations: 1 }),
   "expense-categorization": policy("expense-categorization", "luna-high", 8192, { requiresUserConfirmation: true, maxEscalations: 1 }),
-  "tax-explanation": policy("tax-explanation", "sol-low", 8192, { requiresVerifiedTaxContext: true, maxEscalations: 1, promptVersion: "tax-explanation/2", schemaVersion: "tax-explanation/2" }),
+  "tax-explanation": policy("tax-explanation", "sol-low", 8192, { requiresVerifiedTaxContext: true, maxEscalations: 1, promptVersion: "tax-explanation/3", schemaVersion: "tax-explanation/3" }),
   "complex-reconciliation": policy("complex-reconciliation", "sol-high", 16384,
     { requiresUserConfirmation: true, requiresVerifiedTaxContext: true, timeoutMs: 120000, execution: "cancellable-job" }),
 });

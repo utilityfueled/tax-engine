@@ -4,7 +4,7 @@ import { changeAiRollout, qualifiedAiEvidence, selectQualifiedAiRoute, type AiQu
 const at = "2026-10-25T00:00:00Z";
 // Synthetic records exercise gates; they are never shipped as route evidence.
 const evidence: AiQualificationEvidence = { task: "workspace-summary", profileId: "luna-high", model: "gpt-6-luna",
-  promptVersion: "workspace-summary/2", schemaVersion: "workspace-summary/2", reportSha256: "a".repeat(64), corpusSha256: "b".repeat(64),
+  promptVersion: "workspace-summary/3", schemaVersion: "workspace-summary/3", reportSha256: "a".repeat(64), corpusSha256: "b".repeat(64),
   accountCapabilityReference: "synthetic-access-report", author: "fixture-author", independentReviewer: "fixture-reviewer", approvedBy: "fixture-owner", approvalReference: "synthetic-approval",
   qualifiedAt: "2026-10-24T00:00:00Z", expiresAt: "2026-11-24T00:00:00Z",
   measuredGates: { eligibleForPromotionReview: true, blockers: [], reviewedCases: 220, repeatedHeldOut: true, januaryPricingIncluded: true } };

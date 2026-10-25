@@ -2,6 +2,7 @@ import "server-only";
 import Decimal from "decimal.js";
 import { AI_PROFILES } from "@tax-engine/engine/src/ai-task-registry";
 import { workspaceSummarySchema as summarySchema, workspaceHelpSchema as helpSchema } from "@tax-engine/engine/src/ai-application-schemas";
+import { AI_APPLICATION_INSTRUCTIONS, parseApplicationTaskOutput } from "@tax-engine/engine/src/ai-application-bindings";
 import { z } from "zod";
 import { executeAiTask, type AiTaskExecution, type VerifiedAiTaxContext } from "./ai-task-adapter";
 import type { ProviderWorkspaceRequest, ProviderWorkspaceResponse } from "./provider-workspace-request";
@@ -151,8 +152,11 @@ export function createProviderWorkspaceResponder(dependencies: ProviderWorkspace
     const schema: z.ZodType<z.infer<typeof summarySchema> | z.infer<typeof helpSchema>> = request.task === "workspace-summary" ? summarySchema : helpSchema;
     const result = await executeAiTask({ task: request.task === "workspace-summary" ? "workspace-summary" : "tax-explanation",
       redactedText, taxContext, schema, signal,
-      instructions: "Describe the supplied workflow state or explain the verified audit values. Include sourceIds for every claim. Preserve all audit values exactly. Never describe a return as ready to download or file. Return source IDs, not invented links.",
+      instructions: `${AI_APPLICATION_INSTRUCTIONS} Describe the supplied workflow state or explain the verified audit values. Include sourceIds for every claim. Preserve all audit values exactly. Never describe a return as ready to download or file. Return source IDs, not invented links.`,
       validateGrounding(value) {
+        parseApplicationTaskOutput(request.task === "workspace-summary" ? "workspace-summary" : "tax-explanation", value, {
+          sources: ["workspace:status", "workspace:questions", "workspace:routes"].map(id => ({ id, text: redactedText })), taxContext,
+        });
         if (value.sourceIds.some(id => !permittedSources.has(id))) throw new Error("Unverified source citation.");
         const text = "summary" in value ? value.summary : value.answer;
         dependencies.assertResponsePrivacy?.(text);
@@ -182,7 +186,7 @@ export function createProviderWorkspaceResponder(dependencies: ProviderWorkspace
     const usage = { providerCostUsd: result.accounting.providerCostUsd, usageKind: "reported" as const,
       pricingEffectiveFrom: result.accounting.pricingEffectiveFrom, inputTokens: result.accounting.usage.inputTokens,
       outputTokens: result.accounting.usage.outputTokens, estimatedCostCents: result.accounting.retailChargeCents };
-    if (!result.accepted) return { ...fallback, usage };
+    if (!result.accepted || result.value.disposition === "abstain") return { ...fallback, usage };
     return { ...fallback, provider: AI_PROFILES[result.accounting.profileId].provider === "google" ? "gemini" : "openai-responses",
       modelId: AI_PROFILES[result.accounting.profileId].model,
       ...("summary" in result.value ? { summary: sanitizeHtmlEntities(result.value.summary) } : { answer: sanitizeHtmlEntities(result.value.answer) }),

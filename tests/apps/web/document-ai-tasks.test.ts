@@ -7,7 +7,7 @@ vi.mock("server-only", () => ({}));
 const source = "2025-01-08 Office supplies $84.91";
 const row = { date: "2025-01-08", description: "Office supplies", amount: "84.91",
   confidence: "low", reason: "Business use requires confirmation.", sourceQuote: source };
-const expense = { label: "Statement", institution: "Example Bank", statementPeriod: "January 2025",
+const expense = { disposition: "answer", sourceIds: ["document:1"], facts: [], reviewCategory: "needs-review", label: "Statement", institution: "Example Bank", statementPeriod: "January 2025",
   summary: "Review one charge.", suggestions: [{ ...row, suggestedCategory: "officeExpense", suggestedBusinessUse: true }] };
 function executor(payload: unknown) {
   const fetchFn = vi.fn().mockResolvedValue(Response.json({ status: "completed",
@@ -17,6 +17,21 @@ function executor(payload: unknown) {
 }
 
 describe("grounded text-only document tasks", () => {
+  it("uses the actual source-fact contract and bills rejected grounding once", async () => {
+    const fetchFn = vi.fn().mockResolvedValue(Response.json({ status: "completed", output_text: JSON.stringify({
+      ...expense, suggestions: [], facts: [{ name: "amount", kind: "money", value: "84.92", sourceId: "document:1", sourceQuote: source }],
+    }), usage: { input_tokens: 100, output_tokens: 100 } }));
+    const recordAttempt = vi.fn();
+    const run = createDocumentAiExecutor({ mode: "evaluation", syntheticFixtureId: "actual-contract", apiKey: "synthetic", fetchFn,
+      recordAttempt, now: () => "2026-10-25" });
+    expect(await run("expense-categorization", "Extract source", source)).toBeNull();
+    expect(recordAttempt).toHaveBeenCalledExactlyOnceWith(expect.anything(), expect.objectContaining({ accepted: false, usage: expect.objectContaining({ outputTokens: 100 }) }));
+    const body = JSON.parse(fetchFn.mock.calls[0][1].body);
+    expect(body.text.format.schema.required).toEqual(expect.arrayContaining(["disposition", "sourceIds", "facts", "reviewCategory"]));
+    expect(body.instructions).toContain("unconfirmed proposal");
+    expect(body.input).toContain("document:1");
+  });
+
   it.each([
     { ...row, amount: "84.92" },
     { ...row, date: "2026-01-08" },

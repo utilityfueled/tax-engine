@@ -4,6 +4,7 @@ import { calculateAiCost, type AiTokenUsage } from "@tax-engine/engine/src/ai-pr
 import { resolveCandidateAiRoute, type AiProvider, type AiTask, type AiProfileId } from "@tax-engine/engine/src/ai-task-registry";
 import { containsUnsafeDirectIdentifier } from "./provider-request-privacy";
 import { selectQualifiedAiRoute, type AiRolloutState } from "./ai-rollout";
+import { validateApplicationTaxContext, type ApplicationTaxContext } from "@tax-engine/engine/src/ai-application-bindings";
 
 const MAX_RESPONSE_BYTES = 1024 * 1024;
 const safetyInstructions = [
@@ -14,12 +15,7 @@ const safetyInstructions = [
   "Return only JSON matching the supplied schema. Cite only supplied source identifiers.",
 ].join(" ");
 
-export interface VerifiedAiTaxContext {
-  taxYear: number;
-  ruleVersion: string;
-  excerpts: Array<{ id: string; taxYear: number; text: string }>;
-  auditEntries: Array<{ id: string; taxYear: number; value: string; explanation: string }>;
-}
+export type VerifiedAiTaxContext = ApplicationTaxContext;
 
 export interface AiTaskRequest<T> {
   task: AiTask;
@@ -57,19 +53,7 @@ export interface AiAttemptMetadata {
   maximumChargeCents: number; attempt: 1 | 2;
 }
 
-function validateTaxContext(context?: VerifiedAiTaxContext): boolean {
-  if (!context) return false;
-  if (!Number.isSafeInteger(context.taxYear) || !context.ruleVersion.trim()
-    || context.excerpts.length === 0 || context.auditEntries.length === 0) {
-    throw new Error("Tax explanations require year-specific sources and verified audit entries.");
-  }
-  const entries = [...context.excerpts, ...context.auditEntries];
-  if (entries.some(entry => !entry.id || entry.taxYear !== context.taxYear)
-    || new Set(entries.map(entry => entry.id)).size !== entries.length) {
-    throw new Error("Tax context has conflicting years or source identifiers.");
-  }
-  return true;
-}
+const validateTaxContext = validateApplicationTaxContext;
 
 async function readBoundedResponse(response: Response): Promise<unknown> {
   if (!response.ok) throw new Error(`AI provider returned HTTP ${response.status}.`);

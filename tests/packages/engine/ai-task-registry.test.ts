@@ -27,7 +27,7 @@ describe("AI task candidates and exact costs", () => {
     expect(aiTaskCacheKeyParts({ ...key, ownerScope: "owner-b" })).not.toEqual(baseline);
     expect(aiTaskCacheKeyParts({ ...key, taxYear: 2025 })).not.toEqual(baseline);
     expect(aiTaskCacheKeyParts({ ...key, ruleVersion: "2026.2" })).not.toEqual(baseline);
-    expect(baseline).toContain("income-extraction/1");
+    expect(baseline).toContain("income-extraction/2");
     expect(() => aiTaskCacheKeyParts({ ...key, ownerScope: "" })).toThrow();
   });
   it("distinguishes sub-cent provider costs from the minimum retail charge", () => {

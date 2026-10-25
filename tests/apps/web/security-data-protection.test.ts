@@ -139,7 +139,7 @@ describe("security: data protection — model provider request does not store da
     const fetchFn = vi.fn().mockResolvedValue(
       new Response(JSON.stringify({
         status: "completed", usage: { input_tokens: 100, output_tokens: 100 },
-        output_text: JSON.stringify({ sourceIds: ["workspace:status"], summary: "Workspace summary." })
+        output_text: JSON.stringify({ disposition: "answer", sourceIds: ["workspace:status"], summary: "Workspace summary." })
       }), { status: 200, headers: { "content-type": "application/json" } })
     );
 
@@ -163,7 +163,7 @@ describe("security: data protection — provider summary length bound", () => {
     const fetchFn = vi.fn().mockResolvedValue(
       new Response(JSON.stringify({
         status: "completed", usage: { input_tokens: 100, output_tokens: 100 },
-        output_text: JSON.stringify({ sourceIds: ["workspace:status"], summary: longSummary })
+        output_text: JSON.stringify({ disposition: "answer", sourceIds: ["workspace:status"], summary: longSummary })
       }), { status: 200, headers: { "content-type": "application/json" } })
     );
 
@@ -183,7 +183,7 @@ describe("security: data protection — provider summary length bound", () => {
     const fetchFn = vi.fn().mockResolvedValue(
       new Response(JSON.stringify({
         status: "completed", usage: { input_tokens: 100, output_tokens: 100 },
-        output_text: JSON.stringify({ sourceIds: ["workspace:status"], summary: normalSummary })
+        output_text: JSON.stringify({ disposition: "answer", sourceIds: ["workspace:status"], summary: normalSummary })
       }), { status: 200, headers: { "content-type": "application/json" } })
     );
 
@@ -446,7 +446,7 @@ describe("security: provider response body size limit", () => {
     // Create a response body just over 1 MB
     const oversizedBody = JSON.stringify({
       status: "completed", usage: { input_tokens: 100, output_tokens: 100 },
-        output_text: JSON.stringify({ sourceIds: ["workspace:status"], summary: "A".repeat(1024 * 1024 + 100) })
+        output_text: JSON.stringify({ disposition: "answer", sourceIds: ["workspace:status"], summary: "A".repeat(1024 * 1024 + 100) })
     });
 
     const respond = createProviderWorkspaceResponder({
@@ -476,7 +476,7 @@ describe("security: provider response body size limit", () => {
       skipUrlValidation: true,
       fetchFn: async () => new Response(JSON.stringify({
         status: "completed", usage: { input_tokens: 100, output_tokens: 100 },
-        output_text: JSON.stringify({ sourceIds: ["workspace:status"], summary: normalSummary })
+        output_text: JSON.stringify({ disposition: "answer", sourceIds: ["workspace:status"], summary: normalSummary })
       }), {
         status: 200,
         headers: { "content-type": "application/json" }
@@ -538,7 +538,7 @@ describe("security: SSRF defense-in-depth — provider fetch rejects redirects",
     const fetchFn = vi.fn().mockResolvedValue(
       new Response(JSON.stringify({
         status: "completed", usage: { input_tokens: 100, output_tokens: 100 },
-        output_text: JSON.stringify({ sourceIds: ["workspace:status"], summary: "Workspace ready." })
+        output_text: JSON.stringify({ disposition: "answer", sourceIds: ["workspace:status"], summary: "Workspace ready." })
       }), { status: 200, headers: { "content-type": "application/json" } })
     );
 
@@ -644,7 +644,7 @@ describe("security: provider response streaming size enforcement", () => {
     const normalSummary = "Workspace ready for recompute.";
     const body = JSON.stringify({
       status: "completed", usage: { input_tokens: 100, output_tokens: 100 },
-        output_text: JSON.stringify({ sourceIds: ["workspace:status"], summary: normalSummary })
+        output_text: JSON.stringify({ disposition: "answer", sourceIds: ["workspace:status"], summary: normalSummary })
     });
 
     const respond = createProviderWorkspaceResponder({
@@ -699,7 +699,7 @@ describe("security: provider summary HTML sanitization (stored XSS prevention)",
       skipUrlValidation: true,
       fetchFn: async () => new Response(JSON.stringify({
         status: "completed", usage: { input_tokens: 100, output_tokens: 100 },
-        output_text: JSON.stringify({ sourceIds: ["workspace:status"], summary: xssPayload })
+        output_text: JSON.stringify({ disposition: "answer", sourceIds: ["workspace:status"], summary: xssPayload })
       }), { status: 200 })
     });
 
