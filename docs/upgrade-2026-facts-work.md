@@ -272,3 +272,31 @@ Source-year/document-fidelity package commit: `70f8d17`.
   it. The single and double broker balances due remain $1,534 and $12,458, while
   total tax is $1,472 and $11,957. All source-trace assertions remain enforced.
 - Both affected files pass: 61 tests. Care and QBI fact commit: `e5f3014`.
+
+## Individual energy and carryforward interview
+
+- Individual 25C improvements and 25D properties retain actual categories, net
+  qualified costs, completion dates, qualification, applicable manufacturer ID,
+  fuel-cell capacity and residence eligibility. Unknown and false are distinct.
+  General roofing requires explicit ineligible treatment; qualified solar parts
+  reconcile to actual solar records. Saved totals remain visible but never feed a
+  second aggregate credit calculation.
+- Prior-year carryforward retains actual source year, confirmation and explicit
+  zero. A 2026 energy result requires the actual 2025 carryforward, including zero;
+  new 2026 property records remain available for the calculator's disallowance.
+- Review totals use detailed costs once and separately display the carryforward;
+  extension payments and prior-year overpayments now appear in their own rows.
+- Four new source-fact regressions failed before implementation. 468 guided and
+  rendered-UI tests pass, with root/web typechecks, lint (zero errors), all 3,065
+  spec references and whitespace review passing. Energy input contract commit:
+  `b608522`; calculation/credit-limit orchestration is a separate federal package.
+- The PDF energy fixture now supplies actual detailed solar facts. Its focused
+  run passes 11/12; remaining failure is the federal orchestrator not yet passing
+  the improvement credit-liability worksheet. The federal owner acknowledged and
+  is implementing the actual ordering, without an unlimited placeholder.
+- Fresh production-bundle Chromium interaction passes (1/1): business
+  participation unknown→false→unknown, exact cents above the safe-integer range,
+  individual energy category/date/QMID, false qualification and zero carryforward
+  all survive reload. Captured requests contain neither the synthetic SSN nor the
+  exact entered income. Initial selector failures were corrected without changing
+  app behavior or weakening timeouts/readiness gates.

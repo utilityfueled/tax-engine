@@ -612,6 +612,7 @@ function SectionContent({
       const depCount = Number(personalData?.dependentCount ?? "0");
       return (
         <SectionCredits
+          taxYear={state.taxYear}
           data={getSectionData(state, "credits")}
           hasDependents={depCount > 0}
           filingStatus={state.segmentation.filingStatus}

@@ -11,6 +11,7 @@ import { allPaymentFactErrors, deductionFactErrors, educationFactErrors, retirem
 import { adjustmentFactErrors, householdFactErrors } from "./guided-adjustment-facts";
 import { statePaymentFactErrors } from "./guided-state-facts";
 import { careFactErrors } from "./guided-credit-facts";
+import { energyFactErrors } from "./guided-energy-facts";
 
 import { formatPendingW2SuggestionValueLabel, isOfficialFixtureSourceType } from "@/lib/document-fixture-copy";
 
@@ -911,6 +912,30 @@ export interface EnergyCreditData {
   roofCost: string;
   energyEfficientHvacCost: string;
   waterHeaterHeatPumpCost: string;
+  qualifiedImprovements?: EnergyImprovementData[];
+  cleanEnergyProperties?: CleanEnergyPropertyData[];
+  residenceEligibilityConfirmed?: boolean | null;
+  priorYearCarryforward?: string;
+  carryforwardSourceTaxYear?: string;
+  carryforwardConfirmed?: boolean | null;
+  legacyRoofTreatment?: "" | "not_eligible" | "qualified_solar_component";
+}
+
+export type EnergyImprovementCategory = "insulation" | "exterior_door" | "windows_skylights" | "central_ac" | "gas_water_heater" | "furnace_boiler" | "electrical_panel" | "heat_pump" | "heat_pump_water_heater" | "biomass" | "home_energy_audit";
+export interface EnergyImprovementData {
+  category: EnergyImprovementCategory | "";
+  qualifiedCost: string;
+  installationCompletedDate: string;
+  qualificationConfirmed: boolean | null;
+  manufacturerQualifiedId?: string;
+}
+export type CleanEnergyCategory = "solar_electric" | "solar_water" | "fuel_cell" | "small_wind" | "geothermal" | "battery";
+export interface CleanEnergyPropertyData {
+  category: CleanEnergyCategory | "";
+  qualifiedCost: string;
+  installationCompletedDate: string;
+  qualificationConfirmed: boolean | null;
+  fuelCellKilowattCapacity?: string;
 }
 
 export const emptyEnergyCreditData: EnergyCreditData = {
@@ -1759,7 +1784,7 @@ export function validateSection(
     case "adjustments":
       return validateAdjustmentsSection(getSectionData(state, "adjustments"), state.segmentation.filingStatus, state.taxYear);
     case "credits":
-      return validateRequiredFacts({ ...educationFactErrors(getSectionData(state, "credits"), state.taxYear, state.segmentation.filingStatus), ...careFactErrors(getSectionData(state, "credits")?.dependentCare, state.segmentation.filingStatus) });
+      return validateRequiredFacts({ ...educationFactErrors(getSectionData(state, "credits"), state.taxYear, state.segmentation.filingStatus), ...careFactErrors(getSectionData(state, "credits")?.dependentCare, state.segmentation.filingStatus), ...energyFactErrors(getSectionData(state, "credits")?.energy, state.taxYear) });
     case "other-taxes":
       return validateRequiredFacts(householdFactErrors(getSectionData(state, "other-taxes"), state.taxYear));
     case "payments":

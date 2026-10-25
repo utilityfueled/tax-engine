@@ -80,3 +80,8 @@ lines:
     formula: "A care expense claim requires actual qualifying count, eligibility, separately determined primary/spouse earned income and excluded benefits from the Form 2441 worksheet. Do not infer spouse income from combined wages or treat unknown excluded benefits as zero. QBI material participation is a separate actual answer for each activity; false remains false and omission remains unknown for the engine's conditional 2026 minimum test."
     irsRef: "Form 2441 instructions lines 4-5 and Part III; IRC 199A(i) and 469 material participation"
     testRef: "tests/guided-interview/guided-credit-business-facts.test.ts::preserves actual care earned income benefits and ineligibility without household-income inference"
+  - line: "energy-source-facts"
+    description: "Collect individual energy improvement and carryforward records"
+    formula: "Preserve actual category, net qualified cost, completion date, residence eligibility, qualification, applicable manufacturer identifier and fuel-cell capacity. Reconcile saved aggregates to individual records without emitting both representations. General roofing is ineligible; a recorded qualified solar-roof component requires actual solar records and must not be counted twice. Preserve confirmed prior-year carryforward source year and zero; omit no missing fact by assumption."
+    irsRef: "Form 5695 instructions Parts I and II; Public Law 119-21 sections 70505 and 70506"
+    testRef: "tests/guided-interview/guided-energy-facts.test.ts::preserves individual categories dates qualification and confirmed carryforward"

@@ -316,6 +316,8 @@ function createGuidedFlowStateWithEnergyCredit(): GuidedFlowState {
         },
         energy: {
           solarElectricCost: "12000",
+          residenceEligibilityConfirmed: true,
+          cleanEnergyProperties: [{ category: "solar_electric", qualifiedCost: "12000", installationCompletedDate: "2025-06-01", qualificationConfirmed: true }],
           solarWaterHeatingCost: "",
           insulationCost: "",
           exteriorDoorsWindowsCost: "",

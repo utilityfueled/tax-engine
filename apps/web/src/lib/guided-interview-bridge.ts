@@ -14,6 +14,7 @@ import { allPaymentFactErrors, assertKnownFacts, deductionFactErrors, educationF
 import { adjustmentFactErrors, householdFactErrors, isDeductibleAlimony } from "./guided-adjustment-facts";
 import { statePaymentFactErrors, sumAdditionalStateWithholding } from "./guided-state-facts";
 import { careFactErrors } from "./guided-credit-facts";
+import { energyFactErrors } from "./guided-energy-facts";
 
 import type {
   AdjustmentData,
@@ -460,38 +461,28 @@ export function buildEducationInput(creditsData: CreditsData | undefined) {
 export function buildEnergyCreditsInput(creditsData: CreditsData | undefined) {
   if (!creditsData) return undefined;
   const { energy } = creditsData;
-
-  const solarElectricCost = toDecimalString(energy.solarElectricCost);
-  const solarWaterHeatingCost = toDecimalString(energy.solarWaterHeatingCost);
-  const insulationCost = toDecimalString(energy.insulationCost);
-  const exteriorDoorsWindowsCost = toDecimalString(energy.exteriorDoorsWindowsCost);
-  const roofCost = toDecimalString(energy.roofCost);
-  const energyEfficientHvacCost = toDecimalString(energy.energyEfficientHvacCost);
-  const waterHeaterHeatPumpCost = toDecimalString(energy.waterHeaterHeatPumpCost);
-
-  if (
-    solarElectricCost === "0" &&
-    solarWaterHeatingCost === "0" &&
-    insulationCost === "0" &&
-    exteriorDoorsWindowsCost === "0" &&
-    roofCost === "0" &&
-    energyEfficientHvacCost === "0" &&
-    waterHeaterHeatPumpCost === "0"
-  ) {
-    return undefined;
-  }
-
-  // Map guided interview fields to engine schema.
-  // The engine's Part II lumps doors/windows/roof into insulationCost and
-  // HVAC + water-heater/heat-pump into energyPropertyCost.
-  const part2InsulationCost = new Decimal(insulationCost).plus(exteriorDoorsWindowsCost).plus(roofCost).toFixed();
-  const part2EnergyPropertyCost = new Decimal(energyEfficientHvacCost).plus(waterHeaterHeatPumpCost).toFixed();
-
+  assertKnownFacts(energyFactErrors(energy));
+  const improvements = energy.qualifiedImprovements ?? [];
+  const properties = energy.cleanEnergyProperties ?? [];
+  const carryforward = hasEnteredAmount(energy.priorYearCarryforward);
+  if (!improvements.length && !properties.length && !carryforward) return undefined;
   return {
-    solarElectricCost: solarElectricCost !== "0" ? solarElectricCost : undefined,
-    solarWaterHeatingCost: solarWaterHeatingCost !== "0" ? solarWaterHeatingCost : undefined,
-    insulationCost: part2InsulationCost !== "0" ? part2InsulationCost : undefined,
-    energyPropertyCost: part2EnergyPropertyCost !== "0" ? part2EnergyPropertyCost : undefined,
+    ...(improvements.length ? { qualifiedImprovements: improvements.map((entry) => ({
+      category: entry.category as Exclude<typeof entry.category, "">,
+      qualifiedCost: toDecimalString(entry.qualifiedCost),
+      installationCompletedDate: entry.installationCompletedDate,
+      qualificationConfirmed: entry.qualificationConfirmed as boolean,
+      ...(entry.manufacturerQualifiedId?.trim() ? { manufacturerQualifiedId: entry.manufacturerQualifiedId.trim() } : {}),
+    })) } : {}),
+    ...(properties.length ? { cleanEnergyProperties: properties.map((entry) => ({
+      category: entry.category as Exclude<typeof entry.category, "">,
+      qualifiedCost: toDecimalString(entry.qualifiedCost),
+      installationCompletedDate: entry.installationCompletedDate,
+      qualificationConfirmed: entry.qualificationConfirmed as boolean,
+      ...(hasEnteredAmount(entry.fuelCellKilowattCapacity) ? { fuelCellKilowattCapacity: toDecimalString(entry.fuelCellKilowattCapacity) } : {}),
+    })) } : {}),
+    ...(typeof energy.residenceEligibilityConfirmed === "boolean" ? { residenceEligibilityConfirmed: energy.residenceEligibilityConfirmed } : {}),
+    ...(carryforward ? { priorYearCarryforward: toDecimalString(energy.priorYearCarryforward), carryforwardSourceTaxYear: Number(energy.carryforwardSourceTaxYear), carryforwardConfirmed: energy.carryforwardConfirmed as boolean } : {}),
   };
 }
 
@@ -549,6 +540,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     assertKnownFacts(householdFactErrors(otherTaxesData, state.taxYear));
     assertKnownFacts(statePaymentFactErrors(stateReturnData, state.taxYear, segmentation.stateCode));
     assertKnownFacts(careFactErrors(creditsData?.dependentCare, segmentation.filingStatus));
+    assertKnownFacts(energyFactErrors(creditsData?.energy, state.taxYear));
   } catch { return null; }
 
   const stateCode = personalInfo?.state || segmentation.stateCode || null;

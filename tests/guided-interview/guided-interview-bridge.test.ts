@@ -1388,60 +1388,37 @@ describe("buildEnergyCreditsInput", () => {
     expect(buildEnergyCreditsInput(emptyCreditsData)).toBeUndefined();
   });
 
-  it("converts solar electric cost to Part I field", () => {
-    const data = {
-      ...emptyCreditsData,
-      energy: { ...emptyEnergyCreditData, solarElectricCost: "25,000" },
-    };
-    const result = buildEnergyCreditsInput(data);
-    expect(result!.solarElectricCost).toBe("25000");
-    expect(result!.solarWaterHeatingCost).toBeUndefined();
+  it("converts confirmed solar property without repeating the legacy total", () => {
+    const result = buildEnergyCreditsInput({ ...emptyCreditsData, energy: { ...emptyEnergyCreditData, solarElectricCost: "25,000", residenceEligibilityConfirmed: true, cleanEnergyProperties: [{ category: "solar_electric", qualifiedCost: "25,000", installationCompletedDate: "2025-06-01", qualificationConfirmed: true }] } });
+    expect(result?.cleanEnergyProperties?.[0].qualifiedCost).toBe("25000");
+    expect(result).not.toHaveProperty("solarElectricCost");
   });
 
-  it("aggregates insulation + doors/windows + roof into Part II insulationCost", () => {
-    const data = {
-      ...emptyCreditsData,
-      energy: {
-        ...emptyEnergyCreditData,
-        insulationCost: "1000",
-        exteriorDoorsWindowsCost: "2000",
-        roofCost: "3000",
-      },
-    };
-    const result = buildEnergyCreditsInput(data);
-    expect(result!.insulationCost).toBe("6000");
-    expect(result!.solarElectricCost).toBeUndefined();
+  it("keeps insulation and individual doors distinct and excludes confirmed ordinary roofing", () => {
+    const result = buildEnergyCreditsInput({ ...emptyCreditsData, energy: { ...emptyEnergyCreditData, insulationCost: "1000", exteriorDoorsWindowsCost: "2000", roofCost: "3000", legacyRoofTreatment: "not_eligible", residenceEligibilityConfirmed: true, qualifiedImprovements: [
+      { category: "insulation", qualifiedCost: "1000", installationCompletedDate: "2025-06-01", qualificationConfirmed: true },
+      { category: "exterior_door", qualifiedCost: "2000", installationCompletedDate: "2025-06-01", qualificationConfirmed: true, manufacturerQualifiedId: "A1B2" },
+    ] } });
+    expect(result?.qualifiedImprovements?.map(({ category, qualifiedCost }) => ({ category, qualifiedCost }))).toEqual([{ category: "insulation", qualifiedCost: "1000" }, { category: "exterior_door", qualifiedCost: "2000" }]);
+    expect(result).not.toHaveProperty("insulationCost");
   });
 
-  it("aggregates HVAC + water heater into Part II energyPropertyCost", () => {
-    const data = {
-      ...emptyCreditsData,
-      energy: {
-        ...emptyEnergyCreditData,
-        energyEfficientHvacCost: "5,000",
-        waterHeaterHeatPumpCost: "3,000",
-      },
-    };
-    const result = buildEnergyCreditsInput(data);
-    expect(result!.energyPropertyCost).toBe("8000");
+  it("keeps HVAC and heat-pump expenses in their actual categories", () => {
+    const result = buildEnergyCreditsInput({ ...emptyCreditsData, energy: { ...emptyEnergyCreditData, energyEfficientHvacCost: "5,000", waterHeaterHeatPumpCost: "3,000", residenceEligibilityConfirmed: true, qualifiedImprovements: [
+      { category: "central_ac", qualifiedCost: "5,000", installationCompletedDate: "2025-06-01", qualificationConfirmed: true, manufacturerQualifiedId: "A1B2" },
+      { category: "heat_pump", qualifiedCost: "3,000", installationCompletedDate: "2025-06-01", qualificationConfirmed: true, manufacturerQualifiedId: "A1B2" },
+    ] } });
+    expect(result?.qualifiedImprovements?.map(({ category, qualifiedCost }) => ({ category, qualifiedCost }))).toEqual([{ category: "central_ac", qualifiedCost: "5000" }, { category: "heat_pump", qualifiedCost: "3000" }]);
+    expect(result).not.toHaveProperty("energyPropertyCost");
   });
 
-  it("includes both Part I and Part II when both have values", () => {
-    const data = {
-      ...emptyCreditsData,
-      energy: {
-        solarElectricCost: "20000",
-        solarWaterHeatingCost: "",
-        insulationCost: "1500",
-        exteriorDoorsWindowsCost: "",
-        roofCost: "",
-        energyEfficientHvacCost: "",
-        waterHeaterHeatPumpCost: "",
-      },
-    };
-    const result = buildEnergyCreditsInput(data);
-    expect(result!.solarElectricCost).toBe("20000");
-    expect(result!.insulationCost).toBe("1500");
+  it("includes actual clean energy and home-efficiency records together", () => {
+    const result = buildEnergyCreditsInput({ ...emptyCreditsData, energy: { ...emptyEnergyCreditData, residenceEligibilityConfirmed: true,
+      cleanEnergyProperties: [{ category: "solar_electric", qualifiedCost: "20000", installationCompletedDate: "2025-06-01", qualificationConfirmed: true }],
+      qualifiedImprovements: [{ category: "insulation", qualifiedCost: "1500", installationCompletedDate: "2025-06-01", qualificationConfirmed: true }],
+    } });
+    expect(result?.cleanEnergyProperties?.[0].qualifiedCost).toBe("20000");
+    expect(result?.qualifiedImprovements?.[0].qualifiedCost).toBe("1500");
   });
 });
 
@@ -1498,11 +1475,11 @@ describe("buildTaxInputFromGuidedData — credits", () => {
     });
     state = updateSectionData(state, "credits", {
       ...emptyCreditsData,
-      energy: { ...emptyEnergyCreditData, solarElectricCost: "15000" },
+      energy: { ...emptyEnergyCreditData, solarElectricCost: "15000", residenceEligibilityConfirmed: true, cleanEnergyProperties: [{ category: "solar_electric", qualifiedCost: "15000", installationCompletedDate: "2025-06-01", qualificationConfirmed: true }] },
     });
     const input = buildTaxInputFromGuidedData(state);
     expect(input!.energyCredits).toBeDefined();
-    expect(input!.energyCredits!.solarElectricCost).toBe("15000");
+    expect(input!.energyCredits!.cleanEnergyProperties?.[0].qualifiedCost).toBe("15000");
   });
 
   it("omits all credit fields when credits section is empty", () => {

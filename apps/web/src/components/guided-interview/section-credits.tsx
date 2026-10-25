@@ -6,12 +6,12 @@ import {
   type DependentCareData,
   type EducationCreditData,
   type EducationStudentData,
-  type EnergyCreditData,
   type FilingStatus,
   emptyCreditsData,
   emptyEducationStudent,
 } from "@/lib/guided-interview-flow";
 import { CurrencyField } from "./currency-field";
+import { EnergySourceDetails } from "./energy-source-details";
 
 function EligibilityFact({ label, value, onChange }: { label: string; value: boolean | null | undefined; onChange: (value: boolean | null) => void }) {
   return <label className="guided-field"><span className="guided-field-label">{label}</span><select className="guided-input" value={value == null ? "" : String(value)} onChange={(event) => onChange(event.target.value === "" ? null : event.target.value === "true")}><option value="">Confirm from actual records</option><option value="true">Yes</option><option value="false">No</option></select></label>;
@@ -238,102 +238,16 @@ function EducationSection({
   );
 }
 
-function EnergySection({
-  data,
-  onChange,
-}: {
-  data: EnergyCreditData;
-  onChange: (data: EnergyCreditData) => void;
-}) {
-  function update(field: keyof EnergyCreditData, value: string) {
-    onChange({ ...data, [field]: value });
-  }
-
-  return (
-    <div className="guided-w2-card" style={{ padding: "12px" }}>
-      <div className="guided-w2-card-header">
-        <h3 className="guided-w2-card-title">
-          Residential Energy Credits (Form 5695)
-        </h3>
-      </div>
-      <p className="guided-hint" style={{ marginTop: "4px" }}>
-        If you installed solar panels, made energy-efficient home improvements, or
-        purchased a qualifying heat pump, you may qualify for a 30% credit.
-      </p>
-
-      <fieldset className="guided-fieldset">
-        <legend className="sr-only">Clean energy credits</legend>
-        <h4 className="guided-w2-card-title" style={{ marginTop: "12px", marginBottom: "8px" }}>
-          Clean energy (30% credit, no annual cap)
-        </h4>
-        <div className="guided-form-grid">
-          <CurrencyField
-            label="Solar electric system"
-            hint="Solar panels, inverters, and installation."
-            value={data.solarElectricCost}
-            onChange={(v) => update("solarElectricCost", v)}
-          />
-          <CurrencyField
-            label="Solar water heating"
-            hint="Solar water heater and installation."
-            value={data.solarWaterHeatingCost}
-            onChange={(v) => update("solarWaterHeatingCost", v)}
-          />
-        </div>
-      </fieldset>
-
-      <details className="guided-expand" style={{ marginTop: "12px" }}>
-        <summary className="guided-expand-trigger">Home efficiency improvements</summary>
-        <div className="guided-expand-body">
-          <fieldset className="guided-fieldset">
-            <legend className="sr-only">Home efficiency improvements</legend>
-            <p className="guided-hint">
-              30% credit, up to $3,200/year for qualifying home improvements.
-            </p>
-            <div className="guided-form-grid">
-              <CurrencyField
-                label="Insulation & air sealing"
-                value={data.insulationCost}
-                onChange={(v) => update("insulationCost", v)}
-              />
-              <CurrencyField
-                label="Exterior doors & windows"
-                value={data.exteriorDoorsWindowsCost}
-                onChange={(v) => update("exteriorDoorsWindowsCost", v)}
-              />
-              <CurrencyField
-                label="Roofing (metal or asphalt)"
-                value={data.roofCost}
-                onChange={(v) => update("roofCost", v)}
-              />
-              <CurrencyField
-                label="Energy-efficient HVAC"
-                hint="Central AC, furnace, boiler. Must meet efficiency standards."
-                value={data.energyEfficientHvacCost}
-                onChange={(v) => update("energyEfficientHvacCost", v)}
-              />
-              <CurrencyField
-                label="Water heater / heat pump"
-                hint="Heat pump water heater, heat pump for heating/cooling."
-                value={data.waterHeaterHeatPumpCost}
-                onChange={(v) => update("waterHeaterHeatPumpCost", v)}
-              />
-            </div>
-          </fieldset>
-        </div>
-      </details>
-    </div>
-  );
-}
-
 export function SectionCredits({
   data,
   hasDependents,
   filingStatus,
+  taxYear,
   onDataChange,
 }: {
   data: CreditsData | undefined;
   hasDependents: boolean;
+  taxYear?: number | null;
   filingStatus?: FilingStatus | null;
   onDataChange: (data: CreditsData) => void;
 }) {
@@ -367,7 +281,8 @@ export function SectionCredits({
             onChange={(next) => onDataChange({ ...current, education: next })}
           />
 
-          <EnergySection
+          <EnergySourceDetails
+            taxYear={taxYear}
             data={current.energy}
             onChange={(next) => onDataChange({ ...current, energy: next })}
           />

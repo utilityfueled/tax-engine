@@ -329,18 +329,12 @@ function CreditsSummary({ data }: { data: CreditsData | undefined }) {
     items.push({ label: "Lifetime Learning expenses", value: data.education.llcExpenses });
   }
 
-  const energyTotal = sumGuidedDisplayAmounts([
-    data.energy.solarElectricCost,
-    data.energy.solarWaterHeatingCost,
-    data.energy.insulationCost,
-    data.energy.exteriorDoorsWindowsCost,
-    data.energy.roofCost,
-    data.energy.energyEfficientHvacCost,
-    data.energy.waterHeaterHeatPumpCost,
-  ]);
-
-  if (energyTotal.gt(0)) {
-    items.push({ label: "Energy improvements", value: String(energyTotal) });
+  const energyRecords = [...(data.energy.qualifiedImprovements ?? []), ...(data.energy.cleanEnergyProperties ?? [])];
+  if (energyRecords.length > 0) {
+    items.push({ label: "Entered energy property costs (before qualification and limits)", value: sumGuidedDisplayAmounts(energyRecords.map((record) => record.qualifiedCost)).toString() });
+  }
+  if (data.energy.priorYearCarryforward?.trim()) {
+    items.push({ label: "Prior-year residential clean-energy carryforward", value: data.energy.priorYearCarryforward });
   }
 
   if (items.length === 0) return <p className="guided-review-empty">No credits entered.</p>;
@@ -360,8 +354,11 @@ function CreditsSummary({ data }: { data: CreditsData | undefined }) {
 function PaymentsSummary({ data }: { data: PaymentData | undefined }) {
   if (!data) return <p className="guided-review-empty">No additional payments entered.</p>;
 
-  const filledPayments = data.estimatedPayments.filter((p) => hasValue(p.amount));
-  if (filledPayments.length === 0 && !hasValue(data.otherPayments)) {
+  const filledPayments = data.estimatedPayments.filter((p) => p.amount.trim());
+  const extensionPayments = (data.extensionPayments ?? []).filter((p) => p.amount.trim());
+  const appliedCredits = (data.priorYearAppliedCredits ?? []).filter((p) => p.amount.trim());
+  const hasClassifiedOtherPayments = extensionPayments.length > 0 || appliedCredits.length > 0;
+  if (filledPayments.length === 0 && !hasClassifiedOtherPayments && !data.otherPayments.trim()) {
     return <p className="guided-review-empty">No additional payments entered.</p>;
   }
 
@@ -377,9 +374,21 @@ function PaymentsSummary({ data }: { data: PaymentData | undefined }) {
           <span className="guided-review-value">{formatCurrency(totalEstimated)}</span>
         </div>
       )}
-      {hasValue(data.otherPayments) && (
+      {extensionPayments.length > 0 && (
         <div className="guided-review-row">
-          <span className="guided-review-label">Other payments</span>
+          <span className="guided-review-label">Extension payments ({extensionPayments.length})</span>
+          <span className="guided-review-value">{formatCurrency(sumGuidedDisplayAmounts(extensionPayments.map((payment) => payment.amount)))}</span>
+        </div>
+      )}
+      {appliedCredits.length > 0 && (
+        <div className="guided-review-row">
+          <span className="guided-review-label">Prior-year overpayment applied ({appliedCredits.length})</span>
+          <span className="guided-review-value">{formatCurrency(sumGuidedDisplayAmounts(appliedCredits.map((payment) => payment.amount)))}</span>
+        </div>
+      )}
+      {!hasClassifiedOtherPayments && data.otherPayments.trim() && (
+        <div className="guided-review-row">
+          <span className="guided-review-label">Saved payment total (needs classification)</span>
           <span className="guided-review-value">{formatCurrency(data.otherPayments)}</span>
         </div>
       )}
