@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.38",
+    ruleVersion: "2025.39",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/publications/p529", section: "Actual educator reductions reconcile final sole-owner savings-bond exclusion and recipient cash-QTP/Coverdell education-excluded earnings", revision: "Posted Publication529 educator rule plus Publication970 source distinctions; mixed/joint bond and prepaid methods remain unqualified", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i8960", section: "Official individual lines1-17, signed disposition netting, actual FEIE MAGI allocation, combined itemized deduction limit and required zero-tax form", revision: "Final2025 instructions; enacted2026 section68 coordination remains independently unqualified", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/publications/p525", section: "Actual government current-year repayments/contribution recovery, separate RTAA/nonbusiness grants/statePFML family income; actual expense year distinct from Box3 for refund recoveries", revision: "Final2025 publication, Rev.Rul.2025-4 and actual2026 statement revision; historical incomplete previews unverified, prior-year claim-of-right/farm worksheets separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/pub/irs-drop/rp-24-40.pdf", section: "Section2.28 actual2025 qualified long-term-care premium limits480/900/1800/4810/6020; source correction8f7c622", revision: "Final2025 Form7206 and RevenueProcedure2024-40", retrievedAt: "2026-10-25" },
@@ -81,11 +82,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.34-law-integration-draft",
+    ruleVersion: "2026.35-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/publications/p529", section: "Actual educator reductions reconcile final sole-owner savings-bond exclusion and recipient cash-QTP/Coverdell education-excluded earnings", revision: "Posted Publication529 educator rule plus Publication970 source distinctions; mixed/joint bond and prepaid methods remain unqualified", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i8960", section: "Official individual lines1-17, signed disposition netting, actual FEIE MAGI allocation, combined itemized deduction limit and required zero-tax form", revision: "Final2025 instructions; enacted2026 section68 coordination remains independently unqualified", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/publications/p525", section: "Actual government current-year repayments/contribution recovery, separate RTAA/nonbusiness grants/statePFML family income; actual expense year distinct from Box3 for refund recoveries", revision: "Final2025 publication, Rev.Rul.2025-4 and actual2026 statement revision; historical incomplete previews unverified, prior-year claim-of-right/farm worksheets separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i1040sca", section: "Final line16 TIPS ordinary loss with separate source carry; NIIT line10 under Regulations1.1411-4(f)(5)/(7) limited to actual itemized allowance", revision: "Final2025 source and enacted2026 section68; draft2026 printed identity is unqualified", retrievedAt: "2026-10-25" },

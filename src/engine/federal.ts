@@ -77,6 +77,7 @@ import { calculateForm2210 } from "./forms/form-2210.js";
 import { calculateForm3800 } from "./forms/form-3800.js";
 import { calculateForm5695 } from "./forms/form-5695.js";
 import { calculateForm8815, type Form8815Result } from "./forms/form-8815.js";
+import { reconcileEducatorEducationExclusions } from "./forms/educator-education-exclusions.js";
 import { calculateForm8995 } from "./forms/form-8995.js";
 import { calculateForm8995A } from "./forms/form-8995-a.js";
 import type { QBIBusinessSource } from "./forms/form-8995-a.js";
@@ -1811,6 +1812,17 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
       }
     }
     audit.merge(form8815.lines);
+  }
+  if (input.adjustments?.educatorExpenseSources?.length) {
+    const educatorExclusions = reconcileEducatorEducationExclusions({
+      taxYear: year,
+      filingStatus,
+      educatorSources: input.adjustments.educatorExpenseSources,
+      educationDistributions: form1099Q,
+      savingsBondResult: form8815,
+      savingsBondRedemptions: input.savingsBondRedemptions,
+    });
+    audit.merge(educatorExclusions.lines);
   }
   const schedB = calculateScheduleB(input, savingsBondExclusion);
   audit.merge(schedB.lines);
