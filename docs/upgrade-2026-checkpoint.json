@@ -204,7 +204,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "f23a13a",
+    "lastRecordedCommit": "812fc61",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -404,7 +404,12 @@
       "retirementIraCheckbox": "5bfcfcf",
       "amtPrintedAudit": "d84d890",
       "estateItemizedAudit": "a6ebd97",
-      "nonW2SaltAllocationFacts": "a266046"
+      "nonW2SaltAllocationFacts": "a266046",
+      "ohioOidSources": "f468453",
+      "actualRetirementFacts": "d13fbee",
+      "publishedTaxTableHelper": "0b3d78e",
+      "dependentCareBenefitsCore": "812fc61",
+      "ohioFederalInclusions": "791f6e2"
     },
     "remoteCi": {
       "commit": "a2f62e217f846a479701b3393606228c366d3410",
@@ -430,9 +435,21 @@
     "currentStableCoverageRun": {
       "commit": "f23a13aab52f45ed3aa659c278421d7b21cea9c9",
       "workers": 1,
-      "status": "running",
+      "status": "failed-tests-coverage-thresholds-met",
       "evidence": ".local/upgrade-evidence/stable-coverage-f23a13a.log",
-      "scope": "immutable tracked-file archive with matching installed dependencies and disposable local PostgreSQL16; reportOnFailure enabled; no changed thresholds"
+      "scope": "immutable tracked-file archive with matching installed dependencies and disposable local PostgreSQL16; reportOnFailure enabled; no changed thresholds",
+      "passed": 16356,
+      "failed": 5,
+      "filesPassed": 599,
+      "filesFailed": 4,
+      "skipped": 0,
+      "branchesPercent": "85.96",
+      "functionsPercent": "91.61",
+      "statementsPercent": "92.72",
+      "linesPercent": "94.00",
+      "evidenceSha256": "d513db8f853ef3636430eed26e7d76d2263124b187893c1992f659ff92c6c08f",
+      "durationSeconds": "426.69",
+      "limitation": "Three actual dated-payment facts missing in synthetic2026 tests; two stale AMT audit-label expectations. Assigned for correction. Newer tax-table/source code requires a fresh full run."
     },
     "remainingInternalWork": [
       "Form2441 actual source facts and audited physical fields; 5695 source/physical gaps",

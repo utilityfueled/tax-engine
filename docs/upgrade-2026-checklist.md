@@ -337,3 +337,20 @@ until the brief's criteria pass or only external actions remain.
 - Remaining internal work includes tax-table/IRA rules, retirement and care
   benefits, PA/OH verified OID and rental ownership, full checks/browser runs,
   and final image/recovery evidence. All external inputs above remain pending.
+
+## Immutable coverage result at f23a13a — 2026-10-25
+
+The fixed committed archive completed in 426.69 seconds with 16,356 passing and
+five failing tests,599 passing and four failing files, and zero skips. Unchanged
+coverage thresholds pass: 85.96% branches, 91.61% functions, 92.72% statements and
+94.00% lines. The full command remains failed. Three tests need actual synthetic
+Form2210 payment facts; two AMT tests refer to superseded audit labels. These
+corrections are assigned to the federal owner. Newer changes require another
+full run. Evidence/hashes are in the machine checkpoint and
+`.local/upgrade-evidence/stable-coverage-f23a13a.log`.
+
+New packages: `f468453` actual Ohio OID interest/withholding (132 checks);
+`d13fbee` actual retirement source/taxability facts (585 checks); `0b3d78e`
+published 2022–25 Tax Table helper (69 checks); `812fc61` dependent-care benefits
+core (207 checks). Each has source/evidence details in its package work document.
+No external qualification or production readiness is implied.
