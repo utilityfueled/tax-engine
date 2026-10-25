@@ -53,7 +53,7 @@ export function hasBusinessSourceData(data: SelfEmploymentSectionData | undefine
   return !!data && (data.necEntries.some(isStartedNec) || hasEnteredAmount(data.manualGrossReceipts) || Object.values(data.expenses).some(hasEnteredAmount) || Object.values(data.businessFacts ?? {}).some(value => value !== undefined && value !== null && value !== ""));
 }
 
-export function businessFactErrors(data: SelfEmploymentSectionData | undefined, filingStatus?: FilingStatus | null, w2s: W2EntryData[] = [], stateData?: StateReturnData): Record<string, string> {
+export function businessFactErrors(data: SelfEmploymentSectionData | undefined, filingStatus?: FilingStatus | null, _w2s: W2EntryData[] = [], stateData?: StateReturnData): Record<string, string> {
   const errors: Record<string, string> = {};
   if (!hasBusinessSourceData(data) || !data) return errors;
   const facts = data.businessFacts ?? {};
@@ -87,8 +87,6 @@ export function businessFactErrors(data: SelfEmploymentSectionData | undefined, 
     } else errors[`${prefix}-state`] = "Confirm actual state reporting; multiple states need separate source allocation.";
     if (stateData?.additionalStateWithholdingEntries?.some(extra => extra.documentType === "1099-NEC" && extra.state === entry.state?.trim().toUpperCase() && extra.payer.trim().toLowerCase() === entry.payerName.trim().toLowerCase())) errors[`${prefix}-duplicate-withholding`] = "This NEC withholding is also recorded as additional state withholding. Reconcile the duplicate.";
   });
-  // The current Schedule SE calculator has one wage base. Do not let a spouse's
-  // wages reduce another owner's Social Security tax before owner routing exists.
   const receipts = [data.manualGrossReceipts, ...data.necEntries.filter(isStartedNec).map(entry => entry.nonemployeeCompensation)];
   const businessIncome = [...receipts, facts.otherIncome];
   const incomeReductions = [facts.returnsAndAllowances, facts.costOfGoodsSold];
@@ -98,7 +96,6 @@ export function businessFactErrors(data: SelfEmploymentSectionData | undefined, 
     const tentative = total(businessIncome).minus(total(incomeReductions)).minus(total(expenseAmounts)).minus(parseGuidedCurrency(data.expenses.meals).times("0.5").toDecimalPlaces(0, Decimal.ROUND_HALF_UP));
     if (tentative.isNegative() && (data.qbiMateriallyParticipated === false || facts.allInvestmentAtRisk === false)) errors.lossLimitation = "This loss needs the actual passive activity or at-risk worksheet; the guided calculation cannot treat it as fully deductible.";
   }
-  if (businessIncome.every(value => !amountError(value, "business income")) && businessIncome.reduce((total, value) => total.plus(parseGuidedCurrency(value)), new Decimal(0)).gt(0)
-    && filingStatus === "mfj" && w2s.some(w2 => w2.accountHolder !== facts.accountHolder && !amountError(w2.socialSecurityWages, "Social Security wages") && parseGuidedCurrency(w2.socialSecurityWages).gt(0))) errors.spouseWageBase = "Separate spouse Social Security wage-base calculations are required for this business and W-2 combination.";
+
   return errors;
 }

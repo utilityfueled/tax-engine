@@ -42,13 +42,25 @@ OH 52-5111787
 `;
 
 describe("uploaded document detection", () => {
+  it("preserves actual Box 7 tips without inventing zero from other payroll boxes", () => {
+    const unknown = parseUploadedW2Text(sampleW2Text);
+    expect(unknown?.detectedFacts[0].machineValue).not.toHaveProperty("socialSecurityTips");
+    expect(unknown?.coverage).toBe("partially-supported");
+    for (const value of ["0.00", "123.45", "9007199254740993.01"]) {
+      const actual = parseUploadedW2Text(sampleW2Text.replace("10 Dependent care benefits", `7 Social security tips\n${value}\n10 Dependent care benefits`));
+      expect(actual?.detectedFacts[0].machineValue).toHaveProperty("socialSecurityTips", value);
+    }
+    const conflicting = parseUploadedW2Text(`${sampleW2Text}\n7 Social security tips\n1.00\n7 Social security tips\n2.00`);
+    expect(conflicting?.detectedFacts[0].machineValue).not.toHaveProperty("socialSecurityTips");
+    expect(conflicting?.coverage).toBe("partially-supported");
+  });
   it("parses deterministic W-2 values from extracted PDF text", () => {
     const parsed = parseUploadedW2Text(sampleW2Text, "2025 Northwind W2.pdf");
 
     expect(parsed).toEqual({
       kind: "w2",
       taxYear: 2025,
-      coverage: "supported",
+      coverage: "partially-supported",
       label: "NORTHWIND FABRICATION LLC W-2",
       notes: "Parsed W-2 wage and withholding boxes from an uploaded W-2 PDF.",
       seededFactIds: ["wages", "withholding"],

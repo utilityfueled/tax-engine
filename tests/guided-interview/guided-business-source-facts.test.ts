@@ -45,17 +45,26 @@ describe("guided business source records", () => {
     state.sectionData["income-self-employment"]!.businessFacts = { ...businessFacts, allInvestmentAtRisk: false };
     expect(buildTaxInputFromGuidedData(state)).toBeNull();
   });
-  it("blocks multiple businesses unconfirmed expenses and spouse wage-base conflicts", () => {
+  it("blocks multiple businesses and unconfirmed expenses", () => {
     const state = flow();
     for (const patch of [{ singleBusinessConfirmed: false }, { expensesReconciled: undefined }, { additionalWorksheetRequired: true }, { accountHolder: "joint" }, { priorYearUnallowedLoss: "1" }]) {
       state.sectionData["income-self-employment"]!.businessFacts = { ...businessFacts, ...patch } as typeof businessFacts;
       expect(buildTaxInputFromGuidedData(state), JSON.stringify(patch)).toBeNull();
     }
-    state.sectionData["income-self-employment"]!.businessFacts = businessFacts;
-    state.sectionData["income-self-employment"]!.manualGrossReceipts = "1000";
+  });
+  it("uses actual spouse payroll without reducing the other business owner's wage base", () => {
+    const state = flow();
+    state.sectionData["income-self-employment"]!.manualGrossReceipts = "100000";
     state.segmentation.filingStatus = "mfj";
-    state.sectionData["income-w2"] = { entries: [{ ...completeW2Entry, accountHolder: "spouse", socialSecurityWages: "10000" }] };
-    expect(buildTaxInputFromGuidedData(state)).toBeNull();
+    state.sectionData["income-w2"] = { entries: [{ ...completeW2Entry, accountHolder: "spouse", wages: "176100", socialSecurityWages: "176100", socialSecurityTips: "0", socialSecurityWithheld: "10918.20", medicareWages: "176100", medicareWithheld: "2553.45" }] };
+    const input = buildTaxInputFromGuidedData(state);
+    expect(input).not.toBeNull();
+    const result = calculateFederalTax(TaxYearInputSchema.parse(input)).scheduleSE;
+    // The primary taxpayer has 92,350 net SE earnings: 11,451 SS + 2,678 Medicare.
+    expect(result?.totalSETax.toFixed()).toBe("14129");
+    expect(result?.perTaxpayer[0].accountHolder).toBe("primary");
+    state.sectionData["income-w2"].entries[0].accountHolder = "primary";
+    expect(calculateFederalTax(TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state))).scheduleSE?.totalSETax.toFixed()).toBe("2678");
   });
   it("rejects missing and invalid expense facts without replacing them with zero", () => {
     const state = flow();

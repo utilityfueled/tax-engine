@@ -5,7 +5,7 @@ import { emptyW2Entry, startInterview, validateSection, type W2EntryData } from 
 import { completePersonalInfo } from "./complete-facts";
 import { computeGuidedPreview } from "@/lib/guided-preview-compute";
 
-const completeW2: W2EntryData = { ...emptyW2Entry, employerName: "Actual Employer", employerEin: "12-3456789", accountHolder: "spouse", wages: "9007199254740993.01", federalWithheld: "0", socialSecurityWages: "0", socialSecurityWithheld: "0", medicareWages: "0", medicareWithheld: "0", stateTaxReporting: "single", state: "NY", stateWages: "0.01", stateWithheld: "0" };
+const completeW2: W2EntryData = { ...emptyW2Entry, employerName: "Actual Employer", employerEin: "12-3456789", accountHolder: "spouse", wages: "9007199254740993.01", federalWithheld: "0", socialSecurityWages: "0", socialSecurityTips: "0", socialSecurityWithheld: "0", medicareWages: "0", medicareWithheld: "0", stateTaxReporting: "single", state: "NY", stateWages: "0.01", stateWithheld: "0" };
 function flow(entry: W2EntryData = completeW2) {
   const state = startInterview({ filingStatus: "mfj", incomeTypes: ["w2-wages"], lifeEvents: [], stateCode: "OH" }, 2025);
   state.sectionData["personal-info"] = structuredClone(completePersonalInfo);
@@ -14,6 +14,16 @@ function flow(entry: W2EntryData = completeW2) {
 }
 
 describe("W-2 source facts", () => {
+  it("preserves actual Social Security tips and keeps missing tips unknown", () => {
+    expect(buildW2Inputs([{ ...completeW2, socialSecurityTips: "0.10" }])[0].socialSecurityTips).toBe("0.10");
+    expect(buildW2Inputs([{ ...completeW2, socialSecurityTips: "0" }])[0].socialSecurityTips).toBe("0");
+    expect(buildW2Inputs([{ ...completeW2, socialSecurityTips: undefined }])[0].socialSecurityTips).toBeUndefined();
+    expect(buildTaxInputFromGuidedData(flow({ ...completeW2, socialSecurityTips: undefined }))).toBeNull();
+    const pending = { ...completeW2, socialSecurityTips: "10.01", aiSuggestedFields: { socialSecurityTips: { sourceLabel: "Actual source", status: "pending-confirmation" as const } } };
+    expect(buildW2Inputs([pending])[0].socialSecurityTips).toBeUndefined();
+    expect(buildTaxInputFromGuidedData(flow(pending))).toBeNull();
+  });
+
   it("preserves actual owners and source states without borrowing the mailing state", () => {
     const input = buildTaxInputFromGuidedData(flow());
     expect(input?.w2s[0]).toMatchObject({ accountHolder: "spouse", state: "NY", stateTaxWithheld: "0", wages: "9007199254740993.01" });

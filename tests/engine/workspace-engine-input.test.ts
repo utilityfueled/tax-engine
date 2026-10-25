@@ -1736,6 +1736,7 @@ describe("workspace engine input", () => {
           employerEin: "12-3456789",
           wages: "65000",
           socialSecurityWages: "65000",
+          socialSecurityTips: "0.10",
           socialSecurityWithheld: "4030",
           medicareWages: "65000",
           medicareWithheld: "942.50",
@@ -1761,6 +1762,7 @@ describe("workspace engine input", () => {
           employerEin: "98-7654321",
           wages: "42000",
           socialSecurityWages: "42000",
+          socialSecurityTips: "0",
           socialSecurityWithheld: "2604",
           medicareWages: "42000",
           medicareWithheld: "609",
@@ -1792,6 +1794,7 @@ describe("workspace engine input", () => {
       { ...workspaceTaxpayerFixture(), filingStatus: "married_filing_jointly", spouse: { firstName: "Jordan", lastName: "Example", ssn: "900-70-0002", dateOfBirth: "1991-02-02" } }
     );
 
+    expect(previewInput?.taxInput.w2s.map(w2 => w2.socialSecurityTips)).toEqual(["0.10", "0"]);
     expect(previewInput).not.toBeNull();
     expect(previewInput?.taxInput.w2s).toEqual(expect.arrayContaining([
       expect.objectContaining({

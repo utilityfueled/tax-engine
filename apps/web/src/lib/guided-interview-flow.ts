@@ -547,6 +547,7 @@ export interface W2EntryData {
   wages: string;
   federalWithheld: string;
   socialSecurityWages: string;
+  socialSecurityTips?: string;
   socialSecurityWithheld: string;
   medicareWages: string;
   medicareWithheld: string;
@@ -563,6 +564,7 @@ export type W2SuggestedField =
   | "wages"
   | "federalWithheld"
   | "socialSecurityWages"
+  | "socialSecurityTips"
   | "socialSecurityWithheld"
   | "medicareWages"
   | "medicareWithheld"
@@ -577,6 +579,7 @@ const w2SuggestedFieldLabels: Record<W2SuggestedField, string> = {
   wages: "Box 1 wages",
   federalWithheld: "Box 2 federal tax withheld",
   socialSecurityWages: "Box 3 social security wages",
+  socialSecurityTips: "Box 7 social security tips",
   socialSecurityWithheld: "Box 4 social security tax withheld",
   medicareWages: "Box 5 medicare wages",
   medicareWithheld: "Box 6 medicare tax withheld",
@@ -603,6 +606,7 @@ export const emptyW2Entry: W2EntryData = {
   wages: "",
   federalWithheld: "",
   socialSecurityWages: "",
+  socialSecurityTips: "",
   socialSecurityWithheld: "",
   medicareWages: "",
   medicareWithheld: "",

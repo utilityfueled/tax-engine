@@ -321,6 +321,7 @@ function collectWagesPreviewSources(
         wages: summary.wages,
         federalWithheld: summary.federalWithheld,
         socialSecurityWages: summary.socialSecurityWages,
+        ...(summary.socialSecurityTips !== undefined ? { socialSecurityTips: summary.socialSecurityTips } : {}),
         ...(summary.socialSecurityWithheld !== undefined
           ? { socialSecurityWithheld: summary.socialSecurityWithheld }
           : {}),

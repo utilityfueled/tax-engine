@@ -90,6 +90,7 @@ function sanitizeW2SummarySuggestion(summary: WorkspaceStructuredFactMachineValu
     wages: summary.wages,
     federalWithheld: summary.federalWithheld,
     ...(socialSecurityWages ? { socialSecurityWages } : {}),
+    ...(parseSuggestionAmount(summary.socialSecurityTips) !== null ? { socialSecurityTips: summary.socialSecurityTips } : {}),
     ...(sanitizeSuggestedWithholdingAmount(
       summary.socialSecurityWithheld,
       parseSuggestionAmount(socialSecurityWages) ?? box1Wages

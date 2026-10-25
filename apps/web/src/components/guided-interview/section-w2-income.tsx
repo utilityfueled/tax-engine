@@ -36,6 +36,7 @@ const confirmableFields: W2SuggestedField[] = [
   "wages",
   "federalWithheld",
   "socialSecurityWages",
+  "socialSecurityTips",
   "socialSecurityWithheld",
   "medicareWages",
   "medicareWithheld",
@@ -65,6 +66,7 @@ function applySuggestionToEntry(
     wages: toCurrencyInput(suggestion.summary.wages),
     federalWithheld: toCurrencyInput(suggestion.summary.federalWithheld),
     socialSecurityWages: toCurrencyInput(suggestion.summary.socialSecurityWages),
+    socialSecurityTips: toCurrencyInput(suggestion.summary.socialSecurityTips),
     socialSecurityWithheld: toCurrencyInput(suggestion.summary.socialSecurityWithheld),
     medicareWages: toCurrencyInput(suggestion.summary.medicareWages),
     medicareWithheld: toCurrencyInput(suggestion.summary.medicareWithheld),
@@ -598,6 +600,14 @@ function W2Card({
               )}
             />
           </div>
+          <CurrencyField
+            label="Box 7 — Social Security tips"
+            hint="Enter the actual amount. A blank saved value is unknown; enter 0 only after checking the source."
+            value={entry.socialSecurityTips ?? ""}
+            onChange={value => onUpdate("socialSecurityTips", value)}
+            fieldClassName={entry.aiSuggestedFields?.socialSecurityTips?.status === "pending-confirmation" ? "guided-field-ai-pending" : entry.aiSuggestedFields?.socialSecurityTips?.status === "confirmed" ? "guided-field-ai-confirmed" : undefined}
+            footer={<SuggestedFieldNotice suggestion={entry.aiSuggestedFields?.socialSecurityTips} availableSuggestions={availableSuggestions} onConfirm={() => onConfirmField("socialSecurityTips")} />}
+          />
           <div className="guided-form-grid">
             <label className="guided-field">
               <span className="guided-field-label">State reporting on this W-2</span>

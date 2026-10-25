@@ -544,6 +544,7 @@ export interface WorkspaceStructuredFactMachineValueW2Summary {
   wages: string;
   federalWithheld: string;
   socialSecurityWages?: string;
+  socialSecurityTips?: string;
   socialSecurityWithheld?: string;
   medicareWages?: string;
   medicareWithheld?: string;

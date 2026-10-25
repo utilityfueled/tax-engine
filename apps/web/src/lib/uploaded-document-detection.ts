@@ -512,6 +512,7 @@ export function parseUploadedW2Text(text: string, fileName = ""): ParsedUploaded
     /^6\s+Medicare tax withheld$/i,
     [/^7\s+Social security tips$/i, /^8\s+Allocated tips$/i, /^10\s+Dependent care benefits$/i]
   );
+  const socialSecurityTips = sourceBoxAmount(normalizedText, "7\\s+Social security tips");
   const stateWages = collectAmountsNearLabel(
     normalizedText,
     /16\s+State wages, tips, etc\./i,
@@ -555,6 +556,7 @@ export function parseUploadedW2Text(text: string, fileName = ""): ParsedUploaded
     wages,
     federalWithheld,
     ...(socialSecurityWages ? { socialSecurityWages } : {}),
+    ...(socialSecurityTips !== undefined ? { socialSecurityTips } : {}),
     ...(socialSecurityWithheld ? { socialSecurityWithheld } : {}),
     ...(medicareWages ? { medicareWages } : {}),
     ...(medicareWithheld ? { medicareWithheld } : {}),
@@ -566,7 +568,7 @@ export function parseUploadedW2Text(text: string, fileName = ""): ParsedUploaded
   return {
     kind: "w2",
     taxYear: extractExplicitDocumentTaxYear(normalizedText),
-    coverage: employerName && employerEin && socialSecurityWages !== null && socialSecurityWithheld !== null && medicareWages !== null && medicareWithheld !== null && sourceState && stateWages !== null && stateWithheld !== null ? "supported" : "partially-supported",
+    coverage: employerName && employerEin && socialSecurityWages !== null && socialSecurityTips !== undefined && socialSecurityWithheld !== null && medicareWages !== null && medicareWithheld !== null && sourceState && stateWages !== null && stateWithheld !== null ? "supported" : "partially-supported",
     label: employerName ? `${employerName} W-2` : "Form W-2 upload",
     notes: "Parsed W-2 wage and withholding boxes from an uploaded W-2 PDF.",
     seededFactIds: ["wages", "withholding"],
