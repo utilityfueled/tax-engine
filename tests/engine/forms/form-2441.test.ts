@@ -641,3 +641,51 @@ describe("Form 2441", () => {
     expect(line9.value).toEqual(result.credit);
   });
 });
+
+// Spec: spec/federal/form-2441.yaml validation2026; IRC 21(a)(2), (c), (d).
+describe("Form 2441 2026", () => {
+  const current = (overrides: Partial<Form2441Input> = {}): Form2441Input => make({
+    taxYear: 2026, filingStatus: "single", eligibilityConfirmed: true,
+    excludedDependentCareBenefits: d("0"), ...overrides,
+  });
+
+  it("2026 rates follow both statutory phase-downs", () => {
+    for (const [agi, nonjoint, joint] of [
+      ["15000", "0.50", "0.50"], ["15000.01", "0.49", "0.49"],
+      ["43000", "0.36", "0.36"], ["43001", "0.35", "0.35"],
+      ["75000", "0.35", "0.35"], ["75001", "0.34", "0.35"],
+      ["103000", "0.21", "0.35"], ["103001", "0.20", "0.35"],
+      ["150000", "0.20", "0.35"], ["150001", "0.20", "0.34"],
+      ["154000", "0.20", "0.34"], ["154001", "0.20", "0.33"],
+      ["206000", "0.20", "0.21"], ["206001", "0.20", "0.20"],
+    ]) {
+      expect(calculateForm2441(current({ agi: d(agi) })).creditPercentage.toString()).toBe(d(nonjoint).toString());
+      expect(calculateForm2441(current({ agi: d(agi), filingStatus: "married_filing_jointly", spouseEarnedIncome: d("60000") })).creditPercentage.toString()).toBe(d(joint).toString());
+    }
+    expect(calculateForm2441(make({ taxYear: 2025, agi: d("15000") })).credit.toString()).toBe("1050");
+    expect(calculateForm2441(current({ agi: d("15000") })).credit.toString()).toBe("1500");
+  });
+
+  it("2026 requires confirmed facts and separate spouse income", () => {
+    for (const override of [
+      { filingStatus: undefined }, { eligibilityConfirmed: undefined }, { eligibilityConfirmed: false },
+      { excludedDependentCareBenefits: undefined },
+      { filingStatus: "married_filing_jointly" as const, spouseEarnedIncome: undefined },
+      { taxYear: 2027 },
+    ]) expect(() => calculateForm2441(current(override))).toThrow();
+    const joint = calculateForm2441(current({ filingStatus: "married_filing_jointly", spouseEarnedIncome: d("1000"), agi: d("15000") }));
+    expect(joint.credit.toString()).toBe("500");
+    expect(calculateForm2441(current({ filingStatus: "married_filing_separately" })).credit.toString()).toBe("0");
+  });
+
+  it("2026 reduces expenses and cap by excluded benefits", () => {
+    const remaining = calculateForm2441(current({ careExpenses: d("4500"), qualifyingIndividuals: 2,
+      excludedDependentCareBenefits: d("3000"), agi: d("15000") }));
+    expect(remaining.qualifyingExpenses.toString()).toBe("1500");
+    expect(remaining.credit.toString()).toBe("750");
+    expect(calculateForm2441(current({ excludedDependentCareBenefits: d("7500") })).credit.toString()).toBe("0");
+    expect(calculateForm2441(current({ earnedIncome: d("-100") })).credit.toString()).toBe("0");
+    expect(calculateForm2441(current({ qualifyingIndividuals: 0 })).credit.toString()).toBe("0");
+    expect(() => calculateForm2441(current({ excludedDependentCareBenefits: d("-1") }))).toThrow();
+  });
+});

@@ -1,11 +1,21 @@
 form: "Form 2441"
 fullName: "Child and Dependent Care Expenses"
-taxYear: 2025
+taxYear: 2026
 irsReference: "https://www.irs.gov/instructions/i2441"
 
 notes: |
   Form 2441 calculates the credit for child and dependent care expenses.
-  Credit percentage ranges from 20% to 35% based on AGI.
+  2025 credit percentage is 20%-35%; 2026 is 20%-50% under amended IRC 21(a)(2).
+  This is a calculation specification, not qualification of a draft 2026 PDF.
+  Source refreshed 2026-10-25: https://uscode.house.gov/us/usc/119-118/t26/s21/
+  2026 instructions corroboration (draft, not for filing): https://www.irs.gov/pub/irs-dft/i2441--dft.pdf
+  2026 requires confirmed qualifying-person/provider/work-related-expense eligibility, actual
+  taxpayer earned income, separately determined spouse earned income for MFJ, and explicit
+  section 129 excluded benefits, including an explicit zero. Unknown facts reject computation.
+  Earned-income inputs must already reflect applicable foreign exclusions and section 164(f),
+  and any monthly student/incapable-of-self-care deemed-income rules. Part III exclusion
+  calculation and prior-year expenses paid this year require separately completed worksheets;
+  the excluded-benefit input is their actual exclusion, never inferred from W-2 code 10.
   Maximum qualifying expenses: $3,000 for one qualifying individual,
   $6,000 for two or more.
 
@@ -17,7 +27,7 @@ businessRuleValidation:
 lines:
   - line: "3"
     description: "Qualifying expenses"
-    formula: "Lesser of actual expenses or $3,000/$6,000 limit"
+    formula: "min(max(0, gross qualified expenses - excluded dependent-care benefits), max(0, $3,000/$6,000 - excluded benefits)); zero without a qualifying individual"
     irsRef: "Form 2441 Instructions, Line 3"
     edgeCases:
       - "One qualifying individual: max $3,000"
@@ -27,7 +37,8 @@ lines:
   - line: "4"
     description: "Earned income limit"
     formula: |
-      Lesser of qualifying expenses or earned income (lower-earning spouse for MFJ).
+      max(0, min(qualifying expenses, taxpayer earned income, spouse earned income for MFJ)).
+      For 2026 MFJ, combined household income is not a substitute for separate earned-income facts.
       Earned income = wages (Form 1040 Line 1z) + SE earned income.
       SE earned income = Schedule SE Line 3 (net SE earnings, pre-0.9235 multiplier)
       minus Schedule 1 Line 15 (deductible half of SE tax).
@@ -45,7 +56,10 @@ lines:
   - line: "8"
     description: "Credit percentage"
     formula: |
-      35% minus 1% for each $2,000 (or fraction thereof) of AGI over $15,000, floor at 20%.
+      2025: 35% minus 1% for each $2,000 (or fraction thereof) of AGI over $15,000, floor at 20%.
+      2026: max(35%, 50% - ceil(max(0, AGI - 15000)/2000)*1%), then reduce
+      by ceil(max(0, AGI - 75000)/2000)*1% for nonjoint returns, or
+      ceil(max(0, AGI - 150000)/4000)*1% for joint returns, floor 20%.
       IRS instructions: "Divide the result by $2,000. If the result isn't a whole number,
       round it to the next higher whole number." This means ceiling (round UP), not floor.
       IRS Pub 503 table confirms: $15,001–$17,000 → 34%, $17,001–$19,000 → 33%, etc.
@@ -78,3 +92,14 @@ edgeCases:
     testRef: "tests/engine/forms/form-2441.test.ts::Form 2441 Line 3 - qualifying expenses capped at $6K for two+"
   - description: "MFS filers cannot claim dependent care credit"
     notes: "IRC §21(e)(2) — MFS restriction enforced in federal.ts orchestrator"
+
+validation2026:
+  - rule: "explicit-year-and-eligibility"
+    description: "Reject unsupported years, missing filing status/eligibility/excluded-benefit facts, and missing MFJ spouse income; MFS has no ordinary credit."
+    testRef: "tests/engine/forms/form-2441.test.ts::2026 requires confirmed facts and separate spouse income"
+  - rule: "two-stage-rate"
+    description: "Both sides of the two 2026 step-downs, joint and nonjoint, preserve 2025 rates."
+    testRef: "tests/engine/forms/form-2441.test.ts::2026 rates follow both statutory phase-downs"
+  - rule: "benefits-income-and-zero-floors"
+    description: "Benefits reduce both the statutory cap and gross expenses; loss income cannot create a negative credit."
+    testRef: "tests/engine/forms/form-2441.test.ts::2026 reduces expenses and cap by excluded benefits"
