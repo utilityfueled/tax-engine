@@ -275,7 +275,8 @@ export function assessReturnReadiness(
   }
 
   if (
-    (input.taxInput.form1099B?.some((entry) => entry.transactions.length > 0) ?? false)
+    ((input.taxInput.form1099B?.some((entry) => entry.transactions.length > 0) ?? false)
+      || (input.taxInput.form1099DA?.some((entry) => entry.transactions.length > 0) ?? false))
     && !hasIncludedForm(input.includedForms, /^f8949.*-filled\.pdf$/i)
   ) {
     packetCompleteness = "partial";

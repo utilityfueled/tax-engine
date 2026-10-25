@@ -55,3 +55,8 @@ lines:
     formula: "A raw ordinaryDA-only source with100.49proceeds and90.24basis yields10.25gain, prints100/90/10inH, and includes8949evenwhenoriginalBisempty. All category columns must match canonical audit; equal-net changedproceeds/basis cannot pass."
     irsRef: "i8949 original source reconciliation; Form8949 columns(d),(e),(g),(h) and Line2"
     testRef: "tests/pdf/form-8949-digital-reporting.test.ts::includes actual raw digital dispositions and reconciles the complete review packet"
+  - line: "packet-completeness"
+    description: "Recognize original DA transaction detail when assessing packet completeness"
+    formula: "Raw1099-DA dispositions require8949detail even when original1099-B is empty or net gain is zero. A missing8949marks packet and line completeness partial; including the detail removes only that finding and never grants filing qualification."
+    irsRef: "i8949 original transaction detail and Form8949 PartI/II digital categories; review packet evidence boundary"
+    testRef: "tests/utils/return-readiness.test.ts::marks original digital disposition packets partial when Form8949 detail is missing"

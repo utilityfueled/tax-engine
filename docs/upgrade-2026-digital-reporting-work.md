@@ -79,3 +79,21 @@ ScheduleD has464 visible red review-notice pixels at85dpi. Independent parser
 checks cover all fourteen pages. Rule versions2025.69/2026.65 record the source
 provenance while preserving every existing qualification gate. The final ledger
 append changes no executable source or test.
+
+## Original-source packet completeness follow-up
+
+The readiness audit reproduced a raw1099-DA-only packet being marked complete
+when Form8949 detail was missing. The predicate previously checked only the
+original1099-B collection. It now also checks actualDA transactions; a zero-gain
+disposition still requires its detail page. Including8949 removes only this
+finding and preserves disabled filing and unvalidated business-rule status.
+
+The spec entry preceded the failing regression (`digital-readiness-red.log`).
+Exact tree `d7361963c61e824f7f73c79b2a0a0a7d34db7d5a`, based on `9da0bab`,
+passes27 readiness, digital-source and PDF tests in three files, root types and
+all4,607 spec references. The separate AI agent reviewed the exact predicate and
+passed22 readiness cases, including independent absent/empty-source controls,
+with no actionable finding. Logs are `digital-readiness-isolated-{tests,types,
+spec}.log` and `agent-digital-readiness-{review,probes}.log` under the local
+evidence directory. This changes packet completeness only; no tax arithmetic,
+filing qualification, final-form status or threshold is changed.

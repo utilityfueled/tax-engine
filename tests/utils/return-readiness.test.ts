@@ -4,6 +4,7 @@ import { calculateFederalTax } from "@/engine/federal.js";
 import { calculatePANonresidentReturn } from "@/engine/state/pa-nonresident-orchestrator.js";
 import { calculatePAReturn } from "@/engine/state/pa-orchestrator.js";
 import { assessReturnReadiness } from "@/utils/return-readiness.js";
+import { actualDigitalAssetSource } from "../fixtures/digital-asset-sources.js";
 
 function makeInput() {
   return TaxYearInputSchema.parse({
@@ -54,6 +55,26 @@ function makeInput() {
 }
 
 describe("assessReturnReadiness", () => {
+  // Spec: spec/federal/form-8949-digital-reporting.yaml packet-completeness.
+  it("marks original digital disposition packets partial when Form8949 detail is missing", () => {
+    for (const costBasis of ["90.24", "100.49"]) {
+      const original = structuredClone(actualDigitalAssetSource);
+      original.transactions[0].costBasis = costBasis;
+      const taxInput = TaxYearInputSchema.parse({ ...makeInput(), form1099DA: [original] });
+      const federalResult = calculateFederalTax(taxInput);
+      expect(taxInput.form1099B).toHaveLength(0);
+      const missing = assessReturnReadiness({ taxInput, federalResult, includedForms: ["f1040-filled.pdf", "f1040sd-filled.pdf"] });
+      expect(missing.packetCompleteness).toBe("partial");
+      expect(missing.lineCompleteness).toBe("partial");
+      expect(missing.findings).toContain("Capital transaction detail exists, but Form 8949 detail pages are not present in the packet.");
+      expect(missing.filingQualified).toBe(false);
+      const complete = assessReturnReadiness({ taxInput, federalResult, includedForms: ["f1040-filled.pdf", "f1040sd-filled.pdf", "f8949-filled.pdf"] });
+      expect(complete.findings).not.toContain("Capital transaction detail exists, but Form 8949 detail pages are not present in the packet.");
+      expect(complete.filingQualified).toBe(false);
+      expect(complete.businessRuleValidation).toBe("not-validated");
+    }
+  });
+
   it("marks Ohio packets partial when only reference-summary forms are present", () => {
     const taxInput = makeInput();
     const result = calculateFederalTax(taxInput);
