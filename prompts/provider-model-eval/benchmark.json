@@ -1,282 +1,150 @@
 {
-  "version": 1,
-  "sourcePath": "../../prompts/provider-model-eval/benchmark.json",
-  "fixturePackPath": "../../prompts/provider-model-eval/fixture-pack.json",
-  "fixtureCount": 4,
-  "taskTypes": [
-    "workspace-summary",
-    "interview-assist",
-    "unsupported-route",
-    "explanation-draft"
-  ],
-  "pricingSnapshot": {
-    "retrievedAt": "2026-03-12",
-    "pricingSourceUrl": "https://platform.openai.com/docs/pricing",
-    "modelSourceUrls": [
-      "https://platform.openai.com/docs/models",
-      "https://platform.openai.com/docs/models/gpt-5.2",
-      "https://platform.openai.com/docs/models/gpt-5.1",
-      "https://platform.openai.com/docs/models/gpt-5-mini",
-      "https://platform.openai.com/docs/models/gpt-5-nano"
-    ]
-  },
-  "roleRubric": {
-    "primary": {
-      "taskWeights": {
-        "workspace-summary": 0.35,
-        "interview-assist": 0.35,
-        "unsupported-route": 0.1,
-        "explanation-draft": 0.2
-      },
-      "metricWeights": {
-        "taskFit": 0.45,
-        "structuredOutput": 0.1,
-        "latency": 0.2,
-        "price": 0.25
-      }
-    },
-    "fallback": {
-      "taskWeights": {
-        "workspace-summary": 0.1,
-        "interview-assist": 0.1,
-        "unsupported-route": 0.45,
-        "explanation-draft": 0.35
-      },
-      "metricWeights": {
-        "taskFit": 0.65,
-        "structuredOutput": 0.1,
-        "latency": 0.05,
-        "price": 0.2
-      }
-    },
-    "lowCost": {
-      "taskWeights": {
-        "workspace-summary": 0.35,
-        "interview-assist": 0.35,
-        "unsupported-route": 0.15,
-        "explanation-draft": 0.15
-      },
-      "metricWeights": {
-        "taskFit": 0.15,
-        "structuredOutput": 0.1,
-        "latency": 0.25,
-        "price": 0.5
-      }
-    }
-  },
-  "estimatedInputTokens": 3553,
-  "estimatedOutputTokens": 710,
-  "fixtures": [
-    {
-      "id": "workspace-summary-supported",
-      "title": "Supported workspace summary",
-      "task": "workspace-summary",
-      "prompt": "Summarize return readiness in 2 short paragraphs. Mention pending interview work and whether the workspace is ready for deterministic recompute.",
-      "estimatedInputTokens": 938,
-      "estimatedOutputTokens": 180,
-      "requiredSignals": [
-        "mentions 1 pending interview confirmation",
-        "notes the workspace is not ready for deterministic recompute",
-        "does not expose raw direct identifiers"
-      ]
-    },
-    {
-      "id": "interview-assist-withholding",
-      "title": "Interview assist for withholding follow-up",
-      "task": "interview-assist",
-      "prompt": "Recommend the next interview question and explain why it is the highest-value blocker to resolve next.",
-      "estimatedInputTokens": 512,
-      "estimatedOutputTokens": 140,
-      "requiredSignals": [
-        "recommends the withholding question",
-        "keeps the answer grounded in the queued interview facts",
-        "does not expose raw direct identifiers"
-      ]
-    },
-    {
-      "id": "unsupported-route-side-gig",
-      "title": "Unsupported route handoff for side-gig bookkeeping",
-      "task": "unsupported-route",
-      "prompt": "Explain the unsupported blocker and recommend the safest next action for the user without pretending the return is filing-ready.",
-      "estimatedInputTokens": 1592,
-      "estimatedOutputTokens": 220,
-      "requiredSignals": [
-        "mentions the side-gig bookkeeping blocker",
-        "routes the user toward the filing pack or later partner review",
-        "does not claim deterministic readiness"
-      ]
-    },
-    {
-      "id": "explanation-draft-ready-preview",
-      "title": "Export draft explanation for a ready preview",
-      "task": "explanation-draft",
-      "prompt": "Explain whether the export draft contains a deterministic preview and what checklist items still need user review.",
-      "estimatedInputTokens": 511,
-      "estimatedOutputTokens": 170,
-      "requiredSignals": [
-        "mentions the deterministic preview",
-        "notes the remaining checklist review item",
-        "does not expose raw direct identifiers"
-      ]
-    }
-  ],
+  "version": 2,
   "candidates": [
     {
-      "modelId": "gpt-5.2",
-      "tier": "premium",
-      "pricing": {
-        "inputUsdPerMillionTokens": 1.75,
-        "cachedInputUsdPerMillionTokens": 0.175,
-        "outputUsdPerMillionTokens": 14
-      },
-      "evaluation": {
-        "taskScores": {
-          "workspace-summary": 10,
-          "interview-assist": 10,
-          "unsupported-route": 10,
-          "explanation-draft": 10
-        },
-        "structuredOutputScore": 10,
-        "latencyScore": 3,
-        "priceScore": 2
-      },
-      "notes": "Best premium fallback for nuanced unsupported-case reasoning or explanation quality regressions when the current flagship model is justified.",
-      "estimatedInputTokens": 3553,
-      "estimatedOutputTokens": 710,
-      "estimatedPackCostUsd": 0.016158,
-      "estimatedCachedPackCostUsd": 0.010562,
-      "taskFitScores": {
-        "primary": 10,
-        "fallback": 10,
-        "lowCost": 10
-      },
-      "scores": {
-        "primary": 6.6,
-        "fallback": 8.05,
-        "lowCost": 4.25
-      }
+      "id": "luna-high",
+      "provider": "openai",
+      "model": "gpt-6-luna",
+      "effort": "high",
+      "qualification": "candidate",
+      "role": "candidate"
     },
     {
-      "modelId": "gpt-5.1",
-      "tier": "premium",
-      "pricing": {
-        "inputUsdPerMillionTokens": 1.25,
-        "cachedInputUsdPerMillionTokens": 0.125,
-        "outputUsdPerMillionTokens": 10
-      },
-      "evaluation": {
-        "taskScores": {
-          "workspace-summary": 9,
-          "interview-assist": 8,
-          "unsupported-route": 9,
-          "explanation-draft": 9
-        },
-        "structuredOutputScore": 8,
-        "latencyScore": 5,
-        "priceScore": 3
-      },
-      "notes": "Current recommended GPT-5 sibling for lower-cost premium comparison if live evals show GPT-5.2 quality is not worth the extra spend for fallback traffic.",
-      "estimatedInputTokens": 3553,
-      "estimatedOutputTokens": 710,
-      "estimatedPackCostUsd": 0.011541,
-      "estimatedCachedPackCostUsd": 0.007544,
-      "taskFitScores": {
-        "primary": 8.65,
-        "fallback": 8.9,
-        "lowCost": 8.65
-      },
-      "scores": {
-        "primary": 6.442,
-        "fallback": 7.435,
-        "lowCost": 4.848
-      }
+      "id": "sol-low",
+      "provider": "openai",
+      "model": "gpt-6.1-sol",
+      "effort": "low",
+      "qualification": "candidate",
+      "role": "candidate"
     },
     {
-      "modelId": "gpt-5-mini",
-      "tier": "price-performance",
-      "pricing": {
-        "inputUsdPerMillionTokens": 0.25,
-        "cachedInputUsdPerMillionTokens": 0.025,
-        "outputUsdPerMillionTokens": 2
-      },
-      "evaluation": {
-        "taskScores": {
-          "workspace-summary": 8,
-          "interview-assist": 9,
-          "unsupported-route": 7,
-          "explanation-draft": 8
-        },
-        "structuredOutputScore": 9,
-        "latencyScore": 8,
-        "priceScore": 9
-      },
-      "notes": "Best default for structured tax workspace summaries and interview assistance when the prompt stays inside the redaction boundary.",
-      "estimatedInputTokens": 3553,
-      "estimatedOutputTokens": 710,
-      "estimatedPackCostUsd": 0.002308,
-      "estimatedCachedPackCostUsd": 0.001509,
-      "taskFitScores": {
-        "primary": 8.25,
-        "fallback": 7.65,
-        "lowCost": 8.2
-      },
-      "scores": {
-        "primary": 8.463,
-        "fallback": 8.073,
-        "lowCost": 8.63
-      }
+      "id": "sol-high",
+      "provider": "openai",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "qualification": "candidate",
+      "role": "candidate"
     },
     {
-      "modelId": "gpt-5-nano",
-      "tier": "low-cost",
-      "pricing": {
-        "inputUsdPerMillionTokens": 0.05,
-        "cachedInputUsdPerMillionTokens": 0.005,
-        "outputUsdPerMillionTokens": 0.4
-      },
-      "evaluation": {
-        "taskScores": {
-          "workspace-summary": 5,
-          "interview-assist": 6,
-          "unsupported-route": 4,
-          "explanation-draft": 5
-        },
-        "structuredOutputScore": 7,
-        "latencyScore": 10,
-        "priceScore": 10
-      },
-      "notes": "Cheapest viable tier for high-volume classification or extraction checks, not the default explanation model.",
-      "estimatedInputTokens": 3553,
-      "estimatedOutputTokens": 710,
-      "estimatedPackCostUsd": 0.000462,
-      "estimatedCachedPackCostUsd": 0.000302,
-      "taskFitScores": {
-        "primary": 5.25,
-        "fallback": 4.65,
-        "lowCost": 5.2
-      },
-      "scores": {
-        "primary": 7.563,
-        "fallback": 6.223,
-        "lowCost": 8.98
-      }
+      "id": "gemini-flash-high",
+      "provider": "google",
+      "model": "gemini-3.8-flash",
+      "effort": "high",
+      "qualification": "candidate",
+      "role": "candidate"
+    },
+    {
+      "id": "baseline-gpt-5-mini",
+      "provider": "openai",
+      "model": "gpt-5-mini",
+      "effort": "minimal",
+      "role": "baseline"
+    },
+    {
+      "id": "baseline-gemini-3-flash-preview",
+      "provider": "google",
+      "model": "gemini-3-flash-preview",
+      "effort": "high",
+      "role": "baseline"
     }
   ],
-  "recommendation": {
-    "primary": {
-      "modelId": "gpt-5-mini",
-      "score": 8.463,
-      "rationale": "gpt-5-mini offers the best price-to-quality balance for structured tax workflow prompts in this fixture pack."
-    },
-    "fallback": {
-      "modelId": "gpt-5.2",
-      "score": 8.05,
-      "rationale": "gpt-5.2 is the premium fallback when unsupported-case reasoning or explanation quality matters more than cost."
-    },
-    "lowCost": {
-      "modelId": "gpt-5-nano",
-      "score": 8.98,
-      "rationale": "gpt-5-nano is the cheapest viable tier for classifier or extraction workloads behind the same redaction boundary."
-    }
-  }
+  "gates": {
+    "schemaValidity": 0.995,
+    "criticalFieldExactMatch": 0.995,
+    "repeats": 3,
+    "minimumReviewedCases": 200,
+    "meaningfulCostReduction": 0.1,
+    "minimumQualityGain": 0.01,
+    "p95RoutineLatencyMs": 30000,
+    "p95EscalationLatencyMs": 120000,
+    "maximumRoutineCostPerAcceptedUsd": "0.50",
+    "maximumEscalationCostPerAcceptedUsd": "1.00"
+  },
+  "pricingSnapshot": {
+    "retrievedAt": "2026-10-24",
+    "filingSeasonDate": "2027-01-01",
+    "prices": [
+      {
+        "model": "gpt-5.2",
+        "effectiveFrom": "2026-10-24",
+        "retrievedAt": "2026-10-24",
+        "source": "https://developers.openai.com/api/docs/models/gpt-5.2",
+        "input": "1.75",
+        "output": "14",
+        "cachedInput": "0.175",
+        "regionalUplift": "1"
+      },
+      {
+        "model": "gemini-3-flash-preview",
+        "effectiveFrom": "2026-10-24",
+        "retrievedAt": "2026-10-24",
+        "source": "https://ai.google.dev/gemini-api/docs/pricing.md",
+        "input": "0.50",
+        "output": "3",
+        "cachedInput": "0.05",
+        "storagePerMillionTokenHours": "1",
+        "regionalUplift": "1"
+      },
+      {
+        "model": "gpt-6-luna",
+        "effectiveFrom": "2026-10-24",
+        "retrievedAt": "2026-10-24",
+        "source": "https://developers.openai.com/api/docs/pricing",
+        "input": "0.10",
+        "output": "0.50",
+        "cachedInput": "0.01",
+        "cacheWrite30m": "0.125",
+        "cacheWrite12h": "0.25",
+        "longContextThreshold": 272000,
+        "regionalUplift": "1.10"
+      },
+      {
+        "model": "gpt-6.1-sol",
+        "effectiveFrom": "2026-10-24",
+        "retrievedAt": "2026-10-24",
+        "source": "https://developers.openai.com/api/docs/pricing",
+        "input": "2",
+        "output": "10",
+        "cachedInput": "0.10",
+        "cacheWrite30m": "2.50",
+        "cacheWrite12h": "5",
+        "longContextThreshold": 272000,
+        "regionalUplift": "1.10"
+      },
+      {
+        "model": "gemini-3.8-flash",
+        "effectiveFrom": "2026-10-24",
+        "retrievedAt": "2026-10-24",
+        "source": "https://ai.google.dev/gemini-api/docs/pricing",
+        "input": "0.75",
+        "output": "3.75",
+        "cachedInput": "0.075",
+        "storagePerMillionTokenHours": "0.50",
+        "regionalUplift": "1"
+      },
+      {
+        "model": "gemini-3.8-flash",
+        "effectiveFrom": "2027-01-01",
+        "retrievedAt": "2026-10-24",
+        "source": "https://ai.google.dev/gemini-api/docs/pricing",
+        "input": "1.50",
+        "output": "7.50",
+        "cachedInput": "0.15",
+        "storagePerMillionTokenHours": "1",
+        "regionalUplift": "1"
+      },
+      {
+        "model": "gpt-5-mini",
+        "effectiveFrom": "2026-10-24",
+        "retrievedAt": "2026-10-24",
+        "source": "https://developers.openai.com/api/docs/models/gpt-5-mini",
+        "input": "0.25",
+        "output": "2",
+        "cachedInput": "0.025",
+        "regionalUplift": "1"
+      }
+    ]
+  },
+  "recommendation": null,
+  "limitation": "No measured recommendation. Draft template variants do not establish independent scenario coverage or qualification."
 }

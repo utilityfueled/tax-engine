@@ -235,3 +235,23 @@ The redacted text adapter preserves repeated transaction lines in source order.
 Removing duplicate lines could erase separate purchases, refunds or transfers.
 The added regression failed before the change and passes afterward; this is a
 local deterministic check, not a provider extraction evaluation.
+
+## Measured AI evaluation harness
+
+The four-model union and hand-assigned quality/latency scores are removed.
+The harness lists effort-specific candidate profiles and both requested baselines,
+uses strict run records, and computes monetary/date exact match, abstention,
+grounding, human review results, P50/P95 latency, actual cost and January 2027
+cost with Decimal. Failed outputs and the single permitted escalation still
+contribute cost; unknown usage prevents promotion review. Duplicate run records,
+unknown profiles, invalid usage and excess escalation reject.
+
+The generated corpus has 240 **draft, unreviewed** cases across eight tasks and
+ten scenario families with three variants each, including 80 fixed held-out
+variants. This is a scaffold for review, not 240 independently validated scenarios.
+The committed live-run file is empty. Actual application-schema validation,
+independent expected-output/PII review, broader scenario diversity and live runs
+remain required. All 20 focused harness/CLI tests pass. They simulate measurement
+records; no model was called. No recommendation is emitted from configuration,
+and even a passing report cannot activate production routes. See
+[the evaluation procedure](strategy/model-stack-eval.md).
