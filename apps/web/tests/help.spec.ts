@@ -96,7 +96,7 @@ test("support page distinguishes saving 2026 facts from qualified filing output"
   await expect(page.getByRole("heading", { name: "Year and scenario support" })).toBeVisible();
   await expect(page.getByText(/no scenario is enabled for filing/i)).toBeVisible();
   const federal2026 = page.getByRole("row").filter({ hasText: /2026Federal/ });
-  await expect(federal2026).toContainText("calculation and PDF unavailable");
+  await expect(federal2026).toContainText("full return calculation and PDFs unavailable");
   await expect(federal2026).toContainText("Unavailable");
-  await expect(page.getByText(/review PDFs omit taxpayer IDs/i)).toBeVisible();
+  await expect(page.getByText(/Review PDFs omit taxpayer Social Security numbers and are marked for review only\./)).toBeVisible();
 });

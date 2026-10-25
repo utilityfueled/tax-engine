@@ -486,11 +486,16 @@ test.describe("Guided interview flow", () => {
       await confirmButtons.first().click();
     }
 
+    // Confirming the suggested values does not invent the remaining source boxes.
+    await expect(heroValue).toHaveText("Enter more info for an estimate");
+    await fillRequiredW2Facts(page);
     await expect(ticker.getByText("Estimated Refund", { exact: true })).toBeVisible();
-    await expect(heroValue).not.toHaveText("$0");
+    // IRS Publication1040(2025), p6: single $36,250–$36,300 gives tax $4,115.
+    // Spec: spec/federal/tax-table.yaml; $5,000 withholding less $4,115 = $885.
+    await expect(heroValue).toHaveText("$885");
   });
 
-  test("dependent care expenses do not change the estimate until a qualifying count is chosen", async ({ page }) => {
+  test("dependent care credit waits for actual qualifying-person and provider facts", async ({ page }) => {
     await completeSegmentation(page);
 
     await fillRequiredTaxpayerFacts(page);
@@ -512,16 +517,48 @@ test.describe("Guided interview flow", () => {
 
     const ticker = page.locator(".guided-refund-ticker-sticky");
     const heroValue = ticker.locator(".guided-ticker-item-hero .guided-ticker-value-hero");
-    const qualifyingIndividuals = page.getByRole("combobox", { name: /qualifying individuals/i });
+    const qualifyingIndividuals = page.getByRole("spinbutton", { name: /qualifying individuals/i });
 
-    // 2025 single taxable wages: $50,000 - $15,750. Tax-table tax $3,872; withholding $5,000.
-    await expect(heroValue).toHaveText("$1,128");
+    // 2025 single taxable wages: $50,000 - $15,750. Published Tax Table row $34,250–$34,300: tax $3,875; withholding $5,000.
+    await expect(heroValue).toHaveText("$1,125");
     await expect(qualifyingIndividuals).toHaveValue("");
 
     await page.getByRole("textbox", { name: /total care expenses paid/i }).fill("3000");
 
     await expect(page.getByText(/choose how many qualifying people received care before we estimate this credit/i)).toBeVisible();
-    await expect(heroValue).toHaveText("$1,128");
+    await expect(heroValue).toHaveText("Enter more info for an estimate");
+    await qualifyingIndividuals.fill("1");
+    await expect(heroValue).toHaveText("Enter more info for an estimate");
+
+    // Fictional care for an incapable-of-self-care parent who qualifies under
+    // Form2441's dependency exceptions; no child credit is assumed.
+    for (const [name, value] of [
+      ["Do the qualifying-person, work-related care and eligible-provider requirements in Form 2441 apply?", "true"],
+      ["Did you receive dependent-care benefits, including employer-provided care?", "false"],
+      ["Does either earned-income amount include student or incapacity deemed income?", "false"],
+    ]) await page.getByRole("combobox", { name, exact: true }).selectOption(value);
+    await page.getByRole("textbox", { name: /^Your earned income for Form 2441 line 4/ }).fill("50000");
+    await page.getByRole("textbox", { name: /^Excluded dependent-care benefits from Form 2441 Part III/ }).fill("0");
+    await page.getByRole("textbox", { name: /^Prior-year care expense worksheet credit/ }).fill("0");
+    await page.getByRole("button", { name: "Add care provider", exact: true }).click();
+    await page.getByRole("textbox", { name: "Provider 1 name", exact: true }).fill("Synthetic Adult Care");
+    await page.getByRole("textbox", { name: "Provider 1 address", exact: true }).fill("100 Example Ave, Austin, TX 78701");
+    await page.getByRole("combobox", { name: "Provider 1 identification status", exact: true }).selectOption("tin");
+    await page.getByRole("textbox", { name: "Provider 1 tax ID", exact: true }).fill("12-3456789");
+    await page.getByRole("combobox", { name: "Was provider 1 your household employee?", exact: true }).selectOption("false");
+    await page.getByRole("textbox", { name: "Amount paid to provider 1", exact: true }).fill("3000");
+    await page.getByRole("button", { name: "Add qualifying person", exact: true }).click();
+    await page.getByRole("textbox", { name: "Qualifying person 1 first name", exact: true }).fill("Pat");
+    await page.getByRole("textbox", { name: "Qualifying person 1 last name", exact: true }).fill("Example");
+    await page.getByRole("combobox", { name: "Qualifying person 1 identification status", exact: true }).selectOption("tax_id");
+    await page.getByRole("textbox", { name: "Qualifying person 1 tax ID", exact: true }).fill("900-70-0003");
+    await page.getByRole("combobox", { name: "Was person 1 over age 12 and incapable of self-care when care was provided?", exact: true }).selectOption("true");
+    await page.getByRole("combobox", { name: "Does person 1 meet the Form 2441 qualifying-person, residence and dependency requirements?", exact: true }).selectOption("true");
+    await page.getByRole("textbox", { name: "Qualified expenses for person 1", exact: true }).fill("3000");
+    await expect(heroValue).toHaveText("Enter more info for an estimate");
+    await page.getByRole("combobox", { name: "Have you checked these provider and qualifying-person details against your actual records?", exact: true }).selectOption("true");
+    // Form2441(2025): $3,000 x20% at AGI$50,000 = $600; $1,125 + $600.
+    await expect(heroValue).toHaveText("$1,725");
   });
 
   test("navigation: back button returns to previous section", async ({ page }) => {
@@ -653,7 +690,7 @@ test.describe("Guided interview flow", () => {
     await expect(page.getByRole("heading", { name: /^return bundle$/i })).toBeVisible();
     await expect(page.getByText(/filing exports are not yet qualified/i)).toBeVisible();
     await expect(ticker.getByText("Estimated Refund", { exact: true })).toBeVisible();
-    await expect(ticker.locator(".guided-ticker-item-hero .guided-ticker-value-hero")).toHaveText("$888");
+    await expect(ticker.locator(".guided-ticker-item-hero .guided-ticker-value-hero")).toHaveText("$885");
     await expect(ticker.getByText("Single", { exact: true })).toBeVisible();
     await expect(ticker.getByText("2025", { exact: true })).toBeVisible();
 
@@ -919,6 +956,7 @@ async function seedCompletedGuidedReviewState(
     workspaceId,
     state: {
       phase: "complete",
+      taxYear: 2025,
       segmentation: {
         filingStatus: "single",
         incomeTypes: ["w2-wages"],
@@ -941,14 +979,16 @@ async function seedCompletedGuidedReviewState(
         "income-w2": {
           entries: [
             {
+              accountHolder: "primary", stateTaxReporting: "none",
               employerName: "Official fixture employer",
               employerEin: "12-3456789",
               wages: "52000",
               federalWithheld: "5000",
-              socialSecurityWages: "",
-              socialSecurityWithheld: "",
-              medicareWages: "",
-              medicareWithheld: "",
+              socialSecurityWages: "0",
+              socialSecurityWithheld: "0",
+              medicareWages: "0",
+              medicareWithheld: "0",
+              socialSecurityTips: "0", box10DependentCareBenefits: "0", box12CodeW: "0",
               stateWages: "",
               stateWithheld: "",
             },

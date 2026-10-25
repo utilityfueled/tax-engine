@@ -258,33 +258,41 @@ test.describe("Payments section — other payments", () => {
   });
 
   test("Other payments is collapsed by default", async ({ page }) => {
-    await expect(page.getByText(/extension payments, excess social security/i)).not.toBeVisible();
+    await expect(page.getByRole("button", { name: "Add extension payment", exact: true })).not.toBeVisible();
+    await expect(page.getByRole("button", { name: "Add prior-year applied refund", exact: true })).not.toBeVisible();
   });
 
-  test("expanding Other payments shows currency field with hint", async ({ page }) => {
+  test("expanding Other payments exposes actual extension and applied-refund sources", async ({ page }) => {
     await page.locator("summary").filter({ hasText: /other payments/i }).click();
 
-    await expect(page.getByText(/extension payments, excess social security/i)).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Federal extension payments", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Prior-year federal refund applied to this return", exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Add extension payment", exact: true }).click();
+    await expect(page.getByLabel("Extension payment #1 date", { exact: true })).toHaveValue("");
+    await expect(page.getByRole("textbox", { name: /^Extension payment #1 amount/ })).toHaveValue("");
   });
 
-  test("Other payments field accepts and formats currency", async ({ page }) => {
+  test("Extension payment accepts and formats currency", async ({ page }) => {
     await page.locator("summary").filter({ hasText: /other payments/i }).click();
 
-    const otherInput = page.locator(".guided-expand-body input.guided-input-currency");
+    await page.getByRole("button", { name: "Add extension payment", exact: true }).click();
+    const otherInput = page.getByRole("textbox", { name: /^Extension payment #1 amount/ });
     await otherInput.fill("750");
     await otherInput.blur();
 
     await expect(otherInput).toHaveValue("750");
   });
 
-  test("Other payments field formats large amounts with commas", async ({ page }) => {
+  test("Applied refund formats large amounts with commas and keeps its source year unknown", async ({ page }) => {
     await page.locator("summary").filter({ hasText: /other payments/i }).click();
 
-    const otherInput = page.locator(".guided-expand-body input.guided-input-currency");
+    await page.getByRole("button", { name: "Add prior-year applied refund", exact: true }).click();
+    const otherInput = page.getByRole("textbox", { name: /^Applied refund #1 amount/ });
     await otherInput.fill("12500");
     await otherInput.blur();
 
     await expect(otherInput).toHaveValue("12,500");
+    await expect(page.getByLabel("Applied refund #1 source tax year", { exact: true })).toHaveValue("");
   });
 });
 

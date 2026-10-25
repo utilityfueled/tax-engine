@@ -52,7 +52,7 @@ export async function fillRequiredW2Facts(page: Page) {
   await page.getByRole("combobox", { name: "W-2 recipient", exact: true }).selectOption("primary");
   const details = page.locator("details").filter({ has: page.getByText("More W-2 boxes", { exact: true }) });
   if ((await details.getAttribute("open")) === null) await page.getByText("More W-2 boxes", { exact: true }).click();
-  for (const label of ["Box 2 — Federal income tax withheld", "Box 3 — Social Security wages", "Box 4 — SS tax withheld", "Box 5 — Medicare wages", "Box 6 — Medicare tax withheld"]) {
+  for (const label of ["Box 2 — Federal income tax withheld", "Box 3 — Social Security wages", "Box 4 — SS tax withheld", "Box 5 — Medicare wages", "Box 6 — Medicare tax withheld", "Box 7 — Social Security tips", "Box 10 — Dependent-care benefits", "Box 12 code W — Employer HSA contributions"]) {
     const field = page.getByRole("textbox", { name: new RegExp(`^${label}`) });
     if (!(await field.inputValue())) await field.fill("0");
   }

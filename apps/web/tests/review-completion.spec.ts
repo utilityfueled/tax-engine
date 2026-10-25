@@ -1,4 +1,4 @@
-import { fillRequiredTaxpayerFacts, reachFilingStatus } from "./guided-fixtures";
+import { fillRequiredTaxpayerFacts, fillRequiredW2Facts, reachFilingStatus } from "./guided-fixtures";
 import { expect, test } from "@playwright/test";
 
 /**
@@ -143,6 +143,7 @@ test.describe("Review section — with W-2 data", () => {
     const wagesInput = page.locator("input.guided-input-currency").first();
     await wagesInput.fill("75000");
     await wagesInput.blur();
+    await fillRequiredW2Facts(page);
 
     const fedWithheldInput = page.locator("input.guided-input-currency").nth(1);
     await fedWithheldInput.fill("15000");
@@ -182,6 +183,7 @@ test.describe("Review section — with W-2 data", () => {
     const wagesInput = page.locator("input.guided-input-currency").first();
     await wagesInput.fill("60000");
     await wagesInput.blur();
+    await fillRequiredW2Facts(page);
 
     const fedWithheldInput = page.locator("input.guided-input-currency").nth(1);
     await fedWithheldInput.fill("10000");
@@ -255,6 +257,7 @@ test.describe("Completion screen", () => {
     const wagesInput = page.locator("input.guided-input-currency").first();
     await wagesInput.fill("50000");
     await wagesInput.blur();
+    await fillRequiredW2Facts(page);
 
     // Skip to review and then continue to completion
     await skipSection(page);

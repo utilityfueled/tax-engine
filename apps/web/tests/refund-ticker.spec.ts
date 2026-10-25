@@ -1,4 +1,4 @@
-import { fillRequiredTaxpayerFacts, reachFilingStatus } from "./guided-fixtures";
+import { fillRequiredTaxpayerFacts, fillRequiredW2Facts, reachFilingStatus } from "./guided-fixtures";
 import { expect, test } from "@playwright/test";
 
 /**
@@ -126,9 +126,9 @@ test.describe("Refund ticker — value updates", () => {
     await createReturn(page);
     await completeSegmentation(page);
 
-    // After segmentation the engine produces metrics, so the hero already shows a dollar amount
+    // Required facts are still unknown immediately after segmentation.
     const heroValue = page.locator(".guided-ticker-value-hero").first();
-    await expect(heroValue).toBeVisible();
+    await expect(heroValue).toHaveText("Enter more info for an estimate");
     const heroBefore = await heroValue.innerText();
 
     // Skip personal info
@@ -139,6 +139,7 @@ test.describe("Refund ticker — value updates", () => {
     const wagesInput = page.locator("input.guided-input-currency").first();
     await wagesInput.fill("75000");
     await wagesInput.blur();
+    await fillRequiredW2Facts(page);
 
     // Wait for the ticker to update with new values
     await expect(async () => {
@@ -146,8 +147,13 @@ test.describe("Refund ticker — value updates", () => {
       expect(heroAfter).not.toBe(heroBefore);
     }).toPass({ timeout: 10000 });
 
-    const heroText = await heroValue.innerText();
-    expect(heroText).toMatch(/^\$/);
+    // IRS 2025 Tax Table: $75,000 wages - $15,750 standard deduction gives
+    // $59,250 taxable income; the single $59,250–$59,300 row is $7,955.
+    // This unverified historical preview also shows the regular Form 2210
+    // estimate: four $1,790 installments × 7% × 971 combined days / 365 = $333.
+    // No prior-year safe harbor or waiver has been supplied by this fixture.
+    await expect(heroValue).toHaveText("$8,288");
+    await expect(page.getByText("Estimated Balance Due", { exact: true })).toBeVisible();
   });
 
   test("ticker shows total income after entering W-2 wages", async ({ page }) => {
@@ -162,6 +168,7 @@ test.describe("Refund ticker — value updates", () => {
     const wagesInput = page.locator("input.guided-input-currency").first();
     await wagesInput.fill("80000");
     await wagesInput.blur();
+    await fillRequiredW2Facts(page);
 
     // Ticker should show total income after computation
     const totalIncomeItem = page.locator(".guided-ticker-item").filter({ hasText: /total income/i });
@@ -181,6 +188,7 @@ test.describe("Refund ticker — value updates", () => {
     const wagesInput = page.locator("input.guided-input-currency").first();
     await wagesInput.fill("75000");
     await wagesInput.blur();
+    await fillRequiredW2Facts(page);
 
     // Wait for ticker to compute
     const totalIncomeItem = page.locator(".guided-ticker-item").filter({ hasText: /total income/i });
@@ -214,6 +222,7 @@ test.describe("Refund ticker — breakdown", () => {
     const wagesInput = page.locator("input.guided-input-currency").first();
     await wagesInput.fill("75000");
     await wagesInput.blur();
+    await fillRequiredW2Facts(page);
 
     const fedWithheldInput = page.locator("input.guided-input-currency").nth(1);
     await fedWithheldInput.fill("12000");
@@ -367,6 +376,7 @@ test.describe("Refund ticker — persists across sections", () => {
     const wagesInput = page.locator("input.guided-input-currency").first();
     await wagesInput.fill("65000");
     await wagesInput.blur();
+    await fillRequiredW2Facts(page);
 
     // Wait for ticker to show values
     const totalIncomeItem = page.locator(".guided-ticker-item").filter({ hasText: /total income/i });
@@ -426,6 +436,7 @@ test.describe("Refund ticker — persists across sections", () => {
     const wagesInput = page.locator("input.guided-input-currency").first();
     await wagesInput.fill("50000");
     await wagesInput.blur();
+    await fillRequiredW2Facts(page);
 
     // Wait for ticker to show total income
     const totalIncomeItem = page.locator(".guided-ticker-item").filter({ hasText: /total income/i });
