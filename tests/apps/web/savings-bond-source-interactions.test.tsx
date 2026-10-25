@@ -31,6 +31,14 @@ it("collects joint purchase records and invalidates ownership confirmation", asy
     await change("This bond's interest previously reported by you", "100");
     await change("This bond's interest previously reported by spouse", "400");
     await change("This joint bond is community property", "false");
+    expect(container.textContent).not.toContain("This bond was community property throughout all interest accrual");
+    await change("This joint bond is community property", "true");
+    expect(latest?.redemptions?.[0].incomeOwnershipCommunityPropertyThroughoutAccrualConfirmed).toBeUndefined();
+    await change("This bond was community property throughout all interest accrual", "true");
+    expect(latest?.redemptions?.[0].incomeOwnershipCommunityPropertyThroughoutAccrualConfirmed).toBe(true);
+    await change("This joint bond is community property", "false");
+    expect(latest?.redemptions?.[0].incomeOwnershipCommunityPropertyThroughoutAccrualConfirmed).toBeUndefined();
+
     await change("Income ownership has remained unchanged since issue", "true");
     await change("Purchase and prior-reporting record reference", "Original purchase records");
     await change("Joint income ownership records checked after the last edit", "true");

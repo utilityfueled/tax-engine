@@ -22,6 +22,7 @@ export function SavingsBondSourceDetails({ data, onChange }: { data?: SavingsBon
     const next = { ...item, [key]: value };
     if (collection === "redemptions") {
       if (key !== "incomeOwnershipSourceFactsConfirmed" && savingsBondIncomeOwnershipFields.some(field => item[field.key] !== undefined)) next.incomeOwnershipSourceFactsConfirmed = null;
+      if (key === "incomeOwnershipCommunityProperty") delete next.incomeOwnershipCommunityPropertyThroughoutAccrualConfirmed;
       if (key === "registeredOwner") {
         next.ageTestOwner = undefined;
         for (const field of savingsBondIncomeOwnershipFields) delete next[field.key];
@@ -36,7 +37,7 @@ export function SavingsBondSourceDetails({ data, onChange }: { data?: SavingsBon
     <fieldset className="guided-fieldset"><legend>Bond redemptions</legend>
       {(data.redemptions ?? []).map((record, index) => <fieldset className="guided-fieldset" key={String(record.sourceId ?? index)}><legend>Bond redemption {index + 1}</legend>
         <SourceFields fields={savingsBondFields} record={record} onChange={(key, value) => row("redemptions", index, key, value)} />
-        {record.registeredOwner === "taxpayer_and_spouse" && <fieldset className="guided-fieldset"><legend>Joint bond income ownership</legend><p className="guided-hint">Complete these records when bond interest must be attributed to an educator. Use actual purchase funds and each person's prior reported interest. Community property, changed ownership and a reduced exclusion shared by both owners need a separate tax method; entering a split does not establish one.</p><SourceFields fields={savingsBondIncomeOwnershipFields} record={record} onChange={(key, value) => row("redemptions", index, key, value)} /></fieldset>}
+        {record.registeredOwner === "taxpayer_and_spouse" && <fieldset className="guided-fieldset"><legend>Joint bond income ownership</legend><p className="guided-hint">Complete these records when bond interest must be attributed to an educator. Use actual purchase funds and each person's prior reported interest. For unchanged community property, confirm its entire accrual history and each spouse's prior reporting; purchase-fund amounts are optional. Changed history and a reduced exclusion shared by both owners need a separate tax method.</p><SourceFields fields={savingsBondIncomeOwnershipFields.filter(field => field.key !== "incomeOwnershipCommunityPropertyThroughoutAccrualConfirmed" || record.incomeOwnershipCommunityProperty === true)} record={record} onChange={(key, value) => row("redemptions", index, key, value)} /></fieldset>}
         <button type="button" className="utility-button" onClick={() => update({ redemptions: data.redemptions?.filter((_, offset) => offset !== index) })}>Remove bond redemption {index + 1}</button>
       </fieldset>)}
       {data.redemptions?.length === 0 && <p className="guided-hint">No bond redemptions entered.</p>}

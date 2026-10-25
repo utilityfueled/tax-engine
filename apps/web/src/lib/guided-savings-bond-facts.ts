@@ -44,6 +44,7 @@ export const savingsBondIncomeOwnershipFields: SavingsBondField[] = [
   { key: "incomeOwnershipTaxpayerPriorYearInterestReported", label: "This bond's interest previously reported by you", kind: "money" },
   { key: "incomeOwnershipSpousePriorYearInterestReported", label: "This bond's interest previously reported by spouse", kind: "money" },
   { key: "incomeOwnershipCommunityProperty", label: "This joint bond is community property", kind: "boolean" },
+  { key: "incomeOwnershipCommunityPropertyThroughoutAccrualConfirmed", label: "This bond was community property throughout all interest accrual", kind: "boolean" },
   { key: "incomeOwnershipUnchangedSinceIssueConfirmed", label: "Income ownership has remained unchanged since issue", kind: "boolean" },
   { key: "incomeOwnershipSourceReference", label: "Purchase and prior-reporting record reference", kind: "text" },
   { key: "incomeOwnershipSourceFactsConfirmed", label: "Joint income ownership records checked after the last edit", kind: "boolean" },

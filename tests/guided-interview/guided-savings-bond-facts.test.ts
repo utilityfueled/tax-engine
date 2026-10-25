@@ -36,6 +36,18 @@ describe("actual guided savings-bond sources", () => {
     data.redemptions[0].incomeOwnershipSpousePurchaseFunds = "";
     expect(() => buildSavingsBondInputs(data, 2025, "mfj", interest, completePersonalInfo)).toThrow(/actual|complete/i);
   });
+  it("collects actual community-property history without assuming it", () => {
+    const data = actualSavingsBondData();
+    Object.assign(data.redemptions[0], { registeredOwner: "taxpayer_and_spouse", ageTestOwner: "taxpayer",
+      incomeOwnershipTaxpayerPriorYearInterestReported: "250", incomeOwnershipSpousePriorYearInterestReported: "250",
+      incomeOwnershipCommunityProperty: true, incomeOwnershipUnchangedSinceIssueConfirmed: true,
+      incomeOwnershipSourceFactsConfirmed: true, incomeOwnershipSourceReference: "Actual community-property history" });
+    expect(() => buildSavingsBondInputs(data, 2025, "mfj", interest, completePersonalInfo)).toThrow(/community|history/i);
+    data.redemptions[0].incomeOwnershipCommunityPropertyThroughoutAccrualConfirmed = true;
+    expect(buildSavingsBondInputs(data, 2025, "mfj", interest, completePersonalInfo).savingsBondRedemptions?.[0].incomeOwnership).toMatchObject({ communityProperty: true, communityPropertyThroughoutAccrualConfirmed: true, taxpayerPriorYearInterestReported: "250", spousePriorYearInterestReported: "250" });
+    data.redemptions[0].incomeOwnershipCommunityPropertyThroughoutAccrualConfirmed = false;
+    expect(() => buildSavingsBondInputs(data, 2025, "mfj", interest, completePersonalInfo)).toThrow(/community|history/i);
+  });
   it("preserves unknown bond sources and exact entered amounts", () => {
     expect(buildSavingsBondInputs(undefined, 2025, "single", interest, completePersonalInfo)).toEqual({});
     expect(savingsBondFactErrors({ taxYear: "2025" }, 2025, "single", interest, completePersonalInfo)).toHaveProperty("savingsBondEducation");

@@ -89,14 +89,15 @@ lines:
       summing to the bond total. Lifetime owner interest = total lifetime
       interest * owner purchase funds / total purchase funds; current owner
       interest subtracts only that owner's actual prior reported interest.
-      Reject negative owner amounts, incomplete history, community property,
-      or an unresolved fractional source result. If all positive current
+      Reject negative owner amounts, incomplete or changed community history,
+      or an unresolved fractional source result. Unchanged confirmed community
+      interest uses the separate half-income method in savings-bond-income-ownership.yaml. If all positive current
       interest belongs to one owner, that owner receives the final exclusion;
       otherwise only the fully excluded branch is implemented.
     testRef: "tests/engine/forms/educator-bond-income-ownership.test.ts::uses joint purchase funds and actual owner prior reporting"
   - line: "joint-source-boundaries"
     description: "Do not manufacture ownership or final exclusion rounding"
-    formula: "Reject missing confirmation, unknown contribution or prior-reporting values, inconsistent totals, community-property or changed ownership history, and source cents that cannot reconcile to the full Form8815 exclusion; keep source references out of audit output."
+    formula: "Reject missing confirmation, unknown contribution or prior-reporting values, inconsistent totals, missing community-property history or changed ownership history, and source cents that cannot reconcile to the full Form8815 exclusion; keep source references out of audit output."
     testRef: "tests/engine/forms/educator-bond-income-ownership.test.ts::rejects unknown ownership history and unresolved allocation boundaries"
   - line: "bond-source-reconciliation"
     description: "Retain actual ownership and rounded source interest"

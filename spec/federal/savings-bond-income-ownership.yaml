@@ -1,13 +1,14 @@
 form: "Savings-bond income ownership"
-fullName: "Actual noncommunity purchase-fund ownership for jointly registered bonds"
+fullName: "Actual purchase-fund or unchanged community income ownership for jointly registered bonds"
 taxYear: 2026
 irsReference: "https://www.irs.gov/publications/p550"
 retrievedAt: "2026-10-25"
 notes: |
   Publication550 Table1-2: sole registered ownership determines income ownership;
   a co-owner who alone paid owns all interest, and co-owners who each contributed
-  own interest in proportion to actual purchase funds. Community property and
-  later transfers/reissues require separate source methods and are not inferred.
+  own interest in proportion to actual purchase funds. Unchanged community
+  property assigns half the interest to each spouse. Actual history is required;
+  later changes, transfers and reissues are not inferred.
   This calculation determines actual income ownership only. It does not choose
   a split of a reduced joint Form8815 exclusion. Actual prior reported amounts
   may differ by owner and are never inferred from purchase proportions.
@@ -20,3 +21,19 @@ lines:
     description: "Determine current interest from actual purchase and reporting history"
     formula: "Lifetime interest = proceeds minus actual principal. Owner lifetime interest = lifetime interest times actual purchase funds divided by principal. Subtract that owner's actual previously reported interest; require both owner totals to reconcile exactly to the source current interest and reject unresolved source fractions."
     testRef: "tests/engine/forms/educator-bond-income-ownership.test.ts::uses joint purchase funds and actual owner prior reporting"
+  - line: "community-property-income"
+    description: "Attribute unchanged community bond interest equally"
+    formula: |
+      Publication550 Table1-2 assigns half the interest to each spouse when the
+      bond is actual community property. Require confirmed community status
+      throughout interest accrual and unchanged ownership, plus actual prior
+      reported interest by each spouse that reconciles in total.
+      Current interest for each spouse is half lifetime interest less that
+      spouse's actual prior reporting. Optional provided purchase funds must
+      reconcile to principal but do not change community income ownership.
+      Do not assume equal prior reporting; each actual prior amount must be
+      no more than that owner's half of lifetime interest.
+      Reject missing/changed history, inconsistent prior reports and ambiguous
+      partial source data. This determines income, not a reduced final
+      Form8815 exclusion allocation between two positive owners.
+    testRef: "tests/engine/forms/educator-bond-income-ownership.test.ts::uses actual unchanged community-property history without allocating a reduced exclusion"

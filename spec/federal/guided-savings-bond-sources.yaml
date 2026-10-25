@@ -11,10 +11,11 @@ notes: |
   Preserve unknown answers and known ineligibility. Source labels are local
   opaque identifiers; taxpayers retain the original bond serial-number records.
   Joint bond income ownership can be sourced from actual noncommunity purchase
-  funds and each owner's prior interest reporting. These facts do not propose a
+  funds or confirmed unchanged community-property history, with each owner's
+  actual prior interest reporting. These facts do not propose a
   final exclusion split; only sole-income-owner or fully excluded interest is
-  currently supported for educator attribution. Partial mixed-owner exclusions,
-  community property and changed ownership require a separate source method.
+  currently supported for educator attribution. Partial mixed-owner exclusions
+  and changed ownership or community-property history require a separate method.
 lines:
   - line: "actual-source"
     description: "Unknown-preserving source facts and exact amounts"
@@ -60,3 +61,7 @@ lines:
     description: "Joint income ownership is explicitly recorded and reconfirmed"
     formula: "Visible joint-registration fields have no monetary or ownership defaults; editing substantive bond facts clears ownership and outer confirmation; changing registration clears the obsolete joint worksheet"
     testRef: "tests/apps/web/savings-bond-source-interactions.test.tsx::collects joint purchase records and invalidates ownership confirmation"
+  - line: "community-income-history"
+    description: "Collect actual community-property history without assuming it"
+    formula: "Preserve unknown community-property-throughout-accrual confirmation; edits clear ownership and outer source confirmations; guided validation uses the shared actual income-ownership method"
+    testRef: "tests/guided-interview/guided-savings-bond-facts.test.ts::collects actual community-property history without assuming it"

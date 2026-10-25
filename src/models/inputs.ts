@@ -3399,6 +3399,7 @@ export const SavingsBondRedemptionSchema = z.preprocess((value) => {
     taxpayerPriorYearInterestReported: optionalDecimalInput,
     spousePriorYearInterestReported: optionalDecimalInput,
     communityProperty: z.boolean().optional(),
+    communityPropertyThroughoutAccrualConfirmed: z.boolean().optional(),
     ownershipUnchangedSinceIssueConfirmed: z.boolean().optional(),
     sourceFactsConfirmed: z.boolean().optional(),
     sourceReference: z.string().trim().optional(),

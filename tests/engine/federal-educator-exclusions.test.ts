@@ -62,6 +62,20 @@ describe("Educator federal exclusion conservation", () => {
     expect(result.totalInterest.toFixed()).toBe("0");
     expect(result.schedule1?.educatorExpenses.toFixed()).toBe("175");
     expect(result.agi.toFixed()).toBe("49825");
+    // Unchanged community ownership assigns lifetime interest equally;
+    // actual prior250/250 leaves750/750, so800/800 costs leave50/50.
+    const community = { ...value,
+      savingsBondRedemptions: value.savingsBondRedemptions.map(row => ({ ...row, incomeOwnership: { ...row.incomeOwnership,
+        communityProperty: true, communityPropertyThroughoutAccrualConfirmed: true,
+        taxpayerPriorYearInterestReported: "250", spousePriorYearInterestReported: "250" } })),
+      adjustments: { educatorExpenseSources: [educator("800", { excludedSavingsBondInterest: "750" }), educator("800", { accountHolder: "spouse", excludedSavingsBondInterest: "750" })] },
+    };
+    const communityResult = calculate(community);
+    expect(communityResult.form8815?.excludableSavingsBondInterest.toFixed()).toBe("1500");
+    expect(communityResult.schedule1?.educatorExpenses.toFixed()).toBe("100");
+    expect(communityResult.totalInterest.toFixed()).toBe("0");
+    expect(communityResult.agi.toFixed()).toBe("49900");
+
     expect(result.allLines.filter(line => line.form === "Educator education exclusions" && line.line.endsWith(":bond-exclusion")).map(line => line.value.toFixed())).toEqual(["1400", "100"]);
     value.savingsBondRedemptions[0].incomeOwnership.spousePurchaseFunds = "2001";
     expect(() => calculate(value)).toThrow(/purchase|principal/i);

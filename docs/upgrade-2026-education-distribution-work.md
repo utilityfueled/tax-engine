@@ -738,3 +738,52 @@ The parent independently reviewed the bounded income-ownership method against
 current Pub550 and reran14 core, guided and DOM cases successfully, with no
 actionable finding (`parent-bond-ownership-review.log`). This is agent source
 and software review; independent human qualification remains pending.
+
+### Unchanged community-property bond income (2026-10-25)
+
+Actual purchase-fund ownership is committed as `195f018`. The follow-up uses
+[Pub550 Table1-2 and its community-property explanation](https://www.irs.gov/publications/p550)
+to assign half of lifetime interest to each spouse only when the actual source
+confirms community property throughout accrual and unchanged ownership. It
+subtracts each spouse's actual prior reported interest, requires those reports
+to reconcile to the bond total, and does not infer equal prior reporting. If
+purchase amounts are supplied, both must reconcile to principal; they do not
+change community income ownership. The guided form preserves an unknown history
+answer, requires confirmation, and clears obsolete history after a status edit.
+
+Independent synthetic expectations: 10000 proceeds minus 8000 principal gives
+2000 lifetime interest, or 1000 per spouse. Prior reporting of 250 per spouse
+leaves 750 each; actual educator costs of 800 each leave 50 each, a 100 deduction
+and 49900 AGI from 50000 wages. Prior reporting of 100/400 instead leaves 900/600;
+no discretionary allocation is introduced. The fully excluded 1500 retains
+those actual owners. A partially reduced final exclusion with two positive
+owners still rejects because this income method does not establish that separate
+allocation.
+
+Spec-first core and guided regressions initially failed against the prior
+community-property block (`bond-community-red.log` and
+`bond-community-guided-red.log`). Current checks pass 25 tests across five core,
+canonical return, guided and DOM files, with root/web types, all 3960 current spec
+references and scoped lint passing. Logs use the `bond-community-` prefix in the
+local evidence directory. Exact staged verification and independent agent review
+will be recorded before commit; human tax and filing qualification are unchanged.
+
+The separate [education method decision memo](upgrade-2026-education-method-decisions.md)
+identifies the remaining controlling-source questions, implementation requirements
+and source facts. It does not treat approval as a substitute for a tax method.
+
+The final related cohort passes 141 tests across 12 files, including Form 8815
+historical/year-aware/edge cases, canonical educator returns, source identities,
+review privacy and PDF mapping (`bond-community-all-related.log`). Two additional
+boundary assertions reject contradictory community history and an owner's prior
+reported interest exceeding their lifetime share (`bond-community-boundaries.log`).
+The parent independently refreshed Pub550 and ran 16 tests across three core,
+guided and DOM files with no actionable findings
+(`parent-community-bond-review.log`). This is an agent review only.
+
+The immutable staged code tree `81546065` passes all 141 tests across those
+12 files, root and web type checks, all 3961 committed spec references, and
+scoped lint (`bond-community-staged-{tests,types,web-types,spec,lint}.log`).
+The staged model diff contains only the community-history optional field;
+concurrent Marketplace health inputs and federal work are excluded. No test
+assertion, coverage threshold or readiness gate was weakened.

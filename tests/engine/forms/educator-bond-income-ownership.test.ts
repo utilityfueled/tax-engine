@@ -47,9 +47,32 @@ describe("actual bond income ownership for educator exclusions", () => {
     const sole = [bond("a", "taxpayer_and_spouse", { priorYearInterestReported: "500", incomeOwnership: ownership({ taxpayerPurchaseFunds: "8000", spousePurchaseFunds: "0", taxpayerPriorYearInterestReported: "500", spousePriorYearInterestReported: "0" }) })];
     expect(reconcileEducatorEducationExclusions(input(sole, "1125", "0", "160150")).ownerExclusions[0]?.savingsBondInterest.toFixed()).toBe("1125");
   });
+  it("uses actual unchanged community-property history without allocating a reduced exclusion", () => {
+    // Pub550: community interest belongs half to each spouse, irrespective
+    // of which spouse supplied the money. Lifetime2,000 less prior500
+    // gives current750 each; fully excluded1,500 preserves those owners.
+    const facts = ownership({ communityProperty: true, communityPropertyThroughoutAccrualConfirmed: true, taxpayerPriorYearInterestReported: "250", spousePriorYearInterestReported: "250" });
+    const redemptions = [bond("community", "taxpayer_and_spouse", { priorYearInterestReported: "500", incomeOwnership: facts })];
+    expect(reconcileEducatorEducationExclusions(input(redemptions, "750", "750")).ownerExclusions.map(row => row.savingsBondInterest.toFixed())).toEqual(["750", "750"]);
+    const noPurchaseAllocation = [bond("community", "taxpayer_and_spouse", { priorYearInterestReported: "500", incomeOwnership: { ...facts, taxpayerPurchaseFunds: undefined, spousePurchaseFunds: undefined } })];
+    expect(reconcileEducatorEducationExclusions(input(noPurchaseAllocation, "750", "750")).ownerExclusions.map(row => row.savingsBondInterest.toFixed())).toEqual(["750", "750"]);
+    expect(() => reconcileEducatorEducationExclusions(input(redemptions, "562.50", "562.50", "160150"))).toThrow(/unresolved.*allocation/i);
+    const differentPrior = [bond("community", "taxpayer_and_spouse", { priorYearInterestReported: "500", incomeOwnership: { ...facts, taxpayerPriorYearInterestReported: "100", spousePriorYearInterestReported: "400" } })];
+    expect(reconcileEducatorEducationExclusions(input(differentPrior, "900", "600")).ownerExclusions.map(row => row.savingsBondInterest.toFixed())).toEqual(["900", "600"]);
+    const excessivePrior = [bond("community", "taxpayer_and_spouse", { priorYearInterestReported: "1100", incomeOwnership: { ...facts, taxpayerPriorYearInterestReported: "1100", spousePriorYearInterestReported: "0" } })];
+    expect(() => reconcileEducatorEducationExclusions(input(excessivePrior, "0", "900"))).toThrow(/owner prior interest/i);
+
+    for (const change of [
+      { communityPropertyThroughoutAccrualConfirmed: undefined }, { communityPropertyThroughoutAccrualConfirmed: false },
+      { taxpayerPriorYearInterestReported: "100", spousePriorYearInterestReported: "399" },
+      { taxpayerPurchaseFunds: "6001" }, { spousePurchaseFunds: undefined },
+    ]) expect(() => reconcileEducatorEducationExclusions(input([bond("community", "taxpayer_and_spouse", { priorYearInterestReported: "500", incomeOwnership: { ...facts, ...change } })], "750", "750"))).toThrow(/community|history|prior|purchase|actual|source/i);
+    expect(bond("unknown", "taxpayer_and_spouse", { incomeOwnership: { communityProperty: true } }).incomeOwnership?.communityPropertyThroughoutAccrualConfirmed).toBeUndefined();
+  });
   it("rejects unknown ownership history and unresolved allocation boundaries", () => {
     for (const mutation of [
       { sourceFactsConfirmed: undefined }, { sourceReference: "" }, { communityProperty: undefined }, { communityProperty: true },
+      { communityProperty: false, communityPropertyThroughoutAccrualConfirmed: true },
       { ownershipUnchangedSinceIssueConfirmed: false }, { taxpayerPurchaseFunds: undefined }, { taxpayerPurchaseFunds: "6001" },
       { spousePurchaseFunds: "-1" }, { taxpayerPriorYearInterestReported: undefined }, { taxpayerPriorYearInterestReported: "99" },
       { taxpayerPriorYearInterestReported: "1600", spousePriorYearInterestReported: "0" },
