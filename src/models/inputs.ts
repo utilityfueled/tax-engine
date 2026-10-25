@@ -5578,6 +5578,13 @@ export type Schedule1AInput = z.infer<typeof Schedule1ASchema>;
 /** Complete input for a tax year */
 export const TaxYearInputSchema = z.object({
   taxpayer: TaxpayerSchema,
+  qofDispositionFacts: z.object({
+    sourceTaxYear: z.number().int().optional(),
+    sourceReference: z.string().optional(),
+    sourceFactsConfirmed: z.boolean().optional(),
+    allInvestmentsReviewed: z.boolean().optional(),
+    disposedOfQofInvestment: z.boolean().optional(),
+  }).optional(),
   childTaxCredit: z.object({
     bonaFidePuertoRicoResident: z.boolean().optional(),
     puertoRicoExcludedIncome: decimal.refine(value => d(value).gte(0), "Must be nonnegative").optional(),

@@ -1,3 +1,4 @@
+import { validateQofDispositionFacts } from "@/engine/forms/qof-disposition-facts.js";
 import { assertPdfExportAllowed } from "../../export-policy.js";
 /**
  * PDF filler for IRS Schedule D (Form 1040) — Capital Gains and Losses.
@@ -148,6 +149,7 @@ export async function fillScheduleD(
   blankPdfPath: string,
 ): Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
+  const qofDisposition = validateQofDispositionFacts(input.qofDispositionFacts, input.taxpayer.taxYear);
   const doc = await loadReviewTemplate(blankPdfPath, 2025);
   const form = doc.getForm();
   const F = FIELDS;
@@ -159,8 +161,8 @@ export async function fillScheduleD(
   setTextField(form, F.ssn, input.taxpayer.primary.ssn.replace(/-/g, ""));
   if (!sd) return doc;
 
-  // QOF disposition cannot be inferred from Form8949 or a gain. Both remain
-  // blank until the actual source collector provides a confirmed answer.
+  // An omitted answer remains unknown. A positive event needs its actual method.
+  if (qofDisposition === false) setCheckBox(form, F.qofDispositionNo, true);
 
   // Every current8949 transaction is reported there: use1b/2/8b/9, not1a/8a.
   for (const [category, fields] of [

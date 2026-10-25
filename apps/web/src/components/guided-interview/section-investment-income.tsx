@@ -1,4 +1,6 @@
 "use client";
+import { QofDispositionDetails } from "./qof-disposition-details";
+import type { QofDispositionData } from "@/lib/guided-qof-facts";
 import { changePrivateActivitySource } from "@/lib/guided-private-activity-facts";
 
 import { RetroShell } from "@/components/retro-shell";
@@ -398,6 +400,8 @@ export function SectionInvestmentIncome({
   onOidEntriesChange,
   childElections,
   onChildElectionsChange,
+  qofDispositionFacts,
+  onQofDispositionFactsChange,
 }: {
   interestEntries: InterestEntryData[];
   dividendEntries: DividendEntryData[];
@@ -410,6 +414,8 @@ export function SectionInvestmentIncome({
   onOidEntriesChange?: (entries: OidEntryData[]) => void;
   childElections?: ChildElectionData[];
   onChildElectionsChange?: (entries: ChildElectionData[]) => void;
+  qofDispositionFacts?: QofDispositionData;
+  onQofDispositionFactsChange?: (data: QofDispositionData | undefined) => void;
 }) {
   const currentInterest = interestEntries.length > 0 ? interestEntries : [emptyInterestEntry];
   const currentDividends = dividendEntries.length > 0 ? dividendEntries : [emptyDividendEntry];
@@ -486,6 +492,7 @@ export function SectionInvestmentIncome({
 
         {onOidEntriesChange && <OidSourceCards entries={oidEntries} stateCode={stateCode} onChange={onOidEntriesChange} />}
         {onChildElectionsChange && <ChildElectionCards entries={childElections} onChange={onChildElectionsChange} />}
+        {onQofDispositionFactsChange && <QofDispositionDetails data={qofDispositionFacts} onChange={onQofDispositionFactsChange} />}
 
         {/* ── 1099-DIV: Dividends ── */}
         <h3 className="guided-w2-card-title" style={{ marginTop: "24px", marginBottom: "8px" }}>

@@ -1,3 +1,4 @@
+import { validateQofDispositionFacts } from "./forms/qof-disposition-facts.js";
 /**
  * Federal tax calculation orchestrator.
  * Coordinates all schedules, forms, and worksheets to produce a complete Form 1040.
@@ -167,6 +168,7 @@ import { calculateIllinoisReturn, type ILStateInput } from "./state/il-orchestra
 import type { ILScheduleWITRecord } from "./state/il-schedule-il-wit.js";
 
 export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
+  validateQofDispositionFacts(input.qofDispositionFacts, input.taxpayer.taxYear);
   const marketplace = input.form7206?.plans?.some(plan => plan.marketplaceCoverage === true && plan.premiumTaxCreditInvolved === true);
   if (!marketplace) return calculateFederalTaxCore(input);
   if (![2025,2026].includes(input.taxpayer.taxYear)) throw new Error("Marketplace health coordination supports actual2025 and2026 sources.");

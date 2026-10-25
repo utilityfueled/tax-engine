@@ -1,3 +1,4 @@
+import { qofDispositionFactErrors, type QofDispositionData } from "./guided-qof-facts";
 import type { BrokerageEntryData, CapitalGainTransactionData, DividendEntryData, FilingStatus, InterestEntryData, StateReturnData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
 import { amountError, hasEnteredAmount, isActualDate } from "./guided-required-facts";
@@ -21,7 +22,7 @@ export const interestSourceAmounts = [
 export const dividendSourceAmounts = [
   ["ordinaryDividends", "Box 1a ordinary dividends"], ["qualifiedDividends", "Box 1b qualified dividends"], ["capitalGainDistributions", "Box 2a capital-gain distributions"], ["section1250Gain", "Box 2b unrecaptured section 1250 gain"], ["section1202Gain", "Box 2c section 1202 gain"], ["collectiblesGain", "Box 2d collectibles gain"], ["section897OrdinaryDividends", "Box 2e section 897 ordinary dividends"], ["section897CapitalGain", "Box 2f section 897 capital gain"], ["nondividendDistributions", "Box 3 nondividend distributions"], ["federalWithheld", "Box 4 federal withholding"], ["section199ADividends", "Box 5 section 199A dividends"], ["foreignTaxPaid", "Box 7 foreign tax paid"], ["exemptInterestDividends", "Box 12 exempt-interest dividends"], ["specifiedPrivateActivityBondInterest", "Box 13 private-activity bond dividends"],
 ] as const;
-export type InvestmentData = { interestEntries: InterestEntryData[]; dividendEntries: DividendEntryData[]; brokerageEntries: BrokerageEntryData[]; oidEntries?: OidEntryData[]; childElections?: ChildElectionData[] };
+export type InvestmentData = { interestEntries: InterestEntryData[]; dividendEntries: DividendEntryData[]; brokerageEntries: BrokerageEntryData[]; oidEntries?: OidEntryData[]; childElections?: ChildElectionData[]; qofDispositionFacts?: QofDispositionData };
 
 export function isStartedInvestment(entry: InvestmentSourceData | CapitalGainTransactionData): boolean {
   return Object.values(entry).some(value => typeof value === "string" && value.trim() !== "");
@@ -46,6 +47,7 @@ function rejectUnsupportedAmount(value: string | undefined, key: string, message
 export function investmentFactErrors(data: InvestmentData | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, stateData?: StateReturnData, stateCode?: string | null): Record<string, string> {
   const errors: Record<string, string> = {};
   if (!data) return errors;
+  Object.assign(errors, qofDispositionFactErrors(data.qofDispositionFacts, taxYear));
   Object.assign(errors, oidFactErrors(data.oidEntries, filingStatus, taxYear, stateCode, stateData));
   Object.assign(errors, childElectionFactErrors(data.childElections, taxYear));
   const preferenceSourceIds = new Set<string>();

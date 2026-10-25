@@ -1,3 +1,4 @@
+import { buildGuidedQofFacts } from "./guided-qof-facts";
 import { buildForeignIncomeInput, foreignIncomeFactErrors } from "./guided-foreign-income";
 import { buildEstimatedTaxFacts, estimatedTaxFactErrors } from "./guided-estimated-tax-facts";
 import { buildMinimumTaxCreditInput, minimumTaxCreditFactErrors } from "./guided-minimum-tax-credit";
@@ -759,6 +760,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     scheduleC: scheduleC ?? undefined,
     form1099Int,
     form8814: buildGuidedChildElections(investData?.childElections, state.taxYear),
+    qofDispositionFacts: buildGuidedQofFacts(investData?.qofDispositionFacts, state.taxYear),
     form1099OID,
     paResidentReturn: stateCode === "PA" && form1099OID.length ? { scheduleA: { oidSources: buildPaOidSources(investData?.oidEntries) } } : undefined,
     form1099Div,
