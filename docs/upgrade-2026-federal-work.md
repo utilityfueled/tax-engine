@@ -319,3 +319,14 @@ engine typecheck pass. Spec/whitespace checks and scoped diff reviewed before
 commit. Rule version advances to 2025.7. Remaining Form 8959 Part I/II audit
 positions and separate-part rounding need a separate source-backed correction;
 RRTA inputs remain unsupported. No qualification gate changed.
+
+## Correction: Form 8959 separate tax parts
+
+The final official Form 8959 requires separate rounded wage tax (line 7) and
+self-employment tax (line 13), summed on line 18. The former combined calculation
+could differ by a dollar and exposed incorrect line identifiers. Both regression
+cases failed first; 115 focused tests pass, with engine typecheck, spec validation
+and whitespace checks. Five older audit expectations now use the official line
+positions and full supported line set, preserving their amount assertions.
+The separate parts also provide the source amounts needed for the Schedule 8812
+payroll-tax alternative. RRTA compensation remains unsupported; no gate changed.

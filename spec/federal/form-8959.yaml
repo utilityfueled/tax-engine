@@ -22,13 +22,13 @@ lines:
     irsRef: "Form 8959 Instructions, Line 3"
     testRef: "tests/engine/forms/form-8959.test.ts::Form 8959 Line 3 - supported Form 8919 wages increase the Additional Medicare base"
 
-  - line: "5"
+  - line: "8"
     description: "Self-employment earnings subject to Additional Medicare Tax (post-multiplier)"
-    formula: "Schedule SE earnings carried into the supported Form 8959 computation; the overall Additional Medicare base is Form 8959 Line 1 + Line 2 + Line 3 + Line 5. Per Form 8959 Line 8: 'Enter the amount from Schedule SE, Section A, line 4a.' Line 4a is the POST-multiplier amount (after × 0.9235)."
-    irsRef: "Form 8959 Instructions, Line 5; Schedule SE Line 4a"
+    formula: "Nonnegative Schedule SE Part I line 6, including post-multiplier net earnings and any supported church employee income."
+    irsRef: "Form 8959 Instructions, Line 8; Schedule SE Line 6"
     notes: >
-      Form 8959 Line 8 says: "Enter the amount from Schedule SE, Section A, line 4a."
-      Line 4a is the POST-multiplier amount (after × 0.9235). Using the pre-multiplier
+      Form 8959 Line 8 uses Schedule SE Part I line 6.
+      Ordinary net SE earnings use the POST-multiplier amount (after × 0.9235). Using the pre-multiplier
       amount overstates the SE contribution and inflates the Additional Medicare Tax.
       Per IRC §1402(a)(12), "net earnings from self-employment" includes the 0.9235
       reduction. Negative SE amounts are floored to zero — SE losses do not offset
@@ -38,7 +38,7 @@ lines:
       - "Negative SE floored to zero — does not offset wages for Additional Medicare Tax"
     testRef: "tests/engine/forms/form-8959.test.ts::Form 8959 Line 2 - supported Form 4137 unreported tips increase the Additional Medicare base"
 
-  - line: "7"
+  - line: "5"
     description: "Threshold amount"
     formula: "MFJ: $250,000; Single/HoH/QSS: $200,000; MFS: $125,000"
     notes: >
@@ -47,12 +47,12 @@ lines:
       This differs from NIIT (IRC §1411(b)(1)) which explicitly includes "surviving spouse" at $250K.
     edgeCases:
       - "QSS uses $200K threshold (same as single/HoH), NOT $250K (MFJ) — IRC §3101(b)(2)(C)"
-    irsRef: "Form 8959 Instructions, Line 7"
+    irsRef: "Form 8959 Instructions, Line 5"
     testRef: "tests/engine/forms/form-8959.test.ts::Form 8959 Line 7 - single threshold $200K"
 
   - line: "18"
     description: "Additional Medicare Tax"
-    formula: "(Medicare wages + supported Form 4137 unreported tips + supported Form 8919 wages + SE earnings - threshold) × 0.9%"
+    formula: "Sum separately rounded wage tax (line 7) and SE tax (line 13); SE uses the threshold remaining after wages"
     irsRef: "Form 8959 Instructions, Line 18"
     edgeCases:
       - "Below threshold: $0"
@@ -61,7 +61,7 @@ lines:
 
   - line: "18-se"
     description: "SE income interaction with Additional Medicare Tax"
-    formula: "(Medicare wages + supported Form 4137 unreported tips + supported Form 8919 wages + SE earnings - threshold) × 0.9%"
+    formula: "Sum separately rounded wage tax (line 7) and SE tax (line 13); SE uses the threshold remaining after wages"
     irsRef: "Form 8959 Instructions, Lines 5-6"
     edgeCases:
       - "SE income alone triggers tax when over threshold"
@@ -72,7 +72,7 @@ lines:
   - line: "18-boundary"
     description: "Threshold boundary behavior"
     formula: "Zero tax at exactly the threshold; tax begins at $1 over"
-    irsRef: "Form 8959 Instructions, Line 7"
+    irsRef: "Form 8959 Instructions, Line 5"
     edgeCases:
       - "Exactly at threshold = $0 tax"
       - "HoH uses $200K threshold (same as single)"
@@ -93,3 +93,9 @@ lines:
     formula: "Line 19 = rounded total W-2 box 6, line 20 = rounded total box 5, line 21 = rounded line 20 times 1.45%, line 22 = max(0, line 19 minus 21). In the supported non-RRTA branch line 24 equals line 22 and flows to Form 1040 line 25c independently of liability."
     irsRef: "https://www.irs.gov/pub/irs-pdf/f8959.pdf, Part V"
     testRef: "tests/engine/federal-source-lines.test.ts::Form 1040 source classification"
+
+  - line: "separate-parts"
+    description: "Compute wage and self-employment tax in separate rounded parts"
+    formula: "Line 4=sum rounded lines 1–3; 5=status threshold; 6=max(0,4-5); 7=round(6*0.009). Line 8=nonnegative rounded Schedule SE line 6; 9=threshold; 10=line4; 11=max(0,9-10); 12=max(0,8-11); 13=round(12*0.009); supported non-RRTA line18=7+13. Preserve each rounded part for ACTC payroll worksheet."
+    irsRef: "https://www.irs.gov/pub/irs-pdf/f8959.pdf, Parts I–IV"
+    testRef: "tests/engine/forms/form-8959.test.ts::Form 8959 separate parts and authoritative line numbers"

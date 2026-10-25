@@ -888,17 +888,17 @@ describe("Form 8959 - audit trail line values are accurate", () => {
     expect(line1!.value.toNumber()).toBe(result.medicareWages.toNumber());
   });
 
-  it("audit trail Line 5 value matches SE earnings input", () => {
+  it("audit trail Line 8 value matches SE earnings input", () => {
     const seAmount = d(75000);
     const result = calculateForm8959(simpleW2Fixture, seAmount, "single", c);
-    const line5 = result.lines.find((l) => l.line === "5");
+    const line5 = result.lines.find((l) => l.line === "8");
     expect(line5).toBeDefined();
     expect(line5!.value.toNumber()).toBe(seAmount.toNumber());
   });
 
-  it("audit trail Line 7 value matches filing-status threshold", () => {
+  it("audit trail Line 5 value matches filing-status threshold", () => {
     const result = calculateForm8959(simpleW2Fixture, d(0), "married_filing_separately", c);
-    const line7 = result.lines.find((l) => l.line === "7");
+    const line7 = result.lines.find((l) => l.line === "5");
     expect(line7).toBeDefined();
     // MFS threshold must be $125K
     expect(line7!.value.toNumber()).toBe(125000);
@@ -935,5 +935,31 @@ describe("Form 8959 - audit trail line values are accurate", () => {
     // Credit = $5,250 - $4,350 = $900
     expect(line19!.value.toNumber()).toBe(900);
     expect(line19!.value.toNumber()).toBe(result.withholdingCredit.toNumber());
+  });
+});
+
+// Spec: spec/federal/form-8959.yaml, separate-parts.
+describe("Form 8959 separate parts and authoritative line numbers", () => {
+  it("rounds the wage and SE taxes separately before line 18", () => {
+    const input = {...simpleW2Fixture, w2s:[{...simpleW2Fixture.w2s[0], medicareWages:"200060"}]};
+    const result = calculateForm8959(input, d("60"), "single", c);
+    const line = (id:string) => result.lines.find(item => item.line === id)?.value.toString();
+    // Each $60 excess × .009 = .54 -> $1; summing before rounding would incorrectly give $1 total.
+    expect(line("5")).toBe("200000");
+    expect(line("7")).toBe("1");
+    expect(line("8")).toBe("60");
+    expect(line("11")).toBe("0");
+    expect(line("13")).toBe("1");
+    expect(result.additionalMedicareTax.toString()).toBe("2");
+  });
+  it("reduces the SE threshold by wage income without charging the below-threshold wage portion", () => {
+    const input = {...simpleW2Fixture, w2s:[{...simpleW2Fixture.w2s[0], medicareWages:"199940"}]};
+    const result = calculateForm8959(input, d("120"), "single", c);
+    const line = (id:string) => result.lines.find(item => item.line === id)?.value.toString();
+    expect(line("7")).toBe("0");
+    expect(line("11")).toBe("60");
+    expect(line("12")).toBe("60");
+    expect(line("13")).toBe("1");
+    expect(result.additionalMedicareTax.toString()).toBe("1");
   });
 });

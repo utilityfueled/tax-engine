@@ -19,9 +19,9 @@ export interface Form8959Result {
   medicareWages: Decimal; // Line 1
   unreportedTips: Decimal; // Line 2
   form8919Wages: Decimal; // Line 3
-  selfEmploymentEarnings: Decimal; // Line 5
+  selfEmploymentEarnings: Decimal; // Line 8
   totalEarnings: Decimal;
-  threshold: Decimal; // Line 7
+  threshold: Decimal; // Lines 5 and 9
   excessOverThreshold: Decimal;
   additionalMedicareTax: Decimal; // Line 18
   // Line 24: Additional Medicare withholding credited to Form 1040 line 25c
@@ -40,10 +40,10 @@ export function calculateForm8959(
   const threshold = constants.additionalMedicareTax.threshold[filingStatus];
 
   // Line 1: Medicare wages from W-2s
-  const medicareWages = input.w2s.reduce(
+  const medicareWages = roundDollar(input.w2s.reduce(
     (acc, w2) => acc.plus(d(w2.medicareWages)),
     new Decimal(0)
-  );
+  ));
   audit.record("Form 8959", "1", "Medicare wages from W-2s", medicareWages,
     "Sum W-2 Box 5");
 
@@ -72,28 +72,33 @@ export function calculateForm8959(
   audit.record("Form 8959", "3", "Form 8919 wages subject to Medicare tax", form8919Wages,
     "Supported Form 8919 Line 6");
 
-  // Line 5: SE earnings (post-multiplier from Schedule SE Line 4a).
-  // Per IRS Form 8959 Parts I/II, negative SE does not offset wage-based tax.
-  const effectiveSE = zeroFloor(selfEmploymentEarnings);
-  audit.record("Form 8959", "5", "SE earnings for Additional Medicare", effectiveSE,
-    "From Schedule SE (post-multiplier, floored at 0)");
-
-  // Line 7: Threshold
-  audit.record("Form 8959", "7", "Threshold amount", threshold,
-    `${filingStatus} threshold`);
-
-  // Combined earnings
-  const totalEarnings = medicareWages.plus(unreportedTips).plus(form8919Wages).plus(effectiveSE);
-
-  // Excess over threshold
-  const excessOverThreshold = zeroFloor(totalEarnings.minus(threshold));
-
-  // Line 18: Additional Medicare Tax
-  const additionalMedicareTax = roundDollar(excessOverThreshold.times(rate));
+  // Parts I and II have independent tax lines and dollar rounding.
+  const effectiveSE = roundDollar(zeroFloor(selfEmploymentEarnings));
+  const wageBase = medicareWages.plus(roundDollar(unreportedTips)).plus(roundDollar(form8919Wages));
+  const wageExcess = zeroFloor(wageBase.minus(threshold));
+  const wageTax = roundDollar(wageExcess.times(rate));
+  const remainingSEThreshold = zeroFloor(threshold.minus(wageBase));
+  const seExcess = zeroFloor(effectiveSE.minus(remainingSEThreshold));
+  const seTax = roundDollar(seExcess.times(rate));
+  for (const [line, description, value, formula] of [
+    ["4", "Medicare wages and tips", wageBase, "Lines 1 + 2 + 3"],
+    ["5", "Wage threshold", threshold, `${filingStatus} threshold`],
+    ["6", "Wages over threshold", wageExcess, "max(0, line 4 - line 5)"],
+    ["7", "Additional Medicare Tax on wages", wageTax, "round(line 6 × 0.009)"],
+    ["8", "Self-employment earnings", effectiveSE, "Nonnegative Schedule SE line 6"],
+    ["9", "Self-employment threshold", threshold, `${filingStatus} threshold`],
+    ["10", "Wages reducing SE threshold", wageBase, "Line 4"],
+    ["11", "Remaining SE threshold", remainingSEThreshold, "max(0, line 9 - line 10)"],
+    ["12", "SE earnings over threshold", seExcess, "max(0, line 8 - line 11)"],
+    ["13", "Additional Medicare Tax on self-employment", seTax, "round(line 12 × 0.009)"],
+  ] as const) audit.record("Form 8959", line, description, value, formula);
+  const totalEarnings = wageBase.plus(effectiveSE);
+  const excessOverThreshold = wageExcess.plus(seExcess);
+  const additionalMedicareTax = wageTax.plus(seTax);
   audit.record("Form 8959", "18", "Additional Medicare Tax", additionalMedicareTax,
-    `(${totalEarnings} - ${threshold}) × ${rate}`);
+    "Lines 7 + 13 (each separately rounded at 0.009); no RRTA compensation supplied");
 
-  // Line 19: Withholding credit — employers withhold Additional Medicare Tax
+  // Part V: Employers withhold Additional Medicare Tax
   // on wages over $200K regardless of filing status. Credit for excess withholding.
   const regularMedicareRate = new Decimal("0.0145");
   const totalMedicareWithheld = input.w2s.reduce(
