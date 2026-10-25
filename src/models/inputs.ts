@@ -1032,7 +1032,7 @@ function getNormalizedDistributionCodes(code?: string): string[] {
 export const Form1099SASchema = z.object({
   payer: z.string(),
   grossDistribution: decimal, // Box 1
-  earningsOnExcessContributions: optionalDecimal, // Box 2
+  earningsOnExcessContributions: optionalDecimalInput, // Box 2; unknown is distinct from actual zero.
   distributionCode: z.enum(["1", "2", "3", "4", "5", "6"]), // Box 3
   fmvOnDateOfDeath: decimal.optional(), // Box 4
   trusteeToTrusteeTransfer: z.boolean().optional(), // Local extraction guardrail: direct HSA/MSA transfers are not reported on Form 1099-SA
@@ -1237,6 +1237,23 @@ export const Form8606ByOwnerSchema = z.object({
   spouse: Form8606Schema.optional(),
 });
 
+export const Form5329HsaSourceSchema = z.object({
+  sourceTaxYear: z.number().int().optional(),
+  sourceFactsConfirmed: z.boolean().optional(),
+  priorYearSourceTaxYear: z.number().int().optional(),
+  priorYearExcessContributions: optionalDecimalInput,
+  priorYearAdditionalTax: optionalDecimalInput,
+  valueDec31: optionalDecimalInput,
+  returnedExcessContributionsUnder9100Relief: optionalDecimalInput,
+  returnedExcessContributionEarningsUnder9100Relief: optionalDecimalInput,
+  reliefRequirementsConfirmed: z.boolean().optional(),
+  excessEmployerContributionsAlreadyInWages: optionalDecimalInput,
+});
+export const Form5329HsaByOwnerSchema = z.object({
+  primary: Form5329HsaSourceSchema.optional(),
+  spouse: Form5329HsaSourceSchema.optional(),
+});
+
 export const Form5329Schema = z.object({
   earlyDistributionsIncludedInIncome: optionalDecimal, // Part I Line 1
   rothConversionRecaptureAmount: optionalDecimal, // Part I Line 1 Roth conversion or qualified-plan rollover recapture amount
@@ -1427,7 +1444,7 @@ export const Form8889Schema = z.object({
   supportedW2EmployerContributions: optionalDecimal, // Engine trace: attached W-2 Box 12 code W support for Line 9
   qualifiedFundingDistribution: optionalDecimal, // Line 10
   qualifiedFundingDistributionSource: z.enum(["traditional_ira", "roth_ira"]).optional(), // Engine routing support for Form 8606 defaults
-  distributionsReceived: optionalDecimal, // Line 14a
+  distributionsReceived: optionalDecimalInput, // Line 14a; absent worksheet amount may use actual 1099-SA Box1 support.
   excludedDistributions: decimal.optional(), // Line 14b; absence lets the engine default from rollovers and returned excess support
   rolloverDistributions: optionalDecimal, // Line 14b rollovers included on Line 14a
   prohibitedTransactionDistributions: optionalDecimal, // Form 1099-SA Box 3 code 5 deemed distributions that cannot be matched with Line 15 medical expenses
@@ -1442,6 +1459,7 @@ export const Form8889Schema = z.object({
   testingPeriodFailureDueToDeathOrDisability: z.boolean().default(false), // Part III exception that zeros Lines 18-21
   supported1099SAGrossDistributions: optionalDecimal, // Engine trace: aggregated Form 1099-SA support for Line 14a
   supported1099SAReturnedExcessContributions: optionalDecimal, // Engine trace: aggregated Form 1099-SA code 2 support for Line 14b
+  supported1099SAReturnedExcessContributionEarnings: optionalDecimalInput, // Actual included Box2 earnings; principal correction is gross Box1 minus Box2.
   supported1099SADeathDistributionDateOfDeathValue: optionalDecimal, // Engine trace: Box 4 death-distribution support included in Line 14a
   supported1099SAOtherBeneficiaryDeathDistributionDateOfDeathValue: optionalDecimal, // Engine trace: non-estate-beneficiary Box 4 death-distribution support eligible for the special Line 15 offset, including inferred Form 1099-SA code 6 records
   supported1099SAEstateDeathDistributionDateOfDeathValue: optionalDecimal, // Engine trace: estate-beneficiary Box 4 death-distribution support that cannot offset Form 8889 Line 15 medical expenses
@@ -4912,6 +4930,7 @@ export const TaxYearInputSchema = z.object({
   form8801: Form8801Schema.optional(),
   form8880: Form8880Schema.optional(),
   form5329: Form5329Schema.optional(),
+  form5329HsaByOwner: Form5329HsaByOwnerSchema.optional(),
   form8606: Form8606Schema.optional(),
   form8606ByOwner: Form8606ByOwnerSchema.optional(),
   form8889: Form8889Schema.optional(),

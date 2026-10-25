@@ -46,6 +46,7 @@ export interface Form8889Result {
   line20: Decimal;
   line21: Decimal;
   supportedReturnedExcessContributions: Decimal;
+  supportedReturnedExcessContributionPrincipal: Decimal;
   lines: CalculatedLine[];
 }
 
@@ -440,6 +441,12 @@ export function calculateForm8889(
     new Decimal(0),
     d(input.supported1099SAReturnedExcessContributions)
   );
+  const returnedExcessEarnings = d(input.supported1099SAReturnedExcessContributionEarnings);
+  if (!returnedExcessEarnings.isFinite() || returnedExcessEarnings.lt(0)
+    || returnedExcessEarnings.gt(supported1099SAReturnedExcessContributions)) {
+    throw new Error("Form1099-SA returned-excess Box2 earnings must be included within gross Box1");
+  }
+  const supportedReturnedExcessContributionPrincipal = supported1099SAReturnedExcessContributions.minus(returnedExcessEarnings);
   const rolloverDistributions = Decimal.max(new Decimal(0), d(input.rolloverDistributions));
   const line14bDefaultAmount = rolloverDistributions.plus(supported1099SAReturnedExcessContributions);
   const line14b = input.excludedDistributions === undefined
@@ -841,6 +848,7 @@ export function calculateForm8889(
     line20,
     line21,
     supportedReturnedExcessContributions: supported1099SAReturnedExcessContributions,
+    supportedReturnedExcessContributionPrincipal,
     lines: audit.getLines(),
   };
 }

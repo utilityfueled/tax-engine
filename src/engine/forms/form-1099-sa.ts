@@ -475,6 +475,7 @@ export function mergeForm1099SAIntoForm8889Input(
     testingPeriodFailureDueToDeathOrDisability: input?.testingPeriodFailureDueToDeathOrDisability ?? false,
     supported1099SAGrossDistributions: ownerSupport.hsaGrossDistributions.toString(),
     supported1099SAReturnedExcessContributions: ownerSupport.hsaReturnedExcessContributions.toString(),
+    supported1099SAReturnedExcessContributionEarnings: ownerSupport.hsaReturnedExcessContributionEarnings.toString(),
     supported1099SADeathDistributionDateOfDeathValue: ownerSupport.hsaDeathDistributionDateOfDeathValue.toString(),
     supported1099SAOtherBeneficiaryDeathDistributionDateOfDeathValue:
       ownerSupport.hsaOtherBeneficiaryDeathDistributionDateOfDeathValue.toString(),

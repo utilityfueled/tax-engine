@@ -23,6 +23,7 @@ import { calculateForm4797, type Form4797Result } from "@/engine/forms/form-4797
 import { calculateSocialSecurityBenefitsWorksheet } from "@/engine/forms/social-security-benefits-worksheet.js";
 import { calculateIraReturnWorksheet } from "@/engine/forms/ira-return-worksheet.js";
 import { calculateForm1099C } from "@/engine/forms/form-1099-c.js";
+import { calculateForm5329Hsa, type Form5329HsaResult } from "@/engine/forms/form-5329-hsa.js";
 import { calculateEducatorExpensesDeduction } from "@/engine/forms/educator-expenses.js";
 import { calculateForm3903, type Form3903Result } from "@/engine/forms/form-3903.js";
 
@@ -102,6 +103,9 @@ export interface Schedule1Result {
   lines: CalculatedLine[];
   form8889?: Form8889Result;
   form8889ByOwner?: Partial<Record<Form8889Input["accountOwner"], Form8889Result>>;
+  form5329HsaByOwner?: Partial<Record<"primary" | "spouse", Form5329HsaResult>>;
+  hsaReliefEarnings: Decimal;
+  hsaExcessEmployerIncome: Decimal;
   hsaAdditionalTax: Decimal;
   hsaRecaptureTax: Decimal;
 }
@@ -355,13 +359,10 @@ export function calculateSchedule1(
           input.w2s
         ),
     } satisfies Partial<Record<Form8889Input["accountOwner"], Form8889Input | undefined>>;
-  const form8889 = extra?.hsaDeduction === undefined && normalizedForm8889
+  let form8889 = extra?.hsaDeduction === undefined && normalizedForm8889
     ? calculateForm8889(input.taxpayer, normalizedForm8889, constants)
     : undefined;
   let form8889ByOwner: Partial<Record<Form8889Input["accountOwner"], Form8889Result>> | undefined;
-  if (form8889) {
-    audit.merge(form8889.lines);
-  }
 
   if (extra?.hsaDeduction === undefined && normalizedExplicitForm8889ByOwner !== undefined) {
     const primaryExplicitResult = normalizedExplicitForm8889ByOwner.primary
@@ -376,12 +377,10 @@ export function calculateSchedule1(
 
       if (primaryExplicitResult) {
         form8889ByOwner.primary = primaryExplicitResult;
-        audit.merge(primaryExplicitResult.lines);
       }
 
       if (spouseExplicitResult) {
         form8889ByOwner.spouse = spouseExplicitResult;
-        audit.merge(spouseExplicitResult.lines);
       }
     }
   }
@@ -418,14 +417,66 @@ export function calculateSchedule1(
       form8889ByOwner ??= {};
       if (primaryResult && form8889ByOwner.primary === undefined) {
         form8889ByOwner.primary = primaryResult;
-        audit.merge(primaryResult.lines);
       }
       if (spouseResult && form8889ByOwner.spouse === undefined) {
         form8889ByOwner.spouse = spouseResult;
-        audit.merge(spouseResult.lines);
       }
     }
   }
+  let form5329HsaByOwner: Partial<Record<"primary" | "spouse", Form5329HsaResult>> | undefined;
+  if (input.form5329HsaByOwner !== undefined) {
+    for (const source of input.form1099SA ?? []) {
+      if (source.accountType !== "hsa") continue;
+      if (source.accountHolder === undefined) throw new Error("Form5329 HSA requires an actual owner for each Form1099-SA source");
+      if (source.distributionCode !== "2") continue;
+      if (source.earningsOnExcessContributions === undefined) {
+        throw new Error("Form5329 HSA timely corrections require actual Form1099-SA Box2 earnings, including known zero");
+      }
+      const sourceGross = d(source.grossDistribution);
+      const sourceEarnings = d(source.earningsOnExcessContributions);
+      if (!sourceGross.isFinite() || sourceGross.lt(0) || !sourceEarnings.isFinite() || sourceEarnings.lt(0) || sourceEarnings.gt(sourceGross)) {
+        throw new Error("Form5329 HSA actual Form1099-SA Box2 earnings must be within its gross Box1 distribution");
+      }
+    }
+    if (extra?.hsaDeduction !== undefined) throw new Error("Actual owner HSA5329 sources cannot use an aggregate HSA deduction override");
+    const aggregateHsa = input.form5329;
+    if (aggregateHsa && Object.entries(aggregateHsa).some(([key, value]) =>
+      (/^hsa|^supportedHsa/.test(key)) && typeof value === "string" && !d(value).isZero())) {
+      throw new Error("Aggregate HSA5329 amounts cannot accompany separate owner sources");
+    }
+    form5329HsaByOwner = {};
+    for (const owner of ["primary", "spouse"] as const) {
+      const facts = input.form5329HsaByOwner[owner];
+      const mainOwner = normalizedForm8889?.accountOwner === owner;
+      const ownerResult = mainOwner ? form8889 : form8889ByOwner?.[owner];
+      if (facts && owner === "spouse" && (input.taxpayer.spouse === undefined || filingStatus !== "married_filing_jointly")) {
+        throw new Error("Form5329 HSA spouse sources require an actual joint-return spouse");
+      }
+      if (!facts && ownerResult) throw new Error(`Form5329 HSA ${owner} actual sources are required`);
+      if (!facts) continue;
+      if (!ownerResult) throw new Error(`Form5329 HSA ${owner} requires its actual Form8889 source worksheet`);
+      const sourceResult = calculateForm5329Hsa({ taxYear: input.taxpayer.taxYear, owner, facts, form8889: ownerResult });
+      form5329HsaByOwner[owner] = sourceResult;
+      if (mainOwner) form8889 = sourceResult.correctedForm8889;
+      else {
+        form8889ByOwner ??= {};
+        form8889ByOwner[owner] = sourceResult.correctedForm8889;
+      }
+      audit.merge(sourceResult.lines);
+    }
+    if (Object.keys(form5329HsaByOwner).length === 0) throw new Error("Form5329 HSA actual owner sources cannot be empty");
+  } else if (input.taxpayer.taxYear >= 2026) {
+    const actualResults = [form8889, ...Object.values(form8889ByOwner ?? {})].filter((value): value is Form8889Result => value !== undefined);
+    if (d(input.form5329?.hsaPriorYearExcessContributions).gt(0)
+      || d(input.form5329?.hsaCurrentYearExcessContributions).gt(0)
+      || actualResults.some(value => value.line2.plus(value.line11).gt(value.line8))) {
+      throw new Error("Form5329 HSA excess requires actual separate owner sources for2026");
+    }
+  }
+  if (form8889) audit.merge(form8889.lines);
+  for (const ownerResult of Object.values(form8889ByOwner ?? {})) if (ownerResult) audit.merge(ownerResult.lines);
+  const hsaReliefEarnings = sum(...Object.values(form5329HsaByOwner ?? {}).map(value => value?.reliefEarnings ?? d("0")));
+  const hsaExcessEmployerIncome = sum(...Object.values(form5329HsaByOwner ?? {}).map(value => value?.taxableExcessEmployerContributions ?? d("0")));
   const ownerForm8889Results = form8889ByOwner
     ? (Object.values(form8889ByOwner).filter((result): result is Form8889Result => result !== undefined))
     : [];
@@ -839,6 +890,9 @@ export function calculateSchedule1(
     lines: audit.getLines(),
     form8889,
     form8889ByOwner,
+    form5329HsaByOwner,
+    hsaReliefEarnings,
+    hsaExcessEmployerIncome,
     hsaAdditionalTax,
     hsaRecaptureTax,
   };

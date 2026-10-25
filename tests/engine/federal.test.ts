@@ -12902,11 +12902,13 @@ describe("Form 5329 Part VII HSA excess contribution auto-derivation", () => {
     });
     const line47 = result.allLines.find((line) => line.form === "Form 5329" && line.line === "47");
 
-    expect(result.form5329?.line47.toNumber()).toBe(300);
-    expect(result.form5329?.line48.toNumber()).toBe(300);
-    expect(result.form5329?.line49.toNumber()).toBe(18);
+    // 2025 i1099-SA Box1 includes Box2:900 gross less30 earnings returns870 principal.
+    // The1200 excess therefore leaves330; legacy unrounded tax is330*6%=19.80.
+    expect(result.form5329?.line47.toNumber()).toBe(330);
+    expect(result.form5329?.line48.toNumber()).toBe(330);
+    expect(result.form5329?.line49.toNumber()).toBe(19.8);
     expect(String(line47?.inputs["Raw current-year HSA excess before returned-excess reduction"])).toBe("1200");
-    expect(String(line47?.inputs["Supported timely returned excess contributions"])).toBe("900");
+    expect(String(line47?.inputs["Supported timely returned excess contributions"])).toBe("870");
     expect(result.otherIncome.toNumber()).toBe(30);
   });
 

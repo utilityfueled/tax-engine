@@ -21,6 +21,8 @@ import { PDFDocument } from "pdf-lib";
 import Decimal from "decimal.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
+import { calculateForm5329Hsa } from "@/engine/forms/form-5329-hsa.js";
+import { roundDollar } from "@/utils/decimal.js";
 import {
   loadReviewTemplate,
   setTextField,
@@ -143,19 +145,53 @@ export async function fillForm5329(
   input: TaxYearInput,
   result: TaxReturnResult,
   blankPdfPath: string,
+  hsaOwner?: "primary" | "spouse",
 ): Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
+  const hsa = hsaOwner ? result.form5329HsaByOwner?.[hsaOwner] : undefined;
+  if (hsaOwner) {
+    const facts = input.form5329HsaByOwner?.[hsaOwner];
+    if (!facts || !hsa || hsa.owner !== hsaOwner || hsa.taxYear !== result.taxYear) throw new Error("Form5329 HSA review requires the actual owner's source and result");
+    const actual8889 = result.form8889ByOwner?.[hsaOwner]
+      ?? (input.form8889?.accountOwner === hsaOwner ? result.form8889 : undefined);
+    if (!actual8889) throw new Error("Form5329 HSA review requires the actual owner's Form8889");
+    const baseDeduction = Decimal.min(actual8889.line2, actual8889.line12);
+    const source = calculateForm5329Hsa({ taxYear: result.taxYear, owner: hsaOwner, facts,
+      form8889: { ...actual8889, line13: baseDeduction,
+        lines: actual8889.lines.map(line => line.line === "13" ? { ...line, value: baseDeduction } : line) } });
+    if (hsa.sourceFactsVerified !== true || hsa.requiresForm5329 !== source.requiresForm5329 || hsa.lines.length !== source.lines.length) {
+      throw new Error("Form5329 HSA source status and audit set must reconcile");
+    }
+    for (const key of ["line42", "line43", "line44", "line45", "line46", "line47", "line48", "line49", "valueDec31", "absorbedExcessDeduction", "reliefEarnings", "taxableExcessEmployerContributions"] as const) {
+      if (!hsa[key].isFinite() || !hsa[key].eq(source[key])) throw new Error(`Form5329 HSA source reconciliation failed for ${key}`);
+    }
+    if (!actual8889.line13.eq(source.correctedForm8889.line13)) throw new Error("Form5329 HSA absorbed deduction does not reconcile with Form8889");
+    for (const line of source.lines) {
+      const retained = hsa.lines.filter(value => value.form === line.form && value.line === line.line);
+      const merged = result.allLines.filter(value => value.form === line.form && value.line === line.line);
+      if (retained.length !== 1 || merged.length !== 1 || !retained[0].value.eq(line.value) || !merged[0].value.eq(line.value)) {
+        throw new Error("Form5329 HSA review audit reconciliation failed");
+      }
+    }
+  }
   const doc = await loadReviewTemplate(blankPdfPath, 2025);
   const form = doc.getForm();
   const F = FORM_5329_FIELDS;
-  const f5329 = result.form5329;
+  const f5329 = hsaOwner && input.taxpayer.filingStatus === "married_filing_jointly" ? undefined : result.form5329;
 
   // ── Header ──
-  const name = input.taxpayer.spouse
+  const individual = hsaOwner === "spouse" ? input.taxpayer.spouse : input.taxpayer.primary;
+  if (hsaOwner && !individual) throw new Error("Form5329 HSA review requires actual individual identity");
+  const name = hsaOwner && individual ? `${individual.firstName} ${individual.lastName}` : input.taxpayer.spouse
     ? `${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName} & ${input.taxpayer.spouse.firstName} ${input.taxpayer.spouse.lastName}`
     : `${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName}`;
   setTextField(form, F.name, name);
-  setTextField(form, F.ssn, input.taxpayer.primary.ssn.replace(/-/g, ""));
+  setTextField(form, F.ssn, (hsaOwner && individual ? individual.ssn : input.taxpayer.primary.ssn).replace(/-/g, ""));
+
+  if (hsa) for (const line of hsa.lines) {
+    const key = `line${line.line}` as keyof typeof F;
+    setCurrencyField(form, F[key], roundDollar(line.value));
+  }
 
   if (!f5329) return doc;
 
@@ -216,14 +252,16 @@ export async function fillForm5329(
   setCurrencyField(form, F.line41, f5329.line41);
 
   // ── Part VII: Excess HSA Contributions (Lines 42–49) ──
-  setCurrencyField(form, F.line42, f5329.line42);
-  setCurrencyField(form, F.line43, f5329.line43);
-  setCurrencyField(form, F.line44, f5329.line44);
-  setCurrencyField(form, F.line45, f5329.line45);
-  setCurrencyField(form, F.line46, f5329.line46);
-  setCurrencyField(form, F.line47, f5329.line47);
-  setCurrencyField(form, F.line48, f5329.line48);
-  setCurrencyField(form, F.line49, f5329.line49);
+  if (!hsa) {
+    setCurrencyField(form, F.line42, f5329.line42);
+    setCurrencyField(form, F.line43, f5329.line43);
+    setCurrencyField(form, F.line44, f5329.line44);
+    setCurrencyField(form, F.line45, f5329.line45);
+    setCurrencyField(form, F.line46, f5329.line46);
+    setCurrencyField(form, F.line47, f5329.line47);
+    setCurrencyField(form, F.line48, f5329.line48);
+    setCurrencyField(form, F.line49, f5329.line49);
+  }
 
   // ── Part VIII: Excess ABLE Contributions (Lines 50–51) ──
   // 2025 form simplified Part VIII. Engine lines 50-52 map to a single

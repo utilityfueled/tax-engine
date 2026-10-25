@@ -190,6 +190,8 @@ export interface TaxReturnResult {
     }>;
     /** Wash sale disallowed losses on crypto that carry forward to replacement lot basis (IRC §1091) */
     cryptoWashSaleDisallowed: Decimal;
+    /** Individual HSA carryforwards; aggregate hsa is only a display total. */
+    hsaExcessByOwner?: Partial<Record<"primary" | "spouse", Decimal>>;
     /** Form 5329 excess contribution carryforwards (6% excise tax base for next year).
      *  Each value is the total remaining excess after current-year reductions.
      *  Feed these into next year's Form 5329 prior-year excess inputs. */
@@ -222,6 +224,7 @@ export interface TaxReturnResult {
   form8919?: import("@/engine/forms/form-8919.js").Form8919Result;
   form4797?: import("@/engine/forms/form-4797.js").Form4797Result;
   form5329?: import("@/engine/forms/form-5329.js").Form5329Result;
+  form5329HsaByOwner?: Partial<Record<"primary" | "spouse", import("@/engine/forms/form-5329-hsa.js").Form5329HsaResult>>;
   form8880?: import("@/engine/forms/form-8880.js").Form8880Result;
   form8606?: import("@/engine/forms/form-8606.js").Form8606Result;
   form8606ByOwner?: Partial<Record<

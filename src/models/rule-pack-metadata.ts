@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.28",
+    ruleVersion: "2025.29",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i5329", section: "Individual HSA PartVII source facts, separate account-value caps and prior excess absorption into8889; actual employer excess income per i8889", revision: "Final2025 instructions and applicable current-law2026 calculation; independent review pending", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/pub/irs-pdf/f1040s1.pdf", section: "Canonical final Schedule1 lines8v/8z/9/10 and24j/24k/25/26, separate ScheduleD, passive/NOL source totals and1040 reconciliation", revision: "Final2025 form identities; draft2026 arithmetic remains unqualified", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i6251", section: "Separate actual AMT Form4952, signed line2c and actual PartIII12-40 with distinct regular-source20/27", revision: "2025 final form and current-law indexed2026 preview; other AMT source branches remain unqualified", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i1040sd", section: "Actual Form4952 election into ScheduleD Tax Worksheet, combined sources once and post-election foreign capital-gain excess", revision: "2025 final worksheet and final2026 Form4952 source rules; separate AMT worksheet pending", retrievedAt: "2026-10-25" },
@@ -70,11 +71,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.23-law-integration-draft",
+    ruleVersion: "2026.24-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i5329", section: "Individual HSA PartVII source facts, separate account-value caps and prior excess absorption into8889; actual employer excess income per i8889", revision: "Final2025 instructions and applicable current-law2026 calculation; independent review pending", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/pub/irs-pdf/f1040s1.pdf", section: "Canonical final Schedule1 lines8v/8z/9/10 and24j/24k/25/26, separate ScheduleD, passive/NOL source totals and1040 reconciliation", revision: "Final2025 form identities; draft2026 arithmetic remains unqualified", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i6251", section: "Separate actual AMT Form4952, signed line2c and actual PartIII12-40 with distinct regular-source20/27", revision: "2025 final form and current-law indexed2026 preview; other AMT source branches remain unqualified", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i1040sd", section: "Actual Form4952 election into ScheduleD Tax Worksheet, combined sources once and post-election foreign capital-gain excess", revision: "2025 final worksheet and final2026 Form4952 source rules; separate AMT worksheet pending", retrievedAt: "2026-10-25" },

@@ -1542,6 +1542,8 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     form1099SA.hsaReturnedExcessContributionEarnings,
     form1099SA.hsaPostDeathEarnings,
     d(input.form5329?.supportedHsaReturnedExcessContributionEarningsUnder9100Relief),
+    sched1.hsaReliefEarnings,
+    sched1.hsaExcessEmployerIncome,
     form8814OtherIncome,
     excessBusinessLossAddback,
     form1099QTaxableEarnings,
@@ -2068,7 +2070,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     input.form1099R ?? [],
     form8606,
     schedA.medicalDeduction,
-    allForm8889Results
+    input.form5329HsaByOwner ? [] : allForm8889Results
   );
 
   let deductionUsed: "itemized" | "standard" = deductionElection === "itemized"
@@ -2386,7 +2388,8 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
       { source: "Form1099-MISC unclassified rents", amount: miscAgg.rents },
       { source: "HSA returned-excess earnings", amount: form1099SA.hsaReturnedExcessContributionEarnings },
       { source: "HSA post-death earnings", amount: form1099SA.hsaPostDeathEarnings },
-      { source: "HSA9100 returned-excess earnings", amount: d(input.form5329?.supportedHsaReturnedExcessContributionEarningsUnder9100Relief) },
+      { source: "HSA9100 returned-excess earnings", amount: d(input.form5329?.supportedHsaReturnedExcessContributionEarningsUnder9100Relief).plus(sched1.hsaReliefEarnings) },
+      { source: "HSA excess employer contributions not in wages", amount: sched1.hsaExcessEmployerIncome },
       { source: "Form8814 child election income", amount: form8814OtherIncome },
       { source: "QTP/Coverdell taxable earnings", amount: form1099QTaxableEarnings },
       { source: "Section280F recapture compatibility", amount: section280FRecapture },
@@ -3361,10 +3364,15 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   audit.merge(form8960.lines);
 
   const form5329 = normalizedForm5329 ? calculateForm5329(normalizedForm5329) : undefined;
+  if (sched1.form5329HsaByOwner && filingStatus === "married_filing_jointly" && form5329?.totalAdditionalTax.gt(0)) {
+    throw new Error("Separate HSA5329 sources with other joint5329 taxes require actual owner allocation for those other parts");
+  }
   if (form5329) {
     audit.merge(form5329.lines);
   }
+  const hsaOwnerResults = Object.values(sched1.form5329HsaByOwner ?? {});
   const retirementPlanAdditionalTax = (form5329?.totalAdditionalTax ?? new Decimal(0))
+    .plus(sum(...hsaOwnerResults.map(value => value?.line49 ?? d("0"))))
     .plus(form1099Q?.netPenalty ?? new Decimal(0));
 
   // ── Schedule H: Household Employment Taxes ──────────
@@ -3668,12 +3676,13 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
           })),
         cryptoWashSaleDisallowed: washSaleCarryforward?.totalDisallowedLoss ?? new Decimal(0),
         disasterDistributionDeferrals: form8915FResult?.carryforwardDeferrals ?? [],
+        hsaExcessByOwner: sched1.form5329HsaByOwner ? Object.fromEntries(Object.entries(sched1.form5329HsaByOwner).map(([owner, value]) => [owner, value?.line48 ?? d("0")])) : undefined,
         excessContributions: {
           traditionalIRA: form5329?.line16 ?? new Decimal(0),
           rothIRA: form5329?.line24 ?? new Decimal(0),
           coverdellESA: form5329?.line32 ?? new Decimal(0),
           archerMSA: form5329?.line40 ?? new Decimal(0),
-          hsa: form5329?.line48 ?? new Decimal(0),
+          hsa: (form5329?.line48 ?? d("0")).plus(sum(...hsaOwnerResults.map(value => value?.line48 ?? d("0")))),
           // ABLE section: total excess = max(0, Line 50 - Line 51) + Line 52
           able: form5329
             ? Decimal.max(new Decimal(0), form5329.line50.minus(form5329.line51)).plus(form5329.line52)
@@ -3701,6 +3710,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     form8919,
     form4797,
     form5329,
+    form5329HsaByOwner: sched1.form5329HsaByOwner,
     form8880,
     form8606,
     form8606ByOwner: form8606ByOwnerResults,
@@ -4965,7 +4975,7 @@ function deriveForm5329HsaDefaults(
     const rawOwnerExcess = Decimal.max(new Decimal(0), result.line2.plus(result.line11).minus(result.line8));
     currentYearExcess = currentYearExcess.plus(rawOwnerExcess);
     supportedReturnedExcessContributionsByDueDate = supportedReturnedExcessContributionsByDueDate.plus(
-      Decimal.min(rawOwnerExcess, result.supportedReturnedExcessContributions)
+      Decimal.min(rawOwnerExcess, result.supportedReturnedExcessContributionPrincipal)
     );
   }
 
