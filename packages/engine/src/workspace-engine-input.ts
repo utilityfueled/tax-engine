@@ -109,7 +109,10 @@ interface RetirementPreviewSources {
   excludedEntryCount: number;
 }
 
+type HsaOwnerOffsets = Pick<Partial<NonNullable<TaxYearInput["form8889"]>>, "rolloverDistributions" | "qualifiedMedicalExpenses" | "decedentQualifiedMedicalExpensesPaidWithinOneYearAfterDeath">;
+
 interface HsaPreviewSources {
+  offsetsByOwner: Partial<Record<"primary" | "spouse", HsaOwnerOffsets>>;
   entries: NonNullable<TaxYearInput["form1099SA"]>;
   sourceDocumentIds: string[];
   sourceFixtureIds: string[];
@@ -195,43 +198,6 @@ function isNonSpouseHsaDeathDistribution(
 ) {
   return (entry.distributionCode === "4" || entry.distributionCode === "6")
     && entry.beneficiaryRole !== "surviving_spouse";
-}
-
-function resolveHsaPreviewOwner(
-  entry: NonNullable<TaxYearInput["form1099SA"]>[number]
-) {
-  if (entry.accountHolder !== undefined) {
-    return entry.accountHolder;
-  }
-
-  if (entry.beneficiaryRole === "surviving_spouse" && entry.distributionCode !== "6") {
-    return "spouse" as const;
-  }
-
-  return undefined;
-}
-
-function canPrefillWorkspaceHsaOffsets(
-  entries: NonNullable<TaxYearInput["form1099SA"]>
-) {
-  const resolvedOwners = entries
-    .map((entry) => resolveHsaPreviewOwner(entry))
-    .filter((owner): owner is "primary" | "spouse" => owner !== undefined);
-  const distinctOwners = new Set(resolvedOwners);
-
-  if (distinctOwners.size > 1) {
-    return false;
-  }
-
-  if (distinctOwners.has("spouse")) {
-    return false;
-  }
-
-  if (resolvedOwners.length > 0 && resolvedOwners.length < entries.length) {
-    return false;
-  }
-
-  return true;
 }
 
 function collectContributionSourceFactIds(
@@ -729,7 +695,7 @@ function collectHsaPreviewSources(
   );
   const entriesByDocument = summariesByDocument.map((summaries) =>
     summaries.map((summary) =>
-      Form1099SASchema.parse({
+      Form1099SASchema.safeParse({
         payer: summary.payer,
         grossDistribution: summary.grossDistribution,
         distributionCode: summary.distributionCode,
@@ -744,26 +710,33 @@ function collectHsaPreviewSources(
       })
     )
   );
-  const entries = entriesByDocument.flat();
+  if (entriesByDocument.some(records => records.length === 0 || records.some(record => !record.success))) return null;
+  const entries = entriesByDocument.flat().flatMap(record => record.success ? [record.data] : []);
 
   if (entries.length === 0 || entriesByDocument.some((documentEntries) => documentEntries.length === 0)) {
     return null;
   }
 
-  const canPrefillConfirmedOffsets = canPrefillWorkspaceHsaOffsets(entries);
-  const confirmedRolloverSummaries = canPrefillConfirmedOffsets
-    ? summariesByDocument.flat().filter((summary) => summary.rolloverDistributions !== undefined)
-    : [];
-  const confirmedQualifiedMedicalExpenseSummaries = canPrefillConfirmedOffsets
-    ? summariesByDocument.flat().filter((summary) => summary.qualifiedMedicalExpenses !== undefined)
-    : [];
-  const confirmedDecedentQualifiedMedicalExpenseSummaries = canPrefillConfirmedOffsets
-    ? summariesByDocument.flat().filter((summary) =>
-      summary.decedentQualifiedMedicalExpensesPaidWithinOneYearAfterDeath !== undefined
-    )
-    : [];
+  const summaries = summariesByDocument.flat();
+  const offsetsByOwner: HsaPreviewSources["offsetsByOwner"] = {};
+  const offsetFields = ["rolloverDistributions", "qualifiedMedicalExpenses", "decedentQualifiedMedicalExpensesPaidWithinOneYearAfterDeath"] as const;
+  for (const owner of ["primary", "spouse"] as const) {
+    const owned = summaries.filter(summary => summary.accountHolder === owner);
+    if (!owned.length) continue;
+    const offsets: HsaOwnerOffsets = {};
+    for (const field of offsetFields) {
+      if (owned.every(summary => summary[field] !== undefined)) {
+        offsets[field] = sumMonetaryValues(owned.map(summary => summary[field] as string)).toFixed();
+      }
+    }
+    if (Object.keys(offsets).length) offsetsByOwner[owner] = offsets;
+  }
+  const confirmedRolloverSummaries = summaries.every(summary => summary.rolloverDistributions !== undefined) ? summaries : [];
+  const confirmedQualifiedMedicalExpenseSummaries = summaries.every(summary => summary.qualifiedMedicalExpenses !== undefined) ? summaries : [];
+  const confirmedDecedentQualifiedMedicalExpenseSummaries = summaries.every(summary => summary.decedentQualifiedMedicalExpensesPaidWithinOneYearAfterDeath !== undefined) ? summaries : [];
 
   return {
+    offsetsByOwner,
     entries,
     sourceDocumentIds: item.sourceDocumentIds,
     sourceFixtureIds: getSourceFixtureIds(sourceDocuments),
@@ -1366,26 +1339,15 @@ function buildHsaContribution(
     sourceFactIds: collectContributionSourceFactIds(item, structuredFacts),
     apply(taxInput) {
       taxInput.form1099SA = previewSources.entries;
-      if (
-        previewSources.hasConfirmedRolloverDistributions
-        || previewSources.hasConfirmedQualifiedMedicalExpenses
-        || previewSources.hasConfirmedDecedentQualifiedMedicalExpensesPaidWithinOneYearAfterDeath
-      ) {
-        taxInput.form8889 = {
-          ...(taxInput.form8889 ?? {}),
-          ...(previewSources.hasConfirmedRolloverDistributions
-            ? { rolloverDistributions: rolloverAmount }
-            : {}),
-          ...(previewSources.hasConfirmedQualifiedMedicalExpenses
-            ? { qualifiedMedicalExpenses: qualifiedMedicalExpensesAmount }
-            : {}),
-          ...(previewSources.hasConfirmedDecedentQualifiedMedicalExpensesPaidWithinOneYearAfterDeath
-            ? {
-              decedentQualifiedMedicalExpensesPaidWithinOneYearAfterDeath:
-                decedentQualifiedMedicalExpensesAmount
-            }
-            : {}),
-        } as TaxYearInput["form8889"];
+      const offsets = previewSources.offsetsByOwner;
+      if (Object.keys(offsets).length === 0) return;
+      if (previewSources.entries.every(entry => entry.accountHolder === "primary")) {
+        taxInput.form8889 = { accountOwner: "primary", ...offsets.primary } as TaxYearInput["form8889"];
+      } else {
+        taxInput.form8889ByOwner = {
+          ...(offsets.primary ? { primary: { accountOwner: "primary", ...offsets.primary } } : {}),
+          ...(offsets.spouse ? { spouse: { accountOwner: "spouse", ...offsets.spouse } } : {}),
+        } as TaxYearInput["form8889ByOwner"];
       }
     }
   };
@@ -1497,6 +1459,14 @@ export function buildWorkspaceEngineInput(
     const machineValue = fact.machineValue;
     const hasMoney = (value: unknown, allowNegative = false) => typeof value === "string" && /^-?\d+(?:\.\d+)?$/.test(value) && new Decimal(value).isFinite() && (allowNegative || new Decimal(value).gte(0));
     const hasText = (value: unknown) => typeof value === "string" && value.trim().length > 0;
+    if (machineValue.entryKind === "1099-sa-summary") {
+      if (!["primary", "spouse"].includes(machineValue.accountHolder ?? "") || machineValue.accountType !== "hsa"
+        || !hasText(machineValue.payer) || !hasMoney(machineValue.grossDistribution)) return null;
+      if (machineValue.distributionCode === "2" && !hasMoney(machineValue.earningsOnExcessContributions)) return null;
+      if ([machineValue.earningsOnExcessContributions, machineValue.fmvOnDateOfDeath, machineValue.rolloverDistributions,
+        machineValue.qualifiedMedicalExpenses, machineValue.decedentQualifiedMedicalExpensesPaidWithinOneYearAfterDeath]
+        .some(value => value !== undefined && !hasMoney(value))) return null;
+    }
     if (machineValue.entryKind === "w2-summary"
       && (!hasText(machineValue.employerName) || !/^\d{2}-?\d{7}$/.test(machineValue.employerEin)
         || ![machineValue.wages, machineValue.federalWithheld, machineValue.socialSecurityWages, machineValue.socialSecurityTips, machineValue.socialSecurityWithheld, machineValue.medicareWages, machineValue.medicareWithheld, machineValue.box10DependentCareBenefits].every((value) => hasMoney(value)))) return null;

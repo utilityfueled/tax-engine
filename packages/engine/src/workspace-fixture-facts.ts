@@ -283,7 +283,8 @@ const fixtureStructuredFactsByFixtureId: Record<string, FixtureStructuredFactTem
         payer: "Official fixture HSA custodian",
         grossDistribution: "2400",
         distributionCode: "1",
-        accountType: "hsa"
+        accountType: "hsa",
+        accountHolder: "primary",
       } satisfies WorkspaceStructuredFactMachineValue1099SASummary
     }
   ],

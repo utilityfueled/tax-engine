@@ -240,7 +240,7 @@ describe("Form 1099-SA HSA distribution aggregation", () => {
     expect(survivingSpouseDeathDistributionResult.hsaPostDeathEarnings.toNumber()).toBe(0);
   });
 
-  it("Form 1099-SA Line 1 - surviving-spouse records infer the spouse Form 8889 owner when explicit owner tags are absent", () => {
+  it("Form 1099-SA Line 1 - surviving-spouse records retain the actual spouse Form 8889 owner", () => {
     const parsed = Form1099SASchema.parse({
       payer: "Inherited HSA Custodian",
       grossDistribution: "6600",
@@ -248,18 +248,19 @@ describe("Form 1099-SA HSA distribution aggregation", () => {
       distributionCode: "4",
       accountType: "hsa",
       beneficiaryRole: "surviving_spouse",
+      accountHolder: "spouse",
     });
     const inferredOwnerResult = calculateForm1099SA([parsed]);
     const merged = mergeForm1099SAIntoForm8889Input(undefined, inferredOwnerResult);
 
-    expect(parsed.accountHolder).toBeUndefined();
+    expect(parsed.accountHolder).toBe("spouse");
     expect(inferredOwnerResult.defaultAccountOwner).toBe("spouse");
     expect(merged?.accountOwner).toBe("spouse");
     expect(merged?.distributionsReceived).toBe("6600");
     expect(merged?.supported1099SADeathDistributionDateOfDeathValue).toBe("0");
   });
 
-  it("Form 1099-SA Line 1 - after-year-of-death surviving-spouse code 1 records infer the spouse Form 8889 owner when explicit owner tags are absent", () => {
+  it("Form 1099-SA Line 1 - after-year-of-death surviving-spouse code 1 records retain the actual spouse Form 8889 owner", () => {
     const parsed = Form1099SASchema.parse({
       payer: "Inherited HSA Custodian",
       grossDistribution: "4200",
@@ -267,12 +268,13 @@ describe("Form 1099-SA HSA distribution aggregation", () => {
       distributionCode: "1",
       accountType: "hsa",
       beneficiaryRole: "surviving_spouse",
+      accountHolder: "spouse",
       deathDistributionTiming: "after_year_of_death",
     });
     const inferredOwnerResult = calculateForm1099SA([parsed]);
     const merged = mergeForm1099SAIntoForm8889Input(undefined, inferredOwnerResult);
 
-    expect(parsed.accountHolder).toBeUndefined();
+    expect(parsed.accountHolder).toBe("spouse");
     expect(inferredOwnerResult.hsaGrossDistributions.toNumber()).toBe(4200);
     expect(inferredOwnerResult.hsaDeathDistributionDateOfDeathValue.toNumber()).toBe(0);
     expect(inferredOwnerResult.defaultAccountOwner).toBe("spouse");
@@ -281,18 +283,19 @@ describe("Form 1099-SA HSA distribution aggregation", () => {
     expect(merged?.supported1099SADeathDistributionDateOfDeathValue).toBe("0");
   });
 
-  it("Form 1099-SA Line 1 - surviving-spouse code 5 records infer the spouse Form 8889 owner when explicit owner tags are absent", () => {
+  it("Form 1099-SA Line 1 - surviving-spouse code 5 records retain the actual spouse Form 8889 owner", () => {
     const parsed = Form1099SASchema.parse({
       payer: "Inherited HSA Custodian",
       grossDistribution: "2400",
       distributionCode: "5",
       accountType: "hsa",
       beneficiaryRole: "surviving_spouse",
+      accountHolder: "spouse",
     });
     const inferredOwnerResult = calculateForm1099SA([parsed]);
     const merged = mergeForm1099SAIntoForm8889Input(undefined, inferredOwnerResult);
 
-    expect(parsed.accountHolder).toBeUndefined();
+    expect(parsed.accountHolder).toBe("spouse");
     expect(inferredOwnerResult.defaultAccountOwner).toBe("spouse");
     expect(inferredOwnerResult.accountOwnerSupport.primary.hsaProhibitedTransactionDistributions.toNumber()).toBe(0);
     expect(inferredOwnerResult.accountOwnerSupport.spouse.hsaProhibitedTransactionDistributions.toNumber()).toBe(2400);
@@ -301,13 +304,14 @@ describe("Form 1099-SA HSA distribution aggregation", () => {
     expect(merged?.supported1099SAProhibitedTransactionDistributions).toBe("2400");
   });
 
-  it("Form 1099-SA Line 1 - surviving-spouse inferred owner remaps to primary when the current taxpayer payload no longer includes a spouse", () => {
+  it("Form 1099-SA Line 1 - actual primary surviving spouse ownership remains primary without spouse taxpayer context", () => {
     const parsed = Form1099SASchema.parse({
       payer: "Inherited HSA Custodian",
       grossDistribution: "2400",
       distributionCode: "5",
       accountType: "hsa",
       beneficiaryRole: "surviving_spouse",
+      accountHolder: "primary",
     });
     const inferredOwnerResult = calculateForm1099SA([parsed]);
     const merged = mergeForm1099SAIntoForm8889Input(undefined, inferredOwnerResult, {
@@ -320,7 +324,7 @@ describe("Form 1099-SA HSA distribution aggregation", () => {
       spouse: undefined,
     });
 
-    expect(inferredOwnerResult.defaultAccountOwner).toBe("spouse");
+    expect(inferredOwnerResult.defaultAccountOwner).toBe("primary");
     expect(merged?.accountOwner).toBe("primary");
     expect(merged?.distributionsReceived).toBe("2400");
     expect(merged?.supported1099SAGrossDistributions).toBe("2400");
@@ -328,7 +332,7 @@ describe("Form 1099-SA HSA distribution aggregation", () => {
     expect(merged?.distributionsNotSubjectToAdditionalTax).toBe("0");
   });
 
-  it("Form 1099-SA Line 2 - surviving-spouse code 2 records infer the spouse Form 8889 owner when explicit owner tags are absent", () => {
+  it("Form 1099-SA Line 2 - surviving-spouse code 2 records retain the actual spouse Form 8889 owner", () => {
     const parsed = Form1099SASchema.parse({
       payer: "Inherited HSA Custodian",
       grossDistribution: "400",
@@ -336,11 +340,12 @@ describe("Form 1099-SA HSA distribution aggregation", () => {
       distributionCode: "2",
       accountType: "hsa",
       beneficiaryRole: "surviving_spouse",
+      accountHolder: "spouse",
     });
     const inferredOwnerResult = calculateForm1099SA([parsed]);
     const merged = mergeForm1099SAIntoForm8889Input(undefined, inferredOwnerResult);
 
-    expect(parsed.accountHolder).toBeUndefined();
+    expect(parsed.accountHolder).toBe("spouse");
     expect(inferredOwnerResult.defaultAccountOwner).toBe("spouse");
     expect(inferredOwnerResult.accountOwnerSupport.primary.hsaReturnedExcessContributions.toNumber()).toBe(0);
     expect(inferredOwnerResult.accountOwnerSupport.spouse.hsaReturnedExcessContributions.toNumber()).toBe(400);
@@ -350,18 +355,19 @@ describe("Form 1099-SA HSA distribution aggregation", () => {
     expect(merged?.supported1099SAReturnedExcessContributions).toBe("400");
   });
 
-  it("Form 1099-SA Line 4 - surviving-spouse code 3 records infer the spouse Form 8889 owner when explicit owner tags are absent", () => {
+  it("Form 1099-SA Line 4 - surviving-spouse code 3 records retain the actual spouse Form 8889 owner", () => {
     const parsed = Form1099SASchema.parse({
       payer: "Inherited HSA Custodian",
       grossDistribution: "900",
       distributionCode: "3",
       accountType: "hsa",
       beneficiaryRole: "surviving_spouse",
+      accountHolder: "spouse",
     });
     const inferredOwnerResult = calculateForm1099SA([parsed]);
     const merged = mergeForm1099SAIntoForm8889Input(undefined, inferredOwnerResult);
 
-    expect(parsed.accountHolder).toBeUndefined();
+    expect(parsed.accountHolder).toBe("spouse");
     expect(inferredOwnerResult.defaultAccountOwner).toBe("spouse");
     expect(inferredOwnerResult.accountOwnerSupport.primary.hsaDisabilityExceptionDistributions.toNumber()).toBe(0);
     expect(inferredOwnerResult.accountOwnerSupport.spouse.hsaDisabilityExceptionDistributions.toNumber()).toBe(900);
@@ -371,7 +377,7 @@ describe("Form 1099-SA HSA distribution aggregation", () => {
     expect(merged?.supported1099SAAutomaticExceptionDistributions).toBe("900");
   });
 
-  it("Form 1099-SA Line 1 - surviving-spouse records reject conflicting primary owner tags", () => {
+  it("Form 1099-SA Line 1 - surviving spouse beneficiary can be the actual primary owner", () => {
     const parsed = Form1099SASchema.safeParse({
       payer: "Inherited HSA Custodian",
       grossDistribution: "2400",
@@ -381,11 +387,8 @@ describe("Form 1099-SA HSA distribution aggregation", () => {
       accountHolder: "primary",
     });
 
-    expect(parsed.success).toBe(false);
-    expect(parsed.error?.issues.some((issue) => (
-      issue.path.join(".") === "accountHolder"
-      && /surviving spouse/i.test(issue.message)
-    ))).toBe(true);
+    expect(parsed.success).toBe(true);
+    if (parsed.success) expect(parsed.data.accountHolder).toBe("primary");
   });
 
   it("Form 1099-SA Line 1 - surviving-spouse metadata rejects unsupported code 6 records", () => {
@@ -539,7 +542,7 @@ describe("Form 1099-SA HSA distribution aggregation", () => {
     expect(result.hsaPostDeathEarnings.toNumber()).toBe(2400);
   });
 
-  it("Form 1099-SA Line 2 - surviving-spouse code 2 records infer the spouse Form 8889 owner when explicit owner tags are absent", () => {
+  it("Form 1099-SA Line 2 - surviving-spouse code 2 records retain the actual spouse Form 8889 owner", () => {
     const parsed = Form1099SASchema.parse({
       payer: "Inherited HSA Custodian",
       grossDistribution: "400",
@@ -547,11 +550,12 @@ describe("Form 1099-SA HSA distribution aggregation", () => {
       distributionCode: "2",
       accountType: "hsa",
       beneficiaryRole: "surviving_spouse",
+      accountHolder: "spouse",
     });
     const inferredOwnerResult = calculateForm1099SA([parsed]);
     const merged = mergeForm1099SAIntoForm8889Input(undefined, inferredOwnerResult);
 
-    expect(parsed.accountHolder).toBeUndefined();
+    expect(parsed.accountHolder).toBe("spouse");
     expect(inferredOwnerResult.defaultAccountOwner).toBe("spouse");
     expect(inferredOwnerResult.accountOwnerSupport.primary.hsaGrossDistributions.toNumber()).toBe(0);
     expect(inferredOwnerResult.accountOwnerSupport.spouse.hsaGrossDistributions.toNumber()).toBe(400);
@@ -561,18 +565,19 @@ describe("Form 1099-SA HSA distribution aggregation", () => {
     expect(merged?.supported1099SAReturnedExcessContributions).toBe("400");
   });
 
-  it("Form 1099-SA Line 4 - surviving-spouse code 3 records infer the spouse Form 8889 owner when explicit owner tags are absent", () => {
+  it("Form 1099-SA Line 4 - surviving-spouse code 3 records retain the actual spouse Form 8889 owner", () => {
     const parsed = Form1099SASchema.parse({
       payer: "Inherited HSA Custodian",
       grossDistribution: "900",
       distributionCode: "3",
       accountType: "hsa",
       beneficiaryRole: "surviving_spouse",
+      accountHolder: "spouse",
     });
     const inferredOwnerResult = calculateForm1099SA([parsed]);
     const merged = mergeForm1099SAIntoForm8889Input(undefined, inferredOwnerResult);
 
-    expect(parsed.accountHolder).toBeUndefined();
+    expect(parsed.accountHolder).toBe("spouse");
     expect(inferredOwnerResult.defaultAccountOwner).toBe("spouse");
     expect(inferredOwnerResult.accountOwnerSupport.primary.hsaGrossDistributions.toNumber()).toBe(0);
     expect(inferredOwnerResult.accountOwnerSupport.spouse.hsaGrossDistributions.toNumber()).toBe(900);
@@ -713,7 +718,7 @@ describe("Form 1099-SA HSA distribution aggregation", () => {
     expect(merged?.supported1099SAGrossDistributions).toBe("1200");
   });
 
-  it("mergeForm1099SAIntoForm8889Input keeps an explicit primary-owner draft on the primary path when surviving-spouse metadata infers spouse-owned HSA support", () => {
+  it("mergeForm1099SAIntoForm8889Input keeps an explicit primary-owner draft on the primary path when surviving-spouse sources explicitly identify spouse-owned HSA support", () => {
     const spouseOwnedResult = calculateForm1099SA([
       {
         payer: "Inherited HSA Custodian",
@@ -722,6 +727,7 @@ describe("Form 1099-SA HSA distribution aggregation", () => {
         distributionCode: "4",
         accountType: "hsa",
         beneficiaryRole: "surviving_spouse",
+      accountHolder: "spouse",
       },
     ]);
 
@@ -748,7 +754,7 @@ describe("Form 1099-SA HSA distribution aggregation", () => {
     expect(merged?.supported1099SAGrossDistributions).toBe("0");
   });
 
-  it("Form 1099-SA Line 1 - stale spouse-owned Form 8889 drafts remap surviving-spouse support to primary when spouse context is gone", () => {
+  it("Form 1099-SA Line 1 - stale spouse-owned Form 8889 drafts require actual spouse context", () => {
     const spouseOwnedResult = calculateForm1099SA([
       {
         payer: "Inherited HSA Custodian",
@@ -757,6 +763,7 @@ describe("Form 1099-SA HSA distribution aggregation", () => {
         distributionCode: "4",
         accountType: "hsa",
         beneficiaryRole: "surviving_spouse",
+        accountHolder: "spouse",
       },
       {
         payer: "Inherited HSA Custodian",
@@ -764,23 +771,16 @@ describe("Form 1099-SA HSA distribution aggregation", () => {
         distributionCode: "3",
         accountType: "hsa",
         beneficiaryRole: "surviving_spouse",
+        accountHolder: "spouse",
       },
     ]);
 
-    const merged = mergeForm1099SAIntoForm8889Input({
+    expect(() => mergeForm1099SAIntoForm8889Input({
       accountOwner: "spouse",
-      coverageByMonth: Array(12).fill("self_only"),
+      coverageByMonth: Array(12).fill("none"),
       contributionsMade: "0",
-    }, spouseOwnedResult, simpleW2Fixture.taxpayer);
-
-    expect(spouseOwnedResult.defaultAccountOwner).toBe("spouse");
-    expect(merged?.accountOwner).toBe("primary");
-    expect(merged?.distributionsReceived).toBe("7500");
-    expect(merged?.supported1099SAGrossDistributions).toBe("7500");
-    expect(merged?.supported1099SADeathDistributionDateOfDeathValue).toBe("0");
-    expect(merged?.supported1099SADisabilityExceptionDistributions).toBe("900");
-    expect(merged?.supported1099SAAutomaticExceptionDistributions).toBe("900");
-    expect(merged?.distributionsNotSubjectToAdditionalTax).toBe("900");
+    }, spouseOwnedResult, simpleW2Fixture.taxpayer)).toThrow(/actual spouse taxpayer context/);
+    expect(spouseOwnedResult.accountOwnerSupport.spouse.hsaGrossDistributions.toFixed()).toBe("7500");
   });
 
   it("mergeForm1099SAIntoForm8889Input does not auto-build a single Form 8889 from mixed primary and spouse HSA records", () => {
@@ -973,7 +973,7 @@ describe("Form 1099-SA HSA distribution aggregation", () => {
     expect(merged?.supported1099SAAutomaticExceptionDistributions).toBe("1200");
   });
 
-  it("mergeForm1099SAIntoForm8889Input remaps stale spouse-owner drafts to primary when spouse taxpayer context is absent", () => {
+  it("mergeForm1099SAIntoForm8889Input rejects stale spouse-owner drafts when spouse taxpayer context is absent", () => {
     const spouseOwnedResult = calculateForm1099SA([
       {
         payer: "Inherited HSA Custodian",
@@ -986,15 +986,11 @@ describe("Form 1099-SA HSA distribution aggregation", () => {
       },
     ]);
 
-    const merged = mergeForm1099SAIntoForm8889Input({
+    expect(() => mergeForm1099SAIntoForm8889Input({
       accountOwner: "spouse",
       coverageByMonth: Array(12).fill("none"),
       contributionsMade: "0",
-    }, spouseOwnedResult, simpleW2Fixture.taxpayer);
-
-    expect(merged?.accountOwner).toBe("primary");
-    expect(merged?.distributionsReceived).toBe("6600");
-    expect(merged?.supported1099SAGrossDistributions).toBe("6600");
-    expect(merged?.supported1099SADeathDistributionDateOfDeathValue).toBe("0");
+    }, spouseOwnedResult, simpleW2Fixture.taxpayer)).toThrow(/actual spouse taxpayer context/);
+    expect(spouseOwnedResult.accountOwnerSupport.spouse.hsaGrossDistributions.toFixed()).toBe("6600");
   });
 });

@@ -1402,6 +1402,7 @@ describe("workspace engine input", () => {
           grossDistribution: "11000",
           distributionCode: "4",
           accountType: "hsa",
+          accountHolder: "primary",
           beneficiaryRole: "estate",
           deathDistributionTiming: "year_of_death",
           fmvOnDateOfDeath: "6000",
@@ -1423,6 +1424,7 @@ describe("workspace engine input", () => {
       grossDistribution: "11000",
       distributionCode: "4",
       accountType: "hsa",
+      accountHolder: "primary",
       beneficiaryRole: "estate",
       deathDistributionTiming: "year_of_death",
       fmvOnDateOfDeath: "6000",
@@ -1455,6 +1457,7 @@ describe("workspace engine input", () => {
           grossDistribution: "9000",
           distributionCode: "6",
           accountType: "hsa",
+          accountHolder: "primary",
           beneficiaryRole: "other_beneficiary",
           deathDistributionTiming: "after_year_of_death",
           fmvOnDateOfDeath: "6200",
@@ -1499,6 +1502,7 @@ describe("workspace engine input", () => {
           earningsOnExcessContributions: "60",
           distributionCode: "2",
           accountType: "hsa",
+          accountHolder: "primary",
         }
       }
     ];
@@ -1518,6 +1522,7 @@ describe("workspace engine input", () => {
         earningsOnExcessContributions: "60",
         distributionCode: "2",
         accountType: "hsa",
+        accountHolder: "primary",
       }
     ]);
     expect(previewInput?.assumptions).toContain(
@@ -1548,6 +1553,7 @@ describe("workspace engine input", () => {
           grossDistribution: "2400",
           distributionCode: "1",
           accountType: "hsa",
+          accountHolder: "primary",
           rolloverDistributions: "400",
           qualifiedMedicalExpenses: "1500",
         }
@@ -1569,6 +1575,7 @@ describe("workspace engine input", () => {
         earningsOnExcessContributions: "0",
         distributionCode: "1",
         accountType: "hsa",
+        accountHolder: "primary",
       }
     ]);
     expect(previewInput?.taxInput.form8889).toMatchObject({
@@ -1606,6 +1613,7 @@ describe("workspace engine input", () => {
           grossDistribution: "5300",
           distributionCode: "6",
           accountType: "hsa",
+          accountHolder: "primary",
           beneficiaryRole: "other_beneficiary",
           deathDistributionTiming: "after_year_of_death",
           fmvOnDateOfDeath: "5000",
@@ -1629,6 +1637,7 @@ describe("workspace engine input", () => {
         earningsOnExcessContributions: "0",
         distributionCode: "6",
         accountType: "hsa",
+        accountHolder: "primary",
         beneficiaryRole: "other_beneficiary",
         deathDistributionTiming: "after_year_of_death",
         fmvOnDateOfDeath: "5000",
@@ -1668,6 +1677,7 @@ describe("workspace engine input", () => {
           grossDistribution: "900",
           distributionCode: "3",
           accountType: "hsa",
+          accountHolder: "primary",
         }
       },
       {
@@ -1687,6 +1697,7 @@ describe("workspace engine input", () => {
           grossDistribution: "2400",
           distributionCode: "5",
           accountType: "hsa",
+          accountHolder: "primary",
         }
       }
     ];
@@ -1899,4 +1910,37 @@ describe("workspace engine input", () => {
       })
     ]);
   });
+});
+
+// Spec: spec/federal/guided-input.yaml, hsa-actual-owner-sources
+function hsaSourceFact(id: string, source: Record<string, unknown>): WorkspaceStructuredFactRecord {
+  return { id, factId: "hsa-distribution-review", label: "Actual HSA source", kind: "fixture-derived", value: "Explicit synthetic source facts", sourceType: "official-fixture", confidence: "high", sourceDocumentIds: ["doc-1099sa"], questionId: null, updatedAt: "2026-10-25T00:00:00.000Z", machineValue: { entryKind: "1099-sa-summary", payer: "Actual HSA custodian", grossDistribution: "2400.10", earningsOnExcessContributions: "0", distributionCode: "1", accountType: "hsa", ...source } as WorkspaceStructuredFactRecord["machineValue"] };
+}
+it("requires actual HSA ownership independently of surviving spouse relationship", () => {
+  const preview = (source: Record<string, unknown>) => buildWorkspaceEngineInput([createHsaDocument({})], createHsaReturnSummary({}), [hsaSourceFact("actual", source)], workspaceTaxpayerFixture());
+  expect(preview({})).toBeNull();
+  expect(preview({ beneficiaryRole: "surviving_spouse" })).toBeNull();
+  expect(preview({ beneficiaryRole: "surviving_spouse", accountHolder: "primary" })?.taxInput.form1099SA?.[0]).toMatchObject({ accountHolder: "primary", grossDistribution: "2400.10" });
+  expect(preview({ accountHolder: "spouse" })).toBeNull();
+  expect(preview({ accountHolder: "primary", distributionCode: "unknown" })).toBeNull();
+  expect(preview({ accountHolder: "primary", grossDistribution: "" })).toBeNull();
+});
+it("does not turn partially confirmed HSA owner offsets into complete totals", () => {
+  const preview = buildWorkspaceEngineInput([createHsaDocument({})], createHsaReturnSummary({}), [
+    hsaSourceFact("one", { accountHolder: "primary", rolloverDistributions: "0", qualifiedMedicalExpenses: "100.10" }),
+    hsaSourceFact("two", { accountHolder: "primary", rolloverDistributions: "0" }),
+  ], workspaceTaxpayerFixture());
+  expect(preview?.taxInput.form8889?.rolloverDistributions).toBe("0");
+  expect(preview?.taxInput.form8889?.qualifiedMedicalExpenses).toBeUndefined();
+  expect(preview?.assumptions.some(value => value.includes("applies $100.1"))).toBe(false);
+});
+it("preserves complete HSA offsets separately for each actual return owner", () => {
+  const taxpayer = { ...workspaceTaxpayerFixture(), filingStatus: "married_filing_jointly" as const, spouse: { firstName: "Pat", lastName: "Example", ssn: "987-65-4321", dateOfBirth: "1959-01-01" } };
+  const preview = buildWorkspaceEngineInput([createHsaDocument({})], createHsaReturnSummary({}), [
+    hsaSourceFact("primary", { accountHolder: "primary", rolloverDistributions: "0", qualifiedMedicalExpenses: "100.10" }),
+    hsaSourceFact("spouse", { accountHolder: "spouse", beneficiaryRole: "surviving_spouse", rolloverDistributions: "0.20", qualifiedMedicalExpenses: "200.30" }),
+  ], taxpayer);
+  expect(preview?.taxInput.form8889).toBeUndefined();
+  expect(preview?.taxInput.form8889ByOwner?.primary).toMatchObject({ accountOwner: "primary", rolloverDistributions: "0", qualifiedMedicalExpenses: "100.1" });
+  expect(preview?.taxInput.form8889ByOwner?.spouse).toMatchObject({ accountOwner: "spouse", rolloverDistributions: "0.2", qualifiedMedicalExpenses: "200.3" });
 });

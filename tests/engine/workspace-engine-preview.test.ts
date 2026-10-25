@@ -1743,6 +1743,7 @@ describe("workspace engine preview", () => {
           grossDistribution: "2400",
           distributionCode: "1",
           accountType: "hsa",
+          accountHolder: "primary",
           rolloverDistributions: "400",
           qualifiedMedicalExpenses: "1500",
         }
@@ -1833,6 +1834,7 @@ describe("workspace engine preview", () => {
           grossDistribution: "5300",
           distributionCode: "6",
           accountType: "hsa",
+          accountHolder: "primary",
           beneficiaryRole: "other_beneficiary",
           deathDistributionTiming: "after_year_of_death",
           fmvOnDateOfDeath: "5000",
@@ -2172,6 +2174,7 @@ describe("workspace engine preview", () => {
           earningsOnExcessContributions: "60",
           distributionCode: "2",
           accountType: "hsa",
+          accountHolder: "primary",
         }
       }
     ];

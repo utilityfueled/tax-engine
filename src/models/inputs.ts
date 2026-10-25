@@ -1146,13 +1146,8 @@ export const Form1099SASchema = z.object({
     });
   }
 
-  if (value.beneficiaryRole === "surviving_spouse" && value.accountHolder === "primary") {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Surviving spouse HSA beneficiaries must use the spouse owner path instead of a primary account-holder tag",
-      path: ["accountHolder"],
-    });
-  }
+  // Beneficiary relationship is to the decedent, not a primary/spouse position
+  // on this return. The surviving beneficiary can be either actual return owner.
 });
 
 export const FormSSA1099Schema = z.object({

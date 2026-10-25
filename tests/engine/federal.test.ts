@@ -1602,7 +1602,7 @@ describe("Simple W-2 single filer", () => {
     expect(schedule2Line17c?.value.toNumber()).toBe(0);
   });
 
-  it("Form 1040 Line 8 and Schedule 2 - surviving-spouse Form 1099-SA records infer the spouse owner even without an explicit owner tag", () => {
+  it("Form 1040 Line 8 and Schedule 2 - surviving-spouse Form 1099-SA records use the actual spouse owner", () => {
     const result = calculateFederalTax({
       ...simpleW2Fixture,
       taxpayer: {
@@ -1627,6 +1627,7 @@ describe("Simple W-2 single filer", () => {
           distributionCode: "4",
           accountType: "hsa",
           beneficiaryRole: "surviving_spouse",
+          accountHolder: "spouse",
         },
       ],
       adjustments: {
@@ -1743,7 +1744,7 @@ describe("Simple W-2 single filer", () => {
     expect(schedule2Line17c?.value.toNumber()).toBe(180);
   });
 
-  it("Form 1040 Line 8 and Schedule 2 - explicit primary Form 8889 inputs keep inferred surviving-spouse HSA support on a supplemental spouse statement", () => {
+  it("Form 1040 Line 8 and Schedule 2 - explicit primary Form 8889 inputs keep actual spouse-owned inherited HSA support on a supplemental spouse statement", () => {
     const result = calculateFederalTax({
       ...simpleW2Fixture,
       taxpayer: {
@@ -1774,6 +1775,7 @@ describe("Simple W-2 single filer", () => {
           distributionCode: "4",
           accountType: "hsa",
           beneficiaryRole: "surviving_spouse",
+          accountHolder: "spouse",
         },
       ],
       adjustments: {
@@ -2016,7 +2018,7 @@ describe("Simple W-2 single filer", () => {
     expect(result.totalAdditionalTaxes.toNumber()).toBe(480);
   });
 
-  it("Form 1040 Line 8 and Schedule 2 - surviving-spouse code 5 HSA records infer the spouse owner and preserve the spouse age-65 exception", () => {
+  it("Form 1040 Line 8 and Schedule 2 - surviving-spouse code 5 HSA records use the actual spouse owner and preserve the spouse age-65 exception", () => {
     const result = calculateFederalTax({
       ...simpleW2Fixture,
       taxpayer: {
@@ -2040,6 +2042,7 @@ describe("Simple W-2 single filer", () => {
           distributionCode: "5",
           accountType: "hsa",
           beneficiaryRole: "surviving_spouse",
+          accountHolder: "spouse",
         },
       ],
       adjustments: {
@@ -2063,7 +2066,7 @@ describe("Simple W-2 single filer", () => {
     expect(result.totalAdditionalTaxes.toNumber()).toBe(0);
   });
 
-  it("Form 1040 Line 8 and Schedule 2 - surviving-spouse HSA records remap to a primary-owned Form 8889 when the current taxpayer payload no longer includes a spouse", () => {
+  it("Form 1040 Line 8 and Schedule 2 - surviving-spouse HSA records with actual primary ownership retain the primary Form 8889 age test", () => {
     const result = calculateFederalTax({
       ...simpleW2Fixture,
       taxpayer: {
@@ -2082,6 +2085,7 @@ describe("Simple W-2 single filer", () => {
           distributionCode: "5",
           accountType: "hsa",
           beneficiaryRole: "surviving_spouse",
+          accountHolder: "primary",
         },
       ],
       adjustments: {
@@ -2094,7 +2098,7 @@ describe("Simple W-2 single filer", () => {
     const schedule2Line17c = result.allLines.find((line) => line.form === "Sched 2" && line.line === "17c");
     const form8889Line17a = result.allLines.find((line) => line.form === "Form 8889" && line.line === "17a");
 
-    expect(result.form1099SA?.defaultAccountOwner).toBe("spouse");
+    expect(result.form1099SA?.defaultAccountOwner).toBe("primary");
     expect(result.form8889).toBeDefined();
     expect(result.form8889?.line14a.toNumber()).toBe(2400);
     expect(result.form8889?.line16.toNumber()).toBe(2400);
@@ -2108,7 +2112,7 @@ describe("Simple W-2 single filer", () => {
     expect(result.totalAdditionalTaxes.toNumber()).toBe(0);
   });
 
-  it("Form 1040 Line 8 - surviving-spouse code 2 HSA records infer the spouse owner and keep returned-excess earnings on the spouse path", () => {
+  it("Form 1040 Line 8 - surviving-spouse code 2 HSA records use the actual spouse owner and keep returned-excess earnings on the spouse path", () => {
     const result = calculateFederalTax({
       ...simpleW2Fixture,
       taxpayer: {
@@ -2133,6 +2137,7 @@ describe("Simple W-2 single filer", () => {
           distributionCode: "2",
           accountType: "hsa",
           beneficiaryRole: "surviving_spouse",
+          accountHolder: "spouse",
         },
       ],
       adjustments: {
@@ -2154,7 +2159,7 @@ describe("Simple W-2 single filer", () => {
     expect(result.otherIncome.toNumber()).toBe(25);
   });
 
-  it("Form 1040 Line 8 and Schedule 2 - surviving-spouse code 3 HSA records infer the spouse owner and preserve the disability exception", () => {
+  it("Form 1040 Line 8 and Schedule 2 - surviving-spouse code 3 HSA records use the actual spouse owner and preserve the disability exception", () => {
     const result = calculateFederalTax({
       ...simpleW2Fixture,
       taxpayer: {
@@ -2178,6 +2183,7 @@ describe("Simple W-2 single filer", () => {
           distributionCode: "3",
           accountType: "hsa",
           beneficiaryRole: "surviving_spouse",
+          accountHolder: "spouse",
         },
       ],
       adjustments: {
