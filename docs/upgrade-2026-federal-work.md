@@ -158,3 +158,19 @@ EIN syntax is validated, absent facts remain absent. Three spec-linked tests
 included two red-first regressions; 59 education tests, typecheck and spec
 validation pass. This contract enables fact collection and does not yet claim
 2026 Form 8863 eligibility/calculation completion.
+
+## Package: restored 2026 mortgage insurance premiums
+
+IRC 163(h)(3)(E), (F)(i)(III), (5)(E)-(F), 2026 Publication 505, and the
+historical 2021 Publication 936 premium allocation guidance were refreshed.
+Schedule A accepts known provider/residence/acquisition-debt qualification,
+contract date, allocation year and substantiated premiums allocable to that year.
+Box 5 alone rejects for 2026; prepaid premiums are not assumed fully deductible.
+The aggregate qualified allocation receives the exact 10% ceiling-step phaseout,
+including the MFS threshold/step. Contracts before 2007 remain excluded; 2025
+continues to give no PMI deduction. Actual prepaid amortization inputs remain
+required from source records rather than an inferred loan term.
+
+All 18 new tests failed before implementation. 579 focused Schedule A/federal
+tests pass, engine typecheck and spec validation pass, and the scoped diff was
+reviewed. No qualification/readiness gate changed.

@@ -61,6 +61,7 @@ export interface ScheduleAResult {
   /** Whether the general sales tax election was used for Line 5a (vs income taxes) */
   salesTaxElected: boolean;
   mortgageInterest: Decimal; // Line 8a
+  mortgageInsurancePremiums: Decimal; // Restored for 2026
   investmentInterestDeduction: Decimal; // Line 9
   casualtyLossDeduction: Decimal; // Line 15
   cashCharitable: Decimal; // Line 12
@@ -327,11 +328,37 @@ export function calculateScheduleA(
     (acc, f) => acc.plus(d(f.mortgageInsurancePremiums)),
     new Decimal(0)
   );
-  const mortgageInsurancePremiums = ZERO;
-  audit.record("Sched A", "8d", "Reserved for future use", mortgageInsurancePremiums,
-    reportedMortgageInsurancePremiums.greaterThan(0)
-      ? `2025 Schedule A line 8d is reserved for future use; ignored Form 1098 Box 5 PMI $${reportedMortgageInsurancePremiums}`
-      : "2025 Schedule A line 8d is reserved for future use");
+  let mortgageInsurancePremiums = ZERO;
+  if (input.taxpayer.taxYear === 2026) {
+    let eligiblePremiums = ZERO;
+    for (const mortgage of input.form1098) {
+      const reported = d(mortgage.mortgageInsurancePremiums);
+      if (!reported.isFinite() || reported.lt(0)) throw new Error("Mortgage insurance premiums must be finite and nonnegative");
+      const facts = mortgage.mortgageInsuranceQualification;
+      if (!facts) {
+        if (reported.gt(0)) throw new Error("Mortgage insurance qualification and current-year allocation are unknown");
+        continue;
+      }
+      const allocated = d(facts.premiumsAllocableToYear);
+      if (!allocated.isFinite() || allocated.lt(0)) throw new Error("Allocated mortgage insurance premiums must be finite and nonnegative");
+      if (facts.allocationTaxYear !== input.taxpayer.taxYear) throw new Error("Mortgage insurance allocation tax year does not match return");
+      const issued = new Date(`${facts.contractIssueDate}T00:00:00Z`);
+      if (!Number.isFinite(issued.getTime()) || issued.toISOString().slice(0, 10) !== facts.contractIssueDate || facts.contractIssueDate > `${input.taxpayer.taxYear}-12-31`) throw new Error("Invalid mortgage insurance contract date");
+      if (facts.qualifiedProvider && facts.acquisitionDebt && facts.qualifiedResidence && facts.contractIssueDate >= "2007-01-01") eligiblePremiums = eligiblePremiums.plus(allocated);
+    }
+    if (!agi.isFinite()) throw new Error("Mortgage insurance AGI must be finite");
+    const separate = filingStatus === "married_filing_separately";
+    const steps = zeroFloor(agi.minus(separate ? "50000" : "100000")).div(separate ? "500" : "1000").ceil();
+    const retainedFraction = zeroFloor(new Decimal(1).minus(steps.times("0.10")));
+    mortgageInsurancePremiums = roundDollar(eligiblePremiums.times(retainedFraction));
+    audit.record("Sched A", "8d", "Qualified mortgage insurance premiums", mortgageInsurancePremiums,
+      "Explicit current-year allocations, reduced 10% per complete or partial AGI step", { eligiblePremiums, steps, retainedFraction });
+  } else {
+    audit.record("Sched A", "8d", "Reserved for future use", mortgageInsurancePremiums,
+      reportedMortgageInsurancePremiums.greaterThan(0)
+        ? `2025 Schedule A line 8d is reserved for future use; ignored Form 1098 Box 5 PMI $${reportedMortgageInsurancePremiums}`
+        : "2025 Schedule A line 8d is reserved for future use");
+  }
 
   // Line 9: Investment interest expense (from Form 4952 or manual input)
   const investmentInterestDeduction = extra?.investmentInterestExpense ?? new Decimal(0);
@@ -561,6 +588,7 @@ export function calculateScheduleA(
     saltDeduction,
     salesTaxElected: hasSalesTaxElection,
     mortgageInterest,
+    mortgageInsurancePremiums,
     investmentInterestDeduction,
     casualtyLossDeduction,
     cashCharitable,

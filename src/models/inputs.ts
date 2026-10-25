@@ -1944,6 +1944,14 @@ export const Form1098Schema = z.object({
   mortgageOriginationDate: z.string().optional(),
   refundOfOverpaidInterest: optionalDecimal, // Box 3
   mortgageInsurancePremiums: optionalDecimal, // Box 5
+  mortgageInsuranceQualification: z.object({
+    allocationTaxYear: z.number().int(),
+    contractIssueDate: z.string(),
+    qualifiedProvider: z.boolean(),
+    acquisitionDebt: z.boolean(),
+    qualifiedResidence: z.boolean(),
+    premiumsAllocableToYear: decimal,
+  }).optional(),
   pointsPaid: optionalDecimal, // Box 6
   propertyTax: optionalDecimal,
 });

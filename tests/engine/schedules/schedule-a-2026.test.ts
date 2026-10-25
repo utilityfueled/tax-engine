@@ -91,3 +91,34 @@ describe("2026 charitable qualification facts", () => {
     expect(calc([{ ...stock, qualifiedAppreciatedStock: true }]).nonCashCharitable.toString()).toBe("1500");
   });
 });
+
+describe("2026 mortgage insurance", () => {
+  const qualified = { allocationTaxYear: 2026, contractIssueDate: "2020-01-01", qualifiedProvider: true, acquisitionDebt: true, qualifiedResidence: true, premiumsAllocableToYear: "1000" };
+  const mortgage = { lender: "Test lender", mortgageInterestReceived: "0", outstandingMortgagePrincipal: "100000", mortgageInsurancePremiums: "2500", mortgageInsuranceQualification: qualified };
+  const pmi = (agi: string, status: FilingStatus = "single", change: Record<string, unknown> = {}, taxYear = 2026) => calculateScheduleA(TaxYearInputSchema.parse({ taxpayer: { ...person, taxYear, filingStatus: status }, form1098: [{ ...mortgage, ...change }] }), d(agi), status, taxYear === 2026 ? FEDERAL_2026_CONSTANTS : getConstants(2025));
+  it.each([["100000", "1000"], ["100000.01", "900"], ["101000", "900"], ["101000.01", "800"], ["109000", "100"], ["109000.01", "0"], ["110000", "0"]])("uses ceiling steps at AGI %s", (agi, expected) => {
+    expect(pmi(agi).mortgageInsurancePremiums.toString()).toBe(expected);
+  });
+  it.each([["50000", "1000"], ["50000.01", "900"], ["50500", "900"], ["50500.01", "800"], ["54500.01", "0"]])("halves the MFS threshold and step at %s", (agi, expected) => {
+    expect(pmi(agi, "married_filing_separately").mortgageInsurancePremiums.toString()).toBe(expected);
+  });
+  it.each(["qualifiedProvider", "acquisitionDebt", "qualifiedResidence"])("denies known ineligible %s", field => {
+    expect(pmi("50000", "single", { mortgageInsuranceQualification: { ...qualified, [field]: false } }).mortgageInsurancePremiums.toString()).toBe("0");
+  });
+  it("uses current allocated premiums, including prior prepaid amounts, and adds them to itemized deductions", () => {
+    const result = pmi("50000", "single", { mortgageInsurancePremiums: "0" });
+    expect(result.mortgageInsurancePremiums.toString()).toBe("1000");
+    expect(result.totalItemized.toString()).toBe("1000");
+  });
+  it("retains 2025 expiration and the pre-2007 contract exclusion", () => {
+    expect(pmi("50000", "single", {}, 2025).mortgageInsurancePremiums.toString()).toBe("0");
+    expect(pmi("50000", "single", { mortgageInsuranceQualification: { ...qualified, contractIssueDate: "2006-12-31" } }).mortgageInsurancePremiums.toString()).toBe("0");
+    expect(pmi("50000", "single", { mortgageInsuranceQualification: { ...qualified, contractIssueDate: "2007-01-01" } }).mortgageInsurancePremiums.toString()).toBe("1000");
+  });
+  it("rejects missing eligibility, wrong allocation year, invalid contract dates and negative premiums", () => {
+    expect(() => pmi("50000", "single", { mortgageInsuranceQualification: undefined })).toThrow(/qualification/i);
+    for (const change of [{ allocationTaxYear: 2025 }, { contractIssueDate: "2020-02-30" }, { contractIssueDate: "2027-01-01" }, { premiumsAllocableToYear: "-1" }]) {
+      expect(() => pmi("50000", "single", { mortgageInsuranceQualification: { ...qualified, ...change } })).toThrow();
+    }
+  });
+});
