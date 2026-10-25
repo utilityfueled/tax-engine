@@ -376,9 +376,11 @@ describe("MFS Restrictions — SALT Cap Reduces Itemized Deductions vs Single", 
 
     expect(mfsResult.saltDeduction.toNumber()).toBe(20000);
     expect(singleResult.saltDeduction.toNumber()).toBe(40000);
-    expect(mfsResult.mortgageInterest.toNumber()).toBe(11250);
+    // Pub. 936 Table 1 line 14 rounds 375,000 / 400,000 to .938 before
+    // line 15 multiplies the unchanged 12,000 interest source.
+    expect(mfsResult.mortgageInterest.toNumber()).toBe(11256);
     expect(singleResult.mortgageInterest.toNumber()).toBe(12000);
-    expect(singleResult.totalItemized.minus(mfsResult.totalItemized).toNumber()).toBe(20750);
+    expect(singleResult.totalItemized.minus(mfsResult.totalItemized).toNumber()).toBe(20744);
   });
 });
 

@@ -9,6 +9,7 @@ vi.mock("@/models/constants.js", async (importOriginal) => {
 import { calculateFederalTax } from "@/engine/federal.js";
 import { TaxYearInputSchema } from "@/models/inputs.js";
 import { simpleW2Fixture } from "../fixtures/simple-w2.js";
+import { mortgageLoan } from "../fixtures/mortgage-source.js";
 
 const facts = { primaryBlind: false, primaryCanBeClaimedAsDependent: false, primaryDeathDate: null,
   dualStatusAlien: false, nonresidentAlien: false, shortTaxYear: false };
@@ -28,12 +29,19 @@ describe("Federal standard deduction integration", () => {
   });
 
   it("honors the deduction election before and after the itemized limitation", () => {
-    const mortgage = [{ lender: "Synthetic lender", mortgageInterestReceived: "16500", outstandingMortgagePrincipal: "100000", mortgageOriginationDate: "2020-01-01" }];
+    const mortgage = [{ sourceId: "1098-one", taxYear: 2026, lender: "Synthetic lender", mortgageInterestReceived: "16500", outstandingMortgagePrincipal: "100000", mortgageOriginationDate: "2020-01-01",
+      refundOfOverpaidInterest: "0", mortgageInsurancePremiums: "0", pointsPaid: "0", propertyTax: "0" }];
+    const actualMortgageWorksheet = (interestPaid: string) => ({
+      sourceTaxYear: 2026, sourceReference: "Synthetic complete annual mortgage records", sourceFactsConfirmed: true,
+      allHomeDebtIncluded: true, priorYearInterestRecoveries: [],
+      loans: [mortgageLoan({ lenderName: "Synthetic lender", interestPaid,
+        balance: { method: "highest_balance", amount: "100000", sourceReference: "Synthetic annual maximum balance" } })],
+    });
     const highIncome = { ...base, form2210: { // Explicit synthetic prior-year exception; unrelated credit/deduction assertions stay intact.
       calendarYearTaxpayer:true,residentReturn:true,farmerOrFisher:false,disasterReliefClaimed:false,waiverRequested:false,
       calculationMethod:"regular" as const,withholdingMethod:"equal-installments" as const,priorYearTaxStatus:"no-tax-liability" as const,priorYearFullYear:true,
       priorYearResidentAllYear:true,priorYearTaxForForm2210:"0",priorYearTaxComputationConfirmed:true,
-    }, w2s: [{ ...base.w2s[0], wages: "700000" }], form1098: mortgage };
+    }, w2s: [{ ...base.w2s[0], wages: "700000" }], form1098: mortgage, mortgageInterestWorksheet: actualMortgageWorksheet("16500") };
     const automatic = calculateFederalTax(TaxYearInputSchema.parse(highIncome));
     expect(automatic.deductionUsed).toBe("standard");
     expect(automatic.deductionAmount.toString()).toBe("16100");
@@ -51,7 +59,7 @@ describe("Federal standard deduction integration", () => {
     expect(smallItemized.deductionUsed).toBe("itemized");
     expect(smallItemized.deductionAmount.toString()).toBe("0");
     const forcedStandard = calculateFederalTax(TaxYearInputSchema.parse({ ...highIncome, deductionElection: "standard",
-      form1098: [{ ...mortgage[0], mortgageInterestReceived: "30000" }] }));
+      form1098: [{ ...mortgage[0], mortgageInterestReceived: "30000" }], mortgageInterestWorksheet: actualMortgageWorksheet("30000") }));
     expect(forcedStandard.deductionUsed).toBe("standard");
     expect(forcedStandard.deductionAmount.toString()).toBe("16100");
   });
