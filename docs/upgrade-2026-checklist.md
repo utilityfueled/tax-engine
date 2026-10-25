@@ -18,7 +18,9 @@ complete a checkbox.
   Publication 6079 (May 2026), SSA wage bases and Publication 4557 (May 2024).
   The generic Schedule A/8812 instruction pages still identify 2025.
 - [ ] Inspect current remote CI and run required workflows on this branch.
-- [ ] Recheck peers/lockfile and Sentry 11 migration separately.
+- [x] Frozen offline lockfile/strict-peer check in an isolated manifest copy;
+  no checkout dependency or lockfile change. Sentry 11 reviewed separately in
+  `upgrade-2026-telemetry-review.md`; version 10.76.2 retained.
 - [ ] Scan final runtime images with current vulnerability data; document any
   unresolved exposure with owner and expiry.
 - [ ] Raise branch coverage to at least 85% using meaningful tests.
@@ -77,3 +79,28 @@ Requested in this task while independent implementation proceeds:
 No production deployment, filing enablement, model promotion or release
 publication is authorized by a passing local test alone. The goal stays active
 until the brief's criteria pass or only external actions remain.
+
+## Current execution evidence (2026-10-24, still active)
+
+- Federal commits: `49d3085`, `60b24f2` historical refund facts; `fe64b7a`
+  independent 2026 constant data; `d657eee` Schedule 1-A; `55d5d7c` gambling and
+  nonitemizer charity; `b9fda4b` historical QCD correction; `953aead` charitable
+  category/floor worksheet. Full rule pack and carryover coordination remain open.
+- Facts commits: `5d09daf`, `f312c2f`, `1d166e7`, `70f8d17`. Latest package has
+  516 passing focused tests and web/contracts types. Remaining facts and federal
+  eligibility integration are actively being implemented.
+- Recovery `6bebb6d`: 75 focused integration tests and one Chromium production-
+  build test pass, including original-byte equality after delete/reload/restore.
+  Agent review found reset retention, hosted local-return visibility and failed
+  server-delete handling; follow-up regression fixes are in progress.
+- Telemetry `3408c76`: 53 security tests, including real installed-SDK transport
+  sanitization; no network telemetry in tests. Independent privacy review pending.
+- Runtime `31d1b1a`: trixie base and runtime package-tool removal; local arm64
+  health/non-root/template smoke passes. 67 distinct OS advisories remain in the
+  explicit register, acceptance pending, review deadline 2026-11-07. This image is
+  intermediate and must be rebuilt/scanned from final code on target platforms.
+- Billing `0d90200`: exact atomic ledger, 17 disposable-Postgres tests pass.
+  Parent review requested explicit closure for investigated cost overruns; that
+  follow-up plus task routing/evaluation commits are in progress.
+- Remote CI runs are being triggered by pushes. Superseded runs may be cancelled;
+  no exact-final-commit CI success is claimed yet.

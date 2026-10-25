@@ -201,5 +201,51 @@
     "Legacy workspace AI routing, exact atomic credit accounting and independently reviewed live evaluation/promotion are unfinished.",
     "Hosted auth, isolation, provider/Redis/DB outages, billing replay, migration rollback and backup restoration need staging evidence.",
     "Full-fidelity browser-local backup/import and release-image publication are outstanding."
-  ]
+  ],
+  "ongoingExecution": {
+    "status": "active",
+    "lastRecordedCommit": "a649c613b570c0106c4f85b9f5a083374c0c5bda",
+    "checklist": "docs/upgrade-2026-checklist.md",
+    "recoveryCommit": "6bebb6d",
+    "telemetryCommit": "3408c76",
+    "runtimeSecurityCommit": "31d1b1a",
+    "billingCommit": "0d90200",
+    "localChecks": {
+      "recoveryIntegration": {
+        "passed": 75
+      },
+      "recoveryChromiumProductionBuild": {
+        "passed": 1
+      },
+      "telemetryAndEnvironmentSecurity": {
+        "passed": 53
+      },
+      "atomicLedgerPostgres": {
+        "passed": 17,
+        "scope": "agent-run disposable local PostgreSQL16"
+      }
+    },
+    "externalInputsStillPending": [
+      "authorized staging/test credentials",
+      "independent human reviewers",
+      "live synthetic provider budget/account access",
+      "launch-state demand"
+    ],
+    "notQualified": [
+      "2026 calculation pack",
+      "filing/export maps",
+      "AI promotion",
+      "hosted staging",
+      "final multi-platform release images"
+    ],
+    "workInProgress": [
+      "federal law",
+      "complete facts",
+      "recovery review fixes",
+      "AI routing/evaluation",
+      "physical form versioning",
+      "state gap analysis",
+      "full-suite coverage and release rehearsal"
+    ]
+  }
 }
