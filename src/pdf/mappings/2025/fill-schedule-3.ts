@@ -98,30 +98,15 @@ export async function fillSchedule3(
 
   if (!s3) return doc;
 
-  // ── Part I: Nonrefundable Credits ──
-  setCurrencyField(form, F.line1, s3.foreignTaxCredit);
-  setCurrencyField(form, F.line2, s3.childDependentCareCredit);
-  setCurrencyField(form, F.line3, s3.educationCredits);
-  setCurrencyField(form, F.line4, s3.retirementSavingsCredit);
-  setCurrencyField(form, F.line5a, s3.residentialCleanEnergyCredit);
-  setCurrencyField(form, F.line5b, s3.energyImprovementCredit);
-
-  // Line 6 sub-items
-  setCurrencyField(form, F.line6a, s3.generalBusinessCredit);
-  setCurrencyField(form, F.line6b, s3.priorYearMinimumTaxCredit);
-  setCurrencyField(form, F.line6c, s3.adoptionCredit);
-  setCurrencyField(form, F.line6d, s3.elderlyOrDisabledCredit);
-  setCurrencyField(form, F.line6f, s3.newCleanVehicleCredit);
-  setCurrencyField(form, F.line6m, s3.previouslyOwnedCleanVehicleCredit);
-
-  setCurrencyField(form, F.line7, s3.totalNonrefundableCredits);
-  // Line 8 = lines 1+2+3+4+5a+5b+7
-  setCurrencyField(form, F.line8, s3.totalNonrefundableCredits);
-
-  // ── Part II: Other Payments and Refundable Credits ──
-  setCurrencyField(form, F.line9, s3.netPremiumTaxCredit);
-  setCurrencyField(form, F.line11, s3.excessSSWithholding);
-  setCurrencyField(form, F.line15, s3.totalRefundableCredits);
+  // Copy each printed line from the engine audit. In particular line 7 is
+  // only the line-6 subtotal, and extension payments belong on line 10.
+  for (const line of ["1", "2", "3", "4", "5a", "5b", "6a", "6b", "6c", "6d", "6f", "6m", "7", "8", "9", "10", "11", "14", "15"] as const) {
+    const matches = s3.lines.filter(entry => entry.line === line);
+    if (matches.length !== 1 || !matches[0].value.isFinite()) {
+      throw new Error(`Missing, duplicate or invalid Schedule 3 audit entry ${line}`);
+    }
+    setCurrencyField(form, F[`line${line}`], matches[0].value);
+  }
 
   return doc;
 }

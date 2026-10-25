@@ -11,12 +11,8 @@ import { assertPdfExportAllowed } from "../../export-policy.js";
  */
 
 import { PDFDocument } from "pdf-lib";
-import Decimal from "decimal.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
-import type { Form8812Result } from "@/engine/forms/form-8812.js";
-import { getConstants, type FilingStatus } from "@/models/constants.js";
-import { d, zeroFloor, sum } from "@/utils/decimal.js";
 import {
   loadReviewTemplate,
   setTextField,
@@ -103,187 +99,63 @@ export async function fillForm8812(
 
   if (!f8812) return doc;
 
-  const filingStatus = input.taxpayer.filingStatus as FilingStatus;
-  const constants = getConstants(input.taxpayer.taxYear);
-  const ctc = constants.childTaxCredit;
-
-  // ── Header ──
+  const lineIds = new Set<string>();
+  for (const entry of f8812.lines) {
+    if (lineIds.has(entry.line) || !entry.value.isFinite()) {
+      throw new Error("Duplicate or invalid Schedule 8812 audit entry");
+    }
+    lineIds.add(entry.line);
+  }
+  const audited = (line: string) => {
+    const matches = f8812.lines.filter(entry => entry.line === line);
+    if (matches.length !== 1 || !matches[0].value.isFinite()) {
+      throw new Error(`Missing, duplicate or invalid Schedule 8812 audit entry ${line}`);
+    }
+    return matches[0].value;
+  };
   const primary = input.taxpayer.primary;
   const spouse = input.taxpayer.spouse;
-  const fullName = spouse
+  setTextField(form, F.name, spouse
     ? `${primary.firstName} ${primary.lastName} & ${spouse.firstName} ${spouse.lastName}`
-    : `${primary.firstName} ${primary.lastName}`;
-  setTextField(form, F.name, fullName);
+    : `${primary.firstName} ${primary.lastName}`);
   setTextField(form, F.ssn, primary.ssn.replace(/-/g, ""));
-
-  // ── Part I: Lines 1–14 ──
-
-  // Line 1: AGI
-  setCurrencyField(form, F.line1, result.agi);
-
-  // Lines 2a–2d: Foreign income adjustments (usually 0)
-  const form2555Exclusion = result.form2555
-    ? result.form2555.foreignEarnedIncomeExclusion.plus(
-        result.form2555.housingDeduction ?? new Decimal(0),
-      )
-    : new Decimal(0);
-  if (!form2555Exclusion.isZero()) {
-    setCurrencyField(form, F.line2b, form2555Exclusion);
-  }
-  const line2d = form2555Exclusion; // 2a and 2c are rarely used
-  if (!line2d.isZero()) {
-    setCurrencyField(form, F.line2d, line2d);
-  }
-
-  // Line 3: AGI + foreign adjustments
-  const line3 = result.agi.plus(line2d);
-  setCurrencyField(form, F.line3, line3);
-
-  // Line 4: Number of qualifying children under 17
-  const qualifyingChildren = input.taxpayer.dependents.filter(
-    (dep) => dep.qualifiesForCTC,
-  ).length;
-  setTextField(form, F.line4, qualifyingChildren > 0 ? String(qualifyingChildren) : "");
-
-  // Line 5: Children × per-child credit
-  const line5 = ctc.perChild.times(qualifyingChildren);
-  setCurrencyField(form, F.line5, line5);
-
-  // Line 6: Number of other dependents
-  const otherDependents = input.taxpayer.dependents.filter(
-    (dep) => dep.qualifiesForODC && !dep.qualifiesForCTC,
-  ).length;
-  setTextField(form, F.line6, otherDependents > 0 ? String(otherDependents) : "");
-
-  // Line 7: Other dependents × $500
-  const line7 = ctc.otherDependentCredit.times(otherDependents);
-  setCurrencyField(form, F.line7, line7);
-
-  // Line 8: Total credits before limitation
-  const line8 = line5.plus(line7);
-  setCurrencyField(form, F.line8, line8);
-
-  // Line 9: Filing status threshold
-  const threshold = ctc.phaseOutThreshold[filingStatus];
-  setCurrencyField(form, F.line9, threshold);
-
-  // Line 10: Excess over threshold (rounded up to next $1,000)
-  const rawExcess = line3.minus(threshold);
-  let line10 = new Decimal(0);
-  if (rawExcess.gt(0)) {
-    const thousandsOver = rawExcess.dividedBy(1000).ceil();
-    line10 = thousandsOver.times(1000);
-  }
-  setCurrencyField(form, F.line10, line10);
-
-  // Line 11: 5% phase-out reduction
-  const line11 = line10.times(d("0.05"));
-  setCurrencyField(form, F.line11, line11);
-
-  // Line 12: Is line 8 > line 11?
-  const line12IsYes = line8.gt(line11);
-  setCheckBox(form, F.line12No, !line12IsYes);
-  setCheckBox(form, F.line12Yes, line12IsYes);
-  if (line12IsYes) {
-    setCurrencyField(form, F.line12, f8812.ctcBeforeLimitation);
-  }
-
-  // Line 13: Credit Limit Worksheet A (tax liability after other credits)
-  // Reconstruct: tax before credits minus other credits = what engine passes as taxLiability
-  const taxAfterOtherCredits = zeroFloor(
-    result.totalTaxBeforeCredits.minus(result.otherCredits),
-  );
-  setCurrencyField(form, F.line13, taxAfterOtherCredits);
-
-  // Line 14: Nonrefundable CTC
-  setCurrencyField(form, F.line14, f8812.nonrefundableCTC);
-
-  // ── Part II-A: Additional Child Tax Credit (Lines 15–20) ──
-
-  // Line 15: Reserved — leave blank
-
-  // Line 16a: Unused CTC (Line 12 - Line 14)
-  if (f8812.unusedCTC.gt(0)) {
-    setCurrencyField(form, F.line16a, f8812.unusedCTC);
-
-    // Line 16b: Qualifying children × $1,700
-    const maxRefundablePerChild = d(1700);
-    const line16bAmount = maxRefundablePerChild.times(qualifyingChildren);
-    setTextField(form, F.line16bCount, qualifyingChildren > 0 ? String(qualifyingChildren) : "");
-    setCurrencyField(form, F.line16b, line16bAmount);
-
-    // Line 17: Smaller of 16a or 16b
-    const line17 = Decimal.min(f8812.unusedCTC, line16bAmount);
-    setCurrencyField(form, F.line17, line17);
-
-    // Line 18a: Earned income
-    // Per §32(c)(2): W-2 wages + net SE earnings - deductible half SE tax
-    const totalWages = (input.w2s ?? []).reduce(
-      (acc, w2) => acc.plus(d(w2.wages)),
-      new Decimal(0),
-    );
-    const netSEEarnings = result.scheduleSE?.netSEEarnings ?? new Decimal(0);
-    const deductibleHalf = result.scheduleSE?.deductibleHalf ?? new Decimal(0);
-    const earnedIncome = sum(totalWages, netSEEarnings).minus(deductibleHalf);
-    setCurrencyField(form, F.line18a, earnedIncome);
-
-    // Line 19: Is earned income > $2,500?
-    const earnedIncomeThreshold = d(2500);
-    const line19IsYes = earnedIncome.gt(earnedIncomeThreshold);
-    setCheckBox(form, F.line19No, !line19IsYes);
-    setCheckBox(form, F.line19Yes, line19IsYes);
-    if (line19IsYes) {
-      setCurrencyField(form, F.line19, f8812.earnedIncomeExcess);
-    }
-
-    // Line 20: 15% of line 19
-    setCurrencyField(form, F.line20, f8812.fifteenPercent);
-
-    // Next question: Is line 16b $5,100 or more? (3+ children)
-    const has3PlusChildren = line16bAmount.gte(5100);
-    setCheckBox(form, F.nextNo, !has3PlusChildren);
-    setCheckBox(form, F.nextYes, has3PlusChildren);
-
-    // ── Part II-B: 3+ Qualifying Children (Lines 21–26) ──
-    if (has3PlusChildren && f8812.fifteenPercent.lt(line17)) {
-      // Line 21: SS + Medicare taxes withheld from W-2s
-      const ssMedicareWithheld = (input.w2s ?? []).reduce(
-        (acc, w2) =>
-          acc.plus(d(w2.socialSecurityWithheld)).plus(d(w2.medicareWithheld)),
-        new Decimal(0),
-      );
-      setCurrencyField(form, F.line21, ssMedicareWithheld);
-
-      // Line 22: Schedule 1 line 15 + Schedule 2 lines 5, 6, 13
-      const sched1Line15 = result.schedule1?.seDeduction ?? new Decimal(0);
-      const sched2Line5 = result.schedule2?.unreportedSSTax ?? new Decimal(0);
-      const sched2Line6 = result.schedule2?.form8919Tax ?? new Decimal(0);
-      // Schedule 2 Line 13 (uncollected SS/Medicare) is not separately tracked in result
-      const line22 = sum(sched1Line15, sched2Line5, sched2Line6);
-      setCurrencyField(form, F.line22, line22);
-
-      // Line 23: Lines 21 + 22
-      const line23 = ssMedicareWithheld.plus(line22);
-      setCurrencyField(form, F.line23, line23);
-
-      // Line 24: Form 1040 line 27a (EIC) + Schedule 3 line 11 (excess SS withholding)
-      const eic = result.earnedIncomeCredit;
-      const sched3Line11 = result.schedule3?.excessSSWithholding ?? new Decimal(0);
-      const line24 = eic.plus(sched3Line11);
-      setCurrencyField(form, F.line24, line24);
-
-      // Line 25: Line 23 - Line 24
-      const line25 = zeroFloor(line23.minus(line24));
-      setCurrencyField(form, F.line25, line25);
-
-      // Line 26: Larger of line 20 or line 25
-      const line26 = Decimal.max(f8812.fifteenPercent, line25);
-      setCurrencyField(form, F.line26, line26);
+  setCurrencyField(form, F.line1, lineIds.has("1") ? audited("1") : result.agi);
+  // A positive legacy possession aggregate does not identify its source. Leave
+  // unknown component fields blank; never guess Puerto Rico versus Form 4563.
+  for (const line of ["2a", "2b", "2c", "2d"] as const) {
+    if (f8812.lines.some(entry => entry.line === line)) {
+      setCurrencyField(form, F[`line${line}`], audited(line));
     }
   }
-
-  // ── Part II-C: Line 27 — ACTC ──
-  setCurrencyField(form, F.line27, f8812.actc);
-
+  for (const line of ["3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14"] as const) {
+    setCurrencyField(form, F[`line${line}`], audited(line));
+  }
+  const hasCredit = audited("12").gt(0);
+  setCheckBox(form, F.line12No, !hasCredit);
+  setCheckBox(form, F.line12Yes, hasCredit);
+  // Filing Form 2555 disallows ACTC. Line 15 is reserved in the actual form.
+  if (audited("16a").gt(0) && !input.form2555) {
+    for (const line of ["16a", "16b", "17", "18a", "20"] as const) {
+      setCurrencyField(form, F[`line${line}`], audited(line));
+    }
+    setCurrencyField(form, F.line16bCount, audited("4"));
+    if (f8812.lines.some(entry => entry.line === "18b")) setCurrencyField(form, F.line18b, audited("18b"));
+    const hasEarnedExcess = audited("19").gt(0);
+    setCheckBox(form, F.line19No, !hasEarnedExcess);
+    setCheckBox(form, F.line19Yes, hasEarnedExcess);
+    if (hasEarnedExcess) setCurrencyField(form, F.line19, audited("19"));
+    const threeOrMore = audited("16b").gte(5100);
+    setCheckBox(form, F.nextNo, !threeOrMore);
+    setCheckBox(form, F.nextYes, threeOrMore);
+    const needsPayroll = threeOrMore
+      ? audited("20").lt(audited("17"))
+      : input.childTaxCredit?.bonaFidePuertoRicoResident === true;
+    if (needsPayroll) {
+      for (const line of ["21", "22", "23", "24", "25", "26"] as const) {
+        setCurrencyField(form, F[`line${line}`], audited(line));
+      }
+    }
+    setCurrencyField(form, F.line27, audited("27"));
+  }
   return doc;
 }
