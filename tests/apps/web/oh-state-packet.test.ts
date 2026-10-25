@@ -13,6 +13,7 @@ import { buildWorkspaceStructuredFacts } from "@tax-engine/engine";
 import { buildWorkspaceFilledReturnDownload } from "../../../apps/web/src/lib/workspace-filled-return";
 import type { GuidedFlowState } from "../../../apps/web/src/lib/guided-interview-flow";
 import * as ohioReferenceForms from "../../../src/pdf/fill-oh-reference-forms";
+import { completePersonalInfo, completeW2Entry } from "../../guided-interview/complete-facts";
 
 vi.mock("server-only", () => ({}));
 
@@ -148,6 +149,7 @@ function createGuidedFlowStateWithOhioStateSelection(): GuidedFlowState {
     ],
     sectionData: {
       "personal-info": {
+        ...completePersonalInfo,
         dateOfBirth: "1990-02-15",
         usResidencyMonths: "12",
         stateResidency: "full-year",
@@ -165,6 +167,9 @@ function createGuidedFlowStateWithOhioStateSelection(): GuidedFlowState {
       "income-w2": {
         entries: [
           {
+            ...completeW2Entry,
+            stateTaxReporting: "single",
+            state: "OH",
             employerName: "Northwind Labs",
             employerEin: "12-3456789",
             wages: "75000",

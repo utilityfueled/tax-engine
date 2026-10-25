@@ -12,6 +12,7 @@ import type {
 import { buildWorkspaceStructuredFacts } from "@tax-engine/engine";
 import { buildWorkspaceFilledReturnDownload } from "../../../apps/web/src/lib/workspace-filled-return";
 import type { GuidedFlowState } from "../../../apps/web/src/lib/guided-interview-flow";
+import { completePersonalInfo, completeW2Entry, completeInterestEntry, completeDividendEntry } from "../../guided-interview/complete-facts";
 
 vi.mock("server-only", () => ({}));
 
@@ -147,6 +148,7 @@ function createGuidedFlowStateWithPennsylvaniaStateSelection(): GuidedFlowState 
     ],
     sectionData: {
       "personal-info": {
+        ...completePersonalInfo,
         dateOfBirth: "1990-02-15",
         usResidencyMonths: "12",
         stateResidency: "full-year",
@@ -164,6 +166,9 @@ function createGuidedFlowStateWithPennsylvaniaStateSelection(): GuidedFlowState 
       "income-w2": {
         entries: [
           {
+            ...completeW2Entry,
+            stateTaxReporting: "single",
+            state: "PA",
             employerName: "Northwind Labs",
             employerEin: "12-3456789",
             wages: "75000",
@@ -223,6 +228,9 @@ function createGuidedFlowStateWithPennsylvaniaTaxForgiveness(): GuidedFlowState 
       "income-w2": {
         entries: [
           {
+            ...completeW2Entry,
+            stateTaxReporting: "single",
+            state: "PA",
             employerName: "Northwind Labs",
             employerEin: "12-3456789",
             wages: "6000",
@@ -266,6 +274,7 @@ function createGuidedFlowStateWithPennsylvaniaScheduleAInterest(): GuidedFlowSta
       "income-investments": {
         interestEntries: [
           {
+            ...completeInterestEntry,
             payer: "Keystone Bank",
             interestIncome: "3000",
             federalWithheld: "0",
@@ -304,6 +313,7 @@ function createGuidedFlowStateWithPennsylvaniaScheduleBDividends(): GuidedFlowSt
         interestEntries: [],
         dividendEntries: [
           {
+            ...completeDividendEntry,
             payer: "Keystone Brokerage",
             ordinaryDividends: "2000",
             qualifiedDividends: "0",

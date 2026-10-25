@@ -44,3 +44,13 @@ After actual demand is supplied, research the selected state's official final
 instructions, write per-line specs, derive independent expected cases, collect
 complete facts and qualify the exact final form revision. All these gates remain
 required; selecting a state cannot unlock generic draft output for filing.
+
+## Complete historical review-packet fixtures — 2026-10-25
+
+The PA/OH synthetic packet fixtures now provide actual personal eligibility,
+W-2 owner/state, and investment source facts required by the guided flow. All
+eight existing packet tests pass with their original numeric, disclosure and
+missing-fact assertions retained. Scoped lint passes. Evidence:
+`.local/upgrade-evidence/state-packet-complete-facts.log`.
+This fixes test inputs for historical review output; it does not qualify a
+state, tax year or filing form. The complete investment helpers are in `4679852`.
