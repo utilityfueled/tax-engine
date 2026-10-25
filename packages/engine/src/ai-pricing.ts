@@ -1,5 +1,8 @@
 import Decimal from "decimal.js";
 
+// Exact ledger costs must not inherit the engine's/default significant-digit rounding.
+const Money = Decimal.clone({ precision: 80 });
+
 export interface AiPrice {
   model: string;
   effectiveFrom: string;
@@ -62,19 +65,19 @@ export function calculateAiCost(model: string, at: string, usage: AiTokenUsage) 
   const [input, output, cached, write30m, write12h] = tokenCounts;
   if (cached + write30m + write12h > input) throw new Error("Cache token counts exceed total input.");
   if ((write30m && !price.cacheWrite30m) || (write12h && !price.cacheWrite12h)) throw new Error("Unsupported cache-write price.");
-  const storage = new Decimal(usage.cachedTokenHours ?? "0");
+  const storage = new Money(usage.cachedTokenHours ?? "0");
   if (!storage.isFinite() || storage.isNegative() || (!storage.isZero() && !price.storagePerMillionTokenHours)) throw new Error("Unsupported cache storage usage.");
   const long = price.longContextThreshold !== undefined && input > price.longContextThreshold;
-  const inputCost = new Decimal(input - cached - write30m - write12h).times(price.input)
-    .plus(new Decimal(cached).times(price.cachedInput))
-    .plus(new Decimal(write30m).times(price.cacheWrite30m ?? "0"))
-    .plus(new Decimal(write12h).times(price.cacheWrite12h ?? "0"))
+  const inputCost = new Money(input - cached - write30m - write12h).times(price.input)
+    .plus(new Money(cached).times(price.cachedInput))
+    .plus(new Money(write30m).times(price.cacheWrite30m ?? "0"))
+    .plus(new Money(write12h).times(price.cacheWrite12h ?? "0"))
     .times(long ? "2" : "1");
-  const outputCost = new Decimal(output).times(price.output).times(long ? "1.5" : "1");
+  const outputCost = new Money(output).times(price.output).times(long ? "1.5" : "1");
   const providerCostUsd = inputCost.plus(outputCost)
     .plus(storage.times(price.storagePerMillionTokenHours ?? "0"))
     .div("1000000").times(usage.regionalProcessing ? price.regionalUplift : "1");
-  const retailCharge = Decimal.max("1", providerCostUsd.times("100").ceil());
+  const retailCharge = Money.max("1", providerCostUsd.times("100").ceil());
   if (retailCharge.gt(Number.MAX_SAFE_INTEGER)) throw new Error("Charge exceeds the supported ledger range.");
   return { providerCostUsd: providerCostUsd.toFixed(), retailChargeCents: retailCharge.toNumber(), pricingEffectiveFrom: price.effectiveFrom };
 }

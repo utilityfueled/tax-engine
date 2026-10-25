@@ -1,6 +1,7 @@
 import { Kysely, PostgresDialect } from "kysely";
 import { Pool } from "pg";
 import { resolveDeploymentMode } from "./deployment-mode";
+import { ensureHostedAiLedgerSchema } from "./hosted-ai-ledger-schema";
 
 type HostedDbEnvironment = Record<string, string | undefined>;
 
@@ -263,6 +264,7 @@ async function createHostedAppTables(pool: Pool) {
     CREATE INDEX IF NOT EXISTS hosted_ai_usage_ledger_owner_cycle_idx
       ON hosted_ai_usage_ledger (owner_id, cycle_key, created_at DESC);
   `);
+  await ensureHostedAiLedgerSchema(pool);
 }
 
 export async function ensureHostedAppSchema(
