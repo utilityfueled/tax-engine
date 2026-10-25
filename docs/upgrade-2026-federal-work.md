@@ -954,3 +954,11 @@ reviewed expected outputs; final year-specific forms and mappings; published
 2027 first-quarter interest rate for 2026 Form2210 exposure extending into that
 quarter. No missing source, reviewer or future rate has been invented. Parent
 owns hosted/provider/staging evidence and selected-state qualification.
+
+
+## 2026-10-25 — Actual possession exclusions in Social Security
+
+- Refreshed Publication915 Worksheet1 line5. Consumed the actual Puerto Rico and American Samoa source contract from 0b29f28; missing amounts or source confirmation are rejected when supplied, and positive-benefit 2026 calculations require this source pair. Historical absent facts remain a legacy preview rather than an invented assertion of zero.
+- Two regressions failed before the fix. The ordinary synthetic worksheet has10000 wages,20000 benefits and25000 actual exclusions: provisional income45000 produces13850 taxable benefits and23850 AGI. With4000 attributable to the actual prior year, the lump-sum method produces12150; the25000 aggregate replaces rather than duplicates the known exclusions. A contradictory smaller aggregate rejects.
+-34 focused calculation/model tests pass; root types,3469 spec references and scoped lint/diff checks pass. Rule versions2025.22/2026.17 remain unqualified. Source confirmation establishes the exclusion amount already determined by the taxpayer; it does not implement or qualify a resident Form4563 return.
+- Added to the bounded historical-source queue after facts audit: new 1099-G family-leave source box under Rev.Rul.2025-4 and actual unemployment repayment/contributory rules. Positive unsupported PFML/repayment paths remain gated by source collection until their calculation/routing is implemented.

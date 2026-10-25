@@ -32,4 +32,26 @@ describe("Income exclusion worksheet addbacks",()=>{
     expect(result.socialSecurityBenefitsTaxable.toString()).toBe("17000");
     expect(result.form8815?.modifiedAGI.toString()).toBe("111935");
   });
+  it("adds actual possession exclusions once and reconciles lump-sum aggregates",()=>{
+    const input=fixture({w2s:[wage("10000")],formSSA1099:[{netBenefits:"20000"}],socialSecurityFacts:{puertoRicoIncomeExclusion:"20000",americanSamoaIncomeExclusion:"5000",sourceFactsConfirmed:true}});
+    const r=calculateFederalTax(input);
+    // Pub915: half benefits10000+wages10000+actual exclusions25000=45000;
+    // min(17000,4500+(45000-34000)*85%)=13850. Exclusions are not gross income.
+    expect(r.socialSecurityBenefitsTaxable.toString()).toBe("13850");
+    expect(r.agi.toString()).toBe("23850");
+    expect(r.socialSecurityBenefitsWorksheet?.lines.find(l=>l.form==="Pub915 WS1"&&l.line==="5")?.value.toString()).toBe("25000");
+    const election={currentYearExclusionsAdjustments:"25000",earlierYears:[{taxYear:2024,filingStatus:"single" as const,benefitsReceivedInEarlierYear:"20000",delayedBenefitsReceivedInCurrentYear:"4000",adjustedGrossIncome:"10000",taxExemptInterest:"0",exclusionsAdjustments:"0",taxableBenefitsPreviouslyReported:"0"}]};
+    const withAggregate=fixture({...input,socialSecurityLumpSumElection:election});
+    // Current16000 benefits: half8000+10000+25000=43000 ->12150; prior-year increment0.
+    expect(calculateFederalTax(withAggregate).socialSecurityBenefitsTaxable.toString()).toBe("12150");
+    expect(()=>calculateFederalTax({...withAggregate,socialSecurityLumpSumElection:{...election,currentYearExclusionsAdjustments:"24999"}})).toThrow(/aggregate exclusions/);
+  });
+  it("rejects unknown possession exclusion facts and preserves explicit zero",()=>{
+    const base=fixture({w2s:[wage("10000")],formSSA1099:[{netBenefits:"20000"}]});
+    for(const facts of [{},{puertoRicoIncomeExclusion:"0",sourceFactsConfirmed:true},{puertoRicoIncomeExclusion:"0",americanSamoaIncomeExclusion:"0",sourceFactsConfirmed:false},{puertoRicoIncomeExclusion:"-1",americanSamoaIncomeExclusion:"0",sourceFactsConfirmed:true},{puertoRicoIncomeExclusion:"Infinity",americanSamoaIncomeExclusion:"0",sourceFactsConfirmed:true}]) {
+      expect(()=>calculateFederalTax({...base,socialSecurityFacts:facts})).toThrow(/Social Security possession/);
+    }
+    const r=calculateFederalTax({...base,socialSecurityFacts:{puertoRicoIncomeExclusion:"0",americanSamoaIncomeExclusion:"0",sourceFactsConfirmed:true}});
+    expect(r.socialSecurityBenefitsTaxable.toString()).toBe("0");
+  });
 });

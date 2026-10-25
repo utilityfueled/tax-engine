@@ -1652,6 +1652,18 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     ...(input.formSSA1099 ?? []).map((form) => d(form.netBenefits)),
     ...(input.formRRB1099 ?? []).map((form) => d(form.netSocialSecurityEquivalentBenefitPortion))
   );
+  const possessionExclusions = input.socialSecurityFacts;
+  const requiresPossessionSources = possessionExclusions !== undefined || (year === 2026 && socialSecurityBenefitsGross.gt(0));
+  if (requiresPossessionSources) {
+    if (possessionExclusions?.sourceFactsConfirmed !== true
+      || possessionExclusions.puertoRicoIncomeExclusion === undefined
+      || possessionExclusions.americanSamoaIncomeExclusion === undefined) {
+      throw new Error("Social Security possession exclusion sources require both actual amounts and confirmation");
+    }
+    for (const value of [possessionExclusions.puertoRicoIncomeExclusion, possessionExclusions.americanSamoaIncomeExclusion]) {
+      if (!d(value).isFinite() || d(value).lt(0)) throw new Error("Social Security possession exclusions must be finite and nonnegative");
+    }
+  }
   const socialSecurityBenefitsWorksheet = socialSecurityBenefitsGross.greaterThan(0)
     ? calculateSocialSecurityBenefitsWorksheet({
       filingStatus,
@@ -1672,7 +1684,9 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
       exclusionsAdjustments: sum(
         form2555IncomeReduction,
         form2555HousingDeduction,
-        adoptionBenefitResult?.allowableExclusion ?? new Decimal(0)
+        adoptionBenefitResult?.allowableExclusion ?? new Decimal(0),
+        d(possessionExclusions?.puertoRicoIncomeExclusion),
+        d(possessionExclusions?.americanSamoaIncomeExclusion)
       ),
       livedWithSpouseAtAnyTimeDuringYear: input.taxpayer.livedWithSpouseAtAnyTimeDuringYear,
       adjustments: {

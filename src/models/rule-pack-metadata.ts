@@ -27,7 +27,7 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.21",
+    ruleVersion: "2025.22",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
@@ -43,7 +43,7 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
       { url: "https://www.irs.gov/pub/irs-pdf/f1040sc.pdf", section: "Official income lines3-7 and other-income routing to net profit", revision: "2025 final form; applicable current-law arithmetic", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/pub/irs-pdf/f8815.pdf", section: "Source bond history, coordinated education costs, prior-interest adjustment and line9 MAGI", revision: "2025 final form and instructions; independently indexed2026 thresholds", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i1099int", section: "Separate taxable Box 1 and Treasury Box 3 source amounts", revision: "Continuous-use January2024 instructions", retrievedAt: "2026-10-25" },
-      { url: "https://www.irs.gov/publications/p915", section: "Worksheet1 lines3-8 and19; actual exclusion addbacks and lump-sum comparison", revision: "2025 final publication; applicable current-law rules", retrievedAt: "2026-10-25" },
+      { url: "https://www.irs.gov/publications/p915", section: "Worksheet1 lines3-8 and19; confirmed PR/AS, foreign/adoption addbacks and lump-sum comparison", revision: "2025 final publication; applicable current-law rules", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i1040gi", section: "Standard deduction, separate-owner excess Social Security, foreign income tax worksheet and wage routing", revision: "2025 final instructions; applicable current-law rules", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i2555", section: "Actual foreign income sources; net exclusion45 and housing deduction50", revision: "2025 final instructions with2026indexed values", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/publications/p970", section: "Worksheets2-1 and3-1; chapter9 savings-bond actual exclusion MAGI addbacks", revision: "2025 final publication", retrievedAt: "2026-10-25" },
@@ -65,7 +65,7 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.16-law-integration-draft",
+    ruleVersion: "2026.17-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
@@ -83,7 +83,7 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
       { url: "https://www.irs.gov/instructions/i1040sca", section: "Line5a source withholding, payment year and no duplicate deduction", revision: "2025 final instructions; applicable current-law rules", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/pub/irs-pdf/f8815.pdf", section: "Source bond history, coordinated education costs, prior-interest adjustment and line9 MAGI", revision: "2025 final form and instructions; independently indexed2026 thresholds", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i1099int", section: "Separate taxable Box 1 and Treasury Box 3 source amounts", revision: "Continuous-use January2024 instructions", retrievedAt: "2026-10-25" },
-      { url: "https://www.irs.gov/publications/p915", section: "Worksheet1 lines3-8 and19; actual exclusion addbacks and lump-sum comparison", revision: "2025 final publication; applicable current-law rules", retrievedAt: "2026-10-25" },
+      { url: "https://www.irs.gov/publications/p915", section: "Worksheet1 lines3-8 and19; confirmed PR/AS, foreign/adoption addbacks and lump-sum comparison", revision: "2025 final publication; applicable current-law rules", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i1040gi", section: "Standard deduction, separate-owner excess Social Security, foreign income tax worksheet and wage routing", revision: "2025 final instructions; applicable current-law rules", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i2555", section: "Actual foreign income sources; net exclusion45 and housing deduction50", revision: "2025 final instructions with2026indexed values", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/publications/p970", section: "Worksheets2-1 and3-1; chapter9 savings-bond actual exclusion MAGI addbacks", revision: "2025 final publication", retrievedAt: "2026-10-25" },
