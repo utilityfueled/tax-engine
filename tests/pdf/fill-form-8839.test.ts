@@ -266,6 +266,7 @@ const phaseOutFixture: TaxYearInput = {
   form1095A: [],
   donations: [],
   form8839: {
+    exclusionMagi: "283000",
     children: [
       {
         childName: "Lily Chen",
@@ -306,26 +307,22 @@ describe("Form 8839 PDF filling — Single filer with MAGI phase-out and employe
   });
 
   it("fills Part II Line 8 — MAGI exceeds threshold, checkbox Yes", () => {
-    // AGI = ~$280,000 (wages), MAGI = AGI > $259,190
+    // Wages include $1,785 of taxable employer benefits; credit MAGI is $281,785.
     expect(isChecked(doc, F.line8CheckboxYes)).toBe(true);
     expect(isChecked(doc, F.line8CheckboxNo)).toBe(false);
   });
 
   it("fills Part II Line 8 — excess MAGI value", () => {
-    const val = getFieldText(doc, F.line8);
-    expect(val).toBeDefined();
-    // MAGI - $259,190 = some positive amount
-    const excess = parseInt(val!, 10);
-    expect(excess).toBeGreaterThan(0);
+    expect(result.agi.toString()).toBe("281785");
+    expect(getFieldText(doc, F.line7)).toBe("281785");
+    expect(getFieldText(doc, F.line8)).toBe("22595");
   });
 
   it("fills Part II Line 11a — credit after phase-out is reduced", () => {
-    const val = getFieldText(doc, F.line11a[0]);
-    expect(val).toBeDefined();
-    const creditAfterPhaseOut = parseInt(val!, 10);
-    // Should be less than Line 6 ($15,000) due to phase-out
-    expect(creditAfterPhaseOut).toBeLessThan(15000);
-    expect(creditAfterPhaseOut).toBeGreaterThan(0);
+    // 22,595 / 40,000 rounds to .565; 15,000 - 8,475 = 6,525.
+    expect(getFieldText(doc, F.line11a[0])).toBe("6525");
+    expect(getFieldText(doc, F.line13)).toBe("5000");
+    expect(getFieldText(doc, F.line18)).toBe("1525");
   });
 
   it("fills Part III when employer benefits exist", () => {
@@ -342,17 +339,14 @@ describe("Form 8839 PDF filling — Single filer with MAGI phase-out and employe
   });
 
   it("fills Part III Line 30 — total excluded benefits", () => {
-    const val = getFieldText(doc, F.line30);
-    expect(val).toBeDefined();
-    const excluded = parseInt(val!, 10);
-    // Should be less than $3,000 due to phase-out
-    expect(excluded).toBeLessThan(3000);
-    expect(excluded).toBeGreaterThan(0);
+    // 23,810 / 40,000 rounds to .595; 3,000 - 1,785 = 1,215.
+    expect(getFieldText(doc, F.line25)).toBe("283000");
+    expect(getFieldText(doc, F.line30)).toBe("1215");
   });
 
   it("fills Part III Line 31 — taxable benefits", () => {
-    const val = getFieldText(doc, F.line31);
-    expect(val).toBeDefined();
+    expect(getFieldText(doc, F.line31)).toBe("1785");
+    expect(result.form8839?.taxableEmployerBenefits.toString()).toBe("1785");
   });
 });
 

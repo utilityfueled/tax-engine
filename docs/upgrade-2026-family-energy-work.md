@@ -191,3 +191,11 @@ Calculation evidence is separate from final-form qualification. The current 2026
   was rendered and inspected: line10 $500, line15 $1,000, line16 $2,800, two separate
   water-heater QMIDs/costs and the review-only footer. All five pages contain the
   notice; final source/form qualification remains pending.
+
+### Adoption integration fixture
+
+- The employer-benefit phaseout fixture now supplies the actual exclusion MAGI
+  of $283,000. Independently derived amounts: exclusion ratio .595 gives $1,215
+  excluded and $1,785 taxable; credit MAGI $281,785 gives ratio .565 and current
+  credit $6,525, split $5,000 refundable and $1,525 nonrefundable.
+- All 38 adoption PDF tests pass with the federal signed wage/refund integration.
