@@ -9,15 +9,14 @@ This repository focuses on auditability:
 
 ## Status
 
-Current capabilities include:
-- Federal Form 1040 orchestration and many supporting forms and schedules
-- State support for all 50 states with deeper validated coverage for selected states
-- Fillable PDF generation for supported federal and state forms
-- A local-first web app for guided return preparation
+No scenario is currently qualified for filing or electronic submission.
 
-Current non-goals:
-- This is not legal, tax, or financial advice
-- This project does not currently e-file returns
+- The 2025 federal and state engines provide experimental calculations; dedicated state implementations still require scenario and form review.
+- Tax year 2026 (filed in 2027) has a separate, incomplete rule pack. Full calculation and PDF output remain blocked.
+- PDF downloads are for review only and omit taxpayer IDs. They cannot be used as filing exports.
+- The local-first app collects guided facts and saves drafts. New AI profiles remain evaluation candidates.
+
+See the app's `/support` matrix and [implementation evidence and remaining work](docs/upgrade-2026-progress.md).
 
 ## Repository Layout
 
@@ -41,7 +40,7 @@ forms/blank/        Blank PDF forms used for filling tests
 ### Install
 
 ```bash
-pnpm install
+pnpm install --frozen-lockfile
 pnpm test:setup
 ```
 

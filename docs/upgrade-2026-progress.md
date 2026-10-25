@@ -1,5 +1,24 @@
 # 2026 upgrade implementation evidence
 
+## Current checkpoint
+
+Application commit `d32cb8cf3d607c643c4c7f7e1b845fcace61563f` on
+`upgrade/2026-baseline` remains **not release-ready**. There are 15,141 passing
+unit tests and 293 passing Chromium tests against both the local production
+build and the ARM64 runtime image; each browser run skips five hosted cases.
+Engine/contracts/web type checks, both builds, spec checks and lint pass.
+Branch coverage is 81.52%, below the unchanged 85% gate. The package audit has
+zero reported advisories; this does not cover operating-system vulnerabilities.
+
+The 2026 pack is incomplete, filing exports are disabled, and AI candidates are
+not promoted. Independent tax review, remaining facts/law/forms, live AI
+evaluation, atomic billing and staging/recovery rehearsal remain outstanding.
+The [machine-readable checkpoint](upgrade-2026-checkpoint.json) records command
+results, local evidence hashes, image identity and the runtime SBOM digest.
+The sections below record each work package and its limitations chronologically.
+
+## Starting point
+
 Started 2026-10-24 from `f1f79ec5c38a770cc1f4989e67a12d6ac44f3fda`.
 Remote refreshed before edits; no upstream commits were missing. The existing
 `docs/reviews/` documents were preserved. Formal verification is out of scope.
@@ -306,3 +325,68 @@ Fixture confirmations use the source type, not only a human-readable label.
 Ticker aggregation, formatting and animation preserve Decimal amounts; large
 cent-value regressions now pass. Browser tests use explicit taxpayer fixtures
 and actual field labels and assert review-only output.
+
+## Container rehearsal and resource limit
+
+The Dockerfile now includes public assets and blank templates, excludes nested
+credential files, and disables build telemetry. The smoke script supports an
+explicit Docker or Podman runtime. Next's documented webpack build worker and
+memory optimization preserve custom aliases while releasing compiler memory
+before TypeScript; the local production build, web type check and 73 focused
+browser checks pass after that configuration change.
+
+The first ARM64 Podman image build compiled JavaScript, then was killed with
+exit 137 during TypeScript in the existing 4 GiB VM. The bounded-heap retry
+stalled, and the VM stopped responding to build/SSH probes. After the approved
+restart and resize to 8 GiB, the image built successfully with a 4 GiB build
+limit and a 2560 MiB old-space limit. Podman permits only one active managed VM
+([documentation](https://docs.podman.io/en/stable/markdown/podman-machine-start.1.html)).
+
+The resulting `linux/arm64` image passes health, public asset, blank-template and
+self-host auth smoke checks. Its full production Chromium run has **293 passes,
+five hosted skips and zero failures**, with retries disabled (7.1 minutes).
+The runtime uses Node 24.22.1 and UID 1001, has no provider keys, and runs in
+self-host mode. Runtime old-space is limited to 384 MiB; V8 reports a 576 MiB
+total heap limit, and native memory is additional. This is a local synthetic
+rehearsal, not a production capacity or hosted-service qualification.
+
+Image config ID:
+`sha256:4d1f2179d38d574a5b0b916070272787b0c1b90dbf5c34702a222be31756e721`.
+The OCI archive manifest is
+`sha256:0da515abf058044ed3ae8ac7ffd16b5cc7b6d7faf6aaf2a146b8acc9fafa28e7`.
+Syft 1.55.0, checked against its official release checksum, generated a CycloneDX
+1.7 SBOM with 3,770 components from that runtime image. The ignored local file is
+`.local/upgrade-evidence/runtime-image.cdx.json`, SHA-256
+`2f7d5455a1029b5eacff97628c24b258a47363cb57c4a7f27a09dff7c5845728`.
+This SBOM is not a vulnerability scan. The temporary test container was removed;
+the local image is retained. No image publication, backup restoration, migration
+rollback or version-to-version upgrade rehearsal is claimed.
+
+## Outstanding release work
+
+This branch is an implementation checkpoint, **not completion of the upgrade**.
+No deployment, model promotion, filing enablement or electronic submission occurred.
+
+| Work package | What remains before release |
+| --- | --- |
+| Baseline | Raise branch coverage from 81.52% to at least 85% with meaningful tests; run remote CI and qualify release artifacts on the target platforms. |
+| Complete facts | Remove remaining inferred mortgage principal/lender, donation type/date/recipient, estimated-payment date, retirement code/taxable amount and education history; finish residency and eligibility rules. |
+| Federal law | Finish the independent 2026 pack, Schedule 1-A, SALT/CTC eligibility/refundability, charitable/itemized/gambling rules, care/adoption/education/529/QBI/PTC and energy transitions/carryovers, year-aware taxable-refund and historical carryover handling. Current 2026 full calculations reject. |
+| States and forms | Choose one or two launch states from demand and a documented gap analysis; verify conformity/residency/local taxes and carryovers; version and qualify every final form and mapping. No state is filing-qualified. |
+| Filing exports | Implement and test an explicit complete-data export separately from ID-redacted review downloads; retain readiness/year gates. E-filing remains a separate integration. |
+| AI routing and billing | Replace the legacy live workspace responder (including preview defaults, minimal effort and implicit Google selection); connect year-specific sources/audits/citations; implement atomic reservations, exact cost persistence and failure/retry settlement. Candidate document routes remain gated. |
+| AI evaluation | Independently review and broaden the 240 draft fixtures, collect repeated held-out runs against both baselines, verify provider account capabilities, meet quality/privacy/cost/latency gates, and implement reversible staged rollout. No live model calls were performed. |
+| Hosted rehearsal | Exercise real auth/recovery, tenant isolation, persistence/deletion, telemetry, upload limits, Redis/provider/DB outages, Stripe duplicate/retried events, migrations/rollback and backups in staging. Five hosted browser cases remain skipped. |
+| Self-host recovery | Complete full-fidelity browser-local backup/import and prove restoration; review JSON bundles are not complete recovery backups. Scan the final image for vulnerabilities, rehearse upgrades/rollback, and publish versioned artifacts only after qualification. |
+| Independent review | Human tax/spec/expected-output review, final forms and security/privacy review remain required. Formal verification remains out of scope. |
+
+Reproduce the local checks with Node 24.22.1, pnpm 10.34.8, Python 3.13+
+(`pnpm test:setup`), fetched sample documents and Playwright Chromium. The checked
+commands are `pnpm test`, `pnpm test:coverage`, `pnpm typecheck`,
+`pnpm typecheck:contracts`, `pnpm typecheck:web`, `pnpm spec:validate`,
+`pnpm spec:inventory:check`, `pnpm build`, `pnpm build:web`, `pnpm lint`, and
+`pnpm test:web`. Coverage fails only its branch threshold after all 15,141 tests
+pass. Lint has zero errors and 3,119 warnings. Spec validation resolves all 2,958
+test references; reference existence is not assertion correctness. The latest
+package audit reports zero advisories across 488 entries; no OS-image scan or
+production exploitability conclusion is implied.

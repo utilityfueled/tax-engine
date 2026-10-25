@@ -1,0 +1,205 @@
+{
+  "schemaVersion": 1,
+  "assessedDate": "2026-10-24",
+  "baseCommit": "f1f79ec5c38a770cc1f4989e67a12d6ac44f3fda",
+  "applicationCommit": "d32cb8cf3d607c643c4c7f7e1b845fcace61563f",
+  "branch": "upgrade/2026-baseline",
+  "releaseReady": false,
+  "evidenceBoundary": "Local synthetic checks only. No remote CI, staging, production, live provider evaluation, independent tax review or electronic submission.",
+  "runtime": {
+    "node": "24.22.1",
+    "pnpm": "10.34.8",
+    "pdfTests": "Python 3.13+ and hash-pinned pypdf via pnpm test:setup",
+    "browser": "Playwright Chromium; fetched sample documents"
+  },
+  "checks": [
+    {
+      "id": "unit",
+      "command": "pnpm test",
+      "status": "passed",
+      "evidence": ".local/upgrade-evidence/checkpoint-unit.log",
+      "evidenceSha256": "dc42b089d26115cf6fe1d5990661dfe525729f7556303c882257cd4692947f16",
+      "passed": 15141,
+      "files": 482
+    },
+    {
+      "id": "coverage",
+      "command": "pnpm test:coverage",
+      "status": "failed",
+      "evidence": ".local/upgrade-evidence/final-coverage-2.log",
+      "evidenceSha256": "2999ea890d27a72c3d19668a5a238c7545aac59dac9347dc9c4a2ac32b16205d",
+      "testsPassed": 15141,
+      "branchesPercent": "81.52",
+      "branchThresholdPercent": "85",
+      "reason": "Branch coverage threshold; no test failures."
+    },
+    {
+      "id": "engine-types",
+      "command": "pnpm typecheck",
+      "status": "passed",
+      "evidence": ".local/upgrade-evidence/final-engine-types.log",
+      "evidenceSha256": "5888bcaa4f681b3f7bf48999ae0817c16b3af178b8c13f7d91414fdef8ea04d9"
+    },
+    {
+      "id": "contract-types",
+      "command": "pnpm typecheck:contracts",
+      "status": "passed",
+      "evidence": ".local/upgrade-evidence/checkpoint-contracts.log",
+      "evidenceSha256": "0c2a6bff203db409d0f68d48f7b21a6ac6bd6098310256e72a9c6e558bc3943d"
+    },
+    {
+      "id": "web-types",
+      "command": "pnpm typecheck:web",
+      "status": "passed",
+      "evidence": ".local/upgrade-evidence/final-web-types.log",
+      "evidenceSha256": "249e0be3cf6277994e8d22e8440bebe6db10861cab79fe97aa4952837f3ff073"
+    },
+    {
+      "id": "spec",
+      "command": "pnpm spec:validate",
+      "status": "passed",
+      "evidence": ".local/upgrade-evidence/final-spec.log",
+      "evidenceSha256": "b39d52192c16b503c371f45672bedfc85921a2e85f2ed2976a5e6292b69e4e87",
+      "references": 2958,
+      "missing": 0,
+      "broken": 0,
+      "limitation": "Reference existence does not establish assertion correctness."
+    },
+    {
+      "id": "inventory",
+      "command": "pnpm spec:inventory:check",
+      "status": "passed",
+      "evidence": ".local/upgrade-evidence/final-inventory.log",
+      "evidenceSha256": "846ee1105cfb137b691fc9b9faa383c54ef9f9e367b6b3416b2abe4ccb15cdef"
+    },
+    {
+      "id": "engine-build",
+      "command": "pnpm build",
+      "status": "passed",
+      "evidence": ".local/upgrade-evidence/checkpoint-engine-build.log",
+      "evidenceSha256": "d075c8ab15a7843462a88f3304147338e40a1fb638a358eeb51b2b7984d778ec"
+    },
+    {
+      "id": "web-build",
+      "command": "pnpm build:web",
+      "status": "passed",
+      "evidence": ".local/upgrade-evidence/final-web-build.log",
+      "evidenceSha256": "5d66f39fe5efe1e133d8d9b67a5e73ed134428dee10d630673e2b5a2e914e7e7"
+    },
+    {
+      "id": "lint",
+      "command": "pnpm lint",
+      "status": "passed-with-warnings",
+      "evidence": ".local/upgrade-evidence/final-lint-3.log",
+      "evidenceSha256": "3e6d8e4c971580ebb04b0ace70d646d515a015fa686f7e56c65c30e7cbb05a85",
+      "errors": 0,
+      "warnings": 3119
+    },
+    {
+      "id": "browser-local-production",
+      "command": "pnpm test:web --retries=0 --timeout=30000",
+      "status": "passed-with-skips",
+      "evidence": ".local/upgrade-evidence/browser-final.log",
+      "evidenceSha256": "446b45d7e7c9ab1ad1435585cc974cfee847fef7c373f66fa6019edb708c9631",
+      "passed": 293,
+      "skipped": 5,
+      "failed": 0,
+      "limitation": "Hosted cases skipped; synthetic local data and no provider/billing credentials."
+    },
+    {
+      "id": "browser-worker-configuration",
+      "command": "Production Chromium guided-interview/workspace-upload/workspace-lifecycle/responsive with retries disabled",
+      "status": "passed",
+      "evidence": ".local/upgrade-evidence/browser-worker-check.log",
+      "evidenceSha256": "349190119d4841c755c4ea46b51a583c07fd107a057162bd578eb7721c3c7fd8",
+      "passed": 73,
+      "failed": 0
+    },
+    {
+      "id": "container-build",
+      "command": "podman build --memory=4g --memory-swap=4g --tag localhost/tax-engine:2026-upgrade --file Dockerfile .",
+      "status": "passed",
+      "evidence": ".local/upgrade-evidence/container-build-4.log",
+      "evidenceSha256": "6a4c0623abd211c4d3f992805650286f1ed6e4cca0436e652f5783595a2fdadd"
+    },
+    {
+      "id": "container-smoke",
+      "command": "TAX_ENGINE_CONTAINER_RUNTIME=podman node scripts/smoke-container.mjs localhost/tax-engine:2026-upgrade",
+      "status": "passed",
+      "evidence": ".local/upgrade-evidence/container-smoke.log",
+      "evidenceSha256": "e2fa0c9f4f205c2cc670975c8d0136a2cf2949b01dccb49940bc9a720584893b",
+      "scope": [
+        "health",
+        "public assets",
+        "blank 1040 template",
+        "self-host auth bypass"
+      ]
+    },
+    {
+      "id": "browser-runtime-image",
+      "command": "PLAYWRIGHT_DISABLE_WEBSERVER=true PLAYWRIGHT_BASE_URL=http://127.0.0.1:3109 pnpm test:web --retries=0 --timeout=30000",
+      "status": "passed-with-skips",
+      "evidence": ".local/upgrade-evidence/container-browser.log",
+      "evidenceSha256": "eec46d4dbd8d7f31c24d8d4405ba75018c2ea1b2e1b7b4ffbac9e23b7f699a67",
+      "passed": 293,
+      "skipped": 5,
+      "failed": 0,
+      "durationMinutes": "7.1",
+      "limitation": "Local ARM64 runtime image; hosted cases skipped; provider and billing credentials disabled."
+    }
+  ],
+  "packageAudit": {
+    "evidence": ".local/upgrade-evidence/final-audit.json",
+    "evidenceSha256": "7f2a453eddf34072123667b1ffbd999d3da4e99fc338c9270f81f83e35b3ae2d",
+    "metadata": {
+      "vulnerabilities": {
+        "info": 0,
+        "low": 0,
+        "moderate": 0,
+        "high": 0,
+        "critical": 0
+      },
+      "dependencies": 488,
+      "devDependencies": 0,
+      "optionalDependencies": 0,
+      "totalDependencies": 488
+    },
+    "limitation": "Package advisory results do not assess deployed reachability or operating-system packages."
+  },
+  "container": {
+    "tag": "localhost/tax-engine:2026-upgrade",
+    "platform": "linux/arm64",
+    "configDigest": "sha256:4d1f2179d38d574a5b0b916070272787b0c1b90dbf5c34702a222be31756e721",
+    "ociManifestDigest": "sha256:0da515abf058044ed3ae8ac7ffd16b5cc7b6d7faf6aaf2a146b8acc9fafa28e7",
+    "sizeBytes": 378115845,
+    "published": false,
+    "runtime": {
+      "uid": 1001,
+      "node": "v24.22.1",
+      "heapLimitMiB": 576,
+      "publicAssets": true,
+      "blank1040": true,
+      "deploymentMode": "self-host",
+      "providerKeysPresent": false
+    },
+    "sbom": {
+      "path": ".local/upgrade-evidence/runtime-image.cdx.json",
+      "sha256": "2f7d5455a1029b5eacff97628c24b258a47363cb57c4a7f27a09dff7c5845728",
+      "format": "CycloneDX 1.7",
+      "generator": "Syft 1.55.0",
+      "components": 3770,
+      "subject": "Built runtime image, exported as OCI archive",
+      "vulnerabilityScanPerformed": false
+    },
+    "testContainerRemoved": true
+  },
+  "releaseBlockers": [
+    "Branch coverage is 81.52%, below the unchanged 85% threshold.",
+    "The 2026 rule pack is incomplete; full 2026 calculation is blocked.",
+    "Remaining guided mortgage, donation, payment, retirement and education defaults and eligibility rules need completion.",
+    "Independent tax review, selected-state qualification and final versioned forms are outstanding; all PDF output is review-only.",
+    "Legacy workspace AI routing, exact atomic credit accounting and independently reviewed live evaluation/promotion are unfinished.",
+    "Hosted auth, isolation, provider/Redis/DB outages, billing replay, migration rollback and backup restoration need staging evidence.",
+    "Full-fidelity browser-local backup/import and release-image publication are outstanding."
+  ]
+}
