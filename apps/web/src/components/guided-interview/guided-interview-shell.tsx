@@ -645,6 +645,7 @@ function SectionContent({
           hasSelfEmployment={state.segmentation.incomeTypes.includes("self-employment")}
           hasInvestments={state.segmentation.incomeTypes.some(type => ["investments", "retirement", "rental"].includes(type))}
           retirementEntries={getSectionData(state, "income-retirement")?.entries}
+          investment={getSectionData(state, "income-investments")}
           guidedPreview={guidedPreview}
           onDataChange={(data: OtherTaxesData) =>
             onStateChange(updateSectionData(state, "other-taxes", data))

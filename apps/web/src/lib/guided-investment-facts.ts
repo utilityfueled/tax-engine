@@ -8,6 +8,7 @@ import { Form1099IntSchema, Form1099DivSchema } from "@/models/inputs.js";
 
 export interface InvestmentSourceData extends PrivateActivitySourceData {
   payerTin?: string;
+  accountReference?: string;
   accountHolder?: "primary" | "spouse" | "joint" | "";
   stateTaxReporting?: "none" | "single" | "multiple" | "";
   state?: string;

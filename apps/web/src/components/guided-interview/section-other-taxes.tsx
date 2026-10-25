@@ -2,6 +2,8 @@
 
 import { HouseholdSourceDetails } from "./household-source-details";
 import { NiitSourceDetails } from "./niit-source-details";
+import { ForeignTaxElectionDetails } from "./foreign-tax-election-details";
+import type { InvestmentData } from "@/lib/guided-investment-facts";
 import { RetroShell } from "@/components/retro-shell";
 import { formatGuidedCurrency, parseGuidedDisplayAmount } from "@/lib/guided-currency";
 import type { GuidedPreviewMetrics } from "@/lib/guided-interview-bridge";
@@ -59,6 +61,7 @@ export function SectionOtherTaxes({
   hasInvestments,
   guidedPreview,
   retirementEntries,
+  investment,
   onDataChange,
 }: {
   data: OtherTaxesData | undefined;
@@ -66,6 +69,7 @@ export function SectionOtherTaxes({
   hasInvestments: boolean;
   guidedPreview: GuidedPreviewMetrics | null;
   retirementEntries?: RetirementEntryData[];
+  investment?: InvestmentData;
   onDataChange: (data: OtherTaxesData) => void;
 }) {
   const current = data ?? emptyOtherTaxesData;
@@ -115,6 +119,7 @@ export function SectionOtherTaxes({
         </fieldset>
 
         <NiitSourceDetails data={current.niitSources} entries={retirementEntries} onChange={niitSources => onDataChange({ ...current, niitSources })} />
+        <ForeignTaxElectionDetails data={current.foreignTaxElection} investment={investment} onChange={foreignTaxElection => onDataChange({ ...current, foreignTaxElection })} />
 
         <details className="guided-expand">
           <summary className="guided-expand-trigger">Household employment tax</summary>

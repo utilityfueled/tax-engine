@@ -41,6 +41,13 @@ Exact core/PDF implementation tree `3b5e65b9c601b6556ab3380588d4fddf9e2dd37d` (b
 
 An independent agent reviewed the actual annual source method, canonical transfer, guided source handling and saved PDF. Its initial credit-choice finding was reproduced red (`foreign-tax-election-credit-conflict-red.log`) and corrected. The final five-file re-review passed all 15 cases with no additional actionable finding (`facts-rereview-foreign-tax.log`). This is agent software/source review, not independent human tax qualification. Guided intake is a separately reviewed following commit; its exact staged checks will be recorded below.
 
+## Scoped commits and intake verification
+
+- Core and historical Schedule A PDF: `9a302c08ce126c29b51bbe7371bdc4ca9c737a76`.
+- Intake implementation tree `ff5a53798c40174f31d8684f5290b87764f36af9`, based on that core commit, passed 703 tests across 57 files in its own immutable archive. Root and web types passed, all 4,084 spec references resolved, scoped lint had zero errors and two pre-existing bridge warnings. Logs: `foreign-tax-ui-staged-{tests,types,webtypes,spec,lint}.log`.
+- The final intake check added a red regression for an empty optional account reference on the explicitly unverified credit path. It now remains omitted; a deduction still rejects the missing actual identity. Logs: `foreign-tax-ui-optional-account-{red,green}.log`. No default account identity was introduced.
+- Independent review included the guided helper/DOM and canonical/PDF files (15 cases after the credit-conflict correction). Actual empty-row entry, source replacement, section/bridge parity and confirmation invalidation are covered. Shared staging contains only the foreign-election hunks; concurrent Marketplace health and passive-loss changes were excluded.
+
 ## Remaining internal methods and external evidence
 
 The implemented ordinary branch is not a substitute for these separate methods:

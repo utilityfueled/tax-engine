@@ -1,0 +1,32 @@
+form: "Guided foreign income-tax election"
+fullName: "Actual annual foreign-tax deduction intake and source binding"
+taxYear: 2026
+irsReference: "https://www.irs.gov/publications/p514"
+notes: |
+  Uses the canonical annual-election source validator. Unknowns stay unknown;
+  actual statement account identity and payment dates are never inferred.
+  This bounded intake supports the current cash-paid INT/DIV deduction branch
+  and preserves explicit credit choice. It does not qualify the legacy credit
+  method or any filing form. Accrued history, pass-through sources,
+  redeterminations and positive carryovers require separate actual methods.
+lines:
+  - line: "source"
+    description: "Actual annual choice and source amounts"
+    formula: "Preserve omissions; parse money with Decimal; bind each statement snapshot by actual owner,payer,TIN,account,country and reported tax; use canonical payment/election validator"
+    testRef: "tests/guided-interview/guided-foreign-tax-election.test.ts::preserves actual annual election source facts and rejects stale statements"
+  - line: "handoff"
+    description: "Same source contract for completion and canonical return"
+    formula: "Completion and bridge call same helper; forward actual account identity and elected paid-tax source facts without defaults"
+    testRef: "tests/guided-interview/guided-foreign-tax-election.test.ts::requires the same complete facts for section completion and return input"
+  - line: "invalidation"
+    description: "Substantive source changes require fresh confirmation"
+    formula: "Statement or owner edits clear foreign-election confirmation; annual choice/source changes clear dependent NIIT confirmation; confirmation-only edits do not create loops"
+    testRef: "tests/guided-interview/guided-foreign-tax-election.test.ts::invalidates dependent confirmations after source edits without loops"
+  - line: "actual-entry"
+    description: "An empty UI row can become a validated actual record"
+    formula: "Collect explicit annual choice/year/paid method/history/completeness and actual dated payments and eligible allocations; source edits clear confirmation, exact large currency strings preserved"
+    testRef: "tests/apps/web/foreign-tax-election-interactions.test.tsx::collects an actual foreign-tax election from an empty worksheet"
+  - line: "optional-credit-identity"
+    description: "Empty optional account field remains unknown on unverified credit path"
+    formula: "Normalize empty optional account reference to omission; actual deduction source still requires matching nonempty identity"
+    testRef: "tests/guided-interview/guided-foreign-tax-election.test.ts::preserves omitted account identity on the unverified credit path"
