@@ -353,18 +353,9 @@ test.describe("Payments section — data persistence", () => {
     // Reload page
     await page.reload();
 
-    // Navigate back to payments section after reload restores state
-    // The reload should restore the guided interview at the current section
-    // We may need to re-navigate if it goes back to personal info
-    const paymentsVisible = await page.getByText(/tax you've already paid this year/i)
-      .isVisible({ timeout: 3000 })
-      .catch(() => false);
-
-    if (!paymentsVisible) {
-      // Reload went back to interview start — re-navigate
-      await expect(page.getByText(/let's start with the basics/i)).toBeVisible({ timeout: 5000 });
-      await navigateToPayments(page);
-    }
+    // Wait for hydration to restore the saved section; isVisible does not wait.
+    await expect(page.getByRole("heading", { name: "Payments & Withholding", exact: true })).toBeVisible();
+    await expect(page.getByText(/tax you've already paid this year/i)).toBeVisible();
 
     // Payment should still be present
     await expect(page.getByText(/payment #1/i)).toBeVisible();

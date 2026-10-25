@@ -22,8 +22,8 @@ services:
       # Local preview default only. Hosted production must set postgres-s3 explicitly.
       TAX_ENGINE_HOSTED_PERSISTENCE_BACKEND: ${TAX_ENGINE_HOSTED_PERSISTENCE_BACKEND:-preview-memory}
       TAX_ENGINE_BILLING_MODE: ${TAX_ENGINE_BILLING_MODE:-test}
-      # Local preview default only. Hosted production must set the public app origin.
-      TAX_ENGINE_APP_URL: ${TAX_ENGINE_APP_URL:-http://localhost:3000}
+      # Exact browser origin; change this with WEB_PORT or the public hostname.
+      TAX_ENGINE_APP_URL: ${TAX_ENGINE_APP_URL:-http://127.0.0.1:3000}
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-}
       BETTER_AUTH_TRUSTED_ORIGINS: ${BETTER_AUTH_TRUSTED_ORIGINS:-}
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}

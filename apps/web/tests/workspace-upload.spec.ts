@@ -176,6 +176,7 @@ test("unknown uploads stay flagged for manual review across reloads", async ({ p
 
   await page.reload();
 
+  await expect(documentPanel).toBeVisible();
   if (await documentPanel.getByRole("button", { name: "Expand", exact: true }).isVisible()) {
       await documentPanel.getByRole("button", { name: "Expand", exact: true }).click();
     }

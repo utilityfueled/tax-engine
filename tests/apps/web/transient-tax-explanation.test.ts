@@ -116,6 +116,24 @@ describe("private transient AI calculation contract", () => {
     expect(s.fetchFn).toHaveBeenCalledTimes(allowed ? 1 : 0);
     if (!allowed) { expect(s.accounting).not.toHaveBeenCalled(); expect(s.resolveActor).not.toHaveBeenCalled(); }
   });
+  it.each([
+    { configured: "http://127.0.0.1:3109", origin: "http://127.0.0.1:3109", allowed: true },
+    { configured: "http://127.0.0.1:3109", origin: "http://127.0.0.1:3110", allowed: false },
+    { configured: "http://127.0.0.1:3109", origin: "http://localhost:3109", allowed: false },
+    { configured: "http://127.0.0.1:3109", origin: "http://attacker.example:3109", allowed: false },
+    { configured: undefined, origin: "http://127.0.0.1:3109", allowed: false },
+  ])("requires the configured external origin when a container remaps its port: $origin/$configured", async ({ configured, origin, allowed }) => {
+    const s = setup();
+    const handler = createTaxExplanationRouteHandlers({ ...s.dependencies,
+      env: { TAX_ENGINE_DEPLOYMENT_MODE: "self-host", NODE_ENV: "production", TAX_ENGINE_APP_URL: configured } });
+    const response = await handler.POST(new Request("http://0.0.0.0:3000/api/workspace/tax-explanation", {
+      method: "POST", body: JSON.stringify(envelope()),
+      headers: { "content-type": "application/json", origin, host: new URL(origin).host, "sec-fetch-site": "same-origin" },
+    }));
+    expect(response.status).toBe(allowed ? 200 : 403);
+    expect(s.fetchFn).toHaveBeenCalledTimes(allowed ? 1 : 0);
+    if (!allowed) expect(s.accounting).not.toHaveBeenCalled();
+  });
   it("strips browser previews, extra private fields and selected documents from provider and accounting packets", async () => {
     const s = setup(true), value = envelope();
     Object.assign(value.providerRequest, { taxInput: simpleW2Fixture, allegedAudit: "private-extra-source" });

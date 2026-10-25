@@ -35,7 +35,11 @@ disabled pending independent evaluation and authorization.
 ## First run
 
 1. Copy `.env.docker.example` to `.env.docker`.
-2. Review the ports and database password in `.env.docker`.
+2. Review the ports and database password in `.env.docker`. Set
+   `TAX_ENGINE_APP_URL` to the exact URL you will open, including its published
+   port. For example, with `WEB_PORT=3109`, use
+   `TAX_ENGINE_APP_URL=http://127.0.0.1:3109`. For a reverse proxy, use its public
+   HTTPS origin. `localhost` and `127.0.0.1` are different browser origins.
 3. Start the stack:
 
 ```bash

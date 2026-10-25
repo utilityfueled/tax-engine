@@ -12,6 +12,11 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
     await expect(page).toHaveURL(/\/returns\/(?!new)[a-z0-9-]+/i);
     const id = new URL(page.url()).pathname.split("/").at(-1);
     if (!id) throw new Error("Synthetic workspace ID is missing.");
+    // Navigation updates before the client finishes creating its local workspace.
+    await expect.poll(() => page.evaluate(id => {
+      const stored = JSON.parse(localStorage.getItem("tax-engine.return-workspaces.v1") ?? "{}");
+      return Boolean(stored.workspaces?.[id]);
+    }, id)).toBe(true);
     // Actual explicit fixture facts, no uploaded documents or claimed calculation totals.
     await page.evaluate(({ id, facts }) => {
       localStorage.setItem(`tax-engine.guided-flow-state.v1:${id}`, JSON.stringify({
