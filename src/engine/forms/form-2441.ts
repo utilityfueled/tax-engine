@@ -49,10 +49,13 @@ export function calculateForm2441(input: Form2441Input): Form2441Result {
   const audit = new AuditTrail();
   const taxYear = input.taxYear ?? 2025;
   if (taxYear !== 2025 && taxYear !== 2026) throw new Error("Unsupported Form 2441 tax year");
-  if (taxYear === 2026 && (!input.filingStatus || input.eligibilityConfirmed !== true ||
+  if (taxYear === 2026 && (!input.filingStatus || input.eligibilityConfirmed === undefined ||
     input.excludedDependentCareBenefits === undefined ||
     (input.filingStatus === "married_filing_jointly" && input.spouseEarnedIncome === undefined))) {
     throw new Error("2026 Form 2441 requires confirmed eligibility, filing status, excluded benefits and separate spouse earned income");
+  }
+  if ([input.careExpenses, input.earnedIncome, input.agi, ...(input.spouseEarnedIncome === undefined ? [] : [input.spouseEarnedIncome])].some((amount) => !amount.isFinite()) || input.careExpenses.isNegative()) {
+    throw new Error("Form 2441 requires finite amounts and nonnegative care expenses");
   }
   const benefits = input.excludedDependentCareBenefits ?? new Decimal(0);
   if (!benefits.isFinite() || benefits.isNegative()) throw new Error("Excluded dependent-care benefits must be nonnegative");

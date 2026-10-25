@@ -668,7 +668,7 @@ describe("Form 2441 2026", () => {
 
   it("2026 requires confirmed facts and separate spouse income", () => {
     for (const override of [
-      { filingStatus: undefined }, { eligibilityConfirmed: undefined }, { eligibilityConfirmed: false },
+      { filingStatus: undefined }, { eligibilityConfirmed: undefined },
       { excludedDependentCareBenefits: undefined },
       { filingStatus: "married_filing_jointly" as const, spouseEarnedIncome: undefined },
       { taxYear: 2027 },
@@ -686,6 +686,10 @@ describe("Form 2441 2026", () => {
     expect(calculateForm2441(current({ excludedDependentCareBenefits: d("7500") })).credit.toString()).toBe("0");
     expect(calculateForm2441(current({ earnedIncome: d("-100") })).credit.toString()).toBe("0");
     expect(calculateForm2441(current({ qualifyingIndividuals: 0 })).credit.toString()).toBe("0");
+    expect(calculateForm2441(current({ eligibilityConfirmed: false })).credit.toString()).toBe("0");
+    for (const overrides of [{careExpenses: d("-1")}, {careExpenses: d("Infinity")}, {earnedIncome: d("NaN")}, {spouseEarnedIncome: d("Infinity")}, {agi: d("NaN")}]) {
+      expect(() => calculateForm2441(current(overrides))).toThrow();
+    }
     expect(() => calculateForm2441(current({ excludedDependentCareBenefits: d("-1") }))).toThrow();
   });
 });

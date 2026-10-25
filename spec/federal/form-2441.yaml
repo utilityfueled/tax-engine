@@ -11,7 +11,9 @@ notes: |
   2026 instructions corroboration (draft, not for filing): https://www.irs.gov/pub/irs-dft/i2441--dft.pdf
   2026 requires confirmed qualifying-person/provider/work-related-expense eligibility, actual
   taxpayer earned income, separately determined spouse earned income for MFJ, and explicit
-  section 129 excluded benefits, including an explicit zero. Unknown facts reject computation.
+  section 129 excluded benefits, including an explicit zero. Unknown facts reject computation; known ineligibility yields zero.
+  Expense/benefit amounts are finite and nonnegative; earned-income losses are allowed
+  and floored at zero only when limiting the credit.
   Earned-income inputs must already reflect applicable foreign exclusions and section 164(f),
   and any monthly student/incapable-of-self-care deemed-income rules. Part III exclusion
   calculation and prior-year expenses paid this year require separately completed worksheets;
@@ -103,3 +105,8 @@ validation2026:
   - rule: "benefits-income-and-zero-floors"
     description: "Benefits reduce both the statutory cap and gross expenses; loss income cannot create a negative credit."
     testRef: "tests/engine/forms/form-2441.test.ts::2026 reduces expenses and cap by excluded benefits"
+
+  - line: "2026-federal-facts"
+    description: "Federal integration preserves actual per-spouse earned income and exclusions"
+    formula: "For 2026 require explicit taxpayer earned income, spouse earned income for joint returns, excluded dependent-care benefits and eligibility. Forward return year and filing status. Never use combined household wages as either spouse's limit; explicit zero is preserved. Legacy 2025 omission retains the historical adapter path."
+    testRef: "tests/engine/federal-care-2026.test.ts::2026 dependent-care facts integration"
