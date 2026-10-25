@@ -1,6 +1,7 @@
 /** Spec: spec/federal/form-1040.yaml reviewPdfMapping; official 2025 Form 1040 created 9/5/25. */
 import { describe, expect, it } from "vitest";
 import { PDFDocument, PDFDict, PDFName } from "pdf-lib";
+import Decimal from "decimal.js";
 import { fillForm1040 } from "@/pdf/fill-form-1040.js";
 import { calculateFederalTax } from "@/engine/federal.js";
 import { simpleW2Fixture, complexMFJFixture } from "../fixtures/simple-w2.js";
@@ -73,5 +74,44 @@ describe("official 2025 Form 1040 field locations", () => {
     const result = calculateFederalTax(simpleW2Fixture);
     result.allLines = result.allLines.filter((line) => !(line.form === "1040" && line.line === "16"));
     await expect(fillForm1040(simpleW2Fixture, result, blank)).rejects.toThrow("Missing audited Form 1040 line 16");
+  });
+
+  it("separates wage and withholding sources at the printed sublines", async () => {
+    const input = { ...simpleW2Fixture, w2s: [{ ...simpleW2Fixture.w2s[0], federalWithheld: "12000" }],
+      form4137: { unreportedTipIncome: "1000" },
+      form8919: { wagesNotReportedOnW2: "2000" },
+      form1099Int: [{ payer: "Synthetic bank", interestIncome: "100", federalWithheld: "25" }],
+      formW2G: [{ payer: "Synthetic casino", reportableWinnings: "1000", federalWithheld: "150" }] };
+    const form = (await PDFDocument.load(await (await fillForm1040(input, calculateFederalTax(input), blank)).save())).getForm();
+    expect(form.getTextField(p1 + "f1_47[0]").getText()).toBe("85000"); // W-2s only
+    expect(form.getTextField(p1 + "f1_49[0]").getText()).toBe("1000"); // unreported tips
+    expect(form.getTextField(p1 + "f1_53[0]").getText()).toBe("2000"); // Form 8919
+    expect(form.getTextField(p1 + "f1_57[0]").getText()).toBe("88000"); // wage total
+    expect(form.getTextField(p2 + "f2_17[0]").getText()).toBe("12000");
+    expect(form.getTextField(p2 + "f2_18[0]").getText()).toBe("25");
+    expect(form.getTextField(p2 + "f2_19[0]").getText()).toBe("150");
+    expect(form.getTextField(p2 + "f2_20[0]").getText()).toBe("12175");
+  });
+
+  it("preserves audited overpayment separately from refund after a penalty", async () => {
+    const result = calculateFederalTax(simpleW2Fixture);
+    // Synthetic mapper contract: penalty reduces a $1,000 overpayment to a
+    // $950 refund. The mapper must consume each audit entry, not copy refund.
+    const amounts: Record<string, string> = { "34": "1000", "35a": "950", "37": "0", "38": "50" };
+    result.allLines = result.allLines.map((line) => line.form === "1040" && amounts[line.line] !== undefined
+      ? { ...line, value: new Decimal(amounts[line.line]) } : line);
+    result.refund = new Decimal(950);
+    result.amountOwed = new Decimal(0);
+    result.estimatedTaxPenalty = new Decimal(50);
+    const form = (await fillForm1040(simpleW2Fixture, result, blank)).getForm();
+    expect(form.getTextField(p2 + "f2_30[0]").getText()).toBe("1000");
+    expect(form.getTextField(p2 + "f2_31[0]").getText()).toBe("950");
+    expect(form.getTextField(p2 + "f2_36[0]").getText()).toBe("50");
+  });
+
+  it("rejects excess dependents until an attachment mapping can preserve every person", async () => {
+    const input = { ...complexMFJFixture, taxpayer: { ...complexMFJFixture.taxpayer,
+      dependents: Array.from({ length: 5 }, () => ({ ...complexMFJFixture.taxpayer.dependents[0] })) } };
+    await expect(fillForm1040(input, calculateFederalTax(complexMFJFixture), blank).then(() => undefined)).rejects.toThrow(/dependent attachment/i);
   });
 });

@@ -78,3 +78,18 @@ needed by the bundled renderer. No taxpayer data or external service was used.
 This is a correction to the historical review map, not final-form qualification.
 Independent review, remaining field/fact coverage and final 2026 forms are still
 required before any filing artifact can be enabled.
+
+## Audit-source forwarding and omitted dependents
+
+The historical 1040 map now consumes separate audited W-2, unreported-tip,
+Form 8919 and other-wage lines, plus W-2/1099/other withholding. It no longer
+copies all wages into line 1a or leaves withholding sources blank. Audited gross
+overpayment (34) is separate from the refund after an estimated-tax penalty
+(35a), and missing required source entries fail explicitly. More than four
+dependents now requires an attachment map instead of silently truncating people.
+
+Three new regressions first failed. The 31 focused 1040 mapping tests then pass,
+including saved/reopened source sublines and a synthetic $1,000 gross overpayment,
+$50 penalty and $950 refund. Root types and scoped lint pass. These changes use
+the printed coordinates inspected in the preceding package; independent final
+revision qualification and complete-data attachments remain open.

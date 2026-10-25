@@ -172,6 +172,9 @@ export async function fillForm1040(
   blankPdfPath: string,
 ): Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
+  if (input.taxpayer.dependents.length > 4) {
+    throw new Error("Form 1040 dependent attachment mapping is required for more than four dependents.");
+  }
   const doc = await loadReviewTemplate(blankPdfPath, 2025);
   const form = doc.getForm();
 
@@ -223,9 +226,15 @@ export async function fillForm1040(
   }
 
   // ── Page 1 Income Lines ──
-  setCurrencyField(form, F.line1a, result.totalWages);
-  // Lines 1b-1g: sub-items (not directly on TaxReturnResult, set via allLines)
-  setCurrencyField(form, F.line1z, result.totalWages); // Line 1z = total of 1a-1h
+  for (const line of ["1a", "1c", "1g", "1h"] as const) {
+    const value = getLineValue(result, "1040", line);
+    if (value === undefined) throw new Error(`Missing audited Form 1040 line ${line}.`);
+    setCurrencyField(form, F[`line${line}`], value);
+  }
+  for (const line of ["1b", "1d", "1e", "1f"] as const) {
+    setCurrencyField(form, F[`line${line}`], getLineValue(result, "1040", line) ?? new Decimal(0));
+  }
+  setCurrencyField(form, F.line1z, getLineValue(result, "1040", "1z") ?? result.totalWages);
   setCurrencyField(form, F.line2a, result.taxExemptInterest);
   setCurrencyField(form, F.line2b, result.totalInterest);
   setCurrencyField(form, F.line3a, result.qualifiedDividends);
@@ -262,6 +271,11 @@ export async function fillForm1040(
   }
 
   // ── Page 2 Payments ──
+  for (const line of ["25a", "25b", "25c"] as const) {
+    const value = getLineValue(result, "1040", line);
+    if (value === undefined) throw new Error(`Missing audited Form 1040 line ${line}.`);
+    setCurrencyField(form, F[`line${line}`], value);
+  }
   setCurrencyField(form, F.line25d, result.totalWithholding);
   setCurrencyField(form, F.line26, result.estimatedTaxPayments);
   setCurrencyField(form, F.line27a, result.earnedIncomeCredit);
@@ -273,15 +287,10 @@ export async function fillForm1040(
   const otherPayments = result.totalPayments.minus(result.totalWithholding).minus(result.estimatedTaxPayments);
   setCurrencyField(form, F.line32, otherPayments);
   setCurrencyField(form, F.line33, result.totalPayments);
-  if (result.refund.gt(0)) {
-    setCurrencyField(form, F.line34, result.refund);
-    setCurrencyField(form, F.line35a, result.refund);
-  }
-  if (result.amountOwed.gt(0)) {
-    setCurrencyField(form, F.line37, result.amountOwed);
-  }
-  if (result.estimatedTaxPenalty.gt(0)) {
-    setCurrencyField(form, F.line38, result.estimatedTaxPenalty);
+  for (const line of ["34", "35a", "37", "38"] as const) {
+    const value = getLineValue(result, "1040", line);
+    if (value === undefined) throw new Error(`Missing audited Form 1040 line ${line}.`);
+    setCurrencyField(form, F[`line${line}`], value);
   }
 
   return doc;
