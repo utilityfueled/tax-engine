@@ -619,6 +619,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     assertKnownFacts(nonW2TaxAllocationErrors(state));
     assertKnownFacts(allPaymentFactErrors(paymentData, state.taxYear));
     assertKnownFacts(retirementFactErrors(retirementData?.entries, true, segmentation.filingStatus, state.taxYear, stateReturnData));
+    assertKnownFacts(socialSecurityFactErrors(socialSecurityData, segmentation.filingStatus, state.taxYear, personalInfo, adjustmentData));
     assertKnownFacts(educationFactErrors(creditsData, state.taxYear, segmentation.filingStatus, personalInfo));
     assertKnownFacts(adjustmentFactErrors(adjustmentData, segmentation.filingStatus, state.taxYear));
     assertKnownFacts(householdFactErrors(otherTaxesData, state.taxYear));
@@ -629,7 +630,6 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     assertKnownFacts(adoptionFactErrors(creditsData?.adoption, state.taxYear, segmentation.filingStatus));
   } catch { return null; }
 
-    assertKnownFacts(socialSecurityFactErrors(socialSecurityData, segmentation.filingStatus, state.taxYear, personalInfo, adjustmentData));
   const stateCode = personalInfo?.state || segmentation.stateCode || null;
   const w2s = buildW2Inputs(w2Data?.entries);
   const necs = buildNecInputs(seData?.necEntries);
@@ -640,6 +640,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
   const form1099R = buildRetirementInputs(retirementData?.entries, segmentation.filingStatus, state.taxYear, stateReturnData);
   const rentalProperties = buildRentalPropertyInputs(rentalData?.entries);
   const formSSA1099 = buildSocialSecurityInputs(socialSecurityData);
+  const formRRB1099 = buildRailroadSocialSecurityInputs(socialSecurityData);
   const form1099G = buildUnemploymentInputs(unemploymentData);
   const scheduleA = buildScheduleAInput(deductionData, stateReturnData);
   const form1098 = buildForm1098Inputs(deductionData, state.taxYear, segmentation.filingStatus);
@@ -651,7 +652,6 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     primaryIsActiveParticipant: ira.primaryIsActiveParticipant as boolean,
     primaryAge50OrOlder: state.taxYear - Number(personalInfo.dateOfBirth.slice(0, 4)) >= 50,
     ...(personalInfo.spouse && (segmentation.filingStatus === "mfj" || segmentation.filingStatus === "mfs") ? {
-  const formRRB1099 = buildRailroadSocialSecurityInputs(socialSecurityData);
       spouseIsActiveParticipant: ira.spouseIsActiveParticipant as boolean,
       spouseAge50OrOlder: state.taxYear - Number(personalInfo.spouse.dateOfBirth.slice(0, 4)) >= 50,
     } : {}),
