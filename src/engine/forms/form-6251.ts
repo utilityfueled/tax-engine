@@ -23,6 +23,8 @@ export interface Form6251Input {
   saltDeduction: Decimal; // Legacy name: actual Schedule A line7 taxes, including elected foreign income taxes.
   investmentInterestAdjustment?: Decimal; // Actual signed regular-minus-AMT deduction on2c
   depletionAdjustment?: Decimal; // Line 2d: Depletion (excess over adjusted basis)
+  regularNolDeduction?: Decimal; // Line2e: actual regular deduction restored.
+  alternativeTaxNolDeduction?: Decimal; // Line2f: separately calculated ATNOLD, supplied as a positive amount.
   dispositionAdjustment?: Decimal; // Line 2k: Adjusted gain/loss on property dispositions
   depreciationAdjustment?: Decimal; // Line 2l: Post-1986 depreciation adjustment
   otherAdjustments?: Decimal; // Line 3: Other AMT adjustments
@@ -54,10 +56,18 @@ export interface Form6251Result {
   lines: CalculatedLine[];
 }
 
+export type Form6251IncomeInput = Omit<Form6251Input, "regularTax">;
+export interface Form6251IncomeResult { amti: Decimal; lines: CalculatedLine[] }
+
+export function calculateForm6251(input: Form6251IncomeInput, constants: Pick<YearConstants, "amt" | "capitalGainsRates">,
+  options: { incomeOnly: true }): Form6251IncomeResult;
+export function calculateForm6251(input: Form6251Input, constants: Pick<YearConstants, "amt" | "capitalGainsRates">): Form6251Result;
+
 export function calculateForm6251(
-  input: Form6251Input,
-  constants: Pick<YearConstants, "amt" | "capitalGainsRates">
-): Form6251Result {
+  input: Form6251Input | Form6251IncomeInput,
+  constants: Pick<YearConstants, "amt" | "capitalGainsRates">,
+  options?: { incomeOnly: true },
+): Form6251Result | Form6251IncomeResult {
   const audit = new AuditTrail();
   const amtConst = constants.amt;
 
@@ -90,6 +100,21 @@ export function calculateForm6251(
   if (!depletionAdjustment.isZero()) {
     audit.record("Form 6251", "2d", "Depletion", depletionAdjustment,
       "Excess of percentage depletion over cost depletion (K-1 Box 17 Code C)");
+  }
+
+  const regularNolDeduction = input.regularNolDeduction ?? new Decimal(0);
+  const alternativeTaxNolDeduction = input.alternativeTaxNolDeduction ?? new Decimal(0);
+  if ((input.regularNolDeduction === undefined) !== (input.alternativeTaxNolDeduction === undefined)) {
+    throw new Error("AMT requires separate actual regular and alternative NOL deductions, including known zero");
+  }
+  if (!regularNolDeduction.isFinite() || regularNolDeduction.lt(0) || !alternativeTaxNolDeduction.isFinite() || alternativeTaxNolDeduction.lt(0)) {
+    throw new Error("AMT NOL deductions must be finite and nonnegative");
+  }
+  if (input.regularNolDeduction !== undefined) {
+    audit.record("Form 6251", "2e", "Regular net operating loss deduction", regularNolDeduction,
+      "Restore actual regular Section172 deduction included in1040income");
+    audit.record("Form 6251", "2f", "Alternative tax net operating loss deduction", alternativeTaxNolDeduction.negated(),
+      "Subtract the separately calculated actual ATNOLD; regular carry is not an AMT source");
   }
 
   // Line 2k: Adjusted gain or loss on dispositions
@@ -125,12 +150,17 @@ export function calculateForm6251(
     .plus(seniorAddBack)
     .plus(investmentInterestAdjustment)
     .plus(depletionAdjustment)
+    .plus(regularNolDeduction)
+    .minus(alternativeTaxNolDeduction)
     .plus(dispositionAdjustment)
     .plus(depreciationAdjustment)
     .plus(otherAdjustments)
     .plus(specifiedPrivateActivityBondInterest);
   audit.record("Form 6251", "4", "AMTI", amti,
     "Taxable income + signed investment adjustment and other AMT adjustments (SALT/standard and senior add-backs, depreciation, depletion, dispositions, other)");
+
+  if (options?.incomeOnly) return { amti, lines: audit.getLines() };
+  if (!("regularTax" in input)) throw new Error("Complete AMT requires the actual regular tax comparison");
 
   // Line 5: Exemption (with phase-out)
   const baseExemption = amtConst.exemption[input.filingStatus];

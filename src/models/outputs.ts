@@ -103,6 +103,7 @@ export interface TaxReturnResult {
   /** Form1040line8: final Schedule1line10, including business/farm/rental income. */
   otherIncome: Decimal;
   nolDeduction: Decimal;
+  netOperatingLoss?: import("@/engine/forms/net-operating-loss-return.js").NetOperatingLossReturnResult;
   totalIncome: Decimal;
 
   // Adjustments

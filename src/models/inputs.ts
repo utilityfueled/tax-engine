@@ -2470,6 +2470,30 @@ export const CharitableDonationSchema = z.object({
   isPrivateFoundation: z.boolean().optional(), // Validated 20%-of-AGI branch for LTCG property donated to a private foundation / second-category organization
 });
 
+/** Actual filed NOL sources. Unknown history and tax character have no defaults. */
+export const NetOperatingLossVintageSchema = z.object({
+  sourceId: z.string().optional(), lossTaxYear: z.number().int().optional(), sourceReference: z.string().optional(),
+  originKind: z.enum(["individual_nol", "excess_business_loss", "estate_termination"]).optional(),
+  originalLoss: optionalDecimalInput, openingCarryforward: optionalDecimalInput,
+  carrybackTreatment: z.enum(["not_required", "waived", "completed"]).optional(), carrybackSourceReference: z.string().optional(),
+  ordinaryHistoricalCarrybackConfirmed: z.boolean().optional(), adjustedThroughTaxYear: z.number().int().optional(),
+  historySourceReference: z.string().optional(), allHistoryIncluded: z.boolean().optional(), farmingLossIncluded: z.boolean().optional(),
+  history: z.array(z.object({ taxYear: z.number().int().optional(), nolUsed: optionalDecimalInput,
+    attributeReduction: optionalDecimalInput, sourceReference: z.string().optional() })).optional(),
+  section1411OriginalLoss: optionalDecimalInput,
+});
+export const NetOperatingLossSourcesSchema = z.object({
+  sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
+  allCarryoversIncluded: z.boolean().optional(), calendarYearTaxpayer: z.boolean().optional(),
+  returnMembership: z.enum(["continuous_individual", "same_spouses_joint"]).optional(), membershipUnchangedConfirmed: z.boolean().optional(),
+  primaryName: z.string().optional(), primaryTaxpayerIdLast4: z.string().optional(), spouseName: z.string().optional(), spouseTaxpayerIdLast4: z.string().optional(),
+  vintages: z.array(NetOperatingLossVintageSchema).optional(),
+  alternativeTax: z.object({ sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
+    allCarryoversIncluded: z.boolean().optional(), specialDisasterCarryIncluded: z.boolean().optional(),
+    currentYearAdjustmentsCompleteConfirmed: z.boolean().optional(), regularBasisAndLossLimitsSameAsAlternativeConfirmed: z.boolean().optional(),
+    vintages: z.array(NetOperatingLossVintageSchema).optional() }).optional(),
+});
+
 export const PriorYearCarryforwardSchema = z.object({
   capitalLossCarryforward: optionalDecimal,
   shortTermCapitalLoss: optionalDecimal,
@@ -5724,6 +5748,7 @@ export const TaxYearInputSchema = z.object({
   deductionElection: z.enum(["automatic", "standard", "itemized"]).optional(),
   educationExpenses: EducationExpensesSchema.optional(),
   priorYear: PriorYearCarryforwardSchema.optional(),
+  netOperatingLoss: NetOperatingLossSourcesSchema.optional(),
   adjustments: AdjustmentsSchema.optional(),
   form2210: Form2210Schema.optional(),
   scheduleA: ScheduleAInputSchema.optional(),

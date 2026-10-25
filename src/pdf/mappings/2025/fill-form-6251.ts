@@ -11,6 +11,7 @@ import { PDFDocument, StandardFonts } from "pdf-lib";
 import Decimal from "decimal.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
+import { buildNetOperatingLossReview } from "@/pdf/fill-net-operating-loss.js";
 import {
   loadReviewTemplate,
   setTextField,
@@ -142,6 +143,13 @@ export async function fillForm6251(
     if (!required(id).eq(value)) throw new Error(`Form6251 line${id} audit does not reconcile with its result`);
   }
   const directCredit = result.foreignTaxDirectCredit;
+  if (input.netOperatingLoss || result.netOperatingLoss) {
+    buildNetOperatingLossReview(input, result);
+    if (!result.netOperatingLoss || !required("2e").eq(result.nolDeduction)
+      || !required("2f").eq(result.netOperatingLoss.alternativeTax.deduction.negated())) {
+      throw new Error("Form6251 NOL source amounts do not reconcile with the audited adjustments");
+    }
+  }
   if (directCredit) {
     if (!directCredit.creditAllowed.eq(result.foreignTaxCredit)) throw new Error("Form6251 elected foreign credit does not reconcile with its canonical source result");
     if (result.form8801 || result.form3800 || required("10").lt(required("7"))) required("8");
@@ -166,7 +174,7 @@ export async function fillForm6251(
   for (const [key, field] of Object.entries(F)) {
     if (!key.startsWith("line")) continue;
     const value = audited.get(key.slice(4));
-    if (value !== undefined) setCurrencyField(form, field, value);
+    if (value !== undefined) setCurrencyField(form, field, key === "line2f" ? value.abs() : value);
   }
 
   const page = doc.addPage([612, 792]);
@@ -183,7 +191,11 @@ export async function fillForm6251(
       "General AMT foreign-tax credit source worksheets are not implemented. Line8 is blank.",
       "The preview assumes no AMT foreign-tax credit. Do not treat a blank field as a confirmed zero.",
     ]),
-    "Foreign-income stacking, MFS additional AMTI, AMT NOL and full PartIII source worksheets",
+    ...(result.netOperatingLoss ? [
+      "Lines2e and2f use separate actual regular and alternative carry ledgers.",
+      "The NOL review statement retains current deductions and modified-income carry absorption.",
+    ] : ["Actual AMT NOL source history is unavailable; this preview does not establish an ATNOLD."]),
+    "Foreign-income stacking, MFS additional AMTI and full PartIII source worksheets",
     "remain unqualified. PartIII is blank when no actual audited worksheet is available.",
     "Regular-tax comparison copies the supplied audit; the mapper does not derive it from AMT.",
     ...(audited.has("1a") ? [] : ["Actual total deductions were not supplied; line1a remains blank."]),

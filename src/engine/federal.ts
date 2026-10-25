@@ -65,7 +65,7 @@ import { calculateItemizedDeductionLimit } from "./forms/itemized-deduction-limi
 import { calculateStandardDeduction } from "./forms/standard-deduction.js";
 import { calculateStateLocalIncomeTaxDeduction } from "./forms/state-local-income-tax-deduction.js";
 import { calculateForm1099OID } from "./forms/form-1099-oid.js";
-import { calculateForm6251, type Form6251Input } from "./forms/form-6251.js";
+import { calculateForm6251, type Form6251Input, type Form6251IncomeInput, type Form6251IncomeResult } from "./forms/form-6251.js";
 import { calculateForm8801 } from "./forms/form-8801.js";
 import { calculateForm8582 } from "./forms/form-8582.js";
 import { calculatePassiveLossQBI, type PassiveLossQBIResult } from "./forms/passive-loss-qbi.js";
@@ -141,6 +141,7 @@ import { calculateScheduleJ } from "./forms/schedule-j.js";
 import { calculateForm8915F, type Form8915FResult } from "./forms/form-8915-f.js";
 import { calculateTaxableRefundWorksheet, type TaxableRefundWorksheetResult } from "./forms/taxable-refund-worksheet.js";
 import { calculateStudentLoanInterestDeduction } from "./forms/student-loan-interest.js";
+import { calculateNetOperatingLossReturn, type NetOperatingLossReturnResult, type NolIncomeContext } from "./forms/net-operating-loss-return.js";
 import { calculateForm1098E, type Form1098EResult } from "./forms/form-1098-e.js";
 import { calculateSalesTaxDeduction, type SalesTaxDeductionResult } from "./forms/state-sales-tax-deduction-worksheet.js";
 import { calculateForm8824Aggregate } from "./forms/form-8824.js";
@@ -172,6 +173,13 @@ import type { ILScheduleWITRecord } from "./state/il-schedule-il-wit.js";
 
 export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   validateQofDispositionFacts(input.qofDispositionFacts, input.taxpayer.taxYear);
+  if (input.netOperatingLoss) {
+    const worksheet = calculateNetOperatingLossReturn(input, (deduction, modified) =>
+      calculateFederalTaxCore(input, undefined, undefined, { stage: "income", deduction, modified }),
+    (deduction, modified) => calculateFederalTaxCore(input, undefined, undefined, { stage: "alternative-income", deduction, modified }));
+    if (!worksheet.calculationComplete || worksheet.deduction === undefined) throw new Error("Actual NOL calculation is incomplete");
+    return calculateFederalTaxCore(input, undefined, undefined, { stage: "final", deduction: worksheet.deduction, modified: false, worksheet });
+  }
   const marketplace = input.form7206?.plans?.some(plan => plan.marketplaceCoverage === true && plan.premiumTaxCreditInvolved === true);
   if (!marketplace) return calculateFederalTaxCore(input);
   if (![2025,2026].includes(input.taxpayer.taxYear)) throw new Error("Marketplace health coordination supports actual2025 and2026 sources.");
@@ -256,10 +264,15 @@ interface MarketplaceInterim {
   deductions: Omit<MarketplaceOrderedState, "kinds" | "calculating">;
 }
 type ForeignTaxHypotheticalRequest = { purpose: "foreign-deduction-carryover" };
+type NolReturnContext = { stage: "income" | "alternative-income"; deduction: Decimal; modified: boolean }
+  | { stage: "final"; deduction: Decimal; modified: false; worksheet: NetOperatingLossReturnResult };
+function calculateFederalTaxCore(input: TaxYearInput, marketplace: undefined, hypothetical: undefined, nol: NolReturnContext & { stage: "income" }): NolIncomeContext;
+function calculateFederalTaxCore(input: TaxYearInput, marketplace: undefined, hypothetical: undefined, nol: NolReturnContext & { stage: "alternative-income" }): Form6251IncomeResult;
+function calculateFederalTaxCore(input: TaxYearInput, marketplace: undefined, hypothetical: undefined, nol: NolReturnContext & { stage: "final" }): TaxReturnResult;
 function calculateFederalTaxCore(input: TaxYearInput, marketplace: undefined, hypothetical: ForeignTaxHypotheticalRequest): ForeignTaxHypotheticalContext;
 function calculateFederalTaxCore(input: TaxYearInput, marketplace: MarketplaceContext & { stage: "worksheet-w" | "maximum" | "ordered" }): MarketplaceInterim;
 function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceContext & { stage: "final" }): TaxReturnResult;
-function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceContext, hypothetical?: ForeignTaxHypotheticalRequest): TaxReturnResult | MarketplaceInterim | ForeignTaxHypotheticalContext {
+function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceContext, hypothetical?: ForeignTaxHypotheticalRequest, nol?: NolReturnContext): TaxReturnResult | MarketplaceInterim | ForeignTaxHypotheticalContext | NolIncomeContext | Form6251IncomeResult {
   validateForeignTaxDeductionScope(input);
   const ordered = marketplace?.ordered;
   const calculateOrdered = (kind: MarketplaceOrderedKind) => !ordered?.kinds.includes(kind) || ordered.calculating === kind || ordered[kind] !== undefined;
@@ -267,6 +280,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   const constants = getConstants(year);
   const filingStatus = input.taxpayer.filingStatus as FilingStatus;
   const audit = new AuditTrail();
+  if (nol?.stage === "final") audit.merge(nol.worksheet.lines);
 
   // ═══════════════════════════════════════════════════════════
   // Pre-aggregate input arrays in single passes to avoid
@@ -1764,7 +1778,14 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
 
   const mortgageSourceResult = calculateHomeMortgageInterest(input);
   const mortgageInterestRecovery = mortgageSourceResult.additionalTaxableInterestRecovery;
+  const nolCapitalLossModification = nol?.modified ? zeroFloor(capitalGainLoss.negated()) : d("0");
+  // Section172(d)(2)(A)/(B): restore excluded gains before limiting capital
+  // losses. The exclusion can overlap the already restored current loss; only
+  // its remaining increase in nonnegative capital income is added separately.
+  const nolSection1202Modification = nol?.modified
+    ? zeroFloor(schedD.netCapitalGainLoss.plus(schedD.section1202Exclusion)).minus(zeroFloor(schedD.netCapitalGainLoss)) : d("0");
   const otherIncome = sum(
+    nolCapitalLossModification, nolSection1202Modification, nol?.deduction.negated() ?? d("0"),
     mortgageInterestRecovery,
     form1099G.otherIncome,
     miscOtherIncome,
@@ -1920,7 +1941,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     iraTaxable,pensionTaxable,capitalGainLoss,schedCNetProfit,schedFNetProfit,allowedScheduleETotal,otherIncome);
   if (input.iraDeductionWorksheet && calculateOrdered("ira")) {
     const hasNol = sum(d(input.priorYear?.nolCarryforward),d(input.priorYear?.excessBusinessLossNOL),k1Form1041FinalNOL).gt(0);
-    if (hasNol) throw new Error("IRA and NOL coordination requires a supported completed source worksheet");
+    if (hasNol && !nol) throw new Error("IRA and NOL coordination requires a supported completed source worksheet");
     if (input.socialSecurityLumpSumElection) throw new Error("IRA and lump-sum Social Security coordination requires a supported completed source worksheet");
     if (iraGrossReported.gt(0) && (d(input.iraDeductionWorksheet.primaryContributions).gt(0) || d(input.iraDeductionWorksheet.spouseContributions).gt(0))) {
       throw new Error("IRA distributions and current contributions require Publication590-B taxable-distribution coordination");
@@ -2117,7 +2138,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   // Pub970 uses completed income after the bond exclusion and allowed passive
   // losses. Those upstream worksheets add back or exclude this deduction.
   if ((studentLoanSourceResult || d(combinedStudentLoanInterest ?? input.adjustments?.studentLoanInterest).gt(0)) && calculateOrdered("studentLoan")) {
-    if (studentLoanSourceResult?.qualifiedInterest.gt(0)
+    if (!nol && studentLoanSourceResult?.qualifiedInterest.gt(0)
       && sum(d(input.priorYear?.nolCarryforward), d(input.priorYear?.excessBusinessLossNOL), k1Form1041FinalNOL).gt(0)) {
       throw new Error("Actual student-loan and NOL claims require the coupled NOL and deduction source computation");
     }
@@ -2426,6 +2447,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   const schedule1A = schedule1AReturn?.schedule1A;
   let nonitemizerCharitableDeduction = deductionUsed === "standard" ? schedA.nonitemizerCharitableDeduction : d("0");
   let additionalDeductions = (schedule1A?.totalDeduction ?? d("0")).plus(nonitemizerCharitableDeduction);
+  if (nol?.modified) additionalDeductions = additionalDeductions.minus(schedule1A?.seniorDeduction ?? d("0"));
   if (schedule1A) audit.merge(schedule1A.lines);
   if (schedule1AReturn) audit.merge(schedule1AReturn.lines);
   audit.record("1040", "13b", "Additional deductions from Schedule 1-A", schedule1A?.totalDeduction ?? d("0"),
@@ -2529,6 +2551,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     const taxableIncomeBeforeQBI = zeroFloor(agi.minus(selectedDeduction).minus(otherDeductions));
     let form8995Result: import("./forms/form-8995.js").Form8995Result | undefined;
     let form8995AResult: import("./forms/form-8995-a.js").Form8995AResult | undefined;
+    if (nol?.stage === "income" || (nol?.stage === "alternative-income" && nol.modified)) return { qbiDeduction, form8995Result, form8995AResult };
 
     const hasQBISources = qbiSources.length > 0 || qualifiedReitDividends.greaterThan(0) || !qualifiedPTPIncome.isZero()
       || d(input.priorYear?.qbiLossCarryforward).gt(0) || releasedPriorQualifiedRentalLoss.gt(0);
@@ -2626,13 +2649,14 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   let itemizedDeductionReduction = new Decimal(0);
   if (year === 2026) {
     const availableHistoricalNol = d(input.priorYear?.nolCarryforward ?? input.priorYear?.excessBusinessLossNOL).plus(k1Form1041FinalNOL);
-    if (availableHistoricalNol.gt(0)) throw new Error("2026 NOL and deduction coordination is not yet supported");
+    if (availableHistoricalNol.gt(0) && !nol) throw new Error("2026 NOL and deduction coordination is not yet supported");
     if (deductionUsed === "itemized") {
       const topBracket = constants.taxBrackets[filingStatus].find(bracket => bracket.rate.eq("0.37"));
       if (!topBracket) throw new Error("Missing 37% bracket for itemized limitation");
       const limitation = calculateItemizedDeductionLimit({
         taxYear: year, itemizedDeductions,
-        taxableIncomeBeforeItemized: agi.minus(qbiCalculation.qbiDeduction).minus(schedule1A?.totalDeduction ?? d("0")),
+        taxableIncomeBeforeItemized: agi.minus(qbiCalculation.qbiDeduction).minus(schedule1A?.totalDeduction ?? d("0"))
+          .plus(nol?.modified ? schedule1A?.seniorDeduction ?? d("0") : d("0")),
         topBracketThreshold: topBracket.min,
       });
       audit.merge(limitation.lines);
@@ -2644,6 +2668,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
         deductionAmount = standardDeduction;
         nonitemizerCharitableDeduction = schedA.nonitemizerCharitableDeduction;
         additionalDeductions = (schedule1A?.totalDeduction ?? d("0")).plus(nonitemizerCharitableDeduction);
+        if (nol?.modified) additionalDeductions = additionalDeductions.minus(schedule1A?.seniorDeduction ?? d("0"));
         qbiCalculation = computeQBI(deductionAmount, additionalDeductions);
       } else {
         deductionAmount = itemizedDeductions;
@@ -2690,6 +2715,31 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   // Line 15: Taxable income (preliminary, before NOL deduction)
   const rawTaxableIncome = agi.minus(totalDeduction); // before zero-floor, needed by carryforward worksheet
   const preNolTaxableIncome = zeroFloor(rawTaxableIncome);
+  const amtIncomeInput = (income: Decimal, regularNolDeduction?: Decimal, alternativeTaxNolDeduction?: Decimal): Form6251IncomeInput => ({
+    taxableIncome: income, regularNolDeduction, alternativeTaxNolDeduction, totalDeductions: totalDeduction,
+    standardDeductionAmount: deductionUsed === "standard" ? deductionAmount : d("0"),
+    seniorDeduction: nol?.modified ? d("0") : schedule1A?.seniorDeduction,
+    saltDeduction: schedA.saltDeduction.plus(schedA.foreignIncomeTaxDeduction),
+    investmentInterestAdjustment: form4952Amt && form4952
+      ? deductionUsed === "itemized" ? form4952.line8.minus(form4952Amt.line8) : d("0") : undefined,
+    depletionAdjustment: k1Agg.amtDepletion,
+    specifiedPrivateActivityBondInterest: form6251BondSources.privateActivityBondInterest.plus(form8814AmtSources.privateActivityBondInterest),
+    dispositionAdjustment: k1Agg.amtAdjustedGainOrLoss,
+    depreciationAdjustment: k1Agg.amtDepreciationAdjustment,
+    otherAdjustments: k1Agg.amtOtherItems.plus(k1Form1041AmtAdjustment)
+      .minus(deductionUsed === "itemized" ? itemizedDeductionReduction : d("0")),
+    filingStatus, isItemizing: deductionUsed === "itemized",
+  });
+  if (nol?.stage === "income") return {
+    agi, taxableIncome: rawTaxableIncome, iraDeduction: sched1.iraDeduction, socialSecurityBenefitsTaxable,
+    allowedPassiveLoss: form8582.allowedLoss, medicalDeduction: schedA.medicalDeduction,
+    charitableDeduction: schedA.cashCharitable.plus(schedA.nonCashCharitable), charitableCarryforward: schedA.charitableCarryforward,
+    currentExcessBusinessLoss: excessBusinessLossAddback,
+    seniorDeduction: nol.modified ? schedule1A?.seniorDeduction ?? d("0") : d("0"),
+    capitalLossModification: nolCapitalLossModification, section1202Modification: nolSection1202Modification,
+    lines: audit.getLines(),
+  };
+  if (nol?.stage === "alternative-income") return calculateForm6251(amtIncomeInput(rawTaxableIncome, nol.deduction, d("0")), constants, { incomeOnly: true });
 
   // ── IRC §172: Net Operating Loss Deduction ──────────────
   // For post-2017 NOLs, the deduction is limited to 80% of taxable income
@@ -2705,10 +2755,10 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       .plus(k1Form1041FinalNOL)
   );
   const nolLimit = preNolTaxableIncome.times(new Decimal("0.8"));
-  const nolDeduction = Decimal.min(availableNOL, nolLimit);
+  const nolDeduction = nol?.deduction ?? Decimal.min(availableNOL, nolLimit);
 
   let taxableIncome = preNolTaxableIncome;
-  if (nolDeduction.greaterThan(0)) {
+  if (nolDeduction.greaterThan(0) && !nol) {
     taxableIncome = zeroFloor(preNolTaxableIncome.minus(nolDeduction));
     // Adjust AGI to reflect the NOL deduction for output purposes.
     // The NOL deduction enters Schedule 1 as negative other income, reducing AGI.
@@ -2747,7 +2797,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       { source: "K1(Form1041) other portfolio income", amount: k1Form1041OtherPortfolio },
     ],
   });
-  totalIncome = totalIncome.minus(nolDeduction);
+  if (!nol) totalIncome = totalIncome.minus(nolDeduction);
   const reconciledTotalIncome = sum(totalWages,totalTaxableInterest,totalDividends,iraTaxable,
     pensionTaxable,socialSecurityBenefitsTaxable,capitalGainLoss,sched1.totalAdditionalIncome);
   if (!totalIncome.eq(reconciledTotalIncome) || !sched1.totalAdjustments.eq(adjustments)
@@ -2759,7 +2809,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   audit.record("1040", "9", "Total income", totalIncome, "Sum final Lines1z,2b,3b,4b,5b,6b,7,8");
   audit.record("1040", "11", "Adjusted gross income", agi, "Line 9 - Line 10");
   audit.record("1040", "15", "Taxable income", taxableIncome,
-    nolDeduction.greaterThan(0)
+    nolDeduction.greaterThan(0) && !nol
       ? "AGI - total deductions - NOL deduction"
       : "AGI - total deductions");
 
@@ -2968,12 +3018,6 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     };
   }
 
-  // ── Aggregate K-1 Box 17 AMT items for Form 6251 ────────
-  const k1AmtDepreciation = k1Agg.amtDepreciationAdjustment;
-  const k1AmtDisposition = k1Agg.amtAdjustedGainOrLoss;
-  const k1AmtDepletion = k1Agg.amtDepletion;
-  const k1AmtOther = k1Agg.amtOtherItems;
-
   let amtCapitalGainsSources: Form6251Input["capitalGainsSources"];
   const amtGainFacts = input.amtCapitalGains ?? (schedD.specialGainWorksheets && input.scheduleDSpecialGainSources?.amtBasisAndCarryoversSameAsRegularConfirmed && qualifiedDividends.plus(netLTCG).gt(0) ? {
     sourceFactsConfirmed: true, sourceTaxYear: year, sourceReference: "Verified same-basis ScheduleD source worksheets",
@@ -3049,21 +3093,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   const calculateReturnAMT = (directCredit?: Decimal, directElectionPartI = d("0")) => calculateForm6251(
     {
       // Form 6251 starts from AGI less deductions even when Form 1040 floors at zero.
-      taxableIncome: rawTaxableIncome.minus(nolDeduction),
-      totalDeductions: totalDeduction,
-      standardDeductionAmount: deductionUsed === "standard" ? deductionAmount : d("0"),
-      seniorDeduction: schedule1A?.seniorDeduction,
-      saltDeduction: schedA.saltDeduction.plus(schedA.foreignIncomeTaxDeduction),
-      investmentInterestAdjustment: form4952Amt && form4952
-        ? deductionUsed === "itemized" ? form4952.line8.minus(form4952Amt.line8) : d("0")
-        : undefined,
-      depletionAdjustment: k1AmtDepletion,
-      specifiedPrivateActivityBondInterest: form6251BondSources.privateActivityBondInterest.plus(form8814AmtSources.privateActivityBondInterest),
-      dispositionAdjustment: k1AmtDisposition,
-      depreciationAdjustment: k1AmtDepreciation,
-      // IRC 56(b)(1)(E): restore the section 68 amount only when itemizing.
-      otherAdjustments: k1AmtOther.plus(k1Form1041AmtAdjustment)
-        .minus(deductionUsed === "itemized" ? itemizedDeductionReduction : d("0")),
+      ...amtIncomeInput(nol ? rawTaxableIncome : rawTaxableIncome.minus(nolDeduction),
+        nol ? nolDeduction : undefined, nol?.stage === "final" ? nol.worksheet.alternativeTax.deduction : undefined),
       // Per Form 6251 instructions: if Schedule J is used, Form 6251 must
       // use the tax computed WITHOUT Schedule J (income averaging does not
       // apply to AMT).
@@ -3209,6 +3240,9 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   const foreignTaxCreditCarryforwardByCategory: Record<string, Array<{ taxYear: number; amount: Decimal }>> = {};
   const hasForeignTaxActivity = foreignTaxPaid.greaterThan(0) || hasLegacyCarryforward
     || hasPassiveActivity || hasGeneralActivity;
+  if (nol && hasForeignTaxActivity && !directCreditSources && schedA.foreignTaxElection.election !== "deduction") {
+    throw new Error("Actual NOL with general Form1116 requires the originating foreign-source loss allocation worksheet");
+  }
 
   if (directCreditSources) {
     // The exact elected credit requires actual PartI additions, computed below.
@@ -3862,7 +3896,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       investmentInterestExpense: niitOrdinarySources.investmentInterestExpense,
       investmentIncomeTaxes: niitOrdinarySources.investmentIncomeTaxes,
       additionalModifications: niitOrdinarySources.ordinaryLossDeduction,
-      otherModifications: form8814IncomeCharacter.ordinaryInvestmentIncome,
+      otherModifications: form8814IncomeCharacter.ordinaryInvestmentIncome.minus(nol?.stage === "final" ? nol.worksheet.section1411Deduction : d("0")),
       magi: niitMagi,
     },
     filingStatus,
@@ -4059,6 +4093,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     capitalGainLoss,
     otherIncome: sched1.totalAdditionalIncome,
     nolDeduction,
+    netOperatingLoss: nol?.stage === "final" ? nol.worksheet : undefined,
     totalIncome,
 
     adjustmentsToIncome: adjustments,
@@ -4111,7 +4146,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       // Preserve the same selected prior source used for the deduction, including
       // estate carry. Form461's aggregate also contains its prior EBL alias;
       // add only the current disallowance here so that prior carry is not doubled.
-      let cfNol = zeroFloor(availableNOL.minus(nolDeduction)).plus(excessBusinessLossAddback);
+      let cfNol = (nol?.stage === "final" ? nol.worksheet.carryforward : zeroFloor(availableNOL.minus(nolDeduction))).plus(excessBusinessLossAddback);
       let cfGbc = form3800?.carryforwardToNextYear ?? new Decimal(0);
       let cfMtc = form8801?.carryforwardToNextYear ?? new Decimal(0);
       let cfCapitalLoss = adjustedCarryforward.carryforwardShortTerm.plus(adjustedCarryforward.carryforwardLongTerm);
@@ -4119,6 +4154,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       let cfFtc = foreignTaxCreditCarryforward;
 
       if (hasCodExclusions && codExclusion) {
+        if (nol) throw new Error("Actual NOL carry with current debt cancellation requires its regular and AMT vintage attribute-reduction worksheets");
         form982 = calculateForm982({
           bankruptcyExclusion: form1099CResult.bankruptcyExclusion,
           insolvencyExclusion: form1099CResult.insolvencyExclusion,

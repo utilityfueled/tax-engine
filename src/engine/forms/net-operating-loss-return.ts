@@ -1,0 +1,136 @@
+/** Canonical Section172 income-context orchestration. Spec: net-operating-loss-return.yaml. */
+import Decimal from "decimal.js";
+import type { TaxYearInput } from "@/models/inputs.js";
+import type { CalculatedLine } from "@/models/outputs.js";
+import { AuditTrail } from "@/utils/audit.js";
+import { d, roundDollar, sum } from "@/utils/decimal.js";
+import { calculateNetOperatingLoss, type NetOperatingLossResult } from "./net-operating-loss.js";
+import { calculateAlternativeTaxNol, type AlternativeTaxNolResult } from "./alternative-tax-net-operating-loss.js";
+import type { Form6251IncomeResult } from "./form-6251.js";
+
+export interface NolIncomeContext {
+  agi: Decimal;
+  taxableIncome: Decimal;
+  iraDeduction: Decimal;
+  socialSecurityBenefitsTaxable: Decimal;
+  allowedPassiveLoss: Decimal;
+  medicalDeduction: Decimal;
+  charitableDeduction: Decimal;
+  charitableCarryforward: Decimal;
+  currentExcessBusinessLoss: Decimal;
+  seniorDeduction: Decimal;
+  capitalLossModification: Decimal;
+  section1202Modification: Decimal;
+  lines: CalculatedLine[];
+}
+export interface NetOperatingLossReturnResult extends NetOperatingLossResult {
+  calculationComplete: true;
+  deduction: Decimal;
+  absorbed: Decimal;
+  expired: Decimal;
+  carryforward: Decimal;
+  actualIncome: NolIncomeContext;
+  modifiedIncome: NolIncomeContext;
+  finalIncome: NolIncomeContext;
+  modifiedVintageIncome: Array<{ sourceId: string; retainedEarlierDeduction: Decimal; income: NolIncomeContext }>;
+  section1411Deduction: Decimal;
+  alternativeTaxSources: NetOperatingLossResult;
+  alternativeTax: AlternativeTaxNolResult;
+}
+
+export function calculateNetOperatingLossReturn(input: TaxYearInput,
+  computeIncome: (deduction: Decimal, modified: boolean) => NolIncomeContext,
+  computeAlternativeIncome: (deduction: Decimal, modified: boolean) => Form6251IncomeResult): NetOperatingLossReturnResult {
+  const facts = input.netOperatingLoss;
+  if (!facts) throw new Error("Actual NOL return computation requires the actual carry source packet");
+  if (input.foreignTaxElection?.deductionYearCarryover) {
+    throw new Error("Actual NOL and foreign deduction-year carry require the coupled foreign-source hypothetical worksheet");
+  }
+  if (input.form7206?.plans?.some(plan => plan.marketplaceCoverage && plan.premiumTaxCreditInvolved)) {
+    throw new Error("Actual NOL and Marketplace health require the separate coupled Section172/Pub974 method");
+  }
+  if (input.form8839?.children.some(child => d(child.employerBenefits).gt(0) || (child.isSpecialNeeds && child.employerPlanQualified))) {
+    throw new Error("Actual NOL and adoption-benefit exclusions require the coupled source MAGI worksheet");
+  }
+  const params = { taxYear: input.taxpayer.taxYear, filingStatus: input.taxpayer.filingStatus, taxpayer: input.taxpayer, facts };
+  const source = calculateNetOperatingLoss(params);
+  if (input.priorYear?.nolCarryforward !== undefined && !d(input.priorYear.nolCarryforward).eq(source.availableCarryforward)) {
+    throw new Error("Legacy NOL aggregate must reconcile with actual source vintages");
+  }
+  const eblCarry = sum(...source.vintages.filter(row => row.originKind === "excess_business_loss").map(row => row.openingCarryforward.minus(row.expiredBeforeYear)));
+  if (input.priorYear?.excessBusinessLossNOL !== undefined && !d(input.priorYear.excessBusinessLossNOL).eq(eblCarry)) {
+    throw new Error("Legacy EBL carry must reconcile with the actual EBL source vintages");
+  }
+  if (input.scheduleK1Form1041?.some(row => d(row.finalYearNOLCarryover).gt(0))) throw new Error("Estate NOL carry requires its actual vintage and origin binding");
+  if (facts.vintages?.some(row => row.originKind === "excess_business_loss")) throw new Error("Actual prior EBL NOL requires its originating QBI loss character worksheet");
+  const alternative = facts.alternativeTax;
+  if (alternative?.sourceFactsConfirmed !== true || !alternative.sourceReference?.trim()
+    || alternative.allCarryoversIncluded !== true || alternative.specialDisasterCarryIncluded !== false
+    || alternative.currentYearAdjustmentsCompleteConfirmed !== true || alternative.regularBasisAndLossLimitsSameAsAlternativeConfirmed !== true
+    || !Array.isArray(alternative.vintages)) {
+    throw new Error("NOL requires the separate actual complete AMT carry history and special-loss classification");
+  }
+  const alternativeTaxSources = calculateNetOperatingLoss({ ...params, facts: { ...facts, ...alternative } });
+  if (input.scheduleK1.some(row => !d(row.amtDepletion).isZero())) {
+    throw new Error("ATNOL with depletion requires its refigured AMT taxable-income limitation worksheet");
+  }
+  if (input.scheduleK1.some(row => !d(row.amtDepreciationAdjustment).isZero() || !d(row.amtAdjustedGainOrLoss).isZero())) {
+    throw new Error("Actual AMT basis differences contradict the confirmed same-basis NOL method");
+  }
+  const actualIncome = computeIncome(d("0"), false);
+  const modifiedIncome = computeIncome(d("0"), true);
+  if (modifiedIncome.agi.lt(0) || actualIncome.currentExcessBusinessLoss.gt(0)) {
+    throw new Error("Existing NOL carry with a potential current-year original loss requires its separate original-loss worksheet");
+  }
+  const bases = { taxableIncomeWithoutNolQbiAndSection250: actualIncome.taxableIncome,
+    modifiedTaxableIncomeWithoutNolQbiAndSection250: modifiedIncome.taxableIncome };
+  const claims = calculateNetOperatingLoss({ ...params, context: bases });
+  const modifiedVintageIncome = claims.vintages.filter(row => row.openingCarryforward.gt(row.expiredBeforeYear)).map(row => {
+    const retained = row.earlierModifiedNolDeductions;
+    if (retained === undefined) throw new Error("Canonical NOL earlier-vintage amount is incomplete");
+    return { sourceId: row.sourceId, retainedEarlierDeduction: retained, income: retained.isZero() ? modifiedIncome : computeIncome(retained, true) };
+  });
+  const result = calculateNetOperatingLoss({ ...params, context: { ...bases, carryoverContexts: modifiedVintageIncome.map(row => ({
+    sourceId: row.sourceId, priorNolDeductions: row.retainedEarlierDeduction,
+    modifiedTaxableIncomeBeforeTwentyPercentReduction: row.income.taxableIncome,
+  })) } });
+  if (!result.calculationComplete || result.deduction === undefined || result.carryforward === undefined
+    || result.absorbed === undefined || result.expired === undefined) throw new Error("Actual NOL income and carry computations are incomplete");
+  const finalIncome = computeIncome(result.deduction, false);
+  if (result.carryforward.gt(0) && finalIncome.charitableCarryforward.gt(0)
+    && modifiedVintageIncome.some(row => row.income.charitableDeduction.gt(finalIncome.charitableDeduction))) {
+    throw new Error("Actual charitable carry requires its Section170(d)(1)(B) NOL-carry reduction worksheet");
+  }
+  // Reg1.55-1(b): individual AMT income keeps the applicable regular-tax AGI
+  // basis. Restore the actual regular deduction on6251line2e; never substitute
+  // an alternative-tax deduction into regular AGI-dependent worksheets.
+  const actualAlternativeIncome = computeAlternativeIncome(result.deduction, false);
+  const modifiedAlternativeIncome = computeAlternativeIncome(result.deduction, true);
+  const alternativeTax = calculateAlternativeTaxNol({ taxYear: input.taxpayer.taxYear, sources: alternativeTaxSources,
+    amtiBeforeAtnol: actualAlternativeIncome.amti, modifiedAmtiBeforeAtnol: modifiedAlternativeIncome.amti });
+  const audit = new AuditTrail();
+  for (const [stage, context] of [["actual-limit", actualIncome], ["modified-limit", modifiedIncome]] as const) {
+    audit.record("Section172 Canonical Income", stage, "Refigured income before172,199A and250", context.taxableIncome,
+      "Recompute original income and AGI-dependent deductions for this statutory context", {
+        AGI: context.agi, "IRA deduction": context.iraDeduction, "Taxable Social Security": context.socialSecurityBenefitsTaxable,
+        "Allowed passive loss": context.allowedPassiveLoss, "Medical deduction": context.medicalDeduction,
+        "Removed capital loss": context.capitalLossModification, "Restored1202 gain after loss netting": context.section1202Modification,
+        "Removed senior deduction": context.seniorDeduction,
+      });
+  }
+  const section1411Amounts = result.vintages.map(row => {
+    const record = facts.vintages?.find(item => item.sourceId === row.sourceId);
+    const value = record?.section1411OriginalLoss;
+    if (value === undefined || !/^\d+$/.test(value) || !d(value).isFinite() || d(value).gt(row.originalLoss)
+      || (row.lossTaxYear < 2013 && !d(value).isZero())) throw new Error("NOL requires each actual originating Section1411 loss, including known zero");
+    const amount = (row.deduction ?? d("0")).times(d(value)).div(row.originalLoss);
+    audit.record("Section1411 NOL Worksheet", row.sourceId, "Applicable portion of regular NOL deduction", amount,
+      "Actual current regular deduction times fixed originating1411loss/originalNOL fraction; basis is the claimed deduction, not carry absorption",
+      { "Original regular loss": row.originalLoss, "Original1411 loss": d(value), "Regular deduction": row.deduction ?? d("0") });
+    return amount;
+  });
+  return { ...result, calculationComplete: true, deduction: result.deduction, absorbed: result.absorbed,
+    expired: result.expired, carryforward: result.carryforward, actualIncome, modifiedIncome, finalIncome,
+    modifiedVintageIncome, section1411Deduction: roundDollar(sum(...section1411Amounts)),
+    alternativeTaxSources, alternativeTax, lines: [...result.lines, ...alternativeTax.lines, ...audit.getLines()] };
+}

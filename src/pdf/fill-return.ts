@@ -37,6 +37,7 @@ import { fillSocialSecurityBenefitsWorksheetReference } from "./fill-social-secu
 import { assertForm7206ReviewSource, fillForm7206 } from "./fill-form-7206.js";
 import { fillSEHealthInsuranceWorksheetReference } from "./fill-se-health-insurance-worksheet.js";
 import { fillIraDeductionWorksheetReference } from "./fill-ira-deduction-worksheet.js";
+import { buildNetOperatingLossReview, fillNetOperatingLossReview } from "./fill-net-operating-loss.js";
 import { fillForm8962Reference } from "./fill-form-8962.js";
 import {
   fillForm1116Reference,
@@ -393,6 +394,7 @@ export async function fillReturn(
 ): Promise<FillReturnResult> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear, options.purpose);
   if (input.form7206 || result.form7206) assertForm7206ReviewSource(input, result);
+  if (input.netOperatingLoss || result.netOperatingLoss) buildNetOperatingLossReview(input, result);
   const filledForms: string[] = [];
   const finalizedPaths = new Set<string>();
   const savePacketPdf = async (doc: PDFDocument, outputPath: string) => {
@@ -686,7 +688,9 @@ export async function fillReturn(
   }
 
   // ── Form 6251 (if applicable — Alternative Minimum Tax) ──
-  if (result.form6251 && result.form6251.amt.gt(0)) {
+  // Include the actual NOL adjustment in this review packet even when AMT is
+  // zero. Inclusion is for source review and is not a filing-requirement claim.
+  if (result.form6251 && (result.form6251.amt.gt(0) || result.netOperatingLoss)) {
     const f6251Path = join(blankFormsDir, "f6251.pdf");
     const doc6251 = await fillForm6251(input, result, f6251Path);
     if (flatten) await flattenForm(doc6251.getForm());
@@ -807,6 +811,10 @@ export async function fillReturn(
   }
 
   // ── IRA Deduction Worksheet reference summary (if applicable — supported Pub. 590-A deduction worksheet inputs) ──
+  if (result.netOperatingLoss) {
+    filledForms.push(await fillNetOperatingLossReview(input, result, outputDir));
+  }
+
   if (result.iraDeductionWorksheet) {
     const outputPathIraDeductionWorksheetReference = await fillIraDeductionWorksheetReference(
       result.iraDeductionWorksheet,

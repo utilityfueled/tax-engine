@@ -203,6 +203,17 @@ export function calculateNetOperatingLoss(input: {
     priorDeduction = priorDeduction.plus(row.deduction);
   }
   const claim = { ...base, pre2018Deduction: pre2018, post2017Deduction, deduction, lines: audit.getLines() };
+  if (context.modifiedTaxableIncomeWithoutNolQbiAndSection250 !== undefined) {
+    const modifiedBase = contextAmount(context.modifiedTaxableIncomeWithoutNolQbiAndSection250, "modified limit income");
+    const modifiedLimit = roundDollar(zeroFloor(modifiedBase.minus(pre2018)).times("0.8"));
+    let precedingPre = d("0");
+    let precedingPost = d("0");
+    for (const row of vintages) {
+      row.earlierModifiedNolDeductions = precedingPre.plus(Decimal.min(precedingPost, modifiedLimit));
+      if (row.lossTaxYear < 2018) precedingPre = precedingPre.plus(available(row));
+      else precedingPost = precedingPost.plus(available(row));
+    }
+  }
   if (context.carryoverContexts === undefined) return claim;
   if (context.modifiedTaxableIncomeWithoutNolQbiAndSection250 === undefined) {
     throw new Error("NOL carryover requires the separately recomputed modified limit income");
