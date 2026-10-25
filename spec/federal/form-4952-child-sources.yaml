@@ -1,0 +1,66 @@
+form: "Form 4952 child sources"
+fullName: "Source-bound Form 8814 income in regular and AMT investment interest"
+taxYear: 2026
+supportedTaxYears: [2025, 2026]
+irsReference: "https://www.irs.gov/pub/irs-pdf/f4952.pdf"
+sources:
+  - url: "https://www.irs.gov/pub/irs-pdf/f4952.pdf"
+    revision: "Final2026, created2026-05-28, lines4a-4g"
+    retrieved: "2026-10-25"
+  - url: "https://www.irs.gov/publications/p550"
+    revision: "2025, Investment income of child reported on parent's return"
+    retrieved: "2026-10-25"
+  - url: "https://www.irs.gov/instructions/i6251"
+    revision: "2025, line2c Step3 and line2g"
+    retrieved: "2026-10-25"
+notes: |
+  A completed combined4952 source already includes child income. Bind it to the
+  actual election and reconcile the combined amounts; never add the child again.
+  The source partition identifies all children by original index, year and
+  identity and confirms parent sources exclude every elected child. Parent
+  gross and gain values remain signed. Unknown source amounts are not zero.
+  Recompute child amounts using the actual Form8814; Alaska is excluded from
+  investment income. Qualified dividends stay in4a and4b, while capital
+  distributions enter4d and net long-term gain for4e. Parent short-term gains
+  do not erase long-term losses or enlarge preferential net capital gain.
+  AMT sources are a separate completed partition: include the actual child
+  private-activity preference net of the already verified allowable deduction
+  once in4a. Parent AMT sources exclude those child amounts. Neither source
+  references nor identifying information belongs in the computed audit.
+  This does not qualify final forms or replace independent human review.
+lines:
+  - line: "source"
+    description: "Complete original child election binding"
+    formula: "Require matching source year, actual confirmed source partition, every form8814:index once and matching child name, birth date and SSN last4; reject omitted, duplicate, stale or conflicting sources"
+    irsRef: "Form8814 separate election per child; Form4952 line4a and Pub550"
+    testRef: "tests/engine/forms/form-4952-child-sources.test.ts::rejects missing duplicate stale and conflicting child sources"
+  - line: "4a"
+    description: "Combined gross investment income"
+    formula: "Actual signed parent gross excluding children + sum(child line12 - allocated Alaska + child line9); reconcile raw aggregate before4952 rounding"
+    irsRef: "Pub550 child investment income and4000interest/2000Alaska example"
+    testRef: "tests/engine/forms/form-4952-child-sources.test.ts::reconciles the IRS Alaska example once with signed parent income"
+  - line: "4b"
+    description: "Included qualified dividends"
+    formula: "Actual parent qualified dividends + sum(child line9); preferential character is removed on4c until actual4g election"
+    irsRef: "Form4952 lines4a-4g and Pub550 child's qualified dividends"
+    testRef: "tests/engine/forms/form-4952-child-sources.test.ts::nets actual child dividends and gains before source rounding"
+  - line: "4d-4e"
+    description: "Actual capital gain and loss source netting"
+    formula: "4d source=parent signed net investment gain+child line10;4e source=parent signed net long-term gain+child line10-max(0,-parent signed net short-term gain); completed4952 floors and limits the results"
+    irsRef: "Form4952 lines4d-4e; include capital distributions and capital loss carryovers"
+    testRef: "tests/engine/forms/form-4952-child-sources.test.ts::nets actual child dividends and gains before source rounding"
+  - line: "AMT4a"
+    description: "Separate actual child private-activity preference"
+    formula: "AMT parent signed gross excluding children + child regular gross investment income + actual child preference transferred to6251line2g; no inferred preference or duplicate deduction"
+    irsRef: "Form6251 line2c Step3 and line2g; Form8814 AMT sources"
+    testRef: "tests/engine/forms/form-4952-child-sources.test.ts::adds the actual child private activity preference once only for AMT"
+  - line: "return"
+    description: "Canonical regular and AMT source reconciliation"
+    formula: "Require and audit the actual child source partition before each completed regular or AMT4952 calculation, including the separate AMT source for2025; leave combined source amounts unchanged"
+    irsRef: "Form4952 lines4a-4e and Form6251 line2c"
+    testRef: "tests/engine/federal-child-investment-interest.test.ts::uses complete regular and AMT child sources once in both years"
+  - line: "review"
+    description: "Saved redacted review form retains the verified regular worksheet"
+    formula: "Calculate and validate full source facts first, redact structured identifiers for rendering, then copy the regular4952 audit once; retain review-only notice and2026 export gate"
+    irsRef: "Form4952 lines1-8; final-year qualification remains separate"
+    testRef: "tests/pdf/child-investment-sources.test.ts::reopens the verified child investment deduction with identifiers redacted"

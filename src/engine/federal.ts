@@ -125,6 +125,7 @@ import { calculateForm4952 } from "./forms/form-4952.js";
 import { calculateForm8615 } from "./forms/form-8615.js";
 import { aggregateForm8814Results } from "./forms/form-8814.js";
 import { calculateForm8814AmtSources } from "./forms/form-8814-amt-sources.js";
+import { calculateForm4952ChildSources } from "./forms/form-4952-child-sources.js";
 import { calculateForm8814Election } from "./forms/form-8814-election.js";
 import { calculateForm8814IncomeCharacter } from "./forms/form-8814-income-character.js";
 import { calculateForm6251BondSources } from "./forms/form-6251-bond-sources.js";
@@ -2211,6 +2212,10 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     || form4952Input?.sourceTaxYear !== undefined;
   let form4952: ReturnType<typeof calculateForm4952> | undefined;
   if (needsForm4952) {
+    if ((input.form8814?.length ?? 0) > 0 || form4952Input?.childIncomeSources) {
+      if (!form4952Input) throw new Error("Form4952 requires the actual child source partition");
+      audit.merge(calculateForm4952ChildSources(form4952Input, input.form8814 ?? [], constants).lines);
+    }
     if (form4952HasActualSources) {
       if (!form4952Input) throw new Error("Form4952 requires the actual completed investment source worksheet");
       form4952 = calculateForm4952(form4952Input, year);
@@ -2233,6 +2238,9 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   let form4952Amt: ReturnType<typeof calculateForm4952> | undefined;
   if (input.form4952Amt) {
     if (!form4952) throw new Error("AMT Form4952 requires the actual regular investment source worksheet");
+    if ((input.form8814?.length ?? 0) > 0 || input.form4952Amt.childIncomeSources) {
+      audit.merge(calculateForm4952ChildSources(input.form4952Amt, input.form8814 ?? [], constants, "amt").lines);
+    }
     const calculated = calculateForm4952(input.form4952Amt, year);
     if (!calculated.sourceFactsVerified) throw new Error("AMT Form4952 actual source facts are required");
     const requiredElection = min(form4952.line4g, calculated.line4b.plus(calculated.line4e));
@@ -2244,7 +2252,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       lines: calculated.lines.map(line => ({...line,form:line.form.replace("Form 4952","Form 4952 AMT")})),
     };
     audit.merge(form4952Amt.lines);
-  } else if (form4952 && year >= 2026) {
+  } else if (form4952 && (year >= 2026 || (input.form8814?.length ?? 0) > 0 || form4952Input?.childIncomeSources)) {
     throw new Error("AMT Form4952 requires separate actual investment source facts");
   }
   if (hasK1InvestmentAmounts) {

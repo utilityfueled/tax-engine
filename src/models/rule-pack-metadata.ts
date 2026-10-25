@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.57",
+    ruleVersion: "2025.58",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/publications/p550", section: "Actual child8814 income reconciled once to combined regular and AMT4952 sources, including signed parent amounts, Alaska exclusion and net private-activity preference", revision: "Final2026 Form4952 and final2025 Pub550/Form6251 instructions; separate AMT sources and redacted review output, independent qualification pending", retrievedAt: "2026-10-25" },
       { url: "https://uscode.house.gov/us/usc/119-118/t26/s904/", section: "Actual section904(j) source election, joint-only300/600 thresholds, no current carry creation and preserved unused regular/AMT vintages", revision: "Current statute and final2025 Form1116/Form6251 instructions; section55 net TMT retained for actual later-credit consumers", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/pub/irs-prior/i1099b--2025.pdf", section: "Original Box4 to Form1040 line25b once per statement; actual current-year open-short-sale withholding without a fabricated disposal", revision: "Final2025 instructions, Box4 and Short sales/Backup withholding; original source identity, owner and cents retained", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i1040sd", section: "Actual source-bound 28percent and unrecaptured1250 worksheets; loss netting before regular and confirmed same-basis AMT capital-rate computation", revision: "Final2025 ScheduleD instructions; ordinary direct assets and reported DIV/K1/1041/child cohort; additional property/QSBS/foreign histories remain separate", retrievedAt: "2026-10-25" },
@@ -99,11 +100,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.53-law-integration-draft",
+    ruleVersion: "2026.54-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/publications/p550", section: "Actual child8814 income reconciled once to combined regular and AMT4952 sources, including signed parent amounts, Alaska exclusion and net private-activity preference", revision: "Final2026 Form4952 and final2025 Pub550/Form6251 instructions; separate AMT sources and redacted review output, independent qualification pending", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i6251", section: "Actual section904(j) foreign credit in regular and AMT comparisons; section55 net TMT preserved for actual8801/3800 consumers", revision: "Current section904(j)/55 law and final2025 instructions applied to bounded2026 source calculation; final forms and independent qualification remain closed", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i1099b", section: "Original Box4 withholding and current-year open-short-sale source reporting; prior-year withholding is not repeated on the closing statement", revision: "Current2026 Form1099-B instructions; final return/forms and professional qualification remain gated", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i1040sd", section: "Actual source-bound 28percent and unrecaptured1250 worksheets; loss netting before regular and confirmed same-basis AMT capital-rate computation", revision: "Final2025 ScheduleD instructions; ordinary direct assets and reported DIV/K1/1041/child cohort; additional property/QSBS/foreign histories remain separate", retrievedAt: "2026-10-25" },

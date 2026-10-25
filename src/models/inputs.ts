@@ -3429,6 +3429,17 @@ export const Form4952InputSchema = z.preprocess((value) => {
   /** Line 5: Expenses actually deductible on the return, not miscellaneous investment fees. */
   investmentExpenses: optionalDecimal,
   investmentExpensesDeductibleConfirmed: z.boolean().optional(),
+  /** Separate actual parent totals exclude every child elected on Form 8814. */
+  childIncomeSources: z.object({
+    sourceTaxYear: z.number().int(), sourceReference: z.string().trim().min(1), sourceFactsConfirmed: z.boolean(),
+    parentSourcesExcludeAllChildrenConfirmed: z.boolean(),
+    parentGrossInvestmentIncome: decimal, parentQualifiedDividends: decimal,
+    parentNetInvestmentGain: decimal, parentNetLongTermGain: decimal, parentNetShortTermGain: decimal,
+    children: z.array(z.object({
+      sourceId: z.string().trim().min(1), sourceTaxYear: z.number().int(), sourceReference: z.string().trim().min(1),
+      firstName: z.string().trim().min(1), lastName: z.string().trim().min(1), dateOfBirth: z.string().min(1), ssnLast4: z.string().regex(/^\d{4}$/),
+    })),
+  }).optional(),
 }));
 export type Form4952Input = z.infer<typeof Form4952InputSchema>;
 

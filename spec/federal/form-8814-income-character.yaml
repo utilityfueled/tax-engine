@@ -18,7 +18,7 @@ lines:
     testRef: "tests/engine/forms/form-8814-income-character.test.ts::requires actual character and rejects contradictory source subsets"
   - line: "alaska-allocation"
     description: "Child Alaska amount included on parent return"
-    formula: "round(line6 * AlaskaPFD / line4); ordinary investment portion=max(0,line12-Alaska allocation)"
+    formula: "round(line6 * AlaskaPFD / line4); ordinary investment portion=line12-Alaska allocation; retain the signed printed-line remainder"
     irsRef: "Pub550 Child's Alaska Permanent Fund dividends,4000interest/2000PFD example"
     testRef: "tests/engine/forms/form-8814-income-character.test.ts::reproduces the IRS Alaska example without adding child income twice"
   - line: "special-gains"
