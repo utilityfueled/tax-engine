@@ -1,5 +1,6 @@
 /** Schedule 1-A — Additional Deductions. Spec: spec/federal/schedule-1-a.yaml */
 import Decimal from "decimal.js";
+import { calculateVehicleRefinancing } from "@/engine/forms/vehicle-refinancing.js";
 import { Schedule1ASchema, type Schedule1AInput, type Taxpayer } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { d, min, sum, zeroFloor, roundDollar } from "@/utils/decimal.js";
@@ -67,17 +68,19 @@ export function calculateSchedule1A(input: Schedule1AParams): Schedule1AResult {
   const eligibleOvertime = sum(...facts.overtime.map((entry) => ssnEligible(entry.owner) && entry.requiredByFlsa ? d(entry.qualifiedPremium) : d("0")));
   const overtimeDeduction = marriedSeparate ? d("0") : roundDollar(zeroFloor(min(eligibleOvertime, d(joint ? "25000" : "12500")).minus(wageDeductionReduction)));
   audit.record("Schedule 1-A", "21", "Qualified overtime compensation deduction", overtimeDeduction, "max(0, min(FLSA premium, 12500 [25000 MFJ]) - 100 × floor(MAGI excess / 1000)); MFS excluded");
-  const vehicleInterest = sum(...facts.vehicleLoans.map((loan) => {
+  const vehicleInterest = sum(...facts.vehicleLoans.map((loan, loanIndex) => {
     if (actualSources || loan.owner !== undefined || loan.sourceTaxYear !== undefined || loan.borrowerQualificationConfirmed !== undefined) {
       if (!loan.owner || loan.sourceTaxYear !== taxpayer.taxYear || !loan.lenderName || !loan.loanAccountReference || !loan.sourceReference || loan.borrowerQualificationConfirmed === undefined) throw new Error("Schedule1-A requires actual vehicle borrower and loan source facts for this year.");
       if (loan.owner === "spouse" && (!joint || !taxpayer.spouse)) throw new Error("Schedule1-A spouse vehicle borrower requires the actual joint household.");
       if (!loan.borrowerQualificationConfirmed) return d("0");
     }
-    if (loan.refinanced) throw new Error("Refinanced vehicle loan requires unsupported prior-loan qualification");
+    const refinancing = loan.refinanced ? calculateVehicleRefinancing(loan, taxpayer.taxYear, String(loanIndex + 1)) : undefined;
+    if (!loan.refinanced && loan.refinancingSources !== undefined) throw new Error("Vehicle refinancing sources conflict with a non-refinanced loan");
+    if (refinancing) audit.merge(refinancing.lines);
     const yearEnd = `${taxpayer.taxYear}-12-31`;
     if (loan.acquiredDate > yearEnd || loan.loanOriginationDate > yearEnd) throw new Error("Vehicle purchase/loan date is after the tax year");
-    if (loan.acquiredDate < "2025-01-01" || loan.loanOriginationDate < "2025-01-01" || !loan.firstLien || !loan.originalUse || !loan.finalAssemblyUnitedStates || !loan.personalUse || loan.grossVehicleWeightRating >= 14000 || loan.relatedParty || loan.lease || loan.fleet || loan.salvageOrScrap) return d("0");
-    return d(loan.interestPaid).minus(loan.businessInterestDeducted).minus(loan.nonqualifyingInterest);
+    if (loan.acquiredDate < "2025-01-01" || loan.loanOriginationDate < "2025-01-01" || (!loan.refinanced && !loan.firstLien) || !loan.originalUse || !loan.finalAssemblyUnitedStates || !loan.personalUse || loan.grossVehicleWeightRating >= 14000 || (!loan.refinanced && loan.relatedParty) || loan.lease || loan.fleet || loan.salvageOrScrap) return d("0");
+    return refinancing?.eligibleInterest ?? d(loan.interestPaid).minus(loan.businessInterestDeducted).minus(loan.nonqualifyingInterest);
   }));
   const vehicleReduction = zeroFloor(magi.minus(joint ? "200000" : "100000")).div("1000").ceil().times("200");
   const vehicleInterestDeduction = roundDollar(zeroFloor(min(vehicleInterest, d("10000")).minus(vehicleReduction)));

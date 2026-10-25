@@ -4,6 +4,7 @@
  */
 
 import { z } from "zod";
+import { VehicleRefinancingSourcesSchema } from "@/models/vehicle-refinancing-sources.js";
 import { getNYIT201ResidentConstants } from "@/models/constants.js";
 import { d } from "@/utils/decimal.js";
 import { Form982NolSourcesSchema } from "@/models/cod-nol-sources.js";
@@ -5839,6 +5840,7 @@ export const Schedule1ASchema = z.object({
     fleet: z.boolean(),
     salvageOrScrap: z.boolean(),
     refinanced: z.boolean(),
+    refinancingSources: VehicleRefinancingSourcesSchema.optional(),
   }).refine((value) => d(value.businessInterestDeducted).plus(value.nonqualifyingInterest).lte(value.interestPaid), "Excluded interest exceeds interest paid")),
   seniorOwners: z.array(schedule1AOwner),
 }).superRefine((facts, ctx) => {
