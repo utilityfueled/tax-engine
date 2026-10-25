@@ -2,7 +2,8 @@ name: Web
 
 on:
   push:
-    branches: [main]
+    branches: [main, upgrade/2026-baseline]
+  workflow_dispatch:
   pull_request:
     branches: [main]
 
