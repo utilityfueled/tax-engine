@@ -18,7 +18,7 @@ function run(fixture: ProviderEvalFixture, profileId = "luna-high", repeat = 1):
     attempts: [{ profileId, startedAt: "2026-10-24T12:00:00Z", usage: { inputTokens: 1000, outputTokens: 1000 } }],
   };
 }
-const extraction = taxProviderModelEvalFixtures.find(fixture => fixture.id === "income-extraction-large-exact-1")!;
+const extraction = taxProviderModelEvalFixtures.find(fixture => fixture.id === "case-income-large-ledger-precision")!;
 // Explicitly synthetic evidence for exercising gates; these records are never written to qualification artifacts.
 const availability: ProviderModelLiveEvalTemplate["availability"] = providerModelCandidates.map(profile => ({
   profileId: profile.id, status: "available", checkedAt: "2026-10-24T00:00:00Z", expiresAt: "2026-10-25T00:00:00Z",
@@ -26,15 +26,15 @@ const availability: ProviderModelLiveEvalTemplate["availability"] = providerMode
 }));
 
 describe("measured task model evaluation", () => {
-  it("keeps 240 template variants plus 30 distinct draft scenarios, with fixed held-out cases and no qualification claim", () => {
+  it("keeps 240 distinct draft scenarios with fixed held-out coverage and no qualification claim", () => {
     const pack = buildProviderModelEvalFixturePack();
-    expect(pack.fixtureCount).toBe(270);
-    expect(pack.templateVariantCount).toBe(240);
-    expect(pack.standaloneScenarioCount).toBe(30);
+    expect(pack.fixtureCount).toBe(240);
+    expect(pack.templateVariantCount).toBe(0);
+    expect(pack.standaloneScenarioCount).toBe(240);
     expect(pack.taskTypes).toHaveLength(8);
-    expect(pack.fixtures.filter(fixture => fixture.split === "held-out")).toHaveLength(88);
+    expect(pack.fixtures.filter(fixture => fixture.split === "held-out")).toHaveLength(80);
     expect(pack.fixtures.every(fixture => fixture.review.status === "pending")).toBe(true);
-    expect(new Set(pack.fixtures.map(fixture => fixture.id)).size).toBe(270);
+    expect(new Set(pack.fixtures.map(fixture => fixture.id)).size).toBe(240);
     expect(pack.qualification).toBe("draft-unreviewed");
   });
   it("has effort-specific candidates and both baselines, without fabricated quality scores or recommendations", () => {
@@ -105,7 +105,7 @@ describe("measured task model evaluation", () => {
     const entries = ["luna-high", "baseline-gpt-5-mini", "baseline-gemini-3-flash-preview"].flatMap(profile => cases.flatMap(fixture => [1, 2, 3].map(repeat => run(fixture, profile, repeat))));
     const summary = summarizeProviderModelLiveEvalTemplate({ version: 2, entries, availability }, fixtures);
     expect(summary.groups.find(group => group.profileId === "luna-high" && group.task === "income-extraction"))
-      .toMatchObject({ completedRuns: 120, schemaValidity: 1, criticalFieldExactMatch: 1, eligibleForPromotionReview: true, blockers: [] });
+      .toMatchObject({ completedRuns: 90, schemaValidity: 1, criticalFieldExactMatch: 1, eligibleForPromotionReview: true, blockers: [] });
     expect(summary.productionPromotion).toBe(false);
     entries[0]!.output!.fields.amount = "999";
     const rejected = summarizeProviderModelLiveEvalTemplate({ version: 2, entries, availability }, fixtures);

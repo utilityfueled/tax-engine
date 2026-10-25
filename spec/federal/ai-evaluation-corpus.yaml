@@ -1,0 +1,24 @@
+form: "AI-Evaluation-Corpus"
+fullName: "Representative draft tax-assistance evaluation corpus"
+taxYear: 2026
+reference: "docs/upgrade-2026-execution-brief.md; https://developers.openai.com/api/docs/guides/model-optimization"
+notes: |
+  This is an AI software evaluation contract, not tax-law qualification.
+  The corpus contains 240 separately authored synthetic source and decision cases,
+  thirty per task. Case-specific reviewer criteria are frozen with source content.
+  There is no amount/year/task cross-product. Fixed held-out cases remain published
+  draft test data, not a secret uncontaminated benchmark. No case is human-reviewed
+  until a different human records a real review; authoring or a test pass is not review.
+lines:
+  - line: "representative-drafts"
+    description: "Distinct source and decision coverage replaces template count inflation"
+    formula: "240 unique cases; 30 per task; 10 fixed held-out per task; unique source narrative and reviewer criteria; zero template variants."
+    testRef: "tests/engine/provider-model-eval.test.ts::keeps 240 distinct draft scenarios with fixed held-out coverage and no qualification claim"
+  - line: "source-oracles"
+    description: "Draft source-bound expected values remain separate from provider input"
+    formula: "Literal monetary/date/text oracles, named source IDs and case-specific human review criteria; expected outputs never establish application-schema validation or independent review."
+    testRef: "tests/engine/provider-eval-corpus.test.ts::preserves distinct source boundaries and review criteria across every task"
+  - line: "safety-coverage"
+    description: "The corpus exercises uncertainty and untrusted source content"
+    formula: "Missing facts, conflicts, source corrections, duplicate identities, privacy attacks, readiness claims, unsupported scope and exact audit values are represented by distinct cases."
+    testRef: "tests/engine/provider-eval-corpus.test.ts::covers concrete source and safety challenges without promoting synthetic evidence"

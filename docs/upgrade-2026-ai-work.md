@@ -34,7 +34,7 @@ Read through official developer documentation on 2026-10-24/25; these are docume
 ## Remaining required actions
 
 1. Owner must supply approved synthetic-only provider account access and an explicit spending cap. Record actual model IDs, structured-output/effort/usage capability, account settings and dated evidence for Luna High, Sol Low/High, optional Gemini 3.8 High and the two baseline profiles. Document unavailable/failed profiles; do not infer availability from pricing pages. No API key was present in the inspected process/usual local env-file locations.
-2. Independent human reviewers must validate 200–300 representative cases and their expected fields/source grounding, retaining the held-out split. The 270 drafts do not satisfy this requirement. Execute repeated runs within the approved budget; retain failures, actual tokens/cost and independent quality/PII judgments. No LLM-only monetary judge is used.
+2. Independent human reviewers must validate 200–300 representative cases and their expected fields/source grounding, retaining the held-out split. The 240 individually authored drafts do not satisfy this requirement. Execute repeated runs within the approved budget; retain failures, actual tokens/cost and independent quality/PII judgments. No LLM-only monetary judge is used.
 3. The transient calculation transport is implemented under [its explicit privacy contract](ai-transient-calculation-contract.md). Separate unchecked calculation consent is required, local-only preferences take precedence, and the server recomputes validated facts. Known source identities are removed before provider/accounting hooks; known-identity model answers use the billed-failure fallback. Opaque request IDs stay stable when facts change; a separate payload digest detects reuse with changed calculations. The2026 catalog and model promotion remain closed. Final integrated browser/release and human review evidence is still required.
 4. Rehearse real authenticated staging billing/provider/DB outages, duplicate/retried Stripe credits, concurrent spend, migration, backup restore and rollback with approved staging credentials. Local PostgreSQL tests are useful software evidence, not staging/auth/provider evidence.
 5. Require reviewed report/corpus hashes, capability evidence and explicit owner promotion approval before any rollout configuration changes. Production remains deterministic and filing readiness unchanged.
@@ -65,3 +65,37 @@ bypass, which is corrected. Its two original probes and16 origin cases pass.
 Forwarded headers cannot establish trust, and missing/invalid hosted production
 configuration rejects even originless requests. These are finite synthetic local
 checks, not live provider, staging or independent human qualification.
+
+## Representative draft corpus replacement
+
+The earlier 240 template variants plus30 additional cases are superseded by
+corpus `tax-assistance-2026-r3`:240 individually authored synthetic cases,30 per
+each of eight tasks, with20 development and10 fixed held-out cases per task. No
+task/year/amount cross-product remains. Each case has distinct source narrative,
+literal expected fields/audit values and case-specific human review criteria.
+All reviews remain pending. Published held-out cases are not a secret benchmark
+or evidence of real-world prevalence; external human review is still required.
+
+[OpenAI model optimization guidance](https://developers.openai.com/api/docs/guides/model-optimization#model-optimization-workflow)
+was refreshed on2026-10-25: evaluation inputs should represent actual use cases.
+This source supports the workflow, not the synthetic tax oracles. The new spec
+and count regression failed first against the old270-case pack; the final corpus,
+scorer and CLI freshness cohort passes28 tests across3 files. Web typecheck and
+spec references pass; scoped lint has0 errors and27 pre-existing assertion warnings
+in the scorer tests. No provider was called. Evidence is in
+`.local/upgrade-evidence/ai-representative-corpus-{red,green}.log`,
+`ai-corpus-{web-types,spec,lint}.log`.
+
+The next separate software slice is an approval-bound, budget-bounded repeated
+executor with durable dispatch accounting and account capability records. Actual
+application-schema validity must come from the actual versioned task schema;
+normalized benchmark JSON is insufficient. Unsupported normalization/binding
+methods remain explicit internal implementation blockers. Credentials, approved
+spend, independent human review and live measurements remain absent.
+
+Exact corpus tree `40b251b08dfa22a95c8bc63ade38de306b5296a9` passed34 tests
+across4 files (including strict AST test-reference validation), web types and all
+4,464 spec references. Parent independently reran28 corpus/scorer/CLI cases and
+reviewed the draft/source boundaries with no actionable finding; this is agent
+software review only (`parent-ai-corpus-40b251b-review.log`). The final evidence
+append changes documentation only; no live records or human approvals were added.
