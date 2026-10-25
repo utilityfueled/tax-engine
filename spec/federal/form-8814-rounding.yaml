@@ -1,0 +1,32 @@
+form: "Form8814 allocation rounding"
+fullName: "Rounded child allocation ratios and signed parent transfers"
+taxYear: 2025
+irsReference: "https://www.irs.gov/pub/irs-pdf/f8814.pdf"
+notes: |
+  Final2025 form created2025-03-19, refreshed2026-10-25. Lines7/8 require
+  rounding to at least three decimal places, not truncation. This implementation
+  uses six places HALF_UP and rounds transferred dollars HALF_UP. Line12 is
+  a plain signed subtraction, with no instruction to floor it. Actual source
+  cents remain available when adding amounts; this does not invent income to
+  absorb rounding. Source: Instructions1040, Rounding Off to Whole Dollars.
+lines:
+  - line: "ratio"
+    description: "Round both preferential ratios instead of truncating"
+    formula: "1500/5016=0.299043 to six places; excess2316 times ratio rounds693, leaving ordinary1623."
+    irsRef: "Form8814 lines7-10"
+    testRef: "tests/engine/forms/form-8814-rounding.test.ts::rounds each preferential ratio without truncating the dollar transfer"
+  - line: "signed-remainder"
+    description: "Preserve the actual line12 subtraction"
+    formula: "1350.50qualified +1350.50capital =2701; excess1; each ratio0.5 transfers1; line12=1-2=-1. Combined parent income remains1."
+    irsRef: "Form8814 lines4 and6-12; Instructions1040 Rounding Off to Whole Dollars"
+    testRef: "tests/engine/forms/form-8814-rounding.test.ts::preserves the signed line12 rounding remainder and total parent income"
+  - line: "investment-character"
+    description: "Carry the same signed child ordinary amount to investment worksheets"
+    formula: "With no Alaska amount, line12=-1 gives ordinary investment=-1 and4952grossinvestment=-1+1qualified=0; no second floor."
+    irsRef: "InstructionsForm8960 line7; InstructionsForm8814 Investment income"
+    testRef: "tests/engine/forms/form-8814-rounding.test.ts::preserves the signed ordinary transfer in child investment character"
+  - line: "return-transfer"
+    description: "Report the negative rounding remainder once in the canonical parent return"
+    formula: "Parent wages300000 plus qualified1 plus capital1 minus ordinary1 =300001AGI; Form8960line7=-1."
+    irsRef: "Form8814 lines9-12; InstructionsForm8960 line7"
+    testRef: "tests/engine/forms/form-8814-rounding.test.ts::retains the signed child remainder in the canonical parent return"

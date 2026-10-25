@@ -108,21 +108,18 @@ describe("Form 8814 — Parents' Election To Report Child's Interest and Dividen
     it("Form 8814 Line 9 - qualified dividends allocated proportionally", () => {
       // Child: $3,000 interest + $2,000 ord div ($1,500 qual) + $500 cap gains = $5,500 total
       // Line 6 = 5500 - 2700 = 2800 above base
-      // Line 7 = 1500/5500 = 0.2727
-      // Line 9 = 2800 × 0.2727 = 763 (rounded)
+      // Line 7 = 1500/5500 = 0.272727 to six places
+      // Line 9 = 2800 × 0.272727 = 763.6356, rounded to 764
       const result = calculateForm8814(makeChildInput(), constants);
       expect(result.line4).toEqual(new Decimal(5500));
       expect(result.line6).toEqual(new Decimal(2800));
-      const expectedRatio = new Decimal(1500).dividedBy(5500).toDecimalPlaces(4, Decimal.ROUND_DOWN);
-      const expectedQualDiv = new Decimal(2800).times(expectedRatio).toDecimalPlaces(0, Decimal.ROUND_HALF_UP);
-      expect(result.qualifiedDividendsToReport).toEqual(expectedQualDiv);
+      expect(result.qualifiedDividendsToReport.toFixed()).toBe("764");
     });
 
     it("Form 8814 Line 10 - capital gain distributions allocated proportionally", () => {
       const result = calculateForm8814(makeChildInput(), constants);
-      const expectedRatio = new Decimal(500).dividedBy(5500).toDecimalPlaces(4, Decimal.ROUND_DOWN);
-      const expectedCapGains = new Decimal(2800).times(expectedRatio).toDecimalPlaces(0, Decimal.ROUND_HALF_UP);
-      expect(result.capitalGainsToReport).toEqual(expectedCapGains);
+      // 500/5500 = 0.090909; 2800 × 0.090909 = 254.5452.
+      expect(result.capitalGainsToReport.toFixed()).toBe("255");
     });
 
     it("Form 8814 Line 12 - other income is remainder after preferential items", () => {

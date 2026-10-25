@@ -1,7 +1,7 @@
 /** Actual child income character. Spec: spec/federal/form-8814-income-character.yaml. */
 import type { Form8814ChildInput } from '@/models/inputs.js';
 import type { YearConstants } from '@/models/constants.js';
-import { d, roundDollar, sum, zeroFloor } from '@/utils/decimal.js';
+import { d, roundDollar, sum } from '@/utils/decimal.js';
 import { AuditTrail } from '@/utils/audit.js';
 import { calculateForm8814 } from './form-8814.js';
 
@@ -25,7 +25,7 @@ export function calculateForm8814IncomeCharacter(inputs: Form8814ChildInput[], c
     const result = calculateForm8814(input, constants);
     if (!result.applies) throw new Error('Form8814 income character requires income within the election range.');
     const alaskaIncomeToReport = roundDollar(result.line6.times(alaska).div(result.line4));
-    const ordinaryInvestmentIncome = zeroFloor(result.otherIncomeToReport.minus(alaskaIncomeToReport));
+    const ordinaryInvestmentIncome = result.otherIncomeToReport.minus(alaskaIncomeToReport);
     const collectiblesGain = capital.isZero() ? d('0') : roundDollar(result.capitalGainsToReport.times(collectibles).div(capital));
     const unrecapturedSection1250Gain = capital.isZero() ? d('0') : roundDollar(result.capitalGainsToReport.times(section1250).div(capital));
     const grossInvestmentIncomeFor4952 = ordinaryInvestmentIncome.plus(result.qualifiedDividendsToReport);

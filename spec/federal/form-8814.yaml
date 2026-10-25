@@ -103,14 +103,14 @@ lines:
 
   - line: "7"
     description: "Qualified dividend ratio"
-    formula: "Line 2b / Line 4 (3 decimal places)"
+    formula: "Line 2b / Line 4, rounded HALF_UP to six decimal places (IRS permits at least three)"
     irsRef: "Form 8814 Instructions, Line 7"
     notes: "Only computed when Line 6 > 0 and Line 2b > 0."
     testRef: "tests/engine/forms/form-8814.test.ts::Form 8814 Line 9 - qualified dividends allocated proportionally"
 
   - line: "8"
     description: "Capital gain distribution ratio"
-    formula: "Line 3 / Line 4 (3 decimal places)"
+    formula: "Line 3 / Line 4, rounded HALF_UP to six decimal places (IRS permits at least three)"
     irsRef: "Form 8814 Instructions, Line 8"
     notes: "Only computed when Line 6 > 0 and Line 3 > 0."
     testRef: "tests/engine/forms/form-8814.test.ts::Form 8814 Line 10 - capital gain distributions allocated proportionally"
@@ -139,7 +139,7 @@ lines:
     description: "Other interest/dividend income at ordinary rates"
     formula: "Line 6 - Line 11"
     irsRef: "Form 8814 Instructions, Line 12"
-    notes: "Reports to Schedule 1 Line 8z. If multiple Form 8814s, sum all Line 12 amounts."
+    notes: "Reports the signed subtraction to Schedule 1 Line 8z. Do not floor a negative rounding remainder; unlike line14, line12 has no zero-floor instruction. If multiple Form 8814s, sum all Line12 amounts."
     testRef: "tests/engine/forms/form-8814.test.ts::Form 8814 Line 12 - other income is remainder after preferential items"
 
   # ── Part II: Tax on the First $2,700 of Child's Interest and Dividends ──
