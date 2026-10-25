@@ -10,6 +10,7 @@ it("applies the rehearsed privilege and filesystem boundary to ordinary Compose 
   expect(web.cap_drop).toContain("ALL");
   expect(web.security_opt).toContain("no-new-privileges:true");
   expect(web.tmpfs).toContain("/tmp:rw,noexec,nosuid,size=64m");
+  expect(web.tmpfs).toContain("/app/apps/web/.next/cache:rw,noexec,nosuid,nodev,size=64m,mode=1777");
   expect(web.privileged).not.toBe(true);
   expect(web.volumes ?? []).toEqual([]);
   // The database's explicit data volume remains persistent and writable.

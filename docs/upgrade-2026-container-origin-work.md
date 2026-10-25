@@ -45,3 +45,24 @@ The runtime logs exposed a separate image-optimizer cache write under the
 read-only application root. A bounded writable cache and matching smoke proof
 remain a separate hosting follow-up. Full integrated browsers, both final
 architecture images, advisory acceptance and external staging still remain.
+
+## Bounded cache follow-up — 2026-10-25
+
+Compose, runtime CI and the smoke command now give only `.next/cache` an
+additional64MiB disposable tmpfs with `noexec,nosuid,nodev,mode=1777`.
+The root remains read-only, UID1001, with all capabilities dropped and
+no-new-privileges. The portable sticky mode follows
+[Podman's tmpfs options](https://docs.podman.io/en/latest/markdown/podman-run.1.html#tmpfs-fs);
+the initial uid/gid mount options were rejected by the local Podman runtime and
+were replaced before acceptance.
+
+The smoke check first reproduced the failed cache write on the unchanged
+ARM64 image7ec82595. With the new mount it serves an actual optimized image,
+finds a nonempty cached file, checks the tmpfs filesystem type and exact64MiB
+size, and retains health/assets/templates/auth/non-root assertions. All pass;
+the final runtime log SHA-256 is
+`1021d8d35b8d5c7d5d27cf4afcac118df3a1e5e910047f7d268cc5d033a7c346`.
+The Compose regression and scoped lint pass. Independent agent review found
+no actionable finding and reran the Compose check. This verifies the runtime
+configuration on the recorded image; final integrated images and native Docker
+CI must still pass. No image was published or deployed.

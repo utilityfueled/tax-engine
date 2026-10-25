@@ -10,6 +10,8 @@ services:
       - no-new-privileges:true
     tmpfs:
       - /tmp:rw,noexec,nosuid,size=64m
+      # The non-root image optimizer needs only this disposable, bounded cache.
+      - /app/apps/web/.next/cache:rw,noexec,nosuid,nodev,size=64m,mode=1777
     depends_on:
       postgres:
         condition: service_healthy

@@ -101,6 +101,7 @@ jobs:
         run: |
           docker run --detach --name tax-engine-browser-ci --read-only --cap-drop ALL \
             --security-opt no-new-privileges --tmpfs /tmp:rw,noexec,nosuid,size=64m \
+            --tmpfs /app/apps/web/.next/cache:rw,noexec,nosuid,nodev,size=64m,mode=1777 \
             --publish 127.0.0.1:3109:3000 --env TAX_ENGINE_DEPLOYMENT_MODE=self-host \
             --env TAX_ENGINE_APP_URL=http://127.0.0.1:3109 tax-engine:ci
           for attempt in $(seq 1 60); do

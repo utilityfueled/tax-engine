@@ -34,6 +34,11 @@ disabled pending independent evaluation and authorization.
 
 ## First run
 
+The web container keeps its root filesystem read-only. Compose provides bounded
+temporary memory filesystems for `/tmp` and the image optimizer's cache. The
+non-root application user writes the cached files. Cached public images are disposable; this
+cache is not a backup of return facts or documents.
+
 1. Copy `.env.docker.example` to `.env.docker`.
 2. Review the ports and database password in `.env.docker`. Set
    `TAX_ENGINE_APP_URL` to the exact URL you will open, including its published
