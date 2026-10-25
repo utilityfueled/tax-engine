@@ -2,6 +2,14 @@
 
 ## Current checkpoint
 
+Execution continues beyond the historical checkpoint below. The current work
+and package evidence are tracked in [the durable checklist](upgrade-2026-checklist.md)
+and `ongoingExecution` in the machine checkpoint. Recent packages include actual
+credit source facts, education/PTC reconciliation, local PostgreSQL recovery,
+document consent/cancellation and an inactive complete-data export pipeline.
+None of these supersedes the required full coverage, independent review, staging
+or final-form qualification gates.
+
 Application commit `d32cb8cf3d607c643c4c7f7e1b845fcace61563f` on
 `upgrade/2026-baseline` remains **not release-ready**. There are 15,141 passing
 unit tests and 293 passing Chromium tests against both the local production

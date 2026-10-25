@@ -204,7 +204,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "a649c613b570c0106c4f85b9f5a083374c0c5bda",
+    "lastRecordedCommit": "5e0822a",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -235,6 +235,26 @@
       "analysisUploadPrivacy": {
         "passed": 44,
         "scope": "mocked local extraction and fetch; original filenames never sent"
+      },
+      "metadataMigrationAndRestore": {
+        "passed": 14,
+        "tablesRestored": 9,
+        "exactProviderCostPreserved": true,
+        "scope": "disposable local PostgreSQL16; no hosted authentication tables or staging"
+      },
+      "inactiveFilingPipeline": {
+        "passed": 27,
+        "qualifiedScenarios": 0
+      },
+      "documentConsentAndCancellation": {
+        "passed": 55,
+        "scope": "local mocked transport and real DOM interactions; no provider calls"
+      },
+      "premiumCreditLaw": {
+        "passed": 151
+      },
+      "premiumCreditIntegration": {
+        "passed": 73
       }
     },
     "externalInputsStillPending": [
@@ -251,28 +271,23 @@
       "final multi-platform release images"
     ],
     "workInProgress": [
-      "federal law",
-      "complete facts",
-      "recovery review fixes",
-      "AI routing/evaluation",
-      "physical form versioning",
-      "state gap analysis",
+      "remaining federal law and complete facts",
+      "audited multi-student education PDF and review identifier privacy",
+      "state demand and final form qualification",
       "full-suite coverage and release rehearsal",
-      "legacy hosted metadata retention migration and backup disposition; sanitized reads do not erase old rows"
+      "hosted staging and independent human reviews",
+      "repeated live synthetic AI evaluation and account availability"
     ],
-    "latestIntegratedCommit": "2b4b012",
+    "latestIntegratedCommit": "9c2fa0c",
     "latestCoverageDiagnostic": {
       "status": "failed",
-      "passed": 15581,
-      "failed": 50,
-      "filesPassed": 502,
-      "filesFailed": 23,
-      "branchesPercent": "82.55",
-      "functionsPercent": "87.94",
-      "statementsPercent": "90.91",
-      "linesPercent": "91.88",
-      "evidence": ".local/upgrade-evidence/coverage-after-privacy.log",
-      "limitation": "Ran during concurrent source edits and focused testing. Law assertions and PDF timeouts must be resolved; not final evidence."
+      "passed": 15745,
+      "failed": 30,
+      "skipped": 19,
+      "filesPassed": 525,
+      "filesFailed": 11,
+      "evidence": ".local/upgrade-evidence/coverage-after-credit-integration.log",
+      "limitation": "Concurrent source edits and PDF timeouts. No fresh coverage report generated. Prior percentages remain failed historical diagnostics; stable run required."
     },
     "recentPackages": {
       "privacyHeaderRedaction": "2d16a94",
@@ -284,7 +299,18 @@
       "legacyScheduleHAssertions": "82ecebb",
       "ctcIdentityFacts": "b85af42",
       "vehicleTransitions": "8d7731c",
-      "energySourceFacts": "c3f922f"
+      "energySourceFacts": "c3f922f",
+      "supportMatrix": "1cb8711",
+      "legacyMetadataMigrationAndRestore": "a49300d",
+      "auditedCreditPdfs": "9207583",
+      "inactiveCompleteDataExport": "2e852bc",
+      "documentAnalysisCancellation": "c571b58",
+      "consentAndUiCancellation": "9c2fa0c",
+      "educationLaw": "2885753",
+      "premiumCreditLaw": "ca8c1e5",
+      "premiumCreditIntegration": "5e0822a",
+      "vehicleSourceFacts": "4dd6ebf",
+      "adoptionSourceFacts": "a0a4e21"
     },
     "remoteCi": {
       "commit": "e910507",

@@ -125,6 +125,43 @@ until the brief's criteria pass or only external actions remain.
 
 ## Latest integrated evidence and immediate work
 
+### Continuing integration after the prior diagnostic
+
+- `1cb8711` publishes a year/jurisdiction/residency/output support matrix and
+  refreshed PA/OH gap analysis. Actual launch-state demand is still pending.
+- `a49300d` adds an explicit legacy metadata cleanup command and passes an
+  actual disposable PostgreSQL dump/restore rehearsal across nine application
+  tables, two owners with the same workspace ID and exact sub-cent provider cost.
+  Fourteen migration/store tests, types and scoped lint pass. Reapplying cleanup
+  after restoring a legacy backup is verified. This is local synthetic evidence;
+  hosted auth tables, staging credentials and release rollback remain open.
+- `9207583` copies Schedule 3 and Schedule 8812 printed amounts from audit lines;
+  39 PDF checks pass. `2e852bc` adds the separate complete-data filing library
+  pipeline, whose compiled qualification registry is empty. Twenty-seven gate
+  tests pass; no live route, form, filing capability or approval is enabled.
+- `c571b58` and `9c2fa0c` add abortable document analysis and real UI consent,
+  cancellation, return-change and late-result protection. Fifty-five focused
+  checks pass, with types/lint. Exact zero is preserved and invalid negative or
+  sub-cent source amounts are not silently rounded into expenses.
+- `6d71c4c` adds the compatible jsdom test dependency with strict peer checks;
+  the refreshed package audit reports zero advisories across 519 entries.
+- Federal `bc26ffe`, `2885753`, `ed5ac99` add actual possession exclusions,
+  education eligibility and coherent credit limits/source metadata. PTC core
+  `ca8c1e5` has 151 focused passes; federal integration `5e0822a` has 73 passes.
+  Sources, special worksheet gaps and review limitations are in the package logs.
+- Facts `49e607c`, `4dd6ebf`, `a0a4e21` collect credit identification, individual
+  vehicle facts and individual adoption expense/benefit/history/child facts.
+  Education interview expansion and remaining standard-deduction facts continue.
+- Latest diagnostic: `.local/upgrade-evidence/coverage-after-credit-integration.log`
+  has 15,745 passes / 30 failures / 19 skips while agents edited source. It did
+  not produce a fresh coverage report. The prior 82.55% branch result is still a
+  failed historical diagnostic, not a current measurement. Credit fixture owners
+  have since reconciled assertions; PDF timeout checks need a stable bounded run.
+- Immediate parent work is audited multi-student Form 8863 output, review-copy
+  redaction after complete-input calculation, then a stable whole-suite/coverage
+  run and meaningful remaining coverage. Hosted staging, independent reviews,
+  live provider budget/account access and final official forms remain unprovided.
+
 - Privacy commits `2d16a94`, `9e9462b`, `e910507`: complete name/header
   redaction, metadata allowlist at both browser/network and PostgreSQL boundaries,
   opaque upload names and response binding. Four real disposable-Postgres cases
