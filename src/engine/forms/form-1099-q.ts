@@ -29,6 +29,7 @@ export interface Form1099QResult {
   taxYear: number;
   perDistribution: EducationDistributionResult[];
   perRecipient: EducationRecipientResult[];
+  returnedContributions: ReturnedEducationContribution[];
   coverdellAccounts: Array<{ accountId: string; beneficiaryId: string; distributedBasis: Decimal; earnings: Decimal; endingBasis: Decimal }>;
   /** Opaque beneficiary links only; personal tax identifiers are not calculation output. */
   creditAllocations: Array<{ beneficiaryId: string; amount: Decimal; taxableEarningsCausedByCredit: Decimal }>;
@@ -62,7 +63,16 @@ export interface Form1099QResult {
   lines: CalculatedLine[];
 }
 
+export interface ReturnedEducationContribution {
+  sourceId: string; accountId: string; contributionId: string; sourceTaxYear: number; incomeTaxYear: number;
+  recipientOwner: "primary" | "spouse" | "other"; recipientId: string;
+  returnedPrincipal: Decimal; netIncome: Decimal; taxableEarnings: Decimal;
+  previouslyReportedEarnings: Decimal; incomeAdjustment: Decimal;
+}
 export interface EducationDistributionResult {
+  sourceTaxYear: number;
+  incomeTaxYear: number;
+  treatment: "ordinary" | "returned_contribution";
   sourceId: string;
   accountId: string;
   accountType: "529" | "coverdell_esa";
@@ -250,7 +260,7 @@ export function calculateForm1099Q(
     });
 
   return {
-    sourceFactsVerified: false, taxYear, perDistribution: [], perRecipient: [], coverdellAccounts: [], creditAllocations: [], loanInterestSourceAdjustments: [], loanInterestAdjustments: [],
+    sourceFactsVerified: false, taxYear, perDistribution: [], perRecipient: [], returnedContributions: [], coverdellAccounts: [], creditAllocations: [], loanInterestSourceAdjustments: [], loanInterestAdjustments: [],
     grossDistribution,
     totalEarnings,
     totalBasis,
@@ -482,6 +492,44 @@ function validTransfer(form: SourceForm, gross: Decimal, year: number, audit: Au
   return result;
 }
 
+function isReturnedContribution(form: Form1099Q): boolean {
+  return form.distributionCode === "2" || form.distributionCode === "3";
+}
+function actualReturnedContribution(form: SourceForm, audit: AuditTrail): ReturnedEducationContribution {
+  if (form.accountType !== "coverdell_esa" || form.recipientNotBeneficiary || form.isTrusteeToTrustee || form.isQtpToRoth || form.transfer?.kind !== "none") throw new Error("Form1099Q returned contribution requires an actual Coverdell beneficiary and no transfer");
+  if (!form.returnedContributionId || form.returnedContributionNetIncomeConfirmed !== true || form.returnedContributionBasisReconciled !== true) throw new Error("Form1099Q actual returned contribution net-income and corrected-basis reconciliation is required");
+  const incomeTaxYear = form.returnedContributionTaxYear;
+  if (!Number.isInteger(incomeTaxYear) || incomeTaxYear === undefined || form.taxYear === undefined || incomeTaxYear !== form.taxYear - (form.distributionCode === "3" ? 1 : 0)) throw new Error("Form1099Q returned contribution code and actual income year must reconcile");
+  const contributed = actualDate(form.returnedContributionDate, "returned contribution made");
+  const returned = actualDate(form.distributionDate, "returned contribution distribution");
+  const contributionStart = new Date(Date.UTC(incomeTaxYear, 0, 1));
+  const contributionDeadline = new Date(Date.UTC(incomeTaxYear + 1, 3, 15));
+  if (contributed < contributionStart || contributed > contributionDeadline || contributed > returned) throw new Error("Form1099Q actual contribution date does not support its designated tax year");
+  if (returned >= new Date(Date.UTC(incomeTaxYear + 1, 5, 1))) throw new Error("Form1099Q correction must be completed before the June1 statutory deadline");
+  const original = actualAmount(form.returnedContributionOriginalAmount, "original returned contribution source amount");
+  const returnedPrincipal = actualAmount(form.returnedContributionPrincipal, "returned contribution principal");
+  const netIncome = actualAmount(form.returnedContributionNetIncome, "actual returned contribution net income", true);
+  const gross = actualAmount(form.grossDistribution, "returned contribution Box1");
+  if (returnedPrincipal.isZero() || returnedPrincipal.gt(original) || !returnedPrincipal.plus(netIncome).eq(gross)) throw new Error("Form1099Q returned principal and attributable net income must reconcile to the source contribution and Box1");
+  if ((form.earnings === undefined) !== (form.basis === undefined)) throw new Error("Form1099Q returned contribution Boxes2/3 must be jointly reconciled");
+  if (form.earnings !== undefined && form.basis !== undefined) {
+    const box2 = actualAmount(form.earnings, "returned contribution Box2", true), box3 = actualAmount(form.basis, "returned contribution Box3");
+    const reportedEarnings = netIncome.lt(0) && form.finalDistribution !== true ? ZERO : netIncome;
+    if (!box2.eq(reportedEarnings) || !box3.plus(box2).eq(gross)) throw new Error("Form1099Q returned contribution reported boxes do not reconcile to the actual net-income worksheet");
+  }
+  const taxableEarnings = roundDollar(zeroFloor(netIncome));
+  const previouslyReportedEarnings = actualAmount(form.returnedContributionIncomePreviouslyReported, "returned contribution income previously reported");
+  const incomeAdjustment = taxableEarnings.minus(previouslyReportedEarnings);
+  for (const [line, description, value] of [["returned-principal", "Actual returned contribution principal", returnedPrincipal], ["returned-net-income", "Actual returned contribution net income", netIncome], ["income-year-earnings", `Returned contribution earnings taxable in ${incomeTaxYear}`, taxableEarnings], ["previously-reported-earnings", `Actual earnings previously reported for ${incomeTaxYear}`, previouslyReportedEarnings], ["income-adjustment", `Income reconciliation difference for ${incomeTaxYear}`, incomeAdjustment]] as const) audit.record("Form1099-Q", `${form.sourceId}:${line}`, description, value, "IRC530(b)(4) and(d)(4)(C); actual contribution year and custodian net-income calculation");
+  return { sourceId: form.sourceId, accountId: form.accountId, contributionId: form.returnedContributionId, sourceTaxYear: form.taxYear, incomeTaxYear,
+    recipientOwner: form.recipientOwner, recipientId: form.recipientOwner === "other" ? (form.recipientId ?? "") : form.recipientOwner,
+    returnedPrincipal, netIncome, taxableEarnings, previouslyReportedEarnings, incomeAdjustment };
+}
+function recordSourceDistribution(row: EducationDistributionResult, audit: AuditTrail): EducationDistributionResult {
+  for (const [line, description, amount] of [["gross", "Actual gross education distribution", row.grossDistribution], ["earnings", "Distributed earnings", row.earnings], ["basis", "Distributed basis", row.basis], ["adjusted-qee", "Allocated adjusted qualified expenses", row.adjustedQEE], ["taxable-earnings", "Distribution earnings taxable in the return year", row.taxableEarnings], ["education-excluded-earnings", "Earnings excluded for actual education expenses", row.educationExpenseExcludedEarnings], ["transfer-excluded-earnings", "Earnings excluded for actual valid transfers", row.transferExcludedEarnings], ["credit-exception", "Earnings taxable solely because expenses were allocated to education credit", row.creditException], ["exception", "Return-year taxable earnings exempt from additional tax", row.penaltyException]] as const) audit.record("Form1099-Q", `${row.sourceId}:${line}`, description, amount, "Actual linked source allocation, income year and Pub970 distribution calculation");
+  return row;
+}
+
 function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEducationExpenseSummary | undefined, options: Form1099QOptions & { taxYear: number }): Form1099QResult {
   const facts = summary?.sourceFacts;
   if (!facts || facts.sourceFactsConfirmed !== true || facts.allDistributionsReconciled !== true) throw new Error("Form1099Q actual reconciled education distribution source facts are required");
@@ -499,23 +547,36 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
   const verifiedForms = forms.map((item): SourceForm => {
     if (!item.transfer) throw new Error("Form1099Q actual transfer facts are required, including an explicit none");
     if (item.sourceFactsComplete === false || item.sourceFactsConfirmed !== true || !item.sourceId || !item.accountId || !item.beneficiaryId || !item.recipientOwner) throw new Error("Form1099Q actual statement source facts are incomplete");
-    if (item.taxYear !== options.taxYear) throw new Error("Form1099Q statement year does not match return year");
+    const nextYearCorrection = isReturnedContribution(item) && item.distributionCode === "3" && item.taxYear === options.taxYear + 1 && item.returnedContributionTaxYear === options.taxYear;
+    if (item.taxYear !== options.taxYear && !nextYearCorrection) throw new Error("Form1099Q statement year does not match return year or an actual following-year correction");
     actualBoolean(item.isTrusteeToTrustee, "Box4a"); actualBoolean(item.isQtpToRoth, "Box4b"); actualBoolean(item.recipientNotBeneficiary, "Box6");
     if (item.isTrusteeToTrustee && item.isQtpToRoth) throw new Error("Form1099Q Box4a and Box4b cannot both be checked");
-    if (item.distributionDate !== undefined && actualDate(item.distributionDate, "distribution").getUTCFullYear() !== options.taxYear) throw new Error("Form1099Q distribution date year does not match statement year");
+    if (item.distributionDate !== undefined && actualDate(item.distributionDate, "distribution").getUTCFullYear() !== item.taxYear) throw new Error("Form1099Q distribution date year does not match statement year");
     if (item.isQtpToRoth && item.recipientNotBeneficiary) throw new Error("Form1099Q Roth transfer recipient must be the designated beneficiary");
     if (item.isQtpToRoth !== (item.transfer.kind === "roth")) throw new Error("Form1099Q transfer kind does not reconcile with Box4b");
     if (item.recipientOwner === "other" && !item.recipientId) throw new Error("Form1099Q actual other-recipient identity is required");
     if (!beneficiaries.has(item.beneficiaryId)) throw new Error("Form1099Q statement beneficiary source is missing");
     if (item.accountType === "coverdell_esa" && item.recipientNotBeneficiary && item.distributionCode !== "5") throw new Error("Form1099Q Coverdell recipient must be the designated beneficiary unless an actual death distribution is reported");
-    if (item.distributionCode && ["2", "3", "6"].includes(item.distributionCode)) throw new Error("Form1099Q returned Coverdell contributions or prohibited transactions require separate source-year reconciliation");
+    if (item.distributionCode === "6") throw new Error("Form1099Q returned Coverdell contributions or prohibited transactions require separate source-year reconciliation");
     return { ...item, sourceId: item.sourceId, accountId: item.accountId, beneficiaryId: item.beneficiaryId, recipientOwner: item.recipientOwner };
   });
+  const returnedContributions = verifiedForms.filter(isReturnedContribution).map(form => actualReturnedContribution(form, audit));
+  const returnedBySource = new Map(returnedContributions.map(item => [item.sourceId, item]));
+  for (const contributionId of new Set(returnedContributions.map(item => item.contributionId))) {
+    const group = returnedContributions.filter(item => item.contributionId === contributionId);
+    const first = group[0];
+    const originals = verifiedForms.filter(item => item.returnedContributionId === contributionId && isReturnedContribution(item));
+    const original = actualAmount(originals[0]?.returnedContributionOriginalAmount, "original contribution amount");
+    if (!first || group.some(item => item.accountId !== first.accountId || item.incomeTaxYear !== first.incomeTaxYear || item.recipientOwner !== first.recipientOwner || item.recipientId !== first.recipientId)
+      || originals.some(item => !actualAmount(item.returnedContributionOriginalAmount, "original contribution amount").eq(original) || item.returnedContributionDate !== originals[0]?.returnedContributionDate)
+      || sum(...group.map(item => item.returnedPrincipal)).gt(original)) throw new Error("Form1099Q returned contribution identity or total exceeds the reconciled original contribution");
+  }
   const verifiedById = new Map(verifiedForms.map(item => [item.sourceId, item]));
   const allocationKeys = new Set<string>();
   const allocations: SourceAllocation[] = rawAllocations.map(item => {
     const expense = expenses.get(item.expenseId), form = verifiedById.get(item.sourceId);
     if (!expense || !form) throw new Error("Form1099Q allocation references a missing expense or distribution source");
+    if (isReturnedContribution(form)) throw new Error("Form1099Q returned contribution correction cannot receive an ordinary education expense allocation");
     if (expense.beneficiaryId !== form.beneficiaryId) throw new Error("Form1099Q allocation beneficiary does not match distribution beneficiary");
     const key = `${item.expenseId}\u0000${item.sourceId}`;
     if (allocationKeys.has(key)) throw new Error("Form1099Q duplicate expense/distribution allocation");
@@ -569,12 +630,13 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
   }
   const transferState: TransferState = { capacities: new Map(), baselines: new Map(), rolloverDates: new Map() };
   const transfers = new Map<string, Decimal>();
-  for (const form of [...verifiedForms].sort((a, b) => (a.distributionDate ?? "").localeCompare(b.distributionDate ?? ""))) transfers.set(form.sourceId, validTransfer(form, actualAmount(form.grossDistribution, "Box1"), options.taxYear, audit, transferState));
+  for (const form of [...verifiedForms].sort((a, b) => (a.distributionDate ?? "").localeCompare(b.distributionDate ?? ""))) transfers.set(form.sourceId, isReturnedContribution(form) ? ZERO : validTransfer(form, actualAmount(form.grossDistribution, "Box1"), options.taxYear, audit, transferState));
   const derived = new Map<string, { earnings: Decimal; basis: Decimal; taxFree: Decimal; transferTaxFree: Decimal; creditException: Decimal; creditGross: Decimal; allocated: Decimal }>();
   const accountResults: Form1099QResult["coverdellAccounts"] = [];
-  const esaAccounts = new Set(verifiedForms.filter(item => item.accountType === "coverdell_esa").map(item => item.accountId));
+  const ordinaryForms = verifiedForms.filter(item => !isReturnedContribution(item));
+  const esaAccounts = new Set(ordinaryForms.filter(item => item.accountType === "coverdell_esa").map(item => item.accountId));
   for (const accountId of esaAccounts) {
-    const group = verifiedForms.filter(item => item.accountType === "coverdell_esa" && item.accountId === accountId);
+    const group = ordinaryForms.filter(item => item.accountType === "coverdell_esa" && item.accountId === accountId);
     const first = group[0];
     if (!first) continue;
     if (group.some(item => item.beneficiaryId !== first.beneficiaryId)) throw new Error("Form1099Q Coverdell account beneficiary must reconcile");
@@ -596,7 +658,7 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
     const grossAmounts = group.map(item => actualAmount(item.grossDistribution, "Coverdell Box1").minus(transfers.get(item.sourceId) ?? ZERO));
     const gross = sum(...grossAmounts);
     const value = actualAmount(history.yearEndValue, "Coverdell year-end value").plus(actualAmount(history.outstandingRollovers, "Coverdell outstanding rollovers"));
-    const allBeneficiaryForms = verifiedForms.filter(item => item.accountType === "coverdell_esa" && item.beneficiaryId === first.beneficiaryId);
+    const allBeneficiaryForms = ordinaryForms.filter(item => item.accountType === "coverdell_esa" && item.beneficiaryId === first.beneficiaryId);
     const allGross = sum(...allBeneficiaryForms.map(item => actualAmount(item.grossDistribution, "Coverdell distribution").minus(transfers.get(item.sourceId) ?? ZERO)));
     const allAllocations = allocations.filter(item => item.form.accountType === "coverdell_esa" && item.form.beneficiaryId === first.beneficiaryId);
     const allAQEE = sum(...allAllocations.map(item => item.allowed));
@@ -636,6 +698,15 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
   audit.record("Pub970 WS6-3", "16", "Total taxable Coverdell earnings", sum(...[...derived.values()].map(item => item.earnings.minus(item.taxFree))), "Sum each account line14 once; preserve statement split totals");
   const perDistribution: EducationDistributionResult[] = verifiedForms.map(form => {
     const gross = actualAmount(form.grossDistribution, "Box1");
+    const correction = returnedBySource.get(form.sourceId);
+    if (correction) {
+      if (exceptions.some(item => item.sourceId === form.sourceId)) throw new Error("Form1099Q returned contribution already has its statutory exception and cannot reuse another exception source");
+      const taxable = correction.incomeTaxYear === options.taxYear ? correction.taxableEarnings : ZERO;
+      return recordSourceDistribution({ sourceId: form.sourceId, accountId: form.accountId, accountType: form.accountType, beneficiaryId: form.beneficiaryId,
+        recipientOwner: form.recipientOwner, recipientId: correction.recipientId, sourceTaxYear: correction.sourceTaxYear, incomeTaxYear: correction.incomeTaxYear, treatment: "returned_contribution",
+        grossDistribution: gross, earnings: correction.netIncome, basis: correction.returnedPrincipal, validTransfers: ZERO, adjustedQEE: ZERO,
+        taxableEarnings: taxable, taxFreeEarnings: ZERO, educationExpenseExcludedEarnings: ZERO, transferExcludedEarnings: ZERO, creditException: ZERO, penaltyException: taxable }, audit);
+    }
     const derivedAmounts = derived.get(form.sourceId);
     const earnings = derivedAmounts?.earnings ?? actualAmount(form.earnings, "Box2 earnings", true);
     const basis = derivedAmounts?.basis ?? actualAmount(form.basis, "Box3 basis");
@@ -675,8 +746,7 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
     const ordinaryGross = gross.minus(transfer);
     const exceptionEarnings = ordinaryGross.isZero() ? ZERO : roundDollar(positiveEarnings.minus(transferExcludedEarnings).mul(exceptionGross).div(ordinaryGross));
     const penaltyException = Decimal.min(taxable, creditException.plus(exceptionEarnings));
-    for (const [line, description, amount] of [["gross", "Actual gross education distribution", gross], ["earnings", "Distributed earnings", earnings], ["basis", "Distributed basis", basis], ["adjusted-qee", "Allocated adjusted qualified expenses", allocated], ["taxable-earnings", "Taxable distribution earnings", taxable], ["education-excluded-earnings", "Earnings excluded for actual education expenses", educationExpenseExcludedEarnings], ["transfer-excluded-earnings", "Earnings excluded for actual valid transfers", transferExcludedEarnings], ["credit-exception", "Earnings taxable solely because expenses were allocated to education credit", creditException], ["exception", "Taxable earnings exempt from additional tax", penaltyException]] as const) audit.record("Form1099-Q", `${form.sourceId}:${line}`, description, amount, "Actual linked source allocation and Pub970 distribution calculation");
-    return { sourceId: form.sourceId, accountId: form.accountId, accountType: form.accountType, beneficiaryId: form.beneficiaryId, recipientOwner: form.recipientOwner, recipientId: form.recipientOwner === "other" ? (form.recipientId ?? "") : form.recipientOwner, grossDistribution: gross, earnings, basis, validTransfers: transfer, adjustedQEE: allocated, taxableEarnings: taxable, taxFreeEarnings: taxFree, educationExpenseExcludedEarnings, transferExcludedEarnings, creditException, penaltyException };
+    return recordSourceDistribution({ sourceId: form.sourceId, accountId: form.accountId, accountType: form.accountType, beneficiaryId: form.beneficiaryId, recipientOwner: form.recipientOwner, recipientId: form.recipientOwner === "other" ? (form.recipientId ?? "") : form.recipientOwner, sourceTaxYear: options.taxYear, incomeTaxYear: options.taxYear, treatment: "ordinary", grossDistribution: gross, earnings, basis, validTransfers: transfer, adjustedQEE: allocated, taxableEarnings: taxable, taxFreeEarnings: taxFree, educationExpenseExcludedEarnings, transferExcludedEarnings, creditException, penaltyException }, audit);
   });
   for (const exception of exceptions) if (!sources.has(exception.sourceId)) throw new Error("Form1099Q exception references missing distribution source");
   const loanInterestSourceAdjustments: Form1099QResult["loanInterestSourceAdjustments"] = [...expenses.values()].filter(item => item.category === "student_loan").map(expense => {
@@ -745,7 +815,7 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
   const taxFreeEarnings = sum(...perDistribution.map(item => item.taxFreeEarnings));
   const grossPenalty = roundDollar(taxableEarnings.mul(PENALTY_RATE));
   for (const [line, description, amount] of [["gross-distribution", "All source gross distributions", grossDistribution], ["total-earnings", "All source earnings", totalEarnings], ["total-basis", "All source basis", totalBasis], ["adjusted-qee", "Actual allocated adjusted expenses", adjustedQEE], ["taxable-earnings", "Education earnings taxable on this return", taxableEarnings], ["tax-free-earnings", "Qualified distribution earnings", taxFreeEarnings], ["penalty-amount", "Gross additional tax before exceptions", grossPenalty], ["penalty-exception-amount", "Own-return taxable earnings excepted from additional tax", penaltyExceptionAmount], ["net-penalty", "Own-return additional tax after exceptions", netPenalty]] as const) audit.record("Form1099-Q", line, description, amount, "Sum separately calculated source/recipient results; other recipients excluded from return income and tax");
-  return { sourceFactsVerified: true, taxYear: options.taxYear, perDistribution, perRecipient, coverdellAccounts: accountResults, creditAllocations, loanInterestSourceAdjustments, loanInterestAdjustments,
+  return { sourceFactsVerified: true, taxYear: options.taxYear, perDistribution, perRecipient, returnedContributions, coverdellAccounts: accountResults, creditAllocations, loanInterestSourceAdjustments, loanInterestAdjustments,
     grossDistribution, totalEarnings, totalBasis, trusteeToTrusteeTransfers, taxableGrossDistribution: grossDistribution.minus(trusteeToTrusteeTransfers),
     taxableDistributionEarnings: sum(...perDistribution.map(item => item.earnings.minus(item.transferExcludedEarnings))), adjustedQEE, taxableEarnings, taxFreeEarnings, grossPenalty, penaltyExceptionAmount, netPenalty, lines: audit.getLines() };
 }

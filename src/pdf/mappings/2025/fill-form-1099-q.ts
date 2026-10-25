@@ -10,7 +10,7 @@ import { assertPdfExportAllowed, markReviewPdf } from "../../export-policy.js";
 
 export const FORM_1099_Q_REFERENCE_FILENAME = "f1099q-reference-filled.pdf";
 export interface Form1099QReferenceSummaryForm {
-  payerName: string; accountType: string; box1GrossDistribution: string; box2Earnings: string; box3Basis: string;
+  taxYear?: number; payerName: string; accountType: string; box1GrossDistribution: string; box2Earnings: string; box3Basis: string;
   box4TrusteeToTrusteeTransfer: boolean | undefined;
   box4bQtpToRothTransfer?: boolean; box6RecipientNotBeneficiary?: boolean;
 }
@@ -61,20 +61,36 @@ export function buildForm1099QReferenceSummary(forms: Form1099Q[], result: Form1
   const qualifiedEducationExpenseInputs: Form1099QReferenceSummaryValue[] = [];
   if (result.sourceFactsVerified) {
     if (!qeeSummary?.sourceFacts || qeeSummary.sourceFacts.sourceFactsConfirmed !== true || qeeSummary.sourceFacts.allDistributionsReconciled !== true || qeeSummary.sourceFacts.taxYear !== result.taxYear || forms.length !== result.perDistribution.length) throw new Error("Education reference source confirmation, year or statement count is inconsistent");
+    if (result.returnedContributions.length !== result.perDistribution.filter(row => row.treatment === "returned_contribution").length) throw new Error("Education reference correction source count does not reconcile");
     const seen = new Set<string>();
     for (const [index, row] of result.perDistribution.entries()) {
       const matches = forms.filter(form => form.sourceId === row.sourceId);
       const form = matches[0];
-      if (!form || matches.length !== 1 || seen.has(row.sourceId) || form.sourceFactsConfirmed !== true || form.sourceFactsComplete === false || form.taxYear !== result.taxYear || form.accountId !== row.accountId || form.beneficiaryId !== row.beneficiaryId || form.accountType !== row.accountType || form.recipientOwner !== row.recipientOwner || (form.recipientOwner === "other" ? form.recipientId : form.recipientOwner) !== row.recipientId || !new Decimal(form.grossDistribution).eq(row.grossDistribution)) throw new Error("Education reference statement identity or source amount disagrees with the calculation");
+      if (!form || matches.length !== 1 || seen.has(row.sourceId) || form.sourceFactsConfirmed !== true || form.sourceFactsComplete === false || form.taxYear !== row.sourceTaxYear || form.accountId !== row.accountId || form.beneficiaryId !== row.beneficiaryId || form.accountType !== row.accountType || form.recipientOwner !== row.recipientOwner || (form.recipientOwner === "other" ? form.recipientId : form.recipientOwner) !== row.recipientId || !new Decimal(form.grossDistribution).eq(row.grossDistribution)) throw new Error("Education reference statement identity or source amount disagrees with the calculation");
+      const correction = result.returnedContributions.find(item => item.sourceId === row.sourceId);
+      if (row.treatment === "returned_contribution") {
+        if (!correction || !["2", "3"].includes(form.distributionCode ?? "") || correction.incomeTaxYear !== correction.sourceTaxYear - (form.distributionCode === "3" ? 1 : 0) || result.returnedContributions.filter(item => item.sourceId === row.sourceId).length !== 1 || form.returnedContributionNetIncomeConfirmed !== true || form.returnedContributionBasisReconciled !== true
+          || form.returnedContributionId !== correction.contributionId || form.returnedContributionTaxYear !== correction.incomeTaxYear || form.taxYear !== correction.sourceTaxYear || row.incomeTaxYear !== correction.incomeTaxYear
+          || correction.accountId !== row.accountId || correction.recipientOwner !== row.recipientOwner || correction.recipientId !== row.recipientId
+          || form.returnedContributionPrincipal === undefined || form.returnedContributionNetIncome === undefined || form.returnedContributionIncomePreviouslyReported === undefined
+          || !new Decimal(form.returnedContributionPrincipal).eq(correction.returnedPrincipal) || !new Decimal(form.returnedContributionNetIncome).eq(correction.netIncome) || !new Decimal(form.returnedContributionIncomePreviouslyReported).eq(correction.previouslyReportedEarnings)
+          || !row.earnings.eq(correction.netIncome) || !row.basis.eq(correction.returnedPrincipal)) throw new Error("Education reference correction source does not reconcile");
+        for (const [line, amount] of [["returned-principal", correction.returnedPrincipal], ["returned-net-income", correction.netIncome], ["income-year-earnings", correction.taxableEarnings], ["previously-reported-earnings", correction.previouslyReportedEarnings], ["income-adjustment", correction.incomeAdjustment]] as const) sourceLines.push(describe(requireAudit("Form1099-Q", `${row.sourceId}:${line}`, amount), `Statement ${index + 1}: `));
+      } else if (correction || ["2", "3"].includes(form.distributionCode ?? "") || row.incomeTaxYear !== result.taxYear) throw new Error("Education reference ordinary source year or correction identity does not reconcile");
       const hasReportedEarnings = form.earnings !== undefined;
       const hasReportedBasis = form.basis !== undefined;
       if (hasReportedEarnings !== hasReportedBasis || (form.accountType === "529" && !hasReportedEarnings)) throw new Error("Education reference reported source Boxes2/3 must be jointly reconciled");
       if (form.earnings !== undefined && form.basis !== undefined) {
         const earnings = new Decimal(form.earnings), basis = new Decimal(form.basis);
         if (!earnings.isFinite() || !basis.isFinite() || !earnings.plus(basis).eq(row.grossDistribution)) throw new Error("Education reference source Boxes2/3 do not reconcile to Box1");
-        const expectedEarnings = form.accountType === "coverdell_esa" ? roundDollar(earnings) : earnings;
-        const expectedBasis = form.accountType === "coverdell_esa" ? roundDollar(basis) : basis;
-        if (!expectedEarnings.eq(row.earnings) || !expectedBasis.eq(row.basis)) throw new Error("Education reference reported source boxes disagree with the calculation");
+        if (correction) {
+          const expectedEarnings = correction.netIncome.lt(0) && form.finalDistribution !== true ? new Decimal(0) : correction.netIncome;
+          if (!earnings.eq(expectedEarnings) || !basis.eq(row.grossDistribution.minus(expectedEarnings))) throw new Error("Education reference reported correction boxes disagree with the source calculation");
+        } else {
+          const expectedEarnings = form.accountType === "coverdell_esa" ? roundDollar(earnings) : earnings;
+          const expectedBasis = form.accountType === "coverdell_esa" ? roundDollar(basis) : basis;
+          if (!expectedEarnings.eq(row.earnings) || !expectedBasis.eq(row.basis)) throw new Error("Education reference reported source boxes disagree with the calculation");
+        }
       }
       seen.add(row.sourceId);
       for (const [line, field] of distributionFields) sourceLines.push(describe(requireAudit("Form1099-Q", `${row.sourceId}:${line}`, row[field]), `Statement ${index + 1}: `));
@@ -82,6 +98,7 @@ export function buildForm1099QReferenceSummary(forms: Form1099Q[], result: Form1
     }
     const sumRows = (field: "grossDistribution" | "earnings" | "basis") => result.perDistribution.reduce((sum, row) => sum.plus(row[field]), new Decimal(0));
     if (!sumRows("grossDistribution").eq(result.grossDistribution) || !sumRows("earnings").eq(result.totalEarnings) || !sumRows("basis").eq(result.totalBasis)) throw new Error("Education source audit totals do not reconcile");
+    if (result.perDistribution.some(source => result.perRecipient.filter(recipient => recipient.owner === source.recipientOwner && recipient.recipientId === source.recipientId).length !== 1)) throw new Error("Education reference recipient source audits are missing or duplicated");
     for (const [index, row] of result.coverdellAccounts.entries()) {
       for (const line of ["rollover-basis-in", "rollover-basis-out", "F", "G", "H", ...Array.from({ length: 15 }, (_, i) => String(i + 1))]) {
         const expected = line === "10" ? row.distributedBasis : line === "11" ? row.earnings : line === "15" ? row.endingBasis : undefined;
@@ -109,7 +126,7 @@ export function buildForm1099QReferenceSummary(forms: Form1099Q[], result: Form1
   return {
     title: "Form 1099-Q Education Distribution Reference Summary", warningLabel: "REFERENCE SUMMARY ONLY", statementCount: forms.length,
     introduction: `Tax year ${result.taxYear}. Computed from ${forms.length} statement${forms.length === 1 ? "" : "s"} using ${result.sourceFactsVerified ? "confirmed actual source records and allocations" : "unverified historical aggregate inputs"}. Other-recipient income and additional tax are excluded from this return's totals.`,
-    forms: forms.map((form, index) => ({ payerName: form.payerName?.trim() || `Statement ${index + 1}`, accountType: form.accountType === "coverdell_esa" ? "Coverdell ESA" : "529 plan",
+    forms: forms.map((form, index) => ({ ...(form.taxYear !== undefined ? { taxYear: form.taxYear } : {}), payerName: form.payerName?.trim() || `Statement ${index + 1}`, accountType: form.accountType === "coverdell_esa" ? "Coverdell ESA" : "529 plan",
       box1GrossDistribution: knownAmount(form.grossDistribution), box2Earnings: knownAmount(form.earnings, "Not reported"), box3Basis: knownAmount(form.basis, "Not reported"), box4TrusteeToTrusteeTransfer: form.isTrusteeToTrustee,
       ...(result.sourceFactsVerified ? { box4bQtpToRothTransfer: form.isQtpToRoth, box6RecipientNotBeneficiary: form.recipientNotBeneficiary } : {}),
     })), qualifiedEducationExpenseInputs, lines, sourceLines,
@@ -152,7 +169,7 @@ export async function fillForm1099QReference(forms: Form1099Q[], result: Form109
   draw(summary.title, true, 18); draw(summary.warningLabel, true, 12); draw(summary.introduction);
   draw("This is a calculation reference, not a payer-issued Form 1099-Q. Blank source boxes remain unreported; calculated Coverdell earnings and basis appear in the account audit below.");
   for (const [index, form] of summary.forms.entries()) {
-    draw(`Statement ${index + 1}: ${form.payerName}`, true); draw(`Account type: ${form.accountType}`);
+    draw(`Statement ${index + 1}: ${form.payerName}`, true); draw(`Account type: ${form.accountType}`); if (form.taxYear !== undefined) draw(`Statement tax year: ${form.taxYear}`);
     draw(`Box 1 gross distribution: ${shownValue(form.box1GrossDistribution)}`); draw(`Box 2 earnings: ${shownValue(form.box2Earnings)}`); draw(`Box 3 basis: ${shownValue(form.box3Basis)}`);
     draw(`Box 4a trustee-to-trustee transfer: ${yesNo(form.box4TrusteeToTrusteeTransfer)}`);
     if (result.sourceFactsVerified) { draw(`Box 4b QTP-to-Roth transfer: ${yesNo(form.box4bQtpToRothTransfer)}`); draw(`Box 6 recipient is not the beneficiary: ${yesNo(form.box6RecipientNotBeneficiary)}`); }

@@ -594,6 +594,7 @@ export const Form1099QSchema = z.preprocess((value) => {
   if (!value || typeof value !== "object" || Array.isArray(value)) return value;
   const raw = value as Record<string, unknown>;
   const required = ["sourceId", "accountId", "beneficiaryId", "recipientOwner", "taxYear", "accountType", "grossDistribution", "isTrusteeToTrustee", "isQtpToRoth", "recipientNotBeneficiary", "sourceFactsConfirmed", "transfer"];
+  if (raw.distributionCode === "2" || raw.distributionCode === "3") required.push("distributionDate", "returnedContributionId", "returnedContributionTaxYear", "returnedContributionDate", "returnedContributionOriginalAmount", "returnedContributionPrincipal", "returnedContributionNetIncome", "returnedContributionIncomePreviouslyReported", "returnedContributionNetIncomeConfirmed", "returnedContributionBasisReconciled");
   return { ...raw, sourceFactsComplete: raw.sourceFactsComplete !== false && required.every(field => raw[field] !== undefined) };
 }, z.object({
   sourceFactsComplete: z.boolean().optional(),
@@ -619,6 +620,16 @@ export const Form1099QSchema = z.preprocess((value) => {
   /** Actual source confirmation when an annual statement contains several distributions. */
   allDistributionsAfterJuly42025: z.boolean().optional(),
   transfer: EducationDistributionTransferSchema.optional(),
+  /** Actual custodian correction worksheet; omitted facts remain unknown. */
+  returnedContributionId: z.string().trim().min(1).optional(),
+  returnedContributionTaxYear: z.number().int().optional(),
+  returnedContributionDate: z.string().optional(),
+  returnedContributionOriginalAmount: optionalDecimalInput,
+  returnedContributionPrincipal: optionalDecimalInput,
+  returnedContributionNetIncome: optionalDecimalInput,
+  returnedContributionIncomePreviouslyReported: optionalDecimalInput,
+  returnedContributionNetIncomeConfirmed: z.boolean().optional(),
+  returnedContributionBasisReconciled: z.boolean().optional(),
 }));
 
 const EducationDistributionExpenseSchema = z.object({

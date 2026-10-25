@@ -29,6 +29,14 @@ it("collects actual education distribution records and invalidates edited facts"
     await change("Box 1 gross distribution", "9007199254740993.03");
     await change("Box 4a checked", "false");
     await change("Transfer or recontribution treatment", "none");
+    await change("Optional Box 7 distribution code", "2");
+    await change("Tax year designated for the returned contribution", "2025");
+    await change("Custodian's net income attributable to returned principal (signed)", "-20.01");
+    await change("Actual custodian net-income calculation checked", "false");
+    expect(latest?.forms?.[0]?.fields.returnedContributionTaxYear).toBe("2025");
+    expect(latest?.forms?.[0]?.fields.returnedContributionNetIncome).toBe("-20.01");
+    expect(latest?.forms?.[0]?.fields.returnedContributionNetIncomeConfirmed).toBe(false);
+    expect(latest?.forms?.[0]?.fields.returnedContributionPrincipal).toBeUndefined();
     await change("Statement facts checked against the actual source", "true");
     await change("All education sources and allocations checked after the last edit", "true");
     expect(latest?.sourceFactsConfirmed).toBe(true);

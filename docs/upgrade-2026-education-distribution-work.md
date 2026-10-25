@@ -199,3 +199,80 @@ an agent, not independent human tax or filing qualification.
 
 Immutable owner-review tree `11c6cc90` passed28 focused tests, root types and
 all3708 spec references (education-5329-immutable-* logs).
+
+## Returned Coverdell contribution sources (2026-10-25)
+
+The individual owner Form5329 package is committed as `4a8e8e2`. The next source
+package handles actual Coverdell codes2/3 separately from ordinary distributions.
+Refreshed official continuous Form1099-Q instructions, IRC530(b)(4)/(d)(4)(C),
+Pub970 Worksheet6-3 and Notice2003-53. Sources:
+- https://www.irs.gov/instructions/i1099q
+- https://uscode.house.gov/us/usc/119-124/t26/s530/
+- https://www.irs.gov/publications/p970
+- https://www.irs.gov/irb/2003-33_IRB#NOT-2003-53
+
+Actual contribution identity/year/date/amount, returned principal, signed
+custodian net income, previously reported income and corrected account-basis
+confirmation are preserved without defaults. Timely code3 statement earnings
+belong to the prior contribution year. A following-year statement can therefore
+support the current return; a current-year statement for prior-year income does
+not enter current taxable income. The result retains the signed source income
+adjustment for review, without computing or submitting an amended return.
+Correction principal/earnings are excluded from ordinary account expense ratios
+and require the actual corrected ordinary contribution/basis worksheet.
+Reported nonfinal loss boxes remain0/gross while the actual signed loss remains
+visible; a loss does not manufacture a deduction. Statutory timely-returned
+amounts have no10percent additional tax. Actual transfers, ordinary expenses or
+other exception records cannot be assigned to the same correction.
+
+Spec-first tests initially failed for the unsupported codes and incomplete-source
+marker. Additional review tests proved an outside recipient could be omitted
+from the reference while own-return totals still reconciled; the mapper now
+requires every source recipient and correction identity exactly once. The
+135-test adjacent run passed before those final two review tests; both new
+review tests pass. Root/web types and scoped lint passed. Global spec validation
+at that point was blocked only by a separate mortgage UI testRef still being
+implemented; the staged package is checked separately before commit.
+Logs: education-corrections-red.log, education-corrections-marker-red.log,
+education-corrections-intake-red.log, education-corrections-adjacent.log,
+education-corrections-review-red/green.log and education-corrections-final-*.
+The two-page synthetic reference at
+`.local/upgrade-evidence/education-correction-2025/f1099q-reference-filled.pdf`
+was saved, reopened and rendered. It distinguishes statement2026 from income2025,
+retains the actual100 earnings/40 prior reported/60 difference, and has one
+visible review notice per page (including separately rendered page2 footer).
+
+Still internal: prohibited transaction code6 source rules; ordinary Coverdell
+rollover-basis line attribution and cents/ending-basis boundaries; final combined
+education/educator/source integrations. No filing or independent human
+qualification is claimed.
+
+## Adjacent independent agent reviews (2026-10-25)
+
+Reviewed the parent's Ohio year-specific exemption/joint-filing cutoff changes
+against the official2024 and2025 booklets, including2024 absence of the new
+high-income cutoff and2025 MAGI before exemptions/cents boundary. No actionable
+findings; independently ran12 tests, all passed. Evidence:
+`.local/upgrade-evidence/oh-exemption-independent-review.log`.
+Reviewed the parent's declarative final2026 Form4952 candidate against the current
+IRS PDF, SHA25690b9fc0bd6778983521b61ed5c94cc5668e62af858e38e94a1a6fd4b631bfb6d,
+printed labels/locations and rendered synthetic proof. Its17 text fields match,
+the four source pages and notices remain, and it has no runtime export imports.
+All3 candidate tests pass in `ai-4952-candidate-review.log`. No actionable
+findings. These are software/source reviews by an agent, not independent human
+tax or export qualification.
+
+Parent agent independently reviewed the returned-contribution package against
+current official instructions/statute and reran all8 source/PDF tests, passing
+(`parent-coverdell-corrections-review.log`). No actionable findings. Calendar
+April15 contribution timing covers the supported2025/2026 returns and their
+adjacent correction years; special postponed deadlines require their actual
+source authority and are not inferred from an untimely date.
+
+Final immutable staged tree `96bc22f0` passed all136 adjacent tests, root types
+and all3735 spec references. The initial isolated run caught only a missing-audit
+error label mismatch in the existing owner5329 test; the diagnostic was corrected
+without changing its assertion or gate. Final logs:
+`education-corrections-immutable-final-tests.log`,
+`education-corrections-immutable-final-types.log`,
+`education-corrections-immutable-final-spec.log`.

@@ -76,3 +76,13 @@ describe("actual guided education distributions", () => {
     expect(confirmed.sectionData.credits?.educationDistributions?.sourceFactsConfirmed).toBe(true);
   });
 });
+
+it("collects actual returned contribution years and signed source amounts", () => {
+  const data = actualEducationDistribution();
+  data.forms = [{ fields: { sourceId: "correction", accountId: "esa", beneficiaryId: "student1", recipientOwner: "primary", taxYear: "2026", accountType: "coverdell_esa", grossDistribution: "980", earnings: "0", basis: "980", isTrusteeToTrustee: false, isQtpToRoth: false, recipientNotBeneficiary: false, distributionCode: "3", distributionDate: "2026-05-31", sourceFactsConfirmed: true, returnedContributionId: "deposit", returnedContributionTaxYear: "2025", returnedContributionDate: "2025-11-01", returnedContributionOriginalAmount: "1,000", returnedContributionPrincipal: "1000", returnedContributionNetIncome: "-20", returnedContributionIncomePreviouslyReported: "0", returnedContributionNetIncomeConfirmed: true, returnedContributionBasisReconciled: true }, transfer: { kind: "none" } }];
+  data.expenses = []; data.allocations = [];
+  const result = buildEducationDistributionInputs(data, 2025, "single");
+  expect(result.form1099Q?.[0]).toMatchObject({ taxYear: 2026, returnedContributionTaxYear: 2025, returnedContributionOriginalAmount: "1000", returnedContributionNetIncome: "-20" });
+  data.forms[0].fields.returnedContributionNetIncomeConfirmed = undefined;
+  expect(() => buildEducationDistributionInputs(data, 2025, "single")).toThrow(/actual|net-income/i);
+});
