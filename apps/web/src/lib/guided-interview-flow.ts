@@ -1490,6 +1490,8 @@ export function updateSectionData(
   const iraSourcesChanged = ["income-w2", "income-self-employment", "income-retirement"].includes(sectionId) && adjustments?.iraContributions;
   const hsaSourcesChanged = ["income-w2", "personal-info"].includes(sectionId) && adjustments?.hsaAccounts;
   const sourceValuesChanged = guidedSourceValuesChanged(state.sectionData[sectionId as keyof SectionDataMap], data);
+  const nextInvestments = sectionId === "income-investments" ? data as InvestmentData : state.sectionData["income-investments"];
+  const childElectionSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-social-security", "income-unemployment", "adjustments", "credits", "deductions", "payments", "additional-deductions", "other-taxes"].includes(sectionId) && nextInvestments?.childElections?.length;
   const niitOtherTaxes = state.sectionData["other-taxes"];
   const nextOtherTaxes = sectionId === "other-taxes" ? data as OtherTaxesData : niitOtherTaxes;
   const foreignElectionChanged = sectionId === "other-taxes" && guidedSourceValuesChanged(niitOtherTaxes?.foreignTaxElection, nextOtherTaxes?.foreignTaxElection);
@@ -1521,6 +1523,7 @@ export function updateSectionData(
     sectionData: {
       ...state.sectionData,
       [sectionId]: data,
+      ...(childElectionSourcesChanged && nextInvestments ? { "income-investments": { ...nextInvestments, childElections: nextInvestments.childElections?.map(child => ({ ...child, sourceFactsConfirmed: null })) } } : {}),
       ...((niitSourcesChanged || foreignTaxSourcesChanged) && nextOtherTaxes ? { "other-taxes": { ...nextOtherTaxes, ...(niitSourcesChanged ? { niitSources: { ...niitSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(foreignTaxSourcesChanged ? { foreignTaxElection: { ...foreignTaxSourcesChanged, sourceFactsConfirmed: null } } : {}) } } : {}),
       ...((tipSourcesChanged || additionalSourcesChanged) && nextAdditional ? { "additional-deductions": { ...nextAdditional, ...(tipSourcesChanged ? { tipIncomeAccounts: nextAdditional.tipIncomeAccounts?.map(account => ({ ...account, sourceFactsConfirmed: null })) } : {}), ...(additionalSourcesChanged ? { schedule1A: { ...additionalSourcesChanged, sourceFactsConfirmed: null } } : {}) } } : {}),
       ...(mortgageSourcesChanged ? { deductions: { ...mortgageSourcesChanged, mortgageEntries: mortgageSourcesChanged.mortgageEntries?.map(entry => ({ ...entry, sourceFactsConfirmed: null })), ...(mortgageSourcesChanged.mortgageWorksheet ? { mortgageWorksheet: { ...mortgageSourcesChanged.mortgageWorksheet, sourceFactsConfirmed: null } } : {}) } } : {}),
@@ -1767,7 +1770,7 @@ function validateInvestmentSection(
   stateData?: StateReturnData,
   stateCode?: string | null,
 ): SectionValidationResult {
-  if (!data || (![...data.interestEntries, ...data.dividendEntries, ...data.brokerageEntries].some(isStartedInvestment) && !data.brokerageEntries.some(entry => entry.transactions.some(isStartedInvestment)) && !data.oidEntries?.some(isStartedOid))) return EMPTY_SECTION("investment info");
+  if (!data || (![...data.interestEntries, ...data.dividendEntries, ...data.brokerageEntries].some(isStartedInvestment) && !data.brokerageEntries.some(entry => entry.transactions.some(isStartedInvestment)) && !data.oidEntries?.some(isStartedOid) && !data.childElections?.length)) return EMPTY_SECTION("investment info");
   const errors = investmentFactErrors(data, filingStatus, taxYear, stateData, stateCode);
   if (Object.keys(errors).length) return { status: "partial", message: "Complete the actual investment source amounts, ownership and classifications.", fieldErrors: errors, allowSkip: true };
   return VALID_SECTION;

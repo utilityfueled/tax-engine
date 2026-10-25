@@ -1,0 +1,27 @@
+form: "Guided child election sources"
+fullName: "Actual Form8814 eligibility and AMT intake"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i8814"
+notes: |
+  Source collection for historical2025 and the isolated2026 candidate. No
+  income, identity, parent selection, payment or student fact is inferred.
+  Canonical Form8814 eligibility and computed parent comparisons remain
+  authoritative. Special Alaska/capital/foreign-account methods remain saved
+  with an explicit unsupported route until their source methods are complete.
+lines:
+  - line: "actual-child"
+    description: "Complete actual child election sources"
+    formula: "Explicit year, identity, known income/payment amounts and eligibility choices; preserve cents and zero, reject missing"
+    testRef: "tests/guided-interview/guided-child-election.test.ts::passes actual child income and AMT sources to the canonical parent return"
+  - line: "source-validation"
+    description: "Unknown and contradictory source facts"
+    formula: "Missing year/amount/confirmation, duplicate child or AMT source and unsupported special method cannot become a supported empty election"
+    testRef: "tests/guided-interview/guided-child-election.test.ts::preserves unknown and special sources rather than inventing eligible facts"
+  - line: "source-edits"
+    description: "Invalidate actual election confirmation"
+    formula: "Changed child facts revoke its confirmation; changed household/income/deduction facts revoke all affected parent-comparison confirmations"
+    testRef: "tests/guided-interview/guided-child-election.test.ts::invalidates election sources after actual return changes without confirmation cycles"
+  - line: "controls"
+    description: "Editable child and statement records"
+    formula: "Actual controls preserve blank, false, cents and saved records through edits/add/remove; no automatic election"
+    testRef: "tests/apps/web/child-election-interactions.test.tsx::collects and edits actual child and preference sources"

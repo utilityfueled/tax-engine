@@ -17,6 +17,8 @@ import { BooleanFact } from "./fact-fields";
 import { DividendSourceDetails, InterestSourceDetails, InvestmentSourceIdentity } from "./investment-source-details";
 import { OidSourceCards } from "./oid-source-details";
 import type { OidEntryData } from "@/lib/guided-oid-facts";
+import { ChildElectionCards } from "./child-election-details";
+import type { ChildElectionData } from "@/lib/guided-child-election-facts";
 
 // ── 1099-INT Card ─────────────────────────────────────────────────────────
 
@@ -394,6 +396,8 @@ export function SectionInvestmentIncome({
   oidEntries,
   stateCode,
   onOidEntriesChange,
+  childElections,
+  onChildElectionsChange,
 }: {
   interestEntries: InterestEntryData[];
   dividendEntries: DividendEntryData[];
@@ -404,6 +408,8 @@ export function SectionInvestmentIncome({
   oidEntries?: OidEntryData[];
   stateCode?: string | null;
   onOidEntriesChange?: (entries: OidEntryData[]) => void;
+  childElections?: ChildElectionData[];
+  onChildElectionsChange?: (entries: ChildElectionData[]) => void;
 }) {
   const currentInterest = interestEntries.length > 0 ? interestEntries : [emptyInterestEntry];
   const currentDividends = dividendEntries.length > 0 ? dividendEntries : [emptyDividendEntry];
@@ -479,6 +485,7 @@ export function SectionInvestmentIncome({
         </button>
 
         {onOidEntriesChange && <OidSourceCards entries={oidEntries} stateCode={stateCode} onChange={onOidEntriesChange} />}
+        {onChildElectionsChange && <ChildElectionCards entries={childElections} onChange={onChildElectionsChange} />}
 
         {/* ── 1099-DIV: Dividends ── */}
         <h3 className="guided-w2-card-title" style={{ marginTop: "24px", marginBottom: "8px" }}>

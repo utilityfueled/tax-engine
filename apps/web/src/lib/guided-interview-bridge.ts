@@ -1,6 +1,7 @@
 import { buildGuidedForeignTaxElection, guidedForeignTaxFactErrors } from "./guided-foreign-tax-election";
 import { buildGuidedPrivateActivityFacts } from "./guided-private-activity-facts";
 import { buildPremiumTaxCreditInputs, premiumTaxCreditFactErrors } from "./guided-premium-tax-credit-facts";
+import { buildGuidedChildElections } from "./guided-child-election-facts";
 import { buildSchedule1AInput, schedule1AFactErrors } from "./guided-schedule-1-a-facts";
 import { actualCompensationSourceYear } from "./guided-compensation-reporting";
 import { buildTipIncomeInputs, tipIncomeFactErrors } from "./guided-tip-income-facts";
@@ -748,6 +749,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     form1099Nec: necs,
     scheduleC: scheduleC ?? undefined,
     form1099Int,
+    form8814: buildGuidedChildElections(investData?.childElections, state.taxYear),
     form1099OID,
     paResidentReturn: stateCode === "PA" && form1099OID.length ? { scheduleA: { oidSources: buildPaOidSources(investData?.oidEntries) } } : undefined,
     form1099Div,
