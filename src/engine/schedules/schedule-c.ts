@@ -45,7 +45,8 @@ export interface ScheduleCInput {
   accountingMethod?: "cash" | "accrual";
   grossReceipts?: string; // Line 1 (override — otherwise sum of 1099-NEC)
   returnsAndAllowances?: string; // Line 2
-  costOfGoodsSold?: string; // Line 3
+  costOfGoodsSold?: string; // Line 4
+  otherIncome?: string; // Line 6, separate from gross receipts
   expenses?: BusinessExpenses;
   homeOffice?: HomeOfficeDeduction;
 }
@@ -53,9 +54,11 @@ export interface ScheduleCInput {
 export interface ScheduleCResult {
   grossReceipts: Decimal; // Line 1
   returnsAndAllowances: Decimal; // Line 2
-  costOfGoodsSold: Decimal; // Line 3
-  grossIncome: Decimal; // Line 5
-  grossProfit: Decimal; // Line 7
+  netReceipts: Decimal; // Line 3
+  costOfGoodsSold: Decimal; // Line 4
+  grossProfit: Decimal; // Line 5
+  otherIncome: Decimal; // Line 6
+  grossIncome: Decimal; // Line 7
 
   // Expenses
   depreciationAndSection179Deduction: Decimal; // Line 13
@@ -95,17 +98,17 @@ export function calculateScheduleC(
   const returnsAndAllowances = d(scheduleCInput?.returnsAndAllowances);
   audit.record("Sched C", "2", "Returns and allowances", returnsAndAllowances, "Refunds/rebates");
 
-  // Line 3: COGS
+  // Lines 3–7: receipts, cost of goods, and separately reported other income.
+  const netReceipts = grossReceipts.minus(returnsAndAllowances);
+  audit.record("Sched C", "3", "Net receipts", netReceipts, "Line 1 - Line 2");
   const costOfGoodsSold = d(scheduleCInput?.costOfGoodsSold);
-  audit.record("Sched C", "3", "Cost of goods sold", costOfGoodsSold, "Line 42 (inventory calculation)");
-
-  // Line 5: Gross income
-  const grossIncome = grossReceipts.minus(returnsAndAllowances).minus(costOfGoodsSold);
-  audit.record("Sched C", "5", "Gross income", grossIncome, "Line 1 - Line 2 - Line 3");
-
-  // Line 7: Gross profit (same as gross income for most service businesses)
-  const grossProfit = grossIncome;
-  audit.record("Sched C", "7", "Gross profit", grossProfit, "Line 5");
+  audit.record("Sched C", "4", "Cost of goods sold", costOfGoodsSold, "Line 42 (inventory calculation)");
+  const grossProfit = netReceipts.minus(costOfGoodsSold);
+  audit.record("Sched C", "5", "Gross profit", grossProfit, "Line 3 - Line 4");
+  const otherIncome = d(scheduleCInput?.otherIncome);
+  audit.record("Sched C", "6", "Other business income", otherIncome, "Actual income classified separately from gross receipts");
+  const grossIncome = grossProfit.plus(otherIncome);
+  audit.record("Sched C", "7", "Gross income", grossIncome, "Line 5 + Line 6");
 
   // ── Expenses (Lines 8-27) ────────────────────────────
   const expenses = scheduleCInput?.expenses ?? {};
@@ -153,13 +156,13 @@ export function calculateScheduleC(
   totalExpenses = totalExpenses.plus(deductibleMeals);
 
   totalExpenses = totalExpenses.plus(addExpense("25", "Utilities", expenses.utilities));
-  totalExpenses = totalExpenses.plus(addExpense("27", "Other expenses", expenses.otherExpenses));
+  totalExpenses = totalExpenses.plus(addExpense("27b", "Other expenses", expenses.otherExpenses));
 
   // Line 28: Total expenses
   audit.record("Sched C", "28", "Total expenses", totalExpenses, "Sum of Lines 8-27");
 
   // Line 29: Tentative profit
-  const tentativeProfit = grossProfit.minus(totalExpenses);
+  const tentativeProfit = grossIncome.minus(totalExpenses);
   audit.record("Sched C", "29", "Tentative profit or loss", tentativeProfit, "Line 7 - Line 28");
 
   // Line 30: Home office deduction
@@ -203,9 +206,11 @@ export function calculateScheduleC(
   return {
     grossReceipts,
     returnsAndAllowances,
+    netReceipts,
     costOfGoodsSold,
     grossIncome,
     grossProfit,
+    otherIncome,
     depreciationAndSection179Deduction,
     expenseBreakdown,
     totalExpenses,

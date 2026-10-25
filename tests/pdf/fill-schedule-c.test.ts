@@ -12,7 +12,8 @@ import { calculateFederalTax } from "@/engine/federal.js";
 import { fillScheduleC, SCHEDULE_C_FIELDS } from "@/pdf/fill-schedule-c.js";
 import { complexMFJFixture, simpleW2Fixture } from "../fixtures/simple-w2.js";
 import { formatCurrency } from "@/pdf/pdf-utils.js";
-import type { TaxYearInput } from "@/models/inputs.js";
+import { TaxYearInputSchema, type TaxYearInput } from "@/models/inputs.js";
+import Decimal from "decimal.js";
 
 /** Helper: get text value from a filled PDF field. */
 function getFieldText(doc: PDFDocument, fieldName: string): string | undefined {
@@ -53,18 +54,18 @@ describe("Schedule C PDF fill — MFJ with 1099-NEC income", () => {
     doc = await fillScheduleC(complexMFJFixture, result, BLANK_SC);
   });
 
-  it("fills header with taxpayer names and SSN", () => {
-    expect(getFieldText(doc, SCHEDULE_C_FIELDS.name)).toBe("John Smith & Jane Smith");
-    expect(getFieldText(doc, SCHEDULE_C_FIELDS.ssn)).toBe("111223333");
+  it("leaves an unknown joint-return proprietor unidentified", () => {
+    expect(getFieldText(doc, SCHEDULE_C_FIELDS.name)).toBeUndefined();
+    expect(getFieldText(doc, SCHEDULE_C_FIELDS.ssn)).toBeUndefined();
   });
 
-  it("checks cash accounting method by default", () => {
-    expect(isChecked(doc, SCHEDULE_C_FIELDS.cashMethod)).toBe(true);
+  it("preserves an unknown accounting method", () => {
+    expect(isChecked(doc, SCHEDULE_C_FIELDS.cashMethod)).toBe(false);
     expect(isChecked(doc, SCHEDULE_C_FIELDS.accrualMethod)).toBe(false);
   });
 
-  it("checks material participation Yes", () => {
-    expect(isChecked(doc, SCHEDULE_C_FIELDS.materialParticipationYes)).toBe(true);
+  it("preserves unknown material participation", () => {
+    expect(isChecked(doc, SCHEDULE_C_FIELDS.materialParticipationYes)).toBe(false);
   });
 
   it("fills Line 1 with gross receipts from 1099-NEC", () => {
@@ -77,7 +78,7 @@ describe("Schedule C PDF fill — MFJ with 1099-NEC income", () => {
   it("fills Line 7 with gross income", () => {
     const sc = result.scheduleC!;
     expect(getFieldText(doc, SCHEDULE_C_FIELDS.line7)).toBe(
-      formatCurrency(sc.grossProfit),
+      formatCurrency(sc.grossIncome),
     );
   });
 
@@ -106,8 +107,8 @@ describe("Schedule C PDF fill — MFJ with 1099-NEC income", () => {
     );
   });
 
-  it("checks all investment at risk", () => {
-    expect(isChecked(doc, SCHEDULE_C_FIELDS.allInvestmentAtRisk)).toBe(true);
+  it("preserves the unmodeled investment-at-risk fact", () => {
+    expect(isChecked(doc, SCHEDULE_C_FIELDS.allInvestmentAtRisk)).toBe(false);
   });
 });
 
@@ -196,11 +197,59 @@ describe("Schedule C PDF fill — explicit business with expenses", () => {
   it("fills net profit = gross income minus expenses", () => {
     const sc = result.scheduleC!;
     expect(sc.netProfit.toNumber()).toBe(
-      sc.grossProfit.minus(sc.totalExpenses).minus(sc.homeOfficeDeduction).toNumber(),
+      sc.grossIncome.minus(sc.totalExpenses).minus(sc.homeOfficeDeduction).toNumber(),
     );
     expect(getFieldText(doc, SCHEDULE_C_FIELDS.line31)).toBe(
       formatCurrency(sc.netProfit),
     );
+  });
+});
+
+describe("Schedule C source-qualified review mapping", () => {
+  it("copies official income lines and refuses inconsistent Schedule C data", async () => {
+    // Spec: spec/federal/schedule-c.yaml reviewPdfMapping.
+    const input = TaxYearInputSchema.parse({ ...simpleW2Fixture, scheduleC: {
+      grossReceipts: "25000", returnsAndAllowances: "1000", costOfGoodsSold: "4000", otherIncome: "1200",
+      expenses: { supplies: "200", otherExpenses: "50" }, homeOffice: { method: "simplified", squareFeet: 100 },
+    } });
+    const result = calculateFederalTax(input);
+    const doc = await fillScheduleC(input, result, BLANK_SC);
+    expect(["line3", "line4", "line5", "line6", "line7", "line31"].map(key =>
+      getFieldText(doc, SCHEDULE_C_FIELDS[key as keyof typeof SCHEDULE_C_FIELDS]))).toEqual(["24000", "4000", "20000", "1200", "21200", "20450"]);
+    // Independent official field positions: 27a is not a description; 30/31
+    // are after the square-footage fields. Reopen the saved canonical tree.
+    const saved = await PDFDocument.load(await doc.save());
+    expect(getFieldText(saved, "topmostSubform[0].Page1[0].Lines18-27[0].f1_40[0]")).toBeUndefined();
+    expect(getFieldText(saved, "topmostSubform[0].Page1[0].f1_45[0]")).toBe("500");
+    expect(getFieldText(saved, "topmostSubform[0].Page1[0].f1_46[0]")).toBe("20450");
+    const sc = result.scheduleC;
+    if (!sc || !input.scheduleC) throw new Error("Synthetic Schedule C must exist");
+    const line6 = sc.lines.find(entry => entry.form === "Sched C" && entry.line === "6");
+    if (!line6) throw new Error("Synthetic line6 must exist");
+    await expect(fillScheduleC(input, { ...result, scheduleC: { ...sc, lines: sc.lines.filter(entry => entry !== line6) } }, BLANK_SC)).rejects.toThrow(/audit/i);
+    await expect(fillScheduleC(input, { ...result, scheduleC: { ...sc, lines: [...sc.lines, line6] } }, BLANK_SC)).rejects.toThrow(/audit/i);
+    await expect(fillScheduleC(input, { ...result, scheduleC: { ...sc, otherIncome: new Decimal(1) } }, BLANK_SC)).rejects.toThrow(/inconsistent|reconcile/i);
+    await expect(fillScheduleC({ ...input, scheduleC: { ...input.scheduleC, otherIncome: "1201" } }, result, BLANK_SC)).rejects.toThrow(/source|inconsistent|reconcile/i);
+  });
+
+  it("uses the actual spouse proprietor and preserves unknown checkbox facts", async () => {
+    // Spec: spec/federal/schedule-c.yaml review-source-facts.
+    const input = TaxYearInputSchema.parse({ ...complexMFJFixture, scheduleC: {
+      accountHolder: "spouse", grossReceipts: "15000", qbiMateriallyParticipated: false,
+      principalBusinessActivity: "Bookkeeping", allInvestmentAtRisk: false,
+      expenses: { otherExpenses: "20000" }, otherExpenseDescription: "Actual permit and registration costs",
+    } });
+    const doc = await fillScheduleC(input, calculateFederalTax(input), BLANK_SC);
+    expect(getFieldText(doc, SCHEDULE_C_FIELDS.name)).toBe("Jane Smith");
+    expect(getFieldText(doc, SCHEDULE_C_FIELDS.ssn)).toBe(input.taxpayer.spouse?.ssn.replace(/-/g, ""));
+    expect(isChecked(doc, SCHEDULE_C_FIELDS.materialParticipationNo)).toBe(true);
+    expect(isChecked(doc, SCHEDULE_C_FIELDS.materialParticipationYes)).toBe(false);
+    expect(isChecked(doc, SCHEDULE_C_FIELDS.cashMethod)).toBe(false);
+    expect(isChecked(doc, SCHEDULE_C_FIELDS.accrualMethod)).toBe(false);
+    expect(isChecked(doc, SCHEDULE_C_FIELDS.allInvestmentAtRisk)).toBe(false);
+    expect(isChecked(doc, SCHEDULE_C_FIELDS.someInvestmentNotAtRisk)).toBe(true);
+    expect(getFieldText(doc, SCHEDULE_C_FIELDS.businessOrProfession)).toBe("Bookkeeping");
+    expect(getFieldText(doc, "topmostSubform[0].Page2[0].PartVTable[0].Item1[0].f2_15[0]")).toBe("Actual permit and registration costs");
   });
 });
 

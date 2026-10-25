@@ -2,10 +2,18 @@ form: "Schedule C"
 fullName: "Profit or Loss From Business (Sole Proprietorship)"
 taxYear: 2025
 irsReference: "https://www.irs.gov/instructions/i1040sc"
+reviewPdfMapping:
+  source: "https://www.irs.gov/pub/irs-pdf/f1040sc.pdf"
+  retrieved: "2026-10-25"
+  status: "review-only; not qualified for filing"
+  testRef: "tests/pdf/fill-schedule-c.test.ts::copies official income lines and refuses inconsistent Schedule C data"
 
 notes: |
   Schedule C reports income and expenses from a sole proprietorship or
   single-member LLC. Net profit flows to Form 1040 Line 8 and Schedule SE.
+  Income-line positions refreshed against the final 2025 IRS form on 2026-10-25.
+  Explicit gross receipts already include applicable source documents; they are
+  not added a second time. Actual line 6 other income is separate from receipts.
 
 lines:
   - line: "1"
@@ -24,23 +32,47 @@ lines:
     testRef: "tests/engine/schedules/schedule-c.test.ts::Schedule C Line 2 - returns and allowances"
 
   - line: "3"
+    description: "Net receipts"
+    formula: "Line 1 minus line 2"
+    irsRef: "2025 Schedule C, line 3"
+    testRef: "tests/engine/schedules/schedule-c.test.ts::Schedule C income follows official lines 3 through 7"
+
+  - line: "4"
     description: "Cost of goods sold (from Line 42)"
     formula: "For businesses that sell products: beginning inventory + purchases - ending inventory"
-    irsRef: "Schedule C Instructions, Line 3"
+    irsRef: "Schedule C Instructions, Line 4"
     notes: "Most service businesses have $0 COGS"
-    testRef: "tests/engine/schedules/schedule-c.test.ts::Schedule C Line 3 - COGS"
+    testRef: "tests/engine/schedules/schedule-c.test.ts::Schedule C Line 4 - COGS"
 
   - line: "5"
-    description: "Gross income"
-    formula: "Line 1 - Line 2 - Line 3"
+    description: "Gross profit"
+    formula: "Line 3 minus line 4"
     irsRef: "Schedule C Instructions, Line 5"
-    testRef: "tests/engine/schedules/schedule-c.test.ts::Schedule C Line 5 - gross income"
+    testRef: "tests/engine/schedules/schedule-c.test.ts::Schedule C Line 5 - gross profit"
+
+  - line: "6"
+    description: "Other business income"
+    formula: "Actual separately classified other business income, including applicable fuel credits or refunds"
+    irsRef: "2025 Schedule C, line 6"
+    testRef: "tests/engine/schedules/schedule-c.test.ts::Schedule C income follows official lines 3 through 7"
 
   - line: "7"
-    description: "Gross profit"
-    formula: "Line 5 (same as gross income for most service businesses)"
+    description: "Gross income"
+    formula: "Line 5 plus line 6"
     irsRef: "Schedule C Instructions, Line 7"
     testRef: "tests/engine/schedules/schedule-c.test.ts::Schedule C Line 7 - gross profit equals gross income for services"
+
+  - line: "return-integration"
+    description: "Route other business income through profit and self-employment tax"
+    formula: "Line 6 increases line 7 and line 31 once; line 31 enters Schedule 1 line 3 and Schedule SE line 2"
+    irsRef: "2025 Schedule C, lines 6, 7, 29 and 31"
+    testRef: "tests/engine/schedules/schedule-c.test.ts::Schedule C other income reaches the federal return once"
+
+  - line: "review-source-facts"
+    description: "Preserve unknown proprietor and checkbox facts in review copy"
+    formula: "Use actual proprietor ownership, principalBusinessActivity, accounting method, participation, allInvestmentAtRisk and otherExpenseDescription; preserve omitted facts and leave unknown fields blank"
+    irsRef: "2025 Schedule C header and line 32"
+    testRef: "tests/pdf/fill-schedule-c.test.ts::uses the actual spouse proprietor and preserves unknown checkbox facts"
 
   # ── Expenses ─────────────────────────────────────────────
   - line: "8"
@@ -112,9 +144,9 @@ lines:
     formula: "Business utility expenses"
     testRef: "tests/engine/schedules/schedule-c.test.ts::Schedule C expenses - utilities"
 
-  - line: "27"
+  - line: "27b"
     description: "Other expenses (from Line 48)"
-    formula: "Sum of other business expenses listed on Part V"
+    formula: "Actual other business expenses listed on Part V line 48"
     testRef: "tests/engine/schedules/schedule-c.test.ts::Schedule C expenses - other"
 
   - line: "28"

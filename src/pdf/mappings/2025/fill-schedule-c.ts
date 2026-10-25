@@ -30,7 +30,6 @@ import {
 const p1 = (n: string) => `topmostSubform[0].Page1[0].${n}`;
 const p1Exp8 = (n: string) => `topmostSubform[0].Page1[0].Lines8-17[0].${n}`;
 const p1Exp18 = (n: string) => `topmostSubform[0].Page1[0].Lines18-27[0].${n}`;
-const p1L30 = (n: string) => `topmostSubform[0].Page1[0].Line30_ReadOrder[0].${n}`;
 
 // ─── Field Mapping ─────────────────────────────────────────────────────────
 // Verified against 2025 Schedule C fillable PDF field inspection.
@@ -89,14 +88,14 @@ const FIELDS = {
   line24b: p1Exp18("f1_36[0]"), // Line 24b: Deductible meals
   line25: p1Exp18("f1_37[0]"),  // Line 25: Utilities
   line26: p1Exp18("f1_38[0]"),  // Line 26: Wages
-  line27Desc: p1Exp18("f1_40[0]"), // Line 27a: Other expenses description
+  line27a: p1Exp18("f1_40[0]"), // Line 27a: Form 7205 deduction, not a description
   line27: p1Exp18("f1_39[0]"),  // Line 27b: Other expenses amount
 
   // ── Net Profit / Loss ──
   line28: p1("f1_41[0]"),      // Line 28: Total expenses
   line29: p1("f1_42[0]"),      // Line 29: Tentative profit (line 7 - line 28)
-  line30: p1L30("f1_44[0]"),   // Line 30: Home office deduction
-  line31: p1("f1_45[0]"),      // Line 31: Net profit or (loss)
+  line30: p1("f1_45[0]"),   // Line 30: Home office deduction
+  line31: p1("f1_46[0]"),      // Line 31: Net profit or (loss)
 
   // ── Line 32 checkboxes ──
   allInvestmentAtRisk: p1("c1_7[0]"),       // Line 32a: All investment at risk
@@ -138,48 +137,63 @@ export async function fillScheduleC(
   const F = FIELDS;
   const sc = result.scheduleC;
 
-  // ── Header ──
-  const name = input.taxpayer.spouse
-    ? `${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName} & ${input.taxpayer.spouse.firstName} ${input.taxpayer.spouse.lastName}`
-    : `${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName}`;
-  setTextField(form, F.name, name);
-  setTextField(form, F.ssn, input.taxpayer.primary.ssn.replace(/-/g, ""));
-
-  // ── Business info from input ──
+  // A sole proprietorship belongs to one person, including on a joint return.
   const scInput = input.scheduleC;
+  const proprietor = scInput?.accountHolder === "spouse"
+    ? input.taxpayer.spouse
+    : scInput?.accountHolder === "primary" || input.taxpayer.filingStatus !== "married_filing_jointly"
+      ? input.taxpayer.primary : undefined;
+  if (scInput?.accountHolder === "spouse" && !proprietor) throw new Error("Schedule C spouse proprietor is missing");
+  if (proprietor) {
+    setTextField(form, F.name, `${proprietor.firstName} ${proprietor.lastName}`);
+    setTextField(form, F.ssn, proprietor.ssn.replace(/-/g, ""));
+  }
+
+  // ── Business info from actual input ──
   if (scInput) {
-    setTextField(form, F.businessOrProfession, scInput.businessName ?? "");
+    setTextField(form, F.businessOrProfession, scInput.principalBusinessActivity ?? "");
     setTextField(form, F.businessCode, scInput.businessCode ?? "");
     setTextField(form, F.businessName, scInput.businessName ?? "");
     setTextField(form, F.ein, (scInput.ein ?? "").replace(/-/g, ""));
 
     // Accounting method
-    const method = scInput.accountingMethod ?? "cash";
+    const method = scInput.accountingMethod;
     setCheckBox(form, F.cashMethod, method === "cash");
     setCheckBox(form, F.accrualMethod, method === "accrual");
-  } else {
-    // Default to cash method when no explicit Schedule C input
-    setCheckBox(form, F.cashMethod, true);
   }
-
-  // Default: material participation = Yes (most sole proprietors)
-  setCheckBox(form, F.materialParticipationYes, true);
+  setCheckBox(form, F.materialParticipationYes, scInput?.qbiMateriallyParticipated === true);
+  setCheckBox(form, F.materialParticipationNo, scInput?.qbiMateriallyParticipated === false);
 
   if (!sc) return doc;
 
-  // ── Part I: Income (Lines 1-7) ──
-  setCurrencyField(form, F.line1, sc.grossReceipts);
-  setCurrencyField(form, F.line2, sc.returnsAndAllowances);
-  // Line 3: gross receipts - returns
-  const line3 = sc.grossReceipts.minus(sc.returnsAndAllowances);
-  setCurrencyField(form, F.line3, line3);
-  // Line 4: COGS
-  setCurrencyField(form, F.line4, sc.costOfGoodsSold);
-  // Line 5: gross profit (line 3 - line 4)
-  setCurrencyField(form, F.line5, sc.grossIncome);
-  // Line 6: Other income (not tracked separately — leave blank)
-  // Line 7: gross income = gross profit + other income = grossProfit
-  setCurrencyField(form, F.line7, sc.grossProfit);
+  const audited = (line: string, expected: Decimal): Decimal => {
+    const matches = sc.lines.filter(entry => entry.form === "Sched C" && entry.line === line);
+    if (matches.length !== 1 || !matches[0].value.isFinite()) {
+      throw new Error(`Missing, duplicate or invalid Schedule C audit entry ${line}`);
+    }
+    if (!expected.isFinite() || !matches[0].value.eq(expected)) {
+      throw new Error(`Inconsistent Schedule C result and audit at line ${line}`);
+    }
+    return matches[0].value;
+  };
+  const sourceReceipts = scInput?.grossReceipts === undefined
+    ? input.form1099Nec.reduce((total, entry) => total.plus(entry.nonemployeeCompensation), new Decimal(0))
+    : new Decimal(scInput.grossReceipts);
+  for (const [actual, expected] of [
+    [sourceReceipts, sc.grossReceipts],
+    [new Decimal(scInput?.returnsAndAllowances ?? 0), sc.returnsAndAllowances],
+    [new Decimal(scInput?.costOfGoodsSold ?? 0), sc.costOfGoodsSold],
+    [new Decimal(scInput?.otherIncome ?? 0), sc.otherIncome],
+  ]) {
+    if (!actual.isFinite() || !actual.eq(expected)) throw new Error("Schedule C source amounts do not reconcile with the result");
+  }
+  // Copy the canonical official lines; PDF rendering does not calculate tax.
+  const incomeLines = [sc.grossReceipts, sc.returnsAndAllowances, sc.netReceipts,
+    sc.costOfGoodsSold, sc.grossProfit, sc.otherIncome, sc.grossIncome];
+  for (const [index, amount] of incomeLines.entries()) {
+    const line = String(index + 1) as "1" | "2" | "3" | "4" | "5" | "6" | "7";
+    setCurrencyField(form, F[`line${line}`], audited(line, amount));
+  }
 
   // ── Part II: Expenses (Lines 8-27) ──
   for (const [key, fieldName] of Object.entries(EXPENSE_FIELD_MAP)) {
@@ -194,19 +208,22 @@ export async function fillScheduleC(
     setCurrencyField(form, F.line13, sc.depreciationAndSection179Deduction);
   }
 
-  // Other expenses description
-  if (sc.expenseBreakdown["Other expenses"]?.gt(0)) {
-    setTextField(form, F.line27Desc, "See attached");
-  }
-
   // ── Net Profit / Loss (Lines 28-31) ──
-  setCurrencyField(form, F.line28, sc.totalExpenses);
-  setCurrencyField(form, F.line29, sc.tentativeProfit);
-  setCurrencyField(form, F.line30, sc.homeOfficeDeduction);
-  setCurrencyField(form, F.line31, sc.netProfit);
+  setCurrencyField(form, F.line28, audited("28", sc.totalExpenses));
+  setCurrencyField(form, F.line29, audited("29", sc.tentativeProfit));
+  setCurrencyField(form, F.line30, audited("30", sc.homeOfficeDeduction));
+  setCurrencyField(form, F.line31, audited("31", sc.netProfit));
 
-  // Line 32: All investment at risk (default for most businesses)
-  setCheckBox(form, F.allInvestmentAtRisk, true);
+  if (sc.netProfit.lt(0)) {
+    setCheckBox(form, F.allInvestmentAtRisk, scInput?.allInvestmentAtRisk === true);
+    setCheckBox(form, F.someInvestmentNotAtRisk, scInput?.allInvestmentAtRisk === false);
+  }
+  if (scInput?.otherExpenseDescription && sc.expenseBreakdown["Other expenses"]?.gt(0)) {
+    const otherExpenses = audited("27b", sc.expenseBreakdown["Other expenses"]);
+    setTextField(form, "topmostSubform[0].Page2[0].PartVTable[0].Item1[0].f2_15[0]", scInput.otherExpenseDescription);
+    setCurrencyField(form, "topmostSubform[0].Page2[0].PartVTable[0].Item1[0].f2_16[0]", otherExpenses);
+    setCurrencyField(form, "topmostSubform[0].Page2[0].f2_33[0]", otherExpenses);
+  }
 
   return doc;
 }

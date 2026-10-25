@@ -749,3 +749,23 @@ ScheduleA/payment-year/sales-tax tests and six final source/metadata tests pass;
 root types, all3,289spec references and scoped lint pass (zeroerrors). The scoped
 diff was reviewed.2025.13/2026.8-law-integration-draft remain unqualified. OID
 withholding awaits its separately assigned corrected source contract.
+
+### Schedule C other income and official review fields — 2026-10-25
+
+The final 2025 IRS Schedule C confirms receipts less returns on line3, COGS4,
+gross profit5, separate other income6 and gross income7. Actual other income now
+enters profit, Schedule1 and ScheduleSE once. Canonical result names follow those
+printed lines. The review PDF copies unique finite audited amounts, rejects
+source/result contradictions, and preserves unknown proprietor/accounting/
+participation/at-risk facts. Actual activity and other-expense descriptions are
+represented without inventing them. Physical field checks also corrected the
+home-office/net-profit positions and removed text from the line27a amount box.
+
+Two calculation regressions and the source/physical-field PDF regressions were
+red before implementation.141 focused ScheduleC/SE/PDF/metadata tests pass;
+root types, all3,293 spec references and scoped lint pass (zero errors; existing
+non-null assertions warn). The saved canonical fields were reopened and both
+synthetic pages rendered and inspected. Scope/diff/whitespace reviewed. Versions
+are2025.14/2026.9-law-integration-draft. Detailed COGS/vehicle/home-area facts and
+loss limitation forms still require qualification; review copies remain marked
+not for filing. This is not an independent tax or form review.

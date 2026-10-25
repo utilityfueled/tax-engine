@@ -6,7 +6,8 @@
 import { describe, it, expect } from "vitest";
 import Decimal from "decimal.js";
 import { calculateScheduleC, type ScheduleCInput } from "@/engine/schedules/schedule-c.js";
-import type { TaxYearInput } from "@/models/inputs.js";
+import { TaxYearInputSchema, type TaxYearInput } from "@/models/inputs.js";
+import { calculateFederalTax } from "@/engine/federal.js";
 import { simpleW2Fixture } from "../../fixtures/simple-w2.js";
 
 const d = (n: number | string) => new Decimal(n);
@@ -53,7 +54,7 @@ describe("Schedule C Income", () => {
     expect(result.grossIncome.toNumber()).toBe(9500);
   });
 
-  it("Schedule C Line 3 - COGS", () => {
+  it("Schedule C Line 4 - COGS", () => {
     const { input } = makeScheduleCFixture(
       [{ payer: "Client", nonemployeeCompensation: "20000", federalWithheld: "0" }]
     );
@@ -62,7 +63,7 @@ describe("Schedule C Income", () => {
     expect(result.grossIncome.toNumber()).toBe(17000);
   });
 
-  it("Schedule C Line 5 - gross income", () => {
+  it("Schedule C Line 5 - gross profit", () => {
     const { input } = makeScheduleCFixture(
       [{ payer: "Client", nonemployeeCompensation: "25000", federalWithheld: "0" }]
     );
@@ -79,6 +80,34 @@ describe("Schedule C Income", () => {
     );
     const result = calculateScheduleC(input);
     expect(result.grossProfit.equals(result.grossIncome)).toBe(true);
+  });
+
+  it("Schedule C income follows official lines 3 through 7", () => {
+    // Spec: spec/federal/schedule-c.yaml lines 3–7; final IRS form arithmetic.
+    const input = TaxYearInputSchema.parse({ ...simpleW2Fixture, scheduleC: {
+      grossReceipts: "25000", returnsAndAllowances: "1000", costOfGoodsSold: "4000",
+      otherIncome: "1200", expenses: { supplies: "200" },
+    } });
+    const result = calculateScheduleC(input, input.scheduleC);
+    const amount = (line: string) => result.lines.find((entry) => entry.form === "Sched C" && entry.line === line)?.value.toString();
+    expect(["3", "4", "5", "6", "7"].map(amount)).toEqual(["24000", "4000", "20000", "1200", "21200"]);
+    expect(result.grossProfit.toString()).toBe("20000");
+    expect(result.grossIncome.toString()).toBe("21200");
+    expect(result.netProfit.toString()).toBe("21000");
+  });
+
+  it("Schedule C other income reaches the federal return once", () => {
+    // Spec: spec/federal/schedule-c.yaml return-integration.
+    const input = TaxYearInputSchema.parse({ ...simpleW2Fixture, w2s: [], scheduleC: {
+      grossReceipts: "25000", returnsAndAllowances: "1000", costOfGoodsSold: "4000",
+      otherIncome: "1200", expenses: { supplies: "200" },
+    } });
+    const result = calculateFederalTax(input);
+    expect(result.scheduleC?.netProfit.toString()).toBe("21000");
+    expect(result.scheduleSE?.netNonfarmProfit.toString()).toBe("21000");
+    // 21,000 × .9235 = 19,394; SS 2,405 + Medicare 562 = 2,967; half rounds 1,484.
+    expect(result.scheduleSE?.totalSETax.toString()).toBe("2967");
+    expect(result.agi.toString()).toBe("19516");
   });
 });
 

@@ -2472,6 +2472,9 @@ export const Form8829Schema = z.object({
 
 export const ScheduleCInputSchema = z.object({
   qbiMateriallyParticipated: z.boolean().optional(),
+  principalBusinessActivity: z.string().optional(),
+  allInvestmentAtRisk: z.boolean().optional(),
+  otherExpenseDescription: z.string().optional(),
   businessName: z.string().optional(),
   businessCode: z.string().optional(),
   ein: z.string().optional(),
