@@ -102,3 +102,9 @@ lines:
     formula: "For three or more qualifying children, or a bona fide Puerto Rico resident with a child, alternate=max(0, payroll worksheet line21 + deductible-half-SE/unreported-tax line22 - EIC - excess SS). ACTC=min(unused CTC, indexed refundable cap per child, max(15% of earned income above2500, alternate)). Form2555 disallows ACTC. Worksheet B line14 reserves max(0, line12 - potential ACTC) before adoption/clean-energy limitations. 2026 alternate facts must be known."
     irsRef: "https://www.irs.gov/pub/irs-pdf/f1040s8.pdf, Part II; https://www.irs.gov/instructions/i1040s8, Credit Limit Worksheet B"
     testRef: "tests/engine/forms/form-8812-2026.test.ts::Schedule 8812 payroll and reservation worksheets"
+
+  - line: "2026-identity-and-magi-facts"
+    description: "Preserve actual taxpayer/dependent tax identifiers and federal integration facts"
+    formula: "2026 CTC requires actual timely employment-valid SSN eligibility of a parent (at least one on a joint return), timely TINs for both joint filers, and qualifying-child SSN facts. ODC requires actual timely TIN eligibility. A disqualified parent or child receives no CTC, and no ODC is inferred. MAGI adds actual foreign/possession exclusions; Form2555 blocks ACTC; actual payroll sources feed Part II."
+    irsRef: "https://www.irs.gov/instructions/i1040s8, Taxpayer Identification Number Requirements, Credit Limit Worksheet B, Earned Income Worksheet"
+    testRef: "tests/engine/federal-ctc-facts.test.ts::Schedule 8812 actual identity and payroll facts"

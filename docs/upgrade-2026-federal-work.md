@@ -346,3 +346,24 @@ Seven new assertions failed first; all 115 focused tests, typecheck and spec
 validation pass. Existing audit checks now verify the official line positions
 and complete supported line set; no amount assertion was weakened. Scoped diff
 reviewed. Integration/identity qualifications and Schedule 3-A remain pending.
+
+## Integration: Schedule 8812 identity, MAGI and payroll facts
+
+2026 child-credit claims now require actual timely taxpayer/dependent SSN/TIN
+eligibility and known possession-income/PR-residency facts. An SSN's printed
+format is not evidence of employment validity or issue date. Joint filers may
+qualify with one employment-valid SSN and both timely TINs. Known ineligibility
+removes the claimed credit without manufacturing an ODC claim. Existing explicit
+qualifying-dependent flags remain responsible for the non-identity dependency
+requirements; independently qualified complete-dependent review is still pending.
+
+The federal calculation now supplies the actual year, foreign-income addbacks,
+Form 2555 status and payroll/EIC/excess-SS amounts to Schedule 8812. EIC and Form
+8959 run before credit allocation so Worksheet B can use those source amounts.
+Five substantive identity/payroll regressions failed first; additional positive,
+ODC, duplicate-claim and unknown-residency checks pass. One draft joint-return
+fixture was corrected before implementation to the independently derived bracket
+amount ($50,000 minus $32,200, times 10%). Final 2026 tax tables remain unqualified.
+625 focused tests/typecheck/whitespace checks pass; all our spec references resolve.
+Global spec validation temporarily sees eight references in the concurrently
+edited Form 8936 specification, reported to its owner. Scoped diff reviewed.

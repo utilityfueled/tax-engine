@@ -31,6 +31,7 @@ import {
   calculateTaxFromBrackets,
 } from "@/utils/tax-math.js";
 import { calculateForm8812 } from "./forms/form-8812.js";
+import { calculateChildCreditEligibility } from "./forms/child-credit-eligibility.js";
 import { calculateForm8959 } from "./forms/form-8959.js";
 import { calculateForm8960 } from "./forms/form-8960.js";
 import {
@@ -2486,6 +2487,62 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   audit.merge(form6251.lines);
   audit.record("Sched 2", "1", "Alternative Minimum Tax", amt, "Form 6251 Line 11");
 
+  // ── Form 8959: Additional Medicare Tax ────────────────
+  // Form 8959 Line 8 requires post-multiplier SE (Schedule SE Line 4a = earnings × 0.9235).
+  // Using pre-multiplier netSEEarnings would overstate the SE contribution.
+  const form8959 = calculateForm8959(input, schedSE.taxableEarnings, filingStatus, constants);
+  const additionalMedicareTax = form8959.additionalMedicareTax;
+  audit.merge(form8959.lines);
+
+  // ── Line 27a: Earned Income Credit ──────────────────────
+  // Computed before Form 2210 so EIC is included in refundable credits for
+  // accurate estimated tax penalty calculation.
+  // Per IRC §32(c)(2): earned income = wages + net SE earnings − deductible half of SE tax.
+  const eicEarnedIncome = sum(totalWages, netSEEarnings).minus(schedSE.deductibleHalf);
+
+  // Investment income for EIC disqualification: taxable + tax-exempt interest,
+  // dividends, capital gain net income (≥ $0), net rental/royalty income (if positive)
+  const eicInvestmentIncome = input.eic?.investmentIncomeOverride
+    ? d(input.eic.investmentIncomeOverride)
+    : sum(
+        totalTaxableInterest,
+        taxExemptInterest,
+        totalDividends,
+        Decimal.max(new Decimal(0), capitalGainLoss),
+        Decimal.max(new Decimal(0), adjustedScheduleETotal),
+      );
+
+  // Qualifying EIC children from dependents
+  const qualifyingEicChildren = input.taxpayer.dependents.filter((dep) => dep.qualifiesForEIC).length;
+
+  // Compute primary filer's age at end of tax year
+  const primaryBirth = new Date(input.taxpayer.primary.dateOfBirth);
+  const eicYearEnd = new Date(year, 11, 31);
+  const primaryAgeRaw = eicYearEnd.getFullYear() - primaryBirth.getFullYear();
+  const primaryBirthdayThisYear = new Date(year, primaryBirth.getMonth(), primaryBirth.getDate());
+  const primaryAge = primaryBirthdayThisYear <= eicYearEnd ? primaryAgeRaw : primaryAgeRaw - 1;
+
+  // IRC §32(c)(1)(C): Filing Form 2555 disqualifies the taxpayer from EIC
+  let eic: Decimal;
+  let scheduleEIC: ReturnType<typeof calculateEic> | undefined;
+  if (form2555) {
+    eic = new Decimal(0);
+    audit.record("1040", "27a", "Earned Income Credit", eic,
+      "Disqualified: taxpayer filed Form 2555 (IRC §32(c)(1)(C))");
+  } else {
+    scheduleEIC = calculateEic({
+      filingStatus,
+      qualifyingChildren: qualifyingEicChildren,
+      earnedIncome: eicEarnedIncome,
+      agi,
+      investmentIncome: eicInvestmentIncome,
+      primaryAge,
+      mfsEicEligible: input.eic?.mfsEligible ?? false,
+    }, constants);
+    audit.merge(scheduleEIC.lines);
+    eic = scheduleEIC.credit;
+  }
+
   // ═══════════════════════════════════════════════════════════
   // Phase 5: Credits (Form 1040 Lines 19-21)
   // ═══════════════════════════════════════════════════════════
@@ -2864,19 +2921,34 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   const otherCredits = sched3.totalNonrefundableCredits;
 
   // ── Form 8812: Child Tax Credit (nonrefundable + refundable ACTC) ──
-  const qualifyingChildren = input.taxpayer.dependents.filter((dep) => dep.qualifiesForCTC).length;
-  const otherDependents = input.taxpayer.dependents.filter((dep) => dep.qualifiesForODC).length;
+  const {qualifyingChildren, otherDependents} = calculateChildCreditEligibility(input);
+  if (year === 2026 && qualifyingChildren + otherDependents > 0 && input.childTaxCredit?.possessionIncomeExclusion === undefined) {
+    throw new Error("2026 child-credit possession-income exclusion is unknown");
+  }
+  if (year === 2026 && qualifyingChildren > 0 && input.childTaxCredit?.bonaFidePuertoRicoResident === undefined) {
+    throw new Error("2026 child-credit Puerto Rico residency is unknown");
+  }
   // Per IRS Form 8812 Line 14: tax liability = Line 18 (tax before credits) - other credits
   const taxAfterOtherCredits = zeroFloor(taxBeforeCredits.minus(otherCredits));
   const form8812 = calculateForm8812({
+    taxYear: year,
+    filesForm2555: form2555 !== undefined,
+    bonaFidePuertoRicoResident: input.childTaxCredit?.bonaFidePuertoRicoResident,
+    payrollTaxes: sum(...input.w2s.map(w2 => d(w2.socialSecurityWithheld).plus(d(w2.medicareWithheld))))
+      .plus(form8959.lines.find(line => line.line === "7")?.value ?? new Decimal(0))
+      .minus(form8959.withholdingCredit)
+      .plus((form8959.lines.find(line => line.line === "13")?.value ?? new Decimal(0)).div(2)),
+    additionalPayrollTaxes: sum(schedSE.deductibleHalf, form4137?.line13 ?? new Decimal(0), form8919?.line13 ?? new Decimal(0)),
+    earnedIncomeCredit: eic,
+    excessSocialSecurityWithholding: excessSSWithholding,
     qualifyingChildren,
     otherDependents,
-    agi,
+    agi: sum(agi, form2555IncomeReduction, form2555HousingDeduction, d(input.childTaxCredit?.possessionIncomeExclusion)),
     // Per IRC §32(c)(2)(A)(i)(II) → §24(d)(1)(B)(i): earned income =
     // wages + net SE earnings - deductible half of SE tax (§164(f)).
     // IRS Form 8812 Lines 18a-18f: 18a(wages) + 18c(Sched C/F) - 18e(deductible half).
     // SE losses reduce earned income — no zero-floor on SE component.
-    earnedIncome: sum(totalWages, netSEEarnings).minus(schedSE.deductibleHalf),
+    earnedIncome: sum(totalWages, netSEEarnings, d(input.childTaxCredit?.nonTaxableCombatPayElection)).minus(schedSE.deductibleHalf),
     taxLiability: taxAfterOtherCredits,
     filingStatus,
   }, constants);
@@ -2941,13 +3013,6 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   // ═══════════════════════════════════════════════════════════
   // Phase 5b: Withholding & Estimated Payments (needed by Form 2210)
   // ═══════════════════════════════════════════════════════════
-
-  // ── Form 8959: Additional Medicare Tax ────────────────
-  // Form 8959 Line 8 requires post-multiplier SE (Schedule SE Line 4a = earnings × 0.9235).
-  // Using pre-multiplier netSEEarnings would overstate the SE contribution.
-  const form8959 = calculateForm8959(input, schedSE.taxableEarnings, filingStatus, constants);
-  const additionalMedicareTax = form8959.additionalMedicareTax;
-  audit.merge(form8959.lines);
 
   const withholdingFrom1099 = sum(
     intAgg.federalWithheld,
@@ -3024,55 +3089,6 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   }
   const retirementPlanAdditionalTax = (form5329?.totalAdditionalTax ?? new Decimal(0))
     .plus(form1099Q?.netPenalty ?? new Decimal(0));
-
-  // ── Line 27a: Earned Income Credit ──────────────────────
-  // Computed before Form 2210 so EIC is included in refundable credits for
-  // accurate estimated tax penalty calculation.
-  // Per IRC §32(c)(2): earned income = wages + net SE earnings − deductible half of SE tax.
-  const eicEarnedIncome = sum(totalWages, netSEEarnings).minus(schedSE.deductibleHalf);
-
-  // Investment income for EIC disqualification: taxable + tax-exempt interest,
-  // dividends, capital gain net income (≥ $0), net rental/royalty income (if positive)
-  const eicInvestmentIncome = input.eic?.investmentIncomeOverride
-    ? d(input.eic.investmentIncomeOverride)
-    : sum(
-        totalTaxableInterest,
-        taxExemptInterest,
-        totalDividends,
-        Decimal.max(new Decimal(0), capitalGainLoss),
-        Decimal.max(new Decimal(0), adjustedScheduleETotal),
-      );
-
-  // Qualifying EIC children from dependents
-  const qualifyingEicChildren = input.taxpayer.dependents.filter((dep) => dep.qualifiesForEIC).length;
-
-  // Compute primary filer's age at end of tax year
-  const primaryBirth = new Date(input.taxpayer.primary.dateOfBirth);
-  const eicYearEnd = new Date(year, 11, 31);
-  const primaryAgeRaw = eicYearEnd.getFullYear() - primaryBirth.getFullYear();
-  const primaryBirthdayThisYear = new Date(year, primaryBirth.getMonth(), primaryBirth.getDate());
-  const primaryAge = primaryBirthdayThisYear <= eicYearEnd ? primaryAgeRaw : primaryAgeRaw - 1;
-
-  // IRC §32(c)(1)(C): Filing Form 2555 disqualifies the taxpayer from EIC
-  let eic: Decimal;
-  let scheduleEIC: ReturnType<typeof calculateEic> | undefined;
-  if (form2555) {
-    eic = new Decimal(0);
-    audit.record("1040", "27a", "Earned Income Credit", eic,
-      "Disqualified: taxpayer filed Form 2555 (IRC §32(c)(1)(C))");
-  } else {
-    scheduleEIC = calculateEic({
-      filingStatus,
-      qualifyingChildren: qualifyingEicChildren,
-      earnedIncome: eicEarnedIncome,
-      agi,
-      investmentIncome: eicInvestmentIncome,
-      primaryAge,
-      mfsEicEligible: input.eic?.mfsEligible ?? false,
-    }, constants);
-    audit.merge(scheduleEIC.lines);
-    eic = scheduleEIC.credit;
-  }
 
   // ── Form 2210: Estimated Tax Penalty ──────────────────
   // currentYearTax = 1040 Line 24 minus estimated tax penalty (excluded to avoid circularity).

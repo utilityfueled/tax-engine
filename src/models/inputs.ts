@@ -31,6 +31,9 @@ export const DependentSchema = z.object({
   dateOfBirth: z.string(), // YYYY-MM-DD
   monthsLivedWithYou: z.number().int().min(0).max(12),
   qualifiesForCTC: z.boolean(),
+  /** Timely employment-valid child SSN, or documented born-and-died exception. */
+  ctcSsnEligible: z.boolean().optional(),
+  odcTinEligible: z.boolean().optional(),
   qualifiesForODC: z.boolean().optional().default(false),
   qualifiesForEIC: z.boolean().optional().default(false),
 });
@@ -47,6 +50,8 @@ export const TaxpayerSchema = z.object({
     dateOfBirth: z.string(),
     occupation: z.string().optional(),
     usResidencyMonths: z.number().int().min(0).max(12).optional(),
+    employmentValidSsnIssuedByDueDate: z.boolean().optional(),
+    tinIssuedByDueDate: z.boolean().optional(),
   }),
   spouse: z
     .object({
@@ -56,6 +61,8 @@ export const TaxpayerSchema = z.object({
       dateOfBirth: z.string(),
       occupation: z.string().optional(),
       usResidencyMonths: z.number().int().min(0).max(12).optional(),
+      employmentValidSsnIssuedByDueDate: z.boolean().optional(),
+      tinIssuedByDueDate: z.boolean().optional(),
     })
     .optional(),
   address: z.object({
@@ -4323,6 +4330,11 @@ export type Schedule1AInput = z.infer<typeof Schedule1ASchema>;
 /** Complete input for a tax year */
 export const TaxYearInputSchema = z.object({
   taxpayer: TaxpayerSchema,
+  childTaxCredit: z.object({
+    bonaFidePuertoRicoResident: z.boolean().optional(),
+    possessionIncomeExclusion: decimal.refine(value => d(value).gte(0), "Must be nonnegative").optional(),
+    nonTaxableCombatPayElection: decimal.refine(value => d(value).gte(0), "Must be nonnegative").optional(),
+  }).optional(),
   w2s: z.array(W2Schema).default([]),
   form1099Int: z.array(Form1099IntSchema).default([]),
   form1099Div: z.array(Form1099DivSchema).default([]),
