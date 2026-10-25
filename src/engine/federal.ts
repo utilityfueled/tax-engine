@@ -3074,14 +3074,48 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   let priorYearMinimumTaxCredit = new Decimal(0);
   let form8801: ReturnType<typeof calculateForm8801> | undefined;
   if (input.form8801) {
+    const facts = input.form8801;
+    if ((year === 2026 || facts.sourceFactsConfirmed !== undefined)
+      && [facts.priorYearAMT, facts.priorYearExclusionItemAdjustments, facts.unusedMinimumTaxCreditCarryforward].some(value => value === undefined)) {
+      throw new Error("Form 8801 original required source amounts are unknown");
+    }
+    const optionalAmount = (value: string | undefined) => value === undefined ? undefined : d(value);
     form8801 = calculateForm8801({
-      priorYearFilingStatus: input.form8801.priorYearFilingStatus,
-      priorYearTaxableIncome: d(input.form8801.priorYearTaxableIncome),
-      priorYearExclusionItemAdjustments: d(input.form8801.priorYearExclusionItemAdjustments),
-      priorYearAMT: d(input.form8801.priorYearAMT),
-      priorYearRegularTax: d(input.form8801.priorYearRegularTax),
-      unusedMinimumTaxCreditCarryforward: d(input.form8801.unusedMinimumTaxCreditCarryforward),
-      currentYearRegularTaxBeforeCredits: zeroFloor(incomeTax.plus(partIAdditions).minus(sum(childTaxCredit,otherCredits,generalBusinessCredit))),
+      taxYear: year, priorYear: facts.priorYear,
+      sourceFactsComplete: facts.sourceFactsComplete, sourceFactsConfirmed: facts.sourceFactsConfirmed,
+      priorYearFilingStatus: facts.priorYearFilingStatus,
+      priorYearTaxableIncome: optionalAmount(facts.priorYearTaxableIncome),
+      priorYearExclusionItemAdjustments: d(facts.priorYearExclusionItemAdjustments),
+      priorYearAMT: d(facts.priorYearAMT),
+      priorYearRegularTax: optionalAmount(facts.priorYearRegularTax),
+      unusedMinimumTaxCreditCarryforward: optionalAmount(facts.unusedMinimumTaxCreditCarryforward),
+      priorYearForm6251Line1And2e: optionalAmount(facts.priorYearForm6251Line1And2e),
+      priorYearMinimumTaxCreditNOLDeduction: optionalAmount(facts.priorYearMinimumTaxCreditNOLDeduction),
+      priorYearMinimumTaxForeignTaxCredit: optionalAmount(facts.priorYearMinimumTaxForeignTaxCredit),
+      priorYearForm6251Line10: optionalAmount(facts.priorYearForm6251Line10),
+      priorYearUnallowedQualifiedElectricVehicleCredit: optionalAmount(facts.priorYearUnallowedQualifiedElectricVehicleCredit),
+      priorYearFiledForm2555: facts.priorYearFiledForm2555,
+      priorYearFiledForm1040NR: facts.priorYearFiledForm1040NR,
+      priorYearNetUSRealPropertyGain: optionalAmount(facts.priorYearNetUSRealPropertyGain),
+      priorYearCapitalGainsRequired: facts.priorYearCapitalGainsRequired,
+      priorYearQualifiedDividends: optionalAmount(facts.priorYearQualifiedDividends),
+      priorYearNetLTCG: optionalAmount(facts.priorYearNetLTCG),
+      priorYearUnrecapturedSection1250Gain: optionalAmount(facts.priorYearUnrecapturedSection1250Gain),
+      priorYearCollectiblesGain: optionalAmount(facts.priorYearCollectiblesGain),
+      priorYearCapitalGainsWorksheet: facts.priorYearCapitalGainsWorksheet && {
+        method: facts.priorYearCapitalGainsWorksheet.method,
+        preferentialIncome: d(facts.priorYearCapitalGainsWorksheet.preferentialIncome),
+        ordinaryIncomeForZeroRate: d(facts.priorYearCapitalGainsWorksheet.ordinaryIncomeForZeroRate),
+        ordinaryIncomeForFifteenRate: d(facts.priorYearCapitalGainsWorksheet.ordinaryIncomeForFifteenRate),
+        section1250Gain: optionalAmount(facts.priorYearCapitalGainsWorksheet.section1250Gain),
+        scheduleDTaxWorksheetLine10: optionalAmount(facts.priorYearCapitalGainsWorksheet.scheduleDTaxWorksheetLine10),
+      },
+      priorYearForeignEarnedIncome: facts.priorYearForeignEarnedIncome && {
+        form2555Lines45And50: d(facts.priorYearForeignEarnedIncome.form2555Lines45And50),
+        disallowedDeductions: d(facts.priorYearForeignEarnedIncome.disallowedDeductions),
+        capitalGainAdjustmentsConfirmed: facts.priorYearForeignEarnedIncome.capitalGainAdjustmentsConfirmed,
+      },
+      currentYearRegularTaxAfterCredits: zeroFloor(incomeTax.plus(partIAdditions).minus(sum(childTaxCredit,otherCredits,generalBusinessCredit))),
       currentYearTMT: form6251.tentativeMinimumTax,
     });
     priorYearMinimumTaxCredit = form8801.creditAllowed;

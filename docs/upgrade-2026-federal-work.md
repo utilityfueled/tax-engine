@@ -617,3 +617,18 @@ actual synthetic spouse identities; surtax/bracket/AMT expectations stay intact.
 The remaining workspace1095A expected-source-marker failure is with the facts
 owner. SALT audit-label typo after the earlier rename was separately corrected
 in8c459ce; all587 tests and root types were rerun successfully after that fix.
+
+### Form8801 return integration — 2026-10-25
+
+Integrated independently implementeda44adbb/93f336c prior-year source worksheets.
+Taxyear, sourceyear, original completeness, actual NOL/foreign-tax/capital-gain/
+foreign-income facts now reach the module without optional-value coercion.
+Verified2026 calculations do not need fabricated legacy alias amounts. Final
+line22 uses1040line16+Schedule2line1z less CTC and actual earlier Schedule3credits,
+excluding the minimum-tax credit itself, per refreshed i8801 instructions.
+Red-first integration tests prove2025prior tables produce2306available credit,
+earlier clean-energy credit reduces the current limit to0, and missing/sourceyear
+errors reject. A second red-first direct-input test prevents missing priorAMT
+from becoming zero even when bypassing schema parse.549 focused tests, root
+types and all3,194spec refs pass; scopedlint has zeroerrors, diff/whitespace
+reviewed. Source confirmation and independent final-form review remain required.
