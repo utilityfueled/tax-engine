@@ -135,25 +135,25 @@ interface SocialSecurityPreviewSources {
   sourceFixtureIds: string[];
 }
 
-function createWorkspacePreviewTaxInput(taxYear: number): TaxYearInput {
-  return TaxYearInputSchema.parse({
-    taxpayer: {
-      taxYear,
-      filingStatus: "single",
-      primary: {
-        firstName: "Taylor",
-        lastName: "Preview",
-        ssn: "000-00-0000",
-        dateOfBirth: "1990-01-01"
-      },
-      address: {
-        street: "1 Preview Plaza",
-        city: "Austin",
-        state: "TX",
-        zip: "73301"
-      }
-    }
-  });
+function createWorkspacePreviewTaxInput(taxYear: number, taxpayer?: TaxYearInput["taxpayer"]): TaxYearInput | null {
+  if (!taxpayer || taxpayer.taxYear !== taxYear || !Array.isArray(taxpayer.dependents)) return null;
+  const people = [taxpayer.primary, ...taxpayer.dependents];
+  if (["married_filing_jointly", "married_filing_separately"].includes(taxpayer.filingStatus)) {
+    if (!taxpayer.spouse) return null;
+    people.push(taxpayer.spouse);
+  }
+  for (const person of people) {
+    if (!person?.firstName?.trim() || !person.lastName?.trim()
+      || !/^\d{3}-?\d{2}-?\d{4}$/.test(person.ssn) || person.ssn.replace(/-/g, "") === "000000000"
+      || !/^\d{4}-\d{2}-\d{2}$/.test(person.dateOfBirth)) return null;
+    const birthDate = new Date(`${person.dateOfBirth}T00:00:00Z`);
+    if (!Number.isFinite(birthDate.getTime()) || birthDate.toISOString().slice(0, 10) !== person.dateOfBirth
+      || person.dateOfBirth > `${taxYear}-12-31` || person.dateOfBirth < "1850-01-01") return null;
+  }
+  if (!taxpayer.address || [taxpayer.address.street, taxpayer.address.city, taxpayer.address.state, taxpayer.address.zip].some((value) => !value?.trim())) return null;
+  if (taxpayer.dependents.some((person) => [person.qualifiesForCTC, person.qualifiesForODC, person.qualifiesForEIC].some((value) => typeof value !== "boolean"))) return null;
+  const parsed = TaxYearInputSchema.safeParse({ taxpayer });
+  return parsed.success ? parsed.data : null;
 }
 
 function getReadySourceDocuments(
@@ -1538,7 +1538,8 @@ function buildPreviewContribution(
 export function buildWorkspaceEngineInput(
   documents: WorkspaceDocumentRecord[],
   returnSummary: WorkspaceReturnSummary,
-  structuredFacts: WorkspaceStructuredFactRecord[]
+  structuredFacts: WorkspaceStructuredFactRecord[],
+  taxpayer?: TaxYearInput["taxpayer"]
 ): WorkspaceEngineInputFixture | null {
   const targetTaxYear = returnSummary.targetTaxYear;
 
@@ -1556,7 +1557,8 @@ export function buildWorkspaceEngineInput(
   }
 
   const readyContributions = contributions as PreviewContribution[];
-  const taxInput = createWorkspacePreviewTaxInput(targetTaxYear);
+  const taxInput = createWorkspacePreviewTaxInput(targetTaxYear, taxpayer);
+  if (!taxInput) return null;
 
   for (const contribution of readyContributions) {
     contribution.apply(taxInput);

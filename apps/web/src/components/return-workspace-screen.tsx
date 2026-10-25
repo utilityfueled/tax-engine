@@ -1784,6 +1784,11 @@ export function ReturnWorkspaceScreen({
                 </ul>
               </>
             ) : null}
+            {workspace.documents.length > 0 && !workspace.enginePreview && !guidedFallbackPreview ? (
+              <p className="panel-text">
+                A calculation requires complete taxpayer facts for the selected year. Open the guided interview to confirm your filing status, birth dates, residency and eligibility details. Answering document questions alone does not establish those facts.
+              </p>
+            ) : null}
           </RetroShell>
 
           <StateReturnPanel

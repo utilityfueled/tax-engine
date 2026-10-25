@@ -1,3 +1,4 @@
+import { workspaceTaxpayerFixture } from "../../helpers/workspace-taxpayer";
 import { describe, expect, it } from "vitest";
 import { officialSampleDocumentFixtures, supportMatrix } from "@tax-engine/contracts";
 import {
@@ -119,7 +120,7 @@ describe("workspace storage", () => {
     const storage = createMemoryStorage();
 
     const workspace = ingestFiles(storage, "supported-summary", [
-      { name: "fw2.pdf", size: 10 },
+      { name: "fw2--2026.pdf", size: 10 },
       { name: "f1099div.pdf", size: 11 }
     ]);
 
@@ -133,7 +134,7 @@ describe("workspace storage", () => {
         status: "pending",
         answeredAt: null,
         answerText: null,
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"]
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"]
       },
       {
         id: "withholding",
@@ -141,7 +142,7 @@ describe("workspace storage", () => {
         status: "pending",
         answeredAt: null,
         answerText: null,
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"]
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"]
       },
       {
         id: "ordinary-dividends",
@@ -806,7 +807,7 @@ describe("workspace storage", () => {
       "schedule-c-expense-review",
       "No business expenses or home office deduction apply to this fixture."
     );
-    workspace = await refreshWorkspaceEnginePreview(workspace);
+    workspace = await refreshWorkspaceEnginePreview(workspace, workspaceTaxpayerFixture());
 
     expect(workspace.returnSummary).toEqual({
       status: "ready-to-recompute",
@@ -877,7 +878,7 @@ describe("workspace storage", () => {
       "cost-basis-review",
       "Basis reporting and holding periods are confirmed."
     );
-    workspace = await refreshWorkspaceEnginePreview(workspace);
+    workspace = await refreshWorkspaceEnginePreview(workspace, workspaceTaxpayerFixture());
 
     expect(workspace.returnSummary).toEqual({
       status: "ready-to-recompute",
@@ -992,7 +993,7 @@ describe("workspace storage", () => {
       "capital-gain-distributions",
       "Capital gain distributions are final and no basis review is needed."
     );
-    workspace = await refreshWorkspaceEnginePreview(workspace);
+    workspace = await refreshWorkspaceEnginePreview(workspace, workspaceTaxpayerFixture());
 
     expect(workspace.summary).toEqual({
       totalDocuments: 2,
@@ -1307,7 +1308,7 @@ describe("workspace storage", () => {
       "cost-basis-review",
       "Basis reporting and holding periods are confirmed."
     );
-    workspace = await refreshWorkspaceEnginePreview(workspace);
+    workspace = await refreshWorkspaceEnginePreview(workspace, workspaceTaxpayerFixture());
 
     expect(workspace.returnSummary.status).toBe("ready-to-recompute");
     expect(workspace.returnSummary.items).toEqual([
@@ -1423,7 +1424,7 @@ describe("workspace storage", () => {
     const storage = createMemoryStorage();
     const workspaceId = "future-year-review";
 
-    ingestFiles(storage, workspaceId, [{ name: "fw2.pdf", size: 10 }]);
+    ingestFiles(storage, workspaceId, [{ name: "fw2--2026.pdf", size: 10 }]);
     answerInterviewQuestion(
       storage,
       workspaceId,
@@ -1460,7 +1461,7 @@ describe("workspace storage", () => {
           status: "ready",
           engineTargets: ["Form 1040 Lines 1 and 25a"],
           relatedFactIds: ["wages", "withholding"],
-          sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"],
+          sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"],
           answeredFactCount: 2,
           factCount: 2
         }
@@ -1485,7 +1486,7 @@ describe("workspace storage", () => {
       "withholding",
       "Federal withholding matches the taxpayer copy."
     );
-    workspace = await refreshWorkspaceEnginePreview(workspace);
+    workspace = await refreshWorkspaceEnginePreview(workspace, workspaceTaxpayerFixture());
 
     expect(workspace.returnSummary).toEqual({
       status: "ready-to-recompute",
@@ -1672,7 +1673,7 @@ describe("workspace storage", () => {
     const storage = createMemoryStorage();
 
     const uploadedWorkspace = ingestFiles(storage, "remove-one", [
-      { name: "fw2.pdf", size: 10 },
+      { name: "fw2--2026.pdf", size: 10 },
       { name: "f1099int.pdf", size: 11 }
     ]);
 
@@ -1749,8 +1750,8 @@ describe("workspace storage", () => {
     const storage = createMemoryStorage();
 
     const uploadedWorkspace = ingestFiles(storage, "duplicate-uploads", [
-      { name: "fw2.pdf", size: 10 },
-      { name: "fw2.pdf", size: 10 }
+      { name: "fw2--2026.pdf", size: 10 },
+      { name: "fw2--2026.pdf", size: 10 }
     ]);
 
     expect(uploadedWorkspace.summary).toEqual({
@@ -1761,11 +1762,11 @@ describe("workspace storage", () => {
       interviewQuestionsRemaining: 2
     });
     expect(uploadedWorkspace.documents).toHaveLength(2);
-    expect(uploadedWorkspace.documents[0]?.id).toBe("irs-w2-2026:fw2.pdf:10");
-    expect(uploadedWorkspace.documents[1]?.id).toBe("irs-w2-2026:fw2.pdf:10#2");
+    expect(uploadedWorkspace.documents[0]?.id).toBe("irs-w2-2026:fw2--2026.pdf:10");
+    expect(uploadedWorkspace.documents[1]?.id).toBe("irs-w2-2026:fw2--2026.pdf:10#2");
     expect(uploadedWorkspace.documents.map((document) => document.id)).toEqual([
-      "irs-w2-2026:fw2.pdf:10",
-      "irs-w2-2026:fw2.pdf:10#2"
+      "irs-w2-2026:fw2--2026.pdf:10",
+      "irs-w2-2026:fw2--2026.pdf:10#2"
     ]);
     expect(uploadedWorkspace.seededReturn.facts).toEqual([
       {
@@ -1774,7 +1775,7 @@ describe("workspace storage", () => {
         status: "pending",
         answeredAt: null,
         answerText: null,
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10", "irs-w2-2026:fw2.pdf:10#2"]
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10", "irs-w2-2026:fw2--2026.pdf:10#2"]
       },
       {
         id: "withholding",
@@ -1782,13 +1783,13 @@ describe("workspace storage", () => {
         status: "pending",
         answeredAt: null,
         answerText: null,
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10", "irs-w2-2026:fw2.pdf:10#2"]
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10", "irs-w2-2026:fw2--2026.pdf:10#2"]
       }
     ]);
 
-    const nextWorkspace = removeDocument(storage, "duplicate-uploads", "irs-w2-2026:fw2.pdf:10");
+    const nextWorkspace = removeDocument(storage, "duplicate-uploads", "irs-w2-2026:fw2--2026.pdf:10");
 
-    expect(nextWorkspace.documents.map((document) => document.id)).toEqual(["irs-w2-2026:fw2.pdf:10#2"]);
+    expect(nextWorkspace.documents.map((document) => document.id)).toEqual(["irs-w2-2026:fw2--2026.pdf:10#2"]);
     expect(nextWorkspace.summary.totalDocuments).toBe(1);
     expect(nextWorkspace.seededReturn.facts).toEqual([
       {
@@ -1797,7 +1798,7 @@ describe("workspace storage", () => {
         status: "pending",
         answeredAt: null,
         answerText: null,
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10#2"]
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10#2"]
       },
       {
         id: "withholding",
@@ -1805,7 +1806,7 @@ describe("workspace storage", () => {
         status: "pending",
         answeredAt: null,
         answerText: null,
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10#2"]
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10#2"]
       }
     ]);
     expect(ensureWorkspace(storage, "duplicate-uploads")).toEqual(nextWorkspace);
@@ -1823,8 +1824,8 @@ describe("workspace storage", () => {
           storageMode: "local-browser",
           documents: [
             {
-              id: "irs-w2-2026:fw2.pdf:10",
-              name: "fw2.pdf",
+              id: "irs-w2-2026:fw2--2026.pdf:10",
+              name: "fw2--2026.pdf",
               size: 10,
               uploadedAt: "2026-03-11T00:00:00.000Z",
               kind: "w2",
@@ -1835,8 +1836,8 @@ describe("workspace storage", () => {
               seededFactIds: ["wages", "withholding"]
             },
             {
-              id: "irs-w2-2026:fw2.pdf:10",
-              name: "fw2.pdf",
+              id: "irs-w2-2026:fw2--2026.pdf:10",
+              name: "fw2--2026.pdf",
               size: 10,
               uploadedAt: "2026-03-11T00:01:00.000Z",
               kind: "w2",
@@ -1871,8 +1872,8 @@ describe("workspace storage", () => {
     const workspace = ensureWorkspace(storage, "legacy");
 
     expect(workspace.documents.map((document) => document.id)).toEqual([
-      "irs-w2-2026:fw2.pdf:10",
-      "irs-w2-2026:fw2.pdf:10#2"
+      "irs-w2-2026:fw2--2026.pdf:10",
+      "irs-w2-2026:fw2--2026.pdf:10#2"
     ]);
     expect(workspace.seededReturn.facts).toEqual([
       {
@@ -1881,7 +1882,7 @@ describe("workspace storage", () => {
         status: "pending",
         answeredAt: null,
         answerText: null,
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10", "irs-w2-2026:fw2.pdf:10#2"]
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10", "irs-w2-2026:fw2--2026.pdf:10#2"]
       },
       {
         id: "withholding",
@@ -1889,7 +1890,7 @@ describe("workspace storage", () => {
         status: "pending",
         answeredAt: null,
         answerText: null,
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10", "irs-w2-2026:fw2.pdf:10#2"]
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10", "irs-w2-2026:fw2--2026.pdf:10#2"]
       }
     ]);
   });
@@ -1906,8 +1907,8 @@ describe("workspace storage", () => {
           storageMode: "local-browser",
           documents: [
             {
-              id: "irs-w2-2026:fw2.pdf:10",
-              name: "fw2.pdf",
+              id: "irs-w2-2026:fw2--2026.pdf:10",
+              name: "fw2--2026.pdf",
               size: 10,
               uploadedAt: "2026-03-11T00:00:00.000Z",
               kind: "w2",
@@ -1935,7 +1936,7 @@ describe("workspace storage", () => {
                 status: "answered",
                 answeredAt: "2026-03-11T00:05:00.000Z",
                 answerText: "Legacy filer confirmed the final W-2 is complete.",
-                sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"]
+                sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"]
               },
               {
                 id: "withholding",
@@ -1943,7 +1944,7 @@ describe("workspace storage", () => {
                 status: "pending",
                 answeredAt: null,
                 answerText: null,
-                sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"]
+                sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"]
               }
             ],
             interviewQuestions: [],
@@ -1965,7 +1966,7 @@ describe("workspace storage", () => {
         status: "answered",
         answeredAt: "2026-03-11T00:05:00.000Z",
         answerText: "Legacy filer confirmed the final W-2 is complete.",
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"]
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"]
       },
       {
         id: "withholding",
@@ -1973,7 +1974,7 @@ describe("workspace storage", () => {
         status: "pending",
         answeredAt: null,
         answerText: null,
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"]
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"]
       }
     ]);
     expect(workspace.seededReturn.interviewQuestions).toEqual([
@@ -1984,7 +1985,7 @@ describe("workspace storage", () => {
         status: "answered",
         answeredAt: "2026-03-11T00:05:00.000Z",
         answerText: "Legacy filer confirmed the final W-2 is complete.",
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"]
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"]
       },
       {
         id: "withholding",
@@ -1993,7 +1994,7 @@ describe("workspace storage", () => {
         status: "pending",
         answeredAt: null,
         answerText: null,
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"]
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"]
       }
     ]);
     expect(workspace.structuredFacts).toContainEqual({
@@ -2004,7 +2005,7 @@ describe("workspace storage", () => {
       value: "Legacy filer confirmed the final W-2 is complete.",
       sourceType: "user-answer",
       confidence: "high",
-      sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"],
+      sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"],
       questionId: "wages",
       updatedAt: "2026-03-11T00:05:00.000Z"
     });
@@ -2031,7 +2032,7 @@ describe("workspace storage", () => {
     ]);
 
     const uploadedWorkspace = ingestFiles(storage, workspaceId, [
-      { name: "fw2.pdf", size: 10 },
+      { name: "fw2--2026.pdf", size: 10 },
       { name: "f1099int.pdf", size: 11 }
     ]);
 
@@ -2041,7 +2042,7 @@ describe("workspace storage", () => {
       kind: "documents-ingested",
       message: "Stored 2 document(s) in local browser storage.",
       documentIds: [
-        "irs-w2-2026:fw2.pdf:10",
+        "irs-w2-2026:fw2--2026.pdf:10",
         "irs-1099-int-2024:f1099int.pdf:11"
       ],
       questionId: null,
@@ -2055,7 +2056,7 @@ describe("workspace storage", () => {
       occurredAt: expect.any(String),
       kind: "interview-answered",
       message: "Saved answer for Wages.",
-      documentIds: ["irs-w2-2026:fw2.pdf:10"],
+      documentIds: ["irs-w2-2026:fw2--2026.pdf:10"],
       questionId: "wages",
       answerText: wageAnswer
     });
@@ -2067,7 +2068,7 @@ describe("workspace storage", () => {
       occurredAt: expect.any(String),
       kind: "interview-reopened",
       message: "Reopened question for Wages.",
-      documentIds: ["irs-w2-2026:fw2.pdf:10"],
+      documentIds: ["irs-w2-2026:fw2--2026.pdf:10"],
       questionId: "wages",
       answerText: null
     });
@@ -2089,7 +2090,7 @@ describe("workspace storage", () => {
       kind: "workspace-cleared",
       message: "Reset local return and removed 2 document(s).",
       documentIds: [
-        "irs-w2-2026:fw2.pdf:10",
+        "irs-w2-2026:fw2--2026.pdf:10",
         "irs-1099-int-2024:f1099int.pdf:11"
       ],
       questionId: null,
@@ -2102,7 +2103,7 @@ describe("workspace storage", () => {
     const wageAnswer = "Employer confirmed the final W-2 includes no corrected boxes or dependent care benefits.";
 
     ingestFiles(storage, "interview-loop", [
-      { name: "fw2.pdf", size: 10 },
+      { name: "fw2--2026.pdf", size: 10 },
       { name: "f1099int.pdf", size: 11 }
     ]);
 
@@ -2118,7 +2119,7 @@ describe("workspace storage", () => {
         value: "Detected from 1 uploaded document(s).",
         sourceType: "upload",
         confidence: "low",
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"],
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"],
         questionId: null,
         updatedAt: expect.any(String)
       },
@@ -2130,7 +2131,7 @@ describe("workspace storage", () => {
         value: "Official fixture wages: Form W-2 box 1 wages $52,000 and box 2 federal withholding $5,000.",
         sourceType: "official-fixture",
         confidence: "high",
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"],
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"],
         questionId: null,
         updatedAt: expect.any(String),
         machineValue: {
@@ -2149,7 +2150,7 @@ describe("workspace storage", () => {
         value: wageAnswer,
         sourceType: "user-answer",
         confidence: "high",
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"],
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"],
         questionId: "wages",
         updatedAt: expect.any(String)
       },
@@ -2161,7 +2162,7 @@ describe("workspace storage", () => {
         value: "Detected from 1 uploaded document(s).",
         sourceType: "upload",
         confidence: "low",
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"],
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"],
         questionId: null,
         updatedAt: expect.any(String)
       },
@@ -2173,7 +2174,7 @@ describe("workspace storage", () => {
         value: "Official fixture withholding: Form W-2 box 2 federal income tax withheld $5,000.",
         sourceType: "official-fixture",
         confidence: "high",
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"],
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"],
         questionId: null,
         updatedAt: expect.any(String)
       },
@@ -2218,7 +2219,7 @@ describe("workspace storage", () => {
         status: "answered",
         answeredAt: expect.any(String),
         answerText: wageAnswer,
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"]
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"]
       },
       {
         id: "withholding",
@@ -2226,7 +2227,7 @@ describe("workspace storage", () => {
         status: "pending",
         answeredAt: null,
         answerText: null,
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"]
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"]
       },
       {
         id: "taxable-interest",
@@ -2245,7 +2246,7 @@ describe("workspace storage", () => {
         status: "answered",
         answeredAt: expect.any(String),
         answerText: wageAnswer,
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"]
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"]
       },
       {
         id: "withholding",
@@ -2254,7 +2255,7 @@ describe("workspace storage", () => {
         status: "pending",
         answeredAt: null,
         answerText: null,
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"]
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"]
       },
       {
         id: "taxable-interest",
@@ -2284,7 +2285,7 @@ describe("workspace storage", () => {
         value: "Detected from 1 uploaded document(s).",
         sourceType: "upload",
         confidence: "low",
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"],
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"],
         questionId: null,
         updatedAt: expect.any(String)
       },
@@ -2296,7 +2297,7 @@ describe("workspace storage", () => {
         value: "Official fixture wages: Form W-2 box 1 wages $52,000 and box 2 federal withholding $5,000.",
         sourceType: "official-fixture",
         confidence: "high",
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"],
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"],
         questionId: null,
         updatedAt: expect.any(String),
         machineValue: {
@@ -2315,7 +2316,7 @@ describe("workspace storage", () => {
         value: "Detected from 1 uploaded document(s).",
         sourceType: "upload",
         confidence: "low",
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"],
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"],
         questionId: null,
         updatedAt: expect.any(String)
       },
@@ -2327,7 +2328,7 @@ describe("workspace storage", () => {
         value: "Official fixture withholding: Form W-2 box 2 federal income tax withheld $5,000.",
         sourceType: "official-fixture",
         confidence: "high",
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"],
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"],
         questionId: null,
         updatedAt: expect.any(String)
       },
@@ -2372,7 +2373,7 @@ describe("workspace storage", () => {
       status: "pending",
       answeredAt: null,
       answerText: null,
-      sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"]
+      sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"]
     });
     expect(reopenedWorkspace.seededReturn.interviewQueue).toEqual([
       "Confirm whether every W-2 is final and whether any boxes require follow-up questions.",
@@ -2385,7 +2386,7 @@ describe("workspace storage", () => {
     const storage = createMemoryStorage();
     const withholdingAnswer = "Federal withholding matches the taxpayer copy and there is no state withholding to add.";
 
-    ingestFiles(storage, "preserve-answers", [{ name: "fw2.pdf", size: 10 }]);
+    ingestFiles(storage, "preserve-answers", [{ name: "fw2--2026.pdf", size: 10 }]);
     answerInterviewQuestion(storage, "preserve-answers", "withholding", withholdingAnswer);
 
     const nextWorkspace = ingestFiles(storage, "preserve-answers", [{ name: "f1099div.pdf", size: 11 }]);
@@ -2398,7 +2399,7 @@ describe("workspace storage", () => {
         status: "pending",
         answeredAt: null,
         answerText: null,
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"]
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"]
       },
       {
         id: "withholding",
@@ -2406,7 +2407,7 @@ describe("workspace storage", () => {
         status: "answered",
         answeredAt: expect.any(String),
         answerText: withholdingAnswer,
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"]
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"]
       },
       {
         id: "ordinary-dividends",
@@ -2441,7 +2442,7 @@ describe("workspace storage", () => {
         status: "pending",
         answeredAt: null,
         answerText: null,
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"]
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"]
       },
       {
         id: "withholding",
@@ -2450,7 +2451,7 @@ describe("workspace storage", () => {
         status: "answered",
         answeredAt: expect.any(String),
         answerText: withholdingAnswer,
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"]
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"]
       },
       {
         id: "ordinary-dividends",
@@ -2487,7 +2488,7 @@ describe("workspace storage", () => {
   it("requires trimmed answer notes to persist and keeps them on unrelated updates", () => {
     const storage = createMemoryStorage();
 
-    ingestFiles(storage, "answer-notes", [{ name: "fw2.pdf", size: 10 }]);
+    ingestFiles(storage, "answer-notes", [{ name: "fw2--2026.pdf", size: 10 }]);
 
     const unchangedWorkspace = answerInterviewQuestion(storage, "answer-notes", "wages", "   ");
 
@@ -2499,7 +2500,7 @@ describe("workspace storage", () => {
       status: "pending",
       answeredAt: null,
       answerText: null,
-      sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"]
+      sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"]
     });
 
     const answeredWorkspace = answerInterviewQuestion(
@@ -2516,7 +2517,7 @@ describe("workspace storage", () => {
       status: "answered",
       answeredAt: expect.any(String),
       answerText: "Verified the employer issued the final W-2 and no corrected copy is expected.",
-      sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"]
+      sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"]
     });
     expect(answeredWorkspace.seededReturn.interviewQuestions[0]?.answerText).toBe(
       "Verified the employer issued the final W-2 and no corrected copy is expected."
@@ -2538,7 +2539,7 @@ describe("workspace storage", () => {
   it("lists and deletes saved local workspaces without disturbing other drafts", () => {
     const storage = createMemoryStorage();
 
-    ingestFiles(storage, "resume-me", [{ name: "fw2.pdf", size: 10 }]);
+    ingestFiles(storage, "resume-me", [{ name: "fw2--2026.pdf", size: 10 }]);
     ensureWorkspace(storage, "empty-draft");
 
     const listedWorkspaces = listWorkspaces(storage);
@@ -2554,5 +2555,45 @@ describe("workspace storage", () => {
     expect(remainingWorkspaces.map((workspace) => workspace.id)).toEqual(["resume-me"]);
     expect(ensureWorkspace(storage, "resume-me").summary.totalDocuments).toBe(1);
     expect(deleteWorkspace(storage, "missing-id").map((workspace) => workspace.id)).toEqual(["resume-me"]);
+  });
+
+  it("deletes guided taxpayer data and mode preferences even when the workspace record is missing", () => {
+    const storage = createMemoryStorage();
+    ensureWorkspace(storage, "delete-me");
+    for (const id of ["delete-me", "orphaned", "keep-me"]) {
+      storage.setItem(`tax-engine.guided-flow-state.v1:${id}`, JSON.stringify({ firstName: id, ssn: "900-70-0001" }));
+      storage.setItem(`tax-engine:guided-mode:${id}`, "true");
+    }
+    deleteWorkspace(storage, "delete-me");
+    deleteWorkspace(storage, "orphaned");
+    for (const id of ["delete-me", "orphaned"]) {
+      expect(storage.getItem(`tax-engine.guided-flow-state.v1:${id}`)).toBeNull();
+      expect(storage.getItem(`tax-engine:guided-mode:${id}`)).toBeNull();
+    }
+    expect(storage.getItem("tax-engine.guided-flow-state.v1:keep-me")).toContain("keep-me");
+    expect(storage.getItem("tax-engine:guided-mode:keep-me")).toBe("true");
+  });
+
+  it("does not infer a W-2 year or sample monetary facts from an unversioned IRS filename", () => {
+    const storage = createMemoryStorage();
+    const workspace = ingestFiles(storage, "unknown-w2-year", [{ name: "fw2.pdf", size: 10 }]);
+    expect(workspace.documents[0]?.matchedFixtureId).toBeNull();
+    expect(workspace.returnSummary.targetTaxYear).toBeNull();
+    expect(workspace.structuredFacts.filter((fact) => fact.sourceType === "official-fixture")).toEqual([]);
+    expect(getFutureYearSampleUploadMessage([{ name: "fw2.pdf", size: 10 }])).toBeNull();
+  });
+
+  it("does not calculate or restore a synthetic taxpayer preview after document questions are answered", async () => {
+    const storage = createMemoryStorage();
+    ingestFiles(storage, "facts-needed", [{ name: "fw2--2025.pdf", size: 10 }]);
+    answerInterviewQuestion(storage, "facts-needed", "wages", "The W-2 is final.");
+    const answered = answerInterviewQuestion(storage, "facts-needed", "withholding", "Withholding matches.");
+    expect(answered.returnSummary.status).toBe("ready-to-recompute");
+    expect(answered.enginePreview).toBeNull();
+    expect((await refreshWorkspaceEnginePreview(answered)).enginePreview).toBeNull();
+    const legacy = { ...answered, enginePreview: { mode: "engine-recompute", metrics: { refund: "99999" } } };
+    const restoredStorage = createMemoryStorage();
+    restoredStorage.setItem("tax-engine.return-workspaces.v1", JSON.stringify({ workspaces: { "facts-needed": legacy } }));
+    expect(getWorkspace(restoredStorage, "facts-needed")?.enginePreview).toBeNull();
   });
 });

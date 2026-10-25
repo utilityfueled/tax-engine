@@ -265,3 +265,18 @@ qualification; the six dedicated state engines are not represented as reviewed
 filing support. The guided generic preview is explicitly unqualified too.
 The 78 focused support/copy tests pass. This status page is a disclosure, not
 completion of the state gap analysis or a selection of launch states.
+
+## Advanced preview facts and local deletion
+
+Advanced document-only previews no longer manufacture a taxpayer, filing
+status, birth date, SSN or address. The input adapter requires explicit taxpayer
+facts and matching year before calculating; hydration discards legacy synthetic
+previews. Guided calculations use their separately validated facts. Positive
+adapter tests now supply named synthetic test fixtures explicitly.
+
+Deleting a workspace also removes its scoped guided answers and mode preference,
+even when its main record is already absent; another workspace is preserved.
+An unversioned `fw2.pdf` filename no longer selects the 2026 sample fixture.
+The new deletion, stale-preview and ambiguous-filename regressions pass. This
+package does not complete every eligibility or residency rule, nor remove the
+remaining legacy mortgage, donation, retirement and education assumptions.

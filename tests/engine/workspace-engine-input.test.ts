@@ -10,6 +10,7 @@ import {
   buildWorkspaceStructuredFacts
 } from "@tax-engine/engine";
 import { calculateFederalTax } from "@/engine/federal.js";
+import { workspaceTaxpayerFixture } from "../helpers/workspace-taxpayer";
 
 function createDocument(
   overrides: Partial<WorkspaceDocumentRecord>
@@ -584,6 +585,17 @@ function createPremiumTaxCreditSeededReturn(
 }
 
 describe("workspace engine input", () => {
+  it("requires explicit taxpayer facts and matching year instead of manufacturing a preview identity", () => {
+    const documents = [createInterestDocument({})];
+    const facts = buildWorkspaceStructuredFacts(documents, createInterestSeededReturn({}));
+    const summary = createInterestReturnSummary({});
+    expect(buildWorkspaceEngineInput(documents, summary, facts)).toBeNull();
+    const taxpayer = workspaceTaxpayerFixture();
+    expect(buildWorkspaceEngineInput(documents, summary, facts, { ...taxpayer, taxYear: 2026 })).toBeNull();
+    expect(buildWorkspaceEngineInput(documents, summary, facts, { ...taxpayer, primary: { ...taxpayer.primary, dateOfBirth: "" } })).toBeNull();
+    expect(buildWorkspaceEngineInput(documents, summary, facts, { ...taxpayer, filingStatus: "married_filing_jointly" })).toBeNull();
+    expect(buildWorkspaceEngineInput(documents, summary, facts, taxpayer)?.taxInput.taxpayer).toEqual(taxpayer);
+  });
   it("builds taxable-interest preview input from confirmed Form 1099-OID fixture facts", () => {
     const documents = [createInterestDocument({})];
     const structuredFacts = buildWorkspaceStructuredFacts(documents, createInterestSeededReturn({}));
@@ -591,7 +603,8 @@ describe("workspace engine input", () => {
     const previewInput = buildWorkspaceEngineInput(
       documents,
       createInterestReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(previewInput).not.toBeNull();
@@ -635,7 +648,8 @@ describe("workspace engine input", () => {
     const previewInput = buildWorkspaceEngineInput(
       documents,
       createGovernmentPaymentsReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(previewInput).not.toBeNull();
@@ -674,7 +688,8 @@ describe("workspace engine input", () => {
     const previewInput = buildWorkspaceEngineInput(
       documents,
       createPremiumTaxCreditReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(previewInput).not.toBeNull();
@@ -712,7 +727,8 @@ describe("workspace engine input", () => {
     const previewInput = buildWorkspaceEngineInput(
       documents,
       createReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(previewInput).not.toBeNull();
@@ -759,7 +775,8 @@ describe("workspace engine input", () => {
     const previewInput = buildWorkspaceEngineInput(
       documents,
       createReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(previewInput).not.toBeNull();
@@ -818,7 +835,8 @@ describe("workspace engine input", () => {
     const previewInput = buildWorkspaceEngineInput(
       documents,
       createReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(previewInput).not.toBeNull();
@@ -869,7 +887,8 @@ describe("workspace engine input", () => {
     const previewInput = buildWorkspaceEngineInput(
       documents,
       createReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(previewInput).not.toBeNull();
@@ -920,7 +939,8 @@ describe("workspace engine input", () => {
     const previewInput = buildWorkspaceEngineInput(
       documents,
       createReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(previewInput).not.toBeNull();
@@ -970,7 +990,8 @@ describe("workspace engine input", () => {
     const previewInput = buildWorkspaceEngineInput(
       documents,
       createReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(previewInput).not.toBeNull();
@@ -1077,7 +1098,8 @@ describe("workspace engine input", () => {
     const previewInput = buildWorkspaceEngineInput(
       documents,
       createReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(previewInput).not.toBeNull();
@@ -1177,7 +1199,8 @@ describe("workspace engine input", () => {
     const previewInput = buildWorkspaceEngineInput(
       documents,
       createReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(previewInput).not.toBeNull();
@@ -1232,7 +1255,8 @@ describe("workspace engine input", () => {
     const previewInput = buildWorkspaceEngineInput(
       documents,
       createReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(previewInput).not.toBeNull();
@@ -1255,7 +1279,8 @@ describe("workspace engine input", () => {
     const previewInput = buildWorkspaceEngineInput(
       documents,
       createSocialSecurityReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(previewInput).not.toBeNull();
@@ -1288,7 +1313,8 @@ describe("workspace engine input", () => {
     const previewInput = buildWorkspaceEngineInput(
       documents,
       createStudentLoanReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(previewInput).not.toBeNull();
@@ -1345,7 +1371,8 @@ describe("workspace engine input", () => {
     const previewInput = buildWorkspaceEngineInput(
       documents,
       createHsaReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(previewInput).not.toBeNull();
@@ -1383,7 +1410,8 @@ describe("workspace engine input", () => {
     const previewInput = buildWorkspaceEngineInput(
       documents,
       createHsaReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(previewInput).not.toBeNull();
@@ -1435,7 +1463,8 @@ describe("workspace engine input", () => {
     const previewInput = buildWorkspaceEngineInput(
       documents,
       createHsaReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(previewInput?.taxInput.form1099SA?.[0]).toMatchObject({
@@ -1475,7 +1504,8 @@ describe("workspace engine input", () => {
     const previewInput = buildWorkspaceEngineInput(
       documents,
       createHsaReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(previewInput).not.toBeNull();
@@ -1525,7 +1555,8 @@ describe("workspace engine input", () => {
     const previewInput = buildWorkspaceEngineInput(
       documents,
       createHsaReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(previewInput).not.toBeNull();
@@ -1584,7 +1615,8 @@ describe("workspace engine input", () => {
     const previewInput = buildWorkspaceEngineInput(
       documents,
       createHsaReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(previewInput).not.toBeNull();
@@ -1660,7 +1692,8 @@ describe("workspace engine input", () => {
     const previewInput = buildWorkspaceEngineInput(
       documents,
       createHsaReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(previewInput).not.toBeNull();
@@ -1745,7 +1778,8 @@ describe("workspace engine input", () => {
           }
         ]
       }),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(previewInput).not.toBeNull();
@@ -1835,7 +1869,8 @@ describe("workspace engine input", () => {
           }
         ]
       }),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(previewInput?.taxInput.w2s).toEqual([

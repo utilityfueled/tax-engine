@@ -1,3 +1,4 @@
+import { workspaceTaxpayerFixture } from "../helpers/workspace-taxpayer";
 import { describe, expect, it } from "vitest";
 import type {
   SeededReturnSummary,
@@ -277,7 +278,8 @@ describe("workspace engine preview", () => {
     const preview = buildWorkspaceEnginePreview(
       documents,
       createReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(preview).toMatchObject({
@@ -460,7 +462,8 @@ describe("workspace engine preview", () => {
     const preview = buildWorkspaceEnginePreview(
       documents,
       createReturnSummary({ status: "awaiting-interview" }),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(preview).toBeNull();
@@ -530,7 +533,8 @@ describe("workspace engine preview", () => {
           }
         ]
       }),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(preview).toMatchObject({
@@ -781,7 +785,8 @@ describe("workspace engine preview", () => {
           }
         ]
       }),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(preview).not.toBeNull();
@@ -951,7 +956,8 @@ describe("workspace engine preview", () => {
           }
         ]
       }),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(preview).not.toBeNull();
@@ -1104,7 +1110,8 @@ describe("workspace engine preview", () => {
           factCount: 2
         }
       ]
-    }, structuredFacts);
+    }, structuredFacts,
+      workspaceTaxpayerFixture());
 
     expect(preview?.assumptions).toContain(
       "The confirmed 2025 Form W-2 uploads contribute $9,007,199,254,741,001 of wages and $9,007,199,254,741,001 of federal withholding."
@@ -1165,7 +1172,8 @@ describe("workspace engine preview", () => {
           }
         ]
       }),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(preview).not.toBeNull();
@@ -1272,7 +1280,8 @@ describe("workspace engine preview", () => {
           }
         ]
       }),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(preview).not.toBeNull();
@@ -1366,7 +1375,8 @@ describe("workspace engine preview", () => {
           }
         ]
       }),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(preview).not.toBeNull();
@@ -1464,7 +1474,8 @@ describe("workspace engine preview", () => {
           }
         ]
       }),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(preview).not.toBeNull();
@@ -1542,7 +1553,8 @@ describe("workspace engine preview", () => {
           }
         ]
       }),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(preview).not.toBeNull();
@@ -1636,7 +1648,8 @@ describe("workspace engine preview", () => {
           }
         ]
       }),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(preview).not.toBeNull();
@@ -1703,7 +1716,8 @@ describe("workspace engine preview", () => {
           }
         ]
       }),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(preview).not.toBeNull();
@@ -1788,7 +1802,8 @@ describe("workspace engine preview", () => {
           }
         ]
       }),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(preview).not.toBeNull();
@@ -1879,7 +1894,8 @@ describe("workspace engine preview", () => {
           }
         ]
       }),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(preview).not.toBeNull();
@@ -1916,7 +1932,8 @@ describe("workspace engine preview", () => {
     const preview = buildWorkspaceEnginePreview(
       documents,
       createInterestReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(preview).not.toBeNull();
@@ -1959,7 +1976,8 @@ describe("workspace engine preview", () => {
     const preview = buildWorkspaceEnginePreview(
       documents,
       createGovernmentPaymentsReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(preview).not.toBeNull();
@@ -2050,7 +2068,8 @@ describe("workspace engine preview", () => {
           }
         ]
       }),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(preview).not.toBeNull();
@@ -2132,7 +2151,8 @@ describe("workspace engine preview", () => {
           }
         ]
       }),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(preview).not.toBeNull();
@@ -2209,7 +2229,8 @@ describe("workspace engine preview", () => {
           }
         ]
       }),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(preview).not.toBeNull();

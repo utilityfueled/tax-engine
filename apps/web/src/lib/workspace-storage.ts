@@ -25,6 +25,7 @@ import {
   buildWorkspaceStructuredFacts
 } from "@tax-engine/engine";
 import {
+  clearGuidedFlowState,
   summarizeFlowCompletion,
   type GuidedFlowState
 } from "./guided-interview-flow";
@@ -1514,6 +1515,8 @@ export function syncGuidedFlowToWorkspace(
 
 export function deleteWorkspace(storage: Storage, workspaceId: string) {
   const data = loadStorage(storage);
+  clearGuidedFlowState(storage, workspaceId);
+  storage.removeItem(`tax-engine:guided-mode:${workspaceId}`);
 
   if (!data.workspaces[workspaceId]) {
     return listWorkspaces(storage);
@@ -1533,12 +1536,14 @@ export function deleteWorkspace(storage: Storage, workspaceId: string) {
  * original workspace unchanged if the preview is not applicable.
  */
 export async function refreshWorkspaceEnginePreview(
-  workspace: ReturnWorkspaceRecord
+  workspace: ReturnWorkspaceRecord,
+  taxpayer?: import("@/models/inputs").Taxpayer
 ): Promise<ReturnWorkspaceRecord> {
   const enginePreview = await lazyBuildWorkspaceEnginePreview(
     workspace.documents,
     workspace.returnSummary,
-    workspace.structuredFacts
+    workspace.structuredFacts,
+    taxpayer
   );
   if (enginePreview === workspace.enginePreview) return workspace;
   return { ...workspace, enginePreview };

@@ -239,7 +239,7 @@ export const officialSampleDocumentFixtures: OfficialSampleDocumentFixture[] = [
     id: "irs-w2-2026",
     kind: "w2",
     title: "2026 Form W-2 (official info-copy PDF)",
-    aliases: ["irs-w2-2026", "fw2"],
+    aliases: ["irs-w2-2026", "fw2--2026"],
     taxYearHint: 2026
   },
   {

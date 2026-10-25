@@ -8,6 +8,7 @@ import type {
 import { isSupportedEngineTaxYear } from "@tax-engine/contracts";
 import { calculateFederalTax } from "../../../src/engine/federal";
 import type { TaxReturnResult } from "../../../src/models/outputs";
+import type { Taxpayer } from "../../../src/models/inputs";
 import { buildWorkspaceEngineInput } from "./workspace-engine-input";
 
 type HighlightedPreviewLineRef = {
@@ -124,7 +125,8 @@ function buildHighlightedLines(
 export function buildWorkspaceEnginePreview(
   documents: WorkspaceDocumentRecord[],
   returnSummary: WorkspaceReturnSummary,
-  structuredFacts: WorkspaceStructuredFactRecord[] = []
+  structuredFacts: WorkspaceStructuredFactRecord[] = [],
+  taxpayer?: Taxpayer
 ): WorkspaceEnginePreview | null {
   const taxYear = returnSummary.targetTaxYear;
 
@@ -136,7 +138,7 @@ export function buildWorkspaceEnginePreview(
     return null;
   }
 
-  const previewInput = buildWorkspaceEngineInput(documents, returnSummary, structuredFacts);
+  const previewInput = buildWorkspaceEngineInput(documents, returnSummary, structuredFacts, taxpayer);
 
   if (!previewInput) {
     return null;
