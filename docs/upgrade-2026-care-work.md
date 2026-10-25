@@ -29,3 +29,21 @@ Remaining: actual provider and qualifying-person source records, their guided
 confirmation and PDF rows; audited PDF amounts and canonical/widget/render
 verification; benefits Part III and prior-year worksheet qualification; human
 tax review and final forms.
+
+## Audited review mapping — 2026-10-25
+
+Core commit: `8262f40`. The official 2025 review mapping now copies the separate
+income, tentative credit, prior-year credit and liability-limit audit entries.
+It rejects missing, duplicate, nonfinite, wrong-form or scalar/source-conflicting
+entries. Unknown historical prior-year or separate-income facts remain blank;
+explicit zero remains zero. Every page carries a review-only notice.
+
+All three new mapping tests failed before implementation. All 25 focused core/PDF
+checks pass; root types, 3,348 spec references and scoped lint pass (zero errors,
+eleven existing warnings). The saved interactive synthetic PDF was reopened:
+eleven canonical amounts match their widgets, each changed widget has a nonempty
+appearance, and both pages render legibly with review notices. Part I source
+rows and Part III are not yet completed; this is not filing qualification.
+Evidence under `.local/upgrade-evidence/`: `care-pdf-red.log`,
+`care-pdf-green.log`, `care-pdf-canonical.log`, `care-pdf-types.log`,
+`care-pdf-spec.log`, `care-pdf-lint.log`, and `care-audit-review.pdf`/page PNGs.

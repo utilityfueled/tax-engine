@@ -1,4 +1,4 @@
-import { assertPdfExportAllowed } from "../../export-policy.js";
+import { assertPdfExportAllowed, markReviewPdf } from "../../export-policy.js";
 /**
  * PDF filler for IRS Form 2441 — Child and Dependent Care Expenses
  *
@@ -16,8 +16,7 @@ import type { TaxYearInput } from "@/models/inputs.js";
 import {
   loadReviewTemplate,
   setTextField,
-  setCurrencyField,
-  setCheckBox,
+  formatCurrency,
 } from "../../pdf-utils.js";
 
 // ─── PDF Field Name Helpers ────────────────────────────────────────────────
@@ -114,7 +113,31 @@ export async function fillForm2441(
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
   const doc = await loadReviewTemplate(blankPdfPath, 2025);
   const form = doc.getForm();
-  const f2441 = result.form2441!;
+  const f2441 = result.form2441;
+  if (!f2441) throw new Error("Form 2441 review requires its audited calculation");
+  const required = ["3", "4", "5", "6", "7", "8", "9a", "10", "11"];
+  const printed = new Set([...required, "9b", "9c"]);
+  const byLine = new Map<string, Decimal>();
+  for (const line of f2441.lines) {
+    if (!printed.has(line.line)) continue;
+    if (line.form !== "Form 2441" || byLine.has(line.line) || !Decimal.isDecimal(line.value) || !line.value.isFinite()
+      || (!["4", "5", "7"].includes(line.line) && line.value.isNegative())) {
+      throw new Error(`Form 2441 requires a unique finite audit for printed line ${line.line}`);
+    }
+    byLine.set(line.line, line.value);
+  }
+  for (const line of required) if (!byLine.has(line)) throw new Error(`Form 2441 is missing audit line ${line}`);
+  if (byLine.has("9b") !== byLine.has("9c")) throw new Error("Form 2441 prior-year audit is incomplete");
+  for (const [line, total] of [["3", f2441.qualifyingExpenses], ["6", f2441.earnedIncomeLimit],
+    ["7", result.agi], ["8", f2441.creditPercentage], ["11", f2441.credit]] as const) {
+    if (!byLine.get(line)?.eq(total)) throw new Error(`Form 2441 audit line ${line} disagrees with its calculated total`);
+  }
+  if (input.dependentCare) {
+    for (const [line, source] of [["4", input.dependentCare.primaryEarnedIncome],
+      ["5", input.taxpayer.filingStatus === "married_filing_jointly" ? input.dependentCare.spouseEarnedIncome : input.dependentCare.primaryEarnedIncome]] as const) {
+      if (source !== undefined && !byLine.get(line)?.eq(source)) throw new Error(`Form 2441 audit line ${line} contradicts the source income`);
+    }
+  }
 
   // ── Header ──
   const name = input.taxpayer.spouse
@@ -123,58 +146,15 @@ export async function fillForm2441(
   setTextField(form, F.name, name);
   setTextField(form, F.ssn, input.taxpayer.primary.ssn.replace(/-/g, ""));
 
-  // ── Part II Computation Lines ──
-
-  // Line 3: Total qualified expenses (already capped at $3K/$6K by engine)
-  setCurrencyField(form, F.line3, f2441.qualifyingExpenses);
-
-  // Line 4: Your earned income
-  // The engine computes earnedIncomeLimit = min(qualifyingExpenses, earnedIncome).
-  // We can derive: if earnedIncomeLimit < qualifyingExpenses, earned income was limiting.
-  // Otherwise earned income >= qualifyingExpenses. For the PDF, we fill the earned
-  // income that produces the engine's result. When earned income is not limiting,
-  // the exact value doesn't change the credit, so we use earnedIncomeLimit as a
-  // conservative lower bound only when it's the binding constraint.
-  // In practice, earned income is almost always >> $3K/$6K, so line 4 ≥ line 3.
-  const earnedIncomeIsBinding = f2441.earnedIncomeLimit.lt(f2441.qualifyingExpenses);
-  if (earnedIncomeIsBinding) {
-    // Earned income was the limiting factor — we know the exact value
-    setCurrencyField(form, F.line4, f2441.earnedIncomeLimit);
+  // Copy the persisted printed audit. Historical combined-household inputs are
+  // not evidence of either spouse's actual earned income.
+  for (const [line, field] of [["3", F.line3], ["4", F.line4], ["5", F.line5], ["6", F.line6],
+    ["7", F.line7], ["9a", F.line9a], ["9b", F.line9b], ["9c", F.line9c], ["10", F.line10], ["11", F.line11]] as const) {
+    if ((line === "4" || line === "5") && !f2441.earnedIncomeFactsVerified) continue;
+    const value = byLine.get(line);
+    if (value !== undefined) setTextField(form, field, value.isZero() ? "0" : formatCurrency(value));
   }
-  // If earned income isn't binding, we can't reconstruct the exact value from
-  // the engine result alone. Leave blank — the credit is still correct.
-
-  // Line 5: Spouse's earned income (MFJ) or repeat line 4 (all others)
-  // Same situation as line 4 — we only know the binding constraint.
-
-  // Line 6: Smallest of lines 3, 4, 5
-  setCurrencyField(form, F.line6, f2441.earnedIncomeLimit);
-
-  // Line 7: AGI from Form 1040, line 11
-  setCurrencyField(form, F.line7, result.agi);
-
-  // Line 8: Decimal amount from percentage table
-  // The IRS form shows this as "X . nn" where nn is the decimal digits.
-  // E.g., 20% → ".20", 35% → ".35"
-  const pctStr = f2441.creditPercentage.times(100).toFixed(0);
-  setTextField(form, F.line8decimal, pctStr);
-
-  // Line 9a: Line 6 × line 8
-  setCurrencyField(form, F.line9a, f2441.credit);
-
-  // Line 9b: Prior year expenses paid in current year (not tracked — 0)
-  setTextField(form, F.line9b, "0");
-
-  // Line 9c: Line 9a + line 9b
-  setCurrencyField(form, F.line9c, f2441.credit);
-
-  // Line 10: Tax liability limit
-  // The engine doesn't separately compute the tax liability limit for Form 2441.
-  // The credit is already limited by available tax in the Schedule 3 flow.
-  // We leave this blank rather than fill an inaccurate value.
-
-  // Line 11: Credit for child and dependent care expenses
-  setCurrencyField(form, F.line11, f2441.credit);
-
+  setTextField(form, F.line8decimal, f2441.creditPercentage.times(100).toFixed(0));
+  await markReviewPdf(doc);
   return doc;
 }

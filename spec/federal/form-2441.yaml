@@ -134,6 +134,9 @@ edgeCases:
     notes: "IRC §21(e)(2) — MFS restriction enforced in federal.ts orchestrator"
 
 validation2026:
+  - rule: "review-pdf-audited-values"
+    description: "2025 review mapping copies finite unique printed audit amounts, including tentative credit and actual credit limit; missing prior-year and unverified per-spouse incomes stay blank. Reject duplicate, missing or contradictory audit data."
+    testRef: "tests/pdf/fill-form-2441-source.test.ts::Form2441 review prints audited income and tentative credit"
   - rule: "official-printed-audit-lines"
     description: "Refreshed 2026-10-25 against final 2025 Form2441 created 2025-03-18, page1 lines4-11 and instructions line9b. Copy unique finite audited values; reject scalar/source contradictions. Preserve unknown prior-year and separate-income facts in review output. No final2026 mapping is qualified."
     sources:

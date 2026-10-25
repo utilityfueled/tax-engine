@@ -90,6 +90,7 @@ const singleOneChildFixture: TaxYearInput = {
   dependentCare: {
     expenses: "5000",
     qualifyingIndividuals: 1,
+    priorYearExpenseCredit: "0", primaryEarnedIncome: "75000",
   },
 };
 
@@ -175,6 +176,7 @@ const mfjTwoChildrenFixture: TaxYearInput = {
   dependentCare: {
     expenses: "10000",
     qualifyingIndividuals: 2,
+    priorYearExpenseCredit: "0", primaryEarnedIncome: "90000", spouseEarnedIncome: "60000",
   },
 };
 
