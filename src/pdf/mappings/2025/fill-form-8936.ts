@@ -1,4 +1,4 @@
-import { assertPdfExportAllowed } from "../../export-policy.js";
+import { assertPdfExportAllowed, markReviewPdf } from "../../export-policy.js";
 /**
  * PDF filler for IRS Form 8936 — Clean Vehicle Credits.
  *
@@ -9,12 +9,12 @@ import { assertPdfExportAllowed } from "../../export-policy.js";
  *   fillDebugLabels('forms/blank/2025/f8936.pdf', 'forms/filled/f8936-debug.pdf')
  */
 
-import { PDFDocument } from "pdf-lib";
+import { PDFDocument, StandardFonts } from "pdf-lib";
 import Decimal from "decimal.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import type { FilingStatus } from "@/models/constants.js";
-import { d, zeroFloor } from "@/utils/decimal.js";
+import { d } from "@/utils/decimal.js";
 import {
   loadReviewTemplate,
   setTextField,
@@ -64,7 +64,7 @@ export const FORM_8936_FIELDS = {
   // ── Part IV: Previously Owned Clean Vehicles (Lines 14–18) ──
   line14: p1("f1_24[0]"),  // Previously owned credit from Schedule A Part IV
   line15: p1("f1_25[0]"),  // Form 1040 line 18 (tax before credits)
-  line16: p1("f1_26[0]"),  // Personal credits (including line 13)
+  line16: p1("f1_26[0]"),  // Worksheet credits before used credit (excludes new credit)
   line17: p1("f1_27[0]"),  // Line 15 − Line 16 (≥ 0)
   line18: p1("f1_28[0]"),  // Allowable previously owned credit
 
@@ -97,95 +97,85 @@ export async function fillForm8936(
   blankPdfPath: string,
 ): Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
+  const calculation = result.form8936;
+  const source = input.form8936;
+  if (!calculation || !source || !calculation.sourceFactsVerified) {
+    throw new Error("Form 8936 review requires verified vehicle source facts and audit");
+  }
+  if (calculation.requiresForm3800 || calculation.requiresTransferReconciliation) {
+    throw new Error("Form 8936 business or transfer reconciliation requires its supporting worksheet");
+  }
+  const audited = (line: string): Decimal => {
+    const matches = calculation.lines.filter(entry => entry.form === "Form 8936" && entry.line === line);
+    if (matches.length !== 1 || !matches[0].value.isFinite()) throw new Error(`Missing, duplicate or invalid Form 8936 audit entry ${line}`);
+    return matches[0].value;
+  };
+  if (!audited("13").eq(calculation.totalNewVehicleCredit) || !audited("18").eq(calculation.totalPreviouslyOwnedCredit)) {
+    throw new Error("Form 8936 audit disagrees with allowed vehicle credits");
+  }
   const doc = await loadReviewTemplate(blankPdfPath, 2025);
   const form = doc.getForm();
-  const f8936 = result.form8936!;
-  const f8936Input = input.form8936!;
-
-  // ── Header ──
   const name = input.taxpayer.spouse
     ? `${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName} & ${input.taxpayer.spouse.firstName} ${input.taxpayer.spouse.lastName}`
     : `${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName}`;
   setTextField(form, F.name, name);
   setTextField(form, F.ssn, input.taxpayer.primary.ssn.replace(/-/g, ""));
-
-  // ── Part I: Modified AGI ──
   setCurrencyField(form, F.line1a, result.agi);
-
-  const foreignExclusion = d(f8936Input.foreignEarnedIncomeExclusion);
-  const foreignHousing = d(f8936Input.foreignHousingDeduction);
-  if (foreignExclusion.gt(0)) setCurrencyField(form, F.line1c, foreignExclusion);
-  if (foreignHousing.gt(0)) setCurrencyField(form, F.line1d, foreignHousing);
-
-  // Line 2: Current year MAGI
-  setCurrencyField(form, F.line2, f8936.currentYearMagi);
-
-  // Lines 3a–3e: Prior year MAGI components
-  const priorAgi = d(f8936Input.priorYearAgi);
-  const priorForeignExclusion = d(f8936Input.priorYearForeignEarnedIncomeExclusion);
-  const priorForeignHousing = d(f8936Input.priorYearForeignHousingDeduction);
-  const hasPriorYear = !priorAgi.isZero() || !priorForeignExclusion.isZero() || !priorForeignHousing.isZero();
-
-  if (hasPriorYear) {
-    setCurrencyField(form, F.line3a, priorAgi);
-    if (priorForeignExclusion.gt(0)) setCurrencyField(form, F.line3c, priorForeignExclusion);
-    if (priorForeignHousing.gt(0)) setCurrencyField(form, F.line3d, priorForeignHousing);
-    setCurrencyField(form, F.line4, f8936.priorYearMagi);
+  setCurrencyField(form, F.line1c, d(source.foreignEarnedIncomeExclusion));
+  setCurrencyField(form, F.line1d, d(source.foreignHousingDeduction));
+  setCurrencyField(form, F.line2, audited("2"));
+  if (calculation.priorYearMagiKnown) {
+    if (source.priorYearAgi === undefined || source.priorYearFilingStatus === undefined || source.priorYearAgiAdjustmentsConfirmed !== true) {
+      throw new Error("Form 8936 prior-year source AGI, filing status and adjustments must be known");
+    }
+    // An actual zero must remain distinguishable from an unanswered prior year.
+    setTextField(form, F.line3a, d(source.priorYearAgi).toDecimalPlaces(0, Decimal.ROUND_HALF_UP).toFixed(0));
+    setCurrencyField(form, F.line3c, d(source.priorYearForeignEarnedIncomeExclusion));
+    setCurrencyField(form, F.line3d, d(source.priorYearForeignHousingDeduction));
+    setTextField(form, F.line4, audited("4").toDecimalPlaces(0, Decimal.ROUND_HALF_UP).toFixed(0));
+    setTextField(form, F.line5, filingStatusAbbrev(source.priorYearFilingStatus));
   }
-
-  // Line 5: Filing status abbreviation (uses current year since prior year status
-  // is not separately tracked; the form says "2024 filing status")
-  setTextField(form, F.line5, filingStatusAbbrev(input.taxpayer.filingStatus));
-
-  // ── Part III: Personal Use of New Clean Vehicles ──
-  if (f8936.totalNewVehicleCredit.gt(0)) {
-    setCurrencyField(form, F.line9, f8936.totalNewVehicleCredit);
-
-    // Line 10: Form 1040 line 18 (total tax before credits)
-    setCurrencyField(form, F.line10, result.totalTaxBeforeCredits);
-
-    // Line 11: Personal credits before new vehicle credit
-    // = child tax credit + (schedule 3 nonrefundable credits − new vehicle − previously owned)
-    const sched3Credits = result.schedule3
-      ? result.schedule3.totalNonrefundableCredits
-          .minus(result.schedule3.newCleanVehicleCredit)
-          .minus(result.schedule3.previouslyOwnedCleanVehicleCredit)
-      : new Decimal(0);
-    const personalCreditsBeforeNewVehicle = result.childTaxCredit.plus(sched3Credits);
-    setCurrencyField(form, F.line11, personalCreditsBeforeNewVehicle);
-
-    // Line 12: Line 10 − Line 11 (floor 0)
-    const line12 = zeroFloor(result.totalTaxBeforeCredits.minus(personalCreditsBeforeNewVehicle));
-    setCurrencyField(form, F.line12, line12);
-
-    // Line 13: Allowable credit (min of line 9, line 12)
-    const line13 = Decimal.min(f8936.totalNewVehicleCredit, line12);
-    setCurrencyField(form, F.line13, line13);
+  if (source.newCleanVehicles.length > 0) {
+    for (const line of ["9", "10", "11", "12", "13"] as const) setCurrencyField(form, F[`line${line}`], audited(line));
   }
-
-  // ── Part IV: Previously Owned Clean Vehicles ──
-  if (f8936.totalPreviouslyOwnedCredit.gt(0)) {
-    setCurrencyField(form, F.line14, f8936.totalPreviouslyOwnedCredit);
-
-    // Line 15: Form 1040 line 18 (same as line 10)
-    setCurrencyField(form, F.line15, result.totalTaxBeforeCredits);
-
-    // Line 16: Personal credits including line 13 (new vehicle credit)
-    const sched3Credits = result.schedule3
-      ? result.schedule3.totalNonrefundableCredits
-          .minus(result.schedule3.previouslyOwnedCleanVehicleCredit)
-      : new Decimal(0);
-    const personalCreditsBeforePrevOwned = result.childTaxCredit.plus(sched3Credits);
-    setCurrencyField(form, F.line16, personalCreditsBeforePrevOwned);
-
-    // Line 17: Line 15 − Line 16 (floor 0)
-    const line17 = zeroFloor(result.totalTaxBeforeCredits.minus(personalCreditsBeforePrevOwned));
-    setCurrencyField(form, F.line17, line17);
-
-    // Line 18: Allowable credit (min of line 14, line 17)
-    const line18 = Decimal.min(f8936.totalPreviouslyOwnedCredit, line17);
-    setCurrencyField(form, F.line18, line18);
+  if (source.previouslyOwnedCleanVehicles.length > 0) {
+    for (const line of ["14", "15", "16", "17", "18"] as const) setCurrencyField(form, F[`line${line}`], audited(line));
   }
-
+  // Review detail is not the unqualified Schedule A filing attachment. It preserves
+  // every source record and repayment while making that output gap explicit.
+  const font = await doc.embedFont(StandardFonts.Helvetica);
+  let page = doc.addPage();
+  let y = page.getHeight() - 40;
+  const write = (text: string) => {
+    for (const line of text.match(/.{1,96}(?:\s|$)|.{1,96}/g) ?? [text]) {
+      if (y < 45) { page = doc.addPage(); y = page.getHeight() - 40; }
+      page.drawText(line.trim(), { x: 32, y, size: 9, font });
+      y -= 15;
+    }
+  };
+  write("FORM 8936 REVIEW DETAILS - Schedule A filing attachment is not qualified");
+  write("Credit and repayment amounts copy the verified engine audit. This review does not establish");
+  write("a complete Schedule A filing attachment, seller-report acceptance or a filing-ready return.");
+  if (d(source.possessionIncomeExclusion).gt(0) || d(source.priorYearPossessionIncomeExclusion).gt(0)) {
+    write(`Combined possession exclusions: current $${d(source.possessionIncomeExclusion).toFixed(2)}, prior $${d(source.priorYearPossessionIncomeExclusion).toFixed(2)}.`);
+    write("The Puerto Rico/Form 4563 split was not collected; component lines remain unanswered.");
+  }
+  for (const [kind, vehicles, details] of [
+    ["New", source.newCleanVehicles, calculation.newVehicleDetails],
+    ["Previously owned", source.previouslyOwnedCleanVehicles, calculation.previouslyOwnedDetails],
+  ] as const) {
+    if (vehicles.length !== details.length) throw new Error("Form 8936 source vehicle count disagrees with its audit");
+    for (const [index, vehicle] of vehicles.entries()) {
+      const detail = details[index];
+      write(`${kind} ${index + 1}: VIN ${vehicle.vin}; owner ${vehicle.owner}; acquired ${vehicle.dateAcquired}; placed in service ${vehicle.datePlacedInService}.`);
+      write(`Contract ${vehicle.bindingContractDate}; payment ${vehicle.paymentDate}; reported credit $${d(vehicle.sellerReportCreditAmount).toFixed(2)}; transfer $${d(vehicle.creditTransferredAmount).toFixed(2)}.`);
+      if (vehicle.priorYearMagiConfirmed) write(`Owner prior MAGI $${d(vehicle.priorYearMagi).toFixed(2)}; status ${vehicle.priorYearFilingStatus}.`);
+      write(`Personal tentative credit $${detail.personalCredit.toFixed(2)}; repayment $${(detail.repayment ?? new Decimal(0)).toFixed(2)}; ${detail.disqualified ? detail.disqualificationReason : "source eligibility confirmed"}.`);
+    }
+  }
+  write(`Schedule 2 line 1b new-vehicle repayment: $${audited("transfer-repayment-new").toFixed(2)}.`);
+  write(`Schedule 2 line 1c used-vehicle repayment: $${audited("transfer-repayment-used").toFixed(2)}.`);
+  write(`Dealer-return reconciliation amount: $${calculation.dealerTransferReconciliationAmount.toFixed(2)}. Unused nonrefundable personal credit: $${calculation.unusedPersonalCredit.toFixed(2)}.`);
+  await markReviewPdf(doc);
   return doc;
 }

@@ -11,7 +11,7 @@ import { calculateFederalTax } from "@/engine/federal.js";
 import { fillForm8936, FORM_8936_FIELDS } from "@/pdf/fill-form-8936.js";
 import { fillReturn } from "@/pdf/fill-return.js";
 import { formatCurrency } from "@/pdf/pdf-utils.js";
-import type { TaxYearInput } from "@/models/inputs.js";
+import { TaxYearInputSchema, type TaxYearInput } from "@/models/inputs.js";
 import Decimal from "decimal.js";
 
 /** Helper: get text value from a filled PDF field. */
@@ -86,6 +86,10 @@ const mfjNewVehicleFixture: TaxYearInput = {
     newCleanVehicles: [
       {
         dateAcquired: "2025-03-15",
+        owner: "primary", vin: "1HGCM82633A004352", powertrain: "battery",
+        datePlacedInService: "2025-03-15", bindingContractDate: "2025-03-14", paymentDate: "2025-03-14",
+        bindingContractConfirmed: true, sellerReportReceived: true, sellerReportCreditAmount: "7500",
+        eligibilityConfirmed: true, creditTransferredAmount: "0", resoldWithin30Days: false, returnedToSellerWithin30Days: false,
         criticalMineralsRequirementMet: true,
         batteryComponentsRequirementMet: true,
         msrp: "48000",
@@ -95,7 +99,8 @@ const mfjNewVehicleFixture: TaxYearInput = {
       },
     ],
     previouslyOwnedCleanVehicles: [],
-    priorYearAgi: "175000",
+    priorYearAgi: "175000", priorYearFilingStatus: "married_filing_jointly",
+    agiAdjustmentsConfirmed: true, priorYearAgiAdjustmentsConfirmed: true,
   },
 };
 
@@ -149,12 +154,17 @@ const singlePrevOwnedFixture: TaxYearInput = {
     previouslyOwnedCleanVehicles: [
       {
         dateAcquired: "2025-06-01",
+        owner: "primary", vin: "1HGCM82633A004353", datePlacedInService: "2025-06-01",
+        bindingContractDate: "2025-05-31", paymentDate: "2025-05-31", bindingContractConfirmed: true,
+        sellerReportReceived: true, sellerReportCreditAmount: "4000", eligibilityConfirmed: true,
+        creditTransferredAmount: "0", resoldWithin30Days: false, returnedToSellerWithin30Days: false,
         salePrice: "18000",
         personalUsePercentage: "100",
         creditTransferredToDealer: false,
       },
     ],
-    priorYearAgi: "55000",
+    priorYearAgi: "55000", priorYearFilingStatus: "single",
+    agiAdjustmentsConfirmed: true, priorYearAgiAdjustmentsConfirmed: true,
   },
 };
 
@@ -207,6 +217,10 @@ const disqualifiedFixture: TaxYearInput = {
     newCleanVehicles: [
       {
         dateAcquired: "2025-02-01",
+        owner: "primary", vin: "1HGCM82633A004354", powertrain: "battery",
+        datePlacedInService: "2025-02-01", bindingContractDate: "2025-01-31", paymentDate: "2025-01-31",
+        bindingContractConfirmed: true, sellerReportReceived: true, sellerReportCreditAmount: "7500",
+        eligibilityConfirmed: true, creditTransferredAmount: "0", resoldWithin30Days: false, returnedToSellerWithin30Days: false,
         criticalMineralsRequirementMet: true,
         batteryComponentsRequirementMet: true,
         msrp: "45000",
@@ -216,7 +230,8 @@ const disqualifiedFixture: TaxYearInput = {
       },
     ],
     previouslyOwnedCleanVehicles: [],
-    priorYearAgi: "200000",
+    priorYearAgi: "200000", priorYearFilingStatus: "single",
+    agiAdjustmentsConfirmed: true, priorYearAgiAdjustmentsConfirmed: true,
   },
 };
 
@@ -229,7 +244,7 @@ describe("Form 8936 PDF fill — MFJ with new clean vehicle", () => {
   let result: ReturnType<typeof calculateFederalTax>;
 
   beforeAll(async () => {
-    result = calculateFederalTax(mfjNewVehicleFixture);
+    result = calculateFederalTax(TaxYearInputSchema.parse(mfjNewVehicleFixture));
     expect(result.form8936).toBeDefined();
     expect(result.form8936!.totalNewVehicleCredit.gt(0)).toBe(true);
     doc = await fillForm8936(mfjNewVehicleFixture, result, BLANK_8936);
@@ -303,7 +318,7 @@ describe("Form 8936 PDF fill — single with previously owned vehicle", () => {
   let result: ReturnType<typeof calculateFederalTax>;
 
   beforeAll(async () => {
-    result = calculateFederalTax(singlePrevOwnedFixture);
+    result = calculateFederalTax(TaxYearInputSchema.parse(singlePrevOwnedFixture));
     expect(result.form8936).toBeDefined();
     expect(result.form8936!.totalPreviouslyOwnedCredit.gt(0)).toBe(true);
     doc = await fillForm8936(singlePrevOwnedFixture, result, BLANK_8936);
@@ -356,7 +371,7 @@ describe("Form 8936 — AGI-disqualified filer produces zero credit", () => {
   let result: ReturnType<typeof calculateFederalTax>;
 
   beforeAll(() => {
-    result = calculateFederalTax(disqualifiedFixture);
+    result = calculateFederalTax(TaxYearInputSchema.parse(disqualifiedFixture));
   });
 
   it("engine disqualifies due to MAGI exceeding threshold", () => {
@@ -372,7 +387,7 @@ describe("Form 8936 — AGI-disqualified filer produces zero credit", () => {
 
 describe("fillReturn orchestrator with Form 8936", () => {
   it("fills Form 8936 for filer with new clean vehicle", async () => {
-    const result = calculateFederalTax(mfjNewVehicleFixture);
+    const result = calculateFederalTax(TaxYearInputSchema.parse(mfjNewVehicleFixture));
     const { filledForms } = await fillReturn(mfjNewVehicleFixture, result, {
       blankFormsDir: BLANK_FORMS_DIR,
       outputDir: testOutputDir,
@@ -382,7 +397,7 @@ describe("fillReturn orchestrator with Form 8936", () => {
   });
 
   it("does not fill Form 8936 for AGI-disqualified filer", async () => {
-    const result = calculateFederalTax(disqualifiedFixture);
+    const result = calculateFederalTax(TaxYearInputSchema.parse(disqualifiedFixture));
     const { filledForms } = await fillReturn(disqualifiedFixture, result, {
       blankFormsDir: BLANK_FORMS_DIR,
       outputDir: testOutputDir,
@@ -390,4 +405,58 @@ describe("fillReturn orchestrator with Form 8936", () => {
 
     expect(filledForms.some((f) => f.includes("f8936"))).toBe(false);
   });
+});
+
+it("preserves a known-zero prior AGI and actual different filing status", async () => {
+  const input = TaxYearInputSchema.parse({...mfjNewVehicleFixture, form8936: {...mfjNewVehicleFixture.form8936, priorYearAgi:"0", priorYearFilingStatus:"single"}});
+  const result = calculateFederalTax(input);
+  const doc = await fillForm8936(input,result,BLANK_8936);
+  expect(getFieldText(doc,F.line3a)).toBe("0");
+  expect(getFieldText(doc,F.line4)).toBe("0");
+  expect(getFieldText(doc,F.line5)).toBe("S");
+  expect(doc.getSubject()).toBe("FOR REVIEW ONLY - NOT FOR FILING");
+  expect(doc.getPageCount()).toBe(2);
+});
+
+it("copies audited vehicle limits without recomputing downstream credit totals", async () => {
+  const input=TaxYearInputSchema.parse(mfjNewVehicleFixture);
+  const result=calculateFederalTax(input);
+  const vehicle=result.form8936;
+  if(!vehicle) throw new Error("Expected vehicle calculation");
+  const originalTax=vehicle.lines.find(line=>line.line==="10")?.value;
+  result.totalTaxBeforeCredits=new Decimal(99999);
+  result.childTaxCredit=new Decimal(99999);
+  const doc=await fillForm8936(input,result,BLANK_8936);
+  expect(getFieldText(doc,F.line10)).toBe(originalTax?.toFixed(0));
+  expect(getFieldText(doc,F.line13)).toBe("7500");
+});
+
+it("rejects unverified vehicle facts, audit damage and missing prior-year facts", async () => {
+  const input=TaxYearInputSchema.parse(mfjNewVehicleFixture);
+  const result=calculateFederalTax(input);
+  const calculation=result.form8936;
+  if(!calculation||!input.form8936) throw new Error("Expected vehicle calculation");
+  result.form8936={...calculation,sourceFactsVerified:false};
+  await expect(fillForm8936(input,result,BLANK_8936)).rejects.toThrow(/verified vehicle/);
+  result.form8936={...calculation,lines:calculation.lines.filter(line=>line.line!=="13")};
+  await expect(fillForm8936(input,result,BLANK_8936)).rejects.toThrow(/audit entry 13/);
+  result.form8936={...calculation,totalNewVehicleCredit:new Decimal(1)};
+  await expect(fillForm8936(input,result,BLANK_8936)).rejects.toThrow(/disagrees/);
+  result.form8936={...calculation,requiresForm3800:true};
+  await expect(fillForm8936(input,result,BLANK_8936)).rejects.toThrow(/supporting worksheet/);
+  result.form8936=calculation;input.form8936.priorYearFilingStatus=undefined;
+  await expect(fillForm8936(input,result,BLANK_8936)).rejects.toThrow(/prior-year source/);
+});
+
+it("preserves transfer repayment in review details and leaves unknown prior year unanswered", async()=>{
+  const input=TaxYearInputSchema.parse({...disqualifiedFixture,form8936:{...disqualifiedFixture.form8936,
+    newCleanVehicles:disqualifiedFixture.form8936?.newCleanVehicles?.map(vehicle=>({...vehicle,creditTransferredToDealer:true,creditTransferredAmount:"7500"}))}});
+  const result=calculateFederalTax(input);
+  expect(result.form8936?.transferredNewVehicleCreditRepayment.toString()).toBe("7500");
+  const doc=await fillForm8936(input,result,BLANK_8936);
+  expect(getFieldText(doc,F.line13)).toBeUndefined();
+  expect(doc.getPageCount()).toBe(2);
+  const unknownPrior=TaxYearInputSchema.parse({...mfjNewVehicleFixture,form8936:{...mfjNewVehicleFixture.form8936,priorYearAgi:undefined,priorYearFilingStatus:undefined,priorYearAgiAdjustmentsConfirmed:undefined}});
+  const unknownDoc=await fillForm8936(unknownPrior,calculateFederalTax(unknownPrior),BLANK_8936);
+  expect(getFieldText(unknownDoc,F.line3a)).toBeUndefined();expect(getFieldText(unknownDoc,F.line5)).toBeUndefined();
 });

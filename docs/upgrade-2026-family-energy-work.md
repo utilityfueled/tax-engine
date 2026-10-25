@@ -199,3 +199,20 @@ Calculation evidence is separate from final-form qualification. The current 2026
   excluded and $1,785 taxable; credit MAGI $281,785 gives ratio .565 and current
   credit $6,525, split $5,000 refundable and $1,525 nonrefundable.
 - All 38 adoption PDF tests pass with the federal signed wage/refund integration.
+
+### Vehicle review export correction
+
+- Form 8936 now requires verified dated source facts and unique numeric audit
+  entries. The PDF copies the actual used-before-new worksheet limits instead of
+  subtracting downstream CTC/credit totals again. Prior-year filing status is
+  actual; explicit zero AGI stays zero and unknown prior-year fields stay blank.
+- Added a review-only attachment preserving every vehicle, dates, seller report,
+  transfer and audited Schedule 2 repayment. It explicitly states that the
+  separate Schedule A filing attachment is unqualified. Combined possession
+  exclusions remain visibly unsplit; Puerto Rico/Form 4563 attribution needs facts.
+- Unverified historical records, unfinished business/transfer worksheets, damaged
+  audit entries and inconsistent totals reject. No 2026 PDF or filing is enabled.
+- 87 tests pass across vehicle PDF, adoption PDF and vehicle edge cases, plus root
+  typecheck; scoped ESLint has zero errors and ten existing test assertions.
+  `vehicle-2025-review.pdf` rendered and inspected: actual prior status S/zero AGI,
+  line9/13 $7,500, audited tax limit, source detail and visible notices on both pages.
