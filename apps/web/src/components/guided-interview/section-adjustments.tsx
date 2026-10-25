@@ -1,5 +1,7 @@
 "use client";
 
+import { HealthInsuranceSourceDetails } from "./health-insurance-source-details";
+import type { HealthInsuranceSourceOption } from "@/lib/guided-health-insurance-facts";
 import { RetroShell } from "@/components/retro-shell";
 import {
   type AdjustmentData,
@@ -21,6 +23,8 @@ export function SectionAdjustments({
   filingStatus,
   taxYear,
   educationDistributions,
+  healthInsuranceSources,
+  hasHealthInsurance,
   onDataChange,
 }: {
   data: AdjustmentData | undefined;
@@ -30,6 +34,8 @@ export function SectionAdjustments({
   filingStatus?: FilingStatus | null;
   taxYear?: number | null;
   educationDistributions?: EducationDistributionData;
+  healthInsuranceSources?: HealthInsuranceSourceOption[];
+  hasHealthInsurance?: boolean;
   onDataChange: (data: AdjustmentData) => void;
 }) {
   const current = data ?? emptyAdjustmentData;
@@ -59,10 +65,10 @@ export function SectionAdjustments({
             />
           )}
 
-          {hasSelfEmployment && (
+          {current.selfEmployedHealthInsurance.trim() && (
             <CurrencyField
-              label="Self-employed health insurance"
-              hint="Premiums you paid for yourself, spouse, and dependents."
+              label="Saved health insurance premiums"
+              hint="Reconcile this saved amount with actual owner and business paid premium shares below. It does not establish the allowed deduction."
               value={current.selfEmployedHealthInsurance}
               onChange={(v) => update("selfEmployedHealthInsurance", v)}
             />
@@ -77,6 +83,8 @@ export function SectionAdjustments({
         </div>
 
         {(hasStudentLoans || current.studentLoanFacts || current.studentLoanInterest.trim()) && <StudentLoanSourceDetails data={current.studentLoanFacts} filingStatus={filingStatus} educationDistributions={educationDistributions} onChange={studentLoanFacts => onDataChange({ ...current, studentLoanFacts })} />}
+
+        {(hasHealthInsurance || hasSelfEmployment || healthInsuranceSources?.length || current.healthInsuranceFacts || current.selfEmployedHealthInsurance.trim()) && <HealthInsuranceSourceDetails data={current.healthInsuranceFacts} sources={healthInsuranceSources} onChange={healthInsuranceFacts => onDataChange({ ...current, healthInsuranceFacts })} />}
 
         <EducatorSourceDetails sources={current.educatorExpenseSources} taxYear={taxYear} onChange={educatorExpenseSources => onDataChange({ ...current, educatorExpenseSources })} />
 

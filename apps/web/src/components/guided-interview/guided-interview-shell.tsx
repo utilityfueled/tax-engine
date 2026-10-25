@@ -1,5 +1,6 @@
 "use client";
 
+import { healthInsuranceSourceOptions } from "@/lib/guided-health-insurance-facts";
 import { guidedCareBenefitSources } from "@/lib/guided-dependent-care-benefits";
 import Decimal from "decimal.js";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -609,8 +610,10 @@ function SectionContent({
           hasSelfEmployment={state.segmentation.incomeTypes.includes("self-employment")}
           hasStudentLoans={state.segmentation.lifeEvents.includes("student-loans")}
           hasHsa={state.segmentation.lifeEvents.includes("hsa-contributions")}
+          hasHealthInsurance={state.segmentation.lifeEvents.includes("self-employed-health-insurance")}
           filingStatus={state.segmentation.filingStatus}
           educationDistributions={getSectionData(state, "credits")?.educationDistributions}
+          healthInsuranceSources={healthInsuranceSourceOptions(getSectionData(state, "income-self-employment"), getSectionData(state, "income-w2")?.entries)}
           onDataChange={(data: AdjustmentData) =>
             onStateChange(updateSectionData(state, "adjustments", data))
           }

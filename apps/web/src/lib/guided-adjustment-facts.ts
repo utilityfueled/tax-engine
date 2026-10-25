@@ -1,3 +1,4 @@
+import { healthInsuranceFactErrors } from "./guided-health-insurance-facts";
 import Decimal from "decimal.js";
 import { hsaFactErrors } from "./guided-hsa-facts";
 import { educatorFactErrors } from "./guided-educator-facts";
@@ -16,7 +17,7 @@ export function isDeductibleAlimony(data: AdjustmentData): boolean {
 
 export function adjustmentFactErrors(data: AdjustmentData | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, education: StudentLoanEducationSources = []): Record<string, string> {
   if (!data) return {};
-  const errors: Record<string, string> = { ...hsaFactErrors(data.hsaAccounts, filingStatus, taxYear), ...educatorFactErrors(data, filingStatus, taxYear), ...studentLoanFactErrors(data, filingStatus, taxYear, education) };
+  const errors: Record<string, string> = { ...healthInsuranceFactErrors(data, filingStatus, taxYear), ...hsaFactErrors(data.hsaAccounts, filingStatus, taxYear), ...educatorFactErrors(data, filingStatus, taxYear), ...studentLoanFactErrors(data, filingStatus, taxYear, education) };
   for (const field of ["hsaDeduction", "studentLoanInterest", "selfEmployedHealthInsurance", "educatorExpenses", "iraDeduction", "alimonyPaid"] as const) {
     if (!hasEnteredAmount(data[field])) continue;
     const error = amountError(data[field], field);

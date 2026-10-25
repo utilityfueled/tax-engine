@@ -235,17 +235,21 @@ function AdjustmentsSummary({ data }: { data: AdjustmentData | undefined }) {
     { label: "Saved HSA deduction estimate (not calculated)", value: data.hsaDeduction },
     ...(data.hsaAccounts ?? []).map((account, index) => ({ label: `HSA ${index + 1} ${account.accountOwner || "unknown owner"}: personal contributions before limits`, value: account.contributionsMade })),
     { label: "Saved student-loan gross interest needing source reconciliation", value: data.studentLoanInterest },
-    { label: "SE health insurance", value: data.selfEmployedHealthInsurance },
+    { label: "Saved health premium amount to reconcile", value: data.selfEmployedHealthInsurance },
     { label: "Saved educator net expenses needing source reconciliation", value: data.educatorExpenses },
     { label: "IRA deduction", value: data.iraDeduction },
     { label: "Alimony paid", value: data.alimonyPaid },
   ].filter((item) => hasValue(item.value));
 
-  if (items.length === 0 && !data.hsaAccounts?.length && !data.educatorExpenseSources?.length && !data.studentLoanFacts) return <p className="guided-review-empty">No adjustments entered.</p>;
+  if (items.length === 0 && !data.hsaAccounts?.length && !data.educatorExpenseSources?.length && !data.studentLoanFacts && !data.healthInsuranceFacts) return <p className="guided-review-empty">No adjustments entered.</p>;
 
   return (
     <div className="guided-review-card">
       {!!data.hsaAccounts?.length && <p className="guided-hint">{data.hsaAccounts.length} HSA owner worksheet(s). Contributions are source amounts; eligibility and limits determine the deduction.</p>}
+      {data.healthInsuranceFacts && <div>
+        <p className="guided-hint">{data.healthInsuranceFacts.sourceFactsConfirmed === true ? "Health insurance sources checked" : "Health insurance sources need confirmation"}. Paid premiums below are before monthly eligibility, funding exclusions, age caps and business income limits.</p>
+        {data.healthInsuranceFacts.plans.flatMap((plan, planIndex) => plan.payments.map((payment, paymentIndex) => <div key={`health-${planIndex}-${paymentIndex}`} className="guided-review-row"><span className="guided-review-label">Plan {planIndex + 1} {plan.accountHolder || "unknown owner"}: payment {paymentIndex + 1} owner/business paid premium</span><span className="guided-review-value">{hasEnteredAmount(payment.ownerOrBusinessPaid) ? formatCurrency(payment.ownerOrBusinessPaid) : "Unknown"}</span></div>))}
+      </div>}
       {data.studentLoanFacts && <div>
         <p className="guided-hint">{data.studentLoanFacts.sourceFactsConfirmed === true ? "Student-loan sources checked" : "Student-loan sources need confirmation"}. Interest below is before qualification, benefit reductions and income limits.</p>
         {(data.studentLoanFacts.loans ?? []).map((loan, index) => <div key={`loan-${index}`} className="guided-review-row"><span className="guided-review-label">Loan {index + 1} {loan.accountHolder || "unknown owner"}: paid interest before qualification</span><span className="guided-review-value">{hasEnteredAmount(loan.interestPaid) ? formatCurrency(loan.interestPaid) : "Unknown"}</span></div>)}

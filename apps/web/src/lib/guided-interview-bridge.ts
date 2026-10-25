@@ -1,3 +1,4 @@
+import { buildHealthInsuranceInput, healthInsuranceSourceErrors } from "./guided-health-insurance-facts";
 import { buildHsaInputs, hsaFactErrors } from "./guided-hsa-facts";
 import { buildEducatorSources, educatorFactErrors } from "./guided-educator-facts";
 import { buildStudentLoanInputs, studentLoanFactErrors, studentLoanEducationSources, type StudentLoanEducationSources } from "./guided-student-loan-facts";
@@ -367,7 +368,8 @@ export function buildAdjustmentsInput(adjustmentData: AdjustmentData | undefined
   const hsaDeduction = "0";
   // Actual loan records are forwarded separately; the saved gross amount is not additional interest.
   const studentLoanInterest = "0";
-  const selfEmployedHealthInsurance = toDecimalString(adjustmentData.selfEmployedHealthInsurance);
+  // Actual Form7206 sources are forwarded separately and deducted once after canonical income limits.
+  const selfEmployedHealthInsurance = "0";
   const educatorExpenses = toDecimalString(adjustmentData.educatorExpenses);
   const educatorExpenseSources = buildEducatorSources(adjustmentData.educatorExpenseSources, filingStatus, taxYear, adjustmentData.educatorExpenses);
   const alimony = hasEnteredAmount(adjustmentData.alimonyPaid) ? {
@@ -619,6 +621,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
       buildActualEducationInput(creditsData, state.taxYear, segmentation.filingStatus, personalInfo)));
     if (adjustmentData?.studentLoanFacts) loanEducation = studentLoanEducationSources(creditsData, segmentation.filingStatus, state.taxYear, personalInfo, adjustmentData.studentLoanFacts);
     assertKnownFacts(studentLoanFactErrors(adjustmentData, segmentation.filingStatus, state.taxYear, loanEducation, segmentation.lifeEvents.includes("student-loans")));
+    assertKnownFacts(healthInsuranceSourceErrors(state));
     assertKnownFacts(adjustmentFactErrors(adjustmentData, segmentation.filingStatus, state.taxYear, loanEducation));
     assertKnownFacts(educatorFactErrors(adjustmentData, segmentation.filingStatus, state.taxYear, segmentation.lifeEvents.includes("educator-expenses")));
     assertKnownFacts(hsaFactErrors(adjustmentData?.hsaAccounts, segmentation.filingStatus, state.taxYear, w2Data?.entries ?? [], personalInfo, segmentation.lifeEvents.includes("hsa-contributions")));
@@ -713,6 +716,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     },
     w2s,
     ...buildHsaInputs(adjustmentData?.hsaAccounts, personalInfo),
+    form7206: buildHealthInsuranceInput(adjustmentData?.healthInsuranceFacts, segmentation.filingStatus, state.taxYear, adjustmentData?.selfEmployedHealthInsurance),
     form1099Nec: necs,
     scheduleC: scheduleC ?? undefined,
     form1099Int,
