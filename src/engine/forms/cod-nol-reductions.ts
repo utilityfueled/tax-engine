@@ -53,7 +53,16 @@ function canonical(value: Decimal | undefined, label: string): Decimal {
   return value;
 }
 
-export function calculateCodNolReduction(input: TaxYearInput, context?: {
+/** Precisely the actual records consumed; source-only callers need no fabricated return. */
+export type CodNolSourceInput = Pick<TaxYearInput, 'form982NolSources' | 'netOperatingLoss' | 'form1099C' | 'form172'> & {
+  taxpayer: Pick<TaxYearInput['taxpayer'], 'taxYear' | 'filingStatus'> & {
+    primary: Pick<TaxYearInput['taxpayer']['primary'], 'firstName' | 'lastName' | 'ssn'>;
+  };
+  codExclusion?: Pick<NonNullable<TaxYearInput['codExclusion']>, 'bankruptcy' | 'insolvency' | 'electBasisReductionFirst'
+    | 'qualifiedPrincipalResidence' | 'qualifiedFarmExclusion' | 'qualifiedRealPropertyBusinessExclusion'>;
+};
+
+export function calculateCodNolReduction(input: CodNolSourceInput, context?: {
   priorLoss: NetOperatingLossReturnResult; currentOrigin?: Form172ReturnResult;
 }): CodNolReductionResult {
   const facts = input.form982NolSources, year = input.taxpayer.taxYear, joint = input.taxpayer.filingStatus === 'married_filing_jointly';

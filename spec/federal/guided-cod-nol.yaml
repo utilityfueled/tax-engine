@@ -1,0 +1,47 @@
+form: "Guided insolvency and NOL sources"
+fullName: "Actual canceled-debt statements, insolvency records and loss histories"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i982"
+sources:
+  - url: "https://www.irs.gov/instructions/i982"
+    section: "Actual insolvency exclusion and PartII NOL attribute reductions"
+    retrieved: "2026-10-25"
+  - url: "https://www.irs.gov/publications/p4681"
+    section: "Form1099-C, insolvency immediately before cancellation, all assets and liabilities"
+    retrieved: "2026-10-25"
+notes: |
+  Source intake only; the committed cod-nol-reductions method calculates every
+  deduction, reduction, expiry and closing balance. No amount override or
+  default-zero facts. Original statement identities remain separate from their
+  generated array locators. Liability links bind actual statement identities.
+  Current-year losses require the existing independent Form172 source packet;
+  existing loss carryovers require their actual regular and AMT histories.
+lines:
+  - line: "sources"
+    description: "Exact original sources reach source-only validation"
+    formula: "Normalize only actual formatted amounts; sum complete asset/liability records in Decimal, bind household/year and return no deduction or closing balance"
+    testRef: "tests/guided-interview/guided-cod-nol.test.ts::preserves original COD sources and validates without calculating loss balances"
+  - line: "unknown"
+    description: "Unknown original boxes and insolvency facts remain unknown"
+    formula: "Missing original0, source year, identity, liability link, complete list or confirmation rejects; known other methods remain explicit"
+    testRef: "tests/guided-interview/guided-cod-nol.test.ts::rejects incomplete or conflicting actual COD records"
+  - line: "canonical"
+    description: "Current tax and independent reduced loss carries come from the canonical calculation"
+    formula: "Wages100000 and two regular/AMT100000 vintages with40000 excluded debt retain67400/90000 deductions and yield92600/70000 closing carries exactly once"
+    testRef: "tests/guided-interview/guided-cod-nol.test.ts::forwards actual insolvency records once into independent regular and AMT carries"
+  - line: "current-origin"
+    description: "Supported current COD classification binds the same actual source packet"
+    formula: "Wages20000 plus interest5000 minus active business100000 gives original80000/75000; excluded1000 reduces closing carry to79000/74000 without changing original loss"
+    testRef: "tests/guided-interview/guided-cod-nol.test.ts::links cancelled debt to the actual current loss source packet"
+  - line: "confirmation"
+    description: "Changed household and source records require fresh confirmations"
+    formula: "Substantive edits revoke packet/debt/insolvency confirmations; confirmation-only edits retain independent loss confirmations without cycles"
+    testRef: "tests/guided-interview/guided-cod-nol.test.ts::invalidates actual source changes and retains explicit confirmations"
+  - line: "controls"
+    description: "Original statements and complete insolvency lists remain editable"
+    formula: "Added fields start unknown; explicit empty assets differ from an unknown list; actual0 and source cents survive editing; links use actual statement identities"
+    testRef: "tests/apps/web/cod-nol-interactions.test.tsx::collects original cancellation and insolvency records without invented amounts"
+  - line: "persistence"
+    description: "Actual COD sources persist on desktop and mobile"
+    formula: "Saved original sources and completed confirmations survive reload, source edits invalidate them, and private identities remain local"
+    testRef: "apps/web/tests/guided-cod-nol.spec.ts::preserves actual insolvency source records"

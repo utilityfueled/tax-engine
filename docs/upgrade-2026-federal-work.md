@@ -1436,11 +1436,11 @@ boundaries, not external blockers and not claims of completed support. The
 following is the selected execution order; it does not silently enable every
 special method named in that matrix.
 
-1. Finish ordinary enabled-source collection already in progress. Original
-   1099-DA source binding/withholding and all twelve8949 categories are committed
-   through2025.69/2026.65. Facts owns the remaining document/guided/state handoffs
-   and ordinary capital-origin intake; the federal owner reviews those source
-   boundaries. These are source-collection tasks, not unfinished8949 arithmetic.
+1. Ordinary selected capital-source collection is complete through `9d71c5f`:
+   original1099-DA source binding/withholding, all twelve8949 categories,
+   document/guided/state handoffs, and ordinary/QSBS capital-origin intake. Their
+   source, calculation and review boundaries remain subject to the final
+   enabled-path integration audit; no broader special method is implied.
 2. Actual positive1202 current-origin restoration is implemented and verified
    where post-exclusion capital net is nonnegative, including the separate AMT
    preference and original-source review replay (2025.70/2026.66). The negative-net
@@ -1451,9 +1451,10 @@ special method named in that matrix.
    history is committed, as is the charity reporting/precision prerequisite.
    The AI owner now owns selected actual prior/mixed-category charity and2026
    nonitemizer carry, with source collection included in each coherent package.
-4. Source-bound insolvency reductions of regular/AMT loss vintages are implemented
-   and independently reviewed below. The federal owner next adds their actual
-   guided collector. Different modified-absorption/current-use amounts, later
+4. Source-bound insolvency reductions of regular/AMT loss vintages are committed
+   in `bb5cbe6`. Their actual guided collector now passes its isolated source,
+   canonical, production persistence and privacy checks and bounded independent
+   review. Different modified-absorption/current-use amounts, later
    attributes, partial taxable debt and other debt exclusions remain named
    internal methods. Unknown exclusions, elections or histories cannot become
    zero. Farming, estate/EBL origins and broader foreign-loss methods remain
@@ -1491,7 +1492,8 @@ special method named in that matrix.
   actionable finding. Full evidence and bounded methods are in
   `upgrade-2026-cod-nol-work.md`.
 - Versions2025.75/2026.71 retain all readiness and independent-review gates.
-  The federal owner is implementing the guided collector next; this structured
-  source route alone does not complete enabled-source intake. Later attribute
+  The guided source collector and its exact verification are recorded in
+  `upgrade-2026-guided-cod-nol-work.md`: 795 isolated tests, both production
+  viewports and 11 independent source-review cases pass. Later attribute
   waterfalls and different modified-absorption/current-use amounts remain
   explicit internal methods, not external approval blockers.

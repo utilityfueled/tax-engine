@@ -3,6 +3,7 @@ import type { GuidedFlowState } from './guided-interview-flow';
 import { hasBusinessSourceData } from './guided-business-facts';
 import { buildGuidedNetOperatingLoss } from './guided-net-operating-loss';
 import { guidedSourceValuesChanged } from './guided-source-confirmation';
+import { buildGuidedCodNol } from './guided-cod-nol';
 import { buildCurrentCapitalSources, invalidateCurrentCapitalSources, type CurrentCapitalSourceData } from './guided-current-capital-origin';
 
 export interface CurrentLossBusinessData {
@@ -30,8 +31,12 @@ export function buildCurrentLossOrigin(data: CurrentLossOriginData | undefined, 
     || data.allCurrentYearSourcesIncluded !== true) throw new Error('Confirm the actual current loss source year, reference and complete current records.');
   const prior = buildGuidedNetOperatingLoss(sectionData.adjustments?.netOperatingLossSources, taxYear, segmentation.filingStatus, sectionData['personal-info']);
   if (!prior) throw new Error('Enter the complete actual prior regular and independent AMT carry histories, including explicit empty lists when none.');
-  if (data.farmingLossIncluded !== false || data.cancelledDebtIncluded !== false || data.estateOrTrustLossIncluded !== false) {
-    throw new Error('Confirm the actual farming, cancelled-debt and estate facts. Those positive origin methods require separate source calculations.');
+  if (data.farmingLossIncluded !== false || data.estateOrTrustLossIncluded !== false) {
+    throw new Error('Confirm the actual farming and estate facts. Those positive origin methods require separate source calculations.');
+  }
+  const cod = buildGuidedCodNol(sectionData.adjustments?.codNolSources, state);
+  if (data.cancelledDebtIncluded !== Boolean(cod)) {
+    throw new Error('The current canceled-debt classification must match the actual validated cancellation and insolvency source packet.');
   }
   const se = sectionData['income-self-employment'];
   const hasBusiness = hasBusinessSourceData(se);
