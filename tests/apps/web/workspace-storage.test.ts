@@ -894,11 +894,12 @@ describe("workspace storage", () => {
       metrics: {
         totalIncome: "55000",
         agi: "55000",
+        // Published 2025 single row [14,250, 14,300): 1,475; the 25,000 gain is at 0%.
         taxableIncome: "39250",
-        totalTax: "1472",
+        totalTax: "1475",
         totalPayments: "0",
         refund: "0",
-        amountOwed: "1534"
+        amountOwed: "1537"
       },
       highlightedLines: expect.arrayContaining([
         {
@@ -906,7 +907,7 @@ describe("workspace storage", () => {
           form: "1040",
           line: "24",
           label: "Total tax",
-          value: "1472",
+          value: "1475",
           formula: expect.stringContaining("Line 22"),
           sourceFactIds: [
             "broker-proceeds:document-detected",
@@ -922,7 +923,7 @@ describe("workspace storage", () => {
           form: "1040",
           line: "37",
           label: "Amount you owe",
-          value: "1534",
+          value: "1537",
           formula: "max(0, total tax - total payments + line 38 penalty)",
           sourceFactIds: [
             "broker-proceeds:document-detected",
@@ -1029,11 +1030,12 @@ describe("workspace storage", () => {
       metrics: {
         totalIncome: "25000",
         agi: "25000",
+        // Published single row [5,250, 5,300): 528; 4,000 preferential income is at 0%.
         taxableIncome: "9250",
-        totalTax: "525",
+        totalTax: "528",
         totalPayments: "0",
         refund: "0",
-        amountOwed: "525"
+        amountOwed: "528"
       },
       highlightedLines: expect.arrayContaining([
         {
@@ -1174,7 +1176,7 @@ describe("workspace storage", () => {
           form: "1040",
           line: "24",
           label: "Total tax",
-          value: "525",
+          value: "528",
           formula: expect.stringContaining("Line 22"),
           sourceFactIds: [
             "taxable-interest:document-detected",
@@ -1240,7 +1242,7 @@ describe("workspace storage", () => {
           form: "1040",
           line: "37",
           label: "Amount you owe",
-          value: "525",
+          value: "528",
           formula: "max(0, total tax - total payments + line 38 penalty)",
           sourceFactIds: [
             "taxable-interest:document-detected",
@@ -1321,11 +1323,12 @@ describe("workspace storage", () => {
       metrics: {
         totalIncome: "110000",
         agi: "110000",
+        // Single row [44,250, 44,300): 5,075 + (50,000 - 4,100) × 15% = 11,960.
         taxableIncome: "94250",
-        totalTax: "11957",
+        totalTax: "11960",
         totalPayments: "0",
         refund: "0",
-        amountOwed: "12458"
+        amountOwed: "12461"
       },
       highlightedLines: expect.arrayContaining([
         {
@@ -1369,7 +1372,7 @@ describe("workspace storage", () => {
           form: "1040",
           line: "24",
           label: "Total tax",
-          value: "11957",
+          value: "11960",
           formula: expect.stringContaining("Line 22"),
           sourceFactIds: [
             "broker-proceeds:document-detected",
@@ -1387,7 +1390,7 @@ describe("workspace storage", () => {
           form: "1040",
           line: "37",
           label: "Amount you owe",
-          value: "12458",
+          value: "12461",
           formula: "max(0, total tax - total payments + line 38 penalty)",
           sourceFactIds: [
             "broker-proceeds:document-detected",
@@ -1509,10 +1512,11 @@ describe("workspace storage", () => {
       metrics: {
         totalIncome: "52000",
         agi: "52000",
+        // Published single row [36,250, 36,300): 4,115; 5,000 withholding leaves 885.
         taxableIncome: "36250",
-        totalTax: "4112",
+        totalTax: "4115",
         totalPayments: "5000",
-        refund: "888",
+        refund: "885",
         amountOwed: "0"
       },
       highlightedLines: expect.arrayContaining([
@@ -1542,7 +1546,7 @@ describe("workspace storage", () => {
         }),
         expect.objectContaining({
           id: "1040:34",
-          value: "888",
+          value: "885",
           sourceFactIds: [
             "wages:document-detected",
             "wages:fixture-wages",

@@ -504,3 +504,9 @@ SALT package committed `a266046`. A later all-guided check exposed three older s
 
 - Ordinary retirement source package committed `d13fbee`. Refreshed [Publication 915](https://www.irs.gov/publications/p915), Worksheet 1 line 5 and legal-beneficiary rules. Added optional `socialSecurityFacts` with separate actual Puerto Rico and American Samoa excluded income plus source confirmation; no amount or confirmation defaults. Federal addback routing is separately owned and not claimed by this contract commit.
 - Spec and failing contract test preceded the schema. Four source/schema checks pass; root types and all 3,457 global spec references pass. Malformed, nonfinite and negative source amounts are rejected without throwing from `safeParse`; omitted facts stay omitted and explicit zero/false survive. Evidence: `.local/upgrade-evidence/ssa-contract-{red,green,types,spec}.log`.
+
+## Published-table workspace expectations (2026-10-25)
+
+- The federal source-backed Tax Table integration changed four old workspace assertions that had used rate arithmetic below 100,000. Independently checked the published 2025 single-filer rows in `tests/fixtures/tax-tables/2025.json`, extracted from the [IRS 2025 Tax Table](https://www.irs.gov/pub/irs-pdf/p1040.pdf), rather than deriving expected answers from production code.
+- Actual ordinary bases 14,250, 5,250, 44,250 and 36,250 use taxes 1,475, 528, 5,075 and 4,115. The doubled capital-gain example adds 45,900 at 15% to 5,075 for 11,960. Existing penalties remain 62 and 501, producing balances 1,537 and 12,461; 5,000 W-2 withholding less 4,115 tax produces an 885 refund. Source facts, gates and penalty equations are unchanged.
+- All 36 workspace-storage tests pass (`.local/upgrade-evidence/storage-published-table.log`); the scoped diff contains only independently verified expected amounts and source comments. This fixture correction is separate from the Social Security source package.
