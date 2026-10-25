@@ -195,3 +195,6 @@ lines:
       the transferred amount is recaptured as additional tax on Schedule 2.
       This recapture path is not modeled in the current engine slice.
     testRef: "tests/engine/forms/form-8936.test.ts::Form 8936 transfer election yields $0 personal credit"
+legacy2025CreditLimit:
+  formula: "When actual tax limits are supplied to historical 2025 records, allow previously owned credit first, then new vehicle credit against the remaining amount; tentative amounts remain separately audited. Do not imply missing source facts were verified."
+  testRef: "tests/engine/forms/form-8936.test.ts::historical vehicle records honor actual credit ordering limits"

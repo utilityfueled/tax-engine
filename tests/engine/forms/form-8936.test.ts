@@ -704,3 +704,21 @@ it("known zero prior AGI remains known in the historical interface", () => {
   expect(calculateForm8936(makeInput({agi:"200000",priorYearAgi:"0",newCleanVehicles:[newVehicle()]})).totalNewVehicleCredit.toString()).toBe("7500");
   expect(calculateForm8936(makeInput({agi:"200000",newCleanVehicles:[newVehicle()]})).totalNewVehicleCredit.toString()).toBe("0");
 });
+
+it("historical vehicle records honor actual credit ordering limits", () => {
+  const result = calculateForm8936(makeInput({
+    agi: "50000", newCleanVehicles: [newVehicle()], previouslyOwnedCleanVehicles: [usedVehicle()],
+    incomeTaxBeforeCredits: new Decimal(6000), taxLiabilityLimit: new Decimal(5000),
+  }));
+  expect(result.sourceFactsVerified).toBe(false);
+  expect(result.tentativePreviouslyOwnedCredit.toString()).toBe("4000");
+  expect(result.totalPreviouslyOwnedCredit.toString()).toBe("4000");
+  expect(result.tentativeNewVehicleCredit.toString()).toBe("7500");
+  expect(result.totalNewVehicleCredit.toString()).toBe("1000");
+  expect(result.unusedPersonalCredit.toString()).toBe("6500");
+  expect(result.lines.find(line => line.line === "11")?.value.toString()).toBe("5000");
+  expect(result.lines.find(line => line.line === "16")?.value.toString()).toBe("1000");
+  for (const amount of [new Decimal(-1), new Decimal(Infinity), new Decimal(NaN)]) {
+    expect(() => calculateForm8936(makeInput({taxLiabilityLimit: amount}))).toThrow(/tax-liability/);
+  }
+});

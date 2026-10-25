@@ -162,3 +162,14 @@ Calculation evidence is separate from final-form qualification. The current 2026
   preserve the actual source ordering without repeating tax arithmetic.
 - Red: `energy-audit-red.log`; green: 74 Form 5695 tests and three spec-reference
   checks. ESLint: zero errors, four pre-existing non-null assertions in tests.
+
+### Historical vehicle tax-limit integration
+
+- Actual supplied tax liability limits now apply to historical 2025 aggregate
+  records too, in the official order: previously owned vehicles before new
+  vehicles. Tentative credit, allowed credit and unused credit stay separate.
+- This compatibility calculation does not verify missing vehicle source facts;
+  unresolved dealer transfers still require the detailed reconciliation path.
+- Regression: $4,000 used plus $7,500 new tentative credit with $5,000 remaining
+  tax allows $4,000 used and $1,000 new. Invalid limits reject explicitly.
+- Red/green focused test recorded; no final-form qualification claimed.

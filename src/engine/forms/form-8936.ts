@@ -305,14 +305,34 @@ export function calculateForm8936(input: Form8936Input): Form8936Result {
   audit.record("Form 8936", "14", "Total previously owned clean vehicle credits", totalPreviouslyOwnedCredit,
     `Sum of ${input.previouslyOwnedCleanVehicles.length} previously owned vehicle credit(s)`);
 
+  const tentativeNewVehicleCredit = totalNewVehicleCredit;
+  const tentativePreviouslyOwnedCredit = totalPreviouslyOwnedCredit;
+  const remainingTax = input.taxLiabilityLimit ?? tentativeNewVehicleCredit.plus(tentativePreviouslyOwnedCredit);
+  const taxBeforeCredits = input.incomeTaxBeforeCredits ?? remainingTax;
+  if (!remainingTax.isFinite() || remainingTax.isNegative() || !taxBeforeCredits.isFinite() || taxBeforeCredits.isNegative() || remainingTax.gt(taxBeforeCredits)) {
+    throw new Error("Vehicle tax-liability amounts must be finite, nonnegative and ordered");
+  }
+  const usedLimit = roundDollar(remainingTax);
+  const totalTax = roundDollar(taxBeforeCredits);
+  totalPreviouslyOwnedCredit = Decimal.min(tentativePreviouslyOwnedCredit, usedLimit);
+  const newLimit = zeroFloor(usedLimit.minus(totalPreviouslyOwnedCredit));
+  totalNewVehicleCredit = Decimal.min(tentativeNewVehicleCredit, newLimit);
+  const unusedPersonalCredit = tentativeNewVehicleCredit.plus(tentativePreviouslyOwnedCredit).minus(totalNewVehicleCredit).minus(totalPreviouslyOwnedCredit);
+  for (const [line, description, value] of [
+    ["10", "Tax before credits", totalTax], ["11", "Credits before new vehicle", totalTax.minus(newLimit)],
+    ["12", "New vehicle tax limit", newLimit], ["13", "Allowed new personal vehicle credit", totalNewVehicleCredit],
+    ["15", "Tax before credits", totalTax], ["16", "Credits before previously owned vehicle", totalTax.minus(usedLimit)],
+    ["17", "Previously owned vehicle tax limit", usedLimit], ["18", "Allowed previously owned vehicle credit", totalPreviouslyOwnedCredit],
+  ] as const) audit.record("Form 8936", line, description, value, "Used credit precedes new credit; supplied tax-liability worksheet when available");
+
   return {
     sourceFactsVerified:false,priorYearMagiKnown:hasPriorYear,
-    tentativeNewVehicleCredit:totalNewVehicleCredit,tentativePreviouslyOwnedCredit:totalPreviouslyOwnedCredit,
+    tentativeNewVehicleCredit,tentativePreviouslyOwnedCredit,
     businessInvestmentCredit:ZERO,requiresForm3800:false,
     transferredNewVehicleCreditRepayment:ZERO,transferredPreviouslyOwnedCreditRepayment:ZERO,
     transferredCreditRepayment:ZERO,dealerTransferReconciliationAmount:ZERO,
     requiresTransferReconciliation:[...input.newCleanVehicles,...input.previouslyOwnedCleanVehicles].some(vehicle=>vehicle.creditTransferredToDealer),
-    unusedPersonalCredit:ZERO,
+    unusedPersonalCredit,
     magi,
     currentYearMagi,
     priorYearMagi,
