@@ -517,3 +517,15 @@ Scoped diff reviewed. Rule versions2025.9/2026.4-law-integration-draft add the
 refreshed education sources; dated-source validation now permits actual later
 refreshes while still checking the new exact2026-10-25 education provenance.
 Qualification remains incomplete/pendingreview/filingfalse.
+
+### PTC return integration — 2026-10-25
+
+Integrated the parallel ca8c1e5 Form8962 package with explicit taxYear and actual
+household/coverage facts. Only unqualified2025 compatibility previews receive
+legacy AGI/family proxies;2026 never does. NetPTC routes to Schedule3line9 and
+full2026 excess advances to Schedule2line1a. A new regression failed first on
+silently selecting2025; it now verifies the2026 income cutoff, full3600repayment,
+2400netcredit and missing-fact rejection.73 focused return/schema/stacking tests,
+root types and all3,147spec refs pass; whitespace and scoped diff reviewed.
+Unsupported special PTC allocation, marriage, lawful-presence and self-employment
+coordination worksheets remain explicit gates, with final review still pending.

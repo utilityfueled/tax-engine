@@ -89,4 +89,22 @@ describe("Personal credit return integration",()=>{
     expect(low.form8863?.lines.find(l=>l.line==="19")?.value.toString()).toBe("0");
   });
 
+  it("uses actual 2026 PTC facts and routes full excess advances to Schedule2",()=>{
+    const months=Array.from({length:12},(_,index)=>({month:index+1,enrolleePremium:"500",slcsp:"700",advancePremiumTaxCredit:"300",coverageEligible:true,incomeBasedSepEnrollment:false}));
+    const facts={taxFamilySize:1,fplRegion:"contiguous",taxpayerModifiedAGI:"70000",requiredFilingDependentsModifiedAGI:"0",householdFactsConfirmed:true,canBeClaimedAsDependent:false,belowPovertyException:"none",coverageFactsConfirmed:true,allocationRequired:false,alternativeMarriageCalculationElected:false,selfEmployedHealthInsuranceCoordinationRequired:false,lawfulPresenceReconciliationRequired:false,qsehraAffected:false,monthlyReconciliation:months};
+    const source=[{taxYear:2026,marketplace:"Synthetic",policyNumber:"TEST1",monthlyPremiums:months}];
+    const input=fixture(2026,{form1095A:source,form8962:facts,w2s:[{...simpleW2Fixture.w2s[0],wages:"70000"}]});
+    const r=calculateFederalTax(input);
+    expect(r.form8962?.taxYear).toBe(2026);
+    expect(r.form8962?.sourceFactsVerified).toBe(true);
+    expect(r.form8962?.ptcAllowed.toString()).toBe("0");
+    expect(r.form8962?.excessAPTCRepayment.toString()).toBe("3600");
+    expect(r.schedule2?.lines.find(l=>l.line==="1a")?.value.toString()).toBe("3600");
+    const refund=calculateFederalTax(fixture(2026,{form1095A:source,form8962:{...facts,taxpayerModifiedAGI:"20000"},w2s:[{...simpleW2Fixture.w2s[0],wages:"20000"}]}));
+    expect(refund.form8962?.netPTC.toString()).toBe("2400");
+    expect(refund.schedule3?.lines.find(l=>l.line==="9")?.value.toString()).toBe("2400");
+    expect(()=>calculateFederalTax(fixture(2026,{form1095A:source}))).toThrow(/facts|required/i);
+    expect(()=>calculateFederalTax(fixture(2026,{form1095A:source,form8962:{taxFamilySize:1}}))).toThrow(/facts|required|confirmed/i);
+  });
+
 });

@@ -2765,11 +2765,13 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   let netPremiumTaxCredit = new Decimal(0);
   let excessAPTCRepayment = new Decimal(0);
   let form8962: ReturnType<typeof calculateForm8962> | undefined;
-  if (input.form1095A.length > 0) {
-    const taxFamilySize = 1 + (input.taxpayer.spouse ? 1 : 0) + input.taxpayer.dependents.length;
+  if (input.form1095A.length > 0 || input.form8962) {
     form8962 = calculateForm8962({
-      taxFamilySize,
-      modifiedAGI: agi,
+      taxYear: year,
+      facts: input.form8962,
+      // These compatibility proxies are never used for verified facts or2026.
+      taxFamilySize: year === 2025 && !input.form8962 ? 1 + (input.taxpayer.spouse ? 1 : 0) + input.taxpayer.dependents.length : undefined,
+      modifiedAGI: year === 2025 && !input.form8962 ? agi : undefined,
       filingStatus,
       form1095A: input.form1095A,
     });

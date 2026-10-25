@@ -523,3 +523,9 @@ lines:
     formula: Tax-before-credits includes actual transferred vehicle repayments. Allocate prior-ranking credits then Schedule 8812 A/B reservation, adoption and clean energy. Carryforward is unused eligible credit, not a new 2026 energy cost. Adoption signed taxable employer benefits enter wages line 1f; refundable credit enters line 30 and total payments, not Schedule 3 nonrefundable credits.
     irsRef: https://www.irs.gov/instructions/i8839 and https://www.irs.gov/instructions/i5695 and https://www.irs.gov/instructions/i1040s8
     testRef: tests/engine/federal-credit-integration.test.ts::Personal credit return integration
+
+  - line: "ptc-source-integration"
+    description: "Use actual tax-year PTC household and coverage facts"
+    formula: "Pass taxYear and actual Form8962 facts/source statements;2026 no AGI-only or inferred-family fallback. Route netcreditline26 toSchedule3line9 and uncapped2026excessrepaymentline29 toSchedule2line1a."
+    irsRef: "2026 IRC36B, IRS Form8962 instructions and source worksheet contract"
+    testRef: "tests/engine/federal-credit-integration.test.ts::uses actual 2026 PTC facts and routes full excess advances to Schedule2"
