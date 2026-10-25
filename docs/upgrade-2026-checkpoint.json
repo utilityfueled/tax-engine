@@ -204,7 +204,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "812fc61",
+    "lastRecordedCommit": "df1562b",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -284,6 +284,11 @@
       "providerHttpBoundaries": {
         "passed": 104,
         "scope": "synthetic cancellation, cache and outage tests; types/lint pass"
+      },
+      "ohioCareAndHealthWorksheetRecheck": {
+        "passed": 7,
+        "evidence": ".local/upgrade-evidence/oh-care-and-se-pdf-recheck.log",
+        "scope": "Actual federal Form2441 audit fixture; existing self-employed health-insurance PDF test unchanged and passed in isolated rerun; no timeout increase"
       }
     },
     "externalInputsStillPending": [
@@ -308,7 +313,7 @@
       "hosted staging and independent human reviews",
       "repeated live synthetic AI evaluation and account availability"
     ],
-    "latestIntegratedCommit": "f23a13a",
+    "latestIntegratedCommit": "df1562b",
     "latestCoverageDiagnostic": {
       "status": "failed-tests-coverage-thresholds-met",
       "commit": "05ec24e10716cd6c4c8ccd8d2b6e3effc6e18d94",
@@ -409,7 +414,15 @@
       "actualRetirementFacts": "d13fbee",
       "publishedTaxTableHelper": "0b3d78e",
       "dependentCareBenefitsCore": "812fc61",
-      "ohioFederalInclusions": "791f6e2"
+      "ohioFederalInclusions": "791f6e2",
+      "careReturnIntegration": "5fb2f7e",
+      "careGuidedFacts": "a615453",
+      "paRentalClassification": "df1562b",
+      "socialSecurityGuidedFacts": "e66fa3d",
+      "socialSecurityAdapterPlacement": "003609d",
+      "publishedTableResidualFixtures": "ca3b62c",
+      "workspaceTableExpectations": "dc1e900",
+      "documentPreviewTableExpectations": "914a692"
     },
     "remoteCi": {
       "commit": "a2f62e217f846a479701b3393606228c366d3410",
@@ -433,30 +446,30 @@
       "amd64": "local QEMU Next.js compilation failed with signal11; native CI rehearsal now configured"
     },
     "currentStableCoverageRun": {
-      "commit": "f23a13aab52f45ed3aa659c278421d7b21cea9c9",
+      "commit": "99fc4c25d4fa65e0b535085302bfd489190ab1e1",
       "workers": 1,
       "status": "failed-tests-coverage-thresholds-met",
-      "evidence": ".local/upgrade-evidence/stable-coverage-f23a13a.log",
-      "scope": "immutable tracked-file archive with matching installed dependencies and disposable local PostgreSQL16; reportOnFailure enabled; no changed thresholds",
-      "passed": 16356,
-      "failed": 5,
-      "filesPassed": 599,
-      "filesFailed": 4,
+      "evidence": ".local/upgrade-evidence/stable-coverage-99fc4c2.log",
+      "scope": "immutable tracked-file archive with matching dependencies and disposable local PostgreSQL16; reportOnFailure; unchanged thresholds",
+      "passed": 16384,
+      "failed": 25,
+      "filesPassed": 603,
+      "filesFailed": 10,
       "skipped": 0,
-      "branchesPercent": "85.96",
-      "functionsPercent": "91.61",
-      "statementsPercent": "92.72",
-      "linesPercent": "94.00",
-      "evidenceSha256": "d513db8f853ef3636430eed26e7d76d2263124b187893c1992f659ff92c6c08f",
-      "durationSeconds": "426.69",
-      "limitation": "Three actual dated-payment facts missing in synthetic2026 tests; two stale AMT audit-label expectations. Assigned for correction. Newer tax-table/source code requires a fresh full run."
+      "branchesPercent": "86.06",
+      "functionsPercent": "91.70",
+      "statementsPercent": "92.75",
+      "linesPercent": "94.05",
+      "evidenceSha256": "8d0c616ebe01b2de8570495edb658e732e6a594495ace0a54b3b4842df73ad90",
+      "durationSeconds": "521.39",
+      "limitation": "Full command failed. Twenty-three published-table fixture expectations corrected in dc1e900, ca3b62c and 914a692; Ohio missing audit fixture corrected separately; PDF timeout passed isolated unchanged. Newer complete source code requires fresh full checks."
     },
     "remainingInternalWork": [
-      "Form2441 actual source facts and audited physical fields; 5695 source/physical gaps",
-      "Remaining complete facts checklist and bounded federal rule checklist",
-      "OID verified-source PA/OH adaptation and PA whole-property rental ownership allocation",
-      "All exact-code checks, inventory regeneration, browser and native amd64 CI",
-      "Final exact-code arm64 image rebuild, SBOM, scan and recovery rerun"
+      "Form4952 actual source/printed audit and election integration; newly available final2026 blank retained unqualified",
+      "Remaining federal and complete facts checklists, including IRA compensation and special source coordination",
+      "Care PartIII PDF and actual benefit sources",
+      "Fresh full-suite/coverage/all exact-code gates, inventory, browser and native amd64 CI",
+      "Final exact-code arm64 image, SBOM, scan and recovery rerun"
     ]
   }
 }

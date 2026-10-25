@@ -136,3 +136,13 @@ Remaining: PA-specific depreciation, personal-use and joint owner allocations,
 OID guided worksheet controls and separate-owner final filing output still need
 implementation/qualification. State demand, final 2026 forms and independent
 human review remain external requirements.
+
+### Ohio care audit fixture correction
+
+`tests/engine/state/oh-engine.test.ts` now obtains the actual Form2441 audit from
+its calculation rather than constructing a result with no lines and a mismatched
+20% rate. At2025 AGI$30,000, $2,000 expense x27% gives line9c$540; the supplied
+$400 federal tax-liability limit gives line11$400. Ohio retains25% of line11=$100
+and total credits$120. Seven focused Ohio and self-employed-health PDF tests
+pass; the latter's prior full-run timeout did not recur and no timeout changed.
+Evidence:`.local/upgrade-evidence/oh-care-and-se-pdf-recheck.log`.

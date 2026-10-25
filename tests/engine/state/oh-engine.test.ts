@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import Decimal from "decimal.js";
+import { calculateForm2441 } from "@/engine/forms/form-2441.js";
 import { buildOhioResidentReturnInput } from "@/engine/state/oh-input-adapter.js";
 import { calculateOhioResidentReturnFromFederal } from "@/engine/state/oh-engine.js";
 import { calculateOhioResidentReturn } from "@/engine/state/oh-return.js";
@@ -180,13 +181,17 @@ describe("Ohio Resident Engine", () => {
       totalWages: new Decimal(30000),
       totalIncome: new Decimal(30000),
       taxableIncome: new Decimal(15000),
-      form2441: {
-        qualifyingExpenses: new Decimal(2000),
-        earnedIncomeLimit: new Decimal(2000),
-        creditPercentage: new Decimal(0.2),
-        credit: new Decimal(400),
-        lines: [],
-      },
+      form2441: calculateForm2441({
+        taxYear: 2025,
+        filingStatus: "single",
+        careExpenses: new Decimal(2000),
+        qualifyingIndividuals: 1,
+        earnedIncome: new Decimal(30000),
+        agi: new Decimal(30000),
+        priorYearExpenseCredit: new Decimal(0),
+        taxLiabilityLimit: new Decimal(400),
+        eligibilityConfirmed: true,
+      }),
     });
 
     const wrapped = calculateOhioResidentReturnFromFederal({
@@ -194,6 +199,9 @@ describe("Ohio Resident Engine", () => {
       federalResult,
     });
 
+    // The federal 27% rate gives line 9c = $540; the $400 liability limit
+    // controls line 11. Ohio's $20,000–$39,999 band uses 25% of line 11.
+    expect(federalResult.form2441?.lines.find(line => line.line === "9c")?.value.toFixed()).toBe("540");
     expect(wrapped.scheduleOfCredits.line6_childDependentCareCredit.toNumber()).toBe(100);
     expect(wrapped.it1040.line9_nonrefundableCredits.toNumber()).toBe(120);
   });

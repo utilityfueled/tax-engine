@@ -354,3 +354,26 @@ New packages: `f468453` actual Ohio OID interest/withholding (132 checks);
 published 2022–25 Tax Table helper (69 checks); `812fc61` dependent-care benefits
 core (207 checks). Each has source/evidence details in its package work document.
 No external qualification or production readiness is implied.
+
+## Integrated source packages and immutable coverage — 2026-10-25
+
+- Pushed through `df1562b`: Pennsylvania actual rental classification, care
+  Part III return integration `5fb2f7e`, care source UI `a615453`, actual Social
+  Security UI `e66fa3d` plus placement correction `003609d`, and published Tax
+  Table fixture corrections `dc1e900`, `ca3b62c`, `914a692`. The SSA correction
+  was validated together before push; the intermediate malformed staging is
+  not a qualified artifact. Shared patches now use full context.
+- Immutable `99fc4c2` coverage: **16,384 pass, 25 fail, zero skip**, 603 passing
+  and 10 failing files. Branches **86.06%**, functions **91.70%**, statements
+  **92.75%**, lines **94.05%**; all thresholds met unchanged, command still red.
+  The evidence log/hash is in the machine checkpoint. Twenty-three table-row
+  expectation failures are corrected in the commits above. The Ohio fixture now
+  derives a real Form2441 audit: $2,000 x 27% = $540 line9c, limited by its actual
+  $400 tax liability on line11; Ohio's25% is still $100. The existing unrelated
+  PDF timeout passes unchanged with that focused rerun:7/7 in4.26seconds.
+  A fresh full run is required; no passing global gate is claimed.
+- The final 2026 IRS Form4952 is now available at
+  https://www.irs.gov/pub/irs-pdf/f4952.pdf (created May28,2026). Its source and
+  exact hash are being recorded in the Form4952 package. This updates prior
+  availability evidence for this specific form, not the qualification registry.
+  Filing,2026 PDF exports,AI promotion and release claims remain gated.
