@@ -16,8 +16,9 @@ notes: |
   and floored at zero only when limiting the credit.
   Earned-income inputs must already reflect applicable foreign exclusions and section 164(f),
   and any monthly student/incapable-of-self-care deemed-income rules. Part III exclusion
-  calculation and prior-year expenses paid this year require separately completed worksheets;
-  the excluded-benefit input is their actual exclusion, never inferred from W-2 code 10.
+  calculation uses the dedicated actual dependentCareBenefits source contract when supplied.
+  Prior-year expenses paid this year require a separately completed worksheet;
+  the legacy excluded-benefit input is actual deducted/excluded benefits, never inferred from W-2 box 10.
   Maximum qualifying expenses: $3,000 for one qualifying individual,
   $6,000 for two or more.
 
@@ -27,9 +28,24 @@ businessRuleValidation:
     testRef: "tests/pdf/fill-form-2441.test.ts::fillReturn attaches Form 2441 only for supported credit-bearing scenarios"
 
 lines:
+  - line: "part-iii-handoff"
+    description: "Validated Part III expense base without a second benefit subtraction"
+    formula: "Recalculate confirmed actual Part III facts for the requested year/status; line3 takes line31. Preserve gross paid expenses separately. Actual person count and any legacy benefit amount must reconcile. Part III and Part II earned-income worksheets remain separate."
+    irsRef: "Form2441 line3, PartIII lines27-31, Publication503 expense coordination"
+    testRef: "tests/engine/forms/form-2441-benefits-handoff.test.ts::uses validated line31 and preserves gross expense evidence without a second subtraction"
+  - line: "part-iii-prior-credit"
+    description: "A fully exhausted current expense cap does not erase actual Worksheet A credit"
+    formula: "line31=0 can coexist with actual prior-year line9b; apply line10 to line9a+line9b"
+    irsRef: "Form2441 line29 exception and lines9b-11"
+    testRef: "tests/engine/forms/form-2441-benefits-handoff.test.ts::preserves the separate prior-year worksheet when benefits exhaust the current expense cap"
+  - line: "part-iii-mfs"
+    description: "Actual living-apart source facts permit the considered-unmarried credit path"
+    formula: "MFS eligibility requires all three actual PartIII living-apart facts and separate credit eligibility; otherwise current credit is zero"
+    irsRef: "Form2441 instructions Married Persons Filing Separately; IRC21(e)(4)"
+    testRef: "tests/engine/forms/form-2441-benefits-handoff.test.ts::applies the actual living-apart facts without treating all separate returns as eligible"
   - line: "3"
     description: "Qualifying expenses"
-    formula: "min(max(0, gross qualified expenses - excluded dependent-care benefits), max(0, $3,000/$6,000 - excluded benefits)); zero without a qualifying individual"
+    formula: "With actual PartIII facts: validated line31. Legacy path: min(max(0, gross qualified expenses - excluded/deducted benefits), max(0, $3,000/$6,000 - benefits)); zero without credit eligibility or a qualifying individual"
     irsRef: "Form 2441 Instructions, Line 3"
     edgeCases:
       - "One qualifying individual: max $3,000"

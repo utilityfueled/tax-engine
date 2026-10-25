@@ -24,8 +24,15 @@ source facts. It does not establish independent tax approval or qualify a
   `form-2441-benefits-rounding-red.log`.
 - [x] Final scoped validation: 207 tests in seven care/credit/PDF files pass
   (`form-2441-benefits-final.log`), along with root typecheck, scoped ESLint,
-  diff review and all 3,452 spec references. Core commit reference will be
-  recorded in the next integration evidence update.
+  diff review and all 3,452 spec references. Core commit: `812fc61`.
+- [x] Add the validated Part II handoff after four recorded failing tests
+  (`form-2441-benefits-handoff-red.log`). The combined eight-file suite passes
+  211 tests. The same source facts are validated again for the requested year
+  and filing status, then line 31 becomes line 3. Legacy benefit amounts,
+  qualifying-person count and net paid expenses must reconcile; gross paid
+  expenses and separate earned-income worksheets remain visible. Actual prior
+  Worksheet A credit survives a zero current-year expense base. Actual MFS
+  living-apart facts can establish the considered-unmarried path.
 - [ ] Federal source binding, line 1e, activity deductions, QBI and credit
   coordination: federal agent owns orchestration after the stable core commit.
 - [ ] Guided actual-source collection, source-to-document/activity links and
@@ -88,6 +95,13 @@ validation; it is not an independent review attestation. Source IDs and
 owners must still match real W-2/benefit statements and activities in the
 orchestrator. Deductions already included in business expenses must not be
 deducted again.
+
+`calculateForm2441` accepts `dependentCareBenefits` with the same nested
+facts. Its optional `benefits` result retains the recalculated Part III
+result. Its own `lines` remain Part II plus gross-expense source evidence;
+federal orchestration should merge the earlier Part III result's lines once.
+The prior `excludedDependentCareBenefits` alias may be omitted on this
+verified source path, but a supplied alias must equal actual line 28.
 
 Business deductions belong on the applicable Schedule C, E or F line,
 including the correct QBI and self-employment consequences. Benefits-only
