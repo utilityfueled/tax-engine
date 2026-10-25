@@ -18,6 +18,7 @@ import { EducatorSourceDetails } from "./educator-source-details";
 import { StudentLoanSourceDetails } from "./student-loan-source-details";
 import type { EducationDistributionData } from "@/lib/guided-education-distributions";
 import { AdjustmentSourceDetails } from "./adjustment-source-details";
+import type { InvestmentData } from "@/lib/guided-investment-facts";
 
 export function SectionAdjustments({
   data,
@@ -31,6 +32,7 @@ export function SectionAdjustments({
   healthInsuranceSources,
   marketplacePolicies,
   hasHealthInsurance,
+  investments,
   onDataChange,
 }: {
   data: AdjustmentData | undefined;
@@ -44,6 +46,7 @@ export function SectionAdjustments({
   healthInsuranceSources?: HealthInsuranceSourceOption[];
   marketplacePolicies?: MarketplacePolicyOption[];
   hasHealthInsurance?: boolean;
+  investments?: InvestmentData;
   onDataChange: (data: AdjustmentData) => void;
 }) {
   // Older or source-only saved sections may omit the legacy aggregate inputs.
@@ -98,7 +101,7 @@ export function SectionAdjustments({
 
         <ForeignIncomeDetails data={current.foreignIncome} sources={foreignIncomeSources} onChange={foreignIncome => onDataChange({ ...current, foreignIncome })} />
         <NetOperatingLossDetails data={current.netOperatingLossSources} onChange={netOperatingLossSources => onDataChange({ ...current, netOperatingLossSources })} />
-        <CurrentLossOriginDetails data={current.currentLossOrigin} onChange={currentLossOrigin => onDataChange({ ...current, currentLossOrigin })} />
+        <CurrentLossOriginDetails data={current.currentLossOrigin} investments={investments} onChange={currentLossOrigin => onDataChange({ ...current, currentLossOrigin })} />
 
         <EducatorSourceDetails sources={current.educatorExpenseSources} taxYear={taxYear} onChange={educatorExpenseSources => onDataChange({ ...current, educatorExpenseSources })} />
 

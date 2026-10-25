@@ -3,6 +3,7 @@ import type { GuidedFlowState } from './guided-interview-flow';
 import { hasBusinessSourceData } from './guided-business-facts';
 import { buildGuidedNetOperatingLoss } from './guided-net-operating-loss';
 import { guidedSourceValuesChanged } from './guided-source-confirmation';
+import { buildCurrentCapitalSources, invalidateCurrentCapitalSources, type CurrentCapitalSourceData } from './guided-current-capital-origin';
 
 export interface CurrentLossBusinessData {
   sourceId?: string; accountHolder?: '' | 'primary' | 'spouse'; businessName?: string;
@@ -17,6 +18,7 @@ export interface CurrentLossOriginData {
   sourceTaxYear?: string; sourceReference?: string; sourceFactsConfirmed?: boolean | null; allCurrentYearSourcesIncluded?: boolean | null;
   farmingLossIncluded?: boolean | null; cancelledDebtIncluded?: boolean | null; estateOrTrustLossIncluded?: boolean | null;
   businessSources?: CurrentLossBusinessData[]; alternativeTax?: CurrentLossAlternativeData;
+  capitalSources?: CurrentCapitalSourceData;
 }
 
 /** Only actual source facts. Canonical Form172 calculates all amounts and source-method limits. */
@@ -61,6 +63,7 @@ export function buildCurrentLossOrigin(data: CurrentLossOriginData | undefined, 
     sourceFactsConfirmed: data.sourceFactsConfirmed, allCurrentYearSourcesIncluded: data.allCurrentYearSourcesIncluded,
     farmingLossIncluded: data.farmingLossIncluded, cancelledDebtIncluded: data.cancelledDebtIncluded, estateOrTrustLossIncluded: data.estateOrTrustLossIncluded,
     businessSources, alternativeTax: { ...alternative, sourceReference: alternative.sourceReference.trim() },
+    capitalSources: buildCurrentCapitalSources(data.capitalSources, state).capitalSources,
   });
 }
 export function currentLossOriginFactErrors(state: GuidedFlowState): Record<string, string> {
@@ -72,6 +75,7 @@ export function currentLossOriginFactErrors(state: GuidedFlowState): Record<stri
 }
 export function invalidateCurrentLossOrigin(data: CurrentLossOriginData): CurrentLossOriginData {
   return { ...data, sourceFactsConfirmed: null,
+    ...(data.capitalSources ? { capitalSources: invalidateCurrentCapitalSources(data.capitalSources) } : {}),
     ...(data.businessSources ? { businessSources: data.businessSources.map(source => ({ ...source, sourceFactsConfirmed: null })) } : {}),
     ...(data.alternativeTax ? { alternativeTax: { ...data.alternativeTax, sourceFactsConfirmed: null } } : {}) };
 }

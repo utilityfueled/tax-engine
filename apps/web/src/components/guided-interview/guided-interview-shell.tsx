@@ -627,6 +627,7 @@ function SectionContent({
         <SectionAdjustments
           taxYear={state.taxYear}
           data={getSectionData(state, "adjustments")}
+          investments={getSectionData(state, "income-investments")}
           hasSelfEmployment={state.segmentation.incomeTypes.includes("self-employment")}
           hasStudentLoans={state.segmentation.lifeEvents.includes("student-loans")}
           hasHsa={state.segmentation.lifeEvents.includes("hsa-contributions")}

@@ -1,0 +1,43 @@
+form: "Guided current Form172 capital sources"
+taxYear: "2025 review;2026 actual source facts retain the closed public gate"
+irsReference: "https://www.irs.gov/instructions/i172"
+notes: |
+  Refreshed2026-10-25 i172 PartI2-5,16-22 and i6251 line2k. The existing
+  canonical method needs actual original capital sources before gross gains
+  and losses are netted. This collector supplies those records, independent
+  prior filed short/long losses and an actual AMT comparison. No gain, NOL or
+  closing carry override is collected. Source-bound positiveQSBS uses the
+  existing complete issuer/history packet and its supported nonnegative net.
+  Digital, collectible, business/property and differing AMT methods remain
+  explicit. Copying an original record never confirms its investment character.
+lines:
+  - line: "source"
+    description: "Collect all original brokerage and fund capital records"
+    formula: "Actual100.49 gain and100.50 loss yield-.01 net and-75000.01AGI; canonical regular80000,AMT75000,1411zero remain independent. Original source strings and year/owner are preserved."
+    irsRef: "i172 PartI2-5 and19-22; i6251 line2k"
+    testRef: "tests/guided-interview/guided-current-capital-origin.test.ts::binds actual capital records to independent current loss origins"
+  - line: "prior"
+    description: "Keep actual signed filed capital carry separate from NOL vintages"
+    formula: "Original fund500 minus actual priorST4000 andLT3000 yields-6500capital and-3000transfer, without duplicating the current80000 regular origin. Missing prior values remain unknown."
+    irsRef: "ScheduleD6/14/21 and Form17219-22"
+    testRef: "tests/guided-interview/guided-current-capital-origin.test.ts::reconciles signed capital carry without inferring unknown histories"
+  - line: "qsbs"
+    description: "Reuse actual complete issuer sources for the supported positive exclusion method"
+    formula: "Original1000.25 gain with500.125 actual exclusion retains500.125capital and regular80000/AMT74000; missing issuer sources and negative post-exclusion net stay gated."
+    irsRef: "Form17217 and source-bound section1202 origin method"
+    testRef: "tests/guided-interview/guided-current-capital-origin.test.ts::retains actual QSBS context and explicit unsupported capital methods"
+  - line: "confirmation"
+    description: "Reconfirm stale original and independent records without confirmation cycles"
+    formula: "Actual source edits invalidate current,capital,prior andAMT confirmation. Metadata-only confirmations preserve actual amounts and other completed confirmations."
+    irsRef: "Original source and independent AMT reconciliation"
+    testRef: "tests/guided-interview/guided-current-capital-origin.test.ts::rejects stale original records and revokes only substantive source confirmations"
+  - line: "controls"
+    description: "Collect editable source records without guessed zero or classification"
+    formula: "Explicit copy captures only actual originals. Classification,prior-year history and AMT answers start unknown; knownzero andfalse remain separately editable and local."
+    irsRef: "i172 original capital classification and i6251 independent records"
+    testRef: "tests/apps/web/current-capital-origin-interactions.test.tsx::collects original capital history without invented classifications"
+  - line: "persistence"
+    description: "Retain original cents and signed history through desktop and mobile edits"
+    formula: "Original899.50 proceeds remain unchanged after actual priorST-4000/LT-3000 changes the canonical transfer to-3000 and AGI to-78000. Clearing a carry amount preserves unknown and suppresses the financial preview; private sources remain local."
+    irsRef: "Actual original brokerage, filed carry and independent AMT records"
+    testRef: "apps/web/tests/guided-current-capital-origin.spec.ts::preserves original capital records and independent carry confirmations"

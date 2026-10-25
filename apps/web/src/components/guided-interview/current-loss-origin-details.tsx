@@ -2,6 +2,8 @@
 
 import { updateCurrentLossOrigin, type CurrentLossOriginData, type CurrentLossBusinessData, type CurrentLossAlternativeData } from '@/lib/guided-current-loss-origin';
 import { BooleanFact, TextFact } from './fact-fields';
+import { CurrentCapitalOriginDetails } from './current-capital-origin-details';
+import type { InvestmentData } from '@/lib/guided-investment-facts';
 
 function Choice({ label, value, options, onChange }: { label: string; value?: string; options: [string, string][]; onChange: (value: string) => void }) {
   return <label className="guided-field"><span className="guided-field-label">{label}</span><select className="guided-input" value={value ?? ''} onChange={event => onChange(event.target.value)}>
@@ -9,14 +11,14 @@ function Choice({ label, value, options, onChange }: { label: string; value?: st
   </select></label>;
 }
 
-export function CurrentLossOriginDetails({ data, onChange }: { data?: CurrentLossOriginData; onChange: (next: CurrentLossOriginData | undefined) => void }) {
+export function CurrentLossOriginDetails({ data, investments, onChange }: { data?: CurrentLossOriginData; investments?: InvestmentData; onChange: (next: CurrentLossOriginData | undefined) => void }) {
   const change = (patch: Partial<CurrentLossOriginData>) => onChange(updateCurrentLossOrigin(data ?? {}, patch));
   const changeBusiness = (index: number, patch: Partial<CurrentLossBusinessData>) => change({ businessSources: data?.businessSources?.map((row, i) => i === index ? { ...row, ...patch } : row) });
   const alternative = data?.alternativeTax;
   const changeAlternative = (patch: Partial<CurrentLossAlternativeData>) => change({ alternativeTax: { ...alternative, ...patch } });
   return <details className="guided-expand"><summary className="guided-expand-trigger">Current-year net operating loss sources</summary><div className="guided-expand-body">
     <p className="guided-hint">Use actual current income, deduction and business records. Form 172 calculates the regular and alternative minimum tax losses separately. Complete the prior carry sources above too, including explicit empty histories when there are none.</p>
-    <p className="guided-hint">The supported business method covers an active Schedule C with all investment at risk. Supported itemized costs include actual medical, property or general sales tax, verified main-home interest and points, and separate regular and AMT investment-interest worksheets. Capital transactions, farming, cancelled debt, estates, other businesses and unresolved deduction allocations require additional methods.</p>
+    <p className="guided-hint">The supported business method covers an active Schedule C with all investment at risk. Supported itemized costs include actual medical, property or general sales tax, verified main-home interest and points, and separate regular and AMT investment-interest worksheets. Ordinary investment capital records and supported stock exclusions use the capital packet below. Farming, cancelled debt, estates, other businesses and unresolved deduction allocations require additional methods.</p>
     {!data ? <button type="button" className="utility-button" onClick={() => onChange({})}>Add current-year loss sources</button> : <>
       <div className="guided-form-grid">
         <TextFact label="Current loss source tax year" value={data.sourceTaxYear ?? ''} onChange={sourceTaxYear => change({ sourceTaxYear })} />
@@ -65,6 +67,7 @@ export function CurrentLossOriginDetails({ data, onChange }: { data?: CurrentLos
         </div><BooleanFact label="Current AMT comparison checked after the last edit" value={alternative.sourceFactsConfirmed} onChange={sourceFactsConfirmed => changeAlternative({ sourceFactsConfirmed })} />
         <button type="button" className="utility-button" onClick={() => change({ alternativeTax: undefined })}>Remove current AMT comparison</button>
       </fieldset>}
+      <CurrentCapitalOriginDetails data={data.capitalSources} investments={investments} onChange={capitalSources => change({ capitalSources })} />
       <BooleanFact label="Current loss sources checked after the last edit" value={data.sourceFactsConfirmed} onChange={sourceFactsConfirmed => change({ sourceFactsConfirmed })} />
       <button type="button" className="utility-button" onClick={() => onChange(undefined)}>Remove current-year loss sources</button>
     </>}

@@ -5,7 +5,7 @@ import type { ScheduleDResult } from "@/engine/schedules/schedule-d.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { d, roundDollar, sum, zeroFloor } from "@/utils/decimal.js";
-import { calculateSection1202Sources } from "./section-1202-sources.js";
+import { calculateSection1202Sources, type Section1202SourceInput } from "./section-1202-sources.js";
 import { calculateScheduleDSpecialGains } from "@/engine/schedules/schedule-d-special-gains.js";
 
 export interface Form172CapitalSourcesResult {
@@ -33,7 +33,11 @@ function matches(value: string | undefined, original: string | undefined, label:
   return amount;
 }
 
-export function calculateForm172CapitalSources(input: TaxYearInput, scheduleD?: ScheduleDResult): Form172CapitalSourcesResult {
+export type Form172CapitalSourceInput = Pick<TaxYearInput, "form172" | "form1099B" | "form1099DA" | "form1099Div" | "section1202Sources" | "scheduleDSpecialGainSources" | "amtCapitalGains"> & {
+  taxpayer: Section1202SourceInput["taxpayer"];
+  priorYear?: Partial<Pick<NonNullable<TaxYearInput["priorYear"]>, "shortTermCapitalLoss" | "longTermCapitalLoss" | "capitalLossCarryforward">>;
+};
+export function calculateForm172CapitalSources(input: Form172CapitalSourceInput, scheduleD?: ScheduleDResult): Form172CapitalSourcesResult {
   const facts = input.form172?.capitalSources, year = input.taxpayer.taxYear;
   const sourceTransactions = input.form1099B.flatMap((statement, index) => statement.transactions.map((transaction, row) => ({
     id: `form1099B:${index}:transaction:${row}`, statement, transaction,

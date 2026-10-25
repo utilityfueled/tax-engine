@@ -721,6 +721,8 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
   const extensionPayments = (paymentData?.extensionPayments ?? []).map((entry) => ({ date: entry.date, amount: toDecimalString(entry.amount), type: "federal" as const }));
   const priorYearAppliedCredits = (paymentData?.priorYearAppliedCredits ?? []).map((entry) => ({ sourceTaxYear: Number(entry.sourceTaxYear), amount: toDecimalString(entry.amount), type: "federal" as const }));
   const paymentAdjustments = { estimatedTaxPayments: estimatedPayments, extensionPayments, priorYearAppliedCredits };
+  const form172 = buildCurrentLossOrigin(adjustmentData?.currentLossOrigin, state);
+  const currentCapitalCarry = form172?.capitalSources?.priorCapitalLosses;
 
   return {
     taxpayer: {
@@ -755,7 +757,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     form2210: buildEstimatedTaxFacts(paymentData, state.taxYear),
     form2555: buildForeignIncomeInput(adjustmentData?.foreignIncome, state),
     netOperatingLoss: buildGuidedNetOperatingLoss(adjustmentData?.netOperatingLossSources, state.taxYear, segmentation.filingStatus, personalInfo, deductionData),
-    form172: buildCurrentLossOrigin(adjustmentData?.currentLossOrigin, state),
+    form172,
     section1202Sources: buildGuidedQsbsSources(investData, state.taxYear, segmentation.filingStatus, personalInfo),
     form8801: buildMinimumTaxCreditInput(creditsData?.minimumTaxCredit, state.taxYear, segmentation.filingStatus, personalInfo),
     schedule1A: buildSchedule1AInput(sectionData["additional-deductions"]?.schedule1A, state),
@@ -768,7 +770,11 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     form8814: buildGuidedChildElections(investData?.childElections, state.taxYear),
     qofDispositionFacts: buildGuidedQofFacts(investData?.qofDispositionFacts, state.taxYear),
     ...scheduleDInputs,
-    priorYear: scheduleDInputs.priorYear || rentalCarryovers.length ? { ...scheduleDInputs.priorYear, ...(rentalCarryovers.length ? { suspendedPassiveLosses: rentalCarryovers } : {}) } : undefined,
+    priorYear: scheduleDInputs.priorYear || currentCapitalCarry || rentalCarryovers.length ? {
+      ...scheduleDInputs.priorYear,
+      ...(currentCapitalCarry ? { shortTermCapitalLoss: currentCapitalCarry.shortTermCapitalLoss, longTermCapitalLoss: currentCapitalCarry.longTermCapitalLoss } : {}),
+      ...(rentalCarryovers.length ? { suspendedPassiveLosses: rentalCarryovers } : {}),
+    } : undefined,
     form1099OID,
     paResidentReturn: stateCode === "PA" && form1099OID.length ? { scheduleA: { oidSources: buildPaOidSources(investData?.oidEntries) } } : undefined,
     form1099Div,
