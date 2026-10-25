@@ -51,11 +51,11 @@ describe("Form 8962 - partial-year coverage", () => {
   });
 
   it("1-month coverage with low income gets small PTC", () => {
+    // 2025 income $18,000 exceeds 100% FPL with zero applicable figure.
     const result = calculateForm8962(makeInput({
-      modifiedAGI: d(15000), // ~100% FPL → 0% contribution rate
+      modifiedAGI: d(18000), // ~100% FPL → 0% contribution rate
       form1095A: make1095A(400, 600, 0, 1),
     }));
-    // SLCSP = $600, expected contribution = $0, PTC = min(600, 400) = $400
     expect(result.ptcAllowed.toNumber()).toBe(400);
     expect(result.netPTC.toNumber()).toBe(400); // No APTC received
   });
@@ -321,10 +321,8 @@ describe("Form 8962 - APTC exceeds PTC", () => {
 });
 
 describe("Form 8962 - income below 100% FPL", () => {
-  it("sub-100% FPL results in 0% contribution rate and full PTC up to premium", () => {
-    // Family of 1, AGI = $10,000 → ~66.40% FPL.
-    // Bracket [0, 150): rate = 0%, ec = $0.
-    // The engine does not gate eligibility on the 100% floor — it calculates as-is.
+  it("sub-100% FPL results in 0% contribution rate without an assumed eligibility exception", () => {
+    // Below 100% FPL requires actual exception facts; none are supplied.
     const result = calculateForm8962(makeInput({
       modifiedAGI: d(10000),
       form1095A: make1095A(300, 500, 0),
@@ -332,10 +330,8 @@ describe("Form 8962 - income below 100% FPL", () => {
     expect(result.fplPercentage.toNumber()).toBeCloseTo(66.4, 0);
     expect(result.contributionRate.toNumber()).toBe(0);
     expect(result.expectedContribution.toNumber()).toBe(0);
-    // SLCSP = $6,000, premium = $3,600 → ptcAllowed = $3,600
-    expect(result.ptcAllowed.toNumber()).toBe(3600);
-    // No APTC → full PTC is refundable
-    expect(result.netPTC.toNumber()).toBe(3600);
+    expect(result.ptcAllowed.toNumber()).toBe(0);
+    expect(result.netPTC.toNumber()).toBe(0);
     expect(result.excessAPTCRepayment.toNumber()).toBe(0);
   });
 });
@@ -376,20 +372,15 @@ describe("Form 8962 - monthly premium equals SLCSP", () => {
 
 describe("Form 8962 - large family (household size 4+)", () => {
   it("family of 4 benefits from higher FPL threshold, reducing contribution rate", () => {
-    // Family of 4: FPL = $15,060 + 3×$5,380 = $31,200. 200% = $62,400.
-    // AGI = $70,000 → fplPct = 70000/31200×100 = 224.36%.
-    // Bracket [200, 250): rate = 0.02 + (24.36/50)×0.02 = 0.02974
-    // ec = roundDollar(70000 × 0.02974) = $2,082
-    // Monthly: min(max(0, 1000-173.50), 800) = min(826.50, 800) = 800 × 12 = $9,600
-    // APTC = $3,600 → netPTC = $6,000
+    // Line 5 drops 224.4% to 224; Table 2 rate .0296 times $70000 = $2072.
     const result = calculateForm8962(makeInput({
       taxFamilySize: 4,
       modifiedAGI: d(70000),
       form1095A: make1095A(800, 1000, 300),
     }));
     expect(result.fplPercentage.toNumber()).toBeCloseTo(224.4, 0);
-    expect(result.contributionRate.toNumber()).toBeCloseTo(0.0297, 4);
-    expect(result.expectedContribution.toNumber()).toBe(2082);
+    expect(result.contributionRate.toNumber()).toBe(0.0296);
+    expect(result.expectedContribution.toNumber()).toBe(2072);
     expect(result.ptcAllowed.toNumber()).toBe(9600);
     expect(result.netPTC.toNumber()).toBe(6000);
     expect(result.excessAPTCRepayment.toNumber()).toBe(0);
@@ -764,8 +755,7 @@ describe("Form 8962 - APTC exactly matches PTC", () => {
 
 describe("Form 8962 - very low income / Medicaid gap", () => {
   it("Line 3: zero income yields 0% FPL and 0% contribution rate", () => {
-    // AGI = $0 → fplPct = 0. Bracket [0, 150): rate = 0%
-    // ec = $0. SLCSP = $6,000, premium = $4,800 → PTC = $4,800
+    // No below-poverty eligibility exception is supplied.
     const result = calculateForm8962(makeInput({
       modifiedAGI: d(0),
       form1095A: make1095A(400, 500, 0),
@@ -773,23 +763,21 @@ describe("Form 8962 - very low income / Medicaid gap", () => {
     expect(result.fplPercentage.toNumber()).toBe(0);
     expect(result.contributionRate.toNumber()).toBe(0);
     expect(result.expectedContribution.toNumber()).toBe(0);
-    expect(result.ptcAllowed.toNumber()).toBe(4800);
-    expect(result.netPTC.toNumber()).toBe(4800);
+    expect(result.ptcAllowed.toNumber()).toBe(0);
+    expect(result.netPTC.toNumber()).toBe(0);
   });
 
-  it("Line 3: income $5,000 is ~33% FPL with full PTC up to premium", () => {
-    // fplPct = 5000/15060*100 = 33.20%
-    // Bracket [0, 150): rate = 0%. ec = $0
-    // SLCSP = $6,000, premium = $4,800 → PTC = $4,800
-    // APTC = $2,400 → netPTC = $2,400
+  it("Line 3: income $5,000 is ~33% FPL without an assumed eligibility exception", () => {
+    // No below-poverty exception: credit zero, repayment remains subject to 2025 Table 5.
     const result = calculateForm8962(makeInput({
       modifiedAGI: d(5000),
       form1095A: make1095A(400, 500, 200),
     }));
     expect(result.fplPercentage.toNumber()).toBeCloseTo(33.2, 0);
     expect(result.contributionRate.toNumber()).toBe(0);
-    expect(result.ptcAllowed.toNumber()).toBe(4800);
-    expect(result.netPTC.toNumber()).toBe(2400);
+    expect(result.ptcAllowed.toNumber()).toBe(0);
+    expect(result.netPTC.toNumber()).toBe(0);
+    expect(result.excessAPTCRepayment.toString()).toBe("375");
   });
 });
 
@@ -1006,20 +994,14 @@ describe("Form 8962 - family size drives FPL bracket assignment", () => {
 
 describe("Form 8962 - MFS uses 'other' repayment cap per Table 5", () => {
   it("Line 27: MFS at 232% FPL gets other $1,950 cap per Table 5", () => {
-    // Per IRS Form 8962 Table 5: MFS is not "Single" → uses "any other" column.
-    // Family of 1, AGI = $35,000 → fplPct = 35000/15060*100 = 232.40%.
-    // Bracket [200,250): rate = 0.02+(32.40/50)*0.02 = 0.03296...
-    // ec = roundDollar(35000*0.03296) = $1,154. Monthly ec = $96.17.
-    // Monthly: min(max(0, 200-96.17), 600) = min(103.83, 600) = 103.83 × 12 = $1,246
-    // APTC = $6,000 (500×12). excess = $6,000-$1,246 = $4,754.
-    // MFS uses other cap [200,300) = $1,950 (Rev. Proc. 2024-40).
+    // MFS without an actual exception receives no PTC; the 2025 other-filing-status cap is $1950.
     const result = calculateForm8962(makeInput({
       modifiedAGI: d(35000),
       filingStatus: "married_filing_separately",
       form1095A: make1095A(600, 200, 500),
     }));
     expect(result.fplPercentage.toNumber()).toBeCloseTo(232.4, 0);
-    expect(result.ptcAllowed.toNumber()).toBe(1246);
+    expect(result.ptcAllowed.toNumber()).toBe(0);
     expect(result.excessAPTCRepayment.toNumber()).toBe(1950);
   });
 });
@@ -1067,13 +1049,19 @@ describe("Form 8962 - audit trail records all PTC calculation lines", () => {
 
     // Every key Form 8962 line must appear in the audit trail
     expect(lineNums).toContain("1");   // family size
-    expect(lineNums).toContain("2");   // modified AGI
-    expect(lineNums).toContain("3");   // FPL percentage
-    expect(lineNums).toContain("5");   // contribution rate
-    expect(lineNums).toContain("7");   // expected annual contribution
+    expect(lineNums).toContain("2a");  // taxpayer MAGI
+    expect(lineNums).toContain("2b");  // required-filing dependent MAGI
+    expect(lineNums).toContain("4");   // poverty guideline
+    expect(lineNums).toContain("8a");  // annual contribution
+    expect(lineNums).toContain("8b");  // monthly contribution
+    expect(lineNums).toContain("11f"); // advance credit
+    expect(lineNums).toContain("29");  // repayment tax
+    expect(lineNums).toContain("3");   // household income
+    expect(lineNums).toContain("5");   // whole poverty percentage
+    expect(lineNums).toContain("7");   // applicable figure
     expect(lineNums).toContain("11a"); // annual enrollment premium
     expect(lineNums).toContain("11b"); // annual SLCSP
-    expect(lineNums).toContain("11c"); // annual advance PTC
+    expect(lineNums).toContain("11c"); // annual contribution
     expect(lineNums).toContain("24");  // PTC allowed
     expect(lineNums).toContain("25");  // advance PTC total
     expect(lineNums).toContain("26");  // net PTC
@@ -1087,7 +1075,7 @@ describe("Form 8962 - audit trail records all PTC calculation lines", () => {
 
     // Values must be Decimal instances
     const line3 = result.lines.find((l) => l.form === "Form 8962" && l.line === "3");
-    expect(line3?.value.toNumber()).toBe(result.fplPercentage.toNumber());
+    expect(line3?.value.toNumber()).toBe(result.modifiedAGI.toNumber());
 
     const line24 = result.lines.find((l) => l.form === "Form 8962" && l.line === "24");
     expect(line24?.value.toNumber()).toBe(result.ptcAllowed.toNumber());

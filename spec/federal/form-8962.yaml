@@ -1,150 +1,184 @@
 form: "Form 8962"
 fullName: "Premium Tax Credit (PTC)"
-taxYear: 2025
+taxYear: [2025, 2026]
 irsReference: "https://www.irs.gov/instructions/i8962"
-
-notes: |
-  Form 8962 reconciles advance premium tax credits (APTC) received through
-  the ACA marketplace with the actual PTC based on household income.
-  Net PTC (if PTC > APTC) flows to Schedule 3 Line 10.
-  Excess APTC repayment (if APTC > PTC) flows to Schedule 2 Line 2.
-  For 2025, the enhanced IRA subsidies from ARPA/IRA have been extended.
-  FPL: TY2025 uses the 2024 HHS Poverty Guidelines ($15,060 base, $5,380/person).
-  Per IRS Q&A: "the tax credit for 2025 is based on the 2024 FPL."
-  PTC computation uses the per-month method (IRS Lines 12-23), not the annual
-  shortcut (Line 11), to correctly handle partial-year and varying coverage.
-
-businessRuleValidation:
-  - rule: "reference-summary-packet"
-    description: "Inventory support counts this form as business-rule validated only when regression coverage proves the emitted packet artifact stays labeled as a non-filing reference summary and only surfaces the supported Form 1095-A marketplace policy totals together with the supported Form 8962 reconciliation lines that route to Schedule 2 and Schedule 3."
-    testRef: "tests/pdf/fill-form-8962.test.ts::fillForm8962Reference keeps the packet artifact reference-only and limited to supported Form 1095-A and Form 8962 reconciliation outputs"
-
+references:
+  - "https://www.irs.gov/publications/p974"
+  - "https://www.irs.gov/irb/2025-32_IRB"
+  - "https://www.govinfo.gov/content/pkg/FR-2025-01-17/html/2025-01377.htm"
+  - "https://www.govinfo.gov/content/pkg/PLAW-119publ21/html/PLAW-119publ21.htm"
+  - "https://www.ecfr.gov/current/title-26/section-1.36B-2"
+notes: >-
+  Refreshed 2026-10-25. Final IRS instructions available are for 2025; their
+  physical line identifiers describe the audit, not a qualified 2026 form.
+  Apply enacted 2026 law and indexed percentages without applying the 2027
+  noncitizen restrictions or 2028 verification changes early. The October 15,
+  2026 proposed regulations are not final law. All monetary operations use
+  Decimal. Historical aggregate inputs remain explicitly unverified; they cannot
+  establish coverage, residency, below-poverty or separate-filing exceptions.
+  A verified 2026 computation requires the actual facts in ptc-source-facts.yaml.
 lines:
   - line: "1"
-    description: "Tax family size"
-    formula: "Primary + spouse (if MFJ) + dependents claimed"
-    irsRef: "Form 8962 Instructions, Line 1"
-    testRef: "tests/engine/forms/form-8962.test.ts::Form 8962 Line 1 - family size"
-
-  - line: "2"
-    description: "Modified AGI"
-    formula: "AGI + tax-exempt foreign income + tax-exempt interest + non-taxable SS"
-    irsRef: "Form 8962 Instructions, Line 2"
-    notes: "For most taxpayers this equals AGI"
-    testRef: "tests/engine/forms/form-8962.test.ts::Form 8962 Line 2 - modified AGI"
-
+    description: "Actual tax family size"
+    formula: "Use confirmed Form 8962 tax-family worksheet, never count all household members or every entered dependent automatically."
+    irsRef: "Form 8962 line 1"
+    testRef: "tests/engine/forms/form-8962-2026.test.ts::uses actual household income and regional prior-year poverty guidelines"
+  - line: "2a"
+    description: "Taxpayer modified AGI"
+    formula: "Actual Worksheet 1-1: AGI plus tax-exempt interest, Form 2555 lines 45 and 50, and nontaxable Social Security, with Form 8814 coordination. Preserve signed MAGI."
+    irsRef: "Form 8962 Worksheet 1-1"
+    testRef: "tests/engine/forms/form-8962-2026.test.ts::uses actual household income and regional prior-year poverty guidelines"
+  - line: "2b"
+    description: "Required-filing dependents modified AGI"
+    formula: "Actual Worksheet 1-2 combined signed MAGI only for dependents required to file, including applicable Form 8814 adjustments. Known zero is explicit."
+    irsRef: "Form 8962 Worksheet 1-2"
+    testRef: "tests/engine/forms/form-8962-2026.test.ts::combines signed taxpayer and required-filing dependent MAGI before flooring household income"
   - line: "3"
-    description: "Household income as % of Federal Poverty Line"
-    formula: "(Modified AGI / FPL for family size) × 100 — NOT rounded to whole number"
-    irsRef: "Form 8962 Instructions, Line 3"
-    notes: |
-      TY2025 uses 2024 HHS Poverty Guidelines (48 states): $15,060 (1 person),
-      $5,380 per additional person. NOT the 2025 guidelines ($15,650/$5,580).
-      Per IRS: "the tax credit for 2025 is based on the 2024 FPL."
-      IRS Form 8962 Line 3 shows "___.__%" (2 decimal places). The value must retain
-      decimal precision for accurate interpolation (Line 5) and repayment cap tier
-      classification (Table 5). Rounding to a whole number misclassifies taxpayers
-      near bracket boundaries (e.g., 199.8% → 200% changes repayment cap from $375
-      to $950 for single filers — a $575 error).
-    edgeCases:
-      - "If below 100% FPL, generally not eligible unless exception applies"
-      - "If above 400% FPL, PTC may be zero (pre-IRA) or limited (post-IRA)"
-      - "FPL for family of 4 (2024 HHS) = $31,200"
-      - "FPL% near bracket boundaries must use decimal precision (e.g., 199.8% stays in <200% tier)"
-    testRef: "tests/engine/forms/form-8962.test.ts::Form 8962 Line 3 - FPL percentage retains decimal precision"
-
+    description: "Household income"
+    formula: "max(0, line 2a + line 2b)"
+    irsRef: "Form 8962 line 3"
+    testRef: "tests/engine/forms/form-8962-2026.test.ts::combines signed taxpayer and required-filing dependent MAGI before flooring household income"
+  - line: "4"
+    description: "Federal poverty line"
+    formula: >-
+      Base plus increment times (actual family size minus one). TY2025 uses 2024
+      HHS guidelines: contiguous 15060/5380, Alaska 18810/6730, Hawaii 17310/6190.
+      TY2026 uses 2025 guidelines: contiguous 15650/5500, Alaska 19550/6880,
+      Hawaii 17990/6330. Confirm applicable residence region; where more than
+      one regional guideline applies use the greatest applicable guideline.
+    irsRef: "Form 8962 Tables 1-1 through 1-3; 2025 HHS guidelines"
+    testRef: "tests/engine/forms/form-8962-2026.test.ts::uses actual household income and regional prior-year poverty guidelines"
   - line: "5"
-    description: "Expected contribution percentage"
-    formula: "Based on FPL percentage using applicable figure table"
-    irsRef: "Form 8962 Instructions, Line 5; Table 2"
-    testRef: "tests/engine/forms/form-8962.test.ts::Form 8962 Line 5 - contribution rate at 0% below 150 FPL"
-
+    description: "Household income percentage used by the applicable figure table"
+    formula: "If line 3 > 4 times line 4, enter 401; otherwise floor(line 3 / line 4 times 100). Retain the unrounded percentage only as a diagnostic, never as the table input."
+    irsRef: "Form 8962 Worksheet 2"
+    testRef: "tests/engine/forms/form-8962-2026.test.ts::drops the percentage fraction and rounds the applicable figure to four decimals"
   - line: "7"
-    description: "Expected annual contribution"
-    formula: "Line 2 × Line 5 (contribution rate)"
-    irsRef: "Form 8962 Instructions, Line 7"
-    testRef: "tests/engine/forms/form-8962.test.ts::Form 8962 Line 7 - expected contribution"
-
-  - line: "11a"
-    description: "Annual premium amount (enrollment premiums)"
-    formula: "Sum of monthly enrollment premiums from Form 1095-A"
-    irsRef: "Form 8962 Instructions, Line 11"
-    testRef: "tests/engine/forms/form-8962.test.ts::Form 8962 Line 11a - annual premium"
-
-  - line: "11b"
-    description: "Annual SLCSP premium"
-    formula: "Sum of monthly SLCSP amounts from Form 1095-A"
-    irsRef: "Form 8962 Instructions, Line 11"
-    testRef: "tests/engine/forms/form-8962.test.ts::Form 8962 Line 11b - annual SLCSP"
-
-  - line: "11c"
-    description: "Annual advance PTC"
-    formula: "Sum of monthly advance PTC from Form 1095-A"
-    irsRef: "Form 8962 Instructions, Line 11"
-    testRef: "tests/engine/forms/form-8962.test.ts::Form 8962 Line 11c - annual advance PTC"
-
+    description: "Applicable figure and taxpayer eligibility"
+    formula: >-
+      Interpolate only within the selected bracket using Decimal and round the
+      resulting decimal rate to four places. TY2025 enhanced rates remain 0 below
+      150, 0 to .02 at 150-200, .02 to .04 at 200-250, .04 to .06 at 250-300,
+      .06 to .085 at 300-400, and .085 above 400. TY2026 rates: .021 below 133,
+      .0314 to .0419 at 133-150, .0419 to .066 at 150-200, .066 to .0844 at
+      200-250, .0844 to .0996 at 250-300, and .0996 at 300-400. No 2026 PTC
+      when actual household income exceeds 400 percent. Below 100 requires an
+      actual applicable exception; the lawful-presence/Medicaid exception ends
+      in 2026. The marketplace-estimate exception requires actual qualifying
+      estimate, accurate information and positive APTC. Claimed-as-dependent
+      taxpayers are ineligible. MFS requires confirmed applicable abuse or
+      abandonment exception, including its three-year limitation.
+    irsRef: "Form 8962 Table 2; Rev. Proc. 2025-25; PL 119-21 section 71302; 26 CFR 1.36B-2(b)"
+    testRef: "tests/engine/forms/form-8962-2026.test.ts::applies 2026 income limits and only actual eligibility exceptions"
+  - line: "8a"
+    description: "Annual contribution"
+    formula: "Round line 3 times line 7 to nearest dollar."
+    irsRef: "Form 8962 line 8a"
+    testRef: "tests/engine/forms/form-8962-2026.test.ts::drops the percentage fraction and rounds the applicable figure to four decimals"
+  - line: "8b"
+    description: "Monthly contribution"
+    formula: "Round line 8a divided by 12 to nearest dollar, once per tax family and month."
+    irsRef: "Form 8962 line 8b"
+    testRef: "tests/engine/forms/form-8962-2026.test.ts::uses one rounded monthly contribution for multiple policies"
+  - line: "9"
+    description: "Special worksheets"
+    formula: >-
+      Allocation between tax families, elected alternative marriage calculation,
+      unlawful-presence mixed coverage, and circular self-employed insurance
+      deduction coordination require completed source worksheets. Reject these
+      scenarios while their dedicated worksheet integration is unavailable;
+      never substitute ordinary unallocated figures.
+    irsRef: "Form 8962 line 9; Pub. 974"
+    testRef: "tests/engine/forms/form-8962-2026.test.ts::rejects unresolved special worksheets and missing source facts"
+  - line: "10"
+    description: "Annual versus monthly calculation"
+    formula: >-
+      Use annual line 11 only if every source policy covered all twelve months
+      with unchanged enrollment and benchmark premiums, and actual corrected
+      monthly premium/benchmark/coverage eligibility is unchanged. Otherwise
+      use monthly lines 12-23. QSEHRA adjustments follow Worksheet N/Q under
+      the selected method. APTC changes alone do not prevent annual calculation.
+    irsRef: "Form 8962 line 10; Pub. 974 Worksheets N/Q"
+    testRef: "tests/engine/forms/form-8962-2026.test.ts::selects the annual method only for unchanged full-year source policies"
+  - line: "11a-11f"
+    description: "Annual reconciliation columns"
+    formula: >-
+      a=sum actual eligible enrollment premiums, b=sum corrected household SLCSP,
+      c=line 8a, d=max(0,b-c), e=min(a,d) adjusted for actual QSEHRA,
+      f=sum actual APTC. A duplicate household benchmark on multiple source
+      policies is included only once in corrected monthly reconciliation.
+      Do not emit monthly audit lines when using annual calculation.
+    irsRef: "Form 8962 line 11; Pub. 974 Worksheet Q Parts II and III"
+    testRef: "tests/engine/forms/form-8962-2026.test.ts::selects the annual method only for unchanged full-year source policies"
+  - line: "12-23"
+    description: "Monthly reconciliation columns for January through December"
+    formula: >-
+      For each actual covered month: a=eligible enrollment premiums,
+      b=corrected coverage-family benchmark, c=line 8b, d=max(0,b-c),
+      e=min(a,d) adjusted by QSEHRA, f=actual combined APTC. Known ineligible
+      coverage has zero allowed PTC and retains APTC for repayment. Starting
+      with 2026, coverage enrolled solely through an income-based special
+      enrollment period without a qualifying life event is not eligible.
+      Require one complete monthly reconciliation row per source month.
+    irsRef: "Form 8962 lines 12-23; PL 119-21 section 71304"
+    testRef: "tests/engine/forms/form-8962-2026.test.ts::uses one rounded monthly contribution for multiple policies"
+  - line: "qsehra"
+    description: "QSEHRA adjustment"
+    formula: >-
+      Actual Worksheet N affordability determines zero PTC for an affordable
+      QSEHRA month. Otherwise subtract actual monthly permitted benefit, floored
+      at zero. Under annual calculation allocate the tentative annual credit
+      equally over twelve months before this adjustment; retain Decimal precision
+      and round the resulting annual credit. No inferred employer benefit or
+      affordability. All rows explicitly report zero benefit for unaffected months.
+    irsRef: "Pub. 974 Worksheets N and Q"
+    testRef: "tests/engine/forms/form-8962-2026.test.ts::reconciles actual QSEHRA benefits using the selected calculation method"
   - line: "24"
-    description: "Annual PTC allowed (sum of per-month PTC)"
-    formula: |
-      Sum over each covered month of:
-        min(max(0, monthly_SLCSP - monthly_expected_contribution), monthly_premium)
-      where monthly_expected_contribution = Line 7 ÷ 12 (IRS Lines 12-23 Column c).
-      This is the general monthly method; the annual shortcut (Line 11) only works
-      when coverage is constant for all 12 months.
-    irsRef: "Form 8962 Instructions, Lines 12-23 (monthly calculation), Line 24"
-    edgeCases:
-      - "PTC per month cannot exceed that month's enrollment premium (Column e = min of Column a and Column d)"
-      - "If SLCSP is 0 for any month, no PTC for that month"
-      - "For partial-year coverage, only covered months contribute; uncovered months add $0"
-      - "Monthly expected contribution is NOT prorated — always Line 7 ÷ 12, even for partial-year"
-      - "Annual method (Line 11) gives wrong result for partial-year coverage"
-    testRef: "tests/engine/forms/form-8962.test.ts::Form 8962 Line 24 - PTC allowed"
-
+    description: "Allowed premium tax credit"
+    formula: "Annual column e or sum monthly column e, rounded to nearest dollar."
+    irsRef: "Form 8962 line 24"
+    testRef: "tests/engine/forms/form-8962-2026.test.ts::selects the annual method only for unchanged full-year source policies"
   - line: "25"
-    description: "Advance PTC total"
-    formula: "Same as Line 11c — total APTC received"
-    irsRef: "Form 8962 Instructions, Line 25"
-    testRef: "tests/engine/forms/form-8962.test.ts::Form 8962 Line 25 - advance PTC total equals Line 11c"
-
+    description: "Advance premium tax credit"
+    formula: "Annual column f or sum monthly column f; reconcile every source statement."
+    irsRef: "Form 8962 line 25"
+    testRef: "tests/engine/forms/form-8962-2026.test.ts::rejects inconsistent duplicate or incomplete source reconciliation"
   - line: "26"
-    description: "Net PTC (if PTC > APTC)"
-    formula: "Line 24 - Line 25 (if positive)"
-    irsRef: "Form 8962 Instructions, Line 26"
-    notes: "Flows to Schedule 3 Line 10"
-    testRef: "tests/engine/forms/form-8962.test.ts::Form 8962 Line 26 - net PTC refundable"
-
+    description: "Net refundable premium tax credit"
+    formula: "max(0,line 24-line 25); route to Schedule 3 line 9."
+    irsRef: "Form 8962 line 26"
+    testRef: "tests/engine/forms/form-8962-2026.test.ts::records distinct excess, repayment limit and repayment lines"
   - line: "27"
-    description: "Excess APTC repayment"
-    formula: "Line 25 - Line 24 (if positive), subject to repayment cap"
-    irsRef: "Form 8962 Instructions, Line 27; Table 5 repayment caps"
-    edgeCases:
-      - "Repayment is capped based on FPL percentage (Table 5)"
-      - "Below 200% FPL: $375 single / $750 other (Rev. Proc. 2024-40 §2.07)"
-      - "200-300% FPL: $975 single / $1,950 other (Rev. Proc. 2024-40 §2.07)"
-      - "300-400% FPL: $1,625 single / $3,250 other (Rev. Proc. 2024-40 §2.07)"
-      - "Above 400% FPL: no cap (full repayment)"
-      - "Filing status: only 'Single' uses the lower cap column per IRS Form 8962 Table 5. MFS uses 'any other filing status' (higher cap)."
-    testRef: "tests/engine/forms/form-8962.test.ts::Form 8962 Line 27 - excess APTC repayment"
-
+    description: "Excess advance premium tax credit before limitation"
+    formula: "max(0,line 25-line 24), before any repayment cap."
+    irsRef: "Form 8962 line 27"
+    testRef: "tests/engine/forms/form-8962-2026.test.ts::records distinct excess, repayment limit and repayment lines"
+  - line: "28"
+    description: "Repayment limitation"
+    formula: >-
+      TY2025 only: below 200 percent 375 single / 750 other; 200 to below 300
+      975 / 1950; 300 to below 400 1625 / 3250; 400 or more no limitation.
+      TY2026 no repayment limitation at any income under PL 119-21 section
+      71305; retain null for no limit, never misrepresent zero as a zero cap.
+    irsRef: "Form 8962 Table 5; PL 119-21 section 71305"
+    testRef: "tests/engine/forms/form-8962-2026.test.ts::repays all excess 2026 advances without the historical income-based caps"
+  - line: "29"
+    description: "Excess APTC repayment tax"
+    formula: "min(line27,line28) where a cap applies, otherwise line27; route to Schedule 2 line 1a."
+    irsRef: "Form 8962 line 29"
+    testRef: "tests/engine/forms/form-8962-2026.test.ts::records distinct excess, repayment limit and repayment lines"
+  - line: "30-33"
+    description: "Allocation of policy amounts"
+    formula: "Preserve an explicit allocationRequired fact and reject ordinary calculation pending completed Part IV source allocations and agreements; no inferred 50-percent or zero allocation."
+    irsRef: "Form 8962 Part IV"
+    testRef: "tests/engine/forms/form-8962-2026.test.ts::rejects unresolved special worksheets and missing source facts"
+  - line: "34-35"
+    description: "Alternative calculation for year of marriage"
+    formula: "Preserve actual election and reject ordinary calculation pending Part V/Pub. 974 worksheet integration; do not silently discard an election."
+    irsRef: "Form 8962 Part V"
+    testRef: "tests/engine/forms/form-8962-2026.test.ts::rejects unresolved special worksheets and missing source facts"
   - line: "packet"
-    description: "Draft packet inclusion rule for supported Form 8962 reconciliation data"
-    formula: "When the return includes one or more supported Form 1095-A marketplace statements, include a non-filing reference-summary PDF in the packet that lists each marketplace policy annual premium, annual SLCSP, annual APTC, and the supported Form 8962 reconciliation lines 1, 2, 3, 5, 7, 11a, 11b, 11c, 24, 25, 26, and 27."
-    irsRef: "Form 8962 Instructions, Lines 1, 11, 24, 25, 26, 27"
-    notes: "This packet slice intentionally emits a deterministic reference summary instead of attempting to recreate the IRS fillable Form 8962, so the draft packet stays honest about the supported reconciliation outputs and the marketplace data the engine consumed."
-    testRef: "tests/pdf/fill-form-8962.test.ts::fillReturn includes a Form 8962 reference summary when marketplace statements are present"
-
-  # ── Edge Cases ──────────────────────────────────────────
-  - line: "11a-partial"
-    description: "Partial-year coverage aggregation"
-    formula: "Sum only months with 1095-A entries"
-    irsRef: "Form 8962 Instructions, Lines 12-23"
-    edgeCases:
-      - "6-month coverage produces half the annual amounts"
-      - "Multiple 1095-A forms aggregate across all months"
-    testRef: "tests/edge-cases/ptc-edge-cases.test.ts::Form 8962 - partial-year coverage"
-
-  - line: "27-caps"
-    description: "Repayment cap tiers by FPL and filing status"
-    formula: "Table 5 caps: <200% single $375/other $750, 200-300% $975/$1950, 300-400% $1625/$3250 (Rev. Proc. 2024-40 §2.07)"
-    irsRef: "Form 8962 Instructions, Table 5"
-    testRef: "tests/edge-cases/ptc-edge-cases.test.ts::Form 8962 - repayment cap tiers"
+    description: "Non-filing reference summary"
+    formula: "Copy distinct audited household, contribution, monthly or annual reconciliation and repayment values. Label unverified historical inputs and every PDF page review-only; do not recreate or qualify an official 2026 form."
+    irsRef: "Form 8962 Parts I-III"
+    testRef: "tests/pdf/fill-form-8962.test.ts::fillForm8962Reference keeps the packet artifact reference-only and limited to supported Form 1095-A and Form 8962 reconciliation outputs"

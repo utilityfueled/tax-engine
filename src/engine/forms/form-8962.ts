@@ -1,231 +1,275 @@
-/**
- * Form 8962 — Premium Tax Credit (PTC)
- * Spec: spec/federal/form-8962.yaml
- *
- * Reconciles advance PTC (APTC) from the marketplace with actual PTC
- * based on household income relative to Federal Poverty Line.
- */
-
+/** Form 8962 — Premium Tax Credit. Spec: spec/federal/form-8962.yaml. */
 import Decimal from "decimal.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import type { FilingStatus } from "@/models/constants.js";
-import { d, zeroFloor, min, roundDollar } from "@/utils/decimal.js";
+import { min, roundDollar, zeroFloor } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
 
-export interface Form8962Input {
+/** Actual completed household and coverage worksheets; never inferred from AGI alone. */
+export interface Form8962Facts {
   taxFamilySize: number;
-  modifiedAGI: Decimal;
+  fplRegion: "contiguous" | "alaska" | "hawaii";
+  taxpayerModifiedAGI: string;
+  requiredFilingDependentsModifiedAGI: string;
+  householdFactsConfirmed: boolean;
+  canBeClaimedAsDependent: boolean;
+  marriedFilingSeparatelyExceptionConfirmed?: boolean;
+  belowPovertyException: "none" | "marketplace_estimate" | "lawfully_present_ineligible_medicaid";
+  marketplaceEstimatedIncomeWithinEligibilityRange?: boolean;
+  marketplaceInformationAccurate?: boolean;
+  coverageFactsConfirmed: boolean;
+  allocationRequired: boolean;
+  alternativeMarriageCalculationElected: boolean;
+  selfEmployedHealthInsuranceCoordinationRequired: boolean;
+  lawfulPresenceReconciliationRequired?: boolean;
+  qsehraAffected: boolean;
+  monthlyReconciliation: {
+    month: number;
+    enrolleePremium: string;
+    slcsp: string;
+    advancePremiumTaxCredit: string;
+    coverageEligible: boolean;
+    incomeBasedSepEnrollment: boolean;
+    qsehraAffordable?: boolean;
+    qsehraMonthlyPermittedBenefit?: string;
+  }[];
+}
+
+export interface Form8962Input {
+  taxYear?: number;
+  facts?: TaxYearInput["form8962"];
+  /** Historical 2025 preview only; cannot establish eligibility exceptions. */
+  taxFamilySize?: number;
+  modifiedAGI?: Decimal;
   filingStatus: FilingStatus;
   form1095A: TaxYearInput["form1095A"];
 }
 
 export interface Form8962Result {
-  familySize: number; // Line 1
-  modifiedAGI: Decimal; // Line 2
-  fplPercentage: Decimal; // Line 3
-  contributionRate: Decimal; // Line 5
-  expectedContribution: Decimal; // Line 7
-  annualPremium: Decimal; // Line 11a
-  annualSLCSP: Decimal; // Line 11b
-  annualAdvancePTC: Decimal; // Line 11c
+  taxYear: number;
+  sourceFactsVerified: boolean;
+  calculationMethod: "annual" | "monthly";
+  familySize: number;
+  modifiedAGI: Decimal; // Household income, line 3
+  federalPovertyLine: Decimal;
+  fplPercentage: Decimal; // Diagnostic only; never used to interpolate the applicable figure.
+  fplPercentageForTable: Decimal; // Line 5 (fraction dropped; 401 above 400%).
+  contributionRate: Decimal; // Line 7
+  expectedContribution: Decimal; // Line 8a
+  monthlyContribution: Decimal; // Line 8b
+  annualPremium: Decimal;
+  annualSLCSP: Decimal;
+  annualAdvancePTC: Decimal;
   ptcAllowed: Decimal; // Line 24
   advancePTCTotal: Decimal; // Line 25
-  netPTC: Decimal; // Line 26 (refundable, → Sched 3 Line 10)
-  excessAPTCRepayment: Decimal; // Line 27 (→ Sched 2 Line 2)
+  netPTC: Decimal; // Line 26 -> Schedule 3 line 9
+  excessAPTC: Decimal; // Line 27, before any historical repayment limitation
+  repaymentCap: Decimal | null; // Line 28; null when no cap applies
+  excessAPTCRepayment: Decimal; // Line 29 -> Schedule 2 line 1a
   lines: CalculatedLine[];
 }
 
-/**
- * Federal Poverty Line for TY2025 (48 contiguous states)
- * Per IRS: "the tax credit for 2025 is based on the 2024 FPL"
- * Source: 2024 HHS Poverty Guidelines (published January 2024)
- * IRS Form 8962 Instructions, Table 1-1
- */
-const FPL_2025_BASE = new Decimal(15060); // 1 person
-const FPL_2025_PER_PERSON = new Decimal(5380); // each additional person
+const FPL = {
+  2025: { contiguous: ["15060", "5380"], alaska: ["18810", "6730"], hawaii: ["17310", "6190"] },
+  2026: { contiguous: ["15650", "5500"], alaska: ["19550", "6880"], hawaii: ["17990", "6330"] },
+} as const;
+type Bracket = readonly [number, number, string, string];
+const CONTRIBUTION_TABLE: Record<2025 | 2026, readonly Bracket[]> = {
+  2025: [[0, 150, "0", "0"], [150, 200, "0", ".02"], [200, 250, ".02", ".04"], [250, 300, ".04", ".06"], [300, 400, ".06", ".085"], [400, 402, ".085", ".085"]],
+  2026: [[0, 133, ".021", ".021"], [133, 150, ".0314", ".0419"], [150, 200, ".0419", ".066"], [200, 250, ".066", ".0844"], [250, 300, ".0844", ".0996"], [300, 402, ".0996", ".0996"]],
+};
 
-function getFPL(familySize: number): Decimal {
-  if (familySize <= 1) return FPL_2025_BASE;
-  return FPL_2025_BASE.plus(FPL_2025_PER_PERSON.times(familySize - 1));
+function dollars(value: string | Decimal | undefined, label: string, signed = false): Decimal {
+  if (value === undefined || value === "") throw new Error(`Form 8962 requires actual ${label}`);
+  const amount = new Decimal(value);
+  if (!amount.isFinite() || (!signed && amount.isNegative())) throw new Error(`Form 8962 ${label} must be finite${signed ? "" : " and nonnegative"}`);
+  return amount;
 }
-
-/**
- * 2025 applicable figure table (contribution percentage).
- * Based on IRA-extended enhanced subsidies.
- * FPL% ranges map to contribution rate ranges (linear interpolation).
- */
-interface ContributionBracket {
-  minFPL: number;
-  maxFPL: number;
-  minRate: Decimal;
-  maxRate: Decimal;
+function assertMonth(month: number): void {
+  if (!Number.isInteger(month) || month < 1 || month > 12) throw new Error("Form 8962 requires an actual month from 1 through 12");
 }
-
-const CONTRIBUTION_TABLE_2025: ContributionBracket[] = [
-  { minFPL: 0, maxFPL: 150, minRate: new Decimal(0), maxRate: new Decimal(0) },
-  { minFPL: 150, maxFPL: 200, minRate: new Decimal(0), maxRate: new Decimal(0.02) },
-  { minFPL: 200, maxFPL: 250, minRate: new Decimal(0.02), maxRate: new Decimal(0.04) },
-  { minFPL: 250, maxFPL: 300, minRate: new Decimal(0.04), maxRate: new Decimal(0.06) },
-  { minFPL: 300, maxFPL: 400, minRate: new Decimal(0.06), maxRate: new Decimal(0.085) },
-  { minFPL: 400, maxFPL: Infinity, minRate: new Decimal(0.085), maxRate: new Decimal(0.085) },
-];
-
-function getContributionRate(fplPercentage: Decimal): Decimal {
-  const pct = fplPercentage.toNumber();
-  for (const bracket of CONTRIBUTION_TABLE_2025) {
-    if (pct >= bracket.minFPL && pct < bracket.maxFPL) {
-      if (bracket.minRate.eq(bracket.maxRate)) return bracket.minRate;
-      // Linear interpolation within bracket
-      const range = bracket.maxFPL - bracket.minFPL;
-      const position = (pct - bracket.minFPL) / range;
-      return bracket.minRate.plus(
-        bracket.maxRate.minus(bracket.minRate).times(position)
-      );
-    }
-  }
-  // Above all brackets
-  return new Decimal(0.085);
+function contributionRate(year: 2025 | 2026, percentage: Decimal): Decimal {
+  const bracket = CONTRIBUTION_TABLE[year].find(([start, end]) => percentage.gte(start) && percentage.lt(end));
+  if (!bracket) throw new Error("Form 8962 applicable percentage is outside its table");
+  const [start, end, initial, final] = bracket;
+  return new Decimal(initial).plus(new Decimal(final).minus(initial).times(percentage.minus(start)).div(new Decimal(end).minus(start)))
+    .toDecimalPlaces(4, Decimal.ROUND_HALF_UP);
 }
-
-/**
- * Repayment caps for excess APTC (Table 5)
- */
-interface RepaymentCap {
-  minFPL: number;
-  maxFPL: number;
-  single: Decimal;
-  other: Decimal;
-}
-
-// Rev. Proc. 2024-40 §2.07; IRS Form 8962 Instructions Table 5 (TY2025)
-const REPAYMENT_CAPS_2025: RepaymentCap[] = [
-  { minFPL: 0, maxFPL: 200, single: new Decimal(375), other: new Decimal(750) },
-  { minFPL: 200, maxFPL: 300, single: new Decimal(975), other: new Decimal(1950) },
-  { minFPL: 300, maxFPL: 400, single: new Decimal(1625), other: new Decimal(3250) },
-];
-
-function getRepaymentCap(fplPercentage: Decimal, filingStatus: FilingStatus): Decimal | null {
-  const pct = fplPercentage.toNumber();
-  if (pct >= 400) return null; // No cap above 400% FPL
-  for (const cap of REPAYMENT_CAPS_2025) {
-    if (pct >= cap.minFPL && pct < cap.maxFPL) {
-      // IRS Form 8962 Table 5: "for a filing status of Single" vs "any other filing status"
-      // Only Single uses the lower cap. MFS uses "any other" per Table 5.
-      return filingStatus === "single"
-        ? cap.single
-        : cap.other;
-    }
-  }
-  return null;
+interface Month {
+  month: number; premium: Decimal; slcsp: Decimal; advance: Decimal;
+  eligible: boolean; qsehraAffordable: boolean; qsehraBenefit: Decimal;
 }
 
 export function calculateForm8962(input: Form8962Input): Form8962Result {
-  const audit = new AuditTrail();
+  const year = input.taxYear ?? 2025;
+  if (year !== 2025 && year !== 2026) throw new Error("Form 8962 supports tax year 2025 or 2026 only");
+  const facts = input.facts;
+  if (year === 2026 && !facts) throw new Error("Form 8962 2026 requires actual household and monthly coverage facts");
+  const verified = facts !== undefined;
+  if (facts) {
+    if (facts.householdFactsConfirmed !== true || facts.coverageFactsConfirmed !== true) throw new Error("Form 8962 household and coverage facts must be confirmed");
+    for (const flag of ["allocationRequired", "alternativeMarriageCalculationElected", "selfEmployedHealthInsuranceCoordinationRequired", "lawfulPresenceReconciliationRequired"] as const) {
+      if (facts[flag] !== false) throw new Error(`Form 8962 requires completed ${flag} worksheets or confirmed absence`);
+    }
+    if (typeof facts.canBeClaimedAsDependent !== "boolean" || typeof facts.qsehraAffected !== "boolean") throw new Error("Form 8962 dependency and QSEHRA facts must be confirmed");
+    if (!["none", "marketplace_estimate", "lawfully_present_ineligible_medicaid"].includes(facts.belowPovertyException ?? "")) throw new Error("Form 8962 below-poverty exception facts are unknown");
+    if (input.filingStatus === "married_filing_separately" && typeof facts.marriedFilingSeparatelyExceptionConfirmed !== "boolean") throw new Error("Form 8962 separate filing exception must be confirmed or denied");
+  }
+  const familySize = facts ? facts.taxFamilySize : input.taxFamilySize;
+  if (familySize === undefined || !Number.isSafeInteger(familySize) || familySize < 1) throw new Error("Form 8962 requires a positive actual tax family size");
+  const region = facts ? facts.fplRegion : "contiguous";
+  if (region === undefined || !(region in FPL[year])) throw new Error("Form 8962 requires an actual FPL region");
+  const [base, increment] = FPL[year][region];
+  const federalPovertyLine = new Decimal(base).plus(new Decimal(increment).times(familySize - 1));
+  const taxpayerMAGI = dollars(facts ? facts.taxpayerModifiedAGI : input.modifiedAGI, "taxpayer modified AGI", true);
+  const dependentMAGI = facts ? dollars(facts.requiredFilingDependentsModifiedAGI, "required-filing dependents modified AGI", true) : new Decimal(0);
+  const modifiedAGI = zeroFloor(taxpayerMAGI.plus(dependentMAGI));
+  const fplPercentage = modifiedAGI.div(federalPovertyLine).times(100);
+  const fplPercentageForTable = modifiedAGI.gt(federalPovertyLine.times(4)) ? new Decimal(401) : fplPercentage.floor();
 
-  // Line 1: Family size
-  const familySize = input.taxFamilySize;
-  audit.record("Form 8962", "1", "Tax family size", new Decimal(familySize),
-    "Primary + spouse + dependents");
-
-  // Line 2: Modified AGI
-  const modifiedAGI = input.modifiedAGI;
-  audit.record("Form 8962", "2", "Modified AGI", modifiedAGI, "AGI + adjustments");
-
-  // Line 3: Household income as % of FPL
-  // IRS Form 8962 Line 3: "Divide line 2a by line 2b." — no rounding instruction.
-  // The form field shows "___.__%" (2 decimal places). Decimal precision is required
-  // for accurate interpolation (Line 5) and repayment cap tier classification (Table 5).
-  // Rounding to a whole number would misclassify taxpayers near bracket boundaries
-  // (e.g., 199.8% → 200% would change the repayment cap from $375 to $950 for single filers).
-  const fpl = getFPL(familySize);
-  const fplPercentage = fpl.isZero()
-    ? new Decimal(0)
-    : modifiedAGI.div(fpl).times(100);
-  audit.record("Form 8962", "3", "FPL percentage", fplPercentage,
-    `MAGI ${modifiedAGI} / FPL ${fpl} × 100`);
-
-  // Line 5: Expected contribution rate
-  const contributionRate = getContributionRate(fplPercentage);
-  audit.record("Form 8962", "5", "Expected contribution rate", contributionRate,
-    "From applicable figure table");
-
-  // Line 7: Expected annual contribution
-  const expectedContribution = roundDollar(modifiedAGI.times(contributionRate));
-  audit.record("Form 8962", "7", "Expected annual contribution", expectedContribution,
-    "Line 2 × Line 5");
-
-  // Lines 11a-c: Aggregate Form 1095-A data
-  // Lines 12-23: Per-month PTC computation (IRS Form 8962 Lines 12-23 method)
-  // Monthly expected contribution = Line 7 ÷ 12 (Column c)
-  // Monthly PTC = min(max(0, SLCSP - monthly expected), premium) (Column e)
-  let annualPremium = new Decimal(0);
-  let annualSLCSP = new Decimal(0);
-  let annualAdvancePTC = new Decimal(0);
-  let totalMonthlyPTC = new Decimal(0);
-
-  const monthlyExpected = expectedContribution.dividedBy(12);
-
+  const sourceMonths = new Map<number, { premium: Decimal; slcsp: Decimal; advance: Decimal; policyCount: number }>();
+  const policyIds = new Set<string>();
   for (const form of input.form1095A) {
-    for (const month of form.monthlyPremiums) {
-      const premium = d(month.enrolleePremium);
-      const slcsp = d(month.slcsp);
-      const aptc = d(month.advancePremiumTaxCredit);
-
-      annualPremium = annualPremium.plus(premium);
-      annualSLCSP = annualSLCSP.plus(slcsp);
-      annualAdvancePTC = annualAdvancePTC.plus(aptc);
-
-      // Per-month PTC: min(max(0, SLCSP - monthly expected), premium)
-      const monthPTC = min(zeroFloor(slcsp.minus(monthlyExpected)), premium);
-      totalMonthlyPTC = totalMonthlyPTC.plus(monthPTC);
+    // The schema records missingness before legacy amount defaults are applied.
+    const source = form as typeof form & { taxYear?: number; sourceFactsComplete?: boolean };
+    if (verified && (source.sourceFactsComplete !== true || !form.marketplace.trim() || !form.policyNumber.trim())) throw new Error("Form 8962 original source statement facts are incomplete");
+    if (verified && source.taxYear !== year) throw new Error("Form 8962 source statement tax year does not match");
+    const identity = JSON.stringify([form.marketplace.trim(), form.policyNumber.trim()]);
+    if (policyIds.has(identity)) throw new Error("Form 8962 duplicate policy statement; replace corrected statements instead of adding them");
+    policyIds.add(identity);
+    const seen = new Set<number>();
+    if (verified && form.monthlyPremiums.length === 0) throw new Error("Form 8962 source statement needs actual covered months");
+    for (const row of form.monthlyPremiums) {
+      assertMonth(row.month);
+      if (seen.has(row.month)) throw new Error("Form 8962 duplicate month in source statement");
+      seen.add(row.month);
+      const premium = dollars(row.enrolleePremium, "source enrollment premium");
+      const slcsp = dollars(row.slcsp, "source SLCSP premium");
+      const advance = dollars(row.advancePremiumTaxCredit, "source advance PTC");
+      const previous = sourceMonths.get(row.month);
+      sourceMonths.set(row.month, {
+        premium: premium.plus(previous?.premium ?? 0), slcsp: slcsp.plus(previous?.slcsp ?? 0),
+        advance: advance.plus(previous?.advance ?? 0), policyCount: (previous?.policyCount ?? 0) + 1,
+      });
     }
   }
-
-  audit.record("Form 8962", "11a", "Annual enrollment premium", annualPremium,
-    "Sum of monthly premiums from 1095-A");
-  audit.record("Form 8962", "11b", "Annual SLCSP premium", annualSLCSP,
-    "Sum of monthly SLCSP from 1095-A");
-  audit.record("Form 8962", "11c", "Annual advance PTC", annualAdvancePTC,
-    "Sum of monthly APTC from 1095-A");
-
-  // Line 24: PTC allowed = sum of per-month PTC (IRS Lines 12-23 Column e)
-  const ptcAllowed = roundDollar(totalMonthlyPTC);
-  audit.record("Form 8962", "24", "Annual PTC allowed", ptcAllowed,
-    "max(0, min(SLCSP - expected, premium))");
-
-  // Line 25: Advance PTC total
+  const months: Month[] = [];
+  if (facts) {
+    const seen = new Set<number>();
+    if (!facts.monthlyReconciliation) throw new Error("Form 8962 actual monthly reconciliation facts are required");
+    for (const row of facts.monthlyReconciliation) {
+      assertMonth(row.month);
+      if (seen.has(row.month)) throw new Error("Form 8962 duplicate reconciliation month");
+      seen.add(row.month);
+      const original = sourceMonths.get(row.month);
+      if (!original) throw new Error("Form 8962 reconciliation month has no source statement");
+      const premium = dollars(row.enrolleePremium, "eligible enrollment premium");
+      const slcsp = dollars(row.slcsp, "corrected SLCSP premium");
+      const advance = dollars(row.advancePremiumTaxCredit, "monthly advance PTC");
+      if (!advance.eq(original.advance)) throw new Error("Form 8962 monthly APTC does not reconcile to source statements");
+      if (premium.gt(original.premium)) throw new Error("Form 8962 eligible premium exceeds source enrollment premiums");
+      if (typeof row.coverageEligible !== "boolean" || typeof row.incomeBasedSepEnrollment !== "boolean") throw new Error("Form 8962 monthly coverage eligibility facts must be confirmed");
+      if (facts.qsehraAffected && typeof row.qsehraAffordable !== "boolean") throw new Error("Form 8962 requires actual monthly QSEHRA affordability");
+      const qsehraBenefit = facts.qsehraAffected ? dollars(row.qsehraMonthlyPermittedBenefit, "monthly QSEHRA permitted benefit") : new Decimal(0);
+      if (!facts.qsehraAffected && (row.qsehraAffordable === true || (row.qsehraMonthlyPermittedBenefit !== undefined && !dollars(row.qsehraMonthlyPermittedBenefit, "monthly QSEHRA benefit").isZero()))) throw new Error("Form 8962 QSEHRA source facts conflict");
+      months.push({ month: row.month, premium, slcsp, advance,
+        eligible: row.coverageEligible && !(year === 2026 && row.incomeBasedSepEnrollment),
+        qsehraAffordable: row.qsehraAffordable === true, qsehraBenefit });
+    }
+    if (seen.size !== sourceMonths.size) throw new Error("Form 8962 requires reconciliation for every source month");
+  } else {
+    for (const [month, source] of sourceMonths) {
+      if (source.policyCount > 1) throw new Error("Form 8962 multiple policies require actual corrected household benchmark facts");
+      months.push({ month, ...source, eligible: true, qsehraAffordable: false, qsehraBenefit: new Decimal(0) });
+    }
+  }
+  months.sort((left, right) => left.month - right.month);
+  const totalAdvances = months.reduce((total, month) => total.plus(month.advance), new Decimal(0));
+  if (fplPercentageForTable.lt(100) && facts?.belowPovertyException === "marketplace_estimate" && (typeof facts.marketplaceEstimatedIncomeWithinEligibilityRange !== "boolean" || typeof facts.marketplaceInformationAccurate !== "boolean")) throw new Error("Form 8962 below-poverty marketplace estimate and information accuracy facts must be confirmed");
+  const belowPovertyEligible = facts?.belowPovertyException === "marketplace_estimate"
+    ? facts.marketplaceEstimatedIncomeWithinEligibilityRange === true && facts.marketplaceInformationAccurate === true && totalAdvances.gt(0)
+    : year === 2025 && facts?.belowPovertyException === "lawfully_present_ineligible_medicaid";
+  const taxpayerEligible = facts?.canBeClaimedAsDependent !== true
+    && (input.filingStatus !== "married_filing_separately" || facts?.marriedFilingSeparatelyExceptionConfirmed === true)
+    && (fplPercentageForTable.gte(100) || belowPovertyEligible)
+    && (year !== 2026 || fplPercentageForTable.lte(400));
+  const rate = contributionRate(year, fplPercentageForTable);
+  const expectedContribution = roundDollar(modifiedAGI.times(rate));
+  const monthlyContribution = roundDollar(expectedContribution.div(12));
+  const first = months[0];
+  const fullYearUnchanged = input.form1095A.length > 0 && input.form1095A.every(form => {
+    const firstMonth = form.monthlyPremiums[0];
+    return firstMonth !== undefined && form.monthlyPremiums.length === 12 && form.monthlyPremiums.every(row =>
+      new Decimal(row.enrolleePremium).eq(firstMonth.enrolleePremium) && new Decimal(row.slcsp).eq(firstMonth.slcsp));
+  })
+    && months.length === 12 && first !== undefined && months.every(month => month.premium.eq(first.premium) && month.slcsp.eq(first.slcsp) && month.eligible === first.eligible);
+  const calculationMethod = fullYearUnchanged ? "annual" : "monthly";
+  const audit = new AuditTrail();
+  const record = (line: string, description: string, amount: Decimal, formula: string) => audit.record("Form 8962", line, description, amount, formula);
+  record("1", "Tax family size", new Decimal(familySize), verified ? "Actual confirmed tax-family worksheet" : "Unverified historical family-size input");
+  record("2a", "Taxpayer modified AGI", taxpayerMAGI, verified ? "Actual Worksheet 1-1" : "Unverified historical modified AGI");
+  record("2b", "Required-filing dependents modified AGI", dependentMAGI, verified ? "Actual Worksheet 1-2" : "Unknown historical dependent MAGI; preview only");
+  record("3", "Household income", modifiedAGI, "max(0, line 2a + line 2b)");
+  record("4", "Federal poverty line", federalPovertyLine, `${year - 1} HHS ${region} guideline for actual family size`);
+  record("5", "Household income percentage for applicable figure", fplPercentageForTable, "401 if line 3 > 4 times line 4; otherwise drop fractional percentage");
+  // Keep calculated diagnostic contributions available, but do not print skipped form lines.
+  if (taxpayerEligible) {
+    record("7", "Applicable figure", rate, `${year} applicable figure at whole-number line 5, rounded to four decimals`);
+    record("8a", "Annual contribution", expectedContribution, "round(line 3 times line 7)");
+    record("8b", "Monthly contribution", monthlyContribution, "round(line 8a / 12)");
+  }
+  let annualPremium = new Decimal(0), annualSLCSP = new Decimal(0), annualAdvancePTC = new Decimal(0), ptcAllowed = new Decimal(0);
+  if (calculationMethod === "annual") {
+    annualPremium = roundDollar(months.reduce((total, month) => total.plus(month.premium), new Decimal(0)));
+    annualSLCSP = roundDollar(months.reduce((total, month) => total.plus(month.slcsp), new Decimal(0)));
+    annualAdvancePTC = roundDollar(totalAdvances);
+    const maximum = zeroFloor(annualSLCSP.minus(expectedContribution));
+    const tentative = min(annualPremium, maximum);
+    if (taxpayerEligible && first?.eligible) {
+      ptcAllowed = facts?.qsehraAffected
+        ? roundDollar(months.reduce((total, month) => total.plus(month.qsehraAffordable ? 0 : zeroFloor(tentative.minus(month.qsehraBenefit.times(12)))), new Decimal(0)).div(12))
+        : tentative;
+      record("11a", "Annual enrollment premiums", annualPremium, "Sum actual eligible enrollment premiums");
+      record("11b", "Annual corrected household SLCSP", annualSLCSP, "Sum correct monthly household benchmark, without duplicated policy benchmarks");
+      record("11c", "Annual contribution", expectedContribution, "Line 8a");
+      record("11d", "Annual maximum premium assistance", maximum, "max(0, line 11b - line 11c)");
+      record("11e", "Annual allowed premium tax credit", ptcAllowed, "min(line 11a, line 11d), adjusted by actual QSEHRA Worksheet N/Q");
+    }
+    record("11f", "Annual advance premium tax credit", annualAdvancePTC, "Sum all source advance payments");
+  } else {
+    for (const month of months) {
+      const line = String(month.month + 11);
+      const premium = roundDollar(month.premium), slcsp = roundDollar(month.slcsp), advance = roundDollar(month.advance);
+      annualPremium = annualPremium.plus(premium); annualSLCSP = annualSLCSP.plus(slcsp); annualAdvancePTC = annualAdvancePTC.plus(advance);
+      if (taxpayerEligible && month.eligible) {
+        const maximum = zeroFloor(slcsp.minus(monthlyContribution));
+        const tentative = min(premium, maximum);
+        const allowed = month.qsehraAffordable ? new Decimal(0) : roundDollar(zeroFloor(tentative.minus(month.qsehraBenefit)));
+        ptcAllowed = ptcAllowed.plus(allowed);
+        record(`${line}a`, "Monthly eligible enrollment premium", premium, "Actual coverage-family enrollment premium");
+        record(`${line}b`, "Monthly corrected household SLCSP", slcsp, "Actual household benchmark; do not sum duplicate policy benchmarks");
+        record(`${line}c`, "Monthly contribution", monthlyContribution, "Line 8b, once for the tax family");
+        record(`${line}d`, "Monthly maximum premium assistance", maximum, `max(0, line ${line}b - line ${line}c)`);
+        record(`${line}e`, "Monthly allowed premium tax credit", allowed, `min(line ${line}a, line ${line}d), adjusted by actual QSEHRA`);
+      }
+      record(`${line}f`, "Monthly advance premium tax credit", advance, "All source advance payments, including ineligible coverage");
+    }
+  }
   const advancePTCTotal = annualAdvancePTC;
-  audit.record("Form 8962", "25", "Advance PTC total", advancePTCTotal,
-    "Same as Line 11c");
-
-  // Line 26: Net PTC (refundable credit if PTC > APTC)
   const netPTC = zeroFloor(ptcAllowed.minus(advancePTCTotal));
-  audit.record("Form 8962", "26", "Net PTC", netPTC,
-    "Line 24 - Line 25 → Schedule 3 Line 10");
-
-  // Line 27: Excess APTC repayment (if APTC > PTC)
-  const rawExcess = zeroFloor(advancePTCTotal.minus(ptcAllowed));
-  const repaymentCap = getRepaymentCap(fplPercentage, input.filingStatus);
-  const excessAPTCRepayment = repaymentCap !== null
-    ? min(rawExcess, repaymentCap)
-    : rawExcess;
-  audit.record("Form 8962", "27", "Excess APTC repayment", excessAPTCRepayment,
-    "Line 25 - Line 24 (capped) → Schedule 2 Line 2");
-
-  return {
-    familySize,
-    modifiedAGI,
-    fplPercentage,
-    contributionRate,
-    expectedContribution,
-    annualPremium,
-    annualSLCSP,
-    annualAdvancePTC,
-    ptcAllowed,
-    advancePTCTotal,
-    netPTC,
-    excessAPTCRepayment,
-    lines: audit.getLines(),
-  };
+  const excessAPTC = zeroFloor(advancePTCTotal.minus(ptcAllowed));
+  const capAmounts = input.filingStatus === "single" ? ["375", "975", "1625"] as const : ["750", "1950", "3250"] as const;
+  const repaymentCap = year === 2026 || fplPercentageForTable.gte(400) ? null : new Decimal(capAmounts[fplPercentageForTable.lt(200) ? 0 : fplPercentageForTable.lt(300) ? 1 : 2]);
+  const excessAPTCRepayment = repaymentCap === null ? excessAPTC : min(excessAPTC, repaymentCap);
+  record("24", "Allowed premium tax credit", ptcAllowed, "Annual column e or sum of monthly column e");
+  record("25", "Advance premium tax credit", advancePTCTotal, "Annual column f or sum of monthly column f");
+  record("26", "Net premium tax credit", netPTC, "max(0, line 24 - line 25) -> Schedule 3 line 9");
+  record("27", "Excess advance premium tax credit before limitation", excessAPTC, "max(0, line 25 - line 24)");
+  if (repaymentCap !== null && excessAPTC.gt(0)) record("28", "Historical repayment limitation", repaymentCap, "2025 Table 5; no repayment limitation applies in 2026");
+  record("29", "Excess advance premium tax credit repayment", excessAPTCRepayment, "Line 27 limited by line 28 where applicable -> Schedule 2 line 1a");
+  return { taxYear: year, sourceFactsVerified: verified, calculationMethod, familySize, modifiedAGI,
+    federalPovertyLine, fplPercentage, fplPercentageForTable, contributionRate: rate, expectedContribution, monthlyContribution,
+    annualPremium, annualSLCSP, annualAdvancePTC, ptcAllowed, advancePTCTotal, netPTC, excessAPTC, repaymentCap, excessAPTCRepayment,
+    lines: audit.getLines() };
 }
