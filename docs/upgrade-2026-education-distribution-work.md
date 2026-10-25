@@ -132,3 +132,40 @@ was enabled.
 
 Immutable staged UI tree `5cd7883e` passed all8 targeted intake/credit/DOM tests,
 root types and all3682 spec references. The full working UI also passed web types.
+
+
+## Audited education reference PDF (2026-10-25)
+
+Guided source intake was committed as `9f2ce31`. The reference summary now copies
+unique, finite canonical return, statement, Coverdell account, recipient and
+loan-expense audits. It preserves unreported boxes and unknown legacy answers;
+other-recipient amounts are shown separately from own-return totals. It rejects
+missing, duplicate, wrong-form, nonfinite, mismatched-year or inconsistent audit
+values. Long source labels wrap and paginate, and every page has one visible
+review-only notice. Opaque source links and student tax IDs are omitted.
+
+Parent agent review identified two missing source comparisons. A new failing-first
+regression proved changed QTP Boxes2/3 and outside-recipient identity could retain
+an old calculation. The correction requires exact QTP source amounts and actual
+recipient identity. Reported Coverdell Boxes2/3 must jointly sum to Box1 and their
+whole-dollar amounts must match the audited worksheet; absent boxes stay absent.
+The official worksheet example's reported141.67/708.33 remains distinguishable
+from calculated whole-dollar142/708. This is software review, not tax approval.
+
+Four source-summary regressions plus legacy reference and federal integration
+checks passed (14 tests total). Root types and scoped lint passed after the source comparison correction;
+checks are recorded in education-reference-review/types/lint logs.
+The synthetic three-page artifact is
+`.local/upgrade-evidence/education-reference-2025/f1099q-reference-filled.pdf`.
+All pages were rendered and the footer was inspected separately: each page has
+one visible notice. No2026 filing map or readiness gate was enabled.
+
+Remaining internal work in this slice: individual Form5329 PartII attachment and
+same-owner HSA merging; returned Coverdell contributions (codes2/3), prohibited
+transactions (code6) and their source-year/basis reconciliation; final integrated
+student-loan/educator reconciliation and adjacent suites. Actual final2026 form
+qualification, independent human tax review and release evidence remain external.
+
+Immutable staged reference tree `31246d3d` passed14 focused tests, root types and
+all3692 spec references. Logs: `education-reference-immutable-tests.log`,
+`education-reference-immutable-types.log`, `education-reference-immutable-spec.log`.

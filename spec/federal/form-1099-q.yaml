@@ -26,7 +26,7 @@ notes: |
 
 businessRuleValidation:
   - rule: "reference-summary-packet"
-    description: "Inventory support counts this form as business-rule validated only when regression coverage proves the emitted packet artifact stays labeled as a non-filing reference summary and only surfaces the supported Form 1099-Q payer Boxes 1 through 4 inputs, adjusted qualified education expense inputs, taxable-earnings outputs, and Form 5329 penalty-routing totals."
+    description: "Inventory support counts this form as business-rule validated only when regression coverage proves the emitted packet artifact stays labeled as a non-filing reference summary and only surfaces the actual Form 1099-Q source boxes, unknown values, allocated expense inputs, audited source/account/recipient outputs and own-return Form 5329 routing totals."
     testRef: "tests/pdf/fill-form-1099-q.test.ts::buildForm1099QReferenceSummary keeps the packet artifact reference-only and limited to supported education-distribution outputs"
 
 lines:
@@ -130,7 +130,7 @@ lines:
 
   - line: "packet"
     description: "Draft packet inclusion rule for supported Form 1099-Q statements"
-    formula: "When one or more supported Form 1099-Q statements are present, include a non-filing reference-summary PDF in the packet that lists each payer statement's Box 1 through Box 4 data, the supported adjusted qualified education expense inputs, and the computed taxable-earnings plus Form 5329 penalty-routing totals."
+    formula: "When one or more supported Form 1099-Q statements are present, include a non-filing reference-summary PDF in the packet that lists actual payer statement boxes and unreported values, distinguishes confirmed source records from historical aggregates, and copies audited taxable earnings plus per-recipient Form 5329 amounts. Every page remains marked for review only."
     irsRef: "Form 1099-Q Instructions, Boxes 1-5; Pub.970 chapters6–7; Form 5329 Part II"
     notes: "This packet slice intentionally emits a deterministic reference summary instead of attempting to recreate the payer-issued Form 1099-Q. Transfers remain visible. The legacy exclusion is unverified; source summaries must use actual verified transfer amounts."
     testRef: "tests/pdf/fill-form-1099-q.test.ts::fillReturn includes a Form 1099-Q reference summary when education distribution statements are present"

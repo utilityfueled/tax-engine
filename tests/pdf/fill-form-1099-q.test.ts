@@ -49,9 +49,10 @@ describe("Form 1099-Q packet reference summary", () => {
     };
 
     const result = calculateFederalTax(educationDistributionFixture);
+    if (!result.form1099Q) throw new Error("Expected calculated education distribution result");
     const summary = buildForm1099QReferenceSummary(
       educationDistributionFixture.form1099Q,
-      result.form1099Q!,
+      result.form1099Q,
       educationDistributionFixture.qualifiedEducationExpenses,
     );
 
@@ -95,15 +96,15 @@ describe("Form 1099-Q packet reference summary", () => {
       },
       {
         label: "Military academy penalty exception amount",
-        value: "0",
+        value: "Not provided",
       },
       {
         label: "Death exception",
-        value: "No",
+        value: "Not provided",
       },
       {
         label: "Disability exception",
-        value: "No",
+        value: "Not provided",
       },
     ]);
     expect(summary.lines).toEqual([
@@ -188,8 +189,9 @@ describe("Form 1099-Q packet reference summary", () => {
       const referencePath = filledForms.find((path) => path.endsWith(FORM_1099_Q_REFERENCE_FILENAME));
 
       expect(referencePath).toBeDefined();
-      await access(referencePath!);
-      const pdfBytes = await readFile(referencePath!);
+      if (!referencePath) throw new Error("Expected education reference artifact");
+      await access(referencePath);
+      const pdfBytes = await readFile(referencePath);
       expect(pdfBytes.length).toBeGreaterThan(0);
     } finally {
       await rm(outputDir, { recursive: true, force: true });
