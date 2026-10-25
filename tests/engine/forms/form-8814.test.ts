@@ -9,6 +9,7 @@ import { calculateForm8814, aggregateForm8814Results } from "@/engine/forms/form
 import { calculateFederalTax } from "@/engine/federal.js";
 import type { TaxYearInput, Form8814ChildInput } from "@/models/inputs.js";
 import { getConstants } from "@/models/constants.js";
+import { syntheticChildElection } from "../../fixtures/form-8814-election.js";
 
 const constants = getConstants(2025);
 
@@ -69,7 +70,9 @@ function makeParentFederalInput(
     donations: [],
     rentalProperties: [],
     savingsBondRedemptions: [],
-    form8814: form8814Children.map((c) => makeChildInput(c)),
+    form8814: form8814Children.map((c, index) => makeChildInput({
+      electionFacts: { ...syntheticChildElection(2025, String(index + 1).padStart(2, "0")), parentSituation: "joint_with_other_parent", child: { firstName: "Child", lastName: "Taxpayer", ssn: index === 0 ? "777-88-9999" : `777-88-99${String(index).padStart(2, "0")}`, dateOfBirth: "2012-04-10" } }, ...c,
+    })),
     ...extraInput,
   } as unknown as TaxYearInput;
 }

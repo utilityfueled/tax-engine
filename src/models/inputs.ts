@@ -4308,7 +4308,32 @@ export const Form2555Schema = z.preprocess(value => {
 }));
 export type Form2555Input = z.infer<typeof Form2555Schema>;
 
-export const Form8814ChildSchema = z.object({
+const Form8814ElectionFactsSchema = z.object({
+  taxYear: z.number().int(), sourceReference: z.string().trim().min(1), sourceFactsConfirmed: z.boolean(),
+  child: z.object({ firstName: z.string().trim().min(1), lastName: z.string().trim().min(1), ssn: z.string(), dateOfBirth: z.string() }),
+  electionRequested: z.boolean(), timelyElectionStatus: z.enum(["planned_timely", "filed_timely", "late"]),
+  childRequiredToFile: z.boolean(), childFilesJointReturn: z.boolean(),
+  otherGrossIncome: decimal, estimatedTaxPayments: decimal, priorYearOverpaymentApplied: decimal, federalIncomeTaxWithheld: decimal,
+  student: z.object({
+    program: z.enum(["school", "school_on_farm", "government_on_farm", "online_only", "correspondence", "on_the_job"]),
+    fullTimeMonths: z.array(z.number().int().min(1).max(12)), sourceReference: z.string().trim().min(1),
+  }).optional(),
+  electingTaxpayer: z.enum(["primary", "spouse"]), relationshipToChild: z.enum(["parent", "stepparent"]),
+  parentSituation: z.enum(["joint_with_other_parent", "married_separate", "custodial_unmarried", "custodial_considered_unmarried", "custodial_joint_stepparent", "custodial_separate_stepparent", "never_married_together_all_year", "surviving_unmarried", "surviving_joint_stepparent", "surviving_separate_stepparent"]),
+  custodialParentConfirmed: z.boolean().optional(),
+  consideredUnmarriedUnder7703Confirmed: z.boolean().optional(),
+  parentIncomeComparison: z.object({
+    taxYear: z.number().int(), returnTaxableIncomeWithoutChild: decimal, otherParentTaxableIncomeWithoutChild: decimal,
+    returnSourceReference: z.string().trim().min(1), otherParentSourceReference: z.string().trim().min(1), excludesElectedChildIncomeConfirmed: z.boolean(),
+  }).optional(),
+});
+export const Form8814ChildSchema = z.preprocess(value => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const raw = value as Record<string, unknown>;
+  return { ...raw, incomeSourcesComplete: raw.incomeSourcesComplete !== false && ["taxableInterest", "taxExemptInterest", "ordinaryDividends", "qualifiedDividends", "capitalGainDistributions"].every(field => raw[field] !== undefined) };
+}, z.object({
+  incomeSourcesComplete: z.boolean().optional(),
+  electionFacts: Form8814ElectionFactsSchema.optional(),
   /** Line 1a: Child's taxable interest (Forms 1099-INT, 1099-OID) */
   taxableInterest: optionalDecimal,
   /** Line 1b: Child's tax-exempt interest (informational, not in Line 4 total) */
@@ -4334,7 +4359,7 @@ export const Form8814ChildSchema = z.object({
     deductionSourceReference: z.string().trim().min(1).optional(),
     deductionAllowanceAndNoDuplicationConfirmed: z.literal(true).optional(),
   }).optional(),
-});
+}));
 export type Form8814ChildInput = z.infer<typeof Form8814ChildSchema>;
 
 /**

@@ -118,6 +118,7 @@ import { calculateForm4952 } from "./forms/form-4952.js";
 import { calculateForm8615 } from "./forms/form-8615.js";
 import { aggregateForm8814Results } from "./forms/form-8814.js";
 import { calculateForm8814AmtSources } from "./forms/form-8814-amt-sources.js";
+import { calculateForm8814Election } from "./forms/form-8814-election.js";
 import { calculateForm6251BondSources } from "./forms/form-6251-bond-sources.js";
 import { calculateScheduleF } from "./schedules/schedule-f.js";
 import { calculateForm461 } from "./forms/form-461.js";
@@ -555,6 +556,22 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     });
 
   // ── Form 8814: Parents' Election To Report Child's Interest and Dividends ──
+  let parentTaxableIncomeWithoutChild: Decimal | undefined;
+  if (input.form8814?.some(child => ['married_separate', 'custodial_separate_stepparent', 'surviving_separate_stepparent', 'never_married_together_all_year'].includes(child.electionFacts?.parentSituation ?? ''))) {
+    // Parent selection uses this same completed return with every child election
+    // removed. Recursion terminates because the counterfactual has no elections.
+    // A claimed child's excess returns to the dependent MAGI worksheet; it does
+    // not disappear from the actual PTC household when the election is removed.
+    const dependentIdentities = new Set(input.taxpayer.dependents.map(child => child.ssn.replace(/-/g, '')));
+    const restoredDependentIncome = sum(...input.form8814.filter(child => dependentIdentities.has(child.electionFacts?.child.ssn.replace(/-/g, '') ?? '')).map(child =>
+      zeroFloor(sum(d(child.taxableInterest), d(child.ordinaryDividends), d(child.capitalGainDistributions)).minus(constants.form8814.baseAmount))));
+    const counterfactual: TaxYearInput = { ...input, form8814: [],
+      form8962: input.form8962 ? { ...input.form8962, taxpayerModifiedAGI: undefined,
+        requiredFilingDependentsModifiedAGI: input.form8962.requiredFilingDependentsModifiedAGI === undefined ? undefined
+          : d(input.form8962.requiredFilingDependentsModifiedAGI).plus(restoredDependentIncome).toFixed() } : undefined };
+    parentTaxableIncomeWithoutChild = calculateFederalTax(counterfactual).taxableIncome;
+  }
+  audit.merge(calculateForm8814Election(input.form8814 ?? [], input.taxpayer, constants, parentTaxableIncomeWithoutChild).lines);
   const form8814: AggregatedForm8814 | undefined = (input.form8814?.length ?? 0) > 0
     ? aggregateForm8814Results(input.form8814, constants)
     : undefined;

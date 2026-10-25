@@ -28,7 +28,7 @@ notes: |
 
 businessRuleValidation:
   - rule: "reference-summary-packet"
-    description: "Inventory support counts this form as business-rule validated only when regression coverage proves the draft packet emits a non-filing Form 8814 reference summary for supported parent-election scenarios and suppresses that artifact when no child qualifies for the election."
+    description: "Inventory support counts this form as business-rule validated only when regression coverage proves the draft packet emits a non-filing Form 8814 reference summary for supported parent-election scenarios. Actual election eligibility is separately required before calculation; an invalid requested child election rejects before emitting a packet."
     testRef: "tests/pdf/fill-form-8814.test.ts::buildForm8814ReferenceSummary keeps the packet artifact reference-only and limited to supported child-election outputs"
 
 lines:
@@ -167,5 +167,5 @@ lines:
     description: "Draft packet inclusion rule for supported Form 8814 parent elections"
     formula: "When at least one child's supported Form 8814 computation applies under the official income window, include a non-filing reference-summary PDF in the draft packet showing the supported child-level and aggregate outputs that flow to the parent's Form 1040. Suppress the artifact when no child qualifies for the election because all supported children are at or below $1,350 or otherwise outside the supported election path."
     irsRef: "Form 8814 Instructions, General Instructions; Form 8814 Instructions, Line 4"
-    notes: "The packet stays honest by emitting a reference summary rather than attempting to recreate a filed Form 8814 PDF. The summary may note children that were evaluated but did not produce a supported parent-election result."
+    notes: "The packet emits a reference summary and does not recreate a filed Form8814. The numerical summary helper can represent inactive calculations, but the canonical return rejects an ineligible requested election before export."
     testRef: "tests/pdf/fill-form-8814.test.ts::fillReturn includes a Form 8814 reference summary when at least one child qualifies for the parent election"

@@ -2,7 +2,7 @@
  * Spec: spec/federal/form-8814.yaml
  */
 
-import { access, mkdtemp, readFile, rm } from "fs/promises";
+import { access, mkdtemp, readFile, readdir, rm } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
 import { describe, expect, it } from "vitest";
@@ -13,6 +13,7 @@ import {
 } from "@/pdf/fill-form-8814.js";
 import { fillReturn } from "@/pdf/fill-return.js";
 import { simpleW2Fixture } from "../fixtures/simple-w2.js";
+import { syntheticChildElection } from "../fixtures/form-8814-election.js";
 import type { Form8814ChildInput } from "@/models/inputs.js";
 
 // These synthetic PDF fixtures explicitly report no private activity interest.
@@ -34,6 +35,7 @@ describe("Form 8814 packet reference summary", () => {
       form8814: [
         {
           taxableInterest: "1800",
+          electionFacts: syntheticChildElection(),
           taxExemptInterest: "25",
           amtSources: syntheticExemptSources("25", "child-1-bank"),
           ordinaryDividends: "900",
@@ -42,6 +44,7 @@ describe("Form 8814 packet reference summary", () => {
         },
         {
           taxableInterest: "2000",
+          electionFacts: syntheticChildElection(2025, "02"),
           taxExemptInterest: "5",
           amtSources: syntheticExemptSources("5", "child-2-bank"),
           ordinaryDividends: "800",
@@ -179,6 +182,7 @@ describe("Form 8814 packet reference summary", () => {
         form8814: [
           {
             taxableInterest: "1800",
+            electionFacts: syntheticChildElection(),
             taxExemptInterest: "25",
             amtSources: syntheticExemptSources("25", "child-1-bank"),
             ordinaryDividends: "900",
@@ -205,7 +209,7 @@ describe("Form 8814 packet reference summary", () => {
     }
   });
 
-  it("fillReturn omits the Form 8814 reference summary when no child qualifies for the parent election", async () => {
+  it("an ineligible child election rejects before any return packet is emitted", async () => {
     const outputDir = await makeOutputDir();
 
     try {
@@ -214,6 +218,7 @@ describe("Form 8814 packet reference summary", () => {
         form8814: [
           {
             taxableInterest: "1200",
+            electionFacts: syntheticChildElection(),
             taxExemptInterest: "50",
             amtSources: syntheticExemptSources("50", "child-1-bank"),
             ordinaryDividends: "100",
@@ -223,14 +228,8 @@ describe("Form 8814 packet reference summary", () => {
         ],
       };
 
-      const result = calculateFederalTax(belowThresholdFixture);
-      const { filledForms } = await fillReturn(belowThresholdFixture, result, {
-        blankFormsDir: "forms/blank",
-        outputDir,
-      });
-
-      expect(result.form8814?.children.every((child) => child.applies === false)).toBe(true);
-      expect(filledForms.some((path) => path.endsWith(FORM_8814_REFERENCE_FILENAME))).toBe(false);
+      expect(() => calculateFederalTax(belowThresholdFixture)).toThrow(/child gross income.*election limits/i);
+      expect(await readdir(outputDir)).toEqual([]);
     } finally {
       await rm(outputDir, { recursive: true, force: true });
     }

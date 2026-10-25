@@ -8,6 +8,7 @@ vi.mock('@/models/constants.js', async importOriginal => {
 import { calculateFederalTax } from '@/engine/federal.js';
 import { TaxYearInputSchema } from '@/models/inputs.js';
 import { simpleW2Fixture } from '../fixtures/simple-w2.js';
+import { syntheticChildElection } from '../fixtures/form-8814-election.js';
 
 describe('Child Form8814 preference canonical transfer', () => {
   it('transfers actual child preferences once into AMT without adding regular parent exempt interest', () => {
@@ -15,7 +16,7 @@ describe('Child Form8814 preference canonical transfer', () => {
       const actual = TaxYearInputSchema.parse({
         ...simpleW2Fixture, taxpayer: { ...simpleW2Fixture.taxpayer, taxYear: year },
         form1099Int: [{ privateActivityBondInterest: "0", payer: 'Synthetic parent bank', interestIncome: '0', taxExemptInterest: '125' }],
-        form8814: [{ taxableInterest: '3000', taxExemptInterest: '1000', ordinaryDividends: '0', qualifiedDividends: '0', capitalGainDistributions: '0',
+        form8814: [{ electionFacts: syntheticChildElection(year), taxableInterest: '3000', taxExemptInterest: '1000', ordinaryDividends: '0', qualifiedDividends: '0', capitalGainDistributions: '0',
           amtSources: { taxYear: year, allStatementsConfirmed: true, otherwiseAllowableDeduction: '0', statements: [
             { sourceId: 'synthetic-child-interest', form: '1099-INT', taxExemptInterest: '1000', specifiedPrivateActivityBondInterest: '500' },
           ] },

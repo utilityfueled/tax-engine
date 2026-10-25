@@ -8,6 +8,7 @@ vi.mock("@/models/constants.js", async originalImport => {
 import { calculateFederalTax } from "@/engine/federal.js";
 import { TaxYearInputSchema } from "@/models/inputs.js";
 import { simpleW2Fixture } from "../fixtures/simple-w2.js";
+import { syntheticChildElection } from "../fixtures/form-8814-election.js";
 it("uses canonical tax-exempt interest and nontaxable benefits instead of a favorable source override", () => {
   for (const year of [2025, 2026]) {
     const months = Array.from({ length: 12 }, (_, index) => ({ month: index + 1, enrolleePremium: "500", slcsp: "700", advancePremiumTaxCredit: "300", coverageEligible: true, incomeBasedSepEnrollment: false }));
@@ -44,7 +45,7 @@ it("counts a child election in the actual dependent worksheet without duplicatin
     taxpayer: { ...simpleW2Fixture.taxpayer, dependents: [{ firstName: "Child", lastName: "Doe", ssn: "321-54-6789", dateOfBirth: "2008-05-10", relationship: "child", monthsLivedWithYou: 12, qualifiesForCTC: false }] },
     w2s: [{ ...simpleW2Fixture.w2s[0], wages: "20000" }],
     form1099Int: [{ privateActivityBondInterest: "0", payer: "Parent source", interestIncome: "0", taxExemptInterest: "1000" }],
-    form8814: [{ taxableInterest: "4000", taxExemptInterest: "500", ordinaryDividends: "0", qualifiedDividends: "0", capitalGainDistributions: "0",
+    form8814: [{ electionFacts: { ...syntheticChildElection(), child: { firstName: "Child", lastName: "Doe", ssn: "321-54-6789", dateOfBirth: "2008-05-10" } }, taxableInterest: "4000", taxExemptInterest: "500", ordinaryDividends: "0", qualifiedDividends: "0", capitalGainDistributions: "0",
       amtSources: { taxYear: 2025, allStatementsConfirmed: true, otherwiseAllowableDeduction: "0", statements: [
         { sourceId: "synthetic-child-bank", form: "1099-INT", taxExemptInterest: "500", specifiedPrivateActivityBondInterest: "0" },
       ] },
