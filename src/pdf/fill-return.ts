@@ -589,7 +589,7 @@ export async function fillReturn(
   }
 
   // ── Form 8582 (if applicable — Passive Activity Loss Limitations) ──
-  if (result.form8582 && result.form8582.suspendedLoss.gt(0)) {
+  if (result.form8582?.requiresForm8582) {
     const f8582Path = join(blankFormsDir, "f8582.pdf");
     const doc8582 = await fillForm8582(input, result, f8582Path);
     if (flatten) await flattenForm(doc8582.getForm());

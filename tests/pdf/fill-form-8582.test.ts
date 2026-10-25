@@ -240,11 +240,11 @@ describe("Form 8582 PDF fill — HoH with rental loss", () => {
     expect(getFieldText(doc, F.ssn)).toBe("555667777");
   });
 
-  it("Part I Line 1a — rental income (blank when zero)", () => {
+  it("Part I Line 1a — actual zero rental income", () => {
     const f8582 = result.form8582!;
-    // With only one rental property at a net loss, rentalIncome = 0 → field is not set
+    // A present audit with known zero is distinct from a skipped form line.
     if (f8582.rentalIncome.isZero()) {
-      expect(getFieldText(doc, F.line1a)).toBeUndefined();
+      expect(getFieldText(doc, F.line1a)).toBe("0");
     } else {
       expect(getFieldText(doc, F.line1a)).toBe(formatCurrency(f8582.rentalIncome));
     }
@@ -252,7 +252,7 @@ describe("Form 8582 PDF fill — HoH with rental loss", () => {
 
   it("Part I Line 1b — rental loss", () => {
     const f8582 = result.form8582!;
-    expect(getFieldText(doc, F.line1b)).toBe(formatCurrency(f8582.rentalLoss));
+    expect(getFieldText(doc, F.line1b)).toBe(formatCurrency(f8582.rentalLoss.abs()));
   });
 
   it("Part I Line 1d — net rental (combined)", () => {
@@ -271,7 +271,7 @@ describe("Form 8582 PDF fill — HoH with rental loss", () => {
   });
 
   it("Part II Line 6 — modified AGI", () => {
-    expect(getFieldText(doc, F.line6)).toBe(formatCurrency(result.agi));
+    expect(getFieldText(doc, F.line6)).toBe("60000"); // Wages; add back the allowed 12000 rental loss.
   });
 
   it("Part II Line 9 — rental allowance matches engine", () => {
@@ -279,12 +279,12 @@ describe("Form 8582 PDF fill — HoH with rental loss", () => {
     expect(getFieldText(doc, F.line9)).toBe(formatCurrency(f8582.rentalAllowance));
   });
 
-  it("Part III Line 10 — total passive income (blank when zero)", () => {
+  it("Part III Line 10 — actual zero passive income", () => {
     const f8582 = result.form8582!;
     const expected = f8582.rentalIncome.plus(f8582.passiveIncome);
-    // When total passive income is zero, field is not set
+    // The applicable line carries its known zero.
     if (expected.isZero()) {
-      expect(getFieldText(doc, F.line10)).toBeUndefined();
+      expect(getFieldText(doc, F.line10)).toBe("0");
     } else {
       expect(getFieldText(doc, F.line10)).toBe(formatCurrency(expected));
     }
@@ -326,7 +326,7 @@ describe("Form 8582 PDF fill — MFJ with passive losses and rental", () => {
   it("Part I Line 2b — other passive loss from K-1", () => {
     const f8582 = result.form8582!;
     if (!f8582.passiveLoss.isZero()) {
-      expect(getFieldText(doc, F.line2b)).toBe(formatCurrency(f8582.passiveLoss));
+      expect(getFieldText(doc, F.line2b)).toBe(formatCurrency(f8582.passiveLoss.abs()));
     }
   });
 

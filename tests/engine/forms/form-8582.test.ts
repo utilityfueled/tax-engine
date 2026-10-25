@@ -29,7 +29,7 @@ function makeActivity(
 // ═══════════════════════════════════════════════════════════
 
 describe("Form 8582 - Basic Passive Limitations", () => {
-  it("Form 8582 Line 1a - passive income", () => {
+  it("Form 8582 Line 2a - passive income", () => {
     const input: Form8582Input = {
       activities: [makeActivity("Fund A", 5000, 0), makeActivity("Fund B", 3000, 0)],
       agi: d(80000),
@@ -39,7 +39,7 @@ describe("Form 8582 - Basic Passive Limitations", () => {
     expect(result.passiveIncome.toNumber()).toBe(8000);
   });
 
-  it("Form 8582 Line 1b - passive losses", () => {
+  it("Form 8582 Line 2b - passive losses", () => {
     const input: Form8582Input = {
       activities: [makeActivity("Fund A", 0, -4000), makeActivity("Fund B", 0, -6000)],
       agi: d(80000),
@@ -49,7 +49,7 @@ describe("Form 8582 - Basic Passive Limitations", () => {
     expect(result.passiveLoss.toNumber()).toBe(-10000);
   });
 
-  it("Form 8582 Line 1c - net passive", () => {
+  it("Form 8582 Line 2d - net passive", () => {
     const input: Form8582Input = {
       activities: [makeActivity("Fund A", 3000, 0), makeActivity("Fund B", 0, -8000)],
       agi: d(80000),
@@ -70,7 +70,7 @@ describe("Form 8582 - Basic Passive Limitations", () => {
     expect(result.combinedLoss.toNumber()).toBe(0);
   });
 
-  it("Form 8582 Line 5 - combined losses", () => {
+  it("Form 8582 Line 3 - combined losses", () => {
     const input: Form8582Input = {
       activities: [makeActivity("Fund A", 0, -15000)],
       agi: d(80000),
@@ -80,7 +80,7 @@ describe("Form 8582 - Basic Passive Limitations", () => {
     expect(result.combinedLoss.toNumber()).toBe(-15000);
   });
 
-  it("Form 8582 Line 9 - allowed loss equals passive income when no rental", () => {
+  it("Form 8582 Line 11 - allowed loss equals passive income when no rental", () => {
     const input: Form8582Input = {
       activities: [
         makeActivity("Fund A", 5000, 0),
@@ -93,7 +93,7 @@ describe("Form 8582 - Basic Passive Limitations", () => {
     expect(result.allowedLoss.toNumber()).toBe(5000);
   });
 
-  it("Form 8582 Line 10 - suspended loss", () => {
+  it("Form 8582 Part VII - suspended loss", () => {
     const input: Form8582Input = {
       activities: [
         makeActivity("Fund A", 2000, 0),
@@ -113,7 +113,7 @@ describe("Form 8582 - Basic Passive Limitations", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("Form 8582 - Rental Real Estate Allowance", () => {
-  it("Form 8582 Line 3a - rental income", () => {
+  it("Form 8582 Line 1a - rental income", () => {
     const input: Form8582Input = {
       activities: [
         makeActivity("Rental", 8000, 0, { isRentalRealEstate: true, isActiveParticipant: true }),
@@ -125,7 +125,7 @@ describe("Form 8582 - Rental Real Estate Allowance", () => {
     expect(result.rentalIncome.toNumber()).toBe(8000);
   });
 
-  it("Form 8582 Line 3b - rental loss", () => {
+  it("Form 8582 Line 1b - rental loss", () => {
     const input: Form8582Input = {
       activities: [
         makeActivity("Rental", 0, -15000, { isRentalRealEstate: true, isActiveParticipant: true }),
@@ -137,7 +137,7 @@ describe("Form 8582 - Rental Real Estate Allowance", () => {
     expect(result.rentalLoss.toNumber()).toBe(-15000);
   });
 
-  it("Form 8582 Line 3c - net rental", () => {
+  it("Form 8582 Line 1d - net rental", () => {
     const input: Form8582Input = {
       activities: [
         makeActivity("Rental A", 5000, 0, { isRentalRealEstate: true, isActiveParticipant: true }),
@@ -150,7 +150,7 @@ describe("Form 8582 - Rental Real Estate Allowance", () => {
     expect(result.netRental.toNumber()).toBe(-7000);
   });
 
-  it("Form 8582 Line 7 - rental allowance under $100K AGI", () => {
+  it("Form 8582 Line 9 - rental allowance under $100K AGI", () => {
     const input: Form8582Input = {
       activities: [
         makeActivity("Rental", 0, -20000, { isRentalRealEstate: true, isActiveParticipant: true }),
@@ -162,7 +162,7 @@ describe("Form 8582 - Rental Real Estate Allowance", () => {
     expect(result.rentalAllowance.toNumber()).toBe(20000); // $20K loss, under $25K cap
   });
 
-  it("Form 8582 Line 7 - rental allowance capped at $25,000", () => {
+  it("Form 8582 Line 9 - rental allowance capped at $25,000", () => {
     const input: Form8582Input = {
       activities: [
         makeActivity("Rental", 0, -40000, { isRentalRealEstate: true, isActiveParticipant: true }),
@@ -174,7 +174,7 @@ describe("Form 8582 - Rental Real Estate Allowance", () => {
     expect(result.rentalAllowance.toNumber()).toBe(25000);
   });
 
-  it("Form 8582 Line 7 - rental allowance phased out at $120K AGI", () => {
+  it("Form 8582 Line 9 - rental allowance phased out at $120K AGI", () => {
     // Phase-out: 50% × ($120K - $100K) = $10,000 reduction
     // Allowance: $25,000 - $10,000 = $15,000
     const input: Form8582Input = {
@@ -188,7 +188,7 @@ describe("Form 8582 - Rental Real Estate Allowance", () => {
     expect(result.rentalAllowance.toNumber()).toBe(15000);
   });
 
-  it("Form 8582 Line 7 - rental allowance fully phased out at $150K AGI", () => {
+  it("Form 8582 Line 9 - rental allowance fully phased out at $150K AGI", () => {
     const input: Form8582Input = {
       activities: [
         makeActivity("Rental", 0, -20000, { isRentalRealEstate: true, isActiveParticipant: true }),
@@ -304,20 +304,11 @@ describe("Form 8582 - audit trail", () => {
     };
     const result = calculateForm8582(input);
     const lineIds = result.lines.map((l) => l.line);
-    expect(lineIds).toContain("1a");
-    expect(lineIds).toContain("1b");
-    expect(lineIds).toContain("1c");
-    expect(lineIds).toContain("3a");
-    expect(lineIds).toContain("3b");
-    expect(lineIds).toContain("3c");
-    expect(lineIds).toContain("5");
-    expect(lineIds).toContain("7");
-    expect(lineIds).toContain("9");
-    expect(lineIds).toContain("10");
+    for (const id of ["1a", "1b", "1c", "1d", "2a", "2b", "2c", "2d", "3", "4", "5", "6", "7", "8", "9", "10", "11"]) expect(lineIds).toContain(id);
   });
 
   it("Form 8582 audit trail - all line IDs present for net passive income scenario", () => {
-    // Even when no limitation is needed, all audit lines must still be recorded
+    // Line3 explicitly stops the printed form when all losses are allowed.
     const input: Form8582Input = {
       activities: [
         makeActivity("Fund A", 20000, 0),
@@ -329,22 +320,11 @@ describe("Form 8582 - audit trail", () => {
     };
     const result = calculateForm8582(input);
     const lineIds = result.lines.map((l) => l.line);
-    expect(lineIds).toContain("1a");
-    expect(lineIds).toContain("1b");
-    expect(lineIds).toContain("1c");
-    expect(lineIds).toContain("3a");
-    expect(lineIds).toContain("3b");
-    expect(lineIds).toContain("3c");
-    expect(lineIds).toContain("5");
-    expect(lineIds).toContain("7");
-    expect(lineIds).toContain("9");
-    expect(lineIds).toContain("10");
+    for (const id of ["1a", "1b", "1c", "1d", "2a", "2b", "2c", "2d", "3"]) expect(lineIds).toContain(id);
+    for (const id of ["4", "5", "6", "7", "8", "9", "10", "11"]) expect(lineIds).not.toContain(id);
   });
 });
 
-// ═══════════════════════════════════════════════════════════
-// AGI Phase-Out Boundary Conditions
-// ═══════════════════════════════════════════════════════════
 
 describe("Form 8582 - AGI Phase-Out Boundaries", () => {
   it("Form 8582 Line 7 - AGI exactly $100K gets full $25K rental allowance", () => {
@@ -480,10 +460,10 @@ describe("Form 8582 - Additional Scenarios", () => {
     const result = calculateForm8582(input);
     expect(result.netPassive.toNumber()).toBe(4000);
     expect(result.combinedLoss.toNumber()).toBe(0);
-    expect(result.allowedLoss.toNumber()).toBe(0);
+    expect(result.allowedLoss.toNumber()).toBe(11000);
     expect(result.suspendedLoss.toNumber()).toBe(0);
-    // No activity allocations when there is no net loss
-    expect(result.activityAllocations).toHaveLength(0);
+    // Line3 allows all11000 of current losses; retain their actual allocation.
+    expect(result.activityAllocations).toHaveLength(2);
   });
 });
 
@@ -578,15 +558,14 @@ describe("Form 8582 - AGI $100K exact boundary — full $25K allowance", () => {
     expect(result.rentalAllowance.toNumber()).toBe(24999);
   });
 
-  it("Form 8582 Line 7 - AGI $149,999 yields $0 allowance due to ROUND_HALF_UP", () => {
-    // Phase-out: 50% × ($149,999 - $100,000) = $24,999.50
-    // ROUND_HALF_UP: $24,999.50 → $25,000 reduction → allowance = $25,000 - $25,000 = $0
+  it("Form 8582 Line 7 - AGI $149,999 yields $1 capacity on official line 8", () => {
+    // Printed line8 rounds (150000 -149999)*0.5 to1; do not round a subtracted reduction.
     const result = calculateForm8582({
       activities: [makeActivity("Rental", 0, -30000, { isRentalRealEstate: true, isActiveParticipant: true })],
       agi: d(149999),
       filingStatus: "single",
     });
-    expect(result.rentalAllowance.toNumber()).toBe(0);
+    expect(result.rentalAllowance.toNumber()).toBe(1);
   });
 });
 
@@ -638,7 +617,7 @@ describe("Form 8582 - Multiple activities with mixed rental and passive income/l
     expect(result.passiveLoss.toNumber()).toBe(-10000);
     expect(result.combinedLoss.toNumber()).toBe(0);
     expect(result.suspendedLoss.toNumber()).toBe(0);
-    expect(result.allowedLoss.toNumber()).toBe(0);
+    expect(result.allowedLoss.toNumber()).toBe(10000);
   });
 
   it("four mixed activities — rental loss + rental income + passive loss + passive income allocates proportionally", () => {
@@ -855,14 +834,14 @@ describe("Form 8582 - MFS lived apart from spouse all year — $12,500 allowance
       filingStatus: "married_filing_separately",
       mfsLivedApartFromSpouseAllYear: true,
     });
-    const line7 = result.lines.find((l) => l.line === "7");
-    expect(line7?.formula).toContain("$12,500");
-    expect(line7?.formula).toContain("§469(i)(4)(B)");
+    const line8 = result.lines.find((l) => l.line === "8");
+    expect(line8?.value.toString()).toBe("12500");
+    expect(line8?.formula).toContain("MFS 12500");
   });
 });
 
 describe("Form 8582 - Net passive income scenario (no limitation)", () => {
-  it("rental income alone exceeds all losses — no limitation, activityAllocations empty", () => {
+  it("rental income alone exceeds all losses — no limitation, all current losses remain allowed", () => {
     // Rental income $30K, rental loss $5K, passive loss $10K
     // Net rental: +$25K, net passive: -$10K, combined: +$15K → no limitation
     const result = calculateForm8582({
@@ -877,7 +856,7 @@ describe("Form 8582 - Net passive income scenario (no limitation)", () => {
     expect(result.netPassive.toNumber()).toBe(-10000);
     expect(result.combinedLoss.toNumber()).toBe(0);
     expect(result.suspendedLoss.toNumber()).toBe(0);
-    expect(result.activityAllocations).toHaveLength(0);
+    expect(result.activityAllocations).toHaveLength(2);
   });
 });
 
@@ -936,16 +915,13 @@ describe("Form 8582 - Audit trail completeness with line values", () => {
     });
     const byLine = Object.fromEntries(result.lines.map((l) => [l.line, l.value]));
 
-    // Line 3b should equal rentalLoss
-    expect(byLine["3b"].toNumber()).toBe(result.rentalLoss.toNumber());
-    // Line 3c should equal netRental
-    expect(byLine["3c"].toNumber()).toBe(result.netRental.toNumber());
-    // Line 7 should equal rentalAllowance
-    expect(byLine["7"].toNumber()).toBe(result.rentalAllowance.toNumber());
-    // Line 9 should equal allowedLoss
-    expect(byLine["9"].toNumber()).toBe(result.allowedLoss.toNumber());
-    // Line 10 should equal suspendedLoss
-    expect(byLine["10"].toNumber()).toBe(result.suspendedLoss.toNumber());
+    expect(byLine["1b"].toString()).toBe("-20000");
+    expect(byLine["1d"].toString()).toBe("-20000");
+    expect(byLine["4"].toString()).toBe("15000");
+    expect(byLine["8"].toString()).toBe("20000");
+    expect(byLine["9"].toString()).toBe("15000");
+    expect(byLine["11"].toString()).toBe("20000");
+    expect(byLine.suspended.toString()).toBe("0");
   });
 
   it("audit trail contains correct count of line entries for a fully populated scenario", () => {
@@ -958,10 +934,10 @@ describe("Form 8582 - Audit trail completeness with line values", () => {
       agi: d(95000),
       filingStatus: "single",
     });
-    // Expect at least the 10 required lines: 1a, 1b, 1c, 3a, 3b, 3c, 5, 7, 9, 10
-    expect(result.lines.length).toBeGreaterThanOrEqual(10);
+    // All printed lines are applicable for this negative combined/rental net.
+    expect(result.lines.length).toBeGreaterThanOrEqual(17);
     const lineIds = result.lines.map((l) => l.line);
-    const requiredLines = ["1a", "1b", "1c", "3a", "3b", "3c", "5", "7", "9", "10"];
+    const requiredLines = ["1a", "1b", "1c", "1d", "2a", "2b", "2c", "2d", "3", "4", "5", "6", "7", "8", "9", "10", "11"];
     for (const id of requiredLines) {
       expect(lineIds).toContain(id);
     }
@@ -1004,15 +980,6 @@ describe("Form 8582 - IRS per-activity allocation (special allowance then remain
   });
 
   it("two rental activities share special allowance proportionally; non-rental gets rest", () => {
-    // Rental A: $15K loss, Rental B: $5K loss (both active), Non-rental: $10K loss
-    // Passive income: $3K, AGI $120K → phase-out: 50% × $20K = $10K → allowance = $10K
-    // Total allowed = $13K (income $3K + SA $10K). Suspended = $17K.
-    // IRS Part VI: SA $10K → Rental A: $7,500 (75%), Rental B: $2,500 (25%)
-    // Remaining: Rental A $7,500, Rental B $2,500, Non-rental $10K = $20K total
-    // IRS Part VII: Unallowed $17K allocated proportionally by remaining:
-    //   Rental A: $17K × (7.5/20) = $6,375
-    //   Rental B: $17K × (2.5/20) = $2,125
-    //   Non-rental: $17K × (10/20) = $8,500
     const result = calculateForm8582({
       activities: [
         makeActivity("Rental A", 0, -15000, { isRentalRealEstate: true, isActiveParticipant: true }),
@@ -1023,24 +990,25 @@ describe("Form 8582 - IRS per-activity allocation (special allowance then remain
       filingStatus: "single",
     });
 
-    expect(result.allowedLoss.toNumber()).toBe(13000);
-    expect(result.suspendedLoss.toNumber()).toBe(17000);
+    expect(result.allowedLoss.toNumber()).toBe(18000);
+    expect(result.suspendedLoss.toNumber()).toBe(12000);
 
     const rentalA = result.activityAllocations.find((a) => a.name === "Rental A");
     const rentalB = result.activityAllocations.find((a) => a.name === "Rental B");
     const fund = result.activityAllocations.find((a) => a.name === "Fund");
 
-    // Rental A: $15K - $6,375 = $8,625 allowed
-    expect(rentalA?.allowedLoss.toNumber()).toBe(8625);
-    expect(rentalA?.suspendedLoss.toNumber()).toBe(6375);
+    // Line8 capacity15000; rental weights3:1 =>11250/3750 special allowance.
+    // Remaining overall losses3750/1250/7000; all12000 are suspended.
+    expect(rentalA?.allowedLoss.toNumber()).toBe(11250);
+    expect(rentalA?.suspendedLoss.toNumber()).toBe(3750);
 
-    // Rental B: $5K - $2,125 = $2,875 allowed
-    expect(rentalB?.allowedLoss.toNumber()).toBe(2875);
-    expect(rentalB?.suspendedLoss.toNumber()).toBe(2125);
+    // RentalB:5000-1250.
+    expect(rentalB?.allowedLoss.toNumber()).toBe(3750);
+    expect(rentalB?.suspendedLoss.toNumber()).toBe(1250);
 
-    // Non-rental: $10K - $8,500 = $1,500 allowed
-    expect(fund?.allowedLoss.toNumber()).toBe(1500);
-    expect(fund?.suspendedLoss.toNumber()).toBe(8500);
+    // Other activity retains its own3000 income offset.
+    expect(fund?.allowedLoss.toNumber()).toBe(3000);
+    expect(fund?.suspendedLoss.toNumber()).toBe(7000);
   });
 });
 
@@ -1098,7 +1066,7 @@ describe("Form 8582 - PTP Loss Segregation (IRC §469(k))", () => {
     expect(result.suspendedLoss.toNumber()).toBe(0);
   });
 
-  it("PTP with net income — income flows into regular passive pool", () => {
+  it("PTP with net income — nonpassive income stays outside regular passive pool", () => {
     const input: Form8582Input = {
       activities: [
         makePTPActivity("MLP Beta", 12000, -3000),
@@ -1109,16 +1077,16 @@ describe("Form 8582 - PTP Loss Segregation (IRC §469(k))", () => {
     };
     const result = calculateForm8582(input);
 
-    // PTP net income = 12000 - 3000 = 9000 → flows into passive pool
+    // Section469(k) net9000 is nonpassive.
     expect(result.ptpNetIncome.toNumber()).toBe(9000);
     expect(result.ptpSuspendedLosses).toHaveLength(0);
 
-    // Regular passive pool: PTP income 9000 + non-PTP loss -20000
-    expect(result.passiveIncome.toNumber()).toBe(9000);
+    // No other regular passive income is present.
+    expect(result.passiveIncome.toNumber()).toBe(0);
     expect(result.passiveLoss.toNumber()).toBe(-20000);
-    // Allowed loss = passive income offset (9000), suspended = 20000 - 9000 = 11000
-    expect(result.allowedLoss.toNumber()).toBe(9000);
-    expect(result.suspendedLoss.toNumber()).toBe(11000);
+    // The unrelated20000 loss remains suspended.
+    expect(result.allowedLoss.toNumber()).toBe(0);
+    expect(result.suspendedLoss.toNumber()).toBe(20000);
   });
 
   it("PTP loss cannot offset non-PTP passive income", () => {
@@ -1166,7 +1134,7 @@ describe("Form 8582 - PTP Loss Segregation (IRC §469(k))", () => {
     expect(gamma?.netSuspended.toNumber()).toBe(2000);
 
     // MLP Alpha income flows into the passive pool
-    expect(result.passiveIncome.toNumber()).toBe(10000);
+    expect(result.passiveIncome.toNumber()).toBe(0);
   });
 
   it("PTP prior-year carryforward offsets current-year PTP income from same PTP", () => {
@@ -1185,7 +1153,7 @@ describe("Form 8582 - PTP Loss Segregation (IRC §469(k))", () => {
     // PTP net = 8000 income - 0 loss - 5000 carryforward = 3000 net income
     expect(result.ptpNetIncome.toNumber()).toBe(3000);
     expect(result.ptpSuspendedLosses).toHaveLength(0);
-    expect(result.passiveIncome.toNumber()).toBe(3000);
+    expect(result.passiveIncome.toNumber()).toBe(0);
   });
 
   it("PTP prior-year carryforward exceeds current income — remainder stays suspended", () => {
@@ -1328,7 +1296,7 @@ describe("Form 8582 - PTP Loss Segregation (IRC §469(k))", () => {
   });
 
   it("PTP with net income does not reduce non-PTP suspended losses", () => {
-    // PTP income flows into passive pool, helping offset non-PTP losses
+    // Net PTP income is nonpassive under the official PTP instructions.
     const input: Form8582Input = {
       activities: [
         makePTPActivity("MLP Income", 15000, 0),
@@ -1339,14 +1307,13 @@ describe("Form 8582 - PTP Loss Segregation (IRC §469(k))", () => {
     };
     const result = calculateForm8582(input);
 
-    // PTP net income 15000 flows into passive pool
+    // Net15000 stays outside the regular pool.
     expect(result.ptpNetIncome.toNumber()).toBe(15000);
-    // Passive pool: income 15000 (from PTP), loss -25000 (non-PTP)
-    // Allowed = 15000, suspended = 10000
-    expect(result.passiveIncome.toNumber()).toBe(15000);
+    // Regular allowed0, suspended25000.
+    expect(result.passiveIncome.toNumber()).toBe(0);
     expect(result.passiveLoss.toNumber()).toBe(-25000);
-    expect(result.allowedLoss.toNumber()).toBe(15000);
-    expect(result.suspendedLoss.toNumber()).toBe(10000);
+    expect(result.allowedLoss.toNumber()).toBe(0);
+    expect(result.suspendedLoss.toNumber()).toBe(25000);
   });
 
   it("Multiple PTP carryforwards from different PTPs track independently", () => {
@@ -1665,7 +1632,7 @@ describe("Form 8582 - PTP Disposition (IRC §469(g)(1))", () => {
     // MLP Continuing: income 10000 - prior 6000 = 4000 net income → passive pool
     expect(result.ptpNetIncome.toNumber()).toBe(4000);
     expect(result.ptpSuspendedLosses).toHaveLength(0);
-    expect(result.passiveIncome.toNumber()).toBe(4000);
+    expect(result.passiveIncome.toNumber()).toBe(0);
   });
 
   it("ptpDispositionReleasedLosses is empty when no PTPs are disposed", () => {

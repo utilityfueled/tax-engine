@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.46",
+    ruleVersion: "2025.47",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i8582", section: "Official current/prior loss columns, net passive MAGI, special allowance capacity, PartsVI-VIII allocation and signed ScheduleE transfer", revision: "Final2025 form and instructions; passive Marketplace ordering and specialized source methods remain internal work", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/publications/p974", section: "Special instructions and Y/Z: covered IRA, bond exclusion and student-loan worksheets retained in order; auxiliary400 distinct from actual final eligibility; ordinary no-PTC branch refigures claims", revision: "Final2025 plus historical2020 cliff-year instruction and enacted2026 section36B; passive-loss and other source methods remain internal work", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/publications/p974", section: "Actual2025 W/X source maximum and repayment tiers; computed X25 retained on final8962line28 through the Simplified method", revision: "Final2025 Publication974 including Carla example; passive ordering and partial forgiven-advance ordinary-cost methods remain internal work", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i8962", section: "Canonical Worksheet1-1 taxpayer MAGI from final return; child8814 exempt interest retained once in actual dependent Worksheet1-2, not parent1040line2a", revision: "Final2025 Form8962 and Form8814 instructions; positive Marketplace health coordination remains separate", retrievedAt: "2026-10-25" },
@@ -88,11 +89,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.42-law-integration-draft",
+    ruleVersion: "2026.43-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i8582", section: "Official current/prior loss columns, net passive MAGI, special allowance capacity, PartsVI-VIII allocation and signed ScheduleE transfer", revision: "Final2025 form and instructions; passive Marketplace ordering and specialized source methods remain internal work", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/publications/p974", section: "Special instructions and Y/Z: covered IRA, bond exclusion and student-loan worksheets retained in order; auxiliary400 distinct from actual final eligibility; ordinary no-PTC branch refigures claims", revision: "Final2025 plus historical2020 cliff-year instruction and enacted2026 section36B; passive-loss and other source methods remain internal work", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/publications/p974", section: "Actual2026 uncapped W/X bound, combined-business Simplified steps1-4, signed income, actual monthly premiums/credits and separate gross-income QBI attribution", revision: "Posted2025 publication plus enacted36B(f)(2) effective2026 and Reg1.199A-3(b)(1)(vi); passive ordering and mixed-owner methods remain internal work", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i8962", section: "Canonical Worksheet1-1 taxpayer MAGI from final return; child8814 exempt interest retained once in actual dependent Worksheet1-2, not parent1040line2a", revision: "Final2025 Form8962 and Form8814 instructions; positive Marketplace health coordination remains separate", retrievedAt: "2026-10-25" },

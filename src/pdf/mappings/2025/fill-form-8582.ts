@@ -1,4 +1,4 @@
-import { assertPdfExportAllowed } from "../../export-policy.js";
+import { assertPdfExportAllowed, markReviewPdf } from "../../export-policy.js";
 /**
  * PDF filler for IRS Form 8582 — Passive Activity Loss Limitations.
  *
@@ -7,11 +7,13 @@ import { assertPdfExportAllowed } from "../../export-policy.js";
  * Parts IV/V (per-activity worksheets for rental and other passive).
  */
 
-import { PDFDocument } from "pdf-lib";
+import { PDFDocument, PDFPage, StandardFonts } from "pdf-lib";
 import Decimal from "decimal.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
-import { zeroFloor, min, roundDollar } from "@/utils/decimal.js";
+import { d, sum, zeroFloor } from "@/utils/decimal.js";
+import { calculateScheduleE } from "@/engine/schedules/schedule-e.js";
+import { calculateForm8582, type Form8582ActivityRow, type Form8582Result, type PassiveActivity } from "@/engine/forms/form-8582.js";
 import {
   loadReviewTemplate,
   setTextField,
@@ -220,287 +222,167 @@ const FIELDS = {
   },
 } as const;
 
-// ─── Constants ─────────────────────────────────────────────────────────────
+type Allocation = Form8582Result["activityAllocations"][number];
 
-const ZERO = new Decimal(0);
+function sameSource(expected: unknown, retained: unknown): boolean {
+  if (Decimal.isDecimal(expected)) return Decimal.isDecimal(retained) && retained.isFinite() && expected.eq(retained);
+  if (Array.isArray(expected)) return Array.isArray(retained) && expected.length === retained.length
+    && expected.every((value, index) => sameSource(value, retained[index]));
+  if (expected && typeof expected === "object") return !!retained && typeof retained === "object"
+    && Object.entries(expected).every(([key, value]) => sameSource(value, (retained as Record<string, unknown>)[key]));
+  return expected === retained;
+}
 
-// Phase-out thresholds as shown on the IRS form (Line 5)
-const STANDARD_THRESHOLD = new Decimal(150000);
-const STANDARD_MAX_ALLOWANCE = new Decimal(25000);
-const MFS_LIVED_APART_THRESHOLD = new Decimal(75000);
-const MFS_LIVED_APART_MAX_ALLOWANCE = new Decimal(12500);
-const PHASE_OUT_RATE = new Decimal("0.5");
+/** Recalculate only to validate actual activity sources; render the retained audits. */
+export function assertForm8582ReviewSource(input: TaxYearInput, result: TaxReturnResult): Form8582Result | undefined {
+  const retained = result.form8582;
+  if (!retained) return undefined;
+  if (!Decimal.isDecimal(retained.modifiedAgi) || !retained.modifiedAgi.isFinite()) throw new Error("Form8582 actual modified AGI source is missing");
+  const schedule = calculateScheduleE(input);
+  const activities: PassiveActivity[] = schedule.partnerships.filter(row => row.isPassive).map(row => ({
+    name: row.name, reportingFormAndLine: "Schedule E, line 28", income: row.passiveIncome, loss: row.passiveLoss,
+    isRentalRealEstate: row.isRentalRealEstate, isActiveParticipant: row.isRentalRealEstate,
+    isPubliclyTradedPartnership: row.isPubliclyTradedPartnership,
+    ptpFullyDisposedInTaxableTransaction: row.ptpFullyDisposedInTaxableTransaction,
+    ptpDispositionGainOrLoss: row.ptpDispositionGainOrLoss,
+  }));
+  for (const row of schedule.rentalProperties) activities.push({ name: row.description,
+    reportingFormAndLine: "Schedule E, line 22", income: zeroFloor(row.netRentalIncome),
+    loss: Decimal.min(0, row.netRentalIncome), isRentalRealEstate: true, isActiveParticipant: row.isActiveParticipant });
+  const expected = calculateForm8582({ activities, agi: retained.modifiedAgi, filingStatus: input.taxpayer.filingStatus,
+    mfsLivedApartFromSpouseAllYear: input.taxpayer.filingStatus === "married_filing_separately"
+      && input.taxpayer.livedWithSpouseAtAnyTimeDuringYear === false,
+    priorYearSuspendedLosses: input.priorYear?.suspendedPassiveLosses?.map(row => ({ name: row.partnershipName, amount: d(row.amount) })),
+    priorYearPTPSuspendedLosses: input.priorYear?.suspendedPTPLosses?.map(row => ({ name: row.partnershipName, amount: d(row.amount) })),
+  });
+  if (!sameSource(expected, retained)) throw new Error("Form8582 source activities, allocation and retained audit do not reconcile");
+  return retained;
+}
 
-// ─── Fill Logic ────────────────────────────────────────────────────────────
-
-/**
- * Fill IRS Form 8582 PDF from engine calculation results.
- * Returns the filled PDFDocument (caller saves it).
+/** Printed ratio precision only; retain exact core ratios and dollar allocations.
+ * Largest remainders keep the displayed column total at the required 1.00.
  */
-export async function fillForm8582(
-  input: TaxYearInput,
-  result: TaxReturnResult,
-  blankPdfPath: string,
-): Promise<PDFDocument> {
-  assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
-  const doc = await loadReviewTemplate(blankPdfPath, 2025);
-  const form = doc.getForm();
-  const F = FIELDS;
-  const f8582 = result.form8582;
-
-  // ── Header ──
-  const name = input.taxpayer.spouse
-    ? `${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName} & ${input.taxpayer.spouse.firstName} ${input.taxpayer.spouse.lastName}`
-    : `${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName}`;
-  setTextField(form, F.name, name);
-  setTextField(form, F.ssn, input.taxpayer.primary.ssn.replace(/-/g, ""));
-
-  if (!f8582) return doc;
-
-  // ── Part I: Passive Activity Loss ──
-
-  // Lines 1a–1d: Rental real estate with active participation
-  setCurrencyField(form, F.line1a, f8582.rentalIncome);
-  setCurrencyField(form, F.line1b, f8582.rentalLoss);
-  // Line 1c: prior year unallowed — not separately tracked in engine result, leave blank
-  setCurrencyField(form, F.line1d, f8582.netRental);
-
-  // Lines 2a–2d: All other passive activities
-  setCurrencyField(form, F.line2a, f8582.passiveIncome);
-  setCurrencyField(form, F.line2b, f8582.passiveLoss);
-  // Line 2c: prior year unallowed — not separately tracked in engine result, leave blank
-  setCurrencyField(form, F.line2d, f8582.netPassive);
-
-  // Line 3: Combine 1d and 2d
-  const line3 = f8582.netRental.plus(f8582.netPassive);
-  setCurrencyField(form, F.line3, line3);
-
-  // ── Part II: Special Allowance ──
-  // Only fill if there's a net loss and rental losses exist
-  if (line3.isNegative() && f8582.netRental.isNegative()) {
-    const isMFS = result.filingStatus === "married_filing_separately";
-
-    // Line 4: Smaller of loss on 1d or line 3 (as positive amount)
-    const line4 = min(f8582.netRental.abs(), line3.abs());
-    setCurrencyField(form, F.line4, line4);
-
-    if (!isMFS || f8582.rentalAllowance.gt(0)) {
-      // Standard filer or MFS who lived apart (has an allowance)
-      const isMFSLivedApart = isMFS && f8582.rentalAllowance.gt(0);
-      const threshold = isMFSLivedApart
-        ? MFS_LIVED_APART_THRESHOLD
-        : STANDARD_THRESHOLD;
-      const maxAllowance = isMFSLivedApart
-        ? MFS_LIVED_APART_MAX_ALLOWANCE
-        : STANDARD_MAX_ALLOWANCE;
-
-      // Line 5: Threshold
-      setCurrencyField(form, F.line5, threshold);
-
-      // Line 6: MAGI (use AGI)
-      const magi = zeroFloor(result.agi);
-      setCurrencyField(form, F.line6, magi);
-
-      // Line 7: Subtract line 6 from line 5
-      const line7 = zeroFloor(threshold.minus(magi));
-      setCurrencyField(form, F.line7, line7);
-
-      // Line 8: Line 7 × 50%, capped at max allowance
-      const line8 = min(roundDollar(line7.times(PHASE_OUT_RATE)), maxAllowance);
-      setCurrencyField(form, F.line8, line8);
-
-      // Line 9: Smaller of line 4 or line 8 (= rental allowance)
-      setCurrencyField(form, F.line9, f8582.rentalAllowance);
-    }
-    // If MFS who lived with spouse: Part II is skipped (line 9 = 0)
+function printedRatios(rows: Allocation[], read: (row: Allocation) => Decimal): string[] {
+  const units = new Decimal(1000000), exact = rows.map(row => read(row).times(units));
+  const rounded = exact.map(value => value.floor());
+  let remainder = units.minus(sum(...rounded));
+  for (const { index } of exact.map((value, index) => ({ index, fraction: value.minus(rounded[index]) }))
+    .sort((a, b) => b.fraction.comparedTo(a.fraction) || a.index - b.index)) {
+    if (remainder.isZero()) break;
+    rounded[index] = rounded[index].plus(1); remainder = remainder.minus(1);
   }
+  if (!remainder.isZero()) throw new Error("Form8582 printed ratio audit does not reconcile");
+  return rounded.map(value => value.div(units).toFixed(6));
+}
 
-  // ── Part III: Total Losses Allowed ──
+async function appendSourceRows(doc: PDFDocument, result: Form8582Result): Promise<void> {
+  if (!result.activityRows.length) return;
+  const font = await doc.embedFont(StandardFonts.Helvetica);
+  let page: PDFPage, y = 0;
+  const newPage = () => {
+    page = doc.addPage([612, 792]); y = 730;
+    page.drawText("Form 8582 activity source and allocation continuation", { x: 42, y, size: 12, font }); y -= 24;
+  };
+  const line = (text: string) => {
+    if (y < 50) newPage();
+    page.drawText(text, { x: 42, y, size: 9, font }); y -= 14;
+  };
+  const wrapped = (text: string) => {
+    let current = "";
+    for (const word of text.split(" ")) {
+      const candidate = current ? `${current} ${word}` : word;
+      if (font.widthOfTextAtSize(candidate, 9) <= 528) { current = candidate; continue; }
+      if (current) line(current);
+      current = "";
+      for (const character of word) {
+        if (font.widthOfTextAtSize(current + character, 9) > 528) { line(current); current = ""; }
+        current += character;
+      }
+    }
+    if (current) line(current);
+  };
+  newPage();
+  wrapped("All sources appear below. Rows beyond the five spaces are included in the printed form totals.");
+  wrapped("Original source cents are retained. Form dollars and ratios use reconciled rounding; no ownership allocation is inferred.");
+  const specialRows = result.rentalAllowance.gt(0) ? result.activityAllocations.filter(row => row.isActiveRental && row.overallLoss.gt(0)) : [];
+  const unallowedRows = result.suspendedLoss.gt(0) ? result.activityAllocations.filter(row => row.remainingLoss.gt(0)) : [];
+  const specialRatios = specialRows.length ? printedRatios(specialRows, row => row.specialAllowanceRatio) : [];
+  const unallowedRatios = unallowedRows.length ? printedRatios(unallowedRows, row => row.unallowedRatio) : [];
+  for (const [index, row] of result.activityRows.entries()) {
+    y -= 9;
+    wrapped(`${index + 1}. ${row.name} | ${row.isActiveRental ? "Part IV" : "Part V"} | ${row.reportingFormAndLine ?? "Reporting form/line unknown: source review required"}`);
+    wrapped(`Source income ${row.sourceCurrentIncome.toFixed()} | current loss ${row.sourceCurrentLoss.toFixed()} | prior unallowed loss ${row.sourcePriorYearSuspendedLoss.toFixed()}`);
+    wrapped(`Form income ${row.currentIncome.toFixed()} | current loss ${row.currentLoss.toFixed()} | prior loss ${row.priorYearSuspendedLoss.toFixed()} | overall net ${row.overallNet.toFixed()}`);
+    const allocation = result.activityAllocations.find(item => item.sourceIndex === row.sourceIndex && item.name === row.name);
+    if (allocation) {
+      wrapped(`Total loss ${allocation.totalLoss.abs().toFixed()} | special allowance ${allocation.specialAllowance.toFixed()} | unallowed ${allocation.suspendedLoss.toFixed()} | allowed ${allocation.allowedLoss.toFixed()}`);
+      const specialIndex = specialRows.indexOf(allocation), unallowedIndex = unallowedRows.indexOf(allocation);
+      if (specialIndex >= 0) wrapped(`Part VI: overall loss ${allocation.overallLoss.toFixed()} | ratio ${specialRatios[specialIndex]} | remaining loss ${allocation.remainingLoss.toFixed()}`);
+      if (unallowedIndex >= 0) wrapped(`Part VII: remaining loss ${allocation.remainingLoss.toFixed()} | ratio ${unallowedRatios[unallowedIndex]}`);
+    }
+  }
+  await markReviewPdf(doc);
+}
 
-  // Line 10: Add income on lines 1a and 2a
-  const line10 = f8582.rentalIncome.plus(f8582.passiveIncome);
-  setCurrencyField(form, F.line10, line10);
-
-  // Line 11: Total allowed losses (lines 9 + 10)
-  setCurrencyField(form, F.line11, f8582.allowedLoss);
-
-  // ── Parts IV/V: Per-activity worksheets ──
-  // Fill rental activities in Part IV, other passive in Part V
-  // using the activity allocations from the engine result.
-  fillActivityWorksheets(form, f8582, input);
-
-  // ── Parts VII/VIII: Allocation of unallowed/allowed losses ──
-  fillAllocationWorksheets(form, f8582);
-
+export async function fillForm8582(input: TaxYearInput, result: TaxReturnResult, blankPdfPath: string): Promise<PDFDocument> {
+  assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
+  const retained = assertForm8582ReviewSource(input, result);
+  const doc = await loadReviewTemplate(blankPdfPath, 2025), form = doc.getForm();
+  setTextField(form, FIELDS.name, input.taxpayer.spouse
+    ? `${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName} & ${input.taxpayer.spouse.firstName} ${input.taxpayer.spouse.lastName}`
+    : `${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName}`);
+  setTextField(form, FIELDS.ssn, input.taxpayer.primary.ssn.replace(/-/g, ""));
+  if (!retained || !retained.activityRows.length) return doc;
+  const summaryIds = ["1a", "1b", "1c", "1d", "2a", "2b", "2c", "2d", "3", "4", "5", "6", "7", "8", "9", "10", "11"] as const;
+  for (const id of summaryIds) {
+    const audit = retained.lines.find(row => row.form === "Form 8582" && row.line === id);
+    if (!audit) continue; // Official stop/skip branch, already validated above.
+    const value = ["1b", "1c", "2b", "2c"].includes(id) ? audit.value.abs() : audit.value;
+    // Applicable zeros are actual values; a skipped line is left blank.
+    if (value.isZero()) setTextField(form, FIELDS[`line${id}`], "0");
+    else setCurrencyField(form, FIELDS[`line${id}`], value);
+  }
+  const fillActivityRows = (fields: typeof FIELDS.part4 | typeof FIELDS.part5, rows: Form8582ActivityRow[]) => {
+    const values = (row: Form8582ActivityRow) => ({ a: row.currentIncome, b: row.currentLoss.abs(),
+      c: row.priorYearSuspendedLoss, d: zeroFloor(row.overallNet), e: zeroFloor(row.overallNet.negated()) });
+    for (const [index, row] of rows.slice(0, 5).entries()) {
+      setTextField(form, fields.rows[index].name, row.name);
+      for (const [key, value] of Object.entries(values(row))) setCurrencyField(form, fields.rows[index][key as "a" | "b" | "c" | "d" | "e"], value);
+    }
+    if (rows.length) for (const key of ["a", "b", "c", "d", "e"] as const) setCurrencyField(form, fields.total[key], sum(...rows.map(row => values(row)[key])));
+  };
+  fillActivityRows(FIELDS.part4, retained.activityRows.filter(row => row.isActiveRental));
+  fillActivityRows(FIELDS.part5, retained.activityRows.filter(row => !row.isActiveRental));
+  if (retained.rentalAllowance.gt(0)) {
+    const rows = retained.activityAllocations.filter(row => row.isActiveRental && row.overallLoss.gt(0));
+    const ratios = printedRatios(rows, row => row.specialAllowanceRatio);
+    for (const [index, row] of rows.slice(0, 5).entries()) {
+      const fields = FIELDS.part6.rows[index];
+      setTextField(form, fields.name, row.name); setTextField(form, fields.form, row.reportingFormAndLine ?? "");
+      setCurrencyField(form, fields.a, row.overallLoss); setTextField(form, fields.b, ratios[index]);
+      setCurrencyField(form, fields.c, row.specialAllowance); setCurrencyField(form, fields.d, row.remainingLoss);
+    }
+    setCurrencyField(form, FIELDS.part6.totalA, sum(...rows.map(row => row.overallLoss)));
+    setCurrencyField(form, FIELDS.part6.totalC, sum(...rows.map(row => row.specialAllowance)));
+    setCurrencyField(form, FIELDS.part6.totalD, sum(...rows.map(row => row.remainingLoss)));
+  }
+  if (retained.suspendedLoss.gt(0)) {
+    const rows = retained.activityAllocations.filter(row => row.remainingLoss.gt(0));
+    const ratios = printedRatios(rows, row => row.unallowedRatio);
+    for (const [index, row] of rows.slice(0, 5).entries()) {
+      const fields = FIELDS.part7.rows[index], allowed = FIELDS.part8.rows[index];
+      setTextField(form, fields.name, row.name); setTextField(form, fields.form, row.reportingFormAndLine ?? "");
+      setCurrencyField(form, fields.a, row.remainingLoss); setTextField(form, fields.b, ratios[index]); setCurrencyField(form, fields.c, row.suspendedLoss);
+      setTextField(form, allowed.name, row.name); setTextField(form, allowed.form, row.reportingFormAndLine ?? "");
+      setCurrencyField(form, allowed.a, row.totalLoss.abs()); setCurrencyField(form, allowed.b, row.suspendedLoss); setCurrencyField(form, allowed.c, row.allowedLoss);
+    }
+    setCurrencyField(form, FIELDS.part7.totalA, sum(...rows.map(row => row.remainingLoss)));
+    setCurrencyField(form, FIELDS.part7.totalC, sum(...rows.map(row => row.suspendedLoss)));
+    setCurrencyField(form, FIELDS.part8.totalA, sum(...rows.map(row => row.totalLoss.abs())));
+    setCurrencyField(form, FIELDS.part8.totalB, sum(...rows.map(row => row.suspendedLoss)));
+    setCurrencyField(form, FIELDS.part8.totalC, sum(...rows.map(row => row.allowedLoss)));
+  }
+  await appendSourceRows(doc, retained);
   return doc;
 }
-
-/**
- * Fill Parts IV and V per-activity worksheets.
- * Part IV = rental RE with active participation.
- * Part V = all other passive activities.
- */
-function fillActivityWorksheets(
-  form: import("pdf-lib").PDFForm,
-  f8582: NonNullable<TaxReturnResult["form8582"]>,
-  input: TaxYearInput,
-): void {
-  // Build a set of rental property names for classification
-  const rentalNames = new Set<string>();
-  for (const rp of input.rentalProperties ?? []) {
-    rentalNames.add(rp.description);
-  }
-
-  // Classify allocations into rental (Part IV) and other (Part V)
-  const rentalActivities: typeof f8582.activityAllocations = [];
-  const otherActivities: typeof f8582.activityAllocations = [];
-
-  for (const alloc of f8582.activityAllocations) {
-    if (rentalNames.has(alloc.name)) {
-      rentalActivities.push(alloc);
-    } else {
-      otherActivities.push(alloc);
-    }
-  }
-
-  const F = FIELDS;
-
-  // Part IV: Rental activities (up to 5 rows)
-  let totalP4a = ZERO;
-  let totalP4b = ZERO;
-  let totalP4d = ZERO;
-  let totalP4e = ZERO;
-  const rentalSlice = rentalActivities.slice(0, 5);
-  for (let i = 0; i < rentalSlice.length; i++) {
-    const alloc = rentalSlice[i];
-    const row = F.part4.rows[i];
-    setTextField(form, row.name, alloc.name);
-
-    const overall = alloc.totalLoss; // negative
-    if (overall.isNegative()) {
-      const loss = overall.abs();
-      setCurrencyField(form, row.b, overall); // negative
-      totalP4b = totalP4b.plus(overall);
-      // Column (e): overall loss
-      setCurrencyField(form, row.e, overall);
-      totalP4e = totalP4e.plus(loss);
-    } else if (overall.isPositive()) {
-      setCurrencyField(form, row.a, overall);
-      totalP4a = totalP4a.plus(overall);
-      setCurrencyField(form, row.d, overall);
-      totalP4d = totalP4d.plus(overall);
-    }
-  }
-
-  // Part IV totals
-  if (!totalP4a.isZero()) setCurrencyField(form, F.part4.total.a, totalP4a);
-  if (!totalP4b.isZero()) setCurrencyField(form, F.part4.total.b, totalP4b);
-  if (!totalP4d.isZero()) setCurrencyField(form, F.part4.total.d, totalP4d);
-  if (!totalP4e.isZero()) setCurrencyField(form, F.part4.total.e, f8582.netRental.isNegative() ? f8582.netRental : ZERO);
-
-  // Part V: Other passive activities (up to 5 rows)
-  let totalP5a = ZERO;
-  let totalP5b = ZERO;
-  let totalP5d = ZERO;
-  let totalP5e = ZERO;
-  const otherSlice = otherActivities.slice(0, 5);
-  for (let i = 0; i < otherSlice.length; i++) {
-    const alloc = otherSlice[i];
-    const row = F.part5.rows[i];
-    setTextField(form, row.name, alloc.name);
-
-    const overall = alloc.totalLoss;
-    if (overall.isNegative()) {
-      setCurrencyField(form, row.b, overall);
-      totalP5b = totalP5b.plus(overall);
-      setCurrencyField(form, row.e, overall);
-      totalP5e = totalP5e.plus(overall.abs());
-    } else if (overall.isPositive()) {
-      setCurrencyField(form, row.a, overall);
-      totalP5a = totalP5a.plus(overall);
-      setCurrencyField(form, row.d, overall);
-      totalP5d = totalP5d.plus(overall);
-    }
-  }
-
-  // Part V totals
-  if (!totalP5a.isZero()) setCurrencyField(form, F.part5.total.a, totalP5a);
-  if (!totalP5b.isZero()) setCurrencyField(form, F.part5.total.b, totalP5b);
-  if (!totalP5d.isZero()) setCurrencyField(form, F.part5.total.d, totalP5d);
-  if (!totalP5e.isZero()) setCurrencyField(form, F.part5.total.e, f8582.netPassive.isNegative() ? f8582.netPassive : ZERO);
-}
-
-/**
- * Fill Parts VII and VIII with per-activity allocation of
- * unallowed and allowed losses.
- */
-function fillAllocationWorksheets(
-  form: import("pdf-lib").PDFForm,
-  f8582: NonNullable<TaxReturnResult["form8582"]>,
-): void {
-  const F = FIELDS;
-  const allocations = f8582.activityAllocations;
-  if (allocations.length === 0) return;
-
-  // Total loss across all activities (for ratio computation)
-  const totalLoss = allocations.reduce(
-    (acc, a) => acc.plus(a.totalLoss.abs()),
-    ZERO,
-  );
-  if (totalLoss.isZero()) return;
-
-  // Part VII: Allocation of unallowed losses
-  let totalP7a = ZERO;
-  let totalP7c = ZERO;
-  const lossAllocations = allocations.filter((a) => a.totalLoss.isNegative());
-  const sliceP7 = lossAllocations.slice(0, 5);
-  for (let i = 0; i < sliceP7.length; i++) {
-    const alloc = sliceP7[i];
-    const row = F.part7.rows[i];
-    setTextField(form, row.name, alloc.name);
-    setTextField(form, row.form, "Sch E");
-
-    const loss = alloc.totalLoss.abs();
-    setCurrencyField(form, row.a, loss);
-    totalP7a = totalP7a.plus(loss);
-
-    // Ratio: this activity's loss / total loss
-    const ratio = totalLoss.isZero()
-      ? ZERO
-      : loss.dividedBy(totalLoss);
-    setTextField(form, row.b, ratio.toDecimalPlaces(2).toFixed(2));
-
-    setCurrencyField(form, row.c, alloc.suspendedLoss);
-    totalP7c = totalP7c.plus(alloc.suspendedLoss);
-  }
-  if (!totalP7a.isZero()) setCurrencyField(form, F.part7.totalA, totalP7a);
-  if (!totalP7c.isZero()) setCurrencyField(form, F.part7.totalC, totalP7c);
-
-  // Part VIII: Allowed losses
-  let totalP8a = ZERO;
-  let totalP8b = ZERO;
-  let totalP8c = ZERO;
-  const sliceP8 = lossAllocations.slice(0, 5);
-  for (let i = 0; i < sliceP8.length; i++) {
-    const alloc = sliceP8[i];
-    const row = F.part8.rows[i];
-    setTextField(form, row.name, alloc.name);
-    setTextField(form, row.form, "Sch E");
-
-    const loss = alloc.totalLoss.abs();
-    setCurrencyField(form, row.a, loss);
-    totalP8a = totalP8a.plus(loss);
-
-    setCurrencyField(form, row.b, alloc.suspendedLoss);
-    totalP8b = totalP8b.plus(alloc.suspendedLoss);
-
-    setCurrencyField(form, row.c, alloc.allowedLoss);
-    totalP8c = totalP8c.plus(alloc.allowedLoss);
-  }
-  if (!totalP8a.isZero()) setCurrencyField(form, F.part8.totalA, totalP8a);
-  if (!totalP8b.isZero()) setCurrencyField(form, F.part8.totalB, totalP8b);
-  if (!totalP8c.isZero()) setCurrencyField(form, F.part8.totalC, totalP8c);
-}
-
-/** Exported field map for testing and inspection. */
 export { FIELDS as FORM_8582_FIELDS };

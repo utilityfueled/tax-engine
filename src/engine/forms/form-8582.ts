@@ -9,12 +9,14 @@
 
 import Decimal from "decimal.js";
 import type { CalculatedLine } from "@/models/outputs.js";
-import { zeroFloor, min, roundDollar } from "@/utils/decimal.js";
+import { zeroFloor, roundDollar } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
 import type { FilingStatus } from "@/models/constants.js";
 
 export interface PassiveActivity {
   name: string;
+  /** Actual form/line used for this activity; omitted when that source is unknown. */
+  reportingFormAndLine?: string;
   income: Decimal; // positive
   loss: Decimal; // negative
   isRentalRealEstate: boolean;
@@ -47,30 +49,53 @@ export interface Form8582Input {
   priorYearPTPSuspendedLosses?: Array<{ name: string; amount: Decimal }>;
 }
 
+export interface Form8582ActivityRow {
+  sourceIndex?: number;
+  name: string;
+  reportingFormAndLine?: string;
+  isActiveRental: boolean;
+  sourceCurrentIncome: Decimal;
+  sourceCurrentLoss: Decimal;
+  sourcePriorYearSuspendedLoss: Decimal;
+  currentIncome: Decimal;
+  currentLoss: Decimal;
+  priorYearSuspendedLoss: Decimal;
+  overallNet: Decimal;
+}
+
 export interface Form8582Result {
-  passiveIncome: Decimal; // Line 1a
-  passiveLoss: Decimal; // Line 1b
-  netPassive: Decimal; // Line 1c
-
-  rentalIncome: Decimal; // Line 3a
-  rentalLoss: Decimal; // Line 3b
-  netRental: Decimal; // Line 3c
-
-  combinedLoss: Decimal; // Line 5
-  rentalAllowance: Decimal; // Line 7
-  allowedLoss: Decimal; // Line 9
-  suspendedLoss: Decimal; // Line 10
-
-  /** Per-activity allocation of allowed/suspended amounts */
+  /** Actual input to the modified-AGI worksheet, retained even when Part II is skipped. */
+  modifiedAgi: Decimal;
+  passiveIncome: Decimal; // Line 2a
+  passiveLoss: Decimal; // Lines 2b + 2c, negative
+  netPassive: Decimal; // Line 2d
+  rentalIncome: Decimal; // Line 1a
+  rentalLoss: Decimal; // Lines 1b + 1c, negative
+  netRental: Decimal; // Line 1d
+  combinedLoss: Decimal; // Negative part of line 3
+  rentalAllowance: Decimal; // Line 9
+  allowedLoss: Decimal; // Line 11, or all losses allowed by line 3
+  suspendedLoss: Decimal; // Part VII column c total
+  requiresForm8582: boolean;
+  activityRows: Form8582ActivityRow[];
+  /** Stable original input index binds an allocation even when other rows have no loss. */
   activityAllocations: Array<{
+    sourceIndex?: number;
     name: string;
+    reportingFormAndLine?: string;
+    isActiveRental: boolean;
     totalLoss: Decimal;
+    overallLoss: Decimal;
+    specialAllowanceRatio: Decimal;
+    specialAllowance: Decimal;
+    remainingLoss: Decimal;
+    unallowedRatio: Decimal;
     allowedLoss: Decimal;
     suspendedLoss: Decimal;
   }>;
 
   // ── PTP segregation (IRC §469(k)) ──────────────────────
-  /** PTP net income included in the regular passive pool */
+  /** PTP net income is nonpassive and excluded from the regular Form8582 pool. */
   ptpNetIncome: Decimal;
   /** Per-PTP suspended losses (only offset by same-PTP income) */
   ptpSuspendedLosses: Array<{
@@ -94,13 +119,25 @@ export interface Form8582Result {
   lines: CalculatedLine[];
 }
 
-const RENTAL_ALLOWANCE_MAX = new Decimal(25000);
-const RENTAL_PHASE_OUT_START = new Decimal(100000);
-const RENTAL_PHASE_OUT_RATE = new Decimal(0.5); // $0.50 per $1 over $100K
-
-// IRC §469(i)(4)(B): MFS lived-apart gets half the normal allowance and lower phase-out
-const MFS_LIVED_APART_ALLOWANCE_MAX = new Decimal(12500);
-const MFS_LIVED_APART_PHASE_OUT_START = new Decimal(50000);
+/** Dollar rounding only: conserve the printed total using largest remainders.
+ * The IRS prescribes the proportional formula and matching totals, not this tie rule.
+ */
+function allocateDollars(total: Decimal, weights: Decimal[]): Decimal[] {
+  const denominator = weights.reduce((sum, weight) => sum.plus(weight), new Decimal(0));
+  if (denominator.isZero() || total.isZero()) return weights.map(() => new Decimal(0));
+  const exact = weights.map(weight => total.times(weight).div(denominator));
+  const amounts = exact.map(value => value.floor());
+  let remaining = total.minus(amounts.reduce((sum, value) => sum.plus(value), new Decimal(0)));
+  const order = exact.map((value, index) => ({ index, fraction: value.minus(amounts[index]) }))
+    .sort((a, b) => b.fraction.comparedTo(a.fraction) || a.index - b.index);
+  for (const { index } of order) {
+    if (remaining.isZero()) break;
+    amounts[index] = amounts[index].plus(1);
+    remaining = remaining.minus(1);
+  }
+  if (!remaining.isZero()) throw new Error("Form8582 dollar allocation failed to reconcile its printed total.");
+  return amounts;
+}
 
 export function calculateForm8582(input: Form8582Input): Form8582Result {
   const audit = new AuditTrail();
@@ -108,12 +145,17 @@ export function calculateForm8582(input: Form8582Input): Form8582Result {
   // ═══════════════════════════════════════════════════════════
   // PTP segregation (IRC §469(k))
   // PTPs are handled separately: losses only offset same-PTP income.
-  // PTP net income flows into the regular passive pool; PTP net losses
-  // are fully suspended per-PTP.
+  // PTP net gains are nonpassive; neither income nor losses enter this form.
   // ═══════════════════════════════════════════════════════════
 
-  const ptpActivities = input.activities.filter((a) => a.isPubliclyTradedPartnership);
-  const nonPTPActivities = input.activities.filter((a) => !a.isPubliclyTradedPartnership);
+  if (!input.agi.isFinite()) throw new Error("Form8582 requires finite actual modified AGI.");
+  const sourceActivities = input.activities.map((activity, sourceIndex) => {
+    if (!activity.name.trim() || !activity.income.isFinite() || activity.income.lt(0)
+      || !activity.loss.isFinite() || activity.loss.gt(0)) throw new Error("Form8582 requires actual finite signed activity amounts and names.");
+    return { ...activity, sourceIndex };
+  });
+  const ptpActivities = sourceActivities.filter(a => a.isPubliclyTradedPartnership);
+  const nonPTPActivities = sourceActivities.filter(a => !a.isPubliclyTradedPartnership);
 
   // Build PTP prior-year carryforward map
   const priorPTPByName = new Map<string, Decimal>();
@@ -169,7 +211,7 @@ export function calculateForm8582(input: Form8582Input): Form8582Result {
       );
     } else {
       // Disposition gain fully absorbed suspended losses — no loss to release
-      // Any remaining net income goes to the passive pool (handled below if needed)
+      // Remaining gain is nonpassive and never enters the regular passive pool.
       audit.record("Form 8582", "ptp-disposition", `PTP disposition — no loss to release: ${ptp.name}`, new Decimal(0),
         `Fully disposed PTP — disposition gain/income absorbed all suspended losses. Net income ${net} not released (no suspended loss remains).`,
         {
@@ -189,17 +231,6 @@ export function calculateForm8582(input: Form8582Input): Form8582Result {
   let ptpNetIncomeTotal = new Decimal(0);
   const ptpSuspendedLosses: Form8582Result["ptpSuspendedLosses"] = [];
 
-  // Synthetic passive activities to inject PTP net income into the regular pool
-  const ptpIncomeActivities: Array<{
-    name: string;
-    income: Decimal;
-    loss: Decimal;
-    isRentalRealEstate: boolean;
-    isActiveParticipant: boolean;
-    currentYearLoss: Decimal;
-    priorYearSuspendedLoss: Decimal;
-  }> = [];
-
   for (const ptp of continuingPTPs) {
     const priorCarryforward = priorPTPByName.get(ptp.name) ?? new Decimal(0);
     priorPTPByName.delete(ptp.name);
@@ -210,24 +241,15 @@ export function calculateForm8582(input: Form8582Input): Form8582Result {
     const netAfterCarryforward = netBeforeCarryforward.minus(priorCarryforward);
 
     if (netAfterCarryforward.greaterThan(0)) {
-      // PTP has net income after absorbing carryforwards → include in passive pool
+      // PTP net gain after its own carryforwards is nonpassive.
       ptpNetIncomeTotal = ptpNetIncomeTotal.plus(netAfterCarryforward);
-      ptpIncomeActivities.push({
-        name: ptp.name,
-        income: netAfterCarryforward,
-        loss: new Decimal(0),
-        isRentalRealEstate: ptp.isRentalRealEstate,
-        isActiveParticipant: ptp.isActiveParticipant,
-        currentYearLoss: new Decimal(0),
-        priorYearSuspendedLoss: new Decimal(0),
-      });
       audit.record("Form 8582", "ptp-income", `PTP net income: ${ptp.name}`, netAfterCarryforward,
         `Current income ${currentIncome} − current loss ${currentLoss} − prior carryforward ${priorCarryforward}`,
         {
           "Current-year PTP income": currentIncome,
           "Current-year PTP loss": currentLoss,
           "Prior-year PTP carryforward": priorCarryforward,
-          "PTP net income (into passive pool)": netAfterCarryforward,
+          "PTP nonpassive net income": netAfterCarryforward,
         }
       );
     } else if (netAfterCarryforward.isNegative()) {
@@ -271,280 +293,104 @@ export function calculateForm8582(input: Form8582Input): Form8582Result {
   // Regular (non-PTP) passive activity limitation
   // ═══════════════════════════════════════════════════════════
 
-  const priorYearSuspendedLossesByName = new Map<string, Decimal>();
+  const priorByName = new Map<string, Decimal>();
   for (const carryforward of input.priorYearSuspendedLosses ?? []) {
-    const amount = Decimal.max(new Decimal(0), carryforward.amount);
-    if (amount.isZero()) {
-      continue;
-    }
-    priorYearSuspendedLossesByName.set(
-      carryforward.name,
-      (priorYearSuspendedLossesByName.get(carryforward.name) ?? new Decimal(0)).plus(amount)
-    );
+    if (!carryforward.amount.isFinite() || carryforward.amount.lt(0)) throw new Error("Form8582 requires a nonnegative actual prior unallowed loss.");
+    if (!carryforward.amount.isZero()) priorByName.set(carryforward.name, (priorByName.get(carryforward.name) ?? new Decimal(0)).plus(carryforward.amount));
   }
-
-  const activitiesWithCarryforwards = nonPTPActivities.map((activity) => {
-    const matchedPriorYearSuspendedLoss = priorYearSuspendedLossesByName.get(activity.name) ?? new Decimal(0);
-    priorYearSuspendedLossesByName.delete(activity.name);
-
-    return {
-      ...activity,
-      currentYearLoss: activity.loss,
-      priorYearSuspendedLoss: matchedPriorYearSuspendedLoss,
-      loss: activity.loss.minus(matchedPriorYearSuspendedLoss),
-    };
+  for (const name of priorByName.keys()) {
+    if (nonPTPActivities.filter(activity => activity.name === name).length > 1) throw new Error("Form8582 prior loss requires an unambiguous actual activity identity.");
+  }
+  const mfsIneligible = input.filingStatus === "married_filing_separately" && !input.mfsLivedApartFromSpouseAllYear;
+  const activityRows: Form8582ActivityRow[] = nonPTPActivities.map(activity => {
+    const prior = priorByName.get(activity.name) ?? new Decimal(0);
+    priorByName.delete(activity.name);
+    const currentIncome = roundDollar(activity.income);
+    const currentLoss = roundDollar(activity.loss);
+    const priorYearSuspendedLoss = roundDollar(prior);
+    return { sourceIndex: activity.sourceIndex, name: activity.name, reportingFormAndLine: activity.reportingFormAndLine,
+      isActiveRental: activity.isRentalRealEstate && activity.isActiveParticipant && !mfsIneligible,
+      sourceCurrentIncome: activity.income, sourceCurrentLoss: activity.loss, sourcePriorYearSuspendedLoss: prior,
+      currentIncome, currentLoss, priorYearSuspendedLoss, overallNet: currentIncome.plus(currentLoss).minus(priorYearSuspendedLoss) };
   });
-
-  const unmatchedPriorYearCarryforwardActivities = Array.from(priorYearSuspendedLossesByName.entries()).map(
-    ([name, amount]) => ({
-      name,
-      income: new Decimal(0),
-      loss: amount.negated(),
-      isRentalRealEstate: false,
-      isActiveParticipant: false,
-      currentYearLoss: new Decimal(0),
-      priorYearSuspendedLoss: amount,
-    })
-  );
-
-  const normalizedActivities = [
-    ...activitiesWithCarryforwards,
-    ...unmatchedPriorYearCarryforwardActivities,
-    // PTP net income activities are included in the regular passive pool
-    ...ptpIncomeActivities,
-  ];
-
-  // Separate rental (active participant) from other passive activities
-  const nonRentalActivities = normalizedActivities.filter(
-    (a) => !a.isRentalRealEstate || !a.isActiveParticipant
-  );
-  const rentalActivities = normalizedActivities.filter(
-    (a) => a.isRentalRealEstate && a.isActiveParticipant
-  );
-
-  // ── Lines 1a-1c: Non-rental passive activities ────────
-
-  const passiveIncome = nonRentalActivities.reduce(
-    (acc, a) => acc.plus(a.income),
-    new Decimal(0)
-  );
-  audit.record("Form 8582", "1a", "Passive activity income", passiveIncome, "Sum of non-rental passive income");
-
-  const currentYearPassiveLoss = nonRentalActivities.reduce(
-    (acc, a) => acc.plus(a.currentYearLoss),
-    new Decimal(0)
-  );
-  const priorYearPassiveLoss = nonRentalActivities.reduce(
-    (acc, a) => acc.plus(a.priorYearSuspendedLoss.negated()),
-    new Decimal(0)
-  );
-  const unmatchedPriorYearPassiveLoss = unmatchedPriorYearCarryforwardActivities.reduce(
-    (acc, a) => acc.plus(a.priorYearSuspendedLoss.negated()),
-    new Decimal(0)
-  );
-  const passiveLoss = nonRentalActivities.reduce(
-    (acc, a) => acc.plus(a.loss),
-    new Decimal(0)
-  );
-  audit.record(
-    "Form 8582",
-    "1b",
-    "Passive activity losses",
-    passiveLoss,
-    "Sum of current-year non-rental passive losses plus prior-year carryforwards in the non-rental bucket",
-    {
-      "Current-year non-rental passive losses": currentYearPassiveLoss,
-      "Prior-year carried non-rental passive losses": priorYearPassiveLoss,
-      "Unmatched prior-year carryforwards treated as non-rental passive": unmatchedPriorYearPassiveLoss,
-    }
-  );
-
-  const netPassive = passiveIncome.plus(passiveLoss);
-  audit.record("Form 8582", "1c", "Net passive", netPassive, "Line 1a + Line 1b");
-
-  // ── Lines 3a-3c: Rental real estate (active participant) ──
-
-  const rentalIncome = rentalActivities.reduce(
-    (acc, a) => acc.plus(a.income),
-    new Decimal(0)
-  );
-  audit.record("Form 8582", "3a", "Rental activity income", rentalIncome, "Sum of active-participant rental income");
-
-  const currentYearRentalLoss = rentalActivities.reduce(
-    (acc, a) => acc.plus(a.currentYearLoss),
-    new Decimal(0)
-  );
-  const priorYearRentalLoss = rentalActivities.reduce(
-    (acc, a) => acc.plus(a.priorYearSuspendedLoss.negated()),
-    new Decimal(0)
-  );
-  const rentalLoss = rentalActivities.reduce(
-    (acc, a) => acc.plus(a.loss),
-    new Decimal(0)
-  );
-  audit.record(
-    "Form 8582",
-    "3b",
-    "Rental activity losses",
-    rentalLoss,
-    "Sum of current-year active-participant rental losses plus matched prior-year rental carryforwards",
-    {
-      "Current-year active-participant rental losses": currentYearRentalLoss,
-      "Prior-year carried active-participant rental losses": priorYearRentalLoss,
-    }
-  );
-
-  const netRental = rentalIncome.plus(rentalLoss);
-  audit.record("Form 8582", "3c", "Net rental", netRental, "Line 3a + Line 3b");
-
-  // ── Line 5: Combined passive losses ───────────────────
-
-  const combinedNet = netPassive.plus(netRental);
-  const combinedLoss = combinedNet.isNegative() ? combinedNet : new Decimal(0);
-  audit.record("Form 8582", "5", "Combined passive losses", combinedLoss, "Line 1c + Line 3c (if negative)");
-
-  // If no net loss, no limitation needed
-  if (!combinedNet.isNegative()) {
-    audit.record("Form 8582", "7", "Rental allowance", new Decimal(0), "No net loss — no limitation needed");
-    audit.record("Form 8582", "9", "Allowed loss", new Decimal(0), "No limitation");
-    audit.record("Form 8582", "10", "Suspended loss", new Decimal(0), "No suspension");
-
-    return {
-      passiveIncome,
-      passiveLoss,
-      netPassive,
-      rentalIncome,
-      rentalLoss,
-      netRental,
-      combinedLoss: new Decimal(0),
-      rentalAllowance: new Decimal(0),
-      allowedLoss: new Decimal(0),
-      suspendedLoss: new Decimal(0),
-      activityAllocations: [],
-      ptpNetIncome: ptpNetIncomeTotal,
-      ptpSuspendedLosses,
-      ptpDispositionReleasedLosses,
-      lines: audit.getLines(),
-    };
+  for (const [name, prior] of priorByName) {
+    // Historical compatibility: no source classification or report location is invented.
+    const amount = roundDollar(prior);
+    activityRows.push({ name, isActiveRental: false, sourceCurrentIncome: new Decimal(0), sourceCurrentLoss: new Decimal(0),
+      sourcePriorYearSuspendedLoss: prior, currentIncome: new Decimal(0), currentLoss: new Decimal(0), priorYearSuspendedLoss: amount, overallNet: amount.negated() });
   }
-
-  // ── Line 7: Special $25,000 rental allowance ──────────
+  const sumRows = (rows: Form8582ActivityRow[], read: (row: Form8582ActivityRow) => Decimal) => rows.reduce((sum, row) => sum.plus(read(row)), new Decimal(0));
+  const rentalRows = activityRows.filter(row => row.isActiveRental);
+  const otherRows = activityRows.filter(row => !row.isActiveRental);
+  const rentalIncome = sumRows(rentalRows, row => row.currentIncome);
+  const rentalCurrentLoss = sumRows(rentalRows, row => row.currentLoss);
+  const rentalPriorLoss = sumRows(rentalRows, row => row.priorYearSuspendedLoss).negated();
+  const rentalLoss = rentalCurrentLoss.plus(rentalPriorLoss);
+  const netRental = rentalIncome.plus(rentalLoss);
+  const passiveIncome = sumRows(otherRows, row => row.currentIncome);
+  const passiveCurrentLoss = sumRows(otherRows, row => row.currentLoss);
+  const passivePriorLoss = sumRows(otherRows, row => row.priorYearSuspendedLoss).negated();
+  const passiveLoss = passiveCurrentLoss.plus(passivePriorLoss);
+  const netPassive = passiveIncome.plus(passiveLoss);
+  const combinedNet = netRental.plus(netPassive);
+  const combinedLoss = Decimal.min(0, combinedNet);
+  const summaries: Array<[string, string, Decimal, string]> = [
+    ["1a", "Active rental current income", rentalIncome, "Part IV column (a) total"],
+    ["1b", "Active rental current losses", rentalCurrentLoss, "Part IV column (b) total"],
+    ["1c", "Active rental prior unallowed losses", rentalPriorLoss, "Part IV column (c) total"],
+    ["1d", "Net active rental income or loss", netRental, "1a + 1b + 1c"],
+    ["2a", "Other passive current income", passiveIncome, "Part V column (a) total; excludes PTP income"],
+    ["2b", "Other passive current losses", passiveCurrentLoss, "Part V column (b) total"],
+    ["2c", "Other passive prior unallowed losses", passivePriorLoss, "Part V column (c) total"],
+    ["2d", "Net other passive income or loss", netPassive, "2a + 2b + 2c"],
+    ["3", "Combined passive net income or loss", combinedNet, "1d + 2d; no prior CRD represented"],
+  ];
+  for (const [id, description, amount, formula] of summaries) audit.record("Form 8582", id, description, amount, formula);
 
   let rentalAllowance = new Decimal(0);
-  let rentalAllowanceFormula = "No net rental loss — no rental allowance";
-  if (netRental.isNegative()) {
-    if (input.filingStatus === "married_filing_separately" && !input.mfsLivedApartFromSpouseAllYear) {
-      // MFS who lived with spouse at any time: $0 allowance per IRC §469(i)(4)
-      rentalAllowance = new Decimal(0);
-      rentalAllowanceFormula = "$0 — MFS who lived with spouse at any time during the year (IRC §469(i)(4))";
-    } else if (input.filingStatus === "married_filing_separately" && input.mfsLivedApartFromSpouseAllYear) {
-      // MFS who lived apart all year: $12,500 max, phased out at $50K-$75K MAGI per IRC §469(i)(4)(B)
-      const baseAllowance = min(MFS_LIVED_APART_ALLOWANCE_MAX, netRental.abs());
-      const agiExcess = zeroFloor(input.agi.minus(MFS_LIVED_APART_PHASE_OUT_START));
-      const phaseOutReduction = roundDollar(agiExcess.times(RENTAL_PHASE_OUT_RATE));
-      rentalAllowance = zeroFloor(baseAllowance.minus(phaseOutReduction));
-      rentalAllowanceFormula = "min($12,500, rental loss) - 50% × (MAGI - $50,000) — MFS lived apart all year (IRC §469(i)(4)(B))";
-    } else {
-      const baseAllowance = min(RENTAL_ALLOWANCE_MAX, netRental.abs());
-      const agiExcess = zeroFloor(input.agi.minus(RENTAL_PHASE_OUT_START));
-      const phaseOutReduction = roundDollar(agiExcess.times(RENTAL_PHASE_OUT_RATE));
-      rentalAllowance = zeroFloor(baseAllowance.minus(phaseOutReduction));
-      rentalAllowanceFormula = "min($25,000, rental loss) - 50% × (MAGI - $100,000)";
+  if (combinedNet.lt(0) && netRental.lt(0) && !mfsIneligible) {
+    const line4 = Decimal.min(netRental.abs(), combinedNet.abs());
+    const line5 = new Decimal(input.filingStatus === "married_filing_separately" ? 75000 : 150000);
+    const line6 = roundDollar(zeroFloor(input.agi));
+    audit.record("Form 8582", "4", "Loss eligible for special allowance", line4, "Smaller of negative 1d and 3, as positive amounts");
+    audit.record("Form 8582", "5", "Modified AGI phaseout ceiling", line5, "150000; 75000 for MFS living apart all year");
+    audit.record("Form 8582", "6", "Actual modified adjusted gross income", line6, "Actual Form8582 modified AGI, not less than zero");
+    if (line6.lt(line5)) {
+      const line7 = line5.minus(line6);
+      const line8 = roundDollar(Decimal.min(input.filingStatus === "married_filing_separately" ? 12500 : 25000, line7.times("0.5")));
+      audit.record("Form 8582", "7", "Remaining income capacity", line7, "5 - 6");
+      audit.record("Form 8582", "8", "Special allowance capacity", line8, "50% of line7 limited to 25000 or MFS 12500");
+      rentalAllowance = Decimal.min(line4, line8);
     }
+    audit.record("Form 8582", "9", "Special rental allowance", rentalAllowance, "Smaller of 4 and 8; zero when 6 is at least 5");
   }
-  audit.record(
-    "Form 8582",
-    "7",
-    "Special rental allowance",
-    rentalAllowance,
-    rentalAllowanceFormula
-  );
+  const grossLoss = rentalLoss.plus(passiveLoss).abs();
+  const incomeOffset = rentalIncome.plus(passiveIncome);
+  const allowedLoss = combinedNet.lt(0) ? incomeOffset.plus(rentalAllowance) : grossLoss;
+  const suspendedLoss = grossLoss.minus(allowedLoss);
+  if (combinedNet.lt(0)) {
+    audit.record("Form 8582", "10", "Current passive income offset", incomeOffset, "1a + 2a");
+    audit.record("Form 8582", "11", "Total allowed passive losses", allowedLoss, "9 + 10; skipped Part II contributes zero");
+  }
+  audit.record("Form 8582", "suspended", "Unallowed loss carryforward", suspendedLoss, "Total current and prior losses minus allowed losses");
 
-  // ── Line 9: Allowed passive activity loss ─────────────
-
-  // Total gross losses across non-PTP activities only (PTPs are handled separately)
-  const totalGrossLoss = nonPTPActivities.reduce(
-    (acc, a) => acc.plus(a.loss.abs()),
-    new Decimal(0)
-  ).plus(
-    normalizedActivities.reduce(
-      (acc, a) => acc.plus(a.priorYearSuspendedLoss),
-      new Decimal(0)
-    )
-  );
-
-  // Allowed = passive income offsets + rental allowance, capped at total gross loss
-  const totalPassiveIncomeOffset = passiveIncome.plus(rentalIncome);
-  const allowedLoss = min(
-    totalPassiveIncomeOffset.plus(rentalAllowance),
-    totalGrossLoss
-  );
-  audit.record("Form 8582", "9", "Allowed passive loss", allowedLoss, "Passive income + rental allowance");
-
-  // ── Line 10: Suspended loss ───────────────────────────
-
-  const suspendedLoss = totalGrossLoss.minus(allowedLoss);
-  audit.record("Form 8582", "10", "Suspended passive loss", suspendedLoss, "Total loss - allowed loss");
-
-  // ── Per-activity allocation (IRS Parts VI/VII two-step method) ──
-
-  const lossActivities = normalizedActivities.filter((a) => a.loss.isNegative());
-
-  // Step 1: Allocate special allowance to rental loss activities only (Part VI)
-  const rentalLossActs = lossActivities.filter(
-    (a) => a.isRentalRealEstate && a.isActiveParticipant
-  );
-  const totalRentalAbsLoss = rentalLossActs.reduce(
-    (acc, a) => acc.plus(a.loss.abs()),
-    new Decimal(0)
-  );
-
-  // Step 2: For each loss activity, compute its SA portion and remaining loss
-  const activityData = lossActivities.map((a) => {
-    const isRentalActive = a.isRentalRealEstate && a.isActiveParticipant;
-    const saShare =
-      isRentalActive && !totalRentalAbsLoss.isZero()
-        ? roundDollar(rentalAllowance.times(a.loss.abs().dividedBy(totalRentalAbsLoss)))
-        : new Decimal(0);
-    const remaining = zeroFloor(a.loss.abs().minus(saShare));
-    return { activity: a, saShare, remaining };
+  const lossRows = activityRows.filter(row => row.currentLoss.minus(row.priorYearSuspendedLoss).lt(0));
+  const rentalWeights = lossRows.map(row => row.isActiveRental ? zeroFloor(row.overallNet.negated()) : new Decimal(0));
+  const rentalDenominator = rentalWeights.reduce((sum, value) => sum.plus(value), new Decimal(0));
+  const specialAllowances = allocateDollars(rentalAllowance, rentalWeights);
+  const remainingLosses = lossRows.map((row, index) => zeroFloor(row.overallNet.negated()).minus(specialAllowances[index]));
+  const remainingTotal = remainingLosses.reduce((sum, value) => sum.plus(value), new Decimal(0));
+  const unallowed = allocateDollars(suspendedLoss, remainingLosses);
+  const activityAllocations = lossRows.map((row, index) => {
+    const totalLoss = row.currentLoss.minus(row.priorYearSuspendedLoss);
+    return { sourceIndex: row.sourceIndex, name: row.name, reportingFormAndLine: row.reportingFormAndLine, isActiveRental: row.isActiveRental,
+      totalLoss, overallLoss: zeroFloor(row.overallNet.negated()),
+      specialAllowanceRatio: rentalDenominator.isZero() ? new Decimal(0) : rentalWeights[index].div(rentalDenominator),
+      specialAllowance: specialAllowances[index], remainingLoss: remainingLosses[index],
+      unallowedRatio: remainingTotal.isZero() ? new Decimal(0) : remainingLosses[index].div(remainingTotal),
+      allowedLoss: totalLoss.abs().minus(unallowed[index]), suspendedLoss: unallowed[index] };
   });
-
-  const totalRemaining = activityData.reduce(
-    (acc, item) => acc.plus(item.remaining),
-    new Decimal(0)
-  );
-
-  // Step 3: Allocate unallowed losses proportionally by remaining loss (Part VII)
-  const activityAllocations = activityData.map((data) => {
-    const proportion = totalRemaining.isZero()
-      ? new Decimal(0)
-      : data.remaining.dividedBy(totalRemaining);
-    const unallowed = roundDollar(suspendedLoss.times(proportion));
-    const actAllowed = data.activity.loss.abs().minus(unallowed);
-    return {
-      name: data.activity.name,
-      totalLoss: data.activity.loss,
-      allowedLoss: actAllowed,
-      suspendedLoss: unallowed,
-    };
-  });
-
-  return {
-    passiveIncome,
-    passiveLoss,
-    netPassive,
-    rentalIncome,
-    rentalLoss,
-    netRental,
-    combinedLoss,
-    rentalAllowance,
-    allowedLoss,
-    suspendedLoss,
-    activityAllocations,
-    ptpNetIncome: ptpNetIncomeTotal,
-    ptpSuspendedLosses,
-    ptpDispositionReleasedLosses,
-    lines: audit.getLines(),
-  };
+  return { modifiedAgi: input.agi, passiveIncome, passiveLoss, netPassive, rentalIncome, rentalLoss, netRental, combinedLoss, rentalAllowance,
+    allowedLoss, suspendedLoss, requiresForm8582: grossLoss.gt(0), activityRows, activityAllocations,
+    ptpNetIncome: ptpNetIncomeTotal, ptpSuspendedLosses, ptpDispositionReleasedLosses, lines: audit.getLines() };
 }

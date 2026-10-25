@@ -2,111 +2,141 @@ form: "Form 8582"
 fullName: "Passive Activity Loss Limitations"
 taxYear: 2025
 irsReference: "https://www.irs.gov/instructions/i8582"
-
 notes: |
-  Form 8582 limits passive activity losses. Passive losses can only offset
-  passive income, with exceptions for rental real estate ($25,000 allowance
-  for active participants, phased out at $100K-$150K AGI).
-  Suspended losses carry forward to future years. In this supported summary
-  slice, prior-year unallowed losses are merged back into the current-year
-  limitation computation by matching them to same-named activities. When a
-  matched current-year activity is active-participant rental real estate, the
-  carryforward stays in the rental bucket; otherwise it is treated as a
-  non-rental passive loss. If no current-year activity is available to
-  establish the carryforward's rental-allowance classification, the helper
-  conservatively keeps that prior-year amount in the non-rental passive bucket
-  instead of giving it active-participant rental treatment.
-
-  LINE NUMBER MAPPING NOTE: The IRS Form 8582 (2024+) uses Lines 1a-1d for
-  rental real estate with active participation and Lines 2a-2d for all other
-  passive activities. This implementation uses a simplified internal mapping
-  (1a-1c for non-rental passive, 3a-3c for rental) that does not match the
-  actual IRS form line numbers. The computation is correct; only the line
-  labels differ. A future refactor should align internal labels to the IRS form.
-
-  ALLOCATION METHOD: Per-activity allocation follows the IRS two-step method
-  (Parts VI/VII): (1) special $25K allowance allocated proportionally among
-  rental loss activities only, (2) remaining unallowed loss allocated
-  proportionally among all loss activities by their remaining loss after step 1.
-
+  Official 2025 Form 8582 Parts I-VIII. Source activity amounts have already
+  passed basis and at-risk limitations. Current income, current losses and
+  prior unallowed losses remain separate. Amounts from different forms may
+  coexist for one activity; the overall activity net controls allocation.
+  PTPs remain separate under section 469(k), including their nonpassive net gains.
+  No CRD or invented multi-form Part IX allocation is represented by this input.
+  The helper retains original source cents and uses whole-dollar activity rows.
+  Proportional dollar allocations use largest fractional remainders, with stable
+  original-order ties, solely to reconcile the printed column totals. This is
+  an implementation rounding choice satisfying IRS total constraints, not an
+  IRS-prescribed ownership allocation or taxpayer election.
+  An unmatched historical carryforward lacks rental classification and report
+  location; compatibility preview keeps it in the other-passive bucket and
+  the review copy identifies that source limitation.
 lines:
   - line: "1a"
-    description: "Activities with net income (passive)"
-    formula: "Sum of all passive activity income"
-    irsRef: "Form 8582 Instructions, Line 1a"
-    testRef: "tests/engine/forms/form-8582.test.ts::Form 8582 Line 1a - passive income"
+    description: "Active rental current income"
+    formula: "Sum Part IV column a"
+    irsRef: "Form 8582 and Instructions, Parts I-VIII"
+    testRef: "tests/engine/forms/form-8582-source.test.ts::keeps actual current and prior loss columns on the official lines"
 
   - line: "1b"
-    description: "Activities with net loss (passive)"
-    formula: "Sum of all passive activity losses (negative), including prior-year unallowed losses carried into same-named non-rental passive activities and any unmatched prior-year suspended passive losses that must stay in the non-rental bucket in this supported slice"
-    irsRef: "Form 8582 Instructions, Line 1b"
-    testRef: "tests/engine/forms/form-8582.test.ts::Form 8582 Line 1b - passive losses"
+    description: "Active rental current losses"
+    formula: "Sum Part IV column b; audit retains negative sign"
+    irsRef: "Form 8582 and Instructions, Parts I-VIII"
+    testRef: "tests/engine/forms/form-8582-source.test.ts::keeps actual current and prior loss columns on the official lines"
 
   - line: "1c"
-    description: "Net passive income or loss"
-    formula: "Line 1a + Line 1b"
-    irsRef: "Form 8582 Instructions, Line 1c"
-    testRef: "tests/engine/forms/form-8582.test.ts::Form 8582 Line 1c - net passive"
+    description: "Active rental prior unallowed losses"
+    formula: "Sum Part IV column c; audit retains negative sign"
+    irsRef: "Form 8582 and Instructions, Parts I-VIII"
+    testRef: "tests/engine/forms/form-8582-source.test.ts::keeps actual current and prior loss columns on the official lines"
 
-  - line: "3a"
-    description: "Rental activities with net income"
-    formula: "Sum of rental activity income (if actively participating)"
-    irsRef: "Form 8582 Instructions, Line 3a"
-    notes: "Only for active participants in rental real estate"
-    testRef: "tests/engine/forms/form-8582.test.ts::Form 8582 Line 3a - rental income"
+  - line: "1d"
+    description: "Net active rental"
+    formula: "1a + 1b + 1c"
+    irsRef: "Form 8582 and Instructions, Parts I-VIII"
+    testRef: "tests/engine/forms/form-8582-source.test.ts::keeps actual current and prior loss columns on the official lines"
 
-  - line: "3b"
-    description: "Rental activities with net loss"
-    formula: "Sum of rental activity losses (if actively participating), including prior-year unallowed losses carried into same-named current-year rental real estate activities that are marked as active-participant rentals in this supported slice"
-    irsRef: "Form 8582 Instructions, Line 3b"
-    testRef: "tests/engine/forms/form-8582.test.ts::Form 8582 Line 3b - rental loss"
+  - line: "2a"
+    description: "Other passive current income"
+    formula: "Sum Part V column a; no PTP income"
+    irsRef: "Form 8582 and Instructions, Parts I-VIII"
+    testRef: "tests/engine/forms/form-8582-source.test.ts::keeps PTP net gains outside the regular passive loss pool"
 
-  - line: "3c"
-    description: "Net rental income or loss"
-    formula: "Line 3a + Line 3b"
-    testRef: "tests/engine/forms/form-8582.test.ts::Form 8582 Line 3c - net rental"
+  - line: "2b"
+    description: "Other passive current losses"
+    formula: "Sum Part V column b"
+    irsRef: "Form 8582 and Instructions, Parts I-VIII"
+    testRef: "tests/engine/forms/form-8582-source.test.ts::keeps actual current and prior loss columns on the official lines"
+
+  - line: "2c"
+    description: "Other passive prior unallowed losses"
+    formula: "Sum Part V column c"
+    irsRef: "Form 8582 and Instructions, Parts I-VIII"
+    testRef: "tests/engine/forms/form-8582-source.test.ts::retains fully allowed prior losses when combined activities have a gain"
+
+  - line: "2d"
+    description: "Net other passive"
+    formula: "2a + 2b + 2c"
+    irsRef: "Form 8582 and Instructions, Parts I-VIII"
+    testRef: "tests/engine/forms/form-8582-source.test.ts::retains fully allowed prior losses when combined activities have a gain"
+
+  - line: "3"
+    description: "Combined net"
+    formula: "1d + 2d; if nonnegative all losses including prior losses are allowed and Parts II-III are skipped"
+    irsRef: "Form 8582 and Instructions, Parts I-VIII"
+    testRef: "tests/engine/forms/form-8582-source.test.ts::retains fully allowed prior losses when combined activities have a gain"
+
+  - line: "4"
+    description: "Loss eligible for special allowance"
+    formula: "min(abs(1d),abs(3)) only when both negative"
+    irsRef: "Form 8582 and Instructions, Parts I-VIII"
+    testRef: "tests/engine/forms/form-8582-source.test.ts::caps the special allowance at the combined loss in the IRS line 4 example"
 
   - line: "5"
-    description: "Total combined passive and rental losses"
-    formula: "Line 1c + Line 3c (if negative)"
-    irsRef: "Form 8582 Instructions, Line 5"
-    notes: "If net is positive or zero, no limitation applies"
-    testRef: "tests/engine/forms/form-8582.test.ts::Form 8582 Line 5 - combined losses"
+    description: "Phaseout ceiling"
+    formula: "150000; 75000 MFS lived apart all year"
+    irsRef: "Form 8582 and Instructions, Parts I-VIII"
+    testRef: "tests/engine/forms/form-8582-source.test.ts::uses the MFS capacity before limiting the actual loss and skips Part II when ineligible"
+
+  - line: "6"
+    description: "Modified AGI"
+    formula: "max(0, actual Form8582 MAGI); never substitute final1040 AGI"
+    irsRef: "Form 8582 and Instructions, Parts I-VIII"
+    testRef: "tests/engine/forms/form-8582-source.test.ts::phases out the allowance capacity before limiting the actual rental loss"
 
   - line: "7"
-    description: "Special allowance for rental real estate"
-    formula: "min($25,000, rental loss) — phased out above $100K MODIFIED AGI"
-    irsRef: "Form 8582 Instructions, Lines 6-9; Pub 925"
-    notes: |
-      The phase-out uses MODIFIED AGI, not regular AGI. Per IRS Form 8582 Instructions:
-      MAGI = AGI without regard to passive activity losses, plus IRA deduction,
-      student loan interest deduction, and Form 8815 savings bond exclusion.
-      This prevents passive losses from reducing AGI and inflating the rental allowance.
-    edgeCases:
-      - "$25,000 max allowance for single, HoH, MFJ, QSS"
-      - "Phase-out: 50% of MAGI over $100,000, fully phased out at $150,000 MAGI"
-      - "MFS who lived with spouse at any time during the year: $0 allowance (IRC §469(i)(4))"
-      - "MFS who lived apart from spouse for the ENTIRE year: $12,500 max allowance, phased out at $50,000-$75,000 MAGI (IRC §469(i)(4)(B))"
-      - "Must be active participant (not mere investor)"
-      - "In the federal rental-property path, only properties flagged as actively participated can contribute to the special allowance bucket"
-      - "Matched prior-year suspended losses can enter the special allowance bucket only when the current-year activity is still classified as active-participant rental real estate"
-      - "MAGI adds back: passive losses, IRA deduction, SLI deduction, bond exclusion"
-    testRef: "tests/engine/forms/form-8582.test.ts::Form 8582 Line 7 - rental allowance under $100K AGI"
+    description: "Income capacity"
+    formula: "5 - 6; skip when6 >=5"
+    irsRef: "Form 8582 and Instructions, Parts I-VIII"
+    testRef: "tests/engine/forms/form-8582-source.test.ts::phases out the allowance capacity before limiting the actual rental loss"
+
+  - line: "8"
+    description: "Special allowance capacity"
+    formula: "round(min(25000,(5-6)*0.5)); MFS apart cap12500; skipped when6 >=5"
+    irsRef: "Form 8582 and Instructions, Parts I-VIII"
+    testRef: "tests/engine/forms/form-8582-source.test.ts::phases out the allowance capacity before limiting the actual rental loss"
 
   - line: "9"
-    description: "Allowed passive activity loss"
-    formula: "Passive income + rental allowance (limited by total passive loss)"
-    irsRef: "Form 8582 Instructions, Line 9"
-    testRef: "tests/engine/forms/form-8582.test.ts::Form 8582 Line 9 - allowed loss equals passive income when no rental"
+    description: "Allowed special rental loss"
+    formula: "min(4,8); zero if6 >=5"
+    irsRef: "Form 8582 and Instructions, Parts I-VIII"
+    testRef: "tests/engine/forms/form-8582-source.test.ts::phases out the allowance capacity before limiting the actual rental loss"
 
   - line: "10"
-    description: "Suspended passive activity loss"
-    formula: "Total passive loss, including matched prior-year unallowed losses carried into the current-year activity buckets, minus the allowed loss; the remaining disallowed amount carries forward by activity"
-    irsRef: "Form 8582 Instructions, Line 10"
-    edgeCases:
-      - "Two-step allocation per IRS Parts VI/VII: special allowance to rental first, then remaining unallowed proportional"
-      - "Released fully when activity is disposed in taxable event"
-    testRef: "tests/engine/forms/form-8582.test.ts::Form 8582 Line 10 - suspended loss"
+    description: "Passive income offset"
+    formula: "1a + 2a; only when3 is negative"
+    irsRef: "Form 8582 and Instructions, Parts I-VIII"
+    testRef: "tests/engine/forms/form-8582-source.test.ts::allocates unallowed loss by overall activity loss after the special allowance"
+
+  - line: "11"
+    description: "Total allowed losses"
+    formula: "9 + 10 when3 negative; otherwise losses fully allowed via line3"
+    irsRef: "Form 8582 and Instructions, Parts I-VIII"
+    testRef: "tests/engine/forms/form-8582-source.test.ts::allocates unallowed loss by overall activity loss after the special allowance"
+
+  - line: "IV-V"
+    description: "Activity source rows"
+    formula: "Preserve current income, current loss and prior loss; overall net determines columns d/e and stable original source index"
+    irsRef: "Form 8582 and Instructions, Parts I-VIII"
+    testRef: "tests/engine/forms/form-8582-source.test.ts::keeps actual current and prior loss columns on the official lines"
+
+  - line: "VI-VIII"
+    description: "Activity allocation"
+    formula: "Allocate line9 to overall active rental losses; allocate abs(line3)-line9 to remaining overall losses; an overall gain activity retains all its current/prior losses"
+    irsRef: "Form 8582 and Instructions, Parts I-VIII"
+    testRef: "tests/engine/forms/form-8582-source.test.ts::allocates unallowed loss by overall activity loss after the special allowance"
+
+  - line: "rounding"
+    description: "Reconcile printed dollar totals"
+    formula: "Largest fractional remainder with original-order ties; exact totals, nonnegative and within source loss capacity"
+    irsRef: "Form 8582 and Instructions, Parts I-VIII"
+    testRef: "tests/engine/forms/form-8582-source.test.ts::reconciles proportional dollar rounding while preserving original source cents"
 
   # ── PTP segregation (IRC §469(k)) ─────────────────────────
   - line: "ptp-segregation"
@@ -117,16 +147,16 @@ lines:
       For each PTP:
         1. Compute current-year net income or loss
         2. Add prior-year unallowed PTP losses for the same PTP
-        3. If net income: include in Form 8582 passive income pool (Line 1a or 3a)
+        3. If net income: treat as nonpassive income outside Form 8582; do not offset another activity loss
         4. If net loss: entire net loss is suspended per-PTP (NOT included in Lines 1-10)
       Suspended PTP losses carry forward per-PTP indefinitely.
       When a PTP interest is fully disposed of in a taxable transaction,
       all suspended PTP losses become deductible as nonpassive losses per IRC §469(g)(1).
-    irsRef: "IRC §469(k); Form 8582 Instructions Worksheets 5, 6, 7"
+    irsRef: "IRC §469(k); Form 8582 Instructions, Publicly Traded Partnerships"
     edgeCases:
       - "PTP losses cannot offset non-PTP passive income"
       - "PTP losses cannot offset income from a different PTP"
-      - "PTP net income IS included in the regular passive income pool for Form 8582"
+      - "PTP net income is nonpassive and excluded from every regular Form 8582 line"
       - "Prior-year suspended PTP losses only offset current-year income from the SAME PTP"
       - "Multiple PTPs are handled independently — each has its own income/loss netting"
       - "A PTP with both income and loss items nets to a single amount per IRC §469(k)"
@@ -166,20 +196,39 @@ lines:
       - "The disposed PTP should not appear in the ptpSuspendedLosses carryforward output"
     testRef: "tests/engine/forms/form-8582.test.ts::PTP disposition releases all suspended losses as nonpassive"
 
-  - line: "agi-correction"
-    description: "AGI correction for Part I rental suspended losses"
-    formula: "correctedAGI = preliminaryAGI + Part I rental suspended losses (positive amount)"
-    irsRef: "IRS Form 1040 Instructions; Schedule E Instructions Line 26; Form 8582 Instructions"
-    notes: |
-      Per IRS instructions, Schedule E reports the ALLOWED rental income/loss
-      (after Form 8582 limitation), not the full amount. The allowed amount then
-      flows to Schedule 1 → 1040 Line 8 → AGI. Part I rental losses that are
-      suspended by Form 8582 should NOT be in AGI.
-      The correction adds back the suspended Part I rental loss amounts to AGI
-      so downstream computations (deductions, credits, NIIT, etc.) use the
-      correct AGI that reflects only the allowed passive loss.
-    edgeCases:
-      - "Only Part I (Schedule E) rental losses need correction — K-1 passive losses are already excluded from AGI by Schedule E's own computation"
-      - "Correction = sum of suspended losses for Part I rental activities from Form 8582 allocation"
-      - "No correction needed when all Part I rental losses are allowed (e.g., passive income exceeds losses)"
-    testRef: "tests/edge-cases/rental-property-edge-cases.test.ts::AGI corrected for Form 8582 suspended rental losses"
+
+  - line: "return-magi"
+    description: "Canonical Form8582 modified AGI"
+    formula: "Remove preliminary rental/K1 passive amounts; include positive net regular passive income after prior losses and separate PTP income; add actually deducted IRA/student-loan/half-SE and excluded bond/adoption amounts; remove taxable Social Security"
+    irsRef: "Form8582 Instructions line6 and section469(d)(1)"
+    testRef: "tests/engine/federal-passive-loss-source.test.ts::uses net passive loss and actual line 6 addbacks rather than gross rental losses"
+
+  - line: "return-loss-transfer"
+    description: "Canonical allowed current and prior losses"
+    formula: "Replace preliminary regular ScheduleE passive income with current passive income minus actual total allowed current and prior losses; preserve original activity indices rather than loss-only array positions"
+    irsRef: "Form8582 line3 and PartsVII-VIII; ScheduleE lines22/28"
+    testRef: "tests/engine/federal-passive-loss-source.test.ts::transfers allowed losses by actual activity index and releases prior losses once"
+
+  - line: "review-copy"
+    description: "Audited review form and complete activity rows"
+    formula: "Copy applicable official audited lines1a-11; retain actual current/prior and allocation rows including continuation sources, never recalculate MAGI or infer report locations"
+    irsRef: "Final2025 Form8582 PartsI-VIII"
+    testRef: "tests/pdf/fill-form-8582-source.test.ts::copies actual audited MAGI and prior losses with every source row"
+
+  - line: "review-source-check"
+    description: "Source and audit consistency"
+    formula: "Reject changed current/prior activity sources and missing, duplicate or altered applicable audits before rendering"
+    irsRef: "Final2025 Form8582 PartsI-VIII"
+    testRef: "tests/pdf/fill-form-8582-source.test.ts::refuses changed activity sources and altered intermediate passive audits"
+
+  - line: "attachment"
+    description: "Required form with fully allowed losses"
+    formula: "Attach when current/prior losses require the retained form, including a line3 stop with no suspended loss"
+    irsRef: "Final2025 Form8582 line3; Instructions Who Must File"
+    testRef: "tests/pdf/fill-form-8582-source.test.ts::attaches the passive worksheet when all losses are allowed"
+
+  - line: "review-ratio-rounding"
+    description: "Printed ratio precision and stop branches"
+    formula: "Displayed six-place ratios sum to1 with stable largest remainders; exact core dollar allocations are unchanged. Skipped lines stay blank and actual applicable zero is printed."
+    irsRef: "Form8582 PartsVI-VII ratios total1.00; official lines3/6 stop instructions"
+    testRef: "tests/pdf/fill-form-8582-source.test.ts::reconciles printed ratios and preserves official stop branches"

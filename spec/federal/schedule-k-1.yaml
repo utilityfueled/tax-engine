@@ -523,7 +523,7 @@ lines:
       partnerships (MLPs) are PTPs. When this flag is set, passive losses from
       this K-1 are subject to IRC §469(k) segregation: they can only offset
       income from the same PTP, not other passive income. PTP net income is
-      still included in the regular passive income pool for Form 8582.
+      nonpassive and excluded from the regular Form 8582 income pool.
     testRef: "tests/engine/forms/form-8582.test.ts::PTP with net loss — entire loss is suspended, not included in Lines 1-10"
 
   - line: "isForeignPartnership"

@@ -1960,6 +1960,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     .filter((partnership) => partnership.isPassive)
     .map((partnership) => ({
       name: partnership.name,
+      reportingFormAndLine: "Schedule E, line 28",
       income: partnership.passiveIncome,
       loss: partnership.passiveLoss,
       isRentalRealEstate: partnership.isRentalRealEstate,
@@ -1974,6 +1975,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     const net = rental.netRentalIncome;
     passiveActivities.push({
       name: rental.description,
+      reportingFormAndLine: "Schedule E, line 22",
       income: net.isPositive() ? net : new Decimal(0),
       loss: net.isNegative() ? net : new Decimal(0),
       isRentalRealEstate: true,
@@ -1981,28 +1983,24 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     });
   }
 
-  // Per IRS Form 8582 Instructions, the $25K rental allowance phase-out uses
-  // "modified adjusted gross income" (MAGI), NOT regular AGI. MAGI is AGI:
-  //   - Without regard to passive activity losses (add back net passive loss IN AGI)
-  //   - Plus IRA deduction (add back)
-  //   - Plus student loan interest deduction (add back)
-  //   - Plus savings bond exclusion from Form 8815 (add back)
-  //
-  // Note: Schedule E Part II (K-1) net passive losses are already EXCLUDED from
-  // totalPartnershipIncome (and hence from AGI) by schedule-e.ts. Only Part I
-  // rental losses flow through totalRentalIncome into AGI and need to be added back.
-  const partIRentalLossInAGI = schedE.rentalProperties.reduce(
-    (acc, p) => acc.plus(p.netRentalIncome.isNegative() ? p.netRentalIncome : new Decimal(0)),
-    new Decimal(0)
-  );
-  const rentalLossAddBack = partIRentalLossInAGI.isNegative()
-    ? partIRentalLossInAGI.negated()
-    : new Decimal(0);
+  // Line6 removes the NET passive activity loss, not each property's gross
+  // loss. Replace the preliminary ScheduleE passive contribution before
+  // adding back the specifically excluded deductions and taxable benefits.
+  const k1PassiveCount = schedE.partnerships.filter(partnership => partnership.isPassive).length;
+  const preliminaryPassiveIncome = sum(...schedE.rentalProperties.map(rental => rental.netRentalIncome),
+    zeroFloor(schedE.totalPassiveIncome.plus(schedE.totalPassiveLoss)));
+  const regularPassiveNet = sum(...passiveActivities.filter(activity => !activity.isPubliclyTradedPartnership)
+    .map(activity => roundDollar(activity.income).plus(roundDollar(activity.loss))))
+    .minus(sum(...(input.priorYear?.suspendedPassiveLosses ?? []).map(loss => roundDollar(d(loss.amount)))));
+  // Current PTP gains are separate from the regular pool. Cross-form prior
+  // PTP loss/disposition attribution remains in its existing source path.
+  const currentPtpIncome = sum(...passiveActivities.filter(activity => activity.isPubliclyTradedPartnership)
+    .map(activity => zeroFloor(activity.income.plus(activity.loss))));
   const form8582MAGI = eblSources?.passiveLossModifiedAgi !== undefined ? d(eblSources.passiveLossModifiedAgi) : agi
-    .plus(rentalLossAddBack)
-    .plus(sched1.iraDeduction)
-    .plus(sched1.studentLoanInterest)
-    .plus(savingsBondExclusion);
+    .minus(preliminaryPassiveIncome).plus(zeroFloor(regularPassiveNet)).plus(currentPtpIncome)
+    .plus(sched1.iraDeduction).plus(sched1.studentLoanInterest).plus(schedSE.deductibleHalf)
+    .plus(savingsBondExclusion).plus(adoptionBenefitResult?.allowableExclusion ?? new Decimal(0))
+    .minus(socialSecurityBenefitsTaxable);
 
   const form8582 = calculateForm8582({
     activities: passiveActivities,
@@ -2023,24 +2021,20 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   if (marketplace && form8582.netRental.lt(0) && form8582.combinedLoss.lt(0)) throw new Error("Pub974 ordered special passive-loss deductions require their separate coordination.");
   audit.merge(form8582.lines);
 
-  // ── AGI correction: remove Part I rental suspended losses ──
-  // Per IRS Form 1040 flow, Schedule E reports only the ALLOWED rental income/loss
-  // (after Form 8582 limitation). Part I rental losses that are suspended by Form 8582
-  // should NOT be in AGI. K-1 passive losses are already excluded by Schedule E's own
-  // computation (totalPartnershipIncome excludes net passive loss).
-  const k1PassiveCount = k1Agg.passiveCount;
-  const partIRentalCount = schedE.rentalProperties.length;
-  let partIRentalSuspended = new Decimal(0);
-  for (let i = k1PassiveCount; i < k1PassiveCount + partIRentalCount; i++) {
-    if (i < form8582.activityAllocations.length) {
-      partIRentalSuspended = partIRentalSuspended.plus(form8582.activityAllocations[i].suspendedLoss);
-    }
-  }
-  if (partIRentalSuspended.greaterThan(0)) {
-    agi = agi.plus(partIRentalSuspended);
-    totalIncome = totalIncome.plus(partIRentalSuspended);
-    audit.record("1040", "11-adj", "AGI corrected for Form 8582 suspended rental losses",
-      agi, `Added back $${partIRentalSuspended} suspended Part I rental losses`);
+  // Transfer all regular allowed current/prior losses once. The preliminary
+  // ScheduleE calculation has already limited K1 losses, but not rental losses.
+  // A signed replacement handles both suspended current losses and released
+  // prior losses, including activities whose current income is positive.
+  const allowedPassiveIncome = form8582.rentalIncome.plus(form8582.passiveIncome)
+    .minus(form8582.allowedLoss).plus(currentPtpIncome);
+  const passiveIncomeAdjustment = allowedPassiveIncome.minus(preliminaryPassiveIncome);
+  if (!passiveIncomeAdjustment.isZero()) {
+    agi = agi.plus(passiveIncomeAdjustment);
+    totalIncome = totalIncome.plus(passiveIncomeAdjustment);
+    audit.record("1040", "11-adj", "AGI corrected for allowed passive activity losses", agi,
+      "Replace preliminary ScheduleE passive contribution with current income minus allowed current and prior losses",
+      { "Preliminary passive income": preliminaryPassiveIncome, "Allowed passive income": allowedPassiveIncome,
+        "Signed income adjustment": passiveIncomeAdjustment });
   }
 
   // ── PTP disposition: released losses reduce AGI (IRC §469(g)(1)) ──
@@ -2059,7 +2053,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     );
   }
 
-  if (eblSources && !form461.line5ScheduleE.eq(roundDollar(adjustedScheduleETotal.plus(partIRentalSuspended).minus(ptpReleasedTotal)))) {
+  if (eblSources && !form461.line5ScheduleE.eq(roundDollar(adjustedScheduleETotal.plus(passiveIncomeAdjustment).minus(ptpReleasedTotal)))) {
     throw new Error("Form461 actual supplemental income must reconcile with final post-passive Schedule1 line5");
   }
 
@@ -2397,7 +2391,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       rentalQBI = rental.netRentalIncome;
     } else {
       // Loss: use Form 8582 allowed amount (look up by property description)
-      const alloc = form8582.activityAllocations.find((a) => a.name === rental.description);
+      const alloc = form8582.activityAllocations.find((a) => a.sourceIndex === k1PassiveCount + ri);
       if (alloc) {
         // allowedLoss is the positive portion of the loss allowed into taxable income
         rentalQBI = alloc.allowedLoss.isZero() ? new Decimal(0) : alloc.allowedLoss.negated();
@@ -2633,7 +2627,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       `Reduced by $${nolDeduction} NOL deduction on Schedule 1 Line 8a`);
   }
   sched1 = finalizeSchedule1(sched1, {
-    supplementalIncome: adjustedScheduleETotal.plus(partIRentalSuspended).minus(ptpReleasedTotal),
+    supplementalIncome: adjustedScheduleETotal.plus(passiveIncomeAdjustment).minus(ptpReleasedTotal),
     nolDeduction,
     excessBusinessLoss: excessBusinessLossAddback,
     digitalAssetIncome: cryptoHobbyIncome,
@@ -3619,7 +3613,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   // netPassive/netRental include ALL losses; adding back suspendedLoss removes
   // the disallowed portion, leaving only allowed losses to reduce NII.
   const netAllowedPassive = sum(
-    form8582.netPassive, form8582.netRental, form8582.suspendedLoss
+    form8582.netPassive, form8582.netRental, form8582.suspendedLoss, form8582.ptpNetIncome
   );
   const niitSources = input.form8960Sources;
   if (niitSources && (niitSources.sourceTaxYear !== year || niitSources.sourceFactsConfirmed !== true || !niitSources.sourceReference?.trim())) {

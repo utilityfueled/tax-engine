@@ -8908,12 +8908,12 @@ describe("Rental property QBI — Section 199A deduction from qualifying rental 
       ...simpleW2Fixture,
       w2s: [{
         employer: { name: "Corp", ein: "12-3456789" },
-        wages: "130000",
+        wages: "140000",
         federalWithheld: "20000",
-        socialSecurityWages: "130000",
-        socialSecurityWithheld: "8060",
-        medicareWages: "130000",
-        medicareWithheld: "1885",
+        socialSecurityWages: "140000",
+        socialSecurityWithheld: "8680",
+        medicareWages: "140000",
+        medicareWithheld: "2030",
       }],
       rentalProperties: [{
         description: "Phaseout Rental",
@@ -8941,17 +8941,12 @@ describe("Rental property QBI — Section 199A deduction from qualifying rental 
       }],
     };
     const result = calculateFederalTax(fixture);
-    // Net rental: 10000 - 20000 = -10000
-    // AGI ~ $130K → MAGI ~ $140K (rental loss add-back) → $25K allowance
-    // phased out by ($140K - $100K) × 50% = $20K → allowance = $5K
-    // Allowed: $5K, Suspended: $5K
-    // QBI should be -5000 (only the allowed portion)
-    expect(result.form8582).toBeDefined();
-    expect(result.form8582!.suspendedLoss.toNumber()).toBeGreaterThan(0);
-    // The QBI loss should be only the allowed portion, not the full -10000
-    if (result.form8995) {
-      expect(result.form8995.totalQBI.toNumber()).toBeGreaterThan(-10000);
-    }
+    // Wages140000 less current loss10000: preliminary AGI130000, MAGI140000.
+    // Official line8 capacity5000, line9 allowed5000, suspended5000.
+    expect(result.form8582?.modifiedAgi.toFixed()).toBe("140000");
+    expect(result.form8582?.suspendedLoss.toFixed()).toBe("5000");
+    expect(result.form8995?.totalQBI.toFixed()).toBe("-5000");
+
   });
 
   it("audit trail records rental QBI source", () => {
@@ -13383,7 +13378,7 @@ describe("PTP passive loss segregation (IRC §469(k))", () => {
     expect(result.form8582?.ptpSuspendedLosses[0].netSuspended.toNumber()).toBe(12000);
   });
 
-  it("PTP income flows into passive pool and offsets non-PTP passive losses", () => {
+  it("PTP income stays nonpassive and cannot offset non-PTP passive losses", () => {
     const result = calculateFederalTax({
       ...simpleW2Fixture,
       scheduleK1: [
@@ -13404,15 +13399,16 @@ describe("PTP passive loss segregation (IRC §469(k))", () => {
       ],
     });
 
-    // PTP net income flows into passive pool
+    // Section469(k): PTP net income remains outside the regular passive pool.
     expect(result.form8582?.ptpNetIncome.toNumber()).toBe(8000);
     expect(result.form8582?.ptpSuspendedLosses).toHaveLength(0);
 
-    // Non-PTP loss offset by PTP income: 8000 allowed of 15000
-    expect(result.form8582?.allowedLoss.toNumber()).toBe(8000);
-    expect(result.form8582?.suspendedLoss.toNumber()).toBe(7000);
+    // The unrelated15000 loss remains fully suspended.
+    expect(result.form8582?.allowedLoss.toNumber()).toBe(0);
+    expect(result.form8582?.suspendedLoss.toNumber()).toBe(15000);
     expect(result.carryforwards.suspendedPassiveLosses).toHaveLength(1);
-    expect(result.carryforwards.suspendedPassiveLosses[0].amount.toNumber()).toBe(7000);
+    expect(result.carryforwards.suspendedPassiveLosses[0].amount.toNumber()).toBe(15000);
+    expect(result.agi.toFixed()).toBe("93000"); // Actual85000 wages plus nonpassive8000 PTP.
   });
 
   it("PTP prior-year carryforward is consumed by current-year PTP income", () => {
