@@ -17,6 +17,7 @@ export interface Form6251Input {
   taxableIncome: Decimal; // AGI less deductions before the 1040 zero floor
   standardDeductionAmount?: Decimal; // Actual standard deduction selected on Form 1040
   seniorDeduction?: Decimal; // Schedule 1-A line 37; personal exemption for AMT
+  specifiedPrivateActivityBondInterest?: Decimal; // Actual line2g preference
   saltDeduction: Decimal; // Line 2a: SALT claimed on Sched A (add back)
   depletionAdjustment?: Decimal; // Line 2c: Depletion (excess over adjusted basis)
   dispositionAdjustment?: Decimal; // Line 2k: Adjusted gain/loss on property dispositions
@@ -87,6 +88,11 @@ export function calculateForm6251(
       "Difference between AMT and regular depreciation (K-1 Box 17 Code A)");
   }
 
+  const specifiedPrivateActivityBondInterest = input.specifiedPrivateActivityBondInterest ?? new Decimal(0);
+  if (!specifiedPrivateActivityBondInterest.isFinite() || specifiedPrivateActivityBondInterest.lt(0)) throw new Error("Specified private-activity bond interest must be finite and nonnegative");
+  audit.record("Form 6251", "2g", "Specified private activity interest", specifiedPrivateActivityBondInterest,
+    "Actual source-identified tax-exempt OID and stated interest after matching adjustments");
+
   // Line 3: Other AMT adjustments
   const otherAdjustments = input.otherAdjustments ?? new Decimal(0);
   if (!otherAdjustments.isZero()) {
@@ -102,7 +108,8 @@ export function calculateForm6251(
     .plus(depletionAdjustment)
     .plus(dispositionAdjustment)
     .plus(depreciationAdjustment)
-    .plus(otherAdjustments);
+    .plus(otherAdjustments)
+    .plus(specifiedPrivateActivityBondInterest);
   audit.record("Form 6251", "7", "AMTI", amti,
     "Taxable income + AMT adjustments (SALT/standard and senior add-backs, depreciation, depletion, dispositions, other)");
 

@@ -7,6 +7,7 @@
  */
 
 import Decimal from "decimal.js";
+import { calculateForm1099OID } from "../forms/form-1099-oid.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { d, zeroFloor } from "@/utils/decimal.js";
@@ -114,41 +115,15 @@ export function calculateScheduleB(input: TaxYearInput, savingsBondExclusionOver
     }
   }
 
-  // 1099-OID sources: net OID (Box 1 − acquisition premium) + other periodic interest (Box 2 − bond premium)
-  for (const form of (input.form1099OID ?? [])) {
-    const grossOID = d(form.originalIssueDiscount);
-    const acqPremium = Decimal.min(d(form.acquisitionPremium), grossOID);
-    const netOID = grossOID.minus(acqPremium);
-    if (netOID.greaterThan(0)) {
-      interestPayers.push({
-        name: `${form.payer} (OID)`,
-        amount: netOID,
-      });
-      audit.record(
-        "Sched B",
-        "1",
-        `Interest payer - ${form.payer} (OID)`,
-        netOID,
-        "Form 1099-OID Box 1 - min(Box 1, Box 6 acquisition premium)"
-      );
-    }
-    // Box 2: Other periodic interest, reduced by bond premium (Box 11) under §171
-    const otherInterest = d(form.otherPeriodicInterest);
-    const premium = Decimal.min(d(form.bondPremium), otherInterest);
-    const netOtherInterest = otherInterest.minus(premium);
-    if (netOtherInterest.greaterThan(0)) {
-      interestPayers.push({
-        name: `${form.payer} (interest)`,
-        amount: netOtherInterest,
-      });
-      audit.record(
-        "Sched B",
-        "1",
-        `Interest payer - ${form.payer} (interest)`,
-        netOtherInterest,
-        "Form 1099-OID Box 2 - min(Box 2, Box 11 bond premium)"
-      );
-    }
+  // One recipient-classified amount per actual OID source. Box8 is separate
+  // Treasury OID; tax-exempt Box11/coupons never become taxable by position.
+  const oid = calculateForm1099OID(input.form1099OID ?? [], input.taxpayer.taxYear);
+  for (const source of oid.sources) {
+    if (source.taxableInterest.isZero()) continue;
+    interestPayers.push({ name: `${source.payer} (OID)`, amount: source.taxableInterest });
+    audit.record("Sched B", "1", `Interest payer - ${source.payer} (OID)`, source.taxableInterest,
+      source.sourceFactsVerified ? "Actual recipient-classified OID and stated interest after elections and matching source adjustments" : "Unverified historical OID and interest aliases after legacy netting",
+      { "Source ID": source.sourceId, "Treasury interest": source.treasuryInterest });
   }
 
   audit.record(

@@ -273,3 +273,14 @@ lines:
     formula: "Sum actual state estimated and extension records paid Jan1-Dec31 of return year, plus state credits explicitly applied from immediately prior-year return; exclude federal records and other calendar years. Invalid or unknown dates/amounts reject. Sales-tax auto-comparison uses the same sum."
     irsRef: "https://www.irs.gov/instructions/i1040sca"
     testRef: "tests/engine/forms/state-tax-payment-year.test.ts::deducts state payments by actual calendar year and preserves applied prior credits"
+
+  - line: "16-oid-premium"
+    description: "Allowable excess bond premium"
+    formula: "Add source-calculated allowable section171 excess premium to line16 with gambling deductions, retaining unused premium carry separately. Count actual OID state withholding once on line5a."
+    irsRef: "Publication550 Bond premium amortization more than interest; ScheduleA line16"
+    testRef: "tests/engine/federal-oid-source-integration.test.ts::deducts only allowable excess premium and preserves its carry"
+
+  - line: "16-reviewed-oid-map"
+    description: "Audited other-itemized review mapping"
+    formula: "Copy unique reconciled line16 audit and actual deduction descriptions; no omitted or recomputed premium deduction."
+    testRef: "tests/engine/federal-oid-source-integration.test.ts::maps the audited excess premium into the review form line16"

@@ -130,6 +130,10 @@ export async function fillForm6251(
   // Line 2a: SALT add-back (taxes from Schedule A when itemizing)
   setCurrencyField(form, F.line2a, f6251.saltAddBack);
 
+  const preferenceAudit = f6251.lines.filter(line => line.form === "Form 6251" && line.line === "2g");
+  if (preferenceAudit.length !== 1 || !preferenceAudit[0].value.isFinite()) throw new Error("Form6251 line2g requires a unique finite source audit");
+  setCurrencyField(form, F.line2g, preferenceAudit[0].value);
+
   // Line 2d: Depletion adjustment
   setCurrencyField(form, F.line2d, f6251.depletionAdjustment);
 

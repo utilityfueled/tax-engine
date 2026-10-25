@@ -1,5 +1,6 @@
 /** Schedule A line 5a source worksheet; spec/federal/schedule-a.yaml. */
 import Decimal from "decimal.js";
+import { calculateForm1099OID } from "./form-1099-oid.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { AuditTrail } from "@/utils/audit.js";
@@ -50,6 +51,9 @@ export function calculateStateLocalIncomeTaxDeduction(input: TaxYearInput): Stat
     nonW2Withholding = nonW2Withholding.plus(amount);
     audit.record("SALT Income Tax WS", `1099-R-${index + 1}`, "1099R state and local withholding", amount, "One reconciled state Box14 plus local withholding");
   }
+  const oidStateWithholding = calculateForm1099OID(input.form1099OID ?? [], input.taxpayer.taxYear).stateWithheld;
+  nonW2Withholding = nonW2Withholding.plus(oidStateWithholding);
+  if ((input.form1099OID ?? []).length) audit.record("SALT Income Tax WS", "1099-OID", "Actual OID state withholding", oidStateWithholding, "Sum actual source Box14 state rows once");
   const allocation = input.scheduleA?.nonW2IncomeTaxesDeductedElsewhere;
   if (input.taxpayer.taxYear === 2026 && nonW2Withholding.gt(0) && allocation === undefined) {
     throw new Error("Actual non-W2 income taxes deducted on other schedules are unknown");

@@ -794,3 +794,28 @@ assertion confirms Illinois retains that taxable amount. No assertion was
 removed. Scoped diff/whitespace reviewed; metadata2025.15/2026.10 remains
 unqualified. Optional SE methods, CRP/church/community-property worksheets and
 per-business QBI deduction attribution remain separate qualification work.
+
+### OID return integration and source-specific deductions — 2026-10-25
+
+Integrated e5696a2 recipient calculations with ScheduleB and the federal result.
+Taxable, Treasury and exempt amounts remain separate; actual private-activity
+preference enters Form6251line2g. OID federal/state withholding and early
+withdrawal penalties enter their own return lines once. Allowable excess bond
+premium enters ScheduleAline16, with unused premium carry retained in the OID
+result. A historical payer audit now has one reconciled instrument amount and
+explicitly labels its unverified aliases. Physical ScheduleA16 and6251line2g
+copies use unique finite audits; saved source fields were reopened and rendered.
+
+Five integration/PDF regressions, with calculation and missing-field cases red
+before implementation, cover310.33 taxable/620 exempt interest,12.70 withholding,
+20 SALT,10 penalty,15 allowable premium and45 carry.293 focused engine/PDF and
+metadata tests, root types, all3,321spec references and lint pass (zero errors;
+12 existing non-null warnings). Scoped diff and whitespace reviewed. Versions
+are2025.16/2026.11-law-integration-draft. Excess TIPS ordinary-loss amounts remain
+available from the source module but positive return integration explicitly
+rejects:26CFR1.1275-7(f) establishes the loss, while refreshed Pub1212 only
+specifies the current-instrument ScheduleB offset, not the excess-loss return
+route. No routing fact or line was invented. Detailed TIPS split-statement and
+historic premium cases remain blocked in the source module. Independent review
+and full Form6251 mapping qualification, including existing standard/senior
+add-back display, remain outstanding.

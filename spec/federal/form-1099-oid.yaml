@@ -101,3 +101,8 @@ lines:
     formula: "Signed independently completed source adjustments modify only their named Box 1/8/11 OID, Box 2, Box 5, Box 6 or Box 10 amount. Require a source reference and finite resulting amounts; no fabricated basis or yield."
     irsRef: "Publication 1212 Refiguring OID and Refiguring interest"
     testRef: "tests/engine/forms/form-1099-oid-sources.test.ts::uses explicit recipient worksheets and preserves cents until aggregation"
+
+  - line: "return-loss-boundary"
+    description: "Unresolved excess TIPS loss presentation"
+    formula: "Preserve source-calculated ordinary loss and carry; reject return integration with positive ordinary loss until the applicable return route is implemented from an authoritative source. Never silently discard or classify it as capital loss."
+    testRef: "tests/engine/federal-oid-source-integration.test.ts::refuses an unintegrated excess TIPS ordinary loss"

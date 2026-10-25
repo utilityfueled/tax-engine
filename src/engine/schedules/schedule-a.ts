@@ -7,6 +7,7 @@
  */
 
 import Decimal from "decimal.js";
+import { calculateForm1099OID } from "../forms/form-1099-oid.js";
 import { calculateStateLocalIncomeTaxDeduction } from "../forms/state-local-income-tax-deduction.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
@@ -67,7 +68,9 @@ export interface ScheduleAResult {
   casualtyLossDeduction: Decimal; // Line 15
   cashCharitable: Decimal; // Line 12
   nonCashCharitable: Decimal; // Line 13
-  gamblingLossDeduction: Decimal; // Line 28
+  gamblingLossDeduction: Decimal; // Component of line16
+  bondPremiumDeduction: Decimal; // Actual allowable section171 excess
+  otherItemizedDeductions: Decimal; // Line16
   totalItemized: Decimal; // Line 17
   nonitemizerCharitableDeduction: Decimal; // 2026 candidate; federal flow applies only when standard deduction selected
   /** Excess charitable contributions that carry forward to next year (IRC §170(d)) */
@@ -557,6 +560,11 @@ export function calculateScheduleA(
   audit.record("Sched A", "28", "Gambling losses (limited to winnings)", gamblingLossDeduction,
     `min(${input.taxpayer.taxYear === 2026 ? "90%" : "100%"} × (losses ${rawGamblingLosses} + expenses ${gamblingExpenses}), winnings ${gamblingWinnings})`);
 
+  const bondPremiumDeduction = calculateForm1099OID(input.form1099OID ?? [], input.taxpayer.taxYear).bondPremiumDeduction;
+  const otherItemizedDeductions = gamblingLossDeduction.plus(bondPremiumDeduction);
+  audit.record("Sched A", "16", "Other itemized deductions", otherItemizedDeductions,
+    "Allowed wagering deduction plus actual allowable excess bond premium; unused premium carries separately");
+
   // ── Total (Line 17) ───────────────────────────────────
   const totalItemized = sum(
     medicalDeduction,
@@ -568,10 +576,10 @@ export function calculateScheduleA(
     casualtyLossDeduction,
     cashCharitable,
     nonCashCharitable,
-    gamblingLossDeduction
+    otherItemizedDeductions
   );
   audit.record("Sched A", "17", "Total itemized deductions", totalItemized,
-    "Medical + SALT + mortgage + investment interest + casualty losses + charitable + gambling losses");
+    "Medical + SALT + mortgage + investment interest + casualty losses + charitable + other itemized deductions");
 
 
   return {
@@ -585,6 +593,8 @@ export function calculateScheduleA(
     cashCharitable,
     nonCashCharitable,
     gamblingLossDeduction,
+    bondPremiumDeduction,
+    otherItemizedDeductions,
     totalItemized,
     nonitemizerCharitableDeduction,
     charitableCarryforward: newCharitableCarryforward,

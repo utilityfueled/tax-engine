@@ -115,3 +115,14 @@ lines:
     formula: "Exemption = max(0, 88100 - roundDollar(max(0, AMTI - 626350) * 0.25))"
     irsRef: "2025 Form 6251 Instructions, Line 5 Exemption Worksheet, lines 3-6"
     testRef: "tests/engine/forms/form-6251-2025-regression.test.ts::matches the 2025 IRS exemption worksheet"
+
+  - line: "2g-source-oid"
+    description: "Specified private activity OID and stated interest"
+    formula: "Add only actual identified source preference net of matching premium to AMTI; do not add exempt interest a second time to regular income."
+    irsRef: "Form6251 line2g and Form1099OID recipient instructions"
+    testRef: "tests/engine/federal-oid-source-integration.test.ts::routes verified OID amounts to their actual federal lines once"
+
+  - line: "2g-reviewed-oid-map"
+    description: "Actual OID preference review field"
+    formula: "Copy the unique finite audited2g preference into the final2025physical2g field without recomputing source amounts."
+    testRef: "tests/engine/federal-oid-source-integration.test.ts::maps actual OID preference to the review Form6251 line2g"

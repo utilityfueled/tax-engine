@@ -269,6 +269,7 @@ export interface TaxReturnResult {
   scheduleJ?: import("@/engine/forms/schedule-j.js").ScheduleJResult;
   form3800?: import("@/engine/forms/form-3800.js").Form3800Result;
   form1099Q?: import("@/engine/forms/form-1099-q.js").Form1099QResult;
+  form1099OID?: import("@/engine/forms/form-1099-oid.js").Form1099OIDResult;
   form1099K?: import("@/engine/forms/form-1099-k.js").Form1099KResult;
   partnerBasisSchedules?: import("@/engine/forms/partner-basis-schedule.js").PartnerBasisScheduleResult[];
   form8915F?: import("@/engine/forms/form-8915-f.js").Form8915FResult;

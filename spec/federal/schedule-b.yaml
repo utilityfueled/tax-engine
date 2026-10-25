@@ -24,17 +24,17 @@ lines:
   # ── Part I: Interest ─────────────────────────────────────
   - line: "1"
     description: "List each payer's name and interest amount"
-    formula: "Enumerate each 1099-INT Box 1 plus Box 3 amount, each net Form 1099-OID interest amount after Box 6 acquisition-premium and Box 11 bond-premium offsets, each Schedule K-1 Box 5 interest amount, and each Schedule K-1 (Form 1041) Box 1 interest amount"
+    formula: "Enumerate each 1099-INT Box 1 plus Box 3 amount, each source-classified Form 1099-OID taxable amount after actual recipient adjustments and elections, each Schedule K-1 Box 5 interest amount, and each Schedule K-1 (Form 1041) Box 1 interest amount"
     irsRef: "Schedule B Instructions, Part I"
     inputs:
       - "1099-INT Box 1 (each payer)"
       - "1099-INT Box 3 (each payer; separately reported from Box 1)"
       - "1099-OID Box 1 net of Box 6 acquisition premium (each payer)"
-      - "1099-OID Box 2 net of Box 11 bond premium (each payer)"
+      - "1099-OID Box 2 net of Box 10 bond premium (each payer)"
       - "K-1 Box 5 (each partnership)"
       - "K-1 (Form 1041) Box 1 (each estate or trust)"
       - "Seller-financed mortgage interest received"
-    notes: "The audit trail should preserve payer-level listed amounts, including separate net OID and net stated-interest entries when the same Form 1099-OID contributes both components."
+    notes: "The audit trail should preserve payer-level listed amounts, using one reconciled taxable amount per OID instrument and retaining its source-calculator audit separately."
     edgeCases:
       - "Nominee interest — received on behalf of another"
       - "OID (Original Issue Discount) adjustments"
@@ -111,3 +111,8 @@ lines:
     irsRef: "Schedule B Instructions, Part III Line 8"
     notes: "If yes, may need Forms 3520 and 3520-A"
     testRef: "tests/engine/schedules/schedule-b.test.ts::Schedule B Line 8 - foreign trust indicator from K-1"
+
+  - line: "oid-return-sources"
+    description: "Verified OID source routing"
+    formula: "Use source calculator taxableInterest exactly once; municipal coupon/OID stays exempt, separately reported Treasury OID is taxable, and actual source withholding, penalties and private-activity preference keep their own destinations."
+    testRef: "tests/engine/federal-oid-source-integration.test.ts::routes verified OID amounts to their actual federal lines once"

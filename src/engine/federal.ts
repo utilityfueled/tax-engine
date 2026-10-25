@@ -53,6 +53,7 @@ import { calculateSchedule1A } from "./schedules/schedule-1-a.js";
 import { calculateItemizedDeductionLimit } from "./forms/itemized-deduction-limit.js";
 import { calculateStandardDeduction } from "./forms/standard-deduction.js";
 import { calculateStateLocalIncomeTaxDeduction } from "./forms/state-local-income-tax-deduction.js";
+import { calculateForm1099OID } from "./forms/form-1099-oid.js";
 import { calculateForm6251 } from "./forms/form-6251.js";
 import { calculateForm8801 } from "./forms/form-8801.js";
 import { calculateForm8582 } from "./forms/form-8582.js";
@@ -459,23 +460,22 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     audit.merge(form8814.lines);
   }
 
-  // Line 2a: Tax-exempt interest (informational, not included in total income)
-  // Includes 1099-INT Box 8, 1099-DIV Box 12, 1099-OID Box 14 (net of Box 13), K-1 Box 18 Code A, K-1 1041 Box 14 Code A, and Form 8814 Line 1b
-  const taxExemptOID = sum(
-    ...(input.form1099OID ?? []).map((f) =>
-      zeroFloor(d(f.taxExemptOID).minus(d(f.taxExemptBondPremium)))
-    )
-  );
+  const form1099OID = calculateForm1099OID(input.form1099OID ?? [], year);
+  audit.merge(form1099OID.lines);
+  if (form1099OID.deflationOrdinaryLoss.gt(0)) {
+    throw new Error("TIPS excess ordinary loss requires a supported return-routing worksheet; source loss and carry are preserved by the OID calculator");
+  }
+  // Line2a includes actual source-classified exempt OID and stated interest.
   const taxExemptInterest = sum(
     intAgg.taxExemptInterest,
     divAgg.exemptInterestDividends,
     k1Agg.taxExemptInterest,
     ...(input.scheduleK1Form1041 ?? []).map((k) => d(k.taxExemptInterest)),
-    taxExemptOID,
+    form1099OID.taxExemptInterest,
     form8814?.totalTaxExemptInterest ?? new Decimal(0)
   );
   audit.record("1040", "2a", "Tax-exempt interest", taxExemptInterest,
-    "Sum 1099-INT Box 8 + 1099-DIV Box 12 + 1099-OID Box 14 + K-1 Box 18A + K-1 1041 Box 14A + Form 8814 Line 1b");
+    "Sum 1099-INT Box 8 + 1099-DIV Box 12 + source-classified 1099-OID Box11 and stated interest + K-1 Box 18A + K-1 1041 Box 14A + Form 8814 Line 1b");
 
   // Lines 2b, 3a, 3b: Interest and dividends via Schedule B
   const preliminaryScheduleB = calculateScheduleB(input);
@@ -1353,7 +1353,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   // Early withdrawal penalty: auto-sum from 1099-INT Box 2 + 1099-OID Box 3 + manual adjustments
   const earlyWithdrawalPenalty = sum(
     intAgg.earlyWithdrawalPenalty,
-    ...(input.form1099OID ?? []).map((f) => d(f.earlyWithdrawalPenalty)),
+    form1099OID.earlyWithdrawalPenalty,
     d(input.adjustments?.earlyWithdrawalPenalty)
   );
 
@@ -2608,6 +2608,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
       seniorDeduction: schedule1A?.seniorDeduction,
       saltDeduction: schedA.saltDeduction,
       depletionAdjustment: k1AmtDepletion,
+      specifiedPrivateActivityBondInterest: form1099OID.privateActivityBondInterest,
       dispositionAdjustment: k1AmtDisposition,
       depreciationAdjustment: k1AmtDepreciation,
       // IRC 56(b)(1)(E): restore the section 68 amount only when itemizing.
@@ -3242,7 +3243,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   const withholdingFrom1099 = sum(
     intAgg.federalWithheld,
     divAgg.federalWithheld,
-    ...(input.form1099OID ?? []).map((f) => d(f.federalWithheld)),
+    form1099OID.federalWithheld,
     form1099R.federalWithholding,
     ...(input.formSSA1099 ?? []).map((f) => d(f.federalWithheld)),
     ...(input.formRRB1099 ?? []).map((f) => d(f.federalWithheld)),
@@ -3680,6 +3681,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     scheduleJ: scheduleJResult,
     form3800,
     form1099Q,
+    form1099OID: form1099OID.sources.length ? form1099OID : undefined,
     form1099K: form1099KResult.numberOfForms > 0 ? form1099KResult : undefined,
     form8915F: form8915FResult,
     form1098ESummary: form1098EResult,

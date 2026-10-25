@@ -179,13 +179,9 @@ describe("Schedule B Part I - Interest", () => {
       expect.arrayContaining([
         expect.objectContaining({
           description: "Interest payer - Treasury STRIP (OID)",
-          value: d(500),
-          formula: "Form 1099-OID Box 1 - min(Box 1, Box 6 acquisition premium)",
-        }),
-        expect.objectContaining({
-          description: "Interest payer - Treasury STRIP (interest)",
-          value: d(200),
-          formula: "Form 1099-OID Box 2 - min(Box 2, Box 11 bond premium)",
+          value: d(700), // One instrument: (800-300) + (250-50).
+          formula: "Unverified historical OID and interest aliases after legacy netting",
+          inputs: { "Source ID": "legacy-1", "Treasury interest": d(0) },
         }),
         expect.objectContaining({
           description: "Interest payer - Family Trust (K-1 1041)",
@@ -196,7 +192,7 @@ describe("Schedule B Part I - Interest", () => {
     );
 
     const line1Count = result.lines.find((line) => line.form === "Sched B" && line.line === "1-count");
-    expect(line1Count?.value.toNumber()).toBe(3);
+    expect(line1Count?.value.toNumber()).toBe(2);
   });
 });
 

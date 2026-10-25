@@ -219,10 +219,13 @@ export async function fillScheduleA(
   setCurrencyField(form, F.line15, sa.casualtyLossDeduction);
 
   // ── Other Itemized Deductions (Line 16) ──
-  if (sa.gamblingLossDeduction.gt(0)) {
-    setTextField(form, F.line16Desc, "Gambling losses");
-    setCurrencyField(form, F.line16, sa.gamblingLossDeduction);
+  const line16Audit = sa.lines.filter(line => line.form === "Sched A" && line.line === "16");
+  if (line16Audit.length !== 1 || !line16Audit[0].value.isFinite() || !line16Audit[0].value.eq(sa.otherItemizedDeductions)) {
+    throw new Error("Schedule A line16 requires a unique reconciled audit");
   }
+  const otherDescriptions = [sa.gamblingLossDeduction.gt(0) ? "Gambling losses" : "", sa.bondPremiumDeduction.gt(0) ? "Excess bond premium" : ""].filter(Boolean);
+  setTextField(form, F.line16Desc, otherDescriptions.join("; "));
+  setCurrencyField(form, F.line16, line16Audit[0].value);
 
   // ── Total Itemized Deductions (Line 17) ──
   setCurrencyField(form, F.line17, sa.totalItemized);
