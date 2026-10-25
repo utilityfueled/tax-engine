@@ -45,16 +45,17 @@ describe("guarded repeated provider executor", () => {
     expect(first.unknownMaximumUsd).not.toBe("0");
     expect(JSON.stringify(state.records)).not.toContain("secret raw");
   });
-  it("keeps expected answers private and normalization gaps unqualified", async () => {
+  it("keeps expected answers private and derives actual application observations", async () => {
     const state = setup(); const requests: unknown[] = [];
     const result = await executeProviderEval({ ...state, transport: async request => { requests.push(request);
-      return { ...good, payload: requests.length === 1 ? { probe: "ok" } : { applicationOutput: JSON.stringify({ disposition: "answer", sourceIds: ["case-income-w2-zero-withholding:source"], facts: [], label: "Statement", payer: "[organization-1]", documentPeriod: "2026", summary: "Unconfirmed extraction", suggestions: [] }), disposition: "answer", fields: [], category: null, sourceIds: ["case-income-w2-zero-withholding:source"], engineValues: [], filingReady: false } }; } });
+      return { ...good, payload: requests.length === 1 ? { probe: "ok" } : { disposition: "answer", sourceIds: ["case-income-w2-zero-withholding:source"], facts: [], label: "Statement", payer: "[organization-1]", documentPeriod: "2026", summary: "Unconfirmed extraction", suggestions: [] } }; } });
     expect(requests).toHaveLength(4);
     expect(JSON.stringify(requests)).not.toContain("reviewCriteria");
     expect(JSON.stringify(requests)).not.toContain('"expected"');
     expect(result.template.entries).toHaveLength(3);
     expect(result.template.entries.every(entry => entry.independentReview === null)).toBe(true);
-    expect(result.bindingBlockers.length).toBeGreaterThan(0);
+    expect(result.bindingBlockers).toEqual([]);
+    expect(result.template.entries.every(entry => entry.measurement?.normalizationStatus === "bound")).toBe(true);
     expect(result.productionPromotion).toBe(false);
   });
   it("retains failed-output charges and resumes without additional requests", async () => {
@@ -66,6 +67,14 @@ describe("guarded repeated provider executor", () => {
     expect(resumed.knownProviderCostUsd).toBe("0.00024");
     expect(first.template.entries.map(entry => entry.repeat)).toEqual([1, 2, 3]);
     expect(first.template.entries.every(entry => entry.applicationSchemaValid === false)).toBe(true);
+  });
+  it("rejects undocumented model suffixes without discarding charged usage", async () => {
+    const state = setup(); let calls = 0;
+    const result = await executeProviderEval({ ...state, transport: async () => { calls++; return { ...good, reportedModel: "gpt-6-luna-unverified-snapshot" }; } });
+    expect(calls).toBe(1);
+    expect(result.knownProviderCostUsd).toBe("0.00006");
+    expect(result.template.availability?.[0]?.status).toBe("failed");
+    expect(result.template.entries).toEqual([]);
   });
   it("resumes after referenced usage reconciliation without repeating the uncertain case", async () => {
     const state = setup(); const seen: string[] = [];
@@ -115,11 +124,12 @@ describe("guarded repeated provider executor", () => {
     expect(() => createProviderEvalPlan({ ...input, fixtureIds: [heldOut.id] })).toThrow(/held-out/i);
     expect(createProviderEvalPlan(input).fixtureIds).toHaveLength(160);
   });
-  it("rejects qualification planning while production bindings are unsupported", () => {
+  it("requires full independent corpus review even with complete application bindings", () => {
     const reviewed = taxProviderModelEvalFixtures.map(fixture => ({ ...fixture, review: { ...fixture.review,
       status: "reviewed" as const, reviewer: "synthetic-independent-reviewer", reviewedAt: at } }));
-    expect(() => createProviderEvalPlan({ runId: "qualification", purpose: "qualification", profileIds: ["luna-high"],
-      maximumProviderUsd: "1", maximumRequests: 1000, createdAt: at, expiresAt: "2026-10-25T13:00:00.000Z" }, reviewed)).toThrow(/binding/i);
+    const input = { runId: "qualification", purpose: "qualification" as const, profileIds: ["luna-high"], maximumProviderUsd: "1", maximumRequests: 1000, createdAt: at, expiresAt: "2026-10-25T13:00:00.000Z" };
+    expect(createProviderEvalPlan(input, reviewed).fixtureIds).toHaveLength(240);
+    expect(() => createProviderEvalPlan(input, taxProviderModelEvalFixtures)).toThrow(/review/i);
   });
   it("rejects same-ID model and request policy changes after planning", () => {
     const { plan } = setup(); const selected = providerModelCandidates.find(item => item.id === "luna-high");

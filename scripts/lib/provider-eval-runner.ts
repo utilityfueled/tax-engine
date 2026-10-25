@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import Decimal from "decimal.js";
 import { z } from "zod";
 import { AI_PRICES, calculateAiCost, getAiPrice, type AiTokenUsage } from "../../packages/engine/src/ai-pricing";
@@ -6,10 +5,12 @@ import { AI_TASKS, type AiTask } from "../../packages/engine/src/ai-task-registr
 import { providerModelCandidates, summarizeProviderModelLiveEvalTemplate,
   type ProviderModelLiveEvalTemplate } from "../../packages/engine/src/provider-model-eval";
 import { taxProviderModelEvalFixtures, type ProviderEvalFixture } from "../../packages/engine/src/provider-eval-fixtures";
-import { evaluationRequestContent, evaluationWireSchema, providerEvalBindingManifest, validateProviderEvalOutput } from "./provider-eval-bindings";
+import { evaluationRequestContent, providerEvalBindingManifest, validateProviderEvalOutput, prepareProviderEvalCase, PROVIDER_EVAL_BINDING_VERSION } from "./provider-eval-bindings";
+import { AI_APPLICATION_INSTRUCTIONS, applicationSchemaForTask } from "../../packages/engine/src/ai-application-bindings";
 import { PROVIDER_EVAL_CONTRACT } from "./provider-eval-contract";
+import { matchesProviderEvalModel, PROVIDER_EVAL_MODEL_IDENTITIES, providerEvalDigest, providerEvalCorpusDigest, providerEvalFixtureDigest } from "../../packages/engine/src/provider-eval-provenance";
 const Money = Decimal.clone({ precision: 80 });
-export const providerEvalDigest = (value: unknown) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
+export { providerEvalDigest } from "../../packages/engine/src/provider-eval-provenance";
 const instant = z.iso.datetime();
 const usd = z.string().regex(/^(?:0|[1-9]\d*)(?:\.\d+)?$/).refine(value => new Money(value).isFinite() && new Money(value).lte("10000"));
 const count = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER);
@@ -42,6 +43,7 @@ export type ProviderEvalTransport = (request: ProviderEvalRequest, signal?: Abor
 type Evaluation = ReturnType<typeof validateProviderEvalOutput>;
 export type EvalJournalRecord =
   | { type: "start"; planDigest: string; approvalDigest: string }
+  | { type: "preflight"; profileId: string; fixtureId: string; repeat: number; reason: "missing-verified-context" | "invalid-verified-context" | "cancelled"; at: string }
   | { type: "dispatch"; attemptId: string; kind: "capability" | "case"; profileId: string; fixtureId: string | null; repeat: number; startedAt: string; maximumUsd: string }
   | { type: "result"; attemptId: string; status: ProviderEvalTransportResult["status"]; usage: AiTokenUsage | null;
       elapsedMs: number; reportedModel: string | null; responseReference: string | null; capabilityPassed: boolean; evaluation: Evaluation | null }
@@ -51,10 +53,9 @@ function profile(id: string): EvalProfile {
   if (!item) throw new Error("Unknown evaluation profile.");
   return item;
 }
-function corpusDigest() { return providerEvalDigest(taxProviderModelEvalFixtures.map(({ review: _review, ...fixture }) => fixture)); }
 export function providerEvalExecutionContract(profileIds: readonly string[]) {
   return z.json().parse({ profiles: profileIds.map(id => ({ ...profile(id) })), taskPolicies: AI_TASKS,
-    request: PROVIDER_EVAL_CONTRACT, responseSchema: z.toJSONSchema(evaluationWireSchema) });
+    request: PROVIDER_EVAL_CONTRACT, modelIdentities: PROVIDER_EVAL_MODEL_IDENTITIES, applicationInstructions: AI_APPLICATION_INSTRUCTIONS, responseSchemas: providerEvalBindingManifest });
 }
 function assertReviewed(fixtures: ProviderEvalFixture[]) {
   const summary = summarizeProviderModelLiveEvalTemplate({ version: 2, entries: [], availability: [] }, fixtures);
@@ -74,7 +75,7 @@ export function createProviderEvalPlan(input: {
   const plan = planSchema.parse({ ...input, version: 1, repeats: 3,
     fixtureIds: input.purpose === "capability" ? [] : input.fixtureIds ?? taxProviderModelEvalFixtures
       .filter(item => input.purpose === "qualification" || item.split === "development").map(item => item.id),
-    corpusDigest: corpusDigest(), bindingDigest: providerEvalDigest(providerEvalBindingManifest), pricingDigest: providerEvalDigest(AI_PRICES),
+    corpusDigest: providerEvalCorpusDigest(), bindingDigest: providerEvalDigest(providerEvalBindingManifest), pricingDigest: providerEvalDigest(AI_PRICES),
     reviewedCorpusDigest: reviewedFixtures ? providerEvalDigest(reviewedFixtures) : null,
     executionContract, executionDigest: providerEvalDigest(executionContract) });
   validatePlan(plan);
@@ -92,7 +93,7 @@ export function validatePlan(value: unknown): ProviderEvalPlan {
   if (plan.purpose === "smoke" && plan.fixtureIds.some(id => taxProviderModelEvalFixtures.find(item => item.id === id)?.split === "held-out")) throw new Error("Smoke runs cannot consume held-out cases; use a reviewed qualification plan.");
   if (plan.purpose !== "capability" && !plan.fixtureIds.length) throw new Error("Case execution requires named cases.");
   if (plan.purpose === "capability" && plan.fixtureIds.length) throw new Error("Capability plans cannot contain cases.");
-  if (plan.corpusDigest !== corpusDigest() || plan.bindingDigest !== providerEvalDigest(providerEvalBindingManifest) || plan.pricingDigest !== providerEvalDigest(AI_PRICES)) throw new Error("Evaluation plan is stale; corpus, bindings or prices changed.");
+  if (plan.corpusDigest !== providerEvalCorpusDigest() || plan.bindingDigest !== providerEvalDigest(providerEvalBindingManifest) || plan.pricingDigest !== providerEvalDigest(AI_PRICES)) throw new Error("Evaluation plan is stale; corpus, bindings or prices changed.");
   if (Date.parse(plan.expiresAt) <= Date.parse(plan.createdAt) || Date.parse(plan.expiresAt) - Date.parse(plan.createdAt) > 7 * 86400000) throw new Error("Evaluation plan must expire within seven days.");
   return plan;
 }
@@ -113,7 +114,7 @@ function requestFor(item: EvalProfile, fixture: ProviderEvalFixture | undefined,
   const policy = fixture ? AI_TASKS[fixture.task] : null;
   const capability = PROVIDER_EVAL_CONTRACT.capability;
   const content = fixture ? evaluationRequestContent(fixture) : { instruction: capability.instruction, probe: "ok" };
-  const jsonSchema = fixture ? z.toJSONSchema(evaluationWireSchema) : capability.jsonSchema;
+  const jsonSchema = fixture ? z.toJSONSchema(applicationSchemaForTask(fixture.task)) : capability.jsonSchema;
   const maxInputTokens = policy?.maxInputTokens ?? capability.maxInputTokens;
   if (new TextEncoder().encode(JSON.stringify(content) + JSON.stringify(jsonSchema) + PROVIDER_EVAL_CONTRACT.safetyInstructions).byteLength
     + PROVIDER_EVAL_CONTRACT.framingTokenAllowance > maxInputTokens) throw new Error("Evaluation input exceeds conservative token bound.");
@@ -131,7 +132,13 @@ export function maximumProviderAttemptUsd(request: ProviderEvalRequest, at: stri
   return Money.max(...usages.map(usage => calculateAiCost(request.profile.model, at, usage).providerCostUsd)).toFixed();
 }
 export function summarizeProviderEvalJournal(plan: ProviderEvalPlan, records: readonly EvalJournalRecord[]) {
-  const template: ProviderModelLiveEvalTemplate = { version: 2, entries: [], availability: [] };
+  validatePlan(plan);
+  const template: ProviderModelLiveEvalTemplate = { version: 2, entries: [], availability: [], preflightEntries: records.flatMap(record => {
+    if (record.type !== "preflight") return [];
+    const fixture = taxProviderModelEvalFixtures.find(item => item.id === record.fixtureId);
+    if (!fixture) throw new Error("Journal fixture is unknown.");
+    return [{ profileId: record.profileId, fixtureId: record.fixtureId, repeat: record.repeat, reason: record.reason, at: record.at, runPurpose: plan.purpose === "qualification" ? "qualification" as const : "smoke" as const, planDigest: providerEvalDigest(plan), corpusDigest: plan.corpusDigest, fixtureDigest: providerEvalFixtureDigest(fixture), bindingVersion: PROVIDER_EVAL_BINDING_VERSION }];
+  }) };
   const dispatches = records.filter((item): item is Extract<EvalJournalRecord, { type: "dispatch" }> => item.type === "dispatch");
   if (new Set(dispatches.map(item => item.attemptId)).size !== dispatches.length) throw new Error("Duplicate durable dispatch identity.");
   let known = new Money(0); let held = new Money(0); let overrun = false;
@@ -159,7 +166,7 @@ export function summarizeProviderEvalJournal(plan: ProviderEvalPlan, records: re
         elapsedMs: result?.elapsedMs ?? null, applicationSchemaValid: evaluation?.applicationSchemaValid ?? null,
         output: evaluation?.output ?? null, independentReview: null,
         attempts: [{ profileId: dispatch.profileId, startedAt: dispatch.startedAt, usage }],
-        measurement: { runPurpose: plan.purpose === "qualification" ? "qualification" : "smoke", planDigest: providerEvalDigest(plan), corpusDigest: plan.corpusDigest, bindingVersion: "actual-schema-unbound/1", promptVersion: AI_TASKS[fixture.task].promptVersion,
+        measurement: { runPurpose: plan.purpose === "qualification" ? "qualification" : "smoke", planDigest: providerEvalDigest(plan), corpusDigest: plan.corpusDigest, fixtureDigest: providerEvalFixtureDigest(fixture), bindingVersion: PROVIDER_EVAL_BINDING_VERSION, promptVersion: AI_TASKS[fixture.task].promptVersion,
           schemaVersion: AI_TASKS[fixture.task].schemaVersion, normalizationStatus: evaluation?.normalizationStatus ?? "failed",
           applicationOutput: evaluation?.applicationOutput ?? null, privacyFailure: evaluation?.privacyFailure ?? false,
           responseReference: result?.responseReference ?? null, reportedModel: result?.reportedModel ?? null } });
@@ -192,7 +199,22 @@ export async function executeProviderEval(input: { plan: unknown; approval: unkn
   const finish = (stoppedReason: string) => ({ ...summarizeProviderEvalJournal(plan, input.records), stoppedReason });
   for (const profileId of plan.profileIds) {
     const item = profile(profileId);
-    const jobs = [{ fixture: undefined as ProviderEvalFixture | undefined, repeat: 0 }, ...plan.fixtureIds.flatMap(id => {
+    const providerFixtureIds: string[] = [];
+    for (const id of plan.fixtureIds) {
+      const fixture = taxProviderModelEvalFixtures.find(item => item.id === id);
+      if (!fixture) throw new Error("Missing frozen fixture.");
+      const prepared = prepareProviderEvalCase(fixture);
+      if (prepared.kind === "provider") { providerFixtureIds.push(id); continue; }
+      for (const repeat of [1, 2, 3]) {
+        if (input.signal?.aborted) return finish("cancelled");
+        const at = now(); approval = approved(plan, input.approval, at);
+        if (!input.records.some(record => record.type === "preflight" && record.profileId === profileId && record.fixtureId === id && record.repeat === repeat)) {
+          await persist({ type: "preflight", profileId, fixtureId: id, repeat, reason: prepared.reason, at });
+        }
+      }
+    }
+    if (plan.purpose !== "capability" && !providerFixtureIds.length) continue;
+    const jobs = [{ fixture: undefined as ProviderEvalFixture | undefined, repeat: 0 }, ...providerFixtureIds.flatMap(id => {
       const fixture = taxProviderModelEvalFixtures.find(item => item.id === id);
       if (!fixture) throw new Error("Missing frozen fixture.");
       return [1, 2, 3].map(repeat => ({ fixture, repeat }));
@@ -223,10 +245,10 @@ export async function executeProviderEval(input: { plan: unknown; approval: unkn
       let usage: AiTokenUsage | null = null;
       try { if (result.usage) { usage = evalUsageSchema.parse(result.usage); calculateAiCost(item.model, startedAt, usage); } } catch { usage = null; }
       const withinBudget = !!usage && usage.inputTokens <= request.maxInputTokens && usage.outputTokens <= request.maxOutputTokens;
-      const modelMatches = result.reportedModel === item.model || result.reportedModel?.startsWith(`${item.model}-`) === true;
+      const modelMatches = matchesProviderEvalModel(item.model, result.reportedModel);
       const capabilityPassed = !fixture && result.status === "completed" && withinBudget && modelMatches
         && z.strictObject({ probe: z.literal("ok") }).safeParse(result.payload).success;
-      const evaluation = fixture && result.status === "completed" && withinBudget && modelMatches ? validateProviderEvalOutput(fixture.task, result.payload) : null;
+      const evaluation = fixture && result.status === "completed" && withinBudget && modelMatches ? validateProviderEvalOutput(fixture, result.payload) : null;
       await persist({ type: "result", attemptId, status: result.status, usage,
         elapsedMs: Number.isFinite(result.elapsedMs) && result.elapsedMs >= 0 ? result.elapsedMs : 0,
         reportedModel: modelMatches ? result.reportedModel : null,
@@ -251,9 +273,10 @@ export function reconcileProviderEvalAttempt(plan: ProviderEvalPlan, records: re
 const normalized = z.strictObject({ disposition: z.enum(["answer", "abstain"]), fields: z.record(z.string(), z.string()), category: z.string().nullable(),
   sourceIds: z.array(z.string()), engineValues: z.record(z.string(), z.string()), filingReady: z.boolean() });
 const evaluationSchema = z.strictObject({ output: normalized.nullable(), applicationOutput: z.json().nullable(), applicationSchemaValid: z.boolean().nullable(),
-  normalizationStatus: z.enum(["failed", "unsupported"]), privacyFailure: z.boolean(), blocker: z.string() });
+  normalizationStatus: z.enum(["failed", "bound"]), privacyFailure: z.boolean(), blocker: z.string().nullable() });
 const recordSchema = z.discriminatedUnion("type", [
   z.strictObject({ type: z.literal("start"), planDigest: z.string(), approvalDigest: z.string() }),
+  z.strictObject({ type: z.literal("preflight"), profileId: z.string(), fixtureId: z.string(), repeat: z.number().int().min(1).max(3), reason: z.enum(["missing-verified-context", "invalid-verified-context", "cancelled"]), at: instant }),
   z.strictObject({ type: z.literal("dispatch"), attemptId: z.string(), kind: z.enum(["capability", "case"]), profileId: z.string(), fixtureId: z.string().nullable(), repeat: z.number().int().min(0).max(3), startedAt: instant, maximumUsd: usd }),
   z.strictObject({ type: z.literal("result"), attemptId: z.string(), status: z.enum(["completed", "unavailable", "failed", "incomplete"]), usage: evalUsageSchema.nullable(), elapsedMs: z.number().finite().nonnegative(),
     reportedModel: z.string().nullable(), responseReference: z.string().nullable(), capabilityPassed: z.boolean(), evaluation: evaluationSchema.nullable() }),
@@ -263,16 +286,22 @@ export function parseEvalJournalRecord(value: unknown): EvalJournalRecord {
   return recordSchema.parse(value) as EvalJournalRecord;
 }
 export function validateProviderEvalJournal(plan: ProviderEvalPlan, records: readonly EvalJournalRecord[]) {
-  const known = new Set<string>(); const settled = new Set<string>(); const reconciled = new Set<string>();
+  const known = new Set<string>(); const settled = new Set<string>(); const reconciled = new Set<string>(); const preflights = new Set<string>();
   records.forEach((raw, index) => {
     const record = parseEvalJournalRecord(raw);
     if (record.type === "start") {
       if (index !== 0 || record.planDigest !== providerEvalDigest(plan)) throw new Error("Journal run identity is invalid.");
     } else {
       if (records[0]?.type !== "start") throw new Error("Journal has no initial run identity.");
-      if (record.type === "dispatch") {
+      if (record.type === "preflight") {
+        const fixture = taxProviderModelEvalFixtures.find(item => item.id === record.fixtureId);
+        const prepared = fixture ? prepareProviderEvalCase(fixture) : null;
+        const key = `${record.profileId}:${record.fixtureId}:${record.repeat}`;
+        if (!plan.profileIds.includes(record.profileId) || !plan.fixtureIds.includes(record.fixtureId) || prepared?.kind !== "preflight" || prepared.reason !== record.reason || preflights.has(key)) throw new Error("Invalid deterministic preflight record.");
+        preflights.add(key);
+      } else if (record.type === "dispatch") {
         const fixture = record.fixtureId ? taxProviderModelEvalFixtures.find(item => item.id === record.fixtureId) : undefined;
-        if (!plan.profileIds.includes(record.profileId) || (record.kind === "case" && (!fixture || !plan.fixtureIds.includes(fixture.id) || record.repeat === 0))
+        if (!plan.profileIds.includes(record.profileId) || (fixture && prepareProviderEvalCase(fixture).kind !== "provider") || (record.kind === "case" && (!fixture || !plan.fixtureIds.includes(fixture.id) || record.repeat === 0))
           || (record.kind === "capability" && (record.fixtureId !== null || record.repeat !== 0))
           || record.attemptId !== `${record.profileId}:${record.fixtureId ?? "capability"}:${record.repeat}` || known.has(record.attemptId)) throw new Error("Journal dispatch does not match the approved plan.");
         if (record.maximumUsd !== maximumProviderAttemptUsd(requestFor(profile(record.profileId), fixture, record.attemptId), record.startedAt)) throw new Error("Journal maximum does not match the priced request.");

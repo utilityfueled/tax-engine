@@ -30,7 +30,7 @@ node --import tsx scripts/run-provider-eval.ts plan \
 
 For a smoke plan, supply `--purpose=smoke` and optionally comma-separated
 development `--fixtures=...`. The default is every development case, three times
-per profile, preceded by one capability probe per profile. Qualification uses
+per profile. A capability probe precedes actual provider cases. When every named case fails deterministic context preflight, no probe or provider request is made. Qualification uses
 `--purpose=qualification --reviewed-fixtures=path.json`; that JSON must contain a
 `fixtures` array preserving every frozen field except actual review metadata.
 All 240 cases are required. A plan commits to the corpus, reviewed copy, actual
@@ -39,9 +39,37 @@ every task's budgets/timeouts, actual prompt/transport constants, wire schema,
 repetitions and limits. The complete execution contract is retained in the plan
 as well as hashed, so a same-ID configuration change cannot reuse its approval.
 Changes require a new plan and authorization.
-Qualification planning also rejects until every production task binding is
-implemented. A human-reviewed corpus cannot turn an unsupported application
-contract into a qualifying paid run.
+Actual bindings now use all eight production task schemas and the same source
+validation as the application. Each response is the real task JSON; no
+model-authored normalization sidecar is accepted. The independent scorer reparses
+the saved actual payload, derives its observations and rejects inconsistent flags,
+fields or old binding versions. Human review remains required for prose grounding,
+quality and PII; shape and literal-source checks do not establish those judgments.
+Measured and preflight records include the complete corpus digest and individual
+fixture digest, including actual request context and golden contract but excluding
+review metadata. The scorer recomputes both against the current frozen corpus.
+Missing or stale provenance cannot count as a current schema, exact-field,
+accepted-response or deterministic-preflight success. Known costs remain visible.
+The plan digest is a correlation reference with a required SHA-256 format; it is
+not a signature or independent proof of authorized live execution. Preserve and
+review the actual plan, approval and durable journal alongside exported records.
+Both dispatch and scoring require the reported model to match the final attempted
+profile, including an explicit Sol High escalation. The shared allowlist accepts
+documented aliases/snapshots only; an unknown model or invented suffix cannot
+qualify. The allowlist is part of the frozen execution policy. Known attempt
+usage and its recorded profile cost remain visible after an identity failure;
+that retention does not authenticate the responding model or its true invoice.
+
+Corpus r4 keeps240 cases and the fixed80 held-out split. It adds separately
+authored synthetic application-context literals for explanation/reconciliation,
+including explicit stale/conflicting/missing/cancelled contexts. These are test
+preconditions, not actual production engine receipts or validated tax oracles.
+The12 context-rejected cases produce separate preflight records with no provider
+schema score, latency, tokens or invented model quality. Qualification reports
+require their three actual deterministic outcomes separately from the228 provider
+cases. Preflight successes never inflate model accepted-task counts or lower
+cost per accepted model task. Golden values and human criteria are not sent;
+only actual request context and requested field/audit names are visible.
 
 The approval template deliberately contains null authorizer, time, account and
 approval reference. A human authorized to spend must approve the exact plan and
@@ -119,11 +147,10 @@ node --import tsx scripts/run-provider-eval.ts report \
 `results.json` fits `pnpm eval:models:live-summary -- --live-run-file=...`.
 Results remain nonqualifying until independent fixture and output review,
 measured coverage, actual application normalization and every existing gate
-passes. Smoke provenance cannot pass qualification. Current extracted schemas
-are shared unchanged with application callers; their broader evaluation-field
-normalization is explicitly **unsupported** pending the separate production
-contract package. A normalized model observation is not an application-schema
-pass. The journal retains privacy-checked valid application outputs for real
+passes. Smoke provenance cannot pass qualification. Task schemas and source
+normalization are shared with the application; the scorer derives observations
+from the actual payload and exact current source context. A claimed normalized
+observation is not an application-schema pass. The journal retains valid outputs for real
 review; known direct-identifier output is discarded and recorded as a failure.
 
 Offline tests use synthetic transports and local files. They establish software

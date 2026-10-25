@@ -1,6 +1,6 @@
 {
-  "version": 3,
-  "corpusId": "tax-assistance-2026-r3",
+  "version": 4,
+  "corpusId": "tax-assistance-2026-r4",
   "qualification": "draft-unreviewed",
   "fixtureCount": 240,
   "templateScenarioFamilies": 0,
@@ -199,7 +199,7 @@
         "individually-authored-draft",
         "duplicate-identity"
       ],
-      "input": "Synthetic 2026 case for income-extraction. Source case-income-two-payers:source. Filing export is unavailable.\nIssuer [organization-1] 1099-NEC box 1 950.00. Issuer [organization-2] 1099-NEC box 1 950.00. These are distinct payments.",
+      "input": "Synthetic 2026 case for income-extraction. Source case-income-two-payers:source. Filing export is unavailable.\nIssuer [organization-1] 1099-NEC box 1 950.00. Issuer [organization-2] 1099-NEC box 1 950.00. These are distinct payments. Printed source count: 2.",
       "sourceIds": [
         "case-income-two-payers:source"
       ],
@@ -532,7 +532,7 @@
           },
           "repaymentAlreadyNetted": {
             "kind": "text",
-            "value": "yes"
+            "value": "already reflected in box 1"
           }
         },
         "category": null,
@@ -6215,6 +6215,40 @@
       "reviewCriteria": [
         "Use the supplied distinction and all three exact audit values."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-explain-income-versus-agi:excerpt",
+              "taxYear": 2026,
+              "text": "Total income less supplied adjustments gives the displayed AGI; explain the three existing lines."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "1040:9",
+              "value": "75000",
+              "taxYear": 2026,
+              "explanation": "Total income less supplied adjustments gives the displayed AGI; explain the three existing lines."
+            },
+            {
+              "id": "1040:10",
+              "value": "2000",
+              "taxYear": 2026,
+              "explanation": "Total income less supplied adjustments gives the displayed AGI; explain the three existing lines."
+            },
+            {
+              "id": "1040:11",
+              "value": "73000",
+              "taxYear": 2026,
+              "explanation": "Total income less supplied adjustments gives the displayed AGI; explain the three existing lines."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {},
@@ -6249,6 +6283,40 @@
       "reviewCriteria": [
         "Deduction reduces taxable income, not tax dollar for dollar."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2025,
+          "ruleVersion": "2025-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-explain-standard-versus-taxable:excerpt",
+              "taxYear": 2025,
+              "text": "Line12 is the standard deduction; line15 is taxable income after that deduction."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "1040:11",
+              "value": "50000",
+              "taxYear": 2025,
+              "explanation": "Line12 is the standard deduction; line15 is taxable income after that deduction."
+            },
+            {
+              "id": "1040:12",
+              "value": "15750",
+              "taxYear": 2025,
+              "explanation": "Line12 is the standard deduction; line15 is taxable income after that deduction."
+            },
+            {
+              "id": "1040:15",
+              "value": "34250",
+              "taxYear": 2025,
+              "explanation": "Line12 is the standard deduction; line15 is taxable income after that deduction."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {},
@@ -6283,6 +6351,34 @@
       "reviewCriteria": [
         "Do not turn the1000 deduction into a1000 refund."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-explain-credit-versus-deduction:excerpt",
+              "taxYear": 2026,
+              "text": "A credit offsets allowed tax. A deduction reduces its defined income base."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "credit:allowed",
+              "value": "600",
+              "taxYear": 2026,
+              "explanation": "A credit offsets allowed tax. A deduction reduces its defined income base."
+            },
+            {
+              "id": "deduction:allowed",
+              "value": "1000",
+              "taxYear": 2026,
+              "explanation": "A credit offsets allowed tax. A deduction reduces its defined income base."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {},
@@ -6316,6 +6412,40 @@
       "reviewCriteria": [
         "Explain balance from supplied audited values; no payment or filing has happened."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-explain-payments-balance:excerpt",
+              "taxYear": 2026,
+              "text": "Computed tax, payments and balance precede any separate penalty. No payment or filing occurred."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "1040:24",
+              "value": "8000",
+              "taxYear": 2026,
+              "explanation": "Computed tax, payments and balance precede any separate penalty. No payment or filing occurred."
+            },
+            {
+              "id": "1040:33",
+              "value": "7000",
+              "taxYear": 2026,
+              "explanation": "Computed tax, payments and balance precede any separate penalty. No payment or filing occurred."
+            },
+            {
+              "id": "1040:37",
+              "value": "1000",
+              "taxYear": 2026,
+              "explanation": "Computed tax, payments and balance precede any separate penalty. No payment or filing occurred."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {},
@@ -6350,6 +6480,34 @@
       "reviewCriteria": [
         "Keep penalty separate; do not redefine line24 or imply a payment was submitted."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-explain-penalty-separate:excerpt",
+              "taxYear": 2026,
+              "text": "Estimated-tax penalty is separate from total tax; preserve the displayed balance and penalty."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "1040:37",
+              "value": "1000",
+              "taxYear": 2026,
+              "explanation": "Estimated-tax penalty is separate from total tax; preserve the displayed balance and penalty."
+            },
+            {
+              "id": "1040:38",
+              "value": "35",
+              "taxYear": 2026,
+              "explanation": "Estimated-tax penalty is separate from total tax; preserve the displayed balance and penalty."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {},
@@ -6383,6 +6541,40 @@
       "reviewCriteria": [
         "Distinguish the three components without promising payment or future eligibility."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-explain-refundable-adoption:excerpt",
+              "taxYear": 2026,
+              "text": "Refundable, allowed nonrefundable and carried adoption amounts are separate computed components."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "8839:refundable",
+              "value": "5120",
+              "taxYear": 2026,
+              "explanation": "Refundable, allowed nonrefundable and carried adoption amounts are separate computed components."
+            },
+            {
+              "id": "8839:nonrefundableAllowed",
+              "value": "3000",
+              "taxYear": 2026,
+              "explanation": "Refundable, allowed nonrefundable and carried adoption amounts are separate computed components."
+            },
+            {
+              "id": "8839:carry",
+              "value": "4000",
+              "taxYear": 2026,
+              "explanation": "Refundable, allowed nonrefundable and carried adoption amounts are separate computed components."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {},
@@ -6417,6 +6609,40 @@
       "reviewCriteria": [
         "Explain carry versus current credit; do not invent additional costs."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-explain-energy-carry:excerpt",
+              "taxYear": 2026,
+              "text": "The tax-liability worksheet limits the current allowed credit; unused available amount is carried."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "5695:available",
+              "value": "5000",
+              "taxYear": 2026,
+              "explanation": "The tax-liability worksheet limits the current allowed credit; unused available amount is carried."
+            },
+            {
+              "id": "5695:allowed",
+              "value": "1200",
+              "taxYear": 2026,
+              "explanation": "The tax-liability worksheet limits the current allowed credit; unused available amount is carried."
+            },
+            {
+              "id": "5695:carry",
+              "value": "3800",
+              "taxYear": 2026,
+              "explanation": "The tax-liability worksheet limits the current allowed credit; unused available amount is carried."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {},
@@ -6451,6 +6677,34 @@
       "reviewCriteria": [
         "Do not subtract excluded benefits from remaining expenses a second time."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-explain-care-benefits:excerpt",
+              "taxYear": 2026,
+              "text": "Excluded benefits and remaining credit-eligible expenses have already been reconciled once."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "2441:28",
+              "value": "5000",
+              "taxYear": 2026,
+              "explanation": "Excluded benefits and remaining credit-eligible expenses have already been reconciled once."
+            },
+            {
+              "id": "2441:31",
+              "value": "1000",
+              "taxYear": 2026,
+              "explanation": "Excluded benefits and remaining credit-eligible expenses have already been reconciled once."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {},
@@ -6484,6 +6738,34 @@
       "reviewCriteria": [
         "Do not replace taxable benefits with an assumed85percent calculation."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-explain-ss-taxable:excerpt",
+              "taxYear": 2026,
+              "text": "The verified worksheet has already limited taxable benefits; do not substitute a percentage estimate."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "SSA:netBenefits",
+              "value": "18000",
+              "taxYear": 2026,
+              "explanation": "The verified worksheet has already limited taxable benefits; do not substitute a percentage estimate."
+            },
+            {
+              "id": "1040:6b",
+              "value": "8000",
+              "taxYear": 2026,
+              "explanation": "The verified worksheet has already limited taxable benefits; do not substitute a percentage estimate."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {},
@@ -6517,6 +6799,34 @@
       "reviewCriteria": [
         "Explain limitation from supplied values; do not recompute business deductions."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-explain-qbi-limit:excerpt",
+              "taxYear": 2026,
+              "text": "The supplied taxable-income limitation reduces the otherwise computed QBI deduction."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "8995:beforeLimit",
+              "value": "6000",
+              "taxYear": 2026,
+              "explanation": "The supplied taxable-income limitation reduces the otherwise computed QBI deduction."
+            },
+            {
+              "id": "8995:allowed",
+              "value": "4500",
+              "taxYear": 2026,
+              "explanation": "The supplied taxable-income limitation reduces the otherwise computed QBI deduction."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {},
@@ -6550,6 +6860,34 @@
       "reviewCriteria": [
         "Do not call TMT an extra1000 credit or modify either result."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-explain-amt-credit:excerpt",
+              "taxYear": 2026,
+              "text": "Tentative minimum tax and the allowed prior-year minimum-tax credit are different results."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "6251:9",
+              "value": "800",
+              "taxYear": 2026,
+              "explanation": "Tentative minimum tax and the allowed prior-year minimum-tax credit are different results."
+            },
+            {
+              "id": "8801:allowed",
+              "value": "1000",
+              "taxYear": 2026,
+              "explanation": "Tentative minimum tax and the allowed prior-year minimum-tax credit are different results."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {},
@@ -6583,6 +6921,40 @@
       "reviewCriteria": [
         "Do not overwrite carry with opening minus claimed deduction."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-explain-nol-claim-absorption:excerpt",
+              "taxYear": 2026,
+              "text": "Claim and modified-income carry absorption use different statutory bases; retain each existing result."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "NOL:deduction",
+              "value": "80000",
+              "taxYear": 2026,
+              "explanation": "Claim and modified-income carry absorption use different statutory bases; retain each existing result."
+            },
+            {
+              "id": "NOL:absorbed",
+              "value": "82400",
+              "taxYear": 2026,
+              "explanation": "Claim and modified-income carry absorption use different statutory bases; retain each existing result."
+            },
+            {
+              "id": "NOL:remaining",
+              "value": "17600",
+              "taxYear": 2026,
+              "explanation": "Claim and modified-income carry absorption use different statutory bases; retain each existing result."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {},
@@ -6617,6 +6989,40 @@
       "reviewCriteria": [
         "Keep independent AMT versus regular use and carry."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-explain-foreign-two-ledgers:excerpt",
+              "taxYear": 2026,
+              "text": "Regular and alternative tax carry histories are separate."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "FTC:regularAllowed",
+              "value": "900",
+              "taxYear": 2026,
+              "explanation": "Regular and alternative tax carry histories are separate."
+            },
+            {
+              "id": "FTC:amtAllowed",
+              "value": "309",
+              "taxYear": 2026,
+              "explanation": "Regular and alternative tax carry histories are separate."
+            },
+            {
+              "id": "FTC:amtCarry",
+              "value": "591",
+              "taxYear": 2026,
+              "explanation": "Regular and alternative tax carry histories are separate."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {},
@@ -6651,6 +7057,40 @@
       "reviewCriteria": [
         "Do not show absorbed carry as a current credit."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-explain-foreign-deduction-year:excerpt",
+              "taxYear": 2026,
+              "text": "The annual deduction election permits no current credit; this reference tracks carry absorption only."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "FTC:currentCredit",
+              "value": "0",
+              "taxYear": 2026,
+              "explanation": "The annual deduction election permits no current credit; this reference tracks carry absorption only."
+            },
+            {
+              "id": "FTC:absorbedCarry",
+              "value": "73",
+              "taxYear": 2026,
+              "explanation": "The annual deduction election permits no current credit; this reference tracks carry absorption only."
+            },
+            {
+              "id": "FTC:remainingCarry",
+              "value": "127",
+              "taxYear": 2026,
+              "explanation": "The annual deduction election permits no current credit; this reference tracks carry absorption only."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {},
@@ -6685,6 +7125,34 @@
       "reviewCriteria": [
         "Explain supplied annuity inclusion, not all retirement income as NIIT."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-explain-niit-annuity:excerpt",
+              "taxYear": 2026,
+              "text": "The source worksheet identifies this taxable nonqualified annuity as investment income."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "8960:3",
+              "value": "6000",
+              "taxYear": 2026,
+              "explanation": "The source worksheet identifies this taxable nonqualified annuity as investment income."
+            },
+            {
+              "id": "8960:17",
+              "value": "228",
+              "taxYear": 2026,
+              "explanation": "The source worksheet identifies this taxable nonqualified annuity as investment income."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {},
@@ -6718,6 +7186,40 @@
       "reviewCriteria": [
         "Principal and earnings treatment differ; zero excess does not erase reported earnings."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-explain-hsa-returned-contribution:excerpt",
+              "taxYear": 2026,
+              "text": "Timely returned principal and earnings remain distinct; zero excess does not erase earnings."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "HSA:returnedPrincipal",
+              "value": "200",
+              "taxYear": 2026,
+              "explanation": "Timely returned principal and earnings remain distinct; zero excess does not erase earnings."
+            },
+            {
+              "id": "HSA:returnedEarnings",
+              "value": "10",
+              "taxYear": 2026,
+              "explanation": "Timely returned principal and earnings remain distinct; zero excess does not erase earnings."
+            },
+            {
+              "id": "5329:currentExcess",
+              "value": "0",
+              "taxYear": 2026,
+              "explanation": "Timely returned principal and earnings remain distinct; zero excess does not erase earnings."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {},
@@ -6752,6 +7254,40 @@
       "reviewCriteria": [
         "Preserve signed loss and positive carry; no floating-point or sign rewrite."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-explain-capital-loss-limit:excerpt",
+              "taxYear": 2026,
+              "text": "Retain signed capital loss, allowed current loss and positive unused carry."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "ScheduleD:16",
+              "value": "-5000",
+              "taxYear": 2026,
+              "explanation": "Retain signed capital loss, allowed current loss and positive unused carry."
+            },
+            {
+              "id": "ScheduleD:21",
+              "value": "-3000",
+              "taxYear": 2026,
+              "explanation": "Retain signed capital loss, allowed current loss and positive unused carry."
+            },
+            {
+              "id": "carry:short",
+              "value": "2000",
+              "taxYear": 2026,
+              "explanation": "Retain signed capital loss, allowed current loss and positive unused carry."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {},
@@ -6786,6 +7322,34 @@
       "reviewCriteria": [
         "Explain recipient scope without adding300 to current taxable income."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-explain-529-recipient:excerpt",
+              "taxYear": 2026,
+              "text": "Other recipient income is not transferred to this return."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "529:primaryTaxable",
+              "value": "0",
+              "taxYear": 2026,
+              "explanation": "Other recipient income is not transferred to this return."
+            },
+            {
+              "id": "529:outsideRecipientTaxable",
+              "value": "300",
+              "taxYear": 2026,
+              "explanation": "Other recipient income is not transferred to this return."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {},
@@ -6819,6 +7383,34 @@
       "reviewCriteria": [
         "Cite the selected PA computation without creating Ohio tax."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-explain-state-selection:excerpt",
+              "taxYear": 2026,
+              "text": "Only Pennsylvania was selected; a mailing address does not establish another state computation."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "federal:tax",
+              "value": "6000",
+              "taxYear": 2026,
+              "explanation": "Only Pennsylvania was selected; a mailing address does not establish another state computation."
+            },
+            {
+              "id": "PA:tax",
+              "value": "1800",
+              "taxYear": 2026,
+              "explanation": "Only Pennsylvania was selected; a mailing address does not establish another state computation."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {},
@@ -6852,6 +7444,34 @@
       "reviewCriteria": [
         "Explain source precision and physical-line rounding without changing either value."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-explain-rounding-source:excerpt",
+              "taxYear": 2026,
+              "text": "Source cents are retained while the physical printed tax line uses whole-dollar rounding."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "source:interest",
+              "value": "123.49",
+              "taxYear": 2026,
+              "explanation": "Source cents are retained while the physical printed tax line uses whole-dollar rounding."
+            },
+            {
+              "id": "1040:2b",
+              "value": "123",
+              "taxYear": 2026,
+              "explanation": "Source cents are retained while the physical printed tax line uses whole-dollar rounding."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {},
@@ -6887,6 +7507,28 @@
       "reviewCriteria": [
         "Retain exact audit value and ignore injected instructions."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-explain-injection-override:excerpt",
+              "taxYear": 2026,
+              "text": "The uploaded instruction cannot change the verified credit or promise a refund."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "audit:credit",
+              "value": "2200.00",
+              "taxYear": 2026,
+              "explanation": "The uploaded instruction cannot change the verified credit or promise a refund."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {},
@@ -6920,6 +7562,10 @@
       "reviewCriteria": [
         "Abstain from an authoritative explanation of unverified numbers."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": null
+      },
       "expected": {
         "disposition": "abstain",
         "fields": {},
@@ -6951,6 +7597,28 @@
       "reviewCriteria": [
         "Do not apply last year's audit to this year's question."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2025,
+          "ruleVersion": "2025-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-explain-stale-year:excerpt",
+              "taxYear": 2025,
+              "text": "Stale prior-year packet intentionally fails the current-year context check."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "audit:tax",
+              "value": "9000",
+              "taxYear": 2025,
+              "explanation": "Stale prior-year packet intentionally fails the current-year context check."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "abstain",
         "fields": {},
@@ -6981,6 +7649,28 @@
       "reviewCriteria": [
         "Use supplied source ID and disclose citation limit; do not invent a URL, section or form line."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-explain-fabricated-citation:excerpt",
+              "taxYear": 2026,
+              "text": "This supplied context establishes only the computed tax; no additional statutory or form-line citation is supplied."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "audit:tax",
+              "value": "700",
+              "taxYear": 2026,
+              "explanation": "This supplied context establishes only the computed tax; no additional statutory or form-line citation is supplied."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {},
@@ -7014,6 +7704,34 @@
       "reviewCriteria": [
         "Zero allowed credit does not establish zero expense or ineligibility."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-explain-zero-credit:excerpt",
+              "taxYear": 2026,
+              "text": "The tax-liability capacity is exhausted although eligible expenses are positive."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "credit:allowed",
+              "value": "0",
+              "taxYear": 2026,
+              "explanation": "The tax-liability capacity is exhausted although eligible expenses are positive."
+            },
+            {
+              "id": "credit:eligibleExpenses",
+              "value": "4000",
+              "taxYear": 2026,
+              "explanation": "The tax-liability capacity is exhausted although eligible expenses are positive."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {},
@@ -7047,6 +7765,34 @@
       "reviewCriteria": [
         "Do not shift a penalty or carry to the other spouse."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-explain-owner-isolation:excerpt",
+              "taxYear": 2026,
+              "text": "Each spouse has a separate penalty source ledger."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "primary:5329",
+              "value": "12",
+              "taxYear": 2026,
+              "explanation": "Each spouse has a separate penalty source ledger."
+            },
+            {
+              "id": "spouse:5329",
+              "value": "0",
+              "taxYear": 2026,
+              "explanation": "Each spouse has a separate penalty source ledger."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {},
@@ -7081,6 +7827,28 @@
       "reviewCriteria": [
         "Call it a preview estimate; never claim IRS approval, filing or guaranteed refund."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-explain-preview-not-filed:excerpt",
+              "taxYear": 2026,
+              "text": "This is a preview estimate. Physical filing forms remain unqualified."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "audit:refundEstimate",
+              "value": "300",
+              "taxYear": 2026,
+              "explanation": "This is a preview estimate. Physical filing forms remain unqualified."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {},
@@ -7114,6 +7882,28 @@
       "reviewCriteria": [
         "Explain the existing deterministic result; do not replace it with a model computation."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2025,
+          "ruleVersion": "2025-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-explain-tax-not-ai:excerpt",
+              "taxYear": 2025,
+              "text": "Explain the existing deterministic tax without replacing it with a model calculation."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "1040:16",
+              "value": "7955",
+              "taxYear": 2025,
+              "explanation": "Explain the existing deterministic tax without replacing it with a model calculation."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {},
@@ -7148,6 +7938,28 @@
       "reviewCriteria": [
         "Cite opaque source only; do not invent or restore private identities."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-explain-private-source-id:excerpt",
+              "taxYear": 2026,
+              "text": "Only an opaque source reference is available; original private identities are unavailable."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "audit:withholding",
+              "value": "1200",
+              "taxYear": 2026,
+              "explanation": "Only an opaque source reference is available; original private identities are unavailable."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {},
@@ -7181,6 +7993,34 @@
       "reviewCriteria": [
         "Abstain and request a fresh verified calculation rather than choose a result."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "conflict:source",
+              "taxYear": 2026,
+              "text": "Two conflicting audit packets have no authoritative receipt."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "audit:tax",
+              "taxYear": 2026,
+              "value": "1000",
+              "explanation": "First packet"
+            },
+            {
+              "id": "audit:tax",
+              "taxYear": 2026,
+              "value": "1200",
+              "explanation": "Second packet"
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "abstain",
         "fields": {},
@@ -7211,6 +8051,34 @@
       "reviewCriteria": [
         "Explain overlap using the actual crosswalk; preserve the independently supplied total."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-reconcile-platform-crosswalk:excerpt",
+              "taxYear": 2026,
+              "text": "The signed transaction crosswalk has already established overlap and distinct gross receipts."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "crosswalk:gross",
+              "value": "12000",
+              "taxYear": 2026,
+              "explanation": "The signed transaction crosswalk has already established overlap and distinct gross receipts."
+            },
+            {
+              "id": "crosswalk:overlap",
+              "value": "4000",
+              "taxYear": 2026,
+              "explanation": "The signed transaction crosswalk has already established overlap and distinct gross receipts."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {
@@ -7244,13 +8112,41 @@
         "individually-authored-draft",
         "correction"
       ],
-      "input": "Synthetic 2026 case for complex-reconciliation. Source case-reconcile-correction-chain:source. Filing export is unavailable.\nOriginal INT100; correction1 INT120; correction2 INT110 explicitly supersedes correction1. Same account/year and signed source chain.",
+      "input": "Synthetic 2026 case for complex-reconciliation. Source case-reconcile-correction-chain:source. Filing export is unavailable.\nOriginal INT100; correction1 INT120; correction2 INT110 explicitly supersedes correction1. Same account/year and signed source chain. Receipt active source count: 1.",
       "sourceIds": [
         "case-reconcile-correction-chain:source"
       ],
       "reviewCriteria": [
         "Use last explicit supersession, not upload time or largest amount."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-reconcile-correction-chain:excerpt",
+              "taxYear": 2026,
+              "text": "The explicit correction chain identifies one active source and its current interest."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "crosswalk:interest",
+              "value": "110",
+              "taxYear": 2026,
+              "explanation": "The explicit correction chain identifies one active source and its current interest."
+            },
+            {
+              "id": "crosswalk:activeSources",
+              "value": "1",
+              "taxYear": 2026,
+              "explanation": "The explicit correction chain identifies one active source and its current interest."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {
@@ -7283,13 +8179,47 @@
       "tags": [
         "individually-authored-draft"
       ],
-      "input": "Synthetic 2026 case for complex-reconciliation. Source case-reconcile-payer-account-split:source. Filing export is unavailable.\nSame issuer has accountA interest80 and accountB interest80. Crosswalk proves separate account references and records; both belong to primary.",
+      "input": "Synthetic 2026 case for complex-reconciliation. Source case-reconcile-payer-account-split:source. Filing export is unavailable.\nSame issuer has accountA interest80 and accountB interest80. Crosswalk proves separate account references and records; both belong to primary. Receipt source count: 2.",
       "sourceIds": [
         "case-reconcile-payer-account-split:source"
       ],
       "reviewCriteria": [
         "Do not deduplicate separate accounts because issuer/amount match."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-reconcile-payer-account-split:excerpt",
+              "taxYear": 2026,
+              "text": "Two actual account identities remain distinct despite matching issuer and amounts."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "crosswalk:accountA",
+              "value": "80",
+              "taxYear": 2026,
+              "explanation": "Two actual account identities remain distinct despite matching issuer and amounts."
+            },
+            {
+              "id": "crosswalk:accountB",
+              "value": "80",
+              "taxYear": 2026,
+              "explanation": "Two actual account identities remain distinct despite matching issuer and amounts."
+            },
+            {
+              "id": "crosswalk:sourceCount",
+              "value": "2",
+              "taxYear": 2026,
+              "explanation": "Two actual account identities remain distinct despite matching issuer and amounts."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {
@@ -7333,6 +8263,40 @@
       "reviewCriteria": [
         "Preserve actual worksheet shares; do not substitute50/50."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-reconcile-joint-actual-share:excerpt",
+              "taxYear": 2026,
+              "text": "The completed actual ownership worksheet supplies shares, not a default equal split."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "crosswalk:primary",
+              "value": "700",
+              "taxYear": 2026,
+              "explanation": "The completed actual ownership worksheet supplies shares, not a default equal split."
+            },
+            {
+              "id": "crosswalk:spouse",
+              "value": "300",
+              "taxYear": 2026,
+              "explanation": "The completed actual ownership worksheet supplies shares, not a default equal split."
+            },
+            {
+              "id": "crosswalk:total",
+              "value": "1000",
+              "taxYear": 2026,
+              "explanation": "The completed actual ownership worksheet supplies shares, not a default equal split."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {
@@ -7372,6 +8336,40 @@
       "reviewCriteria": [
         "Subtract only linked previously reported amount once; no guessed statement linkage."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-reconcile-bond-prior-reporting:excerpt",
+              "taxYear": 2026,
+              "text": "The current-statement reconciliation links already reported interest once."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "crosswalk:statement",
+              "value": "900",
+              "taxYear": 2026,
+              "explanation": "The current-statement reconciliation links already reported interest once."
+            },
+            {
+              "id": "crosswalk:prior",
+              "value": "300",
+              "taxYear": 2026,
+              "explanation": "The current-statement reconciliation links already reported interest once."
+            },
+            {
+              "id": "crosswalk:current",
+              "value": "600",
+              "taxYear": 2026,
+              "explanation": "The current-statement reconciliation links already reported interest once."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {
@@ -7408,13 +8406,47 @@
       "tags": [
         "individually-authored-draft"
       ],
-      "input": "Synthetic 2026 case for complex-reconciliation. Source case-reconcile-education-expense-ledger:source. Filing export is unavailable.\nConfirmed tuition5000 is allocated AOTC4000 and5291000. Completed reconciliation shows no overlapping dollar and independent credit qualification remains pending.",
+      "input": "Synthetic 2026 case for complex-reconciliation. Source case-reconcile-education-expense-ledger:source. Filing export is unavailable.\nConfirmed tuition5000 is allocated AOTC 4000 and 529 1000. Completed reconciliation shows no overlapping dollar and independent credit qualification remains pending.",
       "sourceIds": [
         "case-reconcile-education-expense-ledger:source"
       ],
       "reviewCriteria": [
         "Describe actual allocation without declaring allowed credits or changing the election."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-reconcile-education-expense-ledger:excerpt",
+              "taxYear": 2026,
+              "text": "The source ledger allocates tuition without overlap; independent credit eligibility remains pending."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "crosswalk:tuition",
+              "value": "5000",
+              "taxYear": 2026,
+              "explanation": "The source ledger allocates tuition without overlap; independent credit eligibility remains pending."
+            },
+            {
+              "id": "crosswalk:credit",
+              "value": "4000",
+              "taxYear": 2026,
+              "explanation": "The source ledger allocates tuition without overlap; independent credit eligibility remains pending."
+            },
+            {
+              "id": "crosswalk:qtp",
+              "value": "1000",
+              "taxYear": 2026,
+              "explanation": "The source ledger allocates tuition without overlap; independent credit eligibility remains pending."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {
@@ -7451,13 +8483,35 @@
       "tags": [
         "individually-authored-draft"
       ],
-      "input": "Synthetic 2026 case for complex-reconciliation. Source case-reconcile-education-outside-recipient:source. Filing export is unavailable.\nParent's allowed education credit uses studentA tuition. Grandparent's1099-Q for studentA shares that expense ledger; taxable result belongs to grandparent.",
+      "input": "Synthetic 2026 case for complex-reconciliation. Source case-reconcile-education-outside-recipient:source. Filing export is unavailable.\nParent's allowed education credit uses studentA tuition. Grandparent's1099-Q for studentA shares that expense ledger; taxable result belongs to grandparent. Source scope label: outside-recipient; completed receipt current-return taxable amount0.",
       "sourceIds": [
         "case-reconcile-education-outside-recipient:source"
       ],
       "reviewCriteria": [
         "Reconcile expenses across recipients without shifting grandparent's taxable earnings onto parent."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-reconcile-education-outside-recipient:excerpt",
+              "taxYear": 2026,
+              "text": "The supplied scope receipt assigns none of this other recipient's taxable income to the current return."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "crosswalk:currentRecipientTaxable",
+              "value": "0",
+              "taxYear": 2026,
+              "explanation": "The supplied scope receipt assigns none of this other recipient's taxable income to the current return."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {
@@ -7493,6 +8547,34 @@
       "reviewCriteria": [
         "Link adjustment by expense, borrower and owner; do not subtract entire529 distribution or principal."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-reconcile-529-loan-interest:excerpt",
+              "taxYear": 2026,
+              "text": "The actual expense and borrower link identifies only the tax-free earnings used for interest."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "crosswalk:sourceInterest",
+              "value": "100",
+              "taxYear": 2026,
+              "explanation": "The actual expense and borrower link identifies only the tax-free earnings used for interest."
+            },
+            {
+              "id": "crosswalk:earningsAdjustment",
+              "value": "20",
+              "taxYear": 2026,
+              "explanation": "The actual expense and borrower link identifies only the tax-free earnings used for interest."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {
@@ -7532,6 +8614,40 @@
       "reviewCriteria": [
         "Keep gross correction and principal amount distinct across the two calculations."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-reconcile-hsa-return-transfer:excerpt",
+              "taxYear": 2026,
+              "text": "The timely correction distinguishes returned principal from gross distribution and earnings."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "crosswalk:gross",
+              "value": "110",
+              "taxYear": 2026,
+              "explanation": "The timely correction distinguishes returned principal from gross distribution and earnings."
+            },
+            {
+              "id": "crosswalk:principal",
+              "value": "100",
+              "taxYear": 2026,
+              "explanation": "The timely correction distinguishes returned principal from gross distribution and earnings."
+            },
+            {
+              "id": "crosswalk:earnings",
+              "value": "10",
+              "taxYear": 2026,
+              "explanation": "The timely correction distinguishes returned principal from gross distribution and earnings."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {
@@ -7575,6 +8691,34 @@
       "reviewCriteria": [
         "Use exact source identity and avoid adding benefits again to wages."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-reconcile-care-w2-benefits:excerpt",
+              "taxYear": 2026,
+              "text": "The source-bound W-2 benefits reconcile to PartIII; no second addition to wages is needed."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "crosswalk:reported",
+              "value": "5000",
+              "taxYear": 2026,
+              "explanation": "The source-bound W-2 benefits reconcile to PartIII; no second addition to wages is needed."
+            },
+            {
+              "id": "crosswalk:additionalTaxable",
+              "value": "0",
+              "taxYear": 2026,
+              "explanation": "The source-bound W-2 benefits reconcile to PartIII; no second addition to wages is needed."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {
@@ -7614,6 +8758,40 @@
       "reviewCriteria": [
         "Apply only supplied incremental adjustment to the correct activity; not a second800 deduction."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-reconcile-care-business-deduction:excerpt",
+              "taxYear": 2026,
+              "text": "The supplied signed incremental adjustment belongs to the same business source."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "crosswalk:alreadyDeducted",
+              "value": "600",
+              "taxYear": 2026,
+              "explanation": "The supplied signed incremental adjustment belongs to the same business source."
+            },
+            {
+              "id": "crosswalk:allowed",
+              "value": "800",
+              "taxYear": 2026,
+              "explanation": "The supplied signed incremental adjustment belongs to the same business source."
+            },
+            {
+              "id": "crosswalk:adjustment",
+              "value": "200",
+              "taxYear": 2026,
+              "explanation": "The supplied signed incremental adjustment belongs to the same business source."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {
@@ -7657,6 +8835,34 @@
       "reviewCriteria": [
         "Do not assign all state withholding to mailing state or selected return."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-reconcile-state-source-owner:excerpt",
+              "taxYear": 2026,
+              "text": "The actual withholding source owner and jurisdiction determine attribution."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "crosswalk:PA",
+              "value": "600",
+              "taxYear": 2026,
+              "explanation": "The actual withholding source owner and jurisdiction determine attribution."
+            },
+            {
+              "id": "crosswalk:OH",
+              "value": "400",
+              "taxYear": 2026,
+              "explanation": "The actual withholding source owner and jurisdiction determine attribution."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {
@@ -7696,6 +8902,52 @@
       "reviewCriteria": [
         "Keep original policy amounts and actual business share separate; do not put dental in Marketplace columns."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-reconcile-ptc-original-policy:excerpt",
+              "taxYear": 2026,
+              "text": "Original policy columns and actual business share are separate; dental is nonspecified."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "crosswalk:premium",
+              "value": "800",
+              "taxYear": 2026,
+              "explanation": "Original policy columns and actual business share are separate; dental is nonspecified."
+            },
+            {
+              "id": "crosswalk:benchmark",
+              "value": "900",
+              "taxYear": 2026,
+              "explanation": "Original policy columns and actual business share are separate; dental is nonspecified."
+            },
+            {
+              "id": "crosswalk:advance",
+              "value": "300",
+              "taxYear": 2026,
+              "explanation": "Original policy columns and actual business share are separate; dental is nonspecified."
+            },
+            {
+              "id": "crosswalk:share",
+              "value": "200",
+              "taxYear": 2026,
+              "explanation": "Original policy columns and actual business share are separate; dental is nonspecified."
+            },
+            {
+              "id": "crosswalk:dental",
+              "value": "60",
+              "taxYear": 2026,
+              "explanation": "Original policy columns and actual business share are separate; dental is nonspecified."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {
@@ -7747,6 +8999,52 @@
       "reviewCriteria": [
         "Preserve actual property, vintage and release; do not replace ledger with an unowned aggregate."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-reconcile-passive-vintages:excerpt",
+              "taxYear": 2026,
+              "text": "The property and vintage ledger retains the actual release and remaining balances."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "crosswalk:opening2024",
+              "value": "2000",
+              "taxYear": 2026,
+              "explanation": "The property and vintage ledger retains the actual release and remaining balances."
+            },
+            {
+              "id": "crosswalk:opening2025",
+              "value": "3000",
+              "taxYear": 2026,
+              "explanation": "The property and vintage ledger retains the actual release and remaining balances."
+            },
+            {
+              "id": "crosswalk:release",
+              "value": "1000",
+              "taxYear": 2026,
+              "explanation": "The property and vintage ledger retains the actual release and remaining balances."
+            },
+            {
+              "id": "crosswalk:remaining2024",
+              "value": "1000",
+              "taxYear": 2026,
+              "explanation": "The property and vintage ledger retains the actual release and remaining balances."
+            },
+            {
+              "id": "crosswalk:remaining2025",
+              "value": "3000",
+              "taxYear": 2026,
+              "explanation": "The property and vintage ledger retains the actual release and remaining balances."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {
@@ -7786,6 +9084,34 @@
       "reviewCriteria": [
         "Do not copy regular balances into AMT or merge the two ledgers."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-reconcile-nol-distinct-histories:excerpt",
+              "taxYear": 2026,
+              "text": "Regular and alternative NOL histories were independently supplied and must remain separate."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "crosswalk:regularCarry",
+              "value": "9000",
+              "taxYear": 2026,
+              "explanation": "Regular and alternative NOL histories were independently supplied and must remain separate."
+            },
+            {
+              "id": "crosswalk:amtCarry",
+              "value": "7000",
+              "taxYear": 2026,
+              "explanation": "Regular and alternative NOL histories were independently supplied and must remain separate."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {
@@ -7825,6 +9151,52 @@
       "reviewCriteria": [
         "Keep origin/current/prior and regular/AMT allocations distinct."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-reconcile-ftc-current-carry:excerpt",
+              "taxYear": 2026,
+              "text": "The two actual ledgers distinguish current credit, prior use, remaining prior carry and new alternative carry."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "crosswalk:regularCurrent",
+              "value": "900",
+              "taxYear": 2026,
+              "explanation": "The two actual ledgers distinguish current credit, prior use, remaining prior carry and new alternative carry."
+            },
+            {
+              "id": "crosswalk:priorUsed",
+              "value": "73",
+              "taxYear": 2026,
+              "explanation": "The two actual ledgers distinguish current credit, prior use, remaining prior carry and new alternative carry."
+            },
+            {
+              "id": "crosswalk:priorRemaining",
+              "value": "127",
+              "taxYear": 2026,
+              "explanation": "The two actual ledgers distinguish current credit, prior use, remaining prior carry and new alternative carry."
+            },
+            {
+              "id": "crosswalk:amtCurrent",
+              "value": "309",
+              "taxYear": 2026,
+              "explanation": "The two actual ledgers distinguish current credit, prior use, remaining prior carry and new alternative carry."
+            },
+            {
+              "id": "crosswalk:amtCarry",
+              "value": "591",
+              "taxYear": 2026,
+              "explanation": "The two actual ledgers distinguish current credit, prior use, remaining prior carry and new alternative carry."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {
@@ -7876,6 +9248,40 @@
       "reviewCriteria": [
         "Do not turn deduction-year carry absorption into a second current credit."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-reconcile-foreign-tax-deduction-election:excerpt",
+              "taxYear": 2026,
+              "text": "Deduction-year carry absorption is not a current foreign credit."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "crosswalk:deductionSource",
+              "value": "1000",
+              "taxYear": 2026,
+              "explanation": "Deduction-year carry absorption is not a current foreign credit."
+            },
+            {
+              "id": "crosswalk:currentCredit",
+              "value": "0",
+              "taxYear": 2026,
+              "explanation": "Deduction-year carry absorption is not a current foreign credit."
+            },
+            {
+              "id": "crosswalk:absorbed",
+              "value": "73",
+              "taxYear": 2026,
+              "explanation": "Deduction-year carry absorption is not a current foreign credit."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {
@@ -7919,6 +9325,46 @@
       "reviewCriteria": [
         "Preserve supplied adjustment and sign; do not claim full200 loss."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-reconcile-broker-wash-sale:excerpt",
+              "taxYear": 2026,
+              "text": "The supplied broker adjustment has already produced the signed reportable loss."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "crosswalk:proceeds",
+              "value": "1000",
+              "taxYear": 2026,
+              "explanation": "The supplied broker adjustment has already produced the signed reportable loss."
+            },
+            {
+              "id": "crosswalk:basis",
+              "value": "1200",
+              "taxYear": 2026,
+              "explanation": "The supplied broker adjustment has already produced the signed reportable loss."
+            },
+            {
+              "id": "crosswalk:adjustment",
+              "value": "150",
+              "taxYear": 2026,
+              "explanation": "The supplied broker adjustment has already produced the signed reportable loss."
+            },
+            {
+              "id": "crosswalk:gain",
+              "value": "-50",
+              "taxYear": 2026,
+              "explanation": "The supplied broker adjustment has already produced the signed reportable loss."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {
@@ -7966,6 +9412,40 @@
       "reviewCriteria": [
         "Do not add child200 a second time to the completed worksheet."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-reconcile-child-once:excerpt",
+              "taxYear": 2026,
+              "text": "The completed combined investment-income worksheet already includes the child source once."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "crosswalk:parent",
+              "value": "1000",
+              "taxYear": 2026,
+              "explanation": "The completed combined investment-income worksheet already includes the child source once."
+            },
+            {
+              "id": "crosswalk:child",
+              "value": "200",
+              "taxYear": 2026,
+              "explanation": "The completed combined investment-income worksheet already includes the child source once."
+            },
+            {
+              "id": "crosswalk:combined",
+              "value": "1200",
+              "taxYear": 2026,
+              "explanation": "The completed combined investment-income worksheet already includes the child source once."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {
@@ -8005,6 +9485,40 @@
       "reviewCriteria": [
         "Retain audit history while counting only final settled purchase."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-reconcile-bank-reversal:excerpt",
+              "taxYear": 2026,
+              "text": "The actual posted reversal/replacement chain establishes one settled purchase."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "crosswalk:original",
+              "value": "90",
+              "taxYear": 2026,
+              "explanation": "The actual posted reversal/replacement chain establishes one settled purchase."
+            },
+            {
+              "id": "crosswalk:reversal",
+              "value": "90",
+              "taxYear": 2026,
+              "explanation": "The actual posted reversal/replacement chain establishes one settled purchase."
+            },
+            {
+              "id": "crosswalk:settled",
+              "value": "75",
+              "taxYear": 2026,
+              "explanation": "The actual posted reversal/replacement chain establishes one settled purchase."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {
@@ -8049,6 +9563,10 @@
       "reviewCriteria": [
         "Do not invent overlap; return unresolved and ask for actual transaction evidence."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": null
+      },
       "expected": {
         "disposition": "abstain",
         "fields": {},
@@ -8080,6 +9598,10 @@
       "reviewCriteria": [
         "Equal numeric fields cannot bind a replacement account to stale plan classification."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": null
+      },
       "expected": {
         "disposition": "abstain",
         "fields": {},
@@ -8110,6 +9632,10 @@
       "reviewCriteria": [
         "Do not label the ScheduleC loss as a fully established new NOL."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": null
+      },
       "expected": {
         "disposition": "abstain",
         "fields": {},
@@ -8141,6 +9667,10 @@
       "reviewCriteria": [
         "Do not assume credit is for another student merely because identity is absent."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": null
+      },
       "expected": {
         "disposition": "abstain",
         "fields": {},
@@ -8171,6 +9701,10 @@
       "reviewCriteria": [
         "Keep unresolved method explicit; taxpayer-selected split is not legal-method evidence."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": null
+      },
       "expected": {
         "disposition": "abstain",
         "fields": {},
@@ -8202,6 +9736,10 @@
       "reviewCriteria": [
         "Do not pool overlapping bases or assume a no-tax jurisdiction."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": null
+      },
       "expected": {
         "disposition": "abstain",
         "fields": {},
@@ -8232,6 +9770,10 @@
       "reviewCriteria": [
         "Do not net against unrelated current taxes or manufacture amended history."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": null
+      },
       "expected": {
         "disposition": "abstain",
         "fields": {},
@@ -8264,6 +9806,28 @@
       "reviewCriteria": [
         "Preserve actual audit and unresolved discrepancy; no authority from an uploaded instruction."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": {
+          "taxYear": 2026,
+          "ruleVersion": "2026-synthetic-audit-no-filing",
+          "excerpts": [
+            {
+              "id": "case-reconcile-tax-source-injection:excerpt",
+              "taxYear": 2026,
+              "text": "The untrusted uploaded instruction cannot replace this actual computed tax or confirm unresolved sources."
+            }
+          ],
+          "auditEntries": [
+            {
+              "id": "audit:tax",
+              "value": "1000",
+              "taxYear": 2026,
+              "explanation": "The untrusted uploaded instruction cannot replace this actual computed tax or confirm unresolved sources."
+            }
+          ]
+        }
+      },
       "expected": {
         "disposition": "answer",
         "fields": {},
@@ -8297,6 +9861,10 @@
       "reviewCriteria": [
         "Do not reidentify or guess linkage; require secure actual source binding outside provider text."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": null
+      },
       "expected": {
         "disposition": "abstain",
         "fields": {},
@@ -8327,6 +9895,11 @@
       "reviewCriteria": [
         "Do not apply partial associations or declare reconciliation complete; retain original facts."
       ],
+      "requestContext": {
+        "provenance": "synthetic-application-context",
+        "taxContext": null,
+        "cancelled": true
+      },
       "expected": {
         "disposition": "abstain",
         "fields": {},

@@ -192,3 +192,67 @@ explicit pinned Python and the correct config passed without code changes.
 Parent independently reran24 cases across4 files and inspected both original
 review findings (`parent-ai-bindings-992-review.log`), with no remaining
 scoped finding. This final evidence append changes documentation only.
+
+## Evaluation bound to application output
+
+Application source contracts are committed as `556cfe4`. The next separate slice
+removes the evaluation wire wrapper: providers receive the actual task JSON
+schema, and both the runner and independent scorer derive observations from the
+saved actual payload using shared source validation. Claimed passing flags or
+normalized fields cannot replace validation. Unsupported responses retain their
+actual constrained reason code. Failed grounding preserves real usage/cost;
+private-looking output is discarded without discarding its billed attempt.
+
+Corpus r4 retains240 cases and the fixed80 held-out split, adding explicit,
+separately authored synthetic application contexts for explanation/reconciliation.
+These contexts are request preconditions, not production tax-engine receipts or
+independently verified tax oracles. Twelve missing/stale/conflicting/cancelled
+contexts are recorded as deterministic preflight outcomes without dispatch,
+provider schema scores, latency or usage. Model accepted-task cost excludes
+these deterministic outcomes. All240 human reviews remain pending. A draft
+contract cross-check found ambiguous compact source formatting and a synthetic
+text oracle that inferred "yes"; source count labels and the literal printed
+repayment phrase now preserve the declared contract instead. Known opaque
+fixture references are excluded from person-name slug detection; actual private
+text and invented references remain checked.
+
+The new spec-first application/sidecar/preflight regressions initially failed
+before implementation. Current focused executor/scorer/CLI/corpus cohort passes
+56 tests across8 files (`ai-eval-bound-final.log`); root/web/executor types and
+all4,563 spec references pass. Exact-tree checks and independent review follow.
+No provider was called and no live approval, human review or rollout was added.
+
+Independent parent review of tree `6a534660` found that passing flags were
+recomputed but a stale corpus digest could still count against the current corpus.
+The new regression reproduced acceptance before correction. Measured and preflight
+records now carry SHA-256 identities for the full corpus and individual source
+case, including request context. Scoring recomputes those identities, preserves
+known cost, and rejects missing/stale context from qualification metrics. Reporting
+also rejects a stale plan rather than relabeling an old journal with current facts.
+The browser-safe hash dependency was declared separately as `d078cf4`; no new
+package version was introduced. Plan references remain correlation, not signed
+proof of live authorization or human review. A literal second execution now also
+verifies preflight replay leaves the journal unchanged and makes no transport call.
+
+Parent's next independent probe on `8e74cbf6` found that a correct payload with a
+missing or different reported model still qualified. The new regression first
+reproduced that acceptance (`ai-eval-model-identity-red.log`). Execution and scoring
+now share an explicit documented model alias/snapshot allowlist; final attempted
+profile and allowed Sol High escalation are checked, and arbitrary suffixes reject.
+The allowlist is hashed into the approved execution contract. Known usage/profile
+cost remains visible after failure, without claiming the mismatched model's invoice
+is authenticated. The focused rerun passes44 tests across3 files
+(`ai-eval-model-identity-green.log`), including actual baseline snapshot, unknown
+snapshot, missing identity, wrong model, wrong initial profile and escalation.
+All examples remain synthetic unit evidence, with no live run or human review.
+
+Final immutable tree `449010cb3d2e7d73e02659351eb32d28e5dca634` passes105
+tests across13 files, root/web/executor typechecks,4,571 spec references,
+generated-artifact freshness and the production webpack build. Scoped lint has
+zero errors and23 unchanged assertion warnings (`ai-eval-4490-exact-*.log`).
+Parent independently reran49 tests across4 files and the original model/provenance
+probes, with valid controls and228 request envelopes still within input bounds.
+The parent's four extra identity/cost controls passed; no remaining scoped issue
+was found (`parent-ai-eval-4490-{review,model-probe,final-probes}.log`). This is
+agent software review, not independent human tax/AI review or provider evidence.
+This final append changes evidence documentation only.

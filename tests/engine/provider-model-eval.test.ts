@@ -6,18 +6,39 @@ import {
   type ProviderModelLiveEvalEntry,
   type ProviderModelLiveEvalTemplate,
 } from "../../packages/engine/src/provider-model-eval";
+import { AI_TASKS } from "../../packages/engine/src/ai-task-registry";
+import { PROVIDER_EVAL_BINDING_VERSION, validateProviderEvalOutput } from "../../packages/engine/src/provider-eval-application";
 import type { ProviderEvalFixture } from "../../packages/engine/src/provider-eval-fixtures";
+import { providerEvalCorpusDigest, providerEvalFixtureDigest } from "../../packages/engine/src/provider-eval-provenance";
 
 function run(fixture: ProviderEvalFixture, profileId = "luna-high", repeat = 1): ProviderModelLiveEvalEntry {
+  // Test-only payloads are built from literal test oracles. Never written to a run artifact.
+  const applicationOutput = { disposition: fixture.expected.disposition, sourceIds: fixture.sourceIds,
+    label: "Synthetic source", payer: "[organization-1]", documentPeriod: String(fixture.taxYear), summary: "Review the source facts.", suggestions: [],
+    facts: Object.entries(fixture.expected.fields).map(([name, field]) => ({ name, kind: field.kind, value: field.value,
+      sourceId: fixture.sourceIds[0], sourceQuote: fixture.input })) };
+  const validated = validateProviderEvalOutput(fixture, applicationOutput);
+  const profile = providerModelCandidates.find(item => item.id === profileId);
+  if (!profile) throw new Error("Missing test profile.");
   return {
     profileId, fixtureId: fixture.id, fixtureVersion: 1, repeat, elapsedMs: 1000,
-    applicationSchemaValid: true,
-    output: { disposition: fixture.expected.disposition, fields: Object.fromEntries(Object.entries(fixture.expected.fields).map(([key, value]) => [key, value.value])),
-      category: fixture.expected.category, sourceIds: fixture.sourceIds, engineValues: fixture.expected.engineValues, filingReady: false },
-    measurement: { runPurpose: "qualification", planDigest: "synthetic-test-plan", corpusDigest: "synthetic-test-corpus", bindingVersion: "synthetic-test-binding", promptVersion: "test/1", schemaVersion: "test/1", normalizationStatus: "bound", applicationOutput: {}, privacyFailure: false, responseReference: "test-only", reportedModel: "test-only" },
+    applicationSchemaValid: validated.applicationSchemaValid, output: validated.output,
+    measurement: { runPurpose: "qualification", planDigest: "0".repeat(64), corpusDigest: providerEvalCorpusDigest(), fixtureDigest: providerEvalFixtureDigest(fixture), bindingVersion: PROVIDER_EVAL_BINDING_VERSION,
+      promptVersion: AI_TASKS[fixture.task].promptVersion, schemaVersion: AI_TASKS[fixture.task].schemaVersion,
+      normalizationStatus: validated.normalizationStatus, applicationOutput, privacyFailure: false, responseReference: "test-only", reportedModel: profile.model },
     independentReview: { method: "human", reviewer: "independent-test-reviewer", grounded: true, qualityAccepted: true, piiLeak: false },
     attempts: [{ profileId, startedAt: "2026-10-24T12:00:00Z", usage: { inputTokens: 1000, outputTokens: 1000 } }],
   };
+}
+function changePayload(entry: ProviderModelLiveEvalEntry, change: (payload: { disposition: string; facts: {name: string; value: string}[] }) => void) {
+  if (!entry.measurement) throw new Error("Missing test measurement.");
+  const payload = entry.measurement.applicationOutput as { disposition: string; facts: {name: string; value: string}[] };
+  change(payload);
+  const fixture = taxProviderModelEvalFixtures.find(fixture => fixture.id === entry.fixtureId);
+  if (!fixture) throw new Error("Missing test fixture.");
+  const validated = validateProviderEvalOutput(fixture, payload);
+  entry.output = validated.output; entry.applicationSchemaValid = validated.applicationSchemaValid;
+  entry.measurement.normalizationStatus = validated.normalizationStatus;
 }
 const extraction = taxProviderModelEvalFixtures.find(fixture => fixture.id === "case-income-large-ledger-precision")!;
 // Explicitly synthetic evidence for exercising gates; these records are never written to qualification artifacts.
@@ -57,13 +78,12 @@ describe("measured task model evaluation", () => {
   it("uses Decimal for exact cent comparisons beyond JavaScript's safe monetary range", () => {
     const entry = run(extraction);
     expect(scoreProviderEvalEntry(entry, extraction).accepted).toBe(true);
-    entry.output!.fields.amount = "90071992547409.92";
+    changePayload(entry, payload => { const amount = payload.facts.find(fact => fact.name === "amount"); if (!amount) throw new Error("Missing amount."); amount.value = "90071992547409.92"; });
     expect(scoreProviderEvalEntry(entry, extraction)).toMatchObject({ accepted: false, criticalCorrect: false, exactFields: 1 });
   });
   it("counts missing or abstained critical fields as failures and reports abstention separately", () => {
     const entry = run(extraction);
-    entry.output!.disposition = "abstain";
-    entry.output!.fields = {};
+    changePayload(entry, payload => { payload.disposition = "abstain"; payload.facts = []; });
     const summary = summarizeProviderModelLiveEvalTemplate({ version: 2, entries: [entry] });
     expect(summary.groups.find(group => group.profileId === "luna-high" && group.task === "income-extraction"))
       .toMatchObject({ criticalFieldExactMatch: 0, answerableAbstentions: 1, acceptedRuns: 0 });
@@ -108,7 +128,7 @@ describe("measured task model evaluation", () => {
     expect(summary.groups.find(group => group.profileId === "luna-high" && group.task === "income-extraction"))
       .toMatchObject({ completedRuns: 90, schemaValidity: 1, criticalFieldExactMatch: 1, eligibleForPromotionReview: true, blockers: [] });
     expect(summary.productionPromotion).toBe(false);
-    entries[0]!.output!.fields.amount = "999";
+    changePayload(entries[0]!, payload => { const amount = payload.facts[0]; if (!amount) throw new Error("Missing amount."); amount.value = "999"; });
     const rejected = summarizeProviderModelLiveEvalTemplate({ version: 2, entries, availability }, fixtures);
     expect(rejected.groups.find(group => group.profileId === "luna-high" && group.task === "income-extraction")!.blockers).toContain("critical-field-regression");
   });

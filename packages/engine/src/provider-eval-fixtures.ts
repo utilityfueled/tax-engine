@@ -1,3 +1,4 @@
+import type { SyntheticEvalRequestContext } from "./provider-eval-request-contexts";
 import type { AiTask } from "./ai-task-registry";
 import { standaloneProviderEvalScenarios } from "./provider-eval-scenarios";
 
@@ -11,6 +12,7 @@ export interface ProviderEvalFixture {
   tags: string[];
   input: string;
   sourceIds: string[];
+  requestContext?: SyntheticEvalRequestContext;
   /** Human assessment criteria, never sent to a model or used as a generated judge. */
   reviewCriteria: string[];
   expected: {
