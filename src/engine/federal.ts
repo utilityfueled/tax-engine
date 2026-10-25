@@ -2666,8 +2666,18 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     // Per IRS Form 2441 Instructions (Lines 4-5), SE earned income =
     // Schedule SE Line 3 (net SE earnings) minus Schedule 1 Line 15
     // (deductible half of SE tax). IRC §21(d)(1) → §32(c)(2)(A)(i)(II).
-    const earnedIncome = sum(totalWages, netSEEarnings).minus(schedSE.deductibleHalf);
+    if (year === 2026 && input.dependentCare.primaryEarnedIncome === undefined) {
+      throw new Error("2026 dependent-care primary earned income is unknown");
+    }
+    const earnedIncome = input.dependentCare.primaryEarnedIncome === undefined
+      ? sum(totalWages, netSEEarnings).minus(schedSE.deductibleHalf)
+      : d(input.dependentCare.primaryEarnedIncome);
     form2441 = calculateForm2441({
+      taxYear: year,
+      filingStatus,
+      eligibilityConfirmed: input.dependentCare.eligibilityConfirmed,
+      spouseEarnedIncome: input.dependentCare.spouseEarnedIncome === undefined ? undefined : d(input.dependentCare.spouseEarnedIncome),
+      excludedDependentCareBenefits: input.dependentCare.excludedDependentCareBenefits === undefined ? undefined : d(input.dependentCare.excludedDependentCareBenefits),
       careExpenses: d(input.dependentCare.expenses),
       qualifyingIndividuals: input.dependentCare.qualifyingIndividuals,
       earnedIncome,

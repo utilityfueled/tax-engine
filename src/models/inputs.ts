@@ -2066,6 +2066,12 @@ export const PriorYearCarryforwardSchema = z.object({
 });
 
 export const DependentCareSchema = z.object({
+  /** Earned income after applicable exclusions, SE adjustments and substantiated deemed monthly income. */
+  primaryEarnedIncome: optionalDecimalInput,
+  spouseEarnedIncome: optionalDecimalInput,
+  /** Section 129 amount already determined excludable using Form 2441 Part III; unknown is not zero. */
+  excludedDependentCareBenefits: optionalDecimalInput,
+  eligibilityConfirmed: z.boolean().optional(),
   expenses: decimal,
   qualifyingIndividuals: z.number().int().min(1).default(1),
 });

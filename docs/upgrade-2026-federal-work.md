@@ -264,3 +264,18 @@ underpayments and 2025 rates, so it is not qualification evidence for 2026 or
 irregular payments. Separate work must finish dated installment calculations,
 prior-year safe-harbor qualification, and all tax-base exclusions. Wage/withholding
 classification and foreign-exclusion line routing remain separate corrections.
+
+## Integration: 2026 dependent-care facts
+
+The source-backed Form 2441 calculator now receives the actual return year,
+filing status, separate taxpayer/spouse earned-income limits, known excluded
+section 129 benefits and eligibility confirmation. Unknown amounts remain
+unknown; zero spouse income stays zero. Four new integration assertions failed
+first; 609 focused tests and typecheck pass. Whitespace and scoped diff reviewed.
+The package's spec reference resolves; global spec validation temporarily sees
+31 references in the concurrently edited Form 8839 spec before its agent writes
+its tests. The 2025 legacy omission path remains explicitly tested.
+
+Part III employer-benefit exclusion and taxable-benefit wage routing still need
+full integration before the complete 2026 rule pack can be qualified; accepting
+an explicitly determined excluded amount does not invent those facts.
