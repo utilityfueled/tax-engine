@@ -4,6 +4,7 @@ import type { DeductionData, FilingStatus, MortgageEntryData } from "./guided-in
 import { mortgageFactErrors, mortgagePointFacts } from "./guided-mortgage-facts";
 import { amountError, hasEnteredAmount, isActualDate } from "./guided-required-facts";
 import { parseGuidedCurrency } from "./guided-currency";
+import { buildGuidedMortgageBalance } from "./guided-mortgage-balances";
 
 export interface MortgageWorksheetData {
   sourceTaxYear: string;
@@ -57,10 +58,7 @@ export function buildGuidedMortgageInputs(data: MortgageDeductionData | undefine
   if (hasEnteredAmount(data.mortgageInterest) && !form1098.reduce((sum, form) => sum.plus(form.mortgageInterestReceived), parseGuidedCurrency("0")).eq(money(data.mortgageInterest, "saved mortgage interest"))) throw new Error("Reconcile the saved mortgage interest total with the original statement amounts.");
   const loans = data.mortgageEntries.map(entry => {
     const amounts = Object.fromEntries(Object.entries(mortgagePaymentAmounts).map(([field, label]) => [field, money(entry[field as keyof typeof mortgagePaymentAmounts], label)])) as Record<keyof typeof mortgagePaymentAmounts, string>;
-    if (entry.balanceMethod !== "highest_balance" && entry.balanceMethod !== "lender_average") throw new Error("Select the actual mortgage balance method; Box 2 cannot establish it.");
-    if (!entry.balanceSourceReference?.trim()) throw new Error("Enter the actual annual balance source reference.");
-    const balance = { method: entry.balanceMethod, amount: money(entry.balanceMethod === "highest_balance" ? entry.maximumBalanceDuringYear : entry.lenderAverageBalance, "actual mortgage balance for the selected method"), sourceReference: entry.balanceSourceReference.trim() };
-    if (entry.balanceMethod === "lender_average" && entry.maximumBalanceDuringYear?.trim() && !amountError(entry.maximumBalanceDuringYear, "maximum balance") && parseGuidedCurrency(balance.amount).gt(parseGuidedCurrency(entry.maximumBalanceDuringYear))) throw new Error("The actual lender average exceeds the saved maximum balance; reconcile these sources.");
+    const balance = buildGuidedMortgageBalance(entry);
     const positivePoints = parseGuidedCurrency(amounts.pointsPaidByReturnAmount).minus(amounts.pointsNotInterest).gt(0);
     if (positivePoints && (!isActualDate(entry.pointsPaidDate) || !entry.pointsPaidDate!.startsWith(`${taxYear}-`) || !["purchase", "build"].includes(entry.pointsUse ?? ""))) throw new Error("Enter the actual points payment date in this tax year and whether the loan purchased or built the main home.");
     if (positivePoints && Object.keys(mortgagePointFacts).some(field => entry[field as keyof typeof mortgagePointFacts] !== true)) throw new Error("Confirm every current-year points qualification condition.");

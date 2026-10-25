@@ -2,6 +2,7 @@ import Decimal from "decimal.js";
 import type { FilingStatus, MortgageEntryData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
 import { amountError, isActualDate } from "./guided-required-facts";
+import type { MortgageFirstLastData, MortgageMonthlyData, MortgageInterestRateData } from "./guided-mortgage-balances";
 
 export const mortgagePointFacts = {
   pointsOnMainHome: "Were the points for a loan secured by your main home?",
@@ -33,7 +34,10 @@ export type MortgageSourceData = {
   mortgageCreditCertificate?: boolean | null;
   specialCircumstances?: boolean | null;
   maximumBalanceDuringYear?: string;
-  balanceMethod?: "" | "highest_balance" | "lender_average";
+  balanceMethod?: "" | "highest_balance" | "lender_average" | "first_last" | "monthly" | "interest_rate";
+  balanceFirstLast?: MortgageFirstLastData;
+  balanceMonthly?: MortgageMonthlyData;
+  balanceInterestRate?: MortgageInterestRateData;
   lenderAverageBalance?: string;
   balanceSourceReference?: string;
   interestPaidByReturnAmount?: string;
@@ -103,7 +107,7 @@ export function mortgageFactErrors(entries: MortgageEntryData[], taxYear?: numbe
       ["refundOfOverpaidInterest", "prior-year interest refund, Box 4"], ["mortgageInsurancePremiums", "mortgage insurance premiums, Box 5"],
       ["pointsPaid", "purchase points, Box 6"], ["propertyTaxPaid", "qualified real estate taxes actually paid from this mortgage account"],
     ] as const) {
-      if (sourceWorksheet && field === "maximumBalanceDuringYear" && entry.balanceMethod === "lender_average") continue;
+      if (sourceWorksheet && field === "maximumBalanceDuringYear" && entry.balanceMethod !== "highest_balance" && !entry.maximumBalanceDuringYear?.trim()) continue;
       const message = amountError(entry[field], label);
       if (message) error(field, message);
     }
