@@ -600,3 +600,16 @@ Mortgage source methods, 8606 rounding/positive-basis facts, canonical current
 NOL origin, AI executor/application bindings and final integration continue.
 All 240 AI cases remain human-unreviewed and no live measurements, staging,
 filing, final forms or release qualification are claimed.
+
+
+The full immutable `1791979` verification is complete: 17,577 tests/868 files
+pass with zero failures or skips; branch coverage is 86.91% against the unchanged
+85% gate. Types, spec/inventory, engine/web builds and lint pass. Production
+Chromium passes 328 cases with zero retries; five hosted billing cases remain
+skipped and provide no staging evidence. Exact log hashes are in the checkpoint.
+The branch is now pushed through `fc46b8d`, including mortgage balance/category
+intake (`ba451d3`, `d912b8f`), Form8606 rounding (`c7e8ff7`) and independently
+reviewed Roth basis/repayment corrections (`fc46b8d`). Later integration, actual
+retirement/points/recovery facts, canonical Form172, AI executor review fixes and
+application bindings remain active. No human, live-provider, staging, filing,
+final-form or release qualification is claimed.

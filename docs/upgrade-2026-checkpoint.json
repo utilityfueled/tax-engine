@@ -204,7 +204,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "1791979c3413516df211e3109d05d78ee0084a40",
+    "lastRecordedCommit": "fc46b8d",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -767,23 +767,143 @@
       "currentIntegrationVerification": {
         "sourceCommit": "1791979c3413516df211e3109d05d78ee0084a40",
         "archive": "/private/tmp/tax-engine-checks-aa3mhamr",
-        "status": "running",
+        "status": "passed-local-with-hosted-skips",
         "inventoryEntries": 365,
-        "boundary": "No current full-pass claim until logs complete; regenerated inventory is the only change in this archive.",
+        "boundary": "Exact1791979 application archive with regenerated inventory committed51d8c2e. Later packages are separate scoped evidence; no staging, human, model, filing or release qualification.",
         "passedChecks": [
+          "test",
+          "test:coverage",
           "typecheck",
           "typecheck:contracts",
           "typecheck:web",
           "spec:validate",
           "spec:inventory:check",
           "build",
-          "lint"
+          "build:web",
+          "lint",
+          "test:web"
         ],
         "lintErrors": 0,
         "lintWarnings": 4315,
         "inventoryAdded": 95,
         "inventoryRemoved": 0,
-        "existingSupportStatusChanges": 0
+        "existingSupportStatusChanges": 0,
+        "unitTests": 17577,
+        "unitFiles": 868,
+        "unitFailures": 0,
+        "unitSkips": 0,
+        "unitSeconds": "520.03",
+        "coverageTests": 17577,
+        "coverageFiles": 868,
+        "coverageSeconds": "601.67",
+        "statementsPercent": "92.46",
+        "branchesPercent": "86.91",
+        "functionsPercent": "91.23",
+        "linesPercent": "94.79",
+        "branchThresholdPercent": "85",
+        "browserPassed": 328,
+        "browserSkipped": 5,
+        "browserFailed": 0,
+        "browserRetries": 0,
+        "browserWorkers": 1,
+        "browserMinutes": "15.9",
+        "browserSkipReason": "Five hosted subscription/Stripe/credit cases require authorized staging credentials and delivery evidence.",
+        "evidence": [
+          {
+            "path": ".local/upgrade-evidence/full-unit-1791979.log",
+            "sha256": "087c83791708f34007def3e219924c659b73ebad1492ef86d905da4044866808"
+          },
+          {
+            "path": ".local/upgrade-evidence/full-coverage-1791979.log",
+            "sha256": "9580a56fe6293b93d76f855a0ee5950ac048daa40df9f4040ba6b45ca8e71099"
+          },
+          {
+            "path": ".local/upgrade-evidence/full-1791979-typecheck.log",
+            "sha256": "6553f1ffff36dcd33d1ec70bb4943eb54f12defde4b2b8ef00488c4cb898211a"
+          },
+          {
+            "path": ".local/upgrade-evidence/full-1791979-typecheck-contracts.log",
+            "sha256": "36396fb201115fca05efc765c18b56a979c4bb14a6939b943d541f88607c0147"
+          },
+          {
+            "path": ".local/upgrade-evidence/full-1791979-typecheck-web.log",
+            "sha256": "cab6aa1905e59aa95c1f74ae69e8b67df1c63373cc0aa3d08a43db13092515c1"
+          },
+          {
+            "path": ".local/upgrade-evidence/full-1791979-spec-validate.log",
+            "sha256": "c9714502062d684e246f3c4aa8146efb7da62150e713b44f149e0416f76df6db"
+          },
+          {
+            "path": ".local/upgrade-evidence/full-1791979-spec-inventory-check.log",
+            "sha256": "8545823bc62561be7ecfbaa56a804497a5496c41bb80418e3633de1aefaeca3e"
+          },
+          {
+            "path": ".local/upgrade-evidence/full-1791979-build.log",
+            "sha256": "1715c6a944912ae49f3413249808434cf2487782e038cb73f6da64f20195eb31"
+          },
+          {
+            "path": ".local/upgrade-evidence/full-1791979-web-build.log",
+            "sha256": "f363b0916d56c80ad54d880427ce766be785ecb2997c3d84262cf54fb71ae3c5"
+          },
+          {
+            "path": ".local/upgrade-evidence/full-1791979-lint.log",
+            "sha256": "8a6f2fddc43863d107872ade63549ed9a340b4b62572e216c9e2932683d766e8"
+          },
+          {
+            "path": ".local/upgrade-evidence/full-1791979-browser.log",
+            "sha256": "5a7d8c557cb81edfef126747982357e13bb7adbd1aa01cbb81e497984f554240"
+          }
+        ]
+      },
+      "mortgageBalanceMethods": {
+        "commit": "ba451d3",
+        "tree": "82395753",
+        "broadTests": 762,
+        "finalChecks": 17,
+        "browserCases": 2,
+        "browserRetries": 0,
+        "independentAgentCases": 5,
+        "rootAndWebTypes": "passed",
+        "specReferences": 4436
+      },
+      "mortgageDebtCategories": {
+        "commit": "d912b8f",
+        "tree": "1b45017f",
+        "tests": 769,
+        "files": 78,
+        "rootAndWebTypes": "passed",
+        "specReferences": 4476,
+        "browserCases": 2,
+        "browserRetries": 0,
+        "independentAgentCases": 5
+      },
+      "form8606Rounding": {
+        "commit": "c7e8ff7",
+        "tree": "3a04cfed08eee795ee15aaac66034f51ae82a4d7",
+        "tests": 692,
+        "files": 10,
+        "rootTypes": "passed",
+        "specReferences": 4470,
+        "independentAgentCases": 68
+      },
+      "rothHistoryAndRepayments": {
+        "commit": "fc46b8d",
+        "tree": "dc0edd0df53147f11fedd3695afea8491500b5e8",
+        "tests": 696,
+        "files": 11,
+        "rootTypes": "passed",
+        "specReferences": 4486,
+        "independentAgentCases": 220,
+        "canonicalProbe": "repay3000/5000 yields income7000/5000, exception1000/0, tax600/500, no false carry",
+        "source": "https://www.irs.gov/instructions/i8606"
+      },
+      "remoteRefresh20261025Mortgage": {
+        "commit": "d912b8f",
+        "ciRun": 40226442145,
+        "webRun": 40226442108,
+        "status": "in_progress",
+        "evidence": ".local/upgrade-evidence/remote-runs-2026-10-25-after-mortgage.json",
+        "boundary": "Laterfc46b8d pushed after observation; no remote passing claim."
       }
     },
     "externalInputsStillPending": [
@@ -800,11 +920,11 @@
       "final multi-platform release images"
     ],
     "workInProgress": [
-      "Actual mortgage balance methods and represented debt/refinance/points/recovery source collectors",
-      "Form8606 whole-dollar rounding, actual owner-specific positive traditional basis/history and remaining retirement methods",
-      "Canonical current-year Form172 source/regular-AMT-NIIT origin integration and remaining federal coordination methods",
-      "Guarded AI evaluation executor, actual application-schema bindings, official catalog/price refresh; all240cases still pending human review",
-      "Current full tests/coverage/types/build/lint/browser, regenerated inventory, remoteCI and final native runtime/recovery/SBOM rehearsal",
+      "Actual mortgage points history and prior-year tax-benefit recoveries; additional taxpayer-fact methods in package ledger",
+      "Actual separate-owner positive traditional IRA basis/history binding, canonical path and intake; retirement rule-version follow-up",
+      "Canonical current-year Form172 origin and negative-AGI paid-medical source correction; remaining federal coordination methods",
+      "AI evaluator review fixes for journal path aliases and frozen approved request policies, followed by actual application bindings and official provider refresh",
+      "Current later-commit integration/inventory/remote CI and final native runtime/recovery/SBOM rehearsal",
       "External staging/provider-budget/human-review/state-demand/final-form inputs remain unanswered"
     ],
     "latestIntegratedCommit": "13cb428",
@@ -1062,23 +1182,17 @@
       "amd64": "local QEMU Next.js compilation failed with signal11; native CI rehearsal now configured"
     },
     "currentStableCoverageRun": {
-      "commit": "76953875c01d7341cbd7ffaf272273524256c1c9",
-      "directory": "/private/tmp/tax-engine-checks-kl5ok04b",
-      "command": "pnpm test:coverage --maxWorkers=1",
+      "commit": "1791979c3413516df211e3109d05d78ee0084a40",
       "status": "passed",
-      "testsPassed": 17381,
-      "filesPassed": 811,
-      "failures": 0,
-      "skips": 0,
-      "statementsPercent": "92.61",
-      "branchesPercent": "86.84",
-      "functionsPercent": "91.82",
-      "linesPercent": "94.81",
-      "branchThresholdPercent": "85",
-      "durationSeconds": "545.02",
-      "evidence": ".local/upgrade-evidence/coverage-7695387.log",
-      "sha256": "5f0919cc333d3044cfa2b93974b56a25182d0708c24aba122f589b5c42ec070b",
-      "boundary": "Exact committed snapshot; later source packages need a fresh integrated run. Local synthetic and disposable PostgreSQL, not staging."
+      "tests": 17577,
+      "files": 868,
+      "branchesPercent": "86.91",
+      "statementsPercent": "92.46",
+      "functionsPercent": "91.23",
+      "linesPercent": "94.79",
+      "durationSeconds": "601.67",
+      "thresholdChanged": false,
+      "evidence": ".local/upgrade-evidence/full-coverage-1791979.log"
     },
     "remainingInternalWork": [
       "Finish remaining canonical federal source/method tasks listed in federal-work and education-method-decisions; completed source gates are not substitutes for implementation.",
@@ -1109,19 +1223,18 @@
       "scope": "Exact isolated f8c6222 plus single-write PDF package; locked dependencies, Node24.22.1, pinned pypdf and disposable local PostgreSQL16. Thresholds unchanged.",
       "limitation": "Excludes newer in-kind education, Ohio and agent changes. Current integrated and final release gates still require a fresh run. Synthetic local evidence only."
     },
-    "lastPushedCommit": "1791979c3413516df211e3109d05d78ee0084a40",
+    "lastPushedCommit": "fc46b8d",
     "currentBrowserRun": {
-      "commit": "ed915c1708cedc02e99ca12fb7383331a7f99bea",
+      "commit": "1791979c3413516df211e3109d05d78ee0084a40",
       "status": "passed-with-hosted-skips",
-      "evidence": ".local/upgrade-evidence/stable-browser-ed915c1.log",
-      "evidenceSha256": "8d30065fb73842cbab3dae4fb5392ce5933a04b7de1ea6f8c6a5d0cfb7e8e18e",
-      "passed": 296,
-      "failed": 0,
+      "passed": 328,
       "skipped": 5,
-      "durationMinutes": "5.6",
+      "failed": 0,
       "retries": 0,
-      "scope": "Immutable tracked-file production webpack build; Chromium; fetched synthetic sample documents; self-host mode on loopback; pinned Node24.22.1/pnpm10.34.8; no live provider or billing credentials.",
-      "limitation": "Five hosted-only tests skipped. Applies to ed915c1 only; later facts UI changes and final artifacts require fresh runs. No staging or human qualification."
+      "workers": 1,
+      "minutes": "15.9",
+      "evidence": ".local/upgrade-evidence/full-1791979-browser.log",
+      "stagingEvidence": false
     },
     "currentPackageAudit": {
       "date": "2026-10-25",

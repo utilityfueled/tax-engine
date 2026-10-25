@@ -7,7 +7,7 @@ complete a checkbox.
 
 ## Current integration — 2026-10-25
 
-`1791979` is the latest confirmed pushed integration on `upgrade/2026-baseline`. The goal remains active and the
+`fc46b8d` is the latest confirmed pushed integration on `upgrade/2026-baseline`. The goal remains active and the
 upgrade is **not release-ready**. Unanswered external inputs are listed below;
 internal implementation and review continue in parallel.
 
@@ -45,13 +45,28 @@ internal implementation and review continue in parallel.
   six strict-reference checks, 56 workspace cases and two flatten variants pass;
   the PDF repair also passes in the 1,174-case final QSBS suite. No assertions,
   thresholds or readiness controls were weakened.
-- Full unit tests run on immutable `1791979`; all three type checks, spec validation,
-  regenerated inventory check, engine build and lint pass (zero errors; 4,315
-  warnings). Its 365-entry inventory adds 95 entries, removes none and changes
-  no existing support status. The latest full green coverage remains `7695387`
-  below until current verification completes. Fresh package audit reports zero
-  advisories across 521 locked entries. Remote CI/Web on `cc10a79` were queued or
-  running at refresh; superseded runs were cancelled, not passed.
+- Immutable `1791979` passes all 17,577 tests in 868 files (zero failures or
+  skips) and full coverage at 86.91% branches against the unchanged 85% gate.
+  Statements/functions/lines are 92.46%/91.23%/94.79%. All three type checks,
+  spec/inventory, engine and production web builds, and lint pass (zero errors;
+  4,315 warnings). The full production browser run passes 328 cases with zero
+  retries; five hosted billing cases are skipped and supply no staging evidence.
+  The checkpoint records exact logs and SHA256 hashes. Its 365-entry inventory,
+  committed separately in `51d8c2e`, changes no existing support status. Package
+  audit reports zero advisories across 521 locked entries. Later packages require
+  their own integrated verification. Remote CI/Web at `d912b8f` were still running.
+- `ba451d3` and `d912b8f`: actual mortgage balance methods and debt-category
+  worksheets. Their isolated packages pass 762 and 769 tests respectively,
+  root/web types, spec/build checks, separate five-case agent reviews and both
+  desktop/mobile cases with zero retries. Points and recovery sources continue.
+- `c7e8ff7`: completed Form 8606 monetary lines now round once after source
+  aggregation. Exact tree `3a04cfed` passes 692 cases, root types, 4,470 references
+  and separate 68-case/source review. Original source cents remain intact.
+- `fc46b8d`: Roth homebuyer withdrawals reduce later contribution/conversion
+  basis; line 25c uses actual qualifying repayments without an invented
+  proportional tax cap. Exact `dc0edd0d` passes 696 cases, root types and 4,486
+  references. Separate 220-case/source review plus a canonical repayment probe
+  passes. These are software checks, not human retirement qualification.
 - `5a3aab5`: canonical original-source QSBS exclusions on Form 8949, Schedule D,
   AMT and modified NOL income. Exact calculation tree `e4991d78` passes 2,195
   tests in 54 files, root types, 4,384 spec references and clean scoped lint.
