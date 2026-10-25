@@ -144,3 +144,21 @@ this change does not qualify refund extraction or invent netting rules.
 Ten initial cancellation/amount regressions failed. Forty-three focused tests,
 web types and scoped lint pass. Tests use synthetic local extraction and mocked
 fetch; no live provider cancellation or billing-settlement claim is made.
+
+## Document and review-PDF request boundaries — 2026-10-25
+
+The document routes reject an entire malformed batch rather than silently dropping
+records. They require unique opaque upload identifiers, accept redacted text only,
+and cap batch count, per-document text and request bytes. Both analysis routes
+and review-PDF generation use shared hosted protection, return 503 on unavailable
+protection and 429 only for actual quota rejection, and set private/no-store on
+success and errors. Auth/render/analysis exceptions no longer expose upstream
+messages. Aborted requests cannot publish a late analysis or PDF result.
+
+Thirty-one initial regressions failed. The expanded focused run passes 89 tests
+across request boundaries, PDF generation, hosted guards and browser transport;
+web types and scoped lint pass (no errors). PDF fixtures now identify their actual
+W-2 owner/state via the separately owned taxpayer-facts package. Deterministic
+analysis still has no model charge; candidates remain unqualified. These are
+local synthetic tests and dependency-failure mocks, not hosted staging evidence.
+Logs: `.local/upgrade-evidence/document-routes-{red,green,types}.log`.

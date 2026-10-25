@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server";
 import type { ReturnWorkspaceRecord } from "@tax-engine/contracts";
 import type { GuidedFlowState } from "../../../../lib/guided-interview-flow";
 import { resolveDeploymentMode } from "../../../../lib/deployment-mode";
@@ -6,6 +5,9 @@ import { resolveHostedWorkspaceActor } from "../../../../lib/hosted-auth";
 import { shouldAllowLoopbackLocalWorkspaceApiAccess } from "../../../../lib/hosted-runtime-safety";
 import { safeParseJsonBody } from "../../../../lib/safe-body-parser";
 import { buildWorkspaceFilledReturnDownload } from "../../../../lib/workspace-filled-return";
+import { cancelledDocumentRequest, createDocumentRequestProtection, privateJson } from "../../../../lib/protected-document-request";
+
+const protect = createDocumentRequestProtection("filled-return");
 
 function isReturnWorkspaceRecord(value: unknown): value is ReturnWorkspaceRecord {
   if (!value || typeof value !== "object") {
@@ -40,18 +42,18 @@ function isGuidedFlowState(value: unknown): value is GuidedFlowState {
 }
 
 export async function POST(request: Request) {
+  const protectedResponse = await protect(request);
+  if (protectedResponse) return protectedResponse;
   const parsed = await safeParseJsonBody(request);
+  if (request.signal.aborted) return cancelledDocumentRequest();
 
   if (!parsed.ok) {
-    return NextResponse.json(
-      { error: parsed.error },
-      { status: parsed.status }
-    );
+    return privateJson({ error: parsed.error }, parsed.status);
   }
 
   const purpose = (parsed.data as { purpose?: unknown } | null)?.purpose;
   if (purpose !== undefined && purpose !== "review") {
-    return NextResponse.json({ error: "Filing exports are not qualified. Only review downloads are available." }, { status: 400 });
+    return privateJson({ error: "Filing exports are not qualified. Only review downloads are available." }, 400);
   }
 
   const workspace = isReturnWorkspaceRecord(parsed.data)
@@ -64,10 +66,7 @@ export async function POST(request: Request) {
     : null;
 
   if (!workspace) {
-    return NextResponse.json(
-      { error: "Invalid workspace payload." },
-      { status: 400 }
-    );
+    return privateJson({ error: "Invalid workspace payload." }, 400);
   }
 
   const requestHostname = (() => {
@@ -85,20 +84,19 @@ export async function POST(request: Request) {
     );
 
   if (requiresHostedAuth) {
-    const actor = await resolveHostedWorkspaceActor({
-      requestHeaders: request.headers
-    });
-
-    if (!actor) {
-      return NextResponse.json(
-        { error: "Authentication required before downloading a filled return." },
-        { status: 401 }
-      );
+    try {
+      const actor = await resolveHostedWorkspaceActor({ requestHeaders: request.headers });
+      if (request.signal.aborted) return cancelledDocumentRequest();
+      if (!actor) return privateJson({ error: "Authentication required before downloading a filled return." }, 401);
+    } catch {
+      return privateJson({ error: "Authentication is temporarily unavailable. Please try again later." }, 503);
     }
   }
 
   try {
+    if (request.signal.aborted) return cancelledDocumentRequest();
     const download = await buildWorkspaceFilledReturnDownload(workspace, guidedFlowState);
+    if (request.signal.aborted) return cancelledDocumentRequest();
     const pdfBlob = new Blob([Uint8Array.from(download.contents)], {
       type: "application/pdf"
     });
@@ -113,14 +111,8 @@ export async function POST(request: Request) {
         "Cache-Control": "no-store, private",
       },
     });
-  } catch (error) {
-    const message = error instanceof Error && error.message
-      ? error.message
-      : "Could not generate the filled return PDF.";
-
-    return NextResponse.json(
-      { error: message },
-      { status: 400 }
-    );
+  } catch {
+    if (request.signal.aborted) return cancelledDocumentRequest();
+    return privateJson({ error: "Could not generate the review PDF. Check required taxpayer facts, source documents and supported tax year." }, 400);
   }
 }
