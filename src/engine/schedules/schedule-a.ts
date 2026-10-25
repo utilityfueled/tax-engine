@@ -393,9 +393,9 @@ export function calculateScheduleA(
       if (donation.qualifiedOrganization && !donation.supportingOrganization && !donation.donorAdvisedFund && !donation.isPrivateFoundation) eligibleCash = eligibleCash.plus(amount);
     }
     nonitemizerCharitableDeduction = roundDollar(Decimal.min(eligibleCash, contributionBase.times("0.60"), filingStatus === "married_filing_jointly" ? "2000" : "1000"));
+    audit.record("Charitable WS", "nonitemizer", "Nonitemizer charitable deduction candidate", nonitemizerCharitableDeduction,
+      "2026 current eligible cash only: min(cash, 60% AGI, 1000 [2000 MFJ]); no floor or carryover");
   }
-  audit.record("Charitable WS", "nonitemizer", "Nonitemizer charitable deduction candidate", nonitemizerCharitableDeduction,
-    "2026 current eligible cash only: min(cash, 60% AGI, 1000 [2000 MFJ]); no floor or carryover");
 
   let cashCharitable: Decimal;
   let nonCashCharitable: Decimal;
@@ -565,7 +565,8 @@ export function calculateScheduleA(
   const gamblingExpenses = extra?.gamblingExpenses ?? ZERO;
   if ([gamblingWinnings, rawGamblingLosses, gamblingExpenses].some((value) => !value.isFinite() || value.lt(0))) throw new Error("Wagering facts must be finite and nonnegative");
   const deductibleWageringAmount = rawGamblingLosses.plus(gamblingExpenses).times(input.taxpayer.taxYear === 2026 ? "0.90" : "1");
-  const gamblingLossDeduction = roundDollar(min(deductibleWageringAmount, gamblingWinnings));
+  const cappedWageringAmount = min(deductibleWageringAmount, gamblingWinnings);
+  const gamblingLossDeduction = input.taxpayer.taxYear === 2026 ? roundDollar(cappedWageringAmount) : cappedWageringAmount;
   audit.record("Sched A", "28", "Gambling losses (limited to winnings)", gamblingLossDeduction,
     `min(${input.taxpayer.taxYear === 2026 ? "90%" : "100%"} × (losses ${rawGamblingLosses} + expenses ${gamblingExpenses}), winnings ${gamblingWinnings})`);
 

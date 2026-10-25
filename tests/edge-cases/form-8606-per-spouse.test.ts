@@ -472,7 +472,7 @@ describe("Form 8606 per-spouse MFJ - QCD limit enforcement", () => {
     expect(result.form8606ByOwner!.spouse!.line14.toNumber()).toBe(11000);
   });
 
-  it("one spouse over $105K QCD limit - excess flows back to that spouse's taxable income only", () => {
+  it("one spouse over $108K QCD limit - excess flows back to that spouse's taxable income only", () => {
     const input = makeMFJBase();
     input.form1099R = [
       {
@@ -509,24 +509,24 @@ describe("Form 8606 per-spouse MFJ - QCD limit enforcement", () => {
 
     const result = calculateFederalTax(input);
 
-    // Alice: $120K QCD, capped at $105K → $15K excess becomes taxable distribution
-    // Alice Line 7 = $120K - $105K = $15K (excess QCD hits Line 7 for pro-rata)
-    // Alice denominator = $300K + $15K = $315K, basis = $10K
-    // Alice ratio = 10000/315000 = 0.032 (rounded), nontaxable = round($15K * 0.032) = $476
-    // Alice taxable = $15K - $476 = $14,524
+    // 2025 QCD limit: IRS Notice 2025-67, $108,000 per owner.
+    // Alice: $120K - $108K = $12K excess enters Line 7 for pro-rata.
+    // Denominator = $300K + $12K = $312K; basis = $10K.
+    // Ratio = 10000/312000 rounded to 0.032; nontaxable = $12K * .032 = $384.
+    // Alice taxable = $12K - $384 = $11,616.
     //
-    // Bob: $50K QCD, under $105K → fully excluded
+    // Bob: $50K QCD, under $108K → fully excluded
     // Bob Line 7 = $0, taxable = $0
 
-    expect(result.form8606ByOwner!.primary!.qualifiedCharitableDistributions.toNumber()).toBe(105000);
-    expect(result.form8606ByOwner!.primary!.line7.toNumber()).toBe(15000);
+    expect(result.form8606ByOwner!.primary!.qualifiedCharitableDistributions.toNumber()).toBe(108000);
+    expect(result.form8606ByOwner!.primary!.line7.toNumber()).toBe(12000);
 
     expect(result.form8606ByOwner!.spouse!.qualifiedCharitableDistributions.toNumber()).toBe(50000);
     expect(result.form8606ByOwner!.spouse!.line7.toNumber()).toBe(0);
 
     // Bob has zero taxable, only Alice has taxable from excess QCD
     expect(result.form8606ByOwner!.spouse!.taxableTraditionalDistributions.toNumber()).toBe(0);
-    expect(result.form8606ByOwner!.primary!.taxableTraditionalDistributions.greaterThan(0)).toBe(true);
+    expect(result.form8606ByOwner!.primary!.taxableTraditionalDistributions.toNumber()).toBe(11616);
 
     // Combined taxable = only Alice's excess QCD taxable portion
     expect(result.iraDistributionsTaxable.toNumber()).toBe(
@@ -534,7 +534,7 @@ describe("Form 8606 per-spouse MFJ - QCD limit enforcement", () => {
     );
   });
 
-  it("both spouses over $105K QCD limit - independent excess per owner", () => {
+  it("both spouses over $108K QCD limit - independent excess per owner", () => {
     const input = makeMFJBase();
     input.form1099R = [
       {
@@ -571,17 +571,17 @@ describe("Form 8606 per-spouse MFJ - QCD limit enforcement", () => {
 
     const result = calculateFederalTax(input);
 
-    // Alice: $115K QCD capped at $105K → $10K excess, no basis → fully taxable
-    // Bob: $110K QCD capped at $105K → $5K excess, no basis → fully taxable
-    expect(result.form8606ByOwner!.primary!.line7.toNumber()).toBe(10000);
-    expect(result.form8606ByOwner!.spouse!.line7.toNumber()).toBe(5000);
+    // Alice: $115K QCD capped at $108K → $7K excess, no basis → fully taxable.
+    // Bob: $110K QCD capped at $108K → $2K excess, no basis → fully taxable.
+    expect(result.form8606ByOwner!.primary!.line7.toNumber()).toBe(7000);
+    expect(result.form8606ByOwner!.spouse!.line7.toNumber()).toBe(2000);
 
-    // With zero basis, all excess QCD is taxable
-    expect(result.form8606ByOwner!.primary!.taxableTraditionalDistributions.toNumber()).toBe(10000);
-    expect(result.form8606ByOwner!.spouse!.taxableTraditionalDistributions.toNumber()).toBe(5000);
+    // With zero basis, all excess QCD is taxable.
+    expect(result.form8606ByOwner!.primary!.taxableTraditionalDistributions.toNumber()).toBe(7000);
+    expect(result.form8606ByOwner!.spouse!.taxableTraditionalDistributions.toNumber()).toBe(2000);
 
-    // Combined = $10K + $5K = $15K
-    expect(result.iraDistributionsTaxable.toNumber()).toBe(15000);
+    // Combined = $7K + $2K = $9K.
+    expect(result.iraDistributionsTaxable.toNumber()).toBe(9000);
     expect(result.iraDistributionsGross.toNumber()).toBe(225000);
   });
 });

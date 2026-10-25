@@ -225,3 +225,17 @@ contract expressly excludes amounts already counted on forms or estimates;
 negative/nonfinite additional payments reject. Four integration regressions
 failed first; 535 focused tests, typecheck and spec validation pass. Scoped diff
 reviewed. This removes the need to invent a Form 1098 lender for direct tax facts.
+
+## Correction: historical wagering precision and QCD expectations
+
+The full-suite run exposed two 2025 wagering precision regressions and a 2025
+extra worksheet audit entry introduced by the new 2026 Schedule A branch. The
+legacy Decimal source precision and audit identities are restored; existing
+regression assertions remain unchanged. Two historical QCD fixtures now use the
+source-backed 2025 $108,000 per-owner cap from IRS Notice 2025-67; expected taxable
+amounts are independently derived, including the Form 8606 rounded ratio.
+
+All five failures were reproduced before correction. 604 focused tests pass;
+spec validation and whitespace review pass. Engine typecheck reached only three
+errors in concurrent parent-owned PDF mapping edits (reported to the parent),
+with no federal-source errors. No readiness status changed.
