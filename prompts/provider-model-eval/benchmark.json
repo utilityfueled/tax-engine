@@ -55,6 +55,8 @@
     "minimumReviewedCases": 200,
     "meaningfulCostReduction": 0.1,
     "minimumQualityGain": 0.01,
+    "p50RoutineLatencyMs": 10000,
+    "p50EscalationLatencyMs": 60000,
     "p95RoutineLatencyMs": 30000,
     "p95EscalationLatencyMs": 120000,
     "maximumRoutineCostPerAcceptedUsd": "0.50",

@@ -1,4 +1,5 @@
 import { AI_TASKS, type AiTask } from "./ai-task-registry";
+import { standaloneProviderEvalScenarios } from "./provider-eval-scenarios";
 
 export interface ProviderEvalFixture {
   id: string;
@@ -35,7 +36,7 @@ const scenarios = [
   { tag: "conflicting-amounts", amount: "42.10", date: "2025-10-31" },
 ] as const;
 
-export const taxProviderModelEvalFixtures: ProviderEvalFixture[] = (Object.keys(AI_TASKS) as AiTask[]).flatMap(task =>
+export const taxProviderModelEvalFixtures: ProviderEvalFixture[] = (Object.keys(AI_TASKS) as AiTask[]).flatMap<ProviderEvalFixture>(task =>
   scenarios.flatMap(scenario => [0, 1, 2].map(variant => {
     const id = `${task}-${scenario.tag}-${variant + 1}`;
     const sourceId = `${id}:source`;
@@ -74,4 +75,4 @@ export const taxProviderModelEvalFixtures: ProviderEvalFixture[] = (Object.keys(
       review: { author: "codex-draft", status: "pending" as const, reviewer: null, reviewedAt: null },
     };
   }))
-);
+).concat(standaloneProviderEvalScenarios);

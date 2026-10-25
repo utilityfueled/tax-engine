@@ -4,6 +4,7 @@ import {
   parseProviderModelLiveEvalTemplate, providerModelCandidates, recommendProviderModelStack,
   scoreProviderEvalEntry, summarizeProviderModelLiveEvalTemplate, taxProviderModelEvalFixtures,
   type ProviderModelLiveEvalEntry,
+  type ProviderModelLiveEvalTemplate,
 } from "../../packages/engine/src/provider-model-eval";
 import type { ProviderEvalFixture } from "../../packages/engine/src/provider-eval-fixtures";
 
@@ -18,15 +19,22 @@ function run(fixture: ProviderEvalFixture, profileId = "luna-high", repeat = 1):
   };
 }
 const extraction = taxProviderModelEvalFixtures.find(fixture => fixture.id === "income-extraction-large-exact-1")!;
+// Explicitly synthetic evidence for exercising gates; these records are never written to qualification artifacts.
+const availability: ProviderModelLiveEvalTemplate["availability"] = providerModelCandidates.map(profile => ({
+  profileId: profile.id, status: "available", checkedAt: "2026-10-24T00:00:00Z", expiresAt: "2026-10-25T00:00:00Z",
+  evidenceReference: "test-only-account-capability", structuredOutput: true, reasoningEffort: true, reportedUsage: true, reason: "Synthetic test evidence",
+}));
 
 describe("measured task model evaluation", () => {
-  it("keeps 240 draft cases across all actual tasks, with a fixed held-out subset and no qualification claim", () => {
+  it("keeps 240 template variants plus 30 distinct draft scenarios, with fixed held-out cases and no qualification claim", () => {
     const pack = buildProviderModelEvalFixturePack();
-    expect(pack.fixtureCount).toBe(240);
+    expect(pack.fixtureCount).toBe(270);
+    expect(pack.templateVariantCount).toBe(240);
+    expect(pack.standaloneScenarioCount).toBe(30);
     expect(pack.taskTypes).toHaveLength(8);
-    expect(pack.fixtures.filter(fixture => fixture.split === "held-out")).toHaveLength(80);
+    expect(pack.fixtures.filter(fixture => fixture.split === "held-out")).toHaveLength(88);
     expect(pack.fixtures.every(fixture => fixture.review.status === "pending")).toBe(true);
-    expect(new Set(pack.fixtures.map(fixture => fixture.id)).size).toBe(240);
+    expect(new Set(pack.fixtures.map(fixture => fixture.id)).size).toBe(270);
     expect(pack.qualification).toBe("draft-unreviewed");
   });
   it("has effort-specific candidates and both baselines, without fabricated quality scores or recommendations", () => {
@@ -95,12 +103,42 @@ describe("measured task model evaluation", () => {
     const fixtures = taxProviderModelEvalFixtures.map(fixture => ({ ...fixture, review: { author: "author", status: "reviewed" as const, reviewer: "different-reviewer", reviewedAt: "2026-10-24" } }));
     const cases = fixtures.filter(fixture => fixture.task === "income-extraction");
     const entries = ["luna-high", "baseline-gpt-5-mini", "baseline-gemini-3-flash-preview"].flatMap(profile => cases.flatMap(fixture => [1, 2, 3].map(repeat => run(fixture, profile, repeat))));
-    const summary = summarizeProviderModelLiveEvalTemplate({ version: 2, entries }, fixtures);
+    const summary = summarizeProviderModelLiveEvalTemplate({ version: 2, entries, availability }, fixtures);
     expect(summary.groups.find(group => group.profileId === "luna-high" && group.task === "income-extraction"))
-      .toMatchObject({ completedRuns: 90, schemaValidity: 1, criticalFieldExactMatch: 1, eligibleForPromotionReview: true, blockers: [] });
+      .toMatchObject({ completedRuns: 120, schemaValidity: 1, criticalFieldExactMatch: 1, eligibleForPromotionReview: true, blockers: [] });
     expect(summary.productionPromotion).toBe(false);
     entries[0]!.output!.fields.amount = "999";
-    const rejected = summarizeProviderModelLiveEvalTemplate({ version: 2, entries }, fixtures);
+    const rejected = summarizeProviderModelLiveEvalTemplate({ version: 2, entries, availability }, fixtures);
     expect(rejected.groups.find(group => group.profileId === "luna-high" && group.task === "income-extraction")!.blockers).toContain("critical-field-regression");
+  });
+  it.each(["unavailable", "failed"] as const)("records %s account checks without treating them as passing runs", status => {
+    const evidence = availability!.map(item => ({ ...item, status }));
+    const summary = summarizeProviderModelLiveEvalTemplate({ version: 2, entries: [run(extraction)], availability: evidence });
+    expect(summary.groups[0]!.availability?.status).toBe(status);
+    expect(summary.groups.every(group => group.blockers.includes("account-capability-unverified-or-unavailable"))).toBe(true);
+  });
+  it("rejects duplicated or indefinitely valid account evidence", () => {
+    expect(() => parseProviderModelLiveEvalTemplate({ version: 2, entries: [], availability: [availability![0], availability![0]] })).toThrow(/Duplicate/);
+    expect(() => parseProviderModelLiveEvalTemplate({ version: 2, entries: [], availability: [{ ...availability![0], expiresAt: "2027-12-01T00:00:00Z" }] })).toThrow(/30 days/);
+  });
+  it("enforces the declared P50 budget even when the P95 budget passes", () => {
+    const entry = run(extraction); entry.elapsedMs = 15000;
+    const summary = summarizeProviderModelLiveEvalTemplate({ version: 2, entries: [entry], availability });
+    const group = summary.groups.find(item => item.profileId === "luna-high" && item.task === "income-extraction")!;
+    expect(group.p95LatencyMs).toBe(15000);
+    expect(group.blockers).toContain("latency-budget");
+  });
+  it("requires account capability evidence for every escalation at the attempt time", () => {
+    const entry = run(extraction); entry.attempts.push({ profileId: "sol-high", startedAt: "2026-10-25T12:00:00Z", usage: { inputTokens: 1, outputTokens: 1 } });
+    const summary = summarizeProviderModelLiveEvalTemplate({ version: 2, entries: [entry], availability });
+    expect(summary.groups.find(item => item.profileId === "luna-high" && item.task === "income-extraction")!.blockers).toContain("account-capability-unverified-or-unavailable");
+  });
+  it("rejects changed, duplicated or removed cases in reviewed corpus input", () => {
+    const template = buildProviderModelLiveEvalTemplate();
+    expect(() => summarizeProviderModelLiveEvalTemplate(template, taxProviderModelEvalFixtures.slice(1))).toThrow(/full frozen corpus/);
+    const duplicate = [...taxProviderModelEvalFixtures]; duplicate[1] = duplicate[0]!;
+    expect(() => summarizeProviderModelLiveEvalTemplate(template, duplicate)).toThrow(/unique IDs/);
+    const changed = structuredClone(taxProviderModelEvalFixtures); changed[0]!.expected.fields = { invented: { kind: "money", value: "1" } };
+    expect(() => summarizeProviderModelLiveEvalTemplate(template, changed)).toThrow(/frozen case content/);
   });
 });

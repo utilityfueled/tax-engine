@@ -24,12 +24,12 @@ Read through official developer documentation on 2026-10-24/25; these are docume
 
 ## Checks and commits
 
-- `pnpm typecheck:web` passed after the adapter migration and corpus type fix. Final server catalog tests passed 4/4; web typecheck passed. Scoped lint: zero errors, existing evaluator non-null warnings remain.
-- Focused AI, privacy, routing, billing-hook and evaluation tests: 284/284 across 16 files, including the final catalog, adapter, routing, pricing and evaluation tests.
+- `pnpm typecheck:web` passed after the adapter migration and corpus type fix. Final server catalog tests passed 4/4; web typecheck passed. Scoped lint: zero errors and zero warnings after removing evaluator assertions.
+- Focused AI, privacy, routing, billing-hook and evaluation tests: Latest routing/privacy/billing integration run: 260/260 across 14 files. Final evaluation/corpus run: 26/26 across two files. Both include the final local-only and frozen-corpus guards.
 - Isolated real PostgreSQL ledger tests: 19/19. Exercises 12 concurrent requests sharing a budget, owner/idempotency isolation, legacy balances, cross-cycle purchased credits, settled failure + escalation, unknown transport usage + authoritative reconciliation, refunds, overrun cap, cancellation, settlement replay and referenced overrun closure without extra debit.
 - Default unit runs skip database integration unless `TAX_ENGINE_TEST_AI_LEDGER_DATABASE_URL` explicitly points to a disposable loopback database. No staging/database credential is reused.
 - Generated artifacts are drafts: `pnpm eval:models:sync`; `pnpm eval:models:check` checks freshness. The harness performs no provider calls.
-- Commit references: `0d90200` atomic ledger foundation. Further scoped package references are appended below.
+- Commit references: `0d90200` atomic ledger foundation. `a649c61` closes investigated overruns without extra debit; `d3778d8` migrates AI help and billing integration. Evaluation changes are committed separately with the corpus artifacts.
 
 ## Remaining required actions
 
