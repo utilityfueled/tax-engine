@@ -4,6 +4,8 @@ import { PDFDocument, StandardFonts } from "pdf-lib";
 import { taxpayerFacts2025 } from "./guided-fixtures";
 
 test("encrypted backup restores original bytes and private local answers after deletion and reload", async ({ page }, testInfo) => {
+  const sent: string[] = [];
+  page.on("request", (request) => sent.push(`${request.url()}\n${request.postData() ?? ""}`));
   const pdf = await PDFDocument.create();
   const font = await pdf.embedFont(StandardFonts.Helvetica);
   pdf.addPage().drawText("Synthetic supporting record for recovery test only", { font, size: 12 });
@@ -81,6 +83,37 @@ test("encrypted backup restores original bytes and private local answers after d
   }, recoveredId);
   expect(Buffer.from(recovered)).toEqual(bytes);
   await page.goto("/");
+  const restoredCard = page.getByRole("listitem").filter({ hasText: `Tax Return ${recoveredId}` });
+  await expect(restoredCard).toContainText("Restored local return — saved only on this device.");
+  await page.reload();
+  await expect(restoredCard).toBeVisible();
   await page.getByRole("button", { name: `Delete tax return ${recoveredId}`, exact: true }).click();
   await expect(page.getByRole("listitem").filter({ hasText: `Tax Return ${recoveredId}` })).toHaveCount(0);
+  expect(sent.join("\n")).not.toContain("900-70-0011");
+  expect(sent.join("\n")).not.toContain("recovery-source.pdf");
+  expect(sent.join("\n")).not.toContain("%PDF-");
+});
+
+test("reset removes saved guided facts before a return is reopened", async ({ page }) => {
+  await page.goto("/");
+  await page.evaluate(() => localStorage.setItem("tax-engine:guided-mode", "false"));
+  await page.getByRole("button", { name: /start your tax return/i }).click();
+  await expect(page).toHaveURL(/\/returns\/(?!new)[a-z0-9-]+/i);
+  const id = new URL(page.url()).pathname.split("/").at(-1)!;
+  await page.evaluate((id) => {
+    localStorage.setItem(`tax-engine.guided-flow-state.v1:${id}`, JSON.stringify({ phase: "interview", taxYear: 2025,
+      segmentation: { filingStatus: "single", incomeTypes: ["w2"], lifeEvents: [], stateCode: null },
+      currentSectionIndex: 0, completedSections: [], sectionData: { "personal-info": { firstName: "ResetPrivateName", ssn: "900-70-0022" } } }));
+    localStorage.setItem(`tax-engine:guided-mode:${id}`, "false");
+  }, id);
+  await page.reload();
+  await page.getByRole("button", { name: "Reset Return", exact: true }).click();
+  await expect(page.getByRole("status", { name: "Return status", exact: true })).toContainText("Return reset.");
+  expect(await page.evaluate((id) => localStorage.getItem(`tax-engine.guided-flow-state.v1:${id}`), id)).toBeNull();
+  await page.getByRole("button", { name: "Start guided interview", exact: true }).click();
+  await expect(page.getByRole("heading", { name: /let's tailor your return/i })).toBeVisible();
+  expect(await page.content()).not.toContain("ResetPrivateName");
+  await page.reload();
+  await expect(page.getByRole("heading", { name: /let's tailor your return/i })).toBeVisible();
+  expect(await page.content()).not.toContain("ResetPrivateName");
 });

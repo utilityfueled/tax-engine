@@ -6,6 +6,7 @@ import type {
 import { resolveDeploymentMode } from "./deployment-mode";
 import { isHostedProductionEnvironment } from "./hosted-runtime-safety";
 import { deleteCachedWorkspaceDocumentFiles } from "./workspace-document-file-cache";
+import { isLocalRecoveryWorkspace } from "./workspace-local-recovery";
 
 type PersistenceEnvironment = Record<string, string | undefined>;
 type PersistenceFetch = typeof fetch;
@@ -126,6 +127,16 @@ export interface WorkspacePersistenceAdapter {
 
 function sortByUpdatedAtDescending(workspaces: ReturnWorkspaceRecord[]) {
   return [...workspaces].sort((left, right) => right.updatedAt.localeCompare(left.updatedAt));
+}
+
+async function listLocalRecoveries(storage?: Storage) {
+  if (!storage) return [];
+  const { listWorkspaces } = await import("./workspace-storage");
+  return listWorkspaces(storage).filter((workspace) => isLocalRecoveryWorkspace(storage, workspace.id));
+}
+
+function mergeLocalRecoveries(hosted: ReturnWorkspaceRecord[], local: ReturnWorkspaceRecord[]) {
+  return sortByUpdatedAtDescending([...hosted.filter((workspace) => !local.some((entry) => entry.id === workspace.id)), ...local]);
 }
 
 function normalizeHostedWorkspace(workspace: ReturnWorkspaceRecord): ReturnWorkspaceRecord {
@@ -772,7 +783,7 @@ async function requestHostedWorkspacePersistence(
   const response = await fetchFn(endpoint, init);
   const payload = await response.json() as HostedWorkspacePersistenceResponse | HostedPersistenceErrorResponse;
 
-  if (!response.ok && response.status !== 401) {
+  if (!response.ok && !(response.status === 401 && (init.method ?? "GET") === "GET")) {
     throw new Error(
       getHostedPersistenceErrorMessage(payload)
         ?? `Could not connect to the server (error ${response.status}). Please try again later.`
@@ -861,9 +872,12 @@ export async function listPersistedWorkspaces(
 ): Promise<{
   adapter: WorkspacePersistenceAdapter;
   workspaces: ReturnWorkspaceRecord[];
+  notice?: string;
 }> {
   if (options.deploymentMode === "hosted") {
-    const payload = await requestHostedWorkspacePersistence(
+    const localRecoveries = await listLocalRecoveries(options.browserStorage);
+    let payload: HostedWorkspacePersistenceResponse;
+    try { payload = await requestHostedWorkspacePersistence(
       buildHostedWorkspaceEndpoint(options),
       {
         method: "GET",
@@ -872,11 +886,15 @@ export async function listPersistedWorkspaces(
         }
       },
       options.fetchFn ?? fetch
-    );
+    ); } catch (error) {
+      if (!localRecoveries.length) throw error;
+      return { adapter: await createWorkspacePersistenceSession({ ...options, deploymentMode: "self-host" }),
+        workspaces: localRecoveries, notice: "Cloud returns are unavailable. Your restored local returns remain available on this device." };
+    }
 
     return {
       adapter: createHostedTransportAdapter(payload),
-      workspaces: payload.workspaces
+      workspaces: mergeLocalRecoveries(payload.workspaces, localRecoveries)
     };
   }
 
@@ -895,6 +913,11 @@ export async function deletePersistedWorkspace(
   workspaces: ReturnWorkspaceRecord[];
 }> {
   if (options.deploymentMode === "hosted") {
+    if (options.browserStorage && isLocalRecoveryWorkspace(options.browserStorage, options.workspaceId)) {
+      const deleted = await deletePersistedWorkspace({ ...options, deploymentMode: "self-host" });
+      try { return await listPersistedWorkspaces(options); }
+      catch { return { adapter: deleted.adapter, workspaces: await listLocalRecoveries(options.browserStorage) }; }
+    }
     const payload = await requestHostedWorkspacePersistence(
       buildHostedWorkspaceEndpoint(options, options.workspaceId),
       {
@@ -906,6 +929,8 @@ export async function deletePersistedWorkspace(
       options.fetchFn ?? fetch
     );
 
+    if (payload.availability !== "ready") throw new Error("Please sign in before deleting this return. The local copy has been preserved.");
+
     if (options.browserStorage) {
       await deleteCachedWorkspaceDocumentFiles(options.workspaceId);
       const { deleteWorkspace: deleteLocalWorkspace } = await import("./workspace-storage");
@@ -914,7 +939,7 @@ export async function deletePersistedWorkspace(
 
     return {
       adapter: createHostedTransportAdapter(payload),
-      workspaces: payload.workspaces
+      workspaces: mergeLocalRecoveries(payload.workspaces, await listLocalRecoveries(options.browserStorage))
     };
   }
 
@@ -948,13 +973,11 @@ export async function savePersistedWorkspace(
       options.fetchFn ?? fetch
     );
 
+    if (payload.availability !== "ready" || !payload.workspace) throw new Error("Could not save your return. Please sign in and try again.");
+
     if (options.browserStorage) {
       const { saveWorkspaceSnapshot } = await import("./workspace-storage");
       saveWorkspaceSnapshot(options.browserStorage, options.workspace);
-    }
-
-    if (!payload.workspace) {
-      throw new Error("Could not save your return. Please try again.");
     }
 
     return {

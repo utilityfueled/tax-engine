@@ -5,7 +5,7 @@ import { buildWorkspaceEngineInput } from "@tax-engine/engine";
 import type { WorkspaceDocumentRecord, WorkspaceReturnSummary, WorkspaceStructuredFactRecord } from "@tax-engine/contracts";
 import { workspaceTaxpayerFixture } from "../helpers/workspace-taxpayer";
 import { buildGuidedSyntheticDocuments } from "@/lib/guided-interview-bridge";
-import { initialGuidedFlowState, emptyW2Entry } from "@/lib/guided-interview-flow";
+import { initialFlowState, emptyW2Entry } from "@/lib/guided-interview-flow";
 
 const document: WorkspaceDocumentRecord = { id: "w2", name: "2025 wages.pdf", taxYear: 2025, size: 1, uploadedAt: "2026-01-31T00:00:00Z", kind: "w2", coverage: "supported", label: "W-2", notes: "Synthetic", matchedFixtureId: null, seededFactIds: ["wages", "withholding"] };
 const summary: WorkspaceReturnSummary = { status: "ready-to-recompute", targetTaxYear: 2025, taxYearState: "single", answeredFactCount: 2, totalFactCount: 2, readyItemCount: 1, itemCount: 1, blockers: [], items: [{ id: "wages-and-withholding", label: "Wages", status: "ready", engineTargets: [], relatedFactIds: ["wages", "withholding"], sourceDocumentIds: ["w2"], answeredFactCount: 2, factCount: 2 }] };
@@ -13,7 +13,7 @@ const fact: WorkspaceStructuredFactRecord = { id: "source-wages", factId: "wages
 
 describe("document source fidelity", () => {
   it("carries the selected guided year without supplying a missing one", () => {
-    const state = { ...initialGuidedFlowState, taxYear: 2026, sectionData: { "income-w2": { entries: [{ ...emptyW2Entry, wages: "100" }] } } };
+    const state = { ...initialFlowState, taxYear: 2026, sectionData: { "income-w2": { entries: [{ ...emptyW2Entry, wages: "100" }] } } };
     expect(buildGuidedSyntheticDocuments(state)[0].taxYear).toBe(2026);
     expect(buildGuidedSyntheticDocuments({ ...state, taxYear: null })[0].taxYear).toBeNull();
   });

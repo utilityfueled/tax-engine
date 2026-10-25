@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { getGuidedFlowStorageKey } from "./guided-interview-flow";
 import { WORKSPACE_STORAGE_KEY, invalidateWorkspaceStorageCache } from "./workspace-storage";
+import { getLocalRecoveryStorageKey } from "./workspace-local-recovery";
 import {
   deleteCachedWorkspaceDocumentFiles, getCachedWorkspaceDocumentFile,
   restoreWorkspaceDocumentFiles, type WorkspaceDocumentFileUpload,
@@ -189,11 +190,12 @@ export async function importWorkspaceRecovery(
   const documents = options.documents ?? browserDocuments;
   const workspaceId = crypto.randomUUID();
   const flowKey = getGuidedFlowStorageKey(workspaceId), modeKey = guidedModeKey(workspaceId);
-  if (Object.hasOwn(readStorage(storage).workspaces, workspaceId) || storage.getItem(flowKey) !== null || storage.getItem(modeKey) !== null) {
+  const recoveryKey = getLocalRecoveryStorageKey(workspaceId);
+  if (Object.hasOwn(readStorage(storage).workspaces, workspaceId) || storage.getItem(flowKey) !== null || storage.getItem(modeKey) !== null || storage.getItem(recoveryKey) !== null) {
     throw new Error("Recovery identity already exists. Retry to create a new return.");
   }
   let filesWritten = false;
-  let flowWritten = false, modeWritten = false;
+  let flowWritten = false, modeWritten = false, recoveryWritten = false;
   try {
     aborted(options.signal);
     await documents.write(workspaceId, uploads);
@@ -201,11 +203,12 @@ export async function importWorkspaceRecovery(
     aborted(options.signal);
     // Read after asynchronous file work so another saved return is not replaced.
     const data = readStorage(storage);
-    if (Object.hasOwn(data.workspaces, workspaceId) || storage.getItem(flowKey) !== null || storage.getItem(modeKey) !== null) {
+    if (Object.hasOwn(data.workspaces, workspaceId) || storage.getItem(flowKey) !== null || storage.getItem(modeKey) !== null || storage.getItem(recoveryKey) !== null) {
       throw new Error("Recovery identity already exists. Retry to create a new return.");
     }
     if (payload.guidedFlowRaw !== null) { storage.setItem(flowKey, payload.guidedFlowRaw); flowWritten = true; }
     if (payload.guidedMode !== null) { storage.setItem(modeKey, payload.guidedMode); modeWritten = true; }
+    storage.setItem(recoveryKey, "local-only"); recoveryWritten = true;
     // Derived previews are untrusted/stale after recovery; facts and year remain intact.
     const workspace = { ...payload.workspace, id: workspaceId, storageMode: "local-browser",
       enginePreview: null, documents: payload.workspace.documents.map((document) => ({ ...document, blobStorageKey: null })) };
@@ -213,8 +216,10 @@ export async function importWorkspaceRecovery(
       workspaces: { ...data.workspaces, [workspaceId]: workspace } }));
     invalidateWorkspaceStorageCache(storage);
   } catch (error) {
-    if (flowWritten) storage.removeItem(flowKey);
-    if (modeWritten) storage.removeItem(modeKey);
+    // Attempt every cleanup even if one storage API has become unavailable.
+    for (const key of [flowWritten ? flowKey : null, modeWritten ? modeKey : null, recoveryWritten ? recoveryKey : null]) {
+      if (key) { try { storage.removeItem(key); } catch { /* Preserve the original failure and continue cleanup. */ } }
+    }
     if (filesWritten) await documents.remove(workspaceId);
     throw error;
   }

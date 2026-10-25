@@ -10,6 +10,7 @@ import {
   listPersistedWorkspaces
 } from "@/lib/workspace-persistence";
 import { requireBrowserStorage } from "@/lib/browser-storage";
+import { isLocalRecoveryWorkspace } from "@/lib/workspace-local-recovery";
 import { formatWorkspaceDocumentSummary } from "@/lib/document-fixture-copy";
 import { loadGuidedFlowState } from "@/lib/guided-interview-flow";
 import {
@@ -61,6 +62,7 @@ const MAX_VISIBLE_WORKSPACES = 4;
 interface DisplayedWorkspace {
   workspace: ReturnWorkspaceRecord;
   guidedSetupProgress: ReturnType<typeof summarizeGuidedSetupProgress>;
+  localRecovery: boolean;
 }
 
 function buildDisplayedWorkspaces(
@@ -79,7 +81,8 @@ function buildDisplayedWorkspaces(
 
     return [{
       workspace,
-      guidedSetupProgress
+      guidedSetupProgress,
+      localRecovery: isLocalRecoveryWorkspace(browserStorage, workspace.id),
     }];
   });
 }
@@ -108,7 +111,7 @@ export function RecentWorkspacesPanel({
     void (async () => {
       try {
         const browserStorage = requireBrowserStorage();
-        const { adapter, workspaces: nextWorkspaces } = await listPersistedWorkspaces({
+        const { adapter, workspaces: nextWorkspaces, notice } = await listPersistedWorkspaces({
           deploymentMode,
           browserStorage
         });
@@ -118,9 +121,9 @@ export function RecentWorkspacesPanel({
         setWorkspaces(displayedWorkspaces);
         setShowAllWorkspaces((current) => current && displayedWorkspaces.length > MAX_VISIBLE_WORKSPACES);
         setStorageMessage(
-          adapter.availability === "owner-required"
+          notice ?? (adapter.availability === "owner-required"
             ? "Sign in to see your saved returns."
-            : null
+            : null)
         );
       } catch (error) {
         setStorageMessage(
@@ -187,7 +190,7 @@ export function RecentWorkspacesPanel({
             </p>
           ) : null}
           <ul className="workspace-list" role="list">
-            {visibleWorkspaces.map(({ workspace, guidedSetupProgress }) => {
+            {visibleWorkspaces.map(({ workspace, guidedSetupProgress, localRecovery }) => {
               const unsupportedTaxYear = hasUnsupportedTaxYear(workspace.returnSummary);
               const unsupportedTaxYearNotice = formatUnsupportedTaxYearNotice(workspace.returnSummary);
               const guidedCompletionStatus = summarizeWorkspaceGuidedCompletion(workspace.guidedCompletion);
@@ -244,6 +247,7 @@ export function RecentWorkspacesPanel({
                       </p>
                     </>
                   )}
+                  {localRecovery ? <p className="document-meta">Restored local return — saved only on this device.</p> : null}
                   {unsupportedTaxYearNotice ? (
                     <p className="document-meta">{unsupportedTaxYearNotice}</p>
                   ) : null}

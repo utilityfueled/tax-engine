@@ -2091,16 +2091,14 @@ describe("workspace storage", () => {
       "interview-reopened",
       "workspace-cleared"
     ]);
-    expect(clearedWorkspace.auditTrail[2]?.answerText).toBe(wageAnswer);
+    expect(clearedWorkspace.auditTrail[2]?.answerText).toBeNull();
+    expect(JSON.stringify(clearedWorkspace)).not.toContain(wageAnswer);
     expect(clearedWorkspace.auditTrail[4]).toEqual({
       id: expect.stringMatching(/^workspace-cleared:/),
       occurredAt: expect.any(String),
       kind: "workspace-cleared",
       message: "Reset local return and removed 2 document(s).",
-      documentIds: [
-        "irs-w2-2026:fw2--2026.pdf:10",
-        "irs-1099-int-2024:f1099int.pdf:11"
-      ],
+      documentIds: [],
       questionId: null,
       answerText: null
     });

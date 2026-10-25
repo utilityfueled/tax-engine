@@ -112,3 +112,36 @@ Verification with pinned Node 24.22.1:
   itemized and other-payment aggregates rather than dropping/misclassifying them.
 - Audit sparse document-extraction optional fields and remaining household facts.
 - Independent expected-output and required human readiness review remain pending.
+
+## Independent agent review: local recovery integration
+
+Reviewed parent recovery commit `6bebb6d` separately from its implementation. This
+is an independent agent review and does not satisfy a required human security or
+privacy review. Three actionable integration findings were reproduced and fixed:
+
+1. HTTP 401 on a hosted mutation was accepted by the read-oriented transport;
+   deletion could remove the local copy after the server rejected the request.
+   Non-successful mutations now reject before local writes/deletion. Tests cover
+   expired authentication, forbidden responses and network failure.
+2. Reset left scoped guided answers and private audit text/filename references.
+   Reset now clears guided storage, the mode preference, displayed derived state,
+   and private audit details while retaining generic lifecycle history.
+3. Restored local returns disappeared from the hosted homepage after navigation.
+   Imports now receive an explicit local-recovery marker. Hosted listing includes
+   only those marked local returns beside the current owner's server list, labels
+   them as local, and keeps them usable during cloud outages. Unmarked browser
+   shell caches are excluded; local deletion sends no hosted mutation.
+
+Rollback attempts each scoped-key cleanup even if another storage cleanup fails.
+Nine new review regression cases cover these boundaries; six initially failed.
+The combined recovery/cache/storage/persistence suites pass 84 tests in five files.
+The fresh production build passes, and two Chromium recovery/reset flows pass:
+exact private facts/original bytes survive restore and reload, local restore
+labels remain visible, deleted/reset answers stay cleared, and captured requests
+contain no synthetic SSN, source filename or PDF bytes. The first reset browser
+attempt exposed a test navigation race; waiting for the actual created-return URL
+resolved it. The root test wrapper ignored its file filter and began the full
+browser suite; it was interrupted and the exact Playwright file was run directly.
+Web typecheck, scoped lint (zero errors), and diff checks pass.
+
+Source-year/document-fidelity package commit: `70f8d17`.

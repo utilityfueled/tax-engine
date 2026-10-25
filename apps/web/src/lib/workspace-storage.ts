@@ -29,6 +29,7 @@ import {
   summarizeFlowCompletion,
   type GuidedFlowState
 } from "./guided-interview-flow";
+import { getLocalRecoveryStorageKey } from "./workspace-local-recovery";
 
 // The preview helper is cached so refresh calls can avoid repeating the
 // dynamic import work when a caller explicitly asks for a recomputed preview.
@@ -1373,11 +1374,14 @@ export function clearWorkspaceRecord(workspace: ReturnWorkspaceRecord) {
   const resetLabel = workspace.storageMode === "hosted-postgres"
     ? "Reset return on server"
     : "Reset local return";
-  const auditTrail = appendAuditTrailEvent(workspace.auditTrail, {
+  const history = workspace.auditTrail.map((event) => ({ ...event,
+    message: "Prior return activity (details cleared on reset).", documentIds: [], answerText: null,
+  }));
+  const auditTrail = appendAuditTrailEvent(history, {
     occurredAt,
     kind: "workspace-cleared",
     message: `${resetLabel} and removed ${workspace.documents.length} document(s).`,
-    documentIds: workspace.documents.map((document) => document.id),
+    documentIds: [],
     questionId: null,
     answerText: null
   });
@@ -1397,10 +1401,16 @@ export function clearWorkspace(storage: Storage, workspaceId: string) {
   const data = loadStorage(storage);
   const current = data.workspaces[workspaceId] ?? createWorkspace(workspaceId);
   const nextWorkspace = clearWorkspaceRecord(current);
+  clearWorkspaceGuidedData(storage, workspaceId);
 
   data.workspaces[workspaceId] = nextWorkspace;
   saveStorage(storage, data);
   return nextWorkspace;
+}
+
+export function clearWorkspaceGuidedData(storage: Storage, workspaceId: string) {
+  clearGuidedFlowState(storage, workspaceId);
+  storage.removeItem(`tax-engine:guided-mode:${workspaceId}`);
 }
 
 function updateInterviewQuestionStateInWorkspace(
@@ -1579,8 +1589,8 @@ export function syncGuidedFlowToWorkspace(
 
 export function deleteWorkspace(storage: Storage, workspaceId: string) {
   const data = loadStorage(storage);
-  clearGuidedFlowState(storage, workspaceId);
-  storage.removeItem(`tax-engine:guided-mode:${workspaceId}`);
+  clearWorkspaceGuidedData(storage, workspaceId);
+  storage.removeItem(getLocalRecoveryStorageKey(workspaceId));
 
   if (!data.workspaces[workspaceId]) {
     return listWorkspaces(storage);

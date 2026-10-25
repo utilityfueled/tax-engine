@@ -61,6 +61,7 @@ import {
   answerWorkspaceInterviewQuestion,
   clearWorkspace,
   clearWorkspaceRecord,
+  clearWorkspaceGuidedData,
   confirmWorkspaceDocumentTaxYear,
   getFutureYearSampleUploadMessage,
   ingestFiles,
@@ -752,6 +753,13 @@ export function ReturnWorkspaceScreen({
     }
   }
 
+  function resetWorkspaceUi() {
+    setAnswerDrafts({}); setProviderSummaryRun(null); setProviderSummaryError(null);
+    setPersistedGuidedFlowState(null); setGuidedFallbackPreview(null); setGuidedResumeSectionId(null);
+    setGuidedReviewIssues([]); setGuidedReviewSummary(null); setGuidedModeRaw(false);
+    setPartnerReviewConsent(defaultPartnerReviewConsent); setPartnerReviewDownloadRun(null);
+  }
+
   function resetWorkspace() {
     if (!localWorkspaceEditingEnabled) {
       if (!workspace) {
@@ -763,6 +771,8 @@ export function ReturnWorkspaceScreen({
         try {
           await persistHostedWorkspace(clearWorkspaceRecord(workspace));
           await deleteCachedWorkspaceDocumentFiles(workspaceId);
+          clearWorkspaceGuidedData(requireBrowserStorage(), workspaceId);
+          resetWorkspaceUi();
           setStorageMessage("Return reset.");
         } catch (error) {
           setStorageMessage(resolveUiErrorMessage(error, "Could not reset the return. Please try again."));
@@ -775,6 +785,7 @@ export function ReturnWorkspaceScreen({
       try {
         await deleteCachedWorkspaceDocumentFiles(workspaceId);
         const nextWorkspace = clearWorkspace(requireBrowserStorage(), workspaceId);
+        resetWorkspaceUi();
         setWorkspace(nextWorkspace);
         setStorageMessage("Return reset.");
       } catch {
