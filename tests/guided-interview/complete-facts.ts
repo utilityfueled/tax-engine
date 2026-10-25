@@ -2,7 +2,7 @@ import { emptyPersonalInfo, startInterview, type PersonalInfoData, type Segmenta
 
 /** Synthetic, explicitly supplied facts; never production defaults. */
 export const completePersonalInfo: PersonalInfoData = {
-  ...emptyPersonalInfo, firstName: "Jordan", lastName: "Example", ssn: "111-22-3333",
+  ...emptyPersonalInfo, standardDeductionFacts: { primaryBlind: false, spouseBlind: false, primaryCanBeClaimedAsDependent: false, spouseCanBeClaimedAsDependent: false, primaryDeceased: false, spouseDeceased: false, dualStatusAlien: false, nonresidentAlien: false, shortTaxYear: false, spouseItemizes: false, claimSpouseAdditionalDeduction: false }, firstName: "Jordan", lastName: "Example", ssn: "111-22-3333",
   dateOfBirth: "1990-02-15", usResidencyMonths: "12", stateResidency: "full-year",
   addressLine1: "42 Example Road", city: "Columbus", state: "OH", zip: "43215",
   dependentCount: "0", dependents: [], livedWithSpouseAtAnyTimeDuringYear: true,

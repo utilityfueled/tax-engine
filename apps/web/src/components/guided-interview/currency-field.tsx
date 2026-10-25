@@ -30,8 +30,8 @@ export function formatCurrencyDisplay(value: string): string {
   // Preserve decimals if the user typed them
   if (cleaned.includes(".")) {
     const [intPart, decPart] = cleaned.split(".");
-    const formattedInt = new Decimal(intPart).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-    return `${formattedInt}.${decPart}`;
+    const formattedInt = new Decimal(intPart).abs().toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return `${cleaned.startsWith("-") ? "-" : ""}${formattedInt}.${decPart}`;
   }
 
   return new Decimal(cleaned).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -40,10 +40,10 @@ export function formatCurrencyDisplay(value: string): string {
 /**
  * Check whether a raw user string represents a valid non-negative number.
  */
-export function isValidCurrencyValue(value: string): boolean {
+export function isValidCurrencyValue(value: string, allowNegative = false): boolean {
   const cleaned = parseCurrencyInput(value);
   if (cleaned === "") return true; // empty is valid (optional field)
-  return isDecimalInput(value) && new Decimal(cleaned).isFinite() && new Decimal(cleaned).gte(0);
+  return isDecimalInput(value) && new Decimal(cleaned).isFinite() && (allowNegative || new Decimal(cleaned).gte(0));
 }
 
 export function CurrencyField({
@@ -54,6 +54,7 @@ export function CurrencyField({
   fieldClassName,
   footer,
   required,
+  allowNegative = false,
 }: {
   label: string;
   hint?: string;
@@ -62,10 +63,11 @@ export function CurrencyField({
   fieldClassName?: string;
   footer?: ReactNode;
   required?: boolean;
+  allowNegative?: boolean;
 }) {
   const [focused, setFocused] = useState(false);
   const [fieldId] = useState(() => `currency-field-${Math.random().toString(36).slice(2, 10)}`);
-  const invalid = !focused && value.trim() !== "" && !isValidCurrencyValue(value);
+  const invalid = !focused && value.trim() !== "" && !isValidCurrencyValue(value, allowNegative);
   const errorId = `${fieldId}-error`;
   const hintId = `${fieldId}-hint`;
   const describedBy = invalid ? errorId : hint ? hintId : undefined;

@@ -56,6 +56,9 @@ export function educationFactErrors(data: CreditsData | undefined, taxYear?: num
     [personal?.employmentValidSsnIssuedByDueDate, education.primarySsnEligible, "taxpayer SSN"],
     [filingStatus === "mfj" ? personal?.spouse?.employmentValidSsnIssuedByDueDate : undefined, education.spouseSsnEligible, "spouse SSN"],
     [personal?.tinIssuedByDueDate, education.primaryTinEligible, "taxpayer TIN"],
+    [personal?.standardDeductionFacts?.primaryCanBeClaimedAsDependent, education.canBeClaimedAsDependent, "claimable dependency"],
+    [personal?.standardDeductionFacts?.nonresidentAlien, education.nonresidentAlien, "nonresident status"],
+    [personal?.standardDeductionFacts?.residentJointElection, education.residentJointElection, "resident joint election"],
   ] as const) if (typeof actual === "boolean" && typeof answer === "boolean" && actual !== answer) errors[`education-${label}`] = `Reconcile the ${label} answer with the actual personal-information facts.`;
   if (aoc.length) {
     for (const field of ["aocBanInEffect", "form8862Required"] as const) if (typeof education[field] !== "boolean") errors[field] = "Confirm actual AOTC prior-disallowance history.";

@@ -22,6 +22,10 @@ export async function fillRequiredTaxpayerFacts(page: Page) {
   await page.getByLabel("City", { exact: true }).fill("Austin");
   await page.getByLabel("State", { exact: true }).fill("TX");
   await page.getByLabel("ZIP", { exact: true }).fill("78701");
+  for (const label of [
+    "Were you blind under the IRS standard-deduction definition?", "Could another taxpayer claim you as a dependent for the standard deduction?", "Did the primary taxpayer die during this tax year?", "Were you a dual-status alien during this tax year?", "Were you a nonresident alien for the standard-deduction rules?", "Is this a short tax year because of an accounting-period change?",
+    "Was your spouse blind under the IRS standard-deduction definition?", "Could another taxpayer claim your spouse as a dependent?", "Did your spouse die during this tax year?", "Does your spouse itemize deductions on their separate return?", "Do you elect the additional age/blindness deduction for an eligible spouse on your separate return?",
+  ]) { const field = page.getByRole("combobox", { name: label, exact: true }); if (await field.isVisible()) await field.selectOption("false"); }
   if (await page.getByLabel("Spouse first name", { exact: true }).isVisible()) {
     await page.getByLabel("Spouse first name", { exact: true }).fill("Alex");
     await page.getByLabel("Spouse last name", { exact: true }).fill("Example");
@@ -33,6 +37,7 @@ export async function fillRequiredTaxpayerFacts(page: Page) {
 }
 
 export const taxpayerFacts2025 = {
+  standardDeductionFacts: { primaryBlind: false, primaryCanBeClaimedAsDependent: false, primaryDeceased: false, dualStatusAlien: false, nonresidentAlien: false, shortTaxYear: false },
   firstName: "Jane", lastName: "Example", ssn: "900-70-0001", dateOfBirth: "1990-06-15",
   usResidencyMonths: "12", stateResidency: "full-year", addressLine1: "123 Example St",
   addressLine2: "", city: "Austin", state: "TX", zip: "78701", dependentCount: "0", dependents: [],

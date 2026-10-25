@@ -52,6 +52,12 @@ describe("parseCurrencyInput", () => {
 // ── formatCurrencyDisplay ─────────────────────────────────────────────────
 
 describe("formatCurrencyDisplay", () => {
+  it("preserves a signed fractional amount without changing its value", () => {
+    expect(formatCurrencyDisplay("-0.01")).toBe("-0.01");
+    expect(formatCurrencyDisplay("-1000.01")).toBe("-1,000.01");
+    expect(isValidCurrencyValue("-0.01", true)).toBe(true);
+    expect(isValidCurrencyValue("-0.01")).toBe(false);
+  });
   it("preserves cents beyond the JavaScript safe integer range", () => {
     expect(formatCurrencyDisplay("9007199254740993.01")).toBe("9,007,199,254,740,993.01");
   });

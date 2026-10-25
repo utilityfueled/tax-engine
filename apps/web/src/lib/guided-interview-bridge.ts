@@ -1,3 +1,4 @@
+import { buildStandardDeductionFacts } from "./guided-standard-deduction-facts";
 import { buildActualEducationInput } from "./guided-education-facts";
 /**
  * Bridge between guided interview section data and the tax engine.
@@ -606,6 +607,8 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
       ...(hasEnteredAmount(personalInfo.childTaxCredit.nonTaxableCombatPayElection) ? { nonTaxableCombatPayElection: toDecimalString(personalInfo.childTaxCredit.nonTaxableCombatPayElection) } : {}),
     } : undefined,
     dependentCare,
+    standardDeductionFacts: buildStandardDeductionFacts(personalInfo?.standardDeductionFacts, segmentation.filingStatus, state.taxYear, personalInfo),
+    deductionElection: deductionData?.method ?? "automatic",
     educationExpenses,
     energyCredits,
     form8936: buildVehicleCreditInput(creditsData?.vehicles, state.taxYear, segmentation.filingStatus),

@@ -28,6 +28,7 @@ describe("guided actual education source facts", () => {
     }
     expect(() => buildEducationInput({ ...data, education: { ...data.education, llcStudents: [{ ...student, courseEligibilityConfirmed: true }] } }, 2026, "single", completePersonalInfo)).toThrow(/one credit|duplicate/i);
     expect(() => buildEducationInput({ ...data, education: { ...data.education, aocStudents: [{ ...aoc, studentTaxId: "999-88-7777" }] } }, 2026, "single", completePersonalInfo)).toThrow(/household/i);
+    expect(() => buildEducationInput({ ...data, education: { ...data.education, canBeClaimedAsDependent: true } }, 2026, "single", completePersonalInfo)).toThrow(/reconcile/i);
   });
   it("preserves actual under-24 refund facts and distinct 2025 timely TIN eligibility", () => {
     const aoc = { ...student, qualifiedExpenses: "4000", priorYearsClaimed: "0", completedFirstFourYearsBeforeYear: false, enrolledAtLeastHalfTime: true, pursuingDegreeOrCredential: true, felonyDrugConviction: false, institutionEin: "12-3456789", studentSsnEligible: undefined, studentTinEligible: false };

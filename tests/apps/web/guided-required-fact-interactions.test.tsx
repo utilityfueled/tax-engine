@@ -9,6 +9,8 @@ import { DeductionSourceDetails } from "@/components/guided-interview/deduction-
 import { VehicleSourceDetails } from "@/components/guided-interview/vehicle-source-details";
 import { AdoptionSourceDetails } from "@/components/guided-interview/adoption-source-details";
 import { EducationSourceDetails } from "@/components/guided-interview/education-source-details";
+import { StandardDeductionSourceDetails } from "@/components/guided-interview/standard-deduction-source-details";
+import { buildStandardDeductionFacts, type StandardDeductionData } from "@/lib/guided-standard-deduction-facts";
 import { buildEducationInput } from "@/lib/guided-interview-bridge";
 import { buildAdoptionInput, type AdoptionCreditData } from "@/lib/guided-adoption-facts";
 import { buildVehicleCreditInput, type VehicleCreditData } from "@/lib/guided-vehicle-facts";
@@ -43,6 +45,23 @@ beforeEach(() => {
 afterEach(async () => { await act(async () => root.unmount()); container.remove(); });
 
 describe("required fact interaction boundaries", () => {
+  it("collects actual deduction death and separate-spouse facts with signed worksheet amounts", async () => {
+    let latest: StandardDeductionData = {};
+    function Harness() { const [data, setData] = useState(latest); return <StandardDeductionSourceDetails data={data} filingStatus="mfs" onChange={next => { latest = next; setData(next); }} />; }
+    await act(async () => root.render(<Harness />));
+    for (const [label, value] of [
+      ["Were you blind under the IRS standard-deduction definition?", "true"], ["Could another taxpayer claim you as a dependent for the standard deduction?", "true"], ["Did the primary taxpayer die during this tax year?", "true"], ["Actual primary taxpayer death date", "2026-02-01"], ["Were you a dual-status alien during this tax year?", "false"], ["Were you a nonresident alien for the standard-deduction rules?", "false"], ["Is this a short tax year because of an accounting-period change?", "false"], ["Does your spouse itemize deductions on their separate return?", "false"], ["Do you elect the additional age/blindness deduction for an eligible spouse on your separate return?", "true"], ["Was your spouse blind under the IRS standard-deduction definition?", "true"], ["Could another taxpayer claim your spouse as a dependent?", "false"], ["Did your spouse die during this tax year?", "false"], ["Did your spouse have gross income?", "false"], ["Does your spouse file their own return?", "false"], ["Actual dependent earned-income worksheet amount", "-9007199254740993.01"],
+    ]) await change(label, value);
+    expect(control("Actual dependent earned-income worksheet amount").getAttribute("aria-invalid")).toBeNull();
+    expect(buildStandardDeductionFacts(latest, "mfs", 2026, completePersonalInfo)).toMatchObject({ primaryBlind: true, primaryDeathDate: "2026-02-01", spouseDeathDate: null, spouseBlind: true, dependentEarnedIncome: "-9007199254740993.01" });
+    await change("Did your spouse die during this tax year?", "true"); await change("Actual spouse death date", "2026-03-01");
+    expect(buildStandardDeductionFacts(latest, "mfs", 2026, completePersonalInfo)?.spouseDeathDate).toBe("2026-03-01");
+    await change("Did the primary taxpayer die during this tax year?", "false");
+    expect(() => buildStandardDeductionFacts(latest, "mfs", 2026, completePersonalInfo)).toThrow(/death|alive/i);
+    await change("Actual primary taxpayer death date", "");
+    await change("Were you blind under the IRS standard-deduction definition?", "");
+    expect(() => buildStandardDeductionFacts(latest, "mfs", 2026, completePersonalInfo)).toThrow();
+  });
   it("records AOTC history and support facts and permits clearing an obsolete refundable answer", async () => {
     let latest: EducationCreditData = { ...emptyEducationCreditData, ...completeEducationClaimant, refundableAocEligible: false, aocStudents: [{ ...completeAocEligibility, name: "Jordan Example", qualifiedExpenses: "4000", priorYearsClaimed: "0", requiresPriorYearsConfirmation: true }] };
     function Harness() { const [data, setData] = useState(latest); return <EducationSourceDetails data={data} taxYear={2026} filingStatus="mfj" onChange={next => { latest = next; setData(next); }} />; }
@@ -65,7 +84,8 @@ describe("required fact interaction boundaries", () => {
     await change("Were you a nonresident alien during the tax year?", "true");
     await change("Did you make the qualifying resident joint-return election?", "false");
     await change("Was your spouse's employment-valid SSN issued by the return due date for education credits?", "true");
-    const result = buildEducationInput({ ...emptyCreditsData, education: latest }, 2026, "mfj", completePersonalInfo);
+    const actualPersonal = { ...completePersonalInfo, standardDeductionFacts: { ...completePersonalInfo.standardDeductionFacts, nonresidentAlien: true, residentJointElection: false } };
+    const result = buildEducationInput({ ...emptyCreditsData, education: latest }, 2026, "mfj", actualPersonal);
     expect(result).toMatchObject({ residentJointElection: false, form8862Completed: false, refundableAocFacts: { fullTimeStudent: false, parentAlive: false, earnedIncome: "0", totalSupport: "9007199254740993.01" }, aocStudents: [{ priorYearsClaimed: 1, felonyDrugConviction: true, enrolledAtLeastHalfTime: false }] });
     expect(result?.refundableAocEligible).toBeUndefined();
     await click("Remove AOTC student 1");
@@ -74,10 +94,11 @@ describe("required fact interaction boundaries", () => {
     expect(() => buildEducationInput({ ...emptyCreditsData, education: latest }, 2026, "mfj", completePersonalInfo)).toThrow();
   });
   it("collects an individual LLC student and actual institution without inventing aggregate eligibility", async () => {
+    const actualPersonal = { ...completePersonalInfo, standardDeductionFacts: { ...completePersonalInfo.standardDeductionFacts, primaryCanBeClaimedAsDependent: true } };
     let latest: EducationCreditData = { ...emptyEducationCreditData, llcExpenses: "0.10" };
     function Harness() { const [data, setData] = useState(latest); return <EducationSourceDetails data={data} taxYear={2026} filingStatus="single" onChange={next => { latest = next; setData(next); }} />; }
     await act(async () => root.render(<Harness />)); await click("Add LLC student");
-    expect(() => buildEducationInput({ ...emptyCreditsData, education: latest }, 2026, "single", completePersonalInfo)).toThrow();
+    expect(() => buildEducationInput({ ...emptyCreditsData, education: latest }, 2026, "single", actualPersonal)).toThrow();
     for (const [label, value] of [
       ["Student name", "Jordan Example"], ["Student's actual SSN, ITIN or ATIN", "111-22-3333"], ["Student's household role", "primary"], ["Qualified tuition & expenses", "0.10"],
       ["Is the institution eligible for the education credit?", "true"], ["Are actual payment timing, eligible costs and coordination with other education benefits confirmed?", "true"], ["Is the Form 1098-T requirement or a documented IRS exception satisfied?", "true"], ["Was the student's employment-valid SSN issued by the return due date?", "true"], ["Was the student's SSN, ITIN or ATIN issued by the return due date?", "true"], ["Are these postsecondary courses or courses to acquire or improve job skills?", "false"],
@@ -88,15 +109,15 @@ describe("required fact interaction boundaries", () => {
     await change("Institution EIN (required for AOTC or a received Form 1098-T)", "12-3456789");
     await change("Did this student receive a current-year Form 1098-T from this institution?", "false");
     await change("Did this student receive a prior-year Form 1098-T with box 7 checked?", "true");
-    const result = buildEducationInput({ ...emptyCreditsData, education: latest }, 2026, "single", completePersonalInfo);
+    const result = buildEducationInput({ ...emptyCreditsData, education: latest }, 2026, "single", actualPersonal);
     expect(result).toMatchObject({ canBeClaimedAsDependent: true, claimedAsDependent: false, llcExpenses: "0.10", llcStudents: [{ courseEligibilityConfirmed: false, institutions: [{ receivedCurrentYear1098T: false, receivedPriorYear1098TWithBox7: true }] }] });
     await change("Qualified tuition & expenses", "0.20");
-    expect(() => buildEducationInput({ ...emptyCreditsData, education: latest }, 2026, "single", completePersonalInfo)).toThrow(/reconcile/i);
+    expect(() => buildEducationInput({ ...emptyCreditsData, education: latest }, 2026, "single", actualPersonal)).toThrow(/reconcile/i);
     await change("Saved Lifetime Learning total to reconcile", "");
-    expect(buildEducationInput({ ...emptyCreditsData, education: latest }, 2026, "single", completePersonalInfo)?.llcExpenses).toBe("0.2");
+    expect(buildEducationInput({ ...emptyCreditsData, education: latest }, 2026, "single", actualPersonal)?.llcExpenses).toBe("0.2");
     await click("Remove institution 1");
-    expect(() => buildEducationInput({ ...emptyCreditsData, education: latest }, 2026, "single", completePersonalInfo)).toThrow(/institution/i);
-    await click("Remove LLC student 1"); expect(buildEducationInput({ ...emptyCreditsData, education: latest }, 2026, "single", completePersonalInfo)).toBeUndefined();
+    expect(() => buildEducationInput({ ...emptyCreditsData, education: latest }, 2026, "single", actualPersonal)).toThrow(/institution/i);
+    await click("Remove LLC student 1"); expect(buildEducationInput({ ...emptyCreditsData, education: latest }, 2026, "single", actualPersonal)).toBeUndefined();
   });
   it("requires reconfirmation after editing annual adoption expenses and carries actual child identity", async () => {
     let latest: AdoptionCreditData = { children: [] };

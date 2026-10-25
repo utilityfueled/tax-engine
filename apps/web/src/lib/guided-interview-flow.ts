@@ -1,3 +1,4 @@
+import type { StandardDeductionData } from "./guided-standard-deduction-facts";
 /**
  * Guided interview flow — state model, section routing, skip logic, and progress.
  *
@@ -488,6 +489,7 @@ export interface SpouseInfoData {
 export const emptySpouseInfo: SpouseInfoData = { firstName: "", lastName: "", ssn: "", dateOfBirth: "", usResidencyMonths: "" };
 
 export interface PersonalInfoData {
+  standardDeductionFacts?: StandardDeductionData;
   employmentValidSsnIssuedByDueDate?: boolean | null;
   tinIssuedByDueDate?: boolean | null;
   childTaxCredit?: {

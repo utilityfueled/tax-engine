@@ -14,6 +14,7 @@ import {
   filingStatusOptions,
 } from "@/lib/guided-interview-flow";
 import { BooleanFact } from "./fact-fields";
+import { StandardDeductionSourceDetails } from "./standard-deduction-source-details";
 import { CurrencyField } from "./currency-field";
 
 function DependentCard({
@@ -276,6 +277,7 @@ export function SectionPersonalInfo({
           <span className="guided-field-hint" id="ssn-hint">Your taxpayer ID is sensitive. Review downloads omit it; complete filing exports are not yet available.</span>
         </label>
 
+        <StandardDeductionSourceDetails data={current.standardDeductionFacts} filingStatus={filingStatus} onChange={standardDeductionFacts => onDataChange({ ...current, standardDeductionFacts })} />
         {claimsDependentCredit && <fieldset className="guided-fieldset"><legend className="guided-fieldset-legend">Your credit identification requirements</legend>
           <BooleanFact label="Was your employment-valid SSN issued by the return due date, including extensions?" value={current.employmentValidSsnIssuedByDueDate} onChange={(value) => onDataChange({ ...current, employmentValidSsnIssuedByDueDate: value })} />
           <BooleanFact label="Was your SSN or ITIN issued by the return due date, including extensions?" value={current.tinIssuedByDueDate} onChange={(value) => onDataChange({ ...current, tinIssuedByDueDate: value })} />
@@ -419,6 +421,7 @@ export function SectionPersonalInfo({
             ))}
           </div>
         )}
+        <StandardDeductionSourceDetails data={current.standardDeductionFacts} filingStatus={filingStatus} onChange={standardDeductionFacts => onDataChange({ ...current, standardDeductionFacts })} />
         {claimsDependentCredit && <fieldset className="guided-fieldset"><legend className="guided-fieldset-legend">Dependent credit worksheet</legend>
           {dependents.some((entry) => entry.qualifiesForCTC) && <BooleanFact label="Were you a bona fide resident of Puerto Rico during the tax year?" value={current.childTaxCredit?.bonaFidePuertoRicoResident} onChange={(value) => onDataChange({ ...current, childTaxCredit: { ...current.childTaxCredit, bonaFidePuertoRicoResident: value } })} />}
           <CurrencyField label="Puerto Rico income excluded from federal income" hint="Schedule 8812 line 2a. Enter the actual exclusion, including zero." value={current.childTaxCredit?.puertoRicoExcludedIncome ?? ""} onChange={(value) => onDataChange({ ...current, childTaxCredit: { ...current.childTaxCredit, puertoRicoExcludedIncome: value } })} />
