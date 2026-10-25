@@ -12,6 +12,17 @@ import {
 } from "../../../apps/web/src/lib/business-expense-analysis";
 
 describe("business expense analysis helpers", () => {
+  it("rejects negative and sub-cent numeric amounts consistently with string amounts", () => {
+    for (const normalize of [normalizeBankStatementAnalysis, normalizeSelfEmploymentIncomeDocumentAnalysis]) {
+      const amounts = [-1, "-1", 1.005, "1.005", NaN, Infinity, true, {}, 0, "0", "0.01"];
+      const result = normalize({ suggestions: amounts.map(amount => ({ description: "Synthetic source", amount })) }, "source.pdf");
+      expect(result?.suggestions.map(item => item.amount)).toEqual(["0.00", "0.00", "0.01"]);
+    }
+  });
+  it("preserves an explicitly confirmed zero amount in the destination field", () => {
+    expect(addAmountToCurrencyValue("", "0.00")).toBe("0.00");
+    expect(addAmountToCurrencyValue("0.00", "0.00")).toBe("0.00");
+  });
   it("preserves repeated transaction lines for duplicate and refund reconciliation", () => {
     const text = "2025-01-08\nOFFICE SUPPLIES\n$20.00\n2025-01-09\nOFFICE SUPPLIES\n$20.00\nREFUND\n$20.00";
     expect(compactRedactedAiDocumentText(text)).toBe(text);
@@ -24,7 +35,8 @@ describe("business expense analysis helpers", () => {
       { description: "Invoice B", amount: "0.02" },
     ] }, "synthetic.txt");
     expect(analysis?.suggestions[0].amount).toBe("9007199254740993.01");
-    expect(summarizeSelfEmploymentIncomeSuggestions([analysis!])).toBe("9007199254740993.03");
+    if (!analysis) throw new Error("Synthetic analysis must preserve exact source amounts");
+    expect(summarizeSelfEmploymentIncomeSuggestions([analysis])).toBe("9007199254740993.03");
   });
   it("extracts JSON from fenced model output", () => {
     expect(extractJsonObjectFromText("```json\n{\"summary\":\"ok\"}\n```")).toBe("{\"summary\":\"ok\"}");

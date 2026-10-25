@@ -65,8 +65,9 @@ function slugify(value: string) {
 }
 
 function normalizeCurrencyAmount(value: unknown) {
-  if (typeof value === "number" && Number.isFinite(value) && Math.abs(value) <= Number.MAX_SAFE_INTEGER) {
-    return new Decimal(value.toString()).toFixed(2, Decimal.ROUND_HALF_UP);
+  if (typeof value === "number") {
+    if (!Number.isFinite(value) || new Decimal(value.toString()).abs().gt(Number.MAX_SAFE_INTEGER.toString())) return null;
+    value = value.toString();
   }
 
   if (typeof value !== "string") {
@@ -607,7 +608,7 @@ export function normalizeSelfEmploymentIncomeDocumentAnalysis(
 export function addAmountToCurrencyValue(currentValue: string, amount: string) {
   const next = parseGuidedCurrency(currentValue).plus(parseGuidedCurrency(amount));
 
-  return next.gt(0) ? next.toFixed(2, Decimal.ROUND_HALF_UP) : "";
+  return next.toFixed(2, Decimal.ROUND_HALF_UP);
 }
 
 export function addAmountToExpenseValue(currentValue: string, amount: string) {
@@ -643,9 +644,34 @@ export function summarizeBankStatementSuggestionsByCategory(
 }
 
 /** Keep the original filename on the device, including when it contains a name or SSN. */
+export interface DocumentAnalysisOptions { signal?: AbortSignal }
+
+/** Release the caller immediately on cancellation; consume a late parser result
+ * without publishing it. PDF parsing itself remains bounded by upload limits. */
+function waitForLocalText(parsing: Promise<string>, signal?: AbortSignal): Promise<string> {
+  if (!signal) return parsing;
+  return new Promise((resolve, reject) => {
+    const abort = () => {
+      signal.removeEventListener("abort", abort);
+      reject(signal.reason ?? new DOMException("Analysis cancelled", "AbortError"));
+    };
+    signal.addEventListener("abort", abort, { once: true });
+    parsing.then(value => {
+      signal.removeEventListener("abort", abort);
+      resolve(value);
+    }, error => {
+      signal.removeEventListener("abort", abort);
+      reject(error);
+    });
+    if (signal.aborted) abort();
+  });
+}
+
 async function analyzeRedactedDocumentUploads<T extends { fileName: string; label: string }>(
-  files: File[], endpoint: string, failureLabel: string,
+  files: File[], endpoint: string, failureLabel: string, options?: DocumentAnalysisOptions,
 ): Promise<T[]> {
+  const signal = options?.signal;
+  signal?.throwIfAborted();
   if (files.length === 0) return [];
   const originals = new Map<string, File>();
   const documents = await Promise.all(files.map(async (file) => {
@@ -653,7 +679,8 @@ async function analyzeRedactedDocumentUploads<T extends { fileName: string; labe
     if (!looksLikePdf) {
       throw new Error(`${file.name} must be a PDF so we can redact sensitive text locally before AI analysis.`);
     }
-    const extractedText = await extractPdfTextFromFile(file);
+    const extractedText = await waitForLocalText(extractPdfTextFromFile(file), signal);
+    signal?.throwIfAborted();
     const { redactedText } = redactTextForAiAnalysis(extractedText);
     if (!redactedText.trim()) throw new Error("Document did not produce readable text.");
     if (containsUnsafeDirectIdentifier(redactedText)) {
@@ -663,15 +690,20 @@ async function analyzeRedactedDocumentUploads<T extends { fileName: string; labe
     originals.set(fileName, file);
     return { fileName, redactedText };
   }));
+  signal?.throwIfAborted();
   const response = await fetch(endpoint, {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ documents }),
+    signal,
   });
+  signal?.throwIfAborted();
   if (!response.ok) {
     const payload = await response.json().catch(() => null) as { error?: string } | null;
+    signal?.throwIfAborted();
     throw new Error(payload?.error || `${failureLabel} failed with status ${response.status}.`);
   }
   const payload = await response.json() as { analyses?: T[] };
+  signal?.throwIfAborted();
   if (!Array.isArray(payload.analyses)) return [];
   const seen = new Set<string>();
   return payload.analyses.map((analysis) => {
@@ -684,9 +716,9 @@ async function analyzeRedactedDocumentUploads<T extends { fileName: string; labe
   });
 }
 
-export async function analyzeBusinessExpenseStatements(files: File[]) {
+export async function analyzeBusinessExpenseStatements(files: File[], options?: DocumentAnalysisOptions) {
   return analyzeRedactedDocumentUploads<ScheduleCBankStatementAnalysis>(files,
-    "/api/business-expense-analysis", "Business expense analysis");
+    "/api/business-expense-analysis", "Business expense analysis", options);
 }
 
 export function summarizeSelfEmploymentIncomeSuggestions(
@@ -707,7 +739,7 @@ export function summarizeSelfEmploymentIncomeSuggestions(
   return total.toFixed(2);
 }
 
-export async function analyzeSelfEmploymentIncomeDocuments(files: File[]) {
+export async function analyzeSelfEmploymentIncomeDocuments(files: File[], options?: DocumentAnalysisOptions) {
   return analyzeRedactedDocumentUploads<SelfEmploymentIncomeDocumentAnalysis>(files,
-    "/api/self-employment-income-analysis", "Income document analysis");
+    "/api/self-employment-income-analysis", "Income document analysis", options);
 }

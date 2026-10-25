@@ -35,6 +35,52 @@ describe.each([
     expect(fetchFn).not.toHaveBeenCalled();
   });
 
+  it("cancels before local parsing and performs no network request", async () => {
+    const controller = new AbortController(); controller.abort();
+    const fetchFn = vi.fn(); vi.stubGlobal("fetch", fetchFn);
+    await expect(analyze([new File(["synthetic"], "source.pdf")], { signal: controller.signal })).rejects.toMatchObject({ name: "AbortError" });
+    expect(extractPdfTextFromFile).not.toHaveBeenCalled(); expect(fetchFn).not.toHaveBeenCalled();
+  });
+
+  it("cancels while local extraction is in flight without sending its late text", async () => {
+    const controller = new AbortController();
+    vi.mocked(extractPdfTextFromFile).mockImplementation(async () => { controller.abort(); return "2026-01-15 COFFEE SHOP $12.34"; });
+    const fetchFn = vi.fn(); vi.stubGlobal("fetch", fetchFn);
+    await expect(analyze([new File(["synthetic"], "source.pdf")], { signal: controller.signal })).rejects.toMatchObject({ name: "AbortError" });
+    expect(fetchFn).not.toHaveBeenCalled();
+  });
+
+  it("does not make the caller wait for an unfinished parser after cancellation", async () => {
+    const controller = new AbortController();
+    let finish: (value: string) => void = () => undefined;
+    vi.mocked(extractPdfTextFromFile).mockReturnValue(new Promise(resolve => { finish = resolve; }));
+    const fetchFn = vi.fn(); vi.stubGlobal("fetch", fetchFn);
+    const result = analyze([new File(["synthetic"], "source.pdf")], { signal: controller.signal });
+    controller.abort();
+    await expect(result).rejects.toMatchObject({ name: "AbortError" });
+    finish("2026-01-15 COFFEE SHOP $12.34");
+    await Promise.resolve();
+    expect(fetchFn).not.toHaveBeenCalled();
+  });
+
+  it("forwards cancellation to fetch and rejects a late successful response", async () => {
+    const controller = new AbortController();
+    vi.mocked(extractPdfTextFromFile).mockResolvedValue("2026-01-15 COFFEE SHOP $12.34");
+    vi.stubGlobal("fetch", vi.fn<typeof fetch>().mockImplementation(async (_url, init) => {
+      expect(init?.signal).toBe(controller.signal);
+      controller.abort();
+      return Response.json({ analyses: [] });
+    }));
+    await expect(analyze([new File(["synthetic"], "source.pdf")], { signal: controller.signal })).rejects.toMatchObject({ name: "AbortError" });
+  });
+
+  it("rejects results if cancellation happens while decoding JSON", async () => {
+    const controller = new AbortController();
+    vi.mocked(extractPdfTextFromFile).mockResolvedValue("2026-01-15 COFFEE SHOP $12.34");
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => { controller.abort(); return { analyses: [] }; } }));
+    await expect(analyze([new File(["synthetic"], "source.pdf")], { signal: controller.signal })).rejects.toMatchObject({ name: "AbortError" });
+  });
+
   it.each(["invalid-type", "unreadable", "extractor-error"])("does not transmit a failed local preparation: %s", async (failure) => {
     const fetchFn = vi.fn(); vi.stubGlobal("fetch", fetchFn);
     vi.mocked(extractPdfTextFromFile).mockImplementation(async () => {

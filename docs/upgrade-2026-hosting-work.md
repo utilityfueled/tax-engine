@@ -126,3 +126,21 @@ provider costs, reservations, account/reminder metadata and two same-ID tenant
 workspaces all survived. The restored legacy fields required cleanup again,
 which was verified idempotent. Web types and scoped lint pass. This is local
 synthetic evidence, not staging authorization or hosted auth recovery proof.
+
+## Cancellable document-analysis transport
+
+Both income and expense analysis accept an `AbortSignal`, reject cancellation
+before parsing or transmission, pass the signal to fetch, and reject late fetch
+or JSON results. Cancelling while PDF extraction is pending releases the caller
+immediately and consumes its eventual result without sending it. This does not
+claim that the PDF parser itself terminates immediately. Guided controls are
+being wired separately by the facts package.
+
+Numeric extraction no longer rounds sub-cent values or accepts negative numbers
+that the equivalent string parser rejects. Actual source zero survives explicit
+application to an empty field. Refunds/transfers that cannot be represented by
+these nonnegative suggestion contracts still require separate source review;
+this change does not qualify refund extraction or invent netting rules.
+Ten initial cancellation/amount regressions failed. Forty-three focused tests,
+web types and scoped lint pass. Tests use synthetic local extraction and mocked
+fetch; no live provider cancellation or billing-settlement claim is made.
