@@ -1,0 +1,140 @@
+form: "Form 1099-Q source coordination"
+fullName: "Actual education distributions, expenses, transfers, and additional tax"
+taxYear: 2026
+irsReference: "https://www.irs.gov/publications/p970"
+sources:
+  - "https://uscode.house.gov/us/usc/119-124/t26/s529/"
+  - "https://uscode.house.gov/us/usc/119-124/t26/s530/"
+  - "https://www.govinfo.gov/content/pkg/PLAW-119publ21/html/PLAW-119publ21.htm"
+  - "https://www.irs.gov/taxtopics/tc313"
+  - "https://www.irs.gov/instructions/i1099q"
+  - "https://www.irs.gov/instructions/i5329"
+  - "https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"
+  - "https://www.irs.gov/pub/irs-drop/n-25-67.pdf"
+notes: |
+  Source refresh 2026-10-25. Pub. 970 (2025) chapters 6 and 7 are the
+  Coverdell and QTP chapters. The continuous Form 1099-Q instructions are
+  revised April 2025. Box 4a is a transfer indicator, 4b a QTP-to-Roth
+  indicator; neither proves eligibility. Boxes 5a/5b/5c identify private
+  QTP, state QTP, and Coverdell. There is no ABLE Box 5 type on this form.
+  Box 6 states the recipient is not the designated beneficiary. Box 7
+  may contain a distribution code or Coverdell year-end value; blank
+  Coverdell earnings/basis must not be manufactured as zero.
+
+  Verified 2025 and all 2026 paths require actual statement identity,
+  account and beneficiary links, recipient ownership, reconciled amounts,
+  explicit expense reductions and allocations, and source confirmation.
+  Historical aggregate-only 2025 input remains visibly unverified. It is
+  not evidence of complete source facts or filing qualification.
+
+  QTP account aggregation was repealed for distributions after 2014.
+  Expenses cannot cross beneficiaries or be used twice. Coverdell uses
+  Pub. 970 Worksheet 6-3: one beneficiary-wide expense ratio and a separate
+  basis worksheet for each account. Other-recipient results are retained
+  for review, but are not income or additional tax on this return.
+  No automatic allocation optimization or assumed independent review.
+lines:
+  - line: "source-contract"
+    description: "Preserve original statement facts and missing values"
+    formula: "Box1 = Box2 + Box3 when reported; preserve missing Coverdell Box2/3 for actual Worksheet6-3; reject mismatched years, duplicate source IDs and incomplete confirmed sources"
+    testRef: "tests/engine/forms/form-1099-q-source.test.ts::Form1099Q source contract preserves missing facts and refuses default promotion"
+  - line: "expense-allocation"
+    description: "Actual expense ledger and no double benefit"
+    formula: "Net expense = paid - refunds - tax-free assistance - education-credit expenses - other-benefit expenses; sum actual allocations cannot exceed net expense; each source and expense must have the same beneficiary"
+    testRef: "tests/engine/forms/form-1099-q-source.test.ts::Form1099Q source allocations prevent cross-beneficiary and duplicate expense use"
+  - line: "k12-limit"
+    description: "Year-specific per-beneficiary limit across all QTPs"
+    formula: "2025 cap10000; 2026 cap20000; remaining=max(0,cap-actual outside-plan qualified K12 distributions); proportionally limit the beneficiary's elected K12 allocations to remaining cap"
+    notes: "PL119-21 section70413(a) expanded categories applies to distributions after July4,2025. The20000 cap applies to years beginning after December31,2025. Coverdell K12 expenses do not use this QTP cap."
+    testRef: "tests/engine/forms/form-1099-q-source.test.ts::Form1099Q applies the2026 K12 cap across accounts without mixing earnings"
+  - line: "expanded-categories"
+    description: "Actual category eligibility and effective dates"
+    formula: "Accept qualified K12 curriculum/materials/online materials, eligible outside-home unrelated tutoring, testing, dual enrollment, licensed disability therapies, and recognized postsecondary credential expenses only after statutory effective date; preserve known false and reject unknown required facts"
+    testRef: "tests/engine/forms/form-1099-q-source.test.ts::Form1099Q applies expanded expenses only to eligible distributions after enactment"
+  - line: "loan-limit"
+    description: "Actual borrower lifetime history"
+    formula: "Per borrower remaining=max(0,10000-prior qualified distributions-other current qualified distributions); beneficiary or sibling only; section221 deduction excludes only the tax-free QTP earnings used for loan interest, retaining basis-funded interest"
+    testRef: "tests/engine/forms/form-1099-q-source.test.ts::Form1099Q applies student-loan lifetime limits to the actual borrower"
+  - line: "loan-interest-coordination"
+    description: "Actual interest allocations and deductible-interest source reconciliation"
+    formula: "Tax-free earnings used for interest = statement earnings ratio times the actually funded interest allocation after applicable loan and distribution limits; borrower deductible interest cannot include those earnings; no subtraction of principal or basis-funded interest"
+    testRef: "tests/engine/forms/form-1099-q-source.test.ts::Form1099Q preserves basis-funded loan interest and identifies excluded earnings"
+  - line: "qtp-taxable-earnings"
+    description: "Separate actual QTP distributions"
+    formula: "For each statement, taxable earnings=max(0,earnings)-round(max(0,earnings)*min(1,(valid transfers+allocated AQEE)/gross)); sum only primary/spouse recipient income on this return"
+    notes: "Source cents remain in audit inputs; report amounts use IRS nearest-dollar rounding. No loss deduction is manufactured."
+    testRef: "tests/engine/forms/form-1099-q-source.test.ts::Form1099Q reproduces Pub970 credit coordination and preserves other recipients"
+  - line: "coverdell-worksheet"
+    description: "Pub970 Worksheet6-3 actual account basis"
+    formula: "H=min(1,beneficiary Coverdell AQEE/all nonrollover Coverdell distributions); account basis ratio=min(1,(prior basis+current contributions)/(year-end value+outstanding rollovers+account distributions)); taxable=account earnings-round(account earnings*H); ending basis=prior basis+contributions-distributed basis"
+    testRef: "tests/engine/forms/form-1099-q-source.test.ts::Form1099Q calculates missing Coverdell earnings from actual account history"
+  - line: "transfer-eligibility"
+    description: "Actual transfer timing, relationship and capacity"
+    formula: "QTP/Coverdell rollover within60days with eligible beneficiary/family and applicable12month restriction; ABLE actual remaining annual capacity; Roth direct same-beneficiary transfer with15year account/5year contributions/annual IRA and35000 lifetime limits; refunded QTP expense recontributed within60days"
+    testRef: "tests/engine/forms/form-1099-q-source.test.ts::Form1099Q validates transfer eligibility instead of trusting Box4"
+  - line: "transfer-capacities"
+    description: "Year-specific ABLE and Roth capacity without manufacturing account identity"
+    formula: "ABLE ordinary annual limit2025=19000,2026=20000, less other actual destination contributions; Roth IRA limit2026=7500 plus1100 at age50,2025=7000 plus1000; aggregate recipient lifetime rollover35000; use actual remaining eligible compensation and five-year funds"
+    testRef: "tests/engine/forms/form-1099-q-source.test.ts::Form1099Q applies actual ABLE and Roth capacities for the correct year"
+  - line: "coverdell-credential"
+    description: "Coverdell incorporates the higher-education definition"
+    formula: "IRC530(b)(2)(A)(i) incorporates529(e)(3), including recognized credential expenses after July4,2025; Coverdell K12 tutoring retains its own statutory requirements"
+    testRef: "tests/engine/forms/form-1099-q-source.test.ts::Form1099Q preserves Coverdell credential and tutoring eligibility"
+  - line: "rounding-and-validation"
+    description: "Exact source arithmetic and required-source boundaries"
+    formula: "Preserve source cents and known false; apply nearest-dollar report arithmetic; reject inconsistent boxes, unsupported distribution years, invalid dates, unknown branch facts and overallocated source expenses"
+    testRef: "tests/engine/forms/form-1099-q-source.test.ts::Form1099Q validates source boundaries and rounds IRS report amounts"
+  - line: "additional-tax"
+    description: "Form5329 PartII lines5 through8"
+    formula: "Line5=taxable education earnings by actual recipient; line6=taxable earnings attributable to distinct eligible death/disability/scholarship/military distributions plus income arising solely from education-credit allocation, capped at line5; line7=max(0,line5-line6); line8=round(line7*.10)"
+    notes: "Scholarship and military amounts limit the eligible gross distribution; they are not dollar-for-dollar taxable-earnings exclusions. Actual recipient exceptions and source amounts must reconcile."
+    testRef: "tests/engine/forms/form-1099-q-source.test.ts::Form1099Q prorates scholarship exceptions and includes credit-only exceptions"
+  - line: "credit-result-reconciliation"
+    description: "Final return validates the elected credit allocation"
+    formula: "Bind actual student identity and allocated expenses to education-credit inputs; after Form8863, reject positive allocations that create taxable529 earnings when the corresponding allowed education benefit is zero; do not silently reassign expenses"
+    testRef: "tests/engine/forms/form-1099-q-source.test.ts::Form1099Q binds source credit allocations to actual student expenses"
+
+  - line: "transfer-source-capacity"
+    description: "Do not reuse eligible funds or inconsistent transfer histories"
+    formula: "Reduce five-year eligible funds once per QTP account; reduce Roth annual/lifetime capacity once per beneficiary and ABLE capacity once per destination account; reject inconsistent baseline facts and repeated same-beneficiary rollovers in the same12month period"
+    testRef: "tests/engine/forms/form-1099-q-source.test.ts::Form1099Q reconciles transfer histories and never reuses source capacity"
+  - line: "coverdell-account-rounding"
+    description: "Round the actual account worksheet once"
+    formula: "Compute each account Worksheet6-3 lines1-15 once using the beneficiary ratio; split computed whole-dollar basis, earnings and exemption across statements while preserving account totals; do not independently round each statement into a different account result"
+    testRef: "tests/engine/forms/form-1099-q-source.test.ts::Form1099Q preserves Coverdell account totals across multiple statements"
+  - line: "source-migration"
+    description: "Conflicting old aggregate fields are not discarded"
+    formula: "Source-ledger calculation requires removal of legacy aggregate aliases after actual source reconciliation; validate supplied distribution dates even when no transfer is claimed"
+    testRef: "tests/engine/forms/form-1099-q-source.test.ts::Form1099Q rejects conflicting legacy aliases and malformed statement dates"
+
+  - line: "coverdell-transfer-basis"
+    description: "Carry only actual documented rollover basis"
+    formula: "Exclude eligible ESA rollovers from Worksheet6-3 distributions; reconcile current account basis with actual incoming and outgoing rollover basis, and retain transfer earnings separately from education-expense earnings"
+    testRef: "tests/engine/forms/form-1099-q-source.test.ts::Form1099Q carries actual Coverdell rollover basis without inventing zero"
+  - line: "coverdell-qtp-contribution"
+    description: "Coverdell contribution to a QTP is a qualified expense"
+    formula: "IRC530(b)(2)(B): include actual same-beneficiary QTP contribution as Coverdell qualified expense through its matching destination account, received date and source allocation; do not exclude it as an ESA rollover"
+    testRef: "tests/engine/forms/form-1099-q-source.test.ts::Form1099Q treats a Coverdell QTP contribution as an actual linked expense"
+
+  - line: "known-source-conditions"
+    description: "Unknown is distinct from confirmed ineligibility"
+    formula: "Require applicable source fields and lists; preserve confirmed false as zero eligibility; reject invalid negative earnings or separately unresolved prohibited distributions"
+    testRef: "tests/engine/forms/form-1099-q-source.test.ts::Form1099Q enforces known source conditions and preserves explicit ineligibility"
+  - line: "exception-source-boundaries"
+    description: "Actual events and refund deadlines"
+    formula: "Death exception requires eligible recipient and event no later than distribution; disability requires actual eligibility; QTP refund recontribution is limited to actual refund and60days after refund"
+    testRef: "tests/engine/forms/form-1099-q-source.test.ts::Form1099Q applies actual death disability and refunded-expense sources"
+  - line: "credit-exception-boundaries"
+    description: "Actual credit student and exception allocations"
+    formula: "One actual linked credit student, eligible expense cap, and distinct nonoverlapping additional-tax exception source; no fabricated student or double exception"
+    testRef: "tests/engine/forms/form-1099-q-source.test.ts::Form1099Q reconciles actual education-credit students and exclusive exceptions"
+
+  - line: "transfer-source-identity"
+    description: "Do not duplicate refunds or misidentify a Roth recipient"
+    formula: "Group refund recontributions by actual refund source and cap total at the documented refund; Box4b recipient must be the designated beneficiary; unknown account and capacity facts remain blocked"
+    testRef: "tests/engine/forms/form-1099-q-source.test.ts::Form1099Q preserves refund capacity and validates actual transfer identities"
+
+  - line: "account-source-reconciliation"
+    description: "Source-empty accounts and inconsistent stated basis remain distinct"
+    formula: "A confirmed zero distribution produces zero report income; actual reported ESA earnings and basis must reconcile to its account worksheet; actual LLC allocations cannot exceed the return's10000 expense cap"
+    testRef: "tests/engine/forms/form-1099-q-source.test.ts::Form1099Q reconciles zero accounts stated basis and LLC allocations"

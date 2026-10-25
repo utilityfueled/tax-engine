@@ -566,31 +566,135 @@ export const Form1099CSchema = z.object({
   fmvOfProperty: optionalDecimal, // Box 7
 });
 
-export const Form1099QSchema = z.object({
+const EducationDistributionTransferSchema = z.object({
+  kind: z.enum(["none", "qtp", "coverdell", "able", "roth", "refund_recontribution"]),
+  amount: optionalDecimalInput,
+  receivedDate: z.string().optional(),
+  sameBeneficiary: z.boolean().optional(),
+  eligibleFamilyMember: z.boolean().optional(),
+  priorRolloverWithin12Months: z.boolean().optional(),
+  destinationBeneficiaryAge: z.number().int().min(0).optional(),
+  destinationSpecialNeeds: z.boolean().optional(),
+  ableAnnualContributionLimit: optionalDecimalInput,
+  otherAbleContributions: optionalDecimalInput,
+  destinationAccountEligible: z.boolean().optional(),
+  destinationAccountId: z.string().trim().min(1).optional(),
+  accountOpenedDate: z.string().optional(),
+  contributionsAndEarningsBeforeFiveYears: optionalDecimalInput,
+  beneficiaryAgeAtYearEnd: z.number().int().min(0).optional(),
+  beneficiaryTaxableCompensation: optionalDecimalInput,
+  otherIraContributions: optionalDecimalInput,
+  previousRothRollovers: optionalDecimalInput,
+  refundSourceId: z.string().trim().min(1).optional(),
+  refundDate: z.string().optional(),
+  refundedExpenseAmount: optionalDecimalInput,
+  coverdellTransferredBasis: optionalDecimalInput,
+});
+export const Form1099QSchema = z.preprocess((value) => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const raw = value as Record<string, unknown>;
+  const required = ["sourceId", "accountId", "beneficiaryId", "recipientOwner", "taxYear", "accountType", "grossDistribution", "isTrusteeToTrustee", "isQtpToRoth", "recipientNotBeneficiary", "sourceFactsConfirmed", "transfer"];
+  return { ...raw, sourceFactsComplete: raw.sourceFactsComplete !== false && required.every(field => raw[field] !== undefined) };
+}, z.object({
+  sourceFactsComplete: z.boolean().optional(),
+  sourceFactsConfirmed: z.boolean().optional(),
+  sourceId: z.string().trim().min(1).optional(),
+  accountId: z.string().trim().min(1).optional(),
+  beneficiaryId: z.string().trim().min(1).optional(),
+  recipientOwner: z.enum(["primary", "spouse", "other"]).optional(),
+  /** Opaque source person link; required for a recipient outside this return. */
+  recipientId: z.string().trim().min(1).optional(),
+  taxYear: z.number().int().optional(),
   payerName: z.string().optional(),
-  accountType: z.enum(["529", "coverdell_esa"]).default("529"), // Box 5 simplified
+  accountType: z.enum(["529", "coverdell_esa"]).default("529"), // Boxes5a/5b versus5c
   grossDistribution: decimal, // Box 1
-  earnings: optionalDecimal, // Box 2
-  basis: optionalDecimal, // Box 3
-  isTrusteeToTrustee: z.boolean().default(false), // Box 4
+  earnings: optionalDecimalInput, // Box2: an omitted Coverdell value is not zero
+  basis: optionalDecimalInput, // Box3
+  isTrusteeToTrustee: z.boolean().default(false), // Box4a
+  isQtpToRoth: z.boolean().optional(), // Box4b
+  recipientNotBeneficiary: z.boolean().optional(), // Box6
+  distributionCode: z.enum(["1", "2", "3", "4", "5", "6"]).optional(),
+  finalDistribution: z.boolean().optional(),
+  distributionDate: z.string().optional(),
+  /** Actual source confirmation when an annual statement contains several distributions. */
+  allDistributionsAfterJuly42025: z.boolean().optional(),
+  transfer: EducationDistributionTransferSchema.optional(),
+}));
+
+const EducationDistributionExpenseSchema = z.object({
+  id: z.string().trim().min(1), beneficiaryId: z.string().trim().min(1),
+  category: z.enum(["postsecondary_tuition", "postsecondary_books", "postsecondary_special_needs", "postsecondary_room_board", "postsecondary_computer", "k12_tuition", "k12_curriculum", "k12_books", "k12_online", "k12_tutoring", "k12_testing", "k12_dual_enrollment", "k12_disability_therapy", "coverdell_k12_other", "qtp_contribution", "apprenticeship", "student_loan", "credential_enrollment", "credential_testing", "credential_continuing_education"]),
+  paidDate: z.string().optional(),
+  amount: optionalDecimalInput, refundedAmount: optionalDecimalInput,
+  taxFreeAssistance: optionalDecimalInput, educationCreditAmount: optionalDecimalInput,
+  otherTaxBenefitAmount: optionalDecimalInput,
+  qualificationConfirmed: z.boolean().optional(),
+  halfTimeStudent: z.boolean().optional(), roomBoardAllowance: optionalDecimalInput,
+  schoolOwnedHousingCharge: optionalDecimalInput,
+  tutorUnrelated: z.boolean().optional(), tutoringOutsideHome: z.boolean().optional(), tutorQualified: z.boolean().optional(),
+  studentHasDisability: z.boolean().optional(), providerLicensedOrAccredited: z.boolean().optional(),
+  credentialRecognized: z.boolean().optional(), requiredForCredential: z.boolean().optional(),
+  destinationAccountId: z.string().trim().min(1).optional(),
+  borrowerId: z.string().trim().min(1).optional(), beneficiaryOrSibling: z.boolean().optional(),
+  studentLoanInterestAmount: optionalDecimalInput, studentLoanInterestDeducted: optionalDecimalInput,
+});
+const EducationDistributionSourceFactsSchema = z.object({
+  taxYear: z.number().int().optional(), sourceFactsConfirmed: z.boolean().optional(),
+  allDistributionsReconciled: z.boolean().optional(),
+  exceptionsDistinctFromCreditConfirmed: z.boolean().optional(),
+  beneficiaries: z.array(z.object({
+    id: z.string().trim().min(1), name: z.string().optional(),
+    studentTaxId: z.string().regex(/^\d{3}-?\d{2}-?\d{4}$/).optional(),
+    outsideK12QualifiedDistributions: optionalDecimalInput,
+  })).max(100).optional(),
+  expenses: z.array(EducationDistributionExpenseSchema).max(500).optional(),
+  allocations: z.array(z.object({
+    expenseId: z.string().trim().min(1), sourceId: z.string().trim().min(1),
+    /** Actual expense allocation after all reductions, before category caps. */
+    amount: optionalDecimalInput,
+    /** Distinct portion of this expense taken into account for an education credit. */
+    creditAmount: optionalDecimalInput,
+    /** Actual interest portion of this loan-payment allocation, before statutory caps. */
+    loanInterestAmount: optionalDecimalInput,
+  })).max(1000).optional(),
+  loanBorrowers: z.array(z.object({
+    id: z.string().trim().min(1), owner: z.enum(["primary", "spouse", "other"]).optional(),
+    priorQualifiedDistributions: optionalDecimalInput,
+    otherCurrentQualifiedDistributions: optionalDecimalInput,
+  })).max(100).optional(),
+  coverdellAccounts: z.array(z.object({
+    accountId: z.string().trim().min(1), priorYearBasis: optionalDecimalInput,
+    currentYearContributions: optionalDecimalInput, yearEndValue: optionalDecimalInput,
+    outstandingRollovers: optionalDecimalInput,
+    /** Actual basis received in rollovers, not their gross value. Explicit zero when none. */
+    rolloverBasisReceived: optionalDecimalInput,
+  })).max(100).optional(),
+  penaltyExceptions: z.array(z.object({
+    id: z.string().trim().min(1), sourceId: z.string().trim().min(1),
+    kind: z.enum(["scholarship", "military_academy", "death", "disability"]),
+    qualifyingAmount: optionalDecimalInput, distributionAmount: optionalDecimalInput,
+    eligibilityConfirmed: z.boolean().optional(), eventDate: z.string().optional(),
+    paidToBeneficiaryOrEstate: z.boolean().optional(),
+  })).max(500).optional(),
 });
 
 /** Qualified education expense summary for Form 1099-Q distribution taxation */
 export const QualifiedEducationExpenseSummarySchema = z.object({
   /** Total qualified education expenses paid during the year for the beneficiary */
-  totalQualifiedExpenses: decimal,
+  totalQualifiedExpenses: optionalDecimalInput,
   /** Tax-free educational assistance: scholarships, grants, employer assistance, etc. */
-  taxFreeEducationalAssistance: optionalDecimal,
+  taxFreeEducationalAssistance: optionalDecimalInput,
   /** Amounts used to claim AOTC or LLC on Form 8863 */
-  amountsUsedForEducationCredits: optionalDecimal,
+  amountsUsedForEducationCredits: optionalDecimalInput,
   /** Penalty exception: scholarship/grant amount that exempts earnings from 10% penalty */
-  penaltyExceptionScholarshipAmount: optionalDecimal,
+  penaltyExceptionScholarshipAmount: optionalDecimalInput,
   /** Penalty exception: beneficiary died */
-  penaltyExceptionDeath: z.boolean().default(false),
+  penaltyExceptionDeath: z.boolean().optional(),
   /** Penalty exception: beneficiary became disabled */
-  penaltyExceptionDisability: z.boolean().default(false),
+  penaltyExceptionDisability: z.boolean().optional(),
   /** Penalty exception: cost of attendance at US military academy */
-  penaltyExceptionMilitaryAcademyAmount: optionalDecimal,
+  penaltyExceptionMilitaryAcademyAmount: optionalDecimalInput,
+  sourceFacts: EducationDistributionSourceFactsSchema.optional(),
 });
 
 /** COD exclusion under IRC §108 — filed on Form 982 */
