@@ -1372,7 +1372,7 @@ describe("workspace engine input", () => {
       documents,
       createHsaReturnSummary({}),
       structuredFacts,
-      workspaceTaxpayerFixture()
+      { ...workspaceTaxpayerFixture(), filingStatus: "married_filing_jointly", spouse: { firstName: "Jordan", lastName: "Example", ssn: "900-70-0002", dateOfBirth: "1991-02-02" } }
     );
 
     expect(previewInput).not.toBeNull();
@@ -1733,6 +1733,8 @@ describe("workspace engine input", () => {
           employerName: "Primary Employer",
           employerEin: "12-3456789",
           wages: "65000",
+          socialSecurityWages: "65000",
+          medicareWages: "65000",
           federalWithheld: "7000",
           box12CodeW: "500",
           accountHolder: "primary",
@@ -1754,6 +1756,8 @@ describe("workspace engine input", () => {
           employerName: "Spouse Employer",
           employerEin: "98-7654321",
           wages: "42000",
+          socialSecurityWages: "42000",
+          medicareWages: "42000",
           federalWithheld: "4500",
           box12CodeW: "900",
           accountHolder: "spouse",
@@ -1764,7 +1768,7 @@ describe("workspace engine input", () => {
     const previewInput = buildWorkspaceEngineInput(
       documents,
       createWagesReturnSummary({
-        taxYearState: "multiple",
+        taxYearState: "single",
         items: [
           {
             id: "wages-and-withholding",
@@ -1779,7 +1783,7 @@ describe("workspace engine input", () => {
         ]
       }),
       structuredFacts,
-      workspaceTaxpayerFixture()
+      { ...workspaceTaxpayerFixture(), filingStatus: "married_filing_jointly", spouse: { firstName: "Jordan", lastName: "Example", ssn: "900-70-0002", dateOfBirth: "1991-02-02" } }
     );
 
     expect(previewInput).not.toBeNull();

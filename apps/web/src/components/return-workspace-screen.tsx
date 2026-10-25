@@ -54,12 +54,14 @@ import {
   type ProviderWorkspaceResponse
 } from "@/lib/provider-workspace-request";
 import { prepareUploadableFiles } from "@/lib/uploaded-document-detection";
+import { DocumentTaxYearField } from "./document-tax-year-field";
 import { cacheWorkspaceDocumentFiles, deleteCachedWorkspaceDocumentFiles } from "@/lib/workspace-document-file-cache";
 import {
   answerInterviewQuestion,
   answerWorkspaceInterviewQuestion,
   clearWorkspace,
   clearWorkspaceRecord,
+  confirmWorkspaceDocumentTaxYear,
   getFutureYearSampleUploadMessage,
   ingestFiles,
   ingestFilesIntoWorkspace,
@@ -810,6 +812,13 @@ export function ReturnWorkspaceScreen({
         setStorageMessage("Could not remove the document. Please try again.");
       }
     })();
+  }
+
+  async function confirmDocumentYear(documentId: string, year: number | null) {
+    if (!workspace) throw new Error("The return is not available.");
+    const nextWorkspace = confirmWorkspaceDocumentTaxYear(workspace, documentId, year);
+    await persistHostedWorkspace(nextWorkspace);
+    setStorageMessage("Document year saved. Review the related answers again.");
   }
 
   function markInterviewQuestionAnswered(
@@ -2178,6 +2187,12 @@ export function ReturnWorkspaceScreen({
                     </div>
                     <p className="document-meta">{document.name}</p>
                     <p className="document-meta">{document.notes}</p>
+                    <DocumentTaxYearField
+                      key={`${document.id}:${document.taxYear ?? "unknown"}`}
+                      taxYear={document.taxYear}
+                      fixture={Boolean(document.matchedFixtureId)}
+                      onConfirm={(year) => confirmDocumentYear(document.id, year)}
+                    />
                     {formatDocumentCoverageNote(document.coverage, workspace.returnSummary) ? (
                       <p className="document-meta">
                         {formatDocumentCoverageNote(document.coverage, workspace.returnSummary)}

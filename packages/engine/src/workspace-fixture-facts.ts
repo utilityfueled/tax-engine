@@ -30,12 +30,14 @@ const fixtureStructuredFactsByFixtureId: Record<string, FixtureStructuredFactTem
       idSuffix: "fixture-wages",
       factId: "wages",
       label: "Wages",
-      value: "Official fixture wages: Form W-2 box 1 wages $52,000 and box 2 federal withholding $5,000.",
+      value: "Official fixture wages: Form W-2 box 1 wages $52,000, box 2 federal withholding $5,000, and boxes 3 and 5 payroll wages $52,000.",
       machineValue: {
         entryKind: "w2-summary",
         employerName: "Official fixture employer",
         employerEin: "12-3456789",
         wages: "52000",
+        socialSecurityWages: "52000",
+        medicareWages: "52000",
         federalWithheld: "5000"
       } satisfies WorkspaceStructuredFactMachineValueW2Summary
     },
@@ -51,12 +53,14 @@ const fixtureStructuredFactsByFixtureId: Record<string, FixtureStructuredFactTem
       idSuffix: "fixture-wages",
       factId: "wages",
       label: "Wages",
-      value: "Official fixture wages: Form W-2 box 1 wages $52,000 and box 2 federal withholding $5,000.",
+      value: "Official fixture wages: Form W-2 box 1 wages $52,000, box 2 federal withholding $5,000, and boxes 3 and 5 payroll wages $52,000.",
       machineValue: {
         entryKind: "w2-summary",
         employerName: "Official fixture employer",
         employerEin: "12-3456789",
         wages: "52000",
+        socialSecurityWages: "52000",
+        medicareWages: "52000",
         federalWithheld: "5000"
       } satisfies WorkspaceStructuredFactMachineValueW2Summary
     },
@@ -295,7 +299,8 @@ const fixtureStructuredFactsByFixtureId: Record<string, FixtureStructuredFactTem
 
 export function buildFixtureStructuredFacts(
   document: WorkspaceDocumentRecord,
-  supportedFactIds: ReadonlySet<SeededFactId>
+  supportedFactIds: ReadonlySet<SeededFactId>,
+  namespaceDocument = false
 ): WorkspaceStructuredFactRecord[] {
   if (!document.matchedFixtureId) {
     return [];
@@ -307,7 +312,7 @@ export function buildFixtureStructuredFacts(
     }
 
     return [{
-      id: `${fact.factId}:${fact.idSuffix}`,
+      id: `${fact.factId}:${fact.idSuffix}${namespaceDocument ? `:${document.id}` : ""}`,
       factId: fact.factId,
       label: fact.label,
       kind: "fixture-derived",

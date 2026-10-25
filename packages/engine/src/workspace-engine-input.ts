@@ -1,4 +1,5 @@
 import Decimal from "decimal.js";
+import { officialSampleDocumentFixtures } from "@tax-engine/contracts";
 import type {
   WorkspaceDocumentRecord,
   WorkspaceReturnSummary,
@@ -150,6 +151,8 @@ function createWorkspacePreviewTaxInput(taxYear: number, taxpayer?: TaxYearInput
     if (!Number.isFinite(birthDate.getTime()) || birthDate.toISOString().slice(0, 10) !== person.dateOfBirth
       || person.dateOfBirth > `${taxYear}-12-31` || person.dateOfBirth < "1850-01-01") return null;
   }
+  const personIds = people.map((person) => person.ssn.replace(/-/g, ""));
+  if (new Set(personIds).size !== personIds.length) return null;
   if (!taxpayer.address || [taxpayer.address.street, taxpayer.address.city, taxpayer.address.state, taxpayer.address.zip].some((value) => !value?.trim())) return null;
   if (taxpayer.dependents.some((person) => [person.qualifiesForCTC, person.qualifiesForODC, person.qualifiesForEIC].some((value) => typeof value !== "boolean"))) return null;
   const parsed = TaxYearInputSchema.safeParse({ taxpayer });
@@ -315,8 +318,10 @@ function collectWagesPreviewSources(
     return null;
   }
 
-  const entriesByDocument = sourceDocuments.map((document) =>
-    extractW2SummariesFromStructuredFacts(structuredFacts, document.id).map((summary) =>
+  const summariesByDocument = sourceDocuments.map((document) => extractW2SummariesFromStructuredFacts(structuredFacts, document.id));
+  if (summariesByDocument.some((entries) => entries.some((summary) => summary.socialSecurityWages === undefined || summary.medicareWages === undefined))) return null;
+  const entriesByDocument = summariesByDocument.map((summaries) =>
+    summaries.map((summary) =>
       W2Schema.parse({
         employer: {
           name: summary.employerName,
@@ -324,15 +329,15 @@ function collectWagesPreviewSources(
         },
         wages: summary.wages,
         federalWithheld: summary.federalWithheld,
-        socialSecurityWages: summary.socialSecurityWages ?? summary.wages,
+        socialSecurityWages: summary.socialSecurityWages,
         ...(summary.socialSecurityWithheld !== undefined
           ? { socialSecurityWithheld: summary.socialSecurityWithheld }
           : {}),
-        medicareWages: summary.medicareWages ?? summary.wages,
+        medicareWages: summary.medicareWages,
         ...(summary.medicareWithheld !== undefined
           ? { medicareWithheld: summary.medicareWithheld }
           : {}),
-        stateWages: summary.stateWages ?? summary.wages,
+        ...(summary.stateWages !== undefined ? { stateWages: summary.stateWages } : {}),
         ...(summary.stateWithheld !== undefined
           ? { stateTaxWithheld: summary.stateWithheld }
           : {}),
@@ -1543,8 +1548,34 @@ export function buildWorkspaceEngineInput(
 ): WorkspaceEngineInputFixture | null {
   const targetTaxYear = returnSummary.targetTaxYear;
 
-  if (returnSummary.status !== "ready-to-recompute" || targetTaxYear === null) {
+  if (returnSummary.status !== "ready-to-recompute" || targetTaxYear === null || returnSummary.taxYearState !== "single") {
     return null;
+  }
+
+  // A reconstructed/old summary is not authority to change source years or to
+  // count duplicated documents and machine facts more than once.
+  if (new Set(documents.map((document) => document.id)).size !== documents.length
+    || new Set(structuredFacts.map((fact) => fact.id)).size !== structuredFacts.length
+    || new Set(returnSummary.items.map((item) => item.id)).size !== returnSummary.items.length) return null;
+  const selectedIds = new Set(returnSummary.items.flatMap((item) => item.sourceDocumentIds));
+  for (const document of documents.filter((entry) => selectedIds.has(entry.id))) {
+    const fixtureYear = officialSampleDocumentFixtures.find((fixture) => fixture.id === document.matchedFixtureId)?.taxYearHint;
+    const year = document.taxYear === undefined ? fixtureYear : document.taxYear;
+    if (year !== targetTaxYear || (fixtureYear != null && fixtureYear !== targetTaxYear)) return null;
+  }
+  for (const item of returnSummary.items) {
+    if (item.status !== "ready" || new Set(item.sourceDocumentIds).size !== item.sourceDocumentIds.length) return null;
+  }
+  for (const fact of structuredFacts) {
+    if (!fact.machineValue || !fact.sourceDocumentIds.some((id) => selectedIds.has(id))) continue;
+    if (fact.sourceDocumentIds.length !== 1) return null;
+    if ("accountHolder" in fact.machineValue && fact.machineValue.accountHolder === "spouse"
+      && (!taxpayer?.spouse || taxpayer.filingStatus !== "married_filing_jointly")) return null;
+    if (fact.machineValue.entryKind === "1099-b-transaction") {
+      const sold = fact.machineValue.dateSold;
+      const date = new Date(`${sold}T00:00:00Z`);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(sold) || !Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== sold || !sold.startsWith(`${targetTaxYear}-`)) return null;
+    }
   }
 
   const documentsById = new Map(documents.map((document) => [document.id, document]));

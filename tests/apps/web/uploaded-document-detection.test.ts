@@ -47,6 +47,7 @@ describe("uploaded document detection", () => {
 
     expect(parsed).toEqual({
       kind: "w2",
+      taxYear: 2025,
       coverage: "supported",
       label: "NORTHWIND FABRICATION LLC W-2",
       notes: "Parsed W-2 wage and withholding boxes from an uploaded W-2 PDF.",
@@ -87,7 +88,7 @@ describe("uploaded document detection", () => {
     expect(parseUploadedW2Text("Random statement with no wage boxes", "statement.pdf")).toBeNull();
   });
 
-  it("infers social security wages from box 4 when that is the only confident source", () => {
+  it("keeps social security wages unknown when only box 4 is reported", () => {
     const parsed = parseUploadedW2Text(`
 2025 W-2 and EARNINGS SUMMARY
 W-2
@@ -113,9 +114,9 @@ Employer's FED ID number
 
     expect(parsed?.detectedFacts[0]?.machineValue).toMatchObject({
       entryKind: "w2-summary",
-      socialSecurityWages: "107175.28",
       socialSecurityWithheld: "6644.87",
     });
+    expect(parsed?.detectedFacts[0]?.machineValue).not.toHaveProperty("socialSecurityWages");
   });
 
   it("keeps state wage and withholding boxes stable for PDF.js-style W-2 text layouts", () => {
@@ -179,7 +180,7 @@ Total Short-Term (Cost basis is reported to the IRS) $ 917.48 $ 1,006.94 -- $ (8
 `, "1099 schwab 529.PDF");
 
     expect(parsed?.kind).toBe("1099-b");
-    expect(parsed?.coverage).toBe("supported");
+    expect(parsed?.coverage).toBe("partially-supported");
     expect(parsed?.seededFactIds).toEqual([
       "taxable-interest",
       "ordinary-dividends",
@@ -238,6 +239,7 @@ Total: 0.40 0.70 -0.30
 
     expect(parsed).toEqual({
       kind: "unknown",
+      taxYear: null,
       coverage: "reviewed",
       label: "Form 1095-C reviewed",
       notes: "Employer health-coverage statements were reviewed. Form 1095-C does not create a deterministic federal tax input for this return and no additional engine mapping is required.",

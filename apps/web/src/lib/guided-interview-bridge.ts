@@ -951,5 +951,5 @@ export function buildGuidedSyntheticDocuments(
     });
   }
 
-  return docs;
+  return docs.map((document) => ({ ...document, taxYear: state.taxYear ?? null }));
 }

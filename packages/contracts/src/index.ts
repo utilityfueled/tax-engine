@@ -345,6 +345,7 @@ export type WorkspaceAuditEventKind =
   | "workspace-created"
   | "documents-ingested"
   | "document-removed"
+  | "document-year-confirmed"
   | "workspace-cleared"
   | "interview-answered"
   | "interview-reopened";
@@ -813,6 +814,8 @@ export interface WorkspaceEnginePreview {
 
 export interface WorkspaceDocumentRecord {
   id: string;
+  /** Actual source/confirmed return year. Null is explicitly unknown; absent is legacy. */
+  taxYear?: number | null;
   name: string;
   size: number;
   uploadedAt: string;

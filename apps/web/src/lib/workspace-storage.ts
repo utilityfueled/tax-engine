@@ -60,6 +60,7 @@ interface UploadableFile {
   name: string;
   size: number;
   detectedDocument?: {
+    taxYear?: number | null;
     kind: WorkspaceDocumentRecord["kind"];
     coverage: WorkspaceDocumentRecord["coverage"];
     label: string;
@@ -165,6 +166,7 @@ const workspaceAuditEventKinds: WorkspaceAuditEventKind[] = [
   "workspace-created",
   "documents-ingested",
   "document-removed",
+  "document-year-confirmed",
   "workspace-cleared",
   "interview-answered",
   "interview-reopened"
@@ -489,6 +491,10 @@ function computeSummary(documents: WorkspaceDocumentRecord[], seededReturn: Seed
 }
 
 function extractTaxYearHints(document: WorkspaceDocumentRecord) {
+  if (document.taxYear !== undefined) {
+    return Number.isInteger(document.taxYear) && document.taxYear !== null
+      && document.taxYear >= 1900 && document.taxYear <= 2100 ? [document.taxYear] : [];
+  }
   const matchedFixture = document.matchedFixtureId
     ? officialFixtureCatalog.find((fixture) => fixture.id === document.matchedFixtureId) ?? null
     : null;
@@ -497,10 +503,9 @@ function extractTaxYearHints(document: WorkspaceDocumentRecord) {
     return [matchedFixture.taxYearHint];
   }
 
-  const matches = `${document.name} ${document.label}`.match(/\b20\d{2}\b/g) ?? [];
-  return matches
-    .map((value) => Number.parseInt(value, 10))
-    .filter((value, index, values) => Number.isInteger(value) && values.indexOf(value) === index);
+  // A legacy filename is not evidence of the form's tax year. Keep it unknown
+  // until source text or the taxpayer establishes it explicitly.
+  return [];
 }
 
 function normalizeDocumentIdentityValue(value: string | null | undefined) {
@@ -1039,6 +1044,10 @@ function hydrateWorkspaceRecord(workspaceId: string, workspace: ReturnWorkspaceR
 
           return [{
             ...normalized,
+            ...(normalized.taxYear === undefined ? {} : {
+              taxYear: typeof normalized.taxYear === "number" && Number.isInteger(normalized.taxYear)
+                && normalized.taxYear >= 1900 && normalized.taxYear <= 2100 ? normalized.taxYear : null,
+            }),
             blobStorageKey: typeof normalized.blobStorageKey === "string" ? normalized.blobStorageKey : null,
             seededFactIds: normalized.seededFactIds.filter((factId): factId is SeededFactId => seededFactOrder.includes(factId)),
             detectedFacts: normalizeDetectedFacts(normalized.detectedFacts)
@@ -1059,7 +1068,7 @@ function hydrateWorkspaceRecord(workspaceId: string, workspace: ReturnWorkspaceR
     : "local-browser";
   const guidedCompletion = normalizeGuidedCompletion(workspace.guidedCompletion);
 
-  return buildWorkspace(
+  const hydrated = buildWorkspace(
     workspaceId,
     documents,
     createdAt,
@@ -1069,6 +1078,15 @@ function hydrateWorkspaceRecord(workspaceId: string, workspace: ReturnWorkspaceR
     storageMode,
     guidedCompletion
   );
+  const savedYear = workspace.returnSummary?.targetTaxYear;
+  if (hydrated.returnSummary.targetTaxYear === null && Number.isInteger(savedYear)
+    && savedYear !== null && savedYear >= 1900 && savedYear <= 2100
+    && documents.some((document) => document.taxYear === undefined)) {
+    // Preserve the saved return selection separately from unknown source facts.
+    // taxYearState remains unknown, so this does not authorize calculation.
+    return { ...hydrated, returnSummary: { ...hydrated.returnSummary, targetTaxYear: savedYear } };
+  }
+  return hydrated;
 }
 
 function matchFixture(fileName: string): FixtureMatch | null {
@@ -1121,6 +1139,7 @@ function classifyUploadedDocument(file: UploadableFile, usedIds: Set<string>): W
 
     return {
       id: buildUniqueDocumentId(baseId, usedIds),
+      taxYear: matchedFixture.taxYearHint,
       name: file.name,
       size: file.size,
       uploadedAt: new Date().toISOString(),
@@ -1139,6 +1158,7 @@ function classifyUploadedDocument(file: UploadableFile, usedIds: Set<string>): W
 
     return {
       id: buildUniqueDocumentId(baseId, usedIds),
+      taxYear: file.detectedDocument.taxYear ?? null,
       name: file.name,
       size: file.size,
       uploadedAt: new Date().toISOString(),
@@ -1156,6 +1176,7 @@ function classifyUploadedDocument(file: UploadableFile, usedIds: Set<string>): W
 
   return {
     id: buildUniqueDocumentId(baseId, usedIds),
+    taxYear: null,
     name: file.name,
     size: file.size,
     uploadedAt: new Date().toISOString(),
@@ -1314,6 +1335,37 @@ export function removeDocument(storage: Storage, workspaceId: string, documentId
   data.workspaces[workspaceId] = nextWorkspace;
   saveStorage(storage, data);
   return nextWorkspace;
+}
+
+export function confirmWorkspaceDocumentTaxYear(
+  workspace: ReturnWorkspaceRecord,
+  documentId: string,
+  taxYear: number | null
+): ReturnWorkspaceRecord {
+  if (taxYear !== null && (!Number.isInteger(taxYear) || taxYear < 1900 || taxYear > 2100)) {
+    throw new Error("Enter the actual four-digit document year.");
+  }
+  const document = workspace.documents.find((entry) => entry.id === documentId);
+  if (!document) throw new Error("The source document is no longer available.");
+  const fixtureYear = officialFixtureCatalog.find((entry) => entry.id === document.matchedFixtureId)?.taxYearHint;
+  if (fixtureYear != null && taxYear !== fixtureYear) throw new Error("An official sample's year cannot be changed.");
+  if (document.taxYear === taxYear) return workspace;
+  const occurredAt = new Date().toISOString();
+  const questions = workspace.seededReturn.interviewQuestions.map((question) =>
+    question.sourceDocumentIds.includes(documentId)
+      ? { ...question, status: "pending" as const, answerText: null, answeredAt: null }
+      : question
+  );
+  const auditTrail = appendAuditTrailEvent(workspace.auditTrail, {
+    occurredAt,
+    kind: "document-year-confirmed",
+    message: taxYear === null ? `Marked ${document.label} tax year as unknown.` : `Confirmed ${document.label} tax year as ${taxYear}.`,
+    documentIds: [documentId], questionId: null, answerText: null,
+  });
+  return buildWorkspace(workspace.id,
+    workspace.documents.map((entry) => entry.id === documentId ? { ...entry, taxYear } : entry),
+    workspace.createdAt, questions, occurredAt, auditTrail, workspace.storageMode,
+    workspace.guidedCompletion ?? null);
 }
 
 export function clearWorkspaceRecord(workspace: ReturnWorkspaceRecord) {

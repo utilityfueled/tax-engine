@@ -82,3 +82,33 @@ Verification with pinned Node 24.22.1:
   integration, scoped lint and diff checks pass. Eligibility test cases were red
   before implementation. No live provider or taxpayer data used.
 - Decimal presentation commit: `f312c2f`.
+
+## Source years and document fidelity
+
+- Source document contracts now store an actual year, explicit unknown (`null`),
+  or legacy absence. Detection uses explicit form-year text, never a filename or
+  a transaction date. Guided source records carry their selected year.
+- New year-confirmation controls persist the source year and reopen affected
+  answers. Legacy saved return years remain stored while missing source years
+  keep calculation blocked. Invalid/conflicting years cannot drive an adapter.
+- Removed inferred W-2 Social Security wages and cross-box wage substitutions;
+  known zero survives. Brokerage summary-only entries no longer get an invented
+  December 31 sale date. Parser money formatting, comparisons and arithmetic use
+  Decimal.
+- Engine source validation rejects duplicate identities, mixed/unknown years,
+  machine facts ambiguously attached to multiple documents, and spouse-owned
+  sources without actual spouse facts. Repeated synthetic fixture documents now
+  have distinct fact IDs; sample payroll facts are explicitly stated.
+- Eight new source/year tests were introduced before their implementation;
+  516 focused tests in 14 files pass. Web typecheck, scoped ESLint (zero errors)
+  and diff whitespace checks pass. Tax totals in existing regressions unchanged.
+- Eligibility/legacy package commit: `1d166e7`.
+
+## Remaining implementation (updated)
+
+- Collect new 2026 charity and education eligibility fields coordinated with the
+  federal-law input schema.
+- Resolve or explicitly gate ambiguous legacy IRA, alimony, casualty, other
+  itemized and other-payment aggregates rather than dropping/misclassifying them.
+- Audit sparse document-extraction optional fields and remaining household facts.
+- Independent expected-output and required human readiness review remain pending.

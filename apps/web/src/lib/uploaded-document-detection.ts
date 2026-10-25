@@ -1,3 +1,4 @@
+import Decimal from "decimal.js";
 import type {
   SeededFactId,
   WorkspaceDocumentCoverage,
@@ -10,6 +11,7 @@ import type {
 } from "@tax-engine/contracts";
 
 export interface ParsedUploadedDocument {
+  taxYear?: number | null;
   kind: WorkspaceDocumentKind;
   coverage: WorkspaceDocumentCoverage;
   label: string;
@@ -143,11 +145,10 @@ function normalizeSignedAmount(value: string) {
 }
 
 function formatAmountLabel(value: string) {
-  const numericValue = Number(value);
-
-  return Number.isFinite(numericValue)
-    ? numericValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-    : value;
+  const amount = new Decimal(value);
+  if (!amount.isFinite()) return value;
+  const [whole, cents] = amount.toFixed(2, Decimal.ROUND_HALF_UP).split(".");
+  return `${whole.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}.${cents}`;
 }
 
 function dedupeSeededFactIds(entries: SeededFactId[]) {
@@ -209,25 +210,6 @@ function buildReviewedDocument(
   };
 }
 
-function amountsMatchWithinOneCent(left: string, right: string) {
-  return Math.abs(Number(left) - Number(right)) <= 0.01;
-}
-
-function inferSocialSecurityWagesFromKnownValues(
-  wages: string | null,
-  socialSecurityWithheld: string | null,
-) {
-  if (!wages || !socialSecurityWithheld) {
-    return null;
-  }
-
-  const expectedWithholding = (Number(wages) * 0.062).toFixed(2);
-
-  return amountsMatchWithinOneCent(expectedWithholding, socialSecurityWithheld)
-    ? wages
-    : null;
-}
-
 function pickMostFrequentAmount(candidates: string[]) {
   if (candidates.length === 0) {
     return null;
@@ -245,7 +227,7 @@ function pickMostFrequentAmount(candidates: string[]) {
         return right[1] - left[1];
       }
 
-      return Number(right[0]) - Number(left[0]);
+      return new Decimal(right[0]).comparedTo(left[0]);
     })[0]?.[0] ?? null;
 }
 
@@ -254,7 +236,7 @@ function pickLargestAmount(amounts: string[]) {
     return null;
   }
 
-  return [...amounts].sort((left, right) => Number(right) - Number(left))[0] ?? null;
+  return [...amounts].sort((left, right) => new Decimal(right).comparedTo(left))[0] ?? null;
 }
 
 function pickSmallestAmount(amounts: string[]) {
@@ -262,7 +244,7 @@ function pickSmallestAmount(amounts: string[]) {
     return null;
   }
 
-  return [...amounts].sort((left, right) => Number(left) - Number(right))[0] ?? null;
+  return [...amounts].sort((left, right) => new Decimal(left).comparedTo(right))[0] ?? null;
 }
 
 function collectAmountsNearLabel(
@@ -579,8 +561,7 @@ export function parseUploadedW2Text(text: string, fileName = ""): ParsedUploaded
     [/^19\s+Local income tax$/i, /^20\s+Locality name$/i],
     10,
   );
-  const socialSecurityWages = parsedSocialSecurityWages
-    ?? inferSocialSecurityWagesFromKnownValues(wages, socialSecurityWithheld);
+  const socialSecurityWages = parsedSocialSecurityWages;
 
   if (!wages || !federalWithheld) {
     return null;
@@ -602,6 +583,7 @@ export function parseUploadedW2Text(text: string, fileName = ""): ParsedUploaded
 
   return {
     kind: "w2",
+    taxYear: extractExplicitDocumentTaxYear(normalizedText),
     coverage: "supported",
     label: employerName === "Employer from uploaded W-2" ? "Form W-2 upload" : `${employerName} W-2`,
     notes: "Parsed W-2 wage and withholding boxes from an uploaded W-2 PDF.",
@@ -735,12 +717,12 @@ function parseUploadedComposite1099Text(text: string, fileName = ""): ParsedUplo
   }
 
   if (shortTermProceeds && shortTermCostBasis) {
-    const gainLoss = shortTermGainLoss ?? (Number(shortTermProceeds) - Number(shortTermCostBasis)).toFixed(2);
+    const gainLoss = shortTermGainLoss ?? new Decimal(shortTermProceeds).minus(shortTermCostBasis).toFixed(2);
     const machineValue: WorkspaceStructuredFactMachineValue1099BTransaction = {
       entryKind: "1099-b-transaction",
       description: `${payerLabel}${labelSuffix} short-term covered summary`,
       dateAcquired: "VARIOUS",
-      dateSold: "2025-12-31",
+      dateSold: "", // A summary total does not identify the actual sale date.
       proceeds: shortTermProceeds,
       costBasis: shortTermCostBasis,
       adjustments: "0",
@@ -782,9 +764,9 @@ function parseUploadedComposite1099Text(text: string, fileName = ""): ParsedUplo
 
   return {
     kind,
-    coverage: "supported",
+    coverage: shortTermProceeds ? "partially-supported" : "supported",
     label: `${payerLabel}${labelSuffix} composite tax statement`,
-    notes: "Parsed supported 1099 fields from an uploaded composite brokerage statement.",
+    notes: shortTermProceeds ? "Parsed brokerage totals; enter actual transaction dates and adjustments before calculation." : "Parsed supported 1099 fields from an uploaded composite brokerage statement.",
     seededFactIds: dedupeSeededFactIds(seededFactIds),
     detectedFacts,
   };
@@ -918,7 +900,7 @@ function parseUploaded1099DAText(text: string, fileName = ""): ParsedUploadedDoc
         entryKind: "1099-b-transaction",
         description: "Coinbase digital asset summary",
         dateAcquired: "VARIOUS",
-        dateSold: "2025-12-31",
+        dateSold: "", // Unknown summary sale dates must not become year-end dates.
         proceeds: summaryProceeds,
         costBasis: summaryBasis,
         adjustments: "0",
@@ -941,19 +923,27 @@ function parseUploaded1099DAText(text: string, fileName = ""): ParsedUploadedDoc
 
   return {
     kind: "1099-da",
-    coverage: "supported",
+    coverage: detectedFacts.some((fact) => fact.machineValue?.entryKind === "1099-b-transaction" && !fact.machineValue.dateSold) ? "partially-supported" : "supported",
     label: "Coinbase 1099-DA",
-    notes: "Parsed digital asset sale rows from an uploaded 1099-DA PDF.",
+    notes: "Parsed digital asset rows or totals. Summary-only amounts require actual transaction dates and review before calculation.",
     seededFactIds: ["broker-proceeds", "cost-basis-review"],
     detectedFacts,
   };
+}
+
+export function extractExplicitDocumentTaxYear(text: string): number | null {
+  const years = new Set<number>();
+  for (const pattern of [/\b(?:tax\s+year|(?:for\s+)?calendar\s+year)\s*[:-]?\s*(20\d{2})\b/gi, /\b(20\d{2})\s+(?:Form\s+)?(?:W-?2|1099-[A-Z]+|1098-[A-Z]+|1095-[A-Z]+)\b/gi]) {
+    for (const match of text.matchAll(pattern)) years.add(Number(match[1]));
+  }
+  return years.size === 1 ? [...years][0] : null;
 }
 
 export function parseUploadedDocumentText(text: string, fileName = ""): ParsedUploadedDocument | null {
   const normalizedText = normalizeParsingText(text);
   const signalText = `${fileName}\n${normalizedText}`;
 
-  return parseUploadedW2Text(normalizedText, fileName)
+  const parsed = parseUploadedW2Text(normalizedText, fileName)
     ?? parseUploadedComposite1099Text(normalizedText, fileName)
     ?? parseUploaded1099IntText(normalizedText, fileName)
     ?? parseUploaded1099DAText(normalizedText, fileName)
@@ -975,6 +965,7 @@ export function parseUploadedDocumentText(text: string, fileName = ""): ParsedUp
           "Bank year-end summaries were reviewed as supplemental records only. The actual 1099-INT should be used for deterministic interest income."
         )
       : null);
+  return parsed ? { ...parsed, taxYear: extractExplicitDocumentTaxYear(normalizedText) } : null;
 }
 
 export async function prepareUploadableFiles(files: File[]): Promise<PreparedUploadableFile[]> {

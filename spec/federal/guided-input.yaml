@@ -40,3 +40,8 @@ lines:
     formula: "Capture AOTC enrollment, degree, prior study, conviction and refundable-eligibility answers explicitly. Preserve residency months including zero. Saved pre-version-2 code 7 and prior-claim count 0 remain stored but require reconfirmation because their provenance is unknown."
     irsRef: "Publication 970, Who Can Claim the Credit and Refundable Part of Credit; Form 1099-R box 7"
     testRef: "tests/guided-interview/guided-required-facts.test.ts::requires reconfirmation of legacy prefilled facts without changing their values"
+  - line: "parsed-source-fidelity"
+    description: "Do not infer missing dates, payroll boxes or return years from adjacent values"
+    formula: "Preserve missing source facts. A tax year is extracted only from explicit source-year context, never the filename or an unrelated transaction date. Summary-only securities need actual sale dates. Reject source-year conflicts, duplicate document/fact identifiers, multi-document machine facts and spouse ownership without spouse facts."
+    irsRef: "Form W-2 instructions boxes 1, 3, 5 and 16; Form 8949 columns b and c; Form 1040 tax-year identification"
+    testRef: "tests/guided-interview/document-fact-fidelity.test.ts::does not infer document year from a filename or transaction date"

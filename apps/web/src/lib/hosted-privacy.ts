@@ -27,6 +27,8 @@ function sanitizeAuditEventMessage(kind: WorkspaceAuditEventRecord["kind"]) {
       return "Documents processed for this device session.";
     case "document-removed":
       return "Document removed from the local session.";
+    case "document-year-confirmed":
+      return "Document tax year updated.";
     case "workspace-cleared":
       return "Workspace cleared.";
     case "interview-answered":

@@ -1361,8 +1361,10 @@ describe("workspace storage", () => {
           formula: "Form 8949 Part I + K-1 Box 8 + K-1 1041 Box 3 + K-1 1041 Box 11C + prior ST carryforward + Form 6781 short-term + Form 6252 short-term",
           sourceFactIds: [
             "broker-proceeds:document-detected",
-            "broker-proceeds:fixture-long-term-sale",
-            "broker-proceeds:fixture-short-term-sale",
+            "broker-proceeds:fixture-long-term-sale:irs-1099-b-2025:f1099b--2025.pdf:12",
+            "broker-proceeds:fixture-long-term-sale:irs-1099-b-2025:f1099b--2025.pdf:18",
+            "broker-proceeds:fixture-short-term-sale:irs-1099-b-2025:f1099b--2025.pdf:12",
+            "broker-proceeds:fixture-short-term-sale:irs-1099-b-2025:f1099b--2025.pdf:18",
             "broker-proceeds:interview-answer",
             "cost-basis-review:document-detected",
             "cost-basis-review:interview-answer"
@@ -1377,8 +1379,10 @@ describe("workspace storage", () => {
           formula: "Form 8949 Part II + K-1 Box 9a + K-1 1041 Box 4a + K-1 1041 Box 11D + Form 4797 Line 9 + 1099-DIV Box 2a + prior LT carryforward - §1202 exclusion + home sale gain + Form 6781 long-term + Form 6252 long-term",
           sourceFactIds: [
             "broker-proceeds:document-detected",
-            "broker-proceeds:fixture-long-term-sale",
-            "broker-proceeds:fixture-short-term-sale",
+            "broker-proceeds:fixture-long-term-sale:irs-1099-b-2025:f1099b--2025.pdf:12",
+            "broker-proceeds:fixture-long-term-sale:irs-1099-b-2025:f1099b--2025.pdf:18",
+            "broker-proceeds:fixture-short-term-sale:irs-1099-b-2025:f1099b--2025.pdf:12",
+            "broker-proceeds:fixture-short-term-sale:irs-1099-b-2025:f1099b--2025.pdf:18",
             "broker-proceeds:interview-answer",
             "cost-basis-review:document-detected",
             "cost-basis-review:interview-answer"
@@ -1393,8 +1397,10 @@ describe("workspace storage", () => {
           formula: expect.stringContaining("Line 22"),
           sourceFactIds: [
             "broker-proceeds:document-detected",
-            "broker-proceeds:fixture-long-term-sale",
-            "broker-proceeds:fixture-short-term-sale",
+            "broker-proceeds:fixture-long-term-sale:irs-1099-b-2025:f1099b--2025.pdf:12",
+            "broker-proceeds:fixture-long-term-sale:irs-1099-b-2025:f1099b--2025.pdf:18",
+            "broker-proceeds:fixture-short-term-sale:irs-1099-b-2025:f1099b--2025.pdf:12",
+            "broker-proceeds:fixture-short-term-sale:irs-1099-b-2025:f1099b--2025.pdf:18",
             "broker-proceeds:interview-answer",
             "cost-basis-review:document-detected",
             "cost-basis-review:interview-answer"
@@ -1409,8 +1415,10 @@ describe("workspace storage", () => {
           formula: "Total tax - Total payments (if positive)",
           sourceFactIds: [
             "broker-proceeds:document-detected",
-            "broker-proceeds:fixture-long-term-sale",
-            "broker-proceeds:fixture-short-term-sale",
+            "broker-proceeds:fixture-long-term-sale:irs-1099-b-2025:f1099b--2025.pdf:12",
+            "broker-proceeds:fixture-long-term-sale:irs-1099-b-2025:f1099b--2025.pdf:18",
+            "broker-proceeds:fixture-short-term-sale:irs-1099-b-2025:f1099b--2025.pdf:12",
+            "broker-proceeds:fixture-short-term-sale:irs-1099-b-2025:f1099b--2025.pdf:18",
             "broker-proceeds:interview-answer",
             "cost-basis-review:document-detected",
             "cost-basis-review:interview-answer"
@@ -2128,7 +2136,7 @@ describe("workspace storage", () => {
         factId: "wages",
         label: "Wages",
         kind: "fixture-derived",
-        value: "Official fixture wages: Form W-2 box 1 wages $52,000 and box 2 federal withholding $5,000.",
+        value: "Official fixture wages: Form W-2 box 1 wages $52,000, box 2 federal withholding $5,000, and boxes 3 and 5 payroll wages $52,000.",
         sourceType: "official-fixture",
         confidence: "high",
         sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"],
@@ -2139,6 +2147,8 @@ describe("workspace storage", () => {
           employerName: "Official fixture employer",
           employerEin: "12-3456789",
           wages: "52000",
+          socialSecurityWages: "52000",
+          medicareWages: "52000",
           federalWithheld: "5000"
         }
       },
@@ -2294,7 +2304,7 @@ describe("workspace storage", () => {
         factId: "wages",
         label: "Wages",
         kind: "fixture-derived",
-        value: "Official fixture wages: Form W-2 box 1 wages $52,000 and box 2 federal withholding $5,000.",
+        value: "Official fixture wages: Form W-2 box 1 wages $52,000, box 2 federal withholding $5,000, and boxes 3 and 5 payroll wages $52,000.",
         sourceType: "official-fixture",
         confidence: "high",
         sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"],
@@ -2305,6 +2315,8 @@ describe("workspace storage", () => {
           employerName: "Official fixture employer",
           employerEin: "12-3456789",
           wages: "52000",
+          socialSecurityWages: "52000",
+          medicareWages: "52000",
           federalWithheld: "5000"
         }
       },
