@@ -32,7 +32,7 @@ export interface Form8814Result {
   otherIncomeToReport: Decimal;
   /** Line 15: Tax on first $2,700 tier → Form 1040 Line 16 */
   tax: Decimal;
-  /** Child's tax-exempt interest to add to parent's Line 2a */
+  /** Child's line1b; retained for the dependent worksheet, not parent1040line2a */
   taxExemptInterest: Decimal;
   /** Whether the form applies (child income > amountNotTaxed and < maximum) */
   applies: boolean;
@@ -51,7 +51,7 @@ export interface AggregatedForm8814 {
   totalOtherIncome: Decimal;
   /** Total tax from all children → Form 1040 Line 16 */
   totalTax: Decimal;
-  /** Total tax-exempt interest from all children → parent's Line 2a */
+  /** Child tax-exempt interest retained separately for actual dependent/source worksheets */
   totalTaxExemptInterest: Decimal;
   /** Individual results per child */
   children: Form8814Result[];

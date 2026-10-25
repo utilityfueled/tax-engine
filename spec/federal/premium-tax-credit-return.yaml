@@ -1,0 +1,22 @@
+form: "Premium tax credit return source reconciliation"
+fullName: "Form8962 Worksheet1-1 canonical income"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i8962"
+notes: |
+  Refreshed October25,2026: final2025 Form8962 Worksheet1-1 and Publication974.
+  Canonical income uses the calculated return. Household coverage eligibility,
+  poverty region and required-filing dependent income remain actual source facts.
+  This prerequisite does not establish the separate Marketplace/SE deduction loop.
+lines:
+  - line: "1-5"
+    description: "Calculate taxpayer modified adjusted gross income"
+    formula: "Add actual final AGI, Form1040tax-exempt interest, Form2555lines45and50 and max(0,1040line6a-line6b). Preserve signed AGI. If a taxpayerModifiedAGI source worksheet is supplied, it must equal this calculated amount; an omitted derived amount is calculated, never guessed. Do not add dependent income to taxpayer income."
+    testRef: "tests/engine/forms/premium-tax-credit-return.test.ts::reconciles actual return components and preserves signed taxpayer income"
+  - line: "return-handoff"
+    description: "Use one canonical taxpayer MAGI in the credit calculation"
+    formula: "Form8962line2a receives the canonical Worksheet1-1 result; line2b retains actual required-filing dependent MAGI. A contradictory source result rejects before computing a credit. Historical2025 source-free preview remains explicitly unverified."
+    testRef: "tests/engine/federal-ptc-income.test.ts::uses canonical tax-exempt interest and nontaxable benefits instead of a favorable source override"
+  - line: "8814-dependent"
+    description: "Count the actual child-election dependent worksheet once"
+    formula: "For an applicable Form8814 child election, retain child line1b and min(line4,line5) in the actual completed dependent-MAGI worksheet. The parent's exempt-interest addback must not duplicate the child's line1b. No other dependent income is inferred."
+    testRef: "tests/engine/federal-ptc-income.test.ts::counts a child election in the actual dependent worksheet without duplicating exempt interest"

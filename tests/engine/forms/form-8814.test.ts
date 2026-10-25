@@ -341,7 +341,7 @@ describe("Form 8814 — Parents' Election To Report Child's Interest and Dividen
       expect(resultWith.totalTax.greaterThan(resultWithout.totalTax)).toBe(true);
     });
 
-    it("Form 8814 tax-exempt interest adds to parent's Line 2a", () => {
+    it("Form 8814 child exempt interest stays separate from the parent's Line 2a", () => {
       const result = calculateFederalTax(makeParentFederalInput([{
         taxableInterest: "3000",
         taxExemptInterest: "500",
@@ -354,7 +354,8 @@ describe("Form 8814 — Parents' Election To Report Child's Interest and Dividen
       const line2a = result.allLines.find(
         (l) => l.form === "1040" && l.line === "2a"
       );
-      expect(line2a?.value).toEqual(new Decimal(500));
+      expect(line2a?.value).toEqual(new Decimal(0));
+      expect(result.form8814?.totalTaxExemptInterest).toEqual(new Decimal(500));
     });
 
     it("Form 8814 result is included in return result", () => {

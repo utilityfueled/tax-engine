@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.42",
+    ruleVersion: "2025.43",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i8962", section: "Canonical Worksheet1-1 taxpayer MAGI from final return; child8814 exempt interest retained once in actual dependent Worksheet1-2, not parent1040line2a", revision: "Final2025 Form8962 and Form8814 instructions; positive Marketplace health coordination remains separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/irb/2026-18_IRB", section: "TD10044 actual employer/business reporting and net-income limits; section199A(c)(4)(D) allowable business-tip QBI exclusion", revision: "Final regulation plus2025 instructions and2026 reporting; reduced mixed-source allocation remains unsupported", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/pub/irs-pdf/f4137.pdf", section: "Actual employer and owner payroll sources, cash/noncash income distinction, separate spouse forms and canonical1040/Schedule2/SE/8959 routing", revision: "Final2025 Form4137 and official ScheduleSE/Form8959 instructions; RRTA Medicare coordination remains separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/pub/irs-pdf/f7206.pdf", section: "Actual owner/business income, SE tax, retirement/foreign source conservation and per-business line14 handoff to Schedule1 and QBI", revision: "Final2025 Form7206 and instructions; current2026 calculation remains independently unqualified; Marketplace/PTC coupling separate", retrievedAt: "2026-10-25" },
@@ -85,11 +86,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.38-law-integration-draft",
+    ruleVersion: "2026.39-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i8962", section: "Canonical Worksheet1-1 taxpayer MAGI from final return; child8814 exempt interest retained once in actual dependent Worksheet1-2, not parent1040line2a", revision: "Final2025 Form8962 and Form8814 instructions; positive Marketplace health coordination remains separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/irb/2026-18_IRB", section: "TD10044 actual employer/business reporting and net-income limits; section199A(c)(4)(D) allowable business-tip QBI exclusion", revision: "Final regulation plus2025 instructions and2026 reporting; reduced mixed-source allocation remains unsupported", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/pub/irs-pdf/f4137.pdf", section: "Actual separate-owner tip payroll and184500 indexed2026 SocialSecurity base; canonical income/Schedule2/SE/8959 routing", revision: "Final2025 source formulas plus indexed2026 wage base; final2026 forms and independent review pending; RRTA Medicare coordination separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/pub/irs-pdf/f7206.pdf", section: "Actual owner/business income, SE tax, retirement/foreign source conservation and per-business line14 handoff to Schedule1 and QBI", revision: "Final2025 Form7206 and instructions; current2026 calculation remains independently unqualified; Marketplace/PTC coupling separate", retrievedAt: "2026-10-25" },

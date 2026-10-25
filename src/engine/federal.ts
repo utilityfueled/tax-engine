@@ -66,7 +66,8 @@ import { calculateForm2441 } from "./forms/form-2441.js";
 import { calculateForm2441Benefits } from "./forms/form-2441-benefits.js";
 import { calculateDependentCareBenefitSources } from "./forms/dependent-care-benefit-sources.js";
 import { calculateForm8863 } from "./forms/form-8863.js";
-import { calculateForm8962 } from "./forms/form-8962.js";
+import type { calculateForm8962 } from "./forms/form-8962.js";
+import { calculatePremiumTaxCreditReturn } from "./forms/premium-tax-credit-return.js";
 import { calculateUnreportedTipPayroll } from "./forms/unreported-tip-payroll.js";
 import { calculateForm8919 } from "./forms/form-8919.js";
 import { calculateSchedule3, calculateExcessSSWithholding } from "./schedules/schedule-3.js";
@@ -482,11 +483,10 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     divAgg.exemptInterestDividends,
     k1Agg.taxExemptInterest,
     ...(input.scheduleK1Form1041 ?? []).map((k) => d(k.taxExemptInterest)),
-    form1099OID.taxExemptInterest,
-    form8814?.totalTaxExemptInterest ?? new Decimal(0)
+    form1099OID.taxExemptInterest
   );
   audit.record("1040", "2a", "Tax-exempt interest", taxExemptInterest,
-    "Sum 1099-INT Box 8 + 1099-DIV Box 12 + source-classified 1099-OID Box11 and stated interest + K-1 Box 18A + K-1 1041 Box 14A + Form 8814 Line 1b");
+    "Sum 1099-INT Box 8 + 1099-DIV Box 12 + source-classified 1099-OID Box11 and stated interest + K-1 Box 18A + K-1 1041 Box 14A");
 
   // Lines 2b, 3a, 3b: Interest and dividends via Schedule B
   const preliminaryScheduleB = calculateScheduleB(input);
@@ -3067,14 +3067,10 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   let excessAPTCRepayment = new Decimal(0);
   let form8962: ReturnType<typeof calculateForm8962> | undefined;
   if (input.form1095A.length > 0 || input.form8962) {
-    form8962 = calculateForm8962({
-      taxYear: year,
-      facts: input.form8962,
-      // These compatibility proxies are never used for verified facts or2026.
-      taxFamilySize: year === 2025 && !input.form8962 ? 1 + (input.taxpayer.spouse ? 1 : 0) + input.taxpayer.dependents.length : undefined,
-      modifiedAGI: year === 2025 && !input.form8962 ? agi : undefined,
-      filingStatus,
-      form1095A: input.form1095A,
+    form8962 = calculatePremiumTaxCreditReturn({
+      input, agi, taxExemptInterest, foreignIncomeReduction: form2555IncomeReduction,
+      foreignHousingDeduction: form2555HousingDeduction,
+      socialSecurityBenefitsGross, socialSecurityBenefitsTaxable,
     });
     netPremiumTaxCredit = form8962.netPTC;
     excessAPTCRepayment = form8962.excessAPTCRepayment;
