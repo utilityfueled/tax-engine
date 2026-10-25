@@ -71,6 +71,11 @@ businessRuleValidation:
     testRef: "tests/apps/web/pa-state-packet.test.ts::buildWorkspaceFilledReturnDownload includes the Pennsylvania PA-40 packet and keeps the business-rule disclosure honest"
 
 lines:
+  - line: "actual-rental-business-share"
+    description: "Actual owner and share of a supported rental business"
+    formula: "(whole-property rents - whole-property expenses) * actual ownershipPercentage / 100; attribute to the actual owner before PA Class4 loss limits"
+    notes: "The existing short-term classification is a separately bounded legacy slice; annual rentalDays do not prove average customer stay for a full-year property. No new classification qualification is implied."
+    testRef: "tests/engine/state/pa-rental-source-allocation.test.ts::PA attributes a supported short rental to its actual spouse and share"
   - line: "resolve-pa-resident-inputs"
     description: "Resolve PA resident supplemental inputs from validated TaxYearInput before running the resident schedules"
     formula: |

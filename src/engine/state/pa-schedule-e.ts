@@ -15,6 +15,7 @@ import type {
 } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { PA_CONSTANTS } from "@/engine/state/pa-40.js";
+import { getPARentalOwnershipFraction } from "@/engine/state/pa-rental-ownership.js";
 
 export interface PAScheduleEInput {
   taxYear: number;
@@ -26,6 +27,7 @@ export interface PAScheduleEInput {
 
 export interface PAScheduleEPropertyResult {
   description: string;
+  accountHolder?: RentalProperty["accountHolder"];
   grossRents: Decimal;
   allowableExpenses: Decimal;
   netIncome: Decimal;
@@ -83,8 +85,9 @@ export function calculatePAScheduleE(input: PAScheduleEInput): PAScheduleEResult
   const scheduleK1 = input.scheduleK1 ?? [];
 
   const properties = rentalProperties.map((property) => {
-    const grossRents = d(property.rents);
-    const allowableExpenses = calculatePropertyExpenses(property);
+    const share = getPARentalOwnershipFraction(property);
+    const grossRents = d(property.rents).times(share);
+    const allowableExpenses = calculatePropertyExpenses(property).times(share);
     const netIncome = grossRents.minus(allowableExpenses);
 
     audit.record(
@@ -92,14 +95,14 @@ export function calculatePAScheduleE(input: PAScheduleEInput): PAScheduleEResult
       "1-detail",
       `Gross rents for ${property.description}`,
       grossRents,
-      "Included in Schedule E gross rents",
+      `Whole-property rents times ownership fraction ${share}`,
     );
     audit.record(
       "PA-Schedule-E",
       "2-detail",
       `Allowable expenses for ${property.description}`,
       allowableExpenses,
-      "Ordinary and necessary Schedule E expenses",
+      `Whole-property ordinary and necessary expenses times ownership fraction ${share}`,
     );
     audit.record(
       "PA-Schedule-E",
@@ -111,6 +114,7 @@ export function calculatePAScheduleE(input: PAScheduleEInput): PAScheduleEResult
 
     return {
       description: property.description,
+      accountHolder: property.accountHolder,
       grossRents,
       allowableExpenses,
       netIncome,
@@ -203,14 +207,16 @@ export function calculatePAScheduleE(input: PAScheduleEInput): PAScheduleEResult
   let reportableNetRentalRoyaltyIncome = netRentalRoyaltyIncome;
 
   if (input.filingStatus === "married_filing_jointly") {
-    const jointIncomeShare = propertyNetIncome
+    const primaryPropertyIncome = properties.reduce((total, property) => property.accountHolder === "primary" ? total.plus(property.netIncome) : total, new Decimal(0));
+    const spousePropertyIncome = properties.reduce((total, property) => property.accountHolder === "spouse" ? total.plus(property.netIncome) : total, new Decimal(0));
+    const jointIncomeShare = propertyNetIncome.minus(primaryPropertyIncome).minus(spousePropertyIncome)
       .plus(miscRents)
       .plus(miscRoyalties)
       .plus(passThroughJointIncome)
       .dividedBy(2);
 
-    taxpayerNetRentalRoyaltyIncome = passThroughTaxpayerIncome.plus(jointIncomeShare);
-    spouseNetRentalRoyaltyIncome = passThroughSpouseIncome.plus(jointIncomeShare);
+    taxpayerNetRentalRoyaltyIncome = passThroughTaxpayerIncome.plus(primaryPropertyIncome).plus(jointIncomeShare);
+    spouseNetRentalRoyaltyIncome = passThroughSpouseIncome.plus(spousePropertyIncome).plus(jointIncomeShare);
 
     const taxpayerPositive = taxpayerNetRentalRoyaltyIncome.greaterThan(0);
     const spousePositive = spouseNetRentalRoyaltyIncome.greaterThan(0);
@@ -228,14 +234,14 @@ export function calculatePAScheduleE(input: PAScheduleEInput): PAScheduleEResult
       "6-taxpayer",
       "Taxpayer separately computed Schedule E income (loss)",
       taxpayerNetRentalRoyaltyIncome,
-      "Taxpayer-owned pass-through income plus one-half of joint Schedule E amounts for married filing jointly",
+      "Actual taxpayer-owned property and pass-through income plus historical unconfirmed joint preview share",
     );
     audit.record(
       "PA-Schedule-E",
       "6-spouse",
       "Spouse separately computed Schedule E income (loss)",
       spouseNetRentalRoyaltyIncome,
-      "Spouse-owned pass-through income plus one-half of joint Schedule E amounts for married filing jointly",
+      "Actual spouse-owned property and pass-through income plus historical unconfirmed joint preview share",
     );
     audit.record(
       "PA-Schedule-E",

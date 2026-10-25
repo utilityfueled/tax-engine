@@ -33,6 +33,18 @@ packetRules:
     whenever this reference summary is attached.
 
 businessRuleValidation:
+  - rule: "actual-property-share-and-owner"
+    description: |
+      Refreshed2026-10-25: final2025 PA40 ScheduleE SectionII linea and line25
+      require actual taxpayer/spouse ownership and separate income/loss totals.
+      https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40e.pdf
+      Guided input amounts are whole-property amounts. Multiply rents and each
+      expense once by actual ownershipPercentage/100 using Decimal before owner
+      aggregation. Confirmed records require actual primary/spouse and positive
+      share no greater than100; joint interests require separate allocation.
+      Preserve old unconfirmed preview assumptions without treating them as facts
+      or qualifying those legacy records for filing.
+    testRef: "tests/engine/state/pa-rental-source-allocation.test.ts::PA applies actual property shares once before separate spouse loss limits"
   - rule: "pa-schedule-e-reference-packet"
     description: "Inventory support counts the Pennsylvania Schedule E packet path as validated only when fillReturn emits `pa-schedule-e-reference.pdf` whenever supported resident Schedule E activity is present."
     testRef: "tests/pdf/fill-pa-schedule-e.test.ts::fillReturn includes the Pennsylvania Schedule E reference summary when the resident return includes supported rental activity"

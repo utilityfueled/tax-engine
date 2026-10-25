@@ -7,6 +7,7 @@
  */
 
 import Decimal from "decimal.js";
+import { getPARentalOwnershipFraction } from "@/engine/state/pa-rental-ownership.js";
 import { d, sum, zeroFloor } from "@/utils/decimal.js";
 import type {
   Form1099R,
@@ -938,7 +939,7 @@ function calculateRentalPropertyNetIncome(property: TaxYearInput["rentalProperti
     d(property.utilities),
     d(property.depreciation),
     d(property.otherExpenses),
-  ));
+  )).times(getPARentalOwnershipFraction(property));
 }
 
 function isSupportedShortTermRentalBusinessProperty(
@@ -1076,11 +1077,11 @@ function mapBusinessIncomeByOwner(
     }
   }
 
-  // Supported short-term rentals currently lack an owner tag in the validated
-  // input model, so they remain in the primary-filer bucket.
+  // Apply the actual ownership share and owner before separate Class4 limits.
+  // Legacy unconfirmed ownerless previews retain their historical bucket.
   for (const property of input.rentalProperties) {
     if (isSupportedShortTermRentalBusinessProperty(property)) {
-      addAmount(calculateRentalPropertyNetIncome(property));
+      addAmount(calculateRentalPropertyNetIncome(property), property.accountHolder === "spouse" ? "spouse" : "primary");
     }
   }
 

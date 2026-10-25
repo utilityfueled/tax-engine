@@ -51,3 +51,29 @@ from3,000 to the official line9c credit600. Tests also cover partial/zero taxabl
 refunds, a fully excluded savings bond, actual prior-year care credit and audit
 failure paths. Evidence: `oh-inclusions-{red,green,types,lint,spec}.log` under
 `.local/upgrade-evidence/`. This remains local synthetic evidence.
+
+## Pennsylvania rental ownership — 2026-10-25
+
+The final [2025 PA Schedule E instructions](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40e.pdf),
+Section II line a and line 25, require actual ownership and separately computed
+spouse income/loss. Whole-property rents and expenses now receive their actual
+ownership fraction once. The taxpayer's loss no longer offsets a separately
+owned spouse property merely because the old adapter grouped all direct rents
+as joint. The existing short-rental business path also receives actual owner
+and share before Class 4 loss limits.
+
+All three new tests failed first. The initial 290-test package run passed all
+289 surrounding assertions and exposed a test setup that exercised the schema
+instead of the intended nonfinite calculation guard. The corrected three-case
+source run passes; root types and scoped lint pass. Historical unconfirmed
+preview assumptions remain explicitly unqualified; confirmed joint records
+require separate supported allocations. Exact sub-cent shares and amounts over
+Number's exact range are covered without changing monetary assertions.
+
+Evidence: `pa-rental-{red,green,types,lint,spec}.log` and
+`pa-rental-source-final.log` under `.local/upgrade-evidence/`.
+Remaining software work includes actual PA rental/business classification:
+annual rental days cannot establish average customer stay for a year-round
+property. That is separate from this ownership correction. Personal-use
+allocation, PA depreciation differences, joint allocation records and complete
+state-specific source qualification remain bounded gaps.
