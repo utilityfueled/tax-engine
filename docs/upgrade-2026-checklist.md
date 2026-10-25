@@ -7,10 +7,33 @@ complete a checkbox.
 
 ## Current integration — 2026-10-25
 
-`8da947a` is the latest confirmed pushed integration on `upgrade/2026-baseline`. The goal remains active and the
+`dec193d` is the latest confirmed pushed integration on `upgrade/2026-baseline`. The goal remains active and the
 upgrade is **not release-ready**. Unanswered external inputs are listed below;
 internal implementation and review continue in parallel.
 
+- `65a9e9f` and `9889cba`: actual original QSBS sources and per-issuer,
+  acquisition-date arithmetic. Source tree42d168bd passes121 tests in15 files,
+  root types/4,356 refs/lint0; separate source review passes14 cases. Arithmetic
+  tree0e28340c passes14 tests/root types/4,325 refs/lint0. Canonical8949,
+  ScheduleD, AMT and review exports are the next dependent package. Original
+  transfer/changing-ownership methods remain explicit implementation work.
+- `d89cbe5`: actual NOL income replays, separate regular/AMT vintages and NIIT
+  origin fractions. Treee0798760 passes1,079 tests/59 files, root types,
+  4,340 refs and lint0errors. Parent review reproduced and corrected overlapping
+  capital-loss/1202 modifications;18 final review cases pass. Pub974 coupling,
+  current-origin/charity/COD and other listed methods remain active work.
+- `ec6505d`: direct foreign-credit source intake and retained-vintage reference.
+  Treebc271d134 passes733 tests/72 files, root/web types and4,316 refs;
+  separate7-case review and reopened/rendered2-page reference pass.
+- `f6da5b2`: actual capital-source intake. Treea30d45d4 passes732 guided and13
+  canonical/PDF checks, root/web types,4,317 refs, production build and both
+  desktop/mobile cases with retries0. Parent review passes8 cases.
+- `dec193d`: separate regular/AMT investment-interest intake. Production tree
+  12ab089b passes740 checks/build/types and both desktop/mobile cases with
+  retries0. Final ownedfd037cf9 passes types/4,356 refs/scoped lint0 and6 smoke
+  cases. Agent review passes14 cases. Browser verification found and drove a
+  red-first fix for child confirmation inserting untouched blank source cards.
+  Actual NOL intake is the next independent facts package.
 - `8da947a`: actual child income in regular/AMT investment interest. Final tree
   40f8bebbf passes69 tests, root types,4,311 spec refs and lint0errors/four
   existing warnings; prior source tree passes104 tests and independent agent
@@ -45,7 +68,7 @@ internal implementation and review continue in parallel.
   Source binding and canonical integration are now committed in2dbce45.
 - `1ca69d0`: actual NOL vintage helper. Exact tree d8184932 passes 55 tests,
   root types, 4,252 spec refs and clean lint. Parent review passes 14 cases.
-  Actual modified-income, AMT and NIIT integration remains active.
+  Actual ordinary modified-income, AMT and NIIT integration is now d89cbe5.
 - `f2d018d`: simplified foreign credit threshold uses $600 only for MFJ and
   $300 for surviving-spouse returns. Exact tree df5f53e4 passes 80 cases,
   types/spec/lint; parent verified five cent-boundary scenarios. An explicit

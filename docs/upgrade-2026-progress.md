@@ -560,3 +560,15 @@ credit threshold (`f2d018d`), and Schedule D special-gain worksheet arithmetic
 (`ae7512d`). Each has focused checks and separate agent review. Actual canonical
 source integrations remain active; the full later code, remote CI, final runtime
 images and external qualification criteria still need verification.
+
+
+Pushed through `dec193d`: actual QSBS issuer arithmetic and original source
+binding (`9889cba`, `65a9e9f`), canonical regular/AMT/NIIT NOL vintages
+(`d89cbe5`), direct foreign-credit intake/reference (`ec6505d`), capital source
+intake (`f6da5b2`) and regular/AMT investment-interest intake (`dec193d`). Each
+has scoped immutable checks and separate agent review in the checklist. Review
+and browser verification drove corrections for overlapping NOL modifications
+and child confirmation inserting blank source cards. QSBS canonical integration,
+Pub974/NOL coupling, ordinary foreign credits and advanced source intake remain
+active. Current remote CI is pending; no final integrated, staging, human,
+provider, filing or release qualification is claimed.

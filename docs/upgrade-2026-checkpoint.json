@@ -204,7 +204,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "8da947a",
+    "lastRecordedCommit": "dec193d",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -541,6 +541,81 @@
         "browserCases": 2,
         "browserRetries": 0,
         "boundary": "Local synthetic package evidence and bounded agent review; not independent human, final integrated or staging qualification."
+      },
+      "directForeignCreditIntake": {
+        "commit": "ec6505d",
+        "sourceTree": "bc271d134",
+        "testsPassed": 733,
+        "files": 72,
+        "rootWebTypes": "passed",
+        "specReferences": 4316,
+        "independentAgentCases": 7,
+        "renderedPages": 2,
+        "boundary": "Synthetic local review record; no filing or human qualification"
+      },
+      "capitalSourceIntake": {
+        "commit": "f6da5b2",
+        "sourceTree": "a30d45d40fa5248e9114c95d751a87ac5472015a",
+        "guidedTestsPassed": 732,
+        "canonicalPdfTestsPassed": 13,
+        "rootWebTypes": "passed",
+        "specReferences": 4317,
+        "productionBuild": "passed",
+        "browserCases": 2,
+        "browserRetries": 0,
+        "independentParentCases": 8,
+        "boundary": "Local synthetic source and privacy checks"
+      },
+      "canonicalNolVintages": {
+        "commit": "d89cbe5",
+        "sourceTree": "e0798760",
+        "testsPassed": 1079,
+        "files": 59,
+        "rootTypes": "passed",
+        "specReferences": 4340,
+        "lintErrors": 0,
+        "lintWarnings": 6,
+        "independentParentCases": 18,
+        "review": "Capital-loss and section1202 overlap was reproduced and corrected before commit",
+        "boundary": "Ordinary regular/AMT/NIIT methods; Pub974 coupling and other identified methods remain"
+      },
+      "qsbsIssuerArithmetic": {
+        "commit": "9889cba",
+        "sourceTree": "0e28340cc2f841abdccacb490e8a28d779568da7",
+        "testsPassed": 14,
+        "rootTypes": "passed",
+        "specReferences": 4325,
+        "lintErrors": 0,
+        "lintWarnings": 0,
+        "review": "Agent source review and two probes; explicit transfer-method guard added red-first",
+        "boundary": "Standalone original-issue issuer arithmetic, not canonical integration"
+      },
+      "qsbsOriginalSources": {
+        "commit": "65a9e9f",
+        "sourceTree": "42d168bd02ce6bc26e23f27c916f5341015b62d5",
+        "testsPassed": 121,
+        "files": 15,
+        "rootTypes": "passed",
+        "specReferences": 4356,
+        "lintErrors": 0,
+        "lintWarnings": 0,
+        "independentAgentCases": 14,
+        "evidence": ".local/upgrade-evidence/section1202-sources-final-tests.log",
+        "boundary": "Original brokerage and constant-share fund sources; canonical integration remains in progress"
+      },
+      "investmentInterestIntake": {
+        "commit": "dec193d",
+        "sourceTree": "fd037cf9",
+        "productionTree": "12ab089b",
+        "testsPassed": 740,
+        "rootWebTypes": "passed",
+        "specReferences": 4356,
+        "productionBuild": "passed",
+        "browserCases": 2,
+        "browserRetries": 0,
+        "independentAgentCases": 14,
+        "review": "Child confirmation blank-source insertion reproduced and corrected with assertions preserved",
+        "boundary": "Local synthetic actual regular/AMT sources and review copies; not staging"
       }
     },
     "externalInputsStillPending": [
@@ -557,11 +632,10 @@
       "final multi-platform release images"
     ],
     "workInProgress": [
-      "ScheduleD18/19 special-gain source netting and actual section1202 history",
-      "Child4952 source binding, positive-character intake and foreign disclosures",
-      "Actual NOL vintage modified-income methods and remaining Marketplace methods in finite federal matrix",
-      "Actual Form2555 guided intake and QOF disposition facts",
-      "Ordinary foreign simplified-credit threshold and source election methods",
+      "Canonical QSBS Form8949/ScheduleD/AMT source integration, actual intake and complete review mapping",
+      "Pub974/NOL income coupling, remaining federal methods and actual regular/AMT NOL intake",
+      "Ordinary source-bound regular/AMT foreign tax credit and remaining allocation methods",
+      "Remaining advanced source intake, canonical preview/export and cross-document audit",
       "Current integrated coverage/inventory/all required checks and native runtime release rehearsal",
       "External staging/provider/review/state-demand/final-form inputs"
     ],
@@ -867,7 +941,7 @@
       "scope": "Exact isolated f8c6222 plus single-write PDF package; locked dependencies, Node24.22.1, pinned pypdf and disposable local PostgreSQL16. Thresholds unchanged.",
       "limitation": "Excludes newer in-kind education, Ohio and agent changes. Current integrated and final release gates still require a fresh run. Synthetic local evidence only."
     },
-    "lastPushedCommit": "8da947af893e88a7749f3dd7884e40c150f9bdca",
+    "lastPushedCommit": "dec193d3e75c9756970629cf6934f850338adbb8",
     "currentBrowserRun": {
       "commit": "ed915c1708cedc02e99ca12fb7383331a7f99bea",
       "status": "passed-with-hosted-skips",
@@ -1418,11 +1492,11 @@
     },
     "remoteRunsInProgress": {
       "observed": "2026-10-25",
-      "head": "8da947af893e88a7749f3dd7884e40c150f9bdca",
-      "CI": 40217507356,
-      "Web": 40217507374,
-      "status": "CI in_progress; Web queued",
-      "boundary": "Earlier35b8604 and2dbce45 CI failed; Web cancelled. No final green claim."
+      "head": "65a9e9fa9e8547fd478cfef8b1e845faff2855b4",
+      "CI": 40220379361,
+      "Web": 40220379287,
+      "status": "CI pending; Web queued",
+      "boundary": "9889cba CI still running and Web cancelled. Newer dec193d pushed after this observation; no final green claim."
     },
     "containerOriginVerification": {
       "commit": "67e1d94",
