@@ -73,11 +73,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.26-law-integration-draft",
+    ruleVersion: "2026.27-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/publications/p526", section: "Private nonoperating foundation capital-gain gifts: unknown qualified-stock exception versus known basis reduction", revision: "Final2025 Pub526 property rule retained for2026; no filing qualification", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i461", section: "Employee-service exclusion, actual capital/nonbusiness source classifications, official lines2-16 and separate attachment threshold", revision: "Final2025 instructions and current-law2026 indexed calculation; source and independent review gates retained", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/individuals/international-taxpayers/frequently-asked-questions-on-digital-asset-transactions", section: "Q78/Q79 actual crypto property value and substantiation; charitable category limits and2026 floor before ScheduleA", revision: "Current official guidance and statutory2026 preview; final forms and independent review remain pending", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i5329", section: "Individual HSA PartVII source facts, separate account-value caps and prior excess absorption into8889; actual employer excess income per i8889", revision: "Final2025 instructions and applicable current-law2026 calculation; independent review pending", retrievedAt: "2026-10-25" },

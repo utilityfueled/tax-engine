@@ -417,6 +417,9 @@ export function calculateScheduleA(
             contributionValue = min(contributionValue, d(donation.costBasis));
           }
         } else if (donation.isPrivateFoundation && (donation.type !== "appreciated_stock" || donation.qualifiedAppreciatedStock !== true)) {
+          if (input.taxpayer.taxYear === 2026 && donation.type === "appreciated_stock" && donation.qualifiedAppreciatedStock === undefined) {
+            throw new Error("Private-foundation qualified appreciated stock status is unknown");
+          }
           if (donation.costBasis === undefined || !d(donation.costBasis).isFinite() || d(donation.costBasis).lt(0)) throw new Error("Private-foundation capital gain gift requires qualified appreciated stock or actual basis-reduction qualification");
           contributionValue = min(contributionValue, d(donation.costBasis));
         }

@@ -89,6 +89,8 @@ describe("2026 charitable qualification facts", () => {
     const stock = { ...donation, type: "appreciated_stock", isPrivateFoundation: true, isLongTermCapitalGain: true, amount: "2000", costBasis: "1000" };
     expect(() => calc([stock])).toThrow(/qualified.*stock/i);
     expect(calc([{ ...stock, qualifiedAppreciatedStock: true }]).nonCashCharitable.toString()).toBe("1500");
+    expect(calc([{ ...stock, qualifiedAppreciatedStock: false }]).nonCashCharitable.toString()).toBe("500");
+    expect(() => calc([{ ...stock, qualifiedAppreciatedStock: false, costBasis: undefined }])).toThrow(/basis/i);
   });
 });
 
