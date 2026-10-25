@@ -111,6 +111,7 @@ export interface TaxReturnResult {
   // Deductions
   standardDeduction: Decimal;
   itemizedDeductions: Decimal;
+  itemizedDeductionReduction?: Decimal;
   deductionUsed: "standard" | "itemized";
   deductionAmount: Decimal;
   taxableIncome: Decimal;

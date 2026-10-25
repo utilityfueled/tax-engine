@@ -174,3 +174,28 @@ required from source records rather than an inferred loan term.
 All 18 new tests failed before implementation. 579 focused Schedule A/federal
 tests pass, engine typecheck and spec validation pass, and the scoped diff was
 reviewed. No qualification/readiness gate changed.
+
+## Package: overall itemized limitation and QBI coordination
+
+Refreshed IRC 68 and 199A(e)(1), plus 2026 Publication 505 Worksheet 2-6.
+The statute's exact 2/37 ratio is used instead of the estimated-tax worksheet's
+rounded 5.4%; final return-form qualification remains outstanding. QBI is
+computed without section 68; its deduction reduces the section 68 income base.
+A newly smaller itemized deduction triggers selection of the standard deduction
+and recomputation of taxable-income-limited QBI. The section 68 reduction is
+reversed for AMT under IRC 56(b)(1)(E). Current section 56 URLs were unavailable;
+the official 2023 code text and IRS instructions establish the unchanged AMT
+exception, pending independent current-law review.
+
+Eight standalone boundary tests began with a missing-module failure; all four
+initial integration tests failed, followed by a red-first AMT regression. Five
+integration tests now cover the charitable floor, standard selection, QBI order,
+QBI recomputation and explicit NOL-coordination rejection. 730 focused federal,
+QBI, AMT and Schedule 1-A tests and engine typecheck pass. Scoped diff and
+whitespace reviewed. Spec references for this package pass; a concurrent guided
+payment spec had a malformed reference and was reported to its owning agent.
+
+Remaining implementation work: existing historical NOL application changes AGI
+only after deductions, so 2026 NOL coordination explicitly rejects until a correct
+joint calculation is implemented. Existing standard-deduction and senior AMT
+addbacks were also identified for a separate corrective package. No gate opened.

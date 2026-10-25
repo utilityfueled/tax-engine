@@ -1,0 +1,18 @@
+form: "Overall itemized deduction limitation"
+fullName: "IRC 68 overall limitation and section 199A coordination"
+taxYear: 2026
+irsReference: "https://uscode.house.gov/us/usc/119-120/t26/s68/"
+notes: "Apply after all category limitations. The statute prescribes exact 2/37, while Publication 505's estimated-tax worksheet uses rounded 5.4%. This calculation uses the statute pending final return-form qualification. QBI taxable income disregards section 68 under section 199A(e)(1)."
+lines:
+  - line: "reduction"
+    description: "Reduction of otherwise allowable itemized deductions"
+    formula: "roundDollar(2/37 * min(itemizedDeductions, max(0,taxableIncomeBeforeItemized-37PercentBracketThreshold))). Taxable income before itemized means taxable income computed without section 68 plus otherwise allowed itemized deductions, after QBI and other below-AGI deductions."
+    testRef: "tests/engine/forms/itemized-deduction-limit.test.ts::2026 itemized deduction limitation"
+  - line: "federal-coordination"
+    description: "Apply after QBI and select the actual deduction"
+    formula: "Compute QBI with unreduced itemized deductions; apply section 68 using AGI less QBI and Schedule 1-A. If reduced itemized is not greater than standard plus eligible nonitemizer gifts, select standard and recompute QBI using that path. 2025 unchanged. NOL coordination remains explicitly unsupported for 2026."
+    testRef: "tests/engine/federal-itemized-2026.test.ts::2026 federal itemized limitation integration"
+  - line: "amt-coordination"
+    description: "Disregard the overall limitation for AMT"
+    formula: "When itemizing, subtract the section 68 reduction from regular taxable income in computing AMTI. IRC 56(b)(1)(E) makes section 68 inapplicable for AMT."
+    testRef: "tests/engine/federal-itemized-2026.test.ts::2026 federal itemized limitation integration"

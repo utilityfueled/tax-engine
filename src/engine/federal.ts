@@ -48,6 +48,7 @@ import { calculateScheduleE } from "./schedules/schedule-e.js";
 import { calculateScheduleSE } from "./schedules/schedule-se.js";
 import { calculateScheduleA } from "./schedules/schedule-a.js";
 import { calculateSchedule1A } from "./schedules/schedule-1-a.js";
+import { calculateItemizedDeductionLimit } from "./forms/itemized-deduction-limit.js";
 import { calculateForm6251 } from "./forms/form-6251.js";
 import { calculateForm8801 } from "./forms/form-8801.js";
 import { calculateForm8582 } from "./forms/form-8582.js";
@@ -1985,15 +1986,8 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     allForm8889Results
   );
 
-  const deductionUsed = itemizedDeductions.greaterThan(standardDeduction.plus(schedA.nonitemizerCharitableDeduction)) ? "itemized" : "standard";
-  const deductionAmount = deductionUsed === "itemized" ? itemizedDeductions : standardDeduction;
-  audit.record(
-    "1040",
-    "12",
-    "Standard or itemized deduction",
-    deductionAmount,
-    `${deductionUsed} deduction selected`
-  );
+  let deductionUsed: "itemized" | "standard" = itemizedDeductions.greaterThan(standardDeduction.plus(schedA.nonitemizerCharitableDeduction)) ? "itemized" : "standard";
+  let deductionAmount = deductionUsed === "itemized" ? itemizedDeductions : standardDeduction;
 
   if (input.schedule1A?.businessTips.length) {
     throw new Error("Schedule 1-A business tips require unsupported business-level QBI coordination");
@@ -2004,13 +1998,11 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     foreignExcludedIncome: form2555IncomeReduction.plus(form2555HousingDeduction),
     facts: input.schedule1A,
   }) : undefined;
-  const nonitemizerCharitableDeduction = deductionUsed === "standard" ? schedA.nonitemizerCharitableDeduction : d("0");
-  const additionalDeductions = (schedule1A?.totalDeduction ?? d("0")).plus(nonitemizerCharitableDeduction);
+  let nonitemizerCharitableDeduction = deductionUsed === "standard" ? schedA.nonitemizerCharitableDeduction : d("0");
+  let additionalDeductions = (schedule1A?.totalDeduction ?? d("0")).plus(nonitemizerCharitableDeduction);
   if (schedule1A) audit.merge(schedule1A.lines);
   audit.record("1040", "13b", "Additional deductions from Schedule 1-A", schedule1A?.totalDeduction ?? d("0"),
     "Schedule 1-A line 38; no change to AGI or payroll taxes");
-  audit.record("1040", "nonitemizer-charity", "Charitable deduction with standard deduction", nonitemizerCharitableDeduction,
-    "IRC 170(p); available only when the standard deduction is selected");
 
   // Line 13: Section 199A QBI Deduction (Form 8995)
   // Collect QBI sources from Schedule C, Schedule F, and K-1s.
@@ -2141,97 +2133,131 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     }
   }
 
-  let qbiDeduction = new Decimal(0);
-  const taxableIncomeBeforeQBI = zeroFloor(agi.minus(deductionAmount).minus(additionalDeductions));
-  let form8995Result: import("./forms/form-8995.js").Form8995Result | undefined;
-  let form8995AResult: import("./forms/form-8995-a.js").Form8995AResult | undefined;
+  function computeQBI(selectedDeduction: Decimal, otherDeductions: Decimal) {
+    let qbiDeduction = new Decimal(0);
+    const taxableIncomeBeforeQBI = zeroFloor(agi.minus(selectedDeduction).minus(otherDeductions));
+    let form8995Result: import("./forms/form-8995.js").Form8995Result | undefined;
+    let form8995AResult: import("./forms/form-8995-a.js").Form8995AResult | undefined;
 
-  const hasQBISources = qbiSources.length > 0 || qualifiedReitDividends.greaterThan(0) || !qualifiedPTPIncome.isZero();
-  if (hasQBISources && taxableIncomeBeforeQBI.greaterThan(0)) {
-    const qbiThreshold = constants.qbi.simplifiedThreshold[filingStatus];
-    const priorQBILoss = input.priorYear?.qbiLossCarryforward
-      ? d(input.priorYear.qbiLossCarryforward)
-      : undefined;
+    const hasQBISources = qbiSources.length > 0 || qualifiedReitDividends.greaterThan(0) || !qualifiedPTPIncome.isZero();
+    if (hasQBISources && taxableIncomeBeforeQBI.greaterThan(0)) {
+      const qbiThreshold = constants.qbi.simplifiedThreshold[filingStatus];
+      const priorQBILoss = input.priorYear?.qbiLossCarryforward
+        ? d(input.priorYear.qbiLossCarryforward)
+        : undefined;
 
-    if (taxableIncomeBeforeQBI.lte(qbiThreshold)) {
-      // Simplified Form 8995: no W-2/UBIA limitations, no SSTB phase-out
-      form8995Result = calculateForm8995({
-        qbiSources,
-        qualifiedReitDividends,
-        qualifiedPTPIncome,
-        priorYearQBILoss: priorQBILoss,
-        taxableIncomeBeforeQBI,
-        netCapitalGain: min(schedD.netLongTerm, schedD.netCapitalGainLoss),
-        qualifiedDividends,
-      });
-      audit.merge(form8995Result.lines);
-      qbiDeduction = form8995Result.qbiDeduction;
-    } else {
-      // Detailed Form 8995-A: W-2/UBIA limitations and SSTB phase-out apply
-      // Build per-business sources with W-2 wages, UBIA, and SSTB status
-      const qbiBusinessSources: QBIBusinessSource[] = qbiSources.map((source) => {
-        // Look up W-2/UBIA/SSTB metadata from original input
-        let w2Wages = new Decimal(0);
-        let ubia = new Decimal(0);
-        let isSST = false;
-        if (input.scheduleC && source.name === (input.scheduleC.businessName ?? "Schedule C")) {
-          w2Wages = d(input.scheduleC.w2WagesPaid ?? "0");
-          ubia = d(input.scheduleC.ubiaQualifiedProperty ?? "0");
-          isSST = input.scheduleC.isSST ?? false;
-        } else if (input.scheduleF && source.name === (input.scheduleF.principalCropOrActivity ?? "Schedule F")) {
-          w2Wages = d(input.scheduleF.w2WagesPaid ?? "0");
-          ubia = d(input.scheduleF.ubiaQualifiedProperty ?? "0");
-          // Farms are not SSTBs under IRC §199A(d)(2)
-        } else {
-          // Rental property source: look up by property description
-          const rental = (input.rentalProperties ?? []).find((rp) => rp.description === source.name);
-          if (rental?.qualifiesForQBI) {
-            w2Wages = d(rental.qbiW2Wages ?? "0");
-            ubia = d(rental.qbiUBIA ?? "0");
-            isSST = rental.qbiIsSST ?? false;
+      if (taxableIncomeBeforeQBI.lte(qbiThreshold)) {
+        // Simplified Form 8995: no W-2/UBIA limitations, no SSTB phase-out
+        form8995Result = calculateForm8995({
+          qbiSources,
+          qualifiedReitDividends,
+          qualifiedPTPIncome,
+          priorYearQBILoss: priorQBILoss,
+          taxableIncomeBeforeQBI,
+          netCapitalGain: min(schedD.netLongTerm, schedD.netCapitalGainLoss),
+          qualifiedDividends,
+        });
+        qbiDeduction = form8995Result.qbiDeduction;
+      } else {
+        // Detailed Form 8995-A: W-2/UBIA limitations and SSTB phase-out apply
+        // Build per-business sources with W-2 wages, UBIA, and SSTB status
+        const qbiBusinessSources: QBIBusinessSource[] = qbiSources.map((source) => {
+          // Look up W-2/UBIA/SSTB metadata from original input
+          let w2Wages = new Decimal(0);
+          let ubia = new Decimal(0);
+          let isSST = false;
+          if (input.scheduleC && source.name === (input.scheduleC.businessName ?? "Schedule C")) {
+            w2Wages = d(input.scheduleC.w2WagesPaid ?? "0");
+            ubia = d(input.scheduleC.ubiaQualifiedProperty ?? "0");
+            isSST = input.scheduleC.isSST ?? false;
+          } else if (input.scheduleF && source.name === (input.scheduleF.principalCropOrActivity ?? "Schedule F")) {
+            w2Wages = d(input.scheduleF.w2WagesPaid ?? "0");
+            ubia = d(input.scheduleF.ubiaQualifiedProperty ?? "0");
+            // Farms are not SSTBs under IRC §199A(d)(2)
           } else {
-            // K-1 source: look up by partnership name
-            const k1 = input.scheduleK1.find((k) => k.partnershipName === source.name);
-            if (k1) {
-              w2Wages = d(k1.section199AW2Wages ?? "0");
-              ubia = d(k1.section199AUBIA ?? "0");
-              isSST = k1.section199AIsSST ?? false;
+            // Rental property source: look up by property description
+            const rental = (input.rentalProperties ?? []).find((rp) => rp.description === source.name);
+            if (rental?.qualifiesForQBI) {
+              w2Wages = d(rental.qbiW2Wages ?? "0");
+              ubia = d(rental.qbiUBIA ?? "0");
+              isSST = rental.qbiIsSST ?? false;
             } else {
-              // K-1 Form 1041 source: look up by estate/trust name
-              const k1_1041 = k1Form1041s.find((k) => k.estateTrustName === source.name);
-              if (k1_1041) {
-                w2Wages = d(k1_1041.section199AW2Wages ?? "0");
-                ubia = d(k1_1041.section199AUBIA ?? "0");
-                isSST = k1_1041.section199AIsSST ?? false;
+              // K-1 source: look up by partnership name
+              const k1 = input.scheduleK1.find((k) => k.partnershipName === source.name);
+              if (k1) {
+                w2Wages = d(k1.section199AW2Wages ?? "0");
+                ubia = d(k1.section199AUBIA ?? "0");
+                isSST = k1.section199AIsSST ?? false;
+              } else {
+                // K-1 Form 1041 source: look up by estate/trust name
+                const k1_1041 = k1Form1041s.find((k) => k.estateTrustName === source.name);
+                if (k1_1041) {
+                  w2Wages = d(k1_1041.section199AW2Wages ?? "0");
+                  ubia = d(k1_1041.section199AUBIA ?? "0");
+                  isSST = k1_1041.section199AIsSST ?? false;
+                }
               }
             }
           }
-        }
-        return { name: source.name, qbi: source.qbi, w2Wages, ubia, isSST };
-      });
+          return { name: source.name, qbi: source.qbi, w2Wages, ubia, isSST };
+        });
 
-      // Part IV aggregation elections from taxpayer input
-      const aggregationElections = (input.priorYear?.qbiAggregationElections ?? []).map((e) => ({
-        name: e.name,
-        componentBusinessNames: e.componentBusinessNames,
-      }));
+        // Part IV aggregation elections from taxpayer input
+        const aggregationElections = (input.priorYear?.qbiAggregationElections ?? []).map((e) => ({
+          name: e.name,
+          componentBusinessNames: e.componentBusinessNames,
+        }));
 
-      form8995AResult = calculateForm8995A({
-        qbiSources: qbiBusinessSources,
-        ptpSources: ptpSources.length > 0 ? ptpSources : undefined,
-        qualifiedReitDividends,
-        aggregationElections: aggregationElections.length > 0 ? aggregationElections : undefined,
-        priorYearQBILoss: priorQBILoss,
-        taxableIncomeBeforeQBI,
-        netCapitalGain: min(schedD.netLongTerm, schedD.netCapitalGainLoss),
-        qualifiedDividends,
-        simplifiedThreshold: qbiThreshold,
-        phaseInRange: constants.qbi.phaseInRange[filingStatus],
+        form8995AResult = calculateForm8995A({
+          qbiSources: qbiBusinessSources,
+          ptpSources: ptpSources.length > 0 ? ptpSources : undefined,
+          qualifiedReitDividends,
+          aggregationElections: aggregationElections.length > 0 ? aggregationElections : undefined,
+          priorYearQBILoss: priorQBILoss,
+          taxableIncomeBeforeQBI,
+          netCapitalGain: min(schedD.netLongTerm, schedD.netCapitalGainLoss),
+          qualifiedDividends,
+          simplifiedThreshold: qbiThreshold,
+          phaseInRange: constants.qbi.phaseInRange[filingStatus],
+        });
+        qbiDeduction = form8995AResult.qbiDeduction;
+      }
+    }
+    return { qbiDeduction, form8995Result, form8995AResult };
+  }
+  let qbiCalculation = computeQBI(deductionAmount, additionalDeductions);
+  let itemizedDeductionReduction = new Decimal(0);
+  if (year === 2026) {
+    const availableHistoricalNol = d(input.priorYear?.nolCarryforward ?? input.priorYear?.excessBusinessLossNOL).plus(k1Form1041FinalNOL);
+    if (availableHistoricalNol.gt(0)) throw new Error("2026 NOL and deduction coordination is not yet supported");
+    if (deductionUsed === "itemized") {
+      const topBracket = constants.taxBrackets[filingStatus].find(bracket => bracket.rate.eq("0.37"));
+      if (!topBracket) throw new Error("Missing 37% bracket for itemized limitation");
+      const limitation = calculateItemizedDeductionLimit({
+        taxYear: year, itemizedDeductions,
+        taxableIncomeBeforeItemized: agi.minus(qbiCalculation.qbiDeduction).minus(schedule1A?.totalDeduction ?? d("0")),
+        topBracketThreshold: topBracket.min,
       });
-      audit.merge(form8995AResult.lines);
-      qbiDeduction = form8995AResult.qbiDeduction;
+      audit.merge(limitation.lines);
+      itemizedDeductionReduction = limitation.reduction;
+      itemizedDeductions = limitation.allowedDeduction;
+      if (itemizedDeductions.lte(standardDeduction.plus(schedA.nonitemizerCharitableDeduction))) {
+        deductionUsed = "standard";
+        deductionAmount = standardDeduction;
+        nonitemizerCharitableDeduction = schedA.nonitemizerCharitableDeduction;
+        additionalDeductions = (schedule1A?.totalDeduction ?? d("0")).plus(nonitemizerCharitableDeduction);
+        qbiCalculation = computeQBI(deductionAmount, additionalDeductions);
+      } else {
+        deductionAmount = itemizedDeductions;
+      }
     }
   }
+  const { qbiDeduction, form8995Result, form8995AResult } = qbiCalculation;
+  if (form8995Result) audit.merge(form8995Result.lines);
+  if (form8995AResult) audit.merge(form8995AResult.lines);
+  audit.record("1040", "12", "Standard or itemized deduction", deductionAmount, `${deductionUsed} deduction selected after applicable limitations`);
+  audit.record("1040", "nonitemizer-charity", "Charitable deduction with standard deduction", nonitemizerCharitableDeduction,
+    "IRC 170(p); available only when the standard deduction is selected");
   audit.record("1040", "13", "Section 199A deduction", qbiDeduction,
     qbiDeduction.isZero() ? "No QBI sources or zero deduction" :
     form8995AResult ? `Form 8995-A: $${qbiDeduction}` : `Form 8995: $${qbiDeduction}`);
@@ -2428,7 +2454,9 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
       depletionAdjustment: k1AmtDepletion,
       dispositionAdjustment: k1AmtDisposition,
       depreciationAdjustment: k1AmtDepreciation,
-      otherAdjustments: k1AmtOther.plus(k1Form1041AmtAdjustment),
+      // IRC 56(b)(1)(E): restore the section 68 amount only when itemizing.
+      otherAdjustments: k1AmtOther.plus(k1Form1041AmtAdjustment)
+        .minus(deductionUsed === "itemized" ? itemizedDeductionReduction : d("0")),
       // Per Form 6251 instructions: if Schedule J is used, Form 6251 must
       // use the tax computed WITHOUT Schedule J (income averaging does not
       // apply to AMT).
@@ -3180,6 +3208,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
 
     standardDeduction,
     itemizedDeductions,
+    ...(year === 2026 ? { itemizedDeductionReduction } : {}),
     deductionUsed,
     deductionAmount,
     taxableIncome,
