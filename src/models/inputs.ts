@@ -376,7 +376,15 @@ export const CryptoDonationSchema = z.object({
   costBasis: decimal, // Original cost basis
   charityName: z.string(),
   charityEIN: z.string().optional(),
-  isQualifiedOrganization: z.boolean().default(true), // 501(c)(3)
+  isQualifiedOrganization: z.boolean().optional(), // Actual IRC170 eligibility, never assumed.
+  recipientCategory: z.enum(["fifty-percent", "other-qualified"]).optional(),
+  capitalAsset: z.boolean().optional(),
+  sourceFactsConfirmed: z.boolean().optional(),
+  fullOwnershipInterestDonated: z.boolean().optional(),
+  noGoodsOrServicesReceived: z.boolean().optional(),
+  substantiationRequirementsMet: z.boolean().optional(),
+  appraisalRequired: z.boolean().optional(), // Actual similar-property aggregation and threshold review.
+  qualifiedAppraisalObtained: z.boolean().optional(),
 });
 
 // ── Aggregated Crypto Income Input ──

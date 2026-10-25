@@ -29,6 +29,7 @@ import type {
 import type { CalculatedLine } from "@/models/outputs.js";
 import { d, sum } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
+import type { CharitableContributionWorksheetInput } from "./charitable-contribution-worksheet.js";
 
 export interface TrackedLot {
   asset: string;
@@ -1265,11 +1266,13 @@ export function processCryptoLiquidations(
 // ═══════════════════════════════════════════════════════════════
 
 export interface CryptoDonationResult {
-  /** Total charitable deduction → Schedule A */
+  /** Tentative contribution value BEFORE Schedule A limits/floor; not the final deduction. */
   totalDeduction: Decimal;
-  /** Donations that avoid capital gains (held >1 year, FMV deduction) */
+  contributionAmounts: CharitableContributionWorksheetInput["amounts"];
+  sourceFactsVerified: boolean;
+  /** Long-term gifts and their tentative value; second-category gifts can require basis reduction. */
   longTermDonations: Array<{ asset: string; charity: string; deduction: Decimal; avoidedGain: Decimal }>;
-  /** Donations deducted at basis (held ≤1 year) */
+  /** Short-term gifts use the lesser of basis and FMV. */
   shortTermDonations: Array<{ asset: string; charity: string; deduction: Decimal }>;
   lines: CalculatedLine[];
 }
@@ -1278,7 +1281,8 @@ export interface CryptoDonationResult {
  * Process crypto charitable donations.
  *
  * Held >1 year: deduct FMV, no capital gains recognized (IRC §170(e)(1)(A)).
- * Held ≤1 year: deduct basis only (IRC §170(e)(1)(A)).
+ * Held ≤1 year: tentative contribution is min(basis, FMV) (IRC §170(e)(1)(A)).
+ * Actual category values enter Schedule A before its percentage limits/floor.
  *
  * IRS References:
  * - IRC §170: charitable contribution deduction
@@ -1287,49 +1291,78 @@ export interface CryptoDonationResult {
  */
 export function calculateCryptoDonations(
   donations: CryptoDonation[],
+  taxYear = 2025,
 ): CryptoDonationResult {
+  if (![2025, 2026].includes(taxYear)) throw new Error("Unsupported crypto donation tax year");
   const audit = new AuditTrail();
   let totalDeduction = new Decimal(0);
+  let sourceFactsVerified = true;
+  const contributionAmounts = { cashPublic: d("0"), noncashPublic: d("0"), capitalGainPublic: d("0"), cashPrivate: d("0"), noncashPrivate: d("0"), capitalGainPrivate: d("0") };
   const longTermDonations: CryptoDonationResult["longTermDonations"] = [];
   const shortTermDonations: CryptoDonationResult["shortTermDonations"] = [];
 
   for (const don of donations) {
     const fmv = d(don.fairMarketValueAtDonation);
     const basis = d(don.costBasis);
-    const holdingPeriod = getHoldingPeriod(don.dateAcquired, don.dateDonated);
+    if ([fmv, basis, d(don.quantity)].some(value => !value.isFinite() || value.lt(0))) throw new Error("Crypto donation values must be finite and nonnegative");
+    for (const raw of [don.dateAcquired, don.dateDonated]) {
+      const date = new Date(`${raw}T00:00:00Z`);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(raw) || !Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== raw) throw new Error("Crypto donation requires actual valid dates");
+    }
+    if (!don.dateDonated.startsWith(`${taxYear}-`) || don.dateAcquired > don.dateDonated) throw new Error("Crypto donation date must match the return year and follow acquisition");
+    if (don.isQualifiedOrganization === false) continue;
+    const strict = taxYear >= 2026 || don.sourceFactsConfirmed === true;
+    if (strict) {
+      if (don.isQualifiedOrganization !== true || don.recipientCategory === undefined || don.capitalAsset === undefined
+        || don.sourceFactsConfirmed !== true || don.fullOwnershipInterestDonated !== true || don.noGoodsOrServicesReceived !== true
+        || don.substantiationRequirementsMet !== true || don.appraisalRequired === undefined) {
+        throw new Error("Crypto donation actual qualification, property and substantiation sources are required");
+      }
+    } else sourceFactsVerified = false;
+    // More than one calendar year; a leap day does not shorten the statutory year.
+    const acquiredYear = Number(don.dateAcquired.slice(0, 4));
+    const heldLongTerm = taxYear - acquiredYear > 1
+      || (taxYear - acquiredYear === 1 && don.dateDonated.slice(5) > don.dateAcquired.slice(5));
+    const capitalGainProperty = heldLongTerm && don.capitalAsset !== false && fmv.gt(basis);
+    const privateRecipient = don.recipientCategory === "other-qualified";
+    const contribution = capitalGainProperty && !privateRecipient ? fmv : Decimal.min(fmv, basis);
+    if (strict && ((contribution.gt(5000) && don.appraisalRequired !== true)
+      || (don.appraisalRequired === true && don.qualifiedAppraisalObtained !== true))) throw new Error("Crypto donation qualified appraisal source is required");
+    const category = capitalGainProperty ? privateRecipient ? "capitalGainPrivate" : "capitalGainPublic"
+      : privateRecipient ? "noncashPrivate" : "noncashPublic";
+    contributionAmounts[category] = contributionAmounts[category].plus(contribution);
+    totalDeduction = totalDeduction.plus(contribution);
 
-    if (holdingPeriod === "long") {
-      // Deduct FMV, avoid capital gains on appreciation
-      totalDeduction = totalDeduction.plus(fmv);
-      const avoidedGain = fmv.minus(basis);
+    if (heldLongTerm) {
+      const avoidedGain = Decimal.max(0, fmv.minus(basis));
       longTermDonations.push({
         asset: don.asset,
         charity: don.charityName,
-        deduction: fmv,
+        deduction: contribution,
         avoidedGain,
       });
       audit.record("Crypto Donation", "long-term", `${don.asset} donated to ${don.charityName}`,
-        fmv,
-        `Held >1yr: deduct FMV $${fmv}, avoid $${avoidedGain} capital gain (IRC §170(e)(1)(A))`);
+        contribution,
+        `Tentative ${category} property value before ScheduleA; FMV ${fmv}, basis ${basis}, unrecognized appreciation ${avoidedGain}`);
     } else {
-      // Deduct basis only
-      totalDeduction = totalDeduction.plus(basis);
       shortTermDonations.push({
         asset: don.asset,
         charity: don.charityName,
-        deduction: basis,
+        deduction: contribution,
       });
       audit.record("Crypto Donation", "short-term", `${don.asset} donated to ${don.charityName}`,
-        basis,
-        `Held ≤1yr: deduct basis $${basis} only (IRC §170(e)(1)(A))`);
+        contribution,
+        `Held one year or less: tentative min(FMV ${fmv}, basis ${basis}) before ScheduleA limits`);
     }
   }
 
-  audit.record("Crypto Donation", "total", "Total crypto charitable deduction",
-    totalDeduction, `${donations.length} donations → Schedule A`);
+  audit.record("Crypto Donation", "total", "Tentative crypto charitable contribution value",
+    totalDeduction, "Actual property values enter ScheduleA category limits and floor before deduction");
 
   return {
     totalDeduction,
+    contributionAmounts,
+    sourceFactsVerified,
     longTermDonations,
     shortTermDonations,
     lines: audit.getLines(),

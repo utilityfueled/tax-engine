@@ -569,8 +569,9 @@ describe("Crypto Donation - Holding Period Boundary", () => {
     expect(result.longTermDonations).toHaveLength(1);
     // Deduction = FMV = $10000 (even though basis is higher)
     expect(result.totalDeduction.toNumber()).toBe(10000);
-    // "Avoided gain" is negative (actually a loss that can't be claimed)
-    expect(result.longTermDonations[0].avoidedGain.toNumber()).toBe(-5000);
+    // Pub526: the unrecognized decline is not a charitable deduction or an avoided gain.
+    expect(result.longTermDonations[0].avoidedGain.toNumber()).toBe(0);
+    expect(result.contributionAmounts.noncashPublic.toString()).toBe("10000");
   });
 });
 

@@ -15,7 +15,7 @@ import type { FilingStatus, YearConstants } from "@/models/constants.js";
 import { d, sum, zeroFloor, min, roundDollar } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { calculateSALTLimit } from "@/utils/tax-math.js";
-import { calculateCharitableContributionWorksheet, type CharitableCategory } from "@/engine/forms/charitable-contribution-worksheet.js";
+import { calculateCharitableContributionWorksheet, type CharitableCategory, type CharitableContributionWorksheetInput } from "@/engine/forms/charitable-contribution-worksheet.js";
 // calculateDeductibleMortgageInterest is no longer used here — mortgage interest
 // is now computed with aggregate debt limits per IRS Pub 936 (see Lines 8a-8d section).
 
@@ -33,6 +33,8 @@ export interface ScheduleAInput {
   k1CashCharitable?: Decimal; // Code A: cash/non-capital-gain property (60% AGI limit)
   k1AppreciatedProperty30?: Decimal; // Code B: capital gain property to 50% orgs (30% limit)
   k1AppreciatedProperty20?: Decimal; // Code C: capital gain property to non-50% orgs (20% limit)
+  /** Actual tentative crypto property values, before the common charitable limits. */
+  cryptoCharitableAmounts?: CharitableContributionWorksheetInput["amounts"];
   /** Pre-computed sales tax deduction amount from the sales tax worksheet.
    *  When provided, Schedule A compares this to income taxes for Line 5a. */
   salesTaxDeduction?: Decimal;
@@ -393,23 +395,30 @@ export function calculateScheduleA(
   let charitableCarryforwards: CharitableCarryforwardEntry[];
   let charitableCarryforwardExpired = ZERO;
   let charitableCarryforwardDetail: CharitableCarryforwardYearDetail[] = [];
-  if (input.taxpayer.taxYear === 2026) {
+  if (input.taxpayer.taxYear === 2026 || extra?.cryptoCharitableAmounts !== undefined) {
     if (d(input.priorYear?.charitableCarryforward).gt(0) || input.priorYear?.charitableCarryforwardByYear.some(entry => d(entry.amount).gt(0))) {
-      throw new Error("2026 historical charitable carryover requires supported category and reviewed floor-transition treatment");
+      throw new Error("Historical charitable carryover with the category worksheet requires actual category and applicable floor-transition treatment");
     }
-    const amounts = { cashPublic: extra?.k1CashCharitable ?? ZERO, noncashPublic: ZERO, capitalGainPublic: extra?.k1AppreciatedProperty30 ?? ZERO, cashPrivate: ZERO, noncashPrivate: ZERO, capitalGainPrivate: extra?.k1AppreciatedProperty20 ?? ZERO };
+    const crypto = extra?.cryptoCharitableAmounts;
+    const amounts = { cashPublic: (extra?.k1CashCharitable ?? ZERO).plus(crypto?.cashPublic ?? ZERO), noncashPublic: crypto?.noncashPublic ?? ZERO,
+      capitalGainPublic: (extra?.k1AppreciatedProperty30 ?? ZERO).plus(crypto?.capitalGainPublic ?? ZERO), cashPrivate: crypto?.cashPrivate ?? ZERO,
+      noncashPrivate: crypto?.noncashPrivate ?? ZERO, capitalGainPrivate: (extra?.k1AppreciatedProperty20 ?? ZERO).plus(crypto?.capitalGainPrivate ?? ZERO) };
     for (const donation of input.donations) {
       if (d(donation.amount).isZero()) continue;
-      if (donation.qualifiedOrganization === undefined) throw new Error("Charitable recipient qualification is unknown");
-      if (!donation.isPrivateFoundation && !donation.qualifiedOrganization) continue;
+      if (input.taxpayer.taxYear === 2026 && donation.qualifiedOrganization === undefined) throw new Error("Charitable recipient qualification is unknown");
+      if (donation.qualifiedOrganization === false) continue;
       let contributionValue = d(donation.amount);
       if (donation.type !== "cash") {
-        if (donation.isLongTermCapitalGain === undefined) throw new Error("Charitable property long-term holding status is unknown");
+        if (input.taxpayer.taxYear === 2026 && donation.isLongTermCapitalGain === undefined) throw new Error("Charitable property long-term holding status is unknown");
         if (!donation.isLongTermCapitalGain) {
-          if (donation.costBasis === undefined || !d(donation.costBasis).isFinite() || d(donation.costBasis).lt(0)) throw new Error("Charitable property cost basis is unknown or invalid");
-          contributionValue = min(contributionValue, d(donation.costBasis));
+          if (donation.costBasis === undefined && input.taxpayer.taxYear === 2026) throw new Error("Charitable property cost basis is unknown or invalid");
+          if (donation.costBasis !== undefined) {
+            if (!d(donation.costBasis).isFinite() || d(donation.costBasis).lt(0)) throw new Error("Charitable property cost basis is unknown or invalid");
+            contributionValue = min(contributionValue, d(donation.costBasis));
+          }
         } else if (donation.isPrivateFoundation && (donation.type !== "appreciated_stock" || donation.qualifiedAppreciatedStock !== true)) {
-          throw new Error("Private-foundation capital gain gift requires qualified appreciated stock or separately supported basis-reduction qualification");
+          if (donation.costBasis === undefined || !d(donation.costBasis).isFinite() || d(donation.costBasis).lt(0)) throw new Error("Private-foundation capital gain gift requires qualified appreciated stock or actual basis-reduction qualification");
+          contributionValue = min(contributionValue, d(donation.costBasis));
         }
       }
       const category = donation.type === "cash"
@@ -419,13 +428,14 @@ export function calculateScheduleA(
           : donation.isPrivateFoundation ? "noncashPrivate" : "noncashPublic";
       amounts[category] = amounts[category].plus(contributionValue);
     }
-    const charitable = calculateCharitableContributionWorksheet({ taxYear: 2026, contributionBase, amounts });
+    const charitable = calculateCharitableContributionWorksheet({ taxYear: input.taxpayer.taxYear, contributionBase, amounts });
     audit.merge(charitable.lines);
     cashCharitable = charitable.cashDeduction;
     nonCashCharitable = charitable.nonCashDeduction;
     charitableCarryforwards = charitable.carryforwards;
-    audit.record("Sched A", "12", "Cash charitable after 2026 limitations", cashCharitable, "2026 category worksheet, including 0.5% floor");
-    audit.record("Sched A", "13", "Noncash charitable after 2026 limitations", nonCashCharitable, "2026 category worksheet, including 0.5% floor");
+    const limitDescription = input.taxpayer.taxYear === 2026 ? "2026 category worksheet, including 0.5% floor" : "Final2025 Pub526 Worksheet2 current-contribution category limits";
+    audit.record("Sched A", "12", "Cash charitable after applicable limitations", cashCharitable, limitDescription);
+    audit.record("Sched A", "13", "Noncash charitable after applicable limitations", nonCashCharitable, limitDescription);
   } else {
     // ── Charitable (Lines 12-13) with stacked AGI limits ──
     // Per IRC §170(b)(1), charitable contribution limits interact (stack):

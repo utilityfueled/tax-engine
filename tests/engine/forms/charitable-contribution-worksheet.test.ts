@@ -35,7 +35,7 @@ describe("2026 charitable category limits", () => {
   });
   it("rejects negative amounts and unsupported years", () => {
     expect(() => calc({ cashPublic: d("-1") })).toThrow(/nonnegative/i);
-    expect(() => calculateCharitableContributionWorksheet({ taxYear: 2025, contributionBase: d("100000"), amounts: empty })).toThrow(/year/i);
+    expect(() => calculateCharitableContributionWorksheet({ taxYear: 2024, contributionBase: d("100000"), amounts: empty })).toThrow(/year/i);
   });
 });
 describe("2026 charitable floor and carryforward", () => {

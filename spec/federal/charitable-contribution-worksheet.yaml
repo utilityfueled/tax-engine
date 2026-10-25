@@ -13,6 +13,10 @@ notes: |
   Historical carryover/floor transition treatment requires reviewed source evidence
   and remains explicitly blocked in this 2026 worksheet, not silently relabeled.
 lines:
+  - line: "2025-current"
+    description: "Final2025 current-year category worksheet when crypto sources participate"
+    formula: "Pub526 Worksheet2 lines13/17/24/30/40 apply their actual raw/allowed category ordering; no2026 cash adjustment or floor. Prior carryover categories require a separate worksheet and cannot be relabeled current gifts."
+    testRef: "tests/engine/federal-crypto-charity.test.ts::uses the final 2025 category ordering without a 2026 floor"
   - line: "percentage-limits"
     description: "Preserve the supported contribution categories"
     formula: |

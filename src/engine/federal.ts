@@ -1004,7 +1004,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   let donationResult: CryptoDonationResult | undefined;
   const cryptoDonations = cryptoInput?.donations ?? [];
   if (cryptoDonations.length > 0) {
-    donationResult = calculateCryptoDonations(cryptoDonations);
+    donationResult = calculateCryptoDonations(cryptoDonations, year);
     audit.merge(donationResult.lines);
   }
 
@@ -2008,6 +2008,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     || form4952DeductibleAmount !== undefined
     || form4684DeductibleLoss !== undefined
     || hasK1Charitable
+    || donationResult !== undefined
     || salesTaxElectedForLine5a;
   const schedA = calculateScheduleA(
     input,
@@ -2028,6 +2029,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
         k1CashCharitable: hasK1Charitable ? k1CashCharitable : undefined,
         k1AppreciatedProperty30: hasK1Charitable ? k1AppreciatedProperty30 : undefined,
         k1AppreciatedProperty20: hasK1Charitable ? k1AppreciatedProperty20 : undefined,
+        cryptoCharitableAmounts: donationResult?.contributionAmounts,
         salesTaxDeduction: salesTaxElectedForLine5a ? salesTaxDeductionAmount : undefined,
         salesTaxElected: salesTaxElectedForLine5a,
       }
@@ -2041,19 +2043,10 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     audit.record("Sched A", "16b", "Final year non-misc itemized deductions (K-1 1041)", k1Form1041FinalNonMiscItemized,
       "K-1 (Form 1041) Box 11 Code B — non-miscellaneous itemized deductions on termination per IRC §642(h)");
   }
-  // Add crypto charitable donations to itemized deductions (Schedule A)
-  const cryptoDonationDeduction = donationResult?.totalDeduction ?? new Decimal(0);
-  if (cryptoDonationDeduction.greaterThan(0)) {
-    itemizedDeductions = itemizedDeductions.plus(cryptoDonationDeduction);
-    audit.record("Sched A", "12-crypto", "Crypto charitable contributions (IRC §170)",
-      cryptoDonationDeduction,
-      `${donationResult!.longTermDonations.length} long-term (FMV) + ${donationResult!.shortTermDonations.length} short-term (basis) crypto donations`);
-  }
   const hasK1Form1041ItemizedAdditions = k1Form1041EstateTaxDeduction.greaterThan(0) || k1Form1041FinalNonMiscItemized.greaterThan(0);
-  const hasCryptoDonations = cryptoDonationDeduction.greaterThan(0);
   audit.record("Sched A", "17", "Total itemized deductions", itemizedDeductions,
-    hasK1Form1041ItemizedAdditions || hasCryptoDonations
-      ? "Medical + SALT + mortgage + charitable + crypto donations + K-1 1041 estate/trust deductions"
+    hasK1Form1041ItemizedAdditions
+      ? "Medical + SALT + mortgage + limited charitable contributions + K-1 1041 estate/trust deductions"
       : "Medical + SALT + mortgage + charitable");
   // Collect all Form 8889 results for auto-deriving Form 5329 Part VII HSA excess contributions
   const allForm8889Results: Form8889Result[] = [
