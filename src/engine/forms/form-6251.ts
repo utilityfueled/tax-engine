@@ -31,6 +31,7 @@ export interface Form6251Input {
   otherAdjustments?: Decimal; // Line 3: Other AMT adjustments
   regularTax: Decimal; // Regular tax (before credits) for comparison
   directCreditElectionForeignTaxCredit?: Decimal; // Actual section904(j) credit; same regular and AMT credit.
+  ordinaryForeignTaxCredits?: { regular: Decimal; amt: Decimal }; // Separate actual ordinary Form1116 results.
   requiresTentativeMinimumTaxForCredits?: boolean; // Actual8801/3800 consumers require net statutory TMT even when no AMT is due.
   filingStatus: FilingStatus;
   isItemizing: boolean; // Only add back Schedule A taxes if itemizing
@@ -222,7 +223,18 @@ export function calculateForm6251(
   }
   audit.record("Form 6251", "7", "Tax before AMT foreign tax credit", tentativeMinimumTax, line7Source);
   const directCredit = input.directCreditElectionForeignTaxCredit;
+  const ordinaryCredits = input.ordinaryForeignTaxCredits;
   let regularTaxComparison = input.regularTax;
+  if (ordinaryCredits !== undefined) {
+    if (directCredit !== undefined || [ordinaryCredits.regular, ordinaryCredits.amt].some(value => !value.isFinite() || value.lt(0) || !value.isInteger())
+      || ordinaryCredits.regular.gt(input.regularTax) || ordinaryCredits.amt.gt(tentativeMinimumTax)) {
+      throw new Error("AMT ordinary foreign credits must reconcile their separate actual regular and AMT tax limits");
+    }
+    regularTaxComparison = input.regularTax.minus(ordinaryCredits.regular);
+    audit.record("Form 6251", "8", "Actual ordinary AMT foreign tax credit", ordinaryCredits.amt,
+      "Separate AMT Form1116 line35; retain actual net TMT and carryover calculations even when physical line8 may be skipped");
+    tentativeMinimumTax = tentativeMinimumTax.minus(ordinaryCredits.amt);
+  }
   if (directCredit !== undefined) {
     if (!directCredit.isFinite() || directCredit.lt(0) || !directCredit.isInteger() || directCredit.gt(input.regularTax)
       || directCredit.gt(input.filingStatus === "married_filing_jointly" ? "600" : "300")) throw new Error("AMT direct-election credit must reconcile actual regular tax and the election threshold");
@@ -235,11 +247,10 @@ export function calculateForm6251(
       tentativeMinimumTax = zeroFloor(tentativeMinimumTax.minus(directCredit));
     }
   }
-  // Outside the explicit election, no actual AMTFTC worksheet is represented.
   audit.record("Form 6251", "9", "Tentative minimum tax", tentativeMinimumTax,
-    directCredit === undefined ? "Preview line7 with no AMTFTC; source worksheet qualification remains pending" : "Line7 less actual elected AMTFTC when line8 is required");
+    ordinaryCredits ? "Line7 less actual separate AMT Form1116 credit" : directCredit === undefined ? "Preview line7 with no AMTFTC; source worksheet qualification remains pending" : "Line7 less actual elected AMTFTC when line8 is required");
   audit.record("Form 6251", "10", "Regular tax comparison", regularTaxComparison,
-    directCredit === undefined ? "Actual caller-supplied regular-tax comparison; ScheduleJ averaging excluded" : "Regular tax without ScheduleJ plus PartI1z, less actual elected Schedule3line1 credit");
+    ordinaryCredits ? "Regular tax without ScheduleJ plus supported PartI1z, less actual regular Form1116 credit" : directCredit === undefined ? "Actual caller-supplied regular-tax comparison; ScheduleJ averaging excluded" : "Regular tax without ScheduleJ plus PartI1z, less actual elected Schedule3line1 credit");
 
   // Line 11: AMT = excess of tentative minimum over regular tax
   const amt = zeroFloor(tentativeMinimumTax.minus(regularTaxComparison));

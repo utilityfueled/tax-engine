@@ -5,6 +5,7 @@ import type { CalculatedLine } from '@/models/outputs.js';
 import { AuditTrail } from '@/utils/audit.js';
 import { d, sum } from '@/utils/decimal.js';
 import { resolveForeignTaxDirectSources, type ForeignTaxDirectSources } from './foreign-tax-direct-sources.js';
+import { resolveForeignTaxOrdinarySources, type ForeignTaxOrdinarySources } from './foreign-tax-ordinary-sources.js';
 
 export interface ForeignTaxElectionResult {
   election: 'credit' | 'deduction' | 'unverified_credit';
@@ -12,6 +13,7 @@ export interface ForeignTaxElectionResult {
   scheduleAForeignIncomeTaxes: Decimal;
   niitForeignIncomeTaxes: Decimal;
   directCreditSources?: ForeignTaxDirectSources;
+  ordinaryCreditSources?: ForeignTaxOrdinarySources;
   lines: CalculatedLine[];
 }
 function amount(value: string | undefined, label: string): Decimal {
@@ -35,7 +37,7 @@ export type ForeignTaxElectionInput = Pick<TaxYearInput, 'foreignTaxElection' | 
 
 export function resolveForeignTaxElection(input: ForeignTaxElectionInput): ForeignTaxElectionResult {
   const facts = input.foreignTaxElection;
-  if (!facts?.creditWithoutForm1116 && Object.values(input.priorYear?.amtForeignTaxCreditCarryforwardByCategory ?? {}).flat()
+  if (!facts?.creditWithoutForm1116 && !facts?.creditWithForm1116 && Object.values(input.priorYear?.amtForeignTaxCreditCarryforwardByCategory ?? {}).flat()
     .some(row => !amount(row.amount, 'saved AMT credit carryover').isZero())) {
     throw new Error('Actual AMT foreign-credit carryovers require a supported source method; another election cannot discard them');
   }
@@ -59,11 +61,16 @@ export function resolveForeignTaxElection(input: ForeignTaxElectionInput): Forei
       audit.record('Foreign Tax Election WS', 'deduction', 'Actual credit election: no foreign income tax deduction', d('0'), 'IRC275(a)(4); actual904j source election');
       return { ...empty('credit'), sourceFactsVerified: true, directCreditSources };
     }
+    if (facts.creditWithForm1116) {
+      const ordinaryCreditSources = resolveForeignTaxOrdinarySources(input);
+      audit.record('Foreign Tax Election WS', 'deduction', 'Actual ordinary credit election: no foreign income tax deduction', d('0'), 'IRC275(a)(4); separate regular and AMT Form1116 source worksheets');
+      return { ...empty('credit'), sourceFactsVerified: true, ordinaryCreditSources };
+    }
     if (facts.sources?.length) throw new Error('Foreign tax credit source reconciliation needs its separate actual worksheet; deduction-source records cannot enter the unverified legacy credit estimate');
     audit.record('Foreign Tax Election WS', 'deduction', 'Annual credit choice: no foreign income tax deduction', d('0'), 'IRC275(a)(4); existing credit calculation remains separately subject to its source rules');
     return empty('credit');
   }
-  if (facts.creditWithoutForm1116) throw new Error('A deduction election cannot retain an elected direct-credit worksheet');
+  if (facts.creditWithoutForm1116 || facts.creditWithForm1116) throw new Error('A deduction election cannot retain an elected foreign-credit worksheet');
   if (facts.accountingMethod !== 'paid' || facts.priorAccruedCreditElection !== false) throw new Error('Foreign tax deduction requires actual paid-tax method; accrued-credit history needs its separate source method');
   if (facts.allQualifiedForeignTaxesIncludedConfirmed !== true || !facts.sources) throw new Error('Foreign tax deduction requires all actual qualified foreign taxes and complete source records');
   if (facts.noRedeterminationsConfirmed !== true) throw new Error('Foreign tax redeterminations require their actual separate historical source method');

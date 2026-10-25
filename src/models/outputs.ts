@@ -132,6 +132,7 @@ export interface TaxReturnResult {
   foreignTaxDeductionCarryover?: import("@/engine/forms/foreign-tax-deduction-carryover.js").ForeignTaxDeductionCarryoverResult;
   /** Actual904(j) election, including preserved regular and AMT prior histories. */
   foreignTaxDirectCredit?: import("@/engine/forms/foreign-tax-direct-credit.js").ForeignTaxDirectCreditResult;
+  foreignTaxOrdinaryCredit?: import("@/engine/forms/foreign-tax-ordinary-credit.js").ForeignTaxOrdinaryCreditResult;
   otherCredits: Decimal;
   totalCredits: Decimal;
 

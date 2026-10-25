@@ -52,6 +52,7 @@ import {
 } from "./forms/form-1116.js";
 import { calculateForeignTaxDeductionCarryover, type ForeignTaxHypotheticalContext } from "./forms/foreign-tax-deduction-carryover.js";
 import { calculateForeignTaxDirectCredit } from "./forms/foreign-tax-direct-credit.js";
+import { calculateForeignTaxOrdinaryCredit } from "./forms/foreign-tax-ordinary-credit.js";
 import { validateForeignTaxDeductionScope } from "./forms/foreign-tax-deduction-scope.js";
 import { calculateScheduleB } from "./schedules/schedule-b.js";
 import { calculateScheduleC } from "./schedules/schedule-c.js";
@@ -3029,11 +3030,11 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     && nolDeduction.isZero() && qbiDeduction.isZero() && nonitemizerCharitableDeduction.isZero()
     && additionalDeductions.eq(schedule1A?.seniorDeduction ?? d("0"))
     && !marketplace && !input.form8962 && !input.form8936 && !input.form2555;
-  if (hypothetical?.purpose === "foreign-deduction-carryover") {
-    if (!foreignTaxOrdinaryIncomeOnly) throw new Error("Foreign carryover requires the supported actual ordinary-income hypothetical method");
+  const foreignTaxOrdinaryContext = (): ForeignTaxHypotheticalContext => {
+    if (!foreignTaxOrdinaryIncomeOnly) throw new Error("Foreign credit requires the supported actual ordinary-income source method");
     const sourceLine = (id: string): Decimal => {
       const matches = schedA.lines.filter(line => line.form === "Sched A" && line.line === id);
-      if (matches.length !== 1) throw new Error(`Foreign carryover requires unique actual ScheduleA line${id}`);
+      if (matches.length !== 1) throw new Error(`Foreign credit requires unique actual ScheduleA line${id}`);
       return matches[0].value;
     };
     return {
@@ -3048,7 +3049,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
         otherDeductions: sum(schedA.otherItemizedDeductions, schedA.casualtyLossDeduction, schedA.mortgageInsurancePremiums),
         itemizedReduction: itemizedDeductionReduction },
     };
-  }
+  };
+  if (hypothetical?.purpose === "foreign-deduction-carryover") return foreignTaxOrdinaryContext();
 
   let amtCapitalGainsSources: Form6251Input["capitalGainsSources"];
   const amtGainFacts = input.amtCapitalGains ?? (schedD.specialGainWorksheets && input.scheduleDSpecialGainSources?.amtBasisAndCarryoversSameAsRegularConfirmed && qualifiedDividends.plus(netLTCG).gt(0) ? {
@@ -3122,7 +3124,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     d(input.form3800.carryforward).greaterThan(0)
   );
   const hasGBCCarryforward = d(input.priorYear?.generalBusinessCreditCarryforward).greaterThan(0);
-  const calculateReturnAMT = (directCredit?: Decimal, directElectionPartI = d("0")) => calculateForm6251(
+  const calculateReturnAMT = (directCredit?: Decimal, foreignCreditPartI = d("0"), ordinaryCredits?: Form6251Input["ordinaryForeignTaxCredits"]) => calculateForm6251(
     {
       // Form 6251 starts from AGI less deductions even when Form 1040 floors at zero.
       ...amtIncomeInput(nol ? rawTaxableIncome : rawTaxableIncome.minus(nolDeduction),
@@ -3130,8 +3132,9 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       // Per Form 6251 instructions: if Schedule J is used, Form 6251 must
       // use the tax computed WITHOUT Schedule J (income averaging does not
       // apply to AMT).
-      regularTax: taxWithoutScheduleJ.plus(directElectionPartI),
+      regularTax: taxWithoutScheduleJ.plus(foreignCreditPartI),
       directCreditElectionForeignTaxCredit: directCredit,
+      ordinaryForeignTaxCredits: ordinaryCredits,
       requiresTentativeMinimumTaxForCredits: input.form8801 !== undefined || hasK1Box15Credits || hasForm3800Input || hasGBCCarryforward,
       filingStatus,
       isItemizing: deductionUsed === "itemized",
@@ -3268,7 +3271,9 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   let foreignTaxCreditCarryforward = new Decimal(0);
   let foreignTaxDeductionCarryover: TaxReturnResult["foreignTaxDeductionCarryover"];
   let foreignTaxDirectCredit: TaxReturnResult["foreignTaxDirectCredit"];
+  let foreignTaxOrdinaryCredit: TaxReturnResult["foreignTaxOrdinaryCredit"];
   const directCreditSources = schedA.foreignTaxElection.directCreditSources;
+  const ordinaryCreditSources = schedA.foreignTaxElection.ordinaryCreditSources;
   const foreignTaxCreditCarryforwardByCategory: Record<string, Array<{ taxYear: number; amount: Decimal }>> = {};
   const hasForeignTaxActivity = foreignTaxPaid.greaterThan(0) || hasLegacyCarryforward
     || hasPassiveActivity || hasGeneralActivity;
@@ -3276,7 +3281,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     throw new Error("Actual NOL with general Form1116 requires the originating foreign-source loss allocation worksheet");
   }
 
-  if (directCreditSources) {
+  if (directCreditSources || ordinaryCreditSources) {
     // The exact elected credit requires actual PartI additions, computed below.
     // Do not run the legacy foreign-income estimate or consume any prior carry.
     foreignTaxCredit = d("0");
@@ -3452,7 +3457,30 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     Object.assign(foreignTaxCreditCarryforwardByCategory, foreignTaxDirectCredit.carryforwardByCategory);
     audit.merge(foreignTaxDirectCredit.lines);
   }
-  const form6251 = calculateReturnAMT(directCreditSources ? foreignTaxCredit : undefined, directCreditSources ? partIAdditions : d("0"));
+  if (ordinaryCreditSources) {
+    if (!partIAdditions.isZero()) throw new Error("Ordinary foreign credit requires its separate actual Schedule2 PartI source method");
+    // Calculate actual AMTI and pre-credit tax once for both credit worksheets;
+    // only the final credit-aware6251 audit is added to the return.
+    const provisionalAMT = calculateReturnAMT();
+    foreignTaxOrdinaryCredit = calculateForeignTaxOrdinaryCredit({
+      taxYear: year, filingStatus, sourceFactsConfirmed: true, context: foreignTaxOrdinaryContext(),
+      countries: ordinaryCreditSources.countries, passiveGroup: ordinaryCreditSources.passiveGroup,
+      noCfcOrQbuIncomeConfirmed: true, itemizedAllocation: ordinaryCreditSources.itemizedAllocation,
+      regularCarryovers: ordinaryCreditSources.carryovers, amtCarryovers: ordinaryCreditSources.amtCarryovers,
+      regularCarryback: ordinaryCreditSources.regularCarryback, amtCarryback: ordinaryCreditSources.amtCarryback,
+      amt: { ...ordinaryCreditSources.amt, amti: provisionalAMT.amti, grossIncome: totalIncome,
+        taxBeforeCredit: provisionalAMT.tentativeMinimumTax, taxableExcess: provisionalAMT.amtBase,
+        rate26Limit: constants.amt.rate26Limit[filingStatus] },
+    });
+    foreignTaxCredit = foreignTaxOrdinaryCredit.regular.creditAllowed;
+    foreignTaxCreditCarryforward = foreignTaxOrdinaryCredit.regular.carryforward;
+    Object.assign(foreignTaxCreditCarryforwardByCategory, foreignTaxOrdinaryCredit.regular.carryforwardByCategory);
+    audit.merge(ordinaryCreditSources.lines);
+    audit.merge(foreignTaxOrdinaryCredit.lines);
+  }
+  const form6251 = calculateReturnAMT(directCreditSources ? foreignTaxCredit : undefined,
+    directCreditSources || ordinaryCreditSources ? partIAdditions : d("0"),
+    foreignTaxOrdinaryCredit ? { regular: foreignTaxOrdinaryCredit.regular.creditAllowed, amt: foreignTaxOrdinaryCredit.amt.creditAllowed } : undefined);
   const amt = form6251.amt;
   audit.merge(form6251.lines);
   audit.record("Sched 2", "2", "Alternative Minimum Tax", amt, "Form 6251 Line 11");
@@ -4232,6 +4260,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
         foreignTaxCreditCarryforward: cfFtc,
         foreignTaxCreditCarryforwardByCategory,
         ...(foreignTaxDirectCredit ? { amtForeignTaxCreditCarryforwardByCategory: foreignTaxDirectCredit.amtCarryforwardByCategory } : {}),
+        ...(foreignTaxOrdinaryCredit ? { amtForeignTaxCreditCarryforwardByCategory: foreignTaxOrdinaryCredit.amt.carryforwardByCategory } : {}),
         qbiLossCarryforward: form8995Result?.qbiLossCarryforward ?? form8995AResult?.qbiLossCarryforward ?? new Decimal(0),
         investmentInterestExpense: form4952?.disallowedCarryforward ?? new Decimal(0),
         minimumTaxCredit: cfMtc,
@@ -4275,6 +4304,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     // Sub-results
     foreignTaxDeductionCarryover,
     foreignTaxDirectCredit,
+    foreignTaxOrdinaryCredit,
     scheduleA: schedA,
     schedule1: sched1,
     scheduleB: schedB,

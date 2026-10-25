@@ -4344,6 +4344,48 @@ const ForeignTaxDeductionCarryoverSchema = z.object({
   }).strict().optional(),
 }).strict();
 
+/** Actual paid-tax credit sources shared by ordinary1116 and the904(j)election. */
+const ForeignTaxCreditSourceSchema = z.object({
+  electionConfirmed: z.boolean().optional(), filingContext: z.enum(["original_return", "amended_return"]).optional(),
+  sourceFactsConfirmed: z.boolean().optional(), sourceReference: z.string().optional(),
+  allForeignGrossIncomePassiveConfirmed: z.boolean().optional(),
+  allForeignIncomeOnQualifiedPayeeStatementsConfirmed: z.boolean().optional(),
+  noRequiredTaxReductionsConfirmed: z.boolean().optional(),
+  taxpayers: z.array(z.object({ owner: z.enum(["primary", "spouse"]).optional(),
+    status: z.enum(["us_citizen", "full_year_resident_alien", "other"]).optional(), sourceReference: z.string().optional(),
+  }).strict()).optional(),
+  carryoverHistoryConfirmed: z.boolean().optional(), adjustedThroughTaxYear: z.number().int().optional(),
+  filingHistory: z.enum(["continuous_individual", "continuous_joint_same_spouse", "changed"]).optional(),
+  carryovers: z.array(z.object({ originTaxYear: z.number().int().optional(), category: z.enum(["passive", "general"]).optional(),
+    amount: decimal.optional(), sourceReference: z.string().optional(),
+  }).strict()).optional(),
+  amtCarryovers: z.array(z.object({ originTaxYear: z.number().int().optional(), category: z.enum(["passive", "general"]).optional(),
+    amount: decimal.optional(), sourceReference: z.string().optional(),
+  }).strict()).optional(),
+}).strict();
+const ForeignTaxPriorCapacitySchema = z.object({
+  taxYear: z.number().int().optional(), election: z.enum(["form1116_credit", "direct_credit_election", "deduction"]).optional(),
+  sourceFactsConfirmed: z.boolean().optional(), sourceReference: z.string().optional(), allPriorUseIncludedConfirmed: z.boolean().optional(),
+  limitation: decimal.optional(), currentTaxes: decimal.optional(), priorCarryoversUsed: decimal.optional(),
+}).strict();
+const ForeignTaxOrdinaryCreditSchema = ForeignTaxCreditSourceSchema.extend({
+  sourceTaxYear: z.number().int().optional(), method: z.enum(["ordinary_passive"]).optional(),
+  allForeignIncomeSourcesIncludedConfirmed: z.boolean().optional(), noForeignOrDomesticLossAccountsConfirmed: z.boolean().optional(),
+  noCfcOrQbuIncomeConfirmed: z.boolean().optional(),
+  incomeSources: z.array(z.object({
+    sourceId: z.string().optional(), payerName: z.string().optional(), payerTin: z.string().optional(), accountReference: z.string().optional(),
+    owner: z.enum(["primary", "spouse"]).optional(), foreignCountry: z.string().optional(),
+    reportedIncome: decimal.optional(), foreignIncome: decimal.optional(), sourceReference: z.string().optional(),
+    passiveGroup: z.enum(["withholding_15_or_more", "withholding_under_15", "no_foreign_tax", "other_foreign_tax"]).optional(),
+  }).strict()).optional(),
+  itemizedAllocation: ForeignTaxDeductionCarryoverSchema.shape.itemizedAllocation,
+  amt: z.object({
+    sourceFactsConfirmed: z.boolean().optional(), sourceReference: z.string().optional(), foreignAmountsSameAsRegularConfirmed: z.boolean().optional(),
+    firstPost1997CreditClaimTaxYear: z.number().int().optional(), simplifiedElectionMadeInFirstClaimYear: z.boolean().optional(), noRevocationConfirmed: z.boolean().optional(),
+  }).strict().optional(),
+  regularCarryback: ForeignTaxPriorCapacitySchema.optional(), amtCarryback: ForeignTaxPriorCapacitySchema.optional(),
+}).strict();
+
 /** Actual annual foreign income-tax choice and paid-tax deduction records. */
 export const ForeignTaxElectionSchema = z.object({
   taxYear: z.number().int().optional(),
@@ -4356,24 +4398,8 @@ export const ForeignTaxElectionSchema = z.object({
   noUnusedCreditCarryoversConfirmed: z.boolean().optional(),
   deductionYearCarryover: ForeignTaxDeductionCarryoverSchema.optional(),
   /** Actual section904(j) election; no source eligibility or history defaults. */
-  creditWithoutForm1116: z.object({
-    electionConfirmed: z.boolean().optional(), filingContext: z.enum(["original_return", "amended_return"]).optional(),
-    sourceFactsConfirmed: z.boolean().optional(), sourceReference: z.string().optional(),
-    allForeignGrossIncomePassiveConfirmed: z.boolean().optional(),
-    allForeignIncomeOnQualifiedPayeeStatementsConfirmed: z.boolean().optional(),
-    noRequiredTaxReductionsConfirmed: z.boolean().optional(),
-    taxpayers: z.array(z.object({ owner: z.enum(["primary", "spouse"]).optional(),
-      status: z.enum(["us_citizen", "full_year_resident_alien", "other"]).optional(), sourceReference: z.string().optional(),
-    }).strict()).optional(),
-    carryoverHistoryConfirmed: z.boolean().optional(), adjustedThroughTaxYear: z.number().int().optional(),
-    filingHistory: z.enum(["continuous_individual", "continuous_joint_same_spouse", "changed"]).optional(),
-    carryovers: z.array(z.object({ originTaxYear: z.number().int().optional(), category: z.enum(["passive", "general"]).optional(),
-      amount: decimal.optional(), sourceReference: z.string().optional(),
-    }).strict()).optional(),
-    amtCarryovers: z.array(z.object({ originTaxYear: z.number().int().optional(), category: z.enum(["passive", "general"]).optional(),
-      amount: decimal.optional(), sourceReference: z.string().optional(),
-    }).strict()).optional(),
-  }).strict().optional(),
+  creditWithoutForm1116: ForeignTaxCreditSourceSchema.optional(),
+  creditWithForm1116: ForeignTaxOrdinaryCreditSchema.optional(),
   noRedeterminationsConfirmed: z.boolean().optional(),
   sources: z.array(z.object({
     sourceId: z.string().optional(), // Actual form1099Int:index or form1099Div:index.

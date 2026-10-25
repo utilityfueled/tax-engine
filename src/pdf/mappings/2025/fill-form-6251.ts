@@ -143,6 +143,28 @@ export async function fillForm6251(
     if (!required(id).eq(value)) throw new Error(`Form6251 line${id} audit does not reconcile with its result`);
   }
   const directCredit = result.foreignTaxDirectCredit;
+  const ordinaryCredit = result.foreignTaxOrdinaryCredit;
+  if (input.foreignTaxElection?.creditWithForm1116 || ordinaryCredit
+    || result.allLines.some(row => row.form === "AMT Form 1116 (actual passive)")) {
+    if (!ordinaryCredit || directCredit || !ordinaryCredit.regular.creditAllowed.eq(result.foreignTaxCredit)) {
+      throw new Error("Form6251 ordinary foreign credit requires its matching canonical source result");
+    }
+    const sourceValue = (formName: string, id: string): Decimal => {
+      const source = ordinaryCredit.lines.filter(row => row.form === formName && row.line === id);
+      const canonical = result.allLines.filter(row => row.form === formName && row.line === id);
+      if (source.length !== 1 || canonical.length !== 1 || !source[0].value.isFinite()
+        || !source[0].value.eq(canonical[0].value)) throw new Error("Form6251 ordinary foreign credit requires a unique matching source audit");
+      return source[0].value;
+    };
+    if (!sourceValue("Form 1116 (actual passive)", "35").eq(ordinaryCredit.regular.creditAllowed)
+      || !sourceValue("AMT Form 1116 (actual passive)", "35").eq(ordinaryCredit.amt.creditAllowed)
+      || !required("8").eq(ordinaryCredit.amt.creditAllowed)
+      || !required("7").eq(sourceValue("AMT Form 1116 (actual passive)", "20"))
+      || !required("9").eq(required("7").minus(required("8")))
+      || !required("10").eq(sourceValue("Form 1116 (actual passive)", "20").minus(ordinaryCredit.regular.creditAllowed))) {
+      throw new Error("Form6251 ordinary foreign credits do not reconcile with their separate source audits");
+    }
+  }
   if (input.netOperatingLoss || result.netOperatingLoss) {
     buildNetOperatingLossReview(input, result);
     if (!result.netOperatingLoss || !required("2e").eq(result.nolDeduction)
@@ -182,7 +204,12 @@ export async function fillForm6251(
   const notes = [
     "FORM 6251 REVIEW LIMITATIONS - NOT FOR FILING",
     "Printed amounts copy the calculation audit; this attachment does not qualify an AMT return.",
-    ...(directCredit ? [
+    ...(ordinaryCredit ? [
+      "Actual ordinary Form1116 regular and AMT credits reconcile to separate source worksheets.",
+      "Line8 is the AMT credit; line10 subtracts the regular credit from regular tax.",
+      "Independent regular and AMT carry records remain subject to their actual source histories.",
+      "Other foreign-credit methods require their separate actual worksheets.",
+    ] : directCredit ? [
       "Actual elected section904(j) foreign credit is reconciled to the source calculation.",
       audited.has("8") ? "Lines8 and9 retain the actual elected AMT credit and net tentative minimum tax."
         : "The optional no-AMT line8 skip applies; no later credit needs tentative minimum tax.",
