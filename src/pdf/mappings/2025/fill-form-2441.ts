@@ -132,10 +132,11 @@ async function fillSourceRecords(doc: PDFDocument, input: TaxYearInput): Promise
   }).sort((a, b) => b.expenses.comparedTo(a.expenses));
   const total = persons.reduce((sum, person) => sum.plus(person.expenses), new Decimal(0));
   if (care.excludedDependentCareBenefits === undefined || !total.eq(Decimal.max(0, amount(care.expenses).minus(amount(care.excludedDependentCareBenefits))))) throw new Error("Form 2441 person expense sources do not reconcile");
-  const providerId = (provider: typeof providers[number]) => ({ tin: provider.taxId ?? "", tax_exempt: "Tax-Exempt", foreign_no_us_tin: "LAFCP", employer_furnished: "", withheld: "See attached" })[provider.identifierType];
+  const providerId = (provider: typeof providers[number]) => ({ tin: provider.taxId ?? "", tax_exempt: "Tax-Exempt", foreign_no_us_tin: "LAFCP", employer_furnished: "", withheld: "See Attached Statement" })[provider.identifierType];
   const personId = (person: typeof persons[number]) => person.identifierType === "died" ? "Died" : person.taxId ?? "";
   const money = (value: Decimal) => value.isZero() ? "0" : formatCurrency(value);
   const form = doc.getForm();
+  const font = await doc.embedFont(StandardFonts.Helvetica);
   const providerFields = [
     [F.provider1Name, F.provider1Address, F.provider1TIN, F.provider1HouseholdYes, F.provider1HouseholdNo, F.provider1Amount],
     [F.provider2Name, F.provider2Address, F.provider2TIN, F.provider2HouseholdYes, F.provider2HouseholdNo, F.provider2Amount],
@@ -145,7 +146,16 @@ async function fillSourceRecords(doc: PDFDocument, input: TaxYearInput): Promise
     const fields = providerFields[i];
     setTextField(form, fields[0], provider.name);
     setTextField(form, fields[1], provider.identifierType === "employer_furnished" ? "See W-2" : provider.address);
+    // IRS instructions require this text when a provider withholds its ID;
+    // the template's numeric-ID length cap is too short for the required notice.
+    if (provider.identifierType === "withheld") {
+      const idField = form.getTextField(fields[2]);
+      idField.removeMaxLength();
+      const width = idField.acroField.getWidgets()[0].getRectangle().width;
+      idField.setFontSize(Math.min(9, (width - 6) / font.widthOfTextAtSize(providerId(provider), 1)));
+    }
     setTextField(form, fields[2], providerId(provider));
+    if (provider.identifierType === "withheld") form.getTextField(fields[2]).updateAppearances(font);
     setCheckBox(form, fields[3], provider.householdEmployee); setCheckBox(form, fields[4], !provider.householdEmployee);
     setTextField(form, fields[5], money(provider.paid));
   });
@@ -169,7 +179,6 @@ async function fillSourceRecords(doc: PDFDocument, input: TaxYearInput): Promise
     ...providers.filter(provider => provider.identifierType === "withheld").map(provider => `Provider identification due diligence - ${provider.name}: ${provider.dueDiligenceStatement}`),
   ];
   if (!paragraphs.length) return;
-  const font = await doc.embedFont(StandardFonts.Helvetica);
   let page = doc.addPage([612, 792]); let y = 744;
   const header = () => {
     page.drawText("Form 2441 - source continuation (2025 review)", { x: 42, y, size: 13, font }); y -= 23;

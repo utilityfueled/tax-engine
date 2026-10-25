@@ -80,8 +80,10 @@ flow diagram has no checkbox widget. Household-employment, disability and deemed
 income checks copy actual answers. The review identifier-redaction copy is
 respected, including provider and person tax IDs. Input sorting is immutable.
 
-The initial source-row regression failed. All 81 focused PDF/credit integration
-tests pass; root types and scoped mapping lint pass, and 3,360 current spec refs
+The initial source-row regression failed. The first 80 focused PDF/credit checks
+passed. The added 81st identification-exception check then exposed the official
+TIN widget's 11-character maximum rejecting the required attachment notice;
+this needs its separate correction and rerun. Root types and scoped mapping lint pass, and 3,360 current spec refs
 resolve. The unrelated legacy credit-stacking assertion now checks actual earned
 income at printed line4 and retains its original3,000 cap at line6 and600credit.
 Three saved synthetic pages were rendered and inspected, including cropped
@@ -91,3 +93,21 @@ match; remaining records survive on the attachment. See `care-pdf-sources-*.log`
 `care-source-canonical.log`, `care-source-review.pdf` and rendered PNGs under
 `.local/upgrade-evidence/`. PartIII and complete prior-year worksheet computation,
 final2026 mapping qualification and independent human review remain outstanding.
+
+## Provider attachment notice correction — 2026-10-25
+
+The added exception case exposed a failure in `131a8f2`: the official provider
+TIN field's 11-character limit rejected the required notice. The mapper now
+removes that limit only for this identification exception, prints the exact IRS
+instruction text, "See Attached Statement", and fits it inside the existing
+field. Actual due-diligence text remains on the continuation.
+
+All 81 PDF/credit tests now pass; root types and scoped mapping lint pass. The
+saved three-page exception PDF was reopened: the canonical notice is exact,
+its widget appearance is nonempty, the inappropriate length limit is absent,
+and the actual explanation survives. The rendered provider row shows the full
+notice within the field. Evidence: `care-pdf-sources-green.log`,
+`care-pdf-sources-types.log`, `care-pdf-source-mapping-lint.log`,
+`care-exception-canonical.log`, and `care-exception-review.pdf`/PNG under
+`.local/upgrade-evidence/`. This corrects the earlier package's premature
+81-test success claim; the checks apply to this follow-up change.

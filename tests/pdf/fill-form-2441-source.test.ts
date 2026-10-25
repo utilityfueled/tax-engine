@@ -84,7 +84,7 @@ describe("Form2441 actual audited review fields", () => {
     const actualResult = { ...base, agi: d("19000"), form2441: source({ careExpenses: d("5000"), qualifyingIndividuals: 1 }) };
     const original = await fillForm2441({ ...input, dependentCare }, actualResult, "forms/blank/2025/f2441.pdf");
     const doc = await PDFDocument.load(await original.save());
-    expect(doc.getForm().getTextField(F.provider1TIN).getText()).toBe("See attached");
+    expect(doc.getForm().getTextField(F.provider1TIN).getText()).toBe("See Attached Statement");
     expect(doc.getForm().getTextField(F.provider2TIN).getText()).toBe("Tax-Exempt");
     expect(doc.getForm().getTextField(F.provider3Address).getText()).toBe("See W-2");
     expect(doc.getForm().getTextField(F.provider3Amount).getText()).toBe("0");
