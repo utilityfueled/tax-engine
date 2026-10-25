@@ -93,3 +93,19 @@ including saved/reopened source sublines and a synthetic $1,000 gross overpaymen
 $50 penalty and $950 refund. Root types and scoped lint pass. These changes use
 the printed coordinates inspected in the preceding package; independent final
 revision qualification and complete-data attachments remain open.
+
+## Current official source availability — 2026-10-25
+
+Refreshed all 37 federal blank-form endpoints represented by the historical
+manifest. The [source register](upgrade-2026-form-source-refresh.json) records
+the exact URL, retrieval time, SHA-256, printed year and creation date for each
+response. Thirty-six endpoints still serve 2025; Form 4952 serves its final
+2026 revision, created May 28, 2026. This describes those endpoint responses;
+it is not proof that a different final/draft URL does not exist.
+
+The 2026 Form 4952 has different first-page field names from the 2025 copy.
+Its source and inspection map are a separate pending package. No changed or
+newly available source is registered for export by this refresh. Existing 2025
+assets retain their pinned bytes. Independent final mapping review and the
+complete 2026 packet remain open. Raw downloaded responses and extraction
+checks are local evidence in `.local/upgrade-evidence/form-sources-current/`.
