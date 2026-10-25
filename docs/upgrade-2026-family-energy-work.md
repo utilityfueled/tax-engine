@@ -173,3 +173,21 @@ Calculation evidence is separate from final-form qualification. The current 2026
 - Regression: $4,000 used plus $7,500 new tentative credit with $5,000 remaining
   tax allows $4,000 used and $1,000 new. Invalid limits reject explicitly.
 - Red/green focused test recorded; no final-form qualification claimed.
+
+### Energy review export correction
+
+- Replaced scalar credit recomputation with mandatory unique engine audit entries
+  for every numeric printed line. Absent/duplicate/invalid audits, legacy scalar
+  records and inconsistent allowed totals now reject instead of printing zeros.
+- Mapped category costs, limits, carryforward, actual fuel-cell capacity and actual
+  four-character QMIDs. The IRS fields reuse `f3_30` under different parents;
+  fully qualified paths preserve both the first heater cost and second heater QMID.
+- Added a visible review appendix with every supplied property, including overflow
+  and ineligible records. Installation addresses, physical qualification questions,
+  enabled-property codes and occupancy allocations are explicitly uncollected;
+  none are guessed from a mailing address or aggregate qualification flag.
+- Four focused mapping tests pass, including serialized fields, overflow pagination,
+  exact-year/template gates and audit failures. Synthetic `energy-2025-review.pdf`
+  was rendered and inspected: line10 $500, line15 $1,000, line16 $2,800, two separate
+  water-heater QMIDs/costs and the review-only footer. All five pages contain the
+  notice; final source/form qualification remains pending.

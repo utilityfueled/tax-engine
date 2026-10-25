@@ -1,226 +1,103 @@
-import { assertPdfExportAllowed } from "../../export-policy.js";
-/**
- * PDF filler for IRS Form 5695 — Residential Energy Credits.
- *
- * Field names are from the official IRS fillable PDF (2025 tax year).
- * Field mapping was derived by inspecting field names in the blank PDF.
- *
- * To verify or update mappings, run the debug utility:
- *   fillDebugLabels('forms/blank/2025/f5695.pdf', 'forms/filled/f5695-debug.pdf')
- */
-
-import { PDFDocument } from "pdf-lib";
+/** 2025 review-only Form 5695: numeric lines come exclusively from the engine audit. */
+import { PDFDocument, StandardFonts } from "pdf-lib";
 import Decimal from "decimal.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
-import { d, sum, min, roundDollar } from "@/utils/decimal.js";
-import {
-  loadReviewTemplate,
-  setTextField,
-  setCurrencyField,
-  setCheckBox,
-} from "../../pdf-utils.js";
+import { assertPdfExportAllowed, markReviewPdf } from "../../export-policy.js";
+import { loadReviewTemplate, setTextField, setCurrencyField } from "../../pdf-utils.js";
 
-// ─── PDF Field Name Helpers ────────────────────────────────────────────────
-
-const p1 = (n: string) => `topmostSubform[0].Page1[0].${n}`;
-const p2 = (n: string) => `topmostSubform[0].Page2[0].${n}`;
-const p4 = (n: string) => `topmostSubform[0].Page4[0].${n}`;
-
-// ─── Field Mapping ─────────────────────────────────────────────────────────
-// Verified against 2025 Form 5695 fillable PDF field inspection.
+const field = (page: number, name: string) => `topmostSubform[0].Page${page}[0].${name}[0]`;
+const p1 = (name: string) => field(1, name);
+const p2 = (name: string) => field(2, name);
+const p3 = (name: string) => field(3, name);
+const p4 = (name: string) => field(4, name);
+const qmid = (page: number, section: string, name: string, box = "Box1-4") => `topmostSubform[0].Page${page}[0].${section ? `${section}[0].` : ""}${box}[0].${name}[0]`;
 
 export const FORM_5695_FIELDS = {
-  // ── Page 1 Header ──
-  name: p1("f1_01[0]"),
-  ssn: p1("f1_02[0]"),
-
-  // ── Part I: Residential Clean Energy Credit ──
-  line1: p1("f1_08[0]"),   // Qualified solar electric property costs
-  line2: p1("f1_09[0]"),   // Qualified solar water heating property costs
-  line3: p1("f1_10[0]"),   // Qualified small wind energy property costs
-  line4: p1("f1_11[0]"),   // Qualified geothermal heat pump property costs
-  line5aYes: p1("c1_1[0]"),  // Battery ≥ 3 kWh? Yes
-  line5aNo: p1("c1_1[1]"),   // Battery ≥ 3 kWh? No
-  line5b: p1("f1_12[0]"),  // Qualified battery storage technology costs
-  line6a: p1("f1_13[0]"),  // Add lines 1 through 5b
-  line6b: p1("f1_14[0]"),  // Multiply line 6a by 30%
-  line7aYes: p1("c1_2[0]"),  // Fuel cell property? Yes
-  line7aNo: p1("c1_2[1]"),   // Fuel cell property? No
-  line8: p1("f1_20[0]"),   // Qualified fuel cell property costs
-  line9: p1("f1_21[0]"),   // Multiply line 8 by 30%
-  line11: p1("f1_25[0]"),  // Smaller of line 9 or line 10
-  line12: p1("f1_26[0]"),  // Credit carryforward from 2024
-  line13: p1("f1_27[0]"),  // Add lines 6b, 11, and 12
-  line14: p1("f1_28[0]"),  // Tax liability limitation
-  line15: p1("f1_29[0]"),  // Residential clean energy credit
-  line16: p1("f1_30[0]"),  // Credit carryforward to 2026
-
-  // ── Page 2 Header ──
-  name2: p2("f2_01[0]"),
-  ssn2: p2("f2_02[0]"),
-  // Part II, Section A checkboxes
-  line17aYes: p2("c2_1[0]"),
-  line17aNo: p2("c2_1[1]"),
-  line17bYes: p2("c2_2[0]"),
-  line17bNo: p2("c2_2[1]"),
-  line17cYes: p2("c2_3[0]"),
-  line17cNo: p2("c2_3[1]"),
-  // Line 18: Insulation
-  line18a: p2("f2_08[0]"),   // Insulation material cost
-  line18b: p2("f2_09[0]"),   // 30% of 18a, max $1,200
-
-  // ── Page 4: Section B continued + Totals ──
-  line26b: p4("f4_01[0]"),   // Home energy audit cost
-  line26c: p4("f4_02[0]"),   // 30% of 26b, max $150
-  line27: p4("f4_03[0]"),    // Sum of sub-limits (18b, 19h, 20d, 22d, 23d, 24d, 25e, 26c)
-  line28: p4("f4_04[0]"),    // Smaller of line 27 or $1,200
-  line29h: p4("f4_18[0]"),   // 30% of energy property costs, max $2,000
-  line30: p4("f4_19[0]"),    // Add lines 28 and 29h
-  line31: p4("f4_20[0]"),    // Tax liability limitation
-  line32: p4("f4_21[0]"),    // Energy efficient home improvement credit
+  name:p1("f1_01"),ssn:p1("f1_02"),name2:p2("f2_01"),ssn2:p2("f2_02"),
+  line1:p1("f1_08"),line2:p1("f1_09"),line3:p1("f1_10"),line4:p1("f1_11"),line5b:p1("f1_12"),
+  line6a:p1("f1_13"),line6b:p1("f1_14"),line8:p1("f1_20"),line9:p1("f1_21"),
+  capacityInteger:p1("f1_22"),capacityFraction:p1("f1_23"),line10:p1("f1_24"),
+  line11:p1("f1_25"),line12:p1("f1_26"),line13:p1("f1_27"),line14:p1("f1_28"),line15:p1("f1_29"),line16:p1("f1_30"),
+  line18a:p2("f2_08"),line18b:p2("f2_09"),line19a:p2("f2_10"),line19c:p2("f2_13"),line19d:p2("f2_14"),
+  line19d1:p2("f2_17"),line19d2:p2("f2_20"),line19e:p2("f2_21"),line19f:p2("f2_22"),line19g:p2("f2_23"),line19h:p2("f2_24"),
+  line20a:p2("f2_25"),line20a1:p2("f2_28"),line20a2:p2("f2_31"),line20a3:p2("f2_34"),line20a4:p2("f2_37"),
+  line20b:p2("f2_38"),line20c:p2("f2_39"),line20d:p2("f2_40"),
+  line22a:p3("f3_21"),line22b:p3("f3_24"),line22c:p3("f3_25"),line22d:p3("f3_26"),
+  line23a:p3("f3_27"),line23a1:p3("f3_30"),line23a2:p3("f3_32"),line23b:p3("f3_33"),line23c:p3("f3_34"),line23d:p3("f3_35"),
+  line24a:p3("f3_36"),line24b:p3("f3_39"),line24c:p3("f3_40"),line24d:p3("f3_41"),line25c:p3("f3_49"),line25e:p3("f3_52"),
+  line26b:p4("f4_01"),line26c:p4("f4_02"),line27:p4("f4_03"),line28:p4("f4_04"),
+  line29a:p4("f4_05"),line29b:p4("f4_08"),line29c:p4("f4_09"),line29d:p4("f4_12"),line29e:p4("f4_13"),line29f:p4("f4_16"),
+  line29g:p4("f4_17"),line29h:p4("f4_18"),line30:p4("f4_19"),line31:p4("f4_20"),line32:p4("f4_21"),
+  doorQmids:[qmid(2,"Ln19b","f2_11"),qmid(2,"Ln19i","f2_15"),qmid(2,"Ln19ii","f2_18")],
+  windowQmids:[qmid(2,"Ln20i","f2_26"),qmid(2,"Ln20ii","f2_29"),qmid(2,"Ln20iii","f2_32"),qmid(2,"Ln20iv","f2_35")],
+  acQmid:qmid(3,"Ln_22a","f3_22"),waterHeaterQmids:[qmid(3,"Ln23ai","f3_28"),qmid(3,"Ln23aii","f3_30")],furnaceQmid:qmid(3,"Ln_24a","f3_37"),
+  panelQmids:[qmid(3,"","f3_50"),qmid(3,"","f3_51","Box2-4")],heatPumpQmid:qmid(4,"Ln_29a","f4_06"),heatPumpWaterQmid:qmid(4,"Ln_29c","f4_10"),biomassQmid:qmid(4,"Ln_29e","f4_14"),
 } as const;
+const F=FORM_5695_FIELDS;
 
-const F = FORM_5695_FIELDS;
-
-const CLEAN_ENERGY_RATE = new Decimal("0.30");
-const IMPROVEMENT_RATE = new Decimal("0.30");
-const INSULATION_CAP = new Decimal(1200);
-const ENERGY_PROPERTY_CAP = new Decimal(2000);
-const AUDIT_CAP = new Decimal(150);
-const GENERAL_POOL_CAP = new Decimal(1200);
-const IMPROVEMENT_ANNUAL_CAP = new Decimal(3200);
-
-// ─── Fill Logic ────────────────────────────────────────────────────────────
-
-export async function fillForm5695(
-  input: TaxYearInput,
-  result: TaxReturnResult,
-  blankPdfPath: string,
-): Promise<PDFDocument> {
-  assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
-  const doc = await loadReviewTemplate(blankPdfPath, 2025);
-  const form = doc.getForm();
-  const ec = input.energyCredits!;
-  const sched3 = result.schedule3!;
-
-  // ── Header (both pages) ──
-  const name = input.taxpayer.spouse
-    ? `${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName} & ${input.taxpayer.spouse.firstName} ${input.taxpayer.spouse.lastName}`
-    : `${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName}`;
-  setTextField(form, F.name, name);
-  setTextField(form, F.ssn, input.taxpayer.primary.ssn.replace(/-/g, ""));
-  setTextField(form, F.name2, name);
-  setTextField(form, F.ssn2, input.taxpayer.primary.ssn.replace(/-/g, ""));
-
-  // ── Part I: Residential Clean Energy Credit ──
-  const solarElectric = d(ec.solarElectricCost);
-  const solarWater = d(ec.solarWaterHeatingCost);
-  const smallWind = d(ec.smallWindCost);
-  const geoThermal = d(ec.geoThermalHeatPumpCost);
-  const battery = d(ec.batteryStorageCost);
-  const fuelCell = d(ec.fuelCellCost);
-
-  const hasCleanEnergy = solarElectric.plus(solarWater).plus(smallWind)
-    .plus(geoThermal).plus(battery).gt(0);
-  const hasFuelCell = fuelCell.gt(0);
-
-  if (hasCleanEnergy || hasFuelCell) {
-    // Lines 1-4: Individual costs
-    if (solarElectric.gt(0)) setCurrencyField(form, F.line1, solarElectric);
-    if (solarWater.gt(0)) setCurrencyField(form, F.line2, solarWater);
-    if (smallWind.gt(0)) setCurrencyField(form, F.line3, smallWind);
-    if (geoThermal.gt(0)) setCurrencyField(form, F.line4, geoThermal);
-
-    // Line 5a-5b: Battery storage
-    if (battery.gt(0)) {
-      setCheckBox(form, F.line5aYes, true);
-      setCurrencyField(form, F.line5b, battery);
-    }
-
-    // Line 6a: Total non-fuel-cell clean energy costs
-    const line6a = sum(solarElectric, solarWater, smallWind, geoThermal, battery);
-    if (line6a.gt(0)) {
-      setCurrencyField(form, F.line6a, line6a);
-      // Line 6b: 30% of line 6a
-      const line6b = roundDollar(line6a.times(CLEAN_ENERGY_RATE));
-      setCurrencyField(form, F.line6b, line6b);
-    }
-
-    // Lines 7a, 8-9: Fuel cell property
-    if (hasFuelCell) {
-      setCheckBox(form, F.line7aYes, true);
-      setCurrencyField(form, F.line8, fuelCell);
-      const line9 = roundDollar(fuelCell.times(CLEAN_ENERGY_RATE));
-      setCurrencyField(form, F.line9, line9);
-      // Line 11: Without kW capacity data, credit = line 9
-      setCurrencyField(form, F.line11, line9);
-    } else {
-      setCheckBox(form, F.line7aNo, true);
-    }
-
-    // Line 13: Total (6b + 11 + 12)
-    const line6b = roundDollar(sum(solarElectric, solarWater, smallWind, geoThermal, battery).times(CLEAN_ENERGY_RATE));
-    const line11 = hasFuelCell ? roundDollar(fuelCell.times(CLEAN_ENERGY_RATE)) : new Decimal(0);
-    const line13 = line6b.plus(line11);
-    if (line13.gt(0)) setCurrencyField(form, F.line13, line13);
-
-    // Line 15: Residential clean energy credit (from engine)
-    setCurrencyField(form, F.line15, sched3.residentialCleanEnergyCredit);
+export async function fillForm5695(input:TaxYearInput,result:TaxReturnResult,blankPdfPath:string):Promise<PDFDocument>{
+  assertPdfExportAllowed(input.taxpayer.taxYear,result.taxYear);
+  const source=input.energyCredits;
+  const calculation=result.form5695;
+  if(!source||!calculation) throw new Error("Form 5695 review requires energy source facts and its calculation audit");
+  const audited=(line:string):Decimal=>{
+    const matches=calculation.lines.filter(entry=>entry.form==="Form 5695"&&entry.line===line);
+    if(matches.length!==1||!matches[0].value.isFinite()) throw new Error(`Missing, duplicate or invalid Form 5695 audit entry ${line}; reconcile legacy energy totals first`);
+    return matches[0].value;
+  };
+  // Validate the complete audited path before creating any output.
+  const numericEntries=Object.entries(F).filter(([key])=>/^line\d/.test(key));
+  for(const [key] of numericEntries) audited(key.slice(4).replace(/^(19d|20a|23a)(\d)$/,"$1-$2"));
+  if(!audited("15").eq(calculation.residentialCleanEnergyCredit)||!audited("32").eq(calculation.energyImprovementCredit)) throw new Error("Form 5695 audit disagrees with allowed credit totals");
+  const doc=await loadReviewTemplate(blankPdfPath,2025);
+  const form=doc.getForm();
+  const name=input.taxpayer.spouse?`${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName} & ${input.taxpayer.spouse.firstName} ${input.taxpayer.spouse.lastName}`:`${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName}`;
+  for(const nameField of [F.name,F.name2]) setTextField(form,nameField,name);
+  for(const ssnField of [F.ssn,F.ssn2]) setTextField(form,ssnField,input.taxpayer.primary.ssn.replace(/-/g,""));
+  for(const [key,path] of numericEntries) setCurrencyField(form,path as string,audited(key.slice(4).replace(/^(19d|20a|23a)(\d)$/,"$1-$2")));
+  const capacity=audited("10-capacity");
+  if(capacity.gt(0)){
+    const [whole,fraction="0"]=capacity.toFixed().split(".");
+    setTextField(form,F.capacityInteger,whole);setTextField(form,F.capacityFraction,fraction);
   }
-
-  // ── Part II: Energy Efficient Home Improvement Credit ──
-  const insulation = d(ec.insulationCost);
-  const energyProperty = d(ec.energyPropertyCost);
-  const homeAudit = d(ec.homeEnergyAuditCost);
-  const hasImprovements = insulation.plus(energyProperty).plus(homeAudit).gt(0);
-
-  if (hasImprovements) {
-    // Line 17a-17c: Yes checkboxes (assumed yes since costs are provided)
-    setCheckBox(form, F.line17aYes, true);
-    setCheckBox(form, F.line17bYes, true);
-    setCheckBox(form, F.line17cYes, true);
-
-    // Line 18a-18b: Insulation costs
-    if (insulation.gt(0)) {
-      setCurrencyField(form, F.line18a, insulation);
-      const line18b = min(roundDollar(insulation.times(IMPROVEMENT_RATE)), INSULATION_CAP);
-      setCurrencyField(form, F.line18b, line18b);
+  const qualifiedItems=(category:string)=>(source.qualifiedImprovements??[]).filter(entry=>entry.category===category&&entry.qualificationConfirmed&&source.residenceEligibilityConfirmed===true&&entry.installationCompletedDate.startsWith("2025-")).sort((a,b)=>new Decimal(b.qualifiedCost).comparedTo(a.qualifiedCost));
+  for(const [category,paths] of [
+    ["exterior_door",F.doorQmids],["windows_skylights",F.windowQmids],["central_ac",[F.acQmid]],
+    ["gas_water_heater",F.waterHeaterQmids],["furnace_boiler",[F.furnaceQmid]],["electrical_panel",F.panelQmids],
+    ["heat_pump",[F.heatPumpQmid]],["heat_pump_water_heater",[F.heatPumpWaterQmid]],["biomass",[F.biomassQmid]],
+  ] as const){
+    const entries=qualifiedItems(category);
+    for(let index=0;index<Math.min(paths.length,entries.length);index++){
+      const qmid=entries[index].manufacturerQualifiedId;
+      if(!qmid||! /^[A-Za-z0-9]{4}$/.test(qmid)) throw new Error("Form 5695 review requires the actual four-character QMID");
+      setTextField(form,paths[index],qmid);
     }
-
-    // Line 26b-26c: Home energy audit
-    let auditCredit = new Decimal(0);
-    if (homeAudit.gt(0)) {
-      setCurrencyField(form, F.line26b, homeAudit);
-      auditCredit = min(roundDollar(homeAudit.times(IMPROVEMENT_RATE)), AUDIT_CAP);
-      setCurrencyField(form, F.line26c, auditCredit);
-    }
-
-    // Line 27: Sum of sub-limits (insulation credit + audit credit for general pool)
-    const insulationCredit = insulation.gt(0)
-      ? min(roundDollar(insulation.times(IMPROVEMENT_RATE)), INSULATION_CAP)
-      : new Decimal(0);
-    const generalPoolTotal = insulationCredit.plus(auditCredit);
-    if (generalPoolTotal.gt(0)) setCurrencyField(form, F.line27, generalPoolTotal);
-
-    // Line 28: Smaller of line 27 or $1,200
-    const line28 = min(generalPoolTotal, GENERAL_POOL_CAP);
-    if (line28.gt(0)) setCurrencyField(form, F.line28, line28);
-
-    // Line 29h: Energy property credit (heat pumps, etc.), max $2,000
-    let line29h = new Decimal(0);
-    if (energyProperty.gt(0)) {
-      line29h = min(roundDollar(energyProperty.times(IMPROVEMENT_RATE)), ENERGY_PROPERTY_CAP);
-      setCurrencyField(form, F.line29h, line29h);
-    }
-
-    // Line 30: Line 28 + Line 29h
-    const line30 = min(line28.plus(line29h), IMPROVEMENT_ANNUAL_CAP);
-    if (line30.gt(0)) setCurrencyField(form, F.line30, line30);
-
-    // Line 32: Energy efficient home improvement credit (from engine)
-    setCurrencyField(form, F.line32, sched3.energyImprovementCredit);
   }
-
+  // A calculation-level qualification flag does not establish each printed
+  // question or an installation address. Leave those unanswered, visibly explain
+  // the gap, and include every record (including overflow and ineligible costs).
+  const font=await doc.embedFont(StandardFonts.Helvetica);
+  let page=doc.addPage();let y=page.getHeight()-40;
+  const write=(text:string)=>{
+    for(const line of text.match(/.{1,96}(?:\s|$)|.{1,96}/g)??[text]){
+      if(y<45){page=doc.addPage();y=page.getHeight()-40;}
+      page.drawText(line.trim(),{x:32,y,size:9,font});y-=15;
+    }
+  };
+  write("FORM 5695 REVIEW DETAILS - incomplete physical-form facts");
+  write("Amounts copy the calculation audit. No installation address, original-user, five-year-life,");
+  write("new-construction, joint-occupancy or condo/co-op allocation facts have been collected.");
+  write("Electrical-panel enabled-property codes are also uncollected. Related form boxes remain blank.");
+  write("A qualification confirmation is not an answer to each physical-form question. Reconcile these");
+  write("facts and independently qualify the final form before any filing. Mailing address is not inferred.");
+  write(`Confirmed residence eligibility: ${String(source.residenceEligibilityConfirmed)}.`);
+  for(const [index,entry] of [...(source.cleanEnergyProperties??[]),...(source.qualifiedImprovements??[])].entries()){
+    write(`${index+1}. ${entry.category}; qualified cost supplied: $${entry.qualifiedCost}; completed: ${entry.installationCompletedDate}; eligibility: ${entry.qualificationConfirmed?"confirmed":"ineligible"}.`);
+    if("manufacturerQualifiedId" in entry&&entry.manufacturerQualifiedId) write(`Manufacturer qualified ID: ${entry.manufacturerQualifiedId}`);
+    if("fuelCellKilowattCapacity" in entry&&entry.fuelCellKilowattCapacity!==undefined) write(`Fuel-cell capacity: ${entry.fuelCellKilowattCapacity} kW`);
+  }
+  write(`Disallowed costs: $${calculation.disallowedNewEnergyCosts.toFixed(2)}. Clean credit carried to ${calculation.carryforwardTaxYear}: $${calculation.residentialCleanEnergyCarryforward.toFixed(2)}.`);
+  await markReviewPdf(doc);
   return doc;
 }
