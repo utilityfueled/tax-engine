@@ -150,7 +150,7 @@ export function calculateForm8582(input: Form8582Input): Form8582Result {
 
   if (!input.agi.isFinite()) throw new Error("Form8582 requires finite actual modified AGI.");
   const sourceActivities = input.activities.map((activity, sourceIndex) => {
-    if (!activity.name.trim() || !activity.income.isFinite() || activity.income.lt(0)
+    if (typeof activity.name !== "string" || !activity.name.trim() || !activity.income.isFinite() || activity.income.lt(0)
       || !activity.loss.isFinite() || activity.loss.gt(0)) throw new Error("Form8582 requires actual finite signed activity amounts and names.");
     return { ...activity, sourceIndex };
   });

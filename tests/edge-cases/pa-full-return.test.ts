@@ -409,7 +409,7 @@ describe.sequential("Pennsylvania Full-Return Edge Cases", () => {
         ],
       }],
       rentalProperties: [{
-        address: "123 Rental Ave",
+        description: "123 Rental Ave",
         rents: "18000",
         advertising: "200",
         insurance: "1200",
@@ -721,7 +721,7 @@ describe.sequential("Pennsylvania Full-Return Edge Cases", () => {
         expenses: { otherExpenses: "15000" },
       },
       rentalProperties: [{
-        address: "Loss Property",
+        description: "Loss Property",
         rents: "6000",
         repairs: "8000",
         taxes: "3000",
@@ -1298,7 +1298,7 @@ describe.sequential("Pennsylvania Full-Return Edge Cases", () => {
         ],
       }],
       rentalProperties: [{
-        address: "123 Rental Rd, Malvern PA",
+        description: "123 Rental Rd, Malvern PA",
         rents: "24000",
         insurance: "1800",
         repairs: "1200",

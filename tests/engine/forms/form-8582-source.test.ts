@@ -96,4 +96,6 @@ it("rejects invalid or ambiguous PTP prior-loss sources", () => {
   expect(() => calculateForm8582({ ...input, priorYearPTPSuspendedLosses: [{ name: ptp.name, amount: d("-1") }] })).toThrow(/prior.*loss/i);
   expect(() => calculateForm8582({ ...input, priorYearPTPSuspendedLosses: [{ name: ptp.name, amount: d("NaN") }] })).toThrow(/prior.*loss/i);
   expect(() => calculateForm8582({ ...input, activities: [ptp, ptp], priorYearPTPSuspendedLosses: [{ name: ptp.name, amount: d("15000") }] })).toThrow(/identity/i);
+  // @ts-expect-error Raw callers can bypass the validated source model.
+  expect(() => calculateForm8582({ ...input, activities: [{ ...ptp, name: undefined }] })).toThrow(/actual.*names/i);
 });

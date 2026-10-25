@@ -241,6 +241,6 @@ lines:
 
   - line: "ptp-source-integrity"
     description: "Actual PTP prior loss identity and amount"
-    formula: "Finite nonnegative prior amounts and unambiguous current PTP identities are required; no silently discarded invalid or duplicated source"
+    formula: "Finite nonnegative prior amounts and actual nonempty unambiguous current PTP identities are required; missing names reject with a source diagnostic, never fabricated identity"
     irsRef: "Form8582 Instructions Special Instructions for PTPs separate per-partnership computation"
     testRef: "tests/engine/forms/form-8582-source.test.ts::rejects invalid or ambiguous PTP prior-loss sources"
