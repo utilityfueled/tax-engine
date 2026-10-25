@@ -1,5 +1,5 @@
 import { Kysely, PostgresDialect } from "kysely";
-import { Pool } from "pg";
+import { Pool, type PoolClient } from "pg";
 import { resolveDeploymentMode } from "./deployment-mode";
 import { ensureHostedAiLedgerSchema } from "./hosted-ai-ledger-schema";
 
@@ -82,6 +82,31 @@ function normalizeHostedSchemaError(error: unknown) {
   return error;
 }
 
+function discardClientAfterReadTimeout(client: PoolClient) {
+  const query = client.query.bind(client);
+  const discard = (error: unknown) => {
+    if (error instanceof Error && error.message === "Query read timeout"
+      && (!("code" in error) || error.code === undefined)) {
+      // pg's client-side timeout does not cancel a sent non-pipelined query.
+      // End through the public API before Kysely releases without an error:
+      // this marks the client ending synchronously and disconnects the pending
+      // query, so a transaction rolls back and the pool cannot reuse it.
+      void client.end().catch(() => {});
+    }
+  };
+  client.query = ((...args: unknown[]) => {
+    const callback = args.at(-1);
+    if (typeof callback === "function") {
+      args[args.length - 1] = function(this: unknown, error: unknown, ...values: unknown[]) {
+        discard(error);
+        return Reflect.apply(callback, this, [error, ...values]);
+      };
+    }
+    const result: unknown = Reflect.apply(query, client, args);
+    return result instanceof Promise ? result.catch((error: unknown) => { discard(error); throw error; }) : result;
+  }) as typeof client.query;
+}
+
 export function getHostedServerDatabaseConfig(
   env: HostedDbEnvironment = process.env
 ): HostedServerDatabaseConfig {
@@ -132,7 +157,22 @@ export async function getHostedServerDatabase(
     connectionString: normalizedDatabaseUrl,
     ssl: resolveHostedPoolSsl(normalizedDatabaseUrl),
     max: 10,
-    idleTimeoutMillis: 30_000
+    idleTimeoutMillis: 30_000,
+    connectionTimeoutMillis: 5_000,
+    // The server cancels ordinary slow writes before the client read deadline.
+    // Never replay a mutation merely because its response timed out.
+    statement_timeout: 10_000,
+    lock_timeout: 3_000,
+    idle_in_transaction_session_timeout: 15_000,
+    query_timeout: 15_000,
+    keepAlive: true,
+    keepAliveInitialDelayMillis: 10_000,
+  });
+  pool.on("connect", discardClientAfterReadTimeout);
+  // pg has already discarded an idle client before emitting this event.
+  // An absent listener crashes Node; raw driver errors can contain private data.
+  pool.on("error", () => {
+    console.error("[availability] Hosted database connection lost; a new connection will be required.");
   });
   const db = new Kysely<Record<string, never>>({
     dialect: new PostgresDialect({ pool })
