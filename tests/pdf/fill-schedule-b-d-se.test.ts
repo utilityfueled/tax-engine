@@ -146,8 +146,9 @@ describe("Schedule D PDF fill — MFJ complex filer", () => {
     expect(getFieldText(doc, SCHEDULE_D_FIELDS.ssn)).toBe("111223333");
   });
 
-  it("checks Form 8949 Yes checkbox", () => {
-    expect(isChecked(doc, SCHEDULE_D_FIELDS.form8949Yes)).toBe(true);
+  it("preserves the unknown QOF disposition answer", () => {
+    expect(isChecked(doc, SCHEDULE_D_FIELDS.qofDispositionYes)).toBe(false);
+    expect(isChecked(doc, SCHEDULE_D_FIELDS.qofDispositionNo)).toBe(false);
   });
 
   it("fills Line 7 with net short-term gain/loss", () => {
@@ -175,13 +176,14 @@ describe("Schedule D PDF fill — MFJ complex filer", () => {
     const sd = result.scheduleD!;
     const bothGains = sd.netLongTerm.gt(0) && sd.netCapitalGainLoss.gt(0);
     expect(isChecked(doc, SCHEDULE_D_FIELDS.line17Yes)).toBe(bothGains);
-    expect(isChecked(doc, SCHEDULE_D_FIELDS.line17No)).toBe(!bothGains);
+    expect(isChecked(doc, SCHEDULE_D_FIELDS.line17No)).toBe(sd.netCapitalGainLoss.gt(0) && !bothGains);
   });
 
-  it("fills Line 22 QDCG checkbox", () => {
-    // Complex filer has qualified dividends, so QDCG should be Yes
-    const useQDCG = result.scheduleD!.netCapitalGainLoss.gt(0) || result.qualifiedDividends.gt(0);
-    expect(isChecked(doc, SCHEDULE_D_FIELDS.line22Yes)).toBe(useQDCG);
+  it("skips Line22 when the printed both-gain path ends at20", () => {
+    expect(result.scheduleD!.netLongTerm.gt(0)).toBe(true);
+    expect(result.scheduleD!.netCapitalGainLoss.gt(0)).toBe(true);
+    expect(isChecked(doc, SCHEDULE_D_FIELDS.line22Yes)).toBe(false);
+    expect(isChecked(doc, SCHEDULE_D_FIELDS.line22No)).toBe(false);
   });
 });
 

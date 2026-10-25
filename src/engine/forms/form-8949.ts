@@ -128,7 +128,7 @@ export function calculateForm8949(input: TaxYearInput): Form8949Result {
     "Short-term, basis reported",
     shortTermBoxA.totalGainLoss,
     `${shortTermBoxA.transactions.length} transactions`,
-    { proceeds: shortTermBoxA.totalProceeds, cost: shortTermBoxA.totalCostBasis }
+    { proceeds: shortTermBoxA.totalProceeds, cost: shortTermBoxA.totalCostBasis, adjustments: shortTermBoxA.totalAdjustments }
   );
   audit.record(
     "Form 8949",
@@ -136,7 +136,7 @@ export function calculateForm8949(input: TaxYearInput): Form8949Result {
     "Short-term, basis not reported",
     shortTermBoxB.totalGainLoss,
     `${shortTermBoxB.transactions.length} transactions`,
-    { proceeds: shortTermBoxB.totalProceeds, cost: shortTermBoxB.totalCostBasis }
+    { proceeds: shortTermBoxB.totalProceeds, cost: shortTermBoxB.totalCostBasis, adjustments: shortTermBoxB.totalAdjustments }
   );
 
   const totalShortTermGainLoss = shortTermBoxA.totalGainLoss.plus(shortTermBoxB.totalGainLoss);
@@ -155,7 +155,7 @@ export function calculateForm8949(input: TaxYearInput): Form8949Result {
     "Long-term, basis reported",
     longTermBoxD.totalGainLoss,
     `${longTermBoxD.transactions.length} transactions`,
-    { proceeds: longTermBoxD.totalProceeds, cost: longTermBoxD.totalCostBasis }
+    { proceeds: longTermBoxD.totalProceeds, cost: longTermBoxD.totalCostBasis, adjustments: longTermBoxD.totalAdjustments }
   );
   audit.record(
     "Form 8949",
@@ -163,7 +163,7 @@ export function calculateForm8949(input: TaxYearInput): Form8949Result {
     "Long-term, basis not reported",
     longTermBoxE.totalGainLoss,
     `${longTermBoxE.transactions.length} transactions`,
-    { proceeds: longTermBoxE.totalProceeds, cost: longTermBoxE.totalCostBasis }
+    { proceeds: longTermBoxE.totalProceeds, cost: longTermBoxE.totalCostBasis, adjustments: longTermBoxE.totalAdjustments }
   );
 
   const totalLongTermGainLoss = longTermBoxD.totalGainLoss.plus(longTermBoxE.totalGainLoss);

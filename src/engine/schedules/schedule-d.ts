@@ -95,6 +95,12 @@ export function calculateScheduleD(
     new Decimal(0)
   );
   const priorShortTermLoss = d(input.priorYear?.shortTermCapitalLoss);
+  audit.record("Sched D", "4", "Other-form short-term gain/loss", sum(form6781ShortTerm, form6252ShortTerm),
+    "Form6781 short-term + Form6252 short-term", { "Form6781": form6781ShortTerm, "Form6252": form6252ShortTerm });
+  audit.record("Sched D", "5", "Pass-through short-term gain/loss", sum(k1ShortTerm, k1Form1041ShortTerm),
+    "Partnership/S-corporation K1 + estate/trust K1", { "K1": k1ShortTerm, "1041K1": k1Form1041ShortTerm });
+  audit.record("Sched D", "6", "Short-term capital loss carryover", sum(priorShortTermLoss, k1Form1041FinalSTLoss),
+    "Prior short-term carryover + final estate/trust short-term loss", { "Prior carryover": priorShortTermLoss, "Final1041 loss": k1Form1041FinalSTLoss });
   const netShortTerm = sum(form8949.totalShortTermGainLoss, k1ShortTerm, k1Form1041ShortTerm, k1Form1041FinalSTLoss, priorShortTermLoss, form6781ShortTerm, form6252ShortTerm);
   audit.record("Sched D", "7", "Net short-term capital gain/loss", netShortTerm,
     "Form 8949 Part I + K-1 Box 8 + K-1 1041 Box 3 + K-1 1041 Box 11C + prior ST carryforward + Form 6781 short-term + Form 6252 short-term", {
@@ -160,6 +166,14 @@ export function calculateScheduleD(
       "Form8814 Line10": childCapitalGainDistributions,
     });
   const priorLongTermLoss = d(input.priorYear?.longTermCapitalLoss);
+  audit.record("Sched D", "11", "Other-form long-term gain/loss", sum(form4797LongTermGain, form6781LongTerm, form6252LongTerm, form8824CapitalGainLoss),
+    "Form4797line9 + Form6781long-term + Form6252long-term + capital-route Form8824", {
+      "Form4797": form4797LongTermGain, "Form6781": form6781LongTerm, "Form6252": form6252LongTerm, "Form8824": form8824CapitalGainLoss,
+    });
+  audit.record("Sched D", "12", "Pass-through long-term gain/loss", sum(k1LongTerm, k1Form1041LongTerm),
+    "Partnership/S-corporation K1 + estate/trust K1", { "K1": k1LongTerm, "1041K1": k1Form1041LongTerm });
+  audit.record("Sched D", "14", "Long-term capital loss carryover", sum(priorLongTermLoss, k1Form1041FinalLTLoss),
+    "Prior long-term carryover + final estate/trust long-term loss", { "Prior carryover": priorLongTermLoss, "Final1041 loss": k1Form1041FinalLTLoss });
   const netLongTerm = sum(
     form8949.totalLongTermGainLoss, k1LongTerm, k1Form1041LongTerm, k1Form1041FinalLTLoss,
     form4797LongTermGain, capGainDistributions, childCapitalGainDistributions,
