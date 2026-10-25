@@ -204,7 +204,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "f919bb3",
+    "lastRecordedCommit": "d6b8f5f9212543e37761ec62e17e45a81f485ee8",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -305,15 +305,14 @@
       "final multi-platform release images"
     ],
     "workInProgress": [
-      "remaining federal law and complete income/source facts",
-      "PA interest and complete state-packet fixture reconciliation",
-      "clean full-suite coverage and all required checks",
-      "selected-state demand and final form qualification",
-      "final multi-platform release and recovery rehearsal",
-      "hosted staging and independent human reviews",
-      "repeated live synthetic AI evaluation and account availability"
+      "Ordered Marketplace IRA/bond/student-loan/passive/NOL source deductions",
+      "Ordinary NIIT source identity and actual intake; parent INT/DIV AMT sources and child8814 election eligibility",
+      "Guided-only review/export controls and remaining advanced-source intake/PDF handoffs",
+      "Regenerated inventory and all required integrated checks; remote coverage stability",
+      "Final native amd64 and arm64 runtime images, SBOM/advisories, browser flows and recovery",
+      "External state demand, final forms, independent human tax/security/AI review, provider credentials/spend and hosted staging"
     ],
-    "latestIntegratedCommit": "7c4db50e6c917f265c433f87974454fa5eb8dcc0",
+    "latestIntegratedCommit": "d6b8f5f9212543e37761ec62e17e45a81f485ee8",
     "latestCoverageDiagnostic": {
       "status": "failed-tests-coverage-thresholds-met",
       "commit": "e8e169a39a4917744c634378628f717af748759b",
@@ -499,7 +498,18 @@
       "ptcCanonicalIncome": "ea5b663",
       "privateAiCalculationTransport": "f33c2b6",
       "shippedComposeSecurity": "0331de8",
-      "runtimeSourceExposureReview": "7c4db50"
+      "runtimeSourceExposureReview": "7c4db50",
+      "inKindEducationSources": "894f7b9",
+      "singleWriteReviewPdfs": "3adb1f0",
+      "ohio2026EnactedCandidate": "c9e057c",
+      "marketplace2026ActualSources": "c499cab",
+      "completeDocumentCalculationContext": "cd54eb4",
+      "containerOriginAndBrowserSynchronization": "67e1d94",
+      "historicalMarketplaceWX": "c0b9c33",
+      "boundedImageCache": "9cf5518",
+      "persistedGuidedYear": "961f290",
+      "childAmtSources": "3ae750e",
+      "coverageWorkerAllocation": "d6b8f5f"
     },
     "remoteCi": {
       "commit": "054cd59f9d0c8a53fb5794bbebcfd10e110f213b",
@@ -531,30 +541,32 @@
       "amd64": "local QEMU Next.js compilation failed with signal11; native CI rehearsal now configured"
     },
     "currentStableCoverageRun": {
-      "commit": "5d32549a65cebedaf1434af24b7e478fcd9a1f78",
-      "workers": 1,
       "status": "passed",
-      "passed": 16770,
+      "baseCommit": "f8c6222a4e771a98c5e956f5724e899956863d6b",
+      "stagedTree": "77675b7487e023266807eff840774698d1b2c52b",
+      "packageCommit": "3adb1f0",
+      "workers": 1,
+      "passed": 17100,
       "failed": 0,
       "skipped": 0,
-      "filesPassed": 676,
+      "filesPassed": 744,
       "filesFailed": 0,
-      "durationSeconds": "441.80",
-      "branchesPercent": "86.50",
-      "functionsPercent": "92.02",
-      "statementsPercent": "92.81",
-      "linesPercent": "94.41",
-      "evidence": ".local/upgrade-evidence/stable-coverage-5d32549.log",
-      "evidenceSha256": "1ecc5af76a4666636967c836f65dbc000ad2d0ac6e799be3fe8c2813522d0712",
-      "scope": "Immutable tracked-file archive with locked dependencies, pinned Python/pypdf and disposable local PostgreSQL 16. All coverage thresholds unchanged.",
-      "limitation": "Applies to 5d32549 only. Newer source integration and final release checks require verification; this is local synthetic evidence, not human or staging qualification."
+      "durationSeconds": "453.82",
+      "branchesPercent": "86.59",
+      "functionsPercent": "92.37",
+      "statementsPercent": "92.74",
+      "linesPercent": "94.70",
+      "evidence": ".local/upgrade-evidence/pdf-single-write-full-coverage.log",
+      "evidenceSha256": "a2a2334a2f8ca8022ec791a9d4d664b0a28c08b7a7e7a4ec456965aa10627d8d",
+      "scope": "Exact isolated f8c6222 plus single-write PDF package; locked dependencies, Node24.22.1, pinned pypdf and disposable local PostgreSQL16. Thresholds unchanged.",
+      "limitation": "Excludes newer in-kind education, Ohio and agent changes. Current integrated and final release gates still require a fresh run. Synthetic local evidence only."
     },
     "remainingInternalWork": [
-      "Finish positive Marketplace7206/PTC coupling, including applicable year-specific repayment methods and actual source links",
+      "2026 Marketplace coupling implemented c499cab; finish2025 W/X and ordered IRA/bond/student-loan/passive/NOL coordination",
       "Finish ordinary NIIT annuity/deduction sources, child8814 private-activity-bond AMT handoff and remaining federal source/method audit",
-      "Implement supported in-kind529 ordering and finish mixed/joint educator and education methods; distinguish actual legal uncertainties",
-      "Finish complete-facts/preview/cross-document/year audit, including persisted explicit guided year and required actual source context",
-      "Repair PDF coverage timeouts without weakening test deadlines, assertions or coverage thresholds",
+      "Finish remaining source-supported education methods; in-kind529 ordering is implemented894f7b9 and unresolved legal attribution methods are documented for qualified review",
+      "Complete document context implemented cd54eb4; finish persisted guided-year/header reconciliation and bounded advanced-source UI",
+      "Container origin/browser synchronization implemented67e1d94; commit bounded runtime image cache and resolve remote coverage resource contention without changing assertions or deadlines",
       "Regenerate inventory and run all current full tests/coverage/types/spec/builds/lint/browser checks; repair integration failures",
       "Inspect current remote CI and verify final native amd64 and local arm64 images, SBOMs/scans and recovery rehearsal",
       "Obtain confirmed advisory ownership/disposition and reconcile final artifact/support claims with evidence while independent human, provider, staging and form inputs remain pending"
@@ -578,7 +590,7 @@
       "scope": "immutable tracked-file archive, locked dependencies, disposable local PostgreSQL16; unchanged coverage thresholds",
       "limitation": "Two PDF aggregate tests exceeded unchanged5000ms timeouts; no numeric tax failure. Commit76bb3a6 isolates identical template/state assertions into named independent cases. Its exact staged tree passes62tests and3682spec refs; fresh full gate required after newer packages."
     },
-    "lastPushedCommit": "7c4db50e6c917f265c433f87974454fa5eb8dcc0",
+    "lastPushedCommit": "d6b8f5f9212543e37761ec62e17e45a81f485ee8",
     "currentBrowserRun": {
       "commit": "ed915c1708cedc02e99ca12fb7383331a7f99bea",
       "status": "passed-with-hosted-skips",
@@ -594,8 +606,8 @@
     },
     "currentPackageAudit": {
       "date": "2026-10-25",
-      "commit": "f08692f",
-      "evidence": ".local/upgrade-evidence/smtp-installed-audit.json",
+      "commit": "3adb1f0",
+      "evidence": ".local/upgrade-evidence/audit-current-integration.json",
       "evidenceSha256": "53e7d127130984cae97d554a54f7be42a21478066d94206e519540ab84119635",
       "metadata": {
         "vulnerabilities": {
@@ -610,7 +622,7 @@
         "optionalDependencies": 0,
         "totalDependencies": 521
       },
-      "limitation": "Zero package advisories across521 dependencies; final runtime image and reachability findings remain separate."
+      "limitation": "Zero package advisories across521 dependency entries. OS findings and final image scans remain separate."
     },
     "ohioInterestSoftwareReview": {
       "commit": "7a337a0",
@@ -654,18 +666,32 @@
       "limitation": "Actual React DOM callback checks; final production browser rerun required."
     },
     "remoteCiLatestObserved": {
-      "commit": "214411a04c0113fbdbc073862cf3803ee3d6b6a4",
-      "ciRun": 40191977817,
-      "ciStatus": "failure",
-      "webRun": 40191977778,
-      "webStatus": "success",
-      "testsPassed": 17018,
-      "testFiles": 728,
-      "coverageTestsPassed": 16932,
-      "coverageTestsFailed": 86,
-      "coverageFailedFiles": 50,
-      "failure": "Coverage run predominantly five-second PDF packet timeouts; spec inventory stale. No new coverage percentage was produced.",
-      "newerRuns": "pending; inspect exact latest head after integration"
+      "commit": "c9e057ce32385c8ebb3a9003ce3be4c90e3de2e6",
+      "ciRun": 40197402617,
+      "webRun": 40197402587,
+      "unit": {
+        "passed": 17119,
+        "files": 747
+      },
+      "coverage": {
+        "passed": 17107,
+        "failed": 12,
+        "files": 747,
+        "reason": "11 five-second timeouts and one state-packet assertion following timeout; no passing coverage result"
+      },
+      "inventory": "stale",
+      "typesBuildLint": "passed",
+      "webBuildAndStandaloneBrowser": "passed",
+      "nativeAmd64BuildSmokeRecovery": "passed",
+      "runtimeBrowser": {
+        "passed": 300,
+        "failed": 2,
+        "skippedHosted": 5,
+        "reason": "private consent request public origin; repaired in67e1d94"
+      },
+      "imageMatches": 157,
+      "artifactId": 12600704759,
+      "artifactSha256": "7e29c8cd14474d985ccdd653e0997bc44ddd112065191581fadf6ef3967b7493"
     },
     "remoteCi6b07529": {
       "run": 40176974652,
@@ -1098,6 +1124,107 @@
       "distinctAdvisories": 67,
       "critical": 0,
       "scope": "Native CI synthetic intermediate artifact; not final release or staging"
+    },
+    "singleWritePdfVerification": {
+      "commit": "3adb1f0",
+      "stagedTree": "77675b7487e023266807eff840774698d1b2c52b",
+      "testsPassed": 1103,
+      "testFiles": 111,
+      "evidence": ".local/upgrade-evidence/pdf-single-write-broad.log",
+      "evidenceSha256": "a2e183f15e95e099a7f82cdff5f21ba0f0f1f5966bd4c018fe2f099935029493",
+      "review": "Independent agent review; real single-write count, visible every-page notices, retained W2 wage fields; no weakened timeout/assertion/coverage threshold."
+    },
+    "ohio2026Candidate": {
+      "commit": "c9e057c",
+      "stagedTree": "42b0ecaa1d2aebe1a4133e453672fbf3bd47f96f",
+      "testsPassed": 181,
+      "testFiles": 3,
+      "types": "passed",
+      "specReferences": 3984,
+      "lintErrors": 0,
+      "independentAgentReview": "Two findings corrected red-first: unused business exemptions and eligible joint spouse. Final7tests pass; no remaining actionable finding.",
+      "limitation": "Isolated candidate only; no state selection, complete year registry, map or filing qualification."
+    },
+    "remoteContainerF8c6222": {
+      "run": 40195215822,
+      "artifactId": 12600226382,
+      "archiveSha256": "7f3043f9c2d9fdd6d94068650754192b40029ff6af565504dbf02eacb083360d",
+      "downloadVerified": true,
+      "recovery": "passed",
+      "browserPassed": 298,
+      "browserFailed": 4,
+      "browserSkipped": 5,
+      "scanMatches": 157,
+      "scope": "Native amd64 intermediate CI; not final release or staging."
+    },
+    "remoteRunsInProgress": {
+      "commit": "67e1d94671996549194207cdfed9e0f6d293bac1",
+      "ci": 40198847185,
+      "web": 40198847103,
+      "status": "cancelled-by-subsequent-push",
+      "observed": "2026-10-25",
+      "completedChecks": "Unit tests, root/contracts/web types, spec references, lint, both builds, native image smoke and six-phase recovery pass; coverage and browser jobs cancelled. Inventory stale."
+    },
+    "containerOriginVerification": {
+      "commit": "67e1d94",
+      "securityTests": 42,
+      "browserTests": 42,
+      "browserRetries": 0,
+      "browserTimeoutMs": 30000,
+      "image": "7ec82595f3b8ce40b2328af8e6f7ab23a8aa347d3902de737ae97e04c0f97467",
+      "sourceTree": "95e4e3afbae4e83d346e625056f9b7d675ed0ddb",
+      "testDriverDelta": "5-line persisted-workspace wait; file hash recorded in package doc",
+      "browserLogSha256": "520f8e31eb9ca35308b3e0dfdd006bd6e3f7d9d8711ef369f6168be6344cfdef",
+      "boundary": "Scoped local synthetic ARM64 package verification; not final integrated/staging evidence"
+    },
+    "childAmtSources": {
+      "commit": "3ae750e",
+      "sourceTree": "87027282610cc05a8ff994df20939585889a3fd2",
+      "unitTests": 17158,
+      "testFiles": 753,
+      "durationSeconds": "359.58",
+      "rootTypes": "passed",
+      "specReferences": 4013,
+      "lintErrors": 0,
+      "lintWarnings": 9,
+      "independentAgentReview": "No actionable findings after official source review and focused tests; not human qualification.",
+      "evidence": ".local/upgrade-evidence/child-amt-full-unit.log",
+      "evidenceSha256": "14a33fec81592ad23e0326912be44c8af4f00082fb221cd7a6a58737e300bb7e",
+      "boundary": "Exact isolated tree; no final integrated/release claim."
+    },
+    "historicalMarketplaceWX": {
+      "commit": "c0b9c33",
+      "tests": 2590,
+      "files": 63,
+      "rootTypes": "passed",
+      "specReferences": 4020,
+      "independentAgentReview": "Official Carla W/X example and 18 focused cases; no actionable finding.",
+      "remaining": "Ordered deductions and passive/NOL interaction"
+    },
+    "boundedImageCache": {
+      "commit": "9cf5518",
+      "runtimeImage": "7ec82595f3b8ce40b2328af8e6f7ab23a8aa347d3902de737ae97e04c0f97467",
+      "actualCacheFilesystem": "tmpfs",
+      "limitBytes": 67108864,
+      "rootReadOnly": true,
+      "uid": 1001,
+      "cacheFileWritten": true,
+      "independentAgentReview": "No actionable findings; scoped tests pass.",
+      "evidence": ".local/upgrade-evidence/container-cache-runtime-final.log",
+      "evidenceSha256": "1021d8d35b8d5c7d5d27cf4afcac118df3a1e5e910047f7d268cc5d033a7c346",
+      "boundary": "Actual local ARM64 runtime. Final integrated/native Docker image remains required."
+    },
+    "persistedGuidedYear": {
+      "commit": "961f290",
+      "sourceTree": "cebbca7694eb4302bc1f202ef2049bcaaeec0818",
+      "tests": 801,
+      "files": 56,
+      "productionBrowserTests": 2,
+      "browserRetries": 0,
+      "rootWebTypes": "passed",
+      "specReferences": 4026,
+      "parentReviewTests": 7,
+      "remaining": "Guided-only return bundle control follow-up; advanced-source intake"
     }
   }
 }

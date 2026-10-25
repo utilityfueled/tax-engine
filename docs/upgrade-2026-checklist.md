@@ -7,42 +7,53 @@ complete a checkbox.
 
 ## Current integration — 2026-10-25
 
-`7c4db50` is pushed. The goal remains active; required external inputs below
-remain unanswered. Current independent work is positive Marketplace7206/PTC
-coupling, NIIT/child-PAB source completion, qualified in-kind529 ordering,
-complete preview source context and persisted guided-year reconciliation.
-Parent is addressing PDF coverage timeouts and the final integrated checks.
+`d6b8f5f` is pushed. The goal remains active and the upgrade is not release-ready.
+The external inputs below remain unanswered. Current implementation covers ordered
+Marketplace deductions, ordinary NIIT identity and intake, parent INT/DIV AMT
+sources, child election eligibility, and advanced guided sources/PDF handoffs.
 
-- `195f018` and `efbbb6a`: actual sole/joint/community bond ownership and prior
-  reported interest; parent16-case community review passes. Reduced mixed-owner
-  educator attribution remains a documented method boundary.
-- `b0db101` and `74c2d24`: canonical Schedule1A income/QBI sources and actual
-  guided tip/overtime/vehicle/senior facts; direct Form4137-only path works in
-  both years. Guided exact-tree724 tests/56files pass; no filing gate opened.
-- `ea5b663`: canonical PTC taxpayer MAGI, actual dependent worksheet and child8814
-  exempt-interest separation;130 exact-tree tests/5files and parent39-case
-  source review pass. Positive Marketplace deduction coupling is separate.
-- `f33c2b6`: private confirmed AI calculation transport;225 focused tests,
-  production build, scoped lint and two desktop/mobile Chromium cases pass.
-  Source-name/output privacy, guided-only year and origin regressions were
-  reproduced before fixes and independently reviewed. Production AI stays off.
-- `0331de8`: shipped Compose controls now match rehearsal.61 focused tests,
-  independent agent review and six local recovery phases pass. Actual kernel
-  capability sets are zero and no-new-privileges is enforced. Retained image
-  proof is not final-code or staging proof.
-- `7c4db50`: all67 Debian source records refreshed,9 bounded component exposure
-  assessments and native amd64 artifact hashes recorded. Every advisory remains
-  unaccepted, with pending release-maintainer confirmation and2026-11-07 expiry.
-- Remote `214411a`:17,018 tests/728files pass, but coverage has86 failures across
-  50files (predominantly5-second PDF packet timeouts), and inventory is stale.
-  Native amd64 Web40191977778 passes all three jobs. The downloaded artifact
-  matches GitHub's SHA-256;157 image matches/67 advisories remain. Newer remote
-  runs and final arm64/amd64 artifacts still need verification.
+- `894f7b9`: actual in-kind 529 distribution ordering; 167 exact-tree tests pass.
+  Remaining education attribution decisions are in
+  [the method memo](upgrade-2026-education-method-decisions.md).
+- `3adb1f0`: single-write review PDFs. Exact tree 77675b7 passes 1,103 PDF tests
+  and 17,100 coverage tests with 86.59% branches against the unchanged 85% gate.
+- `c9e057c`: isolated enacted Ohio 2026 baseline; 181 tests and independent agent
+  review pass. Demand, full state return, final forms and human review remain.
+- `c499cab`: actual 2026 Marketplace health deduction/PTC coupling; 2,583 tests.
+- `c0b9c33`: historical Marketplace W/X repayment method, including the official
+  Carla example; 2,590 tests and independent source review pass. Ordered special
+  deductions and passive/NOL interactions remain active work.
+- `cd54eb4`: complete actual document context; 765 tests and root/web types pass.
+- `67e1d94`: exact container origin and persisted-state browser synchronization;
+  42 security checks and 42 actual ARM64 container browser cases pass.
+- `9cf5518`: bounded 64 MiB image-cache tmpfs. A real read-only container writes
+  optimized image cache files as UID 1001; the root remains read-only. Independent
+  review passes. Exact evidence is in [the container record](upgrade-2026-container-origin-work.md).
+- `961f290`: saved guided tax year and actual readiness reconciliation; 801 unit
+  tests, root/web types, spec references and two production browser cases pass.
+  Parent review independently passes seven cases. Guided-only bundle controls
+  remain a separate follow-up.
+- `3ae750e`: actual child Form 8814 bond preferences reach parent AMT. Isolated
+  tree 8702728 passes all 17,158 tests across 753 files, root types, 4,013 spec
+  references and scoped lint. Independent agent source review passes; broader
+  election eligibility and human qualification remain open.
+- `d6b8f5f`: one coverage worker in CI; every test, five-second deadline and
+  coverage threshold remains unchanged. YAML parses and the diff was reviewed.
+  A fresh remote result is required.
+- Latest completed remote `c9e057c`: 17,119 unit tests pass; coverage fails 12
+  cases (11 timeouts plus one state-packet assertion), and inventory is stale.
+  Native amd64 smoke/recovery and standalone browsers pass; runtime browsers
+  pass 300, fail two consent-origin cases fixed in 67e1d94, and skip five hosted
+  cases. The later 67e1d94 coverage/browser runs were cancelled by a subsequent
+  push; its other completed checks and native recovery pass.
+- Package audit at the previous integration: zero advisories across 521 entries.
+  Image exposure is separate: 157 matches and 67 advisory records, with owner
+  roles and a 2026-11-07 review deadline; maintainer disposition remains pending.
 
-Next: remove unnecessary PDF serialization work without relaxing assertions,
-timeouts or thresholds; finish remaining internal tax/facts packages; regenerate
-inventory; rerun every brief command and native image/recovery checks on exact
-integrated code. Keep all human, provider, staging and final-form gates closed.
+Next: finish the source/UI packages, regenerate inventory and run every brief
+command against integrated code. Verify final native amd64/arm64 images, scans,
+browser flows and recovery. Human, provider, staging, state-demand and final-form
+gates remain closed. Agent review never replaces independent human qualification.
 
 ## Refreshed baseline — 2026-10-24
 

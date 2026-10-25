@@ -10,14 +10,20 @@ document consent/cancellation and an inactive complete-data export pipeline.
 None of these supersedes the required full coverage, independent review, staging
 or final-form qualification gates.
 
-Latest recorded integration is `7c4db50`, pushed on `upgrade/2026-baseline`.
-Execution remains active and **not release-ready**. Private confirmed AI
-transport, actual guided Schedule1A sources, bond ownership, canonical PTC
-income and shipped Compose security now have separate reviewed commits.
-The latest completed remote unit run is17,018 passing tests at `214411a`;
-its coverage run fails86 cases, predominantly PDF packet timeouts, and its spec
-inventory is stale. Its native amd64 Web workflow passes. These older checks do
-not qualify current code. See the current checklist and package evidence.
+Latest recorded integration is `d6b8f5f`, pushed on `upgrade/2026-baseline`.
+Execution remains active and **not release-ready**. Separate packages now include
+historical Marketplace W/X, actual child AMT preferences, saved guided-year
+reconciliation, and a bounded image-cache mount for read-only containers.
+The child AMT tree passes all 17,158 tests; the guided-year tree passes 801 unit
+and two production browser cases. Exact source trees and limitations are in the
+checklist and machine checkpoint.
+
+The prior single-write PDF tree passes 17,100 coverage tests with 86.59% branches.
+Remote c9e057c passes 17,119 unit tests but fails 12 coverage cases, mostly timeout
+failures; generated inventory is stale. CI now uses one coverage worker without
+changing deadlines or thresholds. The later 67e1d94 coverage/browser jobs were
+cancelled by another push, not counted as passing. A fresh integrated run remains
+required, as do final native runtime images and hosted staging qualification.
 
 Historical starting checkpoint `d32cb8cf3d607c643c4c7f7e1b845fcace61563f`
 recorded15,141 passing
