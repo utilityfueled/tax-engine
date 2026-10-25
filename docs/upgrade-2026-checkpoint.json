@@ -204,7 +204,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "686760e",
+    "lastRecordedCommit": "f919bb3",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -313,7 +313,7 @@
       "hosted staging and independent human reviews",
       "repeated live synthetic AI evaluation and account availability"
     ],
-    "latestIntegratedCommit": "c98cc70f5f8f5d3dde4b06f01258940cf27b0b9d",
+    "latestIntegratedCommit": "f919bb3",
     "latestCoverageDiagnostic": {
       "status": "failed-tests-coverage-thresholds-met",
       "commit": "e8e169a39a4917744c634378628f717af748759b",
@@ -542,16 +542,14 @@
       "limitation": "Applies to 5d32549 only. Newer source integration and final release checks require verification; this is local synthetic evidence, not human or staging qualification."
     },
     "remainingInternalWork": [
-      "Complete Form7206 canonical and guided facts/actual allocations and physical review PDF; implement positive Marketplace SE-health/PTC coordination",
-      "Complete Form4137 per-owner canonical/payroll/Schedule1A coupling, source intake and physical output; finish Schedule1A actual intake and business-tip QBI",
-      "Complete remaining ordinary NIIT annuity, allocation and disposition/basis source methods",
-      "Complete ESAcode6 and positive mixed/joint educator attribution plus actual noncash/QTP methods without inventing missing evidence",
-      "Finish database outage hardening through actual Kysely failure/rollback/reconnect; reviewer identified acquired-client timeout gap beyond pool.query tests",
-      "Repair exact-current remoteCI audit/fixture regressions without weakening source requirements or numeric oracles",
-      "Audit remaining documented source/preview/crossyear boundaries against full brief, not just recent finite queues",
-      "Regenerate inventory and run current-code full suite, coverage, types, spec, builds, lint and complete browser suites",
-      "Verify current remoteCI and nativeamd64 final image/recovery evidence; rebuild finalarm64 runtime,SBOM/scan and recovery/rollback rehearsal",
-      "Resolve or obtain explicit owner/expiry for advisories and align support claims with actual tested artifacts"
+      "Finish Schedule1A actual intake/canonical source binding and supported business-tip QBI paths",
+      "Implement positive Marketplace self-employment-health/PTC coupling and remaining ordinary NIIT source methods",
+      "Finish mixed/joint educator and noncash/QTP source methods, preserving actual unresolved legal boundaries",
+      "Complete private AI audit transport, independent agent review and production browser verification without model promotion",
+      "Finish complete-facts/preview/cross-document/year audit against the execution brief",
+      "Regenerate inventory and run current full tests/coverage/types/spec/builds/lint/browser checks; repair any integration failures",
+      "Inspect current remote CI and verify final native amd64 and local arm64 images, SBOMs/scans and recovery rehearsal",
+      "Resolve or obtain confirmed owner/expiry and exposure disposition for remaining image advisories; align support claims with evidence"
     ],
     "previousStableCoverageRun": {
       "commit": "2f8abd71206dd8483c167861f35c4c0bbecdad7a",
@@ -572,7 +570,7 @@
       "scope": "immutable tracked-file archive, locked dependencies, disposable local PostgreSQL16; unchanged coverage thresholds",
       "limitation": "Two PDF aggregate tests exceeded unchanged5000ms timeouts; no numeric tax failure. Commit76bb3a6 isolates identical template/state assertions into named independent cases. Its exact staged tree passes62tests and3682spec refs; fresh full gate required after newer packages."
     },
-    "lastPushedCommit": "abcb979",
+    "lastPushedCommit": "edde2a004b9bd8714fdfeaa5f386d2de500ea7a7",
     "currentBrowserRun": {
       "commit": "ed915c1708cedc02e99ca12fb7383331a7f99bea",
       "status": "passed-with-hosted-skips",
@@ -648,13 +646,17 @@
       "limitation": "Actual React DOM callback checks; final production browser rerun required."
     },
     "remoteCiLatestObserved": {
-      "commit": "abcb979",
-      "ciRun": 40187987412,
-      "webRun": 40187987417,
-      "ciStatus": "in_progress",
+      "commit": "edde2a004b9bd8714fdfeaa5f386d2de500ea7a7",
+      "ciRun": 40190484105,
+      "ciStatus": "failure",
+      "webRun": 40190484104,
       "webStatus": "in_progress",
-      "evidence": ".local/upgrade-evidence/ci-abcb979-status.json",
-      "limitation": "Observed snapshot only; no exact-current pass yet."
+      "evidence": ".local/upgrade-evidence/remote-runs-after-edde2a0.json",
+      "testsPassed": 17010,
+      "testsFailed": 1,
+      "testFiles": 725,
+      "failure": "Stale header-rule count, repaired by f919bb3; inventory remains stale.",
+      "failedLog": ".local/upgrade-evidence/remote-ci-edde2a0-failed.log"
     },
     "remoteCi6b07529": {
       "run": 40176974652,
@@ -932,6 +934,110 @@
       "scopedLintErrors": 0,
       "existingLintWarnings": 4,
       "scope": "Per-owner computed business and source-bound QBI, actual age/year/W2 identity and foreign attribution. Guided and actual physical PDF handoffs remain active."
+    },
+    "healthInsuranceGuidedAndPdf": {
+      "commits": [
+        "1abb260",
+        "17f0588"
+      ],
+      "parentChecks": {
+        "tests": 30,
+        "files": 5,
+        "evidence": ".local/upgrade-evidence/parent-health-integration-final.log"
+      },
+      "pdfAgentChecks": {
+        "tests": 1115,
+        "files": 111,
+        "specReferences": 3904
+      },
+      "sourcePdfSha256": "822203c9bbd958e651e243bbf6353c4c8e78abbde412e06caf6db5f88fe68ee1",
+      "qualified": false
+    },
+    "hostedDatabaseOutages": {
+      "commit": "dabb14d",
+      "tree": "9cd3f6c03129d2ecb5f640aa2756ec74feeba357",
+      "tests": 16,
+      "files": 3,
+      "seconds": 67.93,
+      "webTypes": "passed",
+      "independentAgentReview": "Reproduced then verified Kysely acquired-client timeout/rollback fix; no further scoped finding.",
+      "evidence": ".local/upgrade-evidence/hosted-database-outages-staged.log",
+      "staging": false
+    },
+    "niitFixtureRepair": {
+      "commit": "9ea5dd1",
+      "tree": "ece2a4e922d50c0bab0315ecf0def1ff9356d263",
+      "tests": 224,
+      "status": "passed",
+      "evidence": ".local/upgrade-evidence/niit-legacy-fixtures-staged-final.log",
+      "independentAgentReview": "224 passed; original tax oracles retained; official i8960 source confirmed."
+    },
+    "coverdellDisqualification": {
+      "commit": "4421801",
+      "agentTests": 150,
+      "files": 16,
+      "specReferences": 3912,
+      "scope": "Whole account January 1 value/basis, zero qualified expenses, no subsequent income/gain/loss, actual identities; broader source methods remain blocked.",
+      "parentCanonicalTests": 9,
+      "evidence": ".local/upgrade-evidence/parent-education-integration-review.log"
+    },
+    "tipPayrollCanonicalAndPdf": {
+      "commit": "edde2a0",
+      "treePrefix": "a57a55d0",
+      "agentTests": 732,
+      "files": 14,
+      "specReferences": 3922,
+      "parentSharedSourcePdfTests": 22,
+      "parentSharedSourcePdfFiles": 4,
+      "evidence": ".local/upgrade-evidence/parent-education-4137-review.log",
+      "reviewFixes": [
+        "Absent optional spouse source",
+        "Long continuation employer identity wrapping"
+      ]
+    },
+    "nativeAmd64C721f07": {
+      "commit": "c721f078989f1bd91ecd9bfc8a2cbf8de9f3a03a",
+      "workflowRun": 40186335148,
+      "job": 121147858381,
+      "artifactId": 12597285004,
+      "artifactSha256": "82119b1ce0c9e10e2c4ad366608613bdf64c0265c864aece7354e7d489ba95cc",
+      "status": "passed",
+      "image": "sha256:7cbf726f1d02e0747e1bcc9840211c981c799be4bf420f8571c057ed2a4110ef",
+      "evidenceDirectory": ".local/upgrade-evidence/amd64-c721f07-runtime",
+      "recoveryPhases": 6,
+      "tables": 9,
+      "owners": 2,
+      "observedRequests": 408,
+      "scan": {
+        "matches": 157,
+        "distinctAdvisories": 67,
+        "critical": 0,
+        "availableFixes": 0
+      },
+      "finalHeadProof": false,
+      "staging": false
+    },
+    "securityRecoveryHeaderRepair": {
+      "commit": "f919bb3",
+      "tree": "bf9cd5758a95889048c774eabb4eff5edb89f910",
+      "tests": 37,
+      "files": 3,
+      "evidence": ".local/upgrade-evidence/security-recovery-headers-staged.log"
+    },
+    "schedule1ASourcePackages": {
+      "seniorAgeAtDeath": {
+        "commit": "d0dd710",
+        "tests": 58
+      },
+      "reportingFields2026": {
+        "commit": "2cdc4d4",
+        "tests": 143
+      },
+      "linkedSourceContract": {
+        "commit": "45f497c",
+        "tests": 60
+      },
+      "canonicalAndGuidedIntegration": "in progress"
     }
   }
 }

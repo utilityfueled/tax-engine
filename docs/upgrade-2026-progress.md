@@ -535,3 +535,14 @@ NIIT audit/source fixtures plus stale inventory. Newer CI is in progress.
 Canonical/guided/PDF health integration, tips/payroll, education methods, NIIT
 sources, database outage handling and full final verification remain active
 internal work. External human/provider/staging/final-form gates remain closed.
+
+
+Pushed through `edde2a0`: actual health intake/PDF, bounded Coverdell code 6,
+separate-owner tip payroll/PDF, NIIT source-fixture repair and bounded real-DB
+outage handling now have scoped immutable checks and parent review. Review drove
+three additional source/export fixes. Native amd64 runtime/recovery/SBOM CI at
+`c721f07` passed and its artifact hash was verified; unresolved OS advisories and
+final-HEAD runtime verification remain. The durable checklist records exact
+commits, trees, logs and limitations. Remaining law/facts integration and private
+AI audit transport continue; no human, staging, model, filing or release
+qualification is claimed.

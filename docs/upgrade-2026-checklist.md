@@ -742,3 +742,73 @@ packages. Database review reproduced the acquired-client issue through actual
 Kysely: timed-out ordinary and transactional queries returned a still-pending
 client to the pool. That finding is open; passing pool-shortcut tests alone do
 not qualify the database outage package.
+
+
+### Integrated sources, database outages and native amd64 evidence — 2026-10-25
+
+Pushed and refetched `edde2a0`. Separate packages now include actual health
+insurance intake `1abb260` and Form 7206 PDF `17f0588`, bounded Coverdell code 6
+`4421801`, and separate-owner tip payroll/PDF `edde2a0`. Their package documents
+record official sources, immutable validation and remaining source boundaries.
+Parent rechecks pass 30 health tests, 22 education/tip source and PDF tests, and
+nine canonical education tests. Review found and drove fixes for unidentified
+education-credit students, an explicitly absent spouse in the tip exporter, and
+long employer names on continuation pages. This is bounded agent review only.
+
+Database outage package `dabb14d` passes 16 tests in three files against real
+local PostgreSQL and packet-loss proxies, plus web types and scoped lint. Exact
+staged tree `9cd3f6c03129d2ecb5f640aa2756ec74feeba357` completes in 67.93 seconds.
+Independent review reproduced the Kysely acquired-client timeout issue and
+confirmed its fix: ordinary and transactional blackholed queries fail at about
+15 seconds and leave zero busy clients in the pool. An unfinished transaction
+rolls back. The package uses bounded connection/lock/statement/read deadlines,
+private idle-error handling and no automatic mutation retry. See
+`hosted-database-outages.md`; this is local synthetic evidence, not staging.
+
+NIIT fixture repair `9ea5dd1` preserves the existing tax expectations while
+reconciling official Form 8960 line 8/12 and actual PA/FTC capital-gain sources.
+The same five remote failures were reproduced first. Exact staged tree
+`ece2a4e922d50c0bab0315ecf0def1ff9356d263` then passes all 224 cases. Independent
+source review and another 224-case run found no remaining issue in that scope.
+
+Native amd64 Web run `40186335148` at `c721f078989f1bd91ecd9bfc8a2cbf8de9f3a03a`
+passes all three jobs, including actual Docker build, runtime smoke, Compose
+upgrade/restart/backup restoration/rollback/reupgrade, browser flows, SBOM and
+critical-vulnerability gate. Artifact `12597285004` has verified ZIP SHA-256
+`82119b1ce0c9e10e2c4ad366608613bdf64c0265c864aece7354e7d489ba95cc`.
+Runtime image `sha256:7cbf726f1d02e0747e1bcc9840211c981c799be4bf420f8571c057ed2a4110ef`
+runs x64 Node 24.22.1 as UID 1001 with a read-only root and 41 templates; no
+package manager or provider credentials are present. Recovery reconciles all
+nine tables, both synthetic owners, exact costs and browser-only facts/document
+bytes across all six phases. The finite observer saw 408 requests without the
+private markers; this does not prove absence of encoded leaks. The scan still
+has 67 distinct OS advisories (157 matches, zero critical); none has an available
+fix in that image. Owner confirmation/exposure assessment and refreshed final
+images remain required. This successful older artifact is not final-HEAD proof.
+
+Remaining internal work includes Schedule 1-A intake/business-tip QBI, positive
+Marketplace health/PTC coupling, ordinary NIIT source methods, educator mixed/
+joint attribution, remaining education source methods and complete preview/
+cross-document auditing. The parent is implementing the authorized transient AI
+calculation transport: complete facts stay in a separate private request, only
+server-recomputed mapped audits and redacted text reach the task adapter. Human
+review, provider evaluation and promotion remain closed. Inventory, full current
+local/remote checks, final images/scans and recovery must run after integration.
+External inputs remain pending; the active goal is not complete.
+
+
+Follow-up commits `d0dd710`, `2cdc4d4` and `45f497c` preserve actual death-date
+senior eligibility, 2026 tip/overtime reporting fields and the linked Schedule
+1-A source contract. They pass 58, 143 and 60 isolated cases respectively, with
+root types/spec checks and scoped reviews recorded in the owner documents.
+Canonical/guided Schedule 1-A integration is still active.
+
+Remote CI at `edde2a0` now has 17,010 passes and one failure across 725 files:
+a prior test assumed one header rule after account recovery intentionally added
+a stricter second rule. `f919bb3` reproduces that red result and verifies the
+exact global/recovery rules, all recovery privacy headers and no relaxation of
+CSP/framing. Exact staged tree `bf9cd5758a95889048c774eabb4eff5edb89f910` passes
+37 header/auth-recovery/telemetry tests. Inventory is still stale and final full
+coverage remains required. The private AI transport currently passes 136 nearby
+tests, but independent review has found a source-name redaction gap; it is not
+yet committed and remains active work.
