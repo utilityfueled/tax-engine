@@ -2934,6 +2934,9 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
       taxYear: year,
       filingStatus,
       eligibilityConfirmed: input.dependentCare.eligibilityConfirmed,
+      priorYearExpenseCredit: input.dependentCare.priorYearExpenseCredit === undefined ? undefined : d(input.dependentCare.priorYearExpenseCredit),
+      earnedIncomeFactsVerified: input.dependentCare.primaryEarnedIncome !== undefined
+        && (filingStatus !== "married_filing_jointly" || input.dependentCare.spouseEarnedIncome !== undefined),
       spouseEarnedIncome: input.dependentCare.spouseEarnedIncome === undefined ? undefined : d(input.dependentCare.spouseEarnedIncome),
       excludedDependentCareBenefits: input.dependentCare.excludedDependentCareBenefits === undefined ? undefined : d(input.dependentCare.excludedDependentCareBenefits),
       taxLiabilityLimit: zeroFloor(taxBeforeCredits.minus(foreignTaxCredit)),

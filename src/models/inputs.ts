@@ -2215,6 +2215,8 @@ export const StandardDeductionFactsSchema = z.object({
 });
 
 export const DependentCareSchema = z.object({
+  /** Actual completed prior-year expense worksheet credit; missing is not zero. */
+  priorYearExpenseCredit: optionalDecimalInput,
   /** Earned income after applicable exclusions, SE adjustments and substantiated deemed monthly income. */
   primaryEarnedIncome: optionalDecimalInput,
   spouseEarnedIncome: optionalDecimalInput,

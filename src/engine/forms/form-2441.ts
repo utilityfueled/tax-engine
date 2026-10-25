@@ -25,6 +25,10 @@ export interface Form2441Input {
   eligibilityConfirmed?: boolean;
   /** Completed credit-limit worksheet, after foreign tax credit. */
   taxLiabilityLimit?: Decimal;
+  /** Actual completed Worksheet A credit, including a confirmed zero. */
+  priorYearExpenseCredit?: Decimal;
+  /** Historical adapters may provide combined/limited income, not individual source facts. */
+  earnedIncomeFactsVerified?: boolean;
   careExpenses: Decimal;
   qualifyingIndividuals: number; // 1 or 2+
   earnedIncome: Decimal; // taxpayer; historical callers may supply the already-limited lower spouse amount
@@ -33,7 +37,8 @@ export interface Form2441Input {
 
 export interface Form2441Result {
   qualifyingExpenses: Decimal; // Line 3
-  earnedIncomeLimit: Decimal; // Line 4
+  earnedIncomeLimit: Decimal; // Line 6
+  earnedIncomeFactsVerified: boolean;
   creditPercentage: Decimal; // Line 8
   credit: Decimal; // Line 11 when the tax-liability worksheet is provided
   lines: CalculatedLine[];
@@ -51,6 +56,8 @@ export function calculateForm2441(input: Form2441Input): Form2441Result {
   const audit = new AuditTrail();
   const taxYear = input.taxYear ?? 2025;
   if (taxYear !== 2025 && taxYear !== 2026) throw new Error("Unsupported Form 2441 tax year");
+  if (taxYear === 2026 && input.priorYearExpenseCredit === undefined) throw new Error("2026 Form 2441 requires the actual prior-year expense worksheet credit, including known zero");
+  if (input.priorYearExpenseCredit !== undefined && (!input.priorYearExpenseCredit.isFinite() || input.priorYearExpenseCredit.isNegative())) throw new Error("Form 2441 prior-year expense credit must be finite and nonnegative");
   if (taxYear === 2026 && (!input.filingStatus || input.eligibilityConfirmed === undefined ||
     input.excludedDependentCareBenefits === undefined ||
     (input.filingStatus === "married_filing_jointly" && input.spouseEarnedIncome === undefined))) {
@@ -72,13 +79,18 @@ export function calculateForm2441(input: Form2441Input): Form2441Result {
   audit.record("Form 2441", "3", "Qualifying expenses", qualifyingExpenses,
     `min(max(0, gross expenses ${input.careExpenses} - excluded benefits ${benefits}), reduced cap ${expenseLimit})`);
 
-  // Line 4: Limited to earned income
+  // Printed lines 4/5 preserve the two source worksheet amounts. The limit is line 6.
   const taxpayerLimit = zeroFloor(input.earnedIncome);
   const spouseLimit = input.filingStatus === "married_filing_jointly" && input.spouseEarnedIncome !== undefined
     ? zeroFloor(input.spouseEarnedIncome) : taxpayerLimit;
   const earnedIncomeLimit = Decimal.min(qualifyingExpenses, taxpayerLimit, spouseLimit);
-  audit.record("Form 2441", "4", "Earned income limit", earnedIncomeLimit,
+  audit.record("Form 2441", "4", "Taxpayer earned income", input.earnedIncome, "Taxpayer worksheet income; source verification recorded separately");
+  audit.record("Form 2441", "5", "Spouse or repeated taxpayer earned income",
+    input.filingStatus === "married_filing_jointly" && input.spouseEarnedIncome !== undefined ? input.spouseEarnedIncome : input.earnedIncome,
+    "Separate spouse worksheet income for a joint return; otherwise line 4");
+  audit.record("Form 2441", "6", "Earned income limit", earnedIncomeLimit,
     `min(expenses, taxpayer income ${taxpayerLimit}, spouse limit ${spouseLimit})`);
+  audit.record("Form 2441", "7", "Adjusted gross income", input.agi, "Form 1040 line 11a");
 
   // Line 8: Credit percentage (35% - 1% per $2K or fraction thereof over $15K, floor 20%)
   // IRS: "If the result isn't a whole number, round it to the next higher whole number."
@@ -104,20 +116,29 @@ export function calculateForm2441(input: Form2441Input): Form2441Result {
 
   // Line 9: Credit amount
   const tentativeCredit = roundDollar(earnedIncomeLimit.times(percentage));
+  const priorCredit = input.priorYearExpenseCredit === undefined ? undefined : roundDollar(input.priorYearExpenseCredit);
+  const totalTentativeCredit = tentativeCredit.plus(priorCredit ?? 0);
   const limit = input.taxLiabilityLimit;
   if (limit !== undefined && (!limit.isFinite() || limit.isNegative())) throw new Error("Care credit tax-liability limit must be finite and nonnegative");
-  const credit = limit === undefined ? tentativeCredit : min(tentativeCredit, roundDollar(limit));
+  const credit = limit === undefined ? totalTentativeCredit : min(totalTentativeCredit, roundDollar(limit));
   audit.record("Form 2441", "9", "Dependent care credit", tentativeCredit,
     `${earnedIncomeLimit} × ${percentage.times(100)}%`);
+  audit.record("Form 2441", "9a", "Current-year tentative care credit", tentativeCredit, "Line 6 multiplied by line 8, rounded to whole dollars");
+  if (priorCredit !== undefined) {
+    audit.record("Form 2441", "9b", "Prior-year expense worksheet credit", priorCredit, "Actual completed Worksheet A credit, including confirmed zero");
+    audit.record("Form 2441", "9c", "Total tentative care credit", totalTentativeCredit, "Line 9a plus line 9b");
+  }
 
   if (limit !== undefined) {
     audit.record("Form 2441", "10", "Credit tax-liability limit", roundDollar(limit), "Completed credit-limit worksheet after foreign tax credit");
-    audit.record("Form 2441", "11", "Allowed dependent care credit", credit, "Lesser of lines 9 and 10");
+    audit.record("Form 2441", "11", "Allowed dependent care credit", credit,
+      priorCredit === undefined ? "Historical current-year-only result; prior-year expense facts are unverified" : "Lesser of lines 9c and 10");
   }
 
   return {
     qualifyingExpenses,
     earnedIncomeLimit,
+    earnedIncomeFactsVerified: taxYear === 2026 || input.earnedIncomeFactsVerified === true,
     creditPercentage: percentage,
     credit,
     lines: audit.getLines(),

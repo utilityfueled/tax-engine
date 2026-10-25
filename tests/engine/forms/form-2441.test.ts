@@ -229,10 +229,10 @@ describe("Form 2441", () => {
   });
 
   // ── Audit trail: all line IDs present ────────────────────
-  it("audit trail contains exactly lines 3, 4, 8, and 9 and no extras", () => {
+  it("audit trail contains all supported printed lines and the historical line9 alias", () => {
     const result = calculateForm2441(make());
     const lineIds = result.lines.map((l) => l.line);
-    expect(lineIds).toEqual(["3", "4", "8", "9"]);
+    expect(lineIds).toEqual(["3", "4", "5", "6", "7", "8", "9", "9a"]);
   });
 
   it("audit trail line values match returned result fields", () => {
@@ -244,7 +244,9 @@ describe("Form 2441", () => {
     }));
     const byLine = Object.fromEntries(result.lines.map((l) => [l.line, l.value]));
     expect(byLine["3"]).toEqual(result.qualifyingExpenses);
-    expect(byLine["4"]).toEqual(result.earnedIncomeLimit);
+    expect(byLine["4"].toString()).toBe("30000");
+    expect(byLine["5"].toString()).toBe("30000");
+    expect(byLine["6"]).toEqual(result.earnedIncomeLimit);
     expect(byLine["8"]).toEqual(result.creditPercentage);
     expect(byLine["9"]).toEqual(result.credit);
   });
@@ -395,8 +397,9 @@ describe("Form 2441", () => {
 
     const line4 = result.lines.find((l) => l.line === "4")!;
     expect(line4.form).toBe("Form 2441");
-    expect(line4.description).toBe("Earned income limit");
-    expect(line4.value.toNumber()).toBe(3000);
+    expect(line4.description).toBe("Taxpayer earned income");
+    expect(line4.value.toNumber()).toBe(30000);
+    expect(result.lines.find(line => line.line === "6")?.value.toNumber()).toBe(3000);
 
     const line8 = result.lines.find((l) => l.line === "8")!;
     expect(line8.form).toBe("Form 2441");
@@ -646,7 +649,7 @@ describe("Form 2441", () => {
 describe("Form 2441 2026", () => {
   const current = (overrides: Partial<Form2441Input> = {}): Form2441Input => make({
     taxYear: 2026, filingStatus: "single", eligibilityConfirmed: true,
-    excludedDependentCareBenefits: d("0"), ...overrides,
+    excludedDependentCareBenefits: d("0"), priorYearExpenseCredit: d("0"), ...overrides,
   });
 
   it("2026 rates follow both statutory phase-downs", () => {

@@ -37,9 +37,10 @@ lines:
     testRef: "tests/engine/forms/form-2441.test.ts::Form 2441 Line 3 - qualifying expenses capped at $3K for one"
 
   - line: "4"
-    description: "Earned income limit"
+    description: "Taxpayer earned income; separate from the line 6 limit"
     formula: |
-      max(0, min(qualifying expenses, taxpayer earned income, spouse earned income for MFJ)).
+      Actual taxpayer worksheet earned income, including permitted signed losses.
+      The minimum of expenses and separate spouse incomes belongs on line 6.
       For 2026 MFJ, combined household income is not a substitute for separate earned-income facts.
       Earned income = wages (Form 1040 Line 1z) + SE earned income.
       SE earned income = Schedule SE Line 3 (net SE earnings, pre-0.9235 multiplier)
@@ -54,6 +55,19 @@ lines:
       - "SE earned income reduced by deductible half of SE tax"
       - "SE losses reduce earned income base (not floored at zero)"
     testRef: "tests/engine/forms/form-2441.test.ts::Form 2441 Line 4 - earned income limit applied"
+
+  - line: "5"
+    description: "Separate spouse earned income for MFJ; otherwise line 4"
+    formula: "Actual spouse worksheet income for MFJ; line 4 for other filing statuses. Historical combined-income adapters are explicitly unverified and cannot populate individual-income PDF fields."
+    testRef: "tests/engine/forms/form-2441-audit-source.test.ts::care audit preserves separate earned incomes and tentative credit"
+  - line: "6"
+    description: "Earned-income-limited qualifying expenses"
+    formula: "max(0,min(line 3,line 4,line 5))"
+    testRef: "tests/engine/forms/form-2441-audit-source.test.ts::care audit preserves separate earned incomes and tentative credit"
+  - line: "7"
+    description: "Actual AGI"
+    formula: "Form 1040 line 11a; signed amount, never a reconstructed income proxy"
+    testRef: "tests/engine/forms/form-2441-audit-source.test.ts::care audit preserves separate earned incomes and tentative credit"
 
   - line: "8"
     description: "Credit percentage"
@@ -77,9 +91,22 @@ lines:
 
   - line: "9"
     description: "Dependent care credit"
-    formula: "Line 4 × Line 8 percentage"
+    formula: "Historical audit alias of line 9a: roundDollar(line 6 × line 8); retained for old audit consumers"
     irsRef: "Form 2441 Instructions, Line 9"
     testRef: "tests/engine/forms/form-2441.test.ts::Form 2441 Line 9 - credit amount calculated correctly"
+
+  - line: "9a"
+    description: "Current-year tentative credit before the tax-liability limit"
+    formula: "roundDollar(line 6 × line 8); do not substitute the tax-limited line 11"
+    testRef: "tests/engine/forms/form-2441-audit-source.test.ts::care audit preserves separate earned incomes and tentative credit"
+  - line: "9b"
+    description: "Actual prior-year expense worksheet credit"
+    formula: "Explicit completed Worksheet A credit, including known zero. Unknown remains absent in historical review output; 2026 requires an actual amount. This input does not compute or qualify the historical worksheet."
+    testRef: "tests/engine/forms/form-2441-audit-source.test.ts::care prior-year amount preserves unknown and exact zero"
+  - line: "9c"
+    description: "Tentative credit including actual prior-year worksheet credit"
+    formula: "line 9a + roundDollar(line 9b); absent from the printed review form when line 9b is unknown"
+    testRef: "tests/engine/forms/form-2441-audit-source.test.ts::care audit preserves separate earned incomes and tentative credit"
 
   - line: "10"
     description: "Nonrefundable credit tax-liability limit"
@@ -88,7 +115,7 @@ lines:
     testRef: "tests/engine/forms/form-2441.test.ts::care credit preserves tentative amount and applies actual tax limit"
   - line: "11"
     description: "Allowed dependent care credit"
-    formula: "min(line 9,line 10); unused credit is not refundable and has no carryforward"
+    formula: "min(line 9c,line 10); unused credit is not refundable and has no carryforward. Historical omission of prior-year facts retains the old current-year-only computation, explicitly unverified for complete export."
     irsRef: "Form 2441 line 11"
     testRef: "tests/engine/forms/form-2441.test.ts::care credit preserves tentative amount and applies actual tax limit"
 
@@ -107,6 +134,12 @@ edgeCases:
     notes: "IRC §21(e)(2) — MFS restriction enforced in federal.ts orchestrator"
 
 validation2026:
+  - rule: "official-printed-audit-lines"
+    description: "Refreshed 2026-10-25 against final 2025 Form2441 created 2025-03-18, page1 lines4-11 and instructions line9b. Copy unique finite audited values; reject scalar/source contradictions. Preserve unknown prior-year and separate-income facts in review output. No final2026 mapping is qualified."
+    sources:
+      - "https://www.irs.gov/pub/irs-pdf/f2441.pdf"
+      - "https://www.irs.gov/instructions/i2441"
+    testRef: "tests/engine/forms/form-2441-audit-source.test.ts::care audit preserves separate earned incomes and tentative credit"
   - rule: "explicit-year-and-eligibility"
     description: "Reject unsupported years, missing filing status/eligibility/excluded-benefit facts, and missing MFJ spouse income; MFS has no ordinary credit."
     testRef: "tests/engine/forms/form-2441.test.ts::2026 requires confirmed facts and separate spouse income"
