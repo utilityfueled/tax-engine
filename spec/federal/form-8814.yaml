@@ -44,7 +44,7 @@ lines:
     description: "Child's tax-exempt interest"
     formula: "Tax-exempt interest from child's Forms 1099-INT Box 8 (informational)"
     irsRef: "Form 8814 Instructions, Line 1b"
-    notes: "Not included in Line 4 total or the parent's Form1040line2a. Form8962 Worksheet1-2 separately includes child line1b plus min(line4,line5) when line4 exceeds the filing threshold; retain the actual dependent worksheet rather than counting child interest again in taxpayer MAGI. This follows the enumerated parent transfers in final8814 and the explicit8962 dependent instruction. Private-activity interest still requires its actual AMT adjustment source."
+    notes: "Not included in Line 4 total or the parent's Form1040line2a. Form8962 Worksheet1-2 separately includes child line1b plus min(line4,line5) when line4 exceeds the filing threshold; retain the actual dependent worksheet rather than counting child interest again in taxpayer MAGI. This follows the enumerated parent transfers in final8814 and the explicit8962 dependent instruction. The complete actual AMT source worksheet transfers specified private-activity preferences to parent Form6251 line2g; see form-8814-amt-sources.yaml."
     testRef: "tests/engine/forms/form-8814.test.ts::Form 8814 tax-exempt interest tracked but not in Line 4"
 
   - line: "1b-return"

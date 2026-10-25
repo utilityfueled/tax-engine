@@ -116,6 +116,7 @@ import { calculateForm4684 } from "./forms/form-4684.js";
 import { calculateForm4952 } from "./forms/form-4952.js";
 import { calculateForm8615 } from "./forms/form-8615.js";
 import { aggregateForm8814Results } from "./forms/form-8814.js";
+import { calculateForm8814AmtSources } from "./forms/form-8814-amt-sources.js";
 import { calculateScheduleF } from "./schedules/schedule-f.js";
 import { calculateForm461 } from "./forms/form-461.js";
 import type { AggregatedForm8814 } from "./forms/form-8814.js";
@@ -508,6 +509,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   if (form8814) {
     audit.merge(form8814.lines);
   }
+  const form8814AmtSources = calculateForm8814AmtSources(input.form8814 ?? [], year);
+  audit.merge(form8814AmtSources.lines);
 
   const form1099OID = calculateForm1099OID(input.form1099OID ?? [], year);
   audit.merge(form1099OID.lines);
@@ -2846,7 +2849,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
         ? deductionUsed === "itemized" ? form4952.line8.minus(form4952Amt.line8) : d("0")
         : undefined,
       depletionAdjustment: k1AmtDepletion,
-      specifiedPrivateActivityBondInterest: form1099OID.privateActivityBondInterest,
+      specifiedPrivateActivityBondInterest: form1099OID.privateActivityBondInterest.plus(form8814AmtSources.privateActivityBondInterest),
       dispositionAdjustment: k1AmtDisposition,
       depreciationAdjustment: k1AmtDepreciation,
       // IRC 56(b)(1)(E): restore the section 68 amount only when itemizing.

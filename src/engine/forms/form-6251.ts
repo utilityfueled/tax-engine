@@ -107,7 +107,7 @@ export function calculateForm6251(
   const specifiedPrivateActivityBondInterest = input.specifiedPrivateActivityBondInterest ?? new Decimal(0);
   if (!specifiedPrivateActivityBondInterest.isFinite() || specifiedPrivateActivityBondInterest.lt(0)) throw new Error("Specified private-activity bond interest must be finite and nonnegative");
   audit.record("Form 6251", "2g", "Specified private activity interest", specifiedPrivateActivityBondInterest,
-    "Actual source-identified tax-exempt OID and stated interest after matching adjustments");
+    "Actual source-identified private activity interest and child Form8814 preferences after matching adjustments");
 
   // Line 3: Other AMT adjustments
   const otherAdjustments = input.otherAdjustments ?? new Decimal(0);

@@ -13,6 +13,15 @@ import {
 } from "@/pdf/fill-form-8814.js";
 import { fillReturn } from "@/pdf/fill-return.js";
 import { simpleW2Fixture } from "../fixtures/simple-w2.js";
+import type { Form8814ChildInput } from "@/models/inputs.js";
+
+// These synthetic PDF fixtures explicitly report no private activity interest.
+function syntheticExemptSources(amount: string, sourceId: string): Form8814ChildInput["amtSources"] {
+  return {
+    taxYear: 2025, allStatementsConfirmed: true, otherwiseAllowableDeduction: "0",
+    statements: [{ sourceId, form: "1099-INT", taxExemptInterest: amount, specifiedPrivateActivityBondInterest: "0" }],
+  };
+}
 
 async function makeOutputDir() {
   return mkdtemp(join(tmpdir(), "tax-engine-8814-"));
@@ -26,6 +35,7 @@ describe("Form 8814 packet reference summary", () => {
         {
           taxableInterest: "1800",
           taxExemptInterest: "25",
+          amtSources: syntheticExemptSources("25", "child-1-bank"),
           ordinaryDividends: "900",
           qualifiedDividends: "300",
           capitalGainDistributions: "300",
@@ -33,6 +43,7 @@ describe("Form 8814 packet reference summary", () => {
         {
           taxableInterest: "2000",
           taxExemptInterest: "5",
+          amtSources: syntheticExemptSources("5", "child-2-bank"),
           ordinaryDividends: "800",
           qualifiedDividends: "0",
           capitalGainDistributions: "0",
@@ -169,6 +180,7 @@ describe("Form 8814 packet reference summary", () => {
           {
             taxableInterest: "1800",
             taxExemptInterest: "25",
+            amtSources: syntheticExemptSources("25", "child-1-bank"),
             ordinaryDividends: "900",
             qualifiedDividends: "300",
             capitalGainDistributions: "300",
@@ -203,6 +215,7 @@ describe("Form 8814 packet reference summary", () => {
           {
             taxableInterest: "1200",
             taxExemptInterest: "50",
+            amtSources: syntheticExemptSources("50", "child-1-bank"),
             ordinaryDividends: "100",
             qualifiedDividends: "0",
             capitalGainDistributions: "0",

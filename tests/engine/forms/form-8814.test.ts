@@ -348,6 +348,10 @@ describe("Form 8814 — Parents' Election To Report Child's Interest and Dividen
         ordinaryDividends: "0",
         qualifiedDividends: "0",
         capitalGainDistributions: "0",
+        amtSources: {
+          taxYear: 2025, allStatementsConfirmed: true, otherwiseAllowableDeduction: "0",
+          statements: [{ sourceId: "synthetic-child-exempt-interest", form: "1099-INT", taxExemptInterest: "500", specifiedPrivateActivityBondInterest: "0" }],
+        },
       }]));
 
       // Find the Line 2a audit entry

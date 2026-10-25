@@ -4250,13 +4250,28 @@ export const Form8814ChildSchema = z.object({
   /** Line 1a: Child's taxable interest (Forms 1099-INT, 1099-OID) */
   taxableInterest: optionalDecimal,
   /** Line 1b: Child's tax-exempt interest (informational, not in Line 4 total) */
-  taxExemptInterest: optionalDecimal,
+  taxExemptInterest: decimal,
   /** Line 2a: Child's ordinary dividends (Forms 1099-DIV Box 1a) */
   ordinaryDividends: optionalDecimal,
   /** Line 2b: Child's qualified dividends (subset of 2a, for proportional allocation) */
   qualifiedDividends: optionalDecimal,
   /** Line 3: Child's capital gain distributions (Forms 1099-DIV Box 2a) */
   capitalGainDistributions: optionalDecimal,
+  /** Complete actual exempt-interest statements for the child's AMT preference. */
+  amtSources: z.object({
+    taxYear: z.union([z.literal(2025), z.literal(2026)]),
+    allStatementsConfirmed: z.literal(true),
+    statements: z.array(z.object({
+      sourceId: z.string().trim().min(1),
+      form: z.enum(["1099-INT", "1099-DIV"]),
+      taxExemptInterest: decimal,
+      /** Actual INT box9 or DIV box13; never inferred from exempt interest. */
+      specifiedPrivateActivityBondInterest: decimal,
+    })),
+    otherwiseAllowableDeduction: decimal,
+    deductionSourceReference: z.string().trim().min(1).optional(),
+    deductionAllowanceAndNoDuplicationConfirmed: z.literal(true).optional(),
+  }).optional(),
 });
 export type Form8814ChildInput = z.infer<typeof Form8814ChildSchema>;
 
