@@ -49,3 +49,30 @@ the IRS basis chart refigures the prior line 23 without the line 20 homebuyer
 amount, while the current FIFO consumes contribution basis from line 21 after
 that amount. This was not introduced by the rounding change. It remains an
 internal source-history task, separate from the ordinary traditional IRA route.
+
+## Roth history and repayment correction
+
+Official instructions refreshed 2026-10-25 identify two separate existing errors.
+The next-year regular basis worksheet uses prior line 19; the conversion chart
+refigures prior line 23 without the homebuyer amount. Current-year homebuyer tax
+relief therefore cannot leave that withdrawn basis available for a later year.
+The line 25c worksheet also subtracts actual qualifying repayments directly from
+total taxable distributions after the disaster exclusion. Its published second
+example gives 5,000 taxable after a 5,000 repayment, while the old proportional
+cap gave 6,000 and an incorrect 1,000 later basis addition.
+
+The new spec preceded four failing literal cases; the corrected direct and
+adjacent suites pass 614 cases across eight files. The original incorrect
+partial-repayment expectation is corrected with the worksheet citation and
+its same source/exception assertions retained. The published first-example
+fixture now records its actual 5,000 eligible distribution rather than treating
+all 12,500 as eligible. Logs: `form8606-roth-history-red.log`,
+`form8606-roth-history-integration-first.log`, `form8606-roth-history-green.log`
+under `.local/upgrade-evidence/`. Immutable tree `dc0edd0df53147f11fedd3695afea8491500b5e8` passes 696 cases
+across 11 files, root types, all 4,486 spec references and lint with zero errors
+(17 warnings). Separate source review passes 220 cases and an independent
+canonical probe: repayments 3,000/5,000 produce income 7,000/5,000, retained
+exception 1,000/0, additional tax 600/500 and no false basis carry. Logs:
+`roth-history-dc0e-*`, `federal-review-roth-history.log` and
+`federal-review-roth-canonical.log`. No human qualification or wider source
+intake is claimed.

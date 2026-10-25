@@ -311,7 +311,7 @@ describe("Form 8606 traditional IRA basis allocation", () => {
     rothDistributions: "12500",
     rothContributionBasis: "2500",
     rothConversionBasis: "0",
-    rothRepaymentEligibleDistributions: "12500",
+    rothRepaymentEligibleDistributions: "5000",
     rothRepaymentDistributionExceptionNumber: "19",
     rothRepaymentsWithin3YearWindow: "3000",
   });
@@ -627,25 +627,27 @@ describe("Form 8606 traditional IRA basis allocation", () => {
     expect(rothOverRepayment.taxableRothDistributions.toNumber()).toBe(0);
   });
 
-  it("Form 8606 Line 25c - IRS 2025 Example 2 leaves $7,000 taxable after a $3,000 Roth repayment", () => {
+  it("Form 8606 Line 25c - IRS 2025 Example 1 leaves $7,000 taxable after a $3,000 Roth repayment", () => {
     expect(irsRothRepaymentExample.line19.toNumber()).toBe(12500);
     expect(irsRothRepaymentExample.line22.toNumber()).toBe(2500);
     expect(irsRothRepaymentExample.line25a.toNumber()).toBe(10000);
-    expect(irsRothRepaymentExample.line25cRepaymentEligibleTaxableShare.toNumber()).toBe(10000);
+    expect(irsRothRepaymentExample.line25cRepaymentEligibleTaxableShare.toNumber()).toBe(4000);
     expect(irsRothRepaymentExample.line25cRepaymentReduction.toNumber()).toBe(3000);
     expect(irsRothRepaymentExample.line25cBasisAdjustment.toNumber()).toBe(0);
     expect(irsRothRepaymentExample.line25c.toNumber()).toBe(7000);
   });
 
-  it("Form 8606 Line 25c - Roth repayments cannot offset taxable amounts outside the eligible worksheet share", () => {
+  it("Form 8606 Line 25c - qualifying repayments reduce the total worksheet tax base", () => {
+    // IRS worksheet lines2–5 subtract the actual qualifying repayment directly;
+    // the separate Form5329 category share is not a cap on that subtraction.
     expect(partialEligibleRothRepaymentReduction.line21.toNumber()).toBe(15000);
     expect(partialEligibleRothRepaymentReduction.line25a.toNumber()).toBe(10000);
     expect(partialEligibleRothRepaymentReduction.line25cRepaymentEligibleTaxableShare.toNumber()).toBe(2000);
-    expect(partialEligibleRothRepaymentReduction.line25cRepaymentReduction.toNumber()).toBe(2000);
-    expect(partialEligibleRothRepaymentReduction.line25cBasisAdjustment.toNumber()).toBe(1000);
+    expect(partialEligibleRothRepaymentReduction.line25cRepaymentReduction.toNumber()).toBe(3000);
+    expect(partialEligibleRothRepaymentReduction.line25cBasisAdjustment.toNumber()).toBe(0);
     expect(partialEligibleRothRepaymentReduction.line25cRepaymentEligibleRemainingTaxableShare.toNumber()).toBe(0);
-    expect(partialEligibleRothRepaymentReduction.line25c.toNumber()).toBe(8000);
-    expect(partialEligibleRothRepaymentReduction.taxableRothDistributions.toNumber()).toBe(8000);
+    expect(partialEligibleRothRepaymentReduction.line25c.toNumber()).toBe(7000);
+    expect(partialEligibleRothRepaymentReduction.taxableRothDistributions.toNumber()).toBe(7000);
 
     const line25c = partialEligibleRothRepaymentReduction.lines.find((line) => line.form === "Form 8606" && line.line === "25c");
     expect(String(line25c?.inputs["Line 25c worksheet repayments"])).toBe("3000");

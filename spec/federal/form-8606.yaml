@@ -4,6 +4,10 @@ taxYear: 2025
 irsReference: "https://www.irs.gov/instructions/i8606"
 
 notes: |
+  The current Roth history and repayment corrections are specified in
+  form-8606-roth-history.yaml: next-year basis uses line19 before homebuyer
+  relief; the line25c worksheet subtracts qualifying repayments directly from
+  its total taxable amount, without a proportional eligible-taxable-share cap.
   Whole-dollar calculation follows Form1040 instructions, Rounding Off to Whole
   Dollars: retain cents while combining source amounts for one monetary line,
   round that line once, and use completed lines in downstream calculations.
@@ -329,7 +333,7 @@ lines:
 
   - line: "22"
     description: "Basis in regular Roth IRA contributions available for recovery"
-    formula: "When a per-year Roth contribution basis chart (rothContributionBasisByYear) is provided, sum each year's remaining basis (contributionAmount minus previouslyWithdrawnTaxFree, floored at $0) to compute the total regular Roth contribution basis; otherwise use the validated single rothContributionBasis input. Then add any prior-year Line 25c worksheet Line 5 carryforward. When distributions consume contribution basis (Line 21 exceeds Line 22), deplete the per-year chart in FIFO order (oldest contribution year first) and output the updated chart as rothContributionBasisByYearCarryforward for next-year automated basis tracking."
+    formula: "When a per-year Roth contribution basis chart (rothContributionBasisByYear) is provided, sum each year's remaining basis (contributionAmount minus previouslyWithdrawnTaxFree, floored at $0) to compute the total regular Roth contribution basis; otherwise use the validated single rothContributionBasis input. Then add any prior-year Line 25c worksheet Line 5 carryforward. For next-year history, consume min(Line 19, Line 22) in FIFO order (oldest contribution year first), without subtracting Line 20 homebuyer relief and output the updated chart as rothContributionBasisByYearCarryforward for next-year automated basis tracking."
     irsRef: "Form 8606 Instructions, Line 22"
     inputs:
       - "Per-year Roth contribution basis chart (rothContributionBasisByYear): array of {year, contributionAmount, previouslyWithdrawnTaxFree}"
@@ -340,7 +344,7 @@ lines:
       - "Single contribution year with partial basis recovery — only that year's record is updated"
       - "Multiple contribution years with FIFO depletion — oldest contribution year is exhausted first before moving to the next"
       - "All contribution basis exhausted — all per-year records show full withdrawal, remaining distributions test against conversion basis on Line 24"
-      - "No distributions touch contribution basis (Line 21 is zero) — all per-year records carry forward unchanged"
+      - "No distributions touch contribution basis (Line 19 is zero) — all per-year records carry forward unchanged"
       - "Backward compatibility: single rothContributionBasis input still works and produces the same result as before"
       - "Both inputs provided: rothContributionBasisByYear takes precedence over rothContributionBasis"
       - "Prior-year Line 25c basis adjustment is added on top of the chart-computed or single-input basis"
@@ -358,7 +362,7 @@ lines:
 
   - line: "24"
     description: "Basis in Roth conversions and rollovers from qualified plans"
-    formula: "When per-year conversion basis records are provided (rothConversionBasisByYear), compute the sum of each year's remaining basis (conversionAmount minus previouslyRecoveredTaxFree) across all conversion years; otherwise use the validated single rothConversionBasis input. After Part III determines how much conversion basis is consumed in the current year (the lesser of Line 23 and Line 24), deplete the per-year records in FIFO order (oldest conversion year first) so each year's cumulative recovery is updated for the next year's carryforward chart."
+    formula: "When per-year conversion basis records are provided (rothConversionBasisByYear), compute the sum of each year's remaining basis (conversionAmount minus previouslyRecoveredTaxFree) across all conversion years; otherwise use the validated single rothConversionBasis input. For next-year history, determine conversion basis consumption as the lesser of max(0, Line 19 minus Line 22) and Line 24, refiguring Line 23 without Line 20 as the IRS chart footnote requires, and deplete the per-year records in FIFO order (oldest conversion year first) so each year's cumulative recovery is updated for the next year's carryforward chart."
     irsRef: "Form 8606 Instructions, Line 24"
     inputs:
       - "Per-year Roth conversion/rollover basis chart (rothConversionBasisByYear): array of {year, conversionAmount, previouslyRecoveredTaxFree}"
@@ -403,7 +407,7 @@ lines:
 
   - line: "25c"
     description: "Taxable Roth IRA distributions reported on Form 1040 Line 4b"
-    formula: "Line 25a - Line 25b, reduced by the 2025 Line 25c worksheet repayments of qualified birth or adoption, emergency personal expense, domestic abuse, and terminal illness distributions made within the 3-year repayment period only when validated Line 21 distributions are eligible for those categories, limiting the worksheet repayment amount to the eligible Line 21 distributions, floored at $0, with any excess repayment above the eligible taxable share carried to the next year's Line 22 basis; when no validated Line 21 distributions are eligible for the Line 25c worksheet, do not complete the worksheet and keep Line 25c at Line 25a - Line 25b with no next-year Line 22 basis adjustment; when validated input identifies Line 21 distributions eligible for those Line 25c worksheet categories and a single applicable Form 5329 exception number, preserve the remaining taxable share and that exception number for downstream Form 5329 Line 2 reporting"
+    formula: "Line25c worksheet2 = Line25a - Line25b; worksheet3 = actual qualifying repayments within three years, limited to the supported eligible gross distributions; Line25c = max(0, worksheet2 - worksheet3); next-year Line22 adjustment = max(0, worksheet3 - worksheet2). No proportional eligible-taxable-share cap applies to repayment subtraction."
     irsRef: "Form 8606 Instructions, Line 25c"
     inputs:
       - "Form 8606 Line 25a"
@@ -411,9 +415,9 @@ lines:
       - "Line 21 distributions eligible for the Line 25c repayment worksheet"
       - "Qualified repayments entered on the 2025 Line 25c worksheet"
       - "Validated Form 5329 exception number for the supported Line 25c repayment category, if known"
-    notes: "The worksheet subtracts qualifying repayments directly from the taxable amount after the Line 25b disaster exclusion, but only when the taxpayer both reported supported repayment-eligible Roth distributions on Line 21 and repaid those distributions within the 3-year period. If no validated Line 21 distributions are eligible for the worksheet, the instructions say not to complete it, so repayment dollars cannot reduce unrelated Roth taxable income or create a next-year Line 22 basis adjustment by themselves. If qualifying repayments exceed the eligible taxable share, the excess becomes the next-year Line 22 adjustment described on worksheet Line 5. When the taxpayer validates that only a portion of the remaining Line 21 Roth distributions belongs to one supported Form 5329 category, the engine first allocates that category's taxable share through the same Part III ordering rules, caps the worksheet repayment amount at that eligible gross distribution subtotal, and then limits the current-year Line 25c repayment reduction to the eligible taxable share. That prevents repayments from offsetting unrelated taxable Roth distributions or creating a next-year basis adjustment larger than the qualifying Roth distribution itself. The engine preserves exception numbers 19, 20, 22, 23, or 99 so the downstream Form 5329 audit trail can distinguish qualified birth or adoption, terminal illness, domestic abuse, emergency personal expense, or mixed-category treatment. The regression suite also locks both the 2025 instructions' second repayment example, where a $12,500 Roth distribution with $2,500 contribution basis and a $3,000 repayment leaves $7,000 taxable on Line 25c, and the no-eligible-distributions boundary where the Line 25c worksheet must stay unused."
+    notes: "The refreshed official worksheet and examples subtract qualifying repayments directly from total taxable Roth distributions after disaster exclusion. Preserve the separate eligible-category allocation only for Form5329 exception tracing; it does not cap Line25c repayment subtraction. Eligibility and actual repayment sources remain required. See form-8606-roth-history.yaml for published examples1–4 and next-year source history."
     edgeCases:
       - "Repayments cannot reduce current-year taxable Roth distributions below $0"
       - "Repayments above the current-year taxable amount carry into the next year's Line 22 basis instead of disappearing"
-      - "When only part of the Line 21 Roth distributions qualifies for the repayment worksheet, both the worksheet repayment amount and the Line 25c reduction are capped at that eligible distribution branch, and only the branch's nontaxable remainder can become next-year Line 22 basis"
+      - "Partial eligible distributions cap actual repayments by eligible gross; the repayment tax reduction is limited by total worksheet taxable income, not a proportional category tax allocation."
     testRef: "tests/engine/forms/form-8606.test.ts::Form 8606 Line 25c - Roth repayment worksheet reduces taxable income and carries excess into next-year basis"

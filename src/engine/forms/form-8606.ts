@@ -338,12 +338,11 @@ export function calculateForm8606(input: Form8606Input): Form8606Result {
       Decimal.min(line25cRepaymentEligibleTaxableShare, rothRepaymentsWithin3YearWindow)
     )
   );
-  const line25cRepaymentReductionBase = rothRepaymentEligibleDistributions.greaterThan(0)
-    ? line25cRepaymentEligibleTaxableShare
-    : line25cBase;
+  // Unlike the traditional line15c worksheet, Roth worksheet line3 subtracts
+  // actual qualifying repayments from all of worksheet line2. The separate
+  // eligible-category share remains a Form5329 trace, not a repayment tax cap.
   const line25cRepaymentReduction = Decimal.min(
     line25cBase,
-    line25cRepaymentReductionBase,
     rothRepaymentsWithin3YearWindow
   );
   const line25cBasisAdjustment = Decimal.max(
@@ -353,9 +352,9 @@ export function calculateForm8606(input: Form8606Input): Form8606Result {
   const line25c = Decimal.max(new Decimal(0), line25cBase.minus(line25cRepaymentReduction));
 
   // FIFO depletion of per-year contribution basis chart
-  // Contribution basis consumed = min(Line 21, Line 22) — the amount of distributions
-  // absorbed by regular Roth contribution basis before conversion basis is tested.
-  const contributionBasisConsumed = Decimal.min(line21, line22);
+  // The next year's line22 worksheet subtracts this year's line19. Homebuyer
+  // relief affects current tax but does not restore withdrawn contribution basis.
+  const contributionBasisConsumed = Decimal.min(line19, line22);
   const rothContributionBasisByYearCarryforward: RothContributionBasisYearEntry[] | undefined =
     sortedContribChart !== undefined
       ? (() => {
@@ -375,7 +374,8 @@ export function calculateForm8606(input: Form8606Input): Form8606Result {
       : undefined;
 
   // FIFO depletion of per-year conversion basis chart
-  const conversionBasisConsumed = Decimal.min(line23, line24);
+  // The conversions basis chart refigures prior line23 without line20.
+  const conversionBasisConsumed = Decimal.min(Decimal.max(new Decimal(0), line19.minus(line22)), line24);
   const rothConversionBasisByYearCarryforward: RothConversionBasisYearEntry[] | undefined =
     sortedChart !== undefined
       ? (() => {
