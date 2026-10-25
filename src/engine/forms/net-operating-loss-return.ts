@@ -20,7 +20,7 @@ export interface NolIncomeContext {
   medicalDeduction: Decimal;
   charitableDeduction: Decimal;
   charitableCarryforward: Decimal;
-  deductionUsed: "standard" | "itemized";
+  deductionUsed: "standard" | "itemized" | "nonitemized";
   currentExcessBusinessLoss: Decimal;
   seniorDeduction: Decimal;
   capitalLossModification: Decimal;

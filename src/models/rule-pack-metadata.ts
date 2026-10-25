@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.83",
+    ruleVersion: "2025.84",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/pub/irs-pdf/p6196.pdf", section: "Explicit2026 nonitemization with actual zero standard entitlement, current eligible cash under170(p), and final selected-deduction audit", revision: "October2026 Publication6196 and IRC170(p)/63(c)(6); historical elections retained, actual source/UI/PDF boundaries verified, positive carry/NOL and human qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://uscode.house.gov/us/usc/119-118/t26/s62/", section: "Section62(d)(2) actual recipient educator reduction for verified earnings excluded from fully qualified in-kind529 benefits; section529(c)(3)(A)/(B)(i)/(iv)", revision: "Final2025 Schedule1line11 and historical Pub529 earnings explanation; documented statutory interpretation, actual source/recipient/year conservation, partial allocations and human qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/irb/2014-33_IRB", section: "Sections3/5.02 source-bound alternative after ordinary health refiguring renews actual2026 eligibility; fresh final AGI-sensitive claims and premium conservation", revision: "Publication974 optional-method authority and enacted2026 full advance repayment;2025 ordinary behavior retained, derived examples are not independent qualification, full2026 gates remain closed", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i8839", section: "Actual foreign-adoption prior-benefit worksheet1-9, finality-year identity and original employer allocations; physical31 distinct from signed1040line1f", revision: "Final2025 worksheet; signed prior-exclusion reporting continues the explicit2023 instruction as a documented interpretation; original cents and physical30 MAGI addbacks retained, independent qualification pending", retrievedAt: "2026-10-25" },
@@ -127,11 +128,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.79-law-integration-draft",
+    ruleVersion: "2026.80-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/pub/irs-pdf/p6196.pdf", section: "Explicit2026 nonitemization with actual zero standard entitlement, current eligible cash under170(p), and final selected-deduction audit", revision: "October2026 Publication6196 and IRC170(p)/63(c)(6); historical elections retained, actual source/UI/PDF boundaries verified, positive carry/NOL and human qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://uscode.house.gov/us/usc/119-118/t26/s62/", section: "Section62(d)(2) actual recipient educator reduction for verified earnings excluded from fully qualified in-kind529 benefits; section529(c)(3)(A)/(B)(i)/(iv)", revision: "Final2025 Schedule1line11 and historical Pub529 earnings explanation; documented statutory interpretation, actual source/recipient/year conservation, partial allocations and human qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/irb/2014-33_IRB", section: "Sections3/5.02 source-bound alternative after ordinary health refiguring renews actual2026 eligibility; fresh final AGI-sensitive claims and premium conservation", revision: "Publication974 optional-method authority and enacted2026 full advance repayment;2025 ordinary behavior retained, derived examples are not independent qualification, full2026 gates remain closed", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i8839", section: "Actual indexed foreign-adoption prior-benefit worksheet and separate current/prior sources with household allocation conservation", revision: "Final2025 worksheet and documented2023 signed-reporting continuation with indexed2026 limits; final2026 full-return and filing gates remain closed, independent qualification pending", retrievedAt: "2026-10-25" },

@@ -405,6 +405,7 @@ export async function fillReturn(
   options: FillReturnOptions,
 ): Promise<FillReturnResult> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear, options.purpose);
+  if (input.deductionElection === "nonitemized" || result.deductionUsed === "nonitemized") throw new Error("Nonitemized election is available only for 2026 and has no supported review PDF mapping");
   const charitableReview = input.charitableCarryoverSources
     ? options.charitableReview ?? prepareCharitableReview(input) : undefined;
   const adoptionReview = hasHistoricalAdoptionSources(input)

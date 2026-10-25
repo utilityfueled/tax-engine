@@ -43,7 +43,7 @@ export function buildGuidedMortgageInputs(data: MortgageDeductionData | undefine
   const root = data?.mortgageWorksheet;
   const recoverySources = buildGuidedMortgageRecoveries(root, data?.mortgageEntries ?? [], taxYear, filingStatus, spouse);
   const recoveryPresent = root?.priorYearInterestRecoveriesPresent === true;
-  if (data?.method === "standard" && data.mortgageEntries?.some(entry => amountError(entry.refundOfOverpaidInterest, "actual earlier-year interest refund"))) throw new Error("The earlier-year interest refund on a saved mortgage source is unknown; confirm the actual source before excluding possible recovery income.");
+  if (data && data.method !== "itemized" && data.mortgageEntries?.some(entry => amountError(entry.refundOfOverpaidInterest, "actual earlier-year interest refund"))) throw new Error("The earlier-year interest refund on a saved mortgage source is unknown; confirm the actual source before excluding possible recovery income.");
   if (data?.method === "itemized" && !data.mortgageEntries?.length && hasEnteredAmount(data.mortgageInterest) && parseGuidedCurrency(money(data.mortgageInterest, "saved mortgage interest")).gt(0)) throw new Error("Enter actual mortgage source records to reconcile the saved interest total.");
   if (!data || (!recoveryPresent && (data.method !== "itemized" || !data.mortgageEntries?.length))) return { form1098: [] };
   if ((taxYear !== 2025 && taxYear !== 2026) || !filingStatus) throw new Error("Confirm the actual return year and filing status for the mortgage worksheet.");

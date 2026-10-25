@@ -1,0 +1,53 @@
+form: "Nonitemized charitable election"
+fullName: "Actual 2026 nonitemization without standard-deduction entitlement"
+taxYear: 2026
+irsReference: "https://www.irs.gov/pub/irs-pdf/p6196.pdf"
+retrievedAt: "2026-10-25"
+reviewStatus: "independent-review-pending"
+notes: |
+  Section170(p) and IRS Publication6196 distinguish not electing to itemize
+  from eligibility for the standard deduction. This package adds an explicit
+  nonitemized choice for an actual2026 taxpayer whose completed standard
+  deduction worksheet establishes ineligibility. It neither grants a standard
+  deduction nor changes historical2025 choices or automatic selection.
+  Actual charitable qualification/date/amount sources remain required. Prior
+  charity and NOL transition methods retain their separate guards. Final2026
+  calculation and export gates remain closed.
+lines:
+  - line: "actual-election"
+    description: "Explicit nonitemization with zero standard entitlement"
+    formula: "For2026 election nonitemized, require actual standard eligibility false and standard amount0; return deductionUsed nonitemized, deductionAmount0, and the separately calculated section170(p) candidate. Standard-eligible taxpayers retain the existing standard election;2025 rejects the new choice."
+    testRef: "tests/engine/forms/federal-deduction-selection.test.ts::requires actual ineligibility and preserves distinct deduction choices"
+  - line: "canonical"
+    description: "Actual current cash deduction without a standard or itemized amount"
+    formula: "MFS actual spouse itemizes, cash1500,base75000: standard0,line12zero,section170(p)1000,additional deductions1000. Supporting organization,DAF or unqualified recipient gets0; missing recipient or standard eligibility facts reject. Currentcash only; no prior gift becomes current cash."
+    irsRef: "IRC170(p),63(c)(6); Publication6196(10-2026)"
+    testRef: "tests/engine/federal-nonitemized-charity.test.ts::claims only actual current eligible cash when the standard deduction is unavailable"
+  - line: "year-and-nol-boundaries"
+    description: "Retain unavailable year and carry methods"
+    formula: "Unknown/2025 nonitemized choice rejects. The new election does not open general2026 calculation/export, prior charity carry/floor or current/prior NOL coordination. A positive current itemized-candidate carry also requires its separate nonitemizer carry method; do not transfer an itemized floor increase to the final return. The section170(p) worksheet retains its 60-percent cap. No zero standard amount may be relabeled an allowed standard deduction."
+    testRef: "tests/engine/federal-nonitemized-charity.test.ts::preserves historical elections source facts and unsupported carry methods"
+  - line: "final-selection-audit"
+    description: "Record the choice after all itemized limitations"
+    formula: "Emit one deduction-selection audit matching the final method and amount after the section68 limitation; an automatic switch from itemized to standard must not retain the preliminary itemized amount."
+    testRef: "tests/engine/federal-standard-deduction.test.ts::honors the deduction election before and after the itemized limitation"
+  - line: "guided"
+    description: "Actual election and eligibility facts survive the guided boundary"
+    formula: "Collect the explicit2026 choice; require actual completed standard-ineligibility facts and current recipient eligibility. Preserve unknown/false. Review labels no standard or itemized deduction, and bridge retains original donation facts without converting the election to standard."
+    testRef: "tests/guided-interview/guided-nonitemized-charity.test.ts::preserves the explicit election and rejects contradictory or missing eligibility"
+  - line: "interaction"
+    description: "Source collection remains available for nonitemizers"
+    formula: "The2026 control exposes current donation sources and earlier-year mortgage recovery records. It does not display a standard amount as entitlement or erase saved itemized sources. Historical2025 cannot select the new method."
+    testRef: "tests/apps/web/nonitemized-charity-interactions.test.tsx::collects a nonitemized election without displaying a standard deduction entitlement"
+  - line: "recovery-and-review"
+    description: "Preserve possible income and the actual election in review"
+    formula: "A nonitemizer must still reconcile actual prior-year mortgage interest refunds; unknown refunds reject. Review retains the no-standard/no-itemized label rather than presenting a standard amount as entitlement."
+    testRef: "tests/guided-interview/guided-nonitemized-charity.test.ts::retains actual recovery source requirements for the new election"
+  - line: "state-and-export"
+    description: "Separate federal deduction choice from state law and export qualification"
+    formula: "Preview/result retains nonitemized with federal deduction0; The Ohio source adapter receives actual federal AGI rather than a fabricated standard deduction; state year gates remain separate. Unmocked2026 calculation/export remains unavailable;2025 packet paths reject a forged nonitemized result."
+    testRef: "tests/pdf/nonitemized-charity-boundary.test.ts::keeps the new election out of unsupported historical and future export paths"
+  - line: "saved-source-browser"
+    description: "Retain the explicit election and actual donation records"
+    formula: "Desktop and mobile controls save and reopen the nonitemized choice, exact cash cents and actual recipient answers. Clearing an answer retains unknown. No private source body is transmitted and the actual2026 calculation boundary remains closed."
+    testRef: "apps/web/tests/nonitemized-charity.spec.ts::preserves an explicit nonitemized election and current cash facts"

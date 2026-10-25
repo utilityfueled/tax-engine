@@ -48,6 +48,13 @@ describe("Federal standard deduction integration", () => {
     const elected = calculateFederalTax(TaxYearInputSchema.parse({ ...highIncome, deductionElection: "itemized" }));
     expect(elected.deductionUsed).toBe("itemized");
     expect(elected.deductionAmount.toString()).toBe("15608"); //16500-round(16500*2/37)
+    // Spec: nonitemized-charitable-election.yaml, final-selection-audit.
+    for (const result of [automatic, elected]) {
+      const selection = result.allLines.filter(line => line.form === "Deduction Selection" && line.line === "method");
+      expect(selection).toHaveLength(1);
+      expect(selection[0]?.value.toFixed()).toBe(result.deductionAmount.toFixed());
+      expect(selection[0]?.formula).toContain(result.deductionUsed);
+    }
     const required = calculateFederalTax(TaxYearInputSchema.parse({ ...highIncome,
       standardDeductionFacts: { ...facts, shortTaxYear: true } }));
     expect(required.deductionUsed).toBe("itemized");

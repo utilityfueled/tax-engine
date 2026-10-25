@@ -116,7 +116,7 @@ export interface TaxReturnResult {
   standardDeductionWorksheet?: import("@/engine/forms/standard-deduction.js").StandardDeductionResult;
   itemizedDeductions: Decimal;
   itemizedDeductionReduction?: Decimal;
-  deductionUsed: "standard" | "itemized";
+  deductionUsed: "standard" | "itemized" | "nonitemized";
   deductionAmount: Decimal;
   taxableIncome: Decimal;
 

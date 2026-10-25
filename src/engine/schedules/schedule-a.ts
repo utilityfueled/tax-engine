@@ -101,7 +101,7 @@ export interface ScheduleAResult {
   educatorExpenseDeduction: Decimal; // 2026 section67 actual costs not deducted above the line
   otherItemizedDeductions: Decimal; // Line16
   totalItemized: Decimal; // Line 17
-  nonitemizerCharitableDeduction: Decimal; // 2026 candidate; federal flow applies only when standard deduction selected
+  nonitemizerCharitableDeduction: Decimal; // 2026 candidate; federal flow applies only under actual nonitemization
   /** Excess charitable contributions that carry forward to next year (IRC §170(d)) */
   charitableCarryforward: Decimal;
   /** Per-year remaining carryforward after FIFO reconciliation with 5-year expiration */

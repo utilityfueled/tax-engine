@@ -12,7 +12,7 @@ import { calculateForeignTaxOrdinaryAllocation } from './foreign-tax-ordinary-al
 export interface ForeignTaxHypotheticalContext {
   taxYear: number; filingStatus: FilingStatus;
   totalIncome: Decimal; agi: Decimal; totalDeductions: Decimal; seniorDeduction: Decimal;
-  deductionUsed: 'standard'|'itemized'; deductionAmount: Decimal; incomeTax: Decimal;
+  deductionUsed: 'standard'|'itemized'|'nonitemized'; deductionAmount: Decimal; incomeTax: Decimal;
   ordinaryIncomeOnly: boolean;
   scheduleA: { medical:Decimal; incomeOrSalesTaxes:Decimal; realPropertyTaxes:Decimal; personalPropertyTaxes:Decimal; saltDeduction:Decimal; salesTaxElected:boolean;
     mortgageInterest:Decimal; investmentInterest:Decimal; charitableContributions:Decimal; otherDeductions:Decimal; itemizedReduction:Decimal };

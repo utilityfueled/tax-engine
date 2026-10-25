@@ -55,7 +55,7 @@ export function SectionDeductions({
           standard amount. We&apos;ll help you compare.
         </p>
 
-        {standardAmount > 0 && (
+        {standardAmount > 0 && current.method !== "nonitemized" && (
           <div className="guided-deduction-standard-callout">
             Base standard deduction before age, blindness or dependent adjustments: <strong>{formatUsd(standardAmount)}</strong> based on your filing status.
           </div>
@@ -97,12 +97,19 @@ export function SectionDeductions({
                 List specific expenses on Schedule A. Choose this if your total exceeds the standard deduction.
               </span>
             </label>
+            {taxYear === 2026 && <label className={`guided-option-card ${current.method === "nonitemized" ? "guided-option-card-selected" : ""}`}>
+              <input type="radio" name="deduction-method" value="nonitemized" checked={current.method === "nonitemized"}
+                onChange={() => setMethod("nonitemized")} className="guided-option-radio" />
+              <span className="guided-option-label">Do not itemize; standard deduction unavailable</span>
+              <span className="guided-option-description">Use this only when your actual eligibility facts make the standard deduction unavailable. Qualifying current cash gifts may still be deductible.</span>
+            </label>}
           </div>
         </fieldset>
 
-        {current.method === "standard" && taxYear === 2026 && <DeductionSourceDetails data={current} onChange={onDataChange} includeMortgages={false} />}
-        {current.method === "standard" && <details className="guided-expand"><summary className="guided-expand-trigger">Earlier-year mortgage refunds and recoveries</summary><div className="guided-expand-body">
-          <p className="guided-hint">An earlier-year refund can create taxable income even when you use the standard deduction this year. Enter the original records and completed tax-benefit worksheet here.</p>
+        {current.method === "nonitemized" && <p className="guided-hint">This choice claims no standard or itemized deduction. Confirm why the standard deduction is unavailable in your personal information, then enter actual current charitable sources below.</p>}
+        {current.method !== "itemized" && taxYear === 2026 && <DeductionSourceDetails data={current} onChange={onDataChange} includeMortgages={false} />}
+        {current.method !== "itemized" && <details className="guided-expand"><summary className="guided-expand-trigger">Earlier-year mortgage refunds and recoveries</summary><div className="guided-expand-body">
+          <p className="guided-hint">An earlier-year refund can create taxable income even when you do not itemize this year. Enter the original records and completed tax-benefit worksheet here.</p>
           <DeductionSourceDetails data={current} onChange={onDataChange} includeDonations={false} />
         </div></details>}
 

@@ -65,6 +65,7 @@ import { calculateScheduleSE } from "./schedules/schedule-se.js";
 import { calculateHomeMortgageInterest } from "./forms/home-mortgage-interest.js";
 import { calculateScheduleA } from "./schedules/schedule-a.js";
 import { calculateSelectedCharitableCarryover } from "./forms/selected-charitable-carryover.js";
+import { calculateFederalDeductionSelection } from "./forms/federal-deduction-selection.js";
 import { calculateSchedule1AReturn } from "./forms/schedule-1-a-return.js";
 import { calculateItemizedDeductionLimit } from "./forms/itemized-deduction-limit.js";
 import { calculateStandardDeduction } from "./forms/standard-deduction.js";
@@ -180,6 +181,9 @@ import { calculateIllinoisReturn, type ILStateInput } from "./state/il-orchestra
 import type { ILScheduleWITRecord } from "./state/il-schedule-il-wit.js";
 
 export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
+  if (input.deductionElection === "nonitemized" && (input.netOperatingLoss || input.form172)) {
+    throw new Error("Explicit nonitemized NOL coordination requires its separate source method");
+  }
   validateQofDispositionFacts(input.qofDispositionFacts, input.taxpayer.taxYear);
   if (input.form982NolSources) calculateCodNolReduction(input);
   const marketplace = input.form7206?.plans?.some(plan => plan.marketplaceCoverage === true && plan.premiumTaxCreditInvolved === true);
@@ -2427,11 +2431,13 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     input.form5329HsaByOwner ? [] : allForm8889Results
   );
 
-  let deductionUsed: "itemized" | "standard" = deductionElection === "itemized"
-    || !standardDeductionWorksheet.eligibleForStandardDeduction
-    || (deductionElection === "automatic" && itemizedDeductions.greaterThan(standardDeduction.plus(schedA.nonitemizerCharitableDeduction)))
-    ? "itemized" : "standard";
-  let deductionAmount = deductionUsed === "itemized" ? itemizedDeductions : standardDeduction;
+  const deductionSelection = calculateFederalDeductionSelection({ taxYear: year, election: deductionElection,
+    eligibleForStandardDeduction: standardDeductionWorksheet.eligibleForStandardDeduction, standardDeduction,
+    itemizedDeductions, nonitemizerCharitableDeduction: schedA.nonitemizerCharitableDeduction });
+  if (deductionSelection.deductionUsed === "nonitemized" && schedA.charitableCarryforward.gt(0)) {
+    throw new Error("Explicit nonitemized charitable carry coordination requires its separate source method; retained sources cannot use the itemized floor carry amount");
+  }
+  let { deductionUsed, deductionAmount } = deductionSelection;
 
   // Section 199A deductions follow the individual and the contributing trade.
   const ownerOf = (owner?: "primary" | "spouse") => owner ?? (filingStatus !== "married_filing_jointly" ? "primary" : undefined);
@@ -2477,7 +2483,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     businessDeductionsVerified: qbiSourceDeductions.sourceFactsVerified,
   }) : undefined;
   const schedule1A = schedule1AReturn?.schedule1A;
-  let nonitemizerCharitableDeduction = deductionUsed === "standard" ? schedA.nonitemizerCharitableDeduction : d("0");
+  let nonitemizerCharitableDeduction = deductionSelection.nonitemizerCharitableDeduction;
   let additionalDeductions = (schedule1A?.totalDeduction ?? d("0")).plus(nonitemizerCharitableDeduction);
   if (nol?.modified) additionalDeductions = additionalDeductions.minus(schedule1A?.seniorDeduction ?? d("0"));
   if (schedule1A) audit.merge(schedule1A.lines);
@@ -2708,6 +2714,9 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     }
   }
   const { qbiDeduction, form8995Result, form8995AResult } = qbiCalculation;
+  audit.merge(calculateFederalDeductionSelection({ taxYear: year, election: deductionElection,
+    eligibleForStandardDeduction: standardDeductionWorksheet.eligibleForStandardDeduction, standardDeduction,
+    itemizedDeductions, nonitemizerCharitableDeduction: schedA.nonitemizerCharitableDeduction }).lines);
   if (input.charitableCarryoverSources) {
     schedA.charitableTreatment = calculateSelectedCharitableCarryover({ taxYear: year, deductionMethod: deductionUsed, scheduleA: schedA });
     audit.merge(schedA.charitableTreatment.lines);
@@ -2738,8 +2747,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   if (form8995Result) audit.merge(form8995Result.lines);
   if (form8995AResult) audit.merge(form8995AResult.lines);
   audit.record("1040", "12", "Standard or itemized deduction", deductionAmount, `${deductionUsed} deduction selected after applicable limitations`);
-  audit.record("1040", "nonitemizer-charity", "Charitable deduction with standard deduction", nonitemizerCharitableDeduction,
-    "IRC 170(p); available only when the standard deduction is selected");
+  audit.record("1040", "nonitemizer-charity", "Nonitemizer charitable deduction", nonitemizerCharitableDeduction,
+    "2026 current eligible cash under section170(p); actual nonitemization is distinct from standard deduction eligibility");
   audit.record("1040", "13", "Section 199A deduction", qbiDeduction,
     qbiDeduction.isZero() ? "No QBI sources or zero deduction" :
     form8995AResult ? `Form 8995-A: $${qbiDeduction}` : `Form 8995: $${qbiDeduction}`);

@@ -5,7 +5,7 @@ import type { CalculatedLine } from "@/models/outputs.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { d, sum } from "@/utils/decimal.js";
 export interface SelectedCharitableCarryover {
-  deductionMethod: "standard" | "itemized";
+  deductionMethod: "standard" | "itemized" | "nonitemized";
   deduction: Decimal;
   priorDeduction: Decimal;
   priorTreatedAsPaid: Decimal;
@@ -14,7 +14,7 @@ export interface SelectedCharitableCarryover {
   lines: CalculatedLine[];
 }
 export function calculateSelectedCharitableCarryover(input: {
-  taxYear: number; deductionMethod: "standard" | "itemized"; scheduleA: ScheduleAResult;
+  taxYear: number; deductionMethod: "standard" | "itemized" | "nonitemized"; scheduleA: ScheduleAResult;
 }): SelectedCharitableCarryover {
   if (input.taxYear !== 2025) throw new Error("Selected charitable history requires its separate2026 floor and nonitemizer method");
   const detail = input.scheduleA.charitableCarryforwardDetail.map(row => {

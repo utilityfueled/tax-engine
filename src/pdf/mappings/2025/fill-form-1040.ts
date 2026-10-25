@@ -172,6 +172,7 @@ export async function fillForm1040(
   blankPdfPath: string,
 ): Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
+  if (input.deductionElection === "nonitemized" || result.deductionUsed === "nonitemized") throw new Error("Nonitemized election is available only for 2026 and has no supported review PDF mapping");
   if (input.taxpayer.dependents.length > 4) {
     throw new Error("Form 1040 dependent attachment mapping is required for more than four dependents.");
   }

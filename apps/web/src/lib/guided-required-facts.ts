@@ -59,7 +59,7 @@ export function deductionFactErrors(data: DeductionData | undefined, taxYear?: n
     if (typeof entry.qualifiedOrganization !== "boolean") errors[`donation-${index}-qualification`] = "Confirm the recipient's actual charitable qualification.";
     if (entry.qualifiedOrganization === false) return;
     if (typeof entry.isPrivateFoundation !== "boolean") errors[`donation-${index}-classification`] = "Confirm the donation recipient's organization classification.";
-    if (taxYear === 2026 && data.method === "standard") {
+    if (taxYear === 2026 && data.method !== "itemized") {
       for (const field of ["qualifiedOrganization", "supportingOrganization", "donorAdvisedFund"] as const) {
         if (typeof entry[field] !== "boolean") errors[`donation-${index}-${field}`] = "Confirm the recipient's eligibility for the 2026 nonitemizer deduction.";
       }

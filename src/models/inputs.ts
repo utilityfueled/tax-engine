@@ -5931,7 +5931,7 @@ export const TaxYearInputSchema = z.object({
   dependentCare: DependentCareSchema.optional(),
   dependentCareBenefits: DependentCareBenefitsSchema.optional(),
   standardDeductionFacts: StandardDeductionFactsSchema.optional(),
-  deductionElection: z.enum(["automatic", "standard", "itemized"]).optional(),
+  deductionElection: z.enum(["automatic", "standard", "itemized", "nonitemized"]).optional(),
   educationExpenses: EducationExpensesSchema.optional(),
   priorYear: PriorYearCarryforwardSchema.optional(),
   netOperatingLoss: NetOperatingLossSourcesSchema.optional(),

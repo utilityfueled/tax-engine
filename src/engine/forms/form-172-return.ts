@@ -24,7 +24,7 @@ export interface Form172ReturnContext {
   taxableSocialSecurity: Decimal;
   capitalGainLoss: Decimal;
   scheduleD: ScheduleDResult;
-  deductionUsed: "standard" | "itemized";
+  deductionUsed: "standard" | "itemized" | "nonitemized";
   deductionAmount: Decimal;
   qbiDeduction: Decimal;
   additionalDeductions: Decimal;

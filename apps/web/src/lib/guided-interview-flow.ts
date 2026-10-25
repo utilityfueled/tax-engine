@@ -26,6 +26,7 @@ import Decimal from "decimal.js";
 import { parseGuidedCurrency, hasGuidedCurrency } from "./guided-currency";
 import { personalFactErrors } from "./guided-taxpayer-facts";
 import { allPaymentFactErrors, deductionFactErrors, educationFactErrors, retirementFactErrors } from "./guided-required-facts";
+import { nonitemizedElectionFactErrors } from "./guided-nonitemized-election";
 import { adjustmentFactErrors, householdFactErrors } from "./guided-adjustment-facts";
 import { statePaymentFactErrors } from "./guided-state-facts";
 import { guidedOhioInterestFactErrors, type OhioInterestAllocation } from "./guided-ohio-interest-facts";
@@ -894,7 +895,7 @@ export const emptyBrokerageEntry: BrokerageEntryData = {
 
 // ── Deductions data ─────────────────────────────────────────────────────────
 
-export type DeductionMethod = "standard" | "itemized";
+export type DeductionMethod = "standard" | "itemized" | "nonitemized";
 
 export interface MortgageEntryData extends MortgageSourceData {
   lender: string;
@@ -1938,7 +1939,7 @@ export function validateSection(
     case "additional-deductions":
       return getSectionData(state, "additional-deductions") ? validateRequiredFacts({ ...tipIncomeFactErrors(state), ...schedule1AFactErrors(state) }) : EMPTY_SECTION("additional deduction sources");
     case "deductions":
-      return validateDeductionsSection(getSectionData(state, "deductions"), state.taxYear, { ...nonW2TaxAllocationErrors(state), ...investmentInterestFactErrors(state.sectionData.deductions, state.sectionData["income-investments"]?.childElections, state.taxYear), ...charitableCarryoverFactErrors(state.sectionData.deductions?.charitableCarryoverSources, state.taxYear, state.segmentation.filingStatus, state.sectionData["personal-info"]) }, state.segmentation.filingStatus, state.sectionData["personal-info"]?.spouse);
+      return validateDeductionsSection(getSectionData(state, "deductions"), state.taxYear, { ...nonitemizedElectionFactErrors(state), ...nonW2TaxAllocationErrors(state), ...investmentInterestFactErrors(state.sectionData.deductions, state.sectionData["income-investments"]?.childElections, state.taxYear), ...charitableCarryoverFactErrors(state.sectionData.deductions?.charitableCarryoverSources, state.taxYear, state.segmentation.filingStatus, state.sectionData["personal-info"]) }, state.segmentation.filingStatus, state.sectionData["personal-info"]?.spouse);
     case "adjustments": {
       const errors = { ...foreignIncomeFactErrors(state), ...healthInsuranceSourceErrors(state), ...hsaFactErrors(getSectionData(state, "adjustments")?.hsaAccounts, state.segmentation.filingStatus, state.taxYear, getSectionData(state, "income-w2")?.entries ?? [], getSectionData(state, "personal-info"), state.segmentation.lifeEvents.includes("hsa-contributions")), ...educatorFactErrors(getSectionData(state, "adjustments"), state.segmentation.filingStatus, state.taxYear, state.segmentation.lifeEvents.includes("educator-expenses")) };
       Object.assign(errors, currentLossOriginFactErrors(state));
