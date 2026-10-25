@@ -100,6 +100,10 @@ export function SectionDeductions({
         </fieldset>
 
         {current.method === "standard" && taxYear === 2026 && <DeductionSourceDetails data={current} onChange={onDataChange} includeMortgages={false} />}
+        {current.method === "standard" && <details className="guided-expand"><summary className="guided-expand-trigger">Earlier-year mortgage refunds and recoveries</summary><div className="guided-expand-body">
+          <p className="guided-hint">An earlier-year refund can create taxable income even when you use the standard deduction this year. Enter the original records and completed tax-benefit worksheet here.</p>
+          <DeductionSourceDetails data={current} onChange={onDataChange} includeDonations={false} />
+        </div></details>}
 
         <CurrencyField label="Gambling winnings not already reported on an entered W-2G" hint="Enter actual winnings regardless of deduction method. Enter 0 only when known to be zero." value={current.gamblingWinnings ?? ""} onChange={(value) => update("gamblingWinnings", value)} />
         <CurrencyField label="Non-W-2 withholding already deducted on other schedules" hint="Enter the actual part of state or local withholding from your entered non-W-2 forms that is already deducted on Schedule C, E or F. Enter 0 only after checking. The source withholding is counted separately; do not add it again to additional income taxes." value={current.nonW2IncomeTaxesDeductedElsewhere ?? ""} onChange={value => update("nonW2IncomeTaxesDeductedElsewhere", value)} />

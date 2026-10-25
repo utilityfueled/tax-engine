@@ -124,7 +124,7 @@ export function mortgageFactErrors(entries: MortgageEntryData[], taxYear?: numbe
       maximumDebt = maximumDebt.plus(parseGuidedCurrency(entry.maximumBalanceDuringYear));
       if (validAmount("outstandingPrincipal") && parseGuidedCurrency(entry.maximumBalanceDuringYear).lt(parseGuidedCurrency(entry.outstandingPrincipal))) error("maximum", "The maximum balance cannot be less than the actual Box 2 balance.");
     } else balancesKnown = false;
-    if (validAmount("refundOfOverpaidInterest") && parseGuidedCurrency(entry.refundOfOverpaidInterest).gt(0)) error("refund", "A prior-year interest refund needs its tax-benefit recovery worksheet; retain the actual refund until that route is supported.");
+    if (!sourceWorksheet && validAmount("refundOfOverpaidInterest") && parseGuidedCurrency(entry.refundOfOverpaidInterest).gt(0)) error("refund", "A prior-year interest refund needs its actual tax-benefit recovery worksheet.");
     if (validAmount("propertyTaxPaid") && parseGuidedCurrency(entry.propertyTaxPaid).gt(0) && entry.propertyTaxDisbursementConfirmed !== true) error("property-tax", "Confirm actual qualified real estate tax disbursements, excluding escrow deposits, fees, assessments and amounts entered elsewhere.");
     const ownPoints = sourceWorksheet && !amountError(entry.pointsPaidByReturnAmount, "points") && !amountError(entry.pointsNotInterest, "point fees")
       ? parseGuidedCurrency(entry.pointsPaidByReturnAmount).minus(parseGuidedCurrency(entry.pointsNotInterest)) : parseGuidedCurrency(validAmount("pointsPaid") ? entry.pointsPaid : "0");

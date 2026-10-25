@@ -1,6 +1,7 @@
 "use client";
 
 import { emptyMortgageWorksheet, type MortgageWorksheetData } from "@/lib/guided-mortgage-worksheet";
+import { MortgageRecoveryDetails } from "./mortgage-recovery-details";
 
 export function MortgageWorksheetDetails({ data, onChange }: { data: MortgageWorksheetData | undefined; onChange: (data: MortgageWorksheetData) => void }) {
   const current = data ?? emptyMortgageWorksheet;
@@ -16,6 +17,7 @@ export function MortgageWorksheetDetails({ data, onChange }: { data: MortgageWor
         ["sourceFactsConfirmed", "Have you confirmed the complete annual home-debt worksheet after the last change?"],
       ] as const).map(([field, label]) => <label className="guided-field" key={field}><span className="guided-field-label">{label}</span><select className="guided-input" value={current[field] == null ? "" : String(current[field])} onChange={event => update({ [field]: event.target.value === "" ? null : event.target.value === "true" })}><option value="">Confirm from actual records</option><option value="true">Yes</option><option value="false">No</option></select></label>)}
     </div>
-    {current.priorYearInterestRecoveriesPresent !== false && <p className="guided-hint">Earlier-year recoveries need their actual tax-benefit worksheet. An unknown answer remains incomplete.</p>}
+    {current.priorYearInterestRecoveriesPresent === true && <MortgageRecoveryDetails data={current} onChange={onChange} />}
+    {current.priorYearInterestRecoveriesPresent !== true && (current.recoveries?.length || current.recoveryOnlyStatements?.length || current.recoveryMiscStatements?.length) ? <p className="guided-hint">Saved recovery records remain present. Reconcile them before changing the recovery answer.</p> : null}
   </fieldset>;
 }

@@ -516,6 +516,9 @@ export const Form1099NecSchema = z.object({
 
 export const Form1099MiscSchema = z.object({
   taxYear: z.number().int().optional(),
+  sourceId: z.string().optional(),
+  accountReference: z.string().optional(),
+  sourceFormRevision: z.enum(["2025-04", "2026-12"]).optional(),
   payer: z.string(),
   payerTin: z.string().optional(), // Payer's TIN (used for IL Schedule IL-WIT Column B auto-attachment)
   accountHolder: z.enum(["primary", "spouse"]).optional(), // Local owner tag for taxpayer vs spouse attribution on shared returns
@@ -528,14 +531,18 @@ export const Form1099MiscSchema = z.object({
   federalWithheld: optionalDecimal, // Box 4
   fishingBoatProceeds: optionalDecimal, // Box 5
   medicalPayments: optionalDecimal, // Box 6
+  directSales: z.boolean().optional(), // Box 7
   substitutePayments: optionalDecimal, // Box 8
   cropInsurance: optionalDecimal, // Box 9
   grossAttorneyProceeds: optionalDecimal, // Box 10
+  fishPurchasedForResale: decimal.optional(), // Box 11
   section409ADeferrals: optionalDecimal, // Box 12
-  excessGoldenParachute: optionalDecimal, // Box 13
-  nonqualifiedDeferredComp: optionalDecimal, // Box 14
+  fatcaFilingRequirement: z.boolean().optional(), // 2025 Box13; separate checkbox on 2026 revision.
+  excessGoldenParachute: optionalDecimal, // Legacy import field; not a current 2025/2026 MISC box.
+  nonqualifiedDeferredComp: optionalDecimal, // Box 15 on the 2025/2026 revisions.
   stateWithheld: optionalDecimal, // Box 16
   state: z.string().optional(), // Box 17 (abbreviated state name and payer state identification number)
+  payerStateId: z.string().optional(), // Original Box 17 payer state identification.
   stateIncome: decimal.optional(), // Box 18 — state income for IL Schedule IL-WIT Column D
 });
 

@@ -16,7 +16,7 @@ function BooleanFact({ label, value, onChange }: { label: string; value: boolean
   return <label className="guided-field"><span className="guided-field-label">{label}</span><select className="guided-input" value={value == null ? "" : String(value)} onChange={(event) => onChange(event.target.value === "" ? null : event.target.value === "true")}><option value="">Confirm from your records</option><option value="true">Yes</option><option value="false">No</option></select></label>;
 }
 
-export function DeductionSourceDetails({ data, onChange, includeMortgages = true }: { data: DeductionData; onChange: (data: DeductionData) => void; includeMortgages?: boolean }) {
+export function DeductionSourceDetails({ data, onChange, includeMortgages = true, includeDonations = true }: { data: DeductionData; onChange: (data: DeductionData) => void; includeMortgages?: boolean; includeDonations?: boolean }) {
   // An old aggregate is preserved as the amount needing source details. No other
   // fact is inferred, and merely rendering does not rewrite the saved workspace.
   const mortgages = data.mortgageEntries ?? (data.mortgageInterest.trim() ? [{ ...emptyMortgageEntry, mortgageInterest: data.mortgageInterest }] : []);
@@ -35,7 +35,7 @@ export function DeductionSourceDetails({ data, onChange, includeMortgages = true
     {includeMortgages && <>
     <h4>Mortgage interest — Form 1098</h4>
     <p className="guided-hint">Copy each lender&apos;s actual amounts and origination date. Leave an unknown fact blank; it must be resolved before calculating.</p>
-    {(mortgages.length > 0 || data.mortgageWorksheet) && <MortgageWorksheetDetails data={data.mortgageWorksheet} onChange={mortgageWorksheet => onChange({ ...data, mortgageWorksheet })} />}
+    <MortgageWorksheetDetails data={data.mortgageWorksheet} onChange={mortgageWorksheet => onChange({ ...data, mortgageWorksheet })} />
     {mortgages.map((entry, index) => {
       const update = (change: Partial<MortgageEntryData>) => setMortgages(mortgages.map((item, i) => i === index ? { ...item, sourceFactsConfirmed: null, ...change } : item));
       return <fieldset className="guided-fieldset" key={index}><legend>Mortgage #{index + 1}</legend><div className="guided-form-grid">
@@ -48,7 +48,7 @@ export function DeductionSourceDetails({ data, onChange, includeMortgages = true
     })}
     <button type="button" className="utility-button" onClick={() => setMortgages([...mortgages, { ...emptyMortgageEntry }])}>Add mortgage</button>
     </>}
-    <h4>Charitable contributions</h4>
+    {includeDonations && <><h4>Charitable contributions</h4>
     {donations.map((entry, index) => {
       const update = (change: Partial<DonationEntryData>) => setDonations(donations.map((item, i) => i === index ? { ...item, ...change } : item));
       return <fieldset className="guided-fieldset" key={index}><legend>Donation #{index + 1}</legend><div className="guided-form-grid">
@@ -68,5 +68,6 @@ export function DeductionSourceDetails({ data, onChange, includeMortgages = true
       </div><button type="button" className="utility-button" onClick={() => setDonations(donations.filter((_, i) => i !== index))}>Remove donation #{index + 1}</button></fieldset>;
     })}
     <button type="button" className="utility-button" onClick={() => setDonations([...donations, { ...emptyDonationEntry }])}>Add donation</button>
+    </>}
   </>;
 }
