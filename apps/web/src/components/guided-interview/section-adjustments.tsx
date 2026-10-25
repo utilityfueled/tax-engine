@@ -3,21 +3,25 @@
 import { RetroShell } from "@/components/retro-shell";
 import {
   type AdjustmentData,
+  type FilingStatus,
   emptyAdjustmentData,
 } from "@/lib/guided-interview-flow";
 import { CurrencyField } from "./currency-field";
+import { AdjustmentSourceDetails } from "./adjustment-source-details";
 
 export function SectionAdjustments({
   data,
   hasSelfEmployment,
   hasStudentLoans,
   hasHsa,
+  filingStatus,
   onDataChange,
 }: {
   data: AdjustmentData | undefined;
   hasSelfEmployment: boolean;
   hasStudentLoans: boolean;
   hasHsa: boolean;
+  filingStatus?: FilingStatus | null;
   onDataChange: (data: AdjustmentData) => void;
 }) {
   const current = data ?? emptyAdjustmentData;
@@ -74,20 +78,7 @@ export function SectionAdjustments({
         <details className="guided-expand">
           <summary className="guided-expand-trigger">More adjustments</summary>
           <div className="guided-expand-body">
-            <div className="guided-form-grid">
-              <CurrencyField
-                label="IRA deduction"
-                hint="Deductible traditional IRA contributions."
-                value={current.iraDeduction}
-                onChange={(v) => update("iraDeduction", v)}
-              />
-              <CurrencyField
-                label="Alimony paid"
-                hint="Only for divorce agreements finalized before 2019."
-                value={current.alimonyPaid}
-                onChange={(v) => update("alimonyPaid", v)}
-              />
-            </div>
+            <AdjustmentSourceDetails data={current} filingStatus={filingStatus} onChange={onDataChange} />
           </div>
         </details>
       </div>

@@ -569,8 +569,10 @@ describe("workspace engine preview", () => {
           formula: "Form 8949 Part I + K-1 Box 8 + K-1 1041 Box 3 + K-1 1041 Box 11C + prior ST carryforward + Form 6781 short-term + Form 6252 short-term",
           sourceFactIds: [
             "broker-proceeds:document-detected",
-            "broker-proceeds:fixture-long-term-sale",
-            "broker-proceeds:fixture-short-term-sale",
+            "broker-proceeds:fixture-long-term-sale:doc-1099b-a",
+            "broker-proceeds:fixture-long-term-sale:doc-1099b-b",
+            "broker-proceeds:fixture-short-term-sale:doc-1099b-a",
+            "broker-proceeds:fixture-short-term-sale:doc-1099b-b",
             "broker-proceeds:interview-answer",
             "cost-basis-review:document-detected",
             "cost-basis-review:interview-answer"
@@ -585,8 +587,10 @@ describe("workspace engine preview", () => {
           formula: "Form 8949 Part II + K-1 Box 9a + K-1 1041 Box 4a + K-1 1041 Box 11D + Form 4797 Line 9 + 1099-DIV Box 2a + prior LT carryforward - §1202 exclusion + home sale gain + Form 6781 long-term + Form 6252 long-term",
           sourceFactIds: [
             "broker-proceeds:document-detected",
-            "broker-proceeds:fixture-long-term-sale",
-            "broker-proceeds:fixture-short-term-sale",
+            "broker-proceeds:fixture-long-term-sale:doc-1099b-a",
+            "broker-proceeds:fixture-long-term-sale:doc-1099b-b",
+            "broker-proceeds:fixture-short-term-sale:doc-1099b-a",
+            "broker-proceeds:fixture-short-term-sale:doc-1099b-b",
             "broker-proceeds:interview-answer",
             "cost-basis-review:document-detected",
             "cost-basis-review:interview-answer"
@@ -601,8 +605,10 @@ describe("workspace engine preview", () => {
           formula: "Schedule D Line 21",
           sourceFactIds: [
             "broker-proceeds:document-detected",
-            "broker-proceeds:fixture-long-term-sale",
-            "broker-proceeds:fixture-short-term-sale",
+            "broker-proceeds:fixture-long-term-sale:doc-1099b-a",
+            "broker-proceeds:fixture-long-term-sale:doc-1099b-b",
+            "broker-proceeds:fixture-short-term-sale:doc-1099b-a",
+            "broker-proceeds:fixture-short-term-sale:doc-1099b-b",
             "broker-proceeds:interview-answer",
             "cost-basis-review:document-detected",
             "cost-basis-review:interview-answer"
@@ -617,8 +623,10 @@ describe("workspace engine preview", () => {
           formula: "Line 9 - Line 10",
           sourceFactIds: [
             "broker-proceeds:document-detected",
-            "broker-proceeds:fixture-long-term-sale",
-            "broker-proceeds:fixture-short-term-sale",
+            "broker-proceeds:fixture-long-term-sale:doc-1099b-a",
+            "broker-proceeds:fixture-long-term-sale:doc-1099b-b",
+            "broker-proceeds:fixture-short-term-sale:doc-1099b-a",
+            "broker-proceeds:fixture-short-term-sale:doc-1099b-b",
             "broker-proceeds:interview-answer",
             "cost-basis-review:document-detected",
             "cost-basis-review:interview-answer"
@@ -633,8 +641,10 @@ describe("workspace engine preview", () => {
           formula: "AGI - total deductions",
           sourceFactIds: [
             "broker-proceeds:document-detected",
-            "broker-proceeds:fixture-long-term-sale",
-            "broker-proceeds:fixture-short-term-sale",
+            "broker-proceeds:fixture-long-term-sale:doc-1099b-a",
+            "broker-proceeds:fixture-long-term-sale:doc-1099b-b",
+            "broker-proceeds:fixture-short-term-sale:doc-1099b-a",
+            "broker-proceeds:fixture-short-term-sale:doc-1099b-b",
             "broker-proceeds:interview-answer",
             "cost-basis-review:document-detected",
             "cost-basis-review:interview-answer"
@@ -649,8 +659,10 @@ describe("workspace engine preview", () => {
           formula: expect.stringContaining("Line 22"),
           sourceFactIds: [
             "broker-proceeds:document-detected",
-            "broker-proceeds:fixture-long-term-sale",
-            "broker-proceeds:fixture-short-term-sale",
+            "broker-proceeds:fixture-long-term-sale:doc-1099b-a",
+            "broker-proceeds:fixture-long-term-sale:doc-1099b-b",
+            "broker-proceeds:fixture-short-term-sale:doc-1099b-a",
+            "broker-proceeds:fixture-short-term-sale:doc-1099b-b",
             "broker-proceeds:interview-answer",
             "cost-basis-review:document-detected",
             "cost-basis-review:interview-answer"
@@ -665,8 +677,10 @@ describe("workspace engine preview", () => {
           formula: "Withholding + estimated + EIC + ACTC + refundable credits",
           sourceFactIds: [
             "broker-proceeds:document-detected",
-            "broker-proceeds:fixture-long-term-sale",
-            "broker-proceeds:fixture-short-term-sale",
+            "broker-proceeds:fixture-long-term-sale:doc-1099b-a",
+            "broker-proceeds:fixture-long-term-sale:doc-1099b-b",
+            "broker-proceeds:fixture-short-term-sale:doc-1099b-a",
+            "broker-proceeds:fixture-short-term-sale:doc-1099b-b",
             "broker-proceeds:interview-answer",
             "cost-basis-review:document-detected",
             "cost-basis-review:interview-answer"
@@ -681,8 +695,10 @@ describe("workspace engine preview", () => {
           formula: "Total payments - Total tax (if positive)",
           sourceFactIds: [
             "broker-proceeds:document-detected",
-            "broker-proceeds:fixture-long-term-sale",
-            "broker-proceeds:fixture-short-term-sale",
+            "broker-proceeds:fixture-long-term-sale:doc-1099b-a",
+            "broker-proceeds:fixture-long-term-sale:doc-1099b-b",
+            "broker-proceeds:fixture-short-term-sale:doc-1099b-a",
+            "broker-proceeds:fixture-short-term-sale:doc-1099b-b",
             "broker-proceeds:interview-answer",
             "cost-basis-review:document-detected",
             "cost-basis-review:interview-answer"
@@ -697,8 +713,10 @@ describe("workspace engine preview", () => {
           formula: "Total tax - Total payments (if positive)",
           sourceFactIds: [
             "broker-proceeds:document-detected",
-            "broker-proceeds:fixture-long-term-sale",
-            "broker-proceeds:fixture-short-term-sale",
+            "broker-proceeds:fixture-long-term-sale:doc-1099b-a",
+            "broker-proceeds:fixture-long-term-sale:doc-1099b-b",
+            "broker-proceeds:fixture-short-term-sale:doc-1099b-a",
+            "broker-proceeds:fixture-short-term-sale:doc-1099b-b",
             "broker-proceeds:interview-answer",
             "cost-basis-review:document-detected",
             "cost-basis-review:interview-answer"
@@ -1065,6 +1083,8 @@ describe("workspace engine preview", () => {
           employerName: "Large Employer A",
           employerEin: "12-3456789",
           wages: "9007199254740991",
+          socialSecurityWages: "9007199254740991",
+          medicareWages: "9007199254740991",
           federalWithheld: "10"
         }
       },
@@ -1084,6 +1104,8 @@ describe("workspace engine preview", () => {
           employerName: "Large Employer B",
           employerEin: "98-7654321",
           wages: "10",
+          socialSecurityWages: "10",
+          medicareWages: "10",
           federalWithheld: "9007199254740991"
         }
       }

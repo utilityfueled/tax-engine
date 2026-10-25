@@ -12,7 +12,7 @@ export function hasEnteredAmount(value: string | undefined): boolean {
   return typeof value === "string" && value.trim() !== "";
 }
 
-function amountError(value: string | undefined, label: string): string | undefined {
+export function amountError(value: string | undefined, label: string): string | undefined {
   if (!hasEnteredAmount(value)) return `Enter the actual ${label}; enter 0 only if it is zero.`;
   try { if (parseGuidedCurrency(value).isNegative()) return `${label} cannot be negative.`; }
   catch { return `Enter a valid ${label}.`; }

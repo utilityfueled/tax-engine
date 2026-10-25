@@ -27,3 +27,5 @@ export const completeAocEligibility = {
   pursuingDegreeOrCredential: true,
   felonyDrugConviction: false,
 };
+
+export const completeHouseholdEmployee = { name: "Actual Employee", cashWages: "0", federalIncomeTaxWithheld: "0", isSpouse: false, isChildUnder21: false, isParent: false, isUnder18NonPrincipal: false };

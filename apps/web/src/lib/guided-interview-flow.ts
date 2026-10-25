@@ -8,6 +8,7 @@ import Decimal from "decimal.js";
 import { parseGuidedCurrency, hasGuidedCurrency } from "./guided-currency";
 import { personalFactErrors } from "./guided-taxpayer-facts";
 import { allPaymentFactErrors, deductionFactErrors, educationFactErrors, retirementFactErrors } from "./guided-required-facts";
+import { adjustmentFactErrors, householdFactErrors } from "./guided-adjustment-facts";
 
 import { formatPendingW2SuggestionValueLabel, isOfficialFixtureSourceType } from "@/lib/document-fixture-copy";
 
@@ -793,6 +794,23 @@ export interface AdjustmentData {
   educatorExpenses: string;
   iraDeduction: string;
   alimonyPaid: string;
+  iraContributions?: {
+    primaryContributions: string;
+    primaryIsActiveParticipant: boolean | null;
+    spouseContributions: string;
+    spouseIsActiveParticipant: boolean | null;
+  };
+  alimonyQualification?: {
+    instrumentDate: string;
+    post2018ModificationAppliesNewRules: boolean | null;
+    paidInCash: boolean | null;
+    notDesignatedNondeductible: boolean | null;
+    notChildSupport: boolean | null;
+    noJointReturnWithRecipient: boolean | null;
+    householdRequirementMet: boolean | null;
+    noPaymentsAfterRecipientDeath: boolean | null;
+    recipientSsn: string;
+  };
 }
 
 export const emptyAdjustmentData: AdjustmentData = {
@@ -911,7 +929,24 @@ export interface OtherTaxesData {
   acknowledgedSETax: boolean;
   acknowledgedAdditionalMedicare: boolean;
   acknowledgedNIIT: boolean;
+  householdEmployees?: HouseholdEmployeeData[];
+  futaApplies?: boolean | null;
+  futaSectionA?: boolean | null;
+  stateUnemploymentContributions?: string;
+  futaCreditReduction?: string;
 }
+
+export interface HouseholdEmployeeData {
+  name: string;
+  cashWages: string;
+  federalIncomeTaxWithheld: string;
+  isSpouse: boolean | null;
+  isChildUnder21: boolean | null;
+  isParent: boolean | null;
+  isUnder18NonPrincipal: boolean | null;
+}
+
+export const emptyHouseholdEmployee: HouseholdEmployeeData = { name: "", cashWages: "", federalIncomeTaxWithheld: "", isSpouse: null, isChildUnder21: null, isParent: null, isUnder18NonPrincipal: null };
 
 export const emptyOtherTaxesData: OtherTaxesData = {
   householdEmploymentWages: "",
@@ -1643,8 +1678,11 @@ function validateDeductionsSection(data: DeductionData | undefined, taxYear?: nu
   return validateRequiredFacts(deductionFactErrors(data, taxYear));
 }
 
-function validateAdjustmentsSection(data: AdjustmentData | undefined): SectionValidationResult {
+function validateAdjustmentsSection(data: AdjustmentData | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null): SectionValidationResult {
   if (!data) return EMPTY_SECTION("adjustments info", true);
+  const errors = adjustmentFactErrors(data, filingStatus, taxYear);
+  if (Object.keys(errors).length) return validateRequiredFacts(errors);
+  if (data.iraContributions) return VALID_SECTION;
   const hasAny = Object.values(data).some((v) => typeof v === "string" && hasNumericValue(v));
   if (!hasAny) return EMPTY_SECTION("adjustments info", true);
   return VALID_SECTION;
@@ -1686,11 +1724,11 @@ export function validateSection(
     case "deductions":
       return validateDeductionsSection(getSectionData(state, "deductions"), state.taxYear);
     case "adjustments":
-      return validateAdjustmentsSection(getSectionData(state, "adjustments"));
+      return validateAdjustmentsSection(getSectionData(state, "adjustments"), state.segmentation.filingStatus, state.taxYear);
     case "credits":
       return validateRequiredFacts(educationFactErrors(getSectionData(state, "credits"), state.taxYear, state.segmentation.filingStatus));
     case "other-taxes":
-      return VALID_SECTION; // Other taxes are informational acknowledgements
+      return validateRequiredFacts(householdFactErrors(getSectionData(state, "other-taxes")));
     case "payments":
       return validatePaymentsSection(getSectionData(state, "payments"), state.taxYear);
     case "review":

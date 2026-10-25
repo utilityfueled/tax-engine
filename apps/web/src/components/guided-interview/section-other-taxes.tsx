@@ -1,6 +1,6 @@
 "use client";
 
-import { CurrencyField } from "@/components/guided-interview/currency-field";
+import { HouseholdSourceDetails } from "./household-source-details";
 import { RetroShell } from "@/components/retro-shell";
 import { formatGuidedCurrency, parseGuidedDisplayAmount } from "@/lib/guided-currency";
 import type { GuidedPreviewMetrics } from "@/lib/guided-interview-bridge";
@@ -117,12 +117,7 @@ export function SectionOtherTaxes({
               Household employment tax depends on each employee&apos;s wages and
               the applicable tax-year rules. Supply complete employee facts for Schedule H.
             </p>
-            <CurrencyField
-              label="Total wages paid to household employees"
-              hint="Leave blank if you didn't pay any household employees."
-              value={current.householdEmploymentWages}
-              onChange={(v) => onDataChange({ ...current, householdEmploymentWages: v })}
-            />
+            <HouseholdSourceDetails data={current} onChange={onDataChange} />
           </div>
         </details>
       </div>

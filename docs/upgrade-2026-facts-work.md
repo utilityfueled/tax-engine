@@ -168,3 +168,28 @@ Source-year/document-fidelity package commit: `70f8d17`.
 - Three new regressions failed before implementation. All 444 guided tests in ten
   files pass; web typecheck, scoped lint and spec validation are checked with this
   package. Organization/education package commit: `a70b823`.
+
+## IRA, alimony and individual household employees
+
+- Added actual IRA contribution/owner/plan-coverage entries; legacy deduction
+  estimates no longer substitute for contribution facts. Confirmed dates of birth
+  supply age flags consistently to both existing engine worksheet paths.
+- Added the original alimony instrument date, post-2018 modification answer,
+  recipient tax ID and supported post-1984 eligibility answers. Unknown facts and
+  pre-1985 treatment block calculation; known ineligible payments remain saved with
+  a zero deductible amount. No blank recipient or agreement is fabricated.
+- Household payroll now has real individual employees, wage/withholding amounts,
+  exclusion answers and FUTA/credit facts. Legacy totals reconcile to individual
+  wages, preserving cents and zero.
+- Refreshed [Publication 590-A](https://www.irs.gov/publications/p590a),
+  [Publication 504](https://www.irs.gov/publications/p504), and
+  [Schedule H instructions](https://www.irs.gov/instructions/i1040sh); live pages
+  are titled 2025. Four new integration tests were red before implementation.
+- Existing household fixtures now explicitly supply employee facts. Corrected two
+  source-preview fixtures for namespaced source IDs and actual SS/Medicare wages;
+  their tax totals and exact large-integer assertions remain intact.
+- The facts audit exposed independent Schedule H FUTA/withholding defects below
+  the Social Security threshold; a separate tax-law correction is in progress.
+- All 470 guided and source-preview tests in 12 files pass, together with root/web
+  typechecks, scoped ESLint, spec validation and diff checks.
+- Classified federal payment package commit: `2c1dfd9`.

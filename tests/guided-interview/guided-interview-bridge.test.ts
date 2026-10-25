@@ -1,4 +1,4 @@
-import { startCompleteInterview as startInterview, completePersonalInfo, completeDependent, completeAocEligibility } from "./complete-facts";
+import { startCompleteInterview as startInterview, completePersonalInfo, completeDependent, completeAocEligibility, completeHouseholdEmployee } from "./complete-facts";
 import { describe, it, expect } from "vitest";
 import {
   buildTaxInputFromGuidedData,
@@ -1702,6 +1702,8 @@ describe("buildTaxInputFromGuidedData retirement and SS and unemployment", () =>
     state = updateSectionData(state, "other-taxes", {
       ...emptyOtherTaxesData,
       householdEmploymentWages: "5000",
+      householdEmployees: [{ ...completeHouseholdEmployee, cashWages: "5000" }],
+      futaApplies: false,
     });
     const input = buildTaxInputFromGuidedData(state);
     expect(input).not.toBeNull();
@@ -1765,9 +1767,12 @@ describe("buildScheduleHInput", () => {
     const result = buildScheduleHInput({
       ...emptyOtherTaxesData,
       householdEmploymentWages: "4500",
+      householdEmployees: [{ ...completeHouseholdEmployee, cashWages: "4500" }],
+      futaApplies: false,
     });
     expect(result).toEqual({
-      employees: [{ name: "Household Employee", cashWages: "4500" }],
+      employees: [{ ...completeHouseholdEmployee, cashWages: "4500" }],
+      futaApplies: false,
     });
   });
 
@@ -1775,9 +1780,12 @@ describe("buildScheduleHInput", () => {
     const result = buildScheduleHInput({
       ...emptyOtherTaxesData,
       householdEmploymentWages: "12,500",
+      householdEmployees: [{ ...completeHouseholdEmployee, cashWages: "12,500" }],
+      futaApplies: false,
     });
     expect(result).toEqual({
-      employees: [{ name: "Household Employee", cashWages: "12500" }],
+      employees: [{ ...completeHouseholdEmployee, cashWages: "12500" }],
+      futaApplies: false,
     });
   });
 
@@ -1785,9 +1793,12 @@ describe("buildScheduleHInput", () => {
     const result = buildScheduleHInput({
       ...emptyOtherTaxesData,
       householdEmploymentWages: "3200.50",
+      householdEmployees: [{ ...completeHouseholdEmployee, cashWages: "3200.50" }],
+      futaApplies: false,
     });
     expect(result).toEqual({
-      employees: [{ name: "Household Employee", cashWages: "3200.50" }],
+      employees: [{ ...completeHouseholdEmployee, cashWages: "3200.50" }],
+      futaApplies: false,
     });
   });
 });

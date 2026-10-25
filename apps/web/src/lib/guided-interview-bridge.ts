@@ -11,6 +11,7 @@ import Decimal from "decimal.js";
 import { parseGuidedCurrency, hasGuidedCurrency, formatGuidedDollars } from "./guided-currency";
 import { dependentFactErrors, personalFactErrors } from "./guided-taxpayer-facts";
 import { allPaymentFactErrors, assertKnownFacts, deductionFactErrors, educationFactErrors, hasEnteredAmount, paymentFactErrors, retirementFactErrors } from "./guided-required-facts";
+import { adjustmentFactErrors, householdFactErrors, isDeductibleAlimony } from "./guided-adjustment-facts";
 
 import type {
   AdjustmentData,
@@ -303,17 +304,22 @@ export function buildDonationsInput(deductionData: DeductionData | undefined) {
 
 export function buildAdjustmentsInput(adjustmentData: AdjustmentData | undefined) {
   if (!adjustmentData) return undefined;
+  assertKnownFacts(adjustmentFactErrors(adjustmentData));
 
   const hsaDeduction = toDecimalString(adjustmentData.hsaDeduction);
   const studentLoanInterest = toDecimalString(adjustmentData.studentLoanInterest);
   const selfEmployedHealthInsurance = toDecimalString(adjustmentData.selfEmployedHealthInsurance);
   const educatorExpenses = toDecimalString(adjustmentData.educatorExpenses);
+  const alimony = hasEnteredAmount(adjustmentData.alimonyPaid) ? {
+    alimonyPaid: isDeductibleAlimony(adjustmentData) ? toDecimalString(adjustmentData.alimonyPaid) : "0",
+    ...(isDeductibleAlimony(adjustmentData) ? { alimonyRecipientSSN: adjustmentData.alimonyQualification?.recipientSsn } : {}),
+  } : undefined;
 
   if (
     hsaDeduction === "0" &&
     studentLoanInterest === "0" &&
     selfEmployedHealthInsurance === "0" &&
-    educatorExpenses === "0"
+    educatorExpenses === "0" && !alimony
   ) {
     return undefined;
   }
@@ -323,6 +329,7 @@ export function buildAdjustmentsInput(adjustmentData: AdjustmentData | undefined
     studentLoanInterest,
     selfEmployedHealthInsurance,
     primaryEducatorExpenses: educatorExpenses,
+    ...alimony,
   };
 }
 
@@ -486,18 +493,14 @@ export function buildEnergyCreditsInput(creditsData: CreditsData | undefined) {
 
 export function buildScheduleHInput(otherTaxesData: OtherTaxesData | undefined) {
   if (!otherTaxesData) return undefined;
-  if (!hasValue(otherTaxesData.householdEmploymentWages)) return undefined;
-
-  const wages = toDecimalString(otherTaxesData.householdEmploymentWages);
-  if (wages === "0") return undefined;
-
+  assertKnownFacts(householdFactErrors(otherTaxesData));
+  if (!otherTaxesData.householdEmployees?.length) return undefined;
   return {
-    employees: [
-      {
-        name: "Household Employee",
-        cashWages: wages,
-      },
-    ],
+    employees: otherTaxesData.householdEmployees.map((employee) => ({ ...employee, name: employee.name.trim(), cashWages: toDecimalString(employee.cashWages), federalIncomeTaxWithheld: toDecimalString(employee.federalIncomeTaxWithheld), isSpouse: employee.isSpouse as boolean, isChildUnder21: employee.isChildUnder21 as boolean, isParent: employee.isParent as boolean, isUnder18NonPrincipal: employee.isUnder18NonPrincipal as boolean })),
+    futaApplies: otherTaxesData.futaApplies as boolean,
+    ...(otherTaxesData.futaApplies ? { futaSectionA: otherTaxesData.futaSectionA as boolean,
+      ...(otherTaxesData.futaSectionA === false ? { stateUnemploymentContributions: toDecimalString(otherTaxesData.stateUnemploymentContributions), futaCreditReduction: toDecimalString(otherTaxesData.futaCreditReduction) } : {}),
+    } : {}),
   };
 }
 
@@ -509,7 +512,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
   if (!segmentation.filingStatus || !Number.isInteger(state.taxYear) || state.taxYear == null) return null;
 
   const personalInfo = sectionData["personal-info"] as PersonalInfoData | undefined;
-  if (!personalInfo || Object.keys(personalFactErrors(personalInfo, segmentation.filingStatus, state.taxYear)).length) return null;
+  if (!personalInfo?.dateOfBirth || Object.keys(personalFactErrors(personalInfo, segmentation.filingStatus, state.taxYear)).length) return null;
   const w2Data = sectionData["income-w2"] as { entries: W2EntryData[] } | undefined;
   const seData = sectionData["income-self-employment"] as
     | { necEntries: NecEntryData[]; manualGrossReceipts: string; expenses: ScheduleCExpenseData }
@@ -532,6 +535,8 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     assertKnownFacts(allPaymentFactErrors(paymentData, state.taxYear));
     assertKnownFacts(retirementFactErrors(retirementData?.entries));
     assertKnownFacts(educationFactErrors(creditsData, state.taxYear, segmentation.filingStatus));
+    assertKnownFacts(adjustmentFactErrors(adjustmentData, segmentation.filingStatus, state.taxYear));
+    assertKnownFacts(householdFactErrors(otherTaxesData));
   } catch { return null; }
 
   const stateCode = personalInfo?.state || segmentation.stateCode || null;
@@ -549,6 +554,17 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
   const form1098 = buildForm1098Inputs(deductionData);
   const donations = buildDonationsInput(deductionData);
   const adjustments = buildAdjustmentsInput(adjustmentData);
+  const ira = adjustmentData?.iraContributions;
+  const iraDeductionWorksheet = ira ? {
+    primaryContributions: toDecimalString(ira.primaryContributions),
+    primaryIsActiveParticipant: ira.primaryIsActiveParticipant as boolean,
+    primaryAge50OrOlder: state.taxYear - Number(personalInfo.dateOfBirth.slice(0, 4)) >= 50,
+    ...(personalInfo.spouse && (segmentation.filingStatus === "mfj" || segmentation.filingStatus === "mfs") ? {
+      spouseIsActiveParticipant: ira.spouseIsActiveParticipant as boolean,
+      spouseAge50OrOlder: state.taxYear - Number(personalInfo.spouse.dateOfBirth.slice(0, 4)) >= 50,
+    } : {}),
+    ...(hasEnteredAmount(ira.spouseContributions) ? { spouseContributions: toDecimalString(ira.spouseContributions) } : {}),
+  } : undefined;
   const dependentCare = buildDependentCareInput(creditsData);
   const educationExpenses = buildEducationInput(creditsData);
   const energyCredits = buildEnergyCreditsInput(creditsData);
@@ -602,6 +618,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     educationExpenses,
     energyCredits,
     scheduleH,
+    iraDeductionWorksheet,
     adjustments: adjustments
       ? {
           ...adjustments,
