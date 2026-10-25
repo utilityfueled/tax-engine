@@ -44,6 +44,10 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pnpm test:setup
       - run: pnpm --filter @tax-engine/web exec playwright install --with-deps chromium
       - run: pnpm sample-docs:fetch
       - run: pnpm test:web
@@ -77,6 +81,10 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pnpm test:setup
       - run: pnpm --filter @tax-engine/web exec playwright install --with-deps chromium
       - run: pnpm sample-docs:fetch
       - name: Install PostgreSQL 16 recovery client

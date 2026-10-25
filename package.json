@@ -17,7 +17,7 @@
     "self-host:logs": "docker compose --env-file .env.docker logs -f web",
     "start": "node dist/index.js",
     "test": "node ./scripts/run-tests.mjs run",
-    "test:web": "pnpm --filter @tax-engine/web test:e2e",
+    "test:web": "node ./scripts/run-tests.mjs --browser",
     "test:pa": "vitest run tests/engine/state/pa-*.test.ts tests/edge-cases/pa-full-return.test.ts tests/public-api.test.ts tests/spec/spec-validator.test.ts",
     "test:watch": "vitest",
     "test:coverage": "node ./scripts/run-tests.mjs run --coverage",

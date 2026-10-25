@@ -12,4 +12,4 @@ function run(command, args) {
 }
 run(process.env.TAX_ENGINE_SETUP_PYTHON || "python3", ["-m", "venv", venv]);
 run(python, ["-m", "pip", "install", "--require-hashes", "-r", "requirements-test.txt"]);
-console.log("PDF test environment ready. Run pnpm test or pnpm test:coverage.");
+console.log("PDF test environment ready. Run pnpm test, pnpm test:coverage, or pnpm test:web.");
