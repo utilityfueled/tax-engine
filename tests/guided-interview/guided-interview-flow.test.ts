@@ -1,3 +1,4 @@
+import { syntheticStudentLoanFacts } from "../fixtures/student-loan-source";
 import { completeNecSource, completeBusinessSection, completeBusinessExpenses } from "./complete-facts";
 import { completeInterestSource } from "./complete-facts";
 import { completePersonalInfo, completeW2Entry, completeSocialSecuritySource, completeSocialSecurityTreatment, completeUnemploymentSource } from "./complete-facts";
@@ -2420,17 +2421,17 @@ describe("validateSection", () => {
   });
 
   it("returns empty for adjustments with no values", () => {
-    let state = startInterview({ filingStatus: "single", incomeTypes: ["self-employment"], lifeEvents: ["student-loans"], stateCode: null });
+    let state = startInterview({ filingStatus: "single", incomeTypes: ["self-employment"], lifeEvents: [], stateCode: null });
     state = updateSectionData(state, "adjustments", emptyAdjustmentData);
     const result = validateSection(state, "adjustments");
     expect(result.status).toBe("empty");
   });
 
-  it("returns complete for adjustments with any value", () => {
-    let state = startInterview({ filingStatus: "single", incomeTypes: ["self-employment"], lifeEvents: ["student-loans"], stateCode: null });
+  it("returns complete for adjustments with actual student-loan sources", () => {
+    let state = startInterview({ filingStatus: "single", incomeTypes: ["self-employment"], lifeEvents: ["student-loans"], stateCode: null }, 2025);
     state = updateSectionData(state, "adjustments", {
       ...emptyAdjustmentData,
-      studentLoanInterest: "2500",
+      studentLoanInterest: "2500", studentLoanFacts: syntheticStudentLoanFacts(2025, "2500"),
     });
     const result = validateSection(state, "adjustments");
     expect(result.status).toBe("complete");

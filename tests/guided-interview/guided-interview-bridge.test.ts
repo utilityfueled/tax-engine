@@ -1,3 +1,4 @@
+import { syntheticStudentLoanFacts } from "../fixtures/student-loan-source";
 import { energySource, sourceImprovement, sourceCleanProperty } from "../fixtures/energy-source";
 import { completeCareSource } from "./care-source-fixture";
 import { completeRentalSource, completeNecSource, completeBusinessSection, completeBusinessExpenses, completeMortgageSource, completeRetirementSource, completeSocialSecuritySource, completeSocialSecurityTreatment, completeUnemploymentSource } from "./complete-facts";
@@ -1130,18 +1131,17 @@ describe("buildAdjustmentsInput", () => {
     expect(buildAdjustmentsInput(emptyAdjustmentData)).toBeUndefined();
   });
 
-  it("converts adjustment data", () => {
-    const result = buildAdjustmentsInput({
-      ...emptyAdjustmentData,
-      hsaDeduction: "3600",
+  it("keeps actual HSA and student-loan worksheets outside raw adjustments", () => {
+    const sources = { ...emptyAdjustmentData, hsaDeduction: "3600",
       hsaAccounts: [{ ...completeHsaSources, contributionsMade: "3600" }],
-      studentLoanInterest: "2500",
-    });
-    expect(result).not.toBeUndefined();
-    expect(result!.hsaDeduction).toBe("0");
-    expect(result!.studentLoanInterest).toBe("2500");
-    expect(result!.selfEmployedHealthInsurance).toBe("0");
-    expect(result!.educatorExpenses).toBe("0");
+      studentLoanInterest: "2500", studentLoanFacts: syntheticStudentLoanFacts(2025, "2500") };
+    expect(buildAdjustmentsInput(sources, "single", 2025)).toBeUndefined();
+    const state = startInterview({ filingStatus: "single", incomeTypes: [], lifeEvents: [], stateCode: null });
+    state.sectionData.adjustments = sources;
+    const input = buildTaxInputFromGuidedData(state);
+    expect(input?.studentLoanInterestFacts?.loans?.[0]?.interestPaid).toBe("2500");
+    expect(input?.form8889ByOwner?.primary?.contributionsMade).toBe("3600");
+    expect(input?.adjustments?.studentLoanInterest ?? "0").toBe("0");
   });
 
   it("does not assign an unexplained educator aggregate to the primary taxpayer", () => {

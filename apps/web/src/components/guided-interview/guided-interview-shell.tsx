@@ -610,6 +610,7 @@ function SectionContent({
           hasStudentLoans={state.segmentation.lifeEvents.includes("student-loans")}
           hasHsa={state.segmentation.lifeEvents.includes("hsa-contributions")}
           filingStatus={state.segmentation.filingStatus}
+          educationDistributions={getSectionData(state, "credits")?.educationDistributions}
           onDataChange={(data: AdjustmentData) =>
             onStateChange(updateSectionData(state, "adjustments", data))
           }

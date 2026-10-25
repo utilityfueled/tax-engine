@@ -9,6 +9,8 @@ import {
 import { CurrencyField } from "./currency-field";
 import { HsaSourceDetails } from "./hsa-source-details";
 import { EducatorSourceDetails } from "./educator-source-details";
+import { StudentLoanSourceDetails } from "./student-loan-source-details";
+import type { EducationDistributionData } from "@/lib/guided-education-distributions";
 import { AdjustmentSourceDetails } from "./adjustment-source-details";
 
 export function SectionAdjustments({
@@ -18,6 +20,7 @@ export function SectionAdjustments({
   hasHsa,
   filingStatus,
   taxYear,
+  educationDistributions,
   onDataChange,
 }: {
   data: AdjustmentData | undefined;
@@ -26,6 +29,7 @@ export function SectionAdjustments({
   hasHsa: boolean;
   filingStatus?: FilingStatus | null;
   taxYear?: number | null;
+  educationDistributions?: EducationDistributionData;
   onDataChange: (data: AdjustmentData) => void;
 }) {
   const current = data ?? emptyAdjustmentData;
@@ -46,10 +50,10 @@ export function SectionAdjustments({
         <div className="guided-form-grid">
 
 
-          {hasStudentLoans && (
+          {current.studentLoanInterest.trim() && (
             <CurrencyField
-              label="Student loan interest"
-              hint="Up to $2,500. From Form 1098-E Box 1."
+              label="Saved student-loan gross interest"
+              hint="Reconcile this saved total with actual source records below. Eligibility and income limits determine the allowed deduction."
               value={current.studentLoanInterest}
               onChange={(v) => update("studentLoanInterest", v)}
             />
@@ -71,6 +75,8 @@ export function SectionAdjustments({
             onChange={(v) => update("educatorExpenses", v)}
           />}
         </div>
+
+        {(hasStudentLoans || current.studentLoanFacts || current.studentLoanInterest.trim()) && <StudentLoanSourceDetails data={current.studentLoanFacts} filingStatus={filingStatus} educationDistributions={educationDistributions} onChange={studentLoanFacts => onDataChange({ ...current, studentLoanFacts })} />}
 
         <EducatorSourceDetails sources={current.educatorExpenseSources} taxYear={taxYear} onChange={educatorExpenseSources => onDataChange({ ...current, educatorExpenseSources })} />
 

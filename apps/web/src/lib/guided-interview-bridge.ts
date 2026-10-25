@@ -1,5 +1,6 @@
 import { buildHsaInputs, hsaFactErrors } from "./guided-hsa-facts";
 import { buildEducatorSources, educatorFactErrors } from "./guided-educator-facts";
+import { buildStudentLoanInputs, studentLoanFactErrors, studentLoanEducationSources, type StudentLoanEducationSources } from "./guided-student-loan-facts";
 import { buildStandardDeductionFacts } from "./guided-standard-deduction-facts";
 import { buildActualEducationInput } from "./guided-education-facts";
 import { buildEducationDistributionInputs, educationDistributionFactErrors } from "./guided-education-distributions";
@@ -369,13 +370,14 @@ export function buildDonationsInput(deductionData: DeductionData | undefined) {
 
 // ── Adjustments converter ───────────────────────────────────────────────────
 
-export function buildAdjustmentsInput(adjustmentData: AdjustmentData | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null) {
+export function buildAdjustmentsInput(adjustmentData: AdjustmentData | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, education: StudentLoanEducationSources = []) {
   if (!adjustmentData) return undefined;
-  assertKnownFacts(adjustmentFactErrors(adjustmentData, filingStatus, taxYear));
+  assertKnownFacts(adjustmentFactErrors(adjustmentData, filingStatus, taxYear, education));
 
   // The HSA deduction is calculated from the actual Form 8889 facts.
   const hsaDeduction = "0";
-  const studentLoanInterest = toDecimalString(adjustmentData.studentLoanInterest);
+  // Actual loan records are forwarded separately; the saved gross amount is not additional interest.
+  const studentLoanInterest = "0";
   const selfEmployedHealthInsurance = toDecimalString(adjustmentData.selfEmployedHealthInsurance);
   const educatorExpenses = toDecimalString(adjustmentData.educatorExpenses);
   const educatorExpenseSources = buildEducatorSources(adjustmentData.educatorExpenseSources, filingStatus, taxYear, adjustmentData.educatorExpenses);
@@ -616,6 +618,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
   const stateReturnData = sectionData["state-return"] as StateReturnData | undefined;
 
   const careBenefitSources = guidedCareBenefitSources(w2Data?.entries, seData?.businessFacts, seData?.expenses);
+  let loanEducation: StudentLoanEducationSources = [];
   try {
     assertKnownFacts(w2FactErrors(w2Data?.entries, segmentation.filingStatus));
     assertKnownFacts(investmentFactErrors(investData, segmentation.filingStatus, state.taxYear, stateReturnData, segmentation.stateCode));
@@ -630,7 +633,9 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     assertKnownFacts(educationFactErrors(creditsData, state.taxYear, segmentation.filingStatus, personalInfo));
     assertKnownFacts(educationDistributionFactErrors(creditsData?.educationDistributions, state.taxYear, segmentation.filingStatus,
       buildActualEducationInput(creditsData, state.taxYear, segmentation.filingStatus, personalInfo)));
-    assertKnownFacts(adjustmentFactErrors(adjustmentData, segmentation.filingStatus, state.taxYear));
+    if (adjustmentData?.studentLoanFacts) loanEducation = studentLoanEducationSources(creditsData, segmentation.filingStatus, state.taxYear, personalInfo, adjustmentData.studentLoanFacts);
+    assertKnownFacts(studentLoanFactErrors(adjustmentData, segmentation.filingStatus, state.taxYear, loanEducation, segmentation.lifeEvents.includes("student-loans")));
+    assertKnownFacts(adjustmentFactErrors(adjustmentData, segmentation.filingStatus, state.taxYear, loanEducation));
     assertKnownFacts(educatorFactErrors(adjustmentData, segmentation.filingStatus, state.taxYear, segmentation.lifeEvents.includes("educator-expenses")));
     assertKnownFacts(hsaFactErrors(adjustmentData?.hsaAccounts, segmentation.filingStatus, state.taxYear, w2Data?.entries ?? [], personalInfo, segmentation.lifeEvents.includes("hsa-contributions")));
     assertKnownFacts(householdFactErrors(otherTaxesData, state.taxYear));
@@ -658,7 +663,8 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
   const scheduleA = buildScheduleAInput(deductionData, stateReturnData);
   const form1098 = buildForm1098Inputs(deductionData, state.taxYear, segmentation.filingStatus);
   const donations = buildDonationsInput(deductionData);
-  const adjustments = buildAdjustmentsInput(adjustmentData, state.segmentation.filingStatus, state.taxYear);
+  const adjustments = buildAdjustmentsInput(adjustmentData, state.segmentation.filingStatus, state.taxYear, loanEducation);
+  const studentLoans = buildStudentLoanInputs(adjustmentData?.studentLoanFacts, segmentation.filingStatus, state.taxYear, loanEducation, adjustmentData?.studentLoanInterest);
   const ira = adjustmentData?.iraContributions;
   const iraDeductionWorksheet = ira ? {
     sourceFactsConfirmed: ira.sourceFactsConfirmed ?? undefined,
@@ -750,6 +756,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     deductionElection: deductionData?.method ?? "automatic",
     educationExpenses,
     ...educationDistributions,
+    ...studentLoans,
     energyCredits,
     form8936: buildVehicleCreditInput(creditsData?.vehicles, state.taxYear, segmentation.filingStatus),
     form8839: buildAdoptionInput(creditsData?.adoption, state.taxYear, segmentation.filingStatus),

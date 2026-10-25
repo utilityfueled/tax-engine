@@ -47,7 +47,7 @@ it("preserves zero false large amounts and incomplete saved source records", () 
   expect(buildTaxInputFromGuidedData(stateWith([{ ...actualEducator, accountHolder: "spouse" }]))).toBeNull();
   expect(buildTaxInputFromGuidedData(stateWith([{ ...actualEducator, expenses: undefined } as unknown as EducatorSourceData]))).toBeNull();
   const state = stateWith([actualEducator]);
-  const changed = updateSectionData(state, "credits", state.sectionData.credits);
+  const changed = updateSectionData(state, "credits", { ...state.sectionData.credits, educationDistributions: { taxYear: "2025", forms: [] } });
   expect(changed.sectionData.adjustments?.educatorExpenseSources?.[0]?.sourceFactsConfirmed).toBeNull();
   expect(changed.sectionData.adjustments?.educatorExpenseSources?.[0]?.expenses?.[0]?.amount).toBe("300.03");
 });

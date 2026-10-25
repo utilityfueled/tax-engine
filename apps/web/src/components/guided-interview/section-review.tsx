@@ -233,18 +233,22 @@ function AdjustmentsSummary({ data }: { data: AdjustmentData | undefined }) {
   const items = [
     { label: "Saved HSA deduction estimate (not calculated)", value: data.hsaDeduction },
     ...(data.hsaAccounts ?? []).map((account, index) => ({ label: `HSA ${index + 1} ${account.accountOwner || "unknown owner"}: personal contributions before limits`, value: account.contributionsMade })),
-    { label: "Student loan interest", value: data.studentLoanInterest },
+    { label: "Saved student-loan gross interest needing source reconciliation", value: data.studentLoanInterest },
     { label: "SE health insurance", value: data.selfEmployedHealthInsurance },
     { label: "Saved educator net expenses needing source reconciliation", value: data.educatorExpenses },
     { label: "IRA deduction", value: data.iraDeduction },
     { label: "Alimony paid", value: data.alimonyPaid },
   ].filter((item) => hasValue(item.value));
 
-  if (items.length === 0 && !data.hsaAccounts?.length && !data.educatorExpenseSources?.length) return <p className="guided-review-empty">No adjustments entered.</p>;
+  if (items.length === 0 && !data.hsaAccounts?.length && !data.educatorExpenseSources?.length && !data.studentLoanFacts) return <p className="guided-review-empty">No adjustments entered.</p>;
 
   return (
     <div className="guided-review-card">
       {!!data.hsaAccounts?.length && <p className="guided-hint">{data.hsaAccounts.length} HSA owner worksheet(s). Contributions are source amounts; eligibility and limits determine the deduction.</p>}
+      {data.studentLoanFacts && <div>
+        <p className="guided-hint">{data.studentLoanFacts.sourceFactsConfirmed === true ? "Student-loan sources checked" : "Student-loan sources need confirmation"}. Interest below is before qualification, benefit reductions and income limits.</p>
+        {(data.studentLoanFacts.loans ?? []).map((loan, index) => <div key={`loan-${index}`} className="guided-review-row"><span className="guided-review-label">Loan {index + 1} {loan.accountHolder || "unknown owner"}: paid interest before qualification</span><span className="guided-review-value">{hasEnteredAmount(loan.interestPaid) ? formatCurrency(loan.interestPaid) : "Unknown"}</span></div>)}
+      </div>}
       {(data.educatorExpenseSources ?? []).map((source, index) => <div key={`educator-${index}`}>
         <p className="guided-hint">{source.sourceFactsConfirmed === true ? "Educator sources checked" : "Educator sources need confirmation"}. Paid costs below are before eligibility, reimbursements and deduction limits.</p>
         {(source.expenses ?? []).map((expense, expenseIndex) => <div key={expenseIndex} className="guided-review-row"><span className="guided-review-label">Educator {index + 1} {source.accountHolder || "unknown owner"}: expense {expenseIndex + 1} before qualification</span><span className="guided-review-value">{hasEnteredAmount(expense.amount) ? formatCurrency(expense.amount) : "Unknown"}</span></div>)}
