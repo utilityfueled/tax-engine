@@ -1,0 +1,97 @@
+form: "Form982 NOL sources"
+fullName: "Actual insolvency exclusion and separate loss-vintage attribute reductions"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i982"
+notes: |
+  Refreshed2026-10-25: IRC108(a)(1)(B),(a)(3),(b)(2)(A),(b)(4),
+  current Form982PartI1b/2 and PartII6, Pub4681 Insolvency/Reduction of Tax
+  Attributes, Pub908 Making the reduction, Reg1.108-7(b), Reg1.55-1(a),
+  IRC56(d) and Reg1.1411-4(h)(3).
+  https://uscode.house.gov/us/usc/119-118/t26/s108/
+  https://www.irs.gov/pub/irs-pdf/f982.pdf
+  https://www.irs.gov/publications/p4681
+  https://www.irs.gov/publications/p908
+  https://www.govinfo.gov/content/pkg/CFR-2025-title26-vol2/pdf/CFR-2025-title26-vol2-sec1-108-7.pdf
+  https://www.ecfr.gov/current/title-26/section-1.55-1
+  https://www.ecfr.gov/current/title-26/section-1.1411-4
+  Compute current tax and ordinary172/AMT claims first. Section108(b)(2)(A)
+  identifies carryovers "to such taxable year"; Pub4681 reduces those after
+  amounts used to reduce current taxable income. Reduce current losses first,
+  then the prior-year carry remaining after current taxable-income use, oldest-first,
+  before expiring residual final-year carry. A carry already expired BEFORE
+  the discharge year is unavailable. Initial coordination requires each actual
+  current taxable-income use to equal its modified172/AMT absorption; unequal amounts
+  remain an explicit internal method boundary pending complete ordering rules.
+  Regular and AMT histories remain independent; application of108 to the
+  alternative ledger follows the general separate-computation rule in1.55-1(a)
+  and56(d), not an assumed equality with the regular ledger. Preserve original
+  regular and1411 loss amounts and their fixed fraction; only remaining carry
+  decreases. No current deduction or income amount changes through this step.
+  The initial source method requires a continuing individual, noncommunity
+  return; actual unsecured personal recourse debt, one discharge date and a
+  complete immediately-before-discharge asset/liability worksheet; no title11,
+  deductible interest, property transfer, other exclusions or108(b)(5) election.
+  All cancelled debt must be covered by actual insolvency and the resulting
+  exclusion must be fully absorbed by NOL in EACH independent tax system.
+  Joint/estate ownership, partial taxable COD, basis-first and later attributes
+  remain separately identified internal methods, never guessed zero.
+  Source-only validation returns no reduction or closing carry. Actual source
+  cents are summed before whole-dollar Form9822/6 transfers under6102; no
+  individual source row is rounded. The numerical examples are derived controls,
+  not published IRS numerical oracles. Full2026 readiness remains closed.
+lines:
+  - line: "source"
+    description: "Bind every original cancelled-debt statement and actual insolvency source"
+    formula: "Require complete explicit original boxes, actual owner/year/date/identity, all original forms exactly once, actual known-zero interest/property value, and complete assets including exempt and retirement assets. Source-only result has no reduction or carry."
+    irsRef: "IRC108(a)(1)(B),(a)(3),(d)(3); Pub4681 Insolvency worksheet"
+    testRef: "tests/engine/forms/cod-nol-reductions.test.ts::validates actual insolvency sources without inventing a loss reduction"
+  - line: "6-prior"
+    description: "Apply exclusion to surviving prior loss vintages after current tax"
+    formula: "100000 wages and two100000 post2017 regular/AMT vintages give regular claim67400 and AMTclaim90000. Excluded40000 reduces regular32600 first then7400 second (closing92600); alternative10000 first then30000 second (closing70000). Current claims and tax are unchanged."
+    irsRef: "IRC108(b)(4)(A)/(B); Reg1.108-7(b); Reg1.55-1(a)"
+    testRef: "tests/engine/federal-cod-nol.test.ts::reduces independent closing loss vintages only after calculating current tax"
+  - line: "6-current"
+    description: "Current-year original loss precedes older carryovers"
+    formula: "Current regular80000/AMT75000 plus earlier10000 and20000, excluded90000: regular reduces80000+10000, leaving20000; AMT reduces75000+10000+5000, leaving15000. Current origin and prior absorption facts remain separately retained."
+    irsRef: "IRC108(b)(4)(B); Pub908 Making the reduction"
+    testRef: "tests/engine/federal-cod-nol.test.ts::reduces current origins before older carries in each tax system"
+  - line: "history"
+    description: "Preserve a filed attribute reduction in the original loss year"
+    formula: "A filed2024 original loss80000 reduced20000 in2024 carries60000 to2025. Same-origin-year use must be0; positive NOL use in that year still rejects."
+    irsRef: "IRC108(b)(4); IRC172(b); Form9826"
+    testRef: "tests/engine/forms/cod-nol-reductions.test.ts::accepts actual origin-year attribute reductions without same-year loss use"
+  - line: "6-expiry"
+    description: "Reduce carryovers to the discharge year before residual final-year expiry"
+    formula: "100000 wages with2005 and2022 losses100000 each gives unrestricted regular claim100000 but only84250 current taxable-income use; AMTclaim/use90000. Excluded5000 uses final-year2005 balances15750/10000 first; only10750/5000 then expires. Both outgoing2022 carries remain100000. Already-expired2004 loss cannot absorb COD."
+    irsRef: "IRC108(b)(2)(A),(b)(4)(A)/(B); Pub4681 All other tax attributes item1; IRC172(b)(1)(A)(ii)"
+    testRef: "tests/engine/federal-cod-nol.test.ts::applies COD before final-year expiry but never revives an already expired loss"
+  - line: "modified-absorption"
+    description: "Retain the unresolved distinct claim and modified-absorption coordination boundary"
+    formula: "For pre2018 regular carry, current use is the lesser of available carry and positive actual limit income less earlier claims; unrestricted claimed deduction is preserved. For post2017 regular and AMT, use is the current capped claim. If this use differs from modified-income absorption, reject this initial COD method. Do not assume the succeeding carry is the108 carryover to the discharge year or silently absorb the difference twice."
+    irsRef: "IRC108(b)(2)(A)/(4); IRC172(b)(2); Reg1.172-5; Reg1.108-7(b)"
+    testRef: "tests/engine/federal-cod-nol.test.ts::requires the separate COD method when modified absorption differs from current use"
+  - line: "conservation"
+    description: "Require original debt, insolvency and final carry conservation"
+    formula: "Missing/duplicate/changed sources, unknown elections or ownership, insufficient independent NOL, actual title11 or property/interest complexity rejects. Exact1000.49 reports1000 once; two actual1000.30 sources aggregate2000.60 and report2001, without rounding individual statements. Original cents remain intact."
+    irsRef: "IRC108(a)/(b); IRC6102(c); Form9822/6"
+    testRef: "tests/engine/federal-cod-nol.test.ts::retains source cents and rejects unresolved or conflicting attribute sources"
+  - line: "1411"
+    description: "Retain original applicable loss fractions after attribute reduction"
+    formula: "The original regular/1411 loss ratio is unchanged. A regular original100000 with original141140000 and post-COD carry27600 retains11040 applicable remaining carry; current regular67400 claim still has26960 section1411 portion."
+    irsRef: "Reg1.1411-4(h)(3); IRC108(b)(4)(A)"
+    testRef: "tests/engine/federal-cod-nol.test.ts::preserves the original investment loss fraction and current deduction"
+  - line: "readiness"
+    description: "Do not turn source-only future-year validation into full-return qualification"
+    formula: "Actual2026 source packet validates without reduction; full2026 remains unavailable. A present positive packet must never be ignored when complete carry context is missing."
+    irsRef: "Actual Form982 source year and source facts"
+    testRef: "tests/engine/forms/cod-nol-reductions.test.ts::retains unknown and future-year boundaries for actual cancellation sources"
+  - line: "review"
+    description: "Reconcile original COD records, each independent carry vector and the saved review statement"
+    formula: "Prepare a private original-validated token before identifier redaction. Recalculate reductions from bound original sources and retained separately checked current-tax contexts; every original/remaining/reduced amount and audit must match. Show Form9821b/2/6 and pre/post regular/AMT carry without creditor TIN, account, last4, source ID or references. Missing/forged/stale tokens and changed sources, retained amounts or audits reject before packet writes."
+    irsRef: "Form9821b/2/6; IRC108(b)(4); retained source and calculation review boundary"
+    testRef: "tests/pdf/cod-nol-review.test.ts::preserves independent COD carry reductions in the redacted review packet"
+  - line: "review-conservation"
+    description: "Reject stale original sources and modified retained calculation contexts"
+    formula: "An opaque token must bind the full original household/year/source input and its redacted equivalent; neither a plain object nor another return's token is accepted. Original amounts and source histories, actual claims, pre-COD vectors, post-COD vectors and audits conserve independently."
+    irsRef: "Form9826; original source and current-tax-first reconciliation"
+    testRef: "tests/pdf/cod-nol-review.test.ts::rejects altered COD sources and retained carry calculations before rendering"

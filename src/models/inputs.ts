@@ -6,6 +6,7 @@
 import { z } from "zod";
 import { getNYIT201ResidentConstants } from "@/models/constants.js";
 import { d } from "@/utils/decimal.js";
+import { Form982NolSourcesSchema } from "@/models/cod-nol-sources.js";
 import { IraBasisSourcesSchema } from "@/models/ira-basis-sources.js";
 
 // Custom Zod type for decimal strings (validated as numbers, stored as strings for Decimal.js)
@@ -5879,6 +5880,7 @@ export const TaxYearInputSchema = z.object({
   form1099K: z.array(Form1099KSchema).default([]),
   form1099C: z.array(Form1099CSchema).default([]),
   codExclusion: CodExclusionSchema.optional(),
+  form982NolSources: Form982NolSourcesSchema.optional(),
   form1099Q: z.array(Form1099QSchema).default([]),
   qualifiedEducationExpenses: QualifiedEducationExpenseSummarySchema.optional(),
   form1099R: z.array(Form1099RSchema).optional(),

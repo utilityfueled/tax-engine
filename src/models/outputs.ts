@@ -268,6 +268,8 @@ export interface TaxReturnResult {
   form8962?: import("@/engine/forms/form-8962.js").Form8962Result;
   form8960?: import("@/engine/forms/form-8960.js").Form8960Result;
   form982?: import("@/engine/forms/form-982.js").Form982Result;
+  /** Source-bound regular/alternative loss reductions after current tax under108(b). */
+  codNolReduction?: import("@/engine/forms/cod-nol-reductions.js").CodNolReductionResult;
   form8824?: import("@/engine/forms/form-8824.js").Form8824AggregateResult;
   form2210?: import("@/engine/forms/form-2210.js").Form2210Result;
   form8815?: import("@/engine/forms/form-8815.js").Form8815Result;

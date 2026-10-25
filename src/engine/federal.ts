@@ -141,6 +141,7 @@ import { calculateForm1099Q } from "./forms/form-1099-q.js";
 import { calculateForm1099K } from "./forms/form-1099-k.js";
 import { calculateForm1099C } from "./forms/form-1099-c.js";
 import { calculateForm982 } from "./forms/form-982.js";
+import { calculateCodNolReduction } from "./forms/cod-nol-reductions.js";
 import { calculateSEHealthInsuranceWorksheet, type SEHealthInsuranceWorksheetResult } from "./forms/se-health-insurance-worksheet.js";
 import { calculateScheduleJ } from "./forms/schedule-j.js";
 import { calculateForm8915F, type Form8915FResult } from "./forms/form-8915-f.js";
@@ -178,6 +179,7 @@ import type { ILScheduleWITRecord } from "./state/il-schedule-il-wit.js";
 
 export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   validateQofDispositionFacts(input.qofDispositionFacts, input.taxpayer.taxYear);
+  if (input.form982NolSources) calculateCodNolReduction(input);
   const marketplace = input.form7206?.plans?.some(plan => plan.marketplaceCoverage === true && plan.premiumTaxCreditInvolved === true);
   if (!marketplace) return calculateFederalTaxWithNol(input);
   if (![2025,2026].includes(input.taxpayer.taxYear)) throw new Error("Marketplace health coordination supports actual2025 and2026 sources.");
@@ -4130,6 +4132,9 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     unverifiedAnnuitySourceIds: niitOrdinarySources.unverifiedAnnuitySourceIds, priorLoss: nol.worksheet,
   }) : undefined;
   if (form172) audit.merge(form172.lines);
+  const codNolReduction = input.form982NolSources && nol?.stage === "final"
+    ? calculateCodNolReduction(input, { priorLoss: nol.worksheet, currentOrigin: form172 }) : undefined;
+  if (codNolReduction) audit.merge(codNolReduction.lines);
   const baseResult: TaxReturnResult = {
     taxYear: year,
     filingStatus,
@@ -4151,6 +4156,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     nolDeduction,
     netOperatingLoss: nol?.stage === "final" ? nol.worksheet : undefined,
     form172,
+    codNolReduction,
     totalIncome,
 
     adjustmentsToIncome: adjustments,
@@ -4212,36 +4218,42 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       let cfFtc = foreignTaxCreditCarryforward;
 
       if (hasCodExclusions && codExclusion) {
-        if (nol) throw new Error("Actual NOL carry with current debt cancellation requires its regular and AMT vintage attribute-reduction worksheets");
-        form982 = calculateForm982({
-          bankruptcyExclusion: form1099CResult.bankruptcyExclusion,
-          insolvencyExclusion: form1099CResult.insolvencyExclusion,
-          qualifiedPrincipalResidenceExclusion: form1099CResult.qualifiedPrincipalResidenceExclusion,
-          qualifiedFarmExclusion: form1099CResult.qualifiedFarmExclusion,
-          qualifiedRealPropertyBusinessExclusion: form1099CResult.qualifiedRealPropertyBusinessExclusion,
-          electBasisReductionFirst: codExclusion.electBasisReductionFirst ?? false,
-          attributes: {
-            nolCarryforward: cfNol,
-            generalBusinessCreditCarryforward: cfGbc,
-            minimumTaxCreditCarryforward: cfMtc,
-            capitalLossCarryforward: cfCapitalLoss,
-            aggregateBasisOfProperty: d(codExclusion.aggregateBasisOfProperty),
-            passiveActivityLossCarryforward: cfPassive,
-            foreignTaxCreditCarryforward: cfFtc,
-            basisOfDepreciableProperty: d(codExclusion.basisOfDepreciableProperty),
-            basisOfPrincipalResidence: d(codExclusion.basisOfPrincipalResidence),
-            basisOfDepreciableRealProperty: d(codExclusion.basisOfDepreciableRealProperty),
-          },
-        });
-        audit.merge(form982.lines);
-        cfNol = form982.reducedAttributes.nolCarryforward;
-        cfGbc = form982.reducedAttributes.generalBusinessCreditCarryforward;
-        cfMtc = form982.reducedAttributes.minimumTaxCreditCarryforward;
-        cfCapitalLoss = form982.reducedAttributes.capitalLossCarryforward;
-        cfFtc = form982.reducedAttributes.foreignTaxCreditCarryforward;
-        // Note: passive loss reduction is applied to the aggregate; individual
-        // activity allocations are not rebalanced — the aggregate reduction is
-        // informational for the carryforward totals.
+        if (codNolReduction?.calculationComplete && codNolReduction.regular && codNolReduction.alternativeTax) {
+          if (!form1099CResult.totalExclusions.eq(codNolReduction.sourceExcludedAmount)
+            || !cfNol.eq(codNolReduction.regular.carryforwardBeforeReduction)) throw new Error("COD actual excluded debt and canonical loss carries must reconcile");
+          cfNol = codNolReduction.regular.carryforward;
+        } else {
+          if (nol) throw new Error("Actual NOL carry with current debt cancellation requires its regular and AMT vintage attribute-reduction worksheets");
+          form982 = calculateForm982({
+            bankruptcyExclusion: form1099CResult.bankruptcyExclusion,
+            insolvencyExclusion: form1099CResult.insolvencyExclusion,
+            qualifiedPrincipalResidenceExclusion: form1099CResult.qualifiedPrincipalResidenceExclusion,
+            qualifiedFarmExclusion: form1099CResult.qualifiedFarmExclusion,
+            qualifiedRealPropertyBusinessExclusion: form1099CResult.qualifiedRealPropertyBusinessExclusion,
+            electBasisReductionFirst: codExclusion.electBasisReductionFirst ?? false,
+            attributes: {
+              nolCarryforward: cfNol,
+              generalBusinessCreditCarryforward: cfGbc,
+              minimumTaxCreditCarryforward: cfMtc,
+              capitalLossCarryforward: cfCapitalLoss,
+              aggregateBasisOfProperty: d(codExclusion.aggregateBasisOfProperty),
+              passiveActivityLossCarryforward: cfPassive,
+              foreignTaxCreditCarryforward: cfFtc,
+              basisOfDepreciableProperty: d(codExclusion.basisOfDepreciableProperty),
+              basisOfPrincipalResidence: d(codExclusion.basisOfPrincipalResidence),
+              basisOfDepreciableRealProperty: d(codExclusion.basisOfDepreciableRealProperty),
+            },
+          });
+          audit.merge(form982.lines);
+          cfNol = form982.reducedAttributes.nolCarryforward;
+          cfGbc = form982.reducedAttributes.generalBusinessCreditCarryforward;
+          cfMtc = form982.reducedAttributes.minimumTaxCreditCarryforward;
+          cfCapitalLoss = form982.reducedAttributes.capitalLossCarryforward;
+          cfFtc = form982.reducedAttributes.foreignTaxCreditCarryforward;
+          // Note: passive loss reduction is applied to the aggregate; individual
+          // activity allocations are not rebalanced — the aggregate reduction is
+          // informational for the carryforward totals.
+        }
       }
 
       const alternativeCharityCarry = nol?.stage === "final"
@@ -4278,7 +4290,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
         } : {}),
         excessBusinessLossNOL: form461.nolCarryforward,
         nolCarryforward: cfNol,
-        ...(form172 ? { alternativeTaxNolCarryforward: form172.alternativeClosingCarryforward } : {}),
+        ...(codNolReduction?.alternativeTax ? { alternativeTaxNolCarryforward: codNolReduction.alternativeTax.carryforward }
+          : form172 ? { alternativeTaxNolCarryforward: form172.alternativeClosingCarryforward } : {}),
         generalBusinessCredit: cfGbc,
         suspendedBusinessInterest: section163jCarryforward,
         partnerBasis: schedE.partnerships

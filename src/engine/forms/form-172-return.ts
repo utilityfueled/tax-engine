@@ -8,6 +8,7 @@ import type { ScheduleDResult } from "@/engine/schedules/schedule-d.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { d, roundDollar, sum } from "@/utils/decimal.js";
 import { calculateForm172Origin, type Form172OriginInput, type Form172OriginResult } from "./form-172-origin.js";
+import { calculateCodNolReduction } from "./cod-nol-reductions.js";
 import type { NetOperatingLossReturnResult } from "./net-operating-loss-return.js";
 import { calculateForm172ItemizedSources } from "./form-172-itemized-sources.js";
 import { calculateForm172CapitalSources } from "./form-172-capital-sources.js";
@@ -70,8 +71,14 @@ export function calculateForm172Return(input: TaxYearInput, context?: Form172Ret
     || facts.sourceFactsConfirmed !== true || facts.allCurrentYearSourcesIncluded !== true
     || !Array.isArray(facts.businessSources)) throw new Error("Form172 requires complete actual current origin year, source reference and confirmations");
   if (!input.netOperatingLoss) throw new Error("Form172 requires the complete actual prior regular and separate AMT carry packet, including known empty histories");
-  if (facts.farmingLossIncluded !== false || facts.cancelledDebtIncluded !== false || facts.estateOrTrustLossIncluded !== false) {
+  if (facts.farmingLossIncluded !== false || facts.estateOrTrustLossIncluded !== false) {
     throw new Error("Form172 farming, cancelled-debt and estate origin methods require their actual separate source worksheets");
+  }
+  if (input.form982NolSources) {
+    if (facts.cancelledDebtIncluded !== true) throw new Error("Form172 must retain the actual cancelled-debt source classification");
+    calculateCodNolReduction(input);
+  } else if (facts.cancelledDebtIncluded !== false || input.form1099C.length || input.codExclusion !== undefined) {
+    throw new Error("Form172 cancelled-debt origin requires its actual separate source worksheet");
   }
   const alternative = facts.alternativeTax;
   if (alternative?.sourceFactsConfirmed !== true || !alternative.sourceReference?.trim()
@@ -98,7 +105,7 @@ export function calculateForm172Return(input: TaxYearInput, context?: Form172Ret
 
   // Reject actual unsupported records before netting so offsetting sources cannot
   // make a missing classification look like a known zero.
-  for (const key of ["scheduleF", "scheduleK1", "scheduleK1Form1041", "rentalProperties", "form1099Misc", "form1099C", "codExclusion",
+  for (const key of ["scheduleF", "scheduleK1", "scheduleK1Form1041", "rentalProperties", "form1099Misc",
     "form1099Q", "formW2G", "form1099K", "form1099OID", "form4797", "form4684", "form8824", "homeSales", "cryptoIncome",
     "form2555", "form8814", "form8839", "form6252", "form6781", "form8915F"] as const) {
     const value = input[key];

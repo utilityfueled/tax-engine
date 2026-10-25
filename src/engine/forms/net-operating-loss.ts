@@ -155,12 +155,13 @@ export function calculateNetOperatingLoss(input: {
     const reductions = row.history.map(history => {
       const historyYear = history.taxYear;
       if (!Number.isInteger(historyYear) || historyYear === undefined || historyYear < 1 || historyYear >= taxYear
-        || historyYear === year || historyYears.has(historyYear) || !history.sourceReference?.trim()) {
+        || historyYears.has(historyYear) || !history.sourceReference?.trim()) {
         throw new Error("NOL history requires distinct actual earlier use years and source references");
       }
       historyYears.add(historyYear);
       const used = filedAmount(history.nolUsed, "historical NOL use");
       const reduced = filedAmount(history.attributeReduction, "historical attribute reduction");
+      if (historyYear === year && !used.isZero()) throw new Error("NOL same-origin-year history may contain actual attribute reduction, never same-year NOL use");
       if (historyYear < year && (row.carrybackTreatment !== "completed" || reduced.gt(0))) {
         throw new Error("NOL prior-origin use requires actual completed carryback history");
       }

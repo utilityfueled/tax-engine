@@ -13,6 +13,7 @@ import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import { buildNetOperatingLossReview } from "@/pdf/fill-net-operating-loss.js";
 import { form8949ReviewCalculation, type PreparedForm8949Review } from "../../form-8949-review-context.js";
+import type { PreparedCodNolReview } from "../../cod-nol-review-context.js";
 import {
   loadReviewTemplate,
   setTextField,
@@ -110,6 +111,7 @@ export async function fillForm6251(
   result: TaxReturnResult,
   blankPdfPath: string,
   capitalGainReview?: PreparedForm8949Review,
+  codNolReview?: PreparedCodNolReview,
 ): Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
   const doc = await loadReviewTemplate(blankPdfPath, 2025);
@@ -174,7 +176,7 @@ export async function fillForm6251(
     }
   }
   if (input.netOperatingLoss || result.netOperatingLoss) {
-    buildNetOperatingLossReview(input, result);
+    buildNetOperatingLossReview(input, result, capitalGainReview, codNolReview);
     if (!result.netOperatingLoss || !required("2e").eq(result.nolDeduction)
       || !required("2f").eq(result.netOperatingLoss.alternativeTax.deduction.negated())) {
       throw new Error("Form6251 NOL source amounts do not reconcile with the audited adjustments");

@@ -166,6 +166,47 @@ function formatCalculatedLineValue(line: CalculatedLine) {
 }
 
 export function buildForm982ReferenceSummary(result: TaxReturnResult): Form982ReferenceSummary {
+  const cod = result.codNolReduction;
+  if (cod) {
+    if (cod.sourceFactsVerified !== true || cod.calculationComplete !== true || !cod.regular || !cod.alternativeTax || result.form982) {
+      throw new Error("Form982 source NOL reference requires its complete independent source calculation");
+    }
+    const same = (actual: Decimal | undefined, expected: Decimal) => {
+      if (!Decimal.isDecimal(actual) || !actual.isFinite() || !actual.eq(expected)) throw new Error("Form982 NOL reference amounts do not reconcile");
+    };
+    for (const ledger of [cod.regular, cod.alternativeTax]) {
+      const total = (key: "beforeReduction" | "attributeReduction" | "expiredAfterReduction" | "remainingCarryforward") => ledger.vintages.reduce((value, row) => value.plus(row[key]), new Decimal(0));
+      same(ledger.beforeReduction, total("beforeReduction")); same(ledger.reduction, total("attributeReduction")); same(ledger.carryforward, total("remainingCarryforward"));
+      same(ledger.expiredAfterReduction, total("expiredAfterReduction"));
+      same(ledger.beforeReduction, ledger.reduction.plus(ledger.expiredAfterReduction).plus(ledger.carryforward)); same(ledger.reduction, cod.reportedExcludedAmount);
+    }
+    same(result.carryforwards.nolCarryforward, cod.regular.carryforward);
+    same(result.carryforwards.alternativeTaxNolCarryforward, cod.alternativeTax.carryforward);
+    for (const [line, expected] of [["2", cod.reportedExcludedAmount], ["6", cod.regular.reduction]] as const) {
+      for (const lines of [cod.lines, result.allLines]) {
+        const rows = lines.filter(row => row.form === "Form 982" && row.line === line);
+        if (rows.length !== 1) throw new Error("Form982 NOL reference requires unique retained source audits");
+        same(rows[0].value, expected);
+      }
+    }
+    return {
+      title: "Form 982 Insolvency and NOL Reduction Reference Summary", warningLabel: "REFERENCE SUMMARY ONLY",
+      introduction: "Actual personal-debt insolvency exclusion. Current tax is calculated before the separate regular and alternative loss-vintage reductions. Original sources and every reduced vintage are reconciled in the accompanying NOL statement.",
+      exclusions: [{ line: "1b", description: "Insolvency exclusion", value: cod.reportedExcludedAmount.toString() }],
+      reductions: [{ line: "6", description: "Regular net operating loss attribute reduction", value: cod.regular.reduction.toString(),
+        formula: "Current-year original NOL first; then oldest carryover to this year before residual expiry. Actual current deductions are unchanged." }],
+      totals: [
+        { label: "Line2 reported excluded debt", value: cod.reportedExcludedAmount.toString() },
+        { label: "Exact original excluded debt", value: cod.sourceExcludedAmount.toString() },
+        { label: "Actual immediately-before-discharge insolvency", value: cod.insolvencyAmount.toString() },
+        { label: "Regular remaining NOL", value: cod.regular.carryforward.toString() },
+        { label: "Regular residual expiry after COD", value: cod.regular.expiredAfterReduction.toString() },
+        { label: "Alternative-tax NOL reduction", value: cod.alternativeTax.reduction.toString() },
+        { label: "Alternative-tax remaining NOL", value: cod.alternativeTax.carryforward.toString() },
+        { label: "Alternative residual expiry after COD", value: cod.alternativeTax.expiredAfterReduction.toString() },
+      ],
+    };
+  }
   if (!result.form982) {
     throw new Error("Form 982 reference summary requires result.form982");
   }

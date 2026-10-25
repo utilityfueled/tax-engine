@@ -10,6 +10,7 @@ import { calculateCharitableNolCarryover } from "@/engine/forms/charitable-net-o
 import { calculateAlternativeCharitableNolCarryover } from "@/engine/forms/alternative-charitable-net-operating-loss.js";
 import { calculateAlternativeTaxNol } from "@/engine/forms/alternative-tax-net-operating-loss.js";
 import { calculateForm172Return } from "@/engine/forms/form-172-return.js";
+import { calculateCodNolReduction } from "@/engine/forms/cod-nol-reductions.js";
 import { calculateForm2441Benefits } from "@/engine/forms/form-2441-benefits.js";
 import { calculateDependentCareBenefitSources } from "@/engine/forms/dependent-care-benefit-sources.js";
 import { calculateForm6251BondSources } from "@/engine/forms/form-6251-bond-sources.js";
@@ -21,6 +22,7 @@ import { getConstants } from "@/models/constants.js";
 import { d, roundDollar, sum } from "@/utils/decimal.js";
 import { assertPdfExportAllowed, markReviewPdf } from "@/pdf/export-policy.js";
 import { form8949ReviewOriginalSourceInput, type PreparedForm8949Review } from "@/pdf/form-8949-review-context.js";
+import { codNolReviewOriginalSourceInput, type PreparedCodNolReview } from "@/pdf/cod-nol-review-context.js";
 
 function amount(value: Decimal | undefined): Decimal {
   if (!Decimal.isDecimal(value) || !value.isFinite()) throw new Error("NOL review requires complete finite retained amounts");
@@ -106,8 +108,13 @@ function currentOriginRows(input: TaxYearInput, result: TaxReturnResult, capital
     if (saved.length !== 1) throw new Error("Current origin retained audits are missing or duplicated");
     eq(saved[0].value, line.value);
   }
-  eq(result.carryforwards.nolCarryforward, checked.regularClosingCarryforward);
-  eq(result.carryforwards.alternativeTaxNolCarryforward, checked.alternativeClosingCarryforward);
+  if (result.codNolReduction) {
+    eq(result.codNolReduction.regular?.carryforwardBeforeReduction, checked.regularClosingCarryforward);
+    eq(result.codNolReduction.alternativeTax?.carryforwardBeforeReduction, checked.alternativeClosingCarryforward);
+  } else {
+    eq(result.carryforwards.nolCarryforward, checked.regularClosingCarryforward);
+    eq(result.carryforwards.alternativeTaxNolCarryforward, checked.alternativeClosingCarryforward);
+  }
   return [
     `Current regular PartI loss ${checked.regular.netOperatingLoss}; current EBL carry ${checked.currentExcessBusinessLoss}; total regular closing carry ${checked.regularClosingCarryforward}`,
     `Current alternative PartI loss ${checked.alternativeTax.netOperatingLoss}; current EBL carry ${checked.alternativeExcessBusinessLoss}; total alternative closing carry ${checked.alternativeClosingCarryforward}`,
@@ -121,8 +128,9 @@ function currentOriginRows(input: TaxYearInput, result: TaxReturnResult, capital
 
 /** Source amounts and retained canonical contexts are checked separately. This
  * render path works after identifier redaction and never invents taxpayer IDs. */
-export function buildNetOperatingLossReview(input: TaxYearInput, result: TaxReturnResult, capitalReview?: PreparedForm8949Review): string[] {
+export function buildNetOperatingLossReview(input: TaxYearInput, result: TaxReturnResult, capitalReview?: PreparedForm8949Review, codReview?: PreparedCodNolReview): string[] {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
+  if (input.form982NolSources || result.codNolReduction) input = codNolReviewOriginalSourceInput(input, result, codReview);
   const facts = input.netOperatingLoss; const calculation = result.netOperatingLoss;
   if (!facts || facts.sourceTaxYear !== result.taxYear || facts.sourceFactsConfirmed !== true
     || facts.allCarryoversIncluded !== true || !calculation?.calculationComplete
@@ -158,11 +166,11 @@ export function buildNetOperatingLossReview(input: TaxYearInput, result: TaxRetu
     return [`${label}: claimed ${computed.deduction}; absorbed ${computed.absorbed}; expired ${computed.expired}; remaining ${computed.carryforward}`, ...rows];
   };
   const alternative = { ...calculation.alternativeTaxSources, ...calculation.alternativeTax };
-  const regularRows = ledger(facts.vintages, calculation, "Regular NOL");
-  const alternativeRows = ledger(facts.alternativeTax.vintages, alternative, "Alternative NOL");
+  const regularRows = ledger(facts.vintages, calculation, result.codNolReduction ? "Regular NOL before COD" : "Regular NOL");
+  const alternativeRows = ledger(facts.alternativeTax.vintages, alternative, result.codNolReduction ? "Alternative NOL before COD" : "Alternative NOL");
   const originRows = currentOriginRows(input, result, capitalReview);
   eq(result.nolDeduction, calculation.deduction);
-  if (!result.form172) eq(result.carryforwards.nolCarryforward, calculation.carryforward);
+  if (!result.form172 && !result.codNolReduction) eq(result.carryforwards.nolCarryforward, calculation.carryforward);
   eq(result.agi, calculation.finalIncome.agi);
   const audit = (form: string, line: string, expected: Decimal) => {
     const rows = result.allLines.filter(row => row.form === form && row.line === line);
@@ -262,14 +270,52 @@ export function buildNetOperatingLossReview(input: TaxYearInput, result: TaxRetu
     `AMTI before ATNOLD ${calculation.alternativeTax.amtiBeforeAtnol}; modified AMTI ${calculation.alternativeTax.modifiedAmtiBeforeAtnol}`,
     `Section1411 applicable regular deduction: ${calculation.section1411Deduction}`,
   ];
-  return ["NET OPERATING LOSS - REVIEW CALCULATION STATEMENT", ...contexts, ...regularRows, ...alternativeRows, ...originRows, ...charityRows,
-    "Amounts explain the retained canonical income contexts; this statement does not independently replay every upstream income source.",
-    "Original loss and history documents must be retained. Prior or mixed charitable carry, special alternative loss sources and debt-cancellation reductions require their separate worksheets.",
+  const codRows: string[] = [];
+  if (input.form982NolSources || result.codNolReduction) {
+    const retained = result.codNolReduction;
+    const checked = calculateCodNolReduction(input, { priorLoss: calculation, currentOrigin: result.form172 });
+    if (retained?.sourceFactsVerified !== true || retained.calculationComplete !== true || !retained.regular || !retained.alternativeTax
+      || !checked.regular || !checked.alternativeTax) throw new Error("COD review requires complete independent loss reductions");
+    for (const key of ["sourceExcludedAmount", "reportedExcludedAmount", "insolvencyAmount"] as const) eq(retained[key], checked[key]);
+    codRows.push(`Form982 line1b: insolvency exclusion; Form982 line2 excluded insolvency amount ${checked.reportedExcludedAmount}; original source amount ${checked.sourceExcludedAmount}`,
+      `Form982 line6 regular NOL reduction ${checked.regular.reduction}; actual current claims are unchanged.`);
+    for (const [key, label] of [["regular", "Regular"], ["alternativeTax", "Alternative"]] as const) {
+      const saved = retained[key], fresh = checked[key];
+      if (!saved || !fresh) throw new Error("COD review requires both independent carry ledgers");
+      if (saved.vintages.length !== fresh.vintages.length) throw new Error("COD review vintage counts do not reconcile");
+      for (const field of ["beforeReduction", "carryforwardBeforeReduction", "reduction", "expiredAfterReduction", "carryforward"] as const) eq(saved[field], fresh[field]);
+      codRows.push(`${label} COD: before ${fresh.beforeReduction}; reduction ${fresh.reduction}; expiry ${fresh.expiredAfterReduction}; remaining ${fresh.carryforward}`);
+      fresh.vintages.forEach((row, index) => {
+        const old = saved.vintages[index];
+        if (old.sourceId !== row.sourceId || old.lossTaxYear !== row.lossTaxYear) throw new Error("COD review original vintage identities do not reconcile");
+        for (const field of ["originalLoss", "beforeReduction", "attributeReduction", "expiredAfterReduction", "remainingCarryforward"] as const) eq(old[field], row[field]);
+        for (const field of ["section1411OriginalLoss", "section1411RemainingCarryforward"] as const) {
+          if (row[field] === undefined) { if (old[field] !== undefined) throw new Error("COD review original investment source does not reconcile"); }
+          else eq(old[field], row[field]);
+        }
+        codRows.push(`${row.lossTaxYear}: before ${row.beforeReduction}; reduction ${row.attributeReduction}; expiry ${row.expiredAfterReduction}; remaining ${row.remainingCarryforward}`);
+        if (row.section1411OriginalLoss !== undefined) codRows.push(`Original regular loss ${row.originalLoss}; original investment loss ${row.section1411OriginalLoss}; applicable remaining investment carry ${row.section1411RemainingCarryforward}`);
+      });
+    }
+    eq(result.carryforwards.nolCarryforward, checked.regular.carryforward);
+    eq(result.carryforwards.alternativeTaxNolCarryforward, checked.alternativeTax.carryforward);
+    for (const expected of checked.lines) {
+      for (const lines of [retained.lines, result.allLines]) {
+        const rows = lines.filter(row => row.form === expected.form && row.line === expected.line);
+        if (rows.length !== 1 || JSON.stringify(rows[0]) !== JSON.stringify(expected)) throw new Error("COD review retained audit and source amounts do not reconcile");
+      }
+    }
+  }
+  return ["NET OPERATING LOSS - REVIEW CALCULATION STATEMENT", ...contexts, ...regularRows, ...alternativeRows, ...originRows, ...charityRows, ...codRows,
+    result.codNolReduction
+      ? "The original source packet was recalculated before identifier removal. The before-COD loss calculations and final after-COD balances are shown separately."
+      : "Amounts explain the retained canonical income contexts; this statement does not independently replay every upstream income source.",
+    "Original loss and history documents must be retained. Prior or mixed charitable carry, special alternative loss sources and other debt-cancellation methods require their separate worksheets.",
     "This statement and the accompanying Form6251 are review material, not filing qualification."];
 }
 
-export async function fillNetOperatingLossReview(input: TaxYearInput, result: TaxReturnResult, outputDir: string, capitalReview?: PreparedForm8949Review): Promise<string> {
-  const paragraphs = buildNetOperatingLossReview(input, result, capitalReview);
+export async function fillNetOperatingLossReview(input: TaxYearInput, result: TaxReturnResult, outputDir: string, capitalReview?: PreparedForm8949Review, codReview?: PreparedCodNolReview): Promise<string> {
+  const paragraphs = buildNetOperatingLossReview(input, result, capitalReview, codReview);
   const doc = await PDFDocument.create(); const font = await doc.embedFont(StandardFonts.Helvetica);
   let page = doc.addPage([612, 792]); let y = 738;
   for (const paragraph of paragraphs) {

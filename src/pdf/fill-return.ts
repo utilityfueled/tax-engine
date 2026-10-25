@@ -29,6 +29,7 @@ import { fillForm2441 } from "./fill-form-2441.js";
 import { fillForm8863 } from "./fill-form-8863.js";
 import { fillForm6251 } from "./fill-form-6251.js";
 import { form8949ReviewCalculation, prepareForm8949Review, type PreparedForm8949Review } from "./form-8949-review-context.js";
+import { prepareCodNolReview, type PreparedCodNolReview } from "./cod-nol-review-context.js";
 import { fillForm8880 } from "./fill-form-8880.js";
 import { fillForm5329 } from "./fill-form-5329.js";
 import { fillForm8606 } from "./fill-form-8606.js";
@@ -378,6 +379,8 @@ export interface FillReturnOptions {
   flatten?: boolean;
   /** Prepared from complete original facts before review identifiers are cleared. */
   capitalGainReview?: PreparedForm8949Review;
+  /** Original COD and loss records, validated before review identifier removal. */
+  codNolReview?: PreparedCodNolReview;
 }
 
 export interface FillReturnResult {
@@ -420,7 +423,9 @@ export async function fillReturn(
     }
   }
   if (input.form7206 || result.form7206) assertForm7206ReviewSource(input, result);
-  if (input.netOperatingLoss || result.netOperatingLoss) buildNetOperatingLossReview(input, result, capitalGainReview);
+  const codNolReview = input.form982NolSources || result.codNolReduction
+    ? options.codNolReview ?? prepareCodNolReview(input) : undefined;
+  if (input.netOperatingLoss || result.netOperatingLoss) buildNetOperatingLossReview(input, result, capitalGainReview, codNolReview);
   const filledForms: string[] = [];
   const finalizedPaths = new Set<string>();
   const savePacketPdf = async (doc: PDFDocument, outputPath: string) => {
@@ -718,7 +723,7 @@ export async function fillReturn(
   // zero. Inclusion is for source review and is not a filing-requirement claim.
   if (result.form6251 && (result.form6251.amt.gt(0) || result.netOperatingLoss || capitalTransactions.section1202?.amtPreference.gt(0))) {
     const f6251Path = join(blankFormsDir, "f6251.pdf");
-    const doc6251 = await fillForm6251(input, result, f6251Path, capitalGainReview);
+    const doc6251 = await fillForm6251(input, result, f6251Path, capitalGainReview, codNolReview);
     if (flatten) await flattenForm(doc6251.getForm());
     const outputPath6251 = join(outputDir, "f6251-filled.pdf");
     await savePacketPdf(doc6251, outputPath6251);
@@ -838,7 +843,7 @@ export async function fillReturn(
 
   // ── IRA Deduction Worksheet reference summary (if applicable — supported Pub. 590-A deduction worksheet inputs) ──
   if (result.netOperatingLoss) {
-    filledForms.push(await fillNetOperatingLossReview(input, result, outputDir, capitalGainReview));
+    filledForms.push(await fillNetOperatingLossReview(input, result, outputDir, capitalGainReview, codNolReview));
   }
 
   if (result.iraDeductionWorksheet) {
@@ -868,7 +873,7 @@ export async function fillReturn(
   }
 
   // ── Form 982 reference summary (if applicable — supported COD exclusions that trigger attribute reductions) ──
-  if (result.form982) {
+  if (result.form982 || result.codNolReduction) {
     const outputPath982Reference = await fillForm982Reference(result, outputDir);
     filledForms.push(outputPath982Reference);
   }

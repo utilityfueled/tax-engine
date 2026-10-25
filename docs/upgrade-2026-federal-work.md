@@ -948,8 +948,12 @@ The current finite canonical queue is:
    coordination with known-empty ATNOL history are implemented below. Next are
    broader current-year origin-loss sources beyond the implemented active,
    all-at-risk ScheduleC standard/ordinary-itemized and ordinary investment
-   capital methods, prior/mixed-category and positive-ATNOL charitable
-   coordination,2026 nonitemizer carry, and debt-cancellation vintage reduction,
+   capital methods. Positive-ATNOL current-public-cash charitable coordination
+   and clear nonnegative-net1202 origins are now implemented. AI owns
+   prior/mixed-category charity and2026 nonitemizer carry; federal-law owns
+   the bounded actual insolvency/NOL reduction package and its guided collector.
+   Distinct modified-absorption COD coordination and later attributes remain
+   explicit internal methods. Other remaining source methods are
    estate/EBL origin-character and general foreign-loss allocation methods.
    Current AMT basis/depletion exceptions need their separate source worksheets.
    No missing origin, history, ownership or loss character may be inferred.
@@ -984,6 +988,16 @@ the exact branch remains rejected. Those internal gaps are distinct from final
 form publication and independent professional review. New findings must attach
 to this finite queue or the named matrix family, rather than expand the task into
 unrelated forms.
+
+The current COD package is tracked in
+[`upgrade-2026-cod-nol-work.md`](upgrade-2026-cod-nol-work.md). It preserves current
+tax, independent regular/AMT histories and fixed1411 origin character, and reduces
+carryovers to the discharge year before residual final-year expiry. Its actual
+guided collector follows canonical review; structured inputs alone do not finish
+the enabled-source criterion. The positive1202 negative-net printed/statutory
+overlap remains a named qualified-interpretation dependency, not a user arithmetic
+choice. Ordinary capital intake belongs to facts, and prior/mixed charity belongs
+to AI; none is silently reassigned or counted complete here.
 
 External evidence is limited to independent tax review with independently
 reviewed expected outputs, final year-specific forms/mappings where unpublished,
@@ -1433,15 +1447,17 @@ special method named in that matrix.
    printed/statutory overlap remains a specific unresolved interpretation,
    documented with its complete trace in
    `upgrade-2026-form172-qsbs-origin-work.md`; no convention is invented.
-3. The AI owner is finishing positive ATNOL with current public-cash gifts and
-   separate actual AMT charity history, then owns the selected actual
-   prior/mixed-category charity and2026 nonitemizer carry.
-   These remain unimplemented internally, with actual source collection handed
-   to the facts owner only after each stable calculation contract.
-4. The federal owner next addresses source-bound cancelled-debt reductions of
-   actual loss vintages. Unknown exclusions, reduction elections or ordering
-   cannot be supplied as zero. Farming, estate/EBL origin character and broader
-   foreign-loss methods remain separately identified unsupported methods.
+3. Positive ATNOL with current public-cash gifts and separate actual AMT charity
+   history is committed, as is the charity reporting/precision prerequisite.
+   The AI owner now owns selected actual prior/mixed-category charity and2026
+   nonitemizer carry, with source collection included in each coherent package.
+4. Source-bound insolvency reductions of regular/AMT loss vintages are implemented
+   and independently reviewed below. The federal owner next adds their actual
+   guided collector. Different modified-absorption/current-use amounts, later
+   attributes, partial taxable debt and other debt exclusions remain named
+   internal methods. Unknown exclusions, elections or histories cannot become
+   zero. Farming, estate/EBL origins and broader foreign-loss methods remain
+   separately identified unsupported methods.
 5. Close the enabled-scenario source, calculation, review/PDF and readiness
    audit, then the parent owns the integrated release checks. Mixed-owner PTC,
    disposed-PTP, preferential foreign-credit/loss accounts, pledged ESA and
@@ -1456,3 +1472,26 @@ special method named in that matrix.
 - A private original-source token authenticates the whole source/household/year packet before fresh redacted-review replay. Missing, forged, other-packet or changed-source tokens reject; snapshots and retained computations are frozen. The limited accessor supplies actual original capital facts while preserving current noncapital facts, so stale business expenses cannot be hidden.
 - Parent independent review on `e1fbc77db1a2ee77119f011d03f1702346b462b7` passed13 cases, including five new source/token probes, with no actionable finding. Final isolated product tree `194d229b3ce295d2b4a23305eaf27343a951710f`, after separately committed PDF-reader repair `9da0bab`, passed12 affected cases, root/web types, all4614 spec references and lint with zero errors/two existing warnings. The preceding571 adjacent cases passed; the only failed reader transport now passes without assertion or timeout changes. All four saved review pages were visually inspected and retain notices without original identifiers.
 - Rule versions2025.70/2026.66 retain incomplete2026, independent-review-pending and disabled filing. The complete derived numerical controls, source citations and negative-net printed-versus-statutory mismatch are in `upgrade-2026-form172-qsbs-origin-work.md`. That single interpretation remains disabled pending qualified authoritative input; the user is not asked to choose arithmetic. The federal owner's next selected implementation is actual cancelled-debt reductions of loss vintages.
+
+## 2026-10-25 — Actual insolvency reductions of NOL vintages
+
+- Actual original1099-C statements and complete immediately-before insolvency
+  records now bind the exclusion. The supported individual noncommunity route
+  requires full exclusion and sufficient independent regular/AMT NOL attributes.
+  Current origins reduce first, then earlier vintages; residual final-year carry
+  expires afterward. Current deductions and original1411 fractions stay intact.
+- The opaque original-source review context rejects stale source/calculation
+  packets before any files are written. The NOL and Form982 reference statements
+  show before/after balances, independent AMT amounts and residual expiry without
+  private identifiers. All four saved ordinary/expiry pages were inspected.
+- Exact tree `183cbe33621972e0f073ddb55fc72116ae5233b2` passes 713 tests across
+  34 files, pinned Node24 root/web types and 4,665 spec references. Scoped lint
+  reports zero errors and six existing warnings. Parent independent source review
+  passed 16 cases, including five additional literal/adversarial probes, with no
+  actionable finding. Full evidence and bounded methods are in
+  `upgrade-2026-cod-nol-work.md`.
+- Versions2025.75/2026.71 retain all readiness and independent-review gates.
+  The federal owner is implementing the guided collector next; this structured
+  source route alone does not complete enabled-source intake. Later attribute
+  waterfalls and different modified-absorption/current-use amounts remain
+  explicit internal methods, not external approval blockers.
