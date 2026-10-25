@@ -97,6 +97,7 @@ export const W2Schema = z.object({
   box12CodeT: optionalDecimal, // Box 12 code T employer-provided adoption benefits
   socialSecurityWages: optionalDecimalInput, // Box 3; omitted is not a verified zero
   socialSecurityTips: optionalDecimalInput, // Box 7; omitted is not a verified zero
+  allocatedTips: optionalDecimalInput, // Box8; actual source amount, distinct from Box1/7 income.
   socialSecurityWithheld: optionalDecimal, // Box 4
   medicareWages: optionalDecimal, // Box 5
   medicareWithheld: optionalDecimal, // Box 6

@@ -3,7 +3,7 @@ import Decimal from "decimal.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import type { YearConstants } from "@/models/constants.js";
-import { calculateForm4137 } from "@/engine/forms/form-4137.js";
+import { calculateUnreportedTipPayroll } from "@/engine/forms/unreported-tip-payroll.js";
 import { calculateForm8919 } from "@/engine/forms/form-8919.js";
 import { calculateScheduleC } from "./schedule-c.js";
 import { calculateScheduleF } from "./schedule-f.js";
@@ -33,7 +33,7 @@ interface ProfitSource { amount: Decimal; owner?: Owner; kind: "farm" | "nonfarm
 
 function calculateIndividual(
   input: TaxYearInput, constants: YearConstants, profits: ProfitSource[],
-  owner: Owner | undefined, aggregateLegacy: boolean,
+  owner: Owner | undefined, aggregateLegacy: boolean, tipPayroll: ReturnType<typeof calculateUnreportedTipPayroll>,
 ): ScheduleSEPerTaxpayer {
   const audit = new AuditTrail();
   const se = constants.selfEmploymentTax;
@@ -48,10 +48,7 @@ function calculateIndividual(
   const w2SSWages = sum(...w2s.map(w2 => d(w2.socialSecurityWages)));
   const w2SSTips = sum(...w2s.map(w2 => d(w2.socialSecurityTips)));
   const w2SSWagesAndTips = roundDollar(w2SSWages.plus(w2SSTips));
-  const tips = input.form4137 && belongs(input.form4137.accountHolder) ? calculateForm4137(input.form4137, constants, {
-    socialSecurityWagesAndTipsAlreadyReported: w2SSWages,
-    socialSecurityTipsAlreadyReported: w2SSTips,
-  }).line10 : new Decimal(0);
+  const tips = sum(...tipPayroll.forms.filter(form => belongs(form.accountHolder)).map(form => form.line10));
   const wages = input.form8919 && belongs(input.form8919.accountHolder) ? calculateForm8919(input.form8919, constants, {
     socialSecurityWagesAndTipsAlreadyReported: w2SSWages,
     w2SocialSecurityTipsAlreadyReported: w2SSTips,
@@ -106,9 +103,10 @@ export function calculateScheduleSE(
   scheduleCNetProfitOverride?: Decimal, scheduleFNetProfitOverride?: Decimal,
   options: { additionalNonfarmIncome?: Decimal; additionalNonfarmOwner?: Owner } = {},
 ): ScheduleSEResult {
+  const tipPayroll = calculateUnreportedTipPayroll(input, constants);
   const strict = input.taxpayer.taxYear >= 2026;
   const joint = input.taxpayer.filingStatus === "married_filing_jointly";
-  let sourceFactsVerified = true;
+  let sourceFactsVerified = tipPayroll.sourceFactsVerified;
   const resolveOwner = (owner: Owner | undefined, label: string): Owner | undefined => {
     if (!joint) {
       if (owner === "spouse") throw new Error(`${label}: spouse-owned SE source requires a joint return`);
@@ -169,10 +167,10 @@ export function calculateScheduleSE(
     || (input.form4137 !== undefined && input.form4137.accountHolder === undefined)
     || (input.form8919 !== undefined && input.form8919.accountHolder === undefined));
   const perTaxpayer = hasUnknownOwner && rawProfits.length
-    ? [calculateIndividual(input,constants,rawProfits,undefined,true)]
+    ? [calculateIndividual(input,constants,rawProfits,undefined,true,tipPayroll)]
     : (["primary","spouse"] as const).filter(owner => rawProfits.some(p => p.owner === owner))
-      .map(owner => calculateIndividual(input,constants,rawProfits.filter(p => p.owner === owner),owner,false));
-  const empty = calculateIndividual(input,constants,[],joint ? undefined : "primary",false);
+      .map(owner => calculateIndividual(input,constants,rawProfits.filter(p => p.owner === owner),owner,false,tipPayroll));
+  const empty = calculateIndividual(input,constants,[],joint ? undefined : "primary",false,tipPayroll);
   const total = (key: Exclude<keyof ScheduleSEAmounts,"lines">) => sum(...perTaxpayer.map(row => row[key]));
   const lines = perTaxpayer.length > 1
     ? perTaxpayer.flatMap(row => row.lines.map(line => ({...line,form:`Sched SE (${row.accountHolder})`})))

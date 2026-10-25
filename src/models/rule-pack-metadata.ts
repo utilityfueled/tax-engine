@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.40",
+    ruleVersion: "2025.41",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/pub/irs-pdf/f4137.pdf", section: "Actual employer and owner payroll sources, cash/noncash income distinction, separate spouse forms and canonical1040/Schedule2/SE/8959 routing", revision: "Final2025 Form4137 and official ScheduleSE/Form8959 instructions; RRTA Medicare coordination remains separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/pub/irs-pdf/f7206.pdf", section: "Actual owner/business income, SE tax, retirement/foreign source conservation and per-business line14 handoff to Schedule1 and QBI", revision: "Final2025 Form7206 and instructions; current2026 calculation remains independently unqualified; Marketplace/PTC coupling separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/publications/p529", section: "Actual educator reductions reconcile final sole-owner savings-bond exclusion and recipient cash-QTP/Coverdell education-excluded earnings", revision: "Posted Publication529 educator rule plus Publication970 source distinctions; mixed/joint bond and prepaid methods remain unqualified", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i8960", section: "Official individual lines1-17, signed disposition netting, actual FEIE MAGI allocation, combined itemized deduction limit and required zero-tax form", revision: "Final2025 instructions; enacted2026 section68 coordination remains independently unqualified", retrievedAt: "2026-10-25" },
@@ -83,11 +84,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.36-law-integration-draft",
+    ruleVersion: "2026.37-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/pub/irs-pdf/f4137.pdf", section: "Actual separate-owner tip payroll and184500 indexed2026 SocialSecurity base; canonical income/Schedule2/SE/8959 routing", revision: "Final2025 source formulas plus indexed2026 wage base; final2026 forms and independent review pending; RRTA Medicare coordination separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/pub/irs-pdf/f7206.pdf", section: "Actual owner/business income, SE tax, retirement/foreign source conservation and per-business line14 handoff to Schedule1 and QBI", revision: "Final2025 Form7206 and instructions; current2026 calculation remains independently unqualified; Marketplace/PTC coupling separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/publications/p529", section: "Actual educator reductions reconcile final sole-owner savings-bond exclusion and recipient cash-QTP/Coverdell education-excluded earnings", revision: "Posted Publication529 educator rule plus Publication970 source distinctions; mixed/joint bond and prepaid methods remain unqualified", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i8960", section: "Official individual lines1-17, signed disposition netting, actual FEIE MAGI allocation, combined itemized deduction limit and required zero-tax form", revision: "Final2025 instructions; enacted2026 section68 coordination remains independently unqualified", retrievedAt: "2026-10-25" },

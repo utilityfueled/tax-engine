@@ -67,7 +67,7 @@ import { calculateForm2441Benefits } from "./forms/form-2441-benefits.js";
 import { calculateDependentCareBenefitSources } from "./forms/dependent-care-benefit-sources.js";
 import { calculateForm8863 } from "./forms/form-8863.js";
 import { calculateForm8962 } from "./forms/form-8962.js";
-import { calculateForm4137 } from "./forms/form-4137.js";
+import { calculateUnreportedTipPayroll } from "./forms/unreported-tip-payroll.js";
 import { calculateForm8919 } from "./forms/form-8919.js";
 import { calculateSchedule3, calculateExcessSSWithholding } from "./schedules/schedule-3.js";
 import { calculateSchedule1 } from "./schedules/schedule-1.js";
@@ -154,7 +154,6 @@ import { calculateIllinoisReturn, type ILStateInput } from "./state/il-orchestra
 import type { ILScheduleWITRecord } from "./state/il-schedule-il-wit.js";
 
 export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
-  if (input.form4137ByOwner !== undefined) throw new Error("Separate-owner Form4137 sources require the pending canonical payroll integration.");
   const year = input.taxpayer.taxYear;
   const constants = getConstants(year);
   const filingStatus = input.taxpayer.filingStatus as FilingStatus;
@@ -318,7 +317,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     qcdAnnualLimit: constants.qcd.annualLimit,
   });
   audit.merge(form1099R.lines);
-  const hasUnreportedPayroll = input.form4137 !== undefined || input.form8919 !== undefined;
+  const hasUnreportedPayroll = input.form4137 !== undefined || input.form4137ByOwner !== undefined || input.form8919 !== undefined;
   const hasActualPayrollOwner = input.form4137?.accountHolder !== undefined || input.form8919?.accountHolder !== undefined;
   if (hasUnreportedPayroll && filingStatus === "married_filing_jointly"
     && (year >= 2026 || hasActualPayrollOwner) && input.w2s.some(w2 => w2.accountHolder === undefined)) {
@@ -340,24 +339,16 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     && ((input.form4137 && !input.form4137.accountHolder) || (input.form8919 && !input.form8919.accountHolder))) {
     throw new Error("2026 unreported payroll forms require actual taxpayer ownership");
   }
-  const tipPayroll = payrollForOwner(input.form4137?.accountHolder);
-  const form4137 = input.form4137
-    ? calculateForm4137(input.form4137, constants, {
-      socialSecurityWagesAndTipsAlreadyReported: tipPayroll.wages,
-      socialSecurityTipsAlreadyReported: tipPayroll.tips,
-    })
-    : undefined;
-  if (form4137) {
-    audit.merge(form4137.lines);
-  }
+  const tipPayroll = calculateUnreportedTipPayroll(input, constants);
+  const form4137 = tipPayroll.singular;
+  audit.merge(tipPayroll.lines);
   const unreportedPayroll = payrollForOwner(input.form8919?.accountHolder);
-  const samePayrollOwner = !input.form4137?.accountHolder || !input.form8919?.accountHolder
-    || input.form4137.accountHolder === input.form8919.accountHolder;
+  const sameOwnerTips = sum(...tipPayroll.forms.filter(form => !form.accountHolder || !input.form8919?.accountHolder || form.accountHolder === input.form8919.accountHolder).map(form => form.line10));
   const form8919 = input.form8919
     ? calculateForm8919(input.form8919, constants, {
       socialSecurityWagesAndTipsAlreadyReported: unreportedPayroll.wages,
       w2SocialSecurityTipsAlreadyReported: unreportedPayroll.tips,
-      form4137SocialSecurityTipsAlreadyReported: samePayrollOwner ? form4137?.line10 ?? new Decimal(0) : new Decimal(0),
+      form4137SocialSecurityTipsAlreadyReported: sameOwnerTips,
     })
     : undefined;
   if (form8919) {
@@ -376,12 +367,12 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
 
   // Line 1: Wages
   const totalWagesBeforeExclusion = w2Agg.wages
-    .plus(form4137?.unreportedTipIncome ?? new Decimal(0))
+    .plus(tipPayroll.income)
     .plus(form8919?.line6 ?? new Decimal(0))
     .plus(form1099R.disabilityPensionWages);
 
   audit.record("1040", "1a", "W-2 wages", w2Agg.wages, "Sum W-2 box 1");
-  audit.record("1040", "1c", "Unreported tips", form4137?.unreportedTipIncome ?? new Decimal(0), "Supported Form 4137 tips not included in line 1a");
+  audit.record("1040", "1c", "Unreported tips", tipPayroll.income, "Supported Form 4137 tips not included in line 1a");
   audit.record("1040", "1g", "Wages from Form 8919", form8919?.line6 ?? new Decimal(0), "Form 8919 line 6");
 
   // ── Form 2555: Foreign Earned Income Exclusion ────────
@@ -453,7 +444,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
       taxableCareBenefits.isZero() ? undefined : `additional taxable dependent-care benefits $${taxableCareBenefits}`,
       foreignEmploymentNotOnW2.isZero() ? undefined : "actual foreign employment income not reported on W2",
       taxableAdoptionBenefits.isZero() ? undefined : `signed taxable adoption benefits $${taxableAdoptionBenefits}`,
-      form4137?.unreportedTipIncome.greaterThan(0)
+      tipPayroll.income.greaterThan(0)
         ? "supported Form 4137 unreported tip income"
         : undefined,
       form8919?.line6.greaterThan(0)
@@ -468,7 +459,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     {
       w2Count: input.w2s.length.toString(),
       foreignEmploymentNotOnW2,
-      form4137UnreportedTipIncome: form4137?.unreportedTipIncome ?? new Decimal(0),
+      form4137UnreportedTipIncome: tipPayroll.income,
       form8919Wages: form8919?.line6 ?? new Decimal(0),
       disabilityPensionWages: form1099R.disabilityPensionWages,
       disabilityPensionPublicSafetyOfficerPremiumExclusion:
@@ -3299,7 +3290,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
       .plus(form8959.lines.find(line => line.line === "7")?.value ?? new Decimal(0))
       .minus(form8959.withholdingCredit)
       .plus((form8959.lines.find(line => line.line === "13")?.value ?? new Decimal(0)).div(2)),
-    additionalPayrollTaxes: sum(schedSE.deductibleHalf, form4137?.line13 ?? new Decimal(0), form8919?.line13 ?? new Decimal(0)),
+    additionalPayrollTaxes: sum(schedSE.deductibleHalf, tipPayroll.tax, form8919?.line13 ?? new Decimal(0)),
     earnedIncomeCredit: eic,
     excessSocialSecurityWithholding: excessSSWithholding,
     qualifyingChildren,
@@ -3676,7 +3667,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     newVehicleTransferRepayment,
     usedVehicleTransferRepayment,
     selfEmploymentTax,
-    unreportedSSTax: form4137?.line13,
+    unreportedSSTax: tipPayroll.tax,
     form8919Tax: form8919?.line13,
     penaltyTax: retirementPlanAdditionalTax,
     householdEmploymentTax: scheduleH?.totalTax,
@@ -3936,6 +3927,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     form2441Benefits,
     form1099SA,
     form4137,
+    form4137ByOwner: tipPayroll.forms.some(form => form.sourceFactsVerified) ? tipPayroll.byOwner : undefined,
     form8919,
     form4797,
     form5329,

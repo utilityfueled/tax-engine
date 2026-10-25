@@ -10,9 +10,9 @@ import Decimal from "decimal.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import type { FilingStatus, YearConstants } from "@/models/constants.js";
-import { d, zeroFloor, roundDollar } from "@/utils/decimal.js";
+import { d, zeroFloor, roundDollar, sum } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
-import { calculateForm4137 } from "./form-4137.js";
+import { calculateUnreportedTipPayroll } from "./unreported-tip-payroll.js";
 import { calculateForm8919 } from "./form-8919.js";
 
 export interface Form8959Result {
@@ -47,27 +47,18 @@ export function calculateForm8959(
   audit.record("Form 8959", "1", "Medicare wages from W-2s", medicareWages,
     "Sum W-2 Box 5");
 
-  const form4137 = input.form4137
-    ? calculateForm4137(input.form4137, constants, {
-      socialSecurityWagesAndTipsAlreadyReported: input.w2s.reduce(
-        (acc, w2) => acc.plus(d(w2.socialSecurityWages)),
-        new Decimal(0)
-      ),
-    })
-    : undefined;
-  const unreportedTips = form4137?.line6 ?? new Decimal(0);
+  const tipPayroll = calculateUnreportedTipPayroll(input, constants);
+  const unreportedTips = tipPayroll.medicareTips;
   audit.record("Form 8959", "2", "Unreported tips subject to Medicare tax", unreportedTips,
-    "Supported Form 4137 Line 6");
-
-  const form8919 = input.form8919
-    ? calculateForm8919(input.form8919, constants, {
-      socialSecurityWagesAndTipsAlreadyReported: input.w2s.reduce(
-        (acc, w2) => acc.plus(d(w2.socialSecurityWages)),
-        new Decimal(0)
-      ),
-      form4137SocialSecurityTipsAlreadyReported: form4137?.line10 ?? new Decimal(0),
-    })
-    : undefined;
+    "Sum actual owner Form4137 line6 amounts");
+  const owner = input.form8919?.accountHolder;
+  const ownerW2s = owner === undefined ? input.w2s : input.w2s.filter(w2 =>
+    (w2.accountHolder ?? (filingStatus !== "married_filing_jointly" ? "primary" : undefined)) === owner);
+  const form8919 = input.form8919 ? calculateForm8919(input.form8919, constants, {
+    socialSecurityWagesAndTipsAlreadyReported: sum(...ownerW2s.map(w2 => d(w2.socialSecurityWages))),
+    w2SocialSecurityTipsAlreadyReported: sum(...ownerW2s.map(w2 => d(w2.socialSecurityTips))),
+    form4137SocialSecurityTipsAlreadyReported: sum(...tipPayroll.forms.filter(form => owner === undefined || form.accountHolder === undefined || form.accountHolder === owner).map(form => form.line10)),
+  }) : undefined;
   const form8919Wages = form8919?.line6 ?? new Decimal(0);
   audit.record("Form 8959", "3", "Form 8919 wages subject to Medicare tax", form8919Wages,
     "Supported Form 8919 Line 6");

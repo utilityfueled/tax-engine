@@ -184,7 +184,7 @@ describe("Actual Form4137 employer source worksheet", () => {
     const household = { ...simpleW2Fixture, taxpayer: { ...simpleW2Fixture.taxpayer, filingStatus: "married_filing_jointly", spouse: { ...simpleW2Fixture.taxpayer.primary, firstName: "Actual Spouse" } } };
     const parsed = TaxYearInputSchema.parse({ ...household, form4137ByOwner: { primary, spouse } });
     expect(parsed.form4137ByOwner?.spouse?.accountHolder).toBe("spouse");
-    expect(() => calculateFederalTax(parsed)).toThrow(/Form4137.*canonical|canonical.*Form4137/i);
+    expect(() => calculateFederalTax(parsed)).toThrow(/actual.*owner|known.*owner|owner.*attribution/i);
     expect(() => TaxYearInputSchema.parse({ ...household, form4137: primary, form4137ByOwner: { primary } })).toThrow(/either|both/i);
     expect(() => TaxYearInputSchema.parse({ ...simpleW2Fixture, form4137ByOwner: { spouse } })).toThrow(/spouse/i);
     expect(() => TaxYearInputSchema.parse({ ...household, form4137ByOwner: { primary: spouse } })).toThrow(/owner/i);

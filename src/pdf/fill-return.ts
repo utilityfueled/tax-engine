@@ -75,7 +75,7 @@ import {
   fillForm6781Reference,
   shouldIncludeForm6781ReferenceSummary,
 } from "./fill-form-6781.js";
-import { fillForm4137 } from "./fill-form-4137.js";
+import { fillForm4137, assertForm4137ReviewSource } from "./fill-form-4137.js";
 import { fillForm8919 } from "./fill-form-8919.js";
 import { fillScheduleEIC } from "./fill-schedule-eic.js";
 import { fillScheduleH } from "./fill-schedule-h.js";
@@ -559,7 +559,8 @@ export async function fillReturn(
   }
 
   // ── Form 4137 (if applicable — Social Security and Medicare Tax on Unreported Tips) ──
-  if (result.form4137 && result.form4137.line13.gt(0)) {
+  const tipForms = assertForm4137ReviewSource(input, result);
+  if (tipForms.some(form => form.sourceFactsVerified || form.line13.gt(0))) {
     const f4137Path = join(blankFormsDir, "f4137.pdf");
     const doc4137 = await fillForm4137(input, result, f4137Path);
     if (flatten) await flattenForm(doc4137.getForm());
