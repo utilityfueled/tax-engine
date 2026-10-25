@@ -1,3 +1,4 @@
+import { buildPremiumTaxCreditInputs, premiumTaxCreditFactErrors } from "./guided-premium-tax-credit-facts";
 import { buildSchedule1AInput, schedule1AFactErrors } from "./guided-schedule-1-a-facts";
 import { actualCompensationSourceYear } from "./guided-compensation-reporting";
 import { buildTipIncomeInputs, tipIncomeFactErrors } from "./guided-tip-income-facts";
@@ -638,6 +639,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     if (adjustmentData?.studentLoanFacts) loanEducation = studentLoanEducationSources(creditsData, segmentation.filingStatus, state.taxYear, personalInfo, adjustmentData.studentLoanFacts);
     assertKnownFacts(studentLoanFactErrors(adjustmentData, segmentation.filingStatus, state.taxYear, loanEducation, segmentation.lifeEvents.includes("student-loans")));
     assertKnownFacts(healthInsuranceSourceErrors(state));
+    assertKnownFacts(premiumTaxCreditFactErrors(state));
     assertKnownFacts(adjustmentFactErrors(adjustmentData, segmentation.filingStatus, state.taxYear, loanEducation));
     assertKnownFacts(educatorFactErrors(adjustmentData, segmentation.filingStatus, state.taxYear, segmentation.lifeEvents.includes("educator-expenses")));
     assertKnownFacts(hsaFactErrors(adjustmentData?.hsaAccounts, segmentation.filingStatus, state.taxYear, w2Data?.entries ?? [], personalInfo, segmentation.lifeEvents.includes("hsa-contributions")));
@@ -766,6 +768,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     educationExpenses,
     ...educationDistributions,
     ...savingsBondInputs,
+    ...buildPremiumTaxCreditInputs(creditsData?.premiumTaxCredit, state.taxYear, segmentation.filingStatus, personalInfo),
     ...studentLoans,
     energyCredits,
     form8936: buildVehicleCreditInput(creditsData?.vehicles, state.taxYear, segmentation.filingStatus),
