@@ -15,7 +15,8 @@ import { careBenefitsFactErrors, guidedCareBenefitSources, type CareBenefitsData
 import { careFactErrors } from "./guided-credit-facts";
 import { energyFactErrors } from "./guided-energy-facts";
 import { isStartedW2, w2FactErrors } from "./guided-w2-facts";
-import { investmentFactErrors, isStartedInvestment, type InvestmentSourceData } from "./guided-investment-facts";
+import { investmentFactErrors, isStartedInvestment, type InvestmentSourceData, type InvestmentData } from "./guided-investment-facts";
+import { isStartedOid } from "./guided-oid-facts";
 import { businessFactErrors, hasBusinessSourceData, type BusinessSourceData } from "./guided-business-facts";
 import { isStartedRental, rentalFactErrors, type RentalSourceData } from "./guided-rental-facts";
 import { nonW2TaxAllocationErrors } from "./guided-salt-facts";
@@ -1208,11 +1209,7 @@ export interface SectionDataMap {
     qbiMateriallyParticipated?: boolean | null;
     businessFacts?: BusinessSourceData;
   };
-  "income-investments"?: {
-    interestEntries: InterestEntryData[];
-    dividendEntries: DividendEntryData[];
-    brokerageEntries: BrokerageEntryData[];
-  };
+  "income-investments"?: InvestmentData;
   "income-retirement"?: { entries: RetirementEntryData[] };
   "income-rental"?: { entries: RentalPropertyEntryData[] };
   "income-social-security"?: SocialSecurityData;
@@ -1678,13 +1675,14 @@ function validateSelfEmploymentSection(
 }
 
 function validateInvestmentSection(
-  data: { interestEntries: InterestEntryData[]; dividendEntries: DividendEntryData[]; brokerageEntries: BrokerageEntryData[] } | undefined,
+  data: InvestmentData | undefined,
   filingStatus?: FilingStatus | null,
   taxYear?: number | null,
   stateData?: StateReturnData,
+  stateCode?: string | null,
 ): SectionValidationResult {
-  if (!data || (![...data.interestEntries, ...data.dividendEntries, ...data.brokerageEntries].some(isStartedInvestment) && !data.brokerageEntries.some(entry => entry.transactions.some(isStartedInvestment)))) return EMPTY_SECTION("investment info");
-  const errors = investmentFactErrors(data, filingStatus, taxYear, stateData);
+  if (!data || (![...data.interestEntries, ...data.dividendEntries, ...data.brokerageEntries].some(isStartedInvestment) && !data.brokerageEntries.some(entry => entry.transactions.some(isStartedInvestment)) && !data.oidEntries?.some(isStartedOid))) return EMPTY_SECTION("investment info");
+  const errors = investmentFactErrors(data, filingStatus, taxYear, stateData, stateCode);
   if (Object.keys(errors).length) return { status: "partial", message: "Complete the actual investment source amounts, ownership and classifications.", fieldErrors: errors, allowSkip: true };
   return VALID_SECTION;
 }
@@ -1756,7 +1754,7 @@ export function validateSection(
     case "income-self-employment":
       return validateSelfEmploymentSection(getSectionData(state, "income-self-employment"), state.segmentation.filingStatus, getSectionData(state, "income-w2")?.entries, getSectionData(state, "state-return"));
     case "income-investments":
-      return validateInvestmentSection(getSectionData(state, "income-investments"), state.segmentation.filingStatus, state.taxYear, getSectionData(state, "state-return"));
+      return validateInvestmentSection(getSectionData(state, "income-investments"), state.segmentation.filingStatus, state.taxYear, getSectionData(state, "state-return"), getSectionData(state, "personal-info")?.state || state.segmentation.stateCode);
     case "income-rental":
       return validateRentalSection(getSectionData(state, "income-rental"), state.segmentation.filingStatus, state.taxYear, getSectionData(state, "personal-info")?.state || state.segmentation.stateCode);
     case "income-retirement":

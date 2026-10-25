@@ -526,19 +526,23 @@ function SectionContent({
       const interestEntries = investData?.interestEntries ?? [emptyInterestEntry];
       const dividendEntries = investData?.dividendEntries ?? [emptyDividendEntry];
       const brokerageEntries = investData?.brokerageEntries ?? [emptyBrokerageEntry];
+      const oidEntries = investData?.oidEntries ?? [];
       return (
         <SectionInvestmentIncome
           interestEntries={interestEntries}
           dividendEntries={dividendEntries}
           brokerageEntries={brokerageEntries}
+          oidEntries={oidEntries}
+          stateCode={state.sectionData["personal-info"]?.state || state.segmentation.stateCode}
+          onOidEntriesChange={next => onStateChange(updateSectionData(state, "income-investments", { interestEntries, dividendEntries, brokerageEntries, oidEntries: next }))}
           onInterestEntriesChange={(next: InterestEntryData[]) =>
-            onStateChange(updateSectionData(state, "income-investments", { interestEntries: next, dividendEntries, brokerageEntries }))
+            onStateChange(updateSectionData(state, "income-investments", { interestEntries: next, dividendEntries, brokerageEntries, oidEntries }))
           }
           onDividendEntriesChange={(next: DividendEntryData[]) =>
-            onStateChange(updateSectionData(state, "income-investments", { interestEntries, dividendEntries: next, brokerageEntries }))
+            onStateChange(updateSectionData(state, "income-investments", { interestEntries, dividendEntries: next, brokerageEntries, oidEntries }))
           }
           onBrokerageEntriesChange={(next: BrokerageEntryData[]) =>
-            onStateChange(updateSectionData(state, "income-investments", { interestEntries, dividendEntries, brokerageEntries: next }))
+            onStateChange(updateSectionData(state, "income-investments", { interestEntries, dividendEntries, brokerageEntries: next, oidEntries }))
           }
         />
       );

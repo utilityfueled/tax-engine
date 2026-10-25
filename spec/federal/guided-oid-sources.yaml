@@ -1,0 +1,32 @@
+form: "Guided-OID-Sources"
+fullName: "Actual Form1099-OID recipient sources in the guided interview"
+taxYear: 2026
+reference: "https://www.irs.gov/instructions/i1099int"
+notes: |
+  Refreshed2026-10-25: continuous-use January2024 Form1099-OID and Publication1212
+  (12/2025), recipient reporting and refiguring OID/interest. PA PIT Guide Interest
+  separately controls state issuer, stripped-obligation and premium facts.
+  This adapter forwards independently reconciled source facts to the existing
+  Decimal source calculators. It does not infer basis, holding periods, elections,
+  zero amounts, state treatment or qualification. No new filing capability.
+lines:
+  - line: "source"
+    description: "Collect every actual source amount and classification"
+    formula: "Preserve original boxes1-14, actual owner/year/revision and recipient reconciliation; no unknown amount becomes zero."
+    testRef: "tests/guided-interview/guided-oid-source-facts.test.ts::forwards actual OID sources and exact monetary amounts into the return"
+  - line: "unknown"
+    description: "Partial or conflicting OID sources block calculation"
+    formula: "Unknown year, owner, box, election, recipient reconciliation or source confirmation remains partial; reject duplicate source identities and incompatible instruments."
+    testRef: "tests/guided-interview/guided-oid-source-facts.test.ts::keeps incomplete and contradictory source facts out of calculations"
+  - line: "worksheets"
+    description: "Forward actual recipient, premium and TIPS worksheets"
+    formula: "Use the named source adjustments, ordered accrual periods and actual carry histories; preserve unsupported loss or linkage boundaries."
+    testRef: "tests/guided-interview/guided-oid-source-facts.test.ts::preserves actual recipient and premium histories and gates unresolved TIPS losses"
+  - line: "state"
+    description: "Link actual state sources without duplicate withholding"
+    formula: "Retain up to2 actual state rows. PA requires a separately confirmed linked source worksheet, premium methods and issuer treatment. State preview and SALT allocation use exact actual withholding once."
+    testRef: "tests/guided-interview/guided-oid-source-facts.test.ts::requires separate PA reconciliation and preserves exact state withholding"
+  - line: "edits"
+    description: "Editing source facts requires renewed confirmation"
+    formula: "Clear source, recipient and affected PA confirmation after factual edits; confirmation-only updates preserve other confirmations."
+    testRef: "tests/apps/web/oid-source-interactions.test.tsx::collects actual OID worksheets and clears stale confirmation after edits"

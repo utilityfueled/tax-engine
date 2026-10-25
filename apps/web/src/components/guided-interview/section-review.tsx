@@ -5,6 +5,7 @@ import { isStartedRental, knownRentalExpenses } from "@/lib/guided-rental-facts"
 import { unemploymentEntries, isStartedUnemployment, governmentSourceTotal } from "@/lib/guided-unemployment-facts";
 import { socialSecurityEntries, isStartedSocialSecurity, socialSecuritySourceTotal } from "@/lib/guided-social-security-facts";
 import { isStartedInvestment } from "@/lib/guided-investment-facts";
+import { isStartedOid, type OidEntryData } from "@/lib/guided-oid-facts";
 import { hasEnteredAmount } from "@/lib/guided-required-facts";
 import { formatGuidedCurrency, parseGuidedDisplayAmount, sumGuidedDisplayAmounts } from "@/lib/guided-currency";
 
@@ -152,15 +153,18 @@ function InvestmentSummary({
   interestEntries,
   dividendEntries,
   brokerageEntries,
+  oidEntries,
 }: {
   interestEntries: InterestEntryData[] | undefined;
   dividendEntries: DividendEntryData[] | undefined;
   brokerageEntries: BrokerageEntryData[] | undefined;
+  oidEntries?: OidEntryData[];
 }) {
   const interest = (interestEntries ?? []).filter(isStartedInvestment);
   const dividends = (dividendEntries ?? []).filter(isStartedInvestment);
   const transactions = (brokerageEntries ?? []).flatMap(entry => entry.transactions.filter(isStartedInvestment));
-  if (!interest.length && !dividends.length && !transactions.length) return <p className="guided-review-empty">No investment income entered.</p>;
+  const oid = (oidEntries ?? []).filter(isStartedOid);
+  if (!interest.length && !dividends.length && !transactions.length && !oid.length) return <p className="guided-review-empty">No investment income entered.</p>;
   const sourceTotal = (values: Array<string | undefined>) => {
     const total = sumGuidedDisplayAmounts(values);
     return values.every(hasEnteredAmount) && total.isFinite() ? formatCurrency(total) : "Unknown — review source amounts";
@@ -169,6 +173,7 @@ function InvestmentSummary({
   if (interest.length) rows.push(["Taxable interest (Boxes 1 and 3)", interest.flatMap(entry => [entry.interestIncome, entry.usSavingsBondInterest])], ["Tax-exempt interest", interest.map(entry => entry.taxExemptInterest)]);
   if (dividends.length) rows.push(["Ordinary dividends", dividends.map(entry => entry.ordinaryDividends)], ["Qualified dividends included above", dividends.map(entry => entry.qualifiedDividends)], ["Capital-gain distributions", dividends.map(entry => entry.capitalGainDistributions)], ["Exempt-interest dividends", dividends.map(entry => entry.exemptInterestDividends)]);
   if (transactions.length) rows.push(["Sale proceeds", transactions.map(transaction => transaction.proceeds)], ["Source cost basis", transactions.map(transaction => transaction.costBasis)], ["Wash-sale loss disallowed", transactions.map(transaction => transaction.washSaleDisallowed)]);
+  if (oid.length) rows.push(["OID Box 1 source amounts", oid.map(entry => entry.originalIssueDiscount)], ["OID Box 8 Treasury source amounts", oid.map(entry => entry.treasuryOID)], ["OID Box 11 exempt source amounts", oid.map(entry => entry.taxExemptOID)], ["OID Box 2 interest before recipient adjustments", oid.map(entry => entry.otherPeriodicInterest)]);
   return <div className="guided-review-card">{rows.map(([label, values]) => <div className="guided-review-row" key={label}><span className="guided-review-label">{label}</span><span className="guided-review-value">{sourceTotal(values)}</span></div>)}</div>;
 }
 
@@ -604,6 +609,7 @@ export function SectionReview({
             interestEntries={investData?.interestEntries}
             dividendEntries={investData?.dividendEntries}
             brokerageEntries={investData?.brokerageEntries}
+            oidEntries={investData?.oidEntries}
           />
         );
       }

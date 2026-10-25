@@ -12,8 +12,9 @@ export function nonW2TaxAllocationErrors(state: GuidedFlowState): Record<string,
     ...state.sectionData["income-retirement"]?.entries ?? [],
     ...state.sectionData["income-unemployment"]?.entries ?? [],
   ];
+  const oidWithholding = (investments?.oidEntries ?? []).flatMap(source => source.stateWithholding ?? []).reduce((sum, row) => !amountError(row.stateWithheld, "OID source withholding") ? sum.plus(parseGuidedCurrency(row.stateWithheld)) : sum, new Decimal(0));
   const stateTotal = sources.reduce((sum, source) => source.stateTaxReporting === "single" && !amountError(source.stateWithheld, "source withholding")
-    ? sum.plus(parseGuidedCurrency(source.stateWithheld)) : sum, new Decimal(0));
+    ? sum.plus(parseGuidedCurrency(source.stateWithheld)) : sum, oidWithholding);
   const total = (state.sectionData["income-retirement"]?.entries ?? []).reduce((sum, source) => source.localTaxReporting === "single" && !amountError(source.localTaxWithheld, "local source withholding")
     ? sum.plus(parseGuidedCurrency(source.localTaxWithheld)) : sum, stateTotal);
   const allocation = state.sectionData.deductions?.nonW2IncomeTaxesDeductedElsewhere;

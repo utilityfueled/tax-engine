@@ -29,6 +29,7 @@ import { nonW2TaxAllocationErrors } from "./guided-salt-facts";
 import { socialSecurityEntries, isStartedSocialSecurity, socialSecurityFactErrors, socialSecuritySourceTotal } from "./guided-social-security-facts";
 import { isStartedRetirement } from "./guided-retirement-facts";
 import { investmentFactErrors, isStartedInvestment, type InvestmentSourceData } from "./guided-investment-facts";
+import { buildOidInputs, buildPaOidSources, isStartedOid, oidFactErrors } from "./guided-oid-facts";
 
 import type {
   AdjustmentData,
@@ -595,9 +596,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
   if (!personalInfo?.dateOfBirth || Object.keys(personalFactErrors(personalInfo, segmentation.filingStatus, state.taxYear)).length) return null;
   const w2Data = sectionData["income-w2"] as { entries: W2EntryData[] } | undefined;
   const seData = sectionData["income-self-employment"];
-  const investData = sectionData["income-investments"] as
-    | { interestEntries: InterestEntryData[]; dividendEntries: DividendEntryData[]; brokerageEntries: BrokerageEntryData[] }
-    | undefined;
+  const investData = sectionData["income-investments"];
   const retirementData = sectionData["income-retirement"] as { entries: RetirementEntryData[] } | undefined;
   const rentalData = sectionData["income-rental"] as { entries: RentalPropertyEntryData[] } | undefined;
   const socialSecurityData = sectionData["income-social-security"] as SocialSecurityData | undefined;
@@ -612,7 +611,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
   const careBenefitSources = guidedCareBenefitSources(w2Data?.entries, seData?.businessFacts, seData?.expenses);
   try {
     assertKnownFacts(w2FactErrors(w2Data?.entries, segmentation.filingStatus));
-    assertKnownFacts(investmentFactErrors(investData, segmentation.filingStatus, state.taxYear, stateReturnData));
+    assertKnownFacts(investmentFactErrors(investData, segmentation.filingStatus, state.taxYear, stateReturnData, personalInfo.state || segmentation.stateCode));
     assertKnownFacts(businessFactErrors(seData, segmentation.filingStatus, w2Data?.entries, stateReturnData));
     assertKnownFacts(rentalFactErrors(rentalData?.entries, segmentation.filingStatus, state.taxYear, personalInfo?.state || segmentation.stateCode));
     assertKnownFacts(deductionFactErrors(deductionData, state.taxYear, segmentation.filingStatus));
@@ -637,6 +636,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
   const necs = buildNecInputs(seData?.necEntries);
   const scheduleC = buildScheduleCInput(seData?.necEntries, seData?.manualGrossReceipts, seData?.expenses, seData?.qbiMateriallyParticipated, seData?.businessFacts);
   const form1099Int = buildInterestInputs(investData?.interestEntries);
+  const form1099OID = buildOidInputs(investData?.oidEntries, segmentation.filingStatus, state.taxYear, stateCode);
   const form1099Div = buildDividendInputs(investData?.dividendEntries);
   const form1099B = buildBrokerageInputs(investData?.brokerageEntries);
   const form1099R = buildRetirementInputs(retirementData?.entries, segmentation.filingStatus, state.taxYear, stateReturnData);
@@ -712,6 +712,8 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     form1099Nec: necs,
     scheduleC: scheduleC ?? undefined,
     form1099Int,
+    form1099OID,
+    paResidentReturn: stateCode === "PA" && form1099OID.length ? { scheduleA: { oidSources: buildPaOidSources(investData?.oidEntries) } } : undefined,
     form1099Div,
     form1099B,
     form1099R,
@@ -936,9 +938,13 @@ export function buildGuidedSyntheticDocuments(
     });
   }
 
-  const investData = state.sectionData["income-investments"] as
-    | { interestEntries: InterestEntryData[]; dividendEntries: DividendEntryData[]; brokerageEntries: BrokerageEntryData[] }
-    | undefined;
+  const investData = state.sectionData["income-investments"];
+
+  if (investData?.oidEntries?.some(isStartedOid)) {
+    docs.push({ id: "guided:1099-oid", name: "Guided Interview — 1099-OID", size: 0, uploadedAt: now,
+      kind: "1099-oid", coverage: Object.keys(oidFactErrors(investData.oidEntries, state.segmentation.filingStatus, state.taxYear, state.sectionData["personal-info"]?.state || state.segmentation.stateCode, state.sectionData["state-return"])).length ? "partially-supported" : "supported",
+      label: "1099-OID (guided interview)", notes: "Actual instrument boxes and recipient worksheets entered via guided interview.", matchedFixtureId: null, seededFactIds: [] });
+  }
 
   if (investData?.interestEntries?.some(isStartedInvestment)) {
     docs.push({

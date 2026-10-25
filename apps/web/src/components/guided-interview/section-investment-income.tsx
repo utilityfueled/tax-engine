@@ -14,6 +14,8 @@ import {
 import { CurrencyField } from "./currency-field";
 import { BooleanFact } from "./fact-fields";
 import { DividendSourceDetails, InterestSourceDetails, InvestmentSourceIdentity } from "./investment-source-details";
+import { OidSourceCards } from "./oid-source-details";
+import type { OidEntryData } from "@/lib/guided-oid-facts";
 
 // ── 1099-INT Card ─────────────────────────────────────────────────────────
 
@@ -388,6 +390,9 @@ export function SectionInvestmentIncome({
   onInterestEntriesChange,
   onDividendEntriesChange,
   onBrokerageEntriesChange,
+  oidEntries,
+  stateCode,
+  onOidEntriesChange,
 }: {
   interestEntries: InterestEntryData[];
   dividendEntries: DividendEntryData[];
@@ -395,6 +400,9 @@ export function SectionInvestmentIncome({
   onInterestEntriesChange: (entries: InterestEntryData[]) => void;
   onDividendEntriesChange: (entries: DividendEntryData[]) => void;
   onBrokerageEntriesChange: (entries: BrokerageEntryData[]) => void;
+  oidEntries?: OidEntryData[];
+  stateCode?: string | null;
+  onOidEntriesChange?: (entries: OidEntryData[]) => void;
 }) {
   const currentInterest = interestEntries.length > 0 ? interestEntries : [emptyInterestEntry];
   const currentDividends = dividendEntries.length > 0 ? dividendEntries : [emptyDividendEntry];
@@ -444,8 +452,8 @@ export function SectionInvestmentIncome({
       <div className="guided-question">
         <p className="guided-prompt">Let&apos;s capture your investment income.</p>
         <p className="guided-hint">
-          Enter info from your 1099-INT (interest), 1099-DIV (dividends), and
-          1099-B (stock sales). If you don&apos;t have one of these, leave it blank
+          Enter info from your 1099-INT (interest), 1099-DIV (dividends),
+          1099-OID (original issue discount) and 1099-B (stock sales). If you don&apos;t have one of these, leave it blank
           and we&apos;ll skip it.
         </p>
 
@@ -468,6 +476,8 @@ export function SectionInvestmentIncome({
         <button type="button" className="utility-button" onClick={addInterest}>
           + Add another 1099-INT
         </button>
+
+        {onOidEntriesChange && <OidSourceCards entries={oidEntries} stateCode={stateCode} onChange={onOidEntriesChange} />}
 
         {/* ── 1099-DIV: Dividends ── */}
         <h3 className="guided-w2-card-title" style={{ marginTop: "24px", marginBottom: "8px" }}>
