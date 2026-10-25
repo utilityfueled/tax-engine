@@ -4379,8 +4379,8 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
       const result = calculatePAReturn(makeInput({
         form1099Int: [{
           payer: "Treasury Direct",
-          interestIncome: "5000",
-          usSavingsBondInterest: "3000", // Box 3: US gov interest included in Box 1
+          interestIncome: "2000",
+          usSavingsBondInterest: "3000", // Box 3: separate US government interest
         }],
       }));
       // PA-taxable interest = 5000 - 3000 = 2000
@@ -4392,7 +4392,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
       const result = calculatePAReturn(makeInput({
         form1099Int: [{
           payer: "Treasury Direct",
-          interestIncome: "8000",
+          interestIncome: "0",
           usSavingsBondInterest: "8000",
         }],
       }));
@@ -4417,8 +4417,8 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
     it("PA orchestrator sums US government interest across multiple 1099-INTs", () => {
       const result = calculatePAReturn(makeInput({
         form1099Int: [
-          { payer: "Treasury Direct", interestIncome: "3000", usSavingsBondInterest: "3000" },
-          { payer: "First Bank", interestIncome: "2000", usSavingsBondInterest: "500" },
+          { payer: "Treasury Direct", interestIncome: "0", usSavingsBondInterest: "3000" },
+          { payer: "First Bank", interestIncome: "1500", usSavingsBondInterest: "500" },
           { payer: "Credit Union", interestIncome: "1000" }, // no Box 3
         ],
       }));
@@ -4441,7 +4441,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
         }],
         form1099Int: [{
           payer: "Treasury Direct",
-          interestIncome: "2000",
+          interestIncome: "0",
           usSavingsBondInterest: "2000",
         }],
       }));
@@ -4458,7 +4458,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
       const result = calculatePAReturn(makeInput({
         form1099Int: [{
           payer: "Treasury Direct",
-          interestIncome: "10000",
+          interestIncome: "4000",
           usSavingsBondInterest: "6000",
         }],
       }));
@@ -4470,7 +4470,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
       const result = calculatePAReturn(makeInput({
         form1099Int: [{
           payer: "Treasury Direct",
-          interestIncome: "3000",
+          interestIncome: "1000",
           usSavingsBondInterest: "2000",
         }],
         scheduleK1: [{
@@ -4490,7 +4490,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
       const result = calculatePAReturn(makeInput({
         form1099Int: [{
           payer: "Treasury Direct",
-          interestIncome: "4000",
+          interestIncome: "0",
           usSavingsBondInterest: "4000",
         }],
         form1099R: [{
@@ -4759,7 +4759,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
         }],
         form1099Int: [{
           payer: "Treasury Direct",
-          interestIncome: "6000",
+          interestIncome: "2000",
           usSavingsBondInterest: "4000",
         }],
         formW2G: [
@@ -4790,7 +4790,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
       const result = calculatePAReturn(makeInput({
         form1099Int: [{
           payer: "Treasury Direct",
-          interestIncome: "12000",
+          interestIncome: "0",
           usSavingsBondInterest: "12000",
         }],
         formW2G: [{
@@ -4828,7 +4828,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
         }],
         form1099Int: [{
           payer: "Treasury Direct",
-          interestIncome: "3000",
+          interestIncome: "0",
           usSavingsBondInterest: "3000", // All US gov → excluded
         }],
         formW2G: [{
@@ -4863,7 +4863,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
         }],
         form1099Int: [{
           payer: "Treasury Direct",
-          interestIncome: "2000",
+          interestIncome: "0",
           usSavingsBondInterest: "2000",
         }],
       }));
@@ -6266,7 +6266,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
         form1099Int: [
           {
             payer: "TreasuryDirect",
-            interestIncome: "1000",
+            interestIncome: "900",
             taxExemptInterest: "40",
             usSavingsBondInterest: "100",
           },
@@ -6330,7 +6330,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
         form1099Int: [
           {
             payer: "Pennsylvania Municipal Fund",
-            interestIncome: "200",
+            interestIncome: "190",
             taxExemptInterest: "80",
             usSavingsBondInterest: "10",
             paDirectObligationInterest: "50",

@@ -105,14 +105,15 @@ lines:
     description: "Compute PA interest income through PA Schedule A before carrying the result to PA-40 Line 2"
     formula: |
       Build PA Schedule A using supported inputs as follows:
-        - Line 1: supported federal interest baseline consisting of Form 1099-INT
-          Box 1 interest plus the federal Schedule K-1 Box 5 interest that is
-          included on the federal return
+        - Line 1: supported federal interest baseline consisting of disjoint
+          Form 1099-INT Boxes 1 and 3 plus federal Schedule K-1 interest,
+          less the actual calculated Form 8815 exclusion when present
         - Line 2: Form 1099-INT Box 8 tax-exempt interest included on the federal return
         - Line 3: explicit Schedule A addition adjustments from overrides or paResidentReturn
         - Line 5: total federal Schedule K-1 Box 5 interest included in the federal baseline
         - Line 6: explicit Pennsylvania direct-obligation interest amount
-        - Line 7: Form 1099-INT Box 3 U.S. government interest
+        - Line 7: Form 1099-INT Box 3 U.S. government interest less the actual
+          Form 8815 exclusion already removed from federal Schedule B
         - Line 8: explicit Schedule A reduction adjustments from overrides or
           paResidentReturn plus the supported Form 1099-INT Box 2
           forfeited-interest penalty default described below
@@ -1128,21 +1129,40 @@ lines:
 
   - line: "exclude-us-gov-interest"
     description: "Exclude US government obligation interest from PA Class 2"
-    formula: "Subtract 1099-INT Box 3 (usSavingsBondInterest) from PA interest income"
+    formula: |
+      federalInterestBaseline = sum(1099-INT Box 1 + Box 3) + federal K-1 interest
+      federalBondExclusion = calculated Form 8815 exclusion, or zero when absent
+      previouslyReportedBondInterest = verified Schedule B prior-year adjustment
+      Schedule A line 1 = roundDollar(federalInterestBaseline - previouslyReportedBondInterest - federalBondExclusion)
+      Schedule A line 7 = roundDollar(max(0, sum(Box 3) - previouslyReportedBondInterest - federalBondExclusion))
+      Schedule SP nontaxable interest includes the full sum(Box 3) once.
     notes: |
-      PA exempts interest on obligations of the US government from personal income tax.
-      This includes Treasury bills, notes, bonds, and US savings bonds.
-      1099-INT Box 3 reports this amount, which is included in Box 1 (total interest).
-      For PA, subtract Box 3 from Box 1 to get PA-taxable interest.
-      The excluded amount is added to Schedule SP nontaxable income.
-      Reference: PA-40 instructions, Class 2 income; 72 Pa.C.S. § 7303(a)(2).
+      Box 1 excludes Box 3. PA starts with federal taxable interest, then removes
+      U.S. government interest that remains in that federal amount. An education
+      savings-bond exclusion must not be deducted a second time. Per-line dollar
+      rounding follows the PA schedule and can differ from rounding Box 1 alone.
+      Prior federally reported bond interest also reduces both federal-based
+      Schedule A lines. It is not automatically a PA Schedule SP exclusion:
+      SP line 2 includes all exempt direct federal-obligation income received,
+      including the portion outside Schedule A line 7.
+      Official sources retrieved 2026-10-25; independent human review pending:
+      IRS Instructions for Forms 1099-INT/OID (01/2024), Boxes 1 and 3:
+      https://www.irs.gov/instructions/i1099int
+      PA Schedule A 2025 (04-25), Lines 1 and 7, and dollar rounding:
+      https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40a.pdf
+      PA Personal Income Tax Guide, Interest, direct-obligation exemption:
+      https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/interest
+      PA Schedule SP 2025 (04-25), Section III line 2:
+      https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40sp.pdf
+      This source correction does not qualify a final 2026 filing packet.
     edgeCases:
-      - "All interest from Treasury bonds: PA interest reduced to zero"
-      - "Partial US gov interest: only Box 3 amount excluded"
-      - "No US gov interest: interest unchanged"
-      - "Box 3 equals Box 1: all interest exempt for PA"
-      - "Multiple 1099-INTs with mixed US gov interest"
-    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator excludes US government interest from Class 2"
+      - "Box 1 zero, positive Box 3: no PA-taxable interest"
+      - "Positive Box 1 is not reduced by separate Box 3 amounts"
+      - "Equal Boxes 1 and 3 still leave the entire Box 1 amount taxable"
+      - "Multiple sources and cents are aggregated before each line is rounded"
+      - "Federal education exclusion reduces both PA line 1 and line 7 only once"
+      - "Prior federally reported bond interest is reconciled once in both Schedule A lines"
+    testRef: "tests/engine/state/pa-interest-source.test.ts::PA preserves Box 1 interest when a separate Box 3 is reported"
 
   - line: "exclude-noncash-pa-lottery"
     description: "Exclude only noncash Pennsylvania Lottery prizes from PA Class 8"

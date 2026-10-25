@@ -839,7 +839,7 @@ function map1099KRental(input: TaxYearInput): Decimal {
 /** Federal interest baseline for PA Schedule A Line 1 */
 function mapFederalInterestIncome(input: TaxYearInput): Decimal {
   return input.form1099Int.reduce(
-    (acc, f) => acc.plus(d(f.interestIncome)),
+    (acc, f) => acc.plus(d(f.interestIncome)).plus(d(f.usSavingsBondInterest)),
     new Decimal(0),
   );
 }
@@ -1156,7 +1156,7 @@ function mapExcludedHomeSaleGainForScheduleSP(input: TaxYearInput): Decimal {
 
 /**
  * US government obligation interest exempt from PA tax.
- * 1099-INT Box 3 (usSavingsBondInterest) is included in Box 1 but exempt for PA.
+ * 1099-INT Box 3 is separate from Box 1 and exempt from PA income tax.
  * Reference: 72 Pa.C.S. § 7303(a)(2)
  */
 function mapUSGovExemptInterest(input: TaxYearInput): Decimal {
@@ -1686,18 +1686,26 @@ export function calculatePAReturn(
     .plus(mapUncollectedWages(input));
 
   const usGovExemptInterest = mapUSGovExemptInterest(input);
+  const federalSavingsBondExclusion = input.savingsBondRedemptions.length > 0
+    ? getFederalResult().form8815?.excludableSavingsBondInterest ?? ZERO
+    : ZERO;
+  const previouslyReportedBondInterest = input.savingsBondRedemptions.length > 0
+    ? getFederalResult().scheduleB?.previouslyReportedSavingsBondInterest ?? ZERO
+    : ZERO;
   const fullFederalScheduleK1Interest = mapFederalScheduleK1Interest(input);
   const paPassThroughInterestForScheduleA = mapFederalScheduleK1Interest(heuristicK1Input)
     .plus(scheduleRK1?.totalInterestIncome ?? ZERO);
   const scheduleAInput: PAScheduleAInput = {
     taxYear,
-    federalInterestIncome: mapFederalInterestIncome(input).plus(fullFederalScheduleK1Interest),
+    federalInterestIncome: mapFederalInterestIncome(input).plus(fullFederalScheduleK1Interest)
+      .minus(previouslyReportedBondInterest).minus(federalSavingsBondExclusion),
     taxExemptInterest: mapTaxExemptInterestIncludedInFederalReturn(input),
     additionAdjustments: resolvedOverrides.scheduleA?.additionAdjustments,
     federalScheduleK1Interest: fullFederalScheduleK1Interest,
     paObligationInterest: resolvedOverrides.scheduleA?.paObligationInterest
       ?? mapPADirectObligationInterest(input),
-    usGovernmentInterest: usGovExemptInterest,
+    usGovernmentInterest: zeroFloor(usGovExemptInterest.minus(previouslyReportedBondInterest)
+      .minus(federalSavingsBondExclusion)),
     reductionAdjustments: resolvedOverrides.scheduleA?.reductionAdjustments,
     forfeitedInterestPenalty: resolvedOverrides.scheduleA?.forfeitedInterestPenalty
       ?? mapSupportedPAForfeitedInterestPenalty(input),

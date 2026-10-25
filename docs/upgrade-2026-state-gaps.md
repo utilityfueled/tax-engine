@@ -54,3 +54,26 @@ missing-fact assertions retained. Scoped lint passes. Evidence:
 `.local/upgrade-evidence/state-packet-complete-facts.log`.
 This fixes test inputs for historical review output; it does not qualify a
 state, tax year or filing form. The complete investment helpers are in `4679852`.
+
+## PA source-interest reconciliation — 2026-10-25
+
+PA Schedule A now starts with the disjoint 1099-INT Boxes 1 and 3 and removes
+only Treasury interest still present in federal taxable interest. Actual Form
+8815 education exclusions and verified prior federally reported interest reduce
+both the federal baseline and the exempt-interest subtraction, preventing double
+deductions. Schedule SP retains the reported exempt direct-obligation income;
+a federal reporting election does not invent a PA tax-forgiveness exclusion.
+
+Official sources: [IRS 1099-INT instructions](https://www.irs.gov/instructions/i1099int),
+[2025 PA Schedule A, revision 04-25](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40a.pdf),
+[PA interest guide](https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/interest),
+and [2025 PA Schedule SP, line 2](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40sp.pdf).
+Source formulas and retrieval date are in `spec/state/pa-orchestrator.yaml`.
+
+Eleven new source/rounding/bond regressions and the adjacent suites pass:
+384 tests across five files, plus 15 nonresident tests. Eighteen historical
+fixtures now state actual disjoint source-box amounts while retaining their
+original scenario assertions. Engine types, spec references and scoped lint pass.
+Evidence: `.local/upgrade-evidence/pa-interest-source-green.log`,
+`pa-bond-source-red.log`, `pa-interest-{nonresident,types,spec,lint}.log`.
+Independent review and 2026 state/form qualification remain outstanding.

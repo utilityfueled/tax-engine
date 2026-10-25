@@ -142,7 +142,7 @@ describe.sequential("Pennsylvania Full-Return Edge Cases", () => {
       ],
       form1099Int: [{
         payer: "PNC Bank",
-        interestIncome: "1200",
+        interestIncome: "900",
         usSavingsBondInterest: "300",
         taxExemptInterest: "200",
       }],
@@ -321,7 +321,7 @@ describe.sequential("Pennsylvania Full-Return Edge Cases", () => {
       }],
       form1099Int: [{
         payer: "Treasury Direct",
-        interestIncome: "3000",
+        interestIncome: "0",
         usSavingsBondInterest: "3000",
         taxExemptInterest: "0",
       }],
@@ -381,7 +381,7 @@ describe.sequential("Pennsylvania Full-Return Edge Cases", () => {
       }],
       form1099Int: [{
         payer: "Savings Bank",
-        interestIncome: "5000",
+        interestIncome: "4000",
         usSavingsBondInterest: "1000",
       }],
       form1099Div: [{
@@ -1266,7 +1266,7 @@ describe.sequential("Pennsylvania Full-Return Edge Cases", () => {
       }],
       form1099Int: [
         { payer: "PNC Savings", interestIncome: "850" },
-        { payer: "Treasury Direct", interestIncome: "2000", usSavingsBondInterest: "2000" },
+        { payer: "Treasury Direct", interestIncome: "0", usSavingsBondInterest: "2000" },
       ],
       form1099Div: [{
         payer: "Vanguard Total Market",
