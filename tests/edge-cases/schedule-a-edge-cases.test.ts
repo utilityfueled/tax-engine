@@ -1116,9 +1116,15 @@ describe("Schedule A - audit trail completeness", () => {
       { medicalExpenses: d(10000) }
     );
     for (const line of result.lines) {
-      expect(["Sched A", "SALT WS", "SALT Income Tax WS", "Pub936 Table1"]).toContain(line.form);
+      expect(["Sched A", "SALT WS", "SALT Income Tax WS", "Pub936 Table1", "OID Deduction Worksheet", "Educator Expense Worksheet"]).toContain(line.form);
     }
     expect(result.lines.some(line => line.form === "SALT Income Tax WS" && line.line === "total")).toBe(true);
+    const oidLoss = result.lines.filter(line => line.form === "OID Deduction Worksheet" && line.line === "ordinary-loss");
+    expect(oidLoss).toHaveLength(1);
+    expect(oidLoss[0].value.toString()).toBe("0");
+    const educator = result.lines.filter(line => line.form === "Educator Expense Worksheet" && line.line === "itemized");
+    expect(educator).toHaveLength(1);
+    expect(educator[0].value.toString()).toBe("0");
   });
 
   it("audit line 17 value matches totalItemized field", () => {
