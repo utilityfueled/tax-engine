@@ -2528,7 +2528,7 @@ export const PriorYearCarryforwardSchema = z.object({
    *  Schedule 1 Line 8a NOL deduction. When absent, the engine defaults
    *  to the excessBusinessLossNOL amount. For post-2017 NOLs, the
    *  deduction is limited to 80% of taxable income (IRC §172(a)(2)). */
-  nolCarryforward: optionalDecimal,
+  nolCarryforward: optionalDecimalInput,
   priorYearTax: optionalDecimal,
   priorYearAGI: optionalDecimal,
 });

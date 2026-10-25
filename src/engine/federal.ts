@@ -4062,7 +4062,10 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       const hasCodExclusions = form1099CResult && form1099CResult.totalExclusions.greaterThan(0);
 
       // Pre-reduction carryforward values
-      let cfNol = zeroFloor(form461.nolCarryforward.minus(nolDeduction));
+      // Preserve the same selected prior source used for the deduction, including
+      // estate carry. Form461's aggregate also contains its prior EBL alias;
+      // add only the current disallowance here so that prior carry is not doubled.
+      let cfNol = zeroFloor(availableNOL.minus(nolDeduction)).plus(excessBusinessLossAddback);
       let cfGbc = form3800?.carryforwardToNextYear ?? new Decimal(0);
       let cfMtc = form8801?.carryforwardToNextYear ?? new Decimal(0);
       let cfCapitalLoss = adjustedCarryforward.carryforwardShortTerm.plus(adjustedCarryforward.carryforwardLongTerm);
