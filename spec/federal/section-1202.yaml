@@ -1,0 +1,88 @@
+form: "Section 1202"
+fullName: "Qualified small business stock issuer and acquisition worksheets"
+taxYear: 2026
+supportedTaxYears: [2025, 2026]
+irsReference: "https://uscode.house.gov/us/usc/119-118/t26/s1202/"
+sources:
+  - url: "https://uscode.house.gov/us/usc/119-118/t26/s1202/"
+    revision: "Current through PL119-120;1202(a),(b),(c),(h),PL119-21 effective dates"
+    retrieved: "2026-10-25"
+  - url: "https://uscode.house.gov/us/usc/119-118/t26/s57/"
+    revision: "57(a)(7), amended by PL119-21, acquired on/before2010-09-27"
+    retrieved: "2026-10-25"
+  - url: "https://www.irs.gov/instructions/i1040sd"
+    revision: "Final2025, Section1202 exclusion and28percent worksheet line2"
+    retrieved: "2026-10-25"
+  - url: "https://www.irs.gov/instructions/i6251"
+    revision: "Final2025, line2h"
+    retrieved: "2026-10-25"
+notes: |
+  This pure worksheet takes validated original qualification and holding-period
+  facts. The canonical source binder must establish actual issuer identity,
+  original issue, corporate/active-business/redemption rules, basis and any
+  transfer/pass-through eligibility; it must not infer qualification from1099DIV2c.
+  Acquisition is the first holding day after applying1223 tacking, not the most
+  recent legal transfer date. Original qualified issue must be after1993-08-10.
+  The2025/2026 calculation cannot have eligible post2025-07-04 acquisition stock:
+  even the new minimum3years cannot yet have elapsed. Do not use the15million
+  future cohort cap or enable unsupported future years in these returns.
+  Every actual issuer history and all current dispositions are confirmed. Prior
+  use means eligible gain before multiplying by exclusion percentage, not the
+  prior exclusion amount. Joint prior-use allocation must already be bound to
+  the actual return members; missing history is never zero. The current joint
+  per-issuer dollar limit is10million, not a separate10million per spouse.
+  A binding cap across different exclusion percentages needs the taxpayer's
+  explicit source allocation; do not silently choose an allocation. A single
+  percentage gives the same tax result whichever lot absorbs the cap. Preserve
+  raw Decimal amounts until the physical form's aggregate reporting boundary.
+  This standalone prerequisite does not change canonical calculations or gates.
+  Its initial method is actual original issue acquired directly. Gift, death,
+  partnership distributions, conversion and351/368 replacement stock need the
+  separate predecessor/ownership/exchange-cap worksheet; reject these methods
+  explicitly rather than report a valid inherited acquisition date as invalid.
+lines:
+  - line: "holding"
+    description: "Actual date cohort and holding eligibility"
+    formula: "For acquired<=2025-07-04 require disposal more than5calendar years later;50percent through2009-02-17,75percent2009-02-18through2010-09-27,100percent2010-09-28through2025-07-04; later acquisitions are ineligible in2025/2026"
+    irsRef: "1202(a)(1),(3),(4),(6),1223; final ScheduleD section1202"
+    testRef: "tests/engine/forms/section-1202.test.ts::uses the actual acquisition cohort and strict five year boundary"
+  - line: "issuer-limit"
+    description: "Per-issuer eligible gain before percentage"
+    formula: "min(total positive eligible gain,max(max(0,10000000-prior eligible gain used),10*sum(adjusted basis ignoring post-issue additions of all qualified stock disposed this year)));MFS dollar limit5000000"
+    irsRef: "1202(b)(1)-(4); qualified disposed stock includes losses and stock not yet held5years"
+    testRef: "tests/engine/forms/section-1202.test.ts::uses issuer history and aggregate original basis before exclusion percentage"
+  - line: "allocation"
+    description: "Explicit allocation when a mixed percentage issuer cap binds"
+    formula: "Require complete per-lot ordinary/EZ eligible-gain allocation when different rates share a binding cap; each component<=actual eligible component and sum=issuer eligible gain limit"
+    irsRef: "1202(b) limits aggregate eligible gain taken into account"
+    testRef: "tests/engine/forms/section-1202.test.ts::requires and validates actual mixed rate allocations when a cap binds"
+  - line: "exclusion"
+    description: "Computed exclusion and remaining recognized gain"
+    formula: "Sum each allocated eligible component*its date-specific percentage; retain full recognized gain minus exclusion and unused eligible gain outside the cap"
+    irsRef: "1202(a),(b); Form8949 adjustment codeQ"
+    testRef: "tests/engine/forms/section-1202.test.ts::preserves cents and keeps separate issuer caps"
+  - line: "empowerment"
+    description: "Actual qualifying empowerment-zone attribution"
+    formula: "60percent only for eligible stock acquired after2000-12-21through2009-02-17 and actual gain attributable through2018; remaining eligible gain uses50percent; source amount must be explicit and within positive gain"
+    irsRef: "1202(a)(2),(3); gain after2018 does not qualify"
+    testRef: "tests/engine/forms/section-1202.test.ts::uses only the actual pre2019 empowerment gain"
+  - line: "28-rate"
+    description: "ScheduleD28percent worksheet component"
+    formula: "Eligible gain taken into account minus exclusion for50/60/75percent components; equivalent to exclusion,2/3exclusion,1/3exclusion; zero for100percent"
+    irsRef: "ScheduleD28percent Rate Gain Worksheet line2"
+    testRef: "tests/engine/forms/section-1202.test.ts::uses only the actual pre2019 empowerment gain"
+  - line: "amt"
+    description: "Alternative minimum tax preference"
+    formula: "7percent of actual exclusion only for effective acquisition on/before2010-09-27; no preference for later cohorts"
+    irsRef: "57(a)(7) and6251line2h"
+    testRef: "tests/engine/forms/section-1202.test.ts::uses the actual acquisition cohort and strict five year boundary"
+  - line: "sources"
+    description: "No guessed source dates history amounts or qualifications"
+    formula: "Reject unknown year, missing confirmations, duplicate/missing issuer or lot IDs, invalid/conflicting dates, nonfinite/negative basis/history and missing actual empowerment attribution"
+    irsRef: "1202(a)-(c),(h); original source substantiation"
+    testRef: "tests/engine/forms/section-1202.test.ts::rejects incomplete conflicting and invalid source facts"
+  - line: "transfer-method"
+    description: "Explicit direct-issue source boundary"
+    formula: "Require original_issue acquisition method; other or unknown methods require their actual predecessor, ownership and applicable1202(h)(4) exchange-cap sources before calculation"
+    irsRef: "1202(f),(g),(h), especially1202(h)(4)(A)-(D)"
+    testRef: "tests/engine/forms/section-1202.test.ts::requires actual transfer sources instead of rejecting a tacked date as impossible"
