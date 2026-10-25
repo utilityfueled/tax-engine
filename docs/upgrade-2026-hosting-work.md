@@ -248,3 +248,14 @@ document-route tests now pass, as do web types, scoped lint and diff checks.
 Logs: `.local/upgrade-evidence/provider-route-boundaries-{red,green,types}.log`.
 These are synthetic in-process failure/cancellation checks. No production route
 was enabled, no live provider was contacted, and staging evidence remains absent.
+# Runtime configuration cleanup — 2026-10-25
+
+Removed unused GPT-5 Mini and Gemini 3 Flash Preview model defaults from the
+example environments and Compose service. The examples now state that keys alone
+cannot enable a provider: the reviewed task rollout controls availability, and
+self-hosting works without keys. The actual production executor remains gated.
+
+Validation: 65 environment/security and workspace-provider tests passed; the
+checked-in example passed `podman compose --env-file .env.docker.example config`.
+Evidence: `.local/upgrade-evidence/runtime-env-defaults.log` and
+`runtime-compose-config.yaml`. No services started and no provider requests made.
