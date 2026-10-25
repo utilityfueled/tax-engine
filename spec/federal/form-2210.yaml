@@ -223,3 +223,19 @@ lines:
       source data for March31, May31, August31 and December31. This package does
       not fabricate period facts or claim to implement this alternate calculation.
     testRef: "tests/engine/forms/form-2210-dated.test.ts::rejects unsupported annualized and special taxpayer methods explicitly"
+
+  - line: "review-pdf"
+    description: "Physical 2025 review map copies audited lines and retains dated evidence"
+    formula: "Copy unique finite Form2210 audit lines1-9 and10a-18d/19; never recompute or allocate annual totals in the PDF mapper"
+    irsRef: "Final 2025 Form2210 pages1-2, created2025-10-21; inspected field rectangles and printed checkbox labels"
+    notes: |
+      c1_1[0]/[1] are line9 No/Yes; PartII A-E use c1_2 through c1_6.
+      Shaded inapplicable physical cells12a/13a/14a/16a/16d/18d stay blank,
+      even though the engine retains their intermediate audit values.
+      BoxD comes from the actual withholding-date election. BoxE needs actual
+      priorYearJointReturn plus changed joint status and auditedline8<line5.
+      Missing prior status stays unknown, visibly disclosed; no guessed checkbox.
+      Review output rejects missing/duplicate/nonfinite/mismatched audits and
+      wrong-year/template revisions. The review notice remains on every page;
+      the normal packet still suppresses2210. No filing qualification is inferred.
+    testRef: "tests/pdf/fill-form-2210.test.ts::copies dated audit columns instead of distributing an annual estimate equally"

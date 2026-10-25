@@ -22,15 +22,27 @@ This is calculation implementation evidence, not independent tax approval or fin
 - [x] Relevant regression suite: 66 tests pass, including all 49 existing penalty
   tests. Existing equal-payment fixtures now explicitly contain their dates;
   no production adapter manufactures equal installment payments.
-- [x] Root typecheck and all 3,343 spec references pass. Scoped ESLint and diff
-  review are required again after final package edits.
-- [ ] Federal orchestration wiring is owned by the federal agent: pass actual
+- [x] Core package committed as `44793ac`; final PDF-package root typecheck,
+  scoped ESLint, diff review and all 3,353 spec references pass.
+- [x] Federal orchestration committed by the federal agent as `a269a9f`: pass actual
   source dates and 1040 line 22, include only the instructions' eligible taxes,
-  and preserve Form 1040 line 38 outside total tax. Interim guided tests with
-  positive estimates fail until the dates are forwarded; their assertions stay.
-- [ ] Replace the historical review PDF recomputation with audited line values,
-  inspect physical fields and reopen/render the result. Form 2210 stays suppressed
+  and preserve Form 1040 line 38 outside total tax. Its 767 core/federal/guided/edge
+  tests pass; positive-estimate assertions were preserved.
+- [x] Replace the historical review PDF recomputation with audited line values,
+  inspect physical fields and reopen/render the result. The final relevant suite
+  passes 102 tests (`form-2210-final-focused.log`). Missing/duplicate/nonfinite
+  audit evidence, mismatched dates/totals/year and wrong/missing PDF fields fail.
+  Form 2210 stays suppressed
   by default; there is no 2026 filing export qualification.
+- [x] Verify printed line 9 No/Yes and Part II A-E field positions. Box D uses the
+  actual withholding election; box E requires actual prior joint-return status
+  (optional schema fact in `8ca3655`). Unknown status stays disclosed.
+- [x] Rendered `.local/upgrade-evidence/form2210/review.pdf` and inspected pages
+  1, 2 and the dated evidence appendix. The real federal fixture has line 11
+  columns $2,000/$2,000/$2,000/$22,000 and penalty $634. Reopened fields match.
+  Shaded cells 12a/13a/14a/16a/16d/18d stay blank; their source audit is retained.
+  The shading regression failed before correction (`form-2210-shaded-red.log`).
+  All pages retain the visible review notice and extracted notice text.
 
 ## Source decisions and independently derived expectations
 
@@ -84,8 +96,9 @@ Software still outside this bounded regular-method package: Schedule AI with
 actual cumulative period income/deductions/credits/SE/wages, Form 2210-F,
 nonresident and fiscal-year computations, disaster postponements and supporting
 waiver workflow. Those combinations fail explicitly rather than silently using
-the ordinary schedule. The final PDF source map and guided source collection are
-separate remaining implementation work, not external blockers.
+the ordinary schedule. Guided source collection is separate remaining
+implementation work, not an external blocker. The physical 2025 PDF remains a
+review artifact even though its supported regular-method mapping is corrected.
 
 External evidence still unavailable: published 2027 first-quarter rate for
 positive 2026 exposure after December 31; qualified final 2026 instructions/form;

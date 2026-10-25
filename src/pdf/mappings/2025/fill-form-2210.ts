@@ -1,199 +1,147 @@
-import { assertPdfExportAllowed } from "../../export-policy.js";
-/**
- * PDF filler for IRS Form 2210 — Underpayment of Estimated Tax
- * by Individuals, Estates, and Trusts.
- *
- * Field names verified against 2025 Form 2210 fillable PDF field inspection.
- */
-
-import { PDFDocument } from "pdf-lib";
+/** Physical 2025 Form 2210 review map; calculations belong exclusively to the engine. */
+import { PDFDocument, StandardFonts } from "pdf-lib";
 import Decimal from "decimal.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
-import {
-  loadReviewTemplate,
-  setTextField,
-  setCurrencyField,
-} from "../../pdf-utils.js";
+import { assertPdfExportAllowed, markReviewPdf } from "../../export-policy.js";
+import { formatCurrency, loadReviewTemplate, setCheckBox, setTextField } from "../../pdf-utils.js";
 
-// ─── PDF Field Name Helpers ────────────────────────────────────────────────
+const p1 = (name: string) => `topmostSubform[0].Page1[0].${name}`;
+const p2 = (name: string) => `topmostSubform[0].Page2[0].${name}`;
+const cell = (line: number, field: number) => p2(`SectionATable[0].Line${line}[0].f2_${field}[0]`);
 
-const p1 = (n: string) => `topmostSubform[0].Page1[0].${n}`;
-const p2 = (n: string) => `topmostSubform[0].Page2[0].${n}`;
-const secA = (line: string, n: string) =>
-  `topmostSubform[0].Page2[0].SectionATable[0].${line}.${n}`;
-
-// ─── Field Mapping ─────────────────────────────────────────────────────────
-// Verified against 2025 Form 2210 fillable PDF debug labels.
-
+/** Printed labels and field rectangles inspected against the registered 2025 PDF. */
 export const FORM_2210_FIELDS = {
-  // ── Header ──
-  name: p1("f1_1[0]"),
-  ssn: p1("f1_2[0]"),
-
-  // ── Part I: Required Annual Payment ──
-  line1: p1("f1_3[0]"),   // Tax after credits (Form 1040, line 22)
-  line2: p1("f1_4[0]"),   // Other taxes (SE tax, Additional Medicare, NIIT, etc.)
-  line3: p1("f1_5[0]"),   // Other payments and refundable credits (in parentheses)
-  line4: p1("f1_6[0]"),   // Current year tax (combine lines 1, 2, and 3)
-  line5: p1("f1_7[0]"),   // Multiply line 4 by 90% (0.90)
-  line6: p1("f1_8[0]"),   // Withholding taxes
-  line7: p1("f1_9[0]"),   // Subtract line 6 from line 4
-  line8: p1("f1_10[0]"),  // Maximum required annual payment based on prior year's tax
-  line9: p1("f1_11[0]"),  // Required annual payment (smaller of line 5 or line 8)
-
-  // ── Part II: Reasons for Filing (checkboxes) ──
-  boxA: p1("c1_1[0]"),
-  boxB: p1("c1_1[1]"),
-  boxC: p1("c1_2[0]"),
-  boxD: p1("c1_3[0]"),
-  boxE: p1("c1_4[0]"),
-
-  // ── Part III: Penalty Computation (Short Method) ──
-  // Section A — Figure Your Underpayment
-  // Line 10: Required installments per quarter (25% of line 9)
-  line10a: secA("Line10[0]", "f2_1[0]"),
-  line10b: secA("Line10[0]", "f2_2[0]"),
-  line10c: secA("Line10[0]", "f2_3[0]"),
-  line10d: secA("Line10[0]", "f2_4[0]"),
-
-  // Line 11: Estimated tax paid and tax withheld per quarter
-  line11a: secA("Line11[0]", "f2_5[0]"),
-  line11b: secA("Line11[0]", "f2_6[0]"),
-  line11c: secA("Line11[0]", "f2_7[0]"),
-  line11d: secA("Line11[0]", "f2_8[0]"),
-
-  // Section B — Penalty
-  line19: p2("f2_37[0]"),  // Total penalty → Form 1040, line 38
+  name: p1("f1_1[0]"), ssn: p1("f1_2[0]"),
+  line1: p1("f1_3[0]"), line2: p1("f1_4[0]"), line3: p1("f1_5[0]"),
+  line4: p1("f1_6[0]"), line5: p1("f1_7[0]"), line6: p1("f1_8[0]"),
+  line7: p1("f1_9[0]"), line8: p1("f1_10[0]"), line9: p1("f1_11[0]"),
+  line9No: p1("c1_1[0]"), line9Yes: p1("c1_1[1]"),
+  boxA: p1("c1_2[0]"), boxB: p1("c1_3[0]"), boxC: p1("c1_4[0]"),
+  boxD: p1("c1_5[0]"), boxE: p1("c1_6[0]"),
+  line10a: cell(10, 1), line10b: cell(10, 2), line10c: cell(10, 3), line10d: cell(10, 4),
+  line11a: cell(11, 5), line11b: cell(11, 6), line11c: cell(11, 7), line11d: cell(11, 8),
+  line12a: cell(12, 9), line12b: cell(12, 10), line12c: cell(12, 11), line12d: cell(12, 12),
+  line13a: cell(13, 13), line13b: cell(13, 14), line13c: cell(13, 15), line13d: cell(13, 16),
+  line14a: cell(14, 17), line14b: cell(14, 18), line14c: cell(14, 19), line14d: cell(14, 20),
+  line15a: cell(15, 21), line15b: cell(15, 22), line15c: cell(15, 23), line15d: cell(15, 24),
+  line16a: cell(16, 25), line16b: cell(16, 26), line16c: cell(16, 27), line16d: cell(16, 28),
+  line17a: cell(17, 29), line17b: cell(17, 30), line17c: cell(17, 31), line17d: cell(17, 32),
+  line18a: cell(18, 33), line18b: cell(18, 34), line18c: cell(18, 35), line18d: cell(18, 36),
+  line19: p2("f2_37[0]"),
 } as const;
 
-// ─── Fill Logic ────────────────────────────────────────────────────────────
-
-/**
- * Fill IRS Form 2210 PDF from engine calculation results.
- * Returns the filled PDFDocument (caller saves it).
- */
-export async function fillForm2210(
-  input: TaxYearInput,
-  result: TaxReturnResult,
-  blankPdfPath: string,
-): Promise<PDFDocument> {
+export async function fillForm2210(input: TaxYearInput, result: TaxReturnResult, blankPdfPath: string): Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
+  const calculation = result.form2210;
+  if (!calculation) throw new Error("Form 2210 review requires its calculation audit");
+  if (calculation.taxYear !== 2025) throw new Error("Form 2210 calculation year does not match the 2025 physical map");
+  const audited = new Map<string, Decimal>();
+  for (const entry of calculation.lines) {
+    if (entry.form !== "Form 2210") continue;
+    if (audited.has(entry.line) || !Decimal.isDecimal(entry.value) || !entry.value.isFinite() || entry.value.isNegative()) {
+      throw new Error(`Form 2210 invalid or duplicate audit line ${entry.line}`);
+    }
+    audited.set(entry.line, entry.value);
+  }
+  const required = (id: string): Decimal => {
+    const value = audited.get(id);
+    if (!value) throw new Error(`Form 2210 missing audit line ${id}`);
+    return value;
+  };
+  for (const id of ["1", "2", "3", "4", "5", "6", "7", "9", "19"]) required(id);
+  if (!required("9").eq(calculation.requiredAnnualPayment) || !required("19").eq(calculation.penalty)
+      || !calculation.exactPenalty.isFinite() || calculation.exactPenalty.isNegative()
+      || !calculation.exactPenalty.toDecimalPlaces(0, Decimal.ROUND_HALF_UP).eq(calculation.penalty)) {
+    throw new Error("Form 2210 audit does not reconcile to its calculated totals");
+  }
+  if (calculation.installments.length !== 0 && calculation.installments.length !== 4) throw new Error("Form 2210 audit must contain four installment columns");
+  if (!calculation.safeHarborMet && calculation.installments.length !== 4) throw new Error("Form 2210 missing audited installment history");
+  for (const [index, installment] of calculation.installments.entries()) {
+    if (installment.installment !== index + 1) throw new Error("Form 2210 installment audit order is invalid");
+    const suffix = String.fromCharCode(97 + index);
+    for (let line = 10; line <= 18; line++) required(`${line}${suffix}`);
+    for (const [line, value] of [[10, installment.required], [11, installment.payments], [17, installment.underpayment], [18, installment.overpayment]] as const) {
+      if (!required(`${line}${suffix}`).eq(value)) throw new Error(`Form 2210 installment audit line ${line}${suffix} does not reconcile`);
+    }
+  }
+  const source = input.form2210;
+  if (calculation.sourceFactsVerified && source?.priorYearTaxStatus === "return-filed" && source.priorYearFullYear) required("8");
+  if ((calculation.withholdingMethod === "actual-dates") !== (source?.withholdingMethod === "actual-dates")) {
+    throw new Error("Form 2210 actual withholding election does not reconcile to the source facts");
+  }
+  const exactTotal = calculation.interestPeriods.reduce((sum, period) => {
+    if (!period.principal.isFinite() || period.principal.isNegative() || !period.annualRate.isFinite()
+        || period.annualRate.isNegative() || !period.exactPenalty.isFinite() || period.exactPenalty.isNegative()
+        || !Number.isInteger(period.days) || period.days <= 0) throw new Error("Form 2210 invalid dated penalty audit");
+    const from = Date.parse(`${period.startDate}T00:00:00Z`);
+    const through = Date.parse(`${period.endDate}T00:00:00Z`);
+    if (!Number.isFinite(from) || !Number.isFinite(through) || (through - from) / 86_400_000 + 1 !== period.days
+        || !period.principal.times(period.annualRate).times(period.days).div(365).eq(period.exactPenalty)) {
+      throw new Error("Form 2210 dated penalty audit arithmetic does not reconcile");
+    }
+    return sum.plus(period.exactPenalty);
+  }, new Decimal(0));
+  if (!exactTotal.eq(calculation.exactPenalty)) throw new Error("Form 2210 dated penalty audit does not reconcile to exactPenalty");
+
   const doc = await loadReviewTemplate(blankPdfPath, 2025);
   const form = doc.getForm();
   const F = FORM_2210_FIELDS;
-  const f2210 = result.form2210;
-
-  // ── Header ──
   const name = input.taxpayer.spouse
     ? `${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName} & ${input.taxpayer.spouse.firstName} ${input.taxpayer.spouse.lastName}`
     : `${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName}`;
   setTextField(form, F.name, name);
   setTextField(form, F.ssn, input.taxpayer.primary.ssn.replace(/-/g, ""));
-
-  if (!f2210) return doc;
-
-  // ── Part I: Required Annual Payment ──
-
-  // Line 1: Form 1040 line 22 (tax after nonrefundable credits)
-  // = (totalTaxBeforeCredits + Schedule 2 Part I) - nonrefundable credits
-  const schedule2Part1 = result.schedule2?.partITotal ?? new Decimal(0);
-  const schedule3Line8 = getLineValue(result, "Schedule 3", "8") ?? new Decimal(0);
-  const totalNonrefCredits = result.totalCredits;
-  const line18Tax = result.totalTaxBeforeCredits.plus(schedule2Part1);
-  const line1 = Decimal.max(line18Tax.minus(totalNonrefCredits), new Decimal(0));
-  setCurrencyField(form, F.line1, line1);
-
-  // Line 2: Other taxes from Schedule 2, Part II (SE tax, Additional Medicare, NIIT, etc.)
-  // Excludes estimated tax penalty (that's what we're computing)
-  const line2 = result.schedule2?.partIITotal ?? new Decimal(0);
-  setCurrencyField(form, F.line2, line2);
-
-  // Line 3: Other payments and refundable credits (shown in parentheses)
-  // = EIC + ACTC + Schedule 3 refundable credits + net premium tax credit
-  const eic = result.earnedIncomeCredit;
-  const actc = result.form8812?.actc ?? new Decimal(0);
-  const sched3RefundableCredits = getLineValue(result, "1040", "31") ?? new Decimal(0);
-  const line3 = eic.plus(actc).plus(sched3RefundableCredits);
-  if (line3.gt(0)) {
-    // Form 2210 shows this in parentheses — use the raw number, the form
-    // already has parentheses printed around the field
-    setCurrencyField(form, F.line3, line3);
+  const stopsAtPartI = required("4").lt(1000) || required("7").lt(1000);
+  for (const [key, field] of Object.entries(F)) {
+    if (!/^line\d+[a-d]?$/.test(key)) continue;
+    const id = key.slice(4);
+    const value = audited.get(id);
+    const notApplicable = (id === "8" && !value) || (/^(?:1[0-8])[a-d]$/.test(id) && calculation.installments.length === 0)
+      || ["12a", "13a", "14a", "16a", "16d", "18d"].includes(id)
+      || (stopsAtPartI && (id === "8" || id === "9"));
+    // Touch blank mapped fields too: a missing/wrong-type template cannot pass silently.
+    setTextField(form, field, notApplicable ? "" : (required(id).isZero() ? "0" : formatCurrency(required(id))));
   }
+  const line9Greater = required("9").gt(required("6"));
+  setCheckBox(form, F.line9No, !stopsAtPartI && !line9Greater);
+  setCheckBox(form, F.line9Yes, !stopsAtPartI && line9Greater);
+  // Unsupported relief/annualized calculations never reach this mapping. Missing
+  // physical source facts remain disclosed; unchecked is not an inferred answer.
+  setCheckBox(form, F.boxA, false);
+  setCheckBox(form, F.boxB, false);
+  setCheckBox(form, F.boxC, false);
+  setCheckBox(form, F.boxD, source?.withholdingMethod === "actual-dates");
+  const changedJointStatus = source?.priorYearJointReturn !== undefined
+    && source.priorYearJointReturn !== (input.taxpayer.filingStatus === "married_filing_jointly");
+  const priorRequired = audited.get("8");
+  setCheckBox(form, F.boxE, changedJointStatus && priorRequired !== undefined && priorRequired.lt(required("5")));
 
-  // Line 4: Current year tax = Line 1 + Line 2 - Line 3
-  const line4 = Decimal.max(line1.plus(line2).minus(line3), new Decimal(0));
-  setCurrencyField(form, F.line4, line4);
-
-  // Line 5: Line 4 × 90%
-  const line5 = line4.times(new Decimal("0.9")).toDecimalPlaces(0, Decimal.ROUND_HALF_UP);
-  setCurrencyField(form, F.line5, line5);
-
-  // Line 6: Withholding taxes
-  const line6 = result.totalWithholding;
-  setCurrencyField(form, F.line6, line6);
-
-  // Line 7: Line 4 - Line 6
-  const line7 = Decimal.max(line4.minus(line6), new Decimal(0));
-  setCurrencyField(form, F.line7, line7);
-
-  // Line 8: Maximum required annual payment based on prior year's tax
-  // 100% of prior year tax (or 110% if prior year AGI > $150K / $75K MFS)
-  if (input.priorYear?.priorYearTax) {
-    const priorYearTax = new Decimal(input.priorYear.priorYearTax);
-    const priorYearAGI = input.priorYear.priorYearAGI
-      ? new Decimal(input.priorYear.priorYearAGI)
-      : new Decimal(0);
-    const threshold = input.taxpayer.filingStatus === "married_filing_separately"
-      ? new Decimal(75000)
-      : new Decimal(150000);
-    const multiplier = priorYearAGI.gt(threshold) ? new Decimal("1.1") : new Decimal("1.0");
-    const line8 = priorYearTax.times(multiplier).toDecimalPlaces(0, Decimal.ROUND_HALF_UP);
-    setCurrencyField(form, F.line8, line8);
+  const font = await doc.embedFont(StandardFonts.Helvetica);
+  let page = doc.addPage();
+  let cursor = page.getHeight() - 40;
+  const write = (text: string) => {
+    const sanitized = text.replace(/[^\x20-\x7E]/g, " ");
+    for (const line of sanitized.match(/.{1,100}(?:\s|$)|.{1,100}/g) ?? [sanitized]) {
+      if (cursor < 45) { page = doc.addPage(); cursor = page.getHeight() - 40; }
+      page.drawText(line.trim(), { x: 32, y: cursor, size: 9, font });
+      cursor -= 14;
+    }
+  };
+  write("FORM 2210 REVIEW - dated regular-method evidence");
+  write(calculation.sourceFactsVerified ? "Calculation uses the supported actual-source contract." : "Historical or exception-only calculation: complete source qualification has not been established.");
+  write("This is a review worksheet. The default return packet omits Form 2210; no filing qualification is implied.");
+  if (source?.priorYearJointReturn === undefined && priorRequired !== undefined) write("Prior joint-return status is unknown; Part II box E remains unanswered.");
+  if (!source) write("Physical filing-reason source facts are uncollected; unchecked boxes are not confirmed negative answers.");
+  if (calculation.interestPeriods.length === 0) write(`No dated interest accrues. ${calculation.safeHarborReason}.`);
+  for (const period of calculation.interestPeriods) {
+    write(`Installment ${period.installment}: ${period.startDate} through ${period.endDate}; ${period.days} days; principal $${period.principal.toFixed()}; annual rate ${period.annualRate.times(100).toFixed()}%.`);
+    write(`Exact penalty $${period.exactPenalty.toFixed()}. Published rate: ${period.rateSource}`);
   }
-
-  // Line 9: Required annual payment = smaller of line 5 or line 8
-  setCurrencyField(form, F.line9, f2210.requiredAnnualPayment);
-
-  // ── Part III: Short Method ──
-
-  if (f2210.penalty.gt(0)) {
-    // Line 10: Required installments (25% of line 9 per quarter)
-    const quarterlyInstallment = f2210.requiredAnnualPayment
-      .dividedBy(4)
-      .toDecimalPlaces(0, Decimal.ROUND_HALF_UP);
-    setCurrencyField(form, F.line10a, quarterlyInstallment);
-    setCurrencyField(form, F.line10b, quarterlyInstallment);
-    setCurrencyField(form, F.line10c, quarterlyInstallment);
-    setCurrencyField(form, F.line10d, quarterlyInstallment);
-
-    // Line 11: Estimated tax paid and withholding per quarter
-    // Allocate withholding equally across quarters (IRS default assumption)
-    const quarterlyWithholding = result.totalWithholding
-      .dividedBy(4)
-      .toDecimalPlaces(0, Decimal.ROUND_HALF_UP);
-    // Engine doesn't track per-quarter estimated payments, so allocate equally
-    const quarterlyEstimated = result.estimatedTaxPayments
-      .dividedBy(4)
-      .toDecimalPlaces(0, Decimal.ROUND_HALF_UP);
-    const quarterlyPayment = quarterlyWithholding.plus(quarterlyEstimated);
-    setCurrencyField(form, F.line11a, quarterlyPayment);
-    setCurrencyField(form, F.line11b, quarterlyPayment);
-    setCurrencyField(form, F.line11c, quarterlyPayment);
-    setCurrencyField(form, F.line11d, quarterlyPayment);
-
-    // Line 19: Penalty
-    setCurrencyField(form, F.line19, f2210.penalty);
-  }
-
+  write(`Exact combined penalty $${calculation.exactPenalty.toFixed()}; whole-dollar Form 2210 line 19 $${calculation.penalty.toFixed()}.`);
+  write("Payments retire the oldest installment first. Statutory withholding is allocated by law; estimated-payment dates are never invented.");
+  await markReviewPdf(doc);
   return doc;
 }
 
-/** Look up a calculated line value from the audit trail. */
-function getLineValue(result: TaxReturnResult, formName: string, line: string): Decimal | undefined {
-  const found = result.allLines.find((l) => l.form === formName && l.line === line);
-  return found?.value;
-}
-
-/** Exported field map for testing and inspection. */
 export { FORM_2210_FIELDS as FORM_2210_FIELDS_MAP };

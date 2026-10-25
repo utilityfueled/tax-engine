@@ -59,7 +59,9 @@ export interface Form2210Result {
   underpayment: Decimal;
   exactPenalty: Decimal;
   penalty: Decimal;
+  /** Known Part II D/E reasons; uncollected physical filing facts are not inferred. */
   requiresForm2210: boolean;
+  withholdingMethod: "equal-installments" | "actual-dates";
   installments: Form2210Installment[];
   interestPeriods: Form2210InterestPeriod[];
   lines: CalculatedLine[];
@@ -156,10 +158,14 @@ export function calculateForm2210(input: Form2210Input): Form2210Result {
     audit.record(FORM, "19", "Regular-method estimated-tax penalty", penalty, "roundDollar(sum(exact dated penalty periods))");
     audit.record(FORM, "safe_harbor", "No installment penalty", new Decimal(safe ? 1 : 0), reason);
     audit.record(FORM, "source_facts_verified", "Complete supported source facts", new Decimal(sourceFactsVerified ? 1 : 0), "Actual year, tax components, method and prior-return facts validated");
+    const priorRequired = audit.getLine(FORM, "8")?.value;
+    const changedJointStatus = facts?.priorYearJointReturn !== undefined
+      && facts.priorYearJointReturn !== (input.filingStatus === "married_filing_jointly");
+    const jointFilingReason = changedJointStatus && priorRequired !== undefined && priorRequired.lt(ninetyPercent);
     return {
       taxYear, sourceFactsVerified, safeHarborMet: safe, safeHarborReason: reason,
       requiredAnnualPayment: required, totalPayments: payments, underpayment: balance,
-      exactPenalty, penalty, requiresForm2210: withholdingMethod === "actual-dates", installments, interestPeriods,
+      exactPenalty, penalty, requiresForm2210: withholdingMethod === "actual-dates" || jointFilingReason, withholdingMethod, installments, interestPeriods,
       lines: audit.getLines(),
     };
   };
