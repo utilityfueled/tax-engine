@@ -138,3 +138,35 @@ The first direct Vitest PDF run used the wrong Python environment and failed;
 the first configured suite caught the year-gate regression while it was being
 fixed. Neither is a passing gate. No output was newly qualified for filing or
 2026 export.
+
+## Final 2026 Form 4952 physical candidate — 2026-10-25
+
+The [official final form](https://www.irs.gov/pub/irs-pdf/f4952.pdf), created
+May 28, 2026, was downloaded again and its SHA-256 remains
+`90b9fc0bd6778983521b61ed5c94cc5668e62af858e38e94a1a6fd4b631bfb6d`.
+Its four pages match the source already preserved under `forms/blank/2026/`
+in `d1b26ef`. The
+separate immutable candidate map identifies all 17 text fields, including the
+nested line 4a widget and the changed, unpadded field names. It is not connected
+to an application route, public filler, review registry or filing registry.
+All current 2026 year and export restrictions remain unchanged.
+
+The spec preceded a failed missing-module test. The three new tests now pass,
+and the expanded 2025/2026 mapping and review-notice suite passes 63 checks.
+Root types and scoped lint pass. Independently inspected printed rectangles
+check each mapping. A synthetic worksheet proof was saved and reopened; pypdf
+independently verified all 17 canonical values against the page widgets and
+nonempty appearances, with one review notice on each of four pages. All four
+rendered pages were visually inspected for alignment and readable notices.
+The first renderer invocation lacked its local font configuration; the corrected
+run used `.local/pdf-fonts.conf` and a writable local font cache.
+
+This prepares a concrete source/map for independent human qualification. It
+does not qualify the form, supply missing 2026 return forms or open any export.
+The synthetic worksheet proves field placement, not independent tax-law review.
+A separate agent reopened the official source, checked its hash and all 17
+printed locations, inspected the rendered first page, and reran the three
+candidate tests without actionable findings. This is agent review; the human
+qualification gate remains pending.
+Local evidence: `.local/upgrade-evidence/form4952-candidate-{red,green,expanded,types,lint,canonical}.log`
+(the canonical check is `.txt`), `form4952-2026-candidate.pdf` and its four PNGs.
