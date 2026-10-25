@@ -19,9 +19,9 @@ export interface Schedule3Input {
   retirementSavingsCredit?: Decimal;
   residentialCleanEnergyCredit?: Decimal;
   energyImprovementCredit?: Decimal;
-  /** Credit for prior year minimum tax — Form 8801, Schedule 3 Line 6a */
+  /** Credit for prior year minimum tax — Form 8801, Schedule 3 Line 6b */
   priorYearMinimumTaxCredit?: Decimal;
-  /** General business credit — Form 3800, Schedule 3 Line 6b */
+  /** General business credit — Form 3800, Schedule 3 Line 6a */
   generalBusinessCredit?: Decimal;
   /** Adoption credit — Form 8839, Schedule 3 Line 6c */
   adoptionCredit?: Decimal;
@@ -33,9 +33,9 @@ export interface Schedule3Input {
   previouslyOwnedCleanVehicleCredit?: Decimal;
   netPremiumTaxCredit?: Decimal;
   excessSocialSecurityWithholding?: Decimal;
-  /** Additional Child Tax Credit (ACTC) from Form 8812 — refundable, Line 14a */
+  /** Additional Child Tax Credit (ACTC) from Form 8812 — refundable directly on Form 1040 line 28; excluded from Schedule 3 */
   additionalChildTaxCredit?: Decimal;
-  /** AOC refundable portion (40% of AOC credit, max $1,000) — refundable, Line 14b */
+  /** AOC refundable portion (40% of AOC credit, max $1,000) — refundable directly on Form 1040 line 29; excluded from Schedule 3 */
   aocRefundablePortion?: Decimal;
 }
 
@@ -46,18 +46,19 @@ export interface Schedule3Result {
   retirementSavingsCredit: Decimal;
   residentialCleanEnergyCredit: Decimal;
   energyImprovementCredit: Decimal;
-  priorYearMinimumTaxCredit: Decimal; // Line 6a
-  generalBusinessCredit: Decimal; // Line 6b
+  priorYearMinimumTaxCredit: Decimal; // Line 6b
+  generalBusinessCredit: Decimal; // Line 6a
   adoptionCredit: Decimal; // Line 6c
   elderlyOrDisabledCredit: Decimal; // Line 6d
   newCleanVehicleCredit: Decimal; // Line 6f
   previouslyOwnedCleanVehicleCredit: Decimal; // Line 6m
-  totalNonrefundableCredits: Decimal; // Line 7
+  totalNonrefundableCredits: Decimal; // Line 8
 
+  extensionPayment: Decimal;
   netPremiumTaxCredit: Decimal;
   excessSSWithholding: Decimal;
-  additionalChildTaxCredit: Decimal; // Line 14a
-  aocRefundablePortion: Decimal;     // Line 14b
+  additionalChildTaxCredit: Decimal; // Form 1040 line 28, retained for API compatibility
+  aocRefundablePortion: Decimal;     // Form 1040 line 29, retained for API compatibility
   totalRefundableCredits: Decimal;   // Line 15
 
   lines: CalculatedLine[];
@@ -106,10 +107,10 @@ export function calculateSchedule3(
   audit.record("Sched 3", "5b", "Energy improvement credit", energyImprovementCredit, "Form 5695 Part II");
 
   const priorYearMinimumTaxCredit = extra?.priorYearMinimumTaxCredit ?? new Decimal(0);
-  audit.record("Sched 3", "6a", "Credit for prior year minimum tax", priorYearMinimumTaxCredit, "Form 8801");
+  audit.record("Sched 3", "6b", "Credit for prior year minimum tax", priorYearMinimumTaxCredit, "Form 8801");
 
   const generalBusinessCredit = extra?.generalBusinessCredit ?? new Decimal(0);
-  audit.record("Sched 3", "6b", "General business credit", generalBusinessCredit, "Form 3800");
+  audit.record("Sched 3", "6a", "General business credit", generalBusinessCredit, "Form 3800");
 
   const adoptionCredit = extra?.adoptionCredit ?? new Decimal(0);
   audit.record("Sched 3", "6c", "Adoption credit", adoptionCredit, "Form 8839");
@@ -137,28 +138,35 @@ export function calculateSchedule3(
     newCleanVehicleCredit,
     previouslyOwnedCleanVehicleCredit
   );
-  audit.record("Sched 3", "7", "Total nonrefundable credits", totalNonrefundableCredits, "Sum Lines 1-6 → 1040 Line 20");
+  const line6Subtotal = sum(priorYearMinimumTaxCredit, generalBusinessCredit, adoptionCredit,
+    elderlyOrDisabledCredit, newCleanVehicleCredit, previouslyOwnedCleanVehicleCredit);
+  audit.record("Sched 3", "7", "Other nonrefundable credit subtotal", line6Subtotal, "Supported lines 6a through 6m");
+  audit.record("Sched 3", "8", "Total nonrefundable credits", totalNonrefundableCredits, "Lines 1 through 5b + line 7 → Form 1040 line 20");
 
   // ── Part II: Other Payments and Refundable Credits ────
 
   const netPremiumTaxCredit = extra?.netPremiumTaxCredit ?? new Decimal(0);
-  audit.record("Sched 3", "10", "Net premium tax credit", netPremiumTaxCredit, "Form 8962");
+  audit.record("Sched 3", "9", "Net premium tax credit", netPremiumTaxCredit, "Form 8962");
 
+  const extensionPayment = sum(...(input.adjustments?.extensionPayments ?? [])
+    .filter(payment => payment.type === "federal").map(payment => d(payment.amount)));
+  if (!extensionPayment.isFinite() || extensionPayment.lt(0)) throw new Error("Federal extension payment must be finite and nonnegative");
+  audit.record("Sched 3", "10", "Amount paid with extension request", extensionPayment, "Actual federal extension payments, excluding fees");
   const excessSSWithholding = extra?.excessSocialSecurityWithholding ?? new Decimal(0);
-  audit.record("Sched 3", "13a", "Excess SS withholding", excessSSWithholding, "Multiple employer refund");
+  audit.record("Sched 3", "11", "Excess SS withholding", excessSSWithholding, "Multiple employer refund");
 
   const additionalChildTaxCredit = extra?.additionalChildTaxCredit ?? new Decimal(0);
-  audit.record("Sched 3", "14a", "Additional child tax credit (ACTC)", additionalChildTaxCredit, "Form 8812");
+
 
   const aocRefundablePortion = extra?.aocRefundablePortion ?? new Decimal(0);
-  audit.record("Sched 3", "14b", "AOC refundable portion (40%)", aocRefundablePortion, "Form 8863 Line 8");
+
 
   const totalRefundableCredits = sum(
     netPremiumTaxCredit,
-    excessSSWithholding,
-    additionalChildTaxCredit,
-    aocRefundablePortion
+    extensionPayment,
+    excessSSWithholding
   );
+  audit.record("Sched 3", "14", "Other payment subtotal", new Decimal(0), "No supported line 13 payment input");
   audit.record("Sched 3", "15", "Total refundable credits", totalRefundableCredits, "Sum Lines 9-14 → 1040 Line 31");
 
   return {
@@ -175,6 +183,7 @@ export function calculateSchedule3(
     newCleanVehicleCredit,
     previouslyOwnedCleanVehicleCredit,
     totalNonrefundableCredits,
+    extensionPayment,
     netPremiumTaxCredit,
     excessSSWithholding,
     additionalChildTaxCredit,

@@ -422,3 +422,21 @@ pre-existing non-null warnings. Scoped diff reviewed.
 Still unqualified: 2026 Schedule 3-A public-benefit limitation/final IRS forms and
 independent tax review; Schedule R/8863 exact worksheet audit needs follow-up;
 prior-AMT year-aware prior constants remain next. No filing readiness gate changed.
+
+### Schedule 3 and omitted payments — 2026-10-25
+
+Refreshed official 2025 Schedule 3 and 1040/2210 instructions. Corrected GBC/prior-AMT
+lines 6a/6b, separate line-6 subtotal7 and total8, PTC9, extension10 and excessSS11.
+ACTC/AOC remain explicit legacy result fields but never enter Schedule 3 totals or
+fabricated lines14a/14b; they belong directly on1040. Federal extension payments
+now enter total payments once; actual prior-return applied credits enter line26,
+with source-year mismatch rejected. Form2210 treats excessSS as withholding and
+excludes extension payments from refundable-credit tax-base reductions.
+
+Five new source-linked regressions failed first. Historical line/total assertions
+were corrected to the printed form without dropping cases; direct1040 amounts are
+still asserted. 549 focused tests, root typecheck, 3,114 spec references and
+whitespace checks pass. Scoped diff reviewed. Rule versions advanced to2025.8 and
+2026.3-law-integration-draft to identify changed calculations; qualification and
+incomplete2026 gates remain unchanged. Per-filer/per-employer excessSS calculation
+and actual dated Form2210 payment/rate calculation remain separate follow-up.

@@ -3082,10 +3082,15 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     "Lines 25a + 25b + 25c"
   );
 
-  const estimatedPayments = input.adjustments?.estimatedTaxPayments
+  const priorReturnAppliedPayments = (input.adjustments?.priorYearAppliedCredits ?? []).filter(payment => payment.type === "federal");
+  if (priorReturnAppliedPayments.some(payment => payment.sourceTaxYear !== year - 1)) {
+    throw new Error("Federal prior-return applied credit has an invalid source year");
+  }
+  const currentEstimatedPayments = input.adjustments?.estimatedTaxPayments
     ?.filter((p) => p.type === "federal")
     .reduce((acc, p) => acc.plus(d(p.amount)), new Decimal(0)) ?? new Decimal(0);
-  audit.record("1040", "26", "Estimated tax payments", estimatedPayments, "Sum federal estimated payments");
+  const estimatedPayments = currentEstimatedPayments.plus(sum(...priorReturnAppliedPayments.map(payment => d(payment.amount))));
+  audit.record("1040", "26", "Estimated tax payments and prior-year applied credit", estimatedPayments, "Actual federal estimates + prior return overpayment applied to this return");
 
   // ═══════════════════════════════════════════════════════════
   // Phase 6: Additional Taxes — Schedule 2 Part II (Form 1040 Line 23)
@@ -3145,9 +3150,9 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
       sched1.hsaAdditionalTax,
       sched1.hsaRecaptureTax
     )),
-    withholding: federalWithholding,
+    withholding: federalWithholding.plus(excessSSWithholding),
     estimatedPayments,
-    refundableCredits: sum(educationRefundable, refundableAdoptionCredit, sched3.totalRefundableCredits, form8812.actc, eic),
+    refundableCredits: sum(educationRefundable, refundableAdoptionCredit, netPremiumTaxCredit, form8812.actc, eic),
     priorYearTax: input.priorYear?.priorYearTax ? d(input.priorYear.priorYearTax) : undefined,
     priorYearAGI: input.priorYear?.priorYearAGI ? d(input.priorYear.priorYearAGI) : undefined,
     filingStatus,

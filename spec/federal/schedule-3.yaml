@@ -52,10 +52,10 @@ lines:
     irsRef: "Schedule 3 Instructions, Line 5b; Form 5695"
     testRef: "tests/engine/schedules/schedule-3.test.ts::Schedule 3 Line 5b - energy improvement credit"
 
-  - line: "6a"
+  - line: "6b"
     description: "Credit for prior year minimum tax"
     formula: "Form 8801 Line 25"
-    irsRef: "Schedule 3 Instructions, Line 6a; Form 8801"
+    irsRef: "Schedule 3 Instructions, Line 6b; Form 8801"
     notes: "Nonrefundable credit for AMT paid in a prior year due to deferral (timing) items such as ISO exercises, depreciation, or depletion"
     testRef: "tests/engine/forms/form-8801.test.ts::Part II Line 25 - credit limited when available exceeds limitation"
 
@@ -66,29 +66,29 @@ lines:
     notes: "Nonrefundable credit for taxpayers age 65+ or permanently disabled"
     testRef: "tests/engine/forms/schedule-r.test.ts::Schedule R — Credit for the Elderly or the Disabled"
 
-  - line: "7"
+  - line: "8"
     description: "Total nonrefundable credits"
-    formula: "Sum of Lines 1-6"
-    irsRef: "Schedule 3 Instructions, Line 7"
+    formula: "Sum of Lines 1-5b and line 7"
+    irsRef: "Schedule 3 Instructions, Line 8"
     notes: "Goes to Form 1040 Line 20"
-    testRef: "tests/engine/schedules/schedule-3.test.ts::Schedule 3 Line 7 - total nonrefundable"
+    testRef: "tests/engine/schedules/schedule-3.test.ts::Schedule 3 Line 8 - total nonrefundable"
 
   # ── Part II: Other Payments and Refundable Credits ──────
-  - line: "10"
+  - line: "9"
     description: "Net premium tax credit"
     formula: "Form 8962 — ACA premium assistance"
-    irsRef: "Schedule 3 Instructions, Line 10; Form 8962"
-    testRef: "tests/engine/schedules/schedule-3.test.ts::Schedule 3 Line 10 - premium tax credit"
+    irsRef: "Schedule 3 Instructions, Line 9; Form 8962"
+    testRef: "tests/engine/schedules/schedule-3.test.ts::Schedule 3 Line 9 - premium tax credit"
 
-  - line: "13a"
+  - line: "11"
     description: "Excess Social Security tax withheld"
     formula: "excess = max(0, totalSSWithheld - maxSSWithholding) where maxSSWithholding = SSWageBase × employeeRate (exact, not rounded)"
-    irsRef: "Schedule 3 Instructions, Line 13a; IRS Form 1040 Instructions: 'credit for the amount withheld in excess of $10,918.20'"
+    irsRef: "Schedule 3 Instructions, Line 11; IRS Form 1040 Instructions: 'credit for the amount withheld in excess of $10,918.20'"
     edgeCases:
       - "2025 max SS withholding: $176,100 × 6.2% = $10,918.20 (exact — do NOT round to $10,918)"
       - "Each employer withholds independently — can exceed if combined wages > base"
       - "Single employer at exact max ($10,918.20 withheld): excess = $0, not $0.20"
-    testRef: "tests/engine/schedules/schedule-3.test.ts::Schedule 3 Line 13a - excess SS withholding"
+    testRef: "tests/engine/schedules/schedule-3.test.ts::Schedule 3 Line 11 - excess SS withholding"
 
   - line: "15"
     description: "Total other payments and refundable credits"
@@ -101,7 +101,7 @@ lines:
   - line: "7-stacking"
     description: "Multiple nonrefundable credits stacking"
     formula: "Sum of FTC + dependent care + education + retirement savings credit + clean energy + improvement"
-    irsRef: "Schedule 3 Instructions, Line 7"
+    irsRef: "Schedule 3 Instructions, Line 8"
     edgeCases:
       - "All six supported nonrefundable credit types sum correctly"
       - "Zero-value credits don't affect total"
@@ -113,6 +113,18 @@ lines:
     irsRef: "Schedule 3 Instructions"
     edgeCases:
       - "FTC + education + energy credits all reduce total tax"
-      - "ACA refundable credit flows through Line 10"
-      - "Excess SS withholding from multiple employers flows through Line 13a"
+      - "ACA refundable credit flows through Line 9"
+      - "Excess SS withholding from multiple employers flows through Line 11"
     testRef: "tests/edge-cases/credit-stacking.test.ts::Schedule 3 - credit stacking in federal pipeline"
+
+  - line: "official-line-routing"
+    description: "Preserve IRS credit/payment lines and direct Form1040 refundable credits"
+    formula: "6a GBC; 6b priorAMT; 7 subtotal6; 8 totalnonref; 9 PTC; 10 extension payments; 11 excessSS; 14 subtotal13; 15 sums9-12+14. ACTC and refundableAOC belong only on1040lines28/29. Prior-year applied credits join estimated payments on1040line26."
+    irsRef: "https://www.irs.gov/pub/irs-pdf/f1040s3.pdf and https://www.irs.gov/instructions/i1040gi"
+    testRef: "tests/engine/schedule-3-official-routing.test.ts::Schedule 3 official credit and payment routing"
+
+  - line: "11-estimated-tax"
+    description: "Social Security overwithholding is withholding for Form2210"
+    formula: "Add Schedule3line11 to Form1040line25d for Form2210withholding; do not subtract it as a refundable credit from the annual tax base. Extension payments are excluded from that credit base."
+    irsRef: "https://www.irs.gov/instructions/i2210, Lines 3 and 6"
+    testRef: "tests/engine/schedule-3-official-routing.test.ts::treats excess Social Security as withholding in Form2210"
