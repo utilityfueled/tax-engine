@@ -82,6 +82,7 @@ import { SectionRentalIncome } from "./section-rental-income";
 import { SectionRetirementIncome } from "./section-retirement-income";
 import { SectionSocialSecurity } from "./section-social-security";
 import { SectionUnemployment } from "./section-unemployment";
+import { SectionAdditionalDeductions } from "./section-additional-deductions";
 import { SectionDeductions } from "./section-deductions";
 import { SectionAdjustments } from "./section-adjustments";
 import { SectionCredits } from "./section-credits";
@@ -591,6 +592,8 @@ function SectionContent({
           }
         />
       );
+    case "additional-deductions":
+      return <SectionAdditionalDeductions state={state} data={getSectionData(state, "additional-deductions")} w2Entries={getSectionData(state, "income-w2")?.entries} onChange={data => onStateChange(updateSectionData(state, "additional-deductions", data))} />;
     case "deductions":
       return (
         <SectionDeductions

@@ -1,3 +1,4 @@
+import { compensationReportingErrors } from "./guided-compensation-reporting";
 import Decimal from "decimal.js";
 import type { FilingStatus, NecEntryData, SelfEmploymentSectionData, StateReturnData, W2EntryData } from "./guided-interview-flow";
 import { parseGuidedCurrency, sumGuidedDisplayAmounts } from "./guided-currency";
@@ -46,14 +47,14 @@ export function sumKnownBusinessAmounts(values: Array<string | undefined>): Deci
 }
 
 export function isStartedNec(entry: NecEntryData): boolean {
-  return Object.values(entry).some(value => typeof value === "string" && value.trim() !== "");
+  return Object.values(entry).some(value => (typeof value === "string" && value.trim() !== "") || Array.isArray(value));
 }
 
 export function hasBusinessSourceData(data: SelfEmploymentSectionData | undefined): boolean {
   return !!data && (data.necEntries.some(isStartedNec) || hasEnteredAmount(data.manualGrossReceipts) || Object.values(data.expenses).some(hasEnteredAmount) || Object.values(data.businessFacts ?? {}).some(value => value !== undefined && value !== null && value !== ""));
 }
 
-export function businessFactErrors(data: SelfEmploymentSectionData | undefined, filingStatus?: FilingStatus | null, _w2s: W2EntryData[] = [], stateData?: StateReturnData): Record<string, string> {
+export function businessFactErrors(data: SelfEmploymentSectionData | undefined, filingStatus?: FilingStatus | null, _w2s: W2EntryData[] = [], stateData?: StateReturnData, returnYear?: number | null): Record<string, string> {
   const errors: Record<string, string> = {};
   if (!hasBusinessSourceData(data) || !data) return errors;
   const facts = data.businessFacts ?? {};
@@ -77,6 +78,7 @@ export function businessFactErrors(data: SelfEmploymentSectionData | undefined, 
   data.necEntries.forEach((entry, index) => {
     if (!isStartedNec(entry)) return;
     const prefix = `nec-${index}`;
+    for (const [key, error] of Object.entries(compensationReportingErrors(entry, returnYear))) errors[`${prefix}-${key}`] = error;
     if (!entry.payerName.trim()) errors[`${prefix}-payer`] = "Enter the actual payer name.";
     for (const field of ["nonemployeeCompensation", "federalWithheld"] as const) { const error = amountError(entry[field], field); if (error) errors[`${prefix}-${field}`] = error; }
     if (!["primary", "spouse"].includes(entry.accountHolder ?? "") || entry.accountHolder !== facts.accountHolder) errors[`${prefix}-owner`] = "The actual NEC recipient must match this business owner; separate owners cannot be combined.";

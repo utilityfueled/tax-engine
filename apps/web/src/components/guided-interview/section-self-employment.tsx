@@ -31,6 +31,7 @@ import {
 } from "@/lib/workspace-document-file-cache";
 import { isGuidedSyntheticDocument } from "@/lib/workspace-status-copy";
 import { CurrencyField } from "./currency-field";
+import { CompensationReportingFields } from "./compensation-reporting-fields";
 import { BooleanFact, TextFact } from "./fact-fields";
 import { BusinessSourceDetails } from "./business-source-details";
 import { isStartedNec, sumKnownBusinessAmounts, type BusinessSourceData } from "@/lib/guided-business-facts";
@@ -90,7 +91,7 @@ function NecCard({
 }: {
   index: number;
   entry: NecEntryData;
-  onUpdate: (field: keyof NecEntryData, value: string) => void;
+  onUpdate: (field: keyof NecEntryData, value: string | string[] | undefined) => void;
   onRemove: () => void;
   removable: boolean;
 }) {
@@ -151,6 +152,7 @@ function NecCard({
           onChange={(v) => onUpdate("federalWithheld", v)}
         />
       </div>
+      <CompensationReportingFields data={entry} kind="nec" onChange={patch => { for (const [field, value] of Object.entries(patch)) onUpdate(field as keyof NecEntryData, value); }} />
       <label className="guided-field"><span className="guided-field-label">Actual 1099-NEC recipient</span><select className="guided-input" value={entry.accountHolder ?? ""} onChange={event => onUpdate("accountHolder", event.target.value)}><option value="">Not answered</option><option value="primary">Primary taxpayer</option><option value="spouse">Spouse on a joint return</option></select></label>
       <label className="guided-field"><span className="guided-field-label">State reporting on this 1099-NEC</span><select className="guided-input" value={entry.stateTaxReporting ?? ""} onChange={event => onUpdate("stateTaxReporting", event.target.value)}><option value="">Not answered</option><option value="none">No state section reported</option><option value="single">One state reported</option><option value="multiple">Multiple states requiring allocation</option></select></label>
       <TextFact label="Box 6 actual source state" value={entry.state ?? ""} onChange={value => onUpdate("state", value.toUpperCase())} />
@@ -355,7 +357,7 @@ export function SectionSelfEmployment({
     latestSection.current.onSectionChange(value);
   }
 
-  function updateEntry(index: number, field: keyof NecEntryData, value: string) {
+  function updateEntry(index: number, field: keyof NecEntryData, value: string | string[] | undefined) {
     const next = currentEntries.map((entry, i) =>
       i === index ? { ...entry, [field]: value } : entry
     );

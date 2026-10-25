@@ -27,6 +27,7 @@ import {
 import { getCachedWorkspaceDocumentFile, hasCachedWorkspaceDocumentFile } from "@/lib/workspace-document-file-cache";
 import { detectUploadedDocumentFromFile } from "@/lib/uploaded-document-detection";
 import { CurrencyField } from "./currency-field";
+import { CompensationReportingFields } from "./compensation-reporting-fields";
 
 const confirmableFields: W2SuggestedField[] = [
   "accountHolder",
@@ -267,7 +268,7 @@ function W2Card({
 }: {
   index: number;
   entry: W2EntryData;
-  onUpdate: (field: keyof W2EntryData, value: string) => void;
+  onUpdate: (field: keyof W2EntryData, value: string | string[] | undefined) => void;
   onConfirmField: (field: W2SuggestedField) => void;
   onConfirmAllFields: () => void;
   onApplySuggestion: (suggestion: W2DocumentSuggestion) => void;
@@ -612,6 +613,8 @@ function W2Card({
             fieldClassName={entry.aiSuggestedFields?.socialSecurityTips?.status === "pending-confirmation" ? "guided-field-ai-pending" : entry.aiSuggestedFields?.socialSecurityTips?.status === "confirmed" ? "guided-field-ai-confirmed" : undefined}
             footer={<SuggestedFieldNotice suggestion={entry.aiSuggestedFields?.socialSecurityTips} availableSuggestions={availableSuggestions} onConfirm={() => onConfirmField("socialSecurityTips")} />}
           />
+      <CompensationReportingFields data={entry} kind="w2" onChange={patch => { for (const [field, value] of Object.entries(patch)) onUpdate(field as keyof W2EntryData, value); }} />
+          <CurrencyField label="Box 8 — Allocated tips" hint="Enter the actual reported amount. Unknown stays blank; checked zero remains zero." value={entry.allocatedTips ?? ""} onChange={value => onUpdate("allocatedTips", value)} />
           <CurrencyField label="Box 10 — Dependent-care benefits"
             hint="Check the actual W-2. Enter 0 only if no benefits are reported. Positive amounts need the benefit details in Tax Credits."
             value={entry.box10DependentCareBenefits ?? ""} onChange={value => onUpdate("box10DependentCareBenefits", value)}
@@ -771,7 +774,7 @@ export function SectionW2Income({
     });
   }, [attachedReviewDocuments]);
 
-  function updateEntry(index: number, field: keyof W2EntryData, value: string) {
+  function updateEntry(index: number, field: keyof W2EntryData, value: string | string[] | undefined) {
     const next = current.map((entry, i) =>
       i === index ? { ...clearSuggestedField(entry, field), [field]: value } : entry
     );

@@ -1,3 +1,6 @@
+import { buildSchedule1AInput, schedule1AFactErrors } from "./guided-schedule-1-a-facts";
+import { actualCompensationSourceYear } from "./guided-compensation-reporting";
+import { buildTipIncomeInputs, tipIncomeFactErrors } from "./guided-tip-income-facts";
 import { buildHealthInsuranceInput, healthInsuranceSourceErrors } from "./guided-health-insurance-facts";
 import { buildHsaInputs, hsaFactErrors } from "./guided-hsa-facts";
 import { buildEducatorSources, educatorFactErrors } from "./guided-educator-facts";
@@ -156,6 +159,11 @@ export function buildW2Inputs(
       federalWithheld: toOptionalDecimalString(e.federalWithheld),
       socialSecurityWages: toOptionalDecimalString(e.socialSecurityWages),
       socialSecurityTips: toOptionalDecimalString(e.socialSecurityTips),
+      allocatedTips: toOptionalDecimalString(e.allocatedTips),
+      taxYear: actualCompensationSourceYear(e.sourceTaxYear),
+      box12CodeTP: toOptionalDecimalString(e.box12CodeTP),
+      box12CodeTT: toOptionalDecimalString(e.box12CodeTT),
+      treasuryTippedOccupationCodes: e.treasuryTippedOccupationCodes === undefined ? undefined : [...e.treasuryTippedOccupationCodes],
       socialSecurityWithheld: toOptionalDecimalString(e.socialSecurityWithheld),
       medicareWages: toOptionalDecimalString(e.medicareWages),
       medicareWithheld: toOptionalDecimalString(e.medicareWithheld),
@@ -175,6 +183,10 @@ export function buildNecInputs(entries: NecEntryData[] | undefined) {
       payer: e.payerName.trim(),
       accountHolder: e.accountHolder || undefined,
       payerTin: e.payerTin || undefined,
+      taxYear: actualCompensationSourceYear(e.sourceTaxYear),
+      cashTips: toOptionalDecimalString(e.cashTips),
+      qualifiedOvertimeCompensation: toOptionalDecimalString(e.qualifiedOvertimeCompensation),
+      treasuryTippedOccupationCodes: e.treasuryTippedOccupationCodes === undefined ? undefined : [...e.treasuryTippedOccupationCodes],
       nonemployeeCompensation: toOptionalDecimalString(e.nonemployeeCompensation),
       federalWithheld: toOptionalDecimalString(e.federalWithheld),
       state: e.state?.trim().toUpperCase() || undefined,
@@ -605,9 +617,11 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
   const careBenefitSources = guidedCareBenefitSources(w2Data?.entries, seData?.businessFacts, seData?.expenses);
   let loanEducation: StudentLoanEducationSources = [];
   try {
-    assertKnownFacts(w2FactErrors(w2Data?.entries, segmentation.filingStatus));
+    assertKnownFacts(tipIncomeFactErrors(state));
+    assertKnownFacts(schedule1AFactErrors(state));
+    assertKnownFacts(w2FactErrors(w2Data?.entries, segmentation.filingStatus, state.taxYear));
     assertKnownFacts(investmentFactErrors(investData, segmentation.filingStatus, state.taxYear, stateReturnData, segmentation.stateCode));
-    assertKnownFacts(businessFactErrors(seData, segmentation.filingStatus, w2Data?.entries, stateReturnData));
+    assertKnownFacts(businessFactErrors(seData, segmentation.filingStatus, w2Data?.entries, stateReturnData, state.taxYear));
     assertKnownFacts(rentalFactErrors(rentalData?.entries, segmentation.filingStatus, state.taxYear, segmentation.stateCode));
     assertKnownFacts(deductionFactErrors(deductionData, state.taxYear, segmentation.filingStatus, personalInfo.spouse));
     assertKnownFacts(nonW2TaxAllocationErrors(state));
@@ -715,6 +729,8 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
       dependents: buildDependents(personalInfo?.dependentCount, personalInfo?.dependents),
     },
     w2s,
+    schedule1A: buildSchedule1AInput(sectionData["additional-deductions"]?.schedule1A, state),
+    form4137ByOwner: buildTipIncomeInputs(sectionData["additional-deductions"]?.tipIncomeAccounts, segmentation.filingStatus, state.taxYear, w2Data?.entries),
     ...buildHsaInputs(adjustmentData?.hsaAccounts, personalInfo),
     form7206: buildHealthInsuranceInput(adjustmentData?.healthInsuranceFacts, segmentation.filingStatus, state.taxYear, adjustmentData?.selfEmployedHealthInsurance),
     form1099Nec: necs,
@@ -927,7 +943,7 @@ export function buildGuidedSyntheticDocuments(
       size: 0,
       uploadedAt: now,
       kind: "1099-nec",
-      coverage: Object.keys(businessFactErrors(seData, state.segmentation.filingStatus, state.sectionData["income-w2"]?.entries, state.sectionData["state-return"])).length ? "partially-supported" : "supported",
+      coverage: Object.keys(businessFactErrors(seData, state.segmentation.filingStatus, state.sectionData["income-w2"]?.entries, state.sectionData["state-return"], state.taxYear)).length ? "partially-supported" : "supported",
       label: "1099-NEC (guided interview)",
       notes: "Entered via guided interview.",
       matchedFixtureId: null,
@@ -941,7 +957,7 @@ export function buildGuidedSyntheticDocuments(
       size: 0,
       uploadedAt: now,
       kind: "schedule-c-support",
-      coverage: Object.keys(businessFactErrors(seData, state.segmentation.filingStatus, state.sectionData["income-w2"]?.entries, state.sectionData["state-return"])).length ? "partially-supported" : "supported",
+      coverage: Object.keys(businessFactErrors(seData, state.segmentation.filingStatus, state.sectionData["income-w2"]?.entries, state.sectionData["state-return"], state.taxYear)).length ? "partially-supported" : "supported",
       label: "Schedule C (guided interview)",
       notes: "Manual Schedule C gross receipts and expenses entered via guided interview.",
       matchedFixtureId: null,

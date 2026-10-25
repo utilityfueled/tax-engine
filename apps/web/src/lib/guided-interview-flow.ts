@@ -1,3 +1,5 @@
+import { schedule1AFactErrors } from "./guided-schedule-1-a-facts";
+import { tipIncomeFactErrors, type AdditionalDeductionsData } from "./guided-tip-income-facts";
 import { healthInsuranceSourceErrors, type HealthInsuranceData } from "./guided-health-insurance-facts";
 import { hsaFactErrors, type HsaAccountData } from "./guided-hsa-facts";
 import type { StandardDeductionData } from "./guided-standard-deduction-facts";
@@ -84,9 +86,11 @@ export type LifeEvent =
   | "student-loans"
   | "hsa-contributions"
   | "educator-expenses"
-  | "self-employed-health-insurance";
+  | "self-employed-health-insurance"
+  | "additional-deductions";
 
 export const lifeEventOptions: { value: LifeEvent; label: string; hint: string }[] = [
+  { value: "additional-deductions", label: "Tips, overtime, vehicle loan interest or senior deduction", hint: "Actual tip records and Schedule 1-A eligibility" },
   { value: "bought-home", label: "Bought a home", hint: "Mortgage interest deduction may apply" },
   { value: "sold-home", label: "Sold a home", hint: "Capital gains exclusion may apply" },
   { value: "had-baby", label: "Had or adopted a child", hint: "Child tax credit, dependent exemption" },
@@ -251,6 +255,7 @@ export type InterviewSectionId =
   | "income-unemployment"
   | "adjustments"
   | "deductions"
+  | "additional-deductions"
   | "credits"
   | "other-taxes"
   | "payments"
@@ -267,6 +272,7 @@ export interface InterviewSectionDefinition {
 }
 
 const allSections: InterviewSectionDefinition[] = [
+  { id: "additional-deductions", label: "Tips & Additional Deductions", eyebrow: "ADDITIONAL DEDUCTIONS", description: "Actual tip records and additional deduction sources", groupLabel: "Deductions" },
   {
     id: "personal-info",
     label: "About You",
@@ -423,6 +429,11 @@ export function buildSectionRoute(segmentation: SegmentationAnswers): InterviewS
   const deductions = allSections.find((s) => s.id === "deductions");
   if (deductions) sections.push(deductions);
 
+  if (segmentation.lifeEvents.includes("additional-deductions")) {
+    const additional = allSections.find(section => section.id === "additional-deductions");
+    if (additional) sections.push(additional);
+  }
+
   // Credits — include if had a baby or has dependents (always show for now)
   const credits = allSections.find((s) => s.id === "credits");
   if (credits) sections.push(credits);
@@ -563,6 +574,8 @@ export const emptyPersonalInfo: PersonalInfoData = {
 };
 
 export interface W2EntryData {
+  sourceTaxYear?: string;
+  box12CodeTP?: string; box12CodeTT?: string; treasuryTippedOccupationCodes?: string[];
   box12CodeW?: string;
   box10DependentCareBenefits?: string;
   accountHolder?: "primary" | "spouse" | "";
@@ -574,6 +587,7 @@ export interface W2EntryData {
   federalWithheld: string;
   socialSecurityWages: string;
   socialSecurityTips?: string;
+  allocatedTips?: string;
   socialSecurityWithheld: string;
   medicareWages: string;
   medicareWithheld: string;
@@ -646,6 +660,8 @@ export const emptyW2Entry: W2EntryData = {
 };
 
 export interface NecEntryData {
+  sourceTaxYear?: string;
+  cashTips?: string; qualifiedOvertimeCompensation?: string; treasuryTippedOccupationCodes?: string[];
   payerName: string;
   payerTin: string;
   nonemployeeCompensation: string;
@@ -1242,6 +1258,7 @@ export interface SectionDataMap {
   "income-social-security"?: SocialSecurityData;
   "income-unemployment"?: UnemploymentData;
   "deductions"?: DeductionData;
+  "additional-deductions"?: AdditionalDeductionsData;
   "adjustments"?: AdjustmentData;
   "credits"?: CreditsData;
   "other-taxes"?: OtherTaxesData;
@@ -1467,6 +1484,9 @@ export function updateSectionData(
   const iraSourcesChanged = ["income-w2", "income-self-employment", "income-retirement"].includes(sectionId) && adjustments?.iraContributions;
   const hsaSourcesChanged = ["income-w2", "personal-info"].includes(sectionId) && adjustments?.hsaAccounts;
   const sourceValuesChanged = guidedSourceValuesChanged(state.sectionData[sectionId as keyof SectionDataMap], data);
+  const tipSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2"].includes(sectionId) && state.sectionData["additional-deductions"];
+  const nextAdditional = sectionId === "additional-deductions" ? data as AdditionalDeductionsData : state.sectionData["additional-deductions"];
+  const additionalSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-social-security", "adjustments", "credits", "deductions", "additional-deductions"].includes(sectionId) && nextAdditional?.schedule1A;
   const nextAdjustments = sectionId === "adjustments" ? data as AdjustmentData : adjustments;
   const healthSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "credits", "adjustments"].includes(sectionId) && nextAdjustments?.healthInsuranceFacts;
   const mortgageSourcesChanged = sourceValuesChanged && sectionId === "personal-info" && state.sectionData.deductions?.mortgageEntries?.length ? state.sectionData.deductions : undefined;
@@ -1489,6 +1509,7 @@ export function updateSectionData(
     sectionData: {
       ...state.sectionData,
       [sectionId]: data,
+      ...((tipSourcesChanged || additionalSourcesChanged) && nextAdditional ? { "additional-deductions": { ...nextAdditional, ...(tipSourcesChanged ? { tipIncomeAccounts: nextAdditional.tipIncomeAccounts?.map(account => ({ ...account, sourceFactsConfirmed: null })) } : {}), ...(additionalSourcesChanged ? { schedule1A: { ...additionalSourcesChanged, sourceFactsConfirmed: null } } : {}) } } : {}),
       ...(mortgageSourcesChanged ? { deductions: { ...mortgageSourcesChanged, mortgageEntries: mortgageSourcesChanged.mortgageEntries?.map(entry => ({ ...entry, sourceFactsConfirmed: null })), ...(mortgageSourcesChanged.mortgageWorksheet ? { mortgageWorksheet: { ...mortgageSourcesChanged.mortgageWorksheet, sourceFactsConfirmed: null } } : {}) } } : {}),
       ...(ohioInterestChanged && ohioStateReturn ? { "state-return": { ...ohioStateReturn, ohioInterestAllocation: { ...ohioInterestChanged, sourceFactsConfirmed: null } } } : {}),
       ...((iraSourcesChanged || hsaSourcesChanged || educatorSourcesChanged || studentLoanSourcesChanged || healthSourcesChanged) && nextAdjustments ? { adjustments: { ...nextAdjustments, ...(healthSourcesChanged ? { healthInsuranceFacts: { ...healthSourcesChanged, sourceFactsConfirmed: null, ...(healthSourcesChanged.incomeDeductions ? { incomeDeductions: { ...healthSourcesChanged.incomeDeductions, sourceFactsConfirmed: null } } : {}) } } : {}), ...(studentLoanSourcesChanged ? { studentLoanFacts: { ...studentLoanSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(iraSourcesChanged ? { iraContributions: { ...iraSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(hsaSourcesChanged ? { hsaAccounts: hsaSourcesChanged.map(account => ({ ...account, sourceFactsConfirmed: null })) } : {}), ...(educatorSourcesChanged ? { educatorExpenseSources: educatorSourcesChanged.map(source => ({ ...source, sourceFactsConfirmed: null })) } : {}) } } : {}),
@@ -1669,14 +1690,14 @@ function validatePersonalInfo(data: PersonalInfoData | undefined, status: Filing
   return VALID_SECTION;
 }
 
-function validateW2Section(data: { entries: W2EntryData[] } | undefined, filingStatus?: FilingStatus | null): SectionValidationResult {
+function validateW2Section(data: { entries: W2EntryData[] } | undefined, filingStatus?: FilingStatus | null, returnYear?: number | null): SectionValidationResult {
   if (!data?.entries || data.entries.length === 0) return EMPTY_SECTION("W-2 info");
 
   const filledEntries = data.entries.filter(isStartedW2);
 
   if (filledEntries.length === 0) return EMPTY_SECTION("W-2 info");
 
-  const errors = w2FactErrors(data.entries, filingStatus);
+  const errors = w2FactErrors(data.entries, filingStatus, returnYear);
 
   const pendingSuggestionConfirmations = filledEntries.flatMap((entry, index) =>
     Object.entries(entry.aiSuggestedFields ?? {}).flatMap(([field, suggestion]) =>
@@ -1718,9 +1739,10 @@ function validateSelfEmploymentSection(
   filingStatus?: FilingStatus | null,
   w2s?: W2EntryData[],
   stateData?: StateReturnData,
+  returnYear?: number | null,
 ): SectionValidationResult {
   if (!hasBusinessSourceData(data)) return EMPTY_SECTION("self-employment info");
-  const errors = businessFactErrors(data, filingStatus, w2s, stateData);
+  const errors = businessFactErrors(data, filingStatus, w2s, stateData, returnYear);
   return Object.keys(errors).length ? { status: "partial", message: "Complete the actual business ownership, source income and qualified expenses.", fieldErrors: errors, allowSkip: true } : VALID_SECTION;
 }
 
@@ -1800,9 +1822,9 @@ export function validateSection(
     case "personal-info":
       return validatePersonalInfo(getSectionData(state, "personal-info"), state.segmentation.filingStatus, state.taxYear);
     case "income-w2":
-      return validateW2Section(getSectionData(state, "income-w2"), state.segmentation.filingStatus);
+      return validateW2Section(getSectionData(state, "income-w2"), state.segmentation.filingStatus, state.taxYear);
     case "income-self-employment":
-      return validateSelfEmploymentSection(getSectionData(state, "income-self-employment"), state.segmentation.filingStatus, getSectionData(state, "income-w2")?.entries, getSectionData(state, "state-return"));
+      return validateSelfEmploymentSection(getSectionData(state, "income-self-employment"), state.segmentation.filingStatus, getSectionData(state, "income-w2")?.entries, getSectionData(state, "state-return"), state.taxYear);
     case "income-investments":
       return validateInvestmentSection(getSectionData(state, "income-investments"), state.segmentation.filingStatus, state.taxYear, getSectionData(state, "state-return"), state.segmentation.stateCode);
     case "income-rental":
@@ -1813,6 +1835,8 @@ export function validateSection(
       return validateSocialSecuritySection(getSectionData(state, "income-social-security"), state);
     case "income-unemployment":
       return validateUnemploymentSection(getSectionData(state, "income-unemployment"), state);
+    case "additional-deductions":
+      return getSectionData(state, "additional-deductions") ? validateRequiredFacts({ ...tipIncomeFactErrors(state), ...schedule1AFactErrors(state) }) : EMPTY_SECTION("additional deduction sources");
     case "deductions":
       return validateDeductionsSection(getSectionData(state, "deductions"), state.taxYear, nonW2TaxAllocationErrors(state), state.segmentation.filingStatus, state.sectionData["personal-info"]?.spouse);
     case "adjustments": {

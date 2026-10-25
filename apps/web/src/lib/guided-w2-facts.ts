@@ -1,16 +1,18 @@
+import { compensationReportingErrors } from "./guided-compensation-reporting";
 import type { FilingStatus, W2EntryData } from "./guided-interview-flow";
 import { amountError, hasEnteredAmount } from "./guided-required-facts";
 import { parseGuidedCurrency } from "./guided-currency";
 
 export function isStartedW2(entry: W2EntryData): boolean {
-  return Object.entries(entry).some(([key, value]) => key !== "aiSuggestedFields" && typeof value === "string" && value.trim() !== "");
+  return Object.entries(entry).some(([key, value]) => key !== "aiSuggestedFields" && ((typeof value === "string" && value.trim() !== "") || Array.isArray(value)));
 }
 
-export function w2FactErrors(entries: W2EntryData[] | undefined, filingStatus?: FilingStatus | null): Record<string, string> {
+export function w2FactErrors(entries: W2EntryData[] | undefined, filingStatus?: FilingStatus | null, returnYear?: number | null): Record<string, string> {
   const errors: Record<string, string> = {};
   for (const [index, entry] of (entries ?? []).entries()) {
     if (!isStartedW2(entry)) continue;
     const prefix = `w2-${index}`;
+    for (const [key, error] of Object.entries(compensationReportingErrors(entry, returnYear))) errors[`${prefix}-${key}`] = error;
     if (!entry.employerName.trim()) errors[`${prefix}-employerName`] = "Enter the actual W-2 employer name.";
     if (!/^\d{2}-?\d{7}$/.test(entry.employerEin.trim())) errors[`${prefix}-employerEin`] = "Enter the actual employer EIN from Box b.";
     if (filingStatus === "mfj" && !["primary", "spouse"].includes(entry.accountHolder ?? "")) errors[`${prefix}-accountHolder`] = "Identify whose W-2 this is on the joint return.";
@@ -19,6 +21,7 @@ export function w2FactErrors(entries: W2EntryData[] | undefined, filingStatus?: 
       const error = amountError(entry[field], label);
       if (error) errors[`${prefix}-${field}`] = error;
     }
+    if (hasEnteredAmount(entry.allocatedTips)) { const error = amountError(entry.allocatedTips, "Box 8 allocated tips"); if (error) errors[`${prefix}-allocatedTips`] = error; }
     if (hasEnteredAmount(entry.box12CodeW)) { const error = amountError(entry.box12CodeW, "Box 12 code W"); if (error) errors[`${prefix}-box12CodeW`] = error; }
     if (entry.stateTaxReporting === "single") {
       if (!/^[A-Z]{2}$/.test(entry.state?.trim().toUpperCase() ?? "")) errors[`${prefix}-state`] = "Enter the actual two-letter state from Box 15.";
