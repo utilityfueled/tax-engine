@@ -1018,7 +1018,7 @@ describe("workspace engine preview", () => {
         questionId: null,
         updatedAt: "2026-03-12T00:00:00.000Z",
         machineValue: {
-          entryKind: "w2-summary", stateTaxReporting: "none",
+          entryKind: "w2-summary", socialSecurityTips: "0", box10DependentCareBenefits: "0", stateTaxReporting: "none",
           employerName: "Large Employer A",
           employerEin: "12-3456789",
           wages: "9007199254740991",
@@ -1041,7 +1041,7 @@ describe("workspace engine preview", () => {
         questionId: null,
         updatedAt: "2026-03-12T00:00:00.000Z",
         machineValue: {
-          entryKind: "w2-summary", stateTaxReporting: "none",
+          entryKind: "w2-summary", socialSecurityTips: "0", box10DependentCareBenefits: "0", stateTaxReporting: "none",
           employerName: "Large Employer B",
           employerEin: "98-7654321",
           wages: "10",

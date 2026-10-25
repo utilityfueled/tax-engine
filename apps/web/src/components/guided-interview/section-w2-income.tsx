@@ -37,6 +37,7 @@ const confirmableFields: W2SuggestedField[] = [
   "federalWithheld",
   "socialSecurityWages",
   "socialSecurityTips",
+  "box10DependentCareBenefits",
   "socialSecurityWithheld",
   "medicareWages",
   "medicareWithheld",
@@ -67,6 +68,7 @@ function applySuggestionToEntry(
     federalWithheld: toCurrencyInput(suggestion.summary.federalWithheld),
     socialSecurityWages: toCurrencyInput(suggestion.summary.socialSecurityWages),
     socialSecurityTips: toCurrencyInput(suggestion.summary.socialSecurityTips),
+    box10DependentCareBenefits: toCurrencyInput(suggestion.summary.box10DependentCareBenefits),
     socialSecurityWithheld: toCurrencyInput(suggestion.summary.socialSecurityWithheld),
     medicareWages: toCurrencyInput(suggestion.summary.medicareWages),
     medicareWithheld: toCurrencyInput(suggestion.summary.medicareWithheld),
@@ -610,7 +612,9 @@ function W2Card({
           />
           <CurrencyField label="Box 10 — Dependent-care benefits"
             hint="Check the actual W-2. Enter 0 only if no benefits are reported. Positive amounts need the benefit details in Tax Credits."
-            value={entry.box10DependentCareBenefits ?? ""} onChange={value => onUpdate("box10DependentCareBenefits", value)} />
+            value={entry.box10DependentCareBenefits ?? ""} onChange={value => onUpdate("box10DependentCareBenefits", value)}
+            fieldClassName={entry.aiSuggestedFields?.box10DependentCareBenefits?.status === "pending-confirmation" ? "guided-field-ai-pending" : entry.aiSuggestedFields?.box10DependentCareBenefits?.status === "confirmed" ? "guided-field-ai-confirmed" : undefined}
+            footer={<SuggestedFieldNotice suggestion={entry.aiSuggestedFields?.box10DependentCareBenefits} availableSuggestions={availableSuggestions} onConfirm={() => onConfirmField("box10DependentCareBenefits")} />} />
           <div className="guided-form-grid">
             <label className="guided-field">
               <span className="guided-field-label">State reporting on this W-2</span>

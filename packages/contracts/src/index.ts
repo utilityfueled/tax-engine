@@ -539,6 +539,7 @@ export interface WorkspaceStructuredFactMachineValue1099BTransaction {
 
 export interface WorkspaceStructuredFactMachineValueW2Summary {
   entryKind: "w2-summary";
+  sourceFactsVersion?: 2;
   employerName: string;
   employerEin: string;
   wages: string;
@@ -552,6 +553,7 @@ export interface WorkspaceStructuredFactMachineValueW2Summary {
   stateWithheld?: string;
   state?: string;
   stateTaxReporting?: "none" | "single" | "multiple";
+  box10DependentCareBenefits?: string;
   box12CodeW?: string;
   accountHolder?: "primary" | "spouse";
 }

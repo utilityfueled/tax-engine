@@ -111,6 +111,8 @@ describe("workspace structured facts", () => {
           employerEin: "12-3456789",
           wages: "52000",
           socialSecurityWages: "52000",
+          socialSecurityTips: "0",
+          box10DependentCareBenefits: "0",
           socialSecurityWithheld: "3224",
           medicareWages: "52000",
           medicareWithheld: "754",

@@ -189,290 +189,29 @@ function buildReviewedDocument(
   };
 }
 
-function pickMostFrequentAmount(candidates: string[]) {
-  if (candidates.length === 0) {
-    return null;
-  }
-
-  const counts = new Map<string, number>();
-
-  for (const candidate of candidates) {
-    counts.set(candidate, (counts.get(candidate) ?? 0) + 1);
-  }
-
-  return [...counts.entries()]
-    .sort((left, right) => {
-      if (right[1] !== left[1]) {
-        return right[1] - left[1];
-      }
-
-      return new Decimal(right[0]).comparedTo(left[0]);
-    })[0]?.[0] ?? null;
-}
-
-function pickLargestAmount(amounts: string[]) {
-  if (amounts.length === 0) {
-    return null;
-  }
-
-  return [...amounts].sort((left, right) => new Decimal(right).comparedTo(left))[0] ?? null;
-}
-
-function pickSmallestAmount(amounts: string[]) {
-  if (amounts.length === 0) {
-    return null;
-  }
-
-  return [...amounts].sort((left, right) => new Decimal(left).comparedTo(right))[0] ?? null;
-}
-
-function collectAmountsNearLabel(
-  text: string,
-  labelPattern: RegExp,
-  nextLabelPatterns: RegExp[],
-  {
-    windowLength = 240,
-    pickCandidate,
-  }: {
-    windowLength?: number;
-    pickCandidate: (amounts: string[]) => string | null;
-  }
-) {
-  const matches = Array.from(text.matchAll(new RegExp(labelPattern.source, `${labelPattern.flags.includes("g") ? labelPattern.flags : `${labelPattern.flags}g`}`)));
-  const candidates: string[] = [];
-
-  for (const match of matches) {
-    const start = match.index ?? 0;
-    const matchEnd = start + match[0].length;
-    let segmentEnd = Math.min(text.length, matchEnd + windowLength);
-
-    for (const pattern of nextLabelPatterns) {
-      const nextMatch = pattern.exec(text.slice(matchEnd));
-
-      if (!nextMatch || nextMatch.index === undefined) {
-        continue;
-      }
-
-      const candidateEnd = matchEnd + nextMatch.index;
-
-      if (candidateEnd > matchEnd && candidateEnd < segmentEnd) {
-        segmentEnd = candidateEnd;
-      }
-    }
-
-    const segment = text.slice(matchEnd, segmentEnd);
-    const amounts = [...segment.matchAll(/\b\d[\d,]*\.\d{2}\b/g)]
-      .map((entry) => normalizeAmount(entry[0]))
-      .filter((entry): entry is string => entry !== null);
-    const candidate = pickCandidate(amounts);
-
-    if (candidate) {
-      candidates.push(candidate);
-    }
-  }
-
-  return pickMostFrequentAmount(candidates);
-}
-
 function extractEmployerName(lines: string[]) {
-  const startIndex = lines.findIndex((line) => /Employer'?s name, address, and ZIP code/i.test(line));
-
-  if (startIndex === -1) {
-    return null;
-  }
-
-  for (let index = startIndex + 1; index < Math.min(lines.length, startIndex + 6); index += 1) {
-    const line = lines[index]?.trim();
-
-    if (!line || /^Batch\b/i.test(line) || /^\d+\./.test(line)) {
-      continue;
-    }
-
-    if (/\d/.test(line) && !/[A-Za-z]/.test(line)) {
-      continue;
-    }
-
-    return line;
-  }
-
-  return null;
+  const names = lines.flatMap((line, index) => {
+    if (!/^(?:c\s+)?Employer'?s name, address, and ZIP code$/i.test(line)) return [];
+    const candidate = lines[index + 1]?.trim();
+    if (!candidate || /^(?:[a-f](?:\/f)?\s+|\d{1,2}[a-z]?\s+|Employer'?s\s+.*(?:number|EIN)|Employee'?s\s+|Batch\b)/i.test(candidate)) return [];
+    return [candidate];
+  });
+  return new Set(names).size === 1 ? names[0] : null;
 }
 
 function extractEmployerEin(text: string) {
-  const employerSectionMatch = text.match(/Employer'?s FED ID number([\s\S]{0,120})/i);
-  const employerSection = employerSectionMatch?.[1] ?? text;
-  const einCandidates = [...employerSection.matchAll(/\b\d{2}-\d{7}\b/g)]
-    .map((entry) => entry[0])
-    .filter((entry) => !entry.includes("XX"));
-
-  if (einCandidates.length > 0) {
-    return einCandidates[0] ?? null;
-  }
-
-  return [...text.matchAll(/\b\d{2}-\d{7}\b/g)]
-    .map((entry) => entry[0])
-    .find((entry) => !entry.includes("XX")) ?? null;
+  const candidates = [...text.matchAll(/(?:Employer'?s (?:FED ID number|identification number(?: \(EIN\))?)|\bb\s+Employer identification number(?: \(EIN\))?)[ \t]*:?[ \t]*(?:\n[ \t]*)?(\d{2}-?\d{7})(?=\s|$)/gi)].map(match => match[1]);
+  const distinct = new Set(candidates.map(value => value.replace(/-/g, "")));
+  return distinct.size === 1 ? candidates[0] : null;
 }
 
-function collectAmountsFromLinesAfterLabel(
-  lines: string[],
-  labelPattern: RegExp,
-  nextLabelPatterns: RegExp[],
-  maxLookahead = 8,
-) {
-  const matches: string[][] = [];
-
-  for (let index = 0; index < lines.length; index += 1) {
-    const line = lines[index] ?? "";
-
-    if (!labelPattern.test(line)) {
-      continue;
-    }
-
-    const amounts: string[] = [];
-
-    for (
-      let lookahead = index + 1;
-      lookahead < lines.length && lookahead <= index + maxLookahead;
-      lookahead += 1
-    ) {
-      const candidateLine = lines[lookahead] ?? "";
-
-      if (nextLabelPatterns.some((pattern) => pattern.test(candidateLine))) {
-        break;
-      }
-
-      const amount = normalizeAmount(candidateLine);
-
-      if (amount) {
-        amounts.push(amount);
-      }
-    }
-
-    if (amounts.length > 0) {
-      matches.push(amounts);
-    }
-  }
-
-  return matches;
-}
-
-function pickFirstLineAmount(
-  lines: string[],
-  labelPattern: RegExp,
-  nextLabelPatterns: RegExp[],
-  maxLookahead = 8,
-) {
-  const matches = collectAmountsFromLinesAfterLabel(lines, labelPattern, nextLabelPatterns, maxLookahead);
-
-  for (const amounts of matches) {
-    const amount = amounts[0];
-
-    if (amount) {
-      return amount;
-    }
-  }
-
-  return null;
-}
-
-function pickLastLineAmount(
-  lines: string[],
-  labelPattern: RegExp,
-  nextLabelPatterns: RegExp[],
-  maxLookahead = 8,
-) {
-  const matches = collectAmountsFromLinesAfterLabel(lines, labelPattern, nextLabelPatterns, maxLookahead);
-
-  for (const amounts of matches) {
-    const amount = amounts[amounts.length - 1];
-
-    if (amount) {
-      return amount;
-    }
-  }
-
-  return null;
-}
-
-function pickSmallestLineAmount(
-  lines: string[],
-  labelPattern: RegExp,
-  nextLabelPatterns: RegExp[],
-  maxLookahead = 8,
-) {
-  const matches = collectAmountsFromLinesAfterLabel(lines, labelPattern, nextLabelPatterns, maxLookahead);
-
-  for (const amounts of matches) {
-    const amount = pickSmallestAmount(amounts);
-
-    if (amount) {
-      return amount;
-    }
-  }
-
-  return null;
-}
-
-function parseW2Box1Wages(text: string) {
-  const reportedW2Wages = collectAmountsNearLabel(
-    text,
-    /Reported W-2 Wages/i,
-    [/Employer'?s FED ID number/i, /1\s+Wages, tips, other comp\./i],
-    {
-      pickCandidate: (amounts) => {
-        if (amounts.length === 0) {
-          return null;
-        }
-
-        return pickMostFrequentAmount(amounts);
-      },
-    }
-  );
-
-  if (reportedW2Wages) {
-    return reportedW2Wages;
-  }
-
-  return collectAmountsNearLabel(
-    text,
-    /Wages, tips, other comp\./i,
-    [/2 Federal income tax withheld/i, /3\s+Social security wages/i],
-    {
-      pickCandidate: (amounts) => {
-        if (amounts.length === 0) {
-          return null;
-        }
-
-        return pickLargestAmount(amounts);
-      },
-    }
-  );
-}
-
-function parseW2Box2FederalWithholding(text: string, wages: string | null) {
-  return collectAmountsNearLabel(
-    text,
-    /2 Federal income tax withheld/i,
-    [/4 Social security tax withheld/i, /3\s+Social security wages/i],
-    {
-      pickCandidate: (amounts) => {
-        if (amounts.length === 0) {
-          return null;
-        }
-
-        if (wages) {
-          const filtered = amounts.filter((amount) => amount !== wages);
-
-          if (filtered.length > 0) {
-            return filtered[filtered.length - 1] ?? null;
-          }
-        }
-
-        return amounts[amounts.length - 1] ?? null;
-      },
-    }
-  );
+/** Accept an explicit single-box value or an exact labeled two-column layout. */
+function w2SourceAmount(text: string, label: string, grids: Array<{ pattern: RegExp; index: number }> = []): string | undefined {
+  const pattern = new RegExp(`(?:^|\\n)[ \\t]*${label}[ \\t]*(?:\\n[ \\t]*)?\\$?[ \\t]*([\\d,]+\\.\\d{2})[ \\t]*(?=\\n|$)`, "gi");
+  const values = [...text.matchAll(pattern)].map(match => match[1]);
+  for (const grid of grids) values.push(...[...text.matchAll(grid.pattern)].map(match => match[grid.index]));
+  const amounts = values.map(normalizeAmount).filter((value): value is string => value !== null);
+  return new Set(amounts.map(value => new Decimal(value).toFixed())).size === 1 ? amounts[0] : undefined;
 }
 
 export function parseUploadedW2Text(text: string, fileName = ""): ParsedUploadedDocument | null {
@@ -490,73 +229,36 @@ export function parseUploadedW2Text(text: string, fileName = ""): ParsedUploaded
   const lines = buildLogicalLines(normalizedText);
   const employerName = extractEmployerName(lines) ?? "";
   const employerEin = extractEmployerEin(normalizedText) ?? "";
-  const wages = parseW2Box1Wages(normalizedText);
-  const federalWithheld = parseW2Box2FederalWithholding(normalizedText, wages);
-  const parsedSocialSecurityWages = pickFirstLineAmount(
-    lines,
-    /^3\s+Social security wages$/i,
-    [/^4\s+Social security tax withheld$/i, /^5\s+Medicare wages(?: and tips)?$/i]
-  );
-  const socialSecurityWithheld = pickLastLineAmount(
-    lines,
-    /^4\s+Social security tax withheld$/i,
-    [/^5\s+Medicare wages(?: and tips)?$/i, /^6\s+Medicare tax withheld$/i]
-  );
-  const medicareWages = pickFirstLineAmount(
-    lines,
-    /^5\s+Medicare wages(?: and tips)?$/i,
-    [/^6\s+Medicare tax withheld$/i, /^7\s+Social security tips$/i, /^8\s+Allocated tips$/i]
-  );
-  const medicareWithheld = pickLastLineAmount(
-    lines,
-    /^6\s+Medicare tax withheld$/i,
-    [/^7\s+Social security tips$/i, /^8\s+Allocated tips$/i, /^10\s+Dependent care benefits$/i]
-  );
-  const socialSecurityTips = sourceBoxAmount(normalizedText, "7\\s+Social security tips");
-  const stateWages = collectAmountsNearLabel(
-    normalizedText,
-    /16\s+State wages, tips, etc\./i,
-    [/17\s+State income tax/i, /18\s+Local wages, tips, etc\./i],
-    {
-      windowLength: 160,
-      pickCandidate: (amounts) => pickLargestAmount(amounts),
-    }
-  ) ?? pickFirstLineAmount(
-    lines,
-    /16\s+State wages, tips, etc\./i,
-    [/^17\s+State income tax$/i, /^18\s+Local wages, tips, etc\./i],
-    10,
-  );
-  const stateWithheld = collectAmountsNearLabel(
-    normalizedText,
-    /(?:17\s+)?State income tax/i,
-    [/18\s+Local wages, tips, etc\./i, /19\s+Local income tax/i, /20\s+Locality name/i],
-    {
-      windowLength: 160,
-      pickCandidate: (amounts) => pickSmallestAmount(amounts),
-    }
-  ) ?? pickSmallestLineAmount(
-    lines,
-    /^17\s+State income tax$/i,
-    [/^19\s+Local income tax$/i, /^20\s+Locality name$/i],
-    10,
-  );
-  const socialSecurityWages = parsedSocialSecurityWages;
+  const wageGrid = /(?:^|\n)1\s+Wages, tips, other comp\.\s+2\s+Federal income tax withheld[ \t]*\n[ \t]*([\d,]+\.\d{2})[ \t]+([\d,]+\.\d{2})[ \t]*(?=\n|$)/gi;
+  const socialGrid = /(?:^|\n)(?:3\s+Social security wages\s+4\s+Social security tax withheld|3\s+4\s+Social security tax withheld[ \t]*\n[ \t]*Social security wages)[ \t]*\n[ \t]*([\d,]+\.\d{2})[ \t]+([\d,]+\.\d{2})[ \t]*(?=\n|$)/gi;
+  const medicareGrid = /(?:^|\n)5\s+Medicare wages(?: and tips)?\s+6\s+Medicare tax withheld[ \t]*\n[ \t]*([\d,]+\.\d{2})[ \t]+([\d,]+\.\d{2})[ \t]*(?=\n|$)/gi;
+  const wages = w2SourceAmount(normalizedText, "1\\s+Wages, tips, other comp\\.", [{ pattern: wageGrid, index: 1 }]);
+  const federalWithheld = w2SourceAmount(normalizedText, "2\\s+Federal income tax withheld", [{ pattern: wageGrid, index: 2 }]);
+  const socialSecurityWages = w2SourceAmount(normalizedText, "3\\s+Social security wages", [{ pattern: socialGrid, index: 1 }]);
+  const socialSecurityWithheld = w2SourceAmount(normalizedText, "4\\s+Social security tax withheld", [{ pattern: socialGrid, index: 2 }]);
+  const medicareWages = w2SourceAmount(normalizedText, "5\\s+Medicare wages(?: and tips)?", [{ pattern: medicareGrid, index: 1 }]);
+  const medicareWithheld = w2SourceAmount(normalizedText, "6\\s+Medicare tax withheld", [{ pattern: medicareGrid, index: 2 }]);
+  const socialSecurityTips = w2SourceAmount(normalizedText, "7\\s+Social security tips");
+  const box10DependentCareBenefits = w2SourceAmount(normalizedText, "10\\s+Dependent care benefits");
+  const stateWages = w2SourceAmount(normalizedText, "16\\s+State wages, tips, etc\\.", [{ pattern: /(?:^|\n)15\s+State Employer'?s state ID no\.?\s+16\s+State wages, tips, etc\.[ \t]*\n[ \t]*[A-Z]{2}[ \t]+[\d-]+[ \t]+([\d,]+\.\d{2})[ \t]*(?=\n|$)/gi, index: 1 }]);
+  const stateWithheld = w2SourceAmount(normalizedText, "17\\s+State income tax", [{ pattern: /(?:^|\n)(?:17\s+)?State income tax\s+18\s+Local wages, tips, etc\.[ \t]*\n(?:[ \t]*17[ \t]*\n)?[ \t]*([\d,]+\.\d{2})[ \t]+([\d,]+\.\d{2})[ \t]*(?=\n|$)/gi, index: 1 }]);
   const sourceStates = [...new Set([...normalizedText.matchAll(/^15[ \t]+State(?:[ \t]+Employer['’]?s state ID(?: no\.?| number))?(?:[ \t]+16[^\n]*)?[ \t]*:?[ \t]*(?:\n[ \t]*)?([A-Z]{2})(?=[ \t]|$)/gm)].map((match) => match[1]))];
   const sourceState = sourceStates.length === 1 ? sourceStates[0] : undefined;
 
-  if (!wages || !federalWithheld) {
+  if (wages === undefined && federalWithheld === undefined) {
     return null;
   }
 
   const machineValue: WorkspaceStructuredFactMachineValueW2Summary = {
     entryKind: "w2-summary",
+    sourceFactsVersion: 2,
     employerName,
     employerEin,
-    wages,
-    federalWithheld,
+    wages: wages ?? "",
+    federalWithheld: federalWithheld ?? "",
     ...(socialSecurityWages ? { socialSecurityWages } : {}),
     ...(socialSecurityTips !== undefined ? { socialSecurityTips } : {}),
+    ...(box10DependentCareBenefits !== undefined ? { box10DependentCareBenefits } : {}),
     ...(socialSecurityWithheld ? { socialSecurityWithheld } : {}),
     ...(medicareWages ? { medicareWages } : {}),
     ...(medicareWithheld ? { medicareWithheld } : {}),
@@ -568,7 +270,7 @@ export function parseUploadedW2Text(text: string, fileName = ""): ParsedUploaded
   return {
     kind: "w2",
     taxYear: extractExplicitDocumentTaxYear(normalizedText),
-    coverage: employerName && employerEin && socialSecurityWages !== null && socialSecurityTips !== undefined && socialSecurityWithheld !== null && medicareWages !== null && medicareWithheld !== null && sourceState && stateWages !== null && stateWithheld !== null ? "supported" : "partially-supported",
+    coverage: employerName && employerEin && [wages, federalWithheld, socialSecurityWages, socialSecurityTips, box10DependentCareBenefits, socialSecurityWithheld, medicareWages, medicareWithheld, stateWages, stateWithheld].every(value => value !== undefined) && sourceState ? "supported" : "partially-supported",
     label: employerName ? `${employerName} W-2` : "Form W-2 upload",
     notes: "Parsed W-2 wage and withholding boxes from an uploaded W-2 PDF.",
     seededFactIds: ["wages", "withholding"],
@@ -577,7 +279,7 @@ export function parseUploadedW2Text(text: string, fileName = ""): ParsedUploaded
         idSuffix: "parsed-w2-summary",
         factId: "wages",
         label: "Wages",
-        value: `Parsed uploaded W-2: ${employerName || "payer identity unconfirmed"} box 1 wages $${formatAmountLabel(wages)} and box 2 federal withholding $${formatAmountLabel(federalWithheld)}.`,
+        value: `Parsed uploaded W-2: ${employerName || "payer identity unconfirmed"} box 1 wages $${wages === undefined ? "unknown" : formatAmountLabel(wages)} and box 2 federal withholding $${federalWithheld === undefined ? "unknown" : formatAmountLabel(federalWithheld)}.`,
         confidence: "high",
         machineValue,
       },
@@ -585,7 +287,7 @@ export function parseUploadedW2Text(text: string, fileName = ""): ParsedUploaded
         idSuffix: "parsed-w2-withholding",
         factId: "withholding",
         label: "Federal withholding",
-        value: `Parsed uploaded W-2 withholding: box 2 federal income tax withheld $${formatAmountLabel(federalWithheld)}.`,
+        value: `Parsed uploaded W-2 withholding: box 2 federal income tax withheld $${federalWithheld === undefined ? "unknown" : formatAmountLabel(federalWithheld)}.`,
         confidence: "high",
       },
     ],

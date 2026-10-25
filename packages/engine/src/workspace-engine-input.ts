@@ -334,6 +334,7 @@ function collectWagesPreviewSources(
         ...(summary.stateWithheld !== undefined
           ? { stateTaxWithheld: summary.stateWithheld }
           : {}),
+        ...(summary.box10DependentCareBenefits !== undefined ? { box10DependentCareBenefits: summary.box10DependentCareBenefits } : {}),
         ...(summary.box12CodeW !== undefined ? { box12CodeW: summary.box12CodeW } : {}),
         ...(summary.accountHolder !== undefined ? { accountHolder: summary.accountHolder } : {}),
       })
@@ -1498,8 +1499,11 @@ export function buildWorkspaceEngineInput(
     const hasText = (value: unknown) => typeof value === "string" && value.trim().length > 0;
     if (machineValue.entryKind === "w2-summary"
       && (!hasText(machineValue.employerName) || !/^\d{2}-?\d{7}$/.test(machineValue.employerEin)
-        || ![machineValue.wages, machineValue.federalWithheld, machineValue.socialSecurityWages, machineValue.socialSecurityWithheld, machineValue.medicareWages, machineValue.medicareWithheld].every((value) => hasMoney(value)))) return null;
+        || ![machineValue.wages, machineValue.federalWithheld, machineValue.socialSecurityWages, machineValue.socialSecurityTips, machineValue.socialSecurityWithheld, machineValue.medicareWages, machineValue.medicareWithheld, machineValue.box10DependentCareBenefits].every((value) => hasMoney(value)))) return null;
     if (machineValue.entryKind === "w2-summary") {
+      // This document-only route has no Form 2441 source qualification facts.
+      if (machineValue.box10DependentCareBenefits === undefined || new Decimal(machineValue.box10DependentCareBenefits).gt(0)) return null;
+      if (fact.sourceType === "upload" && fact.id.includes(":parsed-") && machineValue.sourceFactsVersion !== 2) return null;
       if (taxpayer?.filingStatus === "married_filing_jointly" && !machineValue.accountHolder) return null;
       if (machineValue.stateTaxReporting === "none") {
         if (hasText(machineValue.state) || [machineValue.stateWages, machineValue.stateWithheld].some((value) => value !== undefined && (!hasMoney(value) || !new Decimal(value).isZero()))) return null;

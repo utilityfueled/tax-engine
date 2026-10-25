@@ -573,6 +573,7 @@ export type W2SuggestedField =
   | "federalWithheld"
   | "socialSecurityWages"
   | "socialSecurityTips"
+  | "box10DependentCareBenefits"
   | "socialSecurityWithheld"
   | "medicareWages"
   | "medicareWithheld"
@@ -588,6 +589,7 @@ const w2SuggestedFieldLabels: Record<W2SuggestedField, string> = {
   federalWithheld: "Box 2 federal tax withheld",
   socialSecurityWages: "Box 3 social security wages",
   socialSecurityTips: "Box 7 social security tips",
+  box10DependentCareBenefits: "Box 10 dependent care benefits",
   socialSecurityWithheld: "Box 4 social security tax withheld",
   medicareWages: "Box 5 medicare wages",
   medicareWithheld: "Box 6 medicare tax withheld",

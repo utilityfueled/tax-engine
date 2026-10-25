@@ -1731,7 +1731,7 @@ describe("workspace engine input", () => {
         questionId: null,
         updatedAt: "2026-03-18T00:00:00.000Z",
         machineValue: {
-          entryKind: "w2-summary", stateTaxReporting: "none",
+          entryKind: "w2-summary", box10DependentCareBenefits: "0", stateTaxReporting: "none",
           employerName: "Primary Employer",
           employerEin: "12-3456789",
           wages: "65000",
@@ -1757,7 +1757,7 @@ describe("workspace engine input", () => {
         questionId: null,
         updatedAt: "2026-03-18T00:00:00.000Z",
         machineValue: {
-          entryKind: "w2-summary", stateTaxReporting: "none",
+          entryKind: "w2-summary", box10DependentCareBenefits: "0", stateTaxReporting: "none",
           employerName: "Spouse Employer",
           employerEin: "98-7654321",
           wages: "42000",
@@ -1850,7 +1850,7 @@ describe("workspace engine input", () => {
         questionId: null,
         updatedAt: "2026-03-28T00:00:00.000Z",
         machineValue: {
-          entryKind: "w2-summary", stateTaxReporting: "single", state: "NY",
+          entryKind: "w2-summary", socialSecurityTips: "0", box10DependentCareBenefits: "0", stateTaxReporting: "single", state: "NY",
           employerName: "Uploaded Employer",
           employerEin: "12-3456789",
           wages: "107175.28",

@@ -73,6 +73,8 @@ describe("uploaded document detection", () => {
           confidence: "high",
           machineValue: {
             entryKind: "w2-summary",
+            sourceFactsVersion: 2,
+            box10DependentCareBenefits: "0.00",
             stateTaxReporting: "single",
             state: "OH",
             employerName: "NORTHWIND FABRICATION LLC",
