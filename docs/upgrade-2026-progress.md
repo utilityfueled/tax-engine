@@ -3,7 +3,7 @@
 ## Current checkpoint
 
 Execution remains active and **not release-ready**. Latest confirmed pushed
-commit is `b31b5df` on `upgrade/2026-baseline`. Resume from
+commit is `f006285` on `upgrade/2026-baseline`. Resume from
 [the durable checklist](upgrade-2026-checklist.md) and `ongoingExecution` in the
 machine checkpoint. Older evidence applies only to its recorded code.
 
@@ -44,8 +44,10 @@ upgrade/recovery/rollback pass. The refreshed scan has the identical157 OS
 package/advisory matches (67advisories,0critical,0npm,0available fixes); owner
 acceptance remains pending. See `upgrade-2026-runtime-4aef633.json`.
 
-Full unit integration at `5006088` passes 17,723 tests in 907 files with no
-failures or skips (382.79 seconds). This excludes later packages and is separate
+Full unit integration of committed `fab31fe` with the regenerated396-entry
+inventory passes17,787tests in927files, zero failures/skips, in473.55seconds.
+The inventory is committed in `59eae66`. This excludes later charity/COD
+guided changes and is separate
 from coverage, browser, runtime and staging qualification. Original DA document
 sources are committed in `119ff16`; the broader guided cohort passes 785 tests,
 and separate 14-case and 12-case source reviews pass. `9da0bab` repairs a
@@ -59,8 +61,9 @@ provide no staging evidence. Later packages need another full integrated run.
 CI at `9da0bab` passes17,725 cases but fails one fourteen-page PDF timeout
 and stale inventory. The measured lookup repair is committed in`b5a0675`; inventory392entries
 are regenerated from committed`4aef633`.
-Latest observed `9015b41` workflows are running; earlier push runs were cancelled.
-No current remote green is claimed. A fresh package audit at`71a2536` reports
+Observed`59eae66` unit/type/lint/spec/build steps pass; its coverage/browser
+were still running before subsequent package pushes. No completed remote
+coverage/browser result is inferred. A fresh package audit at`59eae66` reports
 zero findings across521 locked entries; OS advisories remain separately tracked.
 
 The [public capability and entry-path audit](upgrade-2026-enabled-scenario-audit.md)
@@ -72,13 +75,19 @@ review reproduced early percentage rounding and changed exact amounts surviving
 PDF checks. The corrected reporting package `9015b41` passes27parent review cases,
 1,476broad cases and476final rebase cases. A separate three-probe audit
 confirms legacy2025 gift eligibility/year defects; their source correction
-and actual charitable history work continue.
+and actual charitable history work continue. The subsequent frozen charity
+review on`7dac725` reproduces five additional current-method/identity defects:
+private cash limits, ordinary property basis and unknown basis, empty-history
+invariance, and original identity binding before PDF access.20package cases pass;
+all five failures are assigned for correction before commit.
 
 Capital-origin intake is committed and pushed in `9d71c5f`: 795 adjacent
 tests, 32 post-COD integration checks, types/build and both desktop/mobile cases
 pass, with separate source/DOM review. The finite implementation queue continues
-with actual prior and mixed charity history, 2026 nonitemizer carry, and guided
-debt-cancellation sources. The source-bound COD core is independently reviewed and committed in
+with actual prior and mixed charity history and2026 nonitemizer carry.
+Guided debt-cancellation sources are committed in`f006285`:795tests/84files,
+root/web types,4,678spec references, production build, two desktop/mobile
+flows and11independent review cases pass. The source-bound COD core is independently reviewed and committed in
 `bb5cbe6` and pushed: 713 tests in 34 files, root/web types, 4,665 spec
 references and separate 16-case review pass. Four saved review pages were
 rendered and inspected. The negative-net1202/Form172 overlap remains a named interpretation

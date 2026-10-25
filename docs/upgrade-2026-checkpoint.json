@@ -1638,7 +1638,7 @@
       "thresholdChanged": false,
       "evidence": ".local/upgrade-evidence/full-coverage-1791979.log"
     },
-    "lastPushedCommit": "b31b5df97dfacc921a635c0c0cbcf71480fc25ff",
+    "lastPushedCommit": "f006285a0ec72c12183060abf26f7165845fba8f",
     "currentBrowserRun": {
       "commit": "4aef633349dbb39c2481b914730c309785cc8c41",
       "status": "completed-with-missing-pdf-runtime",
@@ -1668,8 +1668,8 @@
     },
     "currentPackageAudit": {
       "date": "2026-10-25",
-      "commit": "71a2536503096550764c14b76e04c248b62c90cd",
-      "evidence": ".local/upgrade-evidence/package-audit-71a2536.json",
+      "commit": "59eae66434d71c485719795e4528a2f495672c8f",
+      "evidence": ".local/upgrade-evidence/package-audit-59eae66.json",
       "evidenceSha256": "53e7d127130984cae97d554a54f7be42a21478066d94206e519540ab84119635",
       "metadata": {
         "vulnerabilities": {
@@ -1684,7 +1684,8 @@
         "optionalDependencies": 0,
         "totalDependencies": 521
       },
-      "limitation": "Zero package advisories across521 locked entries; OS findings and final image scans remain separate."
+      "limitation": "Zero package advisories across521 locked entries; OS findings and final image scans remain separate.",
+      "lockfileSha256": "5e31bdcf01a1b632f84baba785c5ff901c63a9e60bd54276bb55c3f2853607be"
     },
     "ohioInterestSoftwareReview": {
       "commit": "7a337a0",
@@ -1793,12 +1794,13 @@
       "evidence": ".local/upgrade-evidence/form4952-candidate-staged-expanded.log"
     },
     "inventoryRefresh": {
-      "sourceCommit": "fab31fe2ad1faa176308650ee94d1644c9f400ca",
-      "entries": 396,
-      "status": "generated-and-freshness-check-passed",
-      "evidence": ".local/upgrade-evidence/inventory-fab31fe.log",
-      "inventorySha256": "7c21a0eb34ce0759ce0d7ea0e99c829d1ca5ce86be35f015187bc19609f826b3",
-      "qualification": "Conservative inventory metadata; statuses and filing gates unchanged."
+      "sourceCommit": "f006285a0ec72c12183060abf26f7165845fba8f",
+      "entries": 397,
+      "status": "passed",
+      "evidence": ".local/upgrade-evidence/inventory-f006285.log",
+      "inventorySha256": "134f1a652fad40a9b44db864135f461d46519032359b829d8c007035839df4b9",
+      "qualification": "Conservative inventory metadata; statuses and filing gates unchanged.",
+      "evidenceSha256": "29d0616763e7dd8b242b8654f5c75c25f9b2e36fe3920403b561fac86ef4bc54"
     },
     "tickerKeyboardAndMortgageReview": {
       "commit": "603604b",
@@ -2587,11 +2589,79 @@
     "currentUnitRun": {
       "sourceCommit": "fab31fe2ad1faa176308650ee94d1644c9f400ca",
       "inventorySha256": "7c21a0eb34ce0759ce0d7ea0e99c829d1ca5ce86be35f015187bc19609f826b3",
-      "status": "running",
+      "status": "passed",
       "directory": "/private/tmp/tax-engine-checks-50lb65f8",
-      "sessionId": 60794,
+      "sessionId": null,
       "evidence": ".local/upgrade-evidence/full-unit-fab31fe.log",
-      "scope": "Committed product source plus regenerated396-entry inventory; pinnedPython/pypdf, sample documents, disposable loopbackPostgreSQL. Excludes ongoing charity/COD guided edits."
+      "scope": "Committed product source plus regenerated396-entry inventory; pinnedPython/pypdf, sample documents, disposable loopbackPostgreSQL. Excludes later charity/COD guided edits.",
+      "tests": 17787,
+      "files": 927,
+      "failures": 0,
+      "skips": 0,
+      "durationSeconds": "473.55",
+      "evidenceSha256": "df287c8516aa0838e1719ba5e6e67349b20c0f2bdb1a1a027f9fefb8b55d4e43"
+    },
+    "currentRemoteRuns": {
+      "commit": "59eae66434d71c485719795e4528a2f495672c8f",
+      "ci": {
+        "run": 40240016950,
+        "status": "in_progress",
+        "unitStep": "passed",
+        "completedJobs": [
+          "Lint",
+          "Type Check",
+          "Spec Validate",
+          "Build"
+        ]
+      },
+      "web": {
+        "run": 40240016965,
+        "status": "in_progress",
+        "completedJobs": [
+          "Build Web App"
+        ],
+        "containerCompletedSteps": [
+          "native image build",
+          "smoke",
+          "previous image build",
+          "isolated recovery"
+        ]
+      },
+      "qualification": false,
+      "observedDate": "2026-10-25",
+      "limitation": "These were in-progress statuses when observed before subsequent package pushes; no completed coverage/browser run is inferred."
+    },
+    "charityHistoryParentReview": {
+      "tree": "7dac725be8526c9d18ce326b84187807cab03958",
+      "status": "five-reproduced-findings-assigned-to-ai",
+      "packageTestsPassed": 20,
+      "independentProbesFailed": 5,
+      "evidence": ".local/upgrade-evidence/parent-charity-history-review-7dac725.log",
+      "findings": [
+        "2025 private cash6000 at10000base deducts6000 instead of3000 without prior history.",
+        "2025 ordinary public property5000 with actual1000basis deducts5000.",
+        "2025 missing ordinary-property basis does not reject.",
+        "An actual empty prior-history packet changes the same current cash/property deduction60000 to50000.",
+        "Changing original prior-history taxpayer last4 is not rejected before review template access."
+      ],
+      "humanTaxQualification": false
+    },
+    "guidedCodNol": {
+      "commit": "f006285a0ec72c12183060abf26f7165845fba8f",
+      "productTree": "77e2b126a586685fb4cc96642affce0e0d52a6b1",
+      "status": "passed-bounded-software-review",
+      "tests": 795,
+      "files": 84,
+      "specReferences": 4678,
+      "rootTypes": "passed",
+      "webTypes": "passed",
+      "productionBuild": "passed",
+      "browserPassed": 2,
+      "browserRetries": 0,
+      "independentReviewTests": 11,
+      "independentReviewFiles": 3,
+      "humanTaxQualification": false,
+      "evidenceDocument": "docs/upgrade-2026-guided-cod-nol-work.md"
     }
   },
   "historicalReleaseBlockers": {

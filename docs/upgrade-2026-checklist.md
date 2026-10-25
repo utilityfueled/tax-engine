@@ -7,10 +7,18 @@ complete a checkbox.
 
 ## Current integration — 2026-10-25
 
-`b31b5df` is the latest confirmed pushed commit on `upgrade/2026-baseline`. The goal remains active and the
+`f006285` is the latest confirmed pushed commit on `upgrade/2026-baseline`. The goal remains active and the
 upgrade is **not release-ready**. Unanswered external inputs are listed below;
 internal implementation and review continue in parallel.
 
+- `f006285`: actual debt-cancellation intake passes795tests/84files, both
+  type checks,4,678spec references, production build, two desktop/mobile flows
+  and11independent review cases. All source/year/readiness gates are retained.
+- Full unit integration of committed `fab31fe` with the regenerated396-entry
+  inventory passes17,787tests/927files, zero failures/skips, in473.55seconds.
+  The inventory is committed in `59eae66`. Its refreshed package audit has
+  zero advisories across521 locked entries; later charity/COD guided work is
+  excluded from this run.
 - `b31b5df`: browser and CI commands use the shared pinned PDF-reader
   prerequisite. Both unchanged download cases and 28 unit-path cases pass;
   separate argument/environment/failure-path review passes. The original
@@ -21,7 +29,7 @@ internal implementation and review continue in parallel.
 - `bb5cbe6`: actual insolvency sources reduce independent regular/AMT loss
   vintages after current tax. The package passes 713 tests in 34 files,
   root/web types, 4,665 references and separate 16-case review. Four saved
-  pages were rendered and inspected. Actual guided collection remains active.
+  pages were rendered and inspected. Actual guided collection is committed in `f006285`.
 - `4aef633`: actual PA digital-asset basis and separate OH withholding sources.
   Exact4,264 tests/154files, roottypes,4,634 references and lint pass; parent12
   independent source cases and three rendered reference pages pass. Guided
@@ -46,6 +54,10 @@ internal implementation and review continue in parallel.
   Corrected charity reporting is committed in `9015b41`:27parent review cases,
   1,476broad cases and476final rebase cases pass. Actual charitable history
   work includes three newly reproduced2025 gift qualification/year defects.
+  The source correction then exposed five more parent-review failures on
+  `7dac725`: legacy current-only private limits/property basis, empty-history
+  arithmetic invariance, and original-identity review binding. All are assigned
+  to the charity owner before commit;20adjacent package cases pass.
 - `678fe38`: source-bound positive1202 current origins where the printed and
   statutory traces reconcile. Final12 affected cases,571 adjacent cases, root/web
   types and4,614 references pass after the separate reader repair; parent13-case
@@ -123,7 +135,8 @@ internal implementation and review continue in parallel.
   and the refreshed package audit pass with zero findings across521 entries.
 - CI at `9da0bab` passes17,725 cases but fails one fourteen-page PDF timeout
   and stale inventory. The test lookup repair is committed in`b5a0675`; the regenerated inventory
-  has392entries on`4aef633`. Observed `9015b41` CI/Web are running; the earlier fresh
+  has397entries from`f006285`. The observed`59eae66` unit/type/lint/spec/build
+  jobs pass; coverage/browser were still running before later pushes. The fresh
   package audit has zero findings across521entries. Final-head full verification,
   runtime-image advisories/rehearsal and external qualification remain required.
   Full synthetic unit integration on isolated committed `5006088` passed
@@ -136,7 +149,7 @@ internal implementation and review continue in parallel.
   [the repair evidence](upgrade-2026-pdf-reader-repair.md).
 
 The remaining finite internal queue is actual prior/mixed charity and
-2026 nonitemizer carry, and actual guided COD sources. Then close the enabled-scenario facts/calculation/review/
+2026 nonitemizer carry. Actual guided COD sources are committed. Then close the enabled-scenario facts/calculation/review/
 readiness audit and run final integration, native images and recovery checks.
 The negative-net1202/Form172 overlap is a specifically unresolved interpretation,
 not an invented zero or completed method. The user has no interpretation to
