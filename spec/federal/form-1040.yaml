@@ -511,3 +511,8 @@ lines:
     formula: "After allowed prior-ranking personal credits, reserve Schedule8812 WorksheetB line14 (CTC before limitation less potentialACTC) when a qualifying child and adoption/clean-energy credit exist and Form2555 is absent; otherwise reserve ordinary CTC limited to remaining tax. Limit adoption next, then residential clean energy. WorksheetA subtracts actual allowed adoption/clean credits before final CTC; unused adoption/clean credit remains carryforward."
     irsRef: "https://www.irs.gov/instructions/i1040s8, Credit Limit Worksheets A/B; https://www.irs.gov/instructions/i8839, line17; https://www.irs.gov/instructions/i5695, line14"
     testRef: "tests/engine/forms/personal-credit-ordering.test.ts::Personal credit limit worksheets"
+  "credit-source-contract":
+    description: Preserve actual adoption and vehicle eligibility, year, income and transfer facts before calculation
+    calculation: For verified vehicle claims require original personal-use, transfer and price/type facts; missing prior-year AGI remains unknown. Adoption carries actual finalized year, expense years, employer plan, exclusion MAGI and origin-year carryforwards.
+    irsReference: https://www.irs.gov/instructions/i8839 and https://www.irs.gov/instructions/i8936
+    testRef: tests/engine/credit-source-contract.test.ts::Personal credit source contracts

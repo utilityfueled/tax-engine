@@ -378,3 +378,14 @@ Six spec-linked tests were absent/red before implementation and now pass, includ
 $1,000 tax/$2,200 CTC/$1,700 refundable potential -> $500 adoption and $500 CTC.
 72 focused tests, typecheck, spec validation and whitespace checks pass. Reviewed
 scoped diff. Integration follows separately; this helper does not qualify a form.
+
+### Adoption/vehicle source contracts — 2026-10-25
+
+Added actual adoption finality/expense years, plan/exclusion worksheet and
+origin-year carryforwards; preserved vehicle acquisition/service/report/transfer
+facts and current/prior MAGI confirmations. Missing prior-year AGI remains unknown;
+known zero remains usable. Before legacy vehicle defaults, compute completeness
+from original price/type/personal-use/transfer fields and overwrite any supplied
+marker. Verified calculations will require that evidence rather than infer it.
+Four spec-linked contract tests failed first; 120 focused tests, root typecheck,
+spec validation and whitespace checks now pass. Scoped diff reviewed.

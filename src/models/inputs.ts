@@ -2655,7 +2655,36 @@ export const EnergyCreditsSchema = z.object({
   homeEnergyAuditCost: optionalDecimal, // Line 13a
 });
 
-export const NewCleanVehicleSchema = z.object({
+// Record whether original source facts existed before legacy schema defaults.
+// Recompute this marker; an imported `sourceFactsComplete: true` is never evidence.
+const vehicleSourceFacts = (required: string[]) => (value: unknown) => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const record = value as Record<string, unknown>;
+  return {...record, sourceFactsComplete: required.every(key => record[key] !== undefined)};
+};
+const VehicleSourceFactFields = {
+  sourceFactsComplete: z.boolean(),
+  owner: z.enum(["primary", "spouse"]).optional(),
+  vin: z.string().optional(),
+  datePlacedInService: z.string().optional(),
+  bindingContractDate: z.string().optional(),
+  paymentDate: z.string().optional(),
+  bindingContractConfirmed: z.boolean().optional(),
+  sellerReportReceived: z.boolean().optional(),
+  sellerReportCreditAmount: optionalDecimalInput,
+  eligibilityConfirmed: z.boolean().optional(),
+  creditTransferredAmount: optionalDecimalInput,
+  resoldWithin30Days: z.boolean().optional(),
+  returnedToSellerWithin30Days: z.boolean().optional(),
+  sellerReportUpdatedForReturn: z.boolean().optional(),
+  priorYearMagi: optionalDecimalInput,
+  priorYearFilingStatus: FilingStatusSchema.optional(),
+  priorYearMagiConfirmed: z.boolean().optional(),
+};
+
+export const NewCleanVehicleSchema = z.preprocess(vehicleSourceFacts(["msrp", "vehicleType", "personalUsePercentage", "creditTransferredToDealer"]), z.object({
+  ...VehicleSourceFactFields,
+  powertrain: z.enum(["battery", "fuel_cell"]).optional(),
   /** Date acquired (YYYY-MM-DD) */
   dateAcquired: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Must be YYYY-MM-DD"),
   /** Does the vehicle meet the critical minerals requirement? */
@@ -2670,9 +2699,10 @@ export const NewCleanVehicleSchema = z.object({
   personalUsePercentage: optionalDecimal.default("100"),
   /** Was the credit transferred to the dealer at point of sale? */
   creditTransferredToDealer: z.boolean().default(false),
-});
+}));
 
-export const PreviouslyOwnedCleanVehicleSchema = z.object({
+export const PreviouslyOwnedCleanVehicleSchema = z.preprocess(vehicleSourceFacts(["salePrice", "personalUsePercentage", "creditTransferredToDealer"]), z.object({
+  ...VehicleSourceFactFields,
   /** Date acquired (YYYY-MM-DD) */
   dateAcquired: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Must be YYYY-MM-DD"),
   /** Sale price of the vehicle (must be ≤ $25,000 to qualify) */
@@ -2681,13 +2711,18 @@ export const PreviouslyOwnedCleanVehicleSchema = z.object({
   personalUsePercentage: optionalDecimal.default("100"),
   /** Was the credit transferred to the dealer at point of sale? */
   creditTransferredToDealer: z.boolean().default(false),
-});
+}));
 
 export const Form8936Schema = z.object({
   newCleanVehicles: z.array(NewCleanVehicleSchema).default([]),
   previouslyOwnedCleanVehicles: z.array(PreviouslyOwnedCleanVehicleSchema).default([]),
   /** Prior-year AGI for the lesser-of-two-years MAGI check */
-  priorYearAgi: optionalDecimal,
+  priorYearAgi: optionalDecimalInput,
+  priorYearFilingStatus: FilingStatusSchema.optional(),
+  agiAdjustmentsConfirmed: z.boolean().optional(),
+  priorYearAgiAdjustmentsConfirmed: z.boolean().optional(),
+  possessionIncomeExclusion: optionalDecimalInput,
+  priorYearPossessionIncomeExclusion: optionalDecimalInput,
   /** Foreign earned income exclusion (Form 2555 Line 45) — current year */
   foreignEarnedIncomeExclusion: optionalDecimal,
   /** Foreign housing deduction (Form 2555 Line 50) — current year */
@@ -2833,6 +2868,10 @@ export type Form8615Input = z.infer<typeof Form8615Schema>;
  * adoption benefit exclusion (Part III). MFS filers are ineligible.
  */
 export const Form8839ChildSchema = z.object({
+  adoptionFinalizedYear: z.number().int().nullable().optional(),
+  expensesByYear: z.array(z.object({year: z.number().int(), amount: decimal})).optional(),
+  employerPlanQualified: z.boolean().optional(),
+  priorYearForeignBenefits: optionalDecimalInput,
   /** Child's name (for audit trail) */
   childName: z.string().default(""),
   /** Whether the child has special needs as defined by IRC §23(d)(3) */
@@ -2852,6 +2891,11 @@ export const Form8839ChildSchema = z.object({
 });
 
 export const Form8839Schema = z.object({
+  eligibilityConfirmed: z.boolean().optional(),
+  possessionIncomeExclusion: optionalDecimalInput,
+  exclusionMagi: optionalDecimalInput,
+  carryforwards: z.array(z.object({originTaxYear: z.number().int(), amount: decimal})).optional(),
+  carryforwardReconciled2025: z.boolean().optional(),
   children: z.array(Form8839ChildSchema).min(1),
   /** Foreign earned income exclusion amount (Form 2555) for MAGI computation */
   foreignEarnedIncomeExclusion: optionalDecimal,
