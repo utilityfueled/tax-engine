@@ -438,18 +438,56 @@ export const Form1099MiscSchema = z.object({
   stateIncome: decimal.optional(), // Box 18 — state income for IL Schedule IL-WIT Column D
 });
 
-export const Form1099GSchema = z.object({
+export const Form1099GSchema = z.preprocess((value) => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const raw = value as Record<string, unknown>;
+  const required = ["sourceId", "accountReference", "taxYear", "sourceFormRevision", "accountHolder", "programType", "unemploymentCompensation", "federalWithheld", "rtaaPayments", "taxableGrants", "agriculturePayments", "marketGain", "tradeOrBusinessRefund", "currentYearRepaid", "priorYearRepaid", "unrecoveredAfterTaxContributions", "actualReceiptConfirmed", "additionalWorksheetRequired", "sourceFactsConfirmed", "stateTaxReporting"];
+  if (raw.taxYear === 2026 || raw.sourceFormRevision === "2026-12") required.push("familyLeaveBenefits");
+  if (raw.stateTaxReporting === "single") required.push("state", "stateWithheld");
+  const refundPresent = raw.stateOrLocalTaxRefund !== undefined || raw.stateLocalIncomeTaxRefund !== undefined;
+  return { ...raw, sourceFactsComplete: raw.sourceFactsComplete !== false && refundPresent && required.every(field => raw[field] !== undefined) };
+}, z.object({
   payer: z.string(),
   payerTin: z.string().optional(), // Payer TIN shown on the recipient copy; required for IL Schedule IL-WIT Column B auto-attachment
   accountHolder: z.enum(["primary", "spouse"]).optional(), // Local owner tag for taxpayer vs spouse attribution on shared returns
+  sourceId: z.string().optional(),
+  accountReference: z.string().optional(),
+  taxYear: z.number().int().optional(),
+  sourceFormRevision: z.enum(["2024-03", "2026-12"]).optional(),
+  sourceFactsComplete: z.boolean().optional(),
+  sourceFactsConfirmed: z.boolean().optional(),
+  actualReceiptConfirmed: z.boolean().optional(),
+  additionalWorksheetRequired: z.boolean().optional(),
+  programType: z.enum(["government-unemployment", "employer-supplemental", "private-or-union", "other-government"]).optional(),
   unemploymentCompensation: decimal, // Box 1
   stateLocalIncomeTaxRefund: optionalDecimal, // Box 2 (IL Schedule IL-WIT path)
   stateOrLocalTaxRefund: optionalDecimal, // Box 2 (OH and generic path)
   refundTaxYear: z.number().optional(), // Box 3
   federalWithheld: optionalDecimal, // Box 4
-  stateWithheld: optionalDecimal, // Box 11
+  rtaaPayments: optionalDecimalInput, // Box 5
+  taxableGrants: optionalDecimalInput, // Box 6
+  grantIncomeCategory: z.enum(["nonbusiness", "business", "farm"]).optional(),
+  agriculturePayments: optionalDecimalInput, // Box 7
+  tradeOrBusinessRefund: z.boolean().optional(), // Box 8
+  marketGain: optionalDecimalInput, // Box 9
+  familyLeaveBenefits: optionalDecimalInput, // Box 10 from the December 2026 revision
+  familyLeaveProgramType: z.enum(["state-pfml-family", "state-pfml-medical", "private-family-leave"]).optional(),
+  currentYearRepaid: optionalDecimalInput,
+  priorYearRepaid: optionalDecimalInput,
+  unemploymentReceivedBeforeRepayment: optionalDecimalInput,
+  box1IncludesCurrentYearRepayment: z.boolean().optional(),
+  repaymentSourceReference: z.string().optional(),
+  /** Actual available nondeductible unemployment contributions; PFML contributions are separate. */
+  unrecoveredAfterTaxContributions: optionalDecimalInput,
+  contributionProgramId: z.string().optional(),
+  contributionHistoryReference: z.string().optional(),
+  contributionBalanceReconciled: z.boolean().optional(),
+  allProgramPaymentsIncluded: z.boolean().optional(),
+  stateTaxReporting: z.enum(["none", "single", "multiple"]).optional(),
+  stateWithheld: optionalDecimal, // Box 11 before 2026; Box 12 in the 2026 revision
   state: z.string().optional(),
-});
+  statePayerId: z.string().optional(),
+}));
 
 /**
  * Form 1099-OID — Original Issue Discount
