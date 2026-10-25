@@ -5,6 +5,7 @@ import { buildGuidedMortgageInputs } from "./guided-mortgage-worksheet";
 import { buildStandardDeductionFacts } from "./guided-standard-deduction-facts";
 import { buildActualEducationInput } from "./guided-education-facts";
 import { buildEducationDistributionInputs, educationDistributionFactErrors } from "./guided-education-distributions";
+import { buildSavingsBondInputs, savingsBondFactErrors } from "./guided-savings-bond-facts";
 /**
  * Bridge between guided interview section data and the tax engine.
  *
@@ -612,6 +613,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     assertKnownFacts(retirementFactErrors(retirementData?.entries, true, segmentation.filingStatus, state.taxYear, stateReturnData));
     assertKnownFacts(socialSecurityFactErrors(socialSecurityData, segmentation.filingStatus, state.taxYear, personalInfo, adjustmentData));
     assertKnownFacts(unemploymentFactErrors(unemploymentData, segmentation.filingStatus, state.taxYear, personalInfo, stateReturnData));
+    assertKnownFacts(savingsBondFactErrors(creditsData?.savingsBondEducation, state.taxYear, segmentation.filingStatus, investData?.interestEntries, personalInfo));
     assertKnownFacts(educationFactErrors(creditsData, state.taxYear, segmentation.filingStatus, personalInfo));
     assertKnownFacts(educationDistributionFactErrors(creditsData?.educationDistributions, state.taxYear, segmentation.filingStatus,
       buildActualEducationInput(creditsData, state.taxYear, segmentation.filingStatus, personalInfo)));
@@ -668,6 +670,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
   const dependentCare = buildDependentCareInput(creditsData, segmentation.filingStatus, state.taxYear, careBenefitSources);
   const dependentCareBenefits = buildCareBenefitsInput(creditsData?.dependentCareBenefits, state.taxYear, segmentation.filingStatus, careBenefitSources);
   const educationExpenses = buildActualEducationInput(creditsData, state.taxYear, segmentation.filingStatus, personalInfo);
+  const savingsBondInputs = buildSavingsBondInputs(creditsData?.savingsBondEducation, state.taxYear, segmentation.filingStatus, investData?.interestEntries, personalInfo);
   const educationDistributions = buildEducationDistributionInputs(creditsData?.educationDistributions, state.taxYear, segmentation.filingStatus, educationExpenses);
   const energyCredits = buildEnergyCreditsInput(creditsData, state.taxYear, segmentation.filingStatus);
   const scheduleH = buildScheduleHInput(otherTaxesData);
@@ -738,6 +741,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     deductionElection: deductionData?.method ?? "automatic",
     educationExpenses,
     ...educationDistributions,
+    ...savingsBondInputs,
     ...studentLoans,
     energyCredits,
     form8936: buildVehicleCreditInput(creditsData?.vehicles, state.taxYear, segmentation.filingStatus),

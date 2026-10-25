@@ -13,6 +13,7 @@ import { VehicleSourceDetails } from "./vehicle-source-details";
 import { AdoptionSourceDetails } from "./adoption-source-details";
 import { EducationSourceDetails } from "./education-source-details";
 import { EducationDistributionDetails } from "./education-distribution-details";
+import { SavingsBondSourceDetails } from "./savings-bond-source-details";
 import { CareBenefitsDetails } from "./care-benefits-details";
 import type { CareBenefitSource } from "@/lib/guided-dependent-care-benefits";
 import { CareSourceDetails } from "./care-source-details";
@@ -133,6 +134,7 @@ export function SectionCredits({
           />
 
           <EducationDistributionDetails data={current.educationDistributions} onChange={educationDistributions => onDataChange({ ...current, educationDistributions })} />
+          <SavingsBondSourceDetails data={current.savingsBondEducation} onChange={savingsBondEducation => onDataChange({ ...current, savingsBondEducation })} />
 
           <EnergySourceDetails
             filingStatus={filingStatus}

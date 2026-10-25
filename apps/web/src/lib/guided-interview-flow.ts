@@ -32,6 +32,7 @@ import type { RetirementSourceData } from "./guided-retirement-facts";
 import { vehicleFactErrors, type VehicleCreditData } from "./guided-vehicle-facts";
 import { adoptionFactErrors, type AdoptionCreditData } from "./guided-adoption-facts";
 import { educationDistributionFactErrors, type EducationDistributionData } from "./guided-education-distributions";
+import { savingsBondFactErrors, type SavingsBondEducationData } from "./guided-savings-bond-facts";
 import { buildActualEducationInput } from "./guided-education-facts";
 import { guidedSourceValuesChanged } from "./guided-source-confirmation";
 
@@ -1130,6 +1131,7 @@ export interface CreditsData {
   dependentCareBenefits?: CareBenefitsData;
   education: EducationCreditData;
   educationDistributions?: EducationDistributionData;
+  savingsBondEducation?: SavingsBondEducationData;
   energy: EnergyCreditData;
   vehicles?: VehicleCreditData;
   adoption?: AdoptionCreditData;
@@ -1467,7 +1469,11 @@ export function updateSectionData(
   const nextCredits = sectionId === "credits" ? data as CreditsData : credits;
   const educationSourcesChanged = !!nextCredits?.educationDistributions && (
     ((sectionId === "personal-info" || sectionId === "adjustments") && guidedSourceValuesChanged(state.sectionData[sectionId], data)) ||
-    (sectionId === "credits" && guidedSourceValuesChanged(credits?.education, nextCredits.education))
+    (sectionId === "credits" && (guidedSourceValuesChanged(credits?.education, nextCredits.education) || guidedSourceValuesChanged(credits?.savingsBondEducation, nextCredits.savingsBondEducation)))
+  );
+  const bondSourcesChanged = !!nextCredits?.savingsBondEducation && (
+    (["personal-info", "income-investments", "adjustments"].includes(sectionId) && sourceValuesChanged) ||
+    (sectionId === "credits" && (guidedSourceValuesChanged(credits?.education, nextCredits.education) || guidedSourceValuesChanged(credits?.educationDistributions, nextCredits.educationDistributions)))
   );
   const ohioStateReturn = state.sectionData["state-return"];
   const ohioInterestChanged = sectionId === "income-investments" && ohioStateReturn?.ohioInterestAllocation;
@@ -1479,9 +1485,11 @@ export function updateSectionData(
       ...(mortgageSourcesChanged ? { deductions: { ...mortgageSourcesChanged, mortgageEntries: mortgageSourcesChanged.mortgageEntries?.map(entry => ({ ...entry, sourceFactsConfirmed: null })), ...(mortgageSourcesChanged.mortgageWorksheet ? { mortgageWorksheet: { ...mortgageSourcesChanged.mortgageWorksheet, sourceFactsConfirmed: null } } : {}) } } : {}),
       ...(ohioInterestChanged && ohioStateReturn ? { "state-return": { ...ohioStateReturn, ohioInterestAllocation: { ...ohioInterestChanged, sourceFactsConfirmed: null } } } : {}),
       ...((iraSourcesChanged || hsaSourcesChanged || educatorSourcesChanged || studentLoanSourcesChanged) && adjustments ? { adjustments: { ...adjustments, ...(studentLoanSourcesChanged ? { studentLoanFacts: { ...studentLoanSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(iraSourcesChanged ? { iraContributions: { ...iraSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(hsaSourcesChanged ? { hsaAccounts: hsaSourcesChanged.map(account => ({ ...account, sourceFactsConfirmed: null })) } : {}), ...(educatorSourcesChanged ? { educatorExpenseSources: educatorSourcesChanged.map(source => ({ ...source, sourceFactsConfirmed: null })) } : {}) } } : {}),
-      ...(benefitSourcesChanged ? { credits: { ...credits, dependentCareBenefits: { ...credits.dependentCareBenefits,
-        sourceFactsConfirmed: null, earnedIncomeWorksheetConfirmed: null, creditExpenseCoordinationConfirmed: null } } } : {}),
-      ...(educationSourcesChanged && nextCredits ? { credits: { ...nextCredits, educationDistributions: { ...nextCredits.educationDistributions, sourceFactsConfirmed: null } } } : {}),
+      ...((benefitSourcesChanged || educationSourcesChanged || bondSourcesChanged) && nextCredits ? { credits: { ...nextCredits,
+        ...(benefitSourcesChanged ? { dependentCareBenefits: { ...nextCredits.dependentCareBenefits, sourceFactsConfirmed: null, earnedIncomeWorksheetConfirmed: null, creditExpenseCoordinationConfirmed: null } } : {}),
+        ...(educationSourcesChanged ? { educationDistributions: { ...nextCredits.educationDistributions, sourceFactsConfirmed: null } } : {}),
+        ...(bondSourcesChanged ? { savingsBondEducation: { ...nextCredits.savingsBondEducation, sourceFactsConfirmed: null } } : {}),
+      } } : {}),
     },
   };
 }
@@ -1824,6 +1832,7 @@ export function validateSection(
       return validateRequiredFacts({
         ...educationErrors,
         ...distributionErrors,
+        ...savingsBondFactErrors(credits?.savingsBondEducation, state.taxYear, state.segmentation.filingStatus, getSectionData(state, "income-investments")?.interestEntries, personal),
         ...careBenefitsFactErrors(credits?.dependentCareBenefits, state.taxYear, state.segmentation.filingStatus, sources),
         ...careFactErrors(credits?.dependentCare, state.segmentation.filingStatus, { data: credits?.dependentCareBenefits, year: state.taxYear, sources }),
         ...energyFactErrors(credits?.energy, state.taxYear, state.segmentation.filingStatus),

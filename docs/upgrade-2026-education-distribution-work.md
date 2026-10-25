@@ -393,7 +393,7 @@ all3772 spec references (`education-prohibited-isolated-{tests,types,spec}.log`)
   Its new regression first failed, then38 source/integration/owner-PDF tests
   passed. Final credit validation must include affected outside recipients;
   their earnings and additional tax remain off this return.
-- [ ] Complete and verify educator coordination with the federal owner using
+- [x] Complete and verify educator coordination with the federal owner using
   actual `distributionMedium` and per-owner excluded education earnings.
   Distinguish cash QTP earnings from basis, transfers and prepaid/in-kind
   distributions; preserve unknown sources rather than infer cash or zero.
@@ -527,3 +527,89 @@ local PDF Python environment required by the test launcher. The working-tree
 web check encountered only the separate in-progress health-insurance intake
 fields; no web files are included in this core package. Four scoped files are
 staged; the discarded owner-allocation schema is absent.
+
+### Actual savings-bond intake (2026-10-25)
+
+The preceding educator reconciliation core is committed as `7fcf2ab`. The parent
+independently reran its six corrected cases and reported no remaining actionable
+finding in the bounded sole-owner method (`parent-educator-exclusion-review.log`).
+The positive mixed/joint ownership gate remains in place; a confirmation does
+not authorize a missing tax-law allocation method.
+
+Added actual Form8815 intake beside education distributions in the credits
+section. The controls collect original bond dates, registered ownership and
+birth date, face value, redemption proceeds, prior interest reporting, actual
+beneficiary/institution expenses and benefit allocations, statement adjustments,
+and signed royalty/territory MAGI worksheet facts. Blank and false remain
+distinct. Explicit empty lists are possible; adding a record creates only a
+local opaque link. No exclusion, income amount, date or eligibility is invented.
+The original bond serial-number record remains with the taxpayer.
+
+Refreshed the official [Form8815 endpoint](https://www.irs.gov/pub/irs-pdf/f8815.pdf)
+and [Publication970](https://www.irs.gov/publications/p970). The form endpoint
+still serves the final2025 form/instructions. This intake forwards the actual
+return year to the existing year-aware calculation; it does not qualify a2026
+physical form or change readiness. The helper validates source arithmetic and
+actual Form1099-INT Box3 capacity, without running a hypothetical zero-MAGI
+calculation. Canonical federal calculation retains the phaseout and final audit.
+Source edits invalidate linked bond/distribution/educator confirmations; toggling
+confirmation metadata alone does not create a reciprocal confirmation loop.
+
+Spec and new source/DOM tests preceded implementation. Initial red runs failed
+on the absent helper/component (`guided-bond-red.log`, `guided-bond-dom-red.log`).
+An independent numerical fixture has10000 proceeds,8000 principal and500
+previously reported interest:1500 current interest/exclusion,500 actual statement
+adjustment, and100 separate Box1 interest remaining on the return. The unchanged
+review-only reference summary shows the same principal, interest and exclusion.
+Exact decimal preservation is exercised beyond JavaScript's safe-integer range,
+including a signed royalty adjustment and actual2026 source forwarding.
+
+Current owned/adjacent cohort:417 tests across nine files pass
+(`guided-bond-owned.log`); root/web types and all3858 spec references pass.
+Scoped new-file/component/test lint has zero warnings. The shared bridge retains
+two existing non-null warnings at its unrelated lines443/450. A broader guided
+run passed680 cases and found one separate in-progress Form7206 integration
+expectation, reported to its owner; no bond case failed. Exact staged verification
+and parent source review follow before this intake commit.
+
+The identity follow-up is separately committed as `fe4afa8`; the canonical
+educator handoff is `1dac908`. The parent's review identified that separately
+entered birth dates and recipient assertions were insufficient. The intake now
+calls the same return-identity validator used by the engine, using actual
+PersonalInfo and claimed dependents. Joint registration collects an explicit
+actual age-test owner; changing registration clears that role. Beneficiary IDs
+are entered as source facts, never inferred from names.
+
+A fresh DOM-to-engine case enters every fact through visible controls, starts
+without any computed completeness marker, and obtains the independently derived
+1500 exclusion. The schema computes completeness from actual raw presence.
+The parent's initial concern about a hidden UI flag was withdrawn after the
+preprocess was checked; no user-editable provenance override was added.
+Both DOM cases pass (`bond-new-row-review.log`). The guided, DOM and real review
+PDF/encrypted-recovery cohort passes (`bond-ui-privacy.log`); its recovery test
+confirms full identity is used before rendering, redacted copies reach the real
+PDF renderer, source state is untouched, and encrypted import restores the exact
+original beneficiary ID and monetary strings. Existing recursive review redaction
+already covers the tax-ID suffix, so no redundant rendering mutation was needed.
+
+The canonical return identity boundary is committed as `196ee90`; the intake
+package has completed its immutable verification. The remaining education
+implementation queue contains the three tax methods listed below. The ordinary/returned-
+contribution Coverdell calculations, outside-recipient final-credit guard,
+per-expense student-loan linkage, sole-owner educator reconciliation and source
+intake are implemented. The following methods stay explicitly unresolved, with
+facts retained and calculation blocked rather than guessed: Coverdell code6
+education exclusion/deemed-distribution basis and post-disqualification income;
+positive mixed/joint bond attribution to individual educators; and non-cash or
+unknown QTP medium in educator reductions. These are bounded internal tax-method
+gaps, separate from unavailable taxpayer facts and independent human/form/release
+qualification. An approval flag cannot supply the missing legal method.
+
+Exact intake staged tree `6511ea52` passed all665 tests across49 guided,
+review-PDF and privacy files, root/web types and all3,868 spec references.
+The parent independently reran all8 guided/DOM source cases successfully with
+no actionable findings (`parent-guided-bond-review.log`); that is an agent
+software review, not independent human tax qualification. Logs:
+`bond-ui-staged-{tests,types,web-types,spec,lint}.log`.
+The staged shared flow/bridge changes contain only the bond integration and
+merged credit-source invalidation; the concurrent health intake stays separate.

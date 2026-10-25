@@ -3,8 +3,8 @@ fullName: "Exclusion of Interest From Series EE and I U.S. Savings Bonds Issued 
 taxYear: 2026
 irsReference: "https://www.irs.gov/pub/irs-pdf/f8815.pdf"
 notes: |
-  Official2025 form contains its instructions.2026 form/instructions remain draft;
-  final indexed2026 thresholds are RevProc2025-32 section4.17. No filing readiness
+  Official2025 form contains its instructions and remains the current IRS endpoint;
+  no final2026 physical form is qualified. Final indexed2026 thresholds are RevProc2025-32 section4.17. No filing readiness
   is conferred. Monetary arithmetic uses Decimal and completed lines round to dollars;
   ratios retain12decimal places, satisfying at-least-three-place instructions.
   Qualified bonds must be EE/I issued after1989 to an age24-or-older taxpayer

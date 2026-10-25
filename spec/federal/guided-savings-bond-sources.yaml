@@ -1,0 +1,51 @@
+form: "Guided Form 8815 sources"
+fullName: "Actual savings-bond redemption and education-expense intake"
+taxYear: 2026
+irsReference: "https://www.irs.gov/pub/irs-pdf/f8815.pdf"
+notes: |
+  Current official endpoint serves the final 2025 form and instructions. The
+  year-aware Form 8815 engine applies the separately sourced 2026 thresholds.
+  This intake collects source facts; it never supplies a proposed exclusion or
+  invented modified AGI. Principal, prior reporting, eligibility, expense
+  coordination and final phaseout remain auditable in the canonical engine.
+  Preserve unknown answers and known ineligibility. Source labels are local
+  opaque identifiers; taxpayers retain the original bond serial-number records.
+  Positive mixed/joint bond attribution to educators remains explicitly blocked
+  until a controlling allocation method is established.
+lines:
+  - line: "actual-source"
+    description: "Unknown-preserving source facts and exact amounts"
+    formula: "No section emits no bond claims; started records require actual year, bond dates/type/owner/principal/prior reporting and coordinated education sources; normalize entered amounts with Decimal only"
+    testRef: "tests/guided-interview/guided-savings-bond-facts.test.ts::preserves unknown bond sources and exact entered amounts"
+  - line: "source-reconciliation"
+    description: "Validate actual dates, principal and reported interest"
+    formula: "Reject duplicate identities, invalid assigned issue dates, inconsistent source years, negative or excessive principal/prior interest, conflicting saved per-bond aggregates, and adjustments or current bond interest exceeding actual Form1099-INT Box3; no invented statement"
+    testRef: "tests/guided-interview/guided-savings-bond-facts.test.ts::rejects incomplete or contradictory bond and statement records"
+  - line: "source-bridge"
+    description: "One canonical exclusion and prior-interest adjustment"
+    formula: "Forward actual bond and return-level expense sources unchanged to federal calculation; preserve original Box3 and subtract only the confirmed previously reported amount once before final Form8815 exclusion"
+    testRef: "tests/guided-interview/guided-savings-bond-facts.test.ts::forwards actual savings-bond sources through the guided return"
+  - line: "section-parity"
+    description: "Section completion uses the same source validation"
+    formula: "Credits completion and engine bridge both reject incomplete source facts or missing actual interest reconciliation"
+    testRef: "tests/guided-interview/guided-savings-bond-facts.test.ts::requires the same bond facts for section completion and calculation"
+  - line: "household-identity"
+    description: "Bind registered owners and expense beneficiaries to actual household records"
+    formula: "Require exact actual owner DOB and explicit joint age-test role; beneficiary name and tax ID must match the actual taxpayer, spouse or uniquely claimed dependent; missing context is unknown, never inferred"
+    testRef: "tests/guided-interview/guided-savings-bond-facts.test.ts::rejects bond owner and beneficiary identities that contradict the household"
+  - line: "confirmation"
+    description: "Substantive linked changes invalidate source confirmation"
+    formula: "Personal, interest, adjustment or education source changes retain entered sources but invalidate bond confirmation; confirmation metadata alone does not trigger a reciprocal confirmation loop"
+    testRef: "tests/guided-interview/guided-savings-bond-facts.test.ts::invalidates bond coordination after substantive source edits"
+  - line: "actual-controls"
+    description: "Editable bond, expense and MAGI sources"
+    formula: "Explicit controls preserve blank, false, signed amount, and empty-list distinctions; edits invalidate confirmation without inventing monetary zero or dates"
+    testRef: "tests/apps/web/savings-bond-source-interactions.test.tsx::collects actual bond and expense facts without assuming answers"
+  - line: "review-and-recovery-privacy"
+    description: "Use full identities for calculation and retain them only in protected original facts"
+    formula: "Canonical source validation sees actual beneficiaryTaxId; review renderers receive redacted copies; encrypted backup and restored interview preserve original identities and exact source amounts without mutating the active facts"
+    testRef: "tests/apps/web/workspace-bond-privacy.test.ts::redacts bond beneficiary IDs only after calculation and preserves them in encrypted recovery"
+  - line: "new-row-completion"
+    description: "New visible source records reach the canonical calculation"
+    formula: "Entering every visible actual bond and education fact plus source confirmations produces sourceFactsComplete through schema presence checks, never a user-editable provenance flag; substantive edits invalidate confirmation"
+    testRef: "tests/apps/web/savings-bond-source-interactions.test.tsx::completes a new bond through visible controls and the guided bridge"
