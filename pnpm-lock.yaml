@@ -11,6 +11,9 @@ importers:
 
   .:
     dependencies:
+      '@noble/hashes':
+        specifier: 2.4.0
+        version: 2.4.0
       decimal.js:
         specifier: 10.6.0
         version: 10.6.0
