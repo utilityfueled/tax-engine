@@ -8,7 +8,7 @@ function TextFact({ label, value, onChange, type = "text" }: { label: string; va
   return <label className="guided-field"><span className="guided-field-label">{label}</span><input type={type} className="guided-input" value={value} onChange={(event) => onChange(event.target.value)} aria-required="true" /></label>;
 }
 
-function BooleanFact({ label, value, onChange }: { label: string; value: boolean | null; onChange: (value: boolean | null) => void }) {
+function BooleanFact({ label, value, onChange }: { label: string; value: boolean | null | undefined; onChange: (value: boolean | null) => void }) {
   return <label className="guided-field"><span className="guided-field-label">{label}</span><select className="guided-input" value={value == null ? "" : String(value)} onChange={(event) => onChange(event.target.value === "" ? null : event.target.value === "true")}><option value="">Confirm from your records</option><option value="true">Yes</option><option value="false">No</option></select></label>;
 }
 
@@ -49,9 +49,13 @@ export function DeductionSourceDetails({ data, onChange, includeMortgages = true
         <CurrencyField label="Donation amount / fair market value" value={entry.amount} onChange={(amount) => update({ amount })} required />
         <TextFact label="Donation date" value={entry.date} type="date" onChange={(date) => update({ date })} />
         <BooleanFact label="Recipient is a private foundation / second-category organization" value={entry.isPrivateFoundation} onChange={(isPrivateFoundation) => update({ isPrivateFoundation })} />
+        <BooleanFact label="Recipient qualifies under section 170(b)(1)(A) for the 2026 nonitemizer deduction" value={entry.qualifiedOrganization} onChange={(qualifiedOrganization) => update({ qualifiedOrganization })} />
+        <BooleanFact label="Recipient is a supporting organization" value={entry.supportingOrganization} onChange={(supportingOrganization) => update({ supportingOrganization })} />
+        <BooleanFact label="Gift was to a donor-advised fund" value={entry.donorAdvisedFund} onChange={(donorAdvisedFund) => update({ donorAdvisedFund })} />
         {entry.type && entry.type !== "cash" && <>
           <CurrencyField label="Donated property's cost basis" value={entry.costBasis} onChange={(costBasis) => update({ costBasis })} required />
           <BooleanFact label="Long-term capital gain property" value={entry.isLongTermCapitalGain} onChange={(isLongTermCapitalGain) => update({ isLongTermCapitalGain })} />
+          {entry.isPrivateFoundation && entry.isLongTermCapitalGain && <BooleanFact label="Gift is qualified appreciated stock" value={entry.qualifiedAppreciatedStock} onChange={(qualifiedAppreciatedStock) => update({ qualifiedAppreciatedStock })} />}
         </>}
       </div><button type="button" className="utility-button" onClick={() => setDonations(donations.filter((_, i) => i !== index))}>Remove donation #{index + 1}</button></fieldset>;
     })}

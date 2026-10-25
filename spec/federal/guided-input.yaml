@@ -45,3 +45,8 @@ lines:
     formula: "Preserve missing source facts. A tax year is extracted only from explicit source-year context, never the filename or an unrelated transaction date. Summary-only securities need actual sale dates. Reject source-year conflicts, duplicate document/fact identifiers, multi-document machine facts and spouse ownership without spouse facts."
     irsRef: "Form W-2 instructions boxes 1, 3, 5 and 16; Form 8949 columns b and c; Form 1040 tax-year identification"
     testRef: "tests/guided-interview/document-fact-fidelity.test.ts::does not infer document year from a filename or transaction date"
+  - line: "2026-eligibility-facts"
+    description: "Preserve explicit organization and education identity eligibility facts"
+    formula: "For 2026 nonitemizer gifts collect qualified recipient, supporting organization and donor-advised-fund answers. Preserve qualified-appreciated-stock status for private-foundation property. Education captures taxpayer/spouse/student SSN eligibility and institutional EIN; unknown remains unknown and blocks the affected calculation. A positive 2026 Lifetime Learning aggregate without student identity and eligibility is incomplete; an explicit zero is not a credit claim."
+    irsRef: "Publication 505 (2026), education credit SSN requirements and nonitemizer charitable contributions; IRC 170"
+    testRef: "tests/guided-interview/guided-required-facts.test.ts::requires actual 2026 charity and education eligibility facts"

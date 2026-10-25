@@ -106,8 +106,6 @@ Verification with pinned Node 24.22.1:
 
 ## Remaining implementation (updated)
 
-- Collect new 2026 charity and education eligibility fields coordinated with the
-  federal-law input schema.
 - Resolve or explicitly gate ambiguous legacy IRA, alimony, casualty, other
   itemized and other-payment aggregates rather than dropping/misclassifying them.
 - Audit sparse document-extraction optional fields and remaining household facts.
@@ -145,3 +143,16 @@ browser suite; it was interrupted and the exact Playwright file was run directly
 Web typecheck, scoped lint (zero errors), and diff checks pass.
 
 Source-year/document-fidelity package commit: `70f8d17`.
+
+## 2026 organization and education identity facts
+
+- Guided donation details now preserve qualified recipient, supporting organization,
+  donor-advised-fund and qualified-appreciated-stock answers. Unknown facts gate
+  the affected 2026 calculation; an explicit false remains false.
+- Education details collect taxpayer/spouse/student SSN eligibility and institution
+  EIN, without assuming eligibility from a name or amount. A positive 2026 LLC
+  aggregate remains blocked because the engine contract lacks individual LLC
+  student identity and eligibility; a zero aggregate is not a credit claim.
+- Both new eligibility regressions were red before implementation. All 441 guided
+  tests in nine files, web typecheck, scoped ESLint and diff checks pass.
+- Recovery review hardening commit: `937f4bf`. No required human review is claimed.

@@ -292,6 +292,10 @@ export function buildDonationsInput(deductionData: DeductionData | undefined) {
     dateOfDonation: entry.date,
     ...(entry.type !== "cash" ? { costBasis: toDecimalString(entry.costBasis), isLongTermCapitalGain: entry.isLongTermCapitalGain as boolean } : {}),
     isPrivateFoundation: entry.isPrivateFoundation as boolean,
+    qualifiedOrganization: entry.qualifiedOrganization ?? undefined,
+    supportingOrganization: entry.supportingOrganization ?? undefined,
+    donorAdvisedFund: entry.donorAdvisedFund ?? undefined,
+    qualifiedAppreciatedStock: entry.qualifiedAppreciatedStock ?? undefined,
   }));
 }
 
@@ -430,9 +434,13 @@ export function buildEducationInput(creditsData: CreditsData | undefined) {
       enrolledAtLeastHalfTime: s.enrolledAtLeastHalfTime ?? undefined,
       pursuingDegreeOrCredential: s.pursuingDegreeOrCredential ?? undefined,
       felonyDrugConviction: s.felonyDrugConviction ?? undefined,
+      studentSsnEligible: s.studentSsnEligible ?? undefined,
+      institutionEin: s.institutionEin?.trim() || undefined,
     })),
     llcExpenses: hasLlc ? toDecimalString(education.llcExpenses) : undefined,
     refundableAocEligible: education.refundableAocEligible ?? undefined,
+    primarySsnEligible: education.primarySsnEligible ?? undefined,
+    spouseSsnEligible: education.spouseSsnEligible ?? undefined,
   };
 }
 
@@ -523,7 +531,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     assertKnownFacts(deductionFactErrors(deductionData, state.taxYear));
     assertKnownFacts(paymentFactErrors(paymentData?.estimatedPayments, state.taxYear));
     assertKnownFacts(retirementFactErrors(retirementData?.entries));
-    assertKnownFacts(educationFactErrors(creditsData));
+    assertKnownFacts(educationFactErrors(creditsData, state.taxYear, segmentation.filingStatus));
   } catch { return null; }
 
   const stateCode = personalInfo?.state || segmentation.stateCode || null;

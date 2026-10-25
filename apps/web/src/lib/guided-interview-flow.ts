@@ -752,6 +752,10 @@ export interface DonationEntryData {
   costBasis: string;
   isLongTermCapitalGain: boolean | null;
   isPrivateFoundation: boolean | null;
+  qualifiedOrganization?: boolean | null;
+  supportingOrganization?: boolean | null;
+  donorAdvisedFund?: boolean | null;
+  qualifiedAppreciatedStock?: boolean | null;
 }
 
 export const emptyDonationEntry: DonationEntryData = { organization: "", type: "", amount: "", date: "", costBasis: "", isLongTermCapitalGain: null, isPrivateFoundation: null };
@@ -842,6 +846,8 @@ export interface EducationStudentData {
   enrolledAtLeastHalfTime?: boolean | null;
   pursuingDegreeOrCredential?: boolean | null;
   felonyDrugConviction?: boolean | null;
+  studentSsnEligible?: boolean | null;
+  institutionEin?: string;
   requiresPriorYearsConfirmation?: boolean;
 }
 
@@ -855,6 +861,8 @@ export interface EducationCreditData {
   aocStudents: EducationStudentData[];
   llcExpenses: string;
   refundableAocEligible?: boolean | null;
+  primarySsnEligible?: boolean | null;
+  spouseSsnEligible?: boolean | null;
 }
 
 export const emptyEducationCreditData: EducationCreditData = {
@@ -1678,7 +1686,7 @@ export function validateSection(
     case "adjustments":
       return validateAdjustmentsSection(getSectionData(state, "adjustments"));
     case "credits":
-      return validateRequiredFacts(educationFactErrors(getSectionData(state, "credits")));
+      return validateRequiredFacts(educationFactErrors(getSectionData(state, "credits"), state.taxYear, state.segmentation.filingStatus));
     case "other-taxes":
       return VALID_SECTION; // Other taxes are informational acknowledgements
     case "payments":

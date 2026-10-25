@@ -1,5 +1,5 @@
 import Decimal from "decimal.js";
-import type { CreditsData, DeductionData, EstimatedPaymentEntry, RetirementEntryData } from "./guided-interview-flow";
+import type { CreditsData, DeductionData, EstimatedPaymentEntry, RetirementEntryData, FilingStatus } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
 
 export function isActualDate(value: string | undefined): boolean {
@@ -41,10 +41,17 @@ export function deductionFactErrors(data: DeductionData | undefined, taxYear?: n
     if (error) errors[`donation-${index}-amount`] = error;
     if (!isActualDate(entry.date) || (taxYear != null && !entry.date.startsWith(`${taxYear}-`))) errors[`donation-${index}-date`] = "Enter the actual donation date in the selected tax year.";
     if (typeof entry.isPrivateFoundation !== "boolean") errors[`donation-${index}-classification`] = "Confirm the donation recipient's organization classification.";
+    if (taxYear === 2026 && data.method === "standard") {
+      for (const field of ["qualifiedOrganization", "supportingOrganization", "donorAdvisedFund"] as const) {
+        if (typeof entry[field] !== "boolean") errors[`donation-${index}-${field}`] = "Confirm the recipient's eligibility for the 2026 nonitemizer deduction.";
+      }
+    }
     if (entry.type && entry.type !== "cash") {
       const basisError = amountError(entry.costBasis, "donated property's cost basis");
       if (basisError) errors[`donation-${index}-basis`] = basisError;
       if (typeof entry.isLongTermCapitalGain !== "boolean") errors[`donation-${index}-capital-gain`] = "Confirm whether the donated property is long-term capital gain property.";
+      if (taxYear === 2026 && entry.isPrivateFoundation && entry.isLongTermCapitalGain
+        && typeof entry.qualifiedAppreciatedStock !== "boolean") errors[`donation-${index}-qualified-stock`] = "Confirm whether this private-foundation gift is qualified appreciated stock.";
     }
   });
   // Legacy totals remain evidence until the user reconciles them with details.
@@ -85,8 +92,15 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
   return errors;
 }
 
-export function educationFactErrors(data: CreditsData | undefined): Record<string, string> {
+export function educationFactErrors(data: CreditsData | undefined, taxYear?: number | null, filingStatus?: FilingStatus | null): Record<string, string> {
   const errors: Record<string, string> = {};
+  let hasLifetimeLearningClaim = false;
+  if (hasEnteredAmount(data?.education.llcExpenses)) {
+    const error = amountError(data?.education.llcExpenses, "Lifetime Learning expenses");
+    if (error) errors.llcExpenses = error;
+    else hasLifetimeLearningClaim = parseGuidedCurrency(data?.education.llcExpenses).gt(0);
+  }
+  if (taxYear === 2026 && hasLifetimeLearningClaim) errors.llcStudent = "The saved Lifetime Learning total needs each student's identity and SSN eligibility. This entry cannot be calculated until those facts are supported.";
   (data?.education.aocStudents ?? []).forEach((student, index) => {
     if (!student.name.trim()) errors[`student-${index}-name`] = "Enter the actual student name.";
     const amount = amountError(student.qualifiedExpenses, "qualified education expenses");
@@ -96,8 +110,16 @@ export function educationFactErrors(data: CreditsData | undefined): Record<strin
     for (const field of ["completedFirstFourYearsBeforeYear", "enrolledAtLeastHalfTime", "pursuingDegreeOrCredential", "felonyDrugConviction"] as const) {
       if (typeof student[field] !== "boolean") errors[`student-${index}-${field}`] = "Confirm all AOTC student eligibility facts before calculating.";
     }
+    if (taxYear === 2026) {
+      if (typeof student.studentSsnEligible !== "boolean") errors[`student-${index}-ssn`] = "Confirm the student's employment-valid SSN was issued by the return due date.";
+      if (!/^\d{2}-?\d{7}$/.test(student.institutionEin ?? "")) errors[`student-${index}-ein`] = "Enter the institution EIN from Form 1098-T.";
+    }
   });
   if (data?.education.aocStudents.length && typeof data.education.refundableAocEligible !== "boolean") errors.refundableAocEligible = "Confirm the taxpayer's refundable AOTC eligibility from the Form 8863 instructions.";
+  if (data && taxYear === 2026 && (data.education.aocStudents.length || hasLifetimeLearningClaim)) {
+    if (typeof data.education.primarySsnEligible !== "boolean") errors.primarySsnEligible = "Confirm the taxpayer's education-credit SSN eligibility.";
+    if (filingStatus === "mfj" && typeof data.education.spouseSsnEligible !== "boolean") errors.spouseSsnEligible = "Confirm the spouse's education-credit SSN eligibility.";
+  }
   return errors;
 }
 

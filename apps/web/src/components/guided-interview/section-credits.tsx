@@ -140,6 +140,8 @@ function EducationStudentCard({
       <EligibilityFact label="Enrolled at least half-time for at least one academic period" value={student.enrolledAtLeastHalfTime} onChange={(value) => onUpdate("enrolledAtLeastHalfTime", value)} />
       <EligibilityFact label="Pursuing a degree or recognized education credential" value={student.pursuingDegreeOrCredential} onChange={(value) => onUpdate("pursuingDegreeOrCredential", value)} />
       <EligibilityFact label="Had a felony drug conviction by the end of the tax year" value={student.felonyDrugConviction} onChange={(value) => onUpdate("felonyDrugConviction", value)} />
+      <EligibilityFact label="Student has an employment-valid SSN issued by the return due date (required for 2026)" value={student.studentSsnEligible} onChange={(value) => onUpdate("studentSsnEligible", value)} />
+      <label className="guided-field"><span className="guided-field-label">Institution EIN from Form 1098-T (required for 2026)</span><input className="guided-input" value={student.institutionEin ?? ""} onChange={(event) => onUpdate("institutionEin", event.target.value)} /></label>
     </div>
   );
 }
@@ -181,6 +183,8 @@ function EducationSection({
       <h4 className="guided-w2-card-title" style={{ marginTop: "12px", marginBottom: "8px" }}>
         American Opportunity Credit students
       </h4>
+      <EligibilityFact label="Taxpayer has an employment-valid SSN issued by the return due date (required for 2026 education credits)" value={data.primarySsnEligible} onChange={(primarySsnEligible) => onChange({ ...data, primarySsnEligible })} />
+      <EligibilityFact label="Spouse has an employment-valid SSN issued by the return due date (required for a 2026 joint education credit)" value={data.spouseSsnEligible} onChange={(spouseSsnEligible) => onChange({ ...data, spouseSsnEligible })} />
 
       {data.aocStudents.length > 0 && (
         <div className="guided-w2-stack">
