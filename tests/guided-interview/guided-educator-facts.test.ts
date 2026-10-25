@@ -17,6 +17,7 @@ function stateWith(sources?: EducatorSourceData[], legacy = "") {
 }
 
 it("forwards actual educator facts and blocks an unexplained legacy aggregate", () => {
+  for (const invalid of ["-1", "NaN", "Infinity"]) expect(() => buildEducatorSources(undefined, "single", 2025, invalid)).toThrow();
   expect(buildTaxInputFromGuidedData(stateWith(undefined, "300"))).toBeNull();
   expect(validateSection(stateWith(undefined, "300"), "adjustments").status).toBe("partial");
   const result = buildTaxInputFromGuidedData(stateWith([actualEducator]));
@@ -61,4 +62,36 @@ it("preserves zero false large amounts and incomplete saved source records", () 
   const changed = updateSectionData(state, "credits", { ...state.sectionData.credits, educationDistributions: { taxYear: "2025", forms: [] } });
   expect(changed.sectionData.adjustments?.educatorExpenseSources?.[0]?.sourceFactsConfirmed).toBeNull();
   expect(changed.sectionData.adjustments?.educatorExpenseSources?.[0]?.expenses?.[0]?.amount).toBe("300.03");
+});
+
+it("collects actual early childhood qualification and keeps the effective year distinct", () => {
+  const source: EducatorSourceData = { ...actualEducator, taxYear: "2026", schoolYear: "2025-2026",
+    schools: [{ ...actualEducator.schools[0]!, level: "early_childhood", earlyChildhoodNonresidentChildrenUnder6: "3", operatedAtPublicExpense: false, receivesFeePaymentOrGrant: true }],
+    expenses: [{ ...actualEducator.expenses[0]!, datePaid: "2026-03-01", amount: "1000.03" }] };
+  const calculate = (data: EducatorSourceData, year = 2026) => calculateEducatorExpensesDeduction(AdjustmentsSchema.parse({ educatorExpenseSources: buildEducatorSources([data], "single", year) }), "single", year);
+  const result = calculate(source);
+  expect(result.amount.toString()).toBe("350"); expect(result.itemizedDeduction?.toString()).toBe("650.03");
+  expect(buildEducatorSources([source], "single", 2026)?.[0]?.schools?.[0]).toMatchObject({ level: "early_childhood", earlyChildhoodNonresidentChildrenUnder6: 3, operatedAtPublicExpense: false, receivesFeePaymentOrGrant: true });
+  for (const count of ["0", "2"]) expect(calculate({ ...source, schools: [{ ...source.schools[0]!, earlyChildhoodNonresidentChildrenUnder6: count }] }).amount.toString()).toBe("0");
+  expect(calculate({ ...source, schools: [{ ...source.schools[0]!, receivesFeePaymentOrGrant: false }] }).amount.toString()).toBe("0");
+  for (const count of ["", "-1", "2.5", "9007199254740993"]) expect(() => calculate({ ...source, schools: [{ ...source.schools[0]!, earlyChildhoodNonresidentChildrenUnder6: count }] })).toThrow();
+  expect(() => calculate({ ...source, schools: [{ ...source.schools[0]!, operatedAtPublicExpense: null }] })).toThrow(/funding facts/i);
+  const prior = { ...source, taxYear: "2025", schoolYear: "2024-2025", expenses: [{ ...source.expenses[0]!, datePaid: "2025-03-01" }] };
+  expect(calculate(prior, 2025).amount.toString()).toBe("0");
+});
+
+it("requires actual broader use and receipt funding before completing itemized educator facts", () => {
+  const source: EducatorSourceData = { ...actualEducator, taxYear: "2026", schoolYear: "2025-2026",
+    schools: [{ ...actualEducator.schools[0]!, level: "k12", role: "coach" }],
+    expenses: [{ ...actualEducator.expenses[0]!, datePaid: "2026-03-01", amount: "1000.03", qualifyingUse: false, instructionalActivity: true, itemizedReimbursements: "100.01", itemizedTaxFreeFunding: "200.02" }] };
+  const calculate = (data: EducatorSourceData) => calculateEducatorExpensesDeduction(AdjustmentsSchema.parse({ educatorExpenseSources: buildEducatorSources([data], "single", 2026) }), "single", 2026);
+  expect(calculate(source).amount.toString()).toBe("0"); expect(calculate(source).itemizedDeduction?.toString()).toBe("700");
+  expect(() => calculate({ ...source, expenses: [{ ...source.expenses[0]!, instructionalActivity: null }] })).toThrow(/itemized.*facts|instructional/i);
+  for (const value of ["", "-1", "NaN"]) expect(() => calculate({ ...source, expenses: [{ ...source.expenses[0]!, itemizedTaxFreeFunding: value }] })).toThrow();
+  expect(() => calculate({ ...source, expenses: [{ ...source.expenses[0]!, itemizedTaxFreeFunding: "1000.03" }] })).toThrow(/funding exceeds/i);
+  const zero = { ...source, expenses: [{ ...source.expenses[0]!, amount: "9007199254740993.01", itemizedReimbursements: "0", itemizedTaxFreeFunding: "0" }] };
+  expect(calculate(zero).itemizedDeduction?.toString()).toBe("9007199254740993.01");
+  expect(calculate({ ...source, expenses: [{ ...source.expenses[0]!, instructionalActivity: false }] }).itemizedDeduction?.toString()).toBe("0");
+  const administrator = { ...source, schools: [{ ...source.schools[0]!, role: "interscholastic_sports_administrator" as const }] };
+  expect(calculate(administrator).amount.toString()).toBe("0"); expect(calculate(administrator).itemizedDeduction?.toString()).toBe("700");
 });

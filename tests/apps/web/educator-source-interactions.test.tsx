@@ -10,6 +10,8 @@ import { SectionReview } from "@/components/guided-interview/section-review";
 import { startCompleteInterview } from "../../guided-interview/complete-facts";
 import { emptyAdjustmentData } from "@/lib/guided-interview-flow";
 import { emptyEducatorSource, emptyEducatorExpense } from "@/lib/guided-educator-facts";
+import { calculateEducatorExpensesDeduction } from "@/engine/forms/educator-expenses";
+import { AdjustmentsSchema } from "@/models/inputs";
 
 it("collects educator source facts without manufacturing zero or confirmation", async () => {
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -50,4 +52,51 @@ it("shows saved educator costs and unknown amounts separately from the deduction
   expect(html).toContain("Educator 1 unknown owner: expense 1 before qualification");
   expect(html).toContain("Educator sources need confirmation");
   expect(html).toContain("Unknown"); expect(html).toContain("$0");
+});
+
+it("collects expanded educator roles facility facts and receipt funding without guesses", async () => {
+  (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+  const container = document.createElement("div"); document.body.appendChild(container); const root = createRoot(container);
+  let latest: EducatorSourceData[] = [{ ...emptyEducatorSource, accountHolder: "primary", taxYear: "2026", schoolYear: "2025-2026", sourceFactsConfirmed: true,
+    schools: [{ name: "Actual school", role: "teacher", level: "k12", schoolEligible: true, hoursWorked: "900" }],
+    expenses: [{ ...emptyEducatorExpense, sourceId: "receipt-1", datePaid: "2026-03-01", description: "Actual supplies", category: "classroom", amount: "1000.03", ordinaryAndNecessary: true, qualifyingUse: true, healthOrPhysicalEducation: false, deductedElsewhere: false }],
+    reimbursementsNotInWages: "0", excludedSavingsBondInterest: "0", nontaxableQualifiedTuitionProgramAmount: "0", nontaxableCoverdellEarnings: "0" }];
+  function Harness() { const [sources, setSources] = useState(latest); return <EducatorSourceDetails sources={sources} taxYear={2026} onChange={next => { latest = next; setSources(next); }} />; }
+  async function change(label: string, value: string) {
+    const field = [...container.querySelectorAll("label")].find(entry => entry.querySelector(".guided-field-label")?.textContent === label)?.querySelector<HTMLInputElement | HTMLSelectElement>("input,select");
+    if (!field) throw new Error(`Missing control ${label}`);
+    await act(async () => { Object.getOwnPropertyDescriptor(field.tagName === "SELECT" ? HTMLSelectElement.prototype : HTMLInputElement.prototype, "value")!.set!.call(field, value); field.dispatchEvent(new Event(field.tagName === "SELECT" ? "change" : "input", { bubbles: true })); });
+  }
+  const calculate = () => calculateEducatorExpensesDeduction(AdjustmentsSchema.parse({ educatorExpenseSources: buildEducatorSources(latest, "single", 2026) }), "single", 2026);
+  const confirm = () => change("Educator 1: Sources checked after the last edit", "true");
+  try {
+    await act(async () => root.render(<Harness />));
+    await change("Educator 1, school 1: Actual school level", "early_childhood");
+    expect(latest[0]?.schools[0]?.schoolEligible).toBeNull(); expect(latest[0]?.sourceFactsConfirmed).toBeNull();
+    expect(latest[0]?.schools[0]?.earlyChildhoodNonresidentChildrenUnder6).toBeUndefined();
+    await change("Educator 1, school 1: The facility provides educational or childcare services", "true");
+    await change("Educator 1, school 1: Nonresident children under age 6 served by the facility", "2");
+    await change("Educator 1, school 1: The facility operates at public expense", "false");
+    await change("Educator 1, school 1: The facility receives a fee payment or grant for these services", "true");
+    await confirm(); expect(calculate().amount.toString()).toBe("0");
+    await change("Educator 1, school 1: Nonresident children under age 6 served by the facility", "3");
+    expect(latest[0]?.sourceFactsConfirmed).toBeNull(); await confirm();
+    expect(calculate().amount.toString()).toBe("350"); expect(calculate().itemizedDeduction?.toString()).toBe("650.03");
+    await change("Educator 1, school 1: Actual school level", "k12"); expect(latest[0]?.schools[0]?.schoolEligible).toBeNull();
+    await change("Educator 1, school 1: The school provides K-12 education under state law", "true");
+    await change("Educator 1, school 1: Actual role", "coach");
+    await change("Educator 1, expense 1: The expense meets the stated qualifying use", "false");
+    await confirm(); expect(() => calculate()).toThrow(/itemized.*facts|instructional/i);
+    await change("Educator 1, expense 1: Used as part of instructional activity including outside the classroom", "true");
+    await change("Educator 1, expense 1: Reimbursements for this receipt's itemized expense", "100.01");
+    await change("Educator 1, expense 1: Tax-free funding for this receipt's itemized expense", "200.02");
+    await confirm(); expect(calculate().amount.toString()).toBe("0"); expect(calculate().itemizedDeduction?.toString()).toBe("700");
+    await change("Educator 1, expense 1: Reimbursements for this receipt's itemized expense", "0");
+    await change("Educator 1, expense 1: Tax-free funding for this receipt's itemized expense", "0");
+    expect(latest[0]?.sourceFactsConfirmed).toBeNull(); await confirm(); expect(calculate().itemizedDeduction?.toString()).toBe("1000.03");
+    await change("Educator 1, expense 1: Used as part of instructional activity including outside the classroom", "false");
+    await confirm(); expect(calculate().itemizedDeduction?.toString()).toBe("0");
+    await change("Educator 1, expense 1: Used as part of instructional activity including outside the classroom", "true");
+    await change("Educator 1, expense 1: Tax-free funding for this receipt's itemized expense", ""); await confirm(); expect(() => calculate()).toThrow();
+  } finally { await act(async () => root.unmount()); container.remove(); }
 });

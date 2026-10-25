@@ -6,14 +6,19 @@ import { amountError, hasEnteredAmount } from "./guided-required-facts";
 
 export const educatorReductionFields = ["reimbursementsNotInWages", "excludedSavingsBondInterest", "nontaxableQualifiedTuitionProgramAmount", "nontaxableCoverdellEarnings"] as const;
 export interface EducatorSchoolData {
-  name: string; role: "" | "teacher" | "instructor" | "counselor" | "principal" | "aide" | "other";
+  name: string; role: "" | "teacher" | "instructor" | "counselor" | "principal" | "aide" | "interscholastic_sports_administrator" | "coach" | "other";
   level?: "" | "k12" | "early_childhood" | "other";
+  earlyChildhoodNonresidentChildrenUnder6?: string;
+  operatedAtPublicExpense?: boolean | null;
+  receivesFeePaymentOrGrant?: boolean | null;
   schoolEligible: boolean | null; hoursWorked: string;
 }
 export interface EducatorExpenseData {
   sourceId: string; datePaid: string; description: string;
   category: "" | "classroom" | "professional_development" | "protective_supplies" | "other";
   amount: string; ordinaryAndNecessary: boolean | null; qualifyingUse: boolean | null;
+  instructionalActivity?: boolean | null;
+  itemizedReimbursements?: string; itemizedTaxFreeFunding?: string;
   healthOrPhysicalEducation: boolean | null; athleticSupplies: boolean | null; deductedElsewhere: boolean | null;
 }
 export interface EducatorSourceData {
@@ -22,11 +27,15 @@ export interface EducatorSourceData {
   reimbursementsNotInWages: string; excludedSavingsBondInterest: string;
   nontaxableQualifiedTuitionProgramAmount: string; nontaxableCoverdellEarnings: string;
 }
-export const emptyEducatorSchool: EducatorSchoolData = { name: "", role: "", level: "", schoolEligible: null, hoursWorked: "" };
-export const emptyEducatorExpense: EducatorExpenseData = { sourceId: "", datePaid: "", description: "", category: "", amount: "", ordinaryAndNecessary: null, qualifyingUse: null, healthOrPhysicalEducation: null, athleticSupplies: null, deductedElsewhere: null };
+export const emptyEducatorSchool: EducatorSchoolData = { name: "", role: "", level: "", schoolEligible: null, hoursWorked: "", earlyChildhoodNonresidentChildrenUnder6: "", operatedAtPublicExpense: null, receivesFeePaymentOrGrant: null };
+export const emptyEducatorExpense: EducatorExpenseData = { sourceId: "", datePaid: "", description: "", category: "", amount: "", ordinaryAndNecessary: null, qualifyingUse: null, healthOrPhysicalEducation: null, athleticSupplies: null, deductedElsewhere: null, instructionalActivity: null, itemizedReimbursements: "", itemizedTaxFreeFunding: "" };
 export const emptyEducatorSource: EducatorSourceData = { accountHolder: "", taxYear: "", schoolYear: "", sourceFactsConfirmed: null, schools: [], expenses: [], reimbursementsNotInWages: "", excludedSavingsBondInterest: "", nontaxableQualifiedTuitionProgramAmount: "", nontaxableCoverdellEarnings: "" };
 
 export function buildEducatorSources(sources: EducatorSourceData[] | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, legacyAmount?: string) {
+  if (hasEnteredAmount(legacyAmount)) {
+    const error = amountError(legacyAmount, "saved educator net expenses");
+    if (error) throw new Error(error);
+  }
   if (!sources?.length) {
     if (hasEnteredAmount(legacyAmount) && parseGuidedCurrency(legacyAmount).gt(0)) throw new Error("Enter actual educator sources; a saved aggregate does not establish the owner or qualification.");
     return undefined;
@@ -36,18 +45,28 @@ export function buildEducatorSources(sources: EducatorSourceData[] | undefined, 
     if (error) throw new Error(error);
     return parseGuidedCurrency(value).toString();
   };
+  const childCount = (value: string | undefined) => {
+    if (!value?.trim()) return undefined;
+    if (!/^\d+$/.test(value.trim()) || !Number.isSafeInteger(Number(value))) throw new Error("Enter the actual nonnegative whole number of nonresident children under six.");
+    return Number(value);
+  };
   const actual = sources.map(source => ({
     accountHolder: source.accountHolder || undefined,
     taxYear: /^\d{4}$/.test(source.taxYear) ? Number(source.taxYear) : undefined,
     schoolYear: source.schoolYear, sourceFactsConfirmed: source.sourceFactsConfirmed ?? undefined,
-    schools: source.schools?.map(school => ({ name: school.name, role: school.role || undefined, level: school.level || undefined, schoolEligible: school.schoolEligible ?? undefined, hoursWorked: money(school.hoursWorked, "actual school-year hours") })),
-    expenses: source.expenses?.map(expense => ({ ...expense, category: expense.category || undefined, amount: money(expense.amount, "actual educator cost"), ordinaryAndNecessary: expense.ordinaryAndNecessary ?? undefined, qualifyingUse: expense.qualifyingUse ?? undefined, healthOrPhysicalEducation: expense.healthOrPhysicalEducation ?? undefined, athleticSupplies: expense.athleticSupplies ?? undefined, deductedElsewhere: expense.deductedElsewhere ?? undefined })),
+    schools: source.schools?.map(school => ({ name: school.name, role: school.role || undefined, level: school.level || undefined, schoolEligible: school.schoolEligible ?? undefined, hoursWorked: money(school.hoursWorked, "actual school-year hours"),
+      earlyChildhoodNonresidentChildrenUnder6: childCount(school.earlyChildhoodNonresidentChildrenUnder6), operatedAtPublicExpense: school.operatedAtPublicExpense ?? undefined, receivesFeePaymentOrGrant: school.receivesFeePaymentOrGrant ?? undefined })),
+    expenses: source.expenses?.map(expense => ({ ...expense, category: expense.category || undefined, amount: money(expense.amount, "actual educator cost"), ordinaryAndNecessary: expense.ordinaryAndNecessary ?? undefined, qualifyingUse: expense.qualifyingUse ?? undefined, healthOrPhysicalEducation: expense.healthOrPhysicalEducation ?? undefined, athleticSupplies: expense.athleticSupplies ?? undefined, deductedElsewhere: expense.deductedElsewhere ?? undefined,
+      instructionalActivity: expense.instructionalActivity ?? undefined,
+      itemizedReimbursements: hasEnteredAmount(expense.itemizedReimbursements) ? money(expense.itemizedReimbursements, "receipt reimbursements") : undefined,
+      itemizedTaxFreeFunding: hasEnteredAmount(expense.itemizedTaxFreeFunding) ? money(expense.itemizedTaxFreeFunding, "receipt tax-free funding") : undefined })),
     ...Object.fromEntries(educatorReductionFields.map(field => [field, money(source[field], field)])),
   }));
   const adjustments = AdjustmentsSchema.parse({ educatorExpenseSources: actual, educatorExpenses: hasEnteredAmount(legacyAmount) ? money(legacyAmount, "saved educator net expenses") : undefined });
   const year = taxYear ?? actual[0]?.taxYear;
   if (year !== 2025 && year !== 2026) throw new Error("Select and confirm the actual educator tax year.");
-  calculateEducatorExpensesDeduction(adjustments, filingStatus === "mfj" ? "married_filing_jointly" : "single", year);
+  const result = calculateEducatorExpensesDeduction(adjustments, filingStatus === "mfj" ? "married_filing_jointly" : "single", year);
+  if (year >= 2026 && !result.itemizedCalculationComplete) throw new Error("Complete the actual itemized educator facts, including instructional use and receipt funding; unknown is not zero.");
   return adjustments.educatorExpenseSources;
 }
 
