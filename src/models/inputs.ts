@@ -1415,6 +1415,7 @@ export const Form8889PriorYearRedeterminedLimitWorksheetSchema = z.object({
 });
 
 export const Form8889Schema = z.object({
+  useLastMonthRule: z.boolean().optional(), // Actual contribution-limit choice; omitted is unknown
   accountOwner: z.enum(["primary", "spouse"]).default("primary"),
   coverageByMonth: z.array(HsaCoverageSchema).length(12).default(defaultHsaCoverageByMonth),
   spouseFamilyCoverageMonths: z.array(z.number().int().min(1).max(12)).default([]),

@@ -1350,8 +1350,8 @@ describe("Form 8889 HSA contribution deduction", () => {
     expect(excusedTestingPeriodFailure.line20.toNumber()).toBe(0);
   });
 
-  it("Form 8889 Line 21 - additional tax applies only to the last-month-rule recapture amount", () => {
-    expect(testingPeriodFailure.line21.toNumber()).toBe(270);
+  it("Form 8889 Line 21 - additional tax applies to both recapture amounts", () => {
+    expect(testingPeriodFailure.line21.toNumber()).toBe(420);
   });
 
   it("Form 8889 Line 21 - excused testing-period failures do not create recapture tax", () => {

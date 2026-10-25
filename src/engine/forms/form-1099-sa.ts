@@ -448,6 +448,7 @@ export function mergeForm1099SAIntoForm8889Input(
   return {
     accountOwner: selectedAccountOwner ?? "primary",
     coverageByMonth: input?.coverageByMonth ?? DEFAULT_HSA_COVERAGE_BY_MONTH,
+    useLastMonthRule: input?.useLastMonthRule,
     spouseFamilyCoverageMonths: input?.spouseFamilyCoverageMonths ?? [],
     contributionsMade: input?.contributionsMade ?? "0",
     archerMSAContributions: input?.archerMSAContributions ?? "0",

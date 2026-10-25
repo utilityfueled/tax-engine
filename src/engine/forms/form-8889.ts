@@ -259,9 +259,8 @@ function calculateContributionLimitComputation(
 
     return total.plus(
       annualContributionLimitForCoverage(coverage, hsaLimits, age55OrOlder, marriedUsesLine7CatchUp)
-        .dividedBy(12)
     );
-  }, new Decimal(0));
+  }, new Decimal(0)).dividedBy(12);
   const lastMonthRuleAnnualLimit = eligibleOnDecemberFirst
     ? annualContributionLimitForCoverage(
       decemberCoverage as Exclude<HsaCoverage, "none">,
@@ -288,8 +287,8 @@ function calculateContributionLimitComputation(
       return total;
     }
 
-    return total.plus(hsaLimits.familyContributionLimit.dividedBy(12));
-  }, new Decimal(0));
+    return total.plus(hsaLimits.familyContributionLimit);
+  }, new Decimal(0)).dividedBy(12);
   const familyCoverageLine5 = Decimal.max(new Decimal(0), familyCoverageLine3.minus(line4));
   const otherContributionLimit = spouseAllocationApplies && !treatedAsFamilyCoverageForAllMonths
     ? Decimal.max(new Decimal(0), line5.minus(familyCoverageLine5))
@@ -389,8 +388,17 @@ export function calculateForm8889(
     filingStatus,
     input,
     getHsaContributionLimitConstants(constants),
-    true
+    input.useLastMonthRule !== false
   );
+  if (taxpayer.taxYear >= 2026 && input.useLastMonthRule === undefined) {
+    const monthlyMethod = calculateContributionLimitComputation(
+      ownerDateOfBirth, taxpayer.taxYear, filingStatus, input,
+      getHsaContributionLimitConstants(constants), false
+    );
+    if (!monthlyMethod.line8.eq(contributionLimitComputation.line8)) {
+      throw new Error("Form 8889 requires an actual last-month-rule choice when it changes the contribution limit");
+    }
+  }
   const {
     coverageType,
     age55OrOlder,
@@ -544,6 +552,10 @@ export function calculateForm8889(
   const hasManualRedeterminedLimit = input.lastMonthRuleRedeterminedLimit !== undefined;
   const hasSupportedRedeterminedLimitWorksheet = input.priorYearRedeterminedLimitWorksheet !== undefined;
   const hasRedeterminedLimitSupport = hasManualRedeterminedLimit || hasSupportedRedeterminedLimitWorksheet;
+  if (taxpayer.taxYear >= 2026 && d(input.lastMonthRuleContributions).gt(0)
+    && !testingPeriodFailureDueToDeathOrDisability && !hasRedeterminedLimitSupport) {
+    throw new Error("Form 8889 testing-period recapture requires the actual prior-year redetermined limit or worksheet");
+  }
   const line18RedeterminedLimit = input.lastMonthRuleRedeterminedLimit === undefined
     ? supportedPriorYearRedeterminedLimit
     : Decimal.max(new Decimal(0), d(input.lastMonthRuleRedeterminedLimit));
@@ -566,7 +578,7 @@ export function calculateForm8889(
     ? new Decimal(0)
     : Decimal.max(new Decimal(0), d(input.recaptureQualifiedFundingDistribution));
   const line20 = line18.plus(line19);
-  const line21 = line18.times(HSA_RECAPTURE_TAX_RATE);
+  const line21 = line20.times(HSA_RECAPTURE_TAX_RATE);
   const ownerAwareInputs = (inputs: Record<string, Decimal | string> = {}): Record<string, Decimal | string> => ({
     "Account owner": input.accountOwner,
     ...inputs,
@@ -598,6 +610,7 @@ export function calculateForm8889(
     age55OrOlder: age55OrOlder ? "true" : "false",
     filingStatus: taxpayer.filingStatus,
     marriedUsesLine7CatchUp: marriedUsesLine7CatchUp ? "true" : "false",
+    useLastMonthRule: input.useLastMonthRule === undefined ? "unknown_legacy_choice" : String(input.useLastMonthRule),
     eligibleOnDecemberFirst: eligibleOnDecemberFirst ? "true" : "false",
     decemberCoverage,
     spouseFamilyCoverageMonths: input.spouseFamilyCoverageMonths?.join(",") || "none",
@@ -645,6 +658,7 @@ export function calculateForm8889(
     ownerAwareInputs({
       eligibleFamilyMonths: line7EligibleFamilyMonths.toString(),
       marriedUsesLine7CatchUp: marriedUsesLine7CatchUp ? "true" : "false",
+      useLastMonthRule: input.useLastMonthRule === undefined ? "unknown_legacy_choice" : String(input.useLastMonthRule),
       eligibleOnDecemberFirst: eligibleOnDecemberFirst ? "true" : "false",
       decemberCoverage,
       spouseFamilyCoverageMonths: input.spouseFamilyCoverageMonths?.join(",") || "none",
@@ -796,8 +810,8 @@ export function calculateForm8889(
     "Line 19": line19,
     testingPeriodFailureDueToDeathOrDisability: testingPeriodFailureDueToDeathOrDisability ? "true" : "false",
   }));
-  audit.record("Form 8889", "21", "Additional tax on HSA recapture income", line21, "10% × Line 18", ownerAwareInputs({
-    "Line 18": line18,
+  audit.record("Form 8889", "21", "Additional tax on HSA recapture income", line21, "10% × Line 20", ownerAwareInputs({
+    "Line 20": line20,
     testingPeriodFailureDueToDeathOrDisability: testingPeriodFailureDueToDeathOrDisability ? "true" : "false",
   }));
 

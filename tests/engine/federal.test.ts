@@ -2272,14 +2272,14 @@ describe("Simple W-2 single filer", () => {
     const form8889Line21 = hsaRecaptureResult.allLines.find((line) => line.form === "Form 8889" && line.line === "21");
 
     expect(form8889Line20?.value.toNumber()).toBe(4200);
-    expect(form8889Line21?.value.toNumber()).toBe(270);
+    expect(form8889Line21?.value.toNumber()).toBe(420);
     expect(schedule1Line8f?.value.toNumber()).toBe(4200);
-    expect(schedule2Line17d?.value.toNumber()).toBe(270);
+    expect(schedule2Line17d?.value.toNumber()).toBe(420);
     expect(line8?.value.toNumber()).toBe(4200);
-    expect(line23?.value.toNumber()).toBe(270);
+    expect(line23?.value.toNumber()).toBe(420);
     expect(hsaRecaptureResult.otherIncome.toNumber()).toBe(4200);
     expect(hsaRecaptureResult.totalIncome.toNumber()).toBe(89200);
-    expect(hsaRecaptureResult.totalAdditionalTaxes.toNumber()).toBe(270);
+    expect(hsaRecaptureResult.totalAdditionalTaxes.toNumber()).toBe(420);
   });
 
   it("Form 1040 Lines 8 and 23 - HSA testing-period failure can auto-recompute the prior-year redetermined limit", () => {
