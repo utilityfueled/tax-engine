@@ -5,7 +5,7 @@
   "applicationCommit": "d32cb8cf3d607c643c4c7f7e1b845fcace61563f",
   "branch": "upgrade/2026-baseline",
   "releaseReady": false,
-  "evidenceBoundary": "Local synthetic checks only. No remote CI, staging, production, live provider evaluation, independent tax review or electronic submission.",
+  "evidenceBoundary": "Historical checks below apply only to applicationCommit d32cb8c. Active execution evidence is separate: local synthetic packages and remote CI diagnostics, no staging, live provider evaluation, independent human review or release qualification.",
   "runtime": {
     "node": "24.22.1",
     "pnpm": "10.34.8",
@@ -223,6 +223,18 @@
       "atomicLedgerPostgres": {
         "passed": 17,
         "scope": "agent-run disposable local PostgreSQL16"
+      },
+      "hostedPrivacyPostgres": {
+        "passed": 4,
+        "scope": "disposable PostgreSQL16 JSONB, same-ID owner isolation, legacy read sanitation and failure atomicity"
+      },
+      "billingBoundaries": {
+        "passed": 126,
+        "scope": "mocked provider and dependency failures; web types/scoped lint pass"
+      },
+      "analysisUploadPrivacy": {
+        "passed": 44,
+        "scope": "mocked local extraction and fetch; original filenames never sent"
       }
     },
     "externalInputsStillPending": [
@@ -245,7 +257,52 @@
       "AI routing/evaluation",
       "physical form versioning",
       "state gap analysis",
-      "full-suite coverage and release rehearsal"
-    ]
+      "full-suite coverage and release rehearsal",
+      "legacy hosted metadata retention migration and backup disposition; sanitized reads do not erase old rows"
+    ],
+    "latestIntegratedCommit": "2b4b012",
+    "latestCoverageDiagnostic": {
+      "status": "failed",
+      "passed": 15581,
+      "failed": 50,
+      "filesPassed": 502,
+      "filesFailed": 23,
+      "branchesPercent": "82.55",
+      "functionsPercent": "87.94",
+      "statementsPercent": "90.91",
+      "linesPercent": "91.88",
+      "evidence": ".local/upgrade-evidence/coverage-after-privacy.log",
+      "limitation": "Ran during concurrent source edits and focused testing. Law assertions and PDF timeouts must be resolved; not final evidence."
+    },
+    "recentPackages": {
+      "privacyHeaderRedaction": "2d16a94",
+      "hostedMetadataAllowlist": "9e9462b",
+      "postgresCi": "d4f4a0e",
+      "audited1040Sources": "f07de24",
+      "localAnalysisFilenames": "e910507",
+      "billingFailureBoundaries": "2b4b012",
+      "legacyScheduleHAssertions": "82ecebb",
+      "ctcIdentityFacts": "b85af42",
+      "vehicleTransitions": "8d7731c",
+      "energySourceFacts": "c3f922f"
+    },
+    "remoteCi": {
+      "commit": "e910507",
+      "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40156586696",
+      "status": "failed",
+      "passed": [
+        "frozen install",
+        "engine build",
+        "engine and contracts types",
+        "lint",
+        "spec references"
+      ],
+      "failed": [
+        "unit test assertions",
+        "generated inventory freshness"
+      ],
+      "coverage": "not reached",
+      "evidence": ".local/upgrade-evidence/ci-e910507-failed.log"
+    }
   }
 }

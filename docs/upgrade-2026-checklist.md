@@ -89,18 +89,67 @@ until the brief's criteria pass or only external actions remain.
 - Facts commits: `5d09daf`, `f312c2f`, `1d166e7`, `70f8d17`. Latest package has
   516 passing focused tests and web/contracts types. Remaining facts and federal
   eligibility integration are actively being implemented.
-- Recovery `6bebb6d`: 75 focused integration tests and one Chromium production-
-  build test pass, including original-byte equality after delete/reload/restore.
-  Agent review found reset retention, hosted local-return visibility and failed
-  server-delete handling; follow-up regression fixes are in progress.
+- Recovery `6bebb6d`, review corrections `937f4bf`: 84 focused tests and two
+  Chromium tests pass, including original-byte equality after delete/reload/
+  restore, reset retention, hosted local-return visibility and preserving local
+  data on failed cloud deletion. Independent human security review is pending.
 - Telemetry `3408c76`: 53 security tests, including real installed-SDK transport
   sanitization; no network telemetry in tests. Independent privacy review pending.
 - Runtime `31d1b1a`: trixie base and runtime package-tool removal; local arm64
   health/non-root/template smoke passes. 67 distinct OS advisories remain in the
   explicit register, acceptance pending, review deadline 2026-11-07. This image is
   intermediate and must be rebuilt/scanned from final code on target platforms.
-- Billing `0d90200`: exact atomic ledger, 17 disposable-Postgres tests pass.
-  Parent review requested explicit closure for investigated cost overruns; that
-  follow-up plus task routing/evaluation commits are in progress.
+- Billing `0d90200`, overrun reconciliation `a649c61`: exact atomic ledger,
+  19 disposable-Postgres tests pass. Task routing `d3778d8` removes legacy live
+  responder defaults and binds explanations to validated server audits; draft
+  corpus/account/P50 gates `c3909cf` retain no-promotion status.
+- PDFs `a9745e8`, `c6db09e`, `3f71d42`: 41 templates and 90 mappings physically
+  versioned under 2025; exact template hashes and strict field writes enforced.
+  Existing 1040 semantic mislocations corrected using official form positions.
+  908 full PDF tests plus four focused source-location/error tests pass; saved
+  canonical values/widget appearances and both synthetic rendered pages checked.
+  These remain historical review outputs, not qualified filing forms.
+- Additional federal `c5d01c4`, `1e9ad95`, `9abdf5d`, `f4c8a25`, `2998547`,
+  `c74f622` cover education identity, qualified PMI, section 68/QBI/AMT ordering,
+  AMT addbacks, SALT facts and historical precision/QCD corrections. Dependent
+  care `e2d93f0` has 67 focused passes; shared federal integration is in progress.
+- Facts `a70b823`, `2c1dfd9`, `45f96c0` add explicit charity/education eligibility,
+  extension/prior-year payments, IRA/alimony/household employee facts. Latest
+  coherent package: 470 guided/preview tests, types, lint and spec checks pass.
+- Diagnostic full coverage while tax packages were actively changing reports
+  82.22% branches and 89.38% functions. It has concurrent test failures and is
+  not a passing gate. All thresholds are unchanged; meaningful coverage work
+  and a clean full rerun remain required. Evidence: `current-coverage-gaps.log`.
 - Remote CI runs are being triggered by pushes. Superseded runs may be cancelled;
   no exact-final-commit CI success is claimed yet.
+
+## Latest integrated evidence and immediate work
+
+- Privacy commits `2d16a94`, `9e9462b`, `e910507`: complete name/header
+  redaction, metadata allowlist at both browser/network and PostgreSQL boundaries,
+  opaque upload names and response binding. Four real disposable-Postgres cases
+  verify JSONB content, owner isolation, legacy reads and failure atomicity.
+  Sanitized reads do not erase private content already present in legacy rows or
+  backups; a separately rehearsed retention migration remains required.
+- Billing boundaries `2b4b012`: 126 focused tests pass, web types and scoped lint
+  pass. Auth/DB/provider errors cannot return private upstream messages; malformed
+  workspace IDs reject before billing. These use mocks, not staging evidence.
+- 1040 source forwarding `f07de24`: 31 focused PDF tests pass for separately
+  audited wages/withholding and gross/net refund plus penalty. Existing mapping
+  coordinates were unchanged; no new visual qualification is claimed.
+- Federal source/care/QBI/payroll packages and vehicle transition work continue
+  in `upgrade-2026-federal-work.md` and `upgrade-2026-ai-work.md`; complete-facts
+  energy/identity UI and sparse parser hardening continue in facts evidence.
+- Latest diagnostic full coverage: 15,581 pass / 50 fail across 525 files;
+  branches 82.55%, functions 87.94%, statements 90.91%, lines 91.88%. It ran
+  during active source edits and concurrent tests. Required gates remain red.
+  Owners are reconciling source-based assertions; rerun with bounded workers to
+  avoid shared-machine PDF timeouts, without changing test timeouts or thresholds.
+- Remote CI at `e910507` failed unit assertions and generated inventory freshness;
+  frozen install, build, engine/contracts types, lint and spec references passed.
+  Coverage was not reached. Run: https://github.com/utilityfueled/tax-engine/actions/runs/40156586696.
+- Next parent work: real UI privacy/cancellation interactions, support/gap matrix,
+  separately gated complete-data export, legacy metadata cleanup rehearsal and
+  final image/Compose recovery. User demand, secure staging access, approved live
+  provider budget, final official forms and independent human reviews remain
+  external inputs; no promotion, filing, production deployment or publication.

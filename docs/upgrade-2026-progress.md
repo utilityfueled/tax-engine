@@ -402,3 +402,12 @@ are recorded per package. Agent review found recovery edge cases and ledger
 reconciliation work that is being fixed before final verification. No final
 coverage, complete tax-law qualification, live-provider evaluation, hosted staging,
 filing approval or final release-artifact qualification is implied by these commits.
+
+
+The latest active diagnostic and remote CI supersede no historical results:
+15,581 tests passed and 50 failed during concurrent implementation, with 82.55%
+branches and 87.94% functions. CI at `e910507` failed unit assertions and inventory
+freshness. Additional privacy, audited PDF forwarding and billing outage packages
+passed their focused checks; see the checklist and machine checkpoint for exact
+commit/evidence references. Staging, human review, live provider evaluation and
+final release qualification remain unproven. The goal is still active.
