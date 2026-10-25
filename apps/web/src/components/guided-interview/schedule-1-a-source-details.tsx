@@ -7,6 +7,7 @@ import {
 } from "@/lib/guided-schedule-1-a-facts";
 import { BooleanFact, TextFact } from "./fact-fields";
 import { CurrencyField } from "./currency-field";
+import { VehicleRefinancingDetails } from "./vehicle-refinancing-details";
 
 type Source = { sourceId: string; kind: "w2" | "nec"; accountHolder?: string; name: string };
 type ChoiceEntry = readonly [string, string];
@@ -88,7 +89,7 @@ export function Schedule1ASourceDetails({ data, compensationSources = [], busine
         {([["interestPaid", "Interest paid"], ["businessInterestDeducted", "Interest already deducted elsewhere"], ["nonqualifyingInterest", "Nonqualifying interest"]] as const).map(([field, text]) => <CurrencyField key={field} label={`${label}: ${text}`} value={entry[field]} onChange={value => update({ [field]: value })} />)}
         <Choice label={`${label}: Vehicle type`} value={entry.vehicleType} choices={[["car", "Car"], ["minivan", "Minivan"], ["van", "Van"], ["sport_utility_vehicle", "SUV"], ["pickup_truck", "Pickup truck"], ["motorcycle", "Motorcycle"]]} onChange={vehicleType => update({ vehicleType: vehicleType as typeof entry.vehicleType })} />
         {([["borrowerQualificationConfirmed", "Borrower qualification confirmed"], ["firstLien", "First lien"], ["originalUse", "Original use begins with borrower"], ["finalAssemblyUnitedStates", "Final assembly in the United States"], ["personalUse", "Purchased for personal use"], ["relatedParty", "Related-party loan"], ["lease", "Lease"], ["fleet", "Fleet purchase"], ["salvageOrScrap", "Salvage or scrap"], ["refinanced", "Refinanced loan"]] as const).map(([field, text]) => <BooleanFact key={field} label={`${label}: ${text}`} value={entry[field]} onChange={value => update({ [field]: value })} />)}
-      </div><button type="button" onClick={() => set({ vehicleLoans: data.vehicleLoans.filter((_, position) => position !== index) })}>{label}: Remove vehicle loan</button></fieldset>;
+      </div>{(entry.refinanced === true || entry.refinancingSources !== undefined) && <VehicleRefinancingDetails label={`${label} refinancing`} data={entry.refinancingSources} onChange={refinancingSources => update({ refinancingSources })} />}<button type="button" onClick={() => set({ vehicleLoans: data.vehicleLoans.filter((_, position) => position !== index) })}>{label}: Remove vehicle loan</button></fieldset>;
     })}
     <button type="button" onClick={() => set({ vehicleLoans: [...data.vehicleLoans, { ...emptyVehicleInterest }] })}>Add vehicle loan interest</button>
     <p className="guided-hint">Senior eligibility uses actual birth, death and SSN facts from About You, with the deduction computed after the income limit.</p>

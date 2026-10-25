@@ -1,3 +1,5 @@
+import { buildVehicleRefinancingSources, type VehicleRefinancingData } from "./guided-vehicle-refinancing";
+import { calculateVehicleRefinancing } from "@/engine/forms/vehicle-refinancing";
 import { Schedule1ASchema, type Schedule1AInput } from "@/models/inputs";
 import type { GuidedFlowState } from "./guided-interview-flow";
 import { amountError, hasEnteredAmount } from "./guided-required-facts";
@@ -16,6 +18,7 @@ export interface VehicleInterestData {
   vin: string; acquiredDate: string; loanOriginationDate: string; interestPaid: string; businessInterestDeducted: string; nonqualifyingInterest: string;
   firstLien: boolean | null; originalUse: boolean | null; finalAssemblyUnitedStates: boolean | null; personalUse: boolean | null;
   vehicleType: "" | Schedule1AInput["vehicleLoans"][number]["vehicleType"]; grossVehicleWeightRating: string;
+  refinancingSources?: VehicleRefinancingData;
   relatedParty: boolean | null; lease: boolean | null; fleet: boolean | null; salvageOrScrap: boolean | null; refinanced: boolean | null;
 }
 export interface Schedule1AData {
@@ -95,15 +98,17 @@ export function buildSchedule1AInput(data: Schedule1AData | undefined, state: Gu
   });
   const vehicleLoans = data.vehicleLoans.map(loan => {
     const owner = requireOwner(loan.owner); sourceYear(loan.sourceTaxYear, year);
-    if (loan.refinanced === true) throw new Error("Refinanced vehicle interest needs its original-loan qualification worksheet before this guided return can calculate it.");
+    if (loan.refinanced !== true && loan.refinancingSources !== undefined) throw new Error("Saved refinancing records conflict with the actual refinanced-loan answer.");
     const flags = Object.fromEntries((["borrowerQualificationConfirmed", "firstLien", "originalUse", "finalAssemblyUnitedStates", "personalUse", "relatedParty", "lease", "fleet", "salvageOrScrap", "refinanced"] as const).map(key => [key, flag(loan[key], key)]));
-    return { ...loan, ...flags, owner, sourceTaxYear: year, lenderName: text(loan.lenderName, "lender"), loanAccountReference: text(loan.loanAccountReference, "loan account reference"), sourceReference: text(loan.sourceReference, "loan source reference"), grossVehicleWeightRating: /^\d+$/.test(loan.grossVehicleWeightRating) ? Number(loan.grossVehicleWeightRating) : undefined, interestPaid: money(loan.interestPaid, "original loan interest").toFixed(), businessInterestDeducted: money(loan.businessInterestDeducted, "interest already deducted elsewhere").toFixed(), nonqualifyingInterest: money(loan.nonqualifyingInterest, "nonqualifying loan interest").toFixed() };
+    return { ...loan, ...flags, refinancingSources: loan.refinanced === true ? buildVehicleRefinancingSources(loan.refinancingSources) : undefined, owner, sourceTaxYear: year, lenderName: text(loan.lenderName, "lender"), loanAccountReference: text(loan.loanAccountReference, "loan account reference"), sourceReference: text(loan.sourceReference, "loan source reference"), grossVehicleWeightRating: /^\d+$/.test(loan.grossVehicleWeightRating) ? Number(loan.grossVehicleWeightRating) : undefined, interestPaid: money(loan.interestPaid, "original loan interest").toFixed(), businessInterestDeducted: money(loan.businessInterestDeducted, "interest already deducted elsewhere").toFixed(), nonqualifyingInterest: money(loan.nonqualifyingInterest, "nonqualifying loan interest").toFixed() };
   });
   const seniorOwners = data.seniorOwners.map(requireOwner); if (seniorOwners.length) buildStandardDeductionFacts(household?.standardDeductionFacts, state.segmentation.filingStatus, year, household);
   const excludedPuertoRicoIncome = money(data.excludedPuertoRicoIncome, "actual excluded PuertoRico income"); const form4563Exclusion = money(data.form4563Exclusion, "actual Form4563 exclusion");
   for (const [actual, other] of [[excludedPuertoRicoIncome, household?.childTaxCredit?.puertoRicoExcludedIncome], [form4563Exclusion, household?.childTaxCredit?.form4563ExcludedIncome], [excludedPuertoRicoIncome, state.sectionData["income-social-security"]?.puertoRicoIncomeExclusion], [form4563Exclusion, state.sectionData["income-social-security"]?.americanSamoaIncomeExclusion]] as const) if (hasEnteredAmount(other) && !actual.eq(money(other, "other supplied exclusion source"))) throw new Error("Reconcile the conflicting actual income exclusions across household worksheets.");
   const needsSpouse = [...employeeTips, ...businessTips, ...overtime, ...vehicleLoans].some(entry => entry.owner === "spouse") || seniorOwners.includes("spouse");
-  return Schedule1ASchema.parse({ sourceTaxYear: year, sourceReference: data.sourceReference, sourceFactsConfirmed: true, allSourcesIncluded: true, primarySsnEligible, spouseSsnEligible: needsSpouse ? flag(household?.spouse?.employmentValidSsnIssuedByDueDate, "spouse SSN eligibility in About You") : undefined, excludedPuertoRicoIncome: excludedPuertoRicoIncome.toFixed(), form4563Exclusion: form4563Exclusion.toFixed(), employeeTips, businessTips, overtime, vehicleLoans, seniorOwners });
+  const result = Schedule1ASchema.parse({ sourceTaxYear: year, sourceReference: data.sourceReference, sourceFactsConfirmed: true, allSourcesIncluded: true, primarySsnEligible, spouseSsnEligible: needsSpouse ? flag(household?.spouse?.employmentValidSsnIssuedByDueDate, "spouse SSN eligibility in About You") : undefined, excludedPuertoRicoIncome: excludedPuertoRicoIncome.toFixed(), form4563Exclusion: form4563Exclusion.toFixed(), employeeTips, businessTips, overtime, vehicleLoans, seniorOwners });
+  for (const loan of result.vehicleLoans) if (loan.refinanced) calculateVehicleRefinancing(loan, year);
+  return result;
 }
 export function schedule1AFactErrors(state: GuidedFlowState): Record<string, string> {
   try { buildSchedule1AInput(state.sectionData["additional-deductions"]?.schedule1A, state); return {}; }
