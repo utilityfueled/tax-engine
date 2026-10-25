@@ -1,0 +1,52 @@
+form: "Guided current Form172 sources"
+fullName: "Actual current-year regular and alternative-tax loss origin intake"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i172"
+sources:
+  - url: "https://www.irs.gov/instructions/i172"
+    section: "PartI business and nonbusiness classifications, complete records and current loss"
+    retrieved: "2026-10-25"
+  - url: "https://www.irs.gov/instructions/i6251"
+    section: "Line2f independent alternative-tax loss and line3 mortgage eligibility"
+    retrieved: "2026-10-25"
+  - url: "https://www.irs.gov/instructions/i8960"
+    section: "Originating investment loss and active nontrading business exclusion"
+    retrieved: "2026-10-25"
+notes: |
+  Source intake only. The existing canonical Form172 method computes current
+  regular/AMT losses, excess-business-loss additions and closing carries. No
+  current loss, business profit, deduction or closing-balance override is entered.
+  Actual current source year, complete records, owner/activity, participation,
+  at-risk and independent AMT facts must reconcile. The prior regular and AMT
+  history packets remain separately required, including explicit empty lists.
+  Unknown facts stay unknown. Farming, debt cancellation, estate, capital and
+  other unsupported origin methods remain explicit calculation boundaries.
+lines:
+  - line: "canonical"
+    description: "Current actual sources reach independently calculated loss origins"
+    formula: "Wages20000 plus interest5000 minus active ScheduleC expenses100000 gives AGI-75000; current regular origin80000, AMT75000 and investment-origin0. Medical2000 plus property20000 yields independently calculated AMT77000 without copying the regular amount."
+    testRef: "tests/guided-interview/guided-current-loss-origin.test.ts::routes actual current loss sources into regular and independent AMT origins"
+  - line: "unknown"
+    description: "Actual source and prior history must be complete before calculating"
+    formula: "Require original year/reference, complete source list, known qualification answers and independent AMT records; omission is never an empty list or false"
+    testRef: "tests/guided-interview/guided-current-loss-origin.test.ts::preserves unknown current sources and requires independent prior histories"
+  - line: "owner"
+    description: "Bind each current business to the entered actual owner and activity"
+    formula: "Require actual ScheduleC source identity/name/owner and material participation/all-at-risk evidence; reject unrelated, duplicate and unsupported business sources"
+    testRef: "tests/guided-interview/guided-current-loss-origin.test.ts::binds actual business identity and keeps unsupported origin methods explicit"
+  - line: "method-boundary"
+    description: "Unsupported actual deductions remain visible and cannot produce an origin preview"
+    formula: "Known charitable deductions require their current-origin attribution method; preserve the source and reject calculation. An explicit empty business list works when no business exists, and the public2026 gate remains closed."
+    testRef: "tests/guided-interview/guided-current-loss-origin.test.ts::preserves unsupported source methods and the closed year boundary"
+  - line: "confirmation"
+    description: "Reconfirm actual changed current sources without creating confirmation cycles"
+    formula: "Substantive household/income/deduction/history edits revoke current regular, business and AMT confirmations; metadata-only confirmation edits preserve independent records"
+    testRef: "tests/guided-interview/guided-current-loss-origin.test.ts::invalidates current source edits without inventing a calculated loss"
+  - line: "controls"
+    description: "Blank source lists and independent current AMT facts stay editable"
+    formula: "Add creates unanswered fields, explicit no-business action records[], known false and unknown remain distinct, and changes retain original source records"
+    testRef: "tests/apps/web/current-loss-origin-interactions.test.tsx::collects current origin facts without guessing losses or AMT answers"
+  - line: "persistence"
+    description: "Current source confirmations and unknowns survive desktop and mobile reload"
+    formula: "Persist original business and AMT references; edits invalidate source confirmations, confirmation-only actions do not cycle, and private source references stay out of request bodies"
+    testRef: "apps/web/tests/guided-current-loss-origin.spec.ts::preserves actual current loss source facts"

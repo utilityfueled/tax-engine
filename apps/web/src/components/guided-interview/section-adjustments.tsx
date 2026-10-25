@@ -2,6 +2,7 @@
 
 import { ForeignIncomeDetails } from "./foreign-income-details";
 import { NetOperatingLossDetails } from "./net-operating-loss-details";
+import { CurrentLossOriginDetails } from "./current-loss-origin-details";
 import { HealthInsuranceSourceDetails } from "./health-insurance-source-details";
 import type { HealthInsuranceSourceOption } from "@/lib/guided-health-insurance-facts";
 import type { MarketplacePolicyOption } from "@/lib/guided-marketplace-health-facts";
@@ -97,6 +98,7 @@ export function SectionAdjustments({
 
         <ForeignIncomeDetails data={current.foreignIncome} sources={foreignIncomeSources} onChange={foreignIncome => onDataChange({ ...current, foreignIncome })} />
         <NetOperatingLossDetails data={current.netOperatingLossSources} onChange={netOperatingLossSources => onDataChange({ ...current, netOperatingLossSources })} />
+        <CurrentLossOriginDetails data={current.currentLossOrigin} onChange={currentLossOrigin => onDataChange({ ...current, currentLossOrigin })} />
 
         <EducatorSourceDetails sources={current.educatorExpenseSources} taxYear={taxYear} onChange={educatorExpenseSources => onDataChange({ ...current, educatorExpenseSources })} />
 
