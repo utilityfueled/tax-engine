@@ -264,6 +264,7 @@ export function buildInterestInputs(entries: InterestEntryData[] | undefined) {
     foreignTaxPaid: toOptionalDecimalString(entry.foreignTaxPaid),
     foreignCountry: entry.foreignCountry?.trim() || undefined,
     taxExemptInterest: toOptionalDecimalString(entry.taxExemptInterest),
+    privateActivityBondInterest: toOptionalDecimalString(entry.privateActivityBondInterest),
   }));
 }
 
@@ -282,6 +283,7 @@ export function buildDividendInputs(entries: DividendEntryData[] | undefined) {
     collectiblesGain: toOptionalDecimalString(entry.collectiblesGain),
     nondividendDistributions: toOptionalDecimalString(entry.nondividendDistributions),
     exemptInterestDividends: toOptionalDecimalString(entry.exemptInterestDividends),
+    specifiedPrivateActivityBondInterest: toOptionalDecimalString(entry.specifiedPrivateActivityBondInterest),
   }));
 }
 

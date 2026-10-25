@@ -389,7 +389,7 @@ describe("Form 2555 — Federal integration", () => {
         foreignEarnedIncome: "100000",
         qualifyingDays: 365,
       }),
-      form1099Div: [{
+      form1099Div: [{ exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0",
         payer: "Foreign Broker",
         ordinaryDividends: "10000",
         qualifiedDividends: "10000",

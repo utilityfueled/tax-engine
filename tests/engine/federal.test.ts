@@ -352,7 +352,7 @@ describe("Simple W-2 single filer", () => {
         },
       ],
       form1099Div: [
-        {
+        { specifiedPrivateActivityBondInterest: "0",
           payer: "Global Equity Fund",
           ordinaryDividends: "1000",
           qualifiedDividends: "0",
@@ -7765,7 +7765,7 @@ describe("Retirement distributions through federal pipeline", () => {
         },
       ],
       form1099Int: [
-        {
+        { privateActivityBondInterest: "0",
           payer: "US Treasury",
           interestIncome: "0", // Actual Box1 excludes the separate Treasury Box3.
           federalWithheld: "0",
@@ -7889,7 +7889,7 @@ describe("Retirement distributions through federal pipeline", () => {
       ...simpleW2Fixture,
       w2s: [],
       form1099Int: [
-        {
+        { privateActivityBondInterest: "0",
           payer: "City Bond Fund",
           interestIncome: "0",
           federalWithheld: "0",
@@ -8168,7 +8168,7 @@ describe("Federal pipeline - special capital gain rates", () => {
         wages: "100000",
         federalWithheld: "15000",
       }],
-      form1099Div: [{
+      form1099Div: [{ specifiedPrivateActivityBondInterest: "0",
         payer: "REIT Fund",
         ordinaryDividends: "0",
         qualifiedDividends: "0",
@@ -8211,7 +8211,7 @@ describe("Federal pipeline - special capital gain rates", () => {
         wages: "100000",
         federalWithheld: "15000",
       }],
-      form1099Div: [{
+      form1099Div: [{ specifiedPrivateActivityBondInterest: "0",
         payer: "Gold Fund",
         ordinaryDividends: "0",
         qualifiedDividends: "0",
@@ -8366,7 +8366,7 @@ describe("Federal pipeline - special capital gain rates", () => {
         collectiblesGain: "5000", // Box 9c
         isPassiveActivity: false,
       }],
-      form1099Div: [{
+      form1099Div: [{ specifiedPrivateActivityBondInterest: "0",
         payer: "REIT Fund",
         ordinaryDividends: "0",
         qualifiedDividends: "0",
@@ -9196,7 +9196,7 @@ describe("Multiple income sources combined in total income", () => {
   it("total income combines wages + interest + dividends + capital gains", () => {
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
-      form1099Int: [{
+      form1099Int: [{ privateActivityBondInterest: "0",
         payer: "Bank",
         interestIncome: "1000",
         federalWithheld: "0",
@@ -9204,7 +9204,7 @@ describe("Multiple income sources combined in total income", () => {
         usSavingsBondInterest: "0",
         taxExemptInterest: "0",
       }],
-      form1099Div: [{
+      form1099Div: [{ specifiedPrivateActivityBondInterest: "0",
         payer: "Vanguard",
         ordinaryDividends: "2000",
         qualifiedDividends: "1500",
@@ -10131,13 +10131,13 @@ describe("K-1 Box 18 tax-exempt interest through federal pipeline", () => {
   it("K-1 Box 18 Code A aggregates with 1099-INT and 1099-DIV tax-exempt interest", () => {
     const result = calculateFederalTax({
       ...simpleW2Fixture,
-      form1099Int: [{
+      form1099Int: [{ privateActivityBondInterest: "0",
         payer: "Bank",
         interestIncome: "500",
         earlyWithdrawalPenalty: "0",
         taxExemptInterest: "2000",
       }],
-      form1099Div: [{
+      form1099Div: [{ specifiedPrivateActivityBondInterest: "0",
         payer: "Muni Fund",
         ordinaryDividends: "100",
         qualifiedDividends: "0",
@@ -10210,8 +10210,8 @@ describe("K-1 Box 18 tax-exempt interest through federal pipeline", () => {
         wages: "200000",
         federalWithheld: "40000",
       }],
-      form1099Int: [{ payer: "Broker", interestIncome: "5000" }],
-      form1099Div: [{ payer: "Fund", ordinaryDividends: "3000", qualifiedDividends: "2000" }],
+      form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0", payer: "Broker", interestIncome: "5000" }],
+      form1099Div: [{ exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0", payer: "Fund", ordinaryDividends: "3000", qualifiedDividends: "2000" }],
       form1098: [{ lender: "Bank", mortgageInterestReceived: "12000", outstandingMortgagePrincipal: "300000", propertyTax: "8000" }],
       donations: [{ type: "cash", amount: "5000" }],
       form4952: {
@@ -11694,7 +11694,7 @@ describe("REIT dividends and PTP income - federal integration", () => {
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
       form1099Div: [
-        {
+        { exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0",
           payer: "Vanguard REIT Index Fund",
           ordinaryDividends: "5000",
           qualifiedDividends: "500",
@@ -11714,9 +11714,9 @@ describe("REIT dividends and PTP income - federal integration", () => {
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
       form1099Div: [
-        { payer: "Vanguard REIT", ordinaryDividends: "3000", section199ADividends: "2500" },
-        { payer: "Schwab REIT", ordinaryDividends: "2000", section199ADividends: "1500" },
-        { payer: "Fidelity Growth", ordinaryDividends: "1000" }, // no REIT dividends
+        { exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0", payer: "Vanguard REIT", ordinaryDividends: "3000", section199ADividends: "2500" },
+        { exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0", payer: "Schwab REIT", ordinaryDividends: "2000", section199ADividends: "1500" },
+        { exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0", payer: "Fidelity Growth", ordinaryDividends: "1000" }, // no REIT dividends
       ],
     };
     const result = calculateFederalTax(fixture);
@@ -11729,7 +11729,7 @@ describe("REIT dividends and PTP income - federal integration", () => {
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
       form1099Div: [
-        { payer: "REIT Fund", ordinaryDividends: "3000", section199ADividends: "2000" },
+        { exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0", payer: "REIT Fund", ordinaryDividends: "3000", section199ADividends: "2000" },
       ],
       scheduleK1: [
         {
@@ -11771,7 +11771,7 @@ describe("REIT dividends and PTP income - federal integration", () => {
       ...simpleW2Fixture,
       form1099Nec: [{ payer: "Client", nonemployeeCompensation: "40000", federalWithheld: "0" }],
       form1099Div: [
-        { payer: "REIT Fund", ordinaryDividends: "8000", section199ADividends: "6000" },
+        { exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0", payer: "REIT Fund", ordinaryDividends: "8000", section199ADividends: "6000" },
       ],
       scheduleK1: [
         {
@@ -11798,7 +11798,7 @@ describe("REIT dividends and PTP income - federal integration", () => {
       ...simpleW2Fixture,
       w2s: [{ employer: { name: "Employer", ein: "12-3456789" }, wages: "250000", federalWithheld: "50000" }],
       form1099Div: [
-        { payer: "REIT Fund", ordinaryDividends: "30000", section199ADividends: "25000" },
+        { exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0", payer: "REIT Fund", ordinaryDividends: "30000", section199ADividends: "25000" },
       ],
     };
     const result = calculateFederalTax(fixture);
@@ -11839,7 +11839,7 @@ describe("REIT dividends and PTP income - federal integration", () => {
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
       form1099Div: [
-        { payer: "Bond Fund", ordinaryDividends: "3000" }, // no REIT dividends
+        { exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0", payer: "Bond Fund", ordinaryDividends: "3000" }, // no REIT dividends
       ],
     };
     const result = calculateFederalTax(fixture);
@@ -12532,7 +12532,7 @@ describe("Form 8615 kiddie tax through federal pipeline", () => {
         },
       ],
       form1099Int: [
-        {
+        { privateActivityBondInterest: "0",
           payer: "Trust Fund",
           interestIncome: "10000",
           federalWithheld: "0",

@@ -80,7 +80,7 @@ describe("official 2025 Form 1040 field locations", () => {
     const input = { ...simpleW2Fixture, w2s: [{ ...simpleW2Fixture.w2s[0], federalWithheld: "12000" }],
       form4137: { unreportedTipIncome: "1000" },
       form8919: { wagesNotReportedOnW2: "2000" },
-      form1099Int: [{ payer: "Synthetic bank", interestIncome: "100", federalWithheld: "25" }],
+      form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0", payer: "Synthetic bank", interestIncome: "100", federalWithheld: "25" }],
       formW2G: [{ payer: "Synthetic casino", reportableWinnings: "1000", federalWithheld: "150" }] };
     const form = (await PDFDocument.load(await (await fillForm1040(input, calculateFederalTax(input), blank)).save())).getForm();
     expect(form.getTextField(p1 + "f1_47[0]").getText()).toBe("85000"); // W-2s only

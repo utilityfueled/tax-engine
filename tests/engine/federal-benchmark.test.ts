@@ -45,8 +45,8 @@ const complexFixture: TaxYearInput = {
     { employer: { name: "Tech Co", ein: "12-1111111" }, wages: "200000", federalWithheld: "40000", socialSecurityWages: "176100", socialSecurityWithheld: "10918.20", medicareWages: "200000", medicareWithheld: "2900", stateTaxWithheld: "12000", stateWages: "200000", state: "OR" },
     { employer: { name: "Part-Time", ein: "12-2222222" }, wages: "80000", federalWithheld: "12000", socialSecurityWages: "80000", socialSecurityWithheld: "4960", medicareWages: "80000", medicareWithheld: "1160", stateTaxWithheld: "5000", stateWages: "80000", state: "OR" },
   ],
-  form1099Int: [{ payer: "Bank", interestIncome: "3000", federalWithheld: "0", earlyWithdrawalPenalty: "0", usSavingsBondInterest: "0", taxExemptInterest: "0" }],
-  form1099Div: [{ payer: "Fidelity", ordinaryDividends: "12000", qualifiedDividends: "9000", totalCapitalGainDistributions: "5000", federalWithheld: "0", foreignTaxPaid: "200", foreignCountry: "Various", section1250Gain: "0", section1202Gain: "0", collectiblesGain: "0", nondividendDistributions: "0", exemptInterestDividends: "0" }],
+  form1099Int: [{ privateActivityBondInterest: "0", payer: "Bank", interestIncome: "3000", federalWithheld: "0", earlyWithdrawalPenalty: "0", usSavingsBondInterest: "0", taxExemptInterest: "0" }],
+  form1099Div: [{ specifiedPrivateActivityBondInterest: "0", payer: "Fidelity", ordinaryDividends: "12000", qualifiedDividends: "9000", totalCapitalGainDistributions: "5000", federalWithheld: "0", foreignTaxPaid: "200", foreignCountry: "Various", section1250Gain: "0", section1202Gain: "0", collectiblesGain: "0", nondividendDistributions: "0", exemptInterestDividends: "0" }],
   form1099B: [{ broker: "Schwab", transactions: [{ description: "VOO", dateAcquired: "2021-01-15", dateSold: "2025-09-01", proceeds: "60000", costBasis: "40000", holdingPeriod: "long", adjustments: "0", basisReportedToIRS: true, washSale: false, washSaleDisallowed: "0" }] }],
   form1099Nec: [{ payer: "Client", nonemployeeCompensation: "40000", federalWithheld: "0" }],
   form1099Misc: [],
@@ -92,7 +92,7 @@ function buildStressFixture(): TaxYearInput {
 
   const form1099Div: Form1099Div[] = [];
   for (let i = 0; i < 30; i++) {
-    form1099Div.push({
+    form1099Div.push({ specifiedPrivateActivityBondInterest: "0",
       payer: `Fund ${i}`,
       ordinaryDividends: "1000",
       qualifiedDividends: "800",
@@ -111,7 +111,7 @@ function buildStressFixture(): TaxYearInput {
 
   const form1099Int: Form1099Int[] = [];
   for (let i = 0; i < 20; i++) {
-    form1099Int.push({
+    form1099Int.push({ privateActivityBondInterest: "0",
       payer: `Bank ${i}`,
       interestIncome: "500",
       federalWithheld: "25",

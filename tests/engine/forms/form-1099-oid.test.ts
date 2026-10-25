@@ -82,7 +82,7 @@ describe("Form 1099-OID Schedule B integration", () => {
 
   test("1099-OID interest aggregates with 1099-INT interest", () => {
     const result = calculateFederalTax(makeInput({
-      form1099Int: [{ payer: "Bank", interestIncome: "1500" }],
+      form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0", payer: "Bank", interestIncome: "1500" }],
       form1099OID: [makeOID("T-Bill", { originalIssueDiscount: "800" })],
     }));
 
@@ -253,7 +253,7 @@ describe("Form 1099-OID early withdrawal penalty", () => {
 
   test("1099-OID penalty aggregates with 1099-INT penalty", () => {
     const result = calculateFederalTax(makeInput({
-      form1099Int: [{ payer: "Bank A", interestIncome: "1000", earlyWithdrawalPenalty: "50" }],
+      form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0", payer: "Bank A", interestIncome: "1000", earlyWithdrawalPenalty: "50" }],
       form1099OID: [makeOID("CD Bank B", {
         originalIssueDiscount: "200",
         earlyWithdrawalPenalty: "30",
@@ -321,7 +321,7 @@ describe("Form 1099-OID tax-exempt OID", () => {
 
   test("tax-exempt OID aggregates with 1099-INT tax-exempt interest", () => {
     const result = calculateFederalTax(makeInput({
-      form1099Int: [{ payer: "Muni Fund", interestIncome: "0", taxExemptInterest: "3000" }],
+      form1099Int: [{ privateActivityBondInterest: "0", payer: "Muni Fund", interestIncome: "0", taxExemptInterest: "3000" }],
       form1099OID: [makeOID("Muni Bond", { taxExemptOID: "1000" })],
     }));
 
@@ -449,7 +449,7 @@ describe("Form 1099-OID realistic scenarios", () => {
   test("investor with T-bills and savings account", () => {
     // Common scenario: investor has T-bills (all OID) plus bank savings interest
     const result = calculateFederalTax(makeInput({
-      form1099Int: [{ payer: "Chase Savings", interestIncome: "1200" }],
+      form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0", payer: "Chase Savings", interestIncome: "1200" }],
       form1099OID: [
         makeOID("Treasury Direct — 26-week T-Bill", {
           originalIssueDiscount: "2400",
@@ -488,7 +488,7 @@ describe("Form 1099-OID realistic scenarios", () => {
 
   test("muni bond with tax-exempt OID and taxable bank interest", () => {
     const result = calculateFederalTax(makeInput({
-      form1099Int: [{ payer: "Bank", interestIncome: "800" }],
+      form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0", payer: "Bank", interestIncome: "800" }],
       form1099OID: [makeOID("City of Seattle GO Bond", {
         taxExemptOID: "1200",
       })],
@@ -542,7 +542,7 @@ describe("Form 1099-OID realistic scenarios", () => {
 
   test("mixed portfolio: 1099-INT, 1099-OID, K-1 interest all aggregate", () => {
     const result = calculateFederalTax(makeInput({
-      form1099Int: [{ payer: "Bank", interestIncome: "2000" }],
+      form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0", payer: "Bank", interestIncome: "2000" }],
       form1099OID: [
         makeOID("T-Bill", { originalIssueDiscount: "1500" }),
         makeOID("Corp Bond", { originalIssueDiscount: "800", otherPeriodicInterest: "1200" }),

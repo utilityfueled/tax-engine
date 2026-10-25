@@ -326,7 +326,7 @@ describe("HoH with capital gains — QDCG worksheet uses HoH brackets", () => {
     ],
     form1099Nec: [],
     form1099Div: [
-      {
+      { specifiedPrivateActivityBondInterest: "0",
         payer: "Brokerage",
         ordinaryDividends: "5000",
         qualifiedDividends: "5000",
@@ -554,7 +554,7 @@ describe("HoH NIIT threshold is $200K — same as single", () => {
       ],
       form1099Nec: [],
       form1099Int: [
-        {
+        { taxExemptInterest: "0", privateActivityBondInterest: "0",
           payer: "Bank",
           interestIncome: "20000",
           federalWithheld: "0",

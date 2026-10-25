@@ -122,6 +122,15 @@ export const W2Schema = z.object({
   locality: z.string().optional(), // Box 20 locality name
 });
 
+const PrivateActivityBondFactsSchema = z.object({
+  taxYear: z.union([z.literal(2025), z.literal(2026)]),
+  sourceId: z.string().trim().min(1),
+  recipientAmountsConfirmed: z.literal(true),
+  otherwiseAllowableDeduction: decimal,
+  deductionSourceReference: z.string().trim().min(1).optional(),
+  deductionAllowanceAndNoDuplicationConfirmed: z.literal(true).optional(),
+});
+
 export const Form1099IntSchema = z.object({
   payer: z.string(),
   payerTin: z.string().optional(), // Payer TIN shown on the recipient copy; used for IL Schedule IL-WIT Column B auto-attachment
@@ -133,6 +142,8 @@ export const Form1099IntSchema = z.object({
   foreignTaxPaid: optionalDecimal, // Box 6
   foreignCountry: z.string().optional(), // Box 7
   taxExemptInterest: optionalDecimal, // Box 8
+  privateActivityBondInterest: decimal.optional(), // Actual Box 9, included in Box 8; unknown is not zero.
+  privateActivityBondFacts: PrivateActivityBondFactsSchema.optional(),
   paDirectObligationInterest: optionalDecimal, // PA-specific allocation of exempt interest attributable to direct PA obligations
   stateWithheld: optionalDecimal, // Box 17 — state income tax withheld
   state: z.string().optional(), // Box 18 — state
@@ -154,6 +165,8 @@ export const Form1099DivSchema = z.object({
   foreignTaxPaid: optionalDecimal, // Box 7
   foreignCountry: z.string().optional(),
   exemptInterestDividends: optionalDecimal, // Box 12
+  specifiedPrivateActivityBondInterest: decimal.optional(), // Actual Box 13, already included in Box 12 and net of fund expenses.
+  privateActivityBondFacts: PrivateActivityBondFactsSchema.optional(),
   paExemptInterestDividendAllocation: optionalDecimal, // PA-specific allocation of Box 12 attributable to PA and U.S. government obligations
   stateWithheld: optionalDecimal, // Box 16 — state income tax withheld
   state: z.string().optional(), // Box 17 — state

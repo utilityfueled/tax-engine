@@ -47,7 +47,7 @@ const singleFixture: TaxYearInput = {
     },
   ],
   form1099Int: [
-    {
+    { privateActivityBondInterest: "0",
       payer: "Savings Bank",
       interestIncome: "1500",
       federalWithheld: "0",
@@ -57,7 +57,7 @@ const singleFixture: TaxYearInput = {
     },
   ],
   form1099Div: [
-    {
+    { specifiedPrivateActivityBondInterest: "0",
       payer: "Brokerage",
       ordinaryDividends: "3000",
       qualifiedDividends: "2500",
@@ -494,7 +494,7 @@ describe("Single filer - investment income triggering NIIT", () => {
       },
     ],
     form1099Div: [
-      {
+      { specifiedPrivateActivityBondInterest: "0",
         payer: "Vanguard",
         ordinaryDividends: "15000",
         qualifiedDividends: "12000",
@@ -509,7 +509,7 @@ describe("Single filer - investment income triggering NIIT", () => {
       },
     ],
     form1099Int: [
-      {
+      { privateActivityBondInterest: "0",
         payer: "HYSA",
         interestIncome: "5000",
         federalWithheld: "0",
@@ -641,7 +641,7 @@ describe("Single filer - capital gains and QDCG worksheet", () => {
       },
     ],
     form1099Div: [
-      {
+      { specifiedPrivateActivityBondInterest: "0",
         payer: "VTI Fund",
         ordinaryDividends: "2000",
         qualifiedDividends: "1800",
@@ -861,7 +861,7 @@ describe("Single filer - foreign tax credit", () => {
       },
     ],
     form1099Div: [
-      {
+      { specifiedPrivateActivityBondInterest: "0",
         payer: "International Fund",
         ordinaryDividends: "5000",
         qualifiedDividends: "4000",
@@ -1123,7 +1123,7 @@ describe("Single filer - very high income ($550K+ with surtaxes)", () => {
       },
     ],
     form1099Div: [
-      {
+      { specifiedPrivateActivityBondInterest: "0",
         payer: "Brokerage",
         ordinaryDividends: "50000",
         qualifiedDividends: "40000",

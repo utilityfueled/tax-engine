@@ -63,10 +63,10 @@ const fullyDeductibleFixture: TaxYearInput = {
     },
   ],
   form1099Int: [
-    { payer: "Brokerage Inc", amount: "8000" },
+    { payer: "Brokerage Inc", amount: "8000", taxExemptInterest: "0", privateActivityBondInterest: "0" },
   ],
   form1099Div: [
-    {
+    { exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0",
       payer: "Brokerage Inc",
       ordinaryDividends: "5000",
       qualifiedDividends: "3000",
@@ -186,10 +186,10 @@ const partiallyDisallowedFixture: TaxYearInput = {
     },
   ],
   form1099Int: [
-    { payer: "Bank A", amount: "2000" },
+    { payer: "Bank A", amount: "2000", taxExemptInterest: "0", privateActivityBondInterest: "0" },
   ],
   form1099Div: [
-    {
+    { exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0",
       payer: "Fund B",
       ordinaryDividends: "1500",
       qualifiedDividends: "800",

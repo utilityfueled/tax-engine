@@ -140,13 +140,13 @@ describe.sequential("Pennsylvania Full-Return Edge Cases", () => {
           state: "PA",
         },
       ],
-      form1099Int: [{
+      form1099Int: [{ privateActivityBondInterest: "0",
         payer: "PNC Bank",
         interestIncome: "900",
         usSavingsBondInterest: "300",
         taxExemptInterest: "200",
       }],
-      form1099Div: [{
+      form1099Div: [{ exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0",
         payer: "Vanguard",
         ordinaryDividends: "3500",
         qualifiedDividends: "2800",
@@ -319,7 +319,7 @@ describe.sequential("Pennsylvania Full-Return Edge Cases", () => {
         recipient: "Margaret Wilson",
         netBenefits: "22000",
       }],
-      form1099Int: [{
+      form1099Int: [{ privateActivityBondInterest: "0",
         payer: "Treasury Direct",
         interestIncome: "0",
         usSavingsBondInterest: "3000",
@@ -379,12 +379,12 @@ describe.sequential("Pennsylvania Full-Return Edge Cases", () => {
         stateTaxWithheld: "921",
         state: "PA",
       }],
-      form1099Int: [{
+      form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0",
         payer: "Savings Bank",
         interestIncome: "4000",
         usSavingsBondInterest: "1000",
       }],
-      form1099Div: [{
+      form1099Div: [{ exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0",
         payer: "Broker",
         ordinaryDividends: "8000",
         totalCapitalGainDistributions: "3000",
@@ -1014,13 +1014,13 @@ describe.sequential("Pennsylvania Full-Return Edge Cases", () => {
         employer: "PA Corp", wages: "50000", federalWithheld: "6000",
         stateWages: "50000", stateTaxWithheld: "1000", state: "PA",
       }],
-      form1099Int: [{
+      form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0",
         payer: "Bank",
         interestIncome: "5000",
         stateWithheld: "100",
         state: "PA",
       }],
-      form1099Div: [{
+      form1099Div: [{ exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0",
         payer: "Broker",
         ordinaryDividends: "3000",
         stateWithheld: "75",
@@ -1282,10 +1282,10 @@ describe.sequential("Pennsylvania Full-Return Edge Cases", () => {
         state: "PA",
       }],
       form1099Int: [
-        { payer: "PNC Savings", interestIncome: "850" },
-        { payer: "Treasury Direct", interestIncome: "0", usSavingsBondInterest: "2000" },
+        { taxExemptInterest: "0", privateActivityBondInterest: "0", payer: "PNC Savings", interestIncome: "850" },
+        { taxExemptInterest: "0", privateActivityBondInterest: "0", payer: "Treasury Direct", interestIncome: "0", usSavingsBondInterest: "2000" },
       ],
-      form1099Div: [{
+      form1099Div: [{ exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0",
         payer: "Vanguard Total Market",
         ordinaryDividends: "4200",
         qualifiedDividends: "3500",

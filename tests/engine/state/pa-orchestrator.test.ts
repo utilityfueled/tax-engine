@@ -283,8 +283,8 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
     it("PA orchestrator maps 1099-INT to interest", () => {
       const result = calculatePAReturn(makeInput({
         form1099Int: [
-          { payer: "Bank A", interestIncome: "1500" },
-          { payer: "Bank B", interestIncome: "800" },
+          { taxExemptInterest: "0", privateActivityBondInterest: "0", payer: "Bank A", interestIncome: "1500" },
+          { taxExemptInterest: "0", privateActivityBondInterest: "0", payer: "Bank B", interestIncome: "800" },
         ],
       }));
       expect(result.mappedIncome.interest.toNumber()).toBe(2300);
@@ -293,8 +293,8 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
     it("PA orchestrator maps 1099-DIV to dividends", () => {
       const result = calculatePAReturn(makeInput({
         form1099Div: [
-          { payer: "Fund A", ordinaryDividends: "3000" },
-          { payer: "Fund B", ordinaryDividends: "2000", qualifiedDividends: "1500" },
+          { exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0", payer: "Fund A", ordinaryDividends: "3000" },
+          { exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0", payer: "Fund B", ordinaryDividends: "2000", qualifiedDividends: "1500" },
         ],
       }));
       // PA taxes all dividends equally — uses ordinaryDividends (Box 1a)
@@ -583,7 +583,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
 
     it("PA orchestrator maps 1099-DIV capital gain distributions to dividends instead of net gains", () => {
       const result = calculatePAReturn(makeInput({
-        form1099Div: [{
+        form1099Div: [{ exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0",
           payer: "Vanguard Fund",
           ordinaryDividends: "2000",
           totalCapitalGainDistributions: "5000",
@@ -595,7 +595,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
 
     it("PA orchestrator computes dividends through PA Schedule B and taxes federally exempt out-of-state bond dividends", () => {
       const result = calculatePAReturn(makeInput({
-        form1099Div: [{
+        form1099Div: [{ specifiedPrivateActivityBondInterest: "0",
           payer: "National Municipal Fund",
           ordinaryDividends: "100",
           exemptInterestDividends: "80",
@@ -626,7 +626,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
 
     it("PA orchestrator defaults Schedule B Line 3 from Form 1099-DIV Pennsylvania exemption allocations", () => {
       const result = calculatePAReturn(makeInput({
-        form1099Div: [{
+        form1099Div: [{ specifiedPrivateActivityBondInterest: "0",
           payer: "National Municipal Fund",
           ordinaryDividends: "100",
           exemptInterestDividends: "80",
@@ -646,7 +646,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
 
     it("PA orchestrator lets explicit Schedule B Line 3 override the derived Form 1099-DIV allocation", () => {
       const result = calculatePAReturn(makeInput({
-        form1099Div: [{
+        form1099Div: [{ specifiedPrivateActivityBondInterest: "0",
           payer: "National Municipal Fund",
           ordinaryDividends: "100",
           exemptInterestDividends: "80",
@@ -1364,7 +1364,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
 
     it("PA orchestrator extracts 1099-INT PA state withholding", () => {
       const result = calculatePAReturn(makeInput({
-        form1099Int: [{
+        form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0",
           payer: "Chase Bank",
           interestIncome: "5000",
           stateWithheld: "154",
@@ -1376,7 +1376,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
 
     it("PA orchestrator ignores non-PA 1099-INT withholding", () => {
       const result = calculatePAReturn(makeInput({
-        form1099Int: [{
+        form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0",
           payer: "NY Bank",
           interestIncome: "8000",
           stateWithheld: "400",
@@ -1388,7 +1388,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
 
     it("PA orchestrator extracts 1099-DIV PA state withholding", () => {
       const result = calculatePAReturn(makeInput({
-        form1099Div: [{
+        form1099Div: [{ exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0",
           payer: "Schwab",
           ordinaryDividends: "10000",
           stateWithheld: "307",
@@ -1400,7 +1400,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
 
     it("PA orchestrator ignores non-PA 1099-DIV withholding", () => {
       const result = calculatePAReturn(makeInput({
-        form1099Div: [{
+        form1099Div: [{ exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0",
           payer: "CA Fund",
           ordinaryDividends: "6000",
           stateWithheld: "300",
@@ -1474,13 +1474,13 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
           stateWithheld: "307",
           state: "PA",
         }],
-        form1099Int: [{
+        form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0",
           payer: "Chase",
           interestIncome: "3000",
           stateWithheld: "92",
           state: "PA",
         }],
-        form1099Div: [{
+        form1099Div: [{ exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0",
           payer: "Schwab",
           ordinaryDividends: "2000",
           stateWithheld: "61",
@@ -1535,13 +1535,13 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
           },
         ],
         form1099Int: [
-          {
+          { taxExemptInterest: "0", privateActivityBondInterest: "0",
             payer: "PA Bank",
             interestIncome: "2000",
             stateWithheld: "61",
             state: "PA",
           },
-          {
+          { taxExemptInterest: "0", privateActivityBondInterest: "0",
             payer: "NY Bank",
             interestIncome: "3000",
             stateWithheld: "150",
@@ -1572,7 +1572,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
 
     it("PA orchestrator requires actual form1099Int source state before crediting withholding", () => {
       const input = makeInput({
-        form1099Int: [{
+        form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0",
           payer: "Local CU",
           interestIncome: "1500",
           stateWithheld: "46",
@@ -1587,7 +1587,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
 
     it("PA orchestrator requires actual form1099Div source state before crediting withholding", () => {
       const input = makeInput({
-        form1099Div: [{
+        form1099Div: [{ exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0",
           payer: "Fund Co",
           ordinaryDividends: "4000",
           stateWithheld: "123",
@@ -2053,7 +2053,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
           stateTaxWithheld: "2610",
           state: "PA",
         }],
-        form1099Int: [{ payer: "Bank", interestIncome: "250" }],
+        form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0", payer: "Bank", interestIncome: "250" }],
       }));
       // Compensation: $85,000; interest: $250
       // Total PA taxable: $85,250
@@ -2108,7 +2108,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
           stateTaxWithheld: "1842",
           state: "PA",
         }],
-        form1099Div: [{
+        form1099Div: [{ exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0",
           payer: "Vanguard",
           ordinaryDividends: "5000",
           qualifiedDividends: "4000",
@@ -2255,8 +2255,8 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
             stateTaxWithheld: "1535",
             state: "PA",
           }],
-          form1099Int: [{ payer: "Bank", interestIncome: "1000" }],
-          form1099Div: [{ payer: "Fund", ordinaryDividends: "2000" }],
+          form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0", payer: "Bank", interestIncome: "1000" }],
+          form1099Div: [{ exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0", payer: "Fund", ordinaryDividends: "2000" }],
           scheduleC: { grossReceipts: "30000" },
           form1099B: [{
             broker: "Broker",
@@ -2338,7 +2338,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
           stateTaxWithheld: "184",
           state: "PA",
         }],
-        form1099Int: [{
+        form1099Int: [{ privateActivityBondInterest: "0",
           payer: "Muni Fund",
           interestIncome: "0",
           taxExemptInterest: "3000",
@@ -3277,7 +3277,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
             localTaxWithheld: "850",
             state: "PA",
           }],
-          form1099Int: [{ payer: "Bank", interestIncome: "250" }],
+          form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0", payer: "Bank", interestIncome: "250" }],
         }),
         {
           localMunicipality: "Media Borough",
@@ -3508,11 +3508,11 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
             state: "PA",
           }],
           form1099Int: [
-            { payer: "Bank A", interestIncome: "1200" },
-            { payer: "Bank B", interestIncome: "800" },
+            { taxExemptInterest: "0", privateActivityBondInterest: "0", payer: "Bank A", interestIncome: "1200" },
+            { taxExemptInterest: "0", privateActivityBondInterest: "0", payer: "Bank B", interestIncome: "800" },
           ],
           form1099Div: [
-            { payer: "Vanguard", ordinaryDividends: "3500", qualifiedDividends: "2800", totalCapitalGainDistributions: "1500" },
+            { exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0", payer: "Vanguard", ordinaryDividends: "3500", qualifiedDividends: "2800", totalCapitalGainDistributions: "1500" },
           ],
           form1099B: [{
             broker: "Schwab",
@@ -3795,7 +3795,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
             { payerName: "SSA", netBenefits: "24000" },
           ],
           form1099Int: [
-            { payer: "Credit Union", interestIncome: "350" },
+            { taxExemptInterest: "0", privateActivityBondInterest: "0", payer: "Credit Union", interestIncome: "350" },
           ],
         }),
       );
@@ -3850,7 +3850,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
             repairs: "4000",
             depreciation: "5000",
           }],
-          form1099Int: [{ payer: "Savings", interestIncome: "500" }],
+          form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0", payer: "Savings", interestIncome: "500" }],
         }),
       );
 
@@ -4392,7 +4392,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
   describe.sequential("US Government Interest Exclusion", () => {
     it("PA orchestrator excludes US government interest from Class 2", () => {
       const result = calculatePAReturn(makeInput({
-        form1099Int: [{
+        form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0",
           payer: "Treasury Direct",
           interestIncome: "2000",
           usSavingsBondInterest: "3000", // Box 3: separate US government interest
@@ -4405,7 +4405,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
 
     it("PA orchestrator excludes all interest when entirely from US government", () => {
       const result = calculatePAReturn(makeInput({
-        form1099Int: [{
+        form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0",
           payer: "Treasury Direct",
           interestIncome: "0",
           usSavingsBondInterest: "8000",
@@ -4419,7 +4419,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
 
     it("PA orchestrator handles no US government interest (Box 3 absent)", () => {
       const result = calculatePAReturn(makeInput({
-        form1099Int: [{
+        form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0",
           payer: "First Bank",
           interestIncome: "1200",
           // usSavingsBondInterest not set → defaults to 0
@@ -4432,9 +4432,9 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
     it("PA orchestrator sums US government interest across multiple 1099-INTs", () => {
       const result = calculatePAReturn(makeInput({
         form1099Int: [
-          { payer: "Treasury Direct", interestIncome: "0", usSavingsBondInterest: "3000" },
-          { payer: "First Bank", interestIncome: "1500", usSavingsBondInterest: "500" },
-          { payer: "Credit Union", interestIncome: "1000" }, // no Box 3
+          { taxExemptInterest: "0", privateActivityBondInterest: "0", payer: "Treasury Direct", interestIncome: "0", usSavingsBondInterest: "3000" },
+          { taxExemptInterest: "0", privateActivityBondInterest: "0", payer: "First Bank", interestIncome: "1500", usSavingsBondInterest: "500" },
+          { taxExemptInterest: "0", privateActivityBondInterest: "0", payer: "Credit Union", interestIncome: "1000" }, // no Box 3
         ],
       }));
       // Gross interest: 3000 + 2000 + 1000 = 6000
@@ -4454,7 +4454,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
           stateTaxWithheld: "154",
           state: "PA",
         }],
-        form1099Int: [{
+        form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0",
           payer: "Treasury Direct",
           interestIncome: "0",
           usSavingsBondInterest: "2000",
@@ -4471,7 +4471,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
       // Without exclusion: interest = 10000, tax = 10000 × 3.07% = $307
       // With exclusion: interest = 10000 - 6000 = 4000, tax = 4000 × 3.07% = $123
       const result = calculatePAReturn(makeInput({
-        form1099Int: [{
+        form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0",
           payer: "Treasury Direct",
           interestIncome: "4000",
           usSavingsBondInterest: "6000",
@@ -4483,7 +4483,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
 
     it("PA orchestrator US gov interest does not affect K-1 interest", () => {
       const result = calculatePAReturn(makeInput({
-        form1099Int: [{
+        form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0",
           payer: "Treasury Direct",
           interestIncome: "1000",
           usSavingsBondInterest: "2000",
@@ -4503,7 +4503,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
 
     it("PA orchestrator US gov interest combined with early IRA 1099-R interest", () => {
       const result = calculatePAReturn(makeInput({
-        form1099Int: [{
+        form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0",
           payer: "Treasury Direct",
           interestIncome: "0",
           usSavingsBondInterest: "4000",
@@ -4772,7 +4772,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
           stateTaxWithheld: "1535",
           state: "PA",
         }],
-        form1099Int: [{
+        form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0",
           payer: "Treasury Direct",
           interestIncome: "2000",
           usSavingsBondInterest: "4000",
@@ -4803,7 +4803,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
 
     it("PA orchestrator retiree with Treasury interest and PA lottery cash owes tax on the lottery", () => {
       const result = calculatePAReturn(makeInput({
-        form1099Int: [{
+        form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0",
           payer: "Treasury Direct",
           interestIncome: "0",
           usSavingsBondInterest: "12000",
@@ -4841,7 +4841,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
           stateTaxWithheld: "123",
           state: "PA",
         }],
-        form1099Int: [{
+        form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0",
           payer: "Treasury Direct",
           interestIncome: "0",
           usSavingsBondInterest: "3000", // All US gov → excluded
@@ -4876,7 +4876,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
           stateTaxWithheld: "92",
           state: "PA",
         }],
-        form1099Int: [{
+        form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0",
           payer: "Treasury Direct",
           interestIncome: "0",
           usSavingsBondInterest: "2000",
@@ -6279,7 +6279,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
     it("PA orchestrator computes interest through PA Schedule A with Pennsylvania pass-through reclassification", () => {
       const result = calculatePAReturn(makeInput({
         form1099Int: [
-          {
+          { privateActivityBondInterest: "0",
             payer: "TreasuryDirect",
             interestIncome: "900",
             taxExemptInterest: "40",
@@ -6344,7 +6344,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
     it("PA orchestrator defaults Schedule A Line 6 from Form 1099-INT Pennsylvania direct-obligation allocations", () => {
       const result = calculatePAReturn(makeInput({
         form1099Int: [
-          {
+          { privateActivityBondInterest: "0",
             payer: "Pennsylvania Municipal Fund",
             interestIncome: "190",
             taxExemptInterest: "80",
@@ -6365,12 +6365,12 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
     it("PA orchestrator defaults Schedule A Line 8 from supported Form 1099-INT forfeited-interest penalties without over-deducting interest", () => {
       const result = calculatePAReturn(makeInput({
         form1099Int: [
-          {
+          { taxExemptInterest: "0", privateActivityBondInterest: "0",
             payer: "First Bank",
             interestIncome: "40",
             earlyWithdrawalPenalty: "60",
           },
-          {
+          { taxExemptInterest: "0", privateActivityBondInterest: "0",
             payer: "Second Bank",
             interestIncome: "10",
             earlyWithdrawalPenalty: "5",

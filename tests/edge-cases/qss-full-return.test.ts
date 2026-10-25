@@ -59,7 +59,7 @@ const qssFixture: TaxYearInput = {
     },
   ],
   form1099Int: [
-    {
+    { privateActivityBondInterest: "0",
       payer: "First National Bank",
       interestIncome: "1500",
       federalWithheld: "0",
@@ -69,7 +69,7 @@ const qssFixture: TaxYearInput = {
     },
   ],
   form1099Div: [
-    {
+    { specifiedPrivateActivityBondInterest: "0",
       payer: "Schwab Index Fund",
       ordinaryDividends: "2000",
       qualifiedDividends: "1200",
@@ -964,7 +964,7 @@ describe("QSS with foreign tax credit", () => {
     ],
     form1099Int: [],
     form1099Div: [
-      {
+      { specifiedPrivateActivityBondInterest: "0",
         payer: "Vanguard International Fund",
         ordinaryDividends: "8000",
         qualifiedDividends: "5000",
@@ -1157,14 +1157,14 @@ describe("QSS at very high income ($500K+) — multiple surtaxes", () => {
       },
     ],
     form1099Int: [
-      {
+      { taxExemptInterest: "0", privateActivityBondInterest: "0",
         payer: "Treasury Direct",
         interestIncome: "10000",
         federalWithheld: "0",
       },
     ],
     form1099Div: [
-      {
+      { specifiedPrivateActivityBondInterest: "0",
         payer: "Vanguard Total Market",
         ordinaryDividends: "15000",
         qualifiedDividends: "12000",
@@ -1312,14 +1312,14 @@ describe("QSS with only investment income — no earned income", () => {
     },
     w2s: [],
     form1099Int: [
-      {
+      { taxExemptInterest: "0", privateActivityBondInterest: "0",
         payer: "Bank of America",
         interestIncome: "30000",
         federalWithheld: "3000",
       },
     ],
     form1099Div: [
-      {
+      { specifiedPrivateActivityBondInterest: "0",
         payer: "Vanguard Dividend Fund",
         ordinaryDividends: "25000",
         qualifiedDividends: "20000",

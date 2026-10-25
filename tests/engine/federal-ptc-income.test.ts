@@ -14,7 +14,7 @@ it("uses canonical tax-exempt interest and nontaxable benefits instead of a favo
     const input = TaxYearInputSchema.parse({ ...simpleW2Fixture, taxpayer: { ...simpleW2Fixture.taxpayer, taxYear: year },
       w2s: [{ ...simpleW2Fixture.w2s[0], wages: "50000" }], formSSA1099: [{ recipient: "primary", netBenefits: "20000", federalWithheld: "0" }],
       socialSecurityFacts: { puertoRicoIncomeExclusion: "0", americanSamoaIncomeExclusion: "0", sourceFactsConfirmed: true },
-      form1099Int: [{ payer: "Actual exempt interest source", interestIncome: "0", taxExemptInterest: "1000" }],
+      form1099Int: [{ privateActivityBondInterest: "0", payer: "Actual exempt interest source", interestIncome: "0", taxExemptInterest: "1000" }],
       form1095A: [{ taxYear: year, marketplace: "Actual Marketplace", policyNumber: "ACTUAL-1", monthlyPremiums: months }],
       form8962: { taxFamilySize: 1, fplRegion: "contiguous", taxpayerModifiedAGI: "50000", requiredFilingDependentsModifiedAGI: "0",
         householdFactsConfirmed: true, canBeClaimedAsDependent: false, belowPovertyException: "none", coverageFactsConfirmed: true,
@@ -43,7 +43,7 @@ it("counts a child election in the actual dependent worksheet without duplicatin
   const input = TaxYearInputSchema.parse({ ...simpleW2Fixture,
     taxpayer: { ...simpleW2Fixture.taxpayer, dependents: [{ firstName: "Child", lastName: "Doe", ssn: "321-54-6789", dateOfBirth: "2008-05-10", relationship: "child", monthsLivedWithYou: 12, qualifiesForCTC: false }] },
     w2s: [{ ...simpleW2Fixture.w2s[0], wages: "20000" }],
-    form1099Int: [{ payer: "Parent source", interestIncome: "0", taxExemptInterest: "1000" }],
+    form1099Int: [{ privateActivityBondInterest: "0", payer: "Parent source", interestIncome: "0", taxExemptInterest: "1000" }],
     form8814: [{ taxableInterest: "4000", taxExemptInterest: "500", ordinaryDividends: "0", qualifiedDividends: "0", capitalGainDistributions: "0",
       amtSources: { taxYear: 2025, allStatementsConfirmed: true, otherwiseAllowableDeduction: "0", statements: [
         { sourceId: "synthetic-child-bank", form: "1099-INT", taxExemptInterest: "500", specifiedPrivateActivityBondInterest: "0" },

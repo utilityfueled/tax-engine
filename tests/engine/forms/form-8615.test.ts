@@ -45,7 +45,7 @@ function makeFederalInput(form8615Overrides?: Partial<Form8615Input>, extraInput
       dependents: [],
     },
     w2s: [],
-    form1099Int: [{ payer: "Bank", interestIncome: "5000" }],
+    form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0", payer: "Bank", interestIncome: "5000" }],
     form1099Div: [],
     form1099B: [],
     form1099Nec: [],
@@ -652,7 +652,7 @@ describe("Form 8615 — Tax for Certain Children Who Have Unearned Income", () =
       parentTaxableIncome: "200000",
       parentFilingStatus: "single",
     }, {
-      form1099Int: [{ payer: "Trust Fund", interestIncome: "25000" }],
+      form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0", payer: "Trust Fund", interestIncome: "25000" }],
     }));
 
     expect(result.form8615).toBeDefined();
@@ -668,7 +668,7 @@ describe("Form 8615 — Tax for Certain Children Who Have Unearned Income", () =
       parentTaxableIncome: "200000",
       parentFilingStatus: "single",
     }, {
-      form1099Int: [{ payer: "Trust Fund", interestIncome: "25000" }],
+      form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0", payer: "Trust Fund", interestIncome: "25000" }],
     }));
 
     const form8615Lines = result.allLines.filter(l => l.form === "8615");

@@ -205,12 +205,12 @@ describe("NIIT - retiree with investment income only", () => {
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
       w2s: [],
-      form1099Int: [{
+      form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0",
         payer: "Treasury Bonds",
         interestIncome: "80000",
         federalWithheld: "0",
       }],
-      form1099Div: [{
+      form1099Div: [{ specifiedPrivateActivityBondInterest: "0",
         payer: "Index Fund",
         ordinaryDividends: "60000",
         qualifiedDividends: "45000",
@@ -235,12 +235,12 @@ describe("NIIT - retiree with investment income only", () => {
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
       w2s: [],
-      form1099Int: [{
+      form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0",
         payer: "Banks",
         interestIncome: "120000",
         federalWithheld: "0",
       }],
-      form1099Div: [{
+      form1099Div: [{ specifiedPrivateActivityBondInterest: "0",
         payer: "Brokerage",
         ordinaryDividends: "100000",
         qualifiedDividends: "75000",
@@ -324,7 +324,7 @@ describe("NIIT - capital loss impact on NIIT base", () => {
           },
         ],
       }],
-      form1099Int: [{
+      form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0",
         payer: "Bank",
         interestIncome: "5000",
         federalWithheld: "0",
@@ -1211,7 +1211,7 @@ describe("NIIT - passive losses reduce net investment income", () => {
         medicareWages: "250000",
         medicareWithheld: "3625",
       }],
-      form1099Int: [{
+      form1099Int: [{ privateActivityBondInterest: "0",
         payer: "Bank of America",
         interestIncome: "20000",
         earlyWithdrawalPenalty: "0",
@@ -1296,7 +1296,7 @@ describe("NIIT - signed capital netting (Form8960 line5a)", () => {
         medicareWages: "250000",
         medicareWithheld: "3625",
       }],
-      form1099Int: [{
+      form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0",
         payer: "Bank",
         interestIncome: "20000",
         federalWithheld: "0",
@@ -1360,7 +1360,7 @@ describe("NIIT - signed capital netting (Form8960 line5a)", () => {
         medicareWages: "250000",
         medicareWithheld: "3625",
       }],
-      form1099Int: [{
+      form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0",
         payer: "Bank",
         interestIncome: "20000",
         federalWithheld: "0",

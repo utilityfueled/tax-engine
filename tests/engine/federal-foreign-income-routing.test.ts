@@ -24,7 +24,7 @@ describe("Foreign income return routing",()=>{
   it("limits preferential gains to actual taxable income before foreign stacking",()=>{
     const f=sourceFacts();
     const form2555=sourceFacts({foreignEarnedIncome:"120000",employerProvidedForeignEarnedIncome:"120000",partIV:{...f.partIV,wages:"120000"},incomeSources:{...f.incomeSources,foreignEmploymentIncomeIncludedOnW2:"120000"}});
-    const result=calculateFederalTax({...simpleW2Fixture,w2s:[{...simpleW2Fixture.w2s[0],wages:"120000"}],form1099Div:[{payer:"Synthetic",ordinaryDividends:"30000",qualifiedDividends:"30000"}],form2555});
+    const result=calculateFederalTax({...simpleW2Fixture,w2s:[{...simpleW2Fixture.w2s[0],wages:"120000"}],form1099Div:[{ exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0",payer:"Synthetic",ordinaryDividends:"30000",qualifiedDividends:"30000"}],form2555});
     expect(result.taxableIncome.toString()).toBe("14250");
     expect(result.ordinaryTax.toString()).toBe("0");
     expect(result.capitalGainsTax.toString()).toBe("2138");

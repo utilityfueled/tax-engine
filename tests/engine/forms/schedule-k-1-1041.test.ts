@@ -72,7 +72,7 @@ describe("K-1 Form 1041 income routing", () => {
 
   test("K-1 1041 Box 2b qualified dividends flow to Form 1040 Line 3a", () => {
     const result = calculateFederalTax(makeInput({
-      form1099Div: [{ payer: "Brokerage", ordinaryDividends: "2000", qualifiedDividends: "1500" }],
+      form1099Div: [{ exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0", payer: "Brokerage", ordinaryDividends: "2000", qualifiedDividends: "1500" }],
       scheduleK1Form1041: [{
         estateTrustName: "Grandma Trust",
         estateTrustEIN: "98-7654321",
@@ -160,7 +160,7 @@ describe("K-1 Form 1041 income routing", () => {
 
   test("K-1 1041 interest aggregates with 1099-INT and partnership K-1 interest", () => {
     const result = calculateFederalTax(makeInput({
-      form1099Int: [{ payer: "Bank", interestIncome: "1000" }],
+      form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0", payer: "Bank", interestIncome: "1000" }],
       scheduleK1: [{
         partnershipName: "ABC LP",
         partnershipEIN: "66-6666666",
@@ -437,7 +437,7 @@ describe("K-1 Form 1041 deductions and other items", () => {
 
   test("K-1 1041 tax-exempt interest aggregates with 1099-INT and partnership K-1", () => {
     const result = calculateFederalTax(makeInput({
-      form1099Int: [{ payer: "Bank", interestIncome: "1000", taxExemptInterest: "500" }],
+      form1099Int: [{ privateActivityBondInterest: "0", payer: "Bank", interestIncome: "1000", taxExemptInterest: "500" }],
       scheduleK1: [{
         partnershipName: "LP",
         partnershipEIN: "20-2020202",
@@ -678,7 +678,7 @@ describe("K-1 Form 1041 Section 199A QBI (Box 14 Code I)", () => {
   test("K-1 1041 REIT dividends aggregate with 1099-DIV REIT dividends", () => {
     const result = calculateFederalTax(makeInput({
       w2s: [{ ...simpleW2Fixture.w2s[0], wages: "60000", federalWithheld: "9000" }],
-      form1099Div: [{
+      form1099Div: [{ exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0",
         payer: "Vanguard REIT Fund",
         ordinaryDividends: "5000",
         qualifiedDividends: "0",

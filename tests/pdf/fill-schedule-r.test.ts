@@ -63,7 +63,7 @@ const singleElderlyFixture: TaxYearInput = {
   },
   w2s: [],
   form1099Int: [
-    { payer: "Community Bank", amount: "1000" },
+    { payer: "Community Bank", amount: "1000", taxExemptInterest: "0", privateActivityBondInterest: "0" },
   ],
   form1099Div: [],
   form1099B: [],
@@ -185,7 +185,7 @@ const mfjBothElderlyFixture: TaxYearInput = {
   },
   w2s: [],
   form1099Int: [
-    { payer: "Credit Union", amount: "1500" },
+    { payer: "Credit Union", amount: "1500", taxExemptInterest: "0", privateActivityBondInterest: "0" },
   ],
   form1099Div: [],
   form1099B: [],

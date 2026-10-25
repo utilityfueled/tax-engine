@@ -118,6 +118,7 @@ import { calculateForm4952 } from "./forms/form-4952.js";
 import { calculateForm8615 } from "./forms/form-8615.js";
 import { aggregateForm8814Results } from "./forms/form-8814.js";
 import { calculateForm8814AmtSources } from "./forms/form-8814-amt-sources.js";
+import { calculateForm6251BondSources } from "./forms/form-6251-bond-sources.js";
 import { calculateScheduleF } from "./schedules/schedule-f.js";
 import { calculateForm461 } from "./forms/form-461.js";
 import type { AggregatedForm8814 } from "./forms/form-8814.js";
@@ -565,6 +566,11 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
 
   const form1099OID = calculateForm1099OID(input.form1099OID ?? [], year);
   audit.merge(form1099OID.lines);
+  const form6251BondSources = calculateForm6251BondSources(input.form1099Int, input.form1099Div, year, filingStatus,
+    [...(input.form1099OID ?? []).flatMap(source => source.sourceId ? [source.sourceId] : []),
+      ...(input.form8814 ?? []).flatMap(child => child.amtSources?.statements.map(source => source.sourceId) ?? [])],
+    form1099OID.privateActivityBondInterest.toFixed());
+  audit.merge(form6251BondSources.lines);
   // Line2a includes actual source-classified exempt OID and stated interest.
   const taxExemptInterest = sum(
     intAgg.taxExemptInterest,
@@ -2905,7 +2911,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
         ? deductionUsed === "itemized" ? form4952.line8.minus(form4952Amt.line8) : d("0")
         : undefined,
       depletionAdjustment: k1AmtDepletion,
-      specifiedPrivateActivityBondInterest: form1099OID.privateActivityBondInterest.plus(form8814AmtSources.privateActivityBondInterest),
+      specifiedPrivateActivityBondInterest: form6251BondSources.privateActivityBondInterest.plus(form8814AmtSources.privateActivityBondInterest),
       dispositionAdjustment: k1AmtDisposition,
       depreciationAdjustment: k1AmtDepreciation,
       // IRC 56(b)(1)(E): restore the section 68 amount only when itemizing.
