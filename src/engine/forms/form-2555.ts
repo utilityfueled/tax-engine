@@ -42,12 +42,13 @@ const PART_IV = {
   otherEarnedIncome: "23", section119MealsAndLodging: "25",
 } as const;
 
-function amount(value: string | undefined, name: string, required = true): Decimal {
+function sourceAmount(value: string | undefined, name: string, required = true): Decimal {
   if (value === undefined && required) throw new Error(`Form2555 requires actual ${name}`);
   const result = d(value ?? "0");
   if (!result.isFinite() || result.isNegative()) throw new Error(`Form2555 ${name} must be finite and nonnegative`);
-  return roundDollar(result);
+  return result;
 }
+const amount = (value: string | undefined, name: string, required = true) => roundDollar(sourceAmount(value, name, required));
 
 function housingLimit(input: Form2555Input, year: 2025 | 2026): Decimal {
   const defaults = year === 2025 ? { annual: "39000", daily: "106.85" } : { annual: "39870", daily: "109.23" };
@@ -99,29 +100,30 @@ export function calculateForm2555(input: Form2555Input, constants: YearConstants
     if (!input.partIV || !input.incomeSources || input.incomeSourceMappingConfirmed !== true) throw new Error("Form2555 requires actual PartIV and confirmed income source mapping");
   }
   const audit = new AuditTrail();
-  const record = (line: string, label: string, value: Decimal, formula: string) => audit.record("2555", line, label, value, formula);
-  const foreignEarnedIncome = amount(input.foreignEarnedIncome, "foreign earned income");
+  const record = (line: string, label: string, value: Decimal, formula: string, inputs?: Record<string, Decimal | string>) => audit.record("2555", line, label, value, formula, inputs);
+  const rawForeignIncome = sourceAmount(input.foreignEarnedIncome, "foreign earned income");
+  const foreignEarnedIncome = roundDollar(rawForeignIncome);
   if (input.partIV) {
     const partIV = input.partIV;
     const values = Object.fromEntries(Object.entries(PART_IV).map(([key, line]) => {
-      const value = amount(partIV[key as keyof typeof PART_IV], `PartIV ${key}`);
-      record(line, key, value, "Actual eligible source amount in USD");
+      const value = sourceAmount(partIV[key as keyof typeof PART_IV], `PartIV ${key}`);
+      record(line, key, roundDollar(value), "round(actual eligible source amount in USD)", { "Exact source amount": value });
       return [key, value];
     })) as Record<keyof typeof PART_IV, Decimal>;
     const allowances = sum(...Object.keys(PART_IV).filter(key => key.startsWith("allowance")).map(key => values[key as keyof typeof PART_IV]));
     const receipts = sum(...Object.keys(PART_IV).filter(key => key !== "section119MealsAndLodging").map(key => values[key as keyof typeof PART_IV]));
     const section119 = values.section119MealsAndLodging;
     if (section119.gt(values.noncashMeals.plus(values.noncashLodging))) throw new Error("Form2555 section119 meals and lodging exceed actual noncash source amounts");
-    if (!receipts.minus(section119).eq(foreignEarnedIncome)) throw new Error("Form2555 PartIV does not reconcile to foreign earned income");
-    record("22g", "Total allowances", allowances, "sum22a..22f");
-    record("24", "Gross current-year foreign earned receipts", receipts, "19+20a+20b+21a..21d+22g+23");
+    if (!receipts.minus(section119).eq(rawForeignIncome)) throw new Error("Form2555 PartIV does not reconcile to exact foreign earned income sources");
+    record("22g", "Total allowances", roundDollar(allowances), "round(sum exact source amounts22a..22f)", { "Exact source total": allowances });
+    record("24", "Gross current-year foreign earned receipts", roundDollar(receipts), "round(exact sources19+20a+20b+21a..21d+22a..22f+23)", { "Exact source total": receipts });
   }
-  record("26", "Current-year foreign earned income", foreignEarnedIncome, input.partIV ? "24-25" : "Legacy aggregate; detailed source lines unverified");
+  record("26", "Current-year foreign earned income", foreignEarnedIncome, input.partIV ? "round(exact source24 minus exact source25); displayed subtotals may differ by rounding" : "Legacy aggregate; detailed source lines unverified", { "Exact source net income": rawForeignIncome });
   record("27", "Foreign earned income", foreignEarnedIncome, "26");
   let employmentSources: Decimal | undefined;
   if (input.incomeSources) {
-    const mapped = Object.fromEntries(Object.entries(input.incomeSources).map(([key, value]) => [key, amount(value, key)])) as Record<keyof NonNullable<Form2555Input["incomeSources"]>, Decimal>;
-    if (!sum(...Object.values(mapped)).eq(foreignEarnedIncome)) throw new Error("Form2555 income source mapping does not reconcile to line26");
+    const mapped = Object.fromEntries(Object.entries(input.incomeSources).map(([key, value]) => [key, sourceAmount(value, key)])) as Record<keyof NonNullable<Form2555Input["incomeSources"]>, Decimal>;
+    if (!sum(...Object.values(mapped)).eq(rawForeignIncome)) throw new Error("Form2555 income source mapping does not reconcile to exact line26 sources");
     employmentSources = mapped.foreignEmploymentIncomeIncludedOnW2.plus(mapped.foreignEmploymentIncomeNotOnW2);
     if (!input.isSelfEmployed && mapped.foreignBusinessIncomeAlreadyReported.plus(mapped.foreignPartnershipIncomeAlreadyReported).gt(0)) throw new Error("Form2555 business source contradicts self-employment classification");
   }
@@ -136,10 +138,13 @@ export function calculateForm2555(input: Form2555Input, constants: YearConstants
   const housingExpenseLimit = housingLimit(input, taxYear);
   const qualifiedHousingExpensesCapped = min(rawExpenses, housingExpenseLimit);
   const housingAmount = claimHousing && input.housingExpensesQualificationConfirmed !== false ? zeroFloor(qualifiedHousingExpensesCapped.minus(baseHousingAmount)) : d(0);
-  const employerProvided = amount(input.employerProvidedForeignEarnedIncome, "employer-provided foreign earned income", strict || housingAmount.gt(0));
-  if (employerProvided.gt(foreignEarnedIncome) || (employmentSources !== undefined && !employmentSources.eq(employerProvided))) throw new Error("Form2555 employer-provided income does not reconcile to eligible employment sources");
-  if (!input.isSelfEmployed && housingAmount.gt(0) && !employerProvided.eq(foreignEarnedIncome)) throw new Error("Form2555 mixed housing allocation requires actual self-employment classification");
-  const employerFraction = foreignEarnedIncome.isZero() ? d(0) : min(d(1), employerProvided.div(foreignEarnedIncome)).toDecimalPlaces(12);
+  const rawEmployerProvided = sourceAmount(input.employerProvidedForeignEarnedIncome, "employer-provided foreign earned income", strict || housingAmount.gt(0));
+  const employerProvided = roundDollar(rawEmployerProvided);
+  if (rawEmployerProvided.gt(rawForeignIncome) || (employmentSources !== undefined && !employmentSources.eq(rawEmployerProvided))) throw new Error("Form2555 employer-provided income does not reconcile to eligible employment sources");
+  if (!input.isSelfEmployed && housingAmount.gt(0) && !rawEmployerProvided.eq(rawForeignIncome)) throw new Error("Form2555 mixed housing allocation requires actual self-employment classification");
+  // Preserve the same exact source basis in both sides of the fraction. Display
+  // rounding must not create a self-employment share in all-employer receipts.
+  const employerFraction = rawForeignIncome.isZero() ? d(0) : min(d(1), rawEmployerProvided.div(rawForeignIncome)).toDecimalPlaces(12);
   const housingExclusion = min(employerProvided, roundDollar(housingAmount.times(employerFraction)));
   record("28", "Qualified housing expenses", rawExpenses, "Actual eligible expenses");
   record("29b", "Housing expense limit", housingExpenseLimit, "Published annual or sum of published daily notice limits");
@@ -147,8 +152,8 @@ export function calculateForm2555(input: Form2555Input, constants: YearConstants
   record("31", "Qualifying housing days", d(input.qualifyingDays), "Actual days in calendar tax year");
   record("32", "Base housing amount", baseHousingAmount, "Published full-year base or daily base times qualifying days");
   record("33", "Housing amount", housingAmount, "max(0,30-32) if eligible and housing elected");
-  record("34", "Employer-provided foreign earned income", employerProvided, "All employer-provided eligible foreign income; not housing reimbursement alone");
-  record("35", "Employer-provided fraction", employerFraction, "min(1,34/27), twelve decimal places");
+  record("34", "Employer-provided foreign earned income", employerProvided, "round(all actual employer-provided eligible foreign income); not housing reimbursement alone", { "Exact source employer income": rawEmployerProvided });
+  record("35", "Employer-provided fraction", employerFraction, "min(1,exact source34/exact source27), twelve decimal places", { "Exact source numerator": rawEmployerProvided, "Exact source denominator": rawForeignIncome });
   record("36", "Housing exclusion", housingExclusion, "min(34,round33*35)");
   const fraction = d(input.qualifyingDays).div(365).toDecimalPlaces(12);
   const proratedMaximumExclusion = roundDollar(maximumExclusion.times(fraction));
