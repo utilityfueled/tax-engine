@@ -14,6 +14,8 @@ export interface EnergySourceFactsResult {
   separateSpousalMainHomes: boolean;
   improvements: ResolvedEnergyImprovement[];
   cleanProperties: ResolvedCleanEnergyProperty[];
+  /** Non-address source identity used to reject stale calculation/PDF pairings. */
+  sourceBindings: Array<{ sourceId: string; homeId: string; category: string; installationCompletedDate: string; effectiveDate: string; eligible: boolean; manufacturerQualifiedId?: string }>;
 }
 const envelope = new Set(["insulation", "exterior_door", "windows_skylights"]);
 export const ENERGY_PANEL_CODES = Object.freeze({ windows_skylights: "A", central_ac: "B", gas_water_heater: "C", furnace_boiler: "D", heat_pump: "E", heat_pump_water_heater: "F", biomass: "G" });
@@ -155,5 +157,8 @@ export function calculateEnergySourceFacts(source: Partial<EnergyCredits>, optio
     resolved.eligible = resolved.eligible && resolved.effectiveDate.startsWith(`${options.taxYear}-`);
     return { ...resolved, allocatedCost };
   });
-  return { homes, separateSpousalMainHomes, improvements, cleanProperties };
+  const sourceBindings = [...cleanProperties, ...improvements].map(item => ({ sourceId: item.sourceId, homeId: item.homeId,
+    category: item.category, installationCompletedDate: item.installationCompletedDate, effectiveDate: item.effectiveDate, eligible: item.eligible,
+    manufacturerQualifiedId: "manufacturerQualifiedId" in item ? item.manufacturerQualifiedId : undefined }));
+  return { homes, separateSpousalMainHomes, improvements, cleanProperties, sourceBindings };
 }

@@ -1,6 +1,6 @@
 # Form 5695 actual installation and physical-form sources
 
-Status: source/calculation committed `30fc3dd`; guided source collection validated locally; physical mapping follows. This is agent implementation/review evidence, not independent human approval or filing qualification.
+Status: source/calculation `30fc3dd`, printed18b correction `190af2c`, guided source collection `b84205d`; physical mapping validated locally. This is agent implementation/review evidence, not independent human approval or filing qualification.
 
 ## Source refresh
 
@@ -26,8 +26,7 @@ Status: source/calculation committed `30fc3dd`; guided source collection validat
 
 ## Remaining owned work
 
-- Guided collection is implemented below; physical mapping remains the next package.
-- Render physical addresses/answers, actual panel codes, joint/association explanations and separate-spousal-home pages from verified sources and persisted audits; require strict missing/wrong-audit rejection. Reopen, extract and visually inspect the generated PDF.
+- Guided and physical source mapping packages are implemented and verified below.
 - Preserve final-year/source provenance, visible review notices and closed filing gates. Final2026 physical form and independent qualification remain external evidence, not implementation completion.
 - After energy, complete the assigned actual529/education coordination source package.
 
@@ -38,3 +37,15 @@ Status: source/calculation committed `30fc3dd`; guided source collection validat
 - Every source edit clears stale confirmation; carryforward amount/year edits also clear its independent confirmation. Removing an abandoned blank record yields no energy input. Saved aggregate costs remain reconciliation-only, with no second count.
 - Spec-first guided/DOM regressions first failed in `energy-guided-physical-red.log`, `energy-guided-controls-red.log` and `energy-guided-cancelled-red.log`. All575 guided/UI tests pass (`energy-guided-final.log`); all14 workspace filled-PDF tests pass (`energy-guided-pdf-download.log`), preserving the exact one-notice-per-page assertion. Root/web types and all spec refs pass; scoped lint has zero errors and nine pre-existing non-null warnings in unrelated bridge code.
 - Synthetic existing solar/door/window/HVAC fixtures now state actual installation and carryforward facts explicitly; prior allowed monetary expectations were retained.
+
+## Physical review mapping package
+
+- Monetary widgets copy the persisted canonical audits. Physical eligibility answers, actual installation addresses, original/effective dates, manufacturer IDs and panel codes come from verified home/property sources. Known false answers remain false; excluded and overflow records stay in a source statement. The mailing address is never substituted.
+- A non-address source binding retains source/category/home/effective-date/eligibility/QMID identity; exact cost, occupant and fuel allocations are checked against the source audit. Missing, duplicated, stale or contradictory source/group audits reject before template I/O. Carryforward also reconciles to its actual confirmed source.
+- The PartI address follows the highest actual eligible nonfuel cost home; all additional addresses are retained. Actual joint/association boxes and source fractions/statements are rendered. Consecutive-year panel elections retain the original installation date and bind printed codes to actual enabled records.
+- Separate spouse PartII worksheets keep distinct interactive fields and actual source amounts. The first form alone prints combined30 and shared31/32 with the prescribed annotation; the additional form ends at30. A cached-page issue found during rendering was corrected, with a regression preventing a duplicate blank PartI page.
+- Form5695 attaches independently of Schedule3, preserving line16 when no current credit can be used. The return regression explicitly omits the zero-credit Schedule3 to exercise that optional packet boundary.
+- Red-first evidence: `energy-physical-map-red.log`.114 focused core/source/PDF/workspace tests pass in `energy-physical-broad.log`; subsequent page-selection/known-false/extra-address tests pass in `energy-map-page-selection.log`. Root types, all3594 spec references and owned lint pass; two existing unrelated non-null warnings remain in fill-return.ts.
+- All1021 PDF tests across99 files pass in `energy-map-full-pdf-bounded.log` with four workers and unchanged test timeouts. The unrestricted first run had1017 passes and four unrelated five-second packet-test timeouts; bounded concurrency resolved all four without source/test changes.
+- Saved synthetic ordinary/joint/carry PDFs each have5 pages and167 terminal widgets; separate homes have8 pages and299 distinct terminal widgets. Independent pypdf extraction and saved-widget reads verify original values and exactly one review notice per page. Rendered all four ordinary pages, separate-home shared/individual pages, and joint allocation statement. The full-image display clipped two footers; direct150dpi footer renders confirmed both are visibly red. Evidence is under `.local/upgrade-evidence/energy-source-pdf/`, with generation and checks in `energy-source-render-final.log`.
+- Current official endpoint and registered template remain final2025. No2026 physical template, filing qualification or human signoff was asserted.

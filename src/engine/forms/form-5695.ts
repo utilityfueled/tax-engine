@@ -26,6 +26,7 @@ export interface Form5695Options {
 
 export interface Form5695Result {
   sourceFactsVerified?: boolean;
+  sourceBindings?: EnergySourceFactsResult["sourceBindings"];
   taxYear?: number;
   improvementHomes?: Array<{ groupId: string; homeIds: string[]; creditBeforeTaxLimit: Decimal; lines: CalculatedLine[] }>;
   priorYearCarryforward: Decimal;
@@ -434,7 +435,7 @@ function calculateSourcedEnergy(source: Partial<EnergyCredits>, sources: EnergyS
     if (item.home.jointOccupancyWithOtherReturn) sourceAudit.record("Form 5695 Source", `${item.sourceId}:all-occupants`, "Actual corresponding costs of all occupants", item.allOccupantsCost, "Complete all-occupant records confirmed; proportional property and annual caps apply");
     if ("allocatedCost" in item) sourceAudit.record("Form 5695 Source", `${item.sourceId}:allocated`, "Cost after applicable joint fuel-cell allocation", item.allocatedCost, "min(actual cost,1667*half-kilowatt increments*actual occupant fraction)");
   }
-  return { ...base, sourceFactsVerified: true, taxYear: options.taxYear ?? 2025, energyImprovementCredit: allowed,
+  return { ...base, sourceFactsVerified: true, sourceBindings: sources.sourceBindings, taxYear: options.taxYear ?? 2025, energyImprovementCredit: allowed,
     improvementHomes: groupResults.map(group => ({ groupId: group.groupId, homeIds: group.homeIds, creditBeforeTaxLimit: lineValue(group.calculation, "30"), lines: group.calculation.lines })),
     lines: [...lines, ...sourceAudit.getLines()] };
 }

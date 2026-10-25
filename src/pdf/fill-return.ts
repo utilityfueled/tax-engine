@@ -431,14 +431,16 @@ export async function fillReturn(
     await savePdf(docS3, outputPathS3);
     filledForms.push(outputPathS3);
 
-    if (input.energyCredits) {
-      const f5695Path = join(blankFormsDir, "f5695.pdf");
-      const doc5695 = await fillForm5695(input, result, f5695Path);
-      if (flatten) await flattenForm(doc5695.getForm());
-      const outputPath5695 = join(outputDir, "f5695-filled.pdf");
-      await savePdf(doc5695, outputPath5695);
-      filledForms.push(outputPath5695);
-    }
+  }
+
+  // Form5695 line16 retains unused credit even when no Schedule3 credit is allowed.
+  if (input.energyCredits) {
+    const f5695Path = join(blankFormsDir, "f5695.pdf");
+    const doc5695 = await fillForm5695(input, result, f5695Path);
+    if (flatten) await flattenForm(doc5695.getForm());
+    const outputPath5695 = join(outputDir, "f5695-filled.pdf");
+    await savePdf(doc5695, outputPath5695);
+    filledForms.push(outputPath5695);
   }
 
   // ── Schedule A (if applicable — only when itemizing) ──
