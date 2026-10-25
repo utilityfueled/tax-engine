@@ -15,6 +15,7 @@
  */
 
 import Decimal from "decimal.js";
+import { calculateDigitalAssetStateSources } from "./digital-asset-sources.js";
 import { calculateForm1099G } from "@/engine/forms/form-1099-g.js";
 import type {
   TaxYearInput,
@@ -733,6 +734,7 @@ export function buildOhioResidentReturnInput(
   federalResult: TaxReturnResult,
   overlay: OhioOverlayInput = {},
 ): OhioResidentReturnInput {
+  const digitalCapitalInput = calculateDigitalAssetStateSources(taxInput, "OH");
   const filingStatus = mapFilingStatus(federalResult.filingStatus);
   const w2s = taxInput.w2s ?? [];
   const formW2Gs = taxInput.formW2G ?? [];
@@ -766,7 +768,7 @@ export function buildOhioResidentReturnInput(
           form1099Miscs,
           form1099Ints,
           taxInput.form1099Div,
-          taxInput.form1099B,
+          digitalCapitalInput.form1099B,
           form1099OIDs,
         );
 

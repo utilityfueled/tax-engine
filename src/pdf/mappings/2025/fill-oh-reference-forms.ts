@@ -11,6 +11,7 @@ import {
 import type { TaxYearInput } from "@/models/inputs.js";
 import type { CalculatedLine, TaxReturnResult } from "@/models/outputs.js";
 import { d } from "@/utils/decimal.js";
+import { calculateDigitalAssetStateSources } from "../../../engine/state/digital-asset-sources.js";
 import {
   buildOhioResidentReturnInput,
   extractOhioWithholding,
@@ -245,6 +246,7 @@ export async function fillOhioReferenceForms(
   assertPdfExportAllowed(taxInput.taxpayer.taxYear, federalResult.taxYear);
   const ohioInput = buildOhioResidentReturnInput(taxInput, federalResult, overlay);
   const ohioResult = calculateOhioResidentReturn(ohioInput);
+  const digitalCapitalInput = calculateDigitalAssetStateSources(taxInput, "OH");
   const itBusResult = extractQualifyingBusinessIncome(
     federalResult,
     taxInput.scheduleK1 ?? [],
@@ -260,7 +262,7 @@ export async function fillOhioReferenceForms(
     form1099Miscs: taxInput.form1099Misc,
     form1099Ints: taxInput.form1099Int,
     form1099Divs: taxInput.form1099Div,
-    form1099Bs: taxInput.form1099B,
+    form1099Bs: digitalCapitalInput.form1099B,
     form1099OIDs: taxInput.form1099OID,
   });
   const lumpSumDistributionWorksheet = getLumpSumDistributionWorksheet(ohioInput);
@@ -317,7 +319,7 @@ export async function fillOhioReferenceForms(
     taxInput.form1099Misc,
     taxInput.form1099Int,
     taxInput.form1099Div,
-    taxInput.form1099B,
+    digitalCapitalInput.form1099B,
   );
   const totalWithholding = overlay.ohioWithholdingOverride ?? additionalWithholding;
 

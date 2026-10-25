@@ -7,6 +7,7 @@
  */
 
 import Decimal from "decimal.js";
+import { calculateDigitalAssetStateSources } from "./digital-asset-sources.js";
 import { calculatePARentalIncomeExpenses, type PARentalIncomeExpensesResult } from "@/engine/state/pa-rental-income-expenses.js";
 import { calculatePAOIDSources, type PAOIDSourcesResult } from "@/engine/state/pa-oid-sources.js";
 import { calculatePARentalClassification, type PARentalClassificationResult } from "@/engine/state/pa-rental-classification.js";
@@ -1453,6 +1454,7 @@ export function calculatePAReturn(
   input: TaxYearInput,
   overrides: PAOrchestratorOverrides = {},
 ): PAOrchestratorResult {
+  const digitalCapitalInput = calculateDigitalAssetStateSources(input, "PA");
   const taxYear = input.taxpayer.taxYear;
   const ZERO = new Decimal(0);
   const hasFederalConstantsForYear = TAX_CONSTANTS[taxYear] !== undefined;
@@ -1695,7 +1697,7 @@ export function calculatePAReturn(
   const scheduleD = calculatePAScheduleD({
     taxYear,
     filingStatus: input.taxpayer.filingStatus,
-    form1099B: input.form1099B,
+    form1099B: digitalCapitalInput.form1099B,
     scheduleK1: heuristicK1Input.scheduleK1,
     paPassThroughStatements,
     homeSales: input.homeSales,
@@ -1748,7 +1750,7 @@ export function calculatePAReturn(
   if (!additionalStateWithholding.isFinite() || additionalStateWithholding.isNegative()) {
     throw new Error("Additional PA withholding must be a finite nonnegative actual source amount.");
   }
-  const stateWithholding = mapStateWithholding(input).plus(oidSources.stateWithholding).plus(additionalStateWithholding);
+  const stateWithholding = mapStateWithholding(digitalCapitalInput).plus(oidSources.stateWithholding).plus(additionalStateWithholding);
 
   // -------------------------------------------------------------------------
   // Step 1b: Schedule UE — Unreimbursed Employee Business Expenses

@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.72",
+    ruleVersion: "2025.73",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40d.pdf", section: "Original digital-asset PA adjusted basis and separate-owner gain; original OH withholding once while federal AGI is retained", revision: "Final2025 PA ScheduleD/PA40 and Ohio IT1040 instructions; actual ordinary investment sources only, state special methods and independent qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i1040sd", section: "Actual original long-term DA statements bound once to ScheduleD special-gain source worksheets beside unchanged original B/QSBS indexes", revision: "Final2025 ScheduleD and recipient1099DA sources; exact original identity/year/owner and normalized-row conservation, advanced digital methods and independent qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://www.ecfr.gov/current/title-26/section-1.55-1", section: "Current public-cash charitable carry with actual positive ATNOL: regular AGI retained, separate modified-AMTI excess-gift replay and succeeding alternative carry reduction", revision: "IRC170(d)(1)(B),56(d), Reg1.170A-10 and1.172-5; independent known-empty prior charitable histories required, prior/mixed methods and human qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i172", section: "Actual positive1202 current-origin restoration for nonnegative post-exclusion capital net; separate AMT preference removal and original-source review replay", revision: "Final Form172/i6251, IRC172(d)(2),56(d)(2),57(a)(7); negative-net printed/statutory overlap remains unresolved, independent human qualification pending", retrievedAt: "2026-10-25" },
@@ -116,11 +117,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.68-law-integration-draft",
+    ruleVersion: "2026.69-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40d.pdf", section: "Original DA state-source conservation and separately confirmed Pennsylvania adjusted basis", revision: "Bounded actual source method; no final2026 state form qualification, full-year or filing enablement inferred", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i1040sd", section: "Actual original long-term DA statements bound once to ScheduleD special-gain source worksheets beside unchanged original B/QSBS indexes", revision: "Existing source-bound core with actual2026 DA reporting facts; full-year calculation, advanced digital methods and independent qualification remain closed", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i172", section: "Actual positive1202 current-origin source method with nonnegative post-exclusion net and separate AMT preference", revision: "Current statutory and final continuous-use Form172 source convention; negative-net interpretation unresolved, full2026 and filing gates remain closed", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i8949", section: "Original digital and other capital reporting categories with exact paired ScheduleD aggregation", revision: "Final2025 reporting source convention retained for calculation; no2026 physical mapping or filing qualification is inferred", retrievedAt: "2026-10-25" },

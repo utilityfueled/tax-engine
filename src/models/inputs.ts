@@ -290,6 +290,10 @@ export const Form1099DATransactionSchema = z.preprocess((value) => {
   dateSold: z.string(), // Box1e.
   proceeds: decimal, // Box1f.
   costBasis: decimal, // Actual completed taxpayer basis; never inferred from a blank Box1g.
+  paCostBasis: decimal.optional(), // Separately supported Pennsylvania adjusted basis, including actual zero.
+  paBasisSourceReference: z.string().optional(),
+  paBasisFactsConfirmed: z.boolean().optional(),
+  paTransactionForProfitConfirmed: z.boolean().optional(),
   gainOrLoss: decimal.optional(), // Optional substitute-statement summary, not a numbered1099DA box.
   basisReportedToIRS: z.boolean().default(true), // Original Box2.
   holdingPeriod: z.enum(["short", "long"]), // Derived from acquisition/sale dates

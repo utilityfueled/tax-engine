@@ -4,7 +4,12 @@ import type { Form1099B, Form1099DA, TaxYearInput } from '@/models/inputs.js';
 import { AuditTrail } from '@/utils/audit.js';
 import { d } from '@/utils/decimal.js';
 
-type DigitalSourceInput = Pick<TaxYearInput, 'taxpayer' | 'form1099DA' | 'form1099B'>;
+type DigitalSourceInput = Pick<TaxYearInput, 'form1099DA'> & {
+  form1099B: Array<Pick<Form1099B, 'sourceId'>>;
+  taxpayer: Pick<TaxYearInput['taxpayer'], 'taxYear' | 'filingStatus'> & {
+    spouse?: Pick<NonNullable<TaxYearInput['taxpayer']['spouse']>, 'firstName' | 'lastName'>;
+  };
+};
 type ResolvedBasis = ReadonlyMap<string, { costBasis: Decimal; dateAcquired: string }>;
 
 function amount(value: string | undefined, label: string): Decimal {
@@ -25,7 +30,8 @@ function isActualSource(form: Form1099DA, year: number): boolean {
   const statementFields = ['sourceId', 'taxYear', 'sourceReference', 'sourceFactsConfirmed', 'allTransactionsIncluded', 'federalWithheld', 'stateTaxReporting', 'accountReference'] as const;
   const transactionFields = ['sourceId', 'digitalAssetCode', 'reportedDateAcquired', 'reportedCostBasis', 'basisSource', 'basisSourceReference', 'basisFactsConfirmed',
     'proceedsType', 'sellingExpenses', 'marketDiscount', 'qof', 'lossNotAllowed', 'ordinaryIncome', 'onlyCashProceeds', 'customerProvidedAcquisitionInformation',
-    'noncoveredSecurity', 'optionalReportingMethod', 'assetOrigin', 'capitalAssetConfirmed', 'nftOrCollectible'] as const;
+    'noncoveredSecurity', 'optionalReportingMethod', 'assetOrigin', 'capitalAssetConfirmed', 'nftOrCollectible',
+    'paCostBasis', 'paBasisSourceReference', 'paBasisFactsConfirmed', 'paTransactionForProfitConfirmed'] as const;
   return year >= 2026 || statementFields.some(key => form[key] !== undefined)
     || form.transactions.some(row => transactionFields.some(key => row[key] !== undefined));
 }

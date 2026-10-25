@@ -1,0 +1,45 @@
+form: "PA and Ohio digital-asset source handoff"
+taxYear: 2025
+sources:
+  - url: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40d.pdf"
+    section: "Digital-asset question; columns(d)-(f); actual Pennsylvania adjusted basis and for-profit losses"
+    retrieved: "2026-10-25"
+  - url: "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf"
+    section: "IT1040 lines1 and14; actual Ohio-tagged income-statement withholding"
+    retrieved: "2026-10-25"
+  - url: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf"
+    section: "Page 4 Rounding Numbers: whole-dollar PA-40 and schedule amounts"
+    retrieved: "2026-10-25"
+notes: |
+  Retain original DA statements for federal calculation and source validation.
+  Normalize once for the state's capital/withholding view. Pennsylvania requires
+  actual adjusted basis, its source reference/confirmation and for-profit facts;
+  no federal-basis equality is inferred. Ordinary differing PA basis is supported.
+  Positive wash or special adjustment methods remain separate. Ohio already has
+  the DA gain in federal AGI and adds no second gain. Include only actual state
+  withholding, once; preserve DA identity in audit and review output.
+lines:
+  - line: "pa-basis"
+    description: "Compute ordinary PA digital gains from actual PA basis"
+    formula: "Original proceeds100.49 minus actual PA basis80.24 gives exact20.25 and reported PA ScheduleD20, while federal basis90.24 retains10.25 federal gain. Preserve original evidence and actual DA question."
+    testRef: "tests/engine/state/digital-asset-sources.test.ts::uses actual Pennsylvania digital basis without changing federal sources"
+  - line: "oh-withholding"
+    description: "Retain federal AGI and actual Ohio withholding once"
+    formula: "Two actual statements with OH0.10 and PA0.20 withholding produce OH0.10 only; federal gain remains10.25 and Ohio AGI equals supplied current federal AGI."
+    testRef: "tests/engine/state/digital-asset-sources.test.ts::routes original Ohio digital withholding once without adding another gain"
+  - line: "source-gates"
+    description: "Unknown or transformed evidence cannot establish state source facts"
+    formula: "Missing original fields, owner/year conflicts, duplicate statements or normalized-only DA copies reject; PA missing basis or confirmation and wash/special methods reject without inventing zero."
+    testRef: "tests/engine/state/digital-asset-sources.test.ts::rejects incomplete state digital sources and unsupported adjustment methods"
+  - line: "pa-owner"
+    description: "Preserve separate owners and signed PA capital outcomes"
+    formula: "A spouse loss cannot offset primary gain. Actual zero PA basis is retained; Decimal source cents remain exact."
+    testRef: "tests/engine/state/digital-asset-sources.test.ts::preserves separate Pennsylvania owners and actual zero basis"
+  - line: "review"
+    description: "Reopen original DA state withholding review output"
+    formula: "The Ohio audit and saved reference retain DA withholding0.10 separately from B withholding and do not expose source IDs or original account references."
+    testRef: "tests/pdf/digital-asset-state-reference.test.ts::renders original digital withholding once in the Ohio reference packet"
+  - line: "pa-review"
+    description: "Retain actual PA digital classification and reported gain in the review record"
+    formula: "Actual PA basis80.24 and proceeds100.49 produce reported20 and digital-asset Yes, without leaking private basis records."
+    testRef: "tests/pdf/digital-asset-state-reference.test.ts::renders the actual Pennsylvania digital gain and disclosure in its reference record"

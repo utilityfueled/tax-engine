@@ -3,10 +3,14 @@ import type Decimal from 'decimal.js';
 import type { CapitalTransaction, TaxYearInput } from '@/models/inputs.js';
 import { calculateForm1099DASources } from './form-1099-da-sources.js';
 
-export function normalizeDigitalAssetCapitalInput(input: TaxYearInput, options: {
+export type DigitalAssetCapitalInput = Pick<TaxYearInput, 'form1099B' | 'form1099DA'> & {
+  taxpayer: Parameters<typeof calculateForm1099DASources>[0]['taxpayer'];
+};
+
+export function normalizeDigitalAssetCapitalInput<T extends DigitalAssetCapitalInput>(input: T, options: {
   resolvedLegacyBasis?: ReadonlyMap<string, { costBasis: Decimal; dateAcquired: string }>;
   additionalDispositions?: CapitalTransaction[];
-} = {}): TaxYearInput {
+} = {}): T {
   if (!input.form1099DA?.length && !options.additionalDispositions?.length) return input;
   const source = calculateForm1099DASources(input, options);
   const additional = options.additionalDispositions?.length ? [{ broker: 'DeFi/NFT/Crypto', stateWithheld: '0',
