@@ -682,3 +682,59 @@ The exact staged shared model delta contains only the three optional
 disqualification facts and their comments; concurrent tips/Schedule1-A sources
 remain outside this package. This closes the narrow actual-zero-expense method,
 not the remaining broader methods or any independent qualification gate.
+
+### Actual bond income ownership for educator reductions (2026-10-25)
+
+Code6 is committed as `4421801`. The next bounded bond package refreshed
+[Pub550 Table1-2](https://www.irs.gov/publications/p550),
+[IRC135](https://uscode.house.gov/us/usc/119-118/t26/s135/) and
+[IRC62(d)(2)](https://uscode.house.gov/us/usc/119-118/t26/s62/).
+Pub550 assigns jointly registered interest by the actual purchase funds and
+retains separately reported prior interest. The new source helper applies that
+method to unchanged, noncommunity ownership, then subtracts each owner's actual
+prior reported interest. It preserves unknown source facts and rejects transfers,
+reissues, community property, inconsistent source totals and fractions that cannot
+reconcile exactly without assigning a rounding residual. The interview records
+those source facts and invalidates confirmation after substantive edits; it does
+not ask for a discretionary final-exclusion split.
+
+The educator reconciliation now supports actual mixed ownership only when all
+current source interest is excluded, with exact source-cent reconciliation to
+the final Form8815 exclusion. A sole actual income owner may receive the final
+exclusion even when registration is joint. A partially reduced exclusion with
+two positive income owners remains an explicit unsupported tax method. Neither
+the helper nor a taxpayer confirmation invents a pro-rata or priority allocation.
+
+Independent synthetic source math:10000 proceeds minus8000 principal produces
+2000 lifetime interest. Actual purchase funds6000/2000 give1500/500 lifetime
+interest; actual prior reporting100/400 leaves1400/100 current interest. With
+complete eligible expenses the1500 final exclusion is attributed1400/100.
+Educator costs1550/125 less those exclusions leave150/25 deductible, total175.
+The canonical return regression preserves the actual1099-INT2000, subtracts the
+confirmed500 previously reported once, excludes1500 once, and yields49825 AGI
+from50000 wages. Separate-owner sources with2000.25/1999.75 current interest are
+accepted only with the exact4000 fully allowed exclusion; partial MAGI reduction
+and source rounding residuals reject.
+
+Specs preceded failing core and source/DOM tests. Logs under
+`.local/upgrade-evidence/` are `bond-income-ownership-{red,guided-red,dom-red,
+focused,federal,related,types,web-types,spec,lint}.log`. Current adjacent checks
+pass133 tests across10 engine, source, canonical return, guided and DOM files;
+root/web types, all3945 spec references and scoped lint pass. Exact staged
+verification and independent agent review follow; no independent human tax or
+filing qualification is claimed.
+
+Immutable staged code tree `f6becf0e` passes773 tests across55 files, including
+all guided source tests and the actual bond, household identity, educator and
+canonical return regressions. Root/web types and all3936 committed spec references
+pass. The first archive test invocation stopped before tests because its local
+PDF Python path was absent; rerunning with the repository's configured pinned
+Python passed. No assertions, coverage thresholds or timeouts changed. Logs:
+`bond-income-staged-{tests,types,web-types,spec}.log`. Concurrent unfinished
+Schedule1-A, AI transport and unrelated model changes are excluded from the staged
+archive. The staged model delta adds only the optional income-ownership object.
+
+The parent independently reviewed the bounded income-ownership method against
+current Pub550 and reran14 core, guided and DOM cases successfully, with no
+actionable finding (`parent-bond-ownership-review.log`). This is agent source
+and software review; independent human qualification remains pending.

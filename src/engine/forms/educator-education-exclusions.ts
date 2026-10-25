@@ -5,6 +5,7 @@ import type { SavingsBondRedemption, TaxYearInput } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import type { Form1099QResult } from "@/engine/forms/form-1099-q.js";
 import type { Form8815Result } from "@/engine/forms/form-8815.js";
+import { calculateSavingsBondIncomeOwnership } from "@/engine/forms/savings-bond-income-ownership.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { d, roundDollar } from "@/utils/decimal.js";
 
@@ -86,8 +87,8 @@ export function reconcileEducatorEducationExclusions(input: EducatorEducationExc
       sources.set(source.sourceId, source);
     }
     if (sources.size !== bonds.redemptionResults.length) throw new Error("Educator savings-bond sources do not match the calculated redemptions.");
-    const seen = new Set<string>(), eligibleIds = new Set<string>(), registeredOwners = new Set<string>();
-    const interestByRegistration = { taxpayer: d(0), spouse: d(0), taxpayer_and_spouse: d(0) };
+    const seen = new Set<string>(), eligibleIds = new Set<string>();
+    const ownerInterest = { primary: d(0), spouse: d(0) };
     for (const row of bonds.redemptionResults) {
       const source = row.sourceId ? sources.get(row.sourceId) : undefined;
       if (!source || !row.sourceId || seen.has(row.sourceId) || source.sourceFactsComplete !== true || typeof source.ownershipConfirmed !== "boolean" || typeof row.eligible !== "boolean") throw new Error("Educator savings-bond result requires each complete actual source exactly once.");
@@ -96,18 +97,26 @@ export function reconcileEducatorEducationExclusions(input: EducatorEducationExc
       if (!source.ownershipConfirmed || !source.registeredOwner || source.registeredOwner === "other") throw new Error("Educator eligible bond requires actual registered ownership.");
       if (source.registeredOwner !== "taxpayer") ownerIsAllowed("spouse", input.filingStatus);
       eligibleIds.add(row.sourceId);
-      registeredOwners.add(source.registeredOwner);
-      interestByRegistration[source.registeredOwner] = interestByRegistration[source.registeredOwner].plus(amount(row.currentYearInterest, "eligible bond current interest"));
+      if (total.gt(0)) {
+        const actual = calculateSavingsBondIncomeOwnership(source);
+        if (!actual.currentInterest.eq(amount(row.currentYearInterest, "eligible bond current interest")) || !actual.principal.eq(amount(row.principal, "eligible bond principal")) || !amount(source.proceeds, "source proceeds").eq(row.proceeds)) throw new Error("Educator bond source interest and principal do not match the actual calculated redemption.");
+        ownerInterest.primary = ownerInterest.primary.plus(actual.primaryInterest);
+        ownerInterest.spouse = ownerInterest.spouse.plus(actual.spouseInterest);
+      }
     }
     if (total.gt(0) && eligibleIds.size === 0) throw new Error("Educator positive bond exclusion has no actual eligible source.");
-    const soleOwner: Owner | undefined = registeredOwners.size === 1 && registeredOwners.has("taxpayer") ? "primary"
-      : registeredOwners.size === 1 && registeredOwners.has("spouse") ? "spouse" : undefined;
+    const soleOwner: Owner | undefined = ownerInterest.primary.gt(0) && ownerInterest.spouse.isZero() ? "primary"
+      : ownerInterest.spouse.gt(0) && ownerInterest.primary.isZero() ? "spouse" : undefined;
+    const currentInterest = ownerInterest.primary.plus(ownerInterest.spouse);
     if (total.gt(0)) {
-      const currentInterest = interestByRegistration.taxpayer.plus(interestByRegistration.spouse).plus(interestByRegistration.taxpayer_and_spouse);
       if (!roundDollar(currentInterest).eq(amount(bonds.totalInterest, "calculated Form8815line6 interest"))) throw new Error("Educator bond source interest rounding must reconcile to the actual Form8815 worksheet before owner allocation.");
     }
     if (soleOwner) {
       totals[soleOwner].savingsBondInterest = total;
+    } else if (total.gt(0) && bonds.expenseRatio.eq(1) && bonds.modifiedAGI.lte(bonds.phaseOutThreshold) && total.eq(bonds.totalInterest)) {
+      if (!currentInterest.eq(total)) throw new Error("Educator fully excluded bond source interest needs exact source rounding reconciliation before owner attribution.");
+      totals.primary.savingsBondInterest = ownerInterest.primary;
+      totals.spouse.savingsBondInterest = ownerInterest.spouse;
     } else if (total.gt(0)) {
       throw new Error("Educator mixed or joint bond ownership has an unresolved statutory owner-allocation method; a supplied split cannot establish it.");
     }

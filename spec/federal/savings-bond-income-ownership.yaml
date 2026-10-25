@@ -1,0 +1,22 @@
+form: "Savings-bond income ownership"
+fullName: "Actual noncommunity purchase-fund ownership for jointly registered bonds"
+taxYear: 2026
+irsReference: "https://www.irs.gov/publications/p550"
+retrievedAt: "2026-10-25"
+notes: |
+  Publication550 Table1-2: sole registered ownership determines income ownership;
+  a co-owner who alone paid owns all interest, and co-owners who each contributed
+  own interest in proportion to actual purchase funds. Community property and
+  later transfers/reissues require separate source methods and are not inferred.
+  This calculation determines actual income ownership only. It does not choose
+  a split of a reduced joint Form8815 exclusion. Actual prior reported amounts
+  may differ by owner and are never inferred from purchase proportions.
+lines:
+  - line: "actual-ownership-sources"
+    description: "Preserve optional actual ownership facts"
+    formula: "The optional incomeOwnership object preserves unknown purchase funds, prior reporting, community-property status, unchanged-history confirmation and source confirmation/reference; no default ownership or final-exclusion amount."
+    testRef: "tests/engine/forms/educator-bond-income-ownership.test.ts::preserves unknown ownership facts and exact source amounts"
+  - line: "owner-current-interest"
+    description: "Determine current interest from actual purchase and reporting history"
+    formula: "Lifetime interest = proceeds minus actual principal. Owner lifetime interest = lifetime interest times actual purchase funds divided by principal. Subtract that owner's actual previously reported interest; require both owner totals to reconcile exactly to the source current interest and reject unresolved source fractions."
+    testRef: "tests/engine/forms/educator-bond-income-ownership.test.ts::uses joint purchase funds and actual owner prior reporting"

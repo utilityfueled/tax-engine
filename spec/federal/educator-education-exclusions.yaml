@@ -17,11 +17,22 @@ notes: |
   manufactured from an external amount or an absent ledger. Actual zero in the
   confirmed educator worksheet is a declaration of none, not an inferred source.
   The retrieved sources do not establish a discretionary mixed/joint bond
-  exclusion split. Positive mixed/joint ownership remains an unresolved statutory
-  allocation method; taxpayer-supplied amounts cannot substitute for that method.
+  exclusion split. A reduced final exclusion with more than one positive actual
+  income owner remains unresolved; taxpayer-supplied amounts cannot substitute
+  for that method. The fully excluded and sole-income-owner branches below use
+  actual income ownership, without choosing a discretionary final allocation.
   Sources: https://www.irs.gov/instructions/i1040gi
   https://www.irs.gov/publications/p970
   https://www.irs.gov/publications/p529
+  Income ownership extension: current Publication550 Table1-2 binds unchanged
+  noncommunity co-owner bond interest to actual purchase funds. Separately
+  registered bonds belong to their actual sole owners. Under135(a), where all
+  current interest is excluded without an expense or MAGI reduction, the actual
+  owner's interest is also that owner's exclusion. This is not a discretionary
+  split of a partial joint exclusion. Prior interest is attributed from actual
+  per-owner reporting records, not in the purchase-fund ratio by assumption.
+  https://www.irs.gov/publications/p550
+  https://uscode.house.gov/us/usc/119-118/t26/s135/
 lines:
   - line: "owner-education-exclusions"
     description: "Reconcile actual cashQTP and Coverdell earnings by recipient"
@@ -48,18 +59,45 @@ lines:
     formula: |
       Use the verified final Form8815 exclusion and match every calculated
       redemption to its unique actual bond source. If all eligible source bonds
-      have one actual registeredOwner taxpayer or spouse, bind the final exclusion
-      to that owner. Never assign a noneducator spouse's exclusion to the educator.
+      have one actual income owner taxpayer or spouse after the supported source
+      ownership calculation, bind the final exclusion to that owner. Never assign a noneducator spouse's exclusion to the educator.
       Missing/duplicate/mismatched ownership or unverifiable source facts reject.
     testRef: "tests/engine/forms/educator-education-exclusions.test.ts::binds a final bond exclusion only to its actual sole eligible owner"
   - line: "joint-bond-allocation"
     description: "Reject unsupported mixed or joint bond attribution"
     formula: |
-      Positive final exclusion with mixed or jointly registered eligible bonds
-      remains unresolved pending a source-backed statutory allocation method.
-      No discretionary, half, proportional or taxpayer-supplied split establishes
-      that method. A zero final exclusion needs no allocation and remains zero.
+      A partial final exclusion with actual current interest belonging to more
+      than one owner remains unresolved pending a source-backed allocation method.
+      No discretionary, half, proportional or taxpayer-supplied final split
+      establishes that method. A zero final exclusion needs no allocation.
     testRef: "tests/engine/forms/educator-education-exclusions.test.ts::blocks an unresolved joint bond attribution instead of accepting an invented split"
+  - line: "fully-excluded-mixed-owners"
+    description: "Attribute fully excluded interest to its actual income owners"
+    formula: |
+      Require Form8815 expenseRatio=1, no MAGI reduction, and final exclusion
+      equal to the exact sum of eligible source current interest and line6.
+      Each owner's actual current interest is fully excluded and reduces only
+      that educator's expenses. Retain source cents; reject a mismatch with
+      physical-line rounding rather than assign a residual to one owner.
+    testRef: "tests/engine/forms/educator-bond-income-ownership.test.ts::attributes fully excluded mixed-owner interest without splitting a partial exclusion"
+  - line: "joint-purchase-funds"
+    description: "Use actual purchase funds and prior reporting for joint bonds"
+    formula: |
+      For unchanged noncommunity joint registration, require confirmed records,
+      source reference, actual taxpayer and spouse purchase contributions
+      summing to actual principal, and actual prior reported interest by owner
+      summing to the bond total. Lifetime owner interest = total lifetime
+      interest * owner purchase funds / total purchase funds; current owner
+      interest subtracts only that owner's actual prior reported interest.
+      Reject negative owner amounts, incomplete history, community property,
+      or an unresolved fractional source result. If all positive current
+      interest belongs to one owner, that owner receives the final exclusion;
+      otherwise only the fully excluded branch is implemented.
+    testRef: "tests/engine/forms/educator-bond-income-ownership.test.ts::uses joint purchase funds and actual owner prior reporting"
+  - line: "joint-source-boundaries"
+    description: "Do not manufacture ownership or final exclusion rounding"
+    formula: "Reject missing confirmation, unknown contribution or prior-reporting values, inconsistent totals, community-property or changed ownership history, and source cents that cannot reconcile to the full Form8815 exclusion; keep source references out of audit output."
+    testRef: "tests/engine/forms/educator-bond-income-ownership.test.ts::rejects unknown ownership history and unresolved allocation boundaries"
   - line: "bond-source-reconciliation"
     description: "Retain actual ownership and rounded source interest"
     formula: |
@@ -81,3 +119,7 @@ lines:
     description: "Use final actual savings-bond exclusion for the supported sole owner"
     formula: "The declared educator reduction must match final Form8815 exclusion, with source current interest and ownership reconciled; refuse mismatched or unsupported joint allocations."
     testRef: "tests/engine/federal-educator-exclusions.test.ts::binds the final sole-owner bond exclusion and rejects an unsupported positive declaration"
+  - line: "canonical-fully-excluded-ownership"
+    description: "Apply actual joint income ownership to each educator exactly once"
+    formula: "Canonical Form8815 uses complete household-bound sources; fully excluded joint interest follows actual purchase funds less each owner's own prior reported interest; above-line educator expenses reduce by those exact owner exclusions once"
+    testRef: "tests/engine/federal-educator-exclusions.test.ts::routes fully excluded joint interest to the actual educator income owners"

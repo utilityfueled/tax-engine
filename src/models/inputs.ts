@@ -3392,6 +3392,17 @@ export const SavingsBondRedemptionSchema = z.preprocess((value) => {
   ownershipConfirmed: z.boolean().optional(),
   faceValue: optionalDecimalInput,
   priorYearInterestReported: optionalDecimalInput,
+  /** Actual income ownership; not a proposed allocation of a final exclusion. */
+  incomeOwnership: z.object({
+    taxpayerPurchaseFunds: optionalDecimalInput,
+    spousePurchaseFunds: optionalDecimalInput,
+    taxpayerPriorYearInterestReported: optionalDecimalInput,
+    spousePriorYearInterestReported: optionalDecimalInput,
+    communityProperty: z.boolean().optional(),
+    ownershipUnchangedSinceIssueConfirmed: z.boolean().optional(),
+    sourceFactsConfirmed: z.boolean().optional(),
+    sourceReference: z.string().trim().optional(),
+  }).optional(),
 }));
 
 /** Form 8815 expenses are coordinated once per return, not once per bond. */

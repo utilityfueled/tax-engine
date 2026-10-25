@@ -19,6 +19,23 @@ function stateWithBonds() {
 }
 
 describe("actual guided savings-bond sources", () => {
+  it("preserves and validates actual joint income ownership records", () => {
+    const data = actualSavingsBondData();
+    Object.assign(data.redemptions[0], { registeredOwner: "taxpayer_and_spouse", ageTestOwner: "taxpayer",
+      incomeOwnershipTaxpayerPurchaseFunds: "6,000", incomeOwnershipSpousePurchaseFunds: "2,000",
+      incomeOwnershipTaxpayerPriorYearInterestReported: "100", incomeOwnershipSpousePriorYearInterestReported: "400",
+      incomeOwnershipCommunityProperty: false, incomeOwnershipUnchangedSinceIssueConfirmed: true,
+      incomeOwnershipSourceFactsConfirmed: true, incomeOwnershipSourceReference: "Actual original records" });
+    const result = buildSavingsBondInputs(data, 2025, "mfj", interest, completePersonalInfo);
+    expect(result.savingsBondRedemptions?.[0].incomeOwnership).toEqual({ taxpayerPurchaseFunds: "6000", spousePurchaseFunds: "2000", taxpayerPriorYearInterestReported: "100", spousePriorYearInterestReported: "400", communityProperty: false, ownershipUnchangedSinceIssueConfirmed: true, sourceFactsConfirmed: true, sourceReference: "Actual original records" });
+    data.redemptions[0].incomeOwnershipSourceFactsConfirmed = false;
+    expect(() => buildSavingsBondInputs(data, 2025, "mfj", interest, completePersonalInfo)).toThrow(/confirmed|source/i);
+    data.redemptions[0].incomeOwnershipSourceFactsConfirmed = true;
+    data.redemptions[0].incomeOwnershipSpousePurchaseFunds = "2001";
+    expect(() => buildSavingsBondInputs(data, 2025, "mfj", interest, completePersonalInfo)).toThrow(/purchase|principal/i);
+    data.redemptions[0].incomeOwnershipSpousePurchaseFunds = "";
+    expect(() => buildSavingsBondInputs(data, 2025, "mfj", interest, completePersonalInfo)).toThrow(/actual|complete/i);
+  });
   it("preserves unknown bond sources and exact entered amounts", () => {
     expect(buildSavingsBondInputs(undefined, 2025, "single", interest, completePersonalInfo)).toEqual({});
     expect(savingsBondFactErrors({ taxYear: "2025" }, 2025, "single", interest, completePersonalInfo)).toHaveProperty("savingsBondEducation");

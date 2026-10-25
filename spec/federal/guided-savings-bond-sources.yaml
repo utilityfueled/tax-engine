@@ -10,8 +10,11 @@ notes: |
   coordination and final phaseout remain auditable in the canonical engine.
   Preserve unknown answers and known ineligibility. Source labels are local
   opaque identifiers; taxpayers retain the original bond serial-number records.
-  Positive mixed/joint bond attribution to educators remains explicitly blocked
-  until a controlling allocation method is established.
+  Joint bond income ownership can be sourced from actual noncommunity purchase
+  funds and each owner's prior interest reporting. These facts do not propose a
+  final exclusion split; only sole-income-owner or fully excluded interest is
+  currently supported for educator attribution. Partial mixed-owner exclusions,
+  community property and changed ownership require a separate source method.
 lines:
   - line: "actual-source"
     description: "Unknown-preserving source facts and exact amounts"
@@ -49,3 +52,11 @@ lines:
     description: "New visible source records reach the canonical calculation"
     formula: "Entering every visible actual bond and education fact plus source confirmations produces sourceFactsComplete through schema presence checks, never a user-editable provenance flag; substantive edits invalidate confirmation"
     testRef: "tests/apps/web/savings-bond-source-interactions.test.tsx::completes a new bond through visible controls and the guided bridge"
+  - line: "joint-income-ownership"
+    description: "Preserve actual purchase funds and prior interest reporting"
+    formula: "Optional joint ownership controls collect exact purchase contributions, prior interest by owner, actual community-property status, unchanged history and source reference/confirmation; entered facts must reconcile to principal and prior interest, while absent facts remain unknown"
+    testRef: "tests/guided-interview/guided-savings-bond-facts.test.ts::preserves and validates actual joint income ownership records"
+  - line: "joint-ownership-controls"
+    description: "Joint income ownership is explicitly recorded and reconfirmed"
+    formula: "Visible joint-registration fields have no monetary or ownership defaults; editing substantive bond facts clears ownership and outer confirmation; changing registration clears the obsolete joint worksheet"
+    testRef: "tests/apps/web/savings-bond-source-interactions.test.tsx::collects joint purchase records and invalidates ownership confirmation"

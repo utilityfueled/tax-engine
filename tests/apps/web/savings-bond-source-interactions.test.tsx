@@ -11,6 +11,40 @@ import { calculateFederalTax } from "@/engine/federal.js";
 import { TaxYearInputSchema } from "@/models/inputs.js";
 import type { SavingsBondEducationData } from "@/lib/guided-savings-bond-facts";
 
+it("collects joint purchase records and invalidates ownership confirmation", async () => {
+  (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+  const container = document.createElement("div"); document.body.appendChild(container); const root = createRoot(container);
+  let latest: SavingsBondEducationData | undefined;
+  function Harness() { const [data, setData] = useState<SavingsBondEducationData>({ redemptions: [{ sourceId: "joint", registeredOwner: "taxpayer_and_spouse" }] }); return <SavingsBondSourceDetails data={data} onChange={next => { latest = next; setData(next ?? {}); }} />; }
+  async function change(label: string, value: string) {
+    const field = [...container.querySelectorAll("label")].find(item => item.querySelector(".guided-field-label")?.textContent === label)?.querySelector<HTMLInputElement | HTMLSelectElement>("input,select");
+    if (!field) throw new Error(`Missing field ${label}`);
+    const setter = Object.getOwnPropertyDescriptor(field.tagName === "SELECT" ? HTMLSelectElement.prototype : HTMLInputElement.prototype, "value")?.set;
+    if (!setter) throw new Error("Missing setter");
+    await act(async () => { setter.call(field, value); field.dispatchEvent(new Event(field.tagName === "SELECT" ? "change" : "input", { bubbles: true })); });
+  }
+  try {
+    await act(async () => root.render(<Harness />));
+    await change("Your actual funds used to purchase this joint bond", "6000");
+    expect(latest?.redemptions?.[0].incomeOwnershipCommunityProperty).toBeUndefined();
+    await change("Spouse's actual funds used to purchase this joint bond", "2000");
+    await change("This bond's interest previously reported by you", "100");
+    await change("This bond's interest previously reported by spouse", "400");
+    await change("This joint bond is community property", "false");
+    await change("Income ownership has remained unchanged since issue", "true");
+    await change("Purchase and prior-reporting record reference", "Original purchase records");
+    await change("Joint income ownership records checked after the last edit", "true");
+    await change("All bond and education sources checked after the last edit", "true");
+    expect(latest?.redemptions?.[0]).toMatchObject({ incomeOwnershipTaxpayerPurchaseFunds: "6000", incomeOwnershipSpousePriorYearInterestReported: "400", incomeOwnershipSourceFactsConfirmed: true, incomeOwnershipCommunityProperty: false });
+    await change("Your actual funds used to purchase this joint bond", "6000.01");
+    expect(latest?.sourceFactsConfirmed).toBeNull();
+    expect(latest?.redemptions?.[0].incomeOwnershipSourceFactsConfirmed).toBeNull();
+    await change("Registered bond owner", "taxpayer");
+    expect(latest?.redemptions?.[0].incomeOwnershipTaxpayerPurchaseFunds).toBeUndefined();
+    expect(container.textContent).not.toContain("Your actual funds used to purchase this joint bond");
+  } finally { await act(async () => root.unmount()); container.remove(); }
+});
+
 it("collects actual bond and expense facts without assuming answers", async () => {
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
   const container = document.createElement("div"); document.body.appendChild(container); const root = createRoot(container);

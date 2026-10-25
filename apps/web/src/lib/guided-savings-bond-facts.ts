@@ -2,6 +2,7 @@ import Decimal from "decimal.js";
 import { z } from "zod";
 import { Form8815Schema, SavingsBondRedemptionSchema, type TaxYearInput } from "@/models/inputs.js";
 import { validateSavingsBondReturnIdentity } from "@/engine/forms/savings-bond-return-identity.js";
+import { calculateSavingsBondIncomeOwnership } from "@/engine/forms/savings-bond-income-ownership.js";
 import type { FilingStatus as EngineFilingStatus } from "@/models/constants.js";
 import type { FilingStatus, InterestEntryData, PersonalInfoData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
@@ -37,6 +38,16 @@ export const savingsBondFields: SavingsBondField[] = [
   { key: "faceValue", label: "Actual face value", kind: "money" },
   { key: "priorYearInterestReported", label: "This bond's interest reported in earlier years", kind: "money" },
 ];
+export const savingsBondIncomeOwnershipFields: SavingsBondField[] = [
+  { key: "incomeOwnershipTaxpayerPurchaseFunds", label: "Your actual funds used to purchase this joint bond", kind: "money" },
+  { key: "incomeOwnershipSpousePurchaseFunds", label: "Spouse's actual funds used to purchase this joint bond", kind: "money" },
+  { key: "incomeOwnershipTaxpayerPriorYearInterestReported", label: "This bond's interest previously reported by you", kind: "money" },
+  { key: "incomeOwnershipSpousePriorYearInterestReported", label: "This bond's interest previously reported by spouse", kind: "money" },
+  { key: "incomeOwnershipCommunityProperty", label: "This joint bond is community property", kind: "boolean" },
+  { key: "incomeOwnershipUnchangedSinceIssueConfirmed", label: "Income ownership has remained unchanged since issue", kind: "boolean" },
+  { key: "incomeOwnershipSourceReference", label: "Purchase and prior-reporting record reference", kind: "text" },
+  { key: "incomeOwnershipSourceFactsConfirmed", label: "Joint income ownership records checked after the last edit", kind: "boolean" },
+];
 export const savingsBondExpenseFields: SavingsBondField[] = [
   { key: "beneficiaryName", label: "Education beneficiary name", kind: "text" },
   { key: "beneficiaryTaxId", label: "Beneficiary tax ID as entered in household information", kind: "text" },
@@ -60,7 +71,7 @@ export const savingsBondWorksheetFields: SavingsBondField[] = [
   { key: "puertoRicoIncomeExclusion", label: "Actual Puerto Rico income exclusion for Form 8815 MAGI", kind: "money" },
   { key: "royaltyInterestAdjustment", label: "Signed change in AGI from the pre-exclusion royalty interest deduction", kind: "money", signed: true },
 ];
-const fields = [...savingsBondFields, ...savingsBondExpenseFields, ...savingsBondWorksheetFields];
+const fields = [...savingsBondFields, ...savingsBondIncomeOwnershipFields, ...savingsBondExpenseFields, ...savingsBondWorksheetFields];
 function normalized(record: SavingsBondSourceRecord): Record<string, unknown> {
   const result: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(record)) {
@@ -99,7 +110,19 @@ function collect(data: SavingsBondEducationData, year?: number | null, status?: 
   if ((year !== 2025 && year !== 2026) || !status || data.taxYear !== String(year)) throw new Error("Match the actual bond source year to the return year and filing status.");
   if (data.sourceFactsConfirmed !== true || data.currentStatementReconciliationConfirmed !== true) throw new Error("Confirm the actual bond and education sources and current statement interest reconciliation.");
   if (!Array.isArray(data.redemptions) || !Array.isArray(data.educationExpenses)) throw new Error("Add actual bond and education records or explicitly confirm an empty list.");
-  const redemptions = data.redemptions.map(record => SavingsBondRedemptionSchema.parse(normalized(record)));
+  const redemptions = data.redemptions.map(record => {
+    const source = normalized(record);
+    const incomeOwnership: Record<string, unknown> = {};
+    for (const field of savingsBondIncomeOwnershipFields) {
+      const value = source[field.key];
+      if (value === undefined) continue;
+      const name = field.key.slice("incomeOwnership".length);
+      const sourceName = name === "UnchangedSinceIssueConfirmed" ? "ownershipUnchangedSinceIssueConfirmed" : name.charAt(0).toLowerCase() + name.slice(1);
+      incomeOwnership[sourceName] = value;
+      delete source[field.key];
+    }
+    return SavingsBondRedemptionSchema.parse({ ...source, ...(Object.keys(incomeOwnership).length ? { incomeOwnership } : {}) });
+  });
   const worksheet = normalized(Object.fromEntries(savingsBondWorksheetFields.map(field => [field.key, data[field.key as keyof SavingsBondEducationData]])) as SavingsBondSourceRecord);
   for (const field of savingsBondWorksheetFields) if (worksheet[field.key] === undefined) throw new Error(`Enter the actual ${field.label.toLowerCase()}.`);
   const facts = Form8815Schema.parse({ ...worksheet, sourceFactsConfirmed: data.sourceFactsConfirmed, currentStatementReconciliationConfirmed: data.currentStatementReconciliationConfirmed, educationExpenses: data.educationExpenses.map(normalized) });
@@ -127,6 +150,7 @@ function collect(data: SavingsBondEducationData, year?: number | null, status?: 
     if (principal.gt(gross) || prior.gt(gross.minus(principal))) throw new Error("Actual principal and previously reported interest cannot exceed redemption proceeds.");
     if (bond.interest !== undefined && !actualAmount(bond.interest, "saved bond interest").eq(gross.minus(principal).minus(prior))) throw new Error("Saved bond interest does not reconcile to the actual source records.");
     currentInterest = currentInterest.plus(gross.minus(principal).minus(prior));
+    if (bond.incomeOwnership) calculateSavingsBondIncomeOwnership(bond);
   }
   const adjustment = actualAmount(facts.priorYearInterestIncludedInCurrentStatements, "prior interest included in current statements");
   if (adjustment.gt(priorInterest)) throw new Error("The statement adjustment exceeds interest actually reported in earlier years.");

@@ -1,6 +1,6 @@
 "use client";
 
-import { savingsBondFields, savingsBondExpenseFields, savingsBondWorksheetFields, type SavingsBondEducationData, type SavingsBondField, type SavingsBondSourceRecord } from "@/lib/guided-savings-bond-facts";
+import { savingsBondFields, savingsBondIncomeOwnershipFields, savingsBondExpenseFields, savingsBondWorksheetFields, type SavingsBondEducationData, type SavingsBondField, type SavingsBondSourceRecord } from "@/lib/guided-savings-bond-facts";
 import { BooleanFact, TextFact } from "./fact-fields";
 import { CurrencyField } from "./currency-field";
 
@@ -17,7 +17,18 @@ function SourceFields({ fields, record, onChange }: { fields: SavingsBondField[]
 export function SavingsBondSourceDetails({ data, onChange }: { data?: SavingsBondEducationData; onChange: (next: SavingsBondEducationData | undefined) => void }) {
   if (!data) return <div className="guided-w2-card" style={{ padding: "12px" }}><h3 className="guided-w2-card-title">Savings-bond education exclusion (Form 8815)</h3><p className="guided-hint">Add actual series EE or I redemption records and coordinated education expenses.</p><button type="button" className="utility-button" onClick={() => onChange({})}>Add savings-bond education records</button></div>;
   const update = (next: Partial<SavingsBondEducationData>) => onChange({ ...data, ...next, sourceFactsConfirmed: null });
-  const row = (collection: "redemptions" | "educationExpenses", index: number, key: string, value: string | boolean | null) => update({ [collection]: data[collection]?.map((item, offset) => offset === index ? { ...item, [key]: value, ...(key === "registeredOwner" ? { ageTestOwner: undefined } : {}), ...(collection === "educationExpenses" && key !== "coordinationConfirmed" ? { coordinationConfirmed: null } : {}) } : item) });
+  const row = (collection: "redemptions" | "educationExpenses", index: number, key: string, value: string | boolean | null) => update({ [collection]: data[collection]?.map((item, offset) => {
+    if (offset !== index) return item;
+    const next = { ...item, [key]: value };
+    if (collection === "redemptions") {
+      if (key !== "incomeOwnershipSourceFactsConfirmed" && savingsBondIncomeOwnershipFields.some(field => item[field.key] !== undefined)) next.incomeOwnershipSourceFactsConfirmed = null;
+      if (key === "registeredOwner") {
+        next.ageTestOwner = undefined;
+        for (const field of savingsBondIncomeOwnershipFields) delete next[field.key];
+      }
+    } else if (key !== "coordinationConfirmed") next.coordinationConfirmed = null;
+    return next;
+  }) });
   return <div className="guided-w2-card" style={{ padding: "12px" }}>
     <h3 className="guided-w2-card-title">Savings-bond education exclusion (Form 8815)</h3>
     <p className="guided-hint">Use actual bond records, tuition receipts and benefit worksheets. Keep the original serial-number records. Enter the reported Form 1099-INT Box 3 amounts in investment income. Leave unknown answers blank; enter 0 only when your records establish zero. See <a href="https://www.irs.gov/pub/irs-pdf/f8815.pdf" target="_blank" rel="noreferrer">Form 8815 instructions</a>.</p>
@@ -25,6 +36,7 @@ export function SavingsBondSourceDetails({ data, onChange }: { data?: SavingsBon
     <fieldset className="guided-fieldset"><legend>Bond redemptions</legend>
       {(data.redemptions ?? []).map((record, index) => <fieldset className="guided-fieldset" key={String(record.sourceId ?? index)}><legend>Bond redemption {index + 1}</legend>
         <SourceFields fields={savingsBondFields} record={record} onChange={(key, value) => row("redemptions", index, key, value)} />
+        {record.registeredOwner === "taxpayer_and_spouse" && <fieldset className="guided-fieldset"><legend>Joint bond income ownership</legend><p className="guided-hint">Complete these records when bond interest must be attributed to an educator. Use actual purchase funds and each person's prior reported interest. Community property, changed ownership and a reduced exclusion shared by both owners need a separate tax method; entering a split does not establish one.</p><SourceFields fields={savingsBondIncomeOwnershipFields} record={record} onChange={(key, value) => row("redemptions", index, key, value)} /></fieldset>}
         <button type="button" className="utility-button" onClick={() => update({ redemptions: data.redemptions?.filter((_, offset) => offset !== index) })}>Remove bond redemption {index + 1}</button>
       </fieldset>)}
       {data.redemptions?.length === 0 && <p className="guided-hint">No bond redemptions entered.</p>}
