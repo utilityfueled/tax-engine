@@ -29,7 +29,11 @@ describe("Federal standard deduction integration", () => {
 
   it("honors the deduction election before and after the itemized limitation", () => {
     const mortgage = [{ lender: "Synthetic lender", mortgageInterestReceived: "16500", outstandingMortgagePrincipal: "100000", mortgageOriginationDate: "2020-01-01" }];
-    const highIncome = { ...base, w2s: [{ ...base.w2s[0], wages: "700000" }], form1098: mortgage };
+    const highIncome = { ...base, form2210: { // Explicit synthetic prior-year exception; unrelated credit/deduction assertions stay intact.
+      calendarYearTaxpayer:true,residentReturn:true,farmerOrFisher:false,disasterReliefClaimed:false,waiverRequested:false,
+      calculationMethod:"regular" as const,withholdingMethod:"equal-installments" as const,priorYearTaxStatus:"no-tax-liability" as const,priorYearFullYear:true,
+      priorYearResidentAllYear:true,priorYearTaxForForm2210:"0",priorYearTaxComputationConfirmed:true,
+    }, w2s: [{ ...base.w2s[0], wages: "700000" }], form1098: mortgage };
     const automatic = calculateFederalTax(TaxYearInputSchema.parse(highIncome));
     expect(automatic.deductionUsed).toBe("standard");
     expect(automatic.deductionAmount.toString()).toBe("16100");

@@ -12,6 +12,11 @@ import { simpleW2Fixture } from "../fixtures/simple-w2.js";
 function fixture(year = 2025) {
   const parsed = TaxYearInputSchema.parse({
     ...simpleW2Fixture,
+    form2210: { // Explicit synthetic prior-year exception; unrelated credit/deduction assertions stay intact.
+      calendarYearTaxpayer:true,residentReturn:true,farmerOrFisher:false,disasterReliefClaimed:false,waiverRequested:false,
+      calculationMethod:"regular",withholdingMethod:"equal-installments",priorYearTaxStatus:"no-tax-liability",priorYearFullYear:true,
+      priorYearResidentAllYear:true,priorYearTaxForForm2210:"0",priorYearTaxComputationConfirmed:true,
+    },
     taxpayer: { ...simpleW2Fixture.taxpayer, taxYear: year },
     form1099Int: [{ payer: "Treasury", interestIncome: "100", usSavingsBondInterest: "2000" }],
     savingsBondRedemptions: [{ sourceId: "synthetic-bond", proceeds: "10000", bondType: "paper_ee", issueDate: "2005-01-01", redemptionDate: `${year}-06-15`, ownerDateOfBirth: "1980-01-01", registeredOwner: "taxpayer", ownershipConfirmed: true, faceValue: "16000", priorYearInterestReported: "0" }],

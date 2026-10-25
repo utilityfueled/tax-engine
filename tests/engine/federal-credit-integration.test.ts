@@ -8,7 +8,11 @@ vi.mock("@/models/constants.js",async(importOriginal)=>{
 import {calculateFederalTax} from "@/engine/federal.js";
 import {TaxYearInputSchema} from "@/models/inputs.js";
 import {simpleW2Fixture} from "../fixtures/simple-w2.js";
-const fixture=(year:number,overrides:Record<string,unknown>={})=>TaxYearInputSchema.parse({...simpleW2Fixture,taxpayer:{...simpleW2Fixture.taxpayer,taxYear:year,dependents:[]},w2s:[],...overrides});
+const fixture=(year:number,overrides:Record<string,unknown>={})=>TaxYearInputSchema.parse({...simpleW2Fixture,form2210: { // Explicit synthetic prior-year exception; unrelated credit/deduction assertions stay intact.
+      calendarYearTaxpayer:true,residentReturn:true,farmerOrFisher:false,disasterReliefClaimed:false,waiverRequested:false,
+      calculationMethod:"regular",withholdingMethod:"equal-installments",priorYearTaxStatus:"no-tax-liability",priorYearFullYear:true,
+      priorYearResidentAllYear:true,priorYearTaxForForm2210:"0",priorYearTaxComputationConfirmed:true,
+    },taxpayer:{...simpleW2Fixture.taxpayer,taxYear:year,dependents:[]},w2s:[],...overrides});
 const adoptionChild={childName:"Synthetic",isSpecialNeeds:false,isForeignAdoption:false,adoptionBecameFinal:true,qualifiedExpenses:"10000",employerBenefits:"0",priorYearCreditsClaimed:"0",priorYearExclusionsClaimed:"0"};
 const line=(result:ReturnType<typeof calculateFederalTax>,id:string)=>result.allLines.filter(l=>l.form==="1040"&&l.line===id).at(-1)?.value.toString();
 describe("Personal credit return integration",()=>{

@@ -355,12 +355,12 @@ describe("AMT Edge Cases - Audit trail", () => {
       regularTax: d(100000),
     }), c);
     const lineIds = result.lines.map((l) => l.line);
-    expect(lineIds).toContain("1"); // Taxable income
+    expect(lineIds).toContain("1b"); // Taxable income before senior deduction
     expect(lineIds).toContain("2a"); // SALT add-back
-    expect(lineIds).toContain("7"); // AMTI
-    expect(lineIds).toContain("8"); // Exemption
-    expect(lineIds).toContain("9"); // AMT base
-    expect(lineIds).toContain("10"); // Tentative minimum tax
+    expect(lineIds).toContain("4"); // AMTI
+    expect(lineIds).toContain("5"); // Exemption
+    expect(lineIds).toContain("6"); // AMT base
+    expect(lineIds).toContain("9"); // Tentative minimum tax
     expect(lineIds).toContain("11"); // AMT
   });
 
@@ -751,10 +751,10 @@ describe("AMT Edge Cases - Audit trail completeness", () => {
       isItemizing: true,
     }), c);
     const lines = result.lines;
-    const line1 = lines.find((l) => l.line === "1");
+    const line1 = lines.find((l) => l.line === "1b");
     const line2a = lines.find((l) => l.line === "2a");
-    const line7 = lines.find((l) => l.line === "7");
-    const line8 = lines.find((l) => l.line === "8");
+    const line7 = lines.find((l) => l.line === "4");
+    const line8 = lines.find((l) => l.line === "5");
     const line11 = lines.find((l) => l.line === "11");
     expect(line1).toBeDefined();
     expect(line2a).toBeDefined();
