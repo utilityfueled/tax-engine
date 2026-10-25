@@ -664,12 +664,19 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
   const adjustments = buildAdjustmentsInput(adjustmentData);
   const ira = adjustmentData?.iraContributions;
   const iraDeductionWorksheet = ira ? {
+    sourceFactsConfirmed: ira.sourceFactsConfirmed ?? undefined,
     primaryContributions: toDecimalString(ira.primaryContributions),
     primaryIsActiveParticipant: ira.primaryIsActiveParticipant as boolean,
-    primaryAge50OrOlder: state.taxYear - Number(personalInfo.dateOfBirth.slice(0, 4)) >= 50,
+    primaryCompensation: toOptionalDecimalString(ira.primaryCompensation),
+    primaryRothContributions: toOptionalDecimalString(ira.primaryRothContributions),
+    primarySection501c18Contributions: toOptionalDecimalString(ira.primarySection501c18Contributions),
     ...(personalInfo.spouse && (segmentation.filingStatus === "mfj" || segmentation.filingStatus === "mfs") ? {
       spouseIsActiveParticipant: ira.spouseIsActiveParticipant as boolean,
-      spouseAge50OrOlder: state.taxYear - Number(personalInfo.spouse.dateOfBirth.slice(0, 4)) >= 50,
+    } : {}),
+    ...(segmentation.filingStatus === "mfj" ? {
+      spouseCompensation: toOptionalDecimalString(ira.spouseCompensation),
+      spouseRothContributions: toOptionalDecimalString(ira.spouseRothContributions),
+      spouseSection501c18Contributions: toOptionalDecimalString(ira.spouseSection501c18Contributions),
     } : {}),
     ...(hasEnteredAmount(ira.spouseContributions) ? { spouseContributions: toDecimalString(ira.spouseContributions) } : {}),
   } : undefined;

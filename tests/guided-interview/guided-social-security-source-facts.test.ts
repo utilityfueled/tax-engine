@@ -2,7 +2,7 @@
 import { expect, it } from "vitest";
 import { buildGuidedFactAnswers, buildGuidedSyntheticDocuments, buildSocialSecurityInputs, buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
 import { type SocialSecurityData, validateSection } from "@/lib/guided-interview-flow";
-import { completeW2Entry, startCompleteInterview } from "./complete-facts";
+import { completeIraSources, completeW2Entry, startCompleteInterview } from "./complete-facts";
 import { calculateFederalTax } from "@/engine/federal";
 import { TaxYearInputSchema } from "@/models/inputs";
 
@@ -88,7 +88,7 @@ it("includes actual possession exclusions in the independently computed taxable 
 it("requires the actual IRA interaction worksheet when a covered person contributes", () => {
   const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["social-security"], lifeEvents: [], stateCode: null });
   state.sectionData["income-social-security"] = data();
-  state.sectionData.adjustments = { hsaDeduction: "", studentLoanInterest: "", selfEmployedHealthInsurance: "", educatorExpenses: "", iraDeduction: "100", alimonyPaid: "", iraContributions: { primaryContributions: "100", primaryIsActiveParticipant: true } };
+  state.sectionData.adjustments = { hsaDeduction: "", studentLoanInterest: "", selfEmployedHealthInsurance: "", educatorExpenses: "", iraDeduction: "100", alimonyPaid: "", iraContributions: { ...completeIraSources, primaryContributions: "100", primaryIsActiveParticipant: true } };
   expect(buildTaxInputFromGuidedData(state)).toBeNull();
 });
 

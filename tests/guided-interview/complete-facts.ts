@@ -108,3 +108,6 @@ export const completeSocialSecurityTreatment = { residentTreatmentConfirmed: tru
 
 /** Explicit synthetic government-payment source facts, never application defaults. */
 export const completeUnemploymentSource = { sourceTaxYear: "2025", sourceFormRevision: "2024-03", payer: "Actual State Agency", payerTin: "12-3456789", accountReference: "synthetic-government-source", accountHolder: "primary" as const, recipientTaxIdLast4: "3333", programType: "government-unemployment" as const, compensation: "0", federalWithheld: "0", stateOrLocalTaxRefund: "0", rtaaPayments: "0", taxableGrants: "0", agriculturePayments: "0", marketGain: "0", tradeOrBusinessRefund: false, currentYearRepaid: "0", priorYearRepaid: "0", unrecoveredAfterTaxContributions: "0", actualReceiptConfirmed: true, additionalWorksheetRequired: false, sourceFactsConfirmed: true, stateTaxReporting: "none" as const };
+
+/** Explicit synthetic IRA source facts; not production defaults. */
+export const completeIraSources = { primaryContributions: "1000.10", primaryIsActiveParticipant: false, spouseContributions: "", spouseIsActiveParticipant: null, primaryCompensation: "5000.20", primaryRothContributions: "0", primarySection501c18Contributions: "0", contributionTaxYear: "2025", contributionTimingConfirmed: true, specialContributionRulesRequired: false, sourceFactsConfirmed: true };

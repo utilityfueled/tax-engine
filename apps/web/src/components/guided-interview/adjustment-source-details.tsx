@@ -4,6 +4,7 @@ import type { AdjustmentData, FilingStatus } from "@/lib/guided-interview-flow";
 import { alimonyRequirementFields, isDeductibleAlimony, adjustmentFactErrors } from "@/lib/guided-adjustment-facts";
 import { CurrencyField } from "./currency-field";
 import { BooleanFact, TextFact } from "./fact-fields";
+import { IraSourceDetails } from "./ira-source-details";
 
 const alimonyLabels = {
   paidInCash: "The payments were cash, checks or money orders",
@@ -15,20 +16,10 @@ const alimonyLabels = {
 };
 
 export function AdjustmentSourceDetails({ data, filingStatus, onChange }: { data: AdjustmentData; filingStatus?: FilingStatus | null; onChange: (data: AdjustmentData) => void }) {
-  const ira = data.iraContributions;
   const alimony = data.alimonyQualification ?? { instrumentDate: "", post2018ModificationAppliesNewRules: null, paidInCash: null, notDesignatedNondeductible: null, notChildSupport: null, noJointReturnWithRecipient: null, householdRequirementMet: null, noPaymentsAfterRecipientDeath: null, recipientSsn: "" };
   const updateAlimony = (change: Partial<typeof alimony>) => onChange({ ...data, alimonyQualification: { ...alimony, ...change } });
-  const married = filingStatus === "mfj" || filingStatus === "mfs";
   return <>
-    <h4>Traditional IRA contributions</h4>
-    {data.iraDeduction.trim() && <p className="guided-hint">Saved IRA deduction estimate: {data.iraDeduction}. Enter actual contributions and coverage below; the engine calculates the deduction.</p>}
-    {!ira ? <button type="button" className="utility-button" onClick={() => onChange({ ...data, iraContributions: { primaryContributions: "", primaryIsActiveParticipant: null, spouseContributions: "", spouseIsActiveParticipant: null } })}>Add IRA contribution facts</button> : <div className="guided-form-grid">
-      <CurrencyField label="Taxpayer traditional IRA contributions for this tax year" value={ira.primaryContributions} onChange={(primaryContributions) => onChange({ ...data, iraContributions: { ...ira, primaryContributions } })} required />
-      <BooleanFact label="Taxpayer covered by an employer retirement plan at any time during this tax year" value={ira.primaryIsActiveParticipant} onChange={(primaryIsActiveParticipant) => onChange({ ...data, iraContributions: { ...ira, primaryIsActiveParticipant } })} />
-      {married && <BooleanFact label="Spouse covered by an employer retirement plan at any time during this tax year" value={ira.spouseIsActiveParticipant} onChange={(spouseIsActiveParticipant) => onChange({ ...data, iraContributions: { ...ira, spouseIsActiveParticipant } })} />}
-      {filingStatus === "mfj" && <CurrencyField label="Spouse traditional IRA contributions for this tax year" value={ira.spouseContributions} onChange={(spouseContributions) => onChange({ ...data, iraContributions: { ...ira, spouseContributions } })} required />}
-      <button type="button" className="utility-button" onClick={() => onChange({ ...data, iraContributions: undefined, iraDeduction: "" })}>Remove IRA contribution facts</button>
-    </div>}
+    <IraSourceDetails data={data} filingStatus={filingStatus} onChange={onChange} />
     <h4>Alimony payments</h4>
     <CurrencyField label="Alimony paid" hint="Enter actual payments. Eligibility depends on the instrument and payment facts below." value={data.alimonyPaid} onChange={(alimonyPaid) => onChange({ ...data, alimonyPaid })} />
     {data.alimonyPaid.trim() && <div className="guided-form-grid">

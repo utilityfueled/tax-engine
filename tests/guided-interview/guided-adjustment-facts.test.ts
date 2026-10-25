@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
 import { emptyAdjustmentData, emptyOtherTaxesData, validateSection } from "@/lib/guided-interview-flow";
-import { startCompleteInterview } from "./complete-facts";
+import { completeIraSources, startCompleteInterview } from "./complete-facts";
 import { adjustmentFactErrors, householdFactErrors } from "@/lib/guided-adjustment-facts";
 
 function stateWith(section: "adjustments" | "other-taxes", data: unknown) {
@@ -19,9 +19,9 @@ describe("actual adjustment and employee facts", () => {
     }
   });
   it("uses actual IRA contributions and preserves false coverage facts", () => {
-    const data = { ...emptyAdjustmentData, iraDeduction: "100", iraContributions: { primaryContributions: "6000.10", primaryIsActiveParticipant: false, spouseContributions: "", spouseIsActiveParticipant: null } };
+    const data = { ...emptyAdjustmentData, iraDeduction: "100", iraContributions: { ...completeIraSources, primaryContributions: "6000.10", primaryCompensation: "10000" } };
     const state = stateWith("adjustments", data);
-    expect(buildTaxInputFromGuidedData(state)?.iraDeductionWorksheet).toMatchObject({ primaryContributions: "6000.10", primaryIsActiveParticipant: false, primaryAge50OrOlder: false });
+    expect(buildTaxInputFromGuidedData(state)?.iraDeductionWorksheet).toMatchObject({ primaryContributions: "6000.10", primaryIsActiveParticipant: false, primaryCompensation: "10000", primaryRothContributions: "0", sourceFactsConfirmed: true });
     expect(buildTaxInputFromGuidedData(state)?.adjustments ?? {}).not.toHaveProperty("iraDeduction");
     expect(buildTaxInputFromGuidedData(stateWith("adjustments", { ...data, iraContributions: { ...data.iraContributions, primaryIsActiveParticipant: null } }))).toBeNull();
   });

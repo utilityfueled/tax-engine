@@ -22,6 +22,18 @@ export function adjustmentFactErrors(data: AdjustmentData | undefined, filingSta
   if (!errors.iraDeduction && parseGuidedCurrency(data.iraDeduction).gt(0) && !data.iraContributions) errors.iraContributions = "Enter actual IRA contributions and employer-plan coverage; a saved deduction estimate cannot replace these facts.";
   const ira = data.iraContributions;
   if (ira) {
+    if (!["2025", "2026"].includes(ira.contributionTaxYear ?? "") || (taxYear != null && ira.contributionTaxYear !== String(taxYear))) errors.iraContributionYear = "Confirm the actual tax year designated for these contributions.";
+    if (ira.contributionTimingConfirmed !== true) errors.iraContributionTiming = "Confirm the contributions were timely made for the designated tax year; do not include a future planned contribution as paid.";
+    if (ira.specialContributionRulesRequired !== false) errors.iraSpecialRules = "Rollover, recharacterization, returned or excess contributions need their actual source worksheets before these totals can be used.";
+    if (ira.sourceFactsConfirmed !== true) errors.iraConfirmation = "Check the IRA compensation and contribution facts after their last edit.";
+    for (const field of ["primaryCompensation", "primaryRothContributions", "primarySection501c18Contributions"] as const) {
+      const error = amountError(ira[field], field); if (error) errors[field] = error;
+    }
+    for (const field of ["spouseCompensation", "spouseRothContributions", "spouseSection501c18Contributions"] as const) {
+      if (filingStatus !== "mfj" && !hasEnteredAmount(ira[field])) continue;
+      const error = amountError(ira[field], field); if (error) errors[field] = error;
+      else if (filingStatus && filingStatus !== "mfj" && parseGuidedCurrency(ira[field]).gt(0)) errors[field] = "Reconcile saved spouse IRA source facts when this is not a joint return.";
+    }
     const primaryError = amountError(ira.primaryContributions, "taxpayer IRA contributions");
     if (primaryError) errors.primaryContributions = primaryError;
     if (typeof ira.primaryIsActiveParticipant !== "boolean") errors.primaryIsActiveParticipant = "Confirm the taxpayer's employer-plan coverage during the tax year.";

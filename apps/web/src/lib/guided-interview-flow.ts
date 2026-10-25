@@ -889,6 +889,16 @@ export interface AdjustmentData {
     primaryIsActiveParticipant: boolean | null;
     spouseContributions: string;
     spouseIsActiveParticipant: boolean | null;
+    primaryCompensation?: string;
+    spouseCompensation?: string;
+    primaryRothContributions?: string;
+    spouseRothContributions?: string;
+    primarySection501c18Contributions?: string;
+    spouseSection501c18Contributions?: string;
+    contributionTaxYear?: string;
+    contributionTimingConfirmed?: boolean | null;
+    specialContributionRulesRequired?: boolean | null;
+    sourceFactsConfirmed?: boolean | null;
   };
   alimonyQualification?: {
     instrumentDate: string;
@@ -1404,12 +1414,15 @@ export function updateSectionData(
   data: unknown,
 ): GuidedFlowState {
   const credits = state.sectionData.credits;
+  const adjustments = state.sectionData.adjustments;
+  const iraSourcesChanged = ["income-w2", "income-self-employment", "income-retirement"].includes(sectionId) && adjustments?.iraContributions;
   const benefitSourcesChanged = (sectionId === "income-w2" || sectionId === "income-self-employment") && credits?.dependentCareBenefits;
   return {
     ...state,
     sectionData: {
       ...state.sectionData,
       [sectionId]: data,
+      ...(iraSourcesChanged && adjustments ? { adjustments: { ...adjustments, iraContributions: { ...iraSourcesChanged, sourceFactsConfirmed: null } } } : {}),
       ...(benefitSourcesChanged ? { credits: { ...credits, dependentCareBenefits: { ...credits.dependentCareBenefits,
         sourceFactsConfirmed: null, earnedIncomeWorksheetConfirmed: null, creditExpenseCoordinationConfirmed: null } } } : {}),
     },
