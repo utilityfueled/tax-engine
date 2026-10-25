@@ -50,6 +50,7 @@ export interface StateYearConstants {
 }
 
 export interface YearConstants {
+  taxYear: number;
   standardDeduction: Record<FilingStatus, Decimal>;
   dependentStandardDeduction: { minimum: Decimal; earnedIncomeAddition: Decimal };
   additionalStandardDeduction: { unmarried: Decimal; marriedOrSurvivingSpouse: Decimal };
@@ -1180,6 +1181,7 @@ export const NY_IT201_RESIDENT_CONSTANTS: Record<number, NYIT201ResidentYearCons
 
 export const TAX_CONSTANTS: Record<number, YearConstants> = {
   2025: {
+    taxYear: 2025,
     standardDeduction: {
       single: d(15750),
       married_filing_jointly: d(31500),
@@ -1824,6 +1826,7 @@ export const SECTION_280F_ADS_RECOVERY_PERIOD = 5;
 // ---------------------------------------------------------------------------
 
 export interface BaseYearTaxConstants {
+  taxYear: number;
   taxBrackets: Record<FilingStatus, TaxBracket[]>;
   capitalGainsRates: {
     zero: { threshold: Record<FilingStatus, Decimal> };
@@ -1848,6 +1851,7 @@ export interface StateTaxConstants {
 export const BASE_YEAR_TAX_CONSTANTS: Record<number, BaseYearTaxConstants> = {
   // ── 2022 (Rev. Proc. 2021-45) ─────────────────────────────
   2022: {
+    taxYear: 2022,
     taxBrackets: {
       single: [
         { min: d(0), max: d(10275), rate: d(0.10) },
@@ -1919,6 +1923,7 @@ export const BASE_YEAR_TAX_CONSTANTS: Record<number, BaseYearTaxConstants> = {
 
   // ── 2023 (Rev. Proc. 2022-38) ─────────────────────────────
   2023: {
+    taxYear: 2023,
     taxBrackets: {
       single: [
         { min: d(0), max: d(11000), rate: d(0.10) },
@@ -1990,6 +1995,7 @@ export const BASE_YEAR_TAX_CONSTANTS: Record<number, BaseYearTaxConstants> = {
 
   // ── 2024 (Rev. Proc. 2023-34) ─────────────────────────────
   2024: {
+    taxYear: 2024,
     taxBrackets: {
       single: [
         { min: d(0), max: d(11600), rate: d(0.10) },

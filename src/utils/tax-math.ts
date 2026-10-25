@@ -24,6 +24,45 @@ export function calculateTaxFromBrackets(
   return roundDollar(tax);
 }
 
+type OrdinaryTaxConstants = Pick<YearConstants, "taxYear" | "taxBrackets">;
+export type RegularIncomeTaxSource = "final-year-tax-table" | "statutory-rate-preview";
+
+/** A published table and an indexed-rate preview have different source status. */
+export function regularIncomeTaxSource(constants: OrdinaryTaxConstants): RegularIncomeTaxSource {
+  if ([2022, 2023, 2024, 2025].includes(constants.taxYear)) return "final-year-tax-table";
+  if (constants.taxYear === 2026) return "statutory-rate-preview";
+  throw new Error(`Federal tax table is unavailable for year ${constants.taxYear}`);
+}
+
+/**
+ * Form1040 line16 and ordinary-tax worksheet steps. Final2022–25 interval
+ * arithmetic is checked against every independently extracted published cell.
+ * 2026 remains a statutory-rate preview until its final table is available.
+ * Spec: spec/federal/tax-table.yaml.
+ */
+export function calculateRegularIncomeTax(
+  taxableIncome: Decimal,
+  filingStatus: FilingStatus,
+  constants: OrdinaryTaxConstants,
+): Decimal {
+  if (!taxableIncome.isFinite()) throw new Error("Taxable income must be finite");
+  const source = regularIncomeTaxSource(constants);
+  const income = roundDollar(zeroFloor(taxableIncome));
+  const brackets = constants.taxBrackets[filingStatus];
+  if (source === "statutory-rate-preview" || income.gte("100000")) {
+    return calculateTaxFromBrackets(income, brackets);
+  }
+  let midpoint: Decimal;
+  if (income.lt(5)) midpoint = d("2.5");
+  else if (income.lt(15)) midpoint = d("10");
+  else if (income.lt(25)) midpoint = d("20");
+  else {
+    const width = income.lt(3000) ? d("25") : d("50");
+    midpoint = income.div(width).floor().times(width).plus(width.div(2));
+  }
+  return calculateTaxFromBrackets(midpoint, brackets);
+}
+
 /**
  * Calculate capital gains tax using preferential rates (0%/15%/20%).
  * Uses the "stacking" method where gains are stacked on top of ordinary income.

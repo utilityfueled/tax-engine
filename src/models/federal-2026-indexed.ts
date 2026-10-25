@@ -77,6 +77,7 @@ export const FEDERAL_2026_CONSTANTS: YearConstants & {
   adoptionCredit: YearConstants["adoptionCredit"] & { refundablePerChild: Decimal };
   qbi: YearConstants["qbi"] & { minimumDeduction: Decimal; minimumActiveIncome: Decimal };
 } = freezeRuleData({
+  taxYear: 2026,
   ...FEDERAL_2026_INDEXED,
   saltCap: d("40400"),
   saltPhaseDown: { magiThreshold: d("505000"), minimumCap: d("10000"), rate: d("0.30") },
