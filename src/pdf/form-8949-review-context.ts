@@ -2,6 +2,7 @@
 import { createHash } from 'node:crypto';
 import type { TaxYearInput } from '@/models/inputs.js';
 import { calculateForm8949, type Form8949Result } from '@/engine/forms/form-8949.js';
+import { assertOrdinaryDigitalAssetReview } from '@/engine/forms/digital-asset-capital-input.js';
 import { redactReviewIdentifiers } from './redact-review-identifiers.js';
 
 const brand = Symbol('prepared Form8949 review');
@@ -10,7 +11,8 @@ const prepared = new WeakMap<PreparedForm8949Review, { originalDigest: string; r
 
 function sourceDigest(input: TaxYearInput, redacted = false): string {
   const source = { taxpayer: input.taxpayer, form1099B: input.form1099B,
-    form1099Div: input.form1099Div, section1202Sources: input.section1202Sources };
+    form1099Div: input.form1099Div, section1202Sources: input.section1202Sources,
+    form1099DA: input.form1099DA, cryptoIncome: input.cryptoIncome };
   return createHash('sha256').update(JSON.stringify(redacted ? redactReviewIdentifiers(source) : source)).digest('hex');
 }
 function freeze<T>(value: T): T {
@@ -24,6 +26,7 @@ function freeze<T>(value: T): T {
 /** Call with complete original facts before redaction. Tokens are never persisted
  * or accepted from an HTTP client; only this module can create valid contexts. */
 export function prepareForm8949Review(input: TaxYearInput): PreparedForm8949Review {
+  assertOrdinaryDigitalAssetReview(input);
   const calculation = freeze(calculateForm8949(input));
   const token: PreparedForm8949Review = Object.freeze({ [brand]: true as const });
   prepared.set(token, { originalDigest: sourceDigest(input), redactedDigest: sourceDigest(input, true), calculation });
@@ -31,7 +34,10 @@ export function prepareForm8949Review(input: TaxYearInput): PreparedForm8949Revi
 }
 
 export function form8949ReviewCalculation(input: TaxYearInput, token?: PreparedForm8949Review): Form8949Result {
-  if (token === undefined) return calculateForm8949(input);
+  if (token === undefined) {
+    assertOrdinaryDigitalAssetReview(input);
+    return calculateForm8949(input);
+  }
   const context = prepared.get(token);
   if (!context) throw new Error('Form8949 requires an original prepared review context');
   const suppliedDigest = sourceDigest(input);

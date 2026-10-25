@@ -229,8 +229,14 @@ export async function fillForm8949(
   const name = input.taxpayer.spouse
     ? `${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName} & ${input.taxpayer.spouse.firstName} ${input.taxpayer.spouse.lastName}`
     : `${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName}`;
-  const short = categoryPages([[F.boxA, result.shortTermBoxA], [F.boxB, result.shortTermBoxB]]);
-  const long = categoryPages([[F.boxD, result.longTermBoxD], [F.boxE, result.longTermBoxE], [F.boxF, result.longTermBoxF]]);
+  const short = categoryPages([
+    [F.boxA, result.shortTermBoxA], [F.boxB, result.shortTermBoxB], [F.boxC, result.shortTermBoxC],
+    [F.boxG, result.shortTermBoxG], [F.boxH, result.shortTermBoxH], [F.boxI, result.shortTermBoxI],
+  ]);
+  const long = categoryPages([
+    [F.boxD, result.longTermBoxD], [F.boxE, result.longTermBoxE], [F.boxF, result.longTermBoxF],
+    [F.boxJ, result.longTermBoxJ], [F.boxK, result.longTermBoxK], [F.boxL, result.longTermBoxL],
+  ]);
   for (let copy = 0; copy < Math.max(1, short.length, long.length); copy++) {
     const current = copy === 0 ? doc : await loadReviewTemplate(blankPdfPath, 2025);
     const form = current.getForm();

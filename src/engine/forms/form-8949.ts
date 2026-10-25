@@ -12,6 +12,7 @@ import type { CalculatedLine } from "@/models/outputs.js";
 import { d } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { calculateSection1202Sources, type Section1202SourceResult } from "./section-1202-sources.js";
+import { normalizeDigitalAssetCapitalInput } from './digital-asset-capital-input.js';
 
 export interface TransactionSummary {
   description: string;
@@ -36,11 +37,18 @@ export interface Form8949Result {
   /** Part I: Short-term */
   shortTermBoxA: CategoryTotals; // Basis reported to IRS
   shortTermBoxB: CategoryTotals; // Basis NOT reported to IRS
+  shortTermBoxC: CategoryTotals; // Other assets, neither1099-B nor1099-DA
+  shortTermBoxG: CategoryTotals; //1099-DA, basis reported
+  shortTermBoxH: CategoryTotals; //1099-DA, basis not reported
+  shortTermBoxI: CategoryTotals; // Digital assets, neither reporting document
 
   /** Part II: Long-term */
   longTermBoxD: CategoryTotals; // Basis reported to IRS
   longTermBoxE: CategoryTotals; // Basis NOT reported to IRS
-  longTermBoxF: CategoryTotals; // No1099-B: actual fund issuer Q adjustments
+  longTermBoxF: CategoryTotals; // Other assets with neither document, including issuer Q adjustments
+  longTermBoxJ: CategoryTotals; //1099-DA, basis reported
+  longTermBoxK: CategoryTotals; //1099-DA, basis not reported
+  longTermBoxL: CategoryTotals; // Digital assets, neither reporting document
   section1202?: Section1202SourceResult;
 
   /** Aggregate totals for Schedule D */
@@ -89,8 +97,28 @@ function aggregateCategory(transactions: TransactionSummary[]): CategoryTotals {
   return { transactions, totalProceeds, totalCostBasis, totalAdjustments, totalGainLoss };
 }
 
+type ReportingBox = 'A' | 'B' | 'C' | 'G' | 'H' | 'I' | 'D' | 'E' | 'F' | 'J' | 'K' | 'L';
+
+function reportingBox(transaction: CapitalTransaction): ReportingBox {
+  // Older original1099-B records retain their collection's explicit meaning.
+  // Normalized DA and nonstatement rows must carry their actual source type.
+  const source = transaction.sourceDocumentType ?? '1099-b';
+  const short = transaction.holdingPeriod === 'short';
+  if (source === '1099-da') {
+    if (!transaction.digitalAsset) throw new Error('Form8949 source1099-DA must describe a digital asset');
+    return short ? (transaction.basisReportedToIRS ? 'G' : 'H') : (transaction.basisReportedToIRS ? 'J' : 'K');
+  }
+  if (source === 'not-reported') {
+    if (transaction.basisReportedToIRS) throw new Error('Form8949 source without a reporting document cannot claim reported basis');
+    return transaction.digitalAsset ? (short ? 'I' : 'L') : (short ? 'C' : 'F');
+  }
+  if (source !== '1099-b') throw new Error('Form8949 original reporting document is unsupported');
+  return short ? (transaction.basisReportedToIRS ? 'A' : 'B') : (transaction.basisReportedToIRS ? 'D' : 'E');
+}
+
 export function calculateForm8949(input: TaxYearInput): Form8949Result {
   const audit = new AuditTrail();
+  const capitalInput = normalizeDigitalAssetCapitalInput(input);
   const section1202 = calculateSection1202Sources(input);
   const brokerExclusions = new Map<string, Decimal>();
   const fundAdjustments: TransactionSummary[] = [];
@@ -105,98 +133,63 @@ export function calculateForm8949(input: TaxYearInput): Form8949Result {
   }
   if (section1202) audit.merge(section1202.lines);
 
-  // Collect all transactions from all 1099-B forms
+  // Normalization appends originalDA sources without changing originalB indexes
+  // used by the independently bound Section1202 lots. Already normalized input
+  // has no rawDA rows and is not converted a second time.
   const allTransactions: Array<{ transaction: CapitalTransaction; sourceId: string }> = [];
-  for (const [formIndex, form] of input.form1099B.entries()) {
+  for (const [formIndex, form] of capitalInput.form1099B.entries()) {
     for (const [transactionIndex, t] of form.transactions.entries()) {
       allTransactions.push({ transaction: t, sourceId: `form1099B:${formIndex}:transaction:${transactionIndex}` });
     }
   }
 
-  // Categorize by holding period and basis reporting
-  const shortTermReported: TransactionSummary[] = [];
-  const shortTermNotReported: TransactionSummary[] = [];
-  const longTermReported: TransactionSummary[] = [];
-  const longTermNotReported: TransactionSummary[] = [];
-
+  const transactions: Record<ReportingBox, TransactionSummary[]> = {
+    A: [], B: [], C: [], G: [], H: [], I: [], D: [], E: [], F: [...fundAdjustments], J: [], K: [], L: [],
+  };
   for (const { transaction, sourceId } of allTransactions) {
-    const summary = processTransaction(transaction, brokerExclusions.get(sourceId));
-    if (transaction.holdingPeriod === "short") {
-      if (transaction.basisReportedToIRS) {
-        shortTermReported.push(summary);
-      } else {
-        shortTermNotReported.push(summary);
-      }
-    } else {
-      if (transaction.basisReportedToIRS) {
-        longTermReported.push(summary);
-      } else {
-        longTermNotReported.push(summary);
-      }
-    }
+    transactions[reportingBox(transaction)].push(processTransaction(transaction, brokerExclusions.get(sourceId)));
+  }
+  const shortTermBoxA = aggregateCategory(transactions.A);
+  const shortTermBoxB = aggregateCategory(transactions.B);
+  const shortTermBoxC = aggregateCategory(transactions.C);
+  const shortTermBoxG = aggregateCategory(transactions.G);
+  const shortTermBoxH = aggregateCategory(transactions.H);
+  const shortTermBoxI = aggregateCategory(transactions.I);
+  const longTermBoxD = aggregateCategory(transactions.D);
+  const longTermBoxE = aggregateCategory(transactions.E);
+  const longTermBoxF = aggregateCategory(transactions.F);
+  const longTermBoxJ = aggregateCategory(transactions.J);
+  const longTermBoxK = aggregateCategory(transactions.K);
+  const longTermBoxL = aggregateCategory(transactions.L);
+  for (const [part, box, category] of [
+    ['I', 'A', shortTermBoxA], ['I', 'B', shortTermBoxB], ['I', 'C', shortTermBoxC],
+    ['I', 'G', shortTermBoxG], ['I', 'H', shortTermBoxH], ['I', 'I', shortTermBoxI],
+    ['II', 'D', longTermBoxD], ['II', 'E', longTermBoxE], ['II', 'F', longTermBoxF],
+    ['II', 'J', longTermBoxJ], ['II', 'K', longTermBoxK], ['II', 'L', longTermBoxL],
+  ] as const) {
+    audit.record('Form 8949', `Part ${part} Box ${box}`, `${part === 'I' ? 'Short' : 'Long'}-term original reporting category ${box}`,
+      category.totalGainLoss, `${category.transactions.length} transactions`,
+      { proceeds: category.totalProceeds, cost: category.totalCostBasis, adjustments: category.totalAdjustments });
   }
 
-  const shortTermBoxA = aggregateCategory(shortTermReported);
-  const shortTermBoxB = aggregateCategory(shortTermNotReported);
-  const longTermBoxD = aggregateCategory(longTermReported);
-  const longTermBoxE = aggregateCategory(longTermNotReported);
-  const longTermBoxF = aggregateCategory(fundAdjustments);
-
-  // Audit Part I
-  audit.record(
-    "Form 8949",
-    "Part I Box A",
-    "Short-term, basis reported",
-    shortTermBoxA.totalGainLoss,
-    `${shortTermBoxA.transactions.length} transactions`,
-    { proceeds: shortTermBoxA.totalProceeds, cost: shortTermBoxA.totalCostBasis, adjustments: shortTermBoxA.totalAdjustments }
-  );
-  audit.record(
-    "Form 8949",
-    "Part I Box B",
-    "Short-term, basis not reported",
-    shortTermBoxB.totalGainLoss,
-    `${shortTermBoxB.transactions.length} transactions`,
-    { proceeds: shortTermBoxB.totalProceeds, cost: shortTermBoxB.totalCostBasis, adjustments: shortTermBoxB.totalAdjustments }
-  );
-
-  const totalShortTermGainLoss = shortTermBoxA.totalGainLoss.plus(shortTermBoxB.totalGainLoss);
+  const totalShortTermGainLoss = [shortTermBoxA, shortTermBoxB, shortTermBoxC, shortTermBoxG, shortTermBoxH, shortTermBoxI]
+    .reduce((total, category) => total.plus(category.totalGainLoss), new Decimal(0));
   audit.record(
     "Form 8949",
     "Part I totals",
     "Total short-term gain/loss",
     totalShortTermGainLoss,
-    "Box A + Box B"
+    "Box A + Box B + Box C + Box G + Box H + Box I"
   );
 
-  // Audit Part II
-  audit.record(
-    "Form 8949",
-    "Part II Box D",
-    "Long-term, basis reported",
-    longTermBoxD.totalGainLoss,
-    `${longTermBoxD.transactions.length} transactions`,
-    { proceeds: longTermBoxD.totalProceeds, cost: longTermBoxD.totalCostBasis, adjustments: longTermBoxD.totalAdjustments }
-  );
-  audit.record(
-    "Form 8949",
-    "Part II Box E",
-    "Long-term, basis not reported",
-    longTermBoxE.totalGainLoss,
-    `${longTermBoxE.transactions.length} transactions`,
-    { proceeds: longTermBoxE.totalProceeds, cost: longTermBoxE.totalCostBasis, adjustments: longTermBoxE.totalAdjustments }
-  );
-
-  audit.record("Form 8949", "Part II Box F", "Long-term, no1099-B issuer adjustments", longTermBoxF.totalGainLoss,
-    `${longTermBoxF.transactions.length} actual issuer Q adjustments`,
-    { proceeds: longTermBoxF.totalProceeds, cost: longTermBoxF.totalCostBasis, adjustments: longTermBoxF.totalAdjustments });
-  const totalLongTermGainLoss = longTermBoxD.totalGainLoss.plus(longTermBoxE.totalGainLoss).plus(longTermBoxF.totalGainLoss);
+  const totalLongTermGainLoss = [longTermBoxD, longTermBoxE, longTermBoxF, longTermBoxJ, longTermBoxK, longTermBoxL]
+    .reduce((total, category) => total.plus(category.totalGainLoss), new Decimal(0));
   audit.record(
     "Form 8949",
     "Part II totals",
     "Total long-term gain/loss",
     totalLongTermGainLoss,
-    "Box D + Box E + Box F"
+    "Box D + Box E + Box F + Box J + Box K + Box L"
   );
 
   // Wash sale summary
@@ -224,9 +217,16 @@ export function calculateForm8949(input: TaxYearInput): Form8949Result {
   return {
     shortTermBoxA,
     shortTermBoxB,
+    shortTermBoxC,
+    shortTermBoxG,
+    shortTermBoxH,
+    shortTermBoxI,
     longTermBoxD,
     longTermBoxE,
     longTermBoxF,
+    longTermBoxJ,
+    longTermBoxK,
+    longTermBoxL,
     section1202,
     totalShortTermGainLoss,
     totalLongTermGainLoss,

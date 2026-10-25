@@ -1,0 +1,57 @@
+form: "Form8949 original reporting categories"
+fullName: "Original1099-B/1099-DA and unreported capital dispositions"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i8949"
+notes: |
+  Sources retrieved2026-10-25: final2025 Form8949 and instructions, PartI/II,
+  each applicable checkbox, columns(d)-(h), Line2 and ScheduleD transfers.
+  https://www.irs.gov/pub/irs-pdf/f8949.pdf
+  The physical form describes A/B/D/E as1099-B and G/H/J/K as1099-DA;
+  I/L are digital dispositions with neither document and C/F are other
+  dispositions with neither. Digital-asset status does not invent a1099-DA.
+  Existing rows in the1099-B collection without a new source discriminator
+  retain that collection's1099-B meaning. Normalized rawDA rows explicitly
+  retain1099-DA; generated nonstatement dispositions explicitly retain neither.
+  Reject a1099-DA row marked nondigital and a neither-document row claiming
+  basis was reported. Missing raw basis must be completed from actual records
+  before normalization; zero never means unknown. The shared actualDA source
+  validator handles original boxes, identity, year and supported ordinary method.
+  Report original proceeds and reported basis, with required adjustments in(g).
+  Unsupported corrected-basis or other special methods reject at source.
+  Keep exact Decimal amounts through category and ScheduleD aggregation;
+  review output uses the existing consistent whole-dollar presentation.
+  Each printed part checks exactly one category and contains at most11rows.
+  Additional copies preserve all rows, page totals and interactive fields.
+  This is source/reporting implementation and2025 review mapping only:2026
+  final forms, filing, independent human review and readiness remain closed.
+lines:
+  - line: "original-categories"
+    description: "Separate all twelve categories by actual document and holding period"
+    formula: "1099-B basis reported/unreported →A/B(short),D/E(long);1099-DA→G/H,J/K; neither→C/F(other),I/L(digital). Every input appears once."
+    irsRef: "Final2025 Form8949 PartI/II checkbox text; i8949 Line1"
+    testRef: "tests/engine/forms/form-8949-digital-reporting.test.ts::routes all twelve original reporting categories without losing cents"
+  - line: "source-guards"
+    description: "Preserve original document meaning and reject conflicting source facts"
+    formula: "A digital flag alone cannot change1099-B into1099-DA.1099-DA+nondigital, neither+basisreported, or invalid discriminator rejects before categorization."
+    irsRef: "Final2025 Form8949 checkboxesA-L; i8949 original source reconciliation"
+    testRef: "tests/engine/forms/form-8949-digital-reporting.test.ts::preserves actual broker reporting and rejects contradictory source categories"
+  - line: "schedule-d-conservation"
+    description: "Combine paired categories once in each ScheduleD printed row"
+    formula: "A+G→1b,B+H→2,C+I→3,D+J→8b,E+K→9,F+L→10, separately for proceeds,basis,adjustments,gain. Literal example short295.40,long2950.40,total3245.80."
+    irsRef: "Form8949 Line2 transfer directions; ScheduleD1b-3,8b-10"
+    testRef: "tests/pdf/form-8949-digital-reporting.test.ts::prints combined digital and other categories in the six ScheduleD rows"
+  - line: "continuations"
+    description: "Preserve every original row in separate interactive category parts"
+    formula: "All12categories plus12Gtransactions require7two-page copies; one checked box per populated part, every row exactly once, page sums only. Redacted identities stay absent after save/reopen."
+    irsRef: "i8949 separatePartI/II; Form8949 eleven-row capacity and Line2"
+    testRef: "tests/pdf/form-8949-digital-reporting.test.ts::retains all categories and digital continuation rows after reopening"
+  - line: "source-bound-review"
+    description: "Bind original digital sources and their normalization to the review context"
+    formula: "ActualDA rows are included once in computation and review. Changed original source, basis, withholding, year or crypto context invalidates a prepared token. Unsupported derived contexts reject instead of omitting dispositions.2026mapping/filingremainclosed."
+    irsRef: "i8949 original source reconciliation and completeness; year-specific final form"
+    testRef: "tests/pdf/form-8949-digital-reporting.test.ts::rejects stale digital source context and unavailable year mappings"
+  - line: "complete-review-packet"
+    description: "Select original DA dispositions and reconcile their exact columns before packet export"
+    formula: "A raw ordinaryDA-only source with100.49proceeds and90.24basis yields10.25gain, prints100/90/10inH, and includes8949evenwhenoriginalBisempty. All category columns must match canonical audit; equal-net changedproceeds/basis cannot pass."
+    irsRef: "i8949 original source reconciliation; Form8949 columns(d),(e),(g),(h) and Line2"
+    testRef: "tests/pdf/form-8949-digital-reporting.test.ts::includes actual raw digital dispositions and reconciles the complete review packet"

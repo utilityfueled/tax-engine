@@ -164,23 +164,29 @@ export async function fillScheduleD(
   // An omitted answer remains unknown. A positive event needs its actual method.
   if (qofDisposition === false) setCheckBox(form, F.qofDispositionNo, true);
 
-  // Every current8949 transaction is reported there: use1b/2/8b/9, not1a/8a.
-  for (const [category, fields] of [
-    ["Part I Box A", [F.line1bProceeds, F.line1bCostBasis, F.line1bAdjustments, F.line1bGainLoss]],
-    ["Part I Box B", [F.line2Proceeds, F.line2CostBasis, F.line2Adjustments, F.line2GainLoss]],
-    ["Part II Box D", [F.line8bProceeds, F.line8bCostBasis, F.line8bAdjustments, F.line8bGainLoss]],
-    ["Part II Box E", [F.line9Proceeds, F.line9CostBasis, F.line9Adjustments, F.line9GainLoss]],
-    ["Part II Box F", [F.line10Proceeds, F.line10CostBasis, F.line10Adjustments, F.line10GainLoss]],
+  // All current dispositions appear on8949. Combine both original reporting
+  // categories printed on each ScheduleD row before whole-dollar presentation.
+  for (const [categories, fields] of [
+    [["Part I Box A", "Part I Box G"], [F.line1bProceeds, F.line1bCostBasis, F.line1bAdjustments, F.line1bGainLoss]],
+    [["Part I Box B", "Part I Box H"], [F.line2Proceeds, F.line2CostBasis, F.line2Adjustments, F.line2GainLoss]],
+    [["Part I Box C", "Part I Box I"], [F.line3Proceeds, F.line3CostBasis, F.line3Adjustments, F.line3GainLoss]],
+    [["Part II Box D", "Part II Box J"], [F.line8bProceeds, F.line8bCostBasis, F.line8bAdjustments, F.line8bGainLoss]],
+    [["Part II Box E", "Part II Box K"], [F.line9Proceeds, F.line9CostBasis, F.line9Adjustments, F.line9GainLoss]],
+    [["Part II Box F", "Part II Box L"], [F.line10Proceeds, F.line10CostBasis, F.line10Adjustments, F.line10GainLoss]],
   ] as const) {
-    const line = result.allLines.find(item => item.form === "Form 8949" && item.line === category);
-    if (!line) continue;
-    const values = [line.inputs.proceeds, line.inputs.cost, line.inputs.adjustments, line.value];
-    values.forEach((value, index) => {
-      if (value !== undefined) {
+    const totals = fields.map(() => new Decimal(0));
+    let present = false;
+    for (const category of categories) {
+      const line = result.allLines.find(item => item.form === "Form 8949" && item.line === category);
+      if (!line) continue;
+      present = true;
+      const values = [line.inputs.proceeds, line.inputs.cost, line.inputs.adjustments, line.value];
+      values.forEach((value, index) => {
         if (!Decimal.isDecimal(value)) throw new Error("Form8949 monetary audit inputs must be Decimal values");
-        setCurrencyField(form, fields[index], value);
-      }
-    });
+        totals[index] = totals[index].plus(value);
+      });
+    }
+    if (present) fields.forEach((field, index) => setCurrencyField(form, field, totals[index]));
   }
   for (const [line, field] of [["4", F.line4], ["5", F.line5], ["11", F.line11], ["12", F.line12], ["13", F.line13]] as const) {
     const value = getLineValue(result, "Sched D", line);

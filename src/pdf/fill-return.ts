@@ -398,13 +398,25 @@ export async function fillReturn(
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear, options.purpose);
   const capitalGainReview = options.capitalGainReview ?? prepareForm8949Review(input);
   const capitalTransactions = form8949ReviewCalculation(input, capitalGainReview);
+  const hasDigitalDispositions = [capitalTransactions.shortTermBoxG, capitalTransactions.shortTermBoxH, capitalTransactions.shortTermBoxI,
+    capitalTransactions.longTermBoxJ, capitalTransactions.longTermBoxK, capitalTransactions.longTermBoxL].some(category => category.transactions.length > 0);
   if (capitalTransactions.section1202) {
     if (!result.scheduleD?.section1202Exclusion.eq(capitalTransactions.section1202.exclusion)) {
       throw new Error("QSBS review source exclusion does not reconcile with ScheduleD");
     }
+  }
+  if (capitalTransactions.section1202 || hasDigitalDispositions) {
     for (const entry of capitalTransactions.lines.filter(row => row.form === "Form 8949")) {
       const canonical = result.allLines.filter(row => row.form === entry.form && row.line === entry.line);
-      if (canonical.length !== 1 || !canonical[0].value.eq(entry.value)) throw new Error("QSBS Form8949 source audit does not reconcile");
+      if (canonical.length !== 1 || !canonical[0].value.eq(entry.value)) throw new Error("Form8949 original source audit does not reconcile");
+      for (const key of ['proceeds', 'cost', 'adjustments'] as const) {
+        const original = entry.inputs[key];
+        if (original === undefined) continue;
+        const retained = canonical[0].inputs[key];
+        if (!Decimal.isDecimal(original) || !Decimal.isDecimal(retained) || !original.eq(retained)) {
+          throw new Error('Form8949 original source audit columns do not reconcile');
+        }
+      }
     }
   }
   if (input.form7206 || result.form7206) assertForm7206ReviewSource(input, result);
@@ -550,8 +562,11 @@ export async function fillReturn(
     filledForms.push(outputPathSSE);
   }
 
-  // Form8949 also carries actual fund issuer exclusions without a1099-B.
-  if (input.form1099B.some(form => form.transactions.length > 0) || capitalTransactions.longTermBoxF.transactions.length > 0) {
+  // Original DA statements and issuer adjustments can require8949 even with
+  // no original1099-B. Select from the complete validated capital calculation.
+  if ([capitalTransactions.shortTermBoxA, capitalTransactions.shortTermBoxB, capitalTransactions.shortTermBoxC,
+    capitalTransactions.longTermBoxD, capitalTransactions.longTermBoxE, capitalTransactions.longTermBoxF]
+    .some(category => category.transactions.length > 0) || hasDigitalDispositions) {
     const f8949Path = join(blankFormsDir, "f8949.pdf");
     const doc8949 = await fillForm8949(input, f8949Path, capitalGainReview);
     if (flatten) await flattenForm(doc8949.getForm());
