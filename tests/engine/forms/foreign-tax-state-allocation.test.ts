@@ -33,6 +33,57 @@ function source() {
 
 const compute = (raw: unknown, context: ForeignTaxHypotheticalContext) => calculateForeignTaxDeductionCarryover(TaxYearInputSchema.parse(raw), context);
 describe('Actual foreign state-tax allocation', () => {
+  it('uses the pre-state taxable residual after actual U.S. charitable deductions', () => {
+    const { raw, context } = source();
+    context.scheduleA.charitableContributions = d('10000');
+    context.deductionAmount = d('16000'); context.totalDeductions = d('16000');
+    Object.assign(raw.foreignTaxElection.deductionYearCarryover.itemizedAllocation, { noTreatyCharitableDeductionConfirmed: true });
+    const countries = raw.foreignTaxElection.deductionYearCarryover.itemizedAllocation.stateIncomeTaxes[0].countryIncome;
+    countries[0].stateTaxableIncome = '15000'; countries[1].stateTaxableIncome = '10000';
+    // Reg1.861-8(e)(6)(ii)(C): federal taxable income BEFORE state tax is
+    // 100000-16000+6000=90000. Charity is U.S.-source: U.S.65000,foreign25000.
+    // State90000 therefore taxes all25000foreign, not gross-based15000.
+    const before = JSON.stringify(raw), result = compute(raw, context);
+    expect(result.lines.find(row => row.line === 'state-us-taxable-before-deduction')?.value.toFixed()).toBe('65000');
+    expect(result.lines.find(row => row.line === 'state-worldwide-before-deduction')?.value.toFixed()).toBe('90000');
+    expect(result.lines.find(row => row.line === 'country-1:state-tax')?.value.toFixed()).toBe('1000');
+    expect(result.lines.find(row => row.line === 'country-2:state-tax')?.value.toFixed()).toBe('667');
+    expect(result.netForeignTaxableIncome.toFixed()).toBe('23333');
+    // round4(23333/84000)=.2778;15000*.2778=4167.
+    expect(result.hypotheticalLimitation.toFixed()).toBe('4167');
+    // Section151 senior deduction is not allocated to either source under
+    // Reg1.861-8(e)(11); final1116line18 explicitly adds it back.
+    const withSenior = compute(raw, { ...context, totalDeductions: d('22000'), seniorDeduction: d('6000') });
+    expect(withSenior.lines.find(row => row.line === 'state-us-taxable-before-deduction')?.value.toFixed()).toBe('65000');
+    expect(withSenior.netForeignTaxableIncome.toFixed()).toBe('23333');
+    expect(JSON.stringify(raw)).toBe(before);
+  });
+  it('rejects state bases that only reconcile to gross income', () => {
+    const { raw, context } = source();
+    context.scheduleA.charitableContributions = d('20000');
+    context.deductionAmount = d('26000'); context.totalDeductions = d('26000');
+    Object.assign(raw.foreignTaxElection.deductionYearCarryover.itemizedAllocation, { noTreatyCharitableDeductionConfirmed: true });
+    // The previous canonical fixture treated U.S.gross75000 as taxable despite
+    // actual U.S.charity20000. Pre-state worldwide80000 cannot support state90000
+    // under this narrow presumption; keep its actual difference unresolved.
+    const before = JSON.stringify(raw);
+    expect(() => compute(raw, context)).toThrow(/state.*(?:source|taxable|income)/i);
+    expect(JSON.stringify(raw)).toBe(before);
+    const state = raw.foreignTaxElection.deductionYearCarryover.itemizedAllocation.stateIncomeTaxes[0];
+    state.stateTaxableIncome = '60000'; state.foreignIncomeSpecificallyExempt = true;
+    state.countryIncome.forEach(country => { country.stateTaxableIncome = '0'; });
+    // Known exempt-state60000 still exceeds the actual U.S.residual55000.
+    expect(() => compute(raw, context)).toThrow(/state.*(?:source|taxable|income)/i);
+    // A separate source case has75000foreign and25000U.S.income, with actual
+    // allowed60000 cash charity. Its negative U.S.residual needs a loss method.
+    context.scheduleA.charitableContributions = d('60000');
+    context.deductionAmount = d('66000'); context.totalDeductions = d('66000');
+    for (const [index, income] of [[0, '50000'], [1, '25000']] as const) {
+      raw.form1099Int[index].interestIncome = income;
+      Object.assign(raw.foreignTaxElection.deductionYearCarryover.incomeSources[index], { reportedIncome: income, foreignIncome: income });
+    }
+    expect(() => compute(raw, context)).toThrow(/loss.*source|source.*loss/i);
+  });
   it('allocates actual country sources without a gross-income guess', () => {
     const { raw, context } = source();
     const before = JSON.stringify(raw), result = compute(raw, context);

@@ -82,17 +82,41 @@ export function calculateForeignTaxDeductionCarryover(input:TaxYearInput,context
     if(home.gt(0)&&allocation.allRealPropertyTaxesForPersonalResidenceConfirmed!==true)throw new Error('Foreign carryover requires actual personal residence tax use');
     if(sa.charitableContributions.gt(0)&&allocation.noTreatyCharitableDeductionConfirmed!==true)throw new Error('Foreign carryover charitable deductions require actual treaty classification');
     nondirect=sa.medical.plus(home).plus(personal).plus(sa.salesTaxElected?taxes:d('0'));
+    if(sa.mortgageInterest.gt(0)){
+      if(allocation.mortgageInterestMethod==='us_source_small_foreign_income'){
+        if(grossForeign.gt(5000))throw new Error('Foreign carryover small-income interest election exceeds5000');
+      }else if(allocation.mortgageInterestMethod==='gross_income')mortgage=sa.mortgageInterest;
+      else throw new Error('Foreign carryover requires the actual mortgage-interest allocation method');
+    }
+    if(!sum(sa.medical,sa.saltDeduction,sa.mortgageInterest,sa.charitableContributions).eq(context.deductionAmount))throw new Error('Foreign carryover ordinary itemized sources must equal actual hypothetical deduction');
     if((allocation.stateIncomeTaxes?.length??0)>1)throw new Error('Foreign carryover multiple-state income taxes require their separate actual income attribution method');
     if(sa.salesTaxElected&&allocation.stateIncomeTaxes?.length)throw new Error('Foreign carryover state income-tax allocation conflicts with the actual sales-tax election');
     if(!sa.salesTaxElected&&(taxes.gt(0)||allocation.stateIncomeTaxes!==undefined)){
       if(!allocation.stateIncomeTaxes)throw new Error('Foreign carryover requires actual state income-tax allocation worksheets');
-      const states=new Set<string>();let stateTotal=d('0');const usGross=context.totalIncome.minus(grossForeign);
+      // Reg1.861-8(e)(6)(ii)(C) compares TAXABLE source income before state tax.
+      // Preserve every other deduction's existing source allocation. In this
+      // ordinary cohort, section151 amounts are excluded under(e)(11), and
+      // non-treaty charity is entirely U.S.-source under(e)(12).
+      const foreignBeforeState=sum(...[...countries.values()].map(group=>{
+        const countryRatio=ratio(group.gross,context.totalIncome);
+        return roundDollar(group.gross).minus(roundDollar(nondirect.times(countryRatio))).minus(roundDollar(mortgage.times(countryRatio)));
+      }));
+      const worldwideBeforeState=context.agi.minus(context.totalDeductions).plus(context.seniorDeduction).plus(roundDollar(taxes));
+      const usBeforeState=worldwideBeforeState.minus(foreignBeforeState);
+      if(foreignBeforeState.lt(0)||usBeforeState.lt(0))throw new Error('Foreign carryover state income requires its actual foreign or domestic loss source method');
+      audit.record('Foreign Deduction Carryover WS','state-worldwide-before-deduction','Worldwide taxable income before state income tax',worldwideBeforeState,
+        'Hypothetical AGI less deductions, plus section151 amount and allowed state income tax');
+      audit.record('Foreign Deduction Carryover WS','state-foreign-taxable-before-deduction','Foreign taxable income before state income tax',foreignBeforeState,
+        'Actual foreign income less prescribed nonstate deductions');
+      audit.record('Foreign Deduction Carryover WS','state-us-taxable-before-deduction','U.S. taxable income before state income tax',usBeforeState,
+        'Worldwide pre-state taxable income less foreign pre-state taxable income');
+      const states=new Set<string>();let stateTotal=d('0');
       for(const state of allocation.stateIncomeTaxes){
         const code=state.stateCode?.trim().toUpperCase();
         if(!code||!/^[A-Z]{2}$/.test(code)||states.has(code)||!state.sourceReference?.trim()||state.foreignIncomeSpecificallyExempt===undefined)throw new Error('Foreign carryover requires distinct actual state source worksheets');states.add(code);
         const deductible=amount(state.deductibleAmount,'state tax deductible amount');const taxable=amount(state.stateTaxableIncome,'actual state taxable income');
-        if(taxable.gt(context.totalIncome)||(taxable.isZero()&&deductible.gt(0))||(state.foreignIncomeSpecificallyExempt&&taxable.gt(usGross)))throw new Error('Foreign carryover state income needs its actual supported ordinary source reconciliation');
-        const taxedForeign=state.foreignIncomeSpecificallyExempt?d('0'):zeroFloor(taxable.minus(usGross));
+        if(taxable.gt(worldwideBeforeState)||(taxable.isZero()&&deductible.gt(0))||(state.foreignIncomeSpecificallyExempt&&taxable.gt(usBeforeState)))throw new Error('Foreign carryover state income needs its actual supported ordinary source reconciliation');
+        const taxedForeign=state.foreignIncomeSpecificallyExempt?d('0'):zeroFloor(taxable.minus(usBeforeState));
         const needsCountrySources=state.countryIncome!==undefined||state.countryIncomeConfirmed!==undefined
           ||(taxedForeign.gt(0)&&countries.size>1);
         if(needsCountrySources){
@@ -118,13 +142,6 @@ export function calculateForeignTaxDeductionCarryover(input:TaxYearInput,context
       }
       if(!stateTotal.eq(taxes))throw new Error('Foreign carryover state worksheet deductions must equal actual allowed income taxes');
     }
-    if(sa.mortgageInterest.gt(0)){
-      if(allocation.mortgageInterestMethod==='us_source_small_foreign_income'){
-        if(grossForeign.gt(5000))throw new Error('Foreign carryover small-income interest election exceeds5000');
-      }else if(allocation.mortgageInterestMethod==='gross_income')mortgage=sa.mortgageInterest;
-      else throw new Error('Foreign carryover requires the actual mortgage-interest allocation method');
-    }
-    if(!sum(sa.medical,sa.saltDeduction,sa.mortgageInterest,sa.charitableContributions).eq(context.deductionAmount))throw new Error('Foreign carryover ordinary itemized sources must equal actual hypothetical deduction');
   }
   let netForeignTaxableIncome=d('0');let countryIndex=0;
   for(const [country,group] of countries){

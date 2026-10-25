@@ -14,8 +14,16 @@ sources:
     retrieved: "2026-10-25"
 notes: |
   This slice keeps the supported single-state ordinary personal-income
-  presumption: foreign income taxed=max(0,state taxable income-U.S. gross)
-  unless state law specifically exempts foreign income. Actual country amounts
+  presumption: foreign income taxed=max(0,state taxable income-U.S. taxable
+  income before the state-income-tax deduction). The U.S. residual is the
+  hypothetical worldwide taxable amount with state income tax added back,
+  less foreign net income after all other prescribed deductions. Ordinary
+  charitable deductions reduce U.S. income; foreign mortgage and nondirect
+  deductions retain their actual source allocations. Section151 amounts are
+  not allocated under Regulations1.861-8(e)(11). A state base beyond this
+  supported federal base needs its actual state/federal difference method.
+  State law that specifically exempts foreign income allocates no tax to that
+  foreign income. Actual country amounts
   reconcile that total and each country's actual foreign income. No allocation
   is inferred from relative country gross income. Exact source cents are kept;
   each country's total allocated state tax rounds once at its printed line2.
@@ -25,6 +33,19 @@ notes: |
   calculator rejects that unsupported combination, including zero-tax rows that
   could affect the allocation method, rather than inventing an allocation.
 lines:
+  - line: "pre-state-taxable-residual"
+    description: "Compare state income with the U.S. taxable residual, not gross income"
+    formula: "ForeignBeforeState=sum(country printed gross minus prescribed nonstate deductions); WorldwideBeforeState=hypothetical AGI-total deductions+section151senior+allowed state income tax; USBeforeState=WorldwideBeforeState-ForeignBeforeState. Reject negative residuals and unsupported state/federal differences rather than silently applying a gross-income comparator."
+    irsRef: "Regulations1.861-8(e)(6)(ii)(C), (e)(11)/(12), example25 taxable-income facts; Pub514 State income taxes"
+    testRef: "tests/engine/forms/foreign-tax-state-allocation.test.ts::uses the pre-state taxable residual after actual U.S. charitable deductions"
+  - line: "pre-state-source-conflict"
+    description: "Preserve a conflicting state source for its separate method"
+    formula: "A state taxable base above supported worldwide taxable income before state tax or an exempt-state base above that U.S. residual cannot use this narrow ordinary presumption. Do not replace actual state facts or omit nonstate deductions to make the record pass."
+    testRef: "tests/engine/forms/foreign-tax-state-allocation.test.ts::rejects state bases that only reconcile to gross income"
+  - line: "canonical-pre-state-conflict"
+    description: "Reject the former gross-only charity fixture without changing its source facts"
+    formula: "The canonical100000income/20000U.S.charity/6000state-tax case has80000pre-state worldwide and55000U.S.taxable income. Actual state90000 requires a separate state/federal difference method; the old15000foreign-country ledger must not be silently accepted."
+    testRef: "tests/pdf/foreign-state-allocation-reference.test.ts::rejects the former gross-only state source in the canonical return"
   - line: "country-attribution"
     description: "Use actual state-taxed foreign income by country"
     formula: "For the single state's actual deductible tax T and state taxable income S, country deduction=T*actual state-taxed country income/S; require complete confirmed country ledger, sum equal to supported foreign state-tax base, each amount<=actual foreign income."
@@ -47,7 +68,7 @@ lines:
     testRef: "tests/guided-interview/guided-foreign-state-allocation.test.ts::preserves actual state country sources and rejects incomplete facts"
   - line: "canonical-review"
     description: "Actual state sources enter the canonical hypothetical return and review record"
-    formula: "Actual100000income less26600deductions gives zero current FTC; hypothetical credit uses26000itemized and published74000-74050single TaxTable11200. Netforeign24000/worldwide74000 ratio.3243 gives3632limit; prior4000 less3032absorption leaves968. The review record copies these audited values with no source identifiers."
+    formula: "Actual100000income less26600deductions gives zero current FTC; hypothetical credit uses26000itemized and published74000-74050single TaxTable11200. Before state tax, worldwide80000 less foreign25000 gives U.S.55000; actual state70000 taxes15000foreign. Actual country12000.01/2999.99 give1029/257 state deductions. Netforeign23714/worldwide74000 ratio.3205 gives3590limit; prior4000 less2990absorption leaves1010. The review record copies these audited values with no source identifiers."
     testRef: "tests/pdf/foreign-state-allocation-reference.test.ts::preserves actual country allocation in the canonical review record"
   - line: "interactive"
     description: "Actual country records can be entered from an empty state row"

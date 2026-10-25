@@ -11,11 +11,11 @@ import { fillReturn } from '@/pdf/fill-return.js';
 import { REVIEW_PDF_NOTICE } from '@/pdf/export-policy.js';
 import { carryFixture } from '../fixtures/foreign-tax-carryover.js';
 
-it('preserves actual country allocation in the canonical review record', async () => {
+function stateAllocationInput() {
   const base = carryFixture(), election = base.foreignTaxElection, facts = election?.deductionYearCarryover;
   if (!election || !facts?.incomeSources?.[0]) throw new Error('Missing actual source fixture');
   const first = facts.incomeSources[0];
-  const input = TaxYearInputSchema.parse({ ...base, scheduleA: undefined,
+  return TaxYearInputSchema.parse({ ...base, scheduleA: undefined,
     w2s: [{ ...base.w2s[0], wages: '75000', stateWages: '75000', stateTaxWithheld: '6000' }],
     donations: [{ organization: 'Synthetic public charity', type: 'cash', amount: '20000', dateOfDonation: '2025-10-15' }],
     form1099Int: [{ ...base.form1099Int[0], interestIncome: '15000' },
@@ -26,19 +26,36 @@ it('preserves actual country allocation in the canonical review record', async (
       carryovers: [{ originTaxYear: 2024, category: 'passive', amount: '4000', sourceReference: 'Actual adjusted prior balance' }],
       itemizedAllocation: { sourceFactsConfirmed: true, sourceReference: 'Actual source worksheet', noTreatyCharitableDeductionConfirmed: true,
         incomeOrSalesTaxes: '6000', homeRealPropertyTaxes: '0', personalPropertyTaxes: '0', stateIncomeTaxes: [
-          { stateCode: 'NY', deductibleAmount: '6000', stateTaxableIncome: '90000', foreignIncomeSpecificallyExempt: false,
+          { stateCode: 'NY', deductibleAmount: '6000', stateTaxableIncome: '70000', foreignIncomeSpecificallyExempt: false,
             sourceReference: 'Actual state source', countryIncomeConfirmed: true,
             countryIncome: [{ foreignCountry: 'Canada', stateTaxableIncome: '12000.01', sourceReference: 'Private Canadian source' },
               { foreignCountry: 'France', stateTaxableIncome: '2999.99', sourceReference: 'Private French source' }] },
         ] },
     } },
   });
+}
+
+it('rejects the former gross-only state source in the canonical return', () => {
+  const input = stateAllocationInput();
+  const state = input.foreignTaxElection?.deductionYearCarryover?.itemizedAllocation?.stateIncomeTaxes?.[0];
+  if (!state) throw new Error('Missing state source fixture');
+  state.stateTaxableIncome = '90000';
+  const before = JSON.stringify(input);
+  expect(() => calculateFederalTax(input)).toThrow(/state income.*source reconciliation/i);
+  expect(JSON.stringify(input)).toBe(before);
+});
+
+it('preserves actual country allocation in the canonical review record', async () => {
+  const input = stateAllocationInput();
   const before = JSON.stringify(input), result = calculateFederalTax(input);
   const value = (id: string) => result.foreignTaxDeductionCarryover?.lines.find(row => row.line === id)?.value.toFixed();
-  // Published74000-74050single TaxTable11200; round4(24000/74000)=.3243.
+  // Pre-state federal80000 less foreign25000 leaves U.S.55000. Actual state70000
+  // taxes15000foreign;6000*12000.01/70000=>1029 and6000*2999.99/70000=>257.
+  // Published74000-74050single TaxTable11200; round4(23714/74000)=.3205.
   expect(result.agi.toFixed()).toBe('100000'); expect(result.deductionAmount.toFixed()).toBe('26600');
-  expect(value('18')).toBe('74000'); expect(value('20')).toBe('11200'); expect(value('21')).toBe('3632');
-  expect(value('absorbed')).toBe('3032'); expect(value('carryforward')).toBe('968'); expect(result.foreignTaxCredit.isZero()).toBe(true);
+  expect(value('state-us-taxable-before-deduction')).toBe('55000');
+  expect(value('18')).toBe('74000'); expect(value('20')).toBe('11200'); expect(value('21')).toBe('3590');
+  expect(value('absorbed')).toBe('2990'); expect(value('carryforward')).toBe('1010'); expect(result.foreignTaxCredit.isZero()).toBe(true);
   expect(JSON.stringify(input)).toBe(before);
   const directory = await mkdtemp(join(tmpdir(), 'foreign-country-review-'));
   try {
@@ -51,9 +68,9 @@ it('preserves actual country allocation in the canonical review record', async (
     expect(pages.length).toBeGreaterThan(0);
     for (const page of pages) expect(page.split(REVIEW_PDF_NOTICE)).toHaveLength(2);
     const text = pages.join(' ').replace(/\s+/g, ' ');
-    expect(text).toContain('Value: 3632'); expect(text).toContain('Value: 3032'); expect(text).toContain('Value: 968');
-    expect(text).toContain('Line country-1:state-tax: State income tax allocated to foreign country Value: 800');
-    expect(text).toContain('Line country-2:state-tax: State income tax allocated to foreign country Value: 200');
+    expect(text).toContain('Value: 3590'); expect(text).toContain('Value: 2990'); expect(text).toContain('Value: 1010');
+    expect(text).toContain('Line country-1:state-tax: State income tax allocated to foreign country Value: 1029');
+    expect(text).toContain('Line country-2:state-tax: State income tax allocated to foreign country Value: 257');
     expect(text).toContain('No current foreign tax credit');
     for (const identity of ['Private Canadian source', 'Private French source', 'Second private account', '112233445']) expect(text).not.toContain(identity);
   } finally { await rm(directory, { recursive: true, force: true }); }

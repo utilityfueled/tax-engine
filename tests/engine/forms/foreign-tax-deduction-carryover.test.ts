@@ -64,14 +64,16 @@ describe('Foreign tax deduction-year carryover',()=>{
     facts.incomeSources[0].reportedIncome='25000';facts.incomeSources[0].foreignIncome='25000';
     facts.itemizedAllocation={sourceFactsConfirmed:true,sourceReference:'Actual completed source allocation',incomeOrSalesTaxes:'6000',homeRealPropertyTaxes:'1000',personalPropertyTaxes:'200',
       allRealPropertyTaxesForPersonalResidenceConfirmed:true,noTreatyCharitableDeductionConfirmed:true,mortgageInterestMethod:'gross_income',
-      stateIncomeTaxes:[{stateCode:'NY',deductibleAmount:'6000',stateTaxableIncome:'90000',foreignIncomeSpecificallyExempt:false,sourceReference:'Actual state income worksheet'}]};
+      stateIncomeTaxes:[{stateCode:'NY',deductibleAmount:'6000',stateTaxableIncome:'80000',foreignIncomeSpecificallyExempt:false,sourceReference:'Actual state income worksheet'}]};
     const context=hypothetical({totalIncome:d('100000'),agi:d('100000'),totalDeductions:d('21200'),deductionAmount:d('21200'),deductionUsed:'itemized',incomeTax:d('15000'),
       scheduleA:{medical:d('1000'),incomeOrSalesTaxes:d('6000'),realPropertyTaxes:d('1000'),personalPropertyTaxes:d('200'),saltDeduction:d('7200'),salesTaxElected:false,
         mortgageInterest:d('12000'),investmentInterest:d('0'),charitableContributions:d('1000'),otherDeductions:d('0'),itemizedReduction:d('0')}});
-    // Pub514 state example: (90000-75000)/90000*6000=1000 foreign state tax.
-    // Other apportioned2200*.25=550; mortgage12000*.25=3000; foreign net20450.
-    // round4(20450/78800)=.2595; 15000*.2595=3892.5=>3893.
-    const result=compute(input,context);expect(result.netForeignTaxableIncome.toFixed()).toBe('20450');expect(result.hypotheticalLimitation.toFixed()).toBe('3893');
+    // Other foreign deductions2200*.25=550 and mortgage12000*.25=3000.
+    // Pre-state worldwide100000-21200+6000=84800; foreign21450; U.S.63350.
+    // State foreign share(80000-63350)/80000*6000=1248.75=>1249.
+    // Foreign net25000-550-3000-1249=20201; round4(20201/78800)=.2564.
+    const result=compute(input,context);expect(result.netForeignTaxableIncome.toFixed()).toBe('20201');expect(result.hypotheticalLimitation.toFixed()).toBe('3846');
+    expect(result.lines.find(row=>row.line==='state-us-taxable-before-deduction')?.value.toFixed()).toBe('63350');
     expect(result.absorbed.toFixed()).toBe('200');expect(result.carryforward.isZero()).toBe(true);
   });
   it('rejects contradictory state exemption and gross-income facts',()=>{
