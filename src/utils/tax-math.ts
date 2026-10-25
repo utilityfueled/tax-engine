@@ -338,11 +338,11 @@ export function calculateChildTaxCredit(
  * Calculate deductible mortgage interest (limited by debt cap).
  * Spec: Schedule A Line 8a, Pub 936
  *
- * Pre-12/15/2017 mortgages: $1,000,000 limit ($500,000 MFS)
- * Post-12/15/2017 mortgages: $750,000 limit ($375,000 MFS) — IRC §163(h)(3)(B)(ii)
+ * Pre-12/16/2017 acquisition debt: $1,000,000 limit ($500,000 MFS)
+ * Post-12/15/2017 acquisition debt: $750,000 limit ($375,000 MFS) — IRC §163(h)(3)(B)(ii)
  */
 const GRANDFATHERED_DEBT_LIMIT = new Decimal(1000000);
-const TCJA_CUTOFF = "2017-12-15";
+const TCJA_CUTOFF = "2017-12-16";
 
 export function calculateDeductibleMortgageInterest(
   interestPaid: Decimal,
@@ -351,12 +351,14 @@ export function calculateDeductibleMortgageInterest(
   originationDate?: string,
   filingStatus?: FilingStatus
 ): Decimal {
+  // Single-loan compatibility helper. Actual multi-loan sources use Pub936 Table1.
+  if (originationDate !== undefined && originationDate <= "1987-10-13") return interestPaid;
   const isGrandfathered = originationDate !== undefined && originationDate < TCJA_CUTOFF;
   const baseLimit = isGrandfathered ? GRANDFATHERED_DEBT_LIMIT : constants.mortgageInterest.debtLimit;
   // MFS filers get half the debt limit per IRC §163(h)(3)(B)(ii)
   const limit = filingStatus === "married_filing_separately" ? baseLimit.dividedBy(2) : baseLimit;
   if (outstandingPrincipal.lessThanOrEqualTo(limit)) return interestPaid;
-  const ratio = limit.dividedBy(outstandingPrincipal);
+  const ratio = limit.dividedBy(outstandingPrincipal).toDecimalPlaces(3, Decimal.ROUND_HALF_UP);
   return roundDollar(interestPaid.times(ratio));
 }
 

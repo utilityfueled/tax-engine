@@ -2199,12 +2199,20 @@ export const StudentLoanInterestFactsSchema = z.object({
 });
 export type StudentLoanInterestFacts = z.infer<typeof StudentLoanInterestFactsSchema>;
 
-export const Form1098Schema = z.object({
+export const Form1098Schema = z.preprocess(value => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const source = value as Record<string,unknown>;
+  const complete = source.sourceFactsComplete !== false && ["sourceId","taxYear","mortgageInterestReceived","outstandingMortgagePrincipal","mortgageOriginationDate","refundOfOverpaidInterest","pointsPaid"].every(key => source[key] !== undefined);
+  return {...source,sourceFactsComplete:complete};
+},z.object({
+  sourceId: z.string().optional(),
+  taxYear: z.number().int().optional(),
+  sourceFactsComplete: z.boolean().optional(),
   lender: z.string(),
   mortgageInterestReceived: decimal, // Box 1
   outstandingMortgagePrincipal: decimal, // Box 2
   mortgageOriginationDate: z.string().optional(),
-  refundOfOverpaidInterest: optionalDecimal, // Box 3
+  refundOfOverpaidInterest: optionalDecimal, // Box 4: prior-year interest recovery
   mortgageInsurancePremiums: optionalDecimal, // Box 5
   mortgageInsuranceQualification: z.object({
     allocationTaxYear: z.number().int(),
@@ -2216,7 +2224,37 @@ export const Form1098Schema = z.object({
   }).optional(),
   pointsPaid: optionalDecimal, // Box 6
   propertyTax: optionalDecimal,
+}));
+
+const MortgageBalanceSchema = z.discriminatedUnion("method", [
+  z.object({method:z.literal("highest_balance"),amount:decimal,sourceReference:z.string().min(1)}),
+  z.object({method:z.literal("lender_average"),amount:decimal,sourceReference:z.string().min(1)}),
+  z.object({method:z.literal("first_last"),firstBalance:decimal,lastBalance:decimal,noAdditionalBorrowing:z.boolean(),noPrepaymentOverOneMonth:z.boolean(),levelPaymentsAtLeastSemiannually:z.boolean()}),
+  z.object({method:z.literal("monthly"),qualifiedHomeMonths:z.array(z.number().int().min(1).max(12)).min(1),balances:z.array(z.object({month:z.number().int().min(1).max(12),amount:decimal})).min(1)}),
+  z.object({method:z.literal("interest_rate"),currentYearInterest:decimal,currentYearInterestPaidInPriorYears:decimal,currentYearInterestPaidInPriorYearsByOthers:decimal,interestRefundedToOthers:decimal,lowestAnnualRate:decimal,securedAllYear:z.boolean(),interestPaidAtLeastMonthly:z.boolean()}),
+  z.object({method:z.literal("category_worksheet"),grandfatheredDebt:decimal,acquisitionDebtBefore2017:decimal,acquisitionDebtAfter2017:decimal,excludedDebt:decimal,worksheetReference:z.string().min(1),classificationConfirmed:z.boolean(),paymentsAppliedInRequiredOrderConfirmed:z.boolean()}),
+]);
+const MortgagePointsSchema = z.discriminatedUnion("method", [
+  z.object({method:z.literal("none")}),
+  z.object({method:z.literal("current_year"),cashMethod:z.boolean(),establishedPractice:z.boolean(),withinUsualAmount:z.boolean(),notServiceFees:z.boolean(),ownFundsSufficient:z.boolean(),buyBuildOrImproveMainHome:z.enum(["purchase","build","improve"]),percentageOfPrincipal:z.boolean(),onSettlementStatement:z.boolean(),fullDeductionElected:z.boolean(),paidDate:z.string()}),
+  z.object({method:z.literal("ratable"),originalPoints:decimal,originalPrincipal:decimal,loanTermMonths:z.number().int().positive(),paymentsInYear:z.number().int().nonnegative(),paymentIntervalMonths:z.number().int().positive(),unamortizedPointsAtStartOfYear:decimal,cashMethod:z.boolean(),comparableLoanTerms:z.boolean(),pointsAreInterest:z.boolean(),paidDate:z.string()}),
+  z.object({method:z.literal("completed_amortization"),deductibleAmountBeforeLimit:decimal,unamortizedPointsAvailable:decimal,sourceTaxYear:z.number().int(),worksheetReference:z.string().min(1),serviceFeesExcludedConfirmed:z.boolean(),reportedOnCurrentForm1098:z.boolean()}),
+]);
+/** Actual Pub936 source records. No omitted source amount or qualification is defaulted. */
+export const MortgageInterestWorksheetSchema = z.object({
+  sourceTaxYear:z.number().int(),sourceReference:z.string().min(1),sourceFactsConfirmed:z.boolean(),allHomeDebtIncluded:z.boolean(),
+  loans:z.array(z.object({
+    sourceId:z.string().min(1),form1098SourceId:z.string().min(1).optional(),lenderName:z.string().min(1),lenderAddress:z.string().optional(),lenderTaxId:z.string().optional(),
+    accountHolder:z.enum(["primary","spouse","joint"]),homeId:z.string().min(1),homeUse:z.enum(["main","second","other"]),
+    qualifiedResidence:z.boolean(),securedDebt:z.boolean(),ownershipInterest:z.boolean(),obligationToRepay:z.boolean(),
+    originationDate:z.string(),loanType:z.enum(["original","refinanced_mixed"]),acquisitionUse:z.boolean(),currentYearInterestOnly:z.boolean(),
+    interestPaid:decimal,interestPaidByOthers:decimal,interestDeductedElsewhere:decimal,sameYearInterestRefund:decimal,nonqualifiedInterest:decimal,
+    pointsPaid:decimal,pointsPaidByOthers:decimal,pointsNotInterest:decimal,points:MortgagePointsSchema,balance:MortgageBalanceSchema,
+    bindingContract:z.object({signedDate:z.string(),requiredClosingDate:z.string(),purchaseDate:z.string()}).optional(),
+  })),
+  priorYearInterestRecoveries:z.array(z.object({sourceId:z.string().min(1),form1098SourceId:z.string().min(1).optional(),originTaxYear:z.number().int(),refundReceived:decimal,taxableRecovery:decimal,alreadyIncludedInOtherIncome:decimal,otherIncomeSource:z.object({form1099MiscIndex:z.number().int().nonnegative()}).optional(),taxBenefitWorksheetReference:z.string().min(1),taxBenefitWorksheetConfirmed:z.boolean()})),
 });
+export type MortgageInterestWorksheet = z.infer<typeof MortgageInterestWorksheetSchema>;
 
 const nonnegativePremium = decimal.refine(value => !d(value).isNegative(), "Premium amount must be nonnegative");
 const uniqueCoverageMonths = (rows: Array<{month:number}>) => new Set(rows.map(row => row.month)).size === rows.length;
@@ -5130,6 +5168,7 @@ export const TaxYearInputSchema = z.object({
   scheduleK1: z.array(ScheduleK1Schema).default([]),
   scheduleK1Form1041: z.array(ScheduleK1Form1041Schema).default([]),
   form1098: z.array(Form1098Schema).default([]),
+  mortgageInterestWorksheet: MortgageInterestWorksheetSchema.optional(),
   form1098E: z.array(Form1098ESchema).default([]),
   studentLoanInterestFacts: StudentLoanInterestFactsSchema.optional(),
   form1095A: z.array(Form1095ASchema).default([]),

@@ -231,7 +231,7 @@ describe("Schedule A - Mortgage Interest Refund", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("Schedule A - Points Paid", () => {
-  it("Schedule A Line 8c - points paid on purchase of principal residence", () => {
+  it("Schedule A Line 8a - reported points paid on purchase of principal residence", () => {
     const input = {
       ...simpleW2Fixture,
       form1098: [{
@@ -245,11 +245,12 @@ describe("Schedule A - Points Paid", () => {
       }],
     };
     const result = calculateScheduleA(input, d(200000), "single", c);
-    const line8c = result.lines.find((l) => l.line === "8c");
-    expect(line8c!.value.toNumber()).toBe(3000);
+    expect(result.mortgageWorksheet.deductiblePoints.toNumber()).toBe(3000);
+    expect(result.lines.find((l) => l.form === "Sched A" && l.line === "8a")!.value.toNumber()).toBe(15000);
+    expect(result.lines.find((l) => l.form === "Sched A" && l.line === "8c")!.value.toNumber()).toBe(0);
   });
 
-  it("Schedule A Line 8c - multiple 1098s sum points", () => {
+  it("Schedule A Line 8a - multiple 1098s include reported points", () => {
     const input = {
       ...simpleW2Fixture,
       form1098: [
@@ -274,8 +275,9 @@ describe("Schedule A - Points Paid", () => {
       ],
     };
     const result = calculateScheduleA(input, d(200000), "single", c);
-    const line8c = result.lines.find((l) => l.line === "8c");
-    expect(line8c!.value.toNumber()).toBe(3500);
+    expect(result.mortgageWorksheet.deductiblePoints.toNumber()).toBe(3500);
+    expect(result.lines.find((l) => l.form === "Sched A" && l.line === "8a")!.value.toNumber()).toBe(15500);
+    expect(result.lines.find((l) => l.form === "Sched A" && l.line === "8c")!.value.toNumber()).toBe(0);
   });
 });
 
@@ -896,7 +898,7 @@ describe("Schedule A - State estimated tax payments in SALT", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("Schedule A - Mortgage interest with points paid", () => {
-  it("Schedule A Lines 8a and 8c - mortgage interest and points are both deductible and included in total", () => {
+  it("Schedule A Line 8a - reported interest and points are both deductible and included in total", () => {
     const input = {
       ...simpleW2Fixture,
       form1098: [{
@@ -915,8 +917,9 @@ describe("Schedule A - Mortgage interest with points paid", () => {
     // SALT: $7K property tax (under $10K cap)
     // Total = $20K + $4.5K + $7K = $31,500
     expect(result.mortgageInterest.toNumber()).toBe(20000);
-    const line8c = result.lines.find((l) => l.line === "8c");
-    expect(line8c!.value.toNumber()).toBe(4500);
+    expect(result.mortgageWorksheet.deductiblePoints.toNumber()).toBe(4500);
+    expect(result.lines.find((l) => l.form === "Sched A" && l.line === "8a")!.value.toNumber()).toBe(24500);
+    expect(result.lines.find((l) => l.form === "Sched A" && l.line === "8c")!.value.toNumber()).toBe(0);
     expect(result.totalItemized.toNumber()).toBe(31500);
   });
 });
@@ -1122,7 +1125,7 @@ describe("Schedule A - audit trail line values for each section", () => {
       gamblingLosses: new Decimal(2000),
     });
 
-    const getLine = (id: string) => result.lines.find((l) => l.line === id)!.value.toNumber();
+    const getLine = (id: string) => result.lines.find((l) => l.form === "Sched A" && l.line === id)!.value.toNumber();
 
     // Line 1: raw medical expenses
     expect(getLine("1")).toBe(11000);
@@ -1132,8 +1135,8 @@ describe("Schedule A - audit trail line values for each section", () => {
     expect(getLine("5b")).toBe(3500);
     expect(getLine("5c")).toBe(0);
     expect(getLine("5d")).toBe(8000);
-    expect(getLine("8a")).toBe(14000);
-    expect(getLine("8c")).toBe(2500);
+    expect(getLine("8a")).toBe(16500); //14000 interest+2500 reported points
+    expect(getLine("8c")).toBe(0); //No unreported points
     // Line 8d: reserved for future use in 2025
     expect(getLine("8d")).toBe(0);
     expect(getLine("9")).toBe(800);

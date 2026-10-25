@@ -18,6 +18,7 @@ import { assertPdfExportAllowed } from "../../export-policy.js";
  *   Line 18:     Checkbox (itemize even if less than standard deduction)
  */
 
+import { calculateHomeMortgageInterest } from "@/engine/forms/home-mortgage-interest.js";
 import { PDFDocument } from "pdf-lib";
 import Decimal from "decimal.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
@@ -73,7 +74,7 @@ const FIELDS = {
   // ── Interest You Paid ──
   line8Checkbox: p1("Line8_ReadOrder[0].c1_2[0]"), // Mortgage not for buy/build/improve
   line8a: p1("f1_15[0]"),                        // Home mortgage interest + points from 1098
-  line8bDesc: p1("f1_16[0]"),                    // Mortgage interest not on 1098 (description)
+  line8bDesc: p1("Line8b_ReadOrder[0].f1_16[0]"),                    // Mortgage interest not on 1098 (description)
   line8b: p1("f1_17[0]"),                        // Mortgage interest not on 1098 (amount)
   line8c: p1("f1_18[0]"),                        // Points not on 1098
   line8d: p1("f1_19[0]"),                        // Reserved for future use
@@ -180,25 +181,32 @@ export async function fillScheduleA(
   // Line 7: Total taxes = Line 5e + Line 6
   setCurrencyField(form, F.line7, sa.saltDeduction);
 
-  // ── Interest You Paid (Lines 8a-10) ──
-  // Line 8a: Mortgage interest + points from Form 1098
-  // Per IRS instructions, Line 8a includes both interest AND points from 1098
-  const pointsPaid = input.form1098.reduce(
-    (acc, f) => acc.plus(d(f.pointsPaid)), ZERO,
-  );
-  const line8a = sa.mortgageInterest.plus(pointsPaid);
-  setCurrencyField(form, F.line8a, line8a);
-
-  // Lines 8b, 8c, 8d: Not tracked by engine (non-1098 amounts / reserved)
-  // Line 8e: Sum of 8a through 8c = line8a (since 8b, 8c, 8d are 0)
-  setCurrencyField(form, F.line8e, line8a);
-
-  // Line 9: Investment interest
+  // Copy canonical audited amounts only after source/result reconciliation.
+  const mortgage = calculateHomeMortgageInterest(input);
+  if (!mortgage.mortgageInterest.eq(sa.mortgageInterest)
+    || !sa.mortgageWorksheet || !mortgage.deductiblePoints.eq(sa.mortgageWorksheet.deductiblePoints)
+    || mortgage.sourceFactsVerified !== sa.mortgageWorksheet.sourceFactsVerified) {
+    throw new Error("Schedule A mortgage source and result do not reconcile");
+  }
+  const expectedMortgageLines = {
+    "8a": mortgage.line8a, "8b": mortgage.line8b, "8c": mortgage.line8c,
+    "8d": sa.mortgageInsurancePremiums,
+    "8e": mortgage.line8a.plus(mortgage.line8b).plus(mortgage.line8c).plus(sa.mortgageInsurancePremiums),
+    "10": mortgage.mortgageInterest.plus(mortgage.deductiblePoints).plus(sa.mortgageInsurancePremiums).plus(sa.investmentInterestDeduction),
+  };
+  for (const [line, expected] of Object.entries(expectedMortgageLines)) {
+    const audited = sa.lines.filter(item => item.form === "Sched A" && item.line === line);
+    if (audited.length !== 1 || !audited[0].value.isFinite() || !audited[0].value.eq(expected)) {
+      throw new Error(`Schedule A mortgage audit ${line} must be unique and reconcile to actual sources`);
+    }
+    setCurrencyField(form, F[`line${line}` as keyof typeof F], audited[0].value);
+  }
+  if (input.mortgageInterestWorksheet) {
+    setCheckBox(form, F.line8Checkbox, input.mortgageInterestWorksheet.loans.some(loan => !loan.acquisitionUse));
+    const lenders = mortgage.unreportedLenders.map(lender => [lender.name,lender.taxId,lender.address].filter(Boolean).join("; "));
+    if (lenders.length) setTextField(form, F.line8bDesc, lenders.join(" | "));
+  }
   setCurrencyField(form, F.line9, sa.investmentInterestDeduction);
-
-  // Line 10: Total interest (8e + 9)
-  const line10 = line8a.plus(sa.investmentInterestDeduction);
-  setCurrencyField(form, F.line10, line10);
 
   // ── Gifts to Charity (Lines 11-14) ──
   // Split cashCharitable into current-year cash (Line 11) and carryover used (Line 13).

@@ -7,6 +7,7 @@
  */
 
 import Decimal from "decimal.js";
+import { calculateHomeMortgageInterest, type HomeMortgageInterestResult } from "../forms/home-mortgage-interest.js";
 import { calculateForm1099OID } from "../forms/form-1099-oid.js";
 import { calculateStateLocalIncomeTaxDeduction } from "../forms/state-local-income-tax-deduction.js";
 import type { TaxYearInput } from "@/models/inputs.js";
@@ -64,7 +65,8 @@ export interface ScheduleAResult {
   saltDeduction: Decimal; // Line 5e
   /** Whether the general sales tax election was used for Line 5a (vs income taxes) */
   salesTaxElected: boolean;
-  mortgageInterest: Decimal; // Line 8a
+  mortgageInterest: Decimal; // Interest only; reported and unreported
+  mortgageWorksheet: HomeMortgageInterestResult;
   mortgageInsurancePremiums: Decimal; // Restored for 2026
   investmentInterestDeduction: Decimal; // Line 9
   casualtyLossDeduction: Decimal; // Line 15
@@ -252,72 +254,14 @@ export function calculateScheduleA(
   audit.record("Sched A", "5e", "SALT deduction (capped)", saltDeduction,
     `min(${saltTotal}, $${saltCap})`);
 
-  // ── Mortgage Interest (Lines 8a-8d) ────────────────────
-  // Per IRS Pub 936, the debt limit is applied to the AGGREGATE balance
-  // of all mortgages, not per-mortgage. Grandfathered (pre-12/16/2017)
-  // debt gets priority up to $1M/$500K MFS; post-TCJA fills remaining
-  // room under $750K/$375K MFS.
-  const TCJA_CUTOFF = "2017-12-15";
-  const GRANDFATHERED_LIMIT = new Decimal(1000000);
-
-  let totalGrandfatheredPrincipal = new Decimal(0);
-  let totalPostTCJAPrincipal = new Decimal(0);
-  let totalMortgageInterest = new Decimal(0);
-
-  for (const f of input.form1098) {
-    const principal = d(f.outstandingMortgagePrincipal);
-    const interest = d(f.mortgageInterestReceived);
-    totalMortgageInterest = totalMortgageInterest.plus(interest);
-    const isGrandfathered = f.mortgageOriginationDate !== undefined
-      && f.mortgageOriginationDate < TCJA_CUTOFF;
-    if (isGrandfathered) {
-      totalGrandfatheredPrincipal = totalGrandfatheredPrincipal.plus(principal);
-    } else {
-      totalPostTCJAPrincipal = totalPostTCJAPrincipal.plus(principal);
-    }
-  }
-
-  const totalPrincipal = totalGrandfatheredPrincipal.plus(totalPostTCJAPrincipal);
-  const mfsHalf = filingStatus === "married_filing_separately" ? new Decimal(2) : new Decimal(1);
-  const grandfatheredLimit = GRANDFATHERED_LIMIT.dividedBy(mfsHalf);
-  const postTCJAOverallLimit = constants.mortgageInterest.debtLimit.dividedBy(mfsHalf);
-
-  // Step 1: Grandfathered debt limited to $1M/$500K MFS
-  const grandfatheredLimited = min(totalGrandfatheredPrincipal, grandfatheredLimit);
-  // Step 2: Post-TCJA room = max(0, $750K/$375K - grandfathered used)
-  const postTCJARoom = zeroFloor(postTCJAOverallLimit.minus(grandfatheredLimited));
-  // Step 3: Post-TCJA limited to remaining room
-  const postTCJALimited = min(totalPostTCJAPrincipal, postTCJARoom);
-  // Step 4: Total limited debt
-  const totalLimited = grandfatheredLimited.plus(postTCJALimited);
-
-  let grossMortgageInterest: Decimal;
-  if (totalPrincipal.isZero() || totalPrincipal.lessThanOrEqualTo(totalLimited)) {
-    grossMortgageInterest = totalMortgageInterest;
-  } else {
-    const ratio = totalLimited.dividedBy(totalPrincipal);
-    grossMortgageInterest = roundDollar(totalMortgageInterest.times(ratio));
-  }
-
-  const refundOfOverpaidInterest = input.form1098.reduce(
-    (acc, f) => acc.plus(d(f.refundOfOverpaidInterest)),
-    new Decimal(0)
-  );
-  const mortgageInterest = grossMortgageInterest;
-  audit.record("Sched A", "8a", "Mortgage interest", mortgageInterest,
-    `Total interest ${totalMortgageInterest}, principal ${totalPrincipal}, limit ${totalLimited}` +
-    (totalPrincipal.greaterThan(totalLimited) ? ` → ratio ${totalLimited}/${totalPrincipal}` : "") +
-    (refundOfOverpaidInterest.greaterThan(0)
-      ? `; Form 1098 Box 3 refund $${refundOfOverpaidInterest} not netted on 2025 Schedule A line 8a`
-      : ""));
-
-  // Line 8c: Points paid on purchase of principal residence
-  const pointsPaid = input.form1098.reduce(
-    (acc, f) => acc.plus(d(f.pointsPaid)),
-    new Decimal(0)
-  );
-  audit.record("Sched A", "8c", "Points paid", pointsPaid,
-    "Sum Form 1098 Box 6");
+  // Actual Pub936 sources supply interest and points without reusing Box2 as an average.
+  const mortgageWorksheet = calculateHomeMortgageInterest({...input,taxpayer:{...input.taxpayer,filingStatus}});
+  audit.merge(mortgageWorksheet.lines);
+  const mortgageInterest = mortgageWorksheet.mortgageInterest;
+  const pointsPaid = mortgageWorksheet.deductiblePoints;
+  audit.record("Sched A", "8a", "Mortgage interest and points reported on Form1098", mortgageWorksheet.line8a, "Allowed current reported amounts from Pub936 source worksheet");
+  audit.record("Sched A", "8b", "Mortgage interest not reported on Form1098", mortgageWorksheet.line8b, "Actual qualified unreported interest after Pub936 debt limit");
+  audit.record("Sched A", "8c", "Points not reported on current Form1098", mortgageWorksheet.line8c, "Actual qualified unreported points and prior-year amortization after debt limit");
 
   // Line 8d: Mortgage insurance premiums (PMI)
   const reportedMortgageInsurancePremiums = input.form1098.reduce(
@@ -356,12 +300,17 @@ export function calculateScheduleA(
         : "2025 Schedule A line 8d is reserved for future use");
   }
 
+  const totalHomeInterest = sum(mortgageWorksheet.line8a,mortgageWorksheet.line8b,mortgageWorksheet.line8c,mortgageInsurancePremiums);
+  audit.record("Sched A", "8e", "Total home mortgage interest and points", totalHomeInterest, "8a+8b+8c+8d");
+
   // Line 9: Investment interest expense (from Form 4952 or manual input)
   const investmentInterestDeduction = extra?.investmentInterestExpense ?? new Decimal(0);
   audit.record("Sched A", "9", "Investment interest expense", investmentInterestDeduction,
     investmentInterestDeduction.isZero()
       ? "No investment interest expense"
       : "Investment interest expense deduction (Form 4952 or validated manual input)");
+
+  audit.record("Sched A", "10", "Total deductible interest", totalHomeInterest.plus(investmentInterestDeduction), "8e+9");
 
   // Line 15: Casualty and theft losses (from Form 4684)
   const casualtyLossDeduction = extra?.casualtyLossDeduction ?? new Decimal(0);
@@ -604,6 +553,7 @@ export function calculateScheduleA(
     saltDeduction,
     salesTaxElected: hasSalesTaxElection,
     mortgageInterest,
+    mortgageWorksheet,
     mortgageInsurancePremiums,
     investmentInterestDeduction,
     casualtyLossDeduction,

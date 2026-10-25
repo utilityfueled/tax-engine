@@ -112,44 +112,22 @@ lines:
     testRef: "tests/regression/obbba-2025.test.ts::2025 SALT independent worksheet fixtures"
 
   - line: "8a"
-    description: "Home mortgage interest and points (Form 1098)"
-    formula: |
-      AGGREGATE all Form 1098 entries:
-        1. Separate by origination date: grandfathered (pre-12/16/2017) vs post-TCJA
-        2. Grandfathered limited = min(total grandfathered principal, $1M / $500K MFS)
-        3. Post-TCJA room = max(0, $750K/$375K MFS - grandfathered limited)
-        4. Post-TCJA limited = min(total post-TCJA principal, post-TCJA room)
-        5. Total limited = grandfathered limited + post-TCJA limited
-        6. Total principal = sum of all outstanding principals
-        7. If total principal > total limited: ratio = total limited / total principal
-           deductible = roundDollar(total interest × ratio)
-        8. If total principal ≤ total limited: deductible = total interest
-      For 2025, Form 1098 Box 3 refunds of overpaid interest are NOT netted
-      against line 8a; the Schedule A instructions direct taxpayers to review
-      Schedule 1 line 8z separately instead. Per IRS Pub 936 Home Mortgage
-      Interest Deduction Worksheet, the limit is applied to the COMBINED
-      balance of all mortgages, not per-mortgage.
-    irsRef: "Schedule A Instructions, Line 8a; Pub 936; IRC §163(h)(3)(B)(ii)"
-    inputs:
-      - "Form 1098 Box 1 (mortgage interest)"
-      - "Form 1098 Box 2 (outstanding principal)"
-    edgeCases:
-      - "Debt over $750,000 ($375,000 MFS): interest deduction prorated — IRC §163(h)(3)(B)(ii)"
-      - "Pre-12/15/2017 mortgages: $1M limit ($500K MFS)"
-      - "Multiple mortgages: AGGREGATE principal for limit (not per-mortgage) — IRS Pub 936 worksheet"
-      - "MFS limit is half of standard limit per IRC §163(h)(3)(B)(ii): $375K post-TCJA, $500K pre-TCJA"
-      - "Mixed origination dates: grandfathered debt gets priority up to $1M, post-TCJA fills remaining room under $750K"
-      - "Two $500K post-TCJA mortgages: combined $1M > $750K → ratio 75%, each mortgage prorated"
-      - "For 2025, Form 1098 Box 3 refund of overpaid interest is not subtracted on line 8a"
-    testRef: "tests/edge-cases/schedule-a-edge-cases.test.ts::Schedule A - multiple mortgages aggregate debt limit (IRS Pub 936)"
+    description: "Qualified interest and points reported on current Form1098"
+    formula: "Actual Pub936 source worksheet line8a; correct debt categories/average balances, Table1 ratio rounded3decimals, current-year qualified points, no prior-year Box4 refund netting. Historical aggregate amounts remain unverified."
+    irsRef: "ScheduleA8a; Pub936 Table1 and points; detailed spec home-mortgage-interest.yaml"
+    testRef: "tests/engine/schedules/schedule-a.test.ts::Schedule A Line 8a - reported points paid on purchase of principal residence"
+
+  - line: "8b"
+    description: "Qualified home mortgage interest not reported on Form1098"
+    formula: "Actual unreported interest after Pub936 limitations; actual lender identity retained"
+    irsRef: "ScheduleA8b; Pub936"
+    testRef: "tests/engine/forms/home-mortgage-interest.test.ts::routes actual reported and unreported amounts into canonical ScheduleA lines"
 
   - line: "8c"
-    description: "Points paid on purchase of principal residence"
-    formula: "Sum of Form 1098 Box 6 (points paid)"
-    irsRef: "Schedule A Instructions, Line 8c"
-    inputs:
-      - "Form 1098 Box 6 (points paid)"
-    testRef: "tests/engine/schedules/schedule-a.test.ts::Schedule A Line 8c - points paid on purchase of principal residence"
+    description: "Qualified points not reported on current Form1098"
+    formula: "Actual unreported points/current amortization after applicable source qualification and Table1 ratio; current Box6 points enter8a instead"
+    irsRef: "ScheduleA8c; Pub936 Points"
+    testRef: "tests/engine/forms/home-mortgage-interest.test.ts::implements the published ratable points example and actual current purchase qualification"
 
   - line: "8d"
     description: "Reserved for future use"

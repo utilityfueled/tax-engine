@@ -512,8 +512,8 @@ describe("Schedule A - charitable deduction AGI limits", () => {
 
 describe("Schedule A - mortgage interest MFS and boundaries", () => {
   it("MFS filer: mortgage debt limit is $375K (half of $750K) per IRC §163(h)(3)(B)(ii)", () => {
-    // MFS with $900K mortgage → ratio = 375K/900K = 41.67%
-    // Interest $36K × 41.67% = $15,000
+    // MFS with $900K mortgage → Table1line14 =375K/900K rounded3places =0.417
+    // Interest $36K ×0.417 = $15,012
     const result = calculateScheduleA(makeFixture({
       form1098: [{
         lender: "Bank",
@@ -526,7 +526,7 @@ describe("Schedule A - mortgage interest MFS and boundaries", () => {
         mortgageInsurancePremiums: "0",
       }],
     }), d(200000), "married_filing_separately", c);
-    expect(result.mortgageInterest.toNumber()).toBe(15000);
+    expect(result.mortgageInterest.toNumber()).toBe(15012);
   });
 
   it("$1 over $750K debt: interest slightly prorated", () => {
@@ -631,8 +631,8 @@ describe("Schedule A - multiple mortgages aggregate debt limit (IRS Pub 936)", (
     // Mortgage A: $500K principal, $25K interest
     // Mortgage B: $400K principal, $20K interest
     // Combined: $900K > $750K limit
-    // Ratio: $750K / $900K = 0.8333...
-    // Deductible: roundDollar($45K × 0.8333...) = $37,500
+    // Table1line14: $750K / $900K rounds to0.833
+    // Deductible: roundDollar($45K ×0.833) = $37,485
     const result = calculateScheduleA(makeFixture({
       form1098: [
         {
@@ -657,7 +657,7 @@ describe("Schedule A - multiple mortgages aggregate debt limit (IRS Pub 936)", (
         },
       ],
     }), d(200000), "single", c);
-    expect(result.mortgageInterest.toNumber()).toBe(37500);
+    expect(result.mortgageInterest.toNumber()).toBe(37485);
   });
 
   it("Two post-TCJA mortgages combined exactly at $750K: full deduction", () => {
@@ -727,8 +727,8 @@ describe("Schedule A - multiple mortgages aggregate debt limit (IRS Pub 936)", (
     // Post-TCJA: $300K, $12K interest → limited to $150K (out of $300K)
     // Total limited: $600K + $150K = $750K
     // Total principal: $900K
-    // Ratio: $750K / $900K = 0.8333...
-    // Deductible: roundDollar($36K × 0.8333...) = $30,000
+    // Table1line14: $750K / $900K rounds to0.833
+    // Deductible: roundDollar($36K ×0.833) = $29,988
     const result = calculateScheduleA(makeFixture({
       form1098: [
         {
@@ -753,12 +753,12 @@ describe("Schedule A - multiple mortgages aggregate debt limit (IRS Pub 936)", (
         },
       ],
     }), d(200000), "single", c);
-    expect(result.mortgageInterest.toNumber()).toBe(30000);
+    expect(result.mortgageInterest.toNumber()).toBe(29988);
   });
 
   it("Single mortgage still works correctly with aggregate method", () => {
     // Regression: single $900K mortgage → $750K/$900K = 0.8333...
-    // Interest $36K × 0.8333... = $30,000
+    // Interest $36K × rounded0.833 = $29,988
     const result = calculateScheduleA(makeFixture({
       form1098: [{
         lender: "Bank",
@@ -771,7 +771,7 @@ describe("Schedule A - multiple mortgages aggregate debt limit (IRS Pub 936)", (
         mortgageInsurancePremiums: "0",
       }],
     }), d(200000), "single", c);
-    expect(result.mortgageInterest.toNumber()).toBe(30000);
+    expect(result.mortgageInterest.toNumber()).toBe(29988);
   });
 });
 
@@ -1116,7 +1116,7 @@ describe("Schedule A - audit trail completeness", () => {
       { medicalExpenses: d(10000) }
     );
     for (const line of result.lines) {
-      expect(["Sched A", "SALT WS", "SALT Income Tax WS"]).toContain(line.form);
+      expect(["Sched A", "SALT WS", "SALT Income Tax WS", "Pub936 Table1"]).toContain(line.form);
     }
     expect(result.lines.some(line => line.form === "SALT Income Tax WS" && line.line === "total")).toBe(true);
   });

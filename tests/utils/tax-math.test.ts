@@ -559,18 +559,18 @@ describe("Mortgage interest deduction", () => {
   it("Mortgage interest - pre-TCJA mortgage over $1M is prorated", () => {
     // $1.2M principal, pre-12/15/2017 → $1M limit → ratio 1M/1.2M
     const deductible = calculateDeductibleMortgageInterest(d(48000), d(1200000), constants, "2016-01-15");
-    expect(deductible.toNumber()).toBe(40000); // 48000 × (1M / 1.2M)
+    expect(deductible.toNumber()).toBe(39984); //48000*0.833, Table1line14 rounded to3decimal places
   });
 
   it("Mortgage interest - post-TCJA uses $750K limit", () => {
     // $900K principal, post-12/15/2017 → $750K limit → prorated
     const deductible = calculateDeductibleMortgageInterest(d(36000), d(900000), constants, "2020-03-01");
-    expect(deductible.toNumber()).toBe(30000); // 36000 × (750K / 900K)
+    expect(deductible.toNumber()).toBe(29988); //36000*0.833, Table1line14 rounded to3decimal places
   });
 
   it("Mortgage interest - no origination date defaults to post-TCJA", () => {
     const deductible = calculateDeductibleMortgageInterest(d(36000), d(900000), constants);
-    expect(deductible.toNumber()).toBe(30000);
+    expect(deductible.toNumber()).toBe(29988);
   });
 });
 

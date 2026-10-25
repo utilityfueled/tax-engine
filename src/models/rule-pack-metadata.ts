@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.32",
+    ruleVersion: "2025.33",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/publications/p936", section: "Actual Table1 debt categories/average sources/three-place ratio, point qualification and prior-year tax-benefit recoveries; canonical ScheduleA8a-10", revision: "Final2025 publication and enacted permanent debt limits; final2026 filing qualification remains closed", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/publications/p970", section: "Chapters6/7 actual education-distribution year/recipient and final allowed-credit source coordination", revision: "Final2025 Publication970 and applicable2026 source rules; filing qualification remains closed", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i461", section: "Employee-service exclusion, actual capital/nonbusiness source classifications, official lines2-16 and separate attachment threshold", revision: "Final2025 instructions and current-law2026 indexed calculation; source and independent review gates retained", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/individuals/international-taxpayers/frequently-asked-questions-on-digital-asset-transactions", section: "Q78/Q79 actual crypto property value and substantiation; Pub526 current-year category limits before ScheduleA", revision: "Current official guidance; final2025 category worksheet; filing and independent review remain pending", retrievedAt: "2026-10-25" },
@@ -74,11 +75,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.28-law-integration-draft",
+    ruleVersion: "2026.29-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/publications/p936", section: "Actual Table1 debt categories/average sources/three-place ratio, point qualification and prior-year tax-benefit recoveries; canonical ScheduleA8a-10", revision: "Final2025 publication and enacted permanent debt limits; final2026 filing qualification remains closed", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/publications/p970", section: "Chapters6/7 actual education-distribution year/recipient and final allowed-credit source coordination", revision: "Final2025 Publication970 and applicable2026 source rules; filing qualification remains closed", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/publications/p526", section: "Private nonoperating foundation capital-gain gifts: unknown qualified-stock exception versus known basis reduction", revision: "Final2025 Pub526 property rule retained for2026; no filing qualification", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i461", section: "Employee-service exclusion, actual capital/nonbusiness source classifications, official lines2-16 and separate attachment threshold", revision: "Final2025 instructions and current-law2026 indexed calculation; source and independent review gates retained", retrievedAt: "2026-10-25" },

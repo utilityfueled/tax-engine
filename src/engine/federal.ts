@@ -50,6 +50,7 @@ import { calculateScheduleC } from "./schedules/schedule-c.js";
 import { calculateScheduleD, recomputeCarryforward } from "./schedules/schedule-d.js";
 import { calculateScheduleE } from "./schedules/schedule-e.js";
 import { calculateScheduleSE } from "./schedules/schedule-se.js";
+import { calculateHomeMortgageInterest } from "./forms/home-mortgage-interest.js";
 import { calculateScheduleA } from "./schedules/schedule-a.js";
 import { calculateSchedule1A } from "./schedules/schedule-1-a.js";
 import { calculateItemizedDeductionLimit } from "./forms/itemized-deduction-limit.js";
@@ -1580,7 +1581,10 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     totalQualifiedPTPIncome: sum(...k1Form1041s.map((k) => d(k.section199AQualifiedPTPIncome))),
   } : undefined;
 
+  const mortgageSourceResult = calculateHomeMortgageInterest(input);
+  const mortgageInterestRecovery = mortgageSourceResult.additionalTaxableInterestRecovery;
   const otherIncome = sum(
+    mortgageInterestRecovery,
     miscOtherIncome,
     sched1.taxableRefunds,
     sched1.otherGainsOrLosses,
@@ -2439,6 +2443,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
       { source: "HSA excess employer contributions not in wages", amount: sched1.hsaExcessEmployerIncome },
       { source: "Form8814 child election income", amount: form8814OtherIncome },
       { source: "QTP/Coverdell taxable earnings", amount: form1099QTaxableEarnings },
+      { source: "Actual prior-year mortgage interest recovery", amount: mortgageInterestRecovery },
       { source: "Section280F recapture compatibility", amount: section280FRecapture },
       { source: "K1(Form1041) other portfolio income", amount: k1Form1041OtherPortfolio },
     ],
