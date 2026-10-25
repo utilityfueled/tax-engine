@@ -2230,14 +2230,15 @@ describe("Form 2441 pipeline - SE earned income subtracts deductible half", () =
     };
     const result = calculateFederalTax(fixture);
 
-    // SE tax: $20K × 0.9235 = $18,470 → SS $2,286 + MC $536 = $2,822, deductible half = $1,411
-    // Earned income = $30K + $20K - $1,411 = $48,589
+    // SE tax: $20K × 0.9235 = $18,470 → SS $2,290 + MC $536 = $2,826, deductible half = $1,413
+    // Earned income = $30K + $20K - $1,413 = $48,587
     // Qualifying expenses = min($5K, $3K) = $3K (cap for one)
-    // Earned income limit = min($3K, $48,589) = $3K (not binding)
-    // AGI ≈ $48,589, well above $43K → 20% rate. Credit = $3K × 20% = $600
+    // Earned income limit = min($3K, $48,587) = $3K (not binding)
+    // AGI ≈ $48,587, well above $43K → 20% rate. Credit = $3K × 20% = $600
     const form2441Lines = result.allLines.filter((l) => l.form === "Form 2441");
     const line4 = form2441Lines.find((l) => l.line === "4");
-    expect(line4!.value.toNumber()).toBe(3000); // Expense cap is binding, not earned income
+    expect(line4!.value.toNumber()).toBe(48587); // Actual source income, not the expense limit
+    expect(form2441Lines.find(line => line.line === "6")?.value.toNumber()).toBe(3000);
     const line9 = form2441Lines.find((l) => l.line === "9");
     expect(line9!.value.toNumber()).toBe(600);
   });

@@ -134,6 +134,9 @@ edgeCases:
     notes: "IRC §21(e)(2) — MFS restriction enforced in federal.ts orchestrator"
 
 validation2026:
+  - rule: "source-record-review-continuations"
+    description: "Printed PartsI/II copy actual source records, put the three largest payments/expenses on the form, and retain every remaining row and due-diligence statement on review continuation pages. Correct physical continuation boxes; explicit household and over12 disability answers. Preserve render-only identifier redaction."
+    testRef: "tests/pdf/fill-form-2441-source.test.ts::Form2441 review preserves provider and person source records with continuations"
   - rule: "actual-care-source-records"
     description: "Collect actual provider names, addresses, identification status, household-employment answers and payments; qualifying-person names, IDs, disability answers and individually allocated expenses; actual prior-year credit and deemed-income/benefit answers. Retain unknown and zero. Reconcile person expenses to gross eligible expenses less excluded benefits with Decimal; provider payments may exceed but must cover those expenses. Prior-only claims cannot disappear because current expenses are zero."
     testRef: "tests/guided-interview/guided-care-source-facts.test.ts::preserves actual care source records and prior-year credit"

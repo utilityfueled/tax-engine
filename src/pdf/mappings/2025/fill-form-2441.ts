@@ -9,7 +9,7 @@ import { assertPdfExportAllowed, markReviewPdf } from "../../export-policy.js";
  *   fillDebugLabels('forms/blank/2025/f2441.pdf', 'forms/filled/f2441-debug.pdf')
  */
 
-import { PDFDocument } from "pdf-lib";
+import { PDFDocument, StandardFonts } from "pdf-lib";
 import Decimal from "decimal.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
@@ -17,6 +17,7 @@ import {
   loadReviewTemplate,
   setTextField,
   formatCurrency,
+  setCheckBox,
 } from "../../pdf-utils.js";
 
 // ─── PDF Field Name Helpers ────────────────────────────────────────────────
@@ -63,8 +64,9 @@ export const FORM_2441_FIELDS = {
   provider3HouseholdNo: providerRow("BodyRow3[0]", "ColD[0].c1_6[1]"),
   provider3Amount: providerRow("BodyRow3[0]", "f1_14[0]"),
 
-  // ── "Did you receive dependent care benefits?" checkbox ──
-  receivedBenefitsYes: p1("c1_7[0]"),
+  // These are continuation checkboxes. The benefits yes/no diagram has no widget.
+  moreProviders: p1("PartI[0].c1_3[0]"),
+  moreQualifyingPersons: p1("c1_7[0]"),
 
   // ── Part II Line 2: Qualifying Persons (up to 3 rows) ──
   // (a) first name, (a) last name, (b) SSN, (c) disabled checkbox, (d) qualified expenses
@@ -102,6 +104,97 @@ export const FORM_2441_FIELDS = {
 } as const;
 
 const F = FORM_2441_FIELDS;
+
+async function fillSourceRecords(doc: PDFDocument, input: TaxYearInput): Promise<void> {
+  const care = input.dependentCare;
+  if (!care?.providers?.length && !care?.qualifyingPersons?.length) return;
+  if (care.sourceFactsConfirmed !== true || !care.providers?.length || !care.qualifyingPersons?.length
+    || typeof care.usesDeemedIncome !== "boolean" || care.qualifyingPersons.length !== care.qualifyingIndividuals) {
+    throw new Error("Form 2441 requires confirmed complete provider and qualifying-person source records");
+  }
+  const amount = (value: string) => {
+    const parsed = new Decimal(value);
+    if (!parsed.isFinite() || parsed.isNegative()) throw new Error("Form 2441 source amount must be finite and nonnegative");
+    return parsed;
+  };
+  const providers = care.providers.map(provider => {
+    if (!provider.name.trim() || !provider.address.trim() || typeof provider.householdEmployee !== "boolean"
+      || !["tin", "tax_exempt", "foreign_no_us_tin", "employer_furnished", "withheld"].includes(provider.identifierType)
+      || (provider.identifierType === "withheld" && !provider.dueDiligenceStatement?.trim())) throw new Error("Form 2441 provider source is incomplete");
+    const paid = amount(provider.amountPaid);
+    if (provider.identifierType === "employer_furnished" && (!paid.isZero() || provider.householdEmployee || care.receivedBenefits !== true)) throw new Error("Form 2441 employer-furnished source contradicts its required zero payment entry");
+    return { ...provider, paid };
+  }).sort((a, b) => b.paid.comparedTo(a.paid));
+  const persons = care.qualifyingPersons.map(person => {
+    if (!person.firstName.trim() || !person.lastName.trim() || typeof person.over12Disabled !== "boolean"
+      || typeof person.qualifyingPersonConfirmed !== "boolean" || !["tax_id", "died"].includes(person.identifierType)) throw new Error("Form 2441 qualifying-person source is incomplete");
+    return { ...person, expenses: amount(person.qualifiedExpenses) };
+  }).sort((a, b) => b.expenses.comparedTo(a.expenses));
+  const total = persons.reduce((sum, person) => sum.plus(person.expenses), new Decimal(0));
+  if (care.excludedDependentCareBenefits === undefined || !total.eq(Decimal.max(0, amount(care.expenses).minus(amount(care.excludedDependentCareBenefits))))) throw new Error("Form 2441 person expense sources do not reconcile");
+  const providerId = (provider: typeof providers[number]) => ({ tin: provider.taxId ?? "", tax_exempt: "Tax-Exempt", foreign_no_us_tin: "LAFCP", employer_furnished: "", withheld: "See attached" })[provider.identifierType];
+  const personId = (person: typeof persons[number]) => person.identifierType === "died" ? "Died" : person.taxId ?? "";
+  const money = (value: Decimal) => value.isZero() ? "0" : formatCurrency(value);
+  const form = doc.getForm();
+  const providerFields = [
+    [F.provider1Name, F.provider1Address, F.provider1TIN, F.provider1HouseholdYes, F.provider1HouseholdNo, F.provider1Amount],
+    [F.provider2Name, F.provider2Address, F.provider2TIN, F.provider2HouseholdYes, F.provider2HouseholdNo, F.provider2Amount],
+    [F.provider3Name, F.provider3Address, F.provider3TIN, F.provider3HouseholdYes, F.provider3HouseholdNo, F.provider3Amount],
+  ];
+  providers.slice(0, 3).forEach((provider, i) => {
+    const fields = providerFields[i];
+    setTextField(form, fields[0], provider.name);
+    setTextField(form, fields[1], provider.identifierType === "employer_furnished" ? "See W-2" : provider.address);
+    setTextField(form, fields[2], providerId(provider));
+    setCheckBox(form, fields[3], provider.householdEmployee); setCheckBox(form, fields[4], !provider.householdEmployee);
+    setTextField(form, fields[5], money(provider.paid));
+  });
+  const personFields = [
+    [F.qp1FirstName, F.qp1LastName, F.qp1SSN, F.qp1Disabled, F.qp1Expenses],
+    [F.qp2FirstName, F.qp2LastName, F.qp2SSN, F.qp2Disabled, F.qp2Expenses],
+    [F.qp3FirstName, F.qp3LastName, F.qp3SSN, F.qp3Disabled, F.qp3Expenses],
+  ];
+  persons.slice(0, 3).forEach((person, i) => {
+    const fields = personFields[i];
+    setTextField(form, fields[0], person.firstName); setTextField(form, fields[1], person.lastName);
+    setTextField(form, fields[2], personId(person)); setCheckBox(form, fields[3], person.over12Disabled);
+    setTextField(form, fields[4], money(person.expenses));
+  });
+  setCheckBox(form, F.studentOrDisabled, care.usesDeemedIncome);
+  setCheckBox(form, F.moreProviders, providers.length > 3);
+  setCheckBox(form, F.moreQualifyingPersons, persons.length > 3);
+  const paragraphs = [
+    ...providers.slice(3).map((provider, i) => `Provider ${i + 4}: ${provider.name}; address: ${provider.address}; identifier: ${providerId(provider)}; household employee: ${provider.householdEmployee ? "Yes" : "No"}; amount paid: ${money(provider.paid)}.`),
+    ...persons.slice(3).map((person, i) => `Qualifying person ${i + 4}: ${person.firstName} ${person.lastName}; identifier: ${personId(person)}; over age 12 and incapable of self-care: ${person.over12Disabled ? "Yes" : "No"}; qualified expenses: ${money(person.expenses)}.`),
+    ...providers.filter(provider => provider.identifierType === "withheld").map(provider => `Provider identification due diligence - ${provider.name}: ${provider.dueDiligenceStatement}`),
+  ];
+  if (!paragraphs.length) return;
+  const font = await doc.embedFont(StandardFonts.Helvetica);
+  let page = doc.addPage([612, 792]); let y = 744;
+  const header = () => {
+    page.drawText("Form 2441 - source continuation (2025 review)", { x: 42, y, size: 13, font }); y -= 23;
+    page.drawText(`${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName} | SSN: ${input.taxpayer.primary.ssn}`, { x: 42, y, size: 10, font }); y -= 24;
+  };
+  header();
+  for (const paragraph of paragraphs) {
+    // Wrap even unusually long unbroken source names without clipping or dropping text.
+    let line = "";
+    const flush = () => {
+      if (y < 50) { page = doc.addPage([612, 792]); y = 744; header(); }
+      page.drawText(line, { x: 42, y, size: 10, font }); y -= 14; line = "";
+    };
+    for (const word of paragraph.split(/\s+/)) {
+      if (line && font.widthOfTextAtSize(`${line} ${word}`, 10) > 528) flush();
+      if (line) line += " ";
+      for (const char of word) {
+        if (font.widthOfTextAtSize(line + char, 10) > 528) flush();
+        line += char;
+      }
+    }
+    if (line) flush();
+    y -= 9;
+  }
+}
 
 // ─── Fill Logic ────────────────────────────────────────────────────────────
 
@@ -155,6 +248,7 @@ export async function fillForm2441(
     if (value !== undefined) setTextField(form, field, value.isZero() ? "0" : formatCurrency(value));
   }
   setTextField(form, F.line8decimal, f2441.creditPercentage.times(100).toFixed(0));
+  await fillSourceRecords(doc, input);
   await markReviewPdf(doc);
   return doc;
 }

@@ -69,3 +69,25 @@ non-null warnings). Evidence: `care-sources-red.log`, `care-sources-integration.
 `care-sources-spec.log` and `care-sources-lint.log` under `.local/upgrade-evidence/`.
 These are local synthetic checks. Provider/person physical rows and continuation
 pages are the next package; benefits Part III is a separate active module.
+
+## Provider/person review form and continuation — 2026-10-25
+
+Source UI commit: `5d0ef3e`. The review mapper now preserves actual source rows,
+prints the three highest amounts, and retains additional providers/persons and
+identification due-diligence explanations on continuation pages. The physical
+provider continuation path and qualifying-person box are corrected; the benefits
+flow diagram has no checkbox widget. Household-employment, disability and deemed
+income checks copy actual answers. The review identifier-redaction copy is
+respected, including provider and person tax IDs. Input sorting is immutable.
+
+The initial source-row regression failed. All 81 focused PDF/credit integration
+tests pass; root types and scoped mapping lint pass, and 3,360 current spec refs
+resolve. The unrelated legacy credit-stacking assertion now checks actual earned
+income at printed line4 and retains its original3,000 cap at line6 and600credit.
+Three saved synthetic pages were rendered and inspected, including cropped
+footer checks. Canonical source amounts/identifiers match widgets with nonempty
+appearances; continuation/deemed-income checkbox values and appearance states
+match; remaining records survive on the attachment. See `care-pdf-sources-*.log`,
+`care-source-canonical.log`, `care-source-review.pdf` and rendered PNGs under
+`.local/upgrade-evidence/`. PartIII and complete prior-year worksheet computation,
+final2026 mapping qualification and independent human review remain outstanding.
