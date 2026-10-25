@@ -68,6 +68,8 @@ import { calculateDependentCareBenefitSources } from "./forms/dependent-care-ben
 import { calculateForm8863 } from "./forms/form-8863.js";
 import type { calculateForm8962 } from "./forms/form-8962.js";
 import { calculatePremiumTaxCreditReturn } from "./forms/premium-tax-credit-return.js";
+import { calculateMarketplaceHealthDeduction, type MarketplaceHealthDeductionResult } from "./forms/marketplace-health-deduction.js";
+import type { MarketplaceHealthPremiumGroup } from "./forms/marketplace-health-premiums.js";
 import { calculateUnreportedTipPayroll } from "./forms/unreported-tip-payroll.js";
 import { calculateForm8919 } from "./forms/form-8919.js";
 import { calculateSchedule3, calculateExcessSSWithholding } from "./schedules/schedule-3.js";
@@ -155,6 +157,31 @@ import { calculateIllinoisReturn, type ILStateInput } from "./state/il-orchestra
 import type { ILScheduleWITRecord } from "./state/il-schedule-il-wit.js";
 
 export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
+  const marketplace = input.form7206?.plans?.some(plan => plan.marketplaceCoverage === true && plan.premiumTaxCreditInvolved === true);
+  if (!marketplace) return calculateFederalTaxCore(input);
+  if (input.taxpayer.taxYear !== 2026) throw new Error("Historical2025 Marketplace health deduction requires the separate capped-repayment worksheets.");
+  if ((input.savingsBondRedemptions?.length ?? 0) > 0 || input.studentLoanInterestFacts || (input.form1098E?.length ?? 0) > 0
+    || d(input.adjustments?.studentLoanInterest).gt(0) || input.iraDeductionWorksheet || d(input.adjustments?.iraDeduction).gt(0)) {
+    throw new Error("Pub974 ordered special deductions require their separate passive-loss, IRA, bond or student-loan coordination.");
+  }
+  const intermediate = calculateFederalTaxCore(input, { stage: "maximum" });
+  const deduction = calculateMarketplaceHealthDeduction({ input, groups: intermediate.groups, credit: intermediate.credit });
+  const result = calculateFederalTaxCore(input, { stage: "final", deduction });
+  if (!result.form8962) throw new Error("Pub974 final premium tax credit is incomplete.");
+  const finalAllocation = calculateMarketplaceHealthDeduction({ input, groups: intermediate.groups, credit: result.form8962 });
+  if (roundDollar(deduction.specifiedDeduction.plus(sum(...finalAllocation.businesses.map(row => row.allocatedCredit))))
+    .gt(roundDollar(sum(...deduction.businesses.map(row => row.specifiedPremiums))))) throw new Error("Pub974 final deduction plus actual allocated credit exceeds source premiums.");
+  result.marketplaceHealthInsurance = { ...deduction, step2Credit: intermediate.credit.ptcAllowed, finalCredit: result.form8962.ptcAllowed,
+    maximumDeduction: deduction.maximumSpecifiedDeduction.plus(deduction.nonspecifiedDeduction) };
+  result.allLines.push(...deduction.lines);
+  return result;
+}
+
+type MarketplaceContext = { stage: "maximum" } | { stage: "final"; deduction: MarketplaceHealthDeductionResult };
+interface MarketplaceInterim { groups: MarketplaceHealthPremiumGroup[]; credit: ReturnType<typeof calculatePremiumTaxCreditReturn> }
+function calculateFederalTaxCore(input: TaxYearInput, marketplace: { stage: "maximum" }): MarketplaceInterim;
+function calculateFederalTaxCore(input: TaxYearInput, marketplace?: { stage: "final"; deduction: MarketplaceHealthDeductionResult }): TaxReturnResult;
+function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceContext): TaxReturnResult | MarketplaceInterim {
   const year = input.taxpayer.taxYear;
   const constants = getConstants(year);
   const filingStatus = input.taxpayer.filingStatus as FilingStatus;
@@ -1352,7 +1379,8 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     actualHealthInsurance = calculateForm7206Return({ input, scheduleCProfit: schedC.netProfit,
       scheduleFProfit: schedFNetProfit, cryptoBusinessProfit: cryptoBusinessNet,
       selfEmploymentDeductions: schedSE.perTaxpayer.map(row => ({ accountHolder: row.accountHolder, amount: row.deductibleHalf })),
-      foreignIncomeExclusion: form2555IncomeReduction, selfEmploymentSourcesVerified: schedSE.sourceFactsVerified });
+      foreignIncomeExclusion: form2555IncomeReduction, selfEmploymentSourcesVerified: schedSE.sourceFactsVerified, marketplace,
+      businessGrossIncomes: [{ sourceId: "scheduleC", amount: schedC.grossIncome }, { sourceId: "scheduleF", amount: schedF.grossFarmIncome }, { sourceId: "cryptoBusiness", amount: cryptoBusinessGross }] });
     seHealthInsurance = actualHealthInsurance.form7206.deductionToSchedule1;
     audit.merge(actualHealthInsurance.form7206.lines);
   } else if (input.seHealthInsuranceWorksheet) {
@@ -1923,6 +1951,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
       amount: d(s.amount),
     })),
   });
+  if (marketplace && form8582.netRental.lt(0) && form8582.combinedLoss.lt(0)) throw new Error("Pub974 ordered special passive-loss deductions require their separate coordination.");
   audit.merge(form8582.lines);
 
   // ── AGI correction: remove Part I rental suspended losses ──
@@ -2010,6 +2039,15 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     k1Form1041Section67eDeductions.gt(0)
       ? "SE deduction + other adjustments + K-1 1041 §67(e) excess deductions"
       : "SE deduction + other adjustments");
+
+  if (marketplace?.stage === "maximum") {
+    if (!actualHealthInsurance?.marketplacePremiums) throw new Error("Pub974 source calculation is incomplete.");
+    if (sum(d(input.priorYear?.nolCarryforward), d(input.priorYear?.excessBusinessLossNOL), k1Form1041FinalNOL).gt(0)) throw new Error("Pub974 NOL coordination requires the actual circular taxable-income worksheet.");
+    const credit = calculatePremiumTaxCreditReturn({ input, agi, taxExemptInterest,
+      foreignIncomeReduction: form2555IncomeReduction, foreignHousingDeduction: form2555HousingDeduction,
+      socialSecurityBenefitsGross, socialSecurityBenefitsTaxable }, { method: "pub974-simplified-2026", stage: "maximum" });
+    return { groups: actualHealthInsurance.marketplacePremiums.groups, credit };
+  }
 
   // ═══════════════════════════════════════════════════════════
   // Phase 3: Deductions (Form 1040 Lines 12-15)
@@ -3071,11 +3109,16 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
       input, agi, taxExemptInterest, foreignIncomeReduction: form2555IncomeReduction,
       foreignHousingDeduction: form2555HousingDeduction,
       socialSecurityBenefitsGross, socialSecurityBenefitsTaxable,
-    });
+    }, marketplace ? { method: "pub974-simplified-2026", stage: marketplace.stage } : undefined);
     netPremiumTaxCredit = form8962.netPTC;
     excessAPTCRepayment = form8962.excessAPTCRepayment;
     audit.merge(form8962.lines);
   }
+  if (!marketplace && input.form7206?.plans?.some(plan => plan.marketplaceCoverage === true && plan.premiumTaxCreditInvolved === false)
+    && form8962 && (form8962.ptcAllowed.gt(0) || form8962.advancePTCTotal.gt(0))) {
+    throw new Error("Marketplace health sources contradict positive credit or advance payments; actual policy coordination is required.");
+  }
+
 
   const vehicleClaims = [...(input.form8936?.newCleanVehicles ?? []), ...(input.form8936?.previouslyOwnedCleanVehicles ?? [])];
   const verifiedVehicles = year === 2026 || vehicleClaims.some(vehicle => vehicle.datePlacedInService !== undefined);

@@ -1,0 +1,37 @@
+form: "Marketplace self-employed health premium sources"
+fullName: "Publication974 specified and nonspecified premium reconciliation"
+taxYear: 2026
+irsReference: "https://www.irs.gov/publications/p974"
+notes: |
+  Refreshed2026-10-25. Specified premiums remain separate from Form7206
+  nonspecified premiums. Source facts preserve original payments and APTC;
+  an actual tax credit is computed later, never treated as a source payment.
+  The initial coupled method supports actual2026 complete coverage-family
+  sources with no outside-payer share. Mixed coverage-family SLCSP allocations,
+  historical2025 capped-repayment worksheets and other special coordination
+  remain distinct internal work, not inferred eligibility or completed scope.
+lines:
+  - line: "payment-source"
+    description: "Preserve the actual government payment separately"
+    formula: "Original premium equals owner/business paid plus other-person paid plus actual APTC; person allocations independently conserve owner/business amounts and APTC. Unknown positive-Marketplace APTC is not zero."
+    testRef: "tests/engine/forms/marketplace-health-premiums.test.ts::preserves actual advance payments and separates specified source premiums"
+  - line: "policy-month"
+    description: "Bind actual source policies and months"
+    formula: "Canonical form1095A index links preserve source identity/year and bind the plan monthly original premium and APTC totals. Duplicate policy use, contradictory amounts, unknown coverage-family allocation or outside-payer shares reject. No source statement or paid amount is manufactured."
+    testRef: "tests/engine/forms/marketplace-health-premiums.test.ts::reconciles actual policy months without inventing coverage or payment shares"
+  - line: "nonspecified"
+    description: "Keep the actual nonspecified deduction and earned limit"
+    formula: "Eligible Marketplace sources enter the specified-premium ledger rather than Form7206line1. Form7206 retains actual nonspecified medical/LTC limits and owner/business earned-income calculations. The specified deduction is computed separately under Pub974 and must fit the remaining actual earned limit."
+    testRef: "tests/engine/forms/marketplace-health-premiums.test.ts::keeps nonspecified premiums and actual business limits separate"
+  - line: "all-businesses"
+    description: "Preserve nonspecified deductions from every actual business"
+    formula: "The completed Pub974 transfer includes each actual business nonspecified deduction once, including a business with no specified premiums. No unrelated business income or deduction is reassigned to a Marketplace source."
+    testRef: "tests/engine/forms/marketplace-health-premiums.test.ts::retains a separate business nonspecified deduction in the completed source ledger"
+  - line: "employer-offer"
+    description: "Distinguish the health deduction bar from PTC coverage eligibility"
+    formula: "If an actual7206 month is employer-plan eligible while the coverage-family8962 month is credit eligible, require the actual affordability/minimum-value exception and its source reference, plus confirmed no enrollment in employer MEC. An unaffordable or nonminimum-value offer can preserve PTC; actual enrollment cannot. Missing or contradictory facts reject."
+    testRef: "tests/engine/forms/marketplace-health-premiums.test.ts::requires actual PTC exception facts for an employer-eligible health month"
+  - line: "signed-income"
+    description: "Retain signed Worksheet W income before the combined cap"
+    formula: "W13 is actual business income after allocated SE/retirement/foreign deductions, without Form7206's ordinary zero floor. Subtract the same-business nonspecified allowance; sum signed values before flooring the combined W15 limit."
+    testRef: "tests/engine/forms/marketplace-health-premiums.test.ts::preserves an actual business loss for the combined WorksheetW limit"

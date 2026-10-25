@@ -3894,6 +3894,8 @@ export const Form7206Schema = z.object({
     moreThanTwoPercentShareholder: z.boolean().optional(),
     marketplaceCoverage: z.boolean().optional(),
     premiumTaxCreditInvolved: z.boolean().optional(),
+    marketplacePolicySourceIds: z.array(z.string()).optional(),
+    allCoveredPersonsInCoverageFamilyConfirmed: z.boolean().optional(),
     clergySpecialRules: z.boolean().optional(),
     coveredPersons: z.array(z.object({
       personId: z.string().optional(),
@@ -3904,6 +3906,10 @@ export const Form7206Schema = z.object({
       month: z.number().int().min(1).max(12).optional(),
       /** The applicable medical or LTC employer plan, including any part month. */
       employerSubsidizedPlanEligible: z.boolean().optional(),
+      /** Actual completed PTC offer worksheet; an offer differs from enrollment. */
+      employerOfferPtcException: z.enum(["unaffordable", "does_not_provide_minimum_value"]).optional(),
+      employerCoverageEnrolled: z.boolean().optional(),
+      employerOfferSourceReference: z.string().optional(),
     })).optional(),
     payments: z.array(z.object({
       sourceId: z.string().optional(),
@@ -3913,11 +3919,14 @@ export const Form7206Schema = z.object({
       grossPremium: optionalDecimalInput,
       ownerOrBusinessPaid: optionalDecimalInput,
       otherPersonPaid: optionalDecimalInput,
+      /** Actual government advance payment, separate from taxpayer paid premiums. */
+      advancePremiumTaxCredit: optionalDecimalInput,
       personAmounts: z.array(z.object({
         personId: z.string().optional(),
         /** Reimbursements belong to the business share, never both shares. */
         payer: z.enum(["owner_after_tax", "business_paid_or_reimbursed"]).optional(),
         amountPaid: optionalDecimalInput,
+        advancePremiumTaxCredit: optionalDecimalInput,
         excludedPublicSafetyOfficerAmount: optionalDecimalInput,
         publicSafetyOfficerAccountHolder: z.enum(["primary", "spouse"]).optional(),
         otherTaxFreeFunding: optionalDecimalInput,

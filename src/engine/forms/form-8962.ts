@@ -44,11 +44,15 @@ export interface Form8962Input {
   modifiedAGI?: Decimal;
   filingStatus: FilingStatus;
   form1095A: TaxYearInput["form1095A"];
+  /** Canonical engine context; never a TaxYearInput source flag or supplied amount. */
+  healthInsuranceCoordination?: "pub974-simplified-2026";
 }
 
 export interface Form8962Result {
   taxYear: number;
   sourceFactsVerified: boolean;
+  /** Derived eligibility explains officially skipped credit columns. */
+  taxpayerEligible: boolean;
   calculationMethod: "annual" | "monthly";
   familySize: number;
   modifiedAGI: Decimal; // Household income, line 3
@@ -110,6 +114,7 @@ export function calculateForm8962(input: Form8962Input): Form8962Result {
   if (facts) {
     if (facts.householdFactsConfirmed !== true || facts.coverageFactsConfirmed !== true) throw new Error("Form 8962 household and coverage facts must be confirmed");
     for (const flag of ["allocationRequired", "alternativeMarriageCalculationElected", "selfEmployedHealthInsuranceCoordinationRequired", "lawfulPresenceReconciliationRequired"] as const) {
+      if (flag === "selfEmployedHealthInsuranceCoordinationRequired" && facts[flag] === true && year === 2026 && input.healthInsuranceCoordination === "pub974-simplified-2026") continue;
       if (facts[flag] !== false) throw new Error(`Form 8962 requires completed ${flag} worksheets or confirmed absence`);
     }
     if (typeof facts.canBeClaimedAsDependent !== "boolean" || typeof facts.qsehraAffected !== "boolean") throw new Error("Form 8962 dependency and QSEHRA facts must be confirmed");
@@ -268,7 +273,7 @@ export function calculateForm8962(input: Form8962Input): Form8962Result {
   record("27", "Excess advance premium tax credit before limitation", excessAPTC, "max(0, line 25 - line 24)");
   if (repaymentCap !== null && excessAPTC.gt(0)) record("28", "Historical repayment limitation", repaymentCap, "2025 Table 5; no repayment limitation applies in 2026");
   record("29", "Excess advance premium tax credit repayment", excessAPTCRepayment, "Line 27 limited by line 28 where applicable -> Schedule 2 line 1a");
-  return { taxYear: year, sourceFactsVerified: verified, calculationMethod, familySize, modifiedAGI,
+  return { taxYear: year, sourceFactsVerified: verified, taxpayerEligible, calculationMethod, familySize, modifiedAGI,
     federalPovertyLine, fplPercentage, fplPercentageForTable, contributionRate: rate, expectedContribution, monthlyContribution,
     annualPremium, annualSLCSP, annualAdvancePTC, ptcAllowed, advancePTCTotal, netPTC, excessAPTC, repaymentCap, excessAPTCRepayment,
     lines: audit.getLines() };

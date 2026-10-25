@@ -32,6 +32,8 @@ export interface Form7206BusinessResult {
   medicalPremiums: Decimal;
   longTermCarePremiums: Decimal;
   eligiblePremiums: Decimal;
+  /** Source premiums for the separate Pub974 worksheet; excluded from line1. */
+  specifiedPremiums: Decimal;
   netIncome?: Decimal;
   ownerPositiveBusinessIncome?: Decimal;
   incomeRatio?: Decimal;
@@ -51,8 +53,9 @@ export interface Form7206Result {
   calculationComplete: boolean;
   grossSourcePremiums: Decimal;
   paidSourcePremiums: Decimal;
+  marketplaceHandling?: "separate-specified-premiums" | "ordinary-no-ptc";
   businesses: Form7206BusinessResult[];
-  sourceRecords: { sourceId: string; planId: string; accountHolder: Owner; businessSourceId: string; personId: string; payer: "owner_after_tax" | "business_paid_or_reimbursed"; amountPaid: Decimal; excludedFunding: Decimal; eligiblePremium: Decimal }[];
+  sourceRecords: { sourceId: string; planId: string; accountHolder: Owner; businessSourceId: string; personId: string; payer: "owner_after_tax" | "business_paid_or_reimbursed"; amountPaid: Decimal; advancePremiumTaxCredit: Decimal; coverageTaxYear: number; coverageMonth: number; excludedFunding: Decimal; eligiblePremium: Decimal; marketplaceSpecifiedPremium: Decimal }[];
   longTermCarePersons: { personId: string; attainedAge: number; eligiblePremiums: Decimal; annualLimit: Decimal; allowedPremiums: Decimal }[];
   deduction?: Decimal;
   /** Potential review amount only. No automatic ScheduleA qualification. */
@@ -93,6 +96,8 @@ export function calculateForm7206(options: {
   filingStatus: TaxYearInput["taxpayer"]["filingStatus"];
   facts: Form7206Input;
   businesses?: Form7206BusinessContext[];
+  /** Internal worksheet preparation: never itself allows a specified deduction. */
+  marketplaceHandling?: "separate-specified-premiums" | "ordinary-no-ptc";
 }): Form7206Result {
   const { facts, taxYear } = options;
   if (taxYear !== 2025 && taxYear !== 2026) throw new Error("Form7206 supports actual 2025 and 2026 sources.");
@@ -140,7 +145,7 @@ export function calculateForm7206(options: {
     const key = groupKey(owner, sourceId);
     let group = groups.get(key);
     if (!group) {
-      group = { businessSourceId: sourceId, accountHolder: owner, kind, planIds: [], medicalPremiums: new Decimal(0), longTermCarePremiums: new Decimal(0), eligiblePremiums: new Decimal(0) };
+      group = { businessSourceId: sourceId, accountHolder: owner, kind, planIds: [], medicalPremiums: new Decimal(0), longTermCarePremiums: new Decimal(0), eligiblePremiums: new Decimal(0), specifiedPremiums: new Decimal(0) };
       groups.set(key, group);
     } else if (group.kind !== kind) throw new Error("Form7206 plans contradict their shared business source classification.");
     group.planIds.push(planId);
@@ -188,18 +193,23 @@ export function calculateForm7206(options: {
       if (paymentIds.has(paymentId)) throw new Error("Duplicate Form7206 premium payment source.");
       paymentIds.add(paymentId);
       const paidDate = datePaid(payment.datePaid);
-      if (!Number.isInteger(payment.coverageTaxYear)) throw new Error("Form7206 requires an actual coverage tax year.");
+      const coverageYear = payment.coverageTaxYear;
+      if (coverageYear === undefined || !Number.isInteger(coverageYear)) throw new Error("Form7206 requires an actual coverage tax year.");
       const month = validMonth(payment.coverageMonth);
       if (!months.has(month)) throw new Error("Form7206 payment lacks actual monthly employer-plan eligibility.");
       const gross = amount(payment.grossPremium, "original premium");
       const ownPaid = amount(payment.ownerOrBusinessPaid, "owner or business paid share");
       const others = amount(payment.otherPersonPaid, "other person's paid share");
-      if (!ownPaid.plus(others).eq(gross)) throw new Error("Form7206 paid shares must reconcile the original premium.");
+      const advance = marketplace && ptc
+        ? amount(payment.advancePremiumTaxCredit, "Pub974 Marketplace advance payment")
+        : payment.advancePremiumTaxCredit === undefined ? new Decimal(0) : amount(payment.advancePremiumTaxCredit, "advance payment");
+      if (advance.gt(0) && (!marketplace || !ptc)) throw new Error("Form7206 advance payments contradict the actual Marketplace source facts.");
+      if (!ownPaid.plus(others).plus(advance).eq(gross)) throw new Error("Form7206 paid shares and APTC must reconcile the original premium.");
       if (!payment.personAmounts) throw new Error("Form7206 requires actual covered-person premium allocations.");
       grossSourcePremiums = grossSourcePremiums.plus(gross);
       paidSourcePremiums = paidSourcePremiums.plus(ownPaid);
       const allocatedPersonPayers = new Set<string>();
-      let allocated = new Decimal(0);
+      let allocated = new Decimal(0), allocatedAdvance = new Decimal(0);
       for (const allocation of payment.personAmounts) {
         const id = requiredText(allocation.personId, "premium allocation person ID");
         const payer = allocation.payer;
@@ -208,6 +218,10 @@ export function calculateForm7206(options: {
         if (!covered.has(id) || allocatedPersonPayers.has(personPayer)) throw new Error("Unlinked or duplicate person and payer allocation in Form7206 premium source.");
         allocatedPersonPayers.add(personPayer);
         const paid = amount(allocation.amountPaid, "person premium share");
+        const personAdvance = marketplace && ptc
+          ? amount(allocation.advancePremiumTaxCredit, "person advance payment")
+          : allocation.advancePremiumTaxCredit === undefined ? new Decimal(0) : amount(allocation.advancePremiumTaxCredit, "person advance payment");
+        allocatedAdvance = allocatedAdvance.plus(personAdvance);
         const pso = amount(allocation.excludedPublicSafetyOfficerAmount, "excluded public-safety-officer payments");
         const funded = pso.plus(amount(allocation.otherTaxFreeFunding, "other distinct tax-free funding"));
         if (funded.gt(paid)) throw new Error("Form7206 tax-free funding exceeds the person's actual paid premium.");
@@ -229,18 +243,24 @@ export function calculateForm7206(options: {
             : actualBoolean(plan.premiumsIncludedInOwnerIncome, "premium inclusion in owner income");
         }
         const otherwiseEligible = currentYear && established && shareholder && payerEstablished && qualifiedInsurance && covered.get(id) && !months.get(month);
-        const eligiblePremium = otherwiseEligible ? paid.minus(funded) : new Decimal(0);
-        if (eligiblePremium.gt(0) && marketplace && ptc) throw new Error("Form7206 Marketplace premiums require actual Pub974 premium-tax-credit coordination.");
-        if (eligiblePremium.gt(0) && clergy) throw new Error("Form7206 clergy premiums require the actual Pub517 special-rule worksheet.");
+        const grossEligiblePremium = otherwiseEligible ? paid.plus(personAdvance).minus(funded) : new Decimal(0);
+        const specified = marketplace && ptc;
+        if (grossEligiblePremium.gt(0) && specified && (options.marketplaceHandling === undefined || taxYear !== 2026)) throw new Error("Form7206 Marketplace premiums require actual Pub974 premium-tax-credit coordination.");
+        if (specified && plan.kind !== "medical") throw new Error("Form7206 specified Marketplace premiums require an actual qualified medical plan.");
+        const marketplaceSpecifiedPremium = specified ? grossEligiblePremium : new Decimal(0);
+        const eligiblePremium = specified && options.marketplaceHandling !== "ordinary-no-ptc" ? new Decimal(0) : grossEligiblePremium;
+        group.specifiedPremiums = group.specifiedPremiums.plus(marketplaceSpecifiedPremium);
+        if (grossEligiblePremium.gt(0) && clergy) throw new Error("Form7206 clergy premiums require the actual Pub517 special-rule worksheet.");
         if (plan.kind === "qualified_ltc") {
           const byBusiness = ltc.get(id) ?? new Map<string, Decimal>();
           byBusiness.set(key, (byBusiness.get(key) ?? new Decimal(0)).plus(eligiblePremium));
           ltc.set(id, byBusiness);
         } else group.medicalPremiums = group.medicalPremiums.plus(eligiblePremium);
-        sourceRecords.push({ sourceId: paymentId, planId, accountHolder: owner, businessSourceId: sourceId, personId: id, payer, amountPaid: paid, excludedFunding: funded, eligiblePremium });
+        sourceRecords.push({ sourceId: paymentId, planId, accountHolder: owner, businessSourceId: sourceId, personId: id, payer, amountPaid: paid, advancePremiumTaxCredit: personAdvance, coverageTaxYear: coverageYear, coverageMonth: month, excludedFunding: funded, eligiblePremium, marketplaceSpecifiedPremium });
+        if (specified) audit.record("Pub974 Premium Sources", `${paymentId}:${id}:${payer}`, "Actual specified premium before credit coordination", marketplaceSpecifiedPremium, "Eligible owner/business paid share plus actual APTC less distinct funding; excluded from Form7206line1", { "Plan": planId, "Business": sourceId, "Owner": owner, "Coverage month": String(month), "Actual advance payment": personAdvance });
         audit.record("Form 7206", `${paymentId}:${id}:${payer}`, "Actual eligible premium before annual LTC and business limits", eligiblePremium, "Actual paid person share less distinct funding, subject to actual plan, person, payer, year and month qualification", { "Source": paymentId, "Plan": planId, "Owner": owner, "Business": sourceId, "Payer": payer, "Paid share": paid, "Funding": funded });
       }
-      if (!allocated.eq(ownPaid)) throw new Error("Form7206 person allocations must reconcile the actual owner or business paid share.");
+      if (!allocated.eq(ownPaid) || !allocatedAdvance.eq(advance)) throw new Error("Form7206 person allocations must reconcile the actual owner/business and advance payment shares separately.");
     }
   }
   for (const excluded of psoExcludedByOwner.values()) if (excluded.gt(3000)) throw new Error("Reconcile the actual public-safety-officer exclusion; annual owner amounts exceed 3000.");
@@ -282,7 +302,7 @@ export function calculateForm7206(options: {
     audit.record("Form 7206", "2", "Eligible long-term-care premiums", group.longTermCarePremiums, "Actual source premiums after one annual cap per person", inputs);
     audit.record("Form 7206", "3", "Total eligible premiums", group.eligiblePremiums, "Line 1 plus line 2", inputs);
   }
-  const result: Form7206Result = { sourceFactsVerified: true, calculationComplete: false, grossSourcePremiums, paidSourcePremiums, businesses: [...groups.values()], sourceRecords, longTermCarePersons, lines: audit.getLines() };
+  const result: Form7206Result = { sourceFactsVerified: true, calculationComplete: false, grossSourcePremiums, paidSourcePremiums, marketplaceHandling: options.marketplaceHandling, businesses: [...groups.values()], sourceRecords, longTermCarePersons, lines: audit.getLines() };
   if (options.businesses === undefined) return result;
   const contexts = new Map<string, Form7206BusinessContext>();
   const ownerValues = new Map<Owner, { positive: Decimal; seTax: Decimal }>();

@@ -1,0 +1,63 @@
+form: "Marketplace health deduction and PTC"
+fullName: "Publication974 Simplified Calculation Method with2026 uncapped excess repayment"
+taxYear: 2026
+irsReference: "https://www.irs.gov/publications/p974"
+notes: |
+  Source refreshed2026-10-25: Pub974 Worksheets W/X and Simplified steps1–4;
+  section36B(f)(2), as amended by PL119-21 section71305 after2025. Because2026
+  excess APTC is fully repaid, X30 upper bound is min(specified premiums,
+  remaining actual earned limit). This algebra is an upper bound, not a credit
+  or final deduction. Use canonical return income twice and retain original
+  facts; never replace actual coordination-required=true with false.
+  Initial supported branch excludes the separate Pub974 ordered passive-loss,
+  covered-IRA, savings-bond and student-loan special deduction calculations.
+  Those remain internal work, as do2025 capped-repayment worksheets.
+lines:
+  - line: "maximum"
+    description: "Step1 maximum deduction and Step2 intermediate PTC"
+    formula: "Nonspecified Form7206 deduction plus min(total actual specified premiums, summed remaining earned limit of specified-plan businesses); W4–13 are separate, W14–17 once. Re-evaluate canonical income and Form8962 through24 before QBI. Interim source MAGI is not substituted for the final supplied worksheet."
+    testRef: "tests/engine/federal-marketplace-health.test.ts::runs the actual2026 Simplified method and transfers the final deduction once"
+  - line: "allocation"
+    description: "Step3 deduction from actual Step2 credit"
+    formula: "Allocate actual column(e) credit to specified months and actual enrollment premiums; annual unchanged credits use one-twelfth for each actual month. Add all business line7 amounts and apply the single combined line8 cap once. Preserve exact Decimal shares and round the aggregate Schedule1 transfer once; per-business premiums are not final deduction allocations."
+    testRef: "tests/engine/forms/marketplace-health-deduction.test.ts::allocates actual monthly credit and retains each business income limit"
+  - line: "final"
+    description: "Step4 final return and conservation"
+    formula: "Recompute the complete return using the Step3 source-bound deduction. Final actual MAGI must reconcile. Deduction plus allocated final PTC cannot exceed corresponding premiums; no intermediate credit, estimated penalty or duplicated QBI amount is retained."
+    testRef: "tests/engine/federal-marketplace-health.test.ts::reconciles final MAGI and preserves actual coverage contradictions"
+  - line: "boundaries"
+    description: "Retain actual eligibility and explicit special worksheets"
+    formula: "Use actual employer-plan eligibility, source months and earned limits; zero Step2 PTC yields the ordinary source maximum. Historical capped repayment and positive ordered special deductions reject pending their own calculation, without claiming implementation."
+    testRef: "tests/engine/federal-marketplace-health.test.ts::keeps ineligible months and separate ordered worksheets explicit"
+  - line: "contradictory-no-credit"
+    description: "A source label cannot create a second deduction for credited premiums"
+    formula: "An actual Marketplace plan declared not involved in PTC cannot be deducted in full alongside positive actual household PTC/APTC without its completed source allocation. Reject the contradiction before returning a calculation."
+    testRef: "tests/engine/federal-marketplace-health.test.ts::rejects a no-credit plan declaration that would double benefit actual Marketplace premiums"
+  - line: "cliff-and-advance"
+    description: "Final statutory cliff and actual advance payments"
+    formula: "The2026 income cliff and repayment remain actual Form8962 results. Known zero APTC does not eliminate allowed credit or permit deduction of the credited premium; ineligible Step2 uses actual ordinary Form7206 lines1/3/14 with repaid advances included in cost, and every actual advance is repaid."
+    testRef: "tests/engine/federal-marketplace-health.test.ts::retains zero advances and full repayment above the2026 income cliff"
+  - line: "monthly"
+    description: "Preserve actual unequal month amounts"
+    formula: "Use the unique Form8962 column(e) for each covered month when annual calculation is unavailable, then allocate the actual enrollment share. Never use a favorable annual-average credit for unequal months."
+    testRef: "tests/engine/forms/marketplace-health-deduction.test.ts::uses actual unequal monthly credits for partial-year specified premiums"
+  - line: "credit-audit"
+    description: "Conserve the completed intermediate credit"
+    formula: "Unique actual annual or monthly column(e) audits must sum to retained line24. Missing positive credit, duplicate monthly values or a conflicting retained total rejects, rather than becoming zero available credit."
+    testRef: "tests/engine/forms/marketplace-health-deduction.test.ts::requires the retained credit to reconcile its actual annual or monthly audit"
+  - line: "multiple-businesses"
+    description: "Apply the official combined income maximum once"
+    formula: "Sum separate business Step3 line7 values, then line9=min(sum line7,combined W/X maximum). Different earned limits do not cause a second per-business clamp. For an ineligible Step2 taxpayer use ordinary separate Form7206 business limits instead, as Pub974 instructs."
+    testRef: "tests/engine/forms/marketplace-health-deduction.test.ts::applies the combined limit once across actual businesses"
+  - line: "qbi"
+    description: "Keep the aggregate health deduction distinct from QBI source attribution"
+    formula: "For199A only, allocate the actual combined specified deduction to businesses whose gross income entered its calculation, proportionate to actual gross income under1.199A-3(b)(1)(vi). Preserve separately calculated nonspecified deductions. Missing gross-income sources or ambiguous owner/source classifications reject; do not substitute net profit or premium shares."
+    testRef: "tests/engine/federal-marketplace-health.test.ts::coordinates differing business limits and attributes QBI using actual gross income"
+  - line: "single-source-audit"
+    description: "Keep a sole-source transfer distinct from an income allocation"
+    formula: "When exactly one actual business supplied the income, transfer its allowed deduction directly. Do not label an internal unit weight as actual gross income in the source audit."
+    testRef: "tests/engine/federal-marketplace-health.test.ts::runs the actual2026 Simplified method and transfers the final deduction once"
+  - line: "printed-rounding"
+    description: "Reconcile credit and deduction using the same printed-dollar convention"
+    formula: "Keep original premium/payment cents in source records. Compare final allowed credit plus specified deduction to corresponding premiums after IRS whole-dollar rounding, rather than rejecting legitimate sub-dollar form rounding or using a floating tolerance."
+    testRef: "tests/engine/federal-marketplace-health.test.ts::preserves source cents while reconciling full-credit printed dollars"

@@ -4,6 +4,9 @@ import type { TaxYearInput } from "@/models/inputs.js";
 import { d, roundDollar, sum } from "@/utils/decimal.js";
 import { calculateForm7206, type Form7206BusinessContext } from "./form-7206.js";
 import type { QBIDeductionSourceAmount } from "./qbi-source-deductions.js";
+import { calculateMarketplaceHealthPremiums } from "./marketplace-health-premiums.js";
+import type { MarketplaceHealthDeductionResult } from "./marketplace-health-deduction.js";
+import { AuditTrail } from "@/utils/audit.js";
 
 type Owner = "primary" | "spouse";
 interface Params {
@@ -14,6 +17,10 @@ interface Params {
   selfEmploymentDeductions: { accountHolder?: Owner; amount: Decimal }[];
   foreignIncomeExclusion: Decimal;
   selfEmploymentSourcesVerified: boolean;
+  /** Engine-computed Pub974 stage; not a taxpayer amount or source fact. */
+  marketplace?: { stage: "maximum" } | { stage: "final"; deduction: MarketplaceHealthDeductionResult };
+  /** Canonical gross income, never a taxpayer supplied profit override. */
+  businessGrossIncomes?: { sourceId: string; amount: Decimal }[];
 }
 const name = (value: string) => value.trim().replace(/\s+/g, " ").toLocaleLowerCase("en-US");
 function attainedAge(date: string, year: number): number {
@@ -31,7 +38,8 @@ export function calculateForm7206Return(params: Params) {
   if (!facts) throw new Error("Canonical Form7206 requires actual source facts.");
   const year = input.taxpayer.taxYear, joint = input.taxpayer.filingStatus === "married_filing_jointly";
   if (input.seHealthInsuranceWorksheet || !d(input.adjustments?.selfEmployedHealthInsurance).isZero()) throw new Error("Reconcile legacy health-insurance amounts with actual Form7206; duplicate claim representations are unsupported.");
-  const source = calculateForm7206({ taxYear: year, filingStatus: input.taxpayer.filingStatus, facts });
+  const marketplaceHandling = params.marketplace ? "separate-specified-premiums" as const : undefined;
+  const source = calculateForm7206({ taxYear: year, filingStatus: input.taxpayer.filingStatus, facts, marketplaceHandling });
   if (source.businesses.some(row => row.kind !== "s_corporation") && !params.selfEmploymentSourcesVerified) throw new Error("Actual Form7206 requires verified business and payroll sources for the canonical SE deduction.");
   const householdName = (person: { firstName: string; lastName: string }) => name(`${person.firstName} ${person.lastName}`);
   for (const person of facts.persons ?? []) {
@@ -132,10 +140,78 @@ export function calculateForm7206Return(params: Params) {
       }
     }
   }
-  const form7206 = calculateForm7206({ taxYear: year, filingStatus: input.taxpayer.filingStatus, facts, businesses });
+  const form7206 = calculateForm7206({ taxYear: year, filingStatus: input.taxpayer.filingStatus, facts, businesses, marketplaceHandling });
   if (form7206.deduction === undefined) throw new Error("Canonical Form7206 deduction is incomplete.");
-  const healthSources: QBIDeductionSourceAmount[] = form7206.businesses.map(row => ({ sourceId: row.businessSourceId, accountHolder: row.accountHolder,
-    amount: roundDollar(row.deduction ?? d(0)), nonQbi: row.kind === "s_corporation" }));
-  const deductionToSchedule1 = sum(...healthSources.map(row => row.amount));
-  return { form7206: { ...form7206, deductionToSchedule1 }, healthSources, retirementSources };
+  const marketplacePremiums = params.marketplace ? calculateMarketplaceHealthPremiums({ input, healthInsurance: form7206 }) : undefined;
+  const result = params.marketplace?.stage === "final" ? params.marketplace.deduction : undefined;
+  const marketplaceAudit = new AuditTrail();
+  const healthSources: QBIDeductionSourceAmount[] = form7206.businesses.map(row => ({ sourceId: row.businessSourceId,
+    accountHolder: row.accountHolder, amount: row.deduction ?? d(0), nonQbi: row.kind === "s_corporation" }));
+  let deductionToSchedule1: Decimal;
+  if (marketplacePremiums) {
+    const groups = marketplacePremiums.groups;
+    const specified = groups.filter(row => row.months.length > 0);
+    const maximum = Decimal.min(sum(...specified.map(row => row.specifiedPremiums)), Decimal.max(0,sum(...specified.map(row => row.remainingEarnedIncome))));
+    if (params.marketplace?.stage === "maximum") {
+      // This amount is used only to compute AGI/PTC. No interim QBI attribution.
+      deductionToSchedule1 = roundDollar(form7206.deduction.plus(maximum));
+    } else {
+      if (!result || result.businesses.length !== groups.length || new Set(result.businesses.map(row => row.businessSourceId)).size !== groups.length
+        || !result.maximumSpecifiedDeduction.eq(maximum) || !result.nonspecifiedDeduction.eq(form7206.deduction)) throw new Error("Pub974 computed deduction must reconcile the actual combined business worksheets.");
+      for (const group of groups) {
+        const recorded = result.businesses.find(row => row.businessSourceId === group.businessSourceId);
+        if (!recorded || recorded.accountHolder !== group.accountHolder || !recorded.specifiedPremiums.eq(group.specifiedPremiums)
+          || !recorded.remainingEarnedIncome.eq(group.remainingEarnedIncome) || !recorded.nonspecifiedDeduction.eq(group.nonspecifiedDeduction)) throw new Error("Pub974 computed deduction contradicts actual business sources.");
+      }
+      const limit = result.method === "ordinary-no-ptc-2026" ? sum(...result.businesses.map(row => row.ordinaryDeduction)) : maximum;
+      if (!result.specifiedDeduction.isFinite() || result.specifiedDeduction.lt(0) || result.specifiedDeduction.gt(limit)) throw new Error("Pub974 specified deduction exceeds the actual method limit.");
+      const candidates = specified;
+      if (result.method === "ordinary-no-ptc-2026") {
+        for (const group of result.businesses) {
+          const target = healthSources.find(row => row.sourceId === group.businessSourceId);
+          if (!target) throw new Error("Ordinary health deduction has no actual business source.");
+          target.amount = target.amount.plus(group.ordinaryDeduction);
+        }
+      } else if (result.specifiedDeduction.gt(0)) {
+        if (!candidates.length) throw new Error("Pub974 health deduction has no attributable earned-income source.");
+        if (new Set(candidates.map(row => row.accountHolder)).size > 1) throw new Error("Pub974 multiple-owner deductions require the separate actual owner coordination worksheet.");
+        const gross = candidates.map(row => {
+          if (candidates.length === 1) return d(1); // Only one actual income source; no allocation denominator is needed.
+          const actual = params.businessGrossIncomes?.filter(item => item.sourceId === row.businessSourceId);
+          if (actual?.length !== 1 || !actual[0].amount.isFinite() || actual[0].amount.lt(0)) throw new Error("Pub974 QBI allocation requires actual gross income for every business counted in its deduction.");
+          return actual[0].amount;
+        });
+        const denominator = sum(...gross);
+        if (denominator.lte(0)) throw new Error("Pub974 positive deduction requires actual positive gross income for QBI attribution.");
+        let remaining = result.specifiedDeduction;
+        candidates.forEach((group,index) => {
+          const target = healthSources.find(row => row.sourceId === group.businessSourceId);
+          if (!target) throw new Error("Pub974 QBI deduction has no matching actual business source.");
+          const share = index === candidates.length - 1 ? remaining : result.specifiedDeduction.times(gross[index]).div(denominator);
+          target.amount = target.amount.plus(share); remaining = remaining.minus(share);
+          marketplaceAudit.record("Pub974 QBI Allocation", group.businessSourceId, "Specified deduction attributable to this income source", share,
+            candidates.length === 1 ? "Only actual business income used in the deduction" : "Allowed combined specified deduction times actual business gross income / combined gross income;199A only",
+            { "Owner": group.accountHolder, "Combined deduction": result.specifiedDeduction,
+              ...(candidates.length === 1 ? {} : { "Gross income numerator": gross[index], "Gross income denominator": denominator }) });
+        });
+      }
+      deductionToSchedule1 = roundDollar(form7206.deduction.plus(result.specifiedDeduction));
+      // Allocate the single printed-dollar transfer without manufacturing another deduction.
+      const exact = sum(...healthSources.map(row => row.amount));
+      if (!exact.eq(form7206.deduction.plus(result.specifiedDeduction))) throw new Error("Pub974 QBI sources do not conserve the allowed health deduction.");
+      let remainder = deductionToSchedule1;
+      const positive = healthSources.filter(row => row.amount.gt(0));
+      positive.forEach((row,index) => {
+        row.amount = index === positive.length - 1 ? remainder : Decimal.min(remainder, roundDollar(deductionToSchedule1.times(row.amount).div(exact)));
+        remainder = remainder.minus(row.amount);
+      });
+    }
+  } else {
+    for (const row of healthSources) row.amount = roundDollar(row.amount);
+    deductionToSchedule1 = sum(...healthSources.map(row => row.amount));
+  }
+  const printed = result?.method === "ordinary-no-ptc-2026"
+    ? calculateForm7206({ taxYear: year, filingStatus: input.taxpayer.filingStatus, facts, businesses, marketplaceHandling: "ordinary-no-ptc" }) : form7206;
+  if (result?.method === "ordinary-no-ptc-2026" && (printed.deduction === undefined || !roundDollar(printed.deduction).eq(deductionToSchedule1))) throw new Error("Ordinary no-PTC Form7206 must reconcile the final source deduction.");
+  return { form7206: { ...printed, lines: [...printed.lines, ...marketplaceAudit.getLines()], deductionToSchedule1 }, healthSources, retirementSources, marketplacePremiums };
 }
