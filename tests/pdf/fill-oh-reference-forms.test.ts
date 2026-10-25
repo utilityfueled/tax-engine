@@ -92,14 +92,22 @@ describe("Ohio reference packet summaries", () => {
         form1099Int: [{ payer: "Synthetic bank", interestIncome: "100", state: "OH", stateWithheld: "10.10" }],
         form1099Div: [{ payer: "Synthetic fund", ordinaryDividends: "100", state: "OH", stateWithheld: "20.20" }],
         form1099B: [{ broker: "Synthetic broker", state: "OH", stateWithheld: "30.30", transactions: [] }],
+        form1099OID: [{ payer: "Synthetic OID broker", sourceId: "oid-statement", taxYear: 2025,
+          sourceFormRevision: "2024-01", sourceFactsConfirmed: true, recipientAmountsConfirmed: true,
+          obligationType: "taxable", inflationIndexed: false, description: "Synthetic corporate bond",
+          originalIssueDiscount: "100", otherPeriodicInterest: "0", earlyWithdrawalPenalty: "0", federalWithheld: "0",
+          marketDiscount: "0", acquisitionPremium: "0", treasuryOID: "0", investmentExpenses: "0",
+          bondPremium: "0", taxExemptOID: "0", oidReportedNetOfAcquisitionPremium: false,
+          interestReportedNetOfBondPremium: false,
+          stateWithholding: [{ state: "OH", statePayerId: "actual", stateWithheld: "10.11" }] }],
       });
       const packet = await fillOhioReferenceForms(input, calculateFederalTax(input), outputDir);
       const withholding = packet.filledForms.find(path => basename(path) === "oh-schedule-of-withholding-reference.pdf");
       expect(withholding).toBeDefined();
       if (!withholding) throw new Error("Expected investment withholding summary");
       const text = extractPdfText(withholding);
-      for (const source of ["1099-INT", "1099-DIV", "1099-B"]) expect(text).toContain(`Ohio withholding from ${source} statements`);
-      expect(text).toContain("Value: 60.6");
+      for (const source of ["1099-INT", "1099-DIV", "1099-B", "1099-OID"]) expect(text).toContain(`Ohio withholding from ${source} statements`);
+      expect(text).toContain("Value: 70.71");
     } finally { await rm(outputDir, { recursive: true, force: true }); }
   });
 

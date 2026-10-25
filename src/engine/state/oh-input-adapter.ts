@@ -22,6 +22,7 @@ import type {
   Form1099Int,
   Form1099Div,
   Form1099B,
+  Form1099OID,
   Form1099G,
   Form1099K,
   Form1099Misc,
@@ -58,6 +59,7 @@ import {
   lookupOhioSchoolDistrictNumberFromLocalityLabel,
 } from "@/engine/state/oh-school-district-lookup.js";
 import { calculateOhioScheduleOfWithholding } from "@/engine/state/oh-schedule-of-withholding.js";
+import { calculateForm1099OID } from "@/engine/forms/form-1099-oid.js";
 import { d } from "@/utils/decimal.js";
 
 // ---------------------------------------------------------------------------
@@ -228,6 +230,7 @@ export function extractOhioWithholding(
   form1099Ints: Form1099Int[] = [],
   form1099Divs: Form1099Div[] = [],
   form1099Bs: Form1099B[] = [],
+  form1099OIDs: Form1099OID[] = [],
 ): Decimal {
   return calculateOhioScheduleOfWithholding({
     w2s,
@@ -240,6 +243,7 @@ export function extractOhioWithholding(
     form1099Ints,
     form1099Divs,
     form1099Bs,
+    form1099OIDs,
   }).line6_totalOhioWithholding;
 }
 
@@ -728,6 +732,12 @@ export function buildOhioResidentReturnInput(
   const form1099Necs = taxInput.form1099Nec ?? [];
   const form1099Rs = taxInput.form1099R ?? [];
   const form1099Ints = taxInput.form1099Int ?? [];
+  const form1099OIDs = taxInput.form1099OID ?? [];
+  const oid = form1099OIDs.length ? calculateForm1099OID(form1099OIDs, federalResult.taxYear) : undefined;
+  if (oid && !oid.sourceFactsVerified) throw new Error("Ohio OID adaptation requires verified source classifications and recipient amounts.");
+  if (oid?.taxExemptInterest.gt(0) && overlay.nonOhioStateLocalInterest === undefined) {
+    throw new Error("Ohio OID municipal interest requires an actual non-Ohio issuer allocation, including confirmed zero.");
+  }
 
   // Auto-extract values
   const ohioWithholding =
@@ -744,6 +754,7 @@ export function buildOhioResidentReturnInput(
           form1099Ints,
           taxInput.form1099Div,
           taxInput.form1099B,
+          form1099OIDs,
         );
 
   const sdWithholding =
@@ -835,7 +846,7 @@ export function buildOhioResidentReturnInput(
   const federalInterestExemptFromOhio =
     overlay.federalInterestExemptFromOhio !== undefined
       ? overlay.federalInterestExemptFromOhio
-      : extractFederalInterestExemptFromOhio(form1099Ints);
+      : extractFederalInterestExemptFromOhio(form1099Ints).plus(oid?.treasuryInterest ?? d(0));
 
   // Auto-extract state/municipal tax refunds (1099-G box 2) unless overridden
   const stateMunicipalTaxRefunds =

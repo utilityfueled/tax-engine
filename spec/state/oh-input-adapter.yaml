@@ -56,6 +56,18 @@ packetRules:
     the packet-inclusion gate for the Ohio SD 100 reference summary.
 
 businessRuleValidation:
+  - rule: "verified-oid-state-adaptation"
+    description: |
+      Refreshed 2026-10-25: final 2025 Ohio IT1040 booklet, Schedule of
+      Adjustments line26 and IT1040 line14; IRS1099-OID January2024 boxes12-14.
+      Only reconciled Treasury interest included in federal AGI is deductible;
+      market discount is not Treasury interest. Require verified source year
+      and classification. A municipal source requires an explicit actual
+      non-Ohio interest allocation (zero is valid); do not infer its issuer.
+      State withholding is included once only for actual OH rows.
+      https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf
+      https://www.irs.gov/pub/irs-pdf/f1099oid.pdf
+    testRef: "tests/engine/state/oh-oid-sources.test.ts::Ohio uses verified Treasury OID and actual state withholding once"
   - rule: "sd100-reference-summary-gating"
     description: "Inventory support counts this adapter as business-rule validated only when regression coverage proves adapter-derived SD-prefixed district names can auto-attach the Ohio SD 100 reference summary and ambiguous names stay suppressed."
     testRef: "tests/pdf/fill-oh-reference-forms.test.ts::fillOhioReferenceForms auto-includes and suppresses the Ohio SD 100 reference summary based on official SD-prefixed district names"

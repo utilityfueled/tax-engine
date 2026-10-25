@@ -47,6 +47,13 @@ packetRules:
     support pages should be suppressed.
 
 businessRuleValidation:
+  - rule: "actual-oid-withholding"
+    description: |
+      Sum actual 1099-OID Box14 rows only when Box12 is OH; retain exact cents.
+      Reject negative/nonfinite amounts, duplicate states in one statement,
+      or more than two state rows. Explicit zero remains zero. These are
+      internal audit rows, not official printed form line numbers.
+    testRef: "tests/engine/state/oh-oid-sources.test.ts::Ohio OID withholding rejects invalid source rows and preserves exact amounts"
   - rule: "reference-summary-packet"
     description: "Inventory support counts this schedule as business-rule validated only when regression coverage proves the Ohio Schedule of Withholding reference summary is emitted when Ohio withholding exists and stays suppressed when the total withholding is zero."
     testRef: "tests/pdf/fill-oh-reference-forms.test.ts::fillOhioReferenceForms includes the Ohio Schedule of Withholding reference summary only when Ohio withholding exists"

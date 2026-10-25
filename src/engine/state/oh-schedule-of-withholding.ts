@@ -13,6 +13,7 @@ import type {
   Form1099Int,
   Form1099Div,
   Form1099B,
+  Form1099OID,
   Form1099G,
   Form1099K,
   Form1099Misc,
@@ -35,6 +36,7 @@ export interface OhioScheduleOfWithholdingInput {
   form1099Ints?: Form1099Int[];
   form1099Divs?: Form1099Div[];
   form1099Bs?: Form1099B[];
+  form1099OIDs?: Form1099OID[];
 }
 
 export interface OhioScheduleOfWithholdingResult {
@@ -48,6 +50,7 @@ export interface OhioScheduleOfWithholdingResult {
   line5c_1099IntOhioWithholding: Decimal;
   line5d_1099DivOhioWithholding: Decimal;
   line5e_1099BOhioWithholding: Decimal;
+  line5f_1099OIDOhioWithholding: Decimal;
   line6_totalOhioWithholding: Decimal;
   lines: CalculatedLine[];
 }
@@ -172,13 +175,28 @@ export function calculateOhioScheduleOfWithholding(
   audit.record("OH-SCHEDULE-WH", "5e", "Ohio withholding from 1099-B statements", line5e,
     "Sum 1099-B box 16 amounts where state = OH");
 
-  const line6 = sum(line1, line2, line3, line4, line5, line5a, line5b, line5c, line5d, line5e);
+  let line5f = new Decimal(0);
+  for (const source of input.form1099OIDs ?? []) {
+    const rows = source.stateWithholding ?? [];
+    if (rows.length > 2 || new Set(rows.map(row => row.state.trim().toUpperCase())).size !== rows.length) {
+      throw new Error("Ohio OID withholding rows must be distinct and no more than two.");
+    }
+    for (const row of rows) {
+      const amount = d(row.stateWithheld);
+      if (!amount.isFinite() || amount.isNegative()) throw new Error("Ohio OID withholding must be finite and nonnegative.");
+      if (isOhioStateCode(row.state)) line5f = line5f.plus(amount);
+    }
+  }
+  audit.record("OH-SCHEDULE-WH", "5f", "Ohio withholding from 1099-OID statements", line5f,
+    "Sum actual 1099-OID box 14 rows where box 12 state = OH");
+
+  const line6 = sum(line1, line2, line3, line4, line5, line5a, line5b, line5c, line5d, line5e, line5f);
   audit.record(
     "OH-SCHEDULE-WH",
     "6",
     "Total Ohio withholding for IT 1040 line 14",
     line6,
-    "Line 1 + Line 2 + Line 3 + Line 4 + Line 5 + Line 5a + Line 5b + Line 5c + Line 5d + Line 5e",
+    "Line 1 + Line 2 + Line 3 + Line 4 + Line 5 + Line 5a + Line 5b + Line 5c + Line 5d + Line 5e + Line 5f",
     {
       "Line 1": line1,
       "Line 2": line2,
@@ -190,6 +208,7 @@ export function calculateOhioScheduleOfWithholding(
       "Line 5c": line5c,
       "Line 5d": line5d,
       "Line 5e": line5e,
+      "Line 5f": line5f,
     },
   );
 
@@ -204,6 +223,7 @@ export function calculateOhioScheduleOfWithholding(
     line5c_1099IntOhioWithholding: line5c,
     line5d_1099DivOhioWithholding: line5d,
     line5e_1099BOhioWithholding: line5e,
+    line5f_1099OIDOhioWithholding: line5f,
     line6_totalOhioWithholding: line6,
     lines: audit.getLines(),
   };

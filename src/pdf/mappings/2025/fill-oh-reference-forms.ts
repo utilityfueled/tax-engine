@@ -261,6 +261,7 @@ export async function fillOhioReferenceForms(
     form1099Ints: taxInput.form1099Int,
     form1099Divs: taxInput.form1099Div,
     form1099Bs: taxInput.form1099B,
+    form1099OIDs: taxInput.form1099OID,
   });
   const lumpSumDistributionWorksheet = getLumpSumDistributionWorksheet(ohioInput);
 
