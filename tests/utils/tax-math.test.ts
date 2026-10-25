@@ -105,20 +105,15 @@ describe("Capital gains tax - stacking method", () => {
     expect(result.tax.lessThan(allOrdinary)).toBe(true);
   });
 
-  it("QDCG worksheet - §1250 within 15% bracket gets 15% rate (not 25%)", () => {
-    // $150K taxable, $20K LTCG of which $10K is §1250 (depreciation recapture)
-    // Per IRS Schedule D Tax Worksheet: ALL gains stack for 0%/15% first.
-    // 25% is a MAXIMUM rate — gains within 15% bracket get 15%.
-    // Ordinary portion = $130K. Stack $20K on $130K.
-    // $130K < $533,400 (15% threshold) → room = $403K → all $20K at 15%
-    // preferentialTax = $20K × 15% = $3,000
+  it("Schedule D worksheet - section1250 uses ordinary24percent before its cap", () => {
+    // Official21=140000; tax44=26447. Regular10000 gain at15%=1500.
     const result = calculateCapitalGainsTax(d(150000), d(0), d(20000), "single", constants, {
       section1250Gain: d(10000),
     });
     const withoutSection1250 = calculateCapitalGainsTax(d(150000), d(0), d(20000), "single", constants);
-    // Same tax: §1250 within 15% bracket gets 15%, same as regular LTCG
-    expect(result.preferentialTax.toNumber()).toBe(3000);
-    expect(result.preferentialTax.toNumber()).toBe(withoutSection1250.preferentialTax.toNumber());
+    expect(result.preferentialTax.toNumber()).toBe(1500);
+    expect(result.tax.toNumber()).toBe(27947);
+    expect(result.tax.minus(withoutSection1250.tax).toNumber()).toBe(900);
   });
 
   it("QDCG worksheet - §1250 above 15% threshold gets 25% rate", () => {
@@ -133,14 +128,13 @@ describe("Capital gains tax - stacking method", () => {
     expect(result.preferentialTax.toNumber()).toBe(19830);
   });
 
-  it("QDCG worksheet - collectibles within 15% bracket gets 15% rate (not 28%)", () => {
-    // $150K taxable, $15K LTCG of which $5K is collectibles
-    // All gains in 15% bracket → collectibles get 15%, not 28%
-    // preferentialTax = $15K × 15% = $2,250
+  it("Schedule D worksheet - collectibles uses ordinary24percent before its cap", () => {
+    // Official21=140000,44=26447; only regular10000 gain gets15percent.
     const result = calculateCapitalGainsTax(d(150000), d(0), d(15000), "single", constants, {
       collectiblesGain: d(5000),
     });
-    expect(result.preferentialTax.toNumber()).toBe(2250);
+    expect(result.preferentialTax.toNumber()).toBe(1500);
+    expect(result.tax.toNumber()).toBe(27947);
   });
 
   it("QDCG worksheet - collectibles above 15% threshold gets 28% rate", () => {
@@ -154,26 +148,24 @@ describe("Capital gains tax - stacking method", () => {
     expect(result.preferentialTax.toNumber()).toBe(19930);
   });
 
-  it("QDCG worksheet - combined §1250 + collectibles within 15% bracket", () => {
-    // $200K taxable, $30K LTCG: $8K §1250, $5K collectibles, $17K regular
-    // All gains in 15% bracket → all at 15%
-    // preferentialTax = $30K × 15% = $4,500
+  it("Schedule D worksheet - combined special gains below24percent ceiling", () => {
+    // Official21=183000,44=36767; regular17000*15%=2550.
     const result = calculateCapitalGainsTax(d(200000), d(0), d(30000), "single", constants, {
       section1250Gain: d(8000),
       collectiblesGain: d(5000),
     });
-    expect(result.preferentialTax.toNumber()).toBe(4500);
+    expect(result.preferentialTax.toNumber()).toBe(2550);
+    expect(result.tax.toNumber()).toBe(39317);
   });
 
-  it("QDCG worksheet - special gains capped at remaining above 15% threshold", () => {
-    // $200K taxable, $5K LTCG, §1250 $10K, collectibles $3K (exceed LTCG)
-    // All gains in 15% bracket → all at 15%
-    // preferentialTax = $5K × 15% = $750
+  it("Schedule D worksheet - special gains respect net gain and24percent ceiling", () => {
+    // Netgain5000;21=197300,44=40199;39=2700 taxed25%=675.
     const result = calculateCapitalGainsTax(d(200000), d(0), d(5000), "single", constants, {
       section1250Gain: d(10000),
       collectiblesGain: d(3000),
     });
-    expect(result.preferentialTax.toNumber()).toBe(750);
+    expect(result.preferentialTax.toNumber()).toBe(675);
+    expect(result.tax.toNumber()).toBe(40874);
   });
 
   it("QDCG worksheet - zero ordinary income, all LTCG in 0% bracket", () => {
@@ -211,26 +203,21 @@ describe("Capital gains tax - stacking method", () => {
     expect(result.preferentialTax.toNumber()).toBe(0);
   });
 
-  it("QDCG worksheet - §1250 in 0% bracket produces zero preferential tax", () => {
-    // Single, $30K taxable, $10K LTCG all from §1250
-    // Per IRS: stack $10K on $20K ordinary → room at 0% = $28,350 → all at 0%
-    // ordinaryTax($20K) = $2,162, preferentialTax = $0
-    // Total = $2,162 (QDCG method is better than all-ordinary $3,362)
+  it("Schedule D worksheet - low-income section1250 remains ordinary-rate income", () => {
+    // Official21=30000; published single30000-30050 row3365.
     const result = calculateCapitalGainsTax(d(30000), d(0), d(10000), "single", constants, {
       section1250Gain: d(10000),
     });
-    expect(result.tax.toNumber()).toBe(2162);
+    expect(result.tax.toNumber()).toBe(3365);
     expect(result.preferentialTax.toNumber()).toBe(0);
   });
 
-  it("QDCG worksheet - collectibles in 0% bracket produces zero preferential tax", () => {
-    // Single, $30K taxable, $10K LTCG all from collectibles
-    // Per IRS: stack $10K on $20K → all at 0%
-    // ordinaryTax($20K) = $2,162, preferentialTax = $0 → total = $2,162
+  it("Schedule D worksheet - low-income collectibles remains ordinary-rate income", () => {
+    // Official21=30000; published single30000-30050 row3365.
     const result = calculateCapitalGainsTax(d(30000), d(0), d(10000), "single", constants, {
       collectiblesGain: d(10000),
     });
-    expect(result.tax.toNumber()).toBe(2162);
+    expect(result.tax.toNumber()).toBe(3365);
     expect(result.preferentialTax.toNumber()).toBe(0);
   });
 
@@ -246,28 +233,22 @@ describe("Capital gains tax - stacking method", () => {
     expect(result.preferentialTax.greaterThan(0)).toBe(true);
   });
 
-  it("QDCG worksheet - §1250 entirely in 0% bracket (all LTCG, no ordinary)", () => {
-    // Single, $20K taxable from $20K LTCG (all §1250), no ordinary income
-    // Stack $20K on $0 → 0% threshold = $48,350 → all at 0%
-    // ordinaryTax = $0, preferentialTax = $0 → total = $0
+  it("Schedule D worksheet - all section1250 income still uses ordinary-rate table", () => {
+    // Official21=20000; published single20000-20050 row2165.
     const result = calculateCapitalGainsTax(d(20000), d(0), d(20000), "single", constants, {
       section1250Gain: d(20000),
     });
-    expect(result.tax.toNumber()).toBe(0);
+    expect(result.tax.toNumber()).toBe(2165);
     expect(result.preferentialTax.toNumber()).toBe(0);
-    expect(result.ordinaryTax.toNumber()).toBe(0);
+    expect(result.ordinaryTax.toNumber()).toBe(2165);
   });
 
-  it("QDCG worksheet - §1250 spanning 15% threshold (partial 15%, partial 25%)", () => {
-    // Single, $600K taxable, $100K LTCG ($80K §1250, $20K regular)
-    // Ordinary = $500K. Stack $100K on $500K.
-    // Room at 15% = $533,400 - $500K = $33,400 → at15 = $33,400
-    // Remaining = $66,600. §1250 = min($80K, $66,600) = $66,600 at 25%.
-    // 20% remainder = $0. preferentialTax = $5,010 + $16,650 = $21,660
+  it("Schedule D worksheet - section1250 cap applies independently of15percent threshold", () => {
+    // Regular20000*15%=3000; full1250amount80000*25%=20000.
     const result = calculateCapitalGainsTax(d(600000), d(0), d(100000), "single", constants, {
       section1250Gain: d(80000),
     });
-    expect(result.preferentialTax.toNumber()).toBe(21660);
+    expect(result.preferentialTax.toNumber()).toBe(23000);
   });
 
   it("QDCG worksheet - mixed §1250 + collectibles above 15% threshold", () => {

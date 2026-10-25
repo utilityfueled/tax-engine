@@ -3,6 +3,8 @@
  */
 
 import Decimal from "decimal.js";
+import type { CalculatedLine } from "@/models/outputs.js";
+import { AuditTrail } from "./audit.js";
 import type { TaxBracket, FilingStatus, YearConstants } from "@/models/constants.js";
 import { d, zeroFloor, min, roundDollar } from "./decimal.js";
 
@@ -63,133 +65,156 @@ export function calculateRegularIncomeTax(
   return calculateTaxFromBrackets(midpoint, brackets);
 }
 
-/**
- * Calculate capital gains tax using preferential rates (0%/15%/20%).
- * Uses the "stacking" method where gains are stacked on top of ordinary income.
- * Spec: QDCG Worksheet (Qualified Dividends and Capital Gain Tax Worksheet)
- */
+/** Actual worksheet source amounts, after the ScheduleD gain/loss worksheets. */
 export interface CapitalGainsTaxOptions {
-  /** Unrecaptured §1250 gain (from depreciation on real property), taxed at max 25% */
   section1250Gain?: Decimal;
-  /** Collectibles gain (art, coins, etc.), taxed at max 28% */
   collectiblesGain?: Decimal;
+  /** Actual Form4952line4g, not that form's net investment income. */
+  investmentIncomeElection?: Decimal;
+  /** Actual Form4952line4e or the applicable smaller dotted-line amount. */
+  electionCapitalGainAmount?: Decimal;
+  /** ScheduleJ base years explicitly require rate schedules instead of tax tables. */
+  useTaxRateSchedules?: boolean;
 }
+export interface CapitalGainsTaxResult {
+  tax: Decimal;
+  ordinaryTax: Decimal;
+  preferentialTax: Decimal;
+  method: "ordinary" | "qualified-dividends" | "schedule-d";
+  regularTaxSource: RegularIncomeTaxSource;
+  lines: CalculatedLine[];
+}
+type CapitalTaxConstants = Pick<YearConstants, "taxYear" | "taxBrackets" | "capitalGainsRates">;
 
+/** Official QDCG1–25 or ScheduleD Tax Worksheet1–47; specs name every line. */
 export function calculateCapitalGainsTax(
-  ordinaryTaxableIncome: Decimal,
+  taxableIncome: Decimal,
   qualifiedDividends: Decimal,
   netLongTermCapitalGain: Decimal,
   filingStatus: FilingStatus,
-  constants: YearConstants,
-  options?: CapitalGainsTaxOptions
-): { tax: Decimal; ordinaryTax: Decimal; preferentialTax: Decimal } {
-  const section1250 = options?.section1250Gain ?? new Decimal(0);
-  const collectibles = options?.collectiblesGain ?? new Decimal(0);
-
-  // Total preferential = qualified dividends + LTCG (which already includes §1250 and collectibles)
-  const preferentialIncome = qualifiedDividends.plus(netLongTermCapitalGain);
-  if (preferentialIncome.lessThanOrEqualTo(0)) {
-    const ordinaryTax = calculateTaxFromBrackets(
-      ordinaryTaxableIncome,
-      constants.taxBrackets[filingStatus]
-    );
-    return { tax: ordinaryTax, ordinaryTax, preferentialTax: new Decimal(0) };
+  constants: CapitalTaxConstants,
+  options?: CapitalGainsTaxOptions,
+): CapitalGainsTaxResult {
+  for (const amount of [taxableIncome, qualifiedDividends, netLongTermCapitalGain, options?.section1250Gain, options?.collectiblesGain, options?.investmentIncomeElection, options?.electionCapitalGainAmount]) {
+    if (amount !== undefined && !amount.isFinite()) throw new Error("Capital-gain worksheet amounts must be finite");
   }
-
-  // Ordinary income portion (total taxable minus preferential)
-  const ordinaryPortion = zeroFloor(ordinaryTaxableIncome.minus(preferentialIncome));
-  const ordinaryTax = calculateTaxFromBrackets(
-    ordinaryPortion,
-    constants.taxBrackets[filingStatus]
-  );
-
-  // Cap effective preferential at taxable income (QDCG Worksheet Line 10).
-  // When deductions consume part of the preferential income (qual divs + LTCG > taxable),
-  // only the remaining taxable amount enters the rate computation.
-  // effectivePreferential = taxableIncome - ordinaryPortion = min(preferentialIncome, taxableIncome)
-  const effectivePreferential = ordinaryTaxableIncome.minus(ordinaryPortion);
-
-  let preferentialTax = new Decimal(0);
-
-  // ── Per IRS Schedule D Tax Worksheet (Lines 11-31) and IRC §1(h)(1): ──
-  // Stack ALL preferential income (including §1250 and collectibles) for 0%/15%
-  // first. The 25% (§1250) and 28% (collectibles) are MAXIMUM rates — gains
-  // that fall within the 0% or 15% brackets get the lower rate.
-  // Only gains that remain above the 15% threshold get 28%/25%/20% treatment.
+  if (qualifiedDividends.lt(0) || [options?.section1250Gain, options?.collectiblesGain, options?.investmentIncomeElection, options?.electionCapitalGainAmount].some(value => value?.lt(0))) {
+    throw new Error("Capital-gain worksheet dividend and special source amounts must be nonnegative");
+  }
+  const income = roundDollar(zeroFloor(taxableIncome));
+  const qd = roundDollar(qualifiedDividends);
+  const gain = roundDollar(zeroFloor(netLongTermCapitalGain));
+  const s1250 = roundDollar(options?.section1250Gain ?? d("0"));
+  const collectibles = roundDollar(options?.collectiblesGain ?? d("0"));
+  const election = roundDollar(options?.investmentIncomeElection ?? d("0"));
+  if (election.gt(0) && options?.electionCapitalGainAmount === undefined) {
+    throw new Error("Actual Form4952 capital-gain election source is required");
+  }
+  const electionGain = roundDollar(options?.electionCapitalGainAmount ?? d("0"));
+  const regularTaxSource = regularIncomeTaxSource(constants);
+  const regular = (amount: Decimal) => options?.useTaxRateSchedules
+    ? calculateTaxFromBrackets(amount, constants.taxBrackets[filingStatus])
+    : calculateRegularIncomeTax(amount, filingStatus, constants);
+  const allOrdinary = regular(income);
+  if (income.isZero() || qd.plus(gain).isZero()) {
+    return {tax: allOrdinary, ordinaryTax: allOrdinary, preferentialTax: d("0"), method: "ordinary", regularTaxSource, lines: []};
+  }
+  const special = (gain.gt(0) && s1250.plus(collectibles).gt(0)) || election.gt(0);
+  const form = special ? "Sched D Tax WS" : "QDCG WS";
+  const audit = new AuditTrail();
+  const l: Record<number, Decimal> = {};
+  const set = (number: number, amount: Decimal, formula: string): Decimal => {
+    l[number] = amount;
+    audit.record(form, String(number), `Official worksheet line${number}`, amount, formula);
+    return amount;
+  };
   const zeroThreshold = constants.capitalGainsRates.zero.threshold[filingStatus];
   const fifteenThreshold = constants.capitalGainsRates.fifteen.threshold[filingStatus];
-
-  let remainingPreferential = effectivePreferential;
-  let currentStack = ordinaryPortion;
-
-  // 0% rate portion (Schedule D Tax Worksheet Lines 11-14)
-  if (currentStack.lessThan(zeroThreshold)) {
-    const roomAtZero = zeroThreshold.minus(currentStack);
-    const taxedAtZero = min(remainingPreferential, roomAtZero);
-    // 0% rate — no tax added
-    remainingPreferential = remainingPreferential.minus(taxedAtZero);
-    currentStack = currentStack.plus(taxedAtZero);
+  set(1, income, "Actual taxable income or FEI stacked income");
+  set(2, qd, "Actual qualified dividends");
+  let ordinaryTax: Decimal;
+  let computedTax: Decimal;
+  let tax: Decimal;
+  if (!special) {
+    set(3, gain, "max(0,min(ScheduleD15,16))");
+    set(4, l[2].plus(l[3]), "2+3");
+    set(5, zeroFloor(l[1].minus(l[4])), "max(0,1-4)");
+    set(6, zeroThreshold, "Actual year zero-rate threshold");
+    set(7, min(l[1], l[6]), "min(1,6)");
+    set(8, min(l[5], l[7]), "min(5,7)");
+    set(9, l[7].minus(l[8]), "7-8");
+    set(10, min(l[1], l[4]), "min(1,4)");
+    set(11, l[9], "9");
+    set(12, l[10].minus(l[11]), "10-11");
+    set(13, fifteenThreshold, "Actual year fifteen-percent threshold");
+    set(14, min(l[1], l[13]), "min(1,13)");
+    set(15, l[5].plus(l[9]), "5+9");
+    set(16, zeroFloor(l[14].minus(l[15])), "max(0,14-15)");
+    set(17, min(l[12], l[16]), "min(12,16)");
+    set(18, roundDollar(l[17].times("0.15")), "roundDollar(17*0.15)");
+    set(19, l[9].plus(l[17]), "9+17");
+    set(20, l[10].minus(l[19]), "10-19");
+    set(21, roundDollar(l[20].times("0.20")), "roundDollar(20*0.20)");
+    ordinaryTax = set(22, regular(l[5]), "Actual-year TaxTable/TaxComputationWorksheet on5");
+    computedTax = set(23, l[18].plus(l[21]).plus(l[22]), "18+21+22");
+    set(24, allOrdinary, "Actual-year TaxTable/TaxComputationWorksheet on1");
+    tax = set(25, min(l[23], l[24]), "min(23,24)");
+  } else {
+    const bracket24 = constants.taxBrackets[filingStatus].find(bracket => bracket.rate.eq("0.24"));
+    if (!bracket24?.max) throw new Error("Actual year24percent bracket ceiling is unavailable");
+    set(3, election, "Actual Form4952line4g election");
+    set(4, electionGain, "Actual Form4952line4e or smaller applicable amount");
+    set(5, zeroFloor(l[3].minus(l[4])), "max(0,3-4)");
+    set(6, zeroFloor(l[2].minus(l[5])), "max(0,2-5)");
+    set(7, gain, "max(0,min(ScheduleD15,16))");
+    set(8, min(l[3], l[4]), "min(3,4)");
+    set(9, zeroFloor(l[7].minus(l[8])), "max(0,7-8)");
+    set(10, l[6].plus(l[9]), "6+9");
+    set(11, s1250.plus(collectibles), "Actual ScheduleD18+19");
+    set(12, min(l[9], l[11]), "min(9,11)");
+    set(13, l[10].minus(l[12]), "10-12");
+    set(14, zeroFloor(l[1].minus(l[13])), "max(0,1-13)");
+    set(15, zeroThreshold, "Actual year zero-rate threshold");
+    set(16, min(l[1], l[15]), "min(1,15)");
+    set(17, min(l[14], l[16]), "min(14,16)");
+    set(18, zeroFloor(l[1].minus(l[10])), "max(0,1-10)");
+    set(19, min(l[1], bracket24.max), "min(1,actual24percent bracket ceiling)");
+    set(20, min(l[14], l[19]), "min(14,19)");
+    set(21, Decimal.max(l[18], l[20]), "max(18,20)");
+    set(22, l[16].minus(l[17]), "16-17");
+    // Skipped physical fields contribute zero to the later totals.
+    const skip23 = l[1].eq(l[16]);
+    set(23, skip23 ? d("0") : min(l[1], l[13]), "min(1,13), or skipped");
+    set(24, skip23 ? d("0") : l[22], "22, or skipped");
+    set(25, skip23 ? d("0") : zeroFloor(l[23].minus(l[24])), "max(0,23-24), or skipped");
+    set(26, skip23 ? d("0") : fifteenThreshold, "Actual year fifteen-percent threshold, or skipped");
+    set(27, skip23 ? d("0") : min(l[1], l[26]), "min(1,26), or skipped");
+    set(28, skip23 ? d("0") : l[21].plus(l[22]), "21+22, or skipped");
+    set(29, skip23 ? d("0") : zeroFloor(l[27].minus(l[28])), "max(0,27-28), or skipped");
+    set(30, skip23 ? d("0") : min(l[25], l[29]), "min(25,29), or skipped");
+    set(31, roundDollar(l[30].times("0.15")), "roundDollar(30*0.15)");
+    set(32, skip23 ? d("0") : l[24].plus(l[30]), "24+30, or skipped");
+    const skip33 = skip23 || l[1].eq(l[32]);
+    set(33, skip33 ? d("0") : l[23].minus(l[32]), "23-32, or skipped");
+    set(34, roundDollar(l[33].times("0.20")), "roundDollar(33*0.20)");
+    const skip35 = skip33 || s1250.isZero();
+    set(35, skip35 ? d("0") : min(l[9], s1250), "min(9,ScheduleD19), or skipped");
+    set(36, skip35 ? d("0") : l[10].plus(l[21]), "10+21, or skipped");
+    set(37, skip35 ? d("0") : l[1], "1, or skipped");
+    set(38, skip35 ? d("0") : zeroFloor(l[36].minus(l[37])), "max(0,36-37), or skipped");
+    set(39, skip35 ? d("0") : zeroFloor(l[35].minus(l[38])), "max(0,35-38), or skipped");
+    set(40, roundDollar(l[39].times("0.25")), "roundDollar(39*0.25)");
+    const skip41 = skip33 || collectibles.isZero();
+    set(41, skip41 ? d("0") : l[21].plus(l[22]).plus(l[30]).plus(l[33]).plus(l[39]), "21+22+30+33+39, or skipped");
+    set(42, skip41 ? d("0") : l[1].minus(l[41]), "1-41, or skipped");
+    set(43, roundDollar(l[42].times("0.28")), "roundDollar(42*0.28)");
+    ordinaryTax = set(44, regular(l[21]), "Actual-year TaxTable/TaxComputationWorksheet on21");
+    computedTax = set(45, l[31].plus(l[34]).plus(l[40]).plus(l[43]).plus(l[44]), "31+34+40+43+44");
+    set(46, allOrdinary, "Actual-year TaxTable/TaxComputationWorksheet on1");
+    tax = set(47, min(l[45], l[46]), "min(45,46)");
   }
-
-  // 15% rate portion (Schedule D Tax Worksheet Lines 16-20)
-  if (remainingPreferential.greaterThan(0) && currentStack.lessThan(fifteenThreshold)) {
-    const roomAtFifteen = fifteenThreshold.minus(currentStack);
-    const taxedAtFifteen = min(remainingPreferential, roomAtFifteen);
-    preferentialTax = preferentialTax.plus(taxedAtFifteen.times(d(0.15)));
-    remainingPreferential = remainingPreferential.minus(taxedAtFifteen);
-  }
-
-  // Above 15% threshold: allocate to 28%, then 25%, then 20%
-  // Per Schedule D Tax Worksheet Lines 22-31:
-  //   Line 24: 28% rate gain (collectibles) — from top of stack
-  //   Line 28: 25% rate gain (§1250) — next
-  //   Line 30: 20% — remainder
-  if (remainingPreferential.greaterThan(0)) {
-    // 28% rate gain (collectibles) — capped at remaining and actual collectibles
-    const collectiblesPortion = min(collectibles, remainingPreferential);
-    if (collectiblesPortion.greaterThan(0)) {
-      preferentialTax = preferentialTax.plus(collectiblesPortion.times(d(0.28)));
-      remainingPreferential = remainingPreferential.minus(collectiblesPortion);
-    }
-
-    // 25% rate gain (§1250) — capped at remaining and actual §1250
-    const section1250Portion = min(section1250, remainingPreferential);
-    if (section1250Portion.greaterThan(0)) {
-      preferentialTax = preferentialTax.plus(section1250Portion.times(d(0.25)));
-      remainingPreferential = remainingPreferential.minus(section1250Portion);
-    }
-
-    // 20% rate (remainder)
-    if (remainingPreferential.greaterThan(0)) {
-      preferentialTax = preferentialTax.plus(remainingPreferential.times(d(0.20)));
-    }
-  }
-
-  preferentialTax = roundDollar(preferentialTax);
-
-  // Lesser-of check (QDCG Worksheet Line 25-26 / Schedule D Tax Worksheet Line 40-41)
-  // Per IRC §1(h)(1), the preferential rate computation "shall not exceed" the regular tax.
-  // This matters when §1250 (25%) or collectibles (28%) rates exceed the taxpayer's
-  // marginal ordinary rate at low income levels.
-  const qdcgTax = ordinaryTax.plus(preferentialTax);
-  const allOrdinaryTax = calculateTaxFromBrackets(
-    ordinaryTaxableIncome,
-    constants.taxBrackets[filingStatus]
-  );
-
-  if (allOrdinaryTax.lessThan(qdcgTax)) {
-    return {
-      tax: allOrdinaryTax,
-      ordinaryTax: allOrdinaryTax,
-      preferentialTax: new Decimal(0),
-    };
-  }
-
-  return {
-    tax: qdcgTax,
-    ordinaryTax,
-    preferentialTax,
-  };
+  if (allOrdinary.lt(computedTax)) ordinaryTax = allOrdinary;
+  return {tax, ordinaryTax, preferentialTax: tax.minus(ordinaryTax), method: special ? "schedule-d" : "qualified-dividends", regularTaxSource, lines: audit.getLines()};
 }
 
 /**

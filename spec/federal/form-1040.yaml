@@ -362,7 +362,7 @@ lines:
   # ── Tax ──────────────────────────────────────────────────
   - line: "16"
     description: "Tax"
-    formula: "QDCG worksheet if qualified dividends/LTCG > 0, else Tax Table/brackets"
+    formula: "Applicable QDCG or ScheduleD Tax Worksheet; ordinary steps use final-year Tax Table below100000 and Tax Computation Worksheet otherwise. Foreign exclusions use the same sources for both stacked and excluded income. Final2026 table remains unavailable: indexed-rate preview is explicitly unqualified."
     irsRef: "Form 1040 Instructions, Line 16; QDCG Worksheet"
     inputs:
       - "Line 15 (taxable income)"

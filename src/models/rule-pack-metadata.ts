@@ -27,11 +27,14 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.20",
+    ruleVersion: "2025.21",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/pub/irs-pdf/p1040.pdf", section: "Published2025 Tax Table and verified2022-24 historical tables; actual ordinary worksheet steps", revision: "Final2025 publication;2026 table unavailable", retrievedAt: "2026-10-25" },
+      { url: "https://www.irs.gov/instructions/i1040sd", section: "Official ScheduleD Tax Worksheet1-47 and QDCG1-25; source gain/loss worksheets remain separately unqualified", revision: "2025 final instructions", retrievedAt: "2026-10-25" },
+      { url: "https://www.irs.gov/instructions/i1040sj", section: "Current-year Tax Table and actual three base-year Tax Rate Schedules", revision: "2025 final instructions;2026 statutory preview", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i1041sk1", section: "Box10 estate-tax deduction aggregated once in actual ScheduleAline16", revision: "2025 final beneficiary instructions", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/pub/irs-pdf/f6251.pdf", section: "Official1a/1b/2a/2d and4-11 printed audit; remaining source worksheets unqualified", revision: "2025 final form", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i8995", section: "Actual owner/source attribution of SE tax, health insurance and retirement deductions", revision: "2025 final instructions and Reg.1.199A-3(b)(1)(vi)", retrievedAt: "2026-10-25" },
@@ -58,15 +61,18 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
       { url: "https://www.irs.gov/instructions/i1040sca", section: "Line5a source withholding and no duplicate deduction; line5e SALT limit worksheet", revision: "2025 instructions", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i1040s8", section: "Part I and Part II", revision: "2025 instructions", retrievedAt: "2026-10-24" },
     ],
-    limitations: ["Legacy calculations plus SALT/CTC amount corrections; remaining eligibility and law changes require review.", "Final forms and enabled scenarios have not been independently qualified."],
+    limitations: ["Legacy calculations plus SALT/CTC amount corrections; remaining eligibility and law changes require review.", "Final forms and enabled scenarios have not been independently qualified.", "ScheduleD18/19 source gain/loss worksheets and actual Form4952 election integration remain unqualified."],
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.15-law-integration-draft",
+    ruleVersion: "2026.16-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/pub/irs-pdf/p1040.pdf", section: "Published2025 Tax Table and verified2022-24 historical tables; actual ordinary worksheet steps", revision: "Final2025 publication;2026 table unavailable", retrievedAt: "2026-10-25" },
+      { url: "https://www.irs.gov/instructions/i1040sd", section: "Official ScheduleD Tax Worksheet1-47 and QDCG1-25; source gain/loss worksheets remain separately unqualified", revision: "2025 final instructions", retrievedAt: "2026-10-25" },
+      { url: "https://www.irs.gov/instructions/i1040sj", section: "Current-year Tax Table and actual three base-year Tax Rate Schedules", revision: "2025 final instructions;2026 statutory preview", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i1041sk1", section: "Box10 estate-tax deduction aggregated once in actual ScheduleAline16", revision: "2025 final beneficiary instructions", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/pub/irs-pdf/f6251.pdf", section: "Official1a/1b/2a/2d and4-11 printed audit; remaining source worksheets unqualified", revision: "2025 final form", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i2210", section: "Actual dated installments and enumerated line2 taxes, household exception and source facts", revision: "2025 final instructions;2026 rates only through December", retrievedAt: "2026-10-25" },
@@ -93,7 +99,7 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
       { url: "https://www.irs.gov/publications/p505", section: "2026 SALT, Medicare and NIIT amounts", revision: "2026 Publication 505", retrievedAt: "2026-10-24" },
       { url: "https://www.irs.gov/pub/irs-pdf/p926.pdf", section: "Household employment tax rates and wage bases", revision: "2026 Publication 926", retrievedAt: "2026-10-24" },
     ],
-    limitations: ["The constant data has a complete federal shape, but the complete 2026 federal calculation is not implemented or qualified. Do not substitute another year's rules.", "Schedule 1-A, other law changes, state conformity and final form mappings remain release gates.", "Transition amounts for vehicles and residence debt do not establish eligibility after statutory termination dates."],
+    limitations: ["The constant data has a complete federal shape, but the complete 2026 federal calculation is not implemented or qualified. Do not substitute another year's rules.", "Schedule 1-A, other law changes, state conformity and final form mappings remain release gates.", "Transition amounts for vehicles and residence debt do not establish eligibility after statutory termination dates.", "Final2026 Tax Table is unavailable; ordinary tax remains an explicitly labeled statutory-rate preview. ScheduleD source gain/loss worksheets and Form4952 election integration remain unqualified."],
   },
 });
 

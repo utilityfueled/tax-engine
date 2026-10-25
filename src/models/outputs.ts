@@ -118,6 +118,7 @@ export interface TaxReturnResult {
   taxableIncome: Decimal;
 
   // Tax computation
+  incomeTaxSourceStatus?: import("@/utils/tax-math.js").RegularIncomeTaxSource;
   ordinaryTax: Decimal;
   capitalGainsTax: Decimal;
   totalTaxBeforeCredits: Decimal;

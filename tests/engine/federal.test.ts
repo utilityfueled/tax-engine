@@ -228,11 +228,8 @@ describe("Simple W-2 single filer", () => {
   });
 
   it("Form 1040 Line 16 - tax on $69,250 single", () => {
-    // $11,925 × 10% = $1,192.50
-    // ($48,475 - $11,925) × 12% = $4,386
-    // ($69,250 - $48,475) × 22% = $4,570.50
-    // Total = $10,149
-    expect(result.totalTaxBeforeCredits.toNumber()).toBe(10149);
+    // Published2025 single table row69250–69300:10155.
+    expect(result.totalTaxBeforeCredits.toNumber()).toBe(10155);
   });
 
   it("Form 1040 Line 19 - no child tax credit (no children)", () => {
@@ -240,6 +237,7 @@ describe("Simple W-2 single filer", () => {
   });
 
   it("Form 1040 Line 20 - Form 8880 saver's credit flows through Schedule 3 and is capped by the remaining tax", () => {
+    // Published4250–4300 single row428 caps the1000 tentative credit.
     const saverCreditResult = calculateFederalTax({
       ...simpleW2Fixture,
       w2s: [
@@ -260,15 +258,16 @@ describe("Simple W-2 single filer", () => {
 
     const line20 = saverCreditResult.allLines.find((line) => line.form === "1040" && line.line === "20");
 
-    expect(saverCreditResult.totalTaxBeforeCredits.toNumber()).toBe(425);
+    expect(saverCreditResult.totalTaxBeforeCredits.toNumber()).toBe(428);
     expect(saverCreditResult.form8880?.line10.toNumber()).toBe(1000);
-    expect(saverCreditResult.form8880?.line11.toNumber()).toBe(425);
-    expect(saverCreditResult.form8880?.line12.toNumber()).toBe(425);
-    expect(saverCreditResult.otherCredits.toNumber()).toBe(425);
-    expect(line20?.value.toNumber()).toBe(425);
+    expect(saverCreditResult.form8880?.line11.toNumber()).toBe(428);
+    expect(saverCreditResult.form8880?.line12.toNumber()).toBe(428);
+    expect(saverCreditResult.otherCredits.toNumber()).toBe(428);
+    expect(line20?.value.toNumber()).toBe(428);
   });
 
   it("Form 1040 Line 20 - W-2 Box 12 retirement contributions default into Form 8880 when Line 2 inputs are omitted", () => {
+    // Published4250–4300 single row428 caps the tentative credit.
     const saverCreditResult = calculateFederalTax({
       ...simpleW2Fixture,
       w2s: [
@@ -291,11 +290,12 @@ describe("Simple W-2 single filer", () => {
 
     expect(saverCreditResult.form8880?.line2a.toNumber()).toBe(3000);
     expect(String(form8880Line2?.inputs["Supported W-2 Box 12 retirement contributions"])).toBe("3000");
-    expect(saverCreditResult.form8880?.line12.toNumber()).toBe(425);
-    expect(saverCreditResult.otherCredits.toNumber()).toBe(425);
+    expect(saverCreditResult.form8880?.line12.toNumber()).toBe(428);
+    expect(saverCreditResult.otherCredits.toNumber()).toBe(428);
   });
 
   it("Form 8880 Line 11 - the federal engine includes Schedule 2 Line 3 excess APTC repayment in the saver's credit limitation base", () => {
+    // Published2250–2275 single row226 plus375 APTC=601.
     const saverCreditResult = calculateFederalTax({
       ...simpleW2Fixture,
       w2s: [
@@ -328,15 +328,16 @@ describe("Simple W-2 single filer", () => {
 
     const schedule2Line2 = saverCreditResult.allLines.find((line) => line.form === "Sched 2" && line.line === "1a");
 
-    expect(saverCreditResult.totalTaxBeforeCredits.toNumber()).toBe(225);
+    expect(saverCreditResult.totalTaxBeforeCredits.toNumber()).toBe(226);
     expect(saverCreditResult.form8880?.line10.toNumber()).toBe(1000);
     expect(schedule2Line2?.value.toNumber()).toBe(375);
-    expect(saverCreditResult.form8880?.line11.toNumber()).toBe(600);
-    expect(saverCreditResult.form8880?.line12.toNumber()).toBe(600);
-    expect(saverCreditResult.otherCredits.toNumber()).toBe(600);
+    expect(saverCreditResult.form8880?.line11.toNumber()).toBe(601);
+    expect(saverCreditResult.form8880?.line12.toNumber()).toBe(601);
+    expect(saverCreditResult.otherCredits.toNumber()).toBe(601);
   });
 
   it("Form 8880 Line 11 - the federal engine subtracts earlier Schedule 3 credits before limiting the saver's credit", () => {
+    // Published5250–5300 single row528; FTC remains25 after rounding.
     const saverCreditResult = calculateFederalTax({
       ...simpleW2Fixture,
       w2s: [
@@ -373,21 +374,21 @@ describe("Simple W-2 single filer", () => {
     const schedule3Line1 = saverCreditResult.allLines.find((line) => line.form === "Sched 3" && line.line === "1");
     const schedule3Line4 = saverCreditResult.allLines.find((line) => line.form === "Sched 3" && line.line === "4");
 
-    expect(saverCreditResult.totalTaxBeforeCredits.toNumber()).toBe(525);
+    expect(saverCreditResult.totalTaxBeforeCredits.toNumber()).toBe(528);
     // FTC limited by Form 1116 apportionment: deduction × (foreign/AGI) reduces net foreign source
-    // $15.75K std ded × ($1K/$21K) = $750 apportioned → net foreign = $250 → limitation = $525×($250/$5,250) = $25
+    // $15.75K std ded × ($1K/$21K) = $750 apportioned → net foreign = $250 → limitation = $528×($250/$5,250) = $25
     expect(saverCreditResult.foreignTaxCredit.toNumber()).toBe(25);
     expect(schedule3Line1?.value.toNumber()).toBe(25);
-    // Saver's credit: Line 10 = $1000, Line 11 = $525 - $25(FTC) = $500, Line 12 = min($1000,$500) = $500
+    // Saver's credit: Line 10 = $1000, Line 11 = $528 - $25(FTC) = $503, Line 12 = min($1000,$503) = $503
     expect(saverCreditResult.form8880?.line10.toNumber()).toBe(1000);
-    expect(saverCreditResult.form8880?.line11.toNumber()).toBe(500);
-    expect(saverCreditResult.form8880?.line12.toNumber()).toBe(500);
-    expect(schedule3Line4?.value.toNumber()).toBe(500);
-    expect(saverCreditResult.otherCredits.toNumber()).toBe(525);
+    expect(saverCreditResult.form8880?.line11.toNumber()).toBe(503);
+    expect(saverCreditResult.form8880?.line12.toNumber()).toBe(503);
+    expect(schedule3Line4?.value.toNumber()).toBe(503);
+    expect(saverCreditResult.otherCredits.toNumber()).toBe(528);
   });
 
   it("Form 1040 Line 24 - total tax (no additional taxes)", () => {
-    expect(result.totalTax.toNumber()).toBe(10149);
+    expect(result.totalTax.toNumber()).toBe(10155);
   });
 
   it("Form 1040 Line 25d - withholding from W-2", () => {
@@ -399,7 +400,7 @@ describe("Simple W-2 single filer", () => {
   });
 
   it("Form 1040 Line 34 - refund (overpaid)", () => {
-    expect(result.refund.toNumber()).toBe(2601); // 12750 - 10149
+    expect(result.refund.toNumber()).toBe(2595); // Actual withholding12750 minus published tax10155
   });
 
   it("Form 1040 Line 37 - amount owed is zero when overpaid", () => {
@@ -8183,10 +8184,10 @@ describe("Federal pipeline - special capital gain rates", () => {
     };
     const withSection1250 = calculateFederalTax(with1250);
 
-    // Per IRS Schedule D Tax Worksheet: 25% is a MAXIMUM rate. At this income level
-    // ($100K wages + $20K LTCG = $105K taxable), all gains fall within the 15% bracket.
-    // §1250 gets 15% (not 25%) → same tax as without §1250.
-    expect(withSection1250.totalTax.toNumber()).toBe(withoutSection1250.totalTax.toNumber());
+    // Worksheet21 adds10000 special gain to ordinary68500. Published MFJ
+    // rows68500/78500 differ1200; remaining regular gain is zero-rated.
+    expect(withSection1250.totalTax.toNumber()).toBe(8946);
+    expect(withSection1250.totalTax.minus(withoutSection1250.totalTax).toNumber()).toBe(1200);
   });
 
   it("collectibles gain from 1099-DIV taxed at higher rate", () => {
@@ -8225,10 +8226,10 @@ describe("Federal pipeline - special capital gain rates", () => {
     };
     const withCollectiblesResult = calculateFederalTax(withCollectibles);
 
-    // Per IRS Schedule D Tax Worksheet: 28% is a MAXIMUM rate. At this income level
-    // (MFJ, $100K wages + $15K LTCG = $85K taxable), all gains fall within the 0% bracket
-    // ($96,700 MFJ threshold). Collectibles get 0% → same tax as without collectibles.
-    expect(withCollectiblesResult.totalTax.toNumber()).toBe(withoutCollectibles.totalTax.toNumber());
+    // All15000 collectibles enter ordinary worksheet21. Published MFJ
+    // rows68500/83500 differ1800; no0percent special-gain preference.
+    expect(withCollectiblesResult.totalTax.toNumber()).toBe(9546);
+    expect(withCollectiblesResult.totalTax.minus(withoutCollectibles.totalTax).toNumber()).toBe(1800);
   });
 
   it("K-1 Box 9b unrecaptured section 1250 gain applies the 25% maximum rate", () => {
@@ -8403,9 +8404,9 @@ describe("Federal pipeline - special capital gain rates", () => {
   });
 
   it("K-1 Box 9b at low income gets lower rate since 25% is a maximum not minimum", () => {
-    // MFJ with $50K wages + $10K LTCG from K-1 (all §1250). At this income level
-    // ($50K + $10K − $30K std ded = $30K taxable), all gains fall within
-    // the 0% bracket ($96,700 MFJ threshold). §1250 gets 0% not 25%.
+    // MFJ50000 wages+10000gain-31500deduction=28500. Published28500
+    // row2946 applies ordinary rates to all1250gain; regular gain version
+    // instead taxes18500 ordinary income at published1853.
     const baseFixture: TaxYearInput = {
       ...simpleW2Fixture,
       taxpayer: { ...simpleW2Fixture.taxpayer, filingStatus: "married_filing_jointly", spouse: complexMFJFixture.taxpayer.spouse },
@@ -8436,8 +8437,9 @@ describe("Federal pipeline - special capital gain rates", () => {
     };
     const withoutSection1250Result = calculateFederalTax(withoutSection1250);
 
-    // At this low income, both get 0% rate → same tax
-    expect(withSection1250.totalTax.toNumber()).toBe(withoutSection1250Result.totalTax.toNumber());
+    // The lower ordinary rate applies, rather than a0percent exemption.
+    expect(withSection1250.totalTax.toNumber()).toBe(2946);
+    expect(withoutSection1250Result.totalTax.toNumber()).toBe(1853);
   });
 
   it("multiple K-1 forms aggregate Box 9b and 9c amounts", () => {
@@ -9600,10 +9602,10 @@ describe("Form 8936 clean vehicle credits through federal engine", () => {
     const result = calculateFederalTax(fixture);
     // AGI ~$50K, under $75K single threshold → qualifies
     // Tentative $4,000 (30% of $20K capped at $4K), then actual tax-liability cap.
-    // 2025 bracket base: ($50,000 - $15,750) -> round($1,192.50 + $22,325 × 12%) = $3,872.
+    // Published34250–34300 single tax3875 limits the4000 tentative credit.
     expect(result.form8936?.tentativePreviouslyOwnedCredit.toString()).toBe("4000");
-    expect(result.form8936?.totalPreviouslyOwnedCredit.toString()).toBe("3872");
-    expect(result.form8936?.unusedPersonalCredit.toString()).toBe("128");
+    expect(result.form8936?.totalPreviouslyOwnedCredit.toString()).toBe("3875");
+    expect(result.form8936?.unusedPersonalCredit.toString()).toBe("125");
   });
 
   it("Form 8936 AGI over threshold disqualifies credit in federal context", () => {

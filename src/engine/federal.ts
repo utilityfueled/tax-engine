@@ -28,7 +28,8 @@ import { d, sum, zeroFloor, min, roundDollar } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
 import {
   calculateCapitalGainsTax,
-  calculateTaxFromBrackets,
+  calculateRegularIncomeTax,
+  regularIncomeTaxSource,
 } from "@/utils/tax-math.js";
 import { calculateQBISourceDeductions, type QBIDeductionSource } from "./forms/qbi-source-deductions.js";
 import { calculateForm8812 } from "./forms/form-8812.js";
@@ -2475,9 +2476,10 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
       stackedIncome, adjustedQualifiedDividends, adjustedNetLTCG, filingStatus, constants,
       { section1250Gain: zeroFloor(section1250Gain.minus(capitalGainExcess)), collectiblesGain: zeroFloor(collectiblesGain.minus(capitalGainExcess)) }
     );
-    const taxOnExcluded = calculateTaxFromBrackets(
-      form2555StackingAmount, constants.taxBrackets[filingStatus]
+    const taxOnExcluded = calculateRegularIncomeTax(
+      form2555StackingAmount, filingStatus, constants
     );
+    audit.merge(taxWithExclusion.lines);
     incomeTax = zeroFloor(taxWithExclusion.tax.minus(taxOnExcluded));
     ordinaryTax = zeroFloor(taxWithExclusion.ordinaryTax.minus(taxOnExcluded));
     preferentialTax = incomeTax.minus(ordinaryTax);
@@ -2503,7 +2505,8 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     incomeTax = result.tax;
     ordinaryTax = result.ordinaryTax;
     preferentialTax = result.preferentialTax;
-    audit.record("1040", "16", "Tax", incomeTax, "QDCG Worksheet (ordinary + preferential rates)");
+    audit.merge(result.lines);
+    audit.record("1040", "16", "Tax", incomeTax, `${result.method}; ${result.regularTaxSource}`);
   }
 
   // ── Form 8615: Kiddie Tax ────────────────────────────────
@@ -3490,6 +3493,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
 
     ordinaryTax,
     capitalGainsTax: preferentialTax,
+    incomeTaxSourceStatus: regularIncomeTaxSource(constants),
     totalTaxBeforeCredits: incomeTax,
 
     childTaxCredit,

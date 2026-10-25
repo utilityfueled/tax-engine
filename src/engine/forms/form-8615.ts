@@ -18,7 +18,7 @@ import type { CalculatedLine } from "@/models/outputs.js";
 import { AuditTrail } from "@/utils/audit.js";
 import {
   calculateCapitalGainsTax,
-  calculateTaxFromBrackets,
+  calculateRegularIncomeTax,
 } from "@/utils/tax-math.js";
 import { d, zeroFloor, min, roundDollar } from "@/utils/decimal.js";
 
@@ -151,14 +151,14 @@ export function calculateForm8615(
     line12 = taxOnParent.tax;
   } else {
     // No QDCG: use ordinary brackets
-    line11 = calculateTaxFromBrackets(line10, constants.taxBrackets[parentFilingStatus]);
-    line12 = calculateTaxFromBrackets(line7, constants.taxBrackets[parentFilingStatus]);
+    line11 = calculateRegularIncomeTax(line10, parentFilingStatus, constants);
+    line12 = calculateRegularIncomeTax(line7, parentFilingStatus, constants);
   }
 
   audit.record("8615", "11", "Tax on combined income at parent's rates", line11,
-    hasParentQDCG ? "QDCG worksheet using parent's filing status" : "Tax brackets using parent's filing status");
+    hasParentQDCG ? "QDCG worksheet using parent's filing status" : "Actual-year TaxTable/TaxComputationWorksheet using parent's filing status");
   audit.record("8615", "12", "Tax on parent's income at parent's rates", line12,
-    hasParentQDCG ? "QDCG worksheet using parent's filing status" : "Tax brackets using parent's filing status");
+    hasParentQDCG ? "QDCG worksheet using parent's filing status" : "Actual-year TaxTable/TaxComputationWorksheet using parent's filing status");
 
   // ── Line 13: Allocable parental tax ──
   const line13 = zeroFloor(line11.minus(line12));
@@ -205,12 +205,12 @@ export function calculateForm8615(
     );
     line15 = taxOnLine6.tax;
   } else {
-    line15 = calculateTaxFromBrackets(line6, constants.taxBrackets[childFilingStatus]);
+    line15 = calculateRegularIncomeTax(line6, childFilingStatus, constants);
   }
   audit.record("8615", "15", "Tax on child's remaining income at child's rate", line15,
     hasChildQDCGOnLine6
       ? `QDCG worksheet: QD $${qdOnLine6} + LTCG $${ltcgOnLine6} on Line 6`
-      : "Tax brackets using child's filing status");
+      : "Actual-year TaxTable/TaxComputationWorksheet using child's filing status");
 
   // ── Line 16: Tentative tax ──
   const line16 = line14.plus(line15);
@@ -226,10 +226,10 @@ export function calculateForm8615(
     );
     line17 = taxAtChildRate.tax;
   } else {
-    line17 = calculateTaxFromBrackets(line4, constants.taxBrackets[childFilingStatus]);
+    line17 = calculateRegularIncomeTax(line4, childFilingStatus, constants);
   }
   audit.record("8615", "17", "Tax at child's own rate on full taxable income", line17,
-    hasChildQDCG ? "QDCG worksheet using child's filing status" : "Tax brackets using child's filing status");
+    hasChildQDCG ? "QDCG worksheet using child's filing status" : "Actual-year TaxTable/TaxComputationWorksheet using child's filing status");
 
   // ── Line 18: Final tax = max(Line 16, Line 17) ──
   const line18 = Decimal.max(line16, line17);

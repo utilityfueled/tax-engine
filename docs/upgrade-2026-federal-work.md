@@ -912,3 +912,45 @@ Rule versions2025.18/2026.13-law-integration-draft remain unqualified.
 
 - Parent full-suite snapshot found five stale cases across four owned files: two AMT audits still expected pre2025 line numbers, and three isolated2026 credit/deduction/bond scenarios lacked actual Form2210 facts. Updated only the physical audit IDs(1b/4/5/6/9) and declared explicit synthetic full-year US-resident prior-year zero-tax facts. Original tax/credit/deduction/bond amount assertions remain intact; no penalty or unknown-rate gate changed.
 - All84 focused tests pass. Scoped diff reviewed and whitespace clean. Parent's snapshot met unchanged coverage thresholds(85.96percent branches,91.61percent functions) but was red until these five fixture corrections; this entry does not substitute a fresh all-green whole-suite run.
+
+## 2026-10-25 — Published tax tables and complete preferential tax worksheets
+
+- Integrated source helper `0b3d78e` into Form 1040, both foreign-income tax worksheet steps, parent/child Form 8615 and the current-year Schedule J computation. Schedule J base years intentionally use their actual Tax Rate Schedules, as the official instructions require; the three years derive from the return year. The result labels final historical table sources separately from the unqualified 2026 statutory-rate preview.
+- Refreshed official 1040 and Schedule D instructions. Replaced the approximate special-gain stacking with the official QDCG lines 1–25 and Schedule D Tax Worksheet lines 1–47. Actual investment-income election amounts are supported by the pure worksheet contract. Low-income section 1250 and collectible gains use the applicable ordinary rates; capital losses do not erase actual qualified dividends. Every intermediate line is audited.
+- Seven new source and integration tests were red before implementation. Independent expected outputs include every line of the 600000 mixed-gain worksheet (165177 tax), the published 69250–69300 single table row (10155), the foreign exclusion worksheet (6790), kiddie tax (412), and actual Schedule J base-year rates. Historical failures were corrected from source table rows and manually derived worksheet arithmetic; no thresholds or assertions were removed.
+- Verification: 598 focused tests and 98 adjacent QDCG/Schedule J/metadata tests pass; root types and all 3459 spec references pass. Scoped lint reports zero errors with existing non-null/unused warnings. Diff and whitespace reviewed. Metadata is now 2025.21 and 2026.16-law-integration-draft; qualification gates remain closed.
+- Limits are explicit: final 2026 Tax Table is unavailable; Schedule D lines 18/19 source gain/loss worksheets, current Schedule J gain allocation and actual Form 4952 election integration remain separate work. A complete tax worksheet does not establish those missing source amounts or independent review.
+
+## Bounded remaining federal implementation matrix — 2026-10-25
+
+This supersedes the initial scope checklist above. Implemented means the named
+code path and synthetic/source tests exist; it does not mean independently
+reviewed or filing qualified. The complete 2026 pack remains closed.
+
+| Execution-brief family | Implemented evidence | Remaining authorized implementation or exact boundary |
+| --- | --- | --- |
+| Independent 2026 constants and year provenance | Immutable full-shape indexed data, official payroll/IRA/HSA sources; source helper 0b3d78e; rule metadata and 81 indexed tests | Final 2026 Tax Table and final physical forms are external source dependencies; 2026 tax remains a labeled statutory preview. |
+| SALT and taxable refunds | Year-aware refund/source facts; 8a5e4c5 non-W2 withholding; 5a5c6b3 payment-year deduction; phase-down tests | Mixed-origin refund batches need separate actual prior-year workbooks; no inferred origin/property-tax facts. |
+| Schedule 1-A | Explicit eligibility, SSN, occupation, FLSA, loan and exclusion facts; tip/overtime/senior/vehicle phase-down tests | Business-tip deduction needs source-level QBI coordination; unsupported refinance and source histories remain blocked. |
+| CTC/ACTC | e8e767e payroll/reservation worksheets; b85af42 identity; bc26ffe actual possession MAGI | Central Schedule 3-A public-benefit limitation needs final applicable source/routing and exact taxpayer eligibility; no generic approval boolean substitutes for it. |
+| Charity, high-income itemization and gambling | Category limits/carries, 0.5% floor, nonitemizer cash gifts, overall cap, 90% gambling rule, actual PMI qualification | Crypto charitable contributions need integration before category limits/floor; mortgage average-qualified-debt/points/refund and mixed-debt worksheets remain unsupported beyond bounded ordinary source facts. |
+| Care/adoption | 724d942 adoption; 968fa7b actual credit ordering/refunds; 812fc61 and a413fd6 care Part III and validated Part II handoff | Next: resolve actual W2 Box10 and business benefit sources in the return, add taxable benefits once, and apply allocated deduction minus amounts already deducted. Benefits-only result/attachments must survive zero credit. |
+| Education/529 | 2885753 actual Form8863 eligibility/support/limits; 83b9e8f claimed-vs-claimable and LLC TIN; source student/institution facts | 1099-Q/529 allocation must establish actual beneficiary/source expense coordination and enacted 2026 eligible-expense changes; legacy aggregate expenses cannot establish this. |
+| QBI and business income | 8ca3655 actual owner/trade deductions; c0871d3 separate-owner SE; 1a815e0 Schedule C other income; minimum active-business deduction | Confirm allowable retirement/health-plan deduction before QBI attribution; business tips and special foreign/SSTB/wage/basis cases require their actual source worksheets. |
+| PTC/APTC | ca8c1e5 core and 5e0822a integration; actual monthly/family/MAGI facts, 2026 cliff and uncapped repayment | Shared-policy allocation, alternative marriage, SE-health-insurance coordination and special lawful-presence worksheets explicitly reject until supported. |
+| Energy/vehicle transition | 9639aa2/351c3d9 energy and 8d7731c/63f88fa vehicles; actual dates, transfers, source reports, tax limits and carry | Mixed business credit requires Form3800 integration; final 2026 forms/source qualification remain external. |
+| Historical carry and income | 45bb211 Form8801; 2e3fa87 Form2555; 5604a87 Form8815; 6ef58a2 OID; a269a9f dated2210 | Next: actual SSA PR/AS addbacks (schema 0b29f28), IRA compensation/MAGI limits, investment-interest election, Schedule D special-gain source netting and Schedule J actual gain allocation. OID complex TIPS/pre-modern cases remain blocked. |
+| Printed federal audits | d84d890 canonical6251; a6ebd97 estate deduction once; corrected1040/Schedule2/Schedule3 routes | Correct W2G withholding to1040line25c, estate termination deduction24k, canonicalSchedule1/1040line8 totals; actual6251 foreign/MFS/NOL/credit worksheets and remaining source-bound forms still unqualified. |
+
+Other bounded unsupported branches found during source collection: rental
+personal-use/280A carryovers and real-estate-professional treatment; retirement
+special distribution/RMD/Roth basis source worksheets; qualified disaster loss
+standard-deduction treatment; Schedule R actual credit-limit worksheet. They
+must remain outside a qualified scenario until implemented and independently
+reviewed. They are implementation gaps, not missing user authorization.
+
+External evidence still required: independent tax review and independently
+reviewed expected outputs; final year-specific forms and mappings; published
+2027 first-quarter interest rate for 2026 Form2210 exposure extending into that
+quarter. No missing source, reviewer or future rate has been invented. Parent
+owns hosted/provider/staging evidence and selected-state qualification.
