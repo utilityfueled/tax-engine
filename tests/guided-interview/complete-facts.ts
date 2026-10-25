@@ -86,9 +86,14 @@ export const completeMortgageSource = {
   securedDebt: true, ownershipInterest: true, obligationToRepay: true, interestPaidByReturn: true,
   currentYearInterestOnly: true, rentalOrBusinessUse: false, mortgageCreditCertificate: false,
   specialCircumstances: false, maximumBalanceDuringYear: "250000", sourceFactsConfirmed: true,
+  balanceMethod: "highest_balance" as const, balanceSourceReference: "Synthetic complete annual balance history",
+  interestPaidByReturnAmount: "100", interestPaidByOthers: "0", interestDeductedElsewhere: "0", sameYearInterestRefund: "0", nonqualifiedInterest: "0",
+  pointsPaidByReturnAmount: "0", pointsPaidByOthers: "0", pointsNotInterest: "0",
   refundOfOverpaidInterest: "0", mortgageInsurancePremiums: "0", pointsPaid: "0", propertyTaxPaid: "0",
   hasMortgageInsuranceAllocation: false,
 };
+
+export const completeMortgageWorksheet = { sourceTaxYear: "2025", sourceReference: "Synthetic annual home-debt records", allHomeDebtIncluded: true, priorYearInterestRecoveriesPresent: false, sourceFactsConfirmed: true };
 
 /** Explicit ordinary 1099-R facts for synthetic checks, not application defaults. */
 export const completeRetirementSource = {

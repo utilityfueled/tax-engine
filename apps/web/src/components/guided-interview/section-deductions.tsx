@@ -169,7 +169,7 @@ export function SectionDeductions({
                   )}
                 </div>
 
-                <p className="guided-hint">These are expenses before tax limits and income-based adjustments. The calculation determines the deductible amount after all required facts are confirmed.</p>
+                <p className="guided-hint">These are reported amounts before payment allocations, tax limits and income-based adjustments. The calculation determines the deductible amount after all required facts are confirmed.</p>
               </div>
             )}
           </div>

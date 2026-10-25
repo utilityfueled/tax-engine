@@ -119,7 +119,10 @@ function points(loan: Loan, year: number): { reported: Decimal; unreported: Deci
   return { reported: reported ? allowed : ZERO, unreported: reported ? ZERO : allowed };
 }
 
-export function calculateHomeMortgageInterest(input: TaxYearInput): HomeMortgageInterestResult {
+export type HomeMortgageInterestInput = Pick<TaxYearInput, "form1098" | "mortgageInterestWorksheet" | "form1099Misc"> & {
+  taxpayer: Pick<TaxYearInput["taxpayer"], "taxYear" | "filingStatus"> & { spouse?: unknown };
+};
+export function calculateHomeMortgageInterest(input: HomeMortgageInterestInput): HomeMortgageInterestResult {
   const year = input.taxpayer.taxYear;
   const facts = input.mortgageInterestWorksheet;
   const audit = new AuditTrail();

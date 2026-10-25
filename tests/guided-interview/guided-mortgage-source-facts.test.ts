@@ -1,13 +1,15 @@
 // Spec: spec/federal/guided-input.yaml, mortgage-source-qualification
 import { describe, expect, it } from "vitest";
+import { calculateHomeMortgageInterest } from "@/engine/forms/home-mortgage-interest";
+import { TaxYearInputSchema } from "@/models/inputs";
 import { buildForm1098Inputs, buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
 import { computeDeductionComparison, emptyDeductionData, loadGuidedFlowState, validateSection } from "@/lib/guided-interview-flow";
-import { completeMortgageSource, startCompleteInterview } from "./complete-facts";
+import { completeMortgageSource, completeMortgageWorksheet, startCompleteInterview } from "./complete-facts";
 
 function flow() {
   const state = startCompleteInterview({ filingStatus: "single", incomeTypes: [], lifeEvents: [], stateCode: null });
   state.taxYear = 2026;
-  state.sectionData.deductions = { ...emptyDeductionData, method: "itemized", mortgageInterest: "100.10", mortgageEntries: [{ ...completeMortgageSource, sourceTaxYear: "2026", mortgageInterest: "100.10" }] };
+  state.sectionData.deductions = { ...emptyDeductionData, method: "itemized", mortgageInterest: "100.10", mortgageWorksheet: { ...completeMortgageWorksheet, sourceTaxYear: "2026" }, mortgageEntries: [{ ...completeMortgageSource, sourceTaxYear: "2026", mortgageInterest: "100.10", interestPaidByReturnAmount: "100.10" }] };
   return state;
 }
 
@@ -19,10 +21,10 @@ describe("actual mortgage source qualification", () => {
     expect(buildTaxInputFromGuidedData(state)).toBeNull();
     expect(validateSection(state, "deductions").status).toBe("partial");
     entry.securedDebt = true;
-    expect(buildTaxInputFromGuidedData(state)?.form1098?.[0]).toMatchObject({ mortgageInterestReceived: "100.10", outstandingMortgagePrincipal: "250000", refundOfOverpaidInterest: "0", mortgageInsurancePremiums: "0", pointsPaid: "0", propertyTax: "0" });
+    expect(buildTaxInputFromGuidedData(state)?.form1098?.[0]).toMatchObject({ mortgageInterestReceived: "100.1", outstandingMortgagePrincipal: "250000", refundOfOverpaidInterest: "0", mortgageInsurancePremiums: "0", pointsPaid: "0", propertyTax: "0" });
     entry.outstandingPrincipal = "0";
     entry.maximumBalanceDuringYear = "9007199254740993.01";
-    expect(buildTaxInputFromGuidedData(state)).toBeNull();
+    expect(buildTaxInputFromGuidedData(state)?.mortgageInterestWorksheet?.loans[0]?.balance).toMatchObject({ method: "highest_balance", amount: "9007199254740993.01" });
     entry.maximumBalanceDuringYear = "250000";
     expect(buildTaxInputFromGuidedData(state)?.form1098?.[0]?.outstandingMortgagePrincipal).toBe("0");
     entry.sourceTaxYear = "2025";
@@ -42,14 +44,16 @@ describe("actual mortgage source qualification", () => {
     }
     const state = flow();
     state.segmentation.filingStatus = "mfs";
-    state.sectionData.deductions!.mortgageEntries![0]!.maximumBalanceDuringYear = "375000.01";
-    expect(buildTaxInputFromGuidedData(state)).toBeNull();
+    state.sectionData.deductions!.mortgageEntries![0]!.maximumBalanceDuringYear = "500000";
+    const supported = buildTaxInputFromGuidedData(state);
+    expect(supported).not.toBeNull();
+    expect(calculateHomeMortgageInterest(TaxYearInputSchema.parse(supported)).mortgageInterest.toString()).toBe("75");
   });
   it("forwards actual insurance allocation independently from Box 5 and requires known eligibility", () => {
     const state = flow();
     const entry = state.sectionData.deductions!.mortgageEntries![0]!;
     Object.assign(entry, { mortgageInsurancePremiums: "1200", hasMortgageInsuranceAllocation: true, insuranceContractIssueDate: "2020-01-01", insuranceAllocationTaxYear: "2026", insuranceQualifiedProvider: true, insuranceAcquisitionDebt: true, insuranceQualifiedResidence: true, insurancePremiumsAllocableToYear: "100.10" });
-    expect(buildTaxInputFromGuidedData(state)?.form1098?.[0]).toMatchObject({ mortgageInsurancePremiums: "1200", mortgageInsuranceQualification: { allocationTaxYear: 2026, contractIssueDate: "2020-01-01", qualifiedProvider: true, acquisitionDebt: true, qualifiedResidence: true, premiumsAllocableToYear: "100.10" } });
+    expect(buildTaxInputFromGuidedData(state)?.form1098?.[0]).toMatchObject({ mortgageInsurancePremiums: "1200", mortgageInsuranceQualification: { allocationTaxYear: 2026, contractIssueDate: "2020-01-01", qualifiedProvider: true, acquisitionDebt: true, qualifiedResidence: true, premiumsAllocableToYear: "100.1" } });
     entry.insurancePremiumsAllocableToYear = "0";
     expect(buildTaxInputFromGuidedData(state)?.form1098?.[0]?.mortgageInsuranceQualification?.premiumsAllocableToYear).toBe("0");
     entry.insurancePremiumsAllocableToYear = "";
@@ -70,8 +74,8 @@ describe("actual mortgage source qualification", () => {
   it("requires the actual current-year purchase points conditions and preserves allocated taxes", () => {
     const state = flow();
     const entry = state.sectionData.deductions!.mortgageEntries![0]!;
-    Object.assign(entry, { originationDate: "2026-02-03", pointsPaid: "100.10", pointsOnMainHome: true, pointsEstablishedPractice: true, pointsWithinUsualAmount: true, pointsCashMethod: true, pointsNotServiceFees: true, pointsOwnFundsSufficient: true, pointsPurchaseMainHome: true, pointsPercentageOfPrincipal: true, pointsOnSettlementStatement: true, pointsFullDeductionElected: true, propertyTaxPaid: "0.20", propertyTaxDisbursementConfirmed: true });
-    expect(buildTaxInputFromGuidedData(state)?.form1098?.[0]).toMatchObject({ pointsPaid: "100.10", propertyTax: "0.20" });
+    Object.assign(entry, { originationDate: "2026-02-03", pointsPaid: "100.10", pointsPaidByReturnAmount: "100.10", pointsPaidDate: "2026-02-03", pointsUse: "purchase", pointsOnMainHome: true, pointsEstablishedPractice: true, pointsWithinUsualAmount: true, pointsCashMethod: true, pointsNotServiceFees: true, pointsOwnFundsSufficient: true, pointsPurchaseMainHome: true, pointsPercentageOfPrincipal: true, pointsOnSettlementStatement: true, pointsFullDeductionElected: true, propertyTaxPaid: "0.20", propertyTaxDisbursementConfirmed: true });
+    expect(buildTaxInputFromGuidedData(state)?.form1098?.[0]).toMatchObject({ pointsPaid: "100.1", propertyTax: "0.2" });
     expect(computeDeductionComparison("single", state.sectionData.deductions, 2026).itemizedTotal).toBe("200.4");
     entry.pointsOwnFundsSufficient = false;
     expect(buildTaxInputFromGuidedData(state)).toBeNull();

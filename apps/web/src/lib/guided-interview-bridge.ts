@@ -1,6 +1,7 @@
 import { buildHsaInputs, hsaFactErrors } from "./guided-hsa-facts";
 import { buildEducatorSources, educatorFactErrors } from "./guided-educator-facts";
 import { buildStudentLoanInputs, studentLoanFactErrors, studentLoanEducationSources, type StudentLoanEducationSources } from "./guided-student-loan-facts";
+import { buildGuidedMortgageInputs } from "./guided-mortgage-worksheet";
 import { buildStandardDeductionFacts } from "./guided-standard-deduction-facts";
 import { buildActualEducationInput } from "./guided-education-facts";
 import { buildEducationDistributionInputs, educationDistributionFactErrors } from "./guided-education-distributions";
@@ -309,7 +310,7 @@ export function buildDependents(
 
 export function buildScheduleAInput(deductionData: DeductionData | undefined, stateReturnData?: StateReturnData) {
   if (!deductionData) return undefined;
-  assertKnownFacts(deductionFactErrors(deductionData));
+  assertKnownFacts(deductionFactErrors({ ...deductionData, mortgageInterest: "", mortgageEntries: [], mortgageWorksheet: undefined }));
   const fields = {
     nonW2IncomeTaxesDeductedElsewhere: deductionData.nonW2IncomeTaxesDeductedElsewhere,
     gamblingWinnings: deductionData.gamblingWinnings,
@@ -329,31 +330,17 @@ export function buildScheduleAInput(deductionData: DeductionData | undefined, st
 
 // ── Mortgage interest (Form 1098) converter ──────────────────────────────────
 
-export function buildForm1098Inputs(deductionData: DeductionData | undefined, taxYear?: number | null, filingStatus?: FilingStatus | null) {
+export function buildForm1098Inputs(deductionData: DeductionData | undefined, taxYear?: number | null, filingStatus?: FilingStatus | null, spouse?: unknown) {
   if (!deductionData || deductionData.method !== "itemized") return [];
-  assertKnownFacts(deductionFactErrors({ ...deductionData, charitableContributions: "", donationEntries: [] }, taxYear, filingStatus));
-  return (deductionData.mortgageEntries ?? []).map((entry) => ({
-    lender: entry.lender.trim(),
-    mortgageInterestReceived: toDecimalString(entry.mortgageInterest),
-    outstandingMortgagePrincipal: toDecimalString(entry.outstandingPrincipal),
-    mortgageOriginationDate: entry.originationDate,
-    refundOfOverpaidInterest: toDecimalString(entry.refundOfOverpaidInterest),
-    mortgageInsurancePremiums: toDecimalString(entry.mortgageInsurancePremiums),
-    pointsPaid: toDecimalString(entry.pointsPaid),
-    propertyTax: toDecimalString(entry.propertyTaxPaid),
-    ...(entry.sourceTaxYear === "2026" && entry.hasMortgageInsuranceAllocation === true ? { mortgageInsuranceQualification: {
-      allocationTaxYear: Number(entry.insuranceAllocationTaxYear), contractIssueDate: entry.insuranceContractIssueDate!,
-      qualifiedProvider: entry.insuranceQualifiedProvider!, acquisitionDebt: entry.insuranceAcquisitionDebt!, qualifiedResidence: entry.insuranceQualifiedResidence!,
-      premiumsAllocableToYear: toDecimalString(entry.insurancePremiumsAllocableToYear),
-    } } : {}),
-  }));
+  assertKnownFacts(deductionFactErrors({ ...deductionData, charitableContributions: "", donationEntries: [] }, taxYear, filingStatus, spouse));
+  return buildGuidedMortgageInputs(deductionData, taxYear, filingStatus, spouse).form1098;
 }
 
 // ── Charitable donations converter ──────────────────────────────────────────
 
 export function buildDonationsInput(deductionData: DeductionData | undefined) {
   if (!deductionData) return [];
-  assertKnownFacts(deductionFactErrors({ ...deductionData, mortgageInterest: "", mortgageEntries: [] }));
+  assertKnownFacts(deductionFactErrors({ ...deductionData, mortgageInterest: "", mortgageEntries: [], mortgageWorksheet: undefined }));
   return (deductionData.donationEntries ?? []).map((entry) => ({
     organization: entry.organization.trim(),
     type: entry.type as "cash" | "appreciated_stock" | "property" | "other",
@@ -624,7 +611,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     assertKnownFacts(investmentFactErrors(investData, segmentation.filingStatus, state.taxYear, stateReturnData, segmentation.stateCode));
     assertKnownFacts(businessFactErrors(seData, segmentation.filingStatus, w2Data?.entries, stateReturnData));
     assertKnownFacts(rentalFactErrors(rentalData?.entries, segmentation.filingStatus, state.taxYear, segmentation.stateCode));
-    assertKnownFacts(deductionFactErrors(deductionData, state.taxYear, segmentation.filingStatus));
+    assertKnownFacts(deductionFactErrors(deductionData, state.taxYear, segmentation.filingStatus, personalInfo.spouse));
     assertKnownFacts(nonW2TaxAllocationErrors(state));
     assertKnownFacts(allPaymentFactErrors(paymentData, state.taxYear));
     assertKnownFacts(retirementFactErrors(retirementData?.entries, true, segmentation.filingStatus, state.taxYear, stateReturnData));
@@ -661,7 +648,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
   const formRRB1099 = buildRailroadSocialSecurityInputs(socialSecurityData);
   const form1099G = buildUnemploymentInputs(unemploymentData);
   const scheduleA = buildScheduleAInput(deductionData, stateReturnData);
-  const form1098 = buildForm1098Inputs(deductionData, state.taxYear, segmentation.filingStatus);
+  const mortgageInputs = buildGuidedMortgageInputs(deductionData, state.taxYear, segmentation.filingStatus, personalInfo.spouse);
   const donations = buildDonationsInput(deductionData);
   const adjustments = buildAdjustmentsInput(adjustmentData, state.segmentation.filingStatus, state.taxYear, loanEducation);
   const studentLoans = buildStudentLoanInputs(adjustmentData?.studentLoanFacts, segmentation.filingStatus, state.taxYear, loanEducation, adjustmentData?.studentLoanInterest);
@@ -743,7 +730,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     form1099G,
     rentalProperties,
     scheduleA,
-    form1098,
+    ...mortgageInputs,
     donations,
     childTaxCredit: personalInfo.childTaxCredit ? {
       bonaFidePuertoRicoResident: personalInfo.childTaxCredit.bonaFidePuertoRicoResident ?? undefined,

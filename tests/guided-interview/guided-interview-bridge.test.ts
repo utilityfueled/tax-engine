@@ -1,7 +1,7 @@
 import { syntheticStudentLoanFacts } from "../fixtures/student-loan-source";
 import { energySource, sourceImprovement, sourceCleanProperty } from "../fixtures/energy-source";
 import { completeCareSource } from "./care-source-fixture";
-import { completeRentalSource, completeNecSource, completeBusinessSection, completeBusinessExpenses, completeMortgageSource, completeRetirementSource, completeSocialSecuritySource, completeSocialSecurityTreatment, completeUnemploymentSource } from "./complete-facts";
+import { completeRentalSource, completeNecSource, completeBusinessSection, completeBusinessExpenses, completeMortgageSource, completeMortgageWorksheet, completeRetirementSource, completeSocialSecuritySource, completeSocialSecurityTreatment, completeUnemploymentSource } from "./complete-facts";
 import { completeBrokerageSource, completeDividendSource, completeInterestSource, completeTransactionSource } from "./complete-facts";
 import { completeHsaSources, completeW2Entry, startCompleteInterview as startInterview, completePersonalInfo, completeDependent, completeAocEligibility, completeEducationClaimant, completeHouseholdEmployee } from "./complete-facts";
 import { describe, it, expect } from "vitest";
@@ -1044,8 +1044,9 @@ describe("buildForm1098Inputs", () => {
       ...emptyDeductionData,
       method: "itemized",
       mortgageInterest: "12000",
-      mortgageEntries: [{ ...completeMortgageSource, lender: "Actual Lender", mortgageInterest: "12000", outstandingPrincipal: "250000", originationDate: "2019-06-01" }],
-    });
+      mortgageEntries: [{ ...completeMortgageSource, lender: "Actual Lender", mortgageInterest: "12000", interestPaidByReturnAmount: "12000", outstandingPrincipal: "250000", originationDate: "2019-06-01" }],
+      mortgageWorksheet: { ...completeMortgageWorksheet },
+    }, 2025, "single");
     expect(result).toHaveLength(1);
     expect(result[0].mortgageInterestReceived).toBe("12000");
     expect(result[0].lender).toBe("Actual Lender");
@@ -1104,7 +1105,8 @@ describe("itemized deductions in preview", () => {
       ...emptyDeductionData,
       method: "itemized",
       mortgageInterest: "18000",
-      mortgageEntries: [{ ...completeMortgageSource, lender: "Actual Lender", mortgageInterest: "18000", outstandingPrincipal: "250000", originationDate: "2019-06-01" }],
+      mortgageEntries: [{ ...completeMortgageSource, lender: "Actual Lender", mortgageInterest: "18000", interestPaidByReturnAmount: "18000", outstandingPrincipal: "250000", originationDate: "2019-06-01" }],
+      mortgageWorksheet: { ...completeMortgageWorksheet },
       charitableContributions: "5000",
       donationEntries: [{ organization: "Actual Charity", type: "cash", amount: "5000", date: "2025-10-01", costBasis: "", isLongTermCapitalGain: null, isPrivateFoundation: false }],
       stateLocalTaxes: "10000",

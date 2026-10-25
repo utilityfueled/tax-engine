@@ -4,6 +4,8 @@ import { type DeductionData, type DonationEntryData, type MortgageEntryData, emp
 import { sumGuidedDisplayAmounts } from "@/lib/guided-currency";
 import { CurrencyField } from "./currency-field";
 import { MortgageSourceFields } from "./mortgage-source-fields";
+import { MortgageWorksheetDetails } from "./mortgage-worksheet-details";
+import { guidedSourceValuesChanged } from "@/lib/guided-source-confirmation";
 import { amountError } from "@/lib/guided-required-facts";
 
 function TextFact({ label, value, onChange, type = "text" }: { label: string; value: string; onChange: (value: string) => void; type?: "text" | "date" }) {
@@ -21,7 +23,9 @@ export function DeductionSourceDetails({ data, onChange, includeMortgages = true
   const donations = data.donationEntries ?? (data.charitableContributions.trim() ? [{ ...emptyDonationEntry, amount: data.charitableContributions }] : []);
   function setMortgages(entries: MortgageEntryData[]) {
     const known = entries.length > 0 && entries.every(entry => !amountError(entry.mortgageInterest, "mortgage interest"));
-    onChange({ ...data, mortgageEntries: entries, mortgageInterest: known ? sumGuidedDisplayAmounts(entries.map(entry => entry.mortgageInterest)).toFixed() : "" });
+    const changed = guidedSourceValuesChanged(data.mortgageEntries, entries);
+    onChange({ ...data, mortgageEntries: entries, mortgageInterest: known ? sumGuidedDisplayAmounts(entries.map(entry => entry.mortgageInterest)).toFixed() : "",
+      ...(changed && data.mortgageWorksheet ? { mortgageWorksheet: { ...data.mortgageWorksheet, sourceFactsConfirmed: null } } : {}) });
   }
   function setDonations(entries: DonationEntryData[]) {
     const total = sumGuidedDisplayAmounts(entries.map((entry) => entry.amount));
@@ -31,6 +35,7 @@ export function DeductionSourceDetails({ data, onChange, includeMortgages = true
     {includeMortgages && <>
     <h4>Mortgage interest — Form 1098</h4>
     <p className="guided-hint">Copy each lender&apos;s actual amounts and origination date. Leave an unknown fact blank; it must be resolved before calculating.</p>
+    {(mortgages.length > 0 || data.mortgageWorksheet) && <MortgageWorksheetDetails data={data.mortgageWorksheet} onChange={mortgageWorksheet => onChange({ ...data, mortgageWorksheet })} />}
     {mortgages.map((entry, index) => {
       const update = (change: Partial<MortgageEntryData>) => setMortgages(mortgages.map((item, i) => i === index ? { ...item, sourceFactsConfirmed: null, ...change } : item));
       return <fieldset className="guided-fieldset" key={index}><legend>Mortgage #{index + 1}</legend><div className="guided-form-grid">

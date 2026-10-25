@@ -201,8 +201,9 @@ function DeductionsSummary({ data, filingStatus, taxYear }: { data: DeductionDat
     { label: "Investment interest", value: current.investmentInterestExpense ?? "" },
     { label: "Wagering losses", value: current.gamblingLosses ?? "" },
     { label: "Gambling winnings (income)", value: current.gamblingWinnings ?? "" },
-    { label: "Mortgage interest", value: current.mortgageInterest },
+    { label: "Reported mortgage interest before payment allocation and limits", value: current.mortgageInterest },
     ...(current.mortgageEntries ?? []).flatMap((entry, index) => [
+      { label: `Mortgage ${index + 1} actual interest paid by this return`, value: entry.interestPaidByReturnAmount ?? "" },
       { label: `Mortgage ${index + 1} purchase points (before qualification)`, value: entry.pointsPaid ?? "" },
       { label: `Mortgage ${index + 1} actual real estate taxes`, value: entry.propertyTaxPaid ?? "" },
       { label: `Mortgage ${index + 1} annual insurance allocation (before limits)`, value: entry.hasMortgageInsuranceAllocation === true ? entry.insurancePremiumsAllocableToYear ?? "" : "" },

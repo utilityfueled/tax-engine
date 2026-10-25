@@ -26,6 +26,7 @@ import { isStartedRental, rentalFactErrors, type RentalSourceData } from "./guid
 import { nonW2TaxAllocationErrors } from "./guided-salt-facts";
 import { isStartedUnemployment, unemploymentEntries, unemploymentFactErrors, type UnemploymentSourceData } from "./guided-unemployment-facts";
 import type { MortgageSourceData } from "./guided-mortgage-facts";
+import type { MortgageWorksheetData } from "./guided-mortgage-worksheet";
 import { socialSecurityFactErrors, socialSecurityEntries, isStartedSocialSecurity, type SocialSecuritySourceData } from "./guided-social-security-facts";
 import type { RetirementSourceData } from "./guided-retirement-facts";
 import { vehicleFactErrors, type VehicleCreditData } from "./guided-vehicle-facts";
@@ -875,6 +876,7 @@ export interface DeductionData {
   gamblingWinnings?: string;
   gamblingLosses?: string;
   mortgageEntries?: MortgageEntryData[];
+  mortgageWorksheet?: MortgageWorksheetData;
   donationEntries?: DonationEntryData[];
 }
 
@@ -1458,6 +1460,7 @@ export function updateSectionData(
   const iraSourcesChanged = ["income-w2", "income-self-employment", "income-retirement"].includes(sectionId) && adjustments?.iraContributions;
   const hsaSourcesChanged = ["income-w2", "personal-info"].includes(sectionId) && adjustments?.hsaAccounts;
   const sourceValuesChanged = guidedSourceValuesChanged(state.sectionData[sectionId as keyof SectionDataMap], data);
+  const mortgageSourcesChanged = sourceValuesChanged && sectionId === "personal-info" && state.sectionData.deductions?.mortgageEntries?.length ? state.sectionData.deductions : undefined;
   const educatorSourcesChanged = sourceValuesChanged && ["income-w2", "personal-info", "credits", "income-investments"].includes(sectionId) && adjustments?.educatorExpenseSources;
   const studentLoanSourcesChanged = sourceValuesChanged && ["income-w2", "personal-info", "credits"].includes(sectionId) && adjustments?.studentLoanFacts;
   const benefitSourcesChanged = (sectionId === "income-w2" || sectionId === "income-self-employment") && credits?.dependentCareBenefits;
@@ -1473,6 +1476,7 @@ export function updateSectionData(
     sectionData: {
       ...state.sectionData,
       [sectionId]: data,
+      ...(mortgageSourcesChanged ? { deductions: { ...mortgageSourcesChanged, mortgageEntries: mortgageSourcesChanged.mortgageEntries?.map(entry => ({ ...entry, sourceFactsConfirmed: null })), ...(mortgageSourcesChanged.mortgageWorksheet ? { mortgageWorksheet: { ...mortgageSourcesChanged.mortgageWorksheet, sourceFactsConfirmed: null } } : {}) } } : {}),
       ...(ohioInterestChanged && ohioStateReturn ? { "state-return": { ...ohioStateReturn, ohioInterestAllocation: { ...ohioInterestChanged, sourceFactsConfirmed: null } } } : {}),
       ...((iraSourcesChanged || hsaSourcesChanged || educatorSourcesChanged || studentLoanSourcesChanged) && adjustments ? { adjustments: { ...adjustments, ...(studentLoanSourcesChanged ? { studentLoanFacts: { ...studentLoanSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(iraSourcesChanged ? { iraContributions: { ...iraSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(hsaSourcesChanged ? { hsaAccounts: hsaSourcesChanged.map(account => ({ ...account, sourceFactsConfirmed: null })) } : {}), ...(educatorSourcesChanged ? { educatorExpenseSources: educatorSourcesChanged.map(source => ({ ...source, sourceFactsConfirmed: null })) } : {}) } } : {}),
       ...(benefitSourcesChanged ? { credits: { ...credits, dependentCareBenefits: { ...credits.dependentCareBenefits,
@@ -1745,10 +1749,10 @@ function validateUnemploymentSection(data: UnemploymentData | undefined, state: 
   return validateRequiredFacts(unemploymentFactErrors(data, state.segmentation.filingStatus, state.taxYear, state.sectionData["personal-info"], state.sectionData["state-return"]));
 }
 
-function validateDeductionsSection(data: DeductionData | undefined, taxYear?: number | null, sourceErrors: Record<string, string> = {}, filingStatus?: FilingStatus | null): SectionValidationResult {
-  if (Object.keys(sourceErrors).length) return validateRequiredFacts({ ...deductionFactErrors(data, taxYear, filingStatus), ...sourceErrors });
+function validateDeductionsSection(data: DeductionData | undefined, taxYear?: number | null, sourceErrors: Record<string, string> = {}, filingStatus?: FilingStatus | null, spouse?: unknown): SectionValidationResult {
+  if (Object.keys(sourceErrors).length) return validateRequiredFacts({ ...deductionFactErrors(data, taxYear, filingStatus, spouse), ...sourceErrors });
   if (!data) return EMPTY_SECTION("deductions info");
-  return validateRequiredFacts(deductionFactErrors(data, taxYear, filingStatus));
+  return validateRequiredFacts(deductionFactErrors(data, taxYear, filingStatus, spouse));
 }
 
 function validateAdjustmentsSection(data: AdjustmentData | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, education: StudentLoanEducationSources = []): SectionValidationResult {
@@ -1795,7 +1799,7 @@ export function validateSection(
     case "income-unemployment":
       return validateUnemploymentSection(getSectionData(state, "income-unemployment"), state);
     case "deductions":
-      return validateDeductionsSection(getSectionData(state, "deductions"), state.taxYear, nonW2TaxAllocationErrors(state), state.segmentation.filingStatus);
+      return validateDeductionsSection(getSectionData(state, "deductions"), state.taxYear, nonW2TaxAllocationErrors(state), state.segmentation.filingStatus, state.sectionData["personal-info"]?.spouse);
     case "adjustments": {
       const errors = { ...hsaFactErrors(getSectionData(state, "adjustments")?.hsaAccounts, state.segmentation.filingStatus, state.taxYear, getSectionData(state, "income-w2")?.entries ?? [], getSectionData(state, "personal-info"), state.segmentation.lifeEvents.includes("hsa-contributions")), ...educatorFactErrors(getSectionData(state, "adjustments"), state.segmentation.filingStatus, state.taxYear, state.segmentation.lifeEvents.includes("educator-expenses")) };
       let loanEducation: StudentLoanEducationSources = [];

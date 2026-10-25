@@ -33,6 +33,23 @@ export type MortgageSourceData = {
   mortgageCreditCertificate?: boolean | null;
   specialCircumstances?: boolean | null;
   maximumBalanceDuringYear?: string;
+  balanceMethod?: "" | "highest_balance" | "lender_average";
+  lenderAverageBalance?: string;
+  balanceSourceReference?: string;
+  interestPaidByReturnAmount?: string;
+  interestPaidByOthers?: string;
+  interestDeductedElsewhere?: string;
+  sameYearInterestRefund?: string;
+  nonqualifiedInterest?: string;
+  pointsPaidByReturnAmount?: string;
+  pointsPaidByOthers?: string;
+  pointsNotInterest?: string;
+  pointsPaidDate?: string;
+  pointsUse?: "" | "purchase" | "build";
+  bindingContractApplies?: boolean | null;
+  bindingContractSignedDate?: string;
+  bindingContractRequiredClosingDate?: string;
+  bindingContractPurchaseDate?: string;
   refundOfOverpaidInterest?: string;
   mortgageInsurancePremiums?: string;
   pointsPaid?: string;
@@ -49,7 +66,7 @@ export type MortgageSourceData = {
 } & Partial<Record<keyof typeof mortgagePointFacts, boolean | null>>;
 
 /** Bounded ordinary acquisition debt only; never reinterpret Box 2 as an average. */
-export function mortgageFactErrors(entries: MortgageEntryData[], taxYear?: number | null, filingStatus?: FilingStatus | null): Record<string, string> {
+export function mortgageFactErrors(entries: MortgageEntryData[], taxYear?: number | null, filingStatus?: FilingStatus | null, sourceWorksheet = false): Record<string, string> {
   const errors: Record<string, string> = {};
   const loans = new Set<string>();
   const homes = { "main-home": new Set<string>(), "second-home": new Set<string>() };
@@ -74,7 +91,7 @@ export function mortgageFactErrors(entries: MortgageEntryData[], taxYear?: numbe
     for (const [field, label] of [
       ["securedDebt", "legally secured debt on this home"], ["ownershipInterest", "an ownership interest in this home"],
       ["obligationToRepay", "a genuine obligation and intention to repay the debt"],
-      ["interestPaidByReturn", "all interest claimed was paid by taxpayers on this return, with no amount paid by another return or a subsidy"],
+      ["interestPaidByReturn", "the claimed payment share was paid by taxpayers on this return"],
       ["currentYearInterestOnly", "the source interest is deductible payment for this year, with no prepaid interest for a later year"],
     ] as const) if (entry[field] !== true) error(field, `This ordinary route requires actual confirmation of ${label}.`);
     for (const [field, label] of [["rentalOrBusinessUse", "rental or business use"], ["mortgageCreditCertificate", "a mortgage credit certificate"], ["specialCircumstances", "cooperative, construction, ground-rent or other special mortgage rules"]] as const) {
@@ -86,6 +103,7 @@ export function mortgageFactErrors(entries: MortgageEntryData[], taxYear?: numbe
       ["refundOfOverpaidInterest", "prior-year interest refund, Box 4"], ["mortgageInsurancePremiums", "mortgage insurance premiums, Box 5"],
       ["pointsPaid", "purchase points, Box 6"], ["propertyTaxPaid", "qualified real estate taxes actually paid from this mortgage account"],
     ] as const) {
+      if (sourceWorksheet && field === "maximumBalanceDuringYear" && entry.balanceMethod === "lender_average") continue;
       const message = amountError(entry[field], label);
       if (message) error(field, message);
     }
@@ -98,7 +116,9 @@ export function mortgageFactErrors(entries: MortgageEntryData[], taxYear?: numbe
     } else balancesKnown = false;
     if (validAmount("refundOfOverpaidInterest") && parseGuidedCurrency(entry.refundOfOverpaidInterest).gt(0)) error("refund", "A prior-year interest refund needs its tax-benefit recovery worksheet; retain the actual refund until that route is supported.");
     if (validAmount("propertyTaxPaid") && parseGuidedCurrency(entry.propertyTaxPaid).gt(0) && entry.propertyTaxDisbursementConfirmed !== true) error("property-tax", "Confirm actual qualified real estate tax disbursements, excluding escrow deposits, fees, assessments and amounts entered elsewhere.");
-    if (validAmount("pointsPaid") && parseGuidedCurrency(entry.pointsPaid).gt(0)) {
+    const ownPoints = sourceWorksheet && !amountError(entry.pointsPaidByReturnAmount, "points") && !amountError(entry.pointsNotInterest, "point fees")
+      ? parseGuidedCurrency(entry.pointsPaidByReturnAmount).minus(parseGuidedCurrency(entry.pointsNotInterest)) : parseGuidedCurrency(validAmount("pointsPaid") ? entry.pointsPaid : "0");
+    if (validAmount("pointsPaid") && ownPoints.gt(0)) {
       if (entry.propertyUse !== "main-home") error("points-home", "Purchase points on a second home need their actual amortization worksheet; they cannot use the main-home full-deduction route.");
       if (!year || !entry.originationDate.startsWith(`${year}-`)) error("points-year", "Prior-loan points need their actual amortization history; only qualifying current-year purchase points are supported here.");
       for (const field of Object.keys(mortgagePointFacts) as (keyof typeof mortgagePointFacts)[]) if (entry[field] !== true) error(field, "Confirm every full-deduction purchase-points condition. Other points require an amortization or allocation worksheet.");
@@ -121,6 +141,6 @@ export function mortgageFactErrors(entries: MortgageEntryData[], taxYear?: numbe
   // This conservative bound supports the fully deductible path without inventing
   // an average balance or assuming the old debt category survives refinancing.
   const bound = filingStatus === "mfs" ? "375000" : "750000";
-  if (balancesKnown && maximumDebt.gt(bound)) errors.mortgageDebtLimit = "The combined actual maximum balances exceed this ordinary route's debt bound. The Pub. 936 debt-limit worksheet is required; Box 2 cannot substitute for it.";
+  if (!sourceWorksheet && balancesKnown && maximumDebt.gt(bound)) errors.mortgageDebtLimit = "The combined actual maximum balances exceed this ordinary route's debt bound. The Pub. 936 debt-limit worksheet is required; Box 2 cannot substitute for it.";
   return errors;
 }
