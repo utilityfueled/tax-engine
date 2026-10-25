@@ -109,3 +109,20 @@ entitlements, duplicate subscription prevention, malformed input, dependency
 outages and self-host bypass. These are synthetic dependency tests, not live
 Stripe, Redis, hosted authentication or staging evidence. Evidence logs:
 `.local/upgrade-evidence/billing-boundaries-{red,green,types}.log`.
+
+## Legacy metadata migration and actual database restoration — 2026-10-25
+
+An explicit operator command now defaults to a count-only dry run and applies
+allowlist cleanup transactionally. Invalid rows, identity mismatches and bounded
+size failures abort without partial updates. Commit uncertainty is reported
+without asserting rollback. Existing backup/WAL retention remains an operator
+responsibility. [Procedure and limitations](hosted-metadata-migration.md).
+
+Fourteen focused migration/store tests pass against disposable PostgreSQL 16,
+including two-owner isolation, failed-row rollback, source-year preservation and
+connection/commit failures. A separate actual `pg_dump`/`pg_restore` run passed
+across nine application tables: billing events and purchases, exact fractional
+provider costs, reservations, account/reminder metadata and two same-ID tenant
+workspaces all survived. The restored legacy fields required cleanup again,
+which was verified idempotent. Web types and scoped lint pass. This is local
+synthetic evidence, not staging authorization or hosted auth recovery proof.
