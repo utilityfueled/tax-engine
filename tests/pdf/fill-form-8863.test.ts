@@ -11,6 +11,7 @@ import { calculateForm8863 } from "@/engine/forms/form-8863.js";
 import { fillForm8863, FORM_8863_FIELDS } from "@/pdf/fill-form-8863.js";
 import { formatCurrency } from "@/pdf/pdf-utils.js";
 import type { TaxYearInput } from "@/models/inputs.js";
+import { execFileSync } from "node:child_process";
 
 /** Helper: get text value from a filled PDF field. */
 function getFieldText(doc: PDFDocument, fieldName: string): string | undefined {
@@ -99,6 +100,8 @@ const singleAOCFixture: TaxYearInput = {
       {
         name: "Jake Miller",
         qualifiedExpenses: "4000",
+        priorYearsClaimed: 0,
+        felonyDrugConviction: false,
       },
     ],
     llcExpenses: "0",
@@ -482,8 +485,125 @@ describe("Form 8863 PDF fill — MFJ with AOC + LLC, no phase-out", () => {
     expect(getFieldText(doc, F.line30)).toBe("2375");
   });
 
-  it("Part III Line 31 — LLC expenses", () => {
-    expect(getFieldText(doc, F.line31)).toBe("8000");
+  it("does not assign unallocated LLC expenses to the AOC student", () => {
+    expect(getFieldText(doc, F.line31) ?? "").toBe("");
+  });
+});
+
+// Source: spec/federal/form-8863.yaml review mapping contract; official 2025
+// instructions require one Part III per student and the Credit Limit Worksheet.
+describe("Form 8863 audited source and multi-student mapping", () => {
+  it("copies audited MAGI, refundable eligibility and the actual liability limit", async () => {
+    const result = calculateFederalTax(singleAOCFixture);
+    result.form8863 = calculateForm8863({
+      aocStudents: [{ name: "Jake Miller", qualifiedExpenses: new Decimal(4000) }],
+      llcExpenses: new Decimal(0), magi: new Decimal(85000), filingStatus: "single",
+      refundableAocEligible: false, taxLiabilityLimit: new Decimal(125),
+    });
+    const doc = await fillForm8863(singleAOCFixture, result, BLANK_8863);
+    expect(getFieldText(doc, F.line3)).toBe("85000");
+    expect(getFieldText(doc, F.line7)).toBe("1250");
+    expect(getFieldText(doc, F.line8) ?? "").toBe("");
+    expect(getFieldText(doc, F.line9)).toBe("1250");
+    expect(getFieldText(doc, F.line19)).toBe("125");
+    expect(isChecked(doc, F.underAge24)).toBe(true);
+  });
+
+  it("leaves unknown source answers blank and prints actual identity and institutions", async () => {
+    const input = structuredClone(singleAOCFixture);
+    input.educationExpenses!.aocStudents[0] = {
+      name: "Jake Miller", qualifiedExpenses: "4000", studentTaxId: "444-55-6666",
+      enrolledAtLeastHalfTime: true, pursuingDegreeOrCredential: true, completedFirstFourYearsBeforeYear: false,
+      institutions: [{ name: "Example College", address: "123 Campus Way, Denver CO 80202", ein: "12-3456789", receivedCurrentYear1098T: true, receivedPriorYear1098TWithBox7: false }],
+    };
+    const doc = await fillForm8863(input, calculateFederalTax(input), BLANK_8863);
+    expect(isChecked(doc, F.q23No)).toBe(false);
+    expect(isChecked(doc, F.q23Yes)).toBe(false);
+    expect(isChecked(doc, F.q26No)).toBe(false);
+    expect(isChecked(doc, F.q26Yes)).toBe(false);
+    expect(isChecked(doc, F.q24Yes)).toBe(true);
+    expect(isChecked(doc, F.q25No)).toBe(true);
+    expect(getFieldText(doc, F.studentSsn1)).toBe("444");
+    expect(getFieldText(doc, F.studentSsn2)).toBe("55");
+    expect(getFieldText(doc, F.studentSsn3)).toBe("6666");
+    expect(getFieldText(doc, F.inst1Name)).toBe("Example College");
+    expect(isChecked(doc, F.inst1_1098tYes)).toBe(true);
+    expect(isChecked(doc, F.inst1_1098tPriorNo)).toBe(true);
+    expect(getFieldText(doc, "topmostSubform[0].Page2[0].Line22a[0].f2_11[0]")).toBe("1");
+    expect(getFieldText(doc, "topmostSubform[0].Page2[0].Line22a[0].f2_19[0]")).toBe("9");
+  });
+
+  it("includes a separate Part III for every actual AOC and LLC student", async () => {
+    const input = structuredClone(mfjPhaseOutFixture);
+    input.educationExpenses!.aocStudents.push({ name: "Second AOC Student", qualifiedExpenses: "2000", priorYearsClaimed: 4 });
+    input.educationExpenses!.llcStudents = [{ name: "Separate LLC Student", qualifiedExpenses: "8000", studentTaxId: "333-44-5555", studentRole: "spouse" }];
+    const doc = await fillForm8863(input, calculateFederalTax(input), BLANK_8863);
+    expect(doc.getPageCount()).toBe(4);
+    expect(getFieldText(doc, F.line31) ?? "").toBe("");
+    const pages = JSON.parse(execFileSync(process.env.TAX_ENGINE_PDF_TEST_PYTHON ?? "python3", ["-c", "import sys,json,io; from pypdf import PdfReader; print(json.dumps([p.extract_text() or '' for p in PdfReader(io.BytesIO(sys.stdin.buffer.read())).pages]))"], { input: await doc.save(), encoding: "utf8" })) as string[];
+    expect(pages[2]).toContain("Second AOC Student");
+    expect(pages[3]).toContain("Separate LLC Student");
+    expect(pages[3]).toContain("8000");
+    expect(pages[2]).not.toContain("Separate LLC Student");
+  });
+
+  it("adds institution overflow through line 22 without repeating student credit", async () => {
+    const input = structuredClone(singleAOCFixture);
+    input.educationExpenses!.aocStudents[0].institutions = Array.from({ length: 3 }, (_, index) => ({
+      name: `Campus ${index + 1}`, address: `${index + 1} College Street`, ein: "12-3456789", receivedCurrentYear1098T: false, receivedPriorYear1098TWithBox7: true,
+    }));
+    const doc = await fillForm8863(input, calculateFederalTax(input), BLANK_8863);
+    expect(doc.getPageCount()).toBe(3);
+    expect(getFieldText(doc, F.inst2Name)).toBe("Campus 2");
+    expect(isChecked(doc, F.inst2_1098tNo)).toBe(true);
+    expect(isChecked(doc, F.inst2_1098tPriorYes)).toBe(true);
+    const pages = JSON.parse(execFileSync(process.env.TAX_ENGINE_PDF_TEST_PYTHON ?? "python3", ["-c", "import sys,json,io; from pypdf import PdfReader; print(json.dumps([p.extract_text() or '' for p in PdfReader(io.BytesIO(sys.stdin.buffer.read())).pages]))"], { input: await doc.save(), encoding: "utf8" })) as string[];
+    expect(pages[2]).toContain("Campus 3");
+    expect(pages[2]).not.toContain("2500");
+  });
+
+  it("keeps the audited ratio precision near the carry boundary", async () => {
+    const input = structuredClone(singleAOCFixture);
+    input.w2s[0].wages = "80000.10";
+    const result = calculateFederalTax(input);
+    // Use an exact source-audit ratio here: printed decimals must not become
+    // 0.1000 when the fractional part rounds across the integer boundary.
+    for (const line of result.form8863!.lines) if (line.line === "6" || line.line === "17") line.value = new Decimal("0.99999");
+    const doc = await fillForm8863(input, result, BLANK_8863);
+    expect(getFieldText(doc, F.line6int)).toBe("0");
+    expect(getFieldText(doc, F.line6dec)).toBe("99999");
+  });
+
+  it("rejects mismatched student counts instead of dropping source rows", async () => {
+    const result = calculateFederalTax(singleAOCFixture);
+    const input = structuredClone(singleAOCFixture);
+    input.educationExpenses!.llcStudents = [{ name: "Additional student", qualifiedExpenses: "0" }];
+    await expect(fillForm8863(input, result, BLANK_8863)).rejects.toThrow(/student audit count/);
+    input.educationExpenses!.aocStudents = [];
+    await expect(fillForm8863(input, result, BLANK_8863)).rejects.toThrow(/student audit count/);
+  });
+
+  it("leaves the review form blank when no education facts are present", async () => {
+    const input = structuredClone(singleAOCFixture);
+    input.educationExpenses = undefined;
+    const doc = await fillForm8863(input, calculateFederalTax(input), BLANK_8863);
+    expect(getFieldText(doc, F.studentName) ?? "").toBe("");
+  });
+
+  it.each(["missing", "duplicate", "nonfinite"])("rejects %s audit entries instead of recomputing credits", async (failure) => {
+    const result = calculateFederalTax(singleAOCFixture);
+    const lines = result.form8863!.lines;
+    const line = lines.find(entry => entry.line === "19")!;
+    if (failure === "missing") result.form8863!.lines = lines.filter(entry => entry.line !== "19");
+    if (failure === "duplicate") lines.push(line);
+    if (failure === "nonfinite") line.value = new Decimal(NaN);
+    await expect(fillForm8863(singleAOCFixture, result, BLANK_8863)).rejects.toThrow(/audit/i);
+  });
+
+  it("requires the persisted result when education facts are present", async () => {
+    const result = calculateFederalTax(singleAOCFixture);
+    result.form8863 = undefined;
+    await expect(fillForm8863(singleAOCFixture, result, BLANK_8863)).rejects.toThrow(/audit|result/i);
   });
 });
 

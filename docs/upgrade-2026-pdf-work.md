@@ -43,3 +43,28 @@ lint. A mocked synthetic renderer exercises the future complete-data path and
 failure cases; it is explicitly not an official form, tax calculation oracle or
 independent review. The unmocked production-registry test proves both 2025 and
 2026 filing requests remain unavailable. No usable filing packet is claimed.
+
+## Education source mapping and complete-input review calculation
+
+Official 2025 Form 8863 and its instructions were refreshed on 2026-10-24:
+https://www.irs.gov/pub/irs-pdf/f8863.pdf and
+https://www.irs.gov/instructions/i8863 (Parts I/II, credit-limit worksheet,
+Part III lines 20–31). The spec contract preceded regression tests: eight
+mapping assertions failed before replacement. The mapper now copies the
+persisted audit, including actual MAGI/refundability/liability limits, requires
+complete unique global audit lines and exact student-line counts, and preserves
+unknown answers. Every actual AOC/LLC student gets a separate Part III; more
+than two institutions get an extra page completed only through line 22. A
+legacy unallocated LLC total is not assigned to an AOC student. This does not
+qualify a legacy incomplete record or enable filing.
+
+Seventy-six focused PDF, identifier and workspace download tests pass. Engine
+and web types and spec validation pass; scoped lint has zero errors (existing
+and fixture non-null warnings remain). A four-page synthetic packet was rendered
+and all four pages visually inspected, including exact EIN digits, blank person
+IDs, the separate LLC amount and institutional overflow with no duplicated
+credit. Rendered local evidence: `.local/upgrade-evidence/education-review.pdf`.
+The local review pipeline calculates with complete facts before clearing
+structured person/payer identifiers from input and calculated state copies.
+Decimal audit values and original records are preserved. Review filenames,
+notices, no-store behavior and the empty filing qualification registry remain.

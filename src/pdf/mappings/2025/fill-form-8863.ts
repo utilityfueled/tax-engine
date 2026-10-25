@@ -5,16 +5,14 @@ import { assertPdfExportAllowed } from "../../export-policy.js";
  *
  * Field names verified against 2025 Form 8863 fillable PDF debug labels.
  *
- * This filler recomputes Form 8863 from inputs and AGI (same pattern as
- * Form 8949), since the engine result is not persisted on TaxReturnResult.
+ * Copies the persisted calculation audit and actual student source facts.
+ * Extra page 2 copies preserve every student and additional institutions.
  */
 
-import { PDFDocument } from "pdf-lib";
+import { PDFDocument, type PDFForm } from "pdf-lib";
 import Decimal from "decimal.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
-import type { FilingStatus } from "@/models/constants.js";
-import { calculateForm8863 } from "@/engine/forms/form-8863.js";
 import {
   loadReviewTemplate,
   setTextField,
@@ -115,48 +113,47 @@ export const FORM_8863_FIELDS = {
 
 const F = FORM_8863_FIELDS;
 
-// ─── Helpers ───────────────────────────────────────────────────────────────
+// ─── Source and audit mapping ─────────────────────────────────────────────
 
-function d(v: string | number | Decimal): Decimal {
-  return v instanceof Decimal ? v : new Decimal(v);
+type Education = NonNullable<TaxYearInput["educationExpenses"]>;
+type AocStudent = Education["aocStudents"][number];
+type LlcStudent = NonNullable<Education["llcStudents"]>[number];
+
+function answer(form: PDFForm, value: boolean | undefined, yes: string, no: string): void {
+  // An omitted answer is unknown. Never manufacture a negative response.
+  if (value === undefined) return;
+  setCheckBox(form, yes, value);
+  setCheckBox(form, no, !value);
 }
 
-function getThreshold(filingStatus: string): Decimal {
-  return filingStatus === "married_filing_jointly"
-    ? new Decimal(180000)
-    : new Decimal(90000);
+function fillStudentSource(
+  form: PDFForm, student: AocStudent | LlcStudent, name: string, ssn: string,
+  institutionOffset: number,
+): void {
+  setTextField(form, F.p2Name, name);
+  setTextField(form, F.p2Ssn1, ssn.slice(0, 3));
+  setTextField(form, F.p2Ssn2, ssn.slice(3, 5));
+  setTextField(form, F.p2Ssn3, ssn.slice(5, 9));
+  setTextField(form, F.studentName, student.name);
+  const studentId = student.studentTaxId?.replaceAll("-", "") ?? "";
+  setTextField(form, F.studentSsn1, studentId.slice(0, 3));
+  setTextField(form, F.studentSsn2, studentId.slice(3, 5));
+  setTextField(form, F.studentSsn3, studentId.slice(5, 9));
+  for (const [index, institution] of (student.institutions ?? []).slice(institutionOffset, institutionOffset + 2).entries()) {
+    const prefix = index === 0 ? "inst1" : "inst2";
+    setTextField(form, F[`${prefix}Name`], institution.name);
+    setTextField(form, F[`${prefix}Address`], institution.address);
+    answer(form, institution.receivedCurrentYear1098T, F[`${prefix}_1098tYes`], F[`${prefix}_1098tNo`]);
+    answer(form, institution.receivedPriorYear1098TWithBox7, F[`${prefix}_1098tPriorYes`], F[`${prefix}_1098tPriorNo`]);
+    if (institution.ein) {
+      const ein = institution.ein.replaceAll("-", "");
+      for (let digit = 0; digit < 9; digit++) {
+        const path = index === 0 ? p2line22a : p2line22b;
+        setTextField(form, path(`f2_${(index === 0 ? 11 : 22) + digit}[0]`), ein[digit] ?? "");
+      }
+    }
+  }
 }
-
-function getPhaseOutRange(filingStatus: string): Decimal {
-  return filingStatus === "married_filing_jointly"
-    ? new Decimal(20000)
-    : new Decimal(10000);
-}
-
-function computePhaseOutRatio(magi: Decimal, filingStatus: string): Decimal {
-  if (filingStatus === "married_filing_separately") return new Decimal(0);
-  const threshold = getThreshold(filingStatus);
-  const range = getPhaseOutRange(filingStatus);
-  const excess = Decimal.max(threshold.minus(magi), new Decimal(0));
-  if (excess.gte(range)) return new Decimal(1);
-  if (excess.lte(0)) return new Decimal(0);
-  return excess.dividedBy(range);
-}
-
-/** Format a phase-out ratio as integer + 3-digit decimal parts (e.g. 1.000 or 0.850). */
-function formatDecimalRatio(ratio: Decimal): { intPart: string; decPart: string } {
-  const clamped = Decimal.min(Decimal.max(ratio, new Decimal(0)), new Decimal(1));
-  const intPart = clamped.floor().toFixed(0);
-  const decPart = clamped
-    .minus(clamped.floor())
-    .times(1000)
-    .toDecimalPlaces(0, Decimal.ROUND_HALF_UP)
-    .toFixed(0)
-    .padStart(3, "0");
-  return { intPart, decPart };
-}
-
-// ─── Fill Logic ────────────────────────────────────────────────────────────
 
 export async function fillForm8863(
   input: TaxYearInput,
@@ -165,124 +162,76 @@ export async function fillForm8863(
 ): Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
   const doc = await loadReviewTemplate(blankPdfPath, 2025);
-  const form = doc.getForm();
-
   const edu = input.educationExpenses;
   if (!edu) return doc;
-
-  // Recompute Form 8863 from inputs (engine result isn't on TaxReturnResult)
-  const form8863 = calculateForm8863({
-    aocStudents: edu.aocStudents.map((s) => ({
-      name: s.name,
-      qualifiedExpenses: d(s.qualifiedExpenses),
-      priorYearsClaimed: s.priorYearsClaimed,
-    })),
-    llcExpenses: d(edu.llcExpenses ?? 0),
-    magi: result.agi,
-    filingStatus: result.filingStatus as FilingStatus,
-  });
-
-  const filingStatus = result.filingStatus;
-  const magi = result.agi;
-
-  // ── Page 1 Header ──
-  const name = input.taxpayer.spouse
-    ? `${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName} & ${input.taxpayer.spouse.firstName} ${input.taxpayer.spouse.lastName}`
-    : `${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName}`;
+  const calculation = result.form8863;
+  if (!calculation) throw new Error("Form 8863 persisted calculation result and audit are required");
+  const byLine = new Map<string, Decimal[]>();
+  for (const entry of calculation.lines) {
+    if (entry.form !== "Form 8863" || !entry.value.isFinite()) throw new Error("Invalid Form 8863 audit entry");
+    byLine.set(entry.line, [...(byLine.get(entry.line) ?? []), entry.value]);
+  }
+  const audited = (line: string, index = 0, count = 1): Decimal => {
+    const values = byLine.get(line) ?? [];
+    if (values.length !== count || !values[index]) throw new Error(`Missing or duplicate Form 8863 audit entry ${line}`);
+    return values[index];
+  };
+  const form = doc.getForm();
+  const primary = input.taxpayer.primary;
+  const spouse = input.taxpayer.spouse;
+  const name = spouse ? `${primary.firstName} ${primary.lastName} & ${spouse.firstName} ${spouse.lastName}` : `${primary.firstName} ${primary.lastName}`;
+  const ssn = primary.ssn.replaceAll("-", "");
   setTextField(form, F.name, name);
-
-  const ssn = input.taxpayer.primary.ssn.replace(/-/g, "");
   setTextField(form, F.ssn1, ssn.slice(0, 3));
   setTextField(form, F.ssn2, ssn.slice(3, 5));
   setTextField(form, F.ssn3, ssn.slice(5, 9));
-
-  // ── Part I: Refundable American Opportunity Credit ──
-  const threshold = getThreshold(filingStatus);
-  const phaseOutRange = getPhaseOutRange(filingStatus);
-  const excessOverThreshold = Decimal.max(threshold.minus(magi), new Decimal(0));
-  const phaseOutRatio = computePhaseOutRatio(magi, filingStatus);
-
-  setCurrencyField(form, F.line1, form8863.aocTotalTentative);
-  setCurrencyField(form, F.line2, threshold);
-  setCurrencyField(form, F.line3, magi);
-  setCurrencyField(form, F.line4, excessOverThreshold);
-  setCurrencyField(form, F.line5, phaseOutRange);
-
-  const { intPart: l6int, decPart: l6dec } = formatDecimalRatio(phaseOutRatio);
-  setTextField(form, F.line6int, l6int);
-  setTextField(form, F.line6dec, l6dec);
-
-  setCurrencyField(form, F.line7, form8863.aocAfterPhaseOut);
-  setCurrencyField(form, F.line8, form8863.aocRefundable);
-
-  // ── Part II: Nonrefundable Education Credits ──
-  setCurrencyField(form, F.line9, form8863.aocNonrefundable);
-
-  const llcExpenses = d(edu.llcExpenses ?? 0);
-  const llcQualifying = Decimal.min(llcExpenses, new Decimal(10000));
-  const llcTentative = llcQualifying
-    .times(new Decimal(0.20))
-    .toDecimalPlaces(0, Decimal.ROUND_HALF_UP);
-
-  setCurrencyField(form, F.line10, llcExpenses);
-  setCurrencyField(form, F.line11, llcQualifying);
-  setCurrencyField(form, F.line12, llcTentative);
-  setCurrencyField(form, F.line13, threshold);
-  setCurrencyField(form, F.line14, magi);
-  setCurrencyField(form, F.line15, excessOverThreshold);
-  setCurrencyField(form, F.line16, phaseOutRange);
-
-  const { intPart: l17int, decPart: l17dec } = formatDecimalRatio(phaseOutRatio);
-  setTextField(form, F.line17int, l17int);
-  setTextField(form, F.line17dec, l17dec);
-
-  setCurrencyField(form, F.line18, form8863.llcAfterPhaseOut);
-  setCurrencyField(form, F.line19, form8863.totalNonrefundable);
-
-  // ── Page 2 Header ──
-  setTextField(form, F.p2Name, name);
-  setTextField(form, F.p2Ssn1, ssn.slice(0, 3));
-  setTextField(form, F.p2Ssn2, ssn.slice(3, 5));
-  setTextField(form, F.p2Ssn3, ssn.slice(5, 9));
-
-  // ── Part III: First AOC student ──
-  if (edu.aocStudents.length > 0) {
-    const student = edu.aocStudents[0];
-    const studentResult = form8863.aocPerStudent[0];
-
-    setTextField(form, F.studentName, student.name);
-
-    // Q23: Has AOC been claimed for 4+ prior tax years?
-    const priorYears = student.priorYearsClaimed ?? 0;
-    if (priorYears >= 4) {
-      setCheckBox(form, F.q23Yes, true);
-    } else {
-      setCheckBox(form, F.q23No, true);
-      // Q26: Felony conviction — assume No (input doesn't track this)
-      setCheckBox(form, F.q26No, true);
-    }
-
-    // Lines 27–30: AOC computation
-    const qualifiedExpenses = Decimal.min(d(student.qualifiedExpenses), new Decimal(4000));
-    setCurrencyField(form, F.line27, qualifiedExpenses);
-
-    const line28 = Decimal.max(qualifiedExpenses.minus(new Decimal(2000)), new Decimal(0));
-    setCurrencyField(form, F.line28, line28);
-
-    if (line28.gt(0)) {
-      const line29 = line28
-        .times(new Decimal(0.25))
-        .toDecimalPlaces(0, Decimal.ROUND_HALF_UP);
-      setCurrencyField(form, F.line29, line29);
-    }
-
-    setCurrencyField(form, F.line30, studentResult.tentativeCredit);
+  for (const line of ["1", "2", "3", "4", "5", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "18", "19"] as const) {
+    setCurrencyField(form, F[`line${line}`], audited(line));
   }
-
-  // Line 31: LLC expenses
-  if (llcExpenses.gt(0)) {
-    setCurrencyField(form, F.line31, llcExpenses);
+  for (const line of ["6", "17"] as const) {
+    const ratio = audited(line);
+    if (ratio.lt(0) || ratio.gt(1)) throw new Error("Invalid Form 8863 audit phase-out factor");
+    const [integer, fraction] = ratio.toFixed(Math.max(3, ratio.decimalPlaces())).split(".");
+    setTextField(form, F[`line${line}int`], integer);
+    setTextField(form, F[`line${line}dec`], fraction);
   }
+  setCheckBox(form, F.underAge24, audited("7").gt(0) && !calculation.refundableAocEligible);
 
+  // Repeated audit lines are emitted in source student order. Requiring the
+  // exact cardinality prevents silent omission or reassignment to another child.
+  for (const line of ["27", "28", "29", "30"]) {
+    if ((byLine.get(line)?.length ?? 0) !== edu.aocStudents.length) throw new Error("Form 8863 student audit count mismatch");
+  }
+  if ((byLine.get("31")?.length ?? 0) !== (edu.llcStudents?.length ?? 0)) throw new Error("Form 8863 LLC student audit count mismatch");
+  let firstStudentPage = true;
+  const appendStudent = async (student: AocStudent | LlcStudent, index: number, kind: "aoc" | "llc") => {
+    for (let offset = 0; offset < Math.max(1, student.institutions?.length ?? 0); offset += 2) {
+      const studentDoc = firstStudentPage ? doc : await loadReviewTemplate(blankPdfPath, 2025);
+      const studentForm = studentDoc.getForm();
+      fillStudentSource(studentForm, student, name, ssn, offset);
+      // Additional institutions use a page completed only through line 22.
+      if (offset === 0 && kind === "aoc") {
+        const aoc = student as AocStudent;
+        answer(studentForm, aoc.priorYearsClaimed === undefined ? undefined : aoc.priorYearsClaimed >= 4, F.q23Yes, F.q23No);
+        // Q24 asks about BOTH half-time enrollment and a degree/credential.
+        const halfTimeDegree = aoc.enrolledAtLeastHalfTime === false || aoc.pursuingDegreeOrCredential === false
+          ? false : aoc.enrolledAtLeastHalfTime === true && aoc.pursuingDegreeOrCredential === true ? true : undefined;
+        answer(studentForm, halfTimeDegree, F.q24Yes, F.q24No);
+        answer(studentForm, aoc.completedFirstFourYearsBeforeYear, F.q25Yes, F.q25No);
+        answer(studentForm, aoc.felonyDrugConviction, F.q26Yes, F.q26No);
+        for (const line of ["27", "28", "29", "30"] as const) setCurrencyField(studentForm, F[`line${line}`], audited(line, index, edu.aocStudents.length));
+      } else if (offset === 0 && kind === "llc") {
+        setCurrencyField(studentForm, F.line31, audited("31", index, edu.llcStudents?.length ?? 0));
+      }
+      if (!firstStudentPage) {
+        studentForm.flatten();
+        const [page] = await doc.copyPages(studentDoc, [1]);
+        doc.addPage(page);
+      }
+      firstStudentPage = false;
+    }
+  };
+  for (const [index, student] of edu.aocStudents.entries()) await appendStudent(student, index, "aoc");
+  for (const [index, student] of (edu.llcStudents ?? []).entries()) await appendStudent(student, index, "llc");
   return doc;
 }
