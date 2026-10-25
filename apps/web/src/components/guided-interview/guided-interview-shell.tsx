@@ -660,6 +660,7 @@ function SectionContent({
     case "payments":
       return (
         <SectionPayments
+          taxYear={state.taxYear}
           data={getSectionData(state, "payments")}
           onDataChange={(data: PaymentData) =>
             onStateChange(updateSectionData(state, "payments", data))

@@ -1,3 +1,4 @@
+import { estimatedTaxFactErrors, type EstimatedTaxFactsData } from "./guided-estimated-tax-facts";
 import { guidedForeignTaxFactErrors, type ForeignTaxElectionData } from "./guided-foreign-tax-election";
 import { premiumTaxCreditFactErrors, type PremiumTaxCreditData } from "./guided-premium-tax-credit-facts";
 import { schedule1AFactErrors } from "./guided-schedule-1-a-facts";
@@ -979,6 +980,7 @@ export const emptyEstimatedPayment: EstimatedPaymentEntry = {
 };
 
 export interface PaymentData {
+  estimatedTaxFacts?: EstimatedTaxFactsData;
   estimatedPayments: EstimatedPaymentEntry[];
   otherPayments: string;
   extensionPayments?: EstimatedPaymentEntry[];
@@ -1490,6 +1492,8 @@ export function updateSectionData(
   const iraSourcesChanged = ["income-w2", "income-self-employment", "income-retirement"].includes(sectionId) && adjustments?.iraContributions;
   const hsaSourcesChanged = ["income-w2", "personal-info"].includes(sectionId) && adjustments?.hsaAccounts;
   const sourceValuesChanged = guidedSourceValuesChanged(state.sectionData[sectionId as keyof SectionDataMap], data);
+  const nextPayments = sectionId === "payments" ? data as PaymentData : state.sectionData.payments;
+  const estimatedTaxSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-social-security", "income-unemployment", "adjustments", "credits", "deductions", "payments", "additional-deductions", "other-taxes"].includes(sectionId) && nextPayments?.estimatedTaxFacts;
   const nextInvestments = sectionId === "income-investments" ? data as InvestmentData : state.sectionData["income-investments"];
   const childElectionSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-social-security", "income-unemployment", "adjustments", "credits", "deductions", "payments", "additional-deductions", "other-taxes"].includes(sectionId) && nextInvestments?.childElections?.length;
   const niitOtherTaxes = state.sectionData["other-taxes"];
@@ -1523,6 +1527,7 @@ export function updateSectionData(
     sectionData: {
       ...state.sectionData,
       [sectionId]: data,
+      ...(estimatedTaxSourcesChanged && nextPayments ? { payments: { ...nextPayments, estimatedTaxFacts: { ...estimatedTaxSourcesChanged, sourceFactsConfirmed: null } } } : {}),
       ...(childElectionSourcesChanged && nextInvestments ? { "income-investments": { ...nextInvestments, childElections: nextInvestments.childElections?.map(child => ({ ...child, sourceFactsConfirmed: null })) } } : {}),
       ...((niitSourcesChanged || foreignTaxSourcesChanged) && nextOtherTaxes ? { "other-taxes": { ...nextOtherTaxes, ...(niitSourcesChanged ? { niitSources: { ...niitSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(foreignTaxSourcesChanged ? { foreignTaxElection: { ...foreignTaxSourcesChanged, sourceFactsConfirmed: null } } : {}) } } : {}),
       ...((tipSourcesChanged || additionalSourcesChanged) && nextAdditional ? { "additional-deductions": { ...nextAdditional, ...(tipSourcesChanged ? { tipIncomeAccounts: nextAdditional.tipIncomeAccounts?.map(account => ({ ...account, sourceFactsConfirmed: null })) } : {}), ...(additionalSourcesChanged ? { schedule1A: { ...additionalSourcesChanged, sourceFactsConfirmed: null } } : {}) } } : {}),
@@ -1821,9 +1826,9 @@ function validateAdjustmentsSection(data: AdjustmentData | undefined, filingStat
 
 function validatePaymentsSection(data: PaymentData | undefined, taxYear?: number | null): SectionValidationResult {
   if (!data) return EMPTY_SECTION("payments info", true);
-  const errors = allPaymentFactErrors(data, taxYear);
+  const errors = { ...allPaymentFactErrors(data, taxYear), ...estimatedTaxFactErrors(data, taxYear) };
   if (Object.keys(errors).length) return validateRequiredFacts(errors);
-  if (!data.estimatedPayments.length && !data.extensionPayments?.length && !data.priorYearAppliedCredits?.length && !hasNumericValue(data.otherPayments)) return EMPTY_SECTION("payments info", true);
+  if (!data.estimatedTaxFacts && !data.estimatedPayments.length && !data.extensionPayments?.length && !data.priorYearAppliedCredits?.length && !hasNumericValue(data.otherPayments)) return EMPTY_SECTION("payments info", true);
   return VALID_SECTION;
 }
 

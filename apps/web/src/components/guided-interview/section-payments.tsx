@@ -1,5 +1,6 @@
 "use client";
 
+import { EstimatedTaxSourceDetails } from "./estimated-tax-source-details";
 import { RetroShell } from "@/components/retro-shell";
 import {
   type PaymentData,
@@ -68,8 +69,10 @@ function EstimatedPaymentCard({
 export function SectionPayments({
   data,
   onDataChange,
+  taxYear,
 }: {
   data: PaymentData | undefined;
+  taxYear?: number | null;
   onDataChange: (data: PaymentData) => void;
 }) {
   const current = data ?? emptyPaymentData;
@@ -158,6 +161,8 @@ export function SectionPayments({
             <button type="button" className="utility-button" onClick={() => onDataChange({ ...current, priorYearAppliedCredits: [...appliedRefunds, { sourceTaxYear: "", amount: "" }] })}>Add prior-year applied refund</button>
           </div>
         </details>
+
+        <EstimatedTaxSourceDetails data={current.estimatedTaxFacts} appliedCredits={current.priorYearAppliedCredits} taxYear={taxYear} onChange={estimatedTaxFacts => onDataChange({ ...current, estimatedTaxFacts })} />
 
         {totalEstimated.gt(0) && (
           <div className="guided-ticker-grid" style={{ marginTop: "16px" }} role="status" aria-live="polite">
