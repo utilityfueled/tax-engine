@@ -40,7 +40,9 @@ describe('OID actual source return integration',()=>{
   expect(r.agi.toString()).toBe('50000');
   const sa=calculateScheduleA(input,new Decimal(50000),'single',getConstants(2025),{gamblingWinnings:new Decimal(40),gamblingLosses:new Decimal(40)});
   expect(sa.otherItemizedDeductions.toString()).toBe('55');
-  expect(sa.lines.find(row=>row.line==='16')?.value.toString()).toBe('55');
+  const otherDeductionsAudit=sa.lines.filter(row=>row.form==='Sched A'&&row.line==='16');
+  expect(otherDeductionsAudit).toHaveLength(1);
+  expect(otherDeductionsAudit[0]?.value.toString()).toBe('55');
   expect(sa.totalItemized.toString()).toBe('55');
  });
  it('refuses an unintegrated excess TIPS ordinary loss',()=>{

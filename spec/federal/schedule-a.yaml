@@ -254,7 +254,7 @@ lines:
 
   - line: "16-oid-premium"
     description: "Allowable excess bond premium"
-    formula: "Add source-calculated allowable section171 excess premium to line16 with gambling deductions, retaining unused premium carry separately. Count actual OID state withholding once on line5a."
+    formula: "Add source-calculated allowable section171 excess premium to Schedule A line16 with gambling deductions, retaining unused premium carry separately. Identify audit values by both form and line; another worksheet line16 is not the Schedule A total. Count actual OID state withholding once on line5a."
     irsRef: "Publication550 Bond premium amortization more than interest; ScheduleA line16"
     testRef: "tests/engine/federal-oid-source-integration.test.ts::deducts only allowable excess premium and preserves its carry"
 
