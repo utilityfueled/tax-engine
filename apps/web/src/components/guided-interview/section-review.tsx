@@ -1,6 +1,7 @@
 "use client";
 
-import Decimal from "decimal.js";
+import { isStartedInvestment } from "@/lib/guided-investment-facts";
+import { hasEnteredAmount } from "@/lib/guided-required-facts";
 import { formatGuidedCurrency, parseGuidedDisplayAmount, sumGuidedDisplayAmounts } from "@/lib/guided-currency";
 
 import { RetroShell } from "@/components/retro-shell";
@@ -194,45 +195,19 @@ function InvestmentSummary({
   dividendEntries: DividendEntryData[] | undefined;
   brokerageEntries: BrokerageEntryData[] | undefined;
 }) {
-  const filledInterest = (interestEntries ?? []).filter((e) => hasValue(e.interestIncome));
-  const filledDividends = (dividendEntries ?? []).filter(
-    (e) => hasValue(e.ordinaryDividends) || hasValue(e.capitalGainDistributions)
-  );
-  const filledBrokerage = (brokerageEntries ?? []).filter((e) =>
-    e.transactions.some((t) => hasValue(t.proceeds) || hasValue(t.costBasis))
-  );
-
-  if (filledInterest.length === 0 && filledDividends.length === 0 && filledBrokerage.length === 0) {
-    return <p className="guided-review-empty">No investment income entered.</p>;
-  }
-
-  const totalInterest = sumGuidedDisplayAmounts(filledInterest.map((entry) => entry.interestIncome));
-  const totalDividends = sumGuidedDisplayAmounts(filledDividends.map((entry) => entry.ordinaryDividends));
-  const totalGains = filledBrokerage.flatMap((entry) => entry.transactions).reduce((sum, transaction) =>
-    sum.plus(parseGuidedDisplayAmount(transaction.proceeds).minus(parseGuidedDisplayAmount(transaction.costBasis))), new Decimal(0));
-
-  return (
-    <div className="guided-review-card">
-      {totalInterest.gt(0) && (
-        <div className="guided-review-row">
-          <span className="guided-review-label">Interest income</span>
-          <span className="guided-review-value">{formatCurrency(totalInterest)}</span>
-        </div>
-      )}
-      {totalDividends.gt(0) && (
-        <div className="guided-review-row">
-          <span className="guided-review-label">Dividend income</span>
-          <span className="guided-review-value">{formatCurrency(totalDividends)}</span>
-        </div>
-      )}
-      {filledBrokerage.length > 0 && (
-        <div className="guided-review-row">
-          <span className="guided-review-label">Capital gains / losses</span>
-          <span className="guided-review-value">{formatCurrency(totalGains)}</span>
-        </div>
-      )}
-    </div>
-  );
+  const interest = (interestEntries ?? []).filter(isStartedInvestment);
+  const dividends = (dividendEntries ?? []).filter(isStartedInvestment);
+  const transactions = (brokerageEntries ?? []).flatMap(entry => entry.transactions.filter(isStartedInvestment));
+  if (!interest.length && !dividends.length && !transactions.length) return <p className="guided-review-empty">No investment income entered.</p>;
+  const sourceTotal = (values: Array<string | undefined>) => {
+    const total = sumGuidedDisplayAmounts(values);
+    return values.every(hasEnteredAmount) && total.isFinite() ? formatCurrency(total) : "Unknown — review source amounts";
+  };
+  const rows: Array<[string, Array<string | undefined>]> = [];
+  if (interest.length) rows.push(["Taxable interest (Boxes 1 and 3)", interest.flatMap(entry => [entry.interestIncome, entry.usSavingsBondInterest])], ["Tax-exempt interest", interest.map(entry => entry.taxExemptInterest)]);
+  if (dividends.length) rows.push(["Ordinary dividends", dividends.map(entry => entry.ordinaryDividends)], ["Qualified dividends included above", dividends.map(entry => entry.qualifiedDividends)], ["Capital-gain distributions", dividends.map(entry => entry.capitalGainDistributions)], ["Exempt-interest dividends", dividends.map(entry => entry.exemptInterestDividends)]);
+  if (transactions.length) rows.push(["Sale proceeds", transactions.map(transaction => transaction.proceeds)], ["Source cost basis", transactions.map(transaction => transaction.costBasis)], ["Wash-sale loss disallowed", transactions.map(transaction => transaction.washSaleDisallowed)]);
+  return <div className="guided-review-card">{rows.map(([label, values]) => <div className="guided-review-row" key={label}><span className="guided-review-label">{label}</span><span className="guided-review-value">{sourceTotal(values)}</span></div>)}</div>;
 }
 
 function DeductionsSummary({ data, filingStatus, taxYear }: { data: DeductionData | undefined; filingStatus: string | null; taxYear?: number | null }) {

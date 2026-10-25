@@ -1,4 +1,4 @@
-import { emptyPersonalInfo, emptyW2Entry, startInterview, type PersonalInfoData, type SegmentationAnswers, type DependentEntryData, type W2EntryData } from "@/lib/guided-interview-flow";
+import { emptyPersonalInfo, emptyW2Entry, emptyInterestEntry, emptyDividendEntry, emptyCapitalGainTransaction, startInterview, type PersonalInfoData, type SegmentationAnswers, type DependentEntryData, type W2EntryData } from "@/lib/guided-interview-flow";
 
 /** Explicit synthetic W-2 source facts; blank application fields stay unknown. */
 export const completeW2Entry: W2EntryData = { ...emptyW2Entry, employerName: "Synthetic Employer", employerEin: "12-3456789", accountHolder: "primary", wages: "0", federalWithheld: "0", socialSecurityWages: "0", socialSecurityWithheld: "0", medicareWages: "0", medicareWithheld: "0", stateTaxReporting: "none" };
@@ -48,3 +48,13 @@ export const completeEducationClaimant = {
 };
 
 export const completeHouseholdEmployee = { name: "Actual Employee", cashWages: "0", federalIncomeTaxWithheld: "0", isSpouse: false, isChildUnder21: false, isParent: false, isUnder18NonPrincipal: false };
+
+/** Complete fictional investment source facts for synthetic tests, never UI defaults. */
+const sourceIdentity = { accountHolder: "primary" as const, payerTin: "12-3456789", stateTaxReporting: "none" as const, state: "", stateWithheld: "0" };
+export const completeInterestSource = { ...emptyInterestEntry, ...sourceIdentity, payer: "Actual bank", interestIncome: "0", federalWithheld: "0", earlyWithdrawalPenalty: "0", usSavingsBondInterest: "0", foreignTaxPaid: "0", foreignCountry: "", taxExemptInterest: "0", privateActivityBondInterest: "0", marketDiscount: "0", bondPremium: "0", treasuryBondPremium: "0", taxExemptBondPremium: "0" };
+export const completeDividendSource = { ...emptyDividendEntry, ...sourceIdentity, payer: "Actual fund", ordinaryDividends: "0", qualifiedDividends: "0", capitalGainDistributions: "0", federalWithheld: "0", section199ADividends: "0", foreignTaxPaid: "0", foreignCountry: "", section1250Gain: "0", section1202Gain: "0", collectiblesGain: "0", nondividendDistributions: "0", exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0", section897OrdinaryDividends: "0", section897CapitalGain: "0" };
+export const completeTransactionSource = { ...emptyCapitalGainTransaction, description: "Actual security", dateAcquired: "2024-01-02", dateSold: "2025-02-03", proceeds: "0", costBasis: "0", holdingPeriod: "long" as const, basisReportedToIRS: false, digitalAsset: false, washSale: false, washSaleDisallowed: "0", adjustments: "0", sourceClassificationConfirmed: true };
+export const completeBrokerageSource = { ...sourceIdentity, broker: "Actual broker", federalWithheld: "0", transactions: [completeTransactionSource] };
+
+export const completeInterestEntry = completeInterestSource;
+export const completeDividendEntry = completeDividendSource;

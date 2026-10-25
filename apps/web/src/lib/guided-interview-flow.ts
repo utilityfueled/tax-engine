@@ -14,6 +14,7 @@ import { statePaymentFactErrors } from "./guided-state-facts";
 import { careFactErrors } from "./guided-credit-facts";
 import { energyFactErrors } from "./guided-energy-facts";
 import { isStartedW2, w2FactErrors } from "./guided-w2-facts";
+import { investmentFactErrors, isStartedInvestment, type InvestmentSourceData } from "./guided-investment-facts";
 import { vehicleFactErrors, type VehicleCreditData } from "./guided-vehicle-facts";
 import { adoptionFactErrors, type AdoptionCreditData } from "./guided-adoption-facts";
 
@@ -702,10 +703,20 @@ export interface SelfEmploymentIncomeDocumentAnalysis {
 
 // ── Investment income data ────────────────────────────────────────────────
 
-export interface InterestEntryData {
+export interface InterestEntryData extends InvestmentSourceData {
   payer: string;
   interestIncome: string;
   federalWithheld: string;
+  earlyWithdrawalPenalty?: string;
+  usSavingsBondInterest?: string;
+  foreignTaxPaid?: string;
+  foreignCountry?: string;
+  taxExemptInterest?: string;
+  privateActivityBondInterest?: string;
+  marketDiscount?: string;
+  bondPremium?: string;
+  treasuryBondPremium?: string;
+  taxExemptBondPremium?: string;
 }
 
 export const emptyInterestEntry: InterestEntryData = {
@@ -714,7 +725,7 @@ export const emptyInterestEntry: InterestEntryData = {
   federalWithheld: "",
 };
 
-export interface DividendEntryData {
+export interface DividendEntryData extends InvestmentSourceData {
   payer: string;
   ordinaryDividends: string;
   qualifiedDividends: string;
@@ -722,6 +733,15 @@ export interface DividendEntryData {
   federalWithheld: string;
   section199ADividends: string;
   foreignTaxPaid: string;
+  foreignCountry?: string;
+  section1250Gain?: string;
+  section1202Gain?: string;
+  collectiblesGain?: string;
+  nondividendDistributions?: string;
+  exemptInterestDividends?: string;
+  specifiedPrivateActivityBondInterest?: string;
+  section897OrdinaryDividends?: string;
+  section897CapitalGain?: string;
 }
 
 export const emptyDividendEntry: DividendEntryData = {
@@ -740,9 +760,13 @@ export interface CapitalGainTransactionData {
   dateSold: string;
   proceeds: string;
   costBasis: string;
-  holdingPeriod: "short" | "long";
-  basisReportedToIRS: boolean;
-  digitalAsset: boolean;
+  holdingPeriod: "" | "short" | "long";
+  basisReportedToIRS: boolean | null;
+  digitalAsset: boolean | null;
+  washSale?: boolean | null;
+  washSaleDisallowed?: string;
+  adjustments?: string;
+  sourceClassificationConfirmed?: boolean | null;
 }
 
 export const emptyCapitalGainTransaction: CapitalGainTransactionData = {
@@ -751,13 +775,18 @@ export const emptyCapitalGainTransaction: CapitalGainTransactionData = {
   dateSold: "",
   proceeds: "",
   costBasis: "",
-  holdingPeriod: "short",
-  basisReportedToIRS: true,
-  digitalAsset: false,
+  holdingPeriod: "",
+  basisReportedToIRS: null,
+  digitalAsset: null,
+  washSale: null,
+  washSaleDisallowed: "",
+  adjustments: "",
+  sourceClassificationConfirmed: null,
 };
 
-export interface BrokerageEntryData {
+export interface BrokerageEntryData extends InvestmentSourceData {
   broker: string;
+  federalWithheld?: string;
   transactions: CapitalGainTransactionData[];
 }
 
@@ -1596,94 +1625,13 @@ function validateSelfEmploymentSection(
 
 function validateInvestmentSection(
   data: { interestEntries: InterestEntryData[]; dividendEntries: DividendEntryData[]; brokerageEntries: BrokerageEntryData[] } | undefined,
+  filingStatus?: FilingStatus | null,
+  taxYear?: number | null,
+  stateData?: StateReturnData,
 ): SectionValidationResult {
-  if (!data) return EMPTY_SECTION("investment info");
-
-  const startedInterestEntries = data.interestEntries.filter(
-    (entry) =>
-      hasNumericValue(entry.interestIncome)
-      || hasNumericValue(entry.federalWithheld)
-      || hasTextValue(entry.payer)
-  );
-  const startedDividendEntries = data.dividendEntries.filter(
-    (entry) =>
-      hasNumericValue(entry.ordinaryDividends)
-      || hasNumericValue(entry.qualifiedDividends)
-      || hasNumericValue(entry.capitalGainDistributions)
-      || hasNumericValue(entry.federalWithheld)
-      || hasNumericValue(entry.section199ADividends)
-      || hasNumericValue(entry.foreignTaxPaid)
-      || hasTextValue(entry.payer)
-  );
-  const startedBrokerageEntries = data.brokerageEntries.filter((entry) =>
-    hasTextValue(entry.broker)
-    || entry.transactions.some((transaction) =>
-      hasTextValue(transaction.description)
-      || hasTextValue(transaction.dateAcquired)
-      || hasTextValue(transaction.dateSold)
-      || hasNumericValue(transaction.proceeds)
-      || hasNumericValue(transaction.costBasis)
-    )
-  );
-  const hasInterest = data.interestEntries.some((e) => hasNumericValue(e.interestIncome));
-  const hasDividends = data.dividendEntries.some((entry) =>
-    hasNumericValue(entry.ordinaryDividends)
-    || hasNumericValue(entry.qualifiedDividends)
-    || hasNumericValue(entry.capitalGainDistributions)
-    || hasNumericValue(entry.federalWithheld)
-    || hasNumericValue(entry.section199ADividends)
-    || hasNumericValue(entry.foreignTaxPaid)
-  );
-  const hasBrokerage = data.brokerageEntries.some(
-    (b) => b.transactions.some((t) => hasNumericValue(t.proceeds) || hasNumericValue(t.costBasis))
-  );
-
-  if (
-    !hasInterest
-    && !hasDividends
-    && !hasBrokerage
-    && startedInterestEntries.length === 0
-    && startedDividendEntries.length === 0
-    && startedBrokerageEntries.length === 0
-  ) {
-    return EMPTY_SECTION("investment info");
-  }
-
-  const errors: Record<string, string> = {};
-  startedInterestEntries.forEach((entry, index) => {
-    if (!hasNumericValue(entry.interestIncome)) {
-      errors[`interest-${index}-income`] = `Interest entry #${index + 1} needs an interest income amount.`;
-    }
-  });
-  startedDividendEntries.forEach((entry, index) => {
-    const hasDividendAmount = hasNumericValue(entry.ordinaryDividends)
-      || hasNumericValue(entry.qualifiedDividends)
-      || hasNumericValue(entry.capitalGainDistributions)
-      || hasNumericValue(entry.federalWithheld)
-      || hasNumericValue(entry.section199ADividends)
-      || hasNumericValue(entry.foreignTaxPaid);
-    if (!hasDividendAmount) {
-      errors[`dividend-${index}-amount`] = `Dividend entry #${index + 1} needs at least one amount from the form.`;
-    }
-  });
-  startedBrokerageEntries.forEach((entry, index) => {
-    const hasTransactionAmount = entry.transactions.some(
-      (transaction) => hasNumericValue(transaction.proceeds) || hasNumericValue(transaction.costBasis)
-    );
-    if (!hasTransactionAmount) {
-      errors[`brokerage-${index}-amount`] = `Brokerage entry #${index + 1} needs proceeds or cost basis on at least one transaction.`;
-    }
-  });
-
-  if (Object.keys(errors).length > 0) {
-    return {
-      status: "partial",
-      message: "Some investment entries were started but still need form amounts.",
-      fieldErrors: errors,
-      allowSkip: true,
-    };
-  }
-
+  if (!data || (![...data.interestEntries, ...data.dividendEntries, ...data.brokerageEntries].some(isStartedInvestment) && !data.brokerageEntries.some(entry => entry.transactions.some(isStartedInvestment)))) return EMPTY_SECTION("investment info");
+  const errors = investmentFactErrors(data, filingStatus, taxYear, stateData);
+  if (Object.keys(errors).length) return { status: "partial", message: "Complete the actual investment source amounts, ownership and classifications.", fieldErrors: errors, allowSkip: true };
   return VALID_SECTION;
 }
 
@@ -1816,7 +1764,7 @@ export function validateSection(
     case "income-self-employment":
       return validateSelfEmploymentSection(getSectionData(state, "income-self-employment"));
     case "income-investments":
-      return validateInvestmentSection(getSectionData(state, "income-investments"));
+      return validateInvestmentSection(getSectionData(state, "income-investments"), state.segmentation.filingStatus, state.taxYear, getSectionData(state, "state-return"));
     case "income-rental":
       return validateRentalSection(getSectionData(state, "income-rental"));
     case "income-retirement":

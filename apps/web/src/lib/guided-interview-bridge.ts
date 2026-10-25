@@ -10,7 +10,7 @@ import { buildActualEducationInput } from "./guided-education-facts";
  */
 
 import Decimal from "decimal.js";
-import { parseGuidedCurrency, hasGuidedCurrency, formatGuidedDollars } from "./guided-currency";
+import { parseGuidedCurrency, hasGuidedCurrency, formatGuidedDollars, sumGuidedDisplayAmounts } from "./guided-currency";
 import { childCreditExclusionValues, dependentFactErrors, personalFactErrors } from "./guided-taxpayer-facts";
 import { buildVehicleCreditInput, vehicleFactErrors } from "./guided-vehicle-facts";
 import { buildAdoptionInput, adoptionFactErrors } from "./guided-adoption-facts";
@@ -20,6 +20,7 @@ import { statePaymentFactErrors, sumAdditionalStateWithholding } from "./guided-
 import { careFactErrors } from "./guided-credit-facts";
 import { energyFactErrors } from "./guided-energy-facts";
 import { w2FactErrors } from "./guided-w2-facts";
+import { investmentFactErrors, isStartedInvestment, type InvestmentSourceData } from "./guided-investment-facts";
 
 import type {
   AdjustmentData,
@@ -189,51 +190,53 @@ export function buildScheduleCInput(
 
 // ── Investment income converters ──────────────────────────────────────────
 
+function investmentSourceInput(entry: InvestmentSourceData) {
+  return { payerTin: entry.payerTin?.trim() || undefined, accountHolder: entry.accountHolder === "primary" || entry.accountHolder === "spouse" ? entry.accountHolder : undefined, state: entry.state?.trim().toUpperCase() || undefined, stateWithheld: entry.stateTaxReporting === "none" ? "0" : toOptionalDecimalString(entry.stateWithheld) };
+}
+
 export function buildInterestInputs(entries: InterestEntryData[] | undefined) {
-  if (!entries || entries.length === 0) return [];
-  return entries
-    .filter((e) => hasValue(e.interestIncome))
-    .map((e) => ({
-      payer: e.payer || "Financial Institution",
-      interestIncome: toDecimalString(e.interestIncome),
-      federalWithheld: toDecimalString(e.federalWithheld),
-    }));
+  return (entries ?? []).filter(isStartedInvestment).map(entry => ({
+    ...investmentSourceInput(entry), payer: entry.payer.trim(),
+    interestIncome: toOptionalDecimalString(entry.interestIncome),
+    federalWithheld: toOptionalDecimalString(entry.federalWithheld),
+    earlyWithdrawalPenalty: toOptionalDecimalString(entry.earlyWithdrawalPenalty),
+    usSavingsBondInterest: toOptionalDecimalString(entry.usSavingsBondInterest),
+    foreignTaxPaid: toOptionalDecimalString(entry.foreignTaxPaid),
+    foreignCountry: entry.foreignCountry?.trim() || undefined,
+    taxExemptInterest: toOptionalDecimalString(entry.taxExemptInterest),
+  }));
 }
 
 export function buildDividendInputs(entries: DividendEntryData[] | undefined) {
-  if (!entries || entries.length === 0) return [];
-  return entries
-    .filter((e) => hasValue(e.ordinaryDividends) || hasValue(e.capitalGainDistributions))
-    .map((e) => ({
-      payer: e.payer || "Brokerage",
-      ordinaryDividends: toDecimalString(e.ordinaryDividends),
-      qualifiedDividends: toDecimalString(e.qualifiedDividends),
-      totalCapitalGainDistributions: toDecimalString(e.capitalGainDistributions),
-      federalWithheld: toDecimalString(e.federalWithheld),
-      section199ADividends: toDecimalString(e.section199ADividends),
-      foreignTaxPaid: toDecimalString(e.foreignTaxPaid),
-    }));
+  return (entries ?? []).filter(isStartedInvestment).map(entry => ({
+    ...investmentSourceInput(entry), payer: entry.payer.trim(),
+    ordinaryDividends: toOptionalDecimalString(entry.ordinaryDividends),
+    qualifiedDividends: toOptionalDecimalString(entry.qualifiedDividends),
+    totalCapitalGainDistributions: toOptionalDecimalString(entry.capitalGainDistributions),
+    federalWithheld: toOptionalDecimalString(entry.federalWithheld),
+    section199ADividends: toOptionalDecimalString(entry.section199ADividends),
+    foreignTaxPaid: toOptionalDecimalString(entry.foreignTaxPaid),
+    foreignCountry: entry.foreignCountry?.trim() || undefined,
+    section1250Gain: toOptionalDecimalString(entry.section1250Gain),
+    section1202Gain: toOptionalDecimalString(entry.section1202Gain),
+    collectiblesGain: toOptionalDecimalString(entry.collectiblesGain),
+    nondividendDistributions: toOptionalDecimalString(entry.nondividendDistributions),
+    exemptInterestDividends: toOptionalDecimalString(entry.exemptInterestDividends),
+  }));
 }
 
 export function buildBrokerageInputs(entries: BrokerageEntryData[] | undefined) {
-  if (!entries || entries.length === 0) return [];
-  return entries
-    .filter((e) => e.transactions.some((t) => hasValue(t.proceeds) || hasValue(t.costBasis)))
-    .map((e) => ({
-      broker: e.broker || "Broker",
-      transactions: e.transactions
-        .filter((t) => hasValue(t.proceeds) || hasValue(t.costBasis))
-        .map((t) => ({
-          description: t.description || "Securities",
-          dateAcquired: t.dateAcquired,
-          dateSold: t.dateSold,
-          proceeds: toDecimalString(t.proceeds),
-          costBasis: toDecimalString(t.costBasis),
-          holdingPeriod: t.holdingPeriod,
-          basisReportedToIRS: t.basisReportedToIRS,
-          digitalAsset: t.digitalAsset,
-        })),
-    }));
+  return (entries ?? []).filter(entry => isStartedInvestment(entry) || entry.transactions.some(isStartedInvestment)).map(entry => ({
+    ...investmentSourceInput(entry), broker: entry.broker.trim(),
+    transactions: entry.transactions.filter(isStartedInvestment).map(transaction => ({
+      description: transaction.description.trim(), dateAcquired: transaction.dateAcquired, dateSold: transaction.dateSold,
+      proceeds: toOptionalDecimalString(transaction.proceeds), costBasis: toOptionalDecimalString(transaction.costBasis),
+      holdingPeriod: transaction.holdingPeriod || undefined,
+      basisReportedToIRS: transaction.basisReportedToIRS ?? undefined, digitalAsset: transaction.digitalAsset ?? undefined,
+      washSale: transaction.washSale ?? undefined, washSaleDisallowed: toOptionalDecimalString(transaction.washSaleDisallowed),
+      adjustments: toOptionalDecimalString(transaction.adjustments),
+    })),
+  }));
 }
 
 export function buildDependents(
@@ -516,6 +519,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
 
   try {
     assertKnownFacts(w2FactErrors(w2Data?.entries, segmentation.filingStatus));
+    assertKnownFacts(investmentFactErrors(investData, segmentation.filingStatus, state.taxYear, stateReturnData));
     assertKnownFacts(deductionFactErrors(deductionData, state.taxYear));
     assertKnownFacts(allPaymentFactErrors(paymentData, state.taxYear));
     assertKnownFacts(retirementFactErrors(retirementData?.entries));
@@ -726,67 +730,31 @@ export function buildGuidedFactAnswers(
     }
   }
 
-  // Interest → "taxable-interest"
-  const investData = state.sectionData["income-investments"] as
-    | { interestEntries: InterestEntryData[]; dividendEntries: DividendEntryData[]; brokerageEntries: BrokerageEntryData[] }
-    | undefined;
-  if (investData?.interestEntries) {
-    const filled = investData.interestEntries.filter((e) => hasValue(e.interestIncome));
-    if (filled.length > 0) {
-      const total = filled.reduce((sum, e) => sum.plus(numVal(e.interestIncome)), new Decimal(0));
-      answers.push({
-        factId: "taxable-interest",
-        answerText: `Taxable interest confirmed: $${fmtNum(total)}.`,
-      });
+  // Record source totals only when every contributing amount is known.
+  const investData = state.sectionData["income-investments"];
+  const sourceTotal = (values: Array<string | undefined>) => {
+    if (!values.every(hasEnteredAmount)) return null;
+    const total = sumGuidedDisplayAmounts(values);
+    return total.isFinite() ? total : null;
+  };
+  if (investData) {
+    const interest = investData.interestEntries.filter(isStartedInvestment);
+    if (interest.length) {
+      const total = sourceTotal(interest.flatMap(entry => [entry.interestIncome, entry.usSavingsBondInterest]));
+      answers.push({ factId: "taxable-interest", answerText: total === null ? "Interest source records entered; some taxable amounts still need review." : `Taxable interest entered: $${fmtNum(total)}.` });
     }
-  }
-
-  // Dividends → "ordinary-dividends", "qualified-dividends", "capital-gain-distributions"
-  if (investData?.dividendEntries) {
-    const filled = investData.dividendEntries.filter(
-      (e) => hasValue(e.ordinaryDividends) || hasValue(e.capitalGainDistributions),
-    );
-    if (filled.length > 0) {
-      const totalOrd = filled.reduce((sum, e) => sum.plus(numVal(e.ordinaryDividends)), new Decimal(0));
-      const totalQual = filled.reduce((sum, e) => sum.plus(numVal(e.qualifiedDividends)), new Decimal(0));
-      const totalCG = filled.reduce((sum, e) => sum.plus(numVal(e.capitalGainDistributions)), new Decimal(0));
-      answers.push({
-        factId: "ordinary-dividends",
-        answerText: `Ordinary dividends confirmed: $${fmtNum(totalOrd)}.`,
-      });
-      if (totalQual.gt(0)) {
-        answers.push({
-          factId: "qualified-dividends",
-          answerText: `Qualified dividends confirmed: $${fmtNum(totalQual)}.`,
-        });
-      }
-      if (totalCG.gt(0)) {
-        answers.push({
-          factId: "capital-gain-distributions",
-          answerText: `Capital gain distributions confirmed: $${fmtNum(totalCG)}.`,
-        });
+    const dividends = investData.dividendEntries.filter(isStartedInvestment);
+    if (dividends.length) {
+      for (const [field, factId, label] of [["ordinaryDividends", "ordinary-dividends", "Ordinary dividends"], ["qualifiedDividends", "qualified-dividends", "Qualified dividends"], ["capitalGainDistributions", "capital-gain-distributions", "Capital gain distributions"]] as const) {
+        const total = sourceTotal(dividends.map(entry => entry[field]));
+        answers.push({ factId, answerText: total === null ? `${label} source records entered; some amounts still need review.` : `${label} entered: $${fmtNum(total)}.` });
       }
     }
-  }
-
-  // Brokerage → "broker-proceeds" and "cost-basis-review"
-  if (investData?.brokerageEntries) {
-    const filled = investData.brokerageEntries.filter((e) =>
-      e.transactions.some((t) => hasValue(t.proceeds) || hasValue(t.costBasis)),
-    );
-    if (filled.length > 0) {
-      const totalProceeds = filled.reduce(
-        (sum, b) => sum.plus(b.transactions.reduce((tSum, t) => tSum.plus(numVal(t.proceeds)), new Decimal(0))),
-        new Decimal(0),
-      );
-      answers.push({
-        factId: "broker-proceeds",
-        answerText: `Broker proceeds confirmed: $${fmtNum(totalProceeds)}.`,
-      });
-      answers.push({
-        factId: "cost-basis-review",
-        answerText: "Cost basis and holding periods entered via guided interview.",
-      });
+    const transactions = investData.brokerageEntries.flatMap(entry => entry.transactions.filter(isStartedInvestment));
+    if (transactions.length) {
+      const total = sourceTotal(transactions.map(entry => entry.proceeds));
+      answers.push({ factId: "broker-proceeds", answerText: total === null ? "Broker source records entered; some proceeds still need review." : `Broker proceeds entered: $${fmtNum(total)}.` });
+      answers.push({ factId: "cost-basis-review", answerText: transactions.every(transaction => transaction.sourceClassificationConfirmed === true) ? "Cost basis and sale classifications reviewed against source records in the guided interview." : "Cost basis and sale classifications still need source review." });
     }
   }
 
@@ -890,14 +858,14 @@ export function buildGuidedSyntheticDocuments(
     | { interestEntries: InterestEntryData[]; dividendEntries: DividendEntryData[]; brokerageEntries: BrokerageEntryData[] }
     | undefined;
 
-  if (investData?.interestEntries?.some((e) => hasValue(e.interestIncome))) {
+  if (investData?.interestEntries?.some(isStartedInvestment)) {
     docs.push({
       id: "guided:1099-int",
       name: "Guided Interview — 1099-INT",
       size: 0,
       uploadedAt: now,
       kind: "1099-int",
-      coverage: "supported",
+      coverage: Object.keys(investmentFactErrors({ interestEntries: investData.interestEntries, dividendEntries: [], brokerageEntries: [] }, state.segmentation.filingStatus, state.taxYear)).length ? "partially-supported" : "supported",
       label: "1099-INT (guided interview)",
       notes: "Entered via guided interview.",
       matchedFixtureId: null,
@@ -905,14 +873,14 @@ export function buildGuidedSyntheticDocuments(
     });
   }
 
-  if (investData?.dividendEntries?.some((e) => hasValue(e.ordinaryDividends) || hasValue(e.capitalGainDistributions))) {
+  if (investData?.dividendEntries?.some(isStartedInvestment)) {
     docs.push({
       id: "guided:1099-div",
       name: "Guided Interview — 1099-DIV",
       size: 0,
       uploadedAt: now,
       kind: "1099-div",
-      coverage: "supported",
+      coverage: Object.keys(investmentFactErrors({ interestEntries: [], dividendEntries: investData.dividendEntries, brokerageEntries: [] }, state.segmentation.filingStatus, state.taxYear)).length ? "partially-supported" : "supported",
       label: "1099-DIV (guided interview)",
       notes: "Entered via guided interview.",
       matchedFixtureId: null,
@@ -920,14 +888,14 @@ export function buildGuidedSyntheticDocuments(
     });
   }
 
-  if (investData?.brokerageEntries?.some((e) => e.transactions.some((t) => hasValue(t.proceeds) || hasValue(t.costBasis)))) {
+  if (investData?.brokerageEntries?.some((e) => isStartedInvestment(e) || e.transactions.some(isStartedInvestment))) {
     docs.push({
       id: "guided:1099-b",
       name: "Guided Interview — 1099-B",
       size: 0,
       uploadedAt: now,
       kind: "1099-b",
-      coverage: "supported",
+      coverage: Object.keys(investmentFactErrors({ interestEntries: [], dividendEntries: [], brokerageEntries: investData.brokerageEntries }, state.segmentation.filingStatus, state.taxYear)).length ? "partially-supported" : "supported",
       label: "1099-B (guided interview)",
       notes: "Entered via guided interview.",
       matchedFixtureId: null,

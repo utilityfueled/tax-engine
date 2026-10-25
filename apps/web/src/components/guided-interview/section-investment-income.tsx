@@ -12,6 +12,8 @@ import {
   emptyInterestEntry,
 } from "@/lib/guided-interview-flow";
 import { CurrencyField } from "./currency-field";
+import { BooleanFact } from "./fact-fields";
+import { DividendSourceDetails, InterestSourceDetails, InvestmentSourceIdentity } from "./investment-source-details";
 
 // ── 1099-INT Card ─────────────────────────────────────────────────────────
 
@@ -67,11 +69,13 @@ function InterestCard({
         />
         <CurrencyField
           label="Box 4 — Federal tax withheld"
-          hint="Usually $0, but check your form."
+          hint="Enter the actual amount; a blank is unknown, not zero."
           value={entry.federalWithheld}
           onChange={(v) => onUpdate("federalWithheld", v)}
         />
       </div>
+      <InterestSourceDetails data={entry} onChange={onUpdate} />
+      <InvestmentSourceIdentity data={entry} onChange={patch => { for (const [field, value] of Object.entries(patch)) onUpdate(field as keyof InterestEntryData, value); }} />
     </div>
   );
 }
@@ -164,6 +168,8 @@ function DividendCard({
           onChange={(v) => onUpdate("foreignTaxPaid", v)}
         />
       </div>
+      <DividendSourceDetails data={entry} onChange={onUpdate} />
+      <InvestmentSourceIdentity data={entry} onChange={patch => { for (const [field, value] of Object.entries(patch)) onUpdate(field as keyof DividendEntryData, value); }} />
     </div>
   );
 }
@@ -179,7 +185,7 @@ function TransactionRow({
 }: {
   index: number;
   transaction: CapitalGainTransactionData;
-  onUpdate: (field: keyof CapitalGainTransactionData, value: string | boolean) => void;
+  onUpdate: (field: keyof CapitalGainTransactionData, value: string | boolean | null) => void;
   onRemove: () => void;
   removable: boolean;
 }) {
@@ -256,6 +262,7 @@ function TransactionRow({
           value={transaction.holdingPeriod}
           onChange={(e) => onUpdate("holdingPeriod", e.target.value)}
         >
+          <option value="">Confirm from source</option>
           <option value="short">Short-term (held 1 year or less)</option>
           <option value="long">Long-term (held more than 1 year)</option>
         </select>
@@ -265,29 +272,14 @@ function TransactionRow({
       </label>
 
       <div className="guided-form-grid">
-        <label className="guided-field">
-          <span className="guided-field-label">Basis reported to IRS</span>
-          <input
-            type="checkbox"
-            checked={transaction.basisReportedToIRS}
-            onChange={(e) => onUpdate("basisReportedToIRS", e.target.checked)}
-          />
-          <span className="guided-field-hint">
-            Uncheck this for crypto and other sales where basis was not reported.
-          </span>
-        </label>
-        <label className="guided-field">
-          <span className="guided-field-label">Digital asset / crypto sale</span>
-          <input
-            type="checkbox"
-            checked={transaction.digitalAsset}
-            onChange={(e) => onUpdate("digitalAsset", e.target.checked)}
-          />
-          <span className="guided-field-hint">
-            Marks the sale for the Form 1040 digital asset question.
-          </span>
-        </label>
+        <BooleanFact label="Was the actual cost basis reported to the IRS?" value={transaction.basisReportedToIRS} onChange={value => onUpdate("basisReportedToIRS", value)} />
+        <BooleanFact label="Was this a digital-asset or crypto sale?" value={transaction.digitalAsset} onChange={value => onUpdate("digitalAsset", value)} />
+        <BooleanFact label="Was a wash-sale loss disallowed?" value={transaction.washSale} onChange={value => onUpdate("washSale", value)} />
+        <CurrencyField label="Actual wash-sale loss disallowed" value={transaction.washSaleDisallowed ?? ""} onChange={value => onUpdate("washSaleDisallowed", value)} />
+        <CurrencyField allowNegative label="Other Form 8949 adjustment amount" hint="Exclude the wash-sale amount above. Nonzero other adjustments need codes and a supporting worksheet that this guided path does not yet support." value={transaction.adjustments ?? ""} onChange={value => onUpdate("adjustments", value)} />
       </div>
+      <BooleanFact label="Have you checked these sale classifications against the actual source records?" value={transaction.sourceClassificationConfirmed} onChange={value => onUpdate("sourceClassificationConfirmed", value)} />
+
     </div>
   );
 }
@@ -312,10 +304,10 @@ function BrokerageCard({
   function updateTransaction(
     tIndex: number,
     field: keyof CapitalGainTransactionData,
-    value: string | boolean,
+    value: string | boolean | null,
   ) {
     const next = transactions.map((t, i) =>
-      i === tIndex ? { ...t, [field]: value } : t
+      i === tIndex ? { ...t, [field]: value, ...(field === "sourceClassificationConfirmed" ? {} : { sourceClassificationConfirmed: null }) } : t
     );
     onUpdate({ ...entry, transactions: next });
   }
@@ -358,6 +350,9 @@ function BrokerageCard({
           placeholder="Fidelity, Schwab, etc."
         />
       </label>
+
+      <InvestmentSourceIdentity data={entry} onChange={patch => onUpdate({ ...entry, ...patch })} />
+      <CurrencyField label="Box 4 broker federal income tax withheld" value={entry.federalWithheld ?? ""} onChange={federalWithheld => onUpdate({ ...entry, federalWithheld })} hint="Enter the actual amount, including zero. Positive broker withholding needs payment routing that this guided path does not yet support." />
 
       <div className="guided-w2-stack" style={{ marginTop: "8px" }}>
         {transactions.map((t, tIndex) => (
@@ -500,8 +495,8 @@ export function SectionInvestmentIncome({
           <div className="guided-expand-body">
             <p className="guided-hint">
               Enter each brokerage&apos;s 1099-B and the individual transactions.
-              For many transactions, you can enter a summary line per holding period
-              (short-term total and long-term total).
+              Use actual acquisition and sale dates. A source may identify multiple
+              acquisition dates as VARIOUS; do not invent dates for summary totals.
             </p>
             <div className="guided-w2-stack">
               {currentBrokerage.map((entry, index) => (

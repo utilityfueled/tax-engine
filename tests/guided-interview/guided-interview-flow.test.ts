@@ -1,3 +1,4 @@
+import { completeInterestSource } from "./complete-facts";
 import { completePersonalInfo, completeW2Entry } from "./complete-facts";
 import { describe, it, expect } from "vitest";
 import {
@@ -994,16 +995,20 @@ describe("emptyDividendEntry", () => {
 });
 
 describe("emptyCapitalGainTransaction", () => {
-  it("has all fields initialized with defaults", () => {
+  it("leaves sale classification facts unanswered", () => {
     expect(emptyCapitalGainTransaction).toEqual({
       description: "",
       dateAcquired: "",
       dateSold: "",
       proceeds: "",
       costBasis: "",
-      holdingPeriod: "short",
-      basisReportedToIRS: true,
-      digitalAsset: false,
+      holdingPeriod: "",
+      basisReportedToIRS: null,
+      digitalAsset: null,
+      washSale: null,
+      washSaleDisallowed: "",
+      adjustments: "",
+      sourceClassificationConfirmed: null,
     });
   });
 });
@@ -1149,7 +1154,7 @@ describe("investment section routing", () => {
         "income-investments": {
           interestEntries: [
             {
-              ...emptyInterestEntry,
+              ...completeInterestSource,
               payer: "Bank",
               interestIncome: "250",
             },
@@ -2330,7 +2335,7 @@ describe("validateSection", () => {
   it("returns complete for investment section with interest income", () => {
     let state = startInterview({ filingStatus: "single", incomeTypes: ["investments"], lifeEvents: [], stateCode: null });
     state = updateSectionData(state, "income-investments", {
-      interestEntries: [{ ...emptyInterestEntry, interestIncome: "500" }],
+      interestEntries: [{ ...completeInterestSource, interestIncome: "500" }],
       dividendEntries: [emptyDividendEntry],
       brokerageEntries: [emptyBrokerageEntry],
     });

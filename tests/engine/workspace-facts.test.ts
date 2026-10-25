@@ -114,6 +114,7 @@ describe("workspace structured facts", () => {
           socialSecurityWithheld: "3224",
           medicareWages: "52000",
           medicareWithheld: "754",
+          stateTaxReporting: "none",
           federalWithheld: "5000"
         }
       },

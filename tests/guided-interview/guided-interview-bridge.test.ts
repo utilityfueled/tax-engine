@@ -1,3 +1,4 @@
+import { completeBrokerageSource, completeDividendSource, completeInterestSource, completeTransactionSource } from "./complete-facts";
 import { completeW2Entry, startCompleteInterview as startInterview, completePersonalInfo, completeDependent, completeAocEligibility, completeEducationClaimant, completeHouseholdEmployee } from "./complete-facts";
 import { describe, it, expect } from "vitest";
 import {
@@ -318,13 +319,13 @@ describe("buildInterestInputs", () => {
     expect(result).toHaveLength(1);
     expect(result[0].payer).toBe("Chase Bank");
     expect(result[0].interestIncome).toBe("150");
-    expect(result[0].federalWithheld).toBe("0");
+    expect(result[0].federalWithheld).toBeUndefined();
   });
 
-  it("defaults payer name when empty", () => {
+  it("preserves a missing payer name for validation", () => {
     const entry = { ...emptyInterestEntry, interestIncome: "100" };
     const result = buildInterestInputs([entry]);
-    expect(result[0].payer).toBe("Financial Institution");
+    expect(result[0].payer).toBe("");
   });
 
   it("handles multiple entries", () => {
@@ -370,7 +371,7 @@ describe("buildDividendInputs", () => {
     expect(result[0].payer).toBe("Vanguard");
     expect(result[0].ordinaryDividends).toBe("2000");
     expect(result[0].qualifiedDividends).toBe("1500");
-    expect(result[0].totalCapitalGainDistributions).toBe("0");
+    expect(result[0].totalCapitalGainDistributions).toBeUndefined();
     expect(result[0].section199ADividends).toBe("25");
     expect(result[0].foreignTaxPaid).toBe("10");
   });
@@ -382,10 +383,10 @@ describe("buildDividendInputs", () => {
     expect(result[0].totalCapitalGainDistributions).toBe("500");
   });
 
-  it("defaults payer name when empty", () => {
+  it("preserves a missing payer name for validation", () => {
     const entry = { ...emptyDividendEntry, ordinaryDividends: "100" };
     const result = buildDividendInputs([entry]);
-    expect(result[0].payer).toBe("Brokerage");
+    expect(result[0].payer).toBe("");
   });
 });
 
@@ -418,8 +419,8 @@ describe("buildBrokerageInputs", () => {
     expect(result[0].transactions[0].proceeds).toBe("15000");
     expect(result[0].transactions[0].costBasis).toBe("10000");
     expect(result[0].transactions[0].holdingPeriod).toBe("long");
-    expect(result[0].transactions[0].basisReportedToIRS).toBe(true);
-    expect(result[0].transactions[0].digitalAsset).toBe(false);
+    expect(result[0].transactions[0].basisReportedToIRS).toBeUndefined();
+    expect(result[0].transactions[0].digitalAsset).toBeUndefined();
   });
 
   it("preserves basis-reporting and digital-asset flags from guided transactions", () => {
@@ -445,7 +446,7 @@ describe("buildBrokerageInputs", () => {
     });
   });
 
-  it("defaults broker name and description when empty", () => {
+  it("preserves missing broker and property names for validation", () => {
     const entry = {
       broker: "",
       transactions: [
@@ -453,8 +454,8 @@ describe("buildBrokerageInputs", () => {
       ],
     };
     const result = buildBrokerageInputs([entry]);
-    expect(result[0].broker).toBe("Broker");
-    expect(result[0].transactions[0].description).toBe("Securities");
+    expect(result[0].broker).toBe("");
+    expect(result[0].transactions[0].description).toBe("");
   });
 
   it("filters out transactions with no proceeds or cost basis", () => {
@@ -618,11 +619,12 @@ describe("buildTaxInputFromGuidedData", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-investments", {
-      interestEntries: [{ ...emptyInterestEntry, payer: "Chase", interestIncome: "500" }],
-      dividendEntries: [{ ...emptyDividendEntry, payer: "Vanguard", ordinaryDividends: "2000", qualifiedDividends: "1500" }],
+      interestEntries: [{ ...completeInterestSource, payer: "Chase", interestIncome: "500" }],
+      dividendEntries: [{ ...completeDividendSource, payer: "Vanguard", ordinaryDividends: "2000", qualifiedDividends: "1500" }],
       brokerageEntries: [{
+        ...completeBrokerageSource,
         broker: "Fidelity",
-        transactions: [{ ...emptyCapitalGainTransaction, proceeds: "15000", costBasis: "10000", holdingPeriod: "long" as const }],
+        transactions: [{ ...completeTransactionSource, proceeds: "15000", costBasis: "10000", holdingPeriod: "long" as const }],
       }],
     });
     const input = buildTaxInputFromGuidedData(state);
@@ -858,7 +860,7 @@ describe("computeGuidedPreview", () => {
     });
     // Use a large enough amount to exceed the standard deduction
     state = updateSectionData(state, "income-investments", {
-      interestEntries: [{ ...emptyInterestEntry, interestIncome: "25000" }],
+      interestEntries: [{ ...completeInterestSource, interestIncome: "25000" }],
       dividendEntries: [emptyDividendEntry],
       brokerageEntries: [emptyBrokerageEntry],
     });
@@ -877,7 +879,7 @@ describe("computeGuidedPreview", () => {
     });
     state = updateSectionData(state, "income-investments", {
       interestEntries: [emptyInterestEntry],
-      dividendEntries: [{ ...emptyDividendEntry, ordinaryDividends: "8000", qualifiedDividends: "6000" }],
+      dividendEntries: [{ ...completeDividendSource, ordinaryDividends: "8000", qualifiedDividends: "6000" }],
       brokerageEntries: [emptyBrokerageEntry],
     });
     const preview = computeGuidedPreview(state);
@@ -896,8 +898,9 @@ describe("computeGuidedPreview", () => {
       interestEntries: [emptyInterestEntry],
       dividendEntries: [emptyDividendEntry],
       brokerageEntries: [{
+        ...completeBrokerageSource,
         broker: "Fidelity",
-        transactions: [{ ...emptyCapitalGainTransaction, proceeds: "20000", costBasis: "10000", holdingPeriod: "long" as const }],
+        transactions: [{ ...completeTransactionSource, proceeds: "20000", costBasis: "10000", holdingPeriod: "long" as const }],
       }],
     });
     const preview = computeGuidedPreview(state);
@@ -917,8 +920,8 @@ describe("computeGuidedPreview", () => {
       entries: [{ ...completeW2Entry, wages: "80000", federalWithheld: "12000" }],
     });
     state = updateSectionData(state, "income-investments", {
-      interestEntries: [{ ...emptyInterestEntry, interestIncome: "1000" }],
-      dividendEntries: [{ ...emptyDividendEntry, ordinaryDividends: "3000", qualifiedDividends: "2000" }],
+      interestEntries: [{ ...completeInterestSource, interestIncome: "1000" }],
+      dividendEntries: [{ ...completeDividendSource, ordinaryDividends: "3000", qualifiedDividends: "2000" }],
       brokerageEntries: [emptyBrokerageEntry],
     });
     const preview = computeGuidedPreview(state);
@@ -2221,7 +2224,7 @@ describe("buildGuidedFactAnswers", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-investments", {
-      interestEntries: [{ ...emptyInterestEntry, interestIncome: "1500" }],
+      interestEntries: [{ ...completeInterestSource, interestIncome: "1500" }],
       dividendEntries: [emptyDividendEntry],
       brokerageEntries: [emptyBrokerageEntry],
     });
@@ -2239,7 +2242,7 @@ describe("buildGuidedFactAnswers", () => {
     });
     state = updateSectionData(state, "income-investments", {
       interestEntries: [emptyInterestEntry],
-      dividendEntries: [{ ...emptyDividendEntry, ordinaryDividends: "3000", qualifiedDividends: "2000", capitalGainDistributions: "500" }],
+      dividendEntries: [{ ...completeDividendSource, ordinaryDividends: "3000", qualifiedDividends: "2000", capitalGainDistributions: "500" }],
       brokerageEntries: [emptyBrokerageEntry],
     });
     const answers = buildGuidedFactAnswers(state);
@@ -2260,8 +2263,9 @@ describe("buildGuidedFactAnswers", () => {
       interestEntries: [emptyInterestEntry],
       dividendEntries: [emptyDividendEntry],
       brokerageEntries: [{
+        ...completeBrokerageSource,
         broker: "Fidelity",
-        transactions: [{ ...emptyCapitalGainTransaction, proceeds: "20000", costBasis: "15000" }],
+        transactions: [{ ...completeTransactionSource, proceeds: "20000", costBasis: "15000" }],
       }],
     });
     const answers = buildGuidedFactAnswers(state);
@@ -2330,8 +2334,8 @@ describe("buildGuidedFactAnswers", () => {
       expenses: emptyScheduleCExpenses,
     });
     state = updateSectionData(state, "income-investments", {
-      interestEntries: [{ ...emptyInterestEntry, interestIncome: "1000" }],
-      dividendEntries: [{ ...emptyDividendEntry, ordinaryDividends: "2000" }],
+      interestEntries: [{ ...completeInterestSource, interestIncome: "1000" }],
+      dividendEntries: [{ ...completeDividendSource, ordinaryDividends: "2000" }],
       brokerageEntries: [emptyBrokerageEntry],
     });
     const answers = buildGuidedFactAnswers(state);
@@ -2474,11 +2478,12 @@ describe("buildGuidedSyntheticDocuments", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-investments", {
-      interestEntries: [{ ...emptyInterestEntry, interestIncome: "500" }],
-      dividendEntries: [{ ...emptyDividendEntry, ordinaryDividends: "1000" }],
+      interestEntries: [{ ...completeInterestSource, interestIncome: "500" }],
+      dividendEntries: [{ ...completeDividendSource, ordinaryDividends: "1000" }],
       brokerageEntries: [{
+        ...completeBrokerageSource,
         broker: "Fidelity",
-        transactions: [{ ...emptyCapitalGainTransaction, proceeds: "10000", costBasis: "8000" }],
+        transactions: [{ ...completeTransactionSource, proceeds: "10000", costBasis: "8000" }],
       }],
     });
     const docs = buildGuidedSyntheticDocuments(state);
@@ -2547,7 +2552,7 @@ describe("buildGuidedSyntheticDocuments", () => {
       expenses: emptyScheduleCExpenses,
     });
     state = updateSectionData(state, "income-investments", {
-      interestEntries: [{ ...emptyInterestEntry, interestIncome: "1000" }],
+      interestEntries: [{ ...completeInterestSource, interestIncome: "1000" }],
       dividendEntries: [emptyDividendEntry],
       brokerageEntries: [emptyBrokerageEntry],
     });
@@ -2587,7 +2592,7 @@ describe("buildGuidedSyntheticDocuments", () => {
       entries: [{ ...completeW2Entry, wages: "50000" }],
     });
     state = updateSectionData(state, "income-investments", {
-      interestEntries: [{ ...emptyInterestEntry, interestIncome: "500" }],
+      interestEntries: [{ ...completeInterestSource, interestIncome: "500" }],
       dividendEntries: [emptyDividendEntry],
       brokerageEntries: [emptyBrokerageEntry],
     });

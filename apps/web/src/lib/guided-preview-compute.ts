@@ -81,6 +81,11 @@ function collectStateWithholding(state: GuidedFlowState): Decimal {
     }
   }
 
+  const investments = state.sectionData["income-investments"];
+  for (const entry of [...investments?.interestEntries ?? [], ...investments?.dividendEntries ?? [], ...investments?.brokerageEntries ?? []]) {
+    if (entry.stateTaxReporting === "single" && entry.state?.trim().toUpperCase() === state.segmentation.stateCode?.trim().toUpperCase()) total = total.plus(parseGuidedCurrency(entry.stateWithheld));
+  }
+
   total = total.plus(sumAdditionalStateWithholding(stateReturnData));
 
   return total;
