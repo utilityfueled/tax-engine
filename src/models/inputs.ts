@@ -2215,6 +2215,20 @@ export const StandardDeductionFactsSchema = z.object({
 });
 
 export const DependentCareSchema = z.object({
+  sourceFactsConfirmed: z.boolean().optional(),
+  receivedBenefits: z.boolean().optional(),
+  usesDeemedIncome: z.boolean().optional(),
+  providers: z.array(z.object({
+    name: z.string().trim().min(1), address: z.string().trim().min(1),
+    identifierType: z.enum(["tin", "tax_exempt", "foreign_no_us_tin", "employer_furnished", "withheld"]),
+    taxId: z.string().optional(), dueDiligenceStatement: z.string().optional(),
+    householdEmployee: z.boolean(), amountPaid: decimal,
+  })).max(50).optional(),
+  qualifyingPersons: z.array(z.object({
+    firstName: z.string().trim().min(1), lastName: z.string().trim().min(1),
+    identifierType: z.enum(["tax_id", "died"]), taxId: z.string().optional(),
+    over12Disabled: z.boolean(), qualifyingPersonConfirmed: z.boolean(), qualifiedExpenses: decimal,
+  })).max(20).optional(),
   /** Actual completed prior-year expense worksheet credit; missing is not zero. */
   priorYearExpenseCredit: optionalDecimalInput,
   /** Earned income after applicable exclusions, SE adjustments and substantiated deemed monthly income. */

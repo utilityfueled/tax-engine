@@ -1,3 +1,4 @@
+import { completeCareSource } from "./care-source-fixture";
 import { completeRentalSource, completeNecSource, completeBusinessSection, completeBusinessExpenses } from "./complete-facts";
 import { completeBrokerageSource, completeDividendSource, completeInterestSource, completeTransactionSource } from "./complete-facts";
 import { completeW2Entry, startCompleteInterview as startInterview, completePersonalInfo, completeDependent, completeAocEligibility, completeEducationClaimant, completeHouseholdEmployee } from "./complete-facts";
@@ -1292,7 +1293,7 @@ describe("buildDependentCareInput", () => {
   it("converts dependent care expenses and qualifying count", () => {
     const data = {
       ...emptyCreditsData,
-      dependentCare: { expenses: "5,000", qualifyingIndividuals: "2", primaryEarnedIncome: "30000", excludedDependentCareBenefits: "0", eligibilityConfirmed: true },
+      dependentCare: completeCareSource({ expenses: "5,000", qualifyingIndividuals: "2", primaryEarnedIncome: "30000", spouseEarnedIncome: undefined, providers: completeCareSource().providers?.map(provider => ({ ...provider, amountPaid: "5000" })), qualifyingPersons: completeCareSource().qualifyingPersons?.map((person, index) => ({ ...person, qualifiedExpenses: index === 0 ? "5000" : "0" })) }),
     };
     const result = buildDependentCareInput(data);
     expect(result).toEqual({
@@ -1301,6 +1302,8 @@ describe("buildDependentCareInput", () => {
       primaryEarnedIncome: "30000",
       excludedDependentCareBenefits: "0",
       eligibilityConfirmed: true,
+      priorYearExpenseCredit: "0", sourceFactsConfirmed: true, receivedBenefits: false, usesDeemedIncome: false,
+      providers: data.dependentCare.providers, qualifyingPersons: data.dependentCare.qualifyingPersons,
     });
   });
 
@@ -1446,7 +1449,7 @@ describe("buildTaxInputFromGuidedData — credits", () => {
     });
     state = updateSectionData(state, "credits", {
       ...emptyCreditsData,
-      dependentCare: { expenses: "6000", qualifyingIndividuals: "1", primaryEarnedIncome: "30000", excludedDependentCareBenefits: "0", eligibilityConfirmed: true },
+      dependentCare: completeCareSource({ expenses: "6000", qualifyingIndividuals: "1", primaryEarnedIncome: "30000", spouseEarnedIncome: undefined, providers: completeCareSource().providers?.map(provider => ({ ...provider, amountPaid: "6000" })), qualifyingPersons: completeCareSource().qualifyingPersons?.slice(0, 1).map(person => ({ ...person, qualifiedExpenses: "6000" })) }),
     });
     const input = buildTaxInputFromGuidedData(state);
     expect(input!.dependentCare).toEqual({
@@ -1455,6 +1458,9 @@ describe("buildTaxInputFromGuidedData — credits", () => {
       primaryEarnedIncome: "30000",
       excludedDependentCareBenefits: "0",
       eligibilityConfirmed: true,
+      priorYearExpenseCredit: "0", sourceFactsConfirmed: true, receivedBenefits: false, usesDeemedIncome: false,
+      providers: completeCareSource().providers?.map(provider => ({ ...provider, amountPaid: "6000" })),
+      qualifyingPersons: completeCareSource().qualifyingPersons?.slice(0, 1).map(person => ({ ...person, qualifiedExpenses: "6000" })),
     });
   });
 

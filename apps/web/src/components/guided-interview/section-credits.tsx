@@ -12,6 +12,7 @@ import { EnergySourceDetails } from "./energy-source-details";
 import { VehicleSourceDetails } from "./vehicle-source-details";
 import { AdoptionSourceDetails } from "./adoption-source-details";
 import { EducationSourceDetails } from "./education-source-details";
+import { CareSourceDetails } from "./care-source-details";
 
 function EligibilityFact({ label, value, onChange }: { label: string; value: boolean | null | undefined; onChange: (value: boolean | null) => void }) {
   return <label className="guided-field"><span className="guided-field-label">{label}</span><select className="guided-input" value={value == null ? "" : String(value)} onChange={(event) => onChange(event.target.value === "" ? null : event.target.value === "true")}><option value="">Confirm from actual records</option><option value="true">Yes</option><option value="false">No</option></select></label>;
@@ -44,7 +45,7 @@ function DependentCareSection({
           label="Total care expenses paid"
           hint="Daycare, babysitter, after-school care, summer camp, etc."
           value={data.expenses}
-          onChange={(v) => onChange({ ...data, expenses: v })}
+          onChange={(v) => onChange({ ...data, sourceFactsConfirmed: false, expenses: v })}
         />
         <label className="guided-field">
           <span className="guided-field-label">Qualifying individuals</span>
@@ -55,7 +56,7 @@ function DependentCareSection({
             step="1"
             className="guided-input guided-input-narrow"
             value={data.qualifyingIndividuals}
-            onChange={(e) => onChange({ ...data, qualifyingIndividuals: e.target.value })}
+            onChange={(e) => onChange({ ...data, sourceFactsConfirmed: false, qualifyingIndividuals: e.target.value })}
             aria-describedby="qualifying-individuals-hint"
           />
           <span className="guided-field-hint" id="qualifying-individuals-hint">
@@ -68,11 +69,11 @@ function DependentCareSection({
           ) : null}
         </label>
       </div>
-      <EligibilityFact label="Do the qualifying-person, work-related care and eligible-provider requirements in Form 2441 apply?" value={data.eligibilityConfirmed} onChange={(value) => onChange({ ...data, eligibilityConfirmed: value })} />
-      <CurrencyField label="Your earned income for Form 2441 line 4" hint="Use the worksheet amount after applicable self-employment adjustments, exclusions and substantiated student/incapacity rules." value={data.primaryEarnedIncome ?? ""} onChange={(value) => onChange({ ...data, primaryEarnedIncome: value })} />
-      {filingStatus === "mfj" && <CurrencyField label="Spouse's earned income for Form 2441 line 5" hint="Use your spouse's own worksheet amount, including substantiated deemed income where applicable. Enter 0 only when zero is established." value={data.spouseEarnedIncome ?? ""} onChange={(value) => onChange({ ...data, spouseEarnedIncome: value })} />}
-      <CurrencyField label="Excluded dependent-care benefits from Form 2441 Part III" hint="Use the amount determined excludable, not simply W-2 box 10. Confirm 0 when no benefits were excluded." value={data.excludedDependentCareBenefits ?? ""} onChange={(value) => onChange({ ...data, excludedDependentCareBenefits: value })} />
-      <p className="guided-hint">Provider and qualifying-person details still require form review before filing.</p>
+      <EligibilityFact label="Do the qualifying-person, work-related care and eligible-provider requirements in Form 2441 apply?" value={data.eligibilityConfirmed} onChange={(value) => onChange({ ...data, sourceFactsConfirmed: false, eligibilityConfirmed: value })} />
+      <CurrencyField label="Your earned income for Form 2441 line 4" allowNegative hint="Use the worksheet amount after applicable self-employment adjustments, exclusions and substantiated student/incapacity rules." value={data.primaryEarnedIncome ?? ""} onChange={(value) => onChange({ ...data, sourceFactsConfirmed: false, primaryEarnedIncome: value })} />
+      {filingStatus === "mfj" && <CurrencyField label="Spouse's earned income for Form 2441 line 5" allowNegative hint="Use your spouse's own worksheet amount, including substantiated deemed income where applicable. Enter 0 only when zero is established." value={data.spouseEarnedIncome ?? ""} onChange={(value) => onChange({ ...data, sourceFactsConfirmed: false, spouseEarnedIncome: value })} />}
+      <CurrencyField label="Excluded dependent-care benefits from Form 2441 Part III" hint="Use the amount determined excludable, not simply W-2 box 10. Confirm 0 when no benefits were excluded." value={data.excludedDependentCareBenefits ?? ""} onChange={(value) => onChange({ ...data, sourceFactsConfirmed: false, excludedDependentCareBenefits: value })} />
+      <CareSourceDetails data={data} onChange={onChange} />
     </div>
   );
 }

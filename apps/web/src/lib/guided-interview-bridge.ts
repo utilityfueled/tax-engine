@@ -463,7 +463,7 @@ export function buildDependentCareInput(creditsData: CreditsData | undefined) {
   if (!creditsData) return undefined;
   const { dependentCare } = creditsData;
   assertKnownFacts(careFactErrors(dependentCare));
-  if (!hasValue(dependentCare.expenses)) return undefined;
+  if (!hasEnteredAmount(dependentCare.expenses)) return undefined;
 
   const qualifyingIndividuals = Number.parseInt(dependentCare.qualifyingIndividuals, 10);
   if (Number.isNaN(qualifyingIndividuals) || qualifyingIndividuals < 1) return undefined;
@@ -475,6 +475,24 @@ export function buildDependentCareInput(creditsData: CreditsData | undefined) {
     ...(hasEnteredAmount(dependentCare.spouseEarnedIncome) ? { spouseEarnedIncome: toDecimalString(dependentCare.spouseEarnedIncome) } : {}),
     excludedDependentCareBenefits: toDecimalString(dependentCare.excludedDependentCareBenefits),
     eligibilityConfirmed: dependentCare.eligibilityConfirmed as boolean,
+    priorYearExpenseCredit: toDecimalString(dependentCare.priorYearExpenseCredit),
+    sourceFactsConfirmed: dependentCare.sourceFactsConfirmed as boolean,
+    receivedBenefits: dependentCare.receivedBenefits as boolean,
+    usesDeemedIncome: dependentCare.usesDeemedIncome as boolean,
+    providers: dependentCare.providers?.map(provider => ({
+      name: provider.name.trim(), address: provider.address.trim(),
+      identifierType: provider.identifierType as "tin" | "tax_exempt" | "foreign_no_us_tin" | "employer_furnished" | "withheld",
+      ...(provider.taxId?.trim() ? { taxId: provider.taxId.trim() } : {}),
+      ...(provider.dueDiligenceStatement?.trim() ? { dueDiligenceStatement: provider.dueDiligenceStatement.trim() } : {}),
+      householdEmployee: provider.householdEmployee as boolean, amountPaid: toDecimalString(provider.amountPaid),
+    })),
+    qualifyingPersons: dependentCare.qualifyingPersons?.map(person => ({
+      firstName: person.firstName.trim(), lastName: person.lastName.trim(),
+      identifierType: person.identifierType as "tax_id" | "died",
+      ...(person.taxId?.trim() ? { taxId: person.taxId.trim() } : {}),
+      over12Disabled: person.over12Disabled as boolean, qualifyingPersonConfirmed: person.qualifyingPersonConfirmed as boolean,
+      qualifiedExpenses: toDecimalString(person.qualifiedExpenses),
+    })),
   };
 }
 

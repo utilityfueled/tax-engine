@@ -14,7 +14,9 @@ describe("care fact presentation", () => {
     expect(html).toContain("Excluded dependent-care benefits from Form 2441 Part III");
     expect(html).toContain('value="0"');
     expect(html).toContain('<option value="false" selected="">No</option>');
-    expect(html).toContain("Provider and qualifying-person details still require form review before filing.");
+    expect(html).toContain("Add care provider");
+    expect(html).toContain("Add qualifying person");
+    expect(html).toContain("Prior-year care expense worksheet credit");
   });
   it("keeps an unanswered eligibility field unselected and hides irrelevant spouse income", () => {
     const html = renderToStaticMarkup(<SectionCredits data={emptyCreditsData} hasDependents={false} filingStatus="single" onDataChange={() => {}} />);

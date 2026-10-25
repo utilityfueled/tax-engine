@@ -47,3 +47,25 @@ rows and Part III are not yet completed; this is not filing qualification.
 Evidence under `.local/upgrade-evidence/`: `care-pdf-red.log`,
 `care-pdf-green.log`, `care-pdf-canonical.log`, `care-pdf-types.log`,
 `care-pdf-spec.log`, `care-pdf-lint.log`, and `care-audit-review.pdf`/page PNGs.
+
+## Actual care source records — 2026-10-25
+
+The guided interview now collects provider names, addresses, actual identifier
+status, household-employee answers and payments, plus each qualifying person's
+name, identifier, disability/qualification answers and allocated expenses.
+Actual prior-year worksheet credit, benefits received and deemed-income answers
+are required; source confirmation is revoked by edits. Decimal reconciliation
+preserves cents, explicit zero and negative earned income. A prior-year claim
+is retained when current expenses are zero. Missing legacy records remain
+unknown and incomplete; no facts are backfilled. Identification exceptions
+retain their actual status and due-diligence explanation.
+
+Five initial source regressions failed. All 205 focused source/adapter/DOM checks
+pass, including provider/person add/remove, unknown household status, source
+confirmation, large exact amounts and prior-only claims. Root/contract/web types,
+3,353 current spec references and scoped lint pass (zero errors, four test-only
+non-null warnings). Evidence: `care-sources-red.log`, `care-sources-integration.log`,
+`care-sources-types.log`, `care-sources-contracts.log`, `care-sources-web.log`,
+`care-sources-spec.log` and `care-sources-lint.log` under `.local/upgrade-evidence/`.
+These are local synthetic checks. Provider/person physical rows and continuation
+pages are the next package; benefits Part III is a separate active module.

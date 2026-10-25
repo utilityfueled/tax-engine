@@ -928,6 +928,16 @@ export const emptyPaymentData: PaymentData = {
 
 // ── Credits data ────────────────────────────────────────────────────────────
 
+export interface CareProviderData {
+  name: string; address: string;
+  identifierType: "tin" | "tax_exempt" | "foreign_no_us_tin" | "employer_furnished" | "withheld" | "";
+  taxId?: string; dueDiligenceStatement?: string;
+  householdEmployee?: boolean | null; amountPaid: string;
+}
+export interface CareQualifyingPersonData {
+  firstName: string; lastName: string; identifierType: "tax_id" | "died" | ""; taxId?: string;
+  over12Disabled?: boolean | null; qualifyingPersonConfirmed?: boolean | null; qualifiedExpenses: string;
+}
 export interface DependentCareData {
   expenses: string;
   qualifyingIndividuals: string;
@@ -935,6 +945,12 @@ export interface DependentCareData {
   spouseEarnedIncome?: string;
   excludedDependentCareBenefits?: string;
   eligibilityConfirmed?: boolean | null;
+  priorYearExpenseCredit?: string;
+  sourceFactsConfirmed?: boolean | null;
+  receivedBenefits?: boolean | null;
+  usesDeemedIncome?: boolean | null;
+  providers?: CareProviderData[];
+  qualifyingPersons?: CareQualifyingPersonData[];
 }
 
 export const emptyDependentCareData: DependentCareData = {
