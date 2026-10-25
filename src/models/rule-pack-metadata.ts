@@ -27,7 +27,7 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.17",
+    ruleVersion: "2025.18",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
@@ -45,7 +45,7 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
       { url: "https://www.irs.gov/instructions/i8801", section: "Prior-year minimum-tax credit and current credit limit worksheet", revision: "2025 final instructions; year-aware2026prior-year values", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i8863", section: "Student eligibility, refundable support test and actual credit limit", revision: "2025 final instructions", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/pub/irs-pdf/f1040s3.pdf", section: "Official credit and payment line routing", revision: "2025 final form", retrievedAt: "2026-10-25" },
-      { url: "https://www.irs.gov/instructions/i2210", section: "Lines 3 and 6, refundable credits versus withholding", revision: "2025 instructions", retrievedAt: "2026-10-25" },
+      { url: "https://www.irs.gov/instructions/i2210", section: "Actual dated installments and enumerated line2 taxes, household exception and source facts", revision: "2025 final instructions;2026 rates only through December", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i8839", section: "Refundable split, credit limit and employer benefit exclusion", revision: "2025 instructions and 2026 transition notices", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i5695", section: "Credit limit worksheets and carryforward", revision: "2025 instructions", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i1040gi", section: "Lines 1a, 1c, 1g, 1h, 25, 29, 31, 34, 35a, 37 and 38", revision: "2025 instructions", retrievedAt: "2026-10-24" },
@@ -60,11 +60,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.12-law-integration-draft",
+    ruleVersion: "2026.13-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i2210", section: "Actual dated installments and enumerated line2 taxes, household exception and source facts", revision: "2025 final instructions;2026 rates only through December", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i8995", section: "Actual owner/source attribution of SE tax, health insurance and retirement deductions", revision: "2025 final instructions and Reg.1.199A-3(b)(1)(vi)", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/publications/p550", section: "Actual OID recipient sources, premium elections and ScheduleA16 allowable excess", revision: "2025 final publication and current continuous-use OID January2024", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i1040sse", section: "Separate spouse regular-method forms, actual W2 Boxes3/7 and adjusted K1 Box14A", revision: "2025 final instructions; independently indexed2026 payroll values", retrievedAt: "2026-10-25" },

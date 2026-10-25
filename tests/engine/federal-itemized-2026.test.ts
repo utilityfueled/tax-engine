@@ -9,7 +9,12 @@ vi.mock("@/models/constants.js", async (importOriginal) => {
 import { calculateFederalTax } from "@/engine/federal.js";
 import { TaxYearInputSchema } from "@/models/inputs.js";
 import { simpleW2Fixture } from "../fixtures/simple-w2.js";
-const base = { ...simpleW2Fixture, taxpayer: { ...simpleW2Fixture.taxpayer, taxYear: 2026 }, w2s: [{ ...simpleW2Fixture.w2s[0], wages: "700000" }] };
+// These synthetic itemization scenarios have a confirmed full-year2025 US-resident return with no tax liability.
+// This actual fixture fact avoids assuming an unpublished2027 penalty rate while testing deductions.
+const form2210 = {calendarYearTaxpayer:true,residentReturn:true,farmerOrFisher:false,disasterReliefClaimed:false,waiverRequested:false,
+  calculationMethod:"regular",withholdingMethod:"equal-installments",priorYearTaxStatus:"no-tax-liability",priorYearFullYear:true,
+  priorYearResidentAllYear:true,priorYearTaxForForm2210:"0",priorYearTaxComputationConfirmed:true};
+const base = { ...simpleW2Fixture,form2210, taxpayer: { ...simpleW2Fixture.taxpayer, taxYear: 2026 }, w2s: [{ ...simpleW2Fixture.w2s[0], wages: "700000" }] };
 describe("2026 federal itemized limitation integration", () => {
   it("reduces itemized deductions after the charitable floor without changing AGI", () => {
     const input = TaxYearInputSchema.parse({ ...base, donations: [{ organization: "Synthetic public charity", type: "cash", amount: "103500", dateOfDonation: "2026-01-01", qualifiedOrganization: true, supportingOrganization: false, donorAdvisedFund: false, isPrivateFoundation: false }] });

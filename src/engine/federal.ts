@@ -3304,30 +3304,6 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   const retirementPlanAdditionalTax = (form5329?.totalAdditionalTax ?? new Decimal(0))
     .plus(form1099Q?.netPenalty ?? new Decimal(0));
 
-  // ── Form 2210: Estimated Tax Penalty ──────────────────
-  // currentYearTax = 1040 Line 24 minus estimated tax penalty (excluded to avoid circularity).
-  // taxAfterCredits already includes AMT + excess APTC (they're in Line 18 which credits reduce).
-  // Line 24 = Line 22 (taxAfterCredits) + Schedule 2 Part II (SE + Medicare + NIIT).
-  const form2210 = calculateForm2210({
-    currentYearTax: taxAfterCredits.plus(sum(
-      selfEmploymentTax,
-      retirementPlanAdditionalTax,
-      form8919?.line13 ?? new Decimal(0),
-      additionalMedicareTax,
-      niitTax,
-      sched1.hsaAdditionalTax,
-      sched1.hsaRecaptureTax
-    )),
-    withholding: federalWithholding.plus(excessSSWithholding),
-    estimatedPayments,
-    refundableCredits: sum(educationRefundable, refundableAdoptionCredit, netPremiumTaxCredit, form8812.actc, eic),
-    priorYearTax: input.priorYear?.priorYearTax ? d(input.priorYear.priorYearTax) : undefined,
-    priorYearAGI: input.priorYear?.priorYearAGI ? d(input.priorYear.priorYearAGI) : undefined,
-    filingStatus,
-  });
-  audit.merge(form2210.lines);
-  const estimatedTaxPenalty = form2210.penalty;
-
   // ── Schedule H: Household Employment Taxes ──────────
   const scheduleH = input.scheduleH
     ? calculateScheduleH({
@@ -3355,6 +3331,44 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     audit.merge(scheduleH.lines);
   }
 
+  // Form2210 uses only the other taxes enumerated in its line2 instructions.
+  // In particular, employee payroll tax and excess-contribution excise taxes
+  // are not estimated-tax liabilities merely because they appear on Schedule2.
+  const estimatedTaxBase = taxAfterCredits.plus(sum(selfEmploymentTax,
+    form5329?.line4 ?? d("0"), form5329?.line8 ?? d("0"), form1099Q?.netPenalty ?? d("0"),
+    additionalMedicareTax,niitTax,sched1.hsaAdditionalTax,sched1.hsaRecaptureTax));
+  const estimatedTaxRefundableCredits = sum(educationRefundable,refundableAdoptionCredit,netPremiumTaxCredit,form8812.actc,eic);
+  const estimatedTaxInput = {
+    taxYear:year,incomeTaxAfterCredits:taxAfterCredits,currentYearTax:estimatedTaxBase,
+    withholding:federalWithholding.plus(excessSSWithholding),estimatedPayments,
+    refundableCredits:estimatedTaxRefundableCredits,
+    priorYearTax:input.priorYear?.priorYearTax === undefined ? undefined : d(input.priorYear.priorYearTax),
+    priorYearAGI:input.priorYear?.priorYearAGI === undefined ? undefined : d(input.priorYear.priorYearAGI),
+    filingStatus,facts:input.form2210,
+    payments:[
+      ...(input.adjustments?.estimatedTaxPayments ?? []).filter(payment=>payment.type === "federal")
+        .map(payment=>({date:payment.date,amount:payment.amount,kind:"estimated" as const})),
+      ...(input.form2210?.priorYearCreditPayments ?? []).map(payment=>({...payment,kind:"prior-year-credit" as const})),
+      ...(input.adjustments?.extensionPayments ?? []).filter(payment=>payment.type === "federal")
+        .map(payment=>({date:payment.date,amount:payment.amount,kind:"extension" as const})),
+      ...(input.form2210?.returnPayments ?? []).map(payment=>({...payment,kind:"return" as const})),
+    ],
+  };
+  const householdTax = scheduleH?.totalTax ?? d("0");
+  let form2210: ReturnType<typeof calculateForm2210>;
+  if (householdTax.gt(0) && federalWithholding.gt(0)) {
+    form2210=calculateForm2210({...estimatedTaxInput,currentYearTax:estimatedTaxBase.plus(householdTax)});
+  } else {
+    form2210=calculateForm2210(estimatedTaxInput);
+    const paymentsRequiredWithoutHousehold=estimatedTaxBase.minus(estimatedTaxRefundableCredits).gte(1000)
+      && form2210.requiredAnnualPayment.gt(0);
+    if (householdTax.gt(0) && paymentsRequiredWithoutHousehold) {
+      form2210=calculateForm2210({...estimatedTaxInput,currentYearTax:estimatedTaxBase.plus(householdTax)});
+    }
+  }
+  audit.merge(form2210.lines);
+  const estimatedTaxPenalty=form2210.penalty;
+
   // ── Schedule 2: Aggregate Additional Taxes ───────────
   const sched2 = calculateSchedule2({
     amt,
@@ -3370,7 +3384,6 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     niitTax,
     hsaAdditionalTax: sched1.hsaAdditionalTax,
     hsaRecaptureTax: sched1.hsaRecaptureTax,
-    estimatedTaxPenalty,
   });
   audit.merge(sched2.lines);
 

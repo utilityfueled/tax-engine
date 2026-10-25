@@ -1,0 +1,15 @@
+form: "Form 2210 return integration"
+fullName: "Actual dated payments and included current-year tax"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i2210"
+retrievedAt: "2026-10-25"
+reviewStatus: "independent-review-pending"
+lines:
+  - line: "1-2"
+    description: "Use actual Form1040 line22 and only enumerated other taxes"
+    formula: "Line1 is tax after nonrefundable credits. Line2 includes supported Schedule2 lines4,8(distribution tax only),9(subject to household exception),11,12,17c,17d. Do not include lines5/6 unreported employee payroll taxes or Form5329 excess-contribution taxes. Household tax is excluded only when no federal income tax was withheld and no estimated payments were required without household tax."
+    testRef: "tests/engine/federal-2210-dated.test.ts::Federal dated estimated-tax integration"
+  - line: "payments"
+    description: "Forward actual IRS-effective dates without aggregate substitutions"
+    formula: "Pass the actual tax year, optional complete Form2210 scope/prior-return facts, federal estimated payment dates, federal extension dates, actual prior-credit effective dates and actual return-payment dates. State estimates are excluded. Prior credits reconcile to Form1040line26. Retain unresolved-year rate gates and source-fact gates from the calculator. Estimated tax penalty remains solely Form1040line38."
+    testRef: "tests/engine/federal-2210-dated.test.ts::Federal dated estimated-tax integration"

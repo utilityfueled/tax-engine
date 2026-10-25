@@ -852,3 +852,34 @@ separate newly strict Form2210 dated-payment integration (queued next), not a QB
 failure. Scoped lint has zero errors; existing non-null warnings remain. New
 helper/tests are warning-free. Diff reviewed. Rule versions advance to2025.17
 and2026.12-law-integration-draft; review/filing gates remain closed.
+
+
+## Package: actual dated estimated-tax integration
+
+The Form2210 core/source package is44793ac. This return integration refreshes
+https://www.irs.gov/instructions/i2210 lines1–3,6 and the household-employer
+exception. Four new tests ran red before implementation (one source fixture
+needed its actual supported Form8919 field, corrected before implementation).
+Two additional household/extension regressions cover distinct integration paths.
+
+The return now forwards the actual tax year, full optional Form2210 source facts,
+actual federal estimated and extension dates, and explicit prior-credit/return
+payment histories. It excludes state payments and never substitutes an annual
+amount for dates. Physical line1 receives actual Form1040line22. Line2 includes
+only the supported enumerated taxes: SE, distribution taxes, Medicare/NIIT,
+HSA distribution/recapture and household tax subject to the two-part exception.
+Employee misclassification taxes and excess-contribution excise taxes remain in
+Form1040total tax but are excluded from the estimated-tax base.
+
+Five historical direct-call edge fixtures were reconciled with the official
+line IDs and actual synthetic quarterly dates. Their original safe-harbor and
+$1,443 penalty assertions are retained; no annual-total shortcut was restored.
+The independently calculated late-payment regression owes$268 for the three
+late installments despite a January catch-up sufficient for the annual amount.
+
+Checks:795 focused core, federal, guided and edge tests pass; root typecheck
+and all3,350 spec references pass. Scoped lint has zero errors and six pre-existing
+non-null warnings; diff reviewed. Four itemization-only 2026 fixtures additionally needed explicit synthetic
+prior-year no-tax-liability facts; their deduction/AGI/taxable-income assertions
+remain unchanged. Current 2026 source-fact and unpublished2027Q1 rate gates remain enforced.
+Rule versions2025.18/2026.13-law-integration-draft remain unqualified.

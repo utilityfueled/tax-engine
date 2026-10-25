@@ -114,6 +114,8 @@ describe("Form 2210 - safe harbor: prior year tax", () => {
       currentYearTax: d(50000),
       withholding: d(20000),
       estimatedPayments: d(2000),
+      // Actual synthetic quarterly payments; the annual total alone is insufficient.
+      payments: ["2025-04-15", "2025-06-16", "2025-09-15", "2026-01-15"].map(date => ({date,amount:"500",kind:"estimated" as const})),
       refundableCredits: d(0),
       priorYearTax: d(20000),
       priorYearAGI: d(200000),
@@ -207,6 +209,8 @@ describe("Form 2210 - penalty calculation", () => {
       currentYearTax: d(30000),
       withholding: d(10000),
       estimatedPayments: d(17000),
+      // Actual synthetic quarterly payments; the annual total alone is insufficient.
+      payments: ["2025-04-15", "2025-06-16", "2025-09-15", "2026-01-15"].map(date => ({date,amount:"4250",kind:"estimated" as const})),
       refundableCredits: d(0),
       filingStatus: "single",
     });
@@ -768,10 +772,9 @@ describe("Form 2210 - audit trail lines field", () => {
     expect(result.lines.length).toBeGreaterThan(0);
     const forms = result.lines.map((l) => l.form);
     expect(forms.every((f) => f === "Form 2210")).toBe(true);
-    // Line 7 (total payments) must be present
-    const line7 = result.lines.find((l) => l.line === "7");
-    expect(line7).toBeDefined();
-    expect(line7!.value.toNumber()).toBe(9500);
+    // Official line6 is withholding; line7 is current-year tax minus withholding.
+    expect(result.lines.find((l) => l.line === "6")?.value.toNumber()).toBe(9500);
+    expect(result.lines.find((l) => l.line === "7")?.value.toNumber()).toBe(500);
   });
 
   it("lines include underpayment and penalty entries when penalty applies", () => {
@@ -784,13 +787,16 @@ describe("Form 2210 - audit trail lines field", () => {
     });
     expect(result.safeHarborMet).toBe(false);
     const lineNums = result.lines.map((l) => l.line);
-    // Audit trail must record line 6 (required), line 7 (payments), line 8 (underpayment)
+    // Official line9 is required annual tax; line19 is the penalty.
     expect(lineNums).toContain("6");
     expect(lineNums).toContain("7");
-    expect(lineNums).toContain("8");
-    expect(lineNums).toContain("penalty");
-    const line8 = result.lines.find((l) => l.line === "8");
-    expect(line8!.value.toNumber()).toBe(13000);
+    expect(lineNums).toContain("9");
+    expect(lineNums).toContain("19");
+    expect(lineNums).not.toContain("8"); // No actual prior-return computation supplied.
+    expect(result.lines.find((l) => l.line === "9")?.value.toNumber()).toBe(18000);
+    expect(result.underpayment.toNumber()).toBe(13000);
+    expect(result.lines.find((l) => l.line === "19")?.value.toNumber()).toBe(605); //13000*.07*971/1460
+
   });
 
   it("totalPayments reflects withholding + estimated (refundable credits reduce tax shown)", () => {
@@ -798,6 +804,8 @@ describe("Form 2210 - audit trail lines field", () => {
       currentYearTax: d(100000),
       withholding: d(30000),
       estimatedPayments: d(20000),
+      // Actual synthetic quarterly payments; the annual total alone is insufficient.
+      payments: ["2025-04-15", "2025-06-16", "2025-09-15", "2026-01-15"].map(date => ({date,amount:"5000",kind:"estimated" as const})),
       refundableCredits: d(10000),
       filingStatus: "single",
     });
