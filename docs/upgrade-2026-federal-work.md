@@ -215,3 +215,13 @@ validation pass. The affected PDF expectation was independently recomputed:
 ($200,000 AMTI - $88,100 exemption) × 26% = $29,094 TMT; $37,067 regular tax less
 $29,094 gives the $7,973 credit limit. Scoped diff reviewed. This is a code
 correction, not independent tax-law or return qualification evidence.
+
+## Contract and calculation: direct SALT payment categories
+
+Refreshed Schedule A instructions lines 5a–5c. Additional qualified income-tax
+payments now enter line 5a and its sales-tax comparison; separately supplied
+real-estate taxes enter line 5b. Personal-property taxes stay on line 5c. Input
+contract expressly excludes amounts already counted on forms or estimates;
+negative/nonfinite additional payments reject. Four integration regressions
+failed first; 535 focused tests, typecheck and spec validation pass. Scoped diff
+reviewed. This removes the need to invent a Form 1098 lender for direct tax facts.

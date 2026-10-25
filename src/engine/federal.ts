@@ -1890,7 +1890,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     // Determine whether to use sales tax or income tax
     if (input.salesTaxDeduction.autoCompare) {
       // Auto-compare: compute income taxes and use whichever is larger
-      const incomeTaxes = w2Agg.statePlusLocal.plus(
+      const incomeTaxes = w2Agg.statePlusLocal.plus(d(input.scheduleA?.additionalStateLocalIncomeTaxes)).plus(
         input.adjustments?.estimatedTaxPayments
           ?.filter((p) => p.type === "state")
           .reduce((acc, p) => acc.plus(d(p.amount)), new Decimal(0)) ?? new Decimal(0)

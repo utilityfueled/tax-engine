@@ -2524,6 +2524,10 @@ export const AdjustmentsSchema = z.object({
 
 export const ScheduleAInputSchema = z.object({
   medicalExpenses: optionalDecimal,
+  /** Qualified payments not already counted on a Form 1098. */
+  realEstateTaxes: optionalDecimal,
+  /** Qualified income tax payments not already counted in withholding or estimates. */
+  additionalStateLocalIncomeTaxes: optionalDecimal,
   personalPropertyTaxes: optionalDecimal,
   /** SALT MAGI worksheet line 3a. Not deducted from AGI by this adapter. */
   excludedPuertoRicoIncome: optionalDecimal,

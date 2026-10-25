@@ -200,7 +200,10 @@ export function calculateScheduleA(
   const stateEstimatedPayments = input.adjustments?.estimatedTaxPayments
     ?.filter((p) => p.type === "state")
     .reduce((acc, p) => acc.plus(d(p.amount)), new Decimal(0)) ?? new Decimal(0);
-  const stateLocalIncomeTaxes = stateTaxes.plus(localTaxes).plus(stateEstimatedPayments);
+  const additionalStateLocalIncomeTaxes = d(input.scheduleA?.additionalStateLocalIncomeTaxes);
+  const additionalRealEstateTaxes = d(input.scheduleA?.realEstateTaxes);
+  if ([additionalStateLocalIncomeTaxes, additionalRealEstateTaxes].some(amount => !amount.isFinite() || amount.lt(0))) throw new Error("Additional SALT payments must be finite and nonnegative");
+  const stateLocalIncomeTaxes = stateTaxes.plus(localTaxes).plus(stateEstimatedPayments).plus(additionalStateLocalIncomeTaxes);
 
   // Determine whether to use income taxes or sales taxes for Line 5a
   const salesTaxAmount = extra?.salesTaxDeduction ?? new Decimal(0);
@@ -216,7 +219,7 @@ export function calculateScheduleA(
   } else {
     // Default: income taxes
     stateLocalTaxes = stateLocalIncomeTaxes;
-    line5aDescription = `Sum W-2 Box 17 (state ${stateTaxes}) + Box 19 (local ${localTaxes}) + state estimated (${stateEstimatedPayments})`;
+    line5aDescription = `Sum W-2 Box 17 (state ${stateTaxes}) + Box 19 (local ${localTaxes}) + state estimated (${stateEstimatedPayments}) + other qualified income-tax payments (${additionalStateLocalIncomeTaxes})`;
     if (salesTaxAmount.greaterThan(0)) {
       line5aDescription += ` (income taxes $${stateLocalIncomeTaxes} used over sales taxes $${salesTaxAmount})`;
     }
@@ -232,10 +235,10 @@ export function calculateScheduleA(
 
   const propertyTaxes = input.form1098.reduce(
     (acc, f) => acc.plus(d(f.propertyTax)),
-    new Decimal(0)
+    additionalRealEstateTaxes
   );
   audit.record("Sched A", "5b", "Real estate taxes", propertyTaxes,
-    "Sum Form 1098 property tax");
+    "Sum Form 1098 property tax + other qualified real estate tax payments");
 
   // Restore excluded income before applying the 2025 SALT MAGI phase-down.
   if (input.form2555 && extra?.saltMagiAdditions === undefined) {
