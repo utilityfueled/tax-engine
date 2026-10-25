@@ -26,13 +26,13 @@ export function calculateCharitableContributionWorksheet(input: CharitableContri
   const audit = new AuditTrail();
   const base = zeroFloor(input.contributionBase);
   const { cashPublic, noncashPublic, capitalGainPublic, cashPrivate, noncashPrivate, capitalGainPrivate } = input.amounts;
-  const fifty = roundDollar(base.times("0.50"));
-  const thirty = roundDollar(base.times("0.30"));
-  const twenty = roundDollar(base.times("0.20"));
-  const g = min(cashPublic, roundDollar(base.times("0.60")));
+  const fifty = base.times("0.50");
+  const thirty = base.times("0.30");
+  const twenty = base.times("0.20");
+  const g = min(cashPublic, base.times("0.60"));
   const a = min(noncashPublic, zeroFloor(fifty.minus(g)));
   const reserveC = min(capitalGainPublic, zeroFloor(fifty.minus(g).minus(a)));
-  const cashAdjustment = min(g, roundDollar(base.times("0.10")));
+  const cashAdjustment = min(g, base.times("0.10"));
   const b = input.taxYear === 2025
     ? Decimal.min(cashPrivate.plus(noncashPrivate), thirty, zeroFloor(fifty.minus(cashPublic).minus(noncashPublic).minus(capitalGainPublic)))
     : Decimal.min(cashPrivate.plus(noncashPrivate), thirty, zeroFloor(fifty.minus(g).minus(a).minus(reserveC).plus(cashAdjustment)));
@@ -45,7 +45,7 @@ export function calculateCharitableContributionWorksheet(input: CharitableContri
   const allowedAfterFloor = { ...allowedBeforeFloor };
   const categories = Object.keys(raw) as CharitableCategory[];
   const hasPercentageExcess = categories.some(category => raw[category].gt(allowedBeforeFloor[category]));
-  let remainingFloor = input.taxYear === 2026 ? roundDollar(base.times("0.005")) : d("0");
+  let remainingFloor = input.taxYear === 2026 ? base.times("0.005") : d("0");
   for (const category of ["capital_gain_20", "capital_gain_30", "other_30", "noncash_50", "cash_60"] as const) {
     const disallowed = min(allowedBeforeFloor[category], remainingFloor);
     allowedAfterFloor[category] = allowedBeforeFloor[category].minus(disallowed);
@@ -60,7 +60,7 @@ export function calculateCharitableContributionWorksheet(input: CharitableContri
   const carryforwards = categories.flatMap(category => {
     const percentageExcess = raw[category].minus(allowedBeforeFloor[category]);
     const eligibleFloor = hasPercentageExcess ? allowedBeforeFloor[category].minus(allowedAfterFloor[category]) : d("0");
-    const amount = roundDollar(percentageExcess.plus(eligibleFloor));
+    const amount = percentageExcess.plus(eligibleFloor);
     return amount.gt(0) ? [{ taxYear: input.taxYear, category, amount }] : [];
   });
   audit.record("Charitable WS", "total", "Charitable deduction after floor", totalDeduction, "Sum allowed categories after percentage limits and 0.5% floor");

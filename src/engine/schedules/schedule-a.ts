@@ -19,6 +19,7 @@ import { d, sum, zeroFloor, min, roundDollar } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { calculateSALTLimit } from "@/utils/tax-math.js";
 import { calculateCharitableContributionWorksheet, type CharitableCategory, type CharitableContributionWorksheetInput } from "@/engine/forms/charitable-contribution-worksheet.js";
+import { charitableSourceDigest } from "@/utils/charitable-source-digest.js";
 // calculateDeductibleMortgageInterest is no longer used here — mortgage interest
 // is now computed with aggregate debt limits per IRS Pub 936 (see Lines 8a-8d section).
 
@@ -76,8 +77,13 @@ export interface ScheduleAResult {
   mortgageInsurancePremiums: Decimal; // Restored for 2026
   investmentInterestDeduction: Decimal; // Line 9
   casualtyLossDeduction: Decimal; // Line 15
-  cashCharitable: Decimal; // Line 12
-  nonCashCharitable: Decimal; // Line 13
+  cashCharitable: Decimal; // Exact computational cash aggregate; includes legacy prior use.
+  nonCashCharitable: Decimal; // Exact computational noncash amount.
+  charitableCurrentCash: Decimal; // Reported line11 after source-group rounding.
+  charitableCurrentNoncash: Decimal; // Reported line12.
+  charitablePriorYearUsed: Decimal; // Reported line13; separate from current gifts.
+  charitableTotal: Decimal; // Reported line14=sum11–13, transferred to17 and other deduction consumers.
+  charitableSourceDigest: string; // Original charitable facts, excluding render-only identifiers.
   gamblingLossDeduction: Decimal; // Component of line16
   bondPremiumDeduction: Decimal; // Actual allowable section171 excess
   oidOrdinaryLossDeduction: Decimal; // Actual allowable section1.1275-7(f)(1) ordinary loss
@@ -405,14 +411,16 @@ export function calculateScheduleA(
     if (nolCashLimit !== undefined) amounts.cashPublic = min(amounts.cashPublic, nolCashLimit);
     const charitable = calculateCharitableContributionWorksheet({ taxYear: input.taxpayer.taxYear, contributionBase, amounts });
     audit.merge(charitable.lines);
-    cashCharitable = charitable.cashDeduction;
-    nonCashCharitable = charitable.nonCashDeduction;
+    const privateCashAllowed = min(amounts.cashPrivate, charitable.allowedAfterFloor.other_30);
+    cashCharitable = charitable.allowedAfterFloor.cash_60.plus(privateCashAllowed);
+    nonCashCharitable = sum(charitable.allowedAfterFloor.noncash_50, charitable.allowedAfterFloor.capital_gain_30,
+      charitable.allowedAfterFloor.capital_gain_20, charitable.allowedAfterFloor.other_30.minus(privateCashAllowed));
     charitableCarryforwards = charitable.carryforwards;
     const limitDescription = input.taxpayer.taxYear === 2026 ? "2026 category worksheet, including 0.5% floor" : "Final2025 Pub526 Worksheet2 current-contribution category limits";
-    audit.record("Sched A", "12", "Cash charitable after applicable limitations", cashCharitable, limitDescription);
-    audit.record("Sched A", "13", "Noncash charitable after applicable limitations", nonCashCharitable, limitDescription);
+    audit.record("Charitable Computation", "cash", "Cash charitable after applicable limitations", cashCharitable, limitDescription);
+    audit.record("Charitable Computation", "noncash", "Noncash charitable after applicable limitations", nonCashCharitable, limitDescription);
   } else {
-    // ── Charitable (Lines 12-13) with stacked AGI limits ──
+    // ── Historical charitable computation with stacked AGI limits ──
     // Per IRC §170(b)(1), charitable contribution limits interact (stack):
     // Non-cash donations:
     // - LTCG property to supported public charities: 30% of AGI
@@ -434,9 +442,11 @@ export function calculateScheduleA(
     const rawOtherNonCash = input.donations
       .filter((don) => don.type !== "cash" && !don.isLongTermCapitalGain)
       .reduce((acc, don) => acc.plus(d(don.amount)), new Decimal(0));
-    const appreciatedLimit = roundDollar(contributionBase.times("0.3"));
-    const privateFoundationAppreciatedLimit = roundDollar(contributionBase.times("0.2"));
-    const overallNonCashLimit = roundDollar(contributionBase.times("0.5"));
+    // Section6102(c): intermediate percentage capacities remain exact. Only
+    // the completed physical lines are rounded after use/carry is computed.
+    const appreciatedLimit = contributionBase.times("0.3");
+    const privateFoundationAppreciatedLimit = contributionBase.times("0.2");
+    const overallNonCashLimit = contributionBase.times("0.5");
     const deductiblePublicAppreciatedProperty = min(rawPublicAppreciatedProperty, appreciatedLimit);
     // Other non-cash gets remaining 50% capacity after LTCG
     const otherNonCashCapacity = zeroFloor(overallNonCashLimit.minus(deductiblePublicAppreciatedProperty));
@@ -449,7 +459,7 @@ export function calculateScheduleA(
     const rawCashCharitableDirect = nolCashLimit === undefined ? originalCashCharitableDirect : min(originalCashCharitableDirect, nolCashLimit);
     const rawCashCharitable = rawCashCharitableDirect
       .plus(extra?.k1CashCharitable ?? new Decimal(0));
-    const cashAGILimit = roundDollar(contributionBase.times("0.6"));
+    const cashAGILimit = contributionBase.times("0.6");
     const preliminaryNonCash = deductiblePublicAppreciatedProperty.plus(deductibleOtherNonCash);
     const cashCapacity = zeroFloor(cashAGILimit.minus(preliminaryNonCash));
 
@@ -470,7 +480,7 @@ export function calculateScheduleA(
     const carryforwardAuditNote = carryforwardReconciliation.totalExpired.greaterThan(0)
       ? ` (carryforward used ${carryforwardUsed}, expired ${carryforwardReconciliation.totalExpired})`
       : ` + carryforward ${carryforwardUsed}`;
-    audit.record("Sched A", "12", "Cash charitable", cashCharitable,
+    audit.record("Charitable Computation", "cash", "Cash charitable", cashCharitable,
       `Sum cash donations ${rawCashCharitableDirect}${k1CashNote}${carryforwardAuditNote} (limited to 60% AGI = $${cashAGILimit})`);
 
     const remainingThirtyPercentHeadroom = zeroFloor(appreciatedLimit.minus(deductiblePublicAppreciatedProperty));
@@ -489,7 +499,7 @@ export function calculateScheduleA(
     nonCashCharitable = deductiblePublicAppreciatedProperty
       .plus(deductiblePrivateFoundationAppreciatedProperty)
       .plus(deductibleOtherNonCash);
-    audit.record("Sched A", "13", "Non-cash charitable", nonCashCharitable,
+    audit.record("Charitable Computation", "noncash", "Non-cash charitable", nonCashCharitable,
       "Supported public-charity LTCG property (30% AGI limit) + supported private-foundation LTCG property (20% AGI branch with remaining 30% and 50% headroom limits) + other non-cash property (50% AGI limit)" +
       ((extra?.k1AppreciatedProperty30 ?? new Decimal(0)).isZero() && (extra?.k1AppreciatedProperty20 ?? new Decimal(0)).isZero()
         ? ""
@@ -535,6 +545,22 @@ export function calculateScheduleA(
     charitableCarryforwardDetail = carryforwardReconciliation.detail;
   }
   const newCharitableCarryforward = sum(...charitableCarryforwards.map(entry => entry.amount));
+  const exactPriorUsed = sum(...charitableCarryforwardDetail.map(entry => entry.amountUsed));
+  const exactCurrentCash = cashCharitable.minus(exactPriorUsed);
+  if ([exactCurrentCash, nonCashCharitable, exactPriorUsed].some(value => !value.isFinite() || value.lt(0))) {
+    throw new Error("Charitable current and prior computational groups must reconcile");
+  }
+  const charitableCurrentCash = roundDollar(exactCurrentCash);
+  const charitableCurrentNoncash = roundDollar(nonCashCharitable);
+  const charitablePriorYearUsed = roundDollar(exactPriorUsed);
+  const charitableTotal = sum(charitableCurrentCash, charitableCurrentNoncash, charitablePriorYearUsed);
+  audit.record("Sched A", "11", "Current cash charitable contributions", charitableCurrentCash,
+    "Round the completed current-cash group after category limits; preserve original cents", { "Exact current cash": exactCurrentCash });
+  audit.record("Sched A", "12", "Current noncash charitable contributions", charitableCurrentNoncash,
+    "Round the completed current-noncash group after category limits", { "Exact current noncash": nonCashCharitable });
+  audit.record("Sched A", "13", "Prior-year charitable carryover used", charitablePriorYearUsed,
+    "Round actual prior-year use separately from current gifts", { "Exact prior carry used": exactPriorUsed });
+  audit.record("Sched A", "14", "Total charitable contributions", charitableTotal, "Add reported lines11,12,13");
 
   // Line 28: Gambling losses (limited to gambling winnings per IRC §165(d))
   const gamblingWinnings = extra?.gamblingWinnings ?? new Decimal(0);
@@ -580,8 +606,7 @@ export function calculateScheduleA(
     mortgageInsurancePremiums,
     investmentInterestDeduction,
     casualtyLossDeduction,
-    cashCharitable,
-    nonCashCharitable,
+    charitableTotal,
     otherItemizedDeductions
   );
   audit.record("Sched A", "17", "Total itemized deductions", totalItemized,
@@ -601,6 +626,11 @@ export function calculateScheduleA(
     casualtyLossDeduction,
     cashCharitable,
     nonCashCharitable,
+    charitableCurrentCash,
+    charitableCurrentNoncash,
+    charitablePriorYearUsed,
+    charitableTotal,
+    charitableSourceDigest: charitableSourceDigest(input),
     gamblingLossDeduction,
     bondPremiumDeduction,
     oidOrdinaryLossDeduction,

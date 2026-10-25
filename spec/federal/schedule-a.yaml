@@ -182,47 +182,33 @@ lines:
       - "Net casualty gains go to Form 8949, not Schedule A"
     testRef: "tests/engine/forms/form-4684.test.ts::Form 4684 aggregate - deductible loss flows to Schedule A Line 15"
 
+  - line: "11"
+    description: "Current gifts by cash or check"
+    formula: "Round the completed current-cash deduction after applicable category limits and floors; exclude actual prior-year use. Original source cents and exact computational category amounts remain separate."
+    irsRef: "Final2025 ScheduleA line11; i1040 Rounding Off to Whole Dollars; Pub526"
+    testRef: "tests/engine/schedules/schedule-a-charity-reporting.test.ts::reports current and prior charity groups separately after exact computation"
+
   - line: "12"
-    description: "Gifts to charity (cash)"
-    formula: "min(totalCash + carryforward, 60% AGI - totalNonCashAllowed)"
-    irsRef: "IRC §170(b)(1)(G); Schedule A Instructions, Line 12; Pub 526"
-    notes: |
-      Per IRC §170(b)(1)(G), cash contributions to 50% organizations are limited to
-      60% of AGI MINUS property contributions already allowed under (A)/(C).
-      Cash can exceed the 50% overall limit only to the extent the 60% headroom
-      is not consumed by non-cash property deductions.
-    edgeCases:
-      - "Cash-only: limited to 60% of AGI (no reduction)"
-      - "Cash + non-cash: cash reduced by non-cash property allowed"
-      - "Effective maximum total deduction (all categories) is 60% of AGI"
-      - "Carryforward from prior year added to current cash before stacking limit"
-      - "K-1 Box 13 Code A pass-through cash charitable aggregates with personal cash donations"
-    testRef: "tests/engine/schedules/schedule-a.test.ts::Schedule A Line 12 - cash charitable"
+    description: "Current gifts other than cash or check"
+    formula: "Round the completed current-noncash deduction after applicable qualification, basis, category limits and floors; prior-year use belongs on13."
+    irsRef: "Final2025 ScheduleA line12; Pub526; IRC170(b)(1)(A),(C),(D)"
+    testRef: "tests/engine/schedules/schedule-a-charity-reporting.test.ts::reports current and prior charity groups separately after exact computation"
 
   - line: "13"
-    description: "Gifts to charity (non-cash)"
-    formula: "FMV of donated non-cash property, limited by contribution category: long-term capital gain property donated to a supported public charity is limited to 30% of AGI, long-term capital gain property validated as donated to a second-category/private foundation is limited to the smallest of 20% of AGI, the remaining 30%-bucket headroom after the supported 30% capital-gain-property bucket, and the remaining 50%-bucket headroom after the supported 60%, 50%, and 30% buckets already deducted, and other non-cash property is limited to 50% of AGI"
-    irsRef: "Schedule A Instructions, Line 13; Pub. 526 (2025), Limit Based on 20% of AGI and How To Figure Your Deduction When Limits Apply; IRC §170(b)(1)(A),(C)"
-    notes: |
-      Per IRC §170(b)(1)(A), total contributions to 50% organizations (excluding
-      cash under (G)) are limited to 50% of AGI. Capital gain property has a 30%
-      sub-limit under (C). Other non-cash property gets the remaining 50% capacity
-      after capital gain property is allocated. Total non-cash cannot exceed 50% AGI.
-      Long-term capital gain property donated to a validated private foundation uses the 20% AGI limit branch.
-    edgeCases:
-      - "Appreciated stock: deduct FMV, no capital gains"
-      - "Long-term capital gain property: limited to 30% of AGI"
-      - "Long-term capital gain property donated to a validated private foundation uses the 20% AGI limit branch"
-      - "Short-term gain property: limited to cost basis"
-      - "Other non-cash only: limited to 50% of AGI"
-      - "Both LTCG + other: LTCG limited to 30%, other limited to remaining 50% capacity"
-      - "K-1 Box 13 Code B pass-through capital gain property aggregates with personal appreciated-property donations (30% limit)"
-      - "K-1 Box 13 Code C pass-through capital gain property aggregates with personal private-foundation donations (20% limit)"
-    testRef: "tests/engine/schedules/schedule-a.test.ts::Schedule A Line 13 - private-foundation LTCG property uses the 20% AGI limit"
+    description: "Actual prior-year charitable carry used"
+    formula: "Round the sum of allowed prior-year category/vintage amounts separately from current contributions. This reporting line does not establish a missing category or originating year."
+    irsRef: "Final2025 ScheduleA line13; Pub526 Carryovers; IRC170(d)"
+    testRef: "tests/engine/schedules/schedule-a-charity-reporting.test.ts::reports current and prior charity groups separately after exact computation"
+
+  - line: "14"
+    description: "Reported charitable deduction subtotal"
+    formula: "Reported11+12+13. Preserve exact source/category amounts before completing each line; do not replace the sum of completed lines with a rounded combined exact subtotal."
+    irsRef: "Final2025 ScheduleA line14; i1040 Rounding Off to Whole Dollars"
+    testRef: "tests/engine/schedules/schedule-a-charity-reporting.test.ts::rounds each completed charity line without changing original source cents"
 
   - line: "17"
     description: "Total itemized deductions"
-    formula: "Line 4 + 5e + 8a + 8c + 9 + 12 + 13 + 15 + 28"
+    formula: "Line4+7+10+14+15+16; charitable14 is the sum of reported11–13"
     irsRef: "Schedule A Instructions, Line 17"
     testRef: "tests/engine/schedules/schedule-a.test.ts::Schedule A Line 17 - total itemized deductions"
 

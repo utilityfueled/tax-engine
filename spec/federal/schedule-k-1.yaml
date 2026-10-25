@@ -190,7 +190,7 @@ lines:
     description: "Charitable contributions — cash and non-capital-gain property (60% AGI limit)"
     formula: "Partner's share of cash contributions and non-capital-gain property donations to 50% limit organizations"
     irsRef: "Form 1065 K-1 Instructions, Box 13 Code A; IRC §170(b)(1)(A)"
-    destination: "Schedule A Line 12 (cash charitable)"
+    destination: "Schedule A Line 11 (current cash charitable)"
     notes: |
       Flows to Schedule A and is subject to the 60% of AGI limit for cash contributions.
       Non-capital-gain property in Code A is subject to the 50% limit but is treated
@@ -201,7 +201,7 @@ lines:
     description: "Charitable contributions — capital gain property to 50% organizations (30% AGI limit)"
     formula: "Partner's share of capital gain property donated to public charities and certain private foundations"
     irsRef: "Form 1065 K-1 Instructions, Box 13 Code B; IRC §170(b)(1)(C)"
-    destination: "Schedule A Line 13 (non-cash charitable)"
+    destination: "Schedule A Line 12 (current noncash charitable)"
     notes: |
       Long-term capital gain property donated to 50% limit organizations (public charities).
       Subject to the 30% of AGI limit. Flows to the same bucket as personal
@@ -212,7 +212,7 @@ lines:
     description: "Charitable contributions — capital gain property to non-50% organizations (20% AGI limit)"
     formula: "Partner's share of capital gain property donated to non-50% limit organizations"
     irsRef: "Form 1065 K-1 Instructions, Box 13 Code C; IRC §170(b)(1)(D)"
-    destination: "Schedule A Line 13 (non-cash charitable)"
+    destination: "Schedule A Line 12 (current noncash charitable)"
     notes: |
       Capital gain property donated to private foundations and other non-50% organizations.
       Subject to the 20% of AGI limit. Flows to the private-foundation appreciated-property

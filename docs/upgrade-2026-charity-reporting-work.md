@@ -1,0 +1,43 @@
+# Schedule A charitable reporting prerequisite
+
+This package separates current cash, current property, and actual prior-year carry used on the physical Schedule A lines. It retains exact computational source amounts before applying whole-dollar reporting. It does not qualify a filing form or complete the remaining prior/mixed-category and nonitemizer carry methods.
+
+## Sources and decisions
+
+Sources refreshed October 25, 2026:
+
+- [Final 2025 Schedule A](https://www.irs.gov/pub/irs-pdf/f1040sa.pdf): lines 11, 12, and 13 distinguish the three source groups; line 14 adds those reported lines and line 17 includes the resulting subtotal.
+- [Form 1040 rounding instructions](https://www.irs.gov/instructions/i1040gi): retain cents while combining the sources for one line, then round that completed line. The repository applies whole-dollar reporting consistently to these completed charitable lines.
+- [IRC 6102(c)](https://uscode.house.gov/us/usc/119-118/t26/s6102/): whole-dollar reporting does not round the intermediate items needed to compute the reported amount. Both the historical percentage capacities and the current-category worksheet now retain exact values through limits, floor and outgoing carry.
+- [Publication 526](https://www.irs.gov/publications/p526): category limitations and actual prior-year use precede reporting. This reporting package does not replace the separately required category/vintage calculation.
+
+The literal source example has current cash 20,000.49, current property 10,000.51, and prior use 1,234.49. It reports 20,000 / 10,001 / 1,234, then 31,235. The exact computational cash alias remains 21,234.98, including the historical prior-use alias; current property remains 10,000.51. Separate 100.49 cash and 200.49 property groups report 100 + 200 = 300, while two 0.49 sources on the same cash line report 1. The completed line 14 is transferred to the existing NOL deduction and AMT charity consumers.
+
+The renderer requires unique canonical 11–14 audits, reconciles their retained computational groups, and binds original charitable inputs with a local SHA-256 digest. Original source cents and the current/prior split must match, even if the rounded total is unchanged. Tax identifiers removed for review rendering are excluded from this projection. The digest detects changed source facts; it is not evidence of an independent tax review or the authenticity of external documents.
+
+The exact groups must also equal the unique computational cash/noncash audits and the exact inputs retained on physical lines 11–13. A changed retained cent, missing exact input, or duplicate computational audit rejects before template loading. With a contribution base of 1,000.49 and current public cash of 10,000.99, the exact capacity is 600.294 and carryover is 9,400.696; physical line 11 is 600. Corresponding standalone 50%, 30%, and 20% cases preserve 500.245, 300.147, and 200.098 before reporting.
+
+The current-category helper additionally retains the exact 2026 floor of 5.00245 for that base. In the cash example, the allowed amount after the floor is 595.29155 and the exact category carry is 9,405.69845. Neither reporting rounding nor the shared percentage calculation creates or removes source carry. Separate regular/AMT NOL replay worksheets retain their own explicitly documented reported-dollar boundaries.
+
+## Verification record
+
+- Spec entries preceded the new tests and implementation. The first core run reproduced missing physical line 11 and missing retained reporting fields; the PDF run reproduced missing audit rejection before template access.
+- Four initial new core/PDF cases passed after implementation. Existing numeric oracles were preserved while old cash-line-12/noncash-line-13 assertions were corrected to the physical form.
+- The first broad consumer run passed 1,461 cases and found ten failures: nine historical crypto records omitted the donation collection, and one audit whitelist omitted the new computational worksheet. The source digest now preserves omission without inventing a collection; the whitelist adds exact computational-zero assertions.
+- The corrected initial isolated tree passed 1,472 consumer tests. Self-review then found that the 2026 category branch retained its worksheet's rounded aliases; a red 100-versus-100.49 regression led to retaining its exact `allowedAfterFloor` values instead.
+- Independent parent review of tree `83dfe20f41f5de02d555a16c8ef780829f4c38e2` found two defects: legacy percentage capacities rounded early, and altered retained cents could pass PDF reconciliation. The two owned spec-linked regressions reproduced both failures, then all eight new core/PDF cases passed after the source-backed corrections. Parent probes were review-only and are not included in this package.
+- The adjacent current-category audit reproduced the same early percentage rounding. A separate spec-first regression checks all five categories in both supported years, the exact 2026 floor/carry, and the 10% coordination amount. Those intermediate values now remain exact as well.
+- The first exact broad run after the precision correction found four legacy assertions that expected early-rounded computational aliases. Their physical-dollar checks remain: 1 / 200 / 100 / 29,999. Their corrected exact allowed/carry pairs are 0.6 / 499.4, 199.8 / 0.2, 99.9 / 50.1, and 29,999.1 / 0.9, respectively. This adds exact conservation checks instead of removing the old reported-dollar oracles.
+- Clean isolated tree `d7fb6a6914d700de4274f9cc9ab5a087ca714f86` at `/private/tmp/tax-charity-reporting-2mytuw0t` passed **1,476 tests in 50 files**, root and web type checks, **4,645 spec references**, and scoped lint with **zero errors**. The 220 warnings are existing non-null assertions in the long touched engine/test files; new source/test files introduce none. Commands used `pnpm test <50 affected consumer paths> --maxWorkers=1`, `pnpm typecheck`, `pnpm typecheck:web`, `pnpm spec:validate`, and scoped `pnpm exec eslint`. Log: `.local/upgrade-evidence/charity-reporting-d7fb-checks.log`.
+- The saved 2025 review PDF was independently reopened for canonical field values, widgets, appearances, identifiers and one notice per page, then visually inspected. The expected current cash / current property / prior use / total appears on physical 11 / 12 / 13 / 14, with a blank SSN and visible red review notice. The render artifact is in the earlier isolated snapshot `/private/tmp/tax-charity-reporting-h56i9xy2/tmp/pdfs/charity-reporting.pdf`; the subsequent exact-capacity corrections do not alter that fixture's reported values. The final saved-PDF test passed again in the clean tree.
+- Parent re-review of executable tree `a979abe93687f17b77b30fe1cf6b55931f12e82e` refreshed section6102(c) and Pub526, inspected the corrected sources, and independently passed **27 tests across four files**, including the unchanged original five review probes. Log: `.local/upgrade-evidence/parent-charity-reporting-rereview.log`. No remaining actionable finding in the bounded reporting slice. The final clean tree has identical product blobs; only the four corrected legacy precision assertions/comments and documentation differ. This is agent software/source review, not human tax or filing qualification.
+- The reporting package uses coordinated rule versions **2025.74 / 2026.70-law-integration-draft**. COD source reductions follow separately at the next revision. Final staging preserves the original K-1 Box 13 absence assertion; only physical Schedule A references move to 11/12/13. Readiness and independent-review status remain unchanged.
+- The final rebase on `a66b5de` produced executable tree `644d20ebae5218134f00d96dc2bffe49b3b60d5e`. All **476 focused tests in four files**, root/web types and **4,654 spec references** passed again; log `.local/upgrade-evidence/charity-reporting-644d-final.log`. All reviewed product blobs are unchanged; final evidence and rule provenance are the only added records. The final commit tree differs from this tree only by this evidence paragraph.
+
+## Remaining internal work
+
+1. Actual prior-year category/vintage history and mixed-current ordering, including fifth-year expiration and history changes. Prior contributions must not be fed into the current-only Publication 526 Worksheet 2.
+2. Separate standard-deduction/nonitemizer carry treatment, including the 2026 current-cash deduction and the itemizer floor transition.
+3. Extend regular/AMT charitable NOL coordination only with the actual separate source histories and published allocation method.
+
+These are software/source-method tasks. Human tax review and final form qualification remain separate and unclaimed.

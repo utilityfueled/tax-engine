@@ -1,4 +1,5 @@
 import { assertPdfExportAllowed } from "../../export-policy.js";
+import { charitableSourceDigest } from "@/utils/charitable-source-digest.js";
 /**
  * PDF filler for IRS Schedule A (Form 1040) — Itemized Deductions.
  *
@@ -116,6 +117,46 @@ export async function fillScheduleA(
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
   const sa = result.scheduleA;
   if (!sa) throw new Error("Schedule A requires an actual calculation before tax audit mapping");
+  if (sa.charitableSourceDigest !== charitableSourceDigest(input)) throw new Error("Schedule A charitable sources do not match the calculation");
+  const exactPriorUsed = sa.charitableCarryforwardDetail.reduce((total, row) => total.plus(row.amountUsed), ZERO);
+  const exactCurrentCash = sa.cashCharitable.minus(exactPriorUsed);
+  if ([exactPriorUsed, exactCurrentCash, sa.nonCashCharitable].some(value => !value.isFinite() || value.lt(0))) {
+    throw new Error("Schedule A charitable source groups do not reconcile");
+  }
+  for (const [number, expected] of [["cash", sa.cashCharitable], ["noncash", sa.nonCashCharitable]] as const) {
+    const lines = sa.lines.filter(line => line.form === "Charitable Computation" && line.line === number);
+    const value = lines[0]?.value;
+    if (lines.length !== 1 || !value?.isFinite() || !value.eq(expected)) {
+      throw new Error(`Schedule A charitable computational audit ${number} must reconcile exact retained amounts`);
+    }
+  }
+  const exactCharityGroups: Record<string, { key: string; value: Decimal }> = {
+    "11": { key: "Exact current cash", value: exactCurrentCash },
+    "12": { key: "Exact current noncash", value: sa.nonCashCharitable },
+    "13": { key: "Exact prior carry used", value: exactPriorUsed },
+  };
+  const charityExpected = { "11": sa.charitableCurrentCash, "12": sa.charitableCurrentNoncash,
+    "13": sa.charitablePriorYearUsed, "14": sa.charitableTotal };
+  if (!charityExpected["11"]?.eq(exactCurrentCash.toDecimalPlaces(0, Decimal.ROUND_HALF_UP))
+    || !charityExpected["12"]?.eq(sa.nonCashCharitable.toDecimalPlaces(0, Decimal.ROUND_HALF_UP))
+    || !charityExpected["13"]?.eq(exactPriorUsed.toDecimalPlaces(0, Decimal.ROUND_HALF_UP))
+    || !charityExpected["14"]?.eq(charityExpected["11"].plus(charityExpected["12"]).plus(charityExpected["13"]))) {
+    throw new Error("Schedule A charitable audit must reconcile exact source groups and reported subtotal");
+  }
+  for (const [number, expected] of Object.entries(charityExpected)) {
+    const lines = sa.lines.filter(line => line.form === "Sched A" && line.line === number);
+    const value = lines[0]?.value;
+    if (lines.length !== 1 || !value?.isFinite() || !value.isInteger() || value.lt(0) || !value.eq(expected)) {
+      throw new Error(`Schedule A charitable audit ${number} must be unique and reconcile reported sources`);
+    }
+    const group = exactCharityGroups[number];
+    if (group) {
+      const exact = lines[0].inputs[group.key];
+      if (!(exact instanceof Decimal) || !exact.isFinite() || !exact.eq(group.value)) {
+        throw new Error(`Schedule A charitable audit ${number} must reconcile exact source groups`);
+      }
+    }
+  }
   const taxLines = Object.fromEntries((["5a", "5b", "5c", "5d", "5e", "6", "7"] as const).map(number => {
     const lines = sa.lines.filter(line => line.form === "Sched A" && line.line === number);
     const value = lines[0]?.value;
@@ -183,19 +224,9 @@ export async function fillScheduleA(
   setCurrencyField(form, F.line9, sa.investmentInterestDeduction);
 
   // ── Gifts to Charity (Lines 11-14) ──
-  // Split cashCharitable into current-year cash (Line 11) and carryover used (Line 13).
-  // The engine's cashCharitable includes carryforward used; we separate them for the form.
-  const carryforwardUsed = sa.charitableCarryforwardDetail.reduce(
-    (acc, entry) => acc.plus(entry.amountUsed), ZERO,
-  );
-  const currentYearCash = Decimal.max(ZERO, sa.cashCharitable.minus(carryforwardUsed));
-
-  setCurrencyField(form, F.line11, currentYearCash);
-  setCurrencyField(form, F.line12, sa.nonCashCharitable);
-  setCurrencyField(form, F.line13, carryforwardUsed);
-  // Line 14: Total charitable = 11 + 12 + 13
-  const totalCharitable = sa.cashCharitable.plus(sa.nonCashCharitable);
-  setCurrencyField(form, F.line14, totalCharitable);
+  for (const [number, value] of Object.entries(charityExpected)) {
+    setCurrencyField(form, F[`line${number}` as keyof typeof F], value);
+  }
 
   // ── Casualty and Theft Losses (Line 15) ──
   setCurrencyField(form, F.line15, sa.casualtyLossDeduction);

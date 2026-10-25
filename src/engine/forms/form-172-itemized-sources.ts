@@ -74,7 +74,7 @@ export function calculateForm172ItemizedSources(input: TaxYearInput, context: {
     throw new Error("Form172 state/local income-tax business and nonbusiness classification requires actual source attribution");
   }
   if ([fresh.foreignIncomeTaxDeduction, fresh.mortgageInsurancePremiums, fresh.casualtyLossDeduction,
-    fresh.cashCharitable, fresh.nonCashCharitable, fresh.otherItemizedDeductions].some(value => !value.isZero())) {
+    fresh.cashCharitable, fresh.nonCashCharitable, fresh.charitablePriorYearUsed, fresh.otherItemizedDeductions].some(value => !value.isZero())) {
     throw new Error("Form172 other itemized deduction classifications require their separate regular and AMT source methods");
   }
   const mortgage = fresh.mortgageInterest.plus(fresh.mortgageWorksheet.deductiblePoints);

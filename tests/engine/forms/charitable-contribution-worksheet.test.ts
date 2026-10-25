@@ -5,6 +5,29 @@ import { calculateCharitableContributionWorksheet } from "@/engine/forms/charita
 const d = (v: string) => new Decimal(v);
 const empty = { cashPublic: d("0"), noncashPublic: d("0"), capitalGainPublic: d("0"), cashPrivate: d("0"), noncashPrivate: d("0"), capitalGainPrivate: d("0") };
 const calc = (amounts: Partial<typeof empty>, agi = "100000") => calculateCharitableContributionWorksheet({ taxYear: 2026, contributionBase: d(agi), amounts: { ...empty, ...amounts } });
+it("retains exact percentage floor and carry values in both supported years", () => {
+  for (const taxYear of [2025, 2026]) {
+    for (const [source, category, beforeFloor] of [
+      ["cashPublic", "cash_60", "600.294"],
+      ["noncashPublic", "noncash_50", "500.245"],
+      ["capitalGainPublic", "capital_gain_30", "300.147"],
+      ["cashPrivate", "other_30", "300.147"],
+      ["capitalGainPrivate", "capital_gain_20", "200.098"],
+    ] as const) {
+      const result = calculateCharitableContributionWorksheet({ taxYear, contributionBase: d("1000.49"),
+        amounts: { ...empty, [source]: d("10000.99") } });
+      const expectedFloor = taxYear === 2026 ? d("5.00245") : d("0");
+      const expectedAllowed = d(beforeFloor).minus(expectedFloor);
+      expect(result.allowedBeforeFloor[category].toString()).toBe(beforeFloor);
+      expect(result.floorDisallowed).toEqual(expectedFloor);
+      expect(result.allowedAfterFloor[category]).toEqual(expectedAllowed);
+      expect(result.carryforwards).toEqual([{ taxYear, category, amount: d("10000.99").minus(expectedAllowed) }]);
+      expect(result.totalDeduction).toEqual(expectedAllowed.toDecimalPlaces(0, Decimal.ROUND_HALF_UP));
+    }
+  }
+  const adjustment = calc({ cashPublic: d("500.245"), cashPrivate: d("1000.99") }, "1000.49");
+  expect(adjustment.allowedBeforeFloor.other_30.toString()).toBe("100.049");
+});
 describe("2026 charitable category limits", () => {
   it("uses cash before ordinary public property under the 50% coordination", () => {
     const result = calc({ cashPublic: d("70000"), noncashPublic: d("50000") });

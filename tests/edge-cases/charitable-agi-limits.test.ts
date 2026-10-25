@@ -437,27 +437,30 @@ describe("Charitable AGI limits", () => {
     expect(result.totalItemized.toNumber()).toBe(0);
   });
 
-  it("AGI of $1 — 60% limit is $1 (rounds to $1), cash donation capped at $1", () => {
-    // AGI = $1. 60% = $0.60 → roundDollar → $1. Cash donation $500 → capped at $1.
+  it("AGI of $1 retains the exact 60% capacity before reporting one dollar", () => {
+    // Section6102(c): capacity0.60 remains exact; the completed cash line reports1.
     const input = makeFixtureWithDonations([
       { organization: "Charity", type: "cash", amount: "500", dateOfDonation: "2025-06-01", costBasis: "0" },
     ]);
     const result = calculateScheduleA(input, d(1), "single", c);
-    expect(result.cashCharitable.toNumber()).toBe(1);
+    expect(result.cashCharitable.toString()).toBe("0.6");
+    expect(result.charitableCurrentCash.toString()).toBe("1");
+    expect(result.charitableCarryforward.toString()).toBe("499.4");
   });
 
-  it("fractional AGI — 60% limit rounds to nearest dollar", () => {
-    // AGI = $333. 60% = $199.80 → roundDollar → $200. Cash donation $200 → exactly at cap.
+  it("fractional 60% capacity preserves the unreported carry cents", () => {
+    // Exact capacity199.80; reported current cash200; actual unallowed carry0.20.
     const input = makeFixtureWithDonations([
       { organization: "Charity", type: "cash", amount: "200", dateOfDonation: "2025-04-01", costBasis: "0" },
     ]);
     const result = calculateScheduleA(input, d(333), "single", c);
-    // 333 * 0.6 = 199.8 → rounds to 200
-    expect(result.cashCharitable.toNumber()).toBe(200);
+    expect(result.cashCharitable.toString()).toBe("199.8");
+    expect(result.charitableCurrentCash.toString()).toBe("200");
+    expect(result.charitableCarryforward.toString()).toBe("0.2");
   });
 
-  it("fractional AGI — 30% limit rounds to nearest dollar", () => {
-    // AGI = $333. 30% = $99.90 → roundDollar → $100. Appreciated donation $150 → capped at $100.
+  it("fractional 30% capacity preserves exact allowed property and carry", () => {
+    // Exact capacity99.90; reported current property100; actual unallowed carry50.10.
     const input = makeFixtureWithDonations([
       {
         organization: "Museum", type: "appreciated_stock", amount: "150",
@@ -465,7 +468,9 @@ describe("Charitable AGI limits", () => {
       },
     ]);
     const result = calculateScheduleA(input, d(333), "single", c);
-    expect(result.nonCashCharitable.toNumber()).toBe(100);
+    expect(result.nonCashCharitable.toString()).toBe("99.9");
+    expect(result.charitableCurrentNoncash.toString()).toBe("100");
+    expect(result.charitableCarryforward.toString()).toBe("50.1");
   });
 
   it("combined cash + appreciated — stacked limits reduce cash capacity", () => {
@@ -626,13 +631,12 @@ describe("Charitable AGI limits", () => {
       { organization: "Precision Charity", type: "cash", amount: "59999", dateOfDonation: "2025-08-01", costBasis: "0" },
     ]);
     const result = calculateScheduleA(input, d(99999), "single", c);
-    // 99999 * 0.6 = 59999.4 → rounds to 59999 → donation of 59999 is at cap
+    // Exact60% capacity59999.4; the59999 donation is below the cap.
     expect(result.cashCharitable.toNumber()).toBe(59999);
   });
 
-  it("appreciated LTCG property at exactly 30% of AGI with fractional result — rounds down to nearest dollar", () => {
-    // AGI = $99,997. 30% = $29,999.10 → roundDollar → $29,999.
-    // Appreciated stock donation = $30,000 → capped at $29,999.
+  it("appreciated property preserves the fractional 30% limit before reporting", () => {
+    // Exact30% capacity29999.10; report29999 while preserving carry0.90.
     const input = makeFixtureWithDonations([
       {
         organization: "University Endowment", type: "appreciated_stock", amount: "30000",
@@ -640,8 +644,9 @@ describe("Charitable AGI limits", () => {
       },
     ]);
     const result = calculateScheduleA(input, d(99997), "single", c);
-    // 99997 * 0.3 = 29999.1 → rounds to 29999 → $30K capped at $29,999
-    expect(result.nonCashCharitable.toNumber()).toBe(29999);
+    expect(result.nonCashCharitable.toString()).toBe("29999.1");
+    expect(result.charitableCurrentNoncash.toString()).toBe("29999");
+    expect(result.charitableCarryforward.toString()).toBe("0.9");
   });
 
   it("capital gain property donated to a private foundation uses the 20% AGI limit", () => {
@@ -795,7 +800,7 @@ describe("Charitable AGI limits", () => {
     expect(result.totalItemized.toNumber()).toBe(45500);
   });
 
-  it("audit trail — lines array contains Schedule A Line 12 (cash charitable) and Line 13 (non-cash) with correct values", () => {
+  it("audit trail separates current cash noncash and prior charity on physical lines 11 through 14", () => {
     // Verify the audit trail records the charitable contribution lines correctly.
     // AGI = $100K. Cash $20K (under 60% limit). Appreciated stock $15K (under 30% limit).
     const input = makeFixtureWithDonations([
@@ -807,17 +812,15 @@ describe("Charitable AGI limits", () => {
     ]);
     const result = calculateScheduleA(input, d(100000), "single", c);
 
-    // Verify Line 12 audit entry
+    // Final 2025 Schedule A separates current cash, current noncash, and prior carry.
+    const line11 = result.lines.find((l) => l.form === "Sched A" && l.line === "11");
+    expect(line11?.value.toNumber()).toBe(20000);
+    expect(line11?.description).toBe("Current cash charitable contributions");
     const line12 = result.lines.find((l) => l.form === "Sched A" && l.line === "12");
-    expect(line12).toBeDefined();
-    expect(line12!.value.toNumber()).toBe(20000);
-    expect(line12!.description).toBe("Cash charitable");
-
-    // Verify Line 13 audit entry
-    const line13 = result.lines.find((l) => l.form === "Sched A" && l.line === "13");
-    expect(line13).toBeDefined();
-    expect(line13!.value.toNumber()).toBe(15000);
-    expect(line13!.description).toBe("Non-cash charitable");
+    expect(line12?.value.toNumber()).toBe(15000);
+    expect(line12?.description).toBe("Current noncash charitable contributions");
+    expect(result.lines.find((l) => l.form === "Sched A" && l.line === "13")?.value.toNumber()).toBe(0);
+    expect(result.lines.find((l) => l.form === "Sched A" && l.line === "14")?.value.toNumber()).toBe(35000);
 
     // Verify Line 17 (total) audit entry sums correctly
     const line17 = result.lines.find((l) => l.form === "Sched A" && l.line === "17");

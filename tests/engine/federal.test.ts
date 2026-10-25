@@ -10807,9 +10807,9 @@ describe("K-1 Box 13 code separation — charitable contributions to Schedule A"
     });
 
     // Cash charitable should include both the direct donation and K-1 Code A
-    const line12 = result.allLines.find((l) => l.form === "Sched A" && l.line === "12");
-    expect(line12).toBeDefined();
-    expect(line12!.value.toNumber()).toBe(6000); // 1000 + 5000
+    const line11 = result.allLines.find((l) => l.form === "Sched A" && l.line === "11");
+    expect(line11).toBeDefined();
+    expect(line11!.value.toNumber()).toBe(6000); // 1000 + 5000
   });
 
   it("K-1 Box 13 Code A without personal donations still flows to Schedule A", () => {
@@ -10823,9 +10823,9 @@ describe("K-1 Box 13 code separation — charitable contributions to Schedule A"
       }],
     });
 
-    const line12 = result.allLines.find((l) => l.form === "Sched A" && l.line === "12");
-    expect(line12).toBeDefined();
-    expect(line12!.value.toNumber()).toBe(3000);
+    const line11 = result.allLines.find((l) => l.form === "Sched A" && l.line === "11");
+    expect(line11).toBeDefined();
+    expect(line11!.value.toNumber()).toBe(3000);
   });
 
   it("K-1 Box 13 Code B charitable capital gain property flows to Schedule A", () => {
@@ -10840,9 +10840,9 @@ describe("K-1 Box 13 code separation — charitable contributions to Schedule A"
     });
 
     // Non-cash charitable should include K-1 Code B
-    const line13 = result.allLines.find((l) => l.form === "Sched A" && l.line === "13");
-    expect(line13).toBeDefined();
-    expect(line13!.value.toNumber()).toBe(8000);
+    const line12 = result.allLines.find((l) => l.form === "Sched A" && l.line === "12");
+    expect(line12).toBeDefined();
+    expect(line12!.value.toNumber()).toBe(8000);
   });
 
   it("K-1 Box 13 Code C charitable capital gain property flows to Schedule A", () => {
@@ -10856,9 +10856,9 @@ describe("K-1 Box 13 code separation — charitable contributions to Schedule A"
       }],
     });
 
-    const line13 = result.allLines.find((l) => l.form === "Sched A" && l.line === "13");
-    expect(line13).toBeDefined();
-    expect(line13!.value.toNumber()).toBe(4000);
+    const line12 = result.allLines.find((l) => l.form === "Sched A" && l.line === "12");
+    expect(line12).toBeDefined();
+    expect(line12!.value.toNumber()).toBe(4000);
   });
 
   it("K-1 Box 13 Codes A+B+C aggregate from multiple partnerships to Schedule A", () => {
@@ -10884,14 +10884,14 @@ describe("K-1 Box 13 code separation — charitable contributions to Schedule A"
     });
 
     // Cash: 2000 direct + 3000 K-1 A (Fund A) + 1000 K-1 A (Fund B) = 6000
-    const line12 = result.allLines.find((l) => l.form === "Sched A" && l.line === "12");
-    expect(line12).toBeDefined();
-    expect(line12!.value.toNumber()).toBe(6000);
+    const line11 = result.allLines.find((l) => l.form === "Sched A" && l.line === "11");
+    expect(line11).toBeDefined();
+    expect(line11!.value.toNumber()).toBe(6000);
 
     // Non-cash: 2000 K-1 B (Fund A) + 1500 K-1 C (Fund B) = 3500
-    const line13 = result.allLines.find((l) => l.form === "Sched A" && l.line === "13");
-    expect(line13).toBeDefined();
-    expect(line13!.value.toNumber()).toBe(3500);
+    const line12 = result.allLines.find((l) => l.form === "Sched A" && l.line === "12");
+    expect(line12).toBeDefined();
+    expect(line12!.value.toNumber()).toBe(3500);
   });
 
   it("K-1 charitable amounts do NOT reduce partnership income on Schedule E", () => {
@@ -10935,9 +10935,9 @@ describe("K-1 Box 13 code separation — charitable contributions to Schedule A"
     expect(schedELine!.value.toNumber()).toBe(28000);
 
     // Schedule A should get 4000 from Code A
-    const line12 = result.allLines.find((l) => l.form === "Sched A" && l.line === "12");
-    expect(line12).toBeDefined();
-    expect(line12!.value.toNumber()).toBe(4000);
+    const line11 = result.allLines.find((l) => l.form === "Sched A" && l.line === "11");
+    expect(line11).toBeDefined();
+    expect(line11!.value.toNumber()).toBe(4000);
   });
 
   it("K-1 Code A charitable subject to 60% AGI limit on Schedule A", () => {
@@ -10954,9 +10954,9 @@ describe("K-1 Box 13 code separation — charitable contributions to Schedule A"
       }],
     });
 
-    const line12 = result.allLines.find((l) => l.form === "Sched A" && l.line === "12");
-    expect(line12).toBeDefined();
-    expect(line12!.value.toNumber()).toBe(57000); // 60% of 95000 AGI
+    const line11 = result.allLines.find((l) => l.form === "Sched A" && l.line === "11");
+    expect(line11).toBeDefined();
+    expect(line11!.value.toNumber()).toBe(57000); // 60% of 95000 AGI
   });
 
   it("K-1 Code B charitable subject to 30% AGI limit on Schedule A", () => {
@@ -10973,9 +10973,9 @@ describe("K-1 Box 13 code separation — charitable contributions to Schedule A"
       }],
     });
 
-    const line13 = result.allLines.find((l) => l.form === "Sched A" && l.line === "13");
-    expect(line13).toBeDefined();
-    expect(line13!.value.toNumber()).toBe(27000); // 30% of 90000 AGI
+    const line12 = result.allLines.find((l) => l.form === "Sched A" && l.line === "12");
+    expect(line12).toBeDefined();
+    expect(line12!.value.toNumber()).toBe(27000); // 30% of 90000 AGI
   });
 
   it("K-1 Code C charitable subject to 20% AGI limit on Schedule A", () => {
@@ -10992,11 +10992,11 @@ describe("K-1 Box 13 code separation — charitable contributions to Schedule A"
       }],
     });
 
-    const line13 = result.allLines.find((l) => l.form === "Sched A" && l.line === "13");
-    expect(line13).toBeDefined();
+    const line12 = result.allLines.find((l) => l.form === "Sched A" && l.line === "12");
+    expect(line12).toBeDefined();
     // 20% limit applies: min(20000, 18000) = 18000
     // But also subject to 30% headroom and 50% headroom checks
-    expect(line13!.value.toNumber()).toBe(18000);
+    expect(line12!.value.toNumber()).toBe(18000);
   });
 
   it("K-1 charitable excess carries forward", () => {

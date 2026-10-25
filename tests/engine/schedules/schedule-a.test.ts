@@ -1140,7 +1140,10 @@ describe("Schedule A - audit trail line values for each section", () => {
     // Line 8d: reserved for future use in 2025
     expect(getLine("8d")).toBe(0);
     expect(getLine("9")).toBe(800);
-    expect(getLine("12")).toBe(4000);
+    expect(getLine("11")).toBe(4000);
+    expect(getLine("12")).toBe(0);
+    expect(getLine("13")).toBe(0);
+    expect(getLine("14")).toBe(4000);
     expect(getLine("28")).toBe(2000);
     expect(getLine("17")).toBe(33300);
   });

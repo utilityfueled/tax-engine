@@ -2745,7 +2745,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   if (nol?.stage === "income") return {
     agi, taxableIncome: rawTaxableIncome, iraDeduction: sched1.iraDeduction, socialSecurityBenefitsTaxable,
     allowedPassiveLoss: form8582.allowedLoss, medicalDeduction: schedA.medicalDeduction,
-    charitableDeduction: schedA.cashCharitable.plus(schedA.nonCashCharitable), charitableCarryforward: schedA.charitableCarryforward,
+    charitableDeduction: schedA.charitableTotal, charitableCarryforward: schedA.charitableCarryforward,
     deductionUsed,
     currentExcessBusinessLoss: excessBusinessLossAddback,
     seniorDeduction: nol.modified ? schedule1A?.seniorDeduction ?? d("0") : d("0"),
@@ -3026,7 +3026,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
         realPropertyTaxes: sourceLine("5b"), personalPropertyTaxes: sourceLine("5c"),
         saltDeduction: schedA.saltDeduction, salesTaxElected: schedA.salesTaxElected,
         mortgageInterest: schedA.mortgageInterest, investmentInterest: schedA.investmentInterestDeduction,
-        charitableContributions: schedA.cashCharitable.plus(schedA.nonCashCharitable),
+        charitableContributions: schedA.charitableTotal,
         otherDeductions: sum(schedA.otherItemizedDeductions, schedA.casualtyLossDeduction, schedA.mortgageInsurancePremiums),
         itemizedReduction: itemizedDeductionReduction },
     };

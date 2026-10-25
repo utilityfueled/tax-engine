@@ -28,7 +28,9 @@ lines:
       property: min(D,20% base,30% base-C,30% base-B,
       max(0,50% base-G-A-C-B+min(G,10% base))). Cash within B is allocated first
       only to distinguish cash/noncash reporting, without changing its common cap.
-      Base=max(0,AGI); monetary results round to dollars. K-1 categories retain
+      Base=max(0,AGI); intermediate capacities, category use, floor and carry retain exact
+      Decimal values under6102(c). Only completed cash/noncash reporting groups round
+      to dollars. K-1 categories retain
       their reported categories. This worksheet expects contribution values after
       any property valuation/basis reduction; no appraisal or eligibility is inferred.
     testRef: "tests/engine/forms/charitable-contribution-worksheet.test.ts::2026 charitable category limits"
@@ -40,3 +42,8 @@ lines:
     description: "Current contribution excess by category and original tax year"
     formula: "Preserve percentage-limit excess by category and current tax year. If any current-year percentage-limit excess carries forward, add floor-disallowed amounts to the applicable category. If no percentage-limit excess exists, floor-only disallowance does not carry. Never invent a year/category for historical balances."
     testRef: "tests/engine/forms/charitable-contribution-worksheet.test.ts::2026 charitable floor and carryforward"
+  - line: "source-precision"
+    description: "Exact intermediate category limits and outgoing carry"
+    formula: "Base1000.49 gives capacities600.294/500.245/300.147/200.098, and the2026floor is5.00245. With currentcash10000.99,2025 retains600.294 allowed and9400.696 carry;2026 retains595.29155 afterfloor and9405.69845 carry. Only completed report lines round; a rounding difference never creates or destroys source carry."
+    irsRef: "IRC6102(c); Pub526 Worksheet2; IRC170(b)(1)(I) and170(d)(1)(C)"
+    testRef: "tests/engine/forms/charitable-contribution-worksheet.test.ts::retains exact percentage floor and carry values in both supported years"
