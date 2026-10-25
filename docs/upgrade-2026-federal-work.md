@@ -1011,3 +1011,8 @@ owns hosted/provider/staging evidence and selected-state qualification.
 
 - Forwarded actual filing status to both preliminary improvement and final clean-energy computations, preserving the source-qualified separate-main-home rule for joint filers. The source regression failed before the two call sites were corrected. Two actual spouse homes with10000qualified heat-pump cost each retain separate2000limits and a4000allowed improvement credit.
 -29 focused tests pass, including the actual-home source suite and credit integration. Root types and all3561current spec references pass; the narrow diff was reviewed. This is a caller handoff for30fc3dd, with no filing or independent-review gate change.
+
+## 2026-10-25 — Immutableff761dd IRA boundary expectations
+
+- Refreshed Publication590-A Worksheet1-2 lines4/6/8 and Table1-3. Seven historical assertions still encoded the replaced reduction-rounding direction, a current-spouse phaseout for QSS nonparticipants, or excess contributions as valid basis. Corrected their independent source expectations:9999×0.80=7999.20 rounds to8000;19999×0.35=6999.65 and9999×0.70=6999.30 round to7000. QSS nonparticipants have no Table1-3 income phaseout.10000contributed with7000allowable yields3000excess and0nondeductible basis after7000deduction.
+-43 focused tests and all3570current spec references pass. Existing failing assertions were retained as exact source boundaries, with explicit excess-contribution conservation added. No calculation, threshold or readiness gate was changed.

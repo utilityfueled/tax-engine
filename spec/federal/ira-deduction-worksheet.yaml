@@ -114,6 +114,19 @@ lines:
     irsRef: "Schedule 1 Instructions, Line 20"
     testRef: "tests/engine/forms/ira-deduction-worksheet.test.ts::IRA Deduction Worksheet - MFJ combines both spouses deductions"
 
+  - line: "historical-rounding-boundaries"
+    description: "Worksheet1-2 applies upward rounding to the remaining deduction"
+    formula: "At age50 and79001MAGI, remaining9999 times0.80 is7999.20, rounded to8000; joint126001 leaves19999 times0.35=6999.65, rounded to7000"
+    testRef: "tests/edge-cases/ira-deduction-edge-cases.test.ts::IRA Deduction - age 50+ at $79,001 MAGI rounds remaining deduction to $8,000"
+  - line: "historical-qss-nonparticipant"
+    description: "Table1-3 has no income phaseout for a nonparticipant qualifying surviving spouse"
+    formula: "QSS nonparticipant remains eligible for the full otherwise allowable contribution regardless of obsolete spouse-active metadata"
+    testRef: "tests/edge-cases/ira-deduction-edge-cases.test.ts::IRA Deduction - QSS non-participant at $241K retains full deduction"
+  - line: "historical-excess-not-basis"
+    description: "Worksheet1-2 lines6 and8 exclude excess contributions from nondeductible basis"
+    formula: "10000actual contribution minus7000allowable equals3000excess;7000deduction leaves0valid nondeductible basis"
+    testRef: "tests/edge-cases/ira-deduction-edge-cases.test.ts::IRA Deduction - contributions over limit separate excess from nondeductible basis"
+
 businessRuleValidation:
   - scenario: "Reference summary packet disclosure"
     description: "Inventory support counts this worksheet as business-rule validated only when regression coverage proves the emitted packet artifact stays labeled as a non-filing reference summary and only surfaces the supported Pub. 590-A contribution limits, deductible amounts, and Schedule 1 Line 20 total."

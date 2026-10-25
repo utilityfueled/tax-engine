@@ -15,8 +15,7 @@ describe("IRA Deduction Worksheet — Edge Cases", () => {
   describe("Single active participant — near phase-out ceiling", () => {
     it("IRA Deduction - single active at MAGI $88,999 ($1 below ceiling) still gets partial deduction", () => {
       // Phase-out: $79K-$89K. excess = $9,999; ratio = 0.9999
-      // reduction = 0.9999 × $7,000 = $6,999.30 → ceil to $10 = $7,000
-      // raw deduction = $7,000 - $7,000 = $0 → $200 floor applies
+      // Remaining ceiling is1;1 ×0.70 =0.70 →10, then200minimum.
       const result = calculateIraDeduction({
         filingStatus: "single",
         taxYear: 2025,
@@ -51,8 +50,7 @@ describe("IRA Deduction Worksheet — Edge Cases", () => {
 
   describe("Age 50+ with phase-out", () => {
     it("IRA Deduction - age 50+ at $88,999 MAGI: $200 floor with $8K limit", () => {
-      // excess = $9,999; ratio = 0.9999; reduction = 0.9999 × $8,000 = $7,999.20 → ceil $10 = $8,000
-      // raw = $8,000 - $8,000 = $0 → $200 floor
+      // Remaining ceiling1 ×0.80 =0.80 →10, then200minimum.
       const result = calculateIraDeduction({
         filingStatus: "single",
         taxYear: 2025,
@@ -66,9 +64,8 @@ describe("IRA Deduction Worksheet — Edge Cases", () => {
       expect(result.deductibleAmount.toNumber()).toBe(200);
     });
 
-    it("IRA Deduction - age 50+ at $79,001 MAGI: reduction rounded up to $10", () => {
-      // excess = $1; ratio = 0.0001; reduction = 0.0001 × $8,000 = $0.80 → ceil $10 = $10
-      // deduction = $8,000 - $10 = $7,990
+    it("IRA Deduction - age 50+ at $79,001 MAGI rounds remaining deduction to $8,000", () => {
+      // Worksheet1-2 line4: (89000 - 79001) × 0.80 = 7999.20, rounded up to8000.
       const result = calculateIraDeduction({
         filingStatus: "single",
         taxYear: 2025,
@@ -78,7 +75,7 @@ describe("IRA Deduction Worksheet — Edge Cases", () => {
         isSpouseActiveParticipant: false,
         age50OrOlder: true,
       });
-      expect(result.deductibleAmount.toNumber()).toBe(7990);
+      expect(result.deductibleAmount.toNumber()).toBe(8000);
     });
   });
 
@@ -99,9 +96,8 @@ describe("IRA Deduction Worksheet — Edge Cases", () => {
       expect(result.phaseOutApplied).toBe(false);
     });
 
-    it("IRA Deduction - MFJ active at $126,001 ($1 above start) triggers reduction", () => {
-      // excess = $1; ratio = 1/20000; reduction = 0.00005 × $7,000 = $0.35 → ceil $10 = $10
-      // deduction = $7,000 - $10 = $6,990
+    it("IRA Deduction - MFJ active at $126,001 rounds the remaining deduction to $7,000", () => {
+      // Worksheet1-2 line4: (146000 - 126001) × 0.35 = 6999.65, rounded up to7000.
       const result = calculateIraDeduction({
         filingStatus: "married_filing_jointly",
         taxYear: 2025,
@@ -111,13 +107,12 @@ describe("IRA Deduction Worksheet — Edge Cases", () => {
         isSpouseActiveParticipant: false,
         age50OrOlder: false,
       });
-      expect(result.deductibleAmount.toNumber()).toBe(6990);
+      expect(result.deductibleAmount.toNumber()).toBe(7000);
       expect(result.phaseOutApplied).toBe(true);
     });
 
     it("IRA Deduction - MFJ active at $145,999 ($1 below ceiling) gets $200 floor", () => {
-      // excess = $19,999; ratio = 19999/20000; reduction = 0.99995 × $7,000 = $6,999.65 → ceil $10 = $7,000
-      // raw = $7,000 - $7,000 = $0 → $200 floor
+      // Remaining ceiling1 ×0.35 =0.35 →10, then200minimum.
       const result = calculateIraDeduction({
         filingStatus: "married_filing_jointly",
         taxYear: 2025,
@@ -132,13 +127,11 @@ describe("IRA Deduction Worksheet — Edge Cases", () => {
     });
   });
 
-  // ── MFJ spouse-active-participant: QSS uses same thresholds ─────────
+  // ── Table1-3: QSS nonparticipants have no income phaseout ─────────
 
   describe("QSS non-participant with active spouse", () => {
-    it("IRA Deduction - QSS non-participant with active spouse uses $236K-$246K phase-out", () => {
-      // QSS is treated like MFJ for spouse-active thresholds
-      // MAGI $241K → mid-phase-out
-      // excess = $5,000; ratio = 0.5; reduction = $3,500; deduction = $3,500
+    it("IRA Deduction - QSS non-participant at $241K retains full deduction", () => {
+      // Table1-3 lists QSS separately from married filing jointly: any MAGI, full deduction.
       const result = calculateIraDeduction({
         filingStatus: "qualifying_surviving_spouse",
         taxYear: 2025,
@@ -148,8 +141,8 @@ describe("IRA Deduction Worksheet — Edge Cases", () => {
         isSpouseActiveParticipant: true,
         age50OrOlder: false,
       });
-      expect(result.deductibleAmount.toNumber()).toBe(3500);
-      expect(result.phaseOutApplied).toBe(true);
+      expect(result.deductibleAmount.toNumber()).toBe(7000);
+      expect(result.phaseOutApplied).toBe(false);
     });
 
     it("IRA Deduction - QSS non-participant with active spouse at $236K gets full deduction", () => {
@@ -166,7 +159,7 @@ describe("IRA Deduction Worksheet — Edge Cases", () => {
       expect(result.phaseOutApplied).toBe(false);
     });
 
-    it("IRA Deduction - QSS non-participant with active spouse at $246K gets $0", () => {
+    it("IRA Deduction - QSS non-participant at $246K retains full deduction", () => {
       const result = calculateIraDeduction({
         filingStatus: "qualifying_surviving_spouse",
         taxYear: 2025,
@@ -176,17 +169,16 @@ describe("IRA Deduction Worksheet — Edge Cases", () => {
         isSpouseActiveParticipant: true,
         age50OrOlder: false,
       });
-      expect(result.deductibleAmount.toNumber()).toBe(0);
-      expect(result.fullyPhasedOut).toBe(true);
+      expect(result.deductibleAmount.toNumber()).toBe(7000);
+      expect(result.fullyPhasedOut).toBe(false);
     });
   });
 
   // ── MFS active participant at $0 MAGI boundary ─────────────────────
 
   describe("MFS $0-$10K phase-out precision", () => {
-    it("IRA Deduction - MFS active at MAGI $1 triggers minimum $10 reduction", () => {
-      // excess = $1; ratio = 1/10000; reduction = 0.0001 × $7,000 = $0.70 → ceil $10 = $10
-      // deduction = $7,000 - $10 = $6,990
+    it("IRA Deduction - MFS active at MAGI $1 rounds the remaining deduction to $7,000", () => {
+      // Worksheet1-2 line4: (10000 - 1) × 0.70 = 6999.30, rounded up to7000.
       const result = calculateIraDeduction({
         filingStatus: "married_filing_separately",
         taxYear: 2025,
@@ -196,12 +188,11 @@ describe("IRA Deduction Worksheet — Edge Cases", () => {
         isSpouseActiveParticipant: false,
         age50OrOlder: false,
       });
-      expect(result.deductibleAmount.toNumber()).toBe(6990);
+      expect(result.deductibleAmount.toNumber()).toBe(7000);
     });
 
     it("IRA Deduction - MFS active at MAGI $9,999 ($1 below ceiling) gets $200 floor", () => {
-      // excess = $9,999; ratio = 0.9999; reduction = 0.9999 × $7,000 = $6,999.30 → ceil $10 = $7,000
-      // raw = $0 → $200 floor
+      // Remaining ceiling1 ×0.70 =0.70 →10, then200minimum.
       const result = calculateIraDeduction({
         filingStatus: "married_filing_separately",
         taxYear: 2025,
@@ -248,7 +239,7 @@ describe("IRA Deduction Worksheet — Edge Cases", () => {
       expect(result.nondeductibleAmount.toNumber()).toBe(3500);
     });
 
-    it("IRA Deduction - contributions over limit: excess is always nondeductible", () => {
+    it("IRA Deduction - contributions over limit separate excess from nondeductible basis", () => {
       // Not active participant, $10K contributions, $7K limit
       const result = calculateIraDeduction({
         filingStatus: "single",
@@ -260,7 +251,8 @@ describe("IRA Deduction Worksheet — Edge Cases", () => {
         age50OrOlder: false,
       });
       expect(result.deductibleAmount.toNumber()).toBe(7000);
-      expect(result.nondeductibleAmount.toNumber()).toBe(3000);
+      expect(result.nondeductibleAmount.toNumber()).toBe(0);
+      expect(result.excessContributions.toNumber()).toBe(3000);
     });
   });
 
@@ -295,7 +287,7 @@ describe("IRA Deduction Worksheet — Edge Cases", () => {
       expect(result.fullyPhasedOut).toBe(true);
     });
 
-    it("IRA Deduction - HoH active at $79,001 MAGI triggers $10 minimum reduction", () => {
+    it("IRA Deduction - HoH active at $79,001 MAGI rounds the remaining deduction to $7,000", () => {
       const result = calculateIraDeduction({
         filingStatus: "head_of_household",
         taxYear: 2025,
@@ -305,14 +297,14 @@ describe("IRA Deduction Worksheet — Edge Cases", () => {
         isSpouseActiveParticipant: false,
         age50OrOlder: false,
       });
-      expect(result.deductibleAmount.toNumber()).toBe(6990);
+      expect(result.deductibleAmount.toNumber()).toBe(7000);
     });
   });
 
   // ── Round-up to $10: boundary where exact multiple doesn't round ────
 
   describe("$10 rounding precision", () => {
-    it("IRA Deduction - reduction that is exact $10 multiple does not round up further", () => {
+    it("IRA Deduction - remaining deduction that is an exact $10 multiple stays unchanged", () => {
       // MAGI $80,000, excess = $1,000; ratio = 0.1; reduction = $700 → already $10 multiple
       // deduction = $7,000 - $700 = $6,300
       const result = calculateIraDeduction({
@@ -327,7 +319,7 @@ describe("IRA Deduction Worksheet — Edge Cases", () => {
       expect(result.deductibleAmount.toNumber()).toBe(6300);
     });
 
-    it("IRA Deduction - reduction $0.01 over $10 multiple rounds up", () => {
+    it("IRA Deduction - $80,100 MAGI leaves an exact $6,230 remaining deduction", () => {
       // MAGI $80,100, excess = $1,100; ratio = 0.11; reduction = 0.11 × $7,000 = $770 → $770
       // deduction = $7,000 - $770 = $6,230
       const result = calculateIraDeduction({
