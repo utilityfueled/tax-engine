@@ -3089,7 +3089,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   // Preliminary energy calculation determines the independent improvement credit
   // and available clean-energy amount; only final calculated lines are emitted.
   const preliminaryEnergy = calculateForm5695(input.energyCredits, {
-    taxYear: year, taxLiabilityLimit: new Decimal(0), improvementTaxLiabilityLimit,
+    taxYear: year, filingStatus, taxLiabilityLimit: new Decimal(0), improvementTaxLiabilityLimit,
   });
   const vehicleTaxLiabilityLimit = zeroFloor(improvementTaxLiabilityLimit.minus(preliminaryEnergy.energyImprovementCredit));
   const form8936 = calculateVehicles(vehicleTaxLiabilityLimit, taxBeforeCredits);
@@ -3163,7 +3163,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   const adoptionCredit = form8839?.nonrefundableAdoptionCredit ?? new Decimal(0);
   const refundableAdoptionCredit = form8839?.refundableAdoptionCredit ?? new Decimal(0);
   const form5695 = calculateForm5695(input.energyCredits, {
-    taxYear: year, taxLiabilityLimit: personalCreditLimits.cleanEnergyTaxLiability, improvementTaxLiabilityLimit,
+    taxYear: year, filingStatus, taxLiabilityLimit: personalCreditLimits.cleanEnergyTaxLiability, improvementTaxLiabilityLimit,
   });
   audit.merge(form5695.lines);
   const form8812 = calculateChildCredit(personalCreditLimits.ctcTaxLiability);

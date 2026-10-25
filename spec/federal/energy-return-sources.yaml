@@ -1,0 +1,10 @@
+form: "Energy Return Source Integration"
+fullName: "Actual filing status in both Form5695 credit limit computations"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i5695"
+retrievedAt: "2026-10-25"
+lines:
+  - line: "joint-main-homes"
+    description: "Separate actual main homes for joint filers retain their source identity"
+    formula: "Forward actual filing status to preliminary improvement and final clean-energy computations; apply the actual return tax limit once"
+    testRef: "tests/engine/federal-energy-source.test.ts::retains actual joint filing status through both energy computations"
