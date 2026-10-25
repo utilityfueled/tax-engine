@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
 
-FROM node:24.22.1-bookworm-slim AS base
+FROM node:24.22.1-trixie-slim AS base
 ENV PNPM_HOME="/pnpm"
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PATH="$PNPM_HOME:$PATH"
@@ -23,7 +23,7 @@ COPY . .
 RUN NODE_OPTIONS="--max-old-space-size=${NODE_BUILD_MAX_OLD_SPACE_MB}" pnpm --filter @tax-engine/web build
 
 # Production runner
-FROM node:24.22.1-bookworm-slim AS runner
+FROM node:24.22.1-trixie-slim AS runner
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV HOSTNAME=0.0.0.0
@@ -33,7 +33,9 @@ ENV NODE_OPTIONS="--max-old-space-size=384"
 WORKDIR /app
 
 # Run as non-root for security
-RUN groupadd --gid 1001 appgroup && useradd --uid 1001 --gid appgroup --shell /bin/false appuser
+RUN groupadd --gid 1001 appgroup && useradd --uid 1001 --gid appgroup --shell /bin/false appuser \
+    && rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack /opt/yarn-* \
+    && rm -f /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /usr/local/bin/yarn /usr/local/bin/yarnpkg
 
 # Copy standalone server (includes bundled node_modules)
 COPY --from=builder --chown=appuser:appgroup /app/apps/web/.next/standalone ./
