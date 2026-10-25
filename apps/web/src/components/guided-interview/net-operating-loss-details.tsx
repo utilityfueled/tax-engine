@@ -1,5 +1,5 @@
 "use client";
-import { updateNetOperatingLossSources, type NetOperatingLossData, type NolAlternativeData, type NolVintageData } from '@/lib/guided-net-operating-loss';
+import { updateNetOperatingLossSources, type NetOperatingLossData, type NolAlternativeData, type NolVintageData, type NolCharitableHistoryData, type NolCharitableCarryData } from '@/lib/guided-net-operating-loss';
 import { BooleanFact, TextFact } from './fact-fields';
 import { CurrencyField } from './currency-field';
 
@@ -7,6 +7,39 @@ function Choice({ label, value, options, onChange }: { label: string; value?: st
   return <label className="guided-field"><span className="guided-field-label">{label}</span><select className="guided-input" value={value ?? ''} onChange={event => onChange(event.target.value)}>
     <option value="">Choose from actual records</option>{options.map(([key, text]) => <option key={key} value={key}>{text}</option>)}
   </select></label>;
+}
+function CharitableHistories({ data, onChange }: { data?: NolCharitableHistoryData; onChange: (data: NolCharitableHistoryData | undefined) => void }) {
+  if (!data) return <button type="button" className="utility-button" onClick={() => onChange({})}>Add independent charitable carry histories</button>;
+  const change = (patch: Partial<NolCharitableHistoryData>) => onChange({ ...data, ...patch });
+  return <fieldset><legend>Prior charitable carry histories</legend>
+    <p className="guided-hint">With current gifts and an AMT loss, use both actual prior-year charitable worksheets. Confirm each empty history separately when there is no carryover. Keep any prior carryover records here; their category and vintage calculation must be resolved before this return can be calculated.</p>
+    <div className="guided-form-grid">
+      <TextFact label="Charitable histories source tax year" value={data.sourceTaxYear ?? ''} onChange={sourceTaxYear => change({ sourceTaxYear })} />
+      <TextFact label="Charitable histories source reference" value={data.sourceReference ?? ''} onChange={sourceReference => change({ sourceReference })} />
+      <BooleanFact label="All prior regular and AMT charitable carryovers included" value={data.allCarryoversIncluded} onChange={allCarryoversIncluded => change({ allCarryoversIncluded })} />
+    </div>
+    {([['priorRegularCarryovers', 'regular', 'Regular'], ['priorAlternativeCarryovers', 'AMT', 'AMT']] as const).map(([key, label, title]) => <fieldset key={key}><legend>Prior {label} charitable carryovers</legend>
+      {data[key] === undefined && <p role="status">This {label} charitable history is unknown.</p>}
+      {data[key]?.length === 0 && <p>Explicitly recorded: no prior {label} charitable carryovers.</p>}
+      {(data[key] ?? []).map((row, index) => {
+        const prefix = `${title} charitable carry ${index + 1}`;
+        const update = (patch: Partial<NolCharitableCarryData>) => change({ [key]: data[key]?.map((entry, i) => i === index ? { ...entry, ...patch } : entry) });
+        return <div key={index} className="guided-w2-card"><div className="guided-form-grid">
+          <TextFact label={`${prefix} originating tax year`} value={row.taxYear ?? ''} onChange={taxYear => update({ taxYear })} />
+          <Choice label={`${prefix} source category`} value={row.category} options={[
+            ['cash_60', 'Public cash — 60% category'], ['noncash_50', 'Noncash — 50% category'], ['capital_gain_30', 'Capital gain property — 30% category'],
+            ['other_30', 'Other — 30% category'], ['capital_gain_20', 'Capital gain property — 20% category'],
+          ]} onChange={category => update({ category: category as NolCharitableCarryData['category'] })} />
+          <CurrencyField label={`${prefix} amount`} value={row.amount ?? ''} onChange={amount => update({ amount })} />
+          <TextFact label={`${prefix} source reference`} value={row.sourceReference ?? ''} onChange={sourceReference => update({ sourceReference })} />
+        </div><button type="button" className="utility-button" onClick={() => change({ [key]: data[key]?.filter((_, i) => i !== index) })}>Remove {prefix}</button></div>;
+      })}
+      <button type="button" className="utility-button" onClick={() => change({ [key]: [...(data[key] ?? []), {}] })}>Add prior {label} charitable carryover</button>
+      <button type="button" className="utility-button" onClick={() => change({ [key]: [] })}>Record no prior {label} charitable carryovers</button>
+    </fieldset>)}
+    <BooleanFact label="Charitable carry histories checked after the last edit" value={data.sourceFactsConfirmed} onChange={sourceFactsConfirmed => change({ sourceFactsConfirmed })} />
+    <button type="button" className="utility-button" onClick={() => onChange(undefined)}>Remove independent charitable carry histories</button>
+  </fieldset>;
 }
 function Vintages({ label, data, regular, onChange }: { label: string; data?: NolVintageData[]; regular: boolean; onChange: (data: NolVintageData[]) => void }) {
   function update(index: number, patch: Partial<NolVintageData>) { onChange((data ?? []).map((row, i) => i === index ? { ...row, ...patch } : row)); }
@@ -75,6 +108,7 @@ export function NetOperatingLossDetails({ data, onChange }: { data?: NetOperatin
         <div className="guided-form-grid"><TextFact label="AMT NOL source packet reference" value={alternative.sourceReference ?? ''} onChange={sourceReference => changeAlternative({ sourceReference })} />
           {([['allCarryoversIncluded', 'All actual AMT NOL carryovers included'], ['specialDisasterCarryIncluded', 'AMT carry includes special-disaster loss'], ['currentYearAdjustmentsCompleteConfirmed', 'All current AMT adjustments and preferences represented'], ['regularBasisAndLossLimitsSameAsAlternativeConfirmed', 'Current regular and AMT bases and loss limits are the same']] as const).map(([key, label]) => <BooleanFact key={key} label={label} value={alternative[key]} onChange={value => changeAlternative({ [key]: value })} />)}
         </div><Vintages label="AMT" data={alternative.vintages} regular={false} onChange={vintages => changeAlternative({ vintages })} />
+        <CharitableHistories data={alternative.charitableCarryoverHistory} onChange={charitableCarryoverHistory => changeAlternative({ charitableCarryoverHistory })} />
         <BooleanFact label="AMT NOL sources checked after the last edit" value={alternative.sourceFactsConfirmed} onChange={sourceFactsConfirmed => changeAlternative({ sourceFactsConfirmed })} />
         <button type="button" className="utility-button" onClick={() => change({ alternativeTax: undefined })}>Remove AMT carry sources</button>
       </fieldset>}

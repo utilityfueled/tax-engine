@@ -2578,6 +2578,17 @@ export const NetOperatingLossSourcesSchema = z.object({
   alternativeTax: z.object({ sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
     allCarryoversIncluded: z.boolean().optional(), specialDisasterCarryIncluded: z.boolean().optional(),
     currentYearAdjustmentsCompleteConfirmed: z.boolean().optional(), regularBasisAndLossLimitsSameAsAlternativeConfirmed: z.boolean().optional(),
+    /** Independent actual charity histories; absence never establishes either history is empty. */
+    charitableCarryoverHistory: z.object({
+      sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(),
+      sourceFactsConfirmed: z.boolean().optional(), allCarryoversIncluded: z.boolean().optional(),
+      priorRegularCarryovers: z.array(z.object({ taxYear: z.number().int().optional(),
+        category: z.enum(["cash_60", "noncash_50", "capital_gain_30", "other_30", "capital_gain_20"]).optional(),
+        amount: optionalDecimalInput, sourceReference: z.string().optional() })).optional(),
+      priorAlternativeCarryovers: z.array(z.object({ taxYear: z.number().int().optional(),
+        category: z.enum(["cash_60", "noncash_50", "capital_gain_30", "other_30", "capital_gain_20"]).optional(),
+        amount: optionalDecimalInput, sourceReference: z.string().optional() })).optional(),
+    }).optional(),
     vintages: z.array(NetOperatingLossVintageSchema).optional() }).optional(),
 });
 

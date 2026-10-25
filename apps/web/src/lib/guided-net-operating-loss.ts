@@ -1,7 +1,7 @@
 import Decimal from 'decimal.js';
 import { NetOperatingLossSourcesSchema, type TaxYearInput } from '@/models/inputs';
 import { calculateNetOperatingLoss } from '@/engine/forms/net-operating-loss';
-import type { FilingStatus, PersonalInfoData } from './guided-interview-flow';
+import type { DeductionData, FilingStatus, PersonalInfoData } from './guided-interview-flow';
 import { parseGuidedCurrency } from './guided-currency';
 import { guidedSourceValuesChanged } from './guided-source-confirmation';
 
@@ -19,6 +19,15 @@ export interface NolAlternativeData {
   sourceReference?: string; sourceFactsConfirmed?: boolean | null; allCarryoversIncluded?: boolean | null;
   specialDisasterCarryIncluded?: boolean | null; currentYearAdjustmentsCompleteConfirmed?: boolean | null;
   regularBasisAndLossLimitsSameAsAlternativeConfirmed?: boolean | null; vintages?: NolVintageData[];
+  charitableCarryoverHistory?: NolCharitableHistoryData;
+}
+export interface NolCharitableCarryData {
+  taxYear?: string; category?: '' | 'cash_60' | 'noncash_50' | 'capital_gain_30' | 'other_30' | 'capital_gain_20';
+  amount?: string; sourceReference?: string;
+}
+export interface NolCharitableHistoryData {
+  sourceTaxYear?: string; sourceReference?: string; sourceFactsConfirmed?: boolean | null; allCarryoversIncluded?: boolean | null;
+  priorRegularCarryovers?: NolCharitableCarryData[]; priorAlternativeCarryovers?: NolCharitableCarryData[];
 }
 export interface NetOperatingLossData {
   sourceTaxYear?: string; sourceReference?: string; sourceFactsConfirmed?: boolean | null;
@@ -58,7 +67,7 @@ function vintages(rows: NolVintageData[] | undefined, regular: boolean) {
     };
   });
 }
-export function buildGuidedNetOperatingLoss(data: NetOperatingLossData | undefined, taxYear?: number | null, filingStatus?: FilingStatus | null, personal?: PersonalInfoData): TaxYearInput['netOperatingLoss'] {
+export function buildGuidedNetOperatingLoss(data: NetOperatingLossData | undefined, taxYear?: number | null, filingStatus?: FilingStatus | null, personal?: PersonalInfoData, deductions?: DeductionData): TaxYearInput['netOperatingLoss'] {
   if (!data) return undefined;
   if ((taxYear !== 2025 && taxYear !== 2026) || !filingStatus || !personal) throw new Error('Confirm the actual return year, filing status and household before binding NOL sources.');
   const alternative = data.alternativeTax;
@@ -67,6 +76,20 @@ export function buildGuidedNetOperatingLoss(data: NetOperatingLossData | undefin
     || alternative.currentYearAdjustmentsCompleteConfirmed !== true || alternative.regularBasisAndLossLimitsSameAsAlternativeConfirmed !== true) {
     throw new Error('Confirm the separate actual AMT carry history and current source classification. Special-disaster or differing basis/loss-limit methods need their separate worksheet.');
   }
+  const history = alternative.charitableCarryoverHistory;
+  const hasGifts = [deductions?.charitableContributions, ...(deductions?.donationEntries?.map(row => row.amount) ?? [])]
+    .some(value => value?.trim() && !parseGuidedCurrency(value).isZero());
+  const positiveAlternative = alternative.vintages?.some(row => row.openingCarryforward?.trim() && parseGuidedCurrency(row.openingCarryforward).gt(0));
+  if (history !== undefined || (positiveAlternative && hasGifts)) {
+    if (!history || year(history.sourceTaxYear, 'charitable histories source year') !== taxYear - 1 || !history.sourceReference?.trim()
+      || history.sourceFactsConfirmed !== true || history.allCarryoversIncluded !== true
+      || !Array.isArray(history.priorRegularCarryovers) || !Array.isArray(history.priorAlternativeCarryovers)) {
+      throw new Error('Confirm the complete independent prior regular and AMT charitable histories, including each explicitly empty list when none.');
+    }
+    if (history.priorRegularCarryovers.length || history.priorAlternativeCarryovers.length) {
+      throw new Error('Retain actual prior charitable carryovers; their separate category and vintage coordination method is required before calculating this return.');
+    }
+  }
   const facts = NetOperatingLossSourcesSchema.parse({
     sourceTaxYear: year(data.sourceTaxYear, 'carry source tax year'), sourceReference: data.sourceReference?.trim(), sourceFactsConfirmed: data.sourceFactsConfirmed ?? undefined,
     allCarryoversIncluded: data.allCarryoversIncluded ?? undefined, calendarYearTaxpayer: data.calendarYearTaxpayer ?? undefined,
@@ -74,7 +97,11 @@ export function buildGuidedNetOperatingLoss(data: NetOperatingLossData | undefin
     primaryName: data.primaryName?.trim(), primaryTaxpayerIdLast4: data.primaryTaxpayerIdLast4?.trim(), spouseName: data.spouseName?.trim() || undefined, spouseTaxpayerIdLast4: data.spouseTaxpayerIdLast4?.trim() || undefined,
     vintages: vintages(data.vintages, true), alternativeTax: { sourceReference: alternative.sourceReference.trim(), sourceFactsConfirmed: true,
       allCarryoversIncluded: true, specialDisasterCarryIncluded: false, currentYearAdjustmentsCompleteConfirmed: true,
-      regularBasisAndLossLimitsSameAsAlternativeConfirmed: true, vintages: vintages(alternative.vintages, false) },
+      regularBasisAndLossLimitsSameAsAlternativeConfirmed: true, vintages: vintages(alternative.vintages, false),
+      ...(history ? { charitableCarryoverHistory: { sourceTaxYear: year(history.sourceTaxYear, 'charitable histories source year'),
+        sourceReference: history.sourceReference?.trim(), sourceFactsConfirmed: history.sourceFactsConfirmed ?? undefined,
+        allCarryoversIncluded: history.allCarryoversIncluded ?? undefined,
+        priorRegularCarryovers: history.priorRegularCarryovers, priorAlternativeCarryovers: history.priorAlternativeCarryovers } } : {}) },
   });
   const middle = personal.middleName?.replace(/[^A-Za-z]/g, '').charAt(0).toUpperCase();
   const taxpayer = { primary: { firstName: [personal.firstName.trim(), middle].filter(Boolean).join(' '), lastName: personal.lastName, ssn: personal.ssn },
@@ -84,14 +111,15 @@ export function buildGuidedNetOperatingLoss(data: NetOperatingLossData | undefin
   calculateNetOperatingLoss({ ...context, facts: { ...facts, ...facts.alternativeTax } });
   return facts;
 }
-export function netOperatingLossFactErrors(data: NetOperatingLossData | undefined, taxYear?: number | null, filingStatus?: FilingStatus | null, personal?: PersonalInfoData, required = false): Record<string, string> {
+export function netOperatingLossFactErrors(data: NetOperatingLossData | undefined, taxYear?: number | null, filingStatus?: FilingStatus | null, personal?: PersonalInfoData, required = false, deductions?: DeductionData): Record<string, string> {
   try {
     if (required && !data) throw new Error('Enter the actual NOL source packet or remove the NOL carry life event if it does not apply.');
-    buildGuidedNetOperatingLoss(data, taxYear, filingStatus, personal); return {};
+    buildGuidedNetOperatingLoss(data, taxYear, filingStatus, personal, deductions); return {};
   } catch (error) { return { netOperatingLoss: error instanceof Error ? error.message : 'Reconcile the actual NOL source packet.' }; }
 }
 export function updateNetOperatingLossSources(previous: NetOperatingLossData, patch: Partial<NetOperatingLossData>): NetOperatingLossData {
   const next = { ...previous, ...patch };
   return guidedSourceValuesChanged(previous, next) ? { ...next, sourceFactsConfirmed: null,
-    ...(next.alternativeTax ? { alternativeTax: { ...next.alternativeTax, sourceFactsConfirmed: null } } : {}) } : next;
+    ...(next.alternativeTax ? { alternativeTax: { ...next.alternativeTax, sourceFactsConfirmed: null,
+      ...(next.alternativeTax.charitableCarryoverHistory ? { charitableCarryoverHistory: { ...next.alternativeTax.charitableCarryoverHistory, sourceFactsConfirmed: null } } : {}) } } : {}) } : next;
 }

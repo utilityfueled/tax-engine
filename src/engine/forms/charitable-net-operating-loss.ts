@@ -3,7 +3,8 @@ import Decimal from "decimal.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { AuditTrail } from "@/utils/audit.js";
-import { d, roundDollar, sum } from "@/utils/decimal.js";
+import { roundDollar } from "@/utils/decimal.js";
+import { readCurrentPublicCashForNol } from "@/utils/charitable-nol-source.js";
 
 export interface CharitableNolCarryoverResult {
   taxYear: number;
@@ -16,7 +17,7 @@ export interface CharitableNolCarryoverResult {
   reduction: Decimal;
   carryforward: Decimal;
   /** Known-empty ATNOL history only; never copied from the reduced regular carry. */
-  alternativeTaxCarryforward: Decimal;
+  alternativeTaxCarryforward?: Decimal;
   lines: CalculatedLine[];
 }
 
@@ -29,32 +30,10 @@ export function calculateCharitableNolCarryover(params: {
 }): CharitableNolCarryoverResult {
   const { input } = params;
   const taxYear = input.taxpayer.taxYear;
-  if (![2025, 2026].includes(taxYear)) throw new Error("Charitable NOL carry supports actual2025 or2026 contributions");
-  if (d(input.priorYear?.charitableCarryforward).gt(0)
-    || input.priorYear?.charitableCarryforwardByYear.some(row => d(row.amount).gt(0))) {
-    throw new Error("Prior charitable carry requires its separate category and NOL coordination history");
-  }
-  if (input.scheduleK1.some(row => [row.charitableCash, row.charitableCapitalGain30, row.charitableCapitalGain20].some(value => !d(value).isZero()))
-    || (input.cryptoIncome?.donations.length ?? 0) > 0) {
-    throw new Error("Mixed charitable source categories require their separate NOL carry allocation");
-  }
-  const sourceContributions = sum(...input.donations.map(row => {
-    const amount = d(row.amount);
-    if (!amount.isFinite() || amount.lt(0)) throw new Error("Charitable carry requires finite nonnegative original gifts");
-    if (amount.isZero()) return amount;
-    if (row.type !== "cash") throw new Error("Charitable carry currently requires actual current public-cash contributions");
-    const date = new Date(`${row.dateOfDonation}T00:00:00Z`);
-    if (row.qualifiedOrganization !== true || row.isPrivateFoundation !== false || !row.organization.trim()
-      || !Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== row.dateOfDonation
-      || date.getUTCFullYear() !== taxYear) {
-      throw new Error("Charitable carry requires actual current public qualification, recipient and payment date");
-    }
-    return amount;
-  }));
+  const sourceContributions = readCurrentPublicCashForNol(input);
   if ([params.tentativeCarryforward, params.nolCarryforward, params.alternativeTaxNolAvailable].some(value => !Decimal.isDecimal(value) || !value.isFinite() || value.lt(0))) {
     throw new Error("Charitable NOL carry requires finite nonnegative canonical amounts");
   }
-  if (!params.alternativeTaxNolAvailable.isZero()) throw new Error("Positive AMT NOL and charitable carry require their independent source coordination worksheet");
   const contributions = roundDollar(sourceContributions);
   const tentativeCarryforward = roundDollar(params.tentativeCarryforward);
   if (tentativeCarryforward.gt(contributions)) throw new Error("Tentative charitable carry exceeds actual contributions");
@@ -77,9 +56,9 @@ export function calculateCharitableNolCarryover(params: {
     { "Actual NOL carry": nolCarryforward, "NOL carry without excess": counterfactualNolCarryforward });
   audit.record("Section170 NOL Carry Worksheet", "remaining", "Remaining regular charitable carry", carryforward,
     "Tentative excess less170(d)(1)(B) reduction", { "Tentative excess": tentativeCarryforward, "Reduction": reduction });
-  audit.record("Section170 NOL Carry Worksheet", "alternative", "Separate charitable carry with known no ATNOL", tentativeCarryforward,
+  if (params.alternativeTaxNolAvailable.isZero()) audit.record("Section170 NOL Carry Worksheet", "alternative", "Separate charitable carry with known no ATNOL", tentativeCarryforward,
     "No alternative NOL is available in the supported source cohort; do not copy the regular NOL-related reduction");
   return { taxYear, sourceContributions, contributions, tentativeCarryforward, nonexcessContributions,
     nolCarryforward, counterfactualNolCarryforward, reduction, carryforward,
-    alternativeTaxCarryforward: tentativeCarryforward, lines: audit.getLines() };
+    alternativeTaxCarryforward: params.alternativeTaxNolAvailable.isZero() ? tentativeCarryforward : undefined, lines: audit.getLines() };
 }

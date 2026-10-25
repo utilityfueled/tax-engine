@@ -281,7 +281,8 @@ function calculateFederalTaxWithNol(input: TaxYearInput, marketplace?: Marketpla
     retained[kind] === undefined && retained.calculating !== kind) } } : marketplace;
   const worksheet = calculateNetOperatingLossReturn(input, (deduction, modified, purpose, charitableContributionLimit) =>
     calculateFederalTaxCore(input, purpose === "final" ? marketplace : refigured, undefined, { stage: "income", deduction, modified, charitableContributionLimit }),
-  (deduction, modified) => calculateFederalTaxCore(input, modified ? refigured : marketplace, undefined, { stage: "alternative-income", deduction, modified }));
+  (deduction, modified, charitableContributionLimit) => calculateFederalTaxCore(input, modified ? refigured : marketplace, undefined,
+    { stage: "alternative-income", deduction, modified, charitableContributionLimit }));
   if (!worksheet.calculationComplete || worksheet.deduction === undefined) throw new Error("Actual NOL calculation is incomplete");
   return complete(worksheet);
 }
@@ -2338,7 +2339,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   // Schedule A for itemized deductions
   const form4952DeductibleAmount = form4952?.deductibleAmount;
   const form4684DeductibleLoss = form4684?.deductibleLoss;
-  const nolPublicCashContributionLimit = nol?.stage === "income" ? nol.charitableContributionLimit : undefined;
+  const nolPublicCashContributionLimit = nol?.stage === "income" || nol?.stage === "alternative-income" ? nol.charitableContributionLimit : undefined;
   const hasScheduleAExtra = input.scheduleA !== undefined
     || nolPublicCashContributionLimit !== undefined
     || input.form2555 !== undefined
@@ -4242,6 +4243,9 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
         // informational for the carryforward totals.
       }
 
+      const alternativeCharityCarry = nol?.stage === "final"
+        ? nol.worksheet.alternativeCharitableCarryover?.carryforward ?? nol.worksheet.charitableCarryover?.alternativeTaxCarryforward
+        : undefined;
       return {
         capitalLoss: cfCapitalLoss,
         shortTermCapitalLoss: adjustedCarryforward.carryforwardShortTerm,
@@ -4266,10 +4270,10 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
           ? nol.worksheet.charitableCarryover.carryforward.gt(0)
             ? [{ taxYear: input.taxpayer.taxYear, category: "cash_60", amount: nol.worksheet.charitableCarryover.carryforward }] : []
           : schedA.charitableCarryforwardByYear,
-        ...(nol?.stage === "final" && nol.worksheet.charitableCarryover ? {
-          amtCharitableContributions: nol.worksheet.charitableCarryover.alternativeTaxCarryforward,
-          amtCharitableContributionsByYear: [{ taxYear: input.taxpayer.taxYear, category: "cash_60" as const,
-            amount: nol.worksheet.charitableCarryover.alternativeTaxCarryforward }],
+        ...(alternativeCharityCarry !== undefined ? {
+          amtCharitableContributions: alternativeCharityCarry,
+          amtCharitableContributionsByYear: alternativeCharityCarry.gt(0)
+            ? [{ taxYear: input.taxpayer.taxYear, category: "cash_60" as const, amount: alternativeCharityCarry }] : [],
         } : {}),
         excessBusinessLossNOL: form461.nolCarryforward,
         nolCarryforward: cfNol,

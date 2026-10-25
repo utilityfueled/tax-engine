@@ -13,8 +13,9 @@ notes: |
   contributions, not merely a post-floor deduction. No original receipt is
   edited. Counterfactual amounts are internal calculation data, not user inputs.
   This bounded route requires actual current public cash gifts and no prior or
-  mixed-category carry. Positive independent AMT carry and actual2026 standard
-  deduction carry coordination require their separately established methods.
+  mixed-category carry. Positive independent AMT carry uses the separate
+  alternative-charitable-net-operating-loss method and actual independent
+  charity histories. Actual2026 standard-deduction carry remains a separate method.
   Current-year formulas below are derived statutory examples, not published IRS
   numeric examples. The historical regulation example retains its old50percent
   amounts only as a test of the carry-difference rule, not current-year limits.
@@ -46,7 +47,7 @@ lines:
     testRef: "tests/engine/federal-charitable-nol.test.ts::preserves original cents and requires actual current public-cash carry sources"
   - line: "alternative-carry"
     description: "Retain independent charitable carry for known-empty alternative NOL history"
-    formula: "Reg1.55-1(a) applies170 and56 substitutes the alternative loss ledger. The supported confirmed no-ATNOL source packet leaves tentative19200 AMT charitable carry, independently of regular3840. Positive ATNOL requires the unfinished separate charity coordination method; no regular carry copy."
+    formula: "Reg1.55-1(a) applies170 and56 substitutes the alternative loss ledger. The supported confirmed no-ATNOL source packet leaves tentative19200 AMT charitable carry, independently of regular3840. Positive ATNOL is calculated by the separate alternative-charitable-net-operating-loss source method; no regular carry copy."
     irsRef: "Reg1.55-1(a),(b); IRC56(a)(4),(d),170(d)(1)(B); derived separate-computation reading"
     testRef: "tests/engine/federal-charitable-nol.test.ts::reduces current charity carry by the separately refigured succeeding NOL carry increase"
   - line: "review"

@@ -7,6 +7,8 @@ import type { TaxYearInput } from "@/models/inputs.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import type { NetOperatingLossResult } from "@/engine/forms/net-operating-loss.js";
 import { calculateCharitableNolCarryover } from "@/engine/forms/charitable-net-operating-loss.js";
+import { calculateAlternativeCharitableNolCarryover } from "@/engine/forms/alternative-charitable-net-operating-loss.js";
+import { calculateAlternativeTaxNol } from "@/engine/forms/alternative-tax-net-operating-loss.js";
 import { calculateForm172Return } from "@/engine/forms/form-172-return.js";
 import { calculateForm2441Benefits } from "@/engine/forms/form-2441-benefits.js";
 import { calculateDependentCareBenefitSources } from "@/engine/forms/dependent-care-benefit-sources.js";
@@ -172,6 +174,11 @@ export function buildNetOperatingLossReview(input: TaxYearInput, result: TaxRetu
   audit("Form 6251", "2f", calculation.alternativeTax.deduction.negated());
   eq(roundDollar(amount(result.form6251?.amti)), calculation.alternativeTax.amtiBeforeAtnol.minus(calculation.alternativeTax.deduction));
   const charityRows: string[] = [];
+  const carryYears = (rows: TaxReturnResult["carryforwards"]["amtCharitableContributionsByYear"], expected: Decimal) => {
+    if (!rows || rows.length !== (expected.gt(0) ? 1 : 0)
+      || rows.some(row => row.taxYear !== result.taxYear || row.category !== "cash_60")) throw new Error("Charitable NOL carry years do not reconcile");
+    eq(sum(...rows.map(row => row.amount)), expected);
+  };
   const charity = calculation.charitableCarryover;
   if (charity) {
     const comparison = calculation.charitableCounterfactual;
@@ -184,25 +191,68 @@ export function buildNetOperatingLossReview(input: TaxYearInput, result: TaxRetu
       computeCarryover: () => charity.counterfactualNolCarryforward });
     if (!checked.sourceContributions.eq(charity.sourceContributions)) throw new Error("Charitable NOL review source contributions do not reconcile");
     for (const key of ["contributions", "tentativeCarryforward", "nonexcessContributions", "nolCarryforward",
-      "counterfactualNolCarryforward", "reduction", "carryforward", "alternativeTaxCarryforward"] as const) eq(charity[key], checked[key]);
+      "counterfactualNolCarryforward", "reduction", "carryforward"] as const) eq(charity[key], checked[key]);
     eq(result.carryforwards.charitableContributions, charity.carryforward);
-    eq(result.carryforwards.amtCharitableContributions, charity.alternativeTaxCarryforward);
-    for (const [rows, expected] of [[result.carryforwards.charitableContributionsByYear, charity.carryforward],
-      [result.carryforwards.amtCharitableContributionsByYear, charity.alternativeTaxCarryforward]] as const) {
-      if (!rows || rows.length !== (expected.gt(0) ? 1 : 0)
-        || rows.some(row => row.taxYear !== result.taxYear || row.category !== "cash_60")) throw new Error("Charitable NOL carry years do not reconcile");
-      eq(sum(...rows.map(row => row.amount)), expected);
+    carryYears(result.carryforwards.charitableContributionsByYear, charity.carryforward);
+    if (checked.alternativeTaxCarryforward !== undefined) {
+      eq(charity.alternativeTaxCarryforward, checked.alternativeTaxCarryforward);
+      eq(result.carryforwards.amtCharitableContributions, checked.alternativeTaxCarryforward);
+      carryYears(result.carryforwards.amtCharitableContributionsByYear, checked.alternativeTaxCarryforward);
+      charityRows.push(`Separate alternative-tax charitable carry ${checked.alternativeTaxCarryforward}; actual source history establishes no available ATNOL.`);
+    } else if (charity.alternativeTaxCarryforward !== undefined) {
+      throw new Error("Positive alternative NOL requires its independently calculated charitable carry");
     }
     for (const line of checked.lines) audit(line.form, line.line, line.value);
     charityRows.push(`Current regular charitable carry: tentative ${charity.tentativeCarryforward}; NOL-related reduction ${charity.reduction}; remaining ${charity.carryforward}`,
       `Succeeding regular NOL carry: actual ${charity.nolCarryforward}; without excess contributions ${charity.counterfactualNolCarryforward}`,
-      `Original cash contributions ${charity.sourceContributions}; form-dollar total ${charity.contributions}; counterfactual retained contributions ${charity.nonexcessContributions}`,
-      `Separate alternative-tax charitable carry ${charity.alternativeTaxCarryforward}; actual source history establishes no available ATNOL.`);
+      `Original cash contributions ${charity.sourceContributions}; form-dollar total ${charity.contributions}; counterfactual retained contributions ${charity.nonexcessContributions}`);
     charityRows.push(`Counterfactual modified regular limit income: ${comparison.income.taxableIncome}`,
       ...comparison.modifiedVintageIncome.map(row => `${comparison.calculation.vintages.find(vintage => vintage.sourceId === row.sourceId)?.lossTaxYear}: counterfactual earlier modified deduction ${row.retainedEarlierDeduction}; refigured AGI ${row.income.agi}; charity ${row.income.charitableDeduction}; modified income ${row.income.taxableIncome}`),
       ...ledger(facts.vintages, comparison.calculation, "Counterfactual NOL comparison (actual current claim unchanged)"));
   } else {
     eq(result.carryforwards.charitableContributions, calculation.finalIncome.charitableCarryforward);
+  }
+  const alternativeCharity = calculation.alternativeCharitableCarryover;
+  if (!alternativeCharity && calculation.alternativeTaxSources.availableCarryforward.gt(0)
+    && (input.donations.some(row => !d(row.amount).isZero()) || calculation.finalIncome.charitableCarryforward.gt(0)
+      || facts.alternativeTax.charitableCarryoverHistory !== undefined)) {
+    throw new Error("Alternative charitable review requires its complete independent carry calculation");
+  }
+  if (alternativeCharity) {
+    const comparison = calculation.alternativeCharitableCounterfactual;
+    if (!comparison?.calculation.calculationComplete || alternativeCharity.taxYear !== result.taxYear) {
+      throw new Error("Alternative charitable counterfactual review is incomplete");
+    }
+    eq(comparison.calculation.deduction, calculation.alternativeTax.deduction);
+    eq(comparison.calculation.amtiBeforeAtnol, calculation.alternativeTax.amtiBeforeAtnol);
+    const incomeLines = comparison.income.lines.filter(line => line.form === "Form 6251" && line.line === "4");
+    if (incomeLines.length !== 1) throw new Error("Alternative charitable comparison requires a unique canonical AMTI audit");
+    eq(incomeLines[0].value, comparison.income.amti);
+    const checkedLedger = calculateAlternativeTaxNol({ taxYear: result.taxYear, sources: calculation.alternativeTaxSources,
+      amtiBeforeAtnol: calculation.alternativeTax.amtiBeforeAtnol, modifiedAmtiBeforeAtnol: comparison.income.amti });
+    for (const key of ["amtiBeforeAtnol", "modifiedAmtiBeforeAtnol", "deduction", "absorbed", "expired", "carryforward"] as const) {
+      eq(comparison.calculation[key], checkedLedger[key]);
+    }
+    for (const row of checkedLedger.vintages) {
+      const saved = comparison.calculation.vintages.filter(vintage => vintage.sourceId === row.sourceId);
+      if (saved.length !== 1) throw new Error("Alternative charitable comparison source vintages do not reconcile");
+      for (const key of ["deduction", "absorbed", "expired", "remainingCarryforward"] as const) eq(saved[0][key], row[key]);
+    }
+    const checked = calculateAlternativeCharitableNolCarryover({ input,
+      tentativeCarryforward: calculation.finalIncome.charitableCarryforward,
+      alternativeTaxNolAvailable: calculation.alternativeTaxSources.availableCarryforward,
+      nolCarryforward: calculation.alternativeTax.carryforward, computeCarryover: () => checkedLedger.carryforward });
+    for (const key of ["sourceContributions", "contributions", "tentativeCarryforward", "nonexcessContributions", "nolCarryforward",
+      "counterfactualNolCarryforward", "reduction", "carryforward"] as const) eq(alternativeCharity[key], checked[key]);
+    eq(result.carryforwards.amtCharitableContributions, checked.carryforward);
+    carryYears(result.carryforwards.amtCharitableContributionsByYear, checked.carryforward);
+    for (const line of checked.lines) audit(line.form, line.line, line.value);
+    if (!charity) charityRows.push(`Current regular charitable carry: ${result.carryforwards.charitableContributions}`);
+    charityRows.push(`Current alternative charitable carry: tentative ${checked.tentativeCarryforward}; NOL-related reduction ${checked.reduction}; remaining ${checked.carryforward}`,
+      `Succeeding alternative NOL carry: actual ${checked.nolCarryforward}; without excess contributions ${checked.counterfactualNolCarryforward}`,
+      `Original cash contributions ${checked.sourceContributions}; form-dollar total ${checked.contributions}; alternative comparison retained contributions ${checked.nonexcessContributions}`,
+      `Counterfactual modified AMTI: ${comparison.income.amti}; actual regular NOL deduction retained ${calculation.deduction}`,
+      ...ledger(facts.alternativeTax.vintages, { ...calculation.alternativeTaxSources, ...checkedLedger }, "Counterfactual alternative NOL comparison (actual current claim unchanged)"));
   }
   const contexts = [
     `Current regular limit income before NOL, QBI and section250: ${calculation.actualIncome.taxableIncome}`,
@@ -214,7 +264,7 @@ export function buildNetOperatingLossReview(input: TaxYearInput, result: TaxRetu
   ];
   return ["NET OPERATING LOSS - REVIEW CALCULATION STATEMENT", ...contexts, ...regularRows, ...alternativeRows, ...originRows, ...charityRows,
     "Amounts explain the retained canonical income contexts; this statement does not independently replay every upstream income source.",
-    "Original loss and history documents must be retained. Prior or mixed charitable carry, positive ATNOL-charity coordination and debt-cancellation reductions require their separate worksheets.",
+    "Original loss and history documents must be retained. Prior or mixed charitable carry, special alternative loss sources and debt-cancellation reductions require their separate worksheets.",
     "This statement and the accompanying Form6251 are review material, not filing qualification."];
 }
 
