@@ -2,12 +2,14 @@
 import { expect, it } from 'vitest';
 import { buildGuidedForeignTaxCarryover } from '@/lib/guided-foreign-tax-carryover';
 import { guidedCarryoverFixture } from '../fixtures/guided-foreign-tax-carryover';
+import { stateAllocationFacts } from '../fixtures/foreign-tax-carryover';
 
 it('preserves actual state country sources and rejects incomplete facts', () => {
   const { facts, investment } = guidedCarryoverFixture();
   const source = { ...facts.deductionYearCarryover, itemizedAllocation: {
     sourceReference: 'Actual allowed itemized deductions', sourceFactsConfirmed: true,
     incomeOrSalesTaxes: '6,000.00', homeRealPropertyTaxes: '0', personalPropertyTaxes: '0',
+    stateAllocation:stateAllocationFacts(),
     stateIncomeTaxes: [{ stateCode: 'ny', deductibleAmount: '6,000', stateTaxableIncome: '90,000', foreignIncomeSpecificallyExempt: false,
       sourceReference: 'Actual state-source worksheet', countryIncomeConfirmed: true,
       countryIncome: [{ foreignCountry: 'Canada', stateTaxableIncome: '3,500.25', sourceReference: 'Actual country taxable income' }] }],

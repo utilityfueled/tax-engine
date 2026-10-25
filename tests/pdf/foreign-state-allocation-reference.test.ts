@@ -9,7 +9,7 @@ import { TaxYearInputSchema } from '@/models/inputs.js';
 import { FORM_1116_REFERENCE_FILENAME } from '@/pdf/fill-form-1116.js';
 import { fillReturn } from '@/pdf/fill-return.js';
 import { REVIEW_PDF_NOTICE } from '@/pdf/export-policy.js';
-import { carryFixture } from '../fixtures/foreign-tax-carryover.js';
+import { carryFixture, stateAllocationFacts } from '../fixtures/foreign-tax-carryover.js';
 
 function stateAllocationInput() {
   const base = carryFixture(), election = base.foreignTaxElection, facts = election?.deductionYearCarryover;
@@ -25,7 +25,7 @@ function stateAllocationInput() {
         { ...first, sourceId: 'form1099Int:1', reportedIncome: '10000', foreignIncome: '10000', foreignCountry: 'France', accountReference: 'Second private account' }],
       carryovers: [{ originTaxYear: 2024, category: 'passive', amount: '4000', sourceReference: 'Actual adjusted prior balance' }],
       itemizedAllocation: { sourceFactsConfirmed: true, sourceReference: 'Actual source worksheet', noTreatyCharitableDeductionConfirmed: true,
-        incomeOrSalesTaxes: '6000', homeRealPropertyTaxes: '0', personalPropertyTaxes: '0', stateIncomeTaxes: [
+        incomeOrSalesTaxes: '6000', homeRealPropertyTaxes: '0', personalPropertyTaxes: '0', stateAllocation:stateAllocationFacts(),stateIncomeTaxes: [
           { stateCode: 'NY', deductibleAmount: '6000', stateTaxableIncome: '70000', foreignIncomeSpecificallyExempt: false,
             sourceReference: 'Actual state source', countryIncomeConfirmed: true,
             countryIncome: [{ foreignCountry: 'Canada', stateTaxableIncome: '12000.01', sourceReference: 'Private Canadian source' },
@@ -45,8 +45,7 @@ it('rejects the former gross-only state source in the canonical return', () => {
   expect(JSON.stringify(input)).toBe(before);
 });
 
-it('preserves actual country allocation in the canonical review record', async () => {
-  const input = stateAllocationInput();
+async function checkSavedSourceRecord(input:ReturnType<typeof stateAllocationInput>) {
   const before = JSON.stringify(input), result = calculateFederalTax(input);
   const value = (id: string) => result.foreignTaxDeductionCarryover?.lines.find(row => row.line === id)?.value.toFixed();
   // Pre-state federal80000 less foreign25000 leaves U.S.55000. Actual state70000
@@ -68,10 +67,31 @@ it('preserves actual country allocation in the canonical review record', async (
     expect(pages.length).toBeGreaterThan(0);
     for (const page of pages) expect(page.split(REVIEW_PDF_NOTICE)).toHaveLength(2);
     const text = pages.join(' ').replace(/\s+/g, ' ');
+    expect(text).toContain('Line state-aggregate-taxable-base: Aggregate nonexempt state taxable base Value: 70000');
+    expect(text).toContain('Line state-aggregate-deductible-tax: Allowed nonexempt state income-tax pool Value: 6000');
     expect(text).toContain('Value: 3590'); expect(text).toContain('Value: 2990'); expect(text).toContain('Value: 1010');
     expect(text).toContain('Line country-1:state-tax: State income tax allocated to foreign country Value: 1029');
     expect(text).toContain('Line country-2:state-tax: State income tax allocated to foreign country Value: 257');
     expect(text).toContain('No current foreign tax credit');
-    for (const identity of ['Private Canadian source', 'Private French source', 'Second private account', '112233445']) expect(text).not.toContain(identity);
+    for (const identity of ['Private Canadian source', 'Private French source', 'Second private account', '112233445', 'Private NY source', 'Private NJ source']) expect(text).not.toContain(identity);
   } finally { await rm(directory, { recursive: true, force: true }); }
+}
+
+it('preserves actual country allocation in the canonical review record', async () => {
+  await checkSavedSourceRecord(stateAllocationInput());
+});
+
+it('preserves multiple-state source aggregation in the saved review record', async () => {
+  const input=stateAllocationInput(),allocation=input.foreignTaxElection?.deductionYearCarryover?.itemizedAllocation;
+  if(!allocation?.stateIncomeTaxes?.[0])throw new Error('Missing state source fixture');
+  allocation.stateIncomeTaxes=[
+    {stateCode:'NY',deductibleAmount:'4000',stateTaxableIncome:'40000',foreignIncomeSpecificallyExempt:false,sourceReference:'Private NY source',countryIncomeConfirmed:true,
+      countryIncome:[{foreignCountry:'Canada',stateTaxableIncome:'7000.01',sourceReference:'Private Canadian source'}, {foreignCountry:'France',stateTaxableIncome:'1999.99',sourceReference:'Private French source'}]},
+    {stateCode:'NJ',deductibleAmount:'2000',stateTaxableIncome:'30000',foreignIncomeSpecificallyExempt:false,sourceReference:'Private NJ source',countryIncomeConfirmed:true,
+      countryIncome:[{foreignCountry:'Canada',stateTaxableIncome:'5000',sourceReference:'Private Canadian source'}, {foreignCountry:'France',stateTaxableIncome:'1000',sourceReference:'Private French source'}]},
+  ];
+  const result=calculateFederalTax(input),lines=result.foreignTaxDeductionCarryover?.lines;
+  expect(lines?.find(row=>row.line==='state-aggregate-taxable-base')?.value.toFixed()).toBe('70000');
+  expect(lines?.find(row=>row.line==='state-aggregate-deductible-tax')?.value.toFixed()).toBe('6000');
+  await checkSavedSourceRecord(input);
 });

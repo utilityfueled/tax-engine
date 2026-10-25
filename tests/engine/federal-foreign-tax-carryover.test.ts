@@ -7,7 +7,7 @@ vi.mock('@/models/constants.js', async importOriginal => {
 });
 import { calculateFederalTax } from '@/engine/federal.js';
 import { TaxYearInputSchema } from '@/models/inputs.js';
-import { carryFixture } from '../fixtures/foreign-tax-carryover.js';
+import { carryFixture, stateAllocationFacts } from '../fixtures/foreign-tax-carryover.js';
 
 function ordinary(year=2025,stateTaxes='0') {
   const base=carryFixture();const election=base.foreignTaxElection;
@@ -47,13 +47,31 @@ describe('Canonical deduction-year foreign carryover',()=>{
   it('uses actual itemized state allocation in the hypothetical return',()=>{
     const input=ordinary(2025,'20000');const facts=input.foreignTaxElection?.deductionYearCarryover;if(!facts)throw new Error('Missing source fixture');
     facts.itemizedAllocation={sourceFactsConfirmed:true,sourceReference:'Actual state allocation',incomeOrSalesTaxes:'20000',homeRealPropertyTaxes:'0',personalPropertyTaxes:'0',
-      stateIncomeTaxes:[{stateCode:'NY',deductibleAmount:'20000',stateTaxableIncome:'100000',foreignIncomeSpecificallyExempt:false,sourceReference:'Actual state taxable income'}]};
+      stateAllocation:stateAllocationFacts(),stateIncomeTaxes:[{stateCode:'NY',deductibleAmount:'20000',stateTaxableIncome:'100000',foreignIncomeSpecificallyExempt:false,sourceReference:'Actual state taxable income'}]};
     const result=calculateFederalTax(input);
     // Actual source20000 state tax*(100000-95000)/100000=1000 foreign allocation.
     // 5000-1000=4000; hypothetical80000–80050 TaxTable12520*.05=626.
     expect(line(result,'18')).toBe('80000');expect(line(result,'20')).toBe('12520');expect(line(result,'21')).toBe('626');
     expect(result.carryforwards.foreignTaxCreditCarryforward.toFixed()).toBe('174');
     expect(result.scheduleA.foreignIncomeTaxDeduction.toFixed()).toBe('600');
+  });
+  it('uses the aggregate state method once in the canonical hypothetical return',()=>{
+    const input=ordinary(2025,'20000'),facts=input.foreignTaxElection?.deductionYearCarryover;
+    if(!facts)throw new Error('Missing source fixture');
+    facts.itemizedAllocation={sourceFactsConfirmed:true,sourceReference:'Actual complete allowed state deductions',incomeOrSalesTaxes:'20000',homeRealPropertyTaxes:'0',personalPropertyTaxes:'0',
+      stateAllocation:stateAllocationFacts(),stateIncomeTaxes:[
+        {stateCode:'NY',deductibleAmount:'12000',stateTaxableIncome:'60000',foreignIncomeSpecificallyExempt:false,sourceReference:'Actual NY nonoverlapping source'},
+        {stateCode:'NJ',deductibleAmount:'8000',stateTaxableIncome:'40000',foreignIncomeSpecificallyExempt:false,sourceReference:'Actual NJ nonoverlapping source'},
+      ]};
+    const before=JSON.stringify(input),result=calculateFederalTax(input);
+    // Pre-stateworld100000, U.S.95000; pooled20000*(60000+40000-95000)/100000=1000.
+    // Hypothetical foreign4000/world80000=.05; TaxTable12520*.05=626.
+    expect(line(result,'state-aggregate-taxable-base')).toBe('100000');
+    expect(line(result,'state-aggregate-deductible-tax')).toBe('20000');
+    expect(line(result,'country-1:state-tax')).toBe('1000');expect(line(result,'21')).toBe('626');
+    expect(result.allLines.filter(row=>row.form==='Foreign Deduction Carryover WS'&&row.line==='state-aggregate-taxable-base')).toHaveLength(1);
+    expect(result.foreignTaxCredit.isZero()).toBe(true);expect(result.carryforwards.foreignTaxCreditCarryforward.toFixed()).toBe('174');
+    expect(result.scheduleA.foreignIncomeTaxDeduction.toFixed()).toBe('600');expect(JSON.stringify(input)).toBe(before);
   });
   it('preserves unsupported facts and rejects an ordinary-method substitution',()=>{
     const base=ordinary();

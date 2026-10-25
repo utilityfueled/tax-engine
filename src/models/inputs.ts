@@ -4214,10 +4214,20 @@ const ForeignTaxDeductionCarryoverSchema = z.object({
     incomeOrSalesTaxes: decimal.optional(), homeRealPropertyTaxes: decimal.optional(), personalPropertyTaxes: decimal.optional(),
     allRealPropertyTaxesForPersonalResidenceConfirmed: z.boolean().optional(), noTreatyCharitableDeductionConfirmed: z.boolean().optional(),
     mortgageInterestMethod: z.enum(["gross_income", "us_source_small_foreign_income"]).optional(),
+    /** Actual ordinary-method history and complete, nonoverlapping jurisdiction attribution. */
+    stateAllocation: z.object({
+      method: z.enum(["ordinary_presumption", "existing_safe_harbor_or_other"]).optional(),
+      sourceFactsConfirmed: z.boolean().optional(), sourceReference: z.string().optional(),
+      methodHistoryConfirmed: z.boolean().optional(), allStateSourcesIncludedConfirmed: z.boolean().optional(),
+      nonoverlappingIncomeConfirmed: z.boolean().optional(),
+      noTaxStateIncome: z.array(z.object({
+        stateCode: z.string().optional(), usTaxableIncome: decimal.optional(), sourceReference: z.string().optional(),
+      }).strict()).optional(),
+    }).strict().optional(),
     stateIncomeTaxes: z.array(z.object({
       stateCode: z.string().optional(), deductibleAmount: decimal.optional(), stateTaxableIncome: decimal.optional(),
       foreignIncomeSpecificallyExempt: z.boolean().optional(), sourceReference: z.string().optional(),
-      /** Actual single-state country attribution, including known-zero countries. */
+      /** Actual nonoverlapping country attribution, including known-zero countries. */
       countryIncomeConfirmed: z.boolean().optional(),
       countryIncome: z.array(z.object({ foreignCountry: z.string().optional(), stateTaxableIncome: decimal.optional(), sourceReference: z.string().optional() }).strict()).optional(),
     }).strict()).optional(),

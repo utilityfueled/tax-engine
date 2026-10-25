@@ -80,14 +80,39 @@ export function buildGuidedForeignTaxCarryover(data: ForeignCarryoverData | unde
     if (!country) throw new Error('Enter the actual foreign country.');
     countryIncome.set(country, (countryIncome.get(country) ?? parseGuidedCurrency('0')).plus(parseGuidedCurrency(source.foreignIncome)));
   }
-  if ((allocation?.stateIncomeTaxes?.length ?? 0) > 1) throw new Error('Multiple-state income taxes require their separate actual income attribution method.');
+  const jurisdictions = new Set<string>();
+  for (const source of allocation?.stateIncomeTaxes ?? []) {
+    const code = text(source.stateCode, 'state code').toUpperCase();
+    if (!/^[A-Z]{2}$/.test(code) || jurisdictions.has(code)) throw new Error('Enter distinct actual state jurisdictions.');
+    jurisdictions.add(code);
+  }
+  let stateAllocation = allocation?.stateAllocation;
+  if (allocation?.stateIncomeTaxes !== undefined || stateAllocation !== undefined) {
+    if (!stateAllocation || stateAllocation.method !== 'ordinary_presumption' || stateAllocation.sourceFactsConfirmed !== true
+      || stateAllocation.methodHistoryConfirmed !== true || stateAllocation.allStateSourcesIncludedConfirmed !== true
+      || stateAllocation.nonoverlappingIncomeConfirmed !== true || !stateAllocation.noTaxStateIncome) {
+      throw new Error('Complete and confirm the actual ordinary state method history and all nonoverlapping taxing and no-tax jurisdiction sources.');
+    }
+    stateAllocation = { ...stateAllocation, sourceReference: text(stateAllocation.sourceReference, 'state jurisdiction worksheet reference'),
+      noTaxStateIncome: stateAllocation.noTaxStateIncome.map(row => {
+        const stateCode = text(row.stateCode, 'no-tax state code').toUpperCase();
+        if (!/^[A-Z]{2}$/.test(stateCode) || jurisdictions.has(stateCode)) throw new Error('Enter distinct actual taxing and no-tax state jurisdictions.');
+        jurisdictions.add(stateCode);
+        return { ...row, stateCode, usTaxableIncome: money(row.usTaxableIncome, 'no-tax state U.S. taxable income'),
+          sourceReference: text(row.sourceReference, 'no-tax jurisdiction source reference') };
+      }),
+    };
+  }
+  const aggregateCountryIncome = new Map<string, ReturnType<typeof parseGuidedCurrency>>();
+  const anyCountrySources = allocation?.stateIncomeTaxes?.some(row => row.countryIncome !== undefined || row.countryIncomeConfirmed !== undefined);
   const itemizedAllocation = allocation ? {
     ...allocation, sourceReference: text(allocation.sourceReference, 'allowed itemized source worksheet'),
     incomeOrSalesTaxes: money(allocation.incomeOrSalesTaxes, 'allowed income or sales taxes'),
     homeRealPropertyTaxes: money(allocation.homeRealPropertyTaxes, 'allowed personal-home real estate taxes'),
     personalPropertyTaxes: money(allocation.personalPropertyTaxes, 'allowed personal property taxes'),
+    stateAllocation,
     stateIncomeTaxes: allocation.stateIncomeTaxes?.map(source => {
-      const hasCountryFacts = source.countryIncome !== undefined || source.countryIncomeConfirmed !== undefined || countryIncome.size > 1;
+      const hasCountryFacts = anyCountrySources || countryIncome.size > 1;
       if (hasCountryFacts && (source.countryIncomeConfirmed !== true || !source.countryIncome)) throw new Error('Confirm the actual state country-income source worksheet.');
       const seenCountries = new Set<string>(); let totalCountryIncome = parseGuidedCurrency('0');
       const actualCountries = source.countryIncome?.map(row => {
@@ -98,6 +123,9 @@ export function buildGuidedForeignTaxCarryover(data: ForeignCarryoverData | unde
         const stateTaxableIncome = money(row.stateTaxableIncome, 'state-taxed country income');
         const income = parseGuidedCurrency(stateTaxableIncome); totalCountryIncome = totalCountryIncome.plus(income);
         if (income.gt(original) || (source.foreignIncomeSpecificallyExempt === true && income.gt(0))) throw new Error('State country income contradicts its original source or exemption.');
+        const aggregate = (aggregateCountryIncome.get(country) ?? parseGuidedCurrency('0')).plus(income);
+        if (aggregate.gt(original)) throw new Error('Aggregate state country income overlaps or exceeds its actual source.');
+        aggregateCountryIncome.set(country, aggregate);
         return { ...row, foreignCountry, stateTaxableIncome, sourceReference: text(row.sourceReference, 'state country source reference') };
       });
       const stateTaxableIncome = money(source.stateTaxableIncome, 'actual state taxable income');

@@ -28,6 +28,10 @@ it('collects actual country source amounts and revokes confirmation', async () =
     await act(async () => root.render(<Harness />)); await click('Add itemized deduction allocation');
     await change('Itemized allocation source reference', 'Actual allowed deductions');
     await change('Allowed income or sales taxes', '6000'); await change('Allowed personal-home real estate taxes', '0'); await change('Allowed personal property taxes', '0');
+    await change('Actual state income-tax allocation method','ordinary_presumption');
+    await change('State jurisdiction worksheet source reference','Actual complete jurisdiction worksheet');
+    for(const label of ['State allocation method history checked','All taxing and no-tax state sources are included','State source income does not overlap'])await change(label,'true');
+    await click('Confirm no no-tax state income sources');
     await click('Add state income-tax allocation'); await change('State allocation 1 state code', 'NY');
     await change('State allocation 1 deductible tax', '6000'); await change('State allocation 1 actual taxable income', '90000');
     await change('State allocation 1 specifically exempts foreign income', 'false'); await change('State allocation 1 source reference', 'Actual state worksheet');
@@ -35,10 +39,11 @@ it('collects actual country source amounts and revokes confirmation', async () =
     expect(state()?.countryIncome?.[0]).toEqual({}); expect(state()?.countryIncomeConfirmed).toBeUndefined();
     await change('State allocation 1 country 1 name', 'Canada'); await change('State allocation 1 country 1 taxable income', '3500.25');
     await change('State allocation 1 country 1 source reference', 'Actual country worksheet');
-    for (const label of ['State allocation 1 country sources checked after the last edit', 'Itemized allocation sources checked after the last edit', 'Carryover worksheet sources checked after the last edit', 'Foreign-tax election sources checked after the last edit']) await change(label, 'true');
+    for (const label of ['State allocation 1 country sources checked after the last edit', 'State jurisdiction sources checked after the last edit', 'Itemized allocation sources checked after the last edit', 'Carryover worksheet sources checked after the last edit', 'Foreign-tax election sources checked after the last edit']) await change(label, 'true');
     expect(buildGuidedForeignTaxElection(latest, fixture.investment, 2025, 'single')?.deductionYearCarryover?.itemizedAllocation?.stateIncomeTaxes?.[0].countryIncome?.[0].stateTaxableIncome).toBe('3500.25');
     await change('State allocation 1 country 1 taxable income', '3500.26');
     expect(state()?.countryIncome?.[0].stateTaxableIncome).toBe('3500.26'); expect(state()?.countryIncomeConfirmed).toBeUndefined();
+    expect(latest?.deductionYearCarryover?.itemizedAllocation?.stateAllocation?.sourceFactsConfirmed).toBeUndefined();
     expect(latest?.deductionYearCarryover?.itemizedAllocation?.sourceFactsConfirmed).toBeUndefined();
     expect(latest?.deductionYearCarryover?.sourceFactsConfirmed).toBeUndefined(); expect(latest?.sourceFactsConfirmed).toBeNull();
     await change('State allocation 1 country sources checked after the last edit', 'true');

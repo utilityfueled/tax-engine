@@ -4,7 +4,7 @@ import { calculateForeignTaxDeductionCarryover, type ForeignTaxHypotheticalConte
 import { d } from '@/utils/decimal.js';
 import { resolveForeignTaxElection } from '@/engine/forms/foreign-tax-election.js';
 
-import { carryFacts, carryFixture } from '../../fixtures/foreign-tax-carryover.js';
+import { carryFacts, carryFixture, stateAllocationFacts } from '../../fixtures/foreign-tax-carryover.js';
 export function hypothetical(changes:Partial<ForeignTaxHypotheticalContext>={}):ForeignTaxHypotheticalContext {
   return {taxYear:2025,filingStatus:'single',totalIncome:d('50000'),agi:d('50000'),totalDeductions:d('0'),seniorDeduction:d('0'),
     deductionUsed:'standard',deductionAmount:d('0'),incomeTax:d('7000'),ordinaryIncomeOnly:true,
@@ -64,7 +64,7 @@ describe('Foreign tax deduction-year carryover',()=>{
     facts.incomeSources[0].reportedIncome='25000';facts.incomeSources[0].foreignIncome='25000';
     facts.itemizedAllocation={sourceFactsConfirmed:true,sourceReference:'Actual completed source allocation',incomeOrSalesTaxes:'6000',homeRealPropertyTaxes:'1000',personalPropertyTaxes:'200',
       allRealPropertyTaxesForPersonalResidenceConfirmed:true,noTreatyCharitableDeductionConfirmed:true,mortgageInterestMethod:'gross_income',
-      stateIncomeTaxes:[{stateCode:'NY',deductibleAmount:'6000',stateTaxableIncome:'80000',foreignIncomeSpecificallyExempt:false,sourceReference:'Actual state income worksheet'}]};
+      stateAllocation:stateAllocationFacts(),stateIncomeTaxes:[{stateCode:'NY',deductibleAmount:'6000',stateTaxableIncome:'80000',foreignIncomeSpecificallyExempt:false,sourceReference:'Actual state income worksheet'}]};
     const context=hypothetical({totalIncome:d('100000'),agi:d('100000'),totalDeductions:d('21200'),deductionAmount:d('21200'),deductionUsed:'itemized',incomeTax:d('15000'),
       scheduleA:{medical:d('1000'),incomeOrSalesTaxes:d('6000'),realPropertyTaxes:d('1000'),personalPropertyTaxes:d('200'),saltDeduction:d('7200'),salesTaxElected:false,
         mortgageInterest:d('12000'),investmentInterest:d('0'),charitableContributions:d('1000'),otherDeductions:d('0'),itemizedReduction:d('0')}});
@@ -79,7 +79,7 @@ describe('Foreign tax deduction-year carryover',()=>{
   it('rejects contradictory state exemption and gross-income facts',()=>{
     const input=carryFixture();const facts=input.foreignTaxElection?.deductionYearCarryover;if(!facts)throw new Error('Missing facts');
     facts.itemizedAllocation={sourceFactsConfirmed:true,sourceReference:'Actual allocation',incomeOrSalesTaxes:'1000',homeRealPropertyTaxes:'0',personalPropertyTaxes:'0',
-      stateIncomeTaxes:[{stateCode:'NY',deductibleAmount:'1000',stateTaxableIncome:'50000',foreignIncomeSpecificallyExempt:true,sourceReference:'Contradictory state income'}]};
+      stateAllocation:stateAllocationFacts(),stateIncomeTaxes:[{stateCode:'NY',deductibleAmount:'1000',stateTaxableIncome:'50000',foreignIncomeSpecificallyExempt:true,sourceReference:'Contradictory state income'}]};
     const context=hypothetical({deductionUsed:'itemized',deductionAmount:d('1000'),totalDeductions:d('1000'),scheduleA:{...hypothetical().scheduleA,incomeOrSalesTaxes:d('1000'),saltDeduction:d('1000')}});
     expect(()=>compute(input,context)).toThrow(/state.*source|state.*income/i);
   });
@@ -103,7 +103,7 @@ describe('Foreign tax deduction-year carryover',()=>{
     input.form1099Int.push({...input.form1099Int[0],foreignCountry:'France',foreignTaxPaid:'0',accountReference:'Actual second account'});
     facts.incomeSources.push({...facts.incomeSources[0],sourceId:'form1099Int:1',foreignCountry:'France',accountReference:'Actual second account'});
     facts.itemizedAllocation={sourceFactsConfirmed:true,sourceReference:'Actual allocated costs',incomeOrSalesTaxes:'1000',homeRealPropertyTaxes:'0',personalPropertyTaxes:'0',
-      stateIncomeTaxes:[{stateCode:'NY',deductibleAmount:'1000',stateTaxableIncome:'50000',foreignIncomeSpecificallyExempt:false,sourceReference:'Actual state total only'}]};
+      stateAllocation:stateAllocationFacts(),stateIncomeTaxes:[{stateCode:'NY',deductibleAmount:'1000',stateTaxableIncome:'50000',foreignIncomeSpecificallyExempt:false,sourceReference:'Actual state total only'}]};
     expect(()=>compute(input,hypothetical({deductionUsed:'itemized',deductionAmount:d('1000'),totalDeductions:d('1000'),scheduleA:{...hypothetical().scheduleA,incomeOrSalesTaxes:d('1000'),saltDeduction:d('1000')}}))).toThrow(/country.*attribution|state.*country/i);
   });
   it('rejects a saved deduction-year ledger on a credit election',()=>{

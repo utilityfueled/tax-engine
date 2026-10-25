@@ -16,3 +16,8 @@ export function carryFixture(changes:Record<string,unknown>={}) {
     foreignTaxElection:{...election,noUnusedCreditCarryoversConfirmed:false,deductionYearCarryover:carryFacts(),
       sources:[{...election.sources[0],payerName:'Synthetic foreign bank',payerTin:'112233445',accountReference:'Synthetic account A',reportedTaxAmount:'600',taxOnExcludedIncome:'0',investmentAllocableAmount:'0',payments:[{date:'2025-03-15',amountUsd:'600'}]}]},...changes});
 }
+
+/** Authored synthetic source worksheet: no other states or binding elective method. */
+export const stateAllocationFacts = () => ({ method: 'ordinary_presumption' as const, sourceFactsConfirmed: true,
+  sourceReference: 'Synthetic completed jurisdiction and method-history worksheet', methodHistoryConfirmed: true,
+  allStateSourcesIncludedConfirmed: true, nonoverlappingIncomeConfirmed: true, noTaxStateIncome: [] });

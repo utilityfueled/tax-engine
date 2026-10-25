@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { TaxYearInputSchema } from '@/models/inputs.js';
 import { calculateForeignTaxDeductionCarryover, type ForeignTaxHypotheticalContext } from '@/engine/forms/foreign-tax-deduction-carryover.js';
 import { d } from '@/utils/decimal.js';
-import { carryFixture } from '../../fixtures/foreign-tax-carryover.js';
+import { carryFixture, stateAllocationFacts } from '../../fixtures/foreign-tax-carryover.js';
 
 function source() {
   const base = carryFixture();
@@ -22,7 +22,7 @@ function source() {
   ], foreignTaxElection: { ...election, deductionYearCarryover: { ...facts,
     incomeSources: [{ ...first, reportedIncome: '15000', foreignIncome: '15000' },
       { ...first, sourceId: 'form1099Int:1', reportedIncome: '10000', foreignIncome: '10000', foreignCountry: 'France', accountReference: 'Actual second account' }],
-    itemizedAllocation: { sourceFactsConfirmed: true, sourceReference: 'Actual allowed state-tax source', incomeOrSalesTaxes: '6000', homeRealPropertyTaxes: '0', personalPropertyTaxes: '0', stateIncomeTaxes: [state] },
+    itemizedAllocation: { sourceFactsConfirmed: true, sourceReference: 'Actual allowed state-tax source', incomeOrSalesTaxes: '6000', homeRealPropertyTaxes: '0', personalPropertyTaxes: '0', stateAllocation:stateAllocationFacts(),stateIncomeTaxes: [state] },
   } } };
   const context: ForeignTaxHypotheticalContext = { taxYear: 2025, filingStatus: 'single', totalIncome: d('100000'), agi: d('100000'),
     totalDeductions: d('6000'), seniorDeduction: d('0'), deductionUsed: 'itemized', deductionAmount: d('6000'), incomeTax: d('15000'), ordinaryIncomeOnly: true,
@@ -143,6 +143,6 @@ describe('Actual foreign state-tax allocation', () => {
       { stateCode: 'NY', deductibleAmount: '3000', stateTaxableIncome: '45000', foreignIncomeSpecificallyExempt: false, sourceReference: 'Actual NY return' },
       { stateCode: 'CA', deductibleAmount: '3000', stateTaxableIncome: '45000', foreignIncomeSpecificallyExempt: false, sourceReference: 'Actual CA return' },
     ] as typeof changed.foreignTaxElection.deductionYearCarryover.itemizedAllocation.stateIncomeTaxes;
-    expect(() => compute(changed, context)).toThrow(/multiple.state|multi.state/i);
+    expect(() => compute(changed, context)).toThrow(/state.*country|country.*source/i);
   });
 });

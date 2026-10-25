@@ -28,10 +28,10 @@ notes: |
   is inferred from relative country gross income. Exact source cents are kept;
   each country's total allocated state tax rounds once at its printed line2.
   Multiple states cannot independently reuse the entire U.S. income denominator.
-  Their actual overlapping/nonoverlapping sources, state exemptions, credits and
-  any applicable prescribed method require a separate source integration. This
-  calculator rejects that unsupported combination, including zero-tax rows that
-  could affect the allocation method, rather than inventing an allocation.
+  The aggregate ordinary method and required exemption/no-tax modifications are
+  now specified in foreign-tax-multiple-state.yaml. Unknown or overlapping
+  jurisdiction sources and other binding methods remain unresolved, including
+  zero-tax rows that could affect the allocation method.
 lines:
   - line: "pre-state-taxable-residual"
     description: "Compare state income with the U.S. taxable residual, not gross income"
@@ -56,7 +56,7 @@ lines:
     testRef: "tests/engine/forms/foreign-tax-state-allocation.test.ts::rejects unknown duplicate stale and conflicting country facts"
   - line: "multiple-state-boundary"
     description: "Do not repeat the single-state presumption across jurisdictions"
-    formula: "More than one state worksheet requires the separate actual multiple-state source method; do not independently subtract whole-return U.S. income in each state."
+    formula: "Multiple state worksheets require the confirmed aggregate method and complete actual country sources when needed; see foreign-tax-multiple-state.yaml. Do not independently subtract whole-return U.S. income in each state."
     testRef: "tests/engine/forms/foreign-tax-state-allocation.test.ts::rejects multiple-state presumptions without source attribution"
   - line: "known-zero"
     description: "Preserve known exempt zeros and actual identities"

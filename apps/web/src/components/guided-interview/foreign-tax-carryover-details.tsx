@@ -13,13 +13,20 @@ export function ForeignTaxCarryoverDetails({data,investment,onChange}:{data?:For
   const update=(patch:Partial<ForeignCarryoverData>)=>{
     const next={...data,...patch,sourceFactsConfirmed:undefined};
     if('incomeSources' in patch&&next.itemizedAllocation)next.itemizedAllocation={...next.itemizedAllocation,sourceFactsConfirmed:undefined,
+      stateAllocation:next.itemizedAllocation.stateAllocation?{...next.itemizedAllocation.stateAllocation,sourceFactsConfirmed:undefined}:undefined,
       stateIncomeTaxes:next.itemizedAllocation.stateIncomeTaxes?.map(row=>({...row,countryIncomeConfirmed:undefined}))};
     onChange(next);
   };
   const income=(index:number,patch:Partial<ForeignCarryoverIncomeData>)=>update({incomeSources:data.incomeSources?.map((row,i)=>i===index?{...row,...patch}:row)});
   const balance=(index:number,patch:Partial<ForeignCarryoverBalanceData>)=>update({carryovers:data.carryovers?.map((row,i)=>i===index?{...row,...patch}:row)});
   const allocation=data.itemizedAllocation;
-  const updateAllocation=(patch:Partial<NonNullable<ForeignCarryoverData['itemizedAllocation']>>)=>update({itemizedAllocation:{...allocation,...patch,sourceFactsConfirmed:undefined}});
+  const updateAllocation=(patch:Partial<NonNullable<ForeignCarryoverData['itemizedAllocation']>>)=>{
+    const next={...allocation,...patch,sourceFactsConfirmed:undefined};
+    if(next.stateAllocation)next.stateAllocation={...next.stateAllocation,sourceFactsConfirmed:undefined};
+    update({itemizedAllocation:next});
+  };
+  const stateMethod=allocation?.stateAllocation;
+  const updateMethod=(patch:Partial<NonNullable<typeof stateMethod>>)=>updateAllocation({stateAllocation:{...stateMethod,...patch}});
   return <fieldset className="guided-fieldset"><legend>Deduction-year prior credit balances</legend>
     <p className="guided-hint">Unused credit can be absorbed in a deduction year even though it gives no current tax benefit. Enter actual foreign income and adjusted prior balances. The return calculates the hypothetical credit limit; do not enter a guessed limit. Mixed filing histories, special categories and loss accounts require their own methods.</p>
     <TextFact label="Carryover worksheet tax year" value={data.sourceTaxYear??''} onChange={sourceTaxYear=>update({sourceTaxYear})}/>
@@ -60,12 +67,30 @@ export function ForeignTaxCarryoverDetails({data,investment,onChange}:{data?:For
       {data.carryovers===undefined&&<button type="button" className="utility-button" onClick={()=>update({carryovers:[]})}>Confirm no adjusted prior balance remains</button>}
     </fieldset>
     {allocation?<fieldset className="guided-fieldset"><legend>Hypothetical allowed itemized deduction sources</legend>
-      <p className="guided-hint">Complete this when the return would still itemize after removing the foreign income-tax deduction. Use the actual allowed state/local components, including any cap allocation. For one state and several foreign countries, enter each country&apos;s actual income taxed by that state, including known zero. Multiple states require a separate income attribution method.</p>
+      <p className="guided-hint">Complete this when the return would still itemize after removing the foreign income-tax deduction. Use actual allowed state/local components, including any cap allocation. State income taxes require the complete jurisdiction worksheet and actual method history. Include states that exempt foreign income or impose no income tax; use actual nonoverlapping income attribution, not a guessed split.</p>
       <TextFact label="Itemized allocation source reference" value={allocation.sourceReference??''} onChange={sourceReference=>updateAllocation({sourceReference})}/>
       {([['incomeOrSalesTaxes','Allowed income or sales taxes'],['homeRealPropertyTaxes','Allowed personal-home real estate taxes'],['personalPropertyTaxes','Allowed personal property taxes']] as const).map(([key,label])=><CurrencyField key={key} label={label} value={allocation[key]??''} onChange={value=>updateAllocation({[key]:value})}/>)}
       <BooleanFact label="All allocated real estate taxes are for a personal residence" value={allocation.allRealPropertyTaxesForPersonalResidenceConfirmed} onChange={value=>updateAllocation({allRealPropertyTaxesForPersonalResidenceConfirmed:value??undefined})}/>
       <BooleanFact label="No charitable deduction is allocated under a foreign treaty" value={allocation.noTreatyCharitableDeductionConfirmed} onChange={value=>updateAllocation({noTreatyCharitableDeductionConfirmed:value??undefined})}/>
       <Choice label="Actual mortgage-interest allocation method" value={allocation.mortgageInterestMethod} options={[["gross_income","Gross-income method"],["us_source_small_foreign_income","Elect U.S.-source interest allocation when gross foreign income is at most $5,000"]]} onChange={method=>updateAllocation({mortgageInterestMethod:method as NonNullable<ForeignCarryoverData['itemizedAllocation']>['mortgageInterestMethod']})}/>
+      <fieldset className="guided-fieldset"><legend>Actual state jurisdiction worksheet</legend>
+        <p className="guided-hint">The ordinary method combines eligible state bases once. An existing safe-harbor election or another binding method needs its own calculation. Enter a completed reasonable attribution of U.S. taxable income to each no-tax state, including known zero when applicable.</p>
+        <Choice label="Actual state income-tax allocation method" value={stateMethod?.method} options={[["ordinary_presumption","Ordinary taxable-source presumption"],["existing_safe_harbor_or_other","Existing safe-harbor election or other method"]]} onChange={method=>updateMethod({method:method as NonNullable<typeof stateMethod>['method']})}/>
+        <TextFact label="State jurisdiction worksheet source reference" value={stateMethod?.sourceReference??''} onChange={sourceReference=>updateMethod({sourceReference})}/>
+        {([['methodHistoryConfirmed','State allocation method history checked'],['allStateSourcesIncludedConfirmed','All taxing and no-tax state sources are included'],['nonoverlappingIncomeConfirmed','State source income does not overlap']] as const).map(([key,label])=><BooleanFact key={key} label={label} value={stateMethod?.[key]} onChange={value=>updateMethod({[key]:value??undefined})}/>)}
+        {(stateMethod?.noTaxStateIncome??[]).map((source,index)=>{
+          const updateNoTax=(patch:Partial<typeof source>)=>updateMethod({noTaxStateIncome:stateMethod?.noTaxStateIncome?.map((row,i)=>i===index?{...row,...patch}:row)});
+          return <fieldset className="guided-fieldset" key={index}><legend>No-tax state {index+1}</legend>
+            <TextFact label={`No-tax state ${index+1} code`} value={source.stateCode??''} onChange={stateCode=>updateNoTax({stateCode})}/>
+            <CurrencyField label={`No-tax state ${index+1} U.S. taxable income`} value={source.usTaxableIncome??''} onChange={usTaxableIncome=>updateNoTax({usTaxableIncome})}/>
+            <TextFact label={`No-tax state ${index+1} source reference`} value={source.sourceReference??''} onChange={sourceReference=>updateNoTax({sourceReference})}/>
+            <button type="button" className="utility-button" onClick={()=>updateMethod({noTaxStateIncome:stateMethod?.noTaxStateIncome?.filter((_,i)=>i!==index)})}>Remove no-tax state {index+1}</button>
+          </fieldset>;
+        })}
+        <button type="button" className="utility-button" onClick={()=>updateMethod({noTaxStateIncome:[...(stateMethod?.noTaxStateIncome??[]),{}]})}>Add no-tax state income source</button>
+        {stateMethod?.noTaxStateIncome===undefined&&<button type="button" className="utility-button" onClick={()=>updateMethod({noTaxStateIncome:[]})}>Confirm no no-tax state income sources</button>}
+        <BooleanFact label="State jurisdiction sources checked after the last edit" value={stateMethod?.sourceFactsConfirmed} onChange={value=>update({itemizedAllocation:{...allocation,sourceFactsConfirmed:undefined,stateAllocation:{...stateMethod,sourceFactsConfirmed:value??undefined}}})}/>
+      </fieldset>
       {(allocation.stateIncomeTaxes??[]).map((source,index)=>{
         const updateState=(patch:Partial<typeof source>,preserveCountryConfirmation=false)=>updateAllocation({stateIncomeTaxes:allocation.stateIncomeTaxes?.map((row,i)=>i===index?{...row,...patch,...(preserveCountryConfirmation?{}:{countryIncomeConfirmed:undefined})}:row)});
         return <fieldset className="guided-fieldset" key={index}><legend>State allocation {index+1}</legend>
