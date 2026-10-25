@@ -11,6 +11,8 @@ data
 dist
 logs
 node_modules
+.pnpm-store
+**/.pnpm-store
 playwright-report
 prompts
 sample-documents
