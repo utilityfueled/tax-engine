@@ -962,7 +962,24 @@ describe.sequential("Pennsylvania Full-Return Edge Cases", () => {
         section1231Gain: "2000",
         netRentalIncome: "6000",
         royalties: "1000",
+        isPassiveActivity: false,
       }],
+      form4797: { nonrecapturedNetSection1231Losses: "0" },
+      // Synthetic actual worksheet: $4,000 ST + $8,000 LT + $2,000
+      // nonpassive section 1231 gain from an operating business, not a
+      // financial-instrument trading business. Only that business gain is
+      // excluded from NIIT. No partnership interest was sold. Spec: form-8960.yaml.
+      form8960Sources: {
+        sourceTaxYear: 2025,
+        sourceReference: "PA multi-class fixture disposition worksheet",
+        sourceFactsConfirmed: true,
+        dispositions: {
+          regularCapitalGainOrLoss: "14000",
+          regularOrdinaryGainOrLoss: "0",
+          excludedGainOrLossAdjustment: "-2000",
+          passthroughAdjustment: "0",
+        },
+      },
     });
 
     it("routes K-1 income to correct PA classes", () => {

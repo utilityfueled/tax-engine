@@ -1142,7 +1142,8 @@ describe("Audit trail includes Form 8959 and Form 8960 entries in federal pipeli
       (l) => l.form === "Form 8960" && l.line === "17"
     );
     expect(line8960).toBeDefined();
-    expect(line8960!.description).toBe("Net Investment Income Tax");
+    expect(line8960?.description).toBe("Net investment income tax");
+    expect(line8960?.value.toFixed()).toBe("760");
   });
 
   it("Form 8959 line 1 audit entry records medicare wages", () => {
@@ -1154,12 +1155,19 @@ describe("Audit trail includes Form 8959 and Form 8960 entries in federal pipeli
     expect(medicareWagesLine!.description).toBe("Medicare wages from W-2s");
   });
 
-  it("Form 8960 line 8 audit entry records net investment income", () => {
+  it("Form 8960 lines 8 and 12 separately record total and net investment income", () => {
     const federal = calculateFederalTax(highIncomeSingleFixture);
-    const niiLine = federal.allLines.find(
+    const totalLine = federal.allLines.find(
       (l) => l.form === "Form 8960" && l.line === "8"
     );
+    const niiLine = federal.allLines.find(
+      (l) => l.form === "Form 8960" && l.line === "12"
+    );
+    expect(totalLine).toBeDefined();
+    expect(totalLine?.description).toBe("Total investment income");
+    expect(totalLine?.value.toFixed()).toBe("20000");
     expect(niiLine).toBeDefined();
-    expect(niiLine!.description).toBe("Net investment income");
+    expect(niiLine?.description).toBe("Net investment income");
+    expect(niiLine?.value.toFixed()).toBe("20000");
   });
 });

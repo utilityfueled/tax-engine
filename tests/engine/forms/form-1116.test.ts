@@ -436,6 +436,21 @@ describe("Form 1116 - K-1 foreign tax pipeline", () => {
         foreignTaxPaid: "300",
         isPassiveActivity: true,
       }],
+      form4797: { nonrecapturedNetSection1231Losses: "0" },
+      // Synthetic actual worksheet: $3,000 distributions + $900 ST +
+      // $1,000 LT + $1,100 passive section 1231 gain. All are included in
+      // NIIT; no partnership interest was sold. Spec: form-8960.yaml.
+      form8960Sources: {
+        sourceTaxYear: 2025,
+        sourceReference: "Foreign income fixture disposition worksheet",
+        sourceFactsConfirmed: true,
+        dispositions: {
+          regularCapitalGainOrLoss: "6000",
+          regularOrdinaryGainOrLoss: "0",
+          excludedGainOrLossAdjustment: "0",
+          passthroughAdjustment: "0",
+        },
+      },
     });
 
     // Multi-category: 1099-DIV → passive, K-1 → general
