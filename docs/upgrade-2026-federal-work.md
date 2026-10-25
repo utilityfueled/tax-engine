@@ -571,3 +571,20 @@ automatic comparison and both explicit elections.617 focused federal/form tests,
 root types and all3,157spec refs pass; scopedlint has zeroerrors (199existing
 nonnullwarnings in large historical tests). Scoped diff and whitespace reviewed.
 Qualified disaster enhancement and independent review remain outstanding.
+
+### Excess Social Security withholding by owner and employer — 2026-10-25
+
+Refreshed final1040 Schedule3line11 instructions and SSA contribution bases:
+https://www.irs.gov/instructions/i1040gi and
+https://www.ssa.gov/oact/cola/cbb.html. Each spouse has a separate cap; one-employer
+overcollection goes to employer correction/Form843. Grouped by actual owner and
+normalized employerEIN, capped each employer contribution before calculating
+each owner's excess, and preserved exact10918.20/11439.00 yearly limits. Repeated
+EIN records cannot manufacture another employer.2026 joint owner or employer
+identity omissions reject;2025 untagged historical preview remains unqualified
+and still needs actual owner facts before qualification. Guided owner collection
+is being completed by the facts owner. RRTA source support remains separate.
+
+Two new source-linked tests failed before implementation.591 focused return,
+Schedule3 and stacking tests, root types and all3,191spec refs pass. Scopedlint,
+diff and whitespace reviewed; no filing gate changed.

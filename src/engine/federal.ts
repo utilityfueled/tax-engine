@@ -2913,7 +2913,8 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   const excessSSWithholding = calculateExcessSSWithholding(
     input.w2s,
     constants.selfEmploymentTax.socialSecurityWageBase,
-    constants.selfEmploymentTax.socialSecurityRate.dividedBy(2) // employee portion = half
+    constants.selfEmploymentTax.socialSecurityRate.dividedBy(2), // employee portion = half
+    { taxYear: year, filingStatus }
   );
 
   // ── Form 8880: Retirement Savings Contributions Credit ─

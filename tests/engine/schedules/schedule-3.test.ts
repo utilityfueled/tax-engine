@@ -84,6 +84,23 @@ describe("Schedule 3 Part II - Refundable Credits", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("Excess SS Withholding", () => {
+  it("computes excess separately per owner and excludes employer overcollection", () => {
+    const base = simpleW2Fixture.w2s[0];
+    const w2 = (owner: "primary"|"spouse", ein: string, withheld: string) => ({ ...base, accountHolder: owner, employer: { name: "Synthetic", ein }, socialSecurityWithheld: withheld });
+    const opts = { taxYear: 2026, filingStatus: "married_filing_jointly" as const };
+    const cap = d("184500"), rate = d("0.062");
+    expect(calculateExcessSSWithholding([w2("primary","11-1111111","11439"),w2("spouse","11-1111111","11439")],cap,rate,opts).toString()).toBe("0");
+    expect(calculateExcessSSWithholding([w2("primary","11-1111111","12500")],cap,rate,opts).toString()).toBe("0");
+    expect(calculateExcessSSWithholding([w2("primary","11-1111111","12500"),w2("primary","22-2222222","1000")],cap,rate,opts).toString()).toBe("1000");
+    expect(calculateExcessSSWithholding([w2("primary","11-1111111","8000"),w2("primary","111111111","6000")],cap,rate,opts).toString()).toBe("0");
+    expect(calculateExcessSSWithholding([w2("primary","11-1111111","8000"),w2("primary","22-2222222","6000"),w2("spouse","11-1111111","8000"),w2("spouse","22-2222222","6000")],cap,rate,opts).toString()).toBe("5122");
+  });
+  it("requires actual2026 owner and employer facts for excess withholding", () => {
+    const cap = d("184500"), rate = d("0.062"), opts = { taxYear: 2026, filingStatus: "married_filing_jointly" as const };
+    expect(() => calculateExcessSSWithholding([simpleW2Fixture.w2s[0]],cap,rate,opts)).toThrow(/owner.*unknown/i);
+    expect(() => calculateExcessSSWithholding([{...simpleW2Fixture.w2s[0],accountHolder:"primary",employer:{name:"",ein:""}}],cap,rate,opts)).toThrow(/employer.*identity/i);
+    expect(() => calculateExcessSSWithholding([{...simpleW2Fixture.w2s[0],accountHolder:"primary",socialSecurityWithheld:"-1"}],cap,rate,opts)).toThrow(/withholding.*nonnegative/i);
+  });
   it("no excess with single employer", () => {
     const excess = calculateExcessSSWithholding(
       [{ employer: { name: "Corp", ein: "12-3" }, wages: "100000", federalWithheld: "0",

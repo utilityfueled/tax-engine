@@ -8,6 +8,7 @@
 
 import Decimal from "decimal.js";
 import type { TaxYearInput } from "@/models/inputs.js";
+import type { FilingStatus } from "@/models/constants.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { d, zeroFloor, sum } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
@@ -68,16 +69,36 @@ export interface Schedule3Result {
 export function calculateExcessSSWithholding(
   w2s: TaxYearInput["w2s"],
   ssWageBase: Decimal,
-  ssRate: Decimal
+  ssRate: Decimal,
+  options?: { taxYear: number; filingStatus: FilingStatus }
 ): Decimal {
-  // IRS Form 1040 Instructions: max SS withholding = $176,100 × 6.2% = $10,918.20 (exact, not rounded)
-  // "You can take a credit for the amount withheld in excess of $10,918.20"
+  // IRS1040 Schedule3line11: each person has a separate cap. Excess collected by
+  // one employer belongs to employer correction/Form843, never this credit.
+  // Exact cents are retained:2025 cap10918.20;2026 cap11439.00.
   const maxWithholding = ssWageBase.times(ssRate);
-  const totalWithheld = w2s.reduce(
-    (acc, w2) => acc.plus(d(w2.socialSecurityWithheld)),
-    new Decimal(0)
-  );
-  return zeroFloor(totalWithheld.minus(maxWithholding));
+  if (!maxWithholding.isFinite() || maxWithholding.lte(0)) throw new Error("Excess Social Security cap must be finite and positive");
+  const employersByOwner = new Map<string, Map<string, Decimal>>();
+  for (const w2 of w2s) {
+    const withheld = d(w2.socialSecurityWithheld);
+    if (!withheld.isFinite() || withheld.lt(0)) throw new Error("Social Security withholding must be finite and nonnegative");
+    if (options?.taxYear === 2026 && options.filingStatus === "married_filing_jointly" && !w2.accountHolder) {
+      throw new Error("Social Security W2 owner is unknown for the joint2026 return");
+    }
+    const ein = w2.employer.ein.replace(/-/g, "").trim();
+    if (options?.taxYear === 2026 && !/^\d{9}$/.test(ein)) throw new Error("Social Security employer identity requires actual EIN");
+    // Historical untagged records retain an explicitly unqualified preview path.
+    // The2026 joint path above cannot infer ownership from record order.
+    const owner = w2.accountHolder ?? "primary";
+    const employers = employersByOwner.get(owner) ?? new Map<string, Decimal>();
+    employers.set(ein, (employers.get(ein) ?? d(0)).plus(withheld));
+    employersByOwner.set(owner, employers);
+  }
+  let excess = d(0);
+  for (const employers of employersByOwner.values()) {
+    const eligible = [...employers.values()].reduce((total, withheld) => total.plus(Decimal.min(withheld, maxWithholding)), d(0));
+    excess = excess.plus(zeroFloor(eligible.minus(maxWithholding)));
+  }
+  return excess;
 }
 
 export function calculateSchedule3(
@@ -153,7 +174,8 @@ export function calculateSchedule3(
   if (!extensionPayment.isFinite() || extensionPayment.lt(0)) throw new Error("Federal extension payment must be finite and nonnegative");
   audit.record("Sched 3", "10", "Amount paid with extension request", extensionPayment, "Actual federal extension payments, excluding fees");
   const excessSSWithholding = extra?.excessSocialSecurityWithholding ?? new Decimal(0);
-  audit.record("Sched 3", "11", "Excess SS withholding", excessSSWithholding, "Multiple employer refund");
+  audit.record("Sched 3", "11", "Excess SS withholding", excessSSWithholding,
+    "Separate owner caps across distinct employers; excludes single-employer overcollection");
 
   const additionalChildTaxCredit = extra?.additionalChildTaxCredit ?? new Decimal(0);
 
