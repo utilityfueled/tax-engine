@@ -99,9 +99,9 @@ lines:
     description: "Round line 8 times 30%"
     taxYear: 2025
   - line: "10"
-    formula: "Fuel cell capacity in kW times $1000 ($500 per half kW); each qualified system must be at least0.5kW"
+    formula: "Sum floor(each actual fuel-cell capacity in kW times2) times $500; each system must have at least0.5kW"
     testRef: "tests/engine/forms/form-5695.test.ts::detailed clean energy caps fuel cells by actual capacity"
-    description: "Fuel cell capacity in kW times $1000 ($500 per half kW); each qualified system must be at least0.5kW"
+    description: "Sum floor(each actual fuel-cell capacity in kW times2) times $500; each system must have at least0.5kW"
     taxYear: 2025
   - line: "11"
     formula: "Lesser of line 9 and 10"
@@ -139,9 +139,9 @@ lines:
     description: "Qualified insulation and air sealing cost"
     taxYear: 2025
   - line: "18b"
-    formula: "min(round(line 18a times 30%),1200)"
+    formula: "round(line18a times30%); apply the general1200 limit at line28"
     testRef: "tests/engine/forms/form-5695.test.ts::detailed improvements apply every category cap before shared pools"
-    description: "min(round(line 18a times 30%),1200)"
+    description: "round(line18a times30%); apply the general1200 limit at line28"
     taxYear: 2025
   - line: "19h"
     formula: "Sort doors by cost; min(min(round(most-expensive door cost times30%),250) + round(sum remaining door costs times30%),500), matching official lines19c/19g"
@@ -220,8 +220,8 @@ lines:
     taxYear: 2025
   - line: "10-capacity"
     taxYear: 2025
-    description: "Sum actual eligible fuel-cell kilowatt capacity; each system at least 0.5 kW"
-    formula: "Sum actual eligible fuel-cell kilowatt capacity; each system at least 0.5 kW"
+    description: "Sum floor(each actual eligible fuel-cell kW capacity times2)/2; each system at least0.5kW"
+    formula: "Sum floor(each actual eligible fuel-cell kW capacity times2)/2; each system at least0.5kW"
     testRef: "tests/engine/forms/form-5695.test.ts::energy intermediate audit matches printed costs and minimum fuel capacity"
   - line: "19a"
     taxYear: 2025

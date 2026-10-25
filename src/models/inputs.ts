@@ -3035,21 +3035,49 @@ export const Form8815Schema = z.object({
   royaltyInterestAdjustment: optionalDecimalInput,
 });
 
+const EnergyPropertySourceSchema = z.object({
+  sourceId: z.string().trim().min(1).optional(),
+  homeId: z.string().trim().min(1).optional(),
+  /** Actual net qualified costs paid by every occupant, including this return. */
+  totalCostPaidByAllOccupants: optionalDecimalInput,
+  associationCostShare: z.boolean().optional(),
+  associationAllocation: z.object({
+    totalQualifiedCost: decimal, numerator: decimal, denominator: decimal,
+    sourceReference: z.string().trim().min(1),
+  }).optional(),
+});
 export const EnergyCreditsSchema = z.object({
+  sourceFactsConfirmed: z.boolean().optional(),
+  separateSpousalMainHomes: z.boolean().optional(),
+  homes: z.array(z.object({
+    id: z.string().trim().min(1), owner: z.enum(["primary", "spouse", "joint"]).optional(),
+    address: z.object({ street: z.string(), unit: z.string().optional(), city: z.string(), state: z.string(), zip: z.string() }),
+    locatedInUnitedStates: z.boolean().optional(), usedAsResidence: z.boolean().optional(),
+    mainHomeFor: z.enum(["primary", "spouse", "both", "neither"]).optional(),
+    mainHomeStartDate: z.string().optional(), mainHomeEndDate: z.string().optional(),
+    ownedByTaxpayer: z.boolean().optional(), jointOccupancyWithOtherReturn: z.boolean().optional(),
+    allOccupantCostsComplete: z.boolean().optional(),
+  })).optional(),
   /** Itemized records preserve actual category, timing and qualification. */
-  qualifiedImprovements: z.array(z.object({
+  qualifiedImprovements: z.array(EnergyPropertySourceSchema.extend({
     category: z.enum(["insulation", "exterior_door", "windows_skylights", "central_ac", "gas_water_heater", "furnace_boiler", "electrical_panel", "heat_pump", "heat_pump_water_heater", "biomass", "home_energy_audit"]),
     qualifiedCost: decimal,
     installationCompletedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     qualificationConfirmed: z.boolean(),
     manufacturerQualifiedId: z.string().optional(),
+    originalUseByTaxpayer: z.boolean().optional(), expectedFiveYearUse: z.boolean().optional(),
+    newConstruction: z.boolean().optional(), auditReportCertified: z.boolean().optional(),
+    enabledPropertyIds: z.array(z.string().trim().min(1)).optional(),
+    panelLoadAmps: optionalDecimalInput, panelCodeComplianceConfirmed: z.boolean().optional(),
+    consecutiveYearElection: z.boolean().optional(), priorYearCreditClaimed: z.boolean().optional(),
   })).optional(),
-  cleanEnergyProperties: z.array(z.object({
+  cleanEnergyProperties: z.array(EnergyPropertySourceSchema.extend({
     category: z.enum(["solar_electric", "solar_water", "fuel_cell", "small_wind", "geothermal", "battery"]),
     qualifiedCost: decimal,
     installationCompletedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     qualificationConfirmed: z.boolean(),
     fuelCellKilowattCapacity: optionalDecimalInput,
+    batteryKilowattHours: optionalDecimalInput,
   })).optional(),
   residenceEligibilityConfirmed: z.boolean().optional(),
   priorYearCarryforward: optionalDecimalInput,

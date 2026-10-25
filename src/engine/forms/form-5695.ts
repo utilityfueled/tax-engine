@@ -11,9 +11,12 @@ import type { CalculatedLine } from "@/models/outputs.js";
 import { d, sum, min, roundDollar, zeroFloor } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
 import type { EnergyCredits } from "@/models/inputs.js";
+import type { FilingStatus } from "@/models/constants.js";
+import { calculateEnergySourceFacts, type EnergySourceFactsResult, type ResolvedEnergyImprovement } from "./energy-source-facts.js";
 
 export interface Form5695Options {
   taxYear?: number;
+  filingStatus?: FilingStatus;
   priorYearCarryforward?: Decimal;
   carryforwardSourceTaxYear?: number;
   carryforwardConfirmed?: boolean;
@@ -22,6 +25,9 @@ export interface Form5695Options {
 }
 
 export interface Form5695Result {
+  sourceFactsVerified?: boolean;
+  taxYear?: number;
+  improvementHomes?: Array<{ groupId: string; homeIds: string[]; creditBeforeTaxLimit: Decimal; lines: CalculatedLine[] }>;
   priorYearCarryforward: Decimal;
   residentialCleanEnergyCreditBeforeLimit: Decimal;
   residentialCleanEnergyCarryforward: Decimal;
@@ -29,12 +35,12 @@ export interface Form5695Result {
   disallowedNewEnergyCosts: Decimal;
   // Part I
   totalCleanEnergyCosts: Decimal;
-  residentialCleanEnergyCredit: Decimal; // Line 14
+  residentialCleanEnergyCredit: Decimal; // 2025 printed line15
 
   // Part II
   totalImprovementCosts: Decimal;
-  improvementCreditBeforeLimits: Decimal; // Line 24
-  energyImprovementCredit: Decimal; // Line 30
+  improvementCreditBeforeLimits: Decimal; // 30% of qualified costs before category/annual limits
+  energyImprovementCredit: Decimal; // 2025 printed line32
 
   lines: CalculatedLine[];
 }
@@ -96,6 +102,11 @@ export function calculateForm5695(
       improvementCreditBeforeLimits:new Decimal(0), energyImprovementCredit:new Decimal(0), lines:audit.getLines()};
   }
 
+  if (energyCredits?.sourceFactsConfirmed !== undefined || energyCredits?.homes !== undefined) {
+    const sources = calculateEnergySourceFacts(energyCredits, { taxYear, filingStatus: options.filingStatus });
+    return calculateSourcedEnergy(energyCredits, sources, options);
+  }
+
   if (detailed) {
     if (typeof energyCredits?.residenceEligibilityConfirmed !== "boolean") throw new Error("Detailed energy records require known residence eligibility");
     if (options.taxLiabilityLimit === undefined || options.improvementTaxLiabilityLimit === undefined) throw new Error("Detailed energy credits require both actual tax-liability worksheets");
@@ -113,7 +124,7 @@ export function calculateForm5695(
         const capacity = d(record.fuelCellKilowattCapacity);
         if (!capacity.isFinite() || capacity.lte(0)) throw new Error("Qualified fuel cell capacity must be positive and finite");
         if (capacity.lt("0.5")) { disallowedNewEnergyCosts = disallowedNewEnergyCosts.plus(cost); continue; }
-        fuelCellCapacity = fuelCellCapacity.plus(capacity);
+        fuelCellCapacity = fuelCellCapacity.plus(capacity.times(2).floor().div(2));
       }
       cleanCosts.set(record.category, (cleanCosts.get(record.category) ?? new Decimal(0)).plus(cost));
     }
@@ -146,8 +157,8 @@ export function calculateForm5695(
       ["6a", "Non-fuel-cell clean costs", nonFuelCosts, "Sum lines 1,2,3,4,5b"],
       ["6b", "Non-fuel-cell credit", nonFuelCredit, "Line 6a × 30%"],
       ["9", "Fuel-cell tentative credit", fuelCreditBeforeCap, "Line 8 × 30%"],
-      ["10-capacity", "Qualified fuel-cell kilowatt capacity", fuelCellCapacity, "Actual capacity of each eligible fuel cell, at least 0.5 kW"],
-      ["10", "Fuel-cell capacity limit", fuelCap, "Actual kW × $1,000"],
+      ["10-capacity", "Qualified fuel-cell kilowatt capacity", fuelCellCapacity, "Each actual capacity rounded down to a whole half-kilowatt increment"],
+      ["10", "Fuel-cell capacity limit", fuelCap, "Eligible half-kilowatt increments × $500"],
       ["11", "Fuel-cell credit", fuelCredit, "min(line 9,line 10)"],
       ["12", "Prior-year clean carryforward", roundDollar(priorYearCarryforward), "Actual confirmed prior-year carryforward"],
       ["13", "Available clean credit", available, "Sum lines 6b,11,12"],
@@ -201,7 +212,7 @@ export function calculateForm5695(
     ] as const) record(line, description, value, "Actual qualified items sorted by cost; IRS printed-line aggregation and rounding");
     const capped = (category: string, cap: number) => min(roundDollar(improvementCost(category).times(IMPROVEMENT_RATE)), new Decimal(cap));
     const credits = [
-      ["18b", "Insulation", capped("insulation",1200)],
+      ["18b", "Insulation", roundDollar(improvementCost("insulation").times(IMPROVEMENT_RATE))],
       ["19h", "Exterior doors", doorCredit],
       ["20d", "Windows and skylights", capped("windows_skylights",600)],
       ["22d", "Central air conditioners", capped("central_ac",600)],
@@ -316,4 +327,115 @@ export function calculateForm5695(
     energyImprovementCredit,
     lines: audit.getLines(),
   };
+}
+
+/** Apply actual occupancy allocations to the audited printed worksheet. */
+function calculateSourcedEnergy(source: Partial<EnergyCredits>, sources: EnergySourceFactsResult, options: Form5695Options): Form5695Result {
+  if ((options.priorYearCarryforward !== undefined && !options.priorYearCarryforward.eq(d(source.priorYearCarryforward))) ||
+      (options.carryforwardSourceTaxYear !== undefined && options.carryforwardSourceTaxYear !== source.carryforwardSourceTaxYear) ||
+      (options.carryforwardConfirmed !== undefined && options.carryforwardConfirmed !== source.carryforwardConfirmed)) throw new Error("Energy carryforward options conflict with the actual confirmed source");
+  const normalized: Partial<EnergyCredits> = {
+    ...source, sourceFactsConfirmed: undefined, homes: undefined, separateSpousalMainHomes: undefined,
+    cleanEnergyProperties: sources.cleanProperties.map(entry => ({ ...entry, qualifiedCost: entry.allocatedCost.toFixed(), qualificationConfirmed: entry.eligible, installationCompletedDate: entry.effectiveDate })),
+    qualifiedImprovements: sources.improvements.map(entry => ({ ...entry, qualificationConfirmed: entry.eligible, installationCompletedDate: entry.effectiveDate })),
+  };
+  const base = calculateForm5695(normalized, options);
+  const onlyImprovements = (items: ResolvedEnergyImprovement[]): Form5695Result => calculateForm5695({
+    ...normalized, cleanEnergyProperties: [], priorYearCarryforward: "0",
+    qualifiedImprovements: items.map(entry => ({ ...entry, qualificationConfirmed: entry.eligible, installationCompletedDate: entry.effectiveDate })),
+  }, { ...options, priorYearCarryforward: new Decimal(0) });
+  const lineValue = (result: Form5695Result, line: string): Decimal => {
+    const value = result.lines.find(entry => entry.form === "Form 5695" && entry.line === line)?.value;
+    if (!value) throw new Error(`Energy source worksheet is missing audit line ${line}`);
+    return value;
+  };
+  const heatCategories = new Set(["heat_pump", "heat_pump_water_heater", "biomass"]);
+  const categoryLines = [
+    ["insulation", "18b", 1200], ["exterior_door", "19h", 500], ["windows_skylights", "20d", 600],
+    ["central_ac", "22d", 600], ["gas_water_heater", "23d", 600], ["furnace_boiler", "24d", 600],
+    ["electrical_panel", "25e", 600], ["home_energy_audit", "26c", 150],
+  ] as const;
+  const paidTotal = (items: ResolvedEnergyImprovement[], all = false) => sum(...items.map(entry => all ? entry.allOccupantsCost : d(entry.qualifiedCost)));
+  const allocatedCap = (ownCredit: Decimal, cap: number, items: ResolvedEnergyImprovement[], allCredit?: Decimal): Decimal => {
+    const total = paidTotal(items, true); const own = paidTotal(items);
+    if (total.isZero() || (allCredit ?? total.times(IMPROVEMENT_RATE)).lte(cap)) return ownCredit;
+    return min(ownCredit, roundDollar(new Decimal(cap).times(own).div(total)));
+  };
+  const doorCredit = (item: ResolvedEnergyImprovement): Decimal => {
+    const ordinary = min(roundDollar(roundDollar(d(item.qualifiedCost)).times(IMPROVEMENT_RATE)), new Decimal(250));
+    return item.home.jointOccupancyWithOtherReturn ? allocatedCap(ordinary, 250, [item]) : ordinary;
+  };
+  const pool = (items: ResolvedEnergyImprovement[]): Form5695Result => {
+    const ordinary = onlyImprovements(items);
+    if (!items.some(entry => entry.eligible && entry.home.jointOccupancyWithOtherReturn)) return ordinary;
+    const groups = new Map<string, ResolvedEnergyImprovement[]>();
+    for (const item of items.filter(entry => entry.eligible)) {
+      const id = item.home.jointOccupancyWithOtherReturn ? item.homeId : "nonjoint-properties";
+      groups.set(id, [...(groups.get(id) ?? []), item]);
+    }
+    const credits = new Map<string, Decimal>(); let homeHeatTotal = new Decimal(0);
+    for (const itemsAtHome of groups.values()) {
+      const homeBase = onlyImprovements(itemsAtHome);
+      const shared = itemsAtHome[0].home.jointOccupancyWithOtherReturn === true;
+      for (const [category, line, cap] of categoryLines) {
+        const categoryItems = itemsAtHome.filter(item => item.category === category);
+        let value = lineValue(homeBase, line);
+        if (shared && category === "exterior_door") {
+          const totalIndividualCredit = sum(...categoryItems.map(item => min(roundDollar(roundDollar(item.allOccupantsCost).times(IMPROVEMENT_RATE)), new Decimal(250))));
+          value = allocatedCap(sum(...categoryItems.map(doorCredit)), cap, categoryItems, totalIndividualCredit);
+        } else if (shared) value = allocatedCap(value, cap, categoryItems);
+        credits.set(line, (credits.get(line) ?? new Decimal(0)).plus(value));
+      }
+      const heatItems = itemsAtHome.filter(item => heatCategories.has(item.category));
+      const heat = lineValue(homeBase, "29h");
+      homeHeatTotal = homeHeatTotal.plus(shared ? allocatedCap(heat, 2000, heatItems) : heat);
+    }
+    for (const [, line, cap] of categoryLines) {
+      // Insulation's printed18b has no ordinary per-category cap; line28 applies it.
+      if (line !== "18b") credits.set(line, min(credits.get(line) ?? new Decimal(0), new Decimal(cap)));
+    }
+    const firstDoor = items.filter(item => item.eligible && item.category === "exterior_door").sort((a, b) => d(b.qualifiedCost).comparedTo(a.qualifiedCost))[0];
+    credits.set("19c", firstDoor ? doorCredit(firstDoor) : new Decimal(0));
+    const generalBeforeLimit = sum(...categoryLines.map(([, line]) => credits.get(line) ?? new Decimal(0)));
+    // The instructions test the taxpayer's actual printed27 after property shares.
+    // An all-occupant hypothetical27 must not trigger this second allocation.
+    const eligibleItems = items.filter(entry => entry.eligible);
+    const generalAllowed = allocatedCap(min(generalBeforeLimit, INSULATION_CAP), 1200,
+      eligibleItems.filter(entry => !heatCategories.has(entry.category)), generalBeforeLimit);
+    const heatAllowed = allocatedCap(min(homeHeatTotal, ENERGY_PROPERTY_CAP), 2000,
+      eligibleItems.filter(entry => heatCategories.has(entry.category)), homeHeatTotal);
+    const tentative = generalAllowed.plus(heatAllowed);
+    const allowed = min(tentative, lineValue(ordinary, "31"));
+    for (const [line, value] of [["27", generalBeforeLimit], ["28", generalAllowed], ["29h", heatAllowed], ["30", tentative], ["32", allowed]] as const) credits.set(line, value);
+    return { ...ordinary, energyImprovementCredit: allowed, lines: ordinary.lines.map(entry => credits.has(entry.line) && entry.form === "Form 5695"
+      ? { ...entry, value: credits.get(entry.line) ?? entry.value, formula: "Actual joint-occupancy category/annual allocation; source cost ratios retained in the source audit" } : entry) };
+  };
+  const groups = new Map<string, ResolvedEnergyImprovement[]>();
+  for (const item of sources.improvements) {
+    const key = sources.separateSpousalMainHomes ? item.home.owner : "return";
+    if (!key || (sources.separateSpousalMainHomes && key === "joint")) throw new Error("Separate spousal main-home property requires its actual individual owner");
+    groups.set(key, [...(groups.get(key) ?? []), item]);
+  }
+  const groupResults = [...groups].map(([groupId, items]) => ({ groupId, homeIds: [...new Set(items.map(item => item.homeId))], calculation: pool(items) }));
+  const combinedTentative = sum(...groupResults.map(group => lineValue(group.calculation, "30")));
+  const allowed = min(combinedTentative, lineValue(base, "31"));
+  const first = groupResults[0]?.calculation ?? onlyImprovements([]);
+  const firstLines = new Map(first.lines.filter(entry => entry.form === "Form 5695" && Number.parseInt(entry.line, 10) >= 18).map(entry => [entry.line, entry]));
+  const lines = base.lines.map(entry => {
+    if (entry.form !== "Form 5695") return entry;
+    if (entry.line === "30") return { ...entry, value: combinedTentative, formula: "Sum actual per-return or separate-spousal-main-home line30 worksheets" };
+    if (entry.line === "32") return { ...entry, value: allowed, formula: "min(combined line30, actual shared tax-liability line31)" };
+    if (entry.line === "31" || entry.line === "disallowed-costs") return entry;
+    return firstLines.get(entry.line) ?? entry;
+  });
+  const sourceAudit = new AuditTrail();
+  sourceAudit.record("Form 5695 Source", "verified", "Actual installation facts verified locally", new Decimal(1), "Complete home/property/qualification/allocation sources; not independent filing qualification");
+  for (const item of [...sources.cleanProperties, ...sources.improvements]) {
+    sourceAudit.record("Form 5695 Source", `${item.sourceId}:cost`, "Actual taxpayer net qualified cost supplied", d(item.qualifiedCost), `Home ${item.homeId}; actual completion ${item.installationCompletedDate}; effective year ${item.effectiveDate.slice(0, 4)}; eligible ${item.eligible}`);
+    if (item.home.jointOccupancyWithOtherReturn) sourceAudit.record("Form 5695 Source", `${item.sourceId}:all-occupants`, "Actual corresponding costs of all occupants", item.allOccupantsCost, "Complete all-occupant records confirmed; proportional property and annual caps apply");
+    if ("allocatedCost" in item) sourceAudit.record("Form 5695 Source", `${item.sourceId}:allocated`, "Cost after applicable joint fuel-cell allocation", item.allocatedCost, "min(actual cost,1667*half-kilowatt increments*actual occupant fraction)");
+  }
+  return { ...base, sourceFactsVerified: true, taxYear: options.taxYear ?? 2025, energyImprovementCredit: allowed,
+    improvementHomes: groupResults.map(group => ({ groupId: group.groupId, homeIds: group.homeIds, creditBeforeTaxLimit: lineValue(group.calculation, "30"), lines: group.calculation.lines })),
+    lines: [...lines, ...sourceAudit.getLines()] };
 }

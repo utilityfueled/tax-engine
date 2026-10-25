@@ -841,7 +841,7 @@ describe("Form 5695 detailed source facts", () => {
       improvement("home_energy_audit"),improvement("heat_pump"),improvement("heat_pump_water_heater"),improvement("biomass"),
     ]},{...limits,improvementTaxLiabilityLimit:new Decimal(3100)});
     const values=Object.fromEntries(r.lines.map(l=>[l.line,l.value.toString()]));
-    expect(values).toMatchObject({"18b":"1200","19h":"280","20d":"600","22d":"600","23d":"600","24d":"600","25e":"600","26c":"150","28":"1200","29h":"2000","30":"3200","31":"3100","32":"3100"});
+    expect(values).toMatchObject({"18b":"3000","19h":"280","20d":"600","22d":"600","23d":"600","24d":"600","25e":"600","26c":"150","28":"1200","29h":"2000","30":"3200","31":"3100","32":"3100"});
     expect(r.energyImprovementCredit.toString()).toBe("3100");
     expect(r.residentialCleanEnergyCarryforward.toString()).toBe("0");
     expect(calculateForm5695({residenceEligibilityConfirmed:true,qualifiedImprovements:[improvement("central_ac"),improvement("central_ac")]},limits).energyImprovementCredit.toString()).toBe("600");
