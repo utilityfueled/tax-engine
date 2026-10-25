@@ -41,3 +41,22 @@ lines:
     formula: "2026 wage base 184500; employee rate 0.062, self-employed combined rate 0.124. Medicare has no wage base ceiling."
     irsRef: "https://www.ssa.gov/OACT/COLA/cbb.html, 2026 row"
     testRef: "tests/models/federal-2026-indexed.test.ts::keeps the partial pack frozen and unavailable for full returns"
+  - line: "complete-data-pack"
+    description: "Independent complete YearConstants data, still behind the incomplete-rule gate"
+    formula: |
+      SALT 40400, threshold 505000, floor 10000, rate .30; CTC 2200, ACTC 1700,
+      ODC 500; QBI threshold single/HOH/QSS 201750, MFS 201775, MFJ 403500,
+      phase-in widths 75000/150000; student-loan interest joint 175000-205000,
+      others 85000-100000 (MFS ineligible). HSA self 4400/family 8750/catch-up 1000.
+      IRA base 7500/catch-up 1100, active phase-out single/HOH 81000-91000,
+      MFJ/QSS 129000-149000, MFS 0-10000; spouse active 242000-252000.
+      QCD 111000; household payroll 3000 wage trigger, 184500 Social Security
+      wage base; FEIE 132900. Adoption maximum 17670, MAGI 265080-305080,
+      refundable maximum 5120. Excess business loss 256000/512000 MFJ.
+      Long-term care premiums by five age bands 500,930,1860,4960,6200.
+      Kiddie tax and parent election 1350/2700/13500. Statutory unchanged amounts
+      are declared anew: NIIT/Additional Medicare, capital loss, mortgage debt,
+      home sale, elderly credit, vehicle thresholds and historical debt exclusion.
+      Values alone do not implement eligibility, transition or carryover rules.
+    irsRef: "Rev. Proc. 2025-32 sections 4.02-.05,.17,.26-.31,.39; Notice 2025-67; Rev. Proc. 2025-19; Publication 505 (2026); Publication 926 (2026); SSA 2026 wage/coverage tables"
+    testRef: "tests/models/federal-2026-complete-data.test.ts::Independent 2026 constant data"

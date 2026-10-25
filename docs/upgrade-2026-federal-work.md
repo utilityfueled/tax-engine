@@ -47,3 +47,22 @@ an itemized refund, rather than consuming zero cap headroom. Explicit zero is
 preserved. Negative deduction/payment facts and nonfinite MAGI reject; a finite
 negative MAGI remains legal and incurs no phase-down. Seven additional failure
 regressions failed before the fix. All 544 focused tests and typecheck pass.
+
+## Package: complete independent 2026 constant data
+
+The 2026 object now declares every existing federal `YearConstants` family,
+without copying a 2025 object or importing historical state data. Every nested
+object/Decimal is frozen. The rule version is `2026.2-constant-data-draft` and
+full 2026 calculations still reject until rule implementation/qualification.
+
+Additional official sources retrieved 2026-10-24:
+- https://www.irs.gov/pub/irs-drop/n-25-67.pdf — IRA and QCD amounts.
+- https://www.irs.gov/pub/irs-drop/rp-25-19.pdf — HSA contributions.
+- https://www.ssa.gov/oact/cola/CovThresh.html — household wage trigger.
+- https://www.irs.gov/pub/irs-pdf/p926.pdf — payroll rates and wage base.
+
+39 new official-value/boundary/immutability tests failed before implementation;
+all 81 constant/indexed tests and engine typecheck pass. The constant audit also
+found a separate legacy 2025 QCD error ($105,000 rather than $108,000), pending
+its own spec-first correction. Values for expired incentives intentionally do
+not bypass acquisition/discharge date rules or imply current eligibility.

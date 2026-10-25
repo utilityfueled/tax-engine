@@ -66,3 +66,81 @@ export const FEDERAL_2026_INDEXED: Federal2026Indexed = freezeRuleData({
     completedPhaseOutMFJ: children("26820", "58863", "65899", "70244"),
   },
 });
+
+/**
+ * Complete federal constant shape declared independently of historical years.
+ * This supplies isolated form tests; getConstants(2026) remains blocked until
+ * every affected rule and scenario is implemented and reviewed separately.
+ */
+export const FEDERAL_2026_CONSTANTS: YearConstants & {
+  childTaxCredit: YearConstants["childTaxCredit"] & { refundablePerChild: Decimal };
+  adoptionCredit: YearConstants["adoptionCredit"] & { refundablePerChild: Decimal };
+} = freezeRuleData({
+  ...FEDERAL_2026_INDEXED,
+  saltCap: d("40400"),
+  saltPhaseDown: { magiThreshold: d("505000"), minimumCap: d("10000"), rate: d("0.30") },
+  childTaxCredit: {
+    perChild: d("2200"), refundablePerChild: d("1700"), otherDependentCredit: d("500"),
+    phaseOutThreshold: { ...statuses("200000", "400000", "200000", "200000"), qualifying_surviving_spouse: d("200000") },
+    phaseOutRate: d("50"),
+  },
+  additionalMedicareTax: {
+    rate: d("0.009"),
+    threshold: { ...statuses("200000", "250000", "125000", "200000"), qualifying_surviving_spouse: d("200000") },
+  },
+  niit: { rate: d("0.038"), threshold: statuses("200000", "250000", "125000", "200000") },
+  mortgageInterest: { debtLimit: d("750000") },
+  capitalLossLimit: d("3000"),
+  estimatedTaxSafeHarbor: d("1.1"),
+  qbi: {
+    simplifiedThreshold: { ...statuses("201750", "403500", "201775", "201750"), qualifying_surviving_spouse: d("201750") },
+    phaseInRange: { ...statuses("75000", "150000", "75000", "75000"), qualifying_surviving_spouse: d("75000") },
+  },
+  studentLoanInterest: {
+    maxDeduction: d("2500"),
+    phaseOutStart: { ...statuses("85000", "175000", "0", "85000"), qualifying_surviving_spouse: d("85000") },
+    phaseOutRange: { ...statuses("15000", "30000", "0", "15000"), qualifying_surviving_spouse: d("15000") },
+  },
+  studentLoanInterestDeduction: {
+    phaseOutStart: { ...statuses("85000", "175000", "0", "85000"), qualifying_surviving_spouse: d("85000") },
+    phaseOutEnd: { ...statuses("100000", "205000", "0", "100000"), qualifying_surviving_spouse: d("100000") },
+  },
+  hsa: { selfOnlyContributionLimit: d("4400"), familyContributionLimit: d("8750"), catchUpContribution: d("1000") },
+  iraDeduction: {
+    contributionLimit: d("7500"), catchUpContribution: d("1100"),
+    activeParticipantPhaseOutStart: statuses("81000", "129000", "0", "81000"),
+    activeParticipantPhaseOutRange: statuses("10000", "20000", "10000", "10000"),
+    spouseActiveParticipantPhaseOutStart: d("242000"), spouseActiveParticipantPhaseOutRange: d("10000"),
+  },
+  cleanVehicleCredit: {
+    newVehicle: {
+      criticalMineralsCredit: d("3750"), batteryComponentsCredit: d("3750"),
+      msrpLimitSuvVanPickup: d("80000"), msrpLimitOther: d("55000"),
+      magiLimit: statuses("150000", "300000", "150000", "225000"),
+    },
+    previouslyOwned: {
+      maxCredit: d("4000"), creditRate: d("0.30"), maxSalePrice: d("25000"),
+      magiLimit: statuses("75000", "150000", "75000", "112500"),
+    },
+  },
+  householdEmployment: {
+    cashWageThreshold: d("3000"), socialSecurityRate: d("0.124"), medicareRate: d("0.029"),
+    additionalMedicareRate: d("0.009"), additionalMedicareThreshold: d("200000"),
+    socialSecurityWageBase: d("184500"), futaGrossRate: d("0.06"), futaMaxCredit: d("0.054"),
+    futaNetRate: d("0.006"), futaWageBase: d("7000"), futaQuarterlyThreshold: d("1000"),
+  },
+  foreignEarnedIncomeExclusion: { maximumExclusion: d("132900"), baseHousingPercentage: d("0.16"), defaultMaxHousingPercentage: d("0.30") },
+  kiddieTax: { unearnedIncomeThreshold: d("2700"), itemizingThreshold: d("1350") },
+  form8814: { baseAmount: d("2700"), amountNotTaxed: d("1350"), maximumChildIncome: d("13500"), taxRate: d("0.10") },
+  adoptionCredit: { maxCreditPerChild: d("17670"), phaseOutThreshold: d("265080"), phaseOutRange: d("40000"), refundablePerChild: d("5120") },
+  excessBusinessLoss: { threshold: { ...statuses("256000", "512000", "256000", "256000"), qualifying_surviving_spouse: d("256000") } },
+  qualifiedPrincipalResidenceExclusion: { maxExclusion: d("750000"), maxExclusionMFS: d("375000") },
+  homeSaleExclusion: { maxExclusionSingle: d("250000"), maxExclusionMFJ: d("500000") },
+  qcd: { annualLimit: d("111000") },
+  longTermCarePremiumLimits: { age40OrUnder: d("500"), age41to50: d("930"), age51to60: d("1860"), age61to70: d("4960"), age71OrOlder: d("6200") },
+  elderlyOrDisabledCredit: {
+    initialAmountSingle: d("5000"), initialAmountBoth: d("7500"), initialAmountMFS: d("3750"),
+    agiThreshold: { ...statuses("7500", "10000", "5000", "7500"), qualifying_surviving_spouse: d("7500") },
+    creditRate: d("0.15"),
+  },
+});
