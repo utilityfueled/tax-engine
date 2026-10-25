@@ -8,10 +8,12 @@
 
 import Decimal from "decimal.js";
 import { getPARentalOwnershipFraction } from "@/engine/state/pa-rental-ownership.js";
+import { calculatePAOIDSources, type PAOIDSourcesResult } from "@/engine/state/pa-oid-sources.js";
 import { d, sum, zeroFloor } from "@/utils/decimal.js";
 import type {
   Form1099R,
   PAPassThroughStatement,
+  PAScheduleA,
   ScheduleK1,
   TaxYearInput,
 } from "@/models/inputs.js";
@@ -153,7 +155,7 @@ export interface PAOrchestratorOverrides {
     | "federalScheduleK1Interest"
     | "usGovernmentInterest"
     | "paPassThroughInterest"
-  >;
+  > & { oidSources?: PAScheduleA["oidSources"] };
   /** Detailed Schedule B adjustments and supplemental lines */
   scheduleB?: Omit<
     PAScheduleBInput,
@@ -259,6 +261,8 @@ export interface PAOrchestratorResult {
   scheduleT?: PAScheduleTResult;
   /** Schedule A result for PA interest income */
   scheduleA?: PAScheduleAResult;
+  /** Source-linked PA OID adjustments and withholding. */
+  oidSources?: PAOIDSourcesResult;
   /** Schedule B result for PA dividend income */
   scheduleB?: PAScheduleBResult;
   /** Schedule F result for PA farm income */
@@ -419,6 +423,7 @@ function resolvePAResidentOverrides(
 
   if (resolved.scheduleA === undefined && residentReturn.scheduleA) {
     resolved.scheduleA = {
+      oidSources: residentReturn.scheduleA.oidSources,
       additionAdjustments: toPAAdjustmentEntries<PAScheduleAAdjustmentEntry>(
         residentReturn.scheduleA.additionAdjustments,
       ),
@@ -1686,7 +1691,8 @@ export function calculatePAReturn(
     .plus(mapUnreportedTips(input))
     .plus(mapUncollectedWages(input));
 
-  const usGovExemptInterest = mapUSGovExemptInterest(input);
+  const oidSources = calculatePAOIDSources(input.form1099OID ?? [], resolvedOverrides.scheduleA?.oidSources, taxYear);
+  const usGovExemptInterest = mapUSGovExemptInterest(input).plus(oidSources.usGovernmentInterest);
   const federalSavingsBondExclusion = input.savingsBondRedemptions.length > 0
     ? getFederalResult().form8815?.excludableSavingsBondInterest ?? ZERO
     : ZERO;
@@ -1699,17 +1705,19 @@ export function calculatePAReturn(
   const scheduleAInput: PAScheduleAInput = {
     taxYear,
     federalInterestIncome: mapFederalInterestIncome(input).plus(fullFederalScheduleK1Interest)
-      .minus(previouslyReportedBondInterest).minus(federalSavingsBondExclusion),
-    taxExemptInterest: mapTaxExemptInterestIncludedInFederalReturn(input),
-    additionAdjustments: resolvedOverrides.scheduleA?.additionAdjustments,
+      .minus(previouslyReportedBondInterest).minus(federalSavingsBondExclusion).plus(oidSources.federalTaxableInterest),
+    taxExemptInterest: mapTaxExemptInterestIncludedInFederalReturn(input).plus(oidSources.federalTaxExemptInterest),
+    additionAdjustments: [...resolvedOverrides.scheduleA?.additionAdjustments ?? [],
+      ...(oidSources.federalPremiumAddback.isZero() ? [] : [{ description: "OID federal bond premium amortization", amount: oidSources.federalPremiumAddback }])],
     federalScheduleK1Interest: fullFederalScheduleK1Interest,
     paObligationInterest: resolvedOverrides.scheduleA?.paObligationInterest
-      ?? mapPADirectObligationInterest(input),
+      ?? mapPADirectObligationInterest(input).plus(oidSources.paDirectObligationInterest),
     usGovernmentInterest: zeroFloor(usGovExemptInterest.minus(previouslyReportedBondInterest)
       .minus(federalSavingsBondExclusion)),
-    reductionAdjustments: resolvedOverrides.scheduleA?.reductionAdjustments,
+    reductionAdjustments: [...resolvedOverrides.scheduleA?.reductionAdjustments ?? [],
+      ...(oidSources.paPremiumReduction.isZero() ? [] : [{ description: "OID PA bond premium amortization", amount: oidSources.paPremiumReduction }])],
     forfeitedInterestPenalty: resolvedOverrides.scheduleA?.forfeitedInterestPenalty
-      ?? mapSupportedPAForfeitedInterestPenalty(input),
+      ?? mapSupportedPAForfeitedInterestPenalty(input).plus(oidSources.forfeitedInterestPenalty),
     annuityAndEndowmentDistributions: (resolvedOverrides.scheduleA?.annuityAndEndowmentDistributions ?? ZERO)
       .plus(retirement.codeDPairedInterest),
     charitableGiftAnnuityIncome: resolvedOverrides.scheduleA?.charitableGiftAnnuityIncome,
@@ -1804,7 +1812,7 @@ export function calculatePAReturn(
   const paLotteryExempt = scheduleT?.exemptPALotteryNoncashWinnings ?? ZERO;
   const excludedHomeSaleGainForScheduleSP = mapExcludedHomeSaleGainForScheduleSP(input);
 
-  const stateWithholding = mapStateWithholding(input);
+  const stateWithholding = mapStateWithholding(input).plus(oidSources.stateWithholding);
 
   // -------------------------------------------------------------------------
   // Step 1b: Schedule UE — Unreimbursed Employee Business Expenses
@@ -2131,6 +2139,7 @@ export function calculatePAReturn(
     scheduleJ,
     scheduleT,
     scheduleA,
+    oidSources: input.form1099OID?.length ? oidSources : undefined,
     scheduleB,
     scheduleF,
     scheduleD,

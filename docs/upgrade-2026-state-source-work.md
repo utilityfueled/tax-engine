@@ -77,3 +77,30 @@ annual rental days cannot establish average customer stay for a year-round
 property. That is separate from this ownership correction. Personal-use
 allocation, PA depreciation differences, joint allocation records and complete
 state-specific source qualification remain bounded gaps.
+
+## Pennsylvania OID source reconciliation — 2026-10-25
+
+Refreshed the official [PA PIT Guide interest chapter](https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/interest)
+and [final 2025 PA Schedule A](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40a.pdf).
+The state adapter now includes verified federal OID and actual PA withholding
+once. A source-linked PA worksheet identifies issuer treatment, stripped-bond
+allocation and the actual PA premium method. Federal coupon premium reductions
+are tracked separately from excess premium deductions; actual premium already
+netted on the statement is an explicit additional source fact. Federal premiums
+are added back before applying the PA amount. Current market discount stays
+taxable, including for direct obligations. Exempt amounts reach Schedule SP.
+
+Missing, duplicate, unmatched or contradictory worksheets reject; zero remains
+zero. Same-account forfeited interest cannot consume another source's income.
+An excess forfeiture requires a disposition worksheet and remains unsupported
+in this bounded path. The guided state worksheet UI, owner-separated Schedule A
+filing output, final 2026 forms and independent human review remain unqualified.
+No exemption is inferred merely from a federal Treasury label.
+
+The first run reproduced three missing source behaviors and caught one test
+accessor error. Initial integration exposed older fixtures with absent OID arrays;
+the historical no-document path is preserved. Final verification passes all
+314 focused federal/state/PDF tests, root types, all 3,469 spec references and
+scoped lint with no warnings/errors. The diff was reviewed. Evidence lives in
+`.local/upgrade-evidence/pa-oid-{red,green,types,spec,lint}.log`. These are local
+synthetic checks, not final-form or staging qualification.

@@ -7,7 +7,7 @@ import { d, zeroFloor } from "@/utils/decimal.js";
 
 const amountKeys = ["taxableInterest", "taxExemptInterest", "treasuryInterest", "privateActivityBondInterest",
   "deferredMarketDiscount", "earlyWithdrawalPenalty", "federalWithheld", "stateWithheld", "bondPremiumDeduction",
-  "bondPremiumCarryforward", "deflationOrdinaryLoss", "deflationCarryforward", "nondeductiblePremiumLoss"] as const;
+  "bondPremiumCarryforward", "bondPremiumInterestReduction", "deflationOrdinaryLoss", "deflationCarryforward", "nondeductiblePremiumLoss"] as const;
 type Amounts = { [K in typeof amountKeys[number]]: Decimal };
 export interface Form1099OIDSourceResult extends Amounts {
   payer: string;
@@ -147,6 +147,7 @@ export function calculateForm1099OID(forms: Form1099OID[], taxYear = 2025): Form
       } else if (form.bondPremiumWorksheet) {
         throw new Error("Form 1099-OID a premium worksheet cannot be applied without the actual amortization election.");
       }
+      source.bondPremiumInterestReduction = coupon.minus(netCoupon);
       let ordinaryInterest = zeroFloor(netOid).plus(netCoupon);
       if (form.inflationIndexed) {
         const facts = form.tipsDeflationFacts;

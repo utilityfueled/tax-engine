@@ -1632,6 +1632,16 @@ const PAScheduleAAdjustmentSchema = z.object({
 });
 
 const PAScheduleASchema = z.object({
+  oidSources: z.array(z.object({
+    sourceId: z.string().min(1),
+    sourceReference: z.string().min(1),
+    factsConfirmed: z.boolean(),
+    paTaxTreatment: z.enum(["taxable", "pennsylvania", "us_government"]),
+    strippedBond: z.boolean(),
+    strippedBondExemptInterest: decimal.optional(),
+    bondPremiumNettedOnStatement: decimal,
+    paBondPremiumAmortization: decimal,
+  })).optional(),
   additionAdjustments: z.array(PAScheduleAAdjustmentSchema).optional(),
   paObligationInterest: decimal.optional(),
   reductionAdjustments: z.array(PAScheduleAAdjustmentSchema).optional(),

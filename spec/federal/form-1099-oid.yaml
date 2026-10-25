@@ -21,6 +21,10 @@ notes: |
   (12/2025); Publication 550 (2025); IRC 171, 1272, 1276–1278 and 1288;
   26 CFR 1.171-2(a)(4), 1.171-3(b), and 1.1275-7(f).
 lines:
+  - line: "bondPremiumInterestReduction"
+    description: "Track the premium that actually reduced current coupon interest"
+    formula: "Recipient coupon interest before amortization minus net coupon interest after amortization, excluding excess ordinary deductions and unknown premium already netted on the source statement."
+    testRef: "tests/engine/state/pa-oid-sources.test.ts::includes OID once with separate PA and federal premium methods"
   - line: "source"
     description: "Complete actual source facts and historical reconciliation"
     formula: "Require actual original amounts and classification; reject unknown, wrong-year, duplicate or contradictory sources. Never reinterpret positive legacy taxExemptBondPremium as a current box."
