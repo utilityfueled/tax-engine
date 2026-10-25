@@ -3772,6 +3772,75 @@ export const SEHealthInsuranceWorksheetSchema = z.object({
 });
 export type SEHealthInsuranceWorksheetInput = z.infer<typeof SEHealthInsuranceWorksheetSchema>;
 
+/** Actual Form7206 sources. Omission preserves unknown; the calculator requires
+ * source completeness before using a plan or canonical business income limit. */
+export const Form7206Schema = z.object({
+  sourceTaxYear: z.number().int().optional(),
+  sourceReference: z.string().optional(),
+  sourceFactsConfirmed: z.boolean().optional(),
+  allPlansIncluded: z.boolean().optional(),
+  persons: z.array(z.object({
+    personId: z.string().optional(),
+    name: z.string().optional(),
+    householdRole: z.enum(["primary", "spouse", "other"]).optional(),
+    /** Actual attained age from the covered person's year-end source worksheet. */
+    attainedAgeAtYearEnd: z.number().int().min(0).max(120).optional(),
+  })).optional(),
+  plans: z.array(z.object({
+    planId: z.string().optional(),
+    policyReference: z.string().optional(),
+    accountHolder: z.enum(["primary", "spouse"]).optional(),
+    businessSourceId: z.string().optional(),
+    businessKind: z.enum(["self_employed", "partnership", "s_corporation"]).optional(),
+    kind: z.enum(["medical", "qualified_ltc"]).optional(),
+    policyHolder: z.enum(["individual", "business"]).optional(),
+    establishedUnderBusiness: z.boolean().optional(),
+    insuranceQualificationConfirmed: z.boolean().optional(),
+    /** Actual guaranteed-payment or Box1 inclusion, not an assumed wage source. */
+    premiumsIncludedInOwnerIncome: z.boolean().optional(),
+    moreThanTwoPercentShareholder: z.boolean().optional(),
+    marketplaceCoverage: z.boolean().optional(),
+    premiumTaxCreditInvolved: z.boolean().optional(),
+    clergySpecialRules: z.boolean().optional(),
+    coveredPersons: z.array(z.object({
+      personId: z.string().optional(),
+      relationshipToOwner: z.enum(["self", "spouse", "dependent", "child_under_27", "other"]).optional(),
+      dependencyEligibilityConfirmed: z.boolean().optional(),
+    })).optional(),
+    months: z.array(z.object({
+      month: z.number().int().min(1).max(12).optional(),
+      /** The applicable medical or LTC employer plan, including any part month. */
+      employerSubsidizedPlanEligible: z.boolean().optional(),
+    })).optional(),
+    payments: z.array(z.object({
+      sourceId: z.string().optional(),
+      datePaid: z.string().optional(),
+      coverageTaxYear: z.number().int().optional(),
+      coverageMonth: z.number().int().min(1).max(12).optional(),
+      grossPremium: optionalDecimalInput,
+      ownerOrBusinessPaid: optionalDecimalInput,
+      otherPersonPaid: optionalDecimalInput,
+      personAmounts: z.array(z.object({
+        personId: z.string().optional(),
+        /** Reimbursements belong to the business share, never both shares. */
+        payer: z.enum(["owner_after_tax", "business_paid_or_reimbursed"]).optional(),
+        amountPaid: optionalDecimalInput,
+        excludedPublicSafetyOfficerAmount: optionalDecimalInput,
+        publicSafetyOfficerAccountHolder: z.enum(["primary", "spouse"]).optional(),
+        otherTaxFreeFunding: optionalDecimalInput,
+      })).optional(),
+    })).optional(),
+  })).optional(),
+  /** Actual allocation only when the same person's LTC cap spans businesses. */
+  longTermCareAllocations: z.array(z.object({
+    personId: z.string().optional(),
+    accountHolder: z.enum(["primary", "spouse"]).optional(),
+    businessSourceId: z.string().optional(),
+    allowedPremium: optionalDecimalInput,
+  })).optional(),
+});
+export type Form7206Input = z.infer<typeof Form7206Schema>;
+
 /**
  * Taxable Refund Worksheet — Schedule 1, Line 1
  *
@@ -5283,6 +5352,7 @@ export const TaxYearInputSchema = z.object({
   form3800: Form3800Schema.optional(),
   form3903: Form3903Schema.optional(),
   seHealthInsuranceWorksheet: SEHealthInsuranceWorksheetSchema.optional(),
+  form7206: Form7206Schema.optional(),
   scheduleJ: ScheduleJSchema.optional(),
   homeSales: z.array(HomeSaleSchema).default([]),
   form8915F: Form8915FSchema.optional(),
