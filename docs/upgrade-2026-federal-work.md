@@ -529,3 +529,14 @@ silently selecting2025; it now verifies the2026 income cutoff, full3600repayment
 root types and all3,147spec refs pass; whitespace and scoped diff reviewed.
 Unsupported special PTC allocation, marriage, lawful-presence and self-employment
 coordination worksheets remain explicit gates, with final review still pending.
+
+### Education dependent-claim and LLC TIN correction — 2026-10-25
+
+A second source cross-check of final8863 Table1 and WhoCanClaim identified two
+boundaries: timely studentTIN applies to LLC as well asAOC, and education-credit
+ineligibility depends on being actually claimed as a dependent rather than merely
+being claimable. Added actual claimedAsDependent, required for2026, and preserved
+the distinct claimability fact. A source-linked regression failed first;132
+focused tests, root types,3,150spec refs and whitespace checks pass. Scoped diff
+reviewed. Guided facts owner received the corrected distinction. The prior PTC
+integration spec run actually had3,148refs after a concurrent spec addition.

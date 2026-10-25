@@ -13,10 +13,16 @@ notes: |
   Legacy 2025 omissions remain an unqualified compatibility preview; known
   ineligibility applies in either year. Final 2026 forms and independent review
   remain required. Schedule3-A public-benefit limitation is not qualified.
+  Review PDF mapping copies the persisted calculation audit; it must not rerun
+  credit calculations with omitted eligibility or liability facts. One Part III
+  page is required per actual AOC or LLC student. Unknown eligibility answers,
+  student identity and institutional information remain blank. An unallocated
+  legacy LLC aggregate cannot be assigned to an AOC student. Review output is
+  still unqualified and cannot substitute for a complete filing packet.
 lines:
   - line: "eligibility"
     description: "Actual claimant and student eligibility"
-    formula: "No credit for MFS, claimable dependent, or nonresident alien without joint resident election; AOC also requires no effective ban and required Form8862. 2026 primary OR joint spouse employment-valid timely SSN; dependent student timely employment-valid SSN. Actual identity prevents duplicate student credits."
+    formula: "No credit for MFS, actually claimed dependent, or nonresident alien without joint resident election; AOC also requires no effective ban and required Form8862. 2026 primary OR joint spouse employment-valid timely SSN; dependent student timely employment-valid SSN. Actual identity prevents duplicate student credits."
     edgeCases:
       - "AOC requires fewer than4 prior claim years, no completed first4 years, half-time degree enrollment, no felony drug conviction, eligible school, substantiated adjusted expenses and1098T requirement or exception"
       - "LLC has no AOC age/year/degree/felony conditions; actual eligible courses and student identity still required"
@@ -115,3 +121,8 @@ lines:
     description: "Use every actual student fact and MAGI addback on the return"
     formula: "Pass net student expenses and actual eligibility; educationMAGI=AGI+Form2555exclusion+housingdeduction+possessionexclusion; finalline19 uses actual prior-ranking credit limit"
     testRef: "tests/engine/federal-credit-integration.test.ts::forwards education claim history, actual MAGI addbacks and final tax limit"
+  - line: "claimed-dependent-and-tin"
+    description: "Actual dependent claim and timely student TIN"
+    formula: "Both credits require timely student TIN;2026 dependent student additionally needs employment-valid SSN. Actually claimed dependent cannot claim education credit; merely claimable but unclaimed student may claim subject to other conditions."
+    irsRef: "2025 Form8863 Table1 and WhoCanClaim dependent expenses; IRC25A(g)(3)"
+    testRef: "tests/engine/forms/form-8863-2026.test.ts::distinguishes an actual dependent claim and enforces timely LLC student TIN"

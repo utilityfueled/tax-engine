@@ -38,6 +38,7 @@ export interface Form8863Input {
   spouseSsnEligible?: boolean;
   primaryTinEligible?: boolean;
   canBeClaimedAsDependent?: boolean;
+  claimedAsDependent?: boolean;
   nonresidentAlien?: boolean;
   residentJointElection?: boolean;
   aocBanInEffect?: boolean;
@@ -68,7 +69,7 @@ function nonnegative(value: Decimal, label: string): void {
 function required(value: unknown, label: string): void {
   if (value === undefined) throw new Error(`Form8863 actual ${label} required for2026`);
 }
-function studentEligible(student: StudentFacts, strict: boolean, aoc: boolean): boolean {
+function studentEligible(student: StudentFacts, strict: boolean): boolean {
   if (strict && student.qualifiedExpenses.gt(0)) {
     if (!student.studentTaxId || !/^\d{9}$/.test(student.studentTaxId.replaceAll("-", ""))) throw new Error("Form8863 actual student identity required for2026");
     required(student.studentRole, "student role");
@@ -76,10 +77,11 @@ function studentEligible(student: StudentFacts, strict: boolean, aoc: boolean): 
     required(student.expensesEligibilityConfirmed, "student expense facts");
     required(student.form1098TRequirementMet, "student1098T requirement facts");
     if (student.studentRole === "dependent") required(student.studentSsnEligible, "dependent student SSN facts");
+    else if (student.studentSsnEligible !== true) required(student.studentTinEligible, "student timely TIN facts");
   }
   return student.institutionEligible !== false && student.expensesEligibilityConfirmed !== false && student.form1098TRequirementMet !== false
     && !(strict && student.studentRole === "dependent" && student.studentSsnEligible === false)
-    && !(aoc && !strict && student.studentTinEligible === false);
+    && student.studentTinEligible !== false;
 }
 function refundableEligible(input: Form8863Input, strict: boolean, hasAoc: boolean): boolean {
   if (!hasAoc) return false;
@@ -113,14 +115,14 @@ export function calculateForm8863(input: Form8863Input): Form8863Result {
   const joint = input.filingStatus === "married_filing_jointly";
   if (strict && hasExpenses && input.filingStatus !== "married_filing_separately") {
     required(input.taxLiabilityLimit, "tax liability limit");
-    required(input.canBeClaimedAsDependent, "claimant dependency facts");
+    required(input.claimedAsDependent, "actual claimant dependency claim");
     required(input.nonresidentAlien, "claimant residency facts");
     if (input.primarySsnEligible !== true && !(joint && input.spouseSsnEligible === true)) {
       required(input.primarySsnEligible, "claimant SSN eligibility");
       if (joint) required(input.spouseSsnEligible, "spouse SSN eligibility");
     }
   }
-  const claimantEligible = input.filingStatus !== "married_filing_separately" && input.canBeClaimedAsDependent !== true
+  const claimantEligible = input.filingStatus !== "married_filing_separately" && input.claimedAsDependent !== true
     && !(input.nonresidentAlien === true && !(joint && input.residentJointElection === true))
     && (!strict || input.primarySsnEligible === true || (joint && input.spouseSsnEligible === true));
   const seen = new Set<string>();
@@ -135,7 +137,7 @@ export function calculateForm8863(input: Form8863Input): Form8863Result {
   }
   if (input.form8862Required && input.form8862Completed !== true && input.aocStudents.some(s => s.qualifiedExpenses.gt(0))) throw new Error("Form8863 required Form8862 must be completed before AOC claim");
   const aocPerStudent = input.aocStudents.map((student) => {
-    const sourceEligible = studentEligible(student, strict && claimantEligible, true);
+    const sourceEligible = studentEligible(student, strict && claimantEligible);
     if (strict && claimantEligible && student.qualifiedExpenses.gt(0)) {
       for (const field of ["priorYearsClaimed", "completedFirstFourYearsBeforeYear", "enrolledAtLeastHalfTime", "pursuingDegreeOrCredential", "felonyDrugConviction"] as const) required(student[field], `student facts: ${field}`);
       if (!student.institutionEin || !/^\d{9}$/.test(student.institutionEin.replaceAll("-", ""))) throw new Error("Form8863 actual institution EIN required for AOC");
@@ -168,7 +170,7 @@ export function calculateForm8863(input: Form8863Input): Form8863Result {
     const actualTotal = input.llcStudents.reduce((total,s)=>total.plus(s.qualifiedExpenses),new Decimal(0));
     if (!actualTotal.eq(input.llcExpenses)) throw new Error("Form8863 LLC student amounts do not reconcile with LLC total");
     llcEligibleExpenses = input.llcStudents.reduce((total,student)=>{
-      const sourceEligible = studentEligible(student,strict && claimantEligible,false);
+      const sourceEligible = studentEligible(student,strict && claimantEligible);
       if (strict && claimantEligible && student.qualifiedExpenses.gt(0)) required(student.courseEligibilityConfirmed,"LLC course eligibility");
       const eligible = claimantEligible && sourceEligible && student.courseEligibilityConfirmed !== false;
       const amount = eligible ? roundDollar(student.qualifiedExpenses) : new Decimal(0);

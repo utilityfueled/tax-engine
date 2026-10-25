@@ -2156,6 +2156,7 @@ export const EducationExpensesSchema = z.object({
   primarySsnEligible: z.boolean().optional(),
   spouseSsnEligible: z.boolean().optional(),
   primaryTinEligible: z.boolean().optional(),
+  claimedAsDependent: z.boolean().optional(),
   canBeClaimedAsDependent: z.boolean().optional(),
   nonresidentAlien: z.boolean().optional(),
   residentJointElection: z.boolean().optional(),

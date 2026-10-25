@@ -5,7 +5,7 @@ import { EducationExpensesSchema } from "@/models/inputs.js";
 const d = (v: Decimal.Value) => new Decimal(v);
 // Spec: spec/federal/form-8863.yaml
 const student = () => ({name:"Actual Student",studentTaxId:"111-22-3333",studentRole:"dependent" as const,qualifiedExpenses:d(4000),studentSsnEligible:true,institutionEin:"12-3456789",priorYearsClaimed:0,completedFirstFourYearsBeforeYear:false,enrolledAtLeastHalfTime:true,pursuingDegreeOrCredential:true,felonyDrugConviction:false,institutionEligible:true,expensesEligibilityConfirmed:true,form1098TRequirementMet:true});
-const make = (overrides:Partial<Form8863Input>={}):Form8863Input => ({taxYear:2026,aocStudents:[student()],llcExpenses:d(0),magi:d(50000),filingStatus:"single",taxLiabilityLimit:d(10000),primarySsnEligible:true,canBeClaimedAsDependent:false,nonresidentAlien:false,aocBanInEffect:false,form8862Required:false,primaryAgeAtYearEnd:40,...overrides});
+const make = (overrides:Partial<Form8863Input>={}):Form8863Input => ({taxYear:2026,aocStudents:[student()],llcExpenses:d(0),magi:d(50000),filingStatus:"single",taxLiabilityLimit:d(10000),primarySsnEligible:true,canBeClaimedAsDependent:false,claimedAsDependent:false,nonresidentAlien:false,aocBanInEffect:false,form8862Required:false,primaryAgeAtYearEnd:40,...overrides});
 describe("Form8863 actual2026 facts",()=>{
  it("requires actual 2026 student facts and allows only one credit per student",()=>{
   expect(()=>calculateForm8863(make({aocStudents:[{...student(),enrolledAtLeastHalfTime:undefined}]}))).toThrow(/half|student facts/i);
@@ -18,7 +18,7 @@ describe("Form8863 actual2026 facts",()=>{
   expect(calculateForm8863(make({filingStatus:"married_filing_jointly",primarySsnEligible:false,spouseSsnEligible:true})).aocAfterPhaseOut.toString()).toBe("2500");
   expect(calculateForm8863(make({primarySsnEligible:false})).aocAfterPhaseOut.toString()).toBe("0");
   expect(calculateForm8863(make({aocStudents:[{...student(),studentSsnEligible:false}]})).aocAfterPhaseOut.toString()).toBe("0");
-  expect(calculateForm8863(make({filingStatus:"married_filing_jointly",primarySsnEligible:true,spouseSsnEligible:false,aocStudents:[{...student(),studentRole:"spouse",studentSsnEligible:false}]})).aocAfterPhaseOut.toString()).toBe("2500");
+  expect(calculateForm8863(make({filingStatus:"married_filing_jointly",primarySsnEligible:true,spouseSsnEligible:false,aocStudents:[{...student(),studentRole:"spouse",studentSsnEligible:false,studentTinEligible:true}]})).aocAfterPhaseOut.toString()).toBe("2500");
  });
  it("uses claimant age and support facts for refundable AOC with exact half-support boundary",()=>{
   const facts={fullTimeStudent:true,earnedIncome:d(9999),totalSupport:d(20000),parentAlive:true};
@@ -52,7 +52,7 @@ describe("Form8863 actual2026 facts",()=>{
  it("rejects negative or nonfinite amounts and known claimant ineligibility",()=>{
   expect(()=>calculateForm8863(make({llcExpenses:d(-1)}))).toThrow(/nonnegative/i);
   expect(()=>calculateForm8863(make({magi:d("NaN")}))).toThrow(/finite/i);
-  expect(calculateForm8863(make({canBeClaimedAsDependent:true})).totalRefundable.toString()).toBe("0");
+  expect(calculateForm8863(make({claimedAsDependent:true})).totalRefundable.toString()).toBe("0");
   expect(calculateForm8863(make({nonresidentAlien:true})).totalNonrefundable.toString()).toBe("0");
   expect(calculateForm8863(make({aocBanInEffect:true})).aocAfterPhaseOut.toString()).toBe("0");
   expect(()=>calculateForm8863(make({form8862Required:true}))).toThrow(/8862/i);
@@ -65,6 +65,14 @@ describe("Form8863 actual2026 facts",()=>{
  it("does not apply the2026 employment-SSN restriction to a timely2025 ITIN",()=>{
   expect(calculateForm8863(make({taxYear:2025,primarySsnEligible:false,primaryTinEligible:true,aocStudents:[{...student(),studentSsnEligible:false,studentTinEligible:true}]})).aocAfterPhaseOut.toString()).toBe("2500");
   expect(calculateForm8863(make({taxYear:2025,primaryTinEligible:false})).aocAfterPhaseOut.toString()).toBe("0");
+ });
+
+ it("distinguishes an actual dependent claim and enforces timely LLC student TIN",()=>{
+  const unclaimed=make({canBeClaimedAsDependent:true,claimedAsDependent:false});
+  expect(calculateForm8863(unclaimed).aocAfterPhaseOut.toString()).toBe("2500");
+  expect(calculateForm8863({...unclaimed,claimedAsDependent:true}).aocAfterPhaseOut.toString()).toBe("0");
+  const llc={...student(),studentTinEligible:false,courseEligibilityConfirmed:true};
+  expect(calculateForm8863(make({taxYear:2025,aocStudents:[],llcExpenses:d(4000),llcStudents:[llc]})).llcAfterPhaseOut.toString()).toBe("0");
  });
 
 });
