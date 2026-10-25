@@ -84,8 +84,11 @@ export function calculateExcessSSWithholding(
     if (options?.taxYear === 2026 && options.filingStatus === "married_filing_jointly" && !w2.accountHolder) {
       throw new Error("Social Security W2 owner is unknown for the joint2026 return");
     }
-    const ein = w2.employer.ein.replace(/-/g, "").trim();
-    if (options?.taxYear === 2026 && !/^\d{9}$/.test(ein)) throw new Error("Social Security employer identity requires actual EIN");
+    const ein = w2.employer?.ein?.replace(/-/g, "").trim();
+    if (options?.taxYear === 2026 && (!ein || !/^\d{9}$/.test(ein))) throw new Error("Social Security employer identity requires actual EIN");
+    // An incomplete historical record cannot establish another employer. Its
+    // withholding remains on the source record; it cannot create this credit.
+    if (!ein) continue;
     // Historical untagged records retain an explicitly unqualified preview path.
     // The2026 joint path above cannot infer ownership from record order.
     const owner = w2.accountHolder ?? "primary";

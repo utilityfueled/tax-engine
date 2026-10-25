@@ -632,3 +632,14 @@ errors reject. A second red-first direct-input test prevents missing priorAMT
 from becoming zero even when bypassing schema parse.549 focused tests, root
 types and all3,194spec refs pass; scopedlint has zeroerrors, diff/whitespace
 reviewed. Source confirmation and independent final-form review remain required.
+
+### Historical unknown employer compatibility — 2026-10-25
+
+Remote CI exposed legacy direct inputs with no employer EIN. Added a red-first
+source-linked regression and preserved those omissions without manufacturing a
+distinct employer or an excess-withholding credit. Strict2026 still requires
+actual EIN. Existing withholding source records remain unchanged.333 focused
+Schedule3/Pennsylvania orchestration tests, root types, all3197spec refs and
+scopedlint pass. Scoped diff and whitespace reviewed. This is unqualified
+historical preview compatibility; actual employer facts remain required for
+final return qualification.

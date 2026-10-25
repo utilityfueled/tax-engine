@@ -99,6 +99,11 @@ lines:
     description: "Missing2026 ownership and employer facts remain unknown"
     formula: "Actual joint owner and employer identity required; reject negative or nonfinite withholding"
     testRef: "tests/engine/schedules/schedule-3.test.ts::requires actual2026 owner and employer facts for excess withholding"
+  - line: "11-legacy-unknown-employer"
+    description: "Historical preview with an unknown employer identity"
+    formula: "A legacy2025 record without employer EIN contributes no excess-withholding credit because distinct employment cannot be established. Do not fabricate an employer identity or crash an otherwise calculable historical preview. Strict2026 identity requirements still reject."
+    irsRef: "Form1040 instructions, Schedule3line11: credit requires two or more employers; single-employer overcollection requires employer correction or Form843"
+    testRef: "tests/engine/schedules/schedule-3.test.ts::preserves unknown historical employer identity without manufacturing excess credit"
 
   - line: "15"
     description: "Total other payments and refundable credits"

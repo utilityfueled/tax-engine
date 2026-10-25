@@ -84,6 +84,22 @@ describe("Schedule 3 Part II - Refundable Credits", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("Excess SS Withholding", () => {
+  it("preserves unknown historical employer identity without manufacturing excess credit", () => {
+    // Spec: spec/federal/schedule-3.yaml, line11-legacy-unknown-employer.
+    const known = { ...simpleW2Fixture.w2s[0], socialSecurityWithheld: "10918.20" };
+    const unknown = structuredClone(known);
+    Reflect.deleteProperty(unknown.employer, "ein");
+    expect(calculateExcessSSWithholding([known, unknown], d(176100), d("0.062"), {
+      taxYear: 2025, filingStatus: "single",
+    }).toString()).toBe("0");
+    expect(calculateExcessSSWithholding([unknown, unknown], d(176100), d("0.062"), {
+      taxYear: 2025, filingStatus: "single",
+    }).toString()).toBe("0");
+    expect(() => calculateExcessSSWithholding([unknown], d(184500), d("0.062"), {
+      taxYear: 2026, filingStatus: "single",
+    })).toThrow(/employer.*identity/i);
+    expect(unknown.employer).not.toHaveProperty("ein");
+  });
   it("computes excess separately per owner and excludes employer overcollection", () => {
     const base = simpleW2Fixture.w2s[0];
     const w2 = (owner: "primary"|"spouse", ein: string, withheld: string) => ({ ...base, accountHolder: owner, employer: { name: "Synthetic", ein }, socialSecurityWithheld: withheld });
