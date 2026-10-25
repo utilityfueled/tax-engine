@@ -633,6 +633,11 @@ export const Form1099QSchema = z.preprocess((value) => {
   const raw = value as Record<string, unknown>;
   const required = ["sourceId", "accountId", "beneficiaryId", "recipientOwner", "taxYear", "accountType", "grossDistribution", "isTrusteeToTrustee", "isQtpToRoth", "recipientNotBeneficiary", "sourceFactsConfirmed", "transfer"];
   if (raw.distributionCode === "2" || raw.distributionCode === "3") required.push("distributionDate", "returnedContributionId", "returnedContributionTaxYear", "returnedContributionDate", "returnedContributionOriginalAmount", "returnedContributionPrincipal", "returnedContributionNetIncome", "returnedContributionIncomePreviouslyReported", "returnedContributionNetIncomeConfirmed", "returnedContributionBasisReconciled");
+  if (raw.distributionCode === "6") {
+    required.push("prohibitedTransactionKind", "prohibitedTransactionDate", "prohibitedTransactionSourceReference", "prohibitedTransactionSourceConfirmed", "prohibitedTransactionBasis");
+    if (raw.prohibitedTransactionKind === "account_disqualification") required.push("prohibitedTransactionJanuary1Value");
+    if (raw.prohibitedTransactionKind === "pledged_portion") required.push("prohibitedTransactionPledgedAmount");
+  }
   return { ...raw, sourceFactsComplete: raw.sourceFactsComplete !== false && required.every(field => raw[field] !== undefined) };
 }, z.object({
   sourceFactsComplete: z.boolean().optional(),
@@ -646,6 +651,8 @@ export const Form1099QSchema = z.preprocess((value) => {
   taxYear: z.number().int().optional(),
   payerName: z.string().optional(),
   accountType: z.enum(["529", "coverdell_esa"]).default("529"), // Boxes5a/5b versus5c
+  /** Actual distribution form; unknown is not an inferred cash payment. */
+  distributionMedium: z.enum(["cash", "in_kind_prepaid_tuition"]).optional(),
   grossDistribution: decimal, // Box 1
   earnings: optionalDecimalInput, // Box2: an omitted Coverdell value is not zero
   basis: optionalDecimalInput, // Box3
@@ -668,6 +675,14 @@ export const Form1099QSchema = z.preprocess((value) => {
   returnedContributionIncomePreviouslyReported: optionalDecimalInput,
   returnedContributionNetIncomeConfirmed: z.boolean().optional(),
   returnedContributionBasisReconciled: z.boolean().optional(),
+  /** Actual code6 event records; completeness does not enable unsupported tax treatment. */
+  prohibitedTransactionKind: z.enum(["account_disqualification", "pledged_portion"]).optional(),
+  prohibitedTransactionDate: z.string().optional(),
+  prohibitedTransactionSourceReference: z.string().optional(),
+  prohibitedTransactionSourceConfirmed: z.boolean().optional(),
+  prohibitedTransactionJanuary1Value: optionalDecimalInput,
+  prohibitedTransactionBasis: optionalDecimalInput,
+  prohibitedTransactionPledgedAmount: optionalDecimalInput,
 }));
 
 const EducationDistributionExpenseSchema = z.object({

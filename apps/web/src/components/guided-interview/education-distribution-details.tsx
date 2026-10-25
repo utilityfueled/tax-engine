@@ -81,6 +81,7 @@ export function EducationDistributionDetails({ data, onChange }: {
     {collections.filter(collection => collection.key === "beneficiaries").map(collection => renderCollection(collection))}
     <fieldset className="guided-fieldset"><legend>Distribution statements</legend>
       {(data.forms ?? []).map((entry, index) => <fieldset className="guided-fieldset" key={stringValue(entry.fields.sourceId) || index}><legend>Statement {index + 1}</legend>
+        {entry.fields.distributionCode === "6" && <p className="guided-hint">Code 6 tax treatment is not yet supported. You can keep the actual event records here; account basis, education-expense treatment and any income after disqualification still require a separate calculation.</p>}
         <SourceFields fields={educationStatementFields} record={entry.fields} data={data} onChange={(key, value) => statement(index, "fields", key, value)} />
         <SourceFields fields={educationTransferFields} record={entry.transfer} data={data} onChange={(key, value) => statement(index, "transfer", key, value)} />
         <button type="button" className="utility-button" onClick={() => update({ forms: data.forms?.filter((_, row) => row !== index) })}>Remove statement {index + 1}</button>

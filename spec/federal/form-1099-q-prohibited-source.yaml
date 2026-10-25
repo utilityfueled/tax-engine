@@ -1,0 +1,43 @@
+form: "Form1099-Q code6 source facts"
+fullName: "Coverdell account disqualification and pledged-portion records"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i1099q"
+sources:
+  - "https://uscode.house.gov/us/usc/119-124/t26/s530/"
+  - "https://www.govinfo.gov/content/pkg/USCODE-2024-title26/html/USCODE-2024-title26-subtitleA-chap1-subchapD-partI-subpartA-sec408.htm"
+notes: |
+  Refreshed2026-10-25. Current IRS code6 instructions and current530(e) import
+  rules similar to408(e)(2)/(4). The former disqualifies the account from the
+  year's first day and treats January1 value as distributed; the latter treats
+  the pledged portion as distributed. The reference408 text is the official
+  2024 edition, corroborated by the current IRS instructions/current530(e).
+  These source records are not a taxable-income election or an approval flag.
+  The supported calculator has no qualified method for the interaction of the
+  deemed amount, section72 basis and530(d)(2) education exclusions, or for
+  post-disqualification account income. That is an unresolved internal legal
+  and calculation gap, not an external qualification claimed completed.
+lines:
+  - line: "facts"
+    description: "Preserve actual code6 event facts before defaults"
+    formula: "Require actual subtype, event date, source reference, source confirmation and basis; account disqualification also requires January1 value, while a pledge requires its actual amount. Missing remains unknown across reparsing."
+    testRef: "tests/engine/forms/form-1099-q-prohibited-source.test.ts::preserves actual prohibited-transaction facts and missing-source status"
+  - line: "reconciliation"
+    description: "Validate known event scope before unsupported treatment"
+    formula: "Only Coverdell code6 accepts these facts. Require event year to match the statement and return, source confirmation, nonnegative finite basis and event amount. Box1 must match actual January1 value or pledged portion. Never infer one subtype from the other or apply ordinary education exclusions."
+    testRef: "tests/engine/forms/form-1099-q-prohibited-source.test.ts::validates the actual deemed-distribution source before blocking unresolved treatment"
+  - line: "blocked"
+    description: "Preserve explicit unsupported calculation boundary"
+    formula: "Even complete reconciled facts reject with a subtype-specific unresolved treatment message. No zero-income fallback, invented taxable amount, transfer election or model/human approval bypass."
+    testRef: "tests/engine/forms/form-1099-q-prohibited-source.test.ts::keeps both actual code6 subtypes blocked from ordinary tax treatment"
+  - line: "intake"
+    description: "Actual source fields and durable blocked review"
+    formula: "Collect source facts conditionally for code6, preserve known zero versus unknown, and show that the source can be saved while calculation remains unavailable. Editing a source invalidates confirmation."
+    testRef: "tests/apps/web/education-prohibited-source-interactions.test.tsx::retains prohibited source facts and explains the unresolved calculation"
+  - line: "legacy-boundary"
+    description: "New actual source fields cannot silently use historical aggregates"
+    formula: "Any provided field beyond the historical payer/account/gross/earnings/basis/trustee-transfer fields selects the actual-source route, including known false confirmations. A missing source ledger then rejects, rather than ignoring the supplied event, owner, transfer or correction."
+    testRef: "tests/engine/forms/form-1099-q-prohibited-source.test.ts::prevents actual source fields from falling back to historical aggregate treatment"
+  - line: "distribution-medium"
+    description: "Keep cash versus prepaid/in-kind source status explicit"
+    formula: "Preserve optional actual distribution medium without default. Ordinary source calculations do not infer this fact. Educator coordination may use the cash earnings result only with explicit cash confirmation; unknown and in-kind prepaid tuition need their separate supported method."
+    testRef: "tests/engine/forms/form-1099-q-prohibited-source.test.ts::preserves actual distribution medium without inferring cash"

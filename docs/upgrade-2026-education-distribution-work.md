@@ -324,3 +324,104 @@ Immutable staged tree `1a7a6b7e` passed all123 adjacent tests, root types and
 all3765 spec references, with code6 work excluded. Logs:
 `coverdell-basis-immutable-tests.log`, `coverdell-basis-immutable-types.log`,
 `coverdell-basis-immutable-spec.log`.
+
+## Code 6 source records and source-route boundaries (2026-10-25)
+
+Ordinary Coverdell basis/source/PDF work is committed as `932d8a3`.
+The next spec-first package preserves actual Coverdell account-disqualification
+and pledged-portion records: event kind/date, source reference, actual basis,
+January1 account value or pledged amount, and explicit source confirmation.
+Missing facts remain unknown across parsing. Known facts are validated against
+the event year and reported Box1. Ordinary transfer treatment cannot be mixed
+with code6. The visible intake explains that these records can be saved while
+the calculation remains unsupported.
+
+The official [1099-Q instructions](https://www.irs.gov/instructions/i1099q) and
+[section530(e)](https://uscode.house.gov/us/usc/119-124/t26/s530/) refer to rules
+similar to408(e)(2)/(4). The official2024 edition of408 establishes January1
+disqualification and deemed distribution of the pledged portion. The current
+408 endpoint could not be retrieved; that edition is labeled in the spec and
+corroborated only as a cross-reference by the current IRS/current530 sources.
+The interaction of the deemed distribution, section72 basis, education-expense
+exclusion and post-disqualification income is still an **internal calculation
+gap**. Neither actual source confirmation nor external approval enables a
+guessed amount, ordinary worksheet, or zero-income fallback.
+
+A separate regression exposed new source fields falling back to the historical
+2025 aggregate route when the ledger was omitted. Any actual source field now
+selects source validation, including explicit false confirmations. Historical
+aggregate-only inputs retain their visibly unverified compatibility path.
+Optional actual `distributionMedium` (`cash` or `in_kind_prepaid_tuition`) is
+preserved in the statement and per-distribution result without an inferred
+cash default. This supplies the factual distinction needed by the separate
+educator reconciliation.
+
+Source, routing and DOM tests were red before implementation. All497 affected
+tests passed before the optional-medium addition; the final98 source/intake/PDF
+tests, root and web types, and scoped lint passed after it. Logs:
+`education-prohibited-source-red.log`, `education-prohibited-source-second-red.log`,
+`education-prohibited-ui-red.log`, `education-medium-red/green.log`,
+`education-prohibited-all-consumers.log`, `education-prohibited-final-tests.log`,
+`education-prohibited-final-types.log`, `education-prohibited-final-webtypes.log`,
+`education-prohibited-final-lint.log`. The simultaneous global spec check found
+only the other agent's then-unwritten spec-first1099G integration test file;
+the immutable scoped package receives its own complete validation.
+
+Bounded independent review of the parent's guided1099G source binding refreshed
+the IRS1099G instructions, Publication525 and Rev.Rul.2025-4 and reran six
+worksheet/DOM tests successfully (`ai-guided1099g-review.log`). One actionable
+source-ID collision was reproduced: distinct payers sharing a local statement
+reference produced the same audit source ID. The owner received the exact
+case (`ai-guided1099g-identity-review.log`) for correction. This is an agent
+software/source review, not human qualification.
+
+The parent corrected that collision using result-local row IDs while retaining
+actual payer/owner/reference duplicate checks. All7 worksheet/DOM tests passed
+on independent rerun (`ai-guided1099g-identity-fix-review.log`); no remaining
+actionable finding in that bounded review. The parent independently reviewed
+this code6 source package and reran all6 focused tests with no actionable
+findings. A code6-only archive based on `8f7c622` passed98 tests, root types and
+all3772 spec references (`education-prohibited-isolated-{tests,types,spec}.log`).
+
+### Finite remaining education checklist
+
+- [x] Implement, review and verify the code6 source/medium package; keep the
+  calculation explicitly blocked. The commit reference is recorded in the next
+  package entry so the executable commit does not need its own hash in advance.
+- [ ] Commit the separately specified outside-recipient credit-allocation fix.
+  Its new regression first failed, then38 source/integration/owner-PDF tests
+  passed. Final credit validation must include affected outside recipients;
+  their earnings and additional tax remain off this return.
+- [ ] Complete and verify educator coordination with the federal owner using
+  actual `distributionMedium` and per-owner excluded education earnings.
+  Distinguish cash QTP earnings from basis, transfers and prepaid/in-kind
+  distributions; preserve unknown sources rather than infer cash or zero.
+- [ ] Implement the code6 method once its unresolved legal treatment is
+  established. The bounded follow-up research is complete; the source package
+  itself does not close the calculation gap. Retrieved sources include
+  [Notice2001-81](https://www.irs.gov/pub/irs-drop/n-01-81.pdf),
+  [IRS account guidance](https://www.irs.gov/irm/part21/irm_21-006-005r)
+  and [IRS education-distribution analysis](https://www.irs.gov/irm/part4/irm_04-019-003r).
+  These describe ordinary education distributions or the analogous IRA event;
+  none retrieved so far expressly resolves whether and how section530(d)(2)
+  applies to the deemed code6 amount, the pledged-portion basis method, and
+  post-January1 disqualification income. A general ordinary worksheet cannot
+  supply those missing methods. This is an internal unresolved legal method,
+  separate from missing taxpayer records and release/human qualification.
+
+The additional [official2024 section72(e)(9)/(8)(B) text](https://www.govinfo.gov/content/pkg/USCODE-2024-title26/html/USCODE-2024-title26-subtitleA-chap1-subchapB-partII-sec72.htm)
+establishes ordinary pro-rata allocation for an ESA. [Publication590-A](https://www.irs.gov/publications/p590a)
+explains the analogous IRA January1 distribution and gain over basis. These
+do not establish that the ordinary ESA year-end worksheet remains correct for
+a pledge whose assets remain in the account, or resolve the education exclusion
+after disqualification. Required next decision: an authoritative interpretation
+and source-backed worksheet for each subtype, including basis/carry and
+post-disqualification income treatment. Then add actual dated account-income
+source bindings, independently derived examples and return/PDF integration.
+Existing event facts and the ordinary source ledger are retained for that work;
+an approval flag or a manually supplied taxable amount is not a replacement.
+
+Exact staged tree `b8a95076` passed98 tests, root types and all3779 spec references
+after the other agents' preceding commits. Its eight staged files excluded
+the new Form7206 source schema,1099G orchestration and the separate outside-
+recipient guard. Logs: `education-prohibited-staged-{tests,types,spec}.log`.
