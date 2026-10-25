@@ -2853,20 +2853,43 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   }
   const elderlyOrDisabledCredit = Decimal.min(scheduleR?.credit ?? new Decimal(0), zeroFloor(taxBeforeCredits.minus(foreignTaxCredit).minus(dependentCareCredit)));
 
-  // ── Form 8863: Education Credits ────────────────────────
+  // ── Form 8863: actual education facts and Credit Limit Worksheet ──
   let educationNonrefundable = new Decimal(0);
   let educationRefundable = new Decimal(0);
+  let form8863: ReturnType<typeof calculateForm8863> | undefined;
   if (input.educationExpenses) {
-    const form8863 = calculateForm8863({
-      aocStudents: input.educationExpenses.aocStudents.map((s) => ({
-        name: s.name,
-        qualifiedExpenses: d(s.qualifiedExpenses),
-      })),
-      llcExpenses: d(input.educationExpenses.llcExpenses),
-      magi: agi,
+    const education = input.educationExpenses;
+    if (year >= 2026 && education.possessionIncomeExclusion === undefined) throw new Error("Form8863 actual possession-income exclusion is unknown");
+    if (year >= 2026) {
+      for (const student of [...education.aocStudents, ...(education.llcStudents ?? [])]) {
+        if (!d(student.qualifiedExpenses).gt(0) || !student.studentTaxId) continue;
+        const id = student.studentTaxId.replaceAll("-", "");
+        const actual = student.studentRole === "primary" ? [input.taxpayer.primary.ssn] : student.studentRole === "spouse" ? [input.taxpayer.spouse?.ssn] : input.taxpayer.dependents.map(dep => dep.ssn);
+        if (!actual.some(tin => tin?.replaceAll("-", "") === id)) throw new Error("Form8863 student identity does not match the actual return household role");
+      }
+    }
+    const educationPossession = d(education.possessionIncomeExclusion);
+    if (!educationPossession.isFinite() || educationPossession.isNegative()) throw new Error("Form8863 possession exclusion must be finite and nonnegative");
+    // Age is attained on the day before the birthday; January1 births attain
+    // their next age on December31 of the preceding year.
+    const dob = input.taxpayer.primary.dateOfBirth;
+    const educationAge = /^\d{4}-\d{2}-\d{2}$/.test(dob) ? year - Number(dob.slice(0, 4)) + (dob.slice(5) === "01-01" ? 1 : 0) : undefined;
+    form8863 = calculateForm8863({
+      ...education,
+      taxYear: year,
+      primarySsnEligible: education.primarySsnEligible ?? input.taxpayer.primary.employmentValidSsnIssuedByDueDate,
+      spouseSsnEligible: education.spouseSsnEligible ?? input.taxpayer.spouse?.employmentValidSsnIssuedByDueDate,
+      primaryTinEligible: education.primaryTinEligible ?? input.taxpayer.primary.tinIssuedByDueDate,
+      primaryAgeAtYearEnd: educationAge,
+      refundableAocFacts: education.refundableAocFacts ? {...education.refundableAocFacts,earnedIncome:d(education.refundableAocFacts.earnedIncome),totalSupport:d(education.refundableAocFacts.totalSupport)} : undefined,
+      aocStudents: education.aocStudents.map(student => ({...student,qualifiedExpenses:d(student.qualifiedExpenses)})),
+      llcStudents: education.llcStudents?.map(student => ({...student,qualifiedExpenses:d(student.qualifiedExpenses)})),
+      llcExpenses: d(education.llcExpenses),
+      magi: sum(agi,form2555?.totalExclusion ?? new Decimal(0),form2555?.housingDeduction ?? new Decimal(0),educationPossession),
       filingStatus,
+      taxLiabilityLimit: zeroFloor(taxBeforeCredits.minus(sum(foreignTaxCredit,dependentCareCredit,elderlyOrDisabledCredit))),
     });
-    educationNonrefundable = Decimal.min(form8863.totalNonrefundable, zeroFloor(taxBeforeCredits.minus(sum(foreignTaxCredit,dependentCareCredit,elderlyOrDisabledCredit))));
+    educationNonrefundable = form8863.totalNonrefundable;
     educationRefundable = form8863.totalRefundable;
     audit.merge(form8863.lines);
   }
@@ -3490,6 +3513,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     form2210,
     form8815,
     form8812,
+    form8863,
     schedule1A,
     nonitemizerCharitableDeduction,
     form8995: form8995Result,

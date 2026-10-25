@@ -2,71 +2,116 @@ form: "Form 8863"
 fullName: "Education Credits (American Opportunity and Lifetime Learning)"
 taxYear: 2025
 irsReference: "https://www.irs.gov/instructions/i8863"
-
 notes: |
-  Form 8863 calculates two education credits:
-  - American Opportunity Credit (AOC): Up to $2,500 per student, 40% refundable.
-    100% of first $2,000 + 25% of next $2,000 = $2,500 max.
-    Phase-out: Single/HoH/QSS $80K-$90K, MFJ $160K-$180K.
-    QSS uses single thresholds per IRC §25A(d)(2) — "joint return" only.
-    Only first 4 years of post-secondary; at least half-time.
-    A student is ineligible once the credit was already claimed in 4 prior tax years.
-  - Lifetime Learning Credit (LLC): 20% of first $10,000 = $2,000 max per return.
-    Phase-out: Single/HoH/QSS $80K-$90K, MFJ $160K-$180K (same as AOC for 2025).
-    No limit on years; any post-secondary courses.
-
+  Applies 2025 final instructions and IRC25A, with the enacted 2026 employment-SSN
+  requirement verified at https://www.irs.gov/tax-professionals/eitc-central/new-social-security-number-requirements-for-education-tax-credits.
+  The 2026 draft https://www.irs.gov/pub/irs-dft/f8863--dft.pdf is line-layout evidence,
+  never filing qualification. All monetary arithmetic uses Decimal. Printed lines
+  round to dollars; phase-out factor retains Decimal precision (at least 3 places).
+  One credit per student, actual paid net qualified expenses after assistance,
+  refunds and other benefits. Unknown 2026 eligibility/source facts fail closed.
+  Legacy 2025 omissions remain an unqualified compatibility preview; known
+  ineligibility applies in either year. Final 2026 forms and independent review
+  remain required. Schedule3-A public-benefit limitation is not qualified.
 lines:
-  - line: "1"
-    description: "AOC tentative credit per student"
-    formula: "100% of first $2,000 + 25% of next $2,000 of qualified expenses"
-    irsRef: "Form 8863 Instructions, Part III"
+  - line: "eligibility"
+    description: "Actual claimant and student eligibility"
+    formula: "No credit for MFS, claimable dependent, or nonresident alien without joint resident election; AOC also requires no effective ban and required Form8862. 2026 primary OR joint spouse employment-valid timely SSN; dependent student timely employment-valid SSN. Actual identity prevents duplicate student credits."
     edgeCases:
-      - "Max $2,500 per student"
-      - "Student with 4 prior AOC years is ineligible; student with 3 prior years may still claim the current year"
-      - "Only tuition and required fees/materials qualify"
-    notes: "Audit trail should show qualified expenses, prior AOC years claimed, and whether the student remains eligible under the 4-year limit."
-    testRef: "tests/engine/forms/form-8863.test.ts::audit trail Line 1 exposes AOC year-limit eligibility inputs for an exhausted student"
-
+      - "AOC requires fewer than4 prior claim years, no completed first4 years, half-time degree enrollment, no felony drug conviction, eligible school, substantiated adjusted expenses and1098T requirement or exception"
+      - "LLC has no AOC age/year/degree/felony conditions; actual eligible courses and student identity still required"
+    testRef: "tests/engine/forms/form-8863-2026.test.ts::requires actual 2026 student facts and allows only one credit per student"
+  - line: "1"
+    description: "Total tentative AOC"
+    formula: "Sum PartIII line30 for eligible students"
+    testRef: "tests/engine/forms/form-8863.test.ts::Form 8863 Line 1 - AOC total for multiple students"
   - line: "2"
-    description: "AOC total tentative credit"
-    formula: "Sum of Line 1 for all students"
-    testRef: "tests/engine/forms/form-8863.test.ts::Form 8863 Line 2 - AOC total for multiple students"
-
+    description: "MAGI phase-out upper bound"
+    formula: "180000 MFJ,90000 otherwise"
+    testRef: "tests/engine/forms/form-8863-2026.test.ts::audits every printed calculation and applies the actual nonrefundable limit"
+  - line: "3"
+    description: "Education MAGI"
+    formula: "AGI plus actual Form2555 income/housing exclusion and deduction, PuertoRico and Form4563 exclusions"
+    testRef: "tests/engine/forms/form-8863-2026.test.ts::audits every printed calculation and applies the actual nonrefundable limit"
+  - line: "4"
+    description: "MAGI remaining phase-out range"
+    formula: "max(0,line2-line3)"
+    testRef: "tests/engine/forms/form-8863-2026.test.ts::audits every printed calculation and applies the actual nonrefundable limit"
+  - line: "5"
+    description: "Phase-out range"
+    formula: "20000 MFJ,10000 otherwise"
+    testRef: "tests/engine/forms/form-8863-2026.test.ts::audits every printed calculation and applies the actual nonrefundable limit"
+  - line: "6"
+    description: "Phase-out factor"
+    formula: "min(1,line4/line5), retaining Decimal precision of at least three decimal places"
+    testRef: "tests/engine/forms/form-8863.test.ts::Form 8863 Line 7 - AOC no phase-out under threshold"
   - line: "7"
     description: "AOC after phase-out"
-    formula: "Tentative credit × phase-out percentage"
-    irsRef: "Form 8863 Instructions, Line 7"
-    edgeCases:
-      - "Single/HoH/QSS: phase-out $80K-$90K"
-      - "MFJ: phase-out $160K-$180K"
-      - "QSS uses single/HoH thresholds, NOT MFJ — per IRC §25A(d)(2) 'joint return' only; confirmed by IRS Form 8863 Instructions"
-      - "MFS: no AOC allowed"
+    formula: "round(line1*line6)"
     testRef: "tests/engine/forms/form-8863.test.ts::Form 8863 Line 7 - AOC no phase-out under threshold"
-
   - line: "8"
-    description: "Nonrefundable AOC"
-    formula: "60% of Line 7"
-    testRef: "tests/engine/forms/form-8863.test.ts::Form 8863 Line 8 - nonrefundable AOC is 60%"
-
-  - line: "14"
     description: "Refundable AOC"
-    formula: "40% of Line 7"
-    irsRef: "Form 8863 Instructions, Line 14"
-    testRef: "tests/engine/forms/form-8863.test.ts::Form 8863 Line 14 - refundable AOC is 40%"
-
+    formula: "If refundable eligible round(line7*0.40), otherwise0; Form1040line29"
+    notes: "Nonjoint claimant with living parent cannot refund if under18, or age18 earned income less than half support, or full-time student age19–23 earned income less than half support. Equal half support qualifies. Actual claimant facts, not the dependent student's age."
+    testRef: "tests/engine/forms/form-8863-2026.test.ts::uses claimant age and support facts for refundable AOC with exact half-support boundary"
+  - line: "9"
+    description: "Nonrefundable AOC before tax limit"
+    formula: "line7-line8; preserve full AOC when refundable restriction applies"
+    testRef: "tests/engine/forms/form-8863-2026.test.ts::uses claimant age and support facts for refundable AOC with exact half-support boundary"
   - line: "10"
-    description: "Lifetime Learning Credit"
-    formula: "20% × min(qualified expenses, $10,000) × phase-out factor"
-    irsRef: "Form 8863 Instructions, Part II"
-    edgeCases:
-      - "Max $2,000 per return (not per student)"
-      - "Same phase-out as AOC for 2025"
-      - "MFS: no LLC allowed"
-    testRef: "tests/engine/forms/form-8863.test.ts::Form 8863 Line 10 - LLC basic calculation"
-
+    description: "Eligible LLC adjusted expenses"
+    formula: "Sum eligible PartIIIline31 actual separate student expenses"
+    testRef: "tests/engine/forms/form-8863-2026.test.ts::requires actual LLC students and applies 2026 dependent SSN rules"
+  - line: "11"
+    description: "LLC capped expenses"
+    formula: "min(line10,10000)"
+    testRef: "tests/engine/forms/form-8863-2026.test.ts::audits every printed calculation and applies the actual nonrefundable limit"
+  - line: "12"
+    description: "Tentative LLC"
+    formula: "round(line11*0.20)"
+    testRef: "tests/engine/forms/form-8863-2026.test.ts::audits every printed calculation and applies the actual nonrefundable limit"
+  - line: "13"
+    description: "LLC upper MAGI bound"
+    formula: "Same asline2"
+    testRef: "tests/engine/forms/form-8863-2026.test.ts::audits every printed calculation and applies the actual nonrefundable limit"
+  - line: "14"
+    description: "LLC MAGI"
+    formula: "Same asline3"
+    testRef: "tests/engine/forms/form-8863-2026.test.ts::audits every printed calculation and applies the actual nonrefundable limit"
+  - line: "15"
+    description: "LLC remaining range"
+    formula: "max(0,line13-line14)"
+    testRef: "tests/engine/forms/form-8863-2026.test.ts::audits every printed calculation and applies the actual nonrefundable limit"
+  - line: "16"
+    description: "LLC phase-out range"
+    formula: "Same asline5"
+    testRef: "tests/engine/forms/form-8863-2026.test.ts::audits every printed calculation and applies the actual nonrefundable limit"
+  - line: "17"
+    description: "LLC phase-out factor"
+    formula: "min(1,line15/line16), at least3 decimal places"
+    testRef: "tests/engine/forms/form-8863-2026.test.ts::audits every printed calculation and applies the actual nonrefundable limit"
+  - line: "18"
+    description: "LLC after phase-out"
+    formula: "round(line12*line17)"
+    testRef: "tests/engine/forms/form-8863.test.ts::Form 8863 Line 18 - LLC basic calculation"
   - line: "19"
-    description: "Total nonrefundable education credit"
-    formula: "Line 8 (nonrefundable AOC) + Line 10 (LLC)"
-    irsRef: "Form 8863 Instructions, Line 19"
-    notes: "Goes to Schedule 3 Line 3"
-    testRef: "tests/engine/forms/form-8863.test.ts::Form 8863 Line 19 - total nonrefundable (AOC + LLC)"
+    description: "Allowed nonrefundable education credits"
+    formula: "min(line9+line18,max(0,Form1040line18-Schedule3lines1,2,6d,6l)); actual worksheet limit required2026; Schedule3line3"
+    testRef: "tests/engine/forms/form-8863-2026.test.ts::audits every printed calculation and applies the actual nonrefundable limit"
+  - line: "20-26"
+    description: "Student identity, institution and eligibility facts"
+    formula: "Actual student TIN/role, school records and eligibility answers; never infer from dollar amounts or fabricate addresses/EINs"
+    testRef: "tests/engine/forms/form-8863-2026.test.ts::requires actual 2026 student facts and allows only one credit per student"
+  - line: "27-30"
+    description: "Per-student AOC expense calculation"
+    formula: "27=min(adjusted expenses,4000);28=max(0,27-2000);29=round(28*0.25);30=27 when28=0 otherwise2000+29"
+    testRef: "tests/engine/forms/form-8863.test.ts::Form 8863 Line 30 - AOC expenses of $2,500 yield $2,125 (100% first $2K + 25% of $500)"
+  - line: "31"
+    description: "Per-student LLC expenses"
+    formula: "Actual adjusted eligible expenses for a student not claimed for AOC"
+    testRef: "tests/engine/forms/form-8863-2026.test.ts::requires actual LLC students and applies 2026 dependent SSN rules"
+
+  - line: "return-integration"
+    description: "Use every actual student fact and MAGI addback on the return"
+    formula: "Pass net student expenses and actual eligibility; educationMAGI=AGI+Form2555exclusion+housingdeduction+possessionexclusion; finalline19 uses actual prior-ranking credit limit"
+    testRef: "tests/engine/federal-credit-integration.test.ts::forwards education claim history, actual MAGI addbacks and final tax limit"

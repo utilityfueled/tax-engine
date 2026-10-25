@@ -2091,13 +2091,38 @@ export const DependentCareSchema = z.object({
   qualifyingIndividuals: z.number().int().min(1).default(1),
 });
 
+const EducationInstitutionSchema = z.object({
+  name: z.string().min(1),
+  address: z.string().min(1),
+  ein: z.string().regex(/^\d{2}-?\d{7}$/).optional(),
+  receivedCurrentYear1098T: z.boolean(),
+  receivedPriorYear1098TWithBox7: z.boolean(),
+});
+const EducationStudentFacts = {
+  name: z.string(),
+  studentTaxId: z.string().regex(/^\d{3}-?\d{2}-?\d{4}$/).optional(),
+  studentRole: z.enum(["primary", "spouse", "dependent"]).optional(),
+  qualifiedExpenses: decimal,
+  studentSsnEligible: z.boolean().optional(),
+  studentTinEligible: z.boolean().optional(),
+  institutionEligible: z.boolean().optional(),
+  expensesEligibilityConfirmed: z.boolean().optional(),
+  form1098TRequirementMet: z.boolean().optional(),
+  institutions: z.array(EducationInstitutionSchema).optional(),
+};
 export const EducationExpensesSchema = z.object({
   primarySsnEligible: z.boolean().optional(),
   spouseSsnEligible: z.boolean().optional(),
+  primaryTinEligible: z.boolean().optional(),
+  canBeClaimedAsDependent: z.boolean().optional(),
+  nonresidentAlien: z.boolean().optional(),
+  residentJointElection: z.boolean().optional(),
+  aocBanInEffect: z.boolean().optional(),
+  form8862Required: z.boolean().optional(),
+  form8862Completed: z.boolean().optional(),
+  possessionIncomeExclusion: optionalDecimalInput,
   aocStudents: z.array(z.object({
-    name: z.string(),
-    qualifiedExpenses: decimal,
-    studentSsnEligible: z.boolean().optional(),
+    ...EducationStudentFacts,
     institutionEin: z.string().regex(/^\d{2}-?\d{7}$/).optional(),
     priorYearsClaimed: z.number().int().min(0).optional(),
     completedFirstFourYearsBeforeYear: z.boolean().optional(),
@@ -2105,8 +2130,18 @@ export const EducationExpensesSchema = z.object({
     pursuingDegreeOrCredential: z.boolean().optional(),
     felonyDrugConviction: z.boolean().optional(),
   })).default([]),
+  llcStudents: z.array(z.object({
+    ...EducationStudentFacts,
+    courseEligibilityConfirmed: z.boolean().optional(),
+  })).optional(),
   llcExpenses: optionalDecimal,
   refundableAocEligible: z.boolean().optional(),
+  refundableAocFacts: z.object({
+    fullTimeStudent: z.boolean(),
+    earnedIncome: decimal,
+    totalSupport: decimal,
+    parentAlive: z.boolean(),
+  }).optional(),
 });
 
 export const BusinessExpensesSchema = z.object({

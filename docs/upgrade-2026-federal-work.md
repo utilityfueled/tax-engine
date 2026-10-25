@@ -464,3 +464,26 @@ PDFs. Three spec-linked regressions failed first;88 focused tests, root types,
 3,116 spec refs and whitespace checks pass. Scoped diff reviewed. Guided actual
 identity facts are required for both years; omitted historical2025 identity facts
 remain explicitly unqualified legacy compatibility, never independent review.
+
+### Education eligibility and actual Form8863 worksheet — 2026-10-25
+
+Refreshed final2025 instructions, IRC25A-related IRS2026 SSN guidance and the
+2026 draft form (layout evidence only). Added actual student identity/role,
+AOCqualification, separate LLCstudent, claimant residency/dependency, Form8862,
+and claimant support facts. Joint2026 eligibility requires primary OR spouse
+employment-valid timelySSN; dependentstudents require theirs. Known ineligibility
+applies to either year; omitted2025 facts remain unqualified compatibility.
+Refundability follows actual claimant age/support, including exact half-support
+boundary; the unrefundable AOC portion remains available as nonrefundable credit.
+
+Corrected every printed calculation line, including refundable8/nonrefundable9,
+LLC18 and actual credit-limit19. Federal integration now forwards prior claim
+history and other student facts, adds actual excludedincome toMAGI, verifies2026
+student identity against the return role, and preserves the typed form8863 result.
+Eight regressions failed first (seven module/model and one integration);180 focused
+engine/edge/integration/PDF tests pass. Root types pass; scopedlint has noerrors
+and15 existing non-null warnings; whitespace/diff reviewed. Education specrefs
+resolve; the only3 global spec failures are the next package's newly written PTC
+model tests not yet implemented. No test removed or tolerance weakened. Final2026
+forms, complete institution PDF mapping, public-benefit rules and independent
+review remain separate qualification requirements.

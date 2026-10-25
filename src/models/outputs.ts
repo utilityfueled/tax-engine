@@ -245,6 +245,7 @@ export interface TaxReturnResult {
   form2210?: import("@/engine/forms/form-2210.js").Form2210Result;
   form8815?: import("@/engine/forms/form-8815.js").Form8815Result;
   form8812?: import("@/engine/forms/form-8812.js").Form8812Result;
+  form8863?: import("@/engine/forms/form-8863.js").Form8863Result;
   nonitemizerCharitableDeduction?: Decimal;
   schedule1A?: import("@/engine/schedules/schedule-1-a.js").Schedule1AResult;
   form8995?: import("@/engine/forms/form-8995.js").Form8995Result;

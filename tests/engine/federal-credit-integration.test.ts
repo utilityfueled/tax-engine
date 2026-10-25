@@ -76,4 +76,17 @@ describe("Personal credit return integration",()=>{
     expect(r.form8839?.carryforwardRemaining.plus(r.form8839.nonrefundableAdoptionCredit).toString()).toBe("4880");
   });
 
+  it("forwards education claim history, actual MAGI addbacks and final tax limit",()=>{
+    const makeEducation=(history:number)=>fixture(2025,{w2s:[{...simpleW2Fixture.w2s[0],wages:"80000"}],educationExpenses:{possessionIncomeExclusion:"5000",aocStudents:[{name:"Student",qualifiedExpenses:"4000",priorYearsClaimed:history}],llcExpenses:"0"}});
+    const exhausted=calculateFederalTax(makeEducation(4));
+    expect(exhausted.form8863?.aocTotalTentative.toString()).toBe("0");
+    const allowed=calculateFederalTax(makeEducation(0));
+    expect(allowed.form8863?.lines.find(l=>l.line==="3")?.value.toString()).toBe("85000");
+    expect(allowed.form8863?.aocRefundable.toString()).toBe("500");
+    expect(allowed.form8863?.totalNonrefundable.toString()).toBe("750");
+    const low=calculateFederalTax(fixture(2025,{educationExpenses:{aocStudents:[{name:"Student",qualifiedExpenses:"4000"}]}}));
+    expect(low.form8863?.totalNonrefundable.toString()).toBe("0");
+    expect(low.form8863?.lines.find(l=>l.line==="19")?.value.toString()).toBe("0");
+  });
+
 });
