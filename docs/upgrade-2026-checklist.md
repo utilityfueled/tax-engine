@@ -7,10 +7,38 @@ complete a checkbox.
 
 ## Current integration — 2026-10-25
 
-`7b7b761` is the latest confirmed pushed integration on `upgrade/2026-baseline`. The goal remains active and the
+`5006088` is the latest confirmed pushed integration on `upgrade/2026-baseline`. The goal remains active and the
 upgrade is **not release-ready**. Unanswered external inputs are listed below;
 internal implementation and review continue in parallel.
 
+- `e7bd6e8` and `5006088`: actual original1099-DA source records, once-only
+  Box4 withholding and all twelve Form8949 reporting categories. The source
+  core passes646 adjacent tests and eight independent review cases after a
+  reproduced legacy fallback defect was fixed. Exact reporting tree`91a28cb1`
+  passes1,756 tests in145 files, root/web types,4,603 spec references, both
+  builds and lint with zero errors. Independent review passes six new cases
+  plus a mixed QSBS/DA probe. Fourteen-page reopening, all category widgets,
+  redacted identifiers, printed ScheduleD totals and rendered pages pass.
+  Document/guided DA intake and state handoff remain the next facts package.
+- `3ff896c`: actual ordinary investment sources in current Form172 origins.
+  Reviewed tree`7c2a2185` passes649 tests in21 files, root/web types and4,583
+  references; four review pages reopen/render. Independent review passes12
+  cases and four literal/adversarial probes. Guided capital-origin collection
+  and positive1202 origins remain distinct follow-ups.
+- `8cf0e8e`: actual current-year loss-origin collection. Final integrated tree
+  `1dd40361` passes773 tests in79 files, root/web types,4,568 references, build,
+  and desktop/mobile Chromium with zero retries. Six independent source/UI
+  review cases pass; actual saved zero/false/unknown values remain distinct.
+- `f4da2a6`: evaluation uses actual application schemas, complete corpus/request
+  provenance and the actual reported model identity. Both reproduced review
+  defects are fixed. Exact tree`449010cb` passes105 tests; parent passes49
+  checks plus four adversarial controls. All240cases remain human-unreviewed
+  with zero live measurements.
+- `b828ee4`: refreshed official provider prices, capabilities and lifecycle
+  evidence. GPT-5Mini dispatch stops on2026-12-11; post-shutdown imports cannot
+  qualify, while known cost is retained. Five public profiles still have
+  unverified account availability.106 isolated tests and separate18-case/probe
+  review pass. No provider call, budget approval or promotion is inferred.
 - `0834e46`: actual separate-owner IRA history/account/source binding. Exact
   `c5298060` passes319 tests in27 files; separate16-case/probe review and four
   reopened/rendered Form8606 pages pass. Guided intake is committed in `9e80414`:
@@ -36,15 +64,28 @@ internal implementation and review continue in parallel.
   contracts. Exact packages pass123/272 tests and parent44/24-case reviews.
   Journal aliases, approved-policy mutation, fabricated source text and
   unrestricted unsupported-route readiness prose were reproduced and fixed.
-  Actual evaluator binding remains in review: stale corpus provenance now rejects;
-  a second probe reproduced acceptance of mismatched or missing reported model
-  identity in imported measurements, which is being fixed. No live provider calls or
+  Actual evaluator binding and the reproduced stale-corpus/model-identity defects
+  are now corrected in`f4da2a6`. No live provider calls or
   independently reviewed corpus results exist; all240 cases remain draft.
 - `d078cf4`: direct pinned browser-safe SHA256 dependency, matching the existing
   transitive2.4.0 version. Strict frozen peers, three reference hash comparisons
   and the refreshed package audit pass with zero findings across521 entries.
-- Current `7b7b761` CI40230955434/Web40230955481 are queued/pending. Final-head full verification,
+- Latest observed `5006088` CI40233791595/Web40233791627 are in progress. Final-head full verification,
   runtime-image advisories/rehearsal and external qualification remain required.
+  A full synthetic unit run is active on isolated committed`5006088`, with the
+  pinned Python/pypdf, sample downloads and disposable PostgreSQL prerequisites.
+  It excludes concurrent source work and is not recorded as passed yet.
+
+The remaining finite internal queue is ordinaryDA document/guided/state handoff;
+ordinary capital-origin intake; source-bound positive1202 origins where the
+statutory and printed traces reconcile; positiveATNOL/current-cash charity;
+actual prior/mixed charity and2026 nonitemizer carry; and source-bound COD
+vintage reductions. Then close the enabled-scenario facts/calculation/review/
+readiness audit and run final integration, native images and recovery checks.
+The negative-net1202/Form172 overlap is a specifically unresolved interpretation,
+not an invented zero or completed method. Deliberately unsupported special
+methods remain identified in the federal and education method ledgers. Their
+guards do not imply implemented support or external qualification.
 
 - `cc10a79`: complete QSBS Form 8949 categories and continuation pages, fund-only
   Schedule D line 10 and verified 6251 preference, original-or-redacted identity

@@ -3,40 +3,40 @@
 ## Current checkpoint
 
 Execution remains active and **not release-ready**. Latest confirmed pushed
-integration is `7b7b761` on `upgrade/2026-baseline`. Resume from
+integration is `5006088` on `upgrade/2026-baseline`. Resume from
 [the durable checklist](upgrade-2026-checklist.md) and `ongoingExecution` in the
 machine checkpoint. Older evidence applies only to its recorded code.
 
-Recent packages bind actual separate-owner IRA basis (`0834e46`), collect
-mortgage points (`029d5d9`) and prior interest recoveries (`a38c41e`), compute
-actual regular/AMT current loss origins (`febaf9c`) and their ordinary itemized
-sources (`e74436b`), exact Form172 computational amounts (`7b7b761`) and guided
-IRA history/account collection (`9e80414`). The AI executor (`f08eb0c`) and actual application contracts
-(`556cfe4`) are also committed. Each has isolated checks and bounded agent review
-in its package ledger. Review reproduced and drove repairs for source text,
-readiness prose, journal aliases, request policy and second-home prior points.
-These checks do not establish human, provider or final-form qualification.
+Recent packages add actual current-loss intake (`8cf0e8e`), ordinary investment
+capital origins (`3ff896c`), original digital-asset sources (`e7bd6e8`) and all
+twelve Form8949 reporting categories with complete review packets (`5006088`).
+The reporting tree passes1,756 tests in145 files, root/web types,4,603 spec
+references, both builds and separate seven-case/probe review. Original-only DA
+returns include8949, exact source columns reconcile and every continuation row
+survives an independent PDF parser. Rendered amounts, privacy and notices pass.
+Actual AI evaluation/schema/provenance/model binding (`f4da2a6`) and refreshed
+provider lifecycle enforcement (`b828ee4`) are also reviewed and pushed. Package
+ledgers record exact trees, checks and findings. These checks do not establish
+human, provider or final-form qualification.
 
 Full verification at `1791979` passed17,577 tests,86.91%branch coverage against
 the unchanged85%gate, all required types/spec/build/lint checks and328 production
 browser cases with zero retries. Five hosted billing cases were skipped and
 provide no staging evidence. Later packages need another full integrated run.
-Current `7b7b761` CI40230955434 and Web40230955481 are queued/pending; no current
-remote green is claimed. Package advisories were refreshed for the separately
+Latest observed `5006088` CI40233791595 and Web40233791627 are in progress;
+no current remote green is claimed. Package advisories were refreshed for the separately
 committed browser-safe hashing dependency (`d078cf4`):
 zero findings across521 locked entries; OS advisories remain separately tracked.
 
-The IRA collector passes890 tests, both desktop/mobile cases with zero retries,
-eight independent review cases/probes and visual screenshot inspection. Final
-integrated source tests and web types pass; source changes revoke confirmation.
-
-Internal work continues on guided current-loss sources, remaining
-named federal and advanced source methods, and actual-schema AI evaluation.
-Parent review reproduced stale-corpus acceptance in the new AI scorer; that fix
-passes re-review. A second probe found mismatched or absent reported models can
-still pass imported result scoring, and its fix remains pending. All240 evaluation cases remain human-unreviewed,
-with zero live measurements. Final inventory, all integrated checks, native
-images/scans and recovery rehearsal remain.
+The finite internal queue continues with ordinaryDA document/guided/state
+handoffs, capital-origin intake, positive1202 origins, positiveATNOL/current-cash
+charity, actual prior/mixed charity,2026 nonitemizer carry and source-bound COD
+reductions. The negative-net1202/Form172 overlap remains a named interpretation
+question; unaffected methods continue. Both AI scorer review defects are fixed,
+but all240evaluation cases remain human-unreviewed with zero live measurements.
+Final enabled-scenario auditing, inventory, all integrated checks, native
+images/scans and recovery rehearsal remain. The IRS's current1040, ScheduleD
+and8949 downloads still identify2025; no2026 final mapping is inferred.
 
 Staging credentials/authorization, synthetic provider budget/account access,
 independent human reviewers, launch-state demand and final forms remain external

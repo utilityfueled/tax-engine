@@ -196,15 +196,15 @@
   "releaseBlockers": [
     "Final integrated current-head checks remain pending after new packages; full1791979 coverage passed86.91percent against the unchanged85percent gate.",
     "The2026 rule pack and named federal/source methods remain incomplete; full2026 calculation is blocked.",
-    "Remaining enabled-scenario facts/source methods and current-origin guided package require completion and exact review; ordinary IRA intake is committed and reviewed.",
+    "Remaining enabled-scenario source/method queue includes DA intake/state handoff, capital-origin intake, positive1202, ATNOL/charity and COD vintages; ordinary current-origin and IRA intake are committed and reviewed.",
     "Independent human tax review, selected-state demand/qualification and final versioned forms are outstanding; filing stays disabled and PDFs are review-only.",
-    "AI application evaluation bindings need the reproduced imported model-identity fix;240draftcases have zero human reviews/live results and no modelpromotion.",
+    "AI application/scorer bindings are reviewed and corrected;240draftcases still have zero human reviews/live results, unverified provider account availability and no modelpromotion.",
     "Hosted auth/security/billing/Redis/provider/DB/recovery operations require authorized staging credentials and evidence; local synthetic checks do not establish staging readiness.",
     "Final native release images, SBOMs/scans/rollback/recovery and advisory owner acceptance remain pending; full-fidelity local backup/import is implemented and needs final artifact rehearsal."
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "7b7b761f28dd8d62f49239ab5d99cf30f171fd65",
+    "lastRecordedCommit": "500608818c29b181548b0740406add89cb3c6549",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -1016,6 +1016,91 @@
         "strictFrozenPeers": "passed",
         "referenceDigestComparisons": 3,
         "evidence": "docs/upgrade-2026-ai-provenance-dependency.md"
+      },
+      "aiActualEvaluationBindings": {
+        "commit": "f4da2a63a8845867910a1094d5bd1318c6caa500",
+        "tree": "449010cb3d2e7d73e02659351eb32d28e5dca634",
+        "testsPassed": 105,
+        "files": 13,
+        "rootWebExecutorTypes": "passed",
+        "specReferences": 4571,
+        "productionBuild": "passed",
+        "parentTests": 49,
+        "additionalAdversarialControls": 4,
+        "reviewedFindingsFixed": ["stale corpus/request provenance", "wrong or missing actual reported model"],
+        "independentlyHumanReviewedCases": 0,
+        "liveMeasurements": 0,
+        "evidence": "docs/upgrade-2026-ai-work.md"
+      },
+      "guidedCurrentLossOrigins": {
+        "commit": "8cf0e8ea796b2625b98b8cb46c629c9e082bd96e",
+        "tree": "1dd40361f86b6f1a6d21b30313a7f2657531dfb3",
+        "testsPassed": 773,
+        "files": 79,
+        "rootWebTypes": "passed",
+        "specReferences": 4568,
+        "productionBuild": "passed",
+        "browserCases": 2,
+        "browserRetries": 0,
+        "independentAgentReviewCases": 6,
+        "evidence": "docs/upgrade-2026-facts-work.md"
+      },
+      "providerLifecycleRefresh": {
+        "commit": "b828ee4d96e35516c0f339a808e93dcae5cdf5ed",
+        "tree": "4b2808c96814c5bcf200ed54bd41917a7603314e",
+        "testsPassed": 106,
+        "files": 13,
+        "rootWebExecutorTypes": "passed",
+        "specReferences": 4584,
+        "productionBuild": "passed",
+        "parentTests": 18,
+        "gpt5MiniShutdown": "2026-12-11T00:00:00Z",
+        "publicProfiles": 5,
+        "accountAvailability": "unverified",
+        "liveMeasurements": 0,
+        "evidence": "docs/upgrade-2026-ai-work.md"
+      },
+      "ordinaryCapitalLossOrigins": {
+        "commit": "3ff896ce9e53fde1d95c96e856203d6c0e4f6d9b",
+        "reviewedTree": "7c2a21851e60a749dc2fc9edc3e731ef0b001c12",
+        "testsPassed": 649,
+        "files": 21,
+        "rootWebTypes": "passed",
+        "specReferences": 4583,
+        "renderedPages": 4,
+        "independentAgentTests": 12,
+        "independentAgentProbes": 4,
+        "finalSmokeTests": 8,
+        "evidence": "docs/upgrade-2026-federal-work.md"
+      },
+      "actualDigitalAssetSources": {
+        "commit": "e7bd6e86c5bbc334c89eab649c14e64701299431",
+        "reviewedTree": "0545046e48cef24986b3c456ccc7098a1d505f37",
+        "committedTree": "ba957a22c0031a3702951159effbd628f60e1267",
+        "testsPassed": 646,
+        "rootTypes": "passed",
+        "specReferences": 4597,
+        "finalFocusedTests": 100,
+        "independentAgentTests": 8,
+        "reviewedFindingFixed": "known new special facts bypassing legacy source compatibility",
+        "evidence": "docs/upgrade-2026-facts-work.md"
+      },
+      "digitalReportingReviewPackets": {
+        "commit": "500608818c29b181548b0740406add89cb3c6549",
+        "tree": "91a28cb1dbe63589cf8526295a86b92f877daf3b",
+        "testsPassed": 1756,
+        "files": 145,
+        "rootWebTypes": "passed",
+        "specReferences": 4603,
+        "engineWebBuilds": "passed",
+        "lintErrors": 0,
+        "lintExistingWarnings": 2,
+        "independentAgentCasesAndProbes": 7,
+        "independentlyReopenedPages": 14,
+        "finalRenderedPagesInspected": 8,
+        "allReportingCategories": 12,
+        "evidence": "docs/upgrade-2026-digital-reporting-work.md",
+        "boundary": "Local synthetic software and bounded agent review; no human, filing or final2026 form qualification"
       }
     },
     "externalInputsStillPending": [
@@ -1032,13 +1117,23 @@
       "final multi-platform release images"
     ],
     "workInProgress": [
-      "Actual current-year Form172 guided collector: immutable5a3c5ef5 passes768tests/78files, root/web types/spec/build and six independent review cases; production desktop/mobile checks ongoing.",
-      "Remaining federal ordinary investment-capital origins and finite enabled-source audit; advanced deliberately unsupported methods are identified separately from required enabled-scenario gaps.",
-      "Actual-schema AI evaluation/scorer binding: stale corpus fix passes parent probe and42tests; imported mismatched/missing reported model still accepted and fix is underway. All240cases human-unreviewed; zero live calls/promotion.",
+      "OrdinaryDA document/guided/state handoff and actual capital-origin collector; source core and all12 reporting categories are committed and independently reviewed.",
+      "Positive1202 current origins where statutory/printed traces reconcile; concrete negative-net overlap remains an unresolved tax interpretation, not completed support.",
+      "PositiveATNOL/current public-cash charity, prior/mixed charitable carry,2026 nonitemizer carry and source-bound COD vintage reductions.",
+      "Enabled-scenario source/calculation/review/readiness audit; deliberately unsupported special methods remain distinct from external dependencies.",
+      "Actual-schema AI evaluation/scorer fixes and provider documentation refresh are committed; all240cases remain human-unreviewed with zero live results/promotion.",
       "Current integration/inventory/fullcoverage/browser/remoteCI and final native images/SBOMs/scans/recovery rehearsal.",
       "External staging/providerbudget/humanreview/state-demand/final-form inputs remain unanswered."
     ],
-    "latestIntegratedCommit": "7b7b761f28dd8d62f49239ab5d99cf30f171fd65",
+    "latestIntegratedCommit": "500608818c29b181548b0740406add89cb3c6549",
+    "activeIntegrationRun": {
+      "commit": "500608818c29b181548b0740406add89cb3c6549",
+      "command": "pnpm test --maxWorkers=1",
+      "status": "running",
+      "directory": "/private/tmp/tax-engine-checks-_l373hs5",
+      "evidence": ".local/upgrade-evidence/full-unit-5006088.log",
+      "scope": "Immutable pushed source with pinned Python/pypdf, sample downloads and disposable local PostgreSQL; concurrent WIP excluded"
+    },
     "latestCoverageDiagnostic": {
       "status": "failed-tests-coverage-thresholds-met",
       "commit": "e8e169a39a4917744c634378628f717af748759b",
@@ -1334,7 +1429,7 @@
       "scope": "Exact isolated f8c6222 plus single-write PDF package; locked dependencies, Node24.22.1, pinned pypdf and disposable local PostgreSQL16. Thresholds unchanged.",
       "limitation": "Excludes newer in-kind education, Ohio and agent changes. Current integrated and final release gates still require a fresh run. Synthetic local evidence only."
     },
-    "lastPushedCommit": "7b7b761f28dd8d62f49239ab5d99cf30f171fd65",
+    "lastPushedCommit": "500608818c29b181548b0740406add89cb3c6549",
     "currentBrowserRun": {
       "commit": "1791979c3413516df211e3109d05d78ee0084a40",
       "status": "passed-with-hosted-skips",
@@ -1410,59 +1505,65 @@
     },
     "remoteCiLatestObserved": {
       "date": "2026-10-25",
-      "commit": "7b7b761f28dd8d62f49239ab5d99cf30f171fd65",
+      "commit": "500608818c29b181548b0740406add89cb3c6549",
       "runs": [
         {
           "conclusion": "",
-          "databaseId": 40230955481,
-          "headSha": "7b7b761f28dd8d62f49239ab5d99cf30f171fd65",
-          "status": "pending",
-          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40230955481",
-          "workflowName": "Web"
-        },
-        {
-          "conclusion": "",
-          "databaseId": 40230955434,
-          "headSha": "7b7b761f28dd8d62f49239ab5d99cf30f171fd65",
-          "status": "queued",
-          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40230955434",
-          "workflowName": "CI"
-        },
-        {
-          "conclusion": "cancelled",
-          "databaseId": 40230765437,
-          "headSha": "9e804145c2578f5dc2dc94c4ec95237b88d37d58",
-          "status": "completed",
-          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40230765437",
-          "workflowName": "CI"
-        },
-        {
-          "conclusion": "",
-          "databaseId": 40230765492,
-          "headSha": "9e804145c2578f5dc2dc94c4ec95237b88d37d58",
+          "createdAt": "2026-10-25T21:05:03Z",
+          "databaseId": 40233791627,
+          "headSha": "500608818c29b181548b0740406add89cb3c6549",
           "status": "in_progress",
-          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40230765492",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40233791627",
           "workflowName": "Web"
         },
         {
-          "conclusion": "cancelled",
-          "databaseId": 40230686554,
-          "headSha": "d078cf47426307c38c0bc586e3d10ddb21b3bb36",
-          "status": "completed",
-          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40230686554",
+          "conclusion": "",
+          "createdAt": "2026-10-25T21:05:03Z",
+          "databaseId": 40233791595,
+          "headSha": "500608818c29b181548b0740406add89cb3c6549",
+          "status": "in_progress",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40233791595",
           "workflowName": "CI"
         },
         {
           "conclusion": "cancelled",
-          "databaseId": 40230686762,
-          "headSha": "d078cf47426307c38c0bc586e3d10ddb21b3bb36",
+          "createdAt": "2026-10-25T21:00:05Z",
+          "databaseId": 40233377231,
+          "headSha": "e7bd6e86c5bbc334c89eab649c14e64701299431",
           "status": "completed",
-          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40230686762",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40233377231",
+          "workflowName": "Web"
+        },
+        {
+          "conclusion": "cancelled",
+          "createdAt": "2026-10-25T21:00:05Z",
+          "databaseId": 40233377220,
+          "headSha": "e7bd6e86c5bbc334c89eab649c14e64701299431",
+          "status": "completed",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40233377220",
+          "workflowName": "CI"
+        },
+        {
+          "conclusion": "cancelled",
+          "createdAt": "2026-10-25T20:53:14Z",
+          "databaseId": 40232867347,
+          "headSha": "3ff896ce9e53fde1d95c96e856203d6c0e4f6d9b",
+          "status": "completed",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40232867347",
+          "workflowName": "CI"
+        },
+        {
+          "conclusion": "cancelled",
+          "createdAt": "2026-10-25T20:53:14Z",
+          "databaseId": 40232867412,
+          "headSha": "3ff896ce9e53fde1d95c96e856203d6c0e4f6d9b",
+          "status": "completed",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40232867412",
           "workflowName": "Web"
         }
       ],
-      "evidence": ".local/upgrade-evidence/remote-runs-2026-10-25-ira-committed.json",
-      "boundary": "Current CI queued and Web pending; no exact-current remote pass."
+      "evidence": ".local/upgrade-evidence/remote-runs-digital-committed.json",
+      "boundary": "Latest current-head CI/Web in progress; no remote pass or release qualification."
     },
     "remoteCi6b07529": {
       "run": 40176974652,
@@ -1930,10 +2031,10 @@
     },
     "remoteRunsInProgress": {
       "observed": "2026-10-25",
-      "head": "7b7b761f28dd8d62f49239ab5d99cf30f171fd65",
-      "CI": 40230955434,
-      "Web": 40230955481,
-      "status": "CI queued; Web pending",
+      "head": "500608818c29b181548b0740406add89cb3c6549",
+      "CI": 40233791595,
+      "Web": 40233791627,
+      "status": "Both in progress",
       "boundary": "No final remote green or release qualification."
     },
     "containerOriginVerification": {
