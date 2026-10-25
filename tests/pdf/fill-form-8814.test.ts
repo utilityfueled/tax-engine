@@ -65,7 +65,7 @@ describe("Form 8814 packet reference summary", () => {
       {
         childNumber: 1,
         status: "applicable",
-        note: "Supported Form 8814 election applies for this child.",
+        note: "Child income is within the Form 8814 computation range. Eligibility is validated separately from this reference summary.",
         lines: [
           {
             line: "1b",
@@ -114,7 +114,7 @@ describe("Form 8814 packet reference summary", () => {
       {
         childNumber: 2,
         status: "applicable",
-        note: "Supported Form 8814 election applies for this child.",
+        note: "Child income is within the Form 8814 computation range. Eligibility is validated separately from this reference summary.",
         lines: [
           {
             line: "1b",
@@ -151,7 +151,7 @@ describe("Form 8814 packet reference summary", () => {
     ]);
     expect(summary.totals).toEqual([
       {
-        label: "Parent Form 1040 Line 2a addition",
+        label: "Child tax-exempt interest for dependent worksheets (not parent Line 2a)",
         value: "30",
       },
       {

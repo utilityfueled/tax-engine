@@ -54,6 +54,7 @@ export interface Form8814ReferenceSummary {
 function sanitizePdfText(text: string) {
   return text
     .replace(/→/g, "->")
+    .replace(/×/g, "x")
     .replace(/[−–—]/g, "-")
     .replace(/[^\x20-\x7E\n\t]/g, "");
 }
@@ -146,7 +147,7 @@ function getChildStatus(child: Form8814Result): Form8814ReferenceSummaryChild["s
 
 function getChildNote(child: Form8814Result): string {
   if (child.applies) {
-    return "Supported Form 8814 election applies for this child.";
+    return "Child income is within the Form 8814 computation range. Eligibility is validated separately from this reference summary.";
   }
 
   if (child.exceedsMaximum) {
@@ -164,7 +165,7 @@ export function buildForm8814ReferenceSummary(result: AggregatedForm8814): Form8
     warningLabel: "REFERENCE SUMMARY ONLY",
     childCount: result.children.length,
     applicableChildCount,
-    introduction: `Computed from ${result.children.length} supported child interest/dividend election input${result.children.length === 1 ? "" : "s"}. This summary shows the supported Form 8814 outputs that flow to the parent's Form 1040 when the election applies.`,
+    introduction: `Computed from ${result.children.length} child interest/dividend input${result.children.length === 1 ? "" : "s"}. This summary separates child worksheet information from parent return transfers. Election eligibility is validated separately before creating the return packet.`,
     children: result.children.map((child, index) => ({
       childNumber: index + 1,
       status: getChildStatus(child),
@@ -173,7 +174,7 @@ export function buildForm8814ReferenceSummary(result: AggregatedForm8814): Form8
     })),
     totals: [
       {
-        label: "Parent Form 1040 Line 2a addition",
+        label: "Child tax-exempt interest for dependent worksheets (not parent Line 2a)",
         value: result.totalTaxExemptInterest.toString(),
       },
       {
@@ -318,7 +319,7 @@ export async function fillForm8814Reference(
     newPage();
   }
 
-  y = drawWrappedText(page, "Aggregate parent-return totals", {
+  y = drawWrappedText(page, "Child worksheet amounts and parent-return totals", {
     font: bold,
     size: BODY_FONT_SIZE,
     x: PAGE_MARGIN,
