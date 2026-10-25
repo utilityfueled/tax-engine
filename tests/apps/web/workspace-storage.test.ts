@@ -1088,7 +1088,7 @@ describe("workspace storage", () => {
           line: "15",
           label: "Net long-term capital gain/loss",
           value: "1000",
-          formula: "Form 8949 Part II + K-1 Box 9a + K-1 1041 Box 4a + K-1 1041 Box 11D + Form 4797 Line 9 + 1099-DIV Box 2a + prior LT carryforward - §1202 exclusion + home sale gain + Form 6781 long-term + Form 6252 long-term",
+          formula: "Form 8949 Part II after Q adjustments + K-1 Box 9a + K-1 1041 Box 4a + K-1 1041 Box 11D + Form 4797 Line 9 + 1099-DIV Box 2a + prior LT carryforward + home sale gain + Form 6781 long-term + Form 6252 long-term",
           sourceFactIds: [
             "ordinary-dividends:document-detected",
             "ordinary-dividends:fixture-dividend-income",
@@ -1344,7 +1344,7 @@ describe("workspace storage", () => {
           line: "15",
           label: "Net long-term capital gain/loss",
           value: "50000",
-          formula: "Form 8949 Part II + K-1 Box 9a + K-1 1041 Box 4a + K-1 1041 Box 11D + Form 4797 Line 9 + 1099-DIV Box 2a + prior LT carryforward - §1202 exclusion + home sale gain + Form 6781 long-term + Form 6252 long-term",
+          formula: "Form 8949 Part II after Q adjustments + K-1 Box 9a + K-1 1041 Box 4a + K-1 1041 Box 11D + Form 4797 Line 9 + 1099-DIV Box 2a + prior LT carryforward + home sale gain + Form 6781 long-term + Form 6252 long-term",
           sourceFactIds: [
             "broker-proceeds:document-detected",
             "broker-proceeds:fixture-long-term-sale:irs-1099-b-2025:f1099b--2025.pdf:12",
