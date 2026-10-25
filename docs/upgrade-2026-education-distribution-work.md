@@ -453,3 +453,77 @@ references; the scoped lint check reported no findings. Logs:
 `education-outside-credit-staged-{tests,types,spec}.log` and
 `education-outside-credit-lint.log`. Only the core guard, its spec/regression and
 this evidence document are included in the package.
+
+## Educator education-exclusion reconciliation (2026-10-25)
+
+Outside-recipient credit coordination is committed as `475e96d`. The finite
+educator follow-up adds a pure reconciliation helper; federal placement remains
+with the federal owner. It compares each confirmed educator's declared
+reductions exactly to calculated current-year exclusions for that actual
+recipient. It excludes another recipient, returned contributions, basis and
+transfer earnings. A positive QTP education exclusion needs actual cash medium;
+unknown and in-kind prepaid treatment remain unresolved. An explicitly supplied
+zero with no source result is the educator's declaration of none, not an
+inferred external record.
+
+Sources reopened: [current section62(d)(2)](https://uscode.house.gov/us/usc/119-118/t26/s62/)
+(the retrieved page includes laws through PL119-120, October7,2026),
+[final2025 Schedule1line11 instructions](https://www.irs.gov/instructions/i1040gi),
+[Publication970 chapters6/7](https://www.irs.gov/publications/p970) and the
+[linked Publication529](https://www.irs.gov/publications/p529), whose 12/2020
+QTP-earnings wording is corroboration only. No old publication supplies2026
+eligibility or inflation amounts. The basis/earnings distinction follows the
+actual source calculations; the helper does not recalculate distributions.
+
+A positive final bond exclusion binds directly only when every eligible actual
+source establishes the same taxpayer or spouse owner. Mixed or jointly
+registered bonds remain blocked because the retrieved sources do not establish
+a discretionary per-owner split. Parent independent review identified that a
+confirmed taxpayer worksheet could not replace the missing statutory method;
+the proposed manual-allocation schema and acceptance were removed before commit.
+The regression rejects even a supplied confirmed split. A zero final exclusion
+remains zero. Source interest must reconcile to the rounded Form8815 interest
+worksheet before attribution; no rounding difference is assigned to an owner.
+No halves, proportional shares or external amounts are inferred. The audit uses
+owner labels and calculated values without exposing private source references.
+
+Spec preceded the new tests/helper. The first suite could not import the absent
+helper; the initial implementation then exposed one fixture expectation that
+incorrectly used source-box cents instead of the upstream worksheet's rounded
+exclusion. The corrected fixture preserves the existing upstream calculation.
+An intermediate source-capacity red regression helped identify the allocation
+boundary; the final method rejects all positive mixed/joint allocations pending
+authority rather than validate a discretionary split. All6 final helper tests
+pass (`educator-exclusion-joint-guard.log`). The preceding56-test source cohort
+passed before that review correction; final adjacent and immutable checks follow.
+
+Source-derived controls: cashQTP Box2 amounts200.10 and100.20 produce final
+upstream exclusions200 and100; the helper requires those final amounts. The
+published ESA850 distribution/1500 basis/950 ending-value example yields142
+education-excluded earnings when fully qualified. An eligible paperEE bond with
+10000 proceeds less8000 principal has2000 interest; below the phaseout threshold
+its final exclusion binds to its actual sole registered owner. A noneducator
+spouse's exclusion remains with that spouse. Mixed-owner or jointly registered
+bonds do not become a primary educator's exclusion merely because a joint
+return was filed. No taxpayer-supplied allocation establishes missing tax law.
+
+The guided intake currently has no actual Form8815/bond-record path. The parent
+assigned that narrow intake as the next finite education package, coordinated
+with the facts agent's flow/bridge ownership. It remains internal software work,
+not an external credential or qualification blocker. No filing readiness or
+model promotion gate is changed.
+
+Bounded independent review of the parent's Ohio government-income adapter found
+no actionable findings after refreshing ORC5747.05(E) and the final2025 Ohio
+Schedule of Credits line12. All3 new tests passed independently in
+`ai-oh-government-review.log`. This is agent software/source review only.
+
+Final reviewed helper checks:56 tests across five files, root types and scoped
+lint pass. Exact staged tree `4483931d` independently passes the same56 tests,
+root types and all3820 spec references. Logs:
+`educator-exclusion-reviewed-{tests,types,lint}.log` and
+`educator-exclusion-staged-{tests,types,spec}.log`. The archive uses the pinned
+local PDF Python environment required by the test launcher. The working-tree
+web check encountered only the separate in-progress health-insurance intake
+fields; no web files are included in this core package. Four scoped files are
+staged; the discarded owner-allocation schema is absent.

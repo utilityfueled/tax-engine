@@ -1,0 +1,75 @@
+form: "Educator education-exclusion reconciliation"
+fullName: "Actual per-owner education exclusions used in the educator expense worksheet"
+taxYear: 2026
+irsReference: "https://uscode.house.gov/us/usc/119-118/t26/s62/"
+retrievedAt: "2026-10-25"
+notes: |
+  Applies to supported2025/2026 source calculations. IRC62(d)(2) requires the
+  expense reduction for amounts excludable under135/529(c)(1)/530(d)(2).
+  The retrieved current Code page contains laws through PL119-120(2026-10-07).
+  Final2025 Form1040 instructions Schedule1line11 list bond interest, QTP
+  earnings or distributions, and Coverdell earnings. Publication970 chapters6/7
+  distinguish education-excluded earnings from basis and valid transfers.
+  Publication529(12/2020), linked by final1040 instructions, explicitly describes
+  QTP earnings; it is corroboration, not a current-year eligibility source.
+  Cash QTP uses calculated education-excluded earnings. In-kind prepaid tuition
+  or unknown medium remains unsupported for this reconciliation. No source is
+  manufactured from an external amount or an absent ledger. Actual zero in the
+  confirmed educator worksheet is a declaration of none, not an inferred source.
+  The retrieved sources do not establish a discretionary mixed/joint bond
+  exclusion split. Positive mixed/joint ownership remains an unresolved statutory
+  allocation method; taxpayer-supplied amounts cannot substitute for that method.
+  Sources: https://www.irs.gov/instructions/i1040gi
+  https://www.irs.gov/publications/p970
+  https://www.irs.gov/publications/p529
+lines:
+  - line: "owner-education-exclusions"
+    description: "Reconcile actual cashQTP and Coverdell earnings by recipient"
+    formula: |
+      For each actual educator owner, sum only that primary/spouse recipient's
+      current-year ordinary educationExpenseExcludedEarnings from verified
+      Form1099Q sources. Keep QTP and Coverdell totals separate. Exclude other
+      recipients, basis, valid-transfer earnings and returned contributions.
+      Require actual cash medium for positive own QTP education exclusions.
+      Claimed educator reductions must equal these calculated totals exactly;
+      preserve Decimal cents and do not move expenses or another owner's income.
+    testRef: "tests/engine/forms/educator-education-exclusions.test.ts::reconciles only actual recipient education earnings with exact cents"
+  - line: "missing-source"
+    description: "Keep known zero separate from missing and unverified sources"
+    formula: |
+      Require confirmed actual educator owner/year and each nonnegative reduction.
+      Positive reductions need a complete calculated current-year source result.
+      Reject unverified present education/bond results, wrong years, duplicates,
+      mismatched totals and unsupported QTP medium. A missing result can reconcile
+      only an explicitly supplied zero; it never supports a positive external claim.
+    testRef: "tests/engine/forms/educator-education-exclusions.test.ts::rejects missing unverified or contradictory education reductions"
+  - line: "sole-bond-owner"
+    description: "Bind a final bond exclusion to its sole actual eligible owner"
+    formula: |
+      Use the verified final Form8815 exclusion and match every calculated
+      redemption to its unique actual bond source. If all eligible source bonds
+      have one actual registeredOwner taxpayer or spouse, bind the final exclusion
+      to that owner. Never assign a noneducator spouse's exclusion to the educator.
+      Missing/duplicate/mismatched ownership or unverifiable source facts reject.
+    testRef: "tests/engine/forms/educator-education-exclusions.test.ts::binds a final bond exclusion only to its actual sole eligible owner"
+  - line: "joint-bond-allocation"
+    description: "Reject unsupported mixed or joint bond attribution"
+    formula: |
+      Positive final exclusion with mixed or jointly registered eligible bonds
+      remains unresolved pending a source-backed statutory allocation method.
+      No discretionary, half, proportional or taxpayer-supplied split establishes
+      that method. A zero final exclusion needs no allocation and remains zero.
+    testRef: "tests/engine/forms/educator-education-exclusions.test.ts::blocks an unresolved joint bond attribution instead of accepting an invented split"
+  - line: "bond-source-reconciliation"
+    description: "Retain actual ownership and rounded source interest"
+    formula: |
+      Each calculated redemption must match one complete actual bond source with
+      known ownership and eligibility. Actual eligible current-year interest,
+      rounded after summing, must equal the final Form8815line6 amount before a
+      positive exclusion is attributed. An inconsistent source rounding worksheet
+      rejects explicitly; it is not repaired with an invented owner amount.
+    testRef: "tests/engine/forms/educator-education-exclusions.test.ts::refuses incomplete bond ownership and inconsistent interest worksheets"
+  - line: "audit"
+    description: "Record reconciled owner reductions without changing calculations"
+    formula: "Return one audit line per educator owner and exclusion type, with claimed and calculated Decimal values; return source totals for both owners. Do not include account numbers, taxpayer IDs or free-form source references in audit output. No educator deductions are recomputed or costs reassigned."
+    testRef: "tests/engine/forms/educator-education-exclusions.test.ts::records reconciled reductions without exposing source references or changing inputs"
