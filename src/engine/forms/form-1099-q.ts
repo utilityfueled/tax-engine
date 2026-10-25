@@ -32,6 +32,7 @@ export interface Form1099QResult {
   coverdellAccounts: Array<{ accountId: string; beneficiaryId: string; distributedBasis: Decimal; earnings: Decimal; endingBasis: Decimal }>;
   /** Opaque beneficiary links only; personal tax identifiers are not calculation output. */
   creditAllocations: Array<{ beneficiaryId: string; amount: Decimal; taxableEarningsCausedByCredit: Decimal }>;
+  loanInterestSourceAdjustments: Array<{ expenseId: string; borrowerId: string; owner: "primary" | "spouse" | "other"; interestPaid: Decimal; taxFreeEarningsUsedForInterest: Decimal; interestClaimedElsewhere: Decimal }>;
   loanInterestAdjustments: Array<{ borrowerId: string; owner: "primary" | "spouse" | "other"; interestPaid: Decimal; taxFreeEarningsUsedForInterest: Decimal; interestClaimedElsewhere: Decimal }>;
   /** Total gross distributions (sum of Box 1) */
   grossDistribution: Decimal;
@@ -249,7 +250,7 @@ export function calculateForm1099Q(
     });
 
   return {
-    sourceFactsVerified: false, taxYear, perDistribution: [], perRecipient: [], coverdellAccounts: [], creditAllocations: [], loanInterestAdjustments: [],
+    sourceFactsVerified: false, taxYear, perDistribution: [], perRecipient: [], coverdellAccounts: [], creditAllocations: [], loanInterestSourceAdjustments: [], loanInterestAdjustments: [],
     grossDistribution,
     totalEarnings,
     totalBasis,
@@ -678,12 +679,12 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
     return { sourceId: form.sourceId, accountId: form.accountId, accountType: form.accountType, beneficiaryId: form.beneficiaryId, recipientOwner: form.recipientOwner, recipientId: form.recipientOwner === "other" ? (form.recipientId ?? "") : form.recipientOwner, grossDistribution: gross, earnings, basis, validTransfers: transfer, adjustedQEE: allocated, taxableEarnings: taxable, taxFreeEarnings: taxFree, educationExpenseExcludedEarnings, transferExcludedEarnings, creditException, penaltyException };
   });
   for (const exception of exceptions) if (!sources.has(exception.sourceId)) throw new Error("Form1099Q exception references missing distribution source");
-  const loanInterestAdjustments: Form1099QResult["loanInterestAdjustments"] = [...borrowers.values()].map(borrower => {
-    if (!borrower.owner) throw new Error("Form1099Q actual student-loan borrower ownership is required");
-    const actualExpenses = [...expenses.values()].filter(item => item.category === "student_loan" && item.borrowerId === borrower.id);
-    const interestPaid = sum(...actualExpenses.map(item => actualAmount(item.studentLoanInterestAmount, "borrower interest paid")));
-    const interestClaimedElsewhere = sum(...actualExpenses.map(item => actualAmount(item.studentLoanInterestDeducted, "borrower interest claimed for deduction before phase-out")));
-    const taxFreeEarningsUsedForInterest = sum(...allocations.filter(item => item.expense.borrowerId === borrower.id && item.loanInterest.gt(0)).map(item => {
+  const loanInterestSourceAdjustments: Form1099QResult["loanInterestSourceAdjustments"] = [...expenses.values()].filter(item => item.category === "student_loan").map(expense => {
+    const borrower = borrowers.get(expense.borrowerId ?? "");
+    if (!borrower?.owner) throw new Error("Form1099Q actual student-loan borrower ownership is required");
+    const interestPaid = actualAmount(expense.studentLoanInterestAmount, "expense interest paid");
+    const interestClaimedElsewhere = actualAmount(expense.studentLoanInterestDeducted, "expense interest claimed for deduction before phase-out");
+    const taxFreeEarningsUsedForInterest = sum(...allocations.filter(item => item.expense.id === expense.id && item.loanInterest.gt(0)).map(item => {
       const distribution = perDistribution.find(row => row.sourceId === item.form.sourceId);
       if (!distribution || item.amount.isZero() || distribution.grossDistribution.isZero() || distribution.adjustedQEE.isZero()) return ZERO;
       const sourceShare = item.loanInterest.mul(item.allowed).div(item.amount);
@@ -691,7 +692,16 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
       return zeroFloor(distribution.earnings).mul(sourceShare).mul(fundingShare).div(distribution.grossDistribution);
     }));
     if (interestClaimedElsewhere.plus(taxFreeEarningsUsedForInterest).gt(interestPaid)) throw new Error("Form1099Q loan interest claimed for deduction includes tax-free QTP earnings");
-    audit.record("Form1099-Q", `${borrower.id}:loan-interest-reduction`, "Tax-free QTP earnings used for student-loan interest", taxFreeEarningsUsedForInterest, "Actual interest allocation times source earnings ratio, after loan and distribution limits", { "Actual interest paid": interestPaid, "Interest claimed before deduction phase-out": interestClaimedElsewhere });
+    audit.record("Form1099-Q", `loan-expense:${expense.id}:loan-interest-reduction`, "Tax-free QTP earnings used for this loan expense's interest", taxFreeEarningsUsedForInterest, "Actual interest allocation times source earnings ratio, after loan and distribution limits", { "Actual interest paid": interestPaid, "Interest claimed before deduction phase-out": interestClaimedElsewhere });
+    return { expenseId: expense.id, borrowerId: borrower.id, owner: borrower.owner, interestPaid, taxFreeEarningsUsedForInterest, interestClaimedElsewhere };
+  });
+  const loanInterestAdjustments: Form1099QResult["loanInterestAdjustments"] = [...borrowers.values()].map(borrower => {
+    if (!borrower.owner) throw new Error("Form1099Q actual student-loan borrower ownership is required");
+    const rows = loanInterestSourceAdjustments.filter(item => item.borrowerId === borrower.id);
+    const interestPaid = sum(...rows.map(item => item.interestPaid));
+    const interestClaimedElsewhere = sum(...rows.map(item => item.interestClaimedElsewhere));
+    const taxFreeEarningsUsedForInterest = sum(...rows.map(item => item.taxFreeEarningsUsedForInterest));
+    audit.record("Form1099-Q", `${borrower.id}:loan-interest-reduction`, "Tax-free QTP earnings used for borrower loan interest", taxFreeEarningsUsedForInterest, "Sum actual linked expense amounts", { "Actual interest paid": interestPaid, "Interest claimed before deduction phase-out": interestClaimedElsewhere });
     return { borrowerId: borrower.id, owner: borrower.owner, interestPaid, taxFreeEarningsUsedForInterest, interestClaimedElsewhere };
   });
   const recipientKeys = [...new Set(perDistribution.map(item => `${item.recipientOwner}:${item.recipientId}`))];
@@ -735,7 +745,7 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
   const taxFreeEarnings = sum(...perDistribution.map(item => item.taxFreeEarnings));
   const grossPenalty = roundDollar(taxableEarnings.mul(PENALTY_RATE));
   for (const [line, description, amount] of [["gross-distribution", "All source gross distributions", grossDistribution], ["total-earnings", "All source earnings", totalEarnings], ["total-basis", "All source basis", totalBasis], ["adjusted-qee", "Actual allocated adjusted expenses", adjustedQEE], ["taxable-earnings", "Education earnings taxable on this return", taxableEarnings], ["tax-free-earnings", "Qualified distribution earnings", taxFreeEarnings], ["penalty-amount", "Gross additional tax before exceptions", grossPenalty], ["penalty-exception-amount", "Own-return taxable earnings excepted from additional tax", penaltyExceptionAmount], ["net-penalty", "Own-return additional tax after exceptions", netPenalty]] as const) audit.record("Form1099-Q", line, description, amount, "Sum separately calculated source/recipient results; other recipients excluded from return income and tax");
-  return { sourceFactsVerified: true, taxYear: options.taxYear, perDistribution, perRecipient, coverdellAccounts: accountResults, creditAllocations, loanInterestAdjustments,
+  return { sourceFactsVerified: true, taxYear: options.taxYear, perDistribution, perRecipient, coverdellAccounts: accountResults, creditAllocations, loanInterestSourceAdjustments, loanInterestAdjustments,
     grossDistribution, totalEarnings, totalBasis, trusteeToTrusteeTransfers, taxableGrossDistribution: grossDistribution.minus(trusteeToTrusteeTransfers),
     taxableDistributionEarnings: sum(...perDistribution.map(item => item.earnings.minus(item.transferExcludedEarnings))), adjustedQEE, taxableEarnings, taxFreeEarnings, grossPenalty, penaltyExceptionAmount, netPenalty, lines: audit.getLines() };
 }

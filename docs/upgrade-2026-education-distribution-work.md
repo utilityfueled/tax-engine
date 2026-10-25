@@ -7,7 +7,7 @@ Official sources refreshed 2026-10-25: [Pub. 970](https://www.irs.gov/publicatio
 - [x] Inspect current source law and existing implementation. Existing global QTP aggregation, unconditional Box4 exclusion, and raw scholarship-dollar earnings exception are not sufficient for verified2026 calculations.
 - [x] Write source-first specification covering identities, expense allocation, K12/credential changes, account worksheets, actual transfers and additional tax.
 - [x] Red-first ordinary distribution/source/schema calculations and Decimal implementation; source edge cases below remain explicitly blocked.
-- [ ] Federal actual-recipient and final education-credit allocation reconciliation.
+- [x] Federal actual-recipient and final education-credit allocation reconciliation (6b07529); loan and educator source reconciliation remains coordinated separately.
 - [ ] Guided source collection and actual credit/distribution expense coordination.
 - [ ] Audited reference summary and actual Form5329 PartII owner integration.
 - [ ] Relevant suites, diff review, saved-PDF inspection, scoped commits.
@@ -84,3 +84,18 @@ types, and all3653 spec references present in that archive. The first isolated
 test invocation reported the missing PDF-test Python configuration; rerunning
 with the existing pinned `.local/pdf-test-venv/bin/python` passed. No dependency
 or threshold was changed. Immutable test log: `education-core-immutable-tests.log`.
+
+
+Core source package committed as `eaaeb04`. The following source-link correction
+adds `loanInterestSourceAdjustments` per actual expense, retaining borrower totals
+for compatibility. This prevents one loan's unused interest from hiding a
+positive overclaim on another loan. The vector contains expenseId, borrowerId,
+owner, actual interest paid, claimed interest and exact tax-free earnings used
+for that expense's interest. `interestPaid` covers entered education-ledger
+expenses only, not every loan payment the borrower made during the year.
+
+Red-first per-expense regression failed on the missing vector, then passed with
+103 core/source/edge tests (107 including the four in-progress intake tests).
+Root types and scoped lint passed. Logs: `education-loan-source-red.log`,
+`education-loan-source-green.log`, `education-guided-types.log`, and
+`education-guided-lint.log`. No changes to the rounding or exclusion formula.

@@ -101,6 +101,22 @@ describe("Form1099Q actual education distribution sources", () => {
     expect(() => calculateForm1099Q([form()], summary({ ...data.sourceFacts, expenses: [expense({ category: "student_loan", borrowerId: "borrower1", beneficiaryOrSibling: true, studentLoanInterestAmount: "1000", studentLoanInterestDeducted: "1000" })] }), { taxYear: 2026 })).toThrow(/loan interest.*tax-free|tax-free.*loan interest/);
   });
 
+  it("Form1099Q preserves per-expense loan interest links and rejects cross-loan overclaim", () => {
+    const data = summary({ expenses: [
+      expense({ id: "loan-a", category: "student_loan", amount: "5000", borrowerId: "borrower1", beneficiaryOrSibling: true, studentLoanInterestAmount: "1000", studentLoanInterestDeducted: "800" }),
+      expense({ id: "loan-b", category: "student_loan", amount: "1000", borrowerId: "borrower1", beneficiaryOrSibling: true, studentLoanInterestAmount: "100", studentLoanInterestDeducted: "100" }),
+    ], allocations: [{ expenseId: "loan-a", sourceId: "q1", amount: "5000", creditAmount: "0", loanInterestAmount: "1000" }],
+    loanBorrowers: [{ id: "borrower1", owner: "primary", priorQualifiedDistributions: "0", otherCurrentQualifiedDistributions: "0" }] });
+    const result = calculateForm1099Q([form()], data, { taxYear: 2026 });
+    expect(result.loanInterestSourceAdjustments.map(row => ({ ...row, interestPaid: row.interestPaid.toString(), interestClaimedElsewhere: row.interestClaimedElsewhere.toString(), taxFreeEarningsUsedForInterest: row.taxFreeEarningsUsedForInterest.toString() }))).toEqual([
+      { expenseId: "loan-a", borrowerId: "borrower1", owner: "primary", interestPaid: "1000", interestClaimedElsewhere: "800", taxFreeEarningsUsedForInterest: "200" },
+      { expenseId: "loan-b", borrowerId: "borrower1", owner: "primary", interestPaid: "100", interestClaimedElsewhere: "100", taxFreeEarningsUsedForInterest: "0" },
+    ]);
+    expect(result.loanInterestAdjustments[0]?.interestPaid.toString()).toBe("1100");
+    const overclaim = summary({ ...data.sourceFacts, expenses: data.sourceFacts?.expenses?.map(row => ({ ...row, studentLoanInterestDeducted: row.id === "loan-a" ? "900" : "0" })) });
+    expect(() => calculateForm1099Q([form()], overclaim, { taxYear: 2026 })).toThrow(/loan interest.*tax-free/);
+  });
+
   it("Form1099Q reproduces Pub970 credit coordination and preserves other recipients", () => {
     const inputs = [form({ grossDistribution: "5300", earnings: "950", basis: "4350" }), form({ sourceId: "q2", accountId: "account2", recipientOwner: "other", recipientId: "external-student1", recipientNotBeneficiary: false, grossDistribution: "1000", earnings: "200", basis: "800" })];
     const data = summary({ expenses: [expense({ amount: "8300", taxFreeAssistance: "3100", educationCreditAmount: "4000" })], allocations: [{ expenseId: "e1", sourceId: "q1", amount: "1200", creditAmount: "4000" }] });
