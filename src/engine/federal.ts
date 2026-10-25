@@ -95,7 +95,7 @@ import { calculateForm8606 } from "./forms/form-8606.js";
 import type { Form8606Result } from "./forms/form-8606.js";
 import { calculateSocialSecurityBenefitsWorksheet } from "./forms/social-security-benefits-worksheet.js";
 import type { QBISource } from "./forms/form-8995.js";
-import { calculateIraDeduction } from "./forms/ira-deduction-worksheet.js";
+import { calculateIraReturnWorksheet } from "./forms/ira-return-worksheet.js";
 import { calculateScheduleR } from "./forms/schedule-r.js";
 import { calculateForm8839 } from "./forms/form-8839.js";
 import { calculateEic } from "./forms/schedule-eic.js";
@@ -1379,96 +1379,8 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   // MFS filers cannot deduct alimony paid (pre-2019 divorce decrees)
   const alimonyPaid = d(input.adjustments?.alimonyPaid);
 
-  // ── IRA Deduction Worksheet ────────────────────────────────
-  // Per Pub 590-A, MAGI for IRA deduction = AGI computed without the IRA
-  // deduction itself. We approximate MAGI from pre-Schedule-1 income
-  // components minus non-IRA adjustments. Social Security taxable benefits
-  // and a few Schedule-1-only income items are not yet computed at this
-  // point but are typically small relative to total income for IRA
-  // contributors. The manual adjustments.iraDeduction fallback remains
-  // available when the worksheet is not provided.
-  let computedIraDeduction: Decimal | undefined;
+  // IRA deduction is coordinated once after all income components are known.
   let iraDeductionWorksheetResult: TaxReturnResult["iraDeductionWorksheet"];
-  if (input.iraDeductionWorksheet) {
-    const unemploymentForIraMagi = sum(
-      ...(input.form1099G ?? []).map((f) => d(f.unemploymentCompensation))
-    );
-    const preSchedule1Income = sum(
-      totalWages,
-      totalInterestBeforeSavingsBondExclusion,
-      totalDividends,
-      iraTaxable,
-      pensionTaxable,
-      capitalGainLoss,
-      schedCNetProfit,
-      adjustedScheduleETotal,
-      miscOtherIncome,
-      unemploymentForIraMagi,
-      totalGamblingWinnings,
-      form4797.ordinaryGainOrLoss,
-      section280FRecapture,
-    );
-    const preSchedule1NonIraAdjustments = sum(
-      schedSE.deductibleHalf,
-      seHealthInsurance,
-      earlyWithdrawalPenalty,
-      alimonyPaid,
-      d(input.adjustments?.hsaDeduction),
-      d(input.adjustments?.studentLoanInterest),
-      d(input.adjustments?.educatorExpenses),
-      d(input.adjustments?.primaryEducatorExpenses),
-      d(input.adjustments?.spouseEducatorExpenses),
-      d(input.adjustments?.archerMSADeduction),
-      d(input.adjustments?.armedForcesMovingExpenses),
-      d(input.adjustments?.businessExpenseAdjustments),
-      d(input.adjustments?.otherAdjustmentsTotal),
-    );
-    const iraMagi = preSchedule1Income.minus(preSchedule1NonIraAdjustments);
-
-    const ws = input.iraDeductionWorksheet;
-    const primaryAge50OrOlder = ws.primaryAge50OrOlder ?? isAge50OrOlder(input.taxpayer.primary.dateOfBirth, year);
-    const primaryResult = calculateIraDeduction({
-      filingStatus,
-      taxYear: year,
-      magi: iraMagi,
-      contributions: ws.primaryContributions,
-      isActiveParticipant: ws.primaryIsActiveParticipant,
-      isSpouseActiveParticipant: ws.spouseIsActiveParticipant ?? false,
-      age50OrOlder: primaryAge50OrOlder,
-      livedWithSpouseAtAnyTimeDuringYear: input.taxpayer.livedWithSpouseAtAnyTimeDuringYear,
-    });
-    audit.merge(primaryResult.lines);
-
-    let spouseResult: ReturnType<typeof calculateIraDeduction> | undefined;
-    let spouseDeduction = new Decimal(0);
-    if (
-      (filingStatus === "married_filing_jointly" || filingStatus === "qualifying_surviving_spouse") &&
-      d(ws.spouseContributions).greaterThan(0) &&
-      input.taxpayer.spouse
-    ) {
-      const spouseAge50OrOlder = ws.spouseAge50OrOlder ?? isAge50OrOlder(input.taxpayer.spouse.dateOfBirth, year);
-      spouseResult = calculateIraDeduction({
-        filingStatus,
-        taxYear: year,
-        magi: iraMagi,
-        contributions: ws.spouseContributions,
-        isActiveParticipant: ws.spouseIsActiveParticipant ?? false,
-        isSpouseActiveParticipant: ws.primaryIsActiveParticipant,
-        age50OrOlder: spouseAge50OrOlder,
-        livedWithSpouseAtAnyTimeDuringYear: input.taxpayer.livedWithSpouseAtAnyTimeDuringYear,
-      });
-      spouseDeduction = spouseResult.deductibleAmount;
-      audit.merge(spouseResult.lines);
-    }
-
-    computedIraDeduction = primaryResult.deductibleAmount.plus(spouseDeduction);
-    iraDeductionWorksheetResult = {
-      magi: iraMagi,
-      primary: primaryResult,
-      spouse: spouseResult,
-      totalDeduction: computedIraDeduction,
-    };
-  }
 
   // ── Form 1098-E aggregation (student loan interest) ──
   let form1098EResult: Form1098EResult | undefined;
@@ -1482,12 +1394,8 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     combinedStudentLoanInterest = form1098EResult.totalStudentLoanInterest.toString();
   }
 
-  // Build the input for Schedule 1, overriding iraDeduction if the worksheet computed one
-  // and studentLoanInterest if Form 1098-E aggregation produced a combined total
+  // Preserve actual aggregated student-loan source amounts for Schedule1.
   const adjustmentOverrides: Record<string, string> = {};
-  if (computedIraDeduction !== undefined) {
-    adjustmentOverrides.iraDeduction = computedIraDeduction.toString();
-  }
   if (combinedStudentLoanInterest !== undefined) {
     adjustmentOverrides.studentLoanInterest = combinedStudentLoanInterest;
   }
@@ -1515,7 +1423,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   }
 
   // Schedule 1 — formal line-by-line for audit trail
-  const sched1 = calculateSchedule1(sched1Input, {
+  const sched1Context = {
     schedCNetProfit: schedCNetProfit,
     schedFNetProfit: schedFNetProfit,
     schedETotal: adjustedScheduleETotal,
@@ -1528,8 +1436,12 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     form2555HousingDeduction,
     seHealthInsurance: seHealthInsuranceWorksheetResult?.deductibleAmount,
     taxableStateRefund,
+    seRetirementContributions: d(input.adjustments?.seRetirementContributions),
+  };
+  let sched1 = calculateSchedule1(sched1Input, {
+    ...sched1Context,
+    iraDeductionOverride: input.iraDeductionWorksheet ? new Decimal(0) : undefined,
   }, form4797);
-  audit.merge(sched1.lines);
   // Form 8814 Line 12 other income flows to Schedule 1 Line 8z
   const form8814OtherIncome = form8814?.totalOtherIncome ?? new Decimal(0);
   if (form8814OtherIncome.greaterThan(0)) {
@@ -1681,6 +1593,36 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
       if (!d(value).isFinite() || d(value).lt(0)) throw new Error("Social Security possession exclusions must be finite and nonnegative");
     }
   }
+  const incomeBeforeSocialSecurity = sum(totalWages,totalInterestBeforeSavingsBondExclusion,totalDividends,
+    iraTaxable,pensionTaxable,capitalGainLoss,schedCNetProfit,schedFNetProfit,adjustedScheduleETotal,otherIncome);
+  if (input.iraDeductionWorksheet) {
+    const hasNol = sum(d(input.priorYear?.nolCarryforward),d(input.priorYear?.excessBusinessLossNOL),k1Form1041FinalNOL).gt(0);
+    if (hasNol) throw new Error("IRA and NOL coordination requires a supported completed source worksheet");
+    const passiveInteraction = schedE.rentalProperties.some(p => p.netRentalIncome.lt(0))
+      || schedE.partnerships.some(p => p.passiveLoss.gt(0)) || (input.priorYear?.suspendedPassiveLosses ?? []).some(p => d(p.amount).gt(0));
+    if (passiveInteraction) throw new Error("IRA and passive-loss coordination requires a supported completed source worksheet");
+    if (input.socialSecurityLumpSumElection) throw new Error("IRA and lump-sum Social Security coordination requires a supported completed source worksheet");
+    if (iraGrossReported.gt(0) && (d(input.iraDeductionWorksheet.primaryContributions).gt(0) || d(input.iraDeductionWorksheet.spouseContributions).gt(0))) {
+      throw new Error("IRA distributions and current contributions require Publication590-B taxable-distribution coordination");
+    }
+    const nonIraAdjustments = sched1.totalAdjustments.minus(sched1.iraDeduction).minus(sched1.studentLoanInterest).plus(k1Form1041Section67eDeductions);
+    const iraMagiBase = incomeBeforeSocialSecurity.minus(nonIraAdjustments);
+    const noIraSocialSecurity = socialSecurityBenefitsGross.gt(0) ? calculateSocialSecurityBenefitsWorksheet({
+      filingStatus,benefitsReceived:socialSecurityBenefitsGross,otherIncome:iraMagiBase,taxExemptInterest,
+      exclusionsAdjustments:sum(form2555IncomeReduction,form2555HousingDeduction,
+        adoptionBenefitResult?.allowableExclusion ?? new Decimal(0),d(possessionExclusions?.puertoRicoIncomeExclusion),d(possessionExclusions?.americanSamoaIncomeExclusion)),
+      livedWithSpouseAtAnyTimeDuringYear:input.taxpayer.livedWithSpouseAtAnyTimeDuringYear,
+    }).taxableBenefits : new Decimal(0);
+    const iraMagi = sum(iraMagiBase,noIraSocialSecurity,form2555IncomeReduction,form2555HousingDeduction,
+      adoptionBenefitResult?.allowableExclusion ?? new Decimal(0));
+    iraDeductionWorksheetResult = calculateIraReturnWorksheet(input,iraMagi);
+    audit.merge(iraDeductionWorksheetResult.primary.lines);
+    if (iraDeductionWorksheetResult.spouse) audit.merge(iraDeductionWorksheetResult.spouse.lines);
+    audit.record("IRA MAGI Worksheet","total","Complete IRA modified adjusted gross income",iraMagi,
+      "Full pre-bond income less non-IRA/non-student-loan adjustments plus AppendixB benefits before IRA and actual foreign/adoption addbacks");
+    sched1 = calculateSchedule1(sched1Input,{ ...sched1Context,iraDeductionOverride:iraDeductionWorksheetResult.totalDeduction },form4797);
+  }
+  audit.merge(sched1.lines);
   const socialSecurityBenefitsWorksheet = socialSecurityBenefitsGross.greaterThan(0)
     ? calculateSocialSecurityBenefitsWorksheet({
       filingStatus,
@@ -1891,7 +1833,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     : new Decimal(0);
   const form8582MAGI = agi
     .plus(rentalLossAddBack)
-    .plus(d(input.adjustments?.iraDeduction))
+    .plus(sched1.iraDeduction)
     .plus(sched1.studentLoanInterest)
     .plus(savingsBondExclusion);
 
@@ -5982,13 +5924,7 @@ function isReturnedContributionByDueDate(form: Form1099R): boolean {
 }
 
 /** Returns true if the person is age 50 or older by December 31 of the tax year. */
-function isAge50OrOlder(dateOfBirth: string, taxYear: number): boolean {
-  const birth = new Date(dateOfBirth);
-  const yearEnd = new Date(taxYear, 11, 31); // December 31
-  const ageAtYearEnd = yearEnd.getFullYear() - birth.getFullYear();
-  const birthdayThisYear = new Date(taxYear, birth.getMonth(), birth.getDate());
-  return birthdayThisYear <= yearEnd ? ageAtYearEnd >= 50 : ageAtYearEnd - 1 >= 50;
-}
+
 
 /**
  * Combine two per-spouse Form 8606 results into a single combined result.

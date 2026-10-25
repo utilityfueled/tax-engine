@@ -1,0 +1,36 @@
+form: "IRA Return Coordination"
+fullName: "Publication 590-A IRA compensation and modified-AGI integration"
+taxYear: 2026
+irsReference: "https://www.irs.gov/publications/p590a"
+retrievedAt: "2026-10-25"
+notes: |
+  Worksheet1-1 excludes the IRA and student-loan deductions and adds back net
+  foreign exclusion, housing deduction, savings-bond exclusion and adoption
+  exclusion. AppendixB first computes taxable Social Security without the IRA
+  deduction, then computes each IRA deduction, then recomputes taxable benefits.
+  Use actual eligible compensation after each owner's SE-tax/retirement
+  deductions. A joint lower earner may use combined compensation less the
+  higher earner's actual traditional and Roth contributions. Do not manufacture
+  compensation from AGI or assume missing spouse/source facts are zero.
+  Source-complete paths require known compensation, plan contributions, Roth
+  contributions, participation and actual spouse traditional contributions.
+  Legacy incomplete inputs remain unverified. NOL/passive-loss, current IRA
+  distribution/basis and lump-sum SSA coordination require separate supported
+  source worksheets; these combinations reject rather than use an approximation.
+lines:
+  - line: "magi"
+    description: "One canonical IRA modified AGI from full return income"
+    formula: "Full income before savings-bond exclusion plus taxable Social Security computed without IRA, minus all adjustments other than IRA/student-loan, plus Form2555line45 and50 and adoption exclusion"
+    testRef: "tests/engine/federal-ira-sources.test.ts::uses complete interest and farm income in one canonical IRA worksheet"
+  - line: "appendix_b"
+    description: "Social Security and IRA ordering"
+    formula: "Compute AppendixB taxable benefits with IRA deduction zero; calculate IRA deduction; recompute actual taxable benefits with allowed IRA deduction"
+    testRef: "tests/engine/federal-ira-sources.test.ts::coordinates Social Security using Appendix B before the actual deduction"
+  - line: "compensation"
+    description: "Actual individual and joint lower-earner limits"
+    formula: "Each owner's actual eligible compensation; lower earner on MFJ may use combined compensation minus other owner's actual traditional and Roth contributions"
+    testRef: "tests/engine/federal-ira-sources.test.ts::applies actual compensation and joint lower-earner limits without adding excess to basis"
+  - line: "sources"
+    description: "Unknown facts and special coordination remain explicit"
+    formula: "Require all actual source fields for2026 or supplied source-confirmed records; preserve unknown on parsing; reject unsupported interacting worksheets"
+    testRef: "tests/engine/federal-ira-sources.test.ts::preserves unknown IRA facts and rejects missing or unsupported coordination"

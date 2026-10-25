@@ -21,11 +21,15 @@ import { calculateForm1099SA, mergeForm1099SAIntoForm8889Input } from "@/engine/
 import { calculateForm1099R } from "@/engine/forms/form-1099-r.js";
 import { calculateForm4797, type Form4797Result } from "@/engine/forms/form-4797.js";
 import { calculateSocialSecurityBenefitsWorksheet } from "@/engine/forms/social-security-benefits-worksheet.js";
-import { calculateIraDeduction } from "@/engine/forms/ira-deduction-worksheet.js";
+import { calculateIraReturnWorksheet } from "@/engine/forms/ira-return-worksheet.js";
 import { calculateForm1099C } from "@/engine/forms/form-1099-c.js";
 import { calculateForm3903, type Form3903Result } from "@/engine/forms/form-3903.js";
 
 export interface Schedule1Input {
+  /** Completed canonical return worksheet; prevents recomputation from a partial income subset. */
+  iraDeductionOverride?: Decimal;
+  /** Actual complete Pub590-A MAGI for standalone source-confirmed worksheet use. */
+  iraModifiedAgi?: Decimal;
   /** Schedule C net profit (Line 31) */
   schedCNetProfit?: Decimal;
   /** Schedule F net farm profit (Line 34) */
@@ -706,72 +710,25 @@ export function calculateSchedule1(
   );
 
   let iraDeduction: Decimal;
-  if (input.iraDeductionWorksheet) {
-    const ws = input.iraDeductionWorksheet;
-    // IRA MAGI per Pub 590-A: AGI before IRA deduction plus student loan
-    // interest add-back equals total income minus adjustments excluding both
-    // IRA and student loan. Social Security taxable benefits are excluded
-    // because they depend on the IRA deduction (circular); for the typical
-    // working-age taxpayer subject to IRA phase-out this is negligible.
-    const iraMagi = sum(
-      magiWages,
-      magiInterest,
-      magiDividends,
-      form1099R.iraTaxable,
-      form1099R.pensionTaxable,
-      capitalGainLoss,
-      businessIncome,
-      supplementalIncome,
-      farmIncome,
-      magiOtherIncome
-    ).minus(adjustmentsExcludingIraAndStudentLoan);
-
-    const primaryResult = calculateIraDeduction({
-      filingStatus,
-      taxYear: input.taxpayer.taxYear,
-      magi: iraMagi,
-      contributions: ws.primaryContributions,
-      isActiveParticipant: ws.primaryIsActiveParticipant,
-      isSpouseActiveParticipant: ws.spouseIsActiveParticipant ?? false,
-      age50OrOlder: ws.primaryAge50OrOlder ?? false,
-      livedWithSpouseAtAnyTimeDuringYear: input.taxpayer.livedWithSpouseAtAnyTimeDuringYear,
-    });
-    audit.merge(primaryResult.lines);
-
-    let spouseIraDeduction = ZERO;
-    const isMfjForIra = filingStatus === "married_filing_jointly";
-    if (isMfjForIra && d(ws.spouseContributions).greaterThan(0)) {
-      const spouseResult = calculateIraDeduction({
-        filingStatus,
-        taxYear: input.taxpayer.taxYear,
-        magi: iraMagi,
-        contributions: d(ws.spouseContributions),
-        isActiveParticipant: ws.spouseIsActiveParticipant ?? false,
-        isSpouseActiveParticipant: ws.primaryIsActiveParticipant,
-        age50OrOlder: ws.spouseAge50OrOlder ?? false,
-        livedWithSpouseAtAnyTimeDuringYear: input.taxpayer.livedWithSpouseAtAnyTimeDuringYear,
-      });
-      audit.merge(spouseResult.lines);
-      spouseIraDeduction = spouseResult.deductibleAmount;
-    }
-
-    iraDeduction = primaryResult.deductibleAmount.plus(spouseIraDeduction);
-    audit.record("Sched 1", "20", "IRA deduction", iraDeduction,
-      isMfjForIra && spouseIraDeduction.greaterThan(0)
-        ? "Primary + Spouse IRA deduction from Pub 590-A worksheet"
-        : "IRA deduction from Pub 590-A worksheet",
-      {
-        "IRA MAGI": iraMagi,
-        "Primary contributions": d(ws.primaryContributions),
-        "Primary deductible": primaryResult.deductibleAmount,
-        "Primary active participant": ws.primaryIsActiveParticipant ? "Yes" : "No",
-        ...(isMfjForIra && spouseIraDeduction.greaterThan(0) ? {
-          "Spouse contributions": d(ws.spouseContributions),
-          "Spouse deductible": spouseIraDeduction,
-          "Spouse active participant": (ws.spouseIsActiveParticipant ?? false) ? "Yes" : "No",
-        } : {}),
-      }
-    );
+  if (extra?.iraDeductionOverride !== undefined) {
+    iraDeduction = extra.iraDeductionOverride;
+    if (!iraDeduction.isFinite() || iraDeduction.lt(0)) throw new Error("IRA completed deduction must be finite and nonnegative");
+    audit.record("Sched 1","20","IRA deduction",iraDeduction,"Canonical completed Publication590-A return worksheet");
+  } else if (input.iraDeductionWorksheet) {
+    // Standalone legacy preview only. Source-confirmed/current calculations
+    // require complete return MAGI supplied explicitly by the caller.
+    const legacyMagiBase = sum(magiWages,magiInterest,magiDividends,form1099R.iraTaxable,form1099R.pensionTaxable,
+      capitalGainLoss,businessIncome,supplementalIncome,farmIncome,magiOtherIncome).minus(adjustmentsExcludingIraAndStudentLoan);
+    const legacyBenefits = socialSecurityBenefitsGross.gt(0) ? calculateSocialSecurityBenefitsWorksheet({
+      filingStatus,benefitsReceived:socialSecurityBenefitsGross,otherIncome:legacyMagiBase,taxExemptInterest:magiTaxExemptInterest,
+      livedWithSpouseAtAnyTimeDuringYear:input.taxpayer.livedWithSpouseAtAnyTimeDuringYear,
+    }).taxableBenefits : ZERO;
+    const result = calculateIraReturnWorksheet(input,extra?.iraModifiedAgi ?? legacyMagiBase.plus(legacyBenefits),extra?.iraModifiedAgi !== undefined);
+    audit.merge(result.primary.lines);
+    if (result.spouse) audit.merge(result.spouse.lines);
+    iraDeduction = result.totalDeduction;
+    audit.record("Sched 1","20","IRA deduction",iraDeduction,
+      extra?.iraModifiedAgi === undefined ? "Historical standalone preview from available income; complete MAGI sources unverified" : "Completed Pub590-A actual modified AGI worksheet");
   } else {
     iraDeduction = d(adjustments?.iraDeduction);
     audit.record("Sched 1", "20", "IRA deduction", iraDeduction, "Subject to plan participation/income limits");

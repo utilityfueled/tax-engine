@@ -2748,6 +2748,15 @@ export const RentalPropertySchema = z.object({
 });
 
 export const IraDeductionWorksheetSchema = z.object({
+  /** Actual eligible compensation after each owner's SE-tax/retirement deductions,
+   * before the joint lower-earner allocation. Unknowns have no defaults. */
+  sourceFactsConfirmed: z.boolean().optional(),
+  primaryCompensation: optionalDecimalInput,
+  spouseCompensation: optionalDecimalInput,
+  primaryRothContributions: optionalDecimalInput,
+  spouseRothContributions: optionalDecimalInput,
+  primarySection501c18Contributions: optionalDecimalInput,
+  spouseSection501c18Contributions: optionalDecimalInput,
   /** Traditional IRA contributions for the primary taxpayer */
   primaryContributions: decimal,
   /** Whether the primary taxpayer is an active participant in an employer retirement plan (W-2 Box 13 Retirement Plan checked) */
@@ -2755,7 +2764,7 @@ export const IraDeductionWorksheetSchema = z.object({
   /** Whether the primary taxpayer is age 50 or older by the end of the tax year */
   primaryAge50OrOlder: z.boolean().optional(),
   /** Traditional IRA contributions for the spouse (MFJ only) */
-  spouseContributions: optionalDecimal,
+  spouseContributions: optionalDecimalInput,
   /** Whether the spouse is an active participant in an employer retirement plan */
   spouseIsActiveParticipant: z.boolean().optional(),
   /** Whether the spouse is age 50 or older by the end of the tax year */
