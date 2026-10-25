@@ -1754,9 +1754,9 @@ export function validateSection(
     case "income-self-employment":
       return validateSelfEmploymentSection(getSectionData(state, "income-self-employment"), state.segmentation.filingStatus, getSectionData(state, "income-w2")?.entries, getSectionData(state, "state-return"));
     case "income-investments":
-      return validateInvestmentSection(getSectionData(state, "income-investments"), state.segmentation.filingStatus, state.taxYear, getSectionData(state, "state-return"), getSectionData(state, "personal-info")?.state || state.segmentation.stateCode);
+      return validateInvestmentSection(getSectionData(state, "income-investments"), state.segmentation.filingStatus, state.taxYear, getSectionData(state, "state-return"), state.segmentation.stateCode);
     case "income-rental":
-      return validateRentalSection(getSectionData(state, "income-rental"), state.segmentation.filingStatus, state.taxYear, getSectionData(state, "personal-info")?.state || state.segmentation.stateCode);
+      return validateRentalSection(getSectionData(state, "income-rental"), state.segmentation.filingStatus, state.taxYear, state.segmentation.stateCode);
     case "income-retirement":
       return validateRetirementSection(getSectionData(state, "income-retirement"), state.segmentation.filingStatus, state.taxYear, getSectionData(state, "state-return"));
     case "income-social-security":

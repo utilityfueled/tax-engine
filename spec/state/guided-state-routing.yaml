@@ -1,0 +1,42 @@
+form: "Guided-State-Routing"
+fullName: "Actual selected state, dedicated resident preview and payment parity"
+taxYear: 2026
+reference: "https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/brief-overview-and-filing-requirements"
+notes: |
+  Sources refreshed2026-10-25: PA PIT Guide residency, interest and payment
+  rules; final2025 Ohio IT1040 booklet residency and lines14-17/26 deductions.
+  A mailing address alone does not establish the selected return jurisdiction.
+  Guided selection, including explicit federal-only null, governs validation,
+  preview and packet routing. The actual mailing address is preserved separately.
+  PA/OH dedicated engines apply their source adjustments, credits and payment
+  rules; generic estimates must not replace failed or unavailable dedicated
+  calculations. Existing year, residency and filing-readiness gates remain.
+lines:
+  - line: "jurisdiction"
+    description: "Use the actual selected jurisdiction through guided paths"
+    formula: "selected state controls required state source facts; mailing state remains the taxpayer mailing address"
+    testRef: "tests/guided-interview/guided-state-routing.test.ts::uses selected state for source facts and preserves the actual mailing address"
+  - line: "federal-only"
+    description: "Preserve an explicit federal-only selection"
+    formula: "null selection means no state packet or state-source requirements, regardless of mailing state"
+    testRef: "tests/apps/web/workspace-filled-return.test.ts::preserves federal-only selection despite a PA or OH mailing address"
+  - line: "dedicated-preview"
+    description: "Use dedicated PA and OH resident calculations"
+    formula: "actual Treasury OID is excluded according to the selected state's source rules; use dedicated tax, refunds and payments without generic fallback"
+    testRef: "tests/guided-interview/guided-state-routing.test.ts::uses dedicated PA and OH treatment for Treasury OID"
+  - line: "payments"
+    description: "Keep source withholding and dated estimated payments exact and distinct"
+    formula: "state payments = matching-source withholding + reconciled additional withholding + actual estimated payments; do not count OID twice or drop it when another source exists"
+    testRef: "tests/guided-interview/guided-state-routing.test.ts::preserves exact actual payments in dedicated state previews and export overlays"
+  - line: "PA-source-withholding"
+    description: "Include actual PA brokerage withholding and require source jurisdiction"
+    formula: "PA-40 line13 includes actual PA source withholding from all modeled statements, including1099-B; a nonzero source with unknown state cannot be assigned to PA"
+    testRef: "tests/engine/state/pa-guided-payment-sources.test.ts::includes actual PA brokerage withholding and rejects an unknown source state"
+  - line: "unavailable"
+    description: "Do not invent a generic result for incomplete dedicated state facts"
+    formula: "unknown or unsupported residency and unreconciled dedicated state facts leave the state preview unavailable"
+    testRef: "tests/guided-interview/guided-state-routing.test.ts::does not substitute generic calculations for missing dedicated state facts"
+  - line: "residency-export"
+    description: "Do not render a resident calculation for another residency"
+    formula: "PA/OH resident review packets require actual full-year resident facts; a PA nonresident packet requires its separate allocation input"
+    testRef: "tests/apps/web/workspace-filled-return.test.ts::does not print resident state forms for a part-year selection without allocations"

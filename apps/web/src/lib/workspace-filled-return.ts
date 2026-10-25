@@ -1,7 +1,6 @@
+import { buildGuidedOhioOverlay, buildGuidedPennsylvaniaOverrides } from "./guided-state-engine-inputs";
 import "server-only";
 import Decimal from "decimal.js";
-import { parseGuidedCurrency } from "@/lib/guided-currency";
-import { sumAdditionalStateWithholding } from "@/lib/guided-state-facts";
 
 import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from "fs/promises";
 import { tmpdir } from "os";
@@ -30,15 +29,8 @@ import { assertPdfExportAllowed, markReviewPdf, REVIEW_PDF_NOTICE } from "@/pdf/
 import {
   buildTaxInputFromGuidedData,
 } from "@/lib/guided-interview-bridge";
-import {
-  type GuidedFlowState,
-  type StateReturnData,
-} from "@/lib/guided-interview-flow";
+import type { GuidedFlowState } from "@/lib/guided-interview-flow";
 import { assessReturnReadiness } from "@/utils/return-readiness.js";
-import {
-  extractOhioWithholding,
-  type OhioOverlayInput,
-} from "@/engine/state/oh-input-adapter.js";
 
 export interface WorkspaceFilledReturnDownload {
   fileName: string;
@@ -296,7 +288,7 @@ function resolveStateCode(
   taxInput: TaxYearInput,
   guidedFlowState?: GuidedFlowState | null,
 ) {
-  const stateCode = guidedFlowState?.segmentation.stateCode ?? taxInput.taxpayer.address.state ?? null;
+  const stateCode = guidedFlowState ? guidedFlowState.segmentation.stateCode : taxInput.taxpayer.address.state ?? null;
   if (!stateCode) {
     return null;
   }
@@ -407,53 +399,16 @@ function buildPacketSummary(
   };
 }
 
-function buildOhioOverlayFromGuidedState(
-  taxInput: TaxYearInput,
-  guidedFlowState?: GuidedFlowState | null,
-): OhioOverlayInput {
-  const stateReturnData = guidedFlowState?.sectionData["state-return"] as StateReturnData | undefined;
-
-  if (!stateReturnData) {
-    return {};
-  }
-
-  const additionalWithholding = sumAdditionalStateWithholding(stateReturnData);
-  const estimatedPayments = stateReturnData.stateEstimatedPayments.reduce(
-    (sum, entry) => sum.plus(parseGuidedCurrency(entry.amount)),
-    new Decimal(0),
-  );
-  const baseOhioWithholding = extractOhioWithholding(
-    taxInput.w2s,
-    taxInput.formW2G,
-    taxInput.form1099G,
-    taxInput.form1099K,
-    taxInput.form1099R,
-    taxInput.form1099Nec,
-    taxInput.form1099Misc,
-    taxInput.form1099Int,
-    taxInput.form1099Div,
-    taxInput.form1099B,
-  );
-
-  const overlay: OhioOverlayInput = {};
-
-  if (stateReturnData.additionalStateWithholdingEntries?.length) {
-    overlay.ohioWithholdingOverride = baseOhioWithholding.plus(additionalWithholding).toFixed();
-  }
-
-  if (stateReturnData.stateEstimatedPayments.length) {
-    overlay.estimatedPayments = estimatedPayments.toFixed();
-  }
-
-  return overlay;
-}
-
 function attachPennsylvaniaReturn(
   taxInput: TaxYearInput,
   result: ReturnType<typeof calculateFederalTax>,
   stateCode: string | null,
+  guidedFlowState?: GuidedFlowState | null,
 ) {
   if (stateCode !== "PA" || result.stateReturns?.pennsylvania) {
+    return result;
+  }
+  if (!taxInput.paNonresidentReturn && taxInput.taxpayer.stateResidency !== "full-year") {
     return result;
   }
 
@@ -463,7 +418,7 @@ function attachPennsylvaniaReturn(
       ...(result.stateReturns ?? {}),
       pennsylvania: taxInput.paNonresidentReturn
         ? calculatePANonresidentReturn(taxInput)
-        : calculatePAReturn(taxInput),
+        : calculatePAReturn(taxInput, buildGuidedPennsylvaniaOverrides(guidedFlowState)),
     },
   };
 }
@@ -650,6 +605,7 @@ export async function buildWorkspaceFilledReturnDownload(
     resolved.taxInput,
     calculateFederalTax(resolved.taxInput),
     stateCode,
+    guidedFlowState,
   );
   // Identity participates in household matching and state worksheets. Keep it
   // intact through calculation, then redact only copies passed to renderers.
@@ -668,8 +624,8 @@ export async function buildWorkspaceFilledReturnDownload(
     });
     const filledForms = [...fillResult.filledForms];
 
-    if (stateCode === "OH") {
-      const ohioOverlay = buildOhioOverlayFromGuidedState(redactedTaxInput, guidedFlowState);
+    if (stateCode === "OH" && resolved.taxInput.taxpayer.stateResidency === "full-year") {
+      const ohioOverlay = buildGuidedOhioOverlay(redactedTaxInput, guidedFlowState);
       const ohioReferencePacket = await fillOhioReferenceForms(
         redactedTaxInput,
         result,

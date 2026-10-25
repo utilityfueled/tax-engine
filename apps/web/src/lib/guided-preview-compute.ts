@@ -8,6 +8,10 @@ import Decimal from "decimal.js";
 import { sumAdditionalStateWithholding } from "./guided-state-facts";
 import { parseGuidedCurrency } from "./guided-currency";
 import { calculateFederalTax } from "@/engine/federal";
+import { calculatePAReturn } from "@/engine/state/pa-orchestrator";
+import { buildOhioResidentReturnInput } from "@/engine/state/oh-input-adapter";
+import { calculateOhioResidentReturn } from "@/engine/state/oh-return";
+import { buildGuidedOhioOverlay, buildGuidedPennsylvaniaOverrides } from "./guided-state-engine-inputs";
 import {
   calculateGenericStateReturn,
   type GenericStateReturnInput,
@@ -36,7 +40,9 @@ function decimalToString(val: { toString(): string }): string {
   return val.toString();
 }
 
-function extractStateMetrics(stateResult: GenericStateReturnResult): StatePreviewMetrics {
+type StatePreviewResult = Pick<GenericStateReturnResult, "stateCode" | "stateName" | "stateTax" | "refund" | "balanceDue" | "totalPayments">;
+
+function extractStateMetrics(stateResult: StatePreviewResult): StatePreviewMetrics {
   return {
     stateCode: stateResult.stateCode,
     stateName: stateResult.stateName,
@@ -49,7 +55,7 @@ function extractStateMetrics(stateResult: GenericStateReturnResult): StatePrevie
 
 export function extractMetricsFromResult(
   result: TaxReturnResult,
-  stateResult?: GenericStateReturnResult | null,
+  stateResult?: StatePreviewResult | null,
 ): GuidedPreviewMetrics {
   return {
     totalIncome: decimalToString(result.totalIncome),
@@ -150,7 +156,7 @@ export function computeGuidedPreview(state: GuidedFlowState | null | undefined):
     const taxInput = TaxYearInputSchema.parse(rawInput);
     const result = calculateFederalTax(taxInput);
 
-    let stateResult: GenericStateReturnResult | null = null;
+    let stateResult: StatePreviewResult | null = null;
     const stateCode = state.segmentation.stateCode;
     if (stateCode && state.sectionData["personal-info"]?.stateResidency === "full-year") {
       const personalInfo = state.sectionData["personal-info"] as PersonalInfoData | undefined;
@@ -161,17 +167,24 @@ export function computeGuidedPreview(state: GuidedFlowState | null | undefined):
       const stateWithholding = collectStateWithholding(state);
       const stateEstimatedPayments = collectStateEstimatedPayments(state);
 
-      stateResult = tryComputeStatePreview(
-        stateCode,
-        taxInput.taxpayer.taxYear,
-        filingStatus,
-        result.agi,
-        result.taxableIncome,
-        Number.isNaN(depCount) ? 0 : depCount,
-        hasSpouse,
-        stateWithholding,
-        stateEstimatedPayments,
-      );
+      try {
+        if (stateCode === "PA") {
+          const pa = calculatePAReturn(taxInput, buildGuidedPennsylvaniaOverrides(state)).pa40;
+          stateResult = { stateCode, stateName: "Pennsylvania", stateTax: pa.netTaxLiability,
+            refund: pa.netOverpayment, balanceDue: pa.totalAmountDue, totalPayments: pa.totalPayments };
+        } else if (stateCode === "OH") {
+          const oh = calculateOhioResidentReturn(buildOhioResidentReturnInput(taxInput, result, buildGuidedOhioOverlay(taxInput, state))).it1040;
+          stateResult = { stateCode, stateName: "Ohio", stateTax: oh.line13_totalLiability,
+            refund: oh.line26_refund, balanceDue: oh.line22_totalAmountDue, totalPayments: oh.line17_totalPayments };
+        } else {
+          stateResult = tryComputeStatePreview(stateCode, taxInput.taxpayer.taxYear, filingStatus,
+            result.agi, result.taxableIncome, Number.isNaN(depCount) ? 0 : depCount,
+            hasSpouse, stateWithholding, stateEstimatedPayments);
+        }
+      } catch {
+        // Keep the federal result while the dedicated state's actual facts need reconciliation.
+        stateResult = null;
+      }
     }
 
     return extractMetricsFromResult(result, stateResult);

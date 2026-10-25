@@ -195,6 +195,8 @@ export interface PAOrchestratorOverrides {
   extensionPayment?: Decimal;
   /** Estimated tax payments */
   estimatedPayments?: Decimal;
+  /** Reconciled PA source withholding entered separately from the document arrays. */
+  additionalStateWithholding?: Decimal;
   /** Nonresident tax withheld from PA Schedule(s) NRK-1 */
   nonresidentTaxWithheld?: Decimal;
   /** Schedule SP-includable nontaxable income, excluding Social Security and similar exempt retirement benefits */
@@ -1152,75 +1154,20 @@ function mapUSGovExemptInterest(input: TaxYearInput): Decimal {
   );
 }
 
-/** PA state withholding from all sources */
+/** PA-40 line13: actual source state is required for every nonzero withholding. */
 function mapStateWithholding(input: TaxYearInput): Decimal {
-  let total = new Decimal(0);
-
-  // W-2 Box 17 (PA state)
-  for (const w2 of input.w2s) {
-    const paState = w2.state?.toUpperCase();
-    if (paState && paState !== "PA") continue;
-    total = total.plus(d(w2.stateTaxWithheld));
-  }
-
-  // W-2G Box 13 (PA state)
-  for (const w2g of input.formW2G) {
-    const paState = w2g.state?.toUpperCase();
-    if (paState && paState !== "PA") continue;
-    total = total.plus(d(w2g.stateWithheld));
-  }
-
-  // 1099-G Box 11 (PA state)
-  for (const g of input.form1099G) {
-    const paState = g.state?.toUpperCase();
-    if (paState && paState !== "PA") continue;
-    total = total.plus(d(g.stateWithheld));
-  }
-
-  // 1099-K Box 8 (PA state)
-  for (const k of input.form1099K) {
-    const paState = k.state?.toUpperCase();
-    if (paState && paState !== "PA") continue;
-    total = total.plus(d(k.stateWithheld));
-  }
-
-  // 1099-R Box 12 (PA state)
-  const forms1099R = input.form1099R ?? [];
-  for (const r of forms1099R) {
-    const paState = r.state?.toUpperCase();
-    if (paState && paState !== "PA") continue;
-    total = total.plus(d(r.stateWithheld));
-  }
-
-  // 1099-INT Box 13 (PA state)
-  for (const int1099 of input.form1099Int) {
-    const paState = int1099.state?.toUpperCase();
-    if (paState && paState !== "PA") continue;
-    total = total.plus(d(int1099.stateWithheld));
-  }
-
-  // 1099-DIV Box 14 (PA state)
-  for (const div of input.form1099Div) {
-    const paState = div.state?.toUpperCase();
-    if (paState && paState !== "PA") continue;
-    total = total.plus(d(div.stateWithheld));
-  }
-
-  // 1099-MISC Box 16 (PA state)
-  for (const misc of input.form1099Misc) {
-    const paState = misc.state?.toUpperCase();
-    if (paState && paState !== "PA") continue;
-    total = total.plus(d(misc.stateWithheld));
-  }
-
-  // 1099-NEC Box 5 (PA state)
-  for (const nec of input.form1099Nec) {
-    const paState = nec.state?.toUpperCase();
-    if (paState && paState !== "PA") continue;
-    total = total.plus(d(nec.stateWithheld));
-  }
-
-  return total;
+  const sourceRows = [
+    ...input.w2s.map(source => ({ state: source.state, amount: source.stateTaxWithheld })),
+    ...[...input.formW2G, ...input.form1099G, ...input.form1099K, ...(input.form1099R ?? []),
+      ...input.form1099Int, ...input.form1099Div, ...input.form1099Misc,
+      ...input.form1099Nec, ...(input.form1099B ?? [])].map(source => ({ state: source.state, amount: source.stateWithheld })),
+  ];
+  return sourceRows.reduce((total, row) => {
+    const amount = d(row.amount);
+    const actualState = row.state?.trim().toUpperCase();
+    if (!actualState && !amount.isZero()) throw new Error("PA withholding needs the actual source state for every nonzero statement amount.");
+    return actualState === "PA" ? total.plus(amount) : total;
+  }, new Decimal(0));
 }
 
 /** Local EIT withholding from W-2 Box 19 */
@@ -1796,7 +1743,11 @@ export function calculatePAReturn(
   const paLotteryExempt = scheduleT?.exemptPALotteryNoncashWinnings ?? ZERO;
   const excludedHomeSaleGainForScheduleSP = mapExcludedHomeSaleGainForScheduleSP(input);
 
-  const stateWithholding = mapStateWithholding(input).plus(oidSources.stateWithholding);
+  const additionalStateWithholding = resolvedOverrides.additionalStateWithholding ?? ZERO;
+  if (!additionalStateWithholding.isFinite() || additionalStateWithholding.isNegative()) {
+    throw new Error("Additional PA withholding must be a finite nonnegative actual source amount.");
+  }
+  const stateWithholding = mapStateWithholding(input).plus(oidSources.stateWithholding).plus(additionalStateWithholding);
 
   // -------------------------------------------------------------------------
   // Step 1b: Schedule UE — Unreimbursed Employee Business Expenses

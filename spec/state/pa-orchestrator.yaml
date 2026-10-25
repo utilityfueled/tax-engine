@@ -794,13 +794,15 @@ lines:
     description: "Map PA state withholding from all sources"
     formula: |
       Sum of:
-        W-2 Box 17 (PA) + W-2G Box 13 (PA) + 1099-G Box 11 (PA) +
-        1099-K Box 8 (PA) + 1099-R Box 12 (PA) + 1099-INT Box 13 (PA) +
-        1099-DIV Box 14 (PA) + 1099-MISC Box 16 (PA) +
-        1099-NEC Box 5 (PA)
+        Actual PA state withholding from W-2, W-2G,1099-G,1099-K,1099-R,
+        1099-INT,1099-DIV,1099-MISC,1099-NEC and1099-B sources, plus separately
+        reconciled additionalStateWithholding. OID withholding is added once
+        from its separately validated source rows.
     notes: |
       Includes withholding from all document types that carry PA state withholding.
-      Only includes documents where state = 'PA' or state is absent (assumed resident state).
+      Only includes documents with actual source state = 'PA'. A nonzero amount
+      without its source state requires reconciliation; residency does not
+      establish the jurisdiction paid. Explicit zero remains zero.
       1099-R, 1099-INT, 1099-DIV, 1099-MISC, and 1099-NEC state withholding
       fields are mapped so PA-40 Line 13 captures nonwage withholding reported
       on information returns, including independent-contractor withholding from

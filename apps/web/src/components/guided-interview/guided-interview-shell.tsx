@@ -434,7 +434,7 @@ function RefundTicker({
                   <span className="guided-ticker-breakdown-value">{formatTickerCurrency(stateMetrics.stateTax)}</span>
                 </div>
                 <div className="guided-ticker-breakdown-row">
-                  <span className="guided-ticker-breakdown-label">State Withholding</span>
+                  <span className="guided-ticker-breakdown-label">State Payments</span>
                   <span className="guided-ticker-breakdown-value">{formatTickerCurrency(stateMetrics.stateWithholding)}</span>
                 </div>
                 <div className={`guided-ticker-breakdown-row guided-ticker-breakdown-result ${stateRefund.gt(0) ? "guided-ticker-breakdown-refund" : stateOwed.gt(0) ? "guided-ticker-breakdown-owed" : ""}`}>
@@ -533,7 +533,7 @@ function SectionContent({
           dividendEntries={dividendEntries}
           brokerageEntries={brokerageEntries}
           oidEntries={oidEntries}
-          stateCode={state.sectionData["personal-info"]?.state || state.segmentation.stateCode}
+          stateCode={state.segmentation.stateCode}
           onOidEntriesChange={next => onStateChange(updateSectionData(state, "income-investments", { interestEntries, dividendEntries, brokerageEntries, oidEntries: next }))}
           onInterestEntriesChange={(next: InterestEntryData[]) =>
             onStateChange(updateSectionData(state, "income-investments", { interestEntries: next, dividendEntries, brokerageEntries, oidEntries }))
@@ -565,7 +565,7 @@ function SectionContent({
       return (
         <SectionRentalIncome
           entries={rentalEntries}
-          stateCode={getSectionData(state, "personal-info")?.state || state.segmentation.stateCode}
+          stateCode={state.segmentation.stateCode}
           onEntriesChange={(next: RentalPropertyEntryData[]) =>
             onStateChange(updateSectionData(state, "income-rental", { entries: next }))
           }

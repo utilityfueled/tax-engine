@@ -150,8 +150,8 @@ export function SectionStateReturn({
           Let&apos;s wrap up your {stateName} state return.
         </p>
         <p className="guided-hint">
-          We&apos;ve already computed your state tax based on your federal return.
-          Check the summary below, and add any state estimated payments you made during the year.
+          The state preview is available when the required source facts are complete.
+          Review the summary and enter your actual state estimated payments.
         </p>
 
         {stateMetrics ? (
@@ -165,7 +165,7 @@ export function SectionStateReturn({
               value={formatCurrency(stateMetrics.stateTax)}
             />
             <StateSummaryRow
-              label="State Withholding"
+              label="State Payments"
               value={formatCurrency(stateMetrics.stateWithholding)}
             />
             <StateSummaryRow

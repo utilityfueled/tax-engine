@@ -155,16 +155,19 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
       expect(result.stateWithholding.toNumber()).toBe(0);
     });
 
-    it("PA orchestrator includes W-2 with no state (assumed resident)", () => {
-      const result = calculatePAReturn(makeInput({
+    it("PA orchestrator requires actual w2s source state before crediting withholding", () => {
+      const input = makeInput({
         w2s: [{
           employer: { name: "Acme Corp", ein: "12-3456789" },
           wages: "65000",
           federalWithheld: "9000",
           stateTaxWithheld: "1996",
-          // no state field
+          // actual source state is unknown
         }],
-      }));
+      });
+      expect(() => calculatePAReturn(input)).toThrow(/actual source state/);
+      input.w2s[0].state = "PA";
+      const result = calculatePAReturn(input);
       expect(result.mappedIncome.compensation.toNumber()).toBe(65000);
       expect(result.stateWithholding.toNumber()).toBe(1996);
     });
@@ -1551,52 +1554,64 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
       expect(result.stateWithholding.toNumber()).toBe(2210);
     });
 
-    it("PA orchestrator includes 1099-R withholding when state is absent (assumed PA resident)", () => {
-      const result = calculatePAReturn(makeInput({
+    it("PA orchestrator requires actual form1099R source state before crediting withholding", () => {
+      const input = makeInput({
         form1099R: [{
           payer: "Retirement Plan",
           grossDistribution: "25000",
           distributionCode: "7",
           stateWithheld: "768",
-          // no state field — assumed PA resident
+          // actual source state is unknown
         }],
-      }));
+      });
+      expect(() => calculatePAReturn(input)).toThrow(/actual source state/);
+      input.form1099R[0].state = "PA";
+      const result = calculatePAReturn(input);
       expect(result.stateWithholding.toNumber()).toBe(768);
     });
 
-    it("PA orchestrator includes 1099-INT withholding when state is absent", () => {
-      const result = calculatePAReturn(makeInput({
+    it("PA orchestrator requires actual form1099Int source state before crediting withholding", () => {
+      const input = makeInput({
         form1099Int: [{
           payer: "Local CU",
           interestIncome: "1500",
           stateWithheld: "46",
-          // no state field
+          // actual source state is unknown
         }],
-      }));
+      });
+      expect(() => calculatePAReturn(input)).toThrow(/actual source state/);
+      input.form1099Int[0].state = "PA";
+      const result = calculatePAReturn(input);
       expect(result.stateWithholding.toNumber()).toBe(46);
     });
 
-    it("PA orchestrator includes 1099-DIV withholding when state is absent", () => {
-      const result = calculatePAReturn(makeInput({
+    it("PA orchestrator requires actual form1099Div source state before crediting withholding", () => {
+      const input = makeInput({
         form1099Div: [{
           payer: "Fund Co",
           ordinaryDividends: "4000",
           stateWithheld: "123",
-          // no state field
+          // actual source state is unknown
         }],
-      }));
+      });
+      expect(() => calculatePAReturn(input)).toThrow(/actual source state/);
+      input.form1099Div[0].state = "PA";
+      const result = calculatePAReturn(input);
       expect(result.stateWithholding.toNumber()).toBe(123);
     });
 
-    it("PA orchestrator includes 1099-MISC withholding when state is absent", () => {
-      const result = calculatePAReturn(makeInput({
+    it("PA orchestrator requires actual form1099Misc source state before crediting withholding", () => {
+      const input = makeInput({
         form1099Misc: [{
           payer: "Royalty Corp",
           royalties: "7000",
           stateWithheld: "215",
-          // no state field
+          // actual source state is unknown
         }],
-      }));
+      });
+      expect(() => calculatePAReturn(input)).toThrow(/actual source state/);
+      input.form1099Misc[0].state = "PA";
+      const result = calculatePAReturn(input);
       expect(result.stateWithholding.toNumber()).toBe(215);
     });
 

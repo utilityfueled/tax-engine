@@ -611,9 +611,9 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
   const careBenefitSources = guidedCareBenefitSources(w2Data?.entries, seData?.businessFacts, seData?.expenses);
   try {
     assertKnownFacts(w2FactErrors(w2Data?.entries, segmentation.filingStatus));
-    assertKnownFacts(investmentFactErrors(investData, segmentation.filingStatus, state.taxYear, stateReturnData, personalInfo.state || segmentation.stateCode));
+    assertKnownFacts(investmentFactErrors(investData, segmentation.filingStatus, state.taxYear, stateReturnData, segmentation.stateCode));
     assertKnownFacts(businessFactErrors(seData, segmentation.filingStatus, w2Data?.entries, stateReturnData));
-    assertKnownFacts(rentalFactErrors(rentalData?.entries, segmentation.filingStatus, state.taxYear, personalInfo?.state || segmentation.stateCode));
+    assertKnownFacts(rentalFactErrors(rentalData?.entries, segmentation.filingStatus, state.taxYear, segmentation.stateCode));
     assertKnownFacts(deductionFactErrors(deductionData, state.taxYear, segmentation.filingStatus));
     assertKnownFacts(nonW2TaxAllocationErrors(state));
     assertKnownFacts(allPaymentFactErrors(paymentData, state.taxYear));
@@ -631,7 +631,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     assertKnownFacts(adoptionFactErrors(creditsData?.adoption, state.taxYear, segmentation.filingStatus));
   } catch { return null; }
 
-  const stateCode = personalInfo?.state || segmentation.stateCode || null;
+  const stateCode = segmentation.stateCode;
   const w2s = buildW2Inputs(w2Data?.entries);
   const necs = buildNecInputs(seData?.necEntries);
   const scheduleC = buildScheduleCInput(seData?.necEntries, seData?.manualGrossReceipts, seData?.expenses, seData?.qbiMateriallyParticipated, seData?.businessFacts);
@@ -703,7 +703,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
         street: personalInfo.addressLine1,
         apt: personalInfo.addressLine2 || undefined,
         city: personalInfo.city,
-        state: stateCode,
+        state: personalInfo.state,
         zip: personalInfo.zip,
       },
       dependents: buildDependents(personalInfo?.dependentCount, personalInfo?.dependents),
@@ -942,7 +942,7 @@ export function buildGuidedSyntheticDocuments(
 
   if (investData?.oidEntries?.some(isStartedOid)) {
     docs.push({ id: "guided:1099-oid", name: "Guided Interview — 1099-OID", size: 0, uploadedAt: now,
-      kind: "1099-oid", coverage: Object.keys(oidFactErrors(investData.oidEntries, state.segmentation.filingStatus, state.taxYear, state.sectionData["personal-info"]?.state || state.segmentation.stateCode, state.sectionData["state-return"])).length ? "partially-supported" : "supported",
+      kind: "1099-oid", coverage: Object.keys(oidFactErrors(investData.oidEntries, state.segmentation.filingStatus, state.taxYear, state.segmentation.stateCode, state.sectionData["state-return"])).length ? "partially-supported" : "supported",
       label: "1099-OID (guided interview)", notes: "Actual instrument boxes and recipient worksheets entered via guided interview.", matchedFixtureId: null, seededFactIds: [] });
   }
 
