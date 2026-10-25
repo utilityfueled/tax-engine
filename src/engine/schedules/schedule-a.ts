@@ -70,6 +70,7 @@ export interface ScheduleAResult {
   nonCashCharitable: Decimal; // Line 13
   gamblingLossDeduction: Decimal; // Component of line16
   bondPremiumDeduction: Decimal; // Actual allowable section171 excess
+  estateTaxDeduction: Decimal; // Actual K1 Form1041 Box10 section691(c)
   otherItemizedDeductions: Decimal; // Line16
   totalItemized: Decimal; // Line 17
   nonitemizerCharitableDeduction: Decimal; // 2026 candidate; federal flow applies only when standard deduction selected
@@ -561,9 +562,12 @@ export function calculateScheduleA(
     `min(${input.taxpayer.taxYear === 2026 ? "90%" : "100%"} × (losses ${rawGamblingLosses} + expenses ${gamblingExpenses}), winnings ${gamblingWinnings})`);
 
   const bondPremiumDeduction = calculateForm1099OID(input.form1099OID ?? [], input.taxpayer.taxYear).bondPremiumDeduction;
-  const otherItemizedDeductions = gamblingLossDeduction.plus(bondPremiumDeduction);
+  const estateTaxAmounts = (input.scheduleK1Form1041 ?? []).map(source => d(source.estateTaxDeduction));
+  if (estateTaxAmounts.some(amount => !amount.isFinite() || amount.lt(0))) throw new Error("Estate-tax deductions must be finite and nonnegative");
+  const estateTaxDeduction = sum(...estateTaxAmounts);
+  const otherItemizedDeductions = gamblingLossDeduction.plus(bondPremiumDeduction).plus(estateTaxDeduction);
   audit.record("Sched A", "16", "Other itemized deductions", otherItemizedDeductions,
-    "Allowed wagering deduction plus actual allowable excess bond premium; unused premium carries separately");
+    "Allowed wagering deduction + allowable excess bond premium + K1 estate tax on IRD; unused premium carries separately");
 
   // ── Total (Line 17) ───────────────────────────────────
   const totalItemized = sum(
@@ -594,6 +598,7 @@ export function calculateScheduleA(
     nonCashCharitable,
     gamblingLossDeduction,
     bondPremiumDeduction,
+    estateTaxDeduction,
     otherItemizedDeductions,
     totalItemized,
     nonitemizerCharitableDeduction,

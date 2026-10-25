@@ -269,6 +269,19 @@ describe("K-1 Form 1041 deductions and other items", () => {
     expect(new Decimal(line16!.value).toNumber()).toBe(3000);
   });
 
+  test("combines estate tax and gambling in one canonical ScheduleA16", () => {
+    const result = calculateFederalTax(makeInput({
+      scheduleA: {gamblingLosses:"2000"},
+      formW2G:[{payer:"Synthetic casino",reportableWinnings:"5000",federalWithheld:"0"}],
+      scheduleK1Form1041:[{estateTrustName:"Synthetic estate",estateTrustEIN:"11-1111111",estateTaxDeduction:"3000"}],
+    }));
+    const rows=result.allLines.filter(line=>line.form==="Sched A"&&line.line==="16");
+    expect(rows).toHaveLength(1);
+    expect(rows[0].value.toString()).toBe("5000");
+    expect(result.scheduleA.otherItemizedDeductions.toString()).toBe("5000");
+    expect(result.scheduleA.totalItemized.toString()).toBe("5000"); // No other itemized amounts in this fixture.
+  });
+
   test("estate tax deduction from multiple K-1s aggregates", () => {
     const result = calculateFederalTax(makeInput({
       scheduleA: {

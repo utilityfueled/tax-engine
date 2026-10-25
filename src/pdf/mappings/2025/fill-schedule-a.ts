@@ -223,7 +223,7 @@ export async function fillScheduleA(
   if (line16Audit.length !== 1 || !line16Audit[0].value.isFinite() || !line16Audit[0].value.eq(sa.otherItemizedDeductions)) {
     throw new Error("Schedule A line16 requires a unique reconciled audit");
   }
-  const otherDescriptions = [sa.gamblingLossDeduction.gt(0) ? "Gambling losses" : "", sa.bondPremiumDeduction.gt(0) ? "Excess bond premium" : ""].filter(Boolean);
+  const otherDescriptions = [sa.gamblingLossDeduction.gt(0) ? "Gambling losses" : "", sa.bondPremiumDeduction.gt(0) ? "Excess bond premium" : "", sa.estateTaxDeduction.gt(0) ? "Estate tax on IRD" : ""].filter(Boolean);
   setTextField(form, F.line16Desc, otherDescriptions.join("; "));
   setCurrencyField(form, F.line16, line16Audit[0].value);
 

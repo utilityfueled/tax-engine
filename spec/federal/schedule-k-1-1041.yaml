@@ -24,6 +24,15 @@ notes: |
   - §642(h): Excess deductions on termination pass to beneficiaries
 
 lines:
+  - line: "10-canonical-ScheduleA"
+    description: "Estate-tax deduction retains its character in a single ScheduleAline16"
+    formula: "Aggregate actual Box10 amounts with gambling losses and allowable excess bond premium in ScheduleA, include once in line17, and copy the same audited aggregate to the review PDF. Do not add Box10 again after ScheduleA or create a second physical line16 audit."
+    irsRef: "2025 beneficiary instructions Box10 and ScheduleAline16; refreshed2026-10-25"
+    testRef: "tests/engine/forms/schedule-k-1-1041.test.ts::combines estate tax and gambling in one canonical ScheduleA16"
+  - line: "10-review-map"
+    description: "Estate-tax deduction in actual review field"
+    formula: "Review line16 copies the canonical mixed-source audited deduction and describes estate tax; no filing qualification."
+    testRef: "tests/pdf/schedule-a-estate-deduction.test.ts::prints estate and gambling deductions exactly once"
   # ── Income Boxes (1–8) ────────────────────────────────────
 
   - line: "1"

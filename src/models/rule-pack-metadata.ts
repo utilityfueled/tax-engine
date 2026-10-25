@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.19",
+    ruleVersion: "2025.20",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i1041sk1", section: "Box10 estate-tax deduction aggregated once in actual ScheduleAline16", revision: "2025 final beneficiary instructions", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/pub/irs-pdf/f6251.pdf", section: "Official1a/1b/2a/2d and4-11 printed audit; remaining source worksheets unqualified", revision: "2025 final form", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i8995", section: "Actual owner/source attribution of SE tax, health insurance and retirement deductions", revision: "2025 final instructions and Reg.1.199A-3(b)(1)(vi)", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/publications/p550", section: "Actual OID recipient sources, premium elections and ScheduleA16 allowable excess", revision: "2025 final publication and current continuous-use OID January2024", retrievedAt: "2026-10-25" },
@@ -61,11 +62,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.14-law-integration-draft",
+    ruleVersion: "2026.15-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i1041sk1", section: "Box10 estate-tax deduction aggregated once in actual ScheduleAline16", revision: "2025 final beneficiary instructions", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/pub/irs-pdf/f6251.pdf", section: "Official1a/1b/2a/2d and4-11 printed audit; remaining source worksheets unqualified", revision: "2025 final form", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i2210", section: "Actual dated installments and enumerated line2 taxes, household exception and source facts", revision: "2025 final instructions;2026 rates only through December", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i8995", section: "Actual owner/source attribution of SE tax, health insurance and retirement deductions", revision: "2025 final instructions and Reg.1.199A-3(b)(1)(vi)", retrievedAt: "2026-10-25" },

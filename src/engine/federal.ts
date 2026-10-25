@@ -2066,12 +2066,6 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   audit.merge(schedA.lines);
   // Add K-1 Form 1041 deductions to Schedule A
   let itemizedDeductions = schedA.totalItemized;
-  // Box 10: Estate tax deduction (IRC §691(c)) — not subject to 2% floor
-  if (k1Form1041EstateTaxDeduction.greaterThan(0)) {
-    itemizedDeductions = itemizedDeductions.plus(k1Form1041EstateTaxDeduction);
-    audit.record("Sched A", "16", "Estate tax deduction (IRC §691(c))", k1Form1041EstateTaxDeduction,
-      "K-1 (Form 1041) Box 10 — IRC §691(c) deduction for estate tax on income in respect of decedent");
-  }
   // Box 11 Code B: Non-miscellaneous itemized deductions from terminating trust/estate
   if (k1Form1041FinalNonMiscItemized.greaterThan(0)) {
     itemizedDeductions = itemizedDeductions.plus(k1Form1041FinalNonMiscItemized);
