@@ -313,7 +313,7 @@
       "hosted staging and independent human reviews",
       "repeated live synthetic AI evaluation and account availability"
     ],
-    "latestIntegratedCommit": "4b5cacb",
+    "latestIntegratedCommit": "05fd72a96575d7a2a3d1e31125d5cfb1ea01c1aa",
     "latestCoverageDiagnostic": {
       "status": "failed-tests-coverage-thresholds-met",
       "commit": "05ec24e10716cd6c4c8ccd8d2b6e3effc6e18d94",
@@ -452,19 +452,43 @@
       "hsaActualGuidedDistributions": "b8e995a",
       "cryptoActualCharitableIntegration": "ca323c5",
       "ohioActualInterestAllocation": "7a337a0",
-      "hsaActualSourceFixtureReconciliation": "4b5cacb"
+      "hsaActualSourceFixtureReconciliation": "4b5cacb",
+      "ohioWithholdingStateAttribution": "054cd59",
+      "educationDistributionSourceCore": "eaaeb04",
+      "form461OfficialSourceConservation": "9d814f9",
+      "actualEducatorSources": "b4be8d6",
+      "charityUnknownQualifiedStock": "758b024",
+      "educationDistributionReturnIntegration": "6b07529",
+      "educationLoanSourceLinks": "2f8abd7",
+      "actual1098EBox2": "224b2ed",
+      "pennsylvaniaWithholdingValidation": "a3f0bec",
+      "browserActualSourceFixtures": "6cda2c0",
+      "guidedEducationDistributionSources": "9f2ce31",
+      "tickerAnimationTimestampClamp": "0be1714",
+      "pdfAtomicTestCases": "76bb3a6",
+      "studentLoanActualSourceCore": "d162f6c",
+      "pdfPacketAtomicCases": "ddd8976",
+      "auditedEducationDistributionReference": "05fd72a"
     },
     "remoteCi": {
-      "commit": "a2f62e217f846a479701b3393606228c366d3410",
-      "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40164268771",
+      "commit": "054cd59f9d0c8a53fb5794bbebcfd10e110f213b",
+      "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40175687934",
       "status": "failed",
+      "testsPassed": 16624,
+      "testsFailed": 5,
       "failed": [
-        "Same fourteen regressions as stable c087 snapshot",
-        "generated inventory freshness"
+        "Three federal AGI audit formula labels and Form461 expectation subsequently addressed by9d814f9",
+        "Unknown qualified-appreciated-stock status subsequently addressed by758b024",
+        "Generated inventory freshness"
       ],
-      "evidence": ".local/upgrade-evidence/ci-a2f62e2-failed.log",
-      "webRun": "https://github.com/utilityfueled/tax-engine/actions/runs/40164268895",
-      "webStatus": "running when inspected; build, native amd64 image smoke and actual Compose upgrade/recovery/rollback succeeded; browser/SBOM/scan still pending"
+      "passed": [
+        "lint",
+        "types",
+        "contracts",
+        "build",
+        "spec validation"
+      ],
+      "limitation": "Earlier exact push; newer remote workflows triggered but not yet qualified. Coverage skipped after test failures."
     },
     "localSelfHostRehearsal": {
       "status": "passed-intermediate-candidate",
@@ -476,6 +500,31 @@
       "amd64": "local QEMU Next.js compilation failed with signal11; native CI rehearsal now configured"
     },
     "currentStableCoverageRun": {
+      "commit": "2f8abd71206dd8483c167861f35c4c0bbecdad7a",
+      "workers": 1,
+      "status": "failed-tests-coverage-thresholds-met",
+      "passed": 16677,
+      "failed": 2,
+      "skipped": 0,
+      "filesPassed": 667,
+      "filesFailed": 2,
+      "durationSeconds": "476.95",
+      "branchesPercent": "86.41",
+      "functionsPercent": "92.03",
+      "statementsPercent": "92.76",
+      "linesPercent": "94.33",
+      "evidence": ".local/upgrade-evidence/stable-coverage-2f8abd7.log",
+      "evidenceSha256": "29fb6a52ea276976bf491ccc039281f66eb3696b14fa156edd091d10b7a97ba3",
+      "scope": "immutable tracked-file archive, locked dependencies, disposable local PostgreSQL16; unchanged coverage thresholds",
+      "limitation": "Two PDF aggregate tests exceeded unchanged5000ms timeouts; no numeric tax failure. Commit76bb3a6 isolates identical template/state assertions into named independent cases. Its exact staged tree passes62tests and3682spec refs; fresh full gate required after newer packages."
+    },
+    "remainingInternalWork": [
+      "Remaining bounded federal and complete-facts matrices including mortgage/points, student-loan and self-employed-health sources,529 coordination and specialized worksheets",
+      "Remaining dedicated-state source gaps and source/code reviews",
+      "Fresh full-suite/coverage/all exact-code gates, regenerated inventory, browser and native amd64 CI",
+      "Final exact-code arm64 image, SBOM, scan and recovery rerun"
+    ],
+    "previousStableCoverageRun": {
       "commit": "10be1de2e11362eb57fbfa26d871c64f30764fde",
       "workers": 1,
       "status": "failed-tests",
@@ -491,38 +540,18 @@
       "coverageReportProduced": false,
       "limitation": "Full command failed and produced no coverage report. Six HSA source/oracle failures addressed in ed5cae9 and 4b5cacb; three audit-label and one Form461 source/expectation failure assigned to federal package. New code requires a fresh full run; focused success is not a global pass."
     },
-    "remainingInternalWork": [
-      "Remaining bounded federal and complete-facts matrices including actual education/529, mortgage/points, adjustment sources, Form461 source routing and specialized source coordination",
-      "Remaining dedicated-state source gaps and independent review of Ohio allocation package",
-      "Fresh full-suite/coverage/all exact-code gates, regenerated inventory, browser and native amd64 CI",
-      "Final exact-code arm64 image, SBOM, scan and recovery rerun"
-    ],
-    "previousStableCoverageRun": {
-      "commit": "ff761dde6b7a2305cbf1adaafa0ad2609c0f3eef",
-      "workers": 1,
-      "status": "failed-tests-coverage-thresholds-met",
-      "evidence": ".local/upgrade-evidence/stable-coverage-ff761dd.log",
-      "scope": "immutable tracked-file archive with matching dependencies and disposable local PostgreSQL16; reportOnFailure; unchanged thresholds",
-      "limitation": "Full command failed. Seven independently source-verified IRA fixture expectations corrected by dd1b0a7. Four PDF timeouts pass unchanged in the exact same archive (five tests/two files in 8.03 seconds); this does not replace a fresh passing full run.",
-      "passed": 16494,
-      "failed": 11,
-      "filesPassed": 632,
-      "filesFailed": 3,
-      "skipped": 0,
-      "branchesPercent": "86.31",
-      "functionsPercent": "91.88",
-      "statementsPercent": "92.76",
-      "linesPercent": "94.12",
-      "durationSeconds": "460.45",
-      "evidenceSha256": "1d955b475471541d5b838688a71d6cdeda540ac771b6f8659e94084310a85868",
-      "timeoutRerunEvidence": ".local/upgrade-evidence/stable-ff761dd-timeout-rerun.log"
-    },
-    "lastPushedCommit": "7a337a0",
+    "lastPushedCommit": "76bb3a6ef87c77bcac2d7e442dbb0468709afa37",
     "currentBrowserRun": {
       "commit": "4b5cacb7c5f2f0a04bedc1f11032c2ca61c9dfbb",
-      "status": "running",
+      "status": "failed-tests",
       "evidence": ".local/upgrade-evidence/stable-browser-4b5cacb.log",
-      "scope": "immutable local production build, Chromium, synthetic fixture documents, self-host mode; retries disabled; no live providers or staging"
+      "scope": "immutable local production build, Chromium, synthetic fixture documents, self-host mode; retries disabled; no live providers or staging",
+      "passed": 245,
+      "failed": 51,
+      "skipped": 5,
+      "durationMinutes": "13.2",
+      "evidenceSha256": "74e3d55c70a2b687812cef7abbe88244d959442e1dc0533edf39afc12cb2539d",
+      "limitation": "Immutable self-host runtime and browser tests at4b5cacb. Explicit source requirements exposed incomplete W2 fixtures and stale aggregate UI selectors. Parent repairing browser scenarios without loosening gates. Five hosted cases skipped; no staging claim."
     },
     "currentPackageAudit": {
       "date": "2026-10-25",
@@ -542,6 +571,69 @@
         "totalDependencies": 519
       },
       "scope": "519 dependencies; npm advisories only, not image or independent security qualification"
+    },
+    "ohioInterestSoftwareReview": {
+      "commit": "7a337a0",
+      "status": "passed-bounded-agent-review",
+      "testsPassed": 6,
+      "files": 2,
+      "evidence": ".local/upgrade-evidence/ohio-interest-independent-review.log",
+      "humanTaxQualification": false,
+      "findings": []
+    },
+    "browserFixtureRepair": {
+      "commit": "6cda2c0",
+      "runtimeCommit": "4b5cacb7c5f2f0a04bedc1f11032c2ca61c9dfbb",
+      "frozenCohortPassed": 154,
+      "frozenCohortFailed": 1,
+      "finalChangedCasePassed": 1,
+      "finalCaseSeconds": "5.8",
+      "retries": 0,
+      "evidence": [
+        ".local/upgrade-evidence/browser-fixture-repair-frozen.log",
+        ".local/upgrade-evidence/browser-fixture-2210-recheck.log"
+      ],
+      "independentAgentReview": true,
+      "humanQualification": false,
+      "limitation": "Source-backed test repairs on retained earlier runtime; final current-commit full browser run remains required."
+    },
+    "pdfCaseIsolation": {
+      "commit": "76bb3a6",
+      "stagedTree": "8054e7dc6b3d85c82c59bf0d0b80200e25552676",
+      "passed": 62,
+      "specReferences": 3682,
+      "evidence": ".local/upgrade-evidence/pdf-case-isolation-staged.log",
+      "limitation": "Same cases and assertions; default timeout and coverage thresholds unchanged. Scoped verification only."
+    },
+    "tickerAnimationRepair": {
+      "commit": "0be1714",
+      "newTests": 4,
+      "combinedPassed": 103,
+      "redRegressions": 3,
+      "evidence": ".local/upgrade-evidence/ticker-animation-green.log",
+      "limitation": "Actual React DOM callback checks; final production browser rerun required."
+    },
+    "remoteCiLatestObserved": {
+      "commit": "76bb3a6",
+      "ciRun": 40178404035,
+      "webRun": 40178404038,
+      "status": "in_progress",
+      "retrievedDate": "2026-10-25"
+    },
+    "remoteCi6b07529": {
+      "run": 40176974652,
+      "commit": "6b07529462c36bba9181c3f8a0c8028a0cbf4f2c",
+      "unitPassed": 16678,
+      "unitFailed": 0,
+      "unitFiles": 669,
+      "unitDurationSeconds": "176.99",
+      "coveragePassed": 16669,
+      "coverageFailed": 9,
+      "coverageFailure": "Nine multi-document test timeouts; no assertion failure. Three fixed by76bb3a6; remaining six isolated inddd8976. Fresh exact-code remote run required.",
+      "specInventory": "failed-stale",
+      "lint": "passed",
+      "types": "passed",
+      "build": "passed"
     }
   }
 }

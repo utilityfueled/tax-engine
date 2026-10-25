@@ -468,3 +468,12 @@ checks; `upgrade-2026-care-work.md` records the initial field-length failure
 and corrected evidence. The 229-entry inventory was refreshed from this exact
 commit. A new immutable coverage run is in progress; it is not yet a passing
 gate. Tax-table, retirement, care benefits and state-source packages continue.
+
+The latest immutable`2f8abd7`run has16,677passes and twoPDFaggregate-test
+timeouts;86.41%branch coverage and all other thresholds pass unchanged. The full
+command remains failed. `76bb3a6`isolates the same assertions into atomic cases
+and passes62staged checks; fresh full validation is next. Browser source fixtures,
+actual education UI, PAwithholding and ticker timestamp repair are pushed, and
+student-loan source core`d162f6c`has127isolated passes. Current exact-code full
+browser, inventory and release checks remain required; no human/staging/final
+form/provider qualification is claimed. See the checklist for package evidence.

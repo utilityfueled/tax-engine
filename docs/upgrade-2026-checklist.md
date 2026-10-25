@@ -23,7 +23,9 @@ complete a checkbox.
   `upgrade-2026-telemetry-review.md`; version 10.76.2 retained.
 - [ ] Scan final runtime images with current vulnerability data; document any
   unresolved exposure with owner and expiry.
-- [ ] Raise branch coverage to at least 85% using meaningful tests.
+- [x] Raise branch coverage to at least 85% using meaningful tests: immutable
+  `2f8abd7` reaches86.41%; full test/coverage command still failed twoPDFtimeouts
+  and every newer integrated commit requires fresh verification.
 
 ## Packages and file ownership
 
@@ -465,3 +467,80 @@ A new production Chromium suite is running against immutable `4b5cacb` with
 synthetic sample documents and self-host mode, no retries. Evidence:
 `.local/upgrade-evidence/stable-browser-4b5cacb.log`. Remaining federal/facts/state
 work continues in parallel. This run does not establish hosted staging evidence.
+
+
+## Browser source-fixture audit and Form461 review — 2026-10-25
+
+Ohio state attribution `054cd59` is pushed: nonzero withholding requires its
+actual state across ten source categories; every supplied amount is validated
+before exclusions. Unknown state is not silently treated as non-Ohio. The exact
+staged tree passed741 tests/24files, root types and3629 spec references. See
+`upgrade-2026-state-source-work.md`. Independent agent review of Ohio interest
+`7a337a0` found no actionable findings and passed6 tests/twofiles; this is
+software review, not human tax qualification.
+
+The immutable production Chromium run at`4b5cacb` finished245pass,51fail and
+five hosted skips in13.2minutes. Log:`.local/upgrade-evidence/stable-browser-4b5cacb.log`.
+No passing browser gate is claimed. Failures include incomplete synthetic W2
+Boxes7/10/12W, old aggregate donation/education/energy/payment controls, and
+strict selectors matching new source explanations. Parent is repairing the
+browser tests against the actual source-record UI with the same numeric and
+privacy/readiness expectations. An isolated loopback runtime at the same commit
+supports repair checks; a final committed full run is still required.
+
+Form461 `9d814f9` corrects employee exclusion, official printed line identities,
+capital gain/loss treatment and zero-addback attachment requirements. Parent
+review caught invalid bounds on nonbusiness components of net amounts; actual
+signed business-net conservation now accepts both offsetting directions and
+rejects contradictory sources.608 staged checks pass; parent independently ran
+13 source/PDF checks. Official IRS instructions and RevProc2025-32section4.31
+were refreshed. Final2026 form and human review gates remain closed.
+
+Education distribution core `eaaeb04` has102 isolated focused checks and493
+adjacent working-tree checks. Its actual-source intake, federal reconciliation,
+owner-specific5329 and reference PDF remain active work, documented in
+`upgrade-2026-education-distribution-work.md`. Educator and remaining federal
+packages continue independently. The last full unit/coverage command remains
+red until a fresh immutable run verifies the integrated fixes.
+
+## Current source packages and PDF timing correction — 2026-10-25
+
+Immutable `2f8abd7` finished16,677pass,2fail,zero skip across669files in476.95s.
+Coverage meets every unchanged threshold:86.41%branches,92.03%functions,
+92.76%statements,94.33%lines. The two failures were PDF aggregate-test timeouts;
+no numeric tax regression failed. The full command remains red.
+
+`76bb3a6` separates the identical41template checks and PA/OH state cases into
+individually named tests. No assertion, case, default timeout or coverage setting
+changed. Exact staged tree`8054e7d` passes62tests and3,682spec references; see
+`upgrade-2026-validation-work.md`. A fresh full run remains required.
+
+Pushed through`76bb3a6`: actual educator`b4be8d6`, unknown qualified-stock
+`758b024`, education source return`6b07529` and borrower links`2f8abd7`, actual
+1098-E Box2`224b2ed`, PA withholding`a3f0bec`, browser source fixtures`6cda2c0`,
+education distribution UI`9f2ce31`, ticker frame clamp`0be1714` and PDF cases.
+The PA staged package passes939checks, types and384PArefs. The browser repair
+cohort passes154of155; its final independently derived$8,288balance case then
+passes separately against retained earlier runtime`4b5cacb`. It does not count
+as a fresh full browser gate. The ticker has3red regressions then103combined
+passes, with types/lint; current production browser verification is next.
+
+Student-loan source core`d162f6c` passes127isolated checks, types and3,688refs.
+Parent review found and verified a malformed legacy-interest guard correction.
+Mortgage review found an independent interest/rate numerator reconciliation gap;
+its source-first correction is in progress. Education reference PDF and separate
+owner5329 work continue. Agent review is not independent human qualification.
+
+Remote CI/Web at`76bb3a6` are running; previous`a3f0bec`runs were superseded.
+Latest full local coverage/browser, inventory, remaining source integration and
+final release artifacts remain open. Staging access, human reviews, live provider
+account/budget, actual state demand and final2026forms remain external inputs.
+
+Remote`6b07529`plain unit suite passed16,678tests/669files; coverage then failed
+nine multi-document PDFtimeouts. Commits`76bb3a6`and`ddd8976`isolate every affected
+case without removing any check or changing timeouts. The latter's staged tree
+`9923ca59`passes55tests, types and3,688refs. Remote lint/types/build passed;
+inventory remained stale. `05fd72a`adds audited education reference PDFs, with
+14isolated tests, types and3,692refs. Parent review identified source Box2/3 and
+recipient-link consistency gaps; both were reproduced red and corrected before
+commit. Fresh immutable full validation follows these integrated packages.
