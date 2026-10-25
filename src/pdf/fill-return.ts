@@ -33,6 +33,7 @@ import { fillForm8606 } from "./fill-form-8606.js";
 import { fillForm1098EReference } from "./fill-form-1098-e.js";
 import { fillTaxableRefundWorksheetReference } from "./fill-taxable-refund-worksheet.js";
 import { fillSocialSecurityBenefitsWorksheetReference } from "./fill-social-security-benefits-worksheet.js";
+import { assertForm7206ReviewSource, fillForm7206 } from "./fill-form-7206.js";
 import { fillSEHealthInsuranceWorksheetReference } from "./fill-se-health-insurance-worksheet.js";
 import { fillIraDeductionWorksheetReference } from "./fill-ira-deduction-worksheet.js";
 import { fillForm8962Reference } from "./fill-form-8962.js";
@@ -390,6 +391,7 @@ export async function fillReturn(
   options: FillReturnOptions,
 ): Promise<FillReturnResult> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear, options.purpose);
+  if (input.form7206 || result.form7206) assertForm7206ReviewSource(input, result);
   const filledForms: string[] = [];
   const { outputDir, flatten = false } = options;
   const blankFormsDir = resolveReviewTemplateDirectory(options.blankFormsDir, result.taxYear);
@@ -777,8 +779,18 @@ export async function fillReturn(
     filledForms.push(outputPathSocialSecurityBenefitsWorksheetReference);
   }
 
+  // Actual Form7206 has a separate completed worksheet for each business.
+  if (result.form7206) {
+    for (const [index, business] of result.form7206.businesses.entries()) {
+      const doc = await fillForm7206(input, result, join(blankFormsDir, "f7206.pdf"), business.businessSourceId, business.accountHolder);
+      if (flatten) await flattenForm(doc.getForm());
+      const outputPath = join(outputDir, `form-7206-${business.accountHolder}-${index + 1}.pdf`);
+      await savePdf(doc, outputPath); filledForms.push(outputPath);
+    }
+  }
+
   // ── Self-Employed Health Insurance Worksheet reference summary (if applicable — supported Pub. 535 worksheet inputs) ──
-  if (result.seHealthInsuranceWorksheet) {
+  if (result.seHealthInsuranceWorksheet && !result.form7206) {
     const outputPathSEHealthInsuranceWorksheetReference =
       await fillSEHealthInsuranceWorksheetReference(result, outputDir);
     filledForms.push(outputPathSEHealthInsuranceWorksheetReference);
