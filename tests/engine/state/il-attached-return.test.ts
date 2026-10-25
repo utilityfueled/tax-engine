@@ -923,7 +923,7 @@ describe("Illinois return attachment through calculateFederalTax", () => {
       form1099Int: [
         {
           payer: "US Treasury",
-          interestIncome: "3000",
+          interestIncome: "0", // Actual Box1 is separate from Treasury Box3.
           federalWithheld: "0",
           earlyWithdrawalPenalty: "0",
           usSavingsBondInterest: "3000",
@@ -954,6 +954,11 @@ describe("Illinois return attachment through calculateFederalTax", () => {
     expect(result.stateReturns?.illinois?.scheduleM?.lines.find((line) => line.line === "22")?.value.toNumber()).toBe(1500);
     expect(result.agi.toNumber()).toBe(1500);
     expect(result.stateReturns?.illinois?.baseIncome.toNumber()).toBe(0);
+    // A separate taxable Box1 amount must remain taxable in Illinois.
+    const withBankInterest=calculateFederalTax({...input,form1099Int:[{...input.form1099Int[0],interestIncome:"100"}]});
+    expect(withBankInterest.agi.toString()).toBe("1600");
+    expect(withBankInterest.stateReturns?.illinois?.scheduleM?.lines.find(line=>line.line==="22")?.value.toString()).toBe("1500");
+    expect(withBankInterest.stateReturns?.illinois?.baseIncome.toString()).toBe("100");
   });
 
   it("calculateFederalTax maps Illinois K-1 retirement payments into Schedule M Line 14 on the attached return", () => {

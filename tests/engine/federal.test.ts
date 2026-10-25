@@ -7754,7 +7754,7 @@ describe("Retirement distributions through federal pipeline", () => {
       form1099Int: [
         {
           payer: "US Treasury",
-          interestIncome: "3000",
+          interestIncome: "0", // Actual Box1 excludes the separate Treasury Box3.
           federalWithheld: "0",
           earlyWithdrawalPenalty: "0",
           usSavingsBondInterest: "3000",

@@ -95,8 +95,8 @@ export const W2Schema = z.object({
   box12CodeBB: optionalDecimal, // Box 12 code BB designated Roth contributions under section 403(b)
   box12CodeEE: optionalDecimal, // Box 12 code EE designated Roth contributions under governmental section 457(b)
   box12CodeT: optionalDecimal, // Box 12 code T employer-provided adoption benefits
-  socialSecurityWages: optionalDecimal, // Box 3
-  socialSecurityTips: optionalDecimal, // Box 7
+  socialSecurityWages: optionalDecimalInput, // Box 3; omitted is not a verified zero
+  socialSecurityTips: optionalDecimalInput, // Box 7; omitted is not a verified zero
   socialSecurityWithheld: optionalDecimal, // Box 4
   medicareWages: optionalDecimal, // Box 5
   medicareWithheld: optionalDecimal, // Box 6
@@ -380,6 +380,7 @@ export const CryptoDonationSchema = z.object({
 
 // ── Aggregated Crypto Income Input ──
 export const CryptoIncomeInputSchema = z.object({
+  businessAccountHolder: z.enum(["primary", "spouse"]).optional(),
   miningIncome: z.array(CryptoMiningIncomeSchema).default([]),
   stakingIncome: z.array(CryptoStakingIncomeSchema).default([]),
   airdropIncome: z.array(CryptoAirdropIncomeSchema).default([]),
@@ -1811,7 +1812,10 @@ export const ScheduleK1Schema = z.object({
   investmentInterestExpense: optionalDecimal, // Box 13 Code D — IRC §163(d) investment interest expense from partnership
   // Box 13 Code K — excess business interest expense (tracked for §163(j) carryforward)
   excessBusinessInterest: optionalDecimal, // Box 13 Code K — IRC §163(j) excess business interest expense
-  selfEmploymentEarnings: optionalDecimal, // Box 14
+  selfEmploymentEarnings: optionalDecimalInput, // Actual Box 14 code A, including applicable guaranteed payments
+  selfEmploymentFactsConfirmed: z.boolean().optional(),
+  selfEmploymentNetEarningsAfterAdjustments: optionalDecimalInput, // Actual partner worksheet after deductible expenses/loss limits
+  selfEmploymentIncomeType: z.enum(["farm", "nonfarm"]).optional(),
   foreignTaxPaid: optionalDecimal, // Box 16 Code O/P — creditable foreign taxes
   /** Gross foreign source income from Box 16 Codes D/E/F.
    *  When provided, this explicit amount is used for Form 1116 limitation
@@ -2313,6 +2317,7 @@ export const BusinessExpensesSchema = z.object({
 });
 
 export const Form4137Schema = z.object({
+  accountHolder: z.enum(["primary", "spouse"]).optional(),
   unreportedTipIncome: decimal,
   socialSecurityWagesAndTipsAlreadyReported: decimal.optional(),
   medicareOnlyGovernmentEmployeeTips: optionalDecimal,
@@ -2327,6 +2332,7 @@ export const Form4137Schema = z.object({
 });
 
 export const Form8919Schema = z.object({
+  accountHolder: z.enum(["primary", "spouse"]).optional(),
   wagesNotReportedOnW2: decimal,
   socialSecurityWagesAndTipsAlreadyReported: decimal.optional(),
   rrtaCompensationSubjectToSocialSecurityTax: decimal.optional(),

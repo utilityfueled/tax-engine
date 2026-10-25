@@ -305,20 +305,46 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     qcdAnnualLimit: constants.qcd.annualLimit,
   });
   audit.merge(form1099R.lines);
+  const hasUnreportedPayroll = input.form4137 !== undefined || input.form8919 !== undefined;
+  const hasActualPayrollOwner = input.form4137?.accountHolder !== undefined || input.form8919?.accountHolder !== undefined;
+  if (hasUnreportedPayroll && filingStatus === "married_filing_jointly"
+    && (year >= 2026 || hasActualPayrollOwner) && input.w2s.some(w2 => w2.accountHolder === undefined)) {
+    throw new Error("Actual W-2 owner attribution is required with separately owned unreported payroll");
+  }
+  if (hasUnreportedPayroll && year >= 2026 && input.w2s.some(w2 =>
+    w2.socialSecurityWages === undefined || w2.socialSecurityTips === undefined)) {
+    throw new Error("2026 unreported payroll requires actual W-2 Boxes3 and7, including known zero");
+  }
+  const payrollForOwner = (owner: "primary" | "spouse" | undefined) => {
+    const wages = owner === undefined ? input.w2s : input.w2s.filter(w2 =>
+      (w2.accountHolder ?? (filingStatus !== "married_filing_jointly" ? "primary" : undefined)) === owner);
+    return {
+      wages: sum(...wages.map(w2 => d(w2.socialSecurityWages))),
+      tips: sum(...wages.map(w2 => d(w2.socialSecurityTips))),
+    };
+  };
+  if (year >= 2026 && filingStatus === "married_filing_jointly"
+    && ((input.form4137 && !input.form4137.accountHolder) || (input.form8919 && !input.form8919.accountHolder))) {
+    throw new Error("2026 unreported payroll forms require actual taxpayer ownership");
+  }
+  const tipPayroll = payrollForOwner(input.form4137?.accountHolder);
   const form4137 = input.form4137
     ? calculateForm4137(input.form4137, constants, {
-      socialSecurityWagesAndTipsAlreadyReported: w2Agg.ssWages,
-      socialSecurityTipsAlreadyReported: w2Agg.ssTips,
+      socialSecurityWagesAndTipsAlreadyReported: tipPayroll.wages,
+      socialSecurityTipsAlreadyReported: tipPayroll.tips,
     })
     : undefined;
   if (form4137) {
     audit.merge(form4137.lines);
   }
+  const unreportedPayroll = payrollForOwner(input.form8919?.accountHolder);
+  const samePayrollOwner = !input.form4137?.accountHolder || !input.form8919?.accountHolder
+    || input.form4137.accountHolder === input.form8919.accountHolder;
   const form8919 = input.form8919
     ? calculateForm8919(input.form8919, constants, {
-      socialSecurityWagesAndTipsAlreadyReported: w2Agg.ssWages,
-      w2SocialSecurityTipsAlreadyReported: w2Agg.ssTips,
-      form4137SocialSecurityTipsAlreadyReported: form4137?.line10 ?? new Decimal(0),
+      socialSecurityWagesAndTipsAlreadyReported: unreportedPayroll.wages,
+      w2SocialSecurityTipsAlreadyReported: unreportedPayroll.tips,
+      form4137SocialSecurityTipsAlreadyReported: samePayrollOwner ? form4137?.line10 ?? new Decimal(0) : new Decimal(0),
     })
     : undefined;
   if (form8919) {
@@ -1287,7 +1313,10 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   // Schedule SE for SE tax deduction
   // Pass Schedule C net profit (Line 31) and Schedule F net profit (Line 34)
   // so SE tax is assessed on net, not gross amounts.
-  const schedSE = calculateScheduleSE(input, constants, schedCNetProfit, schedFNetProfit);
+  const schedSE = calculateScheduleSE(input, constants, schedC.netProfit, schedFNetProfit, {
+    additionalNonfarmIncome: cryptoBusinessNet,
+    additionalNonfarmOwner: input.cryptoIncome?.businessAccountHolder,
+  });
   audit.merge(schedSE.lines);
   const netSEEarnings = schedSE.netSEEarnings;
 
@@ -2602,9 +2631,9 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   audit.record("Sched 2", "1", "Alternative Minimum Tax", amt, "Form 6251 Line 11");
 
   // ── Form 8959: Additional Medicare Tax ────────────────
-  // Form 8959 Line 8 requires post-multiplier SE (Schedule SE Line 4a = earnings × 0.9235).
+  // Form 8959 Line 8 requires each person's Schedule SE line6 after the filing threshold.
   // Using pre-multiplier netSEEarnings would overstate the SE contribution.
-  const form8959 = calculateForm8959(input, schedSE.taxableEarnings, filingStatus, constants);
+  const form8959 = calculateForm8959(input, schedSE.earningsSubjectToSETax, filingStatus, constants);
   const additionalMedicareTax = form8959.additionalMedicareTax;
   audit.merge(form8959.lines);
 

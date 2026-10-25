@@ -31,7 +31,7 @@ function makeFixtureWith1099NEC(amount: string, w2SSWages = "0"): TaxYearInput {
 // ═══════════════════════════════════════════════════════════
 
 describe("Schedule SE - Net Earnings", () => {
-  it("Schedule SE Line 4a - uses Schedule F net farm profit when farm input is present", () => {
+  it("Schedule SE Line 1a - uses Schedule F net farm profit when farm input is present", () => {
     const result = calculateScheduleSE({
       ...simpleW2Fixture,
       form1099Nec: [],
@@ -49,17 +49,17 @@ describe("Schedule SE - Net Earnings", () => {
     expect(result.netFarmProfit.toNumber()).toBe(30000);
     expect(result.netSEEarnings.toNumber()).toBe(30000);
 
-    const line4a = result.lines.find((l) => l.form === "Sched SE" && l.line === "4a");
+    const line4a = result.lines.find((l) => l.form === "Sched SE" && l.line === "1a");
     expect(line4a).toBeDefined();
     expect(line4a!.value.toNumber()).toBe(30000);
   });
 
-  it("Schedule SE Line 4b - net nonfarm from 1099-NEC", () => {
+  it("Schedule SE Line 2 - net nonfarm from 1099-NEC", () => {
     const result = calculateScheduleSE(makeFixtureWith1099NEC("50000"), c);
     expect(result.netNonfarmProfit.toNumber()).toBe(50000);
   });
 
-  it("Schedule SE Line 4b - uses Schedule C net profit after expenses", () => {
+  it("Schedule SE Line 2 - uses Schedule C net profit after expenses", () => {
     const result = calculateScheduleSE({
       ...simpleW2Fixture,
       form1099Nec: [
@@ -73,12 +73,12 @@ describe("Schedule SE - Net Earnings", () => {
     expect(result.netNonfarmProfit.toNumber()).toBe(500);
     expect(result.netSEEarnings.toNumber()).toBe(500);
 
-    const line4b = result.lines.find((l) => l.form === "Sched SE" && l.line === "4b");
+    const line4b = result.lines.find((l) => l.form === "Sched SE" && l.line === "2");
     expect(line4b).toBeDefined();
     expect((line4b!.inputs["Schedule C Line 31 net profit"] as Decimal).toNumber()).toBe(500);
   });
 
-  it("Schedule SE Line 4b - includes K-1 SE earnings and guaranteed payments", () => {
+  it("Schedule SE Line 2 - includes K-1 SE earnings and guaranteed payments", () => {
     const result = calculateScheduleSE(complexMFJFixture, c);
     // complexMFJ: 1099-NEC $15K + K-1 SE $0 + K-1 guaranteed $0 = $15K
     expect(result.netNonfarmProfit.toNumber()).toBe(15000);
@@ -102,7 +102,7 @@ describe("Schedule SE - Net Earnings", () => {
 });
 
 // ═══════════════════════════════════════════════════════════
-// $400 Minimum Threshold (Schedule SE Line 6)
+// $400 Minimum Threshold (Schedule SE Line 4c)
 // ═══════════════════════════════════════════════════════════
 
 describe("Schedule SE - $400 minimum threshold", () => {
@@ -250,9 +250,9 @@ describe("Schedule SE - Tax Calculation", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("Schedule SE - Farm Income", () => {
-  it("Schedule SE Line 4a - no Schedule F input keeps farm income at zero in the audit trail", () => {
+  it("Schedule SE Line 1a - no Schedule F input keeps farm income at zero in the audit trail", () => {
     const result = calculateScheduleSE(makeFixtureWith1099NEC("50000"), c);
-    const line4a = result.lines.find((l) => l.line === "4a");
+    const line4a = result.lines.find((l) => l.line === "1a");
     expect(line4a).toBeDefined();
     expect(line4a!.value.toNumber()).toBe(0);
     expect(line4a!.description).toBe("Net farm profit or loss");
@@ -263,8 +263,8 @@ describe("Schedule SE - audit trail", () => {
   it("produces complete audit trail", () => {
     const result = calculateScheduleSE(makeFixtureWith1099NEC("50000"), c);
     const lineIds = result.lines.map((l) => l.line);
-    expect(lineIds).toContain("4b");
-    expect(lineIds).toContain("6");
+    expect(lineIds).toContain("2");
+    expect(lineIds).toContain("3");
     expect(lineIds).toContain("7");
     expect(lineIds).toContain("10");
     expect(lineIds).toContain("11");
@@ -274,11 +274,11 @@ describe("Schedule SE - audit trail", () => {
 });
 
 // ═══════════════════════════════════════════════════════════
-// Line 4a: Net Farm Profit (Schedule F)
+// Line 1a: Net Farm Profit (Schedule F)
 // ═══════════════════════════════════════════════════════════
 
-describe("Schedule SE - Line 6 (combined farm and nonfarm income)", () => {
-  it("Schedule SE Line 6 - Schedule F losses offset nonfarm self-employment earnings", () => {
+describe("Schedule SE - Line 3 (combined farm and nonfarm income)", () => {
+  it("Schedule SE Line 3 - Schedule F losses offset nonfarm self-employment earnings", () => {
     const result = calculateScheduleSE({
       ...simpleW2Fixture,
       form1099Nec: [{ payer: "Client", nonemployeeCompensation: "60000", federalWithheld: "0" }],
@@ -296,7 +296,7 @@ describe("Schedule SE - Line 6 (combined farm and nonfarm income)", () => {
     expect(result.netSEEarnings.toNumber()).toBe(45000);
   });
 
-  it("Schedule SE Line 6 - zero farm and nonfarm income keeps total SE earnings at zero", () => {
+  it("Schedule SE Line 3 - zero farm and nonfarm income keeps total SE earnings at zero", () => {
     const result = calculateScheduleSE({
       ...simpleW2Fixture,
       form1099Nec: [],
@@ -310,8 +310,8 @@ describe("Schedule SE - Line 6 (combined farm and nonfarm income)", () => {
 // Lines 4a + 4b: Church Employee Income and Nonfarm Profit
 // ═══════════════════════════════════════════════════════════
 
-describe("Schedule SE - Lines 4a and 4b", () => {
-  it("Line 4b - combines 1099-NEC, K-1 SE earnings, and K-1 guaranteed payments", () => {
+describe("Schedule SE - Lines 1a and 2", () => {
+  it("Line 2 - combines 1099-NEC and K-1 SE earnings without duplicating guaranteed payments", () => {
     const input: TaxYearInput = {
       ...simpleW2Fixture,
       form1099Nec: [
@@ -339,30 +339,30 @@ describe("Schedule SE - Lines 4a and 4b", () => {
       }],
     };
     const result = calculateScheduleSE(input, c);
-    // $20K (1099-NEC) + $10K (K-1 SE) + $5K (guaranteed payments) = $35K
-    expect(result.netNonfarmProfit.toNumber()).toBe(35000);
+    // Official line2: $20K Schedule C + $10K Box14A (which includes the $5K Box4) = $30K.
+    expect(result.netNonfarmProfit.toNumber()).toBe(30000);
   });
 
-  it("Line 4a is recorded as zero while Line 6 still reflects only Line 4b nonfarm income", () => {
-    // Farm income (Line 4a) is always zero; Line 6 should still match Line 4b.
+  it("Line 1a is recorded as zero while Line 3 still reflects only Line 2 nonfarm income", () => {
+    // Farm income (Line 1a) is always zero; Line 3 should still match Line 2.
     const result = calculateScheduleSE(makeFixtureWith1099NEC("80000"), c);
     const lineIds = result.lines.map((l) => l.line);
-    expect(lineIds).toContain("4a");
-    // Line 4b is present
-    expect(lineIds).toContain("4b");
-    const line4a = result.lines.find((l) => l.line === "4a");
+    expect(lineIds).toContain("1a");
+    // Line 2 is present
+    expect(lineIds).toContain("2");
+    const line4a = result.lines.find((l) => l.line === "1a");
     expect(line4a?.value.toNumber()).toBe(0);
-    // Line 6 must equal Line 4b value
+    // Line 3 must equal Line 2 value
     expect(result.netSEEarnings.toNumber()).toBe(result.netNonfarmProfit.toNumber());
   });
 });
 
 // ═══════════════════════════════════════════════════════════
-// Line 6: Combined SE Income
+// Line 3: Combined SE Income
 // ═══════════════════════════════════════════════════════════
 
-describe("Schedule SE - Line 6 (combined SE income)", () => {
-  it("Line 6 - equals nonfarm profit when multiple 1099-NEC payers", () => {
+describe("Schedule SE - Line 3 (combined SE income)", () => {
+  it("Line 3 - equals nonfarm profit when multiple 1099-NEC payers", () => {
     const input: TaxYearInput = {
       ...simpleW2Fixture,
       form1099Nec: [
@@ -372,21 +372,21 @@ describe("Schedule SE - Line 6 (combined SE income)", () => {
       scheduleK1: [],
     };
     const result = calculateScheduleSE(input, c);
-    // Line 6 = $30K + $20K = $50K
+    // Line 3 = $30K + $20K = $50K
     expect(result.netSEEarnings.toNumber()).toBe(50000);
   });
 
-  it("Line 6 - is recorded in audit trail with correct description", () => {
+  it("Line 3 - is recorded in audit trail with correct description", () => {
     const result = calculateScheduleSE(makeFixtureWith1099NEC("40000"), c);
-    const line6 = result.lines.find((l) => l.line === "6");
+    const line6 = result.lines.find((l) => l.line === "3");
     expect(line6).toBeDefined();
     expect(line6!.value.toNumber()).toBe(40000);
   });
 
-  it("Line 6 - below $400 still records Line 6 in audit trail", () => {
+  it("Line 3 - below $400 still records Line 3 in audit trail", () => {
     const result = calculateScheduleSE(makeFixtureWith1099NEC("300", "0"), c);
     const lineIds = result.lines.map((l) => l.line);
-    expect(lineIds).toContain("6");
+    expect(lineIds).toContain("3");
     expect(result.netSEEarnings.toNumber()).toBe(300);
   });
 });
@@ -445,10 +445,10 @@ describe("Schedule SE - audit trail completeness", () => {
   it("audit trail contains lines 4a, 4b, 6, 7, 10, 11, 12, 13", () => {
     const result = calculateScheduleSE(makeFixtureWith1099NEC("75000", "0"), c);
     const lineIds = result.lines.map((l) => l.line);
-    // Farm income is out of scope, but Line 4a is still recorded as an explicit zero.
-    expect(lineIds).toContain("4a"); // Net farm profit (always zero)
-    expect(lineIds).toContain("4b"); // Net nonfarm profit
-    expect(lineIds).toContain("6");  // Combined SE earnings
+    // Farm income is out of scope, but Line 1a is still recorded as an explicit zero.
+    expect(lineIds).toContain("1a"); // Net farm profit (always zero)
+    expect(lineIds).toContain("2"); // Net nonfarm profit
+    expect(lineIds).toContain("3");  // Combined SE earnings
     expect(lineIds).toContain("7");  // SE earnings × 0.9235
     expect(lineIds).toContain("10"); // SS portion
     expect(lineIds).toContain("11"); // Medicare portion
@@ -460,9 +460,9 @@ describe("Schedule SE - audit trail completeness", () => {
     // Even when no tax is due, all lines should be present for completeness
     const result = calculateScheduleSE(makeFixtureWith1099NEC("200", "0"), c);
     const lineIds = result.lines.map((l) => l.line);
-    expect(lineIds).toContain("4a");
-    expect(lineIds).toContain("4b");
-    expect(lineIds).toContain("6");
+    expect(lineIds).toContain("1a");
+    expect(lineIds).toContain("2");
+    expect(lineIds).toContain("3");
     expect(lineIds).toContain("7");
     expect(lineIds).toContain("10");
     expect(lineIds).toContain("11");
@@ -503,8 +503,8 @@ describe("Schedule SE - audit trail completeness", () => {
     };
 
     const result = calculateScheduleSE(input, c);
-    const line4b = result.lines.find((l) => l.form === "Sched SE" && l.line === "4b");
-    const line6 = result.lines.find((l) => l.form === "Sched SE" && l.line === "6");
+    const line4b = result.lines.find((l) => l.form === "Sched SE" && l.line === "2");
+    const line6 = result.lines.find((l) => l.form === "Sched SE" && l.line === "3");
     const line10 = result.lines.find((l) => l.form === "Sched SE" && l.line === "10");
     const line12 = result.lines.find((l) => l.form === "Sched SE" && l.line === "12");
     const line13 = result.lines.find((l) => l.form === "Sched SE" && l.line === "13");
@@ -512,24 +512,24 @@ describe("Schedule SE - audit trail completeness", () => {
     expect(line4b).toBeDefined();
     expect((line4b!.inputs["Schedule C Line 31 net profit"] as Decimal).toNumber()).toBe(20000);
     expect((line4b!.inputs["K-1 self-employment earnings"] as Decimal).toNumber()).toBe(5000);
-    expect((line4b!.inputs["K-1 guaranteed payments"] as Decimal).toNumber()).toBe(3000);
+    expect(line4b!.inputs["K-1 guaranteed payments"]).toBeUndefined();
 
     expect(line6).toBeDefined();
-    expect((line6!.inputs["Line 4a"] as Decimal).toNumber()).toBe(0);
-    expect((line6!.inputs["Line 4b"] as Decimal).toNumber()).toBe(28000);
+    expect((line6!.inputs["Line 1a"] as Decimal).toNumber()).toBe(0);
+    expect((line6!.inputs["Line 2"] as Decimal).toNumber()).toBe(25000);
 
     expect(line10).toBeDefined();
-    expect((line10!.inputs["Line 7 taxable earnings"] as Decimal).toNumber()).toBe(25858);
+    expect((line10!.inputs["Line 6 taxable earnings"] as Decimal).toNumber()).toBe(23088);
     expect((line10!.inputs["W-2 SS wages"] as Decimal).toNumber()).toBe(100000);
     expect((line10!.inputs["Remaining SS wage base room"] as Decimal).toNumber()).toBe(76100);
-    expect((line10!.inputs["SS-taxable earnings after cap"] as Decimal).toNumber()).toBe(25858);
+    expect((line10!.inputs["SS-taxable earnings after cap"] as Decimal).toNumber()).toBe(23088);
 
     expect(line12).toBeDefined();
-    expect((line12!.inputs["Line 10"] as Decimal).toNumber()).toBe(3206);
-    expect((line12!.inputs["Line 11"] as Decimal).toNumber()).toBe(750);
+    expect((line12!.inputs["Line 10"] as Decimal).toNumber()).toBe(2863);
+    expect((line12!.inputs["Line 11"] as Decimal).toNumber()).toBe(670);
 
     expect(line13).toBeDefined();
-    expect((line13!.inputs["Line 12"] as Decimal).toNumber()).toBe(3956);
+    expect((line13!.inputs["Line 12"] as Decimal).toNumber()).toBe(3533);
   });
 });
 
@@ -854,11 +854,11 @@ describe("Schedule SE - filing status variations", () => {
 });
 
 // ═══════════════════════════════════════════════════════════
-// Schedule C Net Profit (Line 4b must use net, not gross)
+// Schedule C Net Profit (Line 2 must use net, not gross)
 // ═══════════════════════════════════════════════════════════
 
 describe("Schedule SE - Schedule C net profit vs gross 1099-NEC", () => {
-  it("Line 4b uses Schedule C net profit when provided (not gross 1099-NEC)", () => {
+  it("Line 2 uses Schedule C net profit when provided (not gross 1099-NEC)", () => {
     // $100K 1099-NEC gross, $40K expenses → Schedule C net = $60K
     // SE should use $60K, NOT $100K
     const input = makeFixtureWith1099NEC("100000", "0");
@@ -884,7 +884,7 @@ describe("Schedule SE - Schedule C net profit vs gross 1099-NEC", () => {
     expect(result.taxableEarnings.toNumber()).toBe(92350);
   });
 
-  it("Schedule C loss reduces K-1 SE earnings in Line 4b", () => {
+  it("Schedule C loss reduces K-1 SE earnings in Line 2", () => {
     // -$10K Schedule C loss + $25K K-1 SE earnings = $15K net
     const input: TaxYearInput = {
       ...simpleW2Fixture,

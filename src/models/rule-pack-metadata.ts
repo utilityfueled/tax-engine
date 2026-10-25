@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.14",
+    ruleVersion: "2025.15",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i1040sse", section: "Separate spouse regular-method forms, actual W2 Boxes3/7 and adjusted K1 Box14A", revision: "2025 final instructions; independently indexed2026 payroll values", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/pub/irs-pdf/f1040sc.pdf", section: "Official income lines3-7 and other-income routing to net profit", revision: "2025 final form; applicable current-law arithmetic", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/pub/irs-pdf/f8815.pdf", section: "Source bond history, coordinated education costs, prior-interest adjustment and line9 MAGI", revision: "2025 final form and instructions; independently indexed2026 thresholds", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i1099int", section: "Separate taxable Box 1 and Treasury Box 3 source amounts", revision: "Continuous-use January2024 instructions", retrievedAt: "2026-10-25" },
@@ -57,11 +58,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.9-law-integration-draft",
+    ruleVersion: "2026.10-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i1040sse", section: "Separate spouse regular-method forms, actual W2 Boxes3/7 and adjusted K1 Box14A", revision: "2025 final instructions; independently indexed2026 payroll values", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/pub/irs-pdf/f1040sc.pdf", section: "Official income lines3-7 and other-income routing to net profit", revision: "2025 final form; applicable current-law arithmetic", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i1040sca", section: "Line5a source withholding, payment year and no duplicate deduction", revision: "2025 final instructions; applicable current-law rules", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/pub/irs-pdf/f8815.pdf", section: "Source bond history, coordinated education costs, prior-interest adjustment and line9 MAGI", revision: "2025 final form and instructions; independently indexed2026 thresholds", retrievedAt: "2026-10-25" },

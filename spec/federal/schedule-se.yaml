@@ -2,112 +2,93 @@ form: "Schedule SE"
 fullName: "Self-Employment Tax"
 taxYear: 2025
 irsReference: "https://www.irs.gov/instructions/i1040sse"
-
+notes: |
+  Refreshed final 2025 form and instructions on 2026-10-25. Each spouse computes
+  a separate Schedule SE. Only that person's losses and wages affect their SE
+  tax. K-1 Box14 codeA already contains applicable guaranteed payments; never
+  add Box4 again. Verified 2026 source paths require actual ownership, payroll
+  Boxes3/7 and actual adjusted K-1 SE amounts/type. Historical missing-source
+  calculations are explicitly unverified. Optional methods, CRP exclusions,
+  church/ministry exemptions and community-property adjustments need their
+  applicable source worksheets before those scenarios can be qualified.
 lines:
+  - line: "1a"
+    description: "Farm earnings"
+    formula: "This person's Schedule F line34 plus adjusted farming K-1 Box14A"
+    testRef: "tests/engine/schedules/schedule-se.test.ts::Schedule SE Line 1a - uses Schedule F net farm profit when farm input is present"
+  - line: "1b"
+    description: "Excluded CRP payments"
+    formula: "Actual qualifying CRP payments; this regular-method slice has none"
+    testRef: "tests/engine/schedules/schedule-se-source.test.ts::audits the official regular-method lines and includes W2 tips"
+  - line: "2"
+    description: "Nonfarm earnings"
+    formula: "This person's Schedule C line31 plus adjusted nonfarm K-1 Box14A and other actual nonfarm business profit"
+    testRef: "tests/engine/schedules/schedule-se-source.test.ts::uses K1 Box14A once and requires adjusted source facts for 2026"
+  - line: "3"
+    description: "Combined net profit"
+    formula: "Lines1a minus1b plus2 for the same person"
+    testRef: "tests/engine/schedules/schedule-se-source.test.ts::does not offset one spouse profit with the other spouse loss"
   - line: "4a"
-    description: "Net farm profit or loss"
-    formula: "Use Schedule F Line 34 net farm profit or loss when the return includes Schedule F input, whether Schedule SE computes Schedule F directly or the federal orchestrator passes the already-computed Schedule F Line 34 override; otherwise enter 0 in this supported slice"
-    irsRef: "Schedule SE Instructions, Lines 4a Through 4c; Net Earnings From Self-Employment"
-    notes: "The supported slice includes direct Schedule F Line 34 farm profit or loss in self-employment earnings. Farm optional-method branches and other dotted-line special cases remain deferred. Partnership self-employment earnings continue through the implemented K-1 support on Line 4b rather than a separate farm-partnership Line 4a path."
-    testRef: "tests/engine/schedules/schedule-se.test.ts::Schedule SE Line 4a - uses Schedule F net farm profit when farm input is present"
-
+    description: "Net earnings adjustment"
+    formula: "If line3 is positive, round(line3 times0.9235); otherwise retain signed line3"
+    testRef: "tests/engine/schedules/schedule-se-source.test.ts::audits the official regular-method lines and includes W2 tips"
   - line: "4b"
-    description: "Net nonfarm profit or loss"
-    formula: "Schedule C Line 31 + K-1 Box 14 + guaranteed payments"
-    irsRef: "Schedule SE Instructions, Line 4b: 'Net profit or (loss) from Schedule C, line 31'"
-    inputs:
-      - "Schedule C Line 31 (net profit after all expenses, NOT gross 1099-NEC)"
-      - "K-1 Box 14 (SE earnings)"
-      - "K-1 Box 4 (guaranteed payments)"
-    notes: |
-      CRITICAL: Schedule C Line 31 is the NET profit (gross receipts minus COGS, expenses,
-      and home office deduction). Using gross 1099-NEC amounts overstates SE earnings when
-      the taxpayer has business expenses. The Schedule SE input must come from the Schedule C
-      calculation result, not from raw form1099Nec data.
-      Audit trail should expose the Schedule C Line 31 net profit or loss used for SE tax
-      so business expenses and home office deductions reduce SE earnings before K-1 subtotals are added.
-    edgeCases:
-      - "Gross 1099-NEC receipts above $400 but Schedule C Line 31 below $400 or negative → no SE tax from the Schedule C activity"
-      - "Schedule C net loss offsets K-1 self-employment earnings before applying the $400 threshold; the combined Line 4b amount can fall below $400 or land exactly on $400"
-      - "1099-NEC $100K with $40K expenses → SE input = $60K (not $100K)"
-      - "Schedule C loss flows through as negative, reducing K-1 SE earnings"
-      - "No Schedule C expenses → gross = net (no difference)"
-    testRef: "tests/engine/schedules/schedule-se.test.ts::Schedule SE Line 4b - uses Schedule C net profit after expenses"
-
-  - line: "6"
-    description: "Net earnings from self-employment"
-    formula: "Line 4a + 4b (combined)"
-    irsRef: "Schedule SE Instructions, Line 6"
-    notes: "If less than $400, no SE tax is due (skip remaining lines). Audit trail should still show the Line 4a and Line 4b amounts combined into Line 6. The definitive $400 threshold applies to Line 7 (post-multiplier)."
-    edgeCases:
-      - "Net SE earnings < $400 → SE tax is $0"
-      - "Exactly $400 → SE tax applies"
-      - "$399 → SE tax does not apply"
-      - "A Schedule F loss offsets Schedule C and K-1 self-employment income before the 92.35% multiplier and the $400 threshold are applied"
-      - "A Schedule C loss can reduce K-1 self-employment income below $400; if the combined amount is exactly $400, SE tax still applies"
-      - "Negative net SE earnings → no SE tax"
-      - "Net SE earnings $0 → no SE tax"
-    testRef: "tests/engine/schedules/schedule-se.test.ts::Schedule SE Line 6 - Schedule F losses offset nonfarm self-employment earnings"
-
-  - line: "7-threshold"
-    description: "$400 filing threshold (post-multiplier)"
-    formula: "If Line 7 < $400, no SE tax is due"
-    irsRef: "IRC §1402(b)(2); Short Schedule SE Line 3 instruction"
-    notes: |
-      Per IRC §1402(b)(2), 'net earnings from self-employment' (which includes the 92.35%
-      multiplier per §1402(a)(12)) must be ≥ $400 for SE tax to apply. The Short Schedule SE
-      confirms: 'If line 3 [post-multiplier] is less than $400, you don't owe self-employment tax.'
-      Pre-multiplier amounts $400–$432 produce post-multiplier amounts $369–$399 (below threshold).
-      The boundary: $433 pre-multiplier → $400 post-multiplier (first amount subject to SE tax).
-    edgeCases:
-      - "$400 pre-multiplier → $369 post-multiplier → no SE tax"
-      - "$432 pre-multiplier → $399 post-multiplier → no SE tax"
-      - "$433 pre-multiplier → $400 post-multiplier → SE tax applies"
+    description: "Optional-method earnings"
+    formula: "Actual lines15 plus17; zero in this supported regular-method slice"
+    testRef: "tests/engine/schedules/schedule-se-source.test.ts::audits the official regular-method lines and includes W2 tips"
+  - line: "4c"
+    description: "Adjusted earnings and filing threshold"
+    formula: "4a plus4b; stop if below400 unless applicable church-employee exception"
     testRef: "tests/engine/schedules/schedule-se.test.ts::$433 SE income: SE tax applies (post-multiplier exactly $400)"
-
+  - line: "5a-5b"
+    description: "Church employee earnings"
+    formula: "Actual church employee income times0.9235 with100 minimum; outside this regular business slice"
+    testRef: "tests/engine/schedules/schedule-se-source.test.ts::audits the official regular-method lines and includes W2 tips"
+  - line: "6"
+    description: "Earnings subject to SE tax"
+    formula: "4c plus5b; zero after the instructed stop when below400"
+    testRef: "tests/engine/schedules/schedule-se-source.test.ts::audits the official regular-method lines and includes W2 tips"
   - line: "7"
-    description: "SE tax earnings multiplier"
-    formula: "Line 6 × 0.9235"
-    irsRef: "Schedule SE Instructions, Line 7"
-    notes: "92.35% multiplier represents the employer-equivalent portion"
-    testRef: "tests/utils/tax-math.test.ts::SE tax - earnings multiplier applies 92.35%"
-
+    description: "Annual Social Security wage limit"
+    formula: "Year-specific statutory Social Security wage base"
+    testRef: "tests/engine/schedules/schedule-se-source.test.ts::keeps each spouse Social Security wage base separate"
+  - line: "8a"
+    description: "This person's Social Security wages and tips"
+    formula: "Sum of this person's W2 Boxes3 and7 plus applicable Tier1 RRTA compensation"
+    testRef: "tests/engine/schedules/schedule-se-source.test.ts::audits the official regular-method lines and includes W2 tips"
+  - line: "8b-8d"
+    description: "Additional covered wages"
+    formula: "8b is this person's Form4137line10;8c Form8919line10;8d=8a+8b+8c"
+    testRef: "tests/engine/schedules/schedule-se-source.test.ts::keeps unreported payroll sources with their actual owner"
+  - line: "9"
+    description: "Remaining wage base"
+    formula: "max(0,line7-line8d)"
+    testRef: "tests/engine/schedules/schedule-se-source.test.ts::keeps each spouse Social Security wage base separate"
   - line: "10"
-    description: "Social Security tax portion"
-    formula: "min(Line 7, wage base - W-2 SS wages - supported Form 4137 Line 10 tips already subject to Social Security tax - supported Form 8919 Line 10 wages already subject to Social Security tax) × 12.4%"
-    irsRef: "Schedule SE Instructions, Lines 8-10"
-    inputs:
-      - "SE taxable earnings (Line 7)"
-      - "Social Security wage base ($176,100 for 2025)"
-      - "W-2 Social Security wages"
-      - "Supported Form 4137 Line 10 Social Security-taxable tips"
-      - "Supported Form 8919 Line 10 Social Security-taxable wages"
-    notes: "Audit trail should expose the remaining Social Security wage-base room after W-2 wages and the capped taxable earnings used in the calculation."
-    edgeCases:
-      - "W-2 wages already exceed SS wage base → SS portion is $0"
-      - "Combined W-2 + SE exceeds wage base → only remaining room taxed"
-      - "Supported Form 4137 Line 10 tips reduce the remaining wage-base room before Schedule SE computes the Social Security portion"
-      - "Supported Form 8919 Line 10 wages reduce the remaining wage-base room before Schedule SE computes the Social Security portion"
-      - "Supported Form 4137 Line 10 tips plus supported Form 8919 Line 10 wages can fully exhaust the remaining wage-base room before any self-employment earnings reach the Social Security rate"
+    description: "Social Security tax"
+    formula: "round(min(line6,line9) times0.124)"
     testRef: "tests/utils/tax-math.test.ts::SE tax - social security capped at wage base"
-
   - line: "11"
-    description: "Medicare tax portion"
-    formula: "Line 7 × 2.9%"
-    irsRef: "Schedule SE Instructions, Line 11"
-    notes: "No wage base cap for Medicare"
+    description: "Medicare tax"
+    formula: "round(line6 times0.029)"
     testRef: "tests/utils/tax-math.test.ts::SE tax - medicare no cap"
-
   - line: "12"
-    description: "Total self-employment tax"
-    formula: "Line 10 + Line 11"
-    irsRef: "Schedule SE Instructions, Line 12"
-    notes: "Audit trail should expose the separately computed Social Security and Medicare portions that sum to total SE tax."
-    testRef: "tests/engine/schedules/schedule-se.test.ts::Schedule SE Line 12 - total SE tax"
-
+    description: "Self-employment tax"
+    formula: "Line10 plus11, combined across separately computed spouse forms for Schedule2line4"
+    testRef: "tests/engine/schedules/schedule-se-source.test.ts::keeps each spouse Social Security wage base separate"
   - line: "13"
-    description: "Deductible part of SE tax"
-    formula: "Line 12 × 50%"
-    irsRef: "Schedule SE Instructions, Line 13"
-    notes: "This amount goes to Schedule 1 Line 15 (adjustment to income). Audit trail should expose the Line 12 total used for the 50% deduction."
-    testRef: "tests/utils/tax-math.test.ts::SE tax - deductible half"
+    description: "Deductible half"
+    formula: "round(each person's line12 times0.5); sum actual separate deductions for Schedule1line15"
+    testRef: "tests/engine/schedules/schedule-se-source.test.ts::does not offset one spouse profit with the other spouse loss"
+  - line: "source-integrity"
+    description: "Unknown source ownership and payroll boxes stay unknown"
+    formula: "Require actual owner on relevant joint-return sources, including positive NEC receipts, and actual Boxes3/7 in2026; reject conflicting owners; historical aggregate fallback remains unverified"
+    testRef: "tests/engine/schedules/schedule-se-source.test.ts::preserves unknown source facts and rejects incomplete 2026 attribution"
+  - line: "review-mapping"
+    description: "Separate audited review forms"
+    formula: "Copy each person's official lines to a complete two-page review form; use actual proprietor identity and reject contradictory results"
+    testRef: "tests/pdf/fill-schedule-se-source.test.ts::renders separate complete audited forms for both spouses"
+  - line: "payroll-owner-integration"
+    description: "No silent loss of wage-base sources"
+    formula: "An actually owned Form4137/8919 cannot silently omit an unowned joint-return W2; 2026 requires actual payroll Boxes3/7 even without a business source"
+    testRef: "tests/engine/schedules/schedule-se-source.test.ts::rejects unknown wage ownership when calculating actually owned unreported payroll"

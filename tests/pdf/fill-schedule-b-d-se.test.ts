@@ -196,14 +196,14 @@ describe("Schedule SE PDF fill — MFJ complex filer", () => {
     doc = await fillScheduleSE(complexMFJFixture, result, BLANK_SSE);
   });
 
-  it("fills header with taxpayer names and SSN", () => {
-    expect(getFieldText(doc, SCHEDULE_SE_FIELDS.name)).toBe("John Smith & Jane Smith");
-    expect(getFieldText(doc, SCHEDULE_SE_FIELDS.ssn)).toBe("111223333");
+  it("preserves an unknown joint-return SE owner", () => {
+    expect(getFieldText(doc, SCHEDULE_SE_FIELDS.name)).toBeUndefined();
+    expect(getFieldText(doc, SCHEDULE_SE_FIELDS.ssn)).toBeUndefined();
   });
 
-  it("fills Line 1b with net nonfarm profit", () => {
+  it("fills Line 2 with net nonfarm profit", () => {
     const se = result.scheduleSE!;
-    expect(getFieldText(doc, SCHEDULE_SE_FIELDS.line1b)).toBe(
+    expect(getFieldText(doc, SCHEDULE_SE_FIELDS.line2)).toBe(
       formatCurrency(se.netNonfarmProfit),
     );
   });

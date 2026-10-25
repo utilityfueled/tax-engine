@@ -262,8 +262,8 @@ lines:
     description: "Self-employment earnings (loss)"
     formula: "Partner's share of net self-employment earnings"
     irsRef: "Form 1065 K-1 Instructions, Box 14"
-    destination: "Schedule SE Line 4b"
-    testRef: "tests/engine/schedules/schedule-se.test.ts::Schedule SE Line 4b - includes K-1 SE earnings and guaranteed payments"
+    destination: "Schedule SE Line 1a or 2 after actual partner adjustments"
+    testRef: "tests/engine/schedules/schedule-se.test.ts::Schedule SE Line 2 - includes K-1 SE earnings and guaranteed payments"
 
   # ── Box 15: Credits ───────────────────────────────────
   - line: "Box 15 Code A"

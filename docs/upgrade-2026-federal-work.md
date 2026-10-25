@@ -769,3 +769,28 @@ synthetic pages rendered and inspected. Scope/diff/whitespace reviewed. Versions
 are2025.14/2026.9-law-integration-draft. Detailed COGS/vehicle/home-area facts and
 loss limitation forms still require qualification; review copies remain marked
 not for filing. This is not an independent tax or form review.
+
+### Separate-person Schedule SE and complete review pages — 2026-10-25
+
+Refreshed final IRS Schedule SE instructions and form. Each spouse now receives
+an independent regular-method computation: only that person's profits, losses,
+W2 Boxes3/7 and Forms4137/8919 reduce their wage base. Partnership Box14A enters
+once; Box4 guaranteed payments are not added again. Actual adjusted K1 source
+amounts and farm/nonfarm classification are required in2026. Missing joint
+owners or payroll boxes remain unknown; legacy aggregate paths are explicitly
+unverified. A partially attributed payroll calculation rejects unknown W2
+owners rather than dropping their wages. Additional Medicare consumes line6
+subject earnings after the SE filing threshold.
+
+Eight source regressions reproduce spouse wage-base/loss netting, tips, K1
+amount duplication and missing-attribution errors. The final2025 review mapper
+copies each person's official audits into a complete two-page interactive form,
+rejects contradictory totals/duplicate audits and preserves unknown identity.
+Reopened canonical fields, widget values and appearance streams are checked;
+all four synthetic pages were rendered and inspected.637 focused engine/PDF/
+Illinois tests, root types and all3,315 spec references pass. The two historical
+Treasury fixtures now use disjoint actual Boxes1/3; a separate100 bank-interest
+assertion confirms Illinois retains that taxable amount. No assertion was
+removed. Scoped diff/whitespace reviewed; metadata2025.15/2026.10 remains
+unqualified. Optional SE methods, CRP/church/community-property worksheets and
+per-business QBI deduction attribution remain separate qualification work.
