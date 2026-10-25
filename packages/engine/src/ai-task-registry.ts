@@ -41,13 +41,13 @@ function policy(task: AiTask, profile: AiProfileId, maxOutputTokens: number, ext
     maxEscalations: 0, requiresUserConfirmation: false, requiresVerifiedTaxContext: false, ...extra });
 }
 export const AI_TASKS: Readonly<Record<AiTask, AiTaskPolicy>> = Object.freeze({
-  "workspace-summary": policy("workspace-summary", "luna-high", 4096),
+  "workspace-summary": policy("workspace-summary", "luna-high", 4096, { promptVersion: "workspace-summary/2", schemaVersion: "workspace-summary/2" }),
   "interview-wording": policy("interview-wording", "luna-high", 4096),
   "unsupported-route": policy("unsupported-route", "luna-high", 4096),
   "document-classification": policy("document-classification", "luna-high", 4096, { requiresUserConfirmation: true, maxEscalations: 1 }),
   "income-extraction": policy("income-extraction", "luna-high", 8192, { requiresUserConfirmation: true, maxEscalations: 1 }),
   "expense-categorization": policy("expense-categorization", "luna-high", 8192, { requiresUserConfirmation: true, maxEscalations: 1 }),
-  "tax-explanation": policy("tax-explanation", "sol-low", 8192, { requiresVerifiedTaxContext: true, maxEscalations: 1 }),
+  "tax-explanation": policy("tax-explanation", "sol-low", 8192, { requiresVerifiedTaxContext: true, maxEscalations: 1, promptVersion: "tax-explanation/2", schemaVersion: "tax-explanation/2" }),
   "complex-reconciliation": policy("complex-reconciliation", "sol-high", 16384,
     { requiresUserConfirmation: true, requiresVerifiedTaxContext: true, timeoutMs: 120000, execution: "cancellable-job" }),
 });
@@ -66,8 +66,9 @@ export function resolveCandidateAiRoute(task: AiTask, options: {
   const escalationCount = options.escalationCount ?? 0;
   if (!Number.isSafeInteger(escalationCount) || escalationCount < 0 || escalationCount > 1) throw new Error("At most one AI escalation is allowed.");
   if (task === "complex-reconciliation" && escalationCount !== 1) throw new Error("Complex reconciliation requires an explicit escalation.");
+  if (escalationCount && task !== "complex-reconciliation" && !selected.maxEscalations) throw new Error("This task does not permit escalation.");
   if (selected.requiresVerifiedTaxContext && !options.verifiedTaxContext) throw new Error("Verified year-specific specs and audit entries are required.");
-  const profile = AI_PROFILES[options.provider === "google" ? "gemini-flash-high" : selected.profile];
+  const profile = AI_PROFILES[escalationCount ? "sol-high" : options.provider === "google" ? "gemini-flash-high" : selected.profile];
   return { policy: selected, profile };
 }
 

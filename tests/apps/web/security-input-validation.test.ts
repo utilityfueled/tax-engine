@@ -1,4 +1,6 @@
+vi.mock("server-only", () => ({}));
 import { describe, expect, it } from "vitest";
+import { vi } from "vitest";
 import { safeParseJsonBody, safeReadTextBody } from "../../../apps/web/src/lib/safe-body-parser";
 import { createProviderWorkspaceRouteHandlers } from "../../../apps/web/src/lib/provider-workspace-route";
 import { createHostedWorkspaceRouteHandlers } from "../../../apps/web/src/lib/hosted-workspace-route";

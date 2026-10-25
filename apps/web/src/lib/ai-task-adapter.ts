@@ -1,8 +1,9 @@
 import "server-only";
 import { z } from "zod";
 import { calculateAiCost, type AiTokenUsage } from "@tax-engine/engine/src/ai-pricing";
-import { resolveCandidateAiRoute, type AiProvider, type AiTask } from "@tax-engine/engine/src/ai-task-registry";
+import { resolveCandidateAiRoute, type AiProvider, type AiTask, type AiProfileId } from "@tax-engine/engine/src/ai-task-registry";
 import { containsUnsafeDirectIdentifier } from "./provider-request-privacy";
+import { selectQualifiedAiRoute, type AiRolloutState } from "./ai-rollout";
 
 const MAX_RESPONSE_BYTES = 1024 * 1024;
 const safetyInstructions = [
@@ -40,8 +41,20 @@ export interface AiTaskExecution {
   syntheticFixtureId?: string;
   escalationCount?: number;
   apiKey?: string;
+  apiKeys?: Partial<Record<AiProvider, string>>;
   fetchFn?: typeof fetch;
   now?: () => string;
+  /** Server-owned rollout configuration; HTTP request bodies never populate it. */
+  productionRollout?: { ownerScope: string; cohortSecret: string; states?: readonly AiRolloutState[] };
+  /** Trusted server hooks. Reserve before dispatch; retain unknown usage for reconciliation. */
+  beforeAttempt?: (attempt: AiAttemptMetadata) => Promise<void>;
+  recordAttempt?: (attempt: AiAttemptMetadata, outcome: { accepted: boolean; usage: AiTokenUsage; providerRequestId?: string }) => Promise<void>;
+  recordUnknownAttempt?: (attempt: AiAttemptMetadata, outcome: { providerRequestId?: string }) => Promise<void>;
+}
+
+export interface AiAttemptMetadata {
+  task: AiTask; profileId: AiProfileId; modelId: string; startedAt: string;
+  maximumChargeCents: number; attempt: 1 | 2;
 }
 
 function validateTaxContext(context?: VerifiedAiTaxContext): boolean {
@@ -87,6 +100,8 @@ async function readBoundedResponse(response: Response): Promise<unknown> {
 
 const usageCount = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER);
 const openAiEnvelope = z.object({
+  id: z.string().optional(),
+  service_tier: z.string().optional(),
   status: z.string(),
   output_text: z.string().optional(),
   output: z.array(z.object({
@@ -94,7 +109,8 @@ const openAiEnvelope = z.object({
     content: z.array(z.object({ type: z.string(), text: z.string().optional() })).optional(),
   })).optional(),
   usage: z.object({ input_tokens: usageCount, output_tokens: usageCount,
-    input_tokens_details: z.object({ cached_tokens: usageCount }).optional() }),
+    input_tokens_details: z.object({ cached_tokens: usageCount.optional(),
+      cache_write_tokens: usageCount.optional(), cache_write_tokens_details: z.object({ ttl_30m_tokens: usageCount, ttl_12h_tokens: usageCount }).optional() }).optional() }),
 });
 const googleEnvelope = z.object({
   candidates: z.array(z.object({ finishReason: z.string(),
@@ -105,13 +121,18 @@ const googleEnvelope = z.object({
 
 /** One attempt only. A caller may explicitly escalate once; no provider switching or hidden retries. */
 export async function executeAiTask<T>(request: AiTaskRequest<T>, execution: AiTaskExecution = { mode: "production" }) {
-  if (request.optedOut || execution.mode === "production") return null;
-  if (!execution.syntheticFixtureId?.trim()) throw new Error("Candidate evaluation requires a named synthetic fixture.");
-  const route = resolveCandidateAiRoute(request.task, { mode: execution.mode, provider: execution.provider,
-    escalationCount: execution.escalationCount, verifiedTaxContext: validateTaxContext(request.taxContext) });
+  if (request.optedOut) return null;
+  const route = execution.mode === "production" ? execution.productionRollout
+    ? selectQualifiedAiRoute({ ...execution.productionRollout, task: request.task, at: (execution.now ?? (() => new Date().toISOString()))() }) : null
+    : resolveCandidateAiRoute(request.task, { mode: execution.mode, provider: execution.provider,
+      escalationCount: execution.escalationCount, verifiedTaxContext: validateTaxContext(request.taxContext) });
   if (!route) return null;
-  if (!execution.apiKey?.trim()) throw new Error("The selected AI provider is not configured.");
+  if (execution.mode === "evaluation" && !execution.syntheticFixtureId?.trim()) throw new Error("Candidate evaluation requires a named synthetic fixture.");
   const { policy, profile } = route;
+  const apiKey = execution.apiKey ?? execution.apiKeys?.[profile.provider];
+  if (!apiKey?.trim()) throw new Error("The selected AI provider is not configured.");
+  if (request.task === "complex-reconciliation" && execution.escalationCount !== 1) throw new Error("Complex reconciliation requires an explicit escalation.");
+  if (policy.requiresVerifiedTaxContext && !validateTaxContext(request.taxContext)) throw new Error("Verified year-specific specs and audit entries are required.");
   if (policy.execution === "cancellable-job" && !request.signal) throw new Error("Complex reconciliation requires a cancellable job.");
   request.signal?.throwIfAborted();
   if (typeof request.redactedText !== "string" || !request.redactedText.trim()) throw new Error("Redacted extracted text is required.");
@@ -132,7 +153,8 @@ export async function executeAiTask<T>(request: AiTaskRequest<T>, execution: AiT
   const url = openai ? "https://api.openai.com/v1/responses"
     : `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(profile.model)}:generateContent`;
   const body = openai ? {
-    model: profile.model, store: false, reasoning: { effort: profile.effort },
+    model: profile.model, store: false, service_tier: "default", reasoning: { effort: profile.effort },
+    prompt_cache_options: { mode: "explicit", ttl: "30m" },
     max_output_tokens: policy.maxOutputTokens, instructions, input,
     text: { format: { type: "json_schema", name: request.task.replaceAll("-", "_"), strict: true, schema: jsonSchema } },
   } : {
@@ -141,23 +163,42 @@ export async function executeAiTask<T>(request: AiTaskRequest<T>, execution: AiT
     generationConfig: { responseMimeType: "application/json", responseJsonSchema: jsonSchema,
       maxOutputTokens: policy.maxOutputTokens, thinkingConfig: { thinkingLevel: "HIGH" } },
   };
+  const startedAt = (execution.now ?? (() => new Date().toISOString()))();
+  const attempt: AiAttemptMetadata = { task: request.task, profileId: profile.id, modelId: profile.model, startedAt,
+    maximumChargeCents: calculateAiCost(profile.model, startedAt, { inputTokens: policy.maxInputTokens, outputTokens: policy.maxOutputTokens }).retailChargeCents,
+    attempt: execution.escalationCount === 1 ? 2 : 1 };
+  await execution.beforeAttempt?.(attempt);
   const started = performance.now();
-  const payload = await readBoundedResponse(await (execution.fetchFn ?? fetch)(url, {
-    method: "POST", redirect: "error", signal,
-    headers: openai ? { "Content-Type": "application/json", Authorization: `Bearer ${execution.apiKey}` }
-      : { "Content-Type": "application/json", "x-goog-api-key": execution.apiKey },
-    body: JSON.stringify(body),
-  }));
   let outputText: string;
   let usage: AiTokenUsage;
   let completed: boolean;
+  let providerRequestId: string | undefined;
+  try {
+  const providerResponse = await (execution.fetchFn ?? fetch)(url, {
+    method: "POST", redirect: "error", signal,
+    headers: openai ? { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` }
+      : { "Content-Type": "application/json", "x-goog-api-key": apiKey },
+    body: JSON.stringify(body),
+  });
+  providerRequestId = providerResponse.headers.get("x-request-id") ?? undefined;
+  const payload = await readBoundedResponse(providerResponse);
   if (openai) {
     const envelope = openAiEnvelope.parse(payload);
+    if (envelope.service_tier && envelope.service_tier !== "default") throw new Error("Unpriced provider service tier.");
+    providerRequestId ??= envelope.id;
     completed = envelope.status === "completed" && !envelope.output?.some(item => item.content?.some(part => part.type === "refusal"));
     outputText = envelope.output_text ?? envelope.output?.flatMap(item => item.type === "message"
       ? item.content?.filter(part => part.type === "output_text").map(part => part.text ?? "") ?? [] : []).join("") ?? "";
+    const details = envelope.usage.input_tokens_details;
+    // No explicit cache breakpoints are requested. Unexpected writes still require exact duration charges.
+    const writes = details?.cache_write_tokens_details;
+    if ((details?.cache_write_tokens ?? 0) !== (writes?.ttl_30m_tokens ?? 0) + (writes?.ttl_12h_tokens ?? 0)) {
+      throw new Error("Provider cache-write duration is unknown; usage requires reconciliation.");
+    }
     usage = { inputTokens: envelope.usage.input_tokens, outputTokens: envelope.usage.output_tokens,
-      cachedInputTokens: envelope.usage.input_tokens_details?.cached_tokens ?? 0 };
+      cachedInputTokens: details?.cached_tokens ?? 0,
+      ...(writes?.ttl_30m_tokens ? { cacheWrite30mTokens: writes.ttl_30m_tokens } : {}),
+      ...(writes?.ttl_12h_tokens ? { cacheWrite12hTokens: writes.ttl_12h_tokens } : {}) };
   } else {
     const envelope = googleEnvelope.parse(payload);
     completed = envelope.candidates[0].finishReason === "STOP";
@@ -166,17 +207,31 @@ export async function executeAiTask<T>(request: AiTaskRequest<T>, execution: AiT
       outputTokens: envelope.usageMetadata.candidatesTokenCount + (envelope.usageMetadata.thoughtsTokenCount ?? 0),
       cachedInputTokens: envelope.usageMetadata.cachedContentTokenCount ?? 0 };
   }
+  } catch {
+    await execution.recordUnknownAttempt?.(attempt, { providerRequestId });
+    // Provider bodies, keys and transport details must never reach a taxpayer or telemetry.
+    throw new Error("AI provider request failed; usage requires reconciliation.");
+  }
   // Compute usage before accepting output; failed validation still incurred provider cost.
-  const cost = calculateAiCost(profile.model, (execution.now ?? (() => new Date().toISOString()))(), usage);
+  let cost;
+  try { cost = calculateAiCost(profile.model, startedAt, usage); }
+  catch {
+    await execution.recordUnknownAttempt?.(attempt, { providerRequestId });
+    throw new Error("AI usage could not be priced; reconciliation is required.");
+  }
   const accounting = { ...cost, usage, profileId: profile.id, latencyMs: performance.now() - started };
+  let value: T;
   try {
     if (!completed) throw new Error("AI output was refused or incomplete.");
     if (usage.inputTokens > policy.maxInputTokens || usage.outputTokens > policy.maxOutputTokens) throw new Error("Provider usage exceeded the task budget.");
     if (containsUnsafeDirectIdentifier(outputText)) throw new Error("AI output contains direct identifiers.");
-    const value = request.schema.parse(JSON.parse(outputText));
+    value = request.schema.parse(JSON.parse(outputText));
     request.validateGrounding(value);
-    return { accepted: true as const, value, accounting, requiresUserConfirmation: policy.requiresUserConfirmation };
   } catch {
+    await execution.recordAttempt?.(attempt, { accepted: false, usage, providerRequestId });
     return { accepted: false as const, value: null, accounting, requiresUserConfirmation: true };
   }
+  // Accounting failures fail closed: never return a successful answer after a failed debit.
+  await execution.recordAttempt?.(attempt, { accepted: true, usage, providerRequestId });
+  return { accepted: true as const, value, accounting, requiresUserConfirmation: policy.requiresUserConfirmation };
 }

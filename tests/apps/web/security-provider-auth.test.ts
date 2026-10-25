@@ -1,3 +1,4 @@
+vi.mock("server-only", () => ({}));
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createProviderWorkspaceRouteHandlers } from "../../../apps/web/src/lib/provider-workspace-route";
 
@@ -241,15 +242,15 @@ describe("security: provider workspace route requires auth in hosted mode", () =
 
       expect(response.status).toBe(200);
       await expect(response.json()).resolves.toMatchObject({
-        provider: "gemini",
-        answer: "Use the local workspace context without hosted billing."
+        provider: "mock-local",
+        modelId: null
       });
     } finally {
       global.fetch = originalFetch;
     }
   });
 
-  it("rejects hosted AI helper requests once the included budget is exhausted", async () => {
+  it("does not apply exhausted AI credits to deterministic workspace help", async () => {
     const { POST } = createProviderWorkspaceRouteHandlers({
       env: {
         TAX_ENGINE_DEPLOYMENT_MODE: "hosted",
@@ -300,13 +301,13 @@ describe("security: provider workspace route requires auth in hosted mode", () =
       body: JSON.stringify(buildMinimalWorkspaceHelpRequestBody())
     }));
 
-    expect(response.status).toBe(402);
+    expect(response.status).toBe(200);
     const body = await response.json();
-    expect(body.error).toContain("included AI helper budget is exhausted");
-    expect(body.billingUrl).toBe("/billing");
+    expect(body.provider).toBe("mock-local");
+    expect(body.usage).toBeUndefined();
   });
 
-  it("rejects hosted AI helper requests when the provider is not configured", async () => {
+  it("offers deterministic help when no provider is qualified", async () => {
     const { POST } = createProviderWorkspaceRouteHandlers({
       env: {
         TAX_ENGINE_DEPLOYMENT_MODE: "hosted",
@@ -357,11 +358,8 @@ describe("security: provider workspace route requires auth in hosted mode", () =
       body: JSON.stringify(buildMinimalWorkspaceHelpRequestBody())
     }));
 
-    expect(response.status).toBe(503);
-    await expect(response.json()).resolves.toEqual({
-      error: "The AI helper is not configured right now. Please email support@vivalatax.com before enabling hosted access.",
-      code: "ai_provider_unavailable"
-    });
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({ provider: "mock-local", modelId: null });
   });
 });
 

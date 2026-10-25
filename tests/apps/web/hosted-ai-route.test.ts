@@ -36,4 +36,10 @@ describe("deterministic document analysis spending boundary", () => {
     expect(mocks.actor).not.toHaveBeenCalled();
     expect(mocks.budget).not.toHaveBeenCalled();
   });
+  it("blocks the legacy estimated provider-debit path", async () => {
+    await expect(reserveHostedAiBudget(request, {}, "gpt-6-luna", hosted)).rejects.toThrow(/atomic task accounting/);
+    await expect(recordHostedAiRouteUsage({} as never, { requestId: "test", task: "document", provider: "openai", modelId: "gpt-6-luna", requestPayload: {}, responsePayload: {} }, hosted))
+      .rejects.toThrow(/Estimated usage cannot settle/);
+    expect(mocks.record).not.toHaveBeenCalled();
+  });
 });

@@ -92,13 +92,13 @@ describe("task-based candidate AI adapter", () => {
   it("never switches providers or retries on failure", async () => {
     const deps = execution();
     deps.fetchFn.mockResolvedValue(new Response("secret provider error", { status: 429 }));
-    await expect(executeAiTask(request(), deps)).rejects.toThrow("AI provider returned HTTP 429.");
+    await expect(executeAiTask(request(), deps)).rejects.toThrow("AI provider request failed; usage requires reconciliation.");
     expect(deps.fetchFn).toHaveBeenCalledTimes(1);
   });
   it("bounds streamed response size", async () => {
     const deps = execution();
     deps.fetchFn.mockResolvedValue(new Response("x".repeat(1024 * 1024 + 1)));
-    await expect(executeAiTask(request(), deps)).rejects.toThrow(/size limit/);
+    await expect(executeAiTask(request(), deps)).rejects.toThrow(/usage requires reconciliation/);
   });
   it("honors cancellation before sending data", async () => {
     const deps = execution();
@@ -106,5 +106,50 @@ describe("task-based candidate AI adapter", () => {
     controller.abort();
     await expect(executeAiTask(request({ signal: controller.signal }), deps)).rejects.toThrow();
     expect(deps.fetchFn).not.toHaveBeenCalled();
+  });
+  it("reserves before dispatch and settles provider usage even when grounding fails", async () => {
+    const order: string[] = [];
+    const deps = execution();
+    const fetchFn = vi.fn(async () => { order.push("dispatch"); return Response.json(envelope()); });
+    const result = await executeAiTask(request({ validateGrounding: () => { throw new Error("bad citation"); } }), { ...deps, fetchFn,
+      beforeAttempt: async metadata => { order.push("reserve"); expect(metadata).toMatchObject({ profileId: "luna-high", attempt: 1, maximumChargeCents: 1 }); },
+      recordAttempt: async (_metadata, outcome) => { order.push("settle"); expect(outcome).toMatchObject({ accepted: false, usage: { inputTokens: 100, outputTokens: 2000 } }); },
+    });
+    expect(result?.accepted).toBe(false);
+    expect(order).toEqual(["reserve", "dispatch", "settle"]);
+  });
+  it("does not dispatch when reservation fails, and does not return success when settlement fails", async () => {
+    const deps = execution();
+    await expect(executeAiTask(request(), { ...deps, beforeAttempt: async () => { throw new Error("credit exhausted"); } })).rejects.toThrow(/credit exhausted/);
+    expect(deps.fetchFn).not.toHaveBeenCalled();
+    await expect(executeAiTask(request(), { ...deps, recordAttempt: async () => { throw new Error("database unavailable"); } })).rejects.toThrow(/database unavailable/);
+  });
+  it("records unknown usage after failed transport without exposing provider details", async () => {
+    const deps = execution(); const recordUnknownAttempt = vi.fn();
+    deps.fetchFn.mockRejectedValue(new Error("provider echoed SSN 123-45-6789 and secret-key"));
+    await expect(executeAiTask(request(), { ...deps, recordUnknownAttempt })).rejects.toThrow("AI provider request failed; usage requires reconciliation.");
+    expect(recordUnknownAttempt).toHaveBeenCalledOnce();
+  });
+  it("uses official cache-write detail fields and counts both lifetimes exactly once", async () => {
+    const deps = execution(envelope(undefined, { usage: { input_tokens: 12000, output_tokens: 100,
+      input_tokens_details: { cached_tokens: 4000, cache_write_tokens: 7000, cache_write_tokens_details: { ttl_30m_tokens: 3000, ttl_12h_tokens: 4000 } } } }));
+    expect((await executeAiTask(request(), deps))?.accounting.providerCostUsd).toBe("0.001565");
+  });
+  it.each([
+    { service_tier: "priority" },
+    { usage: { input_tokens: 100, output_tokens: 2, input_tokens_details: { cache_write_tokens: 50 } } },
+    { usage: { input_tokens: 100, output_tokens: 2, input_tokens_details: { cached_tokens: 101 } } },
+  ])("retains unpriced or inconsistent reported usage for reconciliation: %j", async details => {
+    const recordUnknownAttempt = vi.fn();
+    await expect(executeAiTask(request(), { ...execution(envelope(undefined, details)), recordUnknownAttempt })).rejects.toThrow(/reconciliation/);
+    expect(recordUnknownAttempt).toHaveBeenCalledOnce();
+  });
+  it("prices at dispatch time across the January boundary and requires cancellation for complex tasks", async () => {
+    const taxContext = { taxYear: 2026, ruleVersion: "synthetic", excerpts: [{ id: "s", taxYear: 2026, text: "Synthetic excerpt" }], auditEntries: [{ id: "a", taxYear: 2026, value: "0", explanation: "Synthetic audit" }] };
+    const deps = execution();
+    await expect(executeAiTask(request({ task: "complex-reconciliation", taxContext }), { ...deps, escalationCount: 1 })).rejects.toThrow(/cancellable/);
+    const result = await executeAiTask(request({ task: "complex-reconciliation", taxContext, signal: new AbortController().signal }), { ...deps, escalationCount: 1 });
+    expect(result?.accounting.profileId).toBe("sol-high");
+    expect(JSON.parse(deps.fetchFn.mock.calls[0][1].body)).toMatchObject({ max_output_tokens: 16384, reasoning: { effort: "high" } });
   });
 });

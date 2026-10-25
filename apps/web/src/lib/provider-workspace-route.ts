@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
+import { hostedAiTaskAccounting } from "./hosted-ai-task-accounting";
+import type { AiTaskExecution } from "./ai-task-adapter";
 import { resolveHostedWorkspaceActor } from "./hosted-auth";
-import { getHostedAiBudgetSnapshot, recordHostedAiUsage } from "./hosted-ai-usage-db";
+import { getHostedAiBudgetSnapshot } from "./hosted-ai-usage-db";
 import {
   resolveHostedAiBudgetCycleKey,
-  resolveHostedAiHelperModelId,
-  resolveHostedAiIncludedBudgetCents,
-  estimateHostedAiReserveCostCents
+  resolveHostedAiIncludedBudgetCents
 } from "./hosted-ai-helper-billing";
 import { getHostedEntitlementByOwnerId } from "./hosted-billing-db";
 import {
@@ -15,7 +16,7 @@ import {
 import { containsUnsafeDirectIdentifier } from "./provider-request-privacy";
 import {
   createProviderWorkspaceResponder,
-  hasConfiguredWorkspaceHelpProvider
+  type ProviderWorkspaceResponderDependencies
 } from "./provider-workspace-responder";
 import type { ProviderWorkspaceRequest } from "./provider-workspace-request";
 import {
@@ -29,31 +30,28 @@ import {
 } from "./rate-limit";
 import { safeParseJsonBody } from "./safe-body-parser";
 
+const requestShape = z.object({
+  task: z.enum(["workspace-summary", "workspace-help"]), requestId: z.string().trim().min(1).max(256),
+  requestedAt: z.string(), replacementCount: z.number().int().nonnegative(), optedOut: z.boolean().optional(),
+  question: z.string().max(8000).optional(), redactions: z.array(z.object({ token: z.string(), kind: z.string() })),
+  unsupportedRoutes: z.array(z.object({ id: z.string(), title: z.string(), description: z.string(), reasons: z.array(z.string()) })),
+  workspace: z.object({ storageMode: z.enum(["local-browser", "hosted-postgres"]),
+    summary: z.object({ totalDocuments: z.number().int().nonnegative() }),
+    seededReturn: z.object({ interviewQuestions: z.array(z.object({ status: z.string(), prompt: z.string() })) }),
+    returnSummary: z.object({ status: z.string(), targetTaxYear: z.number().int().nullable() }),
+  }),
+});
 function isProviderWorkspaceRequest(value: unknown): value is ProviderWorkspaceRequest {
-  if (!value || typeof value !== "object") {
-    return false;
-  }
-
-  const candidate = value as Partial<ProviderWorkspaceRequest>;
-
-  return (candidate.task === "workspace-summary" || candidate.task === "workspace-help")
-    && typeof candidate.requestId === "string"
-    && typeof candidate.requestedAt === "string"
-    && !!candidate.workspace
-    && Array.isArray(candidate.unsupportedRoutes)
-    && Array.isArray(candidate.redactions)
-    && typeof candidate.replacementCount === "number"
-    && (candidate.task !== "workspace-help" || typeof candidate.question === "string");
+  const parsed = requestShape.safeParse(value);
+  return parsed.success && (parsed.data.task !== "workspace-help" || typeof parsed.data.question === "string");
 }
 
-interface ProviderWorkspaceRouteDependencies {
-  env?: Record<string, string | undefined>;
-  fetchFn?: typeof fetch;
+interface ProviderWorkspaceRouteDependencies extends ProviderWorkspaceResponderDependencies {
   rateLimitStore?: RateLimitStore;
   resolveActor?: typeof resolveHostedWorkspaceActor;
   getEntitlementByOwnerId?: typeof getHostedEntitlementByOwnerId;
   getBudgetSnapshot?: typeof getHostedAiBudgetSnapshot;
-  recordUsage?: typeof recordHostedAiUsage;
+  accounting?: typeof hostedAiTaskAccounting;
 }
 
 function buildPaidPlanRequiredResponse() {
@@ -64,28 +62,6 @@ function buildPaidPlanRequiredResponse() {
       billingUrl: "/billing"
     },
     { status: 403 }
-  );
-}
-
-function buildAiBudgetExceededResponse(snapshot: Awaited<ReturnType<typeof getHostedAiBudgetSnapshot>>) {
-  return NextResponse.json(
-    {
-      error: "Your included AI helper budget is exhausted. Buy an extra AI credit pack in Billing to continue.",
-      code: "ai_budget_exhausted",
-      billingUrl: "/billing",
-      budget: snapshot
-    },
-    { status: 402 }
-  );
-}
-
-function buildAiProviderUnavailableResponse() {
-  return NextResponse.json(
-    {
-      error: "The AI helper is not configured right now. Please email support@vivalatax.com before enabling hosted access.",
-      code: "ai_provider_unavailable"
-    },
-    { status: 503 }
   );
 }
 
@@ -117,8 +93,8 @@ export function createProviderWorkspaceRouteHandlers(
       const browserWorkspaceMode = resolveBrowserWorkspaceDeploymentMode(env);
       const previewBypassActive = Boolean(env.TAX_ENGINE_HOSTED_PREVIEW_ACTOR_ID?.trim());
       let actor: Awaited<ReturnType<typeof resolveHostedWorkspaceActor>> | null = null;
-      let usageBudgetSnapshot: Awaited<ReturnType<typeof getHostedAiBudgetSnapshot>> | null = null;
-      let usageCycleKey = "self-host";
+      let accounting: Partial<AiTaskExecution> = {};
+      let budgetInput: { ownerId: string; cycleKey: string; includedBudgetCents: number } | null = null;
 
       const clientId = resolveClientIdentifier(request.headers);
       const rateCheck = await checkRateLimitForEnvironment(
@@ -208,95 +184,20 @@ export function createProviderWorkspaceRouteHandlers(
             return buildPaidPlanRequiredResponse();
           }
 
-          usageCycleKey = resolveHostedAiBudgetCycleKey({
-            planId: subscription?.planId ?? null,
-            status: subscription?.status ?? undefined,
-            currentPeriodEnd: subscription?.currentPeriodEnd ?? null
-          });
-          usageBudgetSnapshot = await (dependencies.getBudgetSnapshot
-            ? dependencies.getBudgetSnapshot(env, {
-                ownerId: actor.id,
-                cycleKey: usageCycleKey,
-                includedBudgetCents: resolveHostedAiIncludedBudgetCents(subscription?.planId, env)
-              })
-            : getHostedAiBudgetSnapshot(env, {
-                ownerId: actor.id,
-                cycleKey: usageCycleKey,
-                includedBudgetCents: resolveHostedAiIncludedBudgetCents(subscription?.planId, env)
-              }));
-          const reserveCostCents = estimateHostedAiReserveCostCents({
-            requestPayload: parsed.data,
-            modelId: resolveHostedAiHelperModelId(env)
-          }, env);
-
-          if (usageBudgetSnapshot.totalRemainingCents < reserveCostCents) {
-            return buildAiBudgetExceededResponse(usageBudgetSnapshot);
+          budgetInput = { ownerId: actor.id, cycleKey: resolveHostedAiBudgetCycleKey({
+            planId: subscription?.planId ?? null, currentPeriodEnd: subscription?.currentPeriodEnd ?? null,
+          }), includedBudgetCents: resolveHostedAiIncludedBudgetCents(subscription?.planId, env) };
+          accounting = (dependencies.accounting ?? hostedAiTaskAccounting)({ ...budgetInput,
+            requestId: parsed.data.requestId, requestPayload: parsed.data }, env);
+          if (dependencies.execution?.productionRollout) {
+            accounting.productionRollout = { ...dependencies.execution.productionRollout, ownerScope: actor.id };
           }
         }
 
-        if (
-          parsed.data.task === "workspace-help"
-          && !hasConfiguredWorkspaceHelpProvider(env)
-        ) {
-          return buildAiProviderUnavailableResponse();
-        }
-
-        const response = await respond(parsed.data);
-
-        if (effectiveWorkspaceMode === "hosted" && actor && !previewBypassActive && usageBudgetSnapshot && response.usage) {
-          const includedChargeCents = Math.min(
-            usageBudgetSnapshot.includedRemainingCents,
-            response.usage.estimatedCostCents
-          );
-          const purchasedChargeCents = Math.max(
-            0,
-            response.usage.estimatedCostCents - includedChargeCents
-          );
-
-          if (includedChargeCents + purchasedChargeCents > usageBudgetSnapshot.totalRemainingCents) {
-            return buildAiBudgetExceededResponse(usageBudgetSnapshot);
-          }
-
-          await (dependencies.recordUsage
-            ? dependencies.recordUsage(env, {
-                requestId: response.requestId,
-                ownerId: actor.id,
-                cycleKey: usageCycleKey,
-                task: response.task ?? parsed.data.task,
-                provider: response.provider,
-                modelId: response.modelId ?? null,
-                inputTokens: response.usage.inputTokens,
-                outputTokens: response.usage.outputTokens,
-                estimatedCostCents: response.usage.estimatedCostCents,
-                includedChargeCents,
-                purchasedChargeCents,
-                createdAt: new Date().toISOString()
-              })
-            : recordHostedAiUsage(env, {
-            requestId: response.requestId,
-            ownerId: actor.id,
-            cycleKey: usageCycleKey,
-            task: response.task ?? parsed.data.task,
-            provider: response.provider,
-            modelId: response.modelId ?? null,
-            inputTokens: response.usage.inputTokens,
-            outputTokens: response.usage.outputTokens,
-            estimatedCostCents: response.usage.estimatedCostCents,
-            includedChargeCents,
-            purchasedChargeCents,
-            createdAt: new Date().toISOString()
-          }));
-
-          const updatedBudget = await getHostedAiBudgetSnapshot(env, {
-            ownerId: actor.id,
-            cycleKey: usageCycleKey,
-            includedBudgetCents: usageBudgetSnapshot.includedBudgetCents
-          });
-
-          return NextResponse.json({
-            ...response,
-            budget: updatedBudget
-          });
+        const response = await respond(parsed.data, request.signal, accounting);
+        if (response.usage && budgetInput) {
+          const budget = await (dependencies.getBudgetSnapshot ?? getHostedAiBudgetSnapshot)(env, budgetInput);
+          return NextResponse.json({ ...response, budget });
         }
 
         return NextResponse.json(response);

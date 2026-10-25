@@ -1,3 +1,4 @@
+vi.mock("server-only", () => ({}));
 import { describe, expect, it, vi } from "vitest";
 import {
   checkRateLimit,
@@ -792,6 +793,7 @@ describe("security: external API call timeout protection", () => {
     };
 
     const respond = createProviderWorkspaceResponder({
+      execution: { mode: "evaluation", syntheticFixtureId: "timeout-fixture", now: () => "2026-10-25T02:00:00Z" },
       env: {
         MODEL_PROVIDER_API_KEY: "test-key-for-timeout-test"
       },
@@ -818,6 +820,7 @@ describe("security: external API call timeout protection", () => {
 
     // Give the abort time to fire (timeout is 30s in production, but we verify the signal exists)
     // The actual abort will happen via AbortController — we verify the signal is wired
+    await Promise.resolve();
     expect(receivedSignal).toBeDefined();
     expect(receivedSignal!.aborted).toBe(false);
 
@@ -839,11 +842,13 @@ describe("security: external API call timeout protection", () => {
       capturedInit = init;
 
       return new Response(JSON.stringify({
-        output_text: JSON.stringify({ summary: "test summary" })
+        status: "completed", usage: { input_tokens: 100, output_tokens: 100 },
+        output_text: JSON.stringify({ sourceIds: ["workspace:status"], summary: "test summary" })
       }), { status: 200 });
     };
 
     const respond = createProviderWorkspaceResponder({
+      execution: { mode: "evaluation", syntheticFixtureId: "timeout-fixture", now: () => "2026-10-25T02:00:00Z" },
       env: {
         MODEL_PROVIDER_API_KEY: "test-key-for-signal-test"
       },

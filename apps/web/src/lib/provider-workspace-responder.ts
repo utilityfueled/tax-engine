@@ -1,33 +1,18 @@
+import "server-only";
+import Decimal from "decimal.js";
+import { AI_PROFILES } from "@tax-engine/engine/src/ai-task-registry";
+import { z } from "zod";
+import { executeAiTask, type AiTaskExecution, type VerifiedAiTaxContext } from "./ai-task-adapter";
 import type { ProviderWorkspaceRequest, ProviderWorkspaceResponse } from "./provider-workspace-request";
-import {
-  estimateHostedAiUsageCost,
-  resolveHostedAiHelperModelId,
-  resolveHostedAiMaxOutputTokens
-} from "./hosted-ai-helper-billing";
-import { parseJsonFromModelText } from "./business-expense-analysis";
+import { resolveServerAiTaxContext } from "./ai-tax-context";
+import { buildLocalProviderWorkspaceResponse } from "./provider-workspace-local";
 
-/** Maximum time to wait for an external model provider response before aborting. */
-const PROVIDER_REQUEST_TIMEOUT_MS = 30_000;
-
-/** Maximum response body size from the model provider (1 MB). */
-const PROVIDER_RESPONSE_MAX_SIZE = 1024 * 1024;
-
-/** Maximum character length for provider-generated summary text. */
-const PROVIDER_SUMMARY_MAX_LENGTH = 2_000;
-const GEMINI_API_BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
-const DEFAULT_GEMINI_MODEL = "gemini-3-flash-preview";
-
-interface ProviderWorkspaceResponderDependencies {
+export interface ProviderWorkspaceResponderDependencies {
   env?: Record<string, string | undefined>;
   fetchFn?: typeof fetch;
-  /** Skip URL safety checks (for testing only). */
-  skipUrlValidation?: boolean;
-}
-
-export function hasConfiguredWorkspaceHelpProvider(
-  env: Record<string, string | undefined> = process.env
-) {
-  return Boolean(getOpenAIApiKey(env) || getGeminiApiKey(env));
+  /** Trusted harness/server configuration only; never accepted from request JSON. */
+  execution?: AiTaskExecution;
+  resolveTaxContext?: (request: ProviderWorkspaceRequest) => VerifiedAiTaxContext | undefined;
 }
 
 /**
@@ -129,790 +114,79 @@ export function isAllowedProviderUrl(raw: string): boolean {
   return true;
 }
 
-interface ProviderWorkspaceSummaryShape {
-  summary: string;
-}
-
-interface ProviderWorkspaceHelpShape {
-  answer: string;
-}
-
-interface ProviderWorkspaceSummaryHints {
-  pendingQuestionCount: number;
-  advisoryReviewOnly: boolean;
-  returnBundleReady: boolean;
-}
-
-interface OpenAIResponsesApiResult {
-  output_text?: unknown;
-  usage?: {
-    input_tokens?: unknown;
-    output_tokens?: unknown;
-    input_tokens_details?: { cached_tokens?: unknown };
-  };
-  output?: Array<{
-    type?: unknown;
-    content?: Array<{
-      type?: unknown;
-      text?: unknown;
-    }>;
-  }>;
-  error?: {
-    message?: unknown;
-  };
-}
-
-interface GeminiGenerateContentResult {
-  usageMetadata?: { promptTokenCount?: unknown; candidatesTokenCount?: unknown; thoughtsTokenCount?: unknown; cachedContentTokenCount?: unknown };
-  candidates?: Array<{
-    content?: {
-      parts?: Array<{ text?: string }>;
-    };
-  }>;
-  error?: {
-    message?: unknown;
-  };
-}
-
-const workspaceSummarySchema = {
-  name: "workspace_summary",
-  strict: true,
-  schema: {
-    type: "object",
-    properties: {
-      summary: {
-        type: "string",
-        description: "A concise summary of the redacted workspace state."
-      }
-    },
-    required: ["summary"],
-    additionalProperties: false
-  }
-} as const;
-
-const workspaceHelpSchema = {
-  name: "workspace_help",
-  strict: true,
-  schema: {
-    type: "object",
-    properties: {
-      answer: {
-        type: "string",
-        description: "A concise answer to the user's question using the redacted workspace context."
-      }
-    },
-    required: ["answer"],
-    additionalProperties: false
-  }
-} as const;
-
-function buildWorkspaceSummaryHints(request: ProviderWorkspaceRequest): ProviderWorkspaceSummaryHints {
-  const pendingQuestionCount = request.workspace.seededReturn.interviewQuestions
-    .filter((question) => question.status === "pending")
-    .length;
-  const advisoryReviewOnly = pendingQuestionCount === 0
-    && request.unsupportedRoutes.length > 0
-    && request.unsupportedRoutes.every((route) =>
-      route.id === "review-filing-pack" || route.id === "partner-review-later"
-    );
-  const returnBundleReady = request.workspace.returnSummary.status === "ready-to-recompute"
-    || advisoryReviewOnly;
-
-  return {
-    pendingQuestionCount,
-    advisoryReviewOnly,
-    returnBundleReady
-  };
-}
-
-function readUsageTokens(value: unknown) {
-  return typeof value === "number" && Number.isFinite(value) && value >= 0
-    ? Math.floor(value)
-    : null;
-}
-
-function buildMockSummary(request: ProviderWorkspaceRequest): ProviderWorkspaceResponse {
-  const summaryHints = buildWorkspaceSummaryHints(request);
-  const pendingQuestionCount = summaryHints.pendingQuestionCount;
-  const readyForRecompute = request.workspace.returnSummary.status === "ready-to-recompute";
-  const totalDocuments = request.workspace.summary.totalDocuments;
-  const primaryUnsupportedRoute = request.unsupportedRoutes[0];
-  const primaryUnsupportedReason = primaryUnsupportedRoute?.reasons[0] ?? primaryUnsupportedRoute?.description;
-
-  return {
-    requestId: request.requestId,
-    provider: "mock-local",
-    summary: summaryHints.returnBundleReady && summaryHints.advisoryReviewOnly
-      ? `Return bundle is ready to download. ${request.unsupportedRoutes.length} advisory follow-up route${request.unsupportedRoutes.length === 1 ? "" : "s"} remain for uploaded documents that were not deterministically mapped into the return.`
-      : readyForRecompute
-      ? `Workspace is ready for deterministic recompute across ${totalDocuments} document(s).`
-      : primaryUnsupportedRoute
-        ? [
-          `Workspace has ${request.unsupportedRoutes.length} active unsupported route(s).`,
-          `Start with ${primaryUnsupportedRoute.title}.`,
-          primaryUnsupportedReason ? `Primary blocker: ${primaryUnsupportedReason}` : null
-        ].filter(Boolean).join(" ")
-        : `Workspace still needs ${pendingQuestionCount} interview confirmation(s) before deterministic recompute can run.`,
-    totalDocuments,
-    pendingQuestionCount,
-    readyForRecompute,
-    redactionCount: request.redactions.length,
-  };
-}
-
-function buildProviderWorkspaceInput(request: ProviderWorkspaceRequest) {
-  const summaryHints = buildWorkspaceSummaryHints(request);
-
-  return {
-    task: request.task,
-    requestId: request.requestId,
-    requestedAt: request.requestedAt,
-    replacementCount: request.replacementCount,
-    summaryHints,
-    redactions: request.redactions,
-    unsupportedRoutes: request.unsupportedRoutes,
-    workspace: request.workspace,
-    ...(request.task === "workspace-help"
-      ? {
-          question: request.question ?? "",
-          assistantContext: request.assistantContext ?? null
-        }
-      : {})
-  };
-}
-
-function buildMockHelpAnswer(request: ProviderWorkspaceRequest): ProviderWorkspaceResponse {
-  const summaryHints = buildWorkspaceSummaryHints(request);
-  const question = request.question?.trim() || "your return";
-  const sectionLabel = request.assistantContext?.currentSectionLabel;
-  const nextRoute = request.unsupportedRoutes[0];
-
-  return {
-    task: "workspace-help",
-    requestId: request.requestId,
-    provider: "mock-local",
-    modelId: null,
-    answer: [
-      sectionLabel
-        ? `You're asking about ${sectionLabel}.`
-        : "You're asking about your current return workspace.",
-      summaryHints.returnBundleReady
-        ? "Your return looks ready to download, with only advisory follow-ups left."
-        : summaryHints.pendingQuestionCount > 0
-          ? `There are still ${summaryHints.pendingQuestionCount} unresolved interview confirmation${summaryHints.pendingQuestionCount === 1 ? "" : "s"} affecting the return.`
-          : "There are no pending interview confirmations blocking the current return snapshot.",
-      nextRoute
-        ? `Best next step: ${nextRoute.title}.`
-        : `Question received: ${question}. Review the uploaded documents and confirm any highlighted values before relying on them.`
-    ].join(" "),
-    totalDocuments: request.workspace.summary.totalDocuments,
-    pendingQuestionCount: summaryHints.pendingQuestionCount,
-    readyForRecompute: request.workspace.returnSummary.status === "ready-to-recompute",
-    redactionCount: request.redactions.length,
-    usage: {
-      inputTokens: 0,
-      outputTokens: 0,
-      estimatedCostCents: 0
-    }
-  };
-}
-
-function getGeminiApiKey(env: Record<string, string | undefined>) {
-  return env.GEMINI_API_KEY?.trim() || env.GOOGLE_API_KEY?.trim() || "";
-}
-
-function getOpenAIApiKey(env: Record<string, string | undefined>) {
-  return env.MODEL_PROVIDER_API_KEY?.trim() || env.OPENAI_API_KEY?.trim() || "";
-}
-
-function getGeminiModel(env: Record<string, string | undefined>) {
-  return env.GEMINI_MODEL?.trim() || DEFAULT_GEMINI_MODEL;
-}
-
-function getGeminiOutputText(result: GeminiGenerateContentResult) {
-  return result.candidates?.[0]?.content?.parts
-    ?.map((part) => typeof part.text === "string" ? part.text : "")
-    .join("")
-    .trim() || null;
-}
-
-function getOutputText(result: OpenAIResponsesApiResult) {
-  if (typeof result.output_text === "string" && result.output_text.trim().length > 0) {
-    return result.output_text;
-  }
-
-  for (const item of result.output ?? []) {
-    if (item.type !== "message") {
-      continue;
-    }
-
-    for (const content of item.content ?? []) {
-      if (content.type === "output_text" && typeof content.text === "string" && content.text.trim().length > 0) {
-        return content.text;
-      }
-    }
-  }
-
-  return null;
-}
-
-function parseProviderWorkspaceSummary(result: OpenAIResponsesApiResult): ProviderWorkspaceSummaryShape {
-  if (typeof result.error?.message === "string" && result.error.message.trim().length > 0) {
-    throw new Error("Model provider returned an error.");
-  }
-
-  const outputText = getOutputText(result);
-
-  if (!outputText) {
-    throw new Error("Model provider response did not include output text.");
-  }
-
-  const parsed = parseJsonFromModelText(outputText) as Partial<ProviderWorkspaceSummaryShape>;
-
-  if (typeof parsed.summary !== "string" || parsed.summary.trim().length === 0) {
-    throw new Error("Model provider response did not include a valid workspace summary.");
-  }
-
-  const trimmedSummary = parsed.summary.trim();
-  const truncated = trimmedSummary.length > PROVIDER_SUMMARY_MAX_LENGTH
-    ? trimmedSummary.slice(0, PROVIDER_SUMMARY_MAX_LENGTH)
-    : trimmedSummary;
-
-  // Sanitize HTML entities to prevent stored XSS when rendered in the frontend.
-  // The AI model controls this text; a compromised or adversarial model response
-  // could include <script> or event handler payloads.
-  return {
-    summary: sanitizeHtmlEntities(truncated)
-  };
-}
-
-function parseProviderWorkspaceHelp(result: OpenAIResponsesApiResult): ProviderWorkspaceHelpShape {
-  if (typeof result.error?.message === "string" && result.error.message.trim().length > 0) {
-    throw new Error("Model provider returned an error.");
-  }
-
-  const outputText = getOutputText(result);
-
-  if (!outputText) {
-    throw new Error("Model provider response did not include output text.");
-  }
-
-  const parsed = parseJsonFromModelText(outputText) as Partial<ProviderWorkspaceHelpShape>;
-
-  if (typeof parsed.answer !== "string" || parsed.answer.trim().length === 0) {
-    throw new Error("Model provider response did not include a valid workspace answer.");
-  }
-
-  const trimmedAnswer = parsed.answer.trim();
-  const truncated = trimmedAnswer.length > PROVIDER_SUMMARY_MAX_LENGTH
-    ? trimmedAnswer.slice(0, PROVIDER_SUMMARY_MAX_LENGTH)
-    : trimmedAnswer;
-
-  return {
-    answer: sanitizeHtmlEntities(truncated)
-  };
-}
 
 export function sanitizeHtmlEntities(text: string): string {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#x27;");
+  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#x27;");
 }
 
-/**
- * Reads a Response body with a streaming size limit.
- *
- * Unlike `response.text()` which buffers the entire body before any check,
- * this reads the body in chunks and aborts as soon as the cumulative size
- * exceeds the limit — preventing memory exhaustion from oversized responses.
- */
-async function readResponseWithSizeLimit(
-  response: Response,
-  maxSize: number
-): Promise<string> {
-  const contentLength = response.headers.get("content-length");
+const sourceIds = z.array(z.string().min(1).max(200)).min(1).max(30);
+const summarySchema = z.strictObject({ summary: z.string().trim().min(1).max(2000), sourceIds });
+const helpSchema = z.strictObject({ answer: z.string().trim().min(1).max(2000), sourceIds,
+  engineValues: z.array(z.strictObject({ id: z.string(), value: z.string() })).max(30) });
 
-  if (contentLength) {
-    const declaredSize = parseInt(contentLength, 10);
-
-    if (!Number.isNaN(declaredSize) && declaredSize > maxSize) {
-      throw new Error("Model provider response exceeded the maximum allowed size.");
+/** The legacy responder now uses the same bounded, schema-validated task adapter as document analysis. */
+export function createProviderWorkspaceResponder(dependencies: ProviderWorkspaceResponderDependencies = {}) {
+  return async function respond(request: ProviderWorkspaceRequest, signal?: AbortSignal, accounting: Partial<AiTaskExecution> = {}): Promise<ProviderWorkspaceResponse> {
+    const fallback = buildLocalProviderWorkspaceResponse(request);
+    const execution = dependencies.execution ?? { mode: "production" as const };
+    if ((execution.mode === "production" && !execution.productionRollout) || request.optedOut) return fallback;
+    const env = dependencies.env ?? process.env;
+    if (env.MODEL_PROVIDER_BASE_URL?.trim() && env.MODEL_PROVIDER_BASE_URL.replace(/\/+$/, "") !== "https://api.openai.com/v1") {
+      throw new Error("Only the fixed official AI provider endpoint is supported.");
     }
-  }
-
-  if (!response.body) {
-    return response.text();
-  }
-
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  const chunks: string[] = [];
-  let totalBytes = 0;
-
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-
-      if (done) {
-        break;
-      }
-
-      totalBytes += value.byteLength;
-
-      if (totalBytes > maxSize) {
-        throw new Error("Model provider response exceeded the maximum allowed size.");
-      }
-
-      chunks.push(decoder.decode(value, { stream: true }));
-    }
-
-    // Flush the decoder
-    chunks.push(decoder.decode());
-  } finally {
-    reader.releaseLock();
-  }
-
-  return chunks.join("");
-}
-
-async function requestOpenAIWorkspaceSummary(
-  request: ProviderWorkspaceRequest,
-  dependencies: ProviderWorkspaceResponderDependencies
-) {
-  const env = dependencies.env ?? process.env;
-  const apiKey = getOpenAIApiKey(env);
-
-  if (!apiKey) {
-    return null;
-  }
-
-  const fetchFn = dependencies.fetchFn ?? fetch;
-  const baseUrl = (env.MODEL_PROVIDER_BASE_URL?.trim() || "https://api.openai.com/v1").replace(/\/+$/, "");
-  const model = resolveHostedAiHelperModelId(env);
-
-  if (!dependencies.skipUrlValidation && !isAllowedProviderUrl(baseUrl)) {
-    throw new Error("Model provider base URL is not allowed (SSRF protection).");
-  }
-
-  const controller = new AbortController();
-  const timeoutMs = PROVIDER_REQUEST_TIMEOUT_MS;
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-
-  try {
-    const response = await fetchFn(`${baseUrl}/responses`, {
-      method: "POST",
-      headers: {
-        authorization: `Bearer ${apiKey}`,
-        "content-type": "application/json"
-      },
-      signal: controller.signal,
-      redirect: "error",
-      body: JSON.stringify({
-        model,
-        store: false,
-        reasoning: { effort: "minimal" },
-        max_output_tokens: resolveHostedAiMaxOutputTokens(env),
-        instructions: [
-          "You summarize tax workspace state for a privacy-first filing assistant.",
-          "All direct identifiers are already redacted or tokenized.",
-          "Never infer or restore any redacted identifier.",
-          "If summaryHints.returnBundleReady is true and summaryHints.advisoryReviewOnly is true, describe the return as ready to download with advisory follow-ups rather than blocked.",
-          "Return JSON that matches the supplied schema exactly."
-        ].join(" "),
-        input: JSON.stringify(buildProviderWorkspaceInput(request)),
-        text: {
-          format: {
-            type: "json_schema",
-            ...workspaceSummarySchema
+    const taxContext = dependencies.resolveTaxContext?.(request) ?? resolveServerAiTaxContext({
+      taxYear: request.workspace.returnSummary.targetTaxYear, workspaceId: request.workspace.id,
+      workspaceRevision: request.workspace.updatedAt, ownerScope: execution.productionRollout?.ownerScope ?? "",
+    }).context;
+    // Client preview values, alleged audit entries and year assertions are never verified context.
+    if (request.task === "workspace-help" && !taxContext) return fallback;
+    if (taxContext && taxContext.taxYear !== request.workspace.returnSummary.targetTaxYear) throw new Error("Verified tax context does not match the workspace year.");
+    const permittedSources = new Set(["workspace:status", "workspace:questions", "workspace:routes",
+      ...(taxContext?.excerpts.map(entry => entry.id) ?? []), ...(taxContext?.auditEntries.map(entry => entry.id) ?? [])]);
+    const redactedText = JSON.stringify({ taxYear: request.workspace.returnSummary.targetTaxYear,
+      status: { sourceId: "workspace:status", totalDocuments: fallback.totalDocuments, readyForRecompute: fallback.readyForRecompute },
+      questions: { sourceId: "workspace:questions", pendingCount: fallback.pendingQuestionCount,
+        prompts: request.workspace.seededReturn.interviewQuestions.filter(question => question.status === "pending").map(question => question.prompt) },
+      unsupportedRoutes: { sourceId: "workspace:routes", routes: request.unsupportedRoutes },
+      question: request.question ?? null, assistantContext: request.assistantContext ?? null });
+    const schema: z.ZodType<z.infer<typeof summarySchema> | z.infer<typeof helpSchema>> = request.task === "workspace-summary" ? summarySchema : helpSchema;
+    const result = await executeAiTask({ task: request.task === "workspace-summary" ? "workspace-summary" : "tax-explanation",
+      redactedText, taxContext, schema, signal,
+      instructions: "Describe the supplied workflow state or explain the verified audit values. Include sourceIds for every claim. Preserve all audit values exactly. Never describe a return as ready to download or file. Return source IDs, not invented links.",
+      validateGrounding(value) {
+        if (value.sourceIds.some(id => !permittedSources.has(id))) throw new Error("Unverified source citation.");
+        const text = "summary" in value ? value.summary : value.answer;
+        if (/ready (?:to|for) (?:download|fil(?:e|ing))|filing[- ]ready|guaranteed (?:refund|deduction)/i.test(text)) throw new Error("Invented readiness claim.");
+        if ("engineValues" in value) {
+          if (!value.sourceIds.some(id => taxContext?.excerpts.some(entry => entry.id === id))
+            || !value.sourceIds.some(id => taxContext?.auditEntries.some(entry => entry.id === id))) throw new Error("Tax explanation requires both source and audit citations.");
+          for (const entry of value.engineValues) {
+            const original = taxContext?.auditEntries.find(audit => audit.id === entry.id);
+            if (!original || !/^-?\d+(?:\.\d+)?$/.test(entry.value) || !new Decimal(original.value).eq(entry.value)) throw new Error("Engine value override.");
           }
         }
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Model provider request failed with status ${response.status}.`);
-    }
-
-    const providerInput = buildProviderWorkspaceInput(request);
-    const responseText = await readResponseWithSizeLimit(response, PROVIDER_RESPONSE_MAX_SIZE);
-    const result = JSON.parse(responseText) as OpenAIResponsesApiResult;
-    const parsed = parseProviderWorkspaceSummary(result);
-
-    return {
-      modelId: model,
-      ...parsed,
-      usage: estimateHostedAiUsageCost({
-        requestPayload: providerInput,
-        responseText: parsed.summary,
-        modelId: model,
-        inputTokens: readUsageTokens(result.usage?.input_tokens),
-        outputTokens: readUsageTokens(result.usage?.output_tokens),
-        cachedInputTokens: readUsageTokens(result.usage?.input_tokens_details?.cached_tokens) ?? 0,
-      }, env)
-    };
-  } finally {
-    clearTimeout(timeoutId);
-  }
-}
-
-async function requestOpenAIWorkspaceHelp(
-  request: ProviderWorkspaceRequest,
-  dependencies: ProviderWorkspaceResponderDependencies
-) {
-  const env = dependencies.env ?? process.env;
-  const apiKey = getOpenAIApiKey(env);
-
-  if (!apiKey) {
-    return null;
-  }
-
-  const fetchFn = dependencies.fetchFn ?? fetch;
-  const baseUrl = (env.MODEL_PROVIDER_BASE_URL?.trim() || "https://api.openai.com/v1").replace(/\/+$/, "");
-  const model = resolveHostedAiHelperModelId(env);
-
-  if (!dependencies.skipUrlValidation && !isAllowedProviderUrl(baseUrl)) {
-    throw new Error("Model provider base URL is not allowed (SSRF protection).");
-  }
-
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), PROVIDER_REQUEST_TIMEOUT_MS);
-
-  try {
-    const providerInput = buildProviderWorkspaceInput(request);
-    const response = await fetchFn(`${baseUrl}/responses`, {
-      method: "POST",
-      headers: {
-        authorization: `Bearer ${apiKey}`,
-        "content-type": "application/json"
-      },
-      signal: controller.signal,
-      redirect: "error",
-      body: JSON.stringify({
-        model,
-        store: false,
-        reasoning: { effort: "minimal" },
-        max_output_tokens: resolveHostedAiMaxOutputTokens(env),
-        instructions: [
-      "You answer tax software questions using a privacy-safe, redacted return workspace payload.",
-      "Treat the filer as asking about software use and return workflow, not for legal or CPA representation.",
-      "Use the current section context when present.",
-      "When assistantContext.selectedDocuments is present, explain how those selected documents relate to the current section or question before broadening out to the rest of the workspace.",
-      "Do not fabricate values that are not present in the workspace.",
-          "If the workspace is missing data needed to answer precisely, say what is missing and state the safest next step.",
-          "Never infer or restore any redacted identifier.",
-          "Keep the answer concise, practical, and specific to the question.",
-          "Return JSON that matches the supplied schema exactly."
-        ].join(" "),
-        input: JSON.stringify(providerInput),
-        text: {
-          format: {
-            type: "json_schema",
-            ...workspaceHelpSchema
-          }
+        for (const amount of text.match(/(?:\$|USD\s*)[\d,]+(?:\.\d+)?/g) ?? []) {
+          const value = new Decimal(amount.replace(/USD|\$|,|\s/g, ""));
+          if (!taxContext?.auditEntries.some(entry => new Decimal(entry.value).eq(value))) throw new Error("Unverified monetary claim.");
         }
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Model provider request failed with status ${response.status}.`);
-    }
-
-    const responseText = await readResponseWithSizeLimit(response, PROVIDER_RESPONSE_MAX_SIZE);
-    const result = JSON.parse(responseText) as OpenAIResponsesApiResult;
-    const parsed = parseProviderWorkspaceHelp(result);
-
-    return {
-      modelId: model,
-      ...parsed,
-      usage: estimateHostedAiUsageCost({
-        requestPayload: providerInput,
-        responseText: parsed.answer,
-        modelId: model,
-        inputTokens: readUsageTokens(result.usage?.input_tokens),
-        outputTokens: readUsageTokens(result.usage?.output_tokens),
-        cachedInputTokens: readUsageTokens(result.usage?.input_tokens_details?.cached_tokens) ?? 0,
-      }, env)
-    };
-  } finally {
-    clearTimeout(timeoutId);
-  }
-}
-
-async function requestGeminiWorkspaceSummary(
-  request: ProviderWorkspaceRequest,
-  dependencies: ProviderWorkspaceResponderDependencies
-) {
-  const env = dependencies.env ?? process.env;
-  const apiKey = getGeminiApiKey(env);
-
-  if (!apiKey) {
-    return null;
-  }
-
-  const summaryHints = buildWorkspaceSummaryHints(request);
-  const payload = {
-    requestId: request.requestId,
-    summaryHints,
-    unsupportedRoutes: request.unsupportedRoutes,
-    workspace: request.workspace,
-  };
-  const response = await fetch(
-    `${GEMINI_API_BASE_URL}/models/${encodeURIComponent(getGeminiModel(env))}:generateContent?key=${encodeURIComponent(apiKey)}`,
-    {
-      method: "POST",
-      signal: AbortSignal.timeout(PROVIDER_REQUEST_TIMEOUT_MS),
-      redirect: "error",
-      headers: {
-        "Content-Type": "application/json",
+        const allowedNumbers = [request.workspace.returnSummary.targetTaxYear, fallback.totalDocuments, fallback.pendingQuestionCount,
+          request.unsupportedRoutes.length, ...(taxContext?.auditEntries.map(entry => entry.value) ?? [])].filter(value => value !== null);
+        for (const number of text.match(/(?<![\w])[-+]?\d[\d,]*(?:\.\d+)?/g) ?? []) {
+          if (!allowedNumbers.some(value => new Decimal(value).eq(number.replaceAll(",", "")))) throw new Error("Unverified numeric claim.");
+        }
       },
-      body: JSON.stringify({
-        contents: [{
-          role: "user",
-          parts: [{
-            text: [
-              "Summarize the current tax-return workspace for the filer.",
-              "Return strict JSON with keys:",
-              "{",
-              '  "summary": string',
-              "}",
-              "Rules:",
-              "- Write 2 to 4 short sentences in plain English.",
-              "- Mention the readiness state of the return, any remaining blockers, and the clearest next action.",
-              "- If summaryHints.returnBundleReady is true and summaryHints.advisoryReviewOnly is true, describe the return as ready to download with advisory follow-ups rather than blocked.",
-              "- Never infer any direct identifier from redaction tokens.",
-              "- Keep the summary concise and practical.",
-              "",
-              "Redacted workspace payload:",
-              JSON.stringify(payload)
-            ].join("\n"),
-          }],
-        }],
-        generationConfig: {
-          responseMimeType: "application/json",
-          maxOutputTokens: resolveHostedAiMaxOutputTokens(env),
-          temperature: 0.1,
-        },
-      }),
-    }
-  );
-
-  const result = await response.json().catch(() => null) as GeminiGenerateContentResult | null;
-
-  if (!response.ok) {
-    const errorMessage = typeof result?.error?.message === "string" && result.error.message.trim()
-      ? result.error.message
-      : `Gemini request failed with status ${response.status}.`;
-    throw new Error(errorMessage);
-  }
-
-  const outputText = getGeminiOutputText(result ?? {});
-
-  if (!outputText) {
-    throw new Error("Gemini response did not include output text.");
-  }
-
-  const parsed = JSON.parse(outputText) as Partial<ProviderWorkspaceSummaryShape>;
-
-  if (typeof parsed.summary !== "string" || parsed.summary.trim().length === 0) {
-    throw new Error("Gemini response did not include a valid workspace summary.");
-  }
-
-  return {
-    modelId: getGeminiModel(env),
-    summary: sanitizeHtmlEntities(parsed.summary.trim().slice(0, PROVIDER_SUMMARY_MAX_LENGTH)),
-    usage: estimateHostedAiUsageCost({
-      requestPayload: payload,
-      responseText: parsed.summary,
-      modelId: getGeminiModel(env),
-      inputTokens: readUsageTokens(result?.usageMetadata?.promptTokenCount),
-      outputTokens: readUsageTokens(result?.usageMetadata?.candidatesTokenCount) === null ? null
-        : (readUsageTokens(result?.usageMetadata?.candidatesTokenCount) ?? 0) + (readUsageTokens(result?.usageMetadata?.thoughtsTokenCount) ?? 0),
-      cachedInputTokens: readUsageTokens(result?.usageMetadata?.cachedContentTokenCount) ?? 0,
-    }, env)
-  };
-}
-
-async function requestGeminiWorkspaceHelp(
-  request: ProviderWorkspaceRequest,
-  dependencies: ProviderWorkspaceResponderDependencies
-) {
-  const env = dependencies.env ?? process.env;
-  const apiKey = getGeminiApiKey(env);
-
-  if (!apiKey) {
-    return null;
-  }
-
-  const payload = {
-    requestId: request.requestId,
-    question: request.question ?? "",
-    assistantContext: request.assistantContext ?? null,
-    unsupportedRoutes: request.unsupportedRoutes,
-    workspace: request.workspace
-  };
-  const response = await fetch(
-    `${GEMINI_API_BASE_URL}/models/${encodeURIComponent(getGeminiModel(env))}:generateContent?key=${encodeURIComponent(apiKey)}`,
-    {
-      method: "POST",
-      signal: AbortSignal.timeout(PROVIDER_REQUEST_TIMEOUT_MS),
-      redirect: "error",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        contents: [{
-          role: "user",
-          parts: [{
-            text: [
-              "Answer the user's question about their current tax-return workspace.",
-              "Return strict JSON with keys:",
-              "{",
-              '  "answer": string',
-              "}",
-              "Rules:",
-              "- Use the redacted workspace and current section context when present.",
-              "- When assistantContext.selectedDocuments is present, focus first on how those selected documents relate to the current section and question.",
-              "- Treat this as software workflow help, not legal or CPA representation.",
-              "- Do not fabricate values or restore redacted identifiers.",
-              "- If key information is missing, say what is missing and the safest next step.",
-              "- Keep the answer concise, practical, and directly responsive to the user's question.",
-              "",
-              "Redacted workspace help payload:",
-              JSON.stringify(payload)
-            ].join("\n"),
-          }],
-        }],
-        generationConfig: {
-          responseMimeType: "application/json",
-          maxOutputTokens: resolveHostedAiMaxOutputTokens(env),
-          temperature: 0.1,
-        },
-      }),
-    }
-  );
-
-  const result = await response.json().catch(() => null) as GeminiGenerateContentResult | null;
-
-  if (!response.ok) {
-    const errorMessage = typeof result?.error?.message === "string" && result.error.message.trim()
-      ? result.error.message
-      : `Gemini request failed with status ${response.status}.`;
-    throw new Error(errorMessage);
-  }
-
-  const outputText = getGeminiOutputText(result ?? {});
-
-  if (!outputText) {
-    throw new Error("Gemini response did not include output text.");
-  }
-
-  const parsed = JSON.parse(outputText) as Partial<ProviderWorkspaceHelpShape>;
-
-  if (typeof parsed.answer !== "string" || parsed.answer.trim().length === 0) {
-    throw new Error("Gemini response did not include a valid workspace answer.");
-  }
-
-  return {
-    modelId: getGeminiModel(env),
-    answer: sanitizeHtmlEntities(parsed.answer.trim().slice(0, PROVIDER_SUMMARY_MAX_LENGTH)),
-    usage: estimateHostedAiUsageCost({
-      requestPayload: payload,
-      responseText: parsed.answer,
-      modelId: getGeminiModel(env),
-      inputTokens: readUsageTokens(result?.usageMetadata?.promptTokenCount),
-      outputTokens: readUsageTokens(result?.usageMetadata?.candidatesTokenCount) === null ? null
-        : (readUsageTokens(result?.usageMetadata?.candidatesTokenCount) ?? 0) + (readUsageTokens(result?.usageMetadata?.thoughtsTokenCount) ?? 0),
-      cachedInputTokens: readUsageTokens(result?.usageMetadata?.cachedContentTokenCount) ?? 0,
-    }, env)
-  };
-}
-
-export function createProviderWorkspaceResponder(
-  dependencies: ProviderWorkspaceResponderDependencies = {}
-) {
-  return async function respondToProviderWorkspaceRequest(
-    request: ProviderWorkspaceRequest
-  ): Promise<ProviderWorkspaceResponse> {
-    const pendingQuestionCount = request.workspace.seededReturn.interviewQuestions
-      .filter((question) => question.status === "pending")
-      .length;
-    const readyForRecompute = request.workspace.returnSummary.status === "ready-to-recompute";
-    const totalDocuments = request.workspace.summary.totalDocuments;
-    if (request.task === "workspace-help") {
-      const openAiHelp = await requestOpenAIWorkspaceHelp(request, dependencies);
-
-      if (openAiHelp) {
-        return {
-          task: "workspace-help",
-          requestId: request.requestId,
-          provider: "openai-responses",
-          modelId: openAiHelp.modelId,
-          answer: openAiHelp.answer,
-          totalDocuments,
-          pendingQuestionCount,
-          readyForRecompute,
-          redactionCount: request.redactions.length,
-          usage: openAiHelp.usage
-        };
-      }
-
-      const geminiHelp = await requestGeminiWorkspaceHelp(request, dependencies);
-
-      if (geminiHelp) {
-        return {
-          task: "workspace-help",
-          requestId: request.requestId,
-          provider: "gemini",
-          modelId: geminiHelp.modelId,
-          answer: geminiHelp.answer,
-          totalDocuments,
-          pendingQuestionCount,
-          readyForRecompute,
-          redactionCount: request.redactions.length,
-          usage: geminiHelp.usage
-        };
-      }
-
-      return buildMockHelpAnswer(request);
-    }
-
-    const openAiSummary = await requestOpenAIWorkspaceSummary(request, dependencies);
-
-    if (openAiSummary) {
-      return {
-        task: "workspace-summary",
-        requestId: request.requestId,
-        provider: "openai-responses",
-        modelId: openAiSummary.modelId,
-        summary: openAiSummary.summary,
-        totalDocuments,
-        pendingQuestionCount,
-        readyForRecompute,
-        redactionCount: request.redactions.length,
-        usage: openAiSummary.usage
-      };
-    }
-
-    const geminiSummary = await requestGeminiWorkspaceSummary(request, dependencies);
-
-    if (geminiSummary) {
-      return {
-        task: "workspace-summary",
-        requestId: request.requestId,
-        provider: "gemini",
-        modelId: geminiSummary.modelId,
-        summary: geminiSummary.summary,
-        totalDocuments,
-        pendingQuestionCount,
-        readyForRecompute,
-        redactionCount: request.redactions.length,
-        usage: geminiSummary.usage
-      };
-    }
-
-    return buildMockSummary(request);
+    }, { ...execution, ...accounting, apiKeys: execution.apiKeys ?? {
+      google: env.GEMINI_API_KEY ?? env.GOOGLE_API_KEY, openai: env.OPENAI_API_KEY ?? env.MODEL_PROVIDER_API_KEY,
+    }, fetchFn: dependencies.fetchFn ?? execution.fetchFn });
+    if (!result) return fallback;
+    const usage = { providerCostUsd: result.accounting.providerCostUsd, usageKind: "reported" as const,
+      pricingEffectiveFrom: result.accounting.pricingEffectiveFrom, inputTokens: result.accounting.usage.inputTokens,
+      outputTokens: result.accounting.usage.outputTokens, estimatedCostCents: result.accounting.retailChargeCents };
+    if (!result.accepted) return { ...fallback, usage };
+    return { ...fallback, provider: AI_PROFILES[result.accounting.profileId].provider === "google" ? "gemini" : "openai-responses",
+      modelId: AI_PROFILES[result.accounting.profileId].model,
+      ...("summary" in result.value ? { summary: sanitizeHtmlEntities(result.value.summary) } : { answer: sanitizeHtmlEntities(result.value.answer) }),
+      sourceIds: result.value.sourceIds, usage };
   };
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Decimal from "decimal.js";
 import type { ReturnWorkspaceRecord, WorkspaceDeploymentMode } from "@tax-engine/contracts";
 import {
   buildReturnAssistantReply,
@@ -12,6 +13,7 @@ import {
   requestProviderWorkspaceHelp
 } from "@/lib/provider-workspace-request";
 import { isGuidedSyntheticDocument } from "@/lib/workspace-status-copy";
+import { readWorkspaceAiOptOut, writeWorkspaceAiOptOut } from "@/lib/workspace-ai-preferences";
 
 interface AssistantMessage {
   role: "user" | "assistant";
@@ -68,6 +70,8 @@ export function ReturnHelpDock({
   const [uploadPending, setUploadPending] = useState(false);
   const [selectedDocumentIds, setSelectedDocumentIds] = useState<string[]>([]);
   const [documentsCollapsed, setDocumentsCollapsed] = useState(false);
+  const [localHelpOnly, setLocalHelpOnly] = useState(true);
+  const requestController = useRef<AbortController | null>(null);
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
   const previousDocumentIdsRef = useRef<string[]>([]);
 
@@ -98,6 +102,15 @@ export function ReturnHelpDock({
   );
   const showQuickPrompts = shouldShowQuickPrompts(messages.length, draft);
   const selectedDocumentSummary = formatSelectedDocumentCount(selectedDocumentIds.length);
+
+  useEffect(() => {
+    setLocalHelpOnly(readWorkspaceAiOptOut(workspace.id));
+    setMessages([]);
+    setDraft("");
+    setSelectedDocumentIds([]);
+    previousDocumentIdsRef.current = [];
+    return () => { requestController.current?.abort(); };
+  }, [workspace.id]);
 
   useEffect(() => {
     const currentIds = helperDocuments.map((document) => document.id);
@@ -134,10 +147,20 @@ export function ReturnHelpDock({
     ]);
     setDraft("");
     setOpen(true);
+    if (localHelpOnly || readWorkspaceAiOptOut(workspace.id)) {
+      const reply = buildReturnAssistantReply(workspace, context, trimmed);
+      setMessages(current => [...current, { role: "assistant", text: reply.summary, reply, provider: "mock-local" }]);
+      return;
+    }
+    const controller = new AbortController();
+    requestController.current?.abort();
+    requestController.current = controller;
     setPending(true);
 
     try {
       const result = await requestProviderWorkspaceHelp(workspace, trimmed, {
+        optedOut: false,
+        signal: controller.signal,
         selectedDocumentIds,
         ...(deploymentMode === "self-host"
           ? { workspaceStorageModeOverride: "local-browser" as const }
@@ -149,6 +172,7 @@ export function ReturnHelpDock({
           conversation: priorMessages
         }
       });
+      if (controller.signal.aborted) return;
 
       const answer = result.response.answer
         ?? buildReturnAssistantReply(workspace, context, trimmed).summary;
@@ -157,7 +181,7 @@ export function ReturnHelpDock({
         && typeof result.response.budget === "object"
         && result.response.budget !== null
         && "totalRemainingCents" in result.response.budget
-        ? ` Remaining AI budget: $${(((result.response.budget as { totalRemainingCents: number }).totalRemainingCents) / 100).toFixed(2)}.`
+        ? ` Remaining AI budget: $${new Decimal((result.response.budget as { totalRemainingCents: number }).totalRemainingCents).div(100).toFixed(2)}.`
         : "";
 
       setMessages((current) => [
@@ -169,6 +193,7 @@ export function ReturnHelpDock({
         }
       ]);
     } catch (error) {
+      if (controller.signal.aborted) return;
       let text = error instanceof Error
         ? error.message
         : "Could not reach the AI helper right now.";
@@ -201,7 +226,10 @@ export function ReturnHelpDock({
         }
       ]);
     } finally {
-      setPending(false);
+      if (requestController.current === controller) {
+        requestController.current = null;
+        setPending(false);
+      }
     }
   }
 
@@ -430,6 +458,22 @@ export function ReturnHelpDock({
             </section>
           ) : null}
 
+          <label>
+            <input type="checkbox" checked={localHelpOnly} onChange={event => {
+              const optedOut = event.target.checked;
+              requestController.current?.abort();
+              setLocalHelpOnly(true);
+              try {
+                writeWorkspaceAiOptOut(workspace.id, optedOut);
+                setLocalHelpOnly(optedOut);
+                setDocumentMessage(null);
+              } catch {
+                setDocumentMessage("Could not save this preference. Local help remains enabled.");
+              }
+            }} />
+            Use local help only
+          </label>
+          {pending ? <button type="button" className="utility-button utility-button-small" onClick={() => requestController.current?.abort()}>Cancel request</button> : null}
           <form
             className="return-help-input-form"
             onSubmit={(event) => {

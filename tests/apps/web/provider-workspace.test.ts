@@ -1,3 +1,4 @@
+vi.mock("server-only", () => ({}));
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type {
   ProviderDirectIdentifier,
@@ -173,6 +174,13 @@ function createDirectIdentifiers(): ProviderDirectIdentifier[] {
 }
 
 describe("provider workspace request path", () => {
+  it("keeps default local-only summaries entirely offline", async () => {
+    const fetchFn = vi.fn();
+    const result = await requestProviderWorkspace(createWorkspace(), { fetchFn });
+    expect(result.response.provider).toBe("mock-local");
+    expect(result.request.optedOut).toBe(true);
+    expect(fetchFn).not.toHaveBeenCalled();
+  });
   afterEach(() => {
     vi.unstubAllGlobals();
   });
@@ -191,6 +199,7 @@ describe("provider workspace request path", () => {
     };
 
     const result = await requestProviderWorkspace(workspace, {
+      optedOut: false,
       endpoint: "http://localhost/api/provider/workspace",
       fetchFn,
       now: "2026-03-12T00:00:00.000Z"
@@ -234,6 +243,7 @@ describe("provider workspace request path", () => {
     };
 
     const result = await requestProviderWorkspace(workspace, {
+      optedOut: false,
       endpoint: "http://localhost/api/provider/workspace",
       directIdentifiers: createDirectIdentifiers(),
       fetchFn,
@@ -333,6 +343,7 @@ describe("provider workspace request path", () => {
     };
 
     const result = await requestProviderWorkspace(workspace, {
+      optedOut: false,
       endpoint: "http://localhost/api/provider/workspace",
       directIdentifiers: createDirectIdentifiers(),
       fetchFn,
@@ -431,248 +442,54 @@ describe("provider workspace request path", () => {
     expect(JSON.stringify(request.assistantContext?.selectedDocuments)).not.toContain("Jane Doe");
   });
 
-  it("forwards the redacted workspace payload through the configured OpenAI provider path", async () => {
-    const workspace = createWorkspace();
-    let capturedAppBody = "";
-    let capturedProviderBody = "";
-    const { POST: providerRoute } = createProviderWorkspaceRouteHandlers({
-      env: {
-        MODEL_PROVIDER_API_KEY: "test-provider-key",
-        MODEL_PROVIDER_MODEL: "gpt-5-mini"
-      },
-      fetchFn: async (input, init) => {
-        capturedProviderBody = typeof init?.body === "string" ? init.body : "";
-
-        expect(typeof input === "string" ? input : input.url).toBe("https://api.openai.com/v1/responses");
-
-        return new Response(JSON.stringify({
-          output_text: JSON.stringify({
-            summary: "Provider-safe workspace summary generated from redacted facts."
-          })
-        }), {
-          status: 200,
-          headers: {
-            "content-type": "application/json"
-          }
-        });
-      }
-    });
-
-    const fetchFn: typeof fetch = async (input, init) => {
-      capturedAppBody = typeof init?.body === "string" ? init.body : "";
-      return providerRoute(new Request(typeof input === "string" ? input : input.url, {
-        method: init?.method,
-        headers: init?.headers,
-        body: init?.body
-      }));
-    };
-
-    const result = await requestProviderWorkspace(workspace, {
-      endpoint: "http://localhost/api/provider/workspace",
-      directIdentifiers: createDirectIdentifiers(),
-      fetchFn,
-      now: "2026-03-12T00:00:00.000Z"
-    });
-
-    expect(capturedAppBody).not.toContain("Jane Doe");
-    expect(capturedAppBody).not.toContain("workspace-jane-doe");
-    expect(capturedAppBody).not.toContain("123-45-6789");
-    expect(capturedAppBody).not.toContain("jane.doe@example.com");
-    expect(capturedAppBody).not.toContain("12 Main Street");
-    expect(capturedAppBody).not.toContain("78701");
-    expect(capturedAppBody).not.toContain("512-555-0100");
-    expect(capturedProviderBody).not.toContain("Jane Doe");
-    expect(capturedProviderBody).not.toContain("workspace-jane-doe");
-    expect(capturedProviderBody).not.toContain("123-45-6789");
-    expect(capturedProviderBody).not.toContain("jane.doe@example.com");
-    expect(capturedProviderBody).not.toContain("12 Main Street");
-    expect(capturedProviderBody).not.toContain("78701");
-    expect(capturedProviderBody).not.toContain("512-555-0100");
-    expect(capturedProviderBody).toContain("workspace-[person-name-1]");
-    expect(capturedProviderBody).toContain("\\\"unsupportedRoutes\\\":[]");
-    expect(capturedProviderBody).toContain("\"store\":false");
-    expect(result.response.provider).toBe("openai-responses");
-    expect(result.response.summary).toBe("Provider-safe workspace summary generated from redacted facts.");
-    expect(result.response.totalDocuments).toBe(1);
-    expect(result.response.pendingQuestionCount).toBe(1);
-    expect(result.response.readyForRecompute).toBe(false);
+  it("keeps configured but unqualified provider routes deterministic", async () => {
+    const fetchFn = vi.fn();
+    const { POST: route } = createProviderWorkspaceRouteHandlers({ env: { OPENAI_API_KEY: "synthetic", GEMINI_API_KEY: "synthetic", MODEL_PROVIDER_MODEL: "gpt-5-mini" }, fetchFn });
+    const response = await route(new Request("http://localhost/api/provider/workspace", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(buildProviderWorkspaceRequest(createWorkspace())) }));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ provider: "mock-local", modelId: null });
+    expect(fetchFn).not.toHaveBeenCalled();
   });
 
-  it("uses Gemini when the workspace summary path has a Gemini key but no provider key", async () => {
-    const workspace = createWorkspace();
-    const geminiFetch = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({
-        candidates: [
-          {
-            content: {
-              parts: [
-                {
-                  text: JSON.stringify({
-                    summary: "Gemini workspace summary generated from redacted facts."
-                  })
-                }
-              ]
-            }
-          }
-        ]
-      }), {
-        status: 200,
-        headers: {
-          "content-type": "application/json"
-        }
-      })
-    );
-
-    vi.stubGlobal("fetch", geminiFetch);
-
-    const { POST: providerRoute } = createProviderWorkspaceRouteHandlers({
-      env: {
-        GEMINI_API_KEY: "test-gemini-key"
-      }
-    });
-
-    const fetchFn: typeof fetch = async (input, init) => providerRoute(new Request(
-      typeof input === "string" ? input : input.url,
-      {
-        method: init?.method,
-        headers: init?.headers,
-        body: init?.body
-      }
-    ));
-
-    const result = await requestProviderWorkspace(workspace, {
-      endpoint: "http://localhost/api/provider/workspace",
-      fetchFn,
-      now: "2026-03-12T00:00:00.000Z"
-    });
-
-    expect(result.response.provider).toBe("gemini");
-    expect(result.response.summary).toBe("Gemini workspace summary generated from redacted facts.");
-    expect(geminiFetch).toHaveBeenCalledOnce();
+  it("sends minimal redacted workflow facts through the explicit Luna evaluation route", async () => {
+    const fetchFn = vi.fn().mockResolvedValue(Response.json({ status: "completed", usage: { input_tokens: 120, output_tokens: 48 },
+      output_text: JSON.stringify({ summary: "Review the withholding question.", sourceIds: ["workspace:questions"] }) }));
+    const { POST: route } = createProviderWorkspaceRouteHandlers({ execution: { mode: "evaluation", syntheticFixtureId: "workspace-synthetic", apiKey: "fixture-key" }, fetchFn });
+    const response = await route(new Request("http://localhost/api/provider/workspace", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(buildProviderWorkspaceRequest(createWorkspace())) }));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ provider: "openai-responses", modelId: "gpt-6-luna", summary: "Review the withholding question.", sourceIds: ["workspace:questions"] });
+    const [url, options] = fetchFn.mock.calls[0];
+    expect(url).toBe("https://api.openai.com/v1/responses");
+    expect(JSON.parse(options.body)).toMatchObject({ store: false, reasoning: { effort: "high" }, prompt_cache_options: { mode: "explicit" } });
+    expect(options.body).not.toContain("Jane Doe");
+    expect(options.body).not.toContain("123-45-6789");
+    expect(options.body).not.toContain("workspace-jane-doe");
+    expect(options.body).not.toContain("enginePreview");
   });
 
-  it("sends workspace-help questions through the configured OpenAI provider path", async () => {
-    const workspace = createWorkspace();
-    let capturedProviderBody = "";
-    const { POST: providerRoute } = createProviderWorkspaceRouteHandlers({
-      env: {
-        MODEL_PROVIDER_API_KEY: "test-provider-key",
-        MODEL_PROVIDER_MODEL: "gpt-5-mini"
-      },
-      fetchFn: async (_input, init) => {
-        capturedProviderBody = typeof init?.body === "string" ? init.body : "";
-
-        return new Response(JSON.stringify({
-          output_text: JSON.stringify({
-            answer: "Review the withholding question next, then confirm the imported W-2 values."
-          }),
-          usage: {
-            input_tokens: 120,
-            output_tokens: 48
-          }
-        }), {
-          status: 200,
-          headers: {
-            "content-type": "application/json"
-          }
-        });
-      }
-    });
-
-    const fetchFn: typeof fetch = async (input, init) => providerRoute(new Request(
-      typeof input === "string" ? input : input.url,
-      {
-        method: init?.method,
-        headers: init?.headers,
-        body: init?.body
-      }
-    ));
-
-    const result = await requestProviderWorkspaceHelp(workspace, "What should I do next?", {
-      endpoint: "http://localhost/api/provider/workspace",
-      directIdentifiers: createDirectIdentifiers(),
-      fetchFn,
-      now: "2026-03-12T00:00:00.000Z",
-      assistantContext: {
-        mode: "guided",
-        currentSectionId: "guided-setup",
-        currentSectionLabel: "guided setup",
-        conversation: []
-      }
-    });
-
-    expect(capturedProviderBody).toContain("\\\"task\\\":\\\"workspace-help\\\"");
-    expect(capturedProviderBody).toContain("\\\"question\\\":\\\"What should I do next?\\\"");
-    expect(result.response.task).toBe("workspace-help");
-    expect(result.response.provider).toBe("openai-responses");
-    expect(result.response.answer).toBe("Review the withholding question next, then confirm the imported W-2 values.");
-    expect(result.response.usage).toEqual({
-      inputTokens: 120,
-      outputTokens: 48,
-      estimatedCostCents: 1,
-      providerCostUsd: "0.000126",
-      pricingEffectiveFrom: "2026-10-24",
-      usageKind: "reported",
-    });
+  it("uses Gemini only when the trusted evaluation explicitly selects it", async () => {
+    const fetchFn = vi.fn().mockResolvedValue(Response.json({ candidates: [{ finishReason: "STOP", content: { parts: [{ text: JSON.stringify({ summary: "Review the withholding question.", sourceIds: ["workspace:questions"] }) }] } }],
+      usageMetadata: { promptTokenCount: 120, candidatesTokenCount: 48, thoughtsTokenCount: 20 } }));
+    const { POST: route } = createProviderWorkspaceRouteHandlers({ execution: { mode: "evaluation", provider: "google", syntheticFixtureId: "workspace-synthetic", apiKey: "fixture-key" }, fetchFn });
+    const response = await route(new Request("http://localhost/api/provider/workspace", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(buildProviderWorkspaceRequest(createWorkspace())) }));
+    expect(await response.json()).toMatchObject({ provider: "gemini", modelId: "gemini-3.8-flash" });
+    expect(fetchFn.mock.calls[0][0]).toContain("gemini-3.8-flash:generateContent");
+    expect(fetchFn.mock.calls[0][0]).not.toContain("fixture-key");
   });
 
-  it("uses Gemini for workspace-help when the local env has a Gemini key but no provider key", async () => {
-    const workspace = createWorkspace();
-    const geminiFetch = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({
-        candidates: [
-          {
-            content: {
-              parts: [
-                {
-                  text: JSON.stringify({
-                    answer: "Use the numbers already extracted from your uploaded documents, then confirm the pending review item before filing."
-                  })
-                }
-              ]
-            }
-          }
-        ]
-      }), {
-        status: 200,
-        headers: {
-          "content-type": "application/json"
-        }
-      })
-    );
-
-    vi.stubGlobal("fetch", geminiFetch);
-
-    const { POST: providerRoute } = createProviderWorkspaceRouteHandlers({
-      env: {
-        GEMINI_API_KEY: "test-gemini-key"
-      }
-    });
-
-    const fetchFn: typeof fetch = async (input, init) => providerRoute(new Request(
-      typeof input === "string" ? input : input.url,
-      {
-        method: init?.method,
-        headers: init?.headers,
-        body: init?.body
-      }
-    ));
-
-    const result = await requestProviderWorkspaceHelp(workspace, "What should I do next?", {
-      endpoint: "http://localhost/api/provider/workspace",
-      fetchFn,
-      now: "2026-03-12T00:00:00.000Z",
-      assistantContext: {
-        mode: "guided",
-        currentSectionId: "income-self-employment",
-        currentSectionLabel: "Self-Employment",
-        conversation: []
-      }
-    });
-
-    expect(result.response.provider).toBe("gemini");
-    expect(result.response.answer).toContain("pending review item");
-    expect(geminiFetch).toHaveBeenCalledOnce();
+  it("requires server-verified year-specific citations for Sol tax explanations", async () => {
+    const fetchFn = vi.fn().mockResolvedValue(Response.json({ status: "completed", usage: { input_tokens: 120, output_tokens: 48 },
+      output_text: JSON.stringify({ answer: "The verified audit shows $2,200.", sourceIds: ["spec:ctc", "audit:ctc"], engineValues: [{ id: "audit:ctc", value: "2200" }] }) }));
+    const request = buildProviderWorkspaceRequest(createWorkspace(), { task: "workspace-help", question: "Explain the credit." });
+    const deps = { execution: { mode: "evaluation" as const, syntheticFixtureId: "workspace-help-synthetic", apiKey: "fixture-key" }, fetchFn };
+    const first = createProviderWorkspaceRouteHandlers(deps);
+    expect(await (await first.POST(new Request("http://localhost/api/provider/workspace", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(request) }))).json()).toMatchObject({ provider: "mock-local" });
+    expect(fetchFn).not.toHaveBeenCalled();
+    const second = createProviderWorkspaceRouteHandlers({ ...deps, resolveTaxContext: () => ({ taxYear: 2025, ruleVersion: "2025.3", excerpts: [{ id: "spec:ctc", taxYear: 2025, text: "Synthetic reviewed source." }],
+      auditEntries: [{ id: "audit:ctc", taxYear: 2025, value: "2200", explanation: "Synthetic verified engine output." }] }) });
+    const response = await second.POST(new Request("http://localhost/api/provider/workspace", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(request) }));
+    expect(await response.json()).toMatchObject({ provider: "openai-responses", modelId: "gpt-6.1-sol", usage: { providerCostUsd: "0.00072", usageKind: "reported" } });
+    expect(JSON.parse(fetchFn.mock.calls[0][1].body).reasoning).toEqual({ effort: "low" });
   });
 
   it("surfaces structured provider request errors to the client", async () => {
@@ -681,6 +498,7 @@ describe("provider workspace request path", () => {
     });
 
     await expect(requestProviderWorkspaceHelp(workspace, "What should I do next?", {
+      optedOut: false,
       endpoint: "http://localhost/api/provider/workspace",
       fetchFn: async () => new Response(JSON.stringify({
         error: "AI helper access requires an active Starter or Plus plan.",
@@ -717,6 +535,7 @@ describe("provider workspace request path", () => {
     });
 
     const result = await requestProviderWorkspace(workspace, {
+      optedOut: false,
       endpoint: "http://localhost/api/provider/workspace",
       fetchFn: async (input, init) => POST(new Request(typeof input === "string" ? input : input.url, {
         method: init?.method,
@@ -732,7 +551,7 @@ describe("provider workspace request path", () => {
     expect(result.response.totalDocuments).toBe(1);
   });
 
-  it("summarizes advisory-only review routes as downloadable rather than blocked", async () => {
+  it("does not infer filing or download readiness from advisory-only routes", async () => {
     const workspace = createWorkspace({
       summary: {
         totalDocuments: 2,
@@ -809,6 +628,7 @@ describe("provider workspace request path", () => {
     });
 
     const result = await requestProviderWorkspace(workspace, {
+      optedOut: false,
       endpoint: "http://localhost/api/provider/workspace",
       fetchFn: async (input, init) => POST(new Request(typeof input === "string" ? input : input.url, {
         method: init?.method,
@@ -823,8 +643,8 @@ describe("provider workspace request path", () => {
       "partner-review-later"
     ]);
     expect(result.response.provider).toBe("mock-local");
-    expect(result.response.summary).toContain("Return bundle is ready to download.");
-    expect(result.response.summary).toContain("advisory follow-up");
+    expect(result.response.summary).not.toContain("ready to download");
+    expect(result.response.summary).toContain("unsupported route");
     expect(result.response.readyForRecompute).toBe(false);
   });
 
@@ -859,6 +679,7 @@ describe("provider workspace request path", () => {
       now: "2026-03-12T00:00:00.000Z"
     });
     const { POST: providerRoute } = createProviderWorkspaceRouteHandlers({
+      execution: { mode: "evaluation", syntheticFixtureId: "failure-fixture" },
       env: {
         MODEL_PROVIDER_API_KEY: "test-provider-key"
       },

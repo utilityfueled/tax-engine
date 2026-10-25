@@ -1,7 +1,16 @@
+vi.mock("server-only", () => ({}));
 import { describe, expect, it, vi } from "vitest";
-import { createProviderWorkspaceRouteHandlers } from "../../../apps/web/src/lib/provider-workspace-route";
-import { createProviderWorkspaceResponder, isAllowedProviderUrl, sanitizeHtmlEntities } from "../../../apps/web/src/lib/provider-workspace-responder";
+import { createProviderWorkspaceRouteHandlers as routeHandlers } from "../../../apps/web/src/lib/provider-workspace-route";
+import { createProviderWorkspaceResponder as responder, isAllowedProviderUrl, sanitizeHtmlEntities } from "../../../apps/web/src/lib/provider-workspace-responder";
 import type { ProviderWorkspaceRequest } from "../../../apps/web/src/lib/provider-workspace-request";
+
+const evaluation = { mode: "evaluation" as const, syntheticFixtureId: "security-fixture", now: () => "2026-10-25T02:00:00Z" };
+function createProviderWorkspaceResponder(dependencies: Parameters<typeof responder>[0] = {}) {
+  return responder({ ...dependencies, ...(dependencies.env?.MODEL_PROVIDER_API_KEY ? { execution: evaluation } : {}) });
+}
+function createProviderWorkspaceRouteHandlers(dependencies: Parameters<typeof routeHandlers>[0] = {}) {
+  return routeHandlers({ ...dependencies, ...(dependencies.env?.MODEL_PROVIDER_API_KEY ? { execution: evaluation } : {}) });
+}
 
 function buildMinimalWorkspaceRequest(): ProviderWorkspaceRequest {
   return {
@@ -95,7 +104,7 @@ describe("security: data protection — model provider error sanitization", () =
     });
 
     await expect(respond(buildMinimalWorkspaceRequest())).rejects.toThrow(
-      "Model provider returned an error."
+      "AI provider request failed; usage requires reconciliation."
     );
   });
 
@@ -129,7 +138,8 @@ describe("security: data protection — model provider request does not store da
   it("model provider request includes store:false to prevent third-party data retention", async () => {
     const fetchFn = vi.fn().mockResolvedValue(
       new Response(JSON.stringify({
-        output_text: JSON.stringify({ summary: "Workspace summary." })
+        status: "completed", usage: { input_tokens: 100, output_tokens: 100 },
+        output_text: JSON.stringify({ sourceIds: ["workspace:status"], summary: "Workspace summary." })
       }), { status: 200, headers: { "content-type": "application/json" } })
     );
 
@@ -148,11 +158,12 @@ describe("security: data protection — model provider request does not store da
 });
 
 describe("security: data protection — provider summary length bound", () => {
-  it("truncates provider summary exceeding 2000 characters", async () => {
+  it("rejects provider summary exceeding 2000 characters and preserves incurred cost", async () => {
     const longSummary = "A".repeat(5000);
     const fetchFn = vi.fn().mockResolvedValue(
       new Response(JSON.stringify({
-        output_text: JSON.stringify({ summary: longSummary })
+        status: "completed", usage: { input_tokens: 100, output_tokens: 100 },
+        output_text: JSON.stringify({ sourceIds: ["workspace:status"], summary: longSummary })
       }), { status: 200, headers: { "content-type": "application/json" } })
     );
 
@@ -162,15 +173,17 @@ describe("security: data protection — provider summary length bound", () => {
     });
 
     const result = await respond(buildMinimalWorkspaceRequest());
-    expect(result.summary.length).toBe(2000);
-    expect(result.summary).toBe("A".repeat(2000));
+    expect(result.provider).toBe("mock-local");
+    expect(result.summary).not.toContain("A".repeat(2000));
+    expect(result.usage?.usageKind).toBe("reported");
   });
 
   it("preserves provider summary within 2000 characters", async () => {
-    const normalSummary = "Workspace is ready for recompute with 3 documents.";
+    const normalSummary = "Workspace is ready for recompute with 0 documents.";
     const fetchFn = vi.fn().mockResolvedValue(
       new Response(JSON.stringify({
-        output_text: JSON.stringify({ summary: normalSummary })
+        status: "completed", usage: { input_tokens: 100, output_tokens: 100 },
+        output_text: JSON.stringify({ sourceIds: ["workspace:status"], summary: normalSummary })
       }), { status: 200, headers: { "content-type": "application/json" } })
     );
 
@@ -199,7 +212,7 @@ describe("security: data protection — API response data minimization", () => {
     expect(response.status).toBe(200);
     const body = await response.json();
     const allowedKeys = new Set([
-      "requestId", "provider", "summary", "totalDocuments",
+      "task", "modelId", "requestId", "provider", "summary", "totalDocuments",
       "pendingQuestionCount", "readyForRecompute", "redactionCount"
     ]);
     for (const key of Object.keys(body)) {
@@ -401,7 +414,7 @@ describe("security: SSRF protection — provider base URL validation", () => {
     });
 
     await expect(respond(buildMinimalWorkspaceRequest())).rejects.toThrow(
-      "Model provider base URL is not allowed (SSRF protection)."
+      "Only the fixed official AI provider endpoint is supported."
     );
   });
 
@@ -432,13 +445,14 @@ describe("security: provider response body size limit", () => {
   it("rejects model provider responses exceeding 1 MB", async () => {
     // Create a response body just over 1 MB
     const oversizedBody = JSON.stringify({
-      output_text: JSON.stringify({ summary: "A".repeat(1024 * 1024 + 100) })
+      status: "completed", usage: { input_tokens: 100, output_tokens: 100 },
+        output_text: JSON.stringify({ sourceIds: ["workspace:status"], summary: "A".repeat(1024 * 1024 + 100) })
     });
 
     const respond = createProviderWorkspaceResponder({
       env: {
         MODEL_PROVIDER_API_KEY: "test-key",
-        MODEL_PROVIDER_BASE_URL: "https://api.example.com/v1"
+        MODEL_PROVIDER_BASE_URL: "https://api.openai.com/v1"
       },
       skipUrlValidation: true,
       fetchFn: async () => new Response(oversizedBody, {
@@ -448,7 +462,7 @@ describe("security: provider response body size limit", () => {
     });
 
     await expect(respond(buildMinimalWorkspaceRequest())).rejects.toThrow(
-      "Model provider response exceeded the maximum allowed size."
+      "AI provider request failed; usage requires reconciliation."
     );
   });
 
@@ -457,11 +471,12 @@ describe("security: provider response body size limit", () => {
     const respond = createProviderWorkspaceResponder({
       env: {
         MODEL_PROVIDER_API_KEY: "test-key",
-        MODEL_PROVIDER_BASE_URL: "https://api.example.com/v1"
+        MODEL_PROVIDER_BASE_URL: "https://api.openai.com/v1"
       },
       skipUrlValidation: true,
       fetchFn: async () => new Response(JSON.stringify({
-        output_text: JSON.stringify({ summary: normalSummary })
+        status: "completed", usage: { input_tokens: 100, output_tokens: 100 },
+        output_text: JSON.stringify({ sourceIds: ["workspace:status"], summary: normalSummary })
       }), {
         status: 200,
         headers: { "content-type": "application/json" }
@@ -479,7 +494,7 @@ describe("security: provider response body size limit", () => {
       env: {
         TAX_ENGINE_DEPLOYMENT_MODE: "self-host",
         MODEL_PROVIDER_API_KEY: "test-key",
-        MODEL_PROVIDER_BASE_URL: "https://api.example.com/v1"
+        MODEL_PROVIDER_BASE_URL: "https://api.openai.com/v1"
       },
       fetchFn: async () => new Response(oversizedBody, {
         status: 200,
@@ -510,7 +525,7 @@ describe("security: SSRF defense-in-depth — provider fetch rejects redirects",
     const respond = createProviderWorkspaceResponder({
       env: {
         MODEL_PROVIDER_API_KEY: "test-key",
-        MODEL_PROVIDER_BASE_URL: "https://api.example.com/v1"
+        MODEL_PROVIDER_BASE_URL: "https://api.openai.com/v1"
       },
       skipUrlValidation: true,
       fetchFn
@@ -522,14 +537,15 @@ describe("security: SSRF defense-in-depth — provider fetch rejects redirects",
   it("provider fetch sends redirect:'error' to prevent following redirects", async () => {
     const fetchFn = vi.fn().mockResolvedValue(
       new Response(JSON.stringify({
-        output_text: JSON.stringify({ summary: "Workspace ready." })
+        status: "completed", usage: { input_tokens: 100, output_tokens: 100 },
+        output_text: JSON.stringify({ sourceIds: ["workspace:status"], summary: "Workspace ready." })
       }), { status: 200, headers: { "content-type": "application/json" } })
     );
 
     const respond = createProviderWorkspaceResponder({
       env: {
         MODEL_PROVIDER_API_KEY: "test-key",
-        MODEL_PROVIDER_BASE_URL: "https://api.example.com/v1"
+        MODEL_PROVIDER_BASE_URL: "https://api.openai.com/v1"
       },
       skipUrlValidation: true,
       fetchFn
@@ -551,7 +567,7 @@ describe("security: SSRF defense-in-depth — provider fetch rejects redirects",
       env: {
         TAX_ENGINE_DEPLOYMENT_MODE: "self-host",
         MODEL_PROVIDER_API_KEY: "test-key",
-        MODEL_PROVIDER_BASE_URL: "https://api.example.com/v1"
+        MODEL_PROVIDER_BASE_URL: "https://api.openai.com/v1"
       },
       fetchFn
     });
@@ -589,7 +605,7 @@ describe("security: provider response streaming size enforcement", () => {
     const respond = createProviderWorkspaceResponder({
       env: {
         MODEL_PROVIDER_API_KEY: "test-key",
-        MODEL_PROVIDER_BASE_URL: "https://api.example.com/v1"
+        MODEL_PROVIDER_BASE_URL: "https://api.openai.com/v1"
       },
       skipUrlValidation: true,
       fetchFn: async () => new Response(stream, {
@@ -599,7 +615,7 @@ describe("security: provider response streaming size enforcement", () => {
     });
 
     await expect(respond(buildMinimalWorkspaceRequest())).rejects.toThrow(
-      "Model provider response exceeded the maximum allowed size."
+      "AI provider request failed; usage requires reconciliation."
     );
   });
 
@@ -607,7 +623,7 @@ describe("security: provider response streaming size enforcement", () => {
     const respond = createProviderWorkspaceResponder({
       env: {
         MODEL_PROVIDER_API_KEY: "test-key",
-        MODEL_PROVIDER_BASE_URL: "https://api.example.com/v1"
+        MODEL_PROVIDER_BASE_URL: "https://api.openai.com/v1"
       },
       skipUrlValidation: true,
       fetchFn: async () => new Response("small body", {
@@ -620,20 +636,21 @@ describe("security: provider response streaming size enforcement", () => {
     });
 
     await expect(respond(buildMinimalWorkspaceRequest())).rejects.toThrow(
-      "Model provider response exceeded the maximum allowed size."
+      "AI provider request failed; usage requires reconciliation."
     );
   });
 
   it("reads small response body successfully through streaming path", async () => {
     const normalSummary = "Workspace ready for recompute.";
     const body = JSON.stringify({
-      output_text: JSON.stringify({ summary: normalSummary })
+      status: "completed", usage: { input_tokens: 100, output_tokens: 100 },
+        output_text: JSON.stringify({ sourceIds: ["workspace:status"], summary: normalSummary })
     });
 
     const respond = createProviderWorkspaceResponder({
       env: {
         MODEL_PROVIDER_API_KEY: "test-key",
-        MODEL_PROVIDER_BASE_URL: "https://api.example.com/v1"
+        MODEL_PROVIDER_BASE_URL: "https://api.openai.com/v1"
       },
       skipUrlValidation: true,
       fetchFn: async () => new Response(body, {
@@ -677,11 +694,12 @@ describe("security: provider summary HTML sanitization (stored XSS prevention)",
     const respond = createProviderWorkspaceResponder({
       env: {
         MODEL_PROVIDER_API_KEY: "test-key",
-        MODEL_PROVIDER_BASE_URL: "https://api.example.com/v1"
+        MODEL_PROVIDER_BASE_URL: "https://api.openai.com/v1"
       },
       skipUrlValidation: true,
       fetchFn: async () => new Response(JSON.stringify({
-        output_text: JSON.stringify({ summary: xssPayload })
+        status: "completed", usage: { input_tokens: 100, output_tokens: 100 },
+        output_text: JSON.stringify({ sourceIds: ["workspace:status"], summary: xssPayload })
       }), { status: 200 })
     });
 

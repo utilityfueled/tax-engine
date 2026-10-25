@@ -42,14 +42,7 @@ function readConfiguredNumber(
 
 function approximateTokenCount(value: unknown) {
   const serialized = typeof value === "string" ? value : JSON.stringify(value);
-  return Math.max(1, Math.ceil(serialized.length / 4));
-}
-
-function configuredPrice(raw: string | undefined): Decimal | null {
-  if (!raw?.trim()) return null;
-  const price = new Decimal(raw);
-  if (!price.isFinite() || price.isNegative()) throw new Error("Invalid explicit AI price.");
-  return price;
+  return Math.max(1, new TextEncoder().encode(serialized).byteLength + 1024);
 }
 
 export function resolveHostedAiIncludedBudgetCents(
@@ -123,20 +116,10 @@ export function estimateHostedAiUsageCost(
     ?? approximateTokenCount(responseText ?? "") ;
   if ([resolvedInputTokens, resolvedOutputTokens, cachedInputTokens].some(count => !Number.isSafeInteger(count) || count < 0)
     || cachedInputTokens > resolvedInputTokens) throw new Error("Invalid AI token usage.");
-  const configuredInput = configuredPrice(env.TAX_ENGINE_AI_HELPER_INPUT_USD_PER_MILLION);
-  const configuredOutput = configuredPrice(env.TAX_ENGINE_AI_HELPER_OUTPUT_USD_PER_MILLION);
-  if ((configuredInput === null) !== (configuredOutput === null)) throw new Error("Both explicit AI prices are required.");
-  let cost;
-  if (configuredInput && configuredOutput) {
-    if (cachedInputTokens > 0) throw new Error("Explicit custom pricing needs a cache price before cached usage can be charged.");
-    const providerCost = new Decimal(resolvedInputTokens).times(configuredInput)
-      .plus(new Decimal(resolvedOutputTokens).times(configuredOutput)).div("1000000");
-    const charge = Decimal.max("1", providerCost.times("100").ceil());
-    if (charge.gt(Number.MAX_SAFE_INTEGER)) throw new Error("AI charge exceeds ledger range.");
-    cost = { providerCostUsd: providerCost.toFixed(), retailChargeCents: charge.toNumber(), pricingEffectiveFrom: "explicit-configuration" };
-  } else {
-    cost = calculateAiCost(modelId, at, { inputTokens: resolvedInputTokens, outputTokens: resolvedOutputTokens, cachedInputTokens });
+  if (env.TAX_ENGINE_AI_HELPER_INPUT_USD_PER_MILLION?.trim() || env.TAX_ENGINE_AI_HELPER_OUTPUT_USD_PER_MILLION?.trim()) {
+    throw new Error("Unreviewed custom AI prices are not supported. Add a sourced effective-dated price entry.");
   }
+  const cost = calculateAiCost(modelId, at, { inputTokens: resolvedInputTokens, outputTokens: resolvedOutputTokens, cachedInputTokens });
 
   return {
     inputTokens: resolvedInputTokens,
@@ -171,7 +154,7 @@ export function estimateHostedAiReserveCostCents(
 export function resolveHostedAiHelperModelId(
   env: HostedAiBillingEnvironment = process.env
 ) {
-  return env.MODEL_PROVIDER_MODEL?.trim() || "gpt-5-mini";
+  return env.MODEL_PROVIDER_MODEL?.trim() || "gpt-6-luna";
 }
 
 export function resolveHostedAiMaxOutputTokens(
