@@ -31,9 +31,11 @@ it.each([false, true])("writes each completed template once with its visible rev
       expect(observed.writes.filter(path => path === file), basename(file)).toHaveLength(1);
       const bytes = await readFile(file);
       const doc = await PDFDocument.load(bytes);
+      // Reopen the completed file directly. A pipe waiting for EOF can block
+      // Vitest's event loop and prevent its own timeout from firing.
       const pages = JSON.parse(execFileSync(process.env.TAX_ENGINE_PDF_TEST_PYTHON ?? "python3", ["-c",
-        "import sys,io,json; from pypdf import PdfReader; print(json.dumps([p.extract_text() or '' for p in PdfReader(io.BytesIO(sys.stdin.buffer.read())).pages]))"],
-      { input: bytes, encoding: "utf8" })) as string[];
+        "import sys,json; from pypdf import PdfReader; print(json.dumps([p.extract_text() or '' for p in PdfReader(sys.argv[1]).pages]))", file],
+      { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], timeout: 30_000 })) as string[];
       expect(pages).toHaveLength(doc.getPageCount());
       for (const page of pages) expect(page.split(REVIEW_PDF_NOTICE)).toHaveLength(2);
       if (basename(file) === "f1040-filled.pdf" && !flatten) {
