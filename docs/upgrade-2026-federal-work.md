@@ -713,3 +713,20 @@ Versions are2025.11 and2026.6-law-integration-draft. No filing or review gate is
 changed. Source-qualified Form8815 integration and territory exclusions are the
 next separate package. CTC synthetic joint wage-owner fixture correction is
 committed separately as aaa9dd7; its14 original identity assertions pass.
+
+### Source-qualified savings-bond return integration — 2026-10-25
+
+Integrated acab62e with the actual return year and full source facts. Confirmed
+prior interest included in current statements is removed once before income,
+Social Security and MAGI calculations; original gross Box3 remains intact.
+Verified current bond interest and exclusion must fit the remaining reported
+Box3. Actual territory exclusions and the signed royalty worksheet adjustment
+are required for verified MAGI, including explicit known zeros. No legacy
+amount is silently turned into a verified source fact.
+
+Three red-first return regressions cover2026 midpoint phase-out, prior interest
+and statement contradictions, and actual territory/royalty addbacks.211 focused
+bond/interest/metadata tests pass, root types and all3,282 then-current spec
+references pass; scoped lint has zeroerrors and diff/whitespace was reviewed.
+Metadata is2025.12/2026.7-law-integration-draft; qualification remains closed.
+PA source treatment and independent legal/form review remain separately owned.

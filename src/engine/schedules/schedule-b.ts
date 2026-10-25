@@ -26,6 +26,7 @@ export interface ScheduleBResult {
   /** Part I */
   interestPayers: InterestPayer[];
   totalInterest: Decimal; // Line 2
+  previouslyReportedSavingsBondInterest: Decimal; // Actual prior interest included in current Box 3
   savingsBondExclusion: Decimal; // Line 3
   taxableInterest: Decimal; // Line 4 → 1040 Line 2b
 
@@ -65,6 +66,22 @@ export function calculateScheduleB(input: TaxYearInput, savingsBondExclusionOver
         "1099-INT Box 1": box1Interest,
         "1099-INT Box 3": box3Interest,
       });
+  }
+
+  const previouslyReportedSavingsBondInterest = d(input.form8815?.priorYearInterestIncludedInCurrentStatements);
+  const reportedTreasuryInterest = input.form1099Int.reduce((total, form) => total.plus(d(form.usSavingsBondInterest)), new Decimal(0));
+  if (!previouslyReportedSavingsBondInterest.isFinite() || previouslyReportedSavingsBondInterest.isNegative()
+    || previouslyReportedSavingsBondInterest.gt(reportedTreasuryInterest)) {
+    throw new Error("Previously reported interest adjustment must be finite, nonnegative and no greater than current Box 3 interest");
+  }
+  if (previouslyReportedSavingsBondInterest.gt(0)) {
+    if (input.form8815?.sourceFactsConfirmed !== true || input.form8815.currentStatementReconciliationConfirmed !== true
+      || !input.savingsBondRedemptions?.length) {
+      throw new Error("Previously reported interest requires actual reconciled bond and statement sources");
+    }
+    interestPayers.push({ name: "U.S. savings bond interest previously reported", amount: previouslyReportedSavingsBondInterest.negated() });
+    audit.record("Sched B", "1-prior-interest", "Previously reported savings bond interest", previouslyReportedSavingsBondInterest.negated(),
+      "Subtract only actual prior interest confirmed as included in current Treasury statements");
   }
 
   // K-1 interest income (Box 5 — partnerships/S-corps)
@@ -275,6 +292,7 @@ export function calculateScheduleB(input: TaxYearInput, savingsBondExclusionOver
     hasForeignTrust;
 
   return {
+    previouslyReportedSavingsBondInterest,
     interestPayers,
     totalInterest,
     savingsBondExclusion,

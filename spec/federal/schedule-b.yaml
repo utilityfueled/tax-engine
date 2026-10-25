@@ -10,6 +10,11 @@ notes: |
   - Any financial interest in or signature authority over a foreign financial account (Part III)
 
 lines:
+  - line: "prior-interest-source"
+    description: "Deduct actual previously reported interest included in current Treasury statements"
+    formula: "Subtract confirmed priorYearInterestIncludedInCurrentStatements once on the line1 subtotal; preserve gross original Box3 and reject an adjustment above it. Verified Form8815 then reconciles its source history and remaining current interest."
+    irsRef: "ScheduleB instructions, US savings bond interest; Form8815 line6 worksheet"
+    testRef: "tests/engine/federal-bond-source-integration.test.ts::reconciles previously reported interest once before the current exclusion"
   - line: "box3-source"
     description: "Include Treasury and savings-bond interest separately reported in Box 3"
     formula: "1099-INT listed interest = Box 1 + Box 3; apply any separately calculated Form 8815 exclusion only on Schedule B line 3"

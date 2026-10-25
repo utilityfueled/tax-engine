@@ -1727,11 +1727,31 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   let form8815: Form8815Result | undefined;
   let savingsBondExclusion = new Decimal(0);
   if (input.savingsBondRedemptions && input.savingsBondRedemptions.length > 0) {
+    const bondMagiFacts = input.form8815;
+    const verifiedBondFacts = filingStatus !== "married_filing_separately" && (year === 2026 || bondMagiFacts !== undefined);
+    if (verifiedBondFacts) {
+      for (const key of ["americanSamoaIncomeExclusion", "puertoRicoIncomeExclusion", "royaltyInterestAdjustment"] as const) {
+        const value = bondMagiFacts?.[key];
+        if (value === undefined || !d(value).isFinite() || (key !== "royaltyInterestAdjustment" && d(value).isNegative())) {
+          throw new Error(`Form 8815 requires an actual finite MAGI fact: ${key}`);
+        }
+      }
+    }
     const form8815MAGI = sum(preliminaryAgi, sched1.studentLoanInterest,
       form2555IncomeReduction, form2555HousingDeduction,
-      adoptionBenefitResult?.allowableExclusion ?? new Decimal(0));
-    form8815 = calculateForm8815(input.savingsBondRedemptions, form8815MAGI, filingStatus);
+      adoptionBenefitResult?.allowableExclusion ?? new Decimal(0),
+      d(bondMagiFacts?.americanSamoaIncomeExclusion), d(bondMagiFacts?.puertoRicoIncomeExclusion),
+      d(bondMagiFacts?.royaltyInterestAdjustment));
+    form8815 = calculateForm8815(input.savingsBondRedemptions, form8815MAGI, filingStatus, { taxYear: year, facts: bondMagiFacts });
     savingsBondExclusion = form8815.excludableSavingsBondInterest;
+    if (form8815.sourceFactsVerified) {
+      const remainingStatementInterest = sum(...input.form1099Int.map(form => d(form.usSavingsBondInterest)))
+        .minus(preliminaryScheduleB.previouslyReportedSavingsBondInterest);
+      const sourcedCurrentInterest = sum(...form8815.redemptionResults.map(redemption => redemption.currentYearInterest ?? new Decimal(0)));
+      if (savingsBondExclusion.gt(remainingStatementInterest) || sourcedCurrentInterest.gt(remainingStatementInterest)) {
+        throw new Error("Form 8815 current bond interest and exclusion must reconcile to remaining reported Box 3 statement interest");
+      }
+    }
     audit.merge(form8815.lines);
   }
   const schedB = calculateScheduleB(input, savingsBondExclusion);
