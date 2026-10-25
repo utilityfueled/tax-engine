@@ -643,3 +643,14 @@ Schedule3/Pennsylvania orchestration tests, root types, all3197spec refs and
 scopedlint pass. Scoped diff and whitespace reviewed. This is unqualified
 historical preview compatibility; actual employer facts remain required for
 final return qualification.
+
+### Original credit source facts survive reparsing — 2026-10-25
+
+A red-first schema regression demonstrated that legacy defaults could turn an
+incomplete vehicle or adoption record into a complete record on its second
+parse. The shared presence marker now preserves an earlier false value, while
+explicit complete original facts still pass and a caller-supplied true marker
+cannot replace missing fields.17 focused model/guided contract tests, root types
+and scopedlint pass. New spec reference resolves; the global validator currently
+reports46 expected in-progress Form2555 test references owned by that parallel
+package. Scoped diff/whitespace reviewed. No qualification gate changed.

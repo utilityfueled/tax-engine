@@ -2786,7 +2786,7 @@ export const EnergyCreditsSchema = z.object({
 const sourceFactPresence = (required: string[]) => (value: unknown) => {
   if (!value || typeof value !== "object" || Array.isArray(value)) return value;
   const record = value as Record<string, unknown>;
-  return {...record, sourceFactsComplete: required.every(key => record[key] !== undefined)};
+  return {...record, sourceFactsComplete: record.sourceFactsComplete !== false && required.every(key => record[key] !== undefined)};
 };
 const VehicleSourceFactFields = {
   sourceFactsComplete: z.boolean(),

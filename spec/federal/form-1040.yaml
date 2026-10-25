@@ -512,6 +512,10 @@ lines:
     irsRef: "https://www.irs.gov/instructions/i1040s8, Credit Limit Worksheets A/B; https://www.irs.gov/instructions/i8839, line17; https://www.irs.gov/instructions/i5695, line14"
     testRef: "tests/engine/forms/personal-credit-ordering.test.ts::Personal credit limit worksheets"
 
+  - line: "credit-source-reparse"
+    description: "Original unknown personal-credit source facts survive schema reparsing"
+    formula: "Once sourceFactsComplete is false, generated legacy defaults cannot establish actual vehicle/adoption source facts on a subsequent parse. A supplied true marker still cannot replace original required facts."
+    testRef: "tests/engine/credit-source-contract.test.ts::keeps original missing vehicle and adoption facts incomplete after reparsing"
   - line: "credit-source-contract"
     description: Preserve actual adoption and vehicle eligibility, year, income and transfer facts before calculation
     formula: For verified vehicle claims require original personal-use, transfer and price/type facts; missing prior-year AGI remains unknown. Adoption carries actual finalized year, expense years, employer plan, exclusion MAGI and origin-year carryforwards.

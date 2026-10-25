@@ -16,6 +16,18 @@ describe("Personal credit source contracts",()=>{
     const r=Form8936Schema.parse({newCleanVehicles:[{dateAcquired:"2025-09-30",criticalMineralsRequirementMet:true,batteryComponentsRequirementMet:true,sourceFactsComplete:true}]});
     expect(r.newCleanVehicles[0].sourceFactsComplete).toBe(false);
   });
+  it("keeps original missing vehicle and adoption facts incomplete after reparsing",()=>{
+    // Spec: spec/federal/form-1040.yaml, credit-source-reparse.
+    const vehicles=Form8936Schema.parse({newCleanVehicles:[{dateAcquired:"2025-09-30",criticalMineralsRequirementMet:true,batteryComponentsRequirementMet:true}],previouslyOwnedCleanVehicles:[{dateAcquired:"2025-09-30"}]});
+    const reparsed=Form8936Schema.parse(vehicles);
+    expect(reparsed.newCleanVehicles[0].sourceFactsComplete).toBe(false);
+    expect(reparsed.previouslyOwnedCleanVehicles[0].sourceFactsComplete).toBe(false);
+    const adoption=Form8839Schema.parse({children:[{childName:"Synthetic source"}]});
+    expect(adoption.children[0].sourceFactsComplete).toBe(false);
+    expect(Form8839Schema.parse(adoption).children[0].sourceFactsComplete).toBe(false);
+    const explicit=Form8839Schema.parse({children:[{childName:"Synthetic source",isSpecialNeeds:false,isForeignAdoption:false,employerBenefits:"0",priorYearCreditsClaimed:"0",priorYearExclusionsClaimed:"0"}]});
+    expect(Form8839Schema.parse(explicit).children[0].sourceFactsComplete).toBe(true);
+  });
   it("preserves actual adoption year, expenses, exclusion worksheet and carryforward origin",()=>{
     const r=Form8839Schema.parse({eligibilityConfirmed:true,exclusionMagi:"120000",possessionIncomeExclusion:"0",carryforwards:[{originTaxYear:2025,amount:"1000"}],carryforwardReconciled2025:true,children:[{childName:"Synthetic",adoptionFinalizedYear:2026,expensesByYear:[{year:2026,amount:"10000"}],employerPlanQualified:true,priorYearForeignBenefits:"0"}]});
     expect(r).toMatchObject({eligibilityConfirmed:true,exclusionMagi:"120000",carryforwards:[{originTaxYear:2025,amount:"1000"}],carryforwardReconciled2025:true});
