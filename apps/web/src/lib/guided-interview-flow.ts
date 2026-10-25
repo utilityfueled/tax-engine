@@ -887,9 +887,25 @@ export const emptyDependentCareData: DependentCareData = {
   qualifyingIndividuals: "",
 };
 
-export interface EducationStudentData {
+export interface EducationInstitutionData {
+  name: string; address: string; ein?: string;
+  receivedCurrentYear1098T?: boolean | null;
+  receivedPriorYear1098TWithBox7?: boolean | null;
+}
+export interface EducationStudentSourceData {
   name: string;
   qualifiedExpenses: string;
+  studentTaxId?: string;
+  studentRole?: "primary" | "spouse" | "dependent" | "";
+  studentTinEligible?: boolean | null;
+  studentSsnEligible?: boolean | null;
+  institutionEligible?: boolean | null;
+  expensesEligibilityConfirmed?: boolean | null;
+  form1098TRequirementMet?: boolean | null;
+  institutions?: EducationInstitutionData[];
+}
+export interface EducationLlcStudentData extends EducationStudentSourceData { courseEligibilityConfirmed?: boolean | null }
+export interface EducationStudentData extends EducationStudentSourceData {
   priorYearsClaimed: string;
   completedFirstFourYearsBeforeYear?: boolean | null;
   enrolledAtLeastHalfTime?: boolean | null;
@@ -908,10 +924,21 @@ export const emptyEducationStudent: EducationStudentData = {
 
 export interface EducationCreditData {
   aocStudents: EducationStudentData[];
+  llcStudents?: EducationLlcStudentData[];
   llcExpenses: string;
   refundableAocEligible?: boolean | null;
   primarySsnEligible?: boolean | null;
   spouseSsnEligible?: boolean | null;
+  primaryTinEligible?: boolean | null;
+  canBeClaimedAsDependent?: boolean | null;
+  claimedAsDependent?: boolean | null;
+  nonresidentAlien?: boolean | null;
+  residentJointElection?: boolean | null;
+  aocBanInEffect?: boolean | null;
+  form8862Required?: boolean | null;
+  form8862Completed?: boolean | null;
+  possessionIncomeExclusion?: string;
+  refundableAocFacts?: { fullTimeStudent?: boolean | null; earnedIncome?: string; totalSupport?: string; parentAlive?: boolean | null };
 }
 
 export const emptyEducationCreditData: EducationCreditData = {
@@ -1801,7 +1828,7 @@ export function validateSection(
     case "adjustments":
       return validateAdjustmentsSection(getSectionData(state, "adjustments"), state.segmentation.filingStatus, state.taxYear);
     case "credits":
-      return validateRequiredFacts({ ...educationFactErrors(getSectionData(state, "credits"), state.taxYear, state.segmentation.filingStatus), ...careFactErrors(getSectionData(state, "credits")?.dependentCare, state.segmentation.filingStatus), ...energyFactErrors(getSectionData(state, "credits")?.energy, state.taxYear), ...vehicleFactErrors(getSectionData(state, "credits")?.vehicles, state.taxYear, state.segmentation.filingStatus), ...adoptionFactErrors(getSectionData(state, "credits")?.adoption, state.taxYear, state.segmentation.filingStatus) });
+      return validateRequiredFacts({ ...educationFactErrors(getSectionData(state, "credits"), state.taxYear, state.segmentation.filingStatus, getSectionData(state, "personal-info")), ...careFactErrors(getSectionData(state, "credits")?.dependentCare, state.segmentation.filingStatus), ...energyFactErrors(getSectionData(state, "credits")?.energy, state.taxYear), ...vehicleFactErrors(getSectionData(state, "credits")?.vehicles, state.taxYear, state.segmentation.filingStatus), ...adoptionFactErrors(getSectionData(state, "credits")?.adoption, state.taxYear, state.segmentation.filingStatus) });
     case "other-taxes":
       return validateRequiredFacts(householdFactErrors(getSectionData(state, "other-taxes"), state.taxYear));
     case "payments":

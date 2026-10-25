@@ -1,5 +1,5 @@
 import Decimal from "decimal.js";
-import type { CreditsData, DeductionData, EstimatedPaymentEntry, RetirementEntryData, FilingStatus, PaymentData } from "./guided-interview-flow";
+import type { DeductionData, EstimatedPaymentEntry, RetirementEntryData, PaymentData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
 
 export function isActualDate(value: string | undefined): boolean {
@@ -130,36 +130,7 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
   return errors;
 }
 
-export function educationFactErrors(data: CreditsData | undefined, taxYear?: number | null, filingStatus?: FilingStatus | null): Record<string, string> {
-  const errors: Record<string, string> = {};
-  let hasLifetimeLearningClaim = false;
-  if (hasEnteredAmount(data?.education.llcExpenses)) {
-    const error = amountError(data?.education.llcExpenses, "Lifetime Learning expenses");
-    if (error) errors.llcExpenses = error;
-    else hasLifetimeLearningClaim = parseGuidedCurrency(data?.education.llcExpenses).gt(0);
-  }
-  if (taxYear === 2026 && hasLifetimeLearningClaim) errors.llcStudent = "The saved Lifetime Learning total needs each student's identity and SSN eligibility. This entry cannot be calculated until those facts are supported.";
-  (data?.education.aocStudents ?? []).forEach((student, index) => {
-    if (!student.name.trim()) errors[`student-${index}-name`] = "Enter the actual student name.";
-    const amount = amountError(student.qualifiedExpenses, "qualified education expenses");
-    if (amount) errors[`student-${index}-amount`] = amount;
-    if (!/^[0-4]$/.test(student.priorYearsClaimed)) errors[`student-${index}-history`] = "Confirm prior years AOTC was claimed (0–4; choose 4 for four or more).";
-    if (student.requiresPriorYearsConfirmation) errors[`student-${index}-history`] = "Reconfirm prior AOTC claims from actual records; older versions prefilled zero.";
-    for (const field of ["completedFirstFourYearsBeforeYear", "enrolledAtLeastHalfTime", "pursuingDegreeOrCredential", "felonyDrugConviction"] as const) {
-      if (typeof student[field] !== "boolean") errors[`student-${index}-${field}`] = "Confirm all AOTC student eligibility facts before calculating.";
-    }
-    if (taxYear === 2026) {
-      if (typeof student.studentSsnEligible !== "boolean") errors[`student-${index}-ssn`] = "Confirm the student's employment-valid SSN was issued by the return due date.";
-      if (!/^\d{2}-?\d{7}$/.test(student.institutionEin ?? "")) errors[`student-${index}-ein`] = "Enter the institution EIN from Form 1098-T.";
-    }
-  });
-  if (data?.education.aocStudents.length && typeof data.education.refundableAocEligible !== "boolean") errors.refundableAocEligible = "Confirm the taxpayer's refundable AOTC eligibility from the Form 8863 instructions.";
-  if (data && taxYear === 2026 && (data.education.aocStudents.length || hasLifetimeLearningClaim)) {
-    if (typeof data.education.primarySsnEligible !== "boolean") errors.primarySsnEligible = "Confirm the taxpayer's education-credit SSN eligibility.";
-    if (filingStatus === "mfj" && typeof data.education.spouseSsnEligible !== "boolean") errors.spouseSsnEligible = "Confirm the spouse's education-credit SSN eligibility.";
-  }
-  return errors;
-}
+export { educationFactErrors } from "./guided-education-facts";
 
 export function assertKnownFacts(errors: Record<string, string>): void {
   const first = Object.values(errors)[0];

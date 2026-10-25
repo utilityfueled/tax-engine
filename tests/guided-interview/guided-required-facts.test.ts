@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { buildDonationsInput, buildEducationInput, buildEstimatedPaymentsInput, buildForm1098Inputs, buildRetirementInputs, buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
 import { emptyCreditsData, emptyDeductionData, emptyEducationStudent, emptyRetirementEntry, validateSection, loadGuidedFlowState } from "@/lib/guided-interview-flow";
-import { completePersonalInfo, startCompleteInterview, completeAocEligibility } from "./complete-facts";
+import { completePersonalInfo, startCompleteInterview, completeAocEligibility, completeEducationClaimant } from "./complete-facts";
 
 const mortgage = { lender: "Actual Bank", mortgageInterest: "123.45", outstandingPrincipal: "0", originationDate: "2016-06-05" };
 const donation = { organization: "Actual Charity", type: "cash" as const, amount: "12.34", date: "2025-02-28", costBasis: "", isLongTermCapitalGain: null, isPrivateFoundation: false };
@@ -44,7 +44,7 @@ describe("required guided source facts", () => {
   });
   it("requires explicit education history and preserves zero", () => {
     expect(emptyEducationStudent.priorYearsClaimed).toBe("");
-    const credits = { ...emptyCreditsData, education: { llcExpenses: "", refundableAocEligible: false, aocStudents: [{ ...completeAocEligibility, name: "Actual Student", qualifiedExpenses: "4000", priorYearsClaimed: "" }] } };
+    const credits = { ...emptyCreditsData, education: { ...completeEducationClaimant, llcExpenses: "", refundableAocEligible: false, aocStudents: [{ ...completeAocEligibility, name: "Actual Student", qualifiedExpenses: "4000", priorYearsClaimed: "" }] } };
     expect(() => buildEducationInput(credits)).toThrow(/prior|history/i);
     expect(buildTaxInputFromGuidedData(stateWith("credits", credits))).toBeNull();
     expect(buildEducationInput({ ...credits, education: { ...credits.education, aocStudents: [{ ...credits.education.aocStudents[0], priorYearsClaimed: "0" }] } })?.aocStudents[0].priorYearsClaimed).toBe(0);
@@ -74,10 +74,12 @@ describe("required guided source facts", () => {
     expect(taxpayer?.spouse?.usResidencyMonths).toBe(0);
     expect(taxpayer?.stateResidency).toBe("full-year");
     const eligibility = { completedFirstFourYearsBeforeYear: false, enrolledAtLeastHalfTime: true, pursuingDegreeOrCredential: true, felonyDrugConviction: false };
-    const student = { name: "Actual Student", qualifiedExpenses: "4000", priorYearsClaimed: "0", ...eligibility };
-    const credits = { ...emptyCreditsData, education: { llcExpenses: "", refundableAocEligible: false, aocStudents: [student] } };
+    const student = { ...completeAocEligibility, name: "Actual Student", qualifiedExpenses: "4000", priorYearsClaimed: "0", ...eligibility };
+    const credits = { ...emptyCreditsData, education: { ...completeEducationClaimant, llcExpenses: "", refundableAocEligible: false, aocStudents: [student] } };
     expect(buildEducationInput(credits)).toMatchObject({ refundableAocEligible: false, aocStudents: [{ ...eligibility }] });
-    expect(buildTaxInputFromGuidedData(stateWith("credits", { ...credits, education: { ...credits.education, refundableAocEligible: undefined } }))).toBeNull();
+    const missingSupport = stateWith("credits", { ...credits, education: { ...credits.education, refundableAocEligible: undefined, refundableAocFacts: undefined } });
+    missingSupport.sectionData["personal-info"] = { ...completePersonalInfo, dateOfBirth: "2005-02-01" };
+    expect(buildTaxInputFromGuidedData(missingSupport)).toBeNull();
   });
 });
 
@@ -96,8 +98,9 @@ describe("2026 eligibility facts", () => {
     const result = buildTaxInputFromGuidedData({ ...state, sectionData: { ...state.sectionData, deductions: { ...deductions, donationEntries: [eligible] } } });
     expect(result?.donations[0]).toMatchObject({ qualifiedOrganization: true, supportingOrganization: false, donorAdvisedFund: false, qualifiedAppreciatedStock: false });
     const student = { ...completeAocEligibility, name: "Actual Student", qualifiedExpenses: "4000", priorYearsClaimed: "0", studentSsnEligible: false, institutionEin: "12-3456789" };
-    const credits = { ...emptyCreditsData, education: { aocStudents: [student], llcExpenses: "", refundableAocEligible: false, primarySsnEligible: false } };
+    const credits = { ...emptyCreditsData, education: { ...completeEducationClaimant, aocStudents: [student], llcExpenses: "", refundableAocEligible: false, primarySsnEligible: false } };
     const educationState = { ...stateWith("credits", credits), taxYear: 2026 };
+    educationState.sectionData["personal-info"] = { ...completePersonalInfo, employmentValidSsnIssuedByDueDate: false };
     expect(buildTaxInputFromGuidedData(educationState)?.educationExpenses).toMatchObject({ primarySsnEligible: false, aocStudents: [{ studentSsnEligible: false, institutionEin: "12-3456789" }] });
     expect(buildTaxInputFromGuidedData({ ...educationState, sectionData: { ...educationState.sectionData, credits: { ...credits, education: { ...credits.education, primarySsnEligible: undefined } } } })).toBeNull();
   });

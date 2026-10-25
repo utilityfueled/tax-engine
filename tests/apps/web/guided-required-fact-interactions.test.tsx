@@ -8,12 +8,14 @@ import { HouseholdSourceDetails } from "@/components/guided-interview/household-
 import { DeductionSourceDetails } from "@/components/guided-interview/deduction-source-details";
 import { VehicleSourceDetails } from "@/components/guided-interview/vehicle-source-details";
 import { AdoptionSourceDetails } from "@/components/guided-interview/adoption-source-details";
+import { EducationSourceDetails } from "@/components/guided-interview/education-source-details";
+import { buildEducationInput } from "@/lib/guided-interview-bridge";
 import { buildAdoptionInput, type AdoptionCreditData } from "@/lib/guided-adoption-facts";
 import { buildVehicleCreditInput, type VehicleCreditData } from "@/lib/guided-vehicle-facts";
 import { buildDonationsInput, buildForm1098Inputs, buildScheduleHInput } from "@/lib/guided-interview-bridge";
 import { personalFactErrors } from "@/lib/guided-taxpayer-facts";
-import { emptyDeductionData, emptyOtherTaxesData, type DeductionData, type OtherTaxesData, type PersonalInfoData } from "@/lib/guided-interview-flow";
-import { completeDependent, completePersonalInfo } from "../../guided-interview/complete-facts";
+import { emptyCreditsData, emptyEducationCreditData, emptyDeductionData, emptyOtherTaxesData, type EducationCreditData, type DeductionData, type OtherTaxesData, type PersonalInfoData } from "@/lib/guided-interview-flow";
+import { completeAocEligibility, completeEducationClaimant, completeDependent, completePersonalInfo } from "../../guided-interview/complete-facts";
 
 let container: HTMLDivElement;
 let root: Root;
@@ -41,6 +43,61 @@ beforeEach(() => {
 afterEach(async () => { await act(async () => root.unmount()); container.remove(); });
 
 describe("required fact interaction boundaries", () => {
+  it("records AOTC history and support facts and permits clearing an obsolete refundable answer", async () => {
+    let latest: EducationCreditData = { ...emptyEducationCreditData, ...completeEducationClaimant, refundableAocEligible: false, aocStudents: [{ ...completeAocEligibility, name: "Jordan Example", qualifiedExpenses: "4000", priorYearsClaimed: "0", requiresPriorYearsConfirmation: true }] };
+    function Harness() { const [data, setData] = useState(latest); return <EducationSourceDetails data={data} taxYear={2026} filingStatus="mfj" onChange={next => { latest = next; setData(next); }} />; }
+    await act(async () => root.render(<Harness />));
+    expect(control("Prior years AOTC was claimed").value).toBe("");
+    await change("Prior years AOTC was claimed", "1");
+    await change("Completed the first four years of postsecondary education before this tax year", "true");
+    await change("Enrolled at least half-time for at least one academic period", "false");
+    await change("Pursuing a degree or recognized education credential", "false");
+    await change("Had a felony drug conviction by the end of the tax year", "true");
+    await change("AOTC institution EIN from the actual institution record", "12-3456789");
+    await change("Is an AOTC ban from a prior claim in effect?", "false");
+    await change("Is Form 8862 required because of a prior AOTC disallowance?", "true");
+    await change("Has the required Form 8862 been completed?", "false");
+    await change("Were you a full-time student for the refundable AOTC test?", "false");
+    await change("Was at least one of your parents alive at year end?", "false");
+    await change("Your earned income for the refundable AOTC support test", "0");
+    await change("Your total support for the refundable AOTC test", "9007199254740993.01");
+    await change("Saved refundable AOTC answer (clear to use actual age and support facts)", "");
+    await change("Were you a nonresident alien during the tax year?", "true");
+    await change("Did you make the qualifying resident joint-return election?", "false");
+    await change("Was your spouse's employment-valid SSN issued by the return due date for education credits?", "true");
+    const result = buildEducationInput({ ...emptyCreditsData, education: latest }, 2026, "mfj", completePersonalInfo);
+    expect(result).toMatchObject({ residentJointElection: false, form8862Completed: false, refundableAocFacts: { fullTimeStudent: false, parentAlive: false, earnedIncome: "0", totalSupport: "9007199254740993.01" }, aocStudents: [{ priorYearsClaimed: 1, felonyDrugConviction: true, enrolledAtLeastHalfTime: false }] });
+    expect(result?.refundableAocEligible).toBeUndefined();
+    await click("Remove AOTC student 1");
+    await click("Add AOTC student");
+    expect(control("Prior years AOTC was claimed").value).toBe("");
+    expect(() => buildEducationInput({ ...emptyCreditsData, education: latest }, 2026, "mfj", completePersonalInfo)).toThrow();
+  });
+  it("collects an individual LLC student and actual institution without inventing aggregate eligibility", async () => {
+    let latest: EducationCreditData = { ...emptyEducationCreditData, llcExpenses: "0.10" };
+    function Harness() { const [data, setData] = useState(latest); return <EducationSourceDetails data={data} taxYear={2026} filingStatus="single" onChange={next => { latest = next; setData(next); }} />; }
+    await act(async () => root.render(<Harness />)); await click("Add LLC student");
+    expect(() => buildEducationInput({ ...emptyCreditsData, education: latest }, 2026, "single", completePersonalInfo)).toThrow();
+    for (const [label, value] of [
+      ["Student name", "Jordan Example"], ["Student's actual SSN, ITIN or ATIN", "111-22-3333"], ["Student's household role", "primary"], ["Qualified tuition & expenses", "0.10"],
+      ["Is the institution eligible for the education credit?", "true"], ["Are actual payment timing, eligible costs and coordination with other education benefits confirmed?", "true"], ["Is the Form 1098-T requirement or a documented IRS exception satisfied?", "true"], ["Was the student's employment-valid SSN issued by the return due date?", "true"], ["Was the student's SSN, ITIN or ATIN issued by the return due date?", "true"], ["Are these postsecondary courses or courses to acquire or improve job skills?", "false"],
+      ["Can another taxpayer claim you as a dependent?", "true"], ["Does another taxpayer actually claim you as a dependent on their return?", "false"], ["Were you a nonresident alien during the tax year?", "false"], ["Was your employment-valid SSN issued by the return due date for education credits?", "true"], ["Education MAGI Puerto Rico / American Samoa exclusion", "0"],
+    ]) await change(label, value);
+    await click("Add institution");
+    await change("Institution name", "Actual College"); await change("Institution mailing address", "100 College Rd, Columbus OH 43215");
+    await change("Institution EIN (required for AOTC or a received Form 1098-T)", "12-3456789");
+    await change("Did this student receive a current-year Form 1098-T from this institution?", "false");
+    await change("Did this student receive a prior-year Form 1098-T with box 7 checked?", "true");
+    const result = buildEducationInput({ ...emptyCreditsData, education: latest }, 2026, "single", completePersonalInfo);
+    expect(result).toMatchObject({ canBeClaimedAsDependent: true, claimedAsDependent: false, llcExpenses: "0.10", llcStudents: [{ courseEligibilityConfirmed: false, institutions: [{ receivedCurrentYear1098T: false, receivedPriorYear1098TWithBox7: true }] }] });
+    await change("Qualified tuition & expenses", "0.20");
+    expect(() => buildEducationInput({ ...emptyCreditsData, education: latest }, 2026, "single", completePersonalInfo)).toThrow(/reconcile/i);
+    await change("Saved Lifetime Learning total to reconcile", "");
+    expect(buildEducationInput({ ...emptyCreditsData, education: latest }, 2026, "single", completePersonalInfo)?.llcExpenses).toBe("0.2");
+    await click("Remove institution 1");
+    expect(() => buildEducationInput({ ...emptyCreditsData, education: latest }, 2026, "single", completePersonalInfo)).toThrow(/institution/i);
+    await click("Remove LLC student 1"); expect(buildEducationInput({ ...emptyCreditsData, education: latest }, 2026, "single", completePersonalInfo)).toBeUndefined();
+  });
   it("requires reconfirmation after editing annual adoption expenses and carries actual child identity", async () => {
     let latest: AdoptionCreditData = { children: [] };
     function Harness() { const [data, setData] = useState(latest); return <AdoptionSourceDetails data={data} onChange={(next) => { latest = next; setData(next); }} />; }

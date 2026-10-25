@@ -25,6 +25,14 @@ describe("care fact presentation", () => {
 });
 
 describe("energy source fact presentation", () => {
+  it("reviews individual credit source records without treating seller reports as allowed credits", () => {
+    const state = startCompleteInterview({ filingStatus: "single", incomeTypes: [], lifeEvents: [], stateCode: null });
+    state.sectionData.credits = { ...emptyCreditsData, education: { ...emptyCreditsData.education, llcExpenses: "999", llcStudents: [{ name: "Actual", qualifiedExpenses: "0.10" }, { name: "Other", qualifiedExpenses: "0.20" }] }, adoption: { children: [{ employerBenefits: "0", expensesByYear: [{ year: "2025", amount: "1000.10" }, { year: "2026", amount: "0.20" }] }] }, vehicles: { entries: [{ sellerReportCreditAmount: "7500" }] } };
+    const html = renderToStaticMarkup(<SectionReview state={state} preview={null} onJumpToSection={() => {}} />);
+    expect(html).toContain("Lifetime Learning expenses (2 students)"); expect(html).toContain("$0.30"); expect(html).not.toContain("$999");
+    expect(html).toContain("Entered adoption expenses (all source years)"); expect(html).toContain("$1,000.30");
+    expect(html).toContain("Vehicle seller-reported credits (before qualification and reconciliation)");
+  });
   it("shows actual item categories and preserves unknown qualification and zero carryforward", () => {
     const html = renderToStaticMarkup(<SectionCredits data={{ ...emptyCreditsData, energy: { ...emptyCreditsData.energy,
       qualifiedImprovements: [{ category: "exterior_door", qualifiedCost: "0", installationCompletedDate: "2026-01-01", qualificationConfirmed: null }],

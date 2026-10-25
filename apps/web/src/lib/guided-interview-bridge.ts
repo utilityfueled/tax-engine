@@ -1,3 +1,4 @@
+import { buildActualEducationInput } from "./guided-education-facts";
 /**
  * Bridge between guided interview section data and the tax engine.
  *
@@ -25,7 +26,6 @@ import type {
   DeductionData,
   DependentEntryData,
   DividendEntryData,
-  EducationStudentData,
   FilingStatus,
   GuidedFlowState,
   InterestEntryData,
@@ -431,36 +431,7 @@ export function buildDependentCareInput(creditsData: CreditsData | undefined) {
   };
 }
 
-export function buildEducationInput(creditsData: CreditsData | undefined) {
-  if (!creditsData) return undefined;
-  assertKnownFacts(educationFactErrors(creditsData));
-  const { education } = creditsData;
-
-  const filledStudents = education.aocStudents.filter(
-    (s: EducationStudentData) => hasEnteredAmount(s.qualifiedExpenses)
-  );
-  const hasLlc = hasValue(education.llcExpenses);
-
-  if (filledStudents.length === 0 && !hasLlc) return undefined;
-
-  return {
-    aocStudents: filledStudents.map((s: EducationStudentData) => ({
-      name: s.name.trim(),
-      qualifiedExpenses: toDecimalString(s.qualifiedExpenses),
-      priorYearsClaimed: Number(s.priorYearsClaimed),
-      completedFirstFourYearsBeforeYear: s.completedFirstFourYearsBeforeYear ?? undefined,
-      enrolledAtLeastHalfTime: s.enrolledAtLeastHalfTime ?? undefined,
-      pursuingDegreeOrCredential: s.pursuingDegreeOrCredential ?? undefined,
-      felonyDrugConviction: s.felonyDrugConviction ?? undefined,
-      studentSsnEligible: s.studentSsnEligible ?? undefined,
-      institutionEin: s.institutionEin?.trim() || undefined,
-    })),
-    llcExpenses: hasLlc ? toDecimalString(education.llcExpenses) : undefined,
-    refundableAocEligible: education.refundableAocEligible ?? undefined,
-    primarySsnEligible: education.primarySsnEligible ?? undefined,
-    spouseSsnEligible: education.spouseSsnEligible ?? undefined,
-  };
-}
+export { buildActualEducationInput as buildEducationInput } from "./guided-education-facts";
 
 export function buildEnergyCreditsInput(creditsData: CreditsData | undefined) {
   if (!creditsData) return undefined;
@@ -539,7 +510,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     assertKnownFacts(deductionFactErrors(deductionData, state.taxYear));
     assertKnownFacts(allPaymentFactErrors(paymentData, state.taxYear));
     assertKnownFacts(retirementFactErrors(retirementData?.entries));
-    assertKnownFacts(educationFactErrors(creditsData, state.taxYear, segmentation.filingStatus));
+    assertKnownFacts(educationFactErrors(creditsData, state.taxYear, segmentation.filingStatus, personalInfo));
     assertKnownFacts(adjustmentFactErrors(adjustmentData, segmentation.filingStatus, state.taxYear));
     assertKnownFacts(householdFactErrors(otherTaxesData, state.taxYear));
     assertKnownFacts(statePaymentFactErrors(stateReturnData, state.taxYear, segmentation.stateCode));
@@ -576,7 +547,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     ...(hasEnteredAmount(ira.spouseContributions) ? { spouseContributions: toDecimalString(ira.spouseContributions) } : {}),
   } : undefined;
   const dependentCare = buildDependentCareInput(creditsData);
-  const educationExpenses = buildEducationInput(creditsData);
+  const educationExpenses = buildActualEducationInput(creditsData, state.taxYear, segmentation.filingStatus, personalInfo);
   const energyCredits = buildEnergyCreditsInput(creditsData);
   const scheduleH = buildScheduleHInput(otherTaxesData);
   const estimatedPayments = [

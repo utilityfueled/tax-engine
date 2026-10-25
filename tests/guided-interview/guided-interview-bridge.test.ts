@@ -1,4 +1,4 @@
-import { startCompleteInterview as startInterview, completePersonalInfo, completeDependent, completeAocEligibility, completeHouseholdEmployee } from "./complete-facts";
+import { startCompleteInterview as startInterview, completePersonalInfo, completeDependent, completeAocEligibility, completeEducationClaimant, completeHouseholdEmployee } from "./complete-facts";
 import { describe, it, expect } from "vitest";
 import {
   buildTaxInputFromGuidedData,
@@ -1321,6 +1321,7 @@ describe("buildEducationInput", () => {
     const data = {
       ...emptyCreditsData,
       education: {
+        ...completeEducationClaimant,
         refundableAocEligible: false,
         aocStudents: [
           { ...completeAocEligibility, name: "Jane", qualifiedExpenses: "4,000", priorYearsClaimed: "1" },
@@ -1339,6 +1340,7 @@ describe("buildEducationInput", () => {
     const data = {
       ...emptyCreditsData,
       education: {
+        ...completeEducationClaimant,
         refundableAocEligible: false,
         aocStudents: [
           { ...completeAocEligibility, name: "Jane", qualifiedExpenses: "4000", priorYearsClaimed: "0" },
@@ -1354,8 +1356,10 @@ describe("buildEducationInput", () => {
     const data = {
       ...emptyCreditsData,
       education: {
+        ...completeEducationClaimant,
         refundableAocEligible: false,
         aocStudents: [],
+        llcStudents: [{ ...completeAocEligibility, name: "Jordan Example", qualifiedExpenses: "8500", courseEligibilityConfirmed: true }],
         llcExpenses: "8,500",
       },
     };
@@ -1368,6 +1372,7 @@ describe("buildEducationInput", () => {
     const data = {
       ...emptyCreditsData,
       education: {
+        ...completeEducationClaimant,
         refundableAocEligible: false,
         aocStudents: [{ name: "", qualifiedExpenses: "2000", priorYearsClaimed: "0" }],
         llcExpenses: "",
@@ -1456,6 +1461,7 @@ describe("buildTaxInputFromGuidedData — credits", () => {
     state = updateSectionData(state, "credits", {
       ...emptyCreditsData,
       education: {
+        ...completeEducationClaimant,
         refundableAocEligible: false,
         aocStudents: [{ ...completeAocEligibility, name: "Test", qualifiedExpenses: "4000", priorYearsClaimed: "0" }],
         llcExpenses: "",

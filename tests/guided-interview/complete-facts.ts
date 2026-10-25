@@ -29,6 +29,19 @@ export const completeAocEligibility = {
   enrolledAtLeastHalfTime: true,
   pursuingDegreeOrCredential: true,
   felonyDrugConviction: false,
+  studentTaxId: "111-22-3333", studentRole: "primary" as const,
+  studentTinEligible: true, studentSsnEligible: true,
+  institutionEligible: true, expensesEligibilityConfirmed: true, form1098TRequirementMet: true,
+  institutionEin: "12-3456789",
+  institutions: [{ name: "Synthetic College", address: "100 College Rd, Columbus OH 43215", ein: "12-3456789", receivedCurrentYear1098T: true, receivedPriorYear1098TWithBox7: false }],
+};
+
+/** Actual answers supplied by synthetic fixtures, never interview defaults. */
+export const completeEducationClaimant = {
+  primaryTinEligible: true, primarySsnEligible: true, spouseSsnEligible: true,
+  canBeClaimedAsDependent: false, claimedAsDependent: false, nonresidentAlien: false,
+  aocBanInEffect: false, form8862Required: false, possessionIncomeExclusion: "0",
+  refundableAocFacts: { fullTimeStudent: true, earnedIncome: "0", totalSupport: "10000", parentAlive: true },
 };
 
 export const completeHouseholdEmployee = { name: "Actual Employee", cashWages: "0", federalIncomeTaxWithheld: "0", isSpouse: false, isChildUnder21: false, isParent: false, isUnder18NonPrincipal: false };

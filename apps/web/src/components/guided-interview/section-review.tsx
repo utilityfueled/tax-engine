@@ -319,15 +319,25 @@ function CreditsSummary({ data }: { data: CreditsData | undefined }) {
     });
   }
 
-  const filledStudents = data.education.aocStudents.filter((s) => hasValue(s.qualifiedExpenses));
+  const filledStudents = data.education.aocStudents.filter((s) => s.qualifiedExpenses.trim());
   if (filledStudents.length > 0) {
     const totalEdu = sumGuidedDisplayAmounts(filledStudents.map((student) => student.qualifiedExpenses));
     items.push({ label: `Education (${filledStudents.length} student${filledStudents.length > 1 ? "s" : ""})`, value: String(totalEdu) });
   }
 
-  if (hasValue(data.education.llcExpenses)) {
-    items.push({ label: "Lifetime Learning expenses", value: data.education.llcExpenses });
+  const llcStudents = (data.education.llcStudents ?? []).filter(student => student.qualifiedExpenses.trim());
+  if (llcStudents.length) {
+    items.push({ label: `Lifetime Learning expenses (${llcStudents.length} student${llcStudents.length === 1 ? "" : "s"})`, value: sumGuidedDisplayAmounts(llcStudents.map(student => student.qualifiedExpenses)).toString() });
+  } else if (data.education.llcExpenses.trim()) {
+    items.push({ label: "Saved Lifetime Learning total (needs student records)", value: data.education.llcExpenses });
   }
+
+  const adoptionExpenses = (data.adoption?.children ?? []).flatMap(child => child.expensesByYear ?? []).filter(entry => entry.amount.trim());
+  if (adoptionExpenses.length) items.push({ label: "Entered adoption expenses (all source years)", value: sumGuidedDisplayAmounts(adoptionExpenses.map(entry => entry.amount)).toString() });
+  const adoptionBenefits = (data.adoption?.children ?? []).filter(child => child.employerBenefits?.trim());
+  if (adoptionBenefits.length) items.push({ label: "Employer adoption benefits", value: sumGuidedDisplayAmounts(adoptionBenefits.map(child => child.employerBenefits ?? "")).toString() });
+  const vehicleReports = (data.vehicles?.entries ?? []).filter(vehicle => vehicle.sellerReportCreditAmount?.trim());
+  if (vehicleReports.length) items.push({ label: "Vehicle seller-reported credits (before qualification and reconciliation)", value: sumGuidedDisplayAmounts(vehicleReports.map(vehicle => vehicle.sellerReportCreditAmount ?? "")).toString() });
 
   const energyRecords = [...(data.energy.qualifiedImprovements ?? []), ...(data.energy.cleanEnergyProperties ?? [])];
   if (energyRecords.length > 0) {
@@ -337,7 +347,7 @@ function CreditsSummary({ data }: { data: CreditsData | undefined }) {
     items.push({ label: "Prior-year residential clean-energy carryforward", value: data.energy.priorYearCarryforward });
   }
 
-  if (items.length === 0) return <p className="guided-review-empty">No credits entered.</p>;
+  if (items.length === 0) return <p className="guided-review-empty">{data.education.aocStudents.length || data.education.llcStudents?.length || data.adoption?.children.length || data.vehicles?.entries.length ? "Credit source records need more details." : "No credits entered."}</p>;
 
   return (
     <div className="guided-review-card">
