@@ -8,7 +8,7 @@ import { simpleW2Fixture } from "../../fixtures/simple-w2.js";
 const facts = Schedule1ASchema.parse({ primarySsnEligible: true, spouseSsnEligible: true, excludedPuertoRicoIncome: "0", form4563Exclusion: "0", employeeTips: [], businessTips: [], overtime: [], vehicleLoans: [], seniorOwners: ["primary"] });
 function calculate(death: string | null | undefined, dob = "1960-02-14", year = 2025, verified = false) {
   return calculateSchedule1A({ taxpayer: { ...simpleW2Fixture.taxpayer, taxYear: year, primary: { ...simpleW2Fixture.taxpayer.primary, dateOfBirth: dob } },
-    agi: new Decimal("50000"), foreignExcludedIncome: new Decimal(0), facts: { ...facts, sourceFactsConfirmed: verified ? true : undefined },
+    agi: new Decimal("50000"), foreignExcludedIncome: new Decimal(0), facts: { ...facts, ...(verified ? { sourceFactsConfirmed: true, sourceTaxYear: year, sourceReference: "Actual senior source records", allSourcesIncluded: true } : {}) },
     standardDeductionFacts: { primaryDeathDate: death } });
 }
 it("uses actual senior death dates and preserves unknown status", () => {

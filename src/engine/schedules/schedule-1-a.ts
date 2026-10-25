@@ -10,6 +10,8 @@ export interface Schedule1AParams {
   agi: Decimal;
   foreignExcludedIncome: Decimal;
   facts: Schedule1AInput;
+  /** Set only after the canonical return resolver validates actual source links. */
+  canonicalSourcesVerified?: boolean;
   standardDeductionFacts?: { primaryDeathDate?: string | null; spouseDeathDate?: string | null };
 }
 export interface Schedule1AResult {
@@ -27,6 +29,14 @@ export function calculateSchedule1A(input: Schedule1AParams): Schedule1AResult {
   if (![2025, 2026].includes(taxpayer.taxYear)) throw new Error("Unsupported Schedule 1-A tax year");
   if (!input.agi.isFinite() || !input.foreignExcludedIncome.isFinite() || input.foreignExcludedIncome.lt(0)) throw new Error("Invalid Schedule 1-A MAGI inputs");
   const facts = Schedule1ASchema.parse(input.facts);
+  const actualSources = facts.sourceTaxYear !== undefined || facts.sourceReference !== undefined || facts.sourceFactsConfirmed !== undefined || facts.allSourcesIncluded !== undefined
+    || facts.employeeTips.some(entry => entry.w2SourceIds !== undefined || entry.form4137EmployerSourceId !== undefined || entry.reportingMethod !== undefined || entry.reportingSourceReference !== undefined)
+    || facts.businessTips.some(entry => entry.businessSourceId !== undefined || entry.reportedTipSources !== undefined)
+    || facts.overtime.some(entry => entry.compensationSourceId !== undefined || entry.reportingSourceReference !== undefined);
+  if (actualSources) {
+    if (facts.sourceTaxYear !== taxpayer.taxYear || !facts.sourceReference || facts.sourceFactsConfirmed !== true || facts.allSourcesIncluded !== true) throw new Error("Confirm the complete actual Schedule1-A sources for the return year.");
+    if ((facts.employeeTips.length || facts.businessTips.length || facts.overtime.length) && input.canonicalSourcesVerified !== true) throw new Error("Actual Schedule1-A compensation sources require canonical source verification before calculating.");
+  }
   const audit = new AuditTrail();
   const magi = sum(input.agi, input.foreignExcludedIncome, d(facts.excludedPuertoRicoIncome), d(facts.form4563Exclusion));
   audit.record("Schedule 1-A", "3", "Modified adjusted gross income", magi, "AGI + excluded Puerto Rico income + Form 2555 lines 45/50 + Form 4563 line 15");
@@ -46,8 +56,11 @@ export function calculateSchedule1A(input: Schedule1AParams): Schedule1AResult {
     ssnEligible(entry.owner) && entry.eligibleOccupation && entry.voluntaryCashTips && entry.lawfulActivity && entry.meetsSstbRuleOrTransition;
   const employeeTips = sum(...facts.employeeTips.map((entry) => tipEligible(entry)
     ? Decimal.max(d(entry.qualifiedW2Tips), d(entry.qualifiedForm4137Tips)) : d("0")));
-  const businessTips = sum(...facts.businessTips.map((entry) => tipEligible(entry)
-    ? min(d(entry.qualifiedReportedTips), zeroFloor(d(entry.netProfit).minus(entry.otherAllocableDeductions))) : d("0")));
+  const businessTips = sum(...facts.businessTips.map((entry) => {
+    if (!tipEligible(entry)) return d("0");
+    if (entry.netProfit === undefined || entry.otherAllocableDeductions === undefined) throw new Error("Schedule1-A requires the actual canonical business profit and allocable deductions.");
+    return min(d(entry.qualifiedReportedTips), zeroFloor(d(entry.netProfit).minus(entry.otherAllocableDeductions)));
+  }));
   const wageDeductionReduction = zeroFloor(magi.minus(joint ? "300000" : "150000")).div("1000").floor().times("100");
   const tipsDeduction = marriedSeparate ? d("0") : roundDollar(zeroFloor(min(employeeTips.plus(businessTips), d("25000")).minus(wageDeductionReduction)));
   audit.record("Schedule 1-A", "13", "Qualified tips deduction", tipsDeduction, "max(0, min(eligible reported tips, 25000) - 100 × floor(MAGI excess / 1000)); MFS excluded");
@@ -55,6 +68,11 @@ export function calculateSchedule1A(input: Schedule1AParams): Schedule1AResult {
   const overtimeDeduction = marriedSeparate ? d("0") : roundDollar(zeroFloor(min(eligibleOvertime, d(joint ? "25000" : "12500")).minus(wageDeductionReduction)));
   audit.record("Schedule 1-A", "21", "Qualified overtime compensation deduction", overtimeDeduction, "max(0, min(FLSA premium, 12500 [25000 MFJ]) - 100 × floor(MAGI excess / 1000)); MFS excluded");
   const vehicleInterest = sum(...facts.vehicleLoans.map((loan) => {
+    if (actualSources || loan.owner !== undefined || loan.sourceTaxYear !== undefined || loan.borrowerQualificationConfirmed !== undefined) {
+      if (!loan.owner || loan.sourceTaxYear !== taxpayer.taxYear || !loan.lenderName || !loan.loanAccountReference || !loan.sourceReference || loan.borrowerQualificationConfirmed === undefined) throw new Error("Schedule1-A requires actual vehicle borrower and loan source facts for this year.");
+      if (loan.owner === "spouse" && (!joint || !taxpayer.spouse)) throw new Error("Schedule1-A spouse vehicle borrower requires the actual joint household.");
+      if (!loan.borrowerQualificationConfirmed) return d("0");
+    }
     if (loan.refinanced) throw new Error("Refinanced vehicle loan requires unsupported prior-loan qualification");
     const yearEnd = `${taxpayer.taxYear}-12-31`;
     if (loan.acquiredDate > yearEnd || loan.loanOriginationDate > yearEnd) throw new Error("Vehicle purchase/loan date is after the tax year");
