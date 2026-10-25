@@ -158,9 +158,36 @@ export function calculateForm7206Return(params: Params) {
       stage: params.marketplace?.stage === "worksheet-w" ? "w" : "complete", householdIncomeAfterW: suppliedLimit?.householdIncomeAfterW, federalPovertyLine: suppliedLimit?.federalPovertyLine, orderedDeductions: suppliedLimit?.orderedDeductions }) : undefined;
     const maximum = historicalLimit?.maximumSpecifiedDeduction ?? uncappedMaximum;
     if (suppliedLimit && (!historicalLimit || !suppliedLimit.maximumSpecifiedDeduction.eq(historicalLimit.maximumSpecifiedDeduction))) throw new Error("Pub974 maximum must reconcile the actual historical worksheet.");
+    const attributeSpecified = (amount: Decimal) => {
+      if (amount.isZero()) return;
+      if (!specified.length) throw new Error("Pub974 health deduction has no attributable earned-income source.");
+      if (new Set(specified.map(row => row.accountHolder)).size > 1) throw new Error("Pub974 multiple-owner deductions require the separate actual owner coordination worksheet.");
+      const gross = specified.map(row => {
+        if (specified.length === 1) return d(1); // One actual income source needs no allocation denominator.
+        const actual = params.businessGrossIncomes?.filter(item => item.sourceId === row.businessSourceId);
+        if (actual?.length !== 1 || !actual[0].amount.isFinite() || actual[0].amount.lt(0)) throw new Error("Pub974 QBI allocation requires actual gross income for every business counted in its deduction.");
+        return actual[0].amount;
+      });
+      const denominator = sum(...gross);
+      if (denominator.lte(0)) throw new Error("Pub974 positive deduction requires actual positive gross income for QBI attribution.");
+      let remaining = amount;
+      specified.forEach((group,index) => {
+        const target = healthSources.find(row => row.sourceId === group.businessSourceId);
+        if (!target) throw new Error("Pub974 QBI deduction has no matching actual business source.");
+        const share = index === specified.length - 1 ? remaining : amount.times(gross[index]).div(denominator);
+        target.amount = target.amount.plus(share); remaining = remaining.minus(share);
+        marketplaceAudit.record("Pub974 QBI Allocation", group.businessSourceId, "Specified deduction attributable to this income source", share,
+          specified.length === 1 ? "Only actual business income used in the deduction" : "Allowed combined specified deduction times actual business gross income / combined gross income;199A only",
+          { "Owner": group.accountHolder, "Combined deduction": amount,
+            ...(specified.length === 1 ? {} : { "Gross income numerator": gross[index], "Gross income denominator": denominator }) });
+      });
+    };
+    let specifiedDeduction: Decimal;
     if (params.marketplace?.stage === "maximum" || params.marketplace?.stage === "worksheet-w") {
-      // This amount is used only to compute AGI/PTC. No interim QBI attribution.
-      deductionToSchedule1 = roundDollar(form7206.deduction.plus(maximum));
+      // Statutory NOL/AMT replays may need QBI at this fixed temporary amount.
+      // These allocations are internal to this context; final output is recomputed.
+      specifiedDeduction = maximum;
+      attributeSpecified(maximum);
     } else {
       if (!result || result.businesses.length !== groups.length || new Set(result.businesses.map(row => row.businessSourceId)).size !== groups.length
         || !result.maximumSpecifiedDeduction.eq(maximum) || !result.nonspecifiedDeduction.eq(form7206.deduction)) throw new Error("Pub974 computed deduction must reconcile the actual combined business worksheets.");
@@ -171,47 +198,25 @@ export function calculateForm7206Return(params: Params) {
       }
       const limit = result.method.startsWith("ordinary-no-ptc-") ? sum(...result.businesses.map(row => row.ordinaryDeduction)) : maximum;
       if (!result.specifiedDeduction.isFinite() || result.specifiedDeduction.lt(0) || result.specifiedDeduction.gt(limit)) throw new Error("Pub974 specified deduction exceeds the actual method limit.");
-      const candidates = specified;
+      specifiedDeduction = result.specifiedDeduction;
       if (result.method.startsWith("ordinary-no-ptc-")) {
         for (const group of result.businesses) {
           const target = healthSources.find(row => row.sourceId === group.businessSourceId);
           if (!target) throw new Error("Ordinary health deduction has no actual business source.");
           target.amount = target.amount.plus(group.ordinaryDeduction);
         }
-      } else if (result.specifiedDeduction.gt(0)) {
-        if (!candidates.length) throw new Error("Pub974 health deduction has no attributable earned-income source.");
-        if (new Set(candidates.map(row => row.accountHolder)).size > 1) throw new Error("Pub974 multiple-owner deductions require the separate actual owner coordination worksheet.");
-        const gross = candidates.map(row => {
-          if (candidates.length === 1) return d(1); // Only one actual income source; no allocation denominator is needed.
-          const actual = params.businessGrossIncomes?.filter(item => item.sourceId === row.businessSourceId);
-          if (actual?.length !== 1 || !actual[0].amount.isFinite() || actual[0].amount.lt(0)) throw new Error("Pub974 QBI allocation requires actual gross income for every business counted in its deduction.");
-          return actual[0].amount;
-        });
-        const denominator = sum(...gross);
-        if (denominator.lte(0)) throw new Error("Pub974 positive deduction requires actual positive gross income for QBI attribution.");
-        let remaining = result.specifiedDeduction;
-        candidates.forEach((group,index) => {
-          const target = healthSources.find(row => row.sourceId === group.businessSourceId);
-          if (!target) throw new Error("Pub974 QBI deduction has no matching actual business source.");
-          const share = index === candidates.length - 1 ? remaining : result.specifiedDeduction.times(gross[index]).div(denominator);
-          target.amount = target.amount.plus(share); remaining = remaining.minus(share);
-          marketplaceAudit.record("Pub974 QBI Allocation", group.businessSourceId, "Specified deduction attributable to this income source", share,
-            candidates.length === 1 ? "Only actual business income used in the deduction" : "Allowed combined specified deduction times actual business gross income / combined gross income;199A only",
-            { "Owner": group.accountHolder, "Combined deduction": result.specifiedDeduction,
-              ...(candidates.length === 1 ? {} : { "Gross income numerator": gross[index], "Gross income denominator": denominator }) });
-        });
-      }
-      deductionToSchedule1 = roundDollar(form7206.deduction.plus(result.specifiedDeduction));
-      // Allocate the single printed-dollar transfer without manufacturing another deduction.
-      const exact = sum(...healthSources.map(row => row.amount));
-      if (!exact.eq(form7206.deduction.plus(result.specifiedDeduction))) throw new Error("Pub974 QBI sources do not conserve the allowed health deduction.");
-      let remainder = deductionToSchedule1;
-      const positive = healthSources.filter(row => row.amount.gt(0));
-      positive.forEach((row,index) => {
-        row.amount = index === positive.length - 1 ? remainder : Decimal.min(remainder, roundDollar(deductionToSchedule1.times(row.amount).div(exact)));
-        remainder = remainder.minus(row.amount);
-      });
+      } else attributeSpecified(result.specifiedDeduction);
     }
+    deductionToSchedule1 = roundDollar(form7206.deduction.plus(specifiedDeduction));
+    // Allocate the single printed-dollar transfer without manufacturing another deduction.
+    const exact = sum(...healthSources.map(row => row.amount));
+    if (!exact.eq(form7206.deduction.plus(specifiedDeduction))) throw new Error("Pub974 QBI sources do not conserve the allowed health deduction.");
+    let remainder = deductionToSchedule1;
+    const positive = healthSources.filter(row => row.amount.gt(0));
+    positive.forEach((row,index) => {
+      row.amount = index === positive.length - 1 ? remainder : Decimal.min(remainder, roundDollar(deductionToSchedule1.times(row.amount).div(exact)));
+      remainder = remainder.minus(row.amount);
+    });
   } else {
     for (const row of healthSources) row.amount = roundDollar(row.amount);
     deductionToSchedule1 = sum(...healthSources.map(row => row.amount));

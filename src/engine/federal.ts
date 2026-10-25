@@ -173,15 +173,8 @@ import type { ILScheduleWITRecord } from "./state/il-schedule-il-wit.js";
 
 export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   validateQofDispositionFacts(input.qofDispositionFacts, input.taxpayer.taxYear);
-  if (input.netOperatingLoss) {
-    const worksheet = calculateNetOperatingLossReturn(input, (deduction, modified) =>
-      calculateFederalTaxCore(input, undefined, undefined, { stage: "income", deduction, modified }),
-    (deduction, modified) => calculateFederalTaxCore(input, undefined, undefined, { stage: "alternative-income", deduction, modified }));
-    if (!worksheet.calculationComplete || worksheet.deduction === undefined) throw new Error("Actual NOL calculation is incomplete");
-    return calculateFederalTaxCore(input, undefined, undefined, { stage: "final", deduction: worksheet.deduction, modified: false, worksheet });
-  }
   const marketplace = input.form7206?.plans?.some(plan => plan.marketplaceCoverage === true && plan.premiumTaxCreditInvolved === true);
-  if (!marketplace) return calculateFederalTaxCore(input);
+  if (!marketplace) return calculateFederalTaxWithNol(input);
   if (![2025,2026].includes(input.taxpayer.taxYear)) throw new Error("Marketplace health coordination supports actual2025 and2026 sources.");
   // Discover the passive special method from actual Form8582 PartI in the first
   // canonical pass; do not infer its net-loss condition from raw property signs.
@@ -196,12 +189,12 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   let ordered: MarketplaceOrderedState = { kinds };
   let historicalLimit: MarketplaceHealthLimitResult | undefined;
   if (input.taxpayer.taxYear === 2025) {
-    const initial = calculateFederalTaxCore(input, { stage: "worksheet-w", ordered });
+    const initial = calculateFederalTaxWithNol(input, { stage: "worksheet-w", ordered });
     if (!initial.passiveSpecialRequired) kinds.splice(kinds.indexOf("passive"), 1);
     historicalLimit = calculateMarketplaceHealthLimit({ taxYear: 2025, filingStatus: input.taxpayer.filingStatus, groups: initial.groups,
       householdIncomeAfterW: initial.credit.canonicalTaxpayerModifiedAGI.plus(d(input.form8962?.requiredFilingDependentsModifiedAGI)), federalPovertyLine: initial.credit.federalPovertyLine });
   }
-  let intermediate = calculateFederalTaxCore(input, { stage: "maximum", historicalLimit, ordered, orderedDeductionInterim: kinds.length > 0 });
+  let intermediate = calculateFederalTaxWithNol(input, { stage: "maximum", historicalLimit, ordered, orderedDeductionInterim: kinds.length > 0 });
   if (kinds.includes("passive") && !intermediate.passiveSpecialRequired) kinds.splice(kinds.indexOf("passive"), 1);
   let deduction = calculateMarketplaceHealthDeduction({ input, groups: intermediate.groups, credit: intermediate.credit, historicalLimit });
   const orderedAmounts: { kind: MarketplaceOrderedKind; amount: Decimal }[] = [];
@@ -209,7 +202,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   for (const [index, kind] of kinds.entries()) {
     // Compute one next worksheet at the preceding Step3 health amount. Earlier
     // completed worksheets stay fixed; later claims stay excluded from income.
-    const next = calculateFederalTaxCore(input, { stage: "ordered", deduction, ordered: { ...ordered, calculating: kind } });
+    const next = calculateFederalTaxWithNol(input, { stage: "ordered", deduction, ordered: { ...ordered, calculating: kind } });
     const value = next.deductions[kind];
     if (!value) throw new Error(`Pub974 actual ordered ${kind} worksheet is incomplete.`);
     ordered = { ...ordered, [kind]: value };
@@ -226,13 +219,13 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     if (historicalLimit) historicalLimit = calculateMarketplaceHealthLimit({ taxYear: 2025, filingStatus: input.taxpayer.filingStatus,
       groups: intermediate.groups, householdIncomeAfterW: historicalLimit.householdIncomeAfterW,
       federalPovertyLine: historicalLimit.federalPovertyLine, orderedDeductions: orderedAmounts });
-    intermediate = calculateFederalTaxCore(input, { stage: "maximum", historicalLimit, ordered, orderedDeductionInterim: index < kinds.length - 1 });
+    intermediate = calculateFederalTaxWithNol(input, { stage: "maximum", historicalLimit, ordered, orderedDeductionInterim: index < kinds.length - 1 });
     deduction = calculateMarketplaceHealthDeduction({ input, groups: intermediate.groups, credit: intermediate.credit, historicalLimit });
   }
   const ordinary = deduction.method.startsWith("ordinary-no-ptc-");
   // Pub974 Simplified Step2: when the final iteration is ineligible, stop this
   // method and refigure the listed deductions using actual ordinary Form7206.
-  const result = calculateFederalTaxCore(input, { stage: "final", deduction, ordered: ordinary ? undefined : ordered });
+  const result = calculateFederalTaxWithNol(input, { stage: "final", deduction, ordered: ordinary ? undefined : ordered });
   if (ordinary && kinds.length) orderedAudit.record("Pub974 Ordered Deductions", "ordinary-refigure", "Ordinary health deduction used to refigure all listed claims",
     roundDollar(deduction.specifiedDeduction.plus(deduction.nonspecifiedDeduction)), "FinalStep2 ineligible: discard retained interim claims and recalculate ordinary source worksheets");
   if (!result.form8962 || result.form8962.orderedDeductionInterim) throw new Error("Pub974 final premium tax credit is incomplete.");
@@ -256,21 +249,44 @@ interface MarketplaceOrderedState {
   studentLoan?: { result: ReturnType<typeof calculateStudentLoanInterestDeduction>; modifiedAgi: Decimal };
 }
 type MarketplaceContext = ({ stage: "worksheet-w" } | { stage: "maximum"; historicalLimit?: MarketplaceHealthLimitResult }
-  | { stage: "ordered" | "final"; deduction: MarketplaceHealthDeductionResult }) & { ordered?: MarketplaceOrderedState; orderedDeductionInterim?: boolean };
+  | { stage: "ordered"; deduction: MarketplaceHealthDeductionResult }
+  | { stage: "final"; deduction: MarketplaceHealthDeductionResult }) & { ordered?: MarketplaceOrderedState; orderedDeductionInterim?: boolean };
 interface MarketplaceInterim {
   passiveSpecialRequired: boolean;
   groups: MarketplaceHealthPremiumGroup[];
   credit: ReturnType<typeof calculatePremiumTaxCreditReturn>;
   deductions: Omit<MarketplaceOrderedState, "kinds" | "calculating">;
 }
+function calculateFederalTaxWithNol(input: TaxYearInput, marketplace: MarketplaceContext & { stage: "worksheet-w" | "maximum" | "ordered" }): MarketplaceInterim;
+function calculateFederalTaxWithNol(input: TaxYearInput, marketplace?: MarketplaceContext & { stage: "final" }): TaxReturnResult;
+function calculateFederalTaxWithNol(input: TaxYearInput, marketplace?: MarketplaceContext): TaxReturnResult | MarketplaceInterim {
+  const complete = (worksheet?: NetOperatingLossReturnResult): TaxReturnResult | MarketplaceInterim => {
+    const context = worksheet ? { stage: "final" as const, deduction: worksheet.deduction, modified: false as const, worksheet } : undefined;
+    return marketplace && marketplace.stage !== "final"
+      ? calculateFederalTaxCore(input, marketplace, undefined, context)
+      : calculateFederalTaxCore(input, marketplace, undefined, context);
+  };
+  if (!input.netOperatingLoss) return complete();
+  // A statutory NOL replay recomputes enabled claims rather than freezing a
+  // Pub974 retained amount into a different AGI. Future ordered claims stay
+  // omitted; only actual final income retains completed Pub974 amounts.
+  const retained = marketplace?.ordered;
+  const refigured = retained && marketplace ? { ...marketplace, ordered: { kinds: retained.kinds.filter(kind =>
+    retained[kind] === undefined && retained.calculating !== kind) } } : marketplace;
+  const worksheet = calculateNetOperatingLossReturn(input, (deduction, modified, purpose) =>
+    calculateFederalTaxCore(input, purpose === "final" ? marketplace : refigured, undefined, { stage: "income", deduction, modified }),
+  (deduction, modified) => calculateFederalTaxCore(input, modified ? refigured : marketplace, undefined, { stage: "alternative-income", deduction, modified }));
+  if (!worksheet.calculationComplete || worksheet.deduction === undefined) throw new Error("Actual NOL calculation is incomplete");
+  return complete(worksheet);
+}
 type ForeignTaxHypotheticalRequest = { purpose: "foreign-deduction-carryover" };
 type NolReturnContext = { stage: "income" | "alternative-income"; deduction: Decimal; modified: boolean }
   | { stage: "final"; deduction: Decimal; modified: false; worksheet: NetOperatingLossReturnResult };
-function calculateFederalTaxCore(input: TaxYearInput, marketplace: undefined, hypothetical: undefined, nol: NolReturnContext & { stage: "income" }): NolIncomeContext;
-function calculateFederalTaxCore(input: TaxYearInput, marketplace: undefined, hypothetical: undefined, nol: NolReturnContext & { stage: "alternative-income" }): Form6251IncomeResult;
-function calculateFederalTaxCore(input: TaxYearInput, marketplace: undefined, hypothetical: undefined, nol: NolReturnContext & { stage: "final" }): TaxReturnResult;
+function calculateFederalTaxCore(input: TaxYearInput, marketplace: MarketplaceContext | undefined, hypothetical: undefined, nol: NolReturnContext & { stage: "income" }): NolIncomeContext;
+function calculateFederalTaxCore(input: TaxYearInput, marketplace: MarketplaceContext | undefined, hypothetical: undefined, nol: NolReturnContext & { stage: "alternative-income" }): Form6251IncomeResult;
+function calculateFederalTaxCore(input: TaxYearInput, marketplace: (MarketplaceContext & { stage: "final" }) | undefined, hypothetical?: undefined, nol?: NolReturnContext & { stage: "final" }): TaxReturnResult;
 function calculateFederalTaxCore(input: TaxYearInput, marketplace: undefined, hypothetical: ForeignTaxHypotheticalRequest): ForeignTaxHypotheticalContext;
-function calculateFederalTaxCore(input: TaxYearInput, marketplace: MarketplaceContext & { stage: "worksheet-w" | "maximum" | "ordered" }): MarketplaceInterim;
+function calculateFederalTaxCore(input: TaxYearInput, marketplace: MarketplaceContext & { stage: "worksheet-w" | "maximum" | "ordered" }, hypothetical?: undefined, nol?: NolReturnContext & { stage: "final" }): MarketplaceInterim;
 function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceContext & { stage: "final" }): TaxReturnResult;
 function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceContext, hypothetical?: ForeignTaxHypotheticalRequest, nol?: NolReturnContext): TaxReturnResult | MarketplaceInterim | ForeignTaxHypotheticalContext | NolIncomeContext | Form6251IncomeResult {
   validateForeignTaxDeductionScope(input);
@@ -2183,9 +2199,9 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       ? "SE deduction + other adjustments + K-1 1041 §67(e) excess deductions"
       : "SE deduction + other adjustments");
 
-  if (marketplace && marketplace.stage !== "final") {
+  if (marketplace && marketplace.stage !== "final" && (!nol || nol.stage === "final")) {
     if (!actualHealthInsurance?.marketplacePremiums) throw new Error("Pub974 source calculation is incomplete.");
-    if (sum(d(input.priorYear?.nolCarryforward), d(input.priorYear?.excessBusinessLossNOL), k1Form1041FinalNOL).gt(0)) throw new Error("Pub974 NOL coordination requires the actual circular taxable-income worksheet.");
+    if (!nol && sum(d(input.priorYear?.nolCarryforward), d(input.priorYear?.excessBusinessLossNOL), k1Form1041FinalNOL).gt(0)) throw new Error("Pub974 NOL coordination requires the actual circular taxable-income worksheet.");
     const credit = calculatePremiumTaxCreditReturn({ input, agi, taxExemptInterest,
       foreignIncomeReduction: form2555IncomeReduction, foreignHousingDeduction: form2555HousingDeduction,
       socialSecurityBenefitsGross, socialSecurityBenefitsTaxable }, { method: year === 2025 ? "pub974-simplified-2025" : "pub974-simplified-2026", stage: marketplace.stage, orderedDeductionInterim: marketplace.orderedDeductionInterim
@@ -2433,10 +2449,24 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       qbi,netSEEarnings,accountHolder:ownerOf(k1.accountHolder),materiallyParticipated:k1.qbiMateriallyParticipated,
       excludedSEIncome:!d(k1.guaranteedPayments).isZero() || qbi.isZero()});
   });
+  let qbiAllocation = input.qbiDeductionAllocations;
+  if (marketplace && nol && nol.stage !== "final" && actualHealthInsurance && qbiAllocation) {
+    // An actual final-return allocation is not a claim to the same health amount
+    // in every statutory income replay. Recompute its health column from this
+    // context's canonical gross-income allocation; validate the original at final.
+    const sources = actualHealthInsurance.healthSources;
+    if (deductionSources.some(source => source.excludedSEIncome && sources.some(row => row.sourceId === source.id && row.amount.gt(0)))) {
+      throw new Error("Pub974 NOL with mixed QBI income needs its context-specific health allocation method.");
+    }
+    qbiAllocation = { ...qbiAllocation, rows: qbiAllocation.rows.map(row => ({ ...row,
+      selfEmployedHealthInsurance: sum(...sources.filter(source => source.accountHolder === row.accountHolder
+        && (row.sourceId === "nonQbi" ? source.nonQbi : !source.nonQbi && source.sourceId === row.sourceId)).map(source => source.amount)).toFixed(),
+    })) };
+  }
   const qbiSourceDeductions=calculateQBISourceDeductions({taxYear:year,sources:deductionSources,
     selfEmploymentDeductions:schedSE.perTaxpayer.map(row=>({accountHolder:row.accountHolder,amount:row.deductibleHalf})),
     healthInsuranceDeduction:seHealthInsurance,retirementPlanDeduction:d(input.adjustments?.seRetirementContributions),
-    sourceFactsVerified:schedSE.sourceFactsVerified,allocation:input.qbiDeductionAllocations,
+    sourceFactsVerified:schedSE.sourceFactsVerified,allocation:qbiAllocation,
     healthInsuranceSources:actualHealthInsurance?.healthSources,retirementPlanSources:actualHealthInsurance?.retirementSources});
   audit.merge(qbiSourceDeductions.lines);
   const schedule1AReturn = input.schedule1A ? calculateSchedule1AReturn({
@@ -2740,6 +2770,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     lines: audit.getLines(),
   };
   if (nol?.stage === "alternative-income") return calculateForm6251(amtIncomeInput(rawTaxableIncome, nol.deduction, d("0")), constants, { incomeOnly: true });
+  if (marketplace && marketplace.stage !== "final") throw new Error("Interim Marketplace income must return before final tax calculations.");
 
   // ── IRC §172: Net Operating Loss Deduction ──────────────
   // For post-2017 NOLs, the deduction is limited to 80% of taxable income
