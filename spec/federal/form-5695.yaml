@@ -1,338 +1,329 @@
-form: Form 5695
-fullName: Residential Energy Credits
+form: "Form 5695"
+fullName: "Residential Energy Credits"
 taxYear: 2026
-irsReference: https://www.irs.gov/instructions/i5695
-notes: |
-  Sources refreshed 2026-10-25: IRC 25D(c), (e)(8), (h),
+irsReference: "https://www.irs.gov/instructions/i5695"
+notes: "Sources refreshed 2026-10-25: IRC 25D(c), (e)(8), (h),
+
   https://uscode.house.gov/us/usc/119-118/t26/s25D/ and IRS final 2025 instructions.
+
   The 2026 draft form/instructions are calculation corroboration, never filing approval:
+
   https://www.irs.gov/pub/irs-dft/f5695--dft.pdf
+
   https://www.irs.gov/pub/irs-dft/i5695--dft.pdf
+
   For 2026, new 25C/25D expenses generate no credit; a prepayment in 2025 for
+
   an installation completed in 2026 does not create a new 25D credit. Only the
+
   actual prior-year Form 5695 carryforward is available, with no new five-year expiry.
+
   2026 supplied energy inputs require a confirmed carryforward, immediate-prior-year
+
   source and actual tax-liability limit; zero is a known value, not missing.
+
   For 2025, the historical calculation computes two residential energy credits:
+
   Part I: Residential Clean Energy Credit (30% of qualified costs, no cap)
-  Part II: Energy Efficient Home Improvement Credit (30%, capped at $3,200/year)
+
+  Part II: Energy Efficient Home Improvement Credit (30%, capped at $3,200/year)\n"
 lines:
   - line: "1"
-    description: Prior-year residential clean energy carryforward
-    formula: Actual confirmed 2025 Form 5695 line 16; reject unknown/source-year mismatch and negative
-      amounts
-    testRef: tests/engine/forms/form-5695.test.ts::2026 applies only the confirmed prior-year carryforward
+    description: "Prior-year residential clean energy carryforward"
+    formula: "Actual confirmed 2025 Form 5695 line 16; reject unknown/source-year mismatch and negative amounts"
+    testRef: "tests/engine/forms/form-5695.test.ts::2026 applies only the confirmed prior-year carryforward"
     taxYear: 2026
   - line: "2"
-    description: Remaining tax-liability limit
-    formula: max(0, Form 1040 line 18 less actual allowed credits listed in the IRS worksheet), supplied
-      by orchestrator
-    testRef: tests/engine/forms/form-5695.test.ts::2026 applies only the confirmed prior-year carryforward
+    description: "Remaining tax-liability limit"
+    formula: "max(0, Form 1040 line 18 less actual allowed credits listed in the IRS worksheet), supplied by orchestrator"
+    testRef: "tests/engine/forms/form-5695.test.ts::2026 applies only the confirmed prior-year carryforward"
     taxYear: 2026
   - line: "3"
-    description: Allowed residential clean energy credit
-    formula: min(line 1,line 2); flows to Schedule 3 line 5a
-    testRef: tests/engine/forms/form-5695.test.ts::2026 applies only the confirmed prior-year carryforward
+    description: "Allowed residential clean energy credit"
+    formula: "min(line 1,line 2); flows to Schedule 3 line 5a"
+    testRef: "tests/engine/forms/form-5695.test.ts::2026 applies only the confirmed prior-year carryforward"
     taxYear: 2026
   - line: "4"
-    description: Carryforward to 2027
-    formula: max(0,line 1-line 3); preserve the entire unused amount without inventing an expiry
-    testRef: tests/engine/forms/form-5695.test.ts::2026 zero tax liability preserves the entire carryforward
+    description: "Carryforward to 2027"
+    formula: "max(0,line 1-line 3); preserve the entire unused amount without inventing an expiry"
+    testRef: "tests/engine/forms/form-5695.test.ts::2026 zero tax liability preserves the entire carryforward"
     taxYear: 2026
-  - line: terminated-new-costs
-    description: New 2026 expenses are ineligible
-    formula: Record current costs as disallowed; no 25C credit or 25D new credit; no new carryforward
-      from them
-    testRef: tests/engine/forms/form-5695.test.ts::2026 new energy costs cannot generate credits or
-      carryforwards
+  - line: "terminated-new-costs"
+    description: "New 2026 expenses are ineligible"
+    formula: "Record current costs as disallowed; no 25C credit or 25D new credit; no new carryforward from them"
+    testRef: "tests/engine/forms/form-5695.test.ts::2026 new energy costs cannot generate credits or carryforwards"
     taxYear: 2026
   - line: "1"
-    formula: Qualified solar electric cost
-    testRef: tests/engine/forms/form-5695.test.ts::detailed clean energy caps fuel cells by actual capacity
-    description: Qualified solar electric cost
+    formula: "Qualified solar electric cost"
+    testRef: "tests/engine/forms/form-5695.test.ts::detailed clean energy caps fuel cells by actual capacity"
+    description: "Qualified solar electric cost"
     taxYear: 2025
   - line: "2"
-    formula: Qualified solar water heating cost
-    testRef: tests/engine/forms/form-5695.test.ts::detailed clean energy caps fuel cells by actual capacity
-    description: Qualified solar water heating cost
+    formula: "Qualified solar water heating cost"
+    testRef: "tests/engine/forms/form-5695.test.ts::detailed clean energy caps fuel cells by actual capacity"
+    description: "Qualified solar water heating cost"
     taxYear: 2025
   - line: "3"
-    formula: Qualified small wind cost
-    testRef: tests/engine/forms/form-5695.test.ts::detailed clean energy caps fuel cells by actual capacity
-    description: Qualified small wind cost
+    formula: "Qualified small wind cost"
+    testRef: "tests/engine/forms/form-5695.test.ts::detailed clean energy caps fuel cells by actual capacity"
+    description: "Qualified small wind cost"
     taxYear: 2025
   - line: "4"
-    formula: Qualified geothermal heat pump cost
-    testRef: tests/engine/forms/form-5695.test.ts::detailed clean energy caps fuel cells by actual capacity
-    description: Qualified geothermal heat pump cost
+    formula: "Qualified geothermal heat pump cost"
+    testRef: "tests/engine/forms/form-5695.test.ts::detailed clean energy caps fuel cells by actual capacity"
+    description: "Qualified geothermal heat pump cost"
     taxYear: 2025
-  - line: 5b
-    formula: Qualified battery storage cost, qualification includes at least 3 kWh
-    testRef: tests/engine/forms/form-5695.test.ts::detailed clean energy caps fuel cells by actual capacity
-    description: Qualified battery storage cost, qualification includes at least 3 kWh
+  - line: "5b"
+    formula: "Qualified battery storage cost, qualification includes at least 3 kWh"
+    testRef: "tests/engine/forms/form-5695.test.ts::detailed clean energy caps fuel cells by actual capacity"
+    description: "Qualified battery storage cost, qualification includes at least 3 kWh"
     taxYear: 2025
-  - line: 6a
-    formula: Sum lines 1,2,3,4,5b
-    testRef: tests/engine/forms/form-5695.test.ts::detailed clean energy caps fuel cells by actual capacity
-    description: Sum lines 1,2,3,4,5b
+  - line: "6a"
+    formula: "Sum lines 1,2,3,4,5b"
+    testRef: "tests/engine/forms/form-5695.test.ts::detailed clean energy caps fuel cells by actual capacity"
+    description: "Sum lines 1,2,3,4,5b"
     taxYear: 2025
-  - line: 6b
-    formula: Round line 6a times 30%
-    testRef: tests/engine/forms/form-5695.test.ts::detailed clean energy caps fuel cells by actual capacity
-    description: Round line 6a times 30%
+  - line: "6b"
+    formula: "Round line 6a times 30%"
+    testRef: "tests/engine/forms/form-5695.test.ts::detailed clean energy caps fuel cells by actual capacity"
+    description: "Round line 6a times 30%"
     taxYear: 2025
   - line: "8"
-    formula: Qualified fuel cell costs at main home
-    testRef: tests/engine/forms/form-5695.test.ts::detailed clean energy caps fuel cells by actual capacity
-    description: Qualified fuel cell costs at main home
+    formula: "Qualified fuel cell costs at main home"
+    testRef: "tests/engine/forms/form-5695.test.ts::detailed clean energy caps fuel cells by actual capacity"
+    description: "Qualified fuel cell costs at main home"
     taxYear: 2025
   - line: "9"
-    formula: Round line 8 times 30%
-    testRef: tests/engine/forms/form-5695.test.ts::detailed clean energy caps fuel cells by actual capacity
-    description: Round line 8 times 30%
+    formula: "Round line 8 times 30%"
+    testRef: "tests/engine/forms/form-5695.test.ts::detailed clean energy caps fuel cells by actual capacity"
+    description: "Round line 8 times 30%"
     taxYear: 2025
   - line: "10"
-    formula: Fuel cell capacity in kW times $1000 ($500 per half kW)
-    testRef: tests/engine/forms/form-5695.test.ts::detailed clean energy caps fuel cells by actual capacity
-    description: Fuel cell capacity in kW times $1000 ($500 per half kW)
+    formula: "Fuel cell capacity in kW times $1000 ($500 per half kW)"
+    testRef: "tests/engine/forms/form-5695.test.ts::detailed clean energy caps fuel cells by actual capacity"
+    description: "Fuel cell capacity in kW times $1000 ($500 per half kW)"
     taxYear: 2025
   - line: "11"
-    formula: Lesser of line 9 and 10
-    testRef: tests/engine/forms/form-5695.test.ts::detailed clean energy caps fuel cells by actual capacity
-    description: Lesser of line 9 and 10
+    formula: "Lesser of line 9 and 10"
+    testRef: "tests/engine/forms/form-5695.test.ts::detailed clean energy caps fuel cells by actual capacity"
+    description: "Lesser of line 9 and 10"
     taxYear: 2025
   - line: "12"
-    formula: Confirmed 2024 Form 5695 carryforward
-    testRef: tests/engine/forms/form-5695.test.ts::detailed clean energy caps fuel cells by actual capacity
-    description: Confirmed 2024 Form 5695 carryforward
+    formula: "Confirmed 2024 Form 5695 carryforward"
+    testRef: "tests/engine/forms/form-5695.test.ts::detailed clean energy caps fuel cells by actual capacity"
+    description: "Confirmed 2024 Form 5695 carryforward"
     taxYear: 2025
   - line: "13"
-    formula: Sum lines 6b,11,12
-    testRef: tests/engine/forms/form-5695.test.ts::detailed clean energy caps fuel cells by actual capacity
-    description: Sum lines 6b,11,12
+    formula: "Sum lines 6b,11,12"
+    testRef: "tests/engine/forms/form-5695.test.ts::detailed clean energy caps fuel cells by actual capacity"
+    description: "Sum lines 6b,11,12"
     taxYear: 2025
   - line: "14"
-    formula: Actual clean-credit tax-limit worksheet
-    testRef: tests/engine/forms/form-5695.test.ts::detailed clean energy caps fuel cells by actual capacity
-    description: Actual clean-credit tax-limit worksheet
+    formula: "Actual clean-credit tax-limit worksheet"
+    testRef: "tests/engine/forms/form-5695.test.ts::detailed clean energy caps fuel cells by actual capacity"
+    description: "Actual clean-credit tax-limit worksheet"
     taxYear: 2025
   - line: "15"
-    formula: Lesser of lines 13 and 14
-    testRef: tests/engine/forms/form-5695.test.ts::detailed clean energy caps fuel cells by actual capacity
-    description: Lesser of lines 13 and 14
+    formula: "Lesser of lines 13 and 14"
+    testRef: "tests/engine/forms/form-5695.test.ts::detailed clean energy caps fuel cells by actual capacity"
+    description: "Lesser of lines 13 and 14"
     taxYear: 2025
   - line: "16"
-    formula: Line 13 minus line 15 carried to 2026
-    testRef: tests/engine/forms/form-5695.test.ts::detailed clean energy caps fuel cells by actual capacity
-    description: Line 13 minus line 15 carried to 2026
+    formula: "Line 13 minus line 15 carried to 2026"
+    testRef: "tests/engine/forms/form-5695.test.ts::detailed clean energy caps fuel cells by actual capacity"
+    description: "Line 13 minus line 15 carried to 2026"
     taxYear: 2025
-  - line: 18a
-    formula: Qualified insulation and air sealing cost
-    testRef: tests/engine/forms/form-5695.test.ts::detailed improvements apply every category cap before
-      shared pools
-    description: Qualified insulation and air sealing cost
+  - line: "18a"
+    formula: "Qualified insulation and air sealing cost"
+    testRef: "tests/engine/forms/form-5695.test.ts::detailed improvements apply every category cap before shared pools"
+    description: "Qualified insulation and air sealing cost"
     taxYear: 2025
-  - line: 18b
-    formula: min(round(line 18a times 30%),1200)
-    testRef: tests/engine/forms/form-5695.test.ts::detailed improvements apply every category cap before
-      shared pools
-    description: min(round(line 18a times 30%),1200)
+  - line: "18b"
+    formula: "min(round(line 18a times 30%),1200)"
+    testRef: "tests/engine/forms/form-5695.test.ts::detailed improvements apply every category cap before shared pools"
+    description: "min(round(line 18a times 30%),1200)"
     taxYear: 2025
-  - line: 19h
-    formula: min(sum of min(round(each door cost times 30%),250),500)
-    testRef: tests/engine/forms/form-5695.test.ts::detailed improvements apply every category cap before
-      shared pools
-    description: min(sum of min(round(each door cost times 30%),250),500)
+  - line: "19h"
+    formula: "min(sum of min(round(each door cost times 30%),250),500)"
+    testRef: "tests/engine/forms/form-5695.test.ts::detailed improvements apply every category cap before shared pools"
+    description: "min(sum of min(round(each door cost times 30%),250),500)"
     taxYear: 2025
-  - line: 20d
-    formula: min(round(total window/skylight costs times 30%),600)
-    testRef: tests/engine/forms/form-5695.test.ts::detailed improvements apply every category cap before
-      shared pools
-    description: min(round(total window/skylight costs times 30%),600)
+  - line: "20d"
+    formula: "min(round(total window/skylight costs times 30%),600)"
+    testRef: "tests/engine/forms/form-5695.test.ts::detailed improvements apply every category cap before shared pools"
+    description: "min(round(total window/skylight costs times 30%),600)"
     taxYear: 2025
-  - line: 22d
-    formula: min(round(total central AC costs times 30%),600), IRS final line instruction
-    testRef: tests/engine/forms/form-5695.test.ts::detailed improvements apply every category cap before
-      shared pools
-    description: min(round(total central AC costs times 30%),600), IRS final line instruction
+  - line: "22d"
+    formula: "min(round(total central AC costs times 30%),600), IRS final line instruction"
+    testRef: "tests/engine/forms/form-5695.test.ts::detailed improvements apply every category cap before shared pools"
+    description: "min(round(total central AC costs times 30%),600), IRS final line instruction"
     taxYear: 2025
-  - line: 23d
-    formula: min(round(total qualified gas/propane/oil water heater costs times 30%),600)
-    testRef: tests/engine/forms/form-5695.test.ts::detailed improvements apply every category cap before
-      shared pools
-    description: min(round(total qualified gas/propane/oil water heater costs times 30%),600)
+  - line: "23d"
+    formula: "min(round(total qualified gas/propane/oil water heater costs times 30%),600)"
+    testRef: "tests/engine/forms/form-5695.test.ts::detailed improvements apply every category cap before shared pools"
+    description: "min(round(total qualified gas/propane/oil water heater costs times 30%),600)"
     taxYear: 2025
-  - line: 24d
-    formula: min(round(total qualified furnace/boiler costs times 30%),600)
-    testRef: tests/engine/forms/form-5695.test.ts::detailed improvements apply every category cap before
-      shared pools
-    description: min(round(total qualified furnace/boiler costs times 30%),600)
+  - line: "24d"
+    formula: "min(round(total qualified furnace/boiler costs times 30%),600)"
+    testRef: "tests/engine/forms/form-5695.test.ts::detailed improvements apply every category cap before shared pools"
+    description: "min(round(total qualified furnace/boiler costs times 30%),600)"
     taxYear: 2025
-  - line: 25e
-    formula: min(round(total qualified enabling electrical property costs times 30%),600)
-    testRef: tests/engine/forms/form-5695.test.ts::detailed improvements apply every category cap before
-      shared pools
-    description: min(round(total qualified enabling electrical property costs times 30%),600)
+  - line: "25e"
+    formula: "min(round(total qualified enabling electrical property costs times 30%),600)"
+    testRef: "tests/engine/forms/form-5695.test.ts::detailed improvements apply every category cap before shared pools"
+    description: "min(round(total qualified enabling electrical property costs times 30%),600)"
     taxYear: 2025
-  - line: 26b
-    formula: Qualified home energy audit costs with certified auditor written report
-    testRef: tests/engine/forms/form-5695.test.ts::detailed improvements apply every category cap before
-      shared pools
-    description: Qualified home energy audit costs with certified auditor written report
+  - line: "26b"
+    formula: "Qualified home energy audit costs with certified auditor written report"
+    testRef: "tests/engine/forms/form-5695.test.ts::detailed improvements apply every category cap before shared pools"
+    description: "Qualified home energy audit costs with certified auditor written report"
     taxYear: 2025
-  - line: 26c
-    formula: min(round(line 26b times 30%),150)
-    testRef: tests/engine/forms/form-5695.test.ts::detailed improvements apply every category cap before
-      shared pools
-    description: min(round(line 26b times 30%),150)
+  - line: "26c"
+    formula: "min(round(line 26b times 30%),150)"
+    testRef: "tests/engine/forms/form-5695.test.ts::detailed improvements apply every category cap before shared pools"
+    description: "min(round(line 26b times 30%),150)"
     taxYear: 2025
   - line: "27"
-    formula: Sum 18b,19h,20d,22d,23d,24d,25e,26c
-    testRef: tests/engine/forms/form-5695.test.ts::detailed improvements apply every category cap before
-      shared pools
-    description: Sum 18b,19h,20d,22d,23d,24d,25e,26c
+    formula: "Sum 18b,19h,20d,22d,23d,24d,25e,26c"
+    testRef: "tests/engine/forms/form-5695.test.ts::detailed improvements apply every category cap before shared pools"
+    description: "Sum 18b,19h,20d,22d,23d,24d,25e,26c"
     taxYear: 2025
   - line: "28"
-    formula: min(line 27,1200)
-    testRef: tests/engine/forms/form-5695.test.ts::detailed improvements apply every category cap before
-      shared pools
-    description: min(line 27,1200)
+    formula: "min(line 27,1200)"
+    testRef: "tests/engine/forms/form-5695.test.ts::detailed improvements apply every category cap before shared pools"
+    description: "min(line 27,1200)"
     taxYear: 2025
-  - line: 29g
-    formula: Sum qualified heat pump, heat pump water heater, biomass costs
-    testRef: tests/engine/forms/form-5695.test.ts::detailed improvements apply every category cap before
-      shared pools
-    description: Sum qualified heat pump, heat pump water heater, biomass costs
+  - line: "29g"
+    formula: "Sum qualified heat pump, heat pump water heater, biomass costs"
+    testRef: "tests/engine/forms/form-5695.test.ts::detailed improvements apply every category cap before shared pools"
+    description: "Sum qualified heat pump, heat pump water heater, biomass costs"
     taxYear: 2025
-  - line: 29h
-    formula: min(round(line 29g times 30%),2000)
-    testRef: tests/engine/forms/form-5695.test.ts::detailed improvements apply every category cap before
-      shared pools
-    description: min(round(line 29g times 30%),2000)
+  - line: "29h"
+    formula: "min(round(line 29g times 30%),2000)"
+    testRef: "tests/engine/forms/form-5695.test.ts::detailed improvements apply every category cap before shared pools"
+    description: "min(round(line 29g times 30%),2000)"
     taxYear: 2025
   - line: "30"
-    formula: Sum lines 28 and 29h
-    testRef: tests/engine/forms/form-5695.test.ts::detailed improvements apply every category cap before
-      shared pools
-    description: Sum lines 28 and 29h
+    formula: "Sum lines 28 and 29h"
+    testRef: "tests/engine/forms/form-5695.test.ts::detailed improvements apply every category cap before shared pools"
+    description: "Sum lines 28 and 29h"
     taxYear: 2025
   - line: "31"
-    formula: Actual improvement-credit tax-limit worksheet
-    testRef: tests/engine/forms/form-5695.test.ts::detailed improvements apply every category cap before
-      shared pools
-    description: Actual improvement-credit tax-limit worksheet
+    formula: "Actual improvement-credit tax-limit worksheet"
+    testRef: "tests/engine/forms/form-5695.test.ts::detailed improvements apply every category cap before shared pools"
+    description: "Actual improvement-credit tax-limit worksheet"
     taxYear: 2025
   - line: "32"
-    formula: min(line 30,line 31); unused improvement credit never carries
-    testRef: tests/engine/forms/form-5695.test.ts::detailed improvements apply every category cap before
-      shared pools
-    description: min(line 30,line 31); unused improvement credit never carries
+    formula: "min(line 30,line 31); unused improvement credit never carries"
+    testRef: "tests/engine/forms/form-5695.test.ts::detailed improvements apply every category cap before shared pools"
+    description: "min(line 30,line 31); unused improvement credit never carries"
     taxYear: 2025
 edgeCases:
-  - description: Undefined energy credit input still emits zero-value audit lines for every documented
-      Form 5695 line
-    testRef: tests/engine/forms/form-5695.test.ts::Form 5695 audit - undefined input still emits
-      zero-value lines for 1-6, 14, 18-20, 24, and 30
+  - description: "Undefined energy credit input still emits zero-value audit lines for every documented Form 5695 line"
+    testRef: "tests/engine/forms/form-5695.test.ts::Form 5695 audit - undefined input still emits zero-value lines for 1-6, 14, 18-20, 24, and 30"
 transition2026:
   - line: "1"
-    description: Prior-year residential clean energy carryforward
-    formula: Actual confirmed 2025 Form 5695 line 16; reject unknown/source-year mismatch and negative
-      amounts
-    testRef: tests/engine/forms/form-5695.test.ts::2026 applies only the confirmed prior-year carryforward
+    description: "Prior-year residential clean energy carryforward"
+    formula: "Actual confirmed 2025 Form 5695 line 16; reject unknown/source-year mismatch and negative amounts"
+    testRef: "tests/engine/forms/form-5695.test.ts::2026 applies only the confirmed prior-year carryforward"
   - line: "2"
-    description: Remaining tax-liability limit
-    formula: max(0, Form 1040 line 18 less actual allowed credits listed in the IRS worksheet), supplied
-      by orchestrator
-    testRef: tests/engine/forms/form-5695.test.ts::2026 applies only the confirmed prior-year carryforward
+    description: "Remaining tax-liability limit"
+    formula: "max(0, Form 1040 line 18 less actual allowed credits listed in the IRS worksheet), supplied by orchestrator"
+    testRef: "tests/engine/forms/form-5695.test.ts::2026 applies only the confirmed prior-year carryforward"
   - line: "3"
-    description: Allowed residential clean energy credit
-    formula: min(line 1,line 2); flows to Schedule 3 line 5a
-    testRef: tests/engine/forms/form-5695.test.ts::2026 applies only the confirmed prior-year carryforward
+    description: "Allowed residential clean energy credit"
+    formula: "min(line 1,line 2); flows to Schedule 3 line 5a"
+    testRef: "tests/engine/forms/form-5695.test.ts::2026 applies only the confirmed prior-year carryforward"
   - line: "4"
-    description: Carryforward to 2027
-    formula: max(0,line 1-line 3); preserve the entire unused amount without inventing an expiry
-    testRef: tests/engine/forms/form-5695.test.ts::2026 zero tax liability preserves the entire carryforward
-  - line: terminated-new-costs
-    description: New 2026 expenses are ineligible
-    formula: Record current costs as disallowed; no 25C credit or 25D new credit; no new carryforward
-      from them
-    testRef: tests/engine/forms/form-5695.test.ts::2026 new energy costs cannot generate credits or
-      carryforwards
+    description: "Carryforward to 2027"
+    formula: "max(0,line 1-line 3); preserve the entire unused amount without inventing an expiry"
+    testRef: "tests/engine/forms/form-5695.test.ts::2026 zero tax liability preserves the entire carryforward"
+  - line: "terminated-new-costs"
+    description: "New 2026 expenses are ineligible"
+    formula: "Record current costs as disallowed; no 25C credit or 25D new credit; no new carryforward from them"
+    testRef: "tests/engine/forms/form-5695.test.ts::2026 new energy costs cannot generate credits or carryforwards"
 carryforward2025:
-  description: Available clean credit is new qualified credit plus actual 2024 carryforward; allowed
-    credit is limited by the worksheet and unused balance carries to 2026. The improvement credit is
-    nonrefundable and has no carryforward.
-  testRef: tests/engine/forms/form-5695.test.ts::2025 preserves unused clean credit without carrying
-    improvement credit
+  description: "Available clean credit is new qualified credit plus actual 2024 carryforward; allowed credit is limited by the worksheet and unused balance carries to 2026. The improvement credit is nonrefundable and has no carryforward."
+  testRef: "tests/engine/forms/form-5695.test.ts::2025 preserves unused clean credit without carrying improvement credit"
 detailed2025:
-  source: IRS final 2025 Form 5695 instructions; IRC 25C and 25D
-  contract: |
-    Detailed records require actual qualified net costs, valid installation/original-use dates,
+  source: "IRS final 2025 Form 5695 instructions; IRC 25C and 25D"
+  contract: "Detailed records require actual qualified net costs, valid installation/original-use dates,
+
     known qualification and residence facts. Exclude envelope installation labor and subsidies
+
     before entering qualifiedCost. A true qualification confirmation includes certification,
+
     nonbusiness allocation, original use, and applicable residence requirements. No inference
+
     is made from a combined legacy category; reject positive legacy totals alongside records.
+
     2025 specified improvements require a four-character alphanumeric QMID (insulation and
+
     audits excepted). Panel qualification includes enabled property and actual same-year or
+
     documented consecutive-year election. Joint-occupancy allocations/multiple-household
+
     forms require the actual apportioned property limits and remain outside this single-return
-    detailed contract. These outputs do not qualify a filing form.
-  validationTestRef: tests/engine/forms/form-5695.test.ts::detailed records reject missing facts and
-    preserve known ineligibility
-  lineContract: See taxYear 2025 entries in lines.
+
+    detailed contract. These outputs do not qualify a filing form.\n"
+  validationTestRef: "tests/engine/forms/form-5695.test.ts::detailed records reject missing facts and preserve known ineligibility"
+  lineContract: "See taxYear 2025 entries in lines."
 legacy2025:
-  notes: Historical aggregate input compatibility only; insufficient to establish detailed property
-    qualification or filing readiness.
+  notes: "Historical aggregate input compatibility only; insufficient to establish detailed property qualification or filing readiness."
   lines:
-    - line: 1-6
-      description: Qualified clean energy property costs
-      formula: Sum of solar electric + solar water + fuel cell + small wind + geothermal + battery storage
-      irsRef: Form 5695 Instructions, Lines 1-6
+    - line: "1-6"
+      description: "Qualified clean energy property costs"
+      formula: "Sum of solar electric + solar water + fuel cell + small wind + geothermal + battery storage"
+      irsRef: "Form 5695 Instructions, Lines 1-6"
       edgeCases:
-        - Undefined energy credit input yields $0 total clean energy costs with an audit line
-      testRef: tests/engine/forms/form-5695.test.ts::Form 5695 Part I - total qualified costs
+        - "Undefined energy credit input yields $0 total clean energy costs with an audit line"
+      testRef: "tests/engine/forms/form-5695.test.ts::Form 5695 Part I - total qualified costs"
     - line: "14"
-      description: Residential clean energy credit
-      formula: Total qualified costs × 30%
-      irsRef: Form 5695 Instructions, Line 14
-      notes: No annual dollar cap for Part I (unlike Part II)
+      description: "Residential clean energy credit"
+      formula: "Total qualified costs × 30%"
+      irsRef: "Form 5695 Instructions, Line 14"
+      notes: "No annual dollar cap for Part I (unlike Part II)"
       edgeCases:
-        - Zero costs produce zero credit
-        - Large solar installation ($50K+) gets full 30%
-      testRef: tests/engine/forms/form-5695.test.ts::Form 5695 Part I - 30% credit rate
-    - line: 18-20
-      description: Qualified energy improvement costs
-      formula: Sum of insulation + energy property + home energy audit
-      irsRef: Form 5695 Instructions, Lines 18-20
+        - "Zero costs produce zero credit"
+        - "Large solar installation ($50K+) gets full 30%"
+      testRef: "tests/engine/forms/form-5695.test.ts::Form 5695 Part I - 30% credit rate"
+    - line: "18-20"
+      description: "Qualified energy improvement costs"
+      formula: "Sum of insulation + energy property + home energy audit"
+      irsRef: "Form 5695 Instructions, Lines 18-20"
       edgeCases:
-        - Undefined energy credit input yields $0 total improvement costs with an audit line
-      testRef: tests/engine/forms/form-5695.test.ts::Form 5695 Part II - total improvement costs
+        - "Undefined energy credit input yields $0 total improvement costs with an audit line"
+      testRef: "tests/engine/forms/form-5695.test.ts::Form 5695 Part II - total improvement costs"
     - line: "24"
-      description: Energy improvement credit before limits
-      formula: Qualified costs × 30%
-      irsRef: Form 5695 Instructions, Line 24
+      description: "Energy improvement credit before limits"
+      formula: "Qualified costs × 30%"
+      irsRef: "Form 5695 Instructions, Line 24"
       edgeCases:
-        - Undefined energy credit input yields $0 pre-limit improvement credit with an audit line
-      testRef: tests/engine/forms/form-5695.test.ts::Form 5695 Part II - 30% credit rate
+        - "Undefined energy credit input yields $0 pre-limit improvement credit with an audit line"
+      testRef: "tests/engine/forms/form-5695.test.ts::Form 5695 Part II - 30% credit rate"
     - line: "30"
-      description: Energy improvement credit after annual limit
-      formula: min(generalPool, $1,200) + min(heatPumpCredit, $2,000) where generalPool =
-        insulation/doors/windows/AC/furnace credit + min(auditCredit, $150)
-      irsRef: IRS Energy Efficient Home Improvement Credit page; IRC §25C(b)(1)
-      notes: |
-        $3,200 total annual limit = $1,200 general + $2,000 heat pump.
+      description: "Energy improvement credit after annual limit"
+      formula: "min(generalPool, $1,200) + min(heatPumpCredit, $2,000) where generalPool = insulation/doors/windows/AC/furnace credit + min(auditCredit, $150)"
+      irsRef: "IRS Energy Efficient Home Improvement Credit page; IRC §25C(b)(1)"
+      notes: "$3,200 total annual limit = $1,200 general + $2,000 heat pump.
+
         The $1,200 general pool INCLUDES the home energy audit ($150 cap) per IRS:
-        "A total combined credit limit of $1,200 for energy efficient property costs
+
+        \"A total combined credit limit of $1,200 for energy efficient property costs
+
         and certain energy efficient home improvements, with limits on exterior doors
+
         ($250 per door and $500 total), exterior windows and skylights ($600) and
-        home energy audits ($150)."
+
+        home energy audits ($150).\"
+
         The $2,000 sub-limit covers heat pumps, HP water heaters, and biomass stoves.
-        Since $1,200 + $2,000 = $3,200, the overall cap is the sum of the two pools.
+
+        Since $1,200 + $2,000 = $3,200, the overall cap is the sum of the two pools.\n"
       edgeCases:
-        - Under $3,200 total — full credit
-        - Over $3,200 — capped
-        - Audit alone capped at $150
-        - Audit ($150) + general improvements near $1,200 — audit counts within $1,200 pool, not in
-          addition
-        - Insulation at $1,200 cap + audit $150 — total general pool still $1,200, not $1,350
-      testRef: tests/engine/forms/form-5695.test.ts::Form 5695 Part II - capped at $3,200
+        - "Under $3,200 total — full credit"
+        - "Over $3,200 — capped"
+        - "Audit alone capped at $150"
+        - "Audit ($150) + general improvements near $1,200 — audit counts within $1,200 pool, not in addition"
+        - "Insulation at $1,200 cap + audit $150 — total general pool still $1,200, not $1,350"
+      testRef: "tests/engine/forms/form-5695.test.ts::Form 5695 Part II - capped at $3,200"
