@@ -253,6 +253,7 @@ describe("Ohio workspace packet disclosure", () => {
   it("includes actual investment withholding before additional payment overlays", async () => {
     const guidedState = createGuidedFlowStateWithOhioStateSelection();
     guidedState.segmentation.incomeTypes.push("investments");
+    guidedState.sectionData.deductions!.nonW2IncomeTaxesDeductedElsewhere = "0";
     guidedState.sectionData["income-investments"] = {
       interestEntries: [{ ...completeInterestSource, interestIncome: "100", stateTaxReporting: "single", state: "OH", stateWithheld: "0.10" }],
       dividendEntries: [{ ...completeDividendSource, ordinaryDividends: "100", stateTaxReporting: "single", state: "OH", stateWithheld: "0.20" }],

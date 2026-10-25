@@ -22,6 +22,7 @@ import { energyFactErrors } from "./guided-energy-facts";
 import { w2FactErrors } from "./guided-w2-facts";
 import { businessFactErrors, hasBusinessSourceData, isStartedNec, sumKnownBusinessAmounts, type BusinessSourceData } from "./guided-business-facts";
 import { isStartedRental, rentalFactErrors, rentalExpenseFields } from "./guided-rental-facts";
+import { nonW2TaxAllocationErrors } from "./guided-salt-facts";
 import { investmentFactErrors, isStartedInvestment, type InvestmentSourceData } from "./guided-investment-facts";
 
 import type {
@@ -297,6 +298,7 @@ export function buildScheduleAInput(deductionData: DeductionData | undefined, st
   if (!deductionData) return undefined;
   assertKnownFacts(deductionFactErrors(deductionData));
   const fields = {
+    nonW2IncomeTaxesDeductedElsewhere: deductionData.nonW2IncomeTaxesDeductedElsewhere,
     gamblingWinnings: deductionData.gamblingWinnings,
     ...(deductionData.method === "itemized" ? {
       medicalExpenses: deductionData.medicalExpenses,
@@ -555,6 +557,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     assertKnownFacts(businessFactErrors(seData, segmentation.filingStatus, w2Data?.entries, stateReturnData));
     assertKnownFacts(rentalFactErrors(rentalData?.entries, segmentation.filingStatus, state.taxYear));
     assertKnownFacts(deductionFactErrors(deductionData, state.taxYear));
+    assertKnownFacts(nonW2TaxAllocationErrors(state));
     assertKnownFacts(allPaymentFactErrors(paymentData, state.taxYear));
     assertKnownFacts(retirementFactErrors(retirementData?.entries));
     assertKnownFacts(educationFactErrors(creditsData, state.taxYear, segmentation.filingStatus, personalInfo));

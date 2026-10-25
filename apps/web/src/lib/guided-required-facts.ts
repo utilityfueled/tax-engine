@@ -22,6 +22,10 @@ export function amountError(value: string | undefined, label: string): string | 
 export function deductionFactErrors(data: DeductionData | undefined, taxYear?: number | null): Record<string, string> {
   if (!data) return {};
   const errors: Record<string, string> = {};
+  if (hasEnteredAmount(data.nonW2IncomeTaxesDeductedElsewhere)) {
+    const error = amountError(data.nonW2IncomeTaxesDeductedElsewhere, "non-W-2 withholding deducted elsewhere");
+    if (error) errors.nonW2IncomeTaxesDeductedElsewhere = error;
+  }
   const deductionFields = data.method === "itemized"
     ? ["medicalExpenses", "stateLocalTaxes", "realEstateTaxes", "personalPropertyTaxes", "mortgageInterest", "casualtyLosses", "otherItemized", "investmentInterestExpense", "gamblingLosses", "gamblingWinnings", "charitableContributions"] as const
     : ["gamblingWinnings", "charitableContributions"] as const;

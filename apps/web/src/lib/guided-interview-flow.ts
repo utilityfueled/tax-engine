@@ -17,6 +17,7 @@ import { isStartedW2, w2FactErrors } from "./guided-w2-facts";
 import { investmentFactErrors, isStartedInvestment, type InvestmentSourceData } from "./guided-investment-facts";
 import { businessFactErrors, hasBusinessSourceData, type BusinessSourceData } from "./guided-business-facts";
 import { isStartedRental, rentalFactErrors, type RentalSourceData } from "./guided-rental-facts";
+import { nonW2TaxAllocationErrors } from "./guided-salt-facts";
 import { vehicleFactErrors, type VehicleCreditData } from "./guided-vehicle-facts";
 import { adoptionFactErrors, type AdoptionCreditData } from "./guided-adoption-facts";
 
@@ -839,6 +840,7 @@ export interface DeductionData {
   method: DeductionMethod;
   medicalExpenses: string;
   stateLocalTaxes: string;
+  nonW2IncomeTaxesDeductedElsewhere?: string;
   realEstateTaxes: string;
   mortgageInterest: string;
   charitableContributions: string;
@@ -1670,7 +1672,8 @@ function validateUnemploymentSection(data: UnemploymentData | undefined): Sectio
   return VALID_SECTION;
 }
 
-function validateDeductionsSection(data: DeductionData | undefined, taxYear?: number | null): SectionValidationResult {
+function validateDeductionsSection(data: DeductionData | undefined, taxYear?: number | null, sourceErrors: Record<string, string> = {}): SectionValidationResult {
+  if (Object.keys(sourceErrors).length) return validateRequiredFacts({ ...deductionFactErrors(data, taxYear), ...sourceErrors });
   if (!data) return EMPTY_SECTION("deductions info");
   return validateRequiredFacts(deductionFactErrors(data, taxYear));
 }
@@ -1719,7 +1722,7 @@ export function validateSection(
     case "income-unemployment":
       return validateUnemploymentSection(getSectionData(state, "income-unemployment"));
     case "deductions":
-      return validateDeductionsSection(getSectionData(state, "deductions"), state.taxYear);
+      return validateDeductionsSection(getSectionData(state, "deductions"), state.taxYear, nonW2TaxAllocationErrors(state));
     case "adjustments":
       return validateAdjustmentsSection(getSectionData(state, "adjustments"), state.segmentation.filingStatus, state.taxYear);
     case "credits":
