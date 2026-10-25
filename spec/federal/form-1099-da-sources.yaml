@@ -1,0 +1,66 @@
+form: "Form1099DA actual ordinary sources"
+taxYear: "2025 and 2026 source contract; public2026 calculation remains closed"
+irsReference: "https://www.irs.gov/pub/irs-prior/i1099da--2025.pdf"
+sources:
+  - url: "https://www.irs.gov/pub/irs-prior/f1099da--2025.pdf"
+    retrieved: "2026-10-25"
+    section: "Recipient instructions; boxes1a-1i,2-9,11a-12b,14-16"
+  - url: "https://www.irs.gov/instructions/i1099da"
+    retrieved: "2026-10-25"
+    section: "2026 reporting, noncovered securities, actual basis and Box4"
+  - url: "https://www.irs.gov/pub/irs-prior/f8949--2025.pdf"
+    retrieved: "2026-10-25"
+    section: "Actual source categories G/H/I/J/K/L and separate reporting"
+notes: |
+  The old model's comments calling the asset/basis/proceeds boxes6-12/G were
+  not the final2025 form. Actual asset name is1b, dates1d/1e, proceeds1f,
+  reported basis1g, market discount1h, wash loss1i, basis checkbox2 and
+  withholding4. Broker reporting is distinct from the taxpayer's completed
+  basis records: blank reported basis is null, never a default zero.
+  This bounded source method supports individually identified ordinary capital
+  purchases later sold/exchanged, with actual completed basis and zero other
+  adjustments/selling costs. NFT/collectible, mining/staking/gift/inheritance,
+  optional aggregate, QOF, ordinary-income, loss-restriction and market-discount
+  sources retain explicit separate methods. Legacy2025 source-free arithmetic
+  remains unverified; new source paths and2026 require actual facts.
+lines:
+  - line: "original-facts"
+    description: "Retain actual original boxes and independent taxpayer basis"
+    formula: "Preserve blank original1g/1d separately; require actual completed basis, dates, identity, year, owner and confirmation before conversion"
+    irsRef: "2025 i1099DA General Instructions and final CopyB recipient1d/1g; 2026 i1099DA noncovered securities"
+    testRef: "tests/engine/forms/form-1099-da-sources.test.ts::preserves original missing basis separately from actual taxpayer records"
+  - line: "ordinary-scope"
+    description: "Reject incomplete or special source methods without deleting originals"
+    formula: "Actual ordinary classification and all applicable source boxes must be known; explicit0/false remains valid"
+    irsRef: "Final1099DA boxes1h,3b,5,6,11a and capital-asset determination under i8949"
+    testRef: "tests/engine/forms/form-1099-da-sources.test.ts::rejects unknown conflicting and unsupported actual digital sources"
+  - line: "source-conservation"
+    description: "Bind unique actual statement and transaction identities"
+    formula: "Source year and taxpayer owner match return; no duplicated original statement or transaction, including an original already in1099B"
+    irsRef: "Final1099DA filer/recipient/account identity; i8949 report each disposition once"
+    testRef: "tests/engine/forms/form-1099-da-sources.test.ts::binds unique original digital statements to actual owners and years"
+  - line: "capital-normalization"
+    description: "Use one idempotent source-preserving conversion for calculation and review"
+    formula: "Append actualDA capital rows tagged1099-da, preserve existingB indices, consume DA from returned copy; never change original inputs or replace confirmedzero basis from legacy lots"
+    irsRef: "Final2025 Form8949 G/H/J/K and ScheduleD transfer instructions"
+    testRef: "tests/engine/forms/form-1099-da-sources.test.ts::normalizes actual digital capital sources once without changing original evidence"
+  - line: "25b"
+    description: "Transfer original Box4 backup withholding once"
+    formula: "Form1040line25b += sum original statement Box4; retain exact cents and reject duplicate statement copies"
+    irsRef: "i1099DA Box4; i1040 Form1040line25b"
+    testRef: "tests/engine/forms/form-1099-da-sources.test.ts::routes actual digital withholding once through the canonical return"
+  - line: "legacy-review"
+    description: "Do not reconstruct unsupported lot-derived or phase2 review rows"
+    formula: "Source-free legacy2025 arithmetic remains unverified; review requires actual ordinary sources or a separately prepared complete derived-source method"
+    irsRef: "i8949 actual basis and source reporting; i1099DA noncovered information may be blank"
+    testRef: "tests/engine/forms/form-1099-da-sources.test.ts::keeps legacy sources unverified and rejects incomplete derived review contexts"
+  - line: "known-facts"
+    description: "Never discard supplied original special source facts in legacy compatibility"
+    formula: "Any supplied new original/source field requires the complete actual contract; computed completeness markers alone do not manufacture facts"
+    irsRef: "Final1099DA boxes1h,3b,5,6,9 and actual capital-asset qualification"
+    testRef: "tests/engine/forms/form-1099-da-sources.test.ts::never discards known new special facts through historical compatibility"
+  - line: "2026"
+    description: "Validate actual covered and noncovered2026 source reporting without enabling the return"
+    formula: "Covered source requires actual reported basis; noncovered blank remains null with independent completed taxpayer records; public year gate unchanged"
+    irsRef: "Current2026 i1099DA covered securities and voluntary noncovered basis reporting"
+    testRef: "tests/engine/forms/form-1099-da-sources.test.ts::requires actual2026 source boxes without inferring noncovered basis"

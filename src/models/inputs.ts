@@ -187,6 +187,7 @@ export const CapitalTransactionSchema = z.object({
   washSale: z.boolean().default(false),
   washSaleDisallowed: optionalDecimal,
   digitalAsset: z.boolean().default(false), // PA Schedule D digital-asset disclosure support
+  sourceDocumentType: z.enum(["1099-b", "1099-da", "not-reported"]).optional(), // Actual reporting source; omission in the original Form1099B collection retains its legacy1099-B meaning.
 });
 
 export const Form1099BSchema = z.object({
@@ -269,35 +270,74 @@ export const Section1202SourcesSchema = z.object({
 });
 
 // ── Form 1099-DA: Digital Asset Proceeds from Broker Transactions ──
-// Per IRS Form 1099-DA (2025+), brokers report digital asset dispositions.
-// Mirrors 1099-B structure with crypto-specific fields.
-// IRS Reference: Form 1099-DA Instructions (2025), Notice 2024-56
-export const Form1099DATransactionSchema = z.object({
-  digitalAssetName: z.string(), // Box 6 — name of digital asset
-  ticker: z.string().optional(), // Box 7 — ticker symbol (e.g., BTC, ETH)
-  quantity: decimal.optional(), // Quantity of digital asset disposed (for lot matching)
-  dateAcquired: z.string(), // Box 8 — YYYY-MM-DD or "VARIOUS"
-  dateSold: z.string(), // Box 9 — YYYY-MM-DD
-  proceeds: decimal, // Box 10 — gross proceeds
-  costBasis: decimal, // Box 11 — cost or other basis
-  gainOrLoss: decimal.optional(), // Box 12 — gain or loss (computed if not provided)
-  basisReportedToIRS: z.boolean().default(true), // Box G — whether basis was reported
+// Original final-form boxes are separate from completed taxpayer basis records.
+// Legacy defaults retain historical arithmetic but never establish actual facts.
+export const Form1099DATransactionSchema = z.preprocess((value) => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const raw = value as Record<string, unknown>;
+  const required = ["sourceId", "digitalAssetCode", "digitalAssetName", "quantity", "reportedDateAcquired", "reportedCostBasis", "dateAcquired", "dateSold", "proceeds", "costBasis", "basisReportedToIRS", "holdingPeriod", "transactionType", "basisSource", "basisSourceReference", "basisFactsConfirmed", "proceedsType", "sellingExpenses", "marketDiscount", "washSale", "washSaleDisallowed", "adjustments", "qof", "lossNotAllowed", "ordinaryIncome", "onlyCashProceeds", "customerProvidedAcquisitionInformation", "noncoveredSecurity", "optionalReportingMethod", "assetOrigin", "capitalAssetConfirmed", "nftOrCollectible"];
+  return { ...raw, sourceFactsComplete: raw.sourceFactsComplete !== false && required.every(field => raw[field] !== undefined) };
+}, z.object({
+  sourceId: z.string().optional(),
+  sourceFactsComplete: z.boolean().optional(),
+  digitalAssetCode: z.string().optional(), // Original Box1a DTIF code.
+  digitalAssetName: z.string(), // Box1b.
+  ticker: z.string().optional(), // Optional statement abbreviation, not a numbered box.
+  quantity: decimal.optional(), // Box1c.
+  reportedDateAcquired: z.string().nullable().optional(), // Original Box1d; null means actually blank.
+  reportedCostBasis: decimal.nullable().optional(), // Original Box1g; null means actually blank.
+  dateAcquired: z.string(), // Completed basis record date, independently supported when Box1d is blank.
+  dateSold: z.string(), // Box1e.
+  proceeds: decimal, // Box1f.
+  costBasis: decimal, // Actual completed taxpayer basis; never inferred from a blank Box1g.
+  gainOrLoss: decimal.optional(), // Optional substitute-statement summary, not a numbered1099DA box.
+  basisReportedToIRS: z.boolean().default(true), // Original Box2.
   holdingPeriod: z.enum(["short", "long"]), // Derived from acquisition/sale dates
   transactionType: z.enum(["sale", "exchange", "payment", "gift"]).default("sale"),
+  basisSource: z.enum(["broker_statement", "taxpayer_records"]).optional(),
+  basisSourceReference: z.string().optional(),
+  basisFactsConfirmed: z.boolean().optional(),
+  proceedsType: z.enum(["gross", "net"]).optional(), // Box3a.
+  sellingExpenses: decimal.optional(),
+  marketDiscount: decimal.optional(), // Box1h.
+  qof: z.boolean().optional(), // Box3b.
+  lossNotAllowed: z.boolean().optional(), // Box5.
+  ordinaryIncome: z.boolean().optional(), // Box6 ordinary indicator.
+  onlyCashProceeds: z.boolean().optional(), // Box7.
+  customerProvidedAcquisitionInformation: z.boolean().optional(), // Box8.
+  noncoveredSecurity: z.boolean().optional(), // Box9.
+  optionalReportingMethod: z.enum(["none", "stablecoins", "specified_nfts"]).optional(), // Box11a.
+  assetOrigin: z.enum(["purchase", "mining", "staking", "airdrop", "gift", "inheritance", "other"]).optional(),
+  capitalAssetConfirmed: z.boolean().optional(),
+  nftOrCollectible: z.boolean().optional(),
   lotId: z.string().optional(), // For specific_id method: identifies which lot to match
   washSale: z.boolean().default(false),
-  washSaleDisallowed: optionalDecimal,
+  washSaleDisallowed: optionalDecimal, // Original Box1i.
   adjustments: optionalDecimal,
-});
+}));
 
-export const Form1099DASchema = z.object({
+export const Form1099DASchema = z.preprocess((value) => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const raw = value as Record<string, unknown>;
+  const required = ["sourceId", "taxYear", "sourceReference", "sourceFactsConfirmed", "allTransactionsIncluded", "brokerName", "accountHolder", "federalWithheld", "stateTaxReporting", "stateWithheld", "transactions"];
+  return { ...raw, sourceFactsComplete: raw.sourceFactsComplete !== false && required.every(field => raw[field] !== undefined) };
+}, z.object({
+  sourceId: z.string().optional(),
+  taxYear: z.number().int().optional(),
+  sourceReference: z.string().optional(),
+  sourceFactsConfirmed: z.boolean().optional(),
+  sourceFactsComplete: z.boolean().optional(),
+  allTransactionsIncluded: z.boolean().optional(),
   brokerName: z.string(), // Box — broker name
   brokerTin: z.string().optional(), // Broker TIN
+  accountReference: z.string().optional(),
   accountHolder: z.enum(["primary", "spouse"]).optional(),
+  federalWithheld: decimal.optional(), // Original Box4, once per statement; unknown remains unknown.
+  stateTaxReporting: z.enum(["none", "single", "multiple"]).optional(),
   stateWithheld: optionalDecimal,
   state: z.string().optional(),
   transactions: z.array(Form1099DATransactionSchema),
-});
+}));
 
 // ── Crypto Cost Basis Method Election ──
 // IRS Notice 2014-21, Q&A 7: taxpayers may use FIFO or specific identification

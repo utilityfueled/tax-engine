@@ -1,4 +1,6 @@
 import { calculateBrokerageWithholding } from "./forms/form-1099-b-withholding.js";
+import { calculateForm1099DASources } from "./forms/form-1099-da-sources.js";
+import { normalizeDigitalAssetCapitalInput } from "./forms/digital-asset-capital-input.js";
 import { calculateForm172Return } from "./forms/form-172-return.js";
 import { validateQofDispositionFacts } from "./forms/qof-disposition-facts.js";
 /**
@@ -1183,7 +1185,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
 
   // Separate 1099-DA transactions needing lot matching from those with broker-reported basis
   const needsLotMatching = form1099DAForms.some((form) =>
-    form.transactions.some((t) => !t.basisReportedToIRS && d(t.costBasis).isZero())
+    form.sourceFactsConfirmed !== true && form.transactions.some((t) => !t.basisReportedToIRS && d(t.costBasis).isZero())
   );
 
   let lotMatchedBasis: Map<string, { costBasis: Decimal; dateAcquired: string }> | undefined;
@@ -1191,7 +1193,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   if (needsLotMatching && allLots.length > 0) {
     const transactionsForMatching = form1099DAForms.flatMap((form) =>
       form.transactions
-        .filter((t) => !t.basisReportedToIRS && d(t.costBasis).isZero())
+        .filter((t) => form.sourceFactsConfirmed !== true && !t.basisReportedToIRS && d(t.costBasis).isZero())
         .map((t) => ({ transaction: t, broker: form.brokerName }))
     );
     const lotResult = matchLots(transactionsForMatching, allLots, cryptoBasisMethod);
@@ -1235,46 +1237,9 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     ...liquidationTransactions,
   ];
 
-  const hasCryptoTransactions = form1099DAForms.length > 0 || phase2Dispositions.length > 0;
-  const inputWithCrypto = hasCryptoTransactions
-    ? {
-      ...input,
-      form1099B: [
-        ...input.form1099B,
-        ...form1099DAForms.map((form) => ({
-          broker: form.brokerName,
-          payerTin: form.brokerTin,
-          accountHolder: form.accountHolder,
-          stateWithheld: form.stateWithheld,
-          state: form.state,
-          transactions: form.transactions.map((t) => {
-            const desc = `${t.digitalAssetName}${t.ticker ? ` (${t.ticker})` : ""}`;
-            const matchKey = `${desc} via ${form.brokerName}|${t.dateSold}`;
-            const matched = lotMatchedBasis?.get(matchKey);
-            return {
-              description: desc,
-              dateAcquired: matched?.dateAcquired ?? t.dateAcquired,
-              dateSold: t.dateSold,
-              proceeds: t.proceeds,
-              costBasis: matched ? matched.costBasis.toString() : t.costBasis,
-              adjustments: t.adjustments,
-              basisReportedToIRS: t.basisReportedToIRS,
-              holdingPeriod: t.holdingPeriod,
-              washSale: t.washSale,
-              washSaleDisallowed: t.washSaleDisallowed,
-              digitalAsset: true,
-            };
-          }),
-        })),
-        // Phase 2 DeFi/NFT/liquidation dispositions as synthetic 1099-B entries
-        ...(phase2Dispositions.length > 0 ? [{
-          broker: "DeFi/NFT/Crypto",
-          stateWithheld: "0",
-          transactions: phase2Dispositions,
-        }] : []),
-      ],
-    }
-    : input;
+  const inputWithCrypto = normalizeDigitalAssetCapitalInput(input, {
+    resolvedLegacyBasis: lotMatchedBasis, additionalDispositions: phase2Dispositions,
+  });
 
   // Line 7: Capital gains/losses via Schedule D (includes Form 8949)
   const schedD = calculateScheduleD(inputWithCrypto, filingStatus, constants, form4797, {
@@ -3839,8 +3804,11 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     taxYear: year, filingStatus, spousePresent: input.taxpayer.spouse !== undefined,
   });
   audit.merge(brokerageWithholding.lines);
+  const digitalAssetSources = calculateForm1099DASources(input, { resolvedLegacyBasis: lotMatchedBasis });
+  audit.merge(digitalAssetSources.lines);
   const withholdingFrom1099 = sum(
     brokerageWithholding.federalWithheld,
+    digitalAssetSources.federalWithheld,
     intAgg.federalWithheld,
     divAgg.federalWithheld,
     form1099OID.federalWithheld,
@@ -3857,7 +3825,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   const withholdingFromOtherForms = sum(form8959.withholdingCredit, ...w2gForms.map(f => d(f.federalWithheld)), ...k1FederalWithholding);
   const federalWithholding = sum(w2Agg.federalWithheld, withholdingFrom1099, withholdingFromOtherForms);
   audit.record("1040", "25a", "Federal withholding from Forms W-2", w2Agg.federalWithheld, "Sum W-2 box 2");
-  audit.record("1040", "25b", "Federal withholding from Forms 1099", withholdingFrom1099, "Forms 1099 including original Form1099-B Box4, Form 1099-K, SSA-1099 and RRB-1099");
+  audit.record("1040", "25b", "Federal withholding from Forms 1099", withholdingFrom1099, "Forms 1099 including original Form1099-B and Form1099-DA Box4, Form 1099-K, SSA-1099 and RRB-1099");
   audit.record("1040", "25c", "Federal withholding from other forms", withholdingFromOtherForms, "W-2G, reported K-1 federal withholding and Form 8959 line 24");
   audit.record(
     "1040",

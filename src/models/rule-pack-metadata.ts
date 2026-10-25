@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.67",
+    ruleVersion: "2025.68",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/pub/irs-prior/i1099da--2025.pdf", section: "Actual original digital-asset statements and separate taxpayer basis; unique owner/year sources and original Box4 to1040line25b once", revision: "Final2025 source boxes with original blank basis preserved; ordinary purchase dispositions only, advanced methods and independent qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i172", section: "Actual ordinary investment capital sources, gross nonbusiness gains/losses, filed prior capital carry and exact ScheduleD reconciliation in current regular/AMT/1411 origin", revision: "Final Form172/i6251 with IRC172(d),6102(c) and Reg1.1411-4(h); independent same-treatment AMT evidence required, special capital methods and human qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i172", section: "Current Form172 ordinary itemized nonbusiness deductions with separate AMT medical, principal-residence and actual investment-interest sources", revision: "Final i172/i6251 and Reg1.55-1(b); personal taxes excluded from AMTI, mixed income-tax attribution and broader origin methods remain separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i8606", section: "Completed whole-dollar lines; separate-owner actual prior basis and all traditional/SEP/SIMPLE accounts; Roth basis history and actual line25c repayments", revision: "Final2025 instructions and Total Basis Chart; source-bound ordinary code7 method, whole-dollar derived controls and published repayment examples; professional and broader-source qualification remain pending", retrievedAt: "2026-10-25" },
@@ -111,11 +112,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.63-law-integration-draft",
+    ruleVersion: "2026.64-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i1099da", section: "Actual original2026 digital-asset sources, noncovered blank basis and separate completed taxpayer basis; Box4 once per statement", revision: "Current2026 reporting rules and bounded ordinary purchase source method; full2026 calculation and filing remain closed", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i172", section: "Ordinary investment current-origin capital source validation and exact computational amounts with independently confirmed same-treatment AMT capital sources", revision: "Applicable IRC172(d),6102(c),56 and Reg1.1411-4(h); isolated source arithmetic only, full2026 and filing qualification remain closed", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i172", section: "Current Form172 ordinary itemized nonbusiness deductions with separate AMT medical, principal-residence and actual investment-interest sources", revision: "Final i172/i6251 and Reg1.55-1(b); personal taxes excluded from AMTI, mixed income-tax attribution and broader origin methods remain separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i8606", section: "Actual separate-owner basis/history with exact source-year and account binding; completed whole-dollar lines and corrected Roth historical/repayment treatment", revision: "Applicable final2025 source method; final2026 Form8606 and full-year/filing qualification remain unavailable", retrievedAt: "2026-10-25" },
