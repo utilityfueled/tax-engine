@@ -1,6 +1,7 @@
 // Spec: spec/federal/form-7206-pdf.yaml; final2025 Form7206 and Pub974 Steps3-4.
 import Decimal from "decimal.js";
 import { execFileSync } from "node:child_process";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -36,10 +37,16 @@ function actual2025(noCredit = false) {
   return input;
 }
 function inspect(bytes: Uint8Array): { pages: string[]; fields: Record<string, string>; widgets: { name: string; value: string; appearance: boolean }[] } {
-  return JSON.parse(execFileSync(process.env.TAX_ENGINE_PDF_TEST_PYTHON ?? "python3", ["-c", `
+  // Reopen a saved artifact; an EOF-dependent stdin pipe can hang the synchronous
+  // subprocess before Vitest can enforce its timeout on macOS.
+  const directory = mkdtempSync(join(tmpdir(), "tax-marketplace-pdf-"));
+  const path = join(directory, "review.pdf");
+  try {
+    writeFileSync(path, bytes);
+    return JSON.parse(execFileSync(process.env.TAX_ENGINE_PDF_TEST_PYTHON ?? "python3", ["-c", `
 from pypdf import PdfReader
-import io,json,sys
-r=PdfReader(io.BytesIO(sys.stdin.buffer.read()));widgets=[]
+import json,sys
+r=PdfReader(sys.argv[1]);widgets=[]
 for page in r.pages:
  for ref in page.get('/Annots',[]):
   widget=ref.get_object()
@@ -53,7 +60,10 @@ for page in r.pages:
   widgets.append({'name':'.'.join(names),'value':value or '', 'appearance':bool(appearance and appearance.get_object().get_data())})
 fields={k:str(v.get('/V','')) for k,v in r.get_fields().items() if v.get('/FT')=='/Tx'}
 print(json.dumps({'pages':[p.extract_text() or '' for p in r.pages],'fields':fields,'widgets':widgets}))
-`], { input: bytes, encoding: "utf8" }));
+`, path], { encoding: "utf8", timeout: 5000 }));
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
 }
 
 it("keeps nonspecified physical lines separate from the actual Pub974 return deduction", async () => {
