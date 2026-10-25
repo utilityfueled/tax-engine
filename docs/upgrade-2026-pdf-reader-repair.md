@@ -27,3 +27,30 @@ Local evidence:
 
 This repairs a local test harness. It does not establish final 2026 form,
 filing, human review or hosted qualification.
+
+## CI field-lookup runtime follow-up
+
+CI run40235284806 on `9da0bab` passed17,725 tests but timed out in the
+fourteen-page reopening case. The separate inventory check was also stale.
+The saved-byte reader repair removed the stdin stall; this second failure was
+measured independently on committed `81668db`. Repeated pdf-lib field getters
+traversed the entire reopened AcroForm for each assertion. The local timed
+sequence spent1,008ms in those lookups/assertions and2,172ms through pypdf.
+
+The test now indexes the reopened fields once, validates field types on each
+lookup, and adds a duplicate-name assertion. Every original amount, category,
+continuation, widget, privacy and per-page notice check is retained. The same
+local sequence spent2ms in indexed lookups/assertions and1,184ms through pypdf.
+This is measured local test overhead, not a hosted performance claim. No
+production code, timeout, worker configuration or coverage gate changes.
+Evidence: `ci-9da0bab-failures.log`, `digital-reporting-runtime-profile.log`,
+`digital-reporting-runtime-fixed.log` and `digital-pdf-stage-timing*.txt`.
+Immutable post-repair checks and independent review follow below.
+
+Exact post-repair tree `c2e6311dbdc0544e6a62ed279386f787ff675741`, based
+on `81668db`, passes all four PDF cases, root types and scoped lint. Separate
+federal-agent diff review confirms every original assertion and deadline is
+preserved, and its independent four-case run also passes with no actionable
+finding. Logs: `pdf-field-index-{tests,types,lint}.log` and
+`federal-review-pdf-field-index.log`. Only this evidence append differs from the
+tested tree. Remote revalidation remains required.

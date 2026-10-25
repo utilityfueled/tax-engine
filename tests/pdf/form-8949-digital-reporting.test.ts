@@ -1,6 +1,6 @@
 // Spec: spec/federal/form-8949-digital-reporting.yaml.
 import { expect, it } from 'vitest';
-import { PDFDocument } from 'pdf-lib';
+import { PDFCheckBox, PDFDocument, PDFTextField } from 'pdf-lib';
 import { readFile, writeFile } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
@@ -43,27 +43,42 @@ it('retains all categories and digital continuation rows after reopening', async
   const prepared = prepareForm8949Review(input);
   const document = await fillForm8949(redactReviewIdentifiers(input), blank, prepared);
   const bytes = await document.save();
-  const reopened = await PDFDocument.load(bytes); const form = reopened.getForm();
+  const reopened = await PDFDocument.load(bytes);
+  // getTextField/getCheckBox each traverse every AcroForm field. Index the
+  // independently reopened field tree once while retaining strict type checks.
+  const fields = reopened.getForm().getFields();
+  const fieldsByName = new Map(fields.map(field => [field.getName(), field]));
+  expect(fieldsByName.size).toBe(fields.length);
+  const textField = (name: string): PDFTextField => {
+    const field = fieldsByName.get(name);
+    if (!(field instanceof PDFTextField)) throw new Error(`Missing text field ${name}`);
+    return field;
+  };
+  const checkBox = (name: string): PDFCheckBox => {
+    const field = fieldsByName.get(name);
+    if (!(field instanceof PDFCheckBox)) throw new Error(`Missing checkbox ${name}`);
+    return field;
+  };
   expect(reopened.getPageCount()).toBe(14);
   const short = [F.boxA, F.boxB, F.boxC, F.boxG, F.boxG, F.boxH, F.boxI];
   const long = [F.boxD, F.boxE, F.boxF, F.boxJ, F.boxK, F.boxL];
   for (let copy = 0; copy < 7; copy++) {
-    for (const field of [F.boxA, F.boxB, F.boxC, F.boxG, F.boxH, F.boxI]) expect(form.getCheckBox(copied(field, copy)).isChecked()).toBe(field === short[copy]);
-    for (const field of [F.boxD, F.boxE, F.boxF, F.boxJ, F.boxK, F.boxL]) expect(form.getCheckBox(copied(field, copy)).isChecked()).toBe(field === long[copy]);
-    for (const field of [F.ssn1, F.ssn2]) expect(form.getTextField(copied(field, copy)).getText() ?? '').toBe('');
+    for (const field of [F.boxA, F.boxB, F.boxC, F.boxG, F.boxH, F.boxI]) expect(checkBox(copied(field, copy)).isChecked()).toBe(field === short[copy]);
+    for (const field of [F.boxD, F.boxE, F.boxF, F.boxJ, F.boxK, F.boxL]) expect(checkBox(copied(field, copy)).isChecked()).toBe(field === long[copy]);
+    for (const field of [F.ssn1, F.ssn2]) expect(textField(copied(field, copy)).getText() ?? '').toBe('');
   }
   const descriptions: string[] = [];
   for (let copy = 0; copy < 7; copy++) for (const row of [...F.page1Rows, ...F.page2Rows]) {
-    const description = form.getTextField(copied(row.description, copy)).getText();
+    const description = textField(copied(row.description, copy)).getText();
     if (description) descriptions.push(description);
   }
   expect(descriptions.sort()).toEqual(input.form1099B[0].transactions.map(row => row.description).sort());
-  expect(form.getTextField(copied(F.page1TotalProceeds, 3)).getText()).toBe('4404');
-  expect(form.getTextField(copied(F.page1TotalCostBasis, 3)).getText()).toBe('3302');
-  expect(form.getTextField(copied(F.page1TotalGainLoss, 3)).getText()).toBe('1102');
-  expect(form.getTextField(copied(F.page1Rows[0].description, 4)).getText()).toBe('Original G disposition 12');
-  expect(form.getTextField(copied(F.page1TotalProceeds, 4)).getText()).toBe('400');
-  expect(form.getTextField(copied(F.page1TotalGainLoss, 4)).getText()).toBe('100');
+  expect(textField(copied(F.page1TotalProceeds, 3)).getText()).toBe('4404');
+  expect(textField(copied(F.page1TotalCostBasis, 3)).getText()).toBe('3302');
+  expect(textField(copied(F.page1TotalGainLoss, 3)).getText()).toBe('1102');
+  expect(textField(copied(F.page1Rows[0].description, 4)).getText()).toBe('Original G disposition 12');
+  expect(textField(copied(F.page1TotalProceeds, 4)).getText()).toBe('400');
+  expect(textField(copied(F.page1TotalGainLoss, 4)).getText()).toBe('100');
   const savedPath = join(outputDir, 'digital-reporting-continuations.pdf');
   await writeFile(savedPath, bytes);
   const independent: { pageCount: number; fields: Record<string, string>; widgetNames: string[]; pageText: string[] } = JSON.parse(execFileSync(
