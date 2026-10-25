@@ -19,7 +19,7 @@ import { adjustmentFactErrors, householdFactErrors, isDeductibleAlimony } from "
 import { statePaymentFactErrors, sumAdditionalStateWithholding } from "./guided-state-facts";
 import { buildCareBenefitsInput, careBenefitsFactErrors, guidedCareBenefitSources, type CareBenefitSource } from "./guided-dependent-care-benefits";
 import { careFactErrors } from "./guided-credit-facts";
-import { energyFactErrors } from "./guided-energy-facts";
+import { buildActualEnergyInput, energyFactErrors } from "./guided-energy-facts";
 import { w2FactErrors } from "./guided-w2-facts";
 import { businessFactErrors, hasBusinessSourceData, isStartedNec, sumKnownBusinessAmounts, type BusinessSourceData } from "./guided-business-facts";
 import { isStartedRental, rentalFactErrors, rentalExpenseFields } from "./guided-rental-facts";
@@ -562,32 +562,8 @@ export function buildDependentCareInput(creditsData: CreditsData | undefined, fi
 
 export { buildActualEducationInput as buildEducationInput } from "./guided-education-facts";
 
-export function buildEnergyCreditsInput(creditsData: CreditsData | undefined) {
-  if (!creditsData) return undefined;
-  const { energy } = creditsData;
-  assertKnownFacts(energyFactErrors(energy));
-  const improvements = energy.qualifiedImprovements ?? [];
-  const properties = energy.cleanEnergyProperties ?? [];
-  const carryforward = hasEnteredAmount(energy.priorYearCarryforward);
-  if (!improvements.length && !properties.length && !carryforward) return undefined;
-  return {
-    ...(improvements.length ? { qualifiedImprovements: improvements.map((entry) => ({
-      category: entry.category as Exclude<typeof entry.category, "">,
-      qualifiedCost: toDecimalString(entry.qualifiedCost),
-      installationCompletedDate: entry.installationCompletedDate,
-      qualificationConfirmed: entry.qualificationConfirmed as boolean,
-      ...(entry.manufacturerQualifiedId?.trim() ? { manufacturerQualifiedId: entry.manufacturerQualifiedId.trim() } : {}),
-    })) } : {}),
-    ...(properties.length ? { cleanEnergyProperties: properties.map((entry) => ({
-      category: entry.category as Exclude<typeof entry.category, "">,
-      qualifiedCost: toDecimalString(entry.qualifiedCost),
-      installationCompletedDate: entry.installationCompletedDate,
-      qualificationConfirmed: entry.qualificationConfirmed as boolean,
-      ...(hasEnteredAmount(entry.fuelCellKilowattCapacity) ? { fuelCellKilowattCapacity: toDecimalString(entry.fuelCellKilowattCapacity) } : {}),
-    })) } : {}),
-    ...(typeof energy.residenceEligibilityConfirmed === "boolean" ? { residenceEligibilityConfirmed: energy.residenceEligibilityConfirmed } : {}),
-    ...(carryforward ? { priorYearCarryforward: toDecimalString(energy.priorYearCarryforward), carryforwardSourceTaxYear: Number(energy.carryforwardSourceTaxYear), carryforwardConfirmed: energy.carryforwardConfirmed as boolean } : {}),
-  };
+export function buildEnergyCreditsInput(creditsData: CreditsData | undefined, taxYear?: number | null, filingStatus?: FilingStatus | null) {
+  return buildActualEnergyInput(creditsData?.energy, taxYear, filingStatus);
 }
 
 // ── Household employment tax (Schedule H) converter ─────────────────────────
@@ -651,7 +627,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     assertKnownFacts(statePaymentFactErrors(stateReturnData, state.taxYear, segmentation.stateCode));
     assertKnownFacts(careBenefitsFactErrors(creditsData?.dependentCareBenefits, state.taxYear, segmentation.filingStatus, careBenefitSources));
     assertKnownFacts(careFactErrors(creditsData?.dependentCare, segmentation.filingStatus, { data: creditsData?.dependentCareBenefits, year: state.taxYear, sources: careBenefitSources }));
-    assertKnownFacts(energyFactErrors(creditsData?.energy, state.taxYear));
+    assertKnownFacts(energyFactErrors(creditsData?.energy, state.taxYear, segmentation.filingStatus));
     assertKnownFacts(vehicleFactErrors(creditsData?.vehicles, state.taxYear, segmentation.filingStatus));
     assertKnownFacts(adoptionFactErrors(creditsData?.adoption, state.taxYear, segmentation.filingStatus));
   } catch { return null; }
@@ -693,7 +669,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
   const dependentCare = buildDependentCareInput(creditsData, segmentation.filingStatus, state.taxYear, careBenefitSources);
   const dependentCareBenefits = buildCareBenefitsInput(creditsData?.dependentCareBenefits, state.taxYear, segmentation.filingStatus, careBenefitSources);
   const educationExpenses = buildActualEducationInput(creditsData, state.taxYear, segmentation.filingStatus, personalInfo);
-  const energyCredits = buildEnergyCreditsInput(creditsData);
+  const energyCredits = buildEnergyCreditsInput(creditsData, state.taxYear, segmentation.filingStatus);
   const scheduleH = buildScheduleHInput(otherTaxesData);
   const estimatedPayments = [
     ...buildEstimatedPaymentsInput(paymentData),

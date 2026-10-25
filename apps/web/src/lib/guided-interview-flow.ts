@@ -1037,7 +1037,26 @@ export const emptyEducationCreditData: EducationCreditData = {
   llcExpenses: "",
 };
 
+export interface EnergyHomeData {
+  id: string;
+  owner?: "primary" | "spouse" | "joint" | "";
+  address: { street: string; unit?: string; city: string; state: string; zip: string };
+  locatedInUnitedStates?: boolean | null; usedAsResidence?: boolean | null;
+  mainHomeFor?: "primary" | "spouse" | "both" | "neither" | "";
+  mainHomeStartDate?: string; mainHomeEndDate?: string;
+  ownedByTaxpayer?: boolean | null; jointOccupancyWithOtherReturn?: boolean | null;
+  allOccupantCostsComplete?: boolean | null;
+}
+export interface EnergyPropertySourceData {
+  sourceId?: string; homeId?: string;
+  totalCostPaidByAllOccupants?: string;
+  associationCostShare?: boolean | null;
+  associationAllocation?: { totalQualifiedCost: string; numerator: string; denominator: string; sourceReference: string };
+}
 export interface EnergyCreditData {
+  sourceFactsConfirmed?: boolean | null;
+  separateSpousalMainHomes?: boolean | null;
+  homes?: EnergyHomeData[];
   solarElectricCost: string;
   solarWaterHeatingCost: string;
   insulationCost: string;
@@ -1055,7 +1074,12 @@ export interface EnergyCreditData {
 }
 
 export type EnergyImprovementCategory = "insulation" | "exterior_door" | "windows_skylights" | "central_ac" | "gas_water_heater" | "furnace_boiler" | "electrical_panel" | "heat_pump" | "heat_pump_water_heater" | "biomass" | "home_energy_audit";
-export interface EnergyImprovementData {
+export interface EnergyImprovementData extends EnergyPropertySourceData {
+  originalUseByTaxpayer?: boolean | null; expectedFiveYearUse?: boolean | null;
+  newConstruction?: boolean | null; auditReportCertified?: boolean | null;
+  enabledPropertyIds?: string[]; panelLoadAmps?: string;
+  panelCodeComplianceConfirmed?: boolean | null; consecutiveYearElection?: boolean | null;
+  priorYearCreditClaimed?: boolean | null;
   category: EnergyImprovementCategory | "";
   qualifiedCost: string;
   installationCompletedDate: string;
@@ -1063,7 +1087,8 @@ export interface EnergyImprovementData {
   manufacturerQualifiedId?: string;
 }
 export type CleanEnergyCategory = "solar_electric" | "solar_water" | "fuel_cell" | "small_wind" | "geothermal" | "battery";
-export interface CleanEnergyPropertyData {
+export interface CleanEnergyPropertyData extends EnergyPropertySourceData {
+  batteryKilowattHours?: string;
   category: CleanEnergyCategory | "";
   qualifiedCost: string;
   installationCompletedDate: string;
@@ -1751,7 +1776,7 @@ export function validateSection(
         ...educationFactErrors(credits, state.taxYear, state.segmentation.filingStatus, getSectionData(state, "personal-info")),
         ...careBenefitsFactErrors(credits?.dependentCareBenefits, state.taxYear, state.segmentation.filingStatus, sources),
         ...careFactErrors(credits?.dependentCare, state.segmentation.filingStatus, { data: credits?.dependentCareBenefits, year: state.taxYear, sources }),
-        ...energyFactErrors(credits?.energy, state.taxYear),
+        ...energyFactErrors(credits?.energy, state.taxYear, state.segmentation.filingStatus),
         ...vehicleFactErrors(credits?.vehicles, state.taxYear, state.segmentation.filingStatus),
         ...adoptionFactErrors(credits?.adoption, state.taxYear, state.segmentation.filingStatus),
       });

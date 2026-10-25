@@ -1,3 +1,4 @@
+import { energySource, sourceCleanProperty } from "../../fixtures/energy-source";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { PDFDocument } from "pdf-lib";
 import { rm, writeFile } from "fs/promises";
@@ -322,9 +323,10 @@ function createGuidedFlowStateWithEnergyCredit(): GuidedFlowState {
           llcExpenses: "",
         },
         energy: {
+          ...energySource, qualifiedImprovements: [], carryforwardSourceTaxYear: "2024",
           solarElectricCost: "12000",
           residenceEligibilityConfirmed: true,
-          cleanEnergyProperties: [{ category: "solar_electric", qualifiedCost: "12000", installationCompletedDate: "2025-06-01", qualificationConfirmed: true }],
+          cleanEnergyProperties: [{ ...sourceCleanProperty, category: "solar_electric", qualifiedCost: "12000", installationCompletedDate: "2025-06-01", qualificationConfirmed: true }],
           solarWaterHeatingCost: "",
           insulationCost: "",
           exteriorDoorsWindowsCost: "",

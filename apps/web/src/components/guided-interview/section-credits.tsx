@@ -132,6 +132,7 @@ export function SectionCredits({
           />
 
           <EnergySourceDetails
+            filingStatus={filingStatus}
             taxYear={taxYear}
             data={current.energy}
             onChange={(next) => onDataChange({ ...current, energy: next })}
