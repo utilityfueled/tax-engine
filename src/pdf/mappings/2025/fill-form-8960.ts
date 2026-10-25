@@ -7,7 +7,6 @@ import { assertPdfExportAllowed } from "../../export-policy.js";
  */
 
 import { PDFDocument } from "pdf-lib";
-import Decimal from "decimal.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import {
@@ -101,11 +100,16 @@ export async function fillForm8960(
   setCurrencyField(form, F.line5d, f8960.netCapitalGain);
 
   // Line 8: Total investment income
-  setCurrencyField(form, F.line8, f8960.netInvestmentIncome);
+  setCurrencyField(form, F.line8, f8960.grossInvestmentIncome);
 
   // ── Part II: Investment Expenses ──
-  // Engine doesn't expose individual expense lines; expenses are netted into NII.
-  // Leave Part II blank (expenses already reflected in netInvestmentIncome).
+  const modificationAudit = f8960.lines.filter(line => line.form === "Form 8960" && line.line === "10");
+  if (modificationAudit.length !== 1 || !modificationAudit[0].value.eq(f8960.additionalModifications)) {
+    throw new Error("Form8960 additional modifications require a reconciled audit");
+  }
+  setCurrencyField(form, F.line9d, f8960.investmentExpenses);
+  setCurrencyField(form, F.line10, modificationAudit[0].value);
+  setCurrencyField(form, F.line11, f8960.investmentExpenses.plus(f8960.additionalModifications));
 
   // ── Part III: Tax Computation ──
   // Line 12: Net investment income

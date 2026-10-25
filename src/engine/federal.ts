@@ -480,9 +480,6 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
 
   const form1099OID = calculateForm1099OID(input.form1099OID ?? [], year);
   audit.merge(form1099OID.lines);
-  if (form1099OID.deflationOrdinaryLoss.gt(0)) {
-    throw new Error("TIPS excess ordinary loss requires a supported return-routing worksheet; source loss and carry are preserved by the OID calculator");
-  }
   // Line2a includes actual source-classified exempt OID and stated interest.
   const taxExemptInterest = sum(
     intAgg.taxExemptInterest,
@@ -3473,6 +3470,9 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
       // This prevents cross-category netting for NII purposes.
       netCapitalGain: zeroFloor(schedD.netShortTerm).plus(zeroFloor(schedD.netLongTerm)),
       otherInvestmentIncome: netAllowedPassive,
+      // Reg1.1411-4(f)(5)/(7): only the actual itemized allowance, never the source carry.
+      additionalModifications: deductionUsed === "itemized"
+        ? min(schedA.oidOrdinaryLossDeduction, itemizedDeductions) : d("0"),
       magi: agi,
     },
     filingStatus,

@@ -262,3 +262,13 @@ lines:
     description: "Audited other-itemized review mapping"
     formula: "Copy unique reconciled line16 audit and actual deduction descriptions; no omitted or recomputed premium deduction."
     testRef: "tests/engine/federal-oid-source-integration.test.ts::maps the audited excess premium into the review form line16"
+
+  - line: "16-tips-ordinary-loss"
+    description: "Allowable inflation-indexed debt ordinary loss"
+    formula: "Add actual source-calculated ordinary loss once to other itemized deductions; do not reduce gross interest or AGI again and do not deduct the separate carry."
+    irsRef: "https://www.irs.gov/instructions/i1040sca (Other Itemized Deductions, line16)"
+    testRef: "tests/engine/federal-oid-source-integration.test.ts::routes allowable TIPS ordinary loss to itemized deductions and preserves its carry"
+  - line: "16-tips-review-map"
+    description: "Audited TIPS deduction in reference Schedule A"
+    formula: "Copy unique reconciled line16 and identify actual TIPS ordinary loss in the description."
+    testRef: "tests/engine/federal-oid-source-integration.test.ts::maps actual TIPS loss and NIIT modification to the review forms"

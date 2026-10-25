@@ -27,11 +27,13 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.35",
+    ruleVersion: "2025.36",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/pub/irs-drop/rp-24-40.pdf", section: "Section2.28 actual2025 qualified long-term-care premium limits480/900/1800/4810/6020; source correction8f7c622", revision: "Final2025 Form7206 and RevenueProcedure2024-40", retrievedAt: "2026-10-25" },
+      { url: "https://www.irs.gov/instructions/i1040sca", section: "Final line16 TIPS ordinary loss with separate source carry; NIIT line10 under Regulations1.1411-4(f)(5)/(7) limited to actual itemized allowance", revision: "Final2025 source and enacted2026 section68; draft2026 printed identity is unqualified", retrievedAt: "2026-10-25" },
       { url: "https://uscode.house.gov/us/usc/119-118/t26/s62/", section: "Enacted2026 early-childhood educator eligibility; separate section67 itemized source costs after Schedule1", revision: "PL119-111 divisionB1 and PL119-21 section70110; actual funding interpretation and final2026 forms remain independently unqualified", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/publications/p970", section: "Chapter4 Worksheet4-1: actual borrower/loan source coordination, final SSA/bond/passive income and foreign/housing/possession addbacks; linked529 excluded earnings once", revision: "Final2025 publication and indexed2026 source calculation; coupled NOL source worksheet and independent qualification remain pending", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/publications/p936", section: "Actual Table1 debt categories/average sources/three-place ratio, point qualification and prior-year tax-benefit recoveries; canonical ScheduleA8a-10", revision: "Final2025 publication and enacted permanent debt limits; final2026 filing qualification remains closed", retrievedAt: "2026-10-25" },
@@ -77,11 +79,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.31-law-integration-draft",
+    ruleVersion: "2026.32-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i1040sca", section: "Final line16 TIPS ordinary loss with separate source carry; NIIT line10 under Regulations1.1411-4(f)(5)/(7) limited to actual itemized allowance", revision: "Final2025 source and enacted2026 section68; draft2026 printed identity is unqualified", retrievedAt: "2026-10-25" },
       { url: "https://uscode.house.gov/us/usc/119-118/t26/s62/", section: "Enacted2026 early-childhood educator eligibility; separate section67 itemized source costs after Schedule1", revision: "PL119-111 divisionB1 and PL119-21 section70110; actual funding interpretation and final2026 forms remain independently unqualified", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/publications/p970", section: "Chapter4 Worksheet4-1: actual borrower/loan source coordination, final SSA/bond/passive income and foreign/housing/possession addbacks; linked529 excluded earnings once", revision: "Final2025 publication and indexed2026 source calculation; coupled NOL source worksheet and independent qualification remain pending", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/publications/p936", section: "Actual Table1 debt categories/average sources/three-place ratio, point qualification and prior-year tax-benefit recoveries; canonical ScheduleA8a-10", revision: "Final2025 publication and enacted permanent debt limits; final2026 filing qualification remains closed", retrievedAt: "2026-10-25" },

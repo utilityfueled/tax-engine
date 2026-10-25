@@ -89,3 +89,13 @@ lines:
       - "NII is $0: $0 regardless of MAGI"
       - "Uses lesser of NII and MAGI excess"
     testRef: "tests/engine/forms/form-8960.test.ts::Form 8960 Line 17 - tax on investment income"
+
+  - line: "10-tips"
+    description: "Properly allocable ordinary loss on inflation-indexed debt"
+    formula: "When itemizing, deduct min(actual allowable ordinary loss, final allowed itemized deductions) under Regulations1.1411-4(f)(5)/(7); otherwise zero. Do not deduct the source carry or offset other obligations twice."
+    irsRef: "https://www.ecfr.gov/current/title-26/section-1.1411-4; Form8960 instructions line10"
+    testRef: "tests/engine/federal-oid-source-integration.test.ts::deducts actual TIPS loss for NIIT only when itemized"
+  - line: "10-tips-section68"
+    description: "Current-year section68 deduction coordination"
+    formula: "Retain source loss separately and cap the NIIT itemized deduction at the return's actual post-section68 itemized allowance; no proportional reduction is invented."
+    testRef: "tests/engine/federal-tips-2026.test.ts::limits the TIPS NIIT deduction to actual post-section68 itemized deductions"

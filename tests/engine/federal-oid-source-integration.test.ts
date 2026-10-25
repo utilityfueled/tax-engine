@@ -1,6 +1,7 @@
 // Specs: federal/schedule-b.yaml, schedule-a.yaml, form-6251.yaml, form-1099-oid.yaml.
 import { PDFDocument } from 'pdf-lib';
 import { fillForm6251,FORM_6251_FIELDS } from '@/pdf/fill-form-6251.js';
+import { fillForm8960,FORM_8960_FIELDS } from '@/pdf/fill-form-8960.js';
 import { fillScheduleA,SCHEDULE_A_FIELDS } from '@/pdf/fill-schedule-a.js';
 import { describe,it,expect } from 'vitest';
 import Decimal from 'decimal.js';
@@ -45,9 +46,47 @@ describe('OID actual source return integration',()=>{
   expect(otherDeductionsAudit[0]?.value.toString()).toBe('55');
   expect(sa.totalItemized.toString()).toBe('55');
  });
- it('refuses an unintegrated excess TIPS ordinary loss',()=>{
+ it('routes allowable TIPS ordinary loss to itemized deductions and preserves its carry',()=>{
   const input=fixture([source({obligationType:'treasury',inflationIndexed:true,treasuryOID:'-200',tipsDeflationFacts:{allInstrumentInterestReportedHere:true,priorInterestInclusions:'100',priorOrdinaryLosses:'0',priorCarryforward:'0'}})]);
-  expect(()=>calculateFederalTax(input)).toThrow(/TIPS.*ordinary loss|ordinary loss.*TIPS/i);
+  input.scheduleA={ additionalStateLocalIncomeTaxes:'16000' };
+  const result=calculateFederalTax(input);
+  expect(result.form1099OID?.deflationOrdinaryLoss.toString()).toBe('100');
+  expect(result.form1099OID?.deflationCarryforward.toString()).toBe('100');
+  expect(result.scheduleA?.oidOrdinaryLossDeduction.toString()).toBe('100');
+  expect(result.scheduleA?.otherItemizedDeductions.toString()).toBe('100');
+  expect(result.agi.toString()).toBe('50000');
+  expect(result.taxableIncome.toString()).toBe('33900');
+  expect(audit(result,'1040','2b')).toBe('0');
+ });
+ it('deducts actual TIPS loss for NIIT only when itemized',()=>{
+  const input=fixture([source({obligationType:'treasury',inflationIndexed:true,treasuryOID:'-2000',tipsDeflationFacts:{allInstrumentInterestReportedHere:true,priorInterestInclusions:'1000',priorOrdinaryLosses:'0',priorCarryforward:'0'}}),source({sourceId:'other',originalIssueDiscount:'10000'})]);
+  input.w2s[0]={...input.w2s[0],wages:'200000',federalWithheld:'60000'};
+  const standard=calculateFederalTax(input);
+  expect(standard.deductionUsed).toBe('standard');
+  expect(standard.form8960.netInvestmentIncome.toString()).toBe('10000');
+  expect(standard.form8960.niitTax.toString()).toBe('380');
+  input.scheduleA={ additionalStateLocalIncomeTaxes:'16000' };
+  const itemized=calculateFederalTax(input);
+  expect(itemized.deductionUsed).toBe('itemized');
+  expect(itemized.agi.toString()).toBe('210000');
+  expect(itemized.form8960.netInvestmentIncome.toString()).toBe('9000');
+  expect(itemized.form8960.niitTax.toString()).toBe('342');
+  expect(audit(itemized,'Form 8960','10')).toBe('1000');
+  expect(itemized.form1099OID?.deflationCarryforward.toString()).toBe('1000');
+ });
+ it('maps actual TIPS loss and NIIT modification to the review forms',async()=>{
+  const input=fixture([source({obligationType:'treasury',inflationIndexed:true,treasuryOID:'-2000',tipsDeflationFacts:{allInstrumentInterestReportedHere:true,priorInterestInclusions:'1000',priorOrdinaryLosses:'0',priorCarryforward:'0'}}),source({sourceId:'other',originalIssueDiscount:'10000'})]);
+  input.w2s[0]={...input.w2s[0],wages:'200000',federalWithheld:'60000'};
+  input.scheduleA={ additionalStateLocalIncomeTaxes:'16000' };
+  const result=calculateFederalTax(input);
+  const sa=await PDFDocument.load(await(await fillScheduleA(input,result,'forms/blank/2025/f1040sa.pdf')).save());
+  expect(sa.getForm().getTextField(SCHEDULE_A_FIELDS.line16).getText()).toBe('1000');
+  expect(sa.getForm().getTextField(SCHEDULE_A_FIELDS.line16Desc).getText()).toBe('TIPS ordinary loss');
+  const niit=await PDFDocument.load(await(await fillForm8960(input,result,'forms/blank/2025/f8960.pdf')).save());
+  expect(niit.getForm().getTextField(FORM_8960_FIELDS.line8).getText()).toBe('10000');
+  expect(niit.getForm().getTextField(FORM_8960_FIELDS.line10).getText()).toBe('1000');
+  expect(niit.getForm().getTextField(FORM_8960_FIELDS.line11).getText()).toBe('1000');
+  expect(niit.getForm().getTextField(FORM_8960_FIELDS.line12).getText()).toBe('9000');
  });
  it('maps the audited excess premium into the review form line16',async()=>{
   const input=fixture([source({otherPeriodicInterest:'100',bondPremium:'150',bondPremiumElection:true,bondPremiumWorksheet:{priorInterestInclusions:'20',priorPremiumDeductions:'5',priorCarryforward:'0',disposedDuringYear:false,periods:[{endDate:'2025-12-31',qualifiedStatedInterest:'100',amortization:'150'}]}})]);

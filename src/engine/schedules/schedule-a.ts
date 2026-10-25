@@ -75,6 +75,7 @@ export interface ScheduleAResult {
   nonCashCharitable: Decimal; // Line 13
   gamblingLossDeduction: Decimal; // Component of line16
   bondPremiumDeduction: Decimal; // Actual allowable section171 excess
+  oidOrdinaryLossDeduction: Decimal; // Actual allowable section1.1275-7(f)(1) ordinary loss
   estateTaxDeduction: Decimal; // Actual K1 Form1041 Box10 section691(c)
   educatorExpenseDeduction: Decimal; // 2026 section67 actual costs not deducted above the line
   otherItemizedDeductions: Decimal; // Line16
@@ -525,7 +526,13 @@ export function calculateScheduleA(
   audit.record("Sched A", "28", "Gambling losses (limited to winnings)", gamblingLossDeduction,
     `min(${input.taxpayer.taxYear === 2026 ? "90%" : "100%"} × (losses ${rawGamblingLosses} + expenses ${gamblingExpenses}), winnings ${gamblingWinnings})`);
 
-  const bondPremiumDeduction = calculateForm1099OID(input.form1099OID ?? [], input.taxpayer.taxYear).bondPremiumDeduction;
+  const oidSource = calculateForm1099OID(input.form1099OID ?? [], input.taxpayer.taxYear);
+  const bondPremiumDeduction = oidSource.bondPremiumDeduction;
+  const oidOrdinaryLossDeduction = oidSource.deflationOrdinaryLoss;
+  audit.record("OID Deduction Worksheet", "ordinary-loss", "Allowable TIPS ordinary loss", oidOrdinaryLossDeduction,
+    "Actual source loss after same-instrument interest offset and prior-inclusion limit; carry excluded");
+  if (input.taxpayer.taxYear >= 2026) audit.record("Sched A", "17g", "Ordinary loss on inflation-indexed debt", oidOrdinaryLossDeduction,
+    "Draft2026 printed identity; final2025 line16 source rule, not a qualified final mapping");
   const estateTaxAmounts = (input.scheduleK1Form1041 ?? []).map(source => d(source.estateTaxDeduction));
   if (estateTaxAmounts.some(amount => !amount.isFinite() || amount.lt(0))) throw new Error("Estate-tax deductions must be finite and nonnegative");
   const estateTaxDeduction = sum(...estateTaxAmounts);
@@ -538,9 +545,9 @@ export function calculateScheduleA(
     "2026 section67 eligible unreimbursed expenses less actual above-line deduction; historical2025 zero", educatorWorksheet.inputs);
   if (input.taxpayer.taxYear >= 2026) audit.record("Sched A", "17k", "Deductible educator expenses not reported on Schedule1", educatorExpenseDeduction,
     "Draft2026 printed identity; actual section67 source worksheet, not a qualified final mapping");
-  const otherItemizedDeductions = sum(gamblingLossDeduction, bondPremiumDeduction, estateTaxDeduction, educatorExpenseDeduction);
+  const otherItemizedDeductions = sum(gamblingLossDeduction, bondPremiumDeduction, oidOrdinaryLossDeduction, estateTaxDeduction, educatorExpenseDeduction);
   audit.record("Sched A", "16", "Other itemized deductions", otherItemizedDeductions,
-    "Allowed wagering deduction + allowable excess bond premium + K1 estate tax on IRD + actual educator excess; unused premium carries separately");
+    "Allowed wagering deduction + allowable excess bond premium + TIPS ordinary loss + K1 estate tax on IRD + actual educator excess; unused source carries excluded");
 
   // ── Total (Line 17) ───────────────────────────────────
   const totalItemized = sum(
@@ -572,6 +579,7 @@ export function calculateScheduleA(
     nonCashCharitable,
     gamblingLossDeduction,
     bondPremiumDeduction,
+    oidOrdinaryLossDeduction,
     estateTaxDeduction,
     educatorExpenseDeduction,
     otherItemizedDeductions,

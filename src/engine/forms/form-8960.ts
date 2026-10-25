@@ -18,6 +18,7 @@ export interface Form8960Input {
   netCapitalGain: Decimal; // Line 5a (net gain, zero if loss)
   otherInvestmentIncome?: Decimal; // Line 7 (rents, royalties, etc.)
   investmentExpenses?: Decimal; // Line 9 deductions
+  additionalModifications?: Decimal; // Line10 properly allocable deductions
   magi: Decimal; // Modified AGI
 }
 
@@ -25,7 +26,10 @@ export interface Form8960Result {
   taxableInterest: Decimal; // Line 1
   dividends: Decimal; // Line 4a
   netCapitalGain: Decimal; // Line 5a
-  netInvestmentIncome: Decimal; // Line 8
+  grossInvestmentIncome: Decimal; // Line8 before PartII
+  investmentExpenses: Decimal; // Actual supplied line9 deductions
+  additionalModifications: Decimal; // Line10
+  netInvestmentIncome: Decimal; // Line12
   threshold: Decimal; // Line 11
   magiExcess: Decimal; // Line 13
   taxableBase: Decimal; // Line 14
@@ -61,9 +65,14 @@ export function calculateForm8960(
     input.netCapitalGain,
     input.otherInvestmentIncome ?? new Decimal(0)
   );
-  const netInvestmentIncome = zeroFloor(
-    grossInvestmentIncome.minus(input.investmentExpenses ?? new Decimal(0))
-  );
+  const investmentExpenses = input.investmentExpenses ?? new Decimal(0);
+  const additionalModifications = input.additionalModifications ?? new Decimal(0);
+  if (![investmentExpenses, additionalModifications].every(value => value.isFinite() && value.gte(0))) {
+    throw new Error("NIIT deduction amounts must be finite and nonnegative");
+  }
+  const netInvestmentIncome = zeroFloor(grossInvestmentIncome.minus(investmentExpenses).minus(additionalModifications));
+  audit.record("Form 8960", "10", "Additional modifications", additionalModifications,
+    "Actual properly allocable deductions not included on lines1-9");
   audit.record("Form 8960", "8", "Net investment income", netInvestmentIncome,
     "Gross investment income - expenses");
 
@@ -90,6 +99,9 @@ export function calculateForm8960(
     taxableInterest: input.taxableInterest,
     dividends: input.ordinaryDividends,
     netCapitalGain: input.netCapitalGain,
+    grossInvestmentIncome,
+    investmentExpenses,
+    additionalModifications,
     netInvestmentIncome,
     threshold,
     magiExcess,
