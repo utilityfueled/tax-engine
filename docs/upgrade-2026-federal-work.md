@@ -677,3 +677,16 @@ Form2555 historical integration test file with its coherent package.
 Remaining related work is explicit: IRS Tax Table use below $100,000, special
 capital-gain worksheet correctness, Social Security and savings-bond exclusion
 addbacks, foreign self-employment/QBI coordination, and independent qualification.
+
+### Separately reported Treasury interest — 2026-10-25
+
+Refreshed official IRS i1099int: Box 3 Treasury/savings-bond interest is excluded
+from Box 1. Schedule B now includes both source amounts exactly once before the
+separate Form 8815 exclusion, and preserves both amounts in its payer audit.
+A red-first direct test proves 100 + 2,000 = 2,100 interest and a valid 1,000
+exclusion leaves 1,100; the federal return independently reports 87,100 AGI on
+85,000 wages. Historical fixtures now represent actual disjoint Boxes 1 and 3
+while retaining their original exclusion-boundary assertions.136 focused
+Schedule B/OID tests, root types, all 3,257 spec references and scoped lint pass
+(zero errors). Scoped diff/whitespace reviewed. Pennsylvania integration is a
+separate package owned by the parent; all qualification gates remain in place.

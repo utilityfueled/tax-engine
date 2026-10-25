@@ -6,6 +6,7 @@
 import { describe, it, expect } from "vitest";
 import Decimal from "decimal.js";
 import { calculateScheduleB } from "@/engine/schedules/schedule-b.js";
+import { calculateFederalTax } from "@/engine/federal.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import { simpleW2Fixture, complexMFJFixture } from "../../fixtures/simple-w2.js";
 
@@ -40,6 +41,25 @@ function makeDividendFixture(
 // ═══════════════════════════════════════════════════════════
 
 describe("Schedule B Part I - Interest", () => {
+  it("includes separate Box 3 interest before the savings bond exclusion", () => {
+    // Spec: spec/federal/schedule-b.yaml#box3-source. IRS i1099int excludes
+    // Treasury Box 3 from Box 1; both are federal income before Form 8815.
+    const input = makeInterestFixture([
+      { payer: "Treasury", interestIncome: "100", federalWithheld: "0", earlyWithdrawalPenalty: "0", usSavingsBondInterest: "2000", taxExemptInterest: "0" },
+    ]);
+    const result = calculateScheduleB(input, d("1000"));
+    expect(result.totalInterest.toString()).toBe("2100");
+    expect(result.taxableInterest.toString()).toBe("1100");
+    expect(result.interestPayers[0]?.amount.toString()).toBe("2100");
+    const entry = result.lines.find((line) => line.form === "Sched B" && line.line === "1");
+    expect(entry?.inputs?.["1099-INT Box 1"]?.toString()).toBe("100");
+    expect(entry?.inputs?.["1099-INT Box 3"]?.toString()).toBe("2000");
+    expect(input.form1099Int[0]?.interestIncome).toBe("100");
+    expect(input.form1099Int[0]?.usSavingsBondInterest).toBe("2000");
+    const federal = calculateFederalTax(input);
+    expect(federal.totalInterest.toString()).toBe("2100");
+    expect(federal.agi.toString()).toBe("87100");
+  });
   it("Schedule B Line 1 - list interest payers", () => {
     const input = makeInterestFixture([
       { payer: "Bank A", interestIncome: "500", federalWithheld: "0", earlyWithdrawalPenalty: "0", usSavingsBondInterest: "0", taxExemptInterest: "0" },
@@ -94,9 +114,9 @@ describe("Schedule B Part I - Interest", () => {
 
   it("Schedule B Line 3 - exclusion override reduces taxable interest", () => {
     const input = makeInterestFixture([
-      { payer: "Treasury", interestIncome: "3000", federalWithheld: "0", earlyWithdrawalPenalty: "0", usSavingsBondInterest: "2000", taxExemptInterest: "0" },
+      { payer: "Treasury", interestIncome: "1000", federalWithheld: "0", earlyWithdrawalPenalty: "0", usSavingsBondInterest: "2000", taxExemptInterest: "0" },
     ]);
-    // Pass exclusion from Form 8815
+    // Actual Boxes 1 + 3 total $3,000; pass exclusion from Form 8815.
     const result = calculateScheduleB(input, d(1500));
     expect(result.savingsBondExclusion.toNumber()).toBe(1500);
     expect(result.taxableInterest.toNumber()).toBe(1500); // 3000 - 1500
@@ -648,7 +668,7 @@ describe("Schedule B - zero interest and dividends produce zero totals", () => {
 describe("Schedule B - savings bond exclusion edge cases", () => {
   it("exclusion greater than total interest floors at zero (no negative taxable interest)", () => {
     const input = makeInterestFixture([
-      { payer: "Treasury", interestIncome: "500", federalWithheld: "0", earlyWithdrawalPenalty: "0", usSavingsBondInterest: "500", taxExemptInterest: "0" },
+      { payer: "Treasury", interestIncome: "0", federalWithheld: "0", earlyWithdrawalPenalty: "0", usSavingsBondInterest: "500", taxExemptInterest: "0" },
     ]);
     // Exclusion $1000 > total interest $500 → taxableInterest = max(0, 500-1000) = 0
     const result = calculateScheduleB(input, d(1000));
@@ -658,7 +678,7 @@ describe("Schedule B - savings bond exclusion edge cases", () => {
 
   it("partial exclusion reduces taxable interest correctly", () => {
     const input = makeInterestFixture([
-      { payer: "Treasury", interestIncome: "2000", federalWithheld: "0", earlyWithdrawalPenalty: "0", usSavingsBondInterest: "1500", taxExemptInterest: "0" },
+      { payer: "Treasury", interestIncome: "500", federalWithheld: "0", earlyWithdrawalPenalty: "0", usSavingsBondInterest: "1500", taxExemptInterest: "0" },
       { payer: "Bank", interestIncome: "1000", federalWithheld: "0", earlyWithdrawalPenalty: "0", usSavingsBondInterest: "0", taxExemptInterest: "0" },
     ]);
     const result = calculateScheduleB(input, d(800));
@@ -1014,7 +1034,7 @@ describe("Schedule B - five 1099-INT payers aggregate to correct Line 2 total", 
 describe("Schedule B - savings bond exclusion exactly equals total interest yields zero taxable interest", () => {
   it("Form 8815 exclusion matching total interest produces taxableInterest of zero using Decimal precision", () => {
     const input = makeInterestFixture([
-      { payer: "Treasury Direct", interestIncome: "1234.56", federalWithheld: "0", earlyWithdrawalPenalty: "0", usSavingsBondInterest: "1234.56", taxExemptInterest: "0" },
+      { payer: "Treasury Direct", interestIncome: "0", federalWithheld: "0", earlyWithdrawalPenalty: "0", usSavingsBondInterest: "1234.56", taxExemptInterest: "0" },
     ]);
     const result = calculateScheduleB(input, d("1234.56"));
     expect(result.totalInterest.toNumber()).toBe(1234.56);

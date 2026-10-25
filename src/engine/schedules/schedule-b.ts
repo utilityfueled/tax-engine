@@ -53,12 +53,18 @@ export function calculateScheduleB(input: TaxYearInput, savingsBondExclusionOver
 
   // 1099-INT sources
   for (const form of input.form1099Int) {
-    const amount = d(form.interestIncome);
+    const box1Interest = d(form.interestIncome);
+    const box3Interest = d(form.usSavingsBondInterest);
+    const amount = box1Interest.plus(box3Interest);
     interestPayers.push({
       name: form.payer,
       amount,
     });
-    audit.record("Sched B", "1", `Interest payer - ${form.payer}`, amount, "1099-INT Box 1");
+    audit.record("Sched B", "1", `Interest payer - ${form.payer}`, amount,
+      "1099-INT Box 1 + separately reported Box 3", {
+        "1099-INT Box 1": box1Interest,
+        "1099-INT Box 3": box3Interest,
+      });
   }
 
   // K-1 interest income (Box 5 — partnerships/S-corps)
