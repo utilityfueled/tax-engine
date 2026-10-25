@@ -2,7 +2,7 @@ import { energySource, sourceImprovement, sourceCleanProperty } from "../fixture
 import { completeCareSource } from "./care-source-fixture";
 import { completeRentalSource, completeNecSource, completeBusinessSection, completeBusinessExpenses, completeMortgageSource, completeRetirementSource, completeSocialSecuritySource, completeSocialSecurityTreatment, completeUnemploymentSource } from "./complete-facts";
 import { completeBrokerageSource, completeDividendSource, completeInterestSource, completeTransactionSource } from "./complete-facts";
-import { completeW2Entry, startCompleteInterview as startInterview, completePersonalInfo, completeDependent, completeAocEligibility, completeEducationClaimant, completeHouseholdEmployee } from "./complete-facts";
+import { completeHsaSources, completeW2Entry, startCompleteInterview as startInterview, completePersonalInfo, completeDependent, completeAocEligibility, completeEducationClaimant, completeHouseholdEmployee } from "./complete-facts";
 import { describe, it, expect } from "vitest";
 import {
   buildTaxInputFromGuidedData,
@@ -973,13 +973,15 @@ describe("computeGuidedPreview", () => {
       necEntries: [{ ...completeNecSource, nonemployeeCompensation: "80000" }],
       expenses: completeBusinessExpenses,
     });
-    // First compute without adjustments
+    // Actual zero HSA contributions establish the comparison baseline.
+    state = updateSectionData(state, "adjustments", { ...emptyAdjustmentData, hsaAccounts: [{ ...completeHsaSources, contributionsMade: "0" }] });
     const previewWithout = computeGuidedPreview(state);
 
     // Now add HSA deduction
     state = updateSectionData(state, "adjustments", {
       ...emptyAdjustmentData,
       hsaDeduction: "3600",
+      hsaAccounts: [{ ...completeHsaSources, contributionsMade: "3600" }],
     });
     const previewWith = computeGuidedPreview(state);
 
@@ -1132,10 +1134,11 @@ describe("buildAdjustmentsInput", () => {
     const result = buildAdjustmentsInput({
       ...emptyAdjustmentData,
       hsaDeduction: "3600",
+      hsaAccounts: [{ ...completeHsaSources, contributionsMade: "3600" }],
       studentLoanInterest: "2500",
     });
     expect(result).not.toBeUndefined();
-    expect(result!.hsaDeduction).toBe("3600");
+    expect(result!.hsaDeduction).toBe("0");
     expect(result!.studentLoanInterest).toBe("2500");
     expect(result!.selfEmployedHealthInsurance).toBe("0");
     expect(result!.primaryEducatorExpenses).toBe("0");
@@ -1240,6 +1243,7 @@ describe("buildTaxInputFromGuidedData with deductions/adjustments/payments", () 
     state = updateSectionData(state, "adjustments", {
       ...emptyAdjustmentData,
       hsaDeduction: "3600",
+      hsaAccounts: [{ ...completeHsaSources, contributionsMade: "3600" }],
     });
     state = updateSectionData(state, "payments", {
       estimatedPayments: [{ date: "2025-04-15", amount: "5000" }],
@@ -1247,7 +1251,8 @@ describe("buildTaxInputFromGuidedData with deductions/adjustments/payments", () 
     });
     const input = buildTaxInputFromGuidedData(state);
     expect(input!.adjustments).toBeDefined();
-    expect(input!.adjustments!.hsaDeduction).toBe("3600");
+    expect(input!.adjustments!.hsaDeduction ?? "0").toBe("0");
+    expect(input!.form8889ByOwner!.primary!.contributionsMade).toBe("3600");
     expect(input!.adjustments!.estimatedTaxPayments).toHaveLength(1);
     expect(input!.adjustments!.estimatedTaxPayments[0].amount).toBe("5000");
   });

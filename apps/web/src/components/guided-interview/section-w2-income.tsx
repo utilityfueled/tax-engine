@@ -38,6 +38,7 @@ const confirmableFields: W2SuggestedField[] = [
   "socialSecurityWages",
   "socialSecurityTips",
   "box10DependentCareBenefits",
+  "box12CodeW",
   "socialSecurityWithheld",
   "medicareWages",
   "medicareWithheld",
@@ -69,6 +70,7 @@ function applySuggestionToEntry(
     socialSecurityWages: toCurrencyInput(suggestion.summary.socialSecurityWages),
     socialSecurityTips: toCurrencyInput(suggestion.summary.socialSecurityTips),
     box10DependentCareBenefits: toCurrencyInput(suggestion.summary.box10DependentCareBenefits),
+    box12CodeW: toCurrencyInput(suggestion.summary.box12CodeW),
     socialSecurityWithheld: toCurrencyInput(suggestion.summary.socialSecurityWithheld),
     medicareWages: toCurrencyInput(suggestion.summary.medicareWages),
     medicareWithheld: toCurrencyInput(suggestion.summary.medicareWithheld),
@@ -615,6 +617,9 @@ function W2Card({
             value={entry.box10DependentCareBenefits ?? ""} onChange={value => onUpdate("box10DependentCareBenefits", value)}
             fieldClassName={entry.aiSuggestedFields?.box10DependentCareBenefits?.status === "pending-confirmation" ? "guided-field-ai-pending" : entry.aiSuggestedFields?.box10DependentCareBenefits?.status === "confirmed" ? "guided-field-ai-confirmed" : undefined}
             footer={<SuggestedFieldNotice suggestion={entry.aiSuggestedFields?.box10DependentCareBenefits} availableSuggestions={availableSuggestions} onConfirm={() => onConfirmField("box10DependentCareBenefits")} />} />
+          <CurrencyField label="Box 12 code W — Employer HSA contributions" hint="Include cafeteria-plan contributions. Enter actual zero if no code W is reported; HSA employer worksheet reconciliation requires this source amount." value={entry.box12CodeW ?? ""} onChange={value => onUpdate("box12CodeW", value)}
+            fieldClassName={entry.aiSuggestedFields?.box12CodeW?.status === "pending-confirmation" ? "guided-field-ai-pending" : entry.aiSuggestedFields?.box12CodeW?.status === "confirmed" ? "guided-field-ai-confirmed" : undefined}
+            footer={<SuggestedFieldNotice suggestion={entry.aiSuggestedFields?.box12CodeW} availableSuggestions={availableSuggestions} onConfirm={() => onConfirmField("box12CodeW")} />} />
           <div className="guided-form-grid">
             <label className="guided-field">
               <span className="guided-field-label">State reporting on this W-2</span>

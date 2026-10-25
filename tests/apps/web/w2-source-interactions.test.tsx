@@ -23,7 +23,7 @@ async function upload(files: File[]) { const input = container.querySelector<HTM
 function workspaceWithSource(): ReturnWorkspaceRecord {
   const workspace = createWorkspaceRecord("source");
   workspace.documents = [{ id: "source", name: "actual-wages.pdf", label: "Actual Employer W-2", notes: "Synthetic actual-source test", taxYear: 2025, kind: "w2", coverage: "supported", size: 1, uploadedAt: "2026-01-01T00:00:00Z", matchedFixtureId: null, seededFactIds: ["wages"] }];
-  workspace.structuredFacts = [{ id: "wages", factId: "wages", label: "Wages", kind: "document-detected", sourceType: "upload", confidence: "high", sourceDocumentIds: ["source"], value: "Source values", updatedAt: workspace.updatedAt, questionId: null, machineValue: { entryKind: "w2-summary", employerName: "Actual Employer", employerEin: "12-3456789", accountHolder: "spouse", wages: "1000", federalWithheld: "0", socialSecurityWages: "1000", socialSecurityTips: "0", box10DependentCareBenefits: "0", socialSecurityWithheld: "62", medicareWages: "1000", medicareWithheld: "14.50", stateTaxReporting: "single", state: "NY", stateWages: "1000", stateWithheld: "0" } }];
+  workspace.structuredFacts = [{ id: "wages", factId: "wages", label: "Wages", kind: "document-detected", sourceType: "upload", confidence: "high", sourceDocumentIds: ["source"], value: "Source values", updatedAt: workspace.updatedAt, questionId: null, machineValue: { entryKind: "w2-summary", employerName: "Actual Employer", employerEin: "12-3456789", accountHolder: "spouse", wages: "1000", federalWithheld: "0", socialSecurityWages: "1000", socialSecurityTips: "0", box10DependentCareBenefits: "0", box12CodeW: "100.20", socialSecurityWithheld: "62", medicareWages: "1000", medicareWithheld: "14.50", stateTaxReporting: "single", state: "NY", stateWages: "1000", stateWithheld: "0" } }];
   return workspace;
 }
 beforeEach(() => { vi.clearAllMocks(); vi.mocked(hasCachedWorkspaceDocumentFile).mockResolvedValue(false); (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true; container = document.createElement("div"); document.body.appendChild(container); root = createRoot(container); });
@@ -55,6 +55,8 @@ describe("W-2 source entry interactions", () => {
     await act(async () => root.render(<Harness />)); await click("Review uploaded W-2 suggestions"); await click("Insert detected values");
     expect(latest[0].accountHolder).toBe("spouse"); expect(latest[0].aiSuggestedFields?.accountHolder?.status).toBe("pending-confirmation");
     expect(latest[0].aiSuggestedFields?.socialSecurityTips?.status).toBe("pending-confirmation");
+    expect(latest[0].box12CodeW).toBe("100.20");
+    expect(latest[0].aiSuggestedFields?.box12CodeW?.status).toBe("pending-confirmation");
     expect(latest[0].box10DependentCareBenefits).toBe("0");
     expect(latest[0].aiSuggestedFields?.box10DependentCareBenefits?.status).toBe("pending-confirmation");
     expect(latest[0].aiSuggestedFields?.state?.status).toBe("pending-confirmation"); expect(buildW2Inputs(latest)).toEqual([]);
@@ -64,13 +66,21 @@ describe("W-2 source entry interactions", () => {
     const benefitField = control("Box 10 — Dependent-care benefits").closest("label")!;
     await act(async () => benefitField.querySelector("button")!.click());
     expect(latest[0].aiSuggestedFields?.box10DependentCareBenefits?.status).toBe("confirmed");
+    const hsaField = control("Box 12 code W — Employer HSA contributions").closest("label")!;
+    await act(async () => hsaField.querySelector("button")!.click());
+    expect(latest[0].aiSuggestedFields?.box12CodeW?.status).toBe("confirmed");
+    await change("Box 12 code W — Employer HSA contributions", "0.10");
+    expect(latest[0].box12CodeW).toBe("0.10");
+    expect(latest[0].aiSuggestedFields?.box12CodeW).toBeUndefined();
+    await change("Box 12 code W — Employer HSA contributions", ""); expect(latest[0].box12CodeW).toBe("");
+    await change("Box 12 code W — Employer HSA contributions", "0"); expect(latest[0].box12CodeW).toBe("0");
     await change("Box 10 — Dependent-care benefits", "9007199254740993.01");
     expect(latest[0].box10DependentCareBenefits).toBe("9007199254740993.01");
     expect(latest[0].aiSuggestedFields?.box10DependentCareBenefits).toBeUndefined();
     await change("Box 10 — Dependent-care benefits", ""); expect(w2FactErrors(latest, "mfj")).toHaveProperty("w2-0-box10DependentCareBenefits");
     await change("Box 10 — Dependent-care benefits", "0");
     await click(/^Confirm all /); await change("State reporting on this W-2", "single");
-    expect(w2FactErrors(latest, "mfj")).toEqual({}); expect(buildW2Inputs(latest)[0]).toMatchObject({ accountHolder: "spouse", state: "NJ" });
+    expect(w2FactErrors(latest, "mfj")).toEqual({}); expect(buildW2Inputs(latest)[0]).toMatchObject({ accountHolder: "spouse", state: "NJ", box12CodeW: "0" });
     await click("Review uploaded W-2 suggestions"); await click("Hide W-2 suggestions");
     await change("W-2 recipient", "primary"); expect(latest[0].aiSuggestedFields?.accountHolder).toBeUndefined();
   });

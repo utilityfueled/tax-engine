@@ -702,8 +702,8 @@ describe("Form 8889 HSA edge cases", () => {
 
     expect(result.line19.toNumber()).toBe(2000);
     expect(result.line20.toNumber()).toBe(2000);
-    // Line 21 = 10% of Line 18 only (not Line 19)
-    expect(result.line21.toNumber()).toBe(0);
+    // Printed Form8889 line21 = 10% of line20, including funding recapture.
+    expect(result.line21.toString()).toBe("200");
   });
 
   it("suppresses qualified HSA funding distribution recapture when death or disability applies", () => {
@@ -732,7 +732,7 @@ describe("Form 8889 HSA edge cases", () => {
     expect(result.line18.toNumber()).toBe(2150); // $4,300 - $2,150
     expect(result.line19.toNumber()).toBe(1500);
     expect(result.line20.toNumber()).toBe(3650); // $2,150 + $1,500
-    expect(result.line21.toNumber()).toBe(215); // 10% of $2,150 (Line 18 only)
+    expect(result.line21.toString()).toBe("365"); // 10% of actual line20 $3,650.
   });
 
   // ── Interaction and integration tests ───────────────────

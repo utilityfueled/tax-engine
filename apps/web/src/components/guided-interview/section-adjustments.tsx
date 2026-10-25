@@ -7,6 +7,7 @@ import {
   emptyAdjustmentData,
 } from "@/lib/guided-interview-flow";
 import { CurrencyField } from "./currency-field";
+import { HsaSourceDetails } from "./hsa-source-details";
 import { AdjustmentSourceDetails } from "./adjustment-source-details";
 
 export function SectionAdjustments({
@@ -15,6 +16,7 @@ export function SectionAdjustments({
   hasStudentLoans,
   hasHsa,
   filingStatus,
+  taxYear,
   onDataChange,
 }: {
   data: AdjustmentData | undefined;
@@ -22,6 +24,7 @@ export function SectionAdjustments({
   hasStudentLoans: boolean;
   hasHsa: boolean;
   filingStatus?: FilingStatus | null;
+  taxYear?: number | null;
   onDataChange: (data: AdjustmentData) => void;
 }) {
   const current = data ?? emptyAdjustmentData;
@@ -40,14 +43,7 @@ export function SectionAdjustments({
         </p>
 
         <div className="guided-form-grid">
-          {hasHsa && (
-            <CurrencyField
-              label="HSA deduction"
-              hint="Your contributions to a Health Savings Account (not employer contributions)."
-              value={current.hsaDeduction}
-              onChange={(v) => update("hsaDeduction", v)}
-            />
-          )}
+
 
           {hasStudentLoans && (
             <CurrencyField
@@ -74,6 +70,8 @@ export function SectionAdjustments({
             onChange={(v) => update("educatorExpenses", v)}
           />
         </div>
+
+        {(hasHsa || current.hsaAccounts?.length || current.hsaDeduction.trim()) && <HsaSourceDetails data={current} filingStatus={filingStatus} taxYear={taxYear} onChange={onDataChange} />}
 
         <details className="guided-expand">
           <summary className="guided-expand-trigger">More adjustments</summary>

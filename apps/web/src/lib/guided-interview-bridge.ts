@@ -1,3 +1,4 @@
+import { buildHsaInputs, hsaFactErrors } from "./guided-hsa-facts";
 import { buildStandardDeductionFacts } from "./guided-standard-deduction-facts";
 import { buildActualEducationInput } from "./guided-education-facts";
 /**
@@ -152,6 +153,7 @@ export function buildW2Inputs(
       medicareWages: toOptionalDecimalString(e.medicareWages),
       medicareWithheld: toOptionalDecimalString(e.medicareWithheld),
       box10DependentCareBenefits: toOptionalDecimalString(e.box10DependentCareBenefits),
+      box12CodeW: toOptionalDecimalString(e.box12CodeW),
       stateWages: e.stateTaxReporting === "none" ? "0" : toOptionalDecimalString(e.stateWages),
       stateTaxWithheld: e.stateTaxReporting === "none" ? "0" : toOptionalDecimalString(e.stateWithheld),
       state: e.state?.trim().toUpperCase() || undefined,
@@ -369,7 +371,8 @@ export function buildAdjustmentsInput(adjustmentData: AdjustmentData | undefined
   if (!adjustmentData) return undefined;
   assertKnownFacts(adjustmentFactErrors(adjustmentData));
 
-  const hsaDeduction = toDecimalString(adjustmentData.hsaDeduction);
+  // The HSA deduction is calculated from the actual Form 8889 facts.
+  const hsaDeduction = "0";
   const studentLoanInterest = toDecimalString(adjustmentData.studentLoanInterest);
   const selfEmployedHealthInsurance = toDecimalString(adjustmentData.selfEmployedHealthInsurance);
   const educatorExpenses = toDecimalString(adjustmentData.educatorExpenses);
@@ -622,6 +625,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     assertKnownFacts(unemploymentFactErrors(unemploymentData, segmentation.filingStatus, state.taxYear, personalInfo, stateReturnData));
     assertKnownFacts(educationFactErrors(creditsData, state.taxYear, segmentation.filingStatus, personalInfo));
     assertKnownFacts(adjustmentFactErrors(adjustmentData, segmentation.filingStatus, state.taxYear));
+    assertKnownFacts(hsaFactErrors(adjustmentData?.hsaAccounts, segmentation.filingStatus, state.taxYear, w2Data?.entries ?? [], personalInfo, segmentation.lifeEvents.includes("hsa-contributions")));
     assertKnownFacts(householdFactErrors(otherTaxesData, state.taxYear));
     assertKnownFacts(statePaymentFactErrors(stateReturnData, state.taxYear, segmentation.stateCode));
     assertKnownFacts(careBenefitsFactErrors(creditsData?.dependentCareBenefits, state.taxYear, segmentation.filingStatus, careBenefitSources));
@@ -709,6 +713,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
       dependents: buildDependents(personalInfo?.dependentCount, personalInfo?.dependents),
     },
     w2s,
+    ...buildHsaInputs(adjustmentData?.hsaAccounts),
     form1099Nec: necs,
     scheduleC: scheduleC ?? undefined,
     form1099Int,

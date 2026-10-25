@@ -19,6 +19,7 @@ export function w2FactErrors(entries: W2EntryData[] | undefined, filingStatus?: 
       const error = amountError(entry[field], label);
       if (error) errors[`${prefix}-${field}`] = error;
     }
+    if (hasEnteredAmount(entry.box12CodeW)) { const error = amountError(entry.box12CodeW, "Box 12 code W"); if (error) errors[`${prefix}-box12CodeW`] = error; }
     if (entry.stateTaxReporting === "single") {
       if (!/^[A-Z]{2}$/.test(entry.state?.trim().toUpperCase() ?? "")) errors[`${prefix}-state`] = "Enter the actual two-letter state from Box 15.";
       for (const [field, label] of [["stateWages", "Box 16 state wages"], ["stateWithheld", "Box 17 state withholding"]] as const) {

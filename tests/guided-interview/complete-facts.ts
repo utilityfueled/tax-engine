@@ -1,7 +1,7 @@
 import { emptyPersonalInfo, emptyW2Entry, emptyNecEntry, emptyScheduleCExpenses, emptyInterestEntry, emptyDividendEntry, emptyCapitalGainTransaction, emptyRentalPropertyEntry, startInterview, type PersonalInfoData, type SegmentationAnswers, type DependentEntryData, type W2EntryData, type RentalPropertyEntryData } from "@/lib/guided-interview-flow";
 
 /** Explicit synthetic W-2 source facts; blank application fields stay unknown. */
-export const completeW2Entry: W2EntryData = { ...emptyW2Entry, employerName: "Synthetic Employer", employerEin: "12-3456789", accountHolder: "primary", wages: "0", federalWithheld: "0", socialSecurityWages: "0", socialSecurityTips: "0", socialSecurityWithheld: "0", medicareWages: "0", medicareWithheld: "0", box10DependentCareBenefits: "0", stateTaxReporting: "none" };
+export const completeW2Entry: W2EntryData = { ...emptyW2Entry, employerName: "Synthetic Employer", employerEin: "12-3456789", accountHolder: "primary", wages: "0", federalWithheld: "0", socialSecurityWages: "0", socialSecurityTips: "0", socialSecurityWithheld: "0", medicareWages: "0", medicareWithheld: "0", box10DependentCareBenefits: "0", box12CodeW: "0", stateTaxReporting: "none" };
 
 /** Synthetic, explicitly supplied facts; never production defaults. */
 export const completePersonalInfo: PersonalInfoData = {
@@ -111,3 +111,14 @@ export const completeUnemploymentSource = { sourceTaxYear: "2025", sourceFormRev
 
 /** Explicit synthetic IRA source facts; not production defaults. */
 export const completeIraSources = { primaryContributions: "1000.10", primaryIsActiveParticipant: false, spouseContributions: "", spouseIsActiveParticipant: null, primaryCompensation: "5000.20", primaryRothContributions: "0", primarySection501c18Contributions: "0", contributionTaxYear: "2025", contributionTimingConfirmed: true, specialContributionRulesRequired: false, sourceFactsConfirmed: true };
+
+/** Explicit synthetic HSA facts, never interview defaults. */
+export const completeHsaSources: import("@/lib/guided-hsa-facts").HsaAccountData = {
+  id: "hsa-primary", accountOwner: "primary" as const, contributionTaxYear: "2025",
+  coverageByMonth: Array(12).fill("self_only"), medicareByMonth: Array(12).fill(false), otherDisqualifyingCoverageByMonth: Array(12).fill(false),
+  canBeClaimedAsDependent: false, monthlyEligibilityConfirmed: true, contributionsMade: "3600.10", contributionTimingConfirmed: true,
+  employerW2Contributions: "0", employerPriorYearContributions: "0", employerFollowingYearContributions: "0", employerWorksheetConfirmed: true, excessEmployerContributionsAlreadyInWages: "0",
+  bothSpousesHaveHsas: false, spouseAllocatedLimit: "", otherSpouseAllocatedLimit: "", allocationWorksheetConfirmed: null,
+  useLastMonthRule: false, lastMonthRuleAcknowledged: null, archerMsaContributions: "0", qualifiedFundingDistribution: "0", priorYearExcessContributions: "0", priorYearSourceTaxYear: "2024", priorYearAdditionalTax: "0", yearEndFairMarketValue: "5000",
+  hasDistributions: false, correctionsRequired: false, testingPeriodFailure: false, sourceFactsConfirmed: true,
+};

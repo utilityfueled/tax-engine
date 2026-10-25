@@ -1,3 +1,4 @@
+import { hsaFactErrors, type HsaAccountData } from "./guided-hsa-facts";
 import type { StandardDeductionData } from "./guided-standard-deduction-facts";
 /**
  * Guided interview flow — state model, section routing, skip logic, and progress.
@@ -547,6 +548,7 @@ export const emptyPersonalInfo: PersonalInfoData = {
 };
 
 export interface W2EntryData {
+  box12CodeW?: string;
   box10DependentCareBenefits?: string;
   accountHolder?: "primary" | "spouse" | "";
   stateTaxReporting?: "none" | "single" | "multiple" | "";
@@ -575,6 +577,7 @@ export type W2SuggestedField =
   | "socialSecurityWages"
   | "socialSecurityTips"
   | "box10DependentCareBenefits"
+  | "box12CodeW"
   | "socialSecurityWithheld"
   | "medicareWages"
   | "medicareWithheld"
@@ -591,6 +594,7 @@ const w2SuggestedFieldLabels: Record<W2SuggestedField, string> = {
   socialSecurityWages: "Box 3 social security wages",
   socialSecurityTips: "Box 7 social security tips",
   box10DependentCareBenefits: "Box 10 dependent care benefits",
+  box12CodeW: "Box 12 code W employer HSA contributions",
   socialSecurityWithheld: "Box 4 social security tax withheld",
   medicareWages: "Box 5 medicare wages",
   medicareWithheld: "Box 6 medicare tax withheld",
@@ -879,6 +883,7 @@ export const emptyDeductionData: DeductionData = {
 // ── Adjustments data ──────────────────────────────────────────────────────
 
 export interface AdjustmentData {
+  hsaAccounts?: HsaAccountData[];
   hsaDeduction: string;
   studentLoanInterest: string;
   selfEmployedHealthInsurance: string;
@@ -1438,13 +1443,14 @@ export function updateSectionData(
   const credits = state.sectionData.credits;
   const adjustments = state.sectionData.adjustments;
   const iraSourcesChanged = ["income-w2", "income-self-employment", "income-retirement"].includes(sectionId) && adjustments?.iraContributions;
+  const hsaSourcesChanged = ["income-w2", "personal-info"].includes(sectionId) && adjustments?.hsaAccounts;
   const benefitSourcesChanged = (sectionId === "income-w2" || sectionId === "income-self-employment") && credits?.dependentCareBenefits;
   return {
     ...state,
     sectionData: {
       ...state.sectionData,
       [sectionId]: data,
-      ...(iraSourcesChanged && adjustments ? { adjustments: { ...adjustments, iraContributions: { ...iraSourcesChanged, sourceFactsConfirmed: null } } } : {}),
+      ...((iraSourcesChanged || hsaSourcesChanged) && adjustments ? { adjustments: { ...adjustments, ...(iraSourcesChanged ? { iraContributions: { ...iraSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(hsaSourcesChanged ? { hsaAccounts: hsaSourcesChanged.map(account => ({ ...account, sourceFactsConfirmed: null })) } : {}) } } : {}),
       ...(benefitSourcesChanged ? { credits: { ...credits, dependentCareBenefits: { ...credits.dependentCareBenefits,
         sourceFactsConfirmed: null, earnedIncomeWorksheetConfirmed: null, creditExpenseCoordinationConfirmed: null } } } : {}),
     },
@@ -1724,7 +1730,7 @@ function validateAdjustmentsSection(data: AdjustmentData | undefined, filingStat
   if (!data) return EMPTY_SECTION("adjustments info", true);
   const errors = adjustmentFactErrors(data, filingStatus, taxYear);
   if (Object.keys(errors).length) return validateRequiredFacts(errors);
-  if (data.iraContributions) return VALID_SECTION;
+  if (data.iraContributions || data.hsaAccounts?.length) return VALID_SECTION;
   const hasAny = Object.values(data).some((v) => typeof v === "string" && hasNumericValue(v));
   if (!hasAny) return EMPTY_SECTION("adjustments info", true);
   return VALID_SECTION;
@@ -1765,8 +1771,10 @@ export function validateSection(
       return validateUnemploymentSection(getSectionData(state, "income-unemployment"), state);
     case "deductions":
       return validateDeductionsSection(getSectionData(state, "deductions"), state.taxYear, nonW2TaxAllocationErrors(state), state.segmentation.filingStatus);
-    case "adjustments":
-      return validateAdjustmentsSection(getSectionData(state, "adjustments"), state.segmentation.filingStatus, state.taxYear);
+    case "adjustments": {
+      const errors = hsaFactErrors(getSectionData(state, "adjustments")?.hsaAccounts, state.segmentation.filingStatus, state.taxYear, getSectionData(state, "income-w2")?.entries ?? [], getSectionData(state, "personal-info"), state.segmentation.lifeEvents.includes("hsa-contributions"));
+      return Object.keys(errors).length ? validateRequiredFacts(errors) : validateAdjustmentsSection(getSectionData(state, "adjustments"), state.segmentation.filingStatus, state.taxYear);
+    }
     case "credits": {
       const credits = getSectionData(state, "credits");
       const sources = guidedCareBenefitSources(getSectionData(state, "income-w2")?.entries, getSectionData(state, "income-self-employment")?.businessFacts, getSectionData(state, "income-self-employment")?.expenses);

@@ -231,7 +231,8 @@ function AdjustmentsSummary({ data }: { data: AdjustmentData | undefined }) {
   if (!data) return <p className="guided-review-empty">No adjustments entered.</p>;
 
   const items = [
-    { label: "HSA deduction", value: data.hsaDeduction },
+    { label: "Saved HSA deduction estimate (not calculated)", value: data.hsaDeduction },
+    ...(data.hsaAccounts ?? []).map((account, index) => ({ label: `HSA ${index + 1} ${account.accountOwner || "unknown owner"}: personal contributions before limits`, value: account.contributionsMade })),
     { label: "Student loan interest", value: data.studentLoanInterest },
     { label: "SE health insurance", value: data.selfEmployedHealthInsurance },
     { label: "Educator expenses", value: data.educatorExpenses },
@@ -239,10 +240,11 @@ function AdjustmentsSummary({ data }: { data: AdjustmentData | undefined }) {
     { label: "Alimony paid", value: data.alimonyPaid },
   ].filter((item) => hasValue(item.value));
 
-  if (items.length === 0) return <p className="guided-review-empty">No adjustments entered.</p>;
+  if (items.length === 0 && !data.hsaAccounts?.length) return <p className="guided-review-empty">No adjustments entered.</p>;
 
   return (
     <div className="guided-review-card">
+      {!!data.hsaAccounts?.length && <p className="guided-hint">{data.hsaAccounts.length} HSA owner worksheet(s). Contributions are source amounts; eligibility and limits determine the deduction.</p>}
       {items.map((item) => (
         <div key={item.label} className="guided-review-row">
           <span className="guided-review-label">{item.label}</span>

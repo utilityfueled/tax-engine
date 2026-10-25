@@ -1,4 +1,5 @@
 import Decimal from "decimal.js";
+import { hsaFactErrors } from "./guided-hsa-facts";
 import type { AdjustmentData, FilingStatus, OtherTaxesData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
 import { amountError, hasEnteredAmount, isActualDate } from "./guided-required-facts";
@@ -13,12 +14,13 @@ export function isDeductibleAlimony(data: AdjustmentData): boolean {
 
 export function adjustmentFactErrors(data: AdjustmentData | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null): Record<string, string> {
   if (!data) return {};
-  const errors: Record<string, string> = {};
+  const errors: Record<string, string> = hsaFactErrors(data.hsaAccounts, filingStatus, taxYear);
   for (const field of ["hsaDeduction", "studentLoanInterest", "selfEmployedHealthInsurance", "educatorExpenses", "iraDeduction", "alimonyPaid"] as const) {
     if (!hasEnteredAmount(data[field])) continue;
     const error = amountError(data[field], field);
     if (error) errors[field] = error;
   }
+  if (!errors.hsaDeduction && parseGuidedCurrency(data.hsaDeduction).gt(0) && !data.hsaAccounts?.length) errors.hsaAccounts = "Enter actual HSA coverage and contributions; a saved deduction estimate cannot replace these facts.";
   if (!errors.iraDeduction && parseGuidedCurrency(data.iraDeduction).gt(0) && !data.iraContributions) errors.iraContributions = "Enter actual IRA contributions and employer-plan coverage; a saved deduction estimate cannot replace these facts.";
   const ira = data.iraContributions;
   if (ira) {
