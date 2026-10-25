@@ -67,9 +67,8 @@ const compose = (...args) => command([...composeArgs, ...args], runtime, compose
 async function configure(image, architecture) {
   await writeFile(override, JSON.stringify({ services: {
     web: {
-      image, platform: `linux/${architecture}`, read_only: true, restart: "no",
-      cap_drop: ["ALL"], security_opt: ["no-new-privileges:true"],
-      tmpfs: ["/tmp:rw,noexec,nosuid,size=64m"],
+      // Security controls must come from the actual shipped Compose file.
+      image, platform: `linux/${architecture}`, restart: "no",
       environment: {
         DATABASE_URL: "postgresql://ai_test@postgres:5432/postgres", TAX_ENGINE_DEPLOYMENT_MODE: "self-host",
         TAX_ENGINE_HOSTED_PERSISTENCE_BACKEND: "preview-memory", TAX_ENGINE_BILLING_MODE: "test",
@@ -175,10 +174,18 @@ try {
     const serviceId = await compose("ps", "--quiet", "web");
     const metadata = JSON.parse(await command(["inspect", serviceId]))[0];
     assert.equal(metadata.HostConfig.ReadonlyRootfs, true);
+    // Podman expands ALL into individual capability names; verify the actual
+    // kernel bounding set below instead of assuming Docker's inspect format.
+    assert.ok(metadata.HostConfig.CapDrop.length > 0);
+    assert.deepEqual(metadata.HostConfig.CapAdd ?? [], []);
+    assert.ok(metadata.HostConfig.SecurityOpt.some(value => value.startsWith("no-new-privileges")));
     assert.equal(metadata.Image.replace(/^sha256:/u, ""), expectedImage.replace(/^sha256:/u, ""));
     const runtimeFacts = JSON.parse(await command(["exec", serviceId, "node", "-e",
-      "console.log(JSON.stringify({uid:process.getuid(),arch:process.arch,node:process.version,providerKeys:['MODEL_PROVIDER_API_KEY','OPENAI_API_KEY','GEMINI_API_KEY','GOOGLE_API_KEY'].some(k=>Boolean(process.env[k]))}))"]));
+      "const status=require('node:fs').readFileSync('/proc/self/status','utf8'); console.log(JSON.stringify({uid:process.getuid(),arch:process.arch,node:process.version,noNewPrivileges:/^NoNewPrivs:\\s+1$/m.test(status),noEffectiveCapabilities:/^CapEff:\\s+0+$/m.test(status),noBoundingCapabilities:/^CapBnd:\\s+0+$/m.test(status),providerKeys:['MODEL_PROVIDER_API_KEY','OPENAI_API_KEY','GEMINI_API_KEY','GOOGLE_API_KEY'].some(k=>Boolean(process.env[k]))}))"]));
     assert.equal(runtimeFacts.uid, 1001);
+    assert.equal(runtimeFacts.noNewPrivileges, true);
+    assert.equal(runtimeFacts.noEffectiveCapabilities, true);
+    assert.equal(runtimeFacts.noBoundingCapabilities, true);
     assert.equal(runtimeFacts.arch, candidate.Architecture === "amd64" ? "x64" : "arm64");
     assert.equal(runtimeFacts.providerKeys, false);
     evidence.phases.push({ phase: label, imageDigest: metadata.Image, databaseSha256: beforeDatabase,

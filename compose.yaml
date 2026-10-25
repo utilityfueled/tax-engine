@@ -3,6 +3,13 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
     depends_on:
       postgres:
         condition: service_healthy
