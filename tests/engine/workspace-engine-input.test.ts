@@ -1572,7 +1572,6 @@ describe("workspace engine input", () => {
       {
         payer: "HSA Bank",
         grossDistribution: "2400",
-        earningsOnExcessContributions: "0",
         distributionCode: "1",
         accountType: "hsa",
         accountHolder: "primary",
@@ -1634,7 +1633,6 @@ describe("workspace engine input", () => {
       {
         payer: "Inherited HSA Bank",
         grossDistribution: "5300",
-        earningsOnExcessContributions: "0",
         distributionCode: "6",
         accountType: "hsa",
         accountHolder: "primary",
