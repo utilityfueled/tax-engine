@@ -501,3 +501,19 @@ benchmark is inferred by summing policies. Three model regressions failed first;
 70 focused schema/historical-form tests, root types, all3,146 spec references and
 whitespace checks pass. Scoped diff reviewed. PTC calculation and federal routing
 are the next parallel integration package; this contract does not qualify filing.
+
+### Credit stacking historical assertions — 2026-10-25
+
+Reconciled the historical credit-stacking tests with final Schedule3lines8/9/11,
+Form8962repaymentline29 and Schedule2AMTline2. Updated independent arithmetic
+oracles for actual allowed energy/care credit limits and Schedule8812WorksheetB
+CTC reservations; added unused-energy carryforward and ACTC checks. Synthetic
+APTC statements now include their actual1–12 month identifiers; the synthetic
+child claiming CTC has a consistent under17birthyear. Existing source withholding
+assertions remain unchanged and pass. No test removed or tolerance widened.
+
+All100 affected tests, root types,3,146spec refs and whitespace checks pass.
+Scoped diff reviewed. Rule versions2025.9/2026.4-law-integration-draft add the
+refreshed education sources; dated-source validation now permits actual later
+refreshes while still checking the new exact2026-10-25 education provenance.
+Qualification remains incomplete/pendingreview/filingfalse.

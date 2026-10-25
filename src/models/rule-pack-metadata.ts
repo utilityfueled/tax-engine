@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.8",
+    ruleVersion: "2025.9",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i8863", section: "Student eligibility, refundable support test and actual credit limit", revision: "2025 final instructions", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/pub/irs-pdf/f1040s3.pdf", section: "Official credit and payment line routing", revision: "2025 final form", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i2210", section: "Lines 3 and 6, refundable credits versus withholding", revision: "2025 instructions", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i8839", section: "Refundable split, credit limit and employer benefit exclusion", revision: "2025 instructions and 2026 transition notices", retrievedAt: "2026-10-25" },
@@ -48,11 +49,13 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.3-law-integration-draft",
+    ruleVersion: "2026.4-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/tax-professionals/eitc-central/new-social-security-number-requirements-for-education-tax-credits", section: "2026 taxpayer or joint spouse and dependent student employment-valid SSNs", revision: "IRS current enacted-law guidance", retrievedAt: "2026-10-25" },
+      { url: "https://www.irs.gov/instructions/i8863", section: "Student eligibility, refundable support test and actual credit limit", revision: "2025 final instructions", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/irb/2025-45_IRB", section: "Rev. Proc. 2025-32, section 4", revision: "2025-32", retrievedAt: "2026-10-24" },
       { url: "https://www.ssa.gov/OACT/COLA/cbb.html", section: "2026 contribution and benefit base", revision: "2026 row", retrievedAt: "2026-10-24" },
       { url: "https://uscode.house.gov/us/usc/119-118/t26/s55/", section: "55(d)(4)(A)(ii)(IV), AMT phase-out rate", revision: "Through Public Law 119-120", retrievedAt: "2026-10-24" },

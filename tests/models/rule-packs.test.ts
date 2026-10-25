@@ -35,8 +35,9 @@ describe("explicit federal rule packs", () => {
       expect(pack.reviewStatus).toBe("independent-review-pending");
       expect(pack.filingQualified).toBe(false);
       expect(pack.sources.length).toBeGreaterThan(0);
-      expect(pack.sources.every(source => source.retrievedAt === "2026-10-24" && source.section && source.revision)).toBe(true);
+      expect(pack.sources.every(source => /^\d{4}-\d{2}-\d{2}$/.test(source.retrievedAt) && source.retrievedAt >= "2026-10-24" && source.section && source.revision)).toBe(true);
       expect(Object.isFrozen(pack.sources)).toBe(true);
+      expect(pack.sources.some(source => source.url === "https://www.irs.gov/instructions/i8863" && source.retrievedAt === "2026-10-25")).toBe(true);
     }
   });
 });
