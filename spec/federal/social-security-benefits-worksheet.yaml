@@ -34,6 +34,15 @@ businessRuleValidation:
   - rule: "reference-summary-packet"
     description: "Inventory support counts this worksheet as business-rule validated only when regression coverage proves the emitted packet artifact stays labeled as a non-filing reference summary and only surfaces the supported worksheet lines, the supported SSA-1099 and RRB-1099 benefit totals, and any supported Pub. 915 lump-sum-election outputs that drive Form 1040 Line 6b."
     testRef: "tests/pdf/fill-social-security-benefits-worksheet.test.ts::buildSocialSecurityBenefitsWorksheetReferenceSummary keeps the packet artifact reference-only and limited to supported worksheet outputs"
+  - rule: "reference-official-audit-lines"
+    description: "Reference output uses the selected official audit namespace and numbering, including Pub915 Worksheet1 exclusions and the MFS skip, and validates source/result totals."
+    testRef: "tests/pdf/fill-social-security-benefits-worksheet.test.ts::Social Security reference uses actual Pub915 exclusions and official line numbers"
+  - rule: "reference-audit-integrity"
+    description: "Missing, duplicate, wrong-form, nonfinite or inconsistent audits and mismatched tax years reject instead of reconstructing values from compatibility aliases."
+    testRef: "tests/pdf/fill-social-security-benefits-worksheet.test.ts::Social Security reference rejects incomplete inconsistent or wrong-year evidence"
+  - rule: "reference-every-page-warning"
+    description: "All overflow pages retain a visible review-only notice, including the source-backed Pub915 lump-sum comparison."
+    testRef: "tests/pdf/fill-social-security-benefits-worksheet.test.ts::Social Security reference retains audited lump-sum comparison and every-page warning"
 
 lines:
   - line: "Pub915-1-1"

@@ -1,4 +1,5 @@
-import { assertPdfExportAllowed } from "../../export-policy.js";
+import Decimal from "decimal.js";
+import { assertPdfExportAllowed, markReviewPdf } from "../../export-policy.js";
 import { mkdir, writeFile } from "fs/promises";
 import { join } from "path";
 import {
@@ -9,7 +10,7 @@ import {
   type PDFPage,
 } from "pdf-lib";
 import type { TaxYearInput } from "@/models/inputs.js";
-import type { TaxReturnResult } from "@/models/outputs.js";
+import type { CalculatedLine, TaxReturnResult } from "@/models/outputs.js";
 import { d, sum } from "@/utils/decimal.js";
 
 const PAGE_WIDTH = 612;
@@ -41,7 +42,7 @@ export interface SocialSecurityBenefitsWorksheetReferenceSummary {
 }
 
 function wrapText(text: string, font: PDFFont, size: number, maxWidth: number) {
-  const words = text.trim().split(/\s+/).filter(Boolean);
+  const words = text.replace(/×/g, " x ").replace(/→/g, "->").replace(/[−–—]/g, "-").replace(/[^\x20-\x7E\n\t]/g, "").trim().split(/\s+/).filter(Boolean);
 
   if (words.length === 0) {
     return [""];
@@ -96,133 +97,112 @@ function drawWrappedText(
   return cursorY;
 }
 
-const WORKSHEET_LINE_METADATA = [
-  ["line1", "1", "Total Social Security benefits", "Sum SSA-1099 Box 5 and RRB-1099 tier 1 equivalent Box 5 benefits"],
-  ["line2", "2", "One-half of benefits", "Line 1 / 2"],
-  ["line3", "3", "Other income included in provisional income", "Form 1040 income other than Social Security benefits"],
-  ["line4", "4", "Tax-exempt interest", "Form 1040 Line 2a"],
-  ["line5", "5", "Subtotal before adjustments", "Line 2 + Line 3 + Line 4"],
-  ["line6", "6", "Adjustments added back for provisional income", "Supported Schedule 1 add-back categories"],
-  ["line7", "7", "Provisional income", "Line 5 - Line 6"],
-  ["line8", "8", "Base amount", "Single/HOH/QSS or MFS living apart threshold"],
-  ["line9", "9", "Excess over base amount", "max(0, Line 7 - Line 8)"],
-  ["line10", "10", "Second-tier width", "Single/HOH/QSS width"],
-  ["line11", "11", "Excess over second-tier width", "max(0, Line 9 - Line 10)"],
-  ["line12", "12", "Lower-tier amount subject to 50% inclusion", "min(Line 9, Line 10)"],
-  ["line13", "13", "Half of the lower-tier amount", "Line 12 / 2"],
-  ["line14", "14", "50% inclusion amount", "min(Line 2, Line 13)"],
-  ["line15", "15", "85% of the upper-tier excess", "Line 11 x 85%"],
-  ["line16", "16", "Tentative taxable benefits", "Line 14 + Line 15"],
-  ["line17", "17", "Maximum taxable benefits", "Line 1 x 85%"],
-  ["line18", "18", "Taxable Social Security benefits", "min(Line 16, Line 17)"],
-] as const;
+function requireEqual(actual: Decimal, expected: Decimal, label: string) {
+  if (!actual.isFinite() || !expected.isFinite() || !actual.eq(expected)) {
+    throw new Error(`Social Security reference ${label} does not reconcile to its audited amount.`);
+  }
+}
 
-function shouldIncludeLumpSumSection(result: NonNullable<TaxReturnResult["socialSecurityBenefitsWorksheet"]>) {
-  return result.lumpSumElectionTaxableBenefits !== undefined;
+function auditIndex(lines: CalculatedLine[]) {
+  const index = new Map<string, CalculatedLine>();
+  for (const line of lines) {
+    const key = `${line.form}:${line.line}`;
+    if (index.has(key)) throw new Error(`Social Security reference has duplicate audit line ${key}.`);
+    index.set(key, line);
+  }
+  return (form: string, id: string): CalculatedLine => {
+    const line = index.get(`${form}:${id}`);
+    if (!line) throw new Error(`Social Security reference is missing audit line ${form}:${id}.`);
+    if (!line.value.isFinite()) throw new Error(`Social Security reference audit line ${form}:${id} is not finite.`);
+    return line;
+  };
+}
+
+function referenceLine(line: CalculatedLine): SocialSecurityBenefitsWorksheetReferenceLine {
+  return {line:line.line, description:line.description, value:line.value.toString(), formula:line.formula};
 }
 
 export function buildSocialSecurityBenefitsWorksheetReferenceSummary(
   input: TaxYearInput,
   result: TaxReturnResult,
 ): SocialSecurityBenefitsWorksheetReferenceSummary {
+  assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
   const worksheet = result.socialSecurityBenefitsWorksheet;
-  if (!worksheet) {
-    throw new Error(
-      "Social Security Benefits Worksheet reference summary requires result.socialSecurityBenefitsWorksheet",
-    );
+  if (!worksheet) throw new Error("Social Security Benefits Worksheet reference summary requires result.socialSecurityBenefitsWorksheet");
+  const getAudit = auditIndex(worksheet.lines);
+  const getReturnAudit = auditIndex(result.allLines.filter(line => line.form === "1040" && (line.line === "6a" || line.line === "6b")));
+  const publication = worksheet.worksheetKind === "publication915";
+  if (!publication && worksheet.worksheetKind !== "form1040") throw new Error("Social Security reference requires a known official worksheet kind.");
+  if (publication ? !worksheet.exclusionsAdjustments.isPositive() : !worksheet.exclusionsAdjustments.isZero()) throw new Error("Social Security worksheet kind is inconsistent with actual exclusions.");
+  const form = publication ? "Pub915 WS1" : "SS Worksheet";
+  const finalId = publication ? "19" : "18";
+  const mfsSkip = publication && input.taxpayer.filingStatus === "married_filing_separately" && input.taxpayer.livedWithSpouseAtAnyTimeDuringYear === true;
+  const ids = Array.from({length:publication ? 19 : 18}, (_, index) => index + 1)
+    .filter(number => !mfsSkip || number < 9 || number > 16).map(String);
+  const selected = ids.map(id => getAudit(form, id));
+  for (const line of worksheet.lines) {
+    if (line.form === form && /^\d+$/.test(line.line) && !ids.includes(line.line)) throw new Error(`Social Security reference has unexpected audited line ${line.line}.`);
   }
+  if (publication) requireEqual(getAudit(form,"5").value, worksheet.exclusionsAdjustments, "income exclusions");
+  const standard = getAudit(form,finalId).value;
+  requireEqual(standard, worksheet.standardTaxableBenefits, "standard taxable benefits");
+  const ssaBenefits = sum(...(input.formSSA1099 ?? []).map(source => {
+    if (source.netBenefits === undefined) throw new Error("Social Security reference requires actual SSA benefits.");
+    return d(source.netBenefits);
+  }));
+  const rrbBenefits = sum(...(input.formRRB1099 ?? []).map(source => {
+    if (source.netSocialSecurityEquivalentBenefitPortion === undefined) throw new Error("Social Security reference requires actual RRB benefits.");
+    return d(source.netSocialSecurityEquivalentBenefitPortion);
+  }));
+  requireEqual(ssaBenefits.plus(rrbBenefits), result.socialSecurityBenefitsGross, "source benefit total");
+  requireEqual(getAudit(form,"1").value, result.socialSecurityBenefitsGross, "worksheet gross benefits");
+  requireEqual(getReturnAudit("1040","6a").value, result.socialSecurityBenefitsGross, "Form1040 gross benefits");
+  requireEqual(getReturnAudit("1040","6b").value, result.socialSecurityBenefitsTaxable, "Form1040 taxable benefits");
+  const sections: SocialSecurityBenefitsWorksheetReferenceSection[] = [{
+    heading:"Benefit inputs",
+    lines:[
+      {line:"SSA-1099",description:"SSA-1099 Box 5 net benefits",value:ssaBenefits.toString(),formula:"Sum of supported SSA-1099 Box 5 net benefits"},
+      {line:"RRB-1099",description:"RRB-1099 Box 5 tier 1 equivalent benefits",value:rrbBenefits.toString(),formula:"Sum of supported RRB-1099 Box 5 tier 1 equivalent benefits"},
+      {line:"1040-6a",description:"Form 1040 Line 6a gross benefits",value:result.socialSecurityBenefitsGross.toString(),formula:"SSA-1099 total + RRB-1099 total"},
+    ],
+  }, {
+    heading:publication ? "Publication 915 Worksheet 1" : "Social Security Benefits Worksheet",
+    lines:selected.map(referenceLine),
+  }];
 
-  const ssaBenefits = sum(...(input.formSSA1099 ?? []).map((form) => d(form.netBenefits)));
-  const rrbBenefits = sum(
-    ...(input.formRRB1099 ?? []).map((form) => d(form.netSocialSecurityEquivalentBenefitPortion)),
-  );
-
-  const sections: SocialSecurityBenefitsWorksheetReferenceSection[] = [
-    {
-      heading: "Benefit inputs",
-      lines: [
-        {
-          line: "SSA-1099",
-          description: "SSA-1099 Box 5 net benefits",
-          value: ssaBenefits.toString(),
-          formula: "Sum of supported SSA-1099 Box 5 net benefits",
-        },
-        {
-          line: "RRB-1099",
-          description: "RRB-1099 Box 5 tier 1 equivalent benefits",
-          value: rrbBenefits.toString(),
-          formula: "Sum of supported RRB-1099 Box 5 tier 1 equivalent benefits",
-        },
-        {
-          line: "1040-6a",
-          description: "Form 1040 Line 6a gross benefits",
-          value: result.socialSecurityBenefitsGross.toString(),
-          formula: "SSA-1099 total + RRB-1099 total",
-        },
-      ],
-    },
-    {
-      heading: "Social Security Benefits Worksheet",
-      lines: WORKSHEET_LINE_METADATA.map(([key, line, description, formula]) => ({
-        line,
-        description,
-        value: worksheet[key].toString(),
-        formula,
-      })),
-    },
-  ];
-
-  if (shouldIncludeLumpSumSection(worksheet)) {
-    sections.push({
-      heading: "Pub. 915 lump-sum election",
-      lines: [
-        {
-          line: "standard",
-          description: "Standard worksheet taxable benefits",
-          value: worksheet.standardTaxableBenefits.toString(),
-          formula: "Social Security Benefits Worksheet Line 18 before the election comparison",
-        },
-        {
-          line: "W4-21",
-          description: "Pub. 915 Worksheet 4 taxable benefits",
-          value: worksheet.lumpSumElectionTaxableBenefits!.toString(),
-          formula: "Current-year Worksheet 4 taxable benefits plus earlier-year Worksheet 2 additions",
-        },
-        {
-          line: "used",
-          description: "Election used on Form 1040 Line 6b",
-          value: worksheet.usedLumpSumElection ? "Yes" : "No",
-          formula: "Election used only when it is lower than the standard worksheet amount",
-        },
-        ...worksheet.lumpSumElectionAdditionalBenefitsByYear.flatMap((entry) => ([
-          {
-            line: `W2-21 (${entry.taxYear}) refigured`,
-            description: "Earlier-year refigured taxable benefits",
-            value: entry.refiguredTaxableBenefits.toString(),
-            formula: "Pub. 915 Worksheet 2 refigured earlier-year taxable benefits",
-          },
-          {
-            line: `W2-21 (${entry.taxYear}) additional`,
-            description: "Earlier-year additional taxable benefits",
-            value: entry.additionalTaxableBenefits.toString(),
-            formula: "max(0, refigured taxable benefits - previously reported taxable benefits)",
-          },
-        ])),
-        {
-          line: "1040-6b",
-          description: "Form 1040 Line 6b taxable benefits",
-          value: result.socialSecurityBenefitsTaxable.toString(),
-          formula: "Final taxable Social Security benefits used on Form 1040 Line 6b",
-        },
-      ],
+  const electionAmount = worksheet.lumpSumElectionTaxableBenefits;
+  if (electionAmount !== undefined) {
+    const election = getAudit("SS Worksheet","W4-21");
+    requireEqual(election.value, electionAmount, "lump-sum election amount");
+    if (worksheet.usedLumpSumElection !== election.value.lt(standard)) throw new Error("Social Security lump-sum election choice is inconsistent with audited amounts.");
+    const usedYears = new Set<number>();
+    const earlierYearLines = worksheet.lumpSumElectionAdditionalBenefitsByYear.flatMap(entry => {
+      if (usedYears.has(entry.taxYear)) throw new Error("Social Security reference has duplicate earlier-year sources.");
+      usedYears.add(entry.taxYear);
+      const earlier = getAudit("SS Worksheet",`W2-21 (${entry.taxYear})`);
+      requireEqual(earlier.value, entry.additionalTaxableBenefits, "earlier-year additional benefits");
+      const refigured = earlier.inputs["Refigured taxable benefits"];
+      if (!Decimal.isDecimal(refigured) || !refigured.isFinite()) throw new Error("Social Security reference is missing finite refigured-benefit audit input.");
+      requireEqual(refigured, entry.refiguredTaxableBenefits, "earlier-year refigured benefits");
+      return [
+        {line:`W2-21 (${entry.taxYear}) refigured`,description:"Earlier-year refigured taxable benefits",value:refigured.toString(),formula:"Actual refigured-benefit amount from the earlier-year Worksheet 2 audit"},
+        {line:`W2-21 (${entry.taxYear}) additional`,description:earlier.description,value:earlier.value.toString(),formula:earlier.formula},
+      ];
     });
+    requireEqual(worksheet.usedLumpSumElection ? election.value : standard, worksheet.taxableBenefits, "selected taxable benefits");
+    sections.push({heading:"Pub. 915 lump-sum election", lines:[
+      {line:"standard",description:"Standard worksheet taxable benefits",value:standard.toString(),formula:`${publication ? "Publication 915 Worksheet 1 line 19" : "Social Security Benefits Worksheet Line 18"} before the election comparison`},
+      {line:"W4-21",description:election.description,value:election.value.toString(),formula:election.formula},
+      {line:"used",description:"Election used on Form 1040 Line 6b",value:worksheet.usedLumpSumElection ? "Yes" : "No",formula:"Election used only when it is lower than the standard worksheet amount"},
+      ...earlierYearLines,
+      {line:"1040-6b",description:"Form 1040 Line 6b taxable benefits",value:result.socialSecurityBenefitsTaxable.toString(),formula:"Final taxable Social Security benefits used on Form 1040 Line 6b"},
+    ]});
+  } else {
+    if (worksheet.usedLumpSumElection || worksheet.lumpSumElectionAdditionalBenefitsByYear.length > 0) throw new Error("Social Security reference is missing its lump-sum election audit.");
+    requireEqual(standard, worksheet.taxableBenefits, "selected taxable benefits");
   }
-
-  return {
-    title: "Social Security Benefits Worksheet Reference Summary",
-    warningLabel: "REFERENCE SUMMARY ONLY",
-    sections,
-  };
+  requireEqual(worksheet.taxableBenefits, result.socialSecurityBenefitsTaxable, "final taxable benefits");
+  return {title:"Social Security Benefits Worksheet Reference Summary",warningLabel:"REFERENCE SUMMARY ONLY",sections};
 }
 
 export async function fillSocialSecurityBenefitsWorksheetReference(
@@ -294,7 +274,7 @@ export async function fillSocialSecurityBenefitsWorksheetReference(
     y -= 6;
 
     for (const line of section.lines) {
-      if (y < 90) {
+      if (y < 130) {
         newPage();
       }
 
@@ -320,6 +300,7 @@ export async function fillSocialSecurityBenefitsWorksheetReference(
     }
   }
 
+  await markReviewPdf(doc);
   const pdfBytes = await doc.save();
   await mkdir(outputDir, { recursive: true });
   const outputPath = join(outputDir, SOCIAL_SECURITY_BENEFITS_WORKSHEET_REFERENCE_FILENAME);
