@@ -1534,6 +1534,8 @@ export function updateSectionData(
   const iraSourcesChanged = ["income-w2", "income-self-employment", "income-retirement"].includes(sectionId) && adjustments?.iraContributions;
   const hsaSourcesChanged = ["income-w2", "personal-info"].includes(sectionId) && adjustments?.hsaAccounts;
   const sourceValuesChanged = guidedSourceValuesChanged(state.sectionData[sectionId as keyof SectionDataMap], data);
+  const nextGovernment = sectionId === "income-unemployment" ? data as UnemploymentData : state.sectionData["income-unemployment"];
+  const refundSourcesChanged = sourceValuesChanged && ["personal-info", "income-unemployment", "deductions"].includes(sectionId) && nextGovernment?.taxRefund;
   const nextRetirement = sectionId === "income-retirement" ? data as SectionDataMap["income-retirement"] : state.sectionData["income-retirement"];
   const iraBasisSourcesChanged = sourceValuesChanged && ["income-retirement", "personal-info", "adjustments"].includes(sectionId) && nextRetirement?.basisSources;
   const nextRentals = sectionId === "income-rental" ? data as SectionDataMap["income-rental"] : state.sectionData["income-rental"];
@@ -1585,6 +1587,7 @@ export function updateSectionData(
     sectionData: {
       ...state.sectionData,
       [sectionId]: data,
+      ...(refundSourcesChanged && nextGovernment ? { "income-unemployment": { ...nextGovernment, taxRefund: { ...refundSourcesChanged, sourceFactsConfirmed: null } } } : {}),
       ...(iraBasisSourcesChanged && nextRetirement ? { "income-retirement": { ...nextRetirement, basisSources: { ...iraBasisSourcesChanged, sourceFactsConfirmed: null } } } : {}),
       ...(rentalCarrySourcesChanged && nextRentals ? { "income-rental": { ...nextRentals, entries: nextRentals.entries.map(entry => entry.priorLossSources ? { ...entry, priorLossSources: { ...entry.priorLossSources, sourceFactsConfirmed: null } } : entry) } } : {}),
       ...(estimatedTaxSourcesChanged && nextPayments ? { payments: { ...nextPayments, estimatedTaxFacts: { ...estimatedTaxSourcesChanged, sourceFactsConfirmed: null } } } : {}),
@@ -1876,7 +1879,7 @@ function validateSocialSecuritySection(data: SocialSecurityData | undefined, sta
 
 function validateUnemploymentSection(data: UnemploymentData | undefined, state: GuidedFlowState): SectionValidationResult {
   if (!unemploymentEntries(data).some(isStartedUnemployment)) return EMPTY_SECTION("government payment info");
-  return validateRequiredFacts(unemploymentFactErrors(data, state.segmentation.filingStatus, state.taxYear, state.sectionData["personal-info"], state.sectionData["state-return"]));
+  return validateRequiredFacts(unemploymentFactErrors(data, state.segmentation.filingStatus, state.taxYear, state.sectionData["personal-info"], state.sectionData["state-return"], state.sectionData.deductions));
 }
 
 function validateDeductionsSection(data: DeductionData | undefined, taxYear?: number | null, sourceErrors: Record<string, string> = {}, filingStatus?: FilingStatus | null, spouse?: unknown): SectionValidationResult {

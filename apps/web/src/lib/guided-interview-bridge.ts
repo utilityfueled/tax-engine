@@ -54,6 +54,7 @@ import { isStartedRental, rentalFactErrors, rentalExpenseFields } from "./guided
 import { buildGuidedRentalCarryovers } from "./guided-rental-carry-sources";
 import { paRentalAmountFields } from "./guided-pa-rental-facts";
 import { isStartedUnemployment, unemploymentEntries, unemploymentFactErrors, governmentSourceTotal } from "./guided-unemployment-facts";
+import { buildGuidedTaxRefund } from "./guided-tax-refund";
 import { buildGovernmentPaymentSourceRecords } from "./guided-government-payment-inputs";
 import { nonW2TaxAllocationErrors } from "./guided-salt-facts";
 import { socialSecurityEntries, isStartedSocialSecurity, socialSecurityFactErrors, socialSecuritySourceTotal } from "./guided-social-security-facts";
@@ -493,8 +494,8 @@ function buildSocialSecurityElectionInput(data: SocialSecurityData | undefined) 
 
 // ── Unemployment (1099-G) converter ──────────────────────────────────────
 
-export function buildUnemploymentInputs(data: UnemploymentData | undefined) {
-  assertKnownFacts(unemploymentFactErrors(data));
+export function buildUnemploymentInputs(data: UnemploymentData | undefined, context?: { taxYear?: number | null; filingStatus?: FilingStatus | null; personalInfo?: PersonalInfoData; stateData?: StateReturnData; deductions?: DeductionData }) {
+  assertKnownFacts(unemploymentFactErrors(data, context?.filingStatus, context?.taxYear, context?.personalInfo, context?.stateData, context?.deductions));
   return buildGovernmentPaymentSourceRecords(unemploymentEntries(data).filter(isStartedUnemployment));
 }
 
@@ -645,7 +646,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     assertKnownFacts(minimumTaxCreditFactErrors(creditsData?.minimumTaxCredit, state.taxYear, segmentation.filingStatus, personalInfo));
     assertKnownFacts(retirementFactErrors(retirementData?.entries, true, segmentation.filingStatus, state.taxYear, stateReturnData, { data: retirementData?.basisSources, personal: personalInfo, adjustments: adjustmentData }));
     assertKnownFacts(socialSecurityFactErrors(socialSecurityData, segmentation.filingStatus, state.taxYear, personalInfo, adjustmentData));
-    assertKnownFacts(unemploymentFactErrors(unemploymentData, segmentation.filingStatus, state.taxYear, personalInfo, stateReturnData));
+    assertKnownFacts(unemploymentFactErrors(unemploymentData, segmentation.filingStatus, state.taxYear, personalInfo, stateReturnData, deductionData));
     assertKnownFacts(savingsBondFactErrors(creditsData?.savingsBondEducation, state.taxYear, segmentation.filingStatus, investData?.interestEntries, personalInfo));
     assertKnownFacts(educationFactErrors(creditsData, state.taxYear, segmentation.filingStatus, personalInfo));
     assertKnownFacts(educationDistributionFactErrors(creditsData?.educationDistributions, state.taxYear, segmentation.filingStatus,
@@ -688,7 +689,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
   const scheduleDInputs = buildGuidedScheduleDInputs(investData, state.taxYear, segmentation.filingStatus, personalInfo);
   const formSSA1099 = buildSocialSecurityInputs(socialSecurityData);
   const formRRB1099 = buildRailroadSocialSecurityInputs(socialSecurityData);
-  const form1099G = buildUnemploymentInputs(unemploymentData);
+  const form1099G = buildUnemploymentInputs(unemploymentData, { taxYear: state.taxYear, filingStatus: segmentation.filingStatus, personalInfo, stateData: stateReturnData, deductions: deductionData });
   const scheduleA = buildScheduleAInput(deductionData, stateReturnData);
   const mortgageInputs = buildGuidedMortgageInputs(deductionData, state.taxYear, segmentation.filingStatus, personalInfo.spouse);
   const donations = buildDonationsInput(deductionData, state.taxYear);
@@ -796,6 +797,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     socialSecurityFacts: formSSA1099.length + formRRB1099.length ? { puertoRicoIncomeExclusion: toDecimalString(socialSecurityData?.puertoRicoIncomeExclusion), americanSamoaIncomeExclusion: toDecimalString(socialSecurityData?.americanSamoaIncomeExclusion), sourceFactsConfirmed: socialSecurityData?.sourceFactsConfirmed ?? undefined } : undefined,
     socialSecurityLumpSumElection: formSSA1099.length + formRRB1099.length ? buildSocialSecurityElectionInput(socialSecurityData) : undefined,
     form1099G,
+    taxableRefundWorksheet: buildGuidedTaxRefund(unemploymentData?.taxRefund, unemploymentEntries(unemploymentData).filter(isStartedUnemployment), state.taxYear, segmentation.filingStatus, personalInfo, deductionData),
     rentalProperties,
     scheduleA,
     ...mortgageInputs,
@@ -952,7 +954,7 @@ export function buildGuidedFactAnswers(
   const governmentEntries = unemploymentEntries(unemplData).filter(isStartedUnemployment);
   if (governmentEntries.length) {
     const total = governmentSourceTotal(governmentEntries, "compensation");
-    const complete = Object.keys(unemploymentFactErrors(unemplData, state.segmentation.filingStatus, state.taxYear, state.sectionData["personal-info"], state.sectionData["state-return"])).length === 0;
+    const complete = Object.keys(unemploymentFactErrors(unemplData, state.segmentation.filingStatus, state.taxYear, state.sectionData["personal-info"], state.sectionData["state-return"], state.sectionData.deductions)).length === 0;
     answers.push({ factId: "government-payments-review", answerText: total === null ? "Government-payment source records entered; amounts and ownership need review." : `${governmentEntries.length} government-payment source record(s) ${complete ? "confirmed" : "entered; source facts need review"}. Original unemployment compensation: $${fmtNum(total)}.` });
   }
 
@@ -1118,7 +1120,7 @@ export function buildGuidedSyntheticDocuments(
       size: 0,
       uploadedAt: now,
       kind: "1099-g",
-      coverage: Object.keys(unemploymentFactErrors(unemplData, state.segmentation.filingStatus, state.taxYear, state.sectionData["personal-info"], state.sectionData["state-return"])).length ? "partially-supported" : "supported",
+      coverage: Object.keys(unemploymentFactErrors(unemplData, state.segmentation.filingStatus, state.taxYear, state.sectionData["personal-info"], state.sectionData["state-return"], state.sectionData.deductions)).length ? "partially-supported" : "supported",
       label: "1099-G (guided interview)",
       notes: "Entered via guided interview.",
       matchedFixtureId: null,

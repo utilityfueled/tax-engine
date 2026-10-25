@@ -23,6 +23,7 @@ export function buildGovernmentPaymentSourceRecords(entries: UnemploymentEntryDa
     unemploymentCompensation: money(entry.compensation, "Box 1 unemployment"), federalWithheld: money(entry.federalWithheld, "Box 4 withholding"),
     stateOrLocalTaxRefund: money(entry.stateOrLocalTaxRefund, "Box 2 refund"),
     ...(entry.refundTaxYear?.trim() ? { refundTaxYear: Number(entry.refundTaxYear) } : {}),
+    ...(entry.refundExpenseTaxYear?.trim() ? { refundExpenseTaxYear: Number(entry.refundExpenseTaxYear) } : {}),
     rtaaPayments: money(entry.rtaaPayments, "Box 5 RTAA"), taxableGrants: money(entry.taxableGrants, "Box 6 taxable grants"),
     grantIncomeCategory: entry.grantIncomeCategory || undefined, agriculturePayments: money(entry.agriculturePayments, "Box 7 agriculture"),
     tradeOrBusinessRefund: entry.tradeOrBusinessRefund ?? undefined, marketGain: money(entry.marketGain, "Box 9 market gain"),

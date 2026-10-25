@@ -35,6 +35,7 @@ export function GovernmentPaymentSourceFields({ entry, onChange }: { entry: Unem
     </div></details>
     <label className="guided-field"><span className="guided-field-label">Actual taxable grant classification</span><select className="guided-input" value={entry.grantIncomeCategory ?? ""} onChange={event => onChange({ grantIncomeCategory: event.target.value as UnemploymentEntryData["grantIncomeCategory"] })}><option value="">Choose if a taxable grant is reported</option><option value="nonbusiness">Nonbusiness taxable grant</option><option value="business">Business grant — separate worksheet</option><option value="farm">Farm grant — separate worksheet</option></select></label>
     <Text label="Actual tax year of the Box 2 refund, when any" value={entry.refundTaxYear} onChange={refundTaxYear => onChange({ refundTaxYear })} />
+    <Text label="Actual year refunded taxes were paid and deducted" value={entry.refundExpenseTaxYear} onChange={refundExpenseTaxYear => onChange({ refundExpenseTaxYear })} />
     <Fact label="Is Box 8 checked for a trade or business refund?" value={entry.tradeOrBusinessRefund} onChange={tradeOrBusinessRefund => onChange({ tradeOrBusinessRefund })} />
     {(entry.sourceTaxYear === "2026" || entry.sourceFormRevision === "2026-12" || entry.familyLeaveBenefits != null) && <>
       <CurrencyField label="Family leave benefits (2026 Box 10)" value={entry.familyLeaveBenefits ?? ""} onChange={familyLeaveBenefits => onChange({ familyLeaveBenefits })} required />

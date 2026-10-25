@@ -1,0 +1,48 @@
+form: Guided historical income-tax refund sources
+taxYear: 2025
+reference: https://www.irs.gov/instructions/i1040gi; https://www.irs.gov/publications/p525
+lines:
+  - line: original_sources
+    description: Preserve original refunds and separate tax-return versus payment years
+    formula: capture each positive original1099G refund with actual payer, reference, owner, year, amount, Box3 and paid/deducted year; reconcile every source exactly before forwarding one historical worksheet
+    testRef: "tests/guided-interview/guided-tax-refund.test.ts::preserves and binds actual refund sources without inventing amounts"
+  - line: ordinary_method
+    description: Actual prior return establishes the ordinary tax-benefit calculation
+    formula: require one actual2018..2025 deduction year before receipt, matched unchanged return members, actual itemization/election, standard deduction and historical SALT inputs; itemized income-tax branch requires positive ordinary taxable income and tax, zero AMT/unused credits/other recoveries and no dependency or special capital-rate method
+    note: |
+      Preserve Box3 separately from the actual expense year. Known nonitemization
+      or actual sales-tax election gives zero through the core; never substitute
+      one election for another. Mandatory itemization may establish an actual zero
+      available standard deduction. Unknown facts reject. Joint-return membership
+      changes, mixed expense years, current-year recoveries and special tax-benefit
+      methods need their separate calculation; no user-entered taxable result.
+    testRef: "tests/guided-interview/guided-tax-refund.test.ts::rejects missing historical facts and unsupported recovery methods"
+  - line: recipient_binding
+    description: Captured original statements bind actual recipient and source years independently
+    formula: require original nine-digit payer TIN, actual primary or joint spouse recipient and matching household last four; a freshly captured malformed or different-owner statement cannot establish refund history
+    testRef: "tests/guided-interview/guided-tax-refund.test.ts::rejects freshly captured contradictory original recipients and years"
+  - line: earlier_recoveries_and_nol
+    description: Prior recovery usage and NOL adjustments are actual historical facts
+    formula: for the ordinary income-tax itemizer branch require actual known-zero prior recoveries before the current receipt year and historical NOL carryover; preserve positive sources and reject until their separate historical adjustment is calculated
+    note: Publication525 Worksheet2 line5 reduces original deductions for earlier refunds and footnote4 adjusts taxable income for NOL carryovers; neither absence can be inferred from positive prior taxable income or this year's other-recovery answer.
+    testRef: "tests/guided-interview/guided-tax-refund.test.ts::requires actual prior recovery and NOL history before ordinary treatment"
+  - line: once_only_transfer
+    description: Build actual Form1099G plus the one historical worksheet
+    formula: preserve original Box2/3 and actual expense year; canonical Schedule1 computes income once while withholding remains the original independent payment
+    testRef: "tests/guided-interview/guided-tax-refund.test.ts::calculates ordinary refunds once and retains actual zero-benefit elections"
+  - line: next_year_sources
+    description: Actual2025 SALT MAGI is required for a2026 receipt
+    formula: collect actual source2026 and deduction2025 without opening the full2026 calculation gate; validate the source worksheet using the historical2025 limit
+    testRef: "tests/guided-interview/guided-tax-refund.test.ts::preserves next-year historical MAGI and distinct expense years"
+  - line: confirmation
+    description: Reconfirm changed sources and household facts
+    formula: substantive worksheet, original statement, household or other-recovery edits revoke source confirmation; no confirmation is inferred
+    testRef: "tests/guided-interview/guided-tax-refund.test.ts::revokes confirmation after original or household edits"
+  - line: actual_controls
+    description: Reachable source controls preserve blanks, zero and historical elections
+    formula: original records copy only supplied facts; every monetary field uses text and Decimal conversion; save source facts, not a taxability override
+    testRef: "tests/apps/web/tax-refund-source-interactions.test.tsx::collects actual refund history without defaults and invalidates edits"
+  - line: saved_browser_sources
+    description: Production controls retain original historical facts across reload
+    formula: editing and reconfirming the actual election changes only its calculated benefit; original refund cents, known zero and blank remain distinct and source references stay local
+    testRef: "apps/web/tests/guided-tax-refund.spec.ts::preserves actual refund history and elections"

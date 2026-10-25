@@ -3,6 +3,8 @@ import { calculateForm1099G } from "@/engine/forms/form-1099-g";
 import { buildGovernmentPaymentSourceRecords } from "./guided-government-payment-inputs";
 import { parseGuidedCurrency } from "./guided-currency";
 import { amountError, hasEnteredAmount } from "./guided-required-facts";
+import { guidedTaxRefundErrors, type GuidedTaxRefundData, type RefundRecoveryContext } from "./guided-tax-refund";
+import { guidedSourceValuesChanged } from "./guided-source-confirmation";
 import type { FilingStatus, PersonalInfoData, StateReturnData, UnemploymentData } from "./guided-interview-flow";
 
 export interface UnemploymentEntryData {
@@ -18,6 +20,7 @@ export interface UnemploymentEntryData {
   federalWithheld: string;
   stateOrLocalTaxRefund?: string;
   refundTaxYear?: string;
+  refundExpenseTaxYear?: string;
   rtaaPayments?: string;
   taxableGrants?: string;
   grantIncomeCategory?: "nonbusiness" | "business" | "farm" | "";
@@ -44,7 +47,7 @@ export interface UnemploymentEntryData {
   statePayerId?: string;
   stateWithheld?: string;
 }
-export interface UnemploymentSourceData { entries?: UnemploymentEntryData[]; }
+export interface UnemploymentSourceData { entries?: UnemploymentEntryData[]; taxRefund?: GuidedTaxRefundData; }
 export const emptyUnemploymentEntry: UnemploymentEntryData = { compensation: "", federalWithheld: "" };
 export const governmentOtherAmounts = [
   ["stateOrLocalTaxRefund", "State or local tax refund, credit or offset (Box 2)"],
@@ -71,9 +74,9 @@ export function governmentSourceTotal(entries: UnemploymentEntryData[], field: "
 }
 export function withUnemploymentEntries(data: UnemploymentData, entries: UnemploymentEntryData[]): UnemploymentData {
   const started = entries.some(isStartedUnemployment);
-  return { ...data, entries, compensation: started ? governmentSourceTotal(entries, "compensation")?.toFixed() ?? "" : "", federalWithheld: started ? governmentSourceTotal(entries, "federalWithheld")?.toFixed() ?? "" : "" };
+  return { ...data, entries, ...(data.taxRefund && guidedSourceValuesChanged(data.entries, entries) ? { taxRefund: { ...data.taxRefund, sourceFactsConfirmed: null } } : {}), compensation: started ? governmentSourceTotal(entries, "compensation")?.toFixed() ?? "" : "", federalWithheld: started ? governmentSourceTotal(entries, "federalWithheld")?.toFixed() ?? "" : "" };
 }
-export function unemploymentFactErrors(data: UnemploymentData | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, personalInfo?: PersonalInfoData, stateData?: StateReturnData): Record<string, string> {
+export function unemploymentFactErrors(data: UnemploymentData | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, personalInfo?: PersonalInfoData, stateData?: StateReturnData, otherRecoveries?: RefundRecoveryContext): Record<string, string> {
   const errors: Record<string, string> = {};
   const entries = unemploymentEntries(data).filter(isStartedUnemployment);
   const sourceKeys = new Set<string>();
@@ -96,7 +99,7 @@ export function unemploymentFactErrors(data: UnemploymentData | undefined, filin
     for (const [field, label] of [["compensation", "unemployment compensation in Box 1"], ["federalWithheld", "federal withholding in Box 4"], ...governmentOtherAmounts] as const) {
       const error = amountError(entry[field], label); if (error) fail(field, error);
     }
-    for (const field of ["stateOrLocalTaxRefund", "priorYearRepaid", "agriculturePayments", "marketGain"] as const) if (!amountError(entry[field], field) && parseGuidedCurrency(entry[field]).gt(0)) fail(field, "This actual source amount is saved. Complete its separate historical tax-benefit, claim-of-right or farm worksheet before this guided route can calculate.");
+    for (const field of ["priorYearRepaid", "agriculturePayments", "marketGain"] as const) if (!amountError(entry[field], field) && parseGuidedCurrency(entry[field]).gt(0)) fail(field, "This actual source amount is saved. Complete its separate claim-of-right or farm worksheet before this guided route can calculate.");
     if (entry.sourceTaxYear === "2026" || entry.sourceFormRevision === "2026-12" || hasEnteredAmount(entry.familyLeaveBenefits)) {
       const error = amountError(entry.familyLeaveBenefits, "actual family leave benefits (2026 Box 10)");
       if (error) fail("family-leave", error);
@@ -118,6 +121,7 @@ export function unemploymentFactErrors(data: UnemploymentData | undefined, filin
     const total = governmentSourceTotal(entries, field);
     if (amountError(data[field], field) || total === null || !total.eq(parseGuidedCurrency(data[field]))) errors[`government-total-${field}`] = "Reconcile the saved total with the actual government-payment source records.";
   }
+  Object.assign(errors, guidedTaxRefundErrors(data?.taxRefund, entries, taxYear, filingStatus, personalInfo, otherRecoveries));
   if (entries.length && Object.keys(errors).length === 0) {
     try {
       const forms = buildGovernmentPaymentSourceRecords(entries);
