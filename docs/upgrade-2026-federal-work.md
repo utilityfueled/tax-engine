@@ -41,3 +41,9 @@ Checks: 537 tests pass across the federal orchestrator, refund unit/boundary and
 PDF reference-summary suites; engine typecheck passes; spec validation passes
 (2,961 references at this checkpoint). Scoped diff reviewed; no filing gates
 changed. Mixed-origin-year batches reject pending separate-workbook orchestration.
+
+Review follow-up to `49d3085`: absent property/income-tax payments now fail for
+an itemized refund, rather than consuming zero cap headroom. Explicit zero is
+preserved. Negative deduction/payment facts and nonfinite MAGI reject; a finite
+negative MAGI remains legal and incurs no phase-down. Seven additional failure
+regressions failed before the fix. All 544 focused tests and typecheck pass.

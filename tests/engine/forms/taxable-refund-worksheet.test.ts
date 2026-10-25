@@ -18,6 +18,7 @@ import type { TaxableRefundWorksheetInput } from "@/models/inputs.js";
 function makeWorksheet(overrides: Partial<TaxableRefundWorksheetInput> = {}): TaxableRefundWorksheetInput {
   return {
     priorTaxYear: 2024,
+        priorYearPropertyTaxesPaid: "0",
     priorYearItemized: true,
     priorYearItemizedTotal: "20000",
     priorYearStandardDeduction: "14600",
@@ -91,7 +92,7 @@ describe("Taxable Refund Worksheet — basic tax benefit rule", () => {
     // Refund $3,000 < $5,400 → fully taxable
     const result = calculateTaxableRefundWorksheet(
       make1099Gs("3000"),
-      makeWorksheet({ priorYearStateLocalTaxesPaid: undefined })
+      makeWorksheet({ priorYearStateLocalTaxesPaid: "8000" })
     );
     expect(result.taxableRefund.toNumber()).toBe(3000);
     expect(result.taxBenefitAmount.toNumber()).toBe(3000);
@@ -105,7 +106,7 @@ describe("Taxable Refund Worksheet — basic tax benefit rule", () => {
       makeWorksheet({
         priorYearItemizedTotal: "15000",
         priorYearStandardDeduction: "14600",
-        priorYearStateLocalTaxesPaid: undefined,
+        priorYearStateLocalTaxesPaid: "8000",
       })
     );
     expect(result.taxableRefund.toNumber()).toBe(400);
@@ -115,7 +116,7 @@ describe("Taxable Refund Worksheet — basic tax benefit rule", () => {
   it("multiple 1099-G Box 2 amounts are aggregated", () => {
     const result = calculateTaxableRefundWorksheet(
       make1099Gs("2000", "1500", "500"),
-      makeWorksheet({ priorYearStateLocalTaxesPaid: undefined })
+      makeWorksheet({ priorYearStateLocalTaxesPaid: "8000" })
     );
     // Total refund = 4000, excess itemized = 5400 → taxable = 4000
     expect(result.totalRefund.toNumber()).toBe(4000);
@@ -128,7 +129,7 @@ describe("Taxable Refund Worksheet — basic tax benefit rule", () => {
       { payer: "State B", unemploymentCompensation: "0", stateLocalIncomeTaxRefund: "1000" },
     ];
     const result = calculateTaxableRefundWorksheet(forms, makeWorksheet({
-      priorYearStateLocalTaxesPaid: undefined,
+      priorYearStateLocalTaxesPaid: "8000",
     }));
     expect(result.totalRefund.toNumber()).toBe(1000);
     expect(result.taxableRefund.toNumber()).toBe(1000);
@@ -390,7 +391,7 @@ describe("Taxable Refund Worksheet — edge cases", () => {
       makeWorksheet({
         priorYearItemizedTotal: "20000",
         priorYearStandardDeduction: "14600",
-        priorYearStateLocalTaxesPaid: undefined,
+        priorYearStateLocalTaxesPaid: "8000",
       })
     );
     // Excess = $5,400, refund = $5,400 → fully taxable
@@ -403,7 +404,7 @@ describe("Taxable Refund Worksheet — edge cases", () => {
       makeWorksheet({
         priorYearItemizedTotal: "20000",
         priorYearStandardDeduction: "14600",
-        priorYearStateLocalTaxesPaid: undefined,
+        priorYearStateLocalTaxesPaid: "8000",
       })
     );
     // Excess = $5,400, refund = $10,000 → capped at $5,400
@@ -413,7 +414,7 @@ describe("Taxable Refund Worksheet — edge cases", () => {
   it("very small refund ($1) is still computed correctly", () => {
     const result = calculateTaxableRefundWorksheet(
       make1099Gs("1"),
-      makeWorksheet({ priorYearStateLocalTaxesPaid: undefined })
+      makeWorksheet({ priorYearStateLocalTaxesPaid: "8000" })
     );
     expect(result.taxableRefund.toNumber()).toBe(1);
   });
@@ -424,7 +425,7 @@ describe("Taxable Refund Worksheet — edge cases", () => {
       makeWorksheet({
         priorYearItemizedTotal: "14601",
         priorYearStandardDeduction: "14600",
-        priorYearStateLocalTaxesPaid: undefined,
+        priorYearStateLocalTaxesPaid: "8000",
       })
     );
     // Excess = $1, refund = $5,000 → taxable = $1

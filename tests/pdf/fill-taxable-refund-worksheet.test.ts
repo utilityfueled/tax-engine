@@ -38,6 +38,7 @@ describe("Taxable Refund Worksheet packet reference summary", () => {
       ],
       taxableRefundWorksheet: {
         priorTaxYear: 2024,
+        priorYearPropertyTaxesPaid: "0",
         priorYearItemized: true,
         priorYearItemizedTotal: "20000",
         priorYearStandardDeduction: "14600",
@@ -253,6 +254,7 @@ describe("Taxable Refund Worksheet packet reference summary", () => {
         ],
         taxableRefundWorksheet: {
         priorTaxYear: 2024,
+        priorYearPropertyTaxesPaid: "0",
           priorYearItemized: true,
           priorYearItemizedTotal: "20000",
           priorYearStandardDeduction: "14600",

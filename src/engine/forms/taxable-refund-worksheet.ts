@@ -29,6 +29,7 @@ function getSaltCap(worksheet: TaxableRefundWorksheetInput): Decimal {
   if (worksheet.priorYearSaltMagi === undefined) {
     throw new Error(`Historical SALT MAGI is required for origin tax year ${year}.`);
   }
+  if (!d(worksheet.priorYearSaltMagi).isFinite()) throw new Error("Historical SALT MAGI must be finite.");
   const maximum = d(year === 2025 ? "40000" : "40400");
   const threshold = d(year === 2025 ? "500000" : "505000").dividedBy(mfs ? 2 : 1);
   const reduction = zeroFloor(d(worksheet.priorYearSaltMagi).minus(threshold)).times("0.30");
@@ -62,6 +63,9 @@ export function calculateTaxableRefundWorksheet(
   receivedTaxYear?: number,
 ): TaxableRefundWorksheetResult {
   const audit = new AuditTrail();
+  for (const field of ["priorYearItemizedTotal", "priorYearStandardDeduction", "priorYearStateLocalTaxesPaid", "priorYearPropertyTaxesPaid", "priorYearAlternativeGeneralSalesTaxDeduction"] as const) {
+    if (worksheet[field] !== undefined && (!d(worksheet[field]).isFinite() || d(worksheet[field]).isNegative())) throw new Error("Historical deduction and payment amounts must be finite and cannot be negative.");
+  }
   const saltCap = getSaltCap(worksheet);
   if (receivedTaxYear !== undefined && worksheet.priorTaxYear >= receivedTaxYear) {
     throw new Error("A taxable refund's origin tax year must be before its receipt year; same-year recoveries reduce the deduction.");
@@ -99,6 +103,9 @@ export function calculateTaxableRefundWorksheet(
     audit.record("Taxable Refund WS", "3", "Prior-year itemized?",
       ZERO, "No — took standard deduction; refund is not taxable");
     return buildZeroResult(audit, totalRefund, "Did not itemize in prior year");
+  }
+  if (worksheet.priorYearStateLocalTaxesPaid === undefined || worksheet.priorYearPropertyTaxesPaid === undefined) {
+    throw new Error("Actual historical income and property taxes are required, including explicit zero when applicable.");
   }
   audit.record("Taxable Refund WS", "3", "Prior-year itemized?",
     new Decimal(1), "Yes — continue to Line 4");

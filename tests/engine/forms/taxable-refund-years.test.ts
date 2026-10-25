@@ -5,6 +5,7 @@ import { TaxableRefundWorksheetSchema } from "@/models/inputs.js";
 const facts = {
   priorTaxYear: 2025, priorYearItemized: true, priorYearItemizedTotal: "60000",
   priorYearStandardDeduction: "15750", priorYearStateLocalTaxesPaid: "41000",
+  priorYearPropertyTaxesPaid: "0",
   priorYearFilingStatus: "single" as const, priorYearSaltMagi: "500000",
 };
 function calculate(overrides: Record<string, unknown> = {}, refund = "5000", receivedTaxYear = 2026) {
@@ -45,5 +46,16 @@ describe("Taxable refunds retain their origin year", () => {
   });
   it("rejects a negative refund instead of producing a negative tax benefit", () => {
     expect(() => calculate({}, "-1")).toThrow(/negative/i);
+  });
+  it.each(["priorYearPropertyTaxesPaid", "priorYearStateLocalTaxesPaid"])("rejects unknown %s instead of assuming no SALT cap consumption", (field) => {
+    expect(() => calculate({ [field]: undefined })).toThrow(/required/i);
+    expect(TaxableRefundWorksheetSchema.safeParse({ ...facts, [field]: undefined }).success).toBe(false);
+  });
+  it.each(["priorYearPropertyTaxesPaid", "priorYearStateLocalTaxesPaid", "priorYearStandardDeduction", "priorYearItemizedTotal"])("rejects negative %s", field => {
+    expect(() => calculate({ [field]: "-1" })).toThrow(/negative/i);
+  });
+  it("accepts negative MAGI after deductible losses, while rejecting nonfinite data", () => {
+    expect(calculate({ priorYearSaltMagi: "-1" }).taxableRefund.toString()).toBe("4000");
+    expect(() => calculate({ priorYearSaltMagi: "Infinity" })).toThrow(/finite/i);
   });
 });

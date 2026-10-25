@@ -24,6 +24,10 @@ lines:
       threshold is 500000 (250000 MFS); divide the result by two for MFS.
       For 2026 use 40400 and threshold 505000 (252500 MFS). Round to whole
       dollars after the MFS division. MAGI is required for 2025 and 2026.
+      Positive refunds after itemization require actual historical income taxes
+      and property taxes, including an explicit zero when none were paid. Missing
+      cap facts reject instead of becoming zero. MAGI may be negative but must be
+      finite; refund and deduction/payment amounts must be nonnegative.
       Sources refreshed 2026-10-24; independently reviewed expectations pending.
     testRef: "tests/engine/forms/taxable-refund-years.test.ts::Taxable refunds retain their origin year"
 

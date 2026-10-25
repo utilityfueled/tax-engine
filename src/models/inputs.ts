@@ -2890,7 +2890,7 @@ export const TaxableRefundWorksheetSchema = z.object({
   /** Prior-year standard deduction amount (Form 1040 Line 12a) */
   priorYearStandardDeduction: decimal,
   /** Total state/local income taxes actually paid in the prior year (before SALT cap) */
-  priorYearStateLocalTaxesPaid: optionalDecimal,
+  priorYearStateLocalTaxesPaid: optionalDecimalInput,
   /** Historical state/local real and personal property taxes; preserve unknown. */
   priorYearPropertyTaxesPaid: optionalDecimalInput,
   /** Alternative prior-year general sales tax deduction that could have been
@@ -2903,6 +2903,14 @@ export const TaxableRefundWorksheetSchema = z.object({
 }).superRefine((value, ctx) => {
   if (value.priorTaxYear >= 2025 && value.priorYearSaltMagi === undefined) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["priorYearSaltMagi"], message: "Historical SALT MAGI is required for tax years 2025 and 2026" });
+  }
+  if (value.priorYearItemized) {
+    for (const field of ["priorYearStateLocalTaxesPaid", "priorYearPropertyTaxesPaid"] as const) {
+      if (value[field] === undefined) ctx.addIssue({ code: z.ZodIssueCode.custom, path: [field], message: "Actual historical SALT amounts are required, including explicit zero when applicable" });
+    }
+  }
+  for (const field of ["priorYearItemizedTotal", "priorYearStandardDeduction", "priorYearStateLocalTaxesPaid", "priorYearPropertyTaxesPaid", "priorYearAlternativeGeneralSalesTaxDeduction"] as const) {
+    if (value[field] !== undefined && d(value[field]).isNegative()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: [field], message: "Historical deduction and tax payment amounts cannot be negative" });
   }
 });
 export type TaxableRefundWorksheetInput = z.infer<typeof TaxableRefundWorksheetSchema>;

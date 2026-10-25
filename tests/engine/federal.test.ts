@@ -13750,6 +13750,7 @@ describe("Taxable Refund Worksheet through federal pipeline", () => {
       ],
       taxableRefundWorksheet: {
         priorTaxYear: 2024,
+        priorYearPropertyTaxesPaid: "0",
         priorYearItemized: true,
         priorYearItemizedTotal: "20000",
         priorYearStandardDeduction: "14600",
@@ -13780,6 +13781,7 @@ describe("Taxable Refund Worksheet through federal pipeline", () => {
       ],
       taxableRefundWorksheet: {
         priorTaxYear: 2024,
+        priorYearPropertyTaxesPaid: "0",
         priorYearItemized: false,
         priorYearStandardDeduction: "14600",
         priorYearFilingStatus: "single",
@@ -13804,6 +13806,7 @@ describe("Taxable Refund Worksheet through federal pipeline", () => {
       ],
       taxableRefundWorksheet: {
         priorTaxYear: 2024,
+        priorYearPropertyTaxesPaid: "0",
         priorYearItemized: true,
         priorYearItemizedTotal: "25000",
         priorYearStandardDeduction: "14600",
@@ -13832,6 +13835,7 @@ describe("Taxable Refund Worksheet through federal pipeline", () => {
       ],
       taxableRefundWorksheet: {
         priorTaxYear: 2024,
+        priorYearPropertyTaxesPaid: "0",
         priorYearItemized: true,
         priorYearItemizedTotal: "20000",
         priorYearStandardDeduction: "14600",
@@ -13857,6 +13861,7 @@ describe("Taxable Refund Worksheet through federal pipeline", () => {
       ],
       taxableRefundWorksheet: {
         priorTaxYear: 2024,
+        priorYearPropertyTaxesPaid: "0",
         priorYearItemized: true,
         priorYearItemizedTotal: "18000",
         priorYearStandardDeduction: "14600",
@@ -13899,6 +13904,7 @@ describe("Taxable Refund Worksheet through federal pipeline", () => {
       ],
       taxableRefundWorksheet: {
         priorTaxYear: 2024,
+        priorYearPropertyTaxesPaid: "0",
         priorYearItemized: true,
         priorYearItemizedTotal: "20000",
         priorYearStandardDeduction: "14600",
