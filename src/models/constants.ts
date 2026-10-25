@@ -1522,13 +1522,13 @@ export const TAX_CONSTANTS: Record<number, YearConstants> = {
       annualLimit: d("108000"),
     },
     // IRC §213(d)(10) — Qualified long-term care insurance premium limits by attained age
-    // Rev. Proc. 2024-40 §3.18 for 2025
+    // Rev. Proc. 2024-40 §2.28 and final Form 7206 line 2 for 2025
     longTermCarePremiumLimits: {
       age40OrUnder: d(480),
-      age41to50: d(890),
-      age51to60: d(1790),
-      age61to70: d(4770),
-      age71OrOlder: d(5960),
+      age41to50: d(900),
+      age51to60: d(1800),
+      age61to70: d(4810),
+      age71OrOlder: d(6020),
     },
     state: {
       njResident: {

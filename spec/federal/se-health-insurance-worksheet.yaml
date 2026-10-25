@@ -48,21 +48,27 @@ lines:
   - line: "2"
     description: "Qualified long-term care insurance premiums (age-limited)"
     formula: "For each covered person: min(actual LTC premium, age-based limit per IRC §213(d)(10)). Sum all covered persons."
-    irsRef: "IRC §213(d)(10); Rev. Proc. 2024-40 §3.18"
+    irsRef: "IRC §213(d)(10); Rev. Proc. 2024-40 §2.28; final 2025 Form 7206 line 2"
     inputs:
       - "Long-term care premium per covered person"
       - "Attained age of each covered person at end of tax year"
     notes: |
-      2025 limits (Rev. Proc. 2024-40 §3.18):
+      2025 limits (Rev. Proc. 2024-40 §2.28):
         Age 40 or under:  $480
-        Age 41–50:        $890
-        Age 51–60:        $1,790
-        Age 61–70:        $4,770
-        Age 71 or older:  $5,960
+        Age 41–50:        $900
+        Age 51–60:        $1,800
+        Age 61–70:        $4,810
+        Age 71 or older:  $6,020
     edgeCases:
       - "Each covered person has their own age-based limit"
       - "Attained age means age at end of tax year, not at policy inception"
     testRef: "tests/engine/forms/se-health-insurance-worksheet.test.ts::Line 2 - LTC premiums capped by age (age 40 or under)"
+
+  - line: "2-year-specific-source-limits"
+    description: "Apply the published year's long-term care premium limits"
+    formula: "Use age at year end. For 2025, caps by brackets <=40,41-50,51-60,61-70,71+ are 480/900/1800/4810/6020; for 2026 they are 500/930/1860/4960/6200. These caps alone do not establish insurance, monthly or business eligibility."
+    irsRef: "https://www.irs.gov/pub/irs-drop/rp-24-40.pdf section 2.28; https://www.irs.gov/pub/irs-drop/rp-25-32.pdf section 4.27; Form 7206 line 2"
+    testRef: "tests/engine/forms/se-health-insurance-indexed-limits.test.ts::uses published year-specific LTC caps at age %s"
 
   - line: "3"
     description: "Medicare premiums"
