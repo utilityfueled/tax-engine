@@ -7,6 +7,7 @@ import { buildForeignIncomeInput, foreignIncomeFactErrors } from "./guided-forei
 import { buildGuidedNetOperatingLoss, netOperatingLossFactErrors } from "./guided-net-operating-loss";
 import { buildCurrentLossOrigin, currentLossOriginFactErrors } from "./guided-current-loss-origin";
 import { buildGuidedCodNol, codNolFactErrors } from "./guided-cod-nol";
+import { buildGuidedCharitableCarryover, charitableCarryoverFactErrors } from "./guided-charitable-carryover";
 import { buildEstimatedTaxFacts, estimatedTaxFactErrors } from "./guided-estimated-tax-facts";
 import { buildMinimumTaxCreditInput, minimumTaxCreditFactErrors } from "./guided-minimum-tax-credit";
 import { buildGuidedForeignTaxElection, guidedForeignTaxFactErrors } from "./guided-foreign-tax-election";
@@ -636,6 +637,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     assertKnownFacts(rentalFactErrors(rentalData?.entries, segmentation.filingStatus, state.taxYear, segmentation.stateCode, personalInfo));
     assertKnownFacts(deductionFactErrors(deductionData, state.taxYear, segmentation.filingStatus, personalInfo.spouse));
     assertKnownFacts(investmentInterestFactErrors(deductionData, investData?.childElections, state.taxYear));
+    assertKnownFacts(charitableCarryoverFactErrors(deductionData?.charitableCarryoverSources, state.taxYear, segmentation.filingStatus, personalInfo));
     assertKnownFacts(nonW2TaxAllocationErrors(state));
     assertKnownFacts(allPaymentFactErrors(paymentData, state.taxYear));
     assertKnownFacts(estimatedTaxFactErrors(paymentData, state.taxYear));
@@ -797,6 +799,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     scheduleA,
     ...mortgageInputs,
     donations,
+    charitableCarryoverSources: buildGuidedCharitableCarryover(deductionData?.charitableCarryoverSources, state.taxYear, segmentation.filingStatus, personalInfo),
     childTaxCredit: personalInfo.childTaxCredit ? {
       bonaFidePuertoRicoResident: personalInfo.childTaxCredit.bonaFidePuertoRicoResident ?? undefined,
       ...(hasEnteredAmount(personalInfo.childTaxCredit.possessionIncomeExclusion) || hasEnteredAmount(personalInfo.childTaxCredit.puertoRicoExcludedIncome) || hasEnteredAmount(personalInfo.childTaxCredit.form4563ExcludedIncome) ? childCreditExclusionValues(personalInfo.childTaxCredit) : {}),

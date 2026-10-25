@@ -2,6 +2,7 @@ import { foreignIncomeFactErrors, type ForeignIncomeData } from "./guided-foreig
 import { netOperatingLossFactErrors, type NetOperatingLossData } from "./guided-net-operating-loss";
 import { currentLossOriginFactErrors, invalidateCurrentLossOrigin, type CurrentLossOriginData } from "./guided-current-loss-origin";
 import { codNolFactErrors, invalidateGuidedCodNol, type CodNolData } from "./guided-cod-nol";
+import { charitableCarryoverFactErrors, type CharitableCarryoverData } from "./guided-charitable-carryover";
 import { estimatedTaxFactErrors, type EstimatedTaxFactsData } from "./guided-estimated-tax-facts";
 import { minimumTaxCreditFactErrors, type MinimumTaxCreditData } from "./guided-minimum-tax-credit";
 import { investmentInterestFactErrors, type InvestmentInterestSourceData } from "./guided-investment-interest";
@@ -937,6 +938,7 @@ export interface DeductionData {
   mortgageEntries?: MortgageEntryData[];
   mortgageWorksheet?: MortgageWorksheetData;
   donationEntries?: DonationEntryData[];
+  charitableCarryoverSources?: CharitableCarryoverData;
 }
 
 export const emptyDeductionData: DeductionData = {
@@ -1559,6 +1561,7 @@ export function updateSectionData(
   const healthSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "credits", "adjustments"].includes(sectionId) && nextAdjustments?.healthInsuranceFacts;
   const mortgageSourcesChanged = sourceValuesChanged && sectionId === "personal-info" && state.sectionData.deductions?.mortgageEntries?.length ? state.sectionData.deductions : undefined;
   const nextDeductions = sectionId === "deductions" ? data as DeductionData : state.sectionData.deductions;
+  const charitableCarryoverChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-social-security", "income-unemployment", "adjustments", "credits", "deductions", "additional-deductions", "other-taxes", "state-return"].includes(sectionId) && nextDeductions?.charitableCarryoverSources;
   const investmentInterestSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-social-security", "income-unemployment", "adjustments", "credits", "deductions", "additional-deductions", "other-taxes"].includes(sectionId) && nextDeductions?.investmentInterestSources;
   const educatorSourcesChanged = sourceValuesChanged && ["income-w2", "personal-info", "credits", "income-investments"].includes(sectionId) && adjustments?.educatorExpenseSources;
   const studentLoanSourcesChanged = sourceValuesChanged && ["income-w2", "personal-info", "credits"].includes(sectionId) && adjustments?.studentLoanFacts;
@@ -1587,7 +1590,8 @@ export function updateSectionData(
       ...((childElectionSourcesChanged || qofSourcesChanged || capitalSourcesChanged || qsbsSourcesChanged || digitalAssetHouseholdChanged) && nextInvestments ? { "income-investments": { ...nextInvestments, ...(childElectionSourcesChanged ? { childElections: nextInvestments.childElections?.map(child => ({ ...child, sourceFactsConfirmed: null })) } : {}), ...(qofSourcesChanged ? { qofDispositionFacts: { ...qofSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(capitalSourcesChanged ? { scheduleDSources: { ...capitalSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(qsbsSourcesChanged ? { section1202Sources: { ...qsbsSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(digitalAssetHouseholdChanged ? { digitalAssetEntries: nextInvestments.digitalAssetEntries?.map(entry => ({ ...entry, sourceFactsConfirmed: null })) } : {}) } } : {}),
       ...((niitSourcesChanged || foreignTaxSourcesChanged) && nextOtherTaxes ? { "other-taxes": { ...nextOtherTaxes, ...(niitSourcesChanged ? { niitSources: { ...niitSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(foreignTaxSourcesChanged ? { foreignTaxElection: { ...foreignTaxSourcesChanged, sourceFactsConfirmed: null, ...(foreignTaxSourcesChanged.creditWithoutForm1116 ? { creditWithoutForm1116: { ...foreignTaxSourcesChanged.creditWithoutForm1116, sourceFactsConfirmed: null } } : {}), ...(foreignTaxSourcesChanged.creditWithForm1116 ? { creditWithForm1116: { ...foreignTaxSourcesChanged.creditWithForm1116, sourceFactsConfirmed: null } } : {}) } } : {}) } } : {}),
       ...((tipSourcesChanged || additionalSourcesChanged) && nextAdditional ? { "additional-deductions": { ...nextAdditional, ...(tipSourcesChanged ? { tipIncomeAccounts: nextAdditional.tipIncomeAccounts?.map(account => ({ ...account, sourceFactsConfirmed: null })) } : {}), ...(additionalSourcesChanged ? { schedule1A: { ...additionalSourcesChanged, sourceFactsConfirmed: null } } : {}) } } : {}),
-      ...((mortgageSourcesChanged || investmentInterestSourcesChanged) && nextDeductions ? { deductions: { ...nextDeductions,
+      ...((mortgageSourcesChanged || investmentInterestSourcesChanged || charitableCarryoverChanged) && nextDeductions ? { deductions: { ...nextDeductions,
+        ...(charitableCarryoverChanged ? { charitableCarryoverSources: { ...charitableCarryoverChanged, sourceFactsConfirmed: null } } : {}),
         ...(mortgageSourcesChanged ? { mortgageEntries: mortgageSourcesChanged.mortgageEntries?.map(entry => ({ ...entry, sourceFactsConfirmed: null })), ...(mortgageSourcesChanged.mortgageWorksheet ? { mortgageWorksheet: { ...mortgageSourcesChanged.mortgageWorksheet, sourceFactsConfirmed: null } } : {}) } : {}),
         ...(investmentInterestSourcesChanged ? { investmentInterestSources: Object.fromEntries(Object.entries(investmentInterestSourcesChanged).map(([key, worksheet]) => [key, worksheet ? { ...worksheet, sourceFactsConfirmed: null, ...(worksheet.childIncomeSources ? { childIncomeSources: { ...worksheet.childIncomeSources, sourceFactsConfirmed: null } } : {}) } : worksheet])) } : {}),
       } } : {}),
@@ -1926,7 +1930,7 @@ export function validateSection(
     case "additional-deductions":
       return getSectionData(state, "additional-deductions") ? validateRequiredFacts({ ...tipIncomeFactErrors(state), ...schedule1AFactErrors(state) }) : EMPTY_SECTION("additional deduction sources");
     case "deductions":
-      return validateDeductionsSection(getSectionData(state, "deductions"), state.taxYear, { ...nonW2TaxAllocationErrors(state), ...investmentInterestFactErrors(state.sectionData.deductions, state.sectionData["income-investments"]?.childElections, state.taxYear) }, state.segmentation.filingStatus, state.sectionData["personal-info"]?.spouse);
+      return validateDeductionsSection(getSectionData(state, "deductions"), state.taxYear, { ...nonW2TaxAllocationErrors(state), ...investmentInterestFactErrors(state.sectionData.deductions, state.sectionData["income-investments"]?.childElections, state.taxYear), ...charitableCarryoverFactErrors(state.sectionData.deductions?.charitableCarryoverSources, state.taxYear, state.segmentation.filingStatus, state.sectionData["personal-info"]) }, state.segmentation.filingStatus, state.sectionData["personal-info"]?.spouse);
     case "adjustments": {
       const errors = { ...foreignIncomeFactErrors(state), ...healthInsuranceSourceErrors(state), ...hsaFactErrors(getSectionData(state, "adjustments")?.hsaAccounts, state.segmentation.filingStatus, state.taxYear, getSectionData(state, "income-w2")?.entries ?? [], getSectionData(state, "personal-info"), state.segmentation.lifeEvents.includes("hsa-contributions")), ...educatorFactErrors(getSectionData(state, "adjustments"), state.segmentation.filingStatus, state.taxYear, state.segmentation.lifeEvents.includes("educator-expenses")) };
       Object.assign(errors, currentLossOriginFactErrors(state));

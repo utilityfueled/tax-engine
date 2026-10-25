@@ -12,6 +12,7 @@ import {
 import { CurrencyField } from "./currency-field";
 import { DeductionSourceDetails } from "./deduction-source-details";
 import { InvestmentInterestSourceDetails } from "./investment-interest-source-details";
+import { CharitableCarryoverDetails } from "./charitable-carryover-details";
 import type { ChildElectionData } from "@/lib/guided-child-election-facts";
 import { formatGuidedCurrency, parseGuidedDisplayAmount } from "@/lib/guided-currency";
 
@@ -108,6 +109,7 @@ export function SectionDeductions({
         <CurrencyField label="Gambling winnings not already reported on an entered W-2G" hint="Enter actual winnings regardless of deduction method. Enter 0 only when known to be zero." value={current.gamblingWinnings ?? ""} onChange={(value) => update("gamblingWinnings", value)} />
         <CurrencyField label="Non-W-2 withholding already deducted on other schedules" hint="Enter the actual part of state or local withholding from your entered non-W-2 forms that is already deducted on Schedule C, E or F. Enter 0 only after checking. The source withholding is counted separately; do not add it again to additional income taxes." value={current.nonW2IncomeTaxesDeductedElsewhere ?? ""} onChange={value => update("nonW2IncomeTaxesDeductedElsewhere", value)} />
         <InvestmentInterestSourceDetails data={current.investmentInterestSources} childEntries={childEntries} onChange={investmentInterestSources => onDataChange({ ...current, investmentInterestSources })} />
+        <CharitableCarryoverDetails data={current.charitableCarryoverSources} onChange={charitableCarryoverSources => onDataChange({ ...current, charitableCarryoverSources })} />
 
         {current.method === "itemized" && (
           <div className="guided-w2-card" style={{ marginTop: "16px" }}>
