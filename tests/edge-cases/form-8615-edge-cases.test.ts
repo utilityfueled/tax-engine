@@ -200,27 +200,21 @@ describe("Form 8615 edge cases — parent with zero or very low income", () => {
       constants
     );
     // Net unearned = 2300, combined = 0 + 2300 = 2300
-    // Tax on 2300 MFJ = 2300 * 0.10 = 230
+    // Published2025 MFJ2300–2325 table row=231.
     // Tax on 0 MFJ = 0
-    // Allocable = 230
-    expect(result.allocableParentalTax.toNumber()).toBe(230);
+    // Allocable = 231
+    expect(result.allocableParentalTax.toNumber()).toBe(231);
   });
 
   it("Form 8615 Line 18 - low-income parent can cause child's own rate to exceed tentative tax", () => {
     // Parent: $0 MFJ → 10% bracket
     // Child: $50,000 unearned income, taxable = $50,000
     // Net unearned = 50000 - 2700 = 47300
-    // Combined = 47300 → MFJ 10% on first 23850, 12% on rest
-    // Tax on combined MFJ: 23850*0.10 + 23450*0.12 = 2385 + 2814 = 5199
-    // Tax on parent MFJ: 0
-    // Allocable = 5199
+    // Published MFJ47300–47350 row5202; parent zero tax gives5202allocable.
     // Line 5 = min(47300, 50000) = 47300
     // Line 6 = 50000 - 47300 = 2700
-    // Line 15 = tax on 2700 single = 270
-    // Line 16 = 5199 + 270 = 5469
-    // Line 17 = tax on 50000 single = 11925*0.10 + (48475-11925)*0.12 + (50000-48475)*0.22
-    //         = 1192.50 + 4386 + 335.50 = 5914
-    // Line 18 = max(5469, 5914) = 5914 → child's own rate wins!
+    // Line15 uses single2700–2725 row271; line16=5202+271=5473.
+    // Line17 uses single50000–50050 row5920, so line18=max(5473,5920)=5920.
     const result = calculateForm8615(
       makeInput({
         childUnearnedIncome: "50000",
@@ -232,6 +226,7 @@ describe("Form 8615 edge cases — parent with zero or very low income", () => {
       constants
     );
     expect(result.tax.toNumber()).toBe(result.taxAtChildOwnRate.toNumber());
+    expect(result.tax.toString()).toBe("5920");
     expect(result.taxAtChildOwnRate.greaterThan(result.tentativeTax)).toBe(true);
   });
 });
@@ -327,7 +322,7 @@ describe("Form 8615 edge cases — QDCG absorption between Lines 5 and 6", () =>
     // QD absorbed by Line 5 = min(2300, 2300) = 2300 → all absorbed
     // QD on Line 6 = 0
     // Line 6 = 5000 - 2300 = 2700
-    // Line 15 = ordinary tax on $2700 single = 270
+    // Line15 uses the published single2700–2725 table row271.
     const result = calculateForm8615(
       makeInput({
         childUnearnedIncome: "5000",
@@ -341,9 +336,7 @@ describe("Form 8615 edge cases — QDCG absorption between Lines 5 and 6", () =>
     );
 
     expect(result.childRateIncome.toNumber()).toBe(2700);
-    // Line 15 uses ordinary brackets (no QD flows to Line 6)
-    const expectedLine15 = calculateTaxFromBrackets(new Decimal(2700), constants.taxBrackets.single);
-    expect(result.taxOnChildRateIncome.toNumber()).toBe(expectedLine15.toNumber());
+    expect(result.taxOnChildRateIncome.toNumber()).toBe(271);
   });
 
   it("Form 8615 Line 15 - child has only LTCG (no QD), partially absorbed by Line 5", () => {
@@ -369,9 +362,8 @@ describe("Form 8615 edge cases — QDCG absorption between Lines 5 and 6", () =>
     );
 
     expect(result.childRateIncome.toNumber()).toBe(2700);
-    // All LTCG absorbed by Line 5, Line 6 has ordinary income only
-    const expectedLine15 = calculateTaxFromBrackets(new Decimal(2700), constants.taxBrackets.single);
-    expect(result.taxOnChildRateIncome.toNumber()).toBe(expectedLine15.toNumber());
+    // All LTCG is absorbed; published single2700–2725 table row271.
+    expect(result.taxOnChildRateIncome.toNumber()).toBe(271);
   });
 
   it("Form 8615 Line 15 - large child QD overflows Line 5 into Line 6 for QDCG treatment", () => {

@@ -554,14 +554,14 @@ describe("Credit stacking - nonrefundable credits limited to tax liability", () 
     const result = calculateFederalTax(fixture);
 
     // WorksheetB reserves CTC of6600-5100=1500 before clean energy.
-    // Tax on40000-31500=8500 is850, entirely reserved for CTC.
+    // Published MFJ8500–8550 table row is853, entirely reserved for CTC.
     const taxAfterOtherCredits = Decimal.max(
       new Decimal(0),
       result.totalTaxBeforeCredits.minus(result.otherCredits)
     );
     expect(result.form8812!.nonrefundableCTC.lessThanOrEqualTo(taxAfterOtherCredits)).toBe(true);
     expect(result.form8812!.nonrefundableCTC.greaterThanOrEqualTo(0)).toBe(true);
-    expect(result.form8812!.nonrefundableCTC.toNumber()).toBe(850);
+    expect(result.form8812!.nonrefundableCTC.toNumber()).toBe(853);
     expect(result.form5695?.residentialCleanEnergyCredit.toString()).toBe("0");
     expect(result.form5695?.residentialCleanEnergyCarryforward.toString()).toBe("15000");
     expect(result.form8812!.actc.toString()).toBe("5100");
@@ -770,10 +770,9 @@ describe("Credit stacking - AMT interaction with credits", () => {
 
 describe("Credit stacking - nonrefundable credits offset Schedule 2 Part I (Line 18)", () => {
   it("nonrefundable credits offset excess APTC repayment (Line 18 = Line 16 + Line 17)", () => {
-    // Single, $50K wages, $6K solar credit, $1,600 excess APTC repayment
-    // Income tax on $35K = $3,962. Without fix: credits limited to $3,962,
-    // excess APTC $1,600 added in full → $1,600 tax. With fix (IRS method):
-    // Line 18 = $3,962 + $1,600 = $5,562, credits $6K absorb all → $0 tax.
+    // Single50000 wages,6000solar credit,1625excess APTC repayment.
+    // Published table3875 plus1625repayment gives5500credit-limit tax;
+    // the6000tentative solar credit absorbs it and carries500forward.
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
       w2s: [{
@@ -802,9 +801,8 @@ describe("Credit stacking - nonrefundable credits offset Schedule 2 Part I (Line
 
     const result = calculateFederalTax(fixture);
 
-    // Income tax on $34,250 ($50K - $15,750 standard deduction)
-    // $11,925×10% + ($34,250-$11,925)×12% = $1,192 + $2,679 = $3,872
-    expect(result.totalTaxBeforeCredits.toNumber()).toBe(3872);
+    // Published single34250–34300 table row is3875.
+    expect(result.totalTaxBeforeCredits.toNumber()).toBe(3875);
 
     // Excess APTC repayment should be $1,625 (Rev. Proc. 2024-40 §2.07)
     // FPL% = $50K/$15,060 × 100 = 332%; expected contribution = $3,400
@@ -815,17 +813,17 @@ describe("Credit stacking - nonrefundable credits offset Schedule 2 Part I (Line
     expect(excessLine?.value.toNumber()).toBe(1625);
 
     // Per IRS Form 1040:
-    // Line 16 = $3,872 (income tax)
+    // Line16 =3875 from the published Tax Table
     // Line 17 = $1,625 (Schedule 2 Part I: excess APTC)
-    // Line 18 = $5,497
-    // Line20=$5497 allowed energy credit;503 unused carries forward.
-    // Line22=$5497-$5497=0
+    // Line18 =5500
+    // Line20=5500 allowed energy credit;500 unused carries forward.
+    // Line22=5500-5500=0
     // Line 23 = $0 (no SE, no additional Medicare, no NIIT)
     // Line 24 = $0
 
     // Nonrefundable credits ($6K) absorb both income tax AND excess APTC
     expect(result.totalTax.toNumber()).toBe(0);
-    expect(result.form5695?.residentialCleanEnergyCarryforward.toString()).toBe("503");
+    expect(result.form5695?.residentialCleanEnergyCarryforward.toString()).toBe("500");
 
     // Refund = withholding $5,000 - $0 total tax = $5,000
     expect(result.refund.toNumber()).toBe(5000);
@@ -833,7 +831,7 @@ describe("Credit stacking - nonrefundable credits offset Schedule 2 Part I (Line
 
   it("nonrefundable credits partially offset excess APTC when credits < Line 18", () => {
     // Single, $50K wages, $4K energy credit (smaller solar install), $1,625 excess APTC
-    // Line 18 = $3,872 + $1,625 = $5,497. Credits $4K < $5,497 → Line 22 = $1,497
+    // Published table3875 + APTC1625 =5500; less4000credit gives1500.
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
       w2s: [{
@@ -862,11 +860,11 @@ describe("Credit stacking - nonrefundable credits offset Schedule 2 Part I (Line
 
     const result = calculateFederalTax(fixture);
 
-    // Line 18 = $3,872 + $1,625 = $5,497
+    // Published single34250–34300 row3875 + APTC1625 =5500
     // Credits = $4,000 (30% of $13,334 = $4,000.20 → $4,000)
-    // Line 22 = $5,497 - $4,000 = $1,497
-    // Total tax = $1,497 (excess APTC cap $1,625 per Rev. Proc. 2024-40)
-    expect(result.totalTax.toNumber()).toBe(1497);
+    // Line22 =5500-4000=1500
+    // Total tax1500; the1625 APTC cap is unchanged.
+    expect(result.totalTax.toNumber()).toBe(1500);
   });
 });
 
@@ -1074,10 +1072,10 @@ describe("Credit stacking - Form 5695 energy credits with other credits", () => 
     const line5b = sched3Lines.find((l) => l.line === "5b"); // Improvement
     const line7 = sched3Lines.find((l) => l.line === "8");
 
-    // Tax10809 less FTC100,care1200,improvement2700 and CTCreservation500
-    // leaves6309 of the9000 clean-energy credit usable;2691 carries forward.
-    expect(line5a!.value.toNumber()).toBe(6309);
-    expect(result.form5695?.residentialCleanEnergyCarryforward.toString()).toBe("2691");
+    // Published single72250–72300 row10815 less FTC100,care1200,
+    // improvement2700 and CTCreservation500 leaves6315;2685 carries forward.
+    expect(line5a!.value.toNumber()).toBe(6315);
+    expect(result.form5695?.residentialCleanEnergyCarryforward.toString()).toBe("2685");
     expect(result.childTaxCredit.toString()).toBe("500");
     // Insulation: min(1200, 1200) + energy property: min(1500, 2000) = 2700, under $3200 cap
     expect(line5b!.value.toNumber()).toBe(2700);
@@ -1608,8 +1606,8 @@ describe("Credit stacking - nonrefundable credits hard-capped at tax liability",
 
 describe("Credit stacking - CTC reservation with Schedule3 clean energy (spec 1040 Lines19-21)", () => {
   it("large energy credit preserves the WorksheetB child credit reservation", () => {
-    // MFJ55000 wages less31500 standard deduction gives2350 tax.
-    // WorksheetB reserves500 CTC and allows1850 clean energy.
+    // MFJ55000 wages less31500 deduction: published23500–23550 row2353.
+    // WorksheetB reserves500 CTC and allows1853 clean energy.
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
       taxpayer: {
@@ -1646,10 +1644,10 @@ describe("Credit stacking - CTC reservation with Schedule3 clean energy (spec 10
     };
     const result = calculateFederalTax(fixture);
 
-    // WorksheetB reserves2200-1700=500 CTC. Tax2350 leaves1850 forsolar.
+    // WorksheetB reserves2200-1700=500 CTC. Table tax2353 leaves1853 forsolar.
     expect(result.childTaxCredit.toNumber()).toBe(500);
-    expect(result.otherCredits.toString()).toBe("1850");
-    expect(result.form5695?.residentialCleanEnergyCarryforward.toString()).toBe("13150");
+    expect(result.otherCredits.toString()).toBe("1853");
+    expect(result.form5695?.residentialCleanEnergyCarryforward.toString()).toBe("13147");
     expect(result.form8812!.actc.toString()).toBe("1700");
   });
 
@@ -1766,10 +1764,10 @@ describe("Credit stacking - all six credit types combined in one return", () => 
     expect(sched3Lines.find((l) => l.line === "1")!.value.greaterThan(0)).toBe(true); // FTC
     expect(sched3Lines.find((l) => l.line === "2")!.value.greaterThan(0)).toBe(true); // Care
     expect(sched3Lines.find((l) => l.line === "3")!.value.greaterThan(0)).toBe(true); // Education
-    // Tax on51500 MFJ=5703; FTC180+care600+education1500 leave3423.
-    // WorksheetB reserves4400-3400=1000 CTC; solar2423, carry577.
-    expect(sched3Lines.find((l) => l.line === "5a")!.value.toNumber()).toBe(2423);
-    expect(result.form5695?.residentialCleanEnergyCarryforward.toString()).toBe("577");
+    // Published MFJ51500–51550 row5706; FTC180+care600+education1500 leave3426.
+    // WorksheetB reserves4400-3400=1000 CTC; solar2426, carry574.
+    expect(sched3Lines.find((l) => l.line === "5a")!.value.toNumber()).toBe(2426);
+    expect(result.form5695?.residentialCleanEnergyCarryforward.toString()).toBe("574");
     expect(result.childTaxCredit.toString()).toBe("1000");
 
     expect(result.form8812!.ctcBeforeLimitation.toNumber()).toBe(4400);
@@ -1810,7 +1808,7 @@ describe("Credit stacking - all six credit types combined in one return", () => 
 describe("Credit stacking - credits reducing income tax to exactly zero", () => {
   it("energy credit equal to income tax reduces tax to exactly $0 before additional taxes (spec 1040 Line 22)", () => {
     // Single30000 wages less15750 standard deduction gives14250 taxable.
-    // Bracket tax rounds1471.50 to1472; solar tentative1800 exceeds that limit.
+    // Published single14250–14300 row1475; solar tentative1800 exceeds that limit.
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
       w2s: [{
@@ -1823,15 +1821,14 @@ describe("Credit stacking - credits reducing income tax to exactly zero", () => 
         medicareWithheld: "435",
       }],
       energyCredits: {
-        solarElectricCost: "6000", // 30% = $1,800 — exceeds $1,562 income tax
+        solarElectricCost: "6000", // 30% =1800, exceeding published table tax1475.
       },
     };
     const result = calculateFederalTax(fixture);
 
-    // Tax on14250 single=round(1192.50+2325*0.12)=1472.
-    // Form5695 allows1472 of1800 and carries the remaining328.
-    expect(result.otherCredits.toNumber()).toBe(1472);
-    expect(result.form5695?.residentialCleanEnergyCarryforward.toString()).toBe("328");
+    // Published table1475 limits Form5695;1800-1475=325 carries forward.
+    expect(result.otherCredits.toNumber()).toBe(1475);
+    expect(result.form5695?.residentialCleanEnergyCarryforward.toString()).toBe("325");
     expect(result.otherCredits.eq(result.totalTaxBeforeCredits)).toBe(true);
 
     // After credits, CTC nonrefundable = $0 (no remaining tax liability)

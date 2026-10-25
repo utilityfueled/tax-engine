@@ -1170,9 +1170,15 @@ describe("Cross-feature integration - complex scenario", () => {
       }],
     };
     const baseResult = calculateFederalTax(noSection1250);
-    // §1250 at 25% max rate may increase tax if gains are above 15% threshold;
-    // at lower income levels, §1250 gets 0%/15% → same tax
-    expect(result.capitalGainsTax.greaterThanOrEqualTo(baseResult.capitalGainsTax)).toBe(true);
+    // Actual taxable income248989 contains19000 preferential income before
+    // reclassification. Ordinary229989 MFJ tax40891 plus19000*15%=43741.
+    // The2000 section1250 amount uses the24% ordinary bracket (below25% cap),
+    // replacing its15% tax: total rises2000*(24%-15%)=180. The separately
+    // reported preferential component falls300 because this part is ordinary.
+    expect(baseResult.totalTaxBeforeCredits.toString()).toBe("43741");
+    expect(result.totalTaxBeforeCredits.toString()).toBe("43921");
+    expect(result.totalTaxBeforeCredits.minus(baseResult.totalTaxBeforeCredits).toString()).toBe("180");
+    expect(baseResult.capitalGainsTax.minus(result.capitalGainsTax).toString()).toBe("300");
   });
 
   it("K-1 foreign tax produces foreign tax credit", () => {

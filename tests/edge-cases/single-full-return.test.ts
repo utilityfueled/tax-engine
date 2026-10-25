@@ -382,13 +382,9 @@ describe("Single filer - W-2 only, standard deduction (simplest return)", () => 
     expect(result.taxableIncome.toNumber()).toBe(59250);
   });
 
-  it("Form 1040 Line 16 - tax computed on $59,250 via single brackets", () => {
-    // 10% on $11,925 = $1,192.50
-    // 12% on ($48,475 - $11,925) = $4,386
-    // 22% on ($59,250 - $48,475) = $2,370.50
-    // Total = $7,949
-    const expected = d("1192.50").plus(d("4386")).plus(d("2370.50"));
-    expect(result.totalTaxBeforeCredits.toNumber()).toBe(expected.toNumber());
+  it("Form 1040 Line 16 - tax computed on $59,250 using the published single table row", () => {
+    // Final2025 Tax Table: at least59250 but less than59300, single column7955.
+    expect(result.totalTaxBeforeCredits.toString()).toBe("7955");
   });
 
   it("Form 1040 Line 21 - no credits", () => {

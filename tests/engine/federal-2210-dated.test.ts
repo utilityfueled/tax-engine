@@ -10,12 +10,12 @@ describe("Federal dated estimated-tax integration",()=>{
   it("does not erase earlier installment penalties with a late annual payment",()=>{
     const input=TaxYearInputSchema.parse({...base(),form2210:facts,adjustments:{estimatedTaxPayments:[{date:"2026-01-15",amount:"10000",type:"federal"}]}});
     const r=calculateFederalTax(input);
-    expect(r.form2210?.installments.map(row=>row.required.toString())).toEqual(["2283.5","2283.5","2283.5","2283.5"]);
-    // Tax using current bracket path:1192.50+4386+4570.50=10149;90%=9134.
-    // First three installments unpaid275,214,122days:2283.50*611*7%/365=267.5761.
+    expect(r.form2210?.installments.map(row=>row.required.toString())).toEqual(["2285","2285","2285","2285"]);
+    // Published2025 single69250–69300 table row=10155;90% rounds9140.
+    // First three installments unpaid275,214,122days:2285*611*7%/365=267.7519.
     expect(r.form2210?.penalty.toString()).toBe("268");
     expect(r.form2210?.sourceFactsVerified).toBe(true);
-    expect(r.totalTax.toString()).toBe("10149");
+    expect(r.totalTax.toString()).toBe("10155");
     expect(r.allLines.find(line=>line.form==="1040"&&line.line==="38")?.value.toString()).toBe("268");
   });
   it("uses actual prior-credit dates and excludes state estimated payments",()=>{
@@ -29,7 +29,7 @@ describe("Federal dated estimated-tax integration",()=>{
     const r=calculateFederalTax(TaxYearInputSchema.parse({...base(),form5329:{traditionalIRACurrentYearExcessContributions:"1000",traditionalIRAValueDec31:"1000"}}));
     expect(r.form5329?.line17.toString()).toBe("60");
     expect(r.form2210?.lines.find(line=>line.line==="2")?.value.toString()).toBe("0");
-    expect(r.totalTax.toString()).toBe("10209");
+    expect(r.totalTax.toString()).toBe("10215"); // Table10155 plus separate60excise tax.
   });
   it("excludes employee misclassification payroll tax from the estimated-tax base",()=>{
     const r=calculateFederalTax(TaxYearInputSchema.parse({...base(),form8919:{wagesNotReportedOnW2:"1000"}}));

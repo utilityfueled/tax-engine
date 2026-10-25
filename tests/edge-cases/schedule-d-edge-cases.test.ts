@@ -1301,12 +1301,10 @@ describe("QDCG Line 3 - ST loss reduces preferential capital gain", () => {
     expect(federal.totalIncome.toNumber()).toBe(90000);
     // Taxable income: $90K - $15.75K standard deduction = $74,250
     expect(federal.taxableIncome.toNumber()).toBe(74250);
-    // Tax computation with correct QDCG Line 3 = $5K preferential:
-    // ordinaryPortion = $75K - $5K = $70K
-    // ordinaryTax($69,250) = 10%×$11,925 + 12%×$36,550 + 22%×$20,775 = $10,149
+    // QDCG ordinary portion74250-5000=69250; published single69250–69300 row10155.
     // preferentialTax = $5K × 15% = $750 (stacked on $69,250, above 0% threshold $48,350)
-    // total = $10,149 + $750 = $10,899
-    expect(federal.totalTaxBeforeCredits.toNumber()).toBe(10899);
+    // total = $10,155 + $750 = $10,905
+    expect(federal.totalTaxBeforeCredits.toNumber()).toBe(10905);
     // Capital gains tax (preferential portion) should be $750, not $1,500
     expect(federal.capitalGainsTax.toNumber()).toBe(750);
   });
@@ -1330,10 +1328,8 @@ describe("QDCG Line 3 - ST loss reduces preferential capital gain", () => {
     expect(federal.totalIncome.toNumber()).toBe(82000);
     // Taxable income: $82K - $15.75K = $66,250
     expect(federal.taxableIncome.toNumber()).toBe(66250);
-    // Tax: all ordinary on $67K (no preferential income)
-    // = 10%×$11,925 + 12%×$36,550 + 22%×$17,775
-    // = $1,192.50 + $4,386 + $3,910.50 = $9,489
-    expect(federal.totalTaxBeforeCredits.toNumber()).toBe(9489);
+    // All ordinary: published single66250–66300 table row9495.
+    expect(federal.totalTaxBeforeCredits.toNumber()).toBe(9495);
     // Capital gains tax should be $0 — no preferential rate applies
     expect(federal.capitalGainsTax.toNumber()).toBe(0);
   });
