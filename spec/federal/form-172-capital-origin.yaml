@@ -1,0 +1,61 @@
+form: "Current Form172 capital sources"
+fullName: "Ordinary nonbusiness investment capital sources in current NOL origin"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i172"
+notes: |
+  Sources refreshed 2026-10-25: Form172 PartI lines2-5,10-22 and i172
+  Nonbusiness Capital Losses / Capital Loss Limitation; IRC172(d)(2),(4).
+  https://www.irs.gov/pub/irs-pdf/f172.pdf
+  https://uscode.house.gov/us/usc/119-120/t26/s172/
+  Original nonbusiness investment dispositions and ordinary capital-gain
+  distributions supply separate gross gains and losses before ScheduleD
+  netting. A prior capital loss retains its actual filed short/long character
+  and nonbusiness classification; it is not another current business loss.
+  All source rows must match the original year, owner, statement, dates and
+  amounts. No user-entered computed gain, net income or NOL is accepted.
+  Capital-source completeness and independent AMT basis/adjustment/carry
+  comparison are explicit, including known-zero carry. i6251 Line2k requires
+  refiguring gains and losses when AMT basis or carry differs; this method
+  supports only the actual verified same-treatment comparison, never a copied
+  AMT assumption. https://www.irs.gov/instructions/i6251
+  Active-business, personal-use, digital-asset, QSBS, collectible,1250,
+  pass-through and other adjustment methods remain separately unsupported.
+
+  Exact source gains/losses reconcile to canonical ScheduleD7/15/16 and the
+  actual capped1040 transfer. Form172 uses those same computational cents
+  together with exact completed canonical AGI/deductions, then reports each
+  line under the documented IRC6102(c)/CFR301.6102-1(c) convention in
+  form-172-origin-precision.yaml. Source cents and printed lines both persist.
+  No compensating residual or inferred ownership/character is introduced.
+  Reg1.1411-4(h)(2) independently applies172(c)/(d) to investment income and
+  allocable deductions. Include the actual ordinary investment capital
+  transfer once; the nonbusiness capital-loss limit prevents it generating
+  an investment NOL. https://www.ecfr.gov/current/title-26/section-1.1411-4
+  The literal controls are derived examples, not published IRS numeric cases.
+  No2026 readiness, physical-form or independent human qualification changes.
+lines:
+  - line: "gross-sources"
+    description: "Bind original capital sources before gross classification and netting"
+    formula: "Original gains100.49 and losses100.50 conserve net-.01. AGI-75000.01 and standard15750 produce regular80000/AMT75000/1411zero; no source rounding or duplicate wash adjustment. Same-source wash loss200 less disallowed50 contributes150gross loss."
+    irsRef: "Form172PartI2-5,16,19-24; IRC172(d)(2); IRC6102(c)"
+    testRef: "tests/engine/federal-form-172-capital-origin.test.ts::conserves exact investment capital sources in regular AMT and investment origins"
+  - line: "gain-and-prior-loss"
+    description: "Use actual positive capital gain and independently classified filed capital carry"
+    formula: "Gains20000.49 less losses100.50 gives19899.99 and regular70850/AMT55100. Original DIV2a500 less actual prior ST-4000/LT-3000 gives net-6500,1040loss-3000 and line22addback3000; regular80000/AMT75000 remain unchanged."
+    irsRef: "Form172PartI5-10,16-24; ScheduleD6,14,16,21; IRC172(d)(2)"
+    testRef: "tests/engine/federal-form-172-capital-origin.test.ts::classifies distributions and prior capital losses without duplicating the current NOL"
+  - line: "source-boundary"
+    description: "Reject incomplete or contradictory original and AMT capital facts"
+    formula: "Missing rows, duplicate IDs, changed original cents, owner/year/identity conflicts, unknown classification or AMT comparison, invalid prior signed amounts and unsupported characters reject before offsetting. Source-only validation returns no calculated loss."
+    irsRef: "i172 capital classifications; i6251Line2k; original8949/1099DIV records"
+    testRef: "tests/engine/federal-form-172-capital-origin.test.ts::requires complete original capital classification and independent alternative facts"
+  - line: "canonical-net"
+    description: "Conserve the final canonical net and transfer without source overrides"
+    formula: "Verified source short/long/net amounts and capped transfer must equal the completed ScheduleD and1040 values, including cents. A netted zero cannot conceal unsupported records.2026 remains source-only behind readiness."
+    irsRef: "Form172PartI16/19; ScheduleD7/15/16/21; i6251Line2k"
+    testRef: "tests/engine/federal-form-172-capital-origin.test.ts::preserves exact canonical net source validation and closed future-year readiness"
+  - line: "review"
+    description: "Recheck original capital and retained source audits in the review statement"
+    formula: "Fresh source classification and ScheduleD replay must reconcile both retained exact and printed172amounts. A stale transaction or source amount that leaves the capped transfer unchanged still rejects; redacted account identifiers remain supported without fake identities."
+    irsRef: "Form172 source conservation; IRC6102(c); Reg1.1411-4(h)"
+    testRef: "tests/pdf/form-172-capital-origin-review.test.ts::reconciles original capital sources and exact amounts in the redacted NOL review"

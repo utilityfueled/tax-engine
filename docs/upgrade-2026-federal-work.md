@@ -947,7 +947,8 @@ The current finite canonical queue is:
    and1411 histories. Pub974 composition and current public-cash170(d) carry
    coordination with known-empty ATNOL history are implemented below. Next are
    broader current-year origin-loss sources beyond the implemented active,
-   all-at-risk ScheduleC standard and ordinary itemized methods, prior/mixed-category and positive-ATNOL charitable
+   all-at-risk ScheduleC standard/ordinary-itemized and ordinary investment
+   capital methods, prior/mixed-category and positive-ATNOL charitable
    coordination,2026 nonitemizer carry, and debt-cancellation vintage reduction,
    estate/EBL origin-character and general foreign-loss allocation methods.
    Current AMT basis/depletion exceptions need their separate source worksheets.
@@ -1402,3 +1403,48 @@ The broader matrix above remains the exact residual implementation register. Thi
 - Existing canonical callers still provide their completed source values; this prerequisite does not infer missing source cents or enable a capital-origin route. Ordinary investment-source classification, separate AMT basis and canonical capital integration remain the next package. Positive1202 and other unresolved source methods remain internal work. No metadata or readiness gate changes are included. Isolated checks and independent source review follow.
 - Exact isolated tree `57d7d8f27047254157a045d5360f094d4fca32f2` in `/private/tmp/tax-form172-origin-precision-ahjz6mqg`, based on `e74436b`, passes47 tests across10 current-origin, historical, canonical NOL and PDF files, root types and all4,556 references; scoped lint is clean. Logs are `form172-origin-precision-staged-{tests,types,spec,lint}.log`. No rendering changed, and the new retained-value rejection is tested directly.
 - The independent facts reviewer refreshed IRC6102(c), official2025CFR301.6102-1(c) and physical172, then passed nine package/historical/review cases plus an MFS1500-ceiling/.49-remainder probe. No actionable finding remained in the documented derived precision convention. Evidence is `facts-review-form172-precision.log` and `facts-review-form172-precision-probe.log`. Agent review does not qualify filing; the final evidence append changes no executable source.
+
+## 2026-10-25 — Ordinary investment capital sources in current loss origins
+
+- Refreshed [Form172 and its instructions](https://www.irs.gov/instructions/i172), [Form6251 disposition instructions](https://www.irs.gov/instructions/i6251) and [Regulation1.1411-4(h)](https://www.ecfr.gov/current/title-26/section-1.1411-4). Actual ordinary nonbusiness investment transactions, capital distributions and filed prior short/long losses now supply gross capital classifications. Each original statement, owner, source year, date, amount and special-character answer is reconciled before netting. Independent AMT basis/adjustment/carry evidence is required; a separately supplied contradictory AMT rate worksheet rejects.
+- Exact gain100.49 and loss100.50 give ScheduleD net-.01, AGI-75000.01 and regular80000/AMT75000 new losses. Gain20000.49 less loss100.50 gives19899.99, regular70850 and AMT55100. A500 distribution with actual prior ST-4000/LT-3000 gives net-6500 and capped1040loss-3000; Form172 restores3000, leaving80000/75000 origins and preserving the full6500capital carry. Actual disallowed wash loss is added once. These are independently derived controls, not published IRS numeric examples.
+- The coherent canonical handoff now retains exact completed AGI/deduction/capital computation through Form172 and rounds each reported line under the separately reviewed6102 convention. It does not reconstruct cents already rounded by an upstream form. All original capital gross and net amounts must reconcile exactly to ScheduleD7/15/16 and the1040 transfer. Investment-only172 is independently recomputed; the nonbusiness capital restriction prevents these investment losses from creating a new1411NOL.
+- Source-only validation produces no original-loss amount. The review statement freshly checks source capital and ScheduleD, then compares exact retained172amounts, printed lines and closing carries. Changed source cents reject even when a final cap is unchanged. Account redaction is preserved; no source reference or account number is printed.
+- The bounded method excludes business/personal-use/digital/special-character capital, positive1202, other non-wash adjustments, differing AMT basis/carry and unclassified aggregate prior carry. Those are named source-method boundaries, not inferred zero. Ordinary capital-source intake is a separate UI handoff; existing source-only current-origin intake remains unchanged. Rule versions2025.67/2026.63 preserve incomplete2026, independent-review-pending and disabled filing status.
+- Five spec-linked return/review cases failed on the previous explicit gate;49 new and adjacent current-origin/carry/Marketplace/PDF tests then passed. A later independent source-conflict probe reproduced acceptance of contradictory AMT capital worksheets and was corrected separately. Exact isolated checks and independent review follow below. No8949 or ScheduleD arithmetic, categories or physical mappings are changed in this package.
+- Exact tree `7c2a21851e60a749dc2fc9edc3e731ef0b001c12`, based on `8cf0e8e`, passes649 tests across21 files, root/web types and all4,583 spec references. Scoped lint has zero errors and four existing federal non-null warnings. Evidence is `form172-capital-origin-staged-{tests,types,spec}.log`, `form172-capital-origin-carry-tests.log` and `form172-capital-origin-lint.log`. The saved four-page review statement was reopened, text/privacy checked and all four rendered pages inspected under `form172-capital-review/`.
+- The independent AI agent refreshed official172,6251 and Regulation1.1411-4(h), then passed12 package/adjacent cases and four additional probes: MFS1500 capital ceiling, the exact10750.50/.51 carry boundary, split versus combined fractional losses, and stale account/AMT source rejection. No actionable finding remained in this bounded review (`ai-review-form172-capital-{tests,probes}.log`). This is agent software/source review, not independent human filing qualification.
+
+### Finite federal execution queue after ordinary capital origins
+
+The remaining named methods in the matrix above are internal implementation
+boundaries, not external blockers and not claims of completed support. The
+following is the selected execution order; it does not silently enable every
+special method named in that matrix.
+
+1. Finish the ordinary enabled-source closure already in progress: facts owns
+   original1099-DA sources, once-only withholding and collection; the parent owns
+   the physical8949 digital categories and ScheduleD transfer. Facts then owns
+   guided collection of this package's actual ordinary capital-origin packet;
+   the federal owner verifies its canonical handoff. Metadata order is
+  2025.67/2026.63 for this package, .68/.64 for DA sources and .69/.65 for8949.
+2. The federal owner next implements actual positive1202 current-origin
+   restoration, including capital-loss overlap and the separate AMT preference.
+   The existing supported QSBS return sources must be reconciled; they cannot
+   be replaced by a user-entered exclusion or copied AMT loss.
+3. The federal owner then addresses the selected remaining charitable carry
+   methods: positive ATNOL with current public-cash gifts and separate AMT
+   history; actual prior/mixed-category charity; and2026 nonitemizer carry.
+   These remain unimplemented internally, with actual source collection handed
+   to the facts owner only after each stable calculation contract.
+4. The federal owner next addresses source-bound cancelled-debt reductions of
+   actual loss vintages. Unknown exclusions, reduction elections or ordering
+   cannot be supplied as zero. Farming, estate/EBL origin character and broader
+   foreign-loss methods remain separately identified unsupported methods.
+5. Close the enabled-scenario source, calculation, review/PDF and readiness
+   audit, then the parent owns the integrated release checks. Mixed-owner PTC,
+   disposed-PTP, preferential foreign-credit/loss accounts, pledged ESA and
+   additional special retirement/property histories remain deliberately
+   unsupported until their own scoped methods are implemented; none is relabeled
+   external. Final2026 publications and independent human qualification are
+   separate external dependencies.

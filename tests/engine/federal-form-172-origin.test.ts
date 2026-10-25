@@ -100,6 +100,7 @@ it("classifies actual above-line deductions without losing source precision", ()
   const result = calculateFederalTax(source);
   expect(result.agi.toFixed()).toBe("-78000.25");
   expect(result.form172?.regular.partI[6].toFixed()).toBe("18750");
+  expect(result.form172?.regular.sourcePartI[6].toFixed()).toBe("18750.25");
   expect(result.form172?.regular.netOperatingLoss.toFixed()).toBe("80000");
   expect(result.form172?.alternativeTax.partI[6].toFixed()).toBe("3000");
   expect(result.form172?.alternativeTax.netOperatingLoss.toFixed()).toBe("78000");

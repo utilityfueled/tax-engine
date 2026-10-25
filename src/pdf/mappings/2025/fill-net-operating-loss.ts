@@ -14,6 +14,8 @@ import { calculateForm6251BondSources } from "@/engine/forms/form-6251-bond-sour
 import { isIraForm1099RDistribution, resolveForm1099RTaxableAmount } from "@/engine/forms/form-1099-r.js";
 import { calculateScheduleC } from "@/engine/schedules/schedule-c.js";
 import { calculateScheduleB } from "@/engine/schedules/schedule-b.js";
+import { calculateScheduleD } from "@/engine/schedules/schedule-d.js";
+import { getConstants } from "@/models/constants.js";
 import { d, roundDollar, sum } from "@/utils/decimal.js";
 import { assertPdfExportAllowed, markReviewPdf } from "@/pdf/export-policy.js";
 
@@ -41,6 +43,11 @@ function currentOriginRows(input: TaxYearInput, result: TaxReturnResult): string
   eq(result.totalInterest, investments.taxableInterest); eq(result.totalDividends, investments.totalOrdinaryDividends);
   eq(schedule1.earlyWithdrawalPenalty, sum(...input.form1099Int.map(source => d(source.earlyWithdrawalPenalty))));
   const bondSources = calculateForm6251BondSources(input.form1099Int, input.form1099Div, result.taxYear, input.taxpayer.filingStatus);
+  const capital = calculateScheduleD(input, input.taxpayer.filingStatus, getConstants(input.taxpayer.taxYear));
+  if (!result.scheduleD) throw new Error("Current origin review requires the actual completed capital calculation");
+  for (const key of ["netShortTerm", "netLongTerm", "netCapitalGainLoss", "capitalLossDeduction", "section1202Exclusion", "section1202AmtPreference"] as const) {
+    eq(result.scheduleD[key], capital[key]);
+  }
   const savedLine = (form: string, line: string): Decimal => {
     const rows = result.allLines.filter(row => row.form === form && row.line === line);
     if (rows.length !== 1) throw new Error(`Current origin review requires a unique ${form} line${line}`);
@@ -69,7 +76,7 @@ function currentOriginRows(input: TaxYearInput, result: TaxReturnResult): string
     agi: result.agi, totalIncome: result.totalIncome, totalWages: result.totalWages,
     taxableInterest: investments.taxableInterest, ordinaryDividends: investments.totalOrdinaryDividends,
     iraTaxable: result.iraDistributionsTaxable, pensionTaxable: result.pensionDistributionsTaxable,
-    taxableSocialSecurity: result.socialSecurityBenefitsTaxable, capitalGainLoss: result.capitalGainLoss,
+    taxableSocialSecurity: result.socialSecurityBenefitsTaxable, capitalGainLoss: result.capitalGainLoss, scheduleD: capital,
     deductionUsed: result.deductionUsed, deductionAmount: result.deductionAmount,
     qbiDeduction: savedLine("1040", "13"), additionalDeductions: (result.schedule1A?.totalDeduction ?? d("0")).plus(result.nonitemizerCharitableDeduction ?? d("0")),
     nonitemizerCharitableDeduction: result.nonitemizerCharitableDeduction ?? d("0"), schedule1, scheduleA: result.scheduleA,
@@ -101,7 +108,7 @@ function currentOriginRows(input: TaxYearInput, result: TaxReturnResult): string
     `Current regular PartI loss ${checked.regular.netOperatingLoss}; current EBL carry ${checked.currentExcessBusinessLoss}; total regular closing carry ${checked.regularClosingCarryforward}`,
     `Current alternative PartI loss ${checked.alternativeTax.netOperatingLoss}; current EBL carry ${checked.alternativeExcessBusinessLoss}; total alternative closing carry ${checked.alternativeClosingCarryforward}`,
     `Current section1411 original loss ${checked.section1411OriginalLoss}`,
-    ...checked.lines.filter(line => line.form === "Current Form172 itemized sources")
+    ...checked.lines.filter(line => line.form === "Current Form172 itemized sources" || line.form === "Current Form172 capital sources")
       .map(line => `${line.description}: ${line.value}`),
     ...([ ["Regular", checked.regular], ["Alternative", checked.alternativeTax], ["Investment", checked.investment] ] as const)
       .flatMap(([label, form]) => form.lines.map(line => `${label} current Form172 line${line.line}: ${line.value}`)),

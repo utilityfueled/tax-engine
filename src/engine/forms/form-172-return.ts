@@ -4,11 +4,13 @@ import type { TaxYearInput } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import type { Schedule1Result } from "@/engine/schedules/schedule-1.js";
 import type { ScheduleAResult } from "@/engine/schedules/schedule-a.js";
+import type { ScheduleDResult } from "@/engine/schedules/schedule-d.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { d, roundDollar, sum } from "@/utils/decimal.js";
 import { calculateForm172Origin, type Form172OriginInput, type Form172OriginResult } from "./form-172-origin.js";
 import type { NetOperatingLossReturnResult } from "./net-operating-loss-return.js";
 import { calculateForm172ItemizedSources } from "./form-172-itemized-sources.js";
+import { calculateForm172CapitalSources } from "./form-172-capital-sources.js";
 
 export interface Form172ReturnContext {
   agi: Decimal;
@@ -20,6 +22,7 @@ export interface Form172ReturnContext {
   pensionTaxable: Decimal;
   taxableSocialSecurity: Decimal;
   capitalGainLoss: Decimal;
+  scheduleD: ScheduleDResult;
   deductionUsed: "standard" | "itemized";
   deductionAmount: Decimal;
   qbiDeduction: Decimal;
@@ -101,11 +104,7 @@ export function calculateForm172Return(input: TaxYearInput, context?: Form172Ret
     const value = input[key];
     if (Array.isArray(value) ? value.length > 0 : value !== undefined) throw new Error(`Form172 requires the separate current origin classification method for ${key}`);
   }
-  if (input.form1099B.some(form => form.transactions.length > 0) || input.form1099DA.length
-    || [input.priorYear?.capitalLossCarryforward, input.priorYear?.shortTermCapitalLoss, input.priorYear?.longTermCapitalLoss].some(value => !d(value).isZero())
-    || input.form1099Div.some(form => [form.totalCapitalGainDistributions, form.section1202Gain, form.section1250Gain, form.collectiblesGain].some(value => !d(value).isZero()))) {
-    throw new Error("Form172 capital source classifications and section1202 origin require their separate completed method");
-  }
+  const capital = calculateForm172CapitalSources(input, context?.scheduleD);
   if (input.donations.length || !d(input.priorYear?.charitableCarryforward).isZero()
     || input.priorYear?.charitableCarryforwardByYear?.some(row => !d(row.amount).isZero())) {
     throw new Error("Form172 current origin and charitable itemized carry require their separate regular and alternative coordination");
@@ -127,9 +126,10 @@ export function calculateForm172Return(input: TaxYearInput, context?: Form172Ret
   for (const [key, value] of Object.entries(context)) {
     if (Decimal.isDecimal(value) && !value.isFinite()) throw new Error(`Form172 requires finite actual canonical ${key}`);
   }
-  if (!context.capitalGainLoss.isZero() || !context.additionalDeductions.isZero() || !context.nonitemizerCharitableDeduction.isZero()) {
-    throw new Error("Form172 capital, Schedule1A and nonitemizer charitable deductions require their separate origin coordination method");
+  if (!context.additionalDeductions.isZero() || !context.nonitemizerCharitableDeduction.isZero()) {
+    throw new Error("Form172 Schedule1A and nonitemizer charitable deductions require their separate origin coordination method");
   }
+  if (!context.scheduleD || !context.capitalGainLoss.eq(capital.capitalGainLoss)) throw new Error("Form172 capital must reconcile with the actual canonical Schedule D and1040 transfer");
   if (context.unverifiedAnnuitySourceIds.length) throw new Error("Form172 investment origin requires the actual pension/annuity source classification");
   const prior = context.priorLoss;
   if (!prior.calculationComplete || prior.sourceFactsVerified !== true || prior.alternativeTax.sourceFactsVerified !== true) {
@@ -142,7 +142,7 @@ export function calculateForm172Return(input: TaxYearInput, context?: Form172Ret
   const nonbusinessIncome = sum(context.taxableInterest, context.ordinaryDividends, context.iraTaxable,
     context.pensionTaxable, context.taxableSocialSecurity, sched1.alimonyReceived);
   const businessIncome = sum(context.totalWages, sched1.businessIncome, sched1.unemploymentCompensation);
-  if (!businessIncome.plus(nonbusinessIncome).plus(context.currentExcessBusinessLoss).minus(prior.deduction).eq(context.totalIncome)) {
+  if (!sum(businessIncome, nonbusinessIncome, capital.capitalGainLoss, context.currentExcessBusinessLoss).minus(prior.deduction).eq(context.totalIncome)) {
     throw new Error("Form172 actual business and nonbusiness income must conserve final return income");
   }
   const nonbusinessAdjustments = sum(sched1.hsaDeduction, sched1.archerMSADeduction, sched1.seRetirementContributions,
@@ -161,10 +161,11 @@ export function calculateForm172Return(input: TaxYearInput, context?: Form172Ret
   const itemized = context.deductionUsed === "itemized" ? calculateForm172ItemizedSources(input, context) : undefined;
   const partI = (agi: Decimal, deduction: Decimal, nonbusinessDeduction: Decimal, ordinaryIncome: Decimal, oldNol: Decimal): Form172OriginResult => {
     const args: Form172OriginInput = { taxYear: year, filingStatus: input.taxpayer.filingStatus,
-      adjustedGrossIncome: roundDollar(agi), deductionAmount: roundDollar(deduction),
-      nonbusinessDeductions: roundDollar(nonbusinessDeduction), nonbusinessOrdinaryIncome: roundDollar(ordinaryIncome),
-      nonbusinessCapitalLosses: zero, nonbusinessCapitalGains: zero, businessCapitalLosses: zero, businessCapitalGains: zero,
-      netCapitalGainOrLoss: zero, section1202Exclusion: zero, otherYearNolDeduction: roundDollar(oldNol) };
+      adjustedGrossIncome: agi, deductionAmount: deduction,
+      nonbusinessDeductions: nonbusinessDeduction, nonbusinessOrdinaryIncome: ordinaryIncome,
+      nonbusinessCapitalLosses: capital.nonbusinessCapitalLosses, nonbusinessCapitalGains: capital.nonbusinessCapitalGains,
+      businessCapitalLosses: zero, businessCapitalGains: zero,
+      netCapitalGainOrLoss: capital.netCapitalGainLoss, section1202Exclusion: zero, otherYearNolDeduction: oldNol };
     return calculateForm172Origin(args);
   };
   const regular = partI(context.agi, context.deductionAmount, context.deductionAmount.plus(nonbusinessAdjustments), nonbusinessIncome, prior.deduction);
@@ -181,7 +182,7 @@ export function calculateForm172Return(input: TaxYearInput, context?: Form172Ret
   // income and its nonbusiness early-withdrawal deduction are re-run under172(d),
   // whose nonbusiness limit prevents them from generating a new investment NOL.
   const investmentDeductions = sched1.earlyWithdrawalPenalty.plus(itemized?.investment ?? zero);
-  const investment = partI(context.investmentIncome.minus(investmentDeductions), zero,
+  const investment = partI(context.investmentIncome.plus(capital.capitalGainLoss).minus(investmentDeductions), zero,
     investmentDeductions, context.investmentIncome, zero);
   const section1411OriginalLoss = Decimal.min(regular.netOperatingLoss, investment.netOperatingLoss);
   const currentExcessBusinessLoss = roundDollar(context.currentExcessBusinessLoss);
@@ -204,5 +205,5 @@ export function calculateForm172Return(input: TaxYearInput, context?: Form172Ret
     currentExcessBusinessLoss, alternativeExcessBusinessLoss: currentExcessBusinessLoss, newRegularCarryforward, newAlternativeCarryforward,
     regularClosingCarryforward, alternativeClosingCarryforward,
     lines: [...regular.lines, ...alternativeTax.lines.map(line => ({ ...line, form: "Alternative172 Part I" })),
-      ...investment.lines.map(line => ({ ...line, form: "Section1411 origin172" })), ...(itemized?.lines ?? []), ...audit.getLines()] };
+      ...investment.lines.map(line => ({ ...line, form: "Section1411 origin172" })), ...(itemized?.lines ?? []), ...capital.lines, ...audit.getLines()] };
 }

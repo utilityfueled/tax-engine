@@ -4151,7 +4151,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   if (input.form172 && nol?.stage !== "final") throw new Error("Form172 current origin requires the completed independent carry calculations");
   const form172 = input.form172 && nol?.stage === "final" ? calculateForm172Return(input, {
     agi, totalIncome, totalWages, taxableInterest: totalTaxableInterest, ordinaryDividends: totalDividends,
-    iraTaxable, pensionTaxable, taxableSocialSecurity: socialSecurityBenefitsTaxable, capitalGainLoss,
+    iraTaxable, pensionTaxable, taxableSocialSecurity: socialSecurityBenefitsTaxable, capitalGainLoss, scheduleD: schedD,
     deductionUsed, deductionAmount, qbiDeduction, additionalDeductions, nonitemizerCharitableDeduction,
     schedule1: sched1, scheduleA: schedA, currentExcessBusinessLoss: excessBusinessLossAddback,
     alternativeTaxIncome: form6251.amti,

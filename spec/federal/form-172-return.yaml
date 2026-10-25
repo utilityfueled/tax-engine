@@ -14,7 +14,10 @@ notes: |
   then its own nonbusiness-deduction limit is computed. Regular AGI-dependent
   amounts remain those required by Reg1.55-1(b). Section1411 origin is independently
   computed under Reg1.1411-4(h), excluding the actual active nontrading business.
-  Original source cents are retained; completed PartI inputs are whole dollars.
+  Exact completed canonical computational amounts flow into PartI; source cents
+  and separately rounded reported lines are retained. Existing upstream form
+  rounding is not reversed. The ordinary investment capital extension is
+  specified in form-172-capital-origin.yaml; other capital methods remain gated.
   The literal cases below are derived examples, not published IRS numerical oracles.
 lines:
   - line: "regular-alternative-origin"

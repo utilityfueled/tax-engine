@@ -2551,6 +2551,38 @@ export const Form172OriginSourcesSchema = z.object({
     sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
     materiallyParticipated: z.boolean().optional(), allInvestmentAtRisk: z.boolean().optional(), financialTradingBusiness: z.boolean().optional(),
   })).optional(),
+  /** Original capital records and actual character; no computed gain or loss override. */
+  capitalSources: z.object({
+    sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
+    allCapitalSourcesIncluded: z.boolean().optional(),
+    transactions: z.array(z.object({
+      sourceId: z.string().optional(), sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(),
+      accountHolder: z.enum(["primary", "spouse"]).optional(), statementSourceId: z.string().optional(), payerName: z.string().optional(),
+      accountReference: z.string().optional(), nonbusinessInvestmentConfirmed: z.boolean().optional(),
+      capitalCharacter: z.enum(["ordinary_investment", "collectible", "section1202"]).optional(),
+      transaction: z.object({
+        description: z.string().optional(), dateAcquired: z.string().optional(), dateSold: z.string().optional(),
+        proceeds: optionalDecimalInput, costBasis: optionalDecimalInput, adjustments: optionalDecimalInput,
+        holdingPeriod: z.enum(["short", "long"]).optional(), basisReportedToIRS: z.boolean().optional(),
+        washSale: z.boolean().optional(), washSaleDisallowed: optionalDecimalInput, digitalAsset: z.boolean().optional(),
+      }).optional(),
+    })).optional(),
+    distributions: z.array(z.object({
+      sourceId: z.string().optional(), sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(),
+      accountHolder: z.enum(["primary", "spouse"]).optional(), payerName: z.string().optional(), accountReference: z.string().optional(),
+      nonbusinessInvestmentConfirmed: z.boolean().optional(), totalCapitalGainDistributions: optionalDecimalInput,
+      section1250Gain: optionalDecimalInput, section1202Gain: optionalDecimalInput, collectiblesGain: optionalDecimalInput,
+    })).optional(),
+    priorCapitalLosses: z.object({
+      sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
+      allCarryoversIncluded: z.boolean().optional(), sameReturnMembershipConfirmed: z.boolean().optional(),
+      nonbusinessInvestmentConfirmed: z.boolean().optional(), shortTermCapitalLoss: optionalDecimalInput, longTermCapitalLoss: optionalDecimalInput,
+    }).optional(),
+    alternativeTax: z.object({
+      sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
+      currentBasisAndAdjustmentsSameConfirmed: z.boolean().optional(), priorCapitalLossesSameConfirmed: z.boolean().optional(),
+    }).optional(),
+  }).optional(),
   alternativeTax: z.object({
     sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(), currentYearAdjustmentsCompleteConfirmed: z.boolean().optional(),
     regularBasisAndLossLimitsSameAsAlternativeConfirmed: z.boolean().optional(), regularDepreciationSameAsAlternativeConfirmed: z.boolean().optional(),
