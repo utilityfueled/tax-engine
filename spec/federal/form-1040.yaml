@@ -16,6 +16,11 @@ reviewPdfMapping:
   testRef: "tests/pdf/form-1040-source-mapping.test.ts::places simple return values on official 2025 printed lines after serialization"
 
 lines:
+  - line: "savings-bond-exclusion-addbacks"
+    description: "Actual exclusions are added back for education savings bond MAGI"
+    formula: "Pre-bond-exclusion AGI plus studentloaninterest deduction, net2555lines45+50, and actual8839benefit exclusion; possession exclusions require their separate actual source contract"
+    irsRef: "https://www.irs.gov/publications/p970, Education Savings Bond Program MAGI"
+    testRef: "tests/engine/federal-income-exclusion-addbacks.test.ts::restores actual foreign and adoption exclusions for savings bond MAGI"
   - line: "foreign-income-source-routing"
     description: "Actual foreign employment receipts absent from W2"
     formula: "Add only confirmed foreignEmploymentIncomeNotOnW2 to line1h; retain actual W2 wages on1a. Amounts already in wages/business/partnership/other source records are not added again. Form2555 source tax year must match, source mapping must reconcile, and actual W2 attribution cannot exceed total W2 wages."

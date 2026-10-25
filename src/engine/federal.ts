@@ -1633,10 +1633,16 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
         pensionTaxable,
         capitalGainLoss,
         schedCNetProfit,
+        schedFNetProfit,
         adjustedScheduleETotal,
         otherIncome
       ),
       taxExemptInterest,
+      exclusionsAdjustments: sum(
+        form2555IncomeReduction,
+        form2555HousingDeduction,
+        adoptionBenefitResult?.allowableExclusion ?? new Decimal(0)
+      ),
       livedWithSpouseAtAnyTimeDuringYear: input.taxpayer.livedWithSpouseAtAnyTimeDuringYear,
       adjustments: {
         businessExpenseAdjustments: sched1.businessExpenseAdjustments,
@@ -1650,7 +1656,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
         iraDeduction: sched1.iraDeduction,
         archerMSADeduction: sched1.archerMSADeduction,
         educatorExpenses: sched1.educatorExpenses,
-        otherAdjustmentsTotal: sched1.otherAdjustmentsTotal,
+        otherAdjustmentsTotal: sum(sched1.otherAdjustmentsTotal, form2555HousingDeduction, k1Form1041Section67eDeductions),
         studentLoanInterest: sched1.studentLoanInterest,
       },
       lumpSumElection: input.socialSecurityLumpSumElection === undefined
@@ -1679,7 +1685,9 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     "Sum SSA-1099 Box 5 benefits and RRB-1099 tier 1 equivalent Box 5 benefits");
   audit.record("1040", "6b", "Taxable Social Security benefits", socialSecurityBenefitsTaxable,
     socialSecurityBenefitsWorksheet
-      ? totalInterestBeforeSavingsBondExclusion.eq(preliminaryScheduleB.taxableInterest)
+      ? socialSecurityBenefitsWorksheet.worksheetKind === "publication915"
+        ? "Publication 915 Worksheet 1 line 19, subject to any lower Worksheet 4 lump-sum election"
+        : totalInterestBeforeSavingsBondExclusion.eq(preliminaryScheduleB.taxableInterest)
         ? "Social Security Benefits Worksheet Line 18"
         : "Social Security Benefits Worksheet Line 18 using pre-exclusion Schedule B Line 2 interest because Form 8815 reduced Form 1040 Line 2b"
       : "No Social Security benefits reported");
@@ -1693,6 +1701,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     socialSecurityBenefitsTaxable,
     capitalGainLoss,
     schedCNetProfit,
+    schedFNetProfit,
     adjustedScheduleETotal,
     otherIncome
   );
@@ -1712,13 +1721,15 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   const preliminaryAgi = preliminaryTotalIncome.minus(adjustments);
 
   // ── Form 8815: Savings Bond Interest Exclusion ──────────
-  // Per IRS Form 8815 Instructions, Line 7: modified AGI = AGI + student loan
-  // interest deduction + foreign earned income exclusion + other add-backs.
+  // Per IRS Form 8815 Instructions, Line 9: modified AGI = AGI + student loan
+  // interest deduction + net foreign income/housing and adoption-benefit exclusions.
   // preliminaryAgi already has SLI subtracted, so we add it back for the MAGI.
   let form8815: Form8815Result | undefined;
   let savingsBondExclusion = new Decimal(0);
   if (input.savingsBondRedemptions && input.savingsBondRedemptions.length > 0) {
-    const form8815MAGI = preliminaryAgi.plus(sched1.studentLoanInterest);
+    const form8815MAGI = sum(preliminaryAgi, sched1.studentLoanInterest,
+      form2555IncomeReduction, form2555HousingDeduction,
+      adoptionBenefitResult?.allowableExclusion ?? new Decimal(0));
     form8815 = calculateForm8815(input.savingsBondRedemptions, form8815MAGI, filingStatus);
     savingsBondExclusion = form8815.excludableSavingsBondInterest;
     audit.merge(form8815.lines);

@@ -14,6 +14,8 @@ export interface SocialSecurityBenefitsWorksheetInput {
   benefitsReceived: Decimal;
   otherIncome: Decimal;
   taxExemptInterest: Decimal;
+  /** Actual Pub. 915 Worksheet 1 line 5 exclusions, before any lump-sum aggregate. */
+  exclusionsAdjustments?: Decimal;
   livedWithSpouseAtAnyTimeDuringYear?: boolean;
   adjustments?: {
     businessExpenseAdjustments?: Decimal;
@@ -53,6 +55,8 @@ export interface SocialSecurityLumpSumElectionYearResult {
 }
 
 export interface SocialSecurityBenefitsWorksheetResult {
+  worksheetKind: "form1040" | "publication915";
+  exclusionsAdjustments: Decimal;
   line1: Decimal;
   line2: Decimal;
   line3: Decimal;
@@ -115,6 +119,7 @@ function calculatePub915TaxableBenefits(input: {
 }): Decimal {
   const mfsLivedWithSpouse =
     input.filingStatus === "married_filing_separately" && input.livedWithSpouseAtAnyTimeDuringYear;
+
   const halfBenefits = d(input.benefitsReceived).dividedBy(2);
   const excessOverBase = zeroFloor(
     d(input.provisionalIncome).minus(
@@ -190,11 +195,24 @@ export function calculateSocialSecurityBenefitsWorksheet(
   const mfsLivedWithSpouse =
     input.filingStatus === "married_filing_separately" && input.livedWithSpouseAtAnyTimeDuringYear;
 
+  const knownExclusions = d(input.exclusionsAdjustments);
+  const aggregateExclusions = input.lumpSumElection?.currentYearExclusionsAdjustments;
+  for (const amount of [knownExclusions, aggregateExclusions]) {
+    if (amount !== undefined && (!amount.isFinite() || amount.isNegative())) {
+      throw new Error("Social Security exclusions must be finite and nonnegative");
+    }
+  }
+  if (aggregateExclusions !== undefined && aggregateExclusions.lessThan(knownExclusions)) {
+    throw new Error("Current-year aggregate exclusions cannot be below known actual exclusions");
+  }
+  const exclusionsAdjustments = aggregateExclusions ?? knownExclusions;
+  const worksheetKind = exclusionsAdjustments.greaterThan(0) ? "publication915" : "form1040";
+
   const line1 = d(input.benefitsReceived);
   const line2 = line1.dividedBy(2);
   const line3 = d(input.otherIncome);
   const line4 = d(input.taxExemptInterest);
-  const line5 = sum(line2, line3, line4);
+  const line5 = sum(line2, line3, line4, exclusionsAdjustments);
   const line6 = sum(
     d(input.adjustments?.businessExpenseAdjustments),
     d(input.adjustments?.hsaDeduction),
@@ -224,80 +242,108 @@ export function calculateSocialSecurityBenefitsWorksheet(
   const line17 = line1.times(EIGHTY_FIVE_PERCENT);
   const line18 = min(line16, line17);
 
-  audit.record("SS Worksheet", "1", "Total Social Security benefits", line1, "Sum SSA-1099 Box 5 benefits");
-  audit.record("SS Worksheet", "2", "One-half of benefits", line2, "Line 1 / 2", { "Line 1": line1 });
-  audit.record("SS Worksheet", "3", "Other taxable income", line3, "Form 1040 income excluding Social Security benefits");
-  audit.record("SS Worksheet", "4", "Tax-exempt interest", line4, "Form 1040 Line 2a");
-  audit.record("SS Worksheet", "5", "Subtotal before add-backs", line5, "Line 2 + Line 3 + Line 4", {
-    "Line 2": line2,
-    "Line 3": line3,
-    "Line 4": line4,
-  });
-  audit.record("SS Worksheet", "6", "Specified Schedule 1 add-backs", line6,
-    "Supported 2025 Schedule 1 adjustment categories added back for provisional income; student loan interest stays excluded while Line 12 business expenses and Line 14 Armed Forces moving expenses are supported through validated Schedule 1 amounts", {
-      "Supported Schedule 1 business expense adjustments": d(input.adjustments?.businessExpenseAdjustments),
-      "Supported Schedule 1 educator expenses": d(input.adjustments?.educatorExpenses),
-      "Supported Schedule 1 HSA deduction": d(input.adjustments?.hsaDeduction),
-      "Supported Schedule 1 Armed Forces moving expenses": d(input.adjustments?.armedForcesMovingExpenses),
-      "Supported Schedule 1 deductible self-employment tax": d(input.adjustments?.seDeduction),
-      "Supported Schedule 1 self-employed retirement contributions": d(input.adjustments?.seRetirementContributions),
-      "Supported Schedule 1 self-employed health insurance deduction": d(input.adjustments?.seHealthInsurance),
-      "Supported Schedule 1 early withdrawal penalty": d(input.adjustments?.earlyWithdrawalPenalty),
-      "Supported Schedule 1 alimony paid": d(input.adjustments?.alimonyPaid),
-      "Supported Schedule 1 IRA deduction": d(input.adjustments?.iraDeduction),
-      "Supported Schedule 1 Archer MSA deduction": d(input.adjustments?.archerMSADeduction),
-      "Supported Schedule 1 Line 25 total other adjustments": d(input.adjustments?.otherAdjustmentsTotal),
-      "Excluded Schedule 1 student loan interest": d(input.adjustments?.studentLoanInterest),
+  if (worksheetKind === "publication915") {
+    const entries: Array<[string, string, Decimal, string]> = [
+      ["1", "Total Social Security benefits", line1, "SSA-1099/RRB-1099 equivalent benefits"],
+      ["2", "Half of benefits", line2, "Line 1 × 50%"],
+      ["3", "Other taxable income before savings-bond exclusion", line3, "1040 income other than Social Security; pre-exclusion interest"],
+      ["4", "Tax-exempt interest", line4, "Form 1040 line 2a"],
+      ["5", "Actual income exclusions", exclusionsAdjustments, "Actual foreign income/housing, adoption, and supported other exclusions"],
+      ["6", "Income and exclusions subtotal", line5, "Lines 2 + 3 + 4 + 5"],
+      ["7", "Specified Schedule 1 adjustments", line6, "Schedule 1 lines 11–20, 23, and 25"],
+      ["8", "Provisional income", line7, "Line 6 − line 7"],
+      ["9", "Base amount", line8, "32,000 joint; 25,000 others; MFS lived-together exception"],
+      ["10", "Excess over base", line9, "max(0, line 8 − line 9)"],
+      ["11", "Second-tier width", line10, "12,000 joint; 9,000 others"],
+      ["12", "Upper-tier excess", line11, "max(0, line 10 − line 11)"],
+      ["13", "Lower-tier band", line12, "min(line 10, line 11)"],
+      ["14", "Half lower-tier band", line13, "Line 13 × 50%"],
+      ["15", "Lower-tier inclusion", line14, "min(line 2, line 14)"],
+      ["16", "Upper-tier inclusion", line15, "Line 12 × 85%"],
+      ["17", "Tentative taxable benefits", line16, mfsLivedWithSpouse ? "max(0, line 8) × 85% under MFS lived-together rule" : "Line 15 + line 16"],
+      ["18", "85% benefit limit", line17, "Line 1 × 85%"],
+      ["19", "Taxable Social Security benefits", line18, "min(line 17, line 18)"],
+    ];
+    for (const [line, description, value, formula] of entries) {
+      if (mfsLivedWithSpouse && new Set(["9", "10", "11", "12", "13", "14", "15", "16"]).has(line)) continue;
+      audit.record("Pub915 WS1", line, description, value, formula);
+    }
+  } else {
+    audit.record("SS Worksheet", "1", "Total Social Security benefits", line1, "Sum SSA-1099 Box 5 benefits");
+    audit.record("SS Worksheet", "2", "One-half of benefits", line2, "Line 1 / 2", { "Line 1": line1 });
+    audit.record("SS Worksheet", "3", "Other taxable income", line3, "Form 1040 income excluding Social Security benefits");
+    audit.record("SS Worksheet", "4", "Tax-exempt interest", line4, "Form 1040 Line 2a");
+    audit.record("SS Worksheet", "5", "Subtotal before add-backs", line5, "Line 2 + Line 3 + Line 4", {
+      "Line 2": line2,
+      "Line 3": line3,
+      "Line 4": line4,
     });
-  audit.record("SS Worksheet", "7", "Provisional income", line7, "Line 5 - Line 6", {
-    "Line 5": line5,
-    "Line 6": line6,
-  });
-  audit.record("SS Worksheet", "8", "Base amount", line8,
-    input.filingStatus === "married_filing_jointly"
-      ? "$32,000 for married filing jointly"
-      : mfsLivedWithSpouse
-        ? "$0 because the married filing separately filer lived with a spouse during the year"
-        : "$25,000 for single, head of household, qualifying surviving spouse, or MFS living apart all year");
-  audit.record("SS Worksheet", "9", "Excess over base amount", line9, "max(0, Line 7 - Line 8)", {
-    "Line 7": line7,
-    "Line 8": line8,
-  });
-  audit.record("SS Worksheet", "10", "Second-tier width", line10,
-    input.filingStatus === "married_filing_jointly" ? "$12,000" : "$9,000");
-  audit.record("SS Worksheet", "11", "Excess over second-tier width", line11, "max(0, Line 9 - Line 10)", {
-    "Line 9": line9,
-    "Line 10": line10,
-  });
-  audit.record("SS Worksheet", "12", "Lower-tier band", line12, "min(Line 9, Line 10)", {
-    "Line 9": line9,
-    "Line 10": line10,
-  });
-  audit.record("SS Worksheet", "13", "Half of lower-tier band", line13, "Line 12 / 2", {
-    "Line 12": line12,
-  });
-  audit.record("SS Worksheet", "14", "50% inclusion amount", line14, "min(Line 2, Line 13)", {
-    "Line 2": line2,
-    "Line 13": line13,
-  });
-  audit.record("SS Worksheet", "15", "85% upper-tier amount", line15, "Line 11 × 85%", {
-    "Line 11": line11,
-  });
-  audit.record("SS Worksheet", "16", "Tentative taxable benefits", line16,
-    mfsLivedWithSpouse
-      ? "max(0, Line 7) × 85% because the married filing separately filer lived with a spouse during the year"
-      : "Line 14 + Line 15", {
+    audit.record("SS Worksheet", "6", "Specified Schedule 1 add-backs", line6,
+      "Supported 2025 Schedule 1 adjustment categories added back for provisional income; student loan interest stays excluded while Line 12 business expenses and Line 14 Armed Forces moving expenses are supported through validated Schedule 1 amounts", {
+        "Supported Schedule 1 business expense adjustments": d(input.adjustments?.businessExpenseAdjustments),
+        "Supported Schedule 1 educator expenses": d(input.adjustments?.educatorExpenses),
+        "Supported Schedule 1 HSA deduction": d(input.adjustments?.hsaDeduction),
+        "Supported Schedule 1 Armed Forces moving expenses": d(input.adjustments?.armedForcesMovingExpenses),
+        "Supported Schedule 1 deductible self-employment tax": d(input.adjustments?.seDeduction),
+        "Supported Schedule 1 self-employed retirement contributions": d(input.adjustments?.seRetirementContributions),
+        "Supported Schedule 1 self-employed health insurance deduction": d(input.adjustments?.seHealthInsurance),
+        "Supported Schedule 1 early withdrawal penalty": d(input.adjustments?.earlyWithdrawalPenalty),
+        "Supported Schedule 1 alimony paid": d(input.adjustments?.alimonyPaid),
+        "Supported Schedule 1 IRA deduction": d(input.adjustments?.iraDeduction),
+        "Supported Schedule 1 Archer MSA deduction": d(input.adjustments?.archerMSADeduction),
+        "Supported Schedule 1 Line 25 total other adjustments": d(input.adjustments?.otherAdjustmentsTotal),
+        "Excluded Schedule 1 student loan interest": d(input.adjustments?.studentLoanInterest),
+      });
+    audit.record("SS Worksheet", "7", "Provisional income", line7, "Line 5 - Line 6", {
+      "Line 5": line5,
+      "Line 6": line6,
+    });
+    audit.record("SS Worksheet", "8", "Base amount", line8,
+      input.filingStatus === "married_filing_jointly"
+        ? "$32,000 for married filing jointly"
+        : mfsLivedWithSpouse
+          ? "$0 because the married filing separately filer lived with a spouse during the year"
+          : "$25,000 for single, head of household, qualifying surviving spouse, or MFS living apart all year");
+    audit.record("SS Worksheet", "9", "Excess over base amount", line9, "max(0, Line 7 - Line 8)", {
       "Line 7": line7,
-      "Line 14": line14,
-      "Line 15": line15,
+      "Line 8": line8,
     });
-  audit.record("SS Worksheet", "17", "Maximum taxable benefits", line17, "Line 1 × 85%", {
-    "Line 1": line1,
-  });
-  audit.record("SS Worksheet", "18", "Taxable Social Security benefits", line18, "min(Line 16, Line 17)", {
-    "Line 16": line16,
-    "Line 17": line17,
-  });
+    audit.record("SS Worksheet", "10", "Second-tier width", line10,
+      input.filingStatus === "married_filing_jointly" ? "$12,000" : "$9,000");
+    audit.record("SS Worksheet", "11", "Excess over second-tier width", line11, "max(0, Line 9 - Line 10)", {
+      "Line 9": line9,
+      "Line 10": line10,
+    });
+    audit.record("SS Worksheet", "12", "Lower-tier band", line12, "min(Line 9, Line 10)", {
+      "Line 9": line9,
+      "Line 10": line10,
+    });
+    audit.record("SS Worksheet", "13", "Half of lower-tier band", line13, "Line 12 / 2", {
+      "Line 12": line12,
+    });
+    audit.record("SS Worksheet", "14", "50% inclusion amount", line14, "min(Line 2, Line 13)", {
+      "Line 2": line2,
+      "Line 13": line13,
+    });
+    audit.record("SS Worksheet", "15", "85% upper-tier amount", line15, "Line 11 × 85%", {
+      "Line 11": line11,
+    });
+    audit.record("SS Worksheet", "16", "Tentative taxable benefits", line16,
+      mfsLivedWithSpouse
+        ? "max(0, Line 7) × 85% because the married filing separately filer lived with a spouse during the year"
+        : "Line 14 + Line 15", {
+        "Line 7": line7,
+        "Line 14": line14,
+        "Line 15": line15,
+      });
+    audit.record("SS Worksheet", "17", "Maximum taxable benefits", line17, "Line 1 × 85%", {
+      "Line 1": line1,
+    });
+    audit.record("SS Worksheet", "18", "Taxable Social Security benefits", line18, "min(Line 16, Line 17)", {
+      "Line 16": line16,
+      "Line 17": line17,
+    });
+  }
 
   const standardTaxableBenefits = line18;
   const sortedLumpSumElectionEarlierYears = (input.lumpSumElection?.earlierYears ?? [])
@@ -309,7 +355,7 @@ export function calculateSocialSecurityBenefitsWorksheet(
     ...sortedLumpSumElectionEarlierYears.map((earlierYear) => d(earlierYear.delayedBenefitsReceivedInCurrentYear))
   );
   const currentYearBenefitsExcludingPriorYears = zeroFloor(line1.minus(totalDelayedBenefitsReceivedInCurrentYear));
-  const currentYearExclusionsAdjustments = d(input.lumpSumElection?.currentYearExclusionsAdjustments);
+  const currentYearExclusionsAdjustments = exclusionsAdjustments;
   const currentYearLumpSumElectionProvisionalIncome = currentYearBenefitsExcludingPriorYears
     .dividedBy(2)
     .plus(line3)
@@ -365,8 +411,8 @@ export function calculateSocialSecurityBenefitsWorksheet(
       "Taxable Social Security benefits under the Pub. 915 lump-sum election",
       lumpSumElectionTaxableBenefits,
       usedLumpSumElection
-        ? "Pub. 915 Worksheet 4 Line 21 elected because it is lower than standard Worksheet Line 18"
-        : "Pub. 915 Worksheet 4 Line 21 computed for comparison, but standard Worksheet Line 18 remains lower or equal",
+        ? "Pub. 915 Worksheet 4 Line 21 elected because it is lower than the current-year standard calculation"
+        : "Pub. 915 Worksheet 4 Line 21 computed for comparison, but the current-year standard calculation remains lower or equal",
       {
         "Current-year benefits excluding prior-year delayed payments": currentYearBenefitsExcludingPriorYears,
         "Current-year exclusions and adjustments": currentYearExclusionsAdjustments,
@@ -382,6 +428,8 @@ export function calculateSocialSecurityBenefitsWorksheet(
   }
 
   return {
+    worksheetKind,
+    exclusionsAdjustments,
     line1,
     line2,
     line3,

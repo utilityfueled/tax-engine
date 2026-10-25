@@ -690,3 +690,26 @@ while retaining their original exclusion-boundary assertions.136 focused
 Schedule B/OID tests, root types, all 3,257 spec references and scoped lint pass
 (zero errors). Scoped diff/whitespace reviewed. Pennsylvania integration is a
 separate package owned by the parent; all qualification gates remain in place.
+
+### Social Security and bond exclusion addbacks — 2026-10-25
+
+Refreshed Pub.915 Worksheet1 and Pub.970 chapter9. Actual net foreign exclusion,
+housing deduction and adoption-benefit exclusion now feed Social Security
+provisional income and savings-bond MAGI. The housing deduction is also retained
+among the actual Schedule1 line25 adjustments. Farm income now enters both
+preliminary worksheets. A supplied lump-sum exclusion aggregate is counted once
+and rejected when below known exclusions. Positive exclusions use the audited
+19-line Pub.915 worksheet; MFS lived-together skips lines9–16 as instructed.
+The result identifies its worksheet kind for the separate reference-PDF update.
+
+Four red-first regressions prove full SS taxation after an actual foreign
+exclusion, 9,600 taxable benefits after a 17,280 adoption exclusion, restored
+107,000 bond MAGI, farm income inclusion and no duplicate lump-sum addback.
+A further red-first MFS audit assertion preserves the official skipped lines.
+119 focused income/farm/identity tests, 124 adjacent SS/adoption/reference-PDF
+and metadata tests, and a final 123-test SS/bond/metadata run pass. Root types,
+all 3,278 spec references and scoped lint pass (zero errors); diff reviewed.
+Versions are2025.11 and2026.6-law-integration-draft. No filing or review gate is
+changed. Source-qualified Form8815 integration and territory exclusions are the
+next separate package. CTC synthetic joint wage-owner fixture correction is
+committed separately as aaa9dd7; its14 original identity assertions pass.
