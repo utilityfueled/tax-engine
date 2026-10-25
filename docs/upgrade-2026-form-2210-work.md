@@ -43,6 +43,16 @@ This is calculation implementation evidence, not independent tax approval or fin
   Shaded cells 12a/13a/14a/16a/16d/18d stay blank; their source audit is retained.
   The shading regression failed before correction (`form-2210-shaded-red.log`).
   All pages retain the visible review notice and extracted notice text.
+- [x] PDF package committed as `a656859`. A fresh scan of all Form 2210,
+  underpayment and estimated-penalty consumers initially found 25 stale boundary
+  failures plus two adjacent audit assertions. Boundary fixtures now supply
+  explicit timely synthetic dates and eligible prior-return facts, distinguish
+  zero-tax prior returns from no prior return, and assert the actual printed
+  line numbers. Existing penalty dollar expectations are preserved. After the
+  adjacent owners' corrections, all 51 consumer files and 3,359 tests pass
+  (`form-2210-all-consumers-final.log`). The 47 boundary cases also pass with
+  stricter one-dollar-short and quarterly-payment assertions. Scoped lint,
+  diff review and all 3,357 spec references pass.
 
 ## Source decisions and independently derived expectations
 

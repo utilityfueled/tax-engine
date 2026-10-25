@@ -239,3 +239,14 @@ lines:
       wrong-year/template revisions. The review notice remains on every page;
       the normal packet still suppresses2210. No filing qualification is inferred.
     testRef: "tests/pdf/fill-form-2210.test.ts::copies dated audit columns instead of distributing an annual estimate equally"
+
+  - line: "boundary-regression-contract"
+    description: "Historical boundary fixtures preserve amounts with actual dated sources and physical audit IDs"
+    formula: "Use actual eligible prior-return facts and dated payments; physical line6 is withholding, line7 is tax less withholding, line8 is prior-year tax, line9 is required annual tax and line19 is penalty"
+    irsRef: "Final2025 Form2210 PartsI/III; instructions line8 and IRC6654"
+    notes: |
+      Equal timely payments are an explicit synthetic test scenario, never an
+      inferred production default. A first-time return does not establish a
+      qualifying zero-tax prior return. Annual payments alone do not prove timely
+      installments; a later catch-up is separately tested to retain earlier interest.
+    testRef: "tests/edge-cases/form-2210-edge-cases.test.ts::physical audit lines preserve tax components and the required-payment comparison"
