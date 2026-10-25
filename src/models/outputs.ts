@@ -104,6 +104,7 @@ export interface TaxReturnResult {
   otherIncome: Decimal;
   nolDeduction: Decimal;
   netOperatingLoss?: import("@/engine/forms/net-operating-loss-return.js").NetOperatingLossReturnResult;
+  form172?: import("@/engine/forms/form-172-return.js").Form172ReturnResult;
   totalIncome: Decimal;
 
   // Adjustments
@@ -184,6 +185,8 @@ export interface TaxReturnResult {
     excessBusinessLossNOL: Decimal;
     /** Remaining NOL carryforward after the current-year IRC §172 deduction */
     nolCarryforward: Decimal;
+    /** Independent actual AMT carry including a separately computed current-year origin. */
+    alternativeTaxNolCarryforward?: Decimal;
     /** Unused general business credit carried forward (IRC §39, 20-year limit) */
     generalBusinessCredit: Decimal;
     /** Per-partnership suspended excess business interest expense under IRC

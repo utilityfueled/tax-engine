@@ -142,7 +142,7 @@ export async function fillScheduleA(
   // ── Medical and Dental Expenses (Lines 1-4) ──
   const medicalExpenses = d(input.scheduleA?.medicalExpenses);
   const agi = result.agi;
-  const medicalThreshold = agi.times(new Decimal("0.075")).toDecimalPlaces(0, Decimal.ROUND_HALF_UP);
+  const medicalThreshold = Decimal.max(0, agi).times(new Decimal("0.075")).toDecimalPlaces(0, Decimal.ROUND_HALF_UP);
   setCurrencyField(form, F.line1, medicalExpenses);
   setCurrencyField(form, F.line2, agi);
   setCurrencyField(form, F.line3, medicalThreshold);

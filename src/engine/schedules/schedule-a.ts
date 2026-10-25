@@ -196,7 +196,9 @@ export function calculateScheduleA(
 
   // ── Medical (Lines 1-4) ────────────────────────────────
   const medicalExpenses = extra?.medicalExpenses ?? new Decimal(0);
-  const medicalThreshold = roundDollar(agi.times(new Decimal(0.075)));
+  // Section213(a) allows actual expenses paid. A negative AGI cannot create
+  // additional expenses; retain signed return AGI but floor this limitation.
+  const medicalThreshold = roundDollar(zeroFloor(agi).times(new Decimal("0.075")));
   const medicalDeduction = zeroFloor(medicalExpenses.minus(medicalThreshold));
   audit.record("Sched A", "1", "Medical expenses", medicalExpenses, "Total unreimbursed");
   audit.record("Sched A", "4", "Medical deduction", medicalDeduction,

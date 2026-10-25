@@ -26,14 +26,25 @@ lines:
 
   - line: "4"
     description: "Medical deduction (AGI threshold)"
-    formula: "Line 1 - (7.5% × AGI), floor at 0"
+    formula: "max(0, Line 1 - round(7.5% × max(0, AGI))); a negative AGI cannot increase the deduction beyond actual paid expenses"
     irsRef: "Schedule A Instructions, Line 4"
-    notes: "Only the amount exceeding 7.5% of AGI is deductible"
+    notes: "IRC213(a) allows expenses paid, limited by the AGI percentage. The nonnegative threshold follows that paid-expense ceiling; signed return AGI is preserved. This negative-AGI conclusion is derived from the statute and Pub502, not a published IRS numerical example."
     edgeCases:
       - "7.5% threshold applies to all filers"
       - "No deduction if expenses under threshold"
       - "Deduction cannot be negative"
     testRef: "tests/engine/schedules/schedule-a.test.ts::Schedule A Line 4 - medical deduction exceeds 7.5% AGI"
+
+  - line: "4-negative-agi"
+    description: "Negative AGI does not create medical expenses"
+    formula: "At negative or zero AGI, actual medical expenses0 give deduction0 and actual expenses5000 give deduction5000; the positive-AGI percentage remains unchanged."
+    irsRef: "IRC213(a); Pub502 How Much of the Expenses Can You Deduct?; source refreshed2026-10-25"
+    testRef: "tests/engine/schedules/schedule-a-medical-source-limit.test.ts::never deducts more medical expenses than actually paid at negative AGI"
+
+  - line: "4-negative-agi-review"
+    description: "Review PDF uses the same nonnegative medical threshold"
+    formula: "Retain signed actual AGI on2; map nonnegative threshold3 and actual capped deduction4."
+    testRef: "tests/pdf/schedule-a-medical-source-limit.test.ts::preserves signed AGI without a negative medical threshold in the review form"
 
   - line: "5a"
     description: "State and local income taxes OR general sales taxes"

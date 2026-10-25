@@ -8,6 +8,7 @@ import { calculateNetOperatingLoss, type NetOperatingLossResult } from "./net-op
 import { calculateAlternativeTaxNol, type AlternativeTaxNolResult } from "./alternative-tax-net-operating-loss.js";
 import type { Form6251IncomeResult } from "./form-6251.js";
 import { calculateCharitableNolCarryover, type CharitableNolCarryoverResult } from "./charitable-net-operating-loss.js";
+import { calculateForm172Return } from "./form-172-return.js";
 
 export interface NolIncomeContext {
   agi: Decimal;
@@ -51,6 +52,7 @@ export function calculateNetOperatingLossReturn(input: TaxYearInput,
   computeAlternativeIncome: (deduction: Decimal, modified: boolean) => Form6251IncomeResult): NetOperatingLossReturnResult {
   const facts = input.netOperatingLoss;
   if (!facts) throw new Error("Actual NOL return computation requires the actual carry source packet");
+  const currentOrigin = input.form172 ? calculateForm172Return(input) : undefined;
   if (input.foreignTaxElection?.deductionYearCarryover) {
     throw new Error("Actual NOL and foreign deduction-year carry require the coupled foreign-source hypothetical worksheet");
   }
@@ -84,7 +86,7 @@ export function calculateNetOperatingLossReturn(input: TaxYearInput,
   }
   const actualIncome = computeIncome(d("0"), false, "current-limit");
   const modifiedIncome = computeIncome(d("0"), true, "modified");
-  if (modifiedIncome.agi.lt(0) || actualIncome.currentExcessBusinessLoss.gt(0)) {
+  if (!currentOrigin && (modifiedIncome.agi.lt(0) || actualIncome.currentExcessBusinessLoss.gt(0))) {
     throw new Error("Existing NOL carry with a potential current-year original loss requires its separate original-loss worksheet");
   }
   const bases = { taxableIncomeWithoutNolQbiAndSection250: actualIncome.taxableIncome,

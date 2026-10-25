@@ -1,0 +1,62 @@
+form: "Current Form172 source reconciliation"
+fullName: "Source-bound current-year regular, alternative and investment NOL origin"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i172"
+notes: |
+  The completed Form172 PartI consumes canonical income and deduction amounts,
+  never a user-entered profit, AGI or original-loss override. This first current
+  origin route supports actual active, all-at-risk ScheduleC sources, ordinary
+  income and the standard deduction. Other source methods are explicit internal
+  work, not inferred classifications. The separate current AMT source worksheet
+  must establish unchanged basis, depreciation and loss limits; independent prior
+  regular and AMT carry packets remain required even when their actual arrays are
+  empty. Form6251 income is restored for the actual ATNOLD and disallowed199A,
+  then its own nonbusiness-deduction limit is computed. Regular AGI-dependent
+  amounts remain those required by Reg1.55-1(b). Section1411 origin is independently
+  computed under Reg1.1411-4(h), excluding the actual active nontrading business.
+  Original source cents are retained; completed PartI inputs are whole dollars.
+  The literal cases below are derived examples, not published IRS numerical oracles.
+lines:
+  - line: "regular-alternative-origin"
+    description: "Compute independent regular and alternative current losses"
+    formula: "Wages20000 + interest5000 - activeCloss100000 = AGI-75000. Regular line1=-90750; nonbusiness deductions15750 less income5000 gives10750line9, so loss80000. AMT standard deduction is disallowed: AMTI-75000, nonbusiness deduction0, loss75000. Investment-only interest5000 yields no1411loss. Current losses are carried, never deducted again on the current return."
+    irsRef: "Form172PartI1,6-9,23-24; IRC172(c),(d)(4); IRC56(a)(4),(d); i6251line2f; Reg1.1411-4(h)"
+    testRef: "tests/engine/federal-form-172-origin.test.ts::computes independent current regular AMT and investment loss origins"
+  - line: "excess-business-loss"
+    description: "Add the current disallowed business loss once after PartI"
+    formula: "Verified active/all-at-risk current sources provide Form461's actual noncapital business classification after completed limits. ActiveCloss500000, wages20000 and interest5000: verified Form461disallowance187000 givesAGI-288000. Regular PartI293000 plus187000currentEBL yields480000newcarry; AMT288000 plus187000 yields475000. Preserve the two origin characters separately."
+    irsRef: "IRC461(l)(2); i172PartI and EBLworksheet; IRC56(d)"
+    testRef: "tests/engine/federal-form-172-origin.test.ts::preserves the current excess business loss separately and adds it once"
+  - line: "old-carry-conservation"
+    description: "Restore old deductions and retain independent closing histories"
+    formula: "Current80000regular/75000AMT origin does not consume a10000post2017regular or2000AMT opening carry when income is negative. Regular closing total90000; AMT77000. A pre2018 deduction is restored onPartI23, not counted as another current loss."
+    irsRef: "Form172PartI23; IRC172(a),(b),(d)(1); IRC56(d); i6251line2f"
+    testRef: "tests/engine/federal-form-172-origin.test.ts::conserves earlier carry histories without converting old deductions into new losses"
+  - line: "source-boundary"
+    description: "Require complete actual source and independent alternative-tax facts"
+    formula: "Unknown year, confirmation, business identity/owner/participation/at-risk status, AMT depreciation or either prior ledger rejects. Actual unsupported capital/farming/COD/estate/passive/foreign or unclassified income/deduction is not silently zeroed, including offsetting records. The2026 full-return readiness gate remains unchanged."
+    irsRef: "i172BeforeYouBegin and Business/nonbusiness; i6251FiguringAMTamounts and line2f; Reg1.1411-4(h)"
+    testRef: "tests/engine/federal-form-172-origin.test.ts::rejects unknown contradictory and unsupported current origin sources"
+  - line: "nonbusiness-classification"
+    description: "Restore only the excess of actual nonbusiness deductions"
+    formula: "Actual HSA2000 and IRA1000 reduce ordinaryAGI-75000 to-78000 and add3000 to nonbusiness deductions18750. With5000nonbusinessincome the regular origin stays80000; separate AMT nonbusinessdeductions3000 are absorbed by5000income so alternative origin78000. Source cents remain unchanged."
+    irsRef: "Form172PartI6-9; i172Nonbusinessdeductions; i6251line2f"
+    testRef: "tests/engine/federal-form-172-origin.test.ts::classifies actual above-line deductions without losing source precision"
+  - line: "no-current-loss"
+    description: "Do not create an origin from the standard deduction or an old NOL"
+    formula: "A completed source packet with1000ordinary wages and no current business loss has no new regular or alternative loss even though regular taxable income is negative. Its known-empty business source list remains explicit."
+    irsRef: "IRC172(c),(d)(1),(4); Form172PartI9,23,24"
+    testRef: "tests/engine/federal-form-172-origin.test.ts::retains a known zero current origin without inventing a loss from deductions"
+  - line: "current-origin-review"
+    description: "Retain separately calculated current origins in the carry review statement"
+    formula: "Revalidate current source facts and freshly calculate the actual ScheduleC after dependent-care expense adjustments. Reconcile retained regular/AMT/1411 PartI lines and current EBL once; old closing carry plus new origin equals each final carry. Print all24 current lines under distinct regular/alternative/investment headings, without source references or identifiers."
+    testRef: "tests/pdf/form-172-origin-review.test.ts::preserves current origins and separate closing carries in the redacted review statement"
+  - line: "current-origin-review-conservation"
+    description: "Reject stale business sources and inconsistent current carry output"
+    formula: "A changed actual current ScheduleC net, changed PartI line, missing original source packet or duplicated current audit fails before rendering."
+    testRef: "tests/pdf/form-172-origin-review.test.ts::rejects stale current origin sources and changed retained amounts"
+  - line: "alternative-interest-and-source-cents"
+    description: "Preserve source cents and independently included alternative income"
+    formula: "Actual exempt private-activity interest500.25 leaves regular origin80000 and changes alternative source income from-75000 to-74499.75, giving completed loss74500. Current business expense500000.10 retains its cents while printed EBL187000 and new regular480000/alternative475000 carries remain whole dollars."
+    irsRef: "Form172PartI; i6251lines2f,2g; i1040whole-dollar rounding"
+    testRef: "tests/engine/federal-form-172-origin.test.ts::retains actual private activity interest and business source cents across separate origins"

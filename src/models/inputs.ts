@@ -2530,6 +2530,22 @@ export const NetOperatingLossSourcesSchema = z.object({
     vintages: z.array(NetOperatingLossVintageSchema).optional() }).optional(),
 });
 
+/** Current origin facts, separate from filed prior loss vintages. No calculated income overrides. */
+export const Form172OriginSourcesSchema = z.object({
+  sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
+  allCurrentYearSourcesIncluded: z.boolean().optional(), farmingLossIncluded: z.boolean().optional(),
+  cancelledDebtIncluded: z.boolean().optional(), estateOrTrustLossIncluded: z.boolean().optional(),
+  businessSources: z.array(z.object({
+    sourceId: z.string().optional(), accountHolder: z.enum(["primary", "spouse"]).optional(), businessName: z.string().optional(),
+    sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
+    materiallyParticipated: z.boolean().optional(), allInvestmentAtRisk: z.boolean().optional(), financialTradingBusiness: z.boolean().optional(),
+  })).optional(),
+  alternativeTax: z.object({
+    sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(), currentYearAdjustmentsCompleteConfirmed: z.boolean().optional(),
+    regularBasisAndLossLimitsSameAsAlternativeConfirmed: z.boolean().optional(), regularDepreciationSameAsAlternativeConfirmed: z.boolean().optional(),
+  }).optional(),
+});
+
 export const PriorYearCarryforwardSchema = z.object({
   capitalLossCarryforward: optionalDecimal,
   shortTermCapitalLoss: optionalDecimal,
@@ -5811,6 +5827,7 @@ export const TaxYearInputSchema = z.object({
   educationExpenses: EducationExpensesSchema.optional(),
   priorYear: PriorYearCarryforwardSchema.optional(),
   netOperatingLoss: NetOperatingLossSourcesSchema.optional(),
+  form172: Form172OriginSourcesSchema.optional(),
   adjustments: AdjustmentsSchema.optional(),
   form2210: Form2210Schema.optional(),
   scheduleA: ScheduleAInputSchema.optional(),

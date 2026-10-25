@@ -7,6 +7,13 @@ import type { TaxYearInput } from "@/models/inputs.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import type { NetOperatingLossResult } from "@/engine/forms/net-operating-loss.js";
 import { calculateCharitableNolCarryover } from "@/engine/forms/charitable-net-operating-loss.js";
+import { calculateForm172Return } from "@/engine/forms/form-172-return.js";
+import { calculateForm2441Benefits } from "@/engine/forms/form-2441-benefits.js";
+import { calculateDependentCareBenefitSources } from "@/engine/forms/dependent-care-benefit-sources.js";
+import { calculateForm6251BondSources } from "@/engine/forms/form-6251-bond-sources.js";
+import { isIraForm1099RDistribution, resolveForm1099RTaxableAmount } from "@/engine/forms/form-1099-r.js";
+import { calculateScheduleC } from "@/engine/schedules/schedule-c.js";
+import { calculateScheduleB } from "@/engine/schedules/schedule-b.js";
 import { d, roundDollar, sum } from "@/utils/decimal.js";
 import { assertPdfExportAllowed, markReviewPdf } from "@/pdf/export-policy.js";
 
@@ -16,6 +23,83 @@ function amount(value: Decimal | undefined): Decimal {
 }
 function eq(actual: Decimal | undefined, expected: Decimal): void {
   if (!amount(actual).eq(expected)) throw new Error("NOL review amounts do not reconcile");
+}
+
+function currentOriginRows(input: TaxYearInput, result: TaxReturnResult): string[] {
+  if (!input.form172 && !result.form172) return [];
+  const current = result.form172, prior = result.netOperatingLoss, schedule1 = result.schedule1;
+  if (!input.form172 || current?.sourceFactsVerified !== true || current.calculationComplete !== true
+    || !prior?.calculationComplete || !schedule1 || !result.form6251) throw new Error("NOL review requires the actual complete current origin sources and calculation");
+  calculateForm172Return(input);
+  const benefits = input.dependentCareBenefits ? calculateForm2441Benefits({ taxYear: input.taxpayer.taxYear,
+    filingStatus: input.taxpayer.filingStatus, facts: input.dependentCareBenefits }) : undefined;
+  const care = calculateDependentCareBenefitSources(input, benefits);
+  const business = calculateScheduleC(input, input.scheduleC, { dependentCareBenefitsAdjustment: care.scheduleCAdjustment });
+  eq(schedule1.businessIncome, business.netProfit);
+  if (result.scheduleC) eq(result.scheduleC.netProfit, business.netProfit);
+  const investments = calculateScheduleB(input, result.form8815?.excludableSavingsBondInterest);
+  eq(result.totalInterest, investments.taxableInterest); eq(result.totalDividends, investments.totalOrdinaryDividends);
+  eq(schedule1.earlyWithdrawalPenalty, sum(...input.form1099Int.map(source => d(source.earlyWithdrawalPenalty))));
+  const bondSources = calculateForm6251BondSources(input.form1099Int, input.form1099Div, result.taxYear, input.taxpayer.filingStatus);
+  const savedLine = (form: string, line: string): Decimal => {
+    const rows = result.allLines.filter(row => row.form === form && row.line === line);
+    if (rows.length !== 1) throw new Error(`Current origin review requires a unique ${form} line${line}`);
+    return amount(rows[0].value);
+  };
+  let annuityIncome = d("0");
+  // Preserve the completed source classification after identifier redaction.
+  // This checks each retained source amount and classification audit; it does
+  // not replace the original payer/account identity verification with fake IDs.
+  for (const [index, source] of (input.form1099R ?? []).entries()) {
+    if (isIraForm1099RDistribution(source) || !d(source.grossDistribution).gt(0)) continue;
+    const taxable = resolveForm1099RTaxableAmount(source);
+    if (!taxable.gt(0)) continue;
+    const id = `form1099R:${index}`;
+    const classification = input.form8960Sources?.annuities?.find(row => row.sourceId === id);
+    const included = source.distributionCode?.toUpperCase().includes("D") || classification?.classification === "nonqualified_annuity";
+    if (!included && classification?.classification !== "excluded_retirement_plan") throw new Error("Current origin review requires the retained actual annuity source classification");
+    if (classification) {
+      if (classification.owner !== source.accountHolder || classification.payerName?.trim() !== source.payer.trim()) throw new Error("Current origin annuity sources do not reconcile");
+      eq(d(classification.grossDistribution), d(source.grossDistribution)); eq(d(classification.taxableAmount), taxable);
+    }
+    eq(savedLine("Form8960 source WS", `${id}:${included ? "taxable-annuity" : "excluded-plan"}`), taxable);
+    if (included) annuityIncome = annuityIncome.plus(taxable);
+  }
+  const checked = calculateForm172Return(input, {
+    agi: result.agi, totalIncome: result.totalIncome, totalWages: result.totalWages,
+    taxableInterest: investments.taxableInterest, ordinaryDividends: investments.totalOrdinaryDividends,
+    iraTaxable: result.iraDistributionsTaxable, pensionTaxable: result.pensionDistributionsTaxable,
+    taxableSocialSecurity: result.socialSecurityBenefitsTaxable, capitalGainLoss: result.capitalGainLoss,
+    deductionUsed: result.deductionUsed, deductionAmount: result.deductionAmount,
+    qbiDeduction: savedLine("1040", "13"), additionalDeductions: (result.schedule1A?.totalDeduction ?? d("0")).plus(result.nonitemizerCharitableDeduction ?? d("0")),
+    nonitemizerCharitableDeduction: result.nonitemizerCharitableDeduction ?? d("0"), schedule1,
+    currentExcessBusinessLoss: result.form461?.line16ExcessBusinessLoss ?? d("0"),
+    alternativeTaxIncome: result.form6251.amti, alternativeTaxPrivateActivityInterest: bondSources.privateActivityBondInterest,
+    investmentIncome: sum(investments.taxableInterest, investments.totalOrdinaryDividends, annuityIncome),
+    unverifiedAnnuitySourceIds: [], priorLoss: prior,
+  });
+  for (const key of ["regular", "alternativeTax", "investment"] as const) {
+    if (current[key].taxYear !== checked[key].taxYear) throw new Error("Current origin review source years do not reconcile");
+    for (const line of checked[key].lines) eq(current[key].partI[Number(line.line) as keyof typeof current.regular.partI], line.value);
+    eq(current[key].signedComputation, checked[key].signedComputation); eq(current[key].netOperatingLoss, checked[key].netOperatingLoss);
+  }
+  for (const key of ["section1411OriginalLoss", "currentExcessBusinessLoss", "alternativeExcessBusinessLoss", "newRegularCarryforward",
+    "newAlternativeCarryforward", "regularClosingCarryforward", "alternativeClosingCarryforward"] as const) eq(current[key], checked[key]);
+  for (const line of checked.lines) {
+    eq(savedLine(line.form, line.line), line.value);
+    const saved = current.lines.filter(row => row.form === line.form && row.line === line.line);
+    if (saved.length !== 1) throw new Error("Current origin retained audits are missing or duplicated");
+    eq(saved[0].value, line.value);
+  }
+  eq(result.carryforwards.nolCarryforward, checked.regularClosingCarryforward);
+  eq(result.carryforwards.alternativeTaxNolCarryforward, checked.alternativeClosingCarryforward);
+  return [
+    `Current regular PartI loss ${checked.regular.netOperatingLoss}; current EBL carry ${checked.currentExcessBusinessLoss}; total regular closing carry ${checked.regularClosingCarryforward}`,
+    `Current alternative PartI loss ${checked.alternativeTax.netOperatingLoss}; current EBL carry ${checked.alternativeExcessBusinessLoss}; total alternative closing carry ${checked.alternativeClosingCarryforward}`,
+    `Current section1411 original loss ${checked.section1411OriginalLoss}`,
+    ...([ ["Regular", checked.regular], ["Alternative", checked.alternativeTax], ["Investment", checked.investment] ] as const)
+      .flatMap(([label, form]) => form.lines.map(line => `${label} current Form172 line${line.line}: ${line.value}`)),
+  ];
 }
 
 /** Source amounts and retained canonical contexts are checked separately. This
@@ -59,7 +143,9 @@ export function buildNetOperatingLossReview(input: TaxYearInput, result: TaxRetu
   const alternative = { ...calculation.alternativeTaxSources, ...calculation.alternativeTax };
   const regularRows = ledger(facts.vintages, calculation, "Regular NOL");
   const alternativeRows = ledger(facts.alternativeTax.vintages, alternative, "Alternative NOL");
-  eq(result.nolDeduction, calculation.deduction); eq(result.carryforwards.nolCarryforward, calculation.carryforward);
+  const originRows = currentOriginRows(input, result);
+  eq(result.nolDeduction, calculation.deduction);
+  if (!result.form172) eq(result.carryforwards.nolCarryforward, calculation.carryforward);
   eq(result.agi, calculation.finalIncome.agi);
   const audit = (form: string, line: string, expected: Decimal) => {
     const rows = result.allLines.filter(row => row.form === form && row.line === line);
@@ -111,9 +197,9 @@ export function buildNetOperatingLossReview(input: TaxYearInput, result: TaxRetu
     `AMTI before ATNOLD ${calculation.alternativeTax.amtiBeforeAtnol}; modified AMTI ${calculation.alternativeTax.modifiedAmtiBeforeAtnol}`,
     `Section1411 applicable regular deduction: ${calculation.section1411Deduction}`,
   ];
-  return ["NET OPERATING LOSS - REVIEW CALCULATION STATEMENT", ...contexts, ...regularRows, ...alternativeRows, ...charityRows,
+  return ["NET OPERATING LOSS - REVIEW CALCULATION STATEMENT", ...contexts, ...regularRows, ...alternativeRows, ...originRows, ...charityRows,
     "Amounts explain the retained canonical income contexts; this statement does not independently replay every upstream income source.",
-    "Original loss and history documents must be retained. Current-year new losses, prior or mixed charitable carry, positive ATNOL-charity coordination and debt-cancellation reductions require their separate worksheets.",
+    "Original loss and history documents must be retained. Prior or mixed charitable carry, positive ATNOL-charity coordination and debt-cancellation reductions require their separate worksheets.",
     "This statement and the accompanying Form6251 are review material, not filing qualification."];
 }
 

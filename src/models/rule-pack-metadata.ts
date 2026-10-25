@@ -27,11 +27,13 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.63",
+    ruleVersion: "2025.64",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i172", section: "Actual current active ScheduleC origin, independent regular/AMT/1411 PartI and current EBL once; prior ledgers and source cents retained", revision: "Final Form172/i6251 with IRC172/56 and Reg1.1411-4(h); ordinary standard-deduction method only, other origin methods and professional qualification remain separate", retrievedAt: "2026-10-25" },
+      { url: "https://uscode.house.gov/us/usc/119-118/t26/s213/", section: "Medical deduction cannot exceed actual paid expenses at negative AGI; preserve signed AGI and floor only the7.5percent threshold", revision: "Section213(a), Publication502 and ScheduleA; negative-income numerical tests are derived, not published IRS examples", retrievedAt: "2026-10-25" },
       { url: "https://www.ecfr.gov/current/title-26/section-1.170A-10", section: "Current public-cash charitable carry reduced only by refigured succeeding regular NOL carry increase; original receipts and independent known-empty ATNOL charitable carry retained", revision: "IRC170(d)(1)(B),172 and Reg1.172-5/1.55-1; current numerical examples are derived, prior/mixed/positive-ATNOL methods and independent qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i1116", section: "Actual ordinary passive source binding, regular and separate AMT limits, prescribed passive-group checks, prior carry use/expiry and actual carryback capacity", revision: "Final2025 Form1116/Form6251 and IRC59 applicable26/28percent source method; special sources and independent qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i1040sd", section: "Original source-qualified QSBS issuer/date exclusions on8949, full fund2a onScheduleD13, actual28percent netting and6251line2h; modified NOL restores full exclusion once", revision: "Current1202/57/172 and final2025 instructions; transfers, changing ownership, physical forms and independent qualification remain separate", retrievedAt: "2026-10-25" },
@@ -106,11 +108,13 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.59-law-integration-draft",
+    ruleVersion: "2026.60-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i172", section: "Current ordinary origin source validation and independent regular/alternative/investment worksheets, with current EBL origin kept separate", revision: "Applicable current law and final Form172 source method; full2026 calculation and filing remain unavailable, broader source methods remain internal work", retrievedAt: "2026-10-25" },
+      { url: "https://uscode.house.gov/us/usc/119-118/t26/s213/", section: "Actual paid-medical ceiling at negative AGI", revision: "Current213(a); only the medical threshold is floored, signed AGI and existing readiness gates are preserved", retrievedAt: "2026-10-25" },
       { url: "https://uscode.house.gov/us/usc/119-118/t26/s170/", section: "Current public-cash170(d)(1)(B) NOL carry adjustment after eligible floor carry under(d)(1)(C); counterfactual removes source excess before reapplying modified floor", revision: "Derived current-law isolated calculation; separate AMT carry for known-empty ATNOL, positive ATNOL/standard-deduction coordination and full-year qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i1116", section: "Actual ordinary passive source binding, regular and separate AMT limits, prescribed passive-group checks, prior carry use/expiry and actual carryback capacity", revision: "Final2025 Form1116/Form6251 and IRC59 applicable26/28percent source method; special sources and independent qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i1040sd", section: "Original source-qualified QSBS acquisition cohorts, issuer limits,8949Q adjustments, actual28percent netting and pre2010 AMT preference", revision: "Current1202/57/172 and applicable final2025 source methods; full2026 and physical-form qualification remain closed", retrievedAt: "2026-10-25" },

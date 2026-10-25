@@ -1,4 +1,5 @@
 import { calculateBrokerageWithholding } from "./forms/form-1099-b-withholding.js";
+import { calculateForm172Return } from "./forms/form-172-return.js";
 import { validateQofDispositionFacts } from "./forms/qof-disposition-facts.js";
 /**
  * Federal tax calculation orchestrator.
@@ -261,6 +262,7 @@ interface MarketplaceInterim {
 function calculateFederalTaxWithNol(input: TaxYearInput, marketplace: MarketplaceContext & { stage: "worksheet-w" | "maximum" | "ordered" }): MarketplaceInterim;
 function calculateFederalTaxWithNol(input: TaxYearInput, marketplace?: MarketplaceContext & { stage: "final" }): TaxReturnResult;
 function calculateFederalTaxWithNol(input: TaxYearInput, marketplace?: MarketplaceContext): TaxReturnResult | MarketplaceInterim {
+  if (input.form172 && !input.netOperatingLoss) throw new Error("Form172 requires the actual complete prior regular and separate AMT carry packet");
   const complete = (worksheet?: NetOperatingLossReturnResult): TaxReturnResult | MarketplaceInterim => {
     const context = worksheet ? { stage: "final" as const, deduction: worksheet.deduction, modified: false as const, worksheet } : undefined;
     return marketplace && marketplace.stage !== "final"
@@ -1676,15 +1678,17 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       form4797OrdinaryGainOrLoss: form4797.ordinaryGainOrLoss.plus(section280FRecapture),
       nonpassiveK1Income: schedE.totalNonpassiveIncome,
       nonpassiveK1Loss: schedE.totalNonpassiveLoss,
-      sourceFactsConfirmed: eblSources?.sourceFactsConfirmed,
-      atRiskAndPassiveLimitationsApplied: eblSources?.atRiskAndPassiveLimitationsApplied,
+      sourceFactsConfirmed: eblSources?.sourceFactsConfirmed ?? (input.form172 ? true : undefined),
+      atRiskAndPassiveLimitationsApplied: eblSources?.atRiskAndPassiveLimitationsApplied ?? (input.form172 ? true : undefined),
       capitalGainOrLoss: capitalGainLoss,
       tradeOrBusinessCapitalGainNetIncome: eblSources ? d(eblSources.tradeOrBusinessCapitalGainNetIncome) : form4797.longTermCapitalGain,
       scheduleESupplementalIncome: eblSources ? d(eblSources.scheduleESupplementalIncome)
         : eblHasPassiveOrRentalSources ? schedE.totalNonpassiveIncome.plus(schedE.totalNonpassiveLoss).minus(totalSection163jDeduction) : adjustedScheduleETotal,
       noncapitalNonbusinessIncome: eblSources ? d(eblSources.noncapitalNonbusinessIncome) : new Decimal(0),
       noncapitalNonbusinessLoss: eblSources ? d(eblSources.noncapitalNonbusinessLoss) : new Decimal(0),
-      noncapitalBusinessNet: eblSources ? d(eblSources.noncapitalBusinessNet) : undefined,
+      noncapitalBusinessNet: eblSources ? d(eblSources.noncapitalBusinessNet)
+        : input.form172 ? roundDollar(schedCNetProfit).minus(roundDollar(sum(schedSE.deductibleHalf, sched1.seHealthInsurance, sched1.seRetirementContributions)))
+          : undefined,
       otherBusinessIncome: eblSources ? d(eblSources.otherBusinessIncome) : new Decimal(0),
       otherBusinessDeductions: eblSources ? d(eblSources.otherBusinessDeductions) : new Decimal(0),
       deductibleSETax: schedSE.deductibleHalf,
@@ -4138,6 +4142,18 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       ? "Yes — taxpayer received, sold, exchanged, or disposed of digital assets"
       : "No digital asset activity reported");
 
+  if (input.form172 && nol?.stage !== "final") throw new Error("Form172 current origin requires the completed independent carry calculations");
+  const form172 = input.form172 && nol?.stage === "final" ? calculateForm172Return(input, {
+    agi, totalIncome, totalWages, taxableInterest: totalTaxableInterest, ordinaryDividends: totalDividends,
+    iraTaxable, pensionTaxable, taxableSocialSecurity: socialSecurityBenefitsTaxable, capitalGainLoss,
+    deductionUsed, deductionAmount, qbiDeduction, additionalDeductions, nonitemizerCharitableDeduction,
+    schedule1: sched1, currentExcessBusinessLoss: excessBusinessLossAddback,
+    alternativeTaxIncome: form6251.amti,
+    alternativeTaxPrivateActivityInterest: form6251BondSources.privateActivityBondInterest.plus(form8814AmtSources.privateActivityBondInterest),
+    investmentIncome: sum(totalTaxableInterest, totalDividends, niitOrdinarySources.annuityIncome),
+    unverifiedAnnuitySourceIds: niitOrdinarySources.unverifiedAnnuitySourceIds, priorLoss: nol.worksheet,
+  }) : undefined;
+  if (form172) audit.merge(form172.lines);
   const baseResult: TaxReturnResult = {
     taxYear: year,
     filingStatus,
@@ -4158,6 +4174,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     otherIncome: sched1.totalAdditionalIncome,
     nolDeduction,
     netOperatingLoss: nol?.stage === "final" ? nol.worksheet : undefined,
+    form172,
     totalIncome,
 
     adjustmentsToIncome: adjustments,
@@ -4210,7 +4227,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       // Preserve the same selected prior source used for the deduction, including
       // estate carry. Form461's aggregate also contains its prior EBL alias;
       // add only the current disallowance here so that prior carry is not doubled.
-      let cfNol = (nol?.stage === "final" ? nol.worksheet.carryforward : zeroFloor(availableNOL.minus(nolDeduction))).plus(excessBusinessLossAddback);
+      let cfNol = (nol?.stage === "final" ? nol.worksheet.carryforward : zeroFloor(availableNOL.minus(nolDeduction)))
+        .plus(excessBusinessLossAddback).plus(form172?.regular.netOperatingLoss ?? d("0"));
       let cfGbc = form3800?.carryforwardToNextYear ?? new Decimal(0);
       let cfMtc = form8801?.carryforwardToNextYear ?? new Decimal(0);
       let cfCapitalLoss = adjustedCarryforward.carryforwardShortTerm.plus(adjustedCarryforward.carryforwardLongTerm);
@@ -4281,6 +4299,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
         } : {}),
         excessBusinessLossNOL: form461.nolCarryforward,
         nolCarryforward: cfNol,
+        ...(form172 ? { alternativeTaxNolCarryforward: form172.alternativeClosingCarryforward } : {}),
         generalBusinessCredit: cfGbc,
         suspendedBusinessInterest: section163jCarryforward,
         partnerBasis: schedE.partnerships
