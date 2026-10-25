@@ -16,6 +16,7 @@ import type { GuidedFlowState } from "../../../apps/web/src/lib/guided-interview
 import { buildTaxInputFromGuidedData } from "../../../apps/web/src/lib/guided-interview-bridge";
 import { TaxYearInputSchema } from "../../../src/models/inputs";
 import { calculateFederalTax } from "../../../src/engine/federal";
+import * as federalEngine from "../../../src/engine/federal";
 
 vi.mock("server-only", () => ({}));
 
@@ -232,6 +233,7 @@ function createGuidedFlowState(): GuidedFlowState {
     ],
     sectionData: {
       "personal-info": {
+        standardDeductionFacts: { primaryBlind: false, primaryCanBeClaimedAsDependent: false, primaryDeceased: false, dualStatusAlien: false, nonresidentAlien: false, shortTaxYear: false },
         dateOfBirth: "1990-02-15",
         usResidencyMonths: "12",
         stateResidency: "full-year",
@@ -487,6 +489,31 @@ describe("workspace filled return download", () => {
 
     expect(commandResult).not.toContain("111223333");
     expect(commandResult).not.toContain("000000000");
+  });
+
+  it("calculates education using complete identity before redacting every student page", async () => {
+    const calculate = vi.spyOn(federalEngine, "calculateFederalTax");
+    const state = createGuidedFlowState();
+    const credits = state.sectionData.credits!;
+    credits.education = {
+      aocStudents: [{
+        name: "Jordan Northwind", studentTaxId: "111-22-3333", studentRole: "primary", qualifiedExpenses: "4000", priorYearsClaimed: "0",
+        institutionEin: "12-3456789", institutionEligible: true, expensesEligibilityConfirmed: true, form1098TRequirementMet: true, studentTinEligible: true,
+        completedFirstFourYearsBeforeYear: false, enrolledAtLeastHalfTime: true, pursuingDegreeOrCredential: true, felonyDrugConviction: false,
+        institutions: [{ name: "Synthetic College", address: "1 Campus Drive, Chicago IL 60601", ein: "12-3456789", receivedCurrentYear1098T: true, receivedPriorYear1098TWithBox7: false }],
+      }], llcStudents: [], llcExpenses: "0", possessionIncomeExclusion: "0", primaryTinEligible: true,
+      canBeClaimedAsDependent: false, claimedAsDependent: false, nonresidentAlien: false, aocBanInEffect: false, form8862Required: false,
+    };
+    const original = JSON.stringify(state);
+    const download = await buildWorkspaceFilledReturnDownload(createWorkspace(), state);
+    expect(calculate.mock.lastCall?.[0].taxpayer.primary.ssn).toBe("111-22-3333");
+    calculate.mockRestore();
+    expect(download.includedForms).toContain("f8863-filled.pdf");
+    const text = await extractPdfText(download.contents);
+    expect(text).toContain("Synthetic College");
+    expect(text).toContain("2500");
+    expect(text.replace(/\s|-/g, "")).not.toContain("111223333");
+    expect(JSON.stringify(state)).toBe(original);
   });
 
   it("does not include a blank Schedule E for a simple wage-only return", async () => {

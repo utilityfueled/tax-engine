@@ -23,6 +23,7 @@ import { calculateFederalTax } from "@/engine/federal.js";
 import { calculatePANonresidentReturn } from "@/engine/state/pa-nonresident-orchestrator.js";
 import { calculatePAReturn } from "@/engine/state/pa-orchestrator.js";
 import { fillReturn } from "@/pdf/fill-return.js";
+import { redactReviewIdentifiers } from "@/pdf/redact-review-identifiers.js";
 import { fillOhioReferenceForms } from "@/pdf/fill-oh-reference-forms.js";
 import { loadPdfDocumentQuietly } from "@/pdf/pdf-utils.js";
 import { assertPdfExportAllowed, markReviewPdf, REVIEW_PDF_NOTICE } from "@/pdf/export-policy.js";
@@ -175,13 +176,10 @@ async function mergePdfFiles(pdfPaths: string[]) {
   return merged.save();
 }
 
-function formatCurrencyWholeDollars(value: number) {
-  const rounded = Math.round(value);
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(rounded);
+function formatCurrencyWholeDollars(value: Decimal) {
+  const rounded = value.toDecimalPlaces(0, Decimal.ROUND_HALF_UP);
+  const digits = rounded.abs().toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return `${rounded.isNegative() ? "-" : ""}$${digits}`;
 }
 
 function wrapText(text: string, font: PDFFont, size: number, maxWidth: number) {
@@ -359,9 +357,9 @@ function buildPacketSummary(
     `This packet includes ${includedForms.length} filled form${includedForms.length === 1 ? "" : "s"}: ${formatIncludedForms(includedForms)}.`,
     `Documents reviewed for this workspace: ${workspace.documents.length}; manual-review uploads still open: ${workspace.summary.pendingReviewDocuments}.`,
     result.refund.gt(0)
-      ? `Current federal estimate shows a refund of ${formatCurrencyWholeDollars(result.refund.toNumber())}.`
+      ? `Current federal estimate shows a refund of ${formatCurrencyWholeDollars(result.refund)}.`
       : result.amountOwed.gt(0)
-        ? `Current federal estimate shows a balance due of ${formatCurrencyWholeDollars(result.amountOwed.toNumber())}.`
+        ? `Current federal estimate shows a balance due of ${formatCurrencyWholeDollars(result.amountOwed)}.`
         : "Current federal estimate is effectively balanced with no refund or balance due.",
     "Social Security numbers are intentionally redacted from this PDF packet.",
   ];
@@ -398,7 +396,7 @@ function buildPacketSummary(
 
   if (result.estimatedTaxPenalty.gt(0)) {
     missingBullets.push(
-      `The return currently includes an estimated tax penalty of ${formatCurrencyWholeDollars(result.estimatedTaxPenalty.toNumber())}, but Form 2210 is not auto-attached to this draft packet.`
+      `The return currently includes an estimated tax penalty of ${formatCurrencyWholeDollars(result.estimatedTaxPenalty)}, but Form 2210 is not auto-attached to this draft packet.`
     );
   }
 
@@ -633,29 +631,6 @@ function resolveFilledReturnTaxInput(
 
 }
 
-function redactPdfTaxInputIdentifiers(taxInput: TaxYearInput): TaxYearInput {
-  return {
-    ...taxInput,
-    taxpayer: {
-      ...taxInput.taxpayer,
-      primary: {
-        ...taxInput.taxpayer.primary,
-        ssn: "",
-      },
-      spouse: taxInput.taxpayer.spouse
-        ? {
-            ...taxInput.taxpayer.spouse,
-            ssn: "",
-          }
-        : undefined,
-      dependents: taxInput.taxpayer.dependents.map((dependent) => ({
-        ...dependent,
-        ssn: "",
-      })),
-    },
-  };
-}
-
 export async function buildWorkspaceFilledReturnDownload(
   workspace: ReturnWorkspaceRecord,
   guidedFlowState?: GuidedFlowState | null
@@ -667,13 +642,16 @@ export async function buildWorkspaceFilledReturnDownload(
     throw new Error("Could not build the structured return input from this workspace.");
   }
 
-  const redactedTaxInput = redactPdfTaxInputIdentifiers(resolved.taxInput);
-  const stateCode = resolveStateCode(workspace, redactedTaxInput, guidedFlowState);
-  const result = attachPennsylvaniaReturn(
-    redactedTaxInput,
-    calculateFederalTax(redactedTaxInput),
+  const stateCode = resolveStateCode(workspace, resolved.taxInput, guidedFlowState);
+  const completeResult = attachPennsylvaniaReturn(
+    resolved.taxInput,
+    calculateFederalTax(resolved.taxInput),
     stateCode,
   );
+  // Identity participates in household matching and state worksheets. Keep it
+  // intact through calculation, then redact only copies passed to renderers.
+  const redactedTaxInput = redactReviewIdentifiers(resolved.taxInput);
+  const result = redactReviewIdentifiers(completeResult);
   const blankFormsDir = await resolveBlankFormsDir();
   const tempRoot = await mkdtemp(join(tmpdir(), "tax-engine-filled-return-"));
   const outputDir = join(tempRoot, "filled");
