@@ -150,3 +150,15 @@ Calculation evidence is separate from final-form qualification. The current 2026
 - Review-only vehicle PDF source mapping and per-vehicle Schedule A attachments.
 - Federal source/repayment/credit-ordering integration and independently reviewed
   qualification remain tracked by the coordinating federal/parent agents.
+
+### Printed energy-line audit follow-up
+
+- Official 2025 line 19 rounds the most expensive door's credit separately from
+  the aggregate of remaining doors; three $5 doors produce $5, not $6.
+- Fuel-cell property below 0.5 kW is ineligible even when an upstream qualification
+  flag is true. Its cost is retained as disallowed, with no credit or carryforward.
+- Added numeric audit entries for individual/overflow property costs, capacity,
+  and all printed category totals. PDF mappings can copy those entries and
+  preserve the actual source ordering without repeating tax arithmetic.
+- Red: `energy-audit-red.log`; green: 74 Form 5695 tests and three spec-reference
+  checks. ESLint: zero errors, four pre-existing non-null assertions in tests.

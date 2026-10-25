@@ -101,7 +101,7 @@ export function calculateForm5695(
     if (options.taxLiabilityLimit === undefined || options.improvementTaxLiabilityLimit === undefined) throw new Error("Detailed energy credits require both actual tax-liability worksheets");
     const cleanCosts = new Map<string, Decimal>();
     const improvementCosts = new Map<string, Decimal>();
-    const doorCredits: Decimal[] = [];
+    const improvementItems = new Map<string, Decimal[]>();
     let fuelCellCapacity = new Decimal(0);
     let disallowedNewEnergyCosts = new Decimal(0);
     const eligible = (record: (typeof records)[number]) => energyCredits?.residenceEligibilityConfirmed === true && record.qualificationConfirmed && record.installationCompletedDate.startsWith(`${taxYear}-`);
@@ -112,6 +112,7 @@ export function calculateForm5695(
         if (record.fuelCellKilowattCapacity === undefined) throw new Error("Qualified fuel cells require actual capacity");
         const capacity = d(record.fuelCellKilowattCapacity);
         if (!capacity.isFinite() || capacity.lte(0)) throw new Error("Qualified fuel cell capacity must be positive and finite");
+        if (capacity.lt("0.5")) { disallowedNewEnergyCosts = disallowedNewEnergyCosts.plus(cost); continue; }
         fuelCellCapacity = fuelCellCapacity.plus(capacity);
       }
       cleanCosts.set(record.category, (cleanCosts.get(record.category) ?? new Decimal(0)).plus(cost));
@@ -122,7 +123,7 @@ export function calculateForm5695(
       if (!["insulation", "home_energy_audit"].includes(record.category) && !/^[A-Za-z0-9]{4}$/.test(record.manufacturerQualifiedId ?? "")) {
         throw new Error("Qualified improvement requires its four-character manufacturer ID");
       }
-      if (record.category === "exterior_door") doorCredits.push(min(roundDollar(cost.times(IMPROVEMENT_RATE)), new Decimal(250)));
+      improvementItems.set(record.category, [...(improvementItems.get(record.category) ?? []), cost]);
       improvementCosts.set(record.category, (improvementCosts.get(record.category) ?? new Decimal(0)).plus(cost));
     }
     const cleanCost = (category: string) => roundDollar(cleanCosts.get(category) ?? new Decimal(0));
@@ -145,6 +146,7 @@ export function calculateForm5695(
       ["6a", "Non-fuel-cell clean costs", nonFuelCosts, "Sum lines 1,2,3,4,5b"],
       ["6b", "Non-fuel-cell credit", nonFuelCredit, "Line 6a × 30%"],
       ["9", "Fuel-cell tentative credit", fuelCreditBeforeCap, "Line 8 × 30%"],
+      ["10-capacity", "Qualified fuel-cell kilowatt capacity", fuelCellCapacity, "Actual capacity of each eligible fuel cell, at least 0.5 kW"],
       ["10", "Fuel-cell capacity limit", fuelCap, "Actual kW × $1,000"],
       ["11", "Fuel-cell credit", fuelCredit, "min(line 9,line 10)"],
       ["12", "Prior-year clean carryforward", roundDollar(priorYearCarryforward), "Actual confirmed prior-year carryforward"],
@@ -153,10 +155,54 @@ export function calculateForm5695(
       ["15", "Allowed clean credit", cleanAllowed, "min(line 13,line 14)"],
       ["16", "Clean carryforward to next year", carryforward, "Line 13 − line 15"],
     ] as const) record(line, description, value, formula);
+    const items = (category: string) => [...(improvementItems.get(category) ?? [])].sort((left, right) => right.comparedTo(left));
+    const itemCost = (category: string, index: number) => roundDollar(items(category)[index] ?? new Decimal(0));
+    const otherCosts = (category: string, from: number) => roundDollar(sum(...items(category).slice(from)));
+    const doors = items("exterior_door");
+    const firstDoorCost = roundDollar(doors[0] ?? new Decimal(0));
+    const firstDoorCredit = min(roundDollar(firstDoorCost.times(IMPROVEMENT_RATE)), new Decimal(250));
+    const otherDoorCosts = otherCosts("exterior_door", 1);
+    const otherDoorCredit = roundDollar(otherDoorCosts.times(IMPROVEMENT_RATE));
+    const doorCredit = min(firstDoorCredit.plus(otherDoorCredit), new Decimal(500));
+    for (const [line, description, value] of [
+      ["19a", "Most expensive exterior door", firstDoorCost],
+      ["19c", "First exterior door credit", firstDoorCredit],
+      ["19d-1", "Second exterior door", itemCost("exterior_door", 1)],
+      ["19d-2", "Third exterior door", itemCost("exterior_door", 2)],
+      ["19d", "Second and third exterior doors", roundDollar(sum(...doors.slice(1, 3)))],
+      ["19e", "Additional exterior doors", otherCosts("exterior_door", 3)],
+      ["19f", "Other exterior doors total", otherDoorCosts],
+      ["19g", "Other exterior doors credit", otherDoorCredit],
+      ["20a-1", "First window or skylight", itemCost("windows_skylights", 0)],
+      ["20a-2", "Second window or skylight", itemCost("windows_skylights", 1)],
+      ["20a-3", "Third window or skylight", itemCost("windows_skylights", 2)],
+      ["20a-4", "Fourth window or skylight", itemCost("windows_skylights", 3)],
+      ["20a", "First four windows or skylights", roundDollar(sum(...items("windows_skylights").slice(0, 4)))],
+      ["20b", "Additional windows or skylights", otherCosts("windows_skylights", 4)],
+      ["20c", "Windows and skylights total", improvementCost("windows_skylights")],
+      ["22a", "First central air conditioner", itemCost("central_ac", 0)],
+      ["22b", "Additional central air conditioners", otherCosts("central_ac", 1)],
+      ["22c", "Central air conditioners total", improvementCost("central_ac")],
+      ["23a-1", "First gas water heater", itemCost("gas_water_heater", 0)],
+      ["23a-2", "Second gas water heater", itemCost("gas_water_heater", 1)],
+      ["23a", "First two gas water heaters", roundDollar(sum(...items("gas_water_heater").slice(0, 2)))],
+      ["23b", "Additional gas water heaters", otherCosts("gas_water_heater", 2)],
+      ["23c", "Gas water heaters total", improvementCost("gas_water_heater")],
+      ["24a", "First furnace or boiler", itemCost("furnace_boiler", 0)],
+      ["24b", "Additional furnaces or boilers", otherCosts("furnace_boiler", 1)],
+      ["24c", "Furnaces and boilers total", improvementCost("furnace_boiler")],
+      ["25c", "Enabling electrical property costs", improvementCost("electrical_panel")],
+      ["29a", "First heat pump", itemCost("heat_pump", 0)],
+      ["29b", "Additional heat pumps", otherCosts("heat_pump", 1)],
+      ["29c", "First heat pump water heater", itemCost("heat_pump_water_heater", 0)],
+      ["29d", "Additional heat pump water heaters", otherCosts("heat_pump_water_heater", 1)],
+      ["29e", "First biomass stove or boiler", itemCost("biomass", 0)],
+      ["29f", "Additional biomass stoves or boilers", otherCosts("biomass", 1)],
+    ] as const) record(line, description, value, "Actual qualified items sorted by cost; IRS printed-line aggregation and rounding");
     const capped = (category: string, cap: number) => min(roundDollar(improvementCost(category).times(IMPROVEMENT_RATE)), new Decimal(cap));
     const credits = [
       ["18b", "Insulation", capped("insulation",1200)],
-      ["19h", "Exterior doors", min(sum(...doorCredits),new Decimal(500))],
+      ["19h", "Exterior doors", doorCredit],
       ["20d", "Windows and skylights", capped("windows_skylights",600)],
       ["22d", "Central air conditioners", capped("central_ac",600)],
       ["23d", "Gas/propane/oil water heaters", capped("gas_water_heater",600)],

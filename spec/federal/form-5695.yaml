@@ -99,9 +99,9 @@ lines:
     description: "Round line 8 times 30%"
     taxYear: 2025
   - line: "10"
-    formula: "Fuel cell capacity in kW times $1000 ($500 per half kW)"
+    formula: "Fuel cell capacity in kW times $1000 ($500 per half kW); each qualified system must be at least0.5kW"
     testRef: "tests/engine/forms/form-5695.test.ts::detailed clean energy caps fuel cells by actual capacity"
-    description: "Fuel cell capacity in kW times $1000 ($500 per half kW)"
+    description: "Fuel cell capacity in kW times $1000 ($500 per half kW); each qualified system must be at least0.5kW"
     taxYear: 2025
   - line: "11"
     formula: "Lesser of line 9 and 10"
@@ -144,9 +144,9 @@ lines:
     description: "min(round(line 18a times 30%),1200)"
     taxYear: 2025
   - line: "19h"
-    formula: "min(sum of min(round(each door cost times 30%),250),500)"
+    formula: "Sort doors by cost; min(min(round(most-expensive door cost times30%),250) + round(sum remaining door costs times30%),500), matching official lines19c/19g"
     testRef: "tests/engine/forms/form-5695.test.ts::detailed improvements apply every category cap before shared pools"
-    description: "min(sum of min(round(each door cost times 30%),250),500)"
+    description: "Sort doors by cost; min(min(round(most-expensive door cost times30%),250) + round(sum remaining door costs times30%),500), matching official lines19c/19g"
     taxYear: 2025
   - line: "20d"
     formula: "min(round(total window/skylight costs times 30%),600)"
@@ -218,6 +218,176 @@ lines:
     testRef: "tests/engine/forms/form-5695.test.ts::detailed improvements apply every category cap before shared pools"
     description: "min(line 30,line 31); unused improvement credit never carries"
     taxYear: 2025
+  - line: "10-capacity"
+    taxYear: 2025
+    description: "Sum actual eligible fuel-cell kilowatt capacity; each system at least 0.5 kW"
+    formula: "Sum actual eligible fuel-cell kilowatt capacity; each system at least 0.5 kW"
+    testRef: "tests/engine/forms/form-5695.test.ts::energy intermediate audit matches printed costs and minimum fuel capacity"
+  - line: "19a"
+    taxYear: 2025
+    description: "Most expensive qualifying exterior door cost"
+    formula: "Most expensive qualifying exterior door cost"
+    testRef: "tests/engine/forms/form-5695.test.ts::energy intermediate audit matches printed costs and minimum fuel capacity"
+  - line: "19c"
+    taxYear: 2025
+    description: "min(round(line19a*30%),250)"
+    formula: "min(round(line19a*30%),250)"
+    testRef: "tests/engine/forms/form-5695.test.ts::energy intermediate audit matches printed costs and minimum fuel capacity"
+  - line: "19d-1"
+    taxYear: 2025
+    description: "Second door cost"
+    formula: "Second door cost"
+    testRef: "tests/engine/forms/form-5695.test.ts::energy intermediate audit matches printed costs and minimum fuel capacity"
+  - line: "19d-2"
+    taxYear: 2025
+    description: "Third door cost"
+    formula: "Third door cost"
+    testRef: "tests/engine/forms/form-5695.test.ts::energy intermediate audit matches printed costs and minimum fuel capacity"
+  - line: "19d"
+    taxYear: 2025
+    description: "Sum second and third door costs"
+    formula: "Sum second and third door costs"
+    testRef: "tests/engine/forms/form-5695.test.ts::energy intermediate audit matches printed costs and minimum fuel capacity"
+  - line: "19e"
+    taxYear: 2025
+    description: "Sum further door costs"
+    formula: "Sum further door costs"
+    testRef: "tests/engine/forms/form-5695.test.ts::energy intermediate audit matches printed costs and minimum fuel capacity"
+  - line: "19f"
+    taxYear: 2025
+    description: "Sum line19d and19e"
+    formula: "Sum line19d and19e"
+    testRef: "tests/engine/forms/form-5695.test.ts::energy intermediate audit matches printed costs and minimum fuel capacity"
+  - line: "19g"
+    taxYear: 2025
+    description: "Round line19f*30%"
+    formula: "Round line19f*30%"
+    testRef: "tests/engine/forms/form-5695.test.ts::energy intermediate audit matches printed costs and minimum fuel capacity"
+  - line: "20a-1"
+    taxYear: 2025
+    description: "First window or skylight cost"
+    formula: "First window or skylight cost"
+    testRef: "tests/engine/forms/form-5695.test.ts::energy intermediate audit matches printed costs and minimum fuel capacity"
+  - line: "20a-2"
+    taxYear: 2025
+    description: "Second window or skylight cost"
+    formula: "Second window or skylight cost"
+    testRef: "tests/engine/forms/form-5695.test.ts::energy intermediate audit matches printed costs and minimum fuel capacity"
+  - line: "20a-3"
+    taxYear: 2025
+    description: "Third window or skylight cost"
+    formula: "Third window or skylight cost"
+    testRef: "tests/engine/forms/form-5695.test.ts::energy intermediate audit matches printed costs and minimum fuel capacity"
+  - line: "20a-4"
+    taxYear: 2025
+    description: "Fourth window or skylight cost"
+    formula: "Fourth window or skylight cost"
+    testRef: "tests/engine/forms/form-5695.test.ts::energy intermediate audit matches printed costs and minimum fuel capacity"
+  - line: "20a"
+    taxYear: 2025
+    description: "Sum first four window or skylight costs"
+    formula: "Sum first four window or skylight costs"
+    testRef: "tests/engine/forms/form-5695.test.ts::energy intermediate audit matches printed costs and minimum fuel capacity"
+  - line: "20b"
+    taxYear: 2025
+    description: "Sum further window or skylight costs"
+    formula: "Sum further window or skylight costs"
+    testRef: "tests/engine/forms/form-5695.test.ts::energy intermediate audit matches printed costs and minimum fuel capacity"
+  - line: "20c"
+    taxYear: 2025
+    description: "Sum line20a and20b"
+    formula: "Sum line20a and20b"
+    testRef: "tests/engine/forms/form-5695.test.ts::energy intermediate audit matches printed costs and minimum fuel capacity"
+  - line: "22a"
+    taxYear: 2025
+    description: "First central air conditioner cost"
+    formula: "First central air conditioner cost"
+    testRef: "tests/engine/forms/form-5695.test.ts::energy intermediate audit matches printed costs and minimum fuel capacity"
+  - line: "22b"
+    taxYear: 2025
+    description: "Sum further central air conditioner costs"
+    formula: "Sum further central air conditioner costs"
+    testRef: "tests/engine/forms/form-5695.test.ts::energy intermediate audit matches printed costs and minimum fuel capacity"
+  - line: "22c"
+    taxYear: 2025
+    description: "Sum line22a and22b"
+    formula: "Sum line22a and22b"
+    testRef: "tests/engine/forms/form-5695.test.ts::energy intermediate audit matches printed costs and minimum fuel capacity"
+  - line: "23a-1"
+    taxYear: 2025
+    description: "First gas water heater cost"
+    formula: "First gas water heater cost"
+    testRef: "tests/engine/forms/form-5695.test.ts::energy intermediate audit matches printed costs and minimum fuel capacity"
+  - line: "23a-2"
+    taxYear: 2025
+    description: "Second gas water heater cost"
+    formula: "Second gas water heater cost"
+    testRef: "tests/engine/forms/form-5695.test.ts::energy intermediate audit matches printed costs and minimum fuel capacity"
+  - line: "23a"
+    taxYear: 2025
+    description: "Sum first two gas water heater costs"
+    formula: "Sum first two gas water heater costs"
+    testRef: "tests/engine/forms/form-5695.test.ts::energy intermediate audit matches printed costs and minimum fuel capacity"
+  - line: "23b"
+    taxYear: 2025
+    description: "Sum further gas water heater costs"
+    formula: "Sum further gas water heater costs"
+    testRef: "tests/engine/forms/form-5695.test.ts::energy intermediate audit matches printed costs and minimum fuel capacity"
+  - line: "23c"
+    taxYear: 2025
+    description: "Sum line23a and23b"
+    formula: "Sum line23a and23b"
+    testRef: "tests/engine/forms/form-5695.test.ts::energy intermediate audit matches printed costs and minimum fuel capacity"
+  - line: "24a"
+    taxYear: 2025
+    description: "First furnace or boiler cost"
+    formula: "First furnace or boiler cost"
+    testRef: "tests/engine/forms/form-5695.test.ts::energy intermediate audit matches printed costs and minimum fuel capacity"
+  - line: "24b"
+    taxYear: 2025
+    description: "Sum further furnace or boiler costs"
+    formula: "Sum further furnace or boiler costs"
+    testRef: "tests/engine/forms/form-5695.test.ts::energy intermediate audit matches printed costs and minimum fuel capacity"
+  - line: "24c"
+    taxYear: 2025
+    description: "Sum line24a and24b"
+    formula: "Sum line24a and24b"
+    testRef: "tests/engine/forms/form-5695.test.ts::energy intermediate audit matches printed costs and minimum fuel capacity"
+  - line: "25c"
+    taxYear: 2025
+    description: "Enabling electrical property qualified cost"
+    formula: "Enabling electrical property qualified cost"
+    testRef: "tests/engine/forms/form-5695.test.ts::energy intermediate audit matches printed costs and minimum fuel capacity"
+  - line: "29a"
+    taxYear: 2025
+    description: "First heat pump cost"
+    formula: "First heat pump cost"
+    testRef: "tests/engine/forms/form-5695.test.ts::energy intermediate audit matches printed costs and minimum fuel capacity"
+  - line: "29b"
+    taxYear: 2025
+    description: "Sum further heat pump costs"
+    formula: "Sum further heat pump costs"
+    testRef: "tests/engine/forms/form-5695.test.ts::energy intermediate audit matches printed costs and minimum fuel capacity"
+  - line: "29c"
+    taxYear: 2025
+    description: "First heat pump water heater cost"
+    formula: "First heat pump water heater cost"
+    testRef: "tests/engine/forms/form-5695.test.ts::energy intermediate audit matches printed costs and minimum fuel capacity"
+  - line: "29d"
+    taxYear: 2025
+    description: "Sum further heat pump water heater costs"
+    formula: "Sum further heat pump water heater costs"
+    testRef: "tests/engine/forms/form-5695.test.ts::energy intermediate audit matches printed costs and minimum fuel capacity"
+  - line: "29e"
+    taxYear: 2025
+    description: "First biomass stove or boiler cost"
+    formula: "First biomass stove or boiler cost"
+    testRef: "tests/engine/forms/form-5695.test.ts::energy intermediate audit matches printed costs and minimum fuel capacity"
+  - line: "29f"
+    taxYear: 2025
+    description: "Sum further biomass stove or boiler costs"
+    formula: "Sum further biomass stove or boiler costs"
+    testRef: "tests/engine/forms/form-5695.test.ts::energy intermediate audit matches printed costs and minimum fuel capacity"
 edgeCases:
   - description: "Undefined energy credit input still emits zero-value audit lines for every documented Form 5695 line"
     testRef: "tests/engine/forms/form-5695.test.ts::Form 5695 audit - undefined input still emits zero-value lines for 1-6, 14, 18-20, 24, and 30"
@@ -327,3 +497,6 @@ legacy2025:
         - "Audit ($150) + general improvements near $1,200 — audit counts within $1,200 pool, not in addition"
         - "Insulation at $1,200 cap + audit $150 — total general pool still $1,200, not $1,350"
       testRef: "tests/engine/forms/form-5695.test.ts::Form 5695 Part II - capped at $3,200"
+intermediateAudit:
+  description: "Copy actual property costs and cap/aggregation amounts into every printed numeric intermediate line. PDF layer never calculates credits. Door costs are ranked before line19a; remaining costs aggregate before line19g rounding. Fuel cells under0.5kW are ineligible even if costs are reported."
+  testRef: "tests/engine/forms/form-5695.test.ts::energy intermediate audit matches printed costs and minimum fuel capacity"

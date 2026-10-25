@@ -871,3 +871,12 @@ describe("Form 5695 detailed source facts", () => {
     expect(r.energyImprovementCredit.toString()).toBe("0");
   });
 });
+
+// Spec: spec/federal/form-5695.yaml intermediateAudit and detailed2025.
+it("energy intermediate audit matches printed costs and minimum fuel capacity", () => {
+  const item=(category:"exterior_door"|"gas_water_heater",qualifiedCost:string)=>({category,qualifiedCost,installationCompletedDate:"2025-12-31",qualificationConfirmed:true,manufacturerQualifiedId:"A1B2"});
+  const result=calculateForm5695({residenceEligibilityConfirmed:true,qualifiedImprovements:[item("exterior_door","5"),item("exterior_door","5"),item("exterior_door","5"),item("gas_water_heater","2000"),item("gas_water_heater","1000")],cleanEnergyProperties:[{category:"fuel_cell",qualifiedCost:"10000",installationCompletedDate:"2025-12-31",qualificationConfirmed:true,fuelCellKilowattCapacity:"0.49"}]},{taxYear:2025,taxLiabilityLimit:new Decimal(10000),improvementTaxLiabilityLimit:new Decimal(10000)});
+  expect(result.residentialCleanEnergyCredit.toString()).toBe("0");
+  expect(result.disallowedNewEnergyCosts.toString()).toBe("10000");
+  expect(Object.fromEntries(result.lines.map(line=>[line.line,line.value.toString()]))).toMatchObject({"19a":"5","19c":"2","19d-1":"5","19d-2":"5","19e":"0","19f":"10","19g":"3","19h":"5","23a-1":"2000","23a-2":"1000","23b":"0","23c":"3000","23d":"600"});
+});
