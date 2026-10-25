@@ -625,7 +625,7 @@ export async function buildWorkspaceFilledReturnDownload(
     const filledForms = [...fillResult.filledForms];
 
     if (stateCode === "OH" && resolved.taxInput.taxpayer.stateResidency === "full-year") {
-      const ohioOverlay = buildGuidedOhioOverlay(redactedTaxInput, guidedFlowState);
+      const ohioOverlay = buildGuidedOhioOverlay(redactedTaxInput, guidedFlowState, result.taxExemptInterest);
       const ohioReferencePacket = await fillOhioReferenceForms(
         redactedTaxInput,
         result,

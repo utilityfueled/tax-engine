@@ -6,6 +6,7 @@ import type { GuidedFlowState, StateReturnData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
 import { assertKnownFacts } from "./guided-required-facts";
 import { statePaymentFactErrors, sumAdditionalStateWithholding } from "./guided-state-facts";
+import { ohioInterestFactErrors, requiresOhioInterestAllocation } from "./guided-ohio-interest-facts";
 
 function actualStatePayments(state: GuidedFlowState, code: string): StateReturnData | undefined {
   const data = state.sectionData["state-return"];
@@ -17,18 +18,24 @@ function estimatedPayments(data: StateReturnData): string {
 }
 
 /** The same actual payment overlay is used for the preview and saved review PDF. */
-export function buildGuidedOhioOverlay(taxInput: TaxYearInput, state?: GuidedFlowState | null): OhioOverlayInput {
+export function buildGuidedOhioOverlay(taxInput: TaxYearInput, state: GuidedFlowState | null | undefined, federalTaxExemptInterest: Decimal): OhioOverlayInput {
   if (!state || state.segmentation.stateCode !== "OH") return {};
   const data = actualStatePayments(state, "OH");
-  if (!data) return {};
+  const allocation = data?.ohioInterestAllocation;
+  assertKnownFacts(ohioInterestFactErrors(allocation, state.taxYear,
+    requiresOhioInterestAllocation(state.sectionData["income-investments"]), federalTaxExemptInterest));
   const result: OhioOverlayInput = {};
-  if (data.additionalStateWithholdingEntries?.length) {
+  if (allocation) {
+    result.nonOhioStateLocalInterest = parseGuidedCurrency(allocation.nonOhioStateLocalInterest).toFixed();
+    result.otherAdditions = parseGuidedCurrency(allocation.federalInterestTaxableByOhio).toFixed();
+  }
+  if (data?.additionalStateWithholdingEntries?.length) {
     const sourceWithholding = extractOhioWithholding(taxInput.w2s, taxInput.formW2G, taxInput.form1099G,
       taxInput.form1099K, taxInput.form1099R, taxInput.form1099Nec, taxInput.form1099Misc,
       taxInput.form1099Int, taxInput.form1099Div, taxInput.form1099B, taxInput.form1099OID);
     result.ohioWithholdingOverride = sourceWithholding.plus(sumAdditionalStateWithholding(data)).toFixed();
   }
-  if (data.stateEstimatedPayments.length) result.estimatedPayments = estimatedPayments(data);
+  if (data?.stateEstimatedPayments.length) result.estimatedPayments = estimatedPayments(data);
   return result;
 }
 

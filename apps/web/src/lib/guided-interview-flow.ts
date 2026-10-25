@@ -12,6 +12,7 @@ import { personalFactErrors } from "./guided-taxpayer-facts";
 import { allPaymentFactErrors, deductionFactErrors, educationFactErrors, retirementFactErrors } from "./guided-required-facts";
 import { adjustmentFactErrors, householdFactErrors } from "./guided-adjustment-facts";
 import { statePaymentFactErrors } from "./guided-state-facts";
+import { guidedOhioInterestFactErrors, type OhioInterestAllocation } from "./guided-ohio-interest-facts";
 import { careBenefitsFactErrors, guidedCareBenefitSources, type CareBenefitsData } from "./guided-dependent-care-benefits";
 import { careFactErrors } from "./guided-credit-facts";
 import { energyFactErrors } from "./guided-energy-facts";
@@ -1183,6 +1184,7 @@ export interface StateReturnData {
   stateEstimatedPayments: StateEstimatedPaymentEntry[];
   additionalStateWithholding: string;
   additionalStateWithholdingEntries?: StateWithholdingEntry[];
+  ohioInterestAllocation?: OhioInterestAllocation;
 }
 
 export interface StateWithholdingEntry {
@@ -1445,11 +1447,14 @@ export function updateSectionData(
   const iraSourcesChanged = ["income-w2", "income-self-employment", "income-retirement"].includes(sectionId) && adjustments?.iraContributions;
   const hsaSourcesChanged = ["income-w2", "personal-info"].includes(sectionId) && adjustments?.hsaAccounts;
   const benefitSourcesChanged = (sectionId === "income-w2" || sectionId === "income-self-employment") && credits?.dependentCareBenefits;
+  const ohioStateReturn = state.sectionData["state-return"];
+  const ohioInterestChanged = sectionId === "income-investments" && ohioStateReturn?.ohioInterestAllocation;
   return {
     ...state,
     sectionData: {
       ...state.sectionData,
       [sectionId]: data,
+      ...(ohioInterestChanged && ohioStateReturn ? { "state-return": { ...ohioStateReturn, ohioInterestAllocation: { ...ohioInterestChanged, sourceFactsConfirmed: null } } } : {}),
       ...((iraSourcesChanged || hsaSourcesChanged) && adjustments ? { adjustments: { ...adjustments, ...(iraSourcesChanged ? { iraContributions: { ...iraSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(hsaSourcesChanged ? { hsaAccounts: hsaSourcesChanged.map(account => ({ ...account, sourceFactsConfirmed: null })) } : {}) } } : {}),
       ...(benefitSourcesChanged ? { credits: { ...credits, dependentCareBenefits: { ...credits.dependentCareBenefits,
         sourceFactsConfirmed: null, earnedIncomeWorksheetConfirmed: null, creditExpenseCoordinationConfirmed: null } } } : {}),
@@ -1794,7 +1799,10 @@ export function validateSection(
     case "review":
       return VALID_SECTION; // Review is always valid
     case "state-return":
-      return validateRequiredFacts(statePaymentFactErrors(getSectionData(state, "state-return"), state.taxYear, state.segmentation.stateCode));
+      return validateRequiredFacts({
+        ...statePaymentFactErrors(getSectionData(state, "state-return"), state.taxYear, state.segmentation.stateCode),
+        ...guidedOhioInterestFactErrors(state),
+      });
     case "final-review":
       return VALID_SECTION; // Final review is always available
     default:

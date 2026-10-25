@@ -16,6 +16,7 @@ import { CurrencyField } from "./currency-field";
 import { formatGuidedCurrency, parseGuidedDisplayAmount } from "@/lib/guided-currency";
 import { stateWithholdingDocumentTypes } from "@/lib/guided-state-facts";
 import { TextFact } from "./fact-fields";
+import { OhioInterestDetails } from "./ohio-interest-details";
 
 const formatCurrency = formatGuidedCurrency;
 
@@ -183,10 +184,12 @@ export function SectionStateReturn({
         ) : (
           <div className="guided-badge-row" style={{ marginTop: "16px", marginBottom: "16px" }}>
             <span className="guided-badge guided-badge-neutral">
-              Enter more income data above to see your state estimate
+              Complete the income and state source facts to see your state estimate
             </span>
           </div>
         )}
+
+        {stateCode === "OH" && <OhioInterestDetails data={current.ohioInterestAllocation} onChange={ohioInterestAllocation => onDataChange({ ...current, ohioInterestAllocation })} />}
 
         <h3 className="guided-section-subheading">Additional State Withholding</h3>
         <p className="guided-hint">

@@ -738,6 +738,9 @@ export function buildOhioResidentReturnInput(
   if (oid?.taxExemptInterest.gt(0) && overlay.nonOhioStateLocalInterest === undefined) {
     throw new Error("Ohio OID municipal interest requires an actual non-Ohio issuer allocation, including confirmed zero.");
   }
+  if (federalResult.taxExemptInterest?.gt(0) && overlay.nonOhioStateLocalInterest === undefined) {
+    throw new Error("Ohio tax-exempt interest requires an actual issuer allocation, including confirmed zero for non-Ohio state and local interest.");
+  }
 
   // Auto-extract values
   const ohioWithholding =

@@ -173,7 +173,7 @@ export function computeGuidedPreview(state: GuidedFlowState | null | undefined):
           stateResult = { stateCode, stateName: "Pennsylvania", stateTax: pa.netTaxLiability,
             refund: pa.netOverpayment, balanceDue: pa.totalAmountDue, totalPayments: pa.totalPayments };
         } else if (stateCode === "OH") {
-          const oh = calculateOhioResidentReturn(buildOhioResidentReturnInput(taxInput, result, buildGuidedOhioOverlay(taxInput, state))).it1040;
+          const oh = calculateOhioResidentReturn(buildOhioResidentReturnInput(taxInput, result, buildGuidedOhioOverlay(taxInput, state, result.taxExemptInterest))).it1040;
           stateResult = { stateCode, stateName: "Ohio", stateTax: oh.line13_totalLiability,
             refund: oh.line26_refund, balanceDue: oh.line22_totalAmountDue, totalPayments: oh.line17_totalPayments };
         } else {

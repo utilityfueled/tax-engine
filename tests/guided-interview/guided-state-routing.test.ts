@@ -6,6 +6,7 @@ import { computeGuidedPreview } from "@/lib/guided-preview-compute";
 import { TaxYearInputSchema } from "@/models/inputs";
 import { buildGuidedOhioOverlay, buildGuidedPennsylvaniaOverrides } from "@/lib/guided-state-engine-inputs";
 import { calculatePAReturn } from "@/engine/state/pa-orchestrator";
+import { calculateFederalTax } from "@/engine/federal";
 import { actualOid } from "../fixtures/guided-oid";
 import { completeW2Entry, startCompleteInterview } from "./complete-facts";
 
@@ -63,7 +64,7 @@ describe("selected state and dedicated previews", () => {
       state.sectionData.deductions = { ...emptyDeductionData, nonW2IncomeTaxesDeductedElsewhere: "0" };
       const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state));
       expect(computeGuidedPreview(state)?.state?.stateWithholding).toBe("2000.6");
-      if (code === "OH") expect(buildGuidedOhioOverlay(input, state)).toMatchObject({ ohioWithholdingOverride: "2000.3", estimatedPayments: "0.3" });
+      if (code === "OH") expect(buildGuidedOhioOverlay(input, state, calculateFederalTax(input).taxExemptInterest)).toMatchObject({ ohioWithholdingOverride: "2000.3", estimatedPayments: "0.3" });
       else {
         const result = calculatePAReturn(input, buildGuidedPennsylvaniaOverrides(state));
         expect(result.pa40.stateWithholding.toFixed()).toBe("2000.3");
