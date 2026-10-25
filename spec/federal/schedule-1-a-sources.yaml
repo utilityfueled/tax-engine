@@ -1,0 +1,16 @@
+form: "Schedule 1-A actual source boundaries"
+fullName: "Actual identity, source and death-date reconciliation"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i1040gi"
+notes: "Actual source claims preserve unknowns; historical unverified 2025 preview is distinct from new source qualification."
+lines:
+  - line: "senior-death-date"
+    description: "Determine actual age at death for an enhanced senior deduction"
+    formula: "Use the actual date of birth and the earlier of the return year end or actual death date. Age is attained the day before a birthday. A taxpayer born February14,1960 who dies February12,2025 is not65; death on February13 qualifies. Known null means alive; missing death status remains unknown for2026 or actual source claims. Dates must be real and consistent with the return year and birth date."
+    irsRef: "Form1040 Instructions Schedule1-A PartV Death of a taxpayer and its published February14 birthday example"
+    testRef: "tests/engine/schedules/schedule-1-a-sources.test.ts::uses actual senior death dates and preserves unknown status"
+  - line: "senior-canonical"
+    description: "Use household death facts in the canonical return"
+    formula: "The actual standardDeductionFacts primary/spouse death date also governs Schedule1-A senior eligibility. No second guessed alive flag or age override is accepted; denied senior deductions do not reduce AGI or payroll tax."
+    irsRef: "Form1040 Instructions Schedule1-A PartV and line36"
+    testRef: "tests/engine/schedules/schedule-1-a-sources.test.ts::binds senior eligibility to the canonical household death record"

@@ -5279,6 +5279,10 @@ const schedule1ATipFacts = {
   meetsSstbRuleOrTransition: z.boolean(),
 };
 export const Schedule1ASchema = z.object({
+  sourceTaxYear: z.number().int().optional(),
+  sourceReference: z.string().trim().min(1).optional(),
+  sourceFactsConfirmed: z.boolean().optional(),
+  allSourcesIncluded: z.boolean().optional(),
   primarySsnEligible: z.boolean(),
   spouseSsnEligible: z.boolean().optional(),
   excludedPuertoRicoIncome: schedule1AMoney,

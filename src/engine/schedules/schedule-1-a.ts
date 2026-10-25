@@ -10,6 +10,7 @@ export interface Schedule1AParams {
   agi: Decimal;
   foreignExcludedIncome: Decimal;
   facts: Schedule1AInput;
+  standardDeductionFacts?: { primaryDeathDate?: string | null; spouseDeathDate?: string | null };
 }
 export interface Schedule1AResult {
   magi: Decimal;
@@ -64,11 +65,34 @@ export function calculateSchedule1A(input: Schedule1AParams): Schedule1AResult {
   const vehicleInterestDeduction = roundDollar(zeroFloor(min(vehicleInterest, d("10000")).minus(vehicleReduction)));
   audit.record("Schedule 1-A", "30", "Qualified vehicle loan interest deduction", vehicleInterestDeduction, "max(0, min(eligible interest, 10000) - 200 × ceil(MAGI excess / 1000))");
   const seniorPerPerson = roundDollar(zeroFloor(d("6000").minus(zeroFloor(magi.minus(joint ? "150000" : "75000")).times("0.06"))));
-  const seniorDeduction = marriedSeparate ? d("0") : roundDollar(sum(...facts.seniorOwners.map((owner) => {
+  const seniorAgeEligible = (owner: "primary" | "spouse") => {
     const person = owner === "primary" ? taxpayer.primary : taxpayer.spouse!;
     const parsed = new Date(`${person.dateOfBirth}T00:00:00Z`);
-    if (!Number.isFinite(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== person.dateOfBirth) throw new Error("Invalid senior birth date");
-    return ssnEligible(owner) && person.dateOfBirth < `${taxpayer.taxYear - 64}-01-02` ? seniorPerPerson : d("0");
+    if (!Number.isFinite(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== person.dateOfBirth || person.dateOfBirth > `${taxpayer.taxYear}-12-31`) throw new Error("Invalid senior birth date");
+    const deathDate = owner === "primary" ? input.standardDeductionFacts?.primaryDeathDate : input.standardDeductionFacts?.spouseDeathDate;
+    if (deathDate === undefined && (taxpayer.taxYear === 2026 || facts.sourceFactsConfirmed === true)) throw new Error("Schedule 1-A senior death status is unknown; provide the actual date or confirmed alive status.");
+    if (deathDate !== undefined && deathDate !== null) {
+      const death = new Date(`${deathDate}T00:00:00Z`);
+      if (!Number.isFinite(death.getTime()) || death.toISOString().slice(0, 10) !== deathDate || deathDate.slice(0, 4) !== String(taxpayer.taxYear) || deathDate < person.dateOfBirth) throw new Error("Schedule 1-A senior death date must be an actual date in the return year, on or after birth.");
+    }
+    const end = deathDate ?? `${taxpayer.taxYear}-12-31`;
+    const birthdayYear = parsed.getUTCFullYear() + 65;
+    // An actual leap-day death boundary needs its separate age-attainment rule.
+    // Away from February28/Mar1, either boundary gives the same known answer.
+    if (person.dateOfBirth.slice(5) === "02-29") {
+      if (end < `${birthdayYear}-02-28`) return false;
+      if (end >= `${birthdayYear}-03-01`) return true;
+      throw new Error("Schedule 1-A senior leap-day death boundary requires its actual age-attainment determination.");
+    }
+    // Construct the birthday, then subtract one calendar day for attained age.
+    const birthday = new Date(`${birthdayYear}-${person.dateOfBirth.slice(5)}T00:00:00Z`);
+    birthday.setUTCDate(birthday.getUTCDate() - 1);
+    return end >= birthday.toISOString().slice(0, 10);
+  };
+  // Validate actual dates even when filing status or SSN later disallows the claim.
+  const ageEligible = new Map(facts.seniorOwners.map(owner => [owner, seniorAgeEligible(owner)]));
+  const seniorDeduction = marriedSeparate ? d("0") : roundDollar(sum(...facts.seniorOwners.map((owner) => {
+    return ssnEligible(owner) && ageEligible.get(owner) ? seniorPerPerson : d("0");
   })));
   audit.record("Schedule 1-A", "37", "Enhanced deduction for seniors", seniorDeduction, "Each eligible person: max(0, 6000 - 6% × MAGI excess); MFS excluded");
   const totalDeduction = sum(tipsDeduction, overtimeDeduction, vehicleInterestDeduction, seniorDeduction);

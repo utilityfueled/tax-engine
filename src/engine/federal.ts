@@ -2232,6 +2232,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     agi,
     foreignExcludedIncome: form2555IncomeReduction.plus(form2555HousingDeduction),
     facts: input.schedule1A,
+    standardDeductionFacts: input.standardDeductionFacts,
   }) : undefined;
   let nonitemizerCharitableDeduction = deductionUsed === "standard" ? schedA.nonitemizerCharitableDeduction : d("0");
   let additionalDeductions = (schedule1A?.totalDeduction ?? d("0")).plus(nonitemizerCharitableDeduction);

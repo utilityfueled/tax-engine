@@ -10,7 +10,7 @@ const tip = { owner: "primary", employer: "Synthetic cafe", qualifiedW2Tips: "20
 const overtime = { owner: "primary", qualifiedPremium: "15000", reportedCompensation: "40000", requiredByFlsa: true };
 const vehicle = { vin: "1HGCM82633A004352", acquiredDate: "2025-01-01", loanOriginationDate: "2025-01-01", interestPaid: "12000", businessInterestDeducted: "0", nonqualifyingInterest: "0", firstLien: true, originalUse: true, finalAssemblyUnitedStates: true, personalUse: true, vehicleType: "car", grossVehicleWeightRating: 13999, relatedParty: false, lease: false, fleet: false, salvageOrScrap: false, refinanced: false };
 function calc(input: Record<string, unknown> = {}, magi = "50000", person = taxpayer) {
-  return calculateSchedule1A({ taxpayer: person, agi: d(magi), foreignExcludedIncome: d("0"), facts: Schedule1ASchema.parse({ ...facts, ...input }) });
+  return calculateSchedule1A({ taxpayer: person, agi: d(magi), foreignExcludedIncome: d("0"), facts: Schedule1ASchema.parse({ ...facts, ...input }), standardDeductionFacts: { primaryDeathDate: null, spouseDeathDate: null } });
 }
 describe("Schedule 1-A additional deductions", () => {
   it.each([["150999.99", "20000"], ["151000", "19900"], ["350000", "0"]])("floors tip phase-down steps at MAGI %s", (magi, expected) => {
