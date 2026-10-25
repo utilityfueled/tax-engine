@@ -42,8 +42,8 @@ export function captureScheduleDRecords(investments: InvestmentSources): { longT
   };
 }
 function needsWorksheet(investments: InvestmentSources) {
-  return investments.brokerageEntries.some(form => form.transactions.some(row => row.holdingPeriod === 'long' && row.specialGainCharacter === 'collectible'))
-    || investments.dividendEntries.some(form => [form.collectiblesGain, form.section1250Gain].some(value => value?.trim() && !parseGuidedCurrency(value).isZero()))
+  return investments.brokerageEntries.some(form => form.transactions.some(row => row.holdingPeriod === 'long' && ['collectible', 'qsbs'].includes(row.specialGainCharacter ?? '')))
+    || investments.dividendEntries.some(form => [form.collectiblesGain, form.section1250Gain, form.section1202Gain].some(value => value?.trim() && !parseGuidedCurrency(value).isZero()))
     || investments.childElections?.some(child => child.specialCapitalDistributionPresent === true);
 }
 function sameAmount(left: string | undefined, right: string | undefined, label: string) {
@@ -96,7 +96,6 @@ export function buildGuidedScheduleDInputs(investments: InvestmentSources | unde
       } else {
         const distribution = row as NonNullable<TaxYearInput['scheduleDSpecialGainSources']>['reportedGains'][number], source = original as ScheduleDReportedSource;
         for (const field of ['netLongTermCapitalGain', 'collectiblesGain', 'unrecapturedSection1250Gain', 'section1202Gain'] as const) sameAmount(distribution[field], source[field], field);
-        if (parseGuidedCurrency(distribution.section1202Gain).gt(0)) throw new Error('Actual section1202 gain requires the separate issuer and acquisition history method.');
       }
     }
   }

@@ -2,6 +2,8 @@
 import { QofDispositionDetails } from "./qof-disposition-details";
 import { BrokerageWithholdingDetails } from "./brokerage-withholding-details";
 import { ScheduleDSourceDetails } from "./schedule-d-source-details";
+import { QsbsSourceDetails } from "./qsbs-source-details";
+import type { QsbsSourceData } from "@/lib/guided-qsbs-sources";
 import type { ScheduleDSourceData } from "@/lib/guided-schedule-d-sources";
 import type { QofDispositionData } from "@/lib/guided-qof-facts";
 import { changePrivateActivitySource } from "@/lib/guided-private-activity-facts";
@@ -410,6 +412,8 @@ export function SectionInvestmentIncome({
   onQofDispositionFactsChange,
   scheduleDSources,
   onScheduleDSourcesChange,
+  section1202Sources,
+  onSection1202SourcesChange,
 }: {
   interestEntries: InterestEntryData[];
   dividendEntries: DividendEntryData[];
@@ -426,6 +430,8 @@ export function SectionInvestmentIncome({
   onQofDispositionFactsChange?: (data: QofDispositionData | undefined) => void;
   scheduleDSources?: ScheduleDSourceData;
   onScheduleDSourcesChange?: (data: ScheduleDSourceData | undefined) => void;
+  section1202Sources?: QsbsSourceData;
+  onSection1202SourcesChange?: (data: QsbsSourceData | undefined) => void;
 }) {
   const currentInterest = interestEntries.length > 0 ? interestEntries : [emptyInterestEntry];
   const currentDividends = dividendEntries.length > 0 ? dividendEntries : [emptyDividendEntry];
@@ -504,6 +510,7 @@ export function SectionInvestmentIncome({
         {onChildElectionsChange && <ChildElectionCards entries={childElections} onChange={onChildElectionsChange} />}
         {onQofDispositionFactsChange && <QofDispositionDetails data={qofDispositionFacts} onChange={onQofDispositionFactsChange} />}
         {onScheduleDSourcesChange && <ScheduleDSourceDetails data={scheduleDSources} investments={{ brokerageEntries, dividendEntries }} onChange={onScheduleDSourcesChange} />}
+        {onSection1202SourcesChange && <QsbsSourceDetails data={section1202Sources} investments={{ brokerageEntries, dividendEntries }} onChange={onSection1202SourcesChange} />}
 
         {/* ── 1099-DIV: Dividends ── */}
         <h3 className="guided-w2-card-title" style={{ marginTop: "24px", marginBottom: "8px" }}>

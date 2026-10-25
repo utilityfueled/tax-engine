@@ -10,6 +10,7 @@ import { buildGuidedPrivateActivityFacts, type PrivateActivitySourceData } from 
 import { calculateForm6251BondSources } from "@/engine/forms/form-6251-bond-sources.js";
 import { Form1099IntSchema, Form1099DivSchema } from "@/models/inputs.js";
 import { childElectionFactErrors, type ChildElectionData } from "./guided-child-election-facts";
+import { qsbsSourceFactErrors, type QsbsSourceData } from "./guided-qsbs-sources";
 
 export interface InvestmentSourceData extends PrivateActivitySourceData {
   payerTin?: string;
@@ -25,7 +26,7 @@ export const interestSourceAmounts = [
 export const dividendSourceAmounts = [
   ["ordinaryDividends", "Box 1a ordinary dividends"], ["qualifiedDividends", "Box 1b qualified dividends"], ["capitalGainDistributions", "Box 2a capital-gain distributions"], ["section1250Gain", "Box 2b unrecaptured section 1250 gain"], ["section1202Gain", "Box 2c section 1202 gain"], ["collectiblesGain", "Box 2d collectibles gain"], ["section897OrdinaryDividends", "Box 2e section 897 ordinary dividends"], ["section897CapitalGain", "Box 2f section 897 capital gain"], ["nondividendDistributions", "Box 3 nondividend distributions"], ["federalWithheld", "Box 4 federal withholding"], ["section199ADividends", "Box 5 section 199A dividends"], ["foreignTaxPaid", "Box 7 foreign tax paid"], ["exemptInterestDividends", "Box 12 exempt-interest dividends"], ["specifiedPrivateActivityBondInterest", "Box 13 private-activity bond dividends"],
 ] as const;
-export type InvestmentData = { interestEntries: InterestEntryData[]; dividendEntries: DividendEntryData[]; brokerageEntries: BrokerageEntryData[]; oidEntries?: OidEntryData[]; childElections?: ChildElectionData[]; qofDispositionFacts?: QofDispositionData; scheduleDSources?: ScheduleDSourceData };
+export type InvestmentData = { interestEntries: InterestEntryData[]; dividendEntries: DividendEntryData[]; brokerageEntries: BrokerageEntryData[]; oidEntries?: OidEntryData[]; childElections?: ChildElectionData[]; qofDispositionFacts?: QofDispositionData; scheduleDSources?: ScheduleDSourceData; section1202Sources?: QsbsSourceData };
 
 export function isStartedInvestment(entry: InvestmentSourceData | CapitalGainTransactionData): boolean {
   return Object.values(entry).some(value => typeof value === "string" && value.trim() !== "");
@@ -54,6 +55,7 @@ export function investmentFactErrors(data: InvestmentData | undefined, filingSta
   Object.assign(errors, oidFactErrors(data.oidEntries, filingStatus, taxYear, stateCode, stateData));
   Object.assign(errors, childElectionFactErrors(data.childElections, taxYear));
   Object.assign(errors, scheduleDSourceFactErrors(data, taxYear, filingStatus, personal));
+  Object.assign(errors, qsbsSourceFactErrors(data, taxYear, filingStatus, personal));
   const preferenceSourceIds = new Set<string>();
   for (const [kind, entries] of [["interest", data.interestEntries], ["dividend", data.dividendEntries]] as const) {
     entries.forEach((entry, index) => {
@@ -65,7 +67,7 @@ export function investmentFactErrors(data: InvestmentData | undefined, filingSta
       const values = entry as unknown as Record<string, string | undefined>;
       for (const [field, label] of fields) { const error = amountError(values[field], label); if (error) errors[`${prefix}-${field}`] = error; }
       if (!errors[`${prefix}-foreignTaxPaid`] && parseGuidedCurrency(entry.foreignTaxPaid).gt(0) && !entry.foreignCountry?.trim()) errors[`${prefix}-foreignCountry`] = "Enter the actual foreign country or territory from the source record.";
-      const unsupported = kind === "interest" ? ["marketDiscount", "bondPremium", "treasuryBondPremium", "taxExemptBondPremium"] : ["nondividendDistributions", "section1202Gain", "section897OrdinaryDividends", "section897CapitalGain"];
+      const unsupported = kind === "interest" ? ["marketDiscount", "bondPremium", "treasuryBondPremium", "taxExemptBondPremium"] : ["nondividendDistributions", "section897OrdinaryDividends", "section897CapitalGain"];
       for (const field of unsupported) rejectUnsupportedAmount(values[field], `${prefix}-${field}`, "This source amount needs its additional basis, bond or special-distribution worksheet; the guided calculation does not support it yet.", errors);
       const preferenceKey = kind === "interest" ? "privateActivityBondInterest" : "specifiedPrivateActivityBondInterest";
       const exemptKey = kind === "interest" ? "taxExemptInterest" : "exemptInterestDividends";
@@ -108,7 +110,7 @@ export function investmentFactErrors(data: InvestmentData | undefined, filingSta
       else { try { parseGuidedCurrency(transaction.adjustments); } catch { errors[`${tx}-adjustments`] = "Enter a valid adjustment amount."; } }
       rejectUnsupportedAmount(transaction.adjustments, `${tx}-adjustments`, "Other capital-sale adjustments require their actual Form 8949 codes and supporting worksheet; this guided path currently supports wash-sale adjustments only.", errors);
       if (!["short", "long"].includes(transaction.holdingPeriod)) errors[`${tx}-holdingPeriod`] = "Choose the actual source holding period.";
-      if (transaction.holdingPeriod === "long" && !["ordinary", "collectible"].includes(transaction.specialGainCharacter ?? "")) errors[`${tx}-character`] = transaction.specialGainCharacter === "qsbs" || transaction.specialGainCharacter === "other" ? "This asset needs its separate issuer, acquisition or other special capital-gain method; keep the actual classification saved." : "Confirm whether this actual long-term asset is ordinary capital property, a collectible or another special asset.";
+      if (transaction.holdingPeriod === "long" && !["ordinary", "collectible", "qsbs"].includes(transaction.specialGainCharacter ?? "")) errors[`${tx}-character`] = transaction.specialGainCharacter === "other" ? "This asset needs its separate special capital-gain method; keep the actual classification saved." : "Confirm whether this actual long-term asset is ordinary capital property, a collectible or another special asset.";
       for (const field of ["basisReportedToIRS", "digitalAsset", "washSale"] as const) if (typeof transaction[field] !== "boolean") errors[`${tx}-${field}`] = "Confirm this classification from the actual transaction record.";
       if (transaction.sourceClassificationConfirmed !== true) errors[`${tx}-classification`] = "Review and confirm the actual holding period, basis reporting, digital-asset and wash-sale classifications; saved defaults are not evidence.";
       if (transaction.washSale === false && !errors[`${tx}-washSaleDisallowed`] && !parseGuidedCurrency(transaction.washSaleDisallowed).isZero()) errors[`${tx}-washSaleDisallowed`] = "Reconcile the disallowed loss with the answer that this is not a wash sale.";

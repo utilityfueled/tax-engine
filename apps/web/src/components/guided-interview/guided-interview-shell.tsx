@@ -542,6 +542,8 @@ function SectionContent({
           childElections={investData?.childElections}
           qofDispositionFacts={investData?.qofDispositionFacts}
           scheduleDSources={investData?.scheduleDSources}
+          section1202Sources={investData?.section1202Sources}
+          onSection1202SourcesChange={section1202Sources => onStateChange(updateSectionData(state, "income-investments", { ...savedSources, section1202Sources }))}
           onScheduleDSourcesChange={scheduleDSources => onStateChange(updateSectionData(state, "income-investments", { ...savedSources, scheduleDSources }))}
           onQofDispositionFactsChange={qofDispositionFacts => onStateChange(updateSectionData(state, "income-investments", { ...savedSources, qofDispositionFacts }))}
           onChildElectionsChange={childElections => onStateChange(updateSectionData(state, "income-investments", { ...savedSources, childElections }))}

@@ -1,5 +1,6 @@
 import { buildGuidedQofFacts } from "./guided-qof-facts";
 import { buildGuidedScheduleDInputs } from "./guided-schedule-d-sources";
+import { buildGuidedQsbsSources } from "./guided-qsbs-sources";
 import { buildGuidedInvestmentInterestInputs, investmentInterestFactErrors } from "./guided-investment-interest";
 import { buildBrokerageWithholdingSource } from "./guided-brokerage-withholding";
 import { buildForeignIncomeInput, foreignIncomeFactErrors } from "./guided-foreign-income";
@@ -760,6 +761,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     form2210: buildEstimatedTaxFacts(paymentData, state.taxYear),
     form2555: buildForeignIncomeInput(adjustmentData?.foreignIncome, state),
     netOperatingLoss: buildGuidedNetOperatingLoss(adjustmentData?.netOperatingLossSources, state.taxYear, segmentation.filingStatus, personalInfo),
+    section1202Sources: buildGuidedQsbsSources(investData, state.taxYear, segmentation.filingStatus, personalInfo),
     form8801: buildMinimumTaxCreditInput(creditsData?.minimumTaxCredit, state.taxYear, segmentation.filingStatus, personalInfo),
     schedule1A: buildSchedule1AInput(sectionData["additional-deductions"]?.schedule1A, state),
     form4137ByOwner: buildTipIncomeInputs(sectionData["additional-deductions"]?.tipIncomeAccounts, segmentation.filingStatus, state.taxYear, w2Data?.entries),

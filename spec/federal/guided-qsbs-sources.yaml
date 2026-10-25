@@ -1,0 +1,43 @@
+form: "Guided Section1202 sources"
+fullName: "Original qualified small business stock issuer and lot intake"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i1040sd"
+sources:
+  - url: "https://www.irs.gov/instructions/i1040sd"
+    section: "Exclusion of Gain on QSB Stock; corporate qualification, original issue, issuer limits and fund Box2c"
+    retrieved: "2026-10-25"
+  - url: "https://www.irs.gov/publications/p550"
+    section: "Section1202 exclusion, prior eligible gain and original pass-through ownership"
+    retrieved: "2026-10-25"
+notes: |
+  This collector supplies the existing source-bound Section1202 calculation.
+  Original income and sale boxes remain unchanged. Qualification, acquisition,
+  issuer history and ownership must be actual records, not inferred from a QSBS
+  label. No exclusion, current cap or AMT preference override is collected.
+  Non-original transfers, changing entity ownership, offsetting positions and
+  changed prior household require their separate methods and remain explicit.
+lines:
+  - line: "source-transfer"
+    description: "Complete original broker or fund sources reach the canonical exclusion once"
+    formula: "Actual2008 gain1000.25 produces500.125 exclusion; fund2a1500.50 remains full before separate negative500.125 adjustment"
+    testRef: "tests/guided-interview/guided-qsbs-sources.test.ts::routes actual broker and fund issuer sources without changing original income"
+  - line: "unknowns"
+    description: "Source snapshots do not invent qualification or dates"
+    formula: "Copy only entered original source values on explicit request; preserve missing facts and exact cents; require complete issuer and lot history"
+    testRef: "tests/guided-interview/guided-qsbs-sources.test.ts::preserves unknown source facts and rejects stale incomplete or duplicated records"
+  - line: "history"
+    description: "Actual prior use and owner qualification determine the source method"
+    formula: "Prior eligible gain before exclusion reconciles every filed record; known disqualification keeps income taxable, while unknown or unsupported ownership does not calculate"
+    testRef: "tests/guided-interview/guided-qsbs-sources.test.ts::binds actual household history qualification and original ownership methods"
+  - line: "confirmation"
+    description: "Substantive changes revoke both capital and issuer review"
+    formula: "Source amounts, owner, household and histories invalidate confirmation without deleting records; metadata-only review can complete without cycles"
+    testRef: "tests/guided-interview/guided-qsbs-sources.test.ts::invalidates changed originals while preserving confirmation-only edits"
+  - line: "controls"
+    description: "Blank issuer and lot controls retain exact amounts and explicit answers"
+    formula: "New records begin unknown; explicit no-history actions create empty lists; clear and remove actions preserve other original sources"
+    testRef: "tests/apps/web/qsbs-source-interactions.test.tsx::collects issuer history and original lots without guessed eligibility"
+  - line: "persistence"
+    description: "Actual issuer history persists locally on desktop and mobile"
+    formula: "Exact issuer amounts and original source identity survive reload; unknown and confirmation changes persist; private sources and taxpayer ID stay out of request bodies"
+    testRef: "apps/web/tests/guided-qsbs-sources.spec.ts::preserves actual QSBS issuer history at"
