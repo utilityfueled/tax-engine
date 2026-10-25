@@ -7,10 +7,34 @@ complete a checkbox.
 
 ## Current integration — 2026-10-25
 
-`ae7512d` is the latest confirmed pushed integration on `upgrade/2026-baseline`. The goal remains active and the
+`8da947a` is the latest confirmed pushed integration on `upgrade/2026-baseline`. The goal remains active and the
 upgrade is **not release-ready**. Unanswered external inputs are listed below;
 internal implementation and review continue in parallel.
 
+- `8da947a`: actual child income in regular/AMT investment interest. Final tree
+  40f8bebbf passes69 tests, root types,4,311 spec refs and lint0errors/four
+  existing warnings; prior source tree passes104 tests and independent agent
+  review passes8 new cases. All four redacted PDF pages reopened/rendered and
+  inspected. See`upgrade-2026-child-investment-work.md`.
+- `a996dbc`: explicit source-bound section904(j) credit and separate unused
+  regular/AMT prior vintages. Reviewed tree dbaee904 passes829 tests; final
+  6b1fc0fd passes100 tests/root types/lint0errors, independent parent7cases.
+  Printed6251 credit/TMT reopened and inspected. Actual source intake and a
+  retained-vintage review record remain active; broader FTC methods remain.
+- `35b8604`: original brokerage Box4 withholding once per source, including
+  actual current-year open-short-sale facts.1,238 tests/root+web types/build
+  pass,4,290 spec refs, independent3cases and2desktop/mobile browser cases
+  with retries0. Actual source changes and original zero/unknown are retained.
+- `2dbce45`: actual ScheduleD18/19 source binding, netting, regular/AMT tax
+  worksheets and saved review fields.162 tests/root types/4,284 refs/lint0
+  errors pass; independent K1/estate probe and two rendered pages verified.
+  Actual section1202 issuer/acquisition history remains internal work.
+- `ec6d25f`: actual QOF Yes/No/unknown source answer.723 tests/root+web types/
+  build and4,274 refs pass; independent4cases and2desktop/mobile browser
+  cases pass with retries0. Positive-event8997 method remains internal work.
+- `b741741`: actual foreign-income/qualification source intake.765tests,
+  root+web types/build and4,248 refs pass;2desktop/mobile source-persistence
+  cases pass with retries0. No private source reference enters request bodies.
 - Full coverage at `7695387` passes all 17,381 tests in 811 files, with zero
   failures/skips: branches 86.84%, statements 92.61%, functions 91.82%, lines
   94.81%. Thresholds are unchanged. Exact log/hash are in the checkpoint;
@@ -18,14 +42,14 @@ internal implementation and review continue in parallel.
 - `ae7512d`: standalone Schedule D special-gain arithmetic. Exact source tree
   3fb202d5 passes 69 tests, root types, 4,259 spec refs and lint with no errors
   or warnings. Independent agent source/code review and seven cases pass.
-  Source binding and canonical integration are active separate work.
+  Source binding and canonical integration are now committed in2dbce45.
 - `1ca69d0`: actual NOL vintage helper. Exact tree d8184932 passes 55 tests,
   root types, 4,252 spec refs and clean lint. Parent review passes 14 cases.
   Actual modified-income, AMT and NIIT integration remains active.
 - `f2d018d`: simplified foreign credit threshold uses $600 only for MFJ and
   $300 for surviving-spouse returns. Exact tree df5f53e4 passes 80 cases,
   types/spec/lint; parent verified five cent-boundary scenarios. An explicit
-  annual election and original source integration remain separate work.
+  annual election and original source integration are now committed in a996dbc.
 
 - `13cb428`: saved guided progress and final-review exit. Tree cf15c75b passes
   246 unit cases in 4 files, web types/build, 4,229 spec refs, lint 0 errors,
@@ -107,10 +131,12 @@ internal implementation and review continue in parallel.
   in the federal/facts/AI ledgers and historical sections below. Agent review
   never substitutes for independent human qualification.
 
-Current remote0f408af CI40210148315 and Web40210148259 were observed running.
-The previous65336f7/4d85eb0 runs were cancelled by newer pushes. No final remote
-success is claimed. Generated inventory still needs regeneration. Parent owns
-all final integrated checks and native runtime release rehearsal.
+Current8da947a CI40217507356 is running and Web40217507374 is queued as
+observed after push. Earlier35b8604/2dbce45 CI failed; their Web runs were
+cancelled by newer pushes. The earlier6728ed2 run passed17,411 tests and failed
+two stale QSS600 threshold expectations, corrected red-first in a996dbc.
+No current remote success is claimed. Generated inventory still needs
+regeneration. Parent owns final integrated checks/native release rehearsal.
 
 The latest completed full coverage is the fixed `7695387` run above. Package
 checks after that commit are scoped evidence until a fresh full run. Package
@@ -118,12 +144,14 @@ audit refreshed 2026-10-25 reports zero advisories across 521 entries. Older
 runtime images have 157 matches and 67 advisory records, owner roles and a
 2026-11-07 expiry; maintainer disposition and final-image scans remain pending.
 
-Immediate internal work: ScheduleD audit/PDF subtotals and actual18/19worksheets;
-child4952 source binding, positive character intake and ratio rounding; passive
-ordering/Marketplace/NOL methods;2555actual owner/source binding and intake;
-foreign multi-state carryover allocation; qualified form/export gaps; integrated
-coverage, inventory, builds, browsers, recovery, native images and current scans.
-External staging/provider/human-review/state-demand/final-form gates stay closed.
+Immediate internal work: actual section1202 history, positive special-gain and
+child4952 intake; canonical NOL/AMT/NIIT, remaining Marketplace/PTP/QBI and named
+education methods; actual direct-FTC intake/review record and remaining foreign
+methods; QOF/property source methods; qualified form/export gaps. Final full
+coverage, inventory, builds, browsers, recovery, native images and current scans
+remain required. External staging/provider/human-review/state-demand/final-form
+gates stay closed. Internal method gaps are implementation work, not external
+qualification blockers.
 
 ## Refreshed baseline — 2026-10-24
 

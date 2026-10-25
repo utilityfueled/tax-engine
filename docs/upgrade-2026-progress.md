@@ -2,29 +2,27 @@
 
 ## Current checkpoint
 
-Execution remains active and **not release-ready**. Latest recorded pushed
-integration is `13cb428` on `upgrade/2026-baseline`. Resume from
+Execution remains active and **not release-ready**. Latest confirmed pushed
+integration is `8da947a` on `upgrade/2026-baseline`. Resume from
 [the durable checklist](upgrade-2026-checklist.md) and `ongoingExecution` in the
-machine checkpoint; older evidence below applies only to its recorded code.
+machine checkpoint. Older evidence applies only to its recorded code.
 
-Recent separate packages cover Form2555 source binding and rounding, foreign
-single/aggregate state allocation, passive-first Marketplace ordering,
-ScheduleD physical mapping, Form8814 signed transfers, and preservation of old
-NOL balances. Exact trees, source references and bounded reviews are in their
-package ledgers and the checklist. Actual NOL vintage and modified-income
-methods are still under source review and are not enabled by that prerequisite.
+Recent packages implement actual ScheduleD special-gain sources/regular+AMT
+worksheets (`2dbce45`), child4952 source reconciliation (`8da947a`), direct foreign
+credit election/unused prior vintages (`a996dbc`), actual QOF answers (`ec6d25f`),
+brokerage withholding (`35b8604`) and foreign-income intake (`b741741`). Each has
+isolated source/check evidence and bounded agent review in its package ledger.
+Child4952 and direct-FTC PDFs were saved, reopened and rendered for inspection.
+Those checks do not establish human qualification or final-year filing readiness.
 
-The five failures from remote Web run40210512815 were reproduced and fixed in
-13cb428. Both affected browser suites pass38cases on immutable treecf15c75b,
-including mobile saved returns and review-only W2 output;246unit and210agent
-review cases also pass. See`upgrade-2026-browser-progress-work.md`. This is
-local synthetic evidence; current full remote CI remains unverified.
+Full coverage at `7695387` passed17,381 tests with86.84%branches and unchanged
+gates. Later packages need another full integrated run. Current8da947a remote
+CI40217507356 is running/Web40217507374 queued; no final remote green is claimed.
+The earlier6728ed2 run had two stale QSS600 expectations, corrected in a996dbc.
 
-Immediate internal work includes ScheduleD18/19 netting and source binding,
-actual section1202 history, child4952 sources, remaining Marketplace/NOL methods,
-2555 intake/QOF facts and additional ordinary foreign-tax methods. Final coverage,
-inventory, all builds/browser gates, native release images, scans and recovery
-rehearsal remain required. Earlier17,326tests and86.59%coverage are historical.
+Internal work continues on actual QSBS history, positive-source intake, canonical
+NOL/AMT/NIIT, remaining Marketplace and other named methods. Final inventory,
+all builds/browser gates, native images/scans and recovery rehearsal remain.
 
 Staging credentials/authorization, synthetic provider budget/account access,
 independent human reviewers, launch-state demand and final forms remain external

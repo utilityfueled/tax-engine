@@ -204,7 +204,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "b741741",
+    "lastRecordedCommit": "8da947a",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -474,6 +474,73 @@
         "independentParentLiteralCases": 4,
         "independentParentRegressionCases": 3,
         "boundary": "Ordinary ordering only; Pub974passive method remains separate."
+      },
+      "childInvestmentSources": {
+        "commit": "8da947a",
+        "tree": "40f8bebbfbd627812a94c10277cdc144ea473e58",
+        "tests": 69,
+        "files": 10,
+        "priorSourceTests": 104,
+        "checks": "Root types;4311spec refs;lint0errors4existingwarnings",
+        "independentAgentCases": 8,
+        "pdfPagesInspected": 4,
+        "pdfSha256": "0bc3eab3ddf29301fe69efc4cf583213c746bf1e6497e04e5f219f872dd46a3f",
+        "evidence": "docs/upgrade-2026-child-investment-work.md",
+        "boundary": "Local synthetic package evidence and bounded agent review; not independent human, final integrated or staging qualification."
+      },
+      "directForeignCreditElection": {
+        "commit": "a996dbc",
+        "reviewedTree": "dbaee90403bf0ec48f4aad609909be6ebc518744",
+        "reviewedTests": 829,
+        "finalTree": "6b1fc0fd4f1cf93928762422ceb4ebb11725bf22",
+        "finalTests": 100,
+        "checks": "Root/web types4298refs on reviewed tree;root types andlint0errors on final tree",
+        "independentParentCases": 7,
+        "pdfReopenedAndRendered": true,
+        "evidence": "docs/upgrade-2026-foreign-tax-work.md",
+        "boundary": "Local synthetic package evidence and bounded agent review; not independent human, final integrated or staging qualification."
+      },
+      "brokerageWithholding": {
+        "commit": "35b8604",
+        "sourceTree": "9c88ee63c4f213b3e3546eab54d3d5b6cfc68fde",
+        "tests": 1238,
+        "files": 70,
+        "checks": "Root/web types4290refs;production build;lint0errors",
+        "independentAgentCases": 3,
+        "browserCases": 2,
+        "browserRetries": 0,
+        "evidence": "docs/upgrade-2026-facts-work.md",
+        "boundary": "Local synthetic package evidence and bounded agent review; not independent human, final integrated or staging qualification."
+      },
+      "scheduleDSpecialSources": {
+        "commit": "2dbce45",
+        "tree": "7f19cab20ff0a11583e346ffbe1288b417eac276",
+        "tests": 162,
+        "checks": "Root types4284refs;lint0errors4existingwarnings",
+        "independentAgentReview": "Source review and additional K1/estate probe passed",
+        "pdfPagesInspected": 2,
+        "evidence": "docs/upgrade-2026-special-gain-work.md",
+        "boundary": "Local synthetic package evidence and bounded agent review; not independent human, final integrated or staging qualification."
+      },
+      "qofSourceAnswer": {
+        "commit": "ec6d25f",
+        "tree": "7aeb3ec81da3030cdfe423def8ac533e6b603e38",
+        "tests": 723,
+        "checks": "Root/web types4274refs;production build;lint0errors",
+        "independentAgentCases": 4,
+        "browserCases": 2,
+        "browserRetries": 0,
+        "remaining": "Positive-event8997/8949 method is internal implementation work",
+        "boundary": "Local synthetic package evidence and bounded agent review; not independent human, final integrated or staging qualification."
+      },
+      "foreignIncomeIntake": {
+        "commit": "b741741",
+        "tree": "af1241249cc194deb87f14d36dcd904fcb0e0571",
+        "tests": 765,
+        "checks": "Root/web types4248refs;production build;lint0errors",
+        "browserCases": 2,
+        "browserRetries": 0,
+        "boundary": "Local synthetic package evidence and bounded agent review; not independent human, final integrated or staging qualification."
       }
     },
     "externalInputsStillPending": [
@@ -800,7 +867,7 @@
       "scope": "Exact isolated f8c6222 plus single-write PDF package; locked dependencies, Node24.22.1, pinned pypdf and disposable local PostgreSQL16. Thresholds unchanged.",
       "limitation": "Excludes newer in-kind education, Ohio and agent changes. Current integrated and final release gates still require a fresh run. Synthetic local evidence only."
     },
-    "lastPushedCommit": "13cb428",
+    "lastPushedCommit": "8da947af893e88a7749f3dd7884e40c150f9bdca",
     "currentBrowserRun": {
       "commit": "ed915c1708cedc02e99ca12fb7383331a7f99bea",
       "status": "passed-with-hosted-skips",
@@ -1351,11 +1418,11 @@
     },
     "remoteRunsInProgress": {
       "observed": "2026-10-25",
-      "head": "0f408af4238a04290469e1bb84f4c68a3f2f873c",
-      "CI": 40210148315,
-      "Web": 40210148259,
-      "status": "in_progress",
-      "boundary": "Earlier65336f7/4d85eb0 cancelled; no final green claim."
+      "head": "8da947af893e88a7749f3dd7884e40c150f9bdca",
+      "CI": 40217507356,
+      "Web": 40217507374,
+      "status": "CI in_progress; Web queued",
+      "boundary": "Earlier35b8604 and2dbce45 CI failed; Web cancelled. No final green claim."
     },
     "containerOriginVerification": {
       "commit": "67e1d94",
