@@ -119,3 +119,12 @@ it("attaches a separate actual form for each business without duplicating legacy
     expect(amounts).toEqual(["600", "600"]); expect(result.form7206!.deductionToSchedule1.toFixed()).toBe("1200");
   } finally { await rm(outputDir, { recursive: true, force: true }); }
 });
+
+it("rejects stale ordinary business and shareholder wage sources", async () => {
+  for (const corporate of [false, true]) {
+    const input = fixture(corporate), result = calculateFederalTax(input), source = corporate ? "formW2:0" : "scheduleC";
+    if (corporate) input.w2s[0].medicareWages = new Decimal(input.w2s[0].medicareWages!).plus(1).toFixed();
+    else input.scheduleC!.grossReceipts = "50001";
+    await expect(fillForm7206(input, result, blank, source, "primary")).rejects.toThrow(/source|reconcil|income/i);
+  }
+});
