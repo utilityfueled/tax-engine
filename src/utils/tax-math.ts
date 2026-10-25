@@ -73,6 +73,8 @@ export interface CapitalGainsTaxOptions {
   investmentIncomeElection?: Decimal;
   /** Actual Form4952line4e or the applicable smaller dotted-line amount. */
   electionCapitalGainAmount?: Decimal;
+  /** Actual FEI worksheet capital gain excess, applied to post-election worksheet9 then6. */
+  foreignCapitalGainExcess?: Decimal;
   /** ScheduleJ base years explicitly require rate schedules instead of tax tables. */
   useTaxRateSchedules?: boolean;
 }
@@ -95,10 +97,10 @@ export function calculateCapitalGainsTax(
   constants: CapitalTaxConstants,
   options?: CapitalGainsTaxOptions,
 ): CapitalGainsTaxResult {
-  for (const amount of [taxableIncome, qualifiedDividends, netLongTermCapitalGain, options?.section1250Gain, options?.collectiblesGain, options?.investmentIncomeElection, options?.electionCapitalGainAmount]) {
+  for (const amount of [taxableIncome, qualifiedDividends, netLongTermCapitalGain, options?.section1250Gain, options?.collectiblesGain, options?.investmentIncomeElection, options?.electionCapitalGainAmount, options?.foreignCapitalGainExcess]) {
     if (amount !== undefined && !amount.isFinite()) throw new Error("Capital-gain worksheet amounts must be finite");
   }
-  if (qualifiedDividends.lt(0) || [options?.section1250Gain, options?.collectiblesGain, options?.investmentIncomeElection, options?.electionCapitalGainAmount].some(value => value?.lt(0))) {
+  if (qualifiedDividends.lt(0) || [options?.section1250Gain, options?.collectiblesGain, options?.investmentIncomeElection, options?.electionCapitalGainAmount, options?.foreignCapitalGainExcess].some(value => value?.lt(0))) {
     throw new Error("Capital-gain worksheet dividend and special source amounts must be nonnegative");
   }
   const income = roundDollar(zeroFloor(taxableIncome));
@@ -111,6 +113,10 @@ export function calculateCapitalGainsTax(
     throw new Error("Actual Form4952 capital-gain election source is required");
   }
   const electionGain = roundDollar(options?.electionCapitalGainAmount ?? d("0"));
+  const foreignExcess = roundDollar(options?.foreignCapitalGainExcess ?? d("0"));
+  const gainAfterElection = zeroFloor(gain.minus(Decimal.min(election, electionGain)));
+  const dividendsAfterElection = zeroFloor(qd.minus(zeroFloor(election.minus(electionGain))));
+  if (foreignExcess.gt(gainAfterElection.plus(dividendsAfterElection))) throw new Error("Foreign capital gain excess exceeds post-election preferential income");
   const regularTaxSource = regularIncomeTaxSource(constants);
   const regular = (amount: Decimal) => options?.useTaxRateSchedules
     ? calculateTaxFromBrackets(amount, constants.taxBrackets[filingStatus])
@@ -131,12 +137,12 @@ export function calculateCapitalGainsTax(
   const zeroThreshold = constants.capitalGainsRates.zero.threshold[filingStatus];
   const fifteenThreshold = constants.capitalGainsRates.fifteen.threshold[filingStatus];
   set(1, income, "Actual taxable income or FEI stacked income");
-  set(2, qd, "Actual qualified dividends");
+  set(2, special ? qd : zeroFloor(qd.minus(zeroFloor(foreignExcess.minus(gain)))), "Actual qualified dividends, with applicable QDCG foreign-excess adjustment");
   let ordinaryTax: Decimal;
   let computedTax: Decimal;
   let tax: Decimal;
   if (!special) {
-    set(3, gain, "max(0,min(ScheduleD15,16))");
+    set(3, zeroFloor(gain.minus(foreignExcess)), "max(0,min(ScheduleD15,16)-foreignExcess)");
     set(4, l[2].plus(l[3]), "2+3");
     set(5, zeroFloor(l[1].minus(l[4])), "max(0,1-4)");
     set(6, zeroThreshold, "Actual year zero-rate threshold");
@@ -165,10 +171,10 @@ export function calculateCapitalGainsTax(
     set(3, election, "Actual Form4952line4g election");
     set(4, electionGain, "Actual Form4952line4e or smaller applicable amount");
     set(5, zeroFloor(l[3].minus(l[4])), "max(0,3-4)");
-    set(6, zeroFloor(l[2].minus(l[5])), "max(0,2-5)");
+    set(6, zeroFloor(l[2].minus(l[5]).minus(zeroFloor(foreignExcess.minus(gainAfterElection)))), "max(0,2-5-unusedForeignExcessAfterLine9)");
     set(7, gain, "max(0,min(ScheduleD15,16))");
     set(8, min(l[3], l[4]), "min(3,4)");
-    set(9, zeroFloor(l[7].minus(l[8])), "max(0,7-8)");
+    set(9, zeroFloor(l[7].minus(l[8]).minus(foreignExcess)), "max(0,7-8-foreignExcess)");
     set(10, l[6].plus(l[9]), "6+9");
     set(11, s1250.plus(collectibles), "Actual ScheduleD18+19");
     set(12, min(l[9], l[11]), "min(9,11)");

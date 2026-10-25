@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.25",
+    ruleVersion: "2025.26",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i1040sd", section: "Actual Form4952 election into ScheduleD Tax Worksheet, combined sources once and post-election foreign capital-gain excess", revision: "2025 final worksheet and final2026 Form4952 source rules; separate AMT worksheet pending", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/publications/p590a", section: "IRA Worksheets1-1/1-2 and AppendixB: complete return MAGI, actual compensation, joint lower-earner allocation, remaining-limit rounding and separate excess contributions", revision: "Final2025 publication including indexed2026 amounts; return source coordination still in progress", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i2441", section: "Actual Part III source binding, wage line 1e and business deduction before SE/QBI; validated Part II handoff", revision: "2025 final instructions and amended IRC129 limits", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/pub/irs-pdf/p1040.pdf", section: "Published2025 Tax Table and verified2022-24 historical tables; actual ordinary worksheet steps", revision: "Final2025 publication;2026 table unavailable", retrievedAt: "2026-10-25" },
@@ -67,11 +68,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.19-law-integration-draft",
+    ruleVersion: "2026.21-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i1040sd", section: "Actual Form4952 election into ScheduleD Tax Worksheet, combined sources once and post-election foreign capital-gain excess", revision: "2025 final worksheet and final2026 Form4952 source rules; separate AMT worksheet pending", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/publications/p590a", section: "IRA Worksheets1-1/1-2 and AppendixB: complete return MAGI, actual compensation, joint lower-earner allocation, remaining-limit rounding and separate excess contributions", revision: "Final2025 publication including indexed2026 amounts; return source coordination still in progress", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i2441", section: "Actual Part III source binding, wage line 1e and business deduction before SE/QBI; validated Part II handoff", revision: "2025 final instructions and amended IRC129 limits", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/pub/irs-pdf/p1040.pdf", section: "Published2025 Tax Table and verified2022-24 historical tables; actual ordinary worksheet steps", revision: "Final2025 publication;2026 table unavailable", retrievedAt: "2026-10-25" },

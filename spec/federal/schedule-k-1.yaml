@@ -446,16 +446,16 @@ lines:
   - line: "Box 20 Code B"
     description: "Investment expenses"
     formula: "Partner's share of investment expenses from the partnership"
-    irsRef: "Form 1065 K-1 Instructions, Box 20 Code B; Form 4952 Line 4f"
-    destination: "Form 4952 Line 4f (investment expenses)"
+    irsRef: "Form 1065 K-1 Instructions, Box 20 Code B; Form 4952 Line 5"
+    destination: "Form 4952 Line 5 (actual deductible investment expenses)"
     notes: |
-      Expenses from the partnership that are directly connected with the
-      production of investment income. Under TCJA (2018-2025), most
-      miscellaneous itemized deductions are suspended, but pass-through
-      investment expenses that are clearly allocable to investment income
-      remain deductible for Form 4952 purposes. Added to the taxpayer's
-      own investment expenses on Form 4952 Line 4f.
-    testRef: "tests/engine/federal.test.ts::K-1 Box 20 Code B investment expenses flow to Form 4952 Line 4f"
+      Box 20 Code B identifies investment expenses but does not establish that
+      they are deductible on this return. Form 4952 line 5 includes only actual
+      allowable expenses; miscellaneous itemized deductions are excluded after
+      2017. Source-confirmed completed Form 4952 totals include any eligible
+      K-1 expenses exactly once. Historical preview retains the source amount
+      as information and does not presume it deductible.
+    testRef: "tests/engine/federal.test.ts::K-1 Box 20 Code B requires actual deductible expense classification"
 
   # ── Box 20 Code Z: Section 199A QBI ────────────────────
   - line: "Box 20 Code Z"

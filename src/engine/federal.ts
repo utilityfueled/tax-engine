@@ -1908,7 +1908,9 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   // Aggregate K-1 Box 13 Code D (investment interest expense),
   // Box 20 Code A (investment income), partnership-only Box 20 Code AF
   // (excess business interest income that also counts as Form 4952 investment
-  // income in this supported slice), and Box 20 Code B (investment expenses)
+  // income in this supported historical slice). Actual completed source
+  // worksheets already include these amounts; Box 20 Code B needs a separate
+  // determination that the expense is deductible on the return.
   const k1InvestmentInterestExpense = k1Agg.investmentInterestExpense;
   const k1InvestmentIncome = k1Agg.investmentIncome;
   const k1PartnershipExcessBusinessInterestIncomeForForm4952 = k1Agg.excessBusinessInterestIncomePartnership;
@@ -1921,20 +1923,27 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   // Compute Form 4952 when explicit input is provided OR K-1 investment amounts exist
   const form4952Input = input.form4952;
   const needsForm4952 = form4952Input !== undefined || hasK1InvestmentAmounts;
-  const form4952 = needsForm4952
-      ? calculateForm4952({
+  const form4952HasActualSources = year >= 2026
+    || form4952Input?.sourceFactsConfirmed !== undefined
+    || form4952Input?.sourceTaxYear !== undefined;
+  let form4952: ReturnType<typeof calculateForm4952> | undefined;
+  if (needsForm4952) {
+    if (form4952HasActualSources) {
+      if (!form4952Input) throw new Error("Form4952 requires the actual completed investment source worksheet");
+      form4952 = calculateForm4952(form4952Input, year);
+    } else {
+      form4952 = calculateForm4952({
+        ...form4952Input,
         investmentInterestExpense: d(form4952Input?.investmentInterestExpense).plus(k1InvestmentInterestExpense).toString(),
         priorYearDisallowed: d(form4952Input?.priorYearDisallowed).toString(),
-        grossInvestmentIncome: d(form4952Input?.grossInvestmentIncome)
-          .plus(k1InvestmentIncome)
-          .plus(k1PartnershipExcessBusinessInterestIncomeForForm4952)
-          .toString(),
+        grossInvestmentIncome: sum(d(form4952Input?.grossInvestmentIncome), k1InvestmentIncome, k1PartnershipExcessBusinessInterestIncomeForForm4952).toString(),
         qualifiedDividendsIncluded: d(form4952Input?.qualifiedDividendsIncluded).toString(),
         netGainFromInvestmentProperty: d(form4952Input?.netGainFromInvestmentProperty).toString(),
         electedPreferentialIncome: d(form4952Input?.electedPreferentialIncome).toString(),
-        investmentExpenses: d(form4952Input?.investmentExpenses).plus(k1InvestmentExpenses).toString(),
-      })
-    : undefined;
+        investmentExpenses: d(form4952Input?.investmentExpenses).toString(),
+      }, year);
+    }
+  }
   if (form4952) {
     audit.merge(form4952.lines);
   }
@@ -1944,11 +1953,11 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
         .plus(k1InvestmentIncome)
         .plus(k1PartnershipExcessBusinessInterestIncomeForForm4952)
         .plus(k1InvestmentExpenses),
-      "Box 13 Code D (interest expense) + Box 20 Code A (income) + partnership Box 20 Code AF (EBII investment income) + Box 20 Code B (expenses)", {
+      form4952HasActualSources ? "Actual completed Form4952 includes source K1 amounts once; no second aggregation" : "Historical interest/income aggregation; Box20B retained as information pending actual deductible expense classification", {
         "Box 13 Code D (investment interest expense → Line 1)": k1InvestmentInterestExpense,
         "Box 20 Code A (investment income → Line 4a)": k1InvestmentIncome,
         "Partnership Box 20 Code AF (EBII → Line 4a)": k1PartnershipExcessBusinessInterestIncomeForForm4952,
-        "Box 20 Code B (investment expenses → Line 4f)": k1InvestmentExpenses,
+        "Box 20 Code B (source information; actual deductible total on Line 5)": k1InvestmentExpenses,
       });
   }
 
@@ -2420,6 +2429,19 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     ...(input.scheduleK1Form1041 ?? []).map((k) => d(k.collectiblesGain))
   );
 
+  if (form4952 && (form4952HasActualSources || form4952.line4g.gt(0))
+    && form4952.line4b.gt(roundDollar(qualifiedDividends))) {
+    throw new Error("Form4952 qualified-dividend sources exceed actual reported qualified dividends");
+  }
+  const investmentIncomeElection = form4952?.line4g ?? new Decimal(0);
+  const electionCapitalGainAmount = form4952?.hasExplicitCapitalGainElection
+    ? form4952.electedNetCapitalGain : form4952?.line4e ?? new Decimal(0);
+  const electedCapitalGain = form4952?.electedNetCapitalGain ?? new Decimal(0);
+  const electedQualifiedDividends = form4952?.electedQualifiedDividends ?? new Decimal(0);
+  if (investmentIncomeElection.gt(0) && (input.form8615 || input.scheduleJ)) {
+    throw new Error("Form4952 election requires separate Form8615 or ScheduleJ source coordination");
+  }
+
   // When Form 2555 is present, apply the Foreign Earned Income Tax Worksheet
   // stacking rule: compute tax as if excluded income were still included, then
   // subtract the tax on just the excluded amount. This ensures remaining income
@@ -2442,12 +2464,16 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     const stackedIncome = taxableIncome.plus(form2555StackingAmount);
     // Worksheet footnote: deductions may consume preferential income. Adding
     // excluded foreign earnings must not restore those untaxed capital gains.
-    const capitalGainExcess = zeroFloor(qualifiedDividends.plus(netLTCG).minus(taxableIncome));
-    const adjustedNetLTCG = zeroFloor(netLTCG.minus(capitalGainExcess));
-    const adjustedQualifiedDividends = zeroFloor(qualifiedDividends.minus(zeroFloor(capitalGainExcess.minus(netLTCG))));
+    const postElectionPreferentialIncome = zeroFloor(qualifiedDividends.minus(electedQualifiedDividends)).plus(zeroFloor(netLTCG.minus(electedCapitalGain)));
+    const capitalGainExcess = zeroFloor(postElectionPreferentialIncome.minus(taxableIncome));
     const taxWithExclusion = calculateCapitalGainsTax(
-      stackedIncome, adjustedQualifiedDividends, adjustedNetLTCG, filingStatus, constants,
-      { section1250Gain: zeroFloor(section1250Gain.minus(capitalGainExcess)), collectiblesGain: zeroFloor(collectiblesGain.minus(capitalGainExcess)) }
+      stackedIncome, qualifiedDividends, netLTCG, filingStatus, constants,
+      {
+        section1250Gain: zeroFloor(section1250Gain.minus(capitalGainExcess)),
+        collectiblesGain: zeroFloor(collectiblesGain.minus(capitalGainExcess)),
+        investmentIncomeElection, electionCapitalGainAmount,
+        foreignCapitalGainExcess: capitalGainExcess,
+      }
     );
     const taxOnExcluded = calculateRegularIncomeTax(
       form2555StackingAmount, filingStatus, constants
@@ -2473,7 +2499,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   } else {
     const result = calculateCapitalGainsTax(
       taxableIncome, qualifiedDividends, netLTCG, filingStatus, constants,
-      { section1250Gain, collectiblesGain }
+      { section1250Gain, collectiblesGain, investmentIncomeElection, electionCapitalGainAmount }
     );
     incomeTax = result.tax;
     ordinaryTax = result.ordinaryTax;

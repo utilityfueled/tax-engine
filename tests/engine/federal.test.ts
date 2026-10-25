@@ -11093,11 +11093,11 @@ describe("K-1 investment interest — Form 4952 integration", () => {
     expect(result.form4952).toBeDefined();
     // Line 4a = 8000 (K-1) + 0 (direct) = 8000
     expect(result.form4952!.line4a.toNumber()).toBe(8000);
-    // 4g = 8000 (income, no qualified div adjustment)
+    // Line 6 = 8000 (income, no qualified dividend adjustment)
     expect(result.form4952!.deductibleAmount.toNumber()).toBe(6000); // fully deductible
   });
 
-  it("K-1 Box 20 Code B investment expenses flow to Form 4952 Line 4f", () => {
+  it("K-1 Box 20 Code B requires actual deductible expense classification", () => {
     const result = calculateFederalTax({
       ...simpleW2Fixture,
       scheduleK1: [{
@@ -11114,12 +11114,13 @@ describe("K-1 investment interest — Form 4952 integration", () => {
     });
 
     expect(result.form4952).toBeDefined();
-    // Line 4f = 500 (direct) + 2000 (K-1) = 2500
-    expect(result.form4952!.line4f.toNumber()).toBe(2500);
-    // 4g = max(0, 6000 + 0 + 0 - 2500) = 3500
-    expect(result.form4952!.line4g.toNumber()).toBe(3500);
-    expect(result.form4952!.deductibleAmount.toNumber()).toBe(3500);
-    expect(result.form4952!.disallowedCarryforward.toNumber()).toBe(1500);
+    // Actual classification is missing for Box 20 B. The historical preview
+    // retains only the explicitly supplied direct expense on printed line 5.
+    expect(result.form4952!.line5.toNumber()).toBe(500);
+    expect(result.form4952!.line6.toNumber()).toBe(5500);
+    expect(result.form4952!.deductibleAmount.toNumber()).toBe(5000);
+    expect(result.form4952!.disallowedCarryforward.toNumber()).toBe(0);
+    expect(result.form4952!.sourceFactsVerified).toBe(false);
   });
 
   it("K-1 investment amounts combine with direct Form 4952 input", () => {
@@ -11145,14 +11146,12 @@ describe("K-1 investment interest — Form 4952 integration", () => {
     expect(result.form4952!.line1.toNumber()).toBe(10000);
     // Line 4a = 7000 (direct) + 3000 (K-1 Code A) = 10000
     expect(result.form4952!.line4a.toNumber()).toBe(10000);
-    // Line 4f = 200 (direct) + 500 (K-1 Code B) = 700
-    expect(result.form4952!.line4f.toNumber()).toBe(700);
-    // Line 3 = 10000 (no prior carryforward)
-    // Line 4g = max(0, 10000 + 0 + 0 - 700) = 9300
-    expect(result.form4952!.line4g.toNumber()).toBe(9300);
-    // Deduction = min(10000, 9300) = 9300
-    expect(result.form4952!.deductibleAmount.toNumber()).toBe(9300);
-    expect(result.form4952!.disallowedCarryforward.toNumber()).toBe(700);
+    // Box 20 B alone cannot establish an allowable deduction. The supplied
+    // direct amount remains an unverified historical preview on line 5.
+    expect(result.form4952!.line5.toNumber()).toBe(200);
+    expect(result.form4952!.line6.toNumber()).toBe(9800);
+    expect(result.form4952!.deductibleAmount.toNumber()).toBe(9800);
+    expect(result.form4952!.disallowedCarryforward.toNumber()).toBe(200);
   });
 
   it("K-1 investment amounts alone trigger Form 4952 without explicit form4952 input", () => {
@@ -11203,11 +11202,10 @@ describe("K-1 investment interest — Form 4952 integration", () => {
     expect(result.form4952!.line1.toNumber()).toBe(4000);
     // Line 4a = 3000 + 2000 = 5000
     expect(result.form4952!.line4a.toNumber()).toBe(5000);
-    // Line 4f = 300 + 200 = 500
-    expect(result.form4952!.line4f.toNumber()).toBe(500);
-    // Line 4g = max(0, 5000 + 0 + 0 - 500) = 4500
-    expect(result.form4952!.line4g.toNumber()).toBe(4500);
-    // Deduction = min(4000, 4500) = 4000 (fully deductible)
+    // Source Code B amounts remain informational pending actual classification.
+    expect(result.form4952!.line5.toNumber()).toBe(0);
+    expect(result.form4952!.line6.toNumber()).toBe(5000);
+    // Deduction = min(4000, 5000) = 4000 (fully deductible)
     expect(result.form4952!.deductibleAmount.toNumber()).toBe(4000);
     expect(result.form4952!.disallowedCarryforward.toNumber()).toBe(0);
   });
@@ -11371,7 +11369,7 @@ describe("IRC §163(j) partner-level business interest expense", () => {
     expect(sched1Line5!.value.toNumber()).toBe(10000); // 15000 - 5000 EBIE deduction
     expect(result.form4952).toBeDefined();
     expect(result.form4952!.line4a.toNumber()).toBe(8000);
-    expect(result.form4952!.line4g.toNumber()).toBe(8000);
+    expect(result.form4952!.line6.toNumber()).toBe(8000);
     expect(result.form4952!.deductibleAmount.toNumber()).toBe(6000);
     expect(result.form4952!.disallowedCarryforward.toNumber()).toBe(0);
   });
@@ -11424,7 +11422,7 @@ describe("IRC §163(j) partner-level business interest expense", () => {
 
     expect(result.form4952).toBeDefined();
     expect(result.form4952!.line4a.toNumber()).toBe(0);
-    expect(result.form4952!.line4g.toNumber()).toBe(0);
+    expect(result.form4952!.line6.toNumber()).toBe(0);
     expect(result.form4952!.deductibleAmount.toNumber()).toBe(0);
     expect(result.form4952!.disallowedCarryforward.toNumber()).toBe(6000);
   });
