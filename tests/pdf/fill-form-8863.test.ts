@@ -38,7 +38,7 @@ function isChecked(doc: PDFDocument, fieldName: string): boolean {
   return false;
 }
 
-const BLANK_8863 = "forms/blank/f8863.pdf";
+const BLANK_8863 = "forms/blank/2025/f8863.pdf";
 const F = FORM_8863_FIELDS;
 
 // ─── Fixture: Single filer with one AOC student ─────────────────────────────

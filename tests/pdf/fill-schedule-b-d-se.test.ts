@@ -40,9 +40,9 @@ function isChecked(doc: PDFDocument, fieldName: string): boolean {
   return false;
 }
 
-const BLANK_SB = "forms/blank/f1040sb.pdf";
-const BLANK_SD = "forms/blank/f1040sd.pdf";
-const BLANK_SSE = "forms/blank/f1040sse.pdf";
+const BLANK_SB = "forms/blank/2025/f1040sb.pdf";
+const BLANK_SD = "forms/blank/2025/f1040sd.pdf";
+const BLANK_SSE = "forms/blank/2025/f1040sse.pdf";
 
 // ─── Schedule B — MFJ with interest and dividends ─────────────────────────
 

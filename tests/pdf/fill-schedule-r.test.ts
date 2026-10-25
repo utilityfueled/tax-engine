@@ -37,7 +37,7 @@ function isChecked(doc: PDFDocument, fieldName: string): boolean {
   return false;
 }
 
-const BLANK_SCHED_R = "forms/blank/f1040sr.pdf";
+const BLANK_SCHED_R = "forms/blank/2025/f1040sr.pdf";
 const F = SCHEDULE_R_FIELDS;
 
 // ─── Fixture 1: Single filer, age 65+, Box 1, low AGI → credit ────────────

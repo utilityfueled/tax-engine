@@ -39,7 +39,7 @@ function isChecked(doc: PDFDocument, fieldName: string): boolean {
   return false;
 }
 
-const BLANK_PDF = "forms/blank/f1040.pdf";
+const BLANK_PDF = "forms/blank/2025/f1040.pdf";
 
 // ─── Format Utility Tests ──────────────────────────────────────────────────
 

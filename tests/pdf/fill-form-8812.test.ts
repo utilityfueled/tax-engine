@@ -37,7 +37,7 @@ function isChecked(doc: PDFDocument, fieldName: string): boolean {
   return false;
 }
 
-const BLANK_8812 = "forms/blank/f1040s8.pdf";
+const BLANK_8812 = "forms/blank/2025/f1040s8.pdf";
 const F = FORM_8812_FIELDS;
 
 // ─── Fixture: MFJ with 2 qualifying children (standard CTC scenario) ────

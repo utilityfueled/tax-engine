@@ -37,7 +37,7 @@ function isChecked(doc: PDFDocument, fieldName: string): boolean {
   return false;
 }
 
-const BLANK_SE = "forms/blank/f1040se.pdf";
+const BLANK_SE = "forms/blank/2025/f1040se.pdf";
 
 // ─── Test fixtures ──────────────────────────────────────────────────────
 

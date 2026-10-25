@@ -36,7 +36,7 @@ function isChecked(doc: PDFDocument, fieldName: string): boolean {
   return false;
 }
 
-const BLANK_SH = "forms/blank/f1040sh.pdf";
+const BLANK_SH = "forms/blank/2025/f1040sh.pdf";
 const F = SCHEDULE_H_FIELDS;
 
 // ─── Fixture 1: Single filer with one household employee, $10,000 wages ───

@@ -5,7 +5,7 @@ export const REVIEW_PDF_NOTICE = "FOR REVIEW ONLY - NOT FOR FILING";
 
 /** Mapping versions are separate from the tax engine's calculation availability. */
 export const PDF_MAPPING_PACKS = Object.freeze({
-  2025: Object.freeze({ taxYear: 2025, version: "2025.1-review", reviewAvailable: true, filingQualified: false }),
+  2025: Object.freeze({ taxYear: 2025, version: "2025.2-review", reviewAvailable: true, filingQualified: false }),
   2026: Object.freeze({ taxYear: 2026, version: "2026.0-unavailable", reviewAvailable: false, filingQualified: false }),
 });
 

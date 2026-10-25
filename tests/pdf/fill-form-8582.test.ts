@@ -24,7 +24,7 @@ function getFieldText(doc: PDFDocument, fieldName: string): string | undefined {
   return undefined;
 }
 
-const BLANK_8582 = "forms/blank/f8582.pdf";
+const BLANK_8582 = "forms/blank/2025/f8582.pdf";
 const F = FORM_8582_FIELDS;
 
 // ─── Fixture: HoH with rental loss (full $25K allowance) ──────────────────

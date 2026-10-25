@@ -46,7 +46,7 @@ function isChecked(doc: PDFDocument, fieldName: string): boolean {
   return false;
 }
 
-const BLANK_PDF = "forms/blank/f4684.pdf";
+const BLANK_PDF = "forms/blank/2025/f4684.pdf";
 const F = FORM_4684_FIELDS;
 
 async function makeOutputDir() {

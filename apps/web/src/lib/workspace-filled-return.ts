@@ -144,7 +144,7 @@ async function resolveBlankFormsDir() {
 
   for (const candidate of candidates) {
     try {
-      await stat(join(candidate, "f1040.pdf"));
+      await stat(join(candidate, "2025", "f1040.pdf"));
       return candidate;
     } catch {
       // Try the next possible workspace root.

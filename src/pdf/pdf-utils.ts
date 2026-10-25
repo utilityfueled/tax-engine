@@ -5,8 +5,9 @@
 
 import { PDFDocument, PDFForm, PDFTextField, PDFCheckBox, StandardFonts } from "pdf-lib";
 import { readFile, writeFile, mkdir } from "fs/promises";
-import { dirname } from "path";
+import { basename, dirname } from "path";
 import Decimal from "decimal.js";
+import { assertReviewTemplateBytes } from "./template-registry.js";
 
 const PDF_LIB_XFA_WARNING =
   "Removing XFA form data as pdf-lib does not support reading or writing XFA";
@@ -128,6 +129,13 @@ export function setCheckBox(
 /** Load a blank PDF from disk. */
 export async function loadBlankPdf(pdfPath: string): Promise<PDFDocument> {
   const bytes = await readFile(pdfPath);
+  return loadPdfDocumentQuietly(bytes);
+}
+
+/** A year-specific map must only use its registered, unchanged template revision. */
+export async function loadReviewTemplate(pdfPath: string, taxYear: number): Promise<PDFDocument> {
+  const bytes = await readFile(pdfPath);
+  assertReviewTemplateBytes(basename(pdfPath), bytes, taxYear);
   return loadPdfDocumentQuietly(bytes);
 }
 

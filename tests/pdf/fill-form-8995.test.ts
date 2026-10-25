@@ -24,7 +24,7 @@ function getFieldText(doc: PDFDocument, fieldName: string): string | undefined {
   return undefined;
 }
 
-const BLANK_8995 = "forms/blank/f8995.pdf";
+const BLANK_8995 = "forms/blank/2025/f8995.pdf";
 const F = FORM_8995_FIELDS;
 
 // ─── Fixture: Single filer with Schedule C (triggers simplified 8995) ────

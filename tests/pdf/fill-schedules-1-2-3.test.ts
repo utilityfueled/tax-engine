@@ -27,9 +27,9 @@ function getFieldText(doc: PDFDocument, fieldName: string): string | undefined {
   return undefined;
 }
 
-const BLANK_S1 = "forms/blank/f1040s1.pdf";
-const BLANK_S2 = "forms/blank/f1040s2.pdf";
-const BLANK_S3 = "forms/blank/f1040s3.pdf";
+const BLANK_S1 = "forms/blank/2025/f1040s1.pdf";
+const BLANK_S2 = "forms/blank/2025/f1040s2.pdf";
+const BLANK_S3 = "forms/blank/2025/f1040s3.pdf";
 
 // ─── Schedule 1 — MFJ with business/partnership income ─────────────────────
 

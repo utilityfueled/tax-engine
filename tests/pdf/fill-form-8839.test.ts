@@ -36,7 +36,7 @@ function isChecked(doc: PDFDocument, fieldName: string): boolean {
   return false;
 }
 
-const BLANK_8839 = "forms/blank/f8839.pdf";
+const BLANK_8839 = "forms/blank/2025/f8839.pdf";
 const F = FORM_8839_FIELDS;
 
 // ─── Fixture 1: MFJ, one child, no phase-out, no employer benefits ────────

@@ -41,9 +41,9 @@ function isChecked(doc: PDFDocument, fieldName: string): boolean {
   return false;
 }
 
-const BLANK_8949 = "forms/blank/f8949.pdf";
-const BLANK_8959 = "forms/blank/f8959.pdf";
-const BLANK_8960 = "forms/blank/f8960.pdf";
+const BLANK_8949 = "forms/blank/2025/f8949.pdf";
+const BLANK_8959 = "forms/blank/2025/f8959.pdf";
+const BLANK_8960 = "forms/blank/2025/f8960.pdf";
 
 // ─── Form 8949 — MFJ with capital transactions ─────────────────────────────
 

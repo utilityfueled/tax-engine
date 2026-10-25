@@ -39,7 +39,7 @@ function isChecked(doc: PDFDocument, fieldName: string): boolean {
   return false;
 }
 
-const BLANK_SA = "forms/blank/f1040sa.pdf";
+const BLANK_SA = "forms/blank/2025/f1040sa.pdf";
 
 // ─── Schedule A — MFJ with itemized deductions ───────────────────────────
 

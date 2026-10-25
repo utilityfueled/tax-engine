@@ -26,7 +26,7 @@ function getFieldText(doc: PDFDocument, fieldName: string): string | undefined {
   return undefined;
 }
 
-const BLANK_SJ = "forms/blank/f1040sj.pdf";
+const BLANK_SJ = "forms/blank/2025/f1040sj.pdf";
 
 // ─── Farmer with Schedule J income averaging ──────────────────────────
 

@@ -40,7 +40,7 @@ function isChecked(doc: PDFDocument, fieldName: string): boolean {
   return false;
 }
 
-const BLANK_SC = "forms/blank/f1040sc.pdf";
+const BLANK_SC = "forms/blank/2025/f1040sc.pdf";
 
 // ─── MFJ filer with 1099-NEC self-employment income ──────────────────────
 

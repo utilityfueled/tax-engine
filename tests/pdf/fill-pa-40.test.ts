@@ -45,7 +45,7 @@ function isChecked(doc: PDFDocument, fieldName: string): boolean {
   return false;
 }
 
-const BLANK_PDF = "forms/blank/pa-40.pdf";
+const BLANK_PDF = "forms/blank/2025/pa-40.pdf";
 
 // ─── Minimal PA40Result factory ──────────────────────────────────────────
 
@@ -196,6 +196,7 @@ const paSingleFiler: TaxYearInput = {
 };
 
 const paSingleResult: TaxReturnResult = {
+  taxYear: 2025,
   stateReturns: {
     pennsylvania: makePAOrchestratorResult({
       compensation: d(75000),
@@ -232,6 +233,7 @@ function makeCalculatedPA40PacketResult(
   overrides: PAOrchestratorOverrides = {},
 ): TaxReturnResult {
   return {
+    taxYear: input.taxpayer.taxYear,
     stateReturns: {
       pennsylvania: calculatePAReturn(input, overrides),
     },
@@ -354,6 +356,7 @@ const paMFJFiler: TaxYearInput = {
 };
 
 const paMFJResult: TaxReturnResult = {
+  taxYear: 2025,
   stateReturns: {
     pennsylvania: makePAOrchestratorResult(
       {
@@ -554,6 +557,7 @@ describe("fillPA40 — MFJ filer with multiple income classes and losses", () =>
 
 describe("fillPA40 — Tax Forgiveness and credits", () => {
   const forgivenessResult: TaxReturnResult = {
+    taxYear: 2025,
     stateReturns: {
       pennsylvania: makePAOrchestratorResult(
         {
@@ -763,6 +767,7 @@ describe("fillPA40 — resident packet inclusion for supported PA line items", (
 describe("fillPA40 — error handling", () => {
   it("throws when no PA result is available", async () => {
     const noStateResult = {
+      taxYear: 2025,
       agi: ZERO,
       totalIncome: ZERO,
       allLines: [],

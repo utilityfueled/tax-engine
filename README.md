@@ -26,7 +26,8 @@ packages/           Shared workspace packages
 spec/               Tax rule specifications and test references
 src/                Core engine, models, CLI, PDF filling, utilities
 tests/              Unit and integration tests
-forms/blank/        Blank PDF forms used for filling tests
+forms/blank/2025/   Pinned historical review templates (not filing qualified)
+src/pdf/mappings/2025/  Historical review mappings tied to those template bytes
 ```
 
 ## Getting Started

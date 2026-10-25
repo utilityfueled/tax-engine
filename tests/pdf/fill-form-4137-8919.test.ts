@@ -36,8 +36,8 @@ function getFieldText(doc: PDFDocument, fieldName: string): string | undefined {
   return undefined;
 }
 
-const BLANK_4137 = "forms/blank/f4137.pdf";
-const BLANK_8919 = "forms/blank/f8919.pdf";
+const BLANK_4137 = "forms/blank/2025/f4137.pdf";
+const BLANK_8919 = "forms/blank/2025/f8919.pdf";
 
 async function makeOutputDir() {
   return mkdtemp(join(tmpdir(), "tax-engine-4137-8919-"));
@@ -159,6 +159,7 @@ describe("Form 4137 PDF fill — single filer with unreported tips", () => {
     );
 
     const mockResult = {
+      taxYear: 2025,
       form4137: engineResult,
     } as TaxReturnResult;
 
@@ -217,7 +218,7 @@ describe("Form 4137 PDF fill — no form 4137 result", () => {
   let doc: PDFDocument;
 
   beforeAll(async () => {
-    const mockResult = {} as TaxReturnResult;
+    const mockResult = { taxYear: 2025 } as TaxReturnResult;
     doc = await fillForm4137(form4137Fixture, mockResult, BLANK_4137);
   });
 
@@ -287,6 +288,7 @@ describe("Form 8919 PDF fill — single filer with unreported wages", () => {
     );
 
     const mockResult = {
+      taxYear: 2025,
       form8919: engineResult,
     } as TaxReturnResult;
 
@@ -349,7 +351,7 @@ describe("Form 8919 PDF fill — no form 8919 result", () => {
   let doc: PDFDocument;
 
   beforeAll(async () => {
-    const mockResult = {} as TaxReturnResult;
+    const mockResult = { taxYear: 2025 } as TaxReturnResult;
     doc = await fillForm8919(form8919Fixture, mockResult, BLANK_8919);
   });
 

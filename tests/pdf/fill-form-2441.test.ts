@@ -27,7 +27,7 @@ function getFieldText(doc: PDFDocument, fieldName: string): string | undefined {
   return undefined;
 }
 
-const BLANK_2441 = "forms/blank/f2441.pdf";
+const BLANK_2441 = "forms/blank/2025/f2441.pdf";
 const F = FORM_2441_FIELDS;
 
 async function makeOutputDir() {

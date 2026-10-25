@@ -79,6 +79,7 @@ import { fillForm8919 } from "./fill-form-8919.js";
 import { fillScheduleEIC } from "./fill-schedule-eic.js";
 import { fillScheduleH } from "./fill-schedule-h.js";
 import { fillForm4797 } from "./fill-form-4797.js";
+import { resolveReviewTemplateDirectory } from "./template-registry.js";
 import { fillForm4952 } from "./fill-form-4952.js";
 import { fillScheduleR } from "./fill-schedule-r.js";
 import { fillForm8936 } from "./fill-form-8936.js";
@@ -390,7 +391,8 @@ export async function fillReturn(
 ): Promise<FillReturnResult> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear, options.purpose);
   const filledForms: string[] = [];
-  const { blankFormsDir, outputDir, flatten = false } = options;
+  const { outputDir, flatten = false } = options;
+  const blankFormsDir = resolveReviewTemplateDirectory(options.blankFormsDir, result.taxYear);
 
   // ── Form 1040 (always filled) ──
   const f1040Path = join(blankFormsDir, "f1040.pdf");

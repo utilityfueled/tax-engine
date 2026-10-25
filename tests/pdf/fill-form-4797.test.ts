@@ -34,7 +34,7 @@ function getFieldText(doc: PDFDocument, fieldName: string): string | undefined {
   return undefined;
 }
 
-const BLANK_4797 = "forms/blank/f4797.pdf";
+const BLANK_4797 = "forms/blank/2025/f4797.pdf";
 const F = FORM_4797_FIELDS;
 
 // ─── Scenario 1: Section 1245 Equipment Sale ─────────────────────────────

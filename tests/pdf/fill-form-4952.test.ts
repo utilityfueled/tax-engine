@@ -24,7 +24,7 @@ function getFieldText(doc: PDFDocument, fieldName: string): string | undefined {
   return undefined;
 }
 
-const BLANK_4952 = "forms/blank/f4952.pdf";
+const BLANK_4952 = "forms/blank/2025/f4952.pdf";
 const F = FORM_4952_FIELDS;
 
 // ─── Fixture 1: Margin interest fully deductible (income > expense) ────────

@@ -20,7 +20,7 @@ try {
     const response = await fetch(origin + asset);
     if (!response.ok || (await response.arrayBuffer()).byteLength === 0) throw new Error(`Missing container asset: ${asset}`);
   }
-  docker("exec", container, "node", "-e", "require('node:fs').accessSync('/app/forms/blank/f1040.pdf')");
+  docker("exec", container, "node", "-e", "require('node:fs').accessSync('/app/forms/blank/2025/f1040.pdf')");
   const auth = await fetch(`${origin}/api/auth/get-session`);
   if (!(await auth.json()).bypassed) throw new Error("Self-host auth bypass is unavailable.");
   console.log("Container liveness, public assets, PDF template, and self-host auth checks passed.");

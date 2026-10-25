@@ -25,7 +25,7 @@ function getFieldText(doc: PDFDocument, fieldName: string): string | undefined {
   return undefined;
 }
 
-const BLANK_2210 = "forms/blank/f2210.pdf";
+const BLANK_2210 = "forms/blank/2025/f2210.pdf";
 const F = FORM_2210_FIELDS;
 
 // ─── Fixture 1: Underpayment scenario — single filer with penalty ──────────

@@ -39,7 +39,7 @@ function isChecked(doc: PDFDocument, fieldName: string): boolean {
   return false;
 }
 
-const BLANK_SF = "forms/blank/f1040sf.pdf";
+const BLANK_SF = "forms/blank/2025/f1040sf.pdf";
 
 // ─── Farm with full income and expenses ─────────────────────────────────
 
