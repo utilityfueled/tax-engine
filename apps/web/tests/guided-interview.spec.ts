@@ -1,4 +1,4 @@
-import { fillRequiredTaxpayerFacts, reachFilingStatus, taxpayerFacts2025 } from "./guided-fixtures";
+import { fillRequiredW2Facts, fillRequiredTaxpayerFacts, reachFilingStatus, taxpayerFacts2025 } from "./guided-fixtures";
 import { copyFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -160,7 +160,8 @@ test.describe("Guided interview flow", () => {
     await page.getByRole("button", { name: "Continue" }).click();
     await expect(page.getByText(/confirm the highlighted sample values before continuing/i)).toBeVisible();
 
-    await page.getByRole("button", { name: /confirm all 4 highlighted sample values/i }).click();
+    await page.getByRole("button", { name: /confirm all \d+ highlighted sample values/i }).click();
+    await fillRequiredW2Facts(page);
 
     await expect(page.getByText(/confirm the highlighted sample values before continuing/i)).toHaveCount(0);
     await expect(page.getByRole("button", { name: /review highlighted values/i })).toHaveCount(0);
@@ -441,7 +442,7 @@ test.describe("Guided interview flow", () => {
     await expect(page.getByText(/w-2 #1/i)).toBeVisible();
 
     await expect(page.getByRole("button", { name: /confirm value/i })).toHaveCount(4);
-    await expect(page.getByRole("button", { name: /confirm all 4 highlighted sample values/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /confirm all \d+ highlighted sample values/i })).toBeVisible();
 
     await page.getByRole("button", { name: "Continue" }).click();
 
@@ -456,7 +457,8 @@ test.describe("Guided interview flow", () => {
     await expect(page.getByRole("heading", { name: /deductions/i })).toHaveCount(0);
     await expect(page.getByText(/confirm the highlighted sample values before continuing/i)).toBeVisible();
 
-    await page.getByRole("button", { name: /confirm all 4 highlighted sample values/i }).click();
+    await page.getByRole("button", { name: /confirm all \d+ highlighted sample values/i }).click();
+    await fillRequiredW2Facts(page);
     await expect(page.getByRole("button", { name: /confirm value/i })).toHaveCount(0);
 
     await page.getByRole("button", { name: "Continue" }).click();
@@ -473,11 +475,11 @@ test.describe("Guided interview flow", () => {
     const heroValue = ticker.locator(".guided-ticker-item-hero .guided-ticker-value-hero");
 
     await expect(ticker.getByText("Estimated Result", { exact: true })).toBeVisible();
-    await expect(heroValue).toHaveText("$0");
+    await expect(heroValue).toHaveText("Enter more info for an estimate");
 
     await expect(page.getByText(/confirm 4 highlighted sample values before you continue/i)).toBeVisible();
     await expect(ticker.getByText("Estimated Result", { exact: true })).toBeVisible();
-    await expect(heroValue).toHaveText("$0");
+    await expect(heroValue).toHaveText("Enter more info for an estimate");
 
     const confirmButtons = page.getByRole("button", { name: /confirm value/i });
     for (let index = 0; index < 4; index += 1) {
@@ -504,6 +506,7 @@ test.describe("Guided interview flow", () => {
     await page.getByRole("textbox", { name: /employer name/i }).fill("Acme Corp");
     await page.getByRole("textbox", { name: /box 1/i }).fill("50000");
     await page.getByRole("textbox", { name: /box 2/i }).fill("5000");
+    await fillRequiredW2Facts(page);
     await page.getByRole("button", { name: "Continue" }).click();
     await page.getByRole("button", { name: "Continue" }).click();
 
@@ -626,7 +629,8 @@ test.describe("Guided interview flow", () => {
 
     await page.getByRole("button", { name: /review w-2 and sample suggestions/i }).click();
     await page.getByRole("button", { name: /insert sample values/i }).click();
-    await page.getByRole("button", { name: /confirm all 4 highlighted sample values/i }).click();
+    await page.getByRole("button", { name: /confirm all \d+ highlighted sample values/i }).click();
+    await fillRequiredW2Facts(page);
     await page.getByRole("button", { name: "Continue" }).click();
     await page.getByRole("button", { name: "Continue" }).click();
     await page.getByRole("button", { name: "Continue" }).click();
@@ -824,14 +828,15 @@ async function seedPendingGuidedW2State(
         "income-w2": {
           entries: [
             {
+              accountHolder: "primary", stateTaxReporting: "none",
               employerName: "Official fixture employer",
               employerEin: "12-3456789",
               wages: "52000",
               federalWithheld: "5000",
-              socialSecurityWages: "",
-              socialSecurityWithheld: "",
-              medicareWages: "",
-              medicareWithheld: "",
+              socialSecurityWages: "0",
+              socialSecurityWithheld: "0",
+              medicareWages: "0",
+              medicareWithheld: "0",
               stateWages: "",
               stateWithheld: "",
               aiSuggestedFields: {

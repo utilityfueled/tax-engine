@@ -252,6 +252,9 @@ function createGuidedFlowState(): GuidedFlowState {
         entries: [
           {
             employerName: "Northwind Labs",
+            accountHolder: "primary",
+            stateTaxReporting: "single",
+            state: "IL",
             employerEin: "12-3456789",
             wages: "75000",
             federalWithheld: "8200",
@@ -343,6 +346,7 @@ function createGuidedFlowStateWithOhioStateSelection(): GuidedFlowState {
     },
     sectionData: {
       ...base.sectionData,
+      "income-w2": { entries: base.sectionData["income-w2"]!.entries.map(entry => ({ ...entry, state: "OH" })) },
       "personal-info": {
         ...base.sectionData["personal-info"],
         state: "OH",
@@ -362,6 +366,9 @@ function createGuidedFlowStateWithUnderpayment(): GuidedFlowState {
         entries: [
           {
             employerName: "Northwind Labs",
+            accountHolder: "primary",
+            stateTaxReporting: "single",
+            state: "IL",
             employerEin: "12-3456789",
             wages: "180000",
             federalWithheld: "8000",
@@ -556,5 +563,12 @@ describe("workspace filled return download", () => {
         "Packet completeness status: partial.",
       ],
     });
+  });
+  it("does not turn another state's W-2 withholding into an Ohio payment", async () => {
+    const state = createGuidedFlowStateWithOhioStateSelection();
+    state.sectionData["income-w2"]!.entries[0].state = "IL";
+    const download = await buildWorkspaceFilledReturnDownload(createWorkspace(), state);
+    expect(download.includedForms).toContain("oh-it-1040-reference.pdf");
+    expect(download.includedForms).not.toContain("oh-schedule-of-withholding-reference.pdf");
   });
 });

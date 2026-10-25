@@ -338,6 +338,7 @@ function collectWagesPreviewSources(
           ? { medicareWithheld: summary.medicareWithheld }
           : {}),
         ...(summary.stateWages !== undefined ? { stateWages: summary.stateWages } : {}),
+        ...(summary.state !== undefined ? { state: summary.state.trim().toUpperCase() } : {}),
         ...(summary.stateWithheld !== undefined
           ? { stateTaxWithheld: summary.stateWithheld }
           : {}),
@@ -1577,6 +1578,12 @@ export function buildWorkspaceEngineInput(
     if (machineValue.entryKind === "w2-summary"
       && (!hasText(machineValue.employerName) || !/^\d{2}-?\d{7}$/.test(machineValue.employerEin)
         || ![machineValue.wages, machineValue.federalWithheld, machineValue.socialSecurityWages, machineValue.socialSecurityWithheld, machineValue.medicareWages, machineValue.medicareWithheld].every((value) => hasMoney(value)))) return null;
+    if (machineValue.entryKind === "w2-summary") {
+      if (taxpayer?.filingStatus === "married_filing_jointly" && !machineValue.accountHolder) return null;
+      if (machineValue.stateTaxReporting === "none") {
+        if (hasText(machineValue.state) || [machineValue.stateWages, machineValue.stateWithheld].some((value) => value !== undefined && (!hasMoney(value) || !new Decimal(value).isZero()))) return null;
+      } else if (machineValue.stateTaxReporting !== "single" || !/^[A-Z]{2}$/.test(machineValue.state?.trim().toUpperCase() ?? "") || ![machineValue.stateWages, machineValue.stateWithheld].every((value) => hasMoney(value))) return null;
+    }
     if (["1099-int-summary", "1099-div-summary", "1099-b-transaction"].includes(machineValue.entryKind)
       && fact.sourceType === "upload" && fact.id.includes(":parsed-")
       && (!("sourceFactsVersion" in machineValue) || machineValue.sourceFactsVersion !== 2)) return null;

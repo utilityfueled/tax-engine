@@ -42,3 +42,19 @@ export const taxpayerFacts2025 = {
   usResidencyMonths: "12", stateResidency: "full-year", addressLine1: "123 Example St",
   addressLine2: "", city: "Austin", state: "TX", zip: "78701", dependentCount: "0", dependents: [],
 } as const;
+
+/** Complete the deliberately synthetic payroll-exempt job used by UI scenarios. */
+export async function fillRequiredW2Facts(page: Page) {
+  const employer = page.getByRole("textbox", { name: /^Employer name\b/ });
+  if (!(await employer.inputValue())) await employer.fill("Synthetic Employer");
+  const ein = page.getByRole("textbox", { name: /^Employer EIN \(Box b\)/ });
+  if (!(await ein.inputValue())) await ein.fill("12-3456789");
+  await page.getByRole("combobox", { name: "W-2 recipient", exact: true }).selectOption("primary");
+  const details = page.locator("details").filter({ has: page.getByText("More W-2 boxes", { exact: true }) });
+  if ((await details.getAttribute("open")) === null) await page.getByText("More W-2 boxes", { exact: true }).click();
+  for (const label of ["Box 2 — Federal income tax withheld", "Box 3 — Social Security wages", "Box 4 — SS tax withheld", "Box 5 — Medicare wages", "Box 6 — Medicare tax withheld"]) {
+    const field = page.getByRole("textbox", { name: new RegExp(`^${label}`) });
+    if (!(await field.inputValue())) await field.fill("0");
+  }
+  await page.getByRole("combobox", { name: /^State reporting on this W-2/ }).selectOption("none");
+}

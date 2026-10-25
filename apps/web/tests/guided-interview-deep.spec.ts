@@ -1,4 +1,4 @@
-import { fillRequiredTaxpayerFacts, reachFilingStatus } from "./guided-fixtures";
+import { fillRequiredW2Facts, fillRequiredTaxpayerFacts, reachFilingStatus } from "./guided-fixtures";
 import { expect, test } from "@playwright/test";
 
 /**
@@ -142,6 +142,7 @@ test.describe("Refund ticker in review section", () => {
     const fedWithheldInput = page.locator("input.guided-input-currency").nth(1);
     await fedWithheldInput.fill("12000");
     await fedWithheldInput.blur();
+    await fillRequiredW2Facts(page);
 
     // Skip through remaining sections to reach review
     await page.getByRole("button", { name: "Continue" }).click();
@@ -194,6 +195,7 @@ test.describe("Refund ticker in review section", () => {
     const wagesInput = page.locator("input.guided-input-currency").first();
     await wagesInput.fill("50000");
     await wagesInput.blur();
+    await fillRequiredW2Facts(page);
     await page.getByRole("button", { name: "Continue" }).click();
 
     // Skip through remaining sections
@@ -240,6 +242,7 @@ test.describe("Review section content", () => {
     const wagesInput = page.locator("input.guided-input-currency").first();
     await wagesInput.fill("85000");
     await wagesInput.blur();
+    await fillRequiredW2Facts(page);
     await page.getByRole("button", { name: "Continue" }).click();
 
     // Skip to review

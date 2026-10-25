@@ -29,6 +29,8 @@ import { detectUploadedDocumentFromFile } from "@/lib/uploaded-document-detectio
 import { CurrencyField } from "./currency-field";
 
 const confirmableFields: W2SuggestedField[] = [
+  "accountHolder",
+  "state",
   "employerName",
   "employerEin",
   "wages",
@@ -56,6 +58,8 @@ function applySuggestionToEntry(
   };
 
   const suggestedValues: Partial<Record<W2SuggestedField, string>> = {
+    accountHolder: suggestion.summary.accountHolder,
+    state: suggestion.summary.state,
     employerName: suggestion.summary.employerName || "",
     employerEin: suggestion.summary.employerEin || "",
     wages: toCurrencyInput(suggestion.summary.wages),
@@ -74,7 +78,7 @@ function applySuggestionToEntry(
       continue;
     }
 
-    nextEntry[field] = suggestedValue;
+    Object.assign(nextEntry, { [field]: suggestedValue });
     nextAiSuggestedFields[field] = {
       sourceLabel: suggestion.documentLabel,
       sourceType: suggestion.sourceType,
@@ -440,6 +444,13 @@ function W2Card({
 
       <div className="guided-form-grid">
         <label className="guided-field">
+          <span className="guided-field-label">W-2 recipient</span>
+          <select className="guided-select" value={entry.accountHolder ?? ""} onChange={(event) => onUpdate("accountHolder", event.target.value)}>
+            <option value="">Not answered</option><option value="primary">Primary taxpayer</option><option value="spouse">Spouse on a joint return</option>
+          </select>
+          <SuggestedFieldNotice suggestion={entry.aiSuggestedFields?.accountHolder} availableSuggestions={availableSuggestions} onConfirm={() => onConfirmField("accountHolder")} />
+        </label>
+        <label className="guided-field">
           <span className="guided-field-label">Employer name</span>
           <input
             type="text"
@@ -455,7 +466,7 @@ function W2Card({
           />
         </label>
         <label className="guided-field">
-          <span className="guided-field-label">Employer EIN (optional)</span>
+          <span className="guided-field-label">Employer EIN (Box b)</span>
           <input
             type="text"
             className={`guided-input${entry.aiSuggestedFields?.employerEin?.status === "pending-confirmation" ? " guided-input-ai-pending" : entry.aiSuggestedFields?.employerEin?.status === "confirmed" ? " guided-input-ai-confirmed" : ""}`}
@@ -514,6 +525,7 @@ function W2Card({
       <details className="guided-expand">
         <summary className="guided-expand-trigger">More W-2 boxes</summary>
         <div className="guided-expand-body">
+          <p className="guided-hint">Enter the actual payroll boxes, including 0 where the source confirms zero. An empty field remains unknown.</p>
           <div className="guided-form-grid">
             <CurrencyField
               label="Box 3 — Social Security wages"
@@ -587,6 +599,20 @@ function W2Card({
             />
           </div>
           <div className="guided-form-grid">
+            <label className="guided-field">
+              <span className="guided-field-label">State reporting on this W-2</span>
+              <select className="guided-select" value={entry.stateTaxReporting ?? ""} onChange={(event) => onUpdate("stateTaxReporting", event.target.value)}>
+                <option value="">Not answered</option><option value="none">No state section reported</option><option value="single">One state reported</option><option value="multiple">Multiple states reported</option>
+              </select>
+              <small>Use the actual form. Multiple-state allocation needs separate state records before this return can be calculated.</small>
+            </label>
+            <label className="guided-field">
+              <span className="guided-field-label">Box 15 — State</span>
+              <input className="guided-input" value={entry.state ?? ""} onChange={(event) => onUpdate("state", event.target.value.toUpperCase())} maxLength={2} placeholder="Actual two-letter state" />
+              <SuggestedFieldNotice suggestion={entry.aiSuggestedFields?.state} availableSuggestions={availableSuggestions} onConfirm={() => onConfirmField("state")} />
+            </label>
+          </div>
+          <div className="guided-form-grid">
             <CurrencyField
               label="Box 16 — State wages"
               value={entry.stateWages}
@@ -645,6 +671,10 @@ export function SectionW2Income({
     [workspace.documents, workspace.structuredFacts]
   );
   const [attachedSuggestionCandidates, setAttachedSuggestionCandidates] = useState<W2DocumentSuggestion[]>([]);
+  const attachedSuggestionWorkspaceId = useRef(workspace.id);
+  const attachedReviewToken = useRef(0);
+  const activeWorkspaceId = useRef(workspace.id);
+  activeWorkspaceId.current = workspace.id;
   const [cachedAttachedDocumentIds, setCachedAttachedDocumentIds] = useState<Set<string>>(new Set());
   const [selectedAttachedDocumentIds, setSelectedAttachedDocumentIds] = useState<string[]>([]);
   const [attachedReviewPending, setAttachedReviewPending] = useState(false);
@@ -675,12 +705,18 @@ export function SectionW2Income({
       suggestionsByDocumentId.set(suggestion.documentId, suggestion);
     }
 
-    for (const suggestion of attachedSuggestionCandidates) {
-      suggestionsByDocumentId.set(suggestion.documentId, suggestion);
-    }
+    if (attachedSuggestionWorkspaceId.current === workspace.id) for (const suggestion of attachedSuggestionCandidates) suggestionsByDocumentId.set(suggestion.documentId, suggestion);
 
     return Array.from(suggestionsByDocumentId.values());
-  }, [attachedSuggestionCandidates, workspaceSuggestions]);
+  }, [attachedSuggestionCandidates, workspaceSuggestions, workspace.id]);
+
+  useEffect(() => {
+    attachedReviewToken.current += 1;
+    setAttachedSuggestionCandidates([]);
+    setAttachedReviewMessage(null);
+    setAttachedReviewPending(false);
+    return () => { attachedReviewToken.current += 1; };
+  }, [workspace.id]);
 
   useEffect(() => {
     let cancelled = false;
@@ -762,6 +798,9 @@ export function SectionW2Income({
 
     setAttachedReviewPending(true);
     setAttachedReviewMessage(null);
+    const token = ++attachedReviewToken.current;
+    const sourceWorkspaceId = workspace.id;
+    const isCurrent = () => attachedReviewToken.current === token && activeWorkspaceId.current === sourceWorkspaceId;
 
     try {
       const nextSuggestions: W2DocumentSuggestion[] = [];
@@ -770,6 +809,7 @@ export function SectionW2Income({
 
       for (const document of selectedDocuments) {
         const file = await getCachedWorkspaceDocumentFile(workspace.id, document.id);
+        if (!isCurrent()) return;
 
         if (!file) {
           missingDocumentLabels.push(document.label || document.name);
@@ -777,6 +817,7 @@ export function SectionW2Income({
         }
 
         const detectedDocument = await detectUploadedDocumentFromFile(file);
+        if (!isCurrent()) return;
         const suggestion = buildUploadedW2Suggestion(document, detectedDocument);
 
         if (suggestion) {
@@ -786,6 +827,7 @@ export function SectionW2Income({
         }
       }
 
+      attachedSuggestionWorkspaceId.current = sourceWorkspaceId;
       setAttachedSuggestionCandidates((currentSuggestions) => {
         const suggestionsByDocumentId = new Map(
           currentSuggestions.map((suggestion) => [suggestion.documentId, suggestion]),
@@ -814,13 +856,14 @@ export function SectionW2Income({
           : `Detected W-2 values from ${nextSuggestions.length} attached PDF${nextSuggestions.length === 1 ? "" : "s"}.`,
       );
     } catch (error) {
+      if (!isCurrent()) return;
       setAttachedReviewMessage(
         error instanceof Error
           ? error.message
           : "Could not review the selected attached PDFs.",
       );
     } finally {
-      setAttachedReviewPending(false);
+      if (isCurrent()) setAttachedReviewPending(false);
     }
   }
 
@@ -894,6 +937,7 @@ export function SectionW2Income({
               >
                 {attachedReviewPending ? "Checking attached PDFs..." : "Try selected attached PDFs"}
               </button>
+              {attachedReviewPending && <button type="button" className="utility-button utility-button-small" onClick={() => { attachedReviewToken.current += 1; setAttachedReviewPending(false); setAttachedReviewMessage("Local W-2 detection cancelled."); }}>Cancel W-2 detection</button>}
             </div>
           </div>
         ) : null}

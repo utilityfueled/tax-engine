@@ -2141,7 +2141,7 @@ describe("workspace storage", () => {
         questionId: null,
         updatedAt: expect.any(String),
         machineValue: {
-          entryKind: "w2-summary",
+          entryKind: "w2-summary", stateTaxReporting: "none",
           employerName: "Official fixture employer",
           employerEin: "12-3456789",
           wages: "52000",
@@ -2311,7 +2311,7 @@ describe("workspace storage", () => {
         questionId: null,
         updatedAt: expect.any(String),
         machineValue: {
-          entryKind: "w2-summary",
+          entryKind: "w2-summary", stateTaxReporting: "none",
           employerName: "Official fixture employer",
           employerEin: "12-3456789",
           wages: "52000",

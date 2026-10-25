@@ -76,7 +76,8 @@ function collectStateWithholding(state: GuidedFlowState): Decimal {
 
   if (w2Data?.entries) {
     for (const e of w2Data.entries) {
-      if (e.aiSuggestedFields?.stateWithheld?.status !== "pending-confirmation") total = total.plus(parseGuidedCurrency(e.stateWithheld));
+      if (e.stateTaxReporting === "single" && e.state?.trim().toUpperCase() === state.segmentation.stateCode?.trim().toUpperCase()
+        && e.aiSuggestedFields?.stateWithheld?.status !== "pending-confirmation" && e.aiSuggestedFields?.state?.status !== "pending-confirmation") total = total.plus(parseGuidedCurrency(e.stateWithheld));
     }
   }
 

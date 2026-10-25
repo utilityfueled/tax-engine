@@ -35,6 +35,7 @@ const fixtureStructuredFactsByFixtureId: Record<string, FixtureStructuredFactTem
       value: "Official fixture wages: Form W-2 box 1 wages $52,000, box 2 federal withholding $5,000, and boxes 3 and 5 payroll wages $52,000.",
       machineValue: {
         entryKind: "w2-summary",
+        stateTaxReporting: "none",
         employerName: "Official fixture employer",
         employerEin: "12-3456789",
         wages: "52000",
@@ -60,6 +61,7 @@ const fixtureStructuredFactsByFixtureId: Record<string, FixtureStructuredFactTem
       value: "Official fixture wages: Form W-2 box 1 wages $52,000, box 2 federal withholding $5,000, and boxes 3 and 5 payroll wages $52,000.",
       machineValue: {
         entryKind: "w2-summary",
+        stateTaxReporting: "none",
         employerName: "Official fixture employer",
         employerEin: "12-3456789",
         wages: "52000",

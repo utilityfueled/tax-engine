@@ -61,6 +61,8 @@ describe("uploaded document detection", () => {
           confidence: "high",
           machineValue: {
             entryKind: "w2-summary",
+            stateTaxReporting: "single",
+            state: "OH",
             employerName: "NORTHWIND FABRICATION LLC",
             employerEin: "04-3097449",
             wages: "107175.28",
@@ -86,6 +88,15 @@ describe("uploaded document detection", () => {
 
   it("ignores non-W-2 text", () => {
     expect(parseUploadedW2Text("Random statement with no wage boxes", "statement.pdf")).toBeNull();
+  });
+  it("reads the actual Box 15 state and leaves absent or multiple source states unresolved", () => {
+    const differentSourceState = parseUploadedW2Text(sampleW2Text.replace("OH 52-5111787", "NY 52-5111787"));
+    expect(differentSourceState?.detectedFacts[0].machineValue).toMatchObject({ state: "NY", stateTaxReporting: "single" });
+    const absent = parseUploadedW2Text(sampleW2Text.replace("15 State Employer's state ID no.\nOH 52-5111787", ""));
+    expect(absent?.detectedFacts[0].machineValue).not.toHaveProperty("state"); expect(absent?.coverage).toBe("partially-supported");
+    const multiple = parseUploadedW2Text(`${sampleW2Text}\n15 State Employer's state ID no.\nNY 123456789\n16 State wages, tips, etc.\n100.00`);
+    expect(multiple?.detectedFacts[0].machineValue).toMatchObject({ stateTaxReporting: "multiple" });
+    expect(multiple?.detectedFacts[0].machineValue).not.toHaveProperty("state"); expect(multiple?.coverage).toBe("partially-supported");
   });
 
   it("keeps social security wages unknown when only box 4 is reported", () => {

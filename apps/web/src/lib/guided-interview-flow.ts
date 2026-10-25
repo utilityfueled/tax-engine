@@ -13,6 +13,7 @@ import { adjustmentFactErrors, householdFactErrors } from "./guided-adjustment-f
 import { statePaymentFactErrors } from "./guided-state-facts";
 import { careFactErrors } from "./guided-credit-facts";
 import { energyFactErrors } from "./guided-energy-facts";
+import { isStartedW2, w2FactErrors } from "./guided-w2-facts";
 import { vehicleFactErrors, type VehicleCreditData } from "./guided-vehicle-facts";
 import { adoptionFactErrors, type AdoptionCreditData } from "./guided-adoption-facts";
 
@@ -535,6 +536,9 @@ export const emptyPersonalInfo: PersonalInfoData = {
 };
 
 export interface W2EntryData {
+  accountHolder?: "primary" | "spouse" | "";
+  stateTaxReporting?: "none" | "single" | "multiple" | "";
+  state?: string;
   employerName: string;
   employerEin: string;
   wages: string;
@@ -549,6 +553,8 @@ export interface W2EntryData {
 }
 
 export type W2SuggestedField =
+  | "accountHolder"
+  | "state"
   | "employerName"
   | "employerEin"
   | "wages"
@@ -561,6 +567,8 @@ export type W2SuggestedField =
   | "stateWithheld";
 
 const w2SuggestedFieldLabels: Record<W2SuggestedField, string> = {
+  accountHolder: "W-2 recipient",
+  state: "Box 15 state",
   employerName: "Employer name",
   employerEin: "Employer EIN",
   wages: "Box 1 wages",
@@ -584,6 +592,9 @@ export interface GuidedSuggestedFieldState {
 }
 
 export const emptyW2Entry: W2EntryData = {
+  accountHolder: "",
+  stateTaxReporting: "",
+  state: "",
   employerName: "",
   employerEin: "",
   wages: "",
@@ -1501,21 +1512,14 @@ function validatePersonalInfo(data: PersonalInfoData | undefined, status: Filing
   return VALID_SECTION;
 }
 
-function validateW2Section(data: { entries: W2EntryData[] } | undefined): SectionValidationResult {
+function validateW2Section(data: { entries: W2EntryData[] } | undefined, filingStatus?: FilingStatus | null): SectionValidationResult {
   if (!data?.entries || data.entries.length === 0) return EMPTY_SECTION("W-2 info");
 
-  const filledEntries = data.entries.filter(
-    (e) => hasNumericValue(e.wages) || hasNumericValue(e.federalWithheld) || e.employerName.trim()
-  );
+  const filledEntries = data.entries.filter(isStartedW2);
 
   if (filledEntries.length === 0) return EMPTY_SECTION("W-2 info");
 
-  const errors: Record<string, string> = {};
-  filledEntries.forEach((e, i) => {
-    if (!hasNumericValue(e.wages)) {
-      errors[`w2-${i}-wages`] = `W-2 #${i + 1} needs wages (Box 1)`;
-    }
-  });
+  const errors = w2FactErrors(data.entries, filingStatus);
 
   const pendingSuggestionConfirmations = filledEntries.flatMap((entry, index) =>
     Object.entries(entry.aiSuggestedFields ?? {}).flatMap(([field, suggestion]) =>
@@ -1533,10 +1537,6 @@ function validateW2Section(data: { entries: W2EntryData[] } | undefined): Sectio
     )
   );
 
-  if (Object.keys(errors).length > 0) {
-    return { status: "partial", message: "Some W-2 entries are missing wages.", fieldErrors: errors };
-  }
-
   if (pendingSuggestionConfirmations.length > 0) {
     const containsFixtureSuggestions = pendingSuggestions.some((suggestion) =>
       isOfficialFixtureSourceType(suggestion.sourceType)
@@ -1547,11 +1547,11 @@ function validateW2Section(data: { entries: W2EntryData[] } | undefined): Sectio
       status: "partial",
       message: `Confirm the highlighted ${formatPendingW2SuggestionValueLabel(pendingSuggestions, pendingSuggestionConfirmations.length)} before continuing.`,
       allowSkip: !containsFixtureSuggestions,
-      fieldErrors: Object.fromEntries(
-        pendingSuggestionConfirmations.map(({ key, message }) => [key, message])
-      ),
+      fieldErrors: { ...errors, ...Object.fromEntries(pendingSuggestionConfirmations.map(({ key, message }) => [key, message])) },
     };
   }
+
+  if (Object.keys(errors).length > 0) return { status: "partial", message: "Complete the actual W-2 identity, payroll and state facts.", fieldErrors: errors };
 
   return VALID_SECTION;
 }
@@ -1812,7 +1812,7 @@ export function validateSection(
     case "personal-info":
       return validatePersonalInfo(getSectionData(state, "personal-info"), state.segmentation.filingStatus, state.taxYear);
     case "income-w2":
-      return validateW2Section(getSectionData(state, "income-w2"));
+      return validateW2Section(getSectionData(state, "income-w2"), state.segmentation.filingStatus);
     case "income-self-employment":
       return validateSelfEmploymentSection(getSectionData(state, "income-self-employment"));
     case "income-investments":

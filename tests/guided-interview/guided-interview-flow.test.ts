@@ -1,4 +1,4 @@
-import { completePersonalInfo } from "./complete-facts";
+import { completePersonalInfo, completeW2Entry } from "./complete-facts";
 import { describe, it, expect } from "vitest";
 import {
   type SegmentationAnswers,
@@ -367,7 +367,7 @@ describe("collectGuidedReviewIssues", () => {
     const withPartialW2 = updateSectionData(state, "income-w2", {
       entries: [
         {
-          ...emptyW2Entry,
+          ...completeW2Entry,
           employerName: "Northwind Co",
           wages: "",
           federalWithheld: "",
@@ -387,7 +387,7 @@ describe("collectGuidedReviewIssues", () => {
         sectionId: "income-w2",
         sectionLabel: "W-2 Wages",
         status: "needs-review",
-        message: "Some W-2 entries are missing wages.",
+        message: "Complete the actual W-2 identity, payroll and state facts.",
         actionLabel: "Review W-2 Wages",
       }),
     ]);
@@ -431,7 +431,7 @@ describe("computeFlowProgress", () => {
         "income-w2": {
           entries: [
             {
-              ...emptyW2Entry,
+              ...completeW2Entry,
               employerName: "Acme",
               wages: "50000",
             },
@@ -479,7 +479,7 @@ describe("computeFlowProgress", () => {
         "income-w2": {
           entries: [
             {
-              ...emptyW2Entry,
+              ...completeW2Entry,
               employerName: "Acme",
               wages: "50000",
             },
@@ -512,7 +512,7 @@ describe("summarizeFlowCompletion", () => {
         "income-w2": {
           entries: [
             {
-              ...emptyW2Entry,
+              ...completeW2Entry,
               employerName: "Acme",
               wages: "50000",
             },
@@ -702,14 +702,14 @@ describe("updateSectionData", () => {
   });
 
   it("stores W-2 entries", () => {
-    const entries = [{ ...emptyW2Entry, employerName: "Acme", wages: "50000" }];
+    const entries = [{ ...completeW2Entry, employerName: "Acme", wages: "50000" }];
     const next = updateSectionData(base, "income-w2", { entries });
     expect(next.sectionData["income-w2"]).toEqual({ entries });
   });
 
   it("preserves other section data when updating one section", () => {
     const personalData = { ...emptyPersonalInfo, firstName: "Jane" };
-    const w2Entries = [{ ...emptyW2Entry, wages: "50000" }];
+    const w2Entries = [{ ...completeW2Entry, wages: "50000" }];
     const withPersonal = updateSectionData(base, "personal-info", personalData);
     const withBoth = updateSectionData(withPersonal, "income-w2", { entries: w2Entries });
     expect(withBoth.sectionData["personal-info"]).toEqual(personalData);
@@ -775,9 +775,9 @@ describe("navigation preserves sectionData", () => {
 
   it("goToPreviousSection keeps sectionData", () => {
     const state = goToNextSection(startInterview(simpleSegmentation));
-    const withData = updateSectionData(state, "income-w2", { entries: [{ ...emptyW2Entry, wages: "75000" }] });
+    const withData = updateSectionData(state, "income-w2", { entries: [{ ...completeW2Entry, wages: "75000" }] });
     const prev = goToPreviousSection(withData);
-    expect(getSectionData(prev, "income-w2")).toEqual({ entries: [{ ...emptyW2Entry, wages: "75000" }] });
+    expect(getSectionData(prev, "income-w2")).toEqual({ entries: [{ ...completeW2Entry, wages: "75000" }] });
   });
 
   it("jumpToSection keeps sectionData", () => {
@@ -889,7 +889,7 @@ describe("self-employment section data", () => {
       stateCode: null,
     });
     const withPersonal = updateSectionData(state, "personal-info", { ...emptyPersonalInfo, firstName: "Jane" });
-    const withW2 = updateSectionData(withPersonal, "income-w2", { entries: [{ ...emptyW2Entry, wages: "50000" }] });
+    const withW2 = updateSectionData(withPersonal, "income-w2", { entries: [{ ...completeW2Entry, wages: "50000" }] });
     const withSE = updateSectionData(withW2, "income-self-employment", {
       necEntries: [{ ...emptyNecEntry, nonemployeeCompensation: "20000" }],
       expenses: emptyScheduleCExpenses,
@@ -1079,7 +1079,7 @@ describe("investment income section data", () => {
       stateCode: null,
     });
     const withPersonal = updateSectionData(state, "personal-info", { ...emptyPersonalInfo, firstName: "Jane" });
-    const withW2 = updateSectionData(withPersonal, "income-w2", { entries: [{ ...emptyW2Entry, wages: "50000" }] });
+    const withW2 = updateSectionData(withPersonal, "income-w2", { entries: [{ ...completeW2Entry, wages: "50000" }] });
     const withInvest = updateSectionData(withW2, "income-investments", {
       interestEntries: [{ ...emptyInterestEntry, interestIncome: "200" }],
       dividendEntries: [emptyDividendEntry],
@@ -1140,7 +1140,7 @@ describe("investment section routing", () => {
         "income-w2": {
           entries: [
             {
-              ...emptyW2Entry,
+              ...completeW2Entry,
               employerName: "Acme",
               wages: "50000",
             },
@@ -1216,7 +1216,7 @@ describe("review section in flow", () => {
     });
     // Enter personal info and W-2 data
     state = updateSectionData(state, "personal-info", { ...emptyPersonalInfo, firstName: "Jane", lastName: "Doe" });
-    state = updateSectionData(state, "income-w2", { entries: [{ ...emptyW2Entry, wages: "75000", federalWithheld: "10000" }] });
+    state = updateSectionData(state, "income-w2", { entries: [{ ...completeW2Entry, wages: "75000", federalWithheld: "10000" }] });
 
     // Navigate to review (last section for simple W-2 filer = index 5)
     const sections = buildSectionRoute(state.segmentation);
@@ -1319,7 +1319,7 @@ describe("deduction section data", () => {
   it("coexists with other section data", () => {
     let state = startInterview(simpleSegmentation);
     state = updateSectionData(state, "personal-info", { ...emptyPersonalInfo, firstName: "Jane" });
-    state = updateSectionData(state, "income-w2", { entries: [{ ...emptyW2Entry, wages: "50000" }] });
+    state = updateSectionData(state, "income-w2", { entries: [{ ...completeW2Entry, wages: "50000" }] });
     state = updateSectionData(state, "deductions", { ...emptyDeductionData, method: "itemized", mortgageInterest: "8000" });
     expect(getSectionData(state, "personal-info")?.firstName).toBe("Jane");
     expect(getSectionData(state, "income-w2")?.entries[0].wages).toBe("50000");
@@ -1662,7 +1662,7 @@ describe("flow state persistence", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-w2", {
-      entries: [{ ...emptyW2Entry, wages: "85000", federalWithheld: "12000" }],
+      entries: [{ ...completeW2Entry, wages: "85000", federalWithheld: "12000" }],
     });
     state = goToNextSection(state);
     saveGuidedFlowState(storage, workspaceId, state);
@@ -1931,7 +1931,7 @@ describe("syncGuidedFlowToWorkspace", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-w2", {
-      entries: [{ ...emptyW2Entry, wages: "50000", federalWithheld: "5000" }],
+      entries: [{ ...completeW2Entry, wages: "50000", federalWithheld: "5000" }],
     });
     const docs = buildGuidedSyntheticDocuments(state);
     const answers = buildGuidedFactAnswers(state);
@@ -1950,7 +1950,7 @@ describe("syncGuidedFlowToWorkspace", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-w2", {
-      entries: [{ ...emptyW2Entry, wages: "50000", federalWithheld: "5000" }],
+      entries: [{ ...completeW2Entry, wages: "50000", federalWithheld: "5000" }],
     });
     const docs = buildGuidedSyntheticDocuments(state);
     const answers = buildGuidedFactAnswers(state);
@@ -1990,7 +1990,7 @@ describe("syncGuidedFlowToWorkspace", () => {
           otherItemized: "",
         },
         "income-w2": {
-          entries: [{ ...emptyW2Entry, employerName: "Acme", wages: "50000", federalWithheld: "5000" }],
+          entries: [{ ...completeW2Entry, employerName: "Acme", wages: "50000", federalWithheld: "5000" }],
         },
       },
     };
@@ -2066,7 +2066,7 @@ describe("syncGuidedFlowToWorkspace", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-w2", {
-      entries: [{ ...emptyW2Entry, wages: "50000" }],
+      entries: [{ ...completeW2Entry, wages: "50000" }],
     });
 
     // First sync
@@ -2100,7 +2100,7 @@ describe("syncGuidedFlowToWorkspace", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-w2", {
-      entries: [{ ...emptyW2Entry, wages: "75000", federalWithheld: "10000" }],
+      entries: [{ ...completeW2Entry, wages: "75000", federalWithheld: "10000" }],
     });
     const docs = buildGuidedSyntheticDocuments(state);
     const answers = buildGuidedFactAnswers(state);
@@ -2277,17 +2277,17 @@ describe("validateSection", () => {
   it("returns partial for W-2 with employer name but no wages", () => {
     let state = startInterview({ filingStatus: "single", incomeTypes: ["w2-wages"], lifeEvents: [], stateCode: null });
     state = updateSectionData(state, "income-w2", {
-      entries: [{ ...emptyW2Entry, employerName: "Acme" }],
+      entries: [{ ...completeW2Entry, employerName: "Acme", wages: "" }],
     });
     const result = validateSection(state, "income-w2");
     expect(result.status).toBe("partial");
     expect(Object.keys(result.fieldErrors).length).toBeGreaterThan(0);
   });
 
-  it("returns complete for W-2 with wages entered", () => {
+  it("returns complete for W-2 with complete actual source facts", () => {
     let state = startInterview({ filingStatus: "single", incomeTypes: ["w2-wages"], lifeEvents: [], stateCode: null });
     state = updateSectionData(state, "income-w2", {
-      entries: [{ ...emptyW2Entry, wages: "50000", employerName: "Acme" }],
+      entries: [{ ...completeW2Entry, wages: "50000", employerName: "Acme" }],
     });
     const result = validateSection(state, "income-w2");
     expect(result.status).toBe("complete");
@@ -2517,7 +2517,7 @@ describe("shouldPromptBeforeAdvance", () => {
     state = updateSectionData(state, "income-w2", {
       entries: [
         {
-          ...emptyW2Entry,
+          ...completeW2Entry,
           employerName: "Official fixture employer",
           employerEin: "12-3456789",
           wages: "52000",
@@ -2567,7 +2567,7 @@ describe("shouldPromptBeforeAdvance", () => {
     });
     state = goToNextSection(state);
     state = updateSectionData(state, "income-w2", {
-      entries: [{ ...emptyW2Entry, employerName: "Acme", wages: "50000" }],
+      entries: [{ ...completeW2Entry, employerName: "Acme", wages: "50000" }],
     });
     state = goToNextSection(state);
 

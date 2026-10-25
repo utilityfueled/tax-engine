@@ -106,6 +106,8 @@ function sanitizeW2SummarySuggestion(summary: WorkspaceStructuredFactMachineValu
     ) ? { stateWithheld: summary.stateWithheld } : {}),
     ...(summary.box12CodeW !== undefined ? { box12CodeW: summary.box12CodeW } : {}),
     ...(summary.accountHolder !== undefined ? { accountHolder: summary.accountHolder } : {}),
+    ...(summary.state !== undefined ? { state: summary.state } : {}),
+    ...(summary.stateTaxReporting !== undefined ? { stateTaxReporting: summary.stateTaxReporting } : {}),
   };
 }
 

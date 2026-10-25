@@ -1,4 +1,4 @@
-import { startCompleteInterview as startInterview, completePersonalInfo, completeDependent, completeAocEligibility, completeEducationClaimant, completeHouseholdEmployee } from "./complete-facts";
+import { completeW2Entry, startCompleteInterview as startInterview, completePersonalInfo, completeDependent, completeAocEligibility, completeEducationClaimant, completeHouseholdEmployee } from "./complete-facts";
 import { describe, it, expect } from "vitest";
 import {
   buildTaxInputFromGuidedData,
@@ -129,11 +129,11 @@ describe("buildW2Inputs", () => {
     expect(result[0].federalWithheld).toBe("5000");
   });
 
-  it("converts empty sub-fields to zero", () => {
+  it("preserves blank payroll sub-fields as unknown", () => {
     const entry = { ...emptyW2Entry, wages: "50000" };
     const result = buildW2Inputs([entry]);
-    expect(result[0].socialSecurityWages).toBe("0");
-    expect(result[0].medicareWages).toBe("0");
+    expect(result[0].socialSecurityWages).toBeUndefined();
+    expect(result[0].medicareWages).toBeUndefined();
   });
 
   it("ignores AI-filled wages and withholding until they are confirmed", () => {
@@ -211,12 +211,12 @@ describe("buildW2Inputs", () => {
       expect.objectContaining({
         wages: "52000",
         federalWithheld: "5000",
-        socialSecurityWages: "0",
-        socialSecurityWithheld: "0",
-        medicareWages: "0",
-        medicareWithheld: "0",
-        stateWages: "0",
-        stateTaxWithheld: "0",
+        socialSecurityWages: undefined,
+        socialSecurityWithheld: undefined,
+        medicareWages: undefined,
+        medicareWithheld: undefined,
+        stateWages: undefined,
+        stateTaxWithheld: undefined,
       }),
     ]);
   });
@@ -551,7 +551,7 @@ describe("buildTaxInputFromGuidedData", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-w2", {
-      entries: [{ ...emptyW2Entry, employerName: "Acme", wages: "75000", federalWithheld: "8000" }],
+      entries: [{ ...completeW2Entry, employerName: "Acme", wages: "75000", federalWithheld: "8000" }],
     });
     const input = buildTaxInputFromGuidedData(state);
     expect(input!.w2s).toHaveLength(1);
@@ -691,7 +691,7 @@ describe("computeGuidedPreview", () => {
     });
     // Wages $30,000 with $5,000 withheld — should get a refund
     state = updateSectionData(state, "income-w2", {
-      entries: [{ ...emptyW2Entry, wages: "30000", federalWithheld: "5000" }],
+      entries: [{ ...completeW2Entry, wages: "30000", federalWithheld: "5000" }],
     });
     const preview = computeGuidedPreview(state);
     expect(preview).not.toBeNull();
@@ -709,7 +709,7 @@ describe("computeGuidedPreview", () => {
     });
     state = updateSectionData(state, "income-w2", {
       entries: [{
-        ...emptyW2Entry,
+        ...completeW2Entry,
         employerName: "Official fixture employer",
         employerEin: "12-3456789",
         wages: "52000",
@@ -736,10 +736,7 @@ describe("computeGuidedPreview", () => {
     });
 
     const preview = computeGuidedPreview(state);
-    expect(preview).not.toBeNull();
-    expect(preview!.totalIncome).toBe("0");
-    expect(preview!.totalPayments).toBe("0");
-    expect(preview!.refund).toBe("0");
+    expect(preview).toBeNull();
   });
 
   it("computes preview for filer with explicitly supplied dependents", () => {
@@ -757,7 +754,7 @@ describe("computeGuidedPreview", () => {
       dependents: [completeDependent, { ...completeDependent, firstName: "Blair", ssn: "444-55-6666" }],
     });
     state = updateSectionData(state, "income-w2", {
-      entries: [{ ...emptyW2Entry, wages: "80000", federalWithheld: "10000" }],
+      entries: [{ ...completeW2Entry, wages: "80000", federalWithheld: "10000" }],
     });
     const preview = computeGuidedPreview(state);
     // This was previously null because of missing qualifiesForCTC field
@@ -790,7 +787,7 @@ describe("computeGuidedPreview", () => {
       }],
     });
     state = updateSectionData(state, "income-w2", {
-      entries: [{ ...emptyW2Entry, wages: "80000", federalWithheld: "10000" }],
+      entries: [{ ...completeW2Entry, wages: "80000", federalWithheld: "10000" }],
     });
     const preview = computeGuidedPreview(state);
     expect(preview).not.toBeNull();
@@ -807,7 +804,7 @@ describe("computeGuidedPreview", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-w2", {
-      entries: [{ ...emptyW2Entry, wages: "200000", federalWithheld: "0" }],
+      entries: [{ ...completeW2Entry, wages: "200000", federalWithheld: "0" }],
     });
     const preview = computeGuidedPreview(state);
     expect(preview).not.toBeNull();
@@ -840,7 +837,7 @@ describe("computeGuidedPreview", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-w2", {
-      entries: [{ ...emptyW2Entry, wages: "60000", federalWithheld: "8000" }],
+      entries: [{ ...completeW2Entry, wages: "60000", federalWithheld: "8000" }],
     });
     state = updateSectionData(state, "income-self-employment", {
       necEntries: [{ ...emptyNecEntry, nonemployeeCompensation: "30000" }],
@@ -917,7 +914,7 @@ describe("computeGuidedPreview", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-w2", {
-      entries: [{ ...emptyW2Entry, wages: "80000", federalWithheld: "12000" }],
+      entries: [{ ...completeW2Entry, wages: "80000", federalWithheld: "12000" }],
     });
     state = updateSectionData(state, "income-investments", {
       interestEntries: [{ ...emptyInterestEntry, interestIncome: "1000" }],
@@ -1080,7 +1077,7 @@ describe("itemized deductions in preview", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-w2", {
-      entries: [{ ...emptyW2Entry, wages: "100000", federalWithheld: "15000" }],
+      entries: [{ ...completeW2Entry, wages: "100000", federalWithheld: "15000" }],
     });
 
     // Standard deduction baseline
@@ -2027,11 +2024,11 @@ describe("computeGuidedPreview with state return data", () => {
     });
     state = updateSectionData(state, "income-w2", {
       entries: [{
-        ...emptyW2Entry,
+        ...completeW2Entry,
         employerName: "Acme Corp",
         wages: "60000",
         federalWithheld: "8000",
-        stateWages: "60000",
+        stateTaxReporting: "single", state: "PA", stateWages: "60000",
         stateWithheld: "2000",
       }],
     });
@@ -2124,7 +2121,7 @@ describe("buildGuidedFactAnswers", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-w2", {
-      entries: [{ ...emptyW2Entry, wages: "52,000", federalWithheld: "6,000" }],
+      entries: [{ ...completeW2Entry, wages: "52,000", federalWithheld: "6,000" }],
     });
     const answers = buildGuidedFactAnswers(state);
     const factIds = answers.map((a) => a.factId);
@@ -2145,7 +2142,7 @@ describe("buildGuidedFactAnswers", () => {
     });
     state = updateSectionData(state, "income-w2", {
       entries: [{
-        ...emptyW2Entry,
+        ...completeW2Entry,
         employerName: "Official fixture employer",
         employerEin: "12-3456789",
         wages: "52,000",
@@ -2326,7 +2323,7 @@ describe("buildGuidedFactAnswers", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-w2", {
-      entries: [{ ...emptyW2Entry, wages: "80000", federalWithheld: "12000" }],
+      entries: [{ ...completeW2Entry, wages: "80000", federalWithheld: "12000" }],
     });
     state = updateSectionData(state, "income-self-employment", {
       necEntries: [{ ...emptyNecEntry, nonemployeeCompensation: "40000" }],
@@ -2381,7 +2378,7 @@ describe("buildGuidedSyntheticDocuments", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-w2", {
-      entries: [{ ...emptyW2Entry, wages: "50000" }],
+      entries: [{ ...completeW2Entry, wages: "50000" }],
     });
     const docs = buildGuidedSyntheticDocuments(state);
     expect(docs).toHaveLength(1);
@@ -2401,7 +2398,7 @@ describe("buildGuidedSyntheticDocuments", () => {
     });
     state = updateSectionData(state, "income-w2", {
       entries: [{
-        ...emptyW2Entry,
+        ...completeW2Entry,
         employerName: "Official fixture employer",
         employerEin: "12-3456789",
         wages: "50000",
@@ -2543,7 +2540,7 @@ describe("buildGuidedSyntheticDocuments", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-w2", {
-      entries: [{ ...emptyW2Entry, wages: "80000" }],
+      entries: [{ ...completeW2Entry, wages: "80000" }],
     });
     state = updateSectionData(state, "income-self-employment", {
       necEntries: [{ ...emptyNecEntry, nonemployeeCompensation: "40000" }],
@@ -2587,7 +2584,7 @@ describe("buildGuidedSyntheticDocuments", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-w2", {
-      entries: [{ ...emptyW2Entry, wages: "50000" }],
+      entries: [{ ...completeW2Entry, wages: "50000" }],
     });
     state = updateSectionData(state, "income-investments", {
       interestEntries: [{ ...emptyInterestEntry, interestIncome: "500" }],

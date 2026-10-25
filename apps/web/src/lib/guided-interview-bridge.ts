@@ -19,6 +19,7 @@ import { adjustmentFactErrors, householdFactErrors, isDeductibleAlimony } from "
 import { statePaymentFactErrors, sumAdditionalStateWithholding } from "./guided-state-facts";
 import { careFactErrors } from "./guided-credit-facts";
 import { energyFactErrors } from "./guided-energy-facts";
+import { w2FactErrors } from "./guided-w2-facts";
 
 import type {
   AdjustmentData,
@@ -67,6 +68,10 @@ function toDecimalString(value: string | undefined): string {
   return (value ?? "").trim().replace(/,/g, "") || "0";
 }
 
+function toOptionalDecimalString(value: string | undefined): string | undefined {
+  return hasEnteredAmount(value) ? toDecimalString(value) : undefined;
+}
+
 const hasValue = hasGuidedCurrency;
 
 function combineGivenNameWithMiddleInitial(
@@ -94,12 +99,14 @@ function getConfirmedW2FieldValue(
 ): string {
   return entry.aiSuggestedFields?.[field]?.status === "pending-confirmation"
     ? ""
-    : entry[field];
+    : entry[field] ?? "";
 }
 
 function stripPendingW2Suggestions(entry: W2EntryData): W2EntryData {
   return {
     ...entry,
+    accountHolder: entry.aiSuggestedFields?.accountHolder?.status === "pending-confirmation" ? undefined : entry.accountHolder,
+    state: getConfirmedW2FieldValue(entry, "state"),
     employerName: getConfirmedW2FieldValue(entry, "employerName"),
     employerEin: getConfirmedW2FieldValue(entry, "employerEin"),
     wages: getConfirmedW2FieldValue(entry, "wages"),
@@ -115,26 +122,26 @@ function stripPendingW2Suggestions(entry: W2EntryData): W2EntryData {
 
 export function buildW2Inputs(
   entries: W2EntryData[] | undefined,
-  defaultState?: string | null,
 ) {
   if (!entries || entries.length === 0) return [];
   return entries
     .map(stripPendingW2Suggestions)
-    .filter((e) => hasValue(e.wages) || hasValue(e.federalWithheld))
+    .filter((e) => hasEnteredAmount(e.wages) || hasEnteredAmount(e.federalWithheld))
     .map((e) => ({
       employer: {
         name: e.employerName.trim(),
         ein: e.employerEin.trim(),
       },
-      wages: toDecimalString(e.wages),
-      federalWithheld: toDecimalString(e.federalWithheld),
-      socialSecurityWages: toDecimalString(e.socialSecurityWages),
-      socialSecurityWithheld: toDecimalString(e.socialSecurityWithheld),
-      medicareWages: toDecimalString(e.medicareWages),
-      medicareWithheld: toDecimalString(e.medicareWithheld),
-      stateWages: toDecimalString(e.stateWages),
-      stateTaxWithheld: toDecimalString(e.stateWithheld),
-      state: defaultState?.trim().toUpperCase() || undefined,
+      accountHolder: e.accountHolder || undefined,
+      wages: toOptionalDecimalString(e.wages),
+      federalWithheld: toOptionalDecimalString(e.federalWithheld),
+      socialSecurityWages: toOptionalDecimalString(e.socialSecurityWages),
+      socialSecurityWithheld: toOptionalDecimalString(e.socialSecurityWithheld),
+      medicareWages: toOptionalDecimalString(e.medicareWages),
+      medicareWithheld: toOptionalDecimalString(e.medicareWithheld),
+      stateWages: e.stateTaxReporting === "none" ? "0" : toOptionalDecimalString(e.stateWages),
+      stateTaxWithheld: e.stateTaxReporting === "none" ? "0" : toOptionalDecimalString(e.stateWithheld),
+      state: e.state?.trim().toUpperCase() || undefined,
     }));
 }
 
@@ -508,6 +515,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
   const stateReturnData = sectionData["state-return"] as StateReturnData | undefined;
 
   try {
+    assertKnownFacts(w2FactErrors(w2Data?.entries, segmentation.filingStatus));
     assertKnownFacts(deductionFactErrors(deductionData, state.taxYear));
     assertKnownFacts(allPaymentFactErrors(paymentData, state.taxYear));
     assertKnownFacts(retirementFactErrors(retirementData?.entries));
@@ -522,7 +530,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
   } catch { return null; }
 
   const stateCode = personalInfo?.state || segmentation.stateCode || null;
-  const w2s = buildW2Inputs(w2Data?.entries, stateCode);
+  const w2s = buildW2Inputs(w2Data?.entries);
   const necs = buildNecInputs(seData?.necEntries);
   const scheduleC = buildScheduleCInput(seData?.necEntries, seData?.manualGrossReceipts, seData?.expenses, seData?.qbiMateriallyParticipated);
   const form1099Int = buildInterestInputs(investData?.interestEntries);

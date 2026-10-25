@@ -277,7 +277,6 @@ export function SectionPersonalInfo({
           <span className="guided-field-hint" id="ssn-hint">Your taxpayer ID is sensitive. Review downloads omit it; complete filing exports are not yet available.</span>
         </label>
 
-        <StandardDeductionSourceDetails data={current.standardDeductionFacts} filingStatus={filingStatus} onChange={standardDeductionFacts => onDataChange({ ...current, standardDeductionFacts })} />
         {claimsDependentCredit && <fieldset className="guided-fieldset"><legend className="guided-fieldset-legend">Your credit identification requirements</legend>
           <BooleanFact label="Was your employment-valid SSN issued by the return due date, including extensions?" value={current.employmentValidSsnIssuedByDueDate} onChange={(value) => onDataChange({ ...current, employmentValidSsnIssuedByDueDate: value })} />
           <BooleanFact label="Was your SSN or ITIN issued by the return due date, including extensions?" value={current.tinIssuedByDueDate} onChange={(value) => onDataChange({ ...current, tinIssuedByDueDate: value })} />

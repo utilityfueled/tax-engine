@@ -540,6 +540,8 @@ export function parseUploadedW2Text(text: string, fileName = ""): ParsedUploaded
     10,
   );
   const socialSecurityWages = parsedSocialSecurityWages;
+  const sourceStates = [...new Set([...normalizedText.matchAll(/^15[ \t]+State(?:[ \t]+Employer['’]?s state ID(?: no\.?| number))?(?:[ \t]+16[^\n]*)?[ \t]*:?[ \t]*(?:\n[ \t]*)?([A-Z]{2})(?=[ \t]|$)/gm)].map((match) => match[1]))];
+  const sourceState = sourceStates.length === 1 ? sourceStates[0] : undefined;
 
   if (!wages || !federalWithheld) {
     return null;
@@ -557,12 +559,13 @@ export function parseUploadedW2Text(text: string, fileName = ""): ParsedUploaded
     ...(medicareWithheld ? { medicareWithheld } : {}),
     ...(stateWages ? { stateWages } : {}),
     ...(stateWithheld ? { stateWithheld } : {}),
+    ...(sourceState ? { state: sourceState, stateTaxReporting: "single" as const } : sourceStates.length > 1 ? { stateTaxReporting: "multiple" as const } : {}),
   };
 
   return {
     kind: "w2",
     taxYear: extractExplicitDocumentTaxYear(normalizedText),
-    coverage: employerName && employerEin && socialSecurityWages !== null && socialSecurityWithheld !== null && medicareWages !== null && medicareWithheld !== null ? "supported" : "partially-supported",
+    coverage: employerName && employerEin && socialSecurityWages !== null && socialSecurityWithheld !== null && medicareWages !== null && medicareWithheld !== null && sourceState && stateWages !== null && stateWithheld !== null ? "supported" : "partially-supported",
     label: employerName ? `${employerName} W-2` : "Form W-2 upload",
     notes: "Parsed W-2 wage and withholding boxes from an uploaded W-2 PDF.",
     seededFactIds: ["wages", "withholding"],
