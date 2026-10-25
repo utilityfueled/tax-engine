@@ -73,7 +73,12 @@ export function buildGuidedForeignTaxCarryover(data: ForeignCarryoverData | unde
     balanceIds.add(id);
     return { ...source, originTaxYear, amount: money(source.amount, 'adjusted prior balance'), sourceReference: text(source.sourceReference, 'prior balance source reference') };
   });
-  const allocation = data.itemizedAllocation;
+  const itemizedAllocation = buildGuidedForeignTaxAllocation(data.itemizedAllocation, incomeSources);
+  return { ...data, sourceTaxYear: year, adjustedThroughTaxYear: year - 1, incomeSources, carryovers, itemizedAllocation };
+}
+
+/** Normalize actual allowed deduction sources shared by ordinary credit and deduction-year history. */
+export function buildGuidedForeignTaxAllocation(allocation: EngineCarryover['itemizedAllocation'], incomeSources: ForeignCarryoverIncomeData[]): EngineCarryover['itemizedAllocation'] {
   const countryIncome = new Map<string, ReturnType<typeof parseGuidedCurrency>>();
   for (const source of incomeSources) {
     const country = normalize(source.foreignCountry);
@@ -136,5 +141,5 @@ export function buildGuidedForeignTaxCarryover(data: ForeignCarryoverData | unde
   } : undefined;
   if (itemizedAllocation && itemizedAllocation.sourceFactsConfirmed !== true) throw new Error('Confirm the actual itemized allocation sources.');
   if (itemizedAllocation?.stateIncomeTaxes?.some(source => source.foreignIncomeSpecificallyExempt === undefined)) throw new Error('Confirm actual state foreign-income treatment.');
-  return { ...data, sourceTaxYear: year, adjustedThroughTaxYear: year - 1, incomeSources, carryovers, itemizedAllocation };
+  return itemizedAllocation;
 }

@@ -1,0 +1,54 @@
+form: "Guided ordinary foreign tax credit"
+fullName: "Actual ordinary passive regular and AMT sources and review record"
+taxYear: 2026
+supportedTaxYears: [2025, 2026]
+irsReference: "https://www.irs.gov/instructions/i1116"
+sources:
+  - url: "https://www.irs.gov/instructions/i1116"
+    revision: "Final2025 original income, passive grouping and actual carryback/forward records"
+    retrieved: "2026-10-25"
+  - url: "https://www.irs.gov/instructions/i6251"
+    revision: "Final2025 line8 independent AMT sources and first-election history"
+    retrieved: "2026-10-25"
+notes: |
+  Collect an actual Form1116 choice separately from the no-form election. Preserve
+  unknown and false facts, explicit empty regular/AMT histories and exact source
+  cents. The statement's full income is not its foreign portion. Identity includes
+  owner, payer, account and country. The same source binder serves completion and
+  the canonical bridge; supplied qualified dividends cannot disappear. Current
+  tax/limits are calculated only by the return. Prior capacity is from the actual
+  completed preceding return, with independent regular and AMT records. Itemized
+  allocation uses the existing actual state/country source contract. Changing
+  underlying facts revokes confirmation; confirmation-only changes do not loop.
+  The PDF is a review statement, never a qualified filing form. It validates
+  canonical audits, both credits and all vintage/carryback/new-carry conservation,
+  prints opaque source identities and retains one review notice per page.
+lines:
+  - line: "source"
+    description: "Actual ordinary source entry with independent histories"
+    formula: "Normalize actual year and Decimal values; require source confirmation and preserve missing or false answers; no manufactured prior capacity"
+    testRef: "tests/guided-interview/guided-foreign-tax-ordinary-credit.test.ts::preserves actual ordinary source amounts and separate regular and AMT histories"
+  - line: "handoff"
+    description: "Identical source validation for completion and bridge"
+    formula: "Bind original statement identity and actual foreign portion; reject replacement accounts, missing known foreign income, preferential dividends and conflicting known residency"
+    testRef: "tests/guided-interview/guided-foreign-tax-ordinary-credit.test.ts::uses the same original source checks for completion and the canonical bridge"
+  - line: "invalidation"
+    description: "Substantive source changes invalidate nested confirmation"
+    formula: "Clear annual and ordinary confirmation on actual source changes while retaining all entered facts and avoiding confirmation-only loops"
+    testRef: "tests/guided-interview/guided-foreign-tax-ordinary-credit.test.ts::revokes ordinary confirmation on source edits without confirmation loops"
+  - line: "entry"
+    description: "New ordinary worksheet can be completed through actual controls"
+    formula: "Collect original annual choice, taxpayer status, payment eligibility, original income/foreign portion/group, independent balances, AMT election and actual prior-year capacity without default answers"
+    testRef: "tests/apps/web/foreign-tax-ordinary-credit-interactions.test.tsx::collects ordinary sources and AMT history from an empty worksheet"
+  - line: "review"
+    description: "Independent regular and AMT canonical record"
+    formula: "Copy unique finite canonical audits; label actual ordinary net income and regular Schedule3 versus AMT Form6251 transfers correctly; reconcile credits, current excess, prior use/expiry/remaining and current carryback/forward to original sources and saved return ledgers"
+    testRef: "tests/pdf/foreign-tax-ordinary-credit-reference.test.ts::copies both actual credit ledgers with source privacy and exact conservation"
+  - line: "review-guards"
+    description: "Conflicting source results reject before rendering"
+    formula: "Reject missing, duplicate, altered or nonconserving canonical source/calculation/return records"
+    testRef: "tests/pdf/foreign-tax-ordinary-credit-reference.test.ts::rejects stale missing duplicate and nonconserving ordinary credit results"
+  - line: "browser"
+    description: "Actual source edits survive reload and revoke review confirmation"
+    formula: "Production desktop and mobile controls preserve exact foreign-source cents and explicit false AMT election; blank source remains unknown after reload; private source facts stay local"
+    testRef: "apps/web/tests/foreign-tax-ordinary-credit.spec.ts::preserves actual ordinary credit sources and confirmation"

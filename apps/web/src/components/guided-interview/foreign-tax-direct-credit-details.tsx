@@ -4,8 +4,9 @@ import type { ForeignDirectCreditData, ForeignDirectCarryData } from '@/lib/guid
 import { BooleanFact, TextFact } from './fact-fields';
 import { CurrencyField } from './currency-field';
 
-export function ForeignTaxDirectCreditDetails({ data, onChange }: {
+export function ForeignTaxDirectCreditDetails({ data, onChange, mode = 'direct' }: {
   data?: ForeignDirectCreditData;
+  mode?: 'direct' | 'ordinary';
   onChange: (data: ForeignDirectCreditData | undefined) => void;
 }) {
   if (!data) return <div className="guided-w2-card" style={{ padding: '12px' }}>
@@ -29,11 +30,11 @@ export function ForeignTaxDirectCreditDetails({ data, onChange }: {
       {data[key]?.length === 0 && <p className="guided-hint">The actual {title} ledger is recorded as empty. Keep the supporting history reference.</p>}
     </fieldset>;
   };
-  return <fieldset className="guided-fieldset"><legend>Actual election without Form 1116</legend>
-    <p className="guided-hint">This method covers eligible passive income on qualified payee statements, with combined actual tax no more than $300, or $600 for a married joint return. Prior regular and AMT credits cannot be used this year, and unused current tax creates no carry. Existing prior balances still age and expire. See <a href="https://www.irs.gov/instructions/i1116" target="_blank" rel="noreferrer">IRS Form 1116 instructions</a>.</p>
-    <BooleanFact label="The taxpayer elects the credit without Form 1116" value={data.electionConfirmed} onChange={value => update({ electionConfirmed: value ?? undefined })} />
+  return <fieldset className="guided-fieldset"><legend>{mode === 'direct' ? 'Actual election without Form 1116' : 'Ordinary credit eligibility and prior records'}</legend>
+    {mode === 'direct' && <p className="guided-hint">This method covers eligible passive income on qualified payee statements, with combined actual tax no more than $300, or $600 for a married joint return. Prior regular and AMT credits cannot be used this year, and unused current tax creates no carry. Existing prior balances still age and expire. See <a href="https://www.irs.gov/instructions/i1116" target="_blank" rel="noreferrer">IRS Form 1116 instructions</a>.</p>}
+    <BooleanFact label={mode === 'direct' ? 'The taxpayer elects the credit without Form 1116' : 'The taxpayer elects the ordinary Form 1116 credit'} value={data.electionConfirmed} onChange={value => update({ electionConfirmed: value ?? undefined })} />
     <label className="guided-field"><span className="guided-field-label">Return on which the election is made</span><select className="guided-input" value={data.filingContext ?? ''} onChange={event => update({ filingContext: (event.target.value || undefined) as ForeignDirectCreditData['filingContext'] })}><option value="">Not answered</option><option value="original_return">Original return</option><option value="amended_return">Amended return requiring separate treatment</option></select></label>
-    <TextFact label="Direct-credit election source reference" value={data.sourceReference ?? ''} onChange={sourceReference => update({ sourceReference })} />
+    <TextFact label={mode === 'direct' ? 'Direct-credit election source reference' : 'Ordinary credit source reference'} value={data.sourceReference ?? ''} onChange={sourceReference => update({ sourceReference })} />
     {([
       ['allForeignGrossIncomePassiveConfirmed', 'All foreign gross income is passive income'],
       ['allForeignIncomeOnQualifiedPayeeStatementsConfirmed', 'All foreign income and taxes are on qualified payee statements'],
@@ -53,7 +54,7 @@ export function ForeignTaxDirectCreditDetails({ data, onChange }: {
     <TextFact label="Prior credits adjusted through tax year" value={data.adjustedThroughTaxYear ?? ''} onChange={adjustedThroughTaxYear => update({ adjustedThroughTaxYear })} />
     <label className="guided-field"><span className="guided-field-label">Prior credit filing history</span><select className="guided-input" value={data.filingHistory ?? ''} onChange={event => update({ filingHistory: (event.target.value || undefined) as ForeignDirectCreditData['filingHistory'] })}><option value="">Not answered</option><option value="continuous_individual">Continuous individual history</option><option value="continuous_joint_same_spouse">Continuous joint history with the same spouse</option><option value="changed">Changed filing history requiring allocation</option></select></label>
     {history('carryovers', 'Regular')}{history('amtCarryovers', 'AMT')}
-    <BooleanFact label="Direct-credit election facts checked after the last edit" value={data.sourceFactsConfirmed} onChange={sourceFactsConfirmed => onChange({ ...data, sourceFactsConfirmed })} />
-    <button type="button" className="utility-button" onClick={() => onChange(undefined)}>Remove election without Form 1116</button>
+    {mode === 'direct' && <><BooleanFact label="Direct-credit election facts checked after the last edit" value={data.sourceFactsConfirmed} onChange={sourceFactsConfirmed => onChange({ ...data, sourceFactsConfirmed })} />
+    <button type="button" className="utility-button" onClick={() => onChange(undefined)}>Remove election without Form 1116</button></>}
   </fieldset>;
 }

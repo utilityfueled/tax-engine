@@ -26,11 +26,11 @@ const yearValue = (value: string | undefined) => {
   if (!/^\d{4}$/.test(value ?? '')) throw new Error('Enter the actual four-digit foreign-credit history year.');
   return Number(value);
 };
-export function buildGuidedForeignTaxDirectCredit(data: ForeignDirectCreditData | undefined, known?: ForeignCreditKnownResidency): EngineDirectCredit | undefined {
+export function buildGuidedForeignTaxDirectCredit(data: ForeignDirectCreditData | undefined, known?: ForeignCreditKnownResidency, label = 'direct foreign-credit election'): EngineDirectCredit | undefined {
   if (!data) return undefined;
-  if (data.sourceFactsConfirmed !== true) throw new Error('Confirm the actual direct foreign-credit election facts after the last edit.');
+  if (data.sourceFactsConfirmed !== true) throw new Error(`Confirm the actual ${label} facts after the last edit.`);
   if (known?.nonresidentAlien === true || known?.dualStatusAlien === true || known?.educationNonresidentAlien === true) {
-    throw new Error('The direct foreign-credit election conflicts with actual nonresident or dual-status facts; reconcile those source records.');
+    throw new Error(`The ${label} conflicts with actual nonresident or dual-status facts; reconcile those source records.`);
   }
   if (known?.foreignEarnedIncome?.some(value => value?.trim() && parseGuidedCurrency(value).gt(0))) {
     throw new Error('The all-passive foreign-credit election conflicts with actual foreign earned income.');

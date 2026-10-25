@@ -1,3 +1,4 @@
+import { buildGuidedForeignTaxOrdinaryCredit, type ForeignOrdinaryCreditData } from './guided-foreign-tax-ordinary-credit';
 import { buildGuidedForeignTaxCarryover, type ForeignCarryoverData } from "./guided-foreign-tax-carryover";
 import { buildGuidedForeignTaxDirectCredit, type ForeignDirectCreditData, type ForeignCreditKnownResidency } from './guided-foreign-tax-direct-credit';
 import { ForeignTaxElectionSchema, Form1099IntSchema, Form1099DivSchema, type TaxYearInput } from '@/models/inputs.js';
@@ -9,7 +10,7 @@ import { parseGuidedCurrency } from './guided-currency';
 
 type EngineElection = NonNullable<TaxYearInput['foreignTaxElection']>;
 export type ForeignTaxSourceData = NonNullable<EngineElection['sources']>[number];
-export type ForeignTaxElectionData = Omit<EngineElection,'taxYear'|'sourceFactsConfirmed'|'deductionYearCarryover'|'creditWithoutForm1116'> & {taxYear?:string;sourceFactsConfirmed?:boolean|null;deductionYearCarryover?:ForeignCarryoverData;creditWithoutForm1116?:ForeignDirectCreditData};
+export type ForeignTaxElectionData = Omit<EngineElection,'taxYear'|'sourceFactsConfirmed'|'deductionYearCarryover'|'creditWithoutForm1116'|'creditWithForm1116'> & {taxYear?:string;sourceFactsConfirmed?:boolean|null;deductionYearCarryover?:ForeignCarryoverData;creditWithoutForm1116?:ForeignDirectCreditData;creditWithForm1116?:ForeignOrdinaryCreditData};
 const statusMap:Record<FilingStatus,EngineFilingStatus>={single:'single',mfj:'married_filing_jointly',mfs:'married_filing_separately',hoh:'head_of_household',qss:'qualifying_surviving_spouse'};
 function amount(value:string|undefined,label:string) {
   if(value===undefined||!value.trim())throw new Error(`Enter the actual ${label}, including zero when established by the source.`);
@@ -29,14 +30,14 @@ export function buildGuidedForeignTaxElection(data:ForeignTaxElectionData|undefi
     taxDeductedElsewhere:amount(source.taxDeductedElsewhere,'tax already deducted elsewhere'),investmentAllocableAmount:amount(source.investmentAllocableAmount,'foreign investment tax allocation'),
     payments:source.payments?.map(payment=>({...payment,amountUsd:amount(payment.amountUsd,'dated USD tax payment')})),
   }));
-  const actual=ForeignTaxElectionSchema.parse({...data,taxYear:year,sources,deductionYearCarryover:buildGuidedForeignTaxCarryover(data.deductionYearCarryover,investment,year,status),creditWithoutForm1116:buildGuidedForeignTaxDirectCredit(data.creditWithoutForm1116,knownResidency)});
+  const actual=ForeignTaxElectionSchema.parse({...data,taxYear:year,sources,deductionYearCarryover:buildGuidedForeignTaxCarryover(data.deductionYearCarryover,investment,year,status),creditWithoutForm1116:buildGuidedForeignTaxDirectCredit(data.creditWithoutForm1116,knownResidency),creditWithForm1116:buildGuidedForeignTaxOrdinaryCredit(data.creditWithForm1116,year,knownResidency)});
   const form1099Int=(investment?.interestEntries??[]).filter(isStartedInvestment).map(entry=>Form1099IntSchema.parse({
     payer:entry.payer,payerTin:entry.payerTin,accountReference:entry.accountReference?.trim()||undefined,accountHolder:entry.accountHolder||undefined,
     interestIncome:amount(entry.interestIncome,'statement interest'),foreignTaxPaid:amount(entry.foreignTaxPaid,'statement foreign tax'),foreignCountry:entry.foreignCountry,
   }));
   const form1099Div=(investment?.dividendEntries??[]).filter(isStartedInvestment).map(entry=>Form1099DivSchema.parse({
     payer:entry.payer,payerTin:entry.payerTin,accountReference:entry.accountReference?.trim()||undefined,accountHolder:entry.accountHolder||undefined,
-    ordinaryDividends:amount(entry.ordinaryDividends,'statement dividends'),foreignTaxPaid:amount(entry.foreignTaxPaid,'statement foreign tax'),foreignCountry:entry.foreignCountry,
+    ordinaryDividends:amount(entry.ordinaryDividends,'statement dividends'),qualifiedDividends:entry.qualifiedDividends===undefined?undefined:amount(entry.qualifiedDividends,'qualified dividends'),foreignTaxPaid:amount(entry.foreignTaxPaid,'statement foreign tax'),foreignCountry:entry.foreignCountry,
   }));
   // Annual history is explicitly confirmed in this worksheet. Canonical return
   // validation also checks any saved carryovers and pass-through tax records.
