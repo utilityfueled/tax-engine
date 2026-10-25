@@ -160,6 +160,14 @@ describe("document fixture copy helpers", () => {
 });
 
 describe("workspace assistant fixture messaging", () => {
+  it("preserves exact source cents beyond the safe-integer range in review copy", () => {
+    const workspace = createWorkspace();
+    workspace.structuredFacts[0]!.machineValue = { entryKind: "w2-summary", employerName: "Actual Employer", employerEin: "12-3456789", wages: "9007199254740993.01", federalWithheld: "0", socialSecurityWages: "0", socialSecurityWithheld: "0" };
+    const reply = buildReturnAssistantReply(workspace, { mode: "guided", currentSectionId: "income-w2" }, "Review my W-2");
+    expect(reply.bullets[0]).toContain("$9,007,199,254,740,993.01");
+    expect(reply.bullets[0]).toContain("Box 2 $0");
+    expect(collectW2Suggestions(workspace.documents, workspace.structuredFacts)[0]?.summary.socialSecurityWithheld).toBe("0");
+  });
   it("treats official fixture W-2 suggestions as sample values", () => {
     const workspace = createWorkspace();
     const suggestions = collectW2Suggestions(workspace.documents, workspace.structuredFacts);

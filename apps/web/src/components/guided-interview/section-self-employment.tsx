@@ -34,12 +34,7 @@ import { CurrencyField } from "./currency-field";
 import { BooleanFact } from "./fact-fields";
 
 function toCurrencyInput(value: string | undefined) {
-  if (!value) {
-    return "";
-  }
-
-  const normalized = value.trim();
-  return normalized === "0" ? "" : normalized;
+  return value?.trim() ?? "";
 }
 
 function hasNecEntryContent(entry: NecEntryData) {

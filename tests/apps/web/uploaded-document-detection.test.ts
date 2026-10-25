@@ -209,7 +209,7 @@ Total Short-Term (Cost basis is reported to the IRS) $ 917.48 $ 1,006.94 -- $ (8
     });
   });
 
-  it("parses Coinbase 1099-DA transactions as digital asset sales with basis not reported", () => {
+  it("preserves actual digital asset rows and leaves unreported classification details unknown", () => {
     const parsed = parseUploadedDocumentText(`
 Form 1099-DA
 Long Term Transactions With Cost Basis Captured By Coinbase
@@ -221,17 +221,18 @@ Total: 0.40 0.70 -0.30
 `, "coinbase 1099-da.pdf");
 
     expect(parsed?.kind).toBe("1099-da");
-    expect(parsed?.coverage).toBe("supported");
+    expect(parsed?.coverage).toBe("partially-supported");
     const machineValues = parsed?.detectedFacts
       .map((fact) => fact.machineValue)
       .filter((value): value is NonNullable<typeof value> => value !== undefined && value !== null) ?? [];
     expect(machineValues[0]).toMatchObject({
       entryKind: "1099-b-transaction",
-      description: "ETH via Coinbase",
-      basisReportedToIRS: false,
+      description: "ETH",
       digitalAsset: true,
       holdingPeriod: "long",
     });
+    expect(machineValues[0]).not.toHaveProperty("basisReportedToIRS");
+    expect(machineValues[0]).not.toHaveProperty("adjustments");
   });
 
   it("marks employer 1095-C statements as reviewed instead of blocking deterministic recompute", () => {

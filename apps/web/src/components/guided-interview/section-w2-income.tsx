@@ -42,12 +42,7 @@ const confirmableFields: W2SuggestedField[] = [
 ];
 
 function toCurrencyInput(value: string | undefined) {
-  if (!value) {
-    return "";
-  }
-
-  const normalized = value.trim();
-  return normalized === "0" ? "" : normalized;
+  return value?.trim() ?? "";
 }
 
 function applySuggestionToEntry(

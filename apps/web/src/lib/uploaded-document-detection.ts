@@ -135,15 +135,6 @@ function normalizeAmount(value: string) {
   return /^\d+(\.\d{2})?$/.test(normalized) ? normalized : null;
 }
 
-function normalizeSignedAmount(value: string) {
-  const normalized = value.replace(/[,\s$]/g, "").trim();
-  const cleaned = normalized.startsWith("(") && normalized.endsWith(")")
-    ? `-${normalized.slice(1, -1)}`
-    : normalized;
-
-  return /^-?\d+(\.\d{2})?$/.test(cleaned) ? cleaned : null;
-}
-
 function formatAmountLabel(value: string) {
   const amount = new Decimal(value);
   if (!amount.isFinite()) return value;
@@ -174,19 +165,6 @@ function extractAmountByPatterns(text: string, patterns: RegExp[]) {
   for (const pattern of patterns) {
     const match = text.match(pattern);
     const amount = normalizeAmount(match?.[1] ?? "");
-
-    if (amount) {
-      return amount;
-    }
-  }
-
-  return null;
-}
-
-function extractSignedAmountByPatterns(text: string, patterns: RegExp[]) {
-  for (const pattern of patterns) {
-    const match = text.match(pattern);
-    const amount = normalizeSignedAmount(match?.[1] ?? "");
 
     if (amount) {
       return amount;
@@ -509,7 +487,7 @@ export function parseUploadedW2Text(text: string, fileName = ""): ParsedUploaded
   }
 
   const lines = buildLogicalLines(normalizedText);
-  const employerName = extractEmployerName(lines) ?? "Employer from uploaded W-2";
+  const employerName = extractEmployerName(lines) ?? "";
   const employerEin = extractEmployerEin(normalizedText) ?? "";
   const wages = parseW2Box1Wages(normalizedText);
   const federalWithheld = parseW2Box2FederalWithholding(normalizedText, wages);
@@ -584,8 +562,8 @@ export function parseUploadedW2Text(text: string, fileName = ""): ParsedUploaded
   return {
     kind: "w2",
     taxYear: extractExplicitDocumentTaxYear(normalizedText),
-    coverage: "supported",
-    label: employerName === "Employer from uploaded W-2" ? "Form W-2 upload" : `${employerName} W-2`,
+    coverage: employerName && employerEin && socialSecurityWages !== null && socialSecurityWithheld !== null && medicareWages !== null && medicareWithheld !== null ? "supported" : "partially-supported",
+    label: employerName ? `${employerName} W-2` : "Form W-2 upload",
     notes: "Parsed W-2 wage and withholding boxes from an uploaded W-2 PDF.",
     seededFactIds: ["wages", "withholding"],
     detectedFacts: [
@@ -593,7 +571,7 @@ export function parseUploadedW2Text(text: string, fileName = ""): ParsedUploaded
         idSuffix: "parsed-w2-summary",
         factId: "wages",
         label: "Wages",
-        value: `Parsed uploaded W-2: ${employerName} box 1 wages $${formatAmountLabel(wages)} and box 2 federal withholding $${formatAmountLabel(federalWithheld)}.`,
+        value: `Parsed uploaded W-2: ${employerName || "payer identity unconfirmed"} box 1 wages $${formatAmountLabel(wages)} and box 2 federal withholding $${formatAmountLabel(federalWithheld)}.`,
         confidence: "high",
         machineValue,
       },
@@ -608,223 +586,108 @@ export function parseUploadedW2Text(text: string, fileName = ""): ParsedUploaded
   };
 }
 
+function sourcePayer(text: string): string {
+  const names = [...text.matchAll(/^(?:Payer(?:'s)?(?: name)?|Broker(?:'s)?(?: name)?):[ \t]*([^\n]+)$/gim)].map((match) => (match[1] ?? "").trim());
+  const distinct = [...new Set(names)];
+  return distinct.length === 1 ? (distinct[0] ?? "") : "";
+}
+
+function sourceFormCount(text: string, form: string): number {
+  return [...text.matchAll(new RegExp(`\\bForm\\s+${form}\\b`, "gi"))].length;
+}
+
+/** A missing box cannot borrow a later box's amount. Conflicting copies remain unknown. */
+function sourceBoxAmount(text: string, boxLabel: string): string | undefined {
+  const pattern = new RegExp(`(?:^|\\n)[ \\t]*${boxLabel}\\s*\\$?\\s*([\\d,]+\\.\\d{2})(?!\\d)`, "gi");
+  const amounts = [...text.matchAll(pattern)].map((match) => normalizeAmount(match[1] ?? "")).filter((amount): amount is string => amount !== null);
+  const distinct = [...new Set(amounts)];
+  return distinct.length === 1 ? distinct[0] : undefined;
+}
+
+function sourceFormSection(text: string, form: string): string {
+  const header = new RegExp(`\\bForm\\s+${form}\\b`, "i").exec(text);
+  if (!header) return "";
+  const section = text.slice(header.index + header[0].length);
+  const nextHeader = /\bForm\s+1099-[A-Z]+\b/i.exec(section);
+  return nextHeader ? section.slice(0, nextHeader.index) : section;
+}
+
+function knownSourceAmounts(values: Record<string, string | undefined>): Record<string, string> {
+  return Object.fromEntries(Object.entries(values).filter((entry): entry is [string, string] => entry[1] !== undefined));
+}
+
+function interestSourceFacts(text: string, payer: string): WorkspaceStructuredFactMachineValue1099IntSummary | null {
+  const interestIncome = sourceBoxAmount(text, "1\\s+Interest Income");
+  if (interestIncome === undefined) return null;
+  return { entryKind: "1099-int-summary", sourceFactsVersion: 2, payer, interestIncome, ...knownSourceAmounts({
+    earlyWithdrawalPenalty: sourceBoxAmount(text, "2\\s+Early [Ww]ithdrawal [Pp]enalty"),
+    federalWithheld: sourceBoxAmount(text, "4\\s+Federal Income Tax Withheld"),
+    usSavingsBondInterest: sourceBoxAmount(text, "3\\s+Interest on U\\.S\\. Savings Bonds and Treasury Obligations"),
+    taxExemptInterest: sourceBoxAmount(text, "8\\s+Tax[- ]Exempt Interest"),
+  }) };
+}
+
+function completeInterestSource(entry: WorkspaceStructuredFactMachineValue1099IntSummary): boolean {
+  return Boolean(entry.payer) && [entry.earlyWithdrawalPenalty, entry.federalWithheld, entry.usSavingsBondInterest, entry.taxExemptInterest].every((value) => value !== undefined);
+}
+
 function parseUploadedComposite1099Text(text: string, fileName = ""): ParsedUploadedDocument | null {
   const normalizedText = normalizeParsingText(text);
-  const signalText = `${fileName}\n${normalizedText}`;
-
-  if (!/1099 composite/i.test(signalText)) {
-    return null;
-  }
-
+  if (!/1099 composite/i.test(`${fileName}\n${normalizedText}`)) return null;
+  const payer = sourcePayer(normalizedText);
   const accountNumber = extractAccountNumber(normalizedText);
-  const labelSuffix = accountNumber ? ` ending in ${accountNumber.slice(-4)}` : "";
-  const payerLabel = /schwab/i.test(signalText) ? "Schwab" : "Composite broker";
-
-  const interestIncome = extractAmountByPatterns(normalizedText, [
-    /1\s+Interest Income[\s\S]{0,120}?\$\s*([\d,]+\.\d{2})/i,
-  ]);
-  const ordinaryDividends = extractAmountByPatterns(normalizedText, [
-    /1a\s+Total Ordinary Dividends[\s\S]{0,120}?\$\s*([\d,]+\.\d{2})/i,
-  ]);
-  const qualifiedDividends = extractAmountByPatterns(normalizedText, [
-    /1b\s+Qualified Dividends[\s\S]{0,80}?\$\s*([\d,]+\.\d{2})/i,
-  ]) ?? "0";
-  const capitalGainDistributions = extractAmountByPatterns(normalizedText, [
-    /2a\s+Total Capital Gain Distributions[\s\S]{0,120}?\$\s*([\d,]+\.\d{2})/i,
-  ]) ?? "0";
-  const dividendFederalWithheld = extractAmountByPatterns(normalizedText, [
-    /4\s+Federal Income Tax Withheld[\s\S]{0,80}?\$\s*([\d,]+\.\d{2})/i,
-  ]) ?? "0";
-  const section199ADividends = extractAmountByPatterns(normalizedText, [
-    /5\s+Section 199A Dividends[\s\S]{0,80}?\$\s*([\d,]+\.\d{2})/i,
-  ]) ?? "0";
-  const foreignTaxPaid = extractAmountByPatterns(normalizedText, [
-    /7\s+Foreign Tax Paid[\s\S]{0,80}?\$\s*([\d,]+\.\d{2})/i,
-  ]) ?? "0";
-  const shortTermProceeds = extractAmountByPatterns(normalizedText, [
-    /Total Short-Term \(Cost basis is reported to the IRS\)[\s\S]{0,80}?\$\s*([\d,]+\.\d{2})/i,
-  ]);
-  const shortTermCostBasis = extractAmountByPatterns(normalizedText, [
-    /Total Short-Term \(Cost basis is reported to the IRS\)[\s\S]{0,120}?\$\s*[\d,]+\.\d{2}\s*\$\s*([\d,]+\.\d{2})/i,
-  ]);
-  const shortTermGainLoss = extractSignedAmountByPatterns(normalizedText, [
-    /Total Short-Term \(Cost basis is reported to the IRS\)[\s\S]{0,200}?\$\s*(\(?-?[\d,]+\.\d{2}\)?)/i,
-    /Total Short-Term Sales Price of Stocks, Bonds, etc\.[\s\S]{0,200}?\$\s*(\(?-?[\d,]+\.\d{2}\)?)/i,
-  ]);
-
+  const label = `${payer || "Uploaded brokerage"}${accountNumber ? ` ending in ${accountNumber.slice(-4)}` : ""}`;
+  const interest = interestSourceFacts(sourceFormSection(normalizedText, "1099-INT"), payer);
+  const dividendsText = sourceFormSection(normalizedText, "1099-DIV");
+  const ordinaryDividends = sourceBoxAmount(dividendsText, "1a\\s+Total Ordinary Dividends");
+  const dividendAmounts = knownSourceAmounts({
+    qualifiedDividends: sourceBoxAmount(dividendsText, "1b\\s+Qualified Dividends"),
+    capitalGainDistributions: sourceBoxAmount(dividendsText, "2a\\s+Total Capital Gain Distributions"),
+    federalWithheld: sourceBoxAmount(dividendsText, "4\\s+Federal Income Tax Withheld"),
+    section199ADividends: sourceBoxAmount(dividendsText, "5\\s+Section 199A Dividends"),
+    foreignTaxPaid: sourceBoxAmount(dividendsText, "7\\s+Foreign Tax Paid"),
+  });
+  const totals = sourceFormSection(normalizedText, "1099-B").match(/Total Short-Term \(Cost basis is reported to the IRS\)\s*\$\s*([\d,]+\.\d{2})\s*\$\s*([\d,]+\.\d{2})/i);
+  const proceeds = totals ? normalizeAmount(totals[1]) : null;
+  const basis = totals ? normalizeAmount(totals[2]) : null;
   const detectedFacts: WorkspaceDocumentDetectedFactRecord[] = [];
   const seededFactIds: SeededFactId[] = [];
-
-  if (interestIncome) {
-    const machineValue: WorkspaceStructuredFactMachineValue1099IntSummary = {
-      entryKind: "1099-int-summary",
-      payer: `${payerLabel}${labelSuffix}`,
-      interestIncome,
-      earlyWithdrawalPenalty: "0",
-      federalWithheld: "0",
-      taxExemptInterest: "0",
-      usSavingsBondInterest: "0",
-    };
-
+  if (interest) {
     seededFactIds.push("taxable-interest");
-    detectedFacts.push({
-      idSuffix: "parsed-composite-interest",
-      factId: "taxable-interest",
-      label: "Taxable interest",
-      value: `Parsed uploaded composite statement: taxable interest $${formatAmountLabel(interestIncome)}.`,
-      confidence: "high",
-      machineValue,
-    });
+    detectedFacts.push({ idSuffix: "parsed-composite-interest", factId: "taxable-interest", label: "Taxable interest", value: `Parsed uploaded composite statement: taxable interest $${formatAmountLabel(interest.interestIncome)}. Missing boxes require confirmation.`, confidence: "high", machineValue: interest });
   }
-
-  if (ordinaryDividends) {
-    const machineValue: WorkspaceStructuredFactMachineValue1099DivSummary = {
-      entryKind: "1099-div-summary",
-      payer: `${payerLabel}${labelSuffix}`,
-      ordinaryDividends,
-      qualifiedDividends,
-      capitalGainDistributions,
-      federalWithheld: dividendFederalWithheld,
-      section199ADividends,
-      foreignTaxPaid,
-    };
-
-    seededFactIds.push("ordinary-dividends", "qualified-dividends", "capital-gain-distributions");
-    detectedFacts.push(
-      {
-        idSuffix: "parsed-composite-dividends",
-        factId: "ordinary-dividends",
-        label: "Ordinary dividends",
-        value: `Parsed uploaded composite statement: ordinary dividends $${formatAmountLabel(ordinaryDividends)}, qualified dividends $${formatAmountLabel(qualifiedDividends)}, and foreign tax paid $${formatAmountLabel(foreignTaxPaid)}.`,
-        confidence: "high",
-        machineValue,
-      },
-      {
-        idSuffix: "parsed-composite-qualified-dividends",
-        factId: "qualified-dividends",
-        label: "Qualified dividends",
-        value: `Parsed uploaded composite statement: qualified dividends $${formatAmountLabel(qualifiedDividends)}.`,
-        confidence: "high",
-      },
-      {
-        idSuffix: "parsed-composite-capital-gain-distributions",
-        factId: "capital-gain-distributions",
-        label: "Capital gain distributions",
-        value: `Parsed uploaded composite statement: capital gain distributions $${formatAmountLabel(capitalGainDistributions)} and Section 199A dividends $${formatAmountLabel(section199ADividends)}.`,
-        confidence: "high",
-      },
-    );
+  if (ordinaryDividends !== undefined) {
+    const machineValue: WorkspaceStructuredFactMachineValue1099DivSummary = { entryKind: "1099-div-summary", sourceFactsVersion: 2, payer, ordinaryDividends, ...dividendAmounts };
+    seededFactIds.push("ordinary-dividends");
+    detectedFacts.push({ idSuffix: "parsed-composite-dividends", factId: "ordinary-dividends", label: "Ordinary dividends", value: `Parsed uploaded composite statement: ordinary dividends $${formatAmountLabel(ordinaryDividends)}. Missing dividend boxes require confirmation.`, confidence: "high", machineValue });
+    for (const [field, factId, title] of [["qualifiedDividends", "qualified-dividends", "Qualified dividends"], ["capitalGainDistributions", "capital-gain-distributions", "Capital gain distributions"]] as const) {
+      if (dividendAmounts[field] === undefined) continue;
+      seededFactIds.push(factId);
+      detectedFacts.push({ idSuffix: `parsed-composite-${factId}`, factId, label: title, value: `${title} $${formatAmountLabel(dividendAmounts[field])} from the actual dividend section.`, confidence: "high" });
+    }
   }
-
-  if (shortTermProceeds && shortTermCostBasis) {
-    const gainLoss = shortTermGainLoss ?? new Decimal(shortTermProceeds).minus(shortTermCostBasis).toFixed(2);
-    const machineValue: WorkspaceStructuredFactMachineValue1099BTransaction = {
-      entryKind: "1099-b-transaction",
-      description: `${payerLabel}${labelSuffix} short-term covered summary`,
-      dateAcquired: "VARIOUS",
-      dateSold: "", // A summary total does not identify the actual sale date.
-      proceeds: shortTermProceeds,
-      costBasis: shortTermCostBasis,
-      adjustments: "0",
-      basisReportedToIRS: true,
-      holdingPeriod: "short",
-      washSale: false,
-      washSaleDisallowed: "0",
-    };
-
+  if (proceeds !== null && basis !== null) {
     seededFactIds.push("broker-proceeds", "cost-basis-review");
-    detectedFacts.push(
-      {
-        idSuffix: "parsed-composite-short-term-summary",
-        factId: "broker-proceeds",
-        label: "Broker sale proceeds",
-        value: `Parsed uploaded composite statement: short-term covered sales proceeds $${formatAmountLabel(shortTermProceeds)}, basis $${formatAmountLabel(shortTermCostBasis)}, gain/loss $${formatAmountLabel(gainLoss.replace("-", ""))}${gainLoss.startsWith("-") ? " loss" : " gain"}.`,
-        confidence: "high",
-        machineValue,
-      },
-      {
-        idSuffix: "parsed-composite-cost-basis-review",
-        factId: "cost-basis-review",
-        label: "Cost basis review",
-        value: "Parsed uploaded composite statement includes covered short-term 1099-B totals with basis reported to the IRS.",
-        confidence: "high",
-      },
-    );
+    detectedFacts.push({ idSuffix: "parsed-composite-short-term-summary", factId: "broker-proceeds", label: "Broker sale proceeds", value: `Parsed short-term covered summary: proceeds $${formatAmountLabel(proceeds)} and basis $${formatAmountLabel(basis)}. Actual dates and adjustments remain unconfirmed.`, confidence: "high", machineValue: {
+      entryKind: "1099-b-transaction", sourceFactsVersion: 2, description: `${label} short-term covered summary`, dateAcquired: "", dateSold: "", proceeds, costBasis: basis, basisReportedToIRS: true, holdingPeriod: "short",
+    } });
+    detectedFacts.push({ idSuffix: "parsed-composite-cost-basis-review", factId: "cost-basis-review", label: "Cost basis review", value: "The summary reports short-term basis to the IRS; actual transaction dates, adjustments and wash-sale facts require confirmation.", confidence: "high" });
   }
-
-  if (detectedFacts.length === 0) {
-    return null;
-  }
-
-  const kind: WorkspaceDocumentKind = shortTermProceeds
-    ? "1099-b"
-    : ordinaryDividends
-      ? "1099-div"
-      : "1099-int";
-
-  return {
-    kind,
-    coverage: shortTermProceeds ? "partially-supported" : "supported",
-    label: `${payerLabel}${labelSuffix} composite tax statement`,
-    notes: shortTermProceeds ? "Parsed brokerage totals; enter actual transaction dates and adjustments before calculation." : "Parsed supported 1099 fields from an uploaded composite brokerage statement.",
-    seededFactIds: dedupeSeededFactIds(seededFactIds),
-    detectedFacts,
-  };
+  if (!detectedFacts.length) return null;
+  // Repeated form headings may be duplicate copies or separate statements. A
+  // single extracted section cannot establish which, or a complete total.
+  const unambiguousSections = ["1099-INT", "1099-DIV", "1099-B"].every((form) => sourceFormCount(normalizedText, form) <= 1);
+  const complete = unambiguousSections && !proceeds && (!sourceFormCount(normalizedText, "1099-INT") || (interest !== null && completeInterestSource(interest))) && (!sourceFormCount(normalizedText, "1099-DIV") || (ordinaryDividends !== undefined && payer !== "" && Object.keys(dividendAmounts).length === 5));
+  return { kind: proceeds !== null ? "1099-b" : ordinaryDividends !== undefined ? "1099-div" : "1099-int", coverage: complete ? "supported" : "partially-supported", label: `${label} composite tax statement`, notes: "Parsed only explicitly labeled source fields; missing boxes, payer identity and transaction details require confirmation.", seededFactIds: dedupeSeededFactIds(seededFactIds), detectedFacts };
 }
 
 function parseUploaded1099IntText(text: string, fileName = ""): ParsedUploadedDocument | null {
   const normalizedText = normalizeParsingText(text);
   const signalText = `${fileName}\n${normalizedText}`;
-
-  if (!/1099-?int\b/i.test(signalText) || /1099 composite/i.test(signalText)) {
-    return null;
-  }
-
-  const interestIncome = extractAmountByPatterns(normalizedText, [
-    /1\s+Interest Income[\s\S]{0,120}?\$\s*([\d,]+\.\d{2})/i,
-  ]);
-
-  if (!interestIncome) {
-    return null;
-  }
-
-  const federalWithheld = extractAmountByPatterns(normalizedText, [
-    /4\s+Federal Income Tax Withheld[\s\S]{0,80}?\$\s*([\d,]+\.\d{2})/i,
-  ]) ?? "0";
-  const usSavingsBondInterest = extractAmountByPatterns(normalizedText, [
-    /3\s+Interest on U\.S\. Savings Bonds and Treasury Obligations[\s\S]{0,80}?\$\s*([\d,]+\.\d{2})/i,
-  ]) ?? "0";
-  const taxExemptInterest = extractAmountByPatterns(normalizedText, [
-    /8\s+Tax-Exempt Interest[\s\S]{0,80}?\$\s*([\d,]+\.\d{2})/i,
-  ]) ?? "0";
-  const payer = fileName.replace(/\.pdf$/i, "") || "Interest payer";
-  const machineValue: WorkspaceStructuredFactMachineValue1099IntSummary = {
-    entryKind: "1099-int-summary",
-    payer,
-    interestIncome,
-    earlyWithdrawalPenalty: "0",
-    federalWithheld,
-    taxExemptInterest,
-    usSavingsBondInterest,
-  };
-
-  return {
-    kind: "1099-int",
-    coverage: "supported",
-    label: `${payer} 1099-INT`,
-    notes: "Parsed taxable interest boxes from an uploaded 1099-INT PDF.",
-    seededFactIds: ["taxable-interest"],
-    detectedFacts: [
-      {
-        idSuffix: "parsed-1099-int-summary",
-        factId: "taxable-interest",
-        label: "Taxable interest",
-        value: `Parsed uploaded 1099-INT: taxable interest $${formatAmountLabel(interestIncome)}.`,
-        confidence: "high",
-        machineValue,
-      },
-    ],
-  };
+  if (!/1099-?int\b/i.test(signalText) || /1099 composite/i.test(signalText)) return null;
+  const machineValue = interestSourceFacts(normalizedText, sourcePayer(normalizedText));
+  if (!machineValue) return null;
+  return { kind: "1099-int", coverage: completeInterestSource(machineValue) && sourceFormCount(normalizedText, "1099-INT") <= 1 ? "supported" : "partially-supported", label: `${machineValue.payer || "Uploaded"} 1099-INT`, notes: "Parsed actual labeled interest boxes; missing payer identity or boxes require confirmation.", seededFactIds: ["taxable-interest"], detectedFacts: [{ idSuffix: "parsed-1099-int-summary", factId: "taxable-interest", label: "Taxable interest", value: `Parsed uploaded 1099-INT: taxable interest $${formatAmountLabel(machineValue.interestIncome)}.`, confidence: "high", machineValue }] };
 }
 
 function parseUploaded1099DAText(text: string, fileName = ""): ParsedUploadedDocument | null {
@@ -836,12 +699,19 @@ function parseUploaded1099DAText(text: string, fileName = ""): ParsedUploadedDoc
   }
 
   const assetMatch = normalizedText.match(/\b([A-Z0-9]{2,10})\s*\/\s*([A-Z0-9]{4,})\b/);
-  const assetName = assetMatch?.[1] ?? "Digital asset";
+  const assetName = assetMatch?.[1] ?? "";
+  const longTerm = /\bLong[- ]Term Transactions\b/i.test(normalizedText);
+  const shortTerm = /\bShort[- ]Term Transactions\b/i.test(normalizedText);
+  const holdingPeriod = longTerm !== shortTerm ? (longTerm ? "long" : "short") : undefined;
+  const notReported = /cost basis (?:is|was) not reported to the IRS/i.test(normalizedText);
+  const reported = /cost basis (?:is|was) reported to the IRS/i.test(normalizedText);
+  const basisReportedToIRS = reported !== notReported ? reported : undefined;
   const rowPattern = /(\d{2}\/\d{2}\/\d{2})\s+[0-9.]+\s+([0-9]+\.[0-9]{2})\s+(\d{2}\/\d{2}\/\d{2})\s+([0-9]+\.[0-9]{2})\s+(-?[0-9]+\.[0-9]{2})/g;
   const detectedFacts: WorkspaceDocumentDetectedFactRecord[] = [];
   const transactions = [...normalizedText.matchAll(rowPattern)];
 
   for (const [index, match] of transactions.entries()) {
+    const rowAsset = [...normalizedText.slice(0, match.index).matchAll(/\b([A-Z0-9]{2,10})\s*\/\s*([A-Z0-9]{4,})\b/g)].at(-1)?.[1] ?? "";
     const dateSold = toIsoDate(match[1] ?? "");
     const proceeds = normalizeAmount(match[2] ?? "");
     const dateAcquired = toIsoDate(match[3] ?? "");
@@ -853,17 +723,15 @@ function parseUploaded1099DAText(text: string, fileName = ""): ParsedUploadedDoc
 
     const machineValue: WorkspaceStructuredFactMachineValue1099BTransaction = {
       entryKind: "1099-b-transaction",
-      description: `${assetName} via Coinbase`,
+      sourceFactsVersion: 2,
+      description: rowAsset,
       dateAcquired,
       dateSold,
       proceeds,
       costBasis,
-      adjustments: "0",
-      basisReportedToIRS: false,
-      holdingPeriod: "long",
+      ...(basisReportedToIRS === undefined ? {} : { basisReportedToIRS }),
+      ...(holdingPeriod === undefined ? {} : { holdingPeriod }),
       digitalAsset: true,
-      washSale: false,
-      washSaleDisallowed: "0",
     };
 
     detectedFacts.push({
@@ -898,17 +766,15 @@ function parseUploaded1099DAText(text: string, fileName = ""): ParsedUploadedDoc
       confidence: "high",
       machineValue: {
         entryKind: "1099-b-transaction",
-        description: "Coinbase digital asset summary",
-        dateAcquired: "VARIOUS",
+        sourceFactsVersion: 2,
+        description: assetName,
+        dateAcquired: "",
         dateSold: "", // Unknown summary sale dates must not become year-end dates.
         proceeds: summaryProceeds,
         costBasis: summaryBasis,
-        adjustments: "0",
-        basisReportedToIRS: false,
-        holdingPeriod: "long",
+        ...(basisReportedToIRS === undefined ? {} : { basisReportedToIRS }),
+        ...(holdingPeriod === undefined ? {} : { holdingPeriod }),
         digitalAsset: true,
-        washSale: false,
-        washSaleDisallowed: "0",
       },
     });
   }
@@ -917,14 +783,14 @@ function parseUploaded1099DAText(text: string, fileName = ""): ParsedUploadedDoc
     idSuffix: "parsed-1099-da-cost-basis-review",
     factId: "cost-basis-review",
     label: "Cost basis review",
-    value: "Parsed uploaded 1099-DA indicates basis was not reported to the IRS for these digital asset transactions.",
+    value: "Confirm actual basis reporting, holding period, adjustments and wash-sale treatment from the source transaction records.",
     confidence: "high",
   });
 
   return {
     kind: "1099-da",
-    coverage: detectedFacts.some((fact) => fact.machineValue?.entryKind === "1099-b-transaction" && !fact.machineValue.dateSold) ? "partially-supported" : "supported",
-    label: "Coinbase 1099-DA",
+    coverage: "partially-supported",
+    label: "Uploaded 1099-DA",
     notes: "Parsed digital asset rows or totals. Summary-only amounts require actual transaction dates and review before calculation.",
     seededFactIds: ["broker-proceeds", "cost-basis-review"],
     detectedFacts,

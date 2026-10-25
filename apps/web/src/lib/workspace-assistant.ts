@@ -4,6 +4,8 @@ import type {
   WorkspaceStructuredFactMachineValueW2Summary,
   WorkspaceStructuredFactRecord,
 } from "@tax-engine/contracts";
+import Decimal from "decimal.js";
+import { formatGuidedCurrency } from "@/lib/guided-currency";
 import {
   formatFixtureDocumentCount,
   isOfficialFixtureSourceType,
@@ -38,37 +40,37 @@ export interface ReturnAssistantReply {
 }
 
 function parseSuggestionAmount(value: string | undefined) {
-  if (!value) {
+  if (!value || !/^\d+(?:\.\d+)?$/.test(value.trim())) {
     return null;
   }
 
-  const numericValue = Number(value);
+  const numericValue = new Decimal(value.trim());
 
-  return Number.isFinite(numericValue) && numericValue > 0 ? numericValue : null;
+  return numericValue.isFinite() ? numericValue : null;
 }
 
-function sanitizeSuggestedWageAmount(value: string | undefined, box1Wages: number | null) {
+function sanitizeSuggestedWageAmount(value: string | undefined, box1Wages: Decimal | null) {
   const numericValue = parseSuggestionAmount(value);
 
   if (numericValue === null) {
     return undefined;
   }
 
-  if (box1Wages !== null && numericValue > box1Wages * 3) {
+  if (box1Wages !== null && numericValue.gt(box1Wages.times(3))) {
     return undefined;
   }
 
   return value;
 }
 
-function sanitizeSuggestedWithholdingAmount(value: string | undefined, relatedWages: number | null) {
+function sanitizeSuggestedWithholdingAmount(value: string | undefined, relatedWages: Decimal | null) {
   const numericValue = parseSuggestionAmount(value);
 
   if (numericValue === null) {
     return undefined;
   }
 
-  if (relatedWages !== null && numericValue >= relatedWages) {
+  if (relatedWages !== null && numericValue.gt(0) && numericValue.gte(relatedWages)) {
     return undefined;
   }
 
@@ -147,7 +149,7 @@ function sanitizeNecSummarySuggestion(
     return null;
   }
 
-  if (withholdingAmount !== null && withholdingAmount >= compensationAmount) {
+  if (withholdingAmount !== null && withholdingAmount.gt(0) && withholdingAmount.gte(compensationAmount)) {
     return null;
   }
 
@@ -192,7 +194,7 @@ export function collectNecSuggestions(
 
 function buildW2Bullets(suggestions: W2DocumentSuggestion[]) {
   return suggestions.slice(0, 3).map((suggestion) => (
-    `${suggestion.documentLabel}: Box 1 $${Number(suggestion.summary.wages).toLocaleString()} and Box 2 $${Number(suggestion.summary.federalWithheld).toLocaleString()}`
+    `${suggestion.documentLabel}: Box 1 ${formatGuidedCurrency(suggestion.summary.wages)} and Box 2 ${formatGuidedCurrency(suggestion.summary.federalWithheld)}`
   ));
 }
 

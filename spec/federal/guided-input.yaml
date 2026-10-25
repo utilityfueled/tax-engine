@@ -85,3 +85,8 @@ lines:
     formula: "Preserve actual category, net qualified cost, completion date, residence eligibility, qualification, applicable manufacturer identifier and fuel-cell capacity. Reconcile saved aggregates to individual records without emitting both representations. General roofing is ineligible; a recorded qualified solar-roof component requires actual solar records and must not be counted twice. Preserve confirmed prior-year carryforward source year and zero; omit no missing fact by assumption."
     irsRef: "Form 5695 instructions Parts I and II; Public Law 119-21 sections 70505 and 70506"
     testRef: "tests/guided-interview/guided-energy-facts.test.ts::preserves individual categories dates qualification and confirmed carryforward"
+  - line: "sparse-document-facts"
+    description: "Keep missing uploaded boxes and classifications unknown"
+    formula: "Only extract a box amount from its own labeled field and section. Missing payer identity, monetary boxes, acquisition/sale dates, adjustments, basis reporting, holding period and wash-sale treatment stay unknown. Explicit source zero remains zero. Reject incomplete or legacy parser-inferred facts before schema defaults can create a calculation."
+    irsRef: "Instructions for Forms 1099-INT boxes 1-4 and 8; 1099-DIV boxes 1a-7; 1099-DA basis and transaction reporting"
+    testRef: "tests/guided-interview/document-fact-fidelity.test.ts::keeps sparse interest boxes unknown and never uses the filename as payer identity"

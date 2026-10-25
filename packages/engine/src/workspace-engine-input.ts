@@ -1571,10 +1571,29 @@ export function buildWorkspaceEngineInput(
     if (fact.sourceDocumentIds.length !== 1) return null;
     if ("accountHolder" in fact.machineValue && fact.machineValue.accountHolder === "spouse"
       && (!taxpayer?.spouse || taxpayer.filingStatus !== "married_filing_jointly")) return null;
-    if (fact.machineValue.entryKind === "1099-b-transaction") {
-      const sold = fact.machineValue.dateSold;
+    const machineValue = fact.machineValue;
+    const hasMoney = (value: unknown, allowNegative = false) => typeof value === "string" && /^-?\d+(?:\.\d+)?$/.test(value) && new Decimal(value).isFinite() && (allowNegative || new Decimal(value).gte(0));
+    const hasText = (value: unknown) => typeof value === "string" && value.trim().length > 0;
+    if (machineValue.entryKind === "w2-summary"
+      && (!hasText(machineValue.employerName) || !/^\d{2}-?\d{7}$/.test(machineValue.employerEin)
+        || ![machineValue.wages, machineValue.federalWithheld, machineValue.socialSecurityWages, machineValue.socialSecurityWithheld, machineValue.medicareWages, machineValue.medicareWithheld].every((value) => hasMoney(value)))) return null;
+    if (["1099-int-summary", "1099-div-summary", "1099-b-transaction"].includes(machineValue.entryKind)
+      && fact.sourceType === "upload" && fact.id.includes(":parsed-")
+      && (!("sourceFactsVersion" in machineValue) || machineValue.sourceFactsVersion !== 2)) return null;
+    if (machineValue.entryKind === "1099-int-summary"
+      && (!hasText(machineValue.payer) || ![machineValue.interestIncome, machineValue.earlyWithdrawalPenalty, machineValue.federalWithheld, machineValue.taxExemptInterest, machineValue.usSavingsBondInterest].every((value) => hasMoney(value)))) return null;
+    if (machineValue.entryKind === "1099-div-summary"
+      && (!hasText(machineValue.payer) || ![machineValue.ordinaryDividends, machineValue.qualifiedDividends, machineValue.capitalGainDistributions, machineValue.federalWithheld, machineValue.section199ADividends, machineValue.foreignTaxPaid].every((value) => hasMoney(value)))) return null;
+    if (machineValue.entryKind === "1099-b-transaction") {
+      const sold = machineValue.dateSold;
       const date = new Date(`${sold}T00:00:00Z`);
       if (!/^\d{4}-\d{2}-\d{2}$/.test(sold) || !Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== sold || !sold.startsWith(`${targetTaxYear}-`)) return null;
+      const acquired = machineValue.dateAcquired;
+      const acquiredDate = new Date(`${acquired}T00:00:00Z`);
+      if (acquired !== "VARIOUS" && (!/^\d{4}-\d{2}-\d{2}$/.test(acquired) || !Number.isFinite(acquiredDate.getTime()) || acquiredDate.toISOString().slice(0, 10) !== acquired || acquired > sold)) return null;
+      if (!hasText(machineValue.description) || ![machineValue.proceeds, machineValue.costBasis, machineValue.washSaleDisallowed].every((value) => hasMoney(value))
+        || !hasMoney(machineValue.adjustments, true) || typeof machineValue.basisReportedToIRS !== "boolean" || typeof machineValue.washSale !== "boolean" || !["short", "long"].includes(machineValue.holdingPeriod ?? "")) return null;
+      if (machineValue.washSale === false && machineValue.washSaleDisallowed !== undefined && new Decimal(machineValue.washSaleDisallowed).gt(0)) return null;
     }
   }
 

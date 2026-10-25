@@ -523,17 +523,18 @@ export type WorkspaceStructuredFactConfidence =
 
 export interface WorkspaceStructuredFactMachineValue1099BTransaction {
   entryKind: "1099-b-transaction";
+  sourceFactsVersion?: 2;
   description: string;
   dateAcquired: string;
   dateSold: string;
   proceeds: string;
   costBasis: string;
-  adjustments: string;
-  basisReportedToIRS: boolean;
-  holdingPeriod: "short" | "long";
+  adjustments?: string;
+  basisReportedToIRS?: boolean;
+  holdingPeriod?: "short" | "long";
   digitalAsset?: boolean;
-  washSale: boolean;
-  washSaleDisallowed: string;
+  washSale?: boolean;
+  washSaleDisallowed?: string;
 }
 
 export interface WorkspaceStructuredFactMachineValueW2Summary {
@@ -554,12 +555,13 @@ export interface WorkspaceStructuredFactMachineValueW2Summary {
 
 export interface WorkspaceStructuredFactMachineValue1099IntSummary {
   entryKind: "1099-int-summary";
+  sourceFactsVersion?: 2;
   payer: string;
   interestIncome: string;
-  earlyWithdrawalPenalty: string;
-  federalWithheld: string;
-  taxExemptInterest: string;
-  usSavingsBondInterest: string;
+  earlyWithdrawalPenalty?: string;
+  federalWithheld?: string;
+  taxExemptInterest?: string;
+  usSavingsBondInterest?: string;
 }
 
 export interface WorkspaceStructuredFactMachineValue1099GSummary {
@@ -588,13 +590,14 @@ export interface WorkspaceStructuredFactMachineValue1099OIDSummary {
 
 export interface WorkspaceStructuredFactMachineValue1099DivSummary {
   entryKind: "1099-div-summary";
+  sourceFactsVersion?: 2;
   payer: string;
   ordinaryDividends: string;
-  qualifiedDividends: string;
-  capitalGainDistributions: string;
-  federalWithheld: string;
-  section199ADividends: string;
-  foreignTaxPaid: string;
+  qualifiedDividends?: string;
+  capitalGainDistributions?: string;
+  federalWithheld?: string;
+  section199ADividends?: string;
+  foreignTaxPaid?: string;
 }
 
 export interface WorkspaceStructuredFactMachineValue1095ASummary {

@@ -2146,7 +2146,9 @@ describe("workspace storage", () => {
           employerEin: "12-3456789",
           wages: "52000",
           socialSecurityWages: "52000",
+          socialSecurityWithheld: "3224",
           medicareWages: "52000",
+          medicareWithheld: "754",
           federalWithheld: "5000"
         }
       },
@@ -2314,7 +2316,9 @@ describe("workspace storage", () => {
           employerEin: "12-3456789",
           wages: "52000",
           socialSecurityWages: "52000",
+          socialSecurityWithheld: "3224",
           medicareWages: "52000",
+          medicareWithheld: "754",
           federalWithheld: "5000"
         }
       },

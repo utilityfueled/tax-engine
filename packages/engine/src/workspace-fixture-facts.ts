@@ -24,6 +24,8 @@ interface FixtureStructuredFactTemplate {
   machineValue?: WorkspaceStructuredFactRecord["machineValue"];
 }
 
+// These values are explicit synthetic examples attached to blank IRS templates,
+// not facts extracted from a taxpayer's upload or IRS worked-example evidence.
 const fixtureStructuredFactsByFixtureId: Record<string, FixtureStructuredFactTemplate[]> = {
   "irs-w2-2025": [
     {
@@ -37,7 +39,9 @@ const fixtureStructuredFactsByFixtureId: Record<string, FixtureStructuredFactTem
         employerEin: "12-3456789",
         wages: "52000",
         socialSecurityWages: "52000",
+        socialSecurityWithheld: "3224",
         medicareWages: "52000",
+        medicareWithheld: "754",
         federalWithheld: "5000"
       } satisfies WorkspaceStructuredFactMachineValueW2Summary
     },
@@ -60,7 +64,9 @@ const fixtureStructuredFactsByFixtureId: Record<string, FixtureStructuredFactTem
         employerEin: "12-3456789",
         wages: "52000",
         socialSecurityWages: "52000",
+        socialSecurityWithheld: "3224",
         medicareWages: "52000",
+        medicareWithheld: "754",
         federalWithheld: "5000"
       } satisfies WorkspaceStructuredFactMachineValueW2Summary
     },

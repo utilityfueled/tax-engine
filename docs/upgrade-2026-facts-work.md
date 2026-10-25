@@ -300,3 +300,32 @@ Source-year/document-fidelity package commit: `70f8d17`.
   all survive reload. Captured requests contain neither the synthetic SSN nor the
   exact entered income. Initial selector failures were corrected without changing
   app behavior or weakening timeouts/readiness gates.
+
+## Sparse source documents and confirmed zero
+
+- Deterministic interest/dividend extraction now reads only the amount belonging
+  to the labeled box in its actual form section. Missing boxes, conflicting copies,
+  payer identities and ambiguous repeated statements remain unknown or partial.
+  File names are not payer evidence. Digital asset rows keep their own asset name;
+  absent acquisition dates, basis-reporting status, adjustments and wash-sale
+  facts are no longer invented. Source contracts preserve those missing fields.
+- The document-to-engine boundary rejects missing W-2 payroll boxes and incomplete
+  interest/dividend/transaction facts before schema defaults can replace them.
+  Legacy deterministic records need the new source-facts version and actual facts;
+  unchanged original source records remain available for review. Explicit fixture
+  payroll amounts are synthetic examples, not claims about blank IRS templates.
+- W-2 and NEC copy controls preserve actual zero and leave absent amounts blank.
+  W-2 values remain pending until confirmed; a manual change clears the source
+  confirmation. Suggestion comparisons and large-number review copy now use
+  Decimal, including cents beyond the JavaScript safe-integer range.
+- Refreshed official [1099-INT instructions](https://www.irs.gov/instructions/i1099int),
+  [1099-DIV instructions](https://www.irs.gov/instructions/i1099div) and
+  [2026 1099-DA instructions](https://www.irs.gov/instructions/i1099da).
+  New sparse, ambiguous and source-copy regressions failed before the fixes.
+- 132 tests pass across nine parser, workspace, adapter, PDF and real DOM
+  interaction files. Root, contracts and web types pass; scoped lint has zero
+  errors and diff checks pass. The separate Schedule 3 rewrite temporarily has
+  three stale spec references, reported to its owner; this package's reference
+  resolves. The first direct Vitest PDF invocation lacked pypdf; `pnpm test` uses
+  the pinned interpreter and all 12 filled-return tests now pass, including the
+  actual energy worksheet integration in `968fa7b`. Prior energy UI: `c3f922f`.

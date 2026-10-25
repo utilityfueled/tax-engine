@@ -1084,7 +1084,9 @@ describe("workspace engine preview", () => {
           employerEin: "12-3456789",
           wages: "9007199254740991",
           socialSecurityWages: "9007199254740991",
+          socialSecurityWithheld: "0", // Explicit fictional withholding for this precision fixture.
           medicareWages: "9007199254740991",
+          medicareWithheld: "0",
           federalWithheld: "10"
         }
       },
@@ -1105,7 +1107,9 @@ describe("workspace engine preview", () => {
           employerEin: "98-7654321",
           wages: "10",
           socialSecurityWages: "10",
+          socialSecurityWithheld: "0",
           medicareWages: "10",
+          medicareWithheld: "0",
           federalWithheld: "9007199254740991"
         }
       }
