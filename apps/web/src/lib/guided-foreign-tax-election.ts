@@ -1,3 +1,4 @@
+import { buildGuidedForeignTaxCarryover, type ForeignCarryoverData } from "./guided-foreign-tax-carryover";
 import { ForeignTaxElectionSchema, Form1099IntSchema, Form1099DivSchema, type TaxYearInput } from '@/models/inputs.js';
 import { resolveForeignTaxElection } from '@/engine/forms/foreign-tax-election.js';
 import type { FilingStatus, InterestEntryData, DividendEntryData } from './guided-interview-flow';
@@ -7,7 +8,7 @@ import { parseGuidedCurrency } from './guided-currency';
 
 type EngineElection = NonNullable<TaxYearInput['foreignTaxElection']>;
 export type ForeignTaxSourceData = NonNullable<EngineElection['sources']>[number];
-export type ForeignTaxElectionData = Omit<EngineElection,'taxYear'|'sourceFactsConfirmed'> & {taxYear?:string;sourceFactsConfirmed?:boolean|null};
+export type ForeignTaxElectionData = Omit<EngineElection,'taxYear'|'sourceFactsConfirmed'|'deductionYearCarryover'> & {taxYear?:string;sourceFactsConfirmed?:boolean|null;deductionYearCarryover?:ForeignCarryoverData};
 const statusMap:Record<FilingStatus,EngineFilingStatus>={single:'single',mfj:'married_filing_jointly',mfs:'married_filing_separately',hoh:'head_of_household',qss:'qualifying_surviving_spouse'};
 function amount(value:string|undefined,label:string) {
   if(value===undefined||!value.trim())throw new Error(`Enter the actual ${label}, including zero when established by the source.`);
@@ -27,7 +28,7 @@ export function buildGuidedForeignTaxElection(data:ForeignTaxElectionData|undefi
     taxDeductedElsewhere:amount(source.taxDeductedElsewhere,'tax already deducted elsewhere'),investmentAllocableAmount:amount(source.investmentAllocableAmount,'foreign investment tax allocation'),
     payments:source.payments?.map(payment=>({...payment,amountUsd:amount(payment.amountUsd,'dated USD tax payment')})),
   }));
-  const actual=ForeignTaxElectionSchema.parse({...data,taxYear:year,sources});
+  const actual=ForeignTaxElectionSchema.parse({...data,taxYear:year,sources,deductionYearCarryover:buildGuidedForeignTaxCarryover(data.deductionYearCarryover,investment,year,status)});
   const form1099Int=(investment?.interestEntries??[]).filter(isStartedInvestment).map(entry=>Form1099IntSchema.parse({
     payer:entry.payer,payerTin:entry.payerTin,accountReference:entry.accountReference?.trim()||undefined,accountHolder:entry.accountHolder||undefined,
     interestIncome:amount(entry.interestIncome,'statement interest'),foreignTaxPaid:amount(entry.foreignTaxPaid,'statement foreign tax'),foreignCountry:entry.foreignCountry,

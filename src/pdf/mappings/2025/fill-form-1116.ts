@@ -9,6 +9,8 @@ import {
   type PDFPage,
 } from "pdf-lib";
 import type { CalculatedLine, TaxReturnResult } from "@/models/outputs.js";
+import Decimal from "decimal.js";
+import { d, sum } from "@/utils/decimal.js";
 
 const PAGE_WIDTH = 612;
 const PAGE_HEIGHT = 792;
@@ -125,7 +127,90 @@ function formatLineValue(line: CalculatedLine) {
   return line.value.toString();
 }
 
+const DEDUCTION_CARRYOVER_FORM = "Foreign Deduction Carryover WS";
+
+/** A deduction-year record copies canonical audits; it does not compute another credit. */
+function deductionYearReferenceLines(result: TaxReturnResult): CalculatedLine[] | undefined {
+  const carry = result.foreignTaxDeductionCarryover;
+  const canonical = result.allLines.filter(line => line.form === DEDUCTION_CARRYOVER_FORM);
+  if (!carry) {
+    if (canonical.length) throw new Error("Foreign carryover audit is missing its calculated source result");
+    return undefined;
+  }
+  if (result.scheduleA?.foreignTaxElection.election !== "deduction" || !result.foreignTaxCredit.isZero()) {
+    throw new Error("Foreign carryover record requires the actual deduction election and zero current credit");
+  }
+  const finite = (value: Decimal): boolean => Decimal.isDecimal(value) && value.isFinite();
+  const nonnegative = (value: Decimal): boolean => finite(value) && value.gte(0);
+  const auditById = new Map<string, CalculatedLine>();
+  for (const line of canonical) {
+    if (auditById.has(line.line) || !finite(line.value)) throw new Error("Foreign carryover audit is duplicate or invalid");
+    auditById.set(line.line, line);
+  }
+  if (!carry.lines.length || canonical.length !== carry.lines.length) throw new Error("Foreign carryover audit is incomplete");
+  const copied = new Set<string>();
+  for (const line of carry.lines) {
+    const actual = auditById.get(line.line);
+    if (line.form !== DEDUCTION_CARRYOVER_FORM || copied.has(line.line) || !actual || !finite(line.value)
+      || !actual.value.eq(line.value) || actual.formula !== line.formula || actual.description !== line.description) {
+      throw new Error("Foreign carryover audit does not match its calculated source result");
+    }
+    copied.add(line.line);
+  }
+  const required = (id: string): CalculatedLine => {
+    const line = auditById.get(id);
+    if (!line) throw new Error(`Foreign carryover audit is missing ${id}`);
+    return line;
+  };
+  for (const id of ["18", "19", "20"]) if (!nonnegative(required(id).value)) throw new Error("Foreign carryover audit is invalid");
+  if (required("19").value.gt(1)) throw new Error("Foreign carryover audit ratio is invalid");
+  for (const [id, value] of [["21", carry.hypotheticalLimitation], ["current-tax", carry.currentQualifiedForeignTaxes],
+    ["absorbed", carry.absorbed], ["expired", carry.expired], ["carryforward", carry.carryforward]] as const) {
+    if (!nonnegative(value) || !required(id).value.eq(value)) throw new Error("Foreign carryover audit totals do not reconcile");
+  }
+  const seen = new Set<string>();
+  for (const row of carry.details) {
+    const key = `${row.category}:${row.originTaxYear}`;
+    if (seen.has(key) || !["passive", "general"].includes(row.category) || !Number.isInteger(row.originTaxYear)
+      || row.originTaxYear >= result.taxYear || row.originTaxYear < result.taxYear - 10
+      || ![row.amount, row.absorbed, row.expired, row.remaining].every(nonnegative)
+      || !row.amount.eq(sum(row.absorbed, row.expired, row.remaining))) {
+      throw new Error("Foreign carryover source balances do not conserve their actual prior amounts");
+    }
+    seen.add(key);
+    const line = required(`${key}:remaining`);
+    if (!line.value.eq(row.remaining)) throw new Error("Foreign carryover audit balance does not reconcile");
+    for (const [name, value] of [["available", row.amount], ["absorbed", row.absorbed], ["expired", row.expired]] as const) {
+      const actual = line.inputs[name];
+      if (!Decimal.isDecimal(actual) || !actual.eq(value)) throw new Error("Foreign carryover audit inputs do not reconcile");
+    }
+  }
+  for (const [field, value] of [["absorbed", carry.absorbed], ["expired", carry.expired], ["remaining", carry.carryforward]] as const) {
+    if (!sum(...carry.details.map(row => row[field])).eq(value)) throw new Error("Foreign carryover source totals do not reconcile");
+  }
+  if (!result.carryforwards.foreignTaxCreditCarryforward.eq(carry.carryforward)) throw new Error("Foreign carryover return total does not reconcile");
+  const expected = new Map(carry.details.filter(row => row.remaining.gt(0)).map(row => [`${row.category}:${row.originTaxYear}`, row.remaining]));
+  for (const groups of [carry.carryforwardByCategory, result.carryforwards.foreignTaxCreditCarryforwardByCategory]) {
+    const actual = new Map<string, Decimal>();
+    for (const [category, rows] of Object.entries(groups)) for (const row of rows ?? []) {
+      const key = `${category}:${row.taxYear}`;
+      if (actual.has(key) || !nonnegative(row.amount)) throw new Error("Foreign carryover category records are invalid");
+      if (row.amount.gt(0)) actual.set(key, row.amount);
+    }
+    if (actual.size !== expected.size || [...expected].some(([key, value]) => !value.eq(actual.get(key) ?? d("-1")))) {
+      throw new Error("Foreign carryover category records do not reconcile");
+    }
+  }
+  return carry.lines.map(line => {
+    const actual = required(line.line);
+    const detail = carry.details.find(row => `${row.category}:${row.originTaxYear}:remaining` === line.line);
+    return detail ? { ...actual, formula: `Prior balance ${detail.amount}; deemed absorbed ${detail.absorbed}; expired ${detail.expired}; remaining ${detail.remaining}. No current tax benefit.` } : actual;
+  });
+}
+
 function getReferenceLinesByForm(result: TaxReturnResult) {
+  const deductionLines = deductionYearReferenceLines(result);
+  if (deductionLines) return [{ form: DEDUCTION_CARRYOVER_FORM, lines: deductionLines }];
   const grouped = new Map<string, CalculatedLine[]>();
 
   for (const line of result.allLines) {
@@ -188,10 +273,13 @@ export function buildForm1116ReferenceSummary(result: TaxReturnResult): Form1116
   }));
 
   return {
-    title: "Form 1116 Foreign Tax Credit Reference Summary",
+    title: result.foreignTaxDeductionCarryover
+      ? "Foreign Tax Deduction-Year Carryover Record"
+      : "Form 1116 Foreign Tax Credit Reference Summary",
     warningLabel: "REFERENCE SUMMARY ONLY",
-    introduction:
-      "Computed from supported Form 1116 foreign tax credit audit lines. This artifact appears only when the official filing path requires Form 1116 instead of the no-form simplified election.",
+    introduction: result.foreignTaxDeductionCarryover
+      ? "No current foreign tax credit is claimed, and no deduction of prior carry is allowed. This internal review record shows the hypothetical credit limit, deemed absorption, expiration and remaining prior balances for the actual deduction election."
+      : "Computed from supported Form 1116 foreign tax credit audit lines. This artifact appears only when the official filing path requires Form 1116 instead of the no-form simplified election.",
     sections,
   };
 }
@@ -244,7 +332,9 @@ export async function fillForm1116Reference(result: TaxReturnResult, outputDir: 
 
   y = drawWrappedText(
     page,
-    "This page summarizes the supported Form 1116 limitation, credit, and carryforward outputs that feed Schedule 3 Line 1 and the foreign tax credit carryforward records. It is not an official filled Form 1116.",
+    result.foreignTaxDeductionCarryover
+      ? "Current foreign taxes retain their actual deduction treatment. Prior carry is reduced without a current tax benefit. This is not an official Form 1116 or Schedule B and does not establish filing qualification."
+      : "This page summarizes the supported Form 1116 limitation, credit, and carryforward outputs that feed Schedule 3 Line 1 and the foreign tax credit carryforward records. It is not an official filled Form 1116.",
     {
       font: regular,
       size: BODY_FONT_SIZE,
@@ -272,7 +362,10 @@ export async function fillForm1116Reference(result: TaxReturnResult, outputDir: 
     });
 
     for (const line of section.lines) {
-      if (y < 90) {
+      const rowHeight = wrapText(`Line ${line.line}: ${line.description}`, bold, BODY_FONT_SIZE, PAGE_WIDTH - PAGE_MARGIN * 2 - 8).length * 14
+        + wrapText(`Value: ${line.value}`, regular, BODY_FONT_SIZE, PAGE_WIDTH - PAGE_MARGIN * 2 - 20).length * 13
+        + wrapText(`Formula: ${line.formula}`, regular, BODY_FONT_SIZE - 0.5, PAGE_WIDTH - PAGE_MARGIN * 2 - 20).length * 13 + 16;
+      if (y - rowHeight < PAGE_MARGIN + 24) {
         newPage();
       }
 

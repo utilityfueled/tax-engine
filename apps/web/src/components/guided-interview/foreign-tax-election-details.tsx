@@ -1,4 +1,5 @@
 "use client";
+import {ForeignTaxCarryoverDetails} from "./foreign-tax-carryover-details";
 import {snapshotForeignTaxSource,type ForeignTaxElectionData,type ForeignTaxSourceData} from '@/lib/guided-foreign-tax-election';
 import {isStartedInvestment,type InvestmentData} from '@/lib/guided-investment-facts';
 import {BooleanFact,TextFact} from './fact-fields';
@@ -16,7 +17,7 @@ export function ForeignTaxElectionDetails({data,investment,onChange}:{data?:Fore
     <label className="guided-field"><span className="guided-field-label">Annual foreign-tax choice</span><select className="guided-input" value={data.election??''} onChange={event=>update({election:(event.target.value||undefined) as ForeignTaxElectionData['election']})}><option value="">Not answered</option><option value="credit">Claim a foreign-tax credit</option><option value="deduction">Deduct qualified foreign income taxes</option></select></label>
     <TextFact label="Annual election source reference" value={data.sourceReference??''} onChange={sourceReference=>update({sourceReference})}/>
     {data.election==='deduction'&&<>
-      <p className="guided-hint">This worksheet supports current-year cash-paid taxes on actual interest and dividend statements. Accrued-tax history, unused credit carryovers, pass-through taxes and redeterminations require additional worksheets. Foreign income taxes are outside the state and local tax cap, but a deduction helps only when it is allowed on the return.</p>
+      <p className="guided-hint">This worksheet supports current-year cash-paid taxes on actual interest and dividend statements. Unused credit balances use the carryover worksheet below. Accrued-tax history, pass-through taxes and redeterminations require separate methods. Foreign income taxes are outside the state and local tax cap, but a deduction helps only when it is allowed on the return.</p>
       <label className="guided-field"><span className="guided-field-label">Foreign-tax accounting method</span><select className="guided-input" value={data.accountingMethod??''} onChange={event=>update({accountingMethod:(event.target.value||undefined) as ForeignTaxElectionData['accountingMethod']})}><option value="">Not answered</option><option value="paid">Actual taxes paid</option><option value="accrued">Accrued taxes requiring another worksheet</option></select></label>
       <BooleanFact label="An accrued-credit election was made in an earlier year" value={data.priorAccruedCreditElection} onChange={value=>update({priorAccruedCreditElection:value??undefined})}/>
       <BooleanFact label="All qualified foreign taxes for the year are included here" value={data.allQualifiedForeignTaxesIncludedConfirmed} onChange={value=>update({allQualifiedForeignTaxesIncludedConfirmed:value??undefined})}/>
@@ -43,6 +44,7 @@ export function ForeignTaxElectionDetails({data,investment,onChange}:{data?:Fore
       <button type="button" className="utility-button" onClick={()=>update({sources:[...(data.sources??[]),{}]})}>Add foreign-tax statement</button>
       {data.sources===undefined&&<button type="button" className="utility-button" onClick={()=>update({sources:[]})}>Confirm no foreign-tax statements</button>}
     </fieldset>}
+    {(data.noUnusedCreditCarryoversConfirmed===false||data.deductionYearCarryover!==undefined)&&<ForeignTaxCarryoverDetails data={data.deductionYearCarryover} investment={investment} onChange={deductionYearCarryover=>update({deductionYearCarryover})}/>}
     <BooleanFact label="Foreign-tax election sources checked after the last edit" value={data.sourceFactsConfirmed} onChange={sourceFactsConfirmed=>onChange({...data,sourceFactsConfirmed})}/>
     <button type="button" className="utility-button" onClick={()=>onChange(undefined)}>Remove annual foreign-tax election</button>
   </div>;

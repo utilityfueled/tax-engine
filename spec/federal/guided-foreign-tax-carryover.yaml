@@ -1,0 +1,23 @@
+form: "Guided deduction-year foreign tax carryover"
+fullName: "Actual foreign income, prior credit vintage and hypothetical deduction source intake"
+taxYear: 2026
+irsReference: "https://www.irs.gov/publications/p514"
+notes: |
+  The UI captures actual source facts, not a user-supplied credit limitation.
+  Canonical computation recomputes the hypothetical credit-election return.
+  Missing dates, categories, identities, foreign income or allocation facts remain
+  missing. Source edits invalidate confirmation; a credit-election change retains
+  saved deduction-year sources and requires their separate reconciliation.
+lines:
+  - line: "source-intake"
+    description: "Actual carry vintages and independently sourced foreign income"
+    formula: "Bind income to selected actual owner/payer/account/country statement; require actual foreign share, origin year/category/amount/reference and known continuous history; normalize Decimal strings without Number money."
+    testRef: "tests/guided-interview/guided-foreign-tax-carryover.test.ts::collects actual carryover sources and preserves unknowns"
+  - line: "bridge"
+    description: "Canonical deduction-year result from guided sources"
+    formula: "Complete actual intake passes to the canonical hypothetical calculation; source replacement or omission cannot yield a completed section or return."
+    testRef: "tests/guided-interview/guided-foreign-tax-carryover.test.ts::binds guided carryover sources to the canonical return"
+  - line: "edits"
+    description: "Actual source editing and confirmation revocation"
+    formula: "From an empty carryover worksheet, each field remains unknown until entered; no inferred year/category/foreign-income share. Editing any underlying source revokes confirmation and retains original balances."
+    testRef: "tests/apps/web/foreign-tax-carryover-interactions.test.tsx::collects a carryover worksheet without manufacturing missing facts"
