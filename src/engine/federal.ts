@@ -1507,9 +1507,24 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   // ── Form 1099-Q: Qualified Education Program Distributions ──
   const form1099QForms = input.form1099Q ?? [];
   const form1099Q = form1099QForms.length > 0
-    ? calculateForm1099Q(form1099QForms, input.qualifiedEducationExpenses)
+    ? calculateForm1099Q(form1099QForms, input.qualifiedEducationExpenses, {
+      taxYear: year,
+      educationExpenses: input.educationExpenses ?? {aocStudents:[],llcExpenses:"0"},
+    })
     : undefined;
   if (form1099Q) {
+    if (form1099Q.sourceFactsVerified && (d(input.form5329?.educationAccountDistributionsIncludedInIncome).gt(0)
+      || d(input.form5329?.educationAccountDistributionsExcepted).gt(0))) {
+      throw new Error("Actual education distribution sources require reconciliation of legacy Form5329 education totals");
+    }
+    if (form1099Q.sourceFactsVerified && form1099Q.perRecipient.some(recipient => recipient.owner === "spouse")
+      && (filingStatus !== "married_filing_jointly" || !input.taxpayer.spouse)) {
+      throw new Error("Form1099Q spouse recipient requires an actual joint-return spouse");
+    }
+    if (form1099Q.loanInterestAdjustments.some(item => item.owner !== "other" && item.taxFreeEarningsUsedForInterest.gt(0))
+      && d(combinedStudentLoanInterest ?? input.adjustments?.studentLoanInterest).gt(0)) {
+      throw new Error("Form1099Q excluded earnings require actual student-loan interest source coordination before a deduction");
+    }
     audit.merge(form1099Q.lines);
   }
   const form1099QTaxableEarnings = form1099Q?.taxableEarnings ?? new Decimal(0);
@@ -3082,6 +3097,20 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     educationNonrefundable = form8863.totalNonrefundable;
     educationRefundable = form8863.totalRefundable;
     audit.merge(form8863.lines);
+  }
+  for (const allocation of form1099Q?.creditAllocations ?? []) {
+    if (!allocation.taxableEarningsCausedByCredit.gt(0)) continue;
+    const identity = input.qualifiedEducationExpenses?.sourceFacts?.beneficiaries
+      ?.find(beneficiary => beneficiary.id === allocation.beneficiaryId)?.studentTaxId?.replaceAll("-", "");
+    const aocIndex = input.educationExpenses?.aocStudents.findIndex(student => identity && student.studentTaxId?.replaceAll("-", "") === identity) ?? -1;
+    const llcIndex = input.educationExpenses?.llcStudents?.findIndex(student => identity && student.studentTaxId?.replaceAll("-", "") === identity) ?? -1;
+    const aocBenefit = aocIndex >= 0 && form8863?.aocPerStudent[aocIndex]?.tentativeCredit.gt(0)
+      && form8863.aocAfterPhaseOut.gt(0) && (form8863.totalRefundable.gt(0) || form8863.totalNonrefundable.gt(0));
+    const llcBenefit = llcIndex >= 0 && form8863?.llcPerStudent[llcIndex]?.eligibleExpenses.gt(0)
+      && form8863.llcAfterPhaseOut.gt(0) && form8863.totalNonrefundable.gt(0);
+    if (!aocBenefit && !llcBenefit) {
+      throw new Error("Form1099Q taxable credit allocation has no allowed linked education credit; actual expense allocation must be reconciled");
+    }
   }
 
   // ── Excess Social Security Withholding ──────────────────

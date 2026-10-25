@@ -50,6 +50,7 @@ export interface Form8863Input {
 }
 export interface Form8863Result {
   aocPerStudent: Array<{name: string; tentativeCredit: Decimal}>;
+  llcPerStudent: Array<{name: string; eligibleExpenses: Decimal}>;
   aocTotalTentative: Decimal;
   aocAfterPhaseOut: Decimal;
   aocNonrefundable: Decimal;
@@ -165,6 +166,7 @@ export function calculateForm8863(input: Form8863Input): Form8863Result {
   const aocRefundable = refundEligible ? roundDollar(aocAfterPhaseOut.times("0.40")) : new Decimal(0);
   const aocNonrefundable = aocAfterPhaseOut.minus(aocRefundable);
   let llcEligibleExpenses = input.llcExpenses;
+  const llcPerStudent: Form8863Result["llcPerStudent"] = [];
   if (strict && input.llcExpenses.gt(0) && !input.llcStudents) throw new Error("Form8863 actual LLC student records required for2026");
   if (input.llcStudents) {
     const actualTotal = input.llcStudents.reduce((total,s)=>total.plus(s.qualifiedExpenses),new Decimal(0));
@@ -174,6 +176,7 @@ export function calculateForm8863(input: Form8863Input): Form8863Result {
       if (strict && claimantEligible && student.qualifiedExpenses.gt(0)) required(student.courseEligibilityConfirmed,"LLC course eligibility");
       const eligible = claimantEligible && sourceEligible && student.courseEligibilityConfirmed !== false;
       const amount = eligible ? roundDollar(student.qualifiedExpenses) : new Decimal(0);
+      llcPerStudent.push({name:student.name,eligibleExpenses:amount});
       audit.record("Form 8863","31",`LLC adjusted expenses for ${student.name}`,amount,"Actual adjusted eligible expenses for this separate student");
       return total.plus(amount);
     },new Decimal(0));
@@ -192,5 +195,5 @@ export function calculateForm8863(input: Form8863Input): Form8863Result {
     ["13","LLC MAGI upper limit",upper,"180000 joint;90000 otherwise"],["14","Education MAGI for LLC",input.magi,"Same actual MAGI asline3"],["15","LLC remaining phase-out range",remaining,"max(0,line13-line14)"],["16","LLC phase-out band",range,"20000 joint;10000 otherwise"],["17","LLC phase-out factor",factor,"min(1,line15/line16), at least3 decimal places"],["18","LLC after phase-out",llcAfterPhaseOut,"round(line12*line17)"],["19","Allowed nonrefundable education credit",totalNonrefundable,"min(line9+line18,actual remaining tax liability); Schedule3line3"]
   ];
   for(const [line,description,value,formula] of entries) audit.record("Form 8863",line,description,value,formula);
-  return {aocPerStudent,aocTotalTentative,aocAfterPhaseOut,aocNonrefundable,aocRefundable,llcTentative,llcAfterPhaseOut,nonrefundableBeforeLimit,totalNonrefundable,totalRefundable:aocRefundable,refundableAocEligible:refundEligible,sourceFactsVerified:strict && claimantEligible && hasExpenses,lines:audit.getLines()};
+  return {aocPerStudent,llcPerStudent,aocTotalTentative,aocAfterPhaseOut,aocNonrefundable,aocRefundable,llcTentative,llcAfterPhaseOut,nonrefundableBeforeLimit,totalNonrefundable,totalRefundable:aocRefundable,refundableAocEligible:refundEligible,sourceFactsVerified:strict && claimantEligible && hasExpenses,lines:audit.getLines()};
 }
