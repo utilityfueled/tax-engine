@@ -285,6 +285,8 @@ export interface TaxReturnResult {
   salesTaxDeduction?: import("@/engine/forms/state-sales-tax-deduction-worksheet.js").SalesTaxDeductionResult;
   /** Form 1098-E student loan interest aggregation summary */
   form1098ESummary?: import("@/engine/forms/form-1098-e.js").Form1098EResult;
+  /** Actual borrower, benefit and canonical MAGI source worksheet. */
+  studentLoanInterestWorksheet?: ReturnType<typeof import("@/engine/forms/student-loan-interest.js").calculateStudentLoanInterestDeduction>;
   /** K-1 Form 1041 trust/estate beneficiary income aggregation summary */
   scheduleK1Form1041Summary?: {
     numberOfK1s: number;

@@ -28,6 +28,10 @@ import { calculateEducatorExpensesDeduction } from "@/engine/forms/educator-expe
 import { calculateForm3903, type Form3903Result } from "@/engine/forms/form-3903.js";
 
 export interface Schedule1Input {
+  /** Completed canonical return amount after actual source and MAGI coordination. */
+  studentLoanDeductionOverride?: Decimal;
+  /** Complete return MAGI for the explicitly unverified historical source path. */
+  studentLoanModifiedAgi?: Decimal;
   /** Completed canonical return worksheet; prevents recomputation from a partial income subset. */
   iraDeductionOverride?: Decimal;
   /** Actual complete Pub590-A MAGI for standalone source-confirmed worksheet use. */
@@ -740,98 +744,113 @@ export function calculateSchedule1(
 
   // ── Line 21: Student loan interest ────────────────────────────────
   const studentLoanRaw = d(adjustments?.studentLoanInterest);
-  const adjustmentsExcludingStudentLoan = adjustmentsExcludingIraAndStudentLoan.plus(iraDeduction);
-  const socialSecurityBenefitsTaxable = socialSecurityBenefitsGross.greaterThan(0)
-    ? calculateSocialSecurityBenefitsWorksheet({
-      filingStatus,
-      benefitsReceived: socialSecurityBenefitsGross,
-      otherIncome: sum(
-        magiWages,
-        magiInterest,
-        magiDividends,
-        form1099R.iraTaxable,
-        form1099R.pensionTaxable,
-        capitalGainLoss,
-        businessIncome,
-        supplementalIncome,
-        farmIncome,
-        magiOtherIncome
-      ),
-      taxExemptInterest: magiTaxExemptInterest,
-      livedWithSpouseAtAnyTimeDuringYear: input.taxpayer.livedWithSpouseAtAnyTimeDuringYear,
-      adjustments: {
-        businessExpenseAdjustments,
-        hsaDeduction,
-        armedForcesMovingExpenses,
-        seDeduction,
-        seRetirementContributions,
-        seHealthInsurance,
-        earlyWithdrawalPenalty,
-        alimonyPaid,
-        iraDeduction,
-        archerMSADeduction,
-        educatorExpenses,
-        otherAdjustmentsTotal,
-        studentLoanInterest: ZERO,
-      },
-    }).taxableBenefits
-    : ZERO;
-  const supportedStudentLoanModifiedAgi = sum(
-    magiWages,
-    magiInterest,
-    magiDividends,
-    form1099R.iraTaxable,
-    form1099R.pensionTaxable,
-    socialSecurityBenefitsTaxable,
-    capitalGainLoss,
-    businessIncome,
-    supplementalIncome,
-    farmIncome,
-    magiOtherIncome
-  ).minus(adjustmentsExcludingStudentLoan);
-  const {
-    deduction: studentLoanInterest,
-    phaseOutRatio: studentLoanPhaseOutRatio,
-    phaseOutStart: studentLoanPhaseOutStart,
-    phaseOutEnd: studentLoanPhaseOutEnd,
-  } = calculateStudentLoanInterestDeduction(
-    studentLoanRaw,
-    filingStatus,
-    supportedStudentLoanModifiedAgi,
-    constants
-  );
-  const studentLoanCappedInterest = min(
-    Decimal.max(ZERO, studentLoanRaw),
-    MAX_STUDENT_LOAN_DEDUCTION
-  );
-  const studentLoanWorksheetDeductionBeforeRounding = studentLoanPhaseOutRatio.isZero()
-    ? studentLoanCappedInterest
-    : Decimal.max(
-      ZERO,
-      studentLoanCappedInterest.minus(studentLoanCappedInterest.times(studentLoanPhaseOutRatio))
-    );
-  audit.record(
-    "Sched 1",
-    "21",
-    "Student loan interest",
-    studentLoanInterest,
-    filingStatus === "married_filing_separately"
-      ? "No deduction allowed for married filing separately"
-      : studentLoanPhaseOutRatio.isZero()
-      ? `Smaller of qualified interest paid or $2,500 because supported modified AGI does not exceed the 2025 phase-out threshold`
-      : studentLoanInterest.isZero()
-      ? "Reduced to $0 because supported modified AGI reaches the 2025 phase-out ceiling"
-      : "Qualified interest paid reduced by the 2025 modified-AGI phase-out worksheet",
-    {
-      "Qualified student loan interest paid": studentLoanRaw,
-      "Capped student loan interest before phase-out": studentLoanCappedInterest,
-      "Supported modified AGI before student loan deduction": supportedStudentLoanModifiedAgi,
-      "2025 phase-out threshold": studentLoanPhaseOutStart,
-      "2025 phase-out ceiling": studentLoanPhaseOutEnd,
-      "Phase-out ratio": studentLoanPhaseOutRatio,
-      "Worksheet deduction before whole-dollar rounding": studentLoanWorksheetDeductionBeforeRounding,
+  let studentLoanInterest: Decimal;
+  if (extra?.studentLoanDeductionOverride !== undefined) {
+    studentLoanInterest = extra.studentLoanDeductionOverride;
+    if (!studentLoanInterest.isFinite() || studentLoanInterest.lt(0) || studentLoanInterest.gt(MAX_STUDENT_LOAN_DEDUCTION)) {
+      throw new Error("Completed student-loan deduction must be finite and within its statutory limit");
     }
-  );
+    audit.record("Sched 1", "21", "Student loan interest", studentLoanInterest,
+      "Canonical completed return source and Publication970 MAGI worksheet");
+  } else {
+    if (input.studentLoanInterestFacts || (input.taxpayer.taxYear >= 2026 && studentLoanRaw.gt(0))) {
+      throw new Error("Student-loan actual source calculation requires a completed canonical return deduction");
+    }
+    const adjustmentsExcludingStudentLoan = adjustmentsExcludingIraAndStudentLoan.plus(iraDeduction);
+    const socialSecurityBenefitsTaxable = socialSecurityBenefitsGross.greaterThan(0)
+      ? calculateSocialSecurityBenefitsWorksheet({
+        filingStatus,
+        benefitsReceived: socialSecurityBenefitsGross,
+        otherIncome: sum(
+          magiWages,
+          magiInterest,
+          magiDividends,
+          form1099R.iraTaxable,
+          form1099R.pensionTaxable,
+          capitalGainLoss,
+          businessIncome,
+          supplementalIncome,
+          farmIncome,
+          magiOtherIncome
+        ),
+        taxExemptInterest: magiTaxExemptInterest,
+        livedWithSpouseAtAnyTimeDuringYear: input.taxpayer.livedWithSpouseAtAnyTimeDuringYear,
+        adjustments: {
+          businessExpenseAdjustments,
+          hsaDeduction,
+          armedForcesMovingExpenses,
+          seDeduction,
+          seRetirementContributions,
+          seHealthInsurance,
+          earlyWithdrawalPenalty,
+          alimonyPaid,
+          iraDeduction,
+          archerMSADeduction,
+          educatorExpenses,
+          otherAdjustmentsTotal,
+          studentLoanInterest: ZERO,
+        },
+      }).taxableBenefits
+      : ZERO;
+    const supportedStudentLoanModifiedAgi = extra?.studentLoanModifiedAgi ?? sum(
+      magiWages,
+      magiInterest,
+      magiDividends,
+      form1099R.iraTaxable,
+      form1099R.pensionTaxable,
+      socialSecurityBenefitsTaxable,
+      capitalGainLoss,
+      businessIncome,
+      supplementalIncome,
+      farmIncome,
+      magiOtherIncome
+    ).minus(adjustmentsExcludingStudentLoan);
+    if (!supportedStudentLoanModifiedAgi.isFinite()) throw new Error("Complete student-loan modified AGI must be finite");
+    const {
+      deduction: legacyStudentLoanInterest,
+      phaseOutRatio: studentLoanPhaseOutRatio,
+      phaseOutStart: studentLoanPhaseOutStart,
+      phaseOutEnd: studentLoanPhaseOutEnd,
+    } = calculateStudentLoanInterestDeduction(
+      studentLoanRaw,
+      filingStatus,
+      supportedStudentLoanModifiedAgi,
+      constants
+    );
+    studentLoanInterest = legacyStudentLoanInterest;
+    const studentLoanCappedInterest = min(
+      Decimal.max(ZERO, studentLoanRaw),
+      MAX_STUDENT_LOAN_DEDUCTION
+    );
+    const studentLoanWorksheetDeductionBeforeRounding = studentLoanPhaseOutRatio.isZero()
+      ? studentLoanCappedInterest
+      : Decimal.max(
+        ZERO,
+        studentLoanCappedInterest.minus(studentLoanCappedInterest.times(studentLoanPhaseOutRatio))
+      );
+    audit.record(
+      "Sched 1",
+      "21",
+      "Student loan interest",
+      studentLoanInterest,
+      filingStatus === "married_filing_separately"
+        ? "No deduction allowed for married filing separately"
+        : studentLoanPhaseOutRatio.isZero()
+        ? `Smaller of qualified interest paid or $2,500 because supported modified AGI does not exceed the 2025 phase-out threshold`
+        : studentLoanInterest.isZero()
+        ? "Reduced to $0 because supported modified AGI reaches the 2025 phase-out ceiling"
+        : "Qualified interest paid reduced by the 2025 modified-AGI phase-out worksheet",
+      {
+        "Qualified student loan interest paid": studentLoanRaw,
+        "Capped student loan interest before phase-out": studentLoanCappedInterest,
+        "Supported modified AGI before student loan deduction": supportedStudentLoanModifiedAgi,
+        "2025 phase-out threshold": studentLoanPhaseOutStart,
+        "2025 phase-out ceiling": studentLoanPhaseOutEnd,
+        "Phase-out ratio": studentLoanPhaseOutRatio,
+        "Worksheet deduction before whole-dollar rounding": studentLoanWorksheetDeductionBeforeRounding,
+      }
+    );
+  }
 
   // Form 2555 housing deduction (self-employed only) — included in Line25 above.
   if (form2555HousingDeduction.greaterThan(0)) {

@@ -119,6 +119,7 @@ import { calculateSEHealthInsuranceWorksheet, type SEHealthInsuranceWorksheetRes
 import { calculateScheduleJ } from "./forms/schedule-j.js";
 import { calculateForm8915F, type Form8915FResult } from "./forms/form-8915-f.js";
 import { calculateTaxableRefundWorksheet, type TaxableRefundWorksheetResult } from "./forms/taxable-refund-worksheet.js";
+import { calculateStudentLoanInterestDeduction } from "./forms/student-loan-interest.js";
 import { calculateForm1098E, type Form1098EResult } from "./forms/form-1098-e.js";
 import { calculateSalesTaxDeduction, type SalesTaxDeductionResult } from "./forms/state-sales-tax-deduction-worksheet.js";
 import { calculateForm8824Aggregate } from "./forms/form-8824.js";
@@ -1443,6 +1444,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   let sched1 = calculateSchedule1(sched1Input, {
     ...sched1Context,
     iraDeductionOverride: input.iraDeductionWorksheet ? new Decimal(0) : undefined,
+    studentLoanDeductionOverride: new Decimal(0),
   }, form4797);
   // Form 8814 Line 12 other income flows to Schedule 1 Line 8z
   const form8814OtherIncome = form8814?.totalOtherIncome ?? new Decimal(0);
@@ -1523,12 +1525,23 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
       throw new Error("Form1099Q spouse recipient requires an actual joint-return spouse");
     }
     if (form1099Q.loanInterestAdjustments.some(item => item.owner !== "other" && item.taxFreeEarningsUsedForInterest.gt(0))
-      && d(combinedStudentLoanInterest ?? input.adjustments?.studentLoanInterest).gt(0)) {
+      && d(combinedStudentLoanInterest ?? input.adjustments?.studentLoanInterest).gt(0) && !input.studentLoanInterestFacts) {
       throw new Error("Form1099Q excluded earnings require actual student-loan interest source coordination before a deduction");
     }
     audit.merge(form1099Q.lines);
   }
   const form1099QTaxableEarnings = form1099Q?.taxableEarnings ?? new Decimal(0);
+  const studentLoanSourceOptions = input.studentLoanInterestFacts ? {
+    taxYear: year, filingStatus, facts: input.studentLoanInterestFacts,
+    forms: input.form1098E, educationLoanInterest: form1099Q?.loanInterestSourceAdjustments,
+    legacyAdditionalInterest: input.adjustments?.studentLoanInterest,
+  } : undefined;
+  const studentLoanSourceResult = studentLoanSourceOptions
+    ? calculateStudentLoanInterestDeduction(studentLoanSourceOptions) : undefined;
+  if (year >= 2026 && !studentLoanSourceResult && d(combinedStudentLoanInterest ?? input.adjustments?.studentLoanInterest).gt(0)) {
+    throw new Error("Student-loan deduction requires actual borrower and loan source facts for2026");
+  }
+  let studentLoanInterestWorksheetResult: ReturnType<typeof calculateStudentLoanInterestDeduction> | undefined;
 
   // ── K-1 Form 1041: Estate/Trust Beneficiary Income ─────
   // Aggregate income items from trust/estate K-1s that route through
@@ -1649,7 +1662,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     if (iraDeductionWorksheetResult.spouse) audit.merge(iraDeductionWorksheetResult.spouse.lines);
     audit.record("IRA MAGI Worksheet","total","Complete IRA modified adjusted gross income",iraMagi,
       "Full pre-bond income less non-IRA/non-student-loan adjustments plus AppendixB benefits before IRA and actual foreign/adoption addbacks");
-    sched1 = calculateSchedule1(sched1Input,{ ...sched1Context,iraDeductionOverride:iraDeductionWorksheetResult.totalDeduction },form4797);
+    sched1 = calculateSchedule1(sched1Input,{ ...sched1Context,iraDeductionOverride:iraDeductionWorksheetResult.totalDeduction,studentLoanDeductionOverride:new Decimal(0) },form4797);
   }
   const socialSecurityBenefitsWorksheet = socialSecurityBenefitsGross.greaterThan(0)
     ? calculateSocialSecurityBenefitsWorksheet({
@@ -1709,9 +1722,6 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
         },
     })
     : undefined;
-  if (socialSecurityBenefitsWorksheet) {
-    audit.merge(socialSecurityBenefitsWorksheet.lines);
-  }
   const socialSecurityBenefitsTaxable = socialSecurityBenefitsWorksheet?.taxableBenefits ?? new Decimal(0);
   audit.record("1040", "6a", "Social Security benefits", socialSecurityBenefitsGross,
     "Sum SSA-1099 Box 5 benefits and RRB-1099 tier 1 equivalent Box 5 benefits");
@@ -1743,11 +1753,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   // ═══════════════════════════════════════════════════════════
 
   // K-1 Form 1041 Box 11 Code A (§67(e) excess deductions) is above-the-line
-  const adjustments = sched1.totalAdjustments.plus(k1Form1041Section67eDeductions);
-  audit.record("1040", "10", "Adjustments to income", adjustments,
-    k1Form1041Section67eDeductions.greaterThan(0)
-      ? "SE deduction + other adjustments + K-1 1041 §67(e) excess deductions"
-      : "SE deduction + other adjustments");
+  let adjustments = sched1.totalAdjustments.plus(k1Form1041Section67eDeductions);
 
   // Form 8815 uses AGI before applying the savings bond exclusion on Schedule B Line 3.
   const preliminaryAgi = preliminaryTotalIncome.minus(adjustments);
@@ -1916,6 +1922,52 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   if (eblSources && !form461.line5ScheduleE.eq(roundDollar(adjustedScheduleETotal.plus(partIRentalSuspended).minus(ptpReleasedTotal)))) {
     throw new Error("Form461 actual supplemental income must reconcile with final post-passive Schedule1 line5");
   }
+
+  // Pub970 uses completed income after the bond exclusion and allowed passive
+  // losses. Those upstream worksheets add back or exclude this deduction.
+  if (studentLoanSourceResult || d(combinedStudentLoanInterest ?? input.adjustments?.studentLoanInterest).gt(0)) {
+    if (studentLoanSourceResult?.qualifiedInterest.gt(0)
+      && sum(d(input.priorYear?.nolCarryforward), d(input.priorYear?.excessBusinessLossNOL), k1Form1041FinalNOL).gt(0)) {
+      throw new Error("Actual student-loan and NOL claims require the coupled NOL and deduction source computation");
+    }
+    const studentLoanMagi = sum(agi, sched1.studentLoanInterest, form2555IncomeReduction,
+      form2555HousingDeduction, studentLoanSourceResult?.possessionIncomeAddback ?? new Decimal(0));
+    if (studentLoanSourceOptions) {
+      studentLoanInterestWorksheetResult = calculateStudentLoanInterestDeduction({
+        ...studentLoanSourceOptions, modifiedAgi: studentLoanMagi,
+      });
+      if (!studentLoanInterestWorksheetResult.calculationComplete) throw new Error("Student-loan canonical MAGI calculation is incomplete");
+      audit.merge(studentLoanInterestWorksheetResult.lines);
+    }
+    const previousDeduction = sched1.studentLoanInterest;
+    sched1 = calculateSchedule1(sched1Input, {
+      ...sched1Context, iraDeductionOverride: sched1.iraDeduction,
+      studentLoanDeductionOverride: studentLoanInterestWorksheetResult?.deduction,
+      studentLoanModifiedAgi: studentLoanMagi,
+    }, form4797);
+    const change = sched1.studentLoanInterest.minus(previousDeduction);
+    adjustments = adjustments.plus(change);
+    agi = agi.minus(change);
+    audit.record("Student Loan MAGI Worksheet", "magi", "Canonical student-loan modified AGI", studentLoanMagi,
+      "Complete income less non-student-loan adjustments plus actual foreign/housing and possession addbacks",
+      { "Income after bond and passive worksheets": totalIncome,
+        "Other Schedule1 adjustments": adjustments.minus(sched1.studentLoanInterest),
+        "Form2555 excluded income": form2555IncomeReduction, "Housing deduction": form2555HousingDeduction,
+        "Actual possession exclusions": studentLoanSourceResult?.possessionIncomeAddback ?? new Decimal(0) });
+  }
+  if (socialSecurityBenefitsWorksheet) {
+    // Benefits deliberately exclude this deduction. Attach its final source
+    // amount only after the canonical loan worksheet has been completed.
+    socialSecurityBenefitsWorksheet.lines = socialSecurityBenefitsWorksheet.lines.map(line =>
+      line.inputs["Excluded Schedule 1 student loan interest"] === undefined ? line : {
+        ...line, inputs: { ...line.inputs, "Excluded Schedule 1 student loan interest": sched1.studentLoanInterest },
+      });
+    audit.merge(socialSecurityBenefitsWorksheet.lines);
+  }
+  audit.record("1040", "10", "Adjustments to income", adjustments,
+    k1Form1041Section67eDeductions.gt(0)
+      ? "SE deduction + other adjustments + K-1 1041 §67(e) excess deductions"
+      : "SE deduction + other adjustments");
 
   // ═══════════════════════════════════════════════════════════
   // Phase 3: Deductions (Form 1040 Lines 12-15)
@@ -3821,6 +3873,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     form1099K: form1099KResult.numberOfForms > 0 ? form1099KResult : undefined,
     form8915F: form8915FResult,
     form1098ESummary: form1098EResult,
+    studentLoanInterestWorksheet: studentLoanInterestWorksheetResult,
     taxableRefundWorksheet: taxableRefundWorksheetResult,
     salesTaxDeduction: salesTaxResult,
     scheduleK1Form1041Summary: k1Form1041Summary,
