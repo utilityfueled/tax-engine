@@ -8149,7 +8149,7 @@ describe("Federal pipeline - special capital gain rates", () => {
     // MFJ with $100K wages + $20K LTCG, compare with vs without §1250
     const baseFixture: TaxYearInput = {
       ...simpleW2Fixture,
-      taxpayer: { ...simpleW2Fixture.taxpayer, filingStatus: "married_filing_jointly" },
+      taxpayer: { ...simpleW2Fixture.taxpayer, filingStatus: "married_filing_jointly", spouse: complexMFJFixture.taxpayer.spouse },
       w2s: [{
         ...simpleW2Fixture.w2s[0],
         wages: "100000",
@@ -8192,7 +8192,7 @@ describe("Federal pipeline - special capital gain rates", () => {
   it("collectibles gain from 1099-DIV taxed at higher rate", () => {
     const baseFixture: TaxYearInput = {
       ...simpleW2Fixture,
-      taxpayer: { ...simpleW2Fixture.taxpayer, filingStatus: "married_filing_jointly" },
+      taxpayer: { ...simpleW2Fixture.taxpayer, filingStatus: "married_filing_jointly", spouse: complexMFJFixture.taxpayer.spouse },
       w2s: [{
         ...simpleW2Fixture.w2s[0],
         wages: "100000",
@@ -8408,7 +8408,7 @@ describe("Federal pipeline - special capital gain rates", () => {
     // the 0% bracket ($96,700 MFJ threshold). §1250 gets 0% not 25%.
     const baseFixture: TaxYearInput = {
       ...simpleW2Fixture,
-      taxpayer: { ...simpleW2Fixture.taxpayer, filingStatus: "married_filing_jointly" },
+      taxpayer: { ...simpleW2Fixture.taxpayer, filingStatus: "married_filing_jointly", spouse: complexMFJFixture.taxpayer.spouse },
       w2s: [{
         ...simpleW2Fixture.w2s[0],
         wages: "50000",

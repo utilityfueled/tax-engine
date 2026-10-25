@@ -557,3 +557,17 @@ Spec/test preceded implementation.89 focused calculator/constant-shape tests,
 root types, all3,155spec refs, scopedlint and whitespace checks pass. Scoped diff
 reviewed. Federal selection/routing integration and explicit synthetic2026
 fixture facts follow in a separate package; no readiness gate changed.
+
+### Standard deduction return integration — 2026-10-25
+
+Integrated the7a2a95b worksheet, persisted its audit/result, and honored explicit
+standard/itemized elections. An ineligible standard deduction or explicit
+itemization cannot switch to standard after the2026 section68 limitation.
+Synthetic fixtures now state their actual eligibility facts; three incomplete
+joint capital-gain fixtures now contain an actual synthetic spouse identity.
+Two new spec-linked integration tests failed before implementation and now
+verify actual senior/blind/dependent deductions, unknown2026 rejection,
+automatic comparison and both explicit elections.617 focused federal/form tests,
+root types and all3,157spec refs pass; scopedlint has zeroerrors (199existing
+nonnullwarnings in large historical tests). Scoped diff and whitespace reviewed.
+Qualified disaster enhancement and independent review remain outstanding.

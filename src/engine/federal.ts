@@ -51,6 +51,7 @@ import { calculateScheduleSE } from "./schedules/schedule-se.js";
 import { calculateScheduleA } from "./schedules/schedule-a.js";
 import { calculateSchedule1A } from "./schedules/schedule-1-a.js";
 import { calculateItemizedDeductionLimit } from "./forms/itemized-deduction-limit.js";
+import { calculateStandardDeduction } from "./forms/standard-deduction.js";
 import { calculateForm6251 } from "./forms/form-6251.js";
 import { calculateForm8801 } from "./forms/form-8801.js";
 import { calculateForm8582 } from "./forms/form-8582.js";
@@ -1843,7 +1844,15 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   // Phase 3: Deductions (Form 1040 Lines 12-15)
   // ═══════════════════════════════════════════════════════════
 
-  const standardDeduction = constants.standardDeduction[filingStatus];
+  const standardDeductionWorksheet = calculateStandardDeduction({
+    taxpayer: input.taxpayer, facts: input.standardDeductionFacts, constants,
+  });
+  audit.merge(standardDeductionWorksheet.lines);
+  const standardDeduction = standardDeductionWorksheet.standardDeduction;
+  const deductionElection = input.deductionElection ?? "automatic";
+  if (deductionElection === "standard" && !standardDeductionWorksheet.eligibleForStandardDeduction) {
+    throw new Error("Standard deduction election is ineligible for the actual taxpayer facts");
+  }
 
   // Form 4952: Investment interest expense deduction
   // Aggregate K-1 Box 13 Code D (investment interest expense),
@@ -2029,7 +2038,10 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     allForm8889Results
   );
 
-  let deductionUsed: "itemized" | "standard" = itemizedDeductions.greaterThan(standardDeduction.plus(schedA.nonitemizerCharitableDeduction)) ? "itemized" : "standard";
+  let deductionUsed: "itemized" | "standard" = deductionElection === "itemized"
+    || !standardDeductionWorksheet.eligibleForStandardDeduction
+    || (deductionElection === "automatic" && itemizedDeductions.greaterThan(standardDeduction.plus(schedA.nonitemizerCharitableDeduction)))
+    ? "itemized" : "standard";
   let deductionAmount = deductionUsed === "itemized" ? itemizedDeductions : standardDeduction;
 
   if (input.schedule1A?.businessTips.length) {
@@ -2288,7 +2300,8 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
       audit.merge(limitation.lines);
       itemizedDeductionReduction = limitation.reduction;
       itemizedDeductions = limitation.allowedDeduction;
-      if (itemizedDeductions.lte(standardDeduction.plus(schedA.nonitemizerCharitableDeduction))) {
+      if (deductionElection === "automatic" && standardDeductionWorksheet.eligibleForStandardDeduction
+        && itemizedDeductions.lte(standardDeduction.plus(schedA.nonitemizerCharitableDeduction))) {
         deductionUsed = "standard";
         deductionAmount = standardDeduction;
         nonitemizerCharitableDeduction = schedA.nonitemizerCharitableDeduction;
@@ -3348,6 +3361,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     agi,
 
     standardDeduction,
+    standardDeductionWorksheet,
     itemizedDeductions,
     ...(year === 2026 ? { itemizedDeductionReduction } : {}),
     deductionUsed,

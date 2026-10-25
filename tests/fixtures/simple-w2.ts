@@ -6,6 +6,15 @@ import type { TaxYearInput } from "@/models/inputs.js";
 
 /** Single filer with one W-2, no other income */
 export const simpleW2Fixture: TaxYearInput = {
+  // Explicit synthetic facts, including spouse values used by joint test variants.
+  // These are fixture facts only; the production schema preserves missing answers.
+  standardDeductionFacts: {
+    primaryBlind: false, spouseBlind: false,
+    primaryCanBeClaimedAsDependent: false, spouseCanBeClaimedAsDependent: false,
+    primaryDeathDate: null, spouseDeathDate: null,
+    dualStatusAlien: false, nonresidentAlien: false, shortTaxYear: false,
+    spouseItemizes: false, claimSpouseAdditionalDeduction: false,
+  },
   taxpayer: {
     taxYear: 2025,
     filingStatus: "single",
@@ -52,6 +61,12 @@ export const simpleW2Fixture: TaxYearInput = {
 
 /** MFJ filers with complex income: W-2s, 1099s, K-1, donations, mortgage */
 export const complexMFJFixture: TaxYearInput = {
+  standardDeductionFacts: {
+    primaryBlind: false, spouseBlind: false,
+    primaryCanBeClaimedAsDependent: false, spouseCanBeClaimedAsDependent: false,
+    primaryDeathDate: null, spouseDeathDate: null,
+    dualStatusAlien: false, nonresidentAlien: false, shortTaxYear: false,
+  },
   taxpayer: {
     taxYear: 2025,
     filingStatus: "married_filing_jointly",
