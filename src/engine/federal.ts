@@ -47,6 +47,7 @@ import { calculateScheduleD, recomputeCarryforward } from "./schedules/schedule-
 import { calculateScheduleE } from "./schedules/schedule-e.js";
 import { calculateScheduleSE } from "./schedules/schedule-se.js";
 import { calculateScheduleA } from "./schedules/schedule-a.js";
+import { calculateSchedule1A } from "./schedules/schedule-1-a.js";
 import { calculateForm6251 } from "./forms/form-6251.js";
 import { calculateForm8801 } from "./forms/form-8801.js";
 import { calculateForm8582 } from "./forms/form-8582.js";
@@ -1993,6 +1994,20 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     `${deductionUsed} deduction selected`
   );
 
+  if (input.schedule1A?.businessTips.length) {
+    throw new Error("Schedule 1-A business tips require unsupported business-level QBI coordination");
+  }
+  const schedule1A = input.schedule1A ? calculateSchedule1A({
+    taxpayer: input.taxpayer,
+    agi,
+    foreignExcludedIncome: form2555IncomeReduction.plus(form2555HousingDeduction),
+    facts: input.schedule1A,
+  }) : undefined;
+  const additionalDeductions = schedule1A?.totalDeduction ?? d("0");
+  if (schedule1A) audit.merge(schedule1A.lines);
+  audit.record("1040", "13b", "Additional deductions from Schedule 1-A", additionalDeductions,
+    "Schedule 1-A line 38; no change to AGI or payroll taxes");
+
   // Line 13: Section 199A QBI Deduction (Form 8995)
   // Collect QBI sources from Schedule C, Schedule F, and K-1s.
   // Per IRS Form 8995 Instructions, QBI from Schedule C/F must be reduced by
@@ -2123,7 +2138,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   }
 
   let qbiDeduction = new Decimal(0);
-  const taxableIncomeBeforeQBI = zeroFloor(agi.minus(deductionAmount));
+  const taxableIncomeBeforeQBI = zeroFloor(agi.minus(deductionAmount).minus(additionalDeductions));
   let form8995Result: import("./forms/form-8995.js").Form8995Result | undefined;
   let form8995AResult: import("./forms/form-8995-a.js").Form8995AResult | undefined;
 
@@ -2218,8 +2233,8 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     form8995AResult ? `Form 8995-A: $${qbiDeduction}` : `Form 8995: $${qbiDeduction}`);
 
   // Line 14: Total deductions = Line 12 + Line 13
-  const totalDeduction = deductionAmount.plus(qbiDeduction);
-  audit.record("1040", "14", "Total deductions", totalDeduction, "Line 12 + Line 13");
+  const totalDeduction = deductionAmount.plus(qbiDeduction).plus(additionalDeductions);
+  audit.record("1040", "14", "Total deductions", totalDeduction, "Line 12 + Line 13a QBI + Line 13b Schedule 1-A");
 
   // Line 15: Taxable income (preliminary, before NOL deduction)
   const rawTaxableIncome = agi.minus(totalDeduction); // before zero-floor, needed by carryforward worksheet
@@ -3326,6 +3341,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     form2210,
     form8815,
     form8812,
+    schedule1A,
     form8995: form8995Result,
     form8995A: form8995AResult,
     form8936,

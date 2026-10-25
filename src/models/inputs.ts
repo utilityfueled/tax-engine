@@ -39,12 +39,14 @@ export const TaxpayerSchema = z.object({
   taxYear: z.number().int(),
   filingStatus: FilingStatusSchema,
   livedWithSpouseAtAnyTimeDuringYear: z.boolean().optional(),
+  stateResidency: z.enum(["full-year", "part-year", "nonresident"]).optional(),
   primary: z.object({
     firstName: z.string(),
     lastName: z.string(),
     ssn: z.string(),
     dateOfBirth: z.string(),
     occupation: z.string().optional(),
+    usResidencyMonths: z.number().int().min(0).max(12).optional(),
   }),
   spouse: z
     .object({
@@ -53,6 +55,7 @@ export const TaxpayerSchema = z.object({
       ssn: z.string(),
       dateOfBirth: z.string(),
       occupation: z.string().optional(),
+      usResidencyMonths: z.number().int().min(0).max(12).optional(),
     })
     .optional(),
   address: z.object({
@@ -2058,8 +2061,13 @@ export const EducationExpensesSchema = z.object({
     name: z.string(),
     qualifiedExpenses: decimal,
     priorYearsClaimed: z.number().int().min(0).optional(),
+    completedFirstFourYearsBeforeYear: z.boolean().optional(),
+    enrolledAtLeastHalfTime: z.boolean().optional(),
+    pursuingDegreeOrCredential: z.boolean().optional(),
+    felonyDrugConviction: z.boolean().optional(),
   })).default([]),
   llcExpenses: optionalDecimal,
+  refundableAocEligible: z.boolean().optional(),
 });
 
 export const BusinessExpensesSchema = z.object({
@@ -4171,6 +4179,77 @@ export const NYIT201FullReturnInputSchema = z.object({
 });
 export type NYIT201FullReturnInputDocument = z.infer<typeof NYIT201FullReturnInputSchema>;
 
+/** Schedule 1-A qualification facts. Absence is unknown, never assumed eligible. */
+const schedule1AMoney = decimal.refine((value) => d(value).isFinite() && d(value).gte(0), "Amount must be finite and nonnegative");
+const schedule1AOwner = z.enum(["primary", "spouse"]);
+const schedule1ADate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date").refine((value) => {
+  const parsed = new Date(`${value}T00:00:00Z`);
+  return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+}, "Invalid calendar date");
+const schedule1ATipFacts = {
+  owner: schedule1AOwner,
+  occupationCode: z.string().regex(/^\d{3}$/),
+  eligibleOccupation: z.boolean(),
+  voluntaryCashTips: z.boolean(),
+  lawfulActivity: z.boolean(),
+  meetsSstbRuleOrTransition: z.boolean(),
+};
+export const Schedule1ASchema = z.object({
+  primarySsnEligible: z.boolean(),
+  spouseSsnEligible: z.boolean().optional(),
+  excludedPuertoRicoIncome: schedule1AMoney,
+  form4563Exclusion: schedule1AMoney,
+  employeeTips: z.array(z.object({
+    ...schedule1ATipFacts,
+    employer: z.string().trim().min(1),
+    qualifiedW2Tips: schedule1AMoney,
+    qualifiedForm4137Tips: schedule1AMoney,
+  })),
+  businessTips: z.array(z.object({
+    ...schedule1ATipFacts,
+    businessName: z.string().trim().min(1),
+    qualifiedReportedTips: schedule1AMoney,
+    netProfit: decimal,
+    otherAllocableDeductions: schedule1AMoney,
+  })),
+  overtime: z.array(z.object({
+    owner: schedule1AOwner,
+    qualifiedPremium: schedule1AMoney,
+    reportedCompensation: schedule1AMoney,
+    requiredByFlsa: z.boolean(),
+  }).refine((value) => d(value.qualifiedPremium).lte(value.reportedCompensation), "Premium exceeds reported compensation")),
+  vehicleLoans: z.array(z.object({
+    vin: z.string().regex(/^[A-HJ-NPR-Z0-9]{17}$/, "VIN must contain 17 valid characters"),
+    acquiredDate: schedule1ADate,
+    loanOriginationDate: schedule1ADate,
+    interestPaid: schedule1AMoney,
+    businessInterestDeducted: schedule1AMoney,
+    nonqualifyingInterest: schedule1AMoney,
+    firstLien: z.boolean(),
+    originalUse: z.boolean(),
+    finalAssemblyUnitedStates: z.boolean(),
+    personalUse: z.boolean(),
+    vehicleType: z.enum(["car", "minivan", "van", "sport_utility_vehicle", "pickup_truck", "motorcycle"]),
+    grossVehicleWeightRating: z.number().int().positive(),
+    relatedParty: z.boolean(),
+    lease: z.boolean(),
+    fleet: z.boolean(),
+    salvageOrScrap: z.boolean(),
+    refinanced: z.boolean(),
+  }).refine((value) => d(value.businessInterestDeducted).plus(value.nonqualifyingInterest).lte(value.interestPaid), "Excluded interest exceeds interest paid")),
+  seniorOwners: z.array(schedule1AOwner),
+}).superRefine((facts, ctx) => {
+  for (const [name, entries] of [
+    ["employeeTips", facts.employeeTips.map((entry) => `${entry.owner}:${entry.employer.toLowerCase()}`)],
+    ["businessTips", facts.businessTips.map((entry) => `${entry.owner}:${entry.businessName.toLowerCase()}`)],
+    ["vehicleLoans", facts.vehicleLoans.map((entry) => entry.vin)],
+    ["seniorOwners", facts.seniorOwners],
+  ] as const) {
+    if (new Set(entries).size !== entries.length) ctx.addIssue({ code: z.ZodIssueCode.custom, path: [name], message: `Duplicate ${name} entry` });
+  }
+});
+export type Schedule1AInput = z.infer<typeof Schedule1ASchema>;
+
 /** Complete input for a tax year */
 export const TaxYearInputSchema = z.object({
   taxpayer: TaxpayerSchema,
@@ -4224,6 +4303,7 @@ export const TaxYearInputSchema = z.object({
   priorYear: PriorYearCarryforwardSchema.optional(),
   adjustments: AdjustmentsSchema.optional(),
   scheduleA: ScheduleAInputSchema.optional(),
+  schedule1A: Schedule1ASchema.optional(),
   salesTaxDeduction: SalesTaxDeductionSchema.optional(),
   energyCredits: EnergyCreditsSchema.optional(),
   form8936: Form8936Schema.optional(),

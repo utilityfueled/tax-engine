@@ -1,0 +1,68 @@
+form: "Schedule 1-A"
+fullName: "Additional deductions, 2025 and 2026 rule implementation"
+taxYear: 2026
+reviewStatus: "independent-review-pending"
+retrievedAt: "2026-10-24"
+irsReference: "https://www.irs.gov/instructions/i1040gi"
+notes: |
+  Line labels follow final 2025 Schedule 1-A. Publication 505 (2026) confirms
+  unchanged amounts for 2026. This is calculation research, not qualification
+  of a final 2026 form. Explicit facts must establish SSN validity, reported
+  eligible tips, FLSA premium, and loan requirements; gross wages, arbitrary
+  overtime pay and a vehicle purchase alone cannot establish those facts.
+  All monetary amounts use Decimal. Unknown qualification facts reject.
+lines:
+  - line: "1-3"
+    description: "MAGI including foreign/territory exclusions"
+    formula: "AGI + excluded Puerto Rico income + Form 2555 lines 45 and 50 + Form 4563 line 15"
+    testRef: "tests/engine/schedules/schedule-1-a.test.ts::Schedule 1-A additional deductions"
+  - line: "4-13"
+    description: "Qualified tips; max per-employer W-2/4137 and per-business net limit"
+    formula: |
+      Employee eligible tips = sum over distinct owner/employer of max(qualified
+      reported W2 tips, qualified Form 4137 total tips). Business tips = min(
+      reported qualified tips, max(0, business net profit - allocable deductions))
+      per owner/business. Eligibility requires cash, voluntary, legal service,
+      qualifying TTOC occupation, SSTB rule or applicable transition and valid SSN.
+      Married separate filers receive zero. Return-wide limit = 25000; reduce by
+      100 * floor(max(0, MAGI - 150000 [300000 MFJ]) / 1000); floor at zero.
+      Self-employed tips require QBI allocation before federal orchestration;
+      until that coordination is verified the federal entrypoint rejects them.
+    irsRef: "Schedule 1-A lines 4-13; IRC 224; Form 1040 instructions, multiple employer and multiple business worksheets"
+    testRef: "tests/engine/schedules/schedule-1-a.test.ts::Schedule 1-A additional deductions"
+  - line: "14-21"
+    description: "FLSA overtime premium deduction"
+    formula: |
+      Sum only reported premium required by FLSA section 7, above regular rate,
+      with valid recipient SSN. MFS is zero. Cap 12500 (25000 MFJ); reduce by
+      100 * floor(max(0, MAGI - 150000 [300000 MFJ]) / 1000); floor at zero.
+    testRef: "tests/engine/schedules/schedule-1-a.test.ts::Schedule 1-A additional deductions"
+  - line: "22-30"
+    description: "Qualified passenger vehicle interest"
+    formula: |
+      Per VIN require purchase/loan after 2024 and no future date; first lien,
+      original use, US final assembly, personal use, allowed vehicle type and
+      GVWR below 14000. Exclude related-party debt, lease/fleet/salvage/scrap and
+      amounts allocable to nonqualifying financing or previously deducted on C/E/F.
+      Sum eligible interest, cap 10000; reduce by 200 * ceil(max(0, MAGI -
+      100000 [200000 MFJ]) / 1000); floor at zero. MFS is permitted for this branch.
+      Refinancing or substitute-vehicle exceptions require separate qualification
+      and are rejected explicitly, not treated as a new qualifying loan.
+    irsRef: "IRC 163(h)(4); Schedule 1-A lines 22-30; T.D. 10054, 1.163-16(c)-(e)"
+    testRef: "tests/engine/schedules/schedule-1-a.test.ts::Schedule 1-A additional deductions"
+  - line: "31-38"
+    description: "Enhanced senior deduction and total"
+    formula: |
+      Each eligible primary/spouse receives max(0,6000 - 0.06 * max(0,MAGI -
+      75000 [150000 MFJ])). Born before January 2 of taxYear-64 and SSN valid.
+      MFS receives zero. The same phased-down per-person amount applies to
+      each spouse; round the shared per-person line 35 amount before summing
+      lines 36a/36b. A spouse can claim only on a joint return.
+      Total additional deductions = tips + overtime + vehicle interest + seniors.
+      Total reduces taxable income and QBI income limitation, never AGI or SE tax.
+    testRef: "tests/engine/schedules/schedule-1-a.test.ts::Schedule 1-A additional deductions"
+  - line: "1040-13b"
+    description: "Federal deduction flow and QBI limitation"
+    formula: "AGI is unchanged; taxable income before QBI = max(0, AGI - standard/itemized deduction - Schedule 1-A total). Total deductions include QBI and Schedule 1-A. Self-employed tip integration rejects until business-level QBI adjustment is supported."
+    irsRef: "2025 Form 1040 line 13b; Form 8995 instructions line 11"
+    testRef: "tests/engine/schedules/schedule-1-a.test.ts::Schedule 1-A federal integration"

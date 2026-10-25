@@ -66,3 +66,33 @@ all 81 constant/indexed tests and engine typecheck pass. The constant audit also
 found a separate legacy 2025 QCD error ($105,000 rather than $108,000), pending
 its own spec-first correction. Values for expired incentives intentionally do
 not bypass acquisition/discharge date rules or imply current eligibility.
+
+## Package: Schedule 1-A explicit facts and calculation
+
+Official sources refreshed 2026-10-24:
+- https://www.irs.gov/pub/irs-pdf/f1040s1a.pdf — final 2025 lines and rounding.
+- https://www.irs.gov/instructions/i1040gi — employer/business tip worksheets,
+  SSN and eligibility rules, deductible premium and senior birth-date cutoff.
+- https://www.irs.gov/instructions/i8995 — line 11 subtracts Schedule 1-A.
+- https://www.irs.gov/irb/2026-39_irb — T.D. 10054 vehicle interest regulations,
+  published September 2026 and effective November 9, 2026.
+
+Spec and 38 tests preceded the new module. Three federal integration regressions
+failed first; two review regressions then failed for per-person senior rounding
+and nonjoint spouse claims. The model requires actual SSN, occupation, FLSA,
+loan and exclusion facts. It rejects duplicate sources, unknown spouse facts,
+invalid dates and unsupported refinancing. Tips/overtime use floor steps; vehicle
+interest uses ceiling steps; senior reduction applies separately per person.
+Federal deduction flow preserves AGI/payroll and reduces the QBI income limit.
+Business tips are calculated independently but federal integration rejects them
+until source-level QBI coordination is implemented. Final 2026 form qualification
+and independent human review remain outstanding. No readiness gate was opened.
+
+This package also preserves optional residency and education eligibility facts
+requested by the guided-input package; optional fields remain unknown until
+explicitly answered. Subsequent education work will consume those actual facts.
+
+Checks: 567 focused Schedule 1-A, federal integration and QBI tests pass;
+engine typecheck and spec validation (2,971 references) pass. Scoped diff and
+whitespace reviewed. All new calculation expectations are synthetic or directly
+transcribed IRS example arithmetic, not independently reviewed evidence.
