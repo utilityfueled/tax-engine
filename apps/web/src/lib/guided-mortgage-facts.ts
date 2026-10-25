@@ -3,6 +3,7 @@ import type { FilingStatus, MortgageEntryData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
 import { amountError, isActualDate } from "./guided-required-facts";
 import type { MortgageFirstLastData, MortgageMonthlyData, MortgageInterestRateData } from "./guided-mortgage-balances";
+import type { MortgageDebtCategoryData } from "./guided-mortgage-debt-categories";
 
 export const mortgagePointFacts = {
   pointsOnMainHome: "Were the points for a loan secured by your main home?",
@@ -34,7 +35,8 @@ export type MortgageSourceData = {
   mortgageCreditCertificate?: boolean | null;
   specialCircumstances?: boolean | null;
   maximumBalanceDuringYear?: string;
-  balanceMethod?: "" | "highest_balance" | "lender_average" | "first_last" | "monthly" | "interest_rate";
+  balanceMethod?: "" | "highest_balance" | "lender_average" | "first_last" | "monthly" | "interest_rate" | "category_worksheet";
+  balanceCategories?: MortgageDebtCategoryData;
   balanceFirstLast?: MortgageFirstLastData;
   balanceMonthly?: MortgageMonthlyData;
   balanceInterestRate?: MortgageInterestRateData;
@@ -69,7 +71,7 @@ export type MortgageSourceData = {
   sourceFactsConfirmed?: boolean | null;
 } & Partial<Record<keyof typeof mortgagePointFacts, boolean | null>>;
 
-/** Bounded ordinary acquisition debt only; never reinterpret Box 2 as an average. */
+/** Ordinary original debt or actual completed category sources; never infer an average from Box 2. */
 export function mortgageFactErrors(entries: MortgageEntryData[], taxYear?: number | null, filingStatus?: FilingStatus | null, sourceWorksheet = false): Record<string, string> {
   const errors: Record<string, string> = {};
   const loans = new Set<string>();
@@ -90,8 +92,9 @@ export function mortgageFactErrors(entries: MortgageEntryData[], taxYear?: numbe
     if (filingStatus && filingStatus !== "mfj" && entry.accountHolder !== "primary") error("owner", "A spouse or joint borrower allocation needs its actual separate payment worksheet; this ordinary path supports this taxpayer's payments only.");
     if (!["main-home", "second-home"].includes(entry.propertyUse ?? "")) error("property-use", "Confirm an actual qualified main or second home; other property uses need their supporting worksheet.");
     else homes[entry.propertyUse as keyof typeof homes].add(entry.propertyAddress?.trim().toLowerCase().replace(/\s+/g, " ") ?? "");
-    if (entry.loanType !== "original") error("loan-type", "Refinanced, home-equity, reverse and other loans need their original debt and use worksheets; this ordinary mortgage path cannot calculate them yet.");
-    if (entry.proceedsUse !== "acquisition") error("proceeds", "Confirm all proceeds bought, built or substantially improved the home securing this loan. Mixed or other uses need a separate allocation worksheet.");
+    const categories = sourceWorksheet && entry.balanceMethod === "category_worksheet";
+    if (entry.loanType !== "original" && !(categories && ["refinance", "heloc"].includes(entry.loanType ?? ""))) error("loan-type", "Refinanced or home-equity loans require the actual completed debt-category worksheet. Reverse and other loan methods remain unsupported here.");
+    if (categories ? !["acquisition", "mixed", "other"].includes(entry.proceedsUse ?? "") : entry.proceedsUse !== "acquisition") error("proceeds", "Confirm the actual use traced through the original debt. Mixed or other uses require the completed category and interest-allocation worksheet.");
     for (const [field, label] of [
       ["securedDebt", "legally secured debt on this home"], ["ownershipInterest", "an ownership interest in this home"],
       ["obligationToRepay", "a genuine obligation and intention to repay the debt"],
@@ -112,7 +115,7 @@ export function mortgageFactErrors(entries: MortgageEntryData[], taxYear?: numbe
       if (message) error(field, message);
     }
     if (!isActualDate(entry.originationDate) || (year && entry.originationDate > `${year}-12-31`)) error("date", "Enter the actual mortgage origination date, no later than the statement year.");
-    if (entry.originationDate <= "1987-10-13") error("grandfathered", "Grandfathered debt needs its original balance and use worksheet before this path can calculate.");
+    if (entry.originationDate <= "1987-10-13" && !categories) error("grandfathered", "Grandfathered debt needs its completed category and continuous-security history before this path can calculate.");
     const validAmount = (field: "maximumBalanceDuringYear" | "outstandingPrincipal" | "refundOfOverpaidInterest" | "pointsPaid" | "propertyTaxPaid" | "mortgageInsurancePremiums") => !amountError(entry[field], field);
     if (validAmount("maximumBalanceDuringYear")) {
       maximumDebt = maximumDebt.plus(parseGuidedCurrency(entry.maximumBalanceDuringYear));
@@ -123,6 +126,7 @@ export function mortgageFactErrors(entries: MortgageEntryData[], taxYear?: numbe
     const ownPoints = sourceWorksheet && !amountError(entry.pointsPaidByReturnAmount, "points") && !amountError(entry.pointsNotInterest, "point fees")
       ? parseGuidedCurrency(entry.pointsPaidByReturnAmount).minus(parseGuidedCurrency(entry.pointsNotInterest)) : parseGuidedCurrency(validAmount("pointsPaid") ? entry.pointsPaid : "0");
     if (validAmount("pointsPaid") && ownPoints.gt(0)) {
+      if (entry.loanType !== "original") error("points-history", "Refinancing points require their actual amortization or separately qualified improvement history before this route can calculate.");
       if (entry.propertyUse !== "main-home") error("points-home", "Purchase points on a second home need their actual amortization worksheet; they cannot use the main-home full-deduction route.");
       if (!year || !entry.originationDate.startsWith(`${year}-`)) error("points-year", "Prior-loan points need their actual amortization history; only qualifying current-year purchase points are supported here.");
       for (const field of Object.keys(mortgagePointFacts) as (keyof typeof mortgagePointFacts)[]) if (entry[field] !== true) error(field, "Confirm every full-deduction purchase-points condition. Other points require an amortization or allocation worksheet.");

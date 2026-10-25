@@ -62,7 +62,7 @@ export function buildGuidedMortgageInputs(data: MortgageDeductionData | undefine
     const positivePoints = parseGuidedCurrency(amounts.pointsPaidByReturnAmount).minus(amounts.pointsNotInterest).gt(0);
     if (positivePoints && (!isActualDate(entry.pointsPaidDate) || !entry.pointsPaidDate!.startsWith(`${taxYear}-`) || !["purchase", "build"].includes(entry.pointsUse ?? ""))) throw new Error("Enter the actual points payment date in this tax year and whether the loan purchased or built the main home.");
     if (positivePoints && Object.keys(mortgagePointFacts).some(field => entry[field as keyof typeof mortgagePointFacts] !== true)) throw new Error("Confirm every current-year points qualification condition.");
-    const transition = entry.originationDate >= "2017-12-16" && entry.originationDate < "2018-04-01";
+    const transition = entry.loanType === "original" && entry.originationDate >= "2017-12-16" && entry.originationDate < "2018-04-01";
     if (transition && typeof entry.bindingContractApplies !== "boolean") throw new Error("Confirm whether the actual 2017 binding-contract transition applies to this loan.");
     if (!transition && entry.bindingContractApplies === true) throw new Error("The saved binding-contract transition conflicts with this loan's origination date; reconcile the actual dates.");
     const bindingContract = entry.bindingContractApplies === true ? { signedDate: entry.bindingContractSignedDate, requiredClosingDate: entry.bindingContractRequiredClosingDate, purchaseDate: entry.bindingContractPurchaseDate } : undefined;
@@ -70,7 +70,7 @@ export function buildGuidedMortgageInputs(data: MortgageDeductionData | undefine
     return { sourceId: sourceIdentity(entry), form1098SourceId: sourceIdentity(entry), lenderName: entry.lender.trim(), accountHolder: entry.accountHolder,
       homeId: entry.propertyAddress!.trim().toLowerCase().replace(/\s+/g, " "), homeUse: entry.propertyUse === "main-home" ? "main" : "second", qualifiedResidence: true,
       securedDebt: entry.securedDebt, ownershipInterest: entry.ownershipInterest, obligationToRepay: entry.obligationToRepay,
-      originationDate: entry.originationDate, loanType: "original", acquisitionUse: entry.proceedsUse === "acquisition", currentYearInterestOnly: entry.currentYearInterestOnly,
+      originationDate: entry.originationDate, loanType: entry.loanType === "original" ? "original" : "refinanced_mixed", acquisitionUse: entry.proceedsUse === "acquisition", currentYearInterestOnly: entry.currentYearInterestOnly,
       interestPaid: amounts.interestPaidByReturnAmount, interestPaidByOthers: amounts.interestPaidByOthers, interestDeductedElsewhere: amounts.interestDeductedElsewhere,
       sameYearInterestRefund: amounts.sameYearInterestRefund, nonqualifiedInterest: amounts.nonqualifiedInterest, pointsPaid: amounts.pointsPaidByReturnAmount,
       pointsPaidByOthers: amounts.pointsPaidByOthers, pointsNotInterest: amounts.pointsNotInterest,

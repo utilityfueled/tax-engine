@@ -2,6 +2,7 @@ import type { MortgageInterestWorksheet } from '@/models/inputs';
 import type { MortgageEntryData } from './guided-interview-flow';
 import { amountError, hasEnteredAmount } from './guided-required-facts';
 import { parseGuidedCurrency } from './guided-currency';
+import { buildGuidedMortgageDebtCategories } from './guided-mortgage-debt-categories';
 
 export interface MortgageFirstLastData {
   firstBalance?: string; lastBalance?: string; noAdditionalBorrowing?: boolean | null;
@@ -28,6 +29,7 @@ function month(value: string | undefined): number {
   return Number(value);
 }
 export function buildGuidedMortgageBalance(entry: MortgageEntryData): MortgageInterestWorksheet['loans'][number]['balance'] {
+  if (entry.balanceMethod === 'category_worksheet') return buildGuidedMortgageDebtCategories(entry);
   if (!entry.balanceSourceReference?.trim()) throw new Error('Enter the actual annual balance source reference.');
   const maximum = hasEnteredAmount(entry.maximumBalanceDuringYear) ? money(entry.maximumBalanceDuringYear, 'known maximum mortgage balance') : undefined;
   const sourceBalance = (value: string | undefined, label: string) => {
