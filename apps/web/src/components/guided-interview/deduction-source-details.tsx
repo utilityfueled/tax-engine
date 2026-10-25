@@ -1,8 +1,7 @@
 "use client";
 
-import Decimal from "decimal.js";
 import { type DeductionData, type DonationEntryData, type MortgageEntryData, emptyDonationEntry, emptyMortgageEntry } from "@/lib/guided-interview-flow";
-import { parseGuidedCurrency } from "@/lib/guided-currency";
+import { sumGuidedDisplayAmounts } from "@/lib/guided-currency";
 import { CurrencyField } from "./currency-field";
 
 function TextFact({ label, value, onChange, type = "text" }: { label: string; value: string; onChange: (value: string) => void; type?: "text" | "date" }) {
@@ -13,18 +12,21 @@ function BooleanFact({ label, value, onChange }: { label: string; value: boolean
   return <label className="guided-field"><span className="guided-field-label">{label}</span><select className="guided-input" value={value == null ? "" : String(value)} onChange={(event) => onChange(event.target.value === "" ? null : event.target.value === "true")}><option value="">Confirm from your records</option><option value="true">Yes</option><option value="false">No</option></select></label>;
 }
 
-export function DeductionSourceDetails({ data, onChange }: { data: DeductionData; onChange: (data: DeductionData) => void }) {
+export function DeductionSourceDetails({ data, onChange, includeMortgages = true }: { data: DeductionData; onChange: (data: DeductionData) => void; includeMortgages?: boolean }) {
   // An old aggregate is preserved as the amount needing source details. No other
   // fact is inferred, and merely rendering does not rewrite the saved workspace.
   const mortgages = data.mortgageEntries ?? (data.mortgageInterest.trim() ? [{ ...emptyMortgageEntry, mortgageInterest: data.mortgageInterest }] : []);
   const donations = data.donationEntries ?? (data.charitableContributions.trim() ? [{ ...emptyDonationEntry, amount: data.charitableContributions }] : []);
   function setMortgages(entries: MortgageEntryData[]) {
-    onChange({ ...data, mortgageEntries: entries, mortgageInterest: entries.reduce((total, entry) => total.plus(parseGuidedCurrency(entry.mortgageInterest)), new Decimal(0)).toFixed() });
+    const total = sumGuidedDisplayAmounts(entries.map((entry) => entry.mortgageInterest));
+    onChange({ ...data, mortgageEntries: entries, mortgageInterest: total.isFinite() ? total.toFixed() : data.mortgageInterest });
   }
   function setDonations(entries: DonationEntryData[]) {
-    onChange({ ...data, donationEntries: entries, charitableContributions: entries.reduce((total, entry) => total.plus(parseGuidedCurrency(entry.amount)), new Decimal(0)).toFixed() });
+    const total = sumGuidedDisplayAmounts(entries.map((entry) => entry.amount));
+    onChange({ ...data, donationEntries: entries, charitableContributions: total.isFinite() ? total.toFixed() : data.charitableContributions });
   }
   return <>
+    {includeMortgages && <>
     <h4>Mortgage interest — Form 1098</h4>
     <p className="guided-hint">Copy each lender&apos;s actual amounts and origination date. Leave an unknown fact blank; it must be resolved before calculating.</p>
     {mortgages.map((entry, index) => {
@@ -37,6 +39,7 @@ export function DeductionSourceDetails({ data, onChange }: { data: DeductionData
       </div><button type="button" className="utility-button" onClick={() => setMortgages(mortgages.filter((_, i) => i !== index))}>Remove mortgage #{index + 1}</button></fieldset>;
     })}
     <button type="button" className="utility-button" onClick={() => setMortgages([...mortgages, { ...emptyMortgageEntry }])}>Add mortgage</button>
+    </>}
     <h4>Charitable contributions</h4>
     {donations.map((entry, index) => {
       const update = (change: Partial<DonationEntryData>) => setDonations(donations.map((item, i) => i === index ? { ...item, ...change } : item));

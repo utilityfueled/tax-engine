@@ -35,3 +35,8 @@ lines:
     formula: "Sum and compare income, expenses, payments and review totals using Decimal; stringify without a binary-number conversion. Malformed UI input displays unknown rather than a numeric zero. Other-tax indicators use verified engine amounts, not total-income threshold guesses."
     irsRef: "Form 1040 instructions, rounding off to whole dollars"
     testRef: "tests/guided-interview/guided-display-money.test.ts::retains exact source cents in deduction comparison and formatting"
+  - line: "eligibility-and-migration"
+    description: "Preserve actual eligibility and require confirmation of old defaults"
+    formula: "Capture AOTC enrollment, degree, prior study, conviction and refundable-eligibility answers explicitly. Preserve residency months including zero. Saved pre-version-2 code 7 and prior-claim count 0 remain stored but require reconfirmation because their provenance is unknown."
+    irsRef: "Publication 970, Who Can Claim the Credit and Refundable Part of Credit; Form 1099-R box 7"
+    testRef: "tests/guided-interview/guided-required-facts.test.ts::requires reconfirmation of legacy prefilled facts without changing their values"

@@ -20,11 +20,11 @@ function amountError(value: string | undefined, label: string): string | undefin
 }
 
 export function deductionFactErrors(data: DeductionData | undefined, taxYear?: number | null): Record<string, string> {
-  if (!data || data.method !== "itemized") return {};
+  if (!data) return {};
   const errors: Record<string, string> = {};
-  const mortgages = data.mortgageEntries ?? [];
+  const mortgages = data.method === "itemized" ? data.mortgageEntries ?? [] : [];
   const donations = data.donationEntries ?? [];
-  if (hasEnteredAmount(data.mortgageInterest) && !parseGuidedCurrency(data.mortgageInterest).isZero() && !mortgages.length) errors.mortgages = "Enter the mortgage lender, principal and origination date for the saved mortgage interest.";
+  if (data.method === "itemized" && hasEnteredAmount(data.mortgageInterest) && !parseGuidedCurrency(data.mortgageInterest).isZero() && !mortgages.length) errors.mortgages = "Enter the mortgage lender, principal and origination date for the saved mortgage interest.";
   if (hasEnteredAmount(data.charitableContributions) && !parseGuidedCurrency(data.charitableContributions).isZero() && !donations.length) errors.donations = "Enter donation recipient, type and date for the saved charitable contributions.";
   mortgages.forEach((entry, index) => {
     if (!entry.lender.trim()) errors[`mortgage-${index}-lender`] = "Enter the actual mortgage lender.";
@@ -73,6 +73,7 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
     if (![entry.payer, entry.grossDistribution, entry.taxableAmount, entry.federalWithheld, entry.distributionCode].some((value) => value?.trim())) return;
     if (!entry.payer.trim()) errors[`retirement-${index}-payer`] = "Enter the actual retirement payer.";
     if (!/^[1-9ABCDEFGHJKLMNPQRSTUWY][1-9ABCDEFGHJKLMNPQRSTUWY]?$/.test(entry.distributionCode)) errors[`retirement-${index}-code`] = "Enter the actual Form 1099-R box 7 distribution code.";
+    if (entry.requiresCodeConfirmation) errors[`retirement-${index}-code`] = "Reconfirm the saved distribution code from the actual Form 1099-R; older versions prefilled code 7.";
     for (const field of ["grossDistribution", ...(requireTaxableAmount ? ["taxableAmount" as const] : [])] as const) {
       const error = amountError(entry[field], field === "taxableAmount" ? "taxable amount (unknown amounts require review)" : "gross distribution");
       if (error) errors[`retirement-${index}-${field}`] = error;
@@ -91,7 +92,12 @@ export function educationFactErrors(data: CreditsData | undefined): Record<strin
     const amount = amountError(student.qualifiedExpenses, "qualified education expenses");
     if (amount) errors[`student-${index}-amount`] = amount;
     if (!/^[0-4]$/.test(student.priorYearsClaimed)) errors[`student-${index}-history`] = "Confirm prior years AOTC was claimed (0–4; choose 4 for four or more).";
+    if (student.requiresPriorYearsConfirmation) errors[`student-${index}-history`] = "Reconfirm prior AOTC claims from actual records; older versions prefilled zero.";
+    for (const field of ["completedFirstFourYearsBeforeYear", "enrolledAtLeastHalfTime", "pursuingDegreeOrCredential", "felonyDrugConviction"] as const) {
+      if (typeof student[field] !== "boolean") errors[`student-${index}-${field}`] = "Confirm all AOTC student eligibility facts before calculating.";
+    }
   });
+  if (data?.education.aocStudents.length && typeof data.education.refundableAocEligible !== "boolean") errors.refundableAocEligible = "Confirm the taxpayer's refundable AOTC eligibility from the Form 8863 instructions.";
   return errors;
 }
 

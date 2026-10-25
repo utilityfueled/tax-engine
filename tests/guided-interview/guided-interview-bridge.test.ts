@@ -1,4 +1,4 @@
-import { startCompleteInterview as startInterview, completePersonalInfo, completeDependent } from "./complete-facts";
+import { startCompleteInterview as startInterview, completePersonalInfo, completeDependent, completeAocEligibility } from "./complete-facts";
 import { describe, it, expect } from "vitest";
 import {
   buildTaxInputFromGuidedData,
@@ -1316,8 +1316,9 @@ describe("buildEducationInput", () => {
     const data = {
       ...emptyCreditsData,
       education: {
+        refundableAocEligible: false,
         aocStudents: [
-          { name: "Jane", qualifiedExpenses: "4,000", priorYearsClaimed: "1" },
+          { ...completeAocEligibility, name: "Jane", qualifiedExpenses: "4,000", priorYearsClaimed: "1" },
         ],
         llcExpenses: "",
       },
@@ -1333,8 +1334,9 @@ describe("buildEducationInput", () => {
     const data = {
       ...emptyCreditsData,
       education: {
+        refundableAocEligible: false,
         aocStudents: [
-          { name: "Jane", qualifiedExpenses: "4000", priorYearsClaimed: "0" },
+          { ...completeAocEligibility, name: "Jane", qualifiedExpenses: "4000", priorYearsClaimed: "0" },
           { name: "Empty", qualifiedExpenses: "", priorYearsClaimed: "0" },
         ],
         llcExpenses: "",
@@ -1347,6 +1349,7 @@ describe("buildEducationInput", () => {
     const data = {
       ...emptyCreditsData,
       education: {
+        refundableAocEligible: false,
         aocStudents: [],
         llcExpenses: "8,500",
       },
@@ -1360,6 +1363,7 @@ describe("buildEducationInput", () => {
     const data = {
       ...emptyCreditsData,
       education: {
+        refundableAocEligible: false,
         aocStudents: [{ name: "", qualifiedExpenses: "2000", priorYearsClaimed: "0" }],
         llcExpenses: "",
       },
@@ -1467,7 +1471,8 @@ describe("buildTaxInputFromGuidedData — credits", () => {
     state = updateSectionData(state, "credits", {
       ...emptyCreditsData,
       education: {
-        aocStudents: [{ name: "Test", qualifiedExpenses: "4000", priorYearsClaimed: "0" }],
+        refundableAocEligible: false,
+        aocStudents: [{ ...completeAocEligibility, name: "Test", qualifiedExpenses: "4000", priorYearsClaimed: "0" }],
         llcExpenses: "",
       },
     });

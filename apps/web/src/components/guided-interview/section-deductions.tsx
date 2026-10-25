@@ -93,6 +93,8 @@ export function SectionDeductions({
           </div>
         </fieldset>
 
+        {current.method === "standard" && taxYear === 2026 && <DeductionSourceDetails data={current} onChange={onDataChange} includeMortgages={false} />}
+
         {current.method === "itemized" && (
           <div className="guided-w2-card" style={{ marginTop: "16px" }}>
             <div className="guided-w2-card-header">

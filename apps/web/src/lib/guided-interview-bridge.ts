@@ -283,7 +283,7 @@ export function buildForm1098Inputs(deductionData: DeductionData | undefined) {
 // ── Charitable donations converter ──────────────────────────────────────────
 
 export function buildDonationsInput(deductionData: DeductionData | undefined) {
-  if (!deductionData || deductionData.method !== "itemized") return [];
+  if (!deductionData) return [];
   assertKnownFacts(deductionFactErrors({ ...deductionData, mortgageInterest: "", mortgageEntries: [] }));
   return (deductionData.donationEntries ?? []).map((entry) => ({
     organization: entry.organization.trim(),
@@ -426,8 +426,13 @@ export function buildEducationInput(creditsData: CreditsData | undefined) {
       name: s.name.trim(),
       qualifiedExpenses: toDecimalString(s.qualifiedExpenses),
       priorYearsClaimed: Number(s.priorYearsClaimed),
+      completedFirstFourYearsBeforeYear: s.completedFirstFourYearsBeforeYear ?? undefined,
+      enrolledAtLeastHalfTime: s.enrolledAtLeastHalfTime ?? undefined,
+      pursuingDegreeOrCredential: s.pursuingDegreeOrCredential ?? undefined,
+      felonyDrugConviction: s.felonyDrugConviction ?? undefined,
     })),
     llcExpenses: hasLlc ? toDecimalString(education.llcExpenses) : undefined,
+    refundableAocEligible: education.refundableAocEligible ?? undefined,
   };
 }
 

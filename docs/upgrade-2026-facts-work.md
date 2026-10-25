@@ -66,3 +66,19 @@ Verification with pinned Node 24.22.1:
   the responder's in-progress contract properties (`optedOut`, `sourceIds`). These
   are outside this package and have been reported to its owner for integration.
 - Source-facts package commit: `5d09daf`.
+
+## Eligibility and legacy facts
+
+- Guided AOTC records now collect and forward prior-study, enrollment, credential,
+  conviction and refundable-eligibility answers. Missing answers block calculation.
+- Guided fact schema version 2 preserves saved values and years. A legacy
+  distribution code 7 or AOTC-history 0 is marked for reconfirmation; the app cannot
+  distinguish a previously chosen value from its former automatic default.
+- Donations survive standard-deduction selection, and the 2026 standard-deduction
+  screen accepts donation facts. The 2026 law/readiness gate is still closed.
+- Source-entry editing preserves malformed/in-progress input for correction rather
+  than throwing during a keystroke or converting it to a monetary zero.
+- 434 focused tests pass, web typecheck passes after the AI owner's contract
+  integration, scoped lint and diff checks pass. Eligibility test cases were red
+  before implementation. No live provider or taxpayer data used.
+- Decimal presentation commit: `f312c2f`.

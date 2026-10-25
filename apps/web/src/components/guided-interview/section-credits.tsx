@@ -12,6 +12,10 @@ import {
 } from "@/lib/guided-interview-flow";
 import { CurrencyField } from "./currency-field";
 
+function EligibilityFact({ label, value, onChange }: { label: string; value: boolean | null | undefined; onChange: (value: boolean | null) => void }) {
+  return <label className="guided-field"><span className="guided-field-label">{label}</span><select className="guided-input" value={value == null ? "" : String(value)} onChange={(event) => onChange(event.target.value === "" ? null : event.target.value === "true")}><option value="">Confirm from actual records</option><option value="true">Yes</option><option value="false">No</option></select></label>;
+}
+
 function DependentCareSection({
   data,
   onChange,
@@ -74,7 +78,7 @@ function EducationStudentCard({
 }: {
   index: number;
   student: EducationStudentData;
-  onUpdate: (field: keyof EducationStudentData, value: string) => void;
+  onUpdate: (field: keyof EducationStudentData, value: string | boolean | null) => void;
   onRemove: () => void;
   removable: boolean;
 }) {
@@ -116,7 +120,7 @@ function EducationStudentCard({
         <span className="guided-field-label">Prior years AOTC was claimed</span>
         <select
           className="guided-input guided-input-narrow"
-          value={student.priorYearsClaimed}
+          value={student.requiresPriorYearsConfirmation ? "" : student.priorYearsClaimed}
           onChange={(e) => onUpdate("priorYearsClaimed", e.target.value)}
           aria-describedby={`student-${index}-aotc-hint`}
         >
@@ -129,8 +133,13 @@ function EducationStudentCard({
         </select>
         <span className="guided-field-hint" id={`student-${index}-aotc-hint`}>
           The American Opportunity Credit can be claimed for up to 4 tax years per student.
+          {student.requiresPriorYearsConfirmation ? ` Saved prior claim count ${student.priorYearsClaimed} needs confirmation because older versions prefilled zero.` : ""}
         </span>
       </label>
+      <EligibilityFact label="Completed the first four years of postsecondary education before this tax year" value={student.completedFirstFourYearsBeforeYear} onChange={(value) => onUpdate("completedFirstFourYearsBeforeYear", value)} />
+      <EligibilityFact label="Enrolled at least half-time for at least one academic period" value={student.enrolledAtLeastHalfTime} onChange={(value) => onUpdate("enrolledAtLeastHalfTime", value)} />
+      <EligibilityFact label="Pursuing a degree or recognized education credential" value={student.pursuingDegreeOrCredential} onChange={(value) => onUpdate("pursuingDegreeOrCredential", value)} />
+      <EligibilityFact label="Had a felony drug conviction by the end of the tax year" value={student.felonyDrugConviction} onChange={(value) => onUpdate("felonyDrugConviction", value)} />
     </div>
   );
 }
@@ -142,9 +151,9 @@ function EducationSection({
   data: EducationCreditData;
   onChange: (data: EducationCreditData) => void;
 }) {
-  function updateStudent(index: number, field: keyof EducationStudentData, value: string) {
+  function updateStudent(index: number, field: keyof EducationStudentData, value: string | boolean | null) {
     const next = data.aocStudents.map((s, i) =>
-      i === index ? { ...s, [field]: value } : s
+      i === index ? { ...s, [field]: value, ...(field === "priorYearsClaimed" ? { requiresPriorYearsConfirmation: false } : {}) } : s
     );
     onChange({ ...data, aocStudents: next });
   }
@@ -187,6 +196,10 @@ function EducationSection({
           ))}
         </div>
       )}
+      {data.aocStudents.length > 0 && <>
+        <EligibilityFact label="Taxpayer meets the refundable AOTC eligibility requirements" value={data.refundableAocEligible} onChange={(refundableAocEligible) => onChange({ ...data, refundableAocEligible })} />
+        <p className="guided-hint">Review age, full-time student status, earned income and support, whether a parent is alive, and joint-return status in the <a href="https://www.irs.gov/instructions/i8863" target="_blank" rel="noreferrer">Form 8863 instructions</a>. A student&apos;s expense amount does not establish refundability.</p>
+      </>}
 
       <button
         type="button"

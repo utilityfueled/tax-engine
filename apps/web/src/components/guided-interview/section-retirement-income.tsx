@@ -84,7 +84,7 @@ function RetirementCard({
           <span className="guided-field-label">Distribution code (Box 7)</span>
           <select
             className="guided-input"
-            value={entry.distributionCode}
+            value={entry.requiresCodeConfirmation ? "" : entry.distributionCode}
             onChange={(e) => onUpdate("distributionCode", e.target.value)}
             aria-describedby={`retirement-${index}-dist-hint`}
           >
@@ -97,6 +97,7 @@ function RetirementCard({
           </select>
           <span className="guided-field-hint" id={`retirement-${index}-dist-hint`}>
             Use the code printed in Box 7; do not select one based on age alone.
+            {entry.requiresCodeConfirmation ? ` Saved code ${entry.distributionCode} needs confirmation because older versions prefilled it.` : ""}
           </span>
         </label>
 
@@ -127,7 +128,7 @@ export function SectionRetirementIncome({
     value: RetirementEntryData[K],
   ) {
     const next = entries.map((entry, i) =>
-      i === index ? { ...entry, [field]: value } : entry
+      i === index ? { ...entry, [field]: value, ...(field === "distributionCode" ? { requiresCodeConfirmation: false } : {}) } : entry
     );
     onEntriesChange(next);
   }

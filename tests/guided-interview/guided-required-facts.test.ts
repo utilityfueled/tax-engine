@@ -1,8 +1,8 @@
 // Spec: spec/federal/guided-input.yaml
 import { describe, expect, it } from "vitest";
 import { buildDonationsInput, buildEducationInput, buildEstimatedPaymentsInput, buildForm1098Inputs, buildRetirementInputs, buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
-import { emptyCreditsData, emptyDeductionData, emptyEducationStudent, emptyRetirementEntry, validateSection } from "@/lib/guided-interview-flow";
-import { completePersonalInfo, startCompleteInterview } from "./complete-facts";
+import { emptyCreditsData, emptyDeductionData, emptyEducationStudent, emptyRetirementEntry, validateSection, loadGuidedFlowState } from "@/lib/guided-interview-flow";
+import { completePersonalInfo, startCompleteInterview, completeAocEligibility } from "./complete-facts";
 
 const mortgage = { lender: "Actual Bank", mortgageInterest: "123.45", outstandingPrincipal: "0", originationDate: "2016-06-05" };
 const donation = { organization: "Actual Charity", type: "cash" as const, amount: "12.34", date: "2025-02-28", costBasis: "", isLongTermCapitalGain: null, isPrivateFoundation: false };
@@ -44,7 +44,7 @@ describe("required guided source facts", () => {
   });
   it("requires explicit education history and preserves zero", () => {
     expect(emptyEducationStudent.priorYearsClaimed).toBe("");
-    const credits = { ...emptyCreditsData, education: { llcExpenses: "", aocStudents: [{ name: "Actual Student", qualifiedExpenses: "4000", priorYearsClaimed: "" }] } };
+    const credits = { ...emptyCreditsData, education: { llcExpenses: "", refundableAocEligible: false, aocStudents: [{ ...completeAocEligibility, name: "Actual Student", qualifiedExpenses: "4000", priorYearsClaimed: "" }] } };
     expect(() => buildEducationInput(credits)).toThrow(/prior|history/i);
     expect(buildTaxInputFromGuidedData(stateWith("credits", credits))).toBeNull();
     expect(buildEducationInput({ ...credits, education: { ...credits.education, aocStudents: [{ ...credits.education.aocStudents[0], priorYearsClaimed: "0" }] } })?.aocStudents[0].priorYearsClaimed).toBe(0);
@@ -56,5 +56,27 @@ describe("required guided source facts", () => {
       { ...completePersonalInfo, zip: "bad" },
       { ...completePersonalInfo, state: "ZZ" },
     ]) expect(buildTaxInputFromGuidedData({ ...state, sectionData: { "personal-info": data } })).toBeNull();
+  });
+  it("requires reconfirmation of legacy prefilled facts without changing their values", () => {
+    const original = stateWith("income-retirement", { entries: [retirement] });
+    const legacy = { ...original, factsVersion: undefined };
+    const loaded = loadGuidedFlowState({ getItem: () => JSON.stringify(legacy) } as unknown as Storage, "legacy");
+    expect(loaded?.taxYear).toBe(2025);
+    expect(loaded?.sectionData["income-retirement"]?.entries[0].distributionCode).toBe("7");
+    expect(validateSection(loaded!, "income-retirement").status).toBe("partial");
+    expect(buildTaxInputFromGuidedData(loaded!)).toBeNull();
+  });
+  it("preserves explicit residency and all education eligibility answers", () => {
+    const state = startCompleteInterview({ filingStatus: "mfj", incomeTypes: [], lifeEvents: [], stateCode: null });
+    state.sectionData["personal-info"] = { ...completePersonalInfo, usResidencyMonths: "0", spouse: { ...completePersonalInfo.spouse!, usResidencyMonths: "0" } };
+    const taxpayer = buildTaxInputFromGuidedData(state)?.taxpayer;
+    expect(taxpayer?.primary.usResidencyMonths).toBe(0);
+    expect(taxpayer?.spouse?.usResidencyMonths).toBe(0);
+    expect(taxpayer?.stateResidency).toBe("full-year");
+    const eligibility = { completedFirstFourYearsBeforeYear: false, enrolledAtLeastHalfTime: true, pursuingDegreeOrCredential: true, felonyDrugConviction: false };
+    const student = { name: "Actual Student", qualifiedExpenses: "4000", priorYearsClaimed: "0", ...eligibility };
+    const credits = { ...emptyCreditsData, education: { llcExpenses: "", refundableAocEligible: false, aocStudents: [student] } };
+    expect(buildEducationInput(credits)).toMatchObject({ refundableAocEligible: false, aocStudents: [{ ...eligibility }] });
+    expect(buildTaxInputFromGuidedData(stateWith("credits", { ...credits, education: { ...credits.education, refundableAocEligible: undefined } }))).toBeNull();
   });
 });

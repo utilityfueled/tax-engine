@@ -20,3 +20,10 @@ export function startCompleteInterview(segmentation: SegmentationAnswers) {
   state.sectionData["personal-info"] = structuredClone(completePersonalInfo);
   return state;
 }
+
+export const completeAocEligibility = {
+  completedFirstFourYearsBeforeYear: false,
+  enrolledAtLeastHalfTime: true,
+  pursuingDegreeOrCredential: true,
+  felonyDrugConviction: false,
+};

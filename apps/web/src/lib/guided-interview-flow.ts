@@ -838,6 +838,11 @@ export interface EducationStudentData {
   name: string;
   qualifiedExpenses: string;
   priorYearsClaimed: string;
+  completedFirstFourYearsBeforeYear?: boolean | null;
+  enrolledAtLeastHalfTime?: boolean | null;
+  pursuingDegreeOrCredential?: boolean | null;
+  felonyDrugConviction?: boolean | null;
+  requiresPriorYearsConfirmation?: boolean;
 }
 
 export const emptyEducationStudent: EducationStudentData = {
@@ -849,6 +854,7 @@ export const emptyEducationStudent: EducationStudentData = {
 export interface EducationCreditData {
   aocStudents: EducationStudentData[];
   llcExpenses: string;
+  refundableAocEligible?: boolean | null;
 }
 
 export const emptyEducationCreditData: EducationCreditData = {
@@ -963,6 +969,7 @@ export type SelfEmploymentSectionData = NonNullable<SectionDataMap["income-self-
 export type GuidedFlowPhase = "segmentation" | "interview" | "complete";
 
 export interface GuidedFlowState {
+  factsVersion?: 2;
   /** Null or absent means the year has not been confirmed; never default in the adapter. */
   taxYear?: number | null;
   phase: GuidedFlowPhase;
@@ -976,6 +983,7 @@ export interface GuidedFlowState {
 }
 
 export const initialFlowState: GuidedFlowState = {
+  factsVersion: 2,
   taxYear: null,
   phase: "segmentation",
   segmentation: emptySegmentation,
@@ -1215,6 +1223,7 @@ export interface RetirementEntryData {
   federalWithheld: string;
   isIraSepSimple: boolean;
   distributionCode: string;
+  requiresCodeConfirmation?: boolean;
 }
 
 export const emptyRetirementEntry: RetirementEntryData = {
@@ -1843,10 +1852,20 @@ export function loadGuidedFlowState(storage: Storage, workspaceId: string): Guid
       return null;
     }
 
+    const sectionData = withDefaultSectionData(parsed.sectionData as SectionDataMap);
+    if (parsed.factsVersion !== 2) {
+      if (sectionData["income-retirement"]) {
+        sectionData["income-retirement"] = { ...sectionData["income-retirement"], entries: sectionData["income-retirement"].entries.map((entry) => ({ ...entry, requiresCodeConfirmation: entry.distributionCode === "7" || entry.requiresCodeConfirmation })) };
+      }
+      if (sectionData.credits) {
+        sectionData.credits = { ...sectionData.credits, education: { ...sectionData.credits.education, aocStudents: sectionData.credits.education.aocStudents.map((entry) => ({ ...entry, requiresPriorYearsConfirmation: entry.priorYearsClaimed === "0" || entry.requiresPriorYearsConfirmation })) } };
+      }
+    }
     return {
       ...parsed,
+      factsVersion: 2,
       taxYear: Number.isInteger(parsed.taxYear) ? parsed.taxYear : null,
-      sectionData: withDefaultSectionData(parsed.sectionData as SectionDataMap),
+      sectionData,
     };
   } catch {
     return null;
