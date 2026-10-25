@@ -9,7 +9,7 @@ import { calculateFederalTax } from "@/engine/federal.js";
 import { TaxYearInputSchema } from "@/models/inputs.js";
 import { simpleW2Fixture } from "../fixtures/simple-w2.js";
 const child={firstName:"Synthetic",lastName:"Child",ssn:"999-88-7777",relationship:"child",dateOfBirth:"2018-03-02",monthsLivedWithYou:12,qualifiesForCTC:true,ctcSsnEligible:true};
-const fixture=(overrides:Record<string,unknown>={})=>TaxYearInputSchema.parse({...simpleW2Fixture,childTaxCredit:{bonaFidePuertoRicoResident:false,possessionIncomeExclusion:"0"},taxpayer:{...simpleW2Fixture.taxpayer,taxYear:2026,primary:{...simpleW2Fixture.taxpayer.primary,employmentValidSsnIssuedByDueDate:true,tinIssuedByDueDate:true},dependents:[child],...overrides},w2s:[{...simpleW2Fixture.w2s[0],wages:"50000"}]});
+const fixture=(overrides:Record<string,unknown>={})=>TaxYearInputSchema.parse({...simpleW2Fixture,childTaxCredit:{bonaFidePuertoRicoResident:false,possessionIncomeExclusion:"0"},taxpayer:{...simpleW2Fixture.taxpayer,taxYear:2026,primary:{...simpleW2Fixture.taxpayer.primary,employmentValidSsnIssuedByDueDate:true,tinIssuedByDueDate:true},dependents:[child],...overrides},w2s:[{...simpleW2Fixture.w2s[0],accountHolder:"primary",wages:"50000"}]});
 describe("Schedule 8812 actual identity and payroll facts",()=>{
   it("does not infer a timely employment-valid SSN from its printed digits",()=>{
     expect(()=>calculateFederalTax(fixture({primary:{...simpleW2Fixture.taxpayer.primary,tinIssuedByDueDate:true}}))).toThrow(/SSN.*unknown|unknown.*SSN/i);
