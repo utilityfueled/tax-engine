@@ -4296,6 +4296,19 @@ export const Form2555Schema = z.preprocess(value => {
   return { ...record, sourceFactsComplete: record.sourceFactsComplete !== false && required.every(key => record[key] !== undefined) };
 }, z.object({
   taxYear: z.number().int().optional(),
+  accountHolder: z.enum(["primary", "spouse"]).optional(),
+  /** Actual one-taxpayer mapping to income already reported, or separate foreign wages. */
+  sourceMapping: z.object({
+    sourceReference: z.string(), sourceFactsConfirmed: z.boolean(), allSourcesIncluded: z.boolean(), oneOwnerOnlyConfirmed: z.boolean(),
+    rows: z.array(z.object({
+      sourceId: z.string(), sourceTaxYear: z.number().int(), accountHolder: z.enum(["primary", "spouse"]),
+      sourceReference: z.string(), payerName: z.string(), payerEin: z.string().optional(),
+      foreignEarnedIncome: decimal, priorYearIncomeReceived: decimal,
+      notIncludedInW2Confirmed: z.boolean().optional(),
+      businessGrossReceipts: decimal.optional(), businessReturnsAndAllowances: decimal.optional(),
+      businessCostOfGoodsSold: decimal.optional(), businessOtherIncome: decimal.optional(),
+    })),
+  }).optional(),
   sourceFactsComplete: z.boolean().optional(),
   sourceFactsConfirmed: z.boolean().optional(),
   /** Confirmed tax home and residence/presence eligibility, including permitted services. */

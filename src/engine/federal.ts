@@ -26,6 +26,7 @@ import type { TaxReturnResult } from "@/models/outputs.js";
 import { getConstants, type FilingStatus } from "@/models/constants.js";
 import { d, sum, zeroFloor, min, roundDollar } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
+import { resolveForm2555Sources } from "./forms/form-2555-source-binding.js";
 import {
   calculateCapitalGainsTax,
   calculateRegularIncomeTax,
@@ -477,10 +478,13 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   if (input.form2555?.taxYear !== undefined && input.form2555.taxYear !== year) {
     throw new Error("Foreign income source tax year does not match the return");
   }
+  const foreignIncomeSources = resolveForm2555Sources(input);
+  audit.merge(foreignIncomeSources.lines);
   const form2555 = input.form2555
     ? calculateForm2555({...input.form2555,taxYear:year}, constants)
     : undefined;
   if (form2555) {
+    form2555.sourceFactsVerified = form2555.sourceFactsVerified && foreignIncomeSources.sourceFactsVerified;
     audit.merge(form2555.lines);
   }
   const form2555IncomeReduction = form2555?.totalIncomeReduction ?? new Decimal(0);
