@@ -232,3 +232,15 @@ lines:
     formula: "Displayed six-place ratios sum to1 with stable largest remainders; exact core dollar allocations are unchanged. Skipped lines stay blank and actual applicable zero is printed."
     irsRef: "Form8582 PartsVI-VII ratios total1.00; official lines3/6 stop instructions"
     testRef: "tests/pdf/fill-form-8582-source.test.ts::reconciles printed ratios and preserves official stop branches"
+
+  - line: "return-ptp-prior-loss"
+    description: "Continuing PTP net income after its actual prior unallowed losses"
+    formula: "Canonical AGI, Schedule1 and Form8582 MAGI include the same per-PTP net income after prior carry used by the pure PTP worksheet; no unrelated regular loss offsets that income"
+    irsRef: "Form8582 Instructions Special Instructions for PTPs rules1-3"
+    testRef: "tests/engine/federal-passive-loss-source.test.ts::transfers continuing PTP prior losses into canonical income and rental MAGI once"
+
+  - line: "ptp-source-integrity"
+    description: "Actual PTP prior loss identity and amount"
+    formula: "Finite nonnegative prior amounts and unambiguous current PTP identities are required; no silently discarded invalid or duplicated source"
+    irsRef: "Form8582 Instructions Special Instructions for PTPs separate per-partnership computation"
+    testRef: "tests/engine/forms/form-8582-source.test.ts::rejects invalid or ambiguous PTP prior-loss sources"

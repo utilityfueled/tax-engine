@@ -39,3 +39,22 @@ it("uses net passive loss and actual line 6 addbacks rather than gross rental lo
   expect(retired.socialSecurityBenefitsTaxable.toString()).toBe("17000");
   expect(line(retired, "6")).toBe("95000");
 });
+
+it("transfers continuing PTP prior losses into canonical income and rental MAGI once", () => {
+  const input = source({ scheduleK1: [{ partnershipName: "Actual PTP", partnershipEIN: "12-3456789", ordinaryIncome: "20000",
+    isPassiveActivity: true, isPubliclyTradedPartnership: true }],
+    priorYear: { suspendedPTPLosses: [{ partnershipName: "Actual PTP", amount: "15000" }] } });
+  const result = calculateFederalTax(input);
+  expect(result.form8582?.ptpNetIncome.toFixed()).toBe("5000");
+  expect(result.agi.toFixed()).toBe("125000");
+  expect(result.schedule1?.supplementalIncome.toFixed()).toBe("5000");
+  expect(result.carryforwards.suspendedPTPLosses).toEqual([]);
+  const withRental = calculateFederalTax({ ...input, rentalProperties: source({ rentalProperties: [rental("Actual rental", "0", "20000")] }).rentalProperties });
+  expect(line(withRental, "6")).toBe("125000");
+  expect(withRental.form8582?.rentalAllowance.toFixed()).toBe("12500");
+  expect(withRental.agi.toFixed()).toBe("112500");
+  const stillSuspended = calculateFederalTax({ ...input, priorYear: { ...input.priorYear,
+    suspendedPTPLosses: [{ partnershipName: "Actual PTP", amount: "25000" }] } });
+  expect(stillSuspended.agi.toFixed()).toBe("120000");
+  expect(stillSuspended.carryforwards.suspendedPTPLosses[0].amount.toFixed()).toBe("5000");
+});

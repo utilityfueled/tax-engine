@@ -88,3 +88,12 @@ describe("Form8582 official worksheet sources", () => {
     expect(cents.activityRows[0].currentLoss.toString()).toBe("-100");
   });
 });
+
+it("rejects invalid or ambiguous PTP prior-loss sources", () => {
+  const ptp = { name: "Actual PTP", income: d("20000"), loss: d("0"), isRentalRealEstate: false,
+    isActiveParticipant: false, isPubliclyTradedPartnership: true };
+  const input = { activities: [ptp], agi: d("120000"), filingStatus: "single" as const };
+  expect(() => calculateForm8582({ ...input, priorYearPTPSuspendedLosses: [{ name: ptp.name, amount: d("-1") }] })).toThrow(/prior.*loss/i);
+  expect(() => calculateForm8582({ ...input, priorYearPTPSuspendedLosses: [{ name: ptp.name, amount: d("NaN") }] })).toThrow(/prior.*loss/i);
+  expect(() => calculateForm8582({ ...input, activities: [ptp, ptp], priorYearPTPSuspendedLosses: [{ name: ptp.name, amount: d("15000") }] })).toThrow(/identity/i);
+});

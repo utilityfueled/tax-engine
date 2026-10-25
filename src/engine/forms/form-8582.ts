@@ -156,11 +156,15 @@ export function calculateForm8582(input: Form8582Input): Form8582Result {
   });
   const ptpActivities = sourceActivities.filter(a => a.isPubliclyTradedPartnership);
   const nonPTPActivities = sourceActivities.filter(a => !a.isPubliclyTradedPartnership);
+  if (new Set(ptpActivities.map(activity => activity.name)).size !== ptpActivities.length) {
+    throw new Error("Form8582 requires an unambiguous consolidated current PTP identity.");
+  }
 
   // Build PTP prior-year carryforward map
   const priorPTPByName = new Map<string, Decimal>();
   for (const cf of input.priorYearPTPSuspendedLosses ?? []) {
-    const amount = Decimal.max(new Decimal(0), cf.amount);
+    if (!cf.name.trim() || !cf.amount.isFinite() || cf.amount.lt(0)) throw new Error("Form8582 requires actual finite nonnegative prior PTP loss sources.");
+    const amount = cf.amount;
     if (!amount.isZero()) {
       priorPTPByName.set(cf.name, (priorPTPByName.get(cf.name) ?? new Decimal(0)).plus(amount));
     }

@@ -2009,10 +2009,20 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   const regularPassiveNet = sum(...passiveActivities.filter(activity => !activity.isPubliclyTradedPartnership)
     .map(activity => roundDollar(activity.income).plus(roundDollar(activity.loss))))
     .minus(sum(...(input.priorYear?.suspendedPassiveLosses ?? []).map(loss => roundDollar(d(loss.amount)))));
-  // Current PTP gains are separate from the regular pool. Cross-form prior
-  // PTP loss/disposition attribution remains in its existing source path.
-  const currentPtpIncome = sum(...passiveActivities.filter(activity => activity.isPubliclyTradedPartnership)
-    .map(activity => zeroFloor(activity.income.plus(activity.loss))));
+  // PTP net income includes its own prior losses before it enters regular
+  // Form8582 modified AGI. The PTP-only calculation never uses Part II; only
+  // the final combined calculation below contributes official form audits.
+  const ptpSourceResult = calculateForm8582({
+    activities: passiveActivities.filter(activity => activity.isPubliclyTradedPartnership),
+    agi, filingStatus,
+    priorYearPTPSuspendedLosses: input.priorYear?.suspendedPTPLosses?.map(loss => ({
+      name: loss.partnershipName, amount: d(loss.amount),
+    })),
+  });
+  // Disposition gain/loss source routing remains the separate existing path.
+  const currentPtpIncome = ptpSourceResult.ptpNetIncome.plus(sum(...passiveActivities
+    .filter(activity => activity.isPubliclyTradedPartnership && activity.ptpFullyDisposedInTaxableTransaction)
+    .map(activity => zeroFloor(activity.income.plus(activity.loss)))));
   const form8582MAGI = eblSources?.passiveLossModifiedAgi !== undefined ? d(eblSources.passiveLossModifiedAgi) : agi
     .minus(preliminaryPassiveIncome).plus(zeroFloor(regularPassiveNet)).plus(currentPtpIncome)
     .plus(sched1.iraDeduction).plus(sched1.studentLoanInterest).plus(schedSE.deductibleHalf)
