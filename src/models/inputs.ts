@@ -2610,6 +2610,10 @@ export const ScheduleFInputSchema = z.object({
 
 export const RentalPropertySchema = z.object({
   description: z.string(), // e.g. "123 Main St, Unit A"
+  accountHolder: z.enum(["primary", "spouse", "joint"]).optional(),
+  allInvestmentAtRisk: z.boolean().optional(),
+  sourceFactsConfirmed: z.boolean().optional(),
+  otherExpenseDescription: z.string().optional(),
   propertyType: z.enum(["single_family", "multi_family", "vacation", "commercial", "land", "other"]).default("single_family"),
   personalUseDays: z.number().int().min(0).default(0),
   rentalDays: z.number().int().min(0).default(365),

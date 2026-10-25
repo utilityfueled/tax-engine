@@ -1,0 +1,12 @@
+form: "Rental source facts"
+fullName: "Actual rental ownership and at-risk source contract"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i1040se"
+retrievedAt: "2026-10-25"
+reviewStatus: "independent-review-pending"
+lines:
+  - line: "source-identity"
+    description: "Preserve actual owner and qualification answers"
+    formula: "Retain actual primary/spouse/joint ownership, at-risk answer, source confirmation and other-expense description when supplied. Omitted source fields remain unknown and a known false answer stays false; this metadata does not independently establish passive-loss or joint allocation eligibility."
+    irsRef: "Schedule E instructions, Qualified Joint Venture and At-Risk Rules; https://www.irs.gov/instructions/i1040se"
+    testRef: "tests/models/rental-source-facts.test.ts::preserves actual rental source answers without creating missing qualification"
