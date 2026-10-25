@@ -888,7 +888,7 @@ export async function fillReturn(
   }
 
   // ── Form 461 reference summary (if applicable — supported excess business loss limitation outputs) ──
-  if (result.form461?.applies) {
+  if (result.form461?.requiresForm461) {
     const outputPath461Reference = await fillForm461Reference(result.form461, outputDir);
     filledForms.push(outputPath461Reference);
   }

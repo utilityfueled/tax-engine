@@ -33,10 +33,11 @@ function form461(
 describe("Form 461 Limitation on Business Losses", () => {
   // ── Part I: Business Income Aggregation ────────────────────
 
-  it("Form 461 Line 1 - W-2 wages count as business income", () => {
+  it("Form 461 Line 1 - employee wages do not count as business income", () => {
+    // Final2025 instructions reserve line1; employee wages are excluded.
     const result = form461({ totalWages: new Decimal(100000) });
-    expect(result.line1Wages).toEqual(new Decimal(100000));
-    expect(result.line8TotalBusinessIncome).toEqual(new Decimal(100000));
+    expect(result.line1Wages).toEqual(new Decimal(0));
+    expect(result.line8TotalBusinessIncome).toEqual(new Decimal(0));
   });
 
   it("Form 461 Line 2 - Schedule C net profit or loss", () => {
@@ -52,7 +53,7 @@ describe("Form 461 Limitation on Business Losses", () => {
     expect(result.line9BusinessDeductionsFromLines).toEqual(new Decimal(80000));
   });
 
-  it("Form 461 Line 3 - Schedule F net farm profit or loss", () => {
+  it("Form 461 legacy farm summary - Schedule F net farm profit or loss", () => {
     const result = form461({ scheduleFNetProfit: new Decimal(30000) });
     expect(result.line3ScheduleF).toEqual(new Decimal(30000));
   });
@@ -70,12 +71,13 @@ describe("Form 461 Limitation on Business Losses", () => {
     expect(result.line5NonpassiveK1).toEqual(new Decimal(15000));
   });
 
-  it("Form 461 Line 7 - other business income", () => {
+  it("Form 461 legacy other-business summary - other business income", () => {
     const result = form461({ otherBusinessIncome: new Decimal(10000) });
     expect(result.line7OtherBusiness).toEqual(new Decimal(10000));
   });
 
   it("Form 461 Line 8 - total business income aggregates positive lines", () => {
+    // Business income is25000C+5000K1;75000employee wages do not enter.
     const result = form461({
       totalWages: new Decimal(75000),
       scheduleCNetProfit: new Decimal(25000),
@@ -83,7 +85,7 @@ describe("Form 461 Limitation on Business Losses", () => {
       nonpassiveK1Income: new Decimal(5000),
       nonpassiveK1Loss: new Decimal(0),
     });
-    expect(result.line8TotalBusinessIncome).toEqual(new Decimal(105000));
+    expect(result.line8TotalBusinessIncome).toEqual(new Decimal(30000));
   });
 
   it("Form 461 Line 9 - total business deductions from negative lines", () => {
@@ -98,17 +100,17 @@ describe("Form 461 Limitation on Business Losses", () => {
 
   // ── Above-the-line business deductions ─────────────────────
 
-  it("Form 461 Line 10 - deductible SE tax", () => {
+  it("Form 461 legacy deduction summary - deductible SE tax", () => {
     const result = form461({ deductibleSETax: new Decimal(7065) });
     expect(result.line10DeductibleSETax).toEqual(new Decimal(7065));
   });
 
-  it("Form 461 Line 11 - SE health insurance", () => {
+  it("Form 461 legacy deduction summary - SE health insurance", () => {
     const result = form461({ seHealthInsurance: new Decimal(12000) });
     expect(result.line11SEHealthInsurance).toEqual(new Decimal(12000));
   });
 
-  it("Form 461 Line 12 - SE retirement contributions", () => {
+  it("Form 461 legacy deduction summary - SE retirement contributions", () => {
     const result = form461({ seRetirementContributions: new Decimal(15000) });
     expect(result.line12SERetirement).toEqual(new Decimal(15000));
   });
@@ -127,14 +129,13 @@ describe("Form 461 Limitation on Business Losses", () => {
   // ── Part II: Excess Business Loss ──────────────────────────
 
   it("Form 461 Line 14 - net business income or loss", () => {
+    // Business loss200000 plus3000deductible SE tax;50000wages excluded.
     const result = form461({
       totalWages: new Decimal(50000),
       scheduleCNetProfit: new Decimal(-200000),
       deductibleSETax: new Decimal(3000),
     });
-    // Line 8 = 50000, Line 13 = 200000 + 3000 = 203000
-    // Line 14 = 50000 - 203000 = -153000
-    expect(result.line14NetBusinessAmount).toEqual(new Decimal(-153000));
+    expect(result.line14NetBusinessAmount).toEqual(new Decimal(-203000));
   });
 
   it("Form 461 Line 15 - threshold by filing status", () => {
@@ -146,23 +147,23 @@ describe("Form 461 Limitation on Business Losses", () => {
   });
 
   it("Form 461 Line 16 - no excess when business income exceeds deductions", () => {
+    // Only50000ScheduleC profit is business income; wages excluded.
     const result = form461({
       totalWages: new Decimal(100000),
       scheduleCNetProfit: new Decimal(50000),
     });
-    expect(result.line14NetBusinessAmount).toEqual(new Decimal(150000));
+    expect(result.line14NetBusinessAmount).toEqual(new Decimal(50000));
     expect(result.line16ExcessBusinessLoss).toEqual(new Decimal(0));
     expect(result.applies).toBe(false);
   });
 
   it("Form 461 Line 16 - no excess when business loss within threshold", () => {
+    // Business loss300000 is below313000; employee wages do not reduce it.
     const result = form461({
       totalWages: new Decimal(50000),
       scheduleCNetProfit: new Decimal(-300000),
     });
-    // Net = 50000 - 300000 = -250000, threshold = 313000
-    // |Net| = 250000 < 313000 → no excess
-    expect(result.line14NetBusinessAmount).toEqual(new Decimal(-250000));
+    expect(result.line14NetBusinessAmount).toEqual(new Decimal(-300000));
     expect(result.line16ExcessBusinessLoss).toEqual(new Decimal(0));
     expect(result.applies).toBe(false);
   });
@@ -186,15 +187,13 @@ describe("Form 461 Limitation on Business Losses", () => {
   });
 
   it("Form 461 Line 16 - excess business loss computation", () => {
+    // 500000loss+7065deduction-313000threshold=194065; wages excluded.
     const result = form461({
       totalWages: new Decimal(50000),
       scheduleCNetProfit: new Decimal(-500000),
       deductibleSETax: new Decimal(7065),
     });
-    // Line 8 = 50000, Line 13 = 500000 + 7065 = 507065
-    // Line 14 = 50000 - 507065 = -457065
-    // Line 16 = max(0, 457065 - 313000) = 144065
-    expect(result.line16ExcessBusinessLoss).toEqual(new Decimal(144065));
+    expect(result.line16ExcessBusinessLoss).toEqual(new Decimal(194065));
     expect(result.applies).toBe(true);
   });
 
@@ -215,6 +214,7 @@ describe("Form 461 Limitation on Business Losses", () => {
   });
 
   it("Form 461 - large business losses above MFJ threshold", () => {
+    // 800000C+100000F+10000deduction-626000threshold=284000.
     const result = form461(
       {
         totalWages: new Decimal(100000),
@@ -224,10 +224,7 @@ describe("Form 461 Limitation on Business Losses", () => {
       },
       "married_filing_jointly"
     );
-    // Line 8 = 100000, Line 13 = 900000 + 10000 = 910000
-    // Line 14 = 100000 - 910000 = -810000
-    // MFJ Line 16 = max(0, 810000 - 626000) = 184000
-    expect(result.line16ExcessBusinessLoss).toEqual(new Decimal(184000));
+    expect(result.line16ExcessBusinessLoss).toEqual(new Decimal(284000));
     expect(result.applies).toBe(true);
   });
 
@@ -266,18 +263,17 @@ describe("Form 461 Limitation on Business Losses", () => {
 
   // ── Mixed business sources ─────────────────────────────────
 
-  it("Form 461 - wages offset business losses to reduce excess", () => {
+  it("Form 461 - wages cannot offset business losses", () => {
+    // 600000business loss-313000threshold=287000 regardless200000employee wages.
     const result = form461({
       totalWages: new Decimal(200000),
       scheduleCNetProfit: new Decimal(-600000),
     });
-    // Line 8 = 200000, Line 13 = 600000
-    // Line 14 = 200000 - 600000 = -400000
-    // Excess = 400000 - 313000 = 87000
-    expect(result.line16ExcessBusinessLoss).toEqual(new Decimal(87000));
+    expect(result.line16ExcessBusinessLoss).toEqual(new Decimal(287000));
   });
 
   it("Form 461 - multiple business sources mix income and losses", () => {
+    // 30000C+5000gain-450000F-10000K1-8000SE-15000health=-448000; excess135000.
     const result = form461({
       totalWages: new Decimal(80000),
       scheduleCNetProfit: new Decimal(30000),
@@ -288,20 +284,10 @@ describe("Form 461 Limitation on Business Losses", () => {
       deductibleSETax: new Decimal(8000),
       seHealthInsurance: new Decimal(15000),
     });
-    // Positive: wages 80000 + sched C 30000 + K1 net (10000-20000=-10000→negative) + 4797 5000 = 115000
-    // Wait, K1 net is -10000 which is negative.
-    // Line 5 = 10000 + (-20000) = -10000 → goes to line 9
-    // Positive items: wages 80000, sched C 30000, 4797 5000 = 115000
-    // Negative items: sched F 450000, K1 net 10000 = 460000
-    // Line 8 = 115000
-    // Line 9 = 460000
-    // Line 13 = 460000 + 8000 + 15000 = 483000
-    // Line 14 = 115000 - 483000 = -368000
-    // Excess = 368000 - 313000 = 55000
-    expect(result.line8TotalBusinessIncome).toEqual(new Decimal(115000));
+    expect(result.line8TotalBusinessIncome).toEqual(new Decimal(35000));
     expect(result.line9BusinessDeductionsFromLines).toEqual(new Decimal(460000));
-    expect(result.line14NetBusinessAmount).toEqual(new Decimal(-368000));
-    expect(result.line16ExcessBusinessLoss).toEqual(new Decimal(55000));
+    expect(result.line14NetBusinessAmount).toEqual(new Decimal(-448000));
+    expect(result.line16ExcessBusinessLoss).toEqual(new Decimal(135000));
   });
 
   it("Form 461 - no business activity produces zero excess", () => {
@@ -313,15 +299,14 @@ describe("Form 461 Limitation on Business Losses", () => {
     expect(result.applies).toBe(false);
   });
 
-  it("Form 461 - net positive business income never triggers excess", () => {
+  it("Form 461 - large wages do not change a below-threshold business loss", () => {
+    // 200000business loss+15000SE deduction=215000loss;500000wages excluded.
     const result = form461({
       totalWages: new Decimal(500000),
       scheduleCNetProfit: new Decimal(-200000),
       deductibleSETax: new Decimal(15000),
     });
-    // Line 8 = 500000, Line 13 = 200000 + 15000 = 215000
-    // Line 14 = 500000 - 215000 = 285000 > 0 → no excess
-    expect(result.line14NetBusinessAmount).toEqual(new Decimal(285000));
+    expect(result.line14NetBusinessAmount).toEqual(new Decimal(-215000));
     expect(result.line16ExcessBusinessLoss).toEqual(new Decimal(0));
   });
 
@@ -409,7 +394,7 @@ describe("Form 461 Federal Integration", () => {
   }
 
   it("Form 461 - excess business loss flows to Schedule 1 as income add-back", () => {
-    // Sole proprietor with large Schedule C loss and modest wages
+    // 550000C loss-313000threshold=237000addback; canonical Schedule1 includes original loss once.
     const result = calculateFederalTax(makeInput({
       w2s: [{
         employer: { name: "Employer", ein: "00-0000000" },
@@ -423,18 +408,13 @@ describe("Form 461 Federal Integration", () => {
       },
     }));
 
-    // Schedule C net = 10000 - 560000 = -550000
-    // Form 461: wages 50000, sched C -550000
-    // Line 8 = 50000, Line 9 = 550000
-    // SE tax on loss = 0 (negative net SE), so deductible SE tax = 0
-    // Line 14 = 50000 - 550000 = -500000
-    // Excess = 500000 - 313000 = 187000
     expect(result.form461).toBeDefined();
     expect(result.form461!.applies).toBe(true);
-    expect(result.form461!.line16ExcessBusinessLoss).toEqual(new Decimal(187000));
+    expect(result.form461!.line16ExcessBusinessLoss).toEqual(new Decimal(237000));
 
-    // The excess should be added back to otherIncome
-    expect(result.otherIncome.greaterThanOrEqualTo(new Decimal(187000))).toBe(true);
+    expect(result.otherIncome.toString()).toBe("-313000");
+    expect(result.totalIncome.toString()).toBe("-263000");
+    expect(result.agi.toString()).toBe("-263000");
   });
 
   it("Form 461 - no excess when business loss within threshold", () => {

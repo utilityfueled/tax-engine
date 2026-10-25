@@ -144,6 +144,7 @@ describe("Form 461 filing status thresholds", () => {
 
 describe("Form 461 positive net business income", () => {
   it("Form 461 Line 16 - positive net business income means no excess loss", () => {
+    // Employee wages excluded;50000business profit remains.
     const result = calculateForm461(
       makeInput({
         totalWages: d(100000),
@@ -153,7 +154,7 @@ describe("Form 461 positive net business income", () => {
       CONSTANTS,
     );
 
-    expect(result.line14NetBusinessAmount.toNumber()).toBe(150000);
+    expect(result.line14NetBusinessAmount.toNumber()).toBe(50000);
     expect(result.line16ExcessBusinessLoss.toNumber()).toBe(0);
     expect(result.applies).toBe(false);
   });
@@ -171,6 +172,7 @@ describe("Form 461 positive net business income", () => {
 
 describe("Form 461 mixed income and loss aggregation", () => {
   it("Form 461 Lines 8-9 - positive and negative lines separated correctly", () => {
+    // Legacy summaries preserve50000farm profit and230000business losses; wages excluded.
     const result = calculateForm461(
       makeInput({
         totalWages: d(100000),              // positive
@@ -182,9 +184,7 @@ describe("Form 461 mixed income and loss aggregation", () => {
       CONSTANTS,
     );
 
-    // Line 8: sum of positives = 100000 + 50000 = 150000
-    expect(result.line8TotalBusinessIncome.toNumber()).toBe(150000);
-    // Line 9: sum of |negatives| = 200000 + 30000 = 230000
+    expect(result.line8TotalBusinessIncome.toNumber()).toBe(50000);
     expect(result.line9BusinessDeductionsFromLines.toNumber()).toBe(230000);
   });
 
@@ -225,7 +225,8 @@ describe("Form 461 mixed income and loss aggregation", () => {
     expect(result.line9BusinessDeductionsFromLines.toNumber()).toBe(40000);
   });
 
-  it("Form 461 - wages offset business losses before threshold check", () => {
+  it("Form 461 - employee wages do not absorb business losses", () => {
+    // 500000business loss less313000threshold yields187000; wages have no effect.
     const result = calculateForm461(
       makeInput({
         totalWages: d(200000),
@@ -235,12 +236,9 @@ describe("Form 461 mixed income and loss aggregation", () => {
       CONSTANTS,
     );
 
-    // Line 8: 200000, Line 13: 500000
-    // Line 14: 200000 - 500000 = -300000
-    expect(result.line14NetBusinessAmount.toNumber()).toBe(-300000);
-    // |-300000| = 300000 < 313000 threshold → no excess
-    expect(result.line16ExcessBusinessLoss.toNumber()).toBe(0);
-    expect(result.applies).toBe(false);
+    expect(result.line14NetBusinessAmount.toNumber()).toBe(-500000);
+    expect(result.line16ExcessBusinessLoss.toNumber()).toBe(187000);
+    expect(result.applies).toBe(true);
   });
 });
 
@@ -508,7 +506,8 @@ describe("Form 461 multiple sources at threshold boundary", () => {
     expect(result.applies).toBe(false);
   });
 
-  it("Form 461 - mixed income/loss from multiple sources nets to $1 over threshold", () => {
+  it("Form 461 - mixed income/loss from multiple sources excludes wages from the threshold computation", () => {
+    // 20000business gain-200000C-100000F-83001K1=-363001; excess50001.
     const result = calculateForm461(
       makeInput({
         totalWages: d(50000),                    // +50000 → line8
@@ -522,15 +521,11 @@ describe("Form 461 multiple sources at threshold boundary", () => {
       CONSTANTS,
     );
 
-    // Line 5 (K-1 net): 10000 + (-93001) = -83001 (negative → contributes to line9)
-    // Line 8 (positives): 50000 + 20000 = 70000
-    // Line 9 (|negatives|): 200000 + 100000 + 83001 = 383001
-    // Line 14: 70000 - 383001 = -313001
     expect(result.line5NonpassiveK1.toNumber()).toBe(-83001);
-    expect(result.line8TotalBusinessIncome.toNumber()).toBe(70000);
+    expect(result.line8TotalBusinessIncome.toNumber()).toBe(20000);
     expect(result.line9BusinessDeductionsFromLines.toNumber()).toBe(383001);
-    expect(result.line14NetBusinessAmount.toNumber()).toBe(-313001);
-    expect(result.line16ExcessBusinessLoss.toNumber()).toBe(1);
+    expect(result.line14NetBusinessAmount.toNumber()).toBe(-363001);
+    expect(result.line16ExcessBusinessLoss.toNumber()).toBe(50001);
     expect(result.applies).toBe(true);
   });
 });
@@ -539,6 +534,7 @@ describe("Form 461 multiple sources at threshold boundary", () => {
 
 describe("Form 461 all sources active", () => {
   it("Form 461 - all line items and SE deductions populated, net loss exceeds MFJ threshold", () => {
+    // 75000gain+25000other-900000business losses-33000adjustments=-833000; excess207000, prior100000 makes307000NOL.
     const result = calculateForm461(
       makeInput({
         totalWages: d(150000),
@@ -557,20 +553,12 @@ describe("Form 461 all sources active", () => {
       CONSTANTS,
     );
 
-    // Line 5 (K-1 net): 50000 + (-350000) = -300000
-    // Positives: 150000 + 75000 + 25000 = 250000
-    // Negatives: 400000 + 200000 + 300000 = 900000
-    // Line 8 = 250000, Line 9 = 900000
-    // Line 13 = 900000 + 15000 + 10000 + 8000 = 933000
-    // Line 14 = 250000 - 933000 = -683000
-    // Excess = 683000 - 626000 = 57000
-    // NOL carryforward = 57000 + 100000 = 157000
-    expect(result.line8TotalBusinessIncome.toNumber()).toBe(250000);
+    expect(result.line8TotalBusinessIncome.toNumber()).toBe(100000);
     expect(result.line9BusinessDeductionsFromLines.toNumber()).toBe(900000);
     expect(result.line13TotalBusinessDeductions.toNumber()).toBe(933000);
-    expect(result.line14NetBusinessAmount.toNumber()).toBe(-683000);
-    expect(result.line16ExcessBusinessLoss.toNumber()).toBe(57000);
-    expect(result.nolCarryforward.toNumber()).toBe(157000);
+    expect(result.line14NetBusinessAmount.toNumber()).toBe(-833000);
+    expect(result.line16ExcessBusinessLoss.toNumber()).toBe(207000);
+    expect(result.nolCarryforward.toNumber()).toBe(307000);
     expect(result.applies).toBe(true);
   });
 });
@@ -665,6 +653,7 @@ describe("Form 461 same loss across all filing statuses", () => {
 
 describe("Form 461 prior-year NOL edge cases", () => {
   it("Form 461 NOL - large prior carryforward with positive current business income", () => {
+    // Only100000current business profit counts;200000employee wages excluded.
     const result = calculateForm461(
       makeInput({
         totalWages: d(200000),
@@ -675,10 +664,8 @@ describe("Form 461 prior-year NOL edge cases", () => {
       CONSTANTS,
     );
 
-    // Positive net income → no current excess
-    expect(result.line14NetBusinessAmount.toNumber()).toBe(300000);
+    expect(result.line14NetBusinessAmount.toNumber()).toBe(100000);
     expect(result.line16ExcessBusinessLoss.toNumber()).toBe(0);
-    // Prior carryforward still passes through
     expect(result.nolCarryforward.toNumber()).toBe(500000);
     expect(result.applies).toBe(false);
   });

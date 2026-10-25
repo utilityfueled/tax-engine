@@ -17,26 +17,7 @@ const BODY_FONT_SIZE = 10;
 const HEADER_COLOR = rgb(0.16, 0.16, 0.16);
 const WARNING_COLOR = rgb(0.62, 0.19, 0.14);
 
-const INCLUDED_FORM_461_LINES = [
-  "1",
-  "2",
-  "3",
-  "4",
-  "5",
-  "7",
-  "8",
-  "9",
-  "10",
-  "11",
-  "12",
-  "13",
-  "14",
-  "15",
-  "16",
-  "NOL",
-] as const;
-
-const INCLUDED_FORM_461_LINE_SET = new Set<string>(INCLUDED_FORM_461_LINES);
+const INCLUDED_FORM_461_LINES = ["2","3","4","5","6","8","9","10","11","12","13","14","15","16","NOL"] as const;
 
 export const FORM_461_REFERENCE_FILENAME = "f461-reference-filled.pdf";
 
@@ -121,19 +102,25 @@ function formatValue(line: CalculatedLine) {
 }
 
 function getReferenceLines(result: Form461Result) {
-  return result.lines
-    .filter((line) => INCLUDED_FORM_461_LINE_SET.has(line.line))
-    .sort(
-      (left, right) => INCLUDED_FORM_461_LINES.indexOf(left.line as typeof INCLUDED_FORM_461_LINES[number])
-        - INCLUDED_FORM_461_LINES.indexOf(right.line as typeof INCLUDED_FORM_461_LINES[number]),
-    );
+  if (![2025,2026].includes(result.taxYear)) throw new Error("Form461 reference requires a supported actual year");
+  const retained = [result.line2ScheduleC,result.line3CapitalGainOrLoss,result.line4Form4797,result.line5ScheduleE,result.line6ScheduleF,
+    result.line8OtherBusiness,result.line9TotalIncomeLoss,result.line10NonbusinessIncome,result.line11NonbusinessLosses,
+    result.line12NonbusinessNet,result.line13Adjustment,result.line14NetBusinessAmount,result.line15Threshold,result.line16NetAfterThreshold,result.nolCarryforward];
+  return INCLUDED_FORM_461_LINES.map((id,index)=>{
+    const entries=result.lines.filter(line=>line.form==="Form 461"&&line.line===id);
+    const expected=retained[index];
+    if(entries.length!==1 || !expected?.isFinite() || !entries[0]?.value.isFinite() || !entries[0].value.eq(expected)) {
+      throw new Error(`Form461 canonical audit ${id} is missing, duplicated or inconsistent`);
+    }
+    return entries[0];
+  });
 }
 
 export function buildForm461ReferenceSummary(result: Form461Result): Form461ReferenceSummary {
   return {
     title: "Form 461 Excess Business Loss Reference Summary",
     warningLabel: "REFERENCE SUMMARY ONLY",
-    introduction: "Computed from supported business-loss inputs and engine-calculated Form 461 limitation outputs.",
+    introduction: `Tax year ${result.taxYear}. ${result.sourceFactsVerified ? "Actual completed business classifications were supplied." : "Historical classification is an unverified preview; final source classifications remain required."} Employee wages are excluded; lines 1 and 7 are reserved.`,
     lines: getReferenceLines(result).map((line) => ({
       line: line.line,
       description: line.description,
@@ -167,6 +154,8 @@ export async function fillForm461Reference(
   const newPage = () => {
     page = doc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
     y = PAGE_HEIGHT - PAGE_MARGIN;
+    page.drawText(`REFERENCE SUMMARY ONLY - Tax year ${result.taxYear}`,{x:PAGE_MARGIN,y,font:bold,size:11,color:WARNING_COLOR});
+    y -= 26;
   };
 
   y = drawWrappedText(page, summary.title, {

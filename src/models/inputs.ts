@@ -3080,6 +3080,22 @@ export const SalesTaxDeductionSchema = z.object({
 });
 export type SalesTaxDeduction = z.infer<typeof SalesTaxDeductionSchema>;
 
+/** Actual Form461 classification after basis, at-risk and passive limitations. */
+export const Form461SourceSchema = z.object({
+  sourceTaxYear: z.number().int().optional(),
+  sourceReference: z.string().trim().min(1).optional(),
+  sourceFactsConfirmed: z.boolean().optional(),
+  atRiskAndPassiveLimitationsApplied: z.boolean().optional(),
+  scheduleESupplementalIncome: optionalDecimalInput,
+  passiveLossModifiedAgi: optionalDecimalInput, // Actual completed Form8582 line6 worksheet when passive sources interact.
+  tradeOrBusinessCapitalGainNetIncome: optionalDecimalInput,
+  noncapitalNonbusinessIncome: optionalDecimalInput,
+  noncapitalNonbusinessLoss: optionalDecimalInput,
+  noncapitalBusinessNet: optionalDecimalInput,
+  otherBusinessIncome: optionalDecimalInput,
+  otherBusinessDeductions: optionalDecimalInput,
+});
+
 export const Form4952InputSchema = z.preprocess((value) => {
   if (!value || typeof value !== "object" || Array.isArray(value)) return value;
   const record = value as Record<string, unknown>;
@@ -5085,6 +5101,7 @@ export const TaxYearInputSchema = z.object({
   scheduleH: ScheduleHSchema.optional(),
   form2555: Form2555Schema.optional(),
   form4684: Form4684Schema.optional(),
+  form461: Form461SourceSchema.optional(),
   form4952: Form4952InputSchema.optional(),
   form4952Amt: Form4952InputSchema.optional(),
   amtCapitalGains: AMTCapitalGainsSchema.optional(),

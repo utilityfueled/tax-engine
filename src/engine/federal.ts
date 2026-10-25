@@ -1449,6 +1449,24 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   // ── Form 461: Excess Business Loss Limitation (IRC §461(l)) ──
   // Computed after Schedule 1 so SE deductions are known. The excess
   // is added back to other income on Schedule 1 Line 8p.
+  const eblSources = input.form461;
+  if (eblSources) {
+    if (eblSources.sourceTaxYear !== year || eblSources.sourceFactsConfirmed !== true
+      || !eblSources.sourceReference?.trim() || eblSources.atRiskAndPassiveLimitationsApplied !== true) {
+      throw new Error("Form461 requires current-year actual sources after at-risk and passive limitations");
+    }
+    for (const field of ["scheduleESupplementalIncome", "tradeOrBusinessCapitalGainNetIncome", "noncapitalNonbusinessIncome",
+      "noncapitalNonbusinessLoss", "noncapitalBusinessNet", "otherBusinessIncome", "otherBusinessDeductions"] as const) {
+      if (eblSources[field] === undefined) throw new Error(`Form461 actual source classification is required: ${field}`);
+    }
+    if (d(eblSources.otherBusinessIncome).lt(0) || d(eblSources.otherBusinessIncome).gt(zeroFloor(miscOtherIncome))
+      || d(eblSources.otherBusinessDeductions).gt(zeroFloor(sched1.earlyWithdrawalPenalty.plus(d(input.adjustments?.otherAdjustmentsTotal))))) {
+      throw new Error("Form461 other business sources must reconcile with separately reported income and deductions");
+    }
+  }
+  const eblHasPassiveOrRentalSources = schedE.rentalProperties.length > 0 || schedE.partnerships.some(partnership => partnership.isPassive)
+    || (input.priorYear?.suspendedPassiveLosses ?? []).some(loss => d(loss.amount).gt(0))
+    || (input.priorYear?.suspendedPTPLosses ?? []).some(loss => d(loss.amount).gt(0));
   const form461 = calculateForm461(
     {
       totalWages,
@@ -1457,7 +1475,17 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
       form4797OrdinaryGainOrLoss: form4797.ordinaryGainOrLoss.plus(section280FRecapture),
       nonpassiveK1Income: schedE.totalNonpassiveIncome,
       nonpassiveK1Loss: schedE.totalNonpassiveLoss,
-      otherBusinessIncome: miscOtherIncome,
+      sourceFactsConfirmed: eblSources?.sourceFactsConfirmed,
+      atRiskAndPassiveLimitationsApplied: eblSources?.atRiskAndPassiveLimitationsApplied,
+      capitalGainOrLoss: capitalGainLoss,
+      tradeOrBusinessCapitalGainNetIncome: eblSources ? d(eblSources.tradeOrBusinessCapitalGainNetIncome) : form4797.longTermCapitalGain,
+      scheduleESupplementalIncome: eblSources ? d(eblSources.scheduleESupplementalIncome)
+        : eblHasPassiveOrRentalSources ? schedE.totalNonpassiveIncome.plus(schedE.totalNonpassiveLoss).minus(totalSection163jDeduction) : adjustedScheduleETotal,
+      noncapitalNonbusinessIncome: eblSources ? d(eblSources.noncapitalNonbusinessIncome) : new Decimal(0),
+      noncapitalNonbusinessLoss: eblSources ? d(eblSources.noncapitalNonbusinessLoss) : new Decimal(0),
+      noncapitalBusinessNet: eblSources ? d(eblSources.noncapitalBusinessNet) : undefined,
+      otherBusinessIncome: eblSources ? d(eblSources.otherBusinessIncome) : new Decimal(0),
+      otherBusinessDeductions: eblSources ? d(eblSources.otherBusinessDeductions) : new Decimal(0),
       deductibleSETax: schedSE.deductibleHalf,
       seHealthInsurance: sched1.seHealthInsurance,
       seRetirementContributions: sched1.seRetirementContributions,
@@ -1466,6 +1494,13 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     filingStatus,
     constants
   );
+  if (!eblSources && eblHasPassiveOrRentalSources
+    && (form461.requiresForm461 || adjustedScheduleETotal.lt(constants.excessBusinessLoss.threshold.single.div(2).negated()))) {
+    throw new Error("Form461 material supplemental business loss requires actual post-passive source classification");
+  }
+  if (eblSources && eblHasPassiveOrRentalSources && eblSources.passiveLossModifiedAgi === undefined) {
+    throw new Error("Form461 passive coordination requires the actual completed passive-loss MAGI worksheet");
+  }
   audit.merge(form461.lines);
   const excessBusinessLossAddback = form461.line16ExcessBusinessLoss;
 
@@ -1799,7 +1834,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   const rentalLossAddBack = partIRentalLossInAGI.isNegative()
     ? partIRentalLossInAGI.negated()
     : new Decimal(0);
-  const form8582MAGI = agi
+  const form8582MAGI = eblSources?.passiveLossModifiedAgi !== undefined ? d(eblSources.passiveLossModifiedAgi) : agi
     .plus(rentalLossAddBack)
     .plus(sched1.iraDeduction)
     .plus(sched1.studentLoanInterest)
@@ -1857,6 +1892,10 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
       `IRC §469(g)(1) — ${form8582.ptpDispositionReleasedLosses.length} PTP(s) fully disposed; $${ptpReleasedTotal} suspended losses released as nonpassive`,
       Object.fromEntries(form8582.ptpDispositionReleasedLosses.map((p) => [p.name, p.totalReleased.negated()]))
     );
+  }
+
+  if (eblSources && !form461.line5ScheduleE.eq(roundDollar(adjustedScheduleETotal.plus(partIRentalSuspended).minus(ptpReleasedTotal)))) {
+    throw new Error("Form461 actual supplemental income must reconcile with final post-passive Schedule1 line5");
   }
 
   // ═══════════════════════════════════════════════════════════
@@ -2399,7 +2438,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   audit.merge(sched1.lines);
   audit.record("1040", "8", "Additional income", sched1.totalAdditionalIncome, "Final Schedule1line10");
   audit.record("1040", "9", "Total income", totalIncome, "Sum final Lines1z,2b,3b,4b,5b,6b,7,8");
-  audit.record("1040", "11", "Adjusted gross income", agi, "Final Line9 minus10");
+  audit.record("1040", "11", "Adjusted gross income", agi, "Line 9 - Line 10");
   audit.record("1040", "15", "Taxable income", taxableIncome,
     nolDeduction.greaterThan(0)
       ? "AGI - total deductions - NOL deduction"
