@@ -27,7 +27,7 @@ describe("2026 nonitemizer charitable deduction", () => {
   it.each([["single", "1000"], ["married_filing_jointly", "1500"], ["married_filing_separately", "1000"], ["head_of_household", "1000"], ["qualifying_surviving_spouse", "1000"]] as const)("caps current eligible cash for %s", (status, expected) => {
     expect(calc([donation], "100000", status).nonitemizerCharitableDeduction.toString()).toBe(expected);
   });
-  it.each([{ qualifiedOrganization: false }, { supportingOrganization: true }, { donorAdvisedFund: true }, { isPrivateFoundation: true }, { type: "property" }])("excludes %j", change => {
+  it.each([{ qualifiedOrganization: false }, { supportingOrganization: true }, { donorAdvisedFund: true }, { isPrivateFoundation: true }, { type: "property", costBasis: "1500", isLongTermCapitalGain: false }])("excludes %j", change => {
     expect(calc([{ ...donation, ...change }]).nonitemizerCharitableDeduction.toString()).toBe("0");
   });
   it("applies the cash AGI cap without the itemized floor", () => {
@@ -46,5 +46,48 @@ describe("2026 nonitemizer charitable deduction", () => {
     expect(() => calc([{ ...donation, amount: "-10" }])).toThrow();
     expect(() => calc([{ ...donation, dateOfDonation: "2025-01-01" }])).toThrow(/year/i);
     expect(() => calc([{ ...donation, dateOfDonation: "2026-02-30" }])).toThrow(/date/i);
+  });
+});
+describe("2026 itemized charitable integration", () => {
+  it("applies the floor to itemized cash without changing the standard-path candidate", () => {
+    const result = calc([donation]);
+    expect(result.cashCharitable.toString()).toBe("1000");
+    expect(result.nonitemizerCharitableDeduction.toString()).toBe("1000");
+  });
+  it("retains category and origin for current-year excess and eligible floor amounts", () => {
+    const result = calc([{ ...donation, amount: "70000" }]);
+    expect(result.cashCharitable.toString()).toBe("59500");
+    expect(result.charitableCarryforwardByYear).toEqual([{ taxYear: 2026, category: "cash_60", amount: d("10500") }]);
+  });
+  it("limits reported K-1 cash and capital-gain gifts together", () => {
+    const input = TaxYearInputSchema.parse({ taxpayer: person });
+    const result = calculateScheduleA(input, d("100000"), "single", FEDERAL_2026_CONSTANTS, { k1CashCharitable: d("1000"), k1AppreciatedProperty30: d("1000"), k1AppreciatedProperty20: d("1000") });
+    expect(result.cashCharitable.toString()).toBe("1000");
+    expect(result.nonCashCharitable.toString()).toBe("1500");
+  });
+  it("refuses to invent category or floor-transition treatment for historical carryovers", () => {
+    const input = TaxYearInputSchema.parse({ taxpayer: person, priorYear: { charitableCarryforward: "1000" } });
+    expect(() => calculateScheduleA(input, d("100000"), "single", FEDERAL_2026_CONSTANTS)).toThrow(/carryover|carryforward/i);
+  });
+});
+
+describe("2026 charitable qualification facts", () => {
+  it("does not deduct a known ineligible public recipient", () => {
+    const result = calc([{ ...donation, qualifiedOrganization: false }]);
+    expect(result.cashCharitable.toString()).toBe("0");
+  });
+  it("preserves missing private/public classification as unknown", () => {
+    expect(() => calc([{ ...donation, isPrivateFoundation: undefined }])).toThrow(/classification/i);
+  });
+  it("uses basis for ordinary property and refuses unknown basis or holding status", () => {
+    const property = { ...donation, type: "property", amount: "2000", costBasis: "1000", isLongTermCapitalGain: false };
+    expect(calc([property]).nonCashCharitable.toString()).toBe("500");
+    expect(() => calc([{ ...property, costBasis: undefined }])).toThrow(/basis/i);
+    expect(() => calc([{ ...property, isLongTermCapitalGain: undefined }])).toThrow(/holding|long.term/i);
+  });
+  it("requires qualified-stock evidence for private-foundation capital gain FMV gifts", () => {
+    const stock = { ...donation, type: "appreciated_stock", isPrivateFoundation: true, isLongTermCapitalGain: true, amount: "2000", costBasis: "1000" };
+    expect(() => calc([stock])).toThrow(/qualified.*stock/i);
+    expect(calc([{ ...stock, qualifiedAppreciatedStock: true }]).nonCashCharitable.toString()).toBe("1500");
   });
 });

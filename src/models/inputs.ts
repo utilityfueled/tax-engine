@@ -1967,12 +1967,13 @@ export const CharitableDonationSchema = z.object({
   qualifiedOrganization: z.boolean().optional(),
   supportingOrganization: z.boolean().optional(),
   donorAdvisedFund: z.boolean().optional(),
+  qualifiedAppreciatedStock: z.boolean().optional(),
   type: z.enum(["cash", "appreciated_stock", "property", "other"]),
   amount: decimal, // Fair market value
-  costBasis: optionalDecimal, // For appreciated property
+  costBasis: optionalDecimalInput, // For appreciated property
   dateOfDonation: z.string(),
-  isLongTermCapitalGain: z.boolean().optional().default(false),
-  isPrivateFoundation: z.boolean().optional().default(false), // Validated 20%-of-AGI branch for LTCG property donated to a private foundation / second-category organization
+  isLongTermCapitalGain: z.boolean().optional(),
+  isPrivateFoundation: z.boolean().optional(), // Validated 20%-of-AGI branch for LTCG property donated to a private foundation / second-category organization
 });
 
 export const PriorYearCarryforwardSchema = z.object({
@@ -2029,6 +2030,7 @@ export const PriorYearCarryforwardSchema = z.object({
   charitableCarryforwardByYear: z.array(z.object({
     taxYear: z.number().int(),
     amount: decimal,
+    category: z.enum(["cash_60", "noncash_50", "capital_gain_30", "other_30", "capital_gain_20"]).optional(),
   })).default([]),
   /** Per-partnership suspended excess business interest expense carryforward
    *  from prior years under IRC §163(j)(4)(B)(ii). Each entry tracks the

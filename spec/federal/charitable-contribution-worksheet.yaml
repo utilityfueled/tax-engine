@@ -1,0 +1,38 @@
+form: "Charitable Contribution Worksheet"
+fullName: "2026 contribution categories, floor and carryforward origin"
+taxYear: 2026
+irsReference: "https://uscode.house.gov/us/usc/119-120/t26/s170/"
+retrievedAt: "2026-10-24"
+reviewStatus: "independent-review-pending"
+notes: |
+  Statutory calculation for supported current-year contributions. The 2025
+  Publication 526 worksheet supplies percentage-limit ordering; the 2026 statute
+  modifies cash/private-category coordination and adds the floor. Final 2026
+  instructions and independent tax review remain pending. Historical aggregate
+  carryovers have no category evidence and may not be invented as current cash.
+  Historical carryover/floor transition treatment requires reviewed source evidence
+  and remains explicitly blocked in this 2026 worksheet, not silently relabeled.
+lines:
+  - line: "percentage-limits"
+    description: "Preserve the supported contribution categories"
+    formula: |
+      G cash to public charities: min(cash,60% base). A other public noncash:
+      min(A, max(0,50% base-G)). Reserve public capital-gain property for B headroom without its 30% limit:
+      reserveC=min(raw C,max(0,50% base-G-A)). B other second-category gifts:
+      min(B,30% base,max(0,50% base-G-A-reserveC+min(G,10% base))).
+      C public capital-gain property: min(C,30% base,max(0,50% base-G-A-B)). D second-category capital-gain
+      property: min(D,20% base,30% base-C,30% base-B,
+      max(0,50% base-G-A-C-B+min(G,10% base))). Cash within B is allocated first
+      only to distinguish cash/noncash reporting, without changing its common cap.
+      Base=max(0,AGI); monetary results round to dollars. K-1 categories retain
+      their reported categories. This worksheet expects contribution values after
+      any property valuation/basis reduction; no appraisal or eligibility is inferred.
+    testRef: "tests/engine/forms/charitable-contribution-worksheet.test.ts::2026 charitable category limits"
+  - line: "floor"
+    description: "0.5% contribution-base floor"
+    formula: "Reduce otherwise allowable current contributions by min(total allowed,0.5% base), in statutory order D,C,B,A,G. E conservation is outside the currently modeled contribution categories."
+    testRef: "tests/engine/forms/charitable-contribution-worksheet.test.ts::2026 charitable floor and carryforward"
+  - line: "carryforward"
+    description: "Current contribution excess by category and original tax year"
+    formula: "Preserve percentage-limit excess by category and current tax year. If any current-year percentage-limit excess carries forward, add floor-disallowed amounts to the applicable category. If no percentage-limit excess exists, floor-only disallowance does not carry. Never invent a year/category for historical balances."
+    testRef: "tests/engine/forms/charitable-contribution-worksheet.test.ts::2026 charitable floor and carryforward"

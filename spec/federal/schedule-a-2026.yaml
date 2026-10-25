@@ -23,3 +23,11 @@ lines:
       donation amounts reject rather than infer eligibility.
     irsRef: "IRC 170(p), 63(b), https://uscode.house.gov/us/usc/119-120/t26/s170/"
     testRef: "tests/engine/schedules/schedule-a-2026.test.ts::2026 nonitemizer charitable deduction"
+  - line: "11-14-itemized-charity"
+    description: "2026 itemized contributions use the category worksheet"
+    formula: "Route current direct and reported K-1 contributions through the 2026 category/floor worksheet. Preserve category and tax year on new carryforward entries. Historical aggregate or vintage carryovers reject pending supported reviewed transition treatment. The nonitemizer candidate remains independent of this floor."
+    testRef: "tests/engine/schedules/schedule-a-2026.test.ts::2026 itemized charitable integration"
+  - line: "charitable-qualification"
+    description: "Known recipient, property type and basis facts"
+    formula: "For positive 2026 gifts require actual recipient/public-versus-second-category classification; public recipient known ineligible gives no deduction. Noncash requires actual long-term status, and ordinary property deduction is min(FMV,basis). Private-foundation capital gain FMV route requires qualified appreciated stock; other valuation branches reject for separate qualification."
+    testRef: "tests/engine/schedules/schedule-a-2026.test.ts::2026 charitable qualification facts"

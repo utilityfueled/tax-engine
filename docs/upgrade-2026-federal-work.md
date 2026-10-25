@@ -123,3 +123,29 @@ not select a tax year. Rule provenance advances to 2025.4. This numeric correcti
 does not establish independent review or remedy every legacy QCD eligibility path.
 Checks: 601 focused retirement/federal tests, engine typecheck and spec validation
 pass. Scoped diff reviewed; the QCD change is independent of other 2026 law work.
+
+## Package: 2026 itemized contribution categories and floor
+
+Official sources refreshed 2026-10-24: current 26 USC 170 at
+https://uscode.house.gov/us/usc/119-120/t26/s170/ and IRS Publications 526 and
+505. The new worksheet keeps the cash/public-property/second-category capital
+limits separate, applies the statutory 10%-of-base cash coordination, then
+consumes the 0.5% floor in statutory category order. Current-year carryforwards
+retain their original year and category; floor-only amounts carry only when a
+percentage-limit excess also exists. Ordinary donated property uses the lesser
+of value and known basis; unsupported private-foundation capital-gain valuation
+rejects unless qualified appreciated stock is explicitly established.
+
+The spec preceded the 13 worksheet tests (initially missing-module failure),
+four failing integration regressions and four failing qualification regressions.
+Checks: 630 focused charitable/Schedule A/federal tests pass; engine typecheck,
+spec validation (2,978 references), and whitespace checks pass. Scoped diff
+review confirmed the 2025 calculation branch remains unchanged. Optional basis,
+recipient classification and holding-period facts preserve unknowns.
+
+Still blocked: historical charitable carryovers require source category and a
+reviewed 2026 floor-transition treatment; they explicitly reject rather than
+become current cash. Qualified conservation contributions, special property
+valuation/elections and independent human review are not claimed by this
+worksheet. The full 2026 readiness gate remains closed. These are synthetic
+regressions and source-derived formulas, not independent expected-output review.

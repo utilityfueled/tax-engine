@@ -13,6 +13,7 @@ import type { FilingStatus, YearConstants } from "@/models/constants.js";
 import { d, sum, zeroFloor, min, roundDollar } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { calculateSALTLimit } from "@/utils/tax-math.js";
+import { calculateCharitableContributionWorksheet, type CharitableCategory } from "@/engine/forms/charitable-contribution-worksheet.js";
 // calculateDeductibleMortgageInterest is no longer used here — mortgage interest
 // is now computed with aggregate debt limits per IRS Pub 936 (see Lines 8a-8d section).
 
@@ -41,6 +42,7 @@ export interface ScheduleAInput {
 /** Per-year carryforward entry for charitable contribution vintage tracking (IRC §170(d)(1)) */
 export interface CharitableCarryforwardEntry {
   taxYear: number;
+  category?: CharitableCategory;
   amount: Decimal;
 }
 
@@ -355,6 +357,7 @@ export function calculateScheduleA(
       const date = new Date(`${donation.dateOfDonation}T00:00:00Z`);
       if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== donation.dateOfDonation) throw new Error("Invalid donation date");
       if (!donation.dateOfDonation.startsWith(`${input.taxpayer.taxYear}-`)) throw new Error("Donation date must be in the return tax year");
+      if (amount.gt(0) && donation.isPrivateFoundation === undefined) throw new Error("Charitable recipient classification is unknown");
       if (donation.type !== "cash" || amount.isZero()) continue;
       if (donation.qualifiedOrganization === undefined || donation.supportingOrganization === undefined || donation.donorAdvisedFund === undefined) throw new Error("Nonitemizer charitable recipient qualification is unknown");
       if (donation.qualifiedOrganization && !donation.supportingOrganization && !donation.donorAdvisedFund && !donation.isPrivateFoundation) eligibleCash = eligibleCash.plus(amount);
@@ -364,103 +367,167 @@ export function calculateScheduleA(
   audit.record("Charitable WS", "nonitemizer", "Nonitemizer charitable deduction candidate", nonitemizerCharitableDeduction,
     "2026 current eligible cash only: min(cash, 60% AGI, 1000 [2000 MFJ]); no floor or carryover");
 
-  // ── Charitable (Lines 12-13) with stacked AGI limits ──
-  // Per IRC §170(b)(1), charitable contribution limits interact (stack):
-  // Non-cash donations:
-  // - LTCG property to supported public charities: 30% of AGI
-  // - LTCG property to validated private foundations / second-category orgs:
-  //   smallest of 20% of AGI, remaining 30% bucket headroom, and remaining
-  //   50% bucket headroom after the supported higher-priority categories
-  // - other non-cash property: 50% of AGI
-  // Cash: 60% minus total non-cash property under (G)
-  const rawPublicAppreciatedPropertyDirect = input.donations
-    .filter((don) => don.type !== "cash" && don.isLongTermCapitalGain && !don.isPrivateFoundation)
-    .reduce((acc, don) => acc.plus(d(don.amount)), new Decimal(0));
-  const rawPublicAppreciatedProperty = rawPublicAppreciatedPropertyDirect
-    .plus(extra?.k1AppreciatedProperty30 ?? new Decimal(0));
-  const rawPrivateFoundationAppreciatedPropertyDirect = input.donations
-    .filter((don) => don.type !== "cash" && don.isLongTermCapitalGain && don.isPrivateFoundation)
-    .reduce((acc, don) => acc.plus(d(don.amount)), new Decimal(0));
-  const rawPrivateFoundationAppreciatedProperty = rawPrivateFoundationAppreciatedPropertyDirect
-    .plus(extra?.k1AppreciatedProperty20 ?? new Decimal(0));
-  const rawOtherNonCash = input.donations
-    .filter((don) => don.type !== "cash" && !don.isLongTermCapitalGain)
-    .reduce((acc, don) => acc.plus(d(don.amount)), new Decimal(0));
-  const appreciatedLimit = roundDollar(contributionBase.times("0.3"));
-  const privateFoundationAppreciatedLimit = roundDollar(contributionBase.times("0.2"));
-  const overallNonCashLimit = roundDollar(contributionBase.times("0.5"));
-  const deductiblePublicAppreciatedProperty = min(rawPublicAppreciatedProperty, appreciatedLimit);
-  // Other non-cash gets remaining 50% capacity after LTCG
-  const otherNonCashCapacity = zeroFloor(overallNonCashLimit.minus(deductiblePublicAppreciatedProperty));
-  const deductibleOtherNonCash = min(rawOtherNonCash, otherNonCashCapacity);
+  let cashCharitable: Decimal;
+  let nonCashCharitable: Decimal;
+  let charitableCarryforwards: CharitableCarryforwardEntry[];
+  let charitableCarryforwardExpired = ZERO;
+  let charitableCarryforwardDetail: CharitableCarryforwardYearDetail[] = [];
+  if (input.taxpayer.taxYear === 2026) {
+    if (d(input.priorYear?.charitableCarryforward).gt(0) || input.priorYear?.charitableCarryforwardByYear.some(entry => d(entry.amount).gt(0))) {
+      throw new Error("2026 historical charitable carryover requires supported category and reviewed floor-transition treatment");
+    }
+    const amounts = { cashPublic: extra?.k1CashCharitable ?? ZERO, noncashPublic: ZERO, capitalGainPublic: extra?.k1AppreciatedProperty30 ?? ZERO, cashPrivate: ZERO, noncashPrivate: ZERO, capitalGainPrivate: extra?.k1AppreciatedProperty20 ?? ZERO };
+    for (const donation of input.donations) {
+      if (d(donation.amount).isZero()) continue;
+      if (donation.qualifiedOrganization === undefined) throw new Error("Charitable recipient qualification is unknown");
+      if (!donation.isPrivateFoundation && !donation.qualifiedOrganization) continue;
+      let contributionValue = d(donation.amount);
+      if (donation.type !== "cash") {
+        if (donation.isLongTermCapitalGain === undefined) throw new Error("Charitable property long-term holding status is unknown");
+        if (!donation.isLongTermCapitalGain) {
+          if (donation.costBasis === undefined || !d(donation.costBasis).isFinite() || d(donation.costBasis).lt(0)) throw new Error("Charitable property cost basis is unknown or invalid");
+          contributionValue = min(contributionValue, d(donation.costBasis));
+        } else if (donation.isPrivateFoundation && (donation.type !== "appreciated_stock" || donation.qualifiedAppreciatedStock !== true)) {
+          throw new Error("Private-foundation capital gain gift requires qualified appreciated stock or separately supported basis-reduction qualification");
+        }
+      }
+      const category = donation.type === "cash"
+        ? donation.isPrivateFoundation ? "cashPrivate" : "cashPublic"
+        : donation.isLongTermCapitalGain
+          ? donation.isPrivateFoundation ? "capitalGainPrivate" : "capitalGainPublic"
+          : donation.isPrivateFoundation ? "noncashPrivate" : "noncashPublic";
+      amounts[category] = amounts[category].plus(contributionValue);
+    }
+    const charitable = calculateCharitableContributionWorksheet({ taxYear: 2026, contributionBase, amounts });
+    audit.merge(charitable.lines);
+    cashCharitable = charitable.cashDeduction;
+    nonCashCharitable = charitable.nonCashDeduction;
+    charitableCarryforwards = charitable.carryforwards;
+    audit.record("Sched A", "12", "Cash charitable after 2026 limitations", cashCharitable, "2026 category worksheet, including 0.5% floor");
+    audit.record("Sched A", "13", "Noncash charitable after 2026 limitations", nonCashCharitable, "2026 category worksheet, including 0.5% floor");
+  } else {
+    // ── Charitable (Lines 12-13) with stacked AGI limits ──
+    // Per IRC §170(b)(1), charitable contribution limits interact (stack):
+    // Non-cash donations:
+    // - LTCG property to supported public charities: 30% of AGI
+    // - LTCG property to validated private foundations / second-category orgs:
+    //   smallest of 20% of AGI, remaining 30% bucket headroom, and remaining
+    //   50% bucket headroom after the supported higher-priority categories
+    // - other non-cash property: 50% of AGI
+    // Cash: 60% minus total non-cash property under (G)
+    const rawPublicAppreciatedPropertyDirect = input.donations
+      .filter((don) => don.type !== "cash" && don.isLongTermCapitalGain && !don.isPrivateFoundation)
+      .reduce((acc, don) => acc.plus(d(don.amount)), new Decimal(0));
+    const rawPublicAppreciatedProperty = rawPublicAppreciatedPropertyDirect
+      .plus(extra?.k1AppreciatedProperty30 ?? new Decimal(0));
+    const rawPrivateFoundationAppreciatedPropertyDirect = input.donations
+      .filter((don) => don.type !== "cash" && don.isLongTermCapitalGain && don.isPrivateFoundation)
+      .reduce((acc, don) => acc.plus(d(don.amount)), new Decimal(0));
+    const rawPrivateFoundationAppreciatedProperty = rawPrivateFoundationAppreciatedPropertyDirect
+      .plus(extra?.k1AppreciatedProperty20 ?? new Decimal(0));
+    const rawOtherNonCash = input.donations
+      .filter((don) => don.type !== "cash" && !don.isLongTermCapitalGain)
+      .reduce((acc, don) => acc.plus(d(don.amount)), new Decimal(0));
+    const appreciatedLimit = roundDollar(contributionBase.times("0.3"));
+    const privateFoundationAppreciatedLimit = roundDollar(contributionBase.times("0.2"));
+    const overallNonCashLimit = roundDollar(contributionBase.times("0.5"));
+    const deductiblePublicAppreciatedProperty = min(rawPublicAppreciatedProperty, appreciatedLimit);
+    // Other non-cash gets remaining 50% capacity after LTCG
+    const otherNonCashCapacity = zeroFloor(overallNonCashLimit.minus(deductiblePublicAppreciatedProperty));
+    const deductibleOtherNonCash = min(rawOtherNonCash, otherNonCashCapacity);
 
-  // Cash limited to 60% minus non-cash property already allowed (IRC §170(b)(1)(G))
-  const rawCashCharitableDirect = input.donations
-    .filter((don) => don.type === "cash")
-    .reduce((acc, don) => acc.plus(d(don.amount)), new Decimal(0));
-  const rawCashCharitable = rawCashCharitableDirect
-    .plus(extra?.k1CashCharitable ?? new Decimal(0));
-  const cashAGILimit = roundDollar(contributionBase.times("0.6"));
-  const preliminaryNonCash = deductiblePublicAppreciatedProperty.plus(deductibleOtherNonCash);
-  const cashCapacity = zeroFloor(cashAGILimit.minus(preliminaryNonCash));
+    // Cash limited to 60% minus non-cash property already allowed (IRC §170(b)(1)(G))
+    const rawCashCharitableDirect = input.donations
+      .filter((don) => don.type === "cash")
+      .reduce((acc, don) => acc.plus(d(don.amount)), new Decimal(0));
+    const rawCashCharitable = rawCashCharitableDirect
+      .plus(extra?.k1CashCharitable ?? new Decimal(0));
+    const cashAGILimit = roundDollar(contributionBase.times("0.6"));
+    const preliminaryNonCash = deductiblePublicAppreciatedProperty.plus(deductibleOtherNonCash);
+    const cashCapacity = zeroFloor(cashAGILimit.minus(preliminaryNonCash));
 
-  // Resolve and reconcile per-year carryforward entries with FIFO and 5-year expiration
-  const currentTaxYear = input.taxpayer.taxYear;
-  const carryforwardEntries = resolveCharitableCarryforwardEntries(input);
-  const carryforwardCapacity = zeroFloor(cashCapacity.minus(rawCashCharitable));
-  const carryforwardReconciliation = reconcileCharitableCarryforward(
-    carryforwardEntries, currentTaxYear, carryforwardCapacity,
-  );
-  const carryforwardUsed = carryforwardReconciliation.totalUsed;
+    // Resolve and reconcile per-year carryforward entries with FIFO and 5-year expiration
+    const currentTaxYear = input.taxpayer.taxYear;
+    const carryforwardEntries = resolveCharitableCarryforwardEntries(input);
+    const carryforwardCapacity = zeroFloor(cashCapacity.minus(rawCashCharitable));
+    const carryforwardReconciliation = reconcileCharitableCarryforward(
+      carryforwardEntries, currentTaxYear, carryforwardCapacity,
+    );
+    const carryforwardUsed = carryforwardReconciliation.totalUsed;
 
-  const totalCashCharitable = rawCashCharitable.plus(carryforwardUsed);
-  const cashCharitable = min(totalCashCharitable, cashCapacity);
-  const k1CashNote = (extra?.k1CashCharitable ?? new Decimal(0)).isZero()
-    ? ""
-    : ` + K-1 Box 13 Code A ${extra!.k1CashCharitable}`;
-  const carryforwardAuditNote = carryforwardReconciliation.totalExpired.greaterThan(0)
-    ? ` (carryforward used ${carryforwardUsed}, expired ${carryforwardReconciliation.totalExpired})`
-    : ` + carryforward ${carryforwardUsed}`;
-  audit.record("Sched A", "12", "Cash charitable", cashCharitable,
-    `Sum cash donations ${rawCashCharitableDirect}${k1CashNote}${carryforwardAuditNote} (limited to 60% AGI = $${cashAGILimit})`);
-
-  const remainingThirtyPercentHeadroom = zeroFloor(appreciatedLimit.minus(deductiblePublicAppreciatedProperty));
-  const remainingFiftyPercentHeadroom = zeroFloor(
-    overallNonCashLimit
-      .minus(cashCharitable)
-      .minus(deductiblePublicAppreciatedProperty)
-      .minus(deductibleOtherNonCash)
-  );
-  const deductiblePrivateFoundationAppreciatedProperty = Decimal.min(
-    rawPrivateFoundationAppreciatedProperty,
-    privateFoundationAppreciatedLimit,
-    remainingThirtyPercentHeadroom,
-    remainingFiftyPercentHeadroom
-  );
-  const nonCashCharitable = deductiblePublicAppreciatedProperty
-    .plus(deductiblePrivateFoundationAppreciatedProperty)
-    .plus(deductibleOtherNonCash);
-  audit.record("Sched A", "13", "Non-cash charitable", nonCashCharitable,
-    "Supported public-charity LTCG property (30% AGI limit) + supported private-foundation LTCG property (20% AGI branch with remaining 30% and 50% headroom limits) + other non-cash property (50% AGI limit)" +
-    ((extra?.k1AppreciatedProperty30 ?? new Decimal(0)).isZero() && (extra?.k1AppreciatedProperty20 ?? new Decimal(0)).isZero()
+    const totalCashCharitable = rawCashCharitable.plus(carryforwardUsed);
+    cashCharitable = min(totalCashCharitable, cashCapacity);
+    const k1CashNote = (extra?.k1CashCharitable ?? new Decimal(0)).isZero()
       ? ""
-      : " + K-1 Box 13 Code B/C pass-through"), {
-      "Raw public-charity LTCG property (direct)": rawPublicAppreciatedPropertyDirect,
-      "K-1 Box 13 Code B (30% limit)": extra?.k1AppreciatedProperty30 ?? new Decimal(0),
-      "Raw public-charity LTCG property (total)": rawPublicAppreciatedProperty,
-      "Raw private-foundation LTCG property (direct)": rawPrivateFoundationAppreciatedPropertyDirect,
-      "K-1 Box 13 Code C (20% limit)": extra?.k1AppreciatedProperty20 ?? new Decimal(0),
-      "Raw private-foundation LTCG property (total)": rawPrivateFoundationAppreciatedProperty,
-      "Raw other non-cash property": rawOtherNonCash,
-      "30% AGI limit": appreciatedLimit,
-      "20% AGI limit": privateFoundationAppreciatedLimit,
-      "50% AGI limit": overallNonCashLimit,
-      "Deductible public-charity LTCG property": deductiblePublicAppreciatedProperty,
-      "Remaining 30% headroom for private-foundation LTCG property": remainingThirtyPercentHeadroom,
-      "Remaining 50% headroom for private-foundation LTCG property": remainingFiftyPercentHeadroom,
-      "Deductible private-foundation LTCG property": deductiblePrivateFoundationAppreciatedProperty,
-      "Deductible other non-cash property": deductibleOtherNonCash,
-    });
+      : ` + K-1 Box 13 Code A ${extra!.k1CashCharitable}`;
+    const carryforwardAuditNote = carryforwardReconciliation.totalExpired.greaterThan(0)
+      ? ` (carryforward used ${carryforwardUsed}, expired ${carryforwardReconciliation.totalExpired})`
+      : ` + carryforward ${carryforwardUsed}`;
+    audit.record("Sched A", "12", "Cash charitable", cashCharitable,
+      `Sum cash donations ${rawCashCharitableDirect}${k1CashNote}${carryforwardAuditNote} (limited to 60% AGI = $${cashAGILimit})`);
+
+    const remainingThirtyPercentHeadroom = zeroFloor(appreciatedLimit.minus(deductiblePublicAppreciatedProperty));
+    const remainingFiftyPercentHeadroom = zeroFloor(
+      overallNonCashLimit
+        .minus(cashCharitable)
+        .minus(deductiblePublicAppreciatedProperty)
+        .minus(deductibleOtherNonCash)
+    );
+    const deductiblePrivateFoundationAppreciatedProperty = Decimal.min(
+      rawPrivateFoundationAppreciatedProperty,
+      privateFoundationAppreciatedLimit,
+      remainingThirtyPercentHeadroom,
+      remainingFiftyPercentHeadroom
+    );
+    nonCashCharitable = deductiblePublicAppreciatedProperty
+      .plus(deductiblePrivateFoundationAppreciatedProperty)
+      .plus(deductibleOtherNonCash);
+    audit.record("Sched A", "13", "Non-cash charitable", nonCashCharitable,
+      "Supported public-charity LTCG property (30% AGI limit) + supported private-foundation LTCG property (20% AGI branch with remaining 30% and 50% headroom limits) + other non-cash property (50% AGI limit)" +
+      ((extra?.k1AppreciatedProperty30 ?? new Decimal(0)).isZero() && (extra?.k1AppreciatedProperty20 ?? new Decimal(0)).isZero()
+        ? ""
+        : " + K-1 Box 13 Code B/C pass-through"), {
+        "Raw public-charity LTCG property (direct)": rawPublicAppreciatedPropertyDirect,
+        "K-1 Box 13 Code B (30% limit)": extra?.k1AppreciatedProperty30 ?? new Decimal(0),
+        "Raw public-charity LTCG property (total)": rawPublicAppreciatedProperty,
+        "Raw private-foundation LTCG property (direct)": rawPrivateFoundationAppreciatedPropertyDirect,
+        "K-1 Box 13 Code C (20% limit)": extra?.k1AppreciatedProperty20 ?? new Decimal(0),
+        "Raw private-foundation LTCG property (total)": rawPrivateFoundationAppreciatedProperty,
+        "Raw other non-cash property": rawOtherNonCash,
+        "30% AGI limit": appreciatedLimit,
+        "20% AGI limit": privateFoundationAppreciatedLimit,
+        "50% AGI limit": overallNonCashLimit,
+        "Deductible public-charity LTCG property": deductiblePublicAppreciatedProperty,
+        "Remaining 30% headroom for private-foundation LTCG property": remainingThirtyPercentHeadroom,
+        "Remaining 50% headroom for private-foundation LTCG property": remainingFiftyPercentHeadroom,
+        "Deductible private-foundation LTCG property": deductiblePrivateFoundationAppreciatedProperty,
+        "Deductible other non-cash property": deductibleOtherNonCash,
+      });
+
+    // ── Charitable carryforward (IRC §170(d)) ───────────
+    // Track excess contributions that carry forward up to 5 years.
+    // Cash excess: current-year cash offered minus deductible cash (excluding carryforward used)
+    // Non-cash excess: total non-cash offered minus deductible non-cash
+    // Unused prior-year carryforward vintages carry forward via reconciliation remaining
+    const totalRawNonCash = rawPublicAppreciatedProperty.plus(rawOtherNonCash).plus(rawPrivateFoundationAppreciatedProperty);
+    const currentYearExcessCash = zeroFloor(rawCashCharitable.minus(cashCapacity));
+    const excessNonCash = zeroFloor(totalRawNonCash.minus(nonCashCharitable));
+    const currentYearExcess = currentYearExcessCash.plus(excessNonCash);
+
+    // Build per-year carryforward: remaining prior-year vintages + new current-year vintage
+    const carryforwardByYear: CharitableCarryforwardEntry[] = [
+      ...carryforwardReconciliation.remaining,
+    ];
+    if (currentYearExcess.greaterThan(0)) {
+      carryforwardByYear.push({ taxYear: currentTaxYear, amount: currentYearExcess });
+    }
+
+    // Aggregate carryforward for backward compatibility
+    charitableCarryforwards = carryforwardByYear;
+    charitableCarryforwardExpired = carryforwardReconciliation.totalExpired;
+    charitableCarryforwardDetail = carryforwardReconciliation.detail;
+  }
+  const newCharitableCarryforward = sum(...charitableCarryforwards.map(entry => entry.amount));
 
   // Line 28: Gambling losses (limited to gambling winnings per IRC §165(d))
   const gamblingWinnings = extra?.gamblingWinnings ?? new Decimal(0);
@@ -488,28 +555,6 @@ export function calculateScheduleA(
   audit.record("Sched A", "17", "Total itemized deductions", totalItemized,
     "Medical + SALT + mortgage + investment interest + casualty losses + charitable + gambling losses");
 
-  // ── Charitable carryforward (IRC §170(d)) ───────────
-  // Track excess contributions that carry forward up to 5 years.
-  // Cash excess: current-year cash offered minus deductible cash (excluding carryforward used)
-  // Non-cash excess: total non-cash offered minus deductible non-cash
-  // Unused prior-year carryforward vintages carry forward via reconciliation remaining
-  const totalRawNonCash = rawPublicAppreciatedProperty.plus(rawOtherNonCash).plus(rawPrivateFoundationAppreciatedProperty);
-  const currentYearExcessCash = zeroFloor(rawCashCharitable.minus(cashCapacity));
-  const excessNonCash = zeroFloor(totalRawNonCash.minus(nonCashCharitable));
-  const currentYearExcess = currentYearExcessCash.plus(excessNonCash);
-
-  // Build per-year carryforward: remaining prior-year vintages + new current-year vintage
-  const carryforwardByYear: CharitableCarryforwardEntry[] = [
-    ...carryforwardReconciliation.remaining,
-  ];
-  if (currentYearExcess.greaterThan(0)) {
-    carryforwardByYear.push({ taxYear: currentTaxYear, amount: currentYearExcess });
-  }
-
-  // Aggregate carryforward for backward compatibility
-  const newCharitableCarryforward = carryforwardByYear.reduce(
-    (acc, entry) => acc.plus(entry.amount), ZERO,
-  );
 
   return {
     medicalDeduction,
@@ -524,9 +569,9 @@ export function calculateScheduleA(
     totalItemized,
     nonitemizerCharitableDeduction,
     charitableCarryforward: newCharitableCarryforward,
-    charitableCarryforwardByYear: carryforwardByYear,
-    charitableCarryforwardExpired: carryforwardReconciliation.totalExpired,
-    charitableCarryforwardDetail: carryforwardReconciliation.detail,
+    charitableCarryforwardByYear: charitableCarryforwards,
+    charitableCarryforwardExpired,
+    charitableCarryforwardDetail,
     lines: audit.getLines(),
   };
 }
