@@ -5,6 +5,7 @@ import type {
 } from "@tax-engine/contracts";
 import { resolveDeploymentMode } from "./deployment-mode";
 import { isHostedProductionEnvironment } from "./hosted-runtime-safety";
+import { deleteCachedWorkspaceDocumentFiles } from "./workspace-document-file-cache";
 
 type PersistenceEnvironment = Record<string, string | undefined>;
 type PersistenceFetch = typeof fetch;
@@ -906,6 +907,7 @@ export async function deletePersistedWorkspace(
     );
 
     if (options.browserStorage) {
+      await deleteCachedWorkspaceDocumentFiles(options.workspaceId);
       const { deleteWorkspace: deleteLocalWorkspace } = await import("./workspace-storage");
       deleteLocalWorkspace(options.browserStorage, options.workspaceId);
     }
@@ -918,6 +920,7 @@ export async function deletePersistedWorkspace(
 
   const adapter = await createWorkspacePersistenceSession(options);
 
+  await deleteCachedWorkspaceDocumentFiles(options.workspaceId);
   return {
     adapter,
     workspaces: await adapter.deleteWorkspace(options.workspaceId)

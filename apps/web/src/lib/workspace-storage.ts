@@ -110,7 +110,13 @@ interface StoredGuidedCompletionLike {
   needsReviewSectionCount?: unknown;
 }
 
-const STORAGE_KEY = "tax-engine.return-workspaces.v1";
+export const WORKSPACE_STORAGE_KEY = "tax-engine.return-workspaces.v1";
+const STORAGE_KEY = WORKSPACE_STORAGE_KEY;
+
+/** Invalidate derived records after a recovery import or another storage writer. */
+export function invalidateWorkspaceStorageCache(storage: Storage) {
+  storageCache.delete(storage);
+}
 
 // In-memory cache keyed by Storage instance. Avoids re-parsing the full JSON
 // blob (+ hydrating every workspace) on every read within the same page
@@ -239,8 +245,14 @@ function loadStorage(storage: Storage): StorageShape {
 }
 
 function saveStorage(storage: Storage, data: StorageShape) {
-  storageCache.set(storage, data);
-  storage.setItem(STORAGE_KEY, JSON.stringify(data));
+  try {
+    storage.setItem(STORAGE_KEY, JSON.stringify(data));
+    storageCache.set(storage, data);
+  } catch (error) {
+    // Callers may have mutated a cached record before the durable write failed.
+    storageCache.delete(storage);
+    throw error;
+  }
 }
 
 function createChecklist(

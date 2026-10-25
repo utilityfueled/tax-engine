@@ -54,7 +54,7 @@ import {
   type ProviderWorkspaceResponse
 } from "@/lib/provider-workspace-request";
 import { prepareUploadableFiles } from "@/lib/uploaded-document-detection";
-import { cacheWorkspaceDocumentFiles } from "@/lib/workspace-document-file-cache";
+import { cacheWorkspaceDocumentFiles, deleteCachedWorkspaceDocumentFiles } from "@/lib/workspace-document-file-cache";
 import {
   answerInterviewQuestion,
   answerWorkspaceInterviewQuestion,
@@ -760,6 +760,7 @@ export function ReturnWorkspaceScreen({
       void (async () => {
         try {
           await persistHostedWorkspace(clearWorkspaceRecord(workspace));
+          await deleteCachedWorkspaceDocumentFiles(workspaceId);
           setStorageMessage("Return reset.");
         } catch (error) {
           setStorageMessage(resolveUiErrorMessage(error, "Could not reset the return. Please try again."));
@@ -768,13 +769,16 @@ export function ReturnWorkspaceScreen({
       return;
     }
 
-    try {
-      const nextWorkspace = clearWorkspace(requireBrowserStorage(), workspaceId);
-      setWorkspace(nextWorkspace);
-      setStorageMessage("Return reset.");
-    } catch {
-      setStorageMessage("Could not reset the return. Please try again.");
-    }
+    void (async () => {
+      try {
+        await deleteCachedWorkspaceDocumentFiles(workspaceId);
+        const nextWorkspace = clearWorkspace(requireBrowserStorage(), workspaceId);
+        setWorkspace(nextWorkspace);
+        setStorageMessage("Return reset.");
+      } catch {
+        setStorageMessage("Could not reset the return. Please try again.");
+      }
+    })();
   }
 
   function removeWorkspaceDocument(documentId: string, documentLabel: string) {
@@ -787,6 +791,7 @@ export function ReturnWorkspaceScreen({
       void (async () => {
         try {
           await persistHostedWorkspace(removeDocumentFromWorkspace(workspace, documentId));
+          await deleteCachedWorkspaceDocumentFiles(workspaceId, [documentId]);
           setStorageMessage(`Removed ${documentLabel}.`);
         } catch (error) {
           setStorageMessage(resolveUiErrorMessage(error, "Could not remove the document. Please try again."));
@@ -795,13 +800,16 @@ export function ReturnWorkspaceScreen({
       return;
     }
 
-    try {
-      const nextWorkspace = removeDocument(requireBrowserStorage(), workspaceId, documentId);
-      setWorkspace(nextWorkspace);
-      setStorageMessage(`Removed ${documentLabel}.`);
-    } catch {
-      setStorageMessage("Could not remove the document. Please try again.");
-    }
+    void (async () => {
+      try {
+        await deleteCachedWorkspaceDocumentFiles(workspaceId, [documentId]);
+        const nextWorkspace = removeDocument(requireBrowserStorage(), workspaceId, documentId);
+        setWorkspace(nextWorkspace);
+        setStorageMessage(`Removed ${documentLabel}.`);
+      } catch {
+        setStorageMessage("Could not remove the document. Please try again.");
+      }
+    })();
   }
 
   function markInterviewQuestionAnswered(

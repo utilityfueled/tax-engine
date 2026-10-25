@@ -83,7 +83,9 @@ The downloaded PDFs land in `sample-documents/downloads/` and are ignored by git
 ## Notes
 
 - Browser storage is the active self-host persistence path today. Clearing browser storage clears the local workspace on that device. A Postgres volume backup does not restore browser-only facts or documents.
-- Current review bundles omit private identifiers and are not complete recovery backups. A full-fidelity local backup/import path still needs implementation and testing; retain original documents separately.
+- Use **Back up this return** in the saved-returns list to download an encrypted recovery file containing the workspace, guided answers, original document bytes and local display preference. Choose a password of at least 12 characters and keep it separately. A missing original blocks complete backup.
+- Use **Restore an encrypted backup** to restore on another browser/device as a new local return. Recovery verifies the encrypted contents and file hashes, requires durable document storage, preserves known or unknown years, and clears cached calculation previews for fresh review. It does not overwrite an existing return.
+- Keep both your backup and password: server Postgres backups and redacted review bundles cannot recover browser-only facts or original files. The encrypted recovery payload is limited to 64 MiB (96 MiB input file). No account or AI service is needed. Deleting a return also removes its cached original files, guided answers and preference on that device.
 - All available outputs remain experimental or review-only. Tax year 2026 calculation, filing PDFs and e-filing are unavailable; see `/support`.
 - Hosted preview keeps using the in-memory adapter until a real Postgres/S3-backed store factory is registered or injected behind the hosted persistence boundary.
 - The Better Auth route is present for hosted preview work, but self-host mode bypasses it completely so local use never depends on hosted account setup.

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { ReturnWorkspaceRecord, WorkspaceDeploymentMode } from "@tax-engine/contracts";
 import { RetroShell } from "@/components/retro-shell";
+import { WorkspaceRecoveryControls } from "@/components/workspace-recovery-controls";
 import {
   deletePersistedWorkspace,
   listPersistedWorkspaces
@@ -265,6 +266,7 @@ export function RecentWorkspacesPanel({
                       Delete
                     </button>
                   </div>
+                  <WorkspaceRecoveryControls workspaceId={workspace.id} />
                 </li>
               );
             })}
@@ -289,6 +291,7 @@ export function RecentWorkspacesPanel({
           </div>
         </>
       )}
+      <WorkspaceRecoveryControls />
       <p
         className="status-inline"
         role="status"
