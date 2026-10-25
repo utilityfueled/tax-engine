@@ -649,8 +649,8 @@ export async function fillReturn(
     filledForms.push(outputPath8889);
   }
 
-  // ── Form 2441 (if applicable — Child and Dependent Care Credit) ──
-  if (result.form2441 && result.form2441.credit.gt(0)) {
+  // ── Form 2441: care credit or actual benefit reconciliation, including no-credit returns. ──
+  if (result.form2441?.credit.gt(0) || result.form2441Benefits || input.dependentCareBenefits) {
     const f2441Path = join(blankFormsDir, "f2441.pdf");
     const doc2441 = await fillForm2441(input, result, f2441Path);
     if (flatten) await flattenForm(doc2441.getForm());

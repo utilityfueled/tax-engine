@@ -1,6 +1,7 @@
 // Spec: spec/federal/form-2441.yaml; official final 2025 Form2441 lines4-11.
 import { describe, expect, it } from "vitest";
 import { PDFDocument } from "pdf-lib";
+import { calculateForm2441Benefits } from "@/engine/forms/form-2441-benefits.js";
 import { calculateFederalTax } from "@/engine/federal.js";
 import { calculateForm2441, type Form2441Input } from "@/engine/forms/form-2441.js";
 import { fillForm2441, FORM_2441_FIELDS as F } from "@/pdf/fill-form-2441.js";
@@ -81,8 +82,16 @@ describe("Form2441 actual audited review fields", () => {
       ],
       qualifyingPersons: [{ firstName: "Casey", lastName: "Example", identifierType: "died" as const, over12Disabled: false, qualifyingPersonConfirmed: true, qualifiedExpenses: "5000" }],
     };
-    const actualResult = { ...base, agi: d("19000"), form2441: source({ careExpenses: d("5000"), qualifyingIndividuals: 1 }) };
-    const original = await fillForm2441({ ...input, dependentCare }, actualResult, "forms/blank/2025/f2441.pdf");
+    // Actual employer benefits were already included in Box1; PartIII must still
+    // be retained rather than rendering only the known benefits-received answer.
+    const dependentCareBenefits = { sourceFactsConfirmed: true, exclusionEligibilityConfirmed: true, usesDeemedIncome: false, providers: dependentCare.providers,
+      employeeBenefits: [{ sourceId: "w2:0", owner: "primary" as const, benefitsReported: "5000", alreadyIncludedInWages: "5000", priorYearCarryoverUsed: "0", forfeited: "0", carriedForward: "0" }],
+      selfEmployedBenefits: [], deductionAllocations: [], planExclusionLimit: "5000", qualifiedExpensesIncurred: "5000", primaryEarnedIncome: "30000", spouseEarnedIncome: "2000", spouseDiedDuringYear: false,
+      earnedIncomeWorksheetConfirmed: true, qualifyingIndividuals: 1, qualifiedExpensesPaidForCredit: "5000", creditExpenseCoordinationConfirmed: true };
+    const actualInput = { ...input, w2s: [{ ...input.w2s[0], accountHolder: "primary" as const, box10DependentCareBenefits: "5000" }], dependentCare, dependentCareBenefits };
+    const actualResult = { ...base, agi: d("19000"), form2441: source({ careExpenses: d("5000"), qualifyingIndividuals: 1, dependentCareBenefits }),
+      form2441Benefits: calculateForm2441Benefits({ taxYear: 2025, filingStatus: "married_filing_jointly", facts: dependentCareBenefits }) };
+    const original = await fillForm2441(actualInput, actualResult, "forms/blank/2025/f2441.pdf");
     const doc = await PDFDocument.load(await original.save());
     expect(doc.getForm().getTextField(F.provider1TIN).getText()).toBe("See Attached Statement");
     expect(doc.getForm().getTextField(F.provider2TIN).getText()).toBe("Tax-Exempt");
@@ -97,7 +106,7 @@ describe("Form2441 actual audited review fields", () => {
       { ...dependentCare, providers: dependentCare.providers.map(provider => ({ ...provider, householdEmployee: true })) },
       { ...dependentCare, providers: dependentCare.providers.map(provider => ({ ...provider, dueDiligenceStatement: "" })) },
       { ...dependentCare, qualifyingPersons: dependentCare.qualifyingPersons.map(person => ({ ...person, qualifiedExpenses: "4999.99" })) },
-    ]) await expect(fillForm2441({ ...input, dependentCare: bad }, actualResult, "forms/blank/2025/f2441.pdf")).rejects.toThrow(/source|record/i);
+    ]) await expect(fillForm2441({ ...actualInput, dependentCare: bad }, actualResult, "forms/blank/2025/f2441.pdf")).rejects.toThrow(/source|record/i);
   });
 
   it("rejects missing duplicate nonfinite wrong-form and contradictory audited amounts", async () => {

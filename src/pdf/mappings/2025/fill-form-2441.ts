@@ -11,6 +11,8 @@ import { assertPdfExportAllowed, markReviewPdf } from "../../export-policy.js";
 
 import { PDFDocument, StandardFonts } from "pdf-lib";
 import Decimal from "decimal.js";
+import { calculateForm2441Benefits } from "@/engine/forms/form-2441-benefits.js";
+import { calculateDependentCareBenefitSources } from "@/engine/forms/dependent-care-benefit-sources.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import {
@@ -23,6 +25,7 @@ import {
 // ─── PDF Field Name Helpers ────────────────────────────────────────────────
 
 const p1 = (n: string) => `topmostSubform[0].Page1[0].${n}`;
+const p2 = (n: string) => `topmostSubform[0].Page2[0].${n}`;
 const providerRow = (row: string, n: string) =>
   `topmostSubform[0].Page1[0].PartITable[0].${row}.${n}`;
 const qpRow = (row: string, n: string) =>
@@ -101,15 +104,28 @@ export const FORM_2441_FIELDS = {
   line9c: p1("f1_35[0]"),  // Line 9a + line 9b
   line10: p1("f1_36[0]"),  // Tax liability limit
   line11: p1("f1_37[0]"),  // Credit (smaller of 9c or 10)
+  // Part III, verified against final2025 printed page2 and widget rectangles.
+  line12: p2("f2_1[0]"), line13: p2("f2_2[0]"), line14: p2("f2_3[0]"), line15: p2("f2_4[0]"),
+  line16: p2("Line16_ReadOrder[0].f2_5[0]"), line17: p2("f2_6[0]"), line18: p2("f2_7[0]"), line19: p2("f2_8[0]"),
+  line20: p2("f2_9[0]"), line21: p2("f2_10[0]"), line22: p2("f2_11[0]"), line23: p2("f2_12[0]"),
+  line24: p2("f2_13[0]"), line25: p2("f2_14[0]"), line26: p2("f2_15[0]"),
+  line27: p2("f2_16[0]"), line28: p2("f2_17[0]"), line29: p2("f2_18[0]"), line30: p2("f2_19[0]"), line31: p2("f2_20[0]"),
+  line22No: p2("c2_1[0]"), line22Yes: p2("c2_1[1]"),
 } as const;
 
 const F = FORM_2441_FIELDS;
+const benefitLineNumbers = [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31] as const;
 
-async function fillSourceRecords(doc: PDFDocument, input: TaxYearInput): Promise<void> {
-  const care = input.dependentCare;
-  if (!care?.providers?.length && !care?.qualifyingPersons?.length) return;
-  if (care.sourceFactsConfirmed !== true || !care.providers?.length || !care.qualifyingPersons?.length
-    || typeof care.usesDeemedIncome !== "boolean" || care.qualifyingPersons.length !== care.qualifyingIndividuals) {
+async function fillSourceRecords(doc: PDFDocument, input: TaxYearInput, result: TaxReturnResult): Promise<void> {
+  const care = result.form2441 ? input.dependentCare : undefined;
+  const benefitFacts = input.dependentCareBenefits;
+  if (benefitFacts && (benefitFacts.sourceFactsConfirmed !== true || !Array.isArray(benefitFacts.providers)
+    || typeof benefitFacts.usesDeemedIncome !== "boolean" || (new Decimal(benefitFacts.qualifiedExpensesIncurred ?? "NaN").gt(0) && !benefitFacts.providers.length))) {
+    throw new Error("Form 2441 benefit provider and deemed-income source facts are incomplete");
+  }
+  if (!benefitFacts && !care?.providers?.length && !care?.qualifyingPersons?.length) return;
+  if (care && (care.sourceFactsConfirmed !== true || !care.providers?.length || !care.qualifyingPersons?.length
+    || typeof care.usesDeemedIncome !== "boolean" || care.qualifyingPersons.length !== care.qualifyingIndividuals)) {
     throw new Error("Form 2441 requires confirmed complete provider and qualifying-person source records");
   }
   const amount = (value: string) => {
@@ -117,21 +133,31 @@ async function fillSourceRecords(doc: PDFDocument, input: TaxYearInput): Promise
     if (!parsed.isFinite() || parsed.isNegative()) throw new Error("Form 2441 source amount must be finite and nonnegative");
     return parsed;
   };
-  const providers = care.providers.map(provider => {
+  if (care && benefitFacts && (care.qualifyingIndividuals !== benefitFacts.qualifyingIndividuals || (result.form2441Benefits?.requiresForm2441 && care.receivedBenefits !== true)
+    || (care.excludedDependentCareBenefits !== undefined && !amount(care.excludedDependentCareBenefits).eq(result.form2441Benefits?.totalBenefitsApplied ?? "NaN")))) throw new Error("Form 2441 credit and benefit source facts do not reconcile");
+  if (care?.providers && benefitFacts?.providers) {
+    const key = (provider: NonNullable<typeof care.providers>[number]) => JSON.stringify({ name: provider.name.trim(), address: provider.address.trim(), identifierType: provider.identifierType, taxId: provider.taxId?.replace(/-/g, "") ?? "", dueDiligenceStatement: provider.dueDiligenceStatement?.trim() ?? "", householdEmployee: provider.householdEmployee, amountPaid: amount(provider.amountPaid).toFixed() });
+    if (JSON.stringify(care.providers.map(key).sort()) !== JSON.stringify(benefitFacts.providers.map(key).sort())) throw new Error("Form 2441 benefit and credit provider source records do not reconcile");
+  }
+  const providers = (benefitFacts?.providers ?? care?.providers ?? []).map(provider => {
     if (!provider.name.trim() || !provider.address.trim() || typeof provider.householdEmployee !== "boolean"
       || !["tin", "tax_exempt", "foreign_no_us_tin", "employer_furnished", "withheld"].includes(provider.identifierType)
       || (provider.identifierType === "withheld" && !provider.dueDiligenceStatement?.trim())) throw new Error("Form 2441 provider source is incomplete");
     const paid = amount(provider.amountPaid);
-    if (provider.identifierType === "employer_furnished" && (!paid.isZero() || provider.householdEmployee || care.receivedBenefits !== true)) throw new Error("Form 2441 employer-furnished source contradicts its required zero payment entry");
+    if (provider.identifierType === "employer_furnished" && (!paid.isZero() || provider.householdEmployee || (!result.form2441Benefits?.requiresForm2441 && care?.receivedBenefits !== true))) throw new Error("Form 2441 employer-furnished source contradicts its required zero payment entry");
     return { ...provider, paid };
   }).sort((a, b) => b.paid.comparedTo(a.paid));
-  const persons = care.qualifyingPersons.map(person => {
+  const persons = (care?.qualifyingPersons ?? []).map(person => {
     if (!person.firstName.trim() || !person.lastName.trim() || typeof person.over12Disabled !== "boolean"
       || typeof person.qualifyingPersonConfirmed !== "boolean" || !["tax_id", "died"].includes(person.identifierType)) throw new Error("Form 2441 qualifying-person source is incomplete");
     return { ...person, expenses: amount(person.qualifiedExpenses) };
   }).sort((a, b) => b.expenses.comparedTo(a.expenses));
   const total = persons.reduce((sum, person) => sum.plus(person.expenses), new Decimal(0));
-  if (care.excludedDependentCareBenefits === undefined || !total.eq(Decimal.max(0, amount(care.expenses).minus(amount(care.excludedDependentCareBenefits))))) throw new Error("Form 2441 person expense sources do not reconcile");
+  if (care) {
+    const actualNet = benefitFacts ? benefitFacts.qualifiedExpensesPaidForCredit : undefined;
+    if (benefitFacts ? actualNet === undefined || !total.eq(amount(actualNet))
+      : care.excludedDependentCareBenefits === undefined || !total.eq(Decimal.max(0, amount(care.expenses).minus(amount(care.excludedDependentCareBenefits))))) throw new Error("Form 2441 person expense sources do not reconcile");
+  }
   const providerId = (provider: typeof providers[number]) => ({ tin: provider.taxId ?? "", tax_exempt: "Tax-Exempt", foreign_no_us_tin: "LAFCP", employer_furnished: "", withheld: "See Attached Statement" })[provider.identifierType];
   const personId = (person: typeof persons[number]) => person.identifierType === "died" ? "Died" : person.taxId ?? "";
   const money = (value: Decimal) => value.isZero() ? "0" : formatCurrency(value);
@@ -170,7 +196,7 @@ async function fillSourceRecords(doc: PDFDocument, input: TaxYearInput): Promise
     setTextField(form, fields[2], personId(person)); setCheckBox(form, fields[3], person.over12Disabled);
     setTextField(form, fields[4], money(person.expenses));
   });
-  setCheckBox(form, F.studentOrDisabled, care.usesDeemedIncome);
+  setCheckBox(form, F.studentOrDisabled, care?.usesDeemedIncome === true || benefitFacts?.usesDeemedIncome === true);
   setCheckBox(form, F.moreProviders, providers.length > 3);
   setCheckBox(form, F.moreQualifyingPersons, persons.length > 3);
   const paragraphs = [
@@ -205,6 +231,34 @@ async function fillSourceRecords(doc: PDFDocument, input: TaxYearInput): Promise
   }
 }
 
+/** Validate persisted audits against actual sources; never fill missing lines from a recomputation. */
+function benefitAudits(input: TaxYearInput, result: TaxReturnResult): Map<string, Decimal> | undefined {
+  const benefits = result.form2441Benefits;
+  if (!benefits) {
+    if (input.dependentCareBenefits || input.dependentCare?.receivedBenefits === true) throw new Error("Form 2441 Part III requires its actual source-backed audit");
+    return undefined;
+  }
+  if (benefits.taxYear !== input.taxpayer.taxYear || benefits.sourceFactsVerified !== true || !input.dependentCareBenefits) throw new Error("Form 2441 Part III source audit and year must match");
+  const expected = calculateForm2441Benefits({ taxYear: input.taxpayer.taxYear, filingStatus: input.taxpayer.filingStatus, facts: input.dependentCareBenefits });
+  calculateDependentCareBenefitSources(input, expected);
+  const byLine = new Map<string, Decimal>();
+  const printed = new Set(benefitLineNumbers.map(String));
+  for (const line of benefits.lines) {
+    if (!printed.has(line.line)) continue;
+    if (line.form !== "Form 2441" || byLine.has(line.line) || !Decimal.isDecimal(line.value) || !line.value.isFinite()
+      || (!["18", "19", "23", "29"].includes(line.line) && line.value.isNegative())) throw new Error(`Form 2441 Part III requires a unique finite audit for line ${line.line}`);
+    byLine.set(line.line, line.value);
+  }
+  for (const line of expected.lines.filter(line => line.form === "Form 2441")) {
+    if (!byLine.get(line.line)?.eq(line.value)) throw new Error(`Form 2441 Part III audit ${line.line} is missing or contradicts its actual source`);
+  }
+  for (const key of ["alreadyIncludedInWages", "deductibleBenefits", "excludedBenefits", "taxableBenefits", "totalBenefitsApplied", "qualifyingCreditExpenses"] as const) {
+    if (!Decimal.isDecimal(benefits[key]) || !benefits[key].eq(expected[key])) throw new Error(`Form 2441 Part III audit disagrees with ${key}`);
+  }
+  if (benefits.requiresForm2441 !== expected.requiresForm2441 || benefits.treatedAsUnmarried !== expected.treatedAsUnmarried) throw new Error("Form 2441 Part III source eligibility flags disagree");
+  return byLine;
+}
+
 // ─── Fill Logic ────────────────────────────────────────────────────────────
 
 export async function fillForm2441(
@@ -216,11 +270,12 @@ export async function fillForm2441(
   const doc = await loadReviewTemplate(blankPdfPath, 2025);
   const form = doc.getForm();
   const f2441 = result.form2441;
-  if (!f2441) throw new Error("Form 2441 review requires its audited calculation");
+  const partIII = benefitAudits(input, result);
+  if (!f2441 && !partIII) throw new Error("Form 2441 review requires its audited calculation");
   const required = ["3", "4", "5", "6", "7", "8", "9a", "10", "11"];
   const printed = new Set([...required, "9b", "9c"]);
   const byLine = new Map<string, Decimal>();
-  for (const line of f2441.lines) {
+  for (const line of f2441?.lines ?? []) {
     if (!printed.has(line.line)) continue;
     if (line.form !== "Form 2441" || byLine.has(line.line) || !Decimal.isDecimal(line.value) || !line.value.isFinite()
       || (!["4", "5", "7"].includes(line.line) && line.value.isNegative())) {
@@ -228,17 +283,24 @@ export async function fillForm2441(
     }
     byLine.set(line.line, line.value);
   }
-  for (const line of required) if (!byLine.has(line)) throw new Error(`Form 2441 is missing audit line ${line}`);
+  if (f2441) for (const line of required) if (!byLine.has(line)) throw new Error(`Form 2441 is missing audit line ${line}`);
   if (byLine.has("9b") !== byLine.has("9c")) throw new Error("Form 2441 prior-year audit is incomplete");
-  for (const [line, total] of [["3", f2441.qualifyingExpenses], ["6", f2441.earnedIncomeLimit],
+  if (f2441) for (const [line, total] of [["3", f2441.qualifyingExpenses], ["6", f2441.earnedIncomeLimit],
     ["7", result.agi], ["8", f2441.creditPercentage], ["11", f2441.credit]] as const) {
     if (!byLine.get(line)?.eq(total)) throw new Error(`Form 2441 audit line ${line} disagrees with its calculated total`);
   }
-  if (input.dependentCare) {
+  if (input.dependentCare && f2441) {
     for (const [line, source] of [["4", input.dependentCare.primaryEarnedIncome],
       ["5", input.taxpayer.filingStatus === "married_filing_jointly" ? input.dependentCare.spouseEarnedIncome : input.dependentCare.primaryEarnedIncome]] as const) {
       if (source !== undefined && !byLine.get(line)?.eq(source)) throw new Error(`Form 2441 audit line ${line} contradicts the source income`);
     }
+  }
+
+  if (f2441 && partIII) {
+    const eligible = input.dependentCare?.eligibilityConfirmed !== false
+      && (input.taxpayer.filingStatus !== "married_filing_separately" || result.form2441Benefits?.treatedAsUnmarried === true);
+    const expectedExpenses = eligible ? partIII.get("31") : new Decimal(0);
+    if (!byLine.get("3")?.eq(expectedExpenses ?? "NaN")) throw new Error("Form 2441 Part II audit does not reconcile to the actual Part III handoff");
   }
 
   // ── Header ──
@@ -252,12 +314,24 @@ export async function fillForm2441(
   // not evidence of either spouse's actual earned income.
   for (const [line, field] of [["3", F.line3], ["4", F.line4], ["5", F.line5], ["6", F.line6],
     ["7", F.line7], ["9a", F.line9a], ["9b", F.line9b], ["9c", F.line9c], ["10", F.line10], ["11", F.line11]] as const) {
-    if ((line === "4" || line === "5") && !f2441.earnedIncomeFactsVerified) continue;
+    if ((line === "4" || line === "5") && !f2441?.earnedIncomeFactsVerified) continue;
     const value = byLine.get(line);
     if (value !== undefined) setTextField(form, field, value.isZero() ? "0" : formatCurrency(value));
   }
-  setTextField(form, F.line8decimal, f2441.creditPercentage.times(100).toFixed(0));
-  await fillSourceRecords(doc, input);
+  if (f2441) setTextField(form, F.line8decimal, f2441.creditPercentage.times(100).toFixed(0));
+  if (partIII) {
+    for (const line of benefitLineNumbers) {
+      if (line >= 27 && !f2441) continue;
+      if (line >= 30 && partIII.get("29")?.lte(0)) continue;
+      const value = partIII.get(String(line));
+      if (!value) throw new Error(`Form 2441 Part III is missing audit ${line}`);
+      setTextField(form, F[`line${line}`], value.isZero() ? "0" : formatCurrency(value));
+    }
+    const hasBusinessAmount = input.dependentCareBenefits?.selfEmployedBenefits?.some(source => new Decimal(source.benefitsReceived ?? "NaN").plus(source.priorYearCarryoverUsed ?? "NaN").gt(0)) === true;
+    setCheckBox(form, F.line22Yes, hasBusinessAmount); setCheckBox(form, F.line22No, !hasBusinessAmount);
+    setCheckBox(form, F.mfsException, input.taxpayer.filingStatus === "married_filing_separately" && result.form2441Benefits?.treatedAsUnmarried === true);
+  }
+  await fillSourceRecords(doc, input, result);
   await markReviewPdf(doc);
   return doc;
 }

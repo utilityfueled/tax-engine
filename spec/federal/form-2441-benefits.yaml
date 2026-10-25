@@ -23,6 +23,21 @@ notes: |
   signed losses and actual monthly deemed income/combat-pay elections. This
   source contract does not guess those worksheet facts from household wages.
 lines:
+  - line: "review-pdf-part-iii"
+    description: "2025 review fields use complete actual PartIII audits and source records"
+    formula: "Require unique finite correctly labeled audits12-31 and matching actual source calculation; copy the audited values to registered2025 fields. Preserve signed income, actual business yes/no, MFS and deemed-income answers. Never qualify a2026 form."
+    irsRef: "Final2025 Form2441 physical page2 and instructions"
+    testRef: "tests/pdf/fill-form-2441-benefits.test.ts::fills and reopens actual PartIII fields on a benefits-only return"
+  - line: "review-pdf-credit-stop"
+    description: "Review rendering follows the credit coordination and stop conditions"
+    formula: "Complete27-29 only for an actual PartII calculation; leave30-31 blank when29 is nonpositive, retaining actual prior-year expense credit separately. Without a PartII calculation, leave credit fields blank."
+    irsRef: "Form2441 lines27-31 and line9b exception"
+    testRef: "tests/pdf/fill-form-2441-benefits.test.ts::prints coordinated credit amounts once and obeys the nonpositive line29 stop"
+  - line: "review-pdf-benefits-attachment"
+    description: "Benefit-only returns retain their Form2441 review attachment and redacted identifiers"
+    formula: "Attach the actual PartIII result even when no credit exists; reject missing result/source/audit, preserve exact benefit amounts and remove provider identifiers only from the render copy."
+    irsRef: "Form2441 Purpose of Form; line26 to1040line1e"
+    testRef: "tests/pdf/fill-form-2441-benefits.test.ts::includes benefits-only review packets and redacts provider identifiers after calculation"
   - line: "guided-credit-coordination"
     description: "Actual benefits flow separately from the credit without a second expense reduction"
     formula: "Validate actual benefit sources and use PartIII line30 for per-person allocation; reconcile supplied legacy exclusion alias to line28, preserve omitted aliases, and permit benefit-only returns without fabricated PartII facts."

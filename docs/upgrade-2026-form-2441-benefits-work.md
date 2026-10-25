@@ -56,6 +56,7 @@ source facts. It does not establish independent tax approval or qualify a
   Part II uses actual net line 30 expenses without a second benefit reduction;
   a duplicate legacy exclusion amount must reconcile to line 28. Benefits-only
   returns preserve the separate source object without manufactured credit facts.
+  Guided source/UI commit: `a615453`.
 - [x] Five original guided red tests plus the additional credit-coordination red
   test precede helper integration. The stable broad guided/PDF run has 583 passing
   tests; four concurrent unemployment source tests were still red-first WIP owned
@@ -64,8 +65,20 @@ source facts. It does not establish independent tax approval or qualify a
   That index snapshot passes root types; the shared working tree passes root/web types,
   scoped lint (no errors), diff review and all 3,481 spec references pass.
   Logs use `.local/upgrade-evidence/guided-care-benefits-*`.
-- [ ] Part III review PDF mapping and a benefits-only attachment path, including
-  reopened physical fields, identifier redaction and rendered page review.
+- [x] Part III review PDF mapping copies validated, persisted audit lines 12–31
+  into the actual 2025 widgets, retains the line 29 stop rule and the separately
+  completed prior-year credit, and attaches benefits-only returns. Actual provider
+  records, source IDs/owners, W-2 Box 10 and business amounts must reconcile;
+  missing, duplicate, wrong-form, inconsistent or non-finite audits reject.
+  Benefits-only provider identifiers are redacted after calculation. The physical
+  year registry and review-only notices remain enforced.
+- [x] Six spec-first PDF tests initially failed; the final nine-file core/federal/
+  PDF run passed 99 tests. Root types, all 3,493 spec references, scoped lint and
+  diff checks passed. Reopened fields were checked, and four rendered pages
+  (benefits-only pages 1/2, coordinated credit page 2, stopped credit page 2)
+  were visually inspected: values, checkboxes, blanks and notices are readable
+  and correctly placed. Local logs/artifacts: `.local/upgrade-evidence/` with
+  prefixes `form-2441-benefits-pdf-*` and `care-benefits-*`.
 - [ ] Final 2026 forms and independent qualification evidence.
 
 ## Sources and decisions
