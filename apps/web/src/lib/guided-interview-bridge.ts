@@ -17,6 +17,7 @@ import { buildAdoptionInput, adoptionFactErrors } from "./guided-adoption-facts"
 import { allPaymentFactErrors, assertKnownFacts, deductionFactErrors, educationFactErrors, hasEnteredAmount, paymentFactErrors, retirementFactErrors } from "./guided-required-facts";
 import { adjustmentFactErrors, householdFactErrors, isDeductibleAlimony } from "./guided-adjustment-facts";
 import { statePaymentFactErrors, sumAdditionalStateWithholding } from "./guided-state-facts";
+import { buildCareBenefitsInput, careBenefitsFactErrors, guidedCareBenefitSources, type CareBenefitSource } from "./guided-dependent-care-benefits";
 import { careFactErrors } from "./guided-credit-facts";
 import { energyFactErrors } from "./guided-energy-facts";
 import { w2FactErrors } from "./guided-w2-facts";
@@ -147,6 +148,7 @@ export function buildW2Inputs(
       socialSecurityWithheld: toOptionalDecimalString(e.socialSecurityWithheld),
       medicareWages: toOptionalDecimalString(e.medicareWages),
       medicareWithheld: toOptionalDecimalString(e.medicareWithheld),
+      box10DependentCareBenefits: toOptionalDecimalString(e.box10DependentCareBenefits),
       stateWages: e.stateTaxReporting === "none" ? "0" : toOptionalDecimalString(e.stateWages),
       stateTaxWithheld: e.stateTaxReporting === "none" ? "0" : toOptionalDecimalString(e.stateWithheld),
       state: e.state?.trim().toUpperCase() || undefined,
@@ -202,6 +204,7 @@ export function buildScheduleCInput(
     qbiMateriallyParticipated: qbiMateriallyParticipated ?? undefined,
     expenses: expenses
       ? {
+          employeeBenefitPrograms: toOptionalDecimalString(expenses.employeeBenefitPrograms),
           contractLabor: toOptionalDecimalString(businessFacts?.contractLabor),
           depreciation: toOptionalDecimalString(businessFacts?.depreciation),
           legalAndProfessional: toOptionalDecimalString(businessFacts?.legalAndProfessional),
@@ -500,10 +503,10 @@ export function buildRentalPropertyInputs(entries: RentalPropertyEntryData[] | u
 
 // ── Credits converters ────────────────────────────────────────────────────
 
-export function buildDependentCareInput(creditsData: CreditsData | undefined) {
+export function buildDependentCareInput(creditsData: CreditsData | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, sources?: CareBenefitSource[]) {
   if (!creditsData) return undefined;
   const { dependentCare } = creditsData;
-  assertKnownFacts(careFactErrors(dependentCare));
+  assertKnownFacts(careFactErrors(dependentCare, filingStatus, { data: creditsData.dependentCareBenefits, year: taxYear, sources }));
   if (!hasEnteredAmount(dependentCare.expenses)) return undefined;
 
   const qualifyingIndividuals = Number.parseInt(dependentCare.qualifyingIndividuals, 10);
@@ -514,7 +517,7 @@ export function buildDependentCareInput(creditsData: CreditsData | undefined) {
     qualifyingIndividuals,
     primaryEarnedIncome: toDecimalString(dependentCare.primaryEarnedIncome),
     ...(hasEnteredAmount(dependentCare.spouseEarnedIncome) ? { spouseEarnedIncome: toDecimalString(dependentCare.spouseEarnedIncome) } : {}),
-    excludedDependentCareBenefits: toDecimalString(dependentCare.excludedDependentCareBenefits),
+    ...(hasEnteredAmount(dependentCare.excludedDependentCareBenefits) ? { excludedDependentCareBenefits: toDecimalString(dependentCare.excludedDependentCareBenefits) } : {}),
     eligibilityConfirmed: dependentCare.eligibilityConfirmed as boolean,
     priorYearExpenseCredit: toDecimalString(dependentCare.priorYearExpenseCredit),
     sourceFactsConfirmed: dependentCare.sourceFactsConfirmed as boolean,
@@ -610,6 +613,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
   const paymentData = sectionData["payments"] as PaymentData | undefined;
   const stateReturnData = sectionData["state-return"] as StateReturnData | undefined;
 
+  const careBenefitSources = guidedCareBenefitSources(w2Data?.entries, seData?.businessFacts, seData?.expenses);
   try {
     assertKnownFacts(w2FactErrors(w2Data?.entries, segmentation.filingStatus));
     assertKnownFacts(investmentFactErrors(investData, segmentation.filingStatus, state.taxYear, stateReturnData));
@@ -624,7 +628,8 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     assertKnownFacts(adjustmentFactErrors(adjustmentData, segmentation.filingStatus, state.taxYear));
     assertKnownFacts(householdFactErrors(otherTaxesData, state.taxYear));
     assertKnownFacts(statePaymentFactErrors(stateReturnData, state.taxYear, segmentation.stateCode));
-    assertKnownFacts(careFactErrors(creditsData?.dependentCare, segmentation.filingStatus));
+    assertKnownFacts(careBenefitsFactErrors(creditsData?.dependentCareBenefits, state.taxYear, segmentation.filingStatus, careBenefitSources));
+    assertKnownFacts(careFactErrors(creditsData?.dependentCare, segmentation.filingStatus, { data: creditsData?.dependentCareBenefits, year: state.taxYear, sources: careBenefitSources }));
     assertKnownFacts(energyFactErrors(creditsData?.energy, state.taxYear));
     assertKnownFacts(vehicleFactErrors(creditsData?.vehicles, state.taxYear, segmentation.filingStatus));
     assertKnownFacts(adoptionFactErrors(creditsData?.adoption, state.taxYear, segmentation.filingStatus));
@@ -657,7 +662,8 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     } : {}),
     ...(hasEnteredAmount(ira.spouseContributions) ? { spouseContributions: toDecimalString(ira.spouseContributions) } : {}),
   } : undefined;
-  const dependentCare = buildDependentCareInput(creditsData);
+  const dependentCare = buildDependentCareInput(creditsData, segmentation.filingStatus, state.taxYear, careBenefitSources);
+  const dependentCareBenefits = buildCareBenefitsInput(creditsData?.dependentCareBenefits, state.taxYear, segmentation.filingStatus, careBenefitSources);
   const educationExpenses = buildActualEducationInput(creditsData, state.taxYear, segmentation.filingStatus, personalInfo);
   const energyCredits = buildEnergyCreditsInput(creditsData);
   const scheduleH = buildScheduleHInput(otherTaxesData);
@@ -717,6 +723,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
       ...(hasEnteredAmount(personalInfo.childTaxCredit.nonTaxableCombatPayElection) ? { nonTaxableCombatPayElection: toDecimalString(personalInfo.childTaxCredit.nonTaxableCombatPayElection) } : {}),
     } : undefined,
     dependentCare,
+    dependentCareBenefits,
     standardDeductionFacts: buildStandardDeductionFacts(personalInfo?.standardDeductionFacts, segmentation.filingStatus, state.taxYear, personalInfo),
     formRRB1099,
     socialSecurityFacts: formSSA1099.length + formRRB1099.length ? { puertoRicoIncomeExclusion: toDecimalString(socialSecurityData?.puertoRicoIncomeExclusion), americanSamoaIncomeExclusion: toDecimalString(socialSecurityData?.americanSamoaIncomeExclusion), sourceFactsConfirmed: socialSecurityData?.sourceFactsConfirmed ?? undefined } : undefined,

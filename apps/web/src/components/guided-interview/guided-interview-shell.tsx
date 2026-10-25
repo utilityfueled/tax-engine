@@ -1,5 +1,6 @@
 "use client";
 
+import { guidedCareBenefitSources } from "@/lib/guided-dependent-care-benefits";
 import Decimal from "decimal.js";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ReturnWorkspaceRecord } from "@tax-engine/contracts";
@@ -613,6 +614,7 @@ function SectionContent({
       const depCount = Number(personalData?.dependentCount ?? "0");
       return (
         <SectionCredits
+          careBenefitSources={guidedCareBenefitSources(getSectionData(state, "income-w2")?.entries, getSectionData(state, "income-self-employment")?.businessFacts, getSectionData(state, "income-self-employment")?.expenses)}
           taxYear={state.taxYear}
           data={getSectionData(state, "credits")}
           hasDependents={depCount > 0}

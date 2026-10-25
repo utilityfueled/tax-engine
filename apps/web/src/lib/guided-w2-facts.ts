@@ -15,7 +15,7 @@ export function w2FactErrors(entries: W2EntryData[] | undefined, filingStatus?: 
     if (!/^\d{2}-?\d{7}$/.test(entry.employerEin.trim())) errors[`${prefix}-employerEin`] = "Enter the actual employer EIN from Box b.";
     if (filingStatus === "mfj" && !["primary", "spouse"].includes(entry.accountHolder ?? "")) errors[`${prefix}-accountHolder`] = "Identify whose W-2 this is on the joint return.";
     if (entry.accountHolder === "spouse" && filingStatus && filingStatus !== "mfj") errors[`${prefix}-accountHolder`] = "A spouse's W-2 belongs on a joint return or their own return.";
-    for (const [field, label] of [["wages", "Box 1 wages"], ["federalWithheld", "Box 2 withholding"], ["socialSecurityWages", "Box 3 Social Security wages"], ["socialSecurityWithheld", "Box 4 Social Security withholding"], ["medicareWages", "Box 5 Medicare wages"], ["medicareWithheld", "Box 6 Medicare withholding"], ["socialSecurityTips", "Box 7 Social Security tips"]] as const) {
+    for (const [field, label] of [["wages", "Box 1 wages"], ["federalWithheld", "Box 2 withholding"], ["socialSecurityWages", "Box 3 Social Security wages"], ["socialSecurityWithheld", "Box 4 Social Security withholding"], ["medicareWages", "Box 5 Medicare wages"], ["medicareWithheld", "Box 6 Medicare withholding"], ["socialSecurityTips", "Box 7 Social Security tips"], ["box10DependentCareBenefits", "Box 10 dependent-care benefits"]] as const) {
       const error = amountError(entry[field], label);
       if (error) errors[`${prefix}-${field}`] = error;
     }

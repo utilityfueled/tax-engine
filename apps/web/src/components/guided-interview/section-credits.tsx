@@ -12,6 +12,8 @@ import { EnergySourceDetails } from "./energy-source-details";
 import { VehicleSourceDetails } from "./vehicle-source-details";
 import { AdoptionSourceDetails } from "./adoption-source-details";
 import { EducationSourceDetails } from "./education-source-details";
+import { CareBenefitsDetails } from "./care-benefits-details";
+import type { CareBenefitSource } from "@/lib/guided-dependent-care-benefits";
 import { CareSourceDetails } from "./care-source-details";
 
 function EligibilityFact({ label, value, onChange }: { label: string; value: boolean | null | undefined; onChange: (value: boolean | null) => void }) {
@@ -22,8 +24,10 @@ function DependentCareSection({
   data,
   filingStatus,
   onChange,
+  hasBenefitFacts,
 }: {
   data: DependentCareData;
+  hasBenefitFacts?: boolean;
   filingStatus?: FilingStatus | null;
   onChange: (data: DependentCareData) => void;
 }) {
@@ -72,7 +76,7 @@ function DependentCareSection({
       <EligibilityFact label="Do the qualifying-person, work-related care and eligible-provider requirements in Form 2441 apply?" value={data.eligibilityConfirmed} onChange={(value) => onChange({ ...data, sourceFactsConfirmed: false, eligibilityConfirmed: value })} />
       <CurrencyField label="Your earned income for Form 2441 line 4" allowNegative hint="Use the worksheet amount after applicable self-employment adjustments, exclusions and substantiated student/incapacity rules." value={data.primaryEarnedIncome ?? ""} onChange={(value) => onChange({ ...data, sourceFactsConfirmed: false, primaryEarnedIncome: value })} />
       {filingStatus === "mfj" && <CurrencyField label="Spouse's earned income for Form 2441 line 5" allowNegative hint="Use your spouse's own worksheet amount, including substantiated deemed income where applicable. Enter 0 only when zero is established." value={data.spouseEarnedIncome ?? ""} onChange={(value) => onChange({ ...data, sourceFactsConfirmed: false, spouseEarnedIncome: value })} />}
-      <CurrencyField label="Excluded dependent-care benefits from Form 2441 Part III" hint="Use the amount determined excludable, not simply W-2 box 10. Confirm 0 when no benefits were excluded." value={data.excludedDependentCareBenefits ?? ""} onChange={(value) => onChange({ ...data, sourceFactsConfirmed: false, excludedDependentCareBenefits: value })} />
+      <CurrencyField label="Excluded dependent-care benefits from Form 2441 Part III" hint={hasBenefitFacts ? "Leave blank to use the validated Part III line 28 amount. If supplied, this amount must match it exactly." : "Confirm 0 when no benefits were received. Otherwise complete the actual dependent-care benefit details above."} value={data.excludedDependentCareBenefits ?? ""} onChange={(value) => onChange({ ...data, sourceFactsConfirmed: false, excludedDependentCareBenefits: value })} />
       <CareSourceDetails data={data} onChange={onChange} />
     </div>
   );
@@ -84,7 +88,9 @@ export function SectionCredits({
   filingStatus,
   taxYear,
   onDataChange,
+  careBenefitSources,
 }: {
+  careBenefitSources?: CareBenefitSource[];
   data: CreditsData | undefined;
   hasDependents: boolean;
   taxYear?: number | null;
@@ -110,7 +116,9 @@ export function SectionCredits({
         </p>
 
         <div className="guided-w2-stack" style={{ marginTop: "16px" }}>
+          <CareBenefitsDetails data={current.dependentCareBenefits} taxYear={taxYear} filingStatus={filingStatus} sources={careBenefitSources} careProviders={current.dependentCare.providers} onChange={dependentCareBenefits => onDataChange({ ...current, dependentCareBenefits })} />
           <DependentCareSection
+            hasBenefitFacts={current.dependentCareBenefits !== undefined}
             data={current.dependentCare}
             filingStatus={filingStatus}
             onChange={(next) => onDataChange({ ...current, dependentCare: next })}

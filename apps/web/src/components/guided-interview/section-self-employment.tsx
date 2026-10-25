@@ -161,6 +161,7 @@ function NecCard({
 }
 
 const expenseFields: { field: keyof ScheduleCExpenseData; label: string; hint?: string }[] = [
+  { field: "employeeBenefitPrograms", label: "Employee-benefit programs (Schedule C line 14)", hint: "Use the actual expense already reported, including any dependent-care plan deduction. Required when reconciling business care benefits." },
   { field: "advertising", label: "Advertising" },
   { field: "carAndTruck", label: "Car & truck expenses", hint: "Business use of your vehicle" },
   { field: "insurance", label: "Insurance (business)", hint: "Not health insurance — that goes under Adjustments" },
@@ -431,7 +432,7 @@ export function SectionSelfEmployment({
       expenses: {
         ...currentExpenses,
         [targetCategory]: addAmountToExpenseValue(
-          currentExpenses[targetCategory],
+          currentExpenses[targetCategory] ?? "",
           suggestion.amount,
         ),
       },
@@ -1137,7 +1138,7 @@ export function SectionSelfEmployment({
                   key={ef.field}
                   label={ef.label}
                   hint={ef.hint}
-                  value={currentExpenses[ef.field]}
+                  value={currentExpenses[ef.field] ?? ""}
                   onChange={(v) => updateExpense(ef.field, v)}
                 />
               ))}

@@ -1,7 +1,7 @@
 import { emptyPersonalInfo, emptyW2Entry, emptyNecEntry, emptyScheduleCExpenses, emptyInterestEntry, emptyDividendEntry, emptyCapitalGainTransaction, emptyRentalPropertyEntry, startInterview, type PersonalInfoData, type SegmentationAnswers, type DependentEntryData, type W2EntryData, type RentalPropertyEntryData } from "@/lib/guided-interview-flow";
 
 /** Explicit synthetic W-2 source facts; blank application fields stay unknown. */
-export const completeW2Entry: W2EntryData = { ...emptyW2Entry, employerName: "Synthetic Employer", employerEin: "12-3456789", accountHolder: "primary", wages: "0", federalWithheld: "0", socialSecurityWages: "0", socialSecurityTips: "0", socialSecurityWithheld: "0", medicareWages: "0", medicareWithheld: "0", stateTaxReporting: "none" };
+export const completeW2Entry: W2EntryData = { ...emptyW2Entry, employerName: "Synthetic Employer", employerEin: "12-3456789", accountHolder: "primary", wages: "0", federalWithheld: "0", socialSecurityWages: "0", socialSecurityTips: "0", socialSecurityWithheld: "0", medicareWages: "0", medicareWithheld: "0", box10DependentCareBenefits: "0", stateTaxReporting: "none" };
 
 /** Synthetic, explicitly supplied facts; never production defaults. */
 export const completePersonalInfo: PersonalInfoData = {

@@ -608,6 +608,9 @@ function W2Card({
             fieldClassName={entry.aiSuggestedFields?.socialSecurityTips?.status === "pending-confirmation" ? "guided-field-ai-pending" : entry.aiSuggestedFields?.socialSecurityTips?.status === "confirmed" ? "guided-field-ai-confirmed" : undefined}
             footer={<SuggestedFieldNotice suggestion={entry.aiSuggestedFields?.socialSecurityTips} availableSuggestions={availableSuggestions} onConfirm={() => onConfirmField("socialSecurityTips")} />}
           />
+          <CurrencyField label="Box 10 — Dependent-care benefits"
+            hint="Check the actual W-2. Enter 0 only if no benefits are reported. Positive amounts need the benefit details in Tax Credits."
+            value={entry.box10DependentCareBenefits ?? ""} onChange={value => onUpdate("box10DependentCareBenefits", value)} />
           <div className="guided-form-grid">
             <label className="guided-field">
               <span className="guided-field-label">State reporting on this W-2</span>

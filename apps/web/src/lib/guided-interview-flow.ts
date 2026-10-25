@@ -11,6 +11,7 @@ import { personalFactErrors } from "./guided-taxpayer-facts";
 import { allPaymentFactErrors, deductionFactErrors, educationFactErrors, retirementFactErrors } from "./guided-required-facts";
 import { adjustmentFactErrors, householdFactErrors } from "./guided-adjustment-facts";
 import { statePaymentFactErrors } from "./guided-state-facts";
+import { careBenefitsFactErrors, guidedCareBenefitSources, type CareBenefitsData } from "./guided-dependent-care-benefits";
 import { careFactErrors } from "./guided-credit-facts";
 import { energyFactErrors } from "./guided-energy-facts";
 import { isStartedW2, w2FactErrors } from "./guided-w2-facts";
@@ -544,6 +545,7 @@ export const emptyPersonalInfo: PersonalInfoData = {
 };
 
 export interface W2EntryData {
+  box10DependentCareBenefits?: string;
   accountHolder?: "primary" | "spouse" | "";
   stateTaxReporting?: "none" | "single" | "multiple" | "";
   state?: string;
@@ -640,6 +642,7 @@ export const emptyNecEntry: NecEntryData = {
 };
 
 export interface ScheduleCExpenseData {
+  employeeBenefitPrograms?: string;
   advertising: string;
   carAndTruck: string;
   insurance: string;
@@ -1067,6 +1070,7 @@ export const emptyEnergyCreditData: EnergyCreditData = {
 
 export interface CreditsData {
   dependentCare: DependentCareData;
+  dependentCareBenefits?: CareBenefitsData;
   education: EducationCreditData;
   energy: EnergyCreditData;
   vehicles?: VehicleCreditData;
@@ -1396,11 +1400,15 @@ export function updateSectionData(
   sectionId: string,
   data: unknown,
 ): GuidedFlowState {
+  const credits = state.sectionData.credits;
+  const benefitSourcesChanged = (sectionId === "income-w2" || sectionId === "income-self-employment") && credits?.dependentCareBenefits;
   return {
     ...state,
     sectionData: {
       ...state.sectionData,
       [sectionId]: data,
+      ...(benefitSourcesChanged ? { credits: { ...credits, dependentCareBenefits: { ...credits.dependentCareBenefits,
+        sourceFactsConfirmed: null, earnedIncomeWorksheetConfirmed: null, creditExpenseCoordinationConfirmed: null } } } : {}),
     },
   };
 }
@@ -1733,8 +1741,18 @@ export function validateSection(
       return validateDeductionsSection(getSectionData(state, "deductions"), state.taxYear, nonW2TaxAllocationErrors(state), state.segmentation.filingStatus);
     case "adjustments":
       return validateAdjustmentsSection(getSectionData(state, "adjustments"), state.segmentation.filingStatus, state.taxYear);
-    case "credits":
-      return validateRequiredFacts({ ...educationFactErrors(getSectionData(state, "credits"), state.taxYear, state.segmentation.filingStatus, getSectionData(state, "personal-info")), ...careFactErrors(getSectionData(state, "credits")?.dependentCare, state.segmentation.filingStatus), ...energyFactErrors(getSectionData(state, "credits")?.energy, state.taxYear), ...vehicleFactErrors(getSectionData(state, "credits")?.vehicles, state.taxYear, state.segmentation.filingStatus), ...adoptionFactErrors(getSectionData(state, "credits")?.adoption, state.taxYear, state.segmentation.filingStatus) });
+    case "credits": {
+      const credits = getSectionData(state, "credits");
+      const sources = guidedCareBenefitSources(getSectionData(state, "income-w2")?.entries, getSectionData(state, "income-self-employment")?.businessFacts, getSectionData(state, "income-self-employment")?.expenses);
+      return validateRequiredFacts({
+        ...educationFactErrors(credits, state.taxYear, state.segmentation.filingStatus, getSectionData(state, "personal-info")),
+        ...careBenefitsFactErrors(credits?.dependentCareBenefits, state.taxYear, state.segmentation.filingStatus, sources),
+        ...careFactErrors(credits?.dependentCare, state.segmentation.filingStatus, { data: credits?.dependentCareBenefits, year: state.taxYear, sources }),
+        ...energyFactErrors(credits?.energy, state.taxYear),
+        ...vehicleFactErrors(credits?.vehicles, state.taxYear, state.segmentation.filingStatus),
+        ...adoptionFactErrors(credits?.adoption, state.taxYear, state.segmentation.filingStatus),
+      });
+    }
     case "other-taxes":
       return validateRequiredFacts(householdFactErrors(getSectionData(state, "other-taxes"), state.taxYear));
     case "payments":

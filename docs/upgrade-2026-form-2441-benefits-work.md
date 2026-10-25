@@ -40,11 +40,32 @@ source facts. It does not establish independent tax approval or qualify a
   zero. Federal integration applies allocated line 24 less that actual prior
   deduction, retaining an addback when books over-deducted the benefits.
   Optional provider records and deemed-income status support benefits-only
-  Part I without manufacturing a Part II credit claim.
-- [ ] Federal source binding, line 1e, activity deductions, QBI and credit
-  coordination: federal agent owns orchestration after the stable core commit.
-- [ ] Guided actual-source collection, source-to-document/activity links and
-  Part III review PDF mapping, with a benefits-only attachment path.
+  Part I without manufacturing a Part II credit claim. Source commit: `ebcb1bf`.
+- [x] Federal source binding, line 1e, actual C14/F15 deductions, SE/QBI and
+  credit coordination are in `5fb2f7e` (federal agent). The early result retains
+  benefits-only calculations and source binding rejects unmatched W-2 Box 10.
+  Schedule E activity attribution remains blocked pending its additional actual
+  self-employment/passive/QBI source contract; it is not guessed.
+- [x] Guided entry preserves actual W-2 Box 10, exact benefit amounts, owners,
+  actual source indices, incurred versus paid expenses, plan limits, separate
+  signed earned-income worksheets, actual MFS/survivor answers and provider
+  records. The business branch binds to an actual Schedule C activity and its
+  reported employee-benefit program expense; missing source amounts remain
+  unknown. Explicit empty source/expense-allocation arrays require user actions.
+  Editing benefit records or source W-2/business data clears confirmations.
+  Part II uses actual net line 30 expenses without a second benefit reduction;
+  a duplicate legacy exclusion amount must reconcile to line 28. Benefits-only
+  returns preserve the separate source object without manufactured credit facts.
+- [x] Five original guided red tests plus the additional credit-coordination red
+  test precede helper integration. The stable broad guided/PDF run has 583 passing
+  tests; four concurrent unemployment source tests were still red-first WIP owned
+  by the facts agent. Final care-only six-file run has 38 passing tests, including survivor
+  interactions, also passing from an isolated export of the exact staged index.
+  That index snapshot passes root types; the shared working tree passes root/web types,
+  scoped lint (no errors), diff review and all 3,481 spec references pass.
+  Logs use `.local/upgrade-evidence/guided-care-benefits-*`.
+- [ ] Part III review PDF mapping and a benefits-only attachment path, including
+  reopened physical fields, identifier redaction and rendered page review.
 - [ ] Final 2026 forms and independent qualification evidence.
 
 ## Sources and decisions

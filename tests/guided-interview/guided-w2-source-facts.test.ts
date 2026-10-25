@@ -5,7 +5,7 @@ import { emptyW2Entry, startInterview, validateSection, type W2EntryData } from 
 import { completePersonalInfo } from "./complete-facts";
 import { computeGuidedPreview } from "@/lib/guided-preview-compute";
 
-const completeW2: W2EntryData = { ...emptyW2Entry, employerName: "Actual Employer", employerEin: "12-3456789", accountHolder: "spouse", wages: "9007199254740993.01", federalWithheld: "0", socialSecurityWages: "0", socialSecurityTips: "0", socialSecurityWithheld: "0", medicareWages: "0", medicareWithheld: "0", stateTaxReporting: "single", state: "NY", stateWages: "0.01", stateWithheld: "0" };
+const completeW2: W2EntryData = { ...emptyW2Entry, employerName: "Actual Employer", employerEin: "12-3456789", accountHolder: "spouse", wages: "9007199254740993.01", federalWithheld: "0", socialSecurityWages: "0", socialSecurityTips: "0", socialSecurityWithheld: "0", medicareWages: "0", medicareWithheld: "0", box10DependentCareBenefits: "0", stateTaxReporting: "single", state: "NY", stateWages: "0.01", stateWithheld: "0" };
 function flow(entry: W2EntryData = completeW2) {
   const state = startInterview({ filingStatus: "mfj", incomeTypes: ["w2-wages"], lifeEvents: [], stateCode: "OH" }, 2025);
   state.sectionData["personal-info"] = structuredClone(completePersonalInfo);

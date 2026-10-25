@@ -65,6 +65,7 @@ export function businessFactErrors(data: SelfEmploymentSectionData | undefined, 
   for (const field of ["singleBusinessConfirmed", "incomeReconciled", "expensesReconciled"] as const) if (facts[field] !== true) errors[field] = field === "singleBusinessConfirmed" ? "This interview supports one actual business activity; separate activities cannot be combined." : "Review and reconcile the actual source amounts before calculating.";
   for (const [field, label] of businessSourceAmounts) { const error = amountError(facts[field], label); if (error) errors[field] = error; }
   const manualError = amountError(data.manualGrossReceipts, "gross receipts not already included on Forms 1099-NEC"); if (manualError) errors.manualGrossReceipts = manualError;
+  if (hasEnteredAmount(data.expenses.employeeBenefitPrograms)) { const error = amountError(data.expenses.employeeBenefitPrograms, "actual employee-benefit program expense"); if (error) errors.employeeBenefitPrograms = error; }
   for (const field of expenseCategories) { const error = amountError(data.expenses[field], `${field} business expenses`); if (error) errors[`expense-${field}`] = error; }
   for (const field of ["isSST", "allInvestmentAtRisk", "additionalWorksheetRequired"] as const) if (typeof facts[field] !== "boolean") errors[field] = "Answer this business qualification from the actual facts.";
   if (typeof data.qbiMateriallyParticipated !== "boolean") errors.materialParticipation = "Confirm actual material participation under the section 469 rules.";
