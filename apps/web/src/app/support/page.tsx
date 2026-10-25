@@ -1,16 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { taxYearSupportRows } from "@/lib/tax-year-support";
 
 export const metadata: Metadata = { title: "Year and scenario support" };
-
-const rows = [
-  ["2025", "Federal", "Complete taxpayer, spouse and dependent facts required", "Existing Form 1040 calculation paths; scenario review incomplete", "Experimental calculations, JSON bundle, limited review PDF", "Unavailable"],
-  ["2025", "CA, NY, NJ, IL, PA, OH", "Resident, part-year and nonresident coverage differs by engine; unqualified", "Dedicated state calculations; conformity, local taxes and forms still need review", "Experimental previews and reference output where implemented", "Unavailable"],
-  ["2025", "Other states and DC", "Unqualified", "Generic calculations or no general income-tax path; special taxes may be missing", "Experimental preview where implemented", "Unavailable"],
-  ["2026", "Federal", "All residency scenarios unqualified", "Partial indexed rule data only; remaining law and forms pending", "Save guided facts; calculation and PDF unavailable", "Unavailable"],
-  ["2026", "All states and DC", "All residency scenarios unqualified", "Conformity, scenarios and forms pending", "Save facts; calculation and PDF unavailable", "Unavailable"],
-  ["Other years", "All jurisdictions", "Unsupported", "No implicit fallback to another year", "Calculation and PDF unavailable", "Unavailable"],
-];
 
 export default function SupportPage() {
   return (
@@ -24,10 +16,11 @@ export default function SupportPage() {
         <table>
           <caption>Support status as of October 24, 2026</caption>
           <thead><tr>{["Tax year", "Jurisdiction", "Residency and facts", "Forms and scenarios", "Available output", "Filing / e-file"].map(label => <th key={label} scope="col">{label}</th>)}</tr></thead>
-          <tbody>{rows.map(row => <tr key={`${row[0]}-${row[1]}`}>{row.map((cell, index) => index === 0
+          <tbody>{taxYearSupportRows.map(row => <tr key={`${row[0]}-${row[1]}`}>{row.map((cell, index) => index === 0
             ? <th key={index} scope="row">{cell}</th> : <td key={index}>{cell}</td>)}</tr>)}</tbody>
         </table>
-        <p>A document parser, a passing test or a dedicated state engine does not qualify a return for filing. Review PDFs omit taxpayer IDs and are marked for review only.</p>
+        <p>A document parser, a passing test or a dedicated state engine does not qualify a return for filing. Review PDFs omit taxpayer Social Security numbers and are marked for review only.</p>
+        <p>Calculation components may require structured inputs that the guided interview does not yet collect. Encrypted local backups preserve browser-only facts and original documents; review downloads do not replace a backup.</p>
         <p>Enabling a scenario requires reviewed year-specific rules, complete facts, independent expected results and qualified final forms. State selection for the first filing release is pending.</p>
       </section>
     </div>
