@@ -3,7 +3,8 @@ import { taxpayerFacts2025 } from './guided-fixtures';
 import { guidedOrdinaryCreditFixture } from '../../../tests/fixtures/guided-foreign-tax-ordinary';
 
 for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 }]) {
-  test(`preserves actual ordinary credit sources and confirmation at ${viewport.width}px`, async ({ page }, testInfo) => {
+  test.describe(`Ordinary credit at ${viewport.width}px`, () => {
+  test('preserves actual ordinary credit sources and confirmation', async ({ page }, testInfo) => {
     await page.setViewportSize(viewport);
     const requests: string[] = []; page.on('request', request => requests.push(request.postData() ?? ''));
     await page.goto('/returns/new');
@@ -47,5 +48,6 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
     await page.screenshot({ path: testInfo.outputPath(`foreign-ordinary-${viewport.width}.png`) });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     for (const value of ['synthetic-private-ordinary-credit-reference', 'Private synthetic account A', '112233445', taxpayerFacts2025.ssn]) expect(requests.join('\n')).not.toContain(value);
+  });
   });
 }

@@ -40,4 +40,4 @@ lines:
   - line: "persistence"
     description: "Actual issuer history persists locally on desktop and mobile"
     formula: "Exact issuer amounts and original source identity survive reload; unknown and confirmation changes persist; private sources and taxpayer ID stay out of request bodies"
-    testRef: "apps/web/tests/guided-qsbs-sources.spec.ts::preserves actual QSBS issuer history at"
+    testRef: "apps/web/tests/guided-qsbs-sources.spec.ts::preserves actual QSBS issuer history"

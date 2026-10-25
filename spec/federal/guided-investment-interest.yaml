@@ -45,4 +45,4 @@ lines:
   - line: "persistence"
     description: "Separate source worksheets survive reopening without private network payloads"
     formula: "Actual signed regular sources and distinct AMT amounts persist; confirming a child does not insert unrelated blank source records or absent optional arrays, so child and worksheet confirmations complete without cycles; clearing remains unknown; desktop/mobile requests omit private source reference and taxpayer IDs"
-    testRef: "apps/web/tests/guided-investment-interest.spec.ts::preserves separate regular and AMT investment sources at"
+    testRef: "apps/web/tests/guided-investment-interest.spec.ts::preserves separate regular and AMT investment sources"

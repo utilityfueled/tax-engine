@@ -43,4 +43,4 @@ lines:
   - line: "persistence"
     description: "Actual loss sources survive desktop and mobile reopening"
     formula: "Edited source history, exact opening balances and independent AMT sources persist; unknown stays blank and confirmations can complete without cycles; private source references and taxpayer ID stay out of request bodies"
-    testRef: "apps/web/tests/guided-net-operating-loss.spec.ts::preserves independent NOL histories at"
+    testRef: "apps/web/tests/guided-net-operating-loss.spec.ts::preserves independent NOL histories"

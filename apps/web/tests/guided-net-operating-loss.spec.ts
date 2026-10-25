@@ -5,7 +5,8 @@ const personalFacts = { ...taxpayerFacts2025, firstName: 'Jordan', ssn: '111-22-
 const w2Facts = { employerName: 'Synthetic NOL Employer', employerEin: '12-3456789', accountHolder: 'primary', wages: '100000', federalWithheld: '0', socialSecurityWages: '0', socialSecurityTips: '0', socialSecurityWithheld: '0', medicareWages: '0', medicareWithheld: '0', box10DependentCareBenefits: '0', box12CodeW: '0', stateTaxReporting: 'none' };
 
 for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 }]) {
-  test(`preserves independent NOL histories at ${viewport.width}px`, async ({ page }, testInfo) => {
+  test.describe(`NOL histories at ${viewport.width}px`, () => {
+  test('preserves independent NOL histories', async ({ page }, testInfo) => {
     await page.setViewportSize(viewport);
     const requests: string[] = []; page.on('request', request => requests.push(request.postData() ?? ''));
     await page.goto('/returns/new');
@@ -42,5 +43,6 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
     await page.screenshot({ path: testInfo.outputPath(`nol-history-${viewport.width}.png`) });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     for (const value of ['synthetic-private-nol-source', personalFacts.ssn]) expect(requests.join('\n')).not.toContain(value);
+  });
   });
 }

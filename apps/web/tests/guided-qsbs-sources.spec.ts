@@ -4,7 +4,8 @@ import { actualGuidedQsbs } from '../../../tests/fixtures/guided-qsbs';
 import { actualGuidedScheduleD } from '../../../tests/fixtures/guided-schedule-d-sources';
 
 for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 }]) {
-  test(`preserves actual QSBS issuer history at ${viewport.width}px`, async ({ page }, testInfo) => {
+  test.describe(`QSBS sources at ${viewport.width}px`, () => {
+  test('preserves actual QSBS issuer history', async ({ page }, testInfo) => {
     await page.setViewportSize(viewport);
     const requests: string[] = []; page.on('request', request => requests.push(request.postData() ?? ''));
     await page.goto('/returns/new');
@@ -48,5 +49,6 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
     await assets.scrollIntoViewIfNeeded(); await page.screenshot({ path: testInfo.outputPath(`qsbs-history-${viewport.width}.png`) });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     for (const value of ['synthetic-private-qsbs-packet', 'synthetic-private-prior-issuer', personal.ssn]) expect(requests.join('\n')).not.toContain(value);
+  });
   });
 }

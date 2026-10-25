@@ -3,7 +3,8 @@ import { taxpayerFacts2025 } from './guided-fixtures';
 import { actualInvestmentInterestSources, investmentInterestChild } from '../../../tests/fixtures/guided-investment-interest';
 
 for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 }]) {
-  test(`preserves separate regular and AMT investment sources at ${viewport.width}px`, async ({ page }, testInfo) => {
+  test.describe(`Investment interest at ${viewport.width}px`, () => {
+  test('preserves separate regular and AMT investment sources', async ({ page }, testInfo) => {
     await page.setViewportSize(viewport);
     const requests: string[] = []; page.on('request', request => requests.push(request.postData() ?? ''));
     await page.goto('/returns/new');
@@ -51,5 +52,6 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
     await page.screenshot({ path: testInfo.outputPath(`investment-interest-${viewport.width}.png`) });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     for (const value of ['synthetic-private-interest-source', investmentInterestChild.ssn, taxpayerFacts2025.ssn]) expect(requests.join('\n')).not.toContain(value);
+  });
   });
 }
