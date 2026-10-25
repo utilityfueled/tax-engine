@@ -170,7 +170,9 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   const marketplace = input.form7206?.plans?.some(plan => plan.marketplaceCoverage === true && plan.premiumTaxCreditInvolved === true);
   if (!marketplace) return calculateFederalTaxCore(input);
   if (![2025,2026].includes(input.taxpayer.taxYear)) throw new Error("Marketplace health coordination supports actual2025 and2026 sources.");
-  const kinds: MarketplaceOrderedKind[] = [];
+  // Discover the passive special method from actual Form8582 PartI in the first
+  // canonical pass; do not infer its net-loss condition from raw property signs.
+  const kinds: MarketplaceOrderedKind[] = ["passive"];
   if (d(input.adjustments?.iraDeduction).gt(0) && !input.iraDeductionWorksheet) throw new Error("Pub974 ordered IRA claims require actual contribution and participation sources.");
   if (input.iraDeductionWorksheet && (input.iraDeductionWorksheet.primaryIsActiveParticipant || input.iraDeductionWorksheet.spouseIsActiveParticipant)) kinds.push("ira");
   if ((input.savingsBondRedemptions?.length ?? 0) > 0) kinds.push("bond");
@@ -182,10 +184,12 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   let historicalLimit: MarketplaceHealthLimitResult | undefined;
   if (input.taxpayer.taxYear === 2025) {
     const initial = calculateFederalTaxCore(input, { stage: "worksheet-w", ordered });
+    if (!initial.passiveSpecialRequired) kinds.splice(kinds.indexOf("passive"), 1);
     historicalLimit = calculateMarketplaceHealthLimit({ taxYear: 2025, filingStatus: input.taxpayer.filingStatus, groups: initial.groups,
       householdIncomeAfterW: initial.credit.canonicalTaxpayerModifiedAGI.plus(d(input.form8962?.requiredFilingDependentsModifiedAGI)), federalPovertyLine: initial.credit.federalPovertyLine });
   }
   let intermediate = calculateFederalTaxCore(input, { stage: "maximum", historicalLimit, ordered, orderedDeductionInterim: kinds.length > 0 });
+  if (kinds.includes("passive") && !intermediate.passiveSpecialRequired) kinds.splice(kinds.indexOf("passive"), 1);
   let deduction = calculateMarketplaceHealthDeduction({ input, groups: intermediate.groups, credit: intermediate.credit, historicalLimit });
   const orderedAmounts: { kind: MarketplaceOrderedKind; amount: Decimal }[] = [];
   const orderedAudit = new AuditTrail();
@@ -196,7 +200,8 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     const value = next.deductions[kind];
     if (!value) throw new Error(`Pub974 actual ordered ${kind} worksheet is incomplete.`);
     ordered = { ...ordered, [kind]: value };
-    const amount = kind === "ira" ? next.deductions.ira?.totalDeduction
+    const amount = kind === "passive" ? next.deductions.passive?.allowedLoss
+      : kind === "ira" ? next.deductions.ira?.totalDeduction
       : kind === "bond" ? next.deductions.bond?.excludableSavingsBondInterest : next.deductions.studentLoan?.result.deduction;
     if (!amount || !amount.isFinite() || amount.lt(0)) throw new Error("Pub974 ordered deduction must be finite and nonnegative.");
     orderedAmounts.push({ kind, amount });
@@ -228,10 +233,11 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   return result;
 }
 
-type MarketplaceOrderedKind = "ira" | "bond" | "studentLoan";
+type MarketplaceOrderedKind = "passive" | "ira" | "bond" | "studentLoan";
 interface MarketplaceOrderedState {
   kinds: MarketplaceOrderedKind[];
   calculating?: MarketplaceOrderedKind;
+  passive?: ReturnType<typeof calculateForm8582>;
   ira?: NonNullable<TaxReturnResult["iraDeductionWorksheet"]>;
   bond?: Form8815Result;
   studentLoan?: { result: ReturnType<typeof calculateStudentLoanInterestDeduction>; modifiedAgi: Decimal };
@@ -239,6 +245,7 @@ interface MarketplaceOrderedState {
 type MarketplaceContext = ({ stage: "worksheet-w" } | { stage: "maximum"; historicalLimit?: MarketplaceHealthLimitResult }
   | { stage: "ordered" | "final"; deduction: MarketplaceHealthDeductionResult }) & { ordered?: MarketplaceOrderedState; orderedDeductionInterim?: boolean };
 interface MarketplaceInterim {
+  passiveSpecialRequired: boolean;
   groups: MarketplaceHealthPremiumGroup[];
   credit: ReturnType<typeof calculatePremiumTaxCreditReturn>;
   deductions: Omit<MarketplaceOrderedState, "kinds" | "calculating">;
@@ -1853,7 +1860,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     .plus(sched1.iraDeduction).plus(sched1.studentLoanInterest).plus(schedSE.deductibleHalf)
     .plus(adoptionBenefitResult?.allowableExclusion ?? new Decimal(0));
 
-  const form8582 = calculateForm8582({
+  const calculatedForm8582 = calculateForm8582({
     activities: passiveActivities,
     agi: form8582MAGI,
     filingStatus,
@@ -1869,7 +1876,14 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       amount: d(s.amount),
     })),
   });
-  if (marketplace && form8582.netRental.lt(0) && form8582.combinedLoss.lt(0)) throw new Error("Pub974 ordered special passive-loss deductions require their separate coordination.");
+  const passiveSpecialRequired = calculatedForm8582.netRental.lt(0) && calculatedForm8582.combinedLoss.lt(0);
+  if (marketplace && passiveSpecialRequired && (k1PassiveCount > 0 || eblSources !== undefined)) {
+    throw new Error("Pub974 passive ordering requires separate actual K1 participation, disposition or business-loss source coordination.");
+  }
+  const form8582 = ordered?.passive ?? calculatedForm8582;
+  // The first W/X/Simplified pass excludes losses, retaining positive rental
+  // income. Subsequent passes use the allowance fixed at preceding Step3.
+  const passiveLossForIncome = passiveSpecialRequired && !calculateOrdered("passive") ? new Decimal(0) : form8582.allowedLoss;
   audit.merge(form8582.lines);
 
   // Transfer all regular allowed current/prior losses once. The preliminary
@@ -1877,7 +1891,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   // A signed replacement handles both suspended current losses and released
   // prior losses, including activities whose current income is positive.
   const allowedPassiveIncome = form8582.rentalIncome.plus(form8582.passiveIncome)
-    .minus(form8582.allowedLoss).plus(currentPtpIncome);
+    .minus(passiveLossForIncome).plus(currentPtpIncome);
   const passiveIncomeAdjustment = allowedPassiveIncome.minus(preliminaryPassiveIncome);
   // ── PTP disposition: released losses reduce AGI (IRC §469(g)(1)) ──
   // When a PTP is fully disposed of in a taxable transaction, accumulated
@@ -2146,8 +2160,10 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     if (sum(d(input.priorYear?.nolCarryforward), d(input.priorYear?.excessBusinessLossNOL), k1Form1041FinalNOL).gt(0)) throw new Error("Pub974 NOL coordination requires the actual circular taxable-income worksheet.");
     const credit = calculatePremiumTaxCreditReturn({ input, agi, taxExemptInterest,
       foreignIncomeReduction: form2555IncomeReduction, foreignHousingDeduction: form2555HousingDeduction,
-      socialSecurityBenefitsGross, socialSecurityBenefitsTaxable }, { method: year === 2025 ? "pub974-simplified-2025" : "pub974-simplified-2026", stage: marketplace.stage, orderedDeductionInterim: marketplace.orderedDeductionInterim });
-    return { groups: actualHealthInsurance.marketplacePremiums.groups, credit, deductions: { ira: iraDeductionWorksheetResult, bond: form8815,
+      socialSecurityBenefitsGross, socialSecurityBenefitsTaxable }, { method: year === 2025 ? "pub974-simplified-2025" : "pub974-simplified-2026", stage: marketplace.stage, orderedDeductionInterim: marketplace.orderedDeductionInterim
+        && (passiveSpecialRequired || ordered?.kinds.some(kind => kind !== "passive")) });
+    return { passiveSpecialRequired, groups: actualHealthInsurance.marketplacePremiums.groups, credit,
+      deductions: { passive: passiveSpecialRequired && calculateOrdered("passive") ? form8582 : undefined, ira: iraDeductionWorksheetResult, bond: form8815,
       studentLoan: studentLoanInterestWorksheetResult && studentLoanWorksheetMagi ? { result: studentLoanInterestWorksheetResult, modifiedAgi: studentLoanWorksheetMagi } : undefined } };
   }
 
