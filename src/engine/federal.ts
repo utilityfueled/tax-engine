@@ -2449,7 +2449,10 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   // before the saver's credit limitation on Form 8880 Line 11 is applied.
   const form6251 = calculateForm6251(
     {
-      taxableIncome,
+      // Form 6251 starts from AGI less deductions even when Form 1040 floors at zero.
+      taxableIncome: rawTaxableIncome.minus(nolDeduction),
+      standardDeductionAmount: deductionUsed === "standard" ? deductionAmount : d("0"),
+      seniorDeduction: schedule1A?.seniorDeduction,
       saltDeduction: schedA.saltDeduction,
       depletionAdjustment: k1AmtDepletion,
       dispositionAdjustment: k1AmtDisposition,

@@ -71,8 +71,10 @@ describe("Form 8801 packet reference summary", () => {
       "2500",
       "5500",
       "37067",
-      "24999",
-      "12068",
+      // 2025 TMT: (200,000 AMTI - 88,100 exemption) × 26% = 29,094.
+      "29094",
+      // Regular tax 37,067 - TMT 29,094 = 7,973 current-year limitation.
+      "7973",
       "5500",
       "0",
     ]);

@@ -199,3 +199,19 @@ Remaining implementation work: existing historical NOL application changes AGI
 only after deductions, so 2026 NOL coordination explicitly rejects until a correct
 joint calculation is implemented. Existing standard-deduction and senior AMT
 addbacks were also identified for a separate corrective package. No gate opened.
+
+## Correction: standard and enhanced senior AMT addbacks
+
+The refreshed 2025 Form 6251 instructions expressly add back the selected
+standard deduction and Schedule 1-A senior deduction. Federal orchestration now
+passes those actual amounts separately from K-1 preferences, with distinct audit
+entries. AMTI starts with AGI less deductions before Form 1040's zero floor so
+low-income returns do not overstate AMTI when adding deductions back. Other
+Schedule 1-A deductions remain allowed. The 2025 rule version advances to 2025.5.
+
+Four regressions included three red-first failures. 641 federal/AMT/Schedule
+1-A tests and three Form 8801 packet tests pass; engine typecheck and spec
+validation pass. The affected PDF expectation was independently recomputed:
+($200,000 AMTI - $88,100 exemption) × 26% = $29,094 TMT; $37,067 regular tax less
+$29,094 gives the $7,973 credit limit. Scoped diff reviewed. This is a code
+correction, not independent tax-law or return qualification evidence.

@@ -14,7 +14,9 @@ import { min, roundDollar, zeroFloor } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
 
 export interface Form6251Input {
-  taxableIncome: Decimal; // Line 1: From 1040 Line 15
+  taxableIncome: Decimal; // AGI less deductions before the 1040 zero floor
+  standardDeductionAmount?: Decimal; // Actual standard deduction selected on Form 1040
+  seniorDeduction?: Decimal; // Schedule 1-A line 37; personal exemption for AMT
   saltDeduction: Decimal; // Line 2a: SALT claimed on Sched A (add back)
   depletionAdjustment?: Decimal; // Line 2c: Depletion (excess over adjusted basis)
   dispositionAdjustment?: Decimal; // Line 2k: Adjusted gain/loss on property dispositions
@@ -53,12 +55,16 @@ export function calculateForm6251(
 
   // Line 1: Taxable income
   audit.record("Form 6251", "1", "Taxable income", input.taxableIncome,
-    "From 1040 Line 15");
+    "AGI less deductions, before the Form 1040 zero floor");
 
   // Line 2a: SALT add-back (only if itemizing)
   const saltAddBack = input.isItemizing ? input.saltDeduction : new Decimal(0);
   audit.record("Form 6251", "2a", "SALT add-back", saltAddBack,
     "State/local tax deduction added back for AMT");
+  const standardAddBack = input.isItemizing ? new Decimal(0) : input.standardDeductionAmount ?? new Decimal(0);
+  const seniorAddBack = input.seniorDeduction ?? new Decimal(0);
+  if (!standardAddBack.isZero()) audit.record("Form 6251", "2a-standard", "Standard deduction add-back", standardAddBack, "Actual Form 1040 standard deduction is not allowed for AMT");
+  if (!seniorAddBack.isZero()) audit.record("Form 6251", "1-senior", "Enhanced senior deduction add-back", seniorAddBack, "Schedule 1-A line 37 is not allowed for AMT");
 
   // Line 2c: Depletion adjustment (excess over adjusted basis)
   const depletionAdjustment = input.depletionAdjustment ?? new Decimal(0);
@@ -91,12 +97,14 @@ export function calculateForm6251(
   // Line 7: AMTI
   const amti = input.taxableIncome
     .plus(saltAddBack)
+    .plus(standardAddBack)
+    .plus(seniorAddBack)
     .plus(depletionAdjustment)
     .plus(dispositionAdjustment)
     .plus(depreciationAdjustment)
     .plus(otherAdjustments);
   audit.record("Form 6251", "7", "AMTI", amti,
-    "Taxable income + AMT adjustments (SALT add-back, depreciation, depletion, dispositions, other)");
+    "Taxable income + AMT adjustments (SALT/standard and senior add-backs, depreciation, depletion, dispositions, other)");
 
   // Line 8: Exemption (with phase-out)
   const baseExemption = amtConst.exemption[input.filingStatus];

@@ -20,9 +20,14 @@ notes: |
   taxing the full AMT base at 26%/28%.
 
 lines:
+  - line: "federal-standard-senior-addbacks"
+    description: "Actual standard and enhanced senior deductions are not AMT deductions"
+    formula: "In federal orchestration start with AGI minus actual deductions before the Form 1040 zero floor; add the actual standard deduction if selected, and Schedule 1-A senior deduction, when computing AMTI. Do not add back other Schedule 1-A deductions or the separate nonitemizer charitable deduction."
+    irsRef: "2025 Form 6251 instructions Lines 1 and 2a; IRC 56(b)(1)(D)"
+    testRef: "tests/engine/federal-amt-addbacks.test.ts::AMT standard and senior deduction addbacks"
   - line: "1"
     description: "Taxable income from Form 1040"
-    formula: "Form 1040 Line 15"
+    formula: "AGI less actual deductions before the Form 1040 zero floor; restore senior deduction separately"
     irsRef: "Form 6251 Instructions, Line 1"
     testRef: "tests/engine/forms/form-6251.test.ts::Line 1 - taxable income passes through"
 
