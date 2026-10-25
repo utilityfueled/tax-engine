@@ -2063,9 +2063,13 @@ export const DependentCareSchema = z.object({
 });
 
 export const EducationExpensesSchema = z.object({
+  primarySsnEligible: z.boolean().optional(),
+  spouseSsnEligible: z.boolean().optional(),
   aocStudents: z.array(z.object({
     name: z.string(),
     qualifiedExpenses: decimal,
+    studentSsnEligible: z.boolean().optional(),
+    institutionEin: z.string().regex(/^\d{2}-?\d{7}$/).optional(),
     priorYearsClaimed: z.number().int().min(0).optional(),
     completedFirstFourYearsBeforeYear: z.boolean().optional(),
     enrolledAtLeastHalfTime: z.boolean().optional(),

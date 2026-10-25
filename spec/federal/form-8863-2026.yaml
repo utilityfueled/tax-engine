@@ -1,0 +1,10 @@
+form: "Form 8863 2026"
+fullName: "Education credit identification and eligibility facts"
+taxYear: 2026
+irsReference: "https://www.irs.gov/publications/p505"
+notes: "IRC 25A(g)(1) and 2026 Publication 505 require eligible SSNs and institution EIN for AOC. Input facts preserve unknown; schema acceptance alone does not establish eligibility or complete calculation qualification."
+lines:
+  - line: "identification-facts"
+    description: "Preserve known SSN eligibility and institution identity"
+    formula: "Store optional primarySsnEligible, spouseSsnEligible and each AOC student's studentSsnEligible and institutionEin without converting omission to true or false. Validate supplied EIN syntax."
+    testRef: "tests/engine/forms/education-facts-2026.test.ts::2026 education identification facts"

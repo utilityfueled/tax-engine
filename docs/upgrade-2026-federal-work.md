@@ -149,3 +149,12 @@ become current cash. Qualified conservation contributions, special property
 valuation/elections and independent human review are not claimed by this
 worksheet. The full 2026 readiness gate remains closed. These are synthetic
 regressions and source-derived formulas, not independent expected-output review.
+
+## Contract: education identification facts
+
+2026 Publication 505 and IRC 25A(g)(1) were refreshed. The input model preserves
+optional taxpayer/spouse/student SSN eligibility and AOC institution EIN; supplied
+EIN syntax is validated, absent facts remain absent. Three spec-linked tests
+included two red-first regressions; 59 education tests, typecheck and spec
+validation pass. This contract enables fact collection and does not yet claim
+2026 Form 8863 eligibility/calculation completion.
