@@ -30,6 +30,7 @@ import {
 } from "./rate-limit";
 import { safeParseJsonBody } from "./safe-body-parser";
 import { PRODUCTION_WORKSPACE_AI_EXECUTION } from "./production-ai-config";
+import { cancelledDocumentRequest, privateJson, privateResponse } from "./protected-document-request";
 
 const requestShape = z.object({
   task: z.enum(["workspace-summary", "workspace-help"]), requestId: z.string().trim().min(1).max(256),
@@ -89,7 +90,7 @@ export function createProviderWorkspaceRouteHandlers(
     registerStoreForCleanup(store, rateLimitTiers.provider.windowMs);
   }
 
-  return {
+  const handlers = {
     async POST(request: Request) {
       const env = dependencies.env ?? process.env;
       const browserWorkspaceMode = resolveBrowserWorkspaceDeploymentMode(env);
@@ -105,6 +106,7 @@ export function createProviderWorkspaceRouteHandlers(
         rateLimitTiers.provider,
         env
       );
+      request.signal.throwIfAborted();
 
       if (rateCheck.unavailable) return rateLimitUnavailableResponse();
 
@@ -123,6 +125,7 @@ export function createProviderWorkspaceRouteHandlers(
       }
 
       const parsed = await safeParseJsonBody(request);
+      request.signal.throwIfAborted();
 
       if (!parsed.ok) {
         return NextResponse.json(
@@ -170,6 +173,7 @@ export function createProviderWorkspaceRouteHandlers(
               env,
               requestHeaders: request.headers
             });
+        request.signal.throwIfAborted();
 
         if (!actor) {
           return buildAuthRequiredResponse();
@@ -181,6 +185,7 @@ export function createProviderWorkspaceRouteHandlers(
           const { subscription, entitlement } = await (dependencies.getEntitlementByOwnerId
             ? dependencies.getEntitlementByOwnerId(env, actor.id)
             : getHostedEntitlementByOwnerId(env, actor.id));
+          request.signal.throwIfAborted();
 
           if (!entitlement.workspaceAccess) {
             return buildPaidPlanRequiredResponse();
@@ -197,6 +202,7 @@ export function createProviderWorkspaceRouteHandlers(
         }
 
         const response = await respond(parsed.data, request.signal, accounting);
+        request.signal.throwIfAborted();
         if (response.usage && budgetInput) {
           const budget = await (dependencies.getBudgetSnapshot ?? getHostedAiBudgetSnapshot)(env, budgetInput);
           return NextResponse.json({ ...response, budget });
@@ -208,6 +214,20 @@ export function createProviderWorkspaceRouteHandlers(
           { error: "Configured provider workspace request failed." },
           { status: 502 }
         );
+      }
+    }
+  };
+
+  return {
+    async POST(request: Request): Promise<Response> {
+      if (request.signal.aborted) return cancelledDocumentRequest();
+      try {
+        const response = await handlers.POST(request);
+        return request.signal.aborted ? cancelledDocumentRequest() : privateResponse(response);
+      } catch {
+        return request.signal.aborted
+          ? cancelledDocumentRequest()
+          : privateJson({ error: "Workspace helper is temporarily unavailable." }, 503);
       }
     }
   };

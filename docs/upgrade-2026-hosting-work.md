@@ -233,3 +233,18 @@ and `ui-sales-final-lint.log`. Two additional red regressions reproduced missing
 provider credentials and duplicate-route approval; both are now green. Required
 independent human evaluation, account capability verification, live-budget
 authorization and staging reconciliation remain external release requirements.
+
+## Workspace-provider HTTP boundaries — 2026-10-25
+
+All provider-workspace responses now carry private/no-store headers, including
+denials, rate limits and failures. Authentication and shared-limiter exceptions
+return a generic availability error. Cancellation is checked before work and
+between limiter, body, authentication, entitlement, provider and balance reads;
+a disconnected caller cannot receive late output or trigger the next operation.
+Already incurred provider usage remains subject to the existing accounting path.
+
+Nineteen regressions failed before the change. All 104 focused provider/security/
+document-route tests now pass, as do web types, scoped lint and diff checks.
+Logs: `.local/upgrade-evidence/provider-route-boundaries-{red,green,types}.log`.
+These are synthetic in-process failure/cancellation checks. No production route
+was enabled, no live provider was contacted, and staging evidence remains absent.
