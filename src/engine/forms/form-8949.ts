@@ -11,6 +11,7 @@ import type { TaxYearInput, CapitalTransaction } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { d } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
+import { calculateSection1202Sources, type Section1202SourceResult } from "./section-1202-sources.js";
 
 export interface TransactionSummary {
   description: string;
@@ -39,6 +40,8 @@ export interface Form8949Result {
   /** Part II: Long-term */
   longTermBoxD: CategoryTotals; // Basis reported to IRS
   longTermBoxE: CategoryTotals; // Basis NOT reported to IRS
+  longTermBoxF: CategoryTotals; // No1099-B: actual fund issuer Q adjustments
+  section1202?: Section1202SourceResult;
 
   /** Aggregate totals for Schedule D */
   totalShortTermGainLoss: Decimal;
@@ -47,7 +50,7 @@ export interface Form8949Result {
   lines: CalculatedLine[];
 }
 
-function processTransaction(t: CapitalTransaction): TransactionSummary {
+function processTransaction(t: CapitalTransaction, exclusion = new Decimal(0)): TransactionSummary {
   const proceeds = d(t.proceeds);
   const costBasis = d(t.costBasis);
   let adjustment = d(t.adjustments);
@@ -57,6 +60,10 @@ function processTransaction(t: CapitalTransaction): TransactionSummary {
   if (t.washSale && d(t.washSaleDisallowed).greaterThan(0)) {
     adjustment = adjustment.plus(d(t.washSaleDisallowed));
     adjustmentCode = "W";
+  }
+  if (exclusion.gt(0)) {
+    adjustment = adjustment.minus(exclusion);
+    adjustmentCode = `Q${adjustmentCode}`;
   }
 
   const gainLoss = proceeds.minus(costBasis).plus(adjustment);
@@ -84,12 +91,25 @@ function aggregateCategory(transactions: TransactionSummary[]): CategoryTotals {
 
 export function calculateForm8949(input: TaxYearInput): Form8949Result {
   const audit = new AuditTrail();
+  const section1202 = calculateSection1202Sources(input);
+  const brokerExclusions = new Map<string, Decimal>();
+  const fundAdjustments: TransactionSummary[] = [];
+  for (const binding of section1202?.bindings ?? []) {
+    const lot = section1202?.lots.find(row => row.sourceId === binding.lotId);
+    if (!lot) throw new Error('Section1202 computed source lot is incomplete');
+    if (binding.sourceKind === 'broker') brokerExclusions.set(binding.originalSourceId, lot.exclusion);
+    else if (lot.exclusion.gt(0)) fundAdjustments.push({
+      description: binding.issuerName, dateAcquired: '', dateSold: '', proceeds: new Decimal(0), costBasis: new Decimal(0),
+      adjustment: lot.exclusion.negated(), adjustmentCode: 'Q', gainLoss: lot.exclusion.negated(),
+    });
+  }
+  if (section1202) audit.merge(section1202.lines);
 
   // Collect all transactions from all 1099-B forms
-  const allTransactions: Array<{ transaction: CapitalTransaction; broker: string }> = [];
-  for (const form of input.form1099B) {
-    for (const t of form.transactions) {
-      allTransactions.push({ transaction: t, broker: form.broker });
+  const allTransactions: Array<{ transaction: CapitalTransaction; sourceId: string }> = [];
+  for (const [formIndex, form] of input.form1099B.entries()) {
+    for (const [transactionIndex, t] of form.transactions.entries()) {
+      allTransactions.push({ transaction: t, sourceId: `form1099B:${formIndex}:transaction:${transactionIndex}` });
     }
   }
 
@@ -99,8 +119,8 @@ export function calculateForm8949(input: TaxYearInput): Form8949Result {
   const longTermReported: TransactionSummary[] = [];
   const longTermNotReported: TransactionSummary[] = [];
 
-  for (const { transaction } of allTransactions) {
-    const summary = processTransaction(transaction);
+  for (const { transaction, sourceId } of allTransactions) {
+    const summary = processTransaction(transaction, brokerExclusions.get(sourceId));
     if (transaction.holdingPeriod === "short") {
       if (transaction.basisReportedToIRS) {
         shortTermReported.push(summary);
@@ -120,6 +140,7 @@ export function calculateForm8949(input: TaxYearInput): Form8949Result {
   const shortTermBoxB = aggregateCategory(shortTermNotReported);
   const longTermBoxD = aggregateCategory(longTermReported);
   const longTermBoxE = aggregateCategory(longTermNotReported);
+  const longTermBoxF = aggregateCategory(fundAdjustments);
 
   // Audit Part I
   audit.record(
@@ -166,13 +187,16 @@ export function calculateForm8949(input: TaxYearInput): Form8949Result {
     { proceeds: longTermBoxE.totalProceeds, cost: longTermBoxE.totalCostBasis, adjustments: longTermBoxE.totalAdjustments }
   );
 
-  const totalLongTermGainLoss = longTermBoxD.totalGainLoss.plus(longTermBoxE.totalGainLoss);
+  audit.record("Form 8949", "Part II Box F", "Long-term, no1099-B issuer adjustments", longTermBoxF.totalGainLoss,
+    `${longTermBoxF.transactions.length} actual issuer Q adjustments`,
+    { proceeds: longTermBoxF.totalProceeds, cost: longTermBoxF.totalCostBasis, adjustments: longTermBoxF.totalAdjustments });
+  const totalLongTermGainLoss = longTermBoxD.totalGainLoss.plus(longTermBoxE.totalGainLoss).plus(longTermBoxF.totalGainLoss);
   audit.record(
     "Form 8949",
     "Part II totals",
     "Total long-term gain/loss",
     totalLongTermGainLoss,
-    "Box D + Box E"
+    "Box D + Box E + Box F"
   );
 
   // Wash sale summary
@@ -202,6 +226,8 @@ export function calculateForm8949(input: TaxYearInput): Form8949Result {
     shortTermBoxB,
     longTermBoxD,
     longTermBoxE,
+    longTermBoxF,
+    section1202,
     totalShortTermGainLoss,
     totalLongTermGainLoss,
     lines: audit.getLines(),

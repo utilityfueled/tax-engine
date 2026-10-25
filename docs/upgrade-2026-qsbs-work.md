@@ -76,3 +76,44 @@ Exact source tree `42d168bd02ce6bc26e23f27c916f5341015b62d5` (base `9889cba`)
 passes121tests in15files, root types, all4,356spec references and scoped lint
 with zero errors/warnings. The immutable snapshot isolates the input-schema
 addition from parallel foreign/NOL work. No canonical tax behavior changed.
+
+## Canonical return integration — 2026-10-25
+
+The spec-first return package replaces the old label-only, globally capped
+exclusion with actual original issuer/date sources. Brokerage rows retain original
+amounts and receive Q once; fund2a remains on ScheduleD13 with separate issuer Q
+rows in8949BoxF. Complete source character feeds the actual28percent loss-netting
+worksheet. Form6251 adds the rounded7percent pre2010 preference while retaining
+the full exclusion in its capital-gain method. Modified NOL income restores the
+exclusion before capital-loss netting and omits the preference for an exclusion
+that is already fully restored. Public2026 and filing gates remain unchanged.
+
+Seven new literal return cases failed first. Adjacent verification reproduced
+legacy fixtures with impossible2c>2a values and fabricated capital losses. Their
+actual original sources and expected gross-distribution/once-only adjustment
+assertions are now corrected; no case was removed. Treea3b597221 passes2,195
+tests in54files, root types and4,384 spec references. A subsequent source-lot
+consistency guard and explicit required-fixture checks remove45new lint warnings;
+14focused cases and scoped lint0 pass before final immutable verification.
+
+Independent agent review refreshed current ScheduleD QSBS reporting and6251
+line2h instructions, passed21source/core/canonical cases, and separately probed
+mixed50/100percent same-issuer lots and split fund issuer lots. No actionable
+finding in that bounded review; it is not independent human qualification.
+Evidence: section1202-return-red.log, section1202-adjacent-green.log,
+section1202-return-final-tests.log, federal-review-qsbs.log and
+federal-review-qsbs-probes.log under .local/upgrade-evidence.
+
+The next dependent package completes actual8949category pagination, fund-only
+review inclusion, ScheduleD10 and6251line2h review mapping. Guided actual-source
+intake is active separately. Transfer/exchange/changed ownership and child QSBS
+methods remain identified internal work; no form or scenario is qualified by
+this calculation package alone.
+
+Final isolated calculation tree `e4991d78f3356e4f42146a9affaaf965f5a408f6`
+(base `4925ce1`) passes 2,195 tests in 54 files, root type checking, all 4,384
+spec references, and scoped lint with zero errors or warnings. This includes
+the source-lot consistency guard, the narrower actual-source input type used by
+intake, and explicit required-fixture assertions. Logs are
+`.local/upgrade-evidence/section1202-return-exact-{tests,types,spec,lint}.log`.
+The evidence append changes documentation only.

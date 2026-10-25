@@ -20,6 +20,7 @@ export interface Form6251Input {
   standardDeductionAmount?: Decimal; // Actual standard deduction selected on Form 1040
   seniorDeduction?: Decimal; // Schedule 1-A line 37; personal exemption for AMT
   specifiedPrivateActivityBondInterest?: Decimal; // Actual line2g preference
+  section1202Preference?: Decimal; // Actual pre2010 exclusion preference on2h
   saltDeduction: Decimal; // Legacy name: actual Schedule A line7 taxes, including elected foreign income taxes.
   investmentInterestAdjustment?: Decimal; // Actual signed regular-minus-AMT deduction on2c
   depletionAdjustment?: Decimal; // Line 2d: Depletion (excess over adjusted basis)
@@ -136,6 +137,12 @@ export function calculateForm6251(
   audit.record("Form 6251", "2g", "Specified private activity interest", specifiedPrivateActivityBondInterest,
     "Actual source-identified private activity interest and child Form8814 preferences after matching adjustments");
 
+  const rawSection1202Preference = input.section1202Preference ?? new Decimal(0);
+  if (!rawSection1202Preference.isFinite() || rawSection1202Preference.lt(0)) throw new Error("Section1202 AMT preference must be finite and nonnegative");
+  const section1202Preference = roundDollar(rawSection1202Preference);
+  if (input.section1202Preference !== undefined) audit.record("Form 6251", "2h", "Qualified small business stock preference", section1202Preference,
+    "Seven percent of verified pre2010 exclusions; retain the full exclusion in the AMT capital-gain worksheets");
+
   // Line 3: Other AMT adjustments
   const otherAdjustments = input.otherAdjustments ?? new Decimal(0);
   if (!otherAdjustments.isZero()) {
@@ -155,7 +162,8 @@ export function calculateForm6251(
     .plus(dispositionAdjustment)
     .plus(depreciationAdjustment)
     .plus(otherAdjustments)
-    .plus(specifiedPrivateActivityBondInterest);
+    .plus(specifiedPrivateActivityBondInterest)
+    .plus(section1202Preference);
   audit.record("Form 6251", "4", "AMTI", amti,
     "Taxable income + signed investment adjustment and other AMT adjustments (SALT/standard and senior add-backs, depreciation, depletion, dispositions, other)");
 

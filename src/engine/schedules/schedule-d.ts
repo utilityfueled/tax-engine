@@ -25,6 +25,7 @@ import type { ScheduleDSpecialGainResult } from "./schedule-d-special-gains.js";
 export interface ScheduleDResult {
   netShortTerm: Decimal; // Line 7
   section1202Exclusion: Decimal; // Separate Form8949 adjustment; not Line13 distributions
+  section1202AmtPreference: Decimal; // Actual source aggregate before Form6251 rounding
   netLongTerm: Decimal; // Line 15
   netCapitalGainLoss: Decimal; // Line 16
   capitalLossDeduction: Decimal; // Line 21 (capped loss or full gain)
@@ -57,6 +58,7 @@ export function calculateScheduleD(
 
   // ── Form 8949: Transaction detail ─────────────────────
   const form8949 = calculateForm8949(input);
+  if (form8949.section1202 && !input.scheduleDSpecialGainSources) throw new Error("Section1202 requires the actual ScheduleD source worksheets");
   audit.merge(form8949.lines);
   const form4797 = precomputedForm4797 ?? calculateForm4797(input);
   if (precomputedForm4797 === undefined) {
@@ -120,22 +122,10 @@ export function calculateScheduleD(
     });
 
   // ── Separate Section 1202 QSBS adjustment ────────────
-  // IRC §1202: 100% exclusion for qualified small business stock held 5+ years
-  // 1099-DIV Box 2c reports the §1202 gain eligible for exclusion
-  // Per-issuer cap: greater of $10M or 10× adjusted basis (we apply $10M cap here)
-  const qbsGainFromDiv = input.form1099Div.reduce(
-    (acc, f) => acc.plus(d(f.section1202Gain)),
-    new Decimal(0)
-  );
-  const QSBS_CAP = filingStatus === "married_filing_separately"
-    ? new Decimal(5000000)
-    : new Decimal(10000000);
-  const section1202Exclusion = min(qbsGainFromDiv, QSBS_CAP);
+  const section1202Exclusion = form8949.section1202?.exclusion ?? new Decimal(0);
+  const section1202AmtPreference = form8949.section1202?.amtPreference ?? new Decimal(0);
   audit.record("Sched D", "1202-adjustment", "Section 1202 exclusion (QSBS)", section1202Exclusion,
-    `min(${qbsGainFromDiv} eligible gain, $${QSBS_CAP} cap)`, {
-      "1099-DIV Box 2c eligible gain": qbsGainFromDiv,
-      "Section 1202 cap": QSBS_CAP,
-    });
+    "Verified original issuer/date exclusions already included once in Form8949 PartII");
 
   // ── Home Sale Exclusion (IRC §121) ────────────────────
   const homeSales = (input.homeSales ?? []).length > 0
@@ -183,12 +173,12 @@ export function calculateScheduleD(
   const netLongTerm = sum(
     form8949.totalLongTermGainLoss, k1LongTerm, k1Form1041LongTerm, k1Form1041FinalLTLoss,
     form4797LongTermGain, capGainDistributions, childCapitalGainDistributions,
-    priorLongTermLoss, section1202Exclusion.negated(), homeSaleTaxableGain, form6781LongTerm, form6252LongTerm,
+    priorLongTermLoss, homeSaleTaxableGain, form6781LongTerm, form6252LongTerm,
     form8824CapitalGainLoss
   );
   const longTermFormula = form8824CapitalGainLoss.isZero()
-    ? "Form 8949 Part II + K-1 Box 9a + K-1 1041 Box 4a + K-1 1041 Box 11D + Form 4797 Line 9 + 1099-DIV Box 2a + prior LT carryforward - §1202 exclusion + home sale gain + Form 6781 long-term + Form 6252 long-term"
-    : "Form 8949 Part II + K-1 Box 9a + K-1 1041 Box 4a + K-1 1041 Box 11D + Form 4797 Line 9 + 1099-DIV Box 2a + prior LT carryforward - §1202 exclusion + home sale gain + Form 6781 long-term + Form 6252 long-term + capital-route Form 8824 recognized gain/loss";
+    ? "Form 8949 Part II after Q adjustments + K-1 Box 9a + K-1 1041 Box 4a + K-1 1041 Box 11D + Form 4797 Line 9 + 1099-DIV Box 2a + prior LT carryforward + home sale gain + Form 6781 long-term + Form 6252 long-term"
+    : "Form 8949 Part II after Q adjustments + K-1 Box 9a + K-1 1041 Box 4a + K-1 1041 Box 11D + Form 4797 Line 9 + 1099-DIV Box 2a + prior LT carryforward + home sale gain + Form 6781 long-term + Form 6252 long-term + capital-route Form 8824 recognized gain/loss";
   audit.record("Sched D", "15", "Net long-term capital gain/loss", netLongTerm,
     childCapitalGainDistributions.gt(0) ? `${longTermFormula} + Form8814 line10 distributions` : longTermFormula, {
       "Form 8949 Part II": form8949.totalLongTermGainLoss,
@@ -218,6 +208,7 @@ export function calculateScheduleD(
     form4797, netShortTerm, longTermLossCarryover: sum(priorLongTermLoss, k1Form1041FinalLTLoss),
     childCollectiblesGain: extra?.childCollectiblesGain ?? new Decimal(0),
     childUnrecapturedSection1250Gain: extra?.childUnrecapturedSection1250Gain ?? new Decimal(0),
+    section1202: form8949.section1202,
   });
   const gainCondition = netLongTerm.gt(0) && netCapitalGainLoss.gt(0);
   const specialGainWorksheets = sourceWorksheets ? {
@@ -308,6 +299,7 @@ export function calculateScheduleD(
   return {
     netShortTerm,
     section1202Exclusion,
+    section1202AmtPreference,
     netLongTerm,
     netCapitalGainLoss,
     capitalLossDeduction,

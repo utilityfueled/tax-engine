@@ -8,6 +8,7 @@ import Decimal from "decimal.js";
 import { calculateScheduleD } from "@/engine/schedules/schedule-d.js";
 import { getConstants } from "@/models/constants.js";
 import { simpleW2Fixture, complexMFJFixture } from "../../fixtures/simple-w2.js";
+import { qsbsFullExclusionFundInput } from "../../fixtures/section-1202.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 
 const d = (n: number | string) => new Decimal(n);
@@ -290,114 +291,31 @@ describe("Schedule D - Carryforward", () => {
 
 describe("Schedule D - QSBS exclusion", () => {
   it("Schedule D QSBS adjustment - QSBS exclusion reduces long-term gain", () => {
-    const input: TaxYearInput = {
-      ...simpleW2Fixture,
-      form1099B: [{
-        broker: "Fidelity",
-        transactions: [{
-          description: "StartupCo QSBS",
-          dateAcquired: "2019-01-01",
-          dateSold: "2025-06-01",
-          proceeds: "500000",
-          costBasis: "100000",
-          adjustments: "0",
-          basisReportedToIRS: true,
-          holdingPeriod: "long",
-          washSale: false,
-          washSaleDisallowed: "0",
-        }],
-      }],
-      form1099Div: [{
-        payer: "StartupCo",
-        ordinaryDividends: "0",
-        qualifiedDividends: "0",
-        totalCapitalGainDistributions: "0",
-        section1202Gain: "400000", // $400K eligible for exclusion
-        section1250Gain: "0",
-        collectiblesGain: "0",
-        federalWithheld: "0",
-        foreignTaxPaid: "0",
-        nondividendDistributions: "0",
-        exemptInterestDividends: "0",
-      }],
-    };
-    const result = calculateScheduleD(input, "single", c);
-    // $400K gain, $400K QSBS exclusion → net LT = $400K - $400K = $0 from QSBS
-    // Plus $400K from 8949 long-term = ($500K-$100K) = $400K
-    // Net LT = $400K (8949) - $400K (exclusion) = $0
-    expect(result.section1202Exclusion.toNumber()).toBe(400000);
-    expect(result.netLongTerm.toNumber()).toBe(0);
+    const result = calculateScheduleD(qsbsFullExclusionFundInput("400000"), "single", c);
+    expect(result.section1202Exclusion.toFixed()).toBe("400000");
+    expect(result.netLongTerm.toFixed()).toBe("0");
   });
-
   it("Schedule D QSBS adjustment - QSBS capped at $10M for non-MFS", () => {
-    const input: TaxYearInput = {
-      ...simpleW2Fixture,
-      form1099Div: [{
-        payer: "BigStartup",
-        ordinaryDividends: "0",
-        qualifiedDividends: "0",
-        totalCapitalGainDistributions: "0",
-        section1202Gain: "15000000", // $15M eligible
-        section1250Gain: "0",
-        collectiblesGain: "0",
-        federalWithheld: "0",
-        foreignTaxPaid: "0",
-        nondividendDistributions: "0",
-        exemptInterestDividends: "0",
-      }],
-    };
-    const result = calculateScheduleD(input, "single", c);
-    expect(result.section1202Exclusion.toNumber()).toBe(10000000);
+    const result = calculateScheduleD(qsbsFullExclusionFundInput("15000000"), "single", c);
+    expect(result.section1202Exclusion.toFixed()).toBe("10000000");
+    expect(result.netLongTerm.toFixed()).toBe("5000000");
   });
-
   it("Schedule D QSBS adjustment - QSBS capped at $5M for MFS", () => {
-    const input: TaxYearInput = {
-      ...simpleW2Fixture,
-      form1099Div: [{
-        payer: "BigStartup",
-        ordinaryDividends: "0",
-        qualifiedDividends: "0",
-        totalCapitalGainDistributions: "0",
-        section1202Gain: "8000000",
-        section1250Gain: "0",
-        collectiblesGain: "0",
-        federalWithheld: "0",
-        foreignTaxPaid: "0",
-        nondividendDistributions: "0",
-        exemptInterestDividends: "0",
-      }],
-    };
+    const input = qsbsFullExclusionFundInput("8000000");
+    input.taxpayer.filingStatus = "married_filing_separately";
     const result = calculateScheduleD(input, "married_filing_separately", c);
-    expect(result.section1202Exclusion.toNumber()).toBe(5000000);
+    expect(result.section1202Exclusion.toFixed()).toBe("5000000");
+    expect(result.netLongTerm.toFixed()).toBe("3000000");
   });
-
   it("Schedule D QSBS adjustment - no QSBS when section1202Gain is zero", () => {
-    const result = calculateScheduleD(simpleW2Fixture, "single", c);
-    expect(result.section1202Exclusion.toNumber()).toBe(0);
+    expect(calculateScheduleD(simpleW2Fixture, "single", c).section1202Exclusion.toFixed()).toBe("0");
   });
-
   it("QSBS exclusion shows in audit trail", () => {
-    const input: TaxYearInput = {
-      ...simpleW2Fixture,
-      form1099Div: [{
-        payer: "StartupCo",
-        ordinaryDividends: "0",
-        qualifiedDividends: "0",
-        totalCapitalGainDistributions: "0",
-        section1202Gain: "200000",
-        section1250Gain: "0",
-        collectiblesGain: "0",
-        federalWithheld: "0",
-        foreignTaxPaid: "0",
-        nondividendDistributions: "0",
-        exemptInterestDividends: "0",
-      }],
-    };
-    const result = calculateScheduleD(input, "single", c);
-    const adjustment = result.lines.find((l) => l.line === "1202-adjustment");
+    const result = calculateScheduleD(qsbsFullExclusionFundInput("200000"), "single", c);
+    const adjustment = result.lines.find(line => line.form === "Sched D" && line.line === "1202-adjustment");
     expect(adjustment).toBeDefined();
-    expect(adjustment?.value.toNumber()).toBe(200000);
-    expect(result.lines.find((l) => l.line === "13")?.value.toNumber()).toBe(0);
+    expect(adjustment?.value.toFixed()).toBe("200000");
+    expect(result.lines.find(line => line.form === "Sched D" && line.line === "13")?.value.toFixed()).toBe("200000");
   });
 });
 

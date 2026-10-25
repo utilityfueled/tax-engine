@@ -1,3 +1,4 @@
+import { qsbsFullExclusionFundInput } from "../fixtures/section-1202.js";
 /**
  * Edge case tests for Married Filing Separately restrictions.
  * MFS filers face numerous penalties: lower SALT cap, no education credits,
@@ -973,24 +974,8 @@ describe("MFS Restrictions — PTC Eligibility", () => {
 
 describe("MFS Restrictions — QSBS Section 1202 Exclusion Cap", () => {
   it("MFS QSBS exclusion cap is $5M (half of $10M for other statuses)", () => {
-    // Create input with a large §1202 gain
-    const input: TaxYearInput = {
-      ...simpleW2Fixture,
-      taxpayer: { ...simpleW2Fixture.taxpayer, filingStatus: "married_filing_separately" },
-      form1099Div: [{
-        payer: "QSBS Fund",
-        ordinaryDividends: "0",
-        qualifiedDividends: "0",
-        totalCapitalGainDistributions: "0",
-        section1250Gain: "0",
-        section1202Gain: "7000000", // $7M §1202 gain
-        collectiblesGain: "0",
-        nondividendDistributions: "0",
-        federalWithheld: "0",
-        foreignTaxPaid: "0",
-        exemptInterestDividends: "0",
-      }],
-    };
+    const input = qsbsFullExclusionFundInput("7000000");
+    input.taxpayer.filingStatus = "married_filing_separately";
     const mfsResult = calculateScheduleD(input, "married_filing_separately", c);
     // MFS cap = $5M; $7M gain → exclusion capped at $5M
     expect(mfsResult.section1202Exclusion.toNumber()).toBe(5000000);

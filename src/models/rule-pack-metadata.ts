@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.60",
+    ruleVersion: "2025.61",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i1040sd", section: "Original source-qualified QSBS issuer/date exclusions on8949, full fund2a onScheduleD13, actual28percent netting and6251line2h; modified NOL restores full exclusion once", revision: "Current1202/57/172 and final2025 instructions; transfers, changing ownership, physical forms and independent qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/publications/p974", section: "Actual NOL recomputation at W/X maximum, ordered and final health contexts; separate final regular/AMT/1411 balances and actual temporary business attribution", revision: "Final2025 Pub974 plus IRC172/56 and Reg1.172-5/1.199A-3; synthetic derived cases, specialized coupled methods and independent qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i172", section: "Actual NOL origin/history sources, current deduction before199A/250, per-vintage modified-income replay, and separate carry absorption", revision: "Final Form172 instructions with IRC172 and Reg1.172-5; ordinary IRA/SSA/passive/loan/itemized coordination, coupled special methods remain explicit", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i6251", section: "Separate actual regular/AMT NOL ledgers, lines2e/2f and90percent ATNOLD; regular AGI retained under Reg1.55-1(b)", revision: "Final2025 instructions and IRC56; modified QBI/capital-loss adjustments and Section1411 origin fraction retained separately; independent qualification pending", retrievedAt: "2026-10-25" },
@@ -103,11 +104,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.56-law-integration-draft",
+    ruleVersion: "2026.57-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i1040sd", section: "Original source-qualified QSBS acquisition cohorts, issuer limits,8949Q adjustments, actual28percent netting and pre2010 AMT preference", revision: "Current1202/57/172 and applicable final2025 source methods; full2026 and physical-form qualification remain closed", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/publications/p974", section: "Actual NOL recomputation through uncapped Marketplace and ordered health contexts, with actual final eligibility and independent regular/AMT/1411 ledgers", revision: "Applicable2025 source method plus enacted2026 section36B and indexed constants; isolated source tests do not open full-year or filing qualification", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i172", section: "Actual NOL origin/history sources, current deduction before199A/250, per-vintage modified-income replay, and separate carry absorption", revision: "Current IRC172 and Reg1.172-5 with final Form172 instructions; ordinary source computation only,2026 full-return readiness remains closed", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i6251", section: "Separate actual regular/AMT NOL ledgers, lines2e/2f and90percent ATNOLD; regular AGI retained under Reg1.55-1(b)", revision: "Current IRC56 and final2025 instructions; final2026 forms and independent qualification remain closed", retrievedAt: "2026-10-25" },

@@ -3,15 +3,19 @@ import { expect, it } from "vitest";
 import { calculateFederalTax } from "@/engine/federal.js";
 import { actualNolInput } from "../fixtures/net-operating-loss.js";
 
+import { qsbsFullExclusionFundInput } from "../fixtures/section-1202.js";
+
 const input = actualNolInput;
 it("nets restored1202 gain before disallowing the remaining modified capital loss", () => {
   for (const [loss, reportedCapital, modifiedAgi, claim, absorbed] of [
     ["-700", "-200", "100300", "67240", "67640"],
     ["-4000", "-3000", "100000", "65000", "67400"],
   ]) {
+    const qsbs = qsbsFullExclusionFundInput("500", "1000");
+    qsbs.scheduleDSpecialGainSources!.priorShortTermCapitalLoss = loss!;
     const source = input("100000", { priorYear: { shortTermCapitalLoss: loss },
-      form1099Div: [{ payer: "Synthetic capital-gain fund", ordinaryDividends: "0", qualifiedDividends: "0",
-        totalCapitalGainDistributions: "1000", section1202Gain: "500" }],
+      form1099Div: qsbs.form1099Div, section1202Sources: qsbs.section1202Sources,
+      scheduleDSpecialGainSources: qsbs.scheduleDSpecialGainSources,
     });
     const result = calculateFederalTax(source);
     expect(result.capitalGainLoss.toFixed()).toBe(reportedCapital);

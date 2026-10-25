@@ -24,11 +24,15 @@ function oneYearLater(value: string): string {
   return new Date(Date.UTC(year, original.getUTCMonth(), Math.min(original.getUTCDate(), lastDay))).toISOString().slice(0, 10);
 }
 type Identity = { firstName: string; lastName: string; ssnLast4: string };
-function identity(original: TaxYearInput['taxpayer']['primary'], record: Identity | undefined) {
+type SourcePerson = Pick<TaxYearInput['taxpayer']['primary'], 'firstName' | 'lastName' | 'ssn'>;
+export type Section1202SourceInput = Pick<TaxYearInput, 'section1202Sources' | 'form1099B' | 'form1099Div'> & {
+  taxpayer: Pick<TaxYearInput['taxpayer'], 'taxYear' | 'filingStatus'> & { primary: SourcePerson; spouse?: SourcePerson };
+};
+function identity(original: SourcePerson, record: Identity | undefined) {
   if (!record || normalized(record.firstName) !== normalized(original.firstName) || normalized(record.lastName) !== normalized(original.lastName)
     || record.ssnLast4 !== original.ssn.replace(/-/g, '').slice(-4)) throw new Error('Section1202 source household identity must match the actual return');
 }
-function household(input: TaxYearInput, source: { primary: Identity; spouse?: Identity }) {
+function household(input: Section1202SourceInput, source: { primary: Identity; spouse?: Identity }) {
   identity(input.taxpayer.primary, source.primary);
   if (input.taxpayer.filingStatus === 'married_filing_jointly') {
     if (!input.taxpayer.spouse) throw new Error('Section1202 actual joint spouse is missing');
@@ -36,7 +40,7 @@ function household(input: TaxYearInput, source: { primary: Identity; spouse?: Id
   } else if (source.spouse) throw new Error('Section1202 source spouse conflicts with the actual return');
 }
 
-export function calculateSection1202Sources(input: TaxYearInput) {
+export function calculateSection1202Sources(input: Section1202SourceInput) {
   const reported = input.form1099Div.some(row => d(row.section1202Gain).gt(0));
   if (!input.section1202Sources) {
     if (reported) throw new Error('Section1202 gain requires actual issuer, original acquisition and ownership sources');

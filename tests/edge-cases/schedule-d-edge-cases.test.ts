@@ -10,6 +10,7 @@ import { calculateScheduleD } from "@/engine/schedules/schedule-d.js";
 import { calculateFederalTax } from "@/engine/federal.js";
 import { getConstants } from "@/models/constants.js";
 import { simpleW2Fixture } from "../fixtures/simple-w2.js";
+import { qsbsFullExclusionFundInput } from "../fixtures/section-1202.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 const c = getConstants(2025);
 
@@ -554,23 +555,6 @@ describe("Schedule D - additional edge cases", () => {
 // Section 1202 QSBS Exclusion
 // ═══════════════════════════════════════════════════════════
 
-function makeDiv1202(section1202Gain: string) {
-  return {
-    payer: "Startup Inc",
-    ordinaryDividends: "0",
-    qualifiedDividends: "0",
-    totalCapitalGainDistributions: "0",
-    federalWithheld: "0",
-    foreignTaxPaid: "0",
-    foreignCountry: "",
-    section1250Gain: "0",
-    section1202Gain,
-    collectiblesGain: "0",
-    nondividendDistributions: "0",
-    exemptInterestDividends: "0",
-  };
-}
-
 function makeK1(overrides: Record<string, unknown>) {
   return {
     partnershipName: "Test Fund LP",
@@ -597,36 +581,27 @@ function makeK1(overrides: Record<string, unknown>) {
 
 describe("Schedule D - Section 1202 QSBS exclusion", () => {
   it("$10M cap: $8M QSBS gain excluded in full for single filer", () => {
-    const result = calculateScheduleD(makeFixture({
-      form1099Div: [makeDiv1202("8000000")],
-    }), "single", c);
-    // $8M < $10M cap → full exclusion
-    expect(result.section1202Exclusion.toNumber()).toBe(8000000);
-    // Exclusion subtracts from LT: 0 cap gain dist - 8M exclusion = -8M
-    // But the gain reported via 1202 is also in the LT pipeline
-    // Net LT = capGainDist(0) + 1099-B LT(0) + K-1 LT(0) + prior(0) - exclusion(8M) = -8M
-    expect(result.netLongTerm.toNumber()).toBe(-8000000);
+    const result = calculateScheduleD(qsbsFullExclusionFundInput("8000000"), "single", c);
+    expect(result.section1202Exclusion.toFixed()).toBe("8000000");
+    // Box2c is part of2a; a full exclusion cannot create a fabricated capital loss.
+    expect(result.netLongTerm.toFixed()).toBe("0");
   });
-
   it("$10M cap: $12M QSBS gain capped at $10M exclusion for single filer", () => {
-    const result = calculateScheduleD(makeFixture({
-      form1099Div: [makeDiv1202("12000000")],
-    }), "single", c);
-    expect(result.section1202Exclusion.toNumber()).toBe(10000000);
+    const result = calculateScheduleD(qsbsFullExclusionFundInput("12000000"), "single", c);
+    expect(result.section1202Exclusion.toFixed()).toBe("10000000");
+    expect(result.netLongTerm.toFixed()).toBe("2000000");
   });
-
   it("MFS $5M cap: $7M QSBS gain capped at $5M for married_filing_separately", () => {
-    const result = calculateScheduleD(makeFixture({
-      form1099Div: [makeDiv1202("7000000")],
-    }), "married_filing_separately", c);
-    expect(result.section1202Exclusion.toNumber()).toBe(5000000);
+    const input = qsbsFullExclusionFundInput("7000000"); input.taxpayer.filingStatus = "married_filing_separately";
+    const result = calculateScheduleD(input, "married_filing_separately", c);
+    expect(result.section1202Exclusion.toFixed()).toBe("5000000");
+    expect(result.netLongTerm.toFixed()).toBe("2000000");
   });
-
   it("MFS $5M cap: $3M QSBS gain fully excluded (under cap)", () => {
-    const result = calculateScheduleD(makeFixture({
-      form1099Div: [makeDiv1202("3000000")],
-    }), "married_filing_separately", c);
-    expect(result.section1202Exclusion.toNumber()).toBe(3000000);
+    const input = qsbsFullExclusionFundInput("3000000"); input.taxpayer.filingStatus = "married_filing_separately";
+    const result = calculateScheduleD(input, "married_filing_separately", c);
+    expect(result.section1202Exclusion.toFixed()).toBe("3000000");
+    expect(result.netLongTerm.toFixed()).toBe("0");
   });
 });
 
@@ -1130,7 +1105,7 @@ describe("Schedule D - audit trail records all key lines", () => {
   });
 
   it("audit trail inputs show source subtotals and resulting carryforward character", () => {
-    const result = calculateScheduleD(makeFixture({
+    const input = makeFixture({
       form1099B: [{
         broker: "Fidelity",
         transactions: [
@@ -1139,7 +1114,7 @@ describe("Schedule D - audit trail records all key lines", () => {
         ],
       }],
       form1099Div: [{
-        payer: "Growth Fund",
+        payer: "Actual fund",
         ordinaryDividends: "0",
         qualifiedDividends: "0",
         totalCapitalGainDistributions: "300",
@@ -1179,7 +1154,19 @@ describe("Schedule D - audit trail records all key lines", () => {
         foreignTaxCreditCarryforward: "0",
         charitableCarryforward: "0",
       },
-    }), "single", c);
+    });
+
+    const qsbs = qsbsFullExclusionFundInput("200", "300");
+    input.section1202Sources = qsbs.section1202Sources;
+    input.scheduleDSpecialGainSources = qsbs.scheduleDSpecialGainSources;
+    const facts = input.scheduleDSpecialGainSources!;
+    facts.priorLongTermCapitalLoss = "-7000";
+    facts.longTermAssets = [{ ...input.form1099B[0]!.transactions[1]!, sourceId: "form1099B:0:transaction:1",
+      sourceTaxYear: 2025, sourceReference: "Actual stock statement", accountHolder: "primary", payerName: "Fidelity", character: "ordinary" }];
+    facts.reportedGains.push({ sourceId: "scheduleK1:0", sourceTaxYear: 2025, sourceReference: "Actual K1",
+      accountHolder: "primary", payerName: "Venture Fund", netLongTermCapitalGain: "250", collectiblesGain: "0",
+      unrecapturedSection1250Gain: "0", section1202Gain: "0", section1231Gain: "0" });
+    const result = calculateScheduleD(input, "single", c);
 
     const line7 = result.lines.find((l) => l.line === "7" && l.form === "Sched D");
     const line13 = result.lines.find((l) => l.line === "13" && l.form === "Sched D");
@@ -1198,10 +1185,10 @@ describe("Schedule D - audit trail records all key lines", () => {
     expect(line13).toBeDefined();
     expect(line13?.value.toFixed()).toBe("300");
     expect((line13?.inputs["1099-DIV Box 2a"] as Decimal).toFixed()).toBe("300");
-    expect((qsbsAdjustment?.inputs["1099-DIV Box 2c eligible gain"] as Decimal).toFixed()).toBe("200");
+    expect(qsbsAdjustment?.value.toFixed()).toBe("200");
 
     expect(line15).toBeDefined();
-    expect((line15!.inputs["Form 8949 Part II"] as Decimal).toNumber()).toBe(2000);
+    expect((line15!.inputs["Form 8949 Part II"] as Decimal).toNumber()).toBe(1800);
     expect((line15!.inputs["K-1 Box 9a"] as Decimal).toNumber()).toBe(250);
     expect((line15!.inputs["1099-DIV Box 2a"] as Decimal).toNumber()).toBe(300);
     expect((line15!.inputs["Prior year LT carryforward"] as Decimal).toNumber()).toBe(-7000);

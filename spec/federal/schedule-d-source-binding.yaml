@@ -11,7 +11,8 @@ notes: |
   long-term Form 8949 asset and every DIV/partnership/estate reported gain source
   has its own confirmed original identity and explicit monetary components.
   Missing classifications or components are unknown, not ordinary gain or zero.
-  Recompute collectible transaction gain through the same Form 8949 function.
+  Recompute collectible gain from actual proceeds, basis and signed adjustments,
+  without rebinding an incomplete filtered copy of the original QSBS packet.
   Keep the legacy path separate when no actual contract is supplied; positive
   child special gains still require this complete source method. Never infer
   QSBS exclusion, installment history, additional unreported gain sources or
@@ -34,7 +35,7 @@ lines:
     testRef: "tests/engine/schedules/schedule-d-source-binding.test.ts::routes actual reported gain sources and final estate loss once"
   - line: "unsupported-history"
     description: "Preserve separate methods until their complete sources are connected"
-    formula: "Reject positiveQSBS, property/installment/otherform dispositions, transformedcrypto sources, additional2439/partnershipsale/other1250history, and Form2555 from this source cohort. No fabricated zero component or classification."
+    formula: "Require original issuer/acquisition sources for positiveQSBS; reject property/installment/otherform dispositions, transformedcrypto sources, additional2439/partnershipsale/other1250history, and Form2555 from this source cohort. No fabricated zero component or classification."
     testRef: "tests/engine/schedules/schedule-d-source-binding.test.ts::preserves separate source methods instead of assuming their amounts"
   - line: "canonical-netting"
     description: "Use completed source worksheets in the tax calculation"

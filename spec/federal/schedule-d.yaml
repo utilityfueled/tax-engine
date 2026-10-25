@@ -19,7 +19,7 @@ lines:
 
   - line: "15"
     description: "Net long-term capital gain or loss"
-    formula: "Sum of Form 8949 Part II totals + K-1 Box 9a + Form 4797 Line 9 section 1231 long-term capital gain + 1099-DIV Box 2a + prior year LT carryforward − Section 1202 exclusion + home sale taxable gain (IRC §121) + Form 6781 long-term (60% section 1256 + straddle long-term) + Form 6252 long-term installment sale capital gain"
+    formula: "Sum of Form 8949 Part II totals already including verified Q exclusions + K-1 Box 9a + Form 4797 Line 9 section 1231 long-term capital gain + full1099-DIV Box 2a + prior year LT carryforward + home sale taxable gain (IRC §121) + Form 6781 long-term (60% section 1256 + straddle long-term) + Form 6252 long-term installment sale capital gain"
     irsRef: "Schedule D Instructions, Line 15"
     inputs:
       - "Form 8949 Part II (long-term) totals"
@@ -27,7 +27,7 @@ lines:
       - "Form 4797 Line 9 section 1231 long-term capital gain"
       - "1099-DIV Box 2a (capital gain distributions)"
       - "Prior year long-term capital loss carryforward"
-      - "Section 1202 QSBS exclusion (separate Form8949 adjustment, subtracted)"
+      - "Section1202 QSBS exclusion already subtracted in Form8949; no second subtraction"
       - "Home sale taxable gain after IRC §121 exclusion (from home-sale-exclusion module)"
       - "Form 6781 long-term (Line 9 + Line 11b + Line 13b)"
       - "Form 6252 long-term capital gain (installment sales with gainCharacter = long_term_capital)"
@@ -89,13 +89,14 @@ lines:
 
   - line: "1202-adjustment"
     description: "Section 1202 gain exclusion (QSBS)"
-    formula: "Up to 100% exclusion for qualified small business stock held 5+ years"
+    formula: "Sum verified issuer/date exclusions from the actual source-bound Form8949; informational audit only, already subtracted in PartII"
     irsRef: "Schedule D Instructions, Gain from Form1099DIV, Form8949 adjustment; IRC §1202"
     notes: |
-      For stock acquired after Sept 27, 2010: 100% exclusion.
-      Subject to per-issuer limit of greater of $10M or 10× adjusted basis.
-      Exclusion reduces long-term capital gains on Schedule D.
-      The excluded portion is NOT subject to AMT (for 100% exclusion).
+      Follow section-1202.yaml and section-1202-sources.yaml for actual holding
+      period, date-specific percentages, prior eligible-gain use and original
+      qualifying-stock basis. Positive1099DIV2c alone never establishes an
+      exclusion. Full distributions remain on13; Q adjustments flow once from
+      Form8949. Partial pre2010 exclusions create the actual7percent AMT item.
     edgeCases:
       - "$10M lifetime per-issuer cap"
       - "Only applies to C-corporation stock held 5+ years"

@@ -2754,6 +2754,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       ? deductionUsed === "itemized" ? form4952.line8.minus(form4952Amt.line8) : d("0") : undefined,
     depletionAdjustment: k1Agg.amtDepletion,
     specifiedPrivateActivityBondInterest: form6251BondSources.privateActivityBondInterest.plus(form8814AmtSources.privateActivityBondInterest),
+    section1202Preference: nol?.modified ? d("0") : schedD.section1202AmtPreference,
     dispositionAdjustment: k1Agg.amtAdjustedGainOrLoss,
     depreciationAdjustment: k1Agg.amtDepreciationAdjustment,
     otherAdjustments: k1Agg.amtOtherItems.plus(k1Form1041AmtAdjustment)

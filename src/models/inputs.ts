@@ -223,7 +223,7 @@ export const ScheduleDSpecialGainSourcesSchema = z.object({
   longTermAssets: z.array(ScheduleDCapitalSourceRowSchema.extend({
     description: z.string().trim().min(1), dateAcquired: z.string().min(1), dateSold: z.string().min(1),
     proceeds: decimal, costBasis: decimal, adjustments: decimal, washSale: z.boolean(), washSaleDisallowed: decimal,
-    character: z.enum(["ordinary", "collectible"]),
+    character: z.enum(["ordinary", "collectible", "qsbs"]),
   })),
   reportedGains: z.array(ScheduleDCapitalSourceRowSchema.extend({
     netLongTermCapitalGain: decimal, collectiblesGain: decimal, unrecapturedSection1250Gain: decimal, section1202Gain: decimal,

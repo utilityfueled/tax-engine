@@ -2,7 +2,7 @@
 import Decimal from 'decimal.js';
 import type { TaxYearInput } from '@/models/inputs.js';
 import type { Form4797Result } from '../forms/form-4797.js';
-import { calculateForm8949 } from '../forms/form-8949.js';
+import type { Section1202SourceResult } from '../forms/section-1202-sources.js';
 import { calculateScheduleDSpecialGains } from './schedule-d-special-gains.js';
 import { d, sum } from '@/utils/decimal.js';
 
@@ -32,6 +32,7 @@ function identity(actual: TaxYearInput['taxpayer']['primary'], source: Facts['pr
 export function calculateScheduleDSourceBinding(input: TaxYearInput, context: {
   form4797: Form4797Result; netShortTerm: Decimal; longTermLossCarryover: Decimal;
   childCollectiblesGain: Decimal; childUnrecapturedSection1250Gain: Decimal;
+  section1202?: Section1202SourceResult;
 }) {
   const facts = input.scheduleDSpecialGainSources;
   if (!facts) return undefined;
@@ -74,6 +75,8 @@ export function calculateScheduleDSourceBinding(input: TaxYearInput, context: {
     if (!actualDate(row.dateSold) || (row.dateAcquired !== 'VARIOUS' && !actualDate(row.dateAcquired))) throw new Error('ScheduleD original acquisition and sale dates must be actual calendar dates');
     if (!row.dateSold.startsWith(`${input.taxpayer.taxYear}-`)) throw new Error('ScheduleD asset sale year conflicts with the actual source year');
     for (const key of ['proceeds', 'costBasis', 'adjustments', 'washSaleDisallowed'] as const) reconcile(transaction[key], row[key], `asset ${key}`);
+    const originalQsbs = context.section1202?.bindings.some(binding => binding.sourceKind === 'broker' && binding.originalSourceId === id) ?? false;
+    if ((row.character === 'qsbs') !== originalQsbs) throw new Error('ScheduleD QSBS character requires matching actual issuer and acquisition sources');
     return row.character === 'collectible';
   }) }));
   if (assets.size > 0) throw new Error('ScheduleD original asset source is missing, duplicated or not a long-term asset');
@@ -91,7 +94,9 @@ export function calculateScheduleDSourceBinding(input: TaxYearInput, context: {
     reported.delete(id); owner(input, row, original.accountHolder);
     if (normalized(row.payerName) !== normalized(payer)) throw new Error('ScheduleD reported original payer identity is conflicting');
     for (const key of ['netLongTermCapitalGain', 'collectiblesGain', 'unrecapturedSection1250Gain', 'section1202Gain'] as const) reconcile(original[key], row[key], `reported ${key}`);
-    if (d(row.section1202Gain).gt(0)) throw new Error('ScheduleD section1202 QSBS requires actual issuer and acquisition exclusion history');
+    if (d(row.section1202Gain).gt(0) && !context.section1202?.bindings.some(binding => binding.sourceKind === 'fund' && binding.originalSourceId === id)) {
+      throw new Error('ScheduleD section1202 QSBS requires actual issuer and acquisition exclusion history');
+    }
     if (d(row.section1202Gain).lt(0) || d(row.unrecapturedSection1250Gain).lt(0)) throw new Error('ScheduleD special reported gain source must be nonnegative');
     collectibles = collectibles.plus(row.collectiblesGain);
     return row;
@@ -115,8 +120,11 @@ export function calculateScheduleDSourceBinding(input: TaxYearInput, context: {
   });
   if (reported.size > 0) throw new Error('ScheduleD reported original gain source is missing or aliased');
   return calculateScheduleDSpecialGains({
-    form8949CollectiblesGainLoss: calculateForm8949({ ...input, form1099B: collectibleForms }).totalLongTermGainLoss,
-    section1202WorksheetComponent: d('0'), otherCollectiblesGainLoss: d('0'), reportedCollectiblesGainLoss: collectibles,
+    form8949CollectiblesGainLoss: sum(...collectibleForms.flatMap(form => form.transactions.map(transaction =>
+      d(transaction.proceeds).minus(d(transaction.costBasis)).plus(d(transaction.adjustments))
+        .plus(transaction.washSale ? d(transaction.washSaleDisallowed) : d('0'))))),
+    section1202WorksheetComponent: context.section1202?.section1202WorksheetComponent ?? d('0'),
+    otherCollectiblesGainLoss: d('0'), reportedCollectiblesGainLoss: collectibles,
     shortTermNetGainLoss: context.netShortTerm, longTermLossCarryover: context.longTermLossCarryover,
     form4797Gain: context.form4797.line7, form4797Lookback: context.form4797.line8, businessProperties: [],
     businessInstallment1250Gain: d('0'), passThrough1250Gain: partnership1250,
