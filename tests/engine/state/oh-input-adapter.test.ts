@@ -35,6 +35,9 @@ import type {
 } from "@/models/inputs.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import { d } from "@/utils/decimal.js";
+import { calculateForm2441 } from "@/engine/forms/form-2441.js";
+import { calculateFederalTax } from "@/engine/federal.js";
+import { TaxYearInputSchema } from "@/models/inputs.js";
 
 // ---------------------------------------------------------------------------
 // Helpers — minimal W-2, 1099-R, TaxYearInput, TaxReturnResult stubs
@@ -673,17 +676,12 @@ describe("Ohio Input Adapter — buildOhioResidentReturnInput", () => {
   it("extracts federal Form 2441 values from federal result", () => {
     const taxInput = makeTaxInput();
     const fedResult = makeFederalResult({
-      form2441: {
-        qualifyingExpenses: new Decimal(3000),
-        earnedIncomeLimit: new Decimal(3000),
-        creditPercentage: new Decimal(0.2),
-        credit: new Decimal(600),
-        lines: [],
-      },
+      form2441: calculateForm2441({ careExpenses: d(3000), qualifyingIndividuals: 1,
+        earnedIncome: d(50000), agi: d(50000), priorYearExpenseCredit: d(0), taxLiabilityLimit: d(1000) }),
     });
     const result = buildOhioResidentReturnInput(taxInput, fedResult);
 
-    expect(d(result.federal2441Line9c!).toNumber()).toBe(3000);
+    expect(d(result.federal2441Line9c!).toNumber()).toBe(600);
     expect(d(result.federal2441Line11!).toNumber()).toBe(600);
   });
 
@@ -1937,11 +1935,13 @@ describe("Ohio Input Adapter — Federal Interest & Tax Refund Auto-Extraction i
 
   it("auto-extracts state municipal tax refunds from 1099-Gs", () => {
     const form1099G = [
-      make1099G({ stateOrLocalTaxRefund: "750", state: "OH" }),
-      make1099G({ stateOrLocalTaxRefund: "250", state: "PA" }),
+      make1099G({ stateLocalIncomeTaxRefund: "750", state: "OH" }),
+      make1099G({ stateLocalIncomeTaxRefund: "250", state: "PA" }),
     ];
-    const taxInput = makeTaxInput({ form1099G } as Partial<TaxYearInput>);
-    const fed = makeFederalResult();
+    const taxInput = TaxYearInputSchema.parse({ ...makeTaxInput({ form1099G }),
+      taxableRefundWorksheet: { priorTaxYear: 2024, priorYearPropertyTaxesPaid: "0", priorYearItemized: true,
+        priorYearItemizedTotal: "20000", priorYearStandardDeduction: "14600", priorYearStateLocalTaxesPaid: "8000", priorYearFilingStatus: "single" } });
+    const fed = calculateFederalTax(taxInput);
     const result = buildOhioResidentReturnInput(taxInput, fed, {});
     expect(d(result.stateMunicipalTaxRefunds).toNumber()).toBe(1000);
   });

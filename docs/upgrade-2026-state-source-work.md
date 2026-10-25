@@ -31,3 +31,23 @@ forwarding must use actual printed line9c. PA OID requires its distinct premium
 and exemption reconciliation, and rental records must apply actual ownership
 once before owner-separated loss limits. State launch demand, final2026 forms
 and independent human review remain external prerequisites.
+
+## Ohio federal inclusion limits — 2026-10-25
+
+The same final booklet's Schedule of Adjustments lines26/28 limit deductions
+to income included in federal AGI, and the care worksheet on page45 uses
+Form2441 line9c. The adapter now subtracts actual prior-reported bond interest
+and the education exclusion before taking the Treasury deduction, uses the
+calculated taxable refund, and forwards the unique actual care audit entry.
+Missing, duplicate, nonfinite or negative care audit values reject; an explicit
+reconciled override, including zero, is preserved.
+
+All three new regression cases failed before implementation. All 128 focused
+state/packet/PDF checks now pass, root types pass and lint has zero errors
+(113 existing non-null warnings in the large adapter fixture file). Two legacy
+fixtures now supply actual synthetic federal worksheet facts: the refund
+expectation remains1,000, and the incorrect care expense expectation is corrected
+from3,000 to the official line9c credit600. Tests also cover partial/zero taxable
+refunds, a fully excluded savings bond, actual prior-year care credit and audit
+failure paths. Evidence: `oh-inclusions-{red,green,types,lint,spec}.log` under
+`.local/upgrade-evidence/`. This remains local synthetic evidence.

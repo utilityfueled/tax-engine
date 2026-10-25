@@ -846,18 +846,27 @@ export function buildOhioResidentReturnInput(
   const federalInterestExemptFromOhio =
     overlay.federalInterestExemptFromOhio !== undefined
       ? overlay.federalInterestExemptFromOhio
-      : extractFederalInterestExemptFromOhio(form1099Ints).plus(oid?.treasuryInterest ?? d(0));
+      : Decimal.max(0, extractFederalInterestExemptFromOhio(form1099Ints)
+          .minus(federalResult.scheduleB?.previouslyReportedSavingsBondInterest ?? d(0))
+          .minus(federalResult.form8815?.excludableSavingsBondInterest ?? d(0)))
+          .plus(oid?.treasuryInterest ?? d(0));
 
   // Auto-extract state/municipal tax refunds (1099-G box 2) unless overridden
   const stateMunicipalTaxRefunds =
     overlay.stateMunicipalTaxRefunds !== undefined
       ? overlay.stateMunicipalTaxRefunds
-      : extractStateMunicipalTaxRefunds(form1099Gs);
+      : federalResult.schedule1?.taxableRefunds ?? d(0);
+
+  const careLine9c = federalResult.form2441?.lines.filter(line => line.form === "Form 2441" && line.line === "9c");
+  if (overlay.federal2441Line9c === undefined && federalResult.form2441 &&
+    (careLine9c?.length !== 1 || !careLine9c[0].value.isFinite() || careLine9c[0].value.isNegative())) {
+    throw new Error("Ohio requires the actual Form 2441 line9c audit or an explicit reconciled amount.");
+  }
 
   const federal2441Line9c =
     overlay.federal2441Line9c !== undefined
       ? overlay.federal2441Line9c
-      : federalResult.form2441?.qualifyingExpenses;
+      : careLine9c?.[0]?.value;
 
   const federal2441Line11 =
     overlay.federal2441Line11 !== undefined

@@ -56,6 +56,17 @@ packetRules:
     the packet-inclusion gate for the Ohio SD 100 reference summary.
 
 businessRuleValidation:
+  - rule: "actual-federal-inclusions-and-care-audit"
+    description: |
+      Final2025 Ohio booklet, Schedule of Adjustments lines26/28 and care
+      worksheet page45, refreshed2026-10-25: deduction cannot exceed amounts
+      actually included federally. Remove prior-reported savings-bond interest
+      and Form8815 exclusion from source Box3 before Ohio deduction. State
+      refund deduction is actual Schedule1 taxable refunds, not gross1099-G.
+      Care worksheet uses audited Form2441 line9c, not expense limit line3.
+      Missing/duplicate/nonfinite care audit values require reconciliation;
+      explicit source/overlay zero is retained.
+    testRef: "tests/engine/state/oh-federal-inclusions.test.ts::Ohio deducts only the actual taxable state refund"
   - rule: "verified-oid-state-adaptation"
     description: |
       Refreshed 2026-10-25: final 2025 Ohio IT1040 booklet, Schedule of
@@ -263,14 +274,14 @@ lines:
 
   - line: "federal2441Line9c"
     description: "Ohio child and dependent care credit worksheet line 2 input"
-    source: "OhioOverlayInput.federal2441Line9c or TaxReturnResult.form2441.qualifyingExpenses"
+    source: "OhioOverlayInput.federal2441Line9c or the unique audited Form2441 line9c"
     formula: |
       If overlay.federal2441Line9c is supplied:
         overlay.federal2441Line9c
       Else:
-        federalResult.form2441?.qualifyingExpenses ?? $0
+        actual finite nonnegative Form2441 audit line9c; unknown source rejects
     notes: |
-      Page 44 of the 2025 Ohio IT 1040 booklet instructs taxpayers claiming the
+      Page45 of the final2025 Ohio IT1040 booklet instructs taxpayers claiming the
       Ohio child and dependent care credit to enter federal Form 2441 line 9c
       on worksheet line 2. When the federal engine has already computed Form
       2441, the adapter should auto-fill this amount from the validated federal
@@ -594,12 +605,13 @@ lines:
 
   - line: "federalInterestExemptFromOhio"
     description: "U.S. government obligation interest exempt from Ohio tax"
-    source: "Sum of 1099-INT box 3 (usSavingsBondInterest) across all 1099-INTs"
-    formula: "sum(f.usSavingsBondInterest for f in form1099Int)"
+    source: "Actual federal current-year inclusion from 1099-INT Box3 and verified Treasury OID"
+    formula: "max(0, sum(INT Box3) - prior-reported bond interest - Form8815 exclusion) + verified OID Treasury interest"
     notes: |
       Interest from U.S. Treasury bills, notes, bonds, and Series I/EE/HH
       savings bonds is exempt from state taxation under 31 U.S.C. 3124.
-      Flows to Ohio Schedule of Adjustments line 16 as a deduction.
+      Flows to final2025 Ohio Schedule of Adjustments line26 as a deduction
+      (the current engine reference summary uses internal line16).
       Can be overridden by setting overlay.federalInterestExemptFromOhio.
     edgeCases:
       - "No 1099-INTs -> $0"
@@ -610,13 +622,13 @@ lines:
 
   - line: "stateMunicipalTaxRefunds"
     description: "Prior-year state/local tax refunds included in federal AGI"
-    source: "Sum of 1099-G box 2 (stateOrLocalTaxRefund) across all 1099-Gs"
-    formula: "sum(f.stateOrLocalTaxRefund for f in form1099G)"
+    source: "Federal Schedule1 taxableRefunds after the actual historical tax-benefit worksheet"
+    formula: "federalResult.schedule1.taxableRefunds; zero when no taxable refund is included"
     notes: |
       Prior-year state/local tax refunds are included in federal AGI when the
       taxpayer itemized in the prior year. Ohio allows these as a deduction on
-      Schedule of Adjustments line 18 since Ohio already taxed the underlying
-      income. All 1099-G box 2 amounts are included regardless of issuing state.
+      Final2025 Schedule of Adjustments line28 (internal reference line18).
+      Gross Box2 amounts are not deductible when excluded from federal AGI.
       Can be overridden by setting overlay.stateMunicipalTaxRefunds.
     edgeCases:
       - "No 1099-Gs -> $0"
