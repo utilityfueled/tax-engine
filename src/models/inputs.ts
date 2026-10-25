@@ -450,28 +450,68 @@ export const Form1099GSchema = z.object({
  *
  * Ref: IRC §§1272–1273, §171; IRS Pub 1212; Pub 550 Ch. 1.
  */
-export const Form1099OIDSchema = z.object({
-  /** Payer/issuer name or broker */
+const Form1099OIDFieldsSchema = z.object({
   payer: z.string(),
-  /** Box 1: Original issue discount — taxable OID accrued during the year */
-  originalIssueDiscount: decimal,
-  /** Box 2: Other periodic interest (stated coupon interest, separate from OID) */
-  otherPeriodicInterest: optionalDecimal,
-  /** Box 3: Early withdrawal penalty (CD early withdrawal) */
-  earlyWithdrawalPenalty: optionalDecimal,
-  /** Box 4: Federal income tax withheld (backup withholding) */
-  federalWithheld: optionalDecimal,
-  /** Box 6: Acquisition premium — reduces taxable OID per IRC §1272(a)(7) */
-  acquisitionPremium: optionalDecimal,
-  /** Box 8: OID on U.S. Treasury obligations (subset of Box 1, state/local exempt) */
-  treasuryOID: optionalDecimal,
-  /** Box 11: Amortizable bond premium — offsets interest under IRC §171 election */
-  bondPremium: optionalDecimal,
-  /** Box 13: Bond premium on tax-exempt bond (mandatory amortization, reduces basis) */
+  payerTin: z.string().optional(),
+  accountHolder: z.enum(["primary", "spouse"]).optional(),
+  sourceId: z.string().optional(),
+  taxYear: z.number().int().optional(),
+  sourceFormRevision: z.literal("2024-01").optional(),
+  sourceFactsConfirmed: z.boolean().optional(),
+  sourceFactsComplete: z.boolean().optional(),
+  /** Actual recipient amounts account for holding period, basis and nominee adjustments. */
+  recipientAmountsConfirmed: z.boolean().optional(),
+  obligationType: z.enum(["taxable", "treasury", "tax_exempt"]).optional(),
+  inflationIndexed: z.boolean().optional(),
+  /** Actual specified-private-activity classification, including statutory exceptions. */
+  specifiedPrivateActivityBond: z.boolean().optional(),
+  originalIssueDiscount: decimal, // Box 1, excludes Box 8 Treasury OID
+  otherPeriodicInterest: optionalDecimal, // Box 2, classified by this obligation
+  earlyWithdrawalPenalty: optionalDecimal, // Box 3, separate deduction
+  federalWithheld: optionalDecimal, // Box 4
+  marketDiscount: decimal.optional(), // Box 5, actual current accrual
+  acquisitionPremium: optionalDecimal, // Box 6, offsets matching OID category
+  description: z.string().optional(), // Box 7, actual CUSIP or description
+  treasuryOID: optionalDecimal, // Box 8, separate from Box 1; may be negative for TIPS
+  investmentExpenses: decimal.optional(), // Box 9, already included in Box 2, nondeductible
+  bondPremium: optionalDecimal, // Box 10, offsets stated interest when allowed
+  taxExemptOID: optionalDecimal, // Box 11
+  /** Historical mislabeled aggregate. Positive values require actual source reconciliation. */
   taxExemptBondPremium: optionalDecimal,
-  /** Box 14: Tax-exempt OID (municipal bond discount, flows to Line 2a) */
-  taxExemptOID: optionalDecimal,
+  stateWithholding: z.array(z.object({
+    state: z.string().regex(/^[A-Z]{2}$/), // Box 12
+    statePayerId: z.string(), // Box 13; actual blank is retained as blank
+    stateWithheld: decimal, // Box 14
+  })).max(2).optional(),
+  oidReportedNetOfAcquisitionPremium: z.boolean().optional(),
+  interestReportedNetOfBondPremium: z.boolean().optional(),
+  marketDiscountElection: z.boolean().optional(), // Actual IRC 1278(b) current-inclusion election
+  bondPremiumElection: z.boolean().optional(), // Actual IRC 171 election, taxable bonds only
+  modernBondPremiumRulesApply: z.boolean().optional(), // Actual applicability; no inferred pre-1988 election history
+  /** Signed changes to named source amounts from a completed recipient worksheet, before premium offsets. */
+  recipientAdjustments: z.object({
+    sourceReference: z.string().min(1), oid: decimal, periodicInterest: decimal,
+    acquisitionPremium: decimal, bondPremium: decimal, marketDiscount: decimal,
+  }).optional(),
+  bondPremiumWorksheet: z.object({
+    priorInterestInclusions: decimal, priorPremiumDeductions: decimal, priorCarryforward: decimal,
+    disposedDuringYear: z.boolean(),
+    periods: z.array(z.object({ endDate: z.string(), qualifiedStatedInterest: decimal, amortization: decimal })),
+  }).optional(),
+  tipsDeflationFacts: z.object({
+    allInstrumentInterestReportedHere: z.boolean(),
+    priorInterestInclusions: decimal, priorOrdinaryLosses: decimal, priorCarryforward: decimal,
+  }).optional(),
 });
+export const Form1099OIDSchema = z.preprocess((value) => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const raw = value as Record<string, unknown>;
+  const fields = ["payer", "sourceId", "taxYear", "sourceFormRevision", "sourceFactsConfirmed", "recipientAmountsConfirmed",
+    "obligationType", "inflationIndexed", "description", "originalIssueDiscount", "otherPeriodicInterest", "earlyWithdrawalPenalty",
+    "federalWithheld", "marketDiscount", "acquisitionPremium", "treasuryOID", "investmentExpenses", "bondPremium", "taxExemptOID",
+    "stateWithholding", "oidReportedNetOfAcquisitionPremium", "interestReportedNetOfBondPremium"];
+  return { ...raw, sourceFactsComplete: raw.sourceFactsComplete !== false && fields.every((field) => raw[field] !== undefined) };
+}, Form1099OIDFieldsSchema);
 export type Form1099OID = z.infer<typeof Form1099OIDSchema>;
 
 export const FormW2GSchema = z.object({

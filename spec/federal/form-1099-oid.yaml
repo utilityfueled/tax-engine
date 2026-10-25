@@ -1,79 +1,103 @@
 form: "Form 1099-OID"
-title: "Original Issue Discount"
-taxYear: 2025
-irsReference: "https://www.irs.gov/instructions/i1099oid"
-
+title: "Original Issue Discount — actual instrument sources"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i1099int"
 notes: |
-  Reports original issue discount (OID) accrued on debt instruments such as
-  zero-coupon bonds, CDs issued at a discount, Treasury STRIPS, and TIPS.
-  OID is taxable interest income accrued annually even when no cash is received
-  (phantom income). Reported by brokers and issuers.
-
-  IRC §§1272–1273 govern OID inclusion. IRC §171 governs bond premium
-  amortization. IRC §§1276–1278 govern market discount.
-
-  The engine processes Form 1099-OID by:
-  1. Computing net OID: Box 1 minus min(Box 1, Box 6 acquisition premium)
-  2. Computing net stated interest: Box 2 minus min(Box 2, Box 11 bond premium)
-  3. Adding both net amounts as interest payers on Schedule B Part I
-  4. Aggregating Box 3 early withdrawal penalty into Schedule 1 Line 18
-  5. Computing net tax-exempt OID: max(0, Box 14 minus Box 13) for Line 2a
-  6. Aggregating Box 4 backup withholding into Line 25d
-
+  The IRS continuous-use Form 1099-OID (Rev. January 2024), refreshed 2026-10-25,
+  has separate Box 1 taxable OID, Box 8 Treasury OID and Box 11 tax-exempt OID.
+  Box 10 is bond premium. Boxes 12, 13 and 14 are state, state payer ID and
+  state withholding. They are not the corresponding boxes on Form 1099-INT.
+  Each verified record represents one obligation. Original source presence is
+  recorded before legacy defaults; reparsing an incomplete source cannot verify it.
+  Actual source year, box mapping, recipient reconciliation, instrument class,
+  net/gross reporting and elections are required for 2026. Historical 2025
+  aliases remain unverified and must not be silently promoted to actual boxes.
+  Taxpayer-specific OID/interest adjustments require a completed recipient source
+  worksheet reference. This recipient reporting module does not derive missing
+  issue prices, holding dates, yield, basis, nominee ownership or broker elections.
+  All monetary arithmetic is Decimal; preserve source cents and aggregate before
+  return-line rounding. Filing and independent review gates remain unchanged.
+  Authorities: IRS Form 1099-OID recipient instructions; Publication 1212
+  (12/2025); Publication 550 (2025); IRC 171, 1272, 1276–1278 and 1288;
+  26 CFR 1.171-2(a)(4), 1.171-3(b), and 1.1275-7(f).
 lines:
+  - line: "source"
+    description: "Complete actual source facts and historical reconciliation"
+    formula: "Require actual original amounts and classification; reject unknown, wrong-year, duplicate or contradictory sources. Never reinterpret positive legacy taxExemptBondPremium as a current box."
+    irsRef: "Form 1099-OID recipient instructions; Publication 1212 Refiguring OID"
+    testRef: "tests/engine/forms/form-1099-oid-sources.test.ts::preserves incomplete raw source facts across reparsing"
   - line: "1"
-    description: "Original issue discount — taxable OID accrued during the year"
-    formula: "Net reportable OID = Box 1 − min(Box 1, Box 6). Flows to Schedule B Part I as interest income."
-    irsRef: "IRC §1272(a)(1); Pub 1212"
-    testRef: "tests/engine/forms/form-1099-oid.test.ts::Box 1 OID flows to Schedule B Part I as interest income"
-
+    description: "Taxable OID other than Treasury obligations"
+    formula: "Actual Box 1 plus signed recipient OID worksheet adjustment minus acquisition premium allocated to this obligation. Box 8 is separate."
+    irsRef: "Form 1099-OID Box 1; IRC 1272"
+    testRef: "tests/engine/forms/form-1099-oid-sources.test.ts::keeps taxable Treasury and tax exempt OID separate"
   - line: "2"
-    description: "Other periodic interest (stated coupon interest)"
-    formula: "Net interest = Box 2 − min(Box 2, Box 11 bond premium). Flows to Schedule B Part I."
-    irsRef: "IRC §171; Pub 550 Ch. 1"
-    testRef: "tests/engine/forms/form-1099-oid.test.ts::Box 2 other periodic interest flows to Schedule B"
-
+    description: "Qualified stated interest classified by the actual obligation"
+    formula: "Box 2 plus recipient interest adjustment minus allowed Box 10 amortization. Treasury interest remains separately attributable; municipal interest is tax exempt."
+    irsRef: "Form 1099-OID Box 2; Publication 550 How To Report Amortization"
+    testRef: "tests/engine/forms/form-1099-oid-sources.test.ts::classifies municipal coupon interest and applies each premium once"
   - line: "3"
     description: "Early withdrawal penalty"
-    formula: "Deduction amount = Box 3. Flows to Schedule 1 Line 18 as above-the-line adjustment."
-    irsRef: "Schedule 1 Instructions, Line 18"
-    testRef: "tests/engine/forms/form-1099-oid.test.ts::Box 3 early withdrawal penalty flows to Schedule 1 Line 18"
-
+    formula: "Actual Box 3 is an independent Schedule 1 line 18 adjustment; do not net it from interest."
+    irsRef: "Form 1099-OID Box 3 instructions"
+    testRef: "tests/engine/forms/form-1099-oid-sources.test.ts::keeps penalties withholding and embedded expenses separate"
   - line: "4"
-    description: "Federal income tax withheld (backup withholding)"
-    formula: "Withholding amount = Box 4. Aggregated into Form 1040 Line 25d."
-    irsRef: "Form 1040 Instructions, Line 25b"
-    testRef: "tests/engine/forms/form-1099-oid.test.ts::multiple 1099-OID withholding amounts aggregate"
-
+    description: "Federal income tax withheld"
+    formula: "Actual Box 4 feeds Form 1040 line 25b and the withholding total, once."
+    irsRef: "Form 1040 line 25b instructions"
+    testRef: "tests/engine/forms/form-1099-oid-sources.test.ts::keeps penalties withholding and embedded expenses separate"
+  - line: "5"
+    description: "Market discount and actual current-inclusion election"
+    formula: "Include actual current accrued market discount only under the confirmed section 1278(b) election, even on a municipal obligation; otherwise preserve deferred discount for sale reconciliation."
+    irsRef: "Form 1099-OID Box 5; IRC 1278(b)"
+    testRef: "tests/engine/forms/form-1099-oid-sources.test.ts::uses actual market discount election without inferring from a box"
   - line: "6"
-    description: "Acquisition premium — reduces taxable OID per IRC §1272(a)(7)"
-    formula: "Offset = min(Box 6, Box 1). Net OID = Box 1 − offset."
-    irsRef: "IRC §1272(a)(7)"
-    edgeCases:
-      - "Box 6 ≥ Box 1 → net OID is zero; no taxable OID reported"
-      - "Only reduces OID (Box 1), not stated interest (Box 2)"
-    testRef: "tests/engine/forms/form-1099-oid.test.ts::acquisition premium reduces Box 1 OID"
-
+    description: "Acquisition premium"
+    formula: "Subtract actual Box 6 from the matching Box 1, 8 or 11 obligation, never stated interest. Already-net OID requires zero separately reported acquisition premium. Reject excess or contradictory source amounts."
+    irsRef: "Form 1099-OID Box 6; IRC 1272(a)(7)"
+    testRef: "tests/engine/forms/form-1099-oid-sources.test.ts::does not deduct acquisition or bond premium twice from net reporting"
+  - line: "7"
+    description: "Instrument description"
+    formula: "Preserve the actual CUSIP or description; unique local source ID identifies the obligation, without inventing a CUSIP."
+    irsRef: "Form 1099-OID Box 7"
+    testRef: "tests/engine/forms/form-1099-oid-sources.test.ts::rejects duplicate sources mixed categories and unknown classifications"
+  - line: "8"
+    description: "Treasury OID and TIPS deflation"
+    formula: "Positive Treasury OID is separate taxable interest. Negative TIPS OID offsets this instrument's current interest; excess ordinary loss is limited to prior interest inclusions less prior ordinary losses, and the remainder carries forward. Do not offset another instrument."
+    irsRef: "Form 1099-OID Box 8; 26 CFR 1.1275-7(f)(1)(i); Publication 1212 Example 9"
+    testRef: "tests/engine/forms/form-1099-oid-sources.test.ts::applies the Publication 1212 deflation example and prior income loss limit"
+  - line: "9"
+    description: "Single class REMIC investment expenses"
+    formula: "Already included in Box 2; neither add again nor deduct."
+    irsRef: "Form 1099-OID Box 9 instructions"
+    testRef: "tests/engine/forms/form-1099-oid-sources.test.ts::keeps penalties withholding and embedded expenses separate"
+  - line: "10"
+    description: "Bond premium amortization and actual election"
+    formula: "Taxable premium requires actual section 171 election; tax-exempt premium is mandatory. Gross reporting subtracts actual amortization once. Already-net interest has no second deduction. Ordinary taxable-bond excess requires actual accrual-period history: apply carry to current premium, offset current stated interest, deduct excess up to prior net interest inclusions, carry the balance. Deduct remaining taxable premium carry on actual final disposition. Tax-exempt excess is a nondeductible loss, not a carryforward."
+    irsRef: "26 CFR 1.171-2(a)(4); IRS T.D. 9653 https://www.irs.gov/irb/2014-06_IRB; Publication 550"
+    testRef: "tests/engine/forms/form-1099-oid-sources.test.ts::calculates premium deduction and carry across actual accrual periods"
   - line: "11"
-    description: "Amortizable bond premium — offsets stated interest under IRC §171"
-    formula: "Offset = min(Box 11, Box 2). Net interest = Box 2 − offset."
-    irsRef: "IRC §171"
-    edgeCases:
-      - "Box 11 > Box 2 → net interest is zero; excess premium not deductible under TCJA"
-      - "Only reduces stated interest (Box 2), not OID (Box 1)"
-    testRef: "tests/engine/forms/form-1099-oid.test.ts::bond premium reduces Box 2 stated interest"
-
+    description: "Tax exempt OID and specified private activity preference"
+    formula: "Actual Box 11 less its acquisition premium feeds Form 1040 line 2a with net exempt stated interest. Only actually identified specified private-activity interest feeds AMT preference."
+    irsRef: "Form 1099-OID Box 11; IRC 57(a)(5), 1288"
+    testRef: "tests/engine/forms/form-1099-oid-sources.test.ts::classifies municipal coupon interest and applies each premium once"
+  - line: "12"
+    description: "State jurisdiction"
+    formula: "Preserve actual jurisdiction for each of up to two source withholding rows."
+    irsRef: "Form 1099-OID Boxes 12–14"
+    testRef: "tests/engine/forms/form-1099-oid-sources.test.ts::preserves actual state rows without using premium aliases"
+  - line: "13"
+    description: "State payer identification number"
+    formula: "Preserve actual payer ID with its state row; never treat it as a monetary premium."
+    irsRef: "Form 1099-OID Boxes 12–14"
+    testRef: "tests/engine/forms/form-1099-oid-sources.test.ts::preserves actual state rows without using premium aliases"
   - line: "14"
-    description: "Tax-exempt OID — flows to Form 1040 Line 2a"
-    formula: "Net tax-exempt OID = max(0, Box 14 − Box 13). Added to Line 2a tax-exempt interest."
-    irsRef: "IRC §1288; Form 1040 Instructions, Line 2a"
-    edgeCases:
-      - "Box 13 (tax-exempt bond premium) reduces Box 14 but cannot make it negative"
-      - "Private activity bond OID may be AMT preference under IRC §57(a)(5)"
-    testRef: "tests/engine/forms/form-1099-oid.test.ts::Box 14 tax-exempt OID flows to Form 1040 Line 2a"
-
-  - line: "agg"
-    description: "Aggregation: multiple 1099-OID forms are processed independently then summed"
-    formula: "Total interest = SUM(net OID per form) + SUM(net stated interest per form)"
-    irsRef: "Schedule B Instructions"
-    testRef: "tests/engine/forms/form-1099-oid.test.ts::multiple 1099-OID forms aggregate correctly"
+    description: "State income tax withheld"
+    formula: "Sum actual Box 14 rows once for state source attribution and the Schedule A withholding worksheet."
+    irsRef: "Form 1099-OID Boxes 12–14"
+    testRef: "tests/engine/forms/form-1099-oid-sources.test.ts::preserves actual state rows without using premium aliases"
+  - line: "reconciliation"
+    description: "Recipient calculation adjustments"
+    formula: "Signed independently completed source adjustments modify only their named Box 1/8/11 OID, Box 2, Box 5, Box 6 or Box 10 amount. Require a source reference and finite resulting amounts; no fabricated basis or yield."
+    irsRef: "Publication 1212 Refiguring OID and Refiguring interest"
+    testRef: "tests/engine/forms/form-1099-oid-sources.test.ts::uses explicit recipient worksheets and preserves cents until aggregation"
