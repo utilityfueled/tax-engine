@@ -48,7 +48,8 @@ export function isStartedSocialSecurity(entry: SocialSecurityEntryData): boolean
 }
 export function socialSecurityEntries(data: SocialSecurityData | undefined): SocialSecurityEntryData[] {
   if (!data) return [];
-  return data.entries ?? (hasEnteredAmount(data.netBenefits) || hasEnteredAmount(data.federalWithheld) ? [{ netBenefits: data.netBenefits, federalWithheld: data.federalWithheld }] : []);
+  if (data.entries?.some(isStartedSocialSecurity)) return data.entries;
+  return hasEnteredAmount(data.netBenefits) || hasEnteredAmount(data.federalWithheld) ? [{ netBenefits: data.netBenefits, federalWithheld: data.federalWithheld }] : data.entries ?? [];
 }
 export function signedSourceAmountError(value: string | undefined, label: string): string | undefined {
   if (!hasEnteredAmount(value)) return `Enter the actual ${label}; blank is unknown.`;
@@ -61,7 +62,8 @@ export function socialSecuritySourceTotal(entries: SocialSecurityEntryData[], fi
   return included.reduce((sum, entry) => sum.plus(parseGuidedCurrency(entry[field])), new Decimal(0));
 }
 export function withSocialSecurityEntries(data: SocialSecurityData, entries: SocialSecurityEntryData[]): SocialSecurityData {
-  return { ...data, entries, netBenefits: socialSecuritySourceTotal(entries, "netBenefits")?.toFixed() ?? "", federalWithheld: socialSecuritySourceTotal(entries, "federalWithheld")?.toFixed() ?? "", sourceFactsConfirmed: null };
+  const started = entries.some(isStartedSocialSecurity);
+  return { ...data, entries, netBenefits: started ? socialSecuritySourceTotal(entries, "netBenefits")?.toFixed() ?? "" : "", federalWithheld: started ? socialSecuritySourceTotal(entries, "federalWithheld")?.toFixed() ?? "" : "", sourceFactsConfirmed: null };
 }
 
 export function socialSecurityFactErrors(data: SocialSecurityData | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, personalInfo?: PersonalInfoData, adjustments?: AdjustmentData): Record<string, string> {

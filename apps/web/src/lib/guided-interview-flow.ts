@@ -19,9 +19,10 @@ import { investmentFactErrors, isStartedInvestment, type InvestmentSourceData } 
 import { businessFactErrors, hasBusinessSourceData, type BusinessSourceData } from "./guided-business-facts";
 import { isStartedRental, rentalFactErrors, type RentalSourceData } from "./guided-rental-facts";
 import { nonW2TaxAllocationErrors } from "./guided-salt-facts";
+import { isStartedUnemployment, unemploymentEntries, unemploymentFactErrors, type UnemploymentSourceData } from "./guided-unemployment-facts";
 import type { MortgageSourceData } from "./guided-mortgage-facts";
-import type { RetirementSourceData } from "./guided-retirement-facts";
 import { socialSecurityFactErrors, socialSecurityEntries, isStartedSocialSecurity, type SocialSecuritySourceData } from "./guided-social-security-facts";
+import type { RetirementSourceData } from "./guided-retirement-facts";
 import { vehicleFactErrors, type VehicleCreditData } from "./guided-vehicle-facts";
 import { adoptionFactErrors, type AdoptionCreditData } from "./guided-adoption-facts";
 
@@ -1481,7 +1482,7 @@ export const emptySocialSecurityData: SocialSecurityData = {
 
 // ── Unemployment data ──────────────────────────────────────────────────────
 
-export interface UnemploymentData {
+export interface UnemploymentData extends UnemploymentSourceData {
   compensation: string;
   federalWithheld: string;
 }
@@ -1670,22 +1671,9 @@ function validateSocialSecuritySection(data: SocialSecurityData | undefined, sta
   return validateRequiredFacts(socialSecurityFactErrors(data, state.segmentation.filingStatus, state.taxYear, state.sectionData["personal-info"], state.sectionData.adjustments));
 }
 
-function validateUnemploymentSection(data: UnemploymentData | undefined): SectionValidationResult {
-  if (!data) return EMPTY_SECTION("unemployment info");
-  if (!hasNumericValue(data.compensation) && !hasNumericValue(data.federalWithheld)) {
-    return EMPTY_SECTION("unemployment info");
-  }
-  if (!hasNumericValue(data.compensation)) {
-    return {
-      status: "partial",
-      message: "Unemployment was started but still needs the compensation amount.",
-      fieldErrors: {
-        compensation: "Compensation is still missing."
-      },
-      allowSkip: true,
-    };
-  }
-  return VALID_SECTION;
+function validateUnemploymentSection(data: UnemploymentData | undefined, state: GuidedFlowState): SectionValidationResult {
+  if (!unemploymentEntries(data).some(isStartedUnemployment)) return EMPTY_SECTION("government payment info");
+  return validateRequiredFacts(unemploymentFactErrors(data, state.segmentation.filingStatus, state.taxYear, state.sectionData["personal-info"], state.sectionData["state-return"]));
 }
 
 function validateDeductionsSection(data: DeductionData | undefined, taxYear?: number | null, sourceErrors: Record<string, string> = {}, filingStatus?: FilingStatus | null): SectionValidationResult {
@@ -1736,7 +1724,7 @@ export function validateSection(
     case "income-social-security":
       return validateSocialSecuritySection(getSectionData(state, "income-social-security"), state);
     case "income-unemployment":
-      return validateUnemploymentSection(getSectionData(state, "income-unemployment"));
+      return validateUnemploymentSection(getSectionData(state, "income-unemployment"), state);
     case "deductions":
       return validateDeductionsSection(getSectionData(state, "deductions"), state.taxYear, nonW2TaxAllocationErrors(state), state.segmentation.filingStatus);
     case "adjustments":

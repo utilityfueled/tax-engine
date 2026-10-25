@@ -23,9 +23,10 @@ import { energyFactErrors } from "./guided-energy-facts";
 import { w2FactErrors } from "./guided-w2-facts";
 import { businessFactErrors, hasBusinessSourceData, isStartedNec, sumKnownBusinessAmounts, type BusinessSourceData } from "./guided-business-facts";
 import { isStartedRental, rentalFactErrors, rentalExpenseFields } from "./guided-rental-facts";
+import { isStartedUnemployment, unemploymentEntries, unemploymentFactErrors, governmentSourceTotal } from "./guided-unemployment-facts";
 import { nonW2TaxAllocationErrors } from "./guided-salt-facts";
-import { isStartedRetirement } from "./guided-retirement-facts";
 import { socialSecurityEntries, isStartedSocialSecurity, socialSecurityFactErrors, socialSecuritySourceTotal } from "./guided-social-security-facts";
+import { isStartedRetirement } from "./guided-retirement-facts";
 import { investmentFactErrors, isStartedInvestment, type InvestmentSourceData } from "./guided-investment-facts";
 
 import type {
@@ -466,12 +467,14 @@ function buildSocialSecurityElectionInput(data: SocialSecurityData | undefined) 
 // ── Unemployment (1099-G) converter ──────────────────────────────────────
 
 export function buildUnemploymentInputs(data: UnemploymentData | undefined) {
-  if (!data || !hasValue(data.compensation)) return [];
-  return [{
-    payer: "State Unemployment",
-    unemploymentCompensation: toDecimalString(data.compensation),
-    federalWithheld: toDecimalString(data.federalWithheld),
-  }];
+  assertKnownFacts(unemploymentFactErrors(data));
+  return unemploymentEntries(data).filter(isStartedUnemployment).map(entry => ({
+    payer: entry.payer!.trim(), payerTin: entry.payerTin!.trim(), accountHolder: entry.accountHolder as "primary" | "spouse",
+    unemploymentCompensation: toDecimalString(entry.compensation), federalWithheld: toDecimalString(entry.federalWithheld),
+    stateOrLocalTaxRefund: toDecimalString(entry.stateOrLocalTaxRefund),
+    ...(entry.refundTaxYear?.trim() ? { refundTaxYear: Number(entry.refundTaxYear) } : {}),
+    ...(entry.stateTaxReporting === "single" ? { state: entry.state!.trim().toUpperCase(), stateWithheld: toDecimalString(entry.stateWithheld) } : { stateWithheld: "0" }),
+  }));
 }
 
 // ── Rental property (Schedule E) converter ─────────────────────────────────
@@ -631,6 +634,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     assertKnownFacts(allPaymentFactErrors(paymentData, state.taxYear));
     assertKnownFacts(retirementFactErrors(retirementData?.entries, true, segmentation.filingStatus, state.taxYear, stateReturnData));
     assertKnownFacts(socialSecurityFactErrors(socialSecurityData, segmentation.filingStatus, state.taxYear, personalInfo, adjustmentData));
+    assertKnownFacts(unemploymentFactErrors(unemploymentData, segmentation.filingStatus, state.taxYear, personalInfo, stateReturnData));
     assertKnownFacts(educationFactErrors(creditsData, state.taxYear, segmentation.filingStatus, personalInfo));
     assertKnownFacts(adjustmentFactErrors(adjustmentData, segmentation.filingStatus, state.taxYear));
     assertKnownFacts(householdFactErrors(otherTaxesData, state.taxYear));
@@ -719,6 +723,9 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     form1099B,
     form1099R,
     formSSA1099,
+    formRRB1099,
+    socialSecurityFacts: formSSA1099.length + formRRB1099.length ? { puertoRicoIncomeExclusion: toDecimalString(socialSecurityData?.puertoRicoIncomeExclusion), americanSamoaIncomeExclusion: toDecimalString(socialSecurityData?.americanSamoaIncomeExclusion), sourceFactsConfirmed: socialSecurityData?.sourceFactsConfirmed ?? undefined } : undefined,
+    socialSecurityLumpSumElection: formSSA1099.length + formRRB1099.length ? buildSocialSecurityElectionInput(socialSecurityData) : undefined,
     form1099G,
     rentalProperties,
     scheduleA,
@@ -732,9 +739,6 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     dependentCare,
     dependentCareBenefits,
     standardDeductionFacts: buildStandardDeductionFacts(personalInfo?.standardDeductionFacts, segmentation.filingStatus, state.taxYear, personalInfo),
-    formRRB1099,
-    socialSecurityFacts: formSSA1099.length + formRRB1099.length ? { puertoRicoIncomeExclusion: toDecimalString(socialSecurityData?.puertoRicoIncomeExclusion), americanSamoaIncomeExclusion: toDecimalString(socialSecurityData?.americanSamoaIncomeExclusion), sourceFactsConfirmed: socialSecurityData?.sourceFactsConfirmed ?? undefined } : undefined,
-    socialSecurityLumpSumElection: formSSA1099.length + formRRB1099.length ? buildSocialSecurityElectionInput(socialSecurityData) : undefined,
     deductionElection: deductionData?.method ?? "automatic",
     educationExpenses,
     energyCredits,
@@ -868,12 +872,12 @@ export function buildGuidedFactAnswers(
   }
 
   // Unemployment → "government-payments-review"
-  const unemplData = state.sectionData["income-unemployment"] as UnemploymentData | undefined;
-  if (unemplData && hasValue(unemplData.compensation)) {
-    answers.push({
-      factId: "government-payments-review",
-      answerText: `1099-G confirmed. Unemployment: $${fmtNum(numVal(unemplData.compensation))}.`,
-    });
+  const unemplData = state.sectionData["income-unemployment"];
+  const governmentEntries = unemploymentEntries(unemplData).filter(isStartedUnemployment);
+  if (governmentEntries.length) {
+    const total = governmentSourceTotal(governmentEntries, "compensation");
+    const complete = Object.keys(unemploymentFactErrors(unemplData, state.segmentation.filingStatus, state.taxYear, state.sectionData["personal-info"], state.sectionData["state-return"])).length === 0;
+    answers.push({ factId: "government-payments-review", answerText: total === null ? "Government-payment source records entered; amounts and ownership need review." : `${governmentEntries.length} government-payment source record(s) ${complete ? "confirmed" : "entered; source facts need review"}. Original unemployment compensation: $${fmtNum(total)}.` });
   }
 
   return answers;
@@ -1021,14 +1025,14 @@ export function buildGuidedSyntheticDocuments(
   }
 
   const unemplData = state.sectionData["income-unemployment"] as UnemploymentData | undefined;
-  if (unemplData && hasValue(unemplData.compensation)) {
+  if (unemploymentEntries(unemplData).some(isStartedUnemployment)) {
     docs.push({
       id: "guided:1099-g",
       name: "Guided Interview — 1099-G",
       size: 0,
       uploadedAt: now,
       kind: "1099-g",
-      coverage: "supported",
+      coverage: Object.keys(unemploymentFactErrors(unemplData, state.segmentation.filingStatus, state.taxYear, state.sectionData["personal-info"], state.sectionData["state-return"])).length ? "partially-supported" : "supported",
       label: "1099-G (guided interview)",
       notes: "Entered via guided interview.",
       matchedFixtureId: null,

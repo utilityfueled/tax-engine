@@ -91,3 +91,13 @@ it("requires the actual IRA interaction worksheet when a covered person contribu
   state.sectionData.adjustments = { hsaDeduction: "", studentLoanInterest: "", selfEmployedHealthInsurance: "", educatorExpenses: "", iraDeduction: "100", alimonyPaid: "", iraContributions: { primaryContributions: "100", primaryIsActiveParticipant: true } };
   expect(buildTaxInputFromGuidedData(state)).toBeNull();
 });
+
+it("does not discard saved benefit aggregates behind an empty source-record array", () => {
+  const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["social-security"], lifeEvents: [], stateCode: null });
+  for (const amount of ["0", "1000.10"]) {
+    state.sectionData["income-social-security"] = { netBenefits: amount, federalWithheld: "0", entries: [] };
+    expect(buildTaxInputFromGuidedData(state)).toBeNull();
+    expect(validateSection(state, "income-social-security").status).toBe("partial");
+    expect(buildGuidedFactAnswers(state).find(fact => fact.factId === "social-security-benefits-review")).toBeDefined();
+  }
+});

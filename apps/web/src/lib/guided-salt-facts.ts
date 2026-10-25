@@ -10,6 +10,7 @@ export function nonW2TaxAllocationErrors(state: GuidedFlowState): Record<string,
     ...investments?.interestEntries ?? [], ...investments?.dividendEntries ?? [],
     ...investments?.brokerageEntries ?? [], ...state.sectionData["income-self-employment"]?.necEntries ?? [],
     ...state.sectionData["income-retirement"]?.entries ?? [],
+    ...state.sectionData["income-unemployment"]?.entries ?? [],
   ];
   const stateTotal = sources.reduce((sum, source) => source.stateTaxReporting === "single" && !amountError(source.stateWithheld, "source withholding")
     ? sum.plus(parseGuidedCurrency(source.stateWithheld)) : sum, new Decimal(0));

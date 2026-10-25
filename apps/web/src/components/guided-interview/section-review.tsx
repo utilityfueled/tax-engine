@@ -2,6 +2,7 @@
 
 import { isStartedNec, sumKnownBusinessAmounts, type BusinessSourceData } from "@/lib/guided-business-facts";
 import { isStartedRental, knownRentalExpenses } from "@/lib/guided-rental-facts";
+import { unemploymentEntries, isStartedUnemployment, governmentSourceTotal } from "@/lib/guided-unemployment-facts";
 import { socialSecurityEntries, isStartedSocialSecurity, socialSecuritySourceTotal } from "@/lib/guided-social-security-facts";
 import { isStartedInvestment } from "@/lib/guided-investment-facts";
 import { hasEnteredAmount } from "@/lib/guided-required-facts";
@@ -383,22 +384,15 @@ function SocialSecuritySummary({ data }: { data: SocialSecurityData | undefined 
 }
 
 function UnemploymentSummary({ data }: { data: UnemploymentData | undefined }) {
-  if (!data || !hasValue(data.compensation)) return <p className="guided-review-empty">No unemployment entered.</p>;
-
-  return (
-    <div className="guided-review-card">
-      <div className="guided-review-row">
-        <span className="guided-review-label">Unemployment compensation</span>
-        <span className="guided-review-value">{formatCurrency(data.compensation)}</span>
-      </div>
-      {hasValue(data.federalWithheld) && (
-        <div className="guided-review-row">
-          <span className="guided-review-label">Federal withheld</span>
-          <span className="guided-review-value">{formatCurrency(data.federalWithheld)}</span>
-        </div>
-      )}
-    </div>
-  );
+  const entries = unemploymentEntries(data).filter(isStartedUnemployment);
+  if (!entries.length) return <p className="guided-review-empty">No government-payment records entered.</p>;
+  const total = governmentSourceTotal(entries, "compensation");
+  const withheld = governmentSourceTotal(entries, "federalWithheld");
+  return <div className="guided-review-card">
+    {entries.map((entry, index) => <div className="guided-review-row" key={index}><span className="guided-review-label">{entry.payer || `Government statement ${index + 1}`}</span><span className="guided-review-value">{entry.sourceFactsConfirmed === true ? "Source checked" : "Source facts need review"}</span></div>)}
+    <div className="guided-review-row"><span className="guided-review-label">Original unemployment compensation</span><span className="guided-review-value">{total === null ? "Unknown" : formatCurrency(total)}</span></div>
+    <div className="guided-review-row"><span className="guided-review-label">Government federal withholding</span><span className="guided-review-value">{withheld === null ? "Unknown" : formatCurrency(withheld)}</span></div>
+  </div>;
 }
 
 function RentalIncomeSummary({ entries }: { entries: RentalPropertyEntryData[] | undefined }) {

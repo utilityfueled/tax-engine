@@ -1,5 +1,5 @@
 import { completeCareSource } from "./care-source-fixture";
-import { completeRentalSource, completeNecSource, completeBusinessSection, completeBusinessExpenses, completeMortgageSource, completeRetirementSource, completeSocialSecuritySource, completeSocialSecurityTreatment } from "./complete-facts";
+import { completeRentalSource, completeNecSource, completeBusinessSection, completeBusinessExpenses, completeMortgageSource, completeRetirementSource, completeSocialSecuritySource, completeSocialSecurityTreatment, completeUnemploymentSource } from "./complete-facts";
 import { completeBrokerageSource, completeDividendSource, completeInterestSource, completeTransactionSource } from "./complete-facts";
 import { completeW2Entry, startCompleteInterview as startInterview, completePersonalInfo, completeDependent, completeAocEligibility, completeEducationClaimant, completeHouseholdEmployee } from "./complete-facts";
 import { describe, it, expect } from "vitest";
@@ -1606,17 +1606,16 @@ describe("buildUnemploymentInputs", () => {
   });
 
   it("converts 1099-G data", () => {
-    const data = { compensation: "12000", federalWithheld: "1200" };
+    const data = { compensation: "12000", federalWithheld: "1200", entries: [{ ...completeUnemploymentSource, compensation: "12000", federalWithheld: "1200" }] };
     const result = buildUnemploymentInputs(data);
     expect(result).toHaveLength(1);
     expect(result[0].unemploymentCompensation).toBe("12000");
     expect(result[0].federalWithheld).toBe("1200");
   });
 
-  it("defaults payer to State Unemployment", () => {
+  it("rejects legacy government amounts without actual payer and withholding facts", () => {
     const data = { compensation: "8000", federalWithheld: "" };
-    const result = buildUnemploymentInputs(data);
-    expect(result[0].payer).toBe("State Unemployment");
+    expect(() => buildUnemploymentInputs(data)).toThrow();
   });
 });
 
@@ -1665,6 +1664,7 @@ describe("buildTaxInputFromGuidedData retirement and SS and unemployment", () =>
     state = updateSectionData(state, "income-unemployment", {
       compensation: "15000",
       federalWithheld: "1500",
+      entries: [{ ...completeUnemploymentSource, compensation: "15000", federalWithheld: "1500" }],
     });
     const input = buildTaxInputFromGuidedData(state);
     expect(input).not.toBeNull();
