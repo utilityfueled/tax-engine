@@ -1,126 +1,165 @@
 form: "Form 8815"
-fullName: "Exclusion of Interest from Series EE and I U.S. Savings Bonds Issued After 1989"
-taxYear: 2025
-irsReference: "https://www.irs.gov/instructions/i8815"
-
+fullName: "Exclusion of Interest From Series EE and I U.S. Savings Bonds Issued After1989"
+taxYear: 2026
+irsReference: "https://www.irs.gov/pub/irs-pdf/f8815.pdf"
 notes: |
-  Form 8815 calculates the excludable interest from qualified US savings bonds
-  used to pay higher education expenses. The exclusion is subject to an income
-  phase-out. MFS filers are NOT eligible.
-  Result flows to Schedule B Line 3.
-
+  Official2025 form contains its instructions.2026 form/instructions remain draft;
+  final indexed2026 thresholds are RevProc2025-32 section4.17. No filing readiness
+  is conferred. Monetary arithmetic uses Decimal and completed lines round to dollars;
+  ratios retain12decimal places, satisfying at-least-three-place instructions.
+  Qualified bonds must be EE/I issued after1989 to an age24-or-older taxpayer
+  (or qualified spouse ownership on a joint return), redeemed in the current year.
+  Actual issue/redemption/owner birth dates, registration, face value and prior
+  interest reporting are required for2026. Treasury31CFRPart321 Appendix(b)(2)(ii)
+  permits age24 on the actual first-day-of-month issue date; a purchase-day date
+  must not substitute for the assigned issue date. Unknown facts never become eligibility.
+  Tuition/required fees and Coverdell/QTP contributions are coordinated once per
+  return using distinct actual source records, not repeated once per redeemed bond.
+  Known ineligible bonds/expenses yield zero benefit; malformed/contradictory facts
+  reject. Legacy2025 aggregate inputs remain explicitly unverified.
+  Line9 MAGI uses the official worksheet before the bond exclusion, with foreign
+  net45+50, possession and employer-adoption exclusions added back, and applicable
+  Pub915/IRA/PTC-SEHI/royalty-interest coordination completed by the federal caller.
+  royaltyInterestAdjustment is the signed change in AGI from using the actual
+  pre-exclusion royalty interest deduction; it may be negative.
 businessRuleValidation:
   - rule: "reference-summary-packet"
-    description: "Inventory support counts this form as business-rule validated only when regression coverage proves the emitted packet artifact stays labeled as a non-filing reference summary and only surfaces the supported savings-bond redemption inputs, the computed Form 8815 Lines 2 through 13 outputs, and the resulting Schedule B Line 3 exclusion."
+    description: "Review-only packet must use corrected audited lines and actual source amounts."
     testRef: "tests/pdf/fill-form-8815.test.ts::buildForm8815ReferenceSummary keeps the packet artifact reference-only and limited to supported savings-bond outputs"
-
+  - rule: "reference-audit-integrity"
+    description: "Review summary requires exact-year official audited lines, rejects nonfinite/missing/duplicate/wrong-form or inconsistent totals, and uses calculated source amounts."
+    testRef: "tests/pdf/fill-form-8815.test.ts::Form8815 reference rejects mismatched years incomplete audits and inconsistent totals"
+  - rule: "reference-every-page-warning"
+    description: "Every generated page retains the review-only notice, including overflow pages."
+    testRef: "tests/pdf/fill-form-8815.test.ts::Form8815 source summary preserves worksheet amounts and every-page review warnings"
 lines:
   - line: "1"
-    description: "Name of person who was a qualified beneficiary"
-    formula: "Taxpayer, spouse, or dependent"
-    irsRef: "Form 8815 Instructions, Line 1"
-    testRef: "tests/engine/forms/form-8815.test.ts::Form 8815 - basic exclusion calculation"
-
+    description: "Eligible beneficiary/institution source facts"
+    formula: "Actual taxpayer/spouse/claimed-dependent identity and qualified institution or plan; no invented name or address"
+    irsRef: "Form8815 same numbered line and worksheet; IRC135; RevProc2025-32 section4.17"
+    testRef: "tests/engine/forms/form-8815-2026.test.ts::Form8815 reproduces the official beneficiary scholarship example"
   - line: "2"
-    description: "Total qualified higher education expenses paid"
-    formula: "Tuition + fees, reduced by tax-free scholarships/grants"
-    irsRef: "Form 8815 Instructions, Line 2"
-    testRef: "tests/engine/forms/form-8815.test.ts::Form 8815 Line 2 - qualified expenses"
-
+    description: "Eligible expenses before beneficiary benefits"
+    formula: "Sum qualified paid amounts minus direct-institution benefits, education-credit expenses and expenses used for tax-free ESA/QTP distributions"
+    irsRef: "Form8815 same numbered line and worksheet; IRC135; RevProc2025-32 section4.17"
+    testRef: "tests/engine/forms/form-8815-2026.test.ts::Form8815 coordinates education costs once across multiple bonds"
   - line: "3"
-    description: "Total proceeds (principal + interest) from qualified bonds redeemed"
-    formula: "Sum of all qualified bond redemption amounts"
-    irsRef: "Form 8815 Instructions, Line 3"
-    testRef: "tests/engine/forms/form-8815.test.ts::Form 8815 Line 3 - total proceeds"
-
+    description: "Beneficiary nontaxable education benefits"
+    formula: "Actual benefits covering line2 expenses, excluding direct-institution benefits already removed"
+    irsRef: "Form8815 same numbered line and worksheet; IRC135; RevProc2025-32 section4.17"
+    testRef: "tests/engine/forms/form-8815-2026.test.ts::Form8815 reproduces the official beneficiary scholarship example"
   - line: "4"
-    description: "Interest included in Line 3 proceeds"
-    formula: "Only the interest portion of the redemption"
-    irsRef: "Form 8815 Instructions, Line 4"
-    testRef: "tests/engine/forms/form-8815.test.ts::Form 8815 Line 4 - interest portion"
-
+    description: "Net qualified expenses"
+    formula: "max(0,2-3)"
+    irsRef: "Form8815 same numbered line and worksheet; IRC135; RevProc2025-32 section4.17"
+    testRef: "tests/engine/forms/form-8815-2026.test.ts::Form8815 reproduces the official beneficiary scholarship example"
   - line: "5"
-    description: "Expenses-to-proceeds ratio"
-    formula: "min(1, Line 2 / Line 3)"
-    irsRef: "Form 8815 Instructions, Line 5"
-    notes: "Cannot exceed 1.0"
-    testRef: "tests/engine/forms/form-8815.test.ts::Form 8815 Line 5 - ratio capped at 1"
-
+    description: "Qualified redemption proceeds"
+    formula: "Sum current-year eligible bond principal+interest"
+    irsRef: "Form8815 same numbered line and worksheet; IRC135; RevProc2025-32 section4.17"
+    testRef: "tests/engine/forms/form-8815-2026.test.ts::Form8815 reproduces the official beneficiary scholarship example"
   - line: "6"
-    description: "Excludable interest before phase-out"
-    formula: "Line 4 × Line 5"
-    irsRef: "Form 8815 Instructions, Line 6"
-    testRef: "tests/engine/forms/form-8815.test.ts::Form 8815 Line 6 - excludable before phase-out"
-
+    description: "Current-year interest"
+    formula: "Line6 worksheet8: eligible proceeds less paperEE face*50%, electronicEE/I face, and actual interest previously reported"
+    irsRef: "Form8815 same numbered line and worksheet; IRC135; RevProc2025-32 section4.17"
+    testRef: "tests/engine/forms/form-8815-2026.test.ts::Form8815 derives current interest from face values and prior reporting"
   - line: "7"
-    description: "Modified AGI"
-    formula: "AGI + student loan interest deduction + foreign earned income exclusion + other add-backs"
-    irsRef: "Form 8815 Instructions, Line 7"
-    notes: |
-      Per IRS Form 8815 Instructions, Line 7: "Add to your adjusted gross income
-      (Form 1040, line 11) any of the following: ... The deduction for student loan interest."
-      Engine adds back the student loan interest deduction from Schedule 1 Line 21.
-      Other add-backs (foreign earned income/housing exclusion, Puerto Rico exclusion)
-      are not currently in the input model.
-    edgeCases:
-      - "Filer with $2,500 SLI and MAGI near phase-out: SLI add-back pushes MAGI into phase-out range"
-      - "MFJ at $152K AGI with $2,500 SLI: MAGI = $154.5K (in phase-out), not $152K (below phase-out)"
-    testRef: "tests/engine/forms/form-8815.test.ts::Form 8815 Line 7 - modified AGI"
-
+    description: "Expense fraction"
+    formula: "min(1,4/5), twelve decimal places; zero when proceeds0"
+    irsRef: "Form8815 same numbered line and worksheet; IRC135; RevProc2025-32 section4.17"
+    testRef: "tests/engine/forms/form-8815-2026.test.ts::Form8815 reproduces the official beneficiary scholarship example"
   - line: "8"
-    description: "Phase-out threshold"
-    formula: "MFJ: $149,250; Single/HoH/QSS: $99,500"
-    irsRef: "IRS Pub 970 (2025) Ch. 9; IRC §135(b)(2)(B)"
-    notes: |
-      MFS cannot use Form 8815 (IRC §135(d)(1)).
-      QSS is NOT a joint return per IRC §135(b)(2)(B) — uses single/HoH threshold.
-      IRS Pub 970 (2025): "Single, head of household, or qualifying surviving spouse: $99,500"
-    edgeCases:
-      - "QSS filer at $120K MAGI: fully phased out (single upper limit $114,500), not MFJ treatment"
-    testRef: "tests/engine/forms/form-8815.test.ts::Form 8815 Line 8 - phase-out threshold"
-
+    description: "Exclusion before phaseout"
+    formula: "round(6*7)"
+    irsRef: "Form8815 same numbered line and worksheet; IRC135; RevProc2025-32 section4.17"
+    testRef: "tests/engine/forms/form-8815-2026.test.ts::Form8815 reproduces the official beneficiary scholarship example"
   - line: "9"
-    description: "Excess over phase-out threshold"
-    formula: "max(0, Line 7 - Line 8)"
-    irsRef: "Form 8815 Instructions, Line 9"
-    testRef: "tests/engine/forms/form-8815.test.ts::Form 8815 - full phase-out above upper limit"
-
+    description: "Modified AGI"
+    formula: "Actual completed official Line9 Worksheet; before bond exclusion, plus actual foreign/possession/adoption addbacks"
+    irsRef: "Form8815 same numbered line and worksheet; IRC135; RevProc2025-32 section4.17"
+    testRef: "tests/engine/forms/form-8815-2026.test.ts::Form8815 uses independent2026 thresholds and exact phaseout boundaries"
   - line: "10"
-    description: "Phase-out range"
-    formula: "MFJ: $30,000; Single/HoH/QSS: $15,000"
-    irsRef: "IRS Pub 970 (2025) Ch. 9; IRC §135(b)(2)"
-    notes: "QSS uses single/HoH range ($15,000) since QSS is not a joint return"
-    testRef: "tests/engine/forms/form-8815.test.ts::Form 8815 - partial phase-out"
-
+    description: "Phaseout threshold"
+    formula: "2026 MFJ152650;others101800.2025 MFJ149250;others99500. QSS uses other threshold; MFS ineligible"
+    irsRef: "Form8815 same numbered line and worksheet; IRC135; RevProc2025-32 section4.17"
+    testRef: "tests/engine/forms/form-8815-2026.test.ts::Form8815 uses independent2026 thresholds and exact phaseout boundaries"
   - line: "11"
-    description: "Phase-out ratio"
-    formula: "min(1, Line 9 / Line 10)"
-    irsRef: "Form 8815 Instructions, Line 11"
-    testRef: "tests/engine/forms/form-8815.test.ts::Form 8815 - partial phase-out"
-
+    description: "Excess MAGI"
+    formula: "max(0,9-10)"
+    irsRef: "Form8815 same numbered line and worksheet; IRC135; RevProc2025-32 section4.17"
+    testRef: "tests/engine/forms/form-8815-2026.test.ts::Form8815 uses independent2026 thresholds and exact phaseout boundaries"
   - line: "12"
-    description: "Phase-out reduction amount"
-    formula: "Line 6 × Line 11"
-    irsRef: "Form 8815 Instructions, Line 12"
-    testRef: "tests/engine/forms/form-8815.test.ts::Form 8815 - partial phase-out"
-
+    description: "Phaseout fraction"
+    formula: "min(1,11/(MFJ30000;others15000)), twelve decimal places"
+    irsRef: "Form8815 same numbered line and worksheet; IRC135; RevProc2025-32 section4.17"
+    testRef: "tests/engine/forms/form-8815-2026.test.ts::Form8815 uses independent2026 thresholds and exact phaseout boundaries"
   - line: "13"
+    description: "Phaseout reduction"
+    formula: "round(8*12)"
+    irsRef: "Form8815 same numbered line and worksheet; IRC135; RevProc2025-32 section4.17"
+    testRef: "tests/engine/forms/form-8815-2026.test.ts::Form8815 uses independent2026 thresholds and exact phaseout boundaries"
+  - line: "14"
     description: "Excludable savings bond interest"
-    formula: "Line 6 - Line 12"
-    irsRef: "Form 8815 Instructions, Line 13"
-    notes: "Flows to Schedule B Line 3"
-    edgeCases:
-      - "MFS filers get $0 exclusion (not eligible)"
-      - "Below phase-out threshold: full exclusion"
-      - "Above upper phase-out limit: $0 exclusion"
-      - "Expenses exceed proceeds: ratio capped at 1"
-      - "No qualified expenses: $0 exclusion"
-      - "Zero bond interest: $0 exclusion"
-    testRef: "tests/engine/forms/form-8815.test.ts::Form 8815 Line 13 - final exclusion below phase-out"
-
-  - line: "packet"
-    description: "Draft packet inclusion rule for supported Form 8815 savings-bond exclusions"
-    formula: "When supported savings-bond redemption inputs produce a positive Form 8815 Line 13 exclusion, include a non-filing reference-summary PDF in the packet that lists each supported redemption's proceeds, interest, and qualified-expense inputs plus the computed Form 8815 Lines 2 through 13 outputs and the resulting Schedule B Line 3 exclusion. Suppress the packet artifact when no exclusion is allowed."
-    irsRef: "Form 8815 Instructions; About Schedule B (Form 1040); Publication 550, Education Savings Bond Program"
-    notes: "This packet slice intentionally emits a deterministic reference summary instead of attempting to recreate a filed Form 8815, so the draft packet stays honest about the supported savings-bond exclusion scope while still surfacing the computed federal effect when the taxpayer is actually claiming the exclusion."
-    testRef: "tests/pdf/fill-form-8815.test.ts::fillReturn includes a Form 8815 reference summary when savings bond redemptions produce an exclusion claim"
+    formula: "8-13, zero forMFS; flows ScheduleBline3"
+    irsRef: "Form8815 same numbered line and worksheet; IRC135; RevProc2025-32 section4.17"
+    testRef: "tests/engine/forms/form-8815-2026.test.ts::Form8815 uses independent2026 thresholds and exact phaseout boundaries"
+  - line: "6-worksheet-1"
+    description: "Line6 worksheet1"
+    formula: "5"
+    irsRef: "Form8815 same numbered line and worksheet; IRC135; RevProc2025-32 section4.17"
+    testRef: "tests/engine/forms/form-8815-2026.test.ts::Form8815 derives current interest from face values and prior reporting"
+  - line: "6-worksheet-2"
+    description: "Line6 worksheet2"
+    formula: "sum face of eligible paperEE"
+    irsRef: "Form8815 same numbered line and worksheet; IRC135; RevProc2025-32 section4.17"
+    testRef: "tests/engine/forms/form-8815-2026.test.ts::Form8815 derives current interest from face values and prior reporting"
+  - line: "6-worksheet-3"
+    description: "Line6 worksheet3"
+    formula: "round(worksheet2*0.5)"
+    irsRef: "Form8815 same numbered line and worksheet; IRC135; RevProc2025-32 section4.17"
+    testRef: "tests/engine/forms/form-8815-2026.test.ts::Form8815 derives current interest from face values and prior reporting"
+  - line: "6-worksheet-4"
+    description: "Line6 worksheet4"
+    formula: "sum face of eligible electronicEE andI"
+    irsRef: "Form8815 same numbered line and worksheet; IRC135; RevProc2025-32 section4.17"
+    testRef: "tests/engine/forms/form-8815-2026.test.ts::Form8815 derives current interest from face values and prior reporting"
+  - line: "6-worksheet-5"
+    description: "Line6 worksheet5"
+    formula: "worksheet3+worksheet4"
+    irsRef: "Form8815 same numbered line and worksheet; IRC135; RevProc2025-32 section4.17"
+    testRef: "tests/engine/forms/form-8815-2026.test.ts::Form8815 derives current interest from face values and prior reporting"
+  - line: "6-worksheet-6"
+    description: "Line6 worksheet6"
+    formula: "worksheet1-worksheet5"
+    irsRef: "Form8815 same numbered line and worksheet; IRC135; RevProc2025-32 section4.17"
+    testRef: "tests/engine/forms/form-8815-2026.test.ts::Form8815 derives current interest from face values and prior reporting"
+  - line: "6-worksheet-7"
+    description: "Line6 worksheet7"
+    formula: "actual previously reported interest"
+    irsRef: "Form8815 same numbered line and worksheet; IRC135; RevProc2025-32 section4.17"
+    testRef: "tests/engine/forms/form-8815-2026.test.ts::Form8815 derives current interest from face values and prior reporting"
+  - line: "6-worksheet-8"
+    description: "Line6 worksheet8"
+    formula: "worksheet6-worksheet7"
+    irsRef: "Form8815 same numbered line and worksheet; IRC135; RevProc2025-32 section4.17"
+    testRef: "tests/engine/forms/form-8815-2026.test.ts::Form8815 derives current interest from face values and prior reporting"
+  - line: "source-facts"
+    description: "Actual source qualification"
+    formula: "Require confirmed original monetary source fields and actual bond/education identities/dates/classification; preserve false source marker on reparsing"
+    irsRef: "Form8815 same numbered line and worksheet; IRC135; RevProc2025-32 section4.17"
+    testRef: "tests/engine/forms/form-8815-2026.test.ts::Form8815 rejects missing original source facts and fabricated qualification"
+  - line: "qualification"
+    description: "Bond statutory qualification"
+    formula: "EE/I; issued after1989; owner age>=24; qualified taxpayer/spouse registration; actual current-year redemption"
+    irsRef: "Form8815 same numbered line and worksheet; IRC135; RevProc2025-32 section4.17"
+    testRef: "tests/engine/forms/form-8815-2026.test.ts::Form8815 distinguishes known ineligible ownership issue year and owner age"
+  - line: "expense-coordination"
+    description: "Unique expenses and actual benefit allocations"
+    formula: "Distinct expense source IDs; no repeated per-bond expense aliases or duplicate bond source IDs; known benefit allocations do not exceed cost"
+    irsRef: "Form8815 same numbered line and worksheet; IRC135; RevProc2025-32 section4.17"
+    testRef: "tests/engine/forms/form-8815-2026.test.ts::Form8815 rejects duplicate sources and conflicting legacy expense aliases"
+  - line: "statement-prior-interest-adjustment"
+    description: "Actual previously taxed interest included in current statements"
+    formula: "Confirmed actual adjustment, no greater than listed bond interest previously reported; caller subtracts it once from Schedule B gross interest and reconciles to current Box3"
+    irsRef: "Form8815 Line6 Worksheet7 and ScheduleB interest instructions"
+    testRef: "tests/engine/forms/form-8815-2026.test.ts::Form8815 requires actual current statement reconciliation"

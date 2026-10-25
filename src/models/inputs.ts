@@ -2739,13 +2739,57 @@ export const Form4952InputSchema = z.object({
 });
 export type Form4952Input = z.infer<typeof Form4952InputSchema>;
 
-export const SavingsBondRedemptionSchema = z.object({
+export const SavingsBondRedemptionSchema = z.preprocess((value) => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const record = value as Record<string, unknown>;
+  const required = ["sourceId", "proceeds", "bondType", "issueDate", "redemptionDate", "ownerDateOfBirth", "registeredOwner", "ownershipConfirmed", "faceValue", "priorYearInterestReported"];
+  return { ...record, sourceFactsComplete: record.sourceFactsComplete !== false && required.every(key => record[key] !== undefined) };
+}, z.object({
+  /** Recomputed from original fields; a supplied true marker is not evidence. */
+  sourceFactsComplete: z.boolean().optional(),
   /** Total redemption proceeds (principal + interest) */
   proceeds: decimal,
-  /** Interest portion of the proceeds */
-  interest: decimal,
-  /** Qualified higher education expenses paid */
-  qualifiedExpenses: decimal,
+  /** Historical aggregate aliases do not establish current-year eligibility. */
+  interest: optionalDecimalInput,
+  qualifiedExpenses: optionalDecimalInput,
+  sourceId: z.string().trim().min(1).optional(),
+  bondType: z.enum(["paper_ee", "electronic_ee", "series_i", "other"]).optional(),
+  issueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  redemptionDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  ownerDateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  registeredOwner: z.enum(["taxpayer", "spouse", "taxpayer_and_spouse", "other"]).optional(),
+  ownershipConfirmed: z.boolean().optional(),
+  faceValue: optionalDecimalInput,
+  priorYearInterestReported: optionalDecimalInput,
+}));
+
+/** Form 8815 expenses are coordinated once per return, not once per bond. */
+export const Form8815Schema = z.object({
+  sourceFactsConfirmed: z.boolean().optional(),
+  currentStatementReconciliationConfirmed: z.boolean().optional(),
+  priorYearInterestIncludedInCurrentStatements: optionalDecimalInput,
+  educationExpenses: z.array(z.object({
+    sourceId: z.string().trim().min(1),
+    beneficiaryName: z.string().trim().min(1),
+    relationship: z.enum(["taxpayer", "spouse", "dependent", "other"]),
+    dependentClaimed: z.boolean().optional(),
+    institutionName: z.string().trim().min(1),
+    institutionAddress: z.string().trim().min(1),
+    expenseType: z.enum(["tuition_and_required_fees", "coverdell_contribution", "qtp_contribution"]),
+    paidTaxYear: z.number().int(),
+    amountPaid: decimal,
+    qualificationConfirmed: z.boolean(),
+    coordinationConfirmed: z.boolean(),
+    directInstitutionBenefits: decimal,
+    educationCreditExpenses: decimal,
+    taxFreeDistributionExpenses: decimal,
+    beneficiaryBenefits: decimal,
+  })).optional(),
+  /** Actual official Line 9 Worksheet addbacks; omitted means unknown. */
+  americanSamoaIncomeExclusion: optionalDecimalInput,
+  puertoRicoIncomeExclusion: optionalDecimalInput,
+  /** Signed MAGI change from the actual pre-exclusion royalty interest deduction. */
+  royaltyInterestAdjustment: optionalDecimalInput,
 });
 
 export const EnergyCreditsSchema = z.object({
@@ -4615,6 +4659,7 @@ export const TaxYearInputSchema = z.object({
   energyCredits: EnergyCreditsSchema.optional(),
   form8936: Form8936Schema.optional(),
   savingsBondRedemptions: z.array(SavingsBondRedemptionSchema).default([]),
+  form8815: Form8815Schema.optional(),
   iraDeductionWorksheet: IraDeductionWorksheetSchema.optional(),
   eic: EicConfigSchema.optional(),
   scheduleR: ScheduleRInputSchema.optional(),

@@ -1,4 +1,6 @@
 import { mkdir, writeFile } from "fs/promises";
+import Decimal from "decimal.js";
+import { assertPdfExportAllowed, markReviewPdf } from "../../export-policy.js";
 import { join } from "path";
 import {
   PDFDocument,
@@ -30,6 +32,10 @@ const INCLUDED_FORM_8815_LINES = [
   "11",
   "12",
   "13",
+  "14",
+  "6-worksheet-1", "6-worksheet-2", "6-worksheet-3", "6-worksheet-4",
+  "6-worksheet-5", "6-worksheet-6", "6-worksheet-7", "6-worksheet-8",
+  "statement-prior-interest-adjustment",
 ] as const;
 
 const INCLUDED_FORM_8815_LINE_SET = new Set<string>(INCLUDED_FORM_8815_LINES);
@@ -40,7 +46,8 @@ export interface Form8815ReferenceSummaryRedemption {
   redemptionNumber: number;
   proceeds: string;
   interest: string;
-  qualifiedExpenses: string;
+  principal: string;
+  eligibility: string;
 }
 
 export interface Form8815ReferenceSummaryLine {
@@ -132,29 +139,54 @@ function drawWrappedText(
 }
 
 function getReferenceLines(result: Form8815Result) {
-  return result.lines
-    .filter((line) => INCLUDED_FORM_8815_LINE_SET.has(line.line))
-    .sort(
-      (left, right) => INCLUDED_FORM_8815_LINES.indexOf(left.line as typeof INCLUDED_FORM_8815_LINES[number])
-        - INCLUDED_FORM_8815_LINES.indexOf(right.line as typeof INCLUDED_FORM_8815_LINES[number]),
-    );
+  const selected = new Map<string, Form8815Result["lines"][number]>();
+  for (const line of result.lines) {
+    if (line.form !== "Form 8815" || !INCLUDED_FORM_8815_LINE_SET.has(line.line)) continue;
+    if (selected.has(line.line)) throw new Error(`Form 8815 duplicate audit line ${line.line}.`);
+    if (!line.value.isFinite() || (line.line !== "9" && line.value.isNegative())) throw new Error(`Form 8815 audit line ${line.line} is not a finite allowed amount.`);
+    selected.set(line.line, line);
+  }
+  const required = result.sourceFactsVerified ? INCLUDED_FORM_8815_LINES : INCLUDED_FORM_8815_LINES.slice(0, 13);
+  for (const id of required) if (!selected.has(id)) throw new Error(`Form 8815 missing audited line ${id}.`);
+  const totals: Array<[string, Decimal]> = [
+    ["2", result.grossQualifiedExpenses], ["3", result.nontaxableEducationalBenefits], ["4", result.qualifiedExpenses],
+    ["5", result.totalProceeds], ["6", result.totalInterest], ["7", result.expenseRatio],
+    ["8", result.excludableBeforePhaseOut], ["9", result.modifiedAGI], ["10", result.phaseOutThreshold],
+    ["14", result.excludableSavingsBondInterest],
+  ];
+  for (const [id, value] of totals) if (!value.isFinite() || !selected.get(id)?.value.eq(value)) throw new Error(`Form 8815 line ${id} does not reconcile to its result total.`);
+  return INCLUDED_FORM_8815_LINES.flatMap(id => {
+    const line = selected.get(id);
+    return line ? [line] : [];
+  });
 }
 
 export function buildForm8815ReferenceSummary(
   redemptions: SavingsBondRedemption[],
   result: Form8815Result,
 ): Form8815ReferenceSummary {
+  assertPdfExportAllowed(2025, result.taxYear);
+  if (result.redemptionResults.length !== redemptions.length) throw new Error("Form 8815 redemption sources do not match the calculation.");
+  const rows = result.redemptionResults.map((calculated, index) => {
+    const source = redemptions[index];
+    if (!source) throw new Error("Form 8815 missing redemption source.");
+    const proceeds = new Decimal(source.proceeds);
+    if (!proceeds.isFinite() || !calculated.proceeds.isFinite() || !proceeds.eq(calculated.proceeds) || source.sourceId !== calculated.sourceId) throw new Error("Form 8815 redemption source does not reconcile to the calculation.");
+    if ((calculated.principal && (!calculated.principal.isFinite() || calculated.principal.isNegative())) || (calculated.currentYearInterest && (!calculated.currentYearInterest.isFinite() || calculated.currentYearInterest.isNegative()))) throw new Error("Form 8815 redemption source contains a nonfinite or negative amount.");
+    return {
+      redemptionNumber: index + 1,
+      proceeds: calculated.proceeds.toString(),
+      interest: calculated.currentYearInterest?.toString() ?? "Not applicable to this ineligible bond type",
+      principal: calculated.principal?.toString() ?? "Not applicable to this ineligible bond type",
+      eligibility: calculated.eligible === undefined ? "Unverified historical input" : calculated.eligible ? "Eligible from actual source facts" : "Ineligible from actual source facts",
+    };
+  });
   return {
     title: "Form 8815 Savings Bond Interest Reference Summary",
     warningLabel: "REFERENCE SUMMARY ONLY",
     redemptionCount: redemptions.length,
-    introduction: `Computed from ${redemptions.length} supported savings bond redemption entr${redemptions.length === 1 ? "y" : "ies"} that produce a positive Form 8815 exclusion.`,
-    redemptions: redemptions.map((redemption, index) => ({
-      redemptionNumber: index + 1,
-      proceeds: redemption.proceeds.toString(),
-      interest: redemption.interest.toString(),
-      qualifiedExpenses: redemption.qualifiedExpenses.toString(),
-    })),
+    introduction: `${result.sourceFactsVerified ? "Calculated using actual source facts" : "Calculated using unverified historical aggregate inputs"} for ${redemptions.length} redemption${redemptions.length === 1 ? "" : "s"}. Education costs are coordinated once for the return. This reference does not establish filing readiness.`,
+    redemptions: rows,
     lines: getReferenceLines(result).map((line) => ({
       line: line.line,
       description: line.description,
@@ -231,7 +263,7 @@ export async function fillForm8815Reference(
   y -= 16;
 
   for (const redemption of summary.redemptions) {
-    if (y < 105) {
+    if (y < 140) {
       newPage();
     }
 
@@ -253,7 +285,7 @@ export async function fillForm8815Reference(
       lineHeight: 13,
     });
 
-    y = drawWrappedText(page, `Interest: ${redemption.interest}`, {
+    y = drawWrappedText(page, `Current-year interest: ${redemption.interest}`, {
       font: regular,
       size: BODY_FONT_SIZE,
       x: PAGE_MARGIN + 12,
@@ -262,20 +294,25 @@ export async function fillForm8815Reference(
       lineHeight: 13,
     });
 
-    y = drawWrappedText(page, `Qualified expenses: ${redemption.qualifiedExpenses}`, {
+    y = drawWrappedText(page, `Principal: ${redemption.principal}`, {
       font: regular,
       size: BODY_FONT_SIZE,
       x: PAGE_MARGIN + 12,
       y: y - 2,
       maxWidth: PAGE_WIDTH - PAGE_MARGIN * 2 - 12,
       lineHeight: 13,
+    });
+
+    y = drawWrappedText(page, redemption.eligibility, {
+      font: regular, size: BODY_FONT_SIZE, x: PAGE_MARGIN + 12, y: y - 2,
+      maxWidth: PAGE_WIDTH - PAGE_MARGIN * 2 - 12, lineHeight: 13,
     });
 
     y -= 8;
   }
 
   for (const line of summary.lines) {
-    if (y < 90) {
+    if (y < 130) {
       newPage();
     }
 
@@ -333,6 +370,7 @@ export async function fillForm8815Reference(
     });
   }
 
+  await markReviewPdf(doc);
   await mkdir(outputDir, { recursive: true });
   const outputPath = join(outputDir, FORM_8815_REFERENCE_FILENAME);
   await writeFile(outputPath, await doc.save());
