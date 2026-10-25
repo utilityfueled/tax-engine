@@ -52,6 +52,9 @@ describe("parseCurrencyInput", () => {
 // ── formatCurrencyDisplay ─────────────────────────────────────────────────
 
 describe("formatCurrencyDisplay", () => {
+  it("preserves cents beyond the JavaScript safe integer range", () => {
+    expect(formatCurrencyDisplay("9007199254740993.01")).toBe("9,007,199,254,740,993.01");
+  });
   it("returns empty string for empty input", () => {
     expect(formatCurrencyDisplay("")).toBe("");
   });
@@ -105,6 +108,9 @@ describe("formatCurrencyDisplay", () => {
 // ── isValidCurrencyValue ──────────────────────────────────────────────────
 
 describe("isValidCurrencyValue", () => {
+  it.each(["Infinity", "1e3", "0x10", "1,,000"])("rejects non-decimal input %s", (value) => {
+    expect(isValidCurrencyValue(value)).toBe(false);
+  });
   it("returns true for empty string (optional field)", () => {
     expect(isValidCurrencyValue("")).toBe(true);
   });

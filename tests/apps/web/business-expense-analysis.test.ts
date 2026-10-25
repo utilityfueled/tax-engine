@@ -7,9 +7,21 @@ import {
   normalizeBankStatementAnalysis,
   normalizeSelfEmploymentIncomeDocumentAnalysis,
   normalizeUnsupportedDocumentAiInsight,
+  addAmountToCurrencyValue,
+  summarizeSelfEmploymentIncomeSuggestions,
 } from "../../../apps/web/src/lib/business-expense-analysis";
 
 describe("business expense analysis helpers", () => {
+  it("aggregates cents without converting through binary floating point", () => {
+    expect(addAmountToCurrencyValue("9007199254740993.01", "0.02")).toBe("9007199254740993.03");
+    expect(addAmountToCurrencyValue("1,000.10", "0.20")).toBe("1000.30");
+    const analysis = normalizeSelfEmploymentIncomeDocumentAnalysis({ suggestions: [
+      { description: "Invoice A", amount: "9007199254740993.01" },
+      { description: "Invoice B", amount: "0.02" },
+    ] }, "synthetic.txt");
+    expect(analysis?.suggestions[0].amount).toBe("9007199254740993.01");
+    expect(summarizeSelfEmploymentIncomeSuggestions([analysis!])).toBe("9007199254740993.03");
+  });
   it("extracts JSON from fenced model output", () => {
     expect(extractJsonObjectFromText("```json\n{\"summary\":\"ok\"}\n```")).toBe("{\"summary\":\"ok\"}");
   });

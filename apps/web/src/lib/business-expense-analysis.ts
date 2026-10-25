@@ -1,4 +1,6 @@
 import { redactTextForAiAnalysis } from "@/lib/ai-document-redaction";
+import Decimal from "decimal.js";
+import { parseGuidedCurrency } from "./guided-currency";
 import type {
   ScheduleCBankStatementAnalysis,
   ScheduleCBankStatementSuggestion,
@@ -62,8 +64,8 @@ function slugify(value: string) {
 }
 
 function normalizeCurrencyAmount(value: unknown) {
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return value.toFixed(2);
+  if (typeof value === "number" && Number.isFinite(value) && Math.abs(value) <= Number.MAX_SAFE_INTEGER) {
+    return new Decimal(value.toString()).toFixed(2, Decimal.ROUND_HALF_UP);
   }
 
   if (typeof value !== "string") {
@@ -73,7 +75,7 @@ function normalizeCurrencyAmount(value: unknown) {
   const normalized = value.replace(/[$,\s]/g, "").trim();
 
   return /^\d+(\.\d{1,2})?$/.test(normalized)
-    ? Number(normalized).toFixed(2)
+    ? new Decimal(normalized).toFixed(2)
     : null;
 }
 
@@ -360,7 +362,7 @@ export function buildTransactionLevelBankStatementAnalysis(
     }
 
     const normalizedAmount = normalizeCurrencyAmount(amount);
-    if (!normalizedAmount || Number(normalizedAmount) <= 0) {
+    if (!normalizedAmount || new Decimal(normalizedAmount).lte(0)) {
       continue;
     }
 
@@ -434,7 +436,7 @@ export function buildFallbackBankStatementAnalysis(
       continue;
     }
 
-    const totalAmount = [...amounts].reverse().find((value) => Number(value) > 0);
+    const totalAmount = [...amounts].reverse().find((value) => new Decimal(value).gt(0));
     if (!totalAmount) {
       continue;
     }
@@ -444,7 +446,7 @@ export function buildFallbackBankStatementAnalysis(
       id: `${slugify(fileName) || "statement"}-fallback-${suggestions.length + 1}`,
       date: "",
       description: `${label} annual summary total`,
-      amount: Number(totalAmount).toFixed(2),
+      amount: new Decimal(totalAmount).toFixed(2),
       sourceSection: label,
       suggestedCategory: mapped.category,
       suggestedBusinessUse: mapped.businessUse,
@@ -520,7 +522,7 @@ export function normalizeBankStatementAnalysis(payload: unknown, fileName: strin
     const date = normalizeText(suggestion.date);
     const suggestedCategory = normalizeCategory(suggestion.suggestedCategory);
     const suggestedBusinessUse = suggestion.suggestedBusinessUse === true;
-    const reason = normalizeText(suggestion.reason) || "AI OCR flagged this line for review.";
+    const reason = normalizeText(suggestion.reason) || "Document text flagged this line for review.";
 
     return [{
       id: `${slugify(fileName) || "statement"}-${index + 1}`,
@@ -531,6 +533,7 @@ export function normalizeBankStatementAnalysis(payload: unknown, fileName: strin
       suggestedBusinessUse,
       confidence: normalizeConfidence(suggestion.confidence),
       reason,
+      sourceQuote: normalizeText(suggestion.sourceQuote) || undefined,
       appliedCategory: null,
     }];
   });
@@ -579,6 +582,7 @@ export function normalizeSelfEmploymentIncomeDocumentAnalysis(
       amount,
       confidence: normalizeConfidence(suggestion.confidence),
       reason: normalizeText(suggestion.reason) || "AI review found a likely income amount.",
+      sourceQuote: normalizeText(suggestion.sourceQuote) || undefined,
       applied: false,
     }];
   });
@@ -598,10 +602,9 @@ export function normalizeSelfEmploymentIncomeDocumentAnalysis(
 }
 
 export function addAmountToCurrencyValue(currentValue: string, amount: string) {
-  const current = Number(currentValue || "0");
-  const next = current + Number(amount || "0");
+  const next = parseGuidedCurrency(currentValue).plus(parseGuidedCurrency(amount));
 
-  return next > 0 ? next.toFixed(2) : "";
+  return next.gt(0) ? next.toFixed(2, Decimal.ROUND_HALF_UP) : "";
 }
 
 export function addAmountToExpenseValue(currentValue: string, amount: string) {
@@ -611,7 +614,7 @@ export function addAmountToExpenseValue(currentValue: string, amount: string) {
 export function summarizeBankStatementSuggestionsByCategory(
   analyses: ScheduleCBankStatementAnalysis[],
 ) {
-  const totals = new Map<keyof ScheduleCExpenseData, number>();
+  const totals = new Map<keyof ScheduleCExpenseData, Decimal>();
 
   for (const analysis of analyses) {
     for (const suggestion of analysis.suggestions) {
@@ -626,7 +629,7 @@ export function summarizeBankStatementSuggestionsByCategory(
       }
 
       const category = suggestion.suggestedCategory;
-      totals.set(category, (totals.get(category) ?? 0) + Number(suggestion.amount));
+      totals.set(category, (totals.get(category) ?? new Decimal(0)).plus(parseGuidedCurrency(suggestion.amount)));
     }
   }
 
@@ -677,7 +680,7 @@ export async function analyzeBusinessExpenseStatements(files: File[]) {
 export function summarizeSelfEmploymentIncomeSuggestions(
   analyses: SelfEmploymentIncomeDocumentAnalysis[],
 ) {
-  let total = 0;
+  let total = new Decimal(0);
 
   for (const analysis of analyses) {
     for (const suggestion of analysis.suggestions) {
@@ -685,7 +688,7 @@ export function summarizeSelfEmploymentIncomeSuggestions(
         continue;
       }
 
-      total += Number(suggestion.amount || "0");
+      total = total.plus(parseGuidedCurrency(suggestion.amount));
     }
   }
 

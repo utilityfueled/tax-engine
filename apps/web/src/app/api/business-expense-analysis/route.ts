@@ -1,7 +1,6 @@
-import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
-import { analyzeBusinessExpenseStatementWithGemini, resolveGeminiAnalysisModelId } from "@/lib/gemini-document-analysis-server";
-import { reserveHostedAiBudget, recordHostedAiRouteUsage } from "@/lib/hosted-ai-route";
+import { analyzeBusinessExpenseStatementWithGemini } from "@/lib/gemini-document-analysis-server";
+import { reserveHostedAiBudget } from "@/lib/hosted-ai-route";
 import { containsUnsafeDirectIdentifier } from "@/lib/provider-request-privacy";
 import { safeParseJsonBody } from "@/lib/safe-body-parser";
 
@@ -45,7 +44,8 @@ export async function POST(request: Request) {
     }, { status: 400 });
   }
 
-  const modelId = resolveGeminiAnalysisModelId(process.env);
+  // Candidate profiles are evaluation-only; production uses deterministic analysis.
+  const modelId = null;
   const budgetGuard = await reserveHostedAiBudget(request, { task: "business-expense-analysis", documents }, modelId);
 
   if (budgetGuard.response) {
@@ -62,19 +62,7 @@ export async function POST(request: Request) {
     const responsePayload = {
       analyses: analyses.filter((analysis): analysis is NonNullable<typeof analysis> => analysis !== null),
     };
-    const budget = await recordHostedAiRouteUsage(
-      budgetGuard.reservation,
-      {
-        requestId: randomUUID(),
-        task: "business-expense-analysis",
-        provider: "google-gemini",
-        modelId,
-        requestPayload: documents,
-        responsePayload,
-      },
-    );
-
-    return NextResponse.json(budget ? { ...responsePayload, budget } : responsePayload);
+    return NextResponse.json({ ...responsePayload, mode: "deterministic", aiStatus: "qualification-pending" });
   } catch (error) {
     return NextResponse.json({
       error: error instanceof Error

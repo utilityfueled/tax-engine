@@ -621,6 +621,7 @@ export interface ScheduleCBankStatementSuggestion {
   description: string;
   amount: string;
   sourceSection?: string;
+  sourceQuote?: string;
   suggestedCategory: ScheduleCExpenseSuggestionCategory;
   suggestedBusinessUse: boolean;
   confidence: "high" | "low";
@@ -645,6 +646,7 @@ export interface SelfEmploymentIncomeDocumentSuggestion {
   date: string;
   description: string;
   amount: string;
+  sourceQuote?: string;
   confidence: "high" | "low";
   reason: string;
   applied: boolean;

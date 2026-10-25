@@ -58,7 +58,7 @@ function buildAiBudgetExceededResponse(snapshot: HostedAiBudgetSnapshot) {
 export async function reserveHostedAiBudget(
   request: Request,
   requestPayload: unknown,
-  modelId: string,
+  modelId: string | null,
   env: Record<string, string | undefined> = process.env,
 ): Promise<HostedAiBudgetGuardResult> {
   if (resolveDeploymentMode(env) !== "hosted") {
@@ -96,6 +96,10 @@ export async function reserveHostedAiBudget(
       reservation: null,
     };
   }
+
+  // A deterministic task has no provider spend. Preserve hosted access checks,
+  // but do not reserve credits or apply the minimum retail AI charge.
+  if (modelId === null) return { response: null, reservation: null };
 
   const usageCycleKey = resolveHostedAiBudgetCycleKey({
     planId: subscription?.planId ?? null,

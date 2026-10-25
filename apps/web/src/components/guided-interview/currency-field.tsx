@@ -1,6 +1,11 @@
 "use client";
 
 import { useCallback, useState, type ReactNode } from "react";
+import Decimal from "decimal.js";
+
+function isDecimalInput(raw: string): boolean {
+  return /^-?(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d*)?$/.test(raw.trim().replace(/^\$/, ""));
+}
 
 /**
  * Parse a raw user string into a clean numeric string (no commas, no leading $).
@@ -20,17 +25,16 @@ export function formatCurrencyDisplay(value: string): string {
   const cleaned = parseCurrencyInput(value);
   if (cleaned === "") return "";
 
-  const num = Number(cleaned);
-  if (Number.isNaN(num)) return value;
+  if (!isDecimalInput(value)) return value;
 
   // Preserve decimals if the user typed them
   if (cleaned.includes(".")) {
     const [intPart, decPart] = cleaned.split(".");
-    const formattedInt = Number(intPart).toLocaleString("en-US");
+    const formattedInt = new Decimal(intPart).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     return `${formattedInt}.${decPart}`;
   }
 
-  return num.toLocaleString("en-US");
+  return new Decimal(cleaned).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
 /**
@@ -39,8 +43,7 @@ export function formatCurrencyDisplay(value: string): string {
 export function isValidCurrencyValue(value: string): boolean {
   const cleaned = parseCurrencyInput(value);
   if (cleaned === "") return true; // empty is valid (optional field)
-  const num = Number(cleaned);
-  return !Number.isNaN(num) && num >= 0;
+  return isDecimalInput(value) && new Decimal(cleaned).isFinite() && new Decimal(cleaned).gte(0);
 }
 
 export function CurrencyField({

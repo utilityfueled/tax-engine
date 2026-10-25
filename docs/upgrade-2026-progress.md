@@ -204,3 +204,27 @@ citations, measured latency/cost, atomic credit reservation/settlement, database
 cost persistence and staged rollout/rollback are not complete. The new registry
 is groundwork, not a model promotion. Existing GPT-5 Mini is now marked deprecated
 in its official model documentation; actual account availability remains unchecked.
+
+## Candidate document adapter and Decimal input handling
+
+Document analysis now uses task-specific, strict schemas behind the shared
+adapter. Only a trusted synthetic evaluation caller can run candidate profiles;
+production falls back to deterministic parsing. Calls accept redacted text only,
+use fixed provider endpoints, `store: false` for Responses, bounded response and
+input/output sizes, and no hidden retry or provider switch. Source quotes and
+Decimal comparisons reject invented amounts, dates and duplicate suggestions.
+Merchant/category evidence never establishes business use. Source quotes survive
+normalization for review. Hosted document routes retain access checks but do not
+reserve or debit AI credits when no provider call occurs.
+
+Currency display and statement aggregation no longer round-trip amounts through
+JavaScript numbers. Large-cent regressions fail before the fix and pass after it.
+The adapter records provider-reported costs even when content validation fails;
+HTTP/transport failures with unknown usage still require later reconciliation.
+No provider was called in these tests. All 15,126 unit/integration tests pass at this checkpoint.
+Web type checking and focused lint pass. Production-browser currency entry tests
+pass for dependent care and solar fields.
+
+This replaces the document path, not the legacy live workspace responder or
+hand-scored benchmark. Exact cost persistence, atomic credit reservation,
+independent evaluation/review, and production rollout remain unfinished.
