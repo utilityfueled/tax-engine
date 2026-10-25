@@ -23,6 +23,7 @@ import { calculateForm4797, type Form4797Result } from "@/engine/forms/form-4797
 import { calculateSocialSecurityBenefitsWorksheet } from "@/engine/forms/social-security-benefits-worksheet.js";
 import { calculateIraReturnWorksheet } from "@/engine/forms/ira-return-worksheet.js";
 import { calculateForm1099C } from "@/engine/forms/form-1099-c.js";
+import { calculateEducatorExpensesDeduction } from "@/engine/forms/educator-expenses.js";
 import { calculateForm3903, type Form3903Result } from "@/engine/forms/form-3903.js";
 
 export interface Schedule1Input {
@@ -106,53 +107,9 @@ export interface Schedule1Result {
 }
 
 const MAX_STUDENT_LOAN_DEDUCTION = new Decimal(2500);
-const MAX_EDUCATOR_EXPENSES = new Decimal(300);
 const DEFAULT_DOCUMENT_ONLY_HSA_COVERAGE = Array.from({ length: 12 }, () => "none") as Form8889Input["coverageByMonth"];
 const ZERO = new Decimal(0);
 
-function calculateEducatorExpensesDeduction(
-  adjustments: TaxYearInput["adjustments"],
-  filingStatus: TaxYearInput["taxpayer"]["filingStatus"]
-): {
-  amount: Decimal;
-  formula: string;
-  inputs: Record<string, Decimal | string>;
-} {
-  const aggregateEducatorExpenses = d(adjustments?.educatorExpenses);
-  const primaryEducatorExpenses = d(adjustments?.primaryEducatorExpenses);
-  const spouseEducatorExpenses = d(adjustments?.spouseEducatorExpenses);
-  const hasSplitEducatorExpenses =
-    primaryEducatorExpenses.greaterThan(0) || spouseEducatorExpenses.greaterThan(0);
-
-  if (hasSplitEducatorExpenses) {
-    const allowedPrimaryEducatorExpenses = min(primaryEducatorExpenses, MAX_EDUCATOR_EXPENSES);
-    const allowedSpouseEducatorExpenses = filingStatus === "married_filing_jointly"
-      ? min(spouseEducatorExpenses, MAX_EDUCATOR_EXPENSES)
-      : ZERO;
-
-    return {
-      amount: allowedPrimaryEducatorExpenses.plus(allowedSpouseEducatorExpenses),
-      formula: filingStatus === "married_filing_jointly"
-        ? "min(primary educator expenses, $300) + min(spouse educator expenses, $300)"
-        : "min(primary educator expenses, $300)",
-      inputs: {
-        "Primary educator expenses entered": primaryEducatorExpenses,
-        "Primary educator expenses allowed": allowedPrimaryEducatorExpenses,
-        "Spouse educator expenses entered": spouseEducatorExpenses,
-        "Spouse educator expenses allowed": allowedSpouseEducatorExpenses,
-        "Ignored aggregate educator expenses fallback": aggregateEducatorExpenses,
-      },
-    };
-  }
-
-  return {
-    amount: min(aggregateEducatorExpenses, MAX_EDUCATOR_EXPENSES),
-    formula: `min(${aggregateEducatorExpenses}, $300)`,
-    inputs: {
-      "Aggregate educator expenses entered": aggregateEducatorExpenses,
-    },
-  };
-}
 
 function normalizeForm8889InputWithDocumentSupport(
   input: Form8889Input | undefined,
@@ -623,7 +580,7 @@ export function calculateSchedule1(
   const archerMSADeduction = d(adjustments?.archerMSADeduction);
   audit.record("Sched 1", "23", "Archer MSA deduction", archerMSADeduction, "Validated manual Archer MSA deduction input");
 
-  const educatorExpensesDeduction = calculateEducatorExpensesDeduction(adjustments, filingStatus);
+  const educatorExpensesDeduction = calculateEducatorExpensesDeduction(adjustments, filingStatus, input.taxpayer.taxYear);
   const educatorExpenses = educatorExpensesDeduction.amount;
   audit.record(
     "Sched 1",
