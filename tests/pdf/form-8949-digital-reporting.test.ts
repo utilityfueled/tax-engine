@@ -1,7 +1,7 @@
 // Spec: spec/federal/form-8949-digital-reporting.yaml.
 import { expect, it } from 'vitest';
 import { PDFDocument } from 'pdf-lib';
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
 import Decimal from 'decimal.js';
@@ -64,11 +64,13 @@ it('retains all categories and digital continuation rows after reopening', async
   expect(form.getTextField(copied(F.page1Rows[0].description, 4)).getText()).toBe('Original G disposition 12');
   expect(form.getTextField(copied(F.page1TotalProceeds, 4)).getText()).toBe('400');
   expect(form.getTextField(copied(F.page1TotalGainLoss, 4)).getText()).toBe('100');
+  const savedPath = join(outputDir, 'digital-reporting-continuations.pdf');
+  await writeFile(savedPath, bytes);
   const independent: { pageCount: number; fields: Record<string, string>; widgetNames: string[]; pageText: string[] } = JSON.parse(execFileSync(
     process.env.TAX_ENGINE_PDF_TEST_PYTHON ?? 'python3', ['-c', `
 from pypdf import PdfReader
-import io,json,sys
-reader=PdfReader(io.BytesIO(sys.stdin.buffer.read()))
+import json,sys
+reader=PdfReader(sys.argv[1])
 fields={name:str(field.get('/V','')) for name,field in (reader.get_fields() or {}).items() if field.get('/FT') in ['/Tx','/Btn']}
 names=[]
 for page in reader.pages:
@@ -81,7 +83,7 @@ for page in reader.pages:
    parent=node.get('/Parent'); node=parent.get_object() if parent else None
   names.append('.'.join(parts))
 print(json.dumps({'pageCount':len(reader.pages),'fields':fields,'widgetNames':names,'pageText':[page.extract_text() or '' for page in reader.pages]}))
-`], { input: bytes, encoding: 'utf8' }));
+`, savedPath], { encoding: 'utf8' }));
   expect(independent.pageCount).toBe(14);
   expect(new Set(independent.widgetNames).size).toBe(independent.widgetNames.length);
   for (const name of independent.widgetNames) expect(name in independent.fields, name).toBe(true);
