@@ -14,6 +14,7 @@ const constants = getConstants(2025);
 
 function makeInput(overrides: Record<string, unknown> = {}): Parameters<typeof calculateForm2555>[0] {
   return {
+    employerProvidedForeignEarnedIncome: overrides.isSelfEmployed === true ? "0" : String(overrides.foreignEarnedIncome ?? "100000"),
     foreignEarnedIncome: "100000",
     qualifyingDays: 365,
     totalDaysInYear: 365,
@@ -26,6 +27,8 @@ function makeInput(overrides: Record<string, unknown> = {}): Parameters<typeof c
 
 function makeForm2555Input(overrides: Record<string, unknown> = {}) {
   return {
+    // These synthetic cases explicitly identify all income as employment or SE.
+    employerProvidedForeignEarnedIncome: overrides.isSelfEmployed === true ? "0" : String(overrides.foreignEarnedIncome ?? "100000"),
     foreignEarnedIncome: "100000",
     qualifyingDays: 365,
     totalDaysInYear: 365,
@@ -110,14 +113,8 @@ describe("Form 2555 — Foreign Earned Income Exclusion", () => {
     expect(result.foreignEarnedIncomeExclusion).toEqual(new Decimal("50000"));
   });
 
-  it("Form 2555 - leap year uses 366 total days", () => {
-    const result = calculateForm2555(makeInput({
-      foreignEarnedIncome: "200000",
-      qualifyingDays: 183,
-      totalDaysInYear: 366,
-    }), constants);
-    // $130,000 × 183/366 = $65,000
-    expect(result.proratedMaximumExclusion).toEqual(new Decimal("65000"));
+  it("Form 2555 - rejects a fabricated leap-year denominator for calendar2025", () => {
+    expect(() => calculateForm2555(makeInput({ qualifyingDays: 183, totalDaysInYear: 366 }), constants)).toThrow(/calendar year/);
   });
 
   // ── Housing amount tests ──────────────────────────────
@@ -127,9 +124,9 @@ describe("Form 2555 — Foreign Earned Income Exclusion", () => {
     const resultFull = calculateForm2555(makeInput(), constants);
     expect(resultFull.baseHousingAmount).toEqual(new Decimal("20800"));
 
-    // Half year: $130,000 × 16% × 183/365 = $10,428 (rounded)
+    // Published daily base $56.99 × 183 = $10,429.17 → $10,429.
     const resultPartial = calculateForm2555(makeInput({ qualifyingDays: 183 }), constants);
-    expect(resultPartial.baseHousingAmount).toEqual(new Decimal("10428"));
+    expect(resultPartial.baseHousingAmount).toEqual(new Decimal("10429"));
   });
 
   it("Form 2555 - housing amount is expenses minus base capped at limit", () => {
@@ -158,12 +155,12 @@ describe("Form 2555 — Foreign Earned Income Exclusion", () => {
   });
 
   it("Form 2555 - location-specific housing limit overrides default", () => {
-    // Default limit: $39,000. Location-specific: $50,000
-    // Expenses $45,000, limit $50,000, base $20,800
-    // Housing amount = min($45,000, $50,000) - $20,800 = $24,200
+    // Notice2025-16 Montreal annual limit $50,100.
+    // Expenses $45,000, limit $50,100, base $20,800
+    // Housing amount = $45,000 - $20,800 = $24,200
     const result = calculateForm2555(makeInput({
       qualifiedHousingExpenses: "45000",
-      housingExpenseLocationLimit: "50000",
+      housingLocationPeriods: [{ locationId: "Canada / Montreal", days: 365 }],
     }), constants);
     expect(result.housingAmount).toEqual(new Decimal("24200"));
   });
@@ -186,60 +183,37 @@ describe("Form 2555 — Foreign Earned Income Exclusion", () => {
     expect(result.housingDeduction).toEqual(new Decimal("0"));
   });
 
-  it("Form 2555 - employer-provided housing reduces housing exclusion", () => {
-    // Housing amount $9,200, employer-provided $5,000
-    // Exclusion = $9,200 - $5,000 = $4,200
-    const result = calculateForm2555(makeInput({
-      qualifiedHousingExpenses: "30000",
-      employerProvidedHousingAmount: "5000",
-      isSelfEmployed: false,
-    }), constants);
-    expect(result.housingExclusion).toEqual(new Decimal("4200"));
+  it("Form 2555 - housing reimbursement does not reduce employer income allocation", () => {
+    const result = calculateForm2555(makeInput({ qualifiedHousingExpenses: "30000", employerProvidedHousingAmount: "5000" }), constants);
+    expect(result.housingExclusion).toEqual(new Decimal("9200"));
   });
 
-  it("Form 2555 - employer-provided housing exceeding housing amount gives zero exclusion", () => {
-    const result = calculateForm2555(makeInput({
-      qualifiedHousingExpenses: "30000",
-      employerProvidedHousingAmount: "15000",
-      isSelfEmployed: false,
-    }), constants);
-    expect(result.housingExclusion).toEqual(new Decimal("0"));
+  it("Form 2555 - large reimbursement does not eliminate the employee housing exclusion", () => {
+    const result = calculateForm2555(makeInput({ qualifiedHousingExpenses: "30000", employerProvidedHousingAmount: "15000" }), constants);
+    expect(result.housingExclusion).toEqual(new Decimal("9200"));
   });
 
   // ── Housing deduction (self-employed) ─────────────────
 
-  it("Form 2555 - self-employed gets housing deduction not exclusion", () => {
-    const result = calculateForm2555(makeInput({
-      qualifiedHousingExpenses: "30000",
-      isSelfEmployed: true,
-    }), constants);
-    expect(result.housingDeduction).toEqual(new Decimal("9200"));
+  it("Form 2555 - self-employed gets limited housing deduction and current carryover", () => {
+    const result = calculateForm2555(makeInput({ qualifiedHousingExpenses: "30000", isSelfEmployed: true }), constants);
+    expect(result.housingDeduction).toEqual(new Decimal("0"));
+    expect(result.housingDeductionCarryover).toEqual(new Decimal("9200"));
     expect(result.housingExclusion).toEqual(new Decimal("0"));
   });
 
-  it("Form 2555 - self-employed housing deduction ignores employer-provided amount", () => {
-    const result = calculateForm2555(makeInput({
-      qualifiedHousingExpenses: "30000",
-      employerProvidedHousingAmount: "5000",
-      isSelfEmployed: true,
-    }), constants);
-    // Self-employed: deduction is the full housing amount, employer-provided is irrelevant
-    expect(result.housingDeduction).toEqual(new Decimal("9200"));
+  it("Form 2555 - legacy reimbursement cannot substitute for mixed employer source income", () => {
+    expect(() => calculateForm2555(makeInput({ qualifiedHousingExpenses: "30000", employerProvidedHousingAmount: "5000", employerProvidedForeignEarnedIncome: undefined, isSelfEmployed: true }), constants)).toThrow(/employer-provided/);
   });
 
   // ── Income available for exclusion ────────────────────
 
-  it("Form 2555 - housing deduction reduces income available for exclusion", () => {
-    // Foreign income $100,000, housing deduction $9,200
-    // Income available = $100,000 - $9,200 = $90,800
-    // Exclusion = min($90,800, $130,000) = $90,800
-    const result = calculateForm2555(makeInput({
-      foreignEarnedIncome: "100000",
-      qualifiedHousingExpenses: "30000",
-      isSelfEmployed: true,
-    }), constants);
-    expect(result.incomeAvailableForExclusion).toEqual(new Decimal("90800"));
-    expect(result.foreignEarnedIncomeExclusion).toEqual(new Decimal("90800"));
+  it("Form 2555 - housing deduction is computed after earned income exclusion", () => {
+    const result = calculateForm2555(makeInput({ foreignEarnedIncome: "100000", qualifiedHousingExpenses: "30000", isSelfEmployed: true }), constants);
+    expect(result.incomeAvailableForExclusion).toEqual(new Decimal("100000"));
+    expect(result.foreignEarnedIncomeExclusion).toEqual(new Decimal("100000"));
+    expect(result.housingDeduction).toEqual(new Decimal("0"));
+    expect(result.housingDeductionCarryover).toEqual(new Decimal("9200"));
   });
 
   it("Form 2555 - housing exclusion reduces income available for exclusion", () => {
@@ -287,7 +261,7 @@ describe("Form 2555 — Foreign Earned Income Exclusion", () => {
     }), constants);
     // For SE: housing deduction goes through Schedule 1, not through income reduction
     // Total income reduction = FEI exclusion only (no housing exclusion for SE)
-    // FEI exclusion = min($200,000 - $9,200 housing deduction, $130,000) = $130,000
+    // FEIE comes first: min($200,000, $130,000) = $130,000. Remaining income permits the housing deduction.
     expect(result.totalIncomeReduction).toEqual(new Decimal("130000"));
     expect(result.housingDeduction).toEqual(new Decimal("9200"));
   });
@@ -318,23 +292,29 @@ describe("Form 2555 — Federal integration", () => {
     expect(resultWith.ordinaryTax.greaterThan(new Decimal("500"))).toBe(true);
   });
 
-  it("Form 2555 - wages reduced by exclusion amount", () => {
+  it("Form 2555 - gross wages retained and exclusion routed to Schedule1", () => {
     const result = calculateFederalTax(makeFederalInput({ foreignEarnedIncome: "100000" }));
-    // Wages $120,000 - exclusion $100,000 = $20,000
-    expect(result.totalWages).toEqual(new Decimal("20000"));
+    // Gross wages remain120000; net45 enters Schedule1line8d as negative100000.
+    expect(result.totalWages).toEqual(new Decimal("120000"));
+    expect(result.schedule1?.lines.find(line => line.line === "8d")?.value).toEqual(new Decimal("-100000"));
+    expect(result.totalIncome).toEqual(new Decimal("20000"));
   });
 
   it("Form 2555 - full exclusion when all income is foreign", () => {
     const result = calculateFederalTax(makeFederalInput({ foreignEarnedIncome: "120000" }));
-    // Wages $120,000 - exclusion $120,000 = $0
-    expect(result.totalWages).toEqual(new Decimal("0"));
+    expect(result.totalWages).toEqual(new Decimal("120000"));
+    expect(result.totalIncome).toEqual(new Decimal("0"));
   });
 
-  it("Form 2555 - exclusion cannot exceed wages", () => {
-    const result = calculateFederalTax(makeFederalInput({ foreignEarnedIncome: "200000" }));
-    // Wages $120,000, exclusion capped at $130,000 but wages only $120,000
-    // totalWages floors at zero
-    expect(result.totalWages).toEqual(new Decimal("0"));
+  it("Form 2555 - exclusion also offsets actual foreign business income", () => {
+    const result = calculateFederalTax({
+      ...makeFederalInput({ foreignEarnedIncome: "200000" }),
+      scheduleC: { grossReceipts: "80000", expenses: {} },
+    });
+    // Wages120000 + actual business80000 minus capped130000 exclusion.
+    expect(result.totalWages).toEqual(new Decimal("120000"));
+    expect(result.scheduleC?.netProfit).toEqual(new Decimal("80000"));
+    expect(result.totalIncome).toEqual(new Decimal("70000"));
   });
 
   it("Form 2555 - AGI reflects the exclusion", () => {
@@ -361,21 +341,19 @@ describe("Form 2555 — Federal integration", () => {
 
   it("Form 2555 - housing deduction flows through Schedule 1 for self-employed", () => {
     const result = calculateFederalTax(makeFederalInput({
-      foreignEarnedIncome: "100000",
-      qualifyingDays: 365,
-      qualifiedHousingExpenses: "30000",
-      isSelfEmployed: true,
-    }));
-    // Housing deduction $9,200 reduces AGI through Schedule 1
-    // Wages reduced by: FEI exclusion $90,800 (income available = $100K - $9,200 housing deduction = $90,800)
-    expect(result.totalWages).toEqual(new Decimal("29200")); // $120,000 - $90,800
+      foreignEarnedIncome: "200000", qualifyingDays: 365,
+      qualifiedHousingExpenses: "30000", isSelfEmployed: true,
+    }, { scheduleC: { grossReceipts: "200000", expenses: {} } }));
+    // Actual foreign business income200000 leaves room after130000 FEIE
+    // for9200 housing deduction. Domestic W2wages120000 remain unchanged.
+    expect(result.totalWages).toEqual(new Decimal("120000"));
+    expect(result.form2555?.foreignEarnedIncomeExclusion).toEqual(new Decimal("130000"));
     expect(result.form2555?.housingDeduction).toEqual(new Decimal("9200"));
-    // Schedule 1 total adjustments should include the housing deduction
-    expect(result.schedule1).toBeDefined();
+    expect(result.schedule1?.lines.find(line => line.line === "24j")?.value).toEqual(new Decimal("9200"));
     expect(result.adjustmentsToIncome.greaterThanOrEqualTo(new Decimal("9200"))).toBe(true);
   });
 
-  it("Form 2555 - housing exclusion reduces wages for employees", () => {
+  it("Form 2555 - housing exclusion enters Schedule1 for employees", () => {
     const result = calculateFederalTax(makeFederalInput({
       foreignEarnedIncome: "100000",
       qualifyingDays: 365,
@@ -385,8 +363,9 @@ describe("Form 2555 — Federal integration", () => {
     // Housing exclusion $9,200 reduces wages alongside FEI exclusion
     // FEI exclusion: min($100K - $9,200 housing excl, $130K) = $90,800
     // Total income reduction = $90,800 + $9,200 = $100,000
-    // Wages = $120,000 - $100,000 = $20,000
-    expect(result.totalWages).toEqual(new Decimal("20000"));
+    // Gross wages120000; combined housing and earned income exclusion100000.
+    expect(result.totalWages).toEqual(new Decimal("120000"));
+    expect(result.totalIncome).toEqual(new Decimal("20000"));
   });
 
   it("Form 2555 - partial year prorates all housing and exclusion amounts", () => {
@@ -398,8 +377,8 @@ describe("Form 2555 — Federal integration", () => {
     // Prorated max exclusion = $130,000 × 183/365 = $65,178
     expect(result.form2555?.proratedMaximumExclusion).toEqual(new Decimal("65178"));
     expect(result.form2555?.foreignEarnedIncomeExclusion).toEqual(new Decimal("65178"));
-    // Wages = $120,000 - $65,178 = $54,822
-    expect(result.totalWages).toEqual(new Decimal("54822"));
+    expect(result.totalWages).toEqual(new Decimal("120000"));
+    expect(result.totalIncome).toEqual(new Decimal("54822"));
   });
 
   it("Form 2555 - stacking rule with qualified dividends and capital gains", () => {

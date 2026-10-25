@@ -3352,23 +3352,67 @@ export const Form6252Schema = z.object({
 });
 export type Form6252Input = z.infer<typeof Form6252Schema>;
 
-export const Form2555Schema = z.object({
-  /** Total foreign earned income (wages, SE income, allowances from foreign sources) */
+export const Form2555Schema = z.preprocess(value => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const record = value as Record<string, unknown>;
+  const required = ["foreignEarnedIncome", "qualifyingDays", "totalDaysInYear", "qualifiedHousingExpenses", "isSelfEmployed"];
+  return { ...record, sourceFactsComplete: record.sourceFactsComplete !== false && required.every(key => record[key] !== undefined) };
+}, z.object({
+  taxYear: z.number().int().optional(),
+  sourceFactsComplete: z.boolean().optional(),
+  sourceFactsConfirmed: z.boolean().optional(),
+  /** Confirmed tax home and residence/presence eligibility, including permitted services. */
+  eligibilityConfirmed: z.boolean().optional(),
+  /** Actual election validity, including any prior revocation and required IRS consent. */
+  electionsValidConfirmed: z.boolean().optional(),
+  claimForeignEarnedIncomeExclusion: z.boolean().optional(),
+  claimHousingExclusionOrDeduction: z.boolean().optional(),
   foreignEarnedIncome: decimal,
-  /** Number of days in the qualifying period that fall within the tax year (1-366) */
-  qualifyingDays: z.number().int().min(1).max(366),
-  /** Total days in the tax year — 365 or 366 for leap year (default 365) */
+  qualifyingDays: z.number().int().min(0).max(366),
   totalDaysInYear: z.number().int().min(365).max(366).default(365),
-  /** Qualified housing expenses paid during the tax year */
   qualifiedHousingExpenses: optionalDecimal,
-  /** Location-specific housing expense limit override (IRS high-cost locality table).
-   *  If omitted, uses the default 30% of the prorated maximum exclusion. */
+  housingExpensesQualificationConfirmed: z.boolean().optional(),
+  /** Legacy field is accepted for migration only; arbitrary overrides cannot calculate. */
   housingExpenseLocationLimit: decimal.optional(),
-  /** Employer-provided housing amounts (not counting direct employer reimbursements) */
+  housingLocationPeriods: z.array(z.object({
+    locationId: z.string().min(1), // Exact catalog ID, or "default" for an unlisted location.
+    days: z.number().int().min(1).max(365),
+    noticeTaxYear: z.number().int().optional(), // Explicit2025 election of higher2026 limits.
+    priorYearLocationId: z.string().min(1).optional(), // Actual earlier notice location when labels changed.
+  })).optional(),
+  /** Legacy reimbursement field never substitutes for actual employer-provided income. */
   employerProvidedHousingAmount: optionalDecimal,
-  /** Whether the taxpayer is self-employed (housing deduction) or employee (housing exclusion) */
+  employerProvidedForeignEarnedIncome: decimal.optional(),
   isSelfEmployed: z.boolean().default(false),
-});
+  deductionsAllocableToExcludedIncome: decimal.optional(),
+  foreignEarnedIncomeTaxWorksheetDisallowedDeductions: decimal.optional(),
+  priorYearHousingDeductionCarryover: decimal.optional(),
+  priorYearHousingCarryoverTaxYear: z.number().int().optional(),
+  priorYearHousingCarryoverConfirmed: z.boolean().optional(),
+  priorYearIncomeExclusion: decimal.optional(),
+  priorYearIncomeExclusionTaxYear: z.number().int().optional(),
+  priorYearIncomeStatementConfirmed: z.boolean().optional(),
+  priorYearIncomeAlreadyReportedConfirmed: z.boolean().optional(),
+  priorYearIncomeReceived: decimal.optional(),
+  priorYearUnusedExclusion: decimal.optional(),
+  partIV: z.object({
+    wages: decimal, businessPersonalServices: decimal, partnershipPersonalServices: decimal,
+    noncashLodging: decimal, noncashMeals: decimal, noncashCar: decimal, noncashOther: decimal,
+    allowanceCostOfLiving: decimal, allowanceFamily: decimal, allowanceEducation: decimal,
+    allowanceHomeLeave: decimal, allowanceQuarters: decimal, allowanceOther: decimal,
+    otherEarnedIncome: decimal, section119MealsAndLodging: decimal,
+  }).optional(),
+  incomeSourceMappingConfirmed: z.boolean().optional(),
+  /** Eligible foreign receipts already present in their actual return income sources;
+   * business/partnership amounts are eligible gross personal-service receipts, not net profit. */
+  incomeSources: z.object({
+    foreignEmploymentIncomeIncludedOnW2: decimal,
+    foreignEmploymentIncomeNotOnW2: decimal,
+    foreignBusinessIncomeAlreadyReported: decimal,
+    foreignPartnershipIncomeAlreadyReported: decimal,
+    otherForeignIncomeAlreadyReported: decimal,
+  }).optional(),
+}));
 export type Form2555Input = z.infer<typeof Form2555Schema>;
 
 export const Form8814ChildSchema = z.object({
