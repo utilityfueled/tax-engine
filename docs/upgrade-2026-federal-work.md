@@ -239,3 +239,28 @@ All five failures were reproduced before correction. 604 focused tests pass;
 spec validation and whitespace review pass. Engine typecheck reached only three
 errors in concurrent parent-owned PDF mapping edits (reported to the parent),
 with no federal-source errors. No readiness status changed.
+
+## Correction: Form 1040 and Schedule 2 payment routing
+
+Refreshed the official 2025 Form 1040 instructions (lines 29, 31 and 38) and final
+Schedule 2 PDF. Estimated-tax penalty now stays on Form 1040 line 38, outside
+line 23 and total tax; it reduces the refund or increases line 37. Line 34 shows
+the overpayment before penalty. Refundable AOC uses line 29. Schedule 2 correctly
+separates Part I (APTC line 1a and AMT line 2) from Part II line 21, and line 18
+sums only line 17 taxes. The penalty no longer impersonates Schedule 2 line 19.
+The digital-asset response has its own audit key. The duplicated AMT in the
+penalty tax base was removed. The Schedule H agent's new facts are forwarded.
+
+All four new regressions failed first. 601 focused federal, integration and
+Schedule 2 tests pass; typecheck, spec validation and whitespace checks pass.
+Older assertions using incorrect Schedule 2 grand totals were replaced with
+amounts derived from the final form's Part II sum, preserving boundary and
+precision coverage; the >$100k scenario still exercises an actual >$100k Part II
+sum. Scoped diff reviewed. Rule version advances to 2025.6. Parent's qualified
+review-PDF mapping spec metadata is preserved in this shared-spec commit.
+
+Remaining Form 2210 work: the existing algorithm assumes equal quarterly
+underpayments and 2025 rates, so it is not qualification evidence for 2026 or
+irregular payments. Separate work must finish dated installment calculations,
+prior-year safe-harbor qualification, and all tax-base exclusions. Wage/withholding
+classification and foreign-exclusion line routing remain separate corrections.

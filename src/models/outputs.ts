@@ -84,7 +84,7 @@ export interface TaxReturnResult {
   taxYear: number;
   filingStatus: string;
 
-  // Form 1040 digital asset question (Line 1a checkbox)
+  // Form 1040 digital asset question
   digitalAssetQuestion: boolean;
 
   // Income

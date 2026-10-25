@@ -2,10 +2,22 @@ form: "Form 1040"
 fullName: "U.S. Individual Income Tax Return"
 taxYear: 2025
 irsReference: "https://www.irs.gov/instructions/i1040"
+reviewPdfMapping:
+  source: "https://www.irs.gov/pub/irs-pdf/f1040.pdf"
+  sourceRevision: "2025 Form 1040, created 2025-09-05"
+  retrievedAt: "2026-10-24"
+  reviewStatus: "independent-review-pending"
+  rules:
+    - "Use the printed 2025 line locations, including page 2 deduction lines and 11b AGI repeat; no pre-2025 positions."
+    - "Dependent columns contain each person's first name, last name, SSN and relationship vertically; residency, student and credit checkboxes are distinct rows."
+    - "Map engine audit line values without recalculating tax; total deductions includes Schedule 1-A."
+    - "All five filing statuses have separate boxes; QSS must not select MFJ."
+    - "Review availability is not filing qualification, and taxpayer identifiers remain redacted by the web review path."
+  testRef: "tests/pdf/form-1040-source-mapping.test.ts::places simple return values on official 2025 printed lines after serialization"
 
 lines:
   # ── Digital Asset Question ─────────────────────────────
-  - line: "1a-digital-asset"
+  - line: "digital-asset"
     description: "Digital asset question"
     formula: |
       Answer "Yes" if any of:
@@ -13,7 +25,7 @@ lines:
       - Any capitalTransaction has digitalAsset = true
       - cryptoIncome has any mining, staking, or airdrop entries
       Otherwise "No".
-    irsRef: "Form 1040 Instructions, Line 1a — At any time during the tax year, did you receive, sell, exchange, gift, or otherwise dispose of a digital asset?"
+    irsRef: "Form 1040 Instructions, Digital Assets — At any time during the tax year, did you receive, sell, exchange, gift, or otherwise dispose of a digital asset?"
     edgeCases:
       - "Holding digital assets without disposing does not trigger 'Yes' unless received during the year"
       - "NFT transactions count as digital asset activity"
@@ -402,7 +414,7 @@ lines:
   # ── Additional Taxes ─────────────────────────────────────
   - line: "23"
     description: "Other taxes (Schedule 2)"
-    formula: "Schedule 2 total including AMT, excess advance premium tax credit repayment, SE tax, Form 5329 retirement-plan additional tax, Additional Medicare Tax, NIIT, Form 8889 HSA distribution additional tax, Form 8889 testing-period recapture tax, and other implemented additional taxes"
+    formula: "Schedule 2 Part II total excluding AMT, excess advance premium tax credit repayment and Form 2210 penalty, including SE tax, Form 5329 retirement-plan additional tax, Additional Medicare Tax, NIIT, Form 8889 HSA distribution additional tax, Form 8889 testing-period recapture tax, and other implemented additional taxes"
     irsRef: "Form 1040 Instructions, Line 23; Schedule 2"
     inputs:
       - "Schedule 2 Line 3"
@@ -450,10 +462,9 @@ lines:
 
   - line: "31"
     description: "Schedule 3 refundable credits and other payments"
-    formula: "Refundable AOC (40% of Form 8863) + excess SS withholding + net PTC"
+    formula: "Schedule 3 line 15 only; refundable AOC is separately reported on Form 1040 line 29"
     irsRef: "Form 1040 Instructions, Line 31; Schedule 3 Part II"
     inputs:
-      - "Form 8863 Line 14 (refundable AOC)"
       - "Schedule 3 Line 13a (excess SS withholding)"
       - "Form 8962 (net premium tax credit)"
     testRef: "tests/engine/integration.test.ts::education refundable AOC flows into totalPayments"
@@ -467,7 +478,7 @@ lines:
 
   - line: "33"
     description: "Total payments"
-    formula: "Line 25d + Line 26 + Line 31 (refundable credits)"
+    formula: "Line 25d + Line 26 + Lines 27a, 28, 29, 30, and 31"
     irsRef: "Form 1040 Instructions, Line 33"
     testRef: "tests/engine/federal.test.ts::Form 1040 Line 33 - total payments includes excess SS"
 
@@ -479,6 +490,12 @@ lines:
 
   - line: "37"
     description: "Amount you owe"
-    formula: "Line 24 - Line 33, if positive"
+    formula: "max(0, Line 24 - Line 33 + estimated tax penalty on Line 38)"
     irsRef: "Form 1040 Instructions, Line 37"
     testRef: "tests/engine/federal.test.ts::Form 1040 Line 37 - amount owed when withholding is insufficient"
+
+  - line: "2025-payment-routing"
+    description: "Separate assessed tax, refundable credits and estimated-tax penalty"
+    formula: "1040 line 23 equals Schedule 2 Part II only; line 24 excludes Form 2210 penalty. Report refundable AOC on line 29 and Schedule 3 payments on line 31. Line 34 is gross overpayment, line 35a is refund after penalty, line 37 includes any unpaid penalty, and line 38 shows the penalty separately. Digital asset audit identity does not reuse wage line 1a."
+    irsRef: "https://www.irs.gov/instructions/i1040gi, Lines 29, 31 and 38"
+    testRef: "tests/engine/federal-payment-routing.test.ts::Form 1040 payment and penalty routing"

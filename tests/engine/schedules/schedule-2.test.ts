@@ -19,13 +19,13 @@ function makeInput(overrides?: Partial<Schedule2Input>): Schedule2Input {
 }
 
 describe("Schedule 2 Part I - AMT and PTC", () => {
-  it("Schedule 2 Line 1 - AMT from Form 6251", () => {
+  it("Schedule 2 Line 2 - AMT from Form 6251", () => {
     const result = calculateSchedule2(makeInput({ amt: d(5000) }));
     expect(result.amt.toNumber()).toBe(5000);
     expect(result.partITotal.toNumber()).toBe(5000);
   });
 
-  it("Schedule 2 Line 2 - excess APTC", () => {
+  it("Schedule 2 Line 1a - excess APTC", () => {
     const result = calculateSchedule2(makeInput({ excessAPTCRepayment: d(1200) }));
     expect(result.excessAPTCRepayment.toNumber()).toBe(1200);
     expect(result.partITotal.toNumber()).toBe(1200);
@@ -75,7 +75,7 @@ describe("Schedule 2 Part II - Other Taxes", () => {
     expect(line17d?.value.toNumber()).toBe(270);
   });
 
-  it("Schedule 2 Line 18 - total other taxes", () => {
+  it("Schedule 2 Line 18 - subtotal of additional taxes", () => {
     const result = calculateSchedule2(makeInput({
       selfEmploymentTax: d(14130),
       additionalMedicareTax: d(900),
@@ -84,6 +84,7 @@ describe("Schedule 2 Part II - Other Taxes", () => {
       hsaRecaptureTax: d(270),
     }));
     expect(result.partIITotal.toNumber()).toBe(19260);
+    expect(result.lines.find(line => line.line === "18")?.value.toString()).toBe("430");
   });
 });
 
@@ -95,7 +96,7 @@ describe("Schedule 2 - Total", () => {
       additionalMedicareTax: d(500),
       niitTax: d(1500),
     }));
-    expect(result.totalAdditionalTaxes.toNumber()).toBe(14000); // 2000 + 10000 + 500 + 1500
+    expect(result.totalAdditionalTaxes.toNumber()).toBe(12000); // Part II: 10000 + 500 + 1500
   });
 
   it("Schedule 2 - zero when no additional taxes", () => {
@@ -103,12 +104,12 @@ describe("Schedule 2 - Total", () => {
     expect(result.totalAdditionalTaxes.toNumber()).toBe(0);
   });
 
-  it("Schedule 2 - includes estimated tax penalty", () => {
+  it("Schedule 2 - excludes estimated tax penalty", () => {
     const result = calculateSchedule2(makeInput({
       selfEmploymentTax: d(5000),
       estimatedTaxPenalty: d(200),
     }));
-    expect(result.totalAdditionalTaxes.toNumber()).toBe(5200);
+    expect(result.totalAdditionalTaxes.toNumber()).toBe(5000);
   });
 });
 
@@ -191,7 +192,7 @@ describe("Schedule 2 - Part I + Part II + penalty combinations", () => {
       excessAPTCRepayment: d(2500),
     }));
     expect(result.partITotal.toNumber()).toBe(10500);
-    expect(result.totalAdditionalTaxes.toNumber()).toBe(10500);
+    expect(result.totalAdditionalTaxes.toNumber()).toBe(0);
   });
 
   it("all fields populated gives correct grand total", () => {
@@ -210,11 +211,11 @@ describe("Schedule 2 - Part I + Part II + penalty combinations", () => {
     expect(result.partITotal.toNumber()).toBe(6000);
     // Part II: 14130 + 900 + 3800 + 500 + 200 + 1000 = 20530
     expect(result.partIITotal.toNumber()).toBe(20530);
-    // Total: 6000 + 20530 + 350 = 26880
-    expect(result.totalAdditionalTaxes.toNumber()).toBe(26880);
+    // Line 21 sums Part II only: $20,530.
+    expect(result.totalAdditionalTaxes.toNumber()).toBe(20530);
   });
 
-  it("Schedule 2 Line 19 - estimated tax penalty", () => {
+  it("Schedule 2 Line 19 - excludes estimated tax penalty", () => {
     const result = calculateSchedule2(makeInput({
       amt: d(1000),
       selfEmploymentTax: d(2000),
@@ -222,19 +223,19 @@ describe("Schedule 2 - Part I + Part II + penalty combinations", () => {
     }));
     expect(result.partITotal.toNumber()).toBe(1000);
     expect(result.partIITotal.toNumber()).toBe(2000);
-    expect(result.totalAdditionalTaxes.toNumber()).toBe(3500);
+    expect(result.totalAdditionalTaxes.toNumber()).toBe(2000);
 
     const line19 = result.lines.find((line) => line.line === "19");
-    expect(line19?.value.toNumber()).toBe(500);
+    expect(line19?.value.toNumber()).toBe(0);
   });
 
-  it("only estimated tax penalty produces correct total", () => {
+  it("only estimated tax penalty produces a zero Schedule 2 total", () => {
     const result = calculateSchedule2(makeInput({
       estimatedTaxPenalty: d(750),
     }));
     expect(result.partITotal.toNumber()).toBe(0);
     expect(result.partIITotal.toNumber()).toBe(0);
-    expect(result.totalAdditionalTaxes.toNumber()).toBe(750);
+    expect(result.totalAdditionalTaxes.toNumber()).toBe(0);
   });
 });
 
@@ -257,7 +258,7 @@ describe("Schedule 2 - decimal precision", () => {
     }));
     expect(result.partITotal.toNumber()).toBe(500000);
     expect(result.partIITotal.toNumber()).toBeCloseTo(68068.10, 2);
-    expect(result.totalAdditionalTaxes.toNumber()).toBeCloseTo(568068.10, 2);
+    expect(result.totalAdditionalTaxes.toNumber()).toBeCloseTo(68068.10, 2);
   });
 });
 
@@ -269,7 +270,7 @@ describe("Schedule 2 - audit trail", () => {
       niitTax: d(1000),
     }));
     const lineIds = result.lines.map((l) => l.line);
-    expect(lineIds).toContain("1");
+    expect(lineIds).toContain("1a");
     expect(lineIds).toContain("2");
     expect(lineIds).toContain("3");
     expect(lineIds).toContain("4");
@@ -300,7 +301,7 @@ describe("Schedule 2 - AMT only", () => {
     expect(result.amt.toNumber()).toBe(12500);
     expect(result.partITotal.toNumber()).toBe(12500);
     expect(result.partIITotal.toNumber()).toBe(0);
-    expect(result.totalAdditionalTaxes.toNumber()).toBe(12500);
+    expect(result.totalAdditionalTaxes.toNumber()).toBe(0);
   });
 });
 
@@ -328,8 +329,8 @@ describe("Schedule 2 - all four additional taxes simultaneously", () => {
     expect(result.partITotal.toNumber()).toBe(4000);
     // Part II: 14130 + 900 + 3800 = 18830
     expect(result.partIITotal.toNumber()).toBe(18830);
-    // Total: 4000 + 18830 = 22830
-    expect(result.totalAdditionalTaxes.toNumber()).toBe(22830);
+    // Line 21 = Part II only: $18,830.
+    expect(result.totalAdditionalTaxes.toNumber()).toBe(18830);
   });
 });
 
@@ -354,7 +355,7 @@ describe("Schedule 2 - audit trail line IDs", () => {
     }));
     const lineIds = result.lines.map((l) => l.line);
     // Part I lines
-    expect(lineIds).toContain("1");
+    expect(lineIds).toContain("1a");
     expect(lineIds).toContain("2");
     expect(lineIds).toContain("3");
     // Part II lines
@@ -382,15 +383,15 @@ describe("Schedule 2 - very large combined additional taxes", () => {
       amt: d(45000),
       selfEmploymentTax: d(21068),
       additionalMedicareTax: d(18000),
-      niitTax: d(19000),
+      niitTax: d(119000),
       estimatedTaxPenalty: d(1500),
     }));
     // Part I: 45000
     expect(result.partITotal.toNumber()).toBe(45000);
-    // Part II: 21068 + 18000 + 19000 = 58068
-    expect(result.partIITotal.toNumber()).toBe(58068);
-    // Total: 45000 + 58068 + 1500 = 104568
-    expect(result.totalAdditionalTaxes.toNumber()).toBe(104568);
+    // Part II: 21068 + 18000 + 119000 = 158068
+    expect(result.partIITotal.toNumber()).toBe(158068);
+    // Part II total excludes AMT and the separately reported penalty.
+    expect(result.totalAdditionalTaxes.toNumber()).toBe(158068);
     expect(result.totalAdditionalTaxes.toNumber()).toBeGreaterThan(100000);
   });
 });
@@ -409,16 +410,16 @@ describe("Schedule 2 - NIIT without AMT", () => {
 });
 
 describe("Schedule 2 - estimated tax penalty", () => {
-  it("estimated tax penalty flows to Schedule 2 total without affecting Part I or Part II", () => {
+  it("estimated tax penalty stays outside every Schedule 2 total", () => {
     const result = calculateSchedule2(makeInput({
       estimatedTaxPenalty: d(425),
     }));
     expect(result.partITotal.toNumber()).toBe(0);
     expect(result.partIITotal.toNumber()).toBe(0);
-    expect(result.totalAdditionalTaxes.toNumber()).toBe(425);
+    expect(result.totalAdditionalTaxes.toNumber()).toBe(0);
   });
 
-  it("estimated tax penalty adds on top of Part I and Part II totals", () => {
+  it("estimated tax penalty does not add to either Part I or Part II totals", () => {
     const result = calculateSchedule2(makeInput({
       amt: d(3000),
       selfEmploymentTax: d(7000),
@@ -427,7 +428,7 @@ describe("Schedule 2 - estimated tax penalty", () => {
     expect(result.partITotal.toNumber()).toBe(3000);
     expect(result.partIITotal.toNumber()).toBe(7000);
     // 3000 + 7000 + 300 = 10300
-    expect(result.totalAdditionalTaxes.toNumber()).toBe(10300);
+    expect(result.totalAdditionalTaxes.toNumber()).toBe(7000);
   });
 });
 
@@ -450,7 +451,7 @@ describe("Schedule 2 - AMT interaction with Part II taxes", () => {
     expect(result.partITotal.toNumber()).toBe(25000);
     // Part II: 14130 + 1800 + 5700 + 400 + 250 + 600 = 22880
     expect(result.partIITotal.toNumber()).toBe(22880);
-    expect(result.totalAdditionalTaxes.toNumber()).toBe(47880);
+    expect(result.totalAdditionalTaxes.toNumber()).toBe(22880);
     // AMT does not inflate Part II
     expect(result.partIITotal.toNumber()).toBe(
       result.selfEmploymentTax.plus(result.additionalMedicareTax).plus(result.niitTax).plus(d(400)).plus(d(250)).plus(d(600)).toNumber()
@@ -467,7 +468,7 @@ describe("Schedule 2 - AMT interaction with Part II taxes", () => {
     }));
     expect(result.partITotal.toNumber()).toBe(13000);
     expect(result.partIITotal.toNumber()).toBe(8000);
-    expect(result.totalAdditionalTaxes.toNumber()).toBe(21000);
+    expect(result.totalAdditionalTaxes.toNumber()).toBe(8000);
   });
 });
 
@@ -516,7 +517,7 @@ describe("Schedule 2 - additional Medicare tax edge cases", () => {
     }));
     // 1234.567 + 8765.433 = 10000.000
     expect(result.partIITotal.toNumber()).toBe(10000);
-    expect(result.totalAdditionalTaxes.toNumber()).toBe(10000);
+    expect(result.totalAdditionalTaxes.toNumber()).toBe(10000.000);
   });
 });
 
@@ -543,7 +544,7 @@ describe("Schedule 2 - NIIT edge cases", () => {
     expect(result.partITotal.toNumber()).toBe(7500);
     expect(result.partIITotal.toNumber()).toBe(9500);
     // 7500 + 9500 + 650 = 17650
-    expect(result.totalAdditionalTaxes.toNumber()).toBe(17650);
+    expect(result.totalAdditionalTaxes.toNumber()).toBe(9500);
   });
 });
 
@@ -564,8 +565,8 @@ describe("Schedule 2 - total additional taxes calculation edge cases", () => {
     expect(result.partITotal.toNumber()).toBe(0.03);
     // Part II: 0.03 + 0.04 + 0.05 + 0.06 + 0.07 + 0.08 = 0.33
     expect(result.partIITotal.toNumber()).toBe(0.33);
-    // Total: 0.03 + 0.33 + 0.09 = 0.45
-    expect(result.totalAdditionalTaxes.toNumber()).toBe(0.45);
+    // Line 21 = Part II only: $0.33.
+    expect(result.totalAdditionalTaxes.toNumber()).toBe(0.33);
   });
 
   it("high-income scenario with all taxes produces seven-figure total", () => {
@@ -584,8 +585,8 @@ describe("Schedule 2 - total additional taxes calculation edge cases", () => {
     expect(result.partITotal.toNumber()).toBe(750000);
     // Part II: 21068.10 + 45000 + 95000 + 5000 + 3000 + 10000 = 179068.10
     expect(result.partIITotal.toNumber()).toBeCloseTo(179068.10, 2);
-    // Total: 750000 + 179068.10 + 2500 = 931568.10
-    expect(result.totalAdditionalTaxes.toNumber()).toBeCloseTo(931568.10, 2);
+    // Line 21 = Part II only: $179,068.10.
+    expect(result.totalAdditionalTaxes.toNumber()).toBeCloseTo(179068.10, 2);
   });
 });
 
@@ -594,8 +595,8 @@ describe("Schedule 2 - total additional taxes calculation edge cases", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("Schedule 2 - AMT flows from Form 6251 to Part I", () => {
-  it("AMT from Form 6251 recorded on Line 1 and drives Part I total independently of Part II", () => {
-    // Simulates AMT computed by Form 6251 flowing into Schedule 2 Line 1.
+  it("AMT from Form 6251 recorded on Line 2 and drives Part I total independently of Part II", () => {
+    // Simulates AMT computed by Form 6251 flowing into Schedule 2 Line 2.
     // Part II taxes must remain unaffected.
     const result = calculateSchedule2(makeInput({
       amt: d(18750),
@@ -606,19 +607,19 @@ describe("Schedule 2 - AMT flows from Form 6251 to Part I", () => {
     expect(result.amt.toNumber()).toBe(18750);
     expect(result.partITotal.toNumber()).toBe(18750);
     expect(result.partIITotal.toNumber()).toBe(0);
-    expect(result.totalAdditionalTaxes.toNumber()).toBe(18750);
-    // Audit trail must record Line 1 with the AMT amount
-    const line1 = result.lines.find((l) => l.line === "1");
+    expect(result.totalAdditionalTaxes.toNumber()).toBe(0);
+    // Audit trail must record Line 2 with the AMT amount
+    const line1 = result.lines.find((l) => l.line === "2");
     expect(line1).toBeDefined();
     expect(line1!.value.toNumber()).toBe(18750);
   });
 
-  it("AMT on Line 1 combines with excess APTC on Line 2 to produce Part I total on Line 3", () => {
+  it("AMT on Line 2 combines with excess APTC on Line 1a to produce Part I total on Line 3", () => {
     const result = calculateSchedule2(makeInput({
       amt: d(6200),
       excessAPTCRepayment: d(3800),
     }));
-    // Line 3 = Line 1 + Line 2
+    // Line 3 = Line 1z + Line 2
     expect(result.partITotal.toNumber()).toBe(10000);
     expect(result.amt.plus(result.excessAPTCRepayment).toNumber()).toBe(
       result.partITotal.toNumber()
@@ -713,7 +714,7 @@ describe("Schedule 2 - NIIT from Form 8960", () => {
 });
 
 describe("Schedule 2 - estimated tax penalty from Form 2210", () => {
-  it("estimated tax penalty from Form 2210 flows to Line 19 and is added after Part I and Part II", () => {
+  it("estimated tax penalty from Form 2210 is excluded from Schedule 2 line 21", () => {
     const result = calculateSchedule2(makeInput({
       amt: d(2000),
       selfEmploymentTax: d(5000),
@@ -724,17 +725,17 @@ describe("Schedule 2 - estimated tax penalty from Form 2210", () => {
     // penalty sits outside Part I and Part II
     expect(result.partITotal.toNumber()).toBe(2000);
     expect(result.partIITotal.toNumber()).toBe(6500);
-    // Line 21 = Part I + Part II + penalty
-    expect(result.totalAdditionalTaxes.toNumber()).toBe(8875);
+    // Line 21 = Part II; Part I and the penalty are separate.
+    expect(result.totalAdditionalTaxes.toNumber()).toBe(6500);
   });
 
-  it("estimated tax penalty alone produces a non-zero Line 21 with zero Part I and Part II", () => {
+  it("estimated tax penalty alone leaves line 21 at zero", () => {
     const result = calculateSchedule2(makeInput({
       estimatedTaxPenalty: d(612),
     }));
     expect(result.partITotal.toNumber()).toBe(0);
     expect(result.partIITotal.toNumber()).toBe(0);
-    expect(result.totalAdditionalTaxes.toNumber()).toBe(612);
+    expect(result.totalAdditionalTaxes.toNumber()).toBe(0);
   });
 });
 
@@ -755,8 +756,8 @@ describe("Schedule 2 - all additional taxes combined in one return", () => {
     expect(result.partITotal.toNumber()).toBe(9500);
     // Part II: 14130 + 900 + 3800 + 600 + 300 + 1200 = 20930
     expect(result.partIITotal.toNumber()).toBe(20930);
-    // Total: 9500 + 20930 + 450 = 30880
-    expect(result.totalAdditionalTaxes.toNumber()).toBe(30880);
+    // Line 21 sums Part II only: $20,930.
+    expect(result.totalAdditionalTaxes.toNumber()).toBe(20930);
   });
 });
 
@@ -803,7 +804,7 @@ describe("Schedule 2 - Part I vs Part II independence", () => {
     );
   });
 
-  it("Part II total on Line 18 equals the sum of all Part II component fields", () => {
+  it("Part II total on Line 21 equals the sum of all Part II component fields", () => {
     const unreportedSS = d(800);
     const form8919Tax = d(350);
     const uncollectedSS = d(400);
@@ -837,18 +838,18 @@ describe("Schedule 2 - audit trail line sources", () => {
       niitTax: d(2000),
     }));
     const byLine = Object.fromEntries(result.lines.map((l) => [l.line, l]));
-    // Line 1: AMT from Form 6251
-    expect(byLine["1"].value.toNumber()).toBe(5000);
+    // Line 2: AMT from Form 6251
+    expect(byLine["2"].value.toNumber()).toBe(5000);
     // Line 4: SE tax from Schedule SE
     expect(byLine["4"].value.toNumber()).toBe(10000);
     // Line 11: Additional Medicare Tax from Form 8959
     expect(byLine["11"].value.toNumber()).toBe(800);
     // Line 12: NIIT from Form 8960
     expect(byLine["12"].value.toNumber()).toBe(2000);
-    // Line 18: Part II total
-    expect(byLine["18"].value.toNumber()).toBe(12800);
-    // Line 21: Grand total
-    expect(byLine["21"].value.toNumber()).toBe(17800);
+    // Line 18: line 17 subtotal only
+    expect(byLine["18"].value.toNumber()).toBe(0);
+    // Line 21: Part II total
+    expect(byLine["21"].value.toNumber()).toBe(12800);
   });
 
   it("audit trail contains exactly one entry per Schedule 2 line (no duplicate lines)", () => {

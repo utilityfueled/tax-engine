@@ -13,8 +13,8 @@ import { sum } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
 
 export interface Schedule2Input {
-  amt?: Decimal; // Line 1 (Form 6251)
-  excessAPTCRepayment?: Decimal; // Line 2
+  amt?: Decimal; // Line 2 (Form 6251)
+  excessAPTCRepayment?: Decimal; // Line 1a
   selfEmploymentTax: Decimal; // Line 4 (Schedule SE)
   additionalMedicareTax: Decimal; // Line 11 (Form 8959)
   niitTax: Decimal; // Line 12 (Form 8960)
@@ -25,7 +25,8 @@ export interface Schedule2Input {
   uncollectedSSTax?: Decimal; // Line 13
   householdEmploymentTax?: Decimal; // Line 9 (Schedule H)
   penaltyTax?: Decimal; // Line 8 (Form 5329 early distribution and related retirement-plan tax)
-  estimatedTaxPenalty?: Decimal; // Line 19 (Form 2210)
+  /** @deprecated Accepted for compatibility but never included; Form 2210 belongs on Form 1040 line 38. */
+  estimatedTaxPenalty?: Decimal;
 }
 
 export interface Schedule2Result {
@@ -41,7 +42,7 @@ export interface Schedule2Result {
   hsaAdditionalTax: Decimal;
   hsaRecaptureTax: Decimal;
   householdEmploymentTax: Decimal;
-  partIITotal: Decimal; // Line 18
+  partIITotal: Decimal; // Line 21
 
   totalAdditionalTaxes: Decimal; // Line 21 → 1040 Line 23
 
@@ -54,13 +55,14 @@ export function calculateSchedule2(input: Schedule2Input): Schedule2Result {
   // ── Part I ────────────────────────────────────────────
 
   const amt = input.amt ?? new Decimal(0);
-  audit.record("Sched 2", "1", "AMT", amt, "Form 6251");
+  audit.record("Sched 2", "2", "AMT", amt, "Form 6251");
 
   const excessAPTCRepayment = input.excessAPTCRepayment ?? new Decimal(0);
-  audit.record("Sched 2", "2", "Excess APTC repayment", excessAPTCRepayment, "Form 8962");
+  audit.record("Sched 2", "1a", "Excess APTC repayment", excessAPTCRepayment, "Form 8962");
 
+  audit.record("Sched 2", "1z", "Additions to tax", excessAPTCRepayment, "Supported line 1a; other line 1 additions require separate support");
   const partITotal = amt.plus(excessAPTCRepayment);
-  audit.record("Sched 2", "3", "Part I total", partITotal, "Line 1 + Line 2");
+  audit.record("Sched 2", "3", "Part I total", partITotal, "Line 1z + Line 2");
 
   // ── Part II ───────────────────────────────────────────
 
@@ -135,13 +137,10 @@ export function calculateSchedule2(input: Schedule2Input): Schedule2Result {
     hsaAdditionalTax,
     hsaRecaptureTax
   );
-  audit.record("Sched 2", "18", "Total other taxes", partIITotal, "Sum implemented Part II lines including 4, 7, 8, 9, 11, 12, 13, 17c, and 17d");
-
-  const estimatedTaxPenalty = input.estimatedTaxPenalty ?? new Decimal(0);
-  audit.record("Sched 2", "19", "Estimated tax penalty", estimatedTaxPenalty, "Form 2210");
-
-  const totalAdditionalTaxes = partITotal.plus(partIITotal).plus(estimatedTaxPenalty);
-  audit.record("Sched 2", "21", "Total additional taxes", totalAdditionalTaxes, "Line 3 + Line 18 + Line 19 → 1040 Line 23");
+  audit.record("Sched 2", "18", "Subtotal of line 17 additional taxes", hsaAdditionalTax.plus(hsaRecaptureTax), "Supported lines 17c + 17d");
+  audit.record("Sched 2", "19", "Net elective-payment recapture", new Decimal(0), "No supported Form 4255 recapture; estimated-tax penalty is reported on Form 1040 line 38");
+  const totalAdditionalTaxes = partIITotal;
+  audit.record("Sched 2", "21", "Total other taxes", totalAdditionalTaxes, "Lines 4, 7 through 16, 18 and 19 → Form 1040 line 23; excludes Part I and estimated-tax penalty");
 
   return {
     amt,

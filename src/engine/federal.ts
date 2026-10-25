@@ -3056,7 +3056,6 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   // Line 24 = Line 22 (taxAfterCredits) + Schedule 2 Part II (SE + Medicare + NIIT).
   const form2210 = calculateForm2210({
     currentYearTax: taxAfterCredits.plus(sum(
-      amt,
       selfEmploymentTax,
       retirementPlanAdditionalTax,
       form8919?.line13 ?? new Decimal(0),
@@ -3084,12 +3083,16 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
           isSpouse: emp.isSpouse,
           isChildUnder21: emp.isChildUnder21,
           isParent: emp.isParent,
+          parentCareExceptionApplies: emp.parentCareExceptionApplies,
           isUnder18NonPrincipal: emp.isUnder18NonPrincipal,
           federalIncomeTaxWithheld: emp.federalIncomeTaxWithheld,
         })),
+        taxYear: year,
         futaApplies: input.scheduleH.futaApplies,
         futaSectionA: input.scheduleH.futaSectionA,
         stateUnemploymentContributions: input.scheduleH.stateUnemploymentContributions,
+        futaStatePeriods: input.scheduleH.futaStatePeriods,
+        stateUnemploymentContributionsPaidLate: input.scheduleH.stateUnemploymentContributionsPaidLate,
         futaCreditReduction: input.scheduleH.futaCreditReduction,
         constants: constants.householdEmployment,
       })
@@ -3115,14 +3118,14 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   });
   audit.merge(sched2.lines);
 
-  // Line 23: Only Schedule 2 Part II (SE + Medicare + NIIT) and penalty.
+  // Line 23: Only Schedule 2 Part II; estimated-tax penalty belongs on line 38.
   // AMT and excess APTC (Part I) are already included in Line 17 → Line 18.
-  const totalAdditionalTaxes = sched2.partIITotal.plus(estimatedTaxPenalty);
-  audit.record("1040", "23", "Other taxes", totalAdditionalTaxes, "Schedule 2 Part II + penalty");
+  const totalAdditionalTaxes = sched2.partIITotal;
+  audit.record("1040", "23", "Other taxes", totalAdditionalTaxes, "Schedule 2 Part II only");
 
   // ═══════════════════════════════════════════════════════════
   // Phase 7: Total Tax (Form 1040 Line 24)
-  // Line 24 = Line 22 (taxAfterCredits) + Line 23 (Schedule 2 Part II + penalty)
+  // Line 24 = Line 22 (taxAfterCredits) + Line 23 (Schedule 2 Part II)
   // ═══════════════════════════════════════════════════════════
 
   const totalTax = taxAfterCredits.plus(totalAdditionalTaxes);
@@ -3142,10 +3145,10 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   audit.record("1040", "28", "Additional Child Tax Credit", actc,
     "Form 8812 Line 27 (refundable ACTC)");
 
-  // Line 31: Schedule 3 refundable credits (AOC refundable + excess SS)
+  audit.record("1040", "29", "Refundable American opportunity credit", educationRefundable, "Form 8863 line 8");
+  audit.record("1040", "31", "Schedule 3 refundable credits and other payments", sched3.totalRefundableCredits,
+    "Schedule 3 line 15; excludes American opportunity credit");
   const refundableCredits = sum(educationRefundable, sched3.totalRefundableCredits);
-  audit.record("1040", "31", "Schedule 3 refundable credits", refundableCredits,
-    "Refundable AOC + excess SS withholding");
 
   const totalPayments = sum(federalWithholding, estimatedPayments, eic, actc, refundableCredits);
   audit.record("1040", "33", "Total payments", totalPayments, "Withholding + estimated + EIC + ACTC + refundable credits");
@@ -3155,13 +3158,16 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   // ═══════════════════════════════════════════════════════════
 
   const difference = totalPayments.minus(totalTax);
-  const refund = zeroFloor(difference);
-  const amountOwed = zeroFloor(difference.negated());
+  const overpayment = zeroFloor(difference);
+  const refund = zeroFloor(difference.minus(estimatedTaxPenalty));
+  const amountOwed = zeroFloor(difference.negated().plus(estimatedTaxPenalty));
 
-  audit.record("1040", "34", "Overpayment (refund)", refund, "Total payments - Total tax (if positive)");
-  audit.record("1040", "37", "Amount you owe", amountOwed, "Total tax - Total payments (if positive)");
+  audit.record("1040", "34", "Overpayment before estimated-tax penalty", overpayment, "max(0, total payments - total tax)");
+  audit.record("1040", "35a", "Refund after estimated-tax penalty", refund, "max(0, total payments - total tax - line 38 penalty)");
+  audit.record("1040", "37", "Amount you owe", amountOwed, "max(0, total tax - total payments + line 38 penalty)");
+  audit.record("1040", "38", "Estimated-tax penalty", estimatedTaxPenalty, "Form 2210; excluded from total tax");
 
-  // ── Form 1040 Digital Asset Question (Line 1a) ──────────
+  // ── Form 1040 Digital Asset Question ──────────
   // "At any time during 2025, did you: (a) receive (as a reward, award, or
   // payment for property or services); or (b) sell, exchange, gift, or otherwise
   // dispose of a digital asset?"
@@ -3180,7 +3186,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
       || (cryptoInput.stakingIncome ?? []).length > 0
       || (cryptoInput.airdropIncome ?? []).length > 0
     ));
-  audit.record("1040", "1a", "Digital asset question", new Decimal(digitalAssetQuestion ? 1 : 0),
+  audit.record("1040", "digital-asset", "Digital asset question", new Decimal(digitalAssetQuestion ? 1 : 0),
     digitalAssetQuestion
       ? "Yes — taxpayer received, sold, exchanged, or disposed of digital assets"
       : "No digital asset activity reported");

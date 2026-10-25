@@ -763,8 +763,9 @@ describe("Form 2210 in federal pipeline", () => {
     const federal = calculateFederalTax(fixture);
     // Total tax will be much higher than $5K withholding → penalty
     expect(federal.estimatedTaxPenalty.greaterThan(0)).toBe(true);
-    // Penalty should flow into totalAdditionalTaxes
-    expect(federal.totalAdditionalTaxes.greaterThan(0)).toBe(true);
+    // Form 2210 penalty is outside total tax and increases the amount owed.
+    expect(federal.totalAdditionalTaxes.toString()).toBe("0");
+    expect(federal.amountOwed.eq(federal.totalTax.minus(federal.totalPayments).plus(federal.estimatedTaxPenalty))).toBe(true);
   });
 
   it("safe harbor met with prior year tax", () => {

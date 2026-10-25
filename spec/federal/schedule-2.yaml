@@ -1,7 +1,7 @@
 form: "Schedule 2"
 fullName: "Additional Taxes"
 taxYear: 2025
-irsReference: "https://www.irs.gov/instructions/i1040s2"
+irsReference: "https://www.irs.gov/pub/irs-pdf/f1040s2.pdf"
 
 notes: |
   Schedule 2 collects additional taxes beyond the base income tax.
@@ -11,22 +11,22 @@ notes: |
   Total goes to Form 1040 Line 23.
 
 lines:
-  - line: "1"
+  - line: "2"
     description: "AMT (Form 6251)"
     formula: "Alternative Minimum Tax amount"
     irsRef: "Schedule 2 Instructions, Line 1"
     notes: "Computed via Form 6251 and integrated into federal orchestrator"
-    testRef: "tests/engine/schedules/schedule-2.test.ts::Schedule 2 Line 1 - AMT from Form 6251"
+    testRef: "tests/engine/schedules/schedule-2.test.ts::Schedule 2 Line 2 - AMT from Form 6251"
 
-  - line: "2"
+  - line: "1a"
     description: "Excess advance premium tax credit repayment"
     formula: "Form 8962 excess APTC repayment"
     irsRef: "Schedule 2 Instructions, Line 2"
-    testRef: "tests/engine/schedules/schedule-2.test.ts::Schedule 2 Line 2 - excess APTC"
+    testRef: "tests/engine/schedules/schedule-2.test.ts::Schedule 2 Line 1a - excess APTC"
 
   - line: "3"
     description: "Part I total"
-    formula: "Line 1 + Line 2"
+    formula: "Line 1z + Line 2"
     irsRef: "Schedule 2 Instructions, Line 3"
     testRef: "tests/engine/schedules/schedule-2.test.ts::Schedule 2 Line 3 - Part I total"
 
@@ -95,20 +95,26 @@ lines:
     testRef: "tests/engine/schedules/schedule-2.test.ts::Schedule 2 Line 17d - HSA testing-period failure tax flows from Form 8889 Line 21"
 
   - line: "18"
-    description: "Total other taxes"
-    formula: "Sum of the implemented Part II other-tax lines, including Lines 4, 7, 8, 11, 12, 13, 17c, and 17d"
+    description: "Subtotal of additional taxes on line 17"
+    formula: "Sum supported Lines 17c and 17d; excludes Lines 4 through 16"
     irsRef: "Schedule 2 Instructions, Line 18"
-    testRef: "tests/engine/schedules/schedule-2.test.ts::Schedule 2 Line 18 - total other taxes"
+    testRef: "tests/engine/schedules/schedule-2.test.ts::Schedule 2 Line 18 - subtotal of additional taxes"
 
   - line: "19"
-    description: "Estimated tax penalty"
-    formula: "Form 2210 estimated tax penalty"
+    description: "Net EPE recapture (unsupported when applicable)"
+    formula: "Zero for supported returns with no net EPE recapture; never includes Form 2210 penalty, which belongs on Form 1040 Line 38"
     irsRef: "Schedule 2 Instructions, Line 19"
-    testRef: "tests/engine/schedules/schedule-2.test.ts::Schedule 2 Line 19 - estimated tax penalty"
+    testRef: "tests/engine/schedules/schedule-2.test.ts::Schedule 2 Line 19 - excludes estimated tax penalty"
 
   - line: "21"
     description: "Total additional taxes"
-    formula: "Line 3 + Line 18 + Line 19"
+    formula: "Lines 4 + 7 through 16 + 18 + 19; excludes Part I and estimated-tax penalty"
     irsRef: "Schedule 2 Instructions, Line 21"
     notes: "Goes to Form 1040 Line 23"
     testRef: "tests/engine/schedules/schedule-2.test.ts::Schedule 2 Line 21 - total to 1040"
+
+  - line: "2025-routing"
+    description: "Source-form Part I and Part II totals remain distinct"
+    formula: "AMT on line 2 and APTC on 1a enter line 3 to Form 1040 line 17. Line 18 sums only line 17 amounts; line 21 sums Part II to Form 1040 line 23. Form 2210 penalty is excluded from every Schedule 2 total."
+    irsRef: "https://www.irs.gov/pub/irs-pdf/f1040s2.pdf"
+    testRef: "tests/engine/federal-payment-routing.test.ts::Schedule 2 official line routing"

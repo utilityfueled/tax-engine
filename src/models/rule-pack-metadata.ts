@@ -27,11 +27,13 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.5",
+    ruleVersion: "2025.6",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i1040gi", section: "Lines 29, 31, 34, 35a, 37 and 38", revision: "2025 instructions", retrievedAt: "2026-10-24" },
+      { url: "https://www.irs.gov/pub/irs-pdf/f1040s2.pdf", section: "Lines 1a, 2, 3, 18, 19 and 21", revision: "2025 final form", retrievedAt: "2026-10-24" },
       { url: "https://www.irs.gov/pub/irs-drop/n-25-67.pdf", section: "2025 QCD annual-limit comparison", revision: "Notice 2025-67", retrievedAt: "2026-10-24" },
       { url: "https://www.irs.gov/instructions/i6251", section: "Lines 1, 2a and 5; standard/senior add-backs and Exemption Worksheet", revision: "2025 instructions", retrievedAt: "2026-10-24" },
       { url: "https://www.irs.gov/instructions/i1040sca", section: "Line 5e, State and Local Tax Deduction Worksheet", revision: "2025 instructions", retrievedAt: "2026-10-24" },

@@ -326,7 +326,7 @@ describe("Simple W-2 single filer", () => {
       },
     });
 
-    const schedule2Line2 = saverCreditResult.allLines.find((line) => line.form === "Sched 2" && line.line === "2");
+    const schedule2Line2 = saverCreditResult.allLines.find((line) => line.form === "Sched 2" && line.line === "1a");
 
     expect(saverCreditResult.totalTaxBeforeCredits.toNumber()).toBe(225);
     expect(saverCreditResult.form8880?.line10.toNumber()).toBe(1000);
@@ -8114,9 +8114,9 @@ describe("Amount owed scenario", () => {
     expect(result.totalTax.greaterThan(result.totalPayments)).toBe(true);
     expect(result.amountOwed.greaterThan(0)).toBe(true);
     expect(result.refund.toNumber()).toBe(0);
-    // Verify equation: amountOwed = totalTax - totalPayments
+    // Form 1040 line 37 includes the separately reported line 38 penalty.
     expect(result.amountOwed.toNumber()).toBe(
-      result.totalTax.minus(result.totalPayments).toNumber()
+      result.totalTax.minus(result.totalPayments).plus(result.estimatedTaxPenalty).toNumber()
     );
   });
 
