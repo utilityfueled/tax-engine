@@ -1611,13 +1611,15 @@ export function deleteWorkspace(storage: Storage, workspaceId: string) {
  */
 export async function refreshWorkspaceEnginePreview(
   workspace: ReturnWorkspaceRecord,
-  taxpayer?: import("@/models/inputs").Taxpayer
+  taxpayer?: import("@/models/inputs").Taxpayer,
+  context?: import("@tax-engine/engine").WorkspaceEngineCalculationContext
 ): Promise<ReturnWorkspaceRecord> {
   const enginePreview = await lazyBuildWorkspaceEnginePreview(
     workspace.documents,
     workspace.returnSummary,
     workspace.structuredFacts,
-    taxpayer
+    taxpayer,
+    context
   );
   if (enginePreview === workspace.enginePreview) return workspace;
   return { ...workspace, enginePreview };

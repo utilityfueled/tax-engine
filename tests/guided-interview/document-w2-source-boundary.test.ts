@@ -3,6 +3,7 @@ import { expect, it } from "vitest";
 import { parseUploadedW2Text } from "@/lib/uploaded-document-detection";
 import { buildWorkspaceEngineInput } from "@tax-engine/engine";
 import type { WorkspaceDocumentRecord, WorkspaceReturnSummary, WorkspaceStructuredFactRecord, WorkspaceStructuredFactMachineValue } from "@tax-engine/contracts";
+import { workspaceScenarioContext } from "../helpers/workspace-calculation-context";
 import { workspaceTaxpayerFixture } from "../helpers/workspace-taxpayer";
 
 const text = `2025 Form W-2
@@ -34,9 +35,9 @@ NY 123456
 0.00`;
 const document: WorkspaceDocumentRecord = { id: "source", name: "source.pdf", taxYear: 2025, kind: "w2", coverage: "supported", label: "Actual W-2", notes: "Synthetic source test", size: 1, uploadedAt: "2026-01-01T00:00:00Z", matchedFixtureId: null, seededFactIds: ["wages", "withholding"] };
 const summary: WorkspaceReturnSummary = { status: "ready-to-recompute", targetTaxYear: 2025, taxYearState: "single", answeredFactCount: 2, totalFactCount: 2, readyItemCount: 1, itemCount: 1, blockers: [], items: [{ id: "wages-and-withholding", label: "Wages", status: "ready", engineTargets: [], relatedFactIds: ["wages", "withholding"], sourceDocumentIds: ["source"], answeredFactCount: 2, factCount: 2 }] };
-function input(machineValue: WorkspaceStructuredFactMachineValue, factId = "actual-wages") {
+function input(machineValue: WorkspaceStructuredFactMachineValue, factId = "actual-wages", complete = false) {
   const fact: WorkspaceStructuredFactRecord = { id: factId, factId: "wages", kind: "document-detected", sourceType: "upload", value: "Actual source boxes", label: "Source", confidence: "high", questionId: null, updatedAt: document.uploadedAt, sourceDocumentIds: [document.id], machineValue };
-  return buildWorkspaceEngineInput([document], summary, [fact], workspaceTaxpayerFixture());
+  return buildWorkspaceEngineInput([document], summary, [fact], workspaceTaxpayerFixture(), complete ? workspaceScenarioContext([fact], workspaceTaxpayerFixture()) : undefined);
 }
 it("preserves actual dependent care amounts and keeps absent or conflicting Box 10 unknown", () => {
   for (const amount of ["0.00", "125.45", "9007199254740993.01"]) {
@@ -50,15 +51,15 @@ it("preserves actual dependent care amounts and keeps absent or conflicting Box 
 });
 it("requires actual tips and benefits before document defaults and routes positive benefits to source qualification", () => {
   const actual = { ...parseUploadedW2Text(text)!.detectedFacts[0].machineValue!, accountHolder: "primary" as const, box10DependentCareBenefits: "0" } as WorkspaceStructuredFactMachineValue;
-  expect(input(actual)?.taxInput.w2s[0]).toHaveProperty("box10DependentCareBenefits", "0");
+  expect(input(actual, undefined, true)?.taxInput.w2s[0]).toHaveProperty("box10DependentCareBenefits", "0");
   for (const field of ["socialSecurityTips", "box10DependentCareBenefits"]) {
     const incomplete = { ...actual } as Record<string, unknown>; delete incomplete[field];
-    expect(input(incomplete as unknown as WorkspaceStructuredFactMachineValue)).toBeNull();
+    expect(input(incomplete as unknown as WorkspaceStructuredFactMachineValue, undefined, true)).toBeNull();
   }
-  expect(input({ ...actual, box10DependentCareBenefits: "5000" } as WorkspaceStructuredFactMachineValue)).toBeNull();
+  expect(input({ ...actual, box10DependentCareBenefits: "5000" } as WorkspaceStructuredFactMachineValue, undefined, true)).toBeNull();
   const legacy = { ...actual } as Record<string, unknown>; delete legacy.sourceFactsVersion;
-  expect(input(legacy as unknown as WorkspaceStructuredFactMachineValue, "wages:parsed-w2-summary")).toBeNull();
-  expect(input(actual, "wages:parsed-w2-summary")).not.toBeNull();
+  expect(input(legacy as unknown as WorkspaceStructuredFactMachineValue, "wages:parsed-w2-summary", true)).toBeNull();
+  expect(input(actual, "wages:parsed-w2-summary", true)).not.toBeNull();
 });
 it("never resolves conflicting or blank payroll boxes by choosing another source amount", () => {
   const conflicting = parseUploadedW2Text(`${text}\n4 Social security tax withheld\n621.00\n5 Medicare wages and tips\n10000.00`);

@@ -1,3 +1,4 @@
+import { workspaceScenarioContext } from "../../helpers/workspace-calculation-context";
 import { workspaceTaxpayerFixture } from "../../helpers/workspace-taxpayer";
 import { describe, expect, it } from "vitest";
 import { officialSampleDocumentFixtures, supportMatrix } from "@tax-engine/contracts";
@@ -807,7 +808,7 @@ describe("workspace storage", () => {
       "schedule-c-expense-review",
       "No business expenses or home office deduction apply to this fixture."
     );
-    workspace = await refreshWorkspaceEnginePreview(workspace, workspaceTaxpayerFixture());
+    workspace = await refreshWorkspaceEnginePreview(workspace, workspaceTaxpayerFixture(), workspaceScenarioContext(workspace.structuredFacts, workspaceTaxpayerFixture()));
 
     expect(workspace.returnSummary).toEqual({
       status: "ready-to-recompute",
@@ -854,7 +855,7 @@ describe("workspace storage", () => {
       "cost-basis-review",
       "Basis reporting and holding periods are confirmed."
     );
-    workspace = await refreshWorkspaceEnginePreview(workspace, workspaceTaxpayerFixture());
+    workspace = await refreshWorkspaceEnginePreview(workspace, workspaceTaxpayerFixture(), workspaceScenarioContext(workspace.structuredFacts, workspaceTaxpayerFixture()));
 
     expect(workspace.returnSummary).toEqual({
       status: "ready-to-recompute",
@@ -880,17 +881,13 @@ describe("workspace storage", () => {
     });
     expect(workspace.enginePreview).toMatchObject({
       mode: "engine-recompute",
-      title: "Deterministic engine recompute preview",
+      title: "Complete return recompute preview",
       taxYear: 2025,
       filingStatus: "single",
       filingState: "TX",
       sourceDocumentIds: ["irs-1099-b-2025:f1099b--2025.pdf:12"],
       sourceFixtureIds: ["irs-1099-b-2025"],
-      assumptions: [
-        "Uploaded PDFs are not parsed yet; this engine run uses fixture-derived transaction facts captured in the workspace ledger.",
-        "The confirmed 2025 Form 1099-B upload contributes 2 capital-gains transaction fact(s) with no withholding or carryforwards.",
-        "This preview only runs after the related capital-gains facts are fully confirmed in the interview loop."
-      ],
+      assumptions: ["This preview uses the supplied complete, reviewed return facts. Each selected original document record is reconciled to its actual calculation source; abbreviated summaries do not supply missing eligibility, identity, dates or amounts."],
       metrics: {
         totalIncome: "55000",
         agi: "55000",
@@ -970,7 +967,7 @@ describe("workspace storage", () => {
       "capital-gain-distributions",
       "Capital gain distributions are final and no basis review is needed."
     );
-    workspace = await refreshWorkspaceEnginePreview(workspace, workspaceTaxpayerFixture());
+    workspace = await refreshWorkspaceEnginePreview(workspace, workspaceTaxpayerFixture(), workspaceScenarioContext(workspace.structuredFacts, workspaceTaxpayerFixture()));
 
     expect(workspace.summary).toEqual({
       totalDocuments: 2,
@@ -1013,7 +1010,7 @@ describe("workspace storage", () => {
     });
     expect(workspace.enginePreview).toMatchObject({
       mode: "engine-recompute",
-      title: "Deterministic engine recompute preview",
+      title: "Complete return recompute preview",
       taxYear: 2025,
       filingStatus: "single",
       filingState: "TX",
@@ -1022,11 +1019,7 @@ describe("workspace storage", () => {
         "irs-1099-div-2024:f1099div.pdf:11"
       ],
       sourceFixtureIds: ["irs-1099-int-2024", "irs-1099-div-2024"],
-      assumptions: [
-        "Uploaded PDFs are not parsed yet; this engine run uses fixture-derived facts captured in the workspace ledger.",
-        "The confirmed 2025 Form 1099-INT upload contributes $20,000 of taxable interest with no withholding and no early-withdrawal penalty.",
-        "The confirmed 2025 Form 1099-DIV upload contributes $4,000 of ordinary dividends, including $3,000 of qualified dividends, plus $1,000 of capital gain distributions."
-      ],
+      assumptions: ["This preview uses the supplied complete, reviewed return facts. Each selected original document record is reconciled to its actual calculation source; abbreviated summaries do not supply missing eligibility, identity, dates or amounts."],
       metrics: {
         totalIncome: "25000",
         agi: "25000",
@@ -1286,7 +1279,7 @@ describe("workspace storage", () => {
       "cost-basis-review",
       "Basis reporting and holding periods are confirmed."
     );
-    workspace = await refreshWorkspaceEnginePreview(workspace, workspaceTaxpayerFixture());
+    workspace = await refreshWorkspaceEnginePreview(workspace, workspaceTaxpayerFixture(), workspaceScenarioContext(workspace.structuredFacts, workspaceTaxpayerFixture()));
 
     expect(workspace.returnSummary.status).toBe("ready-to-recompute");
     expect(workspace.returnSummary.items).toEqual([
@@ -1306,7 +1299,7 @@ describe("workspace storage", () => {
     ]);
     expect(workspace.enginePreview).toMatchObject({
       mode: "engine-recompute",
-      title: "Deterministic engine recompute preview",
+      title: "Complete return recompute preview",
       taxYear: 2025,
       filingStatus: "single",
       filingState: "TX",
@@ -1315,11 +1308,7 @@ describe("workspace storage", () => {
         "irs-1099-b-2025:f1099b--2025.pdf:18"
       ],
       sourceFixtureIds: ["irs-1099-b-2025"],
-      assumptions: [
-        "Uploaded PDFs are not parsed yet; this engine run uses fixture-derived transaction facts captured in the workspace ledger.",
-        "The confirmed 2025 Form 1099-B uploads contribute 4 capital-gains transaction fact(s) with no withholding or carryforwards.",
-        "This preview only runs after the related capital-gains facts are fully confirmed in the interview loop."
-      ],
+      assumptions: ["This preview uses the supplied complete, reviewed return facts. Each selected original document record is reconciled to its actual calculation source; abbreviated summaries do not supply missing eligibility, identity, dates or amounts."],
       metrics: {
         totalIncome: "110000",
         agi: "110000",
@@ -1473,7 +1462,7 @@ describe("workspace storage", () => {
       "withholding",
       "Federal withholding matches the taxpayer copy."
     );
-    workspace = await refreshWorkspaceEnginePreview(workspace, workspaceTaxpayerFixture());
+    workspace = await refreshWorkspaceEnginePreview(workspace, workspaceTaxpayerFixture(), workspaceScenarioContext(workspace.structuredFacts, workspaceTaxpayerFixture()));
 
     expect(workspace.returnSummary).toEqual({
       status: "ready-to-recompute",
@@ -1499,16 +1488,13 @@ describe("workspace storage", () => {
     });
     expect(workspace.enginePreview).toMatchObject({
       mode: "engine-recompute",
-      title: "Deterministic engine recompute preview",
+      title: "Complete return recompute preview",
       taxYear: 2025,
       filingStatus: "single",
       filingState: "TX",
       sourceDocumentIds: ["irs-w2-2025:fw2--2025.pdf:10"],
       sourceFixtureIds: ["irs-w2-2025"],
-      assumptions: [
-        "Uploaded PDFs are not parsed yet; this engine run uses fixture-derived facts captured in the workspace ledger.",
-        "The confirmed 2025 Form W-2 upload contributes $52,000 of wages and $5,000 of federal withholding."
-      ],
+      assumptions: ["This preview uses the supplied complete, reviewed return facts. Each selected original document record is reconciled to its actual calculation source; abbreviated summaries do not supply missing eligibility, identity, dates or amounts."],
       metrics: {
         totalIncome: "52000",
         agi: "52000",

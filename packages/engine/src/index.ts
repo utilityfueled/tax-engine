@@ -6,6 +6,7 @@ export { buildProviderFacingPartnerReviewPayload } from "./provider-facing-partn
 export { collectProviderDirectIdentifiersFromTaxInput } from "./provider-direct-identifiers";
 export { collectProviderDirectIdentifiersFromWorkspace } from "./provider-direct-identifiers";
 export { buildWorkspaceStructuredFacts } from "./workspace-facts";
+export type { WorkspaceEngineCalculationContext, WorkspaceSourceBinding, WorkspaceSourceCollection } from "./workspace-engine-input";
 export { buildWorkspaceEngineInput } from "./workspace-engine-input";
 export { buildWorkspaceEnginePreview } from "./workspace-engine-preview";
 export { buildWorkspaceFilingPack } from "./workspace-filing-pack";
