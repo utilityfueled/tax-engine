@@ -1,0 +1,38 @@
+form: "Standard Deduction Worksheet"
+fullName: "Form1040 standard deduction eligibility, dependent cap and age/blind additions"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i1040gi"
+sources:
+  - "https://www.irs.gov/publications/p501"
+  - "https://www.irs.gov/irb/2025-45_IRB"
+notes: |
+  Pub501 Table8 and examples use actual earned income including taxable scholarships
+  and net business income after the deductible half of SEtax. No AGI/W2-only proxy.
+  2026 requires actual relevant blindness, dependency, residency, death and MFS facts;
+  omitted2025 flags remain unqualified compatibility. Birthdays are actual source
+  dates; age65 is attained the day before the65th birthday. A decedent qualifies
+  for the age addition only if already65 at death. Explicit null death date means
+  alive; omitted death status remains unknown2026. Final forms and independent
+  review remain required. Qualified disaster-loss enhancement is not inferred
+  from ordinary casualty loss and remains a separate Form4684 qualification gap.
+lines:
+  - line: "eligibility"
+    description: "Eligibility for standard deduction"
+    formula: "Zero if MFS spouse itemizes, short accounting taxyear, or nonresident/dualstatus without eligible joint resident election; no age/blind additions when ineligible"
+    testRef: "tests/engine/forms/standard-deduction.test.ts::disallows standard deduction for actual spouse itemization and residency exceptions"
+  - line: "base"
+    description: "Dependent standard deduction limitation"
+    formula: "If primary or joint spouse can be claimed, min(status base,max(1350,actual earned income+450)); otherwise statusbase.2025base15750/31500/23625;2026base16100/32200/24150"
+    testRef: "tests/engine/forms/standard-deduction.test.ts::applies dependent minimum earned-income addition and ordinary status cap"
+  - line: "additional"
+    description: "Age65 and blindness additions"
+    formula: "Count each eligible primary age/blind box and joint spouse boxes;2025perbox2000 unmarried/nonQSS or1600 otherwise;2026perbox2050 or1650. MFSspouse boxes require actual no gross income, no return and no other claimant plus election"
+    testRef: "tests/engine/forms/standard-deduction.test.ts::uses the day-before birthday and actual death date for age65"
+  - line: "total"
+    description: "Allowed standard deduction"
+    formula: "If eligible, dependent-limited base plus age/blind additions; additions are outside dependent basecap"
+    testRef: "tests/engine/forms/standard-deduction.test.ts::matches the IRS blind-dependent and married examples"
+  - line: "source-facts"
+    description: "Actual relevant facts remain unknown until supplied"
+    formula: "No defaultfalse for2026 primary blindness/dependency/death/residency/shortyear or applicable spousefacts; dependency requires actual earned-income worksheet"
+    testRef: "tests/engine/forms/standard-deduction.test.ts::requires actual relevant2026 facts and preserves them in the model"

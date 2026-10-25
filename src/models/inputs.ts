@@ -2122,6 +2122,24 @@ export const PriorYearCarryforwardSchema = z.object({
   priorYearAGI: optionalDecimal,
 });
 
+export const StandardDeductionFactsSchema = z.object({
+  primaryBlind: z.boolean().optional(),
+  spouseBlind: z.boolean().optional(),
+  primaryCanBeClaimedAsDependent: z.boolean().optional(),
+  spouseCanBeClaimedAsDependent: z.boolean().optional(),
+  spouseItemizes: z.boolean().optional(),
+  dualStatusAlien: z.boolean().optional(),
+  nonresidentAlien: z.boolean().optional(),
+  residentJointElection: z.boolean().optional(),
+  shortTaxYear: z.boolean().optional(),
+  dependentEarnedIncome: optionalDecimalInput,
+  primaryDeathDate: z.string().nullable().optional(),
+  spouseDeathDate: z.string().nullable().optional(),
+  claimSpouseAdditionalDeduction: z.boolean().optional(),
+  spouseHasGrossIncome: z.boolean().optional(),
+  spouseFilesReturn: z.boolean().optional(),
+});
+
 export const DependentCareSchema = z.object({
   /** Earned income after applicable exclusions, SE adjustments and substantiated deemed monthly income. */
   primaryEarnedIncome: optionalDecimalInput,
@@ -4512,6 +4530,8 @@ export const TaxYearInputSchema = z.object({
   scheduleC: ScheduleCInputSchema.optional(),
   scheduleF: ScheduleFInputSchema.optional(),
   dependentCare: DependentCareSchema.optional(),
+  standardDeductionFacts: StandardDeductionFactsSchema.optional(),
+  deductionElection: z.enum(["automatic", "standard", "itemized"]).optional(),
   educationExpenses: EducationExpensesSchema.optional(),
   priorYear: PriorYearCarryforwardSchema.optional(),
   adjustments: AdjustmentsSchema.optional(),

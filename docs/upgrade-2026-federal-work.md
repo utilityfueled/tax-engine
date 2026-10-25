@@ -540,3 +540,20 @@ the distinct claimability fact. A source-linked regression failed first;132
 focused tests, root types,3,150spec refs and whitespace checks pass. Scoped diff
 reviewed. Guided facts owner received the corrected distinction. The prior PTC
 integration spec run actually had3,148refs after a concurrent spec addition.
+
+### Standard deduction source model and calculator — 2026-10-25
+
+Refreshed final1040/Pub501 dependent worksheets, death examples and2026RevProc
+2025-32 amounts. Added explicit blindness/dependency/residency/short-year/death
+facts, MFS spouse conditions and deduction election. The pure calculator applies
+the dependent1350minimum/earned+450cap, indexed age/blind additions, day-before
+65thbirthday and actual deathdate, including the IRS5350blind-dependent and33100
+joint examples. MFS extra spouse boxes require actual no-income/no-return/no-other
+claimant facts; ineligible standard deductions remain zero.2026 omissions reject;
+2025 omissions remain unqualified compatibility. Qualified disaster enhancement
+is explicitly separate and is not inferred from ordinary casualty loss.
+
+Spec/test preceded implementation.89 focused calculator/constant-shape tests,
+root types, all3,155spec refs, scopedlint and whitespace checks pass. Scoped diff
+reviewed. Federal selection/routing integration and explicit synthetic2026
+fixture facts follow in a separate package; no readiness gate changed.

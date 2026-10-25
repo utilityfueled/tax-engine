@@ -51,6 +51,8 @@ export interface StateYearConstants {
 
 export interface YearConstants {
   standardDeduction: Record<FilingStatus, Decimal>;
+  dependentStandardDeduction: { minimum: Decimal; earnedIncomeAddition: Decimal };
+  additionalStandardDeduction: { unmarried: Decimal; marriedOrSurvivingSpouse: Decimal };
   taxBrackets: Record<FilingStatus, TaxBracket[]>;
   capitalGainsRates: {
     zero: { threshold: Record<FilingStatus, Decimal> };
@@ -1185,6 +1187,8 @@ export const TAX_CONSTANTS: Record<number, YearConstants> = {
       head_of_household: d(23625),
       qualifying_surviving_spouse: d(31500),
     },
+    dependentStandardDeduction: { minimum: d("1350"), earnedIncomeAddition: d("450") },
+    additionalStandardDeduction: { unmarried: d("2000"), marriedOrSurvivingSpouse: d("1600") },
     taxBrackets: {
       married_filing_jointly: [
         { min: d(0), max: d(23850), rate: d(0.10) },
