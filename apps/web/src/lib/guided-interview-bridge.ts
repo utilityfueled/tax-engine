@@ -1,3 +1,4 @@
+import { buildGuidedPrivateActivityFacts } from "./guided-private-activity-facts";
 import { buildPremiumTaxCreditInputs, premiumTaxCreditFactErrors } from "./guided-premium-tax-credit-facts";
 import { buildSchedule1AInput, schedule1AFactErrors } from "./guided-schedule-1-a-facts";
 import { actualCompensationSourceYear } from "./guided-compensation-reporting";
@@ -254,7 +255,7 @@ function investmentSourceInput(entry: InvestmentSourceData) {
   return { payerTin: entry.payerTin?.trim() || undefined, accountHolder: entry.accountHolder === "primary" || entry.accountHolder === "spouse" ? entry.accountHolder : undefined, state: entry.state?.trim().toUpperCase() || undefined, stateWithheld: entry.stateTaxReporting === "none" ? "0" : toOptionalDecimalString(entry.stateWithheld) };
 }
 
-export function buildInterestInputs(entries: InterestEntryData[] | undefined) {
+export function buildInterestInputs(entries: InterestEntryData[] | undefined, taxYear?: number | null) {
   return (entries ?? []).filter(isStartedInvestment).map(entry => ({
     ...investmentSourceInput(entry), payer: entry.payer.trim(),
     interestIncome: toOptionalDecimalString(entry.interestIncome),
@@ -265,10 +266,11 @@ export function buildInterestInputs(entries: InterestEntryData[] | undefined) {
     foreignCountry: entry.foreignCountry?.trim() || undefined,
     taxExemptInterest: toOptionalDecimalString(entry.taxExemptInterest),
     privateActivityBondInterest: toOptionalDecimalString(entry.privateActivityBondInterest),
+    privateActivityBondFacts: buildGuidedPrivateActivityFacts(entry, entry.privateActivityBondInterest, taxYear),
   }));
 }
 
-export function buildDividendInputs(entries: DividendEntryData[] | undefined) {
+export function buildDividendInputs(entries: DividendEntryData[] | undefined, taxYear?: number | null) {
   return (entries ?? []).filter(isStartedInvestment).map(entry => ({
     ...investmentSourceInput(entry), payer: entry.payer.trim(),
     ordinaryDividends: toOptionalDecimalString(entry.ordinaryDividends),
@@ -284,6 +286,7 @@ export function buildDividendInputs(entries: DividendEntryData[] | undefined) {
     nondividendDistributions: toOptionalDecimalString(entry.nondividendDistributions),
     exemptInterestDividends: toOptionalDecimalString(entry.exemptInterestDividends),
     specifiedPrivateActivityBondInterest: toOptionalDecimalString(entry.specifiedPrivateActivityBondInterest),
+    privateActivityBondFacts: buildGuidedPrivateActivityFacts(entry, entry.specifiedPrivateActivityBondInterest, taxYear),
   }));
 }
 
@@ -659,9 +662,9 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
   const w2s = buildW2Inputs(w2Data?.entries);
   const necs = buildNecInputs(seData?.necEntries);
   const scheduleC = buildScheduleCInput(seData?.necEntries, seData?.manualGrossReceipts, seData?.expenses, seData?.qbiMateriallyParticipated, seData?.businessFacts);
-  const form1099Int = buildInterestInputs(investData?.interestEntries);
+  const form1099Int = buildInterestInputs(investData?.interestEntries, state.taxYear);
   const form1099OID = buildOidInputs(investData?.oidEntries, segmentation.filingStatus, state.taxYear, stateCode);
-  const form1099Div = buildDividendInputs(investData?.dividendEntries);
+  const form1099Div = buildDividendInputs(investData?.dividendEntries, state.taxYear);
   const form1099B = buildBrokerageInputs(investData?.brokerageEntries);
   const form1099R = buildRetirementInputs(retirementData?.entries, segmentation.filingStatus, state.taxYear, stateReturnData);
   const rentalProperties = buildRentalPropertyInputs(rentalData?.entries);

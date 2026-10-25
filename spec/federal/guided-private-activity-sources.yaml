@@ -1,0 +1,18 @@
+form: "Guided private activity bond sources"
+fullName: "Actual parent INT and DIV preferences without missing-amount defaults"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i6251"
+sources:
+  - url: "https://www.irs.gov/instructions/i6251"
+    section: "Final 2025 line 2g, actual INT9 and DIV13 recipient amounts"
+    retrieved: "2026-10-25"
+notes: "No year or filing gate is enabled. Source cents use Decimal. Positive premiums and market discount remain unavailable until their separate recipient worksheets are implemented."
+lines:
+  - line: "intake"
+    description: "Collect actual preferences and allowable-deduction sources"
+    formula: "Preserve actual zero and source cents. Positive preference needs current-year source ID, recipient confirmation and actual deduction including zero; reject unknown, duplicate and contradictory records."
+    testRef: "tests/guided-interview/guided-private-activity-sources.test.ts::carries actual parent preference sources into canonical AMT without duplicate exempt income"
+  - line: "confirmation"
+    description: "Invalidate completed source confirmation after changes"
+    formula: "Any changed source value invalidates recipient confirmation; changed deduction facts also invalidate deduction confirmation. Exact no-op edits preserve confirmation."
+    testRef: "tests/apps/web/investment-source-interactions.test.tsx::collects bond preferences and invalidates their confirmation after source edits"

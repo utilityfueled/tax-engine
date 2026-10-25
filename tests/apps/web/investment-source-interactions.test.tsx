@@ -23,6 +23,27 @@ async function render(initial: InvestmentData) {
 }
 
 describe("actual investment input interactions", () => {
+  it("collects bond preferences and invalidates their confirmation after source edits", async () => {
+    await render({ interestEntries: [completeInterestSource], dividendEntries: [], brokerageEntries: [] });
+    const source = card("1099-INT #1");
+    await change(source, "Box 8 tax-exempt interest", "500.25");
+    await change(source, "Box 9 private-activity bond interest", "125.10");
+    await change(source, "Bond preference source tax year", "2025");
+    await change(source, "Bond preference source record ID", "actual-bank-record");
+    await change(source, "Otherwise allowable bond preference deduction", "5.05");
+    await change(source, "Bond deduction worksheet reference", "Actual completed allowance worksheet");
+    await change(source, "Bond deduction is allowable and has not been deducted twice", "true");
+    await change(source, "Bond recipient amounts checked after the last edit", "true");
+    expect(investmentFactErrors(latest, "single", 2025)).toEqual({});
+    expect(buildInterestInputs(latest.interestEntries, 2025)[0]?.privateActivityBondFacts?.otherwiseAllowableDeduction).toBe("5.05");
+    await change(source, "Box 9 private-activity bond interest", "126.10");
+    expect(latest.interestEntries[0]?.pabRecipientAmountsConfirmed).toBe("");
+    expect(investmentFactErrors(latest, "single", 2025)).toHaveProperty("interest-0-pab");
+    await change(source, "Bond recipient amounts checked after the last edit", "true");
+    await change(source, "Otherwise allowable bond preference deduction", "6.05");
+    expect(latest.interestEntries[0]?.pabDeductionAllowanceAndNoDuplicationConfirmed).toBe("");
+    expect(investmentFactErrors(latest, "single", 2025)).toHaveProperty("interest-0-pab");
+  });
   it("shows exact source totals, explicit zero and unknown amounts in the review screen", async () => {
     const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["investments"], lifeEvents: [], stateCode: null });
     state.sectionData["income-investments"] = { interestEntries: [{ ...completeInterestSource, interestIncome: "0.10", usSavingsBondInterest: "0.20", taxExemptInterest: "" }], dividendEntries: [completeDividendSource], brokerageEntries: [{ ...completeBrokerageSource, transactions: [{ ...completeBrokerageSource.transactions[0], proceeds: "600", costBasis: "1000", washSale: true, washSaleDisallowed: "300" }] }] };

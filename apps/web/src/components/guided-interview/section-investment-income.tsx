@@ -1,4 +1,5 @@
 "use client";
+import { changePrivateActivitySource } from "@/lib/guided-private-activity-facts";
 
 import { RetroShell } from "@/components/retro-shell";
 import {
@@ -410,7 +411,7 @@ export function SectionInvestmentIncome({
 
   // ── Interest helpers ──
   function updateInterest(index: number, field: keyof InterestEntryData, value: string) {
-    const next = currentInterest.map((e, i) => (i === index ? { ...e, [field]: value } : e));
+    const next = currentInterest.map((e, i) => (i === index ? changePrivateActivitySource(e, field, value) : e));
     onInterestEntriesChange(next);
   }
   function addInterest() {
@@ -423,7 +424,7 @@ export function SectionInvestmentIncome({
 
   // ── Dividend helpers ──
   function updateDividend(index: number, field: keyof DividendEntryData, value: string) {
-    const next = currentDividends.map((e, i) => (i === index ? { ...e, [field]: value } : e));
+    const next = currentDividends.map((e, i) => (i === index ? changePrivateActivitySource(e, field, value) : e));
     onDividendEntriesChange(next);
   }
   function addDividend() {

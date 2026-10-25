@@ -2,8 +2,11 @@ import type { BrokerageEntryData, CapitalGainTransactionData, DividendEntryData,
 import { parseGuidedCurrency } from "./guided-currency";
 import { amountError, hasEnteredAmount, isActualDate } from "./guided-required-facts";
 import { oidFactErrors, type OidEntryData } from "./guided-oid-facts";
+import { buildGuidedPrivateActivityFacts, type PrivateActivitySourceData } from "./guided-private-activity-facts";
+import { calculateForm6251BondSources } from "@/engine/forms/form-6251-bond-sources.js";
+import { Form1099IntSchema, Form1099DivSchema } from "@/models/inputs.js";
 
-export interface InvestmentSourceData {
+export interface InvestmentSourceData extends PrivateActivitySourceData {
   payerTin?: string;
   accountHolder?: "primary" | "spouse" | "joint" | "";
   stateTaxReporting?: "none" | "single" | "multiple" | "";
@@ -42,6 +45,7 @@ export function investmentFactErrors(data: InvestmentData | undefined, filingSta
   const errors: Record<string, string> = {};
   if (!data) return errors;
   Object.assign(errors, oidFactErrors(data.oidEntries, filingStatus, taxYear, stateCode, stateData));
+  const preferenceSourceIds = new Set<string>();
   for (const [kind, entries] of [["interest", data.interestEntries], ["dividend", data.dividendEntries]] as const) {
     entries.forEach((entry, index) => {
       if (!isStartedInvestment(entry)) return;
@@ -52,8 +56,24 @@ export function investmentFactErrors(data: InvestmentData | undefined, filingSta
       const values = entry as unknown as Record<string, string | undefined>;
       for (const [field, label] of fields) { const error = amountError(values[field], label); if (error) errors[`${prefix}-${field}`] = error; }
       if (!errors[`${prefix}-foreignTaxPaid`] && parseGuidedCurrency(entry.foreignTaxPaid).gt(0) && !entry.foreignCountry?.trim()) errors[`${prefix}-foreignCountry`] = "Enter the actual foreign country or territory from the source record.";
-      const unsupported = kind === "interest" ? ["privateActivityBondInterest", "marketDiscount", "bondPremium", "treasuryBondPremium", "taxExemptBondPremium"] : ["nondividendDistributions", "section1202Gain", "section897OrdinaryDividends", "section897CapitalGain", "specifiedPrivateActivityBondInterest"];
+      const unsupported = kind === "interest" ? ["marketDiscount", "bondPremium", "treasuryBondPremium", "taxExemptBondPremium"] : ["nondividendDistributions", "section1202Gain", "section897OrdinaryDividends", "section897CapitalGain"];
       for (const field of unsupported) rejectUnsupportedAmount(values[field], `${prefix}-${field}`, "This source amount needs its additional basis, bond or special-distribution worksheet; the guided calculation does not support it yet.", errors);
+      const preferenceKey = kind === "interest" ? "privateActivityBondInterest" : "specifiedPrivateActivityBondInterest";
+      const exemptKey = kind === "interest" ? "taxExemptInterest" : "exemptInterestDividends";
+      if (!errors[`${prefix}-${preferenceKey}`] && !errors[`${prefix}-${exemptKey}`] && !errors[`${prefix}-owner`]) {
+        try {
+          const privateActivityBondFacts = buildGuidedPrivateActivityFacts(entry, values[preferenceKey], taxYear);
+          if (privateActivityBondFacts) {
+            const source = { payer: entry.payer, accountHolder: entry.accountHolder, privateActivityBondFacts,
+              [preferenceKey]: parseGuidedCurrency(values[preferenceKey]).toFixed(), [exemptKey]: parseGuidedCurrency(values[exemptKey]).toFixed() };
+            calculateForm6251BondSources(kind === "interest" ? [Form1099IntSchema.parse({ ...source, interestIncome: "0" })] : [],
+              kind === "dividend" ? [Form1099DivSchema.parse({ ...source, ordinaryDividends: "0" })] : [], taxYear ?? 0,
+              filingStatus === "mfj" ? "married_filing_jointly" : "single");
+            if (preferenceSourceIds.has(privateActivityBondFacts.sourceId)) throw new Error("Duplicate bond preference source record; reconcile the original and corrected statements.");
+            preferenceSourceIds.add(privateActivityBondFacts.sourceId);
+          }
+        } catch (error) { errors[`${prefix}-pab`] = error instanceof Error ? error.message : "Complete the actual bond preference source."; }
+      }
       if (kind === "dividend") {
         for (const [part, whole] of [["qualifiedDividends", "ordinaryDividends"], ["section1250Gain", "capitalGainDistributions"], ["collectiblesGain", "capitalGainDistributions"]] as const) if (!errors[`${prefix}-${part}`] && !errors[`${prefix}-${whole}`] && parseGuidedCurrency(values[part]).gt(parseGuidedCurrency(values[whole]))) errors[`${prefix}-${part}`] = "This included distribution cannot exceed its actual source total.";
       }
