@@ -6,7 +6,7 @@ import { simpleW2Fixture } from "../../fixtures/simple-w2";
 
 export function educatorSource(change: Record<string, unknown> = {}) {
   return { accountHolder: "primary", taxYear: 2026, schoolYear: "2025-2026", sourceFactsConfirmed: true,
-    schools: [{ name: "Actual public school", role: "teacher", schoolEligible: true, hoursWorked: "900" }],
+    schools: [{ name: "Actual public school", role: "teacher", schoolEligible: true, level: "k12", hoursWorked: "900" }],
     expenses: [{ sourceId: "receipt-1", datePaid: "2026-03-01", description: "Classroom materials", category: "classroom", amount: "500.15", ordinaryAndNecessary: true, qualifyingUse: true, healthOrPhysicalEducation: false, athleticSupplies: false, deductedElsewhere: false }],
     reimbursementsNotInWages: "20.05", excludedSavingsBondInterest: "10.02", nontaxableQualifiedTuitionProgramAmount: "150.04", nontaxableCoverdellEarnings: "20.01", ...change };
 }
@@ -17,7 +17,7 @@ function calculate(sources: unknown[], extra: Record<string, unknown> = {}, join
 
 it("uses actual owner and school-year hours without inferring eligibility", () => {
   expect(calculate([educatorSource()]).amount.toString()).toBe("300.03");
-  const schools = [{ name: "First school", role: "teacher", schoolEligible: true, hoursWorked: "450" }, { name: "Second school", role: "aide", schoolEligible: true, hoursWorked: "450" }];
+  const schools = [{ name: "First school", role: "teacher", schoolEligible: true, level: "k12", hoursWorked: "450" }, { name: "Second school", role: "aide", schoolEligible: true, level: "k12", hoursWorked: "450" }];
   expect(calculate([educatorSource({ schools })]).amount.toString()).toBe("300.03");
   for (const changed of [{ hoursWorked: "899.99" }, { schoolEligible: false }, { role: "other" }]) {
     expect(calculate([educatorSource({ schools: [{ ...schools[0], hoursWorked: "900", ...changed }] })]).amount.toString()).toBe("0");

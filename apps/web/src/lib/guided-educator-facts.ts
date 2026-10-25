@@ -7,6 +7,7 @@ import { amountError, hasEnteredAmount } from "./guided-required-facts";
 export const educatorReductionFields = ["reimbursementsNotInWages", "excludedSavingsBondInterest", "nontaxableQualifiedTuitionProgramAmount", "nontaxableCoverdellEarnings"] as const;
 export interface EducatorSchoolData {
   name: string; role: "" | "teacher" | "instructor" | "counselor" | "principal" | "aide" | "other";
+  level?: "" | "k12" | "early_childhood" | "other";
   schoolEligible: boolean | null; hoursWorked: string;
 }
 export interface EducatorExpenseData {
@@ -21,7 +22,7 @@ export interface EducatorSourceData {
   reimbursementsNotInWages: string; excludedSavingsBondInterest: string;
   nontaxableQualifiedTuitionProgramAmount: string; nontaxableCoverdellEarnings: string;
 }
-export const emptyEducatorSchool: EducatorSchoolData = { name: "", role: "", schoolEligible: null, hoursWorked: "" };
+export const emptyEducatorSchool: EducatorSchoolData = { name: "", role: "", level: "", schoolEligible: null, hoursWorked: "" };
 export const emptyEducatorExpense: EducatorExpenseData = { sourceId: "", datePaid: "", description: "", category: "", amount: "", ordinaryAndNecessary: null, qualifyingUse: null, healthOrPhysicalEducation: null, athleticSupplies: null, deductedElsewhere: null };
 export const emptyEducatorSource: EducatorSourceData = { accountHolder: "", taxYear: "", schoolYear: "", sourceFactsConfirmed: null, schools: [], expenses: [], reimbursementsNotInWages: "", excludedSavingsBondInterest: "", nontaxableQualifiedTuitionProgramAmount: "", nontaxableCoverdellEarnings: "" };
 
@@ -39,7 +40,7 @@ export function buildEducatorSources(sources: EducatorSourceData[] | undefined, 
     accountHolder: source.accountHolder || undefined,
     taxYear: /^\d{4}$/.test(source.taxYear) ? Number(source.taxYear) : undefined,
     schoolYear: source.schoolYear, sourceFactsConfirmed: source.sourceFactsConfirmed ?? undefined,
-    schools: source.schools?.map(school => ({ name: school.name, role: school.role || undefined, schoolEligible: school.schoolEligible ?? undefined, hoursWorked: money(school.hoursWorked, "actual school-year hours") })),
+    schools: source.schools?.map(school => ({ name: school.name, role: school.role || undefined, level: school.level || undefined, schoolEligible: school.schoolEligible ?? undefined, hoursWorked: money(school.hoursWorked, "actual school-year hours") })),
     expenses: source.expenses?.map(expense => ({ ...expense, category: expense.category || undefined, amount: money(expense.amount, "actual educator cost"), ordinaryAndNecessary: expense.ordinaryAndNecessary ?? undefined, qualifyingUse: expense.qualifyingUse ?? undefined, healthOrPhysicalEducation: expense.healthOrPhysicalEducation ?? undefined, athleticSupplies: expense.athleticSupplies ?? undefined, deductedElsewhere: expense.deductedElsewhere ?? undefined })),
     ...Object.fromEntries(educatorReductionFields.map(field => [field, money(source[field], field)])),
   }));

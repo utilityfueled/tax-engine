@@ -6,8 +6,9 @@ notes: |
   Refreshed 2026-10-25: final 2025 Form1040 instructions Schedule1 line11,
   TaxTopic458, IRC62(a)(2)(D)/(d), and RevProc2025-32 section4.12.
   A school-year total is distinct from calendar-year paid expenses. Above-line
-  eligibility remains K-12 teacher/instructor/counselor/principal/aide and900hours.
-  The2026 section67 expanded itemized rule is a separate calculation, not an
+  eligibility is teacher/instructor/counselor/principal/aide and900hours at K-12
+  schools, with the enacted2026 early-childhood extension described separately
+  in educator-2026-itemized.yaml. The section67 itemized rule is a separate calculation, not an
   inferred use of this above-line result. Actual exclusion worksheet amounts
   under135/529/530 must be supplied; a1099Q gross distribution is not a default.
   Unknown2025 raw engine records remain unverified legacy compatibility. Guided
@@ -15,7 +16,7 @@ notes: |
 lines:
   - line: "11-eligibility"
     description: "Use actual owner and school-year eligibility"
-    formula: "Sum actual nonoverlapping hours at qualifying K-12 schools in eligible roles. Require at least900hours in the same actual school year; owner must match return and spouse deductions require MFJ. Known ineligible facts allow zero; omitted facts block."
+    formula: "Sum actual nonoverlapping hours at qualifying schools in eligible above-line roles. Require at least900hours in the same actual school year; owner must match return and spouse deductions require MFJ. K12 applies both years; actual early-childhood facilities are supported from2026 under the separately sourced expansion. Known ineligible facts allow zero; omitted facts block."
     irsRef: "IRC62(d)(1); Form1040 Schedule1 line11 instructions"
     testRef: "tests/engine/forms/educator-expense-sources.test.ts::uses actual owner and school-year hours without inferring eligibility"
   - line: "11-net-cost"

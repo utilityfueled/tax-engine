@@ -7,7 +7,7 @@ import { simpleW2Fixture } from "../../fixtures/simple-w2";
 function calculate(year: number, primary: string, spouse?: string, reimbursements = "0") {
   const educatorExpenseSources = [primary, ...(spouse === undefined ? [] : [spouse])].map((amount, index) => ({
     accountHolder: index === 0 ? "primary" : "spouse", taxYear: year, schoolYear: `${year - 1}-${year}`, sourceFactsConfirmed: true,
-    schools: [{ name: "Actual school", role: "teacher", schoolEligible: true, hoursWorked: "900" }],
+    schools: [{ name: "Actual school", role: "teacher", schoolEligible: true, level: "k12", hoursWorked: "900" }],
     expenses: [{ sourceId: `receipt-${index}`, datePaid: `${year}-03-01`, description: "Classroom materials", category: "classroom", amount, ordinaryAndNecessary: true, qualifyingUse: true, healthOrPhysicalEducation: false, deductedElsewhere: false }],
     reimbursementsNotInWages: reimbursements, excludedSavingsBondInterest: "0", nontaxableQualifiedTuitionProgramAmount: "0", nontaxableCoverdellEarnings: "0",
   }));

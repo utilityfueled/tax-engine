@@ -4,7 +4,7 @@ import { buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
 import { buildSectionRoute, emptyAdjustmentData, updateSectionData, validateSection } from "@/lib/guided-interview-flow";
 import { buildEducatorSources, emptyEducatorSource, type EducatorSourceData } from "@/lib/guided-educator-facts";
 import { calculateEducatorExpensesDeduction } from "@/engine/forms/educator-expenses";
-import { TaxYearInputSchema } from "@/models/inputs";
+import { AdjustmentsSchema, TaxYearInputSchema } from "@/models/inputs";
 import { startCompleteInterview } from "./complete-facts";
 
 export const actualEducator: EducatorSourceData = { ...emptyEducatorSource, accountHolder: "primary", taxYear: "2025", schoolYear: "2024-2025", sourceFactsConfirmed: true,
@@ -35,6 +35,17 @@ it("opens the actual educator route and requires its source facts", () => {
   expect(buildTaxInputFromGuidedData(state)).toBeNull();
   state.sectionData.adjustments = { ...emptyAdjustmentData, educatorExpenseSources: [actualEducator] };
   expect(buildTaxInputFromGuidedData(state)).not.toBeNull();
+});
+
+it("preserves the actual school level and leaves missing 2026 classification unknown", () => {
+  const source: EducatorSourceData = { ...actualEducator, taxYear: "2026", schoolYear: "2025-2026",
+    expenses: actualEducator.expenses.map(expense => ({ ...expense, datePaid: "2026-03-01" })),
+    schools: actualEducator.schools.map(school => ({ ...school, level: "k12" as const })) };
+  expect(buildEducatorSources([source], "single", 2026)?.[0]?.schools?.[0]?.level).toBe("k12");
+  expect(() => buildEducatorSources([{ ...source, schools: actualEducator.schools }], "single", 2026)).toThrow(/actual school level/i);
+  const other = buildEducatorSources([{ ...source, schools: source.schools.map(school => ({ ...school, level: "other" as const })) }], "single", 2026);
+  expect(other?.[0]?.schools?.[0]?.level).toBe("other");
+  expect(calculateEducatorExpensesDeduction(AdjustmentsSchema.parse({ educatorExpenseSources: other }), "single", 2026).amount.toString()).toBe("0");
 });
 
 it("preserves zero false large amounts and incomplete saved source records", () => {

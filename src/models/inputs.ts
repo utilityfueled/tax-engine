@@ -3067,7 +3067,11 @@ export const EducatorExpenseSourceSchema = z.object({
   sourceFactsConfirmed: z.boolean().optional(),
   schools: z.array(z.object({
     name: z.string(),
-    role: z.enum(["teacher", "instructor", "counselor", "principal", "aide", "other"]).optional(),
+    role: z.enum(["teacher", "instructor", "counselor", "principal", "aide", "interscholastic_sports_administrator", "coach", "other"]).optional(),
+    /** Required for2026; historical2025 omission retains only the original K12 contract. */
+    level: z.enum(["k12", "early_childhood", "other"]).optional(),
+    earlyChildhoodNonresidentChildrenUnder6: z.number().int().nonnegative().optional(),
+    operatedAtPublicExpense: z.boolean().optional(), receivesFeePaymentOrGrant: z.boolean().optional(),
     schoolEligible: z.boolean().optional(),
     hoursWorked: optionalDecimalInput,
   })).optional(),
@@ -3076,6 +3080,9 @@ export const EducatorExpenseSourceSchema = z.object({
     category: z.enum(["classroom", "professional_development", "protective_supplies", "other"]).optional(),
     amount: optionalDecimalInput,
     ordinaryAndNecessary: z.boolean().optional(), qualifyingUse: z.boolean().optional(),
+    /** Actual broader section67 instructional activity; qualifying classroom use already suffices. */
+    instructionalActivity: z.boolean().optional(),
+    itemizedReimbursements: optionalDecimalInput, itemizedTaxFreeFunding: optionalDecimalInput,
     healthOrPhysicalEducation: z.boolean().optional(), athleticSupplies: z.boolean().optional(),
     deductedElsewhere: z.boolean().optional(),
   })).optional(),

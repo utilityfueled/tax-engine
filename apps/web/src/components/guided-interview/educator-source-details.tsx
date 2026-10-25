@@ -37,6 +37,7 @@ export function EducatorSourceDetails({ sources = [], taxYear, onChange }: { sou
           const label = `${prefix}, school ${schoolIndex + 1}`;
           return <div key={schoolIndex} className="guided-form-grid">
             <TextFact label={`${label}: School name`} value={school.name} onChange={name => updateSchool(schoolIndex, { name })} />
+            <Choice label={`${label}: Actual school level`} value={school.level ?? ""} options={[["k12", "Kindergarten through grade 12"], ["early_childhood", "Early childhood facility"], ["other", "Other school level"]]} onChange={level => updateSchool(schoolIndex, { level: level as EducatorSchoolData["level"] })} />
             <Choice label={`${label}: Actual role`} value={school.role} options={[["teacher", "Teacher"], ["instructor", "Instructor"], ["counselor", "Counselor"], ["principal", "Principal"], ["aide", "Aide"], ["other", "Other role"]]} onChange={role => updateSchool(schoolIndex, { role: role as EducatorSchoolData["role"] })} />
             <BooleanFact label={`${label}: The school provides K-12 education under state law`} value={school.schoolEligible} onChange={schoolEligible => updateSchool(schoolIndex, { schoolEligible })} />
             <TextFact label={`${label}: Actual nonoverlapping hours in this school year`} value={school.hoursWorked} onChange={hoursWorked => updateSchool(schoolIndex, { hoursWorked })} />

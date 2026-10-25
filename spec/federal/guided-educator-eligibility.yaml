@@ -1,0 +1,19 @@
+form: "Guided educator eligibility"
+fullName: "Actual school and expense eligibility sources"
+taxYear: 2026
+irsReference: "https://uscode.house.gov/view.xhtml?req=granuleid:USC-prelim-title26-section62&num=0&edition=prelim"
+notes: |
+  Collect the selected year's actual school classification. An omitted historical
+  classification must not become K-12 when the return is changed to 2026.
+  Calculation eligibility is governed by the separately sourced educator module.
+lines:
+  - line: "actual-school-level"
+    description: "Preserve actual school classification and unknown values"
+    formula: "Forward the actual school level without a default. The 2026 actual-source path requires it; supplied other-school classification remains known ineligible rather than missing."
+    irsRef: "IRC 62(d), eligible educator and school definitions"
+    testRef: "tests/guided-interview/guided-educator-facts.test.ts::preserves the actual school level and leaves missing 2026 classification unknown"
+  - line: "school-level-control"
+    description: "Collect the school classification from actual records"
+    formula: "The selector starts unknown; selecting a level preserves the actual value and invalidates source confirmation. Historical saved records remain visible without an inferred classification."
+    irsRef: "IRC 62(d), actual school eligibility"
+    testRef: "tests/apps/web/educator-source-interactions.test.tsx::collects educator source facts without manufacturing zero or confirmation"
