@@ -13,6 +13,7 @@ import { PDFDocument, StandardFonts } from "pdf-lib";
 import Decimal from "decimal.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
+import { adoptionReviewOriginalSourceInput, hasHistoricalAdoptionSources, type PreparedAdoptionReview } from "../../adoption-review-context.js";
 import {
   loadReviewTemplate,
   setTextField,
@@ -171,8 +172,12 @@ export async function fillForm8839(
   input: TaxYearInput,
   result: TaxReturnResult,
   blankPdfPath: string,
+  adoptionReview?: PreparedAdoptionReview,
 ): Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
+  const historicalWorksheet = result.form8839?.lines.some(row => row.form === "Form 8839" && row.line === "prior-benefits-income-adjustment") ?? false;
+  const original = hasHistoricalAdoptionSources(input) || historicalWorksheet || adoptionReview !== undefined
+    ? adoptionReviewOriginalSourceInput(input, result, adoptionReview) : undefined;
   const doc = await loadReviewTemplate(blankPdfPath, 2025);
   const form = doc.getForm();
   const F = FORM_8839_FIELDS;
@@ -279,8 +284,8 @@ export async function fillForm8839(
   if (magiExceeds) setDecimalFraction(form, F.line9Int, F.line9Dec, audited("9"));
 
   // Special-needs qualified-plan exclusions can exist with no current benefits.
-  if (f8839.totalEmployerBenefits.isZero() && f8839.allowableExclusion.isZero()) return finish();
-  setCheckBox(form, children.some(c => d(c.priorYearExclusionsClaimed).gt(ZERO)) ? F.line20CheckboxYes : F.line20CheckboxNo, true);
+  if (f8839.totalEmployerBenefits.isZero() && f8839.allowableExclusion.isZero() && !historicalWorksheet) return finish();
+  setCheckBox(form, children.some(c => d(c.priorYearExclusionsClaimed).gt(ZERO) || d(c.priorYearForeignBenefits).gt(ZERO)) ? F.line20CheckboxYes : F.line20CheckboxNo, true);
   for (const line of ["19", "20", "21", "22", "24", "28", "29"] as const) {
     for (let index = 0; index < numChildren; index++) {
       setCurrencyField(form, F[`line${line}`][index], audited(`${line}-child-${index + 1}`));
@@ -293,5 +298,40 @@ export async function fillForm8839(
   setCheckBox(form, exclusionMagiExceeds ? F.line26CheckboxYes : F.line26CheckboxNo, true);
   if (exclusionMagiExceeds) setDecimalFraction(form, F.line27Int, F.line27Dec, audited("27"));
   setCheckBox(form, audited("30").gt(audited("23")) ? F.line31CheckboxYes : F.line31CheckboxNo, true);
+  if (original && historicalWorksheet) {
+    // Actual historical worksheets can report zero taxable current benefits
+    // while their separate prior-benefit transfer is negative. Keep both visible.
+    setTextField(form, F.line31, audited("31").toFixed(0));
+    const rows = ["HISTORICAL FOREIGN-ADOPTION BENEFITS - REVIEW RECORD",
+      "Physical Form 8839 line 31 and signed Form 1040 line 1f are different amounts.",
+      "Original receipt amounts retain cents; each completed worksheet line is rounded separately."];
+    for (const [index, child] of (original.form8839?.children ?? []).entries()) {
+      const history = child.priorYearForeignBenefitHistory;
+      if (!history) continue;
+      rows.push(`Child ${index + 1}: actual current benefits $${d(child.employerBenefits).toFixed(2)}`,
+        `Actual prior benefits allocated: $${d(child.priorYearForeignBenefits).toFixed(2)}`);
+      for (const [sourceIndex, source] of (history.records ?? []).entries()) {
+        rows.push(`  Prior statement ${sourceIndex + 1}, year ${source.taxYear}: original $${d(source.originalEmployerBenefits).toFixed(2)}; child share $${d(source.benefitsAllocatedToChild).toFixed(2)}`);
+      }
+      if (d(child.priorYearForeignBenefits).gt(0)) for (const line of ["1", "2", "3"]) {
+        rows.push(`Historical worksheet child ${index + 1}, line ${line}: $${audited(`prior-benefits-${line}-child-${index + 1}`).toFixed(0)}`);
+      }
+    }
+    for (const line of ["4", "5", "6", "7", "8", "9"]) rows.push(`Historical worksheet line ${line}: $${audited(`prior-benefits-${line}`).toFixed(0)}`);
+    rows.push(`Physical Form 8839 line 31: $${audited("31").toFixed(0)}`,
+      `Signed Form 1040 line 1f: $${audited("prior-benefits-income-adjustment").toFixed(0)}`,
+      "The signed transfer continues the explicit 2023 reporting instruction alongside the retained 2025 worksheet.",
+      "This is a documented source interpretation, not independent filing qualification.",
+      "Original identifiers and private source references are omitted from this review appendix.");
+    const font = await doc.embedFont(StandardFonts.Helvetica);
+    let page = doc.addPage([612, 792]), y = 745;
+    for (const text of rows) {
+      for (const line of text.match(/.{1,94}(?:\s|$)|.{1,94}/g) ?? [text]) {
+        if (y < 65) { page = doc.addPage([612, 792]); y = 745; }
+        page.drawText(line.trim(), { x: 36, y, size: 10, font }); y -= 15;
+      }
+      y -= 4;
+    }
+  }
   return finish();
 }

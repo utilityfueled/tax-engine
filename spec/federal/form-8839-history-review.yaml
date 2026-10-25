@@ -1,0 +1,42 @@
+form: "Form 8839 Historical Benefits Review"
+fullName: "Source-bound historical adoption benefits and signed return transfer"
+taxYear: 2025
+irsReference: "https://www.irs.gov/pub/irs-pdf/f8839.pdf"
+notes: |
+  Final2025 form created2025-09-02, PartIII and i8839 foreign-child worksheet1-9.
+  Physical31 remains the current taxable benefit amount. The separately signed
+  1040line1f transfer follows the documented2023 reporting continuation in
+  form-8839-prior-benefits.yaml. The appendix is a review record, not an IRS form.
+  The current form asks whether benefits were received in prior years; actual
+  prior benefits require Yes even when actual prior exclusion usage is zero.
+  Original sources and actual canonical income are validated before identifier
+  redaction. A private in-memory token binds original and redacted inputs plus
+  the actual completed8839, AGI and signed1040line1f; a serialized token is invalid.
+  No calculation is replayed using invented or redacted identities. Source IDs,
+  references, employer EINs and personal identifier suffixes are not rendered
+  in the historical appendix. The existing2026 and filing gates remain closed.
+lines:
+  - line: "packet"
+    description: "Benefits-only completed form is retained"
+    formula: "Include eligible8839 when actual benefits/exclusion exist even with zero adoption credit; print physical31 independently from signed1040line1f and append the actual historical worksheet"
+    testRef: "tests/pdf/form8839-history-review.test.ts::retains a saved benefits-only packet and distinct physical and signed lines"
+  - line: "original"
+    description: "Original-source review binding and identifier privacy"
+    formula: "Prepare once from actual complete identity and income; require an authentic context for redacted rendering, preserve source cents and render static ordinal history rows only"
+    testRef: "tests/pdf/form8839-history-review.test.ts::preserves source cents and private identity through redacted review rendering"
+  - line: "stale"
+    description: "Reject stale sources and conflicting calculated transfers"
+    formula: "Changed source identity, allocation, income or retained8839/1040line1f must fail original-source and canonical-result digests; forged context cannot authorize rendering"
+    testRef: "tests/pdf/form8839-history-review.test.ts::rejects stale original facts forged contexts and changed transfer audits"
+  - line: "gates"
+    description: "Historical review keeps future-year and filing restrictions"
+    formula: "No2026 template or filing purpose is enabled by a reviewed2025 historical-benefit packet"
+    testRef: "tests/pdf/form8839-history-review.test.ts::retains year and filing gates for historical benefit review"
+  - line: "continuations"
+    description: "Preserve complete mixed-child history with readable continuation pages"
+    formula: "Render each actual statement once by child ordinal; a confirmed zero-history child has no invented worksheet1-3; paginate before the footer and mark every page review-only"
+    testRef: "tests/pdf/form8839-history-review.test.ts::paginates complete statements beside an actual zero-history child"
+  - line: "workspace"
+    description: "Original-source context reaches the actual workspace download"
+    formula: "Prepare historical source context from complete guided input before redaction and pass it to the packet; preserve source input, actual signed transfer and review-only identifier privacy"
+    testRef: "tests/apps/web/workspace-filled-return.test.ts::binds historical adoption before redacting the actual workspace packet"

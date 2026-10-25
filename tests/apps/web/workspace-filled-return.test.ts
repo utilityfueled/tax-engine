@@ -18,6 +18,7 @@ import { buildTaxInputFromGuidedData } from "../../../apps/web/src/lib/guided-in
 import { TaxYearInputSchema } from "../../../src/models/inputs";
 import { calculateFederalTax } from "../../../src/engine/federal";
 import * as federalEngine from "../../../src/engine/federal";
+import { actualGuidedAdoptionHistory } from "../../fixtures/guided-adoption-prior-benefits";
 
 vi.mock("server-only", () => ({}));
 
@@ -502,6 +503,27 @@ describe("workspace filled return download", () => {
 
     expect(commandResult).not.toContain("111223333");
     expect(commandResult).not.toContain("000000000");
+  });
+
+  it("binds historical adoption before redacting the actual workspace packet", async () => {
+    const state = createGuidedFlowState();
+    state.sectionData["personal-info"] = { ...state.sectionData["personal-info"], lastName: "Example" };
+    const wages = state.sectionData["income-w2"]?.entries[0];
+    if (!wages || !state.sectionData.credits) throw new Error("Missing actual source fixture");
+    Object.assign(wages, { wages: "100000", socialSecurityWages: "102000", socialSecurityWithheld: "6324",
+      medicareWages: "102000", medicareWithheld: "1479", box12CodeT: "2000" });
+    state.sectionData.credits.adoption = actualGuidedAdoptionHistory();
+    const before = JSON.stringify(state), calculate = vi.spyOn(federalEngine, "calculateFederalTax");
+    try {
+      const download = await buildWorkspaceFilledReturnDownload(createWorkspace(), state);
+      expect(download.includedForms).toContain("f8839-filled.pdf");
+      expect(calculate.mock.calls.every(([input]) => input.taxpayer.primary.ssn === "111-22-3333")).toBe(true);
+      const text = await extractPdfText(download.contents);
+      expect(text).toContain("Signed Form 1040 line 1f: $-8000");
+      expect(text).toContain("Actual prior benefits allocated: $8000.10");
+      for (const secret of ["111223333", "345678901", "Actual original adoption statement-A", "Actual fictional prior benefits worksheet", "8901"]) expect(text).not.toContain(secret);
+      expect(JSON.stringify(state)).toBe(before);
+    } finally { calculate.mockRestore(); }
   });
 
   it("calculates education using complete identity before redacting every student page", async () => {
