@@ -33,3 +33,11 @@ Updated 2026-10-25. Implementation is reviewable; final 2026 form qualification 
 - Part IV cross-family allocation, elected Part V alternative marriage calculation, circular self-employed health-insurance/PTC coordination, and unlawful-presence mixed-family repayment worksheets remain explicitly gated. Their presence cannot silently produce an ordinary calculation. These are implementation gaps, not external approvals and not a completed full Form 8962 claim.
 - Guided collection of the complete household/coverage worksheet contract is required for 2026 taxpayers with marketplace statements.
 - Final 2026 forms/instructions, independent tax review, approved scenarios and filing qualification remain required. The 2025 reference-summary PDF is review-only and does not qualify a 2026 form.
+
+## Review reference mapping follow-up
+
+- Calculation package committed as `ca8c1e5`; scoped source mapping follows separately.
+- The 2025 reference summary now copies the corrected physical audit IDs, includes annual or monthly columns, distinguishes raw policy benchmark totals from the actual household benchmark, and explicitly labels unverified historical facts.
+- Missing/duplicate/nonfinite audits, inconsistent audited totals or mismatched source APTC are rejected. Every emitted page has the visible review-only notice.
+- Five PDF tests pass; the three new/corrected cases were observed red before the mapping change. Root TypeScript passes; focused lint has no errors (four existing non-null assertion warnings).
+- Synthetic `.local/upgrade-evidence/f8962-reference-filled.pdf` rendered to five pages. Pages 1 and 5 were visually inspected; pypdf confirms the review notice on every page and PNG footer pixels confirm it is visibly rendered. No filing qualification is implied.

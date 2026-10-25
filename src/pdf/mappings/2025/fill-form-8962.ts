@@ -1,4 +1,6 @@
-import { assertPdfExportAllowed } from "../../export-policy.js";
+import Decimal from "decimal.js";
+import { roundDollar } from "@/utils/decimal.js";
+import { assertPdfExportAllowed, markReviewPdf } from "../../export-policy.js";
 import { mkdir, writeFile } from "fs/promises";
 import { join } from "path";
 import {
@@ -18,22 +20,13 @@ const BODY_FONT_SIZE = 10;
 const HEADER_COLOR = rgb(0.16, 0.16, 0.16);
 const WARNING_COLOR = rgb(0.62, 0.19, 0.14);
 
-const INCLUDED_FORM_8962_LINES = [
-  "1",
-  "2",
-  "3",
-  "5",
-  "7",
-  "11a",
-  "11b",
-  "11c",
-  "24",
-  "25",
-  "26",
-  "27",
-] as const;
-
-const INCLUDED_FORM_8962_LINE_SET = new Set<string>(INCLUDED_FORM_8962_LINES);
+const INCLUDED_FORM_8962_LINES: readonly string[] = [
+  "1", "2a", "2b", "3", "4", "5", "7", "8a", "8b",
+  ...Array.from({ length: 13 }, (_, index) => ["a", "b", "c", "d", "e", "f"].map(column => `${index + 11}${column}`)).flat(),
+  "24", "25", "26", "27", "28", "29",
+];
+const INCLUDED_FORM_8962_LINE_SET = new Set(INCLUDED_FORM_8962_LINES);
+const REQUIRED_LINES = ["1", "2a", "2b", "3", "4", "5", "24", "25", "26", "27", "29"] as const;
 
 export const FORM_8962_REFERENCE_FILENAME = "f8962-reference-filled.pdf";
 
@@ -163,11 +156,46 @@ export function buildForm8962ReferenceSummary(
     throw new Error("Form 8962 reference summary requires result.form8962");
   }
 
+  const byLine = new Map<string, (typeof summary.lines)[number]>();
+  for (const line of summary.lines) {
+    if (line.form !== "Form 8962" || !INCLUDED_FORM_8962_LINE_SET.has(line.line)) continue;
+    if (byLine.has(line.line) || !line.value.isFinite()) throw new Error(`Form 8962 reference requires unique finite audit line ${line.line}`);
+    byLine.set(line.line, line);
+  }
+  for (const line of REQUIRED_LINES) if (!byLine.has(line)) throw new Error(`Form 8962 reference is missing audit line ${line}`);
+  for (const [line, total] of [
+    ["3", summary.modifiedAGI], ["4", summary.federalPovertyLine], ["5", summary.fplPercentageForTable],
+    ["24", summary.ptcAllowed], ["25", summary.advancePTCTotal], ["26", summary.netPTC], ["27", summary.excessAPTC], ["29", summary.excessAPTCRepayment],
+  ] as const) if (!byLine.get(line)?.value.eq(total)) throw new Error(`Form 8962 audit line ${line} disagrees with its calculated total`);
+  const sourceAdvances = new Map<number, Decimal>();
+  for (const form of forms) for (const month of form.monthlyPremiums) {
+    if (month.advancePremiumTaxCredit === undefined) throw new Error("Form 8962 source advance amount is missing");
+    const amount = new Decimal(month.advancePremiumTaxCredit);
+    if (!amount.isFinite() || amount.isNegative()) throw new Error("Form 8962 source advance amount is invalid");
+    sourceAdvances.set(month.month, (sourceAdvances.get(month.month) ?? new Decimal(0)).plus(amount));
+  }
+  const reconciliationRows = summary.calculationMethod === "annual" ? ["11"] : [...sourceAdvances.keys()].sort((left, right) => left - right).map(month => String(month + 11));
+  let auditedCredit = new Decimal(0), auditedAdvances = new Decimal(0);
+  for (const row of reconciliationRows) {
+    const advance = byLine.get(`${row}f`);
+    if (!advance) throw new Error(`Form 8962 reference is missing audit line ${row}f`);
+    auditedAdvances = auditedAdvances.plus(advance.value);
+    if (["a", "b", "c", "d", "e"].some(column => byLine.has(`${row}${column}`))) {
+      for (const column of ["a", "b", "c", "d", "e"]) if (!byLine.has(`${row}${column}`)) throw new Error(`Form 8962 reference is missing audit line ${row}${column}`);
+      for (const line of ["7", "8a", "8b"]) if (!byLine.has(line)) throw new Error(`Form 8962 reference is missing contribution audit ${line}`);
+      auditedCredit = auditedCredit.plus(byLine.get(`${row}e`)?.value ?? 0);
+    }
+  }
+  if (!auditedCredit.eq(summary.ptcAllowed) || !auditedAdvances.eq(summary.advancePTCTotal)) throw new Error("Form 8962 reconciliation audit columns disagree with totals");
+  const sourceAdvanceTotal = summary.calculationMethod === "annual"
+    ? roundDollar([...sourceAdvances.values()].reduce((total, amount) => total.plus(amount), new Decimal(0)))
+    : [...sourceAdvances.values()].reduce((total, amount) => total.plus(roundDollar(amount)), new Decimal(0));
+  if (!sourceAdvanceTotal.eq(summary.advancePTCTotal)) throw new Error("Form 8962 source advance totals disagree with calculation");
   return {
     title: "Form 8962 Premium Tax Credit Reference Summary",
     warningLabel: "REFERENCE SUMMARY ONLY",
     policyCount: forms.length,
-    introduction: `Computed from ${forms.length} supported Form 1095-A marketplace statement${forms.length === 1 ? "" : "s"} and the supported Form 8962 reconciliation outputs.`,
+    introduction: `Computed from ${forms.length} Form 1095-A statement${forms.length === 1 ? "" : "s"} using the ${summary.calculationMethod} method. ${summary.sourceFactsVerified ? "Actual household and coverage facts were supplied." : "This is an unverified historical preview; dependent income, regional residence and coverage eligibility have not been established."} Policy totals below are raw statement amounts; the calculation uses the corrected household benchmark.`,
     policies: forms.map((form) => {
       const annualEnrollmentPremium = form.monthlyPremiums.reduce(
         (total, month) => total.plus(month.enrolleePremium),
@@ -191,11 +219,10 @@ export function buildForm8962ReferenceSummary(
         annualAdvancePTC: annualAdvancePTC.toString(),
       };
     }),
-    lines: summary.lines
-      .filter((line) => INCLUDED_FORM_8962_LINE_SET.has(line.line))
+    lines: [...byLine.values()]
       .sort(
-        (left, right) => INCLUDED_FORM_8962_LINES.indexOf(left.line as typeof INCLUDED_FORM_8962_LINES[number])
-          - INCLUDED_FORM_8962_LINES.indexOf(right.line as typeof INCLUDED_FORM_8962_LINES[number]),
+        (left, right) => INCLUDED_FORM_8962_LINES.indexOf(left.line)
+          - INCLUDED_FORM_8962_LINES.indexOf(right.line),
       )
       .map((line) => ({
         line: line.line,
@@ -258,7 +285,7 @@ export async function fillForm8962Reference(
 
   y = drawWrappedText(
     page,
-    "This page summarizes supported Form 1095-A marketplace amounts and the supported Form 8962 reconciliation outputs that feed Schedule 2 Line 2 and Schedule 3 Line 10. It is not an official filled Form 8962.",
+    "This page summarizes supported Form 1095-A marketplace amounts and the supported Form 8962 reconciliation outputs that feed Schedule 2 Line 1a and Schedule 3 Line 9. It is not an official filled Form 8962.",
     {
       font: regular,
       size: BODY_FONT_SIZE,
@@ -381,6 +408,7 @@ export async function fillForm8962Reference(
     y -= 6;
   }
 
+  await markReviewPdf(doc);
   const filePath = join(outputDir, FORM_8962_REFERENCE_FILENAME);
   await mkdir(outputDir, { recursive: true });
   await writeFile(filePath, await doc.save());

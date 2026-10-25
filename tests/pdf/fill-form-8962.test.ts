@@ -5,10 +5,14 @@
 import { access, mkdtemp, readFile, rm } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
+import Decimal from "decimal.js";
+import { PDFDocument } from "pdf-lib";
+import { REVIEW_PDF_NOTICE } from "@/pdf/export-policy.js";
 import { describe, expect, it } from "vitest";
 import { calculateFederalTax } from "@/engine/federal.js";
 import {
   buildForm8962ReferenceSummary,
+  fillForm8962Reference,
   FORM_8962_REFERENCE_FILENAME,
 } from "@/pdf/fill-form-8962.js";
 import { fillReturn } from "@/pdf/fill-return.js";
@@ -63,35 +67,54 @@ describe("Form 8962 packet reference summary", () => {
         annualAdvancePTC: "3600",
       },
     ]);
+    expect(summary.introduction).toContain("unverified historical");
     expect(summary.lines.map((line) => line.line)).toEqual([
-      "1",
-      "2",
-      "3",
-      "5",
-      "7",
-      "11a",
-      "11b",
-      "11c",
-      "24",
-      "25",
-      "26",
-      "27",
+      "1", "2a", "2b", "3", "4", "5", "7", "8a", "8b", "11a", "11b", "11c", "11d", "11e", "11f", "24", "25", "26", "27", "29",
     ]);
-    expect(summary.lines.find((line) => line.line === "1")?.value).toBe("1");
-    expect(summary.lines.find((line) => line.line === "2")?.value).toBe("30000");
-    expect(summary.lines.find((line) => line.line === "3")?.value).toBe("199.20318725099601594");
-    expect(Number(summary.lines.find((line) => line.line === "5")?.value ?? "0")).toBeCloseTo(
-      Number.parseFloat("0.019681274900398408"),
-      15,
-    );
-    expect(summary.lines.find((line) => line.line === "7")?.value).toBe("590");
-    expect(summary.lines.find((line) => line.line === "11a")?.value).toBe("4800");
-    expect(summary.lines.find((line) => line.line === "11b")?.value).toBe("6000");
-    expect(summary.lines.find((line) => line.line === "11c")?.value).toBe("3600");
-    expect(summary.lines.find((line) => line.line === "24")?.value).toBe("4800");
-    expect(summary.lines.find((line) => line.line === "25")?.value).toBe("3600");
-    expect(summary.lines.find((line) => line.line === "26")?.value).toBe("1200");
-    expect(summary.lines.find((line) => line.line === "27")?.value).toBe("0");
+    const values = Object.fromEntries(summary.lines.map(line => [line.line, line.value]));
+    expect(values).toEqual({
+      "1": "1", "2a": "30000", "2b": "0", "3": "30000", "4": "15060", "5": "199",
+      "7": "0.0196", "8a": "588", "8b": "49", "11a": "4800", "11b": "6000",
+      "11c": "588", "11d": "5412", "11e": "4800", "11f": "3600",
+      "24": "4800", "25": "3600", "26": "1200", "27": "0", "29": "0",
+    });
+  });
+
+  it("rejects missing, duplicate or inconsistent reconciliation audits", () => {
+    const calculated = calculateFederalTax(marketplaceFixture);
+    const reconciliation = calculated.form8962;
+    if (!reconciliation) throw new Error("Fixture must calculate Form 8962");
+    const repayment = reconciliation.lines.find(line => line.line === "29");
+    if (!repayment) throw new Error("Fixture must audit repayment");
+    for (const lines of [
+      reconciliation.lines.filter(line => line.line !== "29"),
+      reconciliation.lines.filter(line => line.line !== "11f"),
+      reconciliation.lines.filter(line => line.line !== "11c"),
+      [...reconciliation.lines, repayment],
+      reconciliation.lines.map(line => line.line === "29" ? { ...line, value: new Decimal(1) } : line),
+    ]) {
+      expect(() => buildForm8962ReferenceSummary(marketplaceFixture.form1095A, { ...calculated, form8962: { ...reconciliation, lines } })).toThrow(/audit/i);
+    }
+    const changedSource = marketplaceFixture.form1095A.map(form => ({ ...form, monthlyPremiums: form.monthlyPremiums.map(row => ({ ...row, advancePremiumTaxCredit: "301" })) }));
+    expect(() => buildForm8962ReferenceSummary(changedSource, calculated)).toThrow(/source.*advance|advance.*source/i);
+  });
+
+  it("copies monthly audit columns and marks every reference page for review", async () => {
+    const source = { ...marketplaceFixture, form1095A: marketplaceFixture.form1095A.map(form => ({ ...form, monthlyPremiums: form.monthlyPremiums.slice(0, 6) })) };
+    const result = calculateFederalTax(source);
+    const summary = buildForm8962ReferenceSummary(source.form1095A, result);
+    expect(summary.lines.find(line => line.line === "12c")?.value).toBe("49");
+    expect(summary.lines.find(line => line.line === "12e")?.value).toBe("400");
+    expect(summary.lines.find(line => line.line === "11a")).toBeUndefined();
+    const outputDir = await makeOutputDir();
+    try {
+      const path = await fillForm8962Reference(source.form1095A, result, outputDir);
+      const pdf = await PDFDocument.load(await readFile(path));
+      expect(pdf.getPageCount()).toBeGreaterThan(1);
+      expect(pdf.getSubject()).toBe(REVIEW_PDF_NOTICE);
+    } finally {
+      await rm(outputDir, { recursive: true, force: true });
+    }
   });
 
   it("fillReturn includes a Form 8962 reference summary when marketplace statements are present", async () => {
