@@ -2616,6 +2616,25 @@ export const SavingsBondRedemptionSchema = z.object({
 });
 
 export const EnergyCreditsSchema = z.object({
+  /** Itemized records preserve actual category, timing and qualification. */
+  qualifiedImprovements: z.array(z.object({
+    category: z.enum(["insulation", "exterior_door", "windows_skylights", "central_ac", "gas_water_heater", "furnace_boiler", "electrical_panel", "heat_pump", "heat_pump_water_heater", "biomass", "home_energy_audit"]),
+    qualifiedCost: decimal,
+    installationCompletedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    qualificationConfirmed: z.boolean(),
+    manufacturerQualifiedId: z.string().optional(),
+  })).optional(),
+  cleanEnergyProperties: z.array(z.object({
+    category: z.enum(["solar_electric", "solar_water", "fuel_cell", "small_wind", "geothermal", "battery"]),
+    qualifiedCost: decimal,
+    installationCompletedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    qualificationConfirmed: z.boolean(),
+    fuelCellKilowattCapacity: optionalDecimalInput,
+  })).optional(),
+  residenceEligibilityConfirmed: z.boolean().optional(),
+  priorYearCarryforward: optionalDecimalInput,
+  carryforwardSourceTaxYear: z.number().int().optional(),
+  carryforwardConfirmed: z.boolean().optional(),
   /** Part I: Residential Clean Energy Credit (30% of qualified costs) */
   solarElectricCost: optionalDecimal, // Line 1
   solarWaterHeatingCost: optionalDecimal, // Line 2
