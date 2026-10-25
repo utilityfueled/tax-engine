@@ -39,8 +39,8 @@ describe("document source fidelity", () => {
   it("does not invent digital asset broker basis status adjustments or holding period", () => {
     const parsed = parseUploadedDocumentText("2025 Form 1099-DA\nETH / X9J9K872S\n04/02/25 0.2 0.20 03/01/25 0.35 -0.15", "coinbase.pdf");
     const entry = parsed?.detectedFacts[0]?.machineValue;
-    expect(entry).toMatchObject({ description: "ETH", proceeds: "0.20", costBasis: "0.35", dateAcquired: "2025-03-01", dateSold: "2025-04-02", digitalAsset: true });
-    for (const field of ["basisReportedToIRS", "holdingPeriod", "adjustments", "washSale", "washSaleDisallowed"]) expect(entry).not.toHaveProperty(field);
+    expect(entry).toMatchObject({ entryKind: "1099-da-transaction", digitalAssetName: "ETH", proceeds: "0.20", reportedCostBasis: "0.35", reportedDateAcquired: "2025-03-01", dateSold: "2025-04-02", gainOrLoss: "-0.15" });
+    for (const field of ["costBasis", "dateAcquired", "basisReportedToIRS", "holdingPeriod", "adjustments", "washSale", "washSaleDisallowed"]) expect(entry).not.toHaveProperty(field);
     expect(parsed?.coverage).toBe("partially-supported");
   });
   it("blocks incomplete source boxes before the engine can apply zero defaults", () => {
@@ -88,7 +88,7 @@ describe("document source fidelity", () => {
   });
   it("keeps digital asset descriptions attached to their own transaction rows", () => {
     const parsed = parseUploadedDocumentText("2025 Form 1099-DA\nETH / X9J9K872S\n04/02/25 0.2 0.20 03/01/25 0.35 -0.15\nBTC / B9J9K872S\n04/03/25 0.2 0.40 03/01/25 0.30 0.10");
-    expect(parsed?.detectedFacts.filter((entry) => entry.machineValue?.entryKind === "1099-b-transaction").map((entry) => entry.machineValue)).toMatchObject([{ description: "ETH", proceeds: "0.20" }, { description: "BTC", proceeds: "0.40" }]);
+    expect(parsed?.detectedFacts.filter((entry) => entry.machineValue?.entryKind === "1099-da-transaction").map((entry) => entry.machineValue)).toMatchObject([{ digitalAssetName: "ETH", proceeds: "0.20", gainOrLoss: "-0.15" }, { digitalAssetName: "BTC", proceeds: "0.40", gainOrLoss: "0.10" }]);
   });
   it("carries the selected guided year without supplying a missing one", () => {
     const state = { ...initialFlowState, taxYear: 2026, sectionData: { "income-w2": { entries: [{ ...emptyW2Entry, wages: "100" }] } } };

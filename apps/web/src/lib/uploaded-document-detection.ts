@@ -4,7 +4,7 @@ import type {
   WorkspaceDocumentCoverage,
   WorkspaceDocumentDetectedFactRecord,
   WorkspaceDocumentKind,
-  WorkspaceStructuredFactMachineValue1099BTransaction,
+  WorkspaceStructuredFactMachineValue1099DATransaction,
   WorkspaceStructuredFactMachineValue1099DivSummary,
   WorkspaceStructuredFactMachineValue1099IntSummary,
   WorkspaceStructuredFactMachineValue1099NecSummary,
@@ -134,6 +134,11 @@ function normalizeAmount(value: string) {
   const normalized = value.replace(/[,\s]/g, "").trim();
 
   return /^\d+(\.\d{2})?$/.test(normalized) ? normalized : null;
+}
+
+function normalizeSignedAmount(value: string) {
+  const normalized = value.replace(/[,\s]/g, "").trim();
+  return /^-?\d+(\.\d{2})?$/.test(normalized) ? normalized : null;
 }
 
 function formatAmountLabel(value: string) {
@@ -438,39 +443,43 @@ function parseUploaded1099DAText(text: string, fileName = ""): ParsedUploadedDoc
   const notReported = /cost basis (?:is|was) not reported to the IRS/i.test(normalizedText);
   const reported = /cost basis (?:is|was) reported to the IRS/i.test(normalizedText);
   const basisReportedToIRS = reported !== notReported ? reported : undefined;
-  const rowPattern = /(\d{2}\/\d{2}\/\d{2})\s+[0-9.]+\s+([0-9]+\.[0-9]{2})\s+(\d{2}\/\d{2}\/\d{2})\s+([0-9]+\.[0-9]{2})\s+(-?[0-9]+\.[0-9]{2})/g;
+  const rowPattern = /(\d{2}\/\d{2}\/\d{2})\s+([0-9]+(?:\.[0-9]+)?)\s+([0-9]+\.[0-9]{2})\s+(\d{2}\/\d{2}\/\d{2}|--)\s+([0-9]+\.[0-9]{2}|--)\s+(-?[0-9]+\.[0-9]{2}|--)/g;
   const detectedFacts: WorkspaceDocumentDetectedFactRecord[] = [];
   const transactions = [...normalizedText.matchAll(rowPattern)];
 
   for (const [index, match] of transactions.entries()) {
-    const rowAsset = [...normalizedText.slice(0, match.index).matchAll(/\b([A-Z0-9]{2,10})\s*\/\s*([A-Z0-9]{4,})\b/g)].at(-1)?.[1] ?? "";
+    const rowAsset = [...normalizedText.slice(0, match.index).matchAll(/\b([A-Z0-9]{2,10})\s*\/\s*([A-Z0-9]{4,})\b/g)].at(-1);
     const dateSold = toIsoDate(match[1] ?? "");
-    const proceeds = normalizeAmount(match[2] ?? "");
-    const dateAcquired = toIsoDate(match[3] ?? "");
-    const costBasis = normalizeAmount(match[4] ?? "");
+    const proceeds = normalizeAmount(match[3] ?? "");
+    const dateAcquired = match[4] === "--" ? null : toIsoDate(match[4] ?? "");
+    const costBasis = match[5] === "--" ? null : normalizeAmount(match[5] ?? "");
+    const gainOrLoss = match[6] === "--" ? undefined : normalizeSignedAmount(match[6] ?? "") ?? undefined;
 
-    if (!proceeds || !costBasis || !dateSold || !dateAcquired) {
+    if (!proceeds || !dateSold || (match[4] !== "--" && !dateAcquired) || (match[5] !== "--" && !costBasis)) {
       continue;
     }
 
-    const machineValue: WorkspaceStructuredFactMachineValue1099BTransaction = {
-      entryKind: "1099-b-transaction",
+    const machineValue: WorkspaceStructuredFactMachineValue1099DATransaction = {
+      entryKind: "1099-da-transaction",
       sourceFactsVersion: 2,
-      description: rowAsset,
-      dateAcquired,
+      transactionEvidence: "individual",
+      ...(rowAsset?.[1] ? { digitalAssetName: rowAsset[1] } : {}),
+      ...(rowAsset?.[2] ? { digitalAssetCode: rowAsset[2] } : {}),
+      quantity: match[2],
+      reportedDateAcquired: dateAcquired,
       dateSold,
       proceeds,
-      costBasis,
+      reportedCostBasis: costBasis,
+      ...(gainOrLoss === undefined ? {} : { gainOrLoss }),
       ...(basisReportedToIRS === undefined ? {} : { basisReportedToIRS }),
       ...(holdingPeriod === undefined ? {} : { holdingPeriod }),
-      digitalAsset: true,
     };
 
     detectedFacts.push({
       idSuffix: `parsed-1099-da-transaction-${index + 1}`,
       factId: "broker-proceeds",
       label: "Digital asset sale",
-      value: `Parsed uploaded 1099-DA: ${assetName} sold ${dateSold} for $${formatAmountLabel(proceeds)} with basis $${formatAmountLabel(costBasis)}.`,
+      value: `Parsed uploaded 1099-DA: ${rowAsset?.[1] ?? assetName} sold ${dateSold} for $${formatAmountLabel(proceeds)} with ${costBasis === null ? "blank reported basis" : `reported basis $${formatAmountLabel(costBasis)}`}.`,
       confidence: "high",
       machineValue,
     });
@@ -497,16 +506,14 @@ function parseUploaded1099DAText(text: string, fileName = ""): ParsedUploadedDoc
       value: `Parsed uploaded 1099-DA summary: proceeds $${formatAmountLabel(summaryProceeds)} and basis $${formatAmountLabel(summaryBasis)}.`,
       confidence: "high",
       machineValue: {
-        entryKind: "1099-b-transaction",
+        entryKind: "1099-da-transaction",
         sourceFactsVersion: 2,
-        description: assetName,
-        dateAcquired: "",
-        dateSold: "", // Unknown summary sale dates must not become year-end dates.
+        transactionEvidence: "summary",
+        ...(assetName ? { digitalAssetName: assetName } : {}),
         proceeds: summaryProceeds,
-        costBasis: summaryBasis,
+        reportedCostBasis: summaryBasis,
         ...(basisReportedToIRS === undefined ? {} : { basisReportedToIRS }),
         ...(holdingPeriod === undefined ? {} : { holdingPeriod }),
-        digitalAsset: true,
       },
     });
   }

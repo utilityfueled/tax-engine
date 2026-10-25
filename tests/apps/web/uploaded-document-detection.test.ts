@@ -251,9 +251,10 @@ Total: 0.40 0.70 -0.30
       .map((fact) => fact.machineValue)
       .filter((value): value is NonNullable<typeof value> => value !== undefined && value !== null) ?? [];
     expect(machineValues[0]).toMatchObject({
-      entryKind: "1099-b-transaction",
-      description: "ETH",
-      digitalAsset: true,
+      entryKind: "1099-da-transaction",
+      digitalAssetName: "ETH",
+      digitalAssetCode: "X9J9K872S",
+      transactionEvidence: "individual",
       holdingPeriod: "long",
     });
     expect(machineValues[0]).not.toHaveProperty("basisReportedToIRS");

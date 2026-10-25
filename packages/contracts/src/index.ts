@@ -537,6 +537,42 @@ export interface WorkspaceStructuredFactMachineValue1099BTransaction {
   washSaleDisallowed?: string;
 }
 
+/** Original1099DA boxes; taxpayer-completed basis belongs in the reviewed context. */
+export interface WorkspaceStructuredFactMachineValue1099DATransaction {
+  entryKind: "1099-da-transaction";
+  sourceFactsVersion?: 2;
+  transactionEvidence: "individual" | "summary";
+  digitalAssetName?: string;
+  digitalAssetCode?: string;
+  ticker?: string;
+  quantity?: string;
+  dateSold?: string;
+  proceeds: string;
+  gainOrLoss?: string;
+  reportedDateAcquired?: string | null;
+  reportedCostBasis?: string | null;
+  basisReportedToIRS?: boolean;
+  holdingPeriod?: "short" | "long";
+  marketDiscount?: string;
+  washSaleDisallowed?: string;
+  proceedsType?: "gross" | "net";
+  qof?: boolean;
+  lossNotAllowed?: boolean;
+  ordinaryIncome?: boolean;
+  onlyCashProceeds?: boolean;
+  customerProvidedAcquisitionInformation?: boolean;
+  noncoveredSecurity?: boolean;
+  optionalReportingMethod?: "none" | "stablecoins" | "specified_nfts";
+  brokerName?: string;
+  brokerTin?: string;
+  accountReference?: string;
+  accountHolder?: "primary" | "spouse";
+  taxYear?: number;
+  federalWithheld?: string;
+  stateWithheld?: string;
+  state?: string;
+}
+
 export interface WorkspaceStructuredFactMachineValueW2Summary {
   entryKind: "w2-summary";
   sourceFactsVersion?: 2;
@@ -706,6 +742,7 @@ export interface WorkspaceStructuredFactMachineValue1099SASummary {
 export type WorkspaceStructuredFactMachineValue =
   | WorkspaceStructuredFactMachineValueW2Summary
   | WorkspaceStructuredFactMachineValue1099BTransaction
+  | WorkspaceStructuredFactMachineValue1099DATransaction
   | WorkspaceStructuredFactMachineValue1099IntSummary
   | WorkspaceStructuredFactMachineValue1099GSummary
   | WorkspaceStructuredFactMachineValue1099OIDSummary

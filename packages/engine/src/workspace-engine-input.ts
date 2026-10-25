@@ -3,8 +3,9 @@ import { officialSampleDocumentFixtures } from "@tax-engine/contracts";
 import type { WorkspaceDocumentRecord, WorkspaceReturnSummary, WorkspaceStructuredFactMachineValue, WorkspaceStructuredFactRecord } from "@tax-engine/contracts";
 import { TaxYearInputSchema, type TaxYearInput } from "../../../src/models/inputs";
 import { calculateBrokerageWithholding } from "../../../src/engine/forms/form-1099-b-withholding";
+import { calculateForm1099DASources } from "../../../src/engine/forms/form-1099-da-sources";
 
-export type WorkspaceSourceCollection = "w2s" | "form1099Int" | "form1099Div" | "form1099B" | "form1099Nec" | "form1099G" | "form1099OID" | "form1099R" | "form1099SA" | "formSSA1099" | "form1098E" | "form1095A";
+export type WorkspaceSourceCollection = "w2s" | "form1099Int" | "form1099Div" | "form1099B" | "form1099DA" | "form1099Nec" | "form1099G" | "form1099OID" | "form1099R" | "form1099SA" | "formSSA1099" | "form1098E" | "form1095A";
 export interface WorkspaceSourceBinding {
   sourceFactId: string;
   sourceFactsConfirmed: boolean;
@@ -28,19 +29,20 @@ export interface WorkspaceEngineInputFixture {
 }
 const sourceCollections: Record<WorkspaceStructuredFactMachineValue["entryKind"], WorkspaceSourceCollection> = {
   "w2-summary": "w2s", "1099-int-summary": "form1099Int", "1099-div-summary": "form1099Div", "1099-b-transaction": "form1099B",
+  "1099-da-transaction": "form1099DA",
   "1099-nec-summary": "form1099Nec", "1099-g-summary": "form1099G", "1099-oid-summary": "form1099OID", "1099-r-summary": "form1099R",
   "1099-sa-summary": "form1099SA", "ssa-1099-summary": "formSSA1099", "1098-e-summary": "form1098E", "1095-a-summary": "form1095A",
 };
 const itemKinds: Record<string, WorkspaceStructuredFactMachineValue["entryKind"][]> = {
   "wages-and-withholding": ["w2-summary"], "interest-income": ["1099-int-summary", "1099-oid-summary"], "dividend-income": ["1099-div-summary"],
-  "capital-gains": ["1099-b-transaction"], "schedule-c-income": ["1099-nec-summary"], "government-payments": ["1099-g-summary"],
+  "capital-gains": ["1099-b-transaction", "1099-da-transaction"], "schedule-c-income": ["1099-nec-summary"], "government-payments": ["1099-g-summary"],
   "retirement-distributions": ["1099-r-summary"], "social-security-benefits": ["ssa-1099-summary"], "hsa-distributions": ["1099-sa-summary"],
   "student-loan-interest": ["1098-e-summary"], "premium-tax-credit": ["1095-a-summary"],
 };
 const moneyFields = new Set([
   "wages", "federalWithheld", "socialSecurityWages", "socialSecurityTips", "socialSecurityWithheld", "medicareWages", "medicareWithheld", "stateWages", "stateWithheld", "stateIncome", "box10DependentCareBenefits", "box12CodeW",
   "interestIncome", "earlyWithdrawalPenalty", "taxExemptInterest", "usSavingsBondInterest", "ordinaryDividends", "qualifiedDividends", "capitalGainDistributions", "section199ADividends", "foreignTaxPaid",
-  "proceeds", "costBasis", "adjustments", "washSaleDisallowed", "nonemployeeCompensation", "unemploymentCompensation", "stateLocalIncomeTaxRefund",
+  "proceeds", "costBasis", "reportedCostBasis", "quantity", "marketDiscount", "gainOrLoss", "adjustments", "washSaleDisallowed", "nonemployeeCompensation", "unemploymentCompensation", "stateLocalIncomeTaxRefund",
   "originalIssueDiscount", "otherPeriodicInterest", "acquisitionPremium", "treasuryOID", "bondPremium", "taxExemptBondPremium", "taxExemptOID",
   "localWages", "localTaxWithheld", "stateTaxWithheld", "stateDistribution", "grossDistribution", "taxableAmount", "employeeContributions", "simplifiedMethodCostInPlan", "simplifiedMethodPriorYearRecovered", "retiredPublicSafetyOfficerInsurancePremiums", "rothConversionAmount", "rothIraRolledOverAmount", "qualifiedCharitableDistribution", "eligibleGovernmental457bTransferredFromQualifiedPlanTaxableAmount",
   "earningsOnExcessContributions", "fmvOnDateOfDeath", "rolloverDistributions", "qualifiedMedicalExpenses", "decedentQualifiedMedicalExpensesPaidWithinOneYearAfterDeath", "netBenefits", "studentLoanInterestReceived", "enrolleePremium", "slcsp", "advancePremiumTaxCredit",
@@ -55,7 +57,8 @@ function moneyEqual(original: unknown, actual: unknown): boolean {
   return left.isFinite() && right.isFinite() && left.eq(right);
 }
 function sameFact(original: unknown, actual: unknown, key: string): boolean {
-  if (moneyFields.has(key)) return moneyEqual(original, actual) && (["adjustments", "netBenefits"].includes(key) || new Decimal(original as string).gte(0));
+  if (key === "reportedCostBasis" && original === null) return actual === null;
+  if (moneyFields.has(key)) return moneyEqual(original, actual) && (["adjustments", "netBenefits", "gainOrLoss"].includes(key) || new Decimal(original as string).gte(0));
   if (Array.isArray(original)) return Array.isArray(actual) && original.length === actual.length && original.every((entry, index) => sameFact(entry, actual[index], key));
   const object = record(original);
   if (object) { const target = record(actual); return !!target && Object.entries(object).every(([name, value]) => value === undefined || sameFact(value, target[name], name)); }
@@ -99,6 +102,7 @@ function sourceDate(value: unknown): value is string {
   return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
 }
 function contextSourceComplete(kind: WorkspaceStructuredFactMachineValue["entryKind"], target: Record<string, unknown>, input: TaxYearInput): boolean {
+  if (kind === "1099-da-transaction") return target.sourceFactsComplete === true;
   const requiredMoney: Partial<Record<typeof kind, string[]>> = {
     "w2-summary": ["wages", "federalWithheld", "socialSecurityWages", "socialSecurityTips", "socialSecurityWithheld", "medicareWages", "medicareWithheld", "box10DependentCareBenefits", "box12CodeW", "box12CodeD", "box12CodeE", "box12CodeF", "box12CodeG", "box12CodeH", "box12CodeS", "box12CodeAA", "box12CodeBB", "box12CodeEE", "box12CodeT", "stateWages", "stateTaxWithheld", "localWages", "localTaxWithheld"],
     "1099-int-summary": ["interestIncome", "earlyWithdrawalPenalty", "federalWithheld", "taxExemptInterest", "usSavingsBondInterest", "foreignTaxPaid", "stateWithheld"],
@@ -155,9 +159,10 @@ function sourceTargetConsistent(kind: WorkspaceStructuredFactMachineValue["entry
   return true;
 }
 function sourceMatches(source: WorkspaceStructuredFactMachineValue, target: Record<string, unknown>, input: TaxYearInput): boolean {
+  if (source.entryKind === "1099-da-transaction" && source.transactionEvidence !== "individual") return false;
   if (!sourceTargetConsistent(source.entryKind, target, input)) return false;
   for (const [key, value] of Object.entries(source)) {
-    if (value === undefined || key === "entryKind" || key === "sourceFactsVersion") continue;
+    if (value === undefined || key === "entryKind" || key === "sourceFactsVersion" || key === "transactionEvidence") continue;
     if (source.entryKind === "1099-sa-summary" && hsaOffsets.includes(key as typeof hsaOffsets[number])) continue;
     // This historical OID label never established the original reported box.
     if (source.entryKind === "1099-oid-summary" && key === "taxExemptBondPremium") return false;
@@ -182,7 +187,7 @@ function sourceMatches(source: WorkspaceStructuredFactMachineValue, target: Reco
 function allContextSourcesComplete(original: TaxYearInput, parsed: TaxYearInput): boolean {
   // These additional source forms have their own canonical/guided routes. This
   // bounded document adapter has no pre-default source contract for them yet.
-  const otherSourceCollections = ["form1099DA", "form1099Misc", "formW2G", "form1099K", "form1099C", "form1099Q", "formRRB1099", "scheduleK1", "scheduleK1Form1041"] as const;
+  const otherSourceCollections = ["form1099Misc", "formW2G", "form1099K", "form1099C", "form1099Q", "formRRB1099", "scheduleK1", "scheduleK1Form1041"] as const;
   if (otherSourceCollections.some(key => (original[key]?.length ?? 0) > 0)) return false;
   for (const [kind, collection] of Object.entries(sourceCollections) as [WorkspaceStructuredFactMachineValue["entryKind"], WorkspaceSourceCollection][]) {
     const actual = original[collection]; const validated = parsed[collection];
@@ -191,6 +196,7 @@ function allContextSourcesComplete(original: TaxYearInput, parsed: TaxYearInput)
     for (let index = 0; index < actual.length; index++) {
       const raw = record(actual[index]); const target = record(validated[index]);
       if (!raw || !target || !sourceTargetConsistent(kind, target, parsed)) return false;
+      if (kind === "1099-da-transaction") continue; // The pre-default DA contract below validates every original statement and row.
       if (kind === "1099-b-transaction") {
         if (typeof raw.broker !== "string" || !raw.broker.trim() || !moneyEqual(raw.federalWithheld, raw.federalWithheld) || new Decimal(raw.federalWithheld as string).lt(0) || !moneyEqual(raw.stateWithheld, raw.stateWithheld) || new Decimal(raw.stateWithheld as string).lt(0) || !Array.isArray(raw.transactions) || raw.transactions.some(transaction => {
           const source = record(transaction); return !source || !contextSourceComplete(kind, source, original);
@@ -198,7 +204,10 @@ function allContextSourcesComplete(original: TaxYearInput, parsed: TaxYearInput)
       } else if (!contextSourceComplete(kind, raw, original)) return false;
     }
   }
-  try { calculateBrokerageWithholding(parsed.form1099B, { taxYear: parsed.taxpayer.taxYear, filingStatus: parsed.taxpayer.filingStatus, spousePresent: parsed.taxpayer.spouse !== undefined }); }
+  try {
+    calculateBrokerageWithholding(parsed.form1099B, { taxYear: parsed.taxpayer.taxYear, filingStatus: parsed.taxpayer.filingStatus, spousePresent: parsed.taxpayer.spouse !== undefined });
+    if (!calculateForm1099DASources(parsed).sourceFactsComplete) return false;
+  }
   catch { return false; }
   return true;
 }
@@ -218,7 +227,7 @@ export function buildWorkspaceEngineInput(
   const selectedIds = new Set(returnSummary.items.flatMap(item => item.sourceDocumentIds));
   const byDocument = new Map(documents.map(document => [document.id, document]));
   for (const id of selectedIds) {
-    const document = byDocument.get(id); if (!document || document.coverage !== "supported") return null;
+    const document = byDocument.get(id); if (!document || (document.coverage !== "supported" && !(document.kind === "1099-da" && document.coverage === "partially-supported"))) return null;
     const fixtureYear = officialSampleDocumentFixtures.find(fixture => fixture.id === document.matchedFixtureId)?.taxYearHint;
     if ((document.taxYear === undefined ? fixtureYear : document.taxYear) !== year || (fixtureYear != null && fixtureYear !== year)) return null;
   }
@@ -229,9 +238,12 @@ export function buildWorkspaceEngineInput(
   const usedTargets = new Set<string>();
   for (const fact of selected) {
     const source = fact.machineValue;
-    if (source && fact.sourceType === "upload" && fact.id.includes(":parsed-") && ["w2-summary", "1099-int-summary", "1099-div-summary", "1099-b-transaction"].includes(source.entryKind) && (!("sourceFactsVersion" in source) || source.sourceFactsVersion !== 2)) return null;
+    if (source && fact.sourceType === "upload" && fact.id.includes(":parsed-") && ["w2-summary", "1099-int-summary", "1099-div-summary", "1099-b-transaction", "1099-da-transaction"].includes(source.entryKind) && (!("sourceFactsVersion" in source) || source.sourceFactsVersion !== 2)) return null;
     const binding = context.sourceBindings.find(entry => entry.sourceFactId === fact.id);
     if (!source || !binding || binding.sourceFactsConfirmed !== true || fact.sourceDocumentIds.length !== 1 || binding.inputCollection !== sourceCollections[source.entryKind] || !Number.isSafeInteger(binding.inputIndex) ) return null;
+    const sourceDocument = byDocument.get(fact.sourceDocumentIds[0]);
+    if (sourceDocument?.kind === "1099-da" && source.entryKind !== "1099-da-transaction") return null;
+    if (source.entryKind === "1099-da-transaction" && sourceDocument?.kind !== "1099-da") return null;
     if (binding.excludedFromCurrentReturn) {
       if (source.entryKind !== "1099-r-summary" || source.belongsOnCurrentYearReturn !== false || binding.inputIndex !== -1 || binding.transactionIndex !== undefined) return null;
       if (input.form1099R?.some(entry => entry.payer === source.payer && moneyEqual(source.grossDistribution, entry.grossDistribution) && entry.distributionCode === source.distributionCode)) return null;
@@ -243,14 +255,15 @@ export function buildWorkspaceEngineInput(
     const key = `${binding.inputCollection}:${binding.inputIndex}:${binding.transactionIndex ?? "record"}`;
     if (usedTargets.has(key)) return null; usedTargets.add(key);
     let target = item;
-    if (source.entryKind === "1099-b-transaction") {
+    if (source.entryKind === "1099-b-transaction" || source.entryKind === "1099-da-transaction") {
       if (!Number.isSafeInteger(binding.transactionIndex) || (binding.transactionIndex ?? -1) < 0 || !Array.isArray(item.transactions)) return null;
-      const transaction = record(item.transactions[binding.transactionIndex as number]); if (!transaction) return null; target = transaction;
+      const transaction = record(item.transactions[binding.transactionIndex as number]); if (!transaction) return null;
+      target = source.entryKind === "1099-da-transaction" ? { ...item, ...transaction } : transaction;
     } else if (binding.transactionIndex !== undefined) return null;
     const originalCollection = context.taxInput[binding.inputCollection];
     const originalRecord = Array.isArray(originalCollection) ? record(originalCollection[binding.inputIndex]) : undefined;
-    const originalTarget = source.entryKind === "1099-b-transaction" && Array.isArray(originalRecord?.transactions) ? record(originalRecord.transactions[binding.transactionIndex as number]) : originalRecord;
-    if (!originalTarget || !contextSourceComplete(source.entryKind, originalTarget, context.taxInput) || !sourceMatches(source, target, input)) return null;
+    const originalTarget = (source.entryKind === "1099-b-transaction" || source.entryKind === "1099-da-transaction") && Array.isArray(originalRecord?.transactions) ? record(originalRecord.transactions[binding.transactionIndex as number]) : originalRecord;
+    if (!originalTarget || !contextSourceComplete(source.entryKind, source.entryKind === "1099-da-transaction" ? target : originalTarget, context.taxInput) || !sourceMatches(source, target, input)) return null;
   }
   for (const owner of ["primary", "spouse"] as const) {
     const owned = selected.filter(fact => fact.machineValue?.entryKind === "1099-sa-summary" && fact.machineValue.accountHolder === owner);
