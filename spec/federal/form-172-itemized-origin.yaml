@@ -1,0 +1,53 @@
+form: "Current Form172 itemized sources"
+fullName: "Ordinary itemized deductions in current regular and alternative loss origins"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i172"
+notes: |
+  Form172 PartI line6 treats ordinary medical, home-mortgage and investment
+  interest, and personal property/general-sales taxes as nonbusiness deductions.
+  State income tax attributable to wages, unemployment or a business is a business
+  deduction instead; no capped-tax attribution is inferred from the aggregate.
+  AMT uses only deductions allowed in AMTI, with the nonbusiness limit recomputed
+  separately (i6251 line2f). ScheduleA7 taxes are disallowed; actual independent
+  Form4952 sources replace regular investment interest under i6251 line2c.
+  Medical uses regular AGI under Reg1.55-1(b). Principal-residence interest is
+  supported from the completed Pub936 sources. A second home's AMT dwelling
+  type, charity, casualty, other deductions, and business/investment income-tax
+  attribution remain separate internal source methods. The literal examples are
+  derived from these rules, not published IRS numerical examples. Source cents
+  remain exact; completed Form172 inputs are rounded only at their line boundary.
+lines:
+  - line: "medical-property"
+    description: "Classify ordinary itemized deductions separately for regular tax and AMT"
+    formula: "Wages20000+interest5000-Closs100000 givesAGI-75000. Medical50000: regular/AMT line1=-125000, line6=50000, line9=45000, origin80000 each. Medical2000+property20000: regular origin80000; AMT disallows20000taxes, line1=-77000, line6=2000, line9=0, origin77000."
+    irsRef: "i172PartI6-9; i6251lines2a,2f; Reg1.55-1(b)"
+    testRef: "tests/engine/federal-form-172-itemized-origin.test.ts::computes medical and property deductions independently for regular and alternative origins"
+  - line: "sales-source-election"
+    description: "Retain an actual sales-tax election without inventing business income-tax allocation"
+    formula: "Actual receipt sales tax1000.25 and property20000 give capped form taxes21000, regular origin80000 and AMT75000; property20000.25 instead sums original cents before rounding to21001. Actual wage income-tax withholding is irrelevant only when the separate sales election is selected. Unknown/table or selected positive income tax requires its own source method."
+    irsRef: "i172PartI6 business versus nonbusiness; IRC164(b)(5); i6251line2a"
+    testRef: "tests/engine/federal-form-172-itemized-origin.test.ts::uses actual elected receipt sales taxes and rejects unclassified income taxes"
+  - line: "principal-residence"
+    description: "Bind mortgage deductions to verified principal-residence sources"
+    formula: "Actual principal-residence interest10000 and property10000 produce regular and AMT origins80000. Prior points4800 spread over240months with12payments add240 to each applicable deduction; AMT nonbusiness10240 is separately limited. The actual Pub936 debt limit and points method are applied first; an unverified or second-home claim cannot silently establish AMT eligibility."
+    irsRef: "i172PartI6; i6251line3 MortgageInterest; Pub936"
+    testRef: "tests/engine/federal-form-172-itemized-origin.test.ts::uses verified main-home mortgage deductions and preserves unknown AMT dwelling facts"
+  - line: "investment-interest"
+    description: "Use independent completed ordinary investment-interest worksheets"
+    formula: "Interestincome5000, PAB500, regular4952deduction5000 and AMT5500, plus property20000: regular origin80000, AMT80000. Independent Form4952 sources must bind the actual ordinary investment income; absent AMT facts or unsupported investment expense/gain classifications reject."
+    irsRef: "i6251line2csteps1-4 and2f; i172PartI6; Reg1.1411-4(h)"
+    testRef: "tests/engine/federal-form-172-itemized-origin.test.ts::recomputes independent investment interest without copying regular AMT amounts"
+  - line: "prior-points-dwelling"
+    description: "Bind AMT dwelling eligibility to actual eligible loan deductions, including prior points"
+    formula: "Actual prior ratable main-home points4800/240months*12payments=240 remain deductible despite current interest and points payments0; regular origin80000 and AMT75240 with property20000. The same second-home source requires actual AMT dwelling facts. A genuinely ineligible second-home loan with no allowed interest or points cannot taint a separate supported main-home deduction."
+    irsRef: "i6251line3 MortgageInterest; Pub936 ratablePoints; i172PartI6"
+    testRef: "tests/engine/federal-form-172-itemized-origin.test.ts::requires AMT dwelling sources for prior points rather than current cash payments"
+  - line: "source-boundaries"
+    description: "Conserve exact sources and reject unclassified components"
+    formula: "Medical2000.25 and property20000.25 retain exact source cents, regular origin80000 and rounded AMT77000. Negative paid amounts, unverified source claims, other itemized amounts and unsupported foreign taxes cannot offset away into the supported total. Standard deduction remains the existing separate route."
+    irsRef: "i172PartI6; i1040 rounding; i6251line2f"
+    testRef: "tests/engine/federal-form-172-itemized-origin.test.ts::preserves exact itemized sources and rejects unclassified deductions"
+  - line: "review-binding"
+    description: "Freshly bind itemized sources before rendering current loss origins"
+    formula: "Recompute supported ScheduleA and both source Form4952 worksheets using retained actual AGI. Compare every relevant itemized component, election and total with the completed result before displaying regular and alternative current losses; changed sources reject even if the NOL limit masks their effect."
+    testRef: "tests/pdf/form-172-itemized-origin-review.test.ts::revalidates itemized sources even when their changes leave the current loss unchanged"

@@ -3,10 +3,12 @@ import Decimal from "decimal.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import type { Schedule1Result } from "@/engine/schedules/schedule-1.js";
+import type { ScheduleAResult } from "@/engine/schedules/schedule-a.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { d, roundDollar, sum } from "@/utils/decimal.js";
 import { calculateForm172Origin, type Form172OriginInput, type Form172OriginResult } from "./form-172-origin.js";
 import type { NetOperatingLossReturnResult } from "./net-operating-loss-return.js";
+import { calculateForm172ItemizedSources } from "./form-172-itemized-sources.js";
 
 export interface Form172ReturnContext {
   agi: Decimal;
@@ -24,6 +26,7 @@ export interface Form172ReturnContext {
   additionalDeductions: Decimal;
   nonitemizerCharitableDeduction: Decimal;
   schedule1: Schedule1Result;
+  scheduleA?: ScheduleAResult;
   currentExcessBusinessLoss: Decimal;
   alternativeTaxIncome: Decimal;
   alternativeTaxPrivateActivityInterest: Decimal;
@@ -124,7 +127,6 @@ export function calculateForm172Return(input: TaxYearInput, context?: Form172Ret
   for (const [key, value] of Object.entries(context)) {
     if (Decimal.isDecimal(value) && !value.isFinite()) throw new Error(`Form172 requires finite actual canonical ${key}`);
   }
-  if (context.deductionUsed !== "standard") throw new Error("Form172 current itemized deduction classifications require their separate source method");
   if (!context.capitalGainLoss.isZero() || !context.additionalDeductions.isZero() || !context.nonitemizerCharitableDeduction.isZero()) {
     throw new Error("Form172 capital, Schedule1A and nonitemizer charitable deductions require their separate origin coordination method");
   }
@@ -156,6 +158,7 @@ export function calculateForm172Return(input: TaxYearInput, context?: Form172Ret
     if (value.lt(0)) throw new Error("Form172 nonbusiness income, deductions and source addbacks require nonnegative actual classifications");
   }
   const zero = d("0");
+  const itemized = context.deductionUsed === "itemized" ? calculateForm172ItemizedSources(input, context) : undefined;
   const partI = (agi: Decimal, deduction: Decimal, nonbusinessDeduction: Decimal, ordinaryIncome: Decimal, oldNol: Decimal): Form172OriginResult => {
     const args: Form172OriginInput = { taxYear: year, filingStatus: input.taxpayer.filingStatus,
       adjustedGrossIncome: roundDollar(agi), deductionAmount: roundDollar(deduction),
@@ -166,19 +169,20 @@ export function calculateForm172Return(input: TaxYearInput, context?: Form172Ret
   };
   const regular = partI(context.agi, context.deductionAmount, context.deductionAmount.plus(nonbusinessAdjustments), nonbusinessIncome, prior.deduction);
   const expectedAlternativeIncome = sum(context.agi, prior.deduction, context.alternativeTaxPrivateActivityInterest)
-    .minus(prior.alternativeTax.deduction).minus(context.qbiDeduction);
+    .minus(prior.alternativeTax.deduction).minus(context.qbiDeduction).minus(itemized?.alternative ?? zero);
   if (!context.alternativeTaxIncome.eq(expectedAlternativeIncome)) {
     throw new Error("Form172 alternative origin requires its separately classified actual AMT adjustments");
   }
-  // The actual6251 amount already restored regularNOL and standard deduction.
+  // Actual6251 already restored regularNOL and the standard deduction or taxes.
   // Restore ATNOLD and disallowed199A once; never copy regular PartI or its carry.
   const alternativeTax = partI(context.alternativeTaxIncome.plus(prior.alternativeTax.deduction).plus(context.qbiDeduction), zero,
-    nonbusinessAdjustments, nonbusinessIncome.plus(context.alternativeTaxPrivateActivityInterest), zero);
+    nonbusinessAdjustments.plus(itemized?.alternative ?? zero), nonbusinessIncome.plus(context.alternativeTaxPrivateActivityInterest), zero);
   // All supported business losses are active and nontrading. Ordinary investment
   // income and its nonbusiness early-withdrawal deduction are re-run under172(d),
   // whose nonbusiness limit prevents them from generating a new investment NOL.
-  const investment = partI(context.investmentIncome.minus(sched1.earlyWithdrawalPenalty), zero,
-    sched1.earlyWithdrawalPenalty, context.investmentIncome, zero);
+  const investmentDeductions = sched1.earlyWithdrawalPenalty.plus(itemized?.investment ?? zero);
+  const investment = partI(context.investmentIncome.minus(investmentDeductions), zero,
+    investmentDeductions, context.investmentIncome, zero);
   const section1411OriginalLoss = Decimal.min(regular.netOperatingLoss, investment.netOperatingLoss);
   const currentExcessBusinessLoss = roundDollar(context.currentExcessBusinessLoss);
   const newRegularCarryforward = regular.netOperatingLoss.plus(currentExcessBusinessLoss);
@@ -200,5 +204,5 @@ export function calculateForm172Return(input: TaxYearInput, context?: Form172Ret
     currentExcessBusinessLoss, alternativeExcessBusinessLoss: currentExcessBusinessLoss, newRegularCarryforward, newAlternativeCarryforward,
     regularClosingCarryforward, alternativeClosingCarryforward,
     lines: [...regular.lines, ...alternativeTax.lines.map(line => ({ ...line, form: "Alternative172 Part I" })),
-      ...investment.lines.map(line => ({ ...line, form: "Section1411 origin172" })), ...audit.getLines()] };
+      ...investment.lines.map(line => ({ ...line, form: "Section1411 origin172" })), ...(itemized?.lines ?? []), ...audit.getLines()] };
 }

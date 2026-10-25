@@ -22,6 +22,7 @@ export interface HomeMortgageInterestResult {
   disallowedHomeInterest: Decimal;
   taxableInterestRecovery: Decimal;
   additionalTaxableInterestRecovery: Decimal;
+  sourceDeductions: Array<{ sourceId: string; interestBeforeLimit: Decimal; pointsBeforeLimit: Decimal }>;
   unreportedLenders: Array<{ name: string; address?: string; taxId?: string }>;
   lines: CalculatedLine[];
 }
@@ -129,6 +130,7 @@ export function calculateHomeMortgageInterest(input: HomeMortgageInterestInput):
   const forms = input.form1098 ?? [];
   let grandfathered = ZERO, old = ZERO, newer = ZERO, reportedInterest = ZERO, unreportedInterest = ZERO, reportedPoints = ZERO, unreportedPoints = ZERO, excludedSourceInterest = ZERO;
   let taxableInterestRecovery = ZERO, additionalTaxableInterestRecovery = ZERO;
+  const sourceDeductions: HomeMortgageInterestResult["sourceDeductions"] = [];
   const unreportedLenders: HomeMortgageInterestResult["unreportedLenders"] = [];
   if (!facts) {
     if (year >= 2026 && forms.some(form => d(form.mortgageInterestReceived).gt(0) || d(form.pointsPaid).gt(0) || d(form.refundOfOverpaidInterest).gt(0))) throw new Error("Mortgage deduction requires actual source worksheet facts for the return year");
@@ -186,6 +188,8 @@ export function calculateHomeMortgageInterest(input: HomeMortgageInterestInput):
       }
       if (loan.form1098SourceId) reportedInterest = reportedInterest.plus(interest); else unreportedInterest = unreportedInterest.plus(interest);
       reportedPoints = reportedPoints.plus(point.reported); unreportedPoints = unreportedPoints.plus(point.unreported);
+      sourceDeductions.push({ sourceId: loan.sourceId, interestBeforeLimit: interest,
+        pointsBeforeLimit: point.reported.plus(point.unreported) });
       audit.record("Mortgage Sources", loan.sourceId, "Actual qualified interest before debt limit", interest, "Actual paid share plus its prior-paid current-year interest, less current refund, amounts deducted elsewhere and source-ineligible interest");
     }
     if (homes.size > 2 || [...homes.values()].filter(use => use === "main").length > 1 || [...homes.values()].filter(use => use === "second").length > 1) throw new Error("Mortgage source worksheet requires the actual one main and one selected second qualified home");
@@ -232,5 +236,5 @@ export function calculateHomeMortgageInterest(input: HomeMortgageInterestInput):
   if (!skipNew) values.push(["7", newer, "Actual newer acquisition average debt"], ["8", line8, "New acquisition statutory limit"], ["9", line9, "max(6,8)"], ["10", line10, "6+7"]);
   values.push(["11", limit, skipNew ? "Line6; skip7-10" : "min(9,10)"], ["12", totalDebt, "All qualified debt categories"], ["13", printedInterest, "Actual interest on qualified debt, excluding points and insurance"], ["14", ratio, "min(1,11/12), rounded to3decimals"], ["15", mortgageInterest, "13*14"], ["16", printedInterest.minus(mortgageInterest), "13-15"]);
   for (const [line, value, formula] of values) audit.record("Pub936 Table1", line, formula, value, `${facts ? "Actual source worksheet" : "Unverified historical outstanding-balance preview"}: ${formula}`);
-  return { taxYear: year, sourceFactsVerified: facts !== undefined, mortgageInterest, deductiblePoints, line8a, line8b, line8c, qualifiedLoanLimit: limit, averageQualifiedDebt: totalDebt, deductionRatio: ratio, excludedSourceInterest, disallowedHomeInterest: printedInterest.minus(mortgageInterest), taxableInterestRecovery, additionalTaxableInterestRecovery, unreportedLenders, lines: audit.getLines() };
+  return { taxYear: year, sourceFactsVerified: facts !== undefined, mortgageInterest, deductiblePoints, line8a, line8b, line8c, qualifiedLoanLimit: limit, averageQualifiedDebt: totalDebt, deductionRatio: ratio, excludedSourceInterest, disallowedHomeInterest: printedInterest.minus(mortgageInterest), taxableInterestRecovery, additionalTaxableInterestRecovery, sourceDeductions, unreportedLenders, lines: audit.getLines() };
 }

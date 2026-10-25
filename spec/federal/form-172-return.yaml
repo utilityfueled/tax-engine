@@ -49,7 +49,7 @@ lines:
     testRef: "tests/engine/federal-form-172-origin.test.ts::retains a known zero current origin without inventing a loss from deductions"
   - line: "current-origin-review"
     description: "Retain separately calculated current origins in the carry review statement"
-    formula: "Revalidate current source facts and freshly calculate the actual ScheduleC after dependent-care expense adjustments. Reconcile retained regular/AMT/1411 PartI lines and current EBL once; old closing carry plus new origin equals each final carry. Print all24 current lines under distinct regular/alternative/investment headings, without source references or identifiers."
+    formula: "Revalidate current source facts and freshly calculate the actual ScheduleC after dependent-care expense adjustments. Reconcile retained regular/AMT/1411 PartI lines and current EBL once; old closing carry plus new origin equals each final carry. Print applicable current lines under distinct regular/alternative/investment headings, preserving inapplicable official blanks, without source references or identifiers."
     testRef: "tests/pdf/form-172-origin-review.test.ts::preserves current origins and separate closing carries in the redacted review statement"
   - line: "current-origin-review-conservation"
     description: "Reject stale business sources and inconsistent current carry output"

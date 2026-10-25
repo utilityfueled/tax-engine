@@ -84,7 +84,7 @@ it("rejects unknown contradictory and unsupported current origin sources", () =>
   expect(() => calculateFederalTax(currentOriginInput("100000", { form1099Misc: [
     { payer: "First source", otherIncome: "100" }, { payer: "Second source", otherIncome: "-100" },
   ] }))).toThrow(/Form172.*classification/i);
-  expect(() => calculateFederalTax(currentOriginInput("100000", { scheduleA: { medicalExpenses: "50000" } }))).toThrow(/Form172.*itemized/i);
+  expect(() => calculateFederalTax(currentOriginInput("100000", { scheduleA: { additionalStateLocalIncomeTaxes: "50000" } }))).toThrow(/Form172.*income.tax.*classification/i);
   expect(() => calculateFederalTax(currentOriginInput("100000", { priorYear: { shortTermCapitalLoss: "-100" } }))).toThrow(/Form172.*capital/i);
   const future = currentOriginInput(); future.taxpayer.taxYear = 2026; required(future.form172).sourceTaxYear = 2026; required(future.netOperatingLoss).sourceTaxYear = 2026;
   expect(() => calculateFederalTax(future)).toThrow(/not ready|unavailable|not enabled|readiness/i);

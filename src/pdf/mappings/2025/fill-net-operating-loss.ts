@@ -72,7 +72,7 @@ function currentOriginRows(input: TaxYearInput, result: TaxReturnResult): string
     taxableSocialSecurity: result.socialSecurityBenefitsTaxable, capitalGainLoss: result.capitalGainLoss,
     deductionUsed: result.deductionUsed, deductionAmount: result.deductionAmount,
     qbiDeduction: savedLine("1040", "13"), additionalDeductions: (result.schedule1A?.totalDeduction ?? d("0")).plus(result.nonitemizerCharitableDeduction ?? d("0")),
-    nonitemizerCharitableDeduction: result.nonitemizerCharitableDeduction ?? d("0"), schedule1,
+    nonitemizerCharitableDeduction: result.nonitemizerCharitableDeduction ?? d("0"), schedule1, scheduleA: result.scheduleA,
     currentExcessBusinessLoss: result.form461?.line16ExcessBusinessLoss ?? d("0"),
     alternativeTaxIncome: result.form6251.amti, alternativeTaxPrivateActivityInterest: bondSources.privateActivityBondInterest,
     investmentIncome: sum(investments.taxableInterest, investments.totalOrdinaryDividends, annuityIncome),
@@ -97,6 +97,8 @@ function currentOriginRows(input: TaxYearInput, result: TaxReturnResult): string
     `Current regular PartI loss ${checked.regular.netOperatingLoss}; current EBL carry ${checked.currentExcessBusinessLoss}; total regular closing carry ${checked.regularClosingCarryforward}`,
     `Current alternative PartI loss ${checked.alternativeTax.netOperatingLoss}; current EBL carry ${checked.alternativeExcessBusinessLoss}; total alternative closing carry ${checked.alternativeClosingCarryforward}`,
     `Current section1411 original loss ${checked.section1411OriginalLoss}`,
+    ...checked.lines.filter(line => line.form === "Current Form172 itemized sources")
+      .map(line => `${line.description}: ${line.value}`),
     ...([ ["Regular", checked.regular], ["Alternative", checked.alternativeTax], ["Investment", checked.investment] ] as const)
       .flatMap(([label, form]) => form.lines.map(line => `${label} current Form172 line${line.line}: ${line.value}`)),
   ];
