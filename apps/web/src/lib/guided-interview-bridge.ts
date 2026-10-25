@@ -365,6 +365,7 @@ export function buildScheduleAInput(deductionData: DeductionData | undefined, st
       personalPropertyTaxes: deductionData.personalPropertyTaxes,
       investmentInterestExpense: deductionData.investmentInterestExpense,
       gamblingLosses: deductionData.gamblingLosses,
+      gamblingExpenses: deductionData.gamblingExpenses,
     } : {}),
   };
   const values = Object.fromEntries(Object.entries(fields).filter(([, value]) => hasEnteredAmount(value)).map(([key, value]) => [key, toDecimalString(value)])) as Partial<Record<keyof typeof fields, string>>;

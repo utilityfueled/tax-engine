@@ -200,6 +200,7 @@ function DeductionsSummary({ data, filingStatus, taxYear }: { data: DeductionDat
     { label: "Personal property taxes", value: current.personalPropertyTaxes ?? "" },
     { label: "Investment interest", value: current.investmentInterestExpense ?? "" },
     { label: "Wagering losses", value: current.gamblingLosses ?? "" },
+    { label: "Otherwise deductible wagering expenses", value: current.gamblingExpenses ?? "" },
     { label: "Gambling winnings (income)", value: current.gamblingWinnings ?? "" },
     { label: "Reported mortgage interest before payment allocation and limits", value: current.mortgageInterest },
     ...(current.mortgageEntries ?? []).flatMap((entry, index) => [

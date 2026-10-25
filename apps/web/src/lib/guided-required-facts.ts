@@ -28,7 +28,7 @@ export function deductionFactErrors(data: DeductionData | undefined, taxYear?: n
     if (error) errors.nonW2IncomeTaxesDeductedElsewhere = error;
   }
   const deductionFields = data.method === "itemized"
-    ? ["medicalExpenses", "stateLocalTaxes", "realEstateTaxes", "personalPropertyTaxes", "mortgageInterest", "casualtyLosses", "otherItemized", "investmentInterestExpense", "gamblingLosses", "gamblingWinnings", "charitableContributions"] as const
+    ? ["medicalExpenses", "stateLocalTaxes", "realEstateTaxes", "personalPropertyTaxes", "mortgageInterest", "casualtyLosses", "otherItemized", "investmentInterestExpense", "gamblingLosses", "gamblingExpenses", "gamblingWinnings", "charitableContributions"] as const
     : ["gamblingWinnings", "charitableContributions"] as const;
   for (const field of deductionFields) {
     if (hasEnteredAmount(data[field])) {
@@ -39,10 +39,10 @@ export function deductionFactErrors(data: DeductionData | undefined, taxYear?: n
   const hasPositiveAmount = (field: typeof deductionFields[number]) => hasEnteredAmount(data[field]) && !errors[field] && parseGuidedCurrency(data[field]).gt(0);
   if (data.method === "itemized") {
     if (hasPositiveAmount("casualtyLosses")) errors.casualtyLosses = "Casualty and theft losses need the event, property and reimbursement facts from Form 4684; this aggregate alone cannot be calculated.";
-    if (hasEnteredAmount(data.gamblingLosses) && !hasEnteredAmount(data.gamblingWinnings)) errors.gamblingWinnings = "Enter actual gambling winnings, including an explicit zero, before claiming wagering losses.";
-    if (hasEnteredAmount(data.otherItemized) && !errors.otherItemized && !errors.investmentInterestExpense && !errors.gamblingLosses) {
-      const classified = parseGuidedCurrency(data.investmentInterestExpense).plus(parseGuidedCurrency(data.gamblingLosses));
-      if (!classified.eq(parseGuidedCurrency(data.otherItemized))) errors.otherItemized = "Classify and reconcile the saved other-deduction total as investment interest or wagering losses. Other deductions need their supporting forms.";
+    if ((hasEnteredAmount(data.gamblingLosses) || hasEnteredAmount(data.gamblingExpenses)) && !hasEnteredAmount(data.gamblingWinnings)) errors.gamblingWinnings = "Enter actual gambling winnings, including an explicit zero, before claiming wagering losses or expenses.";
+    if (hasEnteredAmount(data.otherItemized) && !errors.otherItemized && !errors.investmentInterestExpense && !errors.gamblingLosses && !errors.gamblingExpenses) {
+      const classified = parseGuidedCurrency(data.investmentInterestExpense).plus(parseGuidedCurrency(data.gamblingLosses)).plus(parseGuidedCurrency(data.gamblingExpenses));
+      if (!classified.eq(parseGuidedCurrency(data.otherItemized))) errors.otherItemized = "Classify and reconcile the saved other-deduction total as investment interest, wagering losses or wagering expenses. Other deductions need their supporting forms.";
     }
   }
   const mortgages = data.method === "itemized" ? data.mortgageEntries ?? [] : [];

@@ -155,7 +155,8 @@ export function SectionDeductions({
                   />
                   <CurrencyField label="Investment interest expense" hint="Interest on money borrowed for taxable investments. Complete the actual regular and AMT source worksheets above; a saved total must reconcile to the regular worksheet's current expense." value={current.investmentInterestExpense ?? ""} onChange={(value) => update("investmentInterestExpense", value)} />
                   <CurrencyField label="Wagering losses" hint="Enter actual losses supported by records. The engine applies the year's deduction limit against winnings." value={current.gamblingLosses ?? ""} onChange={(value) => update("gamblingLosses", value)} />
-                  {current.otherItemized.trim() && <CurrencyField label="Saved other-deduction total to reconcile" hint="Classify this total in the investment-interest and wagering-loss fields. Other deductions require their specific supporting forms." value={current.otherItemized} onChange={(value) => update("otherItemized", value)} />}
+                  <CurrencyField label="Otherwise deductible wagering expenses" hint="Enter actual qualifying expenses incurred in wagering transactions. Exclude wagers already entered as losses, personal costs and amounts deducted elsewhere. Leave blank if unknown; enter 0 only when checked." value={current.gamblingExpenses ?? ""} onChange={(value) => update("gamblingExpenses", value)} />
+                  {current.otherItemized.trim() && <CurrencyField label="Saved other-deduction total to reconcile" hint="Classify this total in the investment-interest, wagering-loss and wagering-expense fields. Other deductions require their specific supporting forms." value={current.otherItemized} onChange={(value) => update("otherItemized", value)} />}
                 </fieldset>
               </div>
             </details>

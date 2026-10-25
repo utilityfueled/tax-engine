@@ -248,8 +248,8 @@ export function computeDeductionComparison(
     ...(data.mortgageEntries ?? []).flatMap(entry => [entry.pointsPaid ?? "", entry.propertyTaxPaid ?? "", ...(taxYear === 2026 && entry.hasMortgageInsuranceAllocation === true ? [entry.insurancePremiumsAllocableToYear ?? ""] : [])]),
     data.charitableContributions,
     data.casualtyLosses,
-    ...(data.investmentInterestExpense !== undefined || data.gamblingLosses !== undefined
-      ? [data.investmentInterestExpense ?? "", data.gamblingLosses ?? ""]
+    ...(data.investmentInterestExpense !== undefined || data.gamblingLosses !== undefined || data.gamblingExpenses !== undefined
+      ? [data.investmentInterestExpense ?? "", data.gamblingLosses ?? "", data.gamblingExpenses ?? ""]
       : [data.otherItemized]),
   ];
 
@@ -935,6 +935,7 @@ export interface DeductionData {
   investmentInterestSources?: InvestmentInterestSourceData;
   gamblingWinnings?: string;
   gamblingLosses?: string;
+  gamblingExpenses?: string;
   mortgageEntries?: MortgageEntryData[];
   mortgageWorksheet?: MortgageWorksheetData;
   donationEntries?: DonationEntryData[];
