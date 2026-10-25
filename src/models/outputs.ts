@@ -237,6 +237,7 @@ export interface TaxReturnResult {
     import("@/engine/forms/form-8889.js").Form8889Result
   >>;
   seHealthInsuranceWorksheet?: import("@/engine/forms/se-health-insurance-worksheet.js").SEHealthInsuranceWorksheetResult;
+  form7206?: ReturnType<typeof import("@/engine/forms/form-7206-return.js").calculateForm7206Return>["form7206"];
   socialSecurityBenefitsWorksheet?: import("@/engine/forms/social-security-benefits-worksheet.js").SocialSecurityBenefitsWorksheetResult;
   iraDeductionWorksheet?: {
     magi: Decimal;

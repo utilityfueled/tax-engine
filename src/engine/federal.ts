@@ -79,6 +79,7 @@ import { calculateForm5695 } from "./forms/form-5695.js";
 import { calculateForm8815, type Form8815Result } from "./forms/form-8815.js";
 import { validateSavingsBondReturnIdentity } from "./forms/savings-bond-return-identity.js";
 import { reconcileEducatorEducationExclusions } from "./forms/educator-education-exclusions.js";
+import { calculateForm7206Return } from "./forms/form-7206-return.js";
 import { calculateForm8995 } from "./forms/form-8995.js";
 import { calculateForm8995A } from "./forms/form-8995-a.js";
 import type { QBIBusinessSource } from "./forms/form-8995-a.js";
@@ -1349,10 +1350,21 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   // Per IRS Schedule 1 Instructions, Line 17: "You can't deduct more than the net
   // profit you earned from the trade or business under which the insurance plan was
   // established (reduced by any deductions you claim on Schedule 1, lines 15 and 16)."
+  if (year >= 2026 && !input.form7206 && (input.seHealthInsuranceWorksheet || d(input.adjustments?.selfEmployedHealthInsurance).gt(0))) {
+    throw new Error("2026 SE health insurance requires actual Form7206 source facts and canonical business context.");
+  }
   const seCombinedNetProfit = schedCNetProfit.plus(schedFNetProfit);
   let seHealthInsurance: Decimal;
   let seHealthInsuranceWorksheetResult: SEHealthInsuranceWorksheetResult | undefined;
-  if (input.seHealthInsuranceWorksheet) {
+  let actualHealthInsurance: ReturnType<typeof calculateForm7206Return> | undefined;
+  if (input.form7206) {
+    actualHealthInsurance = calculateForm7206Return({ input, scheduleCProfit: schedC.netProfit,
+      scheduleFProfit: schedFNetProfit, cryptoBusinessProfit: cryptoBusinessNet,
+      selfEmploymentDeductions: schedSE.perTaxpayer.map(row => ({ accountHolder: row.accountHolder, amount: row.deductibleHalf })),
+      foreignIncomeExclusion: form2555IncomeReduction, selfEmploymentSourcesVerified: schedSE.sourceFactsVerified });
+    seHealthInsurance = actualHealthInsurance.form7206.deductionToSchedule1;
+    audit.merge(actualHealthInsurance.form7206.lines);
+  } else if (input.seHealthInsuranceWorksheet) {
     // Compute from detailed Pub 535 worksheet inputs
     seHealthInsuranceWorksheetResult = calculateSEHealthInsuranceWorksheet(
       {
@@ -1459,7 +1471,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     gamblingIncome: totalGamblingWinnings,
     form2555IncomeReduction,
     form2555HousingDeduction,
-    seHealthInsurance: seHealthInsuranceWorksheetResult?.deductibleAmount,
+    seHealthInsurance: actualHealthInsurance?.form7206.deductionToSchedule1 ?? seHealthInsuranceWorksheetResult?.deductibleAmount,
     taxableStateRefund,
     seRetirementContributions: d(input.adjustments?.seRetirementContributions),
   };
@@ -2257,7 +2269,8 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   const qbiSourceDeductions=calculateQBISourceDeductions({taxYear:year,sources:deductionSources,
     selfEmploymentDeductions:schedSE.perTaxpayer.map(row=>({accountHolder:row.accountHolder,amount:row.deductibleHalf})),
     healthInsuranceDeduction:seHealthInsurance,retirementPlanDeduction:d(input.adjustments?.seRetirementContributions),
-    sourceFactsVerified:schedSE.sourceFactsVerified,allocation:input.qbiDeductionAllocations});
+    sourceFactsVerified:schedSE.sourceFactsVerified,allocation:input.qbiDeductionAllocations,
+    healthInsuranceSources:actualHealthInsurance?.healthSources,retirementPlanSources:actualHealthInsurance?.retirementSources});
   audit.merge(qbiSourceDeductions.lines);
   const qbiSources: QBISource[] = qbiSourceDeductions.sources.filter(source=>!source.qbi.isZero());
   // K-1 Form 1041 Box 14 Code I: QBI from estates/trusts
@@ -3933,6 +3946,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     form8889: sched1.form8889,
     form8889ByOwner: sched1.form8889ByOwner,
     seHealthInsuranceWorksheet: seHealthInsuranceWorksheetResult,
+    form7206: actualHealthInsurance?.form7206,
     socialSecurityBenefitsWorksheet,
     iraDeductionWorksheet: iraDeductionWorksheetResult,
     form8959,

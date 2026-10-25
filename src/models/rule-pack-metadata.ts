@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.39",
+    ruleVersion: "2025.40",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/pub/irs-pdf/f7206.pdf", section: "Actual owner/business income, SE tax, retirement/foreign source conservation and per-business line14 handoff to Schedule1 and QBI", revision: "Final2025 Form7206 and instructions; current2026 calculation remains independently unqualified; Marketplace/PTC coupling separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/publications/p529", section: "Actual educator reductions reconcile final sole-owner savings-bond exclusion and recipient cash-QTP/Coverdell education-excluded earnings", revision: "Posted Publication529 educator rule plus Publication970 source distinctions; mixed/joint bond and prepaid methods remain unqualified", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i8960", section: "Official individual lines1-17, signed disposition netting, actual FEIE MAGI allocation, combined itemized deduction limit and required zero-tax form", revision: "Final2025 instructions; enacted2026 section68 coordination remains independently unqualified", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/publications/p525", section: "Actual government current-year repayments/contribution recovery, separate RTAA/nonbusiness grants/statePFML family income; actual expense year distinct from Box3 for refund recoveries", revision: "Final2025 publication, Rev.Rul.2025-4 and actual2026 statement revision; historical incomplete previews unverified, prior-year claim-of-right/farm worksheets separate", retrievedAt: "2026-10-25" },
@@ -82,11 +83,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.35-law-integration-draft",
+    ruleVersion: "2026.36-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/pub/irs-pdf/f7206.pdf", section: "Actual owner/business income, SE tax, retirement/foreign source conservation and per-business line14 handoff to Schedule1 and QBI", revision: "Final2025 Form7206 and instructions; current2026 calculation remains independently unqualified; Marketplace/PTC coupling separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/publications/p529", section: "Actual educator reductions reconcile final sole-owner savings-bond exclusion and recipient cash-QTP/Coverdell education-excluded earnings", revision: "Posted Publication529 educator rule plus Publication970 source distinctions; mixed/joint bond and prepaid methods remain unqualified", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i8960", section: "Official individual lines1-17, signed disposition netting, actual FEIE MAGI allocation, combined itemized deduction limit and required zero-tax form", revision: "Final2025 instructions; enacted2026 section68 coordination remains independently unqualified", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/publications/p525", section: "Actual government current-year repayments/contribution recovery, separate RTAA/nonbusiness grants/statePFML family income; actual expense year distinct from Box3 for refund recoveries", revision: "Final2025 publication, Rev.Rul.2025-4 and actual2026 statement revision; historical incomplete previews unverified, prior-year claim-of-right/farm worksheets separate", retrievedAt: "2026-10-25" },

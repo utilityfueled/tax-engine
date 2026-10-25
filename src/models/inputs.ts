@@ -3819,6 +3819,18 @@ export const Form7206Schema = z.object({
   sourceReference: z.string().optional(),
   sourceFactsConfirmed: z.boolean().optional(),
   allPlansIncluded: z.boolean().optional(),
+  /** Actual attribution of positive already-allowed retirement and Form2555line45 amounts. */
+  incomeDeductions: z.object({
+    sourceReference: z.string().optional(),
+    sourceFactsConfirmed: z.boolean().optional(),
+    allocations: z.array(z.object({
+      businessSourceId: z.string().optional(),
+      accountHolder: z.enum(["primary", "spouse"]).optional(),
+      retirementDeduction: optionalDecimalInput,
+      foreignExclusion: optionalDecimalInput,
+    })).optional(),
+    otherForeignExclusion: optionalDecimalInput,
+  }).optional(),
   persons: z.array(z.object({
     personId: z.string().optional(),
     name: z.string().optional(),

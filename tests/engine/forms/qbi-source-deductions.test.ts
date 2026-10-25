@@ -59,3 +59,21 @@ describe("QBI source deduction attribution",()=>{
     expect(()=>calculateQBISourceDeductions({...params(),sources:[]})).toThrow(/source/i);
   });
 });
+
+it("keeps actual health deductions on their source business and reconciles mixed allocations", () => {
+  const sources = [
+    { id: "scheduleC", name: "First", accountHolder: "primary" as const, qbi: d(30000), netSEEarnings: d(30000) },
+    { id: "scheduleF", name: "Second", accountHolder: "primary" as const, qbi: d(70000), netSEEarnings: d(70000) },
+  ];
+  const input = { taxYear: 2025, sources, selfEmploymentDeductions: [], healthInsuranceDeduction: d(1000), retirementPlanDeduction: d(0), sourceFactsVerified: true,
+    healthInsuranceSources: [{ sourceId: "scheduleC", accountHolder: "primary" as const, amount: d(1000) }] };
+  const result = calculateQBISourceDeductions(input);
+  expect(result.sources.map(source => source.qbi.toString())).toEqual(["29000", "70000"]);
+  const rows = [{ sourceId: "scheduleC", accountHolder: "primary" as const, deductibleSelfEmploymentTax: "0", selfEmployedHealthInsurance: "500", selfEmployedRetirementPlans: "0" },
+    { sourceId: "scheduleF", accountHolder: "primary" as const, deductibleSelfEmploymentTax: "0", selfEmployedHealthInsurance: "500", selfEmployedRetirementPlans: "0" }];
+  expect(() => calculateQBISourceDeductions({ ...input, allocation: { sourceFactsConfirmed: true, rows } })).toThrow(/health.*source|source.*health/i);
+  const mixed = { ...input, sources: [{ ...sources[0], excludedSEIncome: true }, sources[1]] };
+  expect(() => calculateQBISourceDeductions(mixed)).toThrow(/mixed|allocation/i);
+  const correct = calculateQBISourceDeductions({ ...mixed, allocation: { sourceFactsConfirmed: true, rows: [rows[0], { ...rows[1], sourceId: "nonQbi" }] } });
+  expect(correct.sources.map(source => source.qbi.toString())).toEqual(["29500", "70000"]);
+});

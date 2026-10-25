@@ -609,12 +609,14 @@ export function calculateSchedule1(
   // profit you earned from the trade or business under which the insurance plan was
   // established (reduced by any deductions you claim on Schedule 1, lines 15 and 16)."
   // Cap = max(0, net_profit - deductible_SE_tax - SE_retirement_contributions)
+  if (input.form7206 && extra?.seHealthInsurance === undefined) throw new Error("Actual Form7206 requires completed canonical income context before Schedule1.");
+  if (input.taxpayer.taxYear >= 2026 && !input.form7206 && (d(adjustments?.selfEmployedHealthInsurance).gt(0) || (extra?.seHealthInsurance?.gt(0) ?? false))) throw new Error("2026 SE health insurance requires actual Form7206 source facts.");
   let seHealthInsurance: Decimal;
   if (extra?.seHealthInsurance !== undefined) {
     // Pre-computed from the Pub 535 Self-Employed Health Insurance Deduction Worksheet
     seHealthInsurance = extra.seHealthInsurance;
     audit.record("Sched 1", "17", "SE health insurance", seHealthInsurance,
-      "Computed from Self-Employed Health Insurance Deduction Worksheet (Pub 535)");
+      input.form7206 ? "Completed actual Form7206 business deductions, transferred once" : "Computed from Self-Employed Health Insurance Deduction Worksheet (Pub 535)");
   } else {
     const seHealthInsuranceRaw = d(adjustments?.selfEmployedHealthInsurance);
     if (extra?.schedCNetProfit !== undefined) {
