@@ -92,8 +92,9 @@ function isHostedPlanId(value: string): value is HostedPlanId {
 const WORKSPACE_ID_MAX_LENGTH = 128;
 const WORKSPACE_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;
 
-function isValidWorkspaceId(workspaceId: string): boolean {
-  return workspaceId.length > 0
+function isValidWorkspaceId(workspaceId: unknown): workspaceId is string {
+  return typeof workspaceId === "string"
+    && workspaceId.length > 0
     && workspaceId.length <= WORKSPACE_ID_MAX_LENGTH
     && WORKSPACE_ID_PATTERN.test(workspaceId);
 }
@@ -221,9 +222,32 @@ async function ensureStripeCustomerId(
 function buildPreviewCheckoutSession(
   request: HostedBillingCheckoutRequest
 ): Pick<Stripe.Checkout.Session, "id" | "url"> {
+  const url = new URL(request.successUrl);
+  url.searchParams.set("checkout", "preview");
+  url.searchParams.set("plan", request.planId);
   return {
     id: `cs_preview_${request.planId}`,
-    url: `${request.successUrl}?checkout=preview&plan=${encodeURIComponent(request.planId)}`
+    url: url.toString()
+  };
+}
+
+function billingUnavailableResponse() {
+  return NextResponse.json(
+    { error: "Hosted billing is temporarily unavailable. Please try again later.", code: "billing-unavailable" },
+    { status: 503, headers: { "Retry-After": "5", "Cache-Control": "no-store" } }
+  );
+}
+
+// Authentication, shared protection, entitlement and database failures can happen
+// before a Stripe call. Keep every boundary retryable without exposing the
+// upstream error, which may contain credentials or customer data.
+function withBillingAvailability(handler: (request: Request) => Promise<Response>) {
+  return async (request: Request): Promise<Response> => {
+    try {
+      return await handler(request);
+    } catch {
+      return billingUnavailableResponse();
+    }
   };
 }
 
@@ -371,7 +395,7 @@ export function createHostedBillingCheckoutRouteHandlers(
   }
 
   return {
-    async POST(request: Request) {
+    POST: withBillingAvailability(async (request: Request) => {
       const env = dependencies.env ?? process.env;
       const config = getHostedBillingConfig(env);
 
@@ -462,37 +486,26 @@ export function createHostedBillingCheckoutRouteHandlers(
         );
       }
 
-      try {
-        const session = await (dependencies.createCheckoutSession
-          ? dependencies.createCheckoutSession({
-              actor,
-              request: parsed.data,
-              config,
-              env,
-              existingSubscription
-            })
-          : createStripeCheckoutSession(env, actor, parsed.data, existingSubscription));
+      const session = await (dependencies.createCheckoutSession
+        ? dependencies.createCheckoutSession({
+            actor,
+            request: parsed.data,
+            config,
+            env,
+            existingSubscription
+          })
+        : createStripeCheckoutSession(env, actor, parsed.data, existingSubscription));
 
-        return NextResponse.json({
-          provider: config.provider,
-          mode: config.mode,
-          planId: parsed.data.planId,
-          sessionId: session.id,
-          checkoutUrl: session.url,
-          bypassed: false,
-          message: "Redirecting to Stripe Checkout."
-        } satisfies HostedBillingCheckoutResponse);
-      } catch (error) {
-        return NextResponse.json(
-          {
-            error: error instanceof Error
-              ? error.message
-              : "Could not create a hosted billing checkout session."
-          },
-          { status: 400 }
-        );
-      }
-    }
+      return NextResponse.json({
+        provider: config.provider,
+        mode: config.mode,
+        planId: parsed.data.planId,
+        sessionId: session.id,
+        checkoutUrl: session.url,
+        bypassed: false,
+        message: "Redirecting to Stripe Checkout."
+      } satisfies HostedBillingCheckoutResponse);
+    })
   };
 }
 
@@ -518,9 +531,11 @@ async function createStripeAiCreditCheckoutSession(
   const nodeEnv = env.NODE_ENV?.trim().toLowerCase() || "development";
 
   if ((!secretKey || !priceId) && nodeEnv !== "production") {
+    const url = new URL(request.successUrl);
+    url.searchParams.set("checkout", "preview-ai-top-up");
     return {
       id: "cs_preview_ai_top_up",
-      url: `${request.successUrl}?checkout=preview-ai-top-up`
+      url: url.toString()
     };
   }
 
@@ -572,7 +587,7 @@ export function createHostedAiCreditCheckoutRouteHandlers(
   }
 
   return {
-    async POST(request: Request) {
+    POST: withBillingAvailability(async (request: Request) => {
       const env = dependencies.env ?? process.env;
       const config = getHostedBillingConfig(env);
 
@@ -660,34 +675,23 @@ export function createHostedAiCreditCheckoutRouteHandlers(
 
       const existingSubscription = await lookupExistingHostedSubscription(env, actor.id);
 
-      try {
-        const session = await (dependencies.createCheckoutSession
-          ? dependencies.createCheckoutSession({
-              actor,
-              request: parsed.data,
-              env,
-              existingSubscription
-            })
-          : createStripeAiCreditCheckoutSession(env, actor, parsed.data, existingSubscription));
+      const session = await (dependencies.createCheckoutSession
+        ? dependencies.createCheckoutSession({
+            actor,
+            request: parsed.data,
+            env,
+            existingSubscription
+          })
+        : createStripeAiCreditCheckoutSession(env, actor, parsed.data, existingSubscription));
 
-        return NextResponse.json({
-          checkoutUrl: session.url,
-          sessionId: session.id,
-          purchaseKind: "ai-credit-pack",
-          creditedBudgetCents: resolveHostedAiTopUpCreditCents(env),
-          priceCents: resolveHostedAiTopUpPriceCents(env)
-        });
-      } catch (error) {
-        return NextResponse.json(
-          {
-            error: error instanceof Error
-              ? error.message
-              : "Could not create an AI helper credit checkout session."
-          },
-          { status: 400 }
-        );
-      }
-    }
+      return NextResponse.json({
+        checkoutUrl: session.url,
+        sessionId: session.id,
+        purchaseKind: "ai-credit-pack",
+        creditedBudgetCents: resolveHostedAiTopUpCreditCents(env),
+        priceCents: resolveHostedAiTopUpPriceCents(env)
+      });
+    })
   };
 }
 
@@ -735,7 +739,7 @@ export function createHostedBillingPortalRouteHandlers(
   }
 
   return {
-    async POST(request: Request) {
+    POST: withBillingAvailability(async (request: Request) => {
       const env = dependencies.env ?? process.env;
       const config = getHostedBillingConfig(env);
 
@@ -802,26 +806,15 @@ export function createHostedBillingPortalRouteHandlers(
         );
       }
 
-      try {
-        const session = await (dependencies.createPortalSession
-          ? dependencies.createPortalSession({
-              actor,
-              returnUrl: parsed.data.returnUrl,
-              env
-            })
-          : createStripePortalSession(env, actor, parsed.data.returnUrl));
+      const session = await (dependencies.createPortalSession
+        ? dependencies.createPortalSession({
+            actor,
+            returnUrl: parsed.data.returnUrl,
+            env
+          })
+        : createStripePortalSession(env, actor, parsed.data.returnUrl));
 
-        return NextResponse.json({ url: session.url });
-      } catch (error) {
-        return NextResponse.json(
-          {
-            error: error instanceof Error
-              ? error.message
-              : "Could not open the hosted billing portal."
-          },
-          { status: 400 }
-        );
-      }
-    }
+      return NextResponse.json({ url: session.url });
+    })
   };
 }

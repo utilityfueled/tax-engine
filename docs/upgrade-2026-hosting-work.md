@@ -92,3 +92,20 @@ Eight regressions first failed. All 44 focused transport, parser and grounded
 document-task tests now pass, including both analysis flows, local parse errors,
 invalid formats, server failures, repeated response IDs and unknown response IDs.
 Web typecheck and scoped lint pass. No live model/provider request was made.
+## Billing failure boundaries — 2026-10-24
+
+Subscription checkout, AI-credit checkout and portal routes now contain auth,
+protection, database and provider failures inside a generic 503 response with
+`no-store` and a five-second retry hint. They never return upstream exception
+messages. Workspace IDs require strings before inspection; null and malformed
+values reject before payment work. Preview redirects use URL query parameters
+and preserve existing queries/fragments.
+
+Eleven initial regressions failed before implementation. The final focused run
+passes 126 tests across billing, authentication/security and the new boundary
+suite; web typecheck and scoped ESLint pass. Tests exercise account-bound Stripe
+request construction through a mock of the web workspace's exact installed SDK,
+entitlements, duplicate subscription prevention, malformed input, dependency
+outages and self-host bypass. These are synthetic dependency tests, not live
+Stripe, Redis, hosted authentication or staging evidence. Evidence logs:
+`.local/upgrade-evidence/billing-boundaries-{red,green,types}.log`.
