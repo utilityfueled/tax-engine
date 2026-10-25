@@ -2,6 +2,7 @@ import Decimal from "decimal.js";
 import { parseGuidedCurrency } from "./guided-currency";
 import { amountError, hasEnteredAmount } from "./guided-required-facts";
 import type { FilingStatus, RentalPropertyEntryData } from "./guided-interview-flow";
+import { paRentalWorksheetErrors, type PARentalIncomeExpensesData } from "./guided-pa-rental-facts";
 
 export const paRentalBooleanFacts = [
   ["offeredToPublic", "Was this activity offered commercially to the public?"],
@@ -19,6 +20,7 @@ export type PARentalClassificationData = Partial<Record<typeof paRentalBooleanFa
 };
 
 export interface RentalSourceData {
+  paIncomeExpenses?: PARentalIncomeExpensesData;
   paClassification?: PARentalClassificationData;
   accountHolder?: "primary" | "spouse" | "joint" | "";
   ownershipPercentage?: string;
@@ -62,7 +64,8 @@ export const rentalExpenseFields = [
 const types = ["single_family", "multi_family", "vacation", "commercial", "land", "other"];
 
 export function isStartedRental(entry: RentalPropertyEntryData): boolean {
-  return Object.values(entry).some(value => typeof value === "boolean" || (typeof value === "string" && value.trim() !== ""));
+  const entered = (value: unknown) => typeof value === "boolean" || (typeof value === "string" && value.trim() !== "");
+  return Object.values(entry).some(entered) || [entry.paClassification, entry.paIncomeExpenses].some(source => source && Object.values(source).some(entered));
 }
 
 export function rentalFactErrors(entries: RentalPropertyEntryData[] | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, stateCode?: string | null): Record<string, string> {
@@ -91,6 +94,7 @@ export function rentalFactErrors(entries: RentalPropertyEntryData[] | undefined,
     if (entry.amountsAreWholeProperty !== true) errors[`${key}-amount-basis`] = "Enter the full-property amounts before ownership allocation; an already allocated amount would be counted twice.";
     if (entry.sourceFactsConfirmed !== true) errors[`${key}-confirmation`] = "Review the actual property classification, ownership, income and expenses after the latest edits.";
     if (stateCode?.toUpperCase() === "PA") {
+      for (const [field, error] of Object.entries(paRentalWorksheetErrors(entry.paIncomeExpenses, taxYear, entry.personalUseDays))) errors[`${key}-${field}`] = error;
       const pa = entry.paClassification;
       if (!pa) errors[`${key}-pa-classification`] = "Complete the actual PA rental activity classification; annual rented days do not identify customer-use periods.";
       else {

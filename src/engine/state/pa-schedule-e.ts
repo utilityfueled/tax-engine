@@ -6,7 +6,7 @@
 
 import Decimal from "decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
-import { d, sum } from "@/utils/decimal.js";
+import { d } from "@/utils/decimal.js";
 import type {
   FilingStatus,
   Form1099Misc,
@@ -15,7 +15,7 @@ import type {
 } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { PA_CONSTANTS } from "@/engine/state/pa-40.js";
-import { getPARentalOwnershipFraction } from "@/engine/state/pa-rental-ownership.js";
+import { calculatePARentalIncomeExpenses, type PARentalIncomeExpensesResult } from "./pa-rental-income-expenses.js";
 
 export interface PAScheduleEInput {
   taxYear: number;
@@ -25,13 +25,7 @@ export interface PAScheduleEInput {
   scheduleK1?: ScheduleK1[];
 }
 
-export interface PAScheduleEPropertyResult {
-  description: string;
-  accountHolder?: RentalProperty["accountHolder"];
-  grossRents: Decimal;
-  allowableExpenses: Decimal;
-  netIncome: Decimal;
-}
+export type PAScheduleEPropertyResult = PARentalIncomeExpensesResult;
 
 export interface PAScheduleEResult {
   propertyGrossRents: Decimal;
@@ -46,26 +40,6 @@ export interface PAScheduleEResult {
   netRentalRoyaltyIncome: Decimal;
   properties: PAScheduleEPropertyResult[];
   lines: CalculatedLine[];
-}
-
-function calculatePropertyExpenses(property: RentalProperty): Decimal {
-  return sum(
-    d(property.advertising),
-    d(property.autoTravel),
-    d(property.cleaning),
-    d(property.commissions),
-    d(property.insurance),
-    d(property.legalProfessional),
-    d(property.managementFees),
-    d(property.mortgageInterest),
-    d(property.otherInterest),
-    d(property.repairs),
-    d(property.supplies),
-    d(property.taxes),
-    d(property.utilities),
-    d(property.depreciation),
-    d(property.otherExpenses),
-  );
 }
 
 function getScheduleK1RentalRoyaltyAmount(k1: ScheduleK1): Decimal {
@@ -85,24 +59,23 @@ export function calculatePAScheduleE(input: PAScheduleEInput): PAScheduleEResult
   const scheduleK1 = input.scheduleK1 ?? [];
 
   const properties = rentalProperties.map((property) => {
-    const share = getPARentalOwnershipFraction(property);
-    const grossRents = d(property.rents).times(share);
-    const allowableExpenses = calculatePropertyExpenses(property).times(share);
-    const netIncome = grossRents.minus(allowableExpenses);
+    const worksheet = calculatePARentalIncomeExpenses(property, input.taxYear);
+    const { grossRents, allowableExpenses, netIncome } = worksheet;
+    audit.merge(worksheet.lines);
 
     audit.record(
       "PA-Schedule-E",
       "1-detail",
       `Gross rents for ${property.description}`,
       grossRents,
-      `Whole-property rents times ownership fraction ${share}`,
+      "Gross rents from the separately audited PA property worksheet",
     );
     audit.record(
       "PA-Schedule-E",
       "2-detail",
       `Allowable expenses for ${property.description}`,
       allowableExpenses,
-      `Whole-property ordinary and necessary expenses times ownership fraction ${share}`,
+      "Expenses from the separately audited PA property worksheet",
     );
     audit.record(
       "PA-Schedule-E",
@@ -112,13 +85,7 @@ export function calculatePAScheduleE(input: PAScheduleEInput): PAScheduleEResult
       "Gross rents minus allowable expenses",
     );
 
-    return {
-      description: property.description,
-      accountHolder: property.accountHolder,
-      grossRents,
-      allowableExpenses,
-      netIncome,
-    };
+    return worksheet;
   });
 
   const propertyGrossRents = properties.reduce(

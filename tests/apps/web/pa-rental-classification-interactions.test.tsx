@@ -8,6 +8,7 @@ import { rentalFactErrors } from "@/lib/guided-rental-facts";
 import { buildRentalPropertyInputs } from "@/lib/guided-interview-bridge";
 import type { RentalPropertyEntryData } from "@/lib/guided-interview-flow";
 import { completeRentalSource } from "../../guided-interview/complete-facts";
+import { actualPAWorksheet } from "../../fixtures/pa-rental-worksheet";
 let container: HTMLDivElement, root: Root, latest: RentalPropertyEntryData[];
 beforeEach(() => { (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true; container = document.createElement("div"); document.body.appendChild(container); root = createRoot(container); });
 afterEach(async () => { await act(async () => root.unmount()); container.remove(); });
@@ -15,7 +16,8 @@ function control(label: string) { const element = [...container.querySelectorAll
 async function change(label: string, value: string) { const field = control(label); await act(async () => { Object.getOwnPropertyDescriptor(field.tagName === "SELECT" ? HTMLSelectElement.prototype : HTMLInputElement.prototype, "value")?.set?.call(field, value); field.dispatchEvent(new Event(field.tagName === "SELECT" ? "change" : "input", { bubbles: true })); }); }
 
 it("collects PA classification facts without defaults and invalidates confirmation", async () => {
-  latest = [{ ...structuredClone(completeRentalSource), paClassification: undefined }];
+  latest = [{ ...structuredClone(completeRentalSource), paClassification: undefined,
+    paIncomeExpenses: { ...actualPAWorksheet({ grossRents: "0", advertising: "0", autoTravel: "0", repairs: "0", depreciation: "0" }), taxYear: "2025" } }];
   function Harness() { const [data, setData] = useState(latest); return <SectionRentalIncome stateCode="PA" entries={data} onEntriesChange={next => { latest = next; setData(next); }} />; }
   await act(async () => root.render(<Harness />));
   expect(control("Actual average customer-use period in days").value).toBe("");
@@ -32,6 +34,7 @@ it("collects PA classification facts without defaults and invalidates confirmati
     ["Was this a dealer property held for sale to customers?", "false"],
   ]) await change(label, answer);
   await change("Have you checked these PA activity facts against the source records?", "true");
+  await change("Have you checked the PA income and expense worksheet after the latest edits?", "true");
   await change("Have you checked the actual property, ownership, use, income and expense facts after the latest edits?", "true");
   expect(rentalFactErrors(latest, "single", 2025, "PA")).toEqual({});
   expect(buildRentalPropertyInputs(latest)[0]).toMatchObject({ rentalDays: 300, paClassification: { averageCustomerUseDays: "7", forProfit: true, significantServices: false, factsConfirmed: true, relatedPartyRental: false } });

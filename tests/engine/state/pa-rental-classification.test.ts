@@ -4,6 +4,8 @@ import { RentalPropertySchema, TaxYearInputSchema } from "@/models/inputs.js";
 import { calculatePAReturn } from "@/engine/state/pa-orchestrator.js";
 import { simpleW2Fixture } from "../../fixtures/simple-w2.js";
 
+import { actualPAWorksheet } from "../../fixtures/pa-rental-worksheet.js";
+
 const actual = (overrides: Record<string, unknown> = {}) => ({ sourceReference: "Synthetic actual rental activity records", factsConfirmed: true,
   offeredToPublic: true, forProfit: true, regularAndContinuous: true, averageCustomerUseDays: "7",
   availableDuringBusinessHours: false, significantServices: false, significantOperatingExpenses: false,
@@ -11,6 +13,7 @@ const actual = (overrides: Record<string, unknown> = {}) => ({ sourceReference: 
 function input(classification: unknown, overrides: Record<string, unknown> = {}) {
   return TaxYearInputSchema.parse({ ...simpleW2Fixture, w2s: [], rentalProperties: [{
     description: "Synthetic activity", accountHolder: "primary", ownershipPercentage: "50", rents: "20000", repairs: "8000",
+    paIncomeExpenses: actualPAWorksheet({ grossRents: "20000", advertising: "0", autoTravel: "0", repairs: "8000", depreciation: "0" }),
     rentalDays: 365, sourceFactsConfirmed: true, paClassification: classification, ...overrides }] });
 }
 describe("PA actual rental activity classification", () => {
@@ -35,7 +38,7 @@ describe("PA actual rental activity classification", () => {
     for (const facts of [undefined, actual({ factsConfirmed: false }), actual({ sourceReference: "" }), actual({ offeredToPublic: undefined }), actual({ averageCustomerUseDays: "-1" }), actual({ averageCustomerUseDays: "0" }), actual({ averageCustomerUseDays: "Infinity" }), actual({ averageCustomerUseDays: "NaN" }), actual({ forProfit: false })]) {
       expect(() => calculatePAReturn(input(facts))).toThrow();
     }
-    const historical = input(undefined, { sourceFactsConfirmed: undefined, rentalDays: 20 });
+    const historical = input(undefined, { sourceFactsConfirmed: undefined, paIncomeExpenses: undefined, rentalDays: 20 });
     expect(calculatePAReturn(historical).mappedIncome.netBusinessIncome.toString()).toBe("6000");
     const untouched = RentalPropertySchema.parse({ description: "Historical", rents: "1" });
     expect(untouched).not.toHaveProperty("paClassification");

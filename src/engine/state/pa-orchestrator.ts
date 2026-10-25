@@ -7,7 +7,7 @@
  */
 
 import Decimal from "decimal.js";
-import { getPARentalOwnershipFraction } from "@/engine/state/pa-rental-ownership.js";
+import { calculatePARentalIncomeExpenses, type PARentalIncomeExpensesResult } from "@/engine/state/pa-rental-income-expenses.js";
 import { calculatePAOIDSources, type PAOIDSourcesResult } from "@/engine/state/pa-oid-sources.js";
 import { calculatePARentalClassification, type PARentalClassificationResult } from "@/engine/state/pa-rental-classification.js";
 import { d, sum, zeroFloor } from "@/utils/decimal.js";
@@ -266,6 +266,7 @@ export interface PAOrchestratorResult {
   /** Source-linked PA OID adjustments and withholding. */
   oidSources?: PAOIDSourcesResult;
   rentalClassifications: PARentalClassificationResult[];
+  rentalIncomeWorksheets: PARentalIncomeExpensesResult[];
   /** Schedule B result for PA dividend income */
   scheduleB?: PAScheduleBResult;
   /** Schedule F result for PA farm income */
@@ -930,26 +931,6 @@ function mapCapitalGainDistributions(input: TaxYearInput): Decimal {
   );
 }
 
-function calculateRentalPropertyNetIncome(property: TaxYearInput["rentalProperties"][number]): Decimal {
-  return d(property.rents).minus(sum(
-    d(property.advertising),
-    d(property.autoTravel),
-    d(property.cleaning),
-    d(property.commissions),
-    d(property.insurance),
-    d(property.legalProfessional),
-    d(property.managementFees),
-    d(property.mortgageInterest),
-    d(property.otherInterest),
-    d(property.repairs),
-    d(property.supplies),
-    d(property.taxes),
-    d(property.utilities),
-    d(property.depreciation),
-    d(property.otherExpenses),
-  )).times(getPARentalOwnershipFraction(property));
-}
-
 type PAClass4Owner = "primary" | "spouse";
 
 interface PAClass4IncomeByOwner {
@@ -1084,7 +1065,7 @@ function mapBusinessIncomeByOwner(
   // Legacy unconfirmed ownerless previews retain their historical bucket.
   for (const property of input.rentalProperties) {
     if (options.businessRentals?.has(property)) {
-      addAmount(calculateRentalPropertyNetIncome(property), property.accountHolder === "spouse" ? "spouse" : "primary");
+      addAmount(calculatePARentalIncomeExpenses(property, input.taxpayer.taxYear).netIncome, property.accountHolder === "spouse" ? "spouse" : "primary");
     }
   }
 
@@ -1755,6 +1736,7 @@ export function calculatePAReturn(
   const dividends = scheduleB.line12;
   const scheduleF = calculatePAFarmSchedule(input);
   const rentalClassifications = input.rentalProperties.map(property => calculatePARentalClassification(property, taxYear));
+  const rentalIncomeWorksheets = input.rentalProperties.map(property => calculatePARentalIncomeExpenses(property, taxYear));
   const businessRentals = new Set(input.rentalProperties.filter((_, index) => rentalClassifications[index].isBusiness));
   const class4BusinessIncome = mapBusinessIncomeByOwner(input, heuristicK1Input, {
     scheduleF,
@@ -2143,6 +2125,7 @@ export function calculatePAReturn(
     scheduleA,
     oidSources: input.form1099OID?.length ? oidSources : undefined,
     rentalClassifications,
+    rentalIncomeWorksheets,
     scheduleB,
     scheduleF,
     scheduleD,

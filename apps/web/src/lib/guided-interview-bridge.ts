@@ -23,6 +23,7 @@ import { energyFactErrors } from "./guided-energy-facts";
 import { w2FactErrors } from "./guided-w2-facts";
 import { businessFactErrors, hasBusinessSourceData, isStartedNec, sumKnownBusinessAmounts, type BusinessSourceData } from "./guided-business-facts";
 import { isStartedRental, rentalFactErrors, rentalExpenseFields } from "./guided-rental-facts";
+import { paRentalAmountFields } from "./guided-pa-rental-facts";
 import { isStartedUnemployment, unemploymentEntries, unemploymentFactErrors, governmentSourceTotal } from "./guided-unemployment-facts";
 import { nonW2TaxAllocationErrors } from "./guided-salt-facts";
 import { socialSecurityEntries, isStartedSocialSecurity, socialSecurityFactErrors, socialSecuritySourceTotal } from "./guided-social-security-facts";
@@ -488,6 +489,15 @@ export function buildRentalPropertyInputs(entries: RentalPropertyEntryData[] | u
       propertyType: e.propertyType || undefined,
       accountHolder: e.accountHolder || undefined,
       sourceFactsConfirmed: e.sourceFactsConfirmed ?? undefined,
+      paIncomeExpenses: e.paIncomeExpenses ? {
+        ...e.paIncomeExpenses,
+        taxYear: /^\d{4}$/.test(e.paIncomeExpenses.taxYear ?? "") ? Number(e.paIncomeExpenses.taxYear) : undefined,
+        factsConfirmed: e.paIncomeExpenses.factsConfirmed ?? undefined,
+        amountsBeforeOwnershipAllocation: e.paIncomeExpenses.amountsBeforeOwnershipAllocation ?? undefined,
+        expensesAreRentalUseOnly: e.paIncomeExpenses.expensesAreRentalUseOnly ?? undefined,
+        paRulesApplied: e.paIncomeExpenses.paRulesApplied ?? undefined,
+        ...Object.fromEntries(paRentalAmountFields.map(([field]) => [field, toOptionalDecimalString(e.paIncomeExpenses?.[field])])) as Record<typeof paRentalAmountFields[number][0], string | undefined>,
+      } : undefined,
       paClassification: e.paClassification ? {
         ...e.paClassification,
         factsConfirmed: e.paClassification.factsConfirmed ?? undefined,

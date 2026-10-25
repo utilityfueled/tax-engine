@@ -146,3 +146,42 @@ $400 federal tax-liability limit gives line11$400. Ohio retains25% of line11=$10
 and total credits$120. Seven focused Ohio and self-employed-health PDF tests
 pass; the latter's prior full-run timeout did not recur and no timeout changed.
 Evidence:`.local/upgrade-evidence/oh-care-and-se-pdf-recheck.log`.
+
+## Actual Pennsylvania rental income and expense worksheets — 2026-10-25
+
+Official sources refreshed: [final2025 PA40 ScheduleE instructions](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40e.pdf),
+SectionII lines1 and3–21, and the PA PIT Guide's allowable-expense and
+[depreciation sections](https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/net-income-loss-from-rents,-royalties,-copyrights-and-patents).
+
+Confirmed-source and2026 property calculations now require a separate actual PA
+worksheet. They no longer reuse federal depreciation, interest or expense
+amounts. Every category, including zero, has to be supplied with its actual year,
+reference and confirmations. The source amounts exclude personal use and remain
+before ownership allocation. Each allocated printed line is rounded to whole
+dollars; expense lines are then summed. Both Class4 and Class6 use these results.
+Per-property audit records include printed lines1–21 and source verification;
+historical unconfirmed2025 previews remain explicitly unverified.
+
+Positive depreciation requires the actual PA depreciation worksheet reference;
+positive other expenses need itemization; personal-use records need an actual
+allocation reference. PA bonus-depreciation and different-basis rules are
+identified in the interface. This source-entry package does not independently
+compute asset basis or certify a supplied worksheet. Federal personal-use,
+royalty/mineral expenses, special joint-owner and filing qualification remain
+separate boundaries. It does not enable a2026 export or a filing-ready state.
+
+The guided interface preserves unknown and zero values, accepts state amounts
+that differ from federal values, and invalidates source confirmation after
+edits. A PA-only partial record survives conversion. No source values are copied
+from federal defaults. Existing ownership tests now check the official printed
+whole-dollar rule rather than retaining fractional printed-line expectations.
+
+Validation: four new core tests and one DOM interaction failed before their
+implementations. The expanded state, PA PDF, all-guided and DOM run passes
+**1,450 tests in84files**. Root, contract and web typechecks pass. Evidence is
+`.local/upgrade-evidence/pa-rental-expenses-{red,ui-red,focused,expanded,types,contract-types,web-types,lint}.log`.
+The reviewed diff retains the separate historical preview and all readiness gates.
+Exact staged-tree verification (`90e27e7c9791c955980724cd7ddfcd07dd02fb5b`)
+also passes the same1,450 tests and root types. All3,504 staged spec references
+resolve, scoped lint reports zero errors/warnings, and staged diff checks pass.
+The worktree's concurrent HSA/energy/AMT changes were excluded from this snapshot.

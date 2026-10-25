@@ -5,15 +5,19 @@ import { type RentalPropertyEntryData, emptyRentalPropertyEntry, rentalPropertyT
 import { rentalExpenseFields, paRentalBooleanFacts, type PARentalClassificationData } from "@/lib/guided-rental-facts";
 import { CurrencyField } from "./currency-field";
 import { BooleanFact, TextFact } from "./fact-fields";
+import { PARentalExpenseDetails } from "./pa-rental-expense-details";
+import type { PARentalIncomeExpensesData } from "@/lib/guided-pa-rental-facts";
 
 function RentalPropertyCard({ entry, index, onEntryChange, onRemove, canRemove, stateCode }: {
   entry: RentalPropertyEntryData; index: number; onEntryChange: (entry: RentalPropertyEntryData) => void; onRemove: () => void; canRemove: boolean;
   stateCode?: string | null;
 }) {
-  const patch = (values: Partial<RentalPropertyEntryData>) => onEntryChange({ ...entry, ...values,
-    paClassification: values.paClassification ?? (!("sourceFactsConfirmed" in values) && entry.paClassification ? { ...entry.paClassification, factsConfirmed: null } : entry.paClassification),
+  const patch = (values: Partial<RentalPropertyEntryData>, confirmationOnly = false) => onEntryChange({ ...entry, ...values,
+    paClassification: values.paClassification ?? (!confirmationOnly && !("sourceFactsConfirmed" in values) && entry.paClassification ? { ...entry.paClassification, factsConfirmed: null } : entry.paClassification),
+    paIncomeExpenses: values.paIncomeExpenses ?? (!confirmationOnly && !("sourceFactsConfirmed" in values) && entry.paIncomeExpenses ? { ...entry.paIncomeExpenses, factsConfirmed: null } : entry.paIncomeExpenses),
     sourceFactsConfirmed: "sourceFactsConfirmed" in values ? values.sourceFactsConfirmed : null });
-  const patchPA = (values: PARentalClassificationData) => patch({ paClassification: { ...entry.paClassification, ...values, factsConfirmed: "factsConfirmed" in values ? values.factsConfirmed : null } });
+  const patchPA = (values: PARentalClassificationData) => patch({ paClassification: { ...entry.paClassification, ...values, factsConfirmed: "factsConfirmed" in values ? values.factsConfirmed : null } }, Object.keys(values).length === 1 && "factsConfirmed" in values);
+  const patchPAExpenses = (values: PARentalIncomeExpensesData) => patch({ paIncomeExpenses: { ...entry.paIncomeExpenses, ...values, factsConfirmed: "factsConfirmed" in values ? values.factsConfirmed : null } }, Object.keys(values).length === 1 && "factsConfirmed" in values);
   return <div className="guided-w2-card">
     <div className="guided-w2-card-header"><h3 className="guided-w2-card-title">{entry.description || `Property #${index + 1}`}</h3>
       {canRemove && <button className="utility-button utility-button-small" type="button" onClick={onRemove} aria-label={`Remove ${entry.description || `property #${index + 1}`}`}>Remove</button>}
@@ -61,6 +65,7 @@ function RentalPropertyCard({ entry, index, onEntryChange, onRemove, canRemove, 
       <TextFact label="PA rental activity source or worksheet reference" value={entry.paClassification?.sourceReference ?? ""} onChange={sourceReference => patchPA({ sourceReference })} />
       <BooleanFact label="Have you checked these PA activity facts against the source records?" value={entry.paClassification?.factsConfirmed} onChange={factsConfirmed => patchPA({ factsConfirmed })} />
     </fieldset>}
+    {stateCode?.toUpperCase() === "PA" && <PARentalExpenseDetails value={entry.paIncomeExpenses} onChange={patchPAExpenses} />}
     <BooleanFact label="Have you checked the actual property, ownership, use, income and expense facts after the latest edits?" value={entry.sourceFactsConfirmed} onChange={sourceFactsConfirmed => patch({ sourceFactsConfirmed })} />
   </div>;
 }

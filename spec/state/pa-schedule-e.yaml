@@ -33,6 +33,38 @@ packetRules:
     whenever this reference summary is attached.
 
 businessRuleValidation:
+  - rule: "actual-pa-property-income-expenses"
+    description: |
+      Source refreshed2026-10-25: final2025 PA40E instructions, pages1-5,
+      SectionII lines1 and3-21; PA PIT Guide Allowable Expenses and Depreciation.
+      Confirmed sources and2026 calculations require a separate actual PA
+      property worksheet with matching year, reference, all amounts including
+      zero, rental-use-only amounts before ownership allocation, and confirmation
+      that PA rules were applied. Never substitute federal ScheduleE expenses.
+      Deduct no personal costs, owner labor, capital improvements or income taxes.
+      PA travel meals and prepaid-interest treatment can differ from federal.
+      PA depreciation excludes federal bonus depreciation and uses straight-line
+      when PA/federal bases differ; a positive supplied amount needs its actual
+      PA depreciation worksheet reference. This source-entry path does not
+      independently calculate asset basis or certify those source worksheets.
+      Multiply each actual income/expense category by ownershipPercentage/100,
+      then round each printed line to nearest dollar, with .50 rounded up.
+      Line19 sums rounded expense lines3-18. Line20 is positive income; line21
+      is positive loss; signed net is line20 minus line21. Both Class4 and Class6
+      consume the same PA calculation. Direct real-estate rentals have line2
+      royalties and line17 depletion zero; mineral/royalty expenses require
+      separate source worksheets. Personal-use costs must already be removed
+      using a referenced actual allocation; the federal guided personal-use
+      limitation remains unresolved and must not be bypassed.
+      Historical unconfirmed2025 records keep their explicitly unverified
+      preview interpretation. This does not qualify their state filing export.
+    testRef: "tests/engine/state/pa-rental-income-expenses.test.ts::uses independent PA amounts and rounds each allocated printed line"
+  - rule: "pa-property-worksheet-integrity"
+    description: "Reject wrong-year, incomplete, unconfirmed, negative/nonfinite and already allocated sources, missing positive depreciation/other-expense evidence and missing personal-use allocation. Preserve unknown and actual zero in guided entry; edits revoke confirmation."
+    testRef: "tests/engine/state/pa-rental-income-expenses.test.ts::refuses missing and inconsistent PA worksheet sources"
+  - rule: "guided-pa-property-worksheet"
+    description: "Actual PA amounts and source year are entered separately from federal amounts. Blanks stay unknown, zero is retained, and worksheet edits invalidate current source confirmation. A saved PA worksheet does not enable unsupported federal personal-use calculation."
+    testRef: "tests/apps/web/pa-rental-expense-interactions.test.tsx::collects actual PA income and expenses without copying federal values"
   - rule: "actual-property-share-and-owner"
     description: |
       Refreshed2026-10-25: final2025 PA40 ScheduleE SectionII linea and line25

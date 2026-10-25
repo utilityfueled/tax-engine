@@ -3,7 +3,7 @@ import type { RentalProperty } from "@/models/inputs.js";
 import { d } from "@/utils/decimal.js";
 
 export function getPARentalOwnershipFraction(property: RentalProperty) {
-  if (property.sourceFactsConfirmed === true &&
+  if ((property.sourceFactsConfirmed === true || property.paIncomeExpenses !== undefined) &&
     (property.ownershipPercentage === undefined || !["primary", "spouse"].includes(property.accountHolder ?? ""))) {
     throw new Error("PA confirmed rental ownership requires an actual primary/spouse owner and share; joint interests need separate allocations.");
   }
