@@ -39,6 +39,18 @@ describe("Federal education distribution source integration",()=>{
     expect(()=>calculate({...input,w2s:[{...input.w2s[0],wages:"100000",federalWithheld:"25000"}]})).toThrow(/allocation.*credit|credit.*allocation/i);
     expect(()=>calculate({...input,w2s:[{...input.w2s[0],wages:"1000"}],educationExpenses:{...education,aocStudents:[],llcExpenses:"4000",llcStudents:[{...student,courseEligibilityConfirmed:true}]}})).toThrow(/allocation.*credit|credit.*allocation/i);
   });
+  it("validates an outside recipient's credit allocation without moving their income onto this return",()=>{
+    const input={...raw(2025),form1099Q:[statement(2025,{recipientOwner:"other",recipientId:"external-account-owner",recipientNotBeneficiary:true})]};
+    expect(()=>calculate({...input,w2s:[{...input.w2s[0],wages:"100000",federalWithheld:"25000"}]})).toThrow(/allocation.*credit|credit.*allocation/i);
+    const result=calculate(input);
+    expect(result.form1099Q?.creditAllocations[0]?.taxableEarningsCausedByCredit.toString()).toBe("717");
+    expect(result.form1099Q?.perRecipient.find(item=>item.owner==="other")?.taxableEarnings.toString()).toBe("735");
+    expect(result.form1099Q?.taxableEarnings.toString()).toBe("0");
+    expect(result.form1099Q?.netPenalty.toString()).toBe("0");
+    expect(result.otherIncome.toString()).toBe("0");
+    expect(result.agi.toString()).toBe("50000");
+    expect(result.form8863?.aocAfterPhaseOut.toString()).toBe("2500");
+  });
   it("does not use another LLC student to validate an ineligible allocation",()=>{
     expect(()=>calculate({...raw(2025),educationExpenses:{...education,aocStudents:[],llcExpenses:"6000",llcStudents:[{...student,courseEligibilityConfirmed:false},{...student,name:"Other student",studentTaxId:"111223333",studentRole:"dependent",qualifiedExpenses:"2000",courseEligibilityConfirmed:true}]}})).toThrow(/allocation.*credit|credit.*allocation/i);
   });

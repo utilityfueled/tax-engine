@@ -819,7 +819,7 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
   });
   const creditAllocations = [...beneficiaries.values()].map(beneficiary => ({ beneficiaryId: beneficiary.id,
     amount: sum(...[...expenses.values()].filter(item => item.beneficiaryId === beneficiary.id).map(item => d(item.educationCreditAmount))),
-    taxableEarningsCausedByCredit: sum(...perDistribution.filter(item => item.beneficiaryId === beneficiary.id && item.recipientOwner !== "other").map(item => item.creditException)),
+    taxableEarningsCausedByCredit: sum(...perDistribution.filter(item => item.beneficiaryId === beneficiary.id).map(item => item.creditException)),
   })).filter(item => item.amount.gt(0));
   if (options.educationExpenses) {
     for (const allocation of creditAllocations) {

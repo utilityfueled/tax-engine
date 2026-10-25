@@ -388,7 +388,8 @@ all3772 spec references (`education-prohibited-isolated-{tests,types,spec}.log`)
 - [x] Implement, review and verify the code6 source/medium package; keep the
   calculation explicitly blocked. The commit reference is recorded in the next
   package entry so the executable commit does not need its own hash in advance.
-- [ ] Commit the separately specified outside-recipient credit-allocation fix.
+- [x] Implement and independently review the separately specified outside-
+  recipient credit-allocation fix.
   Its new regression first failed, then38 source/integration/owner-PDF tests
   passed. Final credit validation must include affected outside recipients;
   their earnings and additional tax remain off this return.
@@ -425,3 +426,30 @@ Exact staged tree `b8a95076` passed98 tests, root types and all3779 spec referen
 after the other agents' preceding commits. Its eight staged files excluded
 the new Form7206 source schema,1099G orchestration and the separate outside-
 recipient guard. Logs: `education-prohibited-staged-{tests,types,spec}.log`.
+
+## Outside-recipient education-credit coordination (2026-10-25)
+
+The source/medium package is committed as `6965daa`. A separate red regression
+showed that an expense allocation could create taxable earnings for an outside
+recipient while the return's fully phased-out credit escaped final validation.
+The coordination vector now includes every linked beneficiary source. Own-return
+taxable earnings and additional tax still use their separate actual recipient
+filter. The passing allowed-credit control retains735 outside-recipient taxable
+earnings and717 attributable to credit allocation while this return retains
+zero distribution income, zero distribution additional tax and AGI50000.
+
+The parent independently reviewed this one-line calculation change and its eight
+assertions with no actionable findings. Working and isolated source/integration/
+owner-PDF runs each passed38 tests. The separate archive based on `8f7c622`
+passed root types and all3767 spec references. Logs:
+`education-outside-credit-red.log`, `education-outside-credit-green.log`,
+`education-outside-credit-final.log`,
+`education-outside-credit-isolated-{tests,types,spec}.log`.
+No source expense is silently reassigned and no filing or human qualification
+claim follows from this software correction.
+
+Exact staged tree `f9414b63` passed38 tests, root types and all3780 spec
+references; the scoped lint check reported no findings. Logs:
+`education-outside-credit-staged-{tests,types,spec}.log` and
+`education-outside-credit-lint.log`. Only the core guard, its spec/regression and
+this evidence document are included in the package.
