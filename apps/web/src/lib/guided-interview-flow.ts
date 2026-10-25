@@ -2,6 +2,7 @@ import { foreignIncomeFactErrors, type ForeignIncomeData } from "./guided-foreig
 import { estimatedTaxFactErrors, type EstimatedTaxFactsData } from "./guided-estimated-tax-facts";
 import { minimumTaxCreditFactErrors, type MinimumTaxCreditData } from "./guided-minimum-tax-credit";
 import { guidedForeignTaxFactErrors, type ForeignTaxElectionData } from "./guided-foreign-tax-election";
+import { foreignCreditKnownFacts } from './guided-foreign-tax-direct-credit';
 import { premiumTaxCreditFactErrors, type PremiumTaxCreditData } from "./guided-premium-tax-credit-facts";
 import { schedule1AFactErrors } from "./guided-schedule-1-a-facts";
 import { tipIncomeFactErrors, type AdditionalDeductionsData } from "./guided-tip-income-facts";
@@ -1514,7 +1515,7 @@ export function updateSectionData(
   const nextOtherTaxes = sectionId === "other-taxes" ? data as OtherTaxesData : niitOtherTaxes;
   const foreignElectionChanged = sectionId === "other-taxes" && guidedSourceValuesChanged(niitOtherTaxes?.foreignTaxElection, nextOtherTaxes?.foreignTaxElection);
   const niitSourcesChanged = (foreignElectionChanged || (sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-social-security", "income-unemployment", "adjustments", "credits", "deductions", "payments", "state-return", "additional-deductions"].includes(sectionId))) && nextOtherTaxes?.niitSources;
-  const foreignTaxSourcesChanged = sourceValuesChanged && ["personal-info", "income-investments", "income-self-employment"].includes(sectionId) && nextOtherTaxes?.foreignTaxElection;
+  const foreignTaxSourcesChanged = sourceValuesChanged && ["personal-info", "income-investments", "income-self-employment", "adjustments", "credits"].includes(sectionId) && nextOtherTaxes?.foreignTaxElection;
   const tipSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2"].includes(sectionId) && state.sectionData["additional-deductions"];
   const nextAdditional = sectionId === "additional-deductions" ? data as AdditionalDeductionsData : state.sectionData["additional-deductions"];
   const additionalSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-social-security", "adjustments", "credits", "deductions", "additional-deductions"].includes(sectionId) && nextAdditional?.schedule1A;
@@ -1545,7 +1546,7 @@ export function updateSectionData(
       [sectionId]: data,
       ...(estimatedTaxSourcesChanged && nextPayments ? { payments: { ...nextPayments, estimatedTaxFacts: { ...estimatedTaxSourcesChanged, sourceFactsConfirmed: null } } } : {}),
       ...((childElectionSourcesChanged || qofSourcesChanged) && nextInvestments ? { "income-investments": { ...nextInvestments, ...(childElectionSourcesChanged ? { childElections: nextInvestments.childElections?.map(child => ({ ...child, sourceFactsConfirmed: null })) } : {}), ...(qofSourcesChanged ? { qofDispositionFacts: { ...qofSourcesChanged, sourceFactsConfirmed: null } } : {}) } } : {}),
-      ...((niitSourcesChanged || foreignTaxSourcesChanged) && nextOtherTaxes ? { "other-taxes": { ...nextOtherTaxes, ...(niitSourcesChanged ? { niitSources: { ...niitSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(foreignTaxSourcesChanged ? { foreignTaxElection: { ...foreignTaxSourcesChanged, sourceFactsConfirmed: null } } : {}) } } : {}),
+      ...((niitSourcesChanged || foreignTaxSourcesChanged) && nextOtherTaxes ? { "other-taxes": { ...nextOtherTaxes, ...(niitSourcesChanged ? { niitSources: { ...niitSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(foreignTaxSourcesChanged ? { foreignTaxElection: { ...foreignTaxSourcesChanged, sourceFactsConfirmed: null, ...(foreignTaxSourcesChanged.creditWithoutForm1116 ? { creditWithoutForm1116: { ...foreignTaxSourcesChanged.creditWithoutForm1116, sourceFactsConfirmed: null } } : {}) } } : {}) } } : {}),
       ...((tipSourcesChanged || additionalSourcesChanged) && nextAdditional ? { "additional-deductions": { ...nextAdditional, ...(tipSourcesChanged ? { tipIncomeAccounts: nextAdditional.tipIncomeAccounts?.map(account => ({ ...account, sourceFactsConfirmed: null })) } : {}), ...(additionalSourcesChanged ? { schedule1A: { ...additionalSourcesChanged, sourceFactsConfirmed: null } } : {}) } } : {}),
       ...(mortgageSourcesChanged ? { deductions: { ...mortgageSourcesChanged, mortgageEntries: mortgageSourcesChanged.mortgageEntries?.map(entry => ({ ...entry, sourceFactsConfirmed: null })), ...(mortgageSourcesChanged.mortgageWorksheet ? { mortgageWorksheet: { ...mortgageSourcesChanged.mortgageWorksheet, sourceFactsConfirmed: null } } : {}) } } : {}),
       ...(ohioInterestChanged && ohioStateReturn ? { "state-return": { ...ohioStateReturn, ohioInterestAllocation: { ...ohioInterestChanged, sourceFactsConfirmed: null } } } : {}),
@@ -1915,7 +1916,7 @@ export function validateSection(
     case "other-taxes":
       return validateRequiredFacts({ ...householdFactErrors(getSectionData(state, "other-taxes"), state.taxYear),
         ...guidedNiitFactErrors(getSectionData(state, "other-taxes")?.niitSources, getSectionData(state, "income-retirement")?.entries, state.taxYear, state.segmentation.filingStatus),
-        ...guidedForeignTaxFactErrors(getSectionData(state, "other-taxes")?.foreignTaxElection, getSectionData(state, "income-investments"), state.taxYear, state.segmentation.filingStatus) });
+        ...guidedForeignTaxFactErrors(getSectionData(state, "other-taxes")?.foreignTaxElection, getSectionData(state, "income-investments"), state.taxYear, state.segmentation.filingStatus, foreignCreditKnownFacts(state)) });
     case "payments":
       return validatePaymentsSection(getSectionData(state, "payments"), state.taxYear);
     case "review":

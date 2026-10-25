@@ -11,6 +11,7 @@ import {
 import type { CalculatedLine, TaxReturnResult } from "@/models/outputs.js";
 import Decimal from "decimal.js";
 import { d, sum } from "@/utils/decimal.js";
+import { DIRECT_FOREIGN_CREDIT_FORM, directForeignCreditReferenceLines } from './foreign-tax-direct-reference.js';
 
 const PAGE_WIDTH = 612;
 const PAGE_HEIGHT = 792;
@@ -209,6 +210,8 @@ function deductionYearReferenceLines(result: TaxReturnResult): CalculatedLine[] 
 }
 
 function getReferenceLinesByForm(result: TaxReturnResult) {
+  const directLines = directForeignCreditReferenceLines(result);
+  if (directLines) return [{ form: DIRECT_FOREIGN_CREDIT_FORM, lines: directLines }];
   const deductionLines = deductionYearReferenceLines(result);
   if (deductionLines) return [{ form: DEDUCTION_CARRYOVER_FORM, lines: deductionLines }];
   const grouped = new Map<string, CalculatedLine[]>();
@@ -273,11 +276,13 @@ export function buildForm1116ReferenceSummary(result: TaxReturnResult): Form1116
   }));
 
   return {
-    title: result.foreignTaxDeductionCarryover
+    title: result.foreignTaxDirectCredit ? "Foreign Tax Direct-Credit Election Record" : result.foreignTaxDeductionCarryover
       ? "Foreign Tax Deduction-Year Carryover Record"
       : "Form 1116 Foreign Tax Credit Reference Summary",
     warningLabel: "REFERENCE SUMMARY ONLY",
-    introduction: result.foreignTaxDeductionCarryover
+    introduction: result.foreignTaxDirectCredit
+      ? "The actual section904(j) election uses the eligible paid tax limited by regular tax. No current carry is created. Prior regular and AMT credits are retained without election-year use, subject to their expiration."
+      : result.foreignTaxDeductionCarryover
       ? "No current foreign tax credit is claimed, and no deduction of prior carry is allowed. This internal review record shows the hypothetical credit limit, deemed absorption, expiration and remaining prior balances for the actual deduction election."
       : "Computed from supported Form 1116 foreign tax credit audit lines. This artifact appears only when the official filing path requires Form 1116 instead of the no-form simplified election.",
     sections,
@@ -332,7 +337,9 @@ export async function fillForm1116Reference(result: TaxReturnResult, outputDir: 
 
   y = drawWrappedText(
     page,
-    result.foreignTaxDeductionCarryover
+    result.foreignTaxDirectCredit
+      ? "This is an internal review record of the actual election and prior-credit history. It is not an official Form 1116 or Schedule B and does not establish filing qualification."
+      : result.foreignTaxDeductionCarryover
       ? "Current foreign taxes retain their actual deduction treatment. Prior carry is reduced without a current tax benefit. This is not an official Form 1116 or Schedule B and does not establish filing qualification."
       : "This page summarizes the supported Form 1116 limitation, credit, and carryforward outputs that feed Schedule 3 Line 1 and the foreign tax credit carryforward records. It is not an official filled Form 1116.",
     {

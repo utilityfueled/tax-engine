@@ -1,14 +1,16 @@
 form: "Guided foreign income-tax election"
-fullName: "Actual annual foreign-tax deduction intake and source binding"
+fullName: "Actual annual foreign-tax election intake and source binding"
 taxYear: 2026
 irsReference: "https://www.irs.gov/publications/p514"
 notes: |
   Uses the canonical annual-election source validator. Unknowns stay unknown;
   actual statement account identity and payment dates are never inferred.
-  This bounded intake supports the current cash-paid INT/DIV deduction branch
-  and preserves explicit credit choice. It does not qualify the legacy credit
-  method or any filing form. Accrued history, pass-through sources,
-  redeterminations and positive carryovers require separate actual methods.
+  This bounded intake supports the current cash-paid INT/DIV deduction branch,
+  its ordinary prior-credit absorption worksheet, and an explicitly elected
+  section904(j) source method documented in guided-foreign-tax-direct-credit.yaml.
+  A bare credit choice does not qualify the legacy credit method or a filing
+  form. Accrued history, pass-through sources and redeterminations retain their
+  separate actual source-method requirements.
 lines:
   - line: "source"
     description: "Actual annual choice and source amounts"

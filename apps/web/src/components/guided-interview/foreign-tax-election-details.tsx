@@ -1,5 +1,6 @@
 "use client";
 import {ForeignTaxCarryoverDetails} from "./foreign-tax-carryover-details";
+import {ForeignTaxDirectCreditDetails} from './foreign-tax-direct-credit-details';
 import {snapshotForeignTaxSource,type ForeignTaxElectionData,type ForeignTaxSourceData} from '@/lib/guided-foreign-tax-election';
 import {isStartedInvestment,type InvestmentData} from '@/lib/guided-investment-facts';
 import {BooleanFact,TextFact} from './fact-fields';
@@ -8,7 +9,8 @@ import {CurrencyField} from './currency-field';
 export function ForeignTaxElectionDetails({data,investment,onChange}:{data?:ForeignTaxElectionData;investment?:InvestmentData;onChange:(data:ForeignTaxElectionData|undefined)=>void}) {
   if(!data)return <div className="guided-w2-card" style={{padding:'12px'}}><h3 className="guided-w2-card-title">Annual foreign income-tax election</h3><p className="guided-hint">Record an actual credit or deduction choice and the paid foreign-tax sources when they apply.</p><button type="button" className="utility-button" onClick={()=>onChange({})}>Add annual foreign-tax election</button></div>;
   const statements=[...(investment?.interestEntries??[]).filter(isStartedInvestment).map((entry,index)=>({entry,id:`form1099Int:${index}`})),...(investment?.dividendEntries??[]).filter(isStartedInvestment).map((entry,index)=>({entry,id:`form1099Div:${index}`}))];
-  const update=(changes:Partial<ForeignTaxElectionData>)=>onChange({...data,...changes,sourceFactsConfirmed:null});
+  const update=(changes:Partial<ForeignTaxElectionData>)=>onChange({...data,...changes,sourceFactsConfirmed:null,
+    ...(!Object.hasOwn(changes,'creditWithoutForm1116')&&data.creditWithoutForm1116?{creditWithoutForm1116:{...data.creditWithoutForm1116,sourceFactsConfirmed:null}}:{})});
   const updateSource=(index:number,changes:Partial<ForeignTaxSourceData>)=>update({sources:data.sources?.map((row,offset)=>offset===index?{...row,...changes}:row)});
   return <div className="guided-w2-card" style={{padding:'12px'}}>
     <h3 className="guided-w2-card-title">Annual foreign income-tax election</h3>
@@ -16,16 +18,17 @@ export function ForeignTaxElectionDetails({data,investment,onChange}:{data?:Fore
     <TextFact label="Foreign-tax election year" value={data.taxYear??''} onChange={taxYear=>update({taxYear})}/>
     <label className="guided-field"><span className="guided-field-label">Annual foreign-tax choice</span><select className="guided-input" value={data.election??''} onChange={event=>update({election:(event.target.value||undefined) as ForeignTaxElectionData['election']})}><option value="">Not answered</option><option value="credit">Claim a foreign-tax credit</option><option value="deduction">Deduct qualified foreign income taxes</option></select></label>
     <TextFact label="Annual election source reference" value={data.sourceReference??''} onChange={sourceReference=>update({sourceReference})}/>
-    {data.election==='deduction'&&<>
-      <p className="guided-hint">This worksheet supports current-year cash-paid taxes on actual interest and dividend statements. Unused credit balances use the carryover worksheet below. Accrued-tax history, pass-through taxes and redeterminations require separate methods. Foreign income taxes are outside the state and local tax cap, but a deduction helps only when it is allowed on the return.</p>
+    {(data.election==='credit'||data.creditWithoutForm1116!==undefined)&&<ForeignTaxDirectCreditDetails data={data.creditWithoutForm1116} onChange={creditWithoutForm1116=>update({creditWithoutForm1116})}/>}
+    {(data.election==='deduction'||data.creditWithoutForm1116!==undefined)&&<>
+      <p className="guided-hint">Enter current-year cash-paid taxes on actual interest and dividend statements. Accrued-tax history, pass-through taxes and redeterminations require their separate source methods. {data.election==='deduction'?'Foreign income taxes are outside the state and local tax cap; a deduction helps only when allowed on the return.':'Keep both regular and AMT prior-credit histories in the election worksheet.'}</p>
       <label className="guided-field"><span className="guided-field-label">Foreign-tax accounting method</span><select className="guided-input" value={data.accountingMethod??''} onChange={event=>update({accountingMethod:(event.target.value||undefined) as ForeignTaxElectionData['accountingMethod']})}><option value="">Not answered</option><option value="paid">Actual taxes paid</option><option value="accrued">Accrued taxes requiring another worksheet</option></select></label>
       <BooleanFact label="An accrued-credit election was made in an earlier year" value={data.priorAccruedCreditElection} onChange={value=>update({priorAccruedCreditElection:value??undefined})}/>
       <BooleanFact label="All qualified foreign taxes for the year are included here" value={data.allQualifiedForeignTaxesIncludedConfirmed} onChange={value=>update({allQualifiedForeignTaxesIncludedConfirmed:value??undefined})}/>
       <BooleanFact label="No unused foreign-tax credit carryovers enter this year" value={data.noUnusedCreditCarryoversConfirmed} onChange={value=>update({noUnusedCreditCarryoversConfirmed:value??undefined})}/>
       <BooleanFact label="No foreign-tax redetermination affects these sources" value={data.noRedeterminationsConfirmed} onChange={value=>update({noRedeterminationsConfirmed:value??undefined})}/>
     </>}
-    {(data.election==='deduction'||data.sources!==undefined)&&<fieldset className="guided-fieldset"><legend>Actual paid foreign-tax sources</legend>
-      {data.election==='credit'&&<p className="guided-hint">A credit election cannot retain a foreign-tax deduction. These saved deduction-source records need separate credit-source reconciliation before the credit calculation can use them.</p>}
+    {(data.election==='deduction'||data.creditWithoutForm1116!==undefined||data.sources!==undefined)&&<fieldset className="guided-fieldset"><legend>Actual paid foreign-tax sources</legend>
+      {data.election==='credit'&&data.creditWithoutForm1116===undefined&&<p className="guided-hint">These sources need an actual credit election and eligibility worksheet. A credit choice cannot retain a foreign-tax deduction.</p>}
       {(data.sources??[]).map((source,index)=><fieldset className="guided-fieldset" key={index}><legend>Foreign-tax source {index+1}</legend>
         <label className="guided-field"><span className="guided-field-label">Foreign-tax statement {index+1}</span><select className="guided-input" value={source.sourceId??''} onChange={event=>{
           const selected=statements.find(row=>row.id===event.target.value);update({sources:data.sources?.map((row,offset)=>offset===index?(selected?snapshotForeignTaxSource(selected.entry,selected.id):{}):row)});
@@ -33,6 +36,11 @@ export function ForeignTaxElectionDetails({data,investment,onChange}:{data?:Fore
         {source.sourceId&&<p className="guided-hint">Actual source: {source.payerName}; {source.owner==='primary'?'primary taxpayer':source.owner==='spouse'?'spouse':'owner unresolved'}; country {source.foreignCountry??'unknown'}; reported tax {source.reportedTaxAmount??'unknown'}. Correct source facts in investment income before selecting a replacement.</p>}
         <label className="guided-field"><span className="guided-field-label">Source {index+1} jurisdiction</span><select className="guided-input" value={source.jurisdictionType??''} onChange={event=>updateSource(index,{jurisdictionType:(event.target.value||undefined) as ForeignTaxSourceData['jurisdictionType']})}><option value="">Not answered</option><option value="foreign_country">Foreign country</option><option value="us_territory">U.S. territory requiring separate tax routing</option></select></label>
         <BooleanFact label={`Source ${index+1} is a qualified foreign income tax`} value={source.qualifiedIncomeTaxConfirmed} onChange={value=>updateSource(index,{qualifiedIncomeTaxConfirmed:value??undefined})}/>
+        {data.creditWithoutForm1116!==undefined&&([
+          ['passiveIncomeConfirmed','is passive income'],['legalTaxLiabilityConfirmed','is legally owed by this taxpayer'],
+          ['noRefundOrSubsidyConfirmed','has no refund or subsidy entitlement'],['holdingPeriodRequirementMetConfirmed','meets the actual holding-period requirement'],
+          ['noRelatedPaymentsConfirmed','has no related-payment obligation'],['noDisallowedCountryOrBoycottConfirmed','has no disallowed-country or boycott reduction'],
+        ] as const).map(([key,label])=><BooleanFact key={key} label={`Source ${index+1} ${label}`} value={source.creditEligibility?.[key]} onChange={value=>updateSource(index,{creditEligibility:{...source.creditEligibility,[key]:value??undefined}})}/>)}
         {([['taxOnExcludedIncome','tax on excluded income'],['taxDeductedElsewhere','tax deducted elsewhere'],['investmentAllocableAmount','investment tax allocation']] as const).map(([key,label])=><CurrencyField key={key} label={`Source ${index+1} ${label}`} value={source[key]??''} onChange={value=>updateSource(index,{[key]:value})}/>)}
         <TextFact label={`Source ${index+1} allocation method`} value={source.allocationMethodDescription??''} onChange={allocationMethodDescription=>updateSource(index,{allocationMethodDescription})}/>
         <TextFact label={`Source ${index+1} tax record reference`} value={source.sourceReference??''} onChange={sourceReference=>updateSource(index,{sourceReference})}/>
@@ -44,7 +52,7 @@ export function ForeignTaxElectionDetails({data,investment,onChange}:{data?:Fore
       <button type="button" className="utility-button" onClick={()=>update({sources:[...(data.sources??[]),{}]})}>Add foreign-tax statement</button>
       {data.sources===undefined&&<button type="button" className="utility-button" onClick={()=>update({sources:[]})}>Confirm no foreign-tax statements</button>}
     </fieldset>}
-    {(data.noUnusedCreditCarryoversConfirmed===false||data.deductionYearCarryover!==undefined)&&<ForeignTaxCarryoverDetails data={data.deductionYearCarryover} investment={investment} onChange={deductionYearCarryover=>update({deductionYearCarryover})}/>}
+    {((data.election==='deduction'&&data.noUnusedCreditCarryoversConfirmed===false)||data.deductionYearCarryover!==undefined)&&<ForeignTaxCarryoverDetails data={data.deductionYearCarryover} investment={investment} onChange={deductionYearCarryover=>update({deductionYearCarryover})}/>}
     <BooleanFact label="Foreign-tax election sources checked after the last edit" value={data.sourceFactsConfirmed} onChange={sourceFactsConfirmed=>onChange({...data,sourceFactsConfirmed})}/>
     <button type="button" className="utility-button" onClick={()=>onChange(undefined)}>Remove annual foreign-tax election</button>
   </div>;
