@@ -26,9 +26,11 @@ import {
 } from "@tax-engine/engine";
 import {
   clearGuidedFlowState,
+  loadGuidedFlowState,
   summarizeFlowCompletion,
   type GuidedFlowState
 } from "./guided-interview-flow";
+import { reconcileWorkspaceGuidedState } from "./workspace-guided-state";
 import { getLocalRecoveryStorageKey } from "./workspace-local-recovery";
 
 // The preview helper is cached so refresh calls can avoid repeating the
@@ -1225,7 +1227,7 @@ export function ensureWorkspace(storage: Storage, workspaceId: string) {
   const existing = data.workspaces[workspaceId];
 
   if (existing) {
-    return existing;
+    return reconcileWorkspaceGuidedState(existing, loadGuidedFlowState(storage, workspaceId));
   }
 
   const workspace = createWorkspace(workspaceId);
@@ -1237,13 +1239,14 @@ export function ensureWorkspace(storage: Storage, workspaceId: string) {
 export function getWorkspace(storage: Storage, workspaceId: string) {
   const data = loadStorage(storage);
 
-  return data.workspaces[workspaceId] ?? null;
+  const workspace = data.workspaces[workspaceId];
+  return workspace ? reconcileWorkspaceGuidedState(workspace, loadGuidedFlowState(storage, workspaceId)) : null;
 }
 
 export function listWorkspaces(storage: Storage) {
   const data = loadStorage(storage);
 
-  return Object.values(data.workspaces).sort((left, right) =>
+  return Object.values(data.workspaces).map(workspace => reconcileWorkspaceGuidedState(workspace, loadGuidedFlowState(storage, workspace.id))).sort((left, right) =>
     right.updatedAt.localeCompare(left.updatedAt)
   );
 }
@@ -1519,10 +1522,10 @@ export function reopenInterviewQuestion(storage: Storage, workspaceId: string, q
 
 export function saveWorkspaceSnapshot(storage: Storage, workspace: ReturnWorkspaceRecord) {
   const data = loadStorage(storage);
-  const nextWorkspace = hydrateWorkspaceRecord(workspace.id, {
+  const nextWorkspace = reconcileWorkspaceGuidedState(hydrateWorkspaceRecord(workspace.id, {
     ...workspace,
     storageMode: "local-browser"
-  });
+  }), loadGuidedFlowState(storage, workspace.id));
 
   data.workspaces[nextWorkspace.id] = nextWorkspace;
   saveStorage(storage, data);
@@ -1584,7 +1587,7 @@ export function syncGuidedFlowToWorkspace(
     }
   }
 
-  return result;
+  return reconcileWorkspaceGuidedState(result, guidedFlowState);
 }
 
 export function deleteWorkspace(storage: Storage, workspaceId: string) {
@@ -1598,7 +1601,7 @@ export function deleteWorkspace(storage: Storage, workspaceId: string) {
 
   delete data.workspaces[workspaceId];
   saveStorage(storage, data);
-  return Object.values(data.workspaces).sort((left, right) =>
+  return Object.values(data.workspaces).map(workspace => reconcileWorkspaceGuidedState(workspace, loadGuidedFlowState(storage, workspace.id))).sort((left, right) =>
     right.updatedAt.localeCompare(left.updatedAt)
   );
 }

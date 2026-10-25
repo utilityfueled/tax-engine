@@ -47,6 +47,7 @@ import {
 } from "@/lib/guided-interview-flow";
 import { TaxYearInputSchema } from "@/models/inputs";
 import { buildTaxInputFromGuidedData, mapFilingStatus } from "@/lib/guided-interview-bridge";
+import { reconcileWorkspaceGuidedState } from "@/lib/workspace-guided-state";
 import { computeGuidedPreview } from "@/lib/guided-preview-compute";
 import { getInterviewQuestionUiHint } from "@/lib/interview-question-ui";
 import {
@@ -488,7 +489,7 @@ export function ReturnWorkspaceScreen({
           if (localWorkspace) {
             setEffectiveDeploymentMode("self-host");
             setWorkspaceAvailability("ready");
-            setWorkspace(localWorkspace);
+            setWorkspace(reconcileWorkspaceGuidedState(localWorkspace, loadGuidedFlowState(browserStorage, workspaceId)));
             setWorkspaceLookupComplete(true);
             setStorageMessage(null);
 
@@ -509,7 +510,7 @@ export function ReturnWorkspaceScreen({
 
         setEffectiveDeploymentMode(deploymentMode);
         setWorkspaceAvailability(adapter.availability);
-        setWorkspace(nextWorkspace);
+        setWorkspace(nextWorkspace ? reconcileWorkspaceGuidedState(nextWorkspace, loadGuidedFlowState(browserStorage, workspaceId)) : null);
         setWorkspaceLookupComplete(true);
         setStorageMessage(
           adapter.availability === "owner-required"
@@ -1754,11 +1755,11 @@ export function ReturnWorkspaceScreen({
               ) : null}
               <li>{formatWorkspaceCalculationStatus(uploadedSupportedDocumentCount, workspace.returnSummary)}</li>
               <li>{workspace.summary.pendingReviewDocuments} documents need review</li>
-              <li>
-                tax year: {workspace.seededReturn.taxYearHints.length > 0
+              {uploadedDocumentCount > 0 ? <li>
+                source document tax years: {workspace.seededReturn.taxYearHints.length > 0
                   ? workspace.seededReturn.taxYearHints.join(", ")
                   : "not yet determined"}
-              </li>
+              </li> : null}
             </ul>
             {unsupportedTaxYearNotice ? (
               <p className="panel-text">{unsupportedTaxYearNotice}</p>

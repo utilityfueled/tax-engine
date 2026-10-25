@@ -2013,14 +2013,16 @@ describe("syncGuidedFlowToWorkspace", () => {
       skippedSectionCount: 1,
       needsReviewSectionCount: 0,
     });
-    expect(synced.summary.interviewQuestionsRemaining).toBe(1);
+    // One skipped personal section plus one unvisited final review remain pending.
+    expect(synced.summary.interviewQuestionsRemaining).toBe(2);
     expect(synced.returnSummary.status).not.toBe("ready-to-recompute");
     expect(synced.returnSummary.blockers).toContainEqual({
-      id: "needs-answer:guided-follow-up",
-      message: "1 guided section was skipped or still needs review before this return is ready.",
+      id: "guided:incomplete-facts",
+      message: "2 guided sections still need completion or review.",
       relatedFactIds: [],
-      sourceDocumentIds: ["guided:w2"],
+      sourceDocumentIds: [],
     });
+    expect(synced.returnSummary.blockers.some(blocker => blocker.id === "guided:missing-tax-year")).toBe(true);
     expect(synced.checklist.find((item) => item.id === "interview")?.status).toBe("needs-input");
     expect(synced.checklist.find((item) => item.id === "review")?.status).toBe("blocked");
   });

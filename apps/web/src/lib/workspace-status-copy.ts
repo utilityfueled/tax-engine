@@ -197,7 +197,11 @@ export function summarizeWorkspaceGuidedCompletion(
     return null;
   }
 
-  const pendingReviewCount = guidedCompletion.skippedSectionCount + guidedCompletion.needsReviewSectionCount;
+  const classifiedPending = guidedCompletion.skippedSectionCount + guidedCompletion.needsReviewSectionCount;
+  const unvisited = Number.isInteger(guidedCompletion.totalSectionCount) && Number.isInteger(guidedCompletion.completedSectionCount)
+    ? Math.max(0, guidedCompletion.totalSectionCount - guidedCompletion.completedSectionCount - classifiedPending)
+    : 0;
+  const pendingReviewCount = classifiedPending + unvisited;
 
   if (pendingReviewCount === 0) {
     return null;
@@ -208,7 +212,9 @@ export function summarizeWorkspaceGuidedCompletion(
     progressLabel: pendingReviewCount === 1
       ? "1 guided section still needs review"
       : `${pendingReviewCount} guided sections still need review`,
-    helperText: pendingReviewCount === 1
+    helperText: unvisited > 0
+      ? `Your guided interview answers are saved, but ${pendingReviewCount} section${pendingReviewCount === 1 ? " is" : "s are"} incomplete or still need${pendingReviewCount === 1 ? "s" : ""} review before this return is ready.`
+      : pendingReviewCount === 1
       ? "Your guided interview answers are synced, but 1 section was skipped or still needs review before this return is ready."
       : `Your guided interview answers are synced, but ${pendingReviewCount} sections were skipped or still need review before this return is ready.`
   };
