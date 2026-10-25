@@ -313,7 +313,7 @@
       "hosted staging and independent human reviews",
       "repeated live synthetic AI evaluation and account availability"
     ],
-    "latestIntegratedCommit": "f919bb3",
+    "latestIntegratedCommit": "7c4db50e6c917f265c433f87974454fa5eb8dcc0",
     "latestCoverageDiagnostic": {
       "status": "failed-tests-coverage-thresholds-met",
       "commit": "e8e169a39a4917744c634378628f717af748759b",
@@ -491,7 +491,15 @@
       "outsideRecipientCreditConservation": "475e96d",
       "canonicalGovernmentAndRefundExpenseYear": "0124905",
       "guidedGovernmentWorksheets": "e638184",
-      "ohioGovernmentQualifyingIncome": "c98cc70"
+      "ohioGovernmentQualifyingIncome": "c98cc70",
+      "bondActualIncomeOwnership": "195f018",
+      "bondCommunityIncomeOwnership": "efbbb6a",
+      "schedule1ACanonicalSources": "b0db101",
+      "schedule1AGuidedSources": "74c2d24",
+      "ptcCanonicalIncome": "ea5b663",
+      "privateAiCalculationTransport": "f33c2b6",
+      "shippedComposeSecurity": "0331de8",
+      "runtimeSourceExposureReview": "7c4db50"
     },
     "remoteCi": {
       "commit": "054cd59f9d0c8a53fb5794bbebcfd10e110f213b",
@@ -542,14 +550,14 @@
       "limitation": "Applies to 5d32549 only. Newer source integration and final release checks require verification; this is local synthetic evidence, not human or staging qualification."
     },
     "remainingInternalWork": [
-      "Finish Schedule1A actual intake/canonical source binding and supported business-tip QBI paths",
-      "Implement positive Marketplace self-employment-health/PTC coupling and remaining ordinary NIIT source methods",
-      "Finish mixed/joint educator and noncash/QTP source methods, preserving actual unresolved legal boundaries",
-      "Complete private AI audit transport, independent agent review and production browser verification without model promotion",
-      "Finish complete-facts/preview/cross-document/year audit against the execution brief",
-      "Regenerate inventory and run current full tests/coverage/types/spec/builds/lint/browser checks; repair any integration failures",
+      "Finish positive Marketplace7206/PTC coupling, including applicable year-specific repayment methods and actual source links",
+      "Finish ordinary NIIT annuity/deduction sources, child8814 private-activity-bond AMT handoff and remaining federal source/method audit",
+      "Implement supported in-kind529 ordering and finish mixed/joint educator and education methods; distinguish actual legal uncertainties",
+      "Finish complete-facts/preview/cross-document/year audit, including persisted explicit guided year and required actual source context",
+      "Repair PDF coverage timeouts without weakening test deadlines, assertions or coverage thresholds",
+      "Regenerate inventory and run all current full tests/coverage/types/spec/builds/lint/browser checks; repair integration failures",
       "Inspect current remote CI and verify final native amd64 and local arm64 images, SBOMs/scans and recovery rehearsal",
-      "Resolve or obtain confirmed owner/expiry and exposure disposition for remaining image advisories; align support claims with evidence"
+      "Obtain confirmed advisory ownership/disposition and reconcile final artifact/support claims with evidence while independent human, provider, staging and form inputs remain pending"
     ],
     "previousStableCoverageRun": {
       "commit": "2f8abd71206dd8483c167861f35c4c0bbecdad7a",
@@ -570,7 +578,7 @@
       "scope": "immutable tracked-file archive, locked dependencies, disposable local PostgreSQL16; unchanged coverage thresholds",
       "limitation": "Two PDF aggregate tests exceeded unchanged5000ms timeouts; no numeric tax failure. Commit76bb3a6 isolates identical template/state assertions into named independent cases. Its exact staged tree passes62tests and3682spec refs; fresh full gate required after newer packages."
     },
-    "lastPushedCommit": "edde2a004b9bd8714fdfeaa5f386d2de500ea7a7",
+    "lastPushedCommit": "7c4db50e6c917f265c433f87974454fa5eb8dcc0",
     "currentBrowserRun": {
       "commit": "ed915c1708cedc02e99ca12fb7383331a7f99bea",
       "status": "passed-with-hosted-skips",
@@ -646,17 +654,18 @@
       "limitation": "Actual React DOM callback checks; final production browser rerun required."
     },
     "remoteCiLatestObserved": {
-      "commit": "edde2a004b9bd8714fdfeaa5f386d2de500ea7a7",
-      "ciRun": 40190484105,
+      "commit": "214411a04c0113fbdbc073862cf3803ee3d6b6a4",
+      "ciRun": 40191977817,
       "ciStatus": "failure",
-      "webRun": 40190484104,
-      "webStatus": "in_progress",
-      "evidence": ".local/upgrade-evidence/remote-runs-after-edde2a0.json",
-      "testsPassed": 17010,
-      "testsFailed": 1,
-      "testFiles": 725,
-      "failure": "Stale header-rule count, repaired by f919bb3; inventory remains stale.",
-      "failedLog": ".local/upgrade-evidence/remote-ci-edde2a0-failed.log"
+      "webRun": 40191977778,
+      "webStatus": "success",
+      "testsPassed": 17018,
+      "testFiles": 728,
+      "coverageTestsPassed": 16932,
+      "coverageTestsFailed": 86,
+      "coverageFailedFiles": 50,
+      "failure": "Coverage run predominantly five-second PDF packet timeouts; spec inventory stale. No new coverage percentage was produced.",
+      "newerRuns": "pending; inspect exact latest head after integration"
     },
     "remoteCi6b07529": {
       "run": 40176974652,
@@ -1038,6 +1047,57 @@
         "tests": 60
       },
       "canonicalAndGuidedIntegration": "in progress"
+    },
+    "privateAiCalculationTransport": {
+      "commit": "f33c2b6",
+      "applicationTree": "e2505e8b5e1bf848a8ea0ac9da21d90608f3dd19",
+      "focusedTests": 225,
+      "testFiles": 10,
+      "productionBuild": "passed",
+      "scopedLint": "passed",
+      "browserCases": 2,
+      "browserRetries": 0,
+      "viewports": [
+        1280,
+        390
+      ],
+      "independentAgentReview": "source identity, output privacy and origin findings corrected and rechecked",
+      "independentHumanReview": false,
+      "liveProviderRuns": 0,
+      "productionPromotion": false,
+      "evidencePrefix": ".local/upgrade-evidence/ai-transport-reviewed-"
+    },
+    "shippedComposeSecurity": {
+      "commit": "0331de8",
+      "focusedTests": 61,
+      "localRecoveryPhases": 6,
+      "evidence": "docs/upgrade-2026-compose-security.json",
+      "independentAgentReview": "no actionable findings in bounded config/harness review",
+      "finalApplicationImagesVerified": false,
+      "stagingVerified": false
+    },
+    "runtimeSourceExposureReview": {
+      "commit": "7c4db50",
+      "officialSourcesRetrieved": 67,
+      "exposureGroups": 9,
+      "advisoryAcceptance": "pending",
+      "ownerConfirmation": "pending",
+      "reviewBy": "2026-11-07",
+      "register": "docs/upgrade-2026-image-advisories.json"
+    },
+    "nativeAmd64LatestObserved": {
+      "commit": "214411a04c0113fbdbc073862cf3803ee3d6b6a4",
+      "workflowRun": 40191977778,
+      "jobId": 121164701225,
+      "artifactId": 12598607770,
+      "archiveSha256": "4d41df26b5c5d4ef138009ba7234ba8638efe5144f9934f0ca88f21417962606",
+      "image": "sha256:7a95110ddada32392fbbbdd55be295736789bd900cf0a434388c09d9de48e202",
+      "templates": 42,
+      "recoveryPhases": 6,
+      "scanMatches": 157,
+      "distinctAdvisories": 67,
+      "critical": 0,
+      "scope": "Native CI synthetic intermediate artifact; not final release or staging"
     }
   }
 }

@@ -5,6 +5,45 @@ progress log and checkpoint are evidence for their recorded commits, not current
 qualification. Resume here after compaction. Do not remove release gates to
 complete a checkbox.
 
+## Current integration — 2026-10-25
+
+`7c4db50` is pushed. The goal remains active; required external inputs below
+remain unanswered. Current independent work is positive Marketplace7206/PTC
+coupling, NIIT/child-PAB source completion, qualified in-kind529 ordering,
+complete preview source context and persisted guided-year reconciliation.
+Parent is addressing PDF coverage timeouts and the final integrated checks.
+
+- `195f018` and `efbbb6a`: actual sole/joint/community bond ownership and prior
+  reported interest; parent16-case community review passes. Reduced mixed-owner
+  educator attribution remains a documented method boundary.
+- `b0db101` and `74c2d24`: canonical Schedule1A income/QBI sources and actual
+  guided tip/overtime/vehicle/senior facts; direct Form4137-only path works in
+  both years. Guided exact-tree724 tests/56files pass; no filing gate opened.
+- `ea5b663`: canonical PTC taxpayer MAGI, actual dependent worksheet and child8814
+  exempt-interest separation;130 exact-tree tests/5files and parent39-case
+  source review pass. Positive Marketplace deduction coupling is separate.
+- `f33c2b6`: private confirmed AI calculation transport;225 focused tests,
+  production build, scoped lint and two desktop/mobile Chromium cases pass.
+  Source-name/output privacy, guided-only year and origin regressions were
+  reproduced before fixes and independently reviewed. Production AI stays off.
+- `0331de8`: shipped Compose controls now match rehearsal.61 focused tests,
+  independent agent review and six local recovery phases pass. Actual kernel
+  capability sets are zero and no-new-privileges is enforced. Retained image
+  proof is not final-code or staging proof.
+- `7c4db50`: all67 Debian source records refreshed,9 bounded component exposure
+  assessments and native amd64 artifact hashes recorded. Every advisory remains
+  unaccepted, with pending release-maintainer confirmation and2026-11-07 expiry.
+- Remote `214411a`:17,018 tests/728files pass, but coverage has86 failures across
+  50files (predominantly5-second PDF packet timeouts), and inventory is stale.
+  Native amd64 Web40191977778 passes all three jobs. The downloaded artifact
+  matches GitHub's SHA-256;157 image matches/67 advisories remain. Newer remote
+  runs and final arm64/amd64 artifacts still need verification.
+
+Next: remove unnecessary PDF serialization work without relaxing assertions,
+timeouts or thresholds; finish remaining internal tax/facts packages; regenerate
+inventory; rerun every brief command and native image/recovery checks on exact
+integrated code. Keep all human, provider, staging and final-form gates closed.
+
 ## Refreshed baseline — 2026-10-24
 
 - [x] Read AGENTS, execution brief, progress and machine checkpoint.

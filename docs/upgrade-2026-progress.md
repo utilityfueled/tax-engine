@@ -10,8 +10,17 @@ document consent/cancellation and an inactive complete-data export pipeline.
 None of these supersedes the required full coverage, independent review, staging
 or final-form qualification gates.
 
-Application commit `d32cb8cf3d607c643c4c7f7e1b845fcace61563f` on
-`upgrade/2026-baseline` remains **not release-ready**. There are 15,141 passing
+Latest recorded integration is `7c4db50`, pushed on `upgrade/2026-baseline`.
+Execution remains active and **not release-ready**. Private confirmed AI
+transport, actual guided Schedule1A sources, bond ownership, canonical PTC
+income and shipped Compose security now have separate reviewed commits.
+The latest completed remote unit run is17,018 passing tests at `214411a`;
+its coverage run fails86 cases, predominantly PDF packet timeouts, and its spec
+inventory is stale. Its native amd64 Web workflow passes. These older checks do
+not qualify current code. See the current checklist and package evidence.
+
+Historical starting checkpoint `d32cb8cf3d607c643c4c7f7e1b845fcace61563f`
+recorded15,141 passing
 unit tests and 293 passing Chromium tests against both the local production
 build and the ARM64 runtime image; each browser run skips five hosted cases.
 Engine/contracts/web type checks, both builds, spec checks and lint pass.
