@@ -28,6 +28,7 @@ function makeEmployee(wages: string, overrides: Record<string, unknown> = {}) {
     isSpouse: false,
     isChildUnder21: false,
     isParent: false,
+    parentCareExceptionApplies: false,
     isUnder18NonPrincipal: false,
     ...overrides,
   };
@@ -68,7 +69,7 @@ describe("Schedule H — Household Employment Taxes", () => {
 
   // ── Threshold enforcement ─────────────────────────────────────────
 
-  it("Schedule H - employee below $2,800 threshold does not trigger Schedule H", () => {
+  it("Schedule H - employee below $2,800 threshold still owes independently applicable FUTA", () => {
     const result = calculateScheduleH({
       employees: [makeEmployee("2799")],
       futaApplies: true,
@@ -77,7 +78,9 @@ describe("Schedule H — Household Employment Taxes", () => {
     });
 
     expect(result.qualifyingEmployeeCount).toBe(0);
-    expect(result.totalTax.toNumber()).toBe(0);
+    expect(result.line1.toNumber()).toBe(0);
+    expect(result.futaTax.toFixed(2)).toBe("16.79");
+    expect(result.totalTax.toFixed(2)).toBe("16.79");
   });
 
   it("Schedule H - employee at exactly $2,800 threshold triggers Schedule H", () => {
@@ -134,7 +137,7 @@ describe("Schedule H — Household Employment Taxes", () => {
     expect(result.totalTax.toNumber()).toBe(0);
   });
 
-  it("Schedule H - under 18 non-principal occupation is exempt", () => {
+  it("Schedule H - under 18 non-principal occupation is Social Security exempt but subject to FUTA", () => {
     const result = calculateScheduleH({
       employees: [makeEmployee("5000", { isUnder18NonPrincipal: true })],
       futaApplies: true,
@@ -143,7 +146,8 @@ describe("Schedule H — Household Employment Taxes", () => {
     });
 
     expect(result.qualifyingEmployeeCount).toBe(0);
-    expect(result.totalTax.toNumber()).toBe(0);
+    expect(result.futaTax.toNumber()).toBe(30);
+    expect(result.totalTax.toNumber()).toBe(30);
   });
 
   it("Schedule H - exempt employee alongside qualifying employee", () => {
@@ -264,7 +268,7 @@ describe("Schedule H — Household Employment Taxes", () => {
     expect(result.line8.toNumber()).toBe(1240 + 290 + 0 + 1500);
   });
 
-  it("Schedule H - withholding from exempt employee is not included", () => {
+  it("Schedule H - withholding from Social Security exempt employee is still reported", () => {
     const result = calculateScheduleH({
       employees: [
         makeEmployee("10000", { isSpouse: true, federalIncomeTaxWithheld: "2000" }),
@@ -275,8 +279,8 @@ describe("Schedule H — Household Employment Taxes", () => {
       constants: CONSTANTS_2025,
     });
 
-    // Only the non-spouse employee's withholding counts
-    expect(result.line7.toNumber()).toBe(500);
+    // Schedule H line 7 reports all actual income tax withheld.
+    expect(result.line7.toNumber()).toBe(2500);
   });
 
   // ── FUTA calculations ─────────────────────────────────────────────
@@ -299,6 +303,9 @@ describe("Schedule H — Household Employment Taxes", () => {
       employees: [makeEmployee("10000")],
       futaApplies: true,
       futaSectionA: false,
+      futaStatePeriods: [{ state: "OH", periodStart: "2025-01-01", periodEnd: "2025-12-31", taxableWages: "7000", experienceRate: "0.054", contributionsPaidTimely: "350" }],
+      stateUnemploymentContributionsPaidLate: "0",
+      futaCreditReduction: "0",
       stateUnemploymentContributions: "350",
       constants: CONSTANTS_2025,
     });
@@ -317,6 +324,9 @@ describe("Schedule H — Household Employment Taxes", () => {
       employees: [makeEmployee("10000")],
       futaApplies: true,
       futaSectionA: false,
+      futaStatePeriods: [{ state: "OH", periodStart: "2025-01-01", periodEnd: "2025-12-31", taxableWages: "7000", experienceRate: "0.054", contributionsPaidTimely: "500" }],
+      stateUnemploymentContributionsPaidLate: "0",
+      futaCreditReduction: "0",
       stateUnemploymentContributions: "500",
       constants: CONSTANTS_2025,
     });
@@ -332,6 +342,8 @@ describe("Schedule H — Household Employment Taxes", () => {
       employees: [makeEmployee("10000")],
       futaApplies: true,
       futaSectionA: false,
+      futaStatePeriods: [{ state: "OH", periodStart: "2025-01-01", periodEnd: "2025-12-31", taxableWages: "7000", experienceRate: "0.054", contributionsPaidTimely: "378" }],
+      stateUnemploymentContributionsPaidLate: "0",
       stateUnemploymentContributions: "378",
       futaCreditReduction: "84", // e.g., CA credit reduction of 1.2% on $7,000
       constants: CONSTANTS_2025,
@@ -491,6 +503,9 @@ describe("Schedule H — Household Employment Taxes", () => {
       employees: [makeEmployee("10000")],
       futaApplies: true,
       futaSectionA: false,
+      futaStatePeriods: [{ state: "OH", periodStart: "2025-01-01", periodEnd: "2025-12-31", taxableWages: "7000", experienceRate: "0.054", contributionsPaidTimely: "0" }],
+      stateUnemploymentContributionsPaidLate: "0",
+      futaCreditReduction: "0",
       stateUnemploymentContributions: "0",
       constants: CONSTANTS_2025,
     });

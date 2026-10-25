@@ -2720,30 +2720,41 @@ export const HouseholdEmployeeSchema = z.object({
   /** Total cash wages paid to this employee during the year */
   cashWages: decimal,
   /** Whether this employee is the taxpayer's spouse */
-  isSpouse: z.boolean().default(false),
+  isSpouse: z.boolean().optional(),
   /** Whether this employee is the taxpayer's child under age 21 */
-  isChildUnder21: z.boolean().default(false),
+  isChildUnder21: z.boolean().optional(),
   /** Whether this employee is the taxpayer's parent */
-  isParent: z.boolean().default(false),
+  isParent: z.boolean().optional(),
+  /** Both qualifying-child care and marital/spouse-incapacity conditions under Pub. 926 are actually met. */
+  parentCareExceptionApplies: z.boolean().optional(),
   /** Whether this employee is under age 18 and household work is not their principal occupation */
-  isUnder18NonPrincipal: z.boolean().default(false),
+  isUnder18NonPrincipal: z.boolean().optional(),
   /** Federal income tax voluntarily withheld for this employee */
   federalIncomeTaxWithheld: optionalDecimal,
 });
 
 export const ScheduleHSchema = z.object({
   employees: z.array(HouseholdEmployeeSchema).min(1),
-  /** Whether total cash wages to all employees were $1,000+ in any calendar quarter
-   *  (triggers FUTA obligation). Defaults to true when total qualifying wages ≥ $1,000. */
-  futaApplies: z.boolean().default(true),
+  /** Actual $1,000 quarterly test in the current or preceding tax year; never inferred from an annual total. */
+  futaApplies: z.boolean().optional(),
   /** Whether all state unemployment taxes were paid timely and in a single state
    *  with no credit reduction. When true, uses Section A simplified FUTA (0.6%).
    *  When false, uses Section B with gross rate minus allowable credit. */
-  futaSectionA: z.boolean().default(true),
+  futaSectionA: z.boolean().optional(),
   /** Total state unemployment contributions actually paid (Section B only) */
   stateUnemploymentContributions: optionalDecimal,
+  /** Actual Schedule H line 17 state/rate periods; null means no assigned experience rate, not unknown. */
+  futaStatePeriods: z.array(z.object({
+    state: z.string().regex(/^[A-Z]{2}$/),
+    periodStart: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    periodEnd: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    taxableWages: decimal,
+    experienceRate: decimal.nullable(),
+    contributionsPaidTimely: decimal,
+  })).optional(),
+  stateUnemploymentContributionsPaidLate: optionalDecimalInput,
   /** FUTA credit reduction amount for credit reduction states (CA, USVI for 2025) */
-  futaCreditReduction: optionalDecimal,
+  futaCreditReduction: optionalDecimalInput,
 });
 
 export const Form8615Schema = z.object({

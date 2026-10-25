@@ -933,6 +933,11 @@ export interface OtherTaxesData {
   futaApplies?: boolean | null;
   futaSectionA?: boolean | null;
   stateUnemploymentContributions?: string;
+  stateUnemploymentContributionsPaidLate?: string;
+  futaStatePeriods?: {
+    state: string; periodStart: string; periodEnd: string; taxableWages: string;
+    hasAssignedExperienceRate: boolean | null; experienceRatePercent: string; contributionsPaidTimely: string;
+  }[];
   futaCreditReduction?: string;
 }
 
@@ -943,6 +948,7 @@ export interface HouseholdEmployeeData {
   isSpouse: boolean | null;
   isChildUnder21: boolean | null;
   isParent: boolean | null;
+  parentCareExceptionApplies?: boolean | null;
   isUnder18NonPrincipal: boolean | null;
 }
 
@@ -1728,7 +1734,7 @@ export function validateSection(
     case "credits":
       return validateRequiredFacts(educationFactErrors(getSectionData(state, "credits"), state.taxYear, state.segmentation.filingStatus));
     case "other-taxes":
-      return validateRequiredFacts(householdFactErrors(getSectionData(state, "other-taxes")));
+      return validateRequiredFacts(householdFactErrors(getSectionData(state, "other-taxes"), state.taxYear));
     case "payments":
       return validatePaymentsSection(getSectionData(state, "payments"), state.taxYear);
     case "review":

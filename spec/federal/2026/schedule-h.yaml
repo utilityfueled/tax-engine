@@ -1,0 +1,23 @@
+form: "Schedule H"
+fullName: "2026 Household Employment Tax Fact Boundaries"
+taxYear: 2026
+irsReference: "https://www.irs.gov/publications/p926"
+notes: |
+  Refreshed IRS Publication 926 (2026), Table 1, Wages not counted, FUTA wages,
+  and Mary Brown/Jane Oak example. Does not qualify a final 2026 PDF revision.
+lines:
+  - line: "independent-tax-bases"
+    description: "Separate Social Security, FUTA and income withholding bases"
+    formula: "Apply the 3000 per-employee threshold only to Social Security/Medicare. FUTA has a separate current/prior-year 1000 quarterly test and 7000 per-employee base. Report actual income withholding independently. Preserve unknown employee/FUTA eligibility as missing."
+    irsRef: "Publication 926 (2026), Table 1 and FUTA wages"
+    testRef: "tests/engine/forms/schedule-h-fact-boundaries.test.ts::retains FUTA and withholding below the Social Security wage threshold"
+  - line: "parent-exception"
+    description: "Actual qualifying parent childcare exception"
+    formula: "Include parent wages in Social Security and Medicare only when the taxpayer confirms both qualifying-child care and qualifying marital/spouse-incapacity conditions. Parent wages stay excluded from FUTA."
+    irsRef: "Publication 926 (2026), Social Security and Medicare Taxes, Wages not counted"
+    testRef: "tests/engine/forms/schedule-h-fact-boundaries.test.ts::taxes qualifying parent childcare wages while retaining the FUTA exemption"
+  - line: "irs-example"
+    description: "Mary Brown and Jane Oak official example"
+    formula: "3360 cash wages produce combined Social Security tax416.64 and Medicare tax97.44; no income withholding. FUTA is separate and requires actual quarterly facts."
+    irsRef: "Publication 926 (2026), Withholding the employee's share, Mary Brown example"
+    testRef: "tests/engine/forms/schedule-h-fact-boundaries.test.ts::matches the IRS 2026 Mary Brown payroll example"

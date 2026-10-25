@@ -53,10 +53,10 @@ describe("actual adjustment and employee facts", () => {
   });
   it("requires actual FUTA Section B amounts and checks wage reconciliation", () => {
     const employee = { name: "Actual Employee", cashWages: "100", federalIncomeTaxWithheld: "0", isSpouse: false, isChildUnder21: false, isParent: false, isUnder18NonPrincipal: false };
-    const data = { ...emptyOtherTaxesData, householdEmployees: [employee], futaApplies: true, futaSectionA: false, stateUnemploymentContributions: "", futaCreditReduction: "" };
-    expect(householdFactErrors(data)).toHaveProperty("stateUnemploymentContributions");
-    expect(householdFactErrors({ ...data, stateUnemploymentContributions: "0", futaCreditReduction: "0" })).toEqual({});
-    expect(householdFactErrors({ ...data, stateUnemploymentContributions: "0", futaCreditReduction: "0", householdEmploymentWages: "101" })).toHaveProperty("householdEmploymentWages");
+    const data = { ...emptyOtherTaxesData, householdEmployees: [employee], futaApplies: true, futaSectionA: false, stateUnemploymentContributions: "", stateUnemploymentContributionsPaidLate: "", futaCreditReduction: "", futaStatePeriods: [{ state: "OH", periodStart: "2025-01-01", periodEnd: "2025-12-31", taxableWages: "100", hasAssignedExperienceRate: true, experienceRatePercent: "3", contributionsPaidTimely: "0" }] };
+    expect(householdFactErrors(data)).toHaveProperty("stateUnemploymentContributionsPaidLate");
+    expect(householdFactErrors({ ...data, stateUnemploymentContributions: "0", stateUnemploymentContributionsPaidLate: "0", futaCreditReduction: "0" })).toEqual({});
+    expect(householdFactErrors({ ...data, stateUnemploymentContributions: "0", stateUnemploymentContributionsPaidLate: "0", futaCreditReduction: "0", householdEmploymentWages: "101" })).toHaveProperty("householdEmploymentWages");
     expect(householdFactErrors({ ...data, householdEmployees: [{ ...employee, federalIncomeTaxWithheld: "101" }] })).toHaveProperty("employee-0-federalIncomeTaxWithheld");
   });
 });

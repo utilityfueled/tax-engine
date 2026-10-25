@@ -193,3 +193,25 @@ Source-year/document-fidelity package commit: `70f8d17`.
 - All 470 guided and source-preview tests in 12 files pass, together with root/web
   typechecks, scoped ESLint, spec validation and diff checks.
 - Classified federal payment package commit: `2c1dfd9`.
+
+## Schedule H correction discovered during the fact audit
+
+- Refreshed [Publication 926 (2026)](https://www.irs.gov/publications/p926) and
+  [Schedule H instructions, lines 7 and 15–24](https://www.irs.gov/instructions/i1040sh).
+  Five new calculations failed before the correction; the published Mary Brown
+  example independently fixes expected combined SS/Medicare amounts.
+- Separated Social Security/Medicare eligibility from FUTA and actual income
+  withholding. Below-threshold employees and unrelated minors retain applicable
+  FUTA, and actual withholding is never lost because of payroll-tax exemptions.
+- Added the explicit parent childcare exception; omitted eligibility answers stay
+  unknown. Section B now requires real state/rate periods and payment timing,
+  including experience-rate additional credit, the 90% late-contribution worksheet
+  and supplied credit reduction. Negative, invalid and overlapping records fail.
+- Guided payroll collects these facts. The federal owner forwards the fields in
+  its separate routing commit. Full-return/PDF readiness remains unchanged.
+- Actual IRA/alimony/employee facts package commit: `45f96c0`.
+- 515 tests in 14 focused guided/payroll/PDF files, root/web typechecks, scoped
+  ESLint, spec validation and diff checks pass. An additional source-preview run
+  exposed three stale expectations from the concurrent federal penalty separation
+  (line 24 excludes the penalty; line 37 still includes it); those are tracked
+  separately and were not changed to mask a Schedule H failure.

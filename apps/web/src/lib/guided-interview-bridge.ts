@@ -496,10 +496,13 @@ export function buildScheduleHInput(otherTaxesData: OtherTaxesData | undefined) 
   assertKnownFacts(householdFactErrors(otherTaxesData));
   if (!otherTaxesData.householdEmployees?.length) return undefined;
   return {
-    employees: otherTaxesData.householdEmployees.map((employee) => ({ ...employee, name: employee.name.trim(), cashWages: toDecimalString(employee.cashWages), federalIncomeTaxWithheld: toDecimalString(employee.federalIncomeTaxWithheld), isSpouse: employee.isSpouse as boolean, isChildUnder21: employee.isChildUnder21 as boolean, isParent: employee.isParent as boolean, isUnder18NonPrincipal: employee.isUnder18NonPrincipal as boolean })),
+    employees: otherTaxesData.householdEmployees.map((employee) => ({ ...employee, name: employee.name.trim(), cashWages: toDecimalString(employee.cashWages), federalIncomeTaxWithheld: toDecimalString(employee.federalIncomeTaxWithheld), isSpouse: employee.isSpouse as boolean, isChildUnder21: employee.isChildUnder21 as boolean, isParent: employee.isParent as boolean, parentCareExceptionApplies: employee.parentCareExceptionApplies ?? undefined, isUnder18NonPrincipal: employee.isUnder18NonPrincipal as boolean })),
     futaApplies: otherTaxesData.futaApplies as boolean,
     ...(otherTaxesData.futaApplies ? { futaSectionA: otherTaxesData.futaSectionA as boolean,
-      ...(otherTaxesData.futaSectionA === false ? { stateUnemploymentContributions: toDecimalString(otherTaxesData.stateUnemploymentContributions), futaCreditReduction: toDecimalString(otherTaxesData.futaCreditReduction) } : {}),
+      ...(otherTaxesData.futaSectionA === false ? {
+        futaStatePeriods: (otherTaxesData.futaStatePeriods ?? []).map((period) => ({ state: period.state, periodStart: period.periodStart, periodEnd: period.periodEnd, taxableWages: toDecimalString(period.taxableWages), contributionsPaidTimely: toDecimalString(period.contributionsPaidTimely), experienceRate: period.hasAssignedExperienceRate ? parseGuidedCurrency(period.experienceRatePercent).div(100).toFixed() : null })),
+        stateUnemploymentContributionsPaidLate: toDecimalString(otherTaxesData.stateUnemploymentContributionsPaidLate), futaCreditReduction: toDecimalString(otherTaxesData.futaCreditReduction),
+      } : {}),
     } : {}),
   };
 }
@@ -536,7 +539,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     assertKnownFacts(retirementFactErrors(retirementData?.entries));
     assertKnownFacts(educationFactErrors(creditsData, state.taxYear, segmentation.filingStatus));
     assertKnownFacts(adjustmentFactErrors(adjustmentData, segmentation.filingStatus, state.taxYear));
-    assertKnownFacts(householdFactErrors(otherTaxesData));
+    assertKnownFacts(householdFactErrors(otherTaxesData, state.taxYear));
   } catch { return null; }
 
   const stateCode = personalInfo?.state || segmentation.stateCode || null;

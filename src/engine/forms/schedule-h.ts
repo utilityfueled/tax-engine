@@ -14,21 +14,32 @@ import { AuditTrail } from "@/utils/audit.js";
 export interface HouseholdEmployee {
   name?: string;
   cashWages: string | Decimal;
-  isSpouse: boolean;
-  isChildUnder21: boolean;
-  isParent: boolean;
-  isUnder18NonPrincipal: boolean;
+  isSpouse?: boolean;
+  isChildUnder21?: boolean;
+  isParent?: boolean;
+  parentCareExceptionApplies?: boolean;
+  isUnder18NonPrincipal?: boolean;
   federalIncomeTaxWithheld?: string | Decimal;
 }
 
 export interface ScheduleHInput {
   employees: HouseholdEmployee[];
   /** Whether FUTA applies (total wages ≥ $1,000 in any quarter) */
-  futaApplies: boolean;
+  futaApplies?: boolean;
   /** Whether Section A simplified FUTA applies (single state, paid timely, no credit reduction) */
-  futaSectionA: boolean;
+  futaSectionA?: boolean;
   /** State unemployment contributions paid (Section B only) */
   stateUnemploymentContributions?: string | Decimal;
+  taxYear?: number;
+  futaStatePeriods?: Array<{
+    state: string;
+    periodStart: string;
+    periodEnd: string;
+    taxableWages: string | Decimal;
+    experienceRate: string | Decimal | null;
+    contributionsPaidTimely: string | Decimal;
+  }>;
+  stateUnemploymentContributionsPaidLate?: string | Decimal;
   /** FUTA credit reduction for credit reduction states */
   futaCreditReduction?: string | Decimal;
   constants: {
@@ -76,22 +87,27 @@ export function calculateScheduleH(input: ScheduleHInput): ScheduleHResult {
   const audit = new AuditTrail();
   const c = input.constants;
   const ZERO = new Decimal(0);
+  if (typeof input.futaApplies !== "boolean") throw new Error("Schedule H requires the actual current/prior-year FUTA quarterly applicability fact.");
+  if (input.futaApplies && typeof input.futaSectionA !== "boolean") throw new Error("Schedule H requires actual FUTA Section A eligibility facts.");
+  if (input.futaApplies && !input.futaSectionA && (!input.futaStatePeriods?.length || input.stateUnemploymentContributionsPaidLate === undefined || input.futaCreditReduction === undefined)) throw new Error("Schedule H Section B requires actual state/rate periods, contribution timing and credit-reduction facts.");
 
   // Filter employees: exclude exempt workers (spouse, child <21, parent, under-18 non-principal)
   // and those below the cash wage threshold
   const qualifyingEmployees: Array<{
     label: string;
     wages: Decimal;
-    isFutaExempt: boolean;
   }> = [];
 
   for (const emp of input.employees) {
     const wages = d(emp.cashWages);
     const label = emp.name ?? "Employee";
+    for (const field of ["isSpouse", "isChildUnder21", "isParent", "isUnder18NonPrincipal"] as const) if (typeof emp[field] !== "boolean") throw new Error(`Schedule H employee exclusion ${field} is unknown.`);
+    if (!wages.isFinite() || wages.isNegative() || d(emp.federalIncomeTaxWithheld).isNegative()) throw new Error("Schedule H cash wages and federal withholding must be nonnegative amounts.");
+    if (emp.isParent && typeof emp.parentCareExceptionApplies !== "boolean") throw new Error("Schedule H requires the actual parent childcare exception facts.");
 
     // Exempt from Social Security and Medicare entirely
-    if (emp.isSpouse || emp.isChildUnder21 || emp.isParent || emp.isUnder18NonPrincipal) {
-      audit.record("Schedule H", "exempt", `${label} — exempt from household employment taxes`,
+    if (emp.isSpouse || emp.isChildUnder21 || (emp.isParent && !emp.parentCareExceptionApplies) || emp.isUnder18NonPrincipal) {
+      audit.record("Schedule H", "exempt", `${label} — exempt from Social Security and Medicare`,
         wages,
         emp.isSpouse ? "Spouse is exempt"
           : emp.isChildUnder21 ? "Child under age 21 is exempt"
@@ -104,28 +120,14 @@ export function calculateScheduleH(input: ScheduleHInput): ScheduleHResult {
     if (wages.lessThan(c.cashWageThreshold)) {
       audit.record("Schedule H", "below_threshold", `${label} — below $${c.cashWageThreshold} threshold`,
         wages,
-        `Cash wages $${wages} < $${c.cashWageThreshold} threshold — not subject to household employment taxes`);
+        `Cash wages $${wages} < $${c.cashWageThreshold} threshold — no Social Security or Medicare; FUTA and withholding remain separate`);
       continue;
     }
 
     qualifyingEmployees.push({
       label,
       wages,
-      isFutaExempt: false, // FUTA exemptions (spouse, child <21, parent) already filtered above
     });
-  }
-
-  // If no qualifying employees, return zero
-  if (qualifyingEmployees.length === 0) {
-    audit.record("Schedule H", "26", "Total household employment taxes", ZERO,
-      "No qualifying household employees — no Schedule H required");
-    return {
-      line1: ZERO, line2: ZERO, line3: ZERO, line4: ZERO,
-      line5: ZERO, line6: ZERO, line7: ZERO, line8: ZERO,
-      futaTax: ZERO, totalTax: ZERO,
-      qualifyingEmployeeCount: 0,
-      lines: audit.getLines(),
-    };
   }
 
   // ── Part I: Social Security, Medicare, and Federal Income Taxes ──
@@ -176,13 +178,10 @@ export function calculateScheduleH(input: ScheduleHInput): ScheduleHResult {
 
   // Line 7: Federal income tax withheld (voluntary)
   const line7 = sum(
-    ...input.employees
-      .filter((emp) => !emp.isSpouse && !emp.isChildUnder21 && !emp.isParent && !emp.isUnder18NonPrincipal)
-      .filter((emp) => d(emp.cashWages).greaterThanOrEqualTo(c.cashWageThreshold))
-      .map((emp) => d(emp.federalIncomeTaxWithheld))
+    ...input.employees.map((emp) => d(emp.federalIncomeTaxWithheld))
   );
   audit.record("Schedule H", "7", "Federal income tax withheld", line7,
-    "Voluntarily withheld federal income tax from qualifying employees");
+    "Actual federal income tax withheld from all household employees, independent of Social Security/FUTA exclusions");
 
   // Line 8: Total Part I
   const line8 = sum(line2, line4, line6, line7);
@@ -195,12 +194,12 @@ export function calculateScheduleH(input: ScheduleHInput): ScheduleHResult {
 
   if (input.futaApplies) {
     // Line 15: FUTA wages (capped at $7,000 per employee)
-    // FUTA exemptions match SS/Medicare exemptions for household employees
-    // (spouse, child <21, parent already filtered)
+    // FUTA excludes family wages but does not use the Social Security threshold
+    // or its unrelated under-18 principal-occupation exception.
     const futaWages = sum(
-      ...qualifyingEmployees
-        .filter((emp) => !emp.isFutaExempt)
-        .map((emp) => Decimal.min(emp.wages, c.futaWageBase))
+      ...input.employees
+        .filter((emp) => !emp.isSpouse && !emp.isChildUnder21 && !emp.isParent)
+        .map((emp) => Decimal.min(d(emp.cashWages), c.futaWageBase))
     );
 
     if (input.futaSectionA) {
@@ -214,24 +213,47 @@ export function calculateScheduleH(input: ScheduleHInput): ScheduleHResult {
       // Section B: gross rate minus allowable credit
       const grossFuta = futaWages.times(c.futaGrossRate).toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
       const maxCredit = futaWages.times(c.futaMaxCredit).toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
-      const stateContrib = d(input.stateUnemploymentContributions);
+      let experienceCredit = ZERO;
+      let timelyContributions = ZERO;
+      const periods = input.futaStatePeriods ?? [];
+      const validDate = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value) && Number.isFinite(Date.parse(`${value}T00:00:00Z`)) && new Date(`${value}T00:00:00Z`).toISOString().slice(0, 10) === value;
+      const states = new Set("AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY PR VI".split(" "));
+      periods.forEach((period, index) => {
+        if (!states.has(period.state) || !validDate(period.periodStart) || !validDate(period.periodEnd) || period.periodStart > period.periodEnd || period.periodStart.slice(0, 4) !== period.periodEnd.slice(0, 4)
+          || (input.taxYear != null && !period.periodStart.startsWith(`${input.taxYear}-`))) throw new Error("Schedule H requires actual state/rate period dates within the tax year.");
+        if (periods.some((other, otherIndex) => otherIndex < index && other.state === period.state && period.periodStart <= other.periodEnd && period.periodEnd >= other.periodStart)) throw new Error("Schedule H state/rate periods cannot overlap for the same state.");
+        const taxableWages = d(period.taxableWages);
+        const paidTimely = d(period.contributionsPaidTimely);
+        const rate = period.experienceRate === null ? null : d(period.experienceRate);
+        if (!taxableWages.isFinite() || taxableWages.isNegative() || !paidTimely.isFinite() || paidTimely.isNegative() || (rate !== null && (!rate.isFinite() || rate.isNegative() || rate.gt(1)))) throw new Error("Schedule H state wages, contributions and experience rates must be actual nonnegative amounts/rates.");
+        const additional = rate === null ? ZERO : Decimal.max(ZERO, taxableWages.times(c.futaMaxCredit).toDecimalPlaces(2, Decimal.ROUND_HALF_UP).minus(taxableWages.times(rate).toDecimalPlaces(2, Decimal.ROUND_HALF_UP)));
+        experienceCredit = experienceCredit.plus(additional);
+        timelyContributions = timelyContributions.plus(paidTimely);
+        audit.record("Schedule H", `17-${index + 1}g`, `${period.state} experience-rate additional credit`, additional, "max(0, taxable state wages × 5.4% − taxable state wages × assigned experience rate); no assigned rate gives no additional credit");
+        audit.record("Schedule H", `17-${index + 1}h`, `${period.state} timely contributions`, paidTimely, "Actual eligible state unemployment contributions paid by the unextended return due date");
+      });
+      const line19 = experienceCredit.plus(timelyContributions).toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+      const paidLate = d(input.stateUnemploymentContributionsPaidLate);
       const creditReduction = d(input.futaCreditReduction);
-
-      // Allowable credit = min(state contributions, max credit) minus credit reduction
-      const allowableCredit = Decimal.max(ZERO,
-        Decimal.min(stateContrib, maxCredit).minus(creditReduction)
-      );
+      if (!paidLate.isFinite() || paidLate.isNegative() || !creditReduction.isFinite() || creditReduction.isNegative()) throw new Error("Schedule H late contributions and credit reduction must be actual nonnegative amounts.");
+      const lateCredit = Decimal.min(Decimal.max(ZERO, maxCredit.minus(line19)), paidLate).times("0.90").toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+      const allowableCredit = Decimal.max(ZERO, Decimal.min(maxCredit, line19.plus(lateCredit)).minus(creditReduction));
       futaTax = Decimal.max(ZERO, grossFuta.minus(allowableCredit));
 
       audit.record("Schedule H", "15", "Total cash wages subject to FUTA tax", futaWages,
         `Sum of qualifying wages capped at $${c.futaWageBase}/employee`);
       audit.record("Schedule H", "21", "Gross FUTA tax (Section B)", grossFuta,
         `$${futaWages} × ${c.futaGrossRate.times(100)}%`);
+      audit.record("Schedule H", "19", "Additional experience credit plus timely contributions", line19, "Sum line 17 columns g and h across state/rate periods");
+      audit.record("Schedule H", "22", "Maximum FUTA credit", maxCredit, "FUTA wages × 5.4%");
+      audit.record("Schedule H", "23", "Allowable FUTA credit", allowableCredit, "min(maximum credit, line 19 + limited 90% late-payment credit) minus credit reduction, floored at zero");
       audit.record("Schedule H", "24", "Net FUTA tax (Section B)", futaTax,
         `Gross $${grossFuta} - allowable credit $${allowableCredit}`, {
           "Gross FUTA": grossFuta,
           "Max credit": maxCredit,
-          "State contributions": stateContrib,
+          "Timely contributions": timelyContributions,
+          "Experience-rate credit": experienceCredit,
+          "Late contribution credit": lateCredit,
           "Credit reduction": creditReduction,
           "Allowable credit": allowableCredit,
         });

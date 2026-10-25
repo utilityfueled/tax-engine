@@ -48,7 +48,7 @@ export function adjustmentFactErrors(data: AdjustmentData | undefined, filingSta
   return errors;
 }
 
-export function householdFactErrors(data: OtherTaxesData | undefined): Record<string, string> {
+export function householdFactErrors(data: OtherTaxesData | undefined, taxYear?: number | null): Record<string, string> {
   if (!data) return {};
   const errors: Record<string, string> = {};
   const employees = data.householdEmployees ?? [];
@@ -65,13 +65,39 @@ export function householdFactErrors(data: OtherTaxesData | undefined): Record<st
     }
     if (!errors[`employee-${index}-cashWages`] && !errors[`employee-${index}-federalIncomeTaxWithheld`] && parseGuidedCurrency(employee.federalIncomeTaxWithheld).gt(parseGuidedCurrency(employee.cashWages))) errors[`employee-${index}-federalIncomeTaxWithheld`] = "Employee income tax withholding cannot exceed cash wages; check the payroll records.";
     for (const field of ["isSpouse", "isChildUnder21", "isParent", "isUnder18NonPrincipal"] as const) if (typeof employee[field] !== "boolean") errors[`employee-${index}-${field}`] = "Confirm the employee's relationship and age/occupation exclusions.";
+    if (employee.isParent && typeof employee.parentCareExceptionApplies !== "boolean") errors[`employee-${index}-parentCare`] = "Confirm both qualifying childcare and marital-status conditions for the parent exception.";
   });
   if (employees.length) {
     if (typeof data.futaApplies !== "boolean") errors.futaApplies = "Confirm whether qualifying household wages reached $1,000 in any calendar quarter of this or the preceding year.";
     if (data.futaApplies === true && typeof data.futaSectionA !== "boolean") errors.futaSectionA = "Confirm state unemployment tax and credit-reduction facts for Schedule H.";
-    if (data.futaApplies === true && data.futaSectionA === false) for (const field of ["stateUnemploymentContributions", "futaCreditReduction"] as const) {
-      const error = amountError(data[field], field);
-      if (error) errors[field] = error;
+    if (data.futaApplies === true && data.futaSectionA === false) {
+      for (const field of ["stateUnemploymentContributionsPaidLate", "futaCreditReduction"] as const) {
+        const error = amountError(data[field], field);
+        if (error) errors[field] = error;
+      }
+      if (!data.futaStatePeriods?.length) errors.futaStatePeriods = "Enter actual state/rate periods, taxable wages and contribution timing for Schedule H Section B.";
+      (data.futaStatePeriods ?? []).forEach((period, index) => {
+        if (!/^[A-Z]{2}$/.test(period.state)) errors[`futa-${index}-state`] = "Enter the actual state abbreviation.";
+        if (!isActualDate(period.periodStart) || !isActualDate(period.periodEnd) || period.periodStart > period.periodEnd || period.periodStart.slice(0, 4) !== period.periodEnd.slice(0, 4) || (taxYear != null && !period.periodStart.startsWith(`${taxYear}-`))) errors[`futa-${index}-dates`] = "Enter the actual state experience-rate period in the tax year.";
+        for (const field of ["taxableWages", "contributionsPaidTimely"] as const) {
+          const error = amountError(period[field], field);
+          if (error) errors[`futa-${index}-${field}`] = error;
+        }
+        if (typeof period.hasAssignedExperienceRate !== "boolean") errors[`futa-${index}-assigned`] = "Confirm whether the state assigned an experience rate.";
+        if (period.hasAssignedExperienceRate === true) {
+          const error = amountError(period.experienceRatePercent, "experience rate percentage");
+          if (error) errors[`futa-${index}-rate`] = error;
+          else if (parseGuidedCurrency(period.experienceRatePercent).gt(100)) errors[`futa-${index}-rate`] = "Experience rate cannot exceed 100%.";
+        }
+      });
+      if (hasEnteredAmount(data.stateUnemploymentContributions)) {
+        const error = amountError(data.stateUnemploymentContributions, "saved state contributions");
+        if (error) errors.stateUnemploymentContributions = error;
+        else if (!Object.keys(errors).length) {
+          const actual = (data.futaStatePeriods ?? []).reduce((sum, period) => sum.plus(parseGuidedCurrency(period.contributionsPaidTimely)), parseGuidedCurrency(data.stateUnemploymentContributionsPaidLate));
+          if (!actual.eq(parseGuidedCurrency(data.stateUnemploymentContributions))) errors.stateUnemploymentContributions = "Reconcile saved state contributions with actual timely and late amounts.";
+        }
+      }
     }
     if (!Object.keys(errors).length && hasEnteredAmount(data.householdEmploymentWages)) {
       const total = employees.reduce((sum, employee) => sum.plus(parseGuidedCurrency(employee.cashWages)), new Decimal(0));
