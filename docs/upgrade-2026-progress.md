@@ -517,3 +517,21 @@ The checklist and machine checkpoint retain exact trees, logs and limitations.
 Form 7206, educator exclusions and Form 8960 remain active implementation;
 current full checks, inventory, remote CI and final-image recovery evidence still
 must run. No human, provider, staging, filing or release qualification is claimed.
+
+The branch is pushed through `abcb979`, adding actual Form 7206 and Form 4137
+source cores, canonical educator exclusions, corrected Form 8960 sources/lines,
+household bond identities, pinned SMTP transport and private transactional
+hosted account recovery. The recovery package passes 21 isolated tests, including
+real disposable PostgreSQL/loopback SMTP, 116 adjacent checks, production build,
+types/lint and four desktop/mobile browser cases across both modes. Hosted UI
+responses are synthetic; no actual staging delivery is claimed. Exact commits,
+trees, failure-to-fix evidence and source links remain in the package documents
+and machine checkpoint.
+
+The `e8e169a` full coverage run meets unchanged thresholds (86.59% branches) but
+has one audit-fixture failure among 16,889 tests; `c721f07` repairs it and passes
+63 isolated cases. Its remote Web workflow passes, while CI finds five adjacent
+NIIT audit/source fixtures plus stale inventory. Newer CI is in progress.
+Canonical/guided/PDF health integration, tips/payroll, education methods, NIIT
+sources, database outage handling and full final verification remain active
+internal work. External human/provider/staging/final-form gates remain closed.

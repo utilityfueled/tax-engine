@@ -57,6 +57,9 @@ Requested in this task while independent implementation proceeds:
   reviewers, plus recorded review evidence. Agent-produced cases are unreviewed.
 - Actual launch-state demand; PA-only, PA/OH and CA/NY were suggested choices.
 - Final official 2026 forms and revisions for each scenario enabled for filing.
+- Secure configuration location for approved staging SMTP credentials and sender;
+  requested separately while local recovery tests proceed. Do not paste secrets
+  into the conversation.
 
 ## Completion gates (all required)
 
@@ -676,3 +679,66 @@ audit/PDF corrections. All documented remaining source boundaries must be
 checked against the execution brief before deciding that only external work
 remains. Then regenerate inventory and rerun full local, remote and final-image
 recovery evidence. The active goal remains incomplete.
+
+### Source cores, account recovery and current CI — 2026-10-25
+
+Pushed through `abcb979`; the goal remains active. New separately reviewed work:
+
+- Actual Form 7206 source core `724f95c`: 225 tests, root types and 3,814 spec
+  references pass. Canonical owner/business and guided/PDF handoffs remain active.
+- Educator exclusion helper `7fcf2ab` and canonical handoff `1dac908`: the latter
+  passes 507 isolated tests, types and 3,851 references; parent review passes
+  eight cases. Mixed/joint and noncash source methods remain explicit work.
+- Form 8960 corrections `8bd8f00`: 1,037 isolated cases and 12 parent checks
+  pass, with signed gain/loss, actual MAGI/business sources and official lines.
+  The newer remote CI exposed five adjacent stale audit/source fixtures; those
+  are being corrected without changing monetary oracles or completeness gates.
+- Bond identity core `fe4afa8`: 90 cases pass; parent checks four actual household
+  identity cases. Canonical/guided handoffs are separate commits in progress.
+- Form 4137 core `2e85ad2`: 508 isolated cases, types and 3,858 references pass;
+  parent independently passes seven cases. Actual per-owner return/payroll,
+  Schedule 1-A, intake and output integration remain open.
+- SMTP dependency `f08692f` pins Nodemailer 10.2.1 and types 8.0.2 without changing
+  other versions. Strict peers/frozen lock pass; current package audit has zero
+  advisories across 521 entries. Image advisories remain a separate release gate.
+- Hosted recovery `abcb979`: 21 isolated tests include five real local PostgreSQL
+  and loopback SMTP cases. Actual fault injection drove hashed token storage,
+  transactional password/token/session changes and generic exception handling.
+  Adjacent checks pass 116 cases. Production webpack, web types and scoped lint
+  pass. Desktop/mobile production browser checks pass twice in each deployment
+  mode, with no retries and visual inspection. Hosted browser auth responses
+  are synthetic; no real mail, staging or independent human review is claimed.
+  See `hosted-account-recovery.md` for exact trees, initial failures and logs.
+
+Immutable full coverage at `e8e169a` passed all unchanged thresholds (86.59%
+branches) but failed one audit whitelist test: 16,888 passes, one failure and no
+skips across 699 files. `c721f07` explicitly checks the new zero-valued OID and
+educator worksheet entries; all 63 isolated Schedule A cases pass. A fresh full
+current-code run is still required. The older full green `5d32549` remains scoped
+to that commit, not the newer code.
+
+Remote `c721f07` Web succeeds. CI passes types, lint, spec references and build,
+but fails five unit cases and stale inventory; coverage does not run after the
+unit failure. Exact results: 16,913 passing tests and five failures. Latest
+`abcb979` CI/Web are in progress as recorded, with no result inferred. Logs and
+run IDs are in the machine checkpoint.
+
+Remaining internal work also includes positive Marketplace health/PTC coupling,
+actual Schedule 1-A intake/business-tip QBI, ordinary NIIT source methods,
+ESA code 6, educator attribution, and a complete source/preview/cross-year audit.
+Database outage hardening is underway: three red faults now pass, plus packet
+loss and exhausted-pool cases. Review identified a separate acquired-client
+Kysely timeout/rollback path; that must be fixed and verified before this package
+is committed. Then refresh inventory, full local/remote gates and final images,
+SBOMs/scans and recovery rehearsal. External inputs above remain pending and do
+not excuse leaving these internal tasks unfinished.
+
+Subsequent coherent commits are `196ee90` (canonical bond identity; 1,038
+isolated cases, 3,859 refs), `d5edc89` (guided bond/privacy; 665 cases, root/web
+types, 3,868 refs and eight parent checks), and `686760e` (canonical Form 7206;
+633 isolated cases, root types, 3,877 refs and zero lint errors). Each preserves
+qualification gates. The health UI and physical PDF are the next dependent
+packages. Database review reproduced the acquired-client issue through actual
+Kysely: timed-out ordinary and transactional queries returned a still-pending
+client to the pool. That finding is open; passing pool-shortcut tests alone do
+not qualify the database outage package.

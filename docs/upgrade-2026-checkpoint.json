@@ -204,7 +204,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "df1562b",
+    "lastRecordedCommit": "686760e",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -316,19 +316,20 @@
     "latestIntegratedCommit": "c98cc70f5f8f5d3dde4b06f01258940cf27b0b9d",
     "latestCoverageDiagnostic": {
       "status": "failed-tests-coverage-thresholds-met",
-      "commit": "05ec24e10716cd6c4c8ccd8d2b6e3effc6e18d94",
-      "passed": 16112,
-      "failed": 11,
+      "commit": "e8e169a39a4917744c634378628f717af748759b",
+      "workers": 1,
+      "passed": 16888,
+      "failed": 1,
       "skipped": 0,
-      "filesPassed": 562,
-      "filesFailed": 5,
-      "branchesPercent": "85.15",
-      "functionsPercent": "91.25",
-      "statementsPercent": "92.49",
-      "linesPercent": "93.65",
-      "evidence": ".local/upgrade-evidence/stable-coverage-05ec24e.log",
-      "evidenceSha256": "2f076021900e9de943982fd772cdd33a5e00ff192e9ecca03113a04d6381a9b0",
-      "limitation": "Exact committed snapshot; ten stale complete-source fixtures and one partner-basis PDF timeout. Thresholds unchanged and met for this commit; full command failed. Newer code requires a fresh run."
+      "files": 699,
+      "durationSeconds": "486.06",
+      "branchesPercent": "86.59",
+      "functionsPercent": "92.09",
+      "statementsPercent": "92.78",
+      "linesPercent": "94.48",
+      "evidence": ".local/upgrade-evidence/stable-coverage-e8e169a.log",
+      "evidenceSha256": "e3c1c1c498d4ede818955441f411cd18d16442ee6b1c6ab32174bc9598b8e76a",
+      "limitation": "One ScheduleA audit whitelist omitted dedicated OID/educator worksheets; c721f07 fixes exact zero-entry assertions and passes63 isolated cases. Full command failed; a fresh current-code run is still required."
     },
     "recentPackages": {
       "privacyHeaderRedaction": "2d16a94",
@@ -541,13 +542,16 @@
       "limitation": "Applies to 5d32549 only. Newer source integration and final release checks require verification; this is local synthetic evidence, not human or staging qualification."
     },
     "remainingInternalWork": [
-      "Finish actual Form7206 source core, guided collection and canonical computed-business integration",
-      "Finish educator exclusion conservation against final Form8815/1099Q source results",
-      "Finish bounded Form8960 signed capital netting, actual MAGI, audit and reference PDF corrections",
-      "Regenerate inventory and run all current-code full-suite, coverage, types, spec, build, lint and browser gates",
-      "Verify current remote CI and native amd64 container evidence",
-      "Rebuild final local arm64 runtime, SBOM/scan and complete recovery/rollback rehearsal",
-      "Review all remaining documented source boundaries against execution-brief scope; distinguish missing taxpayer facts, unsupported software and required external qualification without relabeling internal work as external blockers"
+      "Complete Form7206 canonical and guided facts/actual allocations and physical review PDF; implement positive Marketplace SE-health/PTC coordination",
+      "Complete Form4137 per-owner canonical/payroll/Schedule1A coupling, source intake and physical output; finish Schedule1A actual intake and business-tip QBI",
+      "Complete remaining ordinary NIIT annuity, allocation and disposition/basis source methods",
+      "Complete ESAcode6 and positive mixed/joint educator attribution plus actual noncash/QTP methods without inventing missing evidence",
+      "Finish database outage hardening through actual Kysely failure/rollback/reconnect; reviewer identified acquired-client timeout gap beyond pool.query tests",
+      "Repair exact-current remoteCI audit/fixture regressions without weakening source requirements or numeric oracles",
+      "Audit remaining documented source/preview/crossyear boundaries against full brief, not just recent finite queues",
+      "Regenerate inventory and run current-code full suite, coverage, types, spec, builds, lint and complete browser suites",
+      "Verify current remoteCI and nativeamd64 final image/recovery evidence; rebuild finalarm64 runtime,SBOM/scan and recovery/rollback rehearsal",
+      "Resolve or obtain explicit owner/expiry for advisories and align support claims with actual tested artifacts"
     ],
     "previousStableCoverageRun": {
       "commit": "2f8abd71206dd8483c167861f35c4c0bbecdad7a",
@@ -568,7 +572,7 @@
       "scope": "immutable tracked-file archive, locked dependencies, disposable local PostgreSQL16; unchanged coverage thresholds",
       "limitation": "Two PDF aggregate tests exceeded unchanged5000ms timeouts; no numeric tax failure. Commit76bb3a6 isolates identical template/state assertions into named independent cases. Its exact staged tree passes62tests and3682spec refs; fresh full gate required after newer packages."
     },
-    "lastPushedCommit": "c98cc70",
+    "lastPushedCommit": "abcb979",
     "currentBrowserRun": {
       "commit": "ed915c1708cedc02e99ca12fb7383331a7f99bea",
       "status": "passed-with-hosted-skips",
@@ -584,8 +588,9 @@
     },
     "currentPackageAudit": {
       "date": "2026-10-25",
-      "evidence": ".local/upgrade-evidence/advisories-2026-10-25-current.json",
-      "evidenceSha256": "75faac6935b02775451d386906298aeeacdbf1fc7fe15565de68098e8d5f3724",
+      "commit": "f08692f",
+      "evidence": ".local/upgrade-evidence/smtp-installed-audit.json",
+      "evidenceSha256": "53e7d127130984cae97d554a54f7be42a21478066d94206e519540ab84119635",
       "metadata": {
         "vulnerabilities": {
           "info": 0,
@@ -594,12 +599,12 @@
           "high": 0,
           "critical": 0
         },
-        "dependencies": 519,
+        "dependencies": 521,
         "devDependencies": 0,
         "optionalDependencies": 0,
-        "totalDependencies": 519
+        "totalDependencies": 521
       },
-      "limitation": "Package audit only; final runtime image scans and advisory disposition remain separate."
+      "limitation": "Zero package advisories across521 dependencies; final runtime image and reachability findings remain separate."
     },
     "ohioInterestSoftwareReview": {
       "commit": "7a337a0",
@@ -643,22 +648,13 @@
       "limitation": "Actual React DOM callback checks; final production browser rerun required."
     },
     "remoteCiLatestObserved": {
-      "commit": "6965daa",
-      "ciRun": 40183934230,
-      "webRun": 40183934251,
-      "ciStatus": "cancelled-by-subsequent-push",
-      "webStatus": "superseded-no-qualified-result",
-      "passed": [
-        "spec validation",
-        "lint",
-        "root types",
-        "contract types"
-      ],
-      "failures": [
-        "Generated inventory stale; regenerate after source integration converges."
-      ],
-      "evidence": ".local/upgrade-evidence/ci-6965daa-status.json",
-      "limitation": "No exact-current remote pass. Other jobs incomplete or cancelled; earlier full local evidence remains scoped to its recorded commits."
+      "commit": "abcb979",
+      "ciRun": 40187987412,
+      "webRun": 40187987417,
+      "ciStatus": "in_progress",
+      "webStatus": "in_progress",
+      "evidence": ".local/upgrade-evidence/ci-abcb979-status.json",
+      "limitation": "Observed snapshot only; no exact-current pass yet."
     },
     "remoteCi6b07529": {
       "run": 40176974652,
@@ -799,6 +795,143 @@
       "evidence": ".local/upgrade-evidence/oh-government-staged-tests.log",
       "limitation": "Source conservation for actual owner/year; state demand, final forms and filing qualification are unchanged.",
       "evidenceSha256": "abcc58528010d3d2acbfc4a828551057de5e7683914dbcb27ed7ee5e261a5109"
+    },
+    "scheduleAAuditRepair": {
+      "commit": "c721f07",
+      "stagedTree": "c1f159abefcb8ded7530476054250197a90a0879",
+      "testsPassed": 63,
+      "evidence": ".local/upgrade-evidence/schedule-a-audit-staged.log",
+      "evidenceSha256": "dcd144bac3f54c1153001b73dfc60fb7bb4ea5ca83bd82042b8125483d7a06af",
+      "limitation": "No numeric calculation, threshold, readiness gate or assertion intent changed."
+    },
+    "smtpDependency": {
+      "commit": "f08692f",
+      "nodemailer": "10.2.1",
+      "types": "8.0.2",
+      "frozenStrictPeers": "passed",
+      "otherDependencyVersionsChanged": false,
+      "evidence": ".local/upgrade-evidence/smtp-dependency-install.log"
+    },
+    "healthInsuranceSourceCore": {
+      "commit": "724f95c",
+      "testsPassed": 225,
+      "files": 7,
+      "rootTypes": "passed",
+      "specReferences": 3814,
+      "scope": "Actual monthly person, payer and business source facts with LTC caps; canonical/UI/PDF integration is separate active work."
+    },
+    "educatorExclusionSourceAndReturn": {
+      "sourceCommit": "7fcf2ab",
+      "canonicalCommit": "1dac908",
+      "canonicalStagedTree": "98b1703a",
+      "canonicalTestsPassed": 507,
+      "files": 9,
+      "specReferences": 3851,
+      "parentReviewTestsPassed": 8,
+      "limitation": "Positive mixed/joint attribution and noncash/QTP methods remain explicit internal work; no human qualification."
+    },
+    "form8960SourceAndReturn": {
+      "commit": "8bd8f00",
+      "stagedTree": "45ec6803",
+      "testsPassed": 1037,
+      "files": 24,
+      "specReferences": 3845,
+      "rootTypes": "passed",
+      "parentReviewTestsPassed": 12,
+      "evidence": ".local/upgrade-evidence/niit-staged-tests.log",
+      "evidenceSha256": "c2f7ca4f82a0fffcef4b835ce5ce91db6cc2965c9d3f9d7e8b473ac344f46924",
+      "limitation": "Signed capital/business/MAGI/audit/PDF scope. RemoteCI subsequently found five adjacent audit/fixture regressions; parent repairing. Other ordinary NIIT source boundaries remain internal work."
+    },
+    "bondIdentityCore": {
+      "commit": "fe4afa8",
+      "testsPassed": 90,
+      "rootTypes": "passed",
+      "specReferences": 3849,
+      "parentReviewTestsPassed": 4,
+      "limitation": "Canonical and guided identity commits follow separately; real IDs remain in encrypted backup and are redacted from review copies."
+    },
+    "form4137SourceCore": {
+      "commit": "2e85ad2",
+      "testsPassed": 508,
+      "files": 6,
+      "rootTypes": "passed",
+      "specReferences": 3858,
+      "parentReviewTestsPassed": 7,
+      "evidence": ".local/upgrade-evidence/form4137-isolated-tests.log",
+      "evidenceSha256": "4ab9a0658b6457b40a787d29fee01562e6c49d19a1d2abf0004e8358a56d17a7",
+      "limitation": "Actual employer/payroll core only. Per-owner canonical/payroll/Schedule1A and physical output/intake integration remains."
+    },
+    "hostedAccountRecovery": {
+      "commit": "abcb979",
+      "applicationStagedTree": "7d6a57fd2ec9897f1da5fe1b1f3b23f656836e50",
+      "finalTestTree": "2605b80246086894ff105dc71be263f874bf364d",
+      "focusedTestsPassed": 21,
+      "realPostgresSmtpCases": 5,
+      "adjacentTestsPassed": 116,
+      "productionWebpackBuild": "passed",
+      "webTypes": "passed",
+      "scopedLintErrors": 0,
+      "scopedLintWarnings": 0,
+      "selfHostBrowserCasesPassed": 2,
+      "hostedBrowserCasesPassed": 2,
+      "browserRetries": 0,
+      "screenshotsVisuallyInspected": true,
+      "independentAgentReviewTestsPassed": 15,
+      "independentHumanReview": false,
+      "stagingQualified": false,
+      "evidence": {
+        "hosted-recovery-staged-tests.log": "cea88e1e0f8616afb6de1573442e633c7780d43c79ce68b0676987af6cb71315",
+        "hosted-recovery-staged-build.log": "3e2acb60e135c072deeeef5e2343b89b48cb7c6479a7b9e5bd7f545ce61dc9f5",
+        "hosted-recovery-selfhost-browser.log": "d7764c21778a115eb3b147ecb23e71119e9f08d8e5285d54e1e8448734dd5082",
+        "hosted-recovery-hosted-browser-final.log": "744bb2b9d0f2d67accdf6033b1879aab2ff98c65047b8c946b7d9cdd638c25da"
+      },
+      "limitation": "Actual disposablePG+loopbackSMTP; hosted production UI uses intercepted synthetic auth and unavailable loopbackRedis/noDB. Initial missingRedis startup rejection retained; final test-only selector narrowed. No real delivery or hosted end-to-end claim."
+    },
+    "remoteCiC721f07": {
+      "commit": "c721f07",
+      "ciRun": 40186335112,
+      "webRun": 40186335148,
+      "ciStatus": "failure",
+      "webStatus": "success",
+      "unitTestsPassed": 16913,
+      "unitTestsFailed": 5,
+      "coverage": "not-run-after-unit-failures",
+      "failures": [
+        "Two Form8960 audit assertions use old label/line8 instead of corrected line12",
+        "Two PA K1 and one Form1116 fixture lack newly required actual disposition worksheet",
+        "Generated inventory stale"
+      ],
+      "otherChecks": "root/contracts types, spec references, lint and engine build pass",
+      "evidence": ".local/upgrade-evidence/ci-c721f07-test-excerpt.log"
+    },
+    "bondIdentityCanonical": {
+      "commit": "196ee90",
+      "stagedTree": "d60d56e9",
+      "testsPassed": 1038,
+      "files": 17,
+      "rootTypes": "passed",
+      "specReferences": 3859,
+      "scope": "Canonical identity call plus explicit matching synthetic source facts; no readiness gate change."
+    },
+    "bondIdentityGuided": {
+      "commit": "d5edc89",
+      "testsPassed": 665,
+      "files": 49,
+      "rootAndWebTypes": "passed",
+      "specReferences": 3868,
+      "parentReviewTestsPassed": 8,
+      "scope": "Actual entered row, household identity, confirmation invalidation, real PDF review redaction and full-fidelity encrypted recovery."
+    },
+    "healthInsuranceCanonical": {
+      "commit": "686760e",
+      "stagedTree": "7c145382",
+      "testsPassed": 633,
+      "files": 8,
+      "rootTypes": "passed",
+      "specReferences": 3877,
+      "scopedLintErrors": 0,
+      "existingLintWarnings": 4,
+      "scope": "Per-owner computed business and source-bound QBI, actual age/year/W2 identity and foreign attribution. Guided and actual physical PDF handoffs remain active."
     }
   }
 }
