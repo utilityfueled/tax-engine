@@ -3,13 +3,14 @@
 import { emptyHealthInsuranceAllocation, emptyHealthInsuranceFacts, emptyHealthInsurancePayment, emptyHealthInsurancePerson, emptyHealthInsurancePlan, type HealthInsuranceData, type HealthInsuranceIncomeDeductionsData, type HealthInsurancePlanData, type HealthInsuranceSourceOption } from "@/lib/guided-health-insurance-facts";
 import { BooleanFact, TextFact } from "./fact-fields";
 import { CurrencyField } from "./currency-field";
+import type { MarketplacePolicyOption } from "@/lib/guided-marketplace-health-facts";
 
 function Choice({ label, value, choices, onChange }: { label: string; value: string; choices: readonly (readonly [string, string])[]; onChange: (value: string) => void }) {
   return <label className="guided-field"><span className="guided-field-label">{label}</span><select className="guided-input" value={value} onChange={event => onChange(event.target.value)}><option value="">Confirm from actual records</option>{value && !choices.some(([id]) => id === value) && <option value={value}>Saved source needs reconciliation</option>}{choices.map(([id, text]) => <option value={id} key={id}>{text}</option>)}</select></label>;
 }
 const monthChoices = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"].map((name, index) => [String(index + 1), name] as const);
 
-export function HealthInsuranceSourceDetails({ data, sources = [], onChange }: { data?: HealthInsuranceData; sources?: HealthInsuranceSourceOption[]; onChange: (data: HealthInsuranceData) => void }) {
+export function HealthInsuranceSourceDetails({ data, sources = [], marketplacePolicies = [], onChange }: { data?: HealthInsuranceData; sources?: HealthInsuranceSourceOption[]; marketplacePolicies?: MarketplacePolicyOption[]; onChange: (data: HealthInsuranceData) => void }) {
   if (!data) return <section><h4>Self-employed health insurance sources</h4><p className="guided-hint">Enter actual policy, payment and monthly eligibility records for a self-employed business or a more-than-two-percent S corporation shareholder. The return's business income determines the allowed deduction.</p><button type="button" onClick={() => onChange({ ...emptyHealthInsuranceFacts, persons: [], plans: [], longTermCareAllocations: [] })}>Add health insurance worksheet</button></section>;
   const update = (patch: Partial<HealthInsuranceData>) => {
     const substantive = !Object.keys(patch).every(key => key === "sourceFactsConfirmed");
@@ -44,6 +45,7 @@ export function HealthInsuranceSourceDetails({ data, sources = [], onChange }: {
     <button type="button" onClick={() => update({ persons: [...data.persons, { ...emptyHealthInsurancePerson }] })}>Add covered person</button>
     {data.plans.map((plan, index) => {
       const prefix = `Plan ${index + 1}`;
+      const specified = plan.marketplaceCoverage === true && plan.premiumTaxCreditInvolved === true;
       const set = (patch: Partial<HealthInsurancePlanData>) => updatePlan(index, patch);
       const selectBusiness = (businessSourceId: string) => { const source = sources.find(item => item.sourceId === businessSourceId); set({ businessSourceId, accountHolder: source?.accountHolder ?? "", businessKind: source?.kind ?? "" }); };
       return <fieldset key={index} className="guided-expand-body"><legend>{prefix}</legend>
@@ -61,6 +63,15 @@ export function HealthInsuranceSourceDetails({ data, sources = [], onChange }: {
           <BooleanFact label={`${prefix}: Premium tax credit or advance credit is involved`} value={plan.premiumTaxCreditInvolved} onChange={premiumTaxCreditInvolved => set({ premiumTaxCreditInvolved })} />
           <BooleanFact label={`${prefix}: Clergy special rules apply`} value={plan.clergySpecialRules} onChange={clergySpecialRules => set({ clergySpecialRules })} />
         </div>
+        {(specified || plan.marketplacePolicySourceIds?.length || plan.allCoveredPersonsInCoverageFamilyConfirmed !== undefined) && <fieldset><legend>{prefix}: Marketplace policy links</legend>
+          <p className="guided-hint">Enter the original Marketplace policies and coverage-family worksheet in Credits, then link those records here. Preserve advances separately from amounts you or the business paid. A mixed coverage family or outside payer needs its separate allocation worksheet.</p>
+          {(plan.marketplacePolicySourceIds ?? []).map((sourceId, policyIndex) => <div key={policyIndex} className="guided-form-grid">
+            <Choice label={`${prefix} policy ${policyIndex + 1}: Original Marketplace policy`} value={sourceId} choices={marketplacePolicies.map(policy => [policy.sourceId, policy.label] as const)} onChange={value => set({ marketplacePolicySourceIds: (plan.marketplacePolicySourceIds ?? []).map((current, position) => position === policyIndex ? value : current) })} />
+            <button type="button" onClick={() => set({ marketplacePolicySourceIds: plan.marketplacePolicySourceIds?.filter((_, position) => position !== policyIndex) })}>{prefix} policy {policyIndex + 1}: Remove link</button>
+          </div>)}
+          <button type="button" onClick={() => set({ marketplacePolicySourceIds: [...plan.marketplacePolicySourceIds ?? [], ""] })}>{prefix}: Add Marketplace policy link</button>
+          <BooleanFact label={`${prefix}: All covered people belong to the actual PTC coverage family`} value={plan.allCoveredPersonsInCoverageFamilyConfirmed} onChange={allCoveredPersonsInCoverageFamilyConfirmed => set({ allCoveredPersonsInCoverageFamilyConfirmed })} />
+        </fieldset>}
         {plan.businessKind === "s_corporation" && <p className="guided-hint">Use the actual shareholder W-2 source. Qualifying premiums must be paid or reimbursed by the corporation and included in Box 1. Medicare wages supply a separate business income limit.</p>}
         {plan.coveredPersons.map((person, personIndex) => {
           const label = `${prefix} person ${personIndex + 1}`;
@@ -76,7 +87,13 @@ export function HealthInsuranceSourceDetails({ data, sources = [], onChange }: {
         {plan.months.map((month, monthIndex) => {
           const label = `${prefix} month ${monthIndex + 1}`;
           const setMonth = (patch: Partial<typeof month>) => set({ months: plan.months.map((current, position) => position === monthIndex ? { ...current, ...patch } : current) });
-          return <div key={monthIndex} className="guided-form-grid"><Choice label={`${label}: Month`} value={month.month} choices={monthChoices} onChange={value => setMonth({ month: value })} /><BooleanFact label={`${label}: Eligible for any subsidized employer coverage in this month`} value={month.employerSubsidizedPlanEligible} onChange={employerSubsidizedPlanEligible => setMonth({ employerSubsidizedPlanEligible })} /><button type="button" onClick={() => set({ months: plan.months.filter((_, position) => position !== monthIndex) })}>{label}: Remove month</button></div>;
+          return <div key={monthIndex} className="guided-form-grid"><Choice label={`${label}: Month`} value={month.month} choices={monthChoices} onChange={value => setMonth({ month: value })} /><BooleanFact label={`${label}: Eligible for any subsidized employer coverage in this month`} value={month.employerSubsidizedPlanEligible} onChange={employerSubsidizedPlanEligible => setMonth({ employerSubsidizedPlanEligible })} />
+            {((specified && month.employerSubsidizedPlanEligible === true) || month.employerOfferPtcException !== undefined || month.employerCoverageEnrolled !== undefined || month.employerOfferSourceReference !== undefined) && <>
+              <Choice label={`${label}: Actual employer-offer PTC exception`} value={month.employerOfferPtcException ?? ""} choices={[["unaffordable", "Offer was unaffordable under PTC rules"], ["does_not_provide_minimum_value", "Offer did not provide minimum value"]]} onChange={employerOfferPtcException => setMonth({ employerOfferPtcException: employerOfferPtcException as typeof month.employerOfferPtcException })} />
+              <BooleanFact label={`${label}: Enrolled in employer coverage`} value={month.employerCoverageEnrolled} onChange={employerCoverageEnrolled => setMonth({ employerCoverageEnrolled })} />
+              <TextFact label={`${label}: Employer-offer and enrollment source reference`} value={month.employerOfferSourceReference ?? ""} onChange={employerOfferSourceReference => setMonth({ employerOfferSourceReference })} />
+            </>}
+            <button type="button" onClick={() => set({ months: plan.months.filter((_, position) => position !== monthIndex) })}>{label}: Remove month</button></div>;
         })}
         <button type="button" onClick={() => set({ months: [...plan.months, { month: "", employerSubsidizedPlanEligible: null }] })}>{prefix}: Add coverage month</button>
         {plan.payments.map((payment, paymentIndex) => {
@@ -88,6 +105,7 @@ export function HealthInsuranceSourceDetails({ data, sources = [], onChange }: {
             <TextFact label={`${label}: Coverage tax year`} value={payment.coverageTaxYear} onChange={coverageTaxYear => setPayment({ coverageTaxYear })} />
             <Choice label={`${label}: Coverage month`} value={payment.coverageMonth} choices={monthChoices} onChange={coverageMonth => setPayment({ coverageMonth })} />
             {([["grossPremium", "Original premium"], ["ownerOrBusinessPaid", "Owner or business paid share"], ["otherPersonPaid", "Other person's paid share"]] as const).map(([field, text]) => <CurrencyField key={field} label={`${label}: ${text}`} value={payment[field]} onChange={value => setPayment({ [field]: value })} />)}
+            {(specified || payment.advancePremiumTaxCredit !== undefined) && <CurrencyField label={`${label}: Actual advance premium tax credit`} value={payment.advancePremiumTaxCredit ?? ""} onChange={advancePremiumTaxCredit => setPayment({ advancePremiumTaxCredit })} />}
           </div><p className="guided-hint">Allocate the owner/business paid amount to the actual covered people and payers. A reimbursed amount belongs to the business share once. Funding exclusions below must be separate and cannot exceed the paid share.</p>
             {payment.personAmounts.map((share, shareIndex) => {
               const shareLabel = `${label} share ${shareIndex + 1}`;
@@ -96,6 +114,7 @@ export function HealthInsuranceSourceDetails({ data, sources = [], onChange }: {
                 <Choice label={`${shareLabel}: Covered person`} value={share.personId} choices={people} onChange={personId => setShare({ personId })} />
                 <Choice label={`${shareLabel}: Actual payer`} value={share.payer} choices={[["owner_after_tax", "Owner personally, after tax, without business reimbursement"], ["business_paid_or_reimbursed", "Business paid or reimbursed the premium"]]} onChange={payer => setShare({ payer: payer as typeof share.payer })} />
                 {([["amountPaid", "Paid premium share"], ["excludedPublicSafetyOfficerAmount", "Excluded public-safety-officer payments"], ["otherTaxFreeFunding", "Other separate tax-free funding"]] as const).map(([field, text]) => <CurrencyField key={field} label={`${shareLabel}: ${text}`} value={share[field]} onChange={value => setShare({ [field]: value })} />)}
+                {(specified || share.advancePremiumTaxCredit !== undefined) && <CurrencyField label={`${shareLabel}: Actual person advance premium tax credit`} value={share.advancePremiumTaxCredit ?? ""} onChange={advancePremiumTaxCredit => setShare({ advancePremiumTaxCredit })} />}
                 <Choice label={`${shareLabel}: Public-safety-officer taxpayer`} value={share.publicSafetyOfficerAccountHolder} choices={[["primary", "You"], ["spouse", "Spouse"]]} onChange={publicSafetyOfficerAccountHolder => setShare({ publicSafetyOfficerAccountHolder: publicSafetyOfficerAccountHolder as typeof share.publicSafetyOfficerAccountHolder })} />
                 <button type="button" onClick={() => setPayment({ personAmounts: payment.personAmounts.filter((_, position) => position !== shareIndex) })}>{shareLabel}: Remove share</button>
               </div>;

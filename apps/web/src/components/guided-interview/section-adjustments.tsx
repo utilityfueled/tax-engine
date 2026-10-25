@@ -2,6 +2,7 @@
 
 import { HealthInsuranceSourceDetails } from "./health-insurance-source-details";
 import type { HealthInsuranceSourceOption } from "@/lib/guided-health-insurance-facts";
+import type { MarketplacePolicyOption } from "@/lib/guided-marketplace-health-facts";
 import { RetroShell } from "@/components/retro-shell";
 import {
   type AdjustmentData,
@@ -24,6 +25,7 @@ export function SectionAdjustments({
   taxYear,
   educationDistributions,
   healthInsuranceSources,
+  marketplacePolicies,
   hasHealthInsurance,
   onDataChange,
 }: {
@@ -35,6 +37,7 @@ export function SectionAdjustments({
   taxYear?: number | null;
   educationDistributions?: EducationDistributionData;
   healthInsuranceSources?: HealthInsuranceSourceOption[];
+  marketplacePolicies?: MarketplacePolicyOption[];
   hasHealthInsurance?: boolean;
   onDataChange: (data: AdjustmentData) => void;
 }) {
@@ -84,7 +87,7 @@ export function SectionAdjustments({
 
         {(hasStudentLoans || current.studentLoanFacts || current.studentLoanInterest.trim()) && <StudentLoanSourceDetails data={current.studentLoanFacts} filingStatus={filingStatus} educationDistributions={educationDistributions} onChange={studentLoanFacts => onDataChange({ ...current, studentLoanFacts })} />}
 
-        {(hasHealthInsurance || hasSelfEmployment || healthInsuranceSources?.length || current.healthInsuranceFacts || current.selfEmployedHealthInsurance.trim()) && <HealthInsuranceSourceDetails data={current.healthInsuranceFacts} sources={healthInsuranceSources} onChange={healthInsuranceFacts => onDataChange({ ...current, healthInsuranceFacts })} />}
+        {(hasHealthInsurance || hasSelfEmployment || healthInsuranceSources?.length || current.healthInsuranceFacts || current.selfEmployedHealthInsurance.trim()) && <HealthInsuranceSourceDetails data={current.healthInsuranceFacts} sources={healthInsuranceSources} marketplacePolicies={marketplacePolicies} onChange={healthInsuranceFacts => onDataChange({ ...current, healthInsuranceFacts })} />}
 
         <EducatorSourceDetails sources={current.educatorExpenseSources} taxYear={taxYear} onChange={educatorExpenseSources => onDataChange({ ...current, educatorExpenseSources })} />
 

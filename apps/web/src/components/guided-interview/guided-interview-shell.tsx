@@ -1,5 +1,7 @@
 "use client";
 
+import { marketplacePolicyOptions } from "@/lib/guided-marketplace-health-facts";
+
 import { healthInsuranceSourceOptions } from "@/lib/guided-health-insurance-facts";
 import { guidedCareBenefitSources } from "@/lib/guided-dependent-care-benefits";
 import Decimal from "decimal.js";
@@ -617,6 +619,7 @@ function SectionContent({
           filingStatus={state.segmentation.filingStatus}
           educationDistributions={getSectionData(state, "credits")?.educationDistributions}
           healthInsuranceSources={healthInsuranceSourceOptions(getSectionData(state, "income-self-employment"), getSectionData(state, "income-w2")?.entries)}
+          marketplacePolicies={marketplacePolicyOptions(getSectionData(state, "credits")?.premiumTaxCredit?.policies)}
           onDataChange={(data: AdjustmentData) =>
             onStateChange(updateSectionData(state, "adjustments", data))
           }

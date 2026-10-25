@@ -4,18 +4,20 @@ import { calculateForm7206 } from "@/engine/forms/form-7206";
 import type { AdjustmentData, FilingStatus, GuidedFlowState, SelfEmploymentSectionData, W2EntryData } from "./guided-interview-flow";
 import { amountError, hasEnteredAmount } from "./guided-required-facts";
 import { parseGuidedCurrency } from "./guided-currency";
+import { validateMarketplaceHealthSources } from "./guided-marketplace-health-facts";
 
 type Owner = "primary" | "spouse";
 export interface HealthInsurancePersonData { personId: string; name: string; householdRole: "" | Owner | "other"; attainedAgeAtYearEnd: string }
-export interface HealthInsuranceAllocationData { personId: string; payer: "" | "owner_after_tax" | "business_paid_or_reimbursed"; amountPaid: string; excludedPublicSafetyOfficerAmount: string; publicSafetyOfficerAccountHolder: "" | Owner; otherTaxFreeFunding: string }
-export interface HealthInsurancePaymentData { sourceId: string; datePaid: string; coverageTaxYear: string; coverageMonth: string; grossPremium: string; ownerOrBusinessPaid: string; otherPersonPaid: string; personAmounts: HealthInsuranceAllocationData[] }
+export interface HealthInsuranceAllocationData { personId: string; payer: "" | "owner_after_tax" | "business_paid_or_reimbursed"; amountPaid: string; advancePremiumTaxCredit?: string; excludedPublicSafetyOfficerAmount: string; publicSafetyOfficerAccountHolder: "" | Owner; otherTaxFreeFunding: string }
+export interface HealthInsurancePaymentData { sourceId: string; datePaid: string; coverageTaxYear: string; coverageMonth: string; grossPremium: string; ownerOrBusinessPaid: string; otherPersonPaid: string; advancePremiumTaxCredit?: string; personAmounts: HealthInsuranceAllocationData[] }
 export interface HealthInsurancePlanData {
   planId: string; policyReference: string; accountHolder: "" | Owner; businessSourceId: string; businessKind: "" | "self_employed" | "partnership" | "s_corporation";
   kind: "" | "medical" | "qualified_ltc"; policyHolder: "" | "individual" | "business";
   establishedUnderBusiness: boolean | null; insuranceQualificationConfirmed: boolean | null; premiumsIncludedInOwnerIncome: boolean | null; moreThanTwoPercentShareholder: boolean | null;
   marketplaceCoverage: boolean | null; premiumTaxCreditInvolved: boolean | null; clergySpecialRules: boolean | null;
+  marketplacePolicySourceIds?: string[]; allCoveredPersonsInCoverageFamilyConfirmed?: boolean | null;
   coveredPersons: { personId: string; relationshipToOwner: "" | "self" | "spouse" | "dependent" | "child_under_27" | "other"; dependencyEligibilityConfirmed: boolean | null }[];
-  months: { month: string; employerSubsidizedPlanEligible: boolean | null }[];
+  months: { month: string; employerSubsidizedPlanEligible: boolean | null; employerOfferPtcException?: "" | "unaffordable" | "does_not_provide_minimum_value"; employerCoverageEnrolled?: boolean | null; employerOfferSourceReference?: string }[];
   payments: HealthInsurancePaymentData[];
 }
 export interface HealthInsuranceIncomeDeductionsData {
@@ -38,6 +40,9 @@ const statuses = { single: "single", mfj: "married_filing_jointly", mfs: "marrie
 function money(value: string | undefined, label: string) {
   const error = amountError(value, label); if (error) throw new Error(error);
   return parseGuidedCurrency(value).toFixed();
+}
+function advance(value: string | undefined, required: boolean, label: string) {
+  return required || value !== undefined ? money(value, label) : undefined;
 }
 function integer(value: string | undefined, label: string): number | undefined {
   if (!value?.trim()) return undefined;
@@ -71,18 +76,23 @@ export function buildHealthInsuranceInput(data: HealthInsuranceData | undefined,
     incomeDeductions: buildIncomeDeductions(data.incomeDeductions),
     persons: data.persons?.map(person => ({ ...person, householdRole: person.householdRole || undefined, attainedAgeAtYearEnd: integer(person.attainedAgeAtYearEnd, "year-end age") })),
     plans: data.plans?.map(plan => ({ ...plan, accountHolder: plan.accountHolder || undefined, businessKind: plan.businessKind || undefined, kind: plan.kind || undefined, policyHolder: plan.policyHolder || undefined,
-      ...Object.fromEntries((["establishedUnderBusiness", "insuranceQualificationConfirmed", "premiumsIncludedInOwnerIncome", "moreThanTwoPercentShareholder", "marketplaceCoverage", "premiumTaxCreditInvolved", "clergySpecialRules"] as const).map(field => [field, plan[field] ?? undefined])),
+      ...Object.fromEntries((["establishedUnderBusiness", "insuranceQualificationConfirmed", "premiumsIncludedInOwnerIncome", "moreThanTwoPercentShareholder", "marketplaceCoverage", "premiumTaxCreditInvolved", "clergySpecialRules", "allCoveredPersonsInCoverageFamilyConfirmed"] as const).map(field => [field, plan[field] ?? undefined])),
       coveredPersons: plan.coveredPersons?.map(person => ({ ...person, relationshipToOwner: person.relationshipToOwner || undefined, dependencyEligibilityConfirmed: person.dependencyEligibilityConfirmed ?? undefined })),
-      months: plan.months?.map(month => ({ month: integer(month.month, "coverage month"), employerSubsidizedPlanEligible: month.employerSubsidizedPlanEligible ?? undefined })),
+      months: plan.months?.map(month => ({ month: integer(month.month, "coverage month"), employerSubsidizedPlanEligible: month.employerSubsidizedPlanEligible ?? undefined,
+        employerOfferPtcException: month.employerOfferPtcException || undefined, employerCoverageEnrolled: month.employerCoverageEnrolled ?? undefined, employerOfferSourceReference: month.employerOfferSourceReference?.trim() || undefined })),
       payments: plan.payments?.map(payment => ({ ...payment, coverageTaxYear: integer(payment.coverageTaxYear, "coverage year"), coverageMonth: integer(payment.coverageMonth, "payment coverage month"),
         grossPremium: money(payment.grossPremium, "original premium"), ownerOrBusinessPaid: money(payment.ownerOrBusinessPaid, "owner or business paid share"), otherPersonPaid: money(payment.otherPersonPaid, "other person's paid share"),
+        advancePremiumTaxCredit: advance(payment.advancePremiumTaxCredit, plan.marketplaceCoverage === true && plan.premiumTaxCreditInvolved === true, "actual premium advance credit"),
         personAmounts: payment.personAmounts?.map(person => ({ ...person, payer: person.payer || undefined, publicSafetyOfficerAccountHolder: person.publicSafetyOfficerAccountHolder || undefined,
-          amountPaid: money(person.amountPaid, "person premium share"), excludedPublicSafetyOfficerAmount: money(person.excludedPublicSafetyOfficerAmount, "excluded public-safety-officer payments"), otherTaxFreeFunding: money(person.otherTaxFreeFunding, "other distinct tax-free funding") })),
+          amountPaid: money(person.amountPaid, "person premium share"), advancePremiumTaxCredit: advance(person.advancePremiumTaxCredit, plan.marketplaceCoverage === true && plan.premiumTaxCreditInvolved === true, "actual person advance credit"), excludedPublicSafetyOfficerAmount: money(person.excludedPublicSafetyOfficerAmount, "excluded public-safety-officer payments"), otherTaxFreeFunding: money(person.otherTaxFreeFunding, "other distinct tax-free funding") })),
       })),
     })),
     longTermCareAllocations: data.longTermCareAllocations?.map(allocation => ({ ...allocation, accountHolder: allocation.accountHolder || undefined, allowedPremium: money(allocation.allowedPremium, "actual long-term-care allocation") })),
   });
-  const checked = calculateForm7206({ facts, filingStatus: statuses[filingStatus], taxYear });
+  const specified = facts.plans?.some(plan => plan.marketplaceCoverage === true && plan.premiumTaxCreditInvolved === true);
+  // Validate original amounts without inventing a business limit or claiming the
+  // final deduction. Canonical Pub974 coordination supplies both later.
+  const checked = calculateForm7206({ facts, filingStatus: statuses[filingStatus], taxYear, marketplaceHandling: specified ? "separate-specified-premiums" : undefined });
   if (legacy && !legacy.eq(checked.paidSourcePremiums)) throw new Error("Reconcile saved health insurance premiums with actual owner and business paid source shares.");
   return facts;
 }
@@ -130,5 +140,7 @@ export function healthInsuranceSourceErrors(state: GuidedFlowState): Record<stri
       return { healthInsuranceHouseholdAge: "Reconcile the health plan's attained age with this person's actual household birth date and return year." };
     }
   }
+  try { validateMarketplaceHealthSources(state, data); }
+  catch (error) { return { healthInsuranceMarketplace: error instanceof Error ? error.message : "Reconcile actual Marketplace policy and premium sources." }; }
   return {};
 }
