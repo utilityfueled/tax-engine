@@ -1963,6 +1963,10 @@ export const Form1095ASchema = z.object({
 
 export const CharitableDonationSchema = z.object({
   organization: z.string(),
+  /** Actual qualification under IRC 170(b)(1)(A), required for 2026 nonitemizer gifts. */
+  qualifiedOrganization: z.boolean().optional(),
+  supportingOrganization: z.boolean().optional(),
+  donorAdvisedFund: z.boolean().optional(),
   type: z.enum(["cash", "appreciated_stock", "property", "other"]),
   amount: decimal, // Fair market value
   costBasis: optionalDecimal, // For appreciated property
@@ -2514,6 +2518,7 @@ export const ScheduleAInputSchema = z.object({
   investmentInterestExpense: optionalDecimal,
   gamblingWinnings: optionalDecimal,
   gamblingLosses: optionalDecimal,
+  gamblingExpenses: optionalDecimal,
 });
 
 /**

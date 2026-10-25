@@ -24,7 +24,8 @@ export interface ScheduleAInput {
   investmentInterestExpense?: Decimal; // Line 9: net investment interest expense
   casualtyLossDeduction?: Decimal; // Line 15: Form 4684 deductible casualty/theft loss
   gamblingWinnings?: Decimal; // Line 21b: gambling winnings (limits gambling loss deduction)
-  gamblingLosses?: Decimal; // Line 28: gambling losses (capped at winnings)
+  gamblingLosses?: Decimal; // Wagering losses
+  gamblingExpenses?: Decimal; // Otherwise deductible expenses incurred carrying on wagering transactions
   // K-1 Box 13 charitable pass-through amounts
   k1CashCharitable?: Decimal; // Code A: cash/non-capital-gain property (60% AGI limit)
   k1AppreciatedProperty30?: Decimal; // Code B: capital gain property to 50% orgs (30% limit)
@@ -64,6 +65,7 @@ export interface ScheduleAResult {
   nonCashCharitable: Decimal; // Line 13
   gamblingLossDeduction: Decimal; // Line 28
   totalItemized: Decimal; // Line 17
+  nonitemizerCharitableDeduction: Decimal; // 2026 candidate; federal flow applies only when standard deduction selected
   /** Excess charitable contributions that carry forward to next year (IRC §170(d)) */
   charitableCarryforward: Decimal;
   /** Per-year remaining carryforward after FIFO reconciliation with 5-year expiration */
@@ -343,6 +345,25 @@ export function calculateScheduleA(
       ? "No casualty or theft losses"
       : "Form 4684 Section A deductible casualty loss (federally declared disaster only, post-TCJA)");
 
+  let nonitemizerCharitableDeduction = ZERO;
+  const contributionBase = zeroFloor(agi);
+  if (input.taxpayer.taxYear === 2026) {
+    let eligibleCash = ZERO;
+    for (const donation of input.donations) {
+      const amount = d(donation.amount);
+      if (!amount.isFinite() || amount.lt(0)) throw new Error("Charitable contribution must be finite and nonnegative");
+      const date = new Date(`${donation.dateOfDonation}T00:00:00Z`);
+      if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== donation.dateOfDonation) throw new Error("Invalid donation date");
+      if (!donation.dateOfDonation.startsWith(`${input.taxpayer.taxYear}-`)) throw new Error("Donation date must be in the return tax year");
+      if (donation.type !== "cash" || amount.isZero()) continue;
+      if (donation.qualifiedOrganization === undefined || donation.supportingOrganization === undefined || donation.donorAdvisedFund === undefined) throw new Error("Nonitemizer charitable recipient qualification is unknown");
+      if (donation.qualifiedOrganization && !donation.supportingOrganization && !donation.donorAdvisedFund && !donation.isPrivateFoundation) eligibleCash = eligibleCash.plus(amount);
+    }
+    nonitemizerCharitableDeduction = roundDollar(Decimal.min(eligibleCash, contributionBase.times("0.60"), filingStatus === "married_filing_jointly" ? "2000" : "1000"));
+  }
+  audit.record("Charitable WS", "nonitemizer", "Nonitemizer charitable deduction candidate", nonitemizerCharitableDeduction,
+    "2026 current eligible cash only: min(cash, 60% AGI, 1000 [2000 MFJ]); no floor or carryover");
+
   // ── Charitable (Lines 12-13) with stacked AGI limits ──
   // Per IRC §170(b)(1), charitable contribution limits interact (stack):
   // Non-cash donations:
@@ -365,9 +386,9 @@ export function calculateScheduleA(
   const rawOtherNonCash = input.donations
     .filter((don) => don.type !== "cash" && !don.isLongTermCapitalGain)
     .reduce((acc, don) => acc.plus(d(don.amount)), new Decimal(0));
-  const appreciatedLimit = roundDollar(agi.times(new Decimal(0.3)));
-  const privateFoundationAppreciatedLimit = roundDollar(agi.times(new Decimal(0.2)));
-  const overallNonCashLimit = roundDollar(agi.times(new Decimal(0.5)));
+  const appreciatedLimit = roundDollar(contributionBase.times("0.3"));
+  const privateFoundationAppreciatedLimit = roundDollar(contributionBase.times("0.2"));
+  const overallNonCashLimit = roundDollar(contributionBase.times("0.5"));
   const deductiblePublicAppreciatedProperty = min(rawPublicAppreciatedProperty, appreciatedLimit);
   // Other non-cash gets remaining 50% capacity after LTCG
   const otherNonCashCapacity = zeroFloor(overallNonCashLimit.minus(deductiblePublicAppreciatedProperty));
@@ -379,7 +400,7 @@ export function calculateScheduleA(
     .reduce((acc, don) => acc.plus(d(don.amount)), new Decimal(0));
   const rawCashCharitable = rawCashCharitableDirect
     .plus(extra?.k1CashCharitable ?? new Decimal(0));
-  const cashAGILimit = roundDollar(agi.times(new Decimal(0.6)));
+  const cashAGILimit = roundDollar(contributionBase.times("0.6"));
   const preliminaryNonCash = deductiblePublicAppreciatedProperty.plus(deductibleOtherNonCash);
   const cashCapacity = zeroFloor(cashAGILimit.minus(preliminaryNonCash));
 
@@ -444,9 +465,12 @@ export function calculateScheduleA(
   // Line 28: Gambling losses (limited to gambling winnings per IRC §165(d))
   const gamblingWinnings = extra?.gamblingWinnings ?? new Decimal(0);
   const rawGamblingLosses = extra?.gamblingLosses ?? new Decimal(0);
-  const gamblingLossDeduction = min(rawGamblingLosses, gamblingWinnings);
+  const gamblingExpenses = extra?.gamblingExpenses ?? ZERO;
+  if ([gamblingWinnings, rawGamblingLosses, gamblingExpenses].some((value) => !value.isFinite() || value.lt(0))) throw new Error("Wagering facts must be finite and nonnegative");
+  const deductibleWageringAmount = rawGamblingLosses.plus(gamblingExpenses).times(input.taxpayer.taxYear === 2026 ? "0.90" : "1");
+  const gamblingLossDeduction = roundDollar(min(deductibleWageringAmount, gamblingWinnings));
   audit.record("Sched A", "28", "Gambling losses (limited to winnings)", gamblingLossDeduction,
-    `min(losses ${rawGamblingLosses}, winnings ${gamblingWinnings})`);
+    `min(${input.taxpayer.taxYear === 2026 ? "90%" : "100%"} × (losses ${rawGamblingLosses} + expenses ${gamblingExpenses}), winnings ${gamblingWinnings})`);
 
   // ── Total (Line 17) ───────────────────────────────────
   const totalItemized = sum(
@@ -498,6 +522,7 @@ export function calculateScheduleA(
     nonCashCharitable,
     gamblingLossDeduction,
     totalItemized,
+    nonitemizerCharitableDeduction,
     charitableCarryforward: newCharitableCarryforward,
     charitableCarryforwardByYear: carryforwardByYear,
     charitableCarryforwardExpired: carryforwardReconciliation.totalExpired,

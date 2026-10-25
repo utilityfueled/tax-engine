@@ -1,0 +1,25 @@
+form: "Schedule A 2026 law transitions"
+fullName: "Year-aware charitable and wagering deductions"
+taxYear: 2026
+irsReference: "https://www.irs.gov/publications/p505"
+retrievedAt: "2026-10-24"
+reviewStatus: "independent-review-pending"
+lines:
+  - line: "16-wagering"
+    description: "Wagering losses and qualifying wagering expenses"
+    formula: "2026: min(winnings, 90% * (wagering losses + otherwise deductible expenses incurred carrying on wagering transactions)); round dollars. 2025 retains 100% limited to winnings. Negative inputs reject."
+    irsRef: "IRC 165(d), https://uscode.house.gov/us/usc/119-120/t26/s165/"
+    testRef: "tests/engine/schedules/schedule-a-2026.test.ts::2026 wagering deduction"
+  - line: "1040-nonitemizer-charity"
+    description: "Current cash contributions with standard deduction"
+    formula: |
+      2026 candidate = min(1000 [2000 MFJ], 60% of max(0, AGI), eligible current-year
+      cash contributions). Required explicit recipient qualification under
+      170(b)(1)(A); supporting organizations, donor-advised funds and private
+      foundations excluded. No carryover, noncash gifts, or 0.5% floor.
+      Standard deduction plus this candidate is compared with itemized deductions.
+      Only the selected standard path receives this below-AGI deduction.
+      2025 candidate is zero. Unknown eligibility, wrong-year dates or negative
+      donation amounts reject rather than infer eligibility.
+    irsRef: "IRC 170(p), 63(b), https://uscode.house.gov/us/usc/119-120/t26/s170/"
+    testRef: "tests/engine/schedules/schedule-a-2026.test.ts::2026 nonitemizer charitable deduction"

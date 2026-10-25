@@ -1930,6 +1930,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
         casualtyLossDeduction: form4684DeductibleLoss,
         gamblingWinnings: totalGamblingWinnings,
         gamblingLosses: d(input.scheduleA?.gamblingLosses),
+        gamblingExpenses: d(input.scheduleA?.gamblingExpenses),
         k1CashCharitable: hasK1Charitable ? k1CashCharitable : undefined,
         k1AppreciatedProperty30: hasK1Charitable ? k1AppreciatedProperty30 : undefined,
         k1AppreciatedProperty20: hasK1Charitable ? k1AppreciatedProperty20 : undefined,
@@ -1984,7 +1985,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     allForm8889Results
   );
 
-  const deductionUsed = itemizedDeductions.greaterThan(standardDeduction) ? "itemized" : "standard";
+  const deductionUsed = itemizedDeductions.greaterThan(standardDeduction.plus(schedA.nonitemizerCharitableDeduction)) ? "itemized" : "standard";
   const deductionAmount = deductionUsed === "itemized" ? itemizedDeductions : standardDeduction;
   audit.record(
     "1040",
@@ -2003,10 +2004,13 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     foreignExcludedIncome: form2555IncomeReduction.plus(form2555HousingDeduction),
     facts: input.schedule1A,
   }) : undefined;
-  const additionalDeductions = schedule1A?.totalDeduction ?? d("0");
+  const nonitemizerCharitableDeduction = deductionUsed === "standard" ? schedA.nonitemizerCharitableDeduction : d("0");
+  const additionalDeductions = (schedule1A?.totalDeduction ?? d("0")).plus(nonitemizerCharitableDeduction);
   if (schedule1A) audit.merge(schedule1A.lines);
-  audit.record("1040", "13b", "Additional deductions from Schedule 1-A", additionalDeductions,
+  audit.record("1040", "13b", "Additional deductions from Schedule 1-A", schedule1A?.totalDeduction ?? d("0"),
     "Schedule 1-A line 38; no change to AGI or payroll taxes");
+  audit.record("1040", "nonitemizer-charity", "Charitable deduction with standard deduction", nonitemizerCharitableDeduction,
+    "IRC 170(p); available only when the standard deduction is selected");
 
   // Line 13: Section 199A QBI Deduction (Form 8995)
   // Collect QBI sources from Schedule C, Schedule F, and K-1s.
@@ -3342,6 +3346,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     form8815,
     form8812,
     schedule1A,
+    nonitemizerCharitableDeduction,
     form8995: form8995Result,
     form8995A: form8995AResult,
     form8936,

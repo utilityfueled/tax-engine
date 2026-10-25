@@ -96,3 +96,18 @@ Checks: 567 focused Schedule 1-A, federal integration and QBI tests pass;
 engine typecheck and spec validation (2,971 references) pass. Scoped diff and
 whitespace reviewed. All new calculation expectations are synthetic or directly
 transcribed IRS example arithmetic, not independently reviewed evidence.
+
+## Package: 2026 wagering and nonitemizer cash gifts
+
+Refreshed https://uscode.house.gov/us/usc/119-120/t26/s165/ (90% wagering
+loss/expense deduction before winnings cap) and
+https://uscode.house.gov/us/usc/119-120/t26/s170/ (subsection (p), recipient
+exclusions, current-year cash only, retained 60% contribution-base limit).
+22 spec-linked tests ran with 19 failures before implementation. All 553 focused
+Schedule A and federal tests pass, with engine typecheck passing. The 2026
+standard-versus-itemized selection includes the additional eligible cash gift
+amount; AGI is unchanged. Positive 2026 cash gifts require actual recipient
+qualification, supporting-organization and donor-advised-fund facts. Invalid
+amounts/dates reject. This does not complete the separate itemized 0.5% floor,
+category carryover, PMI or overall limitation work, and the 2026 full-return gate
+still prevents public use of the incomplete rule pack.
