@@ -2614,9 +2614,9 @@ describe("computeDeductionComparison", () => {
       charitableContributions: "2000",
     }, 2025);
     expect(result.standardAmount).toBe(15750);
-    expect(result.itemizedTotal).toBe(10000);
+    expect(result.itemizedTotal).toBe("10000");
     expect(result.recommendation).toBe("standard");
-    expect(result.savings).toBe(5750);
+    expect(result.savings).toBe("5750");
   });
 
   it("recommends itemized when itemized total exceeds standard deduction", () => {
@@ -2628,9 +2628,9 @@ describe("computeDeductionComparison", () => {
       charitableContributions: "3000",
     }, 2025);
     expect(result.standardAmount).toBe(15750);
-    expect(result.itemizedTotal).toBe(18000);
+    expect(result.itemizedTotal).toBe("18000");
     expect(result.recommendation).toBe("itemized");
-    expect(result.savings).toBe(2250);
+    expect(result.savings).toBe("2250");
   });
 
   it("returns equal when totals match exactly", () => {
@@ -2641,9 +2641,9 @@ describe("computeDeductionComparison", () => {
       charitableContributions: "5000",
     }, 2025);
     expect(result.standardAmount).toBe(15750);
-    expect(result.itemizedTotal).toBe(15000);
+    expect(result.itemizedTotal).toBe("15000");
     expect(result.recommendation).toBe("standard");
-    expect(result.savings).toBe(750);
+    expect(result.savings).toBe("750");
   });
 
   it("uses MFJ standard deduction amount for joint filers", () => {
@@ -2653,17 +2653,17 @@ describe("computeDeductionComparison", () => {
       mortgageInterest: "20000",
     }, 2025);
     expect(result.standardAmount).toBe(31500);
-    expect(result.itemizedTotal).toBe(20000);
+    expect(result.itemizedTotal).toBe("20000");
     expect(result.recommendation).toBe("standard");
-    expect(result.savings).toBe(11500);
+    expect(result.savings).toBe("11500");
   });
 
   it("handles undefined deduction data gracefully", () => {
     const result = computeDeductionComparison("single", undefined, 2025);
     expect(result.standardAmount).toBe(15750);
-    expect(result.itemizedTotal).toBe(0);
+    expect(result.itemizedTotal).toBe("0");
     expect(result.recommendation).toBe("standard");
-    expect(result.savings).toBe(15750);
+    expect(result.savings).toBe("15750");
   });
 
   it("handles null filing status", () => {
@@ -2673,9 +2673,9 @@ describe("computeDeductionComparison", () => {
       mortgageInterest: "10000",
     }, 2025);
     expect(result.standardAmount).toBe(0);
-    expect(result.itemizedTotal).toBe(10000);
+    expect(result.itemizedTotal).toBe("10000");
     expect(result.recommendation).toBe("itemized");
-    expect(result.savings).toBe(10000);
+    expect(result.savings).toBe("10000");
   });
 
   it("rejects malformed nonempty monetary inputs", () => {
@@ -2689,7 +2689,7 @@ describe("computeDeductionComparison", () => {
       mortgageInterest: "12,500",
       charitableContributions: "3,000",
     }, 2025);
-    expect(result.itemizedTotal).toBe(15500);
+    expect(result.itemizedTotal).toBe("15500");
   });
 
   it("sums all seven itemized deduction fields", () => {
@@ -2703,8 +2703,8 @@ describe("computeDeductionComparison", () => {
       casualtyLosses: "1000",
       otherItemized: "1000",
     }, 2025);
-    expect(result.itemizedTotal).toBe(17000);
+    expect(result.itemizedTotal).toBe("17000");
     expect(result.recommendation).toBe("itemized");
-    expect(result.savings).toBe(1250);
+    expect(result.savings).toBe("1250");
   });
 });

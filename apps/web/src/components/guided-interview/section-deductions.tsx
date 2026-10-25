@@ -11,16 +11,9 @@ import {
 } from "@/lib/guided-interview-flow";
 import { CurrencyField } from "./currency-field";
 import { DeductionSourceDetails } from "./deduction-source-details";
+import { formatGuidedCurrency, parseGuidedDisplayAmount } from "@/lib/guided-currency";
 
-const currencyFormatter = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  maximumFractionDigits: 0,
-});
-
-function formatUsd(amount: number): string {
-  return currencyFormatter.format(amount);
-}
+const formatUsd = formatGuidedCurrency;
 
 export function SectionDeductions({
   data,
@@ -150,7 +143,7 @@ export function SectionDeductions({
               </div>
             </details>
 
-            {comparison.itemizedTotal > 0 && (
+            {parseGuidedDisplayAmount(comparison.itemizedTotal).gt(0) && (
               <div className="guided-deduction-comparison" style={{ marginTop: "16px" }} role="status" aria-live="polite">
                 <div className="guided-ticker-grid">
                   <div className="guided-ticker-item">

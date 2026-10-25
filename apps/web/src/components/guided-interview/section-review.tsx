@@ -1,5 +1,8 @@
 "use client";
 
+import Decimal from "decimal.js";
+import { formatGuidedCurrency, parseGuidedDisplayAmount, sumGuidedDisplayAmounts } from "@/lib/guided-currency";
+
 import { RetroShell } from "@/components/retro-shell";
 import type { GuidedPreviewMetrics } from "@/lib/guided-interview-bridge";
 import {
@@ -34,22 +37,10 @@ import {
   type SupportedStateCode,
 } from "@/lib/guided-interview-flow";
 
-const currencyFormatter = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  maximumFractionDigits: 0,
-});
-
-function formatCurrency(value: string | number | undefined): string {
-  if (value === undefined || value === "") return "$0";
-  const num = typeof value === "string" ? Number(value.replace(/,/g, "")) : value;
-  if (Number.isNaN(num)) return "$0";
-  return currencyFormatter.format(num);
-}
-
+const formatCurrency = formatGuidedCurrency;
 function hasValue(value: string): boolean {
-  const n = Number(value.trim().replace(/,/g, ""));
-  return !Number.isNaN(n) && n !== 0;
+  const amount = parseGuidedDisplayAmount(value);
+  return amount.isFinite() && !amount.isZero();
 }
 
 // ── Section summary cards ──────────────────────────────────────────────────
@@ -145,21 +136,10 @@ function SelfEmploymentSummary({
   incomeDocumentAnalyses: import("@/lib/guided-interview-flow").SelfEmploymentIncomeDocumentAnalysis[] | undefined;
 }) {
   const filledEntries = (necEntries ?? []).filter((e) => hasValue(e.nonemployeeCompensation));
-  const manualIncomeValue = Number(manualGrossReceipts?.replace(/,/g, "") ?? "");
-  const manualIncome = Number.isNaN(manualIncomeValue) ? 0 : manualIncomeValue;
-  if (filledEntries.length === 0 && manualIncome === 0) return <p className="guided-review-empty">No self-employment income entered.</p>;
-
-  const totalIncome = filledEntries.reduce((sum, e) => {
-    const val = Number(e.nonemployeeCompensation?.replace(/,/g, ""));
-    return sum + (Number.isNaN(val) ? 0 : val);
-  }, 0) + manualIncome;
-
-  const totalExpenses = expenses
-    ? Object.values(expenses).reduce((sum, val) => {
-        const num = Number(String(val).replace(/,/g, ""));
-        return sum + (Number.isNaN(num) ? 0 : num);
-      }, 0)
-    : 0;
+  const manualIncome = parseGuidedDisplayAmount(manualGrossReceipts);
+  if (filledEntries.length === 0 && manualIncome.isZero()) return <p className="guided-review-empty">No self-employment income entered.</p>;
+  const totalIncome = sumGuidedDisplayAmounts(filledEntries.map((entry) => entry.nonemployeeCompensation)).plus(manualIncome);
+  const totalExpenses = sumGuidedDisplayAmounts(Object.values(expenses ?? {}));
 
   return (
     <div className="guided-review-card">
@@ -173,13 +153,13 @@ function SelfEmploymentSummary({
           </span>
         </div>
       ))}
-      {manualIncome > 0 && (
+      {manualIncome.gt(0) && (
         <div className="guided-review-row">
           <span className="guided-review-label">Income without 1099-NEC</span>
           <span className="guided-review-value">{formatCurrency(String(manualIncome))}</span>
         </div>
       )}
-      {totalExpenses > 0 && (
+      {totalExpenses.gt(0) && (
         <div className="guided-review-row">
           <span className="guided-review-label">Business expenses</span>
           <span className="guided-review-value">{formatCurrency(totalExpenses)}</span>
@@ -199,7 +179,7 @@ function SelfEmploymentSummary({
       )}
       <div className="guided-review-row guided-review-row-total">
         <span className="guided-review-label">Net self-employment</span>
-        <span className="guided-review-value">{formatCurrency(totalIncome - totalExpenses)}</span>
+        <span className="guided-review-value">{formatCurrency(totalIncome.minus(totalExpenses))}</span>
       </div>
     </div>
   );
@@ -226,33 +206,20 @@ function InvestmentSummary({
     return <p className="guided-review-empty">No investment income entered.</p>;
   }
 
-  const totalInterest = filledInterest.reduce((sum, e) => {
-    const val = Number(e.interestIncome?.replace(/,/g, ""));
-    return sum + (Number.isNaN(val) ? 0 : val);
-  }, 0);
-
-  const totalDividends = filledDividends.reduce((sum, e) => {
-    const val = Number(e.ordinaryDividends?.replace(/,/g, ""));
-    return sum + (Number.isNaN(val) ? 0 : val);
-  }, 0);
-
-  const totalGains = filledBrokerage.reduce((sum, b) => {
-    return sum + b.transactions.reduce((tSum, t) => {
-      const proceeds = Number(t.proceeds?.replace(/,/g, "") ?? "0");
-      const basis = Number(t.costBasis?.replace(/,/g, "") ?? "0");
-      return tSum + (Number.isNaN(proceeds) || Number.isNaN(basis) ? 0 : proceeds - basis);
-    }, 0);
-  }, 0);
+  const totalInterest = sumGuidedDisplayAmounts(filledInterest.map((entry) => entry.interestIncome));
+  const totalDividends = sumGuidedDisplayAmounts(filledDividends.map((entry) => entry.ordinaryDividends));
+  const totalGains = filledBrokerage.flatMap((entry) => entry.transactions).reduce((sum, transaction) =>
+    sum.plus(parseGuidedDisplayAmount(transaction.proceeds).minus(parseGuidedDisplayAmount(transaction.costBasis))), new Decimal(0));
 
   return (
     <div className="guided-review-card">
-      {totalInterest > 0 && (
+      {totalInterest.gt(0) && (
         <div className="guided-review-row">
           <span className="guided-review-label">Interest income</span>
           <span className="guided-review-value">{formatCurrency(totalInterest)}</span>
         </div>
       )}
-      {totalDividends > 0 && (
+      {totalDividends.gt(0) && (
         <div className="guided-review-row">
           <span className="guided-review-label">Dividend income</span>
           <span className="guided-review-value">{formatCurrency(totalDividends)}</span>
@@ -349,10 +316,7 @@ function CreditsSummary({ data }: { data: CreditsData | undefined }) {
 
   const filledStudents = data.education.aocStudents.filter((s) => hasValue(s.qualifiedExpenses));
   if (filledStudents.length > 0) {
-    const totalEdu = filledStudents.reduce((sum, s) => {
-      const num = Number(s.qualifiedExpenses?.replace(/,/g, ""));
-      return sum + (Number.isNaN(num) ? 0 : num);
-    }, 0);
+    const totalEdu = sumGuidedDisplayAmounts(filledStudents.map((student) => student.qualifiedExpenses));
     items.push({ label: `Education (${filledStudents.length} student${filledStudents.length > 1 ? "s" : ""})`, value: String(totalEdu) });
   }
 
@@ -360,7 +324,7 @@ function CreditsSummary({ data }: { data: CreditsData | undefined }) {
     items.push({ label: "Lifetime Learning expenses", value: data.education.llcExpenses });
   }
 
-  const energyTotal = [
+  const energyTotal = sumGuidedDisplayAmounts([
     data.energy.solarElectricCost,
     data.energy.solarWaterHeatingCost,
     data.energy.insulationCost,
@@ -368,12 +332,9 @@ function CreditsSummary({ data }: { data: CreditsData | undefined }) {
     data.energy.roofCost,
     data.energy.energyEfficientHvacCost,
     data.energy.waterHeaterHeatPumpCost,
-  ].reduce((sum, val) => {
-    const num = Number(val?.replace(/,/g, "") ?? "0");
-    return sum + (Number.isNaN(num) ? 0 : num);
-  }, 0);
+  ]);
 
-  if (energyTotal > 0) {
+  if (energyTotal.gt(0)) {
     items.push({ label: "Energy improvements", value: String(energyTotal) });
   }
 
@@ -399,10 +360,7 @@ function PaymentsSummary({ data }: { data: PaymentData | undefined }) {
     return <p className="guided-review-empty">No additional payments entered.</p>;
   }
 
-  const totalEstimated = filledPayments.reduce((sum, p) => {
-    const num = Number(p.amount?.replace(/,/g, "") ?? "0");
-    return sum + (Number.isNaN(num) ? 0 : num);
-  }, 0);
+  const totalEstimated = sumGuidedDisplayAmounts(filledPayments.map((payment) => payment.amount));
 
   return (
     <div className="guided-review-card">
@@ -493,13 +451,10 @@ function RentalIncomeSummary({ entries }: { entries: RentalPropertyEntryData[] |
   return (
     <div className="guided-review-card">
       {filledEntries.map((entry, i) => {
-        const totalExpenses = [
+        const totalExpenses = sumGuidedDisplayAmounts([
           entry.mortgageInterest, entry.taxes, entry.insurance,
           entry.repairs, entry.utilities, entry.depreciation, entry.otherExpenses,
-        ].reduce((sum, val) => {
-          const num = Number(val?.replace(/,/g, "") ?? "0");
-          return sum + (Number.isNaN(num) ? 0 : num);
-        }, 0);
+        ]);
 
         return (
           <div key={i} className="guided-review-row">
@@ -507,7 +462,7 @@ function RentalIncomeSummary({ entries }: { entries: RentalPropertyEntryData[] |
               {entry.description || `Property #${i + 1}`}
             </span>
             <span className="guided-review-value">
-              {formatCurrency(entry.rents)} rents{totalExpenses > 0 ? `, ${formatCurrency(totalExpenses)} expenses` : ""}
+              {formatCurrency(entry.rents)} rents{totalExpenses.gt(0) ? `, ${formatCurrency(totalExpenses)} expenses` : ""}
             </span>
           </div>
         );
@@ -551,14 +506,11 @@ function StateReturnSummary({
 
   const stateName = supportedStates.find((s) => s.code === stateCode)?.name ?? stateCode;
   const stateMetrics = preview?.state ?? null;
-  const stateRefund = stateMetrics ? Number(stateMetrics.stateRefund) : 0;
-  const stateOwed = stateMetrics ? Number(stateMetrics.stateAmountOwed) : 0;
+  const stateRefund = parseGuidedDisplayAmount(stateMetrics?.stateRefund);
+  const stateOwed = parseGuidedDisplayAmount(stateMetrics?.stateAmountOwed);
 
   const filledPayments = (data?.stateEstimatedPayments ?? []).filter((p) => hasValue(p.amount));
-  const totalEstimated = filledPayments.reduce((sum, p) => {
-    const num = Number(p.amount?.replace(/,/g, "") ?? "0");
-    return sum + (Number.isNaN(num) ? 0 : num);
-  }, 0);
+  const totalEstimated = sumGuidedDisplayAmounts(filledPayments.map((payment) => payment.amount));
 
   return (
     <div className="guided-review-card">
@@ -574,19 +526,19 @@ function StateReturnSummary({
           </div>
           <div className="guided-review-row">
             <span className="guided-review-label">
-              {stateRefund > 0 ? "State refund" : stateOwed > 0 ? "State balance due" : "State result"}
+              {stateRefund.gt(0) ? "State refund" : stateOwed.gt(0) ? "State balance due" : "State result"}
             </span>
             <span className="guided-review-value">
-              {stateRefund > 0
+              {stateRefund.gt(0)
                   ? formatCurrency(stateMetrics.stateRefund)
-                  : stateOwed > 0
+                  : stateOwed.gt(0)
                     ? formatCurrency(stateMetrics.stateAmountOwed)
                   : "—"}
             </span>
           </div>
         </>
       )}
-      {totalEstimated > 0 && (
+      {totalEstimated.gt(0) && (
         <div className="guided-review-row">
           <span className="guided-review-label">
             State estimated payments ({filledPayments.length})
@@ -735,8 +687,8 @@ export function SectionReview({
     }
   }
 
-  const refund = preview ? Number(preview.refund) : 0;
-  const owed = preview ? Number(preview.amountOwed) : 0;
+  const refund = parseGuidedDisplayAmount(preview?.refund);
+  const owed = parseGuidedDisplayAmount(preview?.amountOwed);
 
   return (
     <RetroShell title="Review & Summary" eyebrow="REVIEW">
@@ -749,14 +701,14 @@ export function SectionReview({
 
         {preview && (
           <div className="guided-review-result-banner">
-            <div className={`guided-ticker-item guided-ticker-item-hero ${refund > 0 ? "guided-ticker-positive" : owed > 0 ? "guided-ticker-negative" : ""}`}>
+            <div className={`guided-ticker-item guided-ticker-item-hero ${refund.gt(0) ? "guided-ticker-positive" : owed.gt(0) ? "guided-ticker-negative" : ""}`}>
               <span className="guided-ticker-label">
-                {refund > 0 ? "Estimated Refund" : owed > 0 ? "Estimated Balance Due" : "Estimated Result"}
+                {refund.gt(0) ? "Estimated Refund" : owed.gt(0) ? "Estimated Balance Due" : "Estimated Result"}
               </span>
               <strong className="guided-ticker-value guided-ticker-value-hero">
-                {refund > 0
+                {refund.gt(0)
                   ? formatCurrency(preview.refund)
-                  : owed > 0
+                  : owed.gt(0)
                     ? formatCurrency(preview.amountOwed)
                     : "—"}
               </strong>

@@ -1,5 +1,7 @@
 "use client";
 
+import { formatGuidedCurrency } from "@/lib/guided-currency";
+
 import { useEffect, useId, useMemo, useRef, useState, type ChangeEvent } from "react";
 import type {
   ReturnWorkspaceRecord,
@@ -418,7 +420,7 @@ function W2Card({
                     <p className="guided-doc-helper-meta">IRS sample values for testing only.</p>
                   ) : null}
                   <p className="guided-doc-helper-meta">
-                    {suggestion.summary.employerName} · Box 1 ${Number(suggestion.summary.wages).toLocaleString()} · Box 2 ${Number(suggestion.summary.federalWithheld).toLocaleString()}
+                    {suggestion.summary.employerName} · Box 1 {formatGuidedCurrency(suggestion.summary.wages)} · Box 2 {formatGuidedCurrency(suggestion.summary.federalWithheld)}
                   </p>
                 </div>
                 <button

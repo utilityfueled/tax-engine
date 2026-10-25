@@ -8,6 +8,7 @@ import {
   emptyPaymentData,
 } from "@/lib/guided-interview-flow";
 import { CurrencyField } from "./currency-field";
+import { formatGuidedCurrency, sumGuidedDisplayAmounts } from "@/lib/guided-currency";
 
 function EstimatedPaymentCard({
   index,
@@ -95,10 +96,7 @@ export function SectionPayments({
     });
   }
 
-  const totalEstimated = payments.reduce((sum, entry) => {
-    const num = Number(entry.amount?.replace(/,/g, "") ?? "0");
-    return sum + (Number.isNaN(num) ? 0 : num);
-  }, 0);
+  const totalEstimated = sumGuidedDisplayAmounts(payments.map((entry) => entry.amount));
 
   return (
     <RetroShell title="Payments & Withholding" eyebrow="PAYMENTS">
@@ -150,12 +148,12 @@ export function SectionPayments({
           </div>
         </details>
 
-        {totalEstimated > 0 && (
+        {totalEstimated.gt(0) && (
           <div className="guided-ticker-grid" style={{ marginTop: "16px" }} role="status" aria-live="polite">
             <div className="guided-ticker-item">
               <span className="guided-ticker-label">Total Estimated Payments</span>
               <strong className="guided-ticker-value">
-                ${totalEstimated.toLocaleString("en-US", { minimumFractionDigits: 0 })}
+                {formatGuidedCurrency(totalEstimated)}
               </strong>
             </div>
           </div>

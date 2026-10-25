@@ -554,9 +554,12 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
         lastName: personalInfo.lastName,
         ssn: personalInfo.ssn,
         dateOfBirth: personalInfo.dateOfBirth,
+        usResidencyMonths: Number(personalInfo.usResidencyMonths),
       },
-      spouse: segmentation.filingStatus === "mfj" || segmentation.filingStatus === "mfs" ? personalInfo.spouse : undefined,
+      spouse: (segmentation.filingStatus === "mfj" || segmentation.filingStatus === "mfs") && personalInfo.spouse
+        ? { ...personalInfo.spouse, usResidencyMonths: Number(personalInfo.spouse.usResidencyMonths) } : undefined,
       livedWithSpouseAtAnyTimeDuringYear: personalInfo?.livedWithSpouseAtAnyTimeDuringYear,
+      stateResidency: personalInfo.stateResidency,
       address: {
         street: personalInfo.addressLine1,
         apt: personalInfo.addressLine2 || undefined,
@@ -613,6 +616,9 @@ export interface GuidedPreviewMetrics {
   totalPayments: string;
   refund: string;
   amountOwed: string;
+  selfEmploymentTax?: string;
+  additionalMedicareTax?: string;
+  netInvestmentIncomeTax?: string;
   state: StatePreviewMetrics | null;
 }
 

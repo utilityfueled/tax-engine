@@ -11,17 +11,9 @@ import {
   type SupportedStateCode,
 } from "@/lib/guided-interview-flow";
 import { CurrencyField } from "./currency-field";
+import { formatGuidedCurrency, parseGuidedDisplayAmount } from "@/lib/guided-currency";
 
-function formatCurrency(value: string | undefined): string {
-  if (!value) return "—";
-  const num = Number(value);
-  if (Number.isNaN(num)) return "—";
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(num);
-}
+const formatCurrency = formatGuidedCurrency;
 
 function StateEstimatedPaymentCard({
   index,
@@ -115,8 +107,8 @@ export function SectionStateReturn({
   const stateName = supportedStates.find((s) => s.code === stateCode)?.name ?? stateCode;
   const stateMetrics: StatePreviewMetrics | null = guidedPreview?.state ?? null;
 
-  const stateRefund = stateMetrics ? Number(stateMetrics.stateRefund) : 0;
-  const stateOwed = stateMetrics ? Number(stateMetrics.stateAmountOwed) : 0;
+  const stateRefund = parseGuidedDisplayAmount(stateMetrics?.stateRefund);
+  const stateOwed = parseGuidedDisplayAmount(stateMetrics?.stateAmountOwed);
 
   function handleAddPayment() {
     onDataChange({
@@ -163,15 +155,15 @@ export function SectionStateReturn({
               value={formatCurrency(stateMetrics.stateWithholding)}
             />
             <StateSummaryRow
-              label={stateRefund > 0 ? "State Refund" : stateOwed > 0 ? "State Balance Due" : "State Result"}
+              label={stateRefund.gt(0) ? "State Refund" : stateOwed.gt(0) ? "State Balance Due" : "State Result"}
               value={
-                stateRefund > 0
+                stateRefund.gt(0)
                   ? formatCurrency(stateMetrics.stateRefund)
-                  : stateOwed > 0
+                  : stateOwed.gt(0)
                     ? formatCurrency(stateMetrics.stateAmountOwed)
                     : "—"
               }
-              highlight={stateRefund > 0 ? "positive" : stateOwed > 0 ? "negative" : undefined}
+              highlight={stateRefund.gt(0) ? "positive" : stateOwed.gt(0) ? "negative" : undefined}
             />
           </div>
         ) : (

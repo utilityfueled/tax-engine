@@ -22,3 +22,19 @@ export function formatGuidedDollars(amount: Decimal): string {
   const grouped = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   return cents === "00" ? grouped : `${grouped}.${cents}`;
 }
+
+/** UI-only parser: propagate malformed values as unknown through display totals.
+ * Engine adapters must use the strict parser above instead. */
+export function parseGuidedDisplayAmount(value: string | undefined): Decimal {
+  try { return parseGuidedCurrency(value); } catch { return new Decimal(NaN); }
+}
+
+export function sumGuidedDisplayAmounts(values: (string | undefined)[]): Decimal {
+  return values.reduce<Decimal>((sum, value) => sum.plus(parseGuidedDisplayAmount(value)), new Decimal(0));
+}
+
+export function formatGuidedCurrency(value: Decimal | string | number | undefined): string {
+  const amount = Decimal.isDecimal(value) ? value : parseGuidedDisplayAmount(value === undefined ? undefined : String(value));
+  if (!amount.isFinite()) return "—";
+  return `${amount.isNegative() ? "-" : ""}$${formatGuidedDollars(amount.abs())}`;
+}

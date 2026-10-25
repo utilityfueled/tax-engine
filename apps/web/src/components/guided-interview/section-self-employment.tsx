@@ -1,4 +1,5 @@
 "use client";
+import { formatGuidedDollars, parseGuidedDisplayAmount, sumGuidedDisplayAmounts } from "@/lib/guided-currency";
 
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import type { ReturnWorkspaceRecord } from "@tax-engine/contracts";
@@ -176,22 +177,15 @@ const maxIncomeSuggestionSteps = 100;
 const maxExpenseSuggestionSteps = 150;
 
 function formatSuggestedAmount(value: string) {
-  return Number(value).toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-}
-
-function parseSuggestionAmount(value: string) {
-  const numeric = Number(value.replace(/,/g, ""));
-  return Number.isFinite(numeric) ? numeric : 0;
+  const amount = parseGuidedDisplayAmount(value);
+  return amount.isFinite() ? formatGuidedDollars(amount) : "—";
 }
 
 function compareSuggestionPriority(
   left: { suggestion: { amount: string; date?: string } },
   right: { suggestion: { amount: string; date?: string } },
 ) {
-  const amountDifference = parseSuggestionAmount(right.suggestion.amount) - parseSuggestionAmount(left.suggestion.amount);
+  const amountDifference = parseGuidedDisplayAmount(right.suggestion.amount).comparedTo(parseGuidedDisplayAmount(left.suggestion.amount));
   if (amountDifference !== 0) {
     return amountDifference;
   }
@@ -573,20 +567,11 @@ export function SectionSelfEmployment({
     }
   }
 
-  const necIncome = currentEntries.reduce((sum, entry) => {
-    const val = Number(entry.nonemployeeCompensation);
-    return sum + (Number.isNaN(val) ? 0 : val);
-  }, 0);
-  const manualIncomeValue = Number(manualGrossReceipts.replace(/,/g, ""));
-  const manualIncome = Number.isNaN(manualIncomeValue) ? 0 : manualIncomeValue;
-  const totalIncome = necIncome + manualIncome;
-
-  const totalExpenses = Object.values(currentExpenses).reduce((sum, val) => {
-    const num = Number(val);
-    return sum + (Number.isNaN(num) ? 0 : num);
-  }, 0);
-
-  const netProfit = totalIncome - totalExpenses;
+  const necIncome = sumGuidedDisplayAmounts(currentEntries.map((entry) => entry.nonemployeeCompensation));
+  const manualIncome = parseGuidedDisplayAmount(manualGrossReceipts);
+  const totalIncome = necIncome.plus(manualIncome);
+  const totalExpenses = sumGuidedDisplayAmounts(Object.values(currentExpenses));
+  const netProfit = totalIncome.minus(totalExpenses);
   const suggestedTotals = summarizeBankStatementSuggestionsByCategory(currentAnalyses);
   const suggestedIncomeTotal = summarizeSelfEmploymentIncomeSuggestions(currentIncomeAnalyses);
   const allIncomeSuggestionSteps = currentIncomeAnalyses.flatMap((analysis) => (
@@ -845,7 +830,7 @@ export function SectionSelfEmployment({
                           {[suggestion.summary.payer, `$${formatSuggestedAmount(suggestion.summary.nonemployeeCompensation)}`].join(" · ")}
                         </p>
                         <p className="guided-hint">
-                          {Number(suggestion.summary.federalWithheld) > 0
+                          {parseGuidedDisplayAmount(suggestion.summary.federalWithheld).gt(0)
                             ? `Federal withholding $${formatSuggestedAmount(suggestion.summary.federalWithheld)} is available too.`
                             : "No federal withholding detected on this attached 1099-NEC."}
                         </p>
@@ -1079,24 +1064,24 @@ export function SectionSelfEmployment({
           </div>
         </details>
 
-        {(totalIncome > 0 || totalExpenses > 0) && (
+        {(totalIncome.gt(0) || totalExpenses.gt(0)) && (
           <div className="guided-ticker-grid" style={{ marginTop: "16px" }}>
             <div className="guided-ticker-item">
               <span className="guided-ticker-label">Gross Income</span>
               <strong className="guided-ticker-value">
-                ${totalIncome.toLocaleString("en-US", { minimumFractionDigits: 0 })}
+                ${formatSuggestedAmount(totalIncome.toFixed())}
               </strong>
             </div>
             <div className="guided-ticker-item">
               <span className="guided-ticker-label">Total Expenses</span>
               <strong className="guided-ticker-value">
-                ${totalExpenses.toLocaleString("en-US", { minimumFractionDigits: 0 })}
+                ${formatSuggestedAmount(totalExpenses.toFixed())}
               </strong>
             </div>
-            <div className={`guided-ticker-item ${netProfit >= 0 ? "" : "guided-ticker-negative"}`}>
+            <div className={`guided-ticker-item ${netProfit.gte(0) ? "" : "guided-ticker-negative"}`}>
               <span className="guided-ticker-label">Net Profit</span>
               <strong className="guided-ticker-value">
-                ${netProfit.toLocaleString("en-US", { minimumFractionDigits: 0 })}
+                ${formatSuggestedAmount(netProfit.toFixed())}
               </strong>
             </div>
           </div>

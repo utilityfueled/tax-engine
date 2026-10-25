@@ -168,9 +168,9 @@ export function getStandardDeductionAmount(filingStatus: FilingStatus | null, ta
 
 export interface DeductionComparison {
   standardAmount: number;
-  itemizedTotal: number;
+  itemizedTotal: string;
   recommendation: "standard" | "itemized" | "equal";
-  savings: number;
+  savings: string;
 }
 
 export function computeDeductionComparison(
@@ -195,9 +195,9 @@ export function computeDeductionComparison(
   const diff = itemizedTotal.minus(standardAmount);
   return {
     standardAmount,
-    itemizedTotal: itemizedTotal.toNumber(), // Presentation only; never an engine input.
+    itemizedTotal: itemizedTotal.toFixed(),
     recommendation: diff.gt(0) ? "itemized" : diff.lt(0) ? "standard" : "equal",
-    savings: diff.abs().toNumber(),
+    savings: diff.abs().toFixed(),
   };
 
 }

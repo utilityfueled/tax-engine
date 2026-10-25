@@ -47,3 +47,22 @@ Verification with pinned Node 24.22.1:
 - Legacy guided-fact confirmation for values formerly prefilled automatically.
 - Integrate additional eligibility requirements from the federal-law package.
 - Broader unit/browser checks and independent expected-output review.
+
+## Decimal presentation package
+
+- Replaced remaining monetary `Number` conversions and arithmetic in guided
+  review, payment, self-employment, state and W-2 presentation. Numeric conversion
+  remains only for counts, months and years.
+- Deduction comparisons retain decimal-string totals; exact cents survive beyond
+  JavaScript's safe integer range. Malformed display inputs propagate unknown
+  rather than being dropped from a total as zero.
+- Other-tax indicators now display the verified engine SE, Additional Medicare
+  and NIIT amounts. Missing calculation is distinct from a zero result.
+- Primary/spouse residency months and state residency now pass through the guided
+  adapter into the coordinated input schema additions.
+- The two new money tests failed before implementation; all 432 focused tests in
+  eight files now pass, including rendered payment precision and tax indicators.
+- Web typecheck passed before concurrent AI responder changes, then reported only
+  the responder's in-progress contract properties (`optedOut`, `sourceIds`). These
+  are outside this package and have been reported to its owner for integration.
+- Source-facts package commit: `5d09daf`.

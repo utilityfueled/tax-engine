@@ -58,6 +58,9 @@ export function extractMetricsFromResult(
     totalPayments: decimalToString(result.totalPayments),
     refund: decimalToString(result.refund),
     amountOwed: decimalToString(result.amountOwed),
+    selfEmploymentTax: decimalToString(result.selfEmploymentTax),
+    additionalMedicareTax: decimalToString(result.additionalMedicareTax),
+    netInvestmentIncomeTax: decimalToString(result.niitTax),
     state: stateResult ? extractStateMetrics(stateResult) : null,
   };
 }

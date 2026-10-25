@@ -30,3 +30,8 @@ lines:
     formula: "Donation dates must fall in the selected tax year; estimated payment dates may fall in that year or the following year. Validate calendar dates, not just their format. Reject duplicate household taxpayer identifiers and contradictory selected state facts."
     irsRef: "Publication 526, When To Deduct; Publication 505, When To Pay Estimated Tax"
     testRef: "tests/guided-interview/guided-required-facts.test.ts::rejects impossible and conflicting source dates"
+  - line: "display-money"
+    description: "Keep source totals exact through review and UI presentation"
+    formula: "Sum and compare income, expenses, payments and review totals using Decimal; stringify without a binary-number conversion. Malformed UI input displays unknown rather than a numeric zero. Other-tax indicators use verified engine amounts, not total-income threshold guesses."
+    irsRef: "Form 1040 instructions, rounding off to whole dollars"
+    testRef: "tests/guided-interview/guided-display-money.test.ts::retains exact source cents in deduction comparison and formatting"
