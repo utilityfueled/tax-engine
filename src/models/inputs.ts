@@ -2174,6 +2174,31 @@ export const Form1098ESchema = z.object({
 });
 export type Form1098E = z.infer<typeof Form1098ESchema>;
 
+/** Actual borrower and benefit sources for Schedule1 line21; no favorable defaults. */
+export const StudentLoanInterestSourceSchema = z.object({
+  sourceId: z.string().optional(), borrowerId: z.string().optional(),
+  accountHolder: z.enum(["primary", "spouse"]).optional(), lender: z.string().optional(),
+  sourceKind: z.enum(["form1098e", "lender_statement", "payment_records"]).optional(),
+  form1098ESourceId: z.string().optional(), loanOriginationDate: z.string().optional(),
+  interestPaid: optionalDecimalInput, additionalInterestPaid: optionalDecimalInput,
+  additionalInterestSourceReference: z.string().optional(), additionalInterestQualificationConfirmed: z.boolean().optional(),
+  paymentsInTaxYearConfirmed: z.boolean().optional(), legallyObligated: z.boolean().optional(),
+  solelyQualifiedEducationExpenses: z.boolean().optional(), eligibleInstitutionAtOrigination: z.boolean().optional(),
+  enrolledAtLeastHalfTime: z.boolean().optional(), pursuingCredential: z.boolean().optional(),
+  studentRelationshipAtOrigination: z.enum(["self", "spouse", "dependent", "other"]).optional(),
+  expensesWithinReasonablePeriod: z.boolean().optional(), relatedLender: z.boolean().optional(), employerPlanLoan: z.boolean().optional(),
+  employerAssistanceExcluded: optionalDecimalInput, otherTaxFreeAssistance: optionalDecimalInput,
+  interestDeductibleElsewhere: optionalDecimalInput, qtpTaxFreeEarningsUsedForInterest: optionalDecimalInput,
+  reductionsDistinctConfirmed: z.boolean().optional(), educationExpenseIds: z.array(z.string()).optional(),
+});
+export const StudentLoanInterestFactsSchema = z.object({
+  sourceTaxYear: z.number().int().optional(), sourceFactsConfirmed: z.boolean().optional(),
+  primaryClaimedAsDependent: z.boolean().optional(), spouseClaimedAsDependent: z.boolean().optional(),
+  puertoRicoIncomeExclusion: optionalDecimalInput, americanSamoaIncomeExclusion: optionalDecimalInput,
+  loans: z.array(StudentLoanInterestSourceSchema).optional(),
+});
+export type StudentLoanInterestFacts = z.infer<typeof StudentLoanInterestFactsSchema>;
+
 export const Form1098Schema = z.object({
   lender: z.string(),
   mortgageInterestReceived: decimal, // Box 1
@@ -5106,6 +5131,7 @@ export const TaxYearInputSchema = z.object({
   scheduleK1Form1041: z.array(ScheduleK1Form1041Schema).default([]),
   form1098: z.array(Form1098Schema).default([]),
   form1098E: z.array(Form1098ESchema).default([]),
+  studentLoanInterestFacts: StudentLoanInterestFactsSchema.optional(),
   form1095A: z.array(Form1095ASchema).default([]),
   form8962: Form8962Schema.optional(),
   donations: z.array(CharitableDonationSchema).default([]),

@@ -1,0 +1,43 @@
+form: "Schedule 1 student loan interest sources"
+fullName: "Actual borrower eligibility, paid interest and education-benefit coordination"
+taxYear: 2026
+irsReference: "https://www.irs.gov/publications/p970"
+notes: |
+  Refreshed2026-10-25: Pub970 chapter4, Topic456, final2025 Form1040 line21
+  worksheet, IRC221, and RevProc2025-32. Actual claimed dependency is distinct
+  from mere claimability. Loan qualification is measured when borrowed, not by
+  current household membership. Box1 alone does not establish qualification.
+  Canonical return MAGI is supplied by the caller before the student-loan
+  deduction and includes applicable foreign/possession exclusions; no wages
+  proxy or unverified zero may replace that calculation.
+lines:
+  - line: "21-source"
+    description: "Reconcile actual interest sources and loan-origin facts"
+    formula: "Require actual tax year, owner, borrower, lender, original loan date, payment-year confirmation and legal/education eligibility. Sum supported paid interest plus separately substantiated additional interest. Linked1098E source allocations must reconcile Box1 once; actual checked Box2 supports unreported pre-Sep1,2004 amounts only with separate records."
+    irsRef: "Pub970 chapter4; IRC221(d); Instructions1098E Box1/2"
+    testRef: "tests/engine/forms/student-loan-interest-sources.test.ts::reconciles actual loan sources and separately supported unreported interest"
+  - line: "21-eligibility"
+    description: "Apply actual claimant and loan eligibility"
+    formula: "Known MFS or actual claimed dependency disallows the return deduction. Known ineligible legal obligation, sole education purpose, institution, half-time credential student, origination relationship/timing, related lender or employer-plan loan gives zero for that source. Unknown eligibility is not false or true."
+    irsRef: "Pub970 Can You Claim the Deduction; Topic456; IRC221(d/e)"
+    testRef: "tests/engine/forms/student-loan-interest-sources.test.ts::keeps actual ineligibility unknown and zero distinct"
+  - line: "21-benefits"
+    description: "Avoid duplicate benefits using actual linked expense records"
+    formula: "Before the2500 cap subtract actual nonoverlapping excluded employer assistance, other tax-free assistance, interest deductible elsewhere and tax-free529 earnings used for this loan's interest. Match each calculated education expense ID to one actual loan and borrower/owner. Do not subtract529 basis or a borrower's unrelated loan payments."
+    irsRef: "IRC221(e)(1)/(6); Pub970 No Double Benefit Allowed"
+    testRef: "tests/engine/forms/student-loan-interest-sources.test.ts::links each education expense to its actual loan and subtracts earnings once"
+  - line: "21-limit"
+    description: "Apply one return limit and the year-specific MAGI phaseout"
+    formula: "Qualified interest=min(sum eligible net loan interest,2500). Apply constants for selectedyear andfilingstatus to actual canonicalMAGI, preserving Decimal ratio precision; round final deduction to whole dollars. Keep actual interest cents and source audit unchanged."
+    irsRef: "Pub970 Worksheet4-1; Form1040 line21 worksheet; RevProc2025-32"
+    testRef: "tests/engine/forms/student-loan-interest-sources.test.ts::uses exact source cents and the selected year phaseout on canonical MAGI"
+  - line: "21-legacy-reconciliation"
+    description: "Validate supplied historical amounts before source verification"
+    formula: "Every supplied legacy additional-interest amount must be finite, decimal and nonnegative, including explicit zero. A positive historical amount must equal the actual additional interest supported by the linked source records; invalid amounts cannot be ignored."
+    irsRef: "Pub970 chapter4 paid interest and no double benefit; source conservation"
+    testRef: "tests/engine/forms/student-loan-interest-sources.test.ts::validates supplied legacy interest before verifying actual sources"
+  - line: "21-source-conservation"
+    description: "Preserve distinct source records and actual owners"
+    formula: "Several loan allocations may reconcile to one actual lender Form1098E, but source and expense IDs remain unique and all source shares sum exactly. Unknown, contradictory, invalid-year and duplicate records prevent source verification."
+    irsRef: "Pub970 chapter4; Instructions1098E Box1"
+    testRef: "tests/engine/forms/student-loan-interest-sources.test.ts::conserves split lender records and rejects contradictory actual source links"
