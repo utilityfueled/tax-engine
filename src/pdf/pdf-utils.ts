@@ -83,21 +83,16 @@ export function formatCurrencyWithCents(value: Decimal): string {
   return rounded.toFixed(2);
 }
 
-/** Safely set a text field value, skipping if the field doesn't exist. */
+/** A missing or wrong-type mapped field is a broken mapping, including blank writes. */
 export function setTextField(
   form: PDFForm,
   fieldName: string,
   value: string,
 ): void {
-  if (!value) return;
-  try {
-    const field = form.getField(fieldName);
-    if (field instanceof PDFTextField) {
-      field.setText(value);
-    }
-  } catch {
-    // Field not found — skip silently. PDF field names vary by year.
-  }
+  const field = form.getFieldMaybe(fieldName);
+  if (!field) throw new Error(`Missing mapped PDF field: ${fieldName}`);
+  if (!(field instanceof PDFTextField)) throw new Error(`Mapped PDF text field has the wrong type: ${fieldName}`);
+  field.setText(value);
 }
 
 /** Safely set a currency field from a Decimal value. */
@@ -109,21 +104,17 @@ export function setCurrencyField(
   setTextField(form, fieldName, formatCurrency(value));
 }
 
-/** Safely check a checkbox. */
+/** Set both checkbox states explicitly and reject stale mapping names/types. */
 export function setCheckBox(
   form: PDFForm,
   fieldName: string,
   checked: boolean,
 ): void {
-  if (!checked) return;
-  try {
-    const field = form.getField(fieldName);
-    if (field instanceof PDFCheckBox) {
-      field.check();
-    }
-  } catch {
-    // Field not found — skip silently.
-  }
+  const field = form.getFieldMaybe(fieldName);
+  if (!field) throw new Error(`Missing mapped PDF field: ${fieldName}`);
+  if (!(field instanceof PDFCheckBox)) throw new Error(`Mapped PDF checkbox has the wrong type: ${fieldName}`);
+  if (checked) field.check();
+  else field.uncheck();
 }
 
 /** Load a blank PDF from disk. */

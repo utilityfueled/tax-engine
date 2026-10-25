@@ -40,3 +40,13 @@ global gate. This package changes no template bytes or mapped tax-line values.
   mapping evidence. Physical year separation does not satisfy that review.
 - Demand-selected state qualification and published support must agree with the
   actual year, residency, scenario and output capabilities.
+
+## Exact mapped writes
+
+Shared PDF field setters now reject absent fields and wrong field types, including
+empty writes. Empty text and false checkboxes explicitly clear previous values.
+Two regressions first failed against the old silent behavior; all 905 PDF tests
+then passed. This validates write behavior, not the semantic location of a field.
+Inspection of the official 2025 Form 1040 revealed existing field names pointing
+to the wrong printed lines and transposed dependent entries. Correcting those
+locations with independent source-position assertions is a separate package.
