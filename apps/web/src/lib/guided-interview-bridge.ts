@@ -30,6 +30,7 @@ import { businessFactErrors, hasBusinessSourceData, isStartedNec, sumKnownBusine
 import { isStartedRental, rentalFactErrors, rentalExpenseFields } from "./guided-rental-facts";
 import { paRentalAmountFields } from "./guided-pa-rental-facts";
 import { isStartedUnemployment, unemploymentEntries, unemploymentFactErrors, governmentSourceTotal } from "./guided-unemployment-facts";
+import { buildGovernmentPaymentSourceRecords } from "./guided-government-payment-inputs";
 import { nonW2TaxAllocationErrors } from "./guided-salt-facts";
 import { socialSecurityEntries, isStartedSocialSecurity, socialSecurityFactErrors, socialSecuritySourceTotal } from "./guided-social-security-facts";
 import { isStartedRetirement } from "./guided-retirement-facts";
@@ -466,13 +467,7 @@ function buildSocialSecurityElectionInput(data: SocialSecurityData | undefined) 
 
 export function buildUnemploymentInputs(data: UnemploymentData | undefined) {
   assertKnownFacts(unemploymentFactErrors(data));
-  return unemploymentEntries(data).filter(isStartedUnemployment).map(entry => ({
-    payer: entry.payer!.trim(), payerTin: entry.payerTin!.trim(), accountHolder: entry.accountHolder as "primary" | "spouse",
-    unemploymentCompensation: toDecimalString(entry.compensation), federalWithheld: toDecimalString(entry.federalWithheld),
-    stateOrLocalTaxRefund: toDecimalString(entry.stateOrLocalTaxRefund),
-    ...(entry.refundTaxYear?.trim() ? { refundTaxYear: Number(entry.refundTaxYear) } : {}),
-    ...(entry.stateTaxReporting === "single" ? { state: entry.state!.trim().toUpperCase(), stateWithheld: toDecimalString(entry.stateWithheld) } : { stateWithheld: "0" }),
-  }));
+  return buildGovernmentPaymentSourceRecords(unemploymentEntries(data).filter(isStartedUnemployment));
 }
 
 // ── Rental property (Schedule E) converter ─────────────────────────────────

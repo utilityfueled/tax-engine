@@ -1,0 +1,36 @@
+form: "Guided government payment source worksheets"
+fullName: "Actual repayment, contribution and government-payment classification"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i1099g"
+sources:
+  - "https://www.irs.gov/publications/p525"
+  - "https://www.irs.gov/pub/irs-drop/rr-25-04.pdf"
+notes: |
+  Sources refreshed 2026-10-25. This adapter binds actual saved source facts to
+  the standalone Form1099-G source calculator; it does not calculate tax itself.
+  Source year/revision remain explicit. Monetary fields keep exact Decimal cents,
+  including zero. Confirmation is revoked when a source changes. Positive Box2
+  refunds still need actual historical tax-benefit facts before this guided route
+  can calculate. Prior-year repayments, farm/business, private and medical-leave
+  cases retain separate worksheet requirements. No filing gate is opened.
+lines:
+  - line: "repayment"
+    description: "Reconcile gross receipts and reported Box1 before reducing benefits"
+    formula: "Forward actual before-repayment receipts, current repayment, reporting boolean and source reference. Canonical source validation reconciles gross versus net Box1 and subtracts repayment once."
+    testRef: "tests/guided-interview/guided-government-payment-worksheets.test.ts::binds actual gross and net repayment reporting without guessing receipts"
+  - line: "contribution-history"
+    description: "Preserve distinct program history and recover pooled basis once"
+    formula: "Forward actual program identity, reconciled opening balance, source history and all-payments confirmation. The canonical calculator pools only matching actual payer, owner and program."
+    testRef: "tests/guided-interview/guided-government-payment-worksheets.test.ts::binds contribution history once across actual linked statements"
+  - line: "other-income"
+    description: "Keep RTAA, nonbusiness grants and state family leave separate"
+    formula: "Positive grants require nonbusiness classification. Positive 2026 Box10 requires actual state PFML family classification. Preserve the amounts separately from unemployment and withholding."
+    testRef: "tests/guided-interview/guided-government-payment-worksheets.test.ts::requires actual payment classification and preserves distinct source amounts"
+  - line: "controls"
+    description: "Enter and reconfirm actual worksheet facts through visible controls"
+    formula: "Collect actual source records, preserve unknown fields and invalidate prior confirmation after edits. Missing or contradictory worksheet facts block calculation."
+    testRef: "tests/apps/web/government-payment-source-interactions.test.tsx::collects actual repayment and contribution records through source controls"
+  - line: "local-audit-identities"
+    description: "Keep distinct payer statements without exposing taxpayer IDs"
+    formula: "Assign unique result-local audit row identifiers to the supplied statements. Actual payer TIN, recipient, statement reference and year remain separate source facts for duplicate reconciliation; identical local labels from different payers are not duplicates."
+    testRef: "tests/guided-interview/guided-government-payment-worksheets.test.ts::distinguishes actual payers sharing a local label without exposing taxpayer IDs"

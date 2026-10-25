@@ -52,8 +52,34 @@ actionable findings (`ai-1099g-source-review.log`). This is bounded agent review
 not human tax qualification. Local logs use `form1099g-sources-*` and `form1099g-source-*` prefixes in
 `.local/upgrade-evidence/`.
 
-This is source-core work in progress. Canonical Schedule 1/withholding integration
+The source core is committed as `027a383`. Its exact staged tree
+`ee74f432762a836cff64c59d29f12cf97a130ca6` passes 226 tests in 16 files,
+root types, 3,760 spec references and scoped lint. Canonical Schedule 1/withholding integration
 and guided entry are separate dependent packages. Prior-year repayments,
 business/farm grants, CCC payments, private programs and medical leave retain
 explicit separate-worksheet errors until their actual source routes are ready.
 No final-form, tax-review, filing or 2026 readiness gate is changed.
+
+## Canonical return and guided worksheet integration
+
+Canonical return integration is committed as `0124905`. Its immutable staged
+tree `9e46609e5ac7a637778b59345fc720b699f780f6` passes 674 tests in 11 files,
+root types and 3,789 spec references; scoped lint has no errors and four existing
+warnings. Actual refund expense year is separate from the Box 3 tax year. The
+return counts repayment/contribution adjustments, RTAA, grants, state family
+leave and withholding once. The physical Schedule 1 repayment checkbox and
+amount were inspected. Parent review passes 175 adjacent tests with no remaining
+actionable findings; this is agent review, not human qualification.
+
+The guided worksheet spec and failing source/control tests precede the UI
+implementation. Actual repayment receipts, gross/net reporting, contribution
+history, grant classification and state family-leave classification now reach
+the canonical calculator without guessed amounts. Changing source facts clears
+confirmation. A separately reproduced identity collision is fixed with distinct
+local audit row IDs while actual payer, owner, statement reference and year still
+detect duplicate statements. Taxpayer IDs do not enter those audit row IDs.
+Positive refunds still require a separate historical worksheet in this UI; prior
+repayments, farm/business, private and medical-leave routes remain explicitly
+blocked. The bounded independent agent review found no remaining code issue.
+The exact staged verification is recorded with the resulting package commit in
+the main checklist; final integrated browser and release checks remain required.

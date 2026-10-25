@@ -1,4 +1,6 @@
 import Decimal from "decimal.js";
+import { calculateForm1099G } from "@/engine/forms/form-1099-g";
+import { buildGovernmentPaymentSourceRecords } from "./guided-government-payment-inputs";
 import { parseGuidedCurrency } from "./guided-currency";
 import { amountError, hasEnteredAmount } from "./guided-required-facts";
 import type { FilingStatus, PersonalInfoData, StateReturnData, UnemploymentData } from "./guided-interview-flow";
@@ -18,13 +20,22 @@ export interface UnemploymentEntryData {
   refundTaxYear?: string;
   rtaaPayments?: string;
   taxableGrants?: string;
+  grantIncomeCategory?: "nonbusiness" | "business" | "farm" | "";
   agriculturePayments?: string;
   marketGain?: string;
   familyLeaveBenefits?: string;
+  familyLeaveProgramType?: "state-pfml-family" | "state-pfml-medical" | "private-family-leave" | "";
   tradeOrBusinessRefund?: boolean | null;
   currentYearRepaid?: string;
   priorYearRepaid?: string;
+  unemploymentReceivedBeforeRepayment?: string;
+  box1IncludesCurrentYearRepayment?: boolean | null;
+  repaymentSourceReference?: string;
   unrecoveredAfterTaxContributions?: string;
+  contributionProgramId?: string;
+  contributionHistoryReference?: string;
+  contributionBalanceReconciled?: boolean | null;
+  allProgramPaymentsIncluded?: boolean | null;
   actualReceiptConfirmed?: boolean | null;
   additionalWorksheetRequired?: boolean | null;
   sourceFactsConfirmed?: boolean | null;
@@ -80,16 +91,15 @@ export function unemploymentFactErrors(data: UnemploymentData | undefined, filin
     const key = `${entry.payerTin?.replace(/-/g, "")}|${entry.accountHolder}|${entry.accountReference?.trim().toLowerCase()}|${entry.sourceTaxYear}`;
     if (sourceKeys.has(key)) fail("duplicate", "Reconcile duplicate or corrected government statements before calculation.");
     sourceKeys.add(key);
-    if (entry.programType !== "government-unemployment") fail("program", "Confirm ordinary government unemployment. Employer, private/union and other government programs need their distinct source treatment.");
+    if (entry.programType !== "government-unemployment" && entry.programType !== "other-government") fail("program", "Confirm actual government unemployment or other government payments. Employer and private/union programs require their separate treatment.");
     if (entry.actualReceiptConfirmed !== true) fail("actual-receipt", "Confirm these are actual benefits belonging to this recipient. An incorrect or identity-theft source must be resolved, not treated as received income.");
     for (const [field, label] of [["compensation", "unemployment compensation in Box 1"], ["federalWithheld", "federal withholding in Box 4"], ...governmentOtherAmounts] as const) {
       const error = amountError(entry[field], label); if (error) fail(field, error);
     }
-    for (const [field] of governmentOtherAmounts) if (!amountError(entry[field], field) && parseGuidedCurrency(entry[field]).gt(0)) fail(field, "This actual source amount is saved. Its separate tax-benefit, payment classification, repayment or contribution worksheet must be implemented before this ordinary route can calculate.");
+    for (const field of ["stateOrLocalTaxRefund", "priorYearRepaid", "agriculturePayments", "marketGain"] as const) if (!amountError(entry[field], field) && parseGuidedCurrency(entry[field]).gt(0)) fail(field, "This actual source amount is saved. Complete its separate historical tax-benefit, claim-of-right or farm worksheet before this guided route can calculate.");
     if (entry.sourceTaxYear === "2026" || entry.sourceFormRevision === "2026-12" || hasEnteredAmount(entry.familyLeaveBenefits)) {
       const error = amountError(entry.familyLeaveBenefits, "actual family leave benefits (2026 Box 10)");
       if (error) fail("family-leave", error);
-      else if (parseGuidedCurrency(entry.familyLeaveBenefits).gt(0)) fail("family-leave", "Family leave benefits require their actual program classification and separate federal calculation; retain the original amount for review.");
     }
     if (entry.tradeOrBusinessRefund !== false) fail("business-refund", "Confirm the actual Box 8 checkbox. Business refund treatment requires its separate source worksheet.");
     if ((hasEnteredAmount(entry.refundTaxYear) || (!amountError(entry.stateOrLocalTaxRefund, "refund") && parseGuidedCurrency(entry.stateOrLocalTaxRefund).gt(0))) && (!/^\d{4}$/.test(entry.refundTaxYear ?? "") || Number(entry.refundTaxYear) < 1900 || Number(entry.refundTaxYear) > Number(entry.sourceTaxYear))) fail("refund-year", "Enter the actual tax year to which the refund belongs; do not infer it from the payment year.");
@@ -107,6 +117,17 @@ export function unemploymentFactErrors(data: UnemploymentData | undefined, filin
     if (!data?.entries || !hasEnteredAmount(data[field])) continue;
     const total = governmentSourceTotal(entries, field);
     if (amountError(data[field], field) || total === null || !total.eq(parseGuidedCurrency(data[field]))) errors[`government-total-${field}`] = "Reconcile the saved total with the actual government-payment source records.";
+  }
+  if (entries.length && Object.keys(errors).length === 0) {
+    try {
+      const forms = buildGovernmentPaymentSourceRecords(entries);
+      const statuses = { single: "single", mfj: "married_filing_jointly", mfs: "married_filing_separately", hoh: "head_of_household", qss: "qualifying_surviving_spouse" } as const;
+      const sourceYear = taxYear ?? forms[0]?.taxYear;
+      if (sourceYear === undefined) throw new Error("Provide the actual government-payment source year.");
+      calculateForm1099G(forms, sourceYear, filingStatus ? statuses[filingStatus] : undefined);
+    } catch (error) {
+      errors["government-source-worksheet"] = error instanceof Error ? error.message : "Complete the actual government-payment source worksheet.";
+    }
   }
   return errors;
 }

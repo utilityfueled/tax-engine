@@ -44,11 +44,13 @@ it("requires actual source facts and keeps legacy unknown withholding unverified
 
 it("retains unsupported repayments contribution history and other payment classifications", () => {
   const state = flow();
-  for (const change of [{ currentYearRepaid: "0.10" }, { priorYearRepaid: "3000.01" }, { unrecoveredAfterTaxContributions: "10" }, { stateOrLocalTaxRefund: "100", refundTaxYear: "2024" }, { rtaaPayments: "100" }, { taxableGrants: "100" }, { agriculturePayments: "100" }, { marketGain: "100" }, { familyLeaveBenefits: "100" }, { tradeOrBusinessRefund: true }, { additionalWorksheetRequired: true }, { programType: "employer-supplemental" }]) {
+  for (const change of [{ currentYearRepaid: "0.10" }, { priorYearRepaid: "3000.01" }, { unrecoveredAfterTaxContributions: "10" }, { stateOrLocalTaxRefund: "100", refundTaxYear: "2024" }, { taxableGrants: "100" }, { agriculturePayments: "100" }, { marketGain: "100" }, { familyLeaveBenefits: "100" }, { tradeOrBusinessRefund: true }, { additionalWorksheetRequired: true }, { programType: "employer-supplemental" }]) {
     state.sectionData["income-unemployment"] = { ...data(), entries: [{ ...unemploymentSource, ...change }] };
     expect(buildTaxInputFromGuidedData(state), JSON.stringify(change)).toBeNull();
     expect(state.sectionData["income-unemployment"]?.entries?.[0]).toMatchObject(change);
   }
+  state.sectionData["income-unemployment"] = { ...data(), entries: [{ ...unemploymentSource, rtaaPayments: "100" }] };
+  expect(buildTaxInputFromGuidedData(state)?.form1099G?.[0]).toMatchObject({ rtaaPayments: "100", unemploymentCompensation: "1000.10" });
   state.sectionData["income-unemployment"] = { ...data(), entries: [unemploymentSource, unemploymentSource] };
   expect(buildTaxInputFromGuidedData(state)).toBeNull();
   state.sectionData["income-unemployment"] = { ...data(), compensation: "1000.11" };

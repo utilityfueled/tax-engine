@@ -18,6 +18,6 @@ export function SectionUnemployment({ data, onDataChange }: { data: Unemployment
       <div className="guided-form-grid"><GovernmentPaymentSourceFields entry={entry} onChange={change => updateEntry(index, change)} /></div>
     </div>)}</div>
     <button type="button" className="utility-button" onClick={() => onDataChange(withUnemploymentEntries(current, [...entries, { ...emptyUnemploymentEntry }]))}>Add government statement</button>
-    <p className="guided-hint">Missing source amounts stay unknown; enter zero only when confirmed. Unsupported positive refund, other-payment, repayment and contribution amounts remain saved and keep this return in review until their distinct worksheets are available. State withholding belongs to the source state, which may differ from your address.</p>
+    <p className="guided-hint">Missing source amounts stay unknown; enter zero only when confirmed. Repayments and contribution balances need matching source records. Refunds, earlier-year repayments, farm payments, medical leave and private programs remain saved for their separate worksheets. State withholding belongs to the source state, which may differ from your address.</p>
   </div></RetroShell>;
 }

@@ -4,6 +4,7 @@ import React, { act, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { expect, it } from "vitest";
 import { SectionUnemployment } from "@/components/guided-interview/section-unemployment";
+import { calculateForm1099G } from "@/engine/forms/form-1099-g";
 import { buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
 import { emptyDeductionData, type UnemploymentData } from "@/lib/guided-interview-flow";
 import { completeUnemploymentSource, startCompleteInterview } from "../../guided-interview/complete-facts";
@@ -58,10 +59,38 @@ it("keeps source state and 2026 family benefits distinct and rechecks changed cl
     await change("Family leave benefits (2026 Box 10)", "0"); await change("Government source state reporting", "single"); await change("Actual state on the government statement", "NY"); await change("State payer identification number, when reported", "actual-state-id"); await change("Government source state withholding (Box 12)", "0.10"); await change(confirmation, "true");
     expect(input()?.form1099G?.[0]).toMatchObject({ state: "NY", stateWithheld: "0.10" });
     await change("Family leave benefits (2026 Box 10)", "100.20"); await change(confirmation, "true"); expect(input()).toBeNull();
+    await change("Actual family-leave program classification", "state-pfml-family"); await change(confirmation, "true");
+    expect(input()?.form1099G?.[0]).toMatchObject({ familyLeaveBenefits: "100.20", familyLeaveProgramType: "state-pfml-family" });
+    await change("Taxable grants (Box 6)", "12.34"); await change(confirmation, "true"); expect(input()).toBeNull();
+    await change("Actual taxable grant classification", "nonbusiness"); await change(confirmation, "true");
+    expect(input()?.form1099G?.[0]).toMatchObject({ taxableGrants: "12.34", grantIncomeCategory: "nonbusiness" });
     await change("Actual tax year of the Box 2 refund, when any", "2024"); await change("State or local tax refund, credit or offset (Box 2)", "1.20");
     expect(latest().entries?.[0]).toMatchObject({ refundTaxYear: "2024", stateOrLocalTaxRefund: "1.20", familyLeaveBenefits: "100.20", sourceFactsConfirmed: null });
     await change("Actual payment program", "private-or-union"); await change("Do these payments actually belong to this recipient?", "false"); await change("Is Box 8 checked for a trade or business refund?", "true"); await change("Is another government-payment taxability or repayment worksheet still needed?", "true");
     expect(latest().entries?.[0]).toMatchObject({ programType: "private-or-union", actualReceiptConfirmed: false, tradeOrBusinessRefund: true, additionalWorksheetRequired: true });
     expect(input()).toBeNull();
+  });
+});
+
+// Spec: spec/federal/guided-government-payment-worksheets.yaml, controls.
+it("collects actual repayment and contribution records through source controls", async () => {
+  await render({ compensation: "1000.25", federalWithheld: "0", entries: [{ ...completeUnemploymentSource, compensation: "1000.25" }] }, async ({ latest, change }) => {
+    const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["unemployment"], lifeEvents: [], stateCode: null });
+    const input = () => { state.sectionData["income-unemployment"] = latest(); return buildTaxInputFromGuidedData(state); };
+    await change("Actual repayment this year of this year's unemployment benefits", "200.10"); await change(confirmation, "true"); expect(input()).toBeNull();
+    await change("Actual benefits received before this year's repayment", "1000.25");
+    await change("Does Box 1 include the benefits you repaid this year?", "true");
+    await change("Actual current-year repayment source reference", "actual-repayment");
+    expect(latest().entries?.[0]?.sourceFactsConfirmed).toBeNull(); await change(confirmation, "true");
+    expect(calculateForm1099G(input()!.form1099G!, 2025).taxableUnemployment.toFixed()).toBe("800.15");
+    await change("Actual unrecovered nondeductible program contributions before these benefits", "100.05"); await change(confirmation, "true"); expect(input()).toBeNull();
+    for (const [label, value] of [["Actual unemployment contribution program reference", "program-a"], ["Actual contribution history source reference", "history-a"], ["Has the available nondeductible contribution balance been reconciled?", "true"], ["Are all this recipient's payments from this contribution program included?", "true"]]) await change(label!, value!);
+    await change(confirmation, "true");
+    expect(calculateForm1099G(input()!.form1099G!, 2025).taxableUnemployment.toFixed()).toBe("700.1");
+    await change("Does Box 1 include the benefits you repaid this year?", "false"); await change(confirmation, "true"); expect(input()).toBeNull();
+    await change("Unemployment compensation (1099-G Box 1)", "800.15"); await change(confirmation, "true");
+    expect(calculateForm1099G(input()!.form1099G!, 2025).taxableUnemployment.toFixed()).toBe("700.1");
+    await change("Actual benefits received before this year's repayment", ""); await change(confirmation, "true");
+    expect(input()).toBeNull(); expect(latest().entries?.[0]?.unemploymentReceivedBeforeRepayment).toBe("");
   });
 });
