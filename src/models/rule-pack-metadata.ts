@@ -27,11 +27,15 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.9",
+    ruleVersion: "2025.10",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i1040gi", section: "Standard deduction, separate-owner excess Social Security, foreign income tax worksheet and wage routing", revision: "2025 final instructions; applicable current-law rules", retrievedAt: "2026-10-25" },
+      { url: "https://www.irs.gov/instructions/i2555", section: "Actual foreign income sources; net exclusion45 and housing deduction50", revision: "2025 final instructions with2026indexed values", retrievedAt: "2026-10-25" },
+      { url: "https://www.irs.gov/publications/p970", section: "Worksheets2-1 and3-1 net foreign-income MAGI addbacks", revision: "2025 final publication", retrievedAt: "2026-10-25" },
+      { url: "https://www.irs.gov/instructions/i8801", section: "Prior-year minimum-tax credit and current credit limit worksheet", revision: "2025 final instructions; year-aware2026prior-year values", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i8863", section: "Student eligibility, refundable support test and actual credit limit", revision: "2025 final instructions", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/pub/irs-pdf/f1040s3.pdf", section: "Official credit and payment line routing", revision: "2025 final form", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i2210", section: "Lines 3 and 6, refundable credits versus withholding", revision: "2025 instructions", retrievedAt: "2026-10-25" },
@@ -49,11 +53,15 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.4-law-integration-draft",
+    ruleVersion: "2026.5-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i1040gi", section: "Standard deduction, separate-owner excess Social Security, foreign income tax worksheet and wage routing", revision: "2025 final instructions; applicable current-law rules", retrievedAt: "2026-10-25" },
+      { url: "https://www.irs.gov/instructions/i2555", section: "Actual foreign income sources; net exclusion45 and housing deduction50", revision: "2025 final instructions with2026indexed values", retrievedAt: "2026-10-25" },
+      { url: "https://www.irs.gov/publications/p970", section: "Worksheets2-1 and3-1 net foreign-income MAGI addbacks", revision: "2025 final publication", retrievedAt: "2026-10-25" },
+      { url: "https://www.irs.gov/instructions/i8801", section: "Prior-year minimum-tax credit and current credit limit worksheet", revision: "2025 final instructions; year-aware2026prior-year values", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/tax-professionals/eitc-central/new-social-security-number-requirements-for-education-tax-credits", section: "2026 taxpayer or joint spouse and dependent student employment-valid SSNs", revision: "IRS current enacted-law guidance", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i8863", section: "Student eligibility, refundable support test and actual credit limit", revision: "2025 final instructions", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/irb/2025-45_IRB", section: "Rev. Proc. 2025-32, section 4", revision: "2025-32", retrievedAt: "2026-10-24" },

@@ -654,3 +654,26 @@ cannot replace missing fields.17 focused model/guided contract tests, root types
 and scopedlint pass. New spec reference resolves; the global validator currently
 reports46 expected in-progress Form2555 test references owned by that parallel
 package. Scoped diff/whitespace reviewed. No qualification gate changed.
+
+### Foreign income return routing and tax worksheet — 2026-10-25
+
+Integrated 28ba63d's actual Form 2555 source worksheets. Gross wages remain on
+Form 1040; only actual foreign employment absent from W-2 is added to line 1h.
+Net exclusion line 45 enters negative Schedule 1 line 8d, and housing deduction
+line 50 enters adjustment 24j. Source years and W-2 attribution reconcile.
+The foreign income tax worksheet uses net lines 45 plus 50, actual disallowed
+deductions, and the official capital-gain-excess adjustment. Education MAGI also
+uses net lines 45 plus 50 per Pub. 970. Rules now report versions 2025.10 and
+2026.5-law-integration-draft; review and filing gates remain unchanged.
+
+Six source-linked integration tests include red-first routing, source-year,
+net-MAGI, stacking and capital-gain-excess regressions. Independent bracket
+arithmetic for the above-$100,000 fixture gives 85,835 minus 24,095 = 61,740.
+625 focused return/form/schedule tests and another nine metadata/routing tests
+pass; root types, all 3,239 spec references and scoped lint pass (zero errors).
+Scoped diff and whitespace reviewed. The module owner committed the shared
+Form2555 historical integration test file with its coherent package.
+
+Remaining related work is explicit: IRS Tax Table use below $100,000, special
+capital-gain worksheet correctness, Social Security and savings-bond exclusion
+addbacks, foreign self-employment/QBI coordination, and independent qualification.

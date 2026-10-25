@@ -12343,7 +12343,7 @@ describe("Schedule F farm income through federal pipeline", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("Form 2555 foreign earned income exclusion through federal pipeline", () => {
-  it("Foreign earned income exclusion reduces wages and total income", () => {
+  it("Foreign earned income exclusion preserves wages and reduces Schedule1 income", () => {
     const base = calculateFederalTax(simpleW2Fixture);
     const withExclusion = calculateFederalTax({
       ...simpleW2Fixture,
@@ -12354,8 +12354,10 @@ describe("Form 2555 foreign earned income exclusion through federal pipeline", (
       },
     });
 
-    // The exclusion should reduce wages
-    expect(withExclusion.totalWages.toNumber()).toBeLessThan(base.totalWages.toNumber());
+    // Final Form2555line45 reduces Schedule1line8d; gross wages remain on1040.
+    expect(withExclusion.totalWages.toString()).toBe("85000");
+    expect(withExclusion.totalWages).toEqual(base.totalWages);
+    expect(withExclusion.schedule1!.lines.find(line => line.line === "8d")!.value.toString()).toBe("-85000");
     // Total income should decrease
     expect(withExclusion.totalIncome.toNumber()).toBeLessThan(base.totalIncome.toNumber());
     // Tax should be lower
@@ -12380,8 +12382,11 @@ describe("Form 2555 foreign earned income exclusion through federal pipeline", (
       },
     });
 
-    // Half-year should have higher wages than full year (less excluded)
-    expect(halfYear.totalWages.toNumber()).toBeGreaterThan(fullYear.totalWages.toNumber());
+    // 130000 × 183/365 rounds to65178; proration changes the exclusion, not wages.
+    expect(halfYear.totalWages.toString()).toBe("85000");
+    expect(fullYear.totalWages.toString()).toBe("85000");
+    expect(halfYear.totalIncome.toString()).toBe("19822");
+    expect(fullYear.totalIncome.toString()).toBe("0");
   });
 
   it("Form 2555 sub-result is populated on the return", () => {
@@ -12401,11 +12406,13 @@ describe("Form 2555 foreign earned income exclusion through federal pipeline", (
   it("Housing deduction flows to Schedule 1 adjustments for SE filers", () => {
     const result = calculateFederalTax({
       ...simpleW2Fixture,
+      scheduleC: { grossReceipts: "200000", expenses: {} },
       form2555: {
-        foreignEarnedIncome: "100000",
+        foreignEarnedIncome: "200000",
         qualifyingDays: 365,
         totalDaysInYear: 365,
         qualifiedHousingExpenses: "25000",
+        employerProvidedForeignEarnedIncome: "0",
         isSelfEmployed: true,
       },
     });

@@ -52,7 +52,9 @@ export interface Schedule1Input {
   gamblingIncome?: Decimal;
   /** NOL deduction computed by the federal engine (IRC §172, limited to 80% of pre-NOL taxable income) */
   nolDeduction?: Decimal;
-  /** Form 2555 housing deduction for self-employed (Schedule 1 Line 24d) */
+  /** Net Form2555line45, entered as negative Schedule1line8d. */
+  form2555IncomeReduction?: Decimal;
+  /** Form 2555 housing deduction for self-employed (Schedule 1 Line 24j) */
   form2555HousingDeduction?: Decimal;
   /** Pre-computed SE health insurance deduction from the Pub 535 worksheet (bypasses manual cap logic) */
   seHealthInsurance?: Decimal;
@@ -71,6 +73,7 @@ export interface Schedule1Result {
   nolDeduction: Decimal; // Line 8a (negative in other income)
   gamblingIncome: Decimal; // Line 8b
   cancelledDebtIncome: Decimal; // Line 8c
+  foreignIncomeExclusion: Decimal; // Positive net Form2555line45, negative on8d
   hsaTaxableDistributions: Decimal; // Line 8f
   totalAdditionalIncome: Decimal; // Line 10
 
@@ -499,6 +502,11 @@ export function calculateSchedule1(
       { "Available NOL deducted": nolDeduction });
   }
 
+  const foreignIncomeExclusion = extra?.form2555IncomeReduction ?? new Decimal(0);
+  if (!foreignIncomeExclusion.isFinite() || foreignIncomeExclusion.lt(0)) throw new Error("Form2555 net exclusion must be finite and nonnegative");
+  if (extra?.form2555IncomeReduction !== undefined) {
+    audit.record("Sched 1", "8d", "Foreign earned income and housing exclusion", foreignIncomeExclusion.negated(), "Negative net Form2555line45; gross wages remain on1040line1z");
+  }
   const totalAdditionalIncome = sum(
     taxableRefunds,
     businessIncome,
@@ -511,7 +519,7 @@ export function calculateSchedule1(
     gamblingIncome,
     cancelledDebtIncome,
     hsaTaxableDistributions
-  ).minus(nolDeduction);
+  ).minus(nolDeduction).minus(foreignIncomeExclusion);
   audit.record("Sched 1", "10", "Total additional income", totalAdditionalIncome,
     nolDeduction.greaterThan(0)
       ? "Sum Lines 1-9 minus Line 8a NOL deduction → 1040 Line 8"
@@ -864,12 +872,12 @@ export function calculateSchedule1(
     }
   );
 
-  // Form 2555 housing deduction (self-employed only) — Schedule 1 Line 24d
+  // Form 2555 housing deduction (self-employed only) — Schedule 1 Line 24j
   const form2555HousingDeduction = extra?.form2555HousingDeduction ?? new Decimal(0);
   if (form2555HousingDeduction.greaterThan(0)) {
-    audit.record("Sched 1", "24d", "Form 2555 housing deduction",
+    audit.record("Sched 1", "24j", "Form 2555 housing deduction",
       form2555HousingDeduction,
-      "Self-employed foreign housing deduction from Form 2555 Part VI");
+      "Self-employed foreign housing deduction from Form2555 PartIX line50");
   }
 
   const totalAdjustments = sum(
@@ -902,6 +910,7 @@ export function calculateSchedule1(
     nolDeduction,
     gamblingIncome,
     cancelledDebtIncome,
+    foreignIncomeExclusion,
     hsaTaxableDistributions,
     totalAdditionalIncome,
     businessExpenseAdjustments,

@@ -334,19 +334,33 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   audit.record("1040", "1a", "W-2 wages", w2Agg.wages, "Sum W-2 box 1");
   audit.record("1040", "1c", "Unreported tips", form4137?.unreportedTipIncome ?? new Decimal(0), "Supported Form 4137 tips not included in line 1a");
   audit.record("1040", "1g", "Wages from Form 8919", form8919?.line6 ?? new Decimal(0), "Form 8919 line 6");
-  audit.record("1040", "1h", "Other earned income", form1099R.disabilityPensionWages, "Supported disability pensions before minimum retirement age");
 
   // ── Form 2555: Foreign Earned Income Exclusion ────────
-  // Must be computed before Line 1 is finalized because the exclusion
-  // reduces the wages amount entered on Form 1040 Line 1a.
+  // Compute before MAGI worksheets. Net line45 reduces Schedule1line8d;
+  // it never changes the gross wages reported on Form1040line1z.
+  if (input.form2555?.taxYear !== undefined && input.form2555.taxYear !== year) {
+    throw new Error("Foreign income source tax year does not match the return");
+  }
   const form2555 = input.form2555
-    ? calculateForm2555(input.form2555, constants)
+    ? calculateForm2555({...input.form2555,taxYear:year}, constants)
     : undefined;
   if (form2555) {
     audit.merge(form2555.lines);
   }
   const form2555IncomeReduction = form2555?.totalIncomeReduction ?? new Decimal(0);
   const form2555HousingDeduction = form2555?.housingDeduction ?? new Decimal(0);
+  const foreignEmploymentNotOnW2 = d(input.form2555?.incomeSources?.foreignEmploymentIncomeNotOnW2);
+  if (input.form2555?.incomeSources && input.form2555.incomeSourceMappingConfirmed !== true) {
+    throw new Error("Foreign income source mapping is unconfirmed");
+  }
+  if (d(input.form2555?.incomeSources?.foreignEmploymentIncomeIncludedOnW2).gt(w2Agg.wages)) {
+    throw new Error("Foreign employment attributed to W2 exceeds actual W2 wages");
+  }
+  if (!foreignEmploymentNotOnW2.isFinite() || foreignEmploymentNotOnW2.lt(0)) {
+    throw new Error("Foreign employment income absent from W2 must be finite and nonnegative");
+  }
+  audit.record("1040", "1h", "Other earned income", form1099R.disabilityPensionWages.plus(foreignEmploymentNotOnW2),
+    "Supported disability pensions and actual foreign employment income not reported on W2");
 
   // Adoption benefit exclusion must precede AGI. The completed Part III MAGI
   // worksheet is an actual input; final credit MAGI is calculated later from AGI.
@@ -383,10 +397,11 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     ? calculateAdoption(d(input.form8839?.exclusionMagi), new Decimal(0)) : undefined;
   const taxableAdoptionBenefits = adoptionBenefitResult?.taxableEmployerBenefits ?? new Decimal(0);
   audit.record("1040", "1f", "Taxable adoption benefits", taxableAdoptionBenefits, "Signed Form 8839 line 31");
-  const totalWages = zeroFloor(totalWagesBeforeExclusion.minus(form2555IncomeReduction)).plus(taxableAdoptionBenefits);
+  const totalWages = totalWagesBeforeExclusion.plus(taxableAdoptionBenefits).plus(foreignEmploymentNotOnW2);
   audit.record("1040", "1", "Wages, salaries, tips", totalWages,
     [
       "Sum of all W-2 Box 1",
+      foreignEmploymentNotOnW2.isZero() ? undefined : "actual foreign employment income not reported on W2",
       taxableAdoptionBenefits.isZero() ? undefined : `signed taxable adoption benefits $${taxableAdoptionBenefits}`,
       form4137?.unreportedTipIncome.greaterThan(0)
         ? "supported Form 4137 unreported tip income"
@@ -399,18 +414,15 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
         : form1099R.disabilityPensionPublicSafetyOfficerPremiumExclusion.greaterThan(0)
           ? "disability pensions taxable as wages before minimum retirement age, net of the retired public safety officer insurance premium exclusion"
           : "disability pensions taxable as wages before minimum retirement age",
-      form2555IncomeReduction.greaterThan(0)
-        ? `less Form 2555 foreign earned income exclusion and housing exclusion $${form2555IncomeReduction}`
-        : undefined,
     ].filter((part): part is string => part !== undefined).join(" plus "),
     {
       w2Count: input.w2s.length.toString(),
+      foreignEmploymentNotOnW2,
       form4137UnreportedTipIncome: form4137?.unreportedTipIncome ?? new Decimal(0),
       form8919Wages: form8919?.line6 ?? new Decimal(0),
       disabilityPensionWages: form1099R.disabilityPensionWages,
       disabilityPensionPublicSafetyOfficerPremiumExclusion:
         form1099R.disabilityPensionPublicSafetyOfficerPremiumExclusion,
-      form2555IncomeReduction,
     });
 
   // ── Form 8814: Parents' Election To Report Child's Interest and Dividends ──
@@ -1464,6 +1476,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     earlyWithdrawalPenalty,
     alimonyPaid,
     gamblingIncome: totalGamblingWinnings,
+    form2555IncomeReduction,
     form2555HousingDeduction,
     seHealthInsurance: seHealthInsuranceWorksheetResult?.deductibleAmount,
     taxableStateRefund,
@@ -1592,7 +1605,8 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     excessBusinessLossAddback,
     form1099QTaxableEarnings,
     section280FRecapture,
-    k1Form1041OtherPortfolio
+    k1Form1041OtherPortfolio,
+    sched1.foreignIncomeExclusion.negated()
   );
   audit.record("1040", "8", "Other income", otherIncome,
     excessBusinessLossAddback.greaterThan(0)
@@ -2406,26 +2420,48 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   let incomeTax: Decimal;
   let ordinaryTax: Decimal;
   let preferentialTax: Decimal;
-  const form2555TotalExclusion = form2555?.totalExclusion ?? new Decimal(0);
+  const form2555WorksheetAmount = form2555IncomeReduction.plus(form2555HousingDeduction);
+  const foreignDisallowedDeductionsInput = input.form2555?.foreignEarnedIncomeTaxWorksheetDisallowedDeductions;
+  if (form2555 && year === 2026 && foreignDisallowedDeductionsInput === undefined) {
+    throw new Error("Foreign earned income tax worksheet disallowed deductions are unknown");
+  }
+  const foreignDisallowedDeductions = d(foreignDisallowedDeductionsInput);
+  if (!foreignDisallowedDeductions.isFinite() || foreignDisallowedDeductions.lt(0)) {
+    throw new Error("Foreign earned income tax worksheet disallowed deductions must be finite and nonnegative");
+  }
+  const form2555StackingAmount = zeroFloor(form2555WorksheetAmount.minus(foreignDisallowedDeductions));
 
-  if (form2555 && form2555TotalExclusion.greaterThan(0)) {
-    // Step 1: Tax on (taxable income + total exclusion) using QDCG worksheet
-    const stackedIncome = taxableIncome.plus(form2555TotalExclusion);
+  if (form2555 && form2555StackingAmount.greaterThan(0) && taxableIncome.gt(0)) {
+    const stackedIncome = taxableIncome.plus(form2555StackingAmount);
+    // Worksheet footnote: deductions may consume preferential income. Adding
+    // excluded foreign earnings must not restore those untaxed capital gains.
+    const capitalGainExcess = zeroFloor(qualifiedDividends.plus(netLTCG).minus(taxableIncome));
+    const adjustedNetLTCG = zeroFloor(netLTCG.minus(capitalGainExcess));
+    const adjustedQualifiedDividends = zeroFloor(qualifiedDividends.minus(zeroFloor(capitalGainExcess.minus(netLTCG))));
     const taxWithExclusion = calculateCapitalGainsTax(
-      stackedIncome, qualifiedDividends, netLTCG, filingStatus, constants,
-      { section1250Gain, collectiblesGain }
+      stackedIncome, adjustedQualifiedDividends, adjustedNetLTCG, filingStatus, constants,
+      { section1250Gain: zeroFloor(section1250Gain.minus(capitalGainExcess)), collectiblesGain: zeroFloor(collectiblesGain.minus(capitalGainExcess)) }
     );
-    // Step 2: Tax on just the excluded amount using ordinary brackets
     const taxOnExcluded = calculateTaxFromBrackets(
-      form2555TotalExclusion, constants.taxBrackets[filingStatus]
+      form2555StackingAmount, constants.taxBrackets[filingStatus]
     );
-    // Step 3: Actual tax = step 1 - step 2 (floored at zero)
     incomeTax = zeroFloor(taxWithExclusion.tax.minus(taxOnExcluded));
     ordinaryTax = zeroFloor(taxWithExclusion.ordinaryTax.minus(taxOnExcluded));
-    preferentialTax = taxWithExclusion.preferentialTax;
+    preferentialTax = incomeTax.minus(ordinaryTax);
+    for (const [line, label, value, formula] of [
+      ["1", "Taxable income", taxableIncome, "Form1040line15"],
+      ["2a", "Net exclusion and housing deduction", form2555WorksheetAmount, "Form2555lines45+50"],
+      ["2b", "Disallowed itemized deductions or exclusions", foreignDisallowedDeductions, "Actual source worksheet amount"],
+      ["2c", "Adjusted excluded amount", form2555StackingAmount, "max(0,line2a-line2b)"],
+      ["3", "Income including adjusted exclusion", stackedIncome, "line1+line2c"],
+      ["4", "Tax on income including exclusion", taxWithExclusion.tax, "Applicable tax computation after capital-gain-excess adjustment"],
+      ["5", "Tax on adjusted excluded amount", taxOnExcluded, "Ordinary tax on line2c"],
+      ["6", "Tax after foreign exclusion", incomeTax, "max(0,line4-line5)"],
+      ["capitalGainExcess", "Capital gain excess", capitalGainExcess, "max(0,preferential gains-line1)"],
+    ] as const) audit.record("FEI Tax WS",line,label,value,formula);
     audit.record("1040", "16", "Tax", incomeTax,
-      `Foreign Earned Income Tax Worksheet stacking rule: tax on $${stackedIncome} minus tax on excluded $${form2555TotalExclusion}`,
-      { stackedIncome, taxWithExclusion: taxWithExclusion.tax, taxOnExcluded, form2555TotalExclusion });
+      `Foreign Earned Income Tax Worksheet: tax on $${stackedIncome} minus tax on adjusted excluded $${form2555StackingAmount}`,
+      { stackedIncome, taxWithExclusion: taxWithExclusion.tax, taxOnExcluded, form2555StackingAmount });
   } else {
     const result = calculateCapitalGainsTax(
       taxableIncome, qualifiedDividends, netLTCG, filingStatus, constants,
@@ -2832,7 +2868,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
       throw new Error("2026 dependent-care primary earned income is unknown");
     }
     const earnedIncome = input.dependentCare.primaryEarnedIncome === undefined
-      ? sum(totalWages, netSEEarnings).minus(schedSE.deductibleHalf)
+      ? sum(totalWages, netSEEarnings).minus(schedSE.deductibleHalf).minus(form2555IncomeReduction).minus(form2555HousingDeduction)
       : d(input.dependentCare.primaryEarnedIncome);
     form2441 = calculateForm2441({
       taxYear: year,
@@ -2898,7 +2934,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
       aocStudents: education.aocStudents.map(student => ({...student,qualifiedExpenses:d(student.qualifiedExpenses)})),
       llcStudents: education.llcStudents?.map(student => ({...student,qualifiedExpenses:d(student.qualifiedExpenses)})),
       llcExpenses: d(education.llcExpenses),
-      magi: sum(agi,form2555?.totalExclusion ?? new Decimal(0),form2555?.housingDeduction ?? new Decimal(0),educationPossession),
+      magi: sum(agi,form2555IncomeReduction,form2555HousingDeduction,educationPossession),
       filingStatus,
       taxLiabilityLimit: zeroFloor(taxBeforeCredits.minus(sum(foreignTaxCredit,dependentCareCredit,elderlyOrDisabledCredit))),
     });

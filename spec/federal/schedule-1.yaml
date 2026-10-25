@@ -9,6 +9,16 @@ notes: |
   1040 Line 8. Part II total goes to 1040 Line 10.
 
 lines:
+  - line: "8d"
+    description: "Foreign earned income and housing exclusions"
+    formula: "Enter net Form2555line45 as a negative amount; reduce Schedule1income and1040total income exactly once, preserving gross1040wages"
+    irsRef: "https://www.irs.gov/instructions/i2555"
+    testRef: "tests/engine/federal-foreign-income-routing.test.ts::routes foreign exclusion through Schedule1 while preserving gross wages and payroll taxes"
+  - line: "24j"
+    description: "Foreign housing deduction"
+    formula: "Actual Form2555line50 is a positive adjustment on Schedule1line24j, not line24d"
+    irsRef: "https://www.irs.gov/pub/irs-pdf/f2555.pdf"
+    testRef: "tests/engine/federal-foreign-income-routing.test.ts::routes housing deduction to the official Schedule1 adjustment line"
   # ── Part I: Additional Income ────────────────────────────
   - line: "1"
     description: "Taxable refunds of state/local taxes"
