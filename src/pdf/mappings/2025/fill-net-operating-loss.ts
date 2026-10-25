@@ -81,6 +81,10 @@ function currentOriginRows(input: TaxYearInput, result: TaxReturnResult): string
   for (const key of ["regular", "alternativeTax", "investment"] as const) {
     if (current[key].taxYear !== checked[key].taxYear) throw new Error("Current origin review source years do not reconcile");
     for (const line of checked[key].lines) eq(current[key].partI[Number(line.line) as keyof typeof current.regular.partI], line.value);
+    for (const [number, exact] of Object.entries(checked[key].sourcePartI)) {
+      eq(current[key].sourcePartI?.[Number(number) as keyof typeof current.regular.sourcePartI], exact);
+    }
+    eq(current[key].sourceSignedComputation, checked[key].sourceSignedComputation);
     eq(current[key].signedComputation, checked[key].signedComputation); eq(current[key].netOperatingLoss, checked[key].netOperatingLoss);
   }
   for (const key of ["section1411OriginalLoss", "currentExcessBusinessLoss", "alternativeExcessBusinessLoss", "newRegularCarryforward",

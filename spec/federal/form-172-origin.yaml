@@ -4,8 +4,10 @@ taxYear: 2025
 irsReference: "https://www.irs.gov/pub/irs-pdf/f172.pdf"
 notes: |
   The December 2024 continuous-use form has 24 Part I lines. Its input amounts
-  are completed canonical form-dollar income and source-classification totals,
-  not a user override of AGI, profit or loss. Original receipts remain upstream.
+  are actual canonical income and source-classification totals, not a user
+  override of AGI, profit or loss. Exact computational amounts and rounded
+  presentation are retained separately under the boundaries documented in
+  form-172-origin-precision.yaml. Completed historical whole dollars stay exact.
   Sections 172(c) and (d) remove other-year NOL deductions, excess nonbusiness
   deductions and disallowed capital losses. This computation is separate from
   current-year Form 461 excess business loss, which is added to the new carry
@@ -100,12 +102,12 @@ lines:
     description: "Schedule D combined net capital loss"
     formula: "max(0,-actual ScheduleD net gain/loss). Capital source classifications must conserve that net amount. If no loss and no1202 exclusion, omit printed16-21."
     irsRef: "Form172 line16"
-    testRef: "tests/engine/forms/form-172-origin.test.ts::requires conserved canonical whole-dollar amounts and explicit classification"
+    testRef: "tests/engine/forms/form-172-origin.test.ts::requires conserved canonical amounts and explicit classification"
   - line: "17"
     description: "Section 1202 exclusion"
     formula: "The form directs the positive excluded amount here. Positive exclusion is currently a specific source-convention gate pending resolution of overlapping16-21 adjustments; explicit zero is supported."
     irsRef: "Form172 line17; IRC172(d)(2)(B)"
-    testRef: "tests/engine/forms/form-172-origin.test.ts::requires conserved canonical whole-dollar amounts and explicit classification"
+    testRef: "tests/engine/forms/form-172-origin.test.ts::requires conserved canonical amounts and explicit classification"
   - line: "18"
     description: "Capital loss less section 1202 exclusion"
     formula: "max(0,line16-line17), subject to the positive1202 source-convention boundary."

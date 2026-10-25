@@ -3,10 +3,10 @@ import Decimal from "decimal.js";
 import type { FilingStatus } from "@/models/constants.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { AuditTrail } from "@/utils/audit.js";
-import { d, sum, zeroFloor } from "@/utils/decimal.js";
+import { d, roundDollar, sum, zeroFloor } from "@/utils/decimal.js";
 
-/** Completed canonical form-dollar amounts. Original cents and the actual
- * business/nonbusiness source classification must be retained by the caller.
+/** Actual canonical amounts and business/nonbusiness classifications, including
+ * computational cents. Completed historical whole-dollar amounts remain valid.
  * These values are not an input contract for user-entered income overrides.
  */
 export interface Form172OriginInput {
@@ -28,9 +28,13 @@ export type Form172PartILine = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12
   | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24;
 export interface Form172OriginResult {
   taxYear: number;
+  /** Whole-dollar amounts reported on the form. */
   partI: Record<Form172PartILine, Decimal>;
+  /** Exact computed amounts before presentation rounding (IRC 6102(c)). */
+  sourcePartI: Record<Form172PartILine, Decimal>;
   capitalLimitationRequired: boolean;
   signedComputation: Decimal;
+  sourceSignedComputation: Decimal;
   netOperatingLoss: Decimal;
   lines: CalculatedLine[];
 }
@@ -45,7 +49,6 @@ export function calculateForm172Origin(input: Form172OriginInput): Form172Origin
   for (const [key, value] of Object.entries(input)) {
     if (key === "taxYear" || key === "filingStatus") continue;
     if (!Decimal.isDecimal(value) || !value.isFinite()) throw new Error(`Form 172 requires a finite actual canonical ${key}`);
-    if (!value.isInteger()) throw new Error(`Form 172 requires completed whole-dollar canonical ${key}; preserve original source cents upstream`);
     if (key !== "adjustedGrossIncome" && key !== "netCapitalGainOrLoss" && value.lt(0)) {
       throw new Error(`Form 172 requires nonnegative canonical ${key}`);
     }
@@ -77,15 +80,24 @@ export function calculateForm172Origin(input: Form172OriginInput): Form172Origin
   const l20 = zeroFloor(l18.minus(l19));
   const l21 = zeroFloor(l19.minus(l18));
   const l22 = zeroFloor(l15.minus(l20));
-  const signedComputation = sum(l1, l9, input.section1202Exclusion, l21, l22, input.otherYearNolDeduction);
-  const l24 = Decimal.min(d("0"), signedComputation);
-  const partI: Form172OriginResult["partI"] = {
+  const sourceSignedComputation = sum(l1, l9, input.section1202Exclusion, l21, l22, input.otherYearNolDeduction);
+  const l24 = Decimal.min(d("0"), sourceSignedComputation);
+  const sourcePartI: Form172OriginResult["sourcePartI"] = {
     1: l1, 2: input.nonbusinessCapitalLosses, 3: input.nonbusinessCapitalGains, 4: l4, 5: l5,
     6: input.nonbusinessDeductions, 7: input.nonbusinessOrdinaryIncome, 8: l8, 9: l9, 10: l10,
     11: input.businessCapitalLosses, 12: input.businessCapitalGains, 13: l13, 14: l14, 15: l15,
     16: l16, 17: input.section1202Exclusion, 18: l18, 19: l19, 20: l20, 21: l21, 22: l22,
     23: input.otherYearNolDeduction, 24: l24,
   };
+  // Section 6102(c) and Reg. 301.6102-1(c) distinguish exact computational
+  // items from reported totals. Do not derive a line from independently
+  // rounded displays or assign their difference to a capital source.
+  const partI = { ...sourcePartI };
+  for (const line of Object.keys(sourcePartI)) {
+    const number = Number(line) as Form172PartILine;
+    partI[number] = roundDollar(sourcePartI[number]);
+  }
+  const signedComputation = roundDollar(sourceSignedComputation);
   const capitalLimitationRequired = l16.gt(0) || input.section1202Exclusion.gt(0);
   const labels: Array<[Form172PartILine, string, string]> = [
     [1, "Income less standard or itemized deduction", "Actual AGI minus the standard or itemized deduction; retain the signed result"],
@@ -116,9 +128,13 @@ export function calculateForm172Origin(input: Form172OriginInput): Form172Origin
   const audit = new AuditTrail();
   for (const [line, label, formula] of labels) {
     if (!capitalLimitationRequired && line >= 16 && line <= 21) continue;
-    audit.record("172 Part I", String(line), label, partI[line], formula,
-      line === 24 ? { "Signed computation": signedComputation } : undefined);
+    audit.record("172 Part I", String(line), label, partI[line], formula, {
+      "Exact amount before reporting": sourcePartI[line],
+      ...(line === 24 ? { "Signed computation": signedComputation,
+        "Exact signed computation": sourceSignedComputation } : {}),
+    });
   }
-  return { taxYear: input.taxYear, partI, capitalLimitationRequired, signedComputation,
-    netOperatingLoss: l24.negated(), lines: audit.getLines() };
+  return { taxYear: input.taxYear, partI, sourcePartI, capitalLimitationRequired,
+    signedComputation, sourceSignedComputation,
+    netOperatingLoss: zeroFloor(partI[24].negated()), lines: audit.getLines() };
 }

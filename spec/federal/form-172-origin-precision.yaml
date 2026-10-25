@@ -1,0 +1,73 @@
+form: "Form172 origin source precision"
+fullName: "Exact classified sources and separately rounded Form172 lines"
+taxYear: 2025
+irsReference: "https://uscode.house.gov/us/usc/119-120/t26/s6102/"
+notes: |
+  Primary sources refreshed 2026-10-25. IRC6102(c) limits whole-dollar rounding
+  to the amount reported on the form, rather than the computational items:
+  "but shall be applicable only to such final amount."
+  Official 2025 CFR301.6102-1(c), printed page73, illustrates that a receipt is
+  taken "at its exact amount, including cents" before the total is reported:
+  https://www.govinfo.gov/content/pkg/CFR-2025-title26-vol20/pdf/CFR-2025-title26-vol20-sec301-6102-1.pdf
+  The current 1040 instructions, Rounding Off to Whole Dollars, require adding
+  cents before rounding a line total and permit consistent whole-dollar display:
+  https://www.irs.gov/instructions/i1040gi
+  IRS Rev. Proc.2024-33 section5.2.6 likewise says that "individual amounts
+  should not be rounded off for computation purposes" in its computer-prepared
+  1040 guidance. This corroborates the computational distinction; it is not a
+  separate Form172 approval or filing-format qualification:
+  https://www.irs.gov/pub/irs-irbs/irb24-44.pdf (printed1054).
+
+  Form172-specific application: the physical December2024 PartI lines2/3 and
+  11/12 take classified gross capital loss/gain, before the specified limits.
+  Their underlying totals retain source cents. Lines4/5 compare those exact
+  totals, rather than inventing a dollar of loss from independently rounded
+  displays. Line16 takes the same exact combined ScheduleD net used by the
+  source ledger; its printed value matches that net rounded for presentation.
+  Line19 applies the actual statutory capital-loss ceiling to that exact loss.
+  Lines1,6-15,18,20-23 likewise retain exact computed amounts until presentation.
+  Line24 combines their exact amounts and then reports the final negative NOL
+  rounded once; a nonnegative exact result establishes no loss. The reported
+  loss magnitude is the new form-dollar carry, not a separately recomputed sum
+  of displayed rounded inputs. Gross classifications must reconcile to the
+  actual ScheduleD net exactly; a printed match cannot cure a source mismatch.
+  https://www.irs.gov/pub/irs-pdf/f172.pdf (PartI, printedpage1)
+  https://www.irs.gov/instructions/i172 (PartI lines2 and19-22).
+
+  sourcePartI and sourceSignedComputation retain the exact computation; partI
+  and signedComputation are whole-dollar presentation. Every printed audit
+  value retains its exact counterpart. Thus displayed2=101 and3=100 can yield
+  displayed4=0 when actual100.50-100.49=.01. This is a disclosed presentation
+  difference, not a residual allocated to income, a source character change,
+  or a conservation tolerance. Historical whole-dollar inputs remain unchanged.
+  This is a derived application of6102/cited regulation to Form172; no IRS
+  published Form172 cents example was located. The software's existing
+  rounding of upstream canonical values is not silently reversed. Enabling a
+  source-cent canonical capital route requires a separate coherent handoff.
+  Positive1202 and other unimplemented capital methods remain separate gates.
+lines:
+  - line: "capital-net"
+    description: "Conserve source capital classifications before rounding printed lines"
+    formula: "Gains100.49 minus losses100.50 equals actual net-0.01. With AGI-75000.01, standard15750 and noncapital nonbusiness income5000, raw22=.01 removes that exact capital loss and raw24=-80000. Printed2=101,3=100,4=0; final carry80000, with raw values retained. Reversing gain/loss cents preserves80000."
+    irsRef: "i1040 RoundingOffToWholeDollars; Form172lines2-5,16,19-24; IRC172(d)(2)"
+    testRef: "tests/engine/forms/form-172-origin-precision.test.ts::conserves exact capital cents before printing independent line amounts"
+  - line: "source-aggregation"
+    description: "Use exact source totals and round the completed original loss once"
+    formula: "Gains20000.49 minus losses100.50 gives19899.99; AGI-55100.01, standard15750, nonbusiness ordinary5000 gives raw24=-70850.01 and carry70850. Nonbusiness standard deduction alone cannot create a loss after exact-cent offsets."
+    irsRef: "i1040 RoundingOffToWholeDollars; Form172lines1,5-10,24"
+    testRef: "tests/engine/forms/form-172-origin-precision.test.ts::retains exact source subtotals without inventing a rounding allocation"
+  - line: "exact-validation"
+    description: "Reject source mismatches that whole-dollar rounding would hide"
+    formula: "100.49-100.50 must reconcile to-.01, not0; a one-cent classification mismatch still rejects. Negative, missing and nonfinite sources remain invalid."
+    irsRef: "Form172 source line definitions; i1040 rounding"
+    testRef: "tests/engine/forms/form-172-origin-precision.test.ts::rejects exact source differences even when printed totals agree"
+  - line: "final-dollar"
+    description: "Round the exact negative origin only at the reporting boundary"
+    formula: "Exact losses10.49 and10.50 report10 and11; the positive carry equals the magnitude of reported line24. Exact positive.49 establishes no loss."
+    irsRef: "IRC6102(a),(c); CFR301.6102-1(a),(c); Form172line24"
+    testRef: "tests/engine/forms/form-172-origin-precision.test.ts::rounds the final loss magnitude without creating a loss from positive income"
+  - line: "review-precision"
+    description: "Reconcile retained computational amounts as well as their displayed totals"
+    formula: "The review statement recalculates each actual172source amount. A changed fractional source line or exact signed computation rejects even when its rounded display and final carry are unchanged."
+    irsRef: "IRC6102(c); CFR301.6102-1(c); Form172 source record conservation"
+    testRef: "tests/pdf/form-172-origin-precision-review.test.ts::rejects altered exact origin amounts hidden by identical printed totals"

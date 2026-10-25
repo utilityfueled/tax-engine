@@ -62,11 +62,11 @@ it("does not turn a standard deduction or an older loss into a new loss", () => 
   expect(large.netOperatingLoss.toFixed()).toBe("9007199254740993");
 });
 
-it("requires conserved canonical whole-dollar amounts and explicit classification", () => {
+it("requires conserved canonical amounts and explicit classification", () => {
   expect(() => calculateForm172Origin(source({ nonbusinessCapitalGains: d("1") }))).toThrow(/capital.*reconcile/i);
   expect(() => calculateForm172Origin(source({ nonbusinessDeductions: d("NaN") }))).toThrow(/finite/i);
   expect(() => calculateForm172Origin(source({ deductionAmount: d("-1") }))).toThrow(/nonnegative/i);
-  expect(() => calculateForm172Origin(source({ deductionAmount: d("15750.01") }))).toThrow(/whole.dollar/i);
+  expect(() => calculateForm172Origin(source({ deductionAmount: d("Infinity") }))).toThrow(/finite/i);
   expect(() => calculateForm172Origin(source({ nonbusinessOrdinaryIncome: undefined as never }))).toThrow(/actual|finite/i);
   expect(() => calculateForm172Origin(source({ taxYear: 2027 }))).toThrow(/year/i);
   expect(() => calculateForm172Origin(source({ section1202Exclusion: d("500"),
