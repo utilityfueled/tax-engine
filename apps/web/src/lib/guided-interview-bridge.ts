@@ -413,7 +413,7 @@ export function buildRetirementInputs(entries: RetirementEntryData[] | undefined
       grossDistribution: toDecimalString(e.grossDistribution),
       taxableAmount: hasEnteredAmount(e.taxableAmount) ? toDecimalString(e.taxableAmount) : undefined,
       federalWithheld: toDecimalString(e.federalWithheld),
-      isIraSepSimple: e.isIraSepSimple,
+      iraSepSimple: e.isIraSepSimple,
       distributionCode: e.distributionCode,
     }));
 }

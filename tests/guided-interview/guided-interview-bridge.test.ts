@@ -1547,7 +1547,7 @@ describe("buildRetirementInputs", () => {
     expect(result[0].taxableAmount).toBe("25000");
     expect(result[0].federalWithheld).toBe("3000");
     expect(result[0].distributionCode).toBe("7");
-    expect(result[0].isIraSepSimple).toBe(true);
+    expect(result[0].iraSepSimple).toBe(true);
   });
 
   it("requires the actual payer name", () => {
