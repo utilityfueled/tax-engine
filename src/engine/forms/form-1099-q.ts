@@ -682,7 +682,8 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
     const available = amount.minus(sum(refunds, assistance, credit, other));
     if (available.lt(0)) throw new Error("Form1099Q expense reductions exceed actual expense");
     const linked = allocations.filter(item => item.expense.id === expense.id);
-    if (sum(...linked.map(item => item.amount)).gt(available) || sum(...linked.map(item => item.credit)).gt(credit)) throw new Error("Form1099Q allocations exceed available expense or credit reduction");
+    const requested = sum(...linked.map(item => item.amount));
+    if (requested.gt(available) || sum(...linked.map(item => item.credit)).gt(credit)) throw new Error("Form1099Q allocations exceed available expense or credit reduction");
     const benefits = inKindBenefits.filter(item => item.expense.id === expense.id);
     if (benefits.length) audit.record("Form1099-Q", `${expense.id}:after-in-kind`, "Expense remaining after actual in-kind benefit costs", available.minus(sum(...benefits.map(item => item.amount))), "Paid expense less actual reductions and costs supplied as in-kind benefits; other allocations must fit the remainder");
     if (expense.category === "student_loan" && sum(...linked.map(item => item.loanInterest)).gt(actualAmount(expense.studentLoanInterestAmount, "actual paid loan interest"))) throw new Error("Form1099Q allocations exceed actual paid loan interest");
@@ -696,7 +697,9 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
         if (item.form.accountType !== "coverdell_esa" || transfer?.kind !== "qtp" || !expense.destinationAccountId || transfer.destinationAccountId !== expense.destinationAccountId || transfer.receivedDate !== expense.paidDate || !actualAmount(transfer.amount, "QTP contribution source amount").eq(amount)) throw new Error("Form1099Q QTP contribution expense must match its actual transfer source");
         if (transfer.sameBeneficiary !== true) { item.allowed = ZERO; continue; }
       }
-      item.allowed = available.isZero() ? ZERO : item.amount.mul(Decimal.min(1, eligible.div(available)));
+      // The actual allocation group shares the qualified category capacity.
+      // Other paid spending not assigned to a distribution cannot dilute it.
+      item.allowed = requested.isZero() ? ZERO : item.amount.mul(Decimal.min(1, eligible.div(requested)));
       if (!expandedExpenseAllowed(item.form, expense, options.taxYear)) item.allowed = ZERO;
     }
   }
