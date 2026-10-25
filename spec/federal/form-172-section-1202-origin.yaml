@@ -1,0 +1,84 @@
+form: "Current Form172 section1202 sources"
+fullName: "Source-bound QSBS restoration in current regular, alternative and investment NOL origins"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i172"
+notes: |
+  Refreshed2026-10-25: IRC172(d)(2)(B),56(d)(2),57(a)(7), Reg1.172-3(a)
+  and1.1411-4(h)(2), current Form172PartI and i6251Line2h.
+  https://uscode.house.gov/us/usc/119-120/t26/s172/
+  https://uscode.house.gov/us/usc/119-120/t26/s56/
+  https://www.ecfr.gov/current/title-26/section-1.172-3
+  https://www.ecfr.gov/current/title-26/section-1.1411-4
+  https://www.irs.gov/pub/irs-pdf/f172.pdf
+  https://www.irs.gov/instructions/i6251
+  Actual issuer/lot history determines the exclusion before origin computation.
+  Form172 line3 retains gross investment gains before exclusion, line16 retains
+  the actual ScheduleD net-loss magnitude, and line17 restores the exclusion.
+  With nonnegative post-exclusion net capital, lines16,18-22 are zero for the
+  supported nonbusiness cohort; the exclusion is restored once at line24.
+  This matches the statutory computation without a1202 exclusion. These literal
+  examples are derived statutory/form controls, not published IRS oracles.
+
+  A negative post-exclusion capital net remains explicitly unresolved. Example:
+  gain1000-loss700-exclusion500 gives ScheduleD-200. Literal printed lines17/21
+  restore500+200, whereas recomputation without1202 changes-200 to300, a500
+  adjustment. No primary worked example resolving this conflict was located.
+  Do not substitute a pre-exclusion net on printed line16, drop its line21,
+  fabricate a residual, or represent this interpretation as settled. Such cases
+  retain a named boundary pending authoritative qualified tax interpretation.
+  Complete independent overlap trace, active business loss100000, wages0,
+  nonbusiness gross gain1000/loss700, exclusion500, standard15750 and no other
+  items: AGI=-100200; lines1..24=[-115950,700,1000,0,300,15750,0,300,15450,
+  0,0,0,0,0,0,200,500,0,200,0,200,0,0,-99800]. Statutory recomputation
+  without1202 leaves300 nonbusiness capital income offset by only300 allowable
+  nonbusiness deductions, yielding100000 NOL. The200 difference is unresolved;
+  the source gate remains, and neither trace is presented as a published oracle.
+
+  Under56(d)(2), the current alternative loss applies the172 modifications to
+  the AMT sources. Actual6251 includes its rounded7percent pre2010 preference;
+  remove that same included amount before restoring the full actual exclusion
+  once. This avoids retaining both full restoration and the partial preference.
+  Keep all original cents, source/printed Form172 amounts and separate regular,
+  AMT and1411 origins. Source validation never accepts an exclusion override.
+  Current source support does not open2026 readiness or establish human review.
+lines:
+  - line: "17"
+    description: "Restore actual exclusion once when the post-exclusion net is nonnegative"
+    formula: "Pure regular example AGI-74500, standard15750, nonbusiness gains1000, ordinary income5000 and exclusion500 gives line9=9750, lines16/18-22=0 and line24=-80000. Full20000 exclusion/net0 gives line24=-70750."
+    irsRef: "Form172PartI3/9/16-24; IRC172(d)(2)(B)"
+    testRef: "tests/engine/federal-form-172-section-1202-origin.test.ts::restores positive QSBS once when statutory and printed origin traces agree"
+  - line: "alternative"
+    description: "Remove the actual included AMT preference before full restoration"
+    formula: "Broker gain1000.25/exclusion500.125 gives capital500.125, AGI-74499.875 and6251preference35. Current regular loss80000 and independent alternative loss74000; investment-only origin remains0. Fund gross1500.50/exclusion500.125 gives AMT73500."
+    irsRef: "IRC56(d)(2),57(a)(7),172(d)(2); i6251Line2h; Reg1.1411-4(h)(2)"
+    testRef: "tests/engine/federal-form-172-section-1202-origin.test.ts::binds original broker and fund QSBS to separate regular AMT and investment origins"
+  - line: "capital-netting"
+    description: "Preserve actual prior losses and netted28percent worksheet amounts"
+    formula: "Actual fund gross1500.50/exclusion500.125 less priorST200/LT100 gives net700.375 and28percent gain200.125; original gains/losses and exclusion conserve without duplicating the prior capital loss. Full20000exclusion/net0 retains zero preference and independent regular70750/AMT55000 origins."
+    irsRef: "ScheduleD28percentWorksheet2,5-7; Form172PartI2/3/17; i6251PartIII"
+    testRef: "tests/engine/federal-form-172-section-1202-origin.test.ts::conserves source netting and full exclusions without inventing an AMT allocation"
+  - line: "source-binding"
+    description: "Validate original QSBS identity, issuer history and capital classification"
+    formula: "Recompute from complete original issuer/lot sources; original Form172 rows classify each bound QSBS disposition and all fund boxes. Missing issuer history, mismatched classification, altered exclusion/preference or conflicting AMT worksheet rejects."
+    irsRef: "IRC1202(a)/(b); Form172PartI source records; i6251Line2k"
+    testRef: "tests/engine/federal-form-172-section-1202-origin.test.ts::requires actual QSBS sources and reconciles retained exclusion and preference"
+  - line: "negative-net-boundary"
+    description: "Retain the unresolved negative-net source convention"
+    formula: "Actual post-exclusion capital net below0 with positive1202 remains blocked for small and capped capital losses. No change is made to the original ScheduleD line16 source or the printed Form172 formulas."
+    irsRef: "Form172PartI16-24 compared with IRC172(d)(2)"
+    testRef: "tests/engine/federal-form-172-section-1202-origin.test.ts::keeps negative-net QSBS origin conventions explicitly unresolved"
+  - line: "readiness"
+    description: "Preserve source-only and closed future-year boundaries"
+    formula: "Actual2026 source packet can be validated without computing a loss; canonical2026 remains unavailable until its independent readiness gates are met."
+    irsRef: "Current Form172 source year and actual source records"
+    testRef: "tests/engine/federal-form-172-section-1202-origin.test.ts::preserves source-only QSBS validation and future-year readiness"
+  - line: "review"
+    description: "Reconcile retained QSBS origins and source snapshots in the redacted review"
+    formula: "Fresh source replay must reproduce actual exclusion, preference and all three origin traces. The opaque original8949 token binds original/redacted QSBS, ScheduleD, AMT, prior-capital and172source packets; restore a clone of actual original source facts for calculation only. Missing/forged tokens, changed sources or altered retained computation reject; original account identifiers never enter the numeric review statement."
+    irsRef: "Form172PartI17/24; IRC6102(c); Reg1.1411-4(h)(2)"
+    testRef: "tests/pdf/form-172-section-1202-origin-review.test.ts::rechecks original QSBS exclusion and separate origin traces in the review statement"
+  - line: "review-packet"
+    description: "Forward the validated original source token through the saved review packet"
+    formula: "The saved packet replays original sources with its opaque token, includes regular80000/alternative74000 and actual exclusion500.125, and contains no original source account, taxpayer identifier or source reference. Reopen with an independent PDF reader and retain one review notice on every statement page."
+    irsRef: "Form172PartI17/24; original source conservation and review privacy"
+    testRef: "tests/pdf/form-172-section-1202-origin-review.test.ts::saves source-validated QSBS origin statements through the redacted return packet"

@@ -1422,19 +1422,20 @@ boundaries, not external blockers and not claims of completed support. The
 following is the selected execution order; it does not silently enable every
 special method named in that matrix.
 
-1. Finish the ordinary enabled-source closure already in progress: facts owns
-   original1099-DA sources, once-only withholding and collection; the parent owns
-   the physical8949 digital categories and ScheduleD transfer. Facts then owns
-   guided collection of this package's actual ordinary capital-origin packet;
-   the federal owner verifies its canonical handoff. Metadata order is
-  2025.67/2026.63 for this package, .68/.64 for DA sources and .69/.65 for8949.
-2. The federal owner next implements actual positive1202 current-origin
-   restoration, including capital-loss overlap and the separate AMT preference.
-   The existing supported QSBS return sources must be reconciled; they cannot
-   be replaced by a user-entered exclusion or copied AMT loss.
-3. The federal owner then addresses the selected remaining charitable carry
-   methods: positive ATNOL with current public-cash gifts and separate AMT
-   history; actual prior/mixed-category charity; and2026 nonitemizer carry.
+1. Finish ordinary enabled-source collection already in progress. Original
+   1099-DA source binding/withholding and all twelve8949 categories are committed
+   through2025.69/2026.65. Facts owns the remaining document/guided/state handoffs
+   and ordinary capital-origin intake; the federal owner reviews those source
+   boundaries. These are source-collection tasks, not unfinished8949 arithmetic.
+2. Actual positive1202 current-origin restoration is implemented and verified
+   where post-exclusion capital net is nonnegative, including the separate AMT
+   preference and original-source review replay (2025.70/2026.66). The negative-net
+   printed/statutory overlap remains a specific unresolved interpretation,
+   documented with its complete trace in
+   `upgrade-2026-form172-qsbs-origin-work.md`; no convention is invented.
+3. The AI owner is finishing positive ATNOL with current public-cash gifts and
+   separate actual AMT charity history, then owns the selected actual
+   prior/mixed-category charity and2026 nonitemizer carry.
    These remain unimplemented internally, with actual source collection handed
    to the facts owner only after each stable calculation contract.
 4. The federal owner next addresses source-bound cancelled-debt reductions of
@@ -1448,3 +1449,10 @@ special method named in that matrix.
    unsupported until their own scoped methods are implemented; none is relabeled
    external. Final2026 publications and independent human qualification are
    separate external dependencies.
+
+## 2026-10-25 — Source-bound positive1202 current loss origins
+
+- Actual issuer/lot exclusions now feed gross-capital classifications and Form172 line17 once for the independently reconciled nonnegative-net method. The AMT origin removes the rounded seven-percent preference already included on6251 before restoring the full exclusion. Source cents and separate regular/AMT/1411 origin calculations are retained; no taxpayer-entered exclusion or result override is accepted.
+- A private original-source token authenticates the whole source/household/year packet before fresh redacted-review replay. Missing, forged, other-packet or changed-source tokens reject; snapshots and retained computations are frozen. The limited accessor supplies actual original capital facts while preserving current noncapital facts, so stale business expenses cannot be hidden.
+- Parent independent review on `e1fbc77db1a2ee77119f011d03f1702346b462b7` passed13 cases, including five new source/token probes, with no actionable finding. Final isolated product tree `194d229b3ce295d2b4a23305eaf27343a951710f`, after separately committed PDF-reader repair `9da0bab`, passed12 affected cases, root/web types, all4614 spec references and lint with zero errors/two existing warnings. The preceding571 adjacent cases passed; the only failed reader transport now passes without assertion or timeout changes. All four saved review pages were visually inspected and retain notices without original identifiers.
+- Rule versions2025.70/2026.66 retain incomplete2026, independent-review-pending and disabled filing. The complete derived numerical controls, source citations and negative-net printed-versus-statutory mismatch are in `upgrade-2026-form172-qsbs-origin-work.md`. That single interpretation remains disabled pending qualified authoritative input; the user is not asked to choose arithmetic. The federal owner's next selected implementation is actual cancelled-debt reductions of loss vintages.

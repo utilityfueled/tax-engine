@@ -17,7 +17,9 @@ notes: |
   Exact completed canonical computational amounts flow into PartI; source cents
   and separately rounded reported lines are retained. Existing upstream form
   rounding is not reversed. The ordinary investment capital extension is
-  specified in form-172-capital-origin.yaml; other capital methods remain gated.
+  specified in form-172-capital-origin.yaml; positive QSBS with nonnegative
+  post-exclusion net is specified in form-172-section-1202-origin.yaml. Other
+  capital methods remain gated.
   The literal cases below are derived examples, not published IRS numerical oracles.
 lines:
   - line: "regular-alternative-origin"

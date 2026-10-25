@@ -420,7 +420,7 @@ export async function fillReturn(
     }
   }
   if (input.form7206 || result.form7206) assertForm7206ReviewSource(input, result);
-  if (input.netOperatingLoss || result.netOperatingLoss) buildNetOperatingLossReview(input, result);
+  if (input.netOperatingLoss || result.netOperatingLoss) buildNetOperatingLossReview(input, result, capitalGainReview);
   const filledForms: string[] = [];
   const finalizedPaths = new Set<string>();
   const savePacketPdf = async (doc: PDFDocument, outputPath: string) => {
@@ -838,7 +838,7 @@ export async function fillReturn(
 
   // ── IRA Deduction Worksheet reference summary (if applicable — supported Pub. 590-A deduction worksheet inputs) ──
   if (result.netOperatingLoss) {
-    filledForms.push(await fillNetOperatingLossReview(input, result, outputDir));
+    filledForms.push(await fillNetOperatingLossReview(input, result, outputDir, capitalGainReview));
   }
 
   if (result.iraDeductionWorksheet) {

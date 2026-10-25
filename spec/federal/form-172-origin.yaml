@@ -14,11 +14,11 @@ notes: |
   only once after the return has already included its income addback.
   The published 2023 Publication 536 page 6 example is a historical arithmetic
   oracle only; its 13,850 standard deduction is not a current-year constant.
-  No root input or canonical route is added by this standalone package. Separate
-  regular/AMT/1411 source classification and current-year carry assembly remain
-  integration work. Positive section 1202 exclusion with capital netting requires
-  resolution of the Part I lines 16-21 source convention before this route can
-  calculate it; it must not duplicate the restored exclusion.
+  Canonical source classification and current-year carry assembly are specified
+  separately in form-172-return.yaml and form-172-capital-origin.yaml.
+  Positive section1202 with nonnegative post-exclusion capital net follows
+  form-172-section-1202-origin.yaml. Negative-net cases require resolution of
+  the PartI16-21 source convention; never duplicate the restored exclusion.
   Current i172's EBL worksheet still refers to Form 172 line 33, whereas the
   current physical Part I origin loss is line 24. Do not use Part II line 33,
   which is an itemized-deduction adjustment, as the current-year original loss.
@@ -105,7 +105,7 @@ lines:
     testRef: "tests/engine/forms/form-172-origin.test.ts::requires conserved canonical amounts and explicit classification"
   - line: "17"
     description: "Section 1202 exclusion"
-    formula: "The form directs the positive excluded amount here. Positive exclusion is currently a specific source-convention gate pending resolution of overlapping16-21 adjustments; explicit zero is supported."
+    formula: "The actual positive excluded amount is restored here. Nonnegative post-exclusion net is supported by form-172-section-1202-origin.yaml; negative-net cases retain the unresolved overlapping16-21 source-convention gate."
     irsRef: "Form172 line17; IRC172(d)(2)(B)"
     testRef: "tests/engine/forms/form-172-origin.test.ts::requires conserved canonical amounts and explicit classification"
   - line: "18"

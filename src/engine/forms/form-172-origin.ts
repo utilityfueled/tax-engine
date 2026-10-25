@@ -61,8 +61,8 @@ export function calculateForm172Origin(input: Form172OriginInput): Form172Origin
   const capitalNet = input.nonbusinessCapitalGains.plus(input.businessCapitalGains)
     .minus(input.nonbusinessCapitalLosses).minus(input.businessCapitalLosses).minus(input.section1202Exclusion);
   if (!capitalNet.eq(input.netCapitalGainOrLoss)) throw new Error("Form 172 capital classifications must reconcile with the actual Schedule D net amount");
-  if (input.section1202Exclusion.gt(0)) {
-    throw new Error("Form 172 positive section 1202 requires its resolved lines 16-21 source convention before origin-loss calculation");
+  if (input.section1202Exclusion.gt(0) && capitalNet.lt(0)) {
+    throw new Error("Form 172 positive section1202 with a negative capital net requires its resolved lines16-21 source convention");
   }
 
   const l1 = input.adjustedGrossIncome.minus(input.deductionAmount);
@@ -116,7 +116,7 @@ export function calculateForm172Origin(input: Form172OriginInput): Form172Origin
     [14, "Excess business capital losses", "max(0, line 11 - line 13)"],
     [15, "Total excess capital losses", "Line 4 + line 14"],
     [16, "Net Schedule D capital loss", "Positive magnitude of the actual combined net loss"],
-    [17, "Section 1202 exclusion", "Actual exclusion; positive amounts require the separately resolved source convention"],
+    [17, "Section 1202 exclusion", "Restore the actual exclusion once; positive exclusion with a negative capital net requires its separate source convention"],
     [18, "Net loss less exclusion", "max(0, line 16 - line 17)"],
     [19, "Capital loss deduction", "min(line 16, 1500 for MFS or 3000 otherwise)"],
     [20, "Capital loss already excluded from income", "max(0, line 18 - line 19)"],

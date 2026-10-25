@@ -165,18 +165,22 @@ export function calculateForm172Return(input: TaxYearInput, context?: Form172Ret
       nonbusinessDeductions: nonbusinessDeduction, nonbusinessOrdinaryIncome: ordinaryIncome,
       nonbusinessCapitalLosses: capital.nonbusinessCapitalLosses, nonbusinessCapitalGains: capital.nonbusinessCapitalGains,
       businessCapitalLosses: zero, businessCapitalGains: zero,
-      netCapitalGainOrLoss: capital.netCapitalGainLoss, section1202Exclusion: zero, otherYearNolDeduction: oldNol };
+      netCapitalGainOrLoss: capital.netCapitalGainLoss, section1202Exclusion: capital.section1202Exclusion, otherYearNolDeduction: oldNol };
     return calculateForm172Origin(args);
   };
   const regular = partI(context.agi, context.deductionAmount, context.deductionAmount.plus(nonbusinessAdjustments), nonbusinessIncome, prior.deduction);
-  const expectedAlternativeIncome = sum(context.agi, prior.deduction, context.alternativeTaxPrivateActivityInterest)
+  const includedSection1202Preference = roundDollar(capital.section1202AmtPreference);
+  const expectedAlternativeIncome = sum(context.agi, prior.deduction, context.alternativeTaxPrivateActivityInterest, includedSection1202Preference)
     .minus(prior.alternativeTax.deduction).minus(context.qbiDeduction).minus(itemized?.alternative ?? zero);
   if (!context.alternativeTaxIncome.eq(expectedAlternativeIncome)) {
     throw new Error("Form172 alternative origin requires its separately classified actual AMT adjustments");
   }
   // Actual6251 already restored regularNOL and the standard deduction or taxes.
   // Restore ATNOLD and disallowed199A once; never copy regular PartI or its carry.
-  const alternativeTax = partI(context.alternativeTaxIncome.plus(prior.alternativeTax.deduction).plus(context.qbiDeduction), zero,
+  // Section172 removes the entire1202 exclusion. Remove only the same partial
+  // preference already included by6251 before PartI restores that full amount.
+  const alternativeTax = partI(context.alternativeTaxIncome.plus(prior.alternativeTax.deduction).plus(context.qbiDeduction)
+    .minus(includedSection1202Preference), zero,
     nonbusinessAdjustments.plus(itemized?.alternative ?? zero), nonbusinessIncome.plus(context.alternativeTaxPrivateActivityInterest), zero);
   // All supported business losses are active and nontrading. Ordinary investment
   // income and its nonbusiness early-withdrawal deduction are re-run under172(d),

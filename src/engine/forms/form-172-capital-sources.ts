@@ -5,6 +5,8 @@ import type { ScheduleDResult } from "@/engine/schedules/schedule-d.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { d, roundDollar, sum, zeroFloor } from "@/utils/decimal.js";
+import { calculateSection1202Sources } from "./section-1202-sources.js";
+import { calculateScheduleDSpecialGains } from "@/engine/schedules/schedule-d-special-gains.js";
 
 export interface Form172CapitalSourcesResult {
   sourceFactsVerified: boolean;
@@ -14,6 +16,8 @@ export interface Form172CapitalSourcesResult {
   netLongTerm: Decimal;
   netCapitalGainLoss: Decimal;
   capitalGainLoss: Decimal;
+  section1202Exclusion: Decimal;
+  section1202AmtPreference: Decimal;
   lines: CalculatedLine[];
 }
 
@@ -37,15 +41,25 @@ export function calculateForm172CapitalSources(input: TaxYearInput, scheduleD?: 
   const priorValues = [input.priorYear?.shortTermCapitalLoss, input.priorYear?.longTermCapitalLoss, input.priorYear?.capitalLossCarryforward];
   const hasCapital = sourceTransactions.length > 0 || priorValues.some(value => !d(value).isZero())
     || input.form1099Div.some(form => [form.totalCapitalGainDistributions, form.section1202Gain, form.section1250Gain, form.collectiblesGain].some(value => !d(value).isZero()));
-  if (input.form1099DA.length || input.section1202Sources !== undefined
+  if (input.form1099DA.length
     || sourceTransactions.some(row => row.transaction.digitalAsset || ("sourceDocumentType" in row.transaction
       && row.transaction.sourceDocumentType !== undefined && row.transaction.sourceDocumentType !== "1099-b"))
-    || input.scheduleDSpecialGainSources?.longTermAssets.some(row => row.character !== "ordinary")
-    || input.form1099Div.some(form => [form.section1202Gain, form.section1250Gain, form.collectiblesGain].some(value => !d(value).isZero()))) {
-    throw new Error("Form172 capital special-character, digital-asset and section1202 sources require their separate origin method");
+    || input.scheduleDSpecialGainSources?.longTermAssets.some(row => !["ordinary", "qsbs"].includes(row.character))
+    || input.form1099Div.some(form => [form.section1250Gain, form.collectiblesGain].some(value => !d(value).isZero()))) {
+    throw new Error("Form172 capital special-character and digital-asset sources require their separate origin method");
+  }
+  if (!input.section1202Sources && input.form1099Div.some(form => d(form.section1202Gain).gt(0))) {
+    throw new Error("Form172 capital special-character section1202 requires actual issuer, acquisition and ownership sources");
+  }
+  const qsbs = calculateSection1202Sources(input);
+  const qsbsIds = new Set(qsbs?.bindings.map(row => row.originalSourceId));
+  const section1202Exclusion = qsbs?.exclusion ?? d("0"), section1202AmtPreference = qsbs?.amtPreference ?? d("0");
+  for (const asset of input.scheduleDSpecialGainSources?.longTermAssets ?? []) {
+    if ((asset.character === "qsbs") !== qsbsIds.has(asset.sourceId)) throw new Error("Form172 capital QSBS character conflicts with its actual issuer source");
   }
   const audit = new AuditTrail();
   let gains = d("0"), losses = d("0"), shortTerm = d("0"), longTerm = d("0");
+  let longTermCarry = d("0");
   if (facts || hasCapital) {
     if (!facts || facts.sourceTaxYear !== year || !facts.sourceReference?.trim() || facts.sourceFactsConfirmed !== true
       || facts.allCapitalSourcesIncluded !== true || !Array.isArray(facts.transactions) || !Array.isArray(facts.distributions)) {
@@ -73,7 +87,8 @@ export function calculateForm172CapitalSources(input: TaxYearInput, scheduleD?: 
         throw new Error("Form172 capital transaction must bind its actual original identity, year and source record");
       }
       owner(row.accountHolder, statement.accountHolder);
-      if (row.nonbusinessInvestmentConfirmed !== true || row.capitalCharacter !== "ordinary_investment") throw new Error("Form172 capital requires the actual ordinary nonbusiness investment classification");
+      const character = qsbsIds.has(id) ? "section1202" : "ordinary_investment";
+      if (row.nonbusinessInvestmentConfirmed !== true || row.capitalCharacter !== character) throw new Error("Form172 capital requires the actual nonbusiness investment and QSBS source classification");
       for (const key of ["description", "dateAcquired", "dateSold", "holdingPeriod"] as const) {
         if (!snapshot[key]?.trim() || snapshot[key] !== transaction[key]) throw new Error(`Form172 capital original ${key} does not reconcile`);
       }
@@ -95,7 +110,7 @@ export function calculateForm172CapitalSources(input: TaxYearInput, scheduleD?: 
       const net = proceeds.minus(basis).plus(wash);
       gains = gains.plus(zeroFloor(net)); losses = losses.plus(zeroFloor(net.negated()));
       if (snapshot.holdingPeriod === "short") shortTerm = shortTerm.plus(net); else longTerm = longTerm.plus(net);
-      audit.record("Current Form172 capital sources", id, "Classified ordinary investment disposition", net,
+      audit.record("Current Form172 capital sources", id, "Classified investment disposition before exclusion", net,
         "Original proceeds minus original basis plus actual disallowed wash loss once", { Proceeds: proceeds, Basis: basis, "Wash loss disallowed": wash });
     }
     const distributions = new Map(facts.distributions.map(row => [row.sourceId, row]));
@@ -108,11 +123,12 @@ export function calculateForm172CapitalSources(input: TaxYearInput, scheduleD?: 
       owner(row.accountHolder, statement.accountHolder);
       const net = matches(row.totalCapitalGainDistributions, statement.totalCapitalGainDistributions, "capital distribution");
       if (net.lt(0)) throw new Error("Form172 capital distribution must be nonnegative");
-      for (const key of ["section1250Gain", "section1202Gain", "collectiblesGain"] as const) {
+      matches(row.section1202Gain, statement.section1202Gain, "section1202Gain");
+      for (const key of ["section1250Gain", "collectiblesGain"] as const) {
         if (!matches(row[key], statement[key], key).isZero()) throw new Error("Form172 capital distribution requires its separate special-character origin method");
       }
       gains = gains.plus(net); longTerm = longTerm.plus(net);
-      audit.record("Current Form172 capital sources", id, "Ordinary investment capital distribution", net, "Actual original Box2a with known-zero special-character boxes");
+      audit.record("Current Form172 capital sources", id, "Investment capital distribution before exclusion", net, "Actual original Box2a; any Box2c exclusion is bound separately to its issuer and lot history");
     }
     const prior = facts.priorCapitalLosses;
     if (!prior || prior.sourceTaxYear !== year - 1 || !prior.sourceReference?.trim() || prior.sourceFactsConfirmed !== true
@@ -125,13 +141,30 @@ export function calculateForm172CapitalSources(input: TaxYearInput, scheduleD?: 
       throw new Error("Form172 capital prior carry requires actual signed filed short/long losses; the unclassified aggregate is not a source");
     }
     losses = losses.minus(st).minus(lt); shortTerm = shortTerm.plus(st); longTerm = longTerm.plus(lt);
+    longTermCarry = lt;
     audit.record("Current Form172 capital sources", "prior-short", "Actual nonbusiness prior short-term loss", st, "Actual filed same-return regular/AMT investment carry");
     audit.record("Current Form172 capital sources", "prior-long", "Actual nonbusiness prior long-term loss", lt, "Actual filed same-return regular/AMT investment carry");
     audit.record("Current Form172 capital sources", "gains", "Nonbusiness capital gains", gains, "Sum actual positive disposition amounts and ordinary distributions before netting");
     audit.record("Current Form172 capital sources", "losses", "Nonbusiness capital losses", losses, "Sum actual negative disposition magnitudes and filed classified prior loss carry");
   }
+  longTerm = longTerm.minus(section1202Exclusion);
   const net = shortTerm.plus(longTerm);
-  if (!gains.minus(losses).eq(net)) throw new Error("Form172 capital gross classification does not conserve its net");
+  if (!gains.minus(losses).minus(section1202Exclusion).eq(net)) throw new Error("Form172 capital gross classification does not conserve its net");
+  if (section1202Exclusion.gt(0) && net.lt(0)) {
+    throw new Error("Form172 positive section1202 with a negative capital net requires its unresolved lines16-21 source convention");
+  }
+  const zero = d("0");
+  const special = calculateScheduleDSpecialGains({ form8949CollectiblesGainLoss: zero,
+    section1202WorksheetComponent: qsbs?.section1202WorksheetComponent ?? zero,
+    otherCollectiblesGainLoss: zero, reportedCollectiblesGainLoss: zero, shortTermNetGainLoss: shortTerm,
+    longTermLossCarryover: longTermCarry, form4797Gain: zero, form4797Lookback: zero, businessProperties: [],
+    businessInstallment1250Gain: zero, passThrough1250Gain: zero, partnershipSale1250Gain: zero, reported1250Gain: zero, other1250Gain: zero });
+  if (qsbs) {
+    audit.record("Current Form172 capital sources", "section1202-exclusion", "Actual source section1202 exclusion", section1202Exclusion,
+      "Original issuer and lot calculation, restored once in each independent origin");
+    audit.record("Current Form172 capital sources", "section1202-preference", "Actual source section1202 AMT preference", section1202AmtPreference,
+      "Original pre2010 exclusion preference before Form6251 reporting rounding");
+  }
   if (input.scheduleDSpecialGainSources && input.scheduleDSpecialGainSources.amtBasisAndCarryoversSameAsRegularConfirmed !== true) {
     throw new Error("Form172 capital same-treatment method conflicts with the separate alternative Schedule D sources");
   }
@@ -144,7 +177,7 @@ export function calculateForm172CapitalSources(input: TaxYearInput, scheduleD?: 
       throw new Error("Form172 capital requires confirmed original alternative capital worksheet sources");
     }
     const expected = { qualifiedDividends: sum(...input.form1099Div.map(row => d(row.qualifiedDividends))),
-      netCapitalGain: Decimal.min(zeroFloor(longTerm), zeroFloor(net)), section1250Gain: d("0"), collectiblesGain: d("0") };
+      netCapitalGain: Decimal.min(zeroFloor(longTerm), zeroFloor(net)), section1250Gain: zero, collectiblesGain: special.collectiblesGain };
     for (const key of ["qualifiedDividends", "netCapitalGain", "section1250Gain", "collectiblesGain"] as const) {
       if (!roundDollar(actual(alternative[key], `alternative ${key}`)).eq(roundDollar(expected[key]))) {
         throw new Error("Form172 capital actual alternative worksheet conflicts with the same-treatment source comparison");
@@ -154,9 +187,10 @@ export function calculateForm172CapitalSources(input: TaxYearInput, scheduleD?: 
   const transfer = Decimal.max(net, d(input.taxpayer.filingStatus === "married_filing_separately" ? "-1500" : "-3000"));
   if (scheduleD && (!scheduleD.netShortTerm.eq(shortTerm) || !scheduleD.netLongTerm.eq(longTerm)
     || !scheduleD.netCapitalGainLoss.eq(net) || !scheduleD.capitalLossDeduction.eq(transfer)
-    || !scheduleD.section1202Exclusion.isZero() || !scheduleD.section1202AmtPreference.isZero())) {
+    || !scheduleD.section1202Exclusion.eq(section1202Exclusion) || !scheduleD.section1202AmtPreference.eq(section1202AmtPreference))) {
     throw new Error("Form172 capital sources do not reconcile with the actual completed Schedule D net and transfer");
   }
   return { sourceFactsVerified: Boolean(facts), nonbusinessCapitalGains: gains, nonbusinessCapitalLosses: losses,
-    netShortTerm: shortTerm, netLongTerm: longTerm, netCapitalGainLoss: net, capitalGainLoss: transfer, lines: audit.getLines() };
+    netShortTerm: shortTerm, netLongTerm: longTerm, netCapitalGainLoss: net, capitalGainLoss: transfer,
+    section1202Exclusion, section1202AmtPreference, lines: audit.getLines() };
 }

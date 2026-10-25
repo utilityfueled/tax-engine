@@ -18,7 +18,10 @@ notes: |
   refiguring gains and losses when AMT basis or carry differs; this method
   supports only the actual verified same-treatment comparison, never a copied
   AMT assumption. https://www.irs.gov/instructions/i6251
-  Active-business, personal-use, digital-asset, QSBS, collectible,1250,
+  Source-bound positive QSBS with nonnegative post-exclusion net is separately
+  specified in form-172-section-1202-origin.yaml. Its actual exclusion and AMT
+  preference reconcile alongside the gross capital sources.
+  Active-business, personal-use, digital-asset, collectible,1250,
   pass-through and other adjustment methods remain separately unsupported.
 
   Exact source gains/losses reconcile to canonical ScheduleD7/15/16 and the

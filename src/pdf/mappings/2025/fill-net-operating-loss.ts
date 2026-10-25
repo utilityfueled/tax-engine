@@ -18,6 +18,7 @@ import { calculateScheduleD } from "@/engine/schedules/schedule-d.js";
 import { getConstants } from "@/models/constants.js";
 import { d, roundDollar, sum } from "@/utils/decimal.js";
 import { assertPdfExportAllowed, markReviewPdf } from "@/pdf/export-policy.js";
+import { form8949ReviewOriginalSourceInput, type PreparedForm8949Review } from "@/pdf/form-8949-review-context.js";
 
 function amount(value: Decimal | undefined): Decimal {
   if (!Decimal.isDecimal(value) || !value.isFinite()) throw new Error("NOL review requires complete finite retained amounts");
@@ -27,8 +28,9 @@ function eq(actual: Decimal | undefined, expected: Decimal): void {
   if (!amount(actual).eq(expected)) throw new Error("NOL review amounts do not reconcile");
 }
 
-function currentOriginRows(input: TaxYearInput, result: TaxReturnResult): string[] {
+function currentOriginRows(input: TaxYearInput, result: TaxReturnResult, capitalReview?: PreparedForm8949Review): string[] {
   if (!input.form172 && !result.form172) return [];
+  if (input.section1202Sources && capitalReview) input = form8949ReviewOriginalSourceInput(input, capitalReview);
   const current = result.form172, prior = result.netOperatingLoss, schedule1 = result.schedule1;
   if (!input.form172 || current?.sourceFactsVerified !== true || current.calculationComplete !== true
     || !prior?.calculationComplete || !schedule1 || !result.form6251) throw new Error("NOL review requires the actual complete current origin sources and calculation");
@@ -117,7 +119,7 @@ function currentOriginRows(input: TaxYearInput, result: TaxReturnResult): string
 
 /** Source amounts and retained canonical contexts are checked separately. This
  * render path works after identifier redaction and never invents taxpayer IDs. */
-export function buildNetOperatingLossReview(input: TaxYearInput, result: TaxReturnResult): string[] {
+export function buildNetOperatingLossReview(input: TaxYearInput, result: TaxReturnResult, capitalReview?: PreparedForm8949Review): string[] {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
   const facts = input.netOperatingLoss; const calculation = result.netOperatingLoss;
   if (!facts || facts.sourceTaxYear !== result.taxYear || facts.sourceFactsConfirmed !== true
@@ -156,7 +158,7 @@ export function buildNetOperatingLossReview(input: TaxYearInput, result: TaxRetu
   const alternative = { ...calculation.alternativeTaxSources, ...calculation.alternativeTax };
   const regularRows = ledger(facts.vintages, calculation, "Regular NOL");
   const alternativeRows = ledger(facts.alternativeTax.vintages, alternative, "Alternative NOL");
-  const originRows = currentOriginRows(input, result);
+  const originRows = currentOriginRows(input, result, capitalReview);
   eq(result.nolDeduction, calculation.deduction);
   if (!result.form172) eq(result.carryforwards.nolCarryforward, calculation.carryforward);
   eq(result.agi, calculation.finalIncome.agi);
@@ -216,8 +218,8 @@ export function buildNetOperatingLossReview(input: TaxYearInput, result: TaxRetu
     "This statement and the accompanying Form6251 are review material, not filing qualification."];
 }
 
-export async function fillNetOperatingLossReview(input: TaxYearInput, result: TaxReturnResult, outputDir: string): Promise<string> {
-  const paragraphs = buildNetOperatingLossReview(input, result);
+export async function fillNetOperatingLossReview(input: TaxYearInput, result: TaxReturnResult, outputDir: string, capitalReview?: PreparedForm8949Review): Promise<string> {
+  const paragraphs = buildNetOperatingLossReview(input, result, capitalReview);
   const doc = await PDFDocument.create(); const font = await doc.embedFont(StandardFonts.Helvetica);
   let page = doc.addPage([612, 792]); let y = 738;
   for (const paragraph of paragraphs) {
