@@ -7,6 +7,7 @@ import type {
   WorkspaceStructuredFactMachineValue1099BTransaction,
   WorkspaceStructuredFactMachineValue1099DivSummary,
   WorkspaceStructuredFactMachineValue1099IntSummary,
+  WorkspaceStructuredFactMachineValue1099NecSummary,
   WorkspaceStructuredFactMachineValueW2Summary,
 } from "@tax-engine/contracts";
 
@@ -634,6 +635,30 @@ function completeInterestSource(entry: WorkspaceStructuredFactMachineValue1099In
   return Boolean(entry.payer) && [entry.earlyWithdrawalPenalty, entry.federalWithheld, entry.usSavingsBondInterest, entry.taxExemptInterest].every((value) => value !== undefined);
 }
 
+function parseUploaded1099NecText(text: string, fileName = ""): ParsedUploadedDocument | null {
+  if (!/1099[- ]?NEC\b/i.test(`${fileName}\n${text}`)) return null;
+  const base = {
+    kind: "1099-nec" as const,
+    coverage: "partially-supported" as const,
+    label: "Form 1099-NEC source review",
+    notes: "Confirm the actual recipient, source boxes and separate business facts in the guided interview before calculating.",
+    seededFactIds: ["nonemployee-compensation", "schedule-c-expense-review"] as SeededFactId[],
+  };
+  if (sourceFormCount(text, "1099-NEC") > 1) return { ...base, notes: "Multiple Forms 1099-NEC need separate source records and recipient confirmation.", detectedFacts: [] };
+  const compensation = sourceBoxAmount(text, "1(?:a)?\\s+Nonemployee [Cc]ompensation");
+  if (compensation === undefined) return { ...base, detectedFacts: [] };
+  const payer = sourcePayer(text);
+  const tins = [...new Set([...text.matchAll(/^Payer(?:'s)?\s+TIN:[ \t]*(\d{2}-?\d{7})\b/gim)].map(match => match[1]))];
+  const states = [...new Set([...text.matchAll(/(?:^|\n)[ \t]*6\s+State(?:\/|\s+and\s+)Payer(?:'s)?\s+state\s+(?:no\.?|number)[ \t]*(?:\n[ \t]*)?([A-Z]{2})\b/gi)].map(match => match[1].toUpperCase()))];
+  const machineValue: WorkspaceStructuredFactMachineValue1099NecSummary = {
+    entryKind: "1099-nec-summary", sourceFactsVersion: 2, payer, nonemployeeCompensation: compensation,
+    ...(tins.length === 1 ? { payerTin: tins[0] } : {}),
+    ...knownSourceAmounts({ federalWithheld: sourceBoxAmount(text, "4\\s+Federal [Ii]ncome [Tt]ax [Ww]ithheld"), stateWithheld: sourceBoxAmount(text, "5\\s+State [Tt]ax [Ww]ithheld"), stateIncome: sourceBoxAmount(text, "7\\s+State [Ii]ncome") }),
+    ...(states.length === 1 ? { state: states[0], stateTaxReporting: "single" as const } : states.length > 1 ? { stateTaxReporting: "multiple" as const } : {}),
+  };
+  return { ...base, label: payer ? `${payer} 1099-NEC` : base.label, detectedFacts: [{ idSuffix: "parsed-1099-nec-summary", factId: "nonemployee-compensation", label: "Nonemployee compensation source", value: `Parsed actual NEC compensation $${formatAmountLabel(compensation)}; business and recipient facts still require confirmation.`, confidence: "high", machineValue }] };
+}
+
 function parseUploadedComposite1099Text(text: string, fileName = ""): ParsedUploadedDocument | null {
   const normalizedText = normalizeParsingText(text);
   if (!/1099 composite/i.test(`${fileName}\n${normalizedText}`)) return null;
@@ -815,6 +840,7 @@ export function parseUploadedDocumentText(text: string, fileName = ""): ParsedUp
   const parsed = parseUploadedW2Text(normalizedText, fileName)
     ?? parseUploadedComposite1099Text(normalizedText, fileName)
     ?? parseUploaded1099IntText(normalizedText, fileName)
+    ?? parseUploaded1099NecText(normalizedText, fileName)
     ?? parseUploaded1099DAText(normalizedText, fileName)
     ?? (/1095.?c/i.test(signalText)
       ? buildReviewedDocument(

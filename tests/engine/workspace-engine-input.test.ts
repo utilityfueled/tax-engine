@@ -612,6 +612,7 @@ describe("workspace engine input", () => {
     expect(previewInput?.taxInput.form1099OID).toEqual([
       {
         payer: "Official fixture OID issuer",
+        sourceFactsComplete: false,
         originalIssueDiscount: "1200",
         otherPeriodicInterest: "400",
         earlyWithdrawalPenalty: "25",

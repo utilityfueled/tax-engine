@@ -790,7 +790,7 @@ describe("workspace storage", () => {
     expect(workspace.checklist.find((item) => item.id === "interview")?.status).toBe("needs-input");
   });
 
-  it("promotes answered 1099-NEC fixture prompts into a deterministic Schedule C recompute preview", async () => {
+  it("keeps answered NEC source records without inventing a complete business calculation", async () => {
     const storage = createMemoryStorage();
     const workspaceId = "self-employment-ready";
 
@@ -831,31 +831,7 @@ describe("workspace storage", () => {
         }
       ]
     });
-    expect(workspace.enginePreview).toMatchObject({
-      mode: "engine-recompute",
-      taxYear: 2025,
-      sourceDocumentIds: ["irs-1099-nec-2025:f1099nec.pdf:13"],
-      sourceFixtureIds: ["irs-1099-nec-2025"],
-      assumptions: [
-        "Uploaded PDFs are not parsed yet; this engine run uses fixture-derived facts captured in the workspace ledger.",
-        "The confirmed 2025 Form 1099-NEC upload contributes $18,000 of Schedule C gross receipts with no withholding.",
-        "This simple Schedule C preview assumes zero business expenses and no home office deduction unless a later fact model captures them explicitly."
-      ],
-      metrics: {
-        totalIncome: "18000",
-        totalPayments: "182"
-      }
-    });
-    expect(workspace.enginePreview?.highlightedLines).toEqual(expect.arrayContaining([
-      expect.objectContaining({
-        id: "Sched C:31",
-        value: "18000"
-      }),
-      expect.objectContaining({
-        id: "Sched 1:3",
-        value: "18000"
-      })
-    ]));
+    expect(workspace.enginePreview).toBeNull();
     expect(workspace.checklist.find((item) => item.id === "coverage")?.status).toBe("ready");
     expect(workspace.checklist.find((item) => item.id === "interview")?.status).toBe("ready");
     expect(workspace.checklist.find((item) => item.id === "review")?.status).toBe("ready");

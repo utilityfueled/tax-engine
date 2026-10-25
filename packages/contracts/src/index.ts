@@ -623,11 +623,12 @@ export interface WorkspaceStructuredFactMachineValue1098ESummary {
 
 export interface WorkspaceStructuredFactMachineValue1099NecSummary {
   entryKind: "1099-nec-summary";
+  sourceFactsVersion?: 2;
   payer: string;
   payerTin?: string;
   accountHolder?: "primary" | "spouse";
   nonemployeeCompensation: string;
-  federalWithheld: string;
+  federalWithheld?: string;
   stateTaxReporting?: "none" | "single" | "multiple";
   state?: string;
   stateIncome?: string;

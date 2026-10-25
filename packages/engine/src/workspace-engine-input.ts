@@ -14,7 +14,6 @@ import {
   Form1099BSchema,
   Form1099GSchema,
   Form1099DivSchema,
-  Form1099NecSchema,
   Form1099RSchema,
   Form1099SASchema,
   FormSSA1099Schema,
@@ -29,7 +28,6 @@ import {
   extract1099GSummariesFromStructuredFacts,
   extract1099IntSummariesFromStructuredFacts,
   extract1099OIDSummariesFromStructuredFacts,
-  extract1099NecSummariesFromStructuredFacts,
   extract1099RSummariesFromStructuredFacts,
   extract1099SASummariesFromStructuredFacts,
   extractSSA1099SummariesFromStructuredFacts,
@@ -49,7 +47,6 @@ interface PreviewContribution {
     | "wages"
     | "capital-gains"
     | "investment-income"
-    | "self-employment"
     | "hsa"
     | "adjustments"
     | "government-payments"
@@ -101,12 +98,6 @@ interface StudentLoanInterestPreviewSources {
 
 interface PremiumTaxCreditPreviewSources {
   entries: NonNullable<TaxYearInput["form1095A"]>;
-  sourceDocumentIds: string[];
-  sourceFixtureIds: string[];
-}
-
-interface NecPreviewSources {
-  entries: TaxYearInput["form1099Nec"];
   sourceDocumentIds: string[];
   sourceFixtureIds: string[];
 }
@@ -582,43 +573,6 @@ function collectPremiumTaxCreditPreviewSources(
             advancePremiumTaxCredit: month.advancePremiumTaxCredit,
           }))
           .sort((left, right) => left.month - right.month),
-      })
-    )
-  );
-  const entries = entriesByDocument.flat();
-
-  if (entries.length === 0 || entriesByDocument.some((documentEntries) => documentEntries.length === 0)) {
-    return null;
-  }
-
-  return {
-    entries,
-    sourceDocumentIds: item.sourceDocumentIds,
-    sourceFixtureIds: getSourceFixtureIds(sourceDocuments)
-  };
-}
-
-function collectNecPreviewSources(
-  item: WorkspaceReturnSummary["items"][number],
-  documentsById: Map<string, WorkspaceDocumentRecord>,
-  structuredFacts: WorkspaceStructuredFactRecord[]
-): NecPreviewSources | null {
-  if (item.id !== "schedule-c-income") {
-    return null;
-  }
-
-  const sourceDocuments = getReadySourceDocuments(item, documentsById);
-
-  if (!sourceDocuments) {
-    return null;
-  }
-
-  const entriesByDocument = sourceDocuments.map((document) =>
-    extract1099NecSummariesFromStructuredFacts(structuredFacts, document.id).map((summary) =>
-      Form1099NecSchema.parse({
-        payer: summary.payer,
-        nonemployeeCompensation: summary.nonemployeeCompensation,
-        federalWithheld: summary.federalWithheld
       })
     )
   );
@@ -1178,43 +1132,6 @@ function buildPremiumTaxCreditContribution(
   };
 }
 
-function buildNecContribution(
-  taxYear: number,
-  item: WorkspaceReturnSummary["items"][number],
-  documentsById: Map<string, WorkspaceDocumentRecord>,
-  structuredFacts: WorkspaceStructuredFactRecord[]
-): PreviewContribution | null {
-  const previewSources = collectNecPreviewSources(item, documentsById, structuredFacts);
-
-  if (!previewSources) {
-    return null;
-  }
-
-  const totalCompensation = previewSources.entries
-    .map((entry) => entry.nonemployeeCompensation);
-  const totalWithholding = previewSources.entries
-    .map((entry) => entry.federalWithheld);
-  const uploadLabel = previewSources.sourceDocumentIds.length === 1 ? "upload" : "uploads";
-  const contributionVerb = previewSources.sourceDocumentIds.length === 1 ? "contributes" : "contribute";
-  const compensationAmount = sumMonetaryValues(totalCompensation).toFixed();
-  const withholdingAmount = sumMonetaryValues(totalWithholding).toFixed();
-
-  return {
-    kind: "self-employment",
-    itemId: item.id,
-    assumptions: [
-      `The confirmed ${taxYear} Form 1099-NEC ${uploadLabel} ${contributionVerb} $${formatCurrencyAmount(compensationAmount)} of Schedule C gross receipts with ${withholdingAmount === "0" ? "no withholding" : `$${formatCurrencyAmount(withholdingAmount)} of withholding`}.`,
-      "This simple Schedule C preview assumes zero business expenses and no home office deduction unless a later fact model captures them explicitly."
-    ],
-    sourceDocumentIds: previewSources.sourceDocumentIds,
-    sourceFixtureIds: previewSources.sourceFixtureIds,
-    sourceFactIds: collectContributionSourceFactIds(item, structuredFacts),
-    apply(taxInput) {
-      taxInput.form1099Nec = previewSources.entries;
-    }
-  };
-}
-
 function buildRetirementContribution(
   taxYear: number,
   item: WorkspaceReturnSummary["items"][number],
@@ -1535,7 +1452,10 @@ function buildPreviewContribution(
     case "hsa-distributions":
       return buildHsaContribution(taxYear, item, documentsById, structuredFacts);
     case "schedule-c-income":
-      return buildNecContribution(taxYear, item, documentsById, structuredFacts);
+      // A source NEC and free-text confirmation cannot establish the business
+      // owner, actual expenses, participation, home office or loss limitations.
+      // The complete guided business adapter collects and validates those facts.
+      return null;
     default:
       return null;
   }

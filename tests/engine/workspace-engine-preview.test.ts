@@ -897,7 +897,7 @@ describe("workspace engine preview", () => {
     ]));
   });
 
-  it("builds a deterministic simple Schedule C preview from confirmed 1099-NEC fixture facts", () => {
+  it("does not infer qualified business expenses from a source NEC and prose answer", () => {
     const documents = [
       createDocument({
         id: "doc-nec",
@@ -978,75 +978,11 @@ describe("workspace engine preview", () => {
       workspaceTaxpayerFixture()
     );
 
-    expect(preview).not.toBeNull();
-    expect(preview).toMatchObject({
-      mode: "engine-recompute",
-      title: "Deterministic engine recompute preview",
-      taxYear: 2025,
-      filingStatus: "single",
-      sourceDocumentIds: ["doc-nec"],
-      sourceFixtureIds: ["irs-1099-nec-2025"],
-      assumptions: [
-        "Uploaded PDFs are not parsed yet; this engine run uses fixture-derived facts captured in the workspace ledger.",
-        "The confirmed 2025 Form 1099-NEC upload contributes $18,000 of Schedule C gross receipts with no withholding.",
-        "This simple Schedule C preview assumes zero business expenses and no home office deduction unless a later fact model captures them explicitly."
-      ],
-      metrics: {
-        totalIncome: "18000",
-        totalPayments: "182"
-      }
-    });
-    expect(Number.parseInt(preview?.metrics.totalTax ?? "0", 10)).toBeGreaterThan(0);
-    expect(preview?.highlightedLines).toEqual(expect.arrayContaining([
-      {
-        id: "Sched C:31",
-        form: "Sched C",
-        line: "31",
-        label: "Net profit or loss",
-        value: "18000",
-        formula: "Line 29 - Line 30",
-        sourceFactIds: [
-          "nonemployee-compensation:document-detected",
-          "nonemployee-compensation:fixture-nec-income",
-          "nonemployee-compensation:interview-answer",
-          "schedule-c-expense-review:document-detected",
-          "schedule-c-expense-review:fixture-schedule-c-expense-review",
-          "schedule-c-expense-review:interview-answer"
-        ]
-      },
-      {
-        id: "Sched 1:3",
-        form: "Sched 1",
-        line: "3",
-        label: "Business income or loss",
-        value: "18000",
-        formula: "Schedule C Line 31",
-        sourceFactIds: [
-          "nonemployee-compensation:document-detected",
-          "nonemployee-compensation:fixture-nec-income",
-          "nonemployee-compensation:interview-answer",
-          "schedule-c-expense-review:document-detected",
-          "schedule-c-expense-review:fixture-schedule-c-expense-review",
-          "schedule-c-expense-review:interview-answer"
-        ]
-      },
-      {
-        id: "1040:8-sched-c",
-        form: "1040",
-        line: "8-sched-c",
-        label: "Business income (Schedule C)",
-        value: "18000",
-        formula: "Schedule C Line 31",
-        sourceFactIds: [
-          "nonemployee-compensation:document-detected",
-          "nonemployee-compensation:fixture-nec-income",
-          "nonemployee-compensation:interview-answer",
-          "schedule-c-expense-review:document-detected",
-          "schedule-c-expense-review:fixture-schedule-c-expense-review",
-          "schedule-c-expense-review:interview-answer"
-        ]
-      }
-    ]));
+    // A prose answer and source NEC are not actual activity, owner, expense,
+    // participation and loss-limit facts. Complete those in the guided path.
+    expect(preview).toBeNull();
+    expect(structuredFacts.some(fact => fact.machineValue?.entryKind === "1099-nec-summary"
+      && fact.machineValue.nonemployeeCompensation === "18000")).toBe(true);
   });
 
   it("uses exact Decimal totals in preview assumptions when workspace fact amounts exceed JS integer precision", () => {
