@@ -1,6 +1,7 @@
 import "server-only";
 import Decimal from "decimal.js";
 import { AI_PROFILES } from "@tax-engine/engine/src/ai-task-registry";
+import { workspaceSummarySchema as summarySchema, workspaceHelpSchema as helpSchema } from "@tax-engine/engine/src/ai-application-schemas";
 import { z } from "zod";
 import { executeAiTask, type AiTaskExecution, type VerifiedAiTaxContext } from "./ai-task-adapter";
 import type { ProviderWorkspaceRequest, ProviderWorkspaceResponse } from "./provider-workspace-request";
@@ -121,11 +122,6 @@ export function sanitizeHtmlEntities(text: string): string {
   return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;").replace(/'/g, "&#x27;");
 }
-
-const sourceIds = z.array(z.string().min(1).max(200)).min(1).max(30);
-const summarySchema = z.strictObject({ summary: z.string().trim().min(1).max(2000), sourceIds });
-const helpSchema = z.strictObject({ answer: z.string().trim().min(1).max(2000), sourceIds,
-  engineValues: z.array(z.strictObject({ id: z.string(), value: z.string() })).max(30) });
 
 /** The legacy responder now uses the same bounded, schema-validated task adapter as document analysis. */
 export function createProviderWorkspaceResponder(dependencies: ProviderWorkspaceResponderDependencies = {}) {

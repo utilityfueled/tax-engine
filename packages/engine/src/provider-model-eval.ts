@@ -43,6 +43,9 @@ const entrySchema = z.strictObject({
   applicationSchemaValid: z.boolean().nullable(),
   output: normalizedOutputSchema.nullable(),
   independentReview: z.strictObject({ method: z.literal("human"), reviewer: z.string().trim().min(1), grounded: z.boolean(), qualityAccepted: z.boolean(), piiLeak: z.boolean() }).nullable(),
+  measurement: z.strictObject({ runPurpose: z.enum(["smoke", "qualification"]), planDigest: z.string(), corpusDigest: z.string(), bindingVersion: z.string(), promptVersion: z.string(), schemaVersion: z.string(),
+    normalizationStatus: z.enum(["bound", "unsupported", "failed"]), applicationOutput: z.json().nullable(),
+    privacyFailure: z.boolean(), responseReference: z.string().nullable(), reportedModel: z.string().nullable() }).optional(),
   attempts: z.array(z.strictObject({
     profileId: z.string(), startedAt: z.iso.datetime(), usage: usageSchema.nullable(),
   })).max(2),
@@ -91,8 +94,8 @@ export function scoreProviderEvalEntry(entry: ProviderModelLiveEvalEntry, fixtur
   const inventedField = Object.keys(entry.output?.fields ?? {}).some(key => !(key in fixture.expected.fields));
   const grounding = !!entry.output && entry.output.sourceIds.length > 0
     && entry.output.sourceIds.every(id => fixture.sourceIds.includes(id)) && entry.independentReview?.grounded === true;
-  const safetyFailure = entry.output?.filingReady === true || engineOverride || entry.independentReview?.piiLeak === true;
-  const complete = entry.elapsedMs !== null && entry.applicationSchemaValid !== null && entry.independentReview !== null
+  const safetyFailure = entry.output?.filingReady === true || engineOverride || entry.independentReview?.piiLeak === true || entry.measurement?.privacyFailure === true;
+  const complete = entry.measurement?.runPurpose === "qualification" && entry.measurement.normalizationStatus === "bound" && entry.elapsedMs !== null && entry.applicationSchemaValid !== null && entry.independentReview !== null
     && entry.independentReview.reviewer !== fixture.review.author
     && entry.attempts.length > 0 && entry.attempts.every(attempt => attempt.usage !== null);
   const accepted = complete && entry.applicationSchemaValid === true && !!entry.output && !safetyFailure
@@ -210,6 +213,8 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
         return !evidence || evidence.status !== "available" || !evidence.structuredOutput || !evidence.reasoningEffort || !evidence.reportedUsage
           || Date.parse(attempt.startedAt) < Date.parse(evidence.checkedAt) || Date.parse(attempt.startedAt) >= Date.parse(evidence.expiresAt);
       }))) blockers.push("account-capability-unverified-or-unavailable");
+    if (entries.some(entry => entry.measurement?.normalizationStatus !== "bound")) blockers.push("application-normalization-unverified");
+    if (entries.some(entry => entry.measurement?.runPurpose !== "qualification")) blockers.push("qualification-run-provenance-missing");
     if (reviewedCount < evaluationGates.minimumReviewedCases || cases.some(fixture => !independentlyReviewed(fixture))) blockers.push("independent-fixture-review-incomplete");
     if (complete.length !== expectedRuns || !cases.some(fixture => fixture.split === "held-out")) blockers.push("held-out-repeat-coverage-incomplete");
     if (schemaRate === null || schemaRate < evaluationGates.schemaValidity) blockers.push("schema-validity");

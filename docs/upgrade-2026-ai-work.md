@@ -99,3 +99,58 @@ across4 files (including strict AST test-reference validation), web types and al
 reviewed the draft/source boundaries with no actionable finding; this is agent
 software review only (`parent-ai-corpus-40b251b-review.log`). The final evidence
 append changes documentation only; no live records or human approvals were added.
+
+## Guarded repeated evaluation executor
+
+The separate executor is implemented in `scripts/run-provider-eval.ts` with a
+[local operator contract](ai-evaluation-executor.md). Offline planning freezes
+the synthetic corpus, real application schema manifest, prices, profiles,
+repetition count and limits. The generated approval template is unapproved;
+explicit actual authorization is still required. No live call was made here.
+
+The runner persists and syncs each dispatch before its one network request,
+uses an exclusive private hash-chain journal, counts capability probes and
+failed outputs against the exact Decimal budget, and preserves unknown-usage
+holds across restarts. An operator may reconcile authoritative usage once with
+an evidence reference; missing responses are never recreated. Resume skips all
+dispatched identities. Capability, model, effort-request acceptance and usage
+are captured as observations with a24-hour expiry. Failure, cancellation,
+timeout, unknown pricing/usage and overruns remain nonpassing. Provider errors,
+keys and rejected private-looking outputs are not echoed into records.
+
+Shared application schemas were extracted without changing their current web
+behavior. The executor validates against those real schemas, but explicitly
+records missing normalization as an internal blocker. It refuses qualification
+planning until those production bindings are complete; smoke runs cannot use
+the declared held-out cases. The next separate package implements the actual
+task contracts/normalizers rather than declaring normalized benchmark JSON an
+application success. Live account measurements, approved spend and independent
+human reviews remain absent, and all production rollout gates remain closed.
+
+Spec-first red regressions caught ineffective durable append, missing required
+output preflight, multiply linked journals, held-out smoke use and premature
+qualification planning. They are preserved in
+`.local/upgrade-evidence/ai-executor-*-red.log`. The offline runner/transport/
+journal/CLI, scorer/corpus and actual web adapter cohort passes121 tests across
+11 files (`ai-executor-scoped.log`). Dedicated script typechecking and web types
+pass. Scoped lint has0 errors and27 pre-existing scorer assertion warnings.
+These are synthetic software checks, not provider availability or human review.
+
+Independent parent review of the first executor snapshot found two real gaps:
+an aliased report path could replace the journal, and a same-ID model/policy
+change could retain an old approval digest. Both were reproduced in new failing
+regressions before correction. Artifact preflight now resolves existing
+ancestors, symbolic targets, inode identity and conservative case/Unicode
+aliases, including the reserved lock. Plans retain and hash resolved profiles,
+complete task policies and the actual shared transport/prompt/wire contract.
+The review fixes are in `ai-executor-review-{red,green}.log`; the reviewed initial
+tree's passing tests did not establish those missing boundaries.
+
+Final executor tree `5777d1a83108f6720d1a808abf9cc58404024f2a` passes123 tests
+across11 files, dedicated script/root/web typechecks, all4,497 spec references,
+artifact freshness and scoped lint (0 errors;27 unchanged scorer warnings).
+Parent independently reran44 tests across5 files and both original alias/policy
+probes; the journal stayed byte-for-byte unchanged and changed request policy
+rejected. No remaining actionable finding in that bounded agent review
+(`parent-ai-executor-5777-review.log`, `parent-ai-executor-{alias,policy}-fixed.log`).
+This documentation append does not add a provider result or human approval.

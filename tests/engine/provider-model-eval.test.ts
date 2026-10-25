@@ -14,6 +14,7 @@ function run(fixture: ProviderEvalFixture, profileId = "luna-high", repeat = 1):
     applicationSchemaValid: true,
     output: { disposition: fixture.expected.disposition, fields: Object.fromEntries(Object.entries(fixture.expected.fields).map(([key, value]) => [key, value.value])),
       category: fixture.expected.category, sourceIds: fixture.sourceIds, engineValues: fixture.expected.engineValues, filingReady: false },
+    measurement: { runPurpose: "qualification", planDigest: "synthetic-test-plan", corpusDigest: "synthetic-test-corpus", bindingVersion: "synthetic-test-binding", promptVersion: "test/1", schemaVersion: "test/1", normalizationStatus: "bound", applicationOutput: {}, privacyFailure: false, responseReference: "test-only", reportedModel: "test-only" },
     independentReview: { method: "human", reviewer: "independent-test-reviewer", grounded: true, qualityAccepted: true, piiLeak: false },
     attempts: [{ profileId, startedAt: "2026-10-24T12:00:00Z", usage: { inputTokens: 1000, outputTokens: 1000 } }],
   };

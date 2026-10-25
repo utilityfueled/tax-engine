@@ -4,18 +4,9 @@ import { z } from "zod";
 import type { AiTask } from "@tax-engine/engine/src/ai-task-registry";
 import { executeAiTask, type AiTaskExecution } from "./ai-task-adapter";
 
-const shortText = z.string().max(2000);
-const categories = z.enum(["advertising", "carAndTruck", "insurance", "officeExpense", "supplies", "travel", "meals", "utilities", "otherExpenses", "not-business", "needs-review"]);
-const amount = z.string().regex(/^\d+(?:\.\d{1,2})?$/);
-const suggestion = z.object({ date: shortText, description: shortText, amount,
-  confidence: z.enum(["high", "low"]), reason: shortText, sourceQuote: z.string().min(1).max(4000) }).strict();
-const income = z.object({ label: shortText, payer: shortText, documentPeriod: shortText, summary: shortText,
-  suggestions: z.array(suggestion).max(150) }).strict();
-const expenses = z.object({ label: shortText, institution: shortText, statementPeriod: shortText, summary: shortText,
-  suggestions: z.array(suggestion.extend({ suggestedCategory: categories, suggestedBusinessUse: z.boolean() })).max(150) }).strict();
-const classification = z.object({ title: shortText, documentType: shortText, summary: shortText,
-  suggestedNextStep: shortText, relevantTaxTopics: z.array(shortText).max(20), bankStatementLike: z.boolean() }).strict();
-const summary = z.object({ summary: shortText }).strict();
+import { documentSuggestionSchema as suggestion, documentIncomeSchema as income,
+  documentExpenseSchema as expenses, documentClassificationSchema as classification,
+  documentSummarySchema as summary } from "@tax-engine/engine/src/ai-application-schemas";
 
 export type DocumentAiTask = Extract<AiTask, "document-classification" | "income-extraction" | "expense-categorization" | "workspace-summary" | "interview-wording">;
 export type DocumentAiExecutor = (task: DocumentAiTask, prompt: string, redactedText: string) => Promise<unknown | null>;
