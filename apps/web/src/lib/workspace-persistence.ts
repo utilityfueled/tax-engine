@@ -7,6 +7,7 @@ import { resolveDeploymentMode } from "./deployment-mode";
 import { isHostedProductionEnvironment } from "./hosted-runtime-safety";
 import { deleteCachedWorkspaceDocumentFiles } from "./workspace-document-file-cache";
 import { isLocalRecoveryWorkspace } from "./workspace-local-recovery";
+import { sanitizeWorkspaceForHostedStorage } from "./hosted-privacy";
 
 type PersistenceEnvironment = Record<string, string | undefined>;
 type PersistenceFetch = typeof fetch;
@@ -967,7 +968,7 @@ export async function savePersistedWorkspace(
           "content-type": "application/json"
         },
         body: JSON.stringify({
-          workspace: options.workspace
+          workspace: sanitizeWorkspaceForHostedStorage(options.workspace)
         })
       },
       options.fetchFn ?? fetch

@@ -55,3 +55,25 @@ seven privacy, document, provider-adapter and detection suites; web typecheck an
 scoped lint pass. This is a synthetic regression result, not a claim that regex
 redaction proves absence of all possible identifiers or an independent privacy
 approval. The independent review and representative PII evaluation remain open.
+
+## Hosted shell allowlist — 2026-10-24
+
+Six new regressions first reproduced full local records being sent by the browser
+and private filenames/free text/unknown fields surviving server filtering. Hosted
+saves now validate and serialize only the metadata allowlist before any request.
+PostgreSQL independently repeats that validation. Labels, prompts and event
+messages come from the application catalog; filenames, answers, amounts, extra
+properties, source keys, previews and structured facts remain on the device.
+Local records are unchanged. Unknown/missing source years are preserved, and
+malformed metadata fails without echoing private values.
+
+Legacy PostgreSQL reads also apply the allowlist. This does **not** erase private
+values from pre-existing rows or backups: a separately authorized and rehearsed
+data migration/backup-retention procedure is still required for an existing host.
+
+Verification: 127 focused privacy/persistence/security/recovery tests; a further
+51-test run includes four real disposable-PostgreSQL cases proving stored JSONB
+contents, same-ID tenant isolation for read/list/upsert/delete, safe legacy reads,
+and retention of the previous row on rejected updates. Web types and scoped lint
+pass. The database tests use a uniquely named temporary schema, never a normal
+or staging `DATABASE_URL`. These results do not establish hosted staging readiness.

@@ -426,12 +426,13 @@ describe("workspace persistence", () => {
       expect(init?.headers).toEqual({
         "content-type": "application/json"
       });
-      expect(init?.body).toBe(JSON.stringify({
+      expect(JSON.parse(String(init?.body))).toEqual({
         workspace: {
           ...hostedWorkspace,
-          storageMode: "hosted-postgres"
+          storageMode: "hosted-postgres",
+          auditTrail: hostedWorkspace.auditTrail.map((event) => ({ ...event, message: "Workspace created." }))
         }
-      }));
+      });
 
       return new Response(JSON.stringify({
         availability: "ready",
