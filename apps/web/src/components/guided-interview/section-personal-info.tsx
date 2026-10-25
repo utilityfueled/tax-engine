@@ -13,6 +13,8 @@ import {
   emptySpouseInfo,
   filingStatusOptions,
 } from "@/lib/guided-interview-flow";
+import { BooleanFact } from "./fact-fields";
+import { CurrencyField } from "./currency-field";
 
 function DependentCard({
   index,
@@ -134,6 +136,8 @@ function DependentCard({
             </select>
           </label>
         ))}
+        {entry.qualifiesForCTC && <BooleanFact label="Does this child meet the timely employment-valid SSN requirement (or documented born-and-died exception)?" value={entry.ctcSsnEligible} onChange={(value) => onChange({ ...entry, ctcSsnEligible: value })} />}
+        {entry.qualifiesForODC && <BooleanFact label="Does this dependent meet the timely taxpayer ID requirement for ODC?" value={entry.odcTinEligible} onChange={(value) => onChange({ ...entry, odcTinEligible: value })} />}
       </fieldset>
 
       <details className="guided-expand">
@@ -160,6 +164,7 @@ export function SectionPersonalInfo({
   const current = data ?? emptyPersonalInfo;
   const depCount = Number(current.dependentCount) || 0;
   const dependents = current.dependents ?? [];
+  const claimsDependentCredit = dependents.some((entry) => entry.qualifiesForCTC || entry.qualifiesForODC);
 
   function update(field: keyof PersonalInfoData, value: string) {
     onDataChange({ ...current, [field]: value });
@@ -271,6 +276,12 @@ export function SectionPersonalInfo({
           <span className="guided-field-hint" id="ssn-hint">Your taxpayer ID is sensitive. Review downloads omit it; complete filing exports are not yet available.</span>
         </label>
 
+        {claimsDependentCredit && <fieldset className="guided-fieldset"><legend className="guided-fieldset-legend">Your credit identification requirements</legend>
+          <BooleanFact label="Was your employment-valid SSN issued by the return due date, including extensions?" value={current.employmentValidSsnIssuedByDueDate} onChange={(value) => onDataChange({ ...current, employmentValidSsnIssuedByDueDate: value })} />
+          <BooleanFact label="Was your SSN or ITIN issued by the return due date, including extensions?" value={current.tinIssuedByDueDate} onChange={(value) => onDataChange({ ...current, tinIssuedByDueDate: value })} />
+          <p className="guided-hint">Review the actual identification requirements and issuance date. A timely employment-valid SSN establishes the timely taxpayer ID requirement.</p>
+        </fieldset>}
+
         <div className="guided-form-grid">
           <label className="guided-field"><span className="guided-field-label">Your date of birth</span>
             <input type="date" className="guided-input" value={current.dateOfBirth ?? ""} onChange={(event) => update("dateOfBirth", event.target.value)} aria-required="true" autoComplete="bday" />
@@ -293,6 +304,10 @@ export function SectionPersonalInfo({
                   onChange={(event) => onDataChange({ ...current, spouse: { ...(current.spouse ?? emptySpouseInfo), [field]: event.target.value } })} />
               </label>
             ))}
+            {claimsDependentCredit && <>
+              <BooleanFact label="Was your spouse's employment-valid SSN issued by the return due date, including extensions?" value={current.spouse?.employmentValidSsnIssuedByDueDate} onChange={(value) => onDataChange({ ...current, spouse: { ...(current.spouse ?? emptySpouseInfo), employmentValidSsnIssuedByDueDate: value } })} />
+              <BooleanFact label="Was your spouse's SSN or ITIN issued by the return due date, including extensions?" value={current.spouse?.tinIssuedByDueDate} onChange={(value) => onDataChange({ ...current, spouse: { ...(current.spouse ?? emptySpouseInfo), tinIssuedByDueDate: value } })} />
+            </>}
             <label className="guided-field"><span className="guided-field-label">Did you live with your spouse at any time during the year?</span>
               <select className="guided-input" value={current.livedWithSpouseAtAnyTimeDuringYear == null ? "" : String(current.livedWithSpouseAtAnyTimeDuringYear)} onChange={(event) => onDataChange({ ...current, livedWithSpouseAtAnyTimeDuringYear: event.target.value === "" ? undefined : event.target.value === "true" })} aria-required="true">
                 <option value="">Choose an answer</option><option value="true">Yes</option><option value="false">No</option>
@@ -404,6 +419,13 @@ export function SectionPersonalInfo({
             ))}
           </div>
         )}
+        {claimsDependentCredit && <fieldset className="guided-fieldset"><legend className="guided-fieldset-legend">Dependent credit worksheet</legend>
+          {dependents.some((entry) => entry.qualifiesForCTC) && <BooleanFact label="Were you a bona fide resident of Puerto Rico during the tax year?" value={current.childTaxCredit?.bonaFidePuertoRicoResident} onChange={(value) => onDataChange({ ...current, childTaxCredit: { ...current.childTaxCredit, bonaFidePuertoRicoResident: value } })} />}
+          <CurrencyField label="Puerto Rico income excluded from federal income" hint="Schedule 8812 line 2a. Enter the actual exclusion, including zero." value={current.childTaxCredit?.puertoRicoExcludedIncome ?? ""} onChange={(value) => onDataChange({ ...current, childTaxCredit: { ...current.childTaxCredit, puertoRicoExcludedIncome: value } })} />
+          <CurrencyField label="American Samoa income excluded on Form 4563" hint="Schedule 8812 line 2c. Enter the actual exclusion, including zero." value={current.childTaxCredit?.form4563ExcludedIncome ?? ""} onChange={(value) => onDataChange({ ...current, childTaxCredit: { ...current.childTaxCredit, form4563ExcludedIncome: value } })} />
+          {current.childTaxCredit?.possessionIncomeExclusion && <CurrencyField label="Saved combined possession exclusion to reconcile" hint="Correct or clear this saved total using your records; the separate amounts must reconcile." value={current.childTaxCredit.possessionIncomeExclusion} onChange={(value) => onDataChange({ ...current, childTaxCredit: { ...current.childTaxCredit, possessionIncomeExclusion: value } })} />}
+          <CurrencyField label="Nontaxable combat pay elected for the additional child credit" hint="Optional actual election amount; leave unanswered if no election is made." value={current.childTaxCredit?.nonTaxableCombatPayElection ?? ""} onChange={(value) => onDataChange({ ...current, childTaxCredit: { ...current.childTaxCredit, nonTaxableCombatPayElection: value } })} />
+        </fieldset>}
       </div>
     </RetroShell>
   );

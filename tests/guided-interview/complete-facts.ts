@@ -6,13 +6,16 @@ export const completePersonalInfo: PersonalInfoData = {
   dateOfBirth: "1990-02-15", usResidencyMonths: "12", stateResidency: "full-year",
   addressLine1: "42 Example Road", city: "Columbus", state: "OH", zip: "43215",
   dependentCount: "0", dependents: [], livedWithSpouseAtAnyTimeDuringYear: true,
-  spouse: { firstName: "Taylor", lastName: "Example", ssn: "222-33-4444", dateOfBirth: "1992-09-10", usResidencyMonths: "12" },
+  employmentValidSsnIssuedByDueDate: true, tinIssuedByDueDate: true,
+  childTaxCredit: { bonaFidePuertoRicoResident: false, puertoRicoExcludedIncome: "0", form4563ExcludedIncome: "0" },
+  spouse: { firstName: "Taylor", lastName: "Example", ssn: "222-33-4444", dateOfBirth: "1992-09-10", usResidencyMonths: "12", employmentValidSsnIssuedByDueDate: true, tinIssuedByDueDate: true },
 };
 
 export const completeDependent: DependentEntryData = {
   firstName: "Alex", lastName: "Example", ssn: "333-44-5555", dateOfBirth: "2015-06-01",
   relationship: "child", monthsLivedWithYou: "12", qualifiesForCTC: true,
   qualifiesForODC: false, qualifiesForEIC: false,
+  ctcSsnEligible: true, odcTinEligible: true,
 };
 
 export function startCompleteInterview(segmentation: SegmentationAnswers) {

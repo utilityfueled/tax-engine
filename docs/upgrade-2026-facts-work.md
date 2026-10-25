@@ -329,3 +329,23 @@ Source-year/document-fidelity package commit: `70f8d17`.
   resolves. The first direct Vitest PDF invocation lacked pypdf; `pnpm test` uses
   the pinned interpreter and all 12 filled-return tests now pass, including the
   actual energy worksheet integration in `968fa7b`. Prior energy UI: `c3f922f`.
+
+## Child and dependent credit identification
+
+- Either guided year now requires actual timely filer/spouse SSN/TIN and claimed
+  child/dependent identification facts. A formatted number alone is insufficient.
+  Known false remains false; it does not change a claimed CTC child into an ODC
+  dependent. Joint-filer checks retain the other spouse's timely TIN requirement.
+- Collected bona fide Puerto Rico residency, separate Puerto Rico and Form 4563
+  income exclusions and an optional actual combat-pay election. Decimal totals
+  reconcile a saved combined exclusion; a known zero can establish both zero
+  components, while a positive legacy aggregate needs its actual split.
+- Refreshed final [2025 Schedule 8812 instructions](https://www.irs.gov/instructions/i1040s8)
+  for identification and worksheet facts. The 2026 draft is not form qualification.
+  Federal input contract is `bc26ffe`; the federal owner retains explicitly
+  unqualified historical API compatibility rather than inventing old identities.
+- Three new source regressions failed before implementation. 490 tests pass in
+  18 guided/DOM/PDF files, including actual user edits for identity, source
+  confirmation, mortgage/noncash donation details and household Section B rate
+  periods. Root/web types, scoped lint (zero errors), all 3,116 spec references and
+  diff checks pass. Sparse source package: `81d6a37`.

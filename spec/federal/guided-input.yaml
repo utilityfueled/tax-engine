@@ -90,3 +90,8 @@ lines:
     formula: "Only extract a box amount from its own labeled field and section. Missing payer identity, monetary boxes, acquisition/sale dates, adjustments, basis reporting, holding period and wash-sale treatment stay unknown. Explicit source zero remains zero. Reject incomplete or legacy parser-inferred facts before schema defaults can create a calculation."
     irsRef: "Instructions for Forms 1099-INT boxes 1-4 and 8; 1099-DIV boxes 1a-7; 1099-DA basis and transaction reporting"
     testRef: "tests/guided-interview/document-fact-fidelity.test.ts::keeps sparse interest boxes unknown and never uses the filename as payer identity"
+  - line: "child-credit-identity"
+    description: "Actual timely identification and possession facts for claimed dependent credits"
+    formula: "For either guided tax year, collect timely employment-valid filer SSN and timely filer TIN facts, each claimed child's CTC SSN or ODC TIN eligibility, Puerto Rico bona fide residence and possession income exclusion. A formatted tax ID is not eligibility evidence. Missing facts block the claim; actual false and zero remain facts, not inferred eligibility. One joint filer's valid SSN can establish the SSN condition, with both filers' timely TIN requirements retained."
+    irsRef: "Schedule 8812 instructions taxpayer identification requirements and lines 1-3; IRC 24(h)(7) and 24(h)(9)"
+    testRef: "tests/guided-interview/guided-child-credit-facts.test.ts::requires actual identity facts for claimed child credits in either guided year"

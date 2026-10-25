@@ -9,7 +9,7 @@
 
 import Decimal from "decimal.js";
 import { parseGuidedCurrency, hasGuidedCurrency, formatGuidedDollars } from "./guided-currency";
-import { dependentFactErrors, personalFactErrors } from "./guided-taxpayer-facts";
+import { childCreditExclusionValues, dependentFactErrors, personalFactErrors } from "./guided-taxpayer-facts";
 import { allPaymentFactErrors, assertKnownFacts, deductionFactErrors, educationFactErrors, hasEnteredAmount, paymentFactErrors, retirementFactErrors } from "./guided-required-facts";
 import { adjustmentFactErrors, householdFactErrors, isDeductibleAlimony } from "./guided-adjustment-facts";
 import { statePaymentFactErrors, sumAdditionalStateWithholding } from "./guided-state-facts";
@@ -244,6 +244,8 @@ export function buildDependents(
       qualifiesForCTC: entry.qualifiesForCTC as boolean,
       qualifiesForODC: entry.qualifiesForODC as boolean,
       qualifiesForEIC: entry.qualifiesForEIC as boolean,
+      ctcSsnEligible: entry.ctcSsnEligible ?? undefined,
+      odcTinEligible: entry.odcTinEligible ?? undefined,
     };
   });
 }
@@ -594,9 +596,11 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
         ssn: personalInfo.ssn,
         dateOfBirth: personalInfo.dateOfBirth,
         usResidencyMonths: Number(personalInfo.usResidencyMonths),
+        employmentValidSsnIssuedByDueDate: personalInfo.employmentValidSsnIssuedByDueDate ?? undefined,
+        tinIssuedByDueDate: personalInfo.tinIssuedByDueDate ?? undefined,
       },
       spouse: (segmentation.filingStatus === "mfj" || segmentation.filingStatus === "mfs") && personalInfo.spouse
-        ? { ...personalInfo.spouse, usResidencyMonths: Number(personalInfo.spouse.usResidencyMonths) } : undefined,
+        ? { ...personalInfo.spouse, usResidencyMonths: Number(personalInfo.spouse.usResidencyMonths), employmentValidSsnIssuedByDueDate: personalInfo.spouse.employmentValidSsnIssuedByDueDate ?? undefined, tinIssuedByDueDate: personalInfo.spouse.tinIssuedByDueDate ?? undefined } : undefined,
       livedWithSpouseAtAnyTimeDuringYear: personalInfo?.livedWithSpouseAtAnyTimeDuringYear,
       stateResidency: personalInfo.stateResidency,
       address: {
@@ -621,6 +625,11 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     scheduleA,
     form1098,
     donations,
+    childTaxCredit: personalInfo.childTaxCredit ? {
+      bonaFidePuertoRicoResident: personalInfo.childTaxCredit.bonaFidePuertoRicoResident ?? undefined,
+      ...(hasEnteredAmount(personalInfo.childTaxCredit.possessionIncomeExclusion) || hasEnteredAmount(personalInfo.childTaxCredit.puertoRicoExcludedIncome) || hasEnteredAmount(personalInfo.childTaxCredit.form4563ExcludedIncome) ? childCreditExclusionValues(personalInfo.childTaxCredit) : {}),
+      ...(hasEnteredAmount(personalInfo.childTaxCredit.nonTaxableCombatPayElection) ? { nonTaxableCombatPayElection: toDecimalString(personalInfo.childTaxCredit.nonTaxableCombatPayElection) } : {}),
+    } : undefined,
     dependentCare,
     educationExpenses,
     energyCredits,

@@ -457,6 +457,8 @@ export interface DependentEntryData {
   qualifiesForCTC: boolean | null;
   qualifiesForODC: boolean | null;
   qualifiesForEIC: boolean | null;
+  ctcSsnEligible?: boolean | null;
+  odcTinEligible?: boolean | null;
 }
 
 export const emptyDependentEntry: DependentEntryData = {
@@ -477,11 +479,22 @@ export interface SpouseInfoData {
   ssn: string;
   dateOfBirth: string;
   usResidencyMonths: string;
+  employmentValidSsnIssuedByDueDate?: boolean | null;
+  tinIssuedByDueDate?: boolean | null;
 }
 
 export const emptySpouseInfo: SpouseInfoData = { firstName: "", lastName: "", ssn: "", dateOfBirth: "", usResidencyMonths: "" };
 
 export interface PersonalInfoData {
+  employmentValidSsnIssuedByDueDate?: boolean | null;
+  tinIssuedByDueDate?: boolean | null;
+  childTaxCredit?: {
+    bonaFidePuertoRicoResident?: boolean | null;
+    possessionIncomeExclusion?: string;
+    puertoRicoExcludedIncome?: string;
+    form4563ExcludedIncome?: string;
+    nonTaxableCombatPayElection?: string;
+  };
   dateOfBirth?: string;
   usResidencyMonths?: string;
   stateResidency?: "full-year" | "part-year" | "nonresident" | null;
