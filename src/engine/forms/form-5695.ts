@@ -212,7 +212,7 @@ export function calculateForm5695(
     ] as const) record(line, description, value, "Actual qualified items sorted by cost; IRS printed-line aggregation and rounding");
     const capped = (category: string, cap: number) => min(roundDollar(improvementCost(category).times(IMPROVEMENT_RATE)), new Decimal(cap));
     const credits = [
-      ["18b", "Insulation", roundDollar(improvementCost("insulation").times(IMPROVEMENT_RATE))],
+      ["18b", "Insulation", min(roundDollar(improvementCost("insulation").times(IMPROVEMENT_RATE)), INSULATION_CAP)],
       ["19h", "Exterior doors", doorCredit],
       ["20d", "Windows and skylights", capped("windows_skylights",600)],
       ["22d", "Central air conditioners", capped("central_ac",600)],
@@ -391,8 +391,7 @@ function calculateSourcedEnergy(source: Partial<EnergyCredits>, sources: EnergyS
       homeHeatTotal = homeHeatTotal.plus(shared ? allocatedCap(heat, 2000, heatItems) : heat);
     }
     for (const [, line, cap] of categoryLines) {
-      // Insulation's printed18b has no ordinary per-category cap; line28 applies it.
-      if (line !== "18b") credits.set(line, min(credits.get(line) ?? new Decimal(0), new Decimal(cap)));
+      credits.set(line, min(credits.get(line) ?? new Decimal(0), new Decimal(cap)));
     }
     const firstDoor = items.filter(item => item.eligible && item.category === "exterior_door").sort((a, b) => d(b.qualifiedCost).comparedTo(a.qualifiedCost))[0];
     credits.set("19c", firstDoor ? doorCredit(firstDoor) : new Decimal(0));

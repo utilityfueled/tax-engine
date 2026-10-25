@@ -8,9 +8,9 @@ const calculate = (value: unknown, options = {}) => calculateForm5695(EnergyCred
 const audited = (result: ReturnType<typeof calculate>, line: string) => result.lines.find(entry => entry.form === "Form 5695" && entry.line === line)?.value.toFixed();
 
 describe("Form5695 actual installation sources", () => {
-  it("keeps the uncapped printed insulation amount before the annual pool limit", () => {
+  it("caps the printed insulation amount before the annual pool limit", () => {
     const result = calculate({ residenceEligibilityConfirmed: true, qualifiedImprovements: [{ ...sourceImprovement, category: "insulation", qualifiedCost: "10000" }], cleanEnergyProperties: [] });
-    expect(audited(result, "18b")).toBe("3000"); expect(audited(result, "27")).toBe("3000"); expect(audited(result, "28")).toBe("1200");
+    expect(audited(result, "18b")).toBe("1200"); expect(audited(result, "27")).toBe("1200"); expect(audited(result, "28")).toBe("1200");
   });
   it("preserves unknown physical source facts and rejects incomplete confirmed records", () => {
     const historical = EnergyCreditsSchema.parse({ qualifiedImprovements: [sourceImprovement] });

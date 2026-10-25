@@ -139,9 +139,9 @@ lines:
     description: "Qualified insulation and air sealing cost"
     taxYear: 2025
   - line: "18b"
-    formula: "round(line18a times30%); apply the general1200 limit at line28"
+    formula: "min(round(line18a times30%),1200); also apply the combined general1200 limit at line28"
     testRef: "tests/engine/forms/form-5695.test.ts::detailed improvements apply every category cap before shared pools"
-    description: "round(line18a times30%); apply the general1200 limit at line28"
+    description: "min(round(line18a times30%),1200); also apply the combined general1200 limit at line28"
     taxYear: 2025
   - line: "19h"
     formula: "Sort doors by cost; min(min(round(most-expensive door cost times30%),250) + round(sum remaining door costs times30%),500), matching official lines19c/19g"
