@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { ReturnWorkspaceRecord, WorkspaceDeploymentMode } from "@tax-engine/contracts";
 import { RetroShell } from "@/components/retro-shell";
@@ -106,8 +106,17 @@ export function RecentWorkspacesPanel({
   const [workspaces, setWorkspaces] = useState<DisplayedWorkspace[]>([]);
   const [storageMessage, setStorageMessage] = useState<string | null>(null);
   const [showAllWorkspaces, setShowAllWorkspaces] = useState(false);
+  const [deletionPending, setDeletionPending] = useState(false);
+  const activeRevision = useRef(0);
+  const deleting = useRef(false);
 
   useEffect(() => {
+    const revision = ++activeRevision.current;
+    deleting.current = false;
+    setDeletionPending(false);
+    setWorkspaces([]);
+    setStorageMessage(null);
+    setShowAllWorkspaces(false);
     void (async () => {
       try {
         const browserStorage = requireBrowserStorage();
@@ -115,6 +124,7 @@ export function RecentWorkspacesPanel({
           deploymentMode,
           browserStorage
         });
+        if (revision !== activeRevision.current) return;
 
         const displayedWorkspaces = buildDisplayedWorkspaces(nextWorkspaces, browserStorage);
 
@@ -126,6 +136,7 @@ export function RecentWorkspacesPanel({
             : null)
         );
       } catch (error) {
+        if (revision !== activeRevision.current) return;
         setStorageMessage(
           deploymentMode === "hosted"
             ? resolveUiErrorMessage(
@@ -136,9 +147,16 @@ export function RecentWorkspacesPanel({
         );
       }
     })();
+    return () => {
+      activeRevision.current += 1;
+    };
   }, [deploymentMode]);
 
   function removeWorkspace(workspaceId: string) {
+    if (deleting.current) return;
+    deleting.current = true;
+    setDeletionPending(true);
+    const revision = activeRevision.current;
     void (async () => {
       try {
         const browserStorage = requireBrowserStorage();
@@ -147,6 +165,7 @@ export function RecentWorkspacesPanel({
           browserStorage,
           workspaceId
         });
+        if (revision !== activeRevision.current) return;
 
         const displayedWorkspaces = buildDisplayedWorkspaces(nextWorkspaces, browserStorage);
 
@@ -154,6 +173,7 @@ export function RecentWorkspacesPanel({
         setShowAllWorkspaces((current) => current && displayedWorkspaces.length > MAX_VISIBLE_WORKSPACES);
         setStorageMessage(`Deleted return ${workspaceId}.`);
       } catch (error) {
+        if (revision !== activeRevision.current) return;
         setStorageMessage(
           deploymentMode === "hosted"
             ? resolveUiErrorMessage(
@@ -162,6 +182,11 @@ export function RecentWorkspacesPanel({
               )
             : "Could not delete the return. Please try again."
         );
+      } finally {
+        if (revision === activeRevision.current) {
+          deleting.current = false;
+          setDeletionPending(false);
+        }
       }
     })();
   }
@@ -262,6 +287,7 @@ export function RecentWorkspacesPanel({
                     <button
                       className="utility-button utility-button-small"
                       type="button"
+                      disabled={deletionPending}
                       onClick={() => {
                         removeWorkspace(workspace.id);
                       }}

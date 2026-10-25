@@ -192,3 +192,19 @@ Errors remain generic and caller disconnects return499 without private reasons.
 All150 focused body/input/rate-limit/document-boundary tests pass; web types and
 scoped lint pass. Evidence: `.local/upgrade-evidence/body-lifecycle-{red,green,types}.log`.
 These are in-process synthetic streams, not a staging reverse-proxy load test.
+
+## Saved-return lifecycle — 2026-10-25
+
+Two DOM regressions reproduced an old storage-mode response replacing the current
+return list and overlapping deletion requests. The list now discards asynchronous
+results after a mode change or unmount, clears stale state on mode changes, and
+serializes deletion while preserving the remaining records and local recovery
+links. Sixteen new interaction cases also cover empty storage, guided shells,
+expansion, unknown timestamps, source counts, notices and recoverable failures.
+The status-copy fixture now supplies actual W-2 facts instead of relying on blank
+payroll fields being interpreted as confirmed zero.
+
+The combined saved-return/status/persistence/recovery run passes 61 tests. Web
+types and scoped lint pass. Evidence: `.local/upgrade-evidence/recent-workspaces-green.log`
+and `.local/upgrade-evidence/ui-package-types.log`. These are local DOM/storage
+tests, not multi-tenant staging evidence.

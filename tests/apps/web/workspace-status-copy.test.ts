@@ -1,4 +1,4 @@
-import { completePersonalInfo } from "../../guided-interview/complete-facts";
+import { completePersonalInfo, completeW2Entry } from "../../guided-interview/complete-facts";
 import { describe, expect, it } from "vitest";
 import type { WorkspaceReturnSummary } from "@tax-engine/contracts";
 import { createWorkspaceRecord, ingestFilesIntoWorkspace } from "../../../apps/web/src/lib/workspace-storage";
@@ -205,16 +205,8 @@ describe("workspace status copy", () => {
         },
         "income-w2": {
           entries: [{
-            employerName: "Acme",
-            employerEin: "",
+            ...completeW2Entry,
             wages: "50000",
-            federalWithheld: "",
-            socialSecurityWages: "",
-            socialSecurityWithheld: "",
-            medicareWages: "",
-            medicareWithheld: "",
-            stateWages: "",
-            stateWithheld: ""
           }]
         }
       }
