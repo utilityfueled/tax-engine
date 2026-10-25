@@ -20,7 +20,8 @@ Updated 2026-10-25. This is calculation and local review evidence. It does not q
 
 ## Remaining work / limits
 
-- Corrected review-only PDF mapping and every-page notice are the next coherent package; old composite audit IDs are obsolete.
+- Calculation/source package committed as `28ba63d`. The follow-up review PDF package copies actual19–50/carryover audits, requires complete PartIV when verified, rejects missing/duplicate/nonfinite/wrong-form/wrong-year/inconsistent values, and guards every physical2025 export.
+- PDF checks:3 observed red cases, then5 passing tests; per-page decoded content streams contain the review-only warning. The four-page synthetic source packet was rendered locally and first/last pages inspected; pypdf independently found the warning on all4pages. Final root types/scoped lint/spec checks passed. Evidence: `.local/upgrade-evidence/form2555/f2555-reference-filled.pdf`, `review-{1..4}.png`, and PDF check logs. No official2026 mapping was created.
 - Final2026 physical forms/instructions, qualified independent review and filing qualification remain required.
 - Physical residence/presence/travel evidence, business capital-versus-services source worksheet, spouse-specific separate Forms2555 and housing allocation, foreign exchange source records, prior-year-earned computation statements, and original qualification/election proof must be supplied from actual records. A confirmation is not an independent tax review, and unknown facts are not inferred.
 - Guided collection must expose the actual source contract. Legacy2025 aggregate previews remain explicitly unverified; positive housing requires actual employer-provided foreign income even on that path.
