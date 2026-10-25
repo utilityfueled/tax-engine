@@ -11,6 +11,7 @@ import { calculateForm6251BondSources } from "@/engine/forms/form-6251-bond-sour
 import { Form1099IntSchema, Form1099DivSchema } from "@/models/inputs.js";
 import { childElectionFactErrors, type ChildElectionData } from "./guided-child-election-facts";
 import { qsbsSourceFactErrors, type QsbsSourceData } from "./guided-qsbs-sources";
+import { digitalAssetFactErrors, type DigitalAssetEntryData } from "./guided-digital-asset-facts";
 
 export interface InvestmentSourceData extends PrivateActivitySourceData {
   payerTin?: string;
@@ -26,7 +27,7 @@ export const interestSourceAmounts = [
 export const dividendSourceAmounts = [
   ["ordinaryDividends", "Box 1a ordinary dividends"], ["qualifiedDividends", "Box 1b qualified dividends"], ["capitalGainDistributions", "Box 2a capital-gain distributions"], ["section1250Gain", "Box 2b unrecaptured section 1250 gain"], ["section1202Gain", "Box 2c section 1202 gain"], ["collectiblesGain", "Box 2d collectibles gain"], ["section897OrdinaryDividends", "Box 2e section 897 ordinary dividends"], ["section897CapitalGain", "Box 2f section 897 capital gain"], ["nondividendDistributions", "Box 3 nondividend distributions"], ["federalWithheld", "Box 4 federal withholding"], ["section199ADividends", "Box 5 section 199A dividends"], ["foreignTaxPaid", "Box 7 foreign tax paid"], ["exemptInterestDividends", "Box 12 exempt-interest dividends"], ["specifiedPrivateActivityBondInterest", "Box 13 private-activity bond dividends"],
 ] as const;
-export type InvestmentData = { interestEntries: InterestEntryData[]; dividendEntries: DividendEntryData[]; brokerageEntries: BrokerageEntryData[]; oidEntries?: OidEntryData[]; childElections?: ChildElectionData[]; qofDispositionFacts?: QofDispositionData; scheduleDSources?: ScheduleDSourceData; section1202Sources?: QsbsSourceData };
+export type InvestmentData = { interestEntries: InterestEntryData[]; dividendEntries: DividendEntryData[]; brokerageEntries: BrokerageEntryData[]; oidEntries?: OidEntryData[]; digitalAssetEntries?: DigitalAssetEntryData[]; childElections?: ChildElectionData[]; qofDispositionFacts?: QofDispositionData; scheduleDSources?: ScheduleDSourceData; section1202Sources?: QsbsSourceData };
 
 export function isStartedInvestment(entry: InvestmentSourceData | CapitalGainTransactionData): boolean {
   return Object.values(entry).some(value => typeof value === "string" && value.trim() !== "");
@@ -53,6 +54,7 @@ export function investmentFactErrors(data: InvestmentData | undefined, filingSta
   if (!data) return errors;
   Object.assign(errors, qofDispositionFactErrors(data.qofDispositionFacts, taxYear));
   Object.assign(errors, oidFactErrors(data.oidEntries, filingStatus, taxYear, stateCode, stateData));
+  Object.assign(errors, digitalAssetFactErrors(data.digitalAssetEntries, filingStatus, taxYear, personal, data.brokerageEntries, stateData, stateCode));
   Object.assign(errors, childElectionFactErrors(data.childElections, taxYear));
   Object.assign(errors, scheduleDSourceFactErrors(data, taxYear, filingStatus, personal));
   Object.assign(errors, qsbsSourceFactErrors(data, taxYear, filingStatus, personal));

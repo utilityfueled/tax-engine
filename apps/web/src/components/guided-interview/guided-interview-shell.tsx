@@ -539,6 +539,8 @@ function SectionContent({
           dividendEntries={dividendEntries}
           brokerageEntries={brokerageEntries}
           oidEntries={oidEntries}
+          digitalAssetEntries={investData?.digitalAssetEntries}
+          onDigitalAssetEntriesChange={digitalAssetEntries => onStateChange(updateSectionData(state, "income-investments", { ...savedSources, digitalAssetEntries }))}
           childElections={investData?.childElections}
           qofDispositionFacts={investData?.qofDispositionFacts}
           scheduleDSources={investData?.scheduleDSources}

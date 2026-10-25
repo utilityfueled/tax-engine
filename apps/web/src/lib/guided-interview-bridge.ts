@@ -60,6 +60,7 @@ import { retirementSourceInput } from "./guided-retirement-source-inputs";
 import { buildGuidedIraBasisSources, type GuidedIraBasisContext } from "./guided-ira-basis";
 import { investmentFactErrors, isStartedInvestment, type InvestmentSourceData } from "./guided-investment-facts";
 import { buildOidInputs, buildPaOidSources, isStartedOid, oidFactErrors } from "./guided-oid-facts";
+import { buildDigitalAssetInputs, digitalAssetFactErrors, isStartedDigitalAsset } from "./guided-digital-asset-facts";
 
 import type {
   AdjustmentData,
@@ -315,6 +316,7 @@ export function buildBrokerageInputs(entries: BrokerageEntryData[] | undefined) 
       proceeds: toOptionalDecimalString(transaction.proceeds), costBasis: toOptionalDecimalString(transaction.costBasis),
       holdingPeriod: transaction.holdingPeriod || undefined,
       basisReportedToIRS: transaction.basisReportedToIRS ?? undefined, digitalAsset: transaction.digitalAsset ?? undefined,
+      sourceDocumentType: "1099-b" as const, // This collector explicitly asks for actual1099-B statements.
       washSale: transaction.washSale ?? undefined, washSaleDisallowed: toOptionalDecimalString(transaction.washSaleDisallowed),
       adjustments: toOptionalDecimalString(transaction.adjustments),
     })),
@@ -673,6 +675,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
   const form1099OID = buildOidInputs(investData?.oidEntries, segmentation.filingStatus, state.taxYear, stateCode);
   const form1099Div = buildDividendInputs(investData?.dividendEntries, state.taxYear);
   const form1099B = buildBrokerageInputs(investData?.brokerageEntries);
+  const form1099DA = buildDigitalAssetInputs(investData?.digitalAssetEntries, segmentation.filingStatus, state.taxYear, personalInfo, form1099B);
   const form1099R = buildRetirementInputs(retirementData?.entries, segmentation.filingStatus, state.taxYear, stateReturnData, { data: retirementData?.basisSources, personal: personalInfo, adjustments: adjustmentData });
   const iraBasisSources = buildGuidedIraBasisSources(retirementData?.basisSources, retirementData?.entries, state.taxYear, segmentation.filingStatus, personalInfo, adjustmentData);
   const rentalProperties = buildRentalPropertyInputs(rentalData?.entries);
@@ -770,6 +773,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     paResidentReturn: stateCode === "PA" && form1099OID.length ? { scheduleA: { oidSources: buildPaOidSources(investData?.oidEntries) } } : undefined,
     form1099Div,
     form1099B,
+    form1099DA,
     form1099R,
     iraBasisSources,
     form8960Sources: buildGuidedNiitSources(otherTaxesData?.niitSources, retirementData?.entries, state.taxYear, segmentation.filingStatus),
@@ -898,10 +902,11 @@ export function buildGuidedFactAnswers(
       }
     }
     const transactions = investData.brokerageEntries.flatMap(entry => entry.transactions.filter(isStartedInvestment));
-    if (transactions.length) {
-      const total = sourceTotal(transactions.map(entry => entry.proceeds));
+    const digitalTransactions = investData.digitalAssetEntries?.filter(isStartedDigitalAsset).flatMap(entry => entry.transactions ?? []) ?? [];
+    if (transactions.length || digitalTransactions.length) {
+      const total = sourceTotal([...transactions, ...digitalTransactions].map(entry => entry.proceeds));
       answers.push({ factId: "broker-proceeds", answerText: total === null ? "Broker source records entered; some proceeds still need review." : `Broker proceeds entered: $${fmtNum(total)}.` });
-      answers.push({ factId: "cost-basis-review", answerText: transactions.every(transaction => transaction.sourceClassificationConfirmed === true) ? "Cost basis and sale classifications reviewed against source records in the guided interview." : "Cost basis and sale classifications still need source review." });
+      answers.push({ factId: "cost-basis-review", answerText: transactions.every(transaction => transaction.sourceClassificationConfirmed === true) && digitalTransactions.every(row => row.basisFactsConfirmed === true) ? "Cost basis and sale classifications reviewed against source records in the guided interview." : "Cost basis and sale classifications still need source review." });
     }
   }
 
@@ -1006,6 +1011,12 @@ export function buildGuidedSyntheticDocuments(
     docs.push({ id: "guided:1099-oid", name: "Guided Interview — 1099-OID", size: 0, uploadedAt: now,
       kind: "1099-oid", coverage: Object.keys(oidFactErrors(investData.oidEntries, state.segmentation.filingStatus, state.taxYear, state.segmentation.stateCode, state.sectionData["state-return"])).length ? "partially-supported" : "supported",
       label: "1099-OID (guided interview)", notes: "Actual instrument boxes and recipient worksheets entered via guided interview.", matchedFixtureId: null, seededFactIds: [] });
+  }
+
+  if (investData?.digitalAssetEntries?.some(isStartedDigitalAsset)) {
+    docs.push({ id: "guided:1099-da", name: "Guided Interview — 1099-DA", size: 0, uploadedAt: now,
+      kind: "1099-da", coverage: Object.keys(digitalAssetFactErrors(investData.digitalAssetEntries, state.segmentation.filingStatus, state.taxYear, state.sectionData["personal-info"], investData.brokerageEntries, state.sectionData["state-return"], state.segmentation.stateCode)).length ? "partially-supported" : "supported",
+      label: "1099-DA (guided interview)", notes: "Actual original digital-asset statements and independent acquisition/basis records entered via guided interview.", matchedFixtureId: null, seededFactIds: ["broker-proceeds", "cost-basis-review"] });
   }
 
   if (investData?.interestEntries?.some(isStartedInvestment)) {

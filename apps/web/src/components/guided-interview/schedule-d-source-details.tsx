@@ -1,6 +1,5 @@
 'use client';
 import { captureScheduleDRecords, updateScheduleDSources, type ScheduleDSourceData, type ScheduleDAssetSource, type ScheduleDReportedSource } from '@/lib/guided-schedule-d-sources';
-import type { BrokerageEntryData, DividendEntryData } from '@/lib/guided-interview-flow';
 import { BooleanFact, TextFact } from './fact-fields';
 import { CurrencyField } from './currency-field';
 
@@ -14,7 +13,7 @@ function SourceIdentity({ row, label, onChange }: { row: ScheduleDAssetSource | 
     </select></label>
   </div>;
 }
-export function ScheduleDSourceDetails({ data, investments, onChange }: { data?: ScheduleDSourceData; investments: { brokerageEntries: BrokerageEntryData[]; dividendEntries: DividendEntryData[] }; onChange: (data: ScheduleDSourceData | undefined) => void }) {
+export function ScheduleDSourceDetails({ data, investments, onChange }: { data?: ScheduleDSourceData; investments: Parameters<typeof captureScheduleDRecords>[0]; onChange: (data: ScheduleDSourceData | undefined) => void }) {
   const update = (patch: Partial<ScheduleDSourceData>) => onChange(updateScheduleDSources(data ?? {}, patch));
   return <details className="guided-expand"><summary className="guided-expand-trigger">Capital gain character and loss carryovers (Schedule D)</summary><div className="guided-expand-body">
     <p className="guided-hint">Use actual source records for collectibles, unrecaptured section 1250 distributions, child capital distributions and capital loss carryovers. The calculation applies the loss netting; do not enter an assumed final special-tax amount.</p>

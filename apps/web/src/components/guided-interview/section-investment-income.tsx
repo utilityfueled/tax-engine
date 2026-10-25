@@ -23,6 +23,8 @@ import { CurrencyField } from "./currency-field";
 import { BooleanFact } from "./fact-fields";
 import { DividendSourceDetails, InterestSourceDetails, InvestmentSourceIdentity } from "./investment-source-details";
 import { OidSourceCards } from "./oid-source-details";
+import { DigitalAssetSourceCards } from "./digital-asset-source-details";
+import type { DigitalAssetEntryData } from "@/lib/guided-digital-asset-facts";
 import type { OidEntryData } from "@/lib/guided-oid-facts";
 import { ChildElectionCards } from "./child-election-details";
 import type { ChildElectionData } from "@/lib/guided-child-election-facts";
@@ -406,6 +408,8 @@ export function SectionInvestmentIncome({
   oidEntries,
   stateCode,
   onOidEntriesChange,
+  digitalAssetEntries,
+  onDigitalAssetEntriesChange,
   childElections,
   onChildElectionsChange,
   qofDispositionFacts,
@@ -424,6 +428,8 @@ export function SectionInvestmentIncome({
   oidEntries?: OidEntryData[];
   stateCode?: string | null;
   onOidEntriesChange?: (entries: OidEntryData[]) => void;
+  digitalAssetEntries?: DigitalAssetEntryData[];
+  onDigitalAssetEntriesChange?: (entries: DigitalAssetEntryData[]) => void;
   childElections?: ChildElectionData[];
   onChildElectionsChange?: (entries: ChildElectionData[]) => void;
   qofDispositionFacts?: QofDispositionData;
@@ -482,7 +488,7 @@ export function SectionInvestmentIncome({
         <p className="guided-prompt">Let&apos;s capture your investment income.</p>
         <p className="guided-hint">
           Enter info from your 1099-INT (interest), 1099-DIV (dividends),
-          1099-OID (original issue discount) and 1099-B (stock sales). If you don&apos;t have one of these, leave it blank
+          1099-OID (original issue discount), 1099-B (brokerage sales) and 1099-DA (digital-asset statements). If you don&apos;t have one of these, leave it blank
           and we&apos;ll skip it.
         </p>
 
@@ -507,9 +513,10 @@ export function SectionInvestmentIncome({
         </button>
 
         {onOidEntriesChange && <OidSourceCards entries={oidEntries} stateCode={stateCode} onChange={onOidEntriesChange} />}
+        {onDigitalAssetEntriesChange && <DigitalAssetSourceCards entries={digitalAssetEntries} stateCode={stateCode} onChange={onDigitalAssetEntriesChange} />}
         {onChildElectionsChange && <ChildElectionCards entries={childElections} onChange={onChildElectionsChange} />}
         {onQofDispositionFactsChange && <QofDispositionDetails data={qofDispositionFacts} onChange={onQofDispositionFactsChange} />}
-        {onScheduleDSourcesChange && <ScheduleDSourceDetails data={scheduleDSources} investments={{ brokerageEntries, dividendEntries }} onChange={onScheduleDSourcesChange} />}
+        {onScheduleDSourcesChange && <ScheduleDSourceDetails data={scheduleDSources} investments={{ brokerageEntries, dividendEntries, digitalAssetEntries }} onChange={onScheduleDSourcesChange} />}
         {onSection1202SourcesChange && <QsbsSourceDetails data={section1202Sources} investments={{ brokerageEntries, dividendEntries }} onChange={onSection1202SourcesChange} />}
 
         {/* ── 1099-DIV: Dividends ── */}

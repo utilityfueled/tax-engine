@@ -3,6 +3,7 @@ import type { BrokerageEntryData, DividendEntryData, FilingStatus, PersonalInfoD
 import type { ChildElectionData } from './guided-child-election-facts';
 import { parseGuidedCurrency } from './guided-currency';
 import { guidedSourceValuesChanged } from './guided-source-confirmation';
+import { isStartedDigitalAsset, type DigitalAssetEntryData } from './guided-digital-asset-facts';
 
 type Identity = { firstName?: string; lastName?: string; ssnLast4?: string };
 type Source = { sourceId?: string; sourceTaxYear?: string; sourceReference?: string; accountHolder?: string; payerName?: string };
@@ -15,7 +16,7 @@ export interface ScheduleDSourceData {
   partnershipInterestDispositionPresent?: boolean | null; other1250DispositionPresent?: boolean | null;
   longTermAssets?: ScheduleDAssetSource[]; reportedGains?: ScheduleDReportedSource[];
 }
-type InvestmentSources = { brokerageEntries: BrokerageEntryData[]; dividendEntries: DividendEntryData[]; childElections?: ChildElectionData[]; scheduleDSources?: ScheduleDSourceData };
+type InvestmentSources = { brokerageEntries: BrokerageEntryData[]; dividendEntries: DividendEntryData[]; digitalAssetEntries?: DigitalAssetEntryData[]; childElections?: ChildElectionData[]; scheduleDSources?: ScheduleDSourceData };
 const started = (entry: object) => Object.values(entry).some(value => typeof value === 'string' && value.trim() !== '');
 const normalized = (value: string | undefined) => (value ?? '').trim().replace(/\s+/g, ' ').toLowerCase();
 function actual(value: string | undefined, label: string): string { if (!value?.trim()) throw new Error(`Enter the actual ${label}.`); return value.trim(); }
@@ -29,13 +30,22 @@ function identity(source: Identity | undefined, person: { firstName?: string; la
 /** Explicit user capture of entered source values; unknowns are copied as unknowns. */
 export function captureScheduleDRecords(investments: InvestmentSources): { longTermAssets: ScheduleDAssetSource[]; reportedGains: ScheduleDReportedSource[] } {
   return {
-    longTermAssets: investments.brokerageEntries.filter(form => started(form) || form.transactions.some(started)).flatMap((form, formIndex) =>
+    longTermAssets: [...investments.brokerageEntries.filter(form => started(form) || form.transactions.some(started)).flatMap((form, formIndex) =>
       form.transactions.filter(started).flatMap((transaction, transactionIndex) => transaction.holdingPeriod !== 'long' ? [] : [{
         sourceId: `form1099B:${formIndex}:transaction:${transactionIndex}`, sourceTaxYear: form.sourceTaxYear, sourceReference: form.sourceId,
         accountHolder: form.accountHolder, payerName: form.broker, description: transaction.description, dateAcquired: transaction.dateAcquired,
         dateSold: transaction.dateSold, proceeds: transaction.proceeds, costBasis: transaction.costBasis, adjustments: transaction.adjustments,
         washSale: transaction.washSale, washSaleDisallowed: transaction.washSaleDisallowed, character: transaction.specialGainCharacter,
-      }])),
+      }])), ...(investments.digitalAssetEntries ?? []).filter(isStartedDigitalAsset).flatMap((form, formIndex) =>
+      (form.transactions ?? []).flatMap((transaction, transactionIndex) => transaction.holdingPeriod !== 'long' ? [] : [{
+        sourceId: `form1099DA:${formIndex}:transaction:${transactionIndex}`, sourceTaxYear: form.taxYear,
+        sourceReference: form.sourceId?.trim() && transaction.sourceId?.trim() ? JSON.stringify([form.sourceId.trim(), transaction.sourceId.trim()]) : undefined,
+        accountHolder: form.accountHolder, payerName: form.brokerName,
+        description: transaction.digitalAssetName ? `${transaction.digitalAssetName.trim()}${transaction.ticker?.trim() ? ` (${transaction.ticker.trim()})` : ''}` : undefined,
+        dateAcquired: transaction.dateAcquired, dateSold: transaction.dateSold, proceeds: transaction.proceeds, costBasis: transaction.costBasis,
+        adjustments: transaction.adjustments, washSale: transaction.washSale, washSaleDisallowed: transaction.washSaleDisallowed,
+        character: transaction.capitalAssetConfirmed === true && transaction.nftOrCollectible === false && transaction.ordinaryIncome === false ? 'ordinary' : undefined,
+      }]))],
     reportedGains: investments.dividendEntries.filter(started).map((form, index) => ({ sourceId: `form1099Div:${index}`,
       accountHolder: form.accountHolder, payerName: form.payer, netLongTermCapitalGain: form.capitalGainDistributions,
       collectiblesGain: form.collectiblesGain, unrecapturedSection1250Gain: form.section1250Gain, section1202Gain: form.section1202Gain })),
