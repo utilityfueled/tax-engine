@@ -38,6 +38,7 @@ import { educationDistributionFactErrors, type EducationDistributionData } from 
 import { savingsBondFactErrors, type SavingsBondEducationData } from "./guided-savings-bond-facts";
 import { buildActualEducationInput } from "./guided-education-facts";
 import { guidedSourceValuesChanged } from "./guided-source-confirmation";
+import { guidedNiitFactErrors, type NiitSourceData } from "./guided-niit-facts";
 
 import { formatPendingW2SuggestionValueLabel, isOfficialFixtureSourceType } from "@/lib/document-fixture-copy";
 
@@ -438,8 +439,8 @@ export function buildSectionRoute(segmentation: SegmentationAnswers): InterviewS
   const credits = allSections.find((s) => s.id === "credits");
   if (credits) sections.push(credits);
 
-  // Other taxes — include if self-employment
-  if (segmentation.incomeTypes.includes("self-employment")) {
+  // Actual retirement and investment sources may need the NIIT worksheet.
+  if (segmentation.incomeTypes.some(type => ["self-employment", "investments", "rental", "retirement"].includes(type))) {
     const otherTaxes = allSections.find((s) => s.id === "other-taxes");
     if (otherTaxes) sections.push(otherTaxes);
   }
@@ -1167,6 +1168,7 @@ export const emptyCreditsData: CreditsData = {
 // ── Other taxes data ──────────────────────────────────────────────────────
 
 export interface OtherTaxesData {
+  niitSources?: NiitSourceData;
   householdEmploymentWages: string;
   acknowledgedSETax: boolean;
   acknowledgedAdditionalMedicare: boolean;
@@ -1484,6 +1486,8 @@ export function updateSectionData(
   const iraSourcesChanged = ["income-w2", "income-self-employment", "income-retirement"].includes(sectionId) && adjustments?.iraContributions;
   const hsaSourcesChanged = ["income-w2", "personal-info"].includes(sectionId) && adjustments?.hsaAccounts;
   const sourceValuesChanged = guidedSourceValuesChanged(state.sectionData[sectionId as keyof SectionDataMap], data);
+  const niitOtherTaxes = state.sectionData["other-taxes"];
+  const niitSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-social-security", "income-unemployment", "adjustments", "credits", "deductions", "payments", "state-return", "additional-deductions"].includes(sectionId) && niitOtherTaxes?.niitSources;
   const tipSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2"].includes(sectionId) && state.sectionData["additional-deductions"];
   const nextAdditional = sectionId === "additional-deductions" ? data as AdditionalDeductionsData : state.sectionData["additional-deductions"];
   const additionalSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-social-security", "adjustments", "credits", "deductions", "additional-deductions"].includes(sectionId) && nextAdditional?.schedule1A;
@@ -1509,6 +1513,7 @@ export function updateSectionData(
     sectionData: {
       ...state.sectionData,
       [sectionId]: data,
+      ...(niitSourcesChanged && niitOtherTaxes ? { "other-taxes": { ...niitOtherTaxes, niitSources: { ...niitSourcesChanged, sourceFactsConfirmed: null } } } : {}),
       ...((tipSourcesChanged || additionalSourcesChanged) && nextAdditional ? { "additional-deductions": { ...nextAdditional, ...(tipSourcesChanged ? { tipIncomeAccounts: nextAdditional.tipIncomeAccounts?.map(account => ({ ...account, sourceFactsConfirmed: null })) } : {}), ...(additionalSourcesChanged ? { schedule1A: { ...additionalSourcesChanged, sourceFactsConfirmed: null } } : {}) } } : {}),
       ...(mortgageSourcesChanged ? { deductions: { ...mortgageSourcesChanged, mortgageEntries: mortgageSourcesChanged.mortgageEntries?.map(entry => ({ ...entry, sourceFactsConfirmed: null })), ...(mortgageSourcesChanged.mortgageWorksheet ? { mortgageWorksheet: { ...mortgageSourcesChanged.mortgageWorksheet, sourceFactsConfirmed: null } } : {}) } } : {}),
       ...(ohioInterestChanged && ohioStateReturn ? { "state-return": { ...ohioStateReturn, ohioInterestAllocation: { ...ohioInterestChanged, sourceFactsConfirmed: null } } } : {}),
@@ -1872,7 +1877,8 @@ export function validateSection(
       });
     }
     case "other-taxes":
-      return validateRequiredFacts(householdFactErrors(getSectionData(state, "other-taxes"), state.taxYear));
+      return validateRequiredFacts({ ...householdFactErrors(getSectionData(state, "other-taxes"), state.taxYear),
+        ...guidedNiitFactErrors(getSectionData(state, "other-taxes")?.niitSources, getSectionData(state, "income-retirement")?.entries, state.taxYear, state.segmentation.filingStatus) });
     case "payments":
       return validatePaymentsSection(getSectionData(state, "payments"), state.taxYear);
     case "review":

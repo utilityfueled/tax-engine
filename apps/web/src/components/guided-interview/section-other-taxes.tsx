@@ -1,11 +1,13 @@
 "use client";
 
 import { HouseholdSourceDetails } from "./household-source-details";
+import { NiitSourceDetails } from "./niit-source-details";
 import { RetroShell } from "@/components/retro-shell";
 import { formatGuidedCurrency, parseGuidedDisplayAmount } from "@/lib/guided-currency";
 import type { GuidedPreviewMetrics } from "@/lib/guided-interview-bridge";
 import {
   type OtherTaxesData,
+  type RetirementEntryData,
   emptyOtherTaxesData,
 } from "@/lib/guided-interview-flow";
 
@@ -56,12 +58,14 @@ export function SectionOtherTaxes({
   hasSelfEmployment,
   hasInvestments,
   guidedPreview,
+  retirementEntries,
   onDataChange,
 }: {
   data: OtherTaxesData | undefined;
   hasSelfEmployment: boolean;
   hasInvestments: boolean;
   guidedPreview: GuidedPreviewMetrics | null;
+  retirementEntries?: RetirementEntryData[];
   onDataChange: (data: OtherTaxesData) => void;
 }) {
   const current = data ?? emptyOtherTaxesData;
@@ -70,7 +74,7 @@ export function SectionOtherTaxes({
     <RetroShell title="Other Taxes" eyebrow="OTHER TAXES">
       <div className="guided-question">
         <p className="guided-prompt">
-          These taxes are computed automatically from the income you&apos;ve already entered.
+          Review additional taxes and complete any source worksheets that apply.
         </p>
         <p className="guided-hint">
           Review each item below. The engine calculates the exact amounts — these
@@ -109,6 +113,8 @@ export function SectionOtherTaxes({
             )}
           </div>
         </fieldset>
+
+        <NiitSourceDetails data={current.niitSources} entries={retirementEntries} onChange={niitSources => onDataChange({ ...current, niitSources })} />
 
         <details className="guided-expand">
           <summary className="guided-expand-trigger">Household employment tax</summary>

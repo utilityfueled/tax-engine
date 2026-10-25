@@ -1170,9 +1170,9 @@ describe("investment section routing", () => {
     };
     const progress = computeFlowProgress(state);
     expect(progress.completedSections).toBe(3);
-    // personal, w2, investments, deductions, credits, payments, review, final-review = 8
-    expect(progress.totalSections).toBe(8);
-    expect(progress.percentComplete).toBe(38);
+    // personal, w2, investments, deductions, credits, other-taxes, payments, review, final-review = 9
+    expect(progress.totalSections).toBe(9);
+    expect(progress.percentComplete).toBe(33);
   });
 });
 

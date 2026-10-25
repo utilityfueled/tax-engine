@@ -63,7 +63,8 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
     if (filingStatus && filingStatus !== "mfj" && entry.accountHolder === "spouse") fail("owner", "A spouse's retirement income requires a joint return or their separate return.");
     const code = entry.distributionCode.trim().toUpperCase();
     if (!/^[1-9ABCDEFGHJKLMNPQRSTUWY]{1,2}$/.test(code)) fail("code", "Enter the actual Form 1099-R distribution code from Box 7 (2026 Box 7a).");
-    else if (!["1", "2", "4", "7", "G", "H"].includes(code)) fail("code", "This distribution code needs its actual basis, Roth, disability, QCD or other special worksheet; the ordinary guided route cannot calculate it yet.");
+    else if (!["1", "2", "4", "7", "G", "H", "1D", "2D", "4D", "7D", "D1", "D2", "D4", "D7"].includes(code)) fail("code", "This distribution code needs its actual basis, Roth, disability, QCD or other special worksheet; the ordinary guided route cannot calculate it yet.");
+    if (code.includes("D") && (entry.isIraSepSimple !== false || entry.eligibleGovernmental457bPlan !== false)) fail("nonqualified-plan", "Code D identifies a nonqualified source; reconcile the actual IRA and governmental-plan classifications.");
     if (entry.requiresIraConfirmation) fail("isIraSepSimple", "Reconfirm the actual IRA checkbox; older versions prefilled an unchecked answer.");
     if (entry.requiresCodeConfirmation) fail("code", "Reconfirm the saved distribution code from the actual Form 1099-R; older versions prefilled code 7.");
     for (const [field, label] of [["grossDistribution", "gross distribution"], ...(requireTaxableAmount ? [["taxableAmount", "taxable amount; unknown amounts need their actual worksheet"]] : []), ["federalWithheld", "federal tax withheld"], ...retirementSourceAmounts] as [keyof RetirementEntryData, string][]) {

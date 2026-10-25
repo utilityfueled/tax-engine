@@ -20,6 +20,7 @@ import { buildSavingsBondInputs, savingsBondFactErrors } from "./guided-savings-
  */
 
 import Decimal from "decimal.js";
+import { buildGuidedNiitSources, guidedNiitFactErrors } from "./guided-niit-facts";
 import { parseGuidedCurrency, hasGuidedCurrency, formatGuidedDollars, sumGuidedDisplayAmounts } from "./guided-currency";
 import { childCreditExclusionValues, dependentFactErrors, personalFactErrors } from "./guided-taxpayer-facts";
 import { buildVehicleCreditInput, vehicleFactErrors } from "./guided-vehicle-facts";
@@ -431,6 +432,7 @@ export function buildRetirementInputs(entries: RetirementEntryData[] | undefined
     .map((e) => ({
       payer: e.payer.trim(),
       payerTin: e.payerTin?.trim(), accountHolder: e.accountHolder || undefined,
+      accountReference: e.accountReference?.trim() || undefined,
       grossDistribution: toDecimalString(e.grossDistribution),
       taxableAmount: hasEnteredAmount(e.taxableAmount) ? toDecimalString(e.taxableAmount) : undefined,
       federalWithheld: toDecimalString(e.federalWithheld),
@@ -640,6 +642,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     assertKnownFacts(educatorFactErrors(adjustmentData, segmentation.filingStatus, state.taxYear, segmentation.lifeEvents.includes("educator-expenses")));
     assertKnownFacts(hsaFactErrors(adjustmentData?.hsaAccounts, segmentation.filingStatus, state.taxYear, w2Data?.entries ?? [], personalInfo, segmentation.lifeEvents.includes("hsa-contributions")));
     assertKnownFacts(householdFactErrors(otherTaxesData, state.taxYear));
+    assertKnownFacts(guidedNiitFactErrors(otherTaxesData?.niitSources, retirementData?.entries, state.taxYear, segmentation.filingStatus));
     assertKnownFacts(statePaymentFactErrors(stateReturnData, state.taxYear, segmentation.stateCode));
     assertKnownFacts(careBenefitsFactErrors(creditsData?.dependentCareBenefits, state.taxYear, segmentation.filingStatus, careBenefitSources));
     assertKnownFacts(careFactErrors(creditsData?.dependentCare, segmentation.filingStatus, { data: creditsData?.dependentCareBenefits, year: state.taxYear, sources: careBenefitSources }));
@@ -741,6 +744,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     form1099Div,
     form1099B,
     form1099R,
+    form8960Sources: buildGuidedNiitSources(otherTaxesData?.niitSources, retirementData?.entries, state.taxYear, segmentation.filingStatus),
     formSSA1099,
     formRRB1099,
     socialSecurityFacts: formSSA1099.length + formRRB1099.length ? { puertoRicoIncomeExclusion: toDecimalString(socialSecurityData?.puertoRicoIncomeExclusion), americanSamoaIncomeExclusion: toDecimalString(socialSecurityData?.americanSamoaIncomeExclusion), sourceFactsConfirmed: socialSecurityData?.sourceFactsConfirmed ?? undefined } : undefined,

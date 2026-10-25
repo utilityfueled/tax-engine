@@ -1,7 +1,7 @@
 # Ordinary NIIT source completion
 
-Status: implementation and local verification complete for the bounded source
-methods below; exact commit verification and intake commit references follow.
+Status: core committed as `a6c5f3da3b833622f12bc7bf1a201655a2e396c4`;
+guided intake implementation and isolated verification are complete.
 No tax-year, filing, physical-form qualification, model or deployment gate changes.
 
 ## Sources and decisions
@@ -60,6 +60,12 @@ allocations 2,000.25 + 500.25 round once to 2,501. Thus AGI is 280,000, NII is
 27,499 and NIIT is 1,045 (27,499 × 0.038 = 1,044.962). Both supported calculation
 years exercise this oracle without enabling the 2026 production gate.
 
+The core commit was checked from immutable tree
+`f445a8dd8193f1336a467e51509a70689ba2bb24`: 2,879 tests in 90 files passed,
+root types passed, all 4,038 spec references resolved, and scoped lint had zero
+errors with four existing federal non-null assertion warnings. The staged code
+excluded concurrent Marketplace and private-activity-bond work.
+
 Local evidence is under `.local/upgrade-evidence/`:
 
 - `niit-account-consumers.log`: 2,885 tests in 92 files passed after the final
@@ -83,6 +89,16 @@ records. A prior invalid nonqualified Simplified Method fixture now states its
 actual reported taxable amount, preserving its original numerical oracle.
 Two unrelated owner-separated Form 5329 fixtures use explicit lower synthetic
 wages so they remain below NIIT thresholds; all their tax assertions are retained.
+
+The guided implementation was checked separately from immutable tree
+`1181285e3c24212418af4cd1d9edeba0cd00a47c`: 687 tests in 53 files passed,
+root and web types passed, all 4,044 spec references resolved, and scoped lint
+had zero errors. Its 15 warnings occur on unchanged existing lines. Evidence:
+`niit-ui-staged-tests.log`, `niit-ui-staged-types.log`,
+`niit-ui-staged-web-types.log`, `niit-ui-staged-spec.log`, and
+`niit-ui-staged-lint.log`. This evidence paragraph was added after those checks;
+no implementation changed. Concurrent PAB, Marketplace and saved-bundle edits
+were excluded from this isolated tree.
 
 ## Intake and remaining boundaries
 
