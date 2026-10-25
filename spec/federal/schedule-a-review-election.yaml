@@ -1,0 +1,11 @@
+form: "Schedule A review election"
+fullName: "Actual itemization election on physical line18"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i1040sca"
+retrievedAt: "2026-10-25"
+reviewStatus: "independent-review-pending"
+lines:
+  - line: "18"
+    description: "Elect itemized deductions below the actual standard deduction"
+    formula: "Final2025 ScheduleAline18 is checked only for an actual itemized election, canonical deductionUsed=itemized and canonical itemizedDeductions below standardDeduction. Automatic/standard choices and an itemized amount at or above the actual standard amount leave it unchecked. No new election is inferred from the review request."
+    testRef: "tests/pdf/schedule-a-election.test.ts::maps only the actual election to itemize below the standard deduction"

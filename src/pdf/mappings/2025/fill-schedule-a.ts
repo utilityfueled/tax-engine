@@ -249,6 +249,11 @@ export async function fillScheduleA(
   // ── Total Itemized Deductions (Line 17) ──
   setCurrencyField(form, F.line17, sa.totalItemized);
 
+  // Line 18 records the taxpayer's actual election to itemize below standard.
+  setCheckBox(form, F.line18Checkbox, input.deductionElection === "itemized"
+    && result.deductionUsed === "itemized"
+    && result.itemizedDeductions.lt(result.standardDeduction));
+
   return doc;
 }
 
