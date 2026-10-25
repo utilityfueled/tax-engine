@@ -50,11 +50,11 @@ export interface Form8801Input {
   sourceFactsComplete?: boolean;
   priorYearFilingStatus: FilingStatus;
   /** Legacy2025 alias; source-backed calculations use actual6251 line1+2e. */
-  priorYearTaxableIncome: Decimal;
+  priorYearTaxableIncome?: Decimal;
   priorYearExclusionItemAdjustments: Decimal;
   priorYearAMT: Decimal;
   /** Legacy2025 alias; source-backed calculations use actual6251 line10. */
-  priorYearRegularTax: Decimal;
+  priorYearRegularTax?: Decimal;
   unusedMinimumTaxCreditCarryforward?: Decimal;
   /** Legacy2025 name; caller must already subtract the line22 allowable credits. */
   currentYearRegularTaxBeforeCredits?: Decimal;

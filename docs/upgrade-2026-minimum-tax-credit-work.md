@@ -20,4 +20,12 @@ Historical expected results were corrected against the actual prior worksheet, i
 
 ## Remaining work and evidence limits
 
-Federal orchestration and exact line22 credit ordering are owned by the federal integration agent; the current-source contract must be passed without defaulting unknown facts. Review PDF line-source mapping follows as a separate commit. Guided collection of these actual prior-return worksheets is still required. This module consumes completed exclusion-only MTCNOLD/MTFTCE worksheets; it does not itself prepare those ancillary source worksheets. Estates/trusts are outside the individual filing-status engine. Final2026 instructions/templates, independent tax review and filing qualification remain pending; current output remains review-only.
+Federal orchestration and exact line22 credit ordering are owned by the federal integration agent; the current-source contract must be passed without defaulting unknown facts. Review PDF line-source mapping is implemented in the follow-up below. Guided collection of these actual prior-return worksheets is still required. This module consumes completed exclusion-only MTCNOLD/MTFTCE worksheets; it does not itself prepare those ancillary source worksheets. Estates/trusts are outside the individual filing-status engine. Final2026 instructions/templates, independent tax review and filing qualification remain pending; current output remains review-only.
+
+## Audited review summary follow-up
+
+Calculation and schema package: `a44adbb`. The review summary now uses the actual official lines 1–26 and all applicable Part III lines 27–55, checks each required audit for uniqueness/finiteness, and reconciles the result totals. It shows the calculation and prior source years, distinguishes unverified historical inputs, and rejects the unavailable 2026 mapping. Every page receives the visible review-only notice.
+
+Verified source calculations can omit both redundant legacy aliases; a red-first model regression confirms the actual Form 6251 fields suffice. The federal integration owner is connecting the exact after-credit limit and all optional source facts without inventing zeros.
+
+Focused calculation/model/PDF suite: 92 passed; all 56 current spec references resolve; root typecheck and owned lint passed. Three new/updated PDF regressions failed before the mapping correction. Rendered the synthetic five-page `.local/upgrade-evidence/f8801-reference-filled.pdf`, inspected first and final pages, and extracted text from every page to confirm the review notice. No filing form is qualified by this rendering evidence.

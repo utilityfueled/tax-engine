@@ -1,3 +1,5 @@
+import Decimal from "decimal.js";
+import { assertPdfExportAllowed, markReviewPdf } from "../../export-policy.js";
 import { mkdir, writeFile } from "fs/promises";
 import { join } from "path";
 import {
@@ -17,25 +19,7 @@ const BODY_FONT_SIZE = 10;
 const HEADER_COLOR = rgb(0.16, 0.16, 0.16);
 const WARNING_COLOR = rgb(0.62, 0.19, 0.14);
 
-const INCLUDED_FORM_8801_LINES = [
-  "1",
-  "3",
-  "9",
-  "10",
-  "11",
-  "12",
-  "13",
-  "14",
-  "15",
-  "16",
-  "17",
-  "18",
-  "22",
-  "23",
-  "24",
-  "25",
-  "26",
-] as const;
+const INCLUDED_FORM_8801_LINES = Array.from({ length: 55 }, (_, index) => String(index + 1));
 
 const INCLUDED_FORM_8801_LINE_SET = new Set<string>(INCLUDED_FORM_8801_LINES);
 
@@ -63,6 +47,7 @@ export interface Form8801ReferenceSummary {
 
 function sanitizePdfText(text: string) {
   return text
+    .replace(/\b(Form|Schedule|line|year)(?=\d)/gi, "$1 ")
     .replace(/→/g, "->")
     .replace(/[−–—]/g, "-")
     .replace(/[^\x20-\x7E\n\t]/g, "");
@@ -129,19 +114,37 @@ function formatValue(line: CalculatedLine) {
 }
 
 function getReferenceLines(result: Form8801Result) {
-  return result.lines
-    .filter((line) => INCLUDED_FORM_8801_LINE_SET.has(line.line))
-    .sort(
-      (left, right) => INCLUDED_FORM_8801_LINES.indexOf(left.line as typeof INCLUDED_FORM_8801_LINES[number])
-        - INCLUDED_FORM_8801_LINES.indexOf(right.line as typeof INCLUDED_FORM_8801_LINES[number]),
-    );
+  const byLine = new Map<string, CalculatedLine>();
+  for (const line of result.lines) {
+    if (line.form !== "Form 8801" || !INCLUDED_FORM_8801_LINE_SET.has(line.line)) continue;
+    if (byLine.has(line.line) || !Decimal.isDecimal(line.value) || !line.value.isFinite()) throw new Error(`Form 8801 reference requires unique finite audit line ${line.line}`);
+    byLine.set(line.line, line);
+  }
+  const hasPartIII = INCLUDED_FORM_8801_LINES.slice(26).some(line => byLine.has(line));
+  const required = INCLUDED_FORM_8801_LINES.slice(0, hasPartIII ? 55 : 26);
+  for (const line of required) if (!byLine.has(line)) throw new Error(`Form 8801 reference is missing audit line ${line}`);
+  for (const [line, total] of [
+    ["4", result.exclusionOnlyAMTI], ["9", result.exemption], ["10", result.amtBaseOnExclusions],
+    ["11", result.exclusionOnlyTMT], ["13", result.tentativeMinimumTaxOnExclusionItems],
+    ["15", result.netMinTaxOnExclusionItems], ["18", result.minTaxCreditFromPriorYear],
+    ["24", result.currentYearLimitation], ["25", result.creditAllowed], ["26", result.carryforwardToNextYear],
+  ] as const) if (!byLine.get(line)?.value.eq(total)) throw new Error(`Form 8801 audit line ${line} disagrees with its calculated total`);
+  const combined = byLine.get("21");
+  if (!combined || !Decimal.max(0, combined.value).eq(result.totalAvailableCredit)) throw new Error("Form 8801 audit line21 disagrees with the usable credit pool");
+  return required.map(line => {
+    const entry = byLine.get(line);
+    if (!entry) throw new Error(`Form 8801 reference is missing audit line ${line}`);
+    return entry;
+  });
 }
 
 export function buildForm8801ReferenceSummary(result: Form8801Result): Form8801ReferenceSummary {
+  assertPdfExportAllowed(2025, result.taxYear);
+  if (result.priorYear !== 2024) throw new Error("Form 8801 prior source year must be2024 for this2025 review mapping");
   return {
     title: "Form 8801 Prior Year Minimum Tax Credit Reference Summary",
     warningLabel: "REFERENCE SUMMARY ONLY",
-    introduction: "Computed from supported prior-year AMT credit inputs and the engine-calculated Form 8801 limitation lines.",
+    introduction: `Tax year 2025; prior source year 2024. ${result.sourceFactsVerified ? "Computed from confirmed actual prior-return source worksheets" : "Computed from unverified historical compatibility inputs"}. Values below copy the Form 8801 audit; current-year credit flows to Schedule 3 line 6b.`,
     lines: getReferenceLines(result).map((line) => ({
       line: line.line,
       description: line.description,
@@ -229,9 +232,11 @@ export async function fillForm8801Reference(
   y -= 16;
 
   for (const line of summary.lines) {
-    if (y < 90) {
-      newPage();
-    }
+    const maxWidth = PAGE_WIDTH - PAGE_MARGIN * 2;
+    const needed = wrapText(`Line ${line.line}: ${line.description}`, bold, BODY_FONT_SIZE, maxWidth).length * 14
+      + wrapText(`Value: ${line.value}`, regular, BODY_FONT_SIZE, maxWidth - 12).length * 13
+      + wrapText(`Formula: ${line.formula}`, regular, BODY_FONT_SIZE, maxWidth - 12).length * 13 + 10;
+    if (y - needed < PAGE_MARGIN) newPage();
 
     y = drawWrappedText(page, `Line ${line.line}: ${line.description}`, {
       font: bold,
@@ -287,6 +292,7 @@ export async function fillForm8801Reference(
     });
   }
 
+  await markReviewPdf(doc);
   await mkdir(outputDir, { recursive: true });
   const outputPath = join(outputDir, FORM_8801_REFERENCE_FILENAME);
   await writeFile(outputPath, await doc.save());

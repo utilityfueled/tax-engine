@@ -15,6 +15,10 @@ it("preserves unknown actual worksheet facts and original-source completeness", 
   expect(complete.priorYearMinimumTaxForeignTaxCredit).toBe("0");
   expect(complete.priorYearFiledForm2555).toBe(false);
   expect(complete.priorYear).toBe(2025);
+  const actualOnly = Form8801Schema.parse({ ...complete, priorYearTaxableIncome: undefined, priorYearRegularTax: undefined });
+  expect(actualOnly.priorYearTaxableIncome).toBeUndefined();
+  expect(actualOnly.priorYearRegularTax).toBeUndefined();
+  expect(actualOnly.sourceFactsComplete).toBe(true);
 });
 it("retains actual partial capital and foreign worksheet sources without manufacturing amounts", () => {
   const facts = Form8801Schema.parse({ ...legacy, priorYearCapitalGainsWorksheet: { method: "schedule_d", preferentialIncome: "15000", ordinaryIncomeForZeroRate: "45000", ordinaryIncomeForFifteenRate: "35000" }, priorYearForeignEarnedIncome: { form2555Lines45And50: "200000", disallowedDeductions: "10000", capitalGainAdjustmentsConfirmed: false } });

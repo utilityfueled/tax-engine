@@ -23,7 +23,7 @@ function line(result: ReturnType<typeof calculateForm8801>, number: string): str
 
 describe("Form8801 actual source years and worksheets", () => {
   it("uses actual prior return lines and the 2025 tables for a 2026 credit", () => {
-    const result = calculateForm8801(fixture({ priorYearTaxableIncome: d(1), priorYearRegularTax: d(1) }));
+    const result = calculateForm8801(fixture({ priorYearTaxableIncome: undefined, priorYearRegularTax: undefined }));
     expect(result.taxYear).toBe(2026);
     expect(result.priorYear).toBe(2025);
     expect(result.sourceFactsVerified).toBe(true);

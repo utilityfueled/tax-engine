@@ -33,6 +33,7 @@ function makeInput(overrides: Partial<Form8801Input> = {}): Form8801Input {
   const special = input.priorYearUnrecapturedSection1250Gain ?? d(0);
   const collectibles = input.priorYearCollectiblesGain ?? d(0);
   if (qd.plus(gain).gt(0) && input.priorYearCapitalGainsWorksheet === undefined) {
+    if (input.priorYearTaxableIncome === undefined) throw new Error("Historical fixture requires actual taxable income");
     const total = qd.plus(gain);
     const preferential = total.minus(Decimal.min(gain, special.plus(collectibles)));
     const ordinaryZero = Decimal.max(0, input.priorYearTaxableIncome.minus(preferential));

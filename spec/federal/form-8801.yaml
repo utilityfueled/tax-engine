@@ -17,7 +17,8 @@ notes: |
   amounts must explicitly confirm the required capital-gain-excess adjustments.
   Tax2026 requires actual source year, all applicable source amounts and known
   Form2555/1040NR/capital-gain applicability; omitted amounts are not assumed zero.
-  Legacy tax2025 simple inputs remain unverified compatibility calculations. Positive
+  Verified actual6251 sources do not require redundant legacy taxable-income or
+  regular-tax aliases. Legacy tax2025 simple inputs remain unverified compatibility calculations. Positive
   legacy capital-gain amounts require actual worksheet inputs, never AMT-base stacking.
   Strict source fields: priorYear, sourceFactsConfirmed, priorYearForm6251Line1And2e,
   priorYearMinimumTaxCreditNOLDeduction, priorYearMinimumTaxForeignTaxCredit,
@@ -29,6 +30,9 @@ notes: |
   priorYearCapitalGainsWorksheet {method, preferentialIncome, ordinaryIncomeForZeroRate,
   ordinaryIncomeForFifteenRate, section1250Gain, scheduleDTaxWorksheetLine10}.
 businessRuleValidation:
+  - rule: "audited-review-summary"
+    description: "Copy complete unique finite official line audits, reconcile totals, preserve prior source year and mark every review page; wrong-year mappings fail closed."
+    testRef: "tests/pdf/fill-form-8801.test.ts::copies PartIII audits and marks every page as review-only"
   - rule: "original-source-presence"
     description: "Preserve missing actual facts and keep original defaultable amounts unverified across reparsing."
     testRef: "tests/models/form-8801-source-facts.test.ts::preserves unknown actual worksheet facts and original-source completeness"
@@ -39,6 +43,10 @@ businessRuleValidation:
     description: "The summary is review-only, never an IRS filing form or a qualified2026 artifact."
     testRef: "tests/pdf/fill-form-8801.test.ts::buildForm8801ReferenceSummary keeps the packet artifact reference-only and limited to supported prior-year minimum-tax-credit outputs"
 lines:
+  - line: "return-integration"
+    description: "Actual prior-year sources and final current-year credit limit"
+    formula: "Pass actual taxYear/priorYear, original completeness and confirmed source worksheets without undefined-to-zero coercion; line22=1040line16+Schedule2line1z minus1040line19 and all supported Schedule3credits except minimum-tax credit itself"
+    testRef: "tests/engine/federal-minimum-tax-credit.test.ts::uses actual prior-year worksheet inputs and final current-year credit limitation"
   - line: "1"
     description: "Prior-year Form 6251 taxable-income and NOL-source sum"
     formula: "Actual prior-year Form 6251 line 1 (line 1b for 2025) plus line 2e; never substitute current-year income."

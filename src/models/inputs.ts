@@ -1300,10 +1300,10 @@ export const Form8801Schema = z.preprocess(value => {
 }, z.object({
   sourceFactsComplete: z.boolean().optional(),
   priorYearFilingStatus: FilingStatusSchema,
-  priorYearTaxableIncome: decimal, // Legacy2025 alias only; verified path uses actual6251 sources.
+  priorYearTaxableIncome: decimal.optional(), // Legacy2025 alias only; verified path uses actual6251 sources.
   priorYearExclusionItemAdjustments: optionalDecimal,
   priorYearAMT: optionalDecimal,
-  priorYearRegularTax: decimal, // Legacy2025 alias only; verified path uses actual6251 line10.
+  priorYearRegularTax: decimal.optional(), // Legacy2025 alias only; verified path uses actual6251 line10.
   unusedMinimumTaxCreditCarryforward: optionalDecimal,
   priorYearQualifiedDividends: optionalDecimal,
   priorYearNetLTCG: optionalDecimal,
