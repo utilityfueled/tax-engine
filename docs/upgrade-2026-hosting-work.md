@@ -179,3 +179,16 @@ Web types and scoped lint pass (eight existing-style test non-null warnings, zer
 errors). Evidence: `.local/upgrade-evidence/recovery-ui-{red,green}.log`. UI tests
 use synthetic dependency stubs; core crypto/storage and previously recorded
 Chromium evidence remain separate from external security approval.
+
+## Request-stream lifetime — 2026-10-25
+
+Seven new regressions exposed streams remaining open after size/deadline failures,
+ignored disconnects and JSON media-type prefix lookalikes. Bounded reads now
+cancel their reader on size overflow, timeout or disconnect, release locks and
+listeners, and check UTF-8 byte size in the non-stream fallback. Content-Type
+must have the exact application/json media type; charset parameters still work.
+Errors remain generic and caller disconnects return499 without private reasons.
+
+All150 focused body/input/rate-limit/document-boundary tests pass; web types and
+scoped lint pass. Evidence: `.local/upgrade-evidence/body-lifecycle-{red,green,types}.log`.
+These are in-process synthetic streams, not a staging reverse-proxy load test.

@@ -34,12 +34,14 @@ const BODY_READ_TIMEOUT_MS = 30_000;
  * soon as the cumulative byte count exceeds `maxBodySize` — preventing
  * memory exhaustion from oversized bodies sent without a Content-Length.
  */
-async function readBodyWithSizeLimit(request: Request, maxBodySize: number): Promise<string> {
+async function readBodyWithSizeLimit(request: Request, maxBodySize: number, signal: AbortSignal): Promise<string> {
+  signal.throwIfAborted();
   if (!request.body) {
     // No streaming body (e.g., empty body or test mock) — fall back
     const text = await request.text();
 
-    if (text.length > maxBodySize) {
+    signal.throwIfAborted();
+    if (new TextEncoder().encode(text).byteLength > maxBodySize) {
       throw new BodyTooLargeError();
     }
 
@@ -50,10 +52,13 @@ async function readBodyWithSizeLimit(request: Request, maxBodySize: number): Pro
   const decoder = new TextDecoder();
   const chunks: string[] = [];
   let totalBytes = 0;
+  const cancel = () => { void reader.cancel().catch(() => {}); };
+  signal.addEventListener("abort", cancel, { once: true });
 
   try {
     while (true) {
       const { done, value } = await reader.read();
+      signal.throwIfAborted();
 
       if (done) {
         break;
@@ -62,6 +67,7 @@ async function readBodyWithSizeLimit(request: Request, maxBodySize: number): Pro
       totalBytes += value.byteLength;
 
       if (totalBytes > maxBodySize) {
+        cancel();
         throw new BodyTooLargeError();
       }
 
@@ -71,6 +77,7 @@ async function readBodyWithSizeLimit(request: Request, maxBodySize: number): Pro
     // Flush the decoder
     chunks.push(decoder.decode());
   } finally {
+    signal.removeEventListener("abort", cancel);
     reader.releaseLock();
   }
 
@@ -89,12 +96,17 @@ export async function safeReadTextBody(
   maxBodySize: number,
   timeoutMs: number = BODY_READ_TIMEOUT_MS
 ): Promise<SafeTextReadOutcome> {
+  if (request.signal?.aborted) {
+    void request.body?.cancel().catch(() => {});
+    return { ok: false, error: "Request cancelled.", status: 499 };
+  }
   const contentLength = request.headers.get("content-length");
 
   if (contentLength) {
     const declaredSize = parseInt(contentLength, 10);
 
     if (!Number.isNaN(declaredSize) && declaredSize > maxBodySize) {
+      void request.body?.cancel().catch(() => {});
       return {
         ok: false,
         error: `Request body too large. Maximum allowed size is ${formatBytes(maxBodySize)}.`,
@@ -103,10 +115,14 @@ export async function safeReadTextBody(
     }
   }
 
+  const controller = new AbortController();
+  const cancel = () => controller.abort();
+  request.signal?.addEventListener("abort", cancel, { once: true });
   try {
-    const text = await withTimeout(readBodyWithSizeLimit(request, maxBodySize), timeoutMs);
+    const text = await withTimeout(readBodyWithSizeLimit(request, maxBodySize, controller.signal), timeoutMs, cancel);
     return { ok: true, text };
   } catch (error) {
+    if (request.signal?.aborted) return { ok: false, error: "Request cancelled.", status: 499 };
     if (error instanceof BodyTooLargeError) {
       return {
         ok: false,
@@ -120,13 +136,15 @@ export async function safeReadTextBody(
       error: "Failed to read request body.",
       status: 400
     };
+  } finally {
+    request.signal?.removeEventListener("abort", cancel);
   }
 }
 
 /** Races a promise against a timeout. Rejects with an error if the timeout fires first. */
-function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+function withTimeout<T>(promise: Promise<T>, ms: number, cancel: () => void): Promise<T> {
   return new Promise<T>((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error("Body read timed out.")), ms);
+    const timer = setTimeout(() => { cancel(); reject(new Error("Body read timed out.")); }, ms);
 
     promise.then(
       (value) => { clearTimeout(timer); resolve(value); },
@@ -143,7 +161,7 @@ function hasJsonContentType(request: Request): boolean {
   }
 
   // Accept "application/json" and "application/json; charset=utf-8" etc.
-  return contentType.toLowerCase().trimStart().startsWith("application/json");
+  return contentType.split(";", 1)[0]?.trim().toLowerCase() === "application/json";
 }
 
 export async function safeParseJsonBody(
