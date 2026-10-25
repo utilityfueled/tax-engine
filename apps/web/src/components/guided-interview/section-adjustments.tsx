@@ -1,6 +1,7 @@
 "use client";
 
 import { ForeignIncomeDetails } from "./foreign-income-details";
+import { NetOperatingLossDetails } from "./net-operating-loss-details";
 import { HealthInsuranceSourceDetails } from "./health-insurance-source-details";
 import type { HealthInsuranceSourceOption } from "@/lib/guided-health-insurance-facts";
 import type { MarketplacePolicyOption } from "@/lib/guided-marketplace-health-facts";
@@ -95,6 +96,7 @@ export function SectionAdjustments({
         {(hasHealthInsurance || hasSelfEmployment || healthInsuranceSources?.length || current.healthInsuranceFacts || current.selfEmployedHealthInsurance.trim()) && <HealthInsuranceSourceDetails data={current.healthInsuranceFacts} sources={healthInsuranceSources} marketplacePolicies={marketplacePolicies} onChange={healthInsuranceFacts => onDataChange({ ...current, healthInsuranceFacts })} />}
 
         <ForeignIncomeDetails data={current.foreignIncome} sources={foreignIncomeSources} onChange={foreignIncome => onDataChange({ ...current, foreignIncome })} />
+        <NetOperatingLossDetails data={current.netOperatingLossSources} onChange={netOperatingLossSources => onDataChange({ ...current, netOperatingLossSources })} />
 
         <EducatorSourceDetails sources={current.educatorExpenseSources} taxYear={taxYear} onChange={educatorExpenseSources => onDataChange({ ...current, educatorExpenseSources })} />
 

@@ -1,0 +1,46 @@
+form: "Guided NOL carry sources"
+fullName: "Actual regular and alternative-tax NOL history intake"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i172"
+sources:
+  - url: "https://www.irs.gov/instructions/i172"
+    section: "Keeping records, carryforward history, changed marital or filing status"
+    retrieved: "2026-10-25"
+  - url: "https://www.irs.gov/instructions/i6251"
+    section: "Line2f independently figured ATNOL adjustments and preferences"
+    retrieved: "2026-10-25"
+  - url: "https://www.irs.gov/instructions/i8960"
+    section: "Line7 applicable portion of a net operating loss deduction"
+    retrieved: "2026-10-25"
+notes: |
+  This collector binds original filed sources and actual historical uses to the
+  existing canonical NOL method. It never accepts a current deduction, modified
+  taxable-income override or closing carry balance. Regular and AMT sources are
+  independent. Explicit empty lists represent reviewed absence; omission stays
+  unknown. Changed membership, EBL QBI origin, estate, farming and differing AMT
+  basis methods remain explicit software boundaries until implemented.
+lines:
+  - line: "canonical"
+    description: "Independent filed histories reach regular, AMT and Section1411 worksheets"
+    formula: "Actual original60000 less prior use5000 and reduction1000 gives54000 opening; independent AMT40000 remains distinct; originating1411loss18000 yields0.3 of the actual regular deduction"
+    testRef: "tests/guided-interview/guided-net-operating-loss.test.ts::routes actual independent regular and AMT carry histories into the return"
+  - line: "unknowns"
+    description: "Missing facts never become zero or copied AMT sources"
+    formula: "Require original sources, complete historical years and explicit reviewed lists, while preserving exact filed whole dollars without rounding unknown cents"
+    testRef: "tests/guided-interview/guided-net-operating-loss.test.ts::preserves actual filed values and rejects incomplete or inconsistent histories"
+  - line: "identity"
+    description: "Continuing taxpayer source identity and method eligibility remain explicit"
+    formula: "Actual source year, household identity and membership must reconcile; no inferred split or unsupported historical method"
+    testRef: "tests/guided-interview/guided-net-operating-loss.test.ts::requires actual continuing membership and supported loss character"
+  - line: "confirmation"
+    description: "Source edits revoke confirmation without erasing evidence"
+    formula: "Actual income, identity and carry edits revoke both regular and AMT confirmation; confirmation metadata changes do not create cycles"
+    testRef: "tests/guided-interview/guided-net-operating-loss.test.ts::invalidates changed source facts without inventing current deductions"
+  - line: "controls"
+    description: "Blank, zero, source history and independent AMT records remain editable"
+    formula: "Adding a source creates unknowns; explicit no-history actions create empty lists; monetary controls preserve exact values and user removal leaves unrelated facts unchanged"
+    testRef: "tests/apps/web/net-operating-loss-interactions.test.tsx::collects independent carry histories without guessed balances or confirmations"
+  - line: "persistence"
+    description: "Actual loss sources survive desktop and mobile reopening"
+    formula: "Edited source history, exact opening balances and independent AMT sources persist; unknown stays blank and confirmations can complete without cycles; private source references and taxpayer ID stay out of request bodies"
+    testRef: "apps/web/tests/guided-net-operating-loss.spec.ts::preserves independent NOL histories at"
