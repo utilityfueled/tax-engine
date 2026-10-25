@@ -2,6 +2,7 @@ import Decimal from "decimal.js";
 import { officialSampleDocumentFixtures } from "@tax-engine/contracts";
 import type { WorkspaceDocumentRecord, WorkspaceReturnSummary, WorkspaceStructuredFactMachineValue, WorkspaceStructuredFactRecord } from "@tax-engine/contracts";
 import { TaxYearInputSchema, type TaxYearInput } from "../../../src/models/inputs";
+import { calculateBrokerageWithholding } from "../../../src/engine/forms/form-1099-b-withholding";
 
 export type WorkspaceSourceCollection = "w2s" | "form1099Int" | "form1099Div" | "form1099B" | "form1099Nec" | "form1099G" | "form1099OID" | "form1099R" | "form1099SA" | "formSSA1099" | "form1098E" | "form1095A";
 export interface WorkspaceSourceBinding {
@@ -191,12 +192,14 @@ function allContextSourcesComplete(original: TaxYearInput, parsed: TaxYearInput)
       const raw = record(actual[index]); const target = record(validated[index]);
       if (!raw || !target || !sourceTargetConsistent(kind, target, parsed)) return false;
       if (kind === "1099-b-transaction") {
-        if (typeof raw.broker !== "string" || !raw.broker.trim() || !moneyEqual(raw.stateWithheld, raw.stateWithheld) || new Decimal(raw.stateWithheld as string).lt(0) || !Array.isArray(raw.transactions) || raw.transactions.some(transaction => {
+        if (typeof raw.broker !== "string" || !raw.broker.trim() || !moneyEqual(raw.federalWithheld, raw.federalWithheld) || new Decimal(raw.federalWithheld as string).lt(0) || !moneyEqual(raw.stateWithheld, raw.stateWithheld) || new Decimal(raw.stateWithheld as string).lt(0) || !Array.isArray(raw.transactions) || raw.transactions.some(transaction => {
           const source = record(transaction); return !source || !contextSourceComplete(kind, source, original);
         })) return false;
       } else if (!contextSourceComplete(kind, raw, original)) return false;
     }
   }
+  try { calculateBrokerageWithholding(parsed.form1099B, { taxYear: parsed.taxpayer.taxYear, filingStatus: parsed.taxpayer.filingStatus, spousePresent: parsed.taxpayer.spouse !== undefined }); }
+  catch { return false; }
   return true;
 }
 /** Never rebuild a financial return from reduced document summaries or prose answers. */

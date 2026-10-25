@@ -1,4 +1,5 @@
 import { buildGuidedQofFacts } from "./guided-qof-facts";
+import { buildBrokerageWithholdingSource } from "./guided-brokerage-withholding";
 import { buildForeignIncomeInput, foreignIncomeFactErrors } from "./guided-foreign-income";
 import { buildEstimatedTaxFacts, estimatedTaxFactErrors } from "./guided-estimated-tax-facts";
 import { buildMinimumTaxCreditInput, minimumTaxCreditFactErrors } from "./guided-minimum-tax-credit";
@@ -299,6 +300,7 @@ export function buildDividendInputs(entries: DividendEntryData[] | undefined, ta
 export function buildBrokerageInputs(entries: BrokerageEntryData[] | undefined) {
   return (entries ?? []).filter(entry => isStartedInvestment(entry) || entry.transactions.some(isStartedInvestment)).map(entry => ({
     ...investmentSourceInput(entry), broker: entry.broker.trim(),
+    ...buildBrokerageWithholdingSource(entry),
     transactions: entry.transactions.filter(isStartedInvestment).map(transaction => ({
       description: transaction.description.trim(), dateAcquired: transaction.dateAcquired, dateSold: transaction.dateSold,
       proceeds: toOptionalDecimalString(transaction.proceeds), costBasis: toOptionalDecimalString(transaction.costBasis),

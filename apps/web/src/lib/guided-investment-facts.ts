@@ -1,4 +1,6 @@
 import { qofDispositionFactErrors, type QofDispositionData } from "./guided-qof-facts";
+import { buildBrokerageWithholdingSource } from "./guided-brokerage-withholding";
+import { calculateBrokerageWithholding } from "@/engine/forms/form-1099-b-withholding.js";
 import type { BrokerageEntryData, CapitalGainTransactionData, DividendEntryData, FilingStatus, InterestEntryData, StateReturnData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
 import { amountError, hasEnteredAmount, isActualDate } from "./guided-required-facts";
@@ -91,9 +93,8 @@ export function investmentFactErrors(data: InvestmentData | undefined, filingSta
     sourceIdentityErrors(entry, prefix, filingStatus, errors);
     const withholdingError = amountError(entry.federalWithheld, "broker federal withholding");
     if (withholdingError) errors[`${prefix}-federalWithheld`] = withholdingError;
-    rejectUnsupportedAmount(entry.federalWithheld, `${prefix}-federalWithheld`, "Broker federal withholding needs source payment routing that this guided calculation does not yet support.", errors);
     const started = entry.transactions.filter(isStartedInvestment);
-    if (!started.length) errors[`${prefix}-transactions`] = "Enter the actual transaction records.";
+    if (!started.length && !entry.withholdingOnlyOpenShortSale) errors[`${prefix}-transactions`] = "Enter the actual transaction records, or the actual withholding-only open-short-sale source.";
     entry.transactions.forEach((transaction, row) => {
       if (!isStartedInvestment(transaction)) return;
       const tx = `${prefix}-${row}`;
@@ -110,6 +111,14 @@ export function investmentFactErrors(data: InvestmentData | undefined, filingSta
       if (transaction.washSale === false && !errors[`${tx}-washSaleDisallowed`] && !parseGuidedCurrency(transaction.washSaleDisallowed).isZero()) errors[`${tx}-washSaleDisallowed`] = "Reconcile the disallowed loss with the answer that this is not a wash sale.";
     });
   });
+  try {
+    calculateBrokerageWithholding(data.brokerageEntries.filter(entry => isStartedInvestment(entry) || entry.transactions.some(isStartedInvestment)).map(entry => ({
+      ...buildBrokerageWithholdingSource(entry), broker: entry.broker,
+      accountHolder: entry.accountHolder === "primary" || entry.accountHolder === "spouse" ? entry.accountHolder : undefined,
+      stateWithheld: entry.stateTaxReporting === "none" ? "0" : entry.stateWithheld,
+      transactions: entry.transactions.filter(isStartedInvestment),
+    })), { taxYear: taxYear ?? 0, filingStatus: filingStatus === "mfj" ? "married_filing_jointly" : "single", spousePresent: filingStatus === "mfj" });
+  } catch (error) { errors["brokerage-withholding"] = error instanceof Error ? error.message : "Complete the actual brokerage withholding sources."; }
   const sources = [...data.interestEntries.map(entry => ({ ...entry, documentType: "1099-INT", payer: entry.payer })), ...data.dividendEntries.map(entry => ({ ...entry, documentType: "1099-DIV", payer: entry.payer })), ...data.brokerageEntries.map(entry => ({ ...entry, documentType: "1099-B", payer: entry.broker }))];
   for (const [index, extra] of (stateData?.additionalStateWithholdingEntries ?? []).entries()) if (sources.some(source => source.stateTaxReporting === "single" && source.state?.trim().toUpperCase() === extra.state && source.documentType === extra.documentType && source.payer.trim().toLowerCase() === extra.payer.trim().toLowerCase())) errors[`additional-withholding-${index}`] = "This payer and source form already has state withholding in investment income. Reconcile the duplicate entry before calculating.";
   return errors;

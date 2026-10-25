@@ -236,3 +236,19 @@ it("calculates actual OID sources while retaining incomplete legacy evidence as 
   const legacy = TaxYearInputSchema.parse({ ...context.taxInput, form1099OID: [{ payer: oid.payer, originalIssueDiscount: "100" }] });
   expect(buildWorkspaceEnginePreview(documents, summary, facts, undefined, { ...context, taxInput: legacy })).toBeNull();
 });
+
+// Spec: spec/federal/form-1099-b-withholding.yaml, document-completeness.
+it('requires known Box4 for every actual brokerage preview source', () => {
+  const context = actualContext();
+  context.taxInput.form1099B = TaxYearInputSchema.parse({ ...context.taxInput, form1099B: [{ broker: 'Actual source broker', sourceId: 'Original statement', taxYear: 2025, accountHolder: 'primary', federalWithheld: '12.34', stateWithheld: '0', transactions: [{ description: 'Actual sold security', dateAcquired: '2024-01-02', dateSold: '2025-03-02', holdingPeriod: 'long', proceeds: '100', costBasis: '100', basisReportedToIRS: true, digitalAsset: false, washSale: false, washSaleDisallowed: '0', adjustments: '0' }] }] }).form1099B;
+  const original = structuredClone(facts);
+  expect(buildWorkspaceEngineInput(documents, summary, facts, undefined, context)?.taxInput.form1099B[0]?.federalWithheld).toBe('12.34');
+  expect(buildWorkspaceEnginePreview(documents, summary, facts, undefined, context)?.metrics.totalPayments).toBe('6012.34');
+  const broker = context.taxInput.form1099B[0]; if (!broker) throw new Error('Missing source');
+  delete broker.federalWithheld;
+  expect(buildWorkspaceEngineInput(documents, summary, facts, undefined, context)).toBeNull();
+  expect(broker.federalWithheld).toBeUndefined();
+  broker.federalWithheld = '0';
+  expect(buildWorkspaceEngineInput(documents, summary, facts, undefined, context)?.taxInput.form1099B[0]?.federalWithheld).toBe('0');
+  expect(facts).toEqual(original);
+});

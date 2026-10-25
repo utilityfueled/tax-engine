@@ -1,3 +1,4 @@
+import { calculateBrokerageWithholding } from "./forms/form-1099-b-withholding.js";
 import { validateQofDispositionFacts } from "./forms/qof-disposition-facts.js";
 /**
  * Federal tax calculation orchestrator.
@@ -3699,7 +3700,12 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   // Phase 5b: Withholding & Estimated Payments (needed by Form 2210)
   // ═══════════════════════════════════════════════════════════
 
+  const brokerageWithholding = calculateBrokerageWithholding(input.form1099B, {
+    taxYear: year, filingStatus, spousePresent: input.taxpayer.spouse !== undefined,
+  });
+  audit.merge(brokerageWithholding.lines);
   const withholdingFrom1099 = sum(
+    brokerageWithholding.federalWithheld,
     intAgg.federalWithheld,
     divAgg.federalWithheld,
     form1099OID.federalWithheld,
@@ -3716,7 +3722,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   const withholdingFromOtherForms = sum(form8959.withholdingCredit, ...w2gForms.map(f => d(f.federalWithheld)), ...k1FederalWithholding);
   const federalWithholding = sum(w2Agg.federalWithheld, withholdingFrom1099, withholdingFromOtherForms);
   audit.record("1040", "25a", "Federal withholding from Forms W-2", w2Agg.federalWithheld, "Sum W-2 box 2");
-  audit.record("1040", "25b", "Federal withholding from Forms 1099", withholdingFrom1099, "Forms 1099 including Form 1099-K, SSA-1099 and RRB-1099");
+  audit.record("1040", "25b", "Federal withholding from Forms 1099", withholdingFrom1099, "Forms 1099 including original Form1099-B Box4, Form 1099-K, SSA-1099 and RRB-1099");
   audit.record("1040", "25c", "Federal withholding from other forms", withholdingFromOtherForms, "W-2G, reported K-1 federal withholding and Form 8959 line 24");
   audit.record(
     "1040",

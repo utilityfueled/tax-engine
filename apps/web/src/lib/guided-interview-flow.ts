@@ -853,7 +853,13 @@ export const emptyCapitalGainTransaction: CapitalGainTransactionData = {
 
 export interface BrokerageEntryData extends InvestmentSourceData {
   broker: string;
+  sourceId?: string;
+  sourceTaxYear?: string;
   federalWithheld?: string;
+  withholdingOnlyOpenShortSale?: {
+    description: string; openedDate: string;
+    stillOpenAtYearEndConfirmed: boolean | null; otherNumberedBoxesBlankConfirmed: boolean | null;
+  };
   transactions: CapitalGainTransactionData[];
 }
 

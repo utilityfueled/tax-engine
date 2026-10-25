@@ -1,5 +1,6 @@
 "use client";
 import { QofDispositionDetails } from "./qof-disposition-details";
+import { BrokerageWithholdingDetails } from "./brokerage-withholding-details";
 import type { QofDispositionData } from "@/lib/guided-qof-facts";
 import { changePrivateActivitySource } from "@/lib/guided-private-activity-facts";
 
@@ -359,7 +360,7 @@ function BrokerageCard({
       </label>
 
       <InvestmentSourceIdentity data={entry} onChange={patch => onUpdate({ ...entry, ...patch })} />
-      <CurrencyField label="Box 4 broker federal income tax withheld" value={entry.federalWithheld ?? ""} onChange={federalWithheld => onUpdate({ ...entry, federalWithheld })} hint="Enter the actual amount, including zero. Positive broker withholding needs payment routing that this guided path does not yet support." />
+      <BrokerageWithholdingDetails data={entry} onChange={onUpdate} />
 
       <div className="guided-w2-stack" style={{ marginTop: "8px" }}>
         {transactions.map((t, tIndex) => (
@@ -369,7 +370,7 @@ function BrokerageCard({
             transaction={t}
             onUpdate={(field, value) => updateTransaction(tIndex, field, value)}
             onRemove={() => removeTransaction(tIndex)}
-            removable={transactions.length > 1}
+            removable={transactions.length > 1 || entry.withholdingOnlyOpenShortSale !== undefined}
           />
         ))}
       </div>

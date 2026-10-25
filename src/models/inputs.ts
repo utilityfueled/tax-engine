@@ -190,6 +190,14 @@ export const CapitalTransactionSchema = z.object({
 
 export const Form1099BSchema = z.object({
   broker: z.string(),
+  sourceId: z.string().optional(), // Original statement identifier; never a transaction-row identifier.
+  taxYear: z.number().int().optional(),
+  accountReference: z.string().optional(),
+  federalWithheld: decimal.optional(), // Actual Box4; omission remains unknown, not zero.
+  withholdingOnlyOpenShortSale: z.object({
+    description: z.string().optional(), openedDate: z.string().optional(),
+    stillOpenAtYearEndConfirmed: z.boolean().optional(), otherNumberedBoxesBlankConfirmed: z.boolean().optional(),
+  }).strict().optional(),
   payerTin: z.string().optional(), // Broker or payer TIN shown on the recipient copy; used for IL Schedule IL-WIT Column B auto-attachment
   accountHolder: z.enum(["primary", "spouse"]).optional(), // Local owner tag for taxpayer vs spouse on shared state returns / spouse-separated PA Schedule D reporting
   stateWithheld: optionalDecimal, // Box 16 — state income tax withheld
