@@ -298,11 +298,12 @@ describe("workspace engine preview", () => {
       metrics: {
         totalIncome: "55000",
         agi: "55000",
+        // Published 2025 single row [14,250, 14,300): 1,475; 25,000 gain at 0%.
         taxableIncome: "39250",
-        totalTax: "1472",
+        totalTax: "1475",
         totalPayments: "0",
         refund: "0",
-        amountOwed: "1534"
+        amountOwed: "1537"
       },
       highlightedLines: expect.arrayContaining([
         {
@@ -390,7 +391,7 @@ describe("workspace engine preview", () => {
           form: "1040",
           line: "24",
           label: "Total tax",
-          value: "1472",
+          value: "1475",
           formula: expect.stringContaining("Line 22"),
           sourceFactIds: [
             "broker-proceeds:document-detected",
@@ -438,7 +439,7 @@ describe("workspace engine preview", () => {
           form: "1040",
           line: "37",
           label: "Amount you owe",
-          value: "1534",
+          value: "1537",
           formula: "max(0, total tax - total payments + line 38 penalty)",
           sourceFactIds: [
             "broker-proceeds:document-detected",
@@ -553,11 +554,12 @@ describe("workspace engine preview", () => {
       metrics: {
         totalIncome: "110000",
         agi: "110000",
+        // Single row [44,250, 44,300): 5,075 + 45,900 at 15% = 11,960.
         taxableIncome: "94250",
-        totalTax: "11957",
+        totalTax: "11960",
         totalPayments: "0",
         refund: "0",
-        amountOwed: "12458"
+        amountOwed: "12461"
       },
       highlightedLines: expect.arrayContaining([
         {
@@ -655,7 +657,7 @@ describe("workspace engine preview", () => {
           form: "1040",
           line: "24",
           label: "Total tax",
-          value: "11957",
+          value: "11960",
           formula: expect.stringContaining("Line 22"),
           sourceFactIds: [
             "broker-proceeds:document-detected",
@@ -709,7 +711,7 @@ describe("workspace engine preview", () => {
           form: "1040",
           line: "37",
           label: "Amount you owe",
-          value: "12458",
+          value: "12461",
           formula: "max(0, total tax - total payments + line 38 penalty)",
           sourceFactIds: [
             "broker-proceeds:document-detected",
@@ -822,10 +824,11 @@ describe("workspace engine preview", () => {
       metrics: {
         totalIncome: "52000",
         agi: "52000",
+        // Published single row [36,250, 36,300): 4,115; 5,000 withheld leaves 885.
         taxableIncome: "36250",
-        totalTax: "4112",
+        totalTax: "4115",
         totalPayments: "5000",
-        refund: "888",
+        refund: "885",
         amountOwed: "0"
       }
     });
@@ -851,7 +854,7 @@ describe("workspace engine preview", () => {
         form: "1040",
         line: "24",
         label: "Total tax",
-        value: "4112",
+        value: "4115",
         formula: expect.stringContaining("Line 22"),
         sourceFactIds: [
           "wages:document-detected",
@@ -883,7 +886,7 @@ describe("workspace engine preview", () => {
         form: "1040",
         line: "34",
         label: "Overpayment before estimated-tax penalty",
-        value: "888",
+        value: "885",
         formula: "max(0, total payments - total tax)",
         sourceFactIds: [
           "wages:document-detected",
