@@ -47,6 +47,8 @@ import {
   estimateForeignSourceIncomeFromScheduleK1Form1041,
   type FTCCarryforwardEntry,
 } from "./forms/form-1116.js";
+import { calculateForeignTaxDeductionCarryover, type ForeignTaxHypotheticalContext } from "./forms/foreign-tax-deduction-carryover.js";
+import { validateForeignTaxDeductionScope } from "./forms/foreign-tax-deduction-scope.js";
 import { calculateScheduleB } from "./schedules/schedule-b.js";
 import { calculateScheduleC } from "./schedules/schedule-c.js";
 import { calculateScheduleD, recomputeCarryforward } from "./schedules/schedule-d.js";
@@ -238,9 +240,12 @@ interface MarketplaceInterim {
   credit: ReturnType<typeof calculatePremiumTaxCreditReturn>;
   deductions: Omit<MarketplaceOrderedState, "kinds" | "calculating">;
 }
+type ForeignTaxHypotheticalRequest = { purpose: "foreign-deduction-carryover" };
+function calculateFederalTaxCore(input: TaxYearInput, marketplace: undefined, hypothetical: ForeignTaxHypotheticalRequest): ForeignTaxHypotheticalContext;
 function calculateFederalTaxCore(input: TaxYearInput, marketplace: MarketplaceContext & { stage: "worksheet-w" | "maximum" | "ordered" }): MarketplaceInterim;
 function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceContext & { stage: "final" }): TaxReturnResult;
-function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceContext): TaxReturnResult | MarketplaceInterim {
+function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceContext, hypothetical?: ForeignTaxHypotheticalRequest): TaxReturnResult | MarketplaceInterim | ForeignTaxHypotheticalContext {
+  validateForeignTaxDeductionScope(input);
   const ordered = marketplace?.ordered;
   const calculateOrdered = (kind: MarketplaceOrderedKind) => !ordered?.kinds.includes(kind) || ordered.calculating === kind || ordered[kind] !== undefined;
   const year = input.taxpayer.taxYear;
@@ -2867,6 +2872,34 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     }
   }
 
+  // A deduction-year carryover uses the credit-election regular tax and actual
+  // deduction choice, with no second complete return or hypothetical filing tax.
+  const foreignTaxOrdinaryIncomeOnly = totalIncome.eq(sum(totalWages, totalTaxableInterest, totalDividends))
+    && adjustments.isZero() && qualifiedDividends.isZero() && capitalGainLoss.isZero()
+    && nolDeduction.isZero() && qbiDeduction.isZero() && nonitemizerCharitableDeduction.isZero()
+    && additionalDeductions.eq(schedule1A?.seniorDeduction ?? d("0"))
+    && !marketplace && !input.form8962 && !input.form8936 && !input.form2555;
+  if (hypothetical?.purpose === "foreign-deduction-carryover") {
+    if (!foreignTaxOrdinaryIncomeOnly) throw new Error("Foreign carryover requires the supported actual ordinary-income hypothetical method");
+    const sourceLine = (id: string): Decimal => {
+      const matches = schedA.lines.filter(line => line.form === "Sched A" && line.line === id);
+      if (matches.length !== 1) throw new Error(`Foreign carryover requires unique actual ScheduleA line${id}`);
+      return matches[0].value;
+    };
+    return {
+      taxYear: year, filingStatus, totalIncome, agi, totalDeductions: totalDeduction,
+      seniorDeduction: schedule1A?.seniorDeduction ?? d("0"), deductionUsed, deductionAmount, incomeTax,
+      ordinaryIncomeOnly: foreignTaxOrdinaryIncomeOnly,
+      scheduleA: { medical: schedA.medicalDeduction, incomeOrSalesTaxes: sourceLine("5a"),
+        realPropertyTaxes: sourceLine("5b"), personalPropertyTaxes: sourceLine("5c"),
+        saltDeduction: schedA.saltDeduction, salesTaxElected: schedA.salesTaxElected,
+        mortgageInterest: schedA.mortgageInterest, investmentInterest: schedA.investmentInterestDeduction,
+        charitableContributions: schedA.cashCharitable.plus(schedA.nonCashCharitable),
+        otherDeductions: sum(schedA.otherItemizedDeductions, schedA.casualtyLossDeduction, schedA.mortgageInsurancePremiums),
+        itemizedReduction: itemizedDeductionReduction },
+    };
+  }
+
   // ── Aggregate K-1 Box 17 AMT items for Form 6251 ────────
   const k1AmtDepreciation = k1Agg.amtDepreciationAdjustment;
   const k1AmtDisposition = k1Agg.amtAdjustedGainOrLoss;
@@ -3078,14 +3111,26 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
 
   let foreignTaxCredit: Decimal;
   let foreignTaxCreditCarryforward = new Decimal(0);
+  let foreignTaxDeductionCarryover: TaxReturnResult["foreignTaxDeductionCarryover"];
   const foreignTaxCreditCarryforwardByCategory: Record<string, Array<{ taxYear: number; amount: Decimal }>> = {};
   const hasForeignTaxActivity = foreignTaxPaid.greaterThan(0) || hasLegacyCarryforward
     || hasPassiveActivity || hasGeneralActivity;
 
   if (schedA.foreignTaxElection.election === "deduction" || !hasForeignTaxActivity) {
-    // The validated annual deduction choice applies to all current qualified taxes.
-    // Positive existing carryovers require the separate hypothetical-limit method.
+    // The actual annual election remains a deduction, including when standard
+    // deduction is better. Only prior balances can be absorbed or expire here.
     foreignTaxCredit = new Decimal(0);
+    if (input.foreignTaxElection?.deductionYearCarryover) {
+      if (!foreignTaxOrdinaryIncomeOnly) throw new Error("Foreign carryover requires the supported actual ordinary-income hypothetical method");
+      const hypotheticalInput: TaxYearInput = { ...input, foreignTaxElection: {
+        ...input.foreignTaxElection, election: "credit", sources: undefined, deductionYearCarryover: undefined,
+      } };
+      const context = calculateFederalTaxCore(hypotheticalInput, undefined, { purpose: "foreign-deduction-carryover" });
+      foreignTaxDeductionCarryover = calculateForeignTaxDeductionCarryover(input, context);
+      foreignTaxCreditCarryforward = foreignTaxDeductionCarryover.carryforward;
+      Object.assign(foreignTaxCreditCarryforwardByCategory, foreignTaxDeductionCarryover.carryforwardByCategory);
+      audit.merge(foreignTaxDeductionCarryover.lines);
+    }
   } else if (!isMultiCategory) {
     // Single category — backward-compatible path
     const foreignSourceIncome = estimateForeignSourceIncome(input);
@@ -4054,6 +4099,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     })(),
 
     // Sub-results
+    foreignTaxDeductionCarryover,
     scheduleA: schedA,
     schedule1: sched1,
     scheduleB: schedB,

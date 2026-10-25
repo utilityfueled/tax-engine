@@ -1,0 +1,95 @@
+form: "Foreign tax deduction-year carryover worksheet"
+fullName: "Actual hypothetical credit limit and deemed absorption of prior foreign taxes"
+taxYear: 2026
+irsReference: "https://www.irs.gov/publications/p514"
+sources:
+  - url: "https://www.irs.gov/publications/p514"
+    section: "Unused taxes carried to deduction year; continuous joint returns; allocation of deductions"
+    retrieved: "2026-10-25"
+  - url: "https://www.irs.gov/instructions/i1116"
+    section: "Final2025 lines1a–7,18–21; standard/itemized deductions, four-place ratios, senior deduction add-back"
+    retrieved: "2026-10-25"
+  - url: "https://www.irs.gov/instructions/i1116sb"
+    section: "Lines4–5: oldest carry used first; unused tenth-preceding-year amount expires after current use"
+    retrieved: "2026-10-25"
+  - url: "https://www.ecfr.gov/current/title-26/section-1.861-8"
+    section: "(e)(9), (12): unrelated personal deductions and ordinary U.S. charitable contribution allocation"
+    retrieved: "2026-10-25"
+notes: |
+  No credit is claimed and no prior tax is deducted in an elected deduction year.
+  Compute the limit as if credit had been chosen, including recalculated actual
+  deduction selection and regular tax. Never add foreign taxes mechanically to
+  taxable income; deduction selection/limits can change. The private canonical
+  context stops after validated line16 and does not alter original facts.
+  Ordinary passive INT/DIV sources, known continuous individual or same-spouse
+  joint filing history, explicit adjusted per-year/category balances, and no
+  special loss/redetermination accounts are supported here. Foreign qualified
+  dividends/capital adjustments, mixed joint/separate histories, FEIE, foreign
+  branch/treaty/901j/951A categories and other special limits require their own
+  source methods. Preserve those as internal implementation boundaries, not as
+  evidence of qualification. Current eligible source tax is separate from prior
+  carry, and a deduction year never creates new credit carryforward.
+  Actual source cents remain immutable. Country-level physical amounts round
+  once; ratios use four decimal places under the form's at-least-four rule.
+  No existing aggregate carry is assigned an invented origin year or category.
+lines:
+  - line: "sources"
+    description: "Unknown-preserving actual carryover and income source contract"
+    formula: "Require actual year/ref/confirmation/history and adjusted-through-prior-year balances; bind every income record to actual owner,payer,TIN,account,country,reported amount"
+    testRef: "tests/engine/forms/foreign-tax-deduction-carryover.test.ts::preserves unknown carryover facts and rejects stale source records"
+  - line: "1a-7"
+    description: "Actual ordinary foreign taxable income"
+    formula: "Per country: line1a=round(sum actual foreign ordinary income); standard deduction or supported nondirect itemized amounts apportioned by round4(foreign gross/worldwide gross); net foreign taxable income subtracts actual allowed deductions once"
+    testRef: "tests/engine/forms/foreign-tax-deduction-carryover.test.ts::computes the prescribed ordinary-income allocation without a heuristic"
+  - line: "18-21"
+    description: "Hypothetical credit limit"
+    formula: "18=max(0,hypothetical AGI-total deductions+senior deduction);19=min(1,round4(net foreign income/18));21=round(19*hypothetical regular tax); no NIIT or AMT included"
+    testRef: "tests/engine/forms/foreign-tax-deduction-carryover.test.ts::reproduces the IRS deduction-year carryover example"
+  - line: "absorption"
+    description: "Oldest actual category balance absorbed first"
+    formula: "ExcessLimit=max(0,hypothetical limit-current qualified foreign taxes); consume earliest origin first within category; no actual credit or carryover deduction"
+    testRef: "tests/engine/forms/foreign-tax-deduction-carryover.test.ts::absorbs oldest balances and expires the unused tenth-year remainder"
+  - line: "conservation"
+    description: "No new deduction-year carry and no invented source vintage"
+    formula: "Each actual prior balance=absorbed+expired+remaining; general category has zero current capacity in the supported passive-only method; current-year excess creates no new balance"
+    testRef: "tests/engine/forms/foreign-tax-deduction-carryover.test.ts::preserves categories and creates no new carry from current-year excess"
+  - line: "history-and-aliases"
+    description: "Actual history and saved balance consistency"
+    formula: "Require continuous same-spouse joint history for joint returns or no joint history for individual returns; actual raw saved aggregate/by-year/by-category aliases must reconcile when positive; reject future/duplicate/already-expired records"
+    testRef: "tests/engine/forms/foreign-tax-deduction-carryover.test.ts::rejects inconsistent history unsupported methods and carry aliases"
+  - line: "itemized-source-allocation"
+    description: "Ordinary allowed itemized deduction source allocation"
+    formula: "Actual SALT component allocations reconcile5e; supported personal-home/property/sales/medical deductions use gross-income ratio. State tax foreign share uses actual state taxable income beyond U.S. gross income unless specifically exempt. Mortgage uses actual elected permitted method; ordinary non-treaty charitable deduction is U.S.-source under1.861-8(e)(12)."
+    testRef: "tests/engine/forms/foreign-tax-deduction-carryover.test.ts::allocates ordinary itemized costs using actual state income and home sources"
+  - line: "state-source-conflict"
+    description: "No exempt-state foreign-income contradiction"
+    formula: "For supported ordinary sources, a state that specifically exempts foreign income cannot have taxable income above actual U.S. gross income; otherwise require separate state-source reconciliation."
+    testRef: "tests/engine/forms/foreign-tax-deduction-carryover.test.ts::rejects contradictory state exemption and gross-income facts"
+  - line: "canonical-hypothetical"
+    description: "Recompute actual credit-election deduction selection and regular tax"
+    formula: "On immutable actual inputs, change only the annual foreign-tax election in a private canonical pass; stop after validated1040line16. Retain zero actual credit and actual deduction; transfer only independently calculated prior-carry absorption/expiry. Unsupported capital/FEIE/Marketplace/loss/PartI methods reject before recursion."
+    testRef: "tests/engine/federal-foreign-tax-carryover.test.ts::recomputes deduction selection without changing the actual election"
+  - line: "canonical-supported-years"
+    description: "Year-aware ordinary limit and carry conservation"
+    formula: "2025 actual TaxTable and2026 indexed statutory preview both feed the hypothetical regular tax; one current source and each prior vintage are counted exactly once."
+    testRef: "tests/engine/federal-foreign-tax-carryover.test.ts::absorbs actual prior carry in both supported years without granting a credit"
+  - line: "canonical-itemized"
+    description: "Retain actual supported itemized allocation in the credit-election pass"
+    formula: "Use actual state worksheet to apportion allowed state income taxes after the foreign deduction is removed; retain known itemized source allocation and zero current credit."
+    testRef: "tests/engine/federal-foreign-tax-carryover.test.ts::uses actual itemized state allocation in the hypothetical return"
+  - line: "canonical-scope"
+    description: "Unsupported special methods cannot disappear in a hypothetical pass"
+    formula: "Reject capital preference, excluded-income, Marketplace, loss and special tax methods before any hypothetical copy; never remove them to manufacture an ordinary return."
+    testRef: "tests/engine/federal-foreign-tax-carryover.test.ts::preserves unsupported facts and rejects an ordinary-method substitution"
+  - line: "country-signed-net"
+    description: "Combine signed physical country columns before the limitation floor"
+    formula: "Form1116line7 sums country gross less country deductions without a per-country zero floor. Line17 nonpositive gives ratio0. Current overall losses need their separate source-account method."
+    testRef: "tests/engine/forms/foreign-tax-deduction-carryover.test.ts::combines signed country columns before limiting the credit"
+  - line: "state-country-attribution"
+    description: "State income taxes follow actual taxed country sources"
+    formula: "The ordinary single-country state worksheet is supported. Positive foreign-related state tax across multiple countries requires actual state-country attribution, not an invented proportional split."
+    testRef: "tests/engine/forms/foreign-tax-deduction-carryover.test.ts::rejects unprovided state country attribution"
+  - line: "credit-choice-conflict"
+    description: "No silent carryover-ledger loss on changing the annual choice"
+    formula: "An actual deduction-year carryover worksheet cannot enter the separate legacy credit method; changing election retains source facts and rejects until reconciled."
+    testRef: "tests/engine/forms/foreign-tax-deduction-carryover.test.ts::rejects a saved deduction-year ledger on a credit election"

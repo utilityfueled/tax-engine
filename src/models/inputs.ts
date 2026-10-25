@@ -4181,6 +4181,29 @@ export const Form6252Schema = z.object({
 });
 export type Form6252Input = z.infer<typeof Form6252Schema>;
 
+/** Actual ordinary Form1116 source worksheets for deduction-year deemed absorption. */
+const ForeignTaxDeductionCarryoverSchema = z.object({
+  sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
+  method: z.enum(["ordinary_passive"]).optional(),
+  filingHistory: z.enum(["continuous_individual", "continuous_joint_same_spouse"]).optional(), filingHistoryConfirmed: z.boolean().optional(),
+  noCarrybackOrRedeterminationAdjustmentsConfirmed: z.boolean().optional(), noForeignOrDomesticLossAccountsConfirmed: z.boolean().optional(),
+  noOtherForeignIncomeConfirmed: z.boolean().optional(), allCurrentTaxesCreditEligibleConfirmed: z.boolean().optional(), passiveCategoryConfirmed: z.boolean().optional(),
+  adjustedThroughTaxYear: z.number().int().optional(),
+  incomeSources: z.array(z.object({
+    sourceId: z.string().optional(), payerName: z.string().optional(), payerTin: z.string().optional(), accountReference: z.string().optional(),
+    owner: z.enum(["primary", "spouse"]).optional(), foreignCountry: z.string().optional(),
+    reportedIncome: decimal.optional(), foreignIncome: decimal.optional(), sourceReference: z.string().optional(),
+  }).strict()).optional(),
+  carryovers: z.array(z.object({ originTaxYear: z.number().int().optional(), category: z.enum(["passive", "general"]).optional(), amount: decimal.optional(), sourceReference: z.string().optional() }).strict()).optional(),
+  itemizedAllocation: z.object({
+    sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
+    incomeOrSalesTaxes: decimal.optional(), homeRealPropertyTaxes: decimal.optional(), personalPropertyTaxes: decimal.optional(),
+    allRealPropertyTaxesForPersonalResidenceConfirmed: z.boolean().optional(), noTreatyCharitableDeductionConfirmed: z.boolean().optional(),
+    mortgageInterestMethod: z.enum(["gross_income", "us_source_small_foreign_income"]).optional(),
+    stateIncomeTaxes: z.array(z.object({ stateCode: z.string().optional(), deductibleAmount: decimal.optional(), stateTaxableIncome: decimal.optional(), foreignIncomeSpecificallyExempt: z.boolean().optional(), sourceReference: z.string().optional() }).strict()).optional(),
+  }).strict().optional(),
+}).strict();
+
 /** Actual annual foreign income-tax choice and paid-tax deduction records. */
 export const ForeignTaxElectionSchema = z.object({
   taxYear: z.number().int().optional(),
@@ -4191,6 +4214,7 @@ export const ForeignTaxElectionSchema = z.object({
   sourceFactsConfirmed: z.boolean().optional(),
   allQualifiedForeignTaxesIncludedConfirmed: z.boolean().optional(),
   noUnusedCreditCarryoversConfirmed: z.boolean().optional(),
+  deductionYearCarryover: ForeignTaxDeductionCarryoverSchema.optional(),
   noRedeterminationsConfirmed: z.boolean().optional(),
   sources: z.array(z.object({
     sourceId: z.string().optional(), // Actual form1099Int:index or form1099Div:index.

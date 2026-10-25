@@ -40,6 +40,7 @@ export function resolveForeignTaxElection(input: ForeignTaxElectionInput): Forei
   if (![2025, 2026].includes(year) || facts.taxYear !== year || facts.sourceFactsConfirmed !== true || !facts.sourceReference?.trim()
     || (facts.election !== 'credit' && facts.election !== 'deduction')) throw new Error('Foreign tax election requires its actual year, annual choice, source reference and confirmation');
   if (facts.election === 'credit') {
+    if (facts.deductionYearCarryover) throw new Error('A saved deduction-year carryover worksheet needs separate credit-election source reconciliation');
     if ((facts.sources ?? []).some(source => source.investmentAllocableAmount !== undefined && !amount(source.investmentAllocableAmount, 'credit-year allocation').isZero())) {
       throw new Error('A foreign tax credit election cannot also claim a foreign investment tax deduction allocation');
     }
@@ -57,7 +58,14 @@ export function resolveForeignTaxElection(input: ForeignTaxElectionInput): Forei
   const carryAmounts = [prior?.foreignTaxCreditCarryforward ?? '0',
     ...(prior?.foreignTaxCreditCarryforwardByYear ?? []).map(row => row.amount),
     ...Object.values(prior?.foreignTaxCreditCarryforwardByCategory ?? {}).flat().map(row => row.amount)];
-  if (facts.noUnusedCreditCarryoversConfirmed !== true || carryAmounts.some(value => !amount(value, 'credit carryover').isZero())) {
+  const carryover = facts.deductionYearCarryover;
+  if (carryover) {
+    if (facts.noUnusedCreditCarryoversConfirmed !== false || carryover.sourceTaxYear !== year || carryover.sourceFactsConfirmed !== true || !carryover.sourceReference?.trim()) {
+      throw new Error('Foreign tax deduction-year carryovers require their actual confirmed source worksheet');
+    }
+    // Current paid-tax deduction is validated here. The canonical return must
+    // separately reconcile the actual carry ledger and hypothetical credit limit.
+  } else if (facts.noUnusedCreditCarryoversConfirmed !== true || carryAmounts.some(value => !amount(value, 'credit carryover').isZero())) {
     throw new Error('Foreign tax deduction-year carryovers require the actual hypothetical credit-limit absorption worksheet');
   }
   if ([...(input.scheduleK1 ?? []).map(source => source.foreignTaxPaid), ...(input.scheduleK1Form1041 ?? []).map(source => source.foreignTaxesPaid)]

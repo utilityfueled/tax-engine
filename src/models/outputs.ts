@@ -127,6 +127,8 @@ export interface TaxReturnResult {
   // Credits
   childTaxCredit: Decimal;
   foreignTaxCredit: Decimal;
+  /** Actual deduction-year prior-credit absorption; grants no current credit. */
+  foreignTaxDeductionCarryover?: import("@/engine/forms/foreign-tax-deduction-carryover.js").ForeignTaxDeductionCarryoverResult;
   otherCredits: Decimal;
   totalCredits: Decimal;
 
