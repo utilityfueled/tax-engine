@@ -33,6 +33,14 @@ source facts. It does not establish independent tax approval or qualify a
   expenses and separate earned-income worksheets remain visible. Actual prior
   Worksheet A credit survives a zero current-year expense base. Actual MFS
   living-apart facts can establish the considered-unmarried path.
+  Handoff commit: `a413fd6`.
+- [x] Add actual W-2 box 10 and per-business `alreadyDeducted` source values
+  after a source-preservation regression failed. An omitted box remains
+  unknown; a business source must state the existing deduction, including
+  zero. Federal integration applies allocated line 24 less that actual prior
+  deduction, retaining an addback when books over-deducted the benefits.
+  Optional provider records and deemed-income status support benefits-only
+  Part I without manufacturing a Part II credit claim.
 - [ ] Federal source binding, line 1e, activity deductions, QBI and credit
   coordination: federal agent owns orchestration after the stable core commit.
 - [ ] Guided actual-source collection, source-to-document/activity links and

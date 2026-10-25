@@ -11,7 +11,7 @@ const employee = (overrides: Partial<NonNullable<Facts["employeeBenefits"]>[numb
 });
 const business = (overrides: Partial<NonNullable<Facts["selfEmployedBenefits"]>[number]> = {}) => ({
   sourceId: "scheduleC", owner: "primary" as const, schedule: "schedule-c" as const,
-  benefitsReceived: "2000", priorYearCarryoverUsed: "0", ...overrides,
+  benefitsReceived: "2000", priorYearCarryoverUsed: "0", alreadyDeducted: "0", ...overrides,
 });
 const facts = (overrides: Partial<Facts> = {}): Facts => ({
   sourceFactsConfirmed: true, exclusionEligibilityConfirmed: true,
@@ -163,6 +163,11 @@ describe("Form 2441 Part III actual benefits", () => {
   it("preserves missing facts in the schema and requires actual zero source arrays", () => {
     const parsed = TaxYearInputSchema.parse({ ...simpleW2Fixture, dependentCareBenefits: {} });
     expect(parsed.dependentCareBenefits).toEqual({});
+    const benefitProvider = { name: "Employer Care", address: "Actual source address", identifierType: "employer_furnished" as const,
+      householdEmployee: false, amountPaid: "0" };
+    expect(TaxYearInputSchema.parse({ ...simpleW2Fixture, dependentCareBenefits: {
+      providers: [benefitProvider], usesDeemedIncome: false,
+    } }).dependentCareBenefits).toEqual({ providers: [benefitProvider], usesDeemedIncome: false });
     for (const key of ["sourceFactsConfirmed", "exclusionEligibilityConfirmed", "employeeBenefits", "selfEmployedBenefits",
       "deductionAllocations", "planExclusionLimit", "qualifiedExpensesIncurred", "primaryEarnedIncome", "earnedIncomeWorksheetConfirmed",
       "qualifyingIndividuals", "qualifiedExpensesPaidForCredit", "creditExpenseCoordinationConfirmed"] as const) {
@@ -213,5 +218,20 @@ describe("Form 2441 Part III actual benefits", () => {
       expect(() => calculate(source)).toThrow(/source.*rounding/i);
       expect(source.selfEmployedBenefits?.[0]?.benefitsReceived).toBe(current);
     }
+  });
+
+  it("preserves actual reported W2 benefits and already deducted activity amounts", () => {
+    const parsed = TaxYearInputSchema.parse({ ...simpleW2Fixture,
+      w2s: [{ ...simpleW2Fixture.w2s[0], box10DependentCareBenefits: "1000.25" }] });
+    expect(parsed.w2s[0]?.box10DependentCareBenefits).toBe("1000.25");
+    expect(TaxYearInputSchema.parse(simpleW2Fixture).w2s[0]?.box10DependentCareBenefits).toBeUndefined();
+    const source = facts({ employeeBenefits: [], selfEmployedBenefits: [business({ alreadyDeducted: "2500" })],
+      deductionAllocations: [{ sourceId: "scheduleC", owner: "primary", schedule: "schedule-c", amount: "2000" }] });
+    const result = calculate(source);
+    expect(result.deductibleBenefits.toFixed()).toBe("2000");
+    expect(result.businessSources[0]?.alreadyDeducted.toFixed()).toBe("2500");
+    // The orchestrator must add back the over-deducted500, not deduct another2000.
+    expect(result.deductionAllocations[0]?.amount.minus(result.businessSources[0]?.alreadyDeducted ?? "NaN").toFixed()).toBe("-500");
+    expect(() => calculate({ ...source, selfEmployedBenefits: [business({ alreadyDeducted: undefined })] })).toThrow(/alreadyDeducted/);
   });
 });

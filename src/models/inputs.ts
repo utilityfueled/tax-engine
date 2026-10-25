@@ -100,6 +100,7 @@ export const W2Schema = z.object({
   socialSecurityWithheld: optionalDecimal, // Box 4
   medicareWages: optionalDecimal, // Box 5
   medicareWithheld: optionalDecimal, // Box 6
+  box10DependentCareBenefits: optionalDecimalInput, // Actual Box 10; omission is unknown, not zero.
   stateTaxWithheld: optionalDecimal, // Box 17
   localWages: optionalDecimal, // Box 18
   localTaxWithheld: optionalDecimal, // Box 19
@@ -2251,6 +2252,9 @@ export const DependentCareSchema = z.object({
 export const DependentCareBenefitsSchema = z.object({
   sourceFactsConfirmed: z.boolean().optional(),
   exclusionEligibilityConfirmed: z.boolean().optional(),
+  /** Part I records for a benefits-only return without manufacturing a Part II credit claim. */
+  providers: DependentCareSchema.shape.providers,
+  usesDeemedIncome: z.boolean().optional(),
   employeeBenefits: z.array(z.object({
     sourceId: z.string().trim().min(1).optional(),
     owner: z.enum(["primary", "spouse"]).optional(),
@@ -2267,6 +2271,8 @@ export const DependentCareBenefitsSchema = z.object({
     /** Actual received benefits; amounts not received are not manufactured as line 14 forfeitures. */
     benefitsReceived: optionalDecimalInput,
     priorYearCarryoverUsed: optionalDecimalInput,
+    /** Actual amount already included in this activity's reported deductible expenses, including known zero. */
+    alreadyDeducted: optionalDecimalInput,
   })).max(100).optional(),
   deductionAllocations: z.array(z.object({
     sourceId: z.string().trim().min(1).optional(),

@@ -27,7 +27,7 @@ export interface Form2441BenefitsResult {
   qualifyingCreditExpenses: Decimal;
   employeeSources: Array<{ sourceId: string; owner: Owner; benefitsReported: Decimal; alreadyIncludedInWages: Decimal;
     currentBenefitsNotInWages: Decimal; priorYearCarryoverUsed: Decimal; forfeited: Decimal; carriedForward: Decimal }>;
-  businessSources: Array<{ sourceId: string; owner: Owner; schedule: Schedule; benefitsReceived: Decimal; priorYearCarryoverUsed: Decimal }>;
+  businessSources: Array<{ sourceId: string; owner: Owner; schedule: Schedule; benefitsReceived: Decimal; priorYearCarryoverUsed: Decimal; alreadyDeducted: Decimal }>;
   deductionAllocations: Array<{ sourceId: string; owner: Owner; schedule: Schedule; amount: Decimal }>;
   lines: CalculatedLine[];
 }
@@ -94,7 +94,8 @@ export function calculateForm2441Benefits(input: Form2441BenefitsInput): Form244
     const id = register(source);
     return { ...id, schedule: sourceSchedule(source.schedule),
       benefitsReceived: amount(source.benefitsReceived, `${id.sourceId}.benefitsReceived`),
-      priorYearCarryoverUsed: amount(source.priorYearCarryoverUsed, `${id.sourceId}.priorYearCarryoverUsed`) };
+      priorYearCarryoverUsed: amount(source.priorYearCarryoverUsed, `${id.sourceId}.priorYearCarryoverUsed`),
+      alreadyDeducted: amount(source.alreadyDeducted, `${id.sourceId}.alreadyDeducted`) };
   });
 
   const planLimit = roundDollar(amount(facts.planExclusionLimit, "planExclusionLimit"));
