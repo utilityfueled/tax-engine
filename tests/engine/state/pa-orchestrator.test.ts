@@ -2416,6 +2416,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
       const result = calculatePAReturn(makeInput({
         form1099R: [{
           payer: "Pennsylvania Municipal Employees' Retirement System",
+          accountHolder: "primary",
           grossDistribution: "12000",
           taxableAmount: "4500",
           distributionCode: "7D",
@@ -2650,6 +2651,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
       const result = calculatePAReturn(makeInput({
         form1099R: [{
           payer: "Nonqualified Annuity",
+          accountHolder: "primary",
           grossDistribution: "12000",
           taxableAmount: "4500",
           distributionCode: "7D",
@@ -2661,17 +2663,15 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
       expect(result.scheduleSP.nontaxableIncome.toNumber()).toBe(0);
     });
 
-    it("PA orchestrator uses the supported Simplified Method taxable amount for code D paired annuity interest", () => {
+    it("PA orchestrator uses the actual reported taxable amount for code D paired annuity interest", () => {
       const result = calculatePAReturn(makeInput({
         form1099R: [{
           payer: "Nonqualified Annuity",
+          accountHolder: "primary",
           grossDistribution: "12000",
-          taxableAmountNotDetermined: true,
+          // Actual synthetic Box2a. Pub575 prohibits the Simplified Method for a nonqualified annuity.
+          taxableAmount: "10800",
           distributionCode: "7D",
-          simplifiedMethodCostInPlan: "24000",
-          simplifiedMethodExpectedPayments: 240,
-          simplifiedMethodPaymentsReceivedThisYear: 12,
-          simplifiedMethodPriorYearRecovered: "6000",
         }],
       }));
 
@@ -6289,6 +6289,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
         form1099R: [
           {
             payer: "Annuity Co",
+            accountHolder: "primary",
             grossDistribution: "40",
             taxableAmount: "40",
             distributionCode: "7D",

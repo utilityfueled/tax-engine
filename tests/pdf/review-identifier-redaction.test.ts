@@ -3,6 +3,17 @@ import Decimal from "decimal.js";
 import { redactReviewIdentifiers } from "@/pdf/redact-review-identifiers.js";
 
 describe("review-copy identifiers", () => {
+  it("redacts actual account references from review copies without altering source records", () => {
+    const actual = { form1099R: [{ accountReference: "Actual account 123456789", taxableAmount: "10000.25" }], form8960Sources: { annuities: [{ accountReference: "Actual account 123456789", sourceId: "form1099R:0" }] } };
+    const backup = JSON.stringify(actual);
+    const review = redactReviewIdentifiers(actual);
+    expect(review.form1099R[0].accountReference).toBe("");
+    expect(review.form8960Sources.annuities[0].accountReference).toBe("");
+    expect(JSON.stringify(review)).not.toContain("Actual account 123456789");
+    expect(review.form1099R[0].taxableAmount).toBe("10000.25");
+    expect(review.form8960Sources.annuities[0].sourceId).toBe("form1099R:0");
+    expect(JSON.stringify(actual)).toBe(backup);
+  });
   it("removes person and ambiguous payer TIN fields across nested inputs and calculated state records", () => {
     const source = {
       taxpayer: { primary: { ssn: "111-22-3333", employmentValidSsnIssuedByDueDate: true } },

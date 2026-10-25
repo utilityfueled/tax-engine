@@ -38,6 +38,7 @@ import { calculateChildCreditEligibility } from "./forms/child-credit-eligibilit
 import { calculateForm8959 } from "./forms/form-8959.js";
 import { calculateForm1099G } from "./forms/form-1099-g.js";
 import { calculateForm8960 } from "./forms/form-8960.js";
+import { resolveForm8960OrdinarySources } from "./forms/form-8960-ordinary-sources.js";
 import {
   calculateForm1116,
   estimateForeignSourceIncome,
@@ -3599,31 +3600,37 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     || !niitAmount(disposition.regularOrdinaryGainOrLoss, "regular ordinary gain/loss").eq(sched1.otherGainsOrLosses))) {
     throw new Error("Form8960 disposition sources must reconcile with actual Form1040line7a and Schedule1line4");
   }
-  let niitInvestmentInterest = deductionUsed === "itemized" ? schedA.investmentInterestDeduction : d("0");
-  let niitOrdinaryLoss = deductionUsed === "itemized" ? schedA.oidOrdinaryLossDeduction : d("0");
-  const niitItemizedLimit = deductionUsed === "itemized" ? min(niitInvestmentInterest.plus(niitOrdinaryLoss), itemizedDeductions) : d("0");
-  if (niitSources?.itemizedAllocation) {
-    const interest = niitAmount(niitSources.itemizedAllocation.investmentInterest, "itemized interest allocation");
-    const loss = niitAmount(niitSources.itemizedAllocation.ordinaryLoss, "itemized ordinary-loss allocation");
-    if (interest.lt(0) || loss.lt(0) || interest.gt(niitInvestmentInterest) || loss.gt(niitOrdinaryLoss) || !interest.plus(loss).eq(niitItemizedLimit)) throw new Error("Form8960 itemized allocation must reconcile with allowed source deductions and their combined limit");
-    niitInvestmentInterest = interest; niitOrdinaryLoss = loss;
-  } else if (niitInvestmentInterest.plus(niitOrdinaryLoss).gt(niitItemizedLimit)) {
-    if (niitInvestmentInterest.gt(0) && niitOrdinaryLoss.gt(0)) throw new Error("Form8960 requires an actual itemized allocation when section68 limits multiple NIIT deductions");
-    niitInvestmentInterest = min(niitInvestmentInterest, niitItemizedLimit);
-    niitOrdinaryLoss = min(niitOrdinaryLoss, niitItemizedLimit);
-  }
+  const niitTaxSource = (lineNumber: string) => {
+    const lines = schedA.lines.filter(line => line.form === "Sched A" && line.line === lineNumber);
+    const actual = lines[0];
+    if (lines.length !== 1 || !actual || !actual.value.isFinite()) throw new Error(`Form8960 requires one actual ScheduleA${lineNumber} source`);
+    return actual.value;
+  };
+  const niitOrdinarySources = resolveForm8960OrdinarySources(input, {
+    filingStatus, magi: niitMagi, niitThreshold: constants.niit.threshold[filingStatus],
+    deductions: {
+      itemized: deductionUsed === "itemized", allowedItemizedDeductions: itemizedDeductions,
+      investmentInterest: schedA.investmentInterestDeduction, ordinaryLoss: schedA.oidOrdinaryLossDeduction,
+      saltDeduction: schedA.saltDeduction, incomeOrSalesTaxes: niitTaxSource("5a"),
+      realPropertyTaxes: niitTaxSource("5b"), personalPropertyTaxes: niitTaxSource("5c"),
+      salesTaxElected: schedA.salesTaxElected,
+    },
+  });
+  audit.merge(niitOrdinarySources.lines);
   const niitBusinessIncome = sum(sched1.businessIncome, sched1.supplementalIncome, sched1.farmIncome);
   const form8960 = calculateForm8960(
     {
       taxableInterest: totalTaxableInterest,
       ordinaryDividends: totalDividends,
+      annuityIncome: niitOrdinarySources.annuityIncome,
       netCapitalGain: capitalGainLoss.plus(sched1.otherGainsOrLosses),
       excludedDispositionAdjustment: disposition ? niitAmount(disposition.excludedGainOrLossAdjustment, "excluded disposition adjustment") : d("0"),
       passthroughDispositionAdjustment: disposition ? niitAmount(disposition.passthroughAdjustment, "pass-through disposition adjustment") : d("0"),
       tradeOrBusinessIncome: niitBusinessIncome,
       nonInvestmentBusinessAdjustment: netAllowedPassive.minus(niitBusinessIncome),
-      investmentInterestExpense: niitInvestmentInterest,
-      additionalModifications: niitOrdinaryLoss,
+      investmentInterestExpense: niitOrdinarySources.investmentInterestExpense,
+      investmentIncomeTaxes: niitOrdinarySources.investmentIncomeTaxes,
+      additionalModifications: niitOrdinarySources.ordinaryLossDeduction,
       magi: niitMagi,
     },
     filingStatus,

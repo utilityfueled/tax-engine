@@ -834,6 +834,7 @@ export const CodExclusionSchema = z.object({
 export const Form1099RSchema = z.object({
   payer: z.string(),
   payerTin: z.string().optional(), // Payer TIN shown on the recipient copy; required for IL Schedule IL-WIT Column B auto-attachment
+  accountReference: z.string().trim().min(1).optional(), // Actual local account identity; never inferred from payer or statement order.
   accountHolder: z.enum(["primary", "spouse"]).optional(), // Local owner tag for taxpayer vs spouse IRA ownership on shared returns
   grossDistribution: decimal, // Box 1
   taxableAmount: decimal.optional(), // Box 2a
@@ -4171,6 +4172,24 @@ export const Form8960SourcesSchema = z.object({
   sourceReference: z.string().min(1).optional(),
   sourceFactsConfirmed: z.boolean().optional(),
   feieAllocableDeductions: decimal.optional(),
+  annuities: z.array(z.object({
+    sourceId: z.string().min(1).optional(), // Exact form1099R:index binding.
+    payerName: z.string().trim().min(1).optional(), payerTin: z.string().trim().min(1).optional(),
+    accountReference: z.string().trim().min(1).optional(),
+    owner: z.enum(["primary", "spouse"]).optional(),
+    classification: z.enum(["nonqualified_annuity", "excluded_retirement_plan"]).optional(),
+    excludedPlanSection: z.enum(["401", "403a", "403b", "408", "408A", "457b"]).optional(),
+    grossDistribution: decimal.optional(),
+    taxableAmount: decimal.optional(),
+    sourceReference: z.string().min(1).optional(),
+  }).strict()).optional(),
+  ordinaryTaxAllocation: z.object({
+    allocationMethodDescription: z.string().min(1).optional(),
+    noDuplicateDeductionConfirmed: z.boolean().optional(),
+    incomeOrSalesTaxes: z.object({ sourceAmount: decimal.optional(), regularDeductibleAmount: decimal.optional(), investmentAllocableAmount: decimal.optional() }).strict().optional(),
+    realPropertyTaxes: z.object({ sourceAmount: decimal.optional(), regularDeductibleAmount: decimal.optional(), investmentAllocableAmount: decimal.optional() }).strict().optional(),
+    personalPropertyTaxes: z.object({ sourceAmount: decimal.optional(), regularDeductibleAmount: decimal.optional(), investmentAllocableAmount: decimal.optional() }).strict().optional(),
+  }).strict().optional(),
   dispositions: z.object({
     regularCapitalGainOrLoss: decimal,
     regularOrdinaryGainOrLoss: decimal,
@@ -4180,6 +4199,7 @@ export const Form8960SourcesSchema = z.object({
   itemizedAllocation: z.object({
     investmentInterest: decimal,
     ordinaryLoss: decimal,
+    investmentIncomeTaxes: decimal.optional(),
   }).optional(),
 });
 

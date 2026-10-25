@@ -3834,6 +3834,8 @@ describe("Complex MFJ filer", () => {
   it("Form 1040 Line 23 - mixed-age MFJ code 1 distributions stay manual when the owner is untagged", () => {
     const ambiguousAge59AndHalfResult = calculateFederalTax({
       ...complexMFJFixture,
+      // Isolate the owner/5329 boundary below the separate NIIT source threshold.
+      w2s: complexMFJFixture.w2s.map(source => ({ ...source, wages: "50000" })),
       taxpayer: {
         ...complexMFJFixture.taxpayer,
         primary: {
@@ -3871,6 +3873,8 @@ describe("Complex MFJ filer", () => {
   it("Form 1040 Line 23 - spouse-tagged mixed-age MFJ code 1 distributions default exception 12 for the tagged spouse", () => {
     const taggedSpouseAge59AndHalfResult = calculateFederalTax({
       ...complexMFJFixture,
+      // Isolate the owner/5329 boundary below the separate NIIT source threshold.
+      w2s: complexMFJFixture.w2s.map(source => ({ ...source, wages: "50000" })),
       taxpayer: {
         ...complexMFJFixture.taxpayer,
         primary: {
