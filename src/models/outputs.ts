@@ -156,7 +156,9 @@ export interface TaxReturnResult {
     capitalLoss: Decimal;
     shortTermCapitalLoss: Decimal;
     longTermCapitalLoss: Decimal;
-    suspendedPassiveLosses: Array<{ partnershipName: string; amount: Decimal }>;
+    suspendedPassiveLosses: Array<{ partnershipName: string; amount: Decimal;
+      /** Calculated history for review; future input still needs its actual filed-source confirmation. */
+      qbiVintages?: import("@/engine/forms/passive-loss-qbi.js").PassiveLossQBIVintage[] }>;
     /** Per-PTP suspended losses under IRC §469(k).
      *  PTP losses can only offset income from the same PTP, not other passive income. */
     suspendedPTPLosses: Array<{ partnershipName: string; amount: Decimal }>;

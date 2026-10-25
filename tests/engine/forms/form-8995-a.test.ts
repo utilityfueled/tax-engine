@@ -499,13 +499,14 @@ describe("Form 8995-A - edge cases", () => {
     expect(result.phaseInPercentage).toEqual(d(1));
   });
 
-  it("business with QBI loss contributes negative component", () => {
+  it("business with QBI loss carries loss instead of a negative component", () => {
     const result = calculateForm8995A(make({
       qbiSources: [makeBiz({ qbi: d(-30000), w2Wages: d(10000) })],
     }));
-    // 20% × -30K = -6K
-    expect(result.businesses[0].line15QBIComponent).toEqual(d(-6000));
-    // Floored at 0 for total
+    // Schedule C column(c) is zero; the30K qualified loss carries once.
+    expect(result.businesses[0].line15QBIComponent).toEqual(d(0));
+    expect(result.qbiLossCarryforward).toEqual(d(30000));
+    // No negative component is subtracted a second time
     expect(result.totalQBIComponent).toEqual(d(0));
   });
 

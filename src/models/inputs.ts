@@ -2445,6 +2445,20 @@ export const PriorYearCarryforwardSchema = z.object({
       z.object({
         partnershipName: z.string(),
         amount: decimal,
+        /** Actual prior filed QBI loss worksheet; no inferred origin or qualification. */
+        qbiLossTracking: z.object({
+          sourceTaxYear: z.number().int(),
+          sourceReference: z.string(),
+          sourceFactsConfirmed: z.boolean().optional(),
+          vintages: z.array(z.object({
+            taxYear: z.number().int(),
+            originalLoss: decimal,
+            qualifiedOriginalLoss: decimal,
+            remainingLoss: decimal,
+            qualifiedRemainingLoss: decimal,
+            materiallyParticipatedInCurrentYear: z.boolean().optional(),
+          })),
+        }).optional(),
       })
     )
     .default([]),

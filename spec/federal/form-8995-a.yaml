@@ -62,8 +62,8 @@ thresholds:
 
 lines:
   - line: "1"
-    description: "Qualified business income or (loss) from the trade or business"
-    formula: "QBI as determined for the trade or business (Schedule C net profit minus allocated SE adjustments for sole proprietorships, or K-1 Box 20 Code Z for pass-throughs)"
+    description: "Qualified business income after current SSTB qualification and loss netting (legacy result label)"
+    formula: "Current qualified amount after Schedule A minus allocated Schedule C current/prior qualified losses, floored at zero; source amounts remain in the Schedule C audit"
     irsRef: "Form 8995-A Instructions, Line 1"
     inputs:
       - "Schedule C QBI (net profit minus allocated deductible half SE tax and SE health insurance)"
@@ -72,7 +72,7 @@ lines:
 
   - line: "2"
     description: "Adjusted QBI after SSTB reduction"
-    formula: "Line 1 × applicable SSTB percentage"
+    formula: "Apply current SSTB percentage first, then Schedule C current/prior loss netting; prior qualified losses retain their originating character"
     irsRef: "Form 8995-A Instructions, Line 2"
     notes: |
       For non-SSTB businesses: applicable SSTB % = 100% (no reduction).

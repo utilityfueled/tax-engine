@@ -64,6 +64,7 @@ import { calculateForm1099OID } from "./forms/form-1099-oid.js";
 import { calculateForm6251, type Form6251Input } from "./forms/form-6251.js";
 import { calculateForm8801 } from "./forms/form-8801.js";
 import { calculateForm8582 } from "./forms/form-8582.js";
+import { calculatePassiveLossQBI, type PassiveLossQBIResult } from "./forms/passive-loss-qbi.js";
 import type { PassiveActivity } from "./forms/form-8582.js";
 import { calculateForm2441 } from "./forms/form-2441.js";
 import { calculateForm2441Benefits } from "./forms/form-2441-benefits.js";
@@ -2408,37 +2409,44 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     }
   }
 
-  // Rental property QBI (Rev. Proc. 2019-38 safe harbor or case law qualification)
-  // QBI is limited to the rental income actually included in taxable income after
-  // Form 8582 passive loss limitation. Positive income is included in full.
-  // Passive losses use the Form 8582-allowed amount (not total loss).
+  // Prior released qualified losses retain their origin-year character and
+  // enter the separate prior-loss amount, not the current rental's QBI.
+  const rentalLossQbi = new Map<number, PassiveLossQBIResult>();
+  let releasedPriorQualifiedRentalLoss = d("0");
+  let releasedPriorActiveRentalLoss: Decimal | undefined = d("0");
+  for (const prior of input.priorYear?.suspendedPassiveLosses ?? []) {
+    if (prior.qbiLossTracking && !schedE.rentalProperties.some(rental => rental.description === prior.partnershipName)) {
+      throw new Error("Actual passive QBI tracking requires its supported rental source; partnership loss character needs its separate source method");
+    }
+  }
   for (let ri = 0; ri < schedE.rentalProperties.length; ri++) {
     const rental = schedE.rentalProperties[ri];
     const prop = (input.rentalProperties ?? [])[ri];
-    if (!prop?.qualifiesForQBI) continue;
-
-    let rentalQBI: Decimal;
-    if (rental.netRentalIncome.isPositive()) {
-      // Positive income: fully included as QBI
-      rentalQBI = rental.netRentalIncome;
-    } else {
-      // Loss: use Form 8582 allowed amount (look up by property description)
-      const alloc = form8582.activityAllocations.find((a) => a.sourceIndex === k1PassiveCount + ri);
-      if (alloc) {
-        // allowedLoss is the positive portion of the loss allowed into taxable income
-        rentalQBI = alloc.allowedLoss.isZero() ? new Decimal(0) : alloc.allowedLoss.negated();
-      } else {
-        // No allocation found (should not happen for loss activities)
-        rentalQBI = new Decimal(0);
-      }
+    const row = form8582.activityRows.find(activity => activity.sourceIndex === k1PassiveCount + ri);
+    const alloc = form8582.activityAllocations.find(activity => activity.sourceIndex === k1PassiveCount + ri);
+    const priorSources = (input.priorYear?.suspendedPassiveLosses ?? []).filter(prior => prior.partnershipName === rental.description);
+    const tracking = priorSources.find(prior => prior.qbiLossTracking)?.qbiLossTracking;
+    const actualQbiSource = prop?.qualifiesForQBI || prop?.sourceFactsConfirmed === true || tracking !== undefined
+      || (year === 2026 && row?.priorYearSuspendedLoss.gt(0));
+    if (!actualQbiSource) continue; // Historical unqualified 2025 preview remains unverified.
+    if (!row || (tracking && priorSources.length !== 1)) throw new Error("Passive QBI tracking requires unambiguous actual rental source identity");
+    const tracked = calculatePassiveLossQBI({ taxYear: year, activityName: rental.description,
+      currentIncome: row.currentIncome, currentLoss: row.currentLoss.abs(), priorLoss: row.priorYearSuspendedLoss,
+      totalAllowedLoss: alloc?.allowedLoss ?? d("0"), currentQualifiesForQbi: prop?.qualifiesForQBI === true, tracking });
+    if (tracked.priorQualifiedLoss.gt(0) && excessBusinessLossAddback.gt(0)) {
+      throw new Error("Released passive QBI losses require actual post-passive limitation allocation before entering QBI");
     }
+    rentalLossQbi.set(k1PassiveCount + ri, tracked);
+    audit.merge(tracked.lines);
+    releasedPriorQualifiedRentalLoss = releasedPriorQualifiedRentalLoss.plus(tracked.priorQualifiedLoss);
+    if (tracked.priorActiveQualifiedLoss === undefined) releasedPriorActiveRentalLoss = undefined;
+    else if (releasedPriorActiveRentalLoss !== undefined) releasedPriorActiveRentalLoss = releasedPriorActiveRentalLoss.plus(tracked.priorActiveQualifiedLoss);
+    const rentalQBI = tracked.currentYearQbi;
     if (!rentalQBI.isZero()) {
       qbiSources.push({ name: rental.description, qbi: rentalQBI, materiallyParticipated: prop.qbiMateriallyParticipated });
       audit.record("1040", "13-QBI-rental", `Rental QBI: ${rental.description}`,
         rentalQBI,
-        rentalQBI.isPositive()
-          ? "Full net rental income (Rev. Proc. 2019-38 qualifying activity)"
-          : `Form 8582-allowed rental loss of $${rentalQBI} (suspended portion excluded from QBI)`);
+        "Qualified current income less current losses allowed after FIFO prior use; released prior qualified losses transferred separately");
     }
   }
 
@@ -2489,18 +2497,20 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     let form8995Result: import("./forms/form-8995.js").Form8995Result | undefined;
     let form8995AResult: import("./forms/form-8995-a.js").Form8995AResult | undefined;
 
-    const hasQBISources = qbiSources.length > 0 || qualifiedReitDividends.greaterThan(0) || !qualifiedPTPIncome.isZero() || d(input.priorYear?.qbiLossCarryforward).gt(0);
+    const hasQBISources = qbiSources.length > 0 || qualifiedReitDividends.greaterThan(0) || !qualifiedPTPIncome.isZero()
+      || d(input.priorYear?.qbiLossCarryforward).gt(0) || releasedPriorQualifiedRentalLoss.gt(0);
     if (hasQBISources && (year === 2026 || taxableIncomeBeforeQBI.greaterThan(0))) {
       const qbiThreshold = constants.qbi.simplifiedThreshold[filingStatus];
-      const priorQBILoss = input.priorYear?.qbiLossCarryforward
-        ? d(input.priorYear.qbiLossCarryforward)
-        : undefined;
+      const priorQBILoss = d(input.priorYear?.qbiLossCarryforward).plus(releasedPriorQualifiedRentalLoss);
+      const priorYearActiveQBILoss = releasedPriorActiveRentalLoss !== undefined
+        && (!d(input.priorYear?.qbiLossCarryforward).gt(0) || input.priorYear?.activeQbiLossCarryforward !== undefined)
+        ? d(input.priorYear?.activeQbiLossCarryforward).plus(releasedPriorActiveRentalLoss) : undefined;
 
       if (taxableIncomeBeforeQBI.lte(qbiThreshold)) {
         // Simplified Form 8995: no W-2/UBIA limitations, no SSTB phase-out
         form8995Result = calculateForm8995({
           taxYear: year,
-          priorYearActiveQBILoss: input.priorYear?.activeQbiLossCarryforward === undefined ? undefined : d(input.priorYear.activeQbiLossCarryforward),
+          priorYearActiveQBILoss,
           qbiSources,
           qualifiedReitDividends,
           qualifiedPTPIncome,
@@ -2562,7 +2572,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
 
         form8995AResult = calculateForm8995A({
           taxYear: year,
-          priorYearActiveQBILoss: input.priorYear?.activeQbiLossCarryforward === undefined ? undefined : d(input.priorYear.activeQbiLossCarryforward),
+          priorYearActiveQBILoss,
           qbiSources: qbiBusinessSources,
           ptpSources: ptpSources.length > 0 ? ptpSources : undefined,
           qualifiedReitDividends,
@@ -2608,6 +2618,29 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     }
   }
   const { qbiDeduction, form8995Result, form8995AResult } = qbiCalculation;
+  // A newly suspended SSTB loss retains this year's applicable percentage.
+  // Future utilization must not substitute that future year's SSTB status.
+  const originatingQbiTaxableIncome = form8995Result?.taxableIncomeBeforeQBI ?? form8995AResult?.taxableIncomeBeforeQBI
+    ?? zeroFloor(agi.minus(deductionAmount).minus(additionalDeductions));
+  const originatingSstPercentage = Decimal.max(0, Decimal.min(1, d("1").minus(
+    Decimal.max(0, originatingQbiTaxableIncome.minus(constants.qbi.simplifiedThreshold[filingStatus]))
+      .div(constants.qbi.phaseInRange[filingStatus]))));
+  for (const [sourceIndex, tracked] of rentalLossQbi) {
+    const prop = input.rentalProperties[sourceIndex - k1PassiveCount];
+    if (!prop?.qualifiesForQBI || !prop.qbiIsSST) continue;
+    tracked.remainingVintages = tracked.remainingVintages.map(vintage => {
+      if (vintage.taxYear !== year) return vintage;
+      const qualifiedOriginalLoss = roundDollar(vintage.originalLoss.times(originatingSstPercentage));
+      // A new columnA vintage is only the loss actually suspended this year.
+      // No utilization precedes its opening columnI qualified balance.
+      const qualifiedRemainingLoss = qualifiedOriginalLoss;
+      audit.record("Passive Loss QBI", `${prop.description}:originating-SSTB`, "Originating-year suspended SSTB qualified loss", qualifiedOriginalLoss,
+        "Actual originating-year taxable income determines the fixed qualified percentage retained for future release",
+        { "Taxable income before QBI": originatingQbiTaxableIncome, "Applicable percentage": originatingSstPercentage,
+          "Original loss": vintage.originalLoss, "Qualified loss remaining": qualifiedRemainingLoss });
+      return { ...vintage, qualifiedOriginalLoss, qualifiedRemainingLoss };
+    });
+  }
   if (form8995Result) audit.merge(form8995Result.lines);
   if (form8995AResult) audit.merge(form8995AResult.lines);
   audit.record("1040", "12", "Standard or itemized deduction", deductionAmount, `${deductionUsed} deduction selected after applicable limitations`);
@@ -4052,7 +4085,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
         longTermCapitalLoss: adjustedCarryforward.carryforwardLongTerm,
         suspendedPassiveLosses: form8582.activityAllocations
           .filter((a) => a.suspendedLoss.greaterThan(0))
-          .map((a) => ({ partnershipName: a.name, amount: a.suspendedLoss })),
+          .map((a) => ({ partnershipName: a.name, amount: a.suspendedLoss,
+            qbiVintages: a.sourceIndex === undefined ? undefined : rentalLossQbi.get(a.sourceIndex)?.remainingVintages })),
         suspendedPTPLosses: form8582.ptpSuspendedLosses
           .filter((p) => p.netSuspended.greaterThan(0))
           .map((p) => ({ partnershipName: p.name, amount: p.netSuspended })),

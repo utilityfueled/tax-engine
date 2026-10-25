@@ -27,11 +27,13 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.47",
+    ruleVersion: "2025.48",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i8995", section: "Actual suspended rental loss vintages, fixed originating qualified percentage, FIFO and separate released prior qualified loss", revision: "Final2025 instructions and Reg1.199A-3(b)(1)(iv); source and independent review gates retained", retrievedAt: "2026-10-25" },
+      { url: "https://www.irs.gov/instructions/i8995a", section: "Schedule A current SSTB qualification before Schedule C loss netting, nonnegative business components and retained qualified carry", revision: "Final2025 instructions and continuous-use Schedules A/C; separate PTP and detailed physical mapping remain unqualified", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i8582", section: "Official current/prior loss columns, net passive MAGI, special allowance capacity, PartsVI-VIII allocation and signed ScheduleE transfer", revision: "Final2025 form and instructions; passive Marketplace ordering and specialized source methods remain internal work", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/publications/p974", section: "Special instructions and Y/Z: covered IRA, bond exclusion and student-loan worksheets retained in order; auxiliary400 distinct from actual final eligibility; ordinary no-PTC branch refigures claims", revision: "Final2025 plus historical2020 cliff-year instruction and enacted2026 section36B; passive-loss and other source methods remain internal work", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/publications/p974", section: "Actual2025 W/X source maximum and repayment tiers; computed X25 retained on final8962line28 through the Simplified method", revision: "Final2025 Publication974 including Carla example; passive ordering and partial forgiven-advance ordinary-cost methods remain internal work", retrievedAt: "2026-10-25" },
@@ -89,11 +91,13 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.43-law-integration-draft",
+    ruleVersion: "2026.44-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i8995", section: "Actual suspended rental loss vintages, fixed originating qualified percentage, FIFO and separate released prior qualified loss", revision: "Applicable current-law source method; final2026 form and independent qualification remain pending", retrievedAt: "2026-10-25" },
+      { url: "https://www.irs.gov/instructions/i8995a", section: "Schedule A current SSTB qualification before Schedule C loss netting, nonnegative business components and retained qualified carry", revision: "Applicable current-law source method with indexed2026 thresholds; separate PTP and detailed physical mapping remain unqualified", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i8582", section: "Official current/prior loss columns, net passive MAGI, special allowance capacity, PartsVI-VIII allocation and signed ScheduleE transfer", revision: "Final2025 form and instructions; passive Marketplace ordering and specialized source methods remain internal work", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/publications/p974", section: "Special instructions and Y/Z: covered IRA, bond exclusion and student-loan worksheets retained in order; auxiliary400 distinct from actual final eligibility; ordinary no-PTC branch refigures claims", revision: "Final2025 plus historical2020 cliff-year instruction and enacted2026 section36B; passive-loss and other source methods remain internal work", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/publications/p974", section: "Actual2026 uncapped W/X bound, combined-business Simplified steps1-4, signed income, actual monthly premiums/credits and separate gross-income QBI attribution", revision: "Posted2025 publication plus enacted36B(f)(2) effective2026 and Reg1.199A-3(b)(1)(vi); passive ordering and mixed-owner methods remain internal work", retrievedAt: "2026-10-25" },

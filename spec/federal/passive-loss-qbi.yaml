@@ -1,0 +1,59 @@
+form: "Passive Loss QBI Tracking"
+fullName: "Rental passive losses retained by originating year and QBI character"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i8995"
+notes: |
+  Reg1.199A-3(b)(1)(iv) requires FIFO and retains the originating qualified
+  percentage. Pre2018 losses never become QBI. Previously suspended losses
+  allowed this year are separate prior qualified losses, not current rental QBI.
+  This ordinary rental branch uses actual prior-year filed whole-dollar loss
+  balances, original losses and original qualified portions; the fixed origin
+  ratio is never inferred from rounded remaining balances. No inferred vintage
+  or favorable qualified percentage. Further post-passive limitations require
+  separate coordination before these amounts can enter QBI.
+lines:
+  - line: "sources"
+    description: "Actual opening loss tracking worksheet"
+    formula: "Prior source year, confirmed reference, unique earlier-year vintages, actual original and remaining losses/qualified portions must reconcile with actual Form8582 prior loss"
+    irsRef: "Form8995 instructions Tracking Losses or Deductions Suspended by Other Provisions"
+    testRef: "tests/engine/forms/passive-loss-qbi.test.ts::requires actual reconciled prior vintage and qualified-loss sources"
+  - line: "fifo"
+    description: "Prior losses used first by originating year"
+    formula: "Allow earliest prior balance first; pre2018 contributes no QBI; later allowed amount times actual fixed qualified fraction"
+    irsRef: "Reg1.199A-3(b)(1)(iv)(A)-(C); Form8995 QBI Loss Tracking Worksheet"
+    testRef: "tests/engine/forms/passive-loss-qbi.test.ts::uses oldest non-QBI loss first and preserves remaining qualified character"
+  - line: "current"
+    description: "Separate current rental QBI"
+    formula: "Actual qualified current income less only current-year losses allowed after FIFO prior utilization"
+    irsRef: "Form8995 lines1 and3; Reg1.199A-3(b)(1)(iv)"
+    testRef: "tests/engine/forms/passive-loss-qbi.test.ts::keeps allowed prior losses separate from current-year rental QBI"
+  - line: "partial"
+    description: "Qualified share and remaining carry"
+    formula: "Allowed prior loss times original qualified/total fixed fraction, rounded per completed worksheet; full remaining use consumes its actual qualified remainder; retain original and remaining balances"
+    irsRef: "Reg1.199A-3(b)(1)(iv)(B) Example1; Form8995 columnsB/J/K/L"
+    testRef: "tests/engine/forms/passive-loss-qbi.test.ts::retains the fixed qualified percentage and exact source character"
+  - line: "return"
+    description: "Canonical released rental loss handoff"
+    formula: "Current rental QBI and separately released prior qualified loss enter199A once; unknown prior character cannot create a current qualified deduction"
+    irsRef: "Form8995 lines1-3 and Reg1.199A-3(b)(1)(iv)"
+    testRef: "tests/engine/federal-passive-loss-qbi.test.ts::uses actual released prior qualified loss separately from positive current rental QBI"
+  - line: "carry"
+    description: "Preserve current and prior loss origin character in the output history"
+    formula: "Use prior losses first; open the current vintage with only the actually suspended loss in columnsA/I (original equals remaining, excluding already allowed current loss). Current SSTB qualified suspended share follows actual originating-year taxable income and phase-in, never the future release year's status"
+    irsRef: "Reg1.199A-3(b)(1)(iv)(B)-(C); Form8995 loss worksheet columnsA/B/I/L"
+    testRef: "tests/engine/federal-passive-loss-qbi.test.ts::retains current loss and originating SSTB character in the next-year history"
+  - line: "active"
+    description: "Actual current participation in released prior qualified losses"
+    formula: "Retain unknown active portion; when2026minimum can matter require actual participation rather than treating prior losses as zero active losses"
+    irsRef: "IRC199A(i); IRC469(h); Reg1.199A-3(b)(1)(iv)"
+    testRef: "tests/engine/federal-passive-loss-qbi.test.ts::preserves unknown active prior loss when the2026 minimum can change"
+  - line: "new-vintage"
+    description: "New suspended loss columnsA/I exclude current losses already allowed"
+    formula: "Original suspended loss equals current unallowed loss; original qualified suspended loss equals rounded suspended loss times originating SSTB percentage. No prior utilization exists in a new vintage."
+    irsRef: "Form8995 QBI Loss Tracking Worksheet columnsA/I/B; Reg1.199A-3(b)(1)(iv)(C)"
+    testRef: "tests/engine/federal-passive-loss-qbi.test.ts::opens a partially qualified SSTB vintage from only the newly suspended loss"
+  - line: "review-transfer"
+    description: "Review forms retain separate current QBI and released prior qualified loss"
+    formula: "Form8995 lines2/3/4/15 retain10000/3000/7000/1400; at50% current SSTB qualification the detailed reference retains2000 netQBI and400 deduction"
+    irsRef: "Form8995 lines2-5 and15; Schedule A(Form8995-A)line11 and Schedule C"
+    testRef: "tests/pdf/passive-loss-qbi-source.test.ts::retains current and prior qualified losses in both QBI review outputs"
