@@ -2,6 +2,7 @@
 
 import { isStartedNec, sumKnownBusinessAmounts, type BusinessSourceData } from "@/lib/guided-business-facts";
 import { isStartedRental, knownRentalExpenses } from "@/lib/guided-rental-facts";
+import { socialSecurityEntries, isStartedSocialSecurity, socialSecuritySourceTotal } from "@/lib/guided-social-security-facts";
 import { isStartedInvestment } from "@/lib/guided-investment-facts";
 import { hasEnteredAmount } from "@/lib/guided-required-facts";
 import { formatGuidedCurrency, parseGuidedDisplayAmount, sumGuidedDisplayAmounts } from "@/lib/guided-currency";
@@ -370,22 +371,15 @@ function RetirementSummary({ entries }: { entries: RetirementEntryData[] | undef
 }
 
 function SocialSecuritySummary({ data }: { data: SocialSecurityData | undefined }) {
-  if (!data || !hasValue(data.netBenefits)) return <p className="guided-review-empty">No Social Security benefits entered.</p>;
-
-  return (
-    <div className="guided-review-card">
-      <div className="guided-review-row">
-        <span className="guided-review-label">Net benefits</span>
-        <span className="guided-review-value">{formatCurrency(data.netBenefits)}</span>
-      </div>
-      {hasValue(data.federalWithheld) && (
-        <div className="guided-review-row">
-          <span className="guided-review-label">Federal withheld</span>
-          <span className="guided-review-value">{formatCurrency(data.federalWithheld)}</span>
-        </div>
-      )}
-    </div>
-  );
+  const entries = socialSecurityEntries(data).filter(isStartedSocialSecurity);
+  if (!entries.length) return <p className="guided-review-empty">No Social Security benefits entered.</p>;
+  const net = socialSecuritySourceTotal(entries, "netBenefits");
+  const withheld = socialSecuritySourceTotal(entries, "federalWithheld");
+  return <div className="guided-review-card">
+    {entries.map((entry, index) => <div className="guided-review-row" key={index}><span className="guided-review-label">{entry.recipient || `Benefit statement ${index + 1}`}{entry.beneficiaryRole === "other" ? " — belongs to another beneficiary" : ""}</span><span className="guided-review-value">{entry.sourceFactsConfirmed === true ? "Source checked" : "Source facts need review"}</span></div>)}
+    <div className="guided-review-row"><span className="guided-review-label">Net benefits belonging to this return</span><span className="guided-review-value">{net === null ? "Unknown" : formatCurrency(net)}</span></div>
+    <div className="guided-review-row"><span className="guided-review-label">Federal withholding belonging to this return</span><span className="guided-review-value">{withheld === null ? "Unknown" : formatCurrency(withheld)}</span></div>
+  </div>;
 }
 
 function UnemploymentSummary({ data }: { data: UnemploymentData | undefined }) {

@@ -20,6 +20,7 @@ import { isStartedRental, rentalFactErrors, type RentalSourceData } from "./guid
 import { nonW2TaxAllocationErrors } from "./guided-salt-facts";
 import type { MortgageSourceData } from "./guided-mortgage-facts";
 import type { RetirementSourceData } from "./guided-retirement-facts";
+import { socialSecurityFactErrors, socialSecurityEntries, isStartedSocialSecurity, type SocialSecuritySourceData } from "./guided-social-security-facts";
 import { vehicleFactErrors, type VehicleCreditData } from "./guided-vehicle-facts";
 import { adoptionFactErrors, type AdoptionCreditData } from "./guided-adoption-facts";
 
@@ -1460,7 +1461,7 @@ export const emptyRetirementEntry: RetirementEntryData = {
 
 // ── Social security data ──────────────────────────────────────────────────
 
-export interface SocialSecurityData {
+export interface SocialSecurityData extends SocialSecuritySourceData {
   netBenefits: string;
   federalWithheld: string;
 }
@@ -1656,22 +1657,9 @@ function validateRetirementSection(data: { entries: RetirementEntryData[] } | un
   return validateRequiredFacts(retirementFactErrors(data.entries, true, filingStatus, taxYear, stateData));
 }
 
-function validateSocialSecuritySection(data: SocialSecurityData | undefined): SectionValidationResult {
-  if (!data) return EMPTY_SECTION("Social Security info");
-  if (!hasNumericValue(data.netBenefits) && !hasNumericValue(data.federalWithheld)) {
-    return EMPTY_SECTION("Social Security info");
-  }
-  if (!hasNumericValue(data.netBenefits)) {
-    return {
-      status: "partial",
-      message: "Social Security was started but still needs the net benefits amount.",
-      fieldErrors: {
-        netBenefits: "Net benefits are still missing."
-      },
-      allowSkip: true,
-    };
-  }
-  return VALID_SECTION;
+function validateSocialSecuritySection(data: SocialSecurityData | undefined, state: GuidedFlowState): SectionValidationResult {
+  if (!socialSecurityEntries(data).some(isStartedSocialSecurity)) return EMPTY_SECTION("Social Security info");
+  return validateRequiredFacts(socialSecurityFactErrors(data, state.segmentation.filingStatus, state.taxYear, state.sectionData["personal-info"], state.sectionData.adjustments));
 }
 
 function validateUnemploymentSection(data: UnemploymentData | undefined): SectionValidationResult {
@@ -1738,7 +1726,7 @@ export function validateSection(
     case "income-retirement":
       return validateRetirementSection(getSectionData(state, "income-retirement"), state.segmentation.filingStatus, state.taxYear, getSectionData(state, "state-return"));
     case "income-social-security":
-      return validateSocialSecuritySection(getSectionData(state, "income-social-security"));
+      return validateSocialSecuritySection(getSectionData(state, "income-social-security"), state);
     case "income-unemployment":
       return validateUnemploymentSection(getSectionData(state, "income-unemployment"));
     case "deductions":

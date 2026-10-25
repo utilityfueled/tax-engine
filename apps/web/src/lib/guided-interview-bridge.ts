@@ -24,6 +24,7 @@ import { businessFactErrors, hasBusinessSourceData, isStartedNec, sumKnownBusine
 import { isStartedRental, rentalFactErrors, rentalExpenseFields } from "./guided-rental-facts";
 import { nonW2TaxAllocationErrors } from "./guided-salt-facts";
 import { isStartedRetirement } from "./guided-retirement-facts";
+import { socialSecurityEntries, isStartedSocialSecurity, socialSecurityFactErrors, socialSecuritySourceTotal } from "./guided-social-security-facts";
 import { investmentFactErrors, isStartedInvestment, type InvestmentSourceData } from "./guided-investment-facts";
 
 import type {
@@ -431,11 +432,32 @@ export function buildRetirementInputs(entries: RetirementEntryData[] | undefined
 // ── Social Security (SSA-1099) converter ─────────────────────────────────
 
 export function buildSocialSecurityInputs(data: SocialSecurityData | undefined) {
-  if (!data || !hasValue(data.netBenefits)) return [];
-  return [{
-    netBenefits: toDecimalString(data.netBenefits),
-    federalWithheld: toDecimalString(data.federalWithheld),
-  }];
+  assertKnownFacts(socialSecurityFactErrors(data));
+  return socialSecurityEntries(data).filter(entry => isStartedSocialSecurity(entry) && entry.sourceType === "ssa-1099" && entry.beneficiaryRole !== "other").map(entry => ({
+    recipient: entry.recipient!.trim(), netBenefits: toDecimalString(entry.netBenefits), federalWithheld: toDecimalString(entry.federalWithheld),
+  }));
+}
+
+export function buildRailroadSocialSecurityInputs(data: SocialSecurityData | undefined) {
+  assertKnownFacts(socialSecurityFactErrors(data));
+  return socialSecurityEntries(data).filter(entry => isStartedSocialSecurity(entry) && entry.sourceType === "rrb-1099" && entry.beneficiaryRole !== "other").map(entry => ({
+    recipient: entry.recipient!.trim(), netSocialSecurityEquivalentBenefitPortion: toDecimalString(entry.netBenefits), federalWithheld: toDecimalString(entry.federalWithheld),
+  }));
+}
+
+function buildSocialSecurityElectionInput(data: SocialSecurityData | undefined) {
+  if (data?.lumpSumMethod !== "election") return undefined;
+  return {
+    currentYearExclusionsAdjustments: toDecimalString(data.currentYearExclusionsAdjustments),
+    earlierYears: (data.earlierYears ?? []).map(year => ({
+      taxYear: Number(year.taxYear), filingStatus: mapFilingStatus(year.filingStatus as FilingStatus),
+      livedWithSpouseAtAnyTimeDuringYear: year.livedWithSpouseAtAnyTimeDuringYear ?? undefined,
+      benefitsReceivedInEarlierYear: toDecimalString(year.benefitsReceivedInEarlierYear),
+      delayedBenefitsReceivedInCurrentYear: toDecimalString(year.delayedBenefitsReceivedInCurrentYear),
+      adjustedGrossIncome: toDecimalString(year.adjustedGrossIncome), taxExemptInterest: toDecimalString(year.taxExemptInterest),
+      exclusionsAdjustments: toDecimalString(year.exclusionsAdjustments), taxableBenefitsPreviouslyReported: toDecimalString(year.taxableBenefitsPreviouslyReported),
+    })),
+  };
 }
 
 // ── Unemployment (1099-G) converter ──────────────────────────────────────
@@ -607,6 +629,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     assertKnownFacts(adoptionFactErrors(creditsData?.adoption, state.taxYear, segmentation.filingStatus));
   } catch { return null; }
 
+    assertKnownFacts(socialSecurityFactErrors(socialSecurityData, segmentation.filingStatus, state.taxYear, personalInfo, adjustmentData));
   const stateCode = personalInfo?.state || segmentation.stateCode || null;
   const w2s = buildW2Inputs(w2Data?.entries);
   const necs = buildNecInputs(seData?.necEntries);
@@ -628,6 +651,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     primaryIsActiveParticipant: ira.primaryIsActiveParticipant as boolean,
     primaryAge50OrOlder: state.taxYear - Number(personalInfo.dateOfBirth.slice(0, 4)) >= 50,
     ...(personalInfo.spouse && (segmentation.filingStatus === "mfj" || segmentation.filingStatus === "mfs") ? {
+  const formRRB1099 = buildRailroadSocialSecurityInputs(socialSecurityData);
       spouseIsActiveParticipant: ira.spouseIsActiveParticipant as boolean,
       spouseAge50OrOlder: state.taxYear - Number(personalInfo.spouse.dateOfBirth.slice(0, 4)) >= 50,
     } : {}),
@@ -694,6 +718,9 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     } : undefined,
     dependentCare,
     standardDeductionFacts: buildStandardDeductionFacts(personalInfo?.standardDeductionFacts, segmentation.filingStatus, state.taxYear, personalInfo),
+    formRRB1099,
+    socialSecurityFacts: formSSA1099.length + formRRB1099.length ? { puertoRicoIncomeExclusion: toDecimalString(socialSecurityData?.puertoRicoIncomeExclusion), americanSamoaIncomeExclusion: toDecimalString(socialSecurityData?.americanSamoaIncomeExclusion), sourceFactsConfirmed: socialSecurityData?.sourceFactsConfirmed ?? undefined } : undefined,
+    socialSecurityLumpSumElection: formSSA1099.length + formRRB1099.length ? buildSocialSecurityElectionInput(socialSecurityData) : undefined,
     deductionElection: deductionData?.method ?? "automatic",
     educationExpenses,
     energyCredits,
@@ -818,12 +845,12 @@ export function buildGuidedFactAnswers(
   }
 
   // Social Security → "social-security-benefits-review"
-  const ssData = state.sectionData["income-social-security"] as SocialSecurityData | undefined;
-  if (ssData && hasValue(ssData.netBenefits)) {
-    answers.push({
-      factId: "social-security-benefits-review",
-      answerText: `SSA-1099 confirmed. Net benefits: $${fmtNum(numVal(ssData.netBenefits))}.`,
-    });
+  const ssData = state.sectionData["income-social-security"];
+  const ssEntries = socialSecurityEntries(ssData).filter(isStartedSocialSecurity);
+  if (ssEntries.length) {
+    const total = socialSecuritySourceTotal(ssEntries, "netBenefits");
+    const complete = Object.keys(socialSecurityFactErrors(ssData, state.segmentation.filingStatus, state.taxYear, state.sectionData["personal-info"], state.sectionData.adjustments)).length === 0;
+    answers.push({ factId: "social-security-benefits-review", answerText: total === null ? "Benefit source records entered; some net amounts still need review." : `${ssEntries.length} benefit source record(s) ${complete ? "confirmed" : "entered; source facts need review"}. Net benefits belonging to this return: $${fmtNum(total)}.` });
   }
 
   // Unemployment → "government-payments-review"
@@ -964,15 +991,15 @@ export function buildGuidedSyntheticDocuments(
   }
 
   const ssData = state.sectionData["income-social-security"] as SocialSecurityData | undefined;
-  if (ssData && hasValue(ssData.netBenefits)) {
+  if (socialSecurityEntries(ssData).some(isStartedSocialSecurity)) {
     docs.push({
       id: "guided:ssa-1099",
-      name: "Guided Interview — SSA-1099",
+      name: "Guided Interview — Social Security benefit statements",
       size: 0,
       uploadedAt: now,
       kind: "ssa-1099",
-      coverage: "supported",
-      label: "SSA-1099 (guided interview)",
+      coverage: Object.keys(socialSecurityFactErrors(ssData, state.segmentation.filingStatus, state.taxYear, state.sectionData["personal-info"], state.sectionData.adjustments)).length ? "partially-supported" : "supported",
+      label: "SSA-1099 / RRB-1099 (guided interview)",
       notes: "Entered via guided interview.",
       matchedFixtureId: null,
       seededFactIds: ["social-security-benefits-review"],

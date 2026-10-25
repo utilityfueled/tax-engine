@@ -1,5 +1,5 @@
 import { completeCareSource } from "./care-source-fixture";
-import { completeRentalSource, completeNecSource, completeBusinessSection, completeBusinessExpenses, completeMortgageSource, completeRetirementSource } from "./complete-facts";
+import { completeRentalSource, completeNecSource, completeBusinessSection, completeBusinessExpenses, completeMortgageSource, completeRetirementSource, completeSocialSecuritySource, completeSocialSecurityTreatment } from "./complete-facts";
 import { completeBrokerageSource, completeDividendSource, completeInterestSource, completeTransactionSource } from "./complete-facts";
 import { completeW2Entry, startCompleteInterview as startInterview, completePersonalInfo, completeDependent, completeAocEligibility, completeEducationClaimant, completeHouseholdEmployee } from "./complete-facts";
 import { describe, it, expect } from "vitest";
@@ -1579,15 +1579,15 @@ describe("buildSocialSecurityInputs", () => {
   });
 
   it("converts SSA-1099 data with net benefits", () => {
-    const data = { netBenefits: "18000", federalWithheld: "2000" };
+    const data = { ...completeSocialSecurityTreatment, netBenefits: "18000", federalWithheld: "2000", entries: [{ ...completeSocialSecuritySource, benefitsPaid: "18000", netBenefits: "18000", federalWithheld: "2000" }] };
     const result = buildSocialSecurityInputs(data);
     expect(result).toHaveLength(1);
     expect(result[0].netBenefits).toBe("18000");
     expect(result[0].federalWithheld).toBe("2000");
   });
 
-  it("converts zero withholding", () => {
-    const data = { netBenefits: "22000", federalWithheld: "" };
+  it("converts an explicitly supplied zero withholding", () => {
+    const data = { ...completeSocialSecurityTreatment, netBenefits: "22000", federalWithheld: "0", entries: [{ ...completeSocialSecuritySource, benefitsPaid: "22000", netBenefits: "22000" }] };
     const result = buildSocialSecurityInputs(data);
     expect(result).toHaveLength(1);
     expect(result[0].federalWithheld).toBe("0");
@@ -1647,8 +1647,7 @@ describe("buildTaxInputFromGuidedData retirement and SS and unemployment", () =>
       stateCode: null,
     });
     state = updateSectionData(state, "income-social-security", {
-      netBenefits: "20000",
-      federalWithheld: "2000",
+      ...completeSocialSecurityTreatment, netBenefits: "20000", federalWithheld: "2000", entries: [{ ...completeSocialSecuritySource, benefitsPaid: "20000", netBenefits: "20000", federalWithheld: "2000" }],
     });
     const input = buildTaxInputFromGuidedData(state);
     expect(input).not.toBeNull();

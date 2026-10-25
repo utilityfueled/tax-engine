@@ -101,3 +101,7 @@ export const completeRetirementSource = {
   qualifiedJointSurvivorAnnuity: false, additionalWorksheetRequired: false, sourceFactsConfirmed: true,
   trumpAccount: false, excessContributionEarnings: "0",
 };
+
+/** Explicit synthetic SSA sources and resident/exclusion facts, never UI defaults. */
+export const completeSocialSecuritySource = { sourceType: "ssa-1099" as const, sourceTaxYear: "2025", accountReference: "synthetic-ssa", beneficiaryRole: "primary" as const, recipient: "Jordan Example", beneficiaryTaxIdLast4: "3333", benefitsPaid: "0", benefitsRepaid: "0", netBenefits: "0", federalWithheld: "0", priorYearBenefits: false, sourceFactsConfirmed: true };
+export const completeSocialSecurityTreatment = { residentTreatmentConfirmed: true, puertoRicoIncomeExclusion: "0", americanSamoaIncomeExclusion: "0", sourceFactsConfirmed: true };

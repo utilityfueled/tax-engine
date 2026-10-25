@@ -1,6 +1,6 @@
 import { completeNecSource, completeBusinessSection, completeBusinessExpenses } from "./complete-facts";
 import { completeInterestSource } from "./complete-facts";
-import { completePersonalInfo, completeW2Entry } from "./complete-facts";
+import { completePersonalInfo, completeW2Entry, completeSocialSecuritySource, completeSocialSecurityTreatment } from "./complete-facts";
 import { describe, it, expect } from "vitest";
 import {
   type SegmentationAnswers,
@@ -2376,11 +2376,11 @@ describe("validateSection", () => {
     expect(result.status).toBe("empty");
   });
 
-  it("returns complete for social security with benefits", () => {
+  it("returns complete for social security with actual source and treatment facts", () => {
     let state = startInterview({ filingStatus: "single", incomeTypes: ["social-security"], lifeEvents: [], stateCode: null });
+    state.sectionData["personal-info"] = completePersonalInfo;
     state = updateSectionData(state, "income-social-security", {
-      ...emptySocialSecurityData,
-      netBenefits: "18000",
+      ...emptySocialSecurityData, ...completeSocialSecurityTreatment, entries: [{ ...completeSocialSecuritySource, benefitsPaid: "18000", netBenefits: "18000" }],
     });
     const result = validateSection(state, "income-social-security");
     expect(result.status).toBe("complete");
