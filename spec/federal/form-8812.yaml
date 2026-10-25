@@ -108,3 +108,9 @@ lines:
     formula: "2026 CTC requires actual timely employment-valid SSN eligibility of a parent (at least one on a joint return), timely TINs for both joint filers, and qualifying-child SSN facts. ODC requires actual timely TIN eligibility. A disqualified parent or child receives no CTC, and no ODC is inferred. MAGI adds actual foreign/possession exclusions; Form2555 blocks ACTC; actual payroll sources feed Part II."
     irsRef: "https://www.irs.gov/instructions/i1040s8, Taxpayer Identification Number Requirements, Credit Limit Worksheet B, Earned Income Worksheet"
     testRef: "tests/engine/federal-ctc-facts.test.ts::Schedule 8812 actual identity and payroll facts"
+
+  - line: "source-magi-lines"
+    description: "Audit actual source amounts on lines1 and2a-2d without fabricating a possession-income split"
+    formula: "Line1=AGI;2a=actual PuertoRico excluded income;2b=Form2555lines45+50;2c=Form4563line15;2d=sum2a-2c;3=1+2d. Known nonnegative possession total0 implies both components0; positive total requires actual source split for2026. Unknown legacy components stay absent from audit."
+    irsRef: "https://www.irs.gov/pub/irs-pdf/f1040s8.pdf, Lines1-3"
+    testRef: "tests/engine/federal-ctc-facts.test.ts::audits actual Puerto Rico and Form4563 MAGI sources"

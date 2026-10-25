@@ -2916,8 +2916,22 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
 
   // ── Form 8812: Child Tax Credit (nonrefundable + refundable ACTC) ──
   const {qualifyingChildren, otherDependents} = calculateChildCreditEligibility(input);
-  if (year === 2026 && qualifyingChildren + otherDependents > 0 && input.childTaxCredit?.possessionIncomeExclusion === undefined) {
-    throw new Error("2026 child-credit possession-income exclusion is unknown");
+  let childCreditPuertoRico = input.childTaxCredit?.puertoRicoExcludedIncome === undefined ? undefined : d(input.childTaxCredit.puertoRicoExcludedIncome);
+  let childCreditForm4563 = input.childTaxCredit?.form4563ExcludedIncome === undefined ? undefined : d(input.childTaxCredit.form4563ExcludedIncome);
+  let childCreditPossessionTotal = input.childTaxCredit?.possessionIncomeExclusion === undefined ? undefined : d(input.childTaxCredit.possessionIncomeExclusion);
+  if (childCreditPuertoRico !== undefined && childCreditForm4563 !== undefined) {
+    const componentTotal = childCreditPuertoRico.plus(childCreditForm4563);
+    if (childCreditPossessionTotal !== undefined && !childCreditPossessionTotal.eq(componentTotal)) throw new Error("Child-credit possession amounts do not reconcile");
+    childCreditPossessionTotal = componentTotal;
+  }
+  if (childCreditPossessionTotal?.isZero()) {
+    if (childCreditPuertoRico?.gt(0) || childCreditForm4563?.gt(0)) throw new Error("Child-credit possession amounts do not reconcile");
+    childCreditPuertoRico = new Decimal(0);
+    childCreditForm4563 = new Decimal(0);
+  }
+  if (year === 2026 && qualifyingChildren + otherDependents > 0) {
+    if (childCreditPossessionTotal === undefined) throw new Error("2026 child-credit possession-income exclusion is unknown");
+    if (childCreditPuertoRico === undefined || childCreditForm4563 === undefined) throw new Error("2026 child-credit possession source split is unknown");
   }
   if (year === 2026 && qualifyingChildren > 0 && input.childTaxCredit?.bonaFidePuertoRicoResident === undefined) {
     throw new Error("2026 child-credit Puerto Rico residency is unknown");
@@ -2935,7 +2949,11 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     excessSocialSecurityWithholding: excessSSWithholding,
     qualifyingChildren,
     otherDependents,
-    agi: sum(agi, form2555IncomeReduction, form2555HousingDeduction, d(input.childTaxCredit?.possessionIncomeExclusion)),
+    adjustedGrossIncome: agi,
+    puertoRicoExcludedIncome: childCreditPuertoRico,
+    form4563ExcludedIncome: childCreditForm4563,
+    foreignExcludedIncome: form2555IncomeReduction.plus(form2555HousingDeduction),
+    agi: sum(agi, form2555IncomeReduction, form2555HousingDeduction, childCreditPossessionTotal ?? new Decimal(0)),
     // Per IRC §32(c)(2)(A)(i)(II) → §24(d)(1)(B)(i): earned income =
     // wages + net SE earnings - deductible half of SE tax (§164(f)).
     // IRS Form 8812 Lines 18a-18f: 18a(wages) + 18c(Sched C/F) - 18e(deductible half).

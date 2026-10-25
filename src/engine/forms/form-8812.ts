@@ -12,6 +12,10 @@ export interface Form8812Input {
   otherDependents: number;
   /** Schedule 8812 line 3 MAGI, including section 911/931/933 addbacks. */
   agi: Decimal;
+  adjustedGrossIncome?: Decimal;
+  puertoRicoExcludedIncome?: Decimal;
+  foreignExcludedIncome?: Decimal;
+  form4563ExcludedIncome?: Decimal;
   earnedIncome: Decimal;
   /** Credit Limit Worksheet A line 5, after the Worksheet B interaction if applicable. */
   taxLiability: Decimal;
@@ -50,6 +54,22 @@ export function calculateForm8812(input: Form8812Input, constants: YearConstants
   }
   for (const amount of [input.agi, input.earnedIncome, input.taxLiability]) {
     if (!amount.isFinite()) throw new Error("Schedule 8812 amount must be finite");
+  }
+  const sourceAmounts = [input.puertoRicoExcludedIncome,input.foreignExcludedIncome,input.form4563ExcludedIncome];
+  if (sourceAmounts.some(value => value !== undefined && (!value.isFinite() || value.lt(0)))) throw new Error("Invalid Schedule8812 excluded-income source");
+  if (input.adjustedGrossIncome !== undefined) {
+    if (!input.adjustedGrossIncome.isFinite()) throw new Error("Invalid Schedule8812 AGI source");
+    audit.record("Form 8812", "1", "Adjusted gross income", input.adjustedGrossIncome, "Form1040 line11");
+  }
+  for (const [line,description,value] of [
+    ["2a","Puerto Rico excluded income",input.puertoRicoExcludedIncome],
+    ["2b","Foreign excluded income and housing deduction",input.foreignExcludedIncome],
+    ["2c","Possession income from Form4563",input.form4563ExcludedIncome],
+  ] as const) if (value !== undefined) audit.record("Form 8812",line,description,value,"Actual source amount");
+  if (sourceAmounts.every(value => value !== undefined)) {
+    const addbacks = sourceAmounts.reduce<Decimal>((total,value)=>total.plus(value ?? 0),new Decimal(0));
+    if (input.adjustedGrossIncome !== undefined && !input.adjustedGrossIncome.plus(addbacks).eq(input.agi)) throw new Error("Schedule8812 source amounts do not reconcile to MAGI");
+    audit.record("Form 8812","2d","Total MAGI addbacks",addbacks,"Lines2a+2b+2c");
   }
   const ctc = constants.childTaxCredit;
   const maxCTC = ctc.perChild.times(input.qualifyingChildren);

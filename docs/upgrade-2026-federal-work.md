@@ -452,3 +452,15 @@ No test was removed and no tolerance widened. All321 affected tests pass; the144
 cases with added assertions pass again. Typecheck,3,115spec refs and whitespace
 checks pass. Scoped diff reviewed; these fixes do not qualify the legacy2210
 short-method estimate or final tax tables.
+
+### Schedule8812 MAGI source audit — 2026-10-25
+
+Added actual Puerto Rico and Form4563 excluded-income fields. Known combined zero
+implies both nonnegative components zero; positive2026 totals require an actual
+split and supplied totals must reconcile. Schedule8812 now audits AGIline1,
+PuertoRico2a, actual Form2555exclusion/housing2b, Form4563amount2c, and known subtotal2d.
+Unknown legacy2025 source components remain absent; no zero is invented for review
+PDFs. Three spec-linked regressions failed first;88 focused tests, root types,
+3,116 spec refs and whitespace checks pass. Scoped diff reviewed. Guided actual
+identity facts are required for both years; omitted historical2025 identity facts
+remain explicitly unqualified legacy compatibility, never independent review.

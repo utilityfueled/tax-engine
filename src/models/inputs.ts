@@ -4377,6 +4377,8 @@ export const TaxYearInputSchema = z.object({
   taxpayer: TaxpayerSchema,
   childTaxCredit: z.object({
     bonaFidePuertoRicoResident: z.boolean().optional(),
+    puertoRicoExcludedIncome: decimal.refine(value => d(value).gte(0), "Must be nonnegative").optional(),
+    form4563ExcludedIncome: decimal.refine(value => d(value).gte(0), "Must be nonnegative").optional(),
     possessionIncomeExclusion: decimal.refine(value => d(value).gte(0), "Must be nonnegative").optional(),
     nonTaxableCombatPayElection: decimal.refine(value => d(value).gte(0), "Must be nonnegative").optional(),
   }).optional(),

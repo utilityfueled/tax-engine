@@ -59,4 +59,21 @@ describe("Schedule 8812 actual identity and payroll facts",()=>{
     expect(()=>calculateFederalTax(input)).toThrow(/Puerto Rico.*unknown/i);
   });
 
+  it("audits actual Puerto Rico and Form4563 MAGI sources",()=>{
+    const input=TaxYearInputSchema.parse({...fixture(),childTaxCredit:{bonaFidePuertoRicoResident:false,possessionIncomeExclusion:"500",puertoRicoExcludedIncome:"200",form4563ExcludedIncome:"300"}});
+    const r=calculateFederalTax(input);
+    for(const [id,amount] of [["1","50000"],["2a","200"],["2b","0"],["2c","300"],["2d","500"],["3","50500"]]) expect(r.form8812?.lines.find(line=>line.line===id)?.value.toString()).toBe(amount);
+  });
+  it("rejects a positive possession aggregate with unknown source split",()=>{
+    const input=fixture();input.childTaxCredit={bonaFidePuertoRicoResident:false,possessionIncomeExclusion:"500"};
+    expect(()=>calculateFederalTax(input)).toThrow(/possession.*split.*unknown/i);
+  });
+  it("rejects contradictory possession totals and records known zero components",()=>{
+    const input=TaxYearInputSchema.parse({...fixture(),childTaxCredit:{bonaFidePuertoRicoResident:false,possessionIncomeExclusion:"500",puertoRicoExcludedIncome:"200",form4563ExcludedIncome:"400"}});
+    expect(()=>calculateFederalTax(input)).toThrow(/possession.*reconcile/i);
+    const zero=calculateFederalTax(fixture());
+    expect(zero.form8812?.lines.find(line=>line.line==="2a")?.value.toString()).toBe("0");
+    expect(zero.form8812?.lines.find(line=>line.line==="2c")?.value.toString()).toBe("0");
+  });
+
 });
