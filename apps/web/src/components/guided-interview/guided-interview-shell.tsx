@@ -528,6 +528,7 @@ function SectionContent({
     }
     case "income-investments": {
       const investData = getSectionData(state, "income-investments");
+      const savedSources = investData ?? { interestEntries: [], dividendEntries: [], brokerageEntries: [] };
       const interestEntries = investData?.interestEntries ?? [emptyInterestEntry];
       const dividendEntries = investData?.dividendEntries ?? [emptyDividendEntry];
       const brokerageEntries = investData?.brokerageEntries ?? [emptyBrokerageEntry];
@@ -541,19 +542,19 @@ function SectionContent({
           childElections={investData?.childElections}
           qofDispositionFacts={investData?.qofDispositionFacts}
           scheduleDSources={investData?.scheduleDSources}
-          onScheduleDSourcesChange={scheduleDSources => onStateChange(updateSectionData(state, "income-investments", { ...investData, interestEntries, dividendEntries, brokerageEntries, oidEntries, scheduleDSources }))}
-          onQofDispositionFactsChange={qofDispositionFacts => onStateChange(updateSectionData(state, "income-investments", { ...investData, interestEntries, dividendEntries, brokerageEntries, oidEntries, qofDispositionFacts }))}
-          onChildElectionsChange={childElections => onStateChange(updateSectionData(state, "income-investments", { ...investData, interestEntries, dividendEntries, brokerageEntries, oidEntries, childElections }))}
+          onScheduleDSourcesChange={scheduleDSources => onStateChange(updateSectionData(state, "income-investments", { ...savedSources, scheduleDSources }))}
+          onQofDispositionFactsChange={qofDispositionFacts => onStateChange(updateSectionData(state, "income-investments", { ...savedSources, qofDispositionFacts }))}
+          onChildElectionsChange={childElections => onStateChange(updateSectionData(state, "income-investments", { ...savedSources, childElections }))}
           stateCode={state.segmentation.stateCode}
-          onOidEntriesChange={next => onStateChange(updateSectionData(state, "income-investments", { ...investData, interestEntries, dividendEntries, brokerageEntries, oidEntries: next }))}
+          onOidEntriesChange={next => onStateChange(updateSectionData(state, "income-investments", { ...savedSources, oidEntries: next }))}
           onInterestEntriesChange={(next: InterestEntryData[]) =>
-            onStateChange(updateSectionData(state, "income-investments", { ...investData, interestEntries: next, dividendEntries, brokerageEntries, oidEntries }))
+            onStateChange(updateSectionData(state, "income-investments", { ...savedSources, interestEntries: next }))
           }
           onDividendEntriesChange={(next: DividendEntryData[]) =>
-            onStateChange(updateSectionData(state, "income-investments", { ...investData, interestEntries, dividendEntries: next, brokerageEntries, oidEntries }))
+            onStateChange(updateSectionData(state, "income-investments", { ...savedSources, dividendEntries: next }))
           }
           onBrokerageEntriesChange={(next: BrokerageEntryData[]) =>
-            onStateChange(updateSectionData(state, "income-investments", { ...investData, interestEntries, dividendEntries, brokerageEntries: next, oidEntries }))
+            onStateChange(updateSectionData(state, "income-investments", { ...savedSources, brokerageEntries: next }))
           }
         />
       );
@@ -608,6 +609,7 @@ function SectionContent({
         <SectionDeductions
           taxYear={state.taxYear}
           data={getSectionData(state, "deductions")}
+          childEntries={getSectionData(state, "income-investments")?.childElections}
           filingStatus={state.segmentation.filingStatus}
           onDataChange={(data: DeductionData) =>
             onStateChange(updateSectionData(state, "deductions", data))

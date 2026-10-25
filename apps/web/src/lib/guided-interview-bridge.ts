@@ -1,5 +1,6 @@
 import { buildGuidedQofFacts } from "./guided-qof-facts";
 import { buildGuidedScheduleDInputs } from "./guided-schedule-d-sources";
+import { buildGuidedInvestmentInterestInputs, investmentInterestFactErrors } from "./guided-investment-interest";
 import { buildBrokerageWithholdingSource } from "./guided-brokerage-withholding";
 import { buildForeignIncomeInput, foreignIncomeFactErrors } from "./guided-foreign-income";
 import { buildEstimatedTaxFacts, estimatedTaxFactErrors } from "./guided-estimated-tax-facts";
@@ -642,6 +643,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     assertKnownFacts(businessFactErrors(seData, segmentation.filingStatus, w2Data?.entries, stateReturnData, state.taxYear));
     assertKnownFacts(rentalFactErrors(rentalData?.entries, segmentation.filingStatus, state.taxYear, segmentation.stateCode));
     assertKnownFacts(deductionFactErrors(deductionData, state.taxYear, segmentation.filingStatus, personalInfo.spouse));
+    assertKnownFacts(investmentInterestFactErrors(deductionData, investData?.childElections, state.taxYear));
     assertKnownFacts(nonW2TaxAllocationErrors(state));
     assertKnownFacts(allPaymentFactErrors(paymentData, state.taxYear));
     assertKnownFacts(estimatedTaxFactErrors(paymentData, state.taxYear));
@@ -791,6 +793,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     dependentCareBenefits,
     standardDeductionFacts: buildStandardDeductionFacts(personalInfo?.standardDeductionFacts, segmentation.filingStatus, state.taxYear, personalInfo),
     deductionElection: deductionData?.method ?? "automatic",
+    ...buildGuidedInvestmentInterestInputs(deductionData, investData?.childElections, state.taxYear),
     educationExpenses,
     ...educationDistributions,
     ...savingsBondInputs,

@@ -1,0 +1,48 @@
+form: "Guided investment interest sources"
+fullName: "Actual regular and AMT Form4952 worksheet intake"
+taxYear: 2026
+irsReference: "https://www.irs.gov/pub/irs-pdf/f4952.pdf"
+sources:
+  - url: "https://www.irs.gov/pub/irs-pdf/f4952.pdf"
+    section: "Final2026 actual lines1-8 and instructions"
+    retrieved: "2026-10-25"
+  - url: "https://www.irs.gov/instructions/i6251"
+    section: "Line2c separate AMT investment income and regular election limitation"
+    retrieved: "2026-10-25"
+  - url: "https://www.irs.gov/publications/p550"
+    section: "Investment income of child; Alaska Permanent Fund example"
+    retrieved: "2026-10-25"
+notes: |
+  Collect actual completed worksheet sources, including signed parent income and
+  gains and explicit known zeros. The canonical Form4952/child binder calculates
+  allowed amounts and child transfers; the interview never guesses original
+  amounts, AMT parity, parent/child allocation or an election. No filing gate changes.
+lines:
+  - line: "child-partition"
+    description: "Actual child character and AMT sources reach the return once"
+    formula: "Actual child4000interest+2000Alaska produces2200regular investment income; actual800childPAB preference raises separateAMT amount to3000;5000interest gives2200regular/3000AMT deductions"
+    testRef: "tests/guided-interview/guided-investment-interest.test.ts::routes actual child partitions and separate AMT amounts through the canonical return"
+  - line: "unknowns-and-conservation"
+    description: "Require original source amounts and child identities"
+    formula: "Unknown year/amount/history/AMT or changed child source rejects; legacy positive scalar requires and reconciles to actual current-interest source; Decimal exact cents retained"
+    testRef: "tests/guided-interview/guided-investment-interest.test.ts::preserves exact signed amounts and rejects missing stale or conflicting sources"
+  - line: "confirmation"
+    description: "Source edits revoke worksheet confirmation"
+    formula: "Actual income/child/household changes revoke regular and AMT source confirmations without erasing original facts; confirmation-only changes preserve other source reviews"
+    testRef: "tests/guided-interview/guided-investment-interest.test.ts::invalidates actual source changes without confirmation cycles"
+  - line: "controls"
+    description: "Editable source worksheets preserve absent and zero answers"
+    formula: "Adding a worksheet creates unknown fields; explicit child-source copy uses actual existing records; signed and exact currency survives edits; removal does not change income evidence"
+    testRef: "tests/apps/web/investment-interest-interactions.test.tsx::collects exact regular and AMT sources without copying unknown amounts"
+  - line: "election-and-history"
+    description: "Actual election, expense qualification and carryforward history remain explicit"
+    formula: "Positive election requires the chosen source allocation; explicit amounts stay within actual available income; separate AMT election follows the regular election limit; positive carryover binds the immediately prior year"
+    testRef: "tests/guided-interview/guided-investment-interest.test.ts::requires actual election and carryforward sources while preserving exact signed values"
+  - line: "source-controls"
+    description: "Source edits retain evidence and require rechecking"
+    formula: "Each regular/AMT field and child link is editable; changing an election does not erase an explicit saved amount; source qualifications and original identities are never supplied by a control default"
+    testRef: "tests/apps/web/investment-interest-interactions.test.tsx::keeps election and child evidence while editing each worksheet source"
+  - line: "persistence"
+    description: "Separate source worksheets survive reopening without private network payloads"
+    formula: "Actual signed regular sources and distinct AMT amounts persist; confirming a child does not insert unrelated blank source records or absent optional arrays, so child and worksheet confirmations complete without cycles; clearing remains unknown; desktop/mobile requests omit private source reference and taxpayer IDs"
+    testRef: "apps/web/tests/guided-investment-interest.spec.ts::preserves separate regular and AMT investment sources at"

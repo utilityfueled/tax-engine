@@ -11,6 +11,8 @@ import {
 } from "@/lib/guided-interview-flow";
 import { CurrencyField } from "./currency-field";
 import { DeductionSourceDetails } from "./deduction-source-details";
+import { InvestmentInterestSourceDetails } from "./investment-interest-source-details";
+import type { ChildElectionData } from "@/lib/guided-child-election-facts";
 import { formatGuidedCurrency, parseGuidedDisplayAmount } from "@/lib/guided-currency";
 
 const formatUsd = formatGuidedCurrency;
@@ -19,11 +21,13 @@ export function SectionDeductions({
   data,
   filingStatus,
   taxYear,
+  childEntries,
   onDataChange,
 }: {
   data: DeductionData | undefined;
   filingStatus: FilingStatus | null;
   taxYear?: number | null;
+  childEntries?: ChildElectionData[];
   onDataChange: (data: DeductionData) => void;
 }) {
   const current = data ?? emptyDeductionData;
@@ -99,6 +103,7 @@ export function SectionDeductions({
 
         <CurrencyField label="Gambling winnings not already reported on an entered W-2G" hint="Enter actual winnings regardless of deduction method. Enter 0 only when known to be zero." value={current.gamblingWinnings ?? ""} onChange={(value) => update("gamblingWinnings", value)} />
         <CurrencyField label="Non-W-2 withholding already deducted on other schedules" hint="Enter the actual part of state or local withholding from your entered non-W-2 forms that is already deducted on Schedule C, E or F. Enter 0 only after checking. The source withholding is counted separately; do not add it again to additional income taxes." value={current.nonW2IncomeTaxesDeductedElsewhere ?? ""} onChange={value => update("nonW2IncomeTaxesDeductedElsewhere", value)} />
+        <InvestmentInterestSourceDetails data={current.investmentInterestSources} childEntries={childEntries} onChange={investmentInterestSources => onDataChange({ ...current, investmentInterestSources })} />
 
         {current.method === "itemized" && (
           <div className="guided-w2-card" style={{ marginTop: "16px" }}>
@@ -142,7 +147,7 @@ export function SectionDeductions({
                     value={current.casualtyLosses}
                     onChange={(v) => update("casualtyLosses", v)}
                   />
-                  <CurrencyField label="Investment interest expense" hint="Interest on money borrowed for taxable investments. The engine applies the Form 4952 investment-income limit." value={current.investmentInterestExpense ?? ""} onChange={(value) => update("investmentInterestExpense", value)} />
+                  <CurrencyField label="Investment interest expense" hint="Interest on money borrowed for taxable investments. Complete the actual regular and AMT source worksheets above; a saved total must reconcile to the regular worksheet's current expense." value={current.investmentInterestExpense ?? ""} onChange={(value) => update("investmentInterestExpense", value)} />
                   <CurrencyField label="Wagering losses" hint="Enter actual losses supported by records. The engine applies the year's deduction limit against winnings." value={current.gamblingLosses ?? ""} onChange={(value) => update("gamblingLosses", value)} />
                   {current.otherItemized.trim() && <CurrencyField label="Saved other-deduction total to reconcile" hint="Classify this total in the investment-interest and wagering-loss fields. Other deductions require their specific supporting forms." value={current.otherItemized} onChange={(value) => update("otherItemized", value)} />}
                 </fieldset>
