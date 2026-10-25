@@ -4,7 +4,7 @@ Updated 2026-10-25 UTC. This is a durable package checklist, not release approva
 
 | Package | Status | Evidence |
 | --- | --- | --- |
-| Atomic credit ledger | Implemented; local PostgreSQL verified | Owner-serialized reservations, exact attempt cost, one-cent aggregate retail minimum, idempotency, failure holds, reconciliation and refund; 17/17 tests against disposable PostgreSQL 16.14 on loopback |
+| Atomic credit ledger | Implemented; local PostgreSQL verified | Owner-serialized reservations, exact attempt cost, one-cent aggregate retail minimum, idempotency, failure holds, reconciliation and refund; 19/19 tests against disposable PostgreSQL 16.14 on loopback |
 | Task adapter/responder | Implemented; focused tests passing | Fixed providers, explicit task profiles, structured response/schema versions, bounded usage/timeouts/cancellation, actual usage hooks, local fallback |
 | Local opt-out | Implemented | Workspace-scoped default local help, failed-write fail-closed behavior, conversation clear on workspace change |
 | Tax grounding | Safe catalog/receipt infrastructure implemented; current helper transport cannot supply verified audit | Server recomputation receipt bound to owner/workspace revision/year/rules; 2026 incomplete and client previews rejected |
@@ -25,11 +25,11 @@ Read through official developer documentation on 2026-10-24/25; these are docume
 ## Checks and commits
 
 - `pnpm typecheck:web` passed after the adapter migration and corpus type fix. Final server catalog tests passed 4/4; web typecheck passed. Scoped lint: zero errors, existing evaluator non-null warnings remain.
-- Focused AI, privacy, routing, billing-hook and evaluation tests: 272/272 across 14 files, before the final catalog tests.
-- Isolated real PostgreSQL ledger tests: 17/17. Exercises 12 concurrent requests sharing a budget, owner/idempotency isolation, legacy balances, cross-cycle purchased credits, settled failure + escalation, unknown transport usage + authoritative reconciliation, refunds, overrun cap, cancellation and settlement replay.
+- Focused AI, privacy, routing, billing-hook and evaluation tests: 284/284 across 16 files, including the final catalog, adapter, routing, pricing and evaluation tests.
+- Isolated real PostgreSQL ledger tests: 19/19. Exercises 12 concurrent requests sharing a budget, owner/idempotency isolation, legacy balances, cross-cycle purchased credits, settled failure + escalation, unknown transport usage + authoritative reconciliation, refunds, overrun cap, cancellation, settlement replay and referenced overrun closure without extra debit.
 - Default unit runs skip database integration unless `TAX_ENGINE_TEST_AI_LEDGER_DATABASE_URL` explicitly points to a disposable loopback database. No staging/database credential is reused.
 - Generated artifacts are drafts: `pnpm eval:models:sync`; `pnpm eval:models:check` checks freshness. The harness performs no provider calls.
-- Commit references: pending package commits; append below after scoped diff review.
+- Commit references: `0d90200` atomic ledger foundation. Further scoped package references are appended below.
 
 ## Remaining required actions
 

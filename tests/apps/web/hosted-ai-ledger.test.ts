@@ -111,4 +111,26 @@ describe.skipIf(!databaseUrl)("AI credits against isolated PostgreSQL", () => {
     const result = await ledger.settle({ ...first, usage, accepted: false, final: true });
     expect(result).toMatchObject({ state: "settled", chargedCents: 1, reservedCents: 0 });
   });
+  it("closes an investigated known overrun without another debit and permits its refund", async () => {
+    await ledger.reserve(base); await start();
+    await ledger.settle({ ...first, usage: { inputTokens: 1000, outputTokens: 100000 }, accepted: false, final: true });
+    await expect(ledger.refund({ ...first, reference: "too-soon" })).rejects.toThrow(/settled/);
+    await expect(ledger.reconcileOverrun({ ...first, reference: "" })).rejects.toThrow(/reference/);
+    const closed = await ledger.reconcileOverrun({ ...first, reference: "synthetic-operator:overrun" });
+    expect(closed).toMatchObject({ state: "settled", chargedCents: 2, reservedCents: 0 });
+    expect(await ledger.reconcileOverrun({ ...first, reference: "synthetic-operator:overrun" })).toEqual(closed);
+    await expect(ledger.reconcileOverrun({ ...first, reference: "conflict" })).rejects.toThrow(/Conflicting/);
+    expect((await pool.query("SELECT provider_cost_usd::text FROM hosted_ai_attempts")).rows[0].provider_cost_usd).toBe("0.0501");
+    await ledger.refund({ ...first, reference: "synthetic-refund:overrun" });
+    expect((await ledger.reserve({ ...base, requestId: "after-overrun-refund", maximumChargeCents: 3 })).accepted).toBe(true);
+    await ensureHostedAiLedgerSchema(pool);
+    expect((await pool.query("SELECT reconciliation_reference FROM hosted_ai_reservations WHERE request_id=$1", [first.requestId])).rows[0].reconciliation_reference).toBe("synthetic-operator:overrun");
+  });
+  it("cannot close unknown usage or unstarted work as an overrun", async () => {
+    await ledger.reserve(base);
+    await expect(ledger.reconcileOverrun({ ...first, reference: "synthetic" })).rejects.toThrow(/final known-usage/);
+    await start(); await ledger.unknown(first);
+    await expect(ledger.reconcileOverrun({ ...first, reference: "synthetic" })).rejects.toThrow(/final known-usage/);
+    expect((await ledger.reserve({ ...base, requestId: "hold-still-active" })).accepted).toBe(false);
+  });
 });

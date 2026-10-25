@@ -10,6 +10,7 @@ interface ReservationRow {
   owner_id: string; request_id: string; payload_digest: string; cycle_key: string;
   included_budget_cents: string; included_reserved_cents: string; purchased_reserved_cents: string;
   included_charge_cents: string; purchased_charge_cents: string; state: State; refund_reference: string | null;
+  reconciliation_reference: string | null;
 }
 interface AttemptRow {
   attempt: number; state: "running" | "unknown" | "accepted" | "rejected";
@@ -167,6 +168,27 @@ export function createHostedAiLedger(pool: Pick<Pool, "connect">) {
         const attempts = await client.query("SELECT attempt FROM hosted_ai_attempts WHERE owner_id=$1 AND request_id=$2", [input.ownerId, input.requestId]);
         if (reservation.state !== "reserved" || attempts.rowCount) throw new Error("Started AI work must be settled or reconciled before release.");
         const result = await client.query<ReservationRow>("UPDATE hosted_ai_reservations SET state='cancelled',included_reserved_cents=0,purchased_reserved_cents=0,updated_at=NOW() WHERE owner_id=$1 AND request_id=$2 RETURNING *", [input.ownerId, input.requestId]);
+        return view(result.rows[0]);
+      });
+    },
+    /** Close an investigated provider overrun without charging above the original authorization. */
+    async reconcileOverrun(input: AiReservationIdentity & { reference: string }) {
+      identity(input);
+      if (!input.reference.trim()) throw new Error("Overrun reconciliation reference is required.");
+      return transaction(input.ownerId, async client => {
+        const reservation = await row(client, input);
+        if (reservation.reconciliation_reference) {
+          if (reservation.reconciliation_reference !== input.reference) throw new Error("Conflicting overrun reconciliation replay.");
+          return view(reservation);
+        }
+        if (reservation.state !== "reconciliation-required"
+          || !new Money(reservation.included_reserved_cents).plus(reservation.purchased_reserved_cents).isZero()) {
+          throw new Error("Only a final known-usage overrun can be closed.");
+        }
+        const attempts = await client.query<AttemptRow>("SELECT * FROM hosted_ai_attempts WHERE owner_id=$1 AND request_id=$2 ORDER BY attempt", [input.ownerId, input.requestId]);
+        if (!attempts.rows.length || attempts.rows.some(attempt => !["accepted", "rejected"].includes(attempt.state)
+          || attempt.provider_cost_usd === null || attempt.usage === null)) throw new Error("All provider attempts require final authoritative usage.");
+        const result = await client.query<ReservationRow>("UPDATE hosted_ai_reservations SET state='settled',reconciliation_reference=$3,updated_at=NOW() WHERE owner_id=$1 AND request_id=$2 RETURNING *", [input.ownerId, input.requestId, input.reference]);
         return view(result.rows[0]);
       });
     },

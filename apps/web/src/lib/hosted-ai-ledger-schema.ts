@@ -17,12 +17,14 @@ export async function ensureHostedAiLedgerSchema(pool: Pick<Pool, "query">) {
       purchased_refund_cents BIGINT NOT NULL DEFAULT 0 CHECK (purchased_refund_cents >= 0),
       state TEXT NOT NULL CHECK (state IN ('reserved', 'running', 'reconciliation-required', 'settled', 'cancelled', 'refunded')),
       refund_reference TEXT,
+      reconciliation_reference TEXT,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       PRIMARY KEY (owner_id, request_id)
     );
     CREATE INDEX IF NOT EXISTS hosted_ai_reservations_owner_cycle_idx
       ON hosted_ai_reservations (owner_id, cycle_key);
+    ALTER TABLE hosted_ai_reservations ADD COLUMN IF NOT EXISTS reconciliation_reference TEXT;
     CREATE TABLE IF NOT EXISTS hosted_ai_attempts (
       owner_id TEXT NOT NULL,
       request_id TEXT NOT NULL,

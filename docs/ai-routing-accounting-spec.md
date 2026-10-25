@@ -21,6 +21,7 @@ Version: 2026-10-25. This defines software behavior; it does not qualify a model
 - Exact provider costs sum across attempts. Retail charge is `max(1, ceil(totalProviderUsd * 100))` once per logical request. Release unused holds atomically. Never debit beyond the authorized hold: retain an overrun and mark reconciliation required.
 - Transport failures, timeouts and cancellation after dispatch retain the hold; an authoritative reconciliation reference is required before settling unknown usage. Only never-started reservations can be released without provider evidence.
 - Settlements and refunds are idempotent. Refunds require an operator reference, restore the original included/purchased charge allocation and preserve immutable provider usage/cost history. No public refund/reconciliation endpoint exists.
+- A known-cost overrun can be closed only by `reconcileOverrun` with a durable operator reference, no remaining holds and every attempt final/known. Closure retains the exact overrun and original capped charge, never adds a debit, and permits an ordinary referenced refund afterward. Unknown usage cannot take this path.
 
 ## Qualification and rollout
 
