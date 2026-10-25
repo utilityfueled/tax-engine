@@ -7,10 +7,34 @@ complete a checkbox.
 
 ## Current integration — 2026-10-25
 
-`5006088` is the latest confirmed pushed integration on `upgrade/2026-baseline`. The goal remains active and the
+`4aef633` is the latest confirmed pushed integration on `upgrade/2026-baseline`. The goal remains active and the
 upgrade is **not release-ready**. Unanswered external inputs are listed below;
 internal implementation and review continue in parallel.
 
+- `4aef633`: actual PA digital-asset basis and separate OH withholding sources.
+  Exact4,264 tests/154files, roottypes,4,634 references and lint pass; parent12
+  independent source cases and three rendered reference pages pass. Guided
+  collection remains active, with no launch-state selection inferred.
+- `b5a0675`: indexed reopened PDF fields remove repeated tree traversal while
+  retaining every original assertion, field-type check and deadline. Four
+  exact cases and four independent cases pass with types/lint.
+- Full immutable coverage on`4aef633` is running with pinnedPython/pypdf, sample
+  documents and disposable PostgreSQL; the regenerated392-entry inventory passes.
+- `678fe38`: source-bound positive1202 current origins where the printed and
+  statutory traces reconcile. Final12 affected cases,571 adjacent cases, root/web
+  types and4,614 references pass after the separate reader repair; parent13-case
+  review and four rendered pages pass. The negative-net interpretation stays
+  disabled pending a qualified tax reviewer.
+- `f5b096f`: actual positiveATNOL and current public-cash charity coordination.
+  Final812 tests/89files, root/web types,4,624 references, build, two production
+  browser cases with zero retries and rendered review output pass. Separate
+  parent11-case and federal12-case reviews pass. Prior/mixed sources remain next.
+- `905d219`: originalDA long-term sources bind exactly once beside original
+  B/QSBS indexes. Reviewed1,239 tests/24files and final20 source/metadata tests
+  pass, with18 independent cases plus a combinedQSBS/DA probe.
+- `81668db`: readiness now flags missing8949 detail for originalDA-only returns,
+  including zero gain. Exact27 tests plus22 independent cases pass; qualification
+  gates are unchanged.
 - `e7bd6e8` and `5006088`: actual original1099-DA source records, once-only
   Box4 withholding and all twelve Form8949 reporting categories. The source
   core passes646 adjacent tests and eight independent review cases after a
@@ -19,12 +43,13 @@ internal implementation and review continue in parallel.
   builds and lint with zero errors. Independent review passes six new cases
   plus a mixed QSBS/DA probe. Fourteen-page reopening, all category widgets,
   redacted identifiers, printed ScheduleD totals and rendered pages pass.
-  Document/guided DA intake and state handoff remain the next facts package.
+  Original document adaptation is committed in `119ff16`, with 785 tests in
+  79 files and independent 14-case/12-case source reviews. The state handoff is committed in`4aef633`; guided intake remains active.
 - `3ff896c`: actual ordinary investment sources in current Form172 origins.
   Reviewed tree`7c2a2185` passes649 tests in21 files, root/web types and4,583
   references; four review pages reopen/render. Independent review passes12
-  cases and four literal/adversarial probes. Guided capital-origin collection
-  and positive1202 origins remain distinct follow-ups.
+  cases and four literal/adversarial probes. Guided capital-origin collection remains active; positive1202 origins are
+  separately committed in`678fe38` within their reconciled-net boundary.
 - `8cf0e8e`: actual current-year loss-origin collection. Final integrated tree
   `1dd40361` passes773 tests in79 files, root/web types,4,568 references, build,
   and desktop/mobile Chromium with zero retries. Six independent source/UI
@@ -70,20 +95,28 @@ internal implementation and review continue in parallel.
 - `d078cf4`: direct pinned browser-safe SHA256 dependency, matching the existing
   transitive2.4.0 version. Strict frozen peers, three reference hash comparisons
   and the refreshed package audit pass with zero findings across521 entries.
-- Latest observed `5006088` CI40233791595/Web40233791627 are in progress. Final-head full verification,
+- CI at `9da0bab` passes17,725 cases but fails one fourteen-page PDF timeout
+  and stale inventory. The test lookup repair is committed in`b5a0675`; the regenerated inventory
+  has392entries on`4aef633`. Current remote revalidation remains pending. Final-head full verification,
   runtime-image advisories/rehearsal and external qualification remain required.
-  A full synthetic unit run is active on isolated committed`5006088`, with the
-  pinned Python/pypdf, sample downloads and disposable PostgreSQL prerequisites.
-  It excludes concurrent source work and is not recorded as passed yet.
+  Full synthetic unit integration on isolated committed `5006088` passed
+  17,723 tests in 907 files, zero failures/skips, in 382.79 seconds, with pinned
+  Python/pypdf, sample downloads and disposable PostgreSQL. Later packages
+  require final integrated coverage/browser/runtime checks.
+- `9da0bab`: independent Form8949 reader now reopens saved bytes rather than
+  waiting for stdin EOF. All four focused cases and independent diff review
+  pass; no assertions, timeout or production code changed. See
+  [the repair evidence](upgrade-2026-pdf-reader-repair.md).
 
-The remaining finite internal queue is ordinaryDA document/guided/state handoff;
-ordinary capital-origin intake; source-bound positive1202 origins where the
-statutory and printed traces reconcile; positiveATNOL/current-cash charity;
-actual prior/mixed charity and2026 nonitemizer carry; and source-bound COD
+The remaining finite internal queue is ordinaryDA guided intake;
+ordinary capital-origin intake; actual prior/mixed charity and2026 nonitemizer carry; and source-bound COD
 vintage reductions. Then close the enabled-scenario facts/calculation/review/
 readiness audit and run final integration, native images and recovery checks.
 The negative-net1202/Form172 overlap is a specifically unresolved interpretation,
-not an invented zero or completed method. Deliberately unsupported special
+not an invented zero or completed method. The user has no interpretation to
+supply; the required next action is a qualified tax reviewer resolving the
+specific $99,800 versus $100,000 NOL trace with controlling authority. The case
+stays disabled while independent work continues. Deliberately unsupported special
 methods remain identified in the federal and education method ledgers. Their
 guards do not imply implemented support or external qualification.
 

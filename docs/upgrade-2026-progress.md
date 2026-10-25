@@ -3,7 +3,7 @@
 ## Current checkpoint
 
 Execution remains active and **not release-ready**. Latest confirmed pushed
-integration is `5006088` on `upgrade/2026-baseline`. Resume from
+integration is `4aef633` on `upgrade/2026-baseline`. Resume from
 [the durable checklist](upgrade-2026-checklist.md) and `ongoingExecution` in the
 machine checkpoint. Older evidence applies only to its recorded code.
 
@@ -19,18 +19,42 @@ provider lifecycle enforcement (`b828ee4`) are also reviewed and pushed. Package
 ledgers record exact trees, checks and findings. These checks do not establish
 human, provider or final-form qualification.
 
+Source-bound positive1202 origins (`678fe38`), positiveATNOL/current-cash charity
+(`f5b096f`), long-term originalDA ScheduleD binding (`905d219`) and originalDA
+packet readiness (`81668db`) now have exact package checks and separate agent
+reviews. All applicable filing/year gates remain closed. The negative-net1202
+interpretation stays disabled and requires a qualified tax reviewer; the user
+is not expected to resolve the tax arithmetic.
+
+The actual PA/OH digital-source handoff (`4aef633`) passes4,264 tests/154files,
+roottypes,4,634 references, lint and separate12-case review. Three reference
+pages are rendered/inspected. Guided intake remains active. `b5a0675` removes
+repeated PDF test field scans with all assertions and deadlines retained; both
+independent four-case runs pass. Full coverage on committed`4aef633` is running,
+and its regenerated392-entry coverage inventory passes freshness validation.
+
+Full unit integration at `5006088` passes 17,723 tests in 907 files with no
+failures or skips (382.79 seconds). This excludes later packages and is separate
+from coverage, browser, runtime and staging qualification. Original DA document
+sources are committed in `119ff16`; the broader guided cohort passes 785 tests,
+and separate 14-case and 12-case source reviews pass. `9da0bab` repairs a
+reproduced independent PDF-reader stdin stall by reopening the saved bytes, with
+all four tests, assertions and the original timeout retained.
+
 Full verification at `1791979` passed17,577 tests,86.91%branch coverage against
 the unchanged85%gate, all required types/spec/build/lint checks and328 production
 browser cases with zero retries. Five hosted billing cases were skipped and
 provide no staging evidence. Later packages need another full integrated run.
-Latest observed `5006088` CI40233791595 and Web40233791627 are in progress;
-no current remote green is claimed. Package advisories were refreshed for the separately
+CI at `9da0bab` passes17,725 cases but fails one fourteen-page PDF timeout
+and stale inventory. The measured lookup repair is committed in`b5a0675`; inventory392entries
+are regenerated from committed`4aef633`.
+Latest `4aef633` workflows are pending; no current remote green is claimed. Package advisories were refreshed for the separately
 committed browser-safe hashing dependency (`d078cf4`):
 zero findings across521 locked entries; OS advisories remain separately tracked.
 
-The finite internal queue continues with ordinaryDA document/guided/state
-handoffs, capital-origin intake, positive1202 origins, positiveATNOL/current-cash
-charity, actual prior/mixed charity,2026 nonitemizer carry and source-bound COD
+The finite internal queue continues with ordinaryDA guided
+intake, capital-origin intake, actual prior/mixed charity,2026 nonitemizer carry
+and source-bound COD
 reductions. The negative-net1202/Form172 overlap remains a named interpretation
 question; unaffected methods continue. Both AI scorer review defects are fixed,
 but all240evaluation cases remain human-unreviewed with zero live measurements.
