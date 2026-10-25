@@ -204,7 +204,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "36e0b728c7dd445490d0f20e93e67a4ccfb5a708",
+    "lastRecordedCommit": "a79959abb552ac0072b8159eae0199612e6b5f24",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -340,6 +340,71 @@
         "rootWebTypes": "passed",
         "specReferences": 4060,
         "independentAgentReviewCases": 8
+      },
+      "childElectionCore": {
+        "commit": "b3f0362",
+        "tree": "667f1f85c662dde5fc40117adac7edaa2e9968fa",
+        "tests": 17241,
+        "files": 775,
+        "rootTypes": "pass",
+        "specReferences": 4098,
+        "review": "Agent reproduced parent-comparison injection and reviewed fix; no human qualification",
+        "evidence": "docs/upgrade-2026-child-election-work.md",
+        "boundary": "Isolated base before passive-source integration; subsequent remote14failures separate"
+      },
+      "childElectionIntake": {
+        "commit": "55c07e7",
+        "tree": "594b2d20ccebf893bbc2c68b4ce7e705eb51a4ee",
+        "tests": 696,
+        "files": 58,
+        "rootWebTypes": "pass",
+        "specReferences": 4126,
+        "build": "pass",
+        "browserTests": 2,
+        "browserRetries": 0,
+        "screenshotsInspected": 2,
+        "evidence": "docs/upgrade-2026-child-election-intake-work.md",
+        "humanQualification": false,
+        "staging": false
+      },
+      "childReferencePdf": {
+        "commit": "a79959a",
+        "tree": "d0365055ce9b2ff8ef4db97fbc2409877d93764a",
+        "tests": 46,
+        "rootTypes": "pass",
+        "specReferences": 4129,
+        "renderedPages": 1,
+        "textChecks": "pass",
+        "agentReview": "pass",
+        "evidence": "docs/upgrade-2026-child-reference-work.md",
+        "filingQualified": false
+      },
+      "passiveSourceRouting": {
+        "commit": "0a7398a",
+        "treePrefix": "f2271616",
+        "tests": 1089,
+        "rootTypes": "pass",
+        "specReferences": 4106,
+        "remainingRegression": "14remote PAfullreturn missing-name failures"
+      },
+      "continuingPtpCarry": {
+        "commit": "fc39cf3",
+        "treePrefix": "233ffd9e",
+        "tests": 555,
+        "rootTypes": "pass",
+        "specReferences": 4124
+      },
+      "marketplaceReviewPdf": {
+        "commit": "b1fab71",
+        "treePrefix": "c7c8758b",
+        "tests": 1169,
+        "files": 124,
+        "rootTypes": "pass",
+        "specReferences": 4115,
+        "renderedPages": 4,
+        "mappedFields": 16,
+        "reviewFix": "Fresh canonical business source binder rejects stale income",
+        "filingQualified": false
       }
     },
     "externalInputsStillPending": [
@@ -646,7 +711,7 @@
       "scope": "immutable tracked-file archive, locked dependencies, disposable local PostgreSQL16; unchanged coverage thresholds",
       "limitation": "Two PDF aggregate tests exceeded unchanged5000ms timeouts; no numeric tax failure. Commit76bb3a6 isolates identical template/state assertions into named independent cases. Its exact staged tree passes62tests and3682spec refs; fresh full gate required after newer packages."
     },
-    "lastPushedCommit": "36e0b728c7dd445490d0f20e93e67a4ccfb5a708",
+    "lastPushedCommit": "a79959abb552ac0072b8159eae0199612e6b5f24",
     "currentBrowserRun": {
       "commit": "ed915c1708cedc02e99ca12fb7383331a7f99bea",
       "status": "passed-with-hosted-skips",
@@ -722,13 +787,13 @@
       "limitation": "Actual React DOM callback checks; final production browser rerun required."
     },
     "remoteCiLatestObserved": {
-      "commit": "36e0b728c7dd445490d0f20e93e67a4ccfb5a708",
+      "commit": "55c07e7",
       "date": "2026-10-25",
-      "ciRun": 40203702503,
-      "ciStatus": "in_progress",
-      "webRun": 40203702965,
-      "webStatus": "queued",
-      "boundary": "Unfinished current runs; prior push runs cancelled, not passing."
+      "ciRun": 40207012368,
+      "ciStatus": "in_progress before newer push",
+      "webRun": 40207012431,
+      "webStatus": "in_progress before newer push",
+      "boundary": "Not final passing evidence; a79959a subsequently pushed"
     },
     "remoteCi6b07529": {
       "run": 40176974652,
@@ -1262,6 +1327,98 @@
       "specReferences": 4026,
       "parentReviewTests": 7,
       "remaining": "Advanced-source intake; guided-only review downloads completed2f009c5."
+    },
+    "childElectionCore": {
+      "commit": "b3f0362",
+      "tree": "667f1f85c662dde5fc40117adac7edaa2e9968fa",
+      "tests": 17241,
+      "files": 775,
+      "rootTypes": "pass",
+      "specReferences": 4098,
+      "review": "Agent reproduced parent-comparison injection and reviewed fix; no human qualification",
+      "evidence": "docs/upgrade-2026-child-election-work.md",
+      "boundary": "Isolated base before passive-source integration; subsequent remote14failures separate"
+    },
+    "childElectionIntake": {
+      "commit": "55c07e7",
+      "tree": "594b2d20ccebf893bbc2c68b4ce7e705eb51a4ee",
+      "tests": 696,
+      "files": 58,
+      "rootWebTypes": "pass",
+      "specReferences": 4126,
+      "build": "pass",
+      "browserTests": 2,
+      "browserRetries": 0,
+      "screenshotsInspected": 2,
+      "evidence": "docs/upgrade-2026-child-election-intake-work.md",
+      "humanQualification": false,
+      "staging": false
+    },
+    "childReferencePdf": {
+      "commit": "a79959a",
+      "tree": "d0365055ce9b2ff8ef4db97fbc2409877d93764a",
+      "tests": 46,
+      "rootTypes": "pass",
+      "specReferences": 4129,
+      "renderedPages": 1,
+      "textChecks": "pass",
+      "agentReview": "pass",
+      "evidence": "docs/upgrade-2026-child-reference-work.md",
+      "filingQualified": false
+    },
+    "passiveSourceRouting": {
+      "commit": "0a7398a",
+      "treePrefix": "f2271616",
+      "tests": 1089,
+      "rootTypes": "pass",
+      "specReferences": 4106,
+      "remainingRegression": "14remote PAfullreturn missing-name failures"
+    },
+    "continuingPtpCarry": {
+      "commit": "fc39cf3",
+      "treePrefix": "233ffd9e",
+      "tests": 555,
+      "rootTypes": "pass",
+      "specReferences": 4124
+    },
+    "marketplaceReviewPdf": {
+      "commit": "b1fab71",
+      "treePrefix": "c7c8758b",
+      "tests": 1169,
+      "files": 124,
+      "rootTypes": "pass",
+      "specReferences": 4115,
+      "renderedPages": 4,
+      "mappedFields": 16,
+      "reviewFix": "Fresh canonical business source binder rejects stale income",
+      "filingQualified": false
+    },
+    "foreignAnnualDeduction": {
+      "commits": [
+        "9a302c0",
+        "e3e8ed0"
+      ],
+      "evidence": "docs/upgrade-2026-ai-work.md",
+      "deductionYearCarryover": "active separate package"
+    },
+    "marketplaceCoordinationIntake": {
+      "commit": "242e3ea",
+      "evidence": "docs/upgrade-2026-facts-work.md"
+    },
+    "remoteCiB3f0362": {
+      "commit": "b3f0362",
+      "run": 40206165887,
+      "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40206165887",
+      "unitPassed": 17241,
+      "unitFailed": 14,
+      "failedCohort": "tests/edge-cases/pa-full-return.test.ts",
+      "failure": "undefined passive activity name.trim",
+      "coverage": "skipped after unit failures",
+      "specReferences": "pass",
+      "inventory": "stale",
+      "typesContractsLintBuild": "pass",
+      "evidence": ".local/upgrade-evidence/ci-b3f0362-failed-unit.log",
+      "evidenceSha256": "13a6680667acb6a7234fe41bd17428026d1cb1dfd21a8eb8697dd91b7b16224b"
     }
   }
 }

@@ -10,16 +10,19 @@ document consent/cancellation and an inactive complete-data export pipeline.
 None of these supersedes the required full coverage, independent review, staging
 or final-form qualification gates.
 
-Latest recorded integration is `36e0b72`, pushed on `upgrade/2026-baseline`.
+Latest recorded integration is `a79959a`, pushed on `upgrade/2026-baseline`.
 Execution remains active and **not release-ready**. New separate packages cover
-ordinary NIIT sources/intake, ordered Marketplace IRA/bond/loan worksheets,
-actual PTC intake, guided review downloads, and parent bond preferences/intake.
-The final isolated parent bond core passes all 17,201 tests across 764 files;
-its intake passes 672 guided/DOM cases, production build and desktop/mobile
-Chromium without retries. Source trees, review fixes and limitations are in the
-checklist and machine checkpoint. Child election eligibility, remaining
-Marketplace methods, foreign-tax elections/carryovers and advanced source
-intake remain active internal work.
+actual child election eligibility/intake, child-only PDF amounts, passive-source
+routing, continuing PTP carry losses, foreign-tax deduction sources and actual
+Marketplace review worksheets. Child core isolated tests pass17,241cases; child
+intake passes696cases plus desktop/mobile production browser checks. Exact tree,
+source and review evidence is in the checklist and package ledgers.
+
+Remote b3f0362 passed17,241cases and failed14PA integration cases on missing
+passive activity names; coverage was skipped. That regression is assigned for
+correction, and inventory requires regeneration. Child special sources, remaining
+Marketplace methods, rental QBI vintages, foreign-tax carryover methods and
+advanced source intake remain active internal work.
 
 The prior single-write PDF tree passes 17,100 coverage tests with 86.59% branches.
 Remote c9e057c passes 17,119 unit tests but fails 12 coverage cases, mostly timeout

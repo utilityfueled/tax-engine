@@ -7,10 +7,36 @@ complete a checkbox.
 
 ## Current integration — 2026-10-25
 
-`36e0b72` is pushed. The goal remains active and the upgrade is not release-ready.
-The external inputs below remain unanswered. Active work includes child election
-eligibility, remaining Marketplace passive/NOL methods, foreign-tax elections and
-advanced guided sources/PDF handoffs. Completed package boundaries follow.
+`a79959a` is pushed. The goal remains active and the upgrade is not release-ready.
+The external inputs below remain unanswered. Internal work continues on child
+special sources, remaining Marketplace passive/NOL methods, rental QBI loss
+vintages, foreign-tax carryovers and advanced guided sources/PDF handoffs.
+
+- `b3f0362`: actual child election age/student/payment/parent eligibility, including
+  canonical parent taxable income without elected child income. Isolated tree
+  667f1f85 passes17,241tests in775files; root types and4,098spec references pass.
+  Independent review reproduced and fixed a caller-supplied parent-income error.
+  This tree preceded the later passive-source integration failures described below.
+- `55c07e7`: actual child election intake and confirmation invalidation; tree
+  594b2d20 passes696tests, root/web types,4,126spec references, production build
+  and two desktop/mobile Chromium cases. Child records survive parent edits and
+  reopening; request bodies exclude the child SSN. Four agent-review cases pass.
+- `a79959a`: child-exempt PDF amounts remain child worksheet information;
+  tree d0365055 passes46tests/root types/4,129spec references. Independent agent
+  review, reopened PDF text assertions and final one-page visual inspection pass.
+- `0a7398a`: actual passive sources and corrected Form8582 lines/routing;
+  tree f2271616 passes1,089tests. Subsequent remote PA integration exposed14
+  missing-name failures; correction remains active internal work.
+- `fc39cf3`: continuing PTP prior losses offset that PTP once before regular
+  income/MAGI; tree233ffd9e passes555tests, root types and4,124spec references.
+- `9a302c0` / `e3e8ed0`: actual annual foreign-tax deduction core/intake;
+  source evidence is in the AI work ledger. Deduction-year carryover absorption
+  and its review worksheet remain a separate active package.
+- `242e3ea`: actual Marketplace health-policy coordination intake.
+- `b1fab71`: actual7206/Pub974 review records and fresh business-source binding;
+  tree c7c8758b passes1,169tests in124files, root types and4,115spec references.
+  Parent review reproduced stale business income and the source binder fixes it;
+  four rendered pages and16fields were inspected. No form qualification implied.
 
 - `6d533d2`: actual parent INT/DIV/OID bond preferences use one parent floor;
   isolated tree 5c5f0e4 passes all 17,201 tests across 764 files, root types and
@@ -66,9 +92,13 @@ advanced guided sources/PDF handoffs. Completed package boundaries follow.
   Image exposure is separate: 157 matches and 67 advisory records, with owner
   roles and a 2026-11-07 review deadline; maintainer disposition remains pending.
 
-Current remote runs for `36e0b72`: CI 40203702503 is in progress and Web
-40203702965 is queued. Preceding runs were cancelled by subsequent pushes;
-none is counted as final integrated qualification.
+Latest completed remote `b3f0362` CI40206165887 passes17,241unit cases and
+fails14PA full-return cases at passive activity name validation; coverage did not
+run. Type/contracts, lint and engine build pass. Spec references pass but generated
+inventory is stale. The current fix is assigned to the passive-source owner. Runs
+for fc39cf3 were cancelled by a newer push. 55c07e7 CI40207012368/Web40207012431
+were observed running before a79959a was pushed; no incomplete run establishes
+final qualification. Parent owns inventory refresh and final integrated checks.
 
 Next: finish the source/UI packages, regenerate inventory and run every brief
 command against integrated code. Verify final native amd64/arm64 images, scans,
