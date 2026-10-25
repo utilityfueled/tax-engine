@@ -32,7 +32,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.cli-tools. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:25.743156+00:00",
+        "sourceSha256": "c9ceb3a77644021c667a4afb2476a67d3ca5f62bb48445604b44292960e01bf3",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "1.35+dfsg-3.1",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "cli-tools",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2007-5686",
@@ -58,7 +71,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.login-pam. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:25.714326+00:00",
+        "sourceSha256": "5c175dfa11c2dec93503e0d7e26a46004b39a21c8f714c0683b387d3a41defbb",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "1:4.17.4-2",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "login-pam",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2010-4756",
@@ -84,7 +110,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.glibc. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:25.715245+00:00",
+        "sourceSha256": "1533aa64c5b15064840929759355263b7de877ee56a438ea7a38a115ecf9d9e3",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "2.41-12+deb13u4",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "glibc",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2011-3374",
@@ -110,7 +149,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.cli-tools. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:25.860746+00:00",
+        "sourceSha256": "258028988b5d28a3a6e9ad123ddaca97a6b8f7b1c180244ea652c57c7c6893a5",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "3.0.3",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "cli-tools",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2011-4116",
@@ -129,7 +181,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.perl. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:25.999685+00:00",
+        "sourceSha256": "ff6fd03ed28b5788deb54aff39bc54e27abe492ba8524375a39fa15eb6a7d5a8",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "5.40.1-6+deb13u1",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "perl",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2013-4392",
@@ -155,7 +220,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.systemd. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:25.983436+00:00",
+        "sourceSha256": "2ecaabeb4bc38ca23499eda7e947c102a52641758e6813125757c94c476c5be3",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "257.13-1~deb13u1",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "systemd",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2017-18018",
@@ -174,7 +252,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.cli-tools. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:26.011203+00:00",
+        "sourceSha256": "53d3f9ec8f5e37e1ddca2beb332adf35b12bc36edb93fc970aa6288bb984eb00",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "9.7-3",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "cli-tools",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2018-20796",
@@ -200,7 +291,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.glibc. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:26.121315+00:00",
+        "sourceSha256": "e6432d5fc861355dacd40700ae7169b572f03a69c17791bf5bb70543511c76e9",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "2.41-12+deb13u4",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "glibc",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2019-1010022",
@@ -226,7 +330,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.glibc. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:26.565086+00:00",
+        "sourceSha256": "cbef0ea746e9555c4d04761bf8ef09f236c787e9fc9033113695d351d480ab1d",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "2.41-12+deb13u4",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "glibc",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2019-1010023",
@@ -252,7 +369,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.glibc. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:26.372779+00:00",
+        "sourceSha256": "316608e29cf6e9690c7cb3c8424fd54d9ac31173423d112c1bcbda4ca881faba",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "2.41-12+deb13u4",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "glibc",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2019-1010024",
@@ -278,7 +408,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.glibc. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:26.292373+00:00",
+        "sourceSha256": "c59a28082119a9ded2f8562007694cd70e5357e727064de5eea447e49a75b4c0",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "2.41-12+deb13u4",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "glibc",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2019-1010025",
@@ -304,7 +447,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.glibc. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:26.425347+00:00",
+        "sourceSha256": "48754f59ff21707ba10211ef7ade27c43c12dd422dbb1acab80155c321ae00a7",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "2.41-12+deb13u4",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "glibc",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2019-9192",
@@ -330,7 +486,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.glibc. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:26.561424+00:00",
+        "sourceSha256": "31d6c3fae656f6efab2173c5b95dfe8d843ebc6e37110cd9f5de3347fb957dc7",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "2.41-12+deb13u4",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "glibc",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2021-45346",
@@ -349,7 +518,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.sqlite. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:26.639384+00:00",
+        "sourceSha256": "8013738ba497b0ef5fb0b774ac9323d5459eebb640ee33215c51cd065ca4cd95",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "3.46.1-7+deb13u2",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "sqlite",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2022-0563",
@@ -424,7 +606,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.privileged-filesystem. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:26.709307+00:00",
+        "sourceSha256": "00feb7f18e310259c9a494a0d52fc3a4586c39c59422ca0ea36279acfe0aa131",
+        "debianTrixieRows": [
+          {
+            "release": "trixie (security), trixie",
+            "version": "2.41.5-0+deb13u1",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "privileged-filesystem",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2023-31437",
@@ -450,7 +645,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.systemd. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:26.828956+00:00",
+        "sourceSha256": "c861bf540930601d746a85735f94e4f68e2df6fb10a9261400632046dc192dce",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "257.13-1~deb13u1",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "systemd",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2023-31438",
@@ -476,7 +684,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.systemd. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:26.849972+00:00",
+        "sourceSha256": "6cd7c80c645a3e53190b4328ab060ecd038466ab8f8c1b6a416ddce2fcc219fa",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "257.13-1~deb13u1",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "systemd",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2023-31439",
@@ -502,7 +723,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.systemd. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:27.286611+00:00",
+        "sourceSha256": "8ff785fb257437ff4247c5db94bb27c788713bae049c120107e9d5cf571c24b4",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "257.13-1~deb13u1",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "systemd",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2024-56433",
@@ -528,7 +762,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.login-pam. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:26.981566+00:00",
+        "sourceSha256": "db7834737da3b01879d3f1742f1bb9350f9ecf1702862721839ccb744574218e",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "1:4.17.4-2",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "login-pam",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2025-5278",
@@ -547,7 +794,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.cli-tools. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:27.289709+00:00",
+        "sourceSha256": "e89db87d050000901752c5b67556822ee1cbd2e60be54fbca6fac8008fe95d9a",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "9.7-3",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "cli-tools",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2025-6141",
@@ -580,7 +840,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.cli-tools. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:27.300169+00:00",
+        "sourceSha256": "d44dc6cc2ebd927c3a56d0ccc9b98c5e6fe637c40e8bb862116d5713e05470d9",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "6.5+20250216-2",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "cli-tools",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2025-69720",
@@ -613,7 +886,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.cli-tools. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:27.281909+00:00",
+        "sourceSha256": "3542be519daaef8f60a0fd662f4a6129a238f59ef9b86155869d49cfd2b3af78",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "6.5+20250216-2",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "cli-tools",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2025-70873",
@@ -632,7 +918,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.sqlite. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:27.550018+00:00",
+        "sourceSha256": "a755476974ee116a8a2232053b19f46ef9a95b953bf62459b60ac16b5e87d002",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "3.46.1-7+deb13u2",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "sqlite",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2026-102010",
@@ -665,7 +964,30 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.cpp-runtime. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:27.590759+00:00",
+        "sourceSha256": "4dfe5f35a8a136a6101c66bf6b6231f8a7de500b77f8c50a08f25c6deeeb07ea",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "12.4.0-5",
+            "status": "vulnerable"
+          },
+          {
+            "release": "trixie",
+            "version": "13.3.0-16",
+            "status": "vulnerable"
+          },
+          {
+            "release": "trixie",
+            "version": "14.2.0-19",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "cpp-runtime",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2026-102473",
@@ -684,7 +1006,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.cli-tools. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:27.554815+00:00",
+        "sourceSha256": "013fdfc57a2ff122a56c38dfe1f456d772f7eaefc3969bc5847267e1f4edd4fb",
+        "debianTrixieRows": [
+          {
+            "release": "forky, sid, trixie",
+            "version": "0.5.12-12",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "cli-tools",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2026-102474",
@@ -703,7 +1038,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.cli-tools. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:27.651947+00:00",
+        "sourceSha256": "e4076cd8f7e5a6f02ef5850c7ccc0e77fce09ee208cb0f1002d1a0cf13d88133",
+        "debianTrixieRows": [
+          {
+            "release": "forky, sid, trixie",
+            "version": "0.5.12-12",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "cli-tools",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2026-15059",
@@ -729,7 +1077,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.systemd. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:27.855115+00:00",
+        "sourceSha256": "aa6e5c02cf1427d96d05a7b9a10da4e98505e28c19333e6d45504047225a04cc",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "257.13-1~deb13u1",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "systemd",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2026-15534",
@@ -748,7 +1109,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.perl. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:27.757839+00:00",
+        "sourceSha256": "df6d9633b379c08701a64d541096100d47ad3c04141720f817ad811c023016e6",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "5.40.1-6+deb13u1",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "perl",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2026-16742",
@@ -774,7 +1148,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.systemd. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:27.987686+00:00",
+        "sourceSha256": "9def8c0e8dc245c97190f018412a2f08fe7e72ec90ccf943c132ff756b7ef7b0",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "257.13-1~deb13u1",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "systemd",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2026-18374",
@@ -800,7 +1187,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.glibc. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:28.005525+00:00",
+        "sourceSha256": "a00ae4be86617e03a5eca95bd14869a2baf5ea5ae196356c682f1de2c7117c9f",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "2.41-12+deb13u4",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "glibc",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2026-18477",
@@ -819,7 +1219,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.cli-tools. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:28.024131+00:00",
+        "sourceSha256": "d16fcffe5ded396c21c47a61e0838a0037dcac7cce84b88a6286156173bc6605",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "1.35+dfsg-3.1",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "cli-tools",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2026-18508",
@@ -838,7 +1251,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.cli-tools. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:28.277762+00:00",
+        "sourceSha256": "1963e9ecda170539d2faa85f5627c95ebca2a79260af292a02689066549c41ec",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "1.35+dfsg-3.1",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "cli-tools",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2026-19499",
@@ -864,7 +1290,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.glibc. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:28.244813+00:00",
+        "sourceSha256": "5ae203e2503db74b024563d3a6cbac974337438d5f3db69b93cbdd0ec38aecd7",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "2.41-12+deb13u4",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "glibc",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2026-19542",
@@ -890,7 +1329,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.glibc. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:28.272642+00:00",
+        "sourceSha256": "dbcdf805c206777ed25f95e2fea9952a174b245e5dd69d212393e2f8f8a5af87",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "2.41-12+deb13u4",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "glibc",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2026-27171",
@@ -909,7 +1361,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.compression. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:28.290558+00:00",
+        "sourceSha256": "b4ea3a807f0bb35621efbb982160130bbfc0983c72c2619e740d0781bdc6c9f1",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "1:1.3.dfsg+really1.3.1-1",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "compression",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2026-3184",
@@ -984,7 +1449,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.privileged-filesystem. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:28.501327+00:00",
+        "sourceSha256": "aedb732936701a73d66105ed0683774b54cf4c90d437dace4a7ac37a7674b0a0",
+        "debianTrixieRows": [
+          {
+            "release": "trixie (security), trixie",
+            "version": "2.41.5-0+deb13u1",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "privileged-filesystem",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2026-40228",
@@ -1010,7 +1488,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.systemd. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:28.465557+00:00",
+        "sourceSha256": "8a80284bc4f08f6f57f96c7a3461217aca86970d7a10f061a62c07675c449af1",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "257.13-1~deb13u1",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "systemd",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2026-42250",
@@ -1029,7 +1520,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.compression. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:28.564063+00:00",
+        "sourceSha256": "498b572f4d30aaefd631fc9d4e313b45e223149d1a21b5ff9056771bb7c96fdb",
+        "debianTrixieRows": [
+          {
+            "release": "forky, sid, trixie",
+            "version": "1.0.8-6",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "compression",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2026-50812",
@@ -1048,7 +1552,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.sqlite. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:28.566110+00:00",
+        "sourceSha256": "cdb5b4675f45adfb8bf1de3ac0388ac052368ec2cf75ebed80a0f60413f10016",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "3.46.1-7+deb13u2",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "sqlite",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2026-50813",
@@ -1067,7 +1584,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.sqlite. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:28.760506+00:00",
+        "sourceSha256": "245ae024f8e37e95aa504643607253bc2b67f848abb05e829030c17df147f57c",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "3.46.1-7+deb13u2",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "sqlite",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2026-53910",
@@ -1086,7 +1616,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.cli-tools. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:28.759061+00:00",
+        "sourceSha256": "009545bf64b158c2248f736c6ea2fb67f566d09904891681f94a324012161425",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "1:3.10-4",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "cli-tools",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2026-5435",
@@ -1112,7 +1655,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.glibc. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:28.821491+00:00",
+        "sourceSha256": "2361f3d31bc16c0ed30e5f79e4398e73155b117f7c2097c4208f9d756cdd0959",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "2.41-12+deb13u4",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "glibc",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2026-54369",
@@ -1131,7 +1687,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.privileged-filesystem. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:28.908093+00:00",
+        "sourceSha256": "4677cdb2b848eca7bc76f57dd54e5d01e309f438bba58d892550db432fbde5ca",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "2.3.2-2",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "privileged-filesystem",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2026-54370",
@@ -1150,7 +1719,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.privileged-filesystem. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:29.247434+00:00",
+        "sourceSha256": "36c932e9051decbe74a402bbe4df1e60f52a17c39cab2785b83901467b36758e",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "2.3.2-2",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "privileged-filesystem",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2026-54371",
@@ -1169,7 +1751,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.privileged-filesystem. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:29.059268+00:00",
+        "sourceSha256": "8ef9888ae918a3a3ed6a43c64ad3b1cae6aea82c4bae6c7c6af873af17d8a265",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "1:2.5.2-3",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "privileged-filesystem",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2026-54411",
@@ -1209,7 +1804,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.login-pam. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:29.090311+00:00",
+        "sourceSha256": "aeb51ee7335304f014968bdb5440ba98503a24a34c93b6b67c890b9741cd11a2",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "1.7.0-5",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "login-pam",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2026-56391",
@@ -1228,7 +1836,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.cli-tools. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:29.178361+00:00",
+        "sourceSha256": "a5dbae87b0cb9b4f3299fc4770b07c5acdde363bb3d1ec6ddfa7276984177cfb",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "9.7-3",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "cli-tools",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2026-56392",
@@ -1247,7 +1868,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.cli-tools. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:29.327831+00:00",
+        "sourceSha256": "83fc93306b7439f6ccf00c267dac24cc42303d39e84f5a2987c2b6a8a14ff9a2",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "9.7-3",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "cli-tools",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2026-5704",
@@ -1266,7 +1900,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.cli-tools. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:29.343367+00:00",
+        "sourceSha256": "b76f23da391f4a3f1a50f792baafc0c2c0ec0af97e1185df013f7fd530455957",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "1.35+dfsg-3.1",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "cli-tools",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2026-6238",
@@ -1292,7 +1939,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.glibc. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:29.445732+00:00",
+        "sourceSha256": "b2e9c31388df4262186d0645acff6fc7994b53511e4a04f4d4468e5bca7f6343",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "2.41-12+deb13u4",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "glibc",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2026-6368",
@@ -1318,7 +1978,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.glibc. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:29.578691+00:00",
+        "sourceSha256": "a8c3722420dc1aefb9b9953e3be13e4784264c49b9bee8975739a0370c66b0dd",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "2.41-12+deb13u4",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "glibc",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2026-6791",
@@ -1344,7 +2017,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.glibc. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:29.594380+00:00",
+        "sourceSha256": "b90c441e5a74f8025eb132fbc1156d06771123f95cbc48cc5aaa1174cd34a096",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "2.41-12+deb13u4",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "glibc",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2026-76642",
@@ -1419,7 +2105,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.privileged-filesystem. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:29.610515+00:00",
+        "sourceSha256": "243d0dcce2b7e8a9446611151a404ced874c0c45f912bca021c03061334d197b",
+        "debianTrixieRows": [
+          {
+            "release": "trixie (security), trixie",
+            "version": "2.41.5-0+deb13u1",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "privileged-filesystem",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2026-77117",
@@ -1445,7 +2144,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.glibc. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:29.736332+00:00",
+        "sourceSha256": "ed3ff25f7f5c15f2f957eb6beb981723cf305f53a86bdccff8a7d9cbe4a93004",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "2.41-12+deb13u4",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "glibc",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2026-78408",
@@ -1520,7 +2232,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.privileged-filesystem. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:29.772421+00:00",
+        "sourceSha256": "176ee66ad84e9fdad225f5e0a60fe5cd7bf8a5aa54bd0fd63d07beb795aba5d3",
+        "debianTrixieRows": [
+          {
+            "release": "trixie (security), trixie",
+            "version": "2.41.5-0+deb13u1",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "privileged-filesystem",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2026-78409",
@@ -1595,7 +2320,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.privileged-filesystem. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:29.906399+00:00",
+        "sourceSha256": "55bb3527e79127500681d1309f174a4e010dd14b8de0e8c20dac634deb59f67b",
+        "debianTrixieRows": [
+          {
+            "release": "trixie (security), trixie",
+            "version": "2.41.5-0+deb13u1",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "privileged-filesystem",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2026-78410",
@@ -1670,7 +2408,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.privileged-filesystem. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:29.868270+00:00",
+        "sourceSha256": "370b52136365d440004d915421bd2b2529393511c802bdc04f3e3a873241621b",
+        "debianTrixieRows": [
+          {
+            "release": "trixie (security), trixie",
+            "version": "2.41.5-0+deb13u1",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "privileged-filesystem",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2026-80489",
@@ -1696,7 +2447,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.glibc. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:29.993173+00:00",
+        "sourceSha256": "c639e01a744829ce5bdb9a22e2eeebdbc33626ea2cb93c454b310626c9362032",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "2.41-12+deb13u4",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "glibc",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2026-82560",
@@ -1715,7 +2479,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.perl. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:29.963951+00:00",
+        "sourceSha256": "b143fb7f152ce34bbaa86ef1d0424b51f41422ec9664e1af3829c8bfb7daf953",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "5.40.1-6+deb13u1",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "perl",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2026-85091",
@@ -1734,7 +2511,21 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.compression. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:30.135690+00:00",
+        "sourceSha256": "fcc8219f50ad516fbc2b5a6b065ab27f1fbc1f85665f17ec9a6cee425654f146",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "1:1.3.dfsg+really1.3.1-1",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "compression",
+        "independentReview": "pending",
+        "specificBoundary": "The description begins at upstream1.3.1.2 but Debian marks its trixie1.3.1 package vulnerable. Preserve the finding until this affected-range discrepancy and Node bundled code are independently resolved."
+      }
     },
     {
       "id": "CVE-2026-8674",
@@ -1760,7 +2551,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.glibc. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:30.149486+00:00",
+        "sourceSha256": "254763c444adc3aad987289503312aecd31d3e8ef8aa952e3f171a91cdac29d0",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "2.41-12+deb13u4",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "glibc",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2026-86805",
@@ -1786,7 +2590,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.glibc. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:30.199858+00:00",
+        "sourceSha256": "dc3e479b2edf14d97823b10c1012e791e1473d61fb0be659e16e868c773a2127",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "2.41-12+deb13u4",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "glibc",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2026-89092",
@@ -1812,7 +2629,21 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.glibc. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:30.249950+00:00",
+        "sourceSha256": "31eb3351ac16b6b226841b8faf481de52043d50e94d7d65db3aba87325d31099",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "2.41-12+deb13u4",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "glibc",
+        "independentReview": "pending",
+        "specificBoundary": "The described nscd daemon was absent at /usr/sbin/nscd and absent from matched libc package manifests. Node still links libc, so this observation is confined to the specified daemon."
+      }
     },
     {
       "id": "CVE-2026-9538",
@@ -1831,7 +2662,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.perl. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:30.376461+00:00",
+        "sourceSha256": "7ef5d867262210dcfd0f600ea409fd1aa470b38d8d2464d6ba885ab275a7fd57",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "5.40.1-6+deb13u1",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "perl",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2026-95619",
@@ -1864,7 +2708,30 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.cpp-runtime. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:30.422378+00:00",
+        "sourceSha256": "be3eefd613452857d18df16943fe435c8a7f6bcdcbaacae2bf702594d0fd99cb",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "12.4.0-5",
+            "status": "vulnerable"
+          },
+          {
+            "release": "trixie",
+            "version": "13.3.0-16",
+            "status": "vulnerable"
+          },
+          {
+            "release": "trixie",
+            "version": "14.2.0-19",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "cpp-runtime",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2026-95818",
@@ -1890,7 +2757,20 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.glibc. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:30.483857+00:00",
+        "sourceSha256": "88a593e9a655640e719f6f7bf985252e4569ec85acab41e5150498fb6c52f271",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "2.41-12+deb13u4",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "glibc",
+        "independentReview": "pending"
+      }
     },
     {
       "id": "CVE-2026-97399",
@@ -1916,8 +2796,103 @@
       "ownerRole": "release maintainer",
       "ownerConfirmation": "pending",
       "reviewBy": "2026-11-07",
-      "exposure": "Package is present in the runtime image; exploitability has not been established or dismissed."
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.glibc. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-25T12:32:30.480662+00:00",
+        "sourceSha256": "3fc856316476a66d6279a005beb47d499a7b486b870a6c072424b4a32b20a5b6",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "2.41-12+deb13u4",
+            "status": "vulnerable"
+          }
+        ],
+        "exposureEvidenceGroup": "glibc",
+        "independentReview": "pending",
+        "specificBoundary": "The described optimized routine targets Power8. Observed runtime platforms are arm64 and amd64; this is an architecture-specific applicability observation, not a suppression."
+      }
     }
   ],
-  "sourceCommit": "da3e0fc5e51184418f29e16f98faecd13d3ddbb3"
+  "sourceCommit": "da3e0fc5e51184418f29e16f98faecd13d3ddbb3",
+  "exposureEvidence": {
+    "glibc": {
+      "assessment": "The observed Node process links libc and the dynamic loader. Application source does not directly call the advisory-specific C functions. Native/transitive reachability has not been ruled out. DNS/environment and loader conditions need release-owner review; container controls do not eliminate memory-safety risk.",
+      "status": "bounded-agent-assessment-not-acceptance"
+    },
+    "cpp-runtime": {
+      "assessment": "Node links libstdc++ and libgcc. The two advisories concern aligned allocation and a PBDS binary-heap operation. Application TypeScript search cannot establish whether bundled/native code uses those paths, so reachability remains unresolved.",
+      "status": "bounded-agent-assessment-not-acceptance"
+    },
+    "compression": {
+      "assessment": "The observed Node process reports its own bundled zlib version and does not list OS zlib as a shared object. That is one process observation, not proof about all native dependencies. The affected bzip2recover utility was absent at its standard path and from libbz2 package files. No vulnerability is suppressed.",
+      "status": "bounded-agent-assessment-not-acceptance"
+    },
+    "perl": {
+      "assessment": "Perl is present. The installed perl-base file manifest has no Pod/Text or Archive/Tar module. No Perl invocation was found in tracked application source. The Perl regex and File::Temp findings remain source-component risks; absence from one package manifest is not proof about arbitrary runtime changes.",
+      "status": "bounded-agent-assessment-not-acceptance"
+    },
+    "systemd": {
+      "assessment": "libsystemd/libudev are installed, but the checked systemd, homed and oomd executables are absent and the image starts Node. The matched package manifests contain none of the affected service executables. Application source has no service invocation; library/transitive exposure is not dismissed.",
+      "status": "bounded-agent-assessment-not-acceptance"
+    },
+    "sqlite": {
+      "assessment": "The Debian SQLite library is installed; sqlite3 CLI and zipfile extension were not found in the checked paths/package list. Hosted persistence uses PostgreSQL through Kysely. Node reports a separate bundled SQLite version. No evidence here proves all native code or optional features unreachable.",
+      "status": "bounded-agent-assessment-not-acceptance"
+    },
+    "privileged-filesystem": {
+      "assessment": "The source advisories require affected pathname/ACL utilities or privileged mount/nsenter operations. mount/nsenter exist; checked ACL/xattr utilities are absent from their standard paths and matched library manifests. Shipped Compose now enforces uid1001, read-only root, no-new-privileges and zero kernel capability sets. These limit described privilege paths but are not acceptance or a kernel/container security proof.",
+      "status": "bounded-agent-assessment-not-acceptance"
+    },
+    "login-pam": {
+      "assessment": "OS login/PAM components are installed; web authentication uses the application auth/database path. No OS login/PAM invocation was found in tracked application code. Non-root/no-new-privileges/read-only controls limit privilege changes; a package match is retained for independent review.",
+      "status": "bounded-agent-assessment-not-acceptance"
+    },
+    "cli-tools": {
+      "assessment": "Affected command-line tools may be installed. Tracked application source only spawns a fixed pdftotext command with generated temporary input, a15-second bound and cleanup; that optional executable is absent in this image. No listed advisory tool invocation was found. This static search does not prove dependency or future runtime behavior.",
+      "status": "bounded-agent-assessment-not-acceptance"
+    }
+  },
+  "sourceReviewEvidence": {
+    "recordedAt": "2026-10-25",
+    "sourceCount": 67,
+    "independentHumanReview": false,
+    "evidence": [
+      {
+        "path": ".local/upgrade-evidence/debian-advisory-sources/index.json",
+        "sha256": "783fbb61310e5dbfdda4409bd8ff78a77a94c6107daa4c5d451051adec37e706"
+      },
+      {
+        "path": ".local/upgrade-evidence/runtime-source-exposure-linked-libraries.json",
+        "sha256": "6b30cad239b13fba97d9486dedaecaea885a4bb1d4c415663cb84cecf156239a"
+      },
+      {
+        "path": ".local/upgrade-evidence/runtime-source-exposure-components.json",
+        "sha256": "2e4dd329edfcf97447ba8c72d477612e006813968f6cd7cba1e9b1d9d80fdb7a"
+      },
+      {
+        "path": ".local/upgrade-evidence/runtime-source-exposure-package-files.json",
+        "sha256": "84fdda11179587faffae0360a313316bbb645bceae9289b903bf5465bd85330d"
+      },
+      {
+        "path": ".local/upgrade-evidence/runtime-source-exposure-code-search.log",
+        "sha256": "4c1309b9ce4ec327a7c9e0db5918107276b60492806268196302afa44e2a546c"
+      }
+    ],
+    "shippedComposeProof": "docs/upgrade-2026-compose-security.json",
+    "scope": "Runtime component observations use the registered intermediate arm64 image; source search uses tracked application code; final images require fresh verification."
+  },
+  "additionalPlatformEvidence": {
+    "commit": "214411a04c0113fbdbc073862cf3803ee3d6b6a4",
+    "platform": "linux/amd64",
+    "image": "sha256:7a95110ddada32392fbbbdd55be295736789bd900cf0a434388c09d9de48e202",
+    "workflowRun": "https://github.com/utilityfueled/tax-engine/actions/runs/40191977778",
+    "artifactId": 12598607770,
+    "archiveSha256": "4d41df26b5c5d4ef138009ba7234ba8638efe5144f9934f0ca88f21417962606",
+    "sbomSha256": "6f07a9ca691db9ee23791383e5080e412d976ccd0fa8d0bf761a9e9aa075e3de",
+    "scanSha256": "56ebab39860cc66be82e1bcd93de8b73db011ea456df660210a9b520b5319b4d",
+    "matches": 157,
+    "distinctAdvisories": 67,
+    "critical": 0,
+    "qualification": "intermediate-native-CI-evidence-not-final-release"
+  }
 }

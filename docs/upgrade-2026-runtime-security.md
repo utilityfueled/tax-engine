@@ -58,3 +58,42 @@ local synthetic upgrade/restart/backup restore/rollback and encrypted browser
 recovery. This intermediate candidate is not final code; amd64 and final-code
 qualification remain required. No image was published and no staging evidence
 or independent approval is implied.
+
+## Component exposure refresh — 2026-10-25
+
+All67 exact Debian advisory pages were retrieved successfully. The register now
+records each retrieval time, source-body hash, current trixie version/status and
+one of nine bounded component assessments. Every trixie row still reports
+vulnerable; no acceptance, suppression or owner confirmation was invented.
+The release-maintainer confirmation and2026-11-07 review deadline remain open.
+
+Read-only, network-disabled inspection of the registered arm64 image confirms
+that Node links glibc/libstdc++/libgcc. These remain meaningful native exposure
+questions. The affected systemd services, nscd and several library-associated
+utilities were absent from the checked executable paths and matched package
+manifests. Perl is present, but its base-package manifest lacks the referenced
+Pod::Text and Archive::Tar modules. Node reports bundled zlib and SQLite versions
+separate from the Debian libraries. These are component observations, not proof
+that all native/transitive paths are unreachable.
+
+Tracked application source contains one subprocess path: fixed `pdftotext`
+arguments using a generated temporary file, bounded size/time and cleanup.
+That optional executable is absent in this image. No invocation of the other
+advisory-specific tools was found. The new [shipped Compose controls and kernel
+checks](upgrade-2026-compose-security.md) bound privilege-related exposure without
+claiming to resolve memory-safety findings. The Power8-only description in
+[CVE-2026-97399](https://security-tracker.debian.org/tracker/CVE-2026-97399)
+does not match the observed arm64/amd64 platforms. The upstream affected-range
+description and Debian status for
+[CVE-2026-85091](https://security-tracker.debian.org/tracker/CVE-2026-85091)
+need reconciliation; the finding remains open.
+
+Native amd64 evidence is now available from
+[Web40191977778](https://github.com/utilityfueled/tax-engine/actions/runs/40191977778)
+at commit `214411a`. Its image `sha256:7a95110ddada32392fbbbdd55be295736789bd900cf0a434388c09d9de48e202`
+passes health/assets/non-root/read-only checks with42 templates, browser flows
+and six recovery phases. Artifact12598607770 was downloaded and its archive hash
+verified against GitHub. Its scan reports the same157 matches/67 advisories and
+zero critical findings. Exact SBOM/scan hashes are in the register. This replaces
+the earlier absence of native amd64 evidence for that intermediate code only;
+both final images, staging and independent review are still required.
