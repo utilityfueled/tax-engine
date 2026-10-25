@@ -21,6 +21,7 @@ export interface BusinessExpenses {
   carAndTruck?: string; // Line 9
   contractLabor?: string; // Line 11
   depreciation?: string; // Line 13
+  employeeBenefitPrograms?: string; // Line 14
   insurance?: string; // Line 15
   legalAndProfessional?: string; // Line 17
   officeExpense?: string; // Line 18
@@ -80,7 +81,8 @@ const SIMPLIFIED_HOME_OFFICE_MAX = new Decimal(1500);
 
 export function calculateScheduleC(
   input: TaxYearInput,
-  scheduleCInput?: ScheduleCInput
+  scheduleCInput?: ScheduleCInput,
+  options: { dependentCareBenefitsAdjustment?: Decimal } = {},
 ): ScheduleCResult {
   const audit = new AuditTrail();
 
@@ -142,6 +144,11 @@ export function calculateScheduleC(
       : { "Validated manual Schedule C depreciation amount": d(expenses.depreciation) }
   );
   totalExpenses = totalExpenses.plus(depreciationAndSection179Deduction);
+  const employeeBenefits = d(expenses.employeeBenefitPrograms).plus(options.dependentCareBenefitsAdjustment ?? d("0"));
+  if (!employeeBenefits.isFinite() || employeeBenefits.lt(0)) {
+    throw new Error("Schedule C employee benefit programs must reconcile to a finite nonnegative expense");
+  }
+  totalExpenses = totalExpenses.plus(addExpense("14", "Employee benefit programs", employeeBenefits.toString()));
   totalExpenses = totalExpenses.plus(addExpense("15", "Insurance", expenses.insurance));
   totalExpenses = totalExpenses.plus(addExpense("17", "Legal and professional", expenses.legalAndProfessional));
   totalExpenses = totalExpenses.plus(addExpense("18", "Office expense", expenses.officeExpense));

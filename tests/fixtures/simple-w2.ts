@@ -37,6 +37,7 @@ export const simpleW2Fixture: TaxYearInput = {
     {
       employer: { name: "Tech Corp", ein: "12-3456789" },
       wages: "85000",
+      box10DependentCareBenefits: "0", // Explicit synthetic no-benefits source.
       federalWithheld: "12750",
       socialSecurityWages: "85000",
       socialSecurityWithheld: "5270",

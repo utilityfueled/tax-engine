@@ -208,6 +208,10 @@ export async function fillScheduleC(
     setCurrencyField(form, F.line13, sc.depreciationAndSection179Deduction);
   }
 
+  // Dependent-care benefits are reconciled before profit, SE and QBI. Copy
+  // that actual deduction, not the raw expense that may already include it.
+  setCurrencyField(form, F.line14, audited("14", sc.expenseBreakdown["Employee benefit programs"] ?? new Decimal(0)));
+
   // ── Net Profit / Loss (Lines 28-31) ──
   setCurrencyField(form, F.line28, audited("28", sc.totalExpenses));
   setCurrencyField(form, F.line29, audited("29", sc.tentativeProfit));

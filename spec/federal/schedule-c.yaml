@@ -105,6 +105,12 @@ lines:
     notes: "This supported slice prefers the dedicated Form 4562 summary result so depreciation and section 179 expense deductions remain auditable instead of being hidden inside Schedule C other expenses."
     testRef: "tests/engine/schedules/schedule-c.test.ts::Schedule C Line 13 - Form 4562 total deduction flows through the depreciation line"
 
+  - line: "14"
+    description: "Employee benefit programs including actual deductible dependent-care benefits"
+    formula: "Actual employee benefit expense plus Form2441 line24 allocated to this business minus the actual amount already deducted; copy the unique reconciled audit value to the review PDF"
+    irsRef: "2025 Schedule C line14; Form2441 instructions line24"
+    testRef: "tests/pdf/fill-schedule-c.test.ts::copies actual dependent-care benefits to line 14 and rejects inconsistent audits"
+
   - line: "15"
     description: "Insurance (other than health)"
     formula: "Business insurance premiums"
@@ -151,7 +157,7 @@ lines:
 
   - line: "28"
     description: "Total expenses before home office"
-    formula: "Sum of implemented expense lines, including Line 13 depreciation and section 179 expense deduction, Lines 8, 9, 11, 15, 17, 18, 22, 24a, 24b, 25, and 27"
+    formula: "Sum of implemented expense lines, including Line 13 depreciation and section 179 expense deduction, Lines 8, 9, 11, 14, 15, 17, 18, 22, 24a, 24b, 25, and 27"
     irsRef: "Schedule C Instructions, Line 28"
     testRef: "tests/engine/schedules/schedule-c.test.ts::Schedule C Line 28 - total expenses"
 

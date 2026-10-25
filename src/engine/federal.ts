@@ -61,6 +61,8 @@ import { calculateForm8801 } from "./forms/form-8801.js";
 import { calculateForm8582 } from "./forms/form-8582.js";
 import type { PassiveActivity } from "./forms/form-8582.js";
 import { calculateForm2441 } from "./forms/form-2441.js";
+import { calculateForm2441Benefits } from "./forms/form-2441-benefits.js";
+import { calculateDependentCareBenefitSources } from "./forms/dependent-care-benefit-sources.js";
 import { calculateForm8863 } from "./forms/form-8863.js";
 import { calculateForm8962 } from "./forms/form-8962.js";
 import { calculateForm4137 } from "./forms/form-4137.js";
@@ -354,6 +356,16 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     audit.merge(form8919.lines);
   }
 
+  // PartIII precedes wages, business profits, SE/QBI and PartII. Source binding
+  // preserves amounts already reported and never fabricates a credit claim.
+  const form2441Benefits = input.dependentCareBenefits
+    ? calculateForm2441Benefits({ taxYear: year, filingStatus, facts: input.dependentCareBenefits }) : undefined;
+  const careBenefitSources = calculateDependentCareBenefitSources(input, form2441Benefits);
+  if (form2441Benefits) audit.merge(form2441Benefits.lines);
+  const taxableCareBenefits = form2441Benefits?.taxableBenefits ?? new Decimal(0);
+  audit.record("1040", "1e", "Taxable dependent-care benefits", taxableCareBenefits,
+    "Form 2441 line 26 after subtracting actual benefits already in W2 Box1");
+
   // Line 1: Wages
   const totalWagesBeforeExclusion = w2Agg.wages
     .plus(form4137?.unreportedTipIncome ?? new Decimal(0))
@@ -426,10 +438,11 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     ? calculateAdoption(d(input.form8839?.exclusionMagi), new Decimal(0)) : undefined;
   const taxableAdoptionBenefits = adoptionBenefitResult?.taxableEmployerBenefits ?? new Decimal(0);
   audit.record("1040", "1f", "Taxable adoption benefits", taxableAdoptionBenefits, "Signed Form 8839 line 31");
-  const totalWages = totalWagesBeforeExclusion.plus(taxableAdoptionBenefits).plus(foreignEmploymentNotOnW2);
+  const totalWages = totalWagesBeforeExclusion.plus(taxableAdoptionBenefits).plus(foreignEmploymentNotOnW2).plus(taxableCareBenefits);
   audit.record("1040", "1", "Wages, salaries, tips", totalWages,
     [
       "Sum of all W-2 Box 1",
+      taxableCareBenefits.isZero() ? undefined : `additional taxable dependent-care benefits $${taxableCareBenefits}`,
       foreignEmploymentNotOnW2.isZero() ? undefined : "actual foreign employment income not reported on W2",
       taxableAdoptionBenefits.isZero() ? undefined : `signed taxable adoption benefits $${taxableAdoptionBenefits}`,
       form4137?.unreportedTipIncome.greaterThan(0)
@@ -1119,7 +1132,9 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
       : "Schedule D Line 21");
 
   // Schedule C: Self-employment income (net profit)
-  const schedC = calculateScheduleC(input, input.scheduleC);
+  const schedC = calculateScheduleC(input, input.scheduleC, {
+    dependentCareBenefitsAdjustment: careBenefitSources.scheduleCAdjustment,
+  });
   // Add crypto business income (mining/staking + NFT creator sales) to Schedule C net profit
   const cryptoBusinessGross = sum(
     cryptoIncomeResult?.businessMiningGrossReceipts ?? new Decimal(0),
@@ -1148,7 +1163,9 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     (cryptoBusinessNet.greaterThan(0) ? ` + crypto business net $${cryptoBusinessNet}` : ""));
 
   // Schedule F: Farm income (net profit)
-  const schedF = calculateScheduleF(input.scheduleF);
+  const schedF = calculateScheduleF(input.scheduleF, {
+    dependentCareBenefitsAdjustment: careBenefitSources.scheduleFAdjustment,
+  });
   const schedFNetProfit = schedF.netFarmProfit;
   audit.merge(schedF.lines);
   audit.record("1040", "8-sched-f", "Farm income (Schedule F)", schedFNetProfit, "Schedule F Line 34");
@@ -2909,10 +2926,10 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     `Line 16 $${incomeTax} + Line 17 $${amt.plus(partIAdditions)}`);
 
   // ── Form 2441: Dependent Care Credit ────────────────────
-  // MFS filers cannot claim dependent care credit (IRC §21(e)(2))
+  // Actual PartIII living-apart facts support the statutory MFS exception.
   let dependentCareCredit = new Decimal(0);
   let form2441: ReturnType<typeof calculateForm2441> | undefined;
-  if (input.dependentCare && filingStatus !== "married_filing_separately") {
+  if (input.dependentCare && (filingStatus !== "married_filing_separately" || form2441Benefits?.treatedAsUnmarried)) {
     // Per IRS Form 2441 Instructions (Lines 4-5), SE earned income =
     // Schedule SE Line 3 (net SE earnings) minus Schedule 1 Line 15
     // (deductible half of SE tax). IRC §21(d)(1) → §32(c)(2)(A)(i)(II).
@@ -2923,6 +2940,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
       ? sum(totalWages, netSEEarnings).minus(schedSE.deductibleHalf).minus(form2555IncomeReduction).minus(form2555HousingDeduction)
       : d(input.dependentCare.primaryEarnedIncome);
     form2441 = calculateForm2441({
+      dependentCareBenefits: input.dependentCareBenefits,
       taxYear: year,
       filingStatus,
       eligibilityConfirmed: input.dependentCare.eligibilityConfirmed,
@@ -3646,6 +3664,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     form8582,
     form1099R,
     form2441,
+    form2441Benefits,
     form1099SA,
     form4137,
     form8919,

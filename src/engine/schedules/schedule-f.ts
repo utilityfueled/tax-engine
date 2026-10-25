@@ -88,7 +88,8 @@ export interface ScheduleFResult {
 }
 
 export function calculateScheduleF(
-  input?: ScheduleFInput
+  input?: ScheduleFInput,
+  options: { dependentCareBenefitsAdjustment?: Decimal } = {},
 ): ScheduleFResult {
   const audit = new AuditTrail();
 
@@ -192,7 +193,11 @@ export function calculateScheduleF(
 
   totalExpenses = totalExpenses.plus(addExpense("13", "Custom hire", expenses.customHire));
   totalExpenses = totalExpenses.plus(addExpense("14", "Depreciation and section 179", expenses.depreciation));
-  totalExpenses = totalExpenses.plus(addExpense("15", "Employee benefits", expenses.employeeBenefits));
+  const employeeBenefits = d(expenses.employeeBenefits).plus(options.dependentCareBenefitsAdjustment ?? ZERO);
+  if (!employeeBenefits.isFinite() || employeeBenefits.lt(0)) {
+    throw new Error("Schedule F employee benefits must reconcile to a finite nonnegative expense");
+  }
+  totalExpenses = totalExpenses.plus(addExpense("15", "Employee benefits", employeeBenefits.toString()));
   totalExpenses = totalExpenses.plus(addExpense("16", "Feed", expenses.feed));
   totalExpenses = totalExpenses.plus(addExpense("17", "Fertilizers and lime", expenses.fertilizersAndLime));
   totalExpenses = totalExpenses.plus(addExpense("18", "Freight and trucking", expenses.freightAndTrucking));

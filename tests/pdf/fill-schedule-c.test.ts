@@ -43,6 +43,41 @@ function isChecked(doc: PDFDocument, fieldName: string): boolean {
 
 const BLANK_SC = "forms/blank/2025/f1040sc.pdf";
 
+it("copies actual dependent-care benefits to line 14 and rejects inconsistent audits", async () => {
+  // Spec: spec/federal/schedule-c.yaml line14. Actual expense2500 contains
+  // the source's already-deducted2500; Form2441 allows2000, so line14 is2000.
+  const input = TaxYearInputSchema.parse({
+    ...simpleW2Fixture,
+    w2s: [],
+    scheduleC: {
+      accountHolder: "primary", grossReceipts: "100000",
+      expenses: { employeeBenefitPrograms: "2500" },
+    },
+    dependentCareBenefits: {
+      sourceFactsConfirmed: true, exclusionEligibilityConfirmed: true,
+      employeeBenefits: [],
+      selfEmployedBenefits: [{ sourceId: "scheduleC", owner: "primary", schedule: "schedule-c",
+        benefitsReceived: "2000", priorYearCarryoverUsed: "0", alreadyDeducted: "2500" }],
+      deductionAllocations: [{ sourceId: "scheduleC", owner: "primary", schedule: "schedule-c", amount: "2000" }],
+      planExclusionLimit: "5000", qualifiedExpensesIncurred: "5000",
+      primaryEarnedIncome: "91076", earnedIncomeWorksheetConfirmed: true,
+      qualifyingIndividuals: 1, qualifiedExpensesPaidForCredit: "0",
+      creditExpenseCoordinationConfirmed: true,
+    },
+  });
+  const result = calculateFederalTax(input);
+  const filled = await fillScheduleC(input, result, BLANK_SC);
+  const doc = await PDFDocument.load(await filled.save());
+  expect(getFieldText(doc, SCHEDULE_C_FIELDS.line14)).toBe("2000");
+  expect(getFieldText(doc, SCHEDULE_C_FIELDS.line28)).toBe("2000");
+  expect(getFieldText(doc, SCHEDULE_C_FIELDS.line31)).toBe("98000");
+  const scheduleC = result.scheduleC;
+  if (!scheduleC) throw new Error("Expected calculated Schedule C");
+  const altered = { ...result, scheduleC: { ...scheduleC, lines: scheduleC.lines.map(line =>
+    line.line === "14" ? { ...line, value: new Decimal("2500") } : line) } };
+  await expect(fillScheduleC(input, altered, BLANK_SC)).rejects.toThrow(/audit at line 14/);
+});
+
 // ─── MFJ filer with 1099-NEC self-employment income ──────────────────────
 
 describe("Schedule C PDF fill — MFJ with 1099-NEC income", () => {

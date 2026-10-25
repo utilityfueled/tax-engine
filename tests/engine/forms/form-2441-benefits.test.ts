@@ -224,7 +224,7 @@ describe("Form 2441 Part III actual benefits", () => {
     const parsed = TaxYearInputSchema.parse({ ...simpleW2Fixture,
       w2s: [{ ...simpleW2Fixture.w2s[0], box10DependentCareBenefits: "1000.25" }] });
     expect(parsed.w2s[0]?.box10DependentCareBenefits).toBe("1000.25");
-    expect(TaxYearInputSchema.parse(simpleW2Fixture).w2s[0]?.box10DependentCareBenefits).toBeUndefined();
+    expect(TaxYearInputSchema.parse({ ...simpleW2Fixture, w2s: [{ ...simpleW2Fixture.w2s[0], box10DependentCareBenefits: undefined }] }).w2s[0]?.box10DependentCareBenefits).toBeUndefined();
     const source = facts({ employeeBenefits: [], selfEmployedBenefits: [business({ alreadyDeducted: "2500" })],
       deductionAllocations: [{ sourceId: "scheduleC", owner: "primary", schedule: "schedule-c", amount: "2000" }] });
     const result = calculate(source);
