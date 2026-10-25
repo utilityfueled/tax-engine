@@ -1,6 +1,7 @@
 import Decimal from "decimal.js";
-import type { DeductionData, EstimatedPaymentEntry, RetirementEntryData, PaymentData } from "./guided-interview-flow";
+import type { DeductionData, EstimatedPaymentEntry, RetirementEntryData, PaymentData, FilingStatus } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
+import { mortgageFactErrors } from "./guided-mortgage-facts";
 
 export function isActualDate(value: string | undefined): boolean {
   if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
@@ -19,7 +20,7 @@ export function amountError(value: string | undefined, label: string): string | 
   return undefined;
 }
 
-export function deductionFactErrors(data: DeductionData | undefined, taxYear?: number | null): Record<string, string> {
+export function deductionFactErrors(data: DeductionData | undefined, taxYear?: number | null, filingStatus?: FilingStatus | null): Record<string, string> {
   if (!data) return {};
   const errors: Record<string, string> = {};
   if (hasEnteredAmount(data.nonW2IncomeTaxesDeductedElsewhere)) {
@@ -48,14 +49,7 @@ export function deductionFactErrors(data: DeductionData | undefined, taxYear?: n
   const donations = data.donationEntries ?? [];
   if (data.method === "itemized" && hasPositiveAmount("mortgageInterest") && !mortgages.length) errors.mortgages = "Enter the mortgage lender, principal and origination date for the saved mortgage interest.";
   if (hasPositiveAmount("charitableContributions") && !donations.length) errors.donations = "Enter donation recipient, type and date for the saved charitable contributions.";
-  mortgages.forEach((entry, index) => {
-    if (!entry.lender.trim()) errors[`mortgage-${index}-lender`] = "Enter the actual mortgage lender.";
-    for (const [field, label] of [["mortgageInterest", "mortgage interest"], ["outstandingPrincipal", "mortgage principal"]] as const) {
-      const error = amountError(entry[field], label);
-      if (error) errors[`mortgage-${index}-${field}`] = error;
-    }
-    if (!isActualDate(entry.originationDate) || (taxYear != null && entry.originationDate > `${taxYear}-12-31`)) errors[`mortgage-${index}-date`] = "Enter the actual mortgage origination date, no later than the tax year.";
-  });
+  Object.assign(errors, mortgageFactErrors(mortgages, taxYear, filingStatus));
   donations.forEach((entry, index) => {
     if (!entry.organization.trim()) errors[`donation-${index}-organization`] = "Enter the actual donation recipient.";
     if (!["cash", "appreciated_stock", "property", "other"].includes(entry.type)) errors[`donation-${index}-type`] = "Choose the actual donation type.";

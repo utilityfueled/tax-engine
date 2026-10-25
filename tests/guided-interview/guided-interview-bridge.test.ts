@@ -1,5 +1,5 @@
 import { completeCareSource } from "./care-source-fixture";
-import { completeRentalSource, completeNecSource, completeBusinessSection, completeBusinessExpenses } from "./complete-facts";
+import { completeRentalSource, completeNecSource, completeBusinessSection, completeBusinessExpenses, completeMortgageSource } from "./complete-facts";
 import { completeBrokerageSource, completeDividendSource, completeInterestSource, completeTransactionSource } from "./complete-facts";
 import { completeW2Entry, startCompleteInterview as startInterview, completePersonalInfo, completeDependent, completeAocEligibility, completeEducationClaimant, completeHouseholdEmployee } from "./complete-facts";
 import { describe, it, expect } from "vitest";
@@ -1040,7 +1040,7 @@ describe("buildForm1098Inputs", () => {
       ...emptyDeductionData,
       method: "itemized",
       mortgageInterest: "12000",
-      mortgageEntries: [{ lender: "Actual Lender", mortgageInterest: "12000", outstandingPrincipal: "250000", originationDate: "2019-06-01" }],
+      mortgageEntries: [{ ...completeMortgageSource, lender: "Actual Lender", mortgageInterest: "12000", outstandingPrincipal: "250000", originationDate: "2019-06-01" }],
     });
     expect(result).toHaveLength(1);
     expect(result[0].mortgageInterestReceived).toBe("12000");
@@ -1100,7 +1100,7 @@ describe("itemized deductions in preview", () => {
       ...emptyDeductionData,
       method: "itemized",
       mortgageInterest: "18000",
-      mortgageEntries: [{ lender: "Actual Lender", mortgageInterest: "18000", outstandingPrincipal: "250000", originationDate: "2019-06-01" }],
+      mortgageEntries: [{ ...completeMortgageSource, lender: "Actual Lender", mortgageInterest: "18000", outstandingPrincipal: "250000", originationDate: "2019-06-01" }],
       charitableContributions: "5000",
       donationEntries: [{ organization: "Actual Charity", type: "cash", amount: "5000", date: "2025-10-01", costBasis: "", isLongTermCapitalGain: null, isPrivateFoundation: false }],
       stateLocalTaxes: "10000",

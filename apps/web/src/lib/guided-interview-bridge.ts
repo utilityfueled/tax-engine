@@ -316,14 +316,23 @@ export function buildScheduleAInput(deductionData: DeductionData | undefined, st
 
 // ── Mortgage interest (Form 1098) converter ──────────────────────────────────
 
-export function buildForm1098Inputs(deductionData: DeductionData | undefined) {
+export function buildForm1098Inputs(deductionData: DeductionData | undefined, taxYear?: number | null, filingStatus?: FilingStatus | null) {
   if (!deductionData || deductionData.method !== "itemized") return [];
-  assertKnownFacts(deductionFactErrors({ ...deductionData, charitableContributions: "", donationEntries: [] }));
+  assertKnownFacts(deductionFactErrors({ ...deductionData, charitableContributions: "", donationEntries: [] }, taxYear, filingStatus));
   return (deductionData.mortgageEntries ?? []).map((entry) => ({
     lender: entry.lender.trim(),
     mortgageInterestReceived: toDecimalString(entry.mortgageInterest),
     outstandingMortgagePrincipal: toDecimalString(entry.outstandingPrincipal),
     mortgageOriginationDate: entry.originationDate,
+    refundOfOverpaidInterest: toDecimalString(entry.refundOfOverpaidInterest),
+    mortgageInsurancePremiums: toDecimalString(entry.mortgageInsurancePremiums),
+    pointsPaid: toDecimalString(entry.pointsPaid),
+    propertyTax: toDecimalString(entry.propertyTaxPaid),
+    ...(entry.sourceTaxYear === "2026" && entry.hasMortgageInsuranceAllocation === true ? { mortgageInsuranceQualification: {
+      allocationTaxYear: Number(entry.insuranceAllocationTaxYear), contractIssueDate: entry.insuranceContractIssueDate!,
+      qualifiedProvider: entry.insuranceQualifiedProvider!, acquisitionDebt: entry.insuranceAcquisitionDebt!, qualifiedResidence: entry.insuranceQualifiedResidence!,
+      premiumsAllocableToYear: toDecimalString(entry.insurancePremiumsAllocableToYear),
+    } } : {}),
   }));
 }
 
@@ -574,7 +583,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     assertKnownFacts(investmentFactErrors(investData, segmentation.filingStatus, state.taxYear, stateReturnData));
     assertKnownFacts(businessFactErrors(seData, segmentation.filingStatus, w2Data?.entries, stateReturnData));
     assertKnownFacts(rentalFactErrors(rentalData?.entries, segmentation.filingStatus, state.taxYear));
-    assertKnownFacts(deductionFactErrors(deductionData, state.taxYear));
+    assertKnownFacts(deductionFactErrors(deductionData, state.taxYear, segmentation.filingStatus));
     assertKnownFacts(nonW2TaxAllocationErrors(state));
     assertKnownFacts(allPaymentFactErrors(paymentData, state.taxYear));
     assertKnownFacts(retirementFactErrors(retirementData?.entries));
@@ -600,7 +609,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
   const formSSA1099 = buildSocialSecurityInputs(socialSecurityData);
   const form1099G = buildUnemploymentInputs(unemploymentData);
   const scheduleA = buildScheduleAInput(deductionData, stateReturnData);
-  const form1098 = buildForm1098Inputs(deductionData);
+  const form1098 = buildForm1098Inputs(deductionData, state.taxYear, segmentation.filingStatus);
   const donations = buildDonationsInput(deductionData);
   const adjustments = buildAdjustmentsInput(adjustmentData);
   const ira = adjustmentData?.iraContributions;

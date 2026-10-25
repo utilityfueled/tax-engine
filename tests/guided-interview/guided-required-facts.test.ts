@@ -2,9 +2,9 @@
 import { describe, expect, it } from "vitest";
 import { buildDonationsInput, buildEducationInput, buildEstimatedPaymentsInput, buildForm1098Inputs, buildRetirementInputs, buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
 import { emptyCreditsData, emptyDeductionData, emptyEducationStudent, emptyRetirementEntry, validateSection, loadGuidedFlowState } from "@/lib/guided-interview-flow";
-import { completePersonalInfo, startCompleteInterview, completeAocEligibility, completeEducationClaimant } from "./complete-facts";
+import { completePersonalInfo, startCompleteInterview, completeAocEligibility, completeEducationClaimant, completeMortgageSource } from "./complete-facts";
 
-const mortgage = { lender: "Actual Bank", mortgageInterest: "123.45", outstandingPrincipal: "0", originationDate: "2016-06-05" };
+const mortgage = { ...completeMortgageSource, lender: "Actual Bank", mortgageInterest: "123.45", outstandingPrincipal: "0", originationDate: "2016-06-05" };
 const donation = { organization: "Actual Charity", type: "cash" as const, amount: "12.34", date: "2025-02-28", costBasis: "", isLongTermCapitalGain: null, isPrivateFoundation: false };
 const retirement = { ...emptyRetirementEntry, payer: "Actual Plan", grossDistribution: "1000", taxableAmount: "0", distributionCode: "7" };
 const stateWith = (section: string, data: unknown) => {
@@ -20,7 +20,7 @@ describe("required guided source facts", () => {
   });
   it("preserves actual mortgage principal and donation classification", () => {
     const data = { ...emptyDeductionData, method: "itemized" as const, mortgageInterest: "123.45", mortgageEntries: [mortgage], charitableContributions: "12.34", donationEntries: [donation] };
-    expect(buildForm1098Inputs(data)).toEqual([{ lender: "Actual Bank", mortgageInterestReceived: "123.45", outstandingMortgagePrincipal: "0", mortgageOriginationDate: "2016-06-05" }]);
+    expect(buildForm1098Inputs(data)).toEqual([{ lender: "Actual Bank", mortgageInterestReceived: "123.45", outstandingMortgagePrincipal: "0", mortgageOriginationDate: "2016-06-05", refundOfOverpaidInterest: "0", mortgageInsurancePremiums: "0", pointsPaid: "0", propertyTax: "0" }]);
     expect(buildDonationsInput(data)[0]).toMatchObject({ organization: "Actual Charity", type: "cash", amount: "12.34", dateOfDonation: "2025-02-28", isPrivateFoundation: false });
     expect(() => buildForm1098Inputs({ ...data, mortgageEntries: [{ ...mortgage, outstandingPrincipal: "" }] })).toThrow(/principal/i);
     expect(() => buildDonationsInput({ ...data, donationEntries: [{ ...donation, type: "property", costBasis: "" }] })).toThrow(/basis|classification/i);

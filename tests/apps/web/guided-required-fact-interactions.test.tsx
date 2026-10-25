@@ -276,12 +276,13 @@ describe("required fact interaction boundaries", () => {
     await change("Donated property's cost basis", "0");
     await change("Long-term capital gain property", "true");
     await change("Gift is qualified appreciated stock", "true");
-    expect(buildForm1098Inputs(latest)[0]).toMatchObject({ lender: "Actual Lender", outstandingMortgagePrincipal: "9007199254740993.01", mortgageOriginationDate: "2020-02-03" });
+    expect(latest.mortgageEntries?.[0]).toMatchObject({ lender: "Actual Lender", outstandingPrincipal: "9007199254740993.01", originationDate: "2020-02-03" });
+    expect(() => buildForm1098Inputs(latest)).toThrow(); // Actual debt eligibility remains unknown.
     expect(buildDonationsInput(latest)[0]).toMatchObject({ organization: "Actual Foundation", type: "appreciated_stock", amount: "0.20", costBasis: "0", qualifiedAppreciatedStock: true });
     await click("Add donation");
     await click("Remove donation #2");
     expect(latest.charitableContributions).toBe("0.2");
     await click("Remove mortgage #1");
-    expect(latest.mortgageInterest).toBe("0");
+    expect(latest.mortgageInterest).toBe("");
   });
 });

@@ -195,6 +195,12 @@ function DeductionsSummary({ data, filingStatus, taxYear }: { data: DeductionDat
     { label: "Wagering losses", value: current.gamblingLosses ?? "" },
     { label: "Gambling winnings (income)", value: current.gamblingWinnings ?? "" },
     { label: "Mortgage interest", value: current.mortgageInterest },
+    ...(current.mortgageEntries ?? []).flatMap((entry, index) => [
+      { label: `Mortgage ${index + 1} purchase points (before qualification)`, value: entry.pointsPaid ?? "" },
+      { label: `Mortgage ${index + 1} actual real estate taxes`, value: entry.propertyTaxPaid ?? "" },
+      { label: `Mortgage ${index + 1} annual insurance allocation (before limits)`, value: entry.hasMortgageInsuranceAllocation === true ? entry.insurancePremiumsAllocableToYear ?? "" : "" },
+    ]),
+    { label: "Non-W-2 withholding deducted elsewhere", value: current.nonW2IncomeTaxesDeductedElsewhere ?? "" },
     { label: "Charitable contributions", value: current.charitableContributions },
   ].filter((item) => hasValue(item.value));
 

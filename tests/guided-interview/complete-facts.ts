@@ -76,3 +76,16 @@ export const completeRentalSource: RentalPropertyEntryData = {
   rents: "0", mortgageInterest: "0", taxes: "0", insurance: "0", repairs: "0", utilities: "0", depreciation: "0", otherExpenses: "0",
   depreciationWorksheetConfirmed: true, autoTravelWorksheetConfirmed: true, otherExpenseDescription: "Actual qualified miscellaneous costs",
 };
+
+/** Explicit synthetic ordinary mortgage facts; never defaults for imported sources. */
+export const completeMortgageSource = {
+  lender: "Actual Lender", mortgageInterest: "100", outstandingPrincipal: "250000", originationDate: "2020-01-01",
+  sourceTaxYear: "2025", accountReference: "synthetic-loan-1", accountHolder: "primary" as const,
+  propertyAddress: "123 Example Street, Columbus OH 43215", propertyUse: "main-home" as const,
+  loanType: "original" as const, proceedsUse: "acquisition" as const,
+  securedDebt: true, ownershipInterest: true, obligationToRepay: true, interestPaidByReturn: true,
+  currentYearInterestOnly: true, rentalOrBusinessUse: false, mortgageCreditCertificate: false,
+  specialCircumstances: false, maximumBalanceDuringYear: "250000", sourceFactsConfirmed: true,
+  refundOfOverpaidInterest: "0", mortgageInsurancePremiums: "0", pointsPaid: "0", propertyTaxPaid: "0",
+  hasMortgageInsuranceAllocation: false,
+};

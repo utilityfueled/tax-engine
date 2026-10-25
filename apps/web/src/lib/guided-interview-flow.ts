@@ -18,6 +18,7 @@ import { investmentFactErrors, isStartedInvestment, type InvestmentSourceData } 
 import { businessFactErrors, hasBusinessSourceData, type BusinessSourceData } from "./guided-business-facts";
 import { isStartedRental, rentalFactErrors, type RentalSourceData } from "./guided-rental-facts";
 import { nonW2TaxAllocationErrors } from "./guided-salt-facts";
+import type { MortgageSourceData } from "./guided-mortgage-facts";
 import { vehicleFactErrors, type VehicleCreditData } from "./guided-vehicle-facts";
 import { adoptionFactErrors, type AdoptionCreditData } from "./guided-adoption-facts";
 
@@ -199,6 +200,7 @@ export function computeDeductionComparison(
     data.realEstateTaxes,
     data.personalPropertyTaxes ?? "",
     data.mortgageInterest,
+    ...(data.mortgageEntries ?? []).flatMap(entry => [entry.pointsPaid ?? "", entry.propertyTaxPaid ?? "", ...(taxYear === 2026 && entry.hasMortgageInsuranceAllocation === true ? [entry.insurancePremiumsAllocableToYear ?? ""] : [])]),
     data.charitableContributions,
     data.casualtyLosses,
     ...(data.investmentInterestExpense !== undefined || data.gamblingLosses !== undefined
@@ -811,7 +813,7 @@ export const emptyBrokerageEntry: BrokerageEntryData = {
 
 export type DeductionMethod = "standard" | "itemized";
 
-export interface MortgageEntryData {
+export interface MortgageEntryData extends MortgageSourceData {
   lender: string;
   mortgageInterest: string;
   outstandingPrincipal: string;
@@ -1688,10 +1690,10 @@ function validateUnemploymentSection(data: UnemploymentData | undefined): Sectio
   return VALID_SECTION;
 }
 
-function validateDeductionsSection(data: DeductionData | undefined, taxYear?: number | null, sourceErrors: Record<string, string> = {}): SectionValidationResult {
-  if (Object.keys(sourceErrors).length) return validateRequiredFacts({ ...deductionFactErrors(data, taxYear), ...sourceErrors });
+function validateDeductionsSection(data: DeductionData | undefined, taxYear?: number | null, sourceErrors: Record<string, string> = {}, filingStatus?: FilingStatus | null): SectionValidationResult {
+  if (Object.keys(sourceErrors).length) return validateRequiredFacts({ ...deductionFactErrors(data, taxYear, filingStatus), ...sourceErrors });
   if (!data) return EMPTY_SECTION("deductions info");
-  return validateRequiredFacts(deductionFactErrors(data, taxYear));
+  return validateRequiredFacts(deductionFactErrors(data, taxYear, filingStatus));
 }
 
 function validateAdjustmentsSection(data: AdjustmentData | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null): SectionValidationResult {
@@ -1738,7 +1740,7 @@ export function validateSection(
     case "income-unemployment":
       return validateUnemploymentSection(getSectionData(state, "income-unemployment"));
     case "deductions":
-      return validateDeductionsSection(getSectionData(state, "deductions"), state.taxYear, nonW2TaxAllocationErrors(state));
+      return validateDeductionsSection(getSectionData(state, "deductions"), state.taxYear, nonW2TaxAllocationErrors(state), state.segmentation.filingStatus);
     case "adjustments":
       return validateAdjustmentsSection(getSectionData(state, "adjustments"), state.segmentation.filingStatus, state.taxYear);
     case "credits":
