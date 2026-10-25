@@ -18,7 +18,6 @@ import {
   setTextField,
   setCurrencyField,
   setCheckBox,
-  formatCurrency,
 } from "../../pdf-utils.js";
 
 // ─── PDF Field Name Helpers ────────────────────────────────────────────────
@@ -55,40 +54,39 @@ const FIELDS = {
   zip: p1Addr("f1_24[0]"),
 
   // ── Filing Status ──
-  single: p1("c1_1[0]"),
-  mfj: p1("c1_2[0]"),
-  mfs: p1("c1_3[0]"),
-  hoh: p1("c1_4[0]"),
+  single: p1("Checkbox_ReadOrder[0].c1_8[0]"),
+  mfj: p1("Checkbox_ReadOrder[0].c1_8[1]"),
+  mfs: p1("Checkbox_ReadOrder[0].c1_8[2]"),
+  hoh: p1("c1_8[0]"),
+  qss: p1("c1_8[1]"),
 
-  // ── Dependents (4 rows: firstName, lastName, SSN, relationship) ──
+  // Each dependent occupies a column; rows hold name, SSN and relationship.
   dep1FirstName: p1Dep("Row1[0]", "f1_31[0]"),
-  dep1LastName: p1Dep("Row1[0]", "f1_32[0]"),
-  dep1SSN: p1Dep("Row1[0]", "f1_33[0]"),
-  dep1Relationship: p1Dep("Row1[0]", "f1_34[0]"),
-  dep2FirstName: p1Dep("Row2[0]", "f1_35[0]"),
+  dep1LastName: p1Dep("Row2[0]", "f1_35[0]"),
+  dep1SSN: p1Dep("Row3[0]", "f1_39[0]"),
+  dep1Relationship: p1Dep("Row4[0]", "f1_43[0]"),
+  dep2FirstName: p1Dep("Row1[0]", "f1_32[0]"),
   dep2LastName: p1Dep("Row2[0]", "f1_36[0]"),
-  dep2SSN: p1Dep("Row2[0]", "f1_37[0]"),
-  dep2Relationship: p1Dep("Row2[0]", "f1_38[0]"),
-  dep3FirstName: p1Dep("Row3[0]", "f1_39[0]"),
-  dep3LastName: p1Dep("Row3[0]", "f1_40[0]"),
+  dep2SSN: p1Dep("Row3[0]", "f1_40[0]"),
+  dep2Relationship: p1Dep("Row4[0]", "f1_44[0]"),
+  dep3FirstName: p1Dep("Row1[0]", "f1_33[0]"),
+  dep3LastName: p1Dep("Row2[0]", "f1_37[0]"),
   dep3SSN: p1Dep("Row3[0]", "f1_41[0]"),
-  dep3Relationship: p1Dep("Row3[0]", "f1_42[0]"),
-  dep4FirstName: p1Dep("Row4[0]", "f1_43[0]"),
-  dep4LastName: p1Dep("Row4[0]", "f1_44[0]"),
-  dep4SSN: p1Dep("Row4[0]", "f1_45[0]"),
+  dep3Relationship: p1Dep("Row4[0]", "f1_45[0]"),
+  dep4FirstName: p1Dep("Row1[0]", "f1_34[0]"),
+  dep4LastName: p1Dep("Row2[0]", "f1_38[0]"),
+  dep4SSN: p1Dep("Row3[0]", "f1_42[0]"),
   dep4Relationship: p1Dep("Row4[0]", "f1_46[0]"),
-
-  // Dependent CTC/ODC checkboxes (Row5 = CTC, Row6 = ODC)
-  dep1CTC: p1Dep("Row5[0]", "Dependent1[0].c1_12[0]"),
-  dep1ODC: p1Dep("Row5[0]", "Dependent1[0].c1_13[0]"),
-  dep2CTC: p1Dep("Row5[0]", "Dependent2[0].c1_14[0]"),
-  dep2ODC: p1Dep("Row5[0]", "Dependent2[0].c1_15[0]"),
-  dep3CTC: p1Dep("Row5[0]", "Dependent3[0].c1_16[0]"),
-  dep3ODC: p1Dep("Row5[0]", "Dependent3[0].c1_17[0]"),
-  dep4CTC: p1Dep("Row5[0]", "Dependent4[0].c1_18[0]"),
-  dep4ODC: p1Dep("Row5[0]", "Dependent4[0].c1_19[0]"),
-
-  // ── Page 1 Income Lines ──
+  // Row 7 contains credit eligibility, separate from residency and student status.
+  dep1CTC: p1Dep("Row7[0]", "Dependent1[0].c1_28[0]"),
+  dep1ODC: p1Dep("Row7[0]", "Dependent1[0].c1_28[1]"),
+  dep2CTC: p1Dep("Row7[0]", "Dependent2[0].c1_29[0]"),
+  dep2ODC: p1Dep("Row7[0]", "Dependent2[0].c1_29[1]"),
+  dep3CTC: p1Dep("Row7[0]", "Dependent3[0].c1_30[0]"),
+  dep3ODC: p1Dep("Row7[0]", "Dependent3[0].c1_30[1]"),
+  dep4CTC: p1Dep("Row7[0]", "Dependent4[0].c1_31[0]"),
+  dep4ODC: p1Dep("Row7[0]", "Dependent4[0].c1_31[1]"),
+  // Printed 2025 income-line locations.
   line1a: p1("f1_47[0]"), // Wages, salaries, tips
   line1b: p1("f1_48[0]"), // Household employee income
   line1c: p1("f1_49[0]"), // Tip income not on line 1a
@@ -96,55 +94,60 @@ const FIELDS = {
   line1e: p1("f1_51[0]"), // Taxable dependent care benefits
   line1f: p1("f1_52[0]"), // Employer-provided adoption benefits
   line1g: p1("f1_53[0]"), // Wages from Form 8919
-  line1h: p1("f1_54[0]"), // Strike benefits (2025+)
-  line1z: p1("f1_55[0]"), // Total of lines 1a through 1h
-  line2a: p1("f1_56[0]"), // Tax-exempt interest
-  line2b: p1("f1_57[0]"), // Taxable interest
-  line3a: p1("f1_58[0]"), // Qualified dividends
-  line3b: p1("f1_59[0]"), // Ordinary dividends
-  line4a: p1("f1_60[0]"), // IRA distributions
-  line4b: p1("f1_61[0]"), // IRA distributions taxable
-  line5a: p1("f1_62[0]"), // Pensions and annuities
-  line5b: p1("f1_63[0]"), // Pensions taxable amount
-  line6a: p1("f1_65[0]"), // Social Security benefits
-  line6b: p1("f1_66[0]"), // SS taxable amount
-  line7: p1("f1_67[0]"),  // Capital gain or (loss)
-  line8: p1("f1_68[0]"),  // Other income from Schedule 1
-  line9: p1("f1_69[0]"),  // Total income
-  line10: p1("f1_70[0]"), // Adjustments from Schedule 1
-  line11: p1("f1_71[0]"), // Adjusted gross income
-  line12: p1("f1_72[0]"), // Standard or itemized deduction
-  line13: p1("f1_73[0]"), // QBI deduction
-  line14: p1("f1_74[0]"), // Total deductions (12 + 13)
-  line15: p1("f1_75[0]"), // Taxable income
+  line1h: p1("f1_55[0]"),
+  line1z: p1("f1_57[0]"),
+  line2a: p1("f1_58[0]"),
+  line2b: p1("f1_59[0]"),
+  line3a: p1("f1_60[0]"),
+  line3b: p1("f1_61[0]"),
+  line4a: p1("f1_62[0]"),
+  line4b: p1("f1_63[0]"),
+  line5a: p1("f1_65[0]"),
+  line5b: p1("f1_66[0]"),
+  line6a: p1("f1_68[0]"),
+  line6b: p1("f1_69[0]"),
+  line7: p1("f1_70[0]"),
+  line8: p1("f1_72[0]"),
+  line9: p1("f1_73[0]"),
+  line10: p1("f1_74[0]"),
+  line11: p1("f1_75[0]"),
+  line11b: p2("f2_01[0]"),
+  line13b: p2("f2_04[0]"),
+  line12: p2("f2_02[0]"),
+  line13: p2("f2_03[0]"),
+  line14: p2("f2_05[0]"),
+  line15: p2("f2_06[0]"),
 
   // ── Page 2 Tax Computation ──
-  line16: p2("f2_02[0]"), // Tax
-  line17: p2("f2_03[0]"), // Schedule 2, Part I, line 4
-  line18: p2("f2_04[0]"), // Add 16 + 17
-  line19: p2("f2_05[0]"), // Child tax credit
-  line20: p2("f2_06[0]"), // Schedule 3, line 8
-  line22: p2("f2_08[0]"), // Subtract 21 from 18 (net tax after credits)
-  line23: p2("f2_09[0]"), // Other taxes from Schedule 2, Part II
-  line24: p2("f2_10[0]"), // Total tax
+  line16: p2("f2_08[0]"),
+  line17: p2("f2_09[0]"),
+  line18: p2("f2_10[0]"),
+  line19: p2("f2_11[0]"),
+  line20: p2("f2_12[0]"),
+  line21: p2("f2_13[0]"),
+  line22: p2("f2_14[0]"),
+  line23: p2("f2_15[0]"),
+  line24: p2("f2_16[0]"),
 
   // ── Page 2 Payments ──
-  line25a: p2("f2_11[0]"), // W-2 withholding
-  line25b: p2("f2_12[0]"), // 1099 withholding
-  line25c: p2("f2_13[0]"), // Other withholding
-  line25d: p2("f2_14[0]"), // Total withholding
-  line26: p2("f2_15[0]"),  // Estimated tax payments
-  line27a: p2("f2_16[0]"), // Earned income credit
+  line25a: p2("f2_17[0]"),
+  line25b: p2("f2_18[0]"),
+  line25c: p2("f2_19[0]"),
+  line25d: p2("f2_20[0]"),
+  line26: p2("f2_21[0]"),
+  line27a: p2("f2_23[0]"),
 
   // ── Page 2 Refundable Credits ──
-  line28: p2("f2_17[0]"),  // Additional child tax credit
-  line29: p2("f2_18[0]"),  // American opportunity credit
-  line31: p2("f2_19[0]"),  // Schedule 3, line 15
+  line28: p2("f2_24[0]"),
+  line29: p2("f2_25[0]"),
+  line30: p2("f2_26[0]"),
+  line31: p2("f2_27[0]"),
 
   // ── Page 2 Totals ──
-  line32: p2("f2_29[0]"), // Total payments
-  line33: p2("f2_30[0]"), // Overpaid
-  line34: p2("f2_31[0]"), // Refund
+  line32: p2("f2_28[0]"),
+  line33: p2("f2_29[0]"),
+  line34: p2("f2_30[0]"),
+  line35a: p2("f2_31[0]"),
   line35aRouting: p2("RoutingNo[0].f2_32[0]"), // Routing number
   line35cAccount: p2("AccountNo[0].f2_33[0]"), // Account number
   line36: p2("f2_34[0]"), // Applied to estimated tax
@@ -196,9 +199,10 @@ export async function fillForm1040(
   // ── Filing Status ──
   const status = taxpayer.filingStatus;
   setCheckBox(form, F.single, status === "single");
-  setCheckBox(form, F.mfj, status === "married_filing_jointly" || status === "qualifying_surviving_spouse");
+  setCheckBox(form, F.mfj, status === "married_filing_jointly");
   setCheckBox(form, F.mfs, status === "married_filing_separately");
   setCheckBox(form, F.hoh, status === "head_of_household");
+  setCheckBox(form, F.qss, status === "qualifying_surviving_spouse");
 
   // ── Dependents (up to 4) ──
   const depFields = [
@@ -237,34 +241,25 @@ export async function fillForm1040(
   setCurrencyField(form, F.line9, result.totalIncome);
   setCurrencyField(form, F.line10, result.adjustmentsToIncome);
   setCurrencyField(form, F.line11, result.agi);
+  setCurrencyField(form, F.line11b, result.agi);
   setCurrencyField(form, F.line12, result.deductionAmount);
   // Line 13: QBI deduction — pull from form8995/8995A if present
   const qbiDeduction = getLineValue(result, "1040", "13");
   if (qbiDeduction) setCurrencyField(form, F.line13, qbiDeduction);
-  // Line 14: total deductions = line 12 + line 13
-  const totalDeductions = result.deductionAmount.plus(qbiDeduction ?? new Decimal(0));
+  const schedule1ADeduction = getLineValue(result, "1040", "13b") ?? new Decimal(0);
+  setCurrencyField(form, F.line13b, schedule1ADeduction);
+  const totalDeductions = getLineValue(result, "1040", "14")
+    ?? result.deductionAmount.plus(qbiDeduction ?? new Decimal(0)).plus(schedule1ADeduction);
   setCurrencyField(form, F.line14, totalDeductions);
   setCurrencyField(form, F.line15, result.taxableIncome);
 
-  // ── Page 2 Tax Computation ──
-  setCurrencyField(form, F.line16, result.totalTaxBeforeCredits);
-  // Line 17: Schedule 2, Part I (AMT + excess premium tax credit)
-  const schedule2Part1 = getLineValue(result, "Schedule 2", "3") ?? new Decimal(0);
-  setCurrencyField(form, F.line17, schedule2Part1);
-  // Line 18: 16 + 17
-  setCurrencyField(form, F.line18, result.totalTaxBeforeCredits.plus(schedule2Part1));
-  setCurrencyField(form, F.line19, result.childTaxCredit);
-  // Line 20: Schedule 3, line 8
-  const schedule3Line8 = getLineValue(result, "Schedule 3", "8") ?? new Decimal(0);
-  setCurrencyField(form, F.line20, schedule3Line8);
-  // Line 22: Net tax after credits
-  const totalNonrefCredits = result.childTaxCredit.plus(schedule3Line8);
-  const line18 = result.totalTaxBeforeCredits.plus(schedule2Part1);
-  const line22 = Decimal.max(line18.minus(totalNonrefCredits), new Decimal(0));
-  setCurrencyField(form, F.line22, line22);
-  // Line 23: Other taxes from Schedule 2, Part II
-  setCurrencyField(form, F.line23, result.totalAdditionalTaxes);
-  setCurrencyField(form, F.line24, result.totalTax);
+  // The engine owns these amounts. Preserve its final audited values without
+  // recalculating credits or adding AMT twice in the form layer.
+  for (const line of ["16", "17", "18", "19", "20", "21", "22", "23", "24"] as const) {
+    const value = getLineValue(result, "1040", line);
+    if (value === undefined) throw new Error(`Missing audited Form 1040 line ${line}.`);
+    setCurrencyField(form, F[`line${line}`], value);
+  }
 
   // ── Page 2 Payments ──
   setCurrencyField(form, F.line25d, result.totalWithholding);
@@ -272,10 +267,15 @@ export async function fillForm1040(
   setCurrencyField(form, F.line27a, result.earnedIncomeCredit);
 
   // ── Page 2 Totals ──
-  setCurrencyField(form, F.line32, result.totalPayments);
+  for (const line of ["28", "29", "30", "31"] as const) {
+    setCurrencyField(form, F[`line${line}`], getLineValue(result, "1040", line) ?? new Decimal(0));
+  }
+  const otherPayments = result.totalPayments.minus(result.totalWithholding).minus(result.estimatedTaxPayments);
+  setCurrencyField(form, F.line32, otherPayments);
+  setCurrencyField(form, F.line33, result.totalPayments);
   if (result.refund.gt(0)) {
-    setCurrencyField(form, F.line33, result.refund);
     setCurrencyField(form, F.line34, result.refund);
+    setCurrencyField(form, F.line35a, result.refund);
   }
   if (result.amountOwed.gt(0)) {
     setCurrencyField(form, F.line37, result.amountOwed);
@@ -289,8 +289,11 @@ export async function fillForm1040(
 
 /** Look up a calculated line value from the audit trail. */
 function getLineValue(result: TaxReturnResult, form: string, line: string): Decimal | undefined {
-  const found = result.allLines.find((l) => l.form === form && l.line === line);
-  return found?.value;
+  for (let index = result.allLines.length - 1; index >= 0; index -= 1) {
+    const candidate = result.allLines[index];
+    if (candidate.form === form && candidate.line === line) return candidate.value;
+  }
+  return undefined;
 }
 
 /** Exported field map for testing and inspection. */
