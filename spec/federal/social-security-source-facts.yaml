@@ -1,0 +1,12 @@
+form: "Social Security source facts"
+fullName: "Current-year possession income exclusion source facts for Publication 915"
+taxYear: 2026
+irsReference: "https://www.irs.gov/publications/p915"
+retrievedAt: "2026-10-25"
+reviewStatus: "independent-review-pending"
+lines:
+  - line: "worksheet-1-line-5-source"
+    description: "Preserve actual Puerto Rico and American Samoa excluded income"
+    formula: "Store each actual nonnegative excluded income amount, including zero, and separate source confirmation. Omission remains unknown; never infer the source amounts from another credit's eligibility or from an omitted exclusion form. Federal orchestration adds these actual exclusions to Publication 915 Worksheet 1 line 5 once."
+    irsRef: "Publication 915 Worksheet 1 line 5: certain income of bona fide residents of American Samoa (Form 4563 line 15) or Puerto Rico"
+    testRef: "tests/engine/forms/social-security-source-facts-schema.test.ts::preserves unknown versus zero Social Security possession exclusion facts"

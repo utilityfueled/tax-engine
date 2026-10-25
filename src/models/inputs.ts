@@ -1160,6 +1160,12 @@ export const FormSSA1099Schema = z.object({
   federalWithheld: optionalDecimal, // Box 6
 });
 
+export const SocialSecurityFactsSchema = z.object({
+  puertoRicoIncomeExclusion: decimal.pipe(z.string().refine(value => d(value).gte(0), "Must be nonnegative")).optional(),
+  americanSamoaIncomeExclusion: decimal.pipe(z.string().refine(value => d(value).gte(0), "Must be nonnegative")).optional(),
+  sourceFactsConfirmed: z.boolean().optional(),
+});
+
 export const FormRRB1099Schema = z.object({
   recipient: z.string().optional(),
   netSocialSecurityEquivalentBenefitPortion: decimal, // Box 5
@@ -4781,6 +4787,7 @@ export const TaxYearInputSchema = z.object({
   form4137: Form4137Schema.optional(),
   form8919: Form8919Schema.optional(),
   socialSecurityLumpSumElection: SocialSecurityLumpSumElectionSchema.optional(),
+  socialSecurityFacts: SocialSecurityFactsSchema.optional(),
   form4562: Form4562Schema.optional(),
   form4797: Form4797Schema.optional(),
   form8801: Form8801Schema.optional(),
