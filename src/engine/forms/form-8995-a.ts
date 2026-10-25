@@ -11,11 +11,13 @@
  */
 
 import Decimal from "decimal.js";
+import { calculateQBIMinimumDeduction } from "./qbi-minimum-deduction.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { zeroFloor, min, max, roundDollar } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
 
 export interface QBIBusinessSource {
+  materiallyParticipated?: boolean;
   name: string;
   /** QBI from this trade or business */
   qbi: Decimal;
@@ -48,6 +50,8 @@ export interface PatronageCooperativeSource {
 }
 
 export interface Form8995AInput {
+  taxYear?: number;
+  priorYearActiveQBILoss?: Decimal;
   /** QBI sources with W-2/UBIA/SSTB detail per business */
   qbiSources: QBIBusinessSource[];
   /** Qualified PTP sources with W-2/UBIA/SSTB detail per PTP */
@@ -478,11 +482,17 @@ export function calculateForm8995A(input: Form8995AInput): Form8995AResult {
 
   // Line 37: QBI deduction before DPAD = min(combined - patron reduction, income limitation)
   const adjustedCombined = zeroFloor(combinedComponent.minus(totalPatronReduction));
-  const qbiDeductionBeforeDPAD = min(adjustedCombined, incomeLimitation);
+  const minimum = calculateQBIMinimumDeduction({
+    taxYear: input.taxYear ?? 2025, ordinaryDeduction: min(adjustedCombined, incomeLimitation),
+    sources: input.qbiSources.map(source => ({ ...source, qbi: source.isSST ? source.qbi.times(sstbApplicablePercentage) : source.qbi })),
+    priorYearQBILoss: input.priorYearQBILoss, priorYearActiveQBILoss: input.priorYearActiveQBILoss,
+  });
+  audit.merge(minimum.lines);
+  const qbiDeductionBeforeDPAD = minimum.deduction;
   audit.record("8995-A", "37", "QBI deduction before DPAD", qbiDeductionBeforeDPAD,
     totalPatronReduction.isZero()
-      ? `min($${combinedComponent} combined, $${incomeLimitation} income limit)`
-      : `min($${combinedComponent} combined - $${totalPatronReduction} patron reduction = $${adjustedCombined}, $${incomeLimitation} income limit)`);
+      ? `min($${combinedComponent} combined, $${incomeLimitation} income limit), subject to section 199A(i) minimum`
+      : `min($${combinedComponent} combined - $${totalPatronReduction} patron reduction = $${adjustedCombined}, $${incomeLimitation} income limit), subject to section 199A(i) minimum`);
 
   // Line 38: DPAD from cooperatives (capped at TI - Line 37)
   const dpadCap = zeroFloor(taxableIncome.minus(qbiDeductionBeforeDPAD));

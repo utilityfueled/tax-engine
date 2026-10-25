@@ -279,3 +279,26 @@ its tests. The 2025 legacy omission path remains explicitly tested.
 Part III employer-benefit exclusion and taxable-benefit wage routing still need
 full integration before the complete 2026 rule pack can be qualified; accepting
 an explicitly determined excluded amount does not invent those facts.
+
+## Package: active-business QBI minimum
+
+Refreshed IRC 199A(i), (c)(2), (d) and (e). The 2026 constant pack now declares the
+$400 minimum and $1,000 active-income threshold. Both Form 8995 paths apply the
+minimum after ordinary limits, using exact pre-threshold Decimal amounts and
+actual material participation. Detailed SSTBs contribute only their applicable
+qualified portion; elective aggregation does not invent participation. Unknown
+participation or active historical loss character rejects when it could change
+the floor. A deduction already at least $400, or sources that cannot reach
+$1,000 even if all positive sources were active, need no invented participation.
+The zero-taxable-income path now computes the statutory minimum, and a historical
+QBI loss survives a year with no current business sources.
+
+Initially nine law/integration assertions and two constant assertions failed;
+the no-current-business carryover regression also failed before correction.
+674 focused tests passed before that final carryover case; the final count is
+recorded with the commit checks below. Typecheck/spec validation pass. The scoped
+diff was reviewed. This is source-derived implementation, with independent tax-law
+review still pending; no readiness gate changed. Business-tip allocation and
+self-employed deduction attribution remain separate QBI integration work.
+Final package verification: 675 focused tests pass, including the carryover
+regression; engine typecheck, spec validation and whitespace checks pass.

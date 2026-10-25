@@ -75,6 +75,7 @@ export const FEDERAL_2026_INDEXED: Federal2026Indexed = freezeRuleData({
 export const FEDERAL_2026_CONSTANTS: YearConstants & {
   childTaxCredit: YearConstants["childTaxCredit"] & { refundablePerChild: Decimal };
   adoptionCredit: YearConstants["adoptionCredit"] & { refundablePerChild: Decimal };
+  qbi: YearConstants["qbi"] & { minimumDeduction: Decimal; minimumActiveIncome: Decimal };
 } = freezeRuleData({
   ...FEDERAL_2026_INDEXED,
   saltCap: d("40400"),
@@ -93,6 +94,7 @@ export const FEDERAL_2026_CONSTANTS: YearConstants & {
   capitalLossLimit: d("3000"),
   estimatedTaxSafeHarbor: d("1.1"),
   qbi: {
+    minimumDeduction: d("400"), minimumActiveIncome: d("1000"),
     simplifiedThreshold: { ...statuses("201750", "403500", "201775", "201750"), qualifying_surviving_spouse: d("201750") },
     phaseInRange: { ...statuses("75000", "150000", "75000", "75000"), qualifying_surviving_spouse: d("75000") },
   },

@@ -1759,6 +1759,7 @@ export const ScheduleK1Schema = z.object({
   investmentExpenses: optionalDecimal, // Box 20 Code B — investment expenses from partnership → Form 4952 Line 4f
   excessTaxableIncome: optionalDecimal, // Partnership Box 20 Code AE or S-corp Box 17 Code AA — current engine only uses the partnership branch for EBIE release
   excessBusinessInterestIncome: optionalDecimal, // Partnership Box 20 Code AF or S-corp Box 17 Code AB — current engine only uses the partnership branch for EBIE release
+  qbiMateriallyParticipated: z.boolean().optional(),
   section199AQBI: optionalDecimal, // Box 20 Code Z — qualified business income
   section199AW2Wages: optionalDecimal, // Section 199A statement — W-2 wages allocable to QBI
   section199AUBIA: optionalDecimal, // Section 199A statement — UBIA of qualified property
@@ -1904,6 +1905,7 @@ export const ScheduleK1Form1041Schema = z.object({
   // dividends, and qualified PTP income. These mirror the partnership
   // K-1 Box 20 Code Z fields.
   /** Box 14 Code I: Qualified business income from the trust/estate */
+  qbiMateriallyParticipated: z.boolean().optional(),
   section199AQBI: optionalDecimal,
   /** Box 14 Code I statement: W-2 wages allocable to QBI */
   section199AW2Wages: optionalDecimal,
@@ -2025,6 +2027,8 @@ export const PriorYearCarryforwardSchema = z.object({
     }))
   ).optional(),
   qbiLossCarryforward: optionalDecimal,
+  /** Actual active portion of the QBI loss carryover; unknown is not zero. */
+  activeQbiLossCarryforward: optionalDecimalInput,
   /** Form 8995-A Part IV aggregation elections per Reg. §1.199A-4 */
   qbiAggregationElections: z.array(z.object({
     name: z.string(),
@@ -2330,6 +2334,7 @@ export const Form8829Schema = z.object({
 });
 
 export const ScheduleCInputSchema = z.object({
+  qbiMateriallyParticipated: z.boolean().optional(),
   businessName: z.string().optional(),
   businessCode: z.string().optional(),
   ein: z.string().optional(),
@@ -2387,6 +2392,7 @@ export const FarmExpensesSchema = z.object({
 });
 
 export const ScheduleFInputSchema = z.object({
+  qbiMateriallyParticipated: z.boolean().optional(),
   principalCropOrActivity: z.string().optional(),
   activityCode: z.string().optional(),    // NAICS code from Part IV
   ein: z.string().optional(),
@@ -2448,6 +2454,7 @@ export const RentalPropertySchema = z.object({
   otherExpenses: optionalDecimal,
   // Section 199A QBI — rental activity qualifies as trade/business (Rev. Proc. 2019-38 safe harbor or case law)
   qualifiesForQBI: z.boolean().default(false),
+  qbiMateriallyParticipated: z.boolean().optional(),
   qbiW2Wages: optionalDecimal, // W-2 wages paid by the rental activity (for Form 8995-A detailed calculation)
   qbiUBIA: optionalDecimal, // UBIA of qualified property (for Form 8995-A detailed calculation)
   qbiIsSST: z.boolean().default(false), // Whether the rental activity is a specified service trade or business

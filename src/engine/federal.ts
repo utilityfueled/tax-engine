@@ -2031,7 +2031,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
       schedCQBIAdjustment = allocatedDeductibleHalf.plus(seHealthInsurance);
     }
     const adjustedSchedCQBI = schedCNetProfit.minus(schedCQBIAdjustment);
-    qbiSources.push({ name: input.scheduleC?.businessName ?? "Schedule C", qbi: adjustedSchedCQBI });
+    qbiSources.push({ name: input.scheduleC?.businessName ?? "Schedule C", qbi: adjustedSchedCQBI, materiallyParticipated: input.scheduleC?.qbiMateriallyParticipated });
   }
   if (schedFNetProfit && !schedFNetProfit.isZero()) {
     // Allocate deductible half SE tax proportionally to Schedule F's contribution
@@ -2041,12 +2041,12 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
       schedFQBIAdjustment = roundDollar(schedSE.deductibleHalf.times(schedFShare));
     }
     const adjustedSchedFQBI = schedFNetProfit.minus(schedFQBIAdjustment);
-    qbiSources.push({ name: input.scheduleF?.principalCropOrActivity ?? "Schedule F", qbi: adjustedSchedFQBI });
+    qbiSources.push({ name: input.scheduleF?.principalCropOrActivity ?? "Schedule F", qbi: adjustedSchedFQBI, materiallyParticipated: input.scheduleF?.qbiMateriallyParticipated });
   }
   for (const k1 of input.scheduleK1) {
     const k1QBI = d(k1.section199AQBI);
     if (!k1QBI.isZero()) {
-      qbiSources.push({ name: k1.partnershipName, qbi: k1QBI });
+      qbiSources.push({ name: k1.partnershipName, qbi: k1QBI, materiallyParticipated: k1.qbiMateriallyParticipated });
     }
   }
   // K-1 Form 1041 Box 14 Code I: QBI from estates/trusts
@@ -2054,7 +2054,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   for (const k1 of k1Form1041s) {
     const k1QBI = d(k1.section199AQBI);
     if (!k1QBI.isZero()) {
-      qbiSources.push({ name: k1.estateTrustName, qbi: k1QBI });
+      qbiSources.push({ name: k1.estateTrustName, qbi: k1QBI, materiallyParticipated: k1.qbiMateriallyParticipated });
     }
   }
 
@@ -2083,7 +2083,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
       }
     }
     if (!rentalQBI.isZero()) {
-      qbiSources.push({ name: rental.description, qbi: rentalQBI });
+      qbiSources.push({ name: rental.description, qbi: rentalQBI, materiallyParticipated: prop.qbiMateriallyParticipated });
       audit.record("1040", "13-QBI-rental", `Rental QBI: ${rental.description}`,
         rentalQBI,
         rentalQBI.isPositive()
@@ -2139,8 +2139,8 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     let form8995Result: import("./forms/form-8995.js").Form8995Result | undefined;
     let form8995AResult: import("./forms/form-8995-a.js").Form8995AResult | undefined;
 
-    const hasQBISources = qbiSources.length > 0 || qualifiedReitDividends.greaterThan(0) || !qualifiedPTPIncome.isZero();
-    if (hasQBISources && taxableIncomeBeforeQBI.greaterThan(0)) {
+    const hasQBISources = qbiSources.length > 0 || qualifiedReitDividends.greaterThan(0) || !qualifiedPTPIncome.isZero() || d(input.priorYear?.qbiLossCarryforward).gt(0);
+    if (hasQBISources && (year === 2026 || taxableIncomeBeforeQBI.greaterThan(0))) {
       const qbiThreshold = constants.qbi.simplifiedThreshold[filingStatus];
       const priorQBILoss = input.priorYear?.qbiLossCarryforward
         ? d(input.priorYear.qbiLossCarryforward)
@@ -2149,6 +2149,8 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
       if (taxableIncomeBeforeQBI.lte(qbiThreshold)) {
         // Simplified Form 8995: no W-2/UBIA limitations, no SSTB phase-out
         form8995Result = calculateForm8995({
+          taxYear: year,
+          priorYearActiveQBILoss: input.priorYear?.activeQbiLossCarryforward === undefined ? undefined : d(input.priorYear.activeQbiLossCarryforward),
           qbiSources,
           qualifiedReitDividends,
           qualifiedPTPIncome,
@@ -2199,7 +2201,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
               }
             }
           }
-          return { name: source.name, qbi: source.qbi, w2Wages, ubia, isSST };
+          return { name: source.name, qbi: source.qbi, w2Wages, ubia, isSST, materiallyParticipated: source.materiallyParticipated };
         });
 
         // Part IV aggregation elections from taxpayer input
@@ -2209,6 +2211,8 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
         }));
 
         form8995AResult = calculateForm8995A({
+          taxYear: year,
+          priorYearActiveQBILoss: input.priorYear?.activeQbiLossCarryforward === undefined ? undefined : d(input.priorYear.activeQbiLossCarryforward),
           qbiSources: qbiBusinessSources,
           ptpSources: ptpSources.length > 0 ? ptpSources : undefined,
           qualifiedReitDividends,

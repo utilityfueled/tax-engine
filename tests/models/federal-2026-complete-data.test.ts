@@ -11,6 +11,7 @@ describe("Independent 2026 constant data", () => {
     ["childTaxCredit.perChild", "2200"], ["childTaxCredit.refundablePerChild", "1700"],
     ["qbi.simplifiedThreshold.single", "201750"], ["qbi.simplifiedThreshold.married_filing_jointly", "403500"],
     ["qbi.simplifiedThreshold.married_filing_separately", "201775"], ["qbi.phaseInRange.single", "75000"], ["qbi.phaseInRange.married_filing_jointly", "150000"],
+    ["qbi.minimumDeduction", "400"], ["qbi.minimumActiveIncome", "1000"],
     ["studentLoanInterest.phaseOutStart.married_filing_jointly", "175000"], ["studentLoanInterestDeduction.phaseOutEnd.married_filing_jointly", "205000"],
     ["hsa.selfOnlyContributionLimit", "4400"], ["hsa.familyContributionLimit", "8750"],
     ["iraDeduction.contributionLimit", "7500"], ["iraDeduction.catchUpContribution", "1100"],
