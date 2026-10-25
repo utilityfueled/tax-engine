@@ -1543,7 +1543,7 @@ describe("retirement income section data", () => {
     expect(emptyRetirementEntry.taxableAmount).toBe("");
     expect(emptyRetirementEntry.federalWithheld).toBe("");
     expect(emptyRetirementEntry.isIraSepSimple).toBe(false);
-    expect(emptyRetirementEntry.distributionCode).toBe("7");
+    expect(emptyRetirementEntry.distributionCode).toBe("");
   });
 });
 
@@ -2350,13 +2350,14 @@ describe("validateSection", () => {
     expect(result.status).toBe("empty");
   });
 
-  it("returns complete for retirement section with taxable amount", () => {
+  it("returns partial for retirement section with only taxable amount", () => {
     let state = startInterview({ filingStatus: "single", incomeTypes: ["retirement"], lifeEvents: [], stateCode: null });
     state = updateSectionData(state, "income-retirement", {
       entries: [{ ...emptyRetirementEntry, taxableAmount: "15000" }],
     });
     const result = validateSection(state, "income-retirement");
-    expect(result.status).toBe("complete");
+    expect(result.status).toBe("partial");
+    expect(result.allowSkip).toBe(false);
   });
 
   it("returns empty for social security with no data", () => {

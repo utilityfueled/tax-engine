@@ -69,7 +69,7 @@ function RetirementCard({
         />
         <CurrencyField
           label="Taxable amount (Box 2a)"
-          hint="The portion subject to income tax"
+          hint="Copy Box 2a, including an explicit zero. If blank or not determined, leave it blank for review; calculation waits for the taxable amount."
           value={entry.taxableAmount}
           onChange={(v) => onUpdate("taxableAmount", v)}
           required
@@ -88,6 +88,7 @@ function RetirementCard({
             onChange={(e) => onUpdate("distributionCode", e.target.value)}
             aria-describedby={`retirement-${index}-dist-hint`}
           >
+            <option value="">Choose the code printed on your form</option>
             {distributionCodeOptions.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
@@ -95,7 +96,7 @@ function RetirementCard({
             ))}
           </select>
           <span className="guided-field-hint" id={`retirement-${index}-dist-hint`}>
-            Code 7 is most common for retirees. Code 1 means early withdrawal with potential penalty.
+            Use the code printed in Box 7; do not select one based on age alone.
           </span>
         </label>
 

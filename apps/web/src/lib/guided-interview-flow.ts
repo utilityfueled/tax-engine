@@ -7,6 +7,7 @@
 import Decimal from "decimal.js";
 import { parseGuidedCurrency, hasGuidedCurrency } from "./guided-currency";
 import { personalFactErrors } from "./guided-taxpayer-facts";
+import { deductionFactErrors, educationFactErrors, paymentFactErrors, retirementFactErrors } from "./guided-required-facts";
 
 import { formatPendingW2SuggestionValueLabel, isOfficialFixtureSourceType } from "@/lib/document-fixture-copy";
 
@@ -734,6 +735,27 @@ export const emptyBrokerageEntry: BrokerageEntryData = {
 
 export type DeductionMethod = "standard" | "itemized";
 
+export interface MortgageEntryData {
+  lender: string;
+  mortgageInterest: string;
+  outstandingPrincipal: string;
+  originationDate: string;
+}
+
+export const emptyMortgageEntry: MortgageEntryData = { lender: "", mortgageInterest: "", outstandingPrincipal: "", originationDate: "" };
+
+export interface DonationEntryData {
+  organization: string;
+  type: "" | "cash" | "appreciated_stock" | "property" | "other";
+  amount: string;
+  date: string;
+  costBasis: string;
+  isLongTermCapitalGain: boolean | null;
+  isPrivateFoundation: boolean | null;
+}
+
+export const emptyDonationEntry: DonationEntryData = { organization: "", type: "", amount: "", date: "", costBasis: "", isLongTermCapitalGain: null, isPrivateFoundation: null };
+
 export interface DeductionData {
   method: DeductionMethod;
   medicalExpenses: string;
@@ -743,6 +765,8 @@ export interface DeductionData {
   charitableContributions: string;
   casualtyLosses: string;
   otherItemized: string;
+  mortgageEntries?: MortgageEntryData[];
+  donationEntries?: DonationEntryData[];
 }
 
 export const emptyDeductionData: DeductionData = {
@@ -819,7 +843,7 @@ export interface EducationStudentData {
 export const emptyEducationStudent: EducationStudentData = {
   name: "",
   qualifiedExpenses: "",
-  priorYearsClaimed: "0",
+  priorYearsClaimed: "",
 };
 
 export interface EducationCreditData {
@@ -1199,7 +1223,7 @@ export const emptyRetirementEntry: RetirementEntryData = {
   taxableAmount: "",
   federalWithheld: "",
   isIraSepSimple: false,
-  distributionCode: "7",
+  distributionCode: "",
 };
 
 // ── Social security data ──────────────────────────────────────────────────
@@ -1548,35 +1572,15 @@ function validateRentalSection(data: { entries: RentalPropertyEntryData[] } | un
   return VALID_SECTION;
 }
 
+function validateRequiredFacts(errors: Record<string, string>): SectionValidationResult {
+  return Object.keys(errors).length ? {
+    status: "partial", message: Object.values(errors)[0], fieldErrors: errors, allowSkip: false,
+  } : VALID_SECTION;
+}
+
 function validateRetirementSection(data: { entries: RetirementEntryData[] } | undefined): SectionValidationResult {
-  if (!data?.entries || data.entries.length === 0) return EMPTY_SECTION("retirement info");
-
-  const filled = data.entries.filter(
-    (entry) =>
-      hasNumericValue(entry.grossDistribution)
-      || hasNumericValue(entry.taxableAmount)
-      || hasNumericValue(entry.federalWithheld)
-      || hasTextValue(entry.payer)
-  );
-  if (filled.length === 0) return EMPTY_SECTION("retirement info");
-
-  const errors: Record<string, string> = {};
-  filled.forEach((entry, index) => {
-    if (!hasNumericValue(entry.grossDistribution) && !hasNumericValue(entry.taxableAmount)) {
-      errors[`retirement-${index}-distribution`] = `Retirement entry #${index + 1} needs a gross or taxable distribution amount.`;
-    }
-  });
-
-  if (Object.keys(errors).length > 0) {
-    return {
-      status: "partial",
-      message: "Some retirement entries were started but still need distribution amounts.",
-      fieldErrors: errors,
-      allowSkip: true,
-    };
-  }
-
-  return VALID_SECTION;
+  if (!data?.entries?.length) return EMPTY_SECTION("retirement info");
+  return validateRequiredFacts(retirementFactErrors(data.entries));
 }
 
 function validateSocialSecuritySection(data: SocialSecurityData | undefined): SectionValidationResult {
@@ -1615,10 +1619,9 @@ function validateUnemploymentSection(data: UnemploymentData | undefined): Sectio
   return VALID_SECTION;
 }
 
-function validateDeductionsSection(data: DeductionData | undefined): SectionValidationResult {
-  // Deductions always have a method (standard is the default), so it's valid once any data exists
+function validateDeductionsSection(data: DeductionData | undefined, taxYear?: number | null): SectionValidationResult {
   if (!data) return EMPTY_SECTION("deductions info");
-  return VALID_SECTION;
+  return validateRequiredFacts(deductionFactErrors(data, taxYear));
 }
 
 function validateAdjustmentsSection(data: AdjustmentData | undefined): SectionValidationResult {
@@ -1628,24 +1631,11 @@ function validateAdjustmentsSection(data: AdjustmentData | undefined): SectionVa
   return VALID_SECTION;
 }
 
-function validatePaymentsSection(data: PaymentData | undefined): SectionValidationResult {
+function validatePaymentsSection(data: PaymentData | undefined, taxYear?: number | null): SectionValidationResult {
   if (!data) return EMPTY_SECTION("payments info", true);
-  const hasEstimated = data.estimatedPayments.some((p) => hasNumericValue(p.amount));
-  const hasOther = hasNumericValue(data.otherPayments);
-  const startedEstimated = data.estimatedPayments.some((payment) =>
-    hasTextValue(payment.date) || hasNumericValue(payment.amount)
-  );
-  if (!hasEstimated && !hasOther && !startedEstimated) return EMPTY_SECTION("payments info", true);
-  if (!hasEstimated && !hasOther && startedEstimated) {
-    return {
-      status: "partial",
-      message: "Estimated payments were started but still need amount fields.",
-      fieldErrors: {
-        estimatedPayments: "At least one estimated payment is missing its amount."
-      },
-      allowSkip: true,
-    };
-  }
+  const errors = paymentFactErrors(data.estimatedPayments, taxYear);
+  if (Object.keys(errors).length) return validateRequiredFacts(errors);
+  if (!data.estimatedPayments.length && !hasNumericValue(data.otherPayments)) return EMPTY_SECTION("payments info", true);
   return VALID_SECTION;
 }
 
@@ -1675,15 +1665,15 @@ export function validateSection(
     case "income-unemployment":
       return validateUnemploymentSection(getSectionData(state, "income-unemployment"));
     case "deductions":
-      return validateDeductionsSection(getSectionData(state, "deductions"));
+      return validateDeductionsSection(getSectionData(state, "deductions"), state.taxYear);
     case "adjustments":
       return validateAdjustmentsSection(getSectionData(state, "adjustments"));
     case "credits":
-      return VALID_SECTION; // Credits are always optional
+      return validateRequiredFacts(educationFactErrors(getSectionData(state, "credits")));
     case "other-taxes":
       return VALID_SECTION; // Other taxes are informational acknowledgements
     case "payments":
-      return validatePaymentsSection(getSectionData(state, "payments"));
+      return validatePaymentsSection(getSectionData(state, "payments"), state.taxYear);
     case "review":
       return VALID_SECTION; // Review is always valid
     case "state-return":

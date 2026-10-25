@@ -1030,10 +1030,11 @@ describe("buildForm1098Inputs", () => {
       ...emptyDeductionData,
       method: "itemized",
       mortgageInterest: "12000",
+      mortgageEntries: [{ lender: "Actual Lender", mortgageInterest: "12000", outstandingPrincipal: "250000", originationDate: "2019-06-01" }],
     });
     expect(result).toHaveLength(1);
     expect(result[0].mortgageInterestReceived).toBe("12000");
-    expect(result[0].lender).toBe("Mortgage Lender");
+    expect(result[0].lender).toBe("Actual Lender");
   });
 });
 
@@ -1057,11 +1058,12 @@ describe("buildDonationsInput", () => {
       ...emptyDeductionData,
       method: "itemized",
       charitableContributions: "5000",
+      donationEntries: [{ organization: "Actual Charity", type: "cash", amount: "5000", date: "2025-10-01", costBasis: "", isLongTermCapitalGain: null, isPrivateFoundation: false }],
     });
     expect(result).toHaveLength(1);
     expect(result[0].amount).toBe("5000");
     expect(result[0].type).toBe("cash");
-    expect(result[0].organization).toBe("Charitable Organization");
+    expect(result[0].organization).toBe("Actual Charity");
   });
 });
 
@@ -1088,7 +1090,9 @@ describe("itemized deductions in preview", () => {
       ...emptyDeductionData,
       method: "itemized",
       mortgageInterest: "18000",
+      mortgageEntries: [{ lender: "Actual Lender", mortgageInterest: "18000", outstandingPrincipal: "250000", originationDate: "2019-06-01" }],
       charitableContributions: "5000",
+      donationEntries: [{ organization: "Actual Charity", type: "cash", amount: "5000", date: "2025-10-01", costBasis: "", isLongTermCapitalGain: null, isPrivateFoundation: false }],
       stateLocalTaxes: "10000",
     });
     const previewItemized = computeGuidedPreview(state);
@@ -1146,12 +1150,10 @@ describe("buildEstimatedPaymentsInput", () => {
     expect(buildEstimatedPaymentsInput(emptyPaymentData)).toEqual([]);
   });
 
-  it("skips entries with zero amounts", () => {
-    const result = buildEstimatedPaymentsInput({
-      estimatedPayments: [{ date: "2025-04-15", amount: "" }],
-      otherPayments: "",
-    });
-    expect(result).toEqual([]);
+  it("rejects an unknown payment amount", () => {
+    expect(() => buildEstimatedPaymentsInput({
+      estimatedPayments: [{ date: "2025-04-15", amount: "" }], otherPayments: "",
+    })).toThrow(/actual payment amount/i);
   });
 
   it("converts payment entries", () => {
@@ -1169,12 +1171,10 @@ describe("buildEstimatedPaymentsInput", () => {
     expect(result[1].date).toBe("2025-06-15");
   });
 
-  it("defaults date when empty", () => {
-    const result = buildEstimatedPaymentsInput({
-      estimatedPayments: [{ date: "", amount: "3000" }],
-      otherPayments: "",
-    });
-    expect(result[0].date).toBe("2025-04-15");
+  it("rejects an unknown payment date", () => {
+    expect(() => buildEstimatedPaymentsInput({
+      estimatedPayments: [{ date: "", amount: "3000" }], otherPayments: "",
+    })).toThrow(/actual payment date/i);
   });
 
   it("strips commas from amounts", () => {
@@ -1329,7 +1329,7 @@ describe("buildEducationInput", () => {
     expect(result!.aocStudents[0].priorYearsClaimed).toBe(1);
   });
 
-  it("filters out students with no expenses", () => {
+  it("rejects a started student with unknown expenses", () => {
     const data = {
       ...emptyCreditsData,
       education: {
@@ -1340,9 +1340,7 @@ describe("buildEducationInput", () => {
         llcExpenses: "",
       },
     };
-    const result = buildEducationInput(data);
-    expect(result!.aocStudents).toHaveLength(1);
-    expect(result!.aocStudents[0].name).toBe("Jane");
+    expect(() => buildEducationInput(data)).toThrow(/actual qualified education expenses/i);
   });
 
   it("includes LLC expenses when filled", () => {
@@ -1358,7 +1356,7 @@ describe("buildEducationInput", () => {
     expect(result!.llcExpenses).toBe("8500");
   });
 
-  it("defaults student name when empty", () => {
+  it("requires the actual student name", () => {
     const data = {
       ...emptyCreditsData,
       education: {
@@ -1366,8 +1364,7 @@ describe("buildEducationInput", () => {
         llcExpenses: "",
       },
     };
-    const result = buildEducationInput(data);
-    expect(result!.aocStudents[0].name).toBe("Student");
+    expect(() => buildEducationInput(data)).toThrow(/actual student name/i);
   });
 });
 
@@ -1544,16 +1541,15 @@ describe("buildRetirementInputs", () => {
     expect(result[0].isIraSepSimple).toBe(true);
   });
 
-  it("defaults payer name when empty", () => {
+  it("requires the actual payer name", () => {
     const entry = { ...emptyRetirementEntry, grossDistribution: "10000", taxableAmount: "10000" };
-    const result = buildRetirementInputs([entry]);
-    expect(result[0].payer).toBe("Retirement Plan");
+    expect(() => buildRetirementInputs([entry])).toThrow(/actual retirement payer/i);
   });
 
   it("handles multiple 1099-Rs", () => {
     const entries = [
-      { ...emptyRetirementEntry, payer: "Vanguard", grossDistribution: "20000", taxableAmount: "20000" },
-      { ...emptyRetirementEntry, payer: "Schwab", grossDistribution: "15000", taxableAmount: "15000" },
+      { ...emptyRetirementEntry, distributionCode: "7", payer: "Vanguard", grossDistribution: "20000", taxableAmount: "20000" },
+      { ...emptyRetirementEntry, distributionCode: "7", payer: "Schwab", grossDistribution: "15000", taxableAmount: "15000" },
     ];
     const result = buildRetirementInputs(entries);
     expect(result).toHaveLength(2);
@@ -1626,7 +1622,7 @@ describe("buildTaxInputFromGuidedData retirement and SS and unemployment", () =>
       stateCode: null,
     });
     state = updateSectionData(state, "income-retirement", {
-      entries: [{ ...emptyRetirementEntry, payer: "Fidelity", grossDistribution: "30000", taxableAmount: "30000", federalWithheld: "4500" }],
+      entries: [{ ...emptyRetirementEntry, distributionCode: "7", payer: "Fidelity", grossDistribution: "30000", taxableAmount: "30000", federalWithheld: "4500" }],
     });
     const input = buildTaxInputFromGuidedData(state);
     expect(input).not.toBeNull();

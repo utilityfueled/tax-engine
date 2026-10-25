@@ -120,6 +120,7 @@ function EducationStudentCard({
           onChange={(e) => onUpdate("priorYearsClaimed", e.target.value)}
           aria-describedby={`student-${index}-aotc-hint`}
         >
+          <option value="">Confirm the actual prior claim history</option>
           <option value="0">0 (first year)</option>
           <option value="1">1</option>
           <option value="2">2</option>

@@ -10,6 +10,7 @@ import {
   getStandardDeductionAmount,
 } from "@/lib/guided-interview-flow";
 import { CurrencyField } from "./currency-field";
+import { DeductionSourceDetails } from "./deduction-source-details";
 
 const currencyFormatter = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -126,19 +127,7 @@ export function SectionDeductions({
               />
             </div>
 
-            <CurrencyField
-              label="Home mortgage interest"
-              hint="From Form 1098 Box 1."
-              value={current.mortgageInterest}
-              onChange={(v) => update("mortgageInterest", v)}
-            />
-
-            <CurrencyField
-              label="Charitable contributions"
-              hint="Cash and non-cash donations to qualified organizations."
-              value={current.charitableContributions}
-              onChange={(v) => update("charitableContributions", v)}
-            />
+            <DeductionSourceDetails data={current} onChange={onDataChange} />
 
             <details className="guided-expand">
               <summary className="guided-expand-trigger">Less common itemized deductions</summary>

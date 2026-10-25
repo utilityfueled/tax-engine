@@ -15,6 +15,8 @@ function hasTaxId(value: string | undefined): boolean {
   return !!value && /^\d{3}-?\d{2}-?\d{4}$/.test(value) && value.replace(/-/g, "") !== "000000000";
 }
 
+const stateCodes = new Set("AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY PR VI GU AS MP AA AE AP".split(" "));
+
 export function dependentFactErrors(entry: DependentEntryData, index: number, taxYear?: number | null): Record<string, string> {
   const errors: Record<string, string> = {};
   const key = `dependent-${index}`;
@@ -42,6 +44,8 @@ export function personalFactErrors(data: PersonalInfoData | undefined, status: F
   if (!hasTaxId(data?.ssn)) errors.ssn = "Enter your actual taxpayer ID";
   if (!isResidencyMonths(data?.usResidencyMonths)) errors.usResidencyMonths = "Enter 0–12 months of U.S. residency";
   if (!data?.stateResidency) errors.stateResidency = "Confirm your state residency status";
+  if (!stateCodes.has(data?.state?.trim().toUpperCase() ?? "")) errors.state = "Enter a valid state or territory abbreviation";
+  if (!/^\d{5}(?:-\d{4})?$/.test(data?.zip ?? "")) errors.zip = "Enter a valid ZIP code";
   if (status === "mfj" || status === "mfs") {
     if (!data?.spouse?.firstName?.trim() || !data.spouse.lastName?.trim()) errors.spouseName = "Enter your spouse's first and last name";
     if (!hasTaxId(data?.spouse?.ssn)) errors.spouseSsn = "Enter your spouse's actual taxpayer ID";
@@ -54,5 +58,8 @@ export function personalFactErrors(data: PersonalInfoData | undefined, status: F
     errors.dependentCount = "Enter complete details for every dependent";
   }
   data?.dependents?.forEach((entry, index) => Object.assign(errors, dependentFactErrors(entry, index, taxYear)));
+  const taxIds = [data?.ssn, ...(status === "mfj" || status === "mfs" ? [data?.spouse?.ssn] : []), ...(data?.dependents ?? []).map((entry) => entry.ssn)]
+    .filter((value): value is string => !!value).map((value) => value.replace(/-/g, ""));
+  if (new Set(taxIds).size !== taxIds.length) errors.taxIds = "Each taxpayer, spouse and dependent must have a different taxpayer ID";
   return errors;
 }

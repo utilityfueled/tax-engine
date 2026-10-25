@@ -10,6 +10,7 @@
 import Decimal from "decimal.js";
 import { parseGuidedCurrency, hasGuidedCurrency, formatGuidedDollars } from "./guided-currency";
 import { dependentFactErrors, personalFactErrors } from "./guided-taxpayer-facts";
+import { assertKnownFacts, deductionFactErrors, educationFactErrors, hasEnteredAmount, paymentFactErrors, retirementFactErrors } from "./guided-required-facts";
 
 import type {
   AdjustmentData,
@@ -270,27 +271,28 @@ export function buildScheduleAInput(deductionData: DeductionData | undefined) {
 
 export function buildForm1098Inputs(deductionData: DeductionData | undefined) {
   if (!deductionData || deductionData.method !== "itemized") return [];
-  if (!hasValue(deductionData.mortgageInterest)) return [];
-
-  return [{
-    lender: "Mortgage Lender",
-    mortgageInterestReceived: toDecimalString(deductionData.mortgageInterest),
-    outstandingMortgagePrincipal: "250000",
-  }];
+  assertKnownFacts(deductionFactErrors({ ...deductionData, charitableContributions: "", donationEntries: [] }));
+  return (deductionData.mortgageEntries ?? []).map((entry) => ({
+    lender: entry.lender.trim(),
+    mortgageInterestReceived: toDecimalString(entry.mortgageInterest),
+    outstandingMortgagePrincipal: toDecimalString(entry.outstandingPrincipal),
+    mortgageOriginationDate: entry.originationDate,
+  }));
 }
 
 // ── Charitable donations converter ──────────────────────────────────────────
 
 export function buildDonationsInput(deductionData: DeductionData | undefined) {
   if (!deductionData || deductionData.method !== "itemized") return [];
-  if (!hasValue(deductionData.charitableContributions)) return [];
-
-  return [{
-    organization: "Charitable Organization",
-    type: "cash" as const,
-    amount: toDecimalString(deductionData.charitableContributions),
-    dateOfDonation: "2025-12-31",
-  }];
+  assertKnownFacts(deductionFactErrors({ ...deductionData, mortgageInterest: "", mortgageEntries: [] }));
+  return (deductionData.donationEntries ?? []).map((entry) => ({
+    organization: entry.organization.trim(),
+    type: entry.type as "cash" | "appreciated_stock" | "property" | "other",
+    amount: toDecimalString(entry.amount),
+    dateOfDonation: entry.date,
+    ...(entry.type !== "cash" ? { costBasis: toDecimalString(entry.costBasis), isLongTermCapitalGain: entry.isLongTermCapitalGain as boolean } : {}),
+    isPrivateFoundation: entry.isPrivateFoundation as boolean,
+  }));
 }
 
 // ── Adjustments converter ───────────────────────────────────────────────────
@@ -324,11 +326,10 @@ export function buildAdjustmentsInput(adjustmentData: AdjustmentData | undefined
 
 export function buildEstimatedPaymentsInput(paymentData: PaymentData | undefined) {
   if (!paymentData) return [];
-
+  assertKnownFacts(paymentFactErrors(paymentData.estimatedPayments));
   return paymentData.estimatedPayments
-    .filter((entry) => hasValue(entry.amount))
     .map((entry) => ({
-      date: entry.date || "2025-04-15",
+      date: entry.date,
       amount: toDecimalString(entry.amount),
       type: "federal" as const,
     }));
@@ -338,15 +339,16 @@ export function buildEstimatedPaymentsInput(paymentData: PaymentData | undefined
 
 export function buildRetirementInputs(entries: RetirementEntryData[] | undefined) {
   if (!entries || entries.length === 0) return [];
+  assertKnownFacts(retirementFactErrors(entries, false));
   return entries
-    .filter((e) => hasValue(e.grossDistribution) || hasValue(e.taxableAmount))
+    .filter((e) => hasEnteredAmount(e.grossDistribution) || hasEnteredAmount(e.taxableAmount))
     .map((e) => ({
-      payer: e.payer || "Retirement Plan",
+      payer: e.payer.trim(),
       grossDistribution: toDecimalString(e.grossDistribution),
-      taxableAmount: toDecimalString(e.taxableAmount),
+      taxableAmount: hasEnteredAmount(e.taxableAmount) ? toDecimalString(e.taxableAmount) : undefined,
       federalWithheld: toDecimalString(e.federalWithheld),
       isIraSepSimple: e.isIraSepSimple,
-      distributionCode: e.distributionCode || "7",
+      distributionCode: e.distributionCode,
     }));
 }
 
@@ -409,10 +411,11 @@ export function buildDependentCareInput(creditsData: CreditsData | undefined) {
 
 export function buildEducationInput(creditsData: CreditsData | undefined) {
   if (!creditsData) return undefined;
+  assertKnownFacts(educationFactErrors(creditsData));
   const { education } = creditsData;
 
   const filledStudents = education.aocStudents.filter(
-    (s: EducationStudentData) => hasValue(s.qualifiedExpenses)
+    (s: EducationStudentData) => hasEnteredAmount(s.qualifiedExpenses)
   );
   const hasLlc = hasValue(education.llcExpenses);
 
@@ -420,9 +423,9 @@ export function buildEducationInput(creditsData: CreditsData | undefined) {
 
   return {
     aocStudents: filledStudents.map((s: EducationStudentData) => ({
-      name: s.name || "Student",
+      name: s.name.trim(),
       qualifiedExpenses: toDecimalString(s.qualifiedExpenses),
-      priorYearsClaimed: Number(s.priorYearsClaimed) || 0,
+      priorYearsClaimed: Number(s.priorYearsClaimed),
     })),
     llcExpenses: hasLlc ? toDecimalString(education.llcExpenses) : undefined,
   };
@@ -510,6 +513,13 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
   const creditsData = sectionData["credits"] as CreditsData | undefined;
   const otherTaxesData = sectionData["other-taxes"] as OtherTaxesData | undefined;
   const paymentData = sectionData["payments"] as PaymentData | undefined;
+
+  try {
+    assertKnownFacts(deductionFactErrors(deductionData, state.taxYear));
+    assertKnownFacts(paymentFactErrors(paymentData?.estimatedPayments, state.taxYear));
+    assertKnownFacts(retirementFactErrors(retirementData?.entries));
+    assertKnownFacts(educationFactErrors(creditsData));
+  } catch { return null; }
 
   const stateCode = personalInfo?.state || segmentation.stateCode || null;
   const w2s = buildW2Inputs(w2Data?.entries, stateCode);
