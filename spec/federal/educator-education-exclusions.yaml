@@ -12,8 +12,9 @@ notes: |
   distinguish education-excluded earnings from basis and valid transfers.
   Publication529(12/2020), linked by final1040 instructions, explicitly describes
   QTP earnings; it is corroboration, not a current-year eligibility source.
-  Cash QTP uses calculated education-excluded earnings. In-kind prepaid tuition
-  or unknown medium remains unsupported for this reconciliation. No source is
+  Cash and supported actual in-kind QTP use calculated education-excluded
+  earnings; see educator-in-kind-exclusions.yaml. Unknown medium remains
+  unsupported for a positive exclusion. No source is
   manufactured from an external amount or an absent ledger. Actual zero in the
   confirmed educator worksheet is a declaration of none, not an inferred source.
   The retrieved sources do not establish a discretionary mixed/joint bond
@@ -35,13 +36,14 @@ notes: |
   https://uscode.house.gov/us/usc/119-118/t26/s135/
 lines:
   - line: "owner-education-exclusions"
-    description: "Reconcile actual cashQTP and Coverdell earnings by recipient"
+    description: "Reconcile actual qualified QTP and Coverdell earnings by recipient"
     formula: |
       For each actual educator owner, sum only that primary/spouse recipient's
       current-year ordinary educationExpenseExcludedEarnings from verified
       Form1099Q sources. Keep QTP and Coverdell totals separate. Exclude other
       recipients, basis, valid-transfer earnings and returned contributions.
-      Require actual cash medium for positive own QTP education exclusions.
+      Require actual cash or fully qualified in-kind prepaid-tuition medium for
+      positive own QTP education exclusions; partial in-kind remains a separate method.
       Claimed educator reductions must equal these calculated totals exactly;
       preserve Decimal cents and do not move expenses or another owner's income.
     testRef: "tests/engine/forms/educator-education-exclusions.test.ts::reconciles only actual recipient education earnings with exact cents"

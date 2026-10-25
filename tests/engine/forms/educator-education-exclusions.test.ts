@@ -66,7 +66,9 @@ describe("Educator education exclusion sources", () => {
     for (const change of [{ sourceFactsVerified: false }, { taxYear: 2025 }]) expect(() => reconcileEducatorEducationExclusions({ ...base, educationDistributions: { ...educationDistributions, ...change }, educatorSources: [educator()] })).toThrow(/verified|year/i);
     for (const distributionMedium of [undefined, "in_kind_prepaid_tuition"] as const) {
       const changed = { ...educationDistributions, perDistribution: educationDistributions.perDistribution.map(row => row.sourceId === "primary-cash" ? { ...row, distributionMedium } : row) };
-      expect(() => reconcileEducatorEducationExclusions({ ...base, educationDistributions: changed, educatorSources: [educator()] })).toThrow(/cash|medium|prepaid/i);
+      // Unknown medium rejects at the medium boundary. An actual supported
+      // medium still cannot reconcile this incorrect declared zero reduction.
+      expect(() => reconcileEducatorEducationExclusions({ ...base, educationDistributions: changed, educatorSources: [educator()] })).toThrow(distributionMedium === undefined ? /medium/i : /reconcile.*educator/i);
     }
     expect(() => reconcileEducatorEducationExclusions({ ...base, educatorSources: [educator(), educator()] })).toThrow(/duplicate/i);
     expect(() => reconcileEducatorEducationExclusions({ ...base, filingStatus: "single", educatorSources: [educator({ accountHolder: "spouse" })] })).toThrow(/joint/i);

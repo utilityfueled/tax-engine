@@ -69,7 +69,9 @@ export function reconcileEducatorEducationExclusions(input: EducatorEducationExc
       if (row.sourceTaxYear !== input.taxYear || row.incomeTaxYear !== input.taxYear) throw new Error("Educator ordinary education exclusion needs actual current-year source and income facts.");
       const excluded = amount(row.educationExpenseExcludedEarnings, "calculated education-excluded earnings");
       if (row.accountType === "529") {
-        if (excluded.gt(0) && row.distributionMedium !== "cash") throw new Error("Educator QTP exclusion requires actual cash medium; unknown or prepaid in-kind treatment remains unresolved.");
+        if (excluded.gt(0) && row.distributionMedium !== "cash" && row.distributionMedium !== "in_kind_prepaid_tuition") throw new Error("Educator QTP exclusion requires actual supported cash or prepaid in-kind medium.");
+        // Section62(d)(2) follows excluded earnings for either actual medium;
+        // section72 returned basis and transfer exclusions are separate.
         totals[row.recipientOwner].qtpEarnings = totals[row.recipientOwner].qtpEarnings.plus(excluded);
       } else totals[row.recipientOwner].coverdellEarnings = totals[row.recipientOwner].coverdellEarnings.plus(excluded);
     }
