@@ -131,18 +131,18 @@ describe("Schedule SE - multiple SE sources", () => {
     const result = calculateScheduleSE(makeSEFixture({
       scheduleK1: [makeK1({
         guaranteedPayments: "75000",
-        selfEmploymentEarnings: "0",
+        selfEmploymentEarnings: "75000", // Actual Box14A includes service guaranteed payments.
       })],
     }), c);
     expect(result.netNonfarmProfit.toNumber()).toBe(75000);
     expect(result.totalSETax.greaterThan(0)).toBe(true);
   });
 
-  it("K-1 SE earnings + guaranteed payments both count", () => {
+  it("K-1 Box14A includes ordinary earnings and guaranteed payments once", () => {
     const result = calculateScheduleSE(makeSEFixture({
       scheduleK1: [makeK1({
         guaranteedPayments: "50000",
-        selfEmploymentEarnings: "25000",
+        selfEmploymentEarnings: "75000", // Actual total: ordinary25K plus service payments50K.
       })],
     }), c);
     expect(result.netNonfarmProfit.toNumber()).toBe(75000);
@@ -151,17 +151,17 @@ describe("Schedule SE - multiple SE sources", () => {
   it("multiple K-1s with mixed SE sources", () => {
     const result = calculateScheduleSE(makeSEFixture({
       scheduleK1: [
-        makeK1({ partnershipName: "LLC A", selfEmploymentEarnings: "30000", guaranteedPayments: "10000" }),
-        makeK1({ partnershipName: "LLC B", selfEmploymentEarnings: "-5000", guaranteedPayments: "20000" }),
+        makeK1({ partnershipName: "LLC A", selfEmploymentEarnings: "40000", guaranteedPayments: "10000" }),
+        makeK1({ partnershipName: "LLC B", selfEmploymentEarnings: "15000", guaranteedPayments: "20000" }),
       ],
     }), c);
-    // SE: 30K + (-5K) = 25K, guaranteed: 10K + 20K = 30K, total = 55K
+    // Actual Box14A totals40K and15K already include the service payments.
     expect(result.netNonfarmProfit.toNumber()).toBe(55000);
   });
 });
 
 describe("Schedule SE - cross-source netting before $400 threshold", () => {
-  it("Schedule SE Line 4b - Schedule C net loss offsets K-1 SE earnings below threshold", () => {
+  it("Schedule SE Line 2 - Schedule C net loss offsets K-1 SE earnings below threshold", () => {
     const result = calculateScheduleSE(makeSEFixture({
       form1099Nec: [{ payer: "Client", nonemployeeCompensation: "500", federalWithheld: "0" }],
       scheduleC: {
@@ -174,10 +174,10 @@ describe("Schedule SE - cross-source netting before $400 threshold", () => {
     expect(result.netSEEarnings.toNumber()).toBe(350);
     expect(result.totalSETax.toNumber()).toBe(0);
 
-    const line4b = result.lines.find((line) => line.form === "Sched SE" && line.line === "4b");
-    expect(line4b).toBeDefined();
-    expect((line4b!.inputs["Schedule C Line 31 net profit"] as Decimal).toNumber()).toBe(-200);
-    expect((line4b!.inputs["K-1 self-employment earnings"] as Decimal).toNumber()).toBe(550);
+    const line2 = result.lines.find((line) => line.form === "Sched SE" && line.line === "2");
+    expect(line2).toBeDefined();
+    expect((line2!.inputs["Schedule C Line 31 net profit"] as Decimal).toNumber()).toBe(-200);
+    expect((line2!.inputs["K-1 self-employment earnings"] as Decimal).toNumber()).toBe(550);
   });
 
   it("Schedule SE Line 6 - Schedule C loss can net K-1 income to exactly $400", () => {
@@ -758,7 +758,7 @@ describe("Schedule SE - W-2 partially fills SS wage base", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("Schedule SE - multiple Schedule C businesses aggregated", () => {
-  it("Sched SE Line 4b - five 1099-NECs aggregate correctly for net nonfarm profit", () => {
+  it("Sched SE Line 2 - five 1099-NECs aggregate correctly for net nonfarm profit", () => {
     const result = calculateScheduleSE(makeSEFixture({
       form1099Nec: [
         { payer: "Biz A", nonemployeeCompensation: "12000", federalWithheld: "0" },
@@ -775,18 +775,18 @@ describe("Schedule SE - multiple Schedule C businesses aggregated", () => {
     expect(result.totalSETax.greaterThan(0)).toBe(true);
   });
 
-  it("Sched SE Line 4b - 1099-NECs + multiple K-1s with guaranteed payments all aggregate", () => {
+  it("Sched SE Line 2 - 1099-NECs + multiple K-1s with guaranteed payments all aggregate", () => {
     const result = calculateScheduleSE(makeSEFixture({
       form1099Nec: [
         { payer: "Freelance", nonemployeeCompensation: "25000", federalWithheld: "0" },
       ],
       scheduleK1: [
-        makeK1({ partnershipName: "Fund A", selfEmploymentEarnings: "15000", guaranteedPayments: "5000" }),
-        makeK1({ partnershipName: "Fund B", selfEmploymentEarnings: "0", guaranteedPayments: "10000" }),
+        makeK1({ partnershipName: "Fund A", selfEmploymentEarnings: "20000", guaranteedPayments: "5000" }),
+        makeK1({ partnershipName: "Fund B", selfEmploymentEarnings: "10000", guaranteedPayments: "10000" }),
       ],
     }), c);
-    // NEC: $25,000. K1 SE: $15,000 + $0 = $15,000. K1 GP: $5,000 + $10,000 = $15,000
-    // Total: $25,000 + $15,000 + $15,000 = $55,000
+    // NEC: $25,000. Actual K1 Box14A totals: $20,000 and $10,000.
+    // Service guaranteed payments are included in each Box14A, so total is $55,000 once.
     expect(result.netNonfarmProfit.toNumber()).toBe(55000);
     expect(result.taxableEarnings.toNumber()).toBe(50793); // $55,000 × 0.9235 = $50,792.50 → $50,793
   });

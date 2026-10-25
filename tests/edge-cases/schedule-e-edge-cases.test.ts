@@ -580,7 +580,7 @@ describe("Schedule E - K-1 guaranteed payments flow to SE and Schedule E", () =>
         partnershipName: "Service Partnership LLP",
         ordinaryIncome: "0",
         guaranteedPayments: "60000",
-        selfEmploymentEarnings: "0",
+        selfEmploymentEarnings: "60000", // Actual Box14A includes these service payments.
         isPassiveActivity: false,
       }],
     };
@@ -615,7 +615,7 @@ describe("Schedule E - K-1 guaranteed payments flow to SE and Schedule E", () =>
         partnershipName: "Active LLP",
         ordinaryIncome: "40000",
         guaranteedPayments: "30000",
-        selfEmploymentEarnings: "40000",
+        selfEmploymentEarnings: "70000", // Actual Box14A includes ordinary income plus service payments.
         isPassiveActivity: false,
       }],
     };
@@ -625,7 +625,7 @@ describe("Schedule E - K-1 guaranteed payments flow to SE and Schedule E", () =>
     // Schedule E Part II: ordinary + guaranteed = $70K nonpassive
     expect(schedE.partnerships[0].nonpassiveIncome.toNumber()).toBe(70000);
 
-    // Schedule SE: selfEmploymentEarnings ($40K) + guaranteedPayments ($30K) = $70K
+    // Schedule SE: actual Box14A is $70K; Box4 payments are not added again.
     expect(federal.scheduleSE.netNonfarmProfit.toNumber()).toBe(70000);
     expect(federal.scheduleSE.totalSETax.toNumber()).toBeGreaterThan(0);
   });

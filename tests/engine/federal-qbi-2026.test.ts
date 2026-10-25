@@ -9,7 +9,7 @@ vi.mock("@/models/constants.js", async (importOriginal) => {
 import { calculateFederalTax } from "@/engine/federal.js";
 import { TaxYearInputSchema } from "@/models/inputs.js";
 import { simpleW2Fixture } from "../fixtures/simple-w2.js";
-const make = (participation?:boolean,wages="0") => TaxYearInputSchema.parse({...simpleW2Fixture,taxpayer:{...simpleW2Fixture.taxpayer,taxYear:2026},w2s:[{...simpleW2Fixture.w2s[0],wages}],scheduleC:{businessName:"Actual trade",grossReceipts:"1200",qbiMateriallyParticipated:participation}});
+const make = (participation?:boolean,wages="0") => TaxYearInputSchema.parse({...simpleW2Fixture,taxpayer:{...simpleW2Fixture.taxpayer,taxYear:2026},w2s:[{...simpleW2Fixture.w2s[0],wages,socialSecurityWages:wages,socialSecurityTips:"0"}],scheduleC:{businessName:"Actual trade",grossReceipts:"1200",qbiMateriallyParticipated:participation}});
 describe("2026 QBI minimum integration",()=>{
   it("computes minimum even when standard deduction eliminates taxable income",()=>{
     const r=calculateFederalTax(make(true));

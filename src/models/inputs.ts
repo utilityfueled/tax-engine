@@ -2695,6 +2695,7 @@ export const Form2210Schema = z.object({
   priorYearTaxStatus: z.enum(["return-filed", "no-return", "no-tax-liability"]).optional(),
   priorYearFullYear: z.boolean().optional(),
   priorYearResidentAllYear: z.boolean().optional(),
+  priorYearJointReturn: z.boolean().optional(),
   // Actual instructions line 8 computation, including filing-status allocation.
   priorYearTaxForForm2210: decimal.optional(),
   priorYearAgiForForm2210: decimal.optional(),
@@ -2704,6 +2705,18 @@ export const Form2210Schema = z.object({
   returnPayments: z.array(Form2210PaymentSchema).optional(),
   returnFiledDate: Form2210DateSchema.optional(),
   returnPaidInFullDate: Form2210DateSchema.optional(),
+});
+
+/** Actual completed attribution of allowed taxpayer deductions under Reg.1.199A-3(b)(1)(vi). */
+export const QBIDeductionAllocationsSchema = z.object({
+  sourceFactsConfirmed: z.boolean(),
+  rows: z.array(z.object({
+    sourceId: z.string().regex(/^(scheduleC|scheduleF|cryptoBusiness|scheduleK1:\d+|nonQbi)$/),
+    accountHolder: z.enum(["primary", "spouse"]),
+    deductibleSelfEmploymentTax: decimal,
+    selfEmployedHealthInsurance: decimal,
+    selfEmployedRetirementPlans: decimal,
+  })),
 });
 
 export const AdjustmentsSchema = z.object({
@@ -4733,6 +4746,7 @@ export const TaxYearInputSchema = z.object({
   rentalProperties: z.array(RentalPropertySchema).default([]),
   scheduleC: ScheduleCInputSchema.optional(),
   scheduleF: ScheduleFInputSchema.optional(),
+  qbiDeductionAllocations: QBIDeductionAllocationsSchema.optional(),
   dependentCare: DependentCareSchema.optional(),
   standardDeductionFacts: StandardDeductionFactsSchema.optional(),
   deductionElection: z.enum(["automatic", "standard", "itemized"]).optional(),

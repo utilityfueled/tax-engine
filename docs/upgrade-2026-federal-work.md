@@ -819,3 +819,36 @@ route. No routing fact or line was invented. Detailed TIPS split-statement and
 historic premium cases remain blocked in the source module. Independent review
 and full Form6251 mapping qualification, including existing standard/senior
 add-back display, remain outstanding.
+
+
+## Package: QBI deductions follow their actual owner and trade
+
+Sources refreshed 2026-10-25: https://www.irs.gov/instructions/i8995 and
+https://www.irs.gov/pub/irs-drop/td-reg-107892-18-corrected.pdf,
+Reg.1.199A-3(b)(1)(vi). Partner-level SE tax deductions, health insurance and
+qualified retirement deductions reduce the attributable business's QBI. A
+partnership statement does not include the partner's individual deductions.
+
+The spec and ten tests preceded implementation: the missing helper failed to
+load, and the two return regressions showed omitted partnership and retirement
+deductions. The implementation preserves each owner's calculated SE deduction,
+does not add guaranteed payments to Box14A twice, and accepts reconciled actual
+allocation facts for multiple trades/non-QBI portions. Ambiguous 2026 attribution
+fails explicitly; proportional historical previews remain marked unverified.
+The allocation contract preserves known zero and rejects omitted amounts,
+duplicate sources, mismatches, negative/nonfinite amounts and unknown owners.
+This slice attributes already allowed plan deductions; it does not qualify a
+retirement plan or establish the allowable contribution from an aggregate entry.
+
+All 11 tax-owned failures in the c0871d3 coverage snapshot were traced to omitted
+synthetic W2 Box7 facts or fixtures that had stored ordinary income in Box14A
+while separately adding guaranteed payments. Fixtures now state actual Box14A
+totals, preserving the independently computed SE totals, and audit assertions
+use official line2 instead of the optional-method line4b.
+
+Checks: 215 focused QBI/care/CTC/SE/ScheduleE tests pass; root typecheck and all
+3,346 spec references pass. A broader 672-test run passed671 and found only the
+separate newly strict Form2210 dated-payment integration (queued next), not a QBI
+failure. Scoped lint has zero errors; existing non-null warnings remain. New
+helper/tests are warning-free. Diff reviewed. Rule versions advance to2025.17
+and2026.12-law-integration-draft; review/filing gates remain closed.

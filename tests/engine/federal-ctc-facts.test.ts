@@ -31,7 +31,7 @@ describe("Schedule 8812 actual identity and payroll facts",()=>{
   it("uses the payroll alternative for a three-child return with a self-employment loss",()=>{
     const input=fixture({dependents:[child,{...child,firstName:"Second",ssn:"999-88-7778"},{...child,firstName:"Third",ssn:"999-88-7779"}]});
     input.taxpayer.primary.dateOfBirth="2004-05-20"; // Age22: ineligible for the childless EIC; no EIC child is claimed.
-    input.w2s=[{...input.w2s[0],wages:"10000",socialSecurityWithheld:"620",medicareWages:"10000",medicareWithheld:"145"}];
+    input.w2s=[{...input.w2s[0],wages:"10000",socialSecurityWages:"10000",socialSecurityTips:"0",socialSecurityWithheld:"620",medicareWages:"10000",medicareWithheld:"145"}];
     input.scheduleC={businessName:"Synthetic loss",businessCode:"541990",grossReceipts:"0",expenses:{otherExpenses:"9000"}} as typeof input.scheduleC;
     const r=calculateFederalTax(input);
     // Earned income $1,000: no 15% method. Payroll $620 + $145; childless EIC is zero at age22.

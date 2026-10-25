@@ -30,6 +30,7 @@ import {
   calculateCapitalGainsTax,
   calculateTaxFromBrackets,
 } from "@/utils/tax-math.js";
+import { calculateQBISourceDeductions, type QBIDeductionSource } from "./forms/qbi-source-deductions.js";
 import { calculateForm8812 } from "./forms/form-8812.js";
 import { calculatePersonalCreditOrdering } from "./forms/personal-credit-ordering.js";
 import { calculateChildCreditEligibility } from "./forms/child-credit-eligibility.js";
@@ -2130,51 +2131,30 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   audit.record("1040", "13b", "Additional deductions from Schedule 1-A", schedule1A?.totalDeduction ?? d("0"),
     "Schedule 1-A line 38; no change to AGI or payroll taxes");
 
-  // Line 13: Section 199A QBI Deduction (Form 8995)
-  // Collect QBI sources from Schedule C, Schedule F, and K-1s.
-  // Per IRS Form 8995 Instructions, QBI from Schedule C/F must be reduced by
-  // SE-related deductions attributable to the business:
-  // - Deductible half of SE tax (§164(f)) — allocated proportionally by SE earnings
-  // - SE health insurance deduction (§162(l)) — attributable to Sched C/F business
-  // - SE retirement contributions (§404) — not in input model, documented limitation
-  const qbiSources: QBISource[] = [];
-  const k1SEIncome = k1Agg.selfEmploymentEarnings;
-  const k1GuaranteedPayments = k1Agg.guaranteedPayments;
-  // Total positive SE earnings for proportional deductible-half allocation
-  const totalPositiveSE = sum(
-    zeroFloor(schedCNetProfit),
-    zeroFloor(schedFNetProfit),
-    zeroFloor(k1SEIncome),
-    zeroFloor(k1GuaranteedPayments)
-  );
-  if (schedCNetProfit && !schedCNetProfit.isZero()) {
-    // Allocate deductible half SE tax proportionally to Schedule C's contribution
-    // to total positive SE earnings. SE health insurance is fully Schedule C's.
-    let schedCQBIAdjustment = new Decimal(0);
-    if (totalPositiveSE.greaterThan(0) && schedCNetProfit.greaterThan(0)) {
-      const schedCShare = schedCNetProfit.dividedBy(totalPositiveSE);
-      const allocatedDeductibleHalf = roundDollar(schedSE.deductibleHalf.times(schedCShare));
-      schedCQBIAdjustment = allocatedDeductibleHalf.plus(seHealthInsurance);
-    }
-    const adjustedSchedCQBI = schedCNetProfit.minus(schedCQBIAdjustment);
-    qbiSources.push({ name: input.scheduleC?.businessName ?? "Schedule C", qbi: adjustedSchedCQBI, materiallyParticipated: input.scheduleC?.qbiMateriallyParticipated });
-  }
-  if (schedFNetProfit && !schedFNetProfit.isZero()) {
-    // Allocate deductible half SE tax proportionally to Schedule F's contribution
-    let schedFQBIAdjustment = new Decimal(0);
-    if (totalPositiveSE.greaterThan(0) && schedFNetProfit.greaterThan(0)) {
-      const schedFShare = schedFNetProfit.dividedBy(totalPositiveSE);
-      schedFQBIAdjustment = roundDollar(schedSE.deductibleHalf.times(schedFShare));
-    }
-    const adjustedSchedFQBI = schedFNetProfit.minus(schedFQBIAdjustment);
-    qbiSources.push({ name: input.scheduleF?.principalCropOrActivity ?? "Schedule F", qbi: adjustedSchedFQBI, materiallyParticipated: input.scheduleF?.qbiMateriallyParticipated });
-  }
-  for (const k1 of input.scheduleK1) {
-    const k1QBI = d(k1.section199AQBI);
-    if (!k1QBI.isZero()) {
-      qbiSources.push({ name: k1.partnershipName, qbi: k1QBI, materiallyParticipated: k1.qbiMateriallyParticipated });
-    }
-  }
+  // Section 199A deductions follow the individual and the contributing trade.
+  const ownerOf = (owner?: "primary" | "spouse") => owner ?? (filingStatus !== "married_filing_jointly" ? "primary" : undefined);
+  const necOwnersForQBI = new Set(input.form1099Nec.filter(f => !d(f.nonemployeeCompensation).isZero()).map(f => f.accountHolder));
+  const cOwnerForQBI = input.scheduleC?.accountHolder ?? (necOwnersForQBI.size === 1 ? [...necOwnersForQBI][0] : undefined);
+  const deductionSources: QBIDeductionSource[] = [];
+  if (input.scheduleC || !schedC.netProfit.isZero()) deductionSources.push({id:"scheduleC",name:input.scheduleC?.businessName ?? "Schedule C",
+    qbi:schedC.netProfit,netSEEarnings:schedC.netProfit,accountHolder:ownerOf(cOwnerForQBI),materiallyParticipated:input.scheduleC?.qbiMateriallyParticipated});
+  if (input.scheduleF || !schedFNetProfit.isZero()) deductionSources.push({id:"scheduleF",name:input.scheduleF?.principalCropOrActivity ?? "Schedule F",
+    qbi:schedFNetProfit,netSEEarnings:schedFNetProfit,accountHolder:ownerOf(input.scheduleF?.accountHolder),materiallyParticipated:input.scheduleF?.qbiMateriallyParticipated});
+  if (!cryptoBusinessNet.isZero()) deductionSources.push({id:"cryptoBusiness",name:"Cryptocurrency business",
+    qbi:cryptoBusinessNet,netSEEarnings:cryptoBusinessNet,accountHolder:ownerOf(input.cryptoIncome?.businessAccountHolder)});
+  input.scheduleK1.forEach((k1,index)=>{
+    const qbi=d(k1.section199AQBI);
+    const netSEEarnings=k1.entityType === "s_corporation" ? d("0") : d(k1.selfEmploymentNetEarningsAfterAdjustments ?? k1.selfEmploymentEarnings);
+    if (!qbi.isZero() || !netSEEarnings.isZero()) deductionSources.push({id:`scheduleK1:${index}`,name:k1.partnershipName,
+      qbi,netSEEarnings,accountHolder:ownerOf(k1.accountHolder),materiallyParticipated:k1.qbiMateriallyParticipated,
+      excludedSEIncome:!d(k1.guaranteedPayments).isZero() || qbi.isZero()});
+  });
+  const qbiSourceDeductions=calculateQBISourceDeductions({taxYear:year,sources:deductionSources,
+    selfEmploymentDeductions:schedSE.perTaxpayer.map(row=>({accountHolder:row.accountHolder,amount:row.deductibleHalf})),
+    healthInsuranceDeduction:seHealthInsurance,retirementPlanDeduction:d(input.adjustments?.seRetirementContributions),
+    sourceFactsVerified:schedSE.sourceFactsVerified,allocation:input.qbiDeductionAllocations});
+  audit.merge(qbiSourceDeductions.lines);
+  const qbiSources: QBISource[] = qbiSourceDeductions.sources.filter(source=>!source.qbi.isZero());
   // K-1 Form 1041 Box 14 Code I: QBI from estates/trusts
   // Trust QBI is NOT self-employment income — no SE tax adjustment needed
   for (const k1 of k1Form1041s) {
