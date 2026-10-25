@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { createHash, createHmac } from "node:crypto";
+import { after, NextResponse } from "next/server";
 import type { WorkspaceDeploymentMode } from "@tax-engine/contracts";
 import { betterAuth, type BetterAuthOptions } from "better-auth";
 import { getMigrations } from "better-auth/db/migration";
@@ -26,6 +27,8 @@ import {
   resolveHostedAppBaseUrl
 } from "./hosted-runtime-safety";
 import type { HostedWorkspaceActor } from "./workspace-persistence";
+import { getHostedRecoveryMailConfig, isRecoveryEmail, isRecoveryToken, sendHostedRecoveryMail } from "./hosted-recovery-mail";
+import { safeParseJsonBody } from "./safe-body-parser";
 
 type AuthEnvironment = Record<string, string | undefined>;
 
@@ -307,16 +310,31 @@ export function resetHostedAuthRuntimeCachesForTests() {
 
 function buildHostedAuthOptions(
   config: HostedAuthConfig,
-  database?: HostedServerDatabase
+  database?: HostedServerDatabase,
+  env: AuthEnvironment = process.env,
+  dependencies: HostedAuthRuntimeDependencies = {},
 ): BetterAuthOptions {
+  const recoveryConfigured = getHostedRecoveryMailConfig(env) !== null;
   const baseOptions = {
     baseURL: config.baseURL,
     basePath: config.basePath,
     secret: config.secret,
     trustedOrigins: config.trustedOrigins,
     emailAndPassword: {
-      enabled: true
+      enabled: true,
+      resetPasswordTokenExpiresIn: 15 * 60,
+      revokeSessionsOnPasswordReset: true,
+      ...(recoveryConfigured ? {
+        sendResetPassword: async ({ user, token }: { user: { email: string }; token: string }) => {
+          await (dependencies.sendRecoveryMail ?? sendHostedRecoveryMail)({ email: user.email, token }, env);
+        }
+      } : {}),
     },
+    advanced: { backgroundTasks: { handler: dependencies.scheduleBackgroundTask ?? ((task: Promise<unknown>) => after(task)) } },
+    // Upstream diagnostics can include request, recipient or database details.
+    logger: { disabled: true },
+    onAPIError: { throw: true },
+    verification: { storeIdentifier: "hashed" as const },
     plugins: [nextCookies()]
   };
 
@@ -328,7 +346,8 @@ function buildHostedAuthOptions(
     ...baseOptions,
     database: {
       db: database,
-      type: "postgres"
+      type: "postgres",
+      transaction: true,
     }
   } as BetterAuthOptions;
 }
@@ -355,7 +374,7 @@ async function ensureHostedAuthSchema(config: HostedAuthConfig, env: AuthEnviron
   const promise = (async () => {
     await ensureHostedAppSchema(env);
     const { db } = await getHostedServerDatabase(env);
-    const migrations = await getMigrations(buildHostedAuthOptions(config, db));
+    const migrations = await getMigrations(buildHostedAuthOptions(config, db, env));
 
     await migrations.runMigrations();
   })();
@@ -374,6 +393,8 @@ interface HostedAuthRuntimeDependencies {
   createAuthInstance?: typeof betterAuth;
   ensureAuthSchema?: typeof ensureHostedAuthSchema;
   getServerDatabase?: typeof getHostedServerDatabase;
+  scheduleBackgroundTask?: (task: Promise<unknown>) => void;
+  sendRecoveryMail?: typeof sendHostedRecoveryMail;
 }
 
 async function createHostedAuth(
@@ -385,7 +406,8 @@ async function createHostedAuth(
     config.baseURL,
     config.secret,
     config.mode,
-    getHostedServerDatabaseConfig(env).databaseUrl ?? "memory"
+    getHostedServerDatabaseConfig(env).databaseUrl ?? "memory",
+    createHash("sha256").update(JSON.stringify(getHostedRecoveryMailConfig(env))).digest("hex"),
   ].join("|");
   const cache = getHostedAuthPromiseCache();
   const existing = cache.get(cacheKey);
@@ -399,10 +421,10 @@ async function createHostedAuth(
       await (dependencies.ensureAuthSchema ?? ensureHostedAuthSchema)(config, env);
       const { db } = await (dependencies.getServerDatabase ?? getHostedServerDatabase)(env);
 
-      return (dependencies.createAuthInstance ?? betterAuth)(buildHostedAuthOptions(config, db));
+      return (dependencies.createAuthInstance ?? betterAuth)(buildHostedAuthOptions(config, db, env, dependencies));
     }
 
-    return (dependencies.createAuthInstance ?? betterAuth)(buildHostedAuthOptions(config));
+    return (dependencies.createAuthInstance ?? betterAuth)(buildHostedAuthOptions(config, undefined, env, dependencies));
   })();
 
   cache.set(cacheKey, promise);
@@ -622,6 +644,52 @@ type HostedAuthRouteMethod =
 interface HostedAuthRouteDependencies {
   env?: AuthEnvironment;
   rateLimitStore?: RateLimitStore;
+  authFactory?: typeof createHostedAuth;
+}
+
+function privateAuthResponse(response: Response): Response {
+  const headers = new Headers(response.headers);
+  headers.set("Cache-Control", "private, no-store, max-age=0");
+  headers.set("Referrer-Policy", "no-referrer");
+  return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+}
+
+const recoveryRecipientLimit = { maxRequests: 3, windowMs: 15 * 60 * 1000 };
+
+async function prepareRecoveryRequest(request: Request, config: HostedAuthConfig, env: AuthEnvironment, store: RateLimitStore): Promise<Request | Response> {
+  const path = getRequestedAuthPath(request, config.basePath);
+  if (path !== "request-password-reset" && path !== "reset-password") return request;
+  const origin = request.headers.get("origin");
+  if ((origin && !config.trustedOrigins.includes(origin)) || request.headers.get("sec-fetch-site") === "cross-site") {
+    return NextResponse.json({ error: "This recovery request is not allowed." }, { status: 403 });
+  }
+  if (path === "request-password-reset" && !getHostedRecoveryMailConfig(env)) {
+    return NextResponse.json({ error: "Account recovery is unavailable. Please try again later." }, { status: 503 });
+  }
+  const parsed = await safeParseJsonBody(request, 8 * 1024);
+  if (!parsed.ok) return NextResponse.json({ error: "Invalid account recovery request." }, { status: parsed.status });
+  const body = parsed.data;
+  if (!body || typeof body !== "object" || Array.isArray(body)) return NextResponse.json({ error: "Invalid account recovery request." }, { status: 400 });
+  const fields = body as Record<string, unknown>;
+  let payload: Record<string, string>;
+  if (path === "request-password-reset") {
+    if (!isRecoveryEmail(fields.email)) return NextResponse.json({ error: "Enter a valid account email." }, { status: 400 });
+    const email = fields.email.toLowerCase();
+    const recipientKey = createHmac("sha256", config.secret).update(email).digest("hex");
+    const limit = await checkRateLimitForEnvironment(store, `auth-recovery:${recipientKey}`, recoveryRecipientLimit, env);
+    if (limit.unavailable) return rateLimitUnavailableResponse();
+    if (!limit.allowed) return buildRateLimitResponse(limit.retryAfterMs);
+    payload = { email, redirectTo: `${new URL(config.baseURL).origin}/account/recover` };
+  } else {
+    if (new URL(request.url).search || !isRecoveryToken(fields.token) || typeof fields.newPassword !== "string"
+      || fields.newPassword.length < 8 || fields.newPassword.length > 128) {
+      return NextResponse.json({ error: "The recovery link or new password is invalid." }, { status: 400 });
+    }
+    payload = { token: fields.token, newPassword: fields.newPassword };
+  }
+  const headers = new Headers(request.headers);
+  headers.delete("content-length");
+  return new Request(request.url, { method: "POST", headers, body: JSON.stringify(payload), signal: request.signal });
 }
 
 function buildRateLimitResponse(retryAfterMs: number | null) {
@@ -647,7 +715,7 @@ export function createHostedAuthRouteHandlers(
     registerStoreForCleanup(store, rateLimitTiers.auth.windowMs);
   }
 
-  async function handle(
+  async function handleInternal(
     method: HostedAuthRouteMethod,
     request: Request
   ) {
@@ -663,6 +731,12 @@ export function createHostedAuthRouteHandlers(
         { error: "Authentication service is unavailable. Please contact the administrator." },
         { status: 503 }
       );
+    }
+
+    // Our mail links carry the token only in a client fragment. Do not expose
+    // the upstream legacy URL-token redirect route through this application.
+    if (getRequestedAuthPath(request, config.basePath).startsWith("reset-password/")) {
+      return NextResponse.json({ error: "Invalid account recovery route." }, { status: 404 });
     }
 
     if (method !== "GET") {
@@ -689,9 +763,27 @@ export function createHostedAuthRouteHandlers(
       }
     }
 
-    const handler = toNextJsHandler(await createHostedAuth(config, env))[method];
+    if (method === "POST") {
+      const prepared = await prepareRecoveryRequest(request, config, env, store);
+      if (prepared instanceof Response) return prepared;
+      request = prepared;
+    }
+
+    const handler = toNextJsHandler(await (dependencies.authFactory ?? createHostedAuth)(config, env))[method];
 
     return handler(request);
+  }
+
+  async function handle(method: HostedAuthRouteMethod, request: Request) {
+    try {
+      if (request.signal.aborted) return privateAuthResponse(new Response(null, { status: 499 }));
+      return privateAuthResponse(await handleInternal(method, request));
+    } catch {
+      return privateAuthResponse(NextResponse.json(
+        { error: "Authentication service is unavailable. Please try again later." },
+        { status: request.signal.aborted ? 499 : 503, headers: { "Retry-After": "30" } },
+      ));
+    }
   }
 
   return {

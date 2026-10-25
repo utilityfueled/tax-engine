@@ -59,6 +59,14 @@ const nextConfig: NextConfig = {
       {
         source: "/(.*)",
         headers: securityHeaders
+      },
+      {
+        source: "/account/recover",
+        headers: [
+          { key: "Referrer-Policy", value: "no-referrer" },
+          { key: "Cache-Control", value: "private, no-store, max-age=0" },
+          { key: "X-Robots-Tag", value: "noindex, nofollow" },
+        ],
       }
     ];
   },
