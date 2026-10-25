@@ -23,7 +23,11 @@ describe("PA actual rental ownership", () => {
     const input = TaxYearInputSchema.parse({ ...simpleW2Fixture,
       taxpayer: { ...simpleW2Fixture.taxpayer, filingStatus: "married_filing_jointly", spouse: { ...simpleW2Fixture.taxpayer.primary, ssn: "999-88-7777", firstName: "Spouse" } },
       w2s: [], scheduleC: { accountHolder: "primary", grossReceipts: "100", expenses: { supplies: "10100" } },
-      rentalProperties: [rental({ accountHolder: "spouse", rentalDays: 20, rents: "20000", repairs: "8000" })] });
+      rentalProperties: [rental({ accountHolder: "spouse", rentalDays: 20, rents: "20000", repairs: "8000",
+        paClassification: { sourceReference: "Synthetic short-stay bookings", factsConfirmed: true, offeredToPublic: true,
+          forProfit: true, regularAndContinuous: true, averageCustomerUseDays: "5", availableDuringBusinessHours: false,
+          significantServices: false, significantOperatingExpenses: false, incidentalToRealEstateSales: false,
+          relatedPartyRental: false, dealerPropertyHeldForSale: false } })] });
     const result = calculatePAReturn(input);
     expect(result.mappedIncome.netBusinessIncome.toString()).toBe("6000");
     expect(result.pa40.netBusinessIncome.toString()).toBe("6000");

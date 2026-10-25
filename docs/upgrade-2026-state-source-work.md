@@ -104,3 +104,35 @@ the historical no-document path is preserved. Final verification passes all
 scoped lint with no warnings/errors. The diff was reviewed. Evidence lives in
 `.local/upgrade-evidence/pa-oid-{red,green,types,spec,lint}.log`. These are local
 synthetic checks, not final-form or staging qualification.
+
+## Pennsylvania actual rental classification — 2026-10-25
+
+The official PA rental-income guide's commercial-enterprise test uses actual
+customer-use periods and activity facts. A year-round seven-day booking activity
+now reaches Class 4; annual occupancy no longer substitutes for customer use in
+confirmed sources. The 30-day boundary, public offering, continuity, business
+hours/services/operating expenses, real-estate sales/dealer facts and related
+party restriction are explicit. An activity without profit intent needs its
+separate deduction rules. Source-confirmed/current-year unknowns reject. Legacy
+unconfirmed previews retain historical amounts with an explicit unverified
+audit; they do not establish current support. Ownership is applied once before
+the separate spouse loss limits.
+
+The PA interview collects these facts without defaults and preserves the actual
+source reference. Edits clear classification and source confirmation. Existing
+profit-intent/services facts feed the state classifier; separate unsupported
+federal rental worksheets remain gated. No hotel occupancy-tax filing or local
+license registration is added.
+
+Both new calculation cases and the new DOM interaction failed first. Final
+checks pass 292 focused state/source/DOM/PDF tests and 381 adjacent guided tests;
+root and web typechecks pass. Scoped lint has zero errors and six existing
+non-null warnings in the shared bridge. The diff was reviewed. Current global
+spec validation resolves this package but initially sees the concurrently
+unfinished care-benefits DOM test; that is separate from these passing checks.
+Evidence: `.local/upgrade-evidence/pa-rental-class-{red,ui-red,green,guided,types,web-types,lint,spec}.log`.
+
+Remaining: PA-specific depreciation, personal-use and joint owner allocations,
+OID guided worksheet controls and separate-owner final filing output still need
+implementation/qualification. State demand, final 2026 forms and independent
+human review remain external requirements.

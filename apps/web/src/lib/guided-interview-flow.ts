@@ -1648,9 +1648,9 @@ function validateInvestmentSection(
   return VALID_SECTION;
 }
 
-function validateRentalSection(data: { entries: RentalPropertyEntryData[] } | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null): SectionValidationResult {
+function validateRentalSection(data: { entries: RentalPropertyEntryData[] } | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, stateCode?: string | null): SectionValidationResult {
   if (!data?.entries.some(isStartedRental)) return EMPTY_SECTION("rental property info");
-  const errors = rentalFactErrors(data.entries, filingStatus, taxYear);
+  const errors = rentalFactErrors(data.entries, filingStatus, taxYear, stateCode);
   return Object.keys(errors).length ? { status: "partial", message: "Complete the actual rental ownership, use and expense facts.", fieldErrors: errors, allowSkip: true } : VALID_SECTION;
 }
 
@@ -1730,7 +1730,7 @@ export function validateSection(
     case "income-investments":
       return validateInvestmentSection(getSectionData(state, "income-investments"), state.segmentation.filingStatus, state.taxYear, getSectionData(state, "state-return"));
     case "income-rental":
-      return validateRentalSection(getSectionData(state, "income-rental"), state.segmentation.filingStatus, state.taxYear);
+      return validateRentalSection(getSectionData(state, "income-rental"), state.segmentation.filingStatus, state.taxYear, getSectionData(state, "personal-info")?.state || state.segmentation.stateCode);
     case "income-retirement":
       return validateRetirementSection(getSectionData(state, "income-retirement"), state.segmentation.filingStatus, state.taxYear, getSectionData(state, "state-return"));
     case "income-social-security":

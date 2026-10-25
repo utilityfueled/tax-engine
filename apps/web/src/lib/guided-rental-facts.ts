@@ -3,7 +3,23 @@ import { parseGuidedCurrency } from "./guided-currency";
 import { amountError, hasEnteredAmount } from "./guided-required-facts";
 import type { FilingStatus, RentalPropertyEntryData } from "./guided-interview-flow";
 
+export const paRentalBooleanFacts = [
+  ["offeredToPublic", "Was this activity offered commercially to the public?"],
+  ["regularAndContinuous", "Was the activity regular and continuous?"],
+  ["availableDuringBusinessHours", "Was use limited to defined business hours?"],
+  ["significantOperatingExpenses", "Did making the property available involve significant operating expenses?"],
+  ["incidentalToRealEstateSales", "Was this leasing activity incidental to a real estate sales business?"],
+  ["relatedPartyRental", "Was the property rented to a related party or your own business?"],
+  ["dealerPropertyHeldForSale", "Was this a dealer property held for sale to customers?"],
+] as const;
+export type PARentalClassificationData = Partial<Record<typeof paRentalBooleanFacts[number][0], boolean | null>> & {
+  sourceReference?: string;
+  factsConfirmed?: boolean | null;
+  averageCustomerUseDays?: string;
+};
+
 export interface RentalSourceData {
+  paClassification?: PARentalClassificationData;
   accountHolder?: "primary" | "spouse" | "joint" | "";
   ownershipPercentage?: string;
   minimumOwnershipPercentage?: string;
@@ -49,7 +65,7 @@ export function isStartedRental(entry: RentalPropertyEntryData): boolean {
   return Object.values(entry).some(value => typeof value === "boolean" || (typeof value === "string" && value.trim() !== ""));
 }
 
-export function rentalFactErrors(entries: RentalPropertyEntryData[] | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null): Record<string, string> {
+export function rentalFactErrors(entries: RentalPropertyEntryData[] | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, stateCode?: string | null): Record<string, string> {
   const errors: Record<string, string> = {};
   const names = new Set<string>();
   const maxDays = taxYear && new Date(Date.UTC(taxYear, 1, 29)).getUTCMonth() === 1 ? 366 : 365;
@@ -74,6 +90,17 @@ export function rentalFactErrors(entries: RentalPropertyEntryData[] | undefined,
     if (entry.heldForRental === false) errors[`${key}-heldForRental`] = "A property not held for rental profit needs its separate reporting and deduction rules.";
     if (entry.amountsAreWholeProperty !== true) errors[`${key}-amount-basis`] = "Enter the full-property amounts before ownership allocation; an already allocated amount would be counted twice.";
     if (entry.sourceFactsConfirmed !== true) errors[`${key}-confirmation`] = "Review the actual property classification, ownership, income and expenses after the latest edits.";
+    if (stateCode?.toUpperCase() === "PA") {
+      const pa = entry.paClassification;
+      if (!pa) errors[`${key}-pa-classification`] = "Complete the actual PA rental activity classification; annual rented days do not identify customer-use periods.";
+      else {
+        if (!pa.sourceReference?.trim()) errors[`${key}-pa-source`] = "Identify the actual activity records or classification worksheet.";
+        if (pa.factsConfirmed !== true) errors[`${key}-pa-confirmation`] = "Check the PA activity facts after the latest edits.";
+        const averageError = amountError(pa.averageCustomerUseDays, "actual average customer-use days");
+        if (averageError || (Number(entry.rentalDays) > 0 && parseGuidedCurrency(pa.averageCustomerUseDays).isZero())) errors[`${key}-pa-average`] = "Enter the actual average customer-use period; use zero only when there was no customer use.";
+        for (const [field] of paRentalBooleanFacts) if (typeof pa[field] !== "boolean") errors[`${key}-pa-${field}`] = "Answer the PA activity question from the actual records.";
+      }
+    }
     for (const field of ["realEstateProfessional", "substantialServices", "selfRental", "additionalWorksheetRequired"] as const) if (entry[field] === true) errors[`${key}-${field}`] = "These facts need additional rental classification or limitation worksheets before calculation.";
     for (const field of ["priorYearUnallowedLoss", "priorYearUnallowedCredits"] as const) if (!errors[`${key}-${field}`] && parseGuidedCurrency(entry[field]).gt(0)) errors[`${key}-${field}`] = "Prior-year losses or credits need their actual activity carryforward worksheets.";
     if (entry.isActiveParticipant === true && (amountError(entry.minimumOwnershipPercentage, "minimum combined ownership") || parseGuidedCurrency(entry.minimumOwnershipPercentage).lt(10) || parseGuidedCurrency(entry.minimumOwnershipPercentage).gt(100))) errors[`${key}-active-interest`] = "Active participation requires at least 10% combined taxpayer/spouse ownership by value throughout the year.";

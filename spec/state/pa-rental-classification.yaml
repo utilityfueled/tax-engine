@@ -1,0 +1,26 @@
+form: "PA-Rental-Classification"
+fullName: "Pennsylvania rental activity income class from actual source facts"
+taxYear: 2026
+reference: "https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/net-income-loss-from-rents,-royalties,-copyrights-and-patents"
+notes: |
+  Retrieved 2026-10-25. Sections Determination of Rents or Net Profits,
+  Significant Services, Dealer in Real Property, Short-Term Rentals and
+  Classification as Rental Income versus Net Income from a Business.
+  The commercial-enterprise test uses average customer use of 30 days or
+  less, not annual occupied days. Related-party/self-rental does not establish
+  a commercial enterprise. Actual source confirmation is required for current
+  records; historical unconfirmed previews retain their old behavior and
+  are explicitly not source-verified or filing qualified.
+lines:
+  - line: "classification"
+    description: "Classify the actual whole activity before owner allocation"
+    formula: "Business requires commercial public offering, profit intent, regularity/continuity and at least one: average customer use <=30 days, defined business hours, significant services, significant operating expenses, incidental real-estate sales or dealer property held for sale. Related-party/self-rentals remain rental income. Otherwise report Class 6. Non-profit activities require separate deduction rules and reject."
+    testRef: "tests/engine/state/pa-rental-classification.test.ts::classifies year round rentals from actual customer use and business facts"
+  - line: "unknown"
+    description: "Unknown current classifications cannot become annual-day assumptions"
+    formula: "Require all actual classification facts for confirmed sources or 2026; preserve unknown and false distinctly. Average days must be finite and nonnegative, and positive when there was actual customer use."
+    testRef: "tests/engine/state/pa-rental-classification.test.ts::rejects missing current classification facts and preserves legacy preview limits"
+  - line: "guided"
+    description: "Collect and preserve PA source facts in the interview"
+    formula: "PA residents complete actual activity facts; edits invalidate source confirmation. Forward actual values without deriving customer-use duration from annual days."
+    testRef: "tests/apps/web/pa-rental-classification-interactions.test.tsx::collects PA classification facts without defaults and invalidates confirmation"

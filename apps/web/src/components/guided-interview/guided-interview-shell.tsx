@@ -561,6 +561,7 @@ function SectionContent({
       return (
         <SectionRentalIncome
           entries={rentalEntries}
+          stateCode={getSectionData(state, "personal-info")?.state || state.segmentation.stateCode}
           onEntriesChange={(next: RentalPropertyEntryData[]) =>
             onStateChange(updateSectionData(state, "income-rental", { entries: next }))
           }

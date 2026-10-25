@@ -2,14 +2,18 @@
 
 import { RetroShell } from "@/components/retro-shell";
 import { type RentalPropertyEntryData, emptyRentalPropertyEntry, rentalPropertyTypeOptions } from "@/lib/guided-interview-flow";
-import { rentalExpenseFields } from "@/lib/guided-rental-facts";
+import { rentalExpenseFields, paRentalBooleanFacts, type PARentalClassificationData } from "@/lib/guided-rental-facts";
 import { CurrencyField } from "./currency-field";
 import { BooleanFact, TextFact } from "./fact-fields";
 
-function RentalPropertyCard({ entry, index, onEntryChange, onRemove, canRemove }: {
+function RentalPropertyCard({ entry, index, onEntryChange, onRemove, canRemove, stateCode }: {
   entry: RentalPropertyEntryData; index: number; onEntryChange: (entry: RentalPropertyEntryData) => void; onRemove: () => void; canRemove: boolean;
+  stateCode?: string | null;
 }) {
-  const patch = (values: Partial<RentalPropertyEntryData>) => onEntryChange({ ...entry, ...values, sourceFactsConfirmed: "sourceFactsConfirmed" in values ? values.sourceFactsConfirmed : null });
+  const patch = (values: Partial<RentalPropertyEntryData>) => onEntryChange({ ...entry, ...values,
+    paClassification: values.paClassification ?? (!("sourceFactsConfirmed" in values) && entry.paClassification ? { ...entry.paClassification, factsConfirmed: null } : entry.paClassification),
+    sourceFactsConfirmed: "sourceFactsConfirmed" in values ? values.sourceFactsConfirmed : null });
+  const patchPA = (values: PARentalClassificationData) => patch({ paClassification: { ...entry.paClassification, ...values, factsConfirmed: "factsConfirmed" in values ? values.factsConfirmed : null } });
   return <div className="guided-w2-card">
     <div className="guided-w2-card-header"><h3 className="guided-w2-card-title">{entry.description || `Property #${index + 1}`}</h3>
       {canRemove && <button className="utility-button utility-button-small" type="button" onClick={onRemove} aria-label={`Remove ${entry.description || `property #${index + 1}`}`}>Remove</button>}
@@ -49,14 +53,22 @@ function RentalPropertyCard({ entry, index, onEntryChange, onRemove, canRemove }
       <CurrencyField label="Owner's qualified W-2 wages for this rental" value={entry.qbiW2Wages ?? ""} onChange={qbiW2Wages => patch({ qbiW2Wages })} />
       <CurrencyField label="Owner's qualified-property UBIA for this rental" value={entry.qbiUBIA ?? ""} onChange={qbiUBIA => patch({ qbiUBIA })} />
     </div>}
+    {stateCode?.toUpperCase() === "PA" && <fieldset className="guided-expand-body">
+      <legend className="guided-field-label">Pennsylvania rental activity</legend>
+      <p className="guided-hint">PA distinguishes a rental from a business using the activity's actual operation. Average customer use is the length of each customer's use, not total occupied days in the year. Your profit-intent and services answers above also apply here.</p>
+      <TextFact label="Actual average customer-use period in days" value={entry.paClassification?.averageCustomerUseDays ?? ""} onChange={averageCustomerUseDays => patchPA({ averageCustomerUseDays })} />
+      {paRentalBooleanFacts.map(([field, label]) => <BooleanFact key={field} label={label} value={entry.paClassification?.[field]} onChange={value => patchPA({ [field]: value })} />)}
+      <TextFact label="PA rental activity source or worksheet reference" value={entry.paClassification?.sourceReference ?? ""} onChange={sourceReference => patchPA({ sourceReference })} />
+      <BooleanFact label="Have you checked these PA activity facts against the source records?" value={entry.paClassification?.factsConfirmed} onChange={factsConfirmed => patchPA({ factsConfirmed })} />
+    </fieldset>}
     <BooleanFact label="Have you checked the actual property, ownership, use, income and expense facts after the latest edits?" value={entry.sourceFactsConfirmed} onChange={sourceFactsConfirmed => patch({ sourceFactsConfirmed })} />
   </div>;
 }
 
-export function SectionRentalIncome({ entries, onEntriesChange }: { entries: RentalPropertyEntryData[]; onEntriesChange: (entries: RentalPropertyEntryData[]) => void }) {
+export function SectionRentalIncome({ entries, onEntriesChange, stateCode }: { entries: RentalPropertyEntryData[]; onEntriesChange: (entries: RentalPropertyEntryData[]) => void; stateCode?: string | null }) {
   return <RetroShell title="Rental Income" eyebrow="INCOME // SCHEDULE E">
     <div className="guided-question"><p className="guided-prompt">Enter the actual source facts for each rental property.</p><p className="guided-hint">Zero-rent and expense-only properties stay in the record. Complete their actual eligibility before calculating.</p></div>
-    <div className="guided-w2-stack">{entries.map((entry, index) => <RentalPropertyCard key={index} entry={entry} index={index} onEntryChange={updated => onEntriesChange(entries.map((existing, existingIndex) => existingIndex === index ? updated : existing))} onRemove={() => onEntriesChange(entries.filter((_, existingIndex) => existingIndex !== index))} canRemove={entries.length > 1} />)}</div>
+    <div className="guided-w2-stack">{entries.map((entry, index) => <RentalPropertyCard key={index} entry={entry} index={index} stateCode={stateCode} onEntryChange={updated => onEntriesChange(entries.map((existing, existingIndex) => existingIndex === index ? updated : existing))} onRemove={() => onEntriesChange(entries.filter((_, existingIndex) => existingIndex !== index))} canRemove={entries.length > 1} />)}</div>
     <button className="utility-button" type="button" onClick={() => onEntriesChange([...entries, { ...emptyRentalPropertyEntry }])} aria-label="Add another rental property">+ Add another property</button>
   </RetroShell>;
 }

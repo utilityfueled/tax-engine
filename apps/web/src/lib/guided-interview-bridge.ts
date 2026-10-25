@@ -485,6 +485,13 @@ export function buildRentalPropertyInputs(entries: RentalPropertyEntryData[] | u
       propertyType: e.propertyType || undefined,
       accountHolder: e.accountHolder || undefined,
       sourceFactsConfirmed: e.sourceFactsConfirmed ?? undefined,
+      paClassification: e.paClassification ? {
+        ...e.paClassification,
+        factsConfirmed: e.paClassification.factsConfirmed ?? undefined,
+        averageCustomerUseDays: toOptionalDecimalString(e.paClassification.averageCustomerUseDays),
+        forProfit: e.heldForRental ?? undefined,
+        significantServices: e.substantialServices ?? undefined,
+      } : undefined,
       ownershipPercentage: toOptionalDecimalString(e.ownershipPercentage),
       personalUseDays: /^\d+$/.test(e.personalUseDays ?? "") ? Number(e.personalUseDays) : undefined,
       rentalDays: /^\d+$/.test(e.rentalDays ?? "") ? Number(e.rentalDays) : undefined,
@@ -618,7 +625,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     assertKnownFacts(w2FactErrors(w2Data?.entries, segmentation.filingStatus));
     assertKnownFacts(investmentFactErrors(investData, segmentation.filingStatus, state.taxYear, stateReturnData));
     assertKnownFacts(businessFactErrors(seData, segmentation.filingStatus, w2Data?.entries, stateReturnData));
-    assertKnownFacts(rentalFactErrors(rentalData?.entries, segmentation.filingStatus, state.taxYear));
+    assertKnownFacts(rentalFactErrors(rentalData?.entries, segmentation.filingStatus, state.taxYear, personalInfo?.state || segmentation.stateCode));
     assertKnownFacts(deductionFactErrors(deductionData, state.taxYear, segmentation.filingStatus));
     assertKnownFacts(nonW2TaxAllocationErrors(state));
     assertKnownFacts(allPaymentFactErrors(paymentData, state.taxYear));

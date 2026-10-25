@@ -9,11 +9,13 @@
 import Decimal from "decimal.js";
 import { getPARentalOwnershipFraction } from "@/engine/state/pa-rental-ownership.js";
 import { calculatePAOIDSources, type PAOIDSourcesResult } from "@/engine/state/pa-oid-sources.js";
+import { calculatePARentalClassification, type PARentalClassificationResult } from "@/engine/state/pa-rental-classification.js";
 import { d, sum, zeroFloor } from "@/utils/decimal.js";
 import type {
   Form1099R,
   PAPassThroughStatement,
   PAScheduleA,
+  RentalProperty,
   ScheduleK1,
   TaxYearInput,
 } from "@/models/inputs.js";
@@ -263,6 +265,7 @@ export interface PAOrchestratorResult {
   scheduleA?: PAScheduleAResult;
   /** Source-linked PA OID adjustments and withholding. */
   oidSources?: PAOIDSourcesResult;
+  rentalClassifications: PARentalClassificationResult[];
   /** Schedule B result for PA dividend income */
   scheduleB?: PAScheduleBResult;
   /** Schedule F result for PA farm income */
@@ -947,12 +950,6 @@ function calculateRentalPropertyNetIncome(property: TaxYearInput["rentalProperti
   )).times(getPARentalOwnershipFraction(property));
 }
 
-function isSupportedShortTermRentalBusinessProperty(
-  property: TaxYearInput["rentalProperties"][number],
-): boolean {
-  return property.rentalDays > 0 && property.rentalDays < 30;
-}
-
 type PAClass4Owner = "primary" | "spouse";
 
 interface PAClass4IncomeByOwner {
@@ -1034,6 +1031,7 @@ function mapBusinessIncomeByOwner(
   options: {
     scheduleF?: PAScheduleFResult;
     scheduleRK1?: PAScheduleRK1Result;
+    businessRentals?: ReadonlySet<RentalProperty>;
   } = {},
 ): PAClass4IncomeByOwner {
   let primary = new Decimal(0);
@@ -1085,7 +1083,7 @@ function mapBusinessIncomeByOwner(
   // Apply the actual ownership share and owner before separate Class4 limits.
   // Legacy unconfirmed ownerless previews retain their historical bucket.
   for (const property of input.rentalProperties) {
-    if (isSupportedShortTermRentalBusinessProperty(property)) {
+    if (options.businessRentals?.has(property)) {
       addAmount(calculateRentalPropertyNetIncome(property), property.accountHolder === "spouse" ? "spouse" : "primary");
     }
   }
@@ -1109,12 +1107,13 @@ function mapBusinessIncomeByOwner(
 function calculateResidentPAScheduleE(
   input: TaxYearInput,
   additionalScheduleK1: readonly ScheduleK1[] = [],
+  businessRentals: ReadonlySet<RentalProperty> = new Set(),
 ) {
   return calculatePAScheduleE({
     taxYear: input.taxpayer.taxYear,
     filingStatus: input.taxpayer.filingStatus,
     rentalProperties: input.rentalProperties.filter(
-      (property) => !isSupportedShortTermRentalBusinessProperty(property),
+      (property) => !businessRentals.has(property),
     ),
     form1099Misc: input.form1099Misc,
     scheduleK1: [...input.scheduleK1, ...additionalScheduleK1],
@@ -1755,9 +1754,12 @@ export function calculatePAReturn(
   const scheduleB = calculatePAScheduleB(scheduleBInput);
   const dividends = scheduleB.line12;
   const scheduleF = calculatePAFarmSchedule(input);
+  const rentalClassifications = input.rentalProperties.map(property => calculatePARentalClassification(property, taxYear));
+  const businessRentals = new Set(input.rentalProperties.filter((_, index) => rentalClassifications[index].isBusiness));
   const class4BusinessIncome = mapBusinessIncomeByOwner(input, heuristicK1Input, {
     scheduleF,
     scheduleRK1,
+    businessRentals,
   });
   const netBusinessIncome = class4BusinessIncome.reportable;
   const scheduleD = calculatePAScheduleD({
@@ -1772,7 +1774,7 @@ export function calculatePAReturn(
     ...resolvedOverrides.scheduleD,
   });
   const netGainOrLoss = scheduleD.reportableNetGainOrLoss;
-  const scheduleE = calculateResidentPAScheduleE(heuristicK1Input, scheduleERK1Statements);
+  const scheduleE = calculateResidentPAScheduleE(heuristicK1Input, scheduleERK1Statements, businessRentals);
   const netRentalIncome = scheduleE.reportableNetRentalRoyaltyIncome.plus(map1099KRental(input));
   let scheduleJ: ScheduleJResult | undefined;
   const scheduleRK1EstateTrustIncome = scheduleRK1?.totalEstateTrustIncome ?? ZERO;
@@ -2140,6 +2142,7 @@ export function calculatePAReturn(
     scheduleT,
     scheduleA,
     oidSources: input.form1099OID?.length ? oidSources : undefined,
+    rentalClassifications,
     scheduleB,
     scheduleF,
     scheduleD,
