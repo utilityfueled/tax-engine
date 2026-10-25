@@ -1,22 +1,21 @@
-import { assertPdfExportAllowed } from "../../export-policy.js";
+import { assertPdfExportAllowed, markReviewPdf } from "../../export-policy.js";
 /**
  * PDF filler for IRS Form 4952 — Investment Interest Expense Deduction.
  *
  * Field names verified against 2025 Form 4952 fillable PDF field inspection.
  *
- * Note: The 2025 form has lines 4a–4h, 5, 6, 7, 8. The engine result uses a
- * simplified numbering (4a–4g, deductibleAmount, disallowedCarryforward).
- * This filler maps engine values to the correct 2025 PDF fields.
+ * Every printed field copies its unique audited engine line. The 2026 source
+ * has different field identifiers and is not registered for review or filing.
  */
 
-import { PDFDocument } from "pdf-lib";
+import { PDFDocument, StandardFonts } from "pdf-lib";
 import Decimal from "decimal.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import {
   loadReviewTemplate,
   setTextField,
-  setCurrencyField,
+  formatCurrency,
 } from "../../pdf-utils.js";
 
 // ─── PDF Field Name Helpers ────────────────────────────────────────────────
@@ -66,10 +65,12 @@ export async function fillForm4952(
   blankPdfPath: string,
 ): Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
+  const f4952 = result.form4952;
+  if (!f4952) throw new Error("Form4952 requires an audited calculation before creating a review PDF");
+  if (f4952.taxYear !== result.taxYear) throw new Error("Form4952 audit year disagrees with the return year");
   const doc = await loadReviewTemplate(blankPdfPath, 2025);
   const form = doc.getForm();
   const F = FORM_4952_FIELDS;
-  const f4952 = result.form4952;
 
   // ── Header ──
   const name = input.taxpayer.spouse
@@ -78,41 +79,43 @@ export async function fillForm4952(
   setTextField(form, F.name, name);
   setTextField(form, F.ssn, input.taxpayer.primary.ssn.replace(/-/g, ""));
 
-  if (!f4952) return doc;
-
-  // ── Part I: Total Investment Interest Expense ──
-  setCurrencyField(form, F.line1, f4952.line1);
-  setCurrencyField(form, F.line2, f4952.line2);
-  setCurrencyField(form, F.line3, f4952.line3);
-
-  // ── Part II: Net Investment Income ──
-  setCurrencyField(form, F.line4a, f4952.line4a);
-  setCurrencyField(form, F.line4b, f4952.line4b);
-  setCurrencyField(form, F.line4c, f4952.line4c);
-  setCurrencyField(form, F.line4d, f4952.line4d);
-
-  // 2025 form lines 4e/4f split net gain into preferential vs non-preferential.
-  // The engine doesn't track this decomposition separately, so:
-  // - PDF 4e: leave blank (engine doesn't separate net capital gain from net gain)
-  // - PDF 4f: = line4d (since 4e=0, the full net gain flows through)
-  setCurrencyField(form, F.line4f, f4952.line4d);
-
-  // PDF 4g = engine's elected preferential income (engine line4e)
-  setCurrencyField(form, F.line4g, f4952.line4e);
-
-  // PDF 4h = investment income = 4c + 4f + 4g = line4c + line4d + engine.line4e
-  const line4h = f4952.line4c.plus(f4952.line4d).plus(f4952.line4e);
-  setCurrencyField(form, F.line4h, line4h);
-
-  // PDF Line 5 = investment expenses (engine line4f)
-  setCurrencyField(form, F.line5, f4952.line4f);
-
-  // PDF Line 6 = net investment income (engine line4g)
-  setCurrencyField(form, F.line6, f4952.line4g);
-
-  // ── Part III: Investment Interest Expense Deduction ──
-  setCurrencyField(form, F.line7, f4952.disallowedCarryforward);
-  setCurrencyField(form, F.line8, f4952.deductibleAmount);
-
+  const fields = {
+    "1": F.line1, "2": F.line2, "3": F.line3, "4a": F.line4a, "4b": F.line4b,
+    "4c": F.line4c, "4d": F.line4d, "4e": F.line4e, "4f": F.line4f,
+    "4g": F.line4g, "4h": F.line4h, "5": F.line5, "6": F.line6, "7": F.line7, "8": F.line8,
+  } as const;
+  const byLine = new Map<string, Decimal>();
+  for (const line of f4952.lines) {
+    if (line.form !== "Form 4952" || !Object.hasOwn(fields, line.line)) continue;
+    if (byLine.has(line.line) || !Decimal.isDecimal(line.value) || !line.value.isFinite()
+      || (!["4a", "4c", "4h"].includes(line.line) && line.value.isNegative())) {
+      throw new Error(`Form4952 requires a unique finite valid audit for line${line.line}`);
+    }
+    byLine.set(line.line, line.value);
+  }
+  for (const [line, field] of Object.entries(fields)) {
+    const value = byLine.get(line);
+    const total = f4952[`line${line}` as keyof typeof f4952];
+    if (!value || !Decimal.isDecimal(total) || !value.eq(total)) throw new Error(`Form4952 audit line${line} is missing or disagrees with its calculated total`);
+    setTextField(form, field, value.isZero() ? "0" : formatCurrency(value));
+  }
+  if (!f4952.line7.eq(f4952.disallowedCarryforward) || !f4952.line8.eq(f4952.deductibleAmount)) throw new Error("Form4952 deduction or carryforward audit disagrees with the return");
+  const font = await doc.embedFont(StandardFonts.Helvetica);
+  const page = doc.getPages()[0];
+  if (!Decimal.isDecimal(f4952.electedNetCapitalGain) || !f4952.electedNetCapitalGain.isFinite() || f4952.electedNetCapitalGain.isNegative()
+    || !Decimal.isDecimal(f4952.electedQualifiedDividends) || !f4952.electedQualifiedDividends.isFinite() || f4952.electedQualifiedDividends.isNegative()
+    || f4952.electedNetCapitalGain.gt(f4952.line4e) || f4952.electedQualifiedDividends.gt(f4952.line4b)
+    || !f4952.electedNetCapitalGain.plus(f4952.electedQualifiedDividends).eq(f4952.line4g)) throw new Error("Form4952 election allocations disagree with the printed audit");
+  if (f4952.hasExplicitCapitalGainElection) {
+    const electionAudit = f4952.lines.filter(line => line.form === "Form 4952 Election" && line.line === "capital_gain");
+    if (electionAudit.length !== 1 || !electionAudit[0].value.eq(f4952.electedNetCapitalGain)) throw new Error("Form4952 Elec allocation disagrees with its audit");
+    // Printed dotted space before the4e box; no IRS AcroForm control exists here.
+    page.drawText(`Elec. ${formatCurrency(f4952.electedNetCapitalGain) || "0"}`, { x: 279, y: 518, size: 9, font });
+  }
+  page.drawText(f4952.sourceFactsVerified
+    ? "REVIEW COPY: calculated from confirmed source records; filing qualification pending."
+    : "REVIEW COPY: historical source facts unverified; gain and expense details require review.",
+  { x: 36, y: 360, size: 9, font });
+  await markReviewPdf(doc);
   return doc;
 }

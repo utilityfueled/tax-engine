@@ -2924,7 +2924,18 @@ export const SalesTaxDeductionSchema = z.object({
 });
 export type SalesTaxDeduction = z.infer<typeof SalesTaxDeductionSchema>;
 
-export const Form4952InputSchema = z.object({
+export const Form4952InputSchema = z.preprocess((value) => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const record = value as Record<string, unknown>;
+  const amounts = ["investmentInterestExpense", "priorYearDisallowed", "grossInvestmentIncome", "qualifiedDividendsIncluded", "netGainFromInvestmentProperty", "netCapitalGainFromInvestmentProperty", "electedPreferentialIncome", "investmentExpenses"];
+  return { ...record, sourceFactsComplete: record.sourceFactsComplete !== false && amounts.every(key => record[key] !== undefined) };
+}, z.object({
+  sourceTaxYear: z.number().int().optional(),
+  sourceReference: z.string().trim().min(1).optional(),
+  sourceFactsConfirmed: z.boolean().optional(),
+  /** Computed from raw source presence before historical defaults are applied. */
+  sourceFactsComplete: z.boolean().optional(),
+  priorYearSourceTaxYear: z.number().int().optional(),
   /** Line 1: Investment interest expense paid or accrued during the tax year (margin interest, etc.) */
   investmentInterestExpense: decimal,
   /** Line 2: Disallowed investment interest expense from prior year Form 4952 */
@@ -2933,13 +2944,18 @@ export const Form4952InputSchema = z.object({
   grossInvestmentIncome: optionalDecimal,
   /** Line 4b: Qualified dividends included on Line 4a */
   qualifiedDividendsIncluded: optionalDecimal,
-  /** Line 4d: Non-preferential net gain from disposition of investment property (floor at 0) */
+  /** Line 4d: Total net investment-property gain. Legacy unconfirmed records used only nonpreferential gain. */
   netGainFromInvestmentProperty: optionalDecimal,
-  /** Line 4e: Amount of qualified dividends and/or net capital gain elected to include as investment income */
+  /** Actual net long-term investment gain less net short-term loss, before the line 4e cap. */
+  netCapitalGainFromInvestmentProperty: optionalDecimalInput,
+  /** Line 4g: Actual election of qualified dividends and/or net capital gain as investment income. */
   electedPreferentialIncome: optionalDecimal,
-  /** Line 4f: Investment expenses directly connected with production of investment income */
+  /** Optional actual "Elec." allocation; omission follows the IRS capital-gain-first rule. */
+  electedNetCapitalGain: optionalDecimalInput,
+  /** Line 5: Expenses actually deductible on the return, not miscellaneous investment fees. */
   investmentExpenses: optionalDecimal,
-});
+  investmentExpensesDeductibleConfirmed: z.boolean().optional(),
+}));
 export type Form4952Input = z.infer<typeof Form4952InputSchema>;
 
 export const SavingsBondRedemptionSchema = z.preprocess((value) => {

@@ -5,7 +5,6 @@
 
 import { describe, it, expect, beforeAll } from "vitest";
 import { PDFDocument, PDFTextField } from "pdf-lib";
-import Decimal from "decimal.js";
 import { calculateFederalTax } from "@/engine/federal.js";
 import { fillForm4952, FORM_4952_FIELDS } from "@/pdf/fill-form-4952.js";
 import { formatCurrency } from "@/pdf/pdf-utils.js";
@@ -106,7 +105,7 @@ describe("Form 4952 PDF filling — fully deductible margin interest", () => {
     expect(f4952).toBeDefined();
     expect(getFieldText(doc, F.line1)).toBe(formatCurrency(f4952.line1));
     // No prior year carryforward
-    expect(getFieldText(doc, F.line2)).toBeUndefined();
+    expect(getFieldText(doc, F.line2)).toBe("0");
     expect(getFieldText(doc, F.line3)).toBe(formatCurrency(f4952.line3));
     expect(f4952.line1.toNumber()).toBe(6000);
     expect(f4952.line3.toNumber()).toBe(6000);
@@ -124,15 +123,15 @@ describe("Form 4952 PDF filling — fully deductible margin interest", () => {
 
   it("Form 4952 Part II Line 4d - net gain from disposition", () => {
     const f4952 = result.form4952!;
-    expect(getFieldText(doc, F.line4d)).toBeUndefined(); // No capital gains
+    expect(getFieldText(doc, F.line4d)).toBe("0"); // No capital gains
     expect(f4952.line4d.toNumber()).toBe(0);
   });
 
   it("Form 4952 Part II Lines 5-6 - net investment income", () => {
     const f4952 = result.form4952!;
     // Net investment income = 4c (10000) + 4d (0) + elected (0) - expenses (0) = 10000
-    expect(getFieldText(doc, F.line6)).toBe(formatCurrency(f4952.line4g));
-    expect(f4952.line4g.toNumber()).toBe(10000);
+    expect(getFieldText(doc, F.line6)).toBe(formatCurrency(f4952.line6));
+    expect(f4952.line6.toNumber()).toBe(10000);
   });
 
   it("Form 4952 Part III Lines 7-8 - deduction and carryforward", () => {
@@ -244,14 +243,14 @@ describe("Form 4952 PDF filling — partially disallowed with carryforward", () 
     expect(f4952.line4a.toNumber()).toBe(3500);
     expect(f4952.line4b.toNumber()).toBe(800);
     expect(f4952.line4c.toNumber()).toBe(2700);
-    expect(f4952.line4f.toNumber()).toBe(200);
-    expect(f4952.line4g.toNumber()).toBe(2500);
+    expect(f4952.line5.toNumber()).toBe(200);
+    expect(f4952.line6.toNumber()).toBe(2500);
 
     expect(getFieldText(doc, F.line4a)).toBe(formatCurrency(f4952.line4a));
     expect(getFieldText(doc, F.line4b)).toBe(formatCurrency(f4952.line4b));
     expect(getFieldText(doc, F.line4c)).toBe(formatCurrency(f4952.line4c));
-    expect(getFieldText(doc, F.line5)).toBe(formatCurrency(f4952.line4f));
-    expect(getFieldText(doc, F.line6)).toBe(formatCurrency(f4952.line4g));
+    expect(getFieldText(doc, F.line5)).toBe(formatCurrency(f4952.line5));
+    expect(getFieldText(doc, F.line6)).toBe(formatCurrency(f4952.line6));
   });
 
   it("Form 4952 Part III - disallowed amount carried forward", () => {

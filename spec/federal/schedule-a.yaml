@@ -176,7 +176,7 @@ lines:
     edgeCases:
       - "Zero when no investment interest input is provided"
       - "Form 4952 limits deduction to net investment income"
-    testRef: "tests/engine/forms/form-4952.test.ts::Form 4952 Line 5 - deduction limited to net investment income"
+    testRef: "tests/engine/forms/form-4952.test.ts::Form 4952 Line 8 - deduction limited to net investment income"
 
   - line: "15"
     description: "Casualty and theft losses"
