@@ -170,6 +170,7 @@ export async function fillScheduleD(
     ["Part I Box B", [F.line2Proceeds, F.line2CostBasis, F.line2Adjustments, F.line2GainLoss]],
     ["Part II Box D", [F.line8bProceeds, F.line8bCostBasis, F.line8bAdjustments, F.line8bGainLoss]],
     ["Part II Box E", [F.line9Proceeds, F.line9CostBasis, F.line9Adjustments, F.line9GainLoss]],
+    ["Part II Box F", [F.line10Proceeds, F.line10CostBasis, F.line10Adjustments, F.line10GainLoss]],
   ] as const) {
     const line = result.allLines.find(item => item.form === "Form 8949" && item.line === category);
     if (!line) continue;

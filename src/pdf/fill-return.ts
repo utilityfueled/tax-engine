@@ -28,6 +28,7 @@ import { fillForm8889 } from "./fill-form-8889.js";
 import { fillForm2441 } from "./fill-form-2441.js";
 import { fillForm8863 } from "./fill-form-8863.js";
 import { fillForm6251 } from "./fill-form-6251.js";
+import { form8949ReviewCalculation, prepareForm8949Review, type PreparedForm8949Review } from "./form-8949-review-context.js";
 import { fillForm8880 } from "./fill-form-8880.js";
 import { fillForm5329 } from "./fill-form-5329.js";
 import { fillForm8606 } from "./fill-form-8606.js";
@@ -375,6 +376,8 @@ export interface FillReturnOptions {
   outputDir: string;
   /** Whether to flatten form fields (makes PDF non-editable but renders consistently). */
   flatten?: boolean;
+  /** Prepared from complete original facts before review identifiers are cleared. */
+  capitalGainReview?: PreparedForm8949Review;
 }
 
 export interface FillReturnResult {
@@ -393,6 +396,17 @@ export async function fillReturn(
   options: FillReturnOptions,
 ): Promise<FillReturnResult> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear, options.purpose);
+  const capitalGainReview = options.capitalGainReview ?? prepareForm8949Review(input);
+  const capitalTransactions = form8949ReviewCalculation(input, capitalGainReview);
+  if (capitalTransactions.section1202) {
+    if (!result.scheduleD?.section1202Exclusion.eq(capitalTransactions.section1202.exclusion)) {
+      throw new Error("QSBS review source exclusion does not reconcile with ScheduleD");
+    }
+    for (const entry of capitalTransactions.lines.filter(row => row.form === "Form 8949")) {
+      const canonical = result.allLines.filter(row => row.form === entry.form && row.line === entry.line);
+      if (canonical.length !== 1 || !canonical[0].value.eq(entry.value)) throw new Error("QSBS Form8949 source audit does not reconcile");
+    }
+  }
   if (input.form7206 || result.form7206) assertForm7206ReviewSource(input, result);
   if (input.netOperatingLoss || result.netOperatingLoss) buildNetOperatingLossReview(input, result);
   const filledForms: string[] = [];
@@ -536,17 +550,14 @@ export async function fillReturn(
     filledForms.push(outputPathSSE);
   }
 
-  // ── Form 8949 (if applicable — capital transactions on 1099-B) ──
-  if (input.form1099B && input.form1099B.length > 0) {
-    const hasTransactions = input.form1099B.some((f) => f.transactions.length > 0);
-    if (hasTransactions) {
-      const f8949Path = join(blankFormsDir, "f8949.pdf");
-      const doc8949 = await fillForm8949(input, f8949Path);
-      if (flatten) await flattenForm(doc8949.getForm());
-      const outputPath8949 = join(outputDir, "f8949-filled.pdf");
-      await savePacketPdf(doc8949, outputPath8949);
-      filledForms.push(outputPath8949);
-    }
+  // Form8949 also carries actual fund issuer exclusions without a1099-B.
+  if (input.form1099B.some(form => form.transactions.length > 0) || capitalTransactions.longTermBoxF.transactions.length > 0) {
+    const f8949Path = join(blankFormsDir, "f8949.pdf");
+    const doc8949 = await fillForm8949(input, f8949Path, capitalGainReview);
+    if (flatten) await flattenForm(doc8949.getForm());
+    const outputPath8949 = join(outputDir, "f8949-filled.pdf");
+    await savePacketPdf(doc8949, outputPath8949);
+    filledForms.push(outputPath8949);
   }
 
   // ── Form 8959 (if applicable — Additional Medicare Tax) ──
@@ -690,9 +701,9 @@ export async function fillReturn(
   // ── Form 6251 (if applicable — Alternative Minimum Tax) ──
   // Include the actual NOL adjustment in this review packet even when AMT is
   // zero. Inclusion is for source review and is not a filing-requirement claim.
-  if (result.form6251 && (result.form6251.amt.gt(0) || result.netOperatingLoss)) {
+  if (result.form6251 && (result.form6251.amt.gt(0) || result.netOperatingLoss || capitalTransactions.section1202?.amtPreference.gt(0))) {
     const f6251Path = join(blankFormsDir, "f6251.pdf");
-    const doc6251 = await fillForm6251(input, result, f6251Path);
+    const doc6251 = await fillForm6251(input, result, f6251Path, capitalGainReview);
     if (flatten) await flattenForm(doc6251.getForm());
     const outputPath6251 = join(outputDir, "f6251-filled.pdf");
     await savePacketPdf(doc6251, outputPath6251);

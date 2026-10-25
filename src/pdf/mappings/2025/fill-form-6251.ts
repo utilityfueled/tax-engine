@@ -12,6 +12,7 @@ import Decimal from "decimal.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import { buildNetOperatingLossReview } from "@/pdf/fill-net-operating-loss.js";
+import { form8949ReviewCalculation, type PreparedForm8949Review } from "../../form-8949-review-context.js";
 import {
   loadReviewTemplate,
   setTextField,
@@ -108,6 +109,7 @@ export async function fillForm6251(
   input: TaxYearInput,
   result: TaxReturnResult,
   blankPdfPath: string,
+  capitalGainReview?: PreparedForm8949Review,
 ): Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
   const doc = await loadReviewTemplate(blankPdfPath, 2025);
@@ -138,6 +140,12 @@ export async function fillForm6251(
     return value;
   };
   for (const id of ["1b", "2a", "2g", "4", "5", "6", "7", "9", "10", "11"]) required(id);
+  if (input.section1202Sources || audited.get("2h")?.gt(0)) {
+    const source = form8949ReviewCalculation(input, capitalGainReview).section1202;
+    if (!source || !required("2h").eq(source.amtPreference.toDecimalPlaces(0, Decimal.ROUND_HALF_UP))) {
+      throw new Error("Form6251 QSBS line2h does not reconcile with its original source calculation");
+    }
+  }
   for (const [id, value] of [["4", f6251.amti], ["5", f6251.exemption], ["6", f6251.amtBase],
     ["9", f6251.tentativeMinimumTax], ["11", f6251.amt]] as const) {
     if (!required(id).eq(value)) throw new Error(`Form6251 line${id} audit does not reconcile with its result`);

@@ -7,16 +7,15 @@ import { assertPdfExportAllowed } from "../../export-policy.js";
  *
  * Each page has 11 transaction rows plus a totals row.
  * Per IRS rules, only one box can be checked per copy of the form.
- * This filler generates one PDF with:
- *   - Page 1: Box A short-term transactions (basis reported to IRS)
- *   - Page 2: Box D long-term transactions (basis reported to IRS)
- * Box B/E transactions (basis NOT reported) are noted in totals but would
- * require a separate form copy for full compliance.
+ * Every supported category has its own part; continuation copies retain every
+ * transaction and a complete interactive AcroForm field tree.
  */
 
-import { PDFDocument } from "pdf-lib";
+import { PDFDocument, PDFObjectCopier, PDFPage, PDFPageLeaf } from "pdf-lib";
+import Decimal from "decimal.js";
 import type { TaxYearInput } from "@/models/inputs.js";
-import { calculateForm8949, type CategoryTotals, type TransactionSummary } from "@/engine/forms/form-8949.js";
+import type { CategoryTotals, TransactionSummary } from "@/engine/forms/form-8949.js";
+import { form8949ReviewCalculation, type PreparedForm8949Review } from "../../form-8949-review-context.js";
 import {
   loadReviewTemplate,
   setTextField,
@@ -128,8 +127,8 @@ function fillTransactionRows(
   rows: RowFields[],
   transactions: TransactionSummary[],
 ): void {
-  const limit = Math.min(transactions.length, rows.length);
-  for (let i = 0; i < limit; i++) {
+  if (transactions.length > rows.length) throw new Error("Form8949 page exceeds its transaction capacity");
+  for (let i = 0; i < transactions.length; i++) {
     const t = transactions[i];
     const r = rows[i];
     setTextField(form, r.description, t.description);
@@ -143,6 +142,55 @@ function fillTransactionRows(
     setCurrencyField(form, r.adjustment, t.adjustment);
     setTextField(form, r.gainLoss, formatCurrency(t.gainLoss));
   }
+}
+
+interface CategoryPage { box: string; transactions: TransactionSummary[] }
+function categoryPages(categories: Array<[string, CategoryTotals]>): CategoryPage[] {
+  return categories.flatMap(([box, category]) => {
+    const pages: CategoryPage[] = [];
+    for (let offset = 0; offset < category.transactions.length; offset += 11) {
+      pages.push({ box, transactions: category.transactions.slice(offset, offset + 11) });
+    }
+    return pages;
+  });
+}
+
+function fillPart(form: ReturnType<PDFDocument["getForm"]>, part: 1 | 2, page?: CategoryPage): void {
+  if (!page) return;
+  const F = FIELDS;
+  setCheckBox(form, page.box, true);
+  fillTransactionRows(form, part === 1 ? F.page1Rows : F.page2Rows, page.transactions);
+  const total = (key: 'proceeds' | 'costBasis' | 'adjustment' | 'gainLoss') =>
+    page.transactions.reduce((amount, row) => amount.plus(row[key]), new Decimal(0));
+  fillTotals(form, part === 1 ? {
+    proceeds: F.page1TotalProceeds, costBasis: F.page1TotalCostBasis,
+    adjustment: F.page1TotalAdjustment, gainLoss: F.page1TotalGainLoss,
+  } : {
+    proceeds: F.page2TotalProceeds, costBasis: F.page2TotalCostBasis,
+    adjustment: F.page2TotalAdjustment, gainLoss: F.page2TotalGainLoss,
+  }, { transactions: page.transactions, totalProceeds: total('proceeds'), totalCostBasis: total('costBasis'),
+    totalAdjustments: total('adjustment'), totalGainLoss: total('gainLoss') });
+}
+
+/** One copier preserves shared field/widget/page references. copyPages alone
+ * would omit the canonical AcroForm tree and leave orphaned widgets. */
+async function appendInteractiveCopy(target: PDFDocument, source: PDFDocument, copy: number): Promise<void> {
+  const sourceForm = source.getForm();
+  const roots = sourceForm.acroForm.getFields();
+  if (roots.length !== 1 || roots[0]?.[0].getPartialName() !== 'topmostSubform[0]') {
+    throw new Error('Form8949 registered template has an unexpected field root');
+  }
+  sourceForm.updateFieldAppearances();
+  roots[0][0].setPartialName(`topmostSubform[${copy}]`);
+  await source.flush();
+  const copier = PDFObjectCopier.for(source.context, target.context);
+  for (const page of source.getPages()) {
+    const ref = copier.copy(page.ref);
+    const node = target.context.lookup(ref);
+    if (!(node instanceof PDFPageLeaf)) throw new Error('Form8949 continuation page is missing');
+    target.addPage(PDFPage.of(node, ref, target));
+  }
+  for (const [, ref] of roots) target.getForm().acroForm.addField(copier.copy(ref));
 }
 
 /** Fill totals row for a category. */
@@ -172,72 +220,26 @@ function fillTotals(
 export async function fillForm8949(
   input: TaxYearInput,
   blankPdfPath: string,
+  prepared?: PreparedForm8949Review,
 ): Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear, input.taxpayer.taxYear);
+  const result = form8949ReviewCalculation(input, prepared);
   const doc = await loadReviewTemplate(blankPdfPath, 2025);
-  const form = doc.getForm();
   const F = FIELDS;
-
-  // ── Header ──
   const name = input.taxpayer.spouse
     ? `${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName} & ${input.taxpayer.spouse.firstName} ${input.taxpayer.spouse.lastName}`
     : `${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName}`;
-  setTextField(form, F.name1, name);
-  setTextField(form, F.ssn1, input.taxpayer.primary.ssn.replace(/-/g, ""));
-  setTextField(form, F.name2, name);
-  setTextField(form, F.ssn2, input.taxpayer.primary.ssn.replace(/-/g, ""));
-
-  // Skip if no 1099-B forms
-  if (!input.form1099B || input.form1099B.length === 0) return doc;
-
-  const result = calculateForm8949(input);
-
-  // ── Part I: Short-Term (Page 1) ──
-  // Fill Box A transactions (basis reported to IRS) — most common
-  if (result.shortTermBoxA.transactions.length > 0) {
-    setCheckBox(form, F.boxA, true);
-    fillTransactionRows(form, F.page1Rows, result.shortTermBoxA.transactions);
-    fillTotals(form, {
-      proceeds: F.page1TotalProceeds,
-      costBasis: F.page1TotalCostBasis,
-      adjustment: F.page1TotalAdjustment,
-      gainLoss: F.page1TotalGainLoss,
-    }, result.shortTermBoxA);
-  } else if (result.shortTermBoxB.transactions.length > 0) {
-    // Fall back to Box B if no Box A transactions
-    setCheckBox(form, F.boxB, true);
-    fillTransactionRows(form, F.page1Rows, result.shortTermBoxB.transactions);
-    fillTotals(form, {
-      proceeds: F.page1TotalProceeds,
-      costBasis: F.page1TotalCostBasis,
-      adjustment: F.page1TotalAdjustment,
-      gainLoss: F.page1TotalGainLoss,
-    }, result.shortTermBoxB);
+  const short = categoryPages([[F.boxA, result.shortTermBoxA], [F.boxB, result.shortTermBoxB]]);
+  const long = categoryPages([[F.boxD, result.longTermBoxD], [F.boxE, result.longTermBoxE], [F.boxF, result.longTermBoxF]]);
+  for (let copy = 0; copy < Math.max(1, short.length, long.length); copy++) {
+    const current = copy === 0 ? doc : await loadReviewTemplate(blankPdfPath, 2025);
+    const form = current.getForm();
+    for (const field of [F.name1, F.name2]) setTextField(form, field, name);
+    for (const field of [F.ssn1, F.ssn2]) setTextField(form, field, input.taxpayer.primary.ssn.replace(/-/g, ''));
+    fillPart(form, 1, short[copy]);
+    fillPart(form, 2, long[copy]);
+    if (copy > 0) await appendInteractiveCopy(doc, current, copy);
   }
-
-  // ── Part II: Long-Term (Page 2) ──
-  // Fill Box D transactions (basis reported to IRS) — most common
-  if (result.longTermBoxD.transactions.length > 0) {
-    setCheckBox(form, F.boxD, true);
-    fillTransactionRows(form, F.page2Rows, result.longTermBoxD.transactions);
-    fillTotals(form, {
-      proceeds: F.page2TotalProceeds,
-      costBasis: F.page2TotalCostBasis,
-      adjustment: F.page2TotalAdjustment,
-      gainLoss: F.page2TotalGainLoss,
-    }, result.longTermBoxD);
-  } else if (result.longTermBoxE.transactions.length > 0) {
-    // Fall back to Box E if no Box D transactions
-    setCheckBox(form, F.boxE, true);
-    fillTransactionRows(form, F.page2Rows, result.longTermBoxE.transactions);
-    fillTotals(form, {
-      proceeds: F.page2TotalProceeds,
-      costBasis: F.page2TotalCostBasis,
-      adjustment: F.page2TotalAdjustment,
-      gainLoss: F.page2TotalGainLoss,
-    }, result.longTermBoxE);
-  }
-
   return doc;
 }
 
