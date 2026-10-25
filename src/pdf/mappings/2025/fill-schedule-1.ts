@@ -14,6 +14,7 @@ import {
   loadReviewTemplate,
   setTextField,
   setCurrencyField,
+  setCheckBox,
 } from "../../pdf-utils.js";
 
 // ─── PDF Field Name Helpers ────────────────────────────────────────────────
@@ -41,7 +42,7 @@ const FIELDS = {
   line5: p1("f1_09[0]"),    // Rental/royalties/partnerships (Schedule E)
   line6: p1("f1_10[0]"),    // Farm income (Schedule F)
   line7: p1("f1_12[0]"),    // Unemployment compensation
-  // c1_3 = Line 7 repayment checkbox (inside Line7_ReadOrder)
+  line7RepaymentCheckbox: p1("Line7_ReadOrder[0].c1_3[0]"),
   line7Repaid: p1("Line7_ReadOrder[0].f1_11[0]"), // Amount repaid
 
   // ── Line 8 sub-items ──
@@ -151,7 +152,7 @@ export async function fillSchedule1(
     return value;
   };
   for (const [id, amount] of [["3",s1.businessIncome],["5",s1.supplementalIncome],
-    ["9",s1.totalOtherIncome],["10",s1.totalAdditionalIncome],["25",s1.otherAdjustmentsTotal],
+    ["7",s1.unemploymentCompensation],["9",s1.totalOtherIncome],["10",s1.totalAdditionalIncome],["25",s1.otherAdjustmentsTotal],
     ["26",s1.totalAdjustments]] as const) {
     if (!required(id).eq(amount)) throw new Error(`Schedule1 line${id} does not reconcile with its result`);
   }
@@ -198,6 +199,13 @@ export async function fillSchedule1(
   }
   await markReviewPdf(doc);
 
+  const repaid = s1.governmentPayments.currentYearRepaid;
+  const repaymentAudit = s1.lines.filter(line => line.form === "Sched 1" && line.line === "7-repaid");
+  if (repaymentAudit.length !== 1 || !repaymentAudit[0].value.eq(repaid)) {
+    throw new Error("Schedule1 unemployment repayment requires a unique reconciled source audit");
+  }
+  setCurrencyField(form, F.line7Repaid, repaid);
+  setCheckBox(form, F.line7RepaymentCheckbox, repaid.gt(0));
   return doc;
 }
 

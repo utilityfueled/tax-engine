@@ -462,7 +462,8 @@ export const Form1099GSchema = z.preprocess((value) => {
   unemploymentCompensation: decimal, // Box 1
   stateLocalIncomeTaxRefund: optionalDecimal, // Box 2 (IL Schedule IL-WIT path)
   stateOrLocalTaxRefund: optionalDecimal, // Box 2 (OH and generic path)
-  refundTaxYear: z.number().optional(), // Box 3
+  refundTaxYear: z.number().optional(), // Box 3: state return year, not necessarily the payment year
+  refundExpenseTaxYear: z.number().int().min(1900).optional(), // Actual year the refunded tax was paid/deducted
   federalWithheld: optionalDecimal, // Box 4
   rtaaPayments: optionalDecimalInput, // Box 5
   taxableGrants: optionalDecimalInput, // Box 6

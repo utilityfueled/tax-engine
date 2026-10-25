@@ -1,5 +1,6 @@
 /** Schedule A line 5a source worksheet; spec/federal/schedule-a.yaml. */
 import Decimal from "decimal.js";
+import { calculateForm1099G } from "./form-1099-g.js";
 import { calculateForm1099OID } from "./form-1099-oid.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
@@ -14,6 +15,7 @@ interface StateLocalIncomeTaxDeductionResult {
   deductedElsewhere: Decimal;
   statePaymentsInYear: Decimal;
   additionalPayments: Decimal;
+  currentYearRefunds: Decimal;
   total: Decimal;
   lines: CalculatedLine[];
 }
@@ -62,11 +64,19 @@ export function calculateStateLocalIncomeTaxDeduction(input: TaxYearInput): Stat
   if (deductedElsewhere.gt(nonW2Withholding)) throw new Error("Another-schedule tax deduction exceeds actual non-W2 withholding");
   const statePaymentsInYear = calculateStateTaxPaymentsInYear(input);
   const additionalPayments = actualAmount(input.scheduleA?.additionalStateLocalIncomeTaxes, "Additional income-tax payments");
-  const total = sum(w2StateWithholding, w2LocalWithholding, nonW2Withholding, statePaymentsInYear, additionalPayments).minus(deductedElsewhere);
+  const currentRefundSources = (input.form1099G ?? []).filter(source => source.refundExpenseTaxYear === input.taxpayer.taxYear
+    && Decimal.max(d(source.stateOrLocalTaxRefund), d(source.stateLocalIncomeTaxRefund)).gt(0));
+  const government = calculateForm1099G(currentRefundSources, input.taxpayer.taxYear, input.taxpayer.filingStatus);
+  const currentYearRefunds = sum(...government.refundSources.filter(source => source.refundExpenseTaxYear === input.taxpayer.taxYear).map(source => source.amount));
+  const payments = sum(w2StateWithholding, w2LocalWithholding, nonW2Withholding, statePaymentsInYear, additionalPayments).minus(deductedElsewhere);
+  if (currentYearRefunds.gt(payments)) throw new Error("Actual same-year income-tax refunds exceed known current-year payments");
+  const total = payments.minus(currentYearRefunds);
+  audit.record("SALT Income Tax WS", "same-year-refunds", "Actual same-year income-tax refunds", currentYearRefunds,
+    "Reduce the same-year deduction once; prior-year refunds require separate historical tax benefit");
   audit.record("SALT Income Tax WS", "total", "Qualified state and local income taxes", total,
-    "W2 state/local + non-W2 state/local + in-year payments/applied credits + separate additional payments − non-W2 withholding deducted elsewhere", {
+    "W2 state/local + non-W2 state/local + in-year payments/applied credits + separate additional payments − non-W2 withholding deducted elsewhere − actual same-year refunds", {
       "W2 state": w2StateWithholding, "W2 local": w2LocalWithholding, "Non-W2": nonW2Withholding,
-      "Deducted elsewhere": deductedElsewhere, "In-year payments/applied credits": statePaymentsInYear, "Additional payments": additionalPayments,
+      "Deducted elsewhere": deductedElsewhere, "In-year payments/applied credits": statePaymentsInYear, "Additional payments": additionalPayments, "Same-year refunds": currentYearRefunds,
     });
-  return { w2StateWithholding, w2LocalWithholding, nonW2Withholding, deductedElsewhere, statePaymentsInYear, additionalPayments, total, lines: audit.getLines() };
+  return { w2StateWithholding, w2LocalWithholding, nonW2Withholding, deductedElsewhere, statePaymentsInYear, additionalPayments, currentYearRefunds, total, lines: audit.getLines() };
 }

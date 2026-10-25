@@ -13,9 +13,12 @@ purpose: |
 lines:
   - line: "origin_year"
     description: Explicit origin year controls the historical SALT limitation
-    formula: require priorTaxYear in 2018..2026 and priorTaxYear < receipt year; reject a Form 1099-G Box 3 year that differs
+    formula: require actual deduction priorTaxYear in 2018..2026 and priorTaxYear < receipt year; explicit refundExpenseTaxYear must match. Only historical unverified inputs may use Box3 as the former compatibility origin.
     reference: IRC 111; Publication 525 (2025), Recoveries for 2 or more years; IRC 164(b)(6)
     note: |
+      Box3 state-return year and actual expense/deduction year are distinct.
+      Verified source refunds retain both; payments and refunds in the same year
+      reduce the current deduction under Publication525.
       Never assume the refund relates to the immediately preceding year. One
       worksheet supports one origin year. Mixed-year refunds require separate
       worksheets and are rejected until that orchestration is implemented.

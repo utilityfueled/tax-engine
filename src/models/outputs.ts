@@ -280,6 +280,7 @@ export interface TaxReturnResult {
   form1099K?: import("@/engine/forms/form-1099-k.js").Form1099KResult;
   partnerBasisSchedules?: import("@/engine/forms/partner-basis-schedule.js").PartnerBasisScheduleResult[];
   form8915F?: import("@/engine/forms/form-8915-f.js").Form8915FResult;
+  form1099G?: import("@/engine/forms/form-1099-g.js").Form1099GResult;
   taxableRefundWorksheet?: import("@/engine/forms/taxable-refund-worksheet.js").TaxableRefundWorksheetResult;
   /** State and local general sales tax deduction worksheet result */
   salesTaxDeduction?: import("@/engine/forms/state-sales-tax-deduction-worksheet.js").SalesTaxDeductionResult;

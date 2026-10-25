@@ -15,6 +15,27 @@ const source = (changes: Record<string, unknown> = {}) => Form1099GSchema.parse(
 });
 
 describe("Actual Form 1099-G source treatment", () => {
+  it("retains unverified historical absent-box compatibility without bypassing actual facts", () => {
+    const legacy = Form1099GSchema.parse({ payer: "Legacy", unemploymentCompensation: "800" });
+    Reflect.deleteProperty(legacy, "federalWithheld");
+    const withIncome = calculateForm1099G([legacy], 2025);
+    expect(withIncome.sourceFactsVerified).toBe(false);
+    expect(withIncome.taxableUnemployment.toFixed()).toBe("800");
+    expect(withIncome.federalWithheld.toFixed()).toBe("0");
+    Reflect.deleteProperty(legacy, "unemploymentCompensation");
+    const empty = calculateForm1099G([legacy], 2025);
+    expect(empty.sourceFactsVerified).toBe(false);
+    expect(empty.taxableUnemployment.toFixed()).toBe("0");
+    expect(empty.federalWithheld.toFixed()).toBe("0");
+    expect(() => calculateForm1099G([legacy], 2026)).toThrow(/actual|complete/i);
+    expect(() => calculateForm1099G([{ ...legacy, currentYearRepaid: "0" }], 2025)).toThrow(/actual|complete/i);
+    expect(() => calculateForm1099G([{ ...legacy, federalWithheld: "NaN" }], 2025)).toThrow(/actual|finite/i);
+    const actual = source();
+    Reflect.deleteProperty(actual, "unemploymentCompensation");
+    Reflect.deleteProperty(actual, "federalWithheld");
+    expect(() => calculateForm1099G([actual], 2026)).toThrow(/actual|complete/i);
+  });
+
   it("preserves unknown source facts and distinguishes historical previews", () => {
     const unknown = source({ currentYearRepaid: undefined, sourceFactsConfirmed: undefined });
     expect(unknown.currentYearRepaid).toBeUndefined();
@@ -74,13 +95,13 @@ describe("Actual Form 1099-G source treatment", () => {
   });
 
   it("preserves refund source years without inventing taxable refunds", () => {
-    const result = calculateForm1099G([source({ stateOrLocalTaxRefund: "250.75", refundTaxYear: 2024 })], 2026);
-    expect(result.refundSources[0]).toMatchObject({ sourceId: "g1", refundTaxYear: 2024, accountHolder: "primary" });
+    const result = calculateForm1099G([source({ stateOrLocalTaxRefund: "250.75", refundTaxYear: 2024, refundExpenseTaxYear: 2024 })], 2026);
+    expect(result.refundSources[0]).toMatchObject({ sourceId: "g1", refundTaxYear: 2024, refundExpenseTaxYear: 2024, accountHolder: "primary" });
     expect(result.refundSources[0]?.amount.toFixed()).toBe("250.75");
     expect(result.otherIncome.toFixed()).toBe("0");
     expect(() => calculateForm1099G([source({ stateOrLocalTaxRefund: "50" })], 2026)).toThrow(/refund.*year/i);
-    expect(() => calculateForm1099G([source({ stateOrLocalTaxRefund: "50", stateLocalIncomeTaxRefund: "51", refundTaxYear: 2025 })], 2026)).toThrow(/refund.*reconcil|alias/i);
-    const aliases = calculateForm1099G([source({ stateOrLocalTaxRefund: "50", stateLocalIncomeTaxRefund: "50", refundTaxYear: 2025 })], 2026);
+    expect(() => calculateForm1099G([source({ stateOrLocalTaxRefund: "50", stateLocalIncomeTaxRefund: "51", refundTaxYear: 2025, refundExpenseTaxYear: 2025 })], 2026)).toThrow(/refund.*reconcil|alias/i);
+    const aliases = calculateForm1099G([source({ stateOrLocalTaxRefund: "50", stateLocalIncomeTaxRefund: "50", refundTaxYear: 2025, refundExpenseTaxYear: 2025 })], 2026);
     expect(aliases.refundSources[0]?.amount.toFixed()).toBe("50");
   });
 
@@ -98,7 +119,7 @@ describe("Actual Form 1099-G source treatment", () => {
   });
 
   it("rejects unclassified or separately routed payments and unsupported repayments", () => {
-    for (const changes of [{ priorYearRepaid: "3000" }, { priorYearRepaid: "3000.01" }, { taxableGrants: "1" }, { taxableGrants: "1", grantIncomeCategory: "business" }, { agriculturePayments: "1" }, { marketGain: "1" }, { stateOrLocalTaxRefund: "1", refundTaxYear: 2025, tradeOrBusinessRefund: true }, { programType: "employer-supplemental" }, { programType: "private-or-union" }, { additionalWorksheetRequired: true }]) {
+    for (const changes of [{ priorYearRepaid: "3000" }, { priorYearRepaid: "3000.01" }, { taxableGrants: "1" }, { taxableGrants: "1", grantIncomeCategory: "business" }, { agriculturePayments: "1" }, { marketGain: "1" }, { stateOrLocalTaxRefund: "1", refundTaxYear: 2025, refundExpenseTaxYear: 2025, tradeOrBusinessRefund: true }, { programType: "employer-supplemental" }, { programType: "private-or-union" }, { additionalWorksheetRequired: true }]) {
       expect(() => calculateForm1099G([source(changes)], 2026)).toThrow(/separate|worksheet|classification|program|grant|farm|repayment|business/i);
     }
   });

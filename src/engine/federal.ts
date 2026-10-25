@@ -36,6 +36,7 @@ import { calculateForm8812 } from "./forms/form-8812.js";
 import { calculatePersonalCreditOrdering } from "./forms/personal-credit-ordering.js";
 import { calculateChildCreditEligibility } from "./forms/child-credit-eligibility.js";
 import { calculateForm8959 } from "./forms/form-8959.js";
+import { calculateForm1099G } from "./forms/form-1099-g.js";
 import { calculateForm8960 } from "./forms/form-8960.js";
 import {
   calculateForm1116,
@@ -1409,12 +1410,33 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     }
     : input;
 
+  const form1099G = calculateForm1099G(input.form1099G ?? [], year, filingStatus);
+  if (form1099G.sources.some(source => source.accountHolder === "spouse") && !input.taxpayer.spouse) {
+    throw new Error("Government spouse sources require actual joint-return spouse facts");
+  }
+  const historicalRefundForms = (input.form1099G ?? []).map(form => {
+    const current = d(form.stateOrLocalTaxRefund), legacy = d(form.stateLocalIncomeTaxRefund);
+    if (![current, legacy].every(value => value.isFinite() && value.gte(0))
+      || (current.gt(0) && legacy.gt(0) && !current.eq(legacy))) {
+      throw new Error("Form1099G refund source aliases must be finite, nonnegative and reconciled");
+    }
+    if (current.plus(legacy).gt(0) && (form.refundExpenseTaxYear ?? form.refundTaxYear) === year
+      && !form1099G.refundSources.some(source => source.sourceId === form.sourceId)) {
+      throw new Error("Same-year refund requires complete actual government source facts");
+    }
+    return { stateLocalIncomeTaxRefund: Decimal.max(current, legacy).toString(), refundTaxYear: form.refundTaxYear, refundExpenseTaxYear: form.refundExpenseTaxYear };
+  }).filter(form => (form.refundExpenseTaxYear ?? form.refundTaxYear) !== year);
+  if (form1099G.refundSources.some(source => source.refundExpenseTaxYear < year && source.amount.gt(0))
+    && !input.taxableRefundWorksheet) {
+    throw new Error("Actual prior-year refund requires its historical tax-benefit worksheet");
+  }
+
   // ── Taxable Refund Worksheet (Schedule 1 Line 1) ──
   let taxableRefundWorksheetResult: TaxableRefundWorksheetResult | undefined;
   let taxableStateRefund: Decimal | undefined;
   if (input.taxableRefundWorksheet) {
     taxableRefundWorksheetResult = calculateTaxableRefundWorksheet(
-      input.form1099G ?? [],
+      historicalRefundForms,
       input.taxableRefundWorksheet,
       input.taxpayer.taxYear,
     );
@@ -1595,6 +1617,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   const mortgageInterestRecovery = mortgageSourceResult.additionalTaxableInterestRecovery;
   const otherIncome = sum(
     mortgageInterestRecovery,
+    form1099G.otherIncome,
     miscOtherIncome,
     sched1.taxableRefunds,
     sched1.otherGainsOrLosses,
@@ -2484,6 +2507,9 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     digitalAssetIncome: cryptoHobbyIncome,
     estateTerminationDeduction: k1Form1041Section67eDeductions,
     otherIncomeItems: [
+      { source: "Government RTAA", amount: form1099G.taxableRtaa },
+      { source: "Government nonbusiness taxable grants", amount: form1099G.taxableGrants },
+      { source: "State PFML family-leave benefits", amount: form1099G.taxableFamilyLeave },
       { source: "Form1099-MISC other income", amount: miscAgg.otherIncome },
       { source: "Form1099-MISC unclassified rents", amount: miscAgg.rents },
       { source: "HSA returned-excess earnings", amount: form1099SA.hsaReturnedExcessContributionEarnings },
@@ -3413,7 +3439,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     ...(input.formRRB1099 ?? []).map((f) => d(f.federalWithheld)),
     necAgg.federalWithheld,
     miscAgg.federalWithheld,
-    ...(input.form1099G ?? []).map((f) => d(f.federalWithheld)),
+    form1099G.federalWithheld,
     form1099KResult.federalWithholding
   );
   const k1FederalWithholding = [...input.scheduleK1, ...k1Form1041s].map(k1 => d(k1.federalIncomeTaxWithheld));
@@ -3874,6 +3900,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     form8915F: form8915FResult,
     form1098ESummary: form1098EResult,
     studentLoanInterestWorksheet: studentLoanInterestWorksheetResult,
+    form1099G: (input.form1099G ?? []).length ? form1099G : undefined,
     taxableRefundWorksheet: taxableRefundWorksheetResult,
     salesTaxDeduction: salesTaxResult,
     scheduleK1Form1041Summary: k1Form1041Summary,

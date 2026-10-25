@@ -22,6 +22,7 @@ import { calculateForm1099R } from "@/engine/forms/form-1099-r.js";
 import { calculateForm4797, type Form4797Result } from "@/engine/forms/form-4797.js";
 import { calculateSocialSecurityBenefitsWorksheet } from "@/engine/forms/social-security-benefits-worksheet.js";
 import { calculateIraReturnWorksheet } from "@/engine/forms/ira-return-worksheet.js";
+import { calculateForm1099G, type Form1099GResult } from "@/engine/forms/form-1099-g.js";
 import { calculateForm1099C } from "@/engine/forms/form-1099-c.js";
 import { calculateForm5329Hsa, type Form5329HsaResult } from "@/engine/forms/form-5329-hsa.js";
 import { calculateEducatorExpensesDeduction } from "@/engine/forms/educator-expenses.js";
@@ -78,6 +79,7 @@ export interface Schedule1Result {
   supplementalIncome: Decimal; // Line 5
   farmIncome: Decimal; // Line 6
   unemploymentCompensation: Decimal; // Line 7
+  governmentPayments: Form1099GResult; // Actual program/source reconciliation
   capitalGainLoss: Decimal; // Form 1040 Line 7 passthrough
   alimonyReceived: Decimal; // Line 2a
   nolDeduction: Decimal; // Line 8a (negative in other income)
@@ -303,15 +305,16 @@ export function calculateSchedule1(
   const farmIncome = extra?.schedFNetProfit ?? new Decimal(0);
   audit.record("Sched 1", "6", "Farm income or loss", farmIncome, "Schedule F Line 34");
 
-  // Line 7: Unemployment compensation (Form 1099-G Box 1)
-  const form1099Gs = input.form1099G ?? [];
-  const unemploymentCompensation = sum(
-    ...form1099Gs.map((f) => d(f.unemploymentCompensation))
-  );
+  const governmentPayments = calculateForm1099G(input.form1099G ?? [], input.taxpayer.taxYear, filingStatus);
+  audit.merge(governmentPayments.lines);
+  const unemploymentCompensation = governmentPayments.taxableUnemployment;
   audit.record("Sched 1", "7", "Unemployment compensation", unemploymentCompensation,
-    form1099Gs.length > 0
-      ? `Sum of ${form1099Gs.length} Form 1099-G Box 1 amount(s)`
-      : "No Form 1099-G unemployment compensation reported");
+    "Actual government receipts less current-year repayments and nondeductible contribution recovery",
+    { "Current-year benefits repaid": governmentPayments.currentYearRepaid });
+  audit.record("Sched 1", "7-repaid", "Current-year unemployment repaid", governmentPayments.currentYearRepaid,
+    "Actual source repayment amount; retained even when Box1 already reflects it");
+  audit.record("Sched 1", "8z", "Other government income", governmentPayments.otherIncome,
+    "Actual RTAA, nonbusiness taxable grants and state family-leave benefits; not self-employment income");
 
   const capitalGainLoss = extra?.capitalGainLoss ?? new Decimal(0);
 
@@ -524,7 +527,7 @@ export function calculateSchedule1(
   if (extra?.form2555IncomeReduction !== undefined) {
     audit.record("Sched 1", "8d", "Foreign earned income and housing exclusion", foreignIncomeExclusion.negated(), "Negative net Form2555line45; gross wages remain on1040line1z");
   }
-  const totalOtherIncome = sum(gamblingIncome, cancelledDebtIncome, hsaTaxableDistributions)
+  const totalOtherIncome = sum(gamblingIncome, cancelledDebtIncome, hsaTaxableDistributions, governmentPayments.otherIncome)
     .minus(nolDeduction).minus(foreignIncomeExclusion);
   audit.record("Sched 1", "9", "Total other income", totalOtherIncome,
     "Sum Lines 8a through 8z, including signed NOL and foreign exclusions");
@@ -684,6 +687,7 @@ export function calculateSchedule1(
   );
   const magiOtherIncome = sum(
     magiMiscOtherIncome,
+    governmentPayments.otherIncome,
     taxableRefunds,
     unemploymentCompensation,
     alimonyReceived,
@@ -883,6 +887,7 @@ export function calculateSchedule1(
     supplementalIncome,
     farmIncome,
     unemploymentCompensation,
+    governmentPayments,
     capitalGainLoss,
     alimonyReceived,
     nolDeduction,

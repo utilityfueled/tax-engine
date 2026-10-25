@@ -58,7 +58,7 @@ export interface TaxableRefundWorksheetResult {
 }
 
 export function calculateTaxableRefundWorksheet(
-  form1099Gs: Array<{ stateLocalIncomeTaxRefund?: string; refundTaxYear?: number }>,
+  form1099Gs: Array<{ stateLocalIncomeTaxRefund?: string; refundTaxYear?: number; refundExpenseTaxYear?: number }>,
   worksheet: TaxableRefundWorksheetInput,
   receivedTaxYear?: number,
 ): TaxableRefundWorksheetResult {
@@ -72,8 +72,9 @@ export function calculateTaxableRefundWorksheet(
   }
   for (const form of form1099Gs) {
     if (d(form.stateLocalIncomeTaxRefund).isNegative()) throw new Error("Tax refunds cannot be negative.");
-    if (d(form.stateLocalIncomeTaxRefund).greaterThan(0) && form.refundTaxYear !== undefined && form.refundTaxYear !== worksheet.priorTaxYear) {
-      throw new Error("Form 1099-G refund tax year does not match the worksheet origin year; mixed-year recoveries require separate worksheets.");
+    const expenseYear = form.refundExpenseTaxYear ?? form.refundTaxYear; // Historical aggregate compatibility only when actual expense year is absent.
+    if (d(form.stateLocalIncomeTaxRefund).greaterThan(0) && expenseYear !== undefined && expenseYear !== worksheet.priorTaxYear) {
+      throw new Error("Form 1099-G refund expense year does not match the worksheet origin year; mixed-year recoveries require separate worksheets.");
     }
   }
   audit.record("Taxable Refund WS", "origin_year", "Tax deduction origin year", d(worksheet.priorTaxYear), `Historical SALT limit $${saltCap}; receipt year ${receivedTaxYear ?? "not provided"}`);

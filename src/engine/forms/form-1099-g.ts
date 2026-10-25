@@ -39,7 +39,7 @@ export interface Form1099GResult {
   federalWithheld: Decimal;
   sources: GovernmentPaymentSource[];
   programs: GovernmentUnemploymentProgram[];
-  refundSources: Array<{ sourceId: string; accountHolder?: Owner; amount: Decimal; refundTaxYear: number }>;
+  refundSources: Array<{ sourceId: string; accountHolder?: Owner; amount: Decimal; refundTaxYear: number; refundExpenseTaxYear: number }>;
   stateWithholding: Array<{ sourceId: string; accountHolder?: Owner; state: string; statePayerId?: string; amount: Decimal }>;
   lines: CalculatedLine[];
 }
@@ -56,7 +56,7 @@ function text(value: string | undefined, label: string): string {
 }
 
 export function calculateForm1099G(forms: Form1099G[], taxYear = 2025, filingStatus?: TaxYearInput["taxpayer"]["filingStatus"]): Form1099GResult {
-  if (taxYear !== 2025 && taxYear !== 2026) throw new Error(`Form1099G source worksheet does not support tax year ${taxYear}.`);
+  if (![2022, 2023, 2024, 2025, 2026].includes(taxYear)) throw new Error(`Form1099G source worksheet does not support tax year ${taxYear}.`);
   const audit = new AuditTrail();
   const seenIds = new Set<string>(), seenStatements = new Set<string>();
   const sources: GovernmentPaymentSource[] = [];
@@ -64,14 +64,17 @@ export function calculateForm1099G(forms: Form1099G[], taxYear = 2025, filingSta
   const refundSources: Form1099GResult["refundSources"] = [];
   const stateWithholding: Form1099GResult["stateWithholding"] = [];
   for (const [index, form] of forms.entries()) {
-    const sourceFields = ["sourceId", "accountReference", "taxYear", "sourceFormRevision", "sourceFactsConfirmed", "actualReceiptConfirmed", "additionalWorksheetRequired", "programType", "rtaaPayments", "taxableGrants", "grantIncomeCategory", "agriculturePayments", "tradeOrBusinessRefund", "marketGain", "familyLeaveBenefits", "familyLeaveProgramType", "currentYearRepaid", "priorYearRepaid", "unemploymentReceivedBeforeRepayment", "box1IncludesCurrentYearRepayment", "repaymentSourceReference", "unrecoveredAfterTaxContributions", "contributionProgramId", "contributionHistoryReference", "contributionBalanceReconciled", "allProgramPaymentsIncluded", "stateTaxReporting", "statePayerId"] as const;
+    const sourceFields = ["sourceId", "refundExpenseTaxYear", "accountReference", "taxYear", "sourceFormRevision", "sourceFactsConfirmed", "actualReceiptConfirmed", "additionalWorksheetRequired", "programType", "rtaaPayments", "taxableGrants", "grantIncomeCategory", "agriculturePayments", "tradeOrBusinessRefund", "marketGain", "familyLeaveBenefits", "familyLeaveProgramType", "currentYearRepaid", "priorYearRepaid", "unemploymentReceivedBeforeRepayment", "box1IncludesCurrentYearRepayment", "repaymentSourceReference", "unrecoveredAfterTaxContributions", "contributionProgramId", "contributionHistoryReference", "contributionBalanceReconciled", "allProgramPaymentsIncluded", "stateTaxReporting", "statePayerId"] as const;
     const verified = taxYear === 2026 || sourceFields.some(field => form[field] !== undefined);
+    if (verified && taxYear < 2025) throw new Error("Actual Form1099G source worksheets are unavailable for this historical year; do not relabel the source.");
     const sourceId = verified ? text(form.sourceId, "source identity") : `legacy-${index + 1}`;
     if (seenIds.has(sourceId)) throw new Error("Form1099G duplicate source identity.");
     seenIds.add(sourceId);
     const record = (line: string, description: string, value: Decimal, formula: string) => audit.record("Form1099-G", `${sourceId}:${line}`, description, value, formula);
-    const box1 = amount(form.unemploymentCompensation, "Box1 unemployment");
-    const withheld = amount(form.federalWithheld, "Box4 withholding");
+    // Preserve the former direct-call preview only for historical records without
+    // any actual source contract. The verified path must retain missing facts.
+    const box1 = amount(verified ? form.unemploymentCompensation : form.unemploymentCompensation ?? "0", "Box1 unemployment");
+    const withheld = amount(verified ? form.federalWithheld : form.federalWithheld ?? "0", "Box4 withholding");
     let received = box1, repayment = new Decimal(0), balance = new Decimal(0), family = new Decimal(0), rtaa = new Decimal(0), grants = new Decimal(0);
     let programId = sourceId, programKey = JSON.stringify(["source", sourceId]);
     if (verified) {
@@ -118,9 +121,10 @@ export function calculateForm1099G(forms: Form1099G[], taxYear = 2025, filingSta
       const refundAmount = Decimal.max(refund, alias);
       if (refundAmount.gt(0)) {
         if (!Number.isInteger(form.refundTaxYear) || form.refundTaxYear === undefined || form.refundTaxYear < 1900 || form.refundTaxYear > taxYear) throw new Error("Form1099G requires the actual refund origin year.");
+        if (!Number.isInteger(form.refundExpenseTaxYear) || form.refundExpenseTaxYear === undefined || form.refundExpenseTaxYear < 1900 || form.refundExpenseTaxYear > taxYear) throw new Error("Form1099G requires the actual refunded expense year, separately from Box3.");
         if (form.tradeOrBusinessRefund) throw new Error("Form1099G business refund requires its separate business tax-benefit worksheet.");
-        refundSources.push({ sourceId, accountHolder: form.accountHolder, amount: refundAmount, refundTaxYear: form.refundTaxYear });
-        record("2", `Refund for actual tax year ${form.refundTaxYear}`, refundAmount, "Source amount only; separate historical tax-benefit calculation required");
+        refundSources.push({ sourceId, accountHolder: form.accountHolder, amount: refundAmount, refundTaxYear: form.refundTaxYear, refundExpenseTaxYear: form.refundExpenseTaxYear });
+        record("2", `Refund for state return ${form.refundTaxYear}, actual expense year ${form.refundExpenseTaxYear}`, refundAmount, "Source amount only; separate historical tax-benefit calculation required");
       }
       family = taxYear === 2026 ? amount(form.familyLeaveBenefits, "Box10 family leave") : amount(form.familyLeaveBenefits ?? "0", "family leave source");
       if (family.gt(0) && (taxYear !== 2026 || form.familyLeaveProgramType !== "state-pfml-family")) throw new Error("Form1099G family benefits require the actual 2026 source and state family-leave classification; medical/private benefits need separate treatment.");
@@ -168,5 +172,5 @@ export function calculateForm1099G(forms: Form1099G[], taxYear = 2025, filingSta
   const otherIncome = taxableFamilyLeave.plus(taxableRtaa).plus(taxableGrants);
   audit.record("Form1099-G", "taxable-unemployment", "Total taxable unemployment", taxableUnemployment, "Sum reconciled source programs once; downstream line rounding remains separate");
   audit.record("Form1099-G", "other-income", "Separate government other income", otherIncome, "State PFML family benefits plus RTAA plus confirmed nonbusiness taxable grants");
-  return { taxYear, sourceFactsVerified: sources.every(source => source.sourceFactsVerified), taxableUnemployment, currentYearRepaid: sumSources("currentYearRepaid"), taxableFamilyLeave, taxableRtaa, taxableGrants, otherIncome, federalWithheld: sumSources("federalWithheld"), sources, programs: [...programs.values()], refundSources, stateWithholding, lines: audit.getLines() };
+  return { taxYear, sourceFactsVerified: taxYear >= 2025 && sources.every(source => source.sourceFactsVerified), taxableUnemployment, currentYearRepaid: sumSources("currentYearRepaid"), taxableFamilyLeave, taxableRtaa, taxableGrants, otherIncome, federalWithheld: sumSources("federalWithheld"), sources, programs: [...programs.values()], refundSources, stateWithholding, lines: audit.getLines() };
 }
