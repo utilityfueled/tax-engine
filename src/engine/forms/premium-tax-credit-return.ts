@@ -3,7 +3,7 @@ import Decimal from "decimal.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { d, sum, zeroFloor } from "@/utils/decimal.js";
-import { calculateForm8962 } from "./form-8962.js";
+import { calculateForm8962, type Form8962Input } from "./form-8962.js";
 
 export function calculatePremiumTaxCreditReturn(params: {
   input: TaxYearInput;
@@ -13,7 +13,7 @@ export function calculatePremiumTaxCreditReturn(params: {
   foreignHousingDeduction: Decimal;
   socialSecurityBenefitsGross: Decimal;
   socialSecurityBenefitsTaxable: Decimal;
-}, coordination?: { method: "pub974-simplified-2025" | "pub974-simplified-2026"; stage: "worksheet-w" | "maximum" | "ordered" | "final"; repaymentLimit?: Decimal; orderedDeductionInterim?: boolean }) {
+}, coordination?: { method: NonNullable<Form8962Input["healthInsuranceCoordination"]>; stage: "worksheet-w" | "maximum" | "ordered" | "final"; repaymentLimit?: Decimal; orderedDeductionInterim?: boolean }) {
   const { input } = params;
   if (coordination?.orderedDeductionInterim && coordination.stage !== "maximum") throw new Error("Pub974 auxiliary400 is only for an interim maximum-deduction credit calculation.");
   for (const [name, amount] of Object.entries(params)) {

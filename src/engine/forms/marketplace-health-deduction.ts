@@ -115,4 +115,6 @@ export function calculateMarketplaceHealthDeduction(params: {
   ] as const) audit.record("Pub974 Simplified", line, label, amount, formula);
   return { method, businesses, maximumSpecifiedDeduction, specifiedDeduction, nonspecifiedDeduction, historicalLimit, lines: audit.getLines() };
 }
-export type MarketplaceHealthDeductionResult = ReturnType<typeof calculateMarketplaceHealthDeduction>;
+export type MarketplaceHealthDeductionResult = Omit<ReturnType<typeof calculateMarketplaceHealthDeduction>, "method"> & {
+  method: ReturnType<typeof calculateMarketplaceHealthDeduction>["method"] | "pub974-alternative-reentry-2026";
+};

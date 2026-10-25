@@ -1,0 +1,43 @@
+form: "Publication974 alternative renewed-eligibility calculation"
+fullName: "Actual2026 health deduction and premium credit after ordinary refiguring"
+taxYear: 2026
+irsReference: "https://www.irs.gov/irb/2014-33_IRB"
+notes: |
+  Refreshed October25,2026: RevProc2014-41 sections3,5.02,5.03 and current
+  Publication974 Self-Employed Health Insurance Deduction opening caution.
+  These permit an alternative calculation that satisfies both162(l) and36B;
+  the prescribed simplified ordered worksheets need not be restarted forever.
+  Section36B(f)(2), as amended by119-21 section71305, requires full excess
+  advance repayment after2025. The historical repayment ceiling is not used.
+  This implementation applies only when actual ordinary refiguring renews
+  eligibility and its specified deduction equals the verified combined maximum.
+  Recompute all AGI-sensitive claims on both alternative passes. Do not retain
+  earlier simplified worksheets or use its auxiliary400 percentage. This is a
+  permitted conservative method, not a claim of tax optimization. Examples are
+  derived from the controlling method and2026 constants, not published IRS
+  numerical examples. Actual2026 full-return readiness remains separately closed.
+lines:
+  - line: "alternative-initial"
+    description: "Compute actual initial credit at the verified maximum deduction"
+    formula: "After simplified finalStep2 ineligibility, refigure ordinary7206 and all listed claims. If actual eligibility returns, require2026 uncapped repayment and equality with the canonical combined maximum. Initial credit uses actual resulting household income, no retained ordered claims and no auxiliary400."
+    testRef: "tests/engine/federal-marketplace-health-reentry.test.ts::uses the alternative actual calculation when ordinary refiguring restores eligibility"
+  - line: "alternative-final"
+    description: "Recompute final income and credit at the alternative deduction"
+    formula: "Alternative specified deduction=min(source premiums-initial attributable credit, verified earned-income maximum). Recompute final AGI-sensitive deductions and actual8962 once at that amount. For derived106000 profit, net98511, ordinary12000 and IRA3370 give83141 MAGI; credit12000-round(83141*.0996)=3719. Health8281 gives IRA580, finalMAGI89650 and finalPTC0, with full6000 advance repayment."
+    testRef: "tests/engine/federal-marketplace-health-reentry.test.ts::uses the alternative actual calculation when ordinary refiguring restores eligibility"
+  - line: "source-finality"
+    description: "Validate supplied final income only against the completed method"
+    formula: "Interim income is derived privately from actual sources. A supplied final taxpayerMAGI must equal the final89650, not the initial83141. Preserve source records and forward the health deduction and final credit once. Final deduction plus attributable actual credit cannot exceed actual premiums."
+    testRef: "tests/engine/federal-marketplace-health-reentry.test.ts::reconciles final income without mutating or retaining interim source amounts"
+  - line: "ordinary-preserved"
+    description: "Keep genuinely ineligible ordinary refiguring intact"
+    formula: "When ordinary refiguring remains ineligible, retain its ordinary health and fresh listed deductions. Do not create an alternative method or suppress actual advance repayment."
+    testRef: "tests/engine/federal-marketplace-health-ordered.test.ts::refigures earlier claims when final Step2 is ineligible for PTC"
+  - line: "method-boundary"
+    description: "Reject a stale, auxiliary or unsupported starting worksheet"
+    formula: "Require actual2026 credit sources, verified annual or monthly credit audits, renewed eligibility and equality of the original ordinary deduction with the combined maximum. A different per-business maximum, historical cap, supplied interim400 or stale deduction is not the alternative step1 used by this method."
+    testRef: "tests/engine/forms/marketplace-health-reentry.test.ts::requires a verified actual maximum and credit before alternative re-entry"
+  - line: "final-loss-history"
+    description: "Retain only final regular and independent AMT loss results"
+    formula: "Run the canonical NOL context at every alternative health amount and retain only its final deductions, absorption and carry. A fully usable1000 regular vintage offsetting107076 profit less7565 half-SE leaves the same98511 starting income,8281 final health and89650 finalAGI; no AMT vintage is inferred from regular history."
+    testRef: "tests/engine/federal-marketplace-health-reentry.test.ts::keeps only final actual NOL carry after renewed eligibility"

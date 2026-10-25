@@ -45,7 +45,7 @@ export interface Form8962Input {
   filingStatus: FilingStatus;
   form1095A: TaxYearInput["form1095A"];
   /** Canonical engine context; never a TaxYearInput source flag or supplied amount. */
-  healthInsuranceCoordination?: "pub974-simplified-2025" | "pub974-simplified-2026";
+  healthInsuranceCoordination?: "pub974-simplified-2025" | "pub974-simplified-2026" | "pub974-alternative-reentry-2026";
   /** Computed WorksheetX/Y/Z result, never a taxpayer-provided Form8962 fact. */
   healthInsuranceRepaymentLimit?: Decimal;
   /** Internal Pub974 auxiliary calculation while an ordered claim remains; never final. */
@@ -120,7 +120,9 @@ export function calculateForm8962(input: Form8962Input): Form8962Result {
   if (facts) {
     if (facts.householdFactsConfirmed !== true || facts.coverageFactsConfirmed !== true) throw new Error("Form 8962 household and coverage facts must be confirmed");
     for (const flag of ["allocationRequired", "alternativeMarriageCalculationElected", "selfEmployedHealthInsuranceCoordinationRequired", "lawfulPresenceReconciliationRequired"] as const) {
-      if (flag === "selfEmployedHealthInsuranceCoordinationRequired" && facts[flag] === true && input.healthInsuranceCoordination === `pub974-simplified-${year}`) continue;
+      if (flag === "selfEmployedHealthInsuranceCoordinationRequired" && facts[flag] === true
+        && (input.healthInsuranceCoordination === `pub974-simplified-${year}`
+          || (year === 2026 && input.healthInsuranceCoordination === "pub974-alternative-reentry-2026"))) continue;
       if (facts[flag] !== false) throw new Error(`Form 8962 requires completed ${flag} worksheets or confirmed absence`);
     }
     if (typeof facts.canBeClaimedAsDependent !== "boolean" || typeof facts.qsehraAffected !== "boolean") throw new Error("Form 8962 dependency and QSEHRA facts must be confirmed");

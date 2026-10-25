@@ -148,7 +148,7 @@ it("refigures earlier claims when final Step2 is ineligible for PTC", () => {
   expect(result.form8962?.excessAPTCRepayment.toFixed()).toBe("6000");
 });
 
-it("rejects an ordinary no-credit result that regains actual eligibility", () => {
+it("uses a separate method when ordinary no-credit refiguring regains actual eligibility", () => {
   const input = actual(2026,"106000","1000","500");
   if (!input.form8962) throw new Error("Missing actual household source");
   input.form8962.taxFamilySize = 2;
@@ -160,5 +160,8 @@ it("rejects an ordinary no-credit result that regains actual eligibility", () =>
   // above the two-person84600 cliff. Ordinary health12000 instead permits
   // IRA3370 and income83141, which regains actual eligibility. A no-credit
   // method cannot publish this result, even before the premium double-benefit check.
-  expect(() => calculateFederalTax(input)).toThrow(/ordinary.*re-entry.*eligibility/i);
+  const result = calculateFederalTax(input);
+  expect(result.marketplaceHealthInsurance?.method).toBe("pub974-alternative-reentry-2026");
+  expect(result.schedule1?.seHealthInsurance.toFixed()).toBe("8281");
+  expect(result.form8962?.ptcAllowed.toFixed()).toBe("0");
 });

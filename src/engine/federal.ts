@@ -82,6 +82,7 @@ import { calculateForm8863 } from "./forms/form-8863.js";
 import type { calculateForm8962 } from "./forms/form-8962.js";
 import { calculatePremiumTaxCreditReturn } from "./forms/premium-tax-credit-return.js";
 import { calculateMarketplaceHealthDeduction, type MarketplaceHealthDeductionResult } from "./forms/marketplace-health-deduction.js";
+import { calculateMarketplaceHealthReentry } from "./forms/marketplace-health-reentry.js";
 import type { MarketplaceHealthPremiumGroup } from "./forms/marketplace-health-premiums.js";
 import { calculateMarketplaceHealthLimit, type MarketplaceHealthLimitResult } from "./forms/marketplace-health-limit.js";
 import { calculateUnreportedTipPayroll } from "./forms/unreported-tip-payroll.js";
@@ -204,7 +205,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   }
   let intermediate = calculateFederalTaxWithNol(input, { stage: "maximum", historicalLimit, ordered, orderedDeductionInterim: kinds.length > 0 });
   if (kinds.includes("passive") && !intermediate.passiveSpecialRequired) kinds.splice(kinds.indexOf("passive"), 1);
-  let deduction = calculateMarketplaceHealthDeduction({ input, groups: intermediate.groups, credit: intermediate.credit, historicalLimit });
+  let deduction: MarketplaceHealthDeductionResult = calculateMarketplaceHealthDeduction({ input, groups: intermediate.groups, credit: intermediate.credit, historicalLimit });
   const orderedAmounts: { kind: MarketplaceOrderedKind; amount: Decimal }[] = [];
   const orderedAudit = new AuditTrail();
   for (const [index, kind] of kinds.entries()) {
@@ -233,17 +234,29 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   const ordinary = deduction.method.startsWith("ordinary-no-ptc-");
   // Pub974 Simplified Step2: when the final iteration is ineligible, stop this
   // method and refigure the listed deductions using actual ordinary Form7206.
+  let reentered = false;
+  if (ordinary) {
+    // This is a private eligibility probe, so a supplied final source MAGI is
+    // reconciled only after choosing the method actually used on the return.
+    const refigured = calculateFederalTaxWithNol(input, { stage: "ordered", deduction });
+    if (refigured.credit.taxpayerEligible) {
+      deduction = calculateMarketplaceHealthReentry({ input, groups: refigured.groups,
+        credit: refigured.credit, ordinaryDeduction: deduction });
+      intermediate = refigured;
+      reentered = true;
+    }
+  }
   const result = calculateFederalTaxWithNol(input, { stage: "final", deduction, ordered: ordinary ? undefined : ordered });
-  if (ordinary && kinds.length) orderedAudit.record("Pub974 Ordered Deductions", "ordinary-refigure", "Ordinary health deduction used to refigure all listed claims",
+  if (ordinary && !reentered && kinds.length) orderedAudit.record("Pub974 Ordered Deductions", "ordinary-refigure", "Ordinary health deduction used to refigure all listed claims",
     roundDollar(deduction.specifiedDeduction.plus(deduction.nonspecifiedDeduction)), "FinalStep2 ineligible: discard retained interim claims and recalculate ordinary source worksheets");
   if (!result.form8962 || result.form8962.orderedDeductionInterim) throw new Error("Pub974 final premium tax credit is incomplete.");
-  if (ordinary && result.form8962.taxpayerEligible) throw new Error("Pub974 ordinary-method re-entry after renewed actual eligibility requires a supported coordination method.");
+  if (ordinary && !reentered && result.form8962.taxpayerEligible) throw new Error("Pub974 ordinary-method eligibility changed after the actual refiguring calculation.");
   const finalAllocation = calculateMarketplaceHealthDeduction({ input, groups: intermediate.groups, credit: result.form8962, historicalLimit });
   if (roundDollar(deduction.specifiedDeduction.plus(sum(...finalAllocation.businesses.map(row => row.allocatedCredit))))
     .gt(roundDollar(sum(...deduction.businesses.map(row => row.specifiedPremiums))))) throw new Error("Pub974 final deduction plus actual allocated credit exceeds source premiums.");
   result.marketplaceHealthInsurance = { ...deduction, step2Credit: intermediate.credit.ptcAllowed, finalCredit: result.form8962.ptcAllowed,
     maximumDeduction: deduction.maximumSpecifiedDeduction.plus(deduction.nonspecifiedDeduction) };
-  result.allLines.push(...(historicalLimit?.lines ?? []), ...orderedAudit.getLines(), ...deduction.lines);
+  result.allLines.push(...(historicalLimit?.lines ?? []), ...(reentered ? [] : orderedAudit.getLines()), ...deduction.lines);
   return result;
 }
 
@@ -3411,7 +3424,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       input, agi, taxExemptInterest, foreignIncomeReduction: form2555IncomeReduction,
       foreignHousingDeduction: form2555HousingDeduction,
       socialSecurityBenefitsGross, socialSecurityBenefitsTaxable,
-    }, marketplace ? { method: year === 2025 ? "pub974-simplified-2025" : "pub974-simplified-2026", stage: marketplace.stage,
+    }, marketplace ? { method: marketplace.deduction.method === "pub974-alternative-reentry-2026" ? marketplace.deduction.method
+      : year === 2025 ? "pub974-simplified-2025" : "pub974-simplified-2026", stage: marketplace.stage,
       repaymentLimit: marketplace.deduction.method.startsWith("ordinary-no-ptc-") ? undefined : marketplace.deduction.historicalLimit?.repaymentLimit ?? undefined } : undefined);
     netPremiumTaxCredit = form8962.netPTC;
     excessAPTCRepayment = form8962.excessAPTCRepayment;
