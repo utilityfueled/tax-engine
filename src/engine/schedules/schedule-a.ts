@@ -7,7 +7,7 @@
  */
 
 import Decimal from "decimal.js";
-import { calculateStateTaxPaymentsInYear } from "../forms/state-tax-payment-year.js";
+import { calculateStateLocalIncomeTaxDeduction } from "../forms/state-local-income-tax-deduction.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import type { FilingStatus, YearConstants } from "@/models/constants.js";
@@ -188,25 +188,13 @@ export function calculateScheduleA(
 
   // ── SALT (Lines 5a-5d) ─────────────────────────────────
   // Line 5a: State/local income taxes OR general sales taxes (taxpayer elects)
-  const stateTaxes = input.w2s.reduce(
-    (acc, w2) => acc.plus(d(w2.stateTaxWithheld)),
-    new Decimal(0)
-  );
-  const localTaxes = input.w2s.reduce(
-    (acc, w2) => acc.plus(d(w2.localTaxWithheld)),
-    new Decimal(0)
-  );
-  // Per IRS Schedule A Instructions Line 5a, state estimated tax payments
-  // made during the year are deductible as state/local income taxes.
-  const statePaymentsInYear = calculateStateTaxPaymentsInYear(input);
-  const additionalStateLocalIncomeTaxes = d(input.scheduleA?.additionalStateLocalIncomeTaxes);
-  const additionalRealEstateTaxes = d(input.scheduleA?.realEstateTaxes);
-  if ([additionalStateLocalIncomeTaxes, additionalRealEstateTaxes].some(amount => !amount.isFinite() || amount.lt(0))) throw new Error("Additional SALT payments must be finite and nonnegative");
-  const stateLocalIncomeTaxes = stateTaxes.plus(localTaxes).plus(statePaymentsInYear).plus(additionalStateLocalIncomeTaxes);
-
-  // Determine whether to use income taxes or sales taxes for Line 5a
   const salesTaxAmount = extra?.salesTaxDeduction ?? new Decimal(0);
   const hasSalesTaxElection = salesTaxAmount.greaterThan(0) && (extra?.salesTaxElected ?? false);
+  const incomeTaxSources = hasSalesTaxElection ? undefined : calculateStateLocalIncomeTaxDeduction(input);
+  if (incomeTaxSources) audit.merge(incomeTaxSources.lines);
+  const additionalRealEstateTaxes = d(input.scheduleA?.realEstateTaxes);
+  if (!additionalRealEstateTaxes.isFinite() || additionalRealEstateTaxes.lt(0)) throw new Error("Additional real estate tax payments must be finite and nonnegative");
+  const stateLocalIncomeTaxes = incomeTaxSources?.total ?? new Decimal(0);
 
   let stateLocalTaxes: Decimal;
   let line5aDescription: string;
@@ -214,11 +202,11 @@ export function calculateScheduleA(
   if (hasSalesTaxElection) {
     // Sales tax elected — use sales tax amount
     stateLocalTaxes = salesTaxAmount;
-    line5aDescription = `General sales tax deduction $${salesTaxAmount} (elected over income taxes $${stateLocalIncomeTaxes})`;
+    line5aDescription = `Elected general sales tax deduction $${salesTaxAmount}`;
   } else {
     // Default: income taxes
     stateLocalTaxes = stateLocalIncomeTaxes;
-    line5aDescription = `Sum W-2 Box 17 (state ${stateTaxes}) + Box 19 (local ${localTaxes}) + in-year state payments and applied credits (${statePaymentsInYear}) + other qualified income-tax payments (${additionalStateLocalIncomeTaxes})`;
+    line5aDescription = "SALT Income Tax WS total: actual W2/non-W2 withholding and in-year payments, excluding source withholding deducted elsewhere";
     if (salesTaxAmount.greaterThan(0)) {
       line5aDescription += ` (income taxes $${stateLocalIncomeTaxes} used over sales taxes $${salesTaxAmount})`;
     }

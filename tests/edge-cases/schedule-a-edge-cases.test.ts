@@ -1116,8 +1116,9 @@ describe("Schedule A - audit trail completeness", () => {
       { medicalExpenses: d(10000) }
     );
     for (const line of result.lines) {
-      expect(["Sched A", "SALT WS"]).toContain(line.form);
+      expect(["Sched A", "SALT WS", "SALT Income Tax WS"]).toContain(line.form);
     }
+    expect(result.lines.some(line => line.form === "SALT Income Tax WS" && line.line === "total")).toBe(true);
   });
 
   it("audit line 17 value matches totalItemized field", () => {

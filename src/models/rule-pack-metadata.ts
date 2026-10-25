@@ -27,7 +27,7 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.12",
+    ruleVersion: "2025.13",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
@@ -49,18 +49,19 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
       { url: "https://www.irs.gov/pub/irs-pdf/f1040s2.pdf", section: "Lines 1a, 2, 3, 18, 19 and 21", revision: "2025 final form", retrievedAt: "2026-10-24" },
       { url: "https://www.irs.gov/pub/irs-drop/n-25-67.pdf", section: "2025 QCD annual-limit comparison", revision: "Notice 2025-67", retrievedAt: "2026-10-24" },
       { url: "https://www.irs.gov/instructions/i6251", section: "Lines 1, 2a and 5; standard/senior add-backs and Exemption Worksheet", revision: "2025 instructions", retrievedAt: "2026-10-24" },
-      { url: "https://www.irs.gov/instructions/i1040sca", section: "Line 5e, State and Local Tax Deduction Worksheet", revision: "2025 instructions", retrievedAt: "2026-10-24" },
+      { url: "https://www.irs.gov/instructions/i1040sca", section: "Line5a source withholding and no duplicate deduction; line5e SALT limit worksheet", revision: "2025 instructions", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i1040s8", section: "Part I and Part II", revision: "2025 instructions", retrievedAt: "2026-10-24" },
     ],
     limitations: ["Legacy calculations plus SALT/CTC amount corrections; remaining eligibility and law changes require review.", "Final forms and enabled scenarios have not been independently qualified."],
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.7-law-integration-draft",
+    ruleVersion: "2026.8-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i1040sca", section: "Line5a source withholding, payment year and no duplicate deduction", revision: "2025 final instructions; applicable current-law rules", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/pub/irs-pdf/f8815.pdf", section: "Source bond history, coordinated education costs, prior-interest adjustment and line9 MAGI", revision: "2025 final form and instructions; independently indexed2026 thresholds", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i1099int", section: "Separate taxable Box 1 and Treasury Box 3 source amounts", revision: "Continuous-use January2024 instructions", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/publications/p915", section: "Worksheet1 lines3-8 and19; actual exclusion addbacks and lump-sum comparison", revision: "2025 final publication; applicable current-law rules", retrievedAt: "2026-10-25" },

@@ -4,6 +4,20 @@ taxYear: 2025
 irsReference: "https://www.irs.gov/instructions/i1040sca"
 
 lines:
+  - line: "5a-source-withholding"
+    description: "Include actual non-W2 withholding once without another-schedule duplication"
+    formula: "W2 state/local + actual INT/DIV/B/DA/NEC/MISC/G/K/W2G state withholding +1099R state/local withholding + in-year state payments/applied credits + separate additional income-tax payments minus actual non-W2 withholding deducted on other schedules.1099R state aliases count once; contradictory positive aliases reject."
+    irsRef: "ScheduleA instructions line5a, State and Local Income Taxes"
+    notes: "2026 positive non-W2 withholding requires actual nonW2IncomeTaxesDeductedElsewhere, including known0; unknown cannot become a confirmedzero. This contract covers modeled source withholding only."
+    testRef: "tests/engine/forms/state-local-income-tax-deduction.test.ts::includes modeled source withholding once and reconciles other-schedule deductions"
+  - line: "5a-source-comparison"
+    description: "Compare sales tax against the same complete income-tax deduction"
+    formula: "Use the identical source-based income-tax calculation for ScheduleAline5a and the sales-tax auto-comparison. An unconditional general-sales-tax election does not claim or require an unused income-tax deduction calculation."
+    testRef: "tests/engine/forms/state-local-income-tax-deduction.test.ts::uses all actual withholding in the sales-tax comparison"
+  - line: "5a-source-unknown"
+    description: "Preserve unknown and contradictory withholding allocation facts"
+    formula: "Reject nonfinite/negative payments, another-schedule deduction exceeding source withholding, incompatible1099R aliases, and missing2026 deduction allocation"
+    testRef: "tests/engine/forms/state-local-income-tax-deduction.test.ts::rejects unknown or contradictory withholding allocation facts"
   - line: "1"
     description: "Medical and dental expenses"
     formula: "Total unreimbursed medical/dental expenses"
@@ -24,7 +38,7 @@ lines:
   - line: "5a"
     description: "State and local income taxes OR general sales taxes"
     formula: |
-      Income tax path: Sum of W-2 Box17(state)+Box19(local) plus actual state estimated/extension payments made during the calendar return year and actual immediately prior-year state credits applied to this year.
+      Income tax path: Actual W2 and modeled non-W2 state/local withholding, less any non-W2 withholding deducted on other schedules, plus separate additional payments, state estimated/extension payments made during the calendar return year and immediately prior-year state credits applied to this year.
       Sales tax path: IRS Optional State Sales Tax Table amount (by AGI, state, exemptions, local rate)
         + actual sales tax on specific large purchases (vehicles, boats, etc.).
       When autoCompare is enabled, use whichever is larger.
@@ -32,6 +46,7 @@ lines:
     inputs:
       - "W-2 Box 17 (state tax withheld)"
       - "W-2 Box 19 (local tax withheld)"
+      - "Modeled non-W2 state/local withholding and actual amount already deducted on other schedules"
       - "State estimated/extension payment records with actual date in the calendar return year; next-January installment excluded even if for the same state return"
       - "salesTaxDeduction.state (for IRS table lookup)"
       - "salesTaxDeduction.localSalesTaxRate"

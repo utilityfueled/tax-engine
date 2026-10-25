@@ -52,7 +52,7 @@ import { calculateScheduleA } from "./schedules/schedule-a.js";
 import { calculateSchedule1A } from "./schedules/schedule-1-a.js";
 import { calculateItemizedDeductionLimit } from "./forms/itemized-deduction-limit.js";
 import { calculateStandardDeduction } from "./forms/standard-deduction.js";
-import { calculateStateTaxPaymentsInYear } from "./forms/state-tax-payment-year.js";
+import { calculateStateLocalIncomeTaxDeduction } from "./forms/state-local-income-tax-deduction.js";
 import { calculateForm6251 } from "./forms/form-6251.js";
 import { calculateForm8801 } from "./forms/form-8801.js";
 import { calculateForm8582 } from "./forms/form-8582.js";
@@ -1988,8 +1988,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     // Determine whether to use sales tax or income tax
     if (input.salesTaxDeduction.autoCompare) {
       // Auto-compare: compute income taxes and use whichever is larger
-      const incomeTaxes = w2Agg.statePlusLocal.plus(d(input.scheduleA?.additionalStateLocalIncomeTaxes))
-        .plus(calculateStateTaxPaymentsInYear(input));
+      const incomeTaxes = calculateStateLocalIncomeTaxDeduction(input).total;
       salesTaxElectedForLine5a = salesTaxDeductionAmount.greaterThan(incomeTaxes);
       audit.record("Sales Tax WS", "cmp", "Income tax vs sales tax comparison",
         salesTaxElectedForLine5a ? salesTaxDeductionAmount : incomeTaxes,

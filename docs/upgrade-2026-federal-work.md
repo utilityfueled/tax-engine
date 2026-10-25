@@ -730,3 +730,22 @@ bond/interest/metadata tests pass, root types and all3,282 then-current spec
 references pass; scoped lint has zeroerrors and diff/whitespace was reviewed.
 Metadata is2025.12/2026.7-law-integration-draft; qualification remains closed.
 PA source treatment and independent legal/form review remain separately owned.
+
+### Non-W2 state/local withholding deduction — 2026-10-25
+
+Refreshed ScheduleA line5a instructions. A shared source calculation now includes
+modeled INT/DIV/B/DA/NEC/MISC/G/K/W2G and1099R state/local withholding once, along
+with W2 amounts, actual in-year payments and separate additional payments.
+Equal1099R aliases count once; conflicting positive aliases reject. Actual
+non-W2 withholding deducted on other schedules is removed.2026 requires that
+allocation when positive non-W2 withholding exists; an explicit zero is valid
+and omitted facts remain unknown. A fixed sales-tax election does not require
+an unused income-tax allocation. Auto-comparison uses the same complete amount
+as ScheduleA, preventing a false choice caused by missing withholding.
+
+Spec-linked red tests reproduced450 instead of490 in the comparison and an
+unnecessary missing-fact rejection on fixed sales-tax election.220 focused
+ScheduleA/payment-year/sales-tax tests and six final source/metadata tests pass;
+root types, all3,289spec references and scoped lint pass (zeroerrors). The scoped
+diff was reviewed.2025.13/2026.8-law-integration-draft remain unqualified. OID
+withholding awaits its separately assigned corrected source contract.
