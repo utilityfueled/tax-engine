@@ -99,6 +99,8 @@ export function calculateForm8815(
       const born = date(bond.ownerDateOfBirth, "registered owner birth date");
       if (Number(redeemed.slice(0, 4)) !== taxYear || issued > redeemed || born > issued) throw new Error("Form 8815 bond dates contradict the redemption year or owner history.");
       if (!bond.bondType || !bond.registeredOwner || bond.ownershipConfirmed === undefined) throw new Error("Form 8815 requires actual bond classification and ownership facts.");
+      if (bond.registeredOwner === "taxpayer_and_spouse" && !bond.ageTestOwner) throw new Error("Form 8815 joint registration requires the actual age-test owner.");
+      if (bond.ageTestOwner && bond.registeredOwner !== "taxpayer_and_spouse" && bond.ageTestOwner !== bond.registeredOwner) throw new Error("Form 8815 age-test owner conflicts with actual bond registration.");
       const gross = amount(bond.proceeds, "redemption proceeds");
       const face = amount(bond.faceValue, "face value");
       const reported = amount(bond.priorYearInterestReported, "previously reported interest");

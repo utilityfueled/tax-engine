@@ -3328,6 +3328,8 @@ export const SavingsBondRedemptionSchema = z.preprocess((value) => {
   redemptionDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   ownerDateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   registeredOwner: z.enum(["taxpayer", "spouse", "taxpayer_and_spouse", "other"]).optional(),
+  /** Actual registered person used for the age-at-issue test; required for joint registration. */
+  ageTestOwner: z.enum(["taxpayer", "spouse"]).optional(),
   ownershipConfirmed: z.boolean().optional(),
   faceValue: optionalDecimalInput,
   priorYearInterestReported: optionalDecimalInput,
@@ -3341,6 +3343,8 @@ export const Form8815Schema = z.object({
   educationExpenses: z.array(z.object({
     sourceId: z.string().trim().min(1),
     beneficiaryName: z.string().trim().min(1),
+    /** Actual identity link to the taxpayer, spouse, or claimed dependent; never inferred from name. */
+    beneficiaryTaxId: z.string().trim().min(1).optional(),
     relationship: z.enum(["taxpayer", "spouse", "dependent", "other"]),
     dependentClaimed: z.boolean().optional(),
     institutionName: z.string().trim().min(1),

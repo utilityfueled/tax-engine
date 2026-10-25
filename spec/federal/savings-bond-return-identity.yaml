@@ -1,0 +1,31 @@
+form: "Form 8815 return identity"
+fullName: "Actual registered owner and education beneficiary reconciliation"
+taxYear: 2026
+irsReference: "https://www.irs.gov/pub/irs-pdf/f8815.pdf"
+notes: |
+  IRC135 and the Form8815 instructions require actual eligible registered
+  taxpayer/spouse ownership, age at issue, and education for the taxpayer,
+  spouse or claimed dependent. A separate source DOB or beneficiary assertion
+  cannot override the actual return household. Treasury31CFRPart321 Appendix
+  uses the assigned first-day-of-month issue date; that date rule stays in the
+  source calculator. Joint registration requires an explicit age-test owner;
+  no favorable birthday is selected. Identity errors never echo private IDs.
+  Historical2025 aggregate-only preview remains unverified and is not promoted
+  by this helper. Actual-source pathways and2026 require identity reconciliation.
+lines:
+  - line: "owner"
+    description: "Bind bond age facts to the actual registered return owner"
+    formula: "Taxpayer/spouse bond owner DOB must equal that actual person's valid return DOB; unknown identity cannot establish age eligibility"
+    testRef: "tests/engine/forms/savings-bond-return-identity.test.ts::binds actual bond owner dates to the return household"
+  - line: "joint-owner"
+    description: "Require the actual age-test owner on joint registration"
+    formula: "Joint registration needs both actual married household identities and explicit ageTestOwner taxpayer or spouse; the supplied DOB must match that named owner; standalone source calculation requires the role"
+    testRef: "tests/engine/forms/savings-bond-return-identity.test.ts::requires an explicit actual age-test owner for joint bonds"
+  - line: "beneficiary"
+    description: "Bind beneficiary claims to actual household identities"
+    formula: "Eligible taxpayer/spouse/claimed-dependent sources require matching actual beneficiaryTaxId and name; claimed dependents must identify one unique dependent in the return; known other or unclaimed recipients remain ineligible"
+    testRef: "tests/engine/forms/savings-bond-return-identity.test.ts::reconciles education beneficiaries to actual claimed household members"
+  - line: "historical-boundary"
+    description: "Preserve unknown source facts and legacy qualification boundary"
+    formula: "New optional identity fields preserve omission; only2025 aggregate-only legacy input may skip source identity validation; actual source evidence or2026 activates strict checks"
+    testRef: "tests/engine/forms/savings-bond-return-identity.test.ts::preserves unknown identity facts without promoting legacy sources"
