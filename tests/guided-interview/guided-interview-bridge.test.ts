@@ -1141,15 +1141,14 @@ describe("buildAdjustmentsInput", () => {
     expect(result!.hsaDeduction).toBe("0");
     expect(result!.studentLoanInterest).toBe("2500");
     expect(result!.selfEmployedHealthInsurance).toBe("0");
-    expect(result!.primaryEducatorExpenses).toBe("0");
+    expect(result!.educatorExpenses).toBe("0");
   });
 
-  it("maps educator expenses to primaryEducatorExpenses", () => {
-    const result = buildAdjustmentsInput({
+  it("does not assign an unexplained educator aggregate to the primary taxpayer", () => {
+    expect(() => buildAdjustmentsInput({
       ...emptyAdjustmentData,
       educatorExpenses: "300",
-    });
-    expect(result!.primaryEducatorExpenses).toBe("300");
+    })).toThrow(/actual educator sources/);
   });
 });
 

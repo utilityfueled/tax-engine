@@ -1,5 +1,6 @@
 import Decimal from "decimal.js";
 import { hsaFactErrors } from "./guided-hsa-facts";
+import { educatorFactErrors } from "./guided-educator-facts";
 import type { AdjustmentData, FilingStatus, OtherTaxesData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
 import { amountError, hasEnteredAmount, isActualDate } from "./guided-required-facts";
@@ -14,7 +15,7 @@ export function isDeductibleAlimony(data: AdjustmentData): boolean {
 
 export function adjustmentFactErrors(data: AdjustmentData | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null): Record<string, string> {
   if (!data) return {};
-  const errors: Record<string, string> = hsaFactErrors(data.hsaAccounts, filingStatus, taxYear);
+  const errors: Record<string, string> = { ...hsaFactErrors(data.hsaAccounts, filingStatus, taxYear), ...educatorFactErrors(data, filingStatus, taxYear) };
   for (const field of ["hsaDeduction", "studentLoanInterest", "selfEmployedHealthInsurance", "educatorExpenses", "iraDeduction", "alimonyPaid"] as const) {
     if (!hasEnteredAmount(data[field])) continue;
     const error = amountError(data[field], field);

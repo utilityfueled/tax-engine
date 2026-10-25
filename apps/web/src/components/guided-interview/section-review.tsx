@@ -235,16 +235,20 @@ function AdjustmentsSummary({ data }: { data: AdjustmentData | undefined }) {
     ...(data.hsaAccounts ?? []).map((account, index) => ({ label: `HSA ${index + 1} ${account.accountOwner || "unknown owner"}: personal contributions before limits`, value: account.contributionsMade })),
     { label: "Student loan interest", value: data.studentLoanInterest },
     { label: "SE health insurance", value: data.selfEmployedHealthInsurance },
-    { label: "Educator expenses", value: data.educatorExpenses },
+    { label: "Saved educator net expenses needing source reconciliation", value: data.educatorExpenses },
     { label: "IRA deduction", value: data.iraDeduction },
     { label: "Alimony paid", value: data.alimonyPaid },
   ].filter((item) => hasValue(item.value));
 
-  if (items.length === 0 && !data.hsaAccounts?.length) return <p className="guided-review-empty">No adjustments entered.</p>;
+  if (items.length === 0 && !data.hsaAccounts?.length && !data.educatorExpenseSources?.length) return <p className="guided-review-empty">No adjustments entered.</p>;
 
   return (
     <div className="guided-review-card">
       {!!data.hsaAccounts?.length && <p className="guided-hint">{data.hsaAccounts.length} HSA owner worksheet(s). Contributions are source amounts; eligibility and limits determine the deduction.</p>}
+      {(data.educatorExpenseSources ?? []).map((source, index) => <div key={`educator-${index}`}>
+        <p className="guided-hint">{source.sourceFactsConfirmed === true ? "Educator sources checked" : "Educator sources need confirmation"}. Paid costs below are before eligibility, reimbursements and deduction limits.</p>
+        {(source.expenses ?? []).map((expense, expenseIndex) => <div key={expenseIndex} className="guided-review-row"><span className="guided-review-label">Educator {index + 1} {source.accountHolder || "unknown owner"}: expense {expenseIndex + 1} before qualification</span><span className="guided-review-value">{hasEnteredAmount(expense.amount) ? formatCurrency(expense.amount) : "Unknown"}</span></div>)}
+      </div>)}
       {items.map((item) => (
         <div key={item.label} className="guided-review-row">
           <span className="guided-review-label">{item.label}</span>

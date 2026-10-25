@@ -1,0 +1,45 @@
+form: "Schedule 1 educator source facts"
+fullName: "Actual educator eligibility and qualified expense sources"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i1040gi"
+notes: |
+  Refreshed 2026-10-25: final 2025 Form1040 instructions Schedule1 line11,
+  TaxTopic458, IRC62(a)(2)(D)/(d), and RevProc2025-32 section4.12.
+  A school-year total is distinct from calendar-year paid expenses. Above-line
+  eligibility remains K-12 teacher/instructor/counselor/principal/aide and900hours.
+  The2026 section67 expanded itemized rule is a separate calculation, not an
+  inferred use of this above-line result. Actual exclusion worksheet amounts
+  under135/529/530 must be supplied; a1099Q gross distribution is not a default.
+  Unknown2025 raw engine records remain unverified legacy compatibility. Guided
+  collection requires actual facts for both years;2026 positive raw claims reject.
+lines:
+  - line: "11-eligibility"
+    description: "Use actual owner and school-year eligibility"
+    formula: "Sum actual nonoverlapping hours at qualifying K-12 schools in eligible roles. Require at least900hours in the same actual school year; owner must match return and spouse deductions require MFJ. Known ineligible facts allow zero; omitted facts block."
+    irsRef: "IRC62(d)(1); Form1040 Schedule1 line11 instructions"
+    testRef: "tests/engine/forms/educator-expense-sources.test.ts::uses actual owner and school-year hours without inferring eligibility"
+  - line: "11-net-cost"
+    description: "Deduct only actual net eligible costs, once per owner"
+    formula: "Sum dated ordinary/necessary qualified professional-development or classroom/safety costs, excluding duplicate benefits and ineligible nonathletic health/PE supplies. Subtract actual unreimbursed-cost adjustments and135/529/530 exclusions, floor at0, then apply the year-specific owner cap once. Unknown amounts are not0."
+    irsRef: "IRC62(a)(2)(D),62(d)(2); Topic458; RevProc2025-32 section4.12"
+    testRef: "tests/engine/forms/educator-expense-sources.test.ts::reconciles exact qualified costs and education benefit reductions before each cap"
+  - line: "11-source-integrity"
+    description: "Reject incomplete, duplicate or contradictory claims"
+    formula: "Require actual source year, confirmed records, unique expense IDs and one worksheet per owner. A positive2026 raw amount cannot establish qualification; an actual-source result must reconcile any positive legacy net amount."
+    irsRef: "Form1040 Schedule1 line11 actual qualified expenses"
+    testRef: "tests/engine/forms/educator-expense-sources.test.ts::keeps unknown zero and unsupported raw claims distinct"
+  - line: "guided-source"
+    description: "Preserve educator sources in the guided adapter"
+    formula: "Blank remains unknown and exact0/false remains supplied. Retain source costs that fail qualification and old aggregate facts; require reconciliation rather than assign a raw aggregate to the primary educator."
+    irsRef: "Form1040 Schedule1 line11 source qualification"
+    testRef: "tests/guided-interview/guided-educator-facts.test.ts::forwards actual educator facts and blocks an unexplained legacy aggregate"
+  - line: "guided-events"
+    description: "Source edits invalidate confirmation"
+    formula: "Changing owner, year, school, expenses, benefit sources or household context requires rechecking. Add/remove actions preserve unknown defaults; actual zero and large cents survive user input."
+    irsRef: "Form1040 Schedule1 line11 source records"
+    testRef: "tests/apps/web/educator-source-interactions.test.tsx::collects educator source facts without manufacturing zero or confirmation"
+  - line: "guided-route"
+    description: "Reach educator sources without an unrelated HSA or student loan"
+    formula: "Selecting actual educator expenses opens adjustments and requires an actual source worksheet. Review shows saved source costs and missing amounts separately from calculated deductions."
+    irsRef: "Form1040 Schedule1 line11 actual educator expenses"
+    testRef: "tests/guided-interview/guided-educator-facts.test.ts::opens the actual educator route and requires its source facts"

@@ -2979,6 +2979,32 @@ export const QBIDeductionAllocationsSchema = z.object({
   })),
 });
 
+/** Schedule 1 line 11 actual sources; omitted qualification is not a negative answer. */
+export const EducatorExpenseSourceSchema = z.object({
+  accountHolder: z.enum(["primary", "spouse"]).optional(),
+  taxYear: z.number().int().optional(),
+  schoolYear: z.string().optional(),
+  sourceFactsConfirmed: z.boolean().optional(),
+  schools: z.array(z.object({
+    name: z.string(),
+    role: z.enum(["teacher", "instructor", "counselor", "principal", "aide", "other"]).optional(),
+    schoolEligible: z.boolean().optional(),
+    hoursWorked: optionalDecimalInput,
+  })).optional(),
+  expenses: z.array(z.object({
+    sourceId: z.string(), datePaid: z.string(), description: z.string(),
+    category: z.enum(["classroom", "professional_development", "protective_supplies", "other"]).optional(),
+    amount: optionalDecimalInput,
+    ordinaryAndNecessary: z.boolean().optional(), qualifyingUse: z.boolean().optional(),
+    healthOrPhysicalEducation: z.boolean().optional(), athleticSupplies: z.boolean().optional(),
+    deductedElsewhere: z.boolean().optional(),
+  })).optional(),
+  reimbursementsNotInWages: optionalDecimalInput,
+  excludedSavingsBondInterest: optionalDecimalInput,
+  nontaxableQualifiedTuitionProgramAmount: optionalDecimalInput,
+  nontaxableCoverdellEarnings: optionalDecimalInput,
+});
+
 export const AdjustmentsSchema = z.object({
   estimatedTaxPayments: z
     .array(
@@ -3014,6 +3040,7 @@ export const AdjustmentsSchema = z.object({
   educatorExpenses: optionalDecimal,
   primaryEducatorExpenses: optionalDecimal,
   spouseEducatorExpenses: optionalDecimal,
+  educatorExpenseSources: z.array(EducatorExpenseSourceSchema).optional(),
   businessExpenseAdjustments: optionalDecimal,
   hsaDeduction: optionalDecimal,
   armedForcesMovingExpenses: optionalDecimal,

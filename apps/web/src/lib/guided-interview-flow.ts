@@ -1,5 +1,6 @@
 import { hsaFactErrors, type HsaAccountData } from "./guided-hsa-facts";
 import type { StandardDeductionData } from "./guided-standard-deduction-facts";
+import { educatorFactErrors, type EducatorSourceData } from "./guided-educator-facts";
 /**
  * Guided interview flow — state model, section routing, skip logic, and progress.
  *
@@ -74,7 +75,8 @@ export type LifeEvent =
   | "got-divorced"
   | "started-business"
   | "student-loans"
-  | "hsa-contributions";
+  | "hsa-contributions"
+  | "educator-expenses";
 
 export const lifeEventOptions: { value: LifeEvent; label: string; hint: string }[] = [
   { value: "bought-home", label: "Bought a home", hint: "Mortgage interest deduction may apply" },
@@ -85,6 +87,7 @@ export const lifeEventOptions: { value: LifeEvent; label: string; hint: string }
   { value: "started-business", label: "Started a business", hint: "Schedule C, self-employment tax" },
   { value: "student-loans", label: "Paid student loan interest", hint: "Above-the-line deduction up to $2,500" },
   { value: "hsa-contributions", label: "HSA contributions or distributions", hint: "Actual HSA statements and eligibility" },
+  { value: "educator-expenses", label: "Paid educator expenses", hint: "Actual school work and paid classroom or professional development costs" },
 ];
 
 // ── State of residence ─────────────────────────────────────────────────────
@@ -395,11 +398,12 @@ export function buildSectionRoute(segmentation: SegmentationAnswers): InterviewS
     if (section) sections.push(section);
   }
 
-  // Adjustments — include if self-employment, student loans, or HSA
+  // Adjustments — include when the taxpayer selects a supported source route.
   const needsAdjustments =
     segmentation.incomeTypes.includes("self-employment") ||
     segmentation.lifeEvents.includes("student-loans") ||
-    segmentation.lifeEvents.includes("hsa-contributions");
+    segmentation.lifeEvents.includes("hsa-contributions") ||
+    segmentation.lifeEvents.includes("educator-expenses");
   if (needsAdjustments) {
     const adj = allSections.find((s) => s.id === "adjustments");
     if (adj) sections.push(adj);
@@ -889,6 +893,7 @@ export interface AdjustmentData {
   studentLoanInterest: string;
   selfEmployedHealthInsurance: string;
   educatorExpenses: string;
+  educatorExpenseSources?: EducatorSourceData[];
   iraDeduction: string;
   alimonyPaid: string;
   iraContributions?: {
@@ -1446,6 +1451,7 @@ export function updateSectionData(
   const adjustments = state.sectionData.adjustments;
   const iraSourcesChanged = ["income-w2", "income-self-employment", "income-retirement"].includes(sectionId) && adjustments?.iraContributions;
   const hsaSourcesChanged = ["income-w2", "personal-info"].includes(sectionId) && adjustments?.hsaAccounts;
+  const educatorSourcesChanged = ["income-w2", "personal-info", "credits", "income-investments"].includes(sectionId) && adjustments?.educatorExpenseSources;
   const benefitSourcesChanged = (sectionId === "income-w2" || sectionId === "income-self-employment") && credits?.dependentCareBenefits;
   const ohioStateReturn = state.sectionData["state-return"];
   const ohioInterestChanged = sectionId === "income-investments" && ohioStateReturn?.ohioInterestAllocation;
@@ -1455,7 +1461,7 @@ export function updateSectionData(
       ...state.sectionData,
       [sectionId]: data,
       ...(ohioInterestChanged && ohioStateReturn ? { "state-return": { ...ohioStateReturn, ohioInterestAllocation: { ...ohioInterestChanged, sourceFactsConfirmed: null } } } : {}),
-      ...((iraSourcesChanged || hsaSourcesChanged) && adjustments ? { adjustments: { ...adjustments, ...(iraSourcesChanged ? { iraContributions: { ...iraSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(hsaSourcesChanged ? { hsaAccounts: hsaSourcesChanged.map(account => ({ ...account, sourceFactsConfirmed: null })) } : {}) } } : {}),
+      ...((iraSourcesChanged || hsaSourcesChanged || educatorSourcesChanged) && adjustments ? { adjustments: { ...adjustments, ...(iraSourcesChanged ? { iraContributions: { ...iraSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(hsaSourcesChanged ? { hsaAccounts: hsaSourcesChanged.map(account => ({ ...account, sourceFactsConfirmed: null })) } : {}), ...(educatorSourcesChanged ? { educatorExpenseSources: educatorSourcesChanged.map(source => ({ ...source, sourceFactsConfirmed: null })) } : {}) } } : {}),
       ...(benefitSourcesChanged ? { credits: { ...credits, dependentCareBenefits: { ...credits.dependentCareBenefits,
         sourceFactsConfirmed: null, earnedIncomeWorksheetConfirmed: null, creditExpenseCoordinationConfirmed: null } } } : {}),
     },
@@ -1735,7 +1741,7 @@ function validateAdjustmentsSection(data: AdjustmentData | undefined, filingStat
   if (!data) return EMPTY_SECTION("adjustments info", true);
   const errors = adjustmentFactErrors(data, filingStatus, taxYear);
   if (Object.keys(errors).length) return validateRequiredFacts(errors);
-  if (data.iraContributions || data.hsaAccounts?.length) return VALID_SECTION;
+  if (data.iraContributions || data.hsaAccounts?.length || data.educatorExpenseSources?.length) return VALID_SECTION;
   const hasAny = Object.values(data).some((v) => typeof v === "string" && hasNumericValue(v));
   if (!hasAny) return EMPTY_SECTION("adjustments info", true);
   return VALID_SECTION;
@@ -1777,7 +1783,7 @@ export function validateSection(
     case "deductions":
       return validateDeductionsSection(getSectionData(state, "deductions"), state.taxYear, nonW2TaxAllocationErrors(state), state.segmentation.filingStatus);
     case "adjustments": {
-      const errors = hsaFactErrors(getSectionData(state, "adjustments")?.hsaAccounts, state.segmentation.filingStatus, state.taxYear, getSectionData(state, "income-w2")?.entries ?? [], getSectionData(state, "personal-info"), state.segmentation.lifeEvents.includes("hsa-contributions"));
+      const errors = { ...hsaFactErrors(getSectionData(state, "adjustments")?.hsaAccounts, state.segmentation.filingStatus, state.taxYear, getSectionData(state, "income-w2")?.entries ?? [], getSectionData(state, "personal-info"), state.segmentation.lifeEvents.includes("hsa-contributions")), ...educatorFactErrors(getSectionData(state, "adjustments"), state.segmentation.filingStatus, state.taxYear, state.segmentation.lifeEvents.includes("educator-expenses")) };
       return Object.keys(errors).length ? validateRequiredFacts(errors) : validateAdjustmentsSection(getSectionData(state, "adjustments"), state.segmentation.filingStatus, state.taxYear);
     }
     case "credits": {

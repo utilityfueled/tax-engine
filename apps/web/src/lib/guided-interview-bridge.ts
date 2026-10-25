@@ -1,4 +1,5 @@
 import { buildHsaInputs, hsaFactErrors } from "./guided-hsa-facts";
+import { buildEducatorSources, educatorFactErrors } from "./guided-educator-facts";
 import { buildStandardDeductionFacts } from "./guided-standard-deduction-facts";
 import { buildActualEducationInput } from "./guided-education-facts";
 /**
@@ -367,15 +368,16 @@ export function buildDonationsInput(deductionData: DeductionData | undefined) {
 
 // ── Adjustments converter ───────────────────────────────────────────────────
 
-export function buildAdjustmentsInput(adjustmentData: AdjustmentData | undefined) {
+export function buildAdjustmentsInput(adjustmentData: AdjustmentData | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null) {
   if (!adjustmentData) return undefined;
-  assertKnownFacts(adjustmentFactErrors(adjustmentData));
+  assertKnownFacts(adjustmentFactErrors(adjustmentData, filingStatus, taxYear));
 
   // The HSA deduction is calculated from the actual Form 8889 facts.
   const hsaDeduction = "0";
   const studentLoanInterest = toDecimalString(adjustmentData.studentLoanInterest);
   const selfEmployedHealthInsurance = toDecimalString(adjustmentData.selfEmployedHealthInsurance);
   const educatorExpenses = toDecimalString(adjustmentData.educatorExpenses);
+  const educatorExpenseSources = buildEducatorSources(adjustmentData.educatorExpenseSources, filingStatus, taxYear, adjustmentData.educatorExpenses);
   const alimony = hasEnteredAmount(adjustmentData.alimonyPaid) ? {
     alimonyPaid: isDeductibleAlimony(adjustmentData) ? toDecimalString(adjustmentData.alimonyPaid) : "0",
     ...(isDeductibleAlimony(adjustmentData) ? { alimonyRecipientSSN: adjustmentData.alimonyQualification?.recipientSsn } : {}),
@@ -385,7 +387,7 @@ export function buildAdjustmentsInput(adjustmentData: AdjustmentData | undefined
     hsaDeduction === "0" &&
     studentLoanInterest === "0" &&
     selfEmployedHealthInsurance === "0" &&
-    educatorExpenses === "0" && !alimony
+    educatorExpenses === "0" && !educatorExpenseSources?.length && !alimony
   ) {
     return undefined;
   }
@@ -394,7 +396,8 @@ export function buildAdjustmentsInput(adjustmentData: AdjustmentData | undefined
     hsaDeduction,
     studentLoanInterest,
     selfEmployedHealthInsurance,
-    primaryEducatorExpenses: educatorExpenses,
+    educatorExpenses,
+    educatorExpenseSources,
     ...alimony,
   };
 }
@@ -625,6 +628,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     assertKnownFacts(unemploymentFactErrors(unemploymentData, segmentation.filingStatus, state.taxYear, personalInfo, stateReturnData));
     assertKnownFacts(educationFactErrors(creditsData, state.taxYear, segmentation.filingStatus, personalInfo));
     assertKnownFacts(adjustmentFactErrors(adjustmentData, segmentation.filingStatus, state.taxYear));
+    assertKnownFacts(educatorFactErrors(adjustmentData, segmentation.filingStatus, state.taxYear, segmentation.lifeEvents.includes("educator-expenses")));
     assertKnownFacts(hsaFactErrors(adjustmentData?.hsaAccounts, segmentation.filingStatus, state.taxYear, w2Data?.entries ?? [], personalInfo, segmentation.lifeEvents.includes("hsa-contributions")));
     assertKnownFacts(householdFactErrors(otherTaxesData, state.taxYear));
     assertKnownFacts(statePaymentFactErrors(stateReturnData, state.taxYear, segmentation.stateCode));
@@ -651,7 +655,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
   const scheduleA = buildScheduleAInput(deductionData, stateReturnData);
   const form1098 = buildForm1098Inputs(deductionData, state.taxYear, segmentation.filingStatus);
   const donations = buildDonationsInput(deductionData);
-  const adjustments = buildAdjustmentsInput(adjustmentData);
+  const adjustments = buildAdjustmentsInput(adjustmentData, state.segmentation.filingStatus, state.taxYear);
   const ira = adjustmentData?.iraContributions;
   const iraDeductionWorksheet = ira ? {
     sourceFactsConfirmed: ira.sourceFactsConfirmed ?? undefined,

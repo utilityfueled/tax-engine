@@ -8,6 +8,7 @@ import {
 } from "@/lib/guided-interview-flow";
 import { CurrencyField } from "./currency-field";
 import { HsaSourceDetails } from "./hsa-source-details";
+import { EducatorSourceDetails } from "./educator-source-details";
 import { AdjustmentSourceDetails } from "./adjustment-source-details";
 
 export function SectionAdjustments({
@@ -63,13 +64,15 @@ export function SectionAdjustments({
             />
           )}
 
-          <CurrencyField
-            label="Educator expenses"
-            hint="Up to $300 ($600 MFJ if both are educators). Books, supplies, etc."
+          {current.educatorExpenses.trim() && <CurrencyField
+            label="Saved educator net-expense amount"
+            hint="Retained from the earlier interview. Reconcile this amount with actual net source expenses below. It does not establish an educator's eligibility."
             value={current.educatorExpenses}
             onChange={(v) => update("educatorExpenses", v)}
-          />
+          />}
         </div>
+
+        <EducatorSourceDetails sources={current.educatorExpenseSources} taxYear={taxYear} onChange={educatorExpenseSources => onDataChange({ ...current, educatorExpenseSources })} />
 
         {(hasHsa || current.hsaAccounts?.length || current.hsaDeduction.trim()) && <HsaSourceDetails data={current} filingStatus={filingStatus} taxYear={taxYear} onChange={onDataChange} />}
 
