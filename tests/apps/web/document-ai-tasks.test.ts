@@ -55,6 +55,11 @@ describe("grounded text-only document tasks", () => {
     await expect(analyzeUnsupportedDocumentWithGemini("source.txt", "SSN 123-45-6789", {}, run)).rejects.toThrow(/identifiers/);
     expect(run).not.toHaveBeenCalled();
   });
+  it("blocks an unredacted labelled name before the document task or provider runs", async () => {
+    const run = vi.fn();
+    await expect(analyzeUnsupportedDocumentWithGemini("source.txt", "Account holder\nMaría-José Nuñez", {}, run)).rejects.toThrow(/identifiers/);
+    expect(run).not.toHaveBeenCalled();
+  });
   it("extracts transaction rows deterministically without claiming business use", async () => {
     const run = vi.fn();
     const result = await analyzeBusinessExpenseStatementWithGemini("bank.txt",

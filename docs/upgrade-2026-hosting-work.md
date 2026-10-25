@@ -39,3 +39,19 @@ Remaining: independent security/privacy review, cross-browser/target-platform
 rehearsal, hosted account recovery/isolation/outage/billing/migration/restore and
 final release-image qualification. No hosted staging credentials or authority
 have been supplied in this execution.
+
+## Document-request privacy regression — 2026-10-24
+
+Ten new synthetic regressions first failed because labelled names without a
+second detectable identifier could pass through redaction. The multiline stop
+condition matched every letter without regard to case. Inline colon-separated,
+mixed-case and accented names also escaped the original uppercase patterns.
+
+Header redaction now handles these names and complete labelled mailing blocks,
+while preserving transaction dates, amounts and financial field boundaries.
+The provider guard separately rejects unredacted labelled names before the task
+executor runs. Tokens remain scoped to one document. Verification: 213 tests in
+seven privacy, document, provider-adapter and detection suites; web typecheck and
+scoped lint pass. This is a synthetic regression result, not a claim that regex
+redaction proves absence of all possible identifiers or an independent privacy
+approval. The independent review and representative PII evaluation remain open.

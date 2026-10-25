@@ -2,7 +2,8 @@ const personNameContextPatterns = [
   /(?:Uploaded by|Call|Contact|Reach|Verify)\s+([A-Z][a-z]+(?: [A-Z][a-z]+)+)\b/g,
   /Mail(?: [^.\n]*?)? to\s+([A-Z][a-z]+(?: [A-Z][a-z]+)+)\b/g,
   /\b([A-Z][a-z]+(?: [A-Z][a-z]+)+)\s+(?:confirmed|answered|matches|uses)\b/g,
-  /\bdependent\s+([A-Z][a-z]+(?: [A-Z][a-z]+)+)\b/gi
+  /\bdependent\s+([A-Z][a-z]+(?: [A-Z][a-z]+)+)\b/gi,
+  /\b(?:account holder|card member|recipient name|taxpayer name|spouse name|prepared for)(?:[\t ]+|[\t ]*:[\t ]*|\r?\n)([\p{L}][\p{L}\p{M}'.,-]*(?:[\t ]+[\p{L}][\p{L}\p{M}'.,-]*)*)/giu
 ] as const;
 const workspaceSlugPattern = /(?:^|[^a-z0-9])(?:workspace|return)[-_]([a-z]+(?:[._-][a-z]+)+)(?=$|[^a-z0-9])/gi;
 const ssnPattern = /(?<!\d)(?:\d{3}[-_.\s]?\d{2}[-_.\s]?\d{4})(?!\d)/;
