@@ -12,7 +12,7 @@ lines:
   - line: "registered-template"
     description: "Review templates are visibly marked before mapping"
     formula: "Verify registered revision/year, load, visibly stamp every page, then return."
-    testRef: "tests/pdf/review-template-notice.test.ts::marks every registered template before callers can return it"
+    testRef: "tests/pdf/review-template-notice.test.ts::marks every registered template before callers can return it: %s"
   - line: "appended-pages"
     description: "Pages added after the initial stamp remain review-only"
     formula: "Stamp each newly added page at finalization; repeated calls do not add duplicate notices to unchanged pages."

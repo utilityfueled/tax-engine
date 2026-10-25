@@ -17,13 +17,11 @@ function noticeCounts(doc: PDFDocument) {
 }
 
 describe("visible PDF review notices", () => {
-  it("marks every registered template before callers can return it", async () => {
-    for (const filename of Object.keys(REVIEW_TEMPLATE_PACKS[2025].templates)) {
-      const doc = await loadReviewTemplate(`forms/blank/2025/${filename}`, 2025);
-      const saved = await PDFDocument.load(await doc.save());
-      expect(saved.getSubject(), filename).toBe(REVIEW_PDF_NOTICE);
-      expect(noticeCounts(saved), filename).toEqual(saved.getPages().map(() => 1));
-    }
+  it.each(Object.keys(REVIEW_TEMPLATE_PACKS[2025].templates))("marks every registered template before callers can return it: %s", async filename => {
+    const doc = await loadReviewTemplate(`forms/blank/2025/${filename}`, 2025);
+    const saved = await PDFDocument.load(await doc.save());
+    expect(saved.getSubject(), filename).toBe(REVIEW_PDF_NOTICE);
+    expect(noticeCounts(saved), filename).toEqual(saved.getPages().map(() => 1));
   });
   it("marks appended pages and does not trust a matching metadata subject", async () => {
     const doc = await PDFDocument.create();

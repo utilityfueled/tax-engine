@@ -571,28 +571,24 @@ describe("workspace filled return download", () => {
     });
   });
   // Spec: spec/state/guided-state-routing.yaml.
-  it("preserves federal-only selection despite a PA or OH mailing address", async () => {
-    for (const mailingState of ["PA", "OH"]) {
-      const state = createGuidedFlowState();
-      const personal = state.sectionData["personal-info"];
-      if (!personal) throw new Error("Missing synthetic personal facts");
-      personal.state = mailingState;
-      state.segmentation.stateCode = null;
-      const download = await buildWorkspaceFilledReturnDownload(createWorkspace(), state);
-      expect(download.includedForms.some(form => form.startsWith("pa-") || form.startsWith("oh-"))).toBe(false);
-    }
+  it.each(["PA", "OH"])("preserves federal-only selection despite a PA or OH mailing address: %s", async mailingState => {
+    const state = createGuidedFlowState();
+    const personal = state.sectionData["personal-info"];
+    if (!personal) throw new Error("Missing synthetic personal facts");
+    personal.state = mailingState;
+    state.segmentation.stateCode = null;
+    const download = await buildWorkspaceFilledReturnDownload(createWorkspace(), state);
+    expect(download.includedForms.some(form => form.startsWith("pa-") || form.startsWith("oh-"))).toBe(false);
   });
-  it("does not print resident state forms for a part-year selection without allocations", async () => {
-    for (const selectedState of ["PA", "OH"]) {
-      const state = createGuidedFlowState();
-      const personal = state.sectionData["personal-info"];
-      if (!personal) throw new Error("Missing synthetic personal facts");
-      personal.state = selectedState;
-      personal.stateResidency = "part-year";
-      state.segmentation.stateCode = selectedState;
-      const download = await buildWorkspaceFilledReturnDownload(createWorkspace(), state);
-      expect(download.includedForms.some(form => form.startsWith("pa-") || form.startsWith("oh-"))).toBe(false);
-    }
+  it.each(["PA", "OH"])("does not print resident state forms for a part-year selection without allocations: %s", async selectedState => {
+    const state = createGuidedFlowState();
+    const personal = state.sectionData["personal-info"];
+    if (!personal) throw new Error("Missing synthetic personal facts");
+    personal.state = selectedState;
+    personal.stateResidency = "part-year";
+    state.segmentation.stateCode = selectedState;
+    const download = await buildWorkspaceFilledReturnDownload(createWorkspace(), state);
+    expect(download.includedForms.some(form => form.startsWith("pa-") || form.startsWith("oh-"))).toBe(false);
   });
   it("does not turn another state's W-2 withholding into an Ohio payment", async () => {
     const state = createGuidedFlowStateWithOhioStateSelection();
