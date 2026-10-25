@@ -1,0 +1,35 @@
+form: "Publication974 ordered health deductions"
+fullName: "Actual covered IRA, bond exclusion and student loan coordination"
+taxYear: 2026
+irsReference: "https://www.irs.gov/publications/p974"
+notes: |
+  Refreshed October25,2026: Special Instructions for Self-Employed Individuals
+  Who Claim Certain Deductions/Exclusions, WorksheetsY/Z; historical2020
+  Publication974 pp66-69 confirms the auxiliary400 instruction in a cliff year.
+  Final2026 eligibility still uses actual section36B(c)(1) household income.
+  Passive rental-loss ordering remains a separate internal implementation.
+lines:
+  - line: "ordered-loan"
+    description: "Calculate the next actual deduction using preceding Step3 health"
+    formula: "First omit the listed claims. Complete the simplified method through Step3. Compute the next actual deduction using that health amount, retain its amount and source MAGI, recompute Y/Z when X applies, and repeat. The final student-loan amount transfers once."
+    testRef: "tests/engine/federal-marketplace-health-ordered.test.ts::uses the prior Step3 health amount for the actual student loan worksheet"
+  - line: "ordered-ira"
+    description: "Retain previously calculated deductions in the published order"
+    formula: "When taxpayer or spouse is covered by a plan, calculate IRA first, then bond exclusion, then student-loan interest. Freeze each completed worksheet when computing later deductions and final health/PTC. Do not recalculate an earlier phased-out amount using later health."
+    testRef: "tests/engine/federal-marketplace-health-ordered.test.ts::retains the covered IRA worksheet while computing the following loan and final credit"
+  - line: "ordered-bond"
+    description: "Preserve actual bond interest and ordered exclusion once"
+    formula: "The actual Form8815 worksheet follows covered IRA and precedes student-loan interest. Preserve its original source MAGI and transfer only the allowed exclusion through ScheduleB; source identity and statement-interest reconciliation remain mandatory."
+    testRef: "tests/engine/federal-marketplace-health-ordered.test.ts::retains the bond exclusion before calculating student loan interest"
+  - line: "interim-400"
+    description: "Separate the auxiliary interim percentage from final eligibility"
+    formula: "While listed deductions remain, auxiliary Form8962 uses400 when Worksheet2 would otherwise require401, retaining actual household income and all other eligibility facts. Tag this as an interim calculation. Final2026 Form8962 recomputes actual percentage, denies credit above400 and repays all excess APTC. No source-input override exists."
+    testRef: "tests/engine/federal-marketplace-health-ordered.test.ts::uses auxiliary400 only before the final actual2026 eligibility calculation"
+  - line: "ordinary-refigure"
+    description: "Refigure earlier claims when final Step2 cannot take PTC"
+    formula: "On final Step2 ineligibility, stop the simplified method and calculate ordinary actual Form7206. Refigure IRA, bond and loan claims using that ordinary health deduction; discard retained interim claim amounts and X/Y/Z repayment overrides. Final actual Form8962 and premium conservation remain mandatory."
+    testRef: "tests/engine/federal-marketplace-health-ordered.test.ts::refigures earlier claims when final Step2 is ineligible for PTC"
+  - line: "ordinary-reentry"
+    description: "Reject an ordinary no-credit branch that regains actual PTC eligibility"
+    formula: "After the required ordinary refiguring, verify that final actual Form8962 remains ineligible. A newly eligible result cannot retain the ordinary-no-PTC method; require a separately supported re-entry method instead of returning inconsistent health and credit results or guessing an iteration."
+    testRef: "tests/engine/federal-marketplace-health-ordered.test.ts::rejects an ordinary no-credit result that regains actual eligibility"

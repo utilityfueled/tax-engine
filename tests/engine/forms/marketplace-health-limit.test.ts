@@ -44,3 +44,23 @@ it("requires actual finite worksheet inputs and unique premium sources", () => {
   expect(() => calculateMarketplaceHealthLimit({ ...base, groups: [group("1000","1001")] })).toThrow(/advance/i);
   expect(() => calculateMarketplaceHealthLimit({ ...base, taxYear: 2024 })).toThrow(/2025/i);
 });
+it("recomputes Y and Z in the published deduction order", () => {
+  const base = { taxYear: 2025, filingStatus: "single" as const, groups: [group("6000","3600","10000")], householdIncomeAfterW: d(46500), federalPovertyLine: d(15060) };
+  const result = calculateMarketplaceHealthLimit({ ...base, orderedDeductions: [
+    { kind: "ira", amount: d(500) }, { kind: "studentLoan", amount: d(1500) },
+  ] });
+  // X: (46500-975)/15060 >=300%, so1625. Y: (46000-975) <300%, so975.
+  // Z: (44500-375)/15060 >=200%, but (44500-975)<300%, so975.
+  expect(result.repaymentLimit?.toFixed()).toBe("975");
+  expect(result.maximumSpecifiedDeduction.toFixed()).toBe("3375");
+  const value = (form: string, line: string) => result.lines.find(row => row.form === form && row.line === line)?.value.toFixed();
+  expect(value("Pub974 Worksheet X","25")).toBe("1625");
+  expect(value("Pub974 Worksheet Y","3")).toBe("46000");
+  expect(value("Pub974 Worksheet Y","14")).toBe("975");
+  expect(value("Pub974 Worksheet Z 1","3")).toBe("44500");
+  expect(value("Pub974 Worksheet Z 1","14")).toBe("975");
+  expect(() => calculateMarketplaceHealthLimit({ ...base, orderedDeductions: [
+    { kind: "studentLoan", amount: d(1) }, { kind: "ira", amount: d(1) },
+  ] })).toThrow(/order/i);
+  expect(() => calculateMarketplaceHealthLimit({ ...base, orderedDeductions: [{ kind: "ira", amount: d(-1) }] })).toThrow(/nonnegative/i);
+});

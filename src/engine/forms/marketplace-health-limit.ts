@@ -5,6 +5,9 @@ import type { MarketplaceHealthPremiumGroup } from "./marketplace-health-premium
 import { AuditTrail } from "@/utils/audit.js";
 import { d, min, zeroFloor } from "@/utils/decimal.js";
 
+export type MarketplaceOrderedDeductionKind = "passive" | "ira" | "bond" | "studentLoan";
+export interface MarketplaceOrderedDeduction { kind: MarketplaceOrderedDeductionKind; amount: Decimal }
+
 export function calculateMarketplaceHealthLimit(params: {
   taxYear: number;
   filingStatus: FilingStatus;
@@ -14,8 +17,18 @@ export function calculateMarketplaceHealthLimit(params: {
   /** Actual canonical X8+X13 after deducting W17, excluding ordered deductions. */
   householdIncomeAfterW?: Decimal;
   federalPovertyLine?: Decimal;
+  /** Completed source worksheets, retained in the order prescribed by Pub974. */
+  orderedDeductions?: MarketplaceOrderedDeduction[];
 }) {
   if (params.taxYear !== 2025) throw new Error("This capped Marketplace worksheet requires tax year2025.");
+  const orderedDeductions = params.orderedDeductions ?? [];
+  let previousKind = -1;
+  for (const deduction of orderedDeductions) {
+    const position = ["passive", "ira", "bond", "studentLoan"].indexOf(deduction.kind);
+    if (position < 0 || position <= previousKind) throw new Error("Pub974 deductions must follow the published order without duplicate worksheets.");
+    if (!Decimal.isDecimal(deduction.amount) || !deduction.amount.isFinite() || deduction.amount.lt(0)) throw new Error("Pub974 ordered deductions require actual finite nonnegative amounts.");
+    previousKind = position;
+  }
   const audit = new AuditTrail();
   const seen = new Set<string>();
   const specified = params.groups.filter(row => row.months.length > 0);
@@ -72,17 +85,21 @@ export function calculateMarketplaceHealthLimit(params: {
     audit.record("Pub974 Worksheet X","14","Canonical household income",income,"Actual taxpayer X8 plus required-filing dependent X13, after W17");
     audit.record("Pub974 Worksheet X","17b","Actual federal poverty line",poverty,"Return-year household size and region");
     const tiers = params.filingStatus === "single" ? [375,975,1625] : [750,1950,3250];
-    for (let index = 0; index < tiers.length; index++) {
-      const adjustment = min(remainingAfterW,d(tiers[index]));
-      const adjustedIncome = zeroFloor(income.minus(adjustment));
-      const percentage = adjustedIncome.div(poverty).times(100).floor();
-      const line = [15,19,22][index];
-      audit.record("Pub974 Worksheet X",String(line),"Tentative repayment reduction",adjustment,"min(WorksheetW19, actual statutory repayment tier)");
-      audit.record("Pub974 Worksheet X",String(line+1),"Income after tentative repayment",adjustedIncome,`max(0,line14-line${line})`);
-      audit.record("Pub974 Worksheet X",String(index === 0 ? 18 : line+2),"Poverty percentage for repayment test",percentage,`floor(line${line+1}/line17b times100)`);
-      if (percentage.lt(200 + index * 100)) { repaymentLimit = d(tiers[index]); break; }
-    }
-    repaymentLimit ??= specifiedAdvances;
+    const testTiers = (household: Decimal, form: string, revised: boolean): Decimal => {
+      for (let index = 0; index < tiers.length; index++) {
+        const adjustment = min(remainingAfterW, d(tiers[index]));
+        const adjustedIncome = zeroFloor(household.minus(adjustment));
+        const percentage = adjustedIncome.div(poverty).times(100).floor();
+        const line = (revised ? [4,8,11] : [15,19,22])[index];
+        audit.record(form, String(line), "Tentative repayment reduction", adjustment, "min(WorksheetW19, actual statutory repayment tier)");
+        audit.record(form, String(line+1), "Income after tentative repayment", adjustedIncome, `max(0,line${revised ? 3 : 14}-line${line})`);
+        const percentageLine = index === 0 ? revised ? 7 : 18 : line+2;
+        audit.record(form, String(percentageLine), "Poverty percentage for repayment test", percentage, `floor(line${line+1}/line${revised ? 6 : "17b"} times100)`);
+        if (percentage.lt(200 + index * 100)) return d(tiers[index]);
+      }
+      return specifiedAdvances;
+    };
+    repaymentLimit = testTiers(income, "Pub974 Worksheet X", false);
     const beforePremiumLimit = preliminarySpecifiedDeduction.plus(repaymentLimit);
     const premiumLimit = min(beforePremiumLimit,specifiedPremiums);
     maximumSpecifiedDeduction = min(premiumLimit,earnedLimit);
@@ -95,8 +112,33 @@ export function calculateMarketplaceHealthLimit(params: {
       ["30","Maximum specified deduction",maximumSpecifiedDeduction,"min(line28,nonnegative line29)"],
       ["31","Maximum total health deduction",maximumSpecifiedDeduction.plus(nonspecifiedDeduction),"Line5+line30"],
     ] as const) audit.record("Pub974 Worksheet X",line,label,value,formula);
+    let revisedIncome = income;
+    orderedDeductions.forEach((deduction, index) => {
+      const form = index === 0 ? "Pub974 Worksheet Y" : `Pub974 Worksheet Z ${index}`;
+      const previousIncome = revisedIncome;
+      revisedIncome = revisedIncome.minus(deduction.amount);
+      audit.record(form, "1", "Household income before the next deduction", previousIncome, index === 0 ? "WorksheetX14" : "Previous Y/Z line3");
+      audit.record(form, "2", "Actual next ordered deduction", deduction.amount, `Completed ${deduction.kind} source worksheet using the preceding Step3 health deduction`);
+      audit.record(form, "3", "Revised household income", revisedIncome, "Line1-line2");
+      audit.record(form, "6", "Actual federal poverty line", poverty, "WorksheetX17b");
+      repaymentLimit = testTiers(revisedIncome, form, true);
+      const beforePremiumLimit = preliminarySpecifiedDeduction.plus(repaymentLimit);
+      const premiumLimit = min(beforePremiumLimit, specifiedPremiums);
+      maximumSpecifiedDeduction = min(premiumLimit, earnedLimit);
+      for (const [line, label, value, formula] of [
+        ["14", "Revised repayment limitation", repaymentLimit, "First qualifying tier; otherwise WorksheetW2; replaces Form8962Table5"],
+        ["15", "Initial specified deduction", preliminarySpecifiedDeduction, "WorksheetX6"],
+        ["16", "Initial deduction plus revised limit", beforePremiumLimit, "Line14+line15"],
+        ["17", "Specified premiums", specifiedPremiums, "WorksheetX27"],
+        ["18", "Premium-limited maximum", premiumLimit, "min(line16,line17)"],
+        ["19", "Remaining earned income", remainingEarnedIncome, "WorksheetX29"],
+        ["20", "Revised specified maximum", maximumSpecifiedDeduction, "min(line18,nonnegative line19)"],
+        ["21", "Nonspecified health deduction", nonspecifiedDeduction, "WorksheetX5"],
+        ["22", "Revised total maximum", maximumSpecifiedDeduction.plus(nonspecifiedDeduction), "Line20+line21"],
+      ] as const) audit.record(form, line, label, value, formula);
+    });
   }
-  return { taxYear: 2025, worksheetXCompleted, requiresWorksheetX, householdIncomeAfterW: params.householdIncomeAfterW, federalPovertyLine: params.federalPovertyLine,
+  return { taxYear: 2025, orderedDeductions: [...orderedDeductions], worksheetXCompleted, requiresWorksheetX, householdIncomeAfterW: params.householdIncomeAfterW, federalPovertyLine: params.federalPovertyLine,
     specifiedPremiums, specifiedAdvances, remainingEarnedIncome, nonspecifiedDeduction,
     preliminarySpecifiedDeduction, repaymentLimit, maximumSpecifiedDeduction, maximumHealthDeduction: maximumSpecifiedDeduction.plus(nonspecifiedDeduction), lines: audit.getLines() };
 }

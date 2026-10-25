@@ -13,8 +13,9 @@ export function calculatePremiumTaxCreditReturn(params: {
   foreignHousingDeduction: Decimal;
   socialSecurityBenefitsGross: Decimal;
   socialSecurityBenefitsTaxable: Decimal;
-}, coordination?: { method: "pub974-simplified-2025" | "pub974-simplified-2026"; stage: "worksheet-w" | "maximum" | "final"; repaymentLimit?: Decimal }) {
+}, coordination?: { method: "pub974-simplified-2025" | "pub974-simplified-2026"; stage: "worksheet-w" | "maximum" | "ordered" | "final"; repaymentLimit?: Decimal; orderedDeductionInterim?: boolean }) {
   const { input } = params;
+  if (coordination?.orderedDeductionInterim && coordination.stage !== "maximum") throw new Error("Pub974 auxiliary400 is only for an interim maximum-deduction credit calculation.");
   for (const [name, amount] of Object.entries(params)) {
     if (name === "input") continue;
     if (!Decimal.isDecimal(amount) || !amount.isFinite()) throw new Error("Form8962 canonical income must be finite.");
@@ -42,6 +43,7 @@ export function calculatePremiumTaxCreditReturn(params: {
     form1095A: input.form1095A,
     healthInsuranceCoordination: coordination?.method,
     healthInsuranceRepaymentLimit: coordination?.repaymentLimit,
+    orderedDeductionInterim: coordination?.orderedDeductionInterim,
   });
   return { ...result, canonicalTaxpayerModifiedAGI: taxpayerMagi, lines: [...audit.getLines(), ...result.lines] };
 }

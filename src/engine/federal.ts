@@ -163,34 +163,84 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   const marketplace = input.form7206?.plans?.some(plan => plan.marketplaceCoverage === true && plan.premiumTaxCreditInvolved === true);
   if (!marketplace) return calculateFederalTaxCore(input);
   if (![2025,2026].includes(input.taxpayer.taxYear)) throw new Error("Marketplace health coordination supports actual2025 and2026 sources.");
-  if ((input.savingsBondRedemptions?.length ?? 0) > 0 || input.studentLoanInterestFacts || (input.form1098E?.length ?? 0) > 0
-    || d(input.adjustments?.studentLoanInterest).gt(0) || input.iraDeductionWorksheet || d(input.adjustments?.iraDeduction).gt(0)) {
-    throw new Error("Pub974 ordered special deductions require their separate passive-loss, IRA, bond or student-loan coordination.");
+  const kinds: MarketplaceOrderedKind[] = [];
+  if (d(input.adjustments?.iraDeduction).gt(0) && !input.iraDeductionWorksheet) throw new Error("Pub974 ordered IRA claims require actual contribution and participation sources.");
+  if (input.iraDeductionWorksheet && (input.iraDeductionWorksheet.primaryIsActiveParticipant || input.iraDeductionWorksheet.spouseIsActiveParticipant)) kinds.push("ira");
+  if ((input.savingsBondRedemptions?.length ?? 0) > 0) kinds.push("bond");
+  if (input.studentLoanInterestFacts || (input.form1098E?.length ?? 0) > 0 || d(input.adjustments?.studentLoanInterest).gt(0)) {
+    if (!input.studentLoanInterestFacts) throw new Error("Pub974 ordered student-loan claims require actual borrower and loan sources.");
+    kinds.push("studentLoan");
   }
+  let ordered: MarketplaceOrderedState = { kinds };
   let historicalLimit: MarketplaceHealthLimitResult | undefined;
   if (input.taxpayer.taxYear === 2025) {
-    const initial = calculateFederalTaxCore(input, { stage: "worksheet-w" });
+    const initial = calculateFederalTaxCore(input, { stage: "worksheet-w", ordered });
     historicalLimit = calculateMarketplaceHealthLimit({ taxYear: 2025, filingStatus: input.taxpayer.filingStatus, groups: initial.groups,
       householdIncomeAfterW: initial.credit.canonicalTaxpayerModifiedAGI.plus(d(input.form8962?.requiredFilingDependentsModifiedAGI)), federalPovertyLine: initial.credit.federalPovertyLine });
   }
-  const intermediate = calculateFederalTaxCore(input, { stage: "maximum", historicalLimit });
-  const deduction = calculateMarketplaceHealthDeduction({ input, groups: intermediate.groups, credit: intermediate.credit, historicalLimit });
-  const result = calculateFederalTaxCore(input, { stage: "final", deduction });
-  if (!result.form8962) throw new Error("Pub974 final premium tax credit is incomplete.");
+  let intermediate = calculateFederalTaxCore(input, { stage: "maximum", historicalLimit, ordered, orderedDeductionInterim: kinds.length > 0 });
+  let deduction = calculateMarketplaceHealthDeduction({ input, groups: intermediate.groups, credit: intermediate.credit, historicalLimit });
+  const orderedAmounts: { kind: MarketplaceOrderedKind; amount: Decimal }[] = [];
+  const orderedAudit = new AuditTrail();
+  for (const [index, kind] of kinds.entries()) {
+    // Compute one next worksheet at the preceding Step3 health amount. Earlier
+    // completed worksheets stay fixed; later claims stay excluded from income.
+    const next = calculateFederalTaxCore(input, { stage: "ordered", deduction, ordered: { ...ordered, calculating: kind } });
+    const value = next.deductions[kind];
+    if (!value) throw new Error(`Pub974 actual ordered ${kind} worksheet is incomplete.`);
+    ordered = { ...ordered, [kind]: value };
+    const amount = kind === "ira" ? next.deductions.ira?.totalDeduction
+      : kind === "bond" ? next.deductions.bond?.excludableSavingsBondInterest : next.deductions.studentLoan?.result.deduction;
+    if (!amount || !amount.isFinite() || amount.lt(0)) throw new Error("Pub974 ordered deduction must be finite and nonnegative.");
+    orderedAmounts.push({ kind, amount });
+    orderedAudit.record("Pub974 Ordered Deductions", kind, "Interim ordered deduction or exclusion", amount,
+      "Actual next worksheet using preceding Step3 health; retained unless finalStep2 requires ordinary no-credit refiguring",
+      { "Preceding Step3 health": roundDollar(deduction.specifiedDeduction.plus(deduction.nonspecifiedDeduction)),
+        "Auxiliary Step2 percentage": intermediate.credit.fplPercentageForTable,
+        "Auxiliary actual household income": intermediate.credit.modifiedAGI });
+    if (historicalLimit) historicalLimit = calculateMarketplaceHealthLimit({ taxYear: 2025, filingStatus: input.taxpayer.filingStatus,
+      groups: intermediate.groups, householdIncomeAfterW: historicalLimit.householdIncomeAfterW,
+      federalPovertyLine: historicalLimit.federalPovertyLine, orderedDeductions: orderedAmounts });
+    intermediate = calculateFederalTaxCore(input, { stage: "maximum", historicalLimit, ordered, orderedDeductionInterim: index < kinds.length - 1 });
+    deduction = calculateMarketplaceHealthDeduction({ input, groups: intermediate.groups, credit: intermediate.credit, historicalLimit });
+  }
+  const ordinary = deduction.method.startsWith("ordinary-no-ptc-");
+  // Pub974 Simplified Step2: when the final iteration is ineligible, stop this
+  // method and refigure the listed deductions using actual ordinary Form7206.
+  const result = calculateFederalTaxCore(input, { stage: "final", deduction, ordered: ordinary ? undefined : ordered });
+  if (ordinary && kinds.length) orderedAudit.record("Pub974 Ordered Deductions", "ordinary-refigure", "Ordinary health deduction used to refigure all listed claims",
+    roundDollar(deduction.specifiedDeduction.plus(deduction.nonspecifiedDeduction)), "FinalStep2 ineligible: discard retained interim claims and recalculate ordinary source worksheets");
+  if (!result.form8962 || result.form8962.orderedDeductionInterim) throw new Error("Pub974 final premium tax credit is incomplete.");
+  if (ordinary && result.form8962.taxpayerEligible) throw new Error("Pub974 ordinary-method re-entry after renewed actual eligibility requires a supported coordination method.");
   const finalAllocation = calculateMarketplaceHealthDeduction({ input, groups: intermediate.groups, credit: result.form8962, historicalLimit });
   if (roundDollar(deduction.specifiedDeduction.plus(sum(...finalAllocation.businesses.map(row => row.allocatedCredit))))
     .gt(roundDollar(sum(...deduction.businesses.map(row => row.specifiedPremiums))))) throw new Error("Pub974 final deduction plus actual allocated credit exceeds source premiums.");
   result.marketplaceHealthInsurance = { ...deduction, step2Credit: intermediate.credit.ptcAllowed, finalCredit: result.form8962.ptcAllowed,
     maximumDeduction: deduction.maximumSpecifiedDeduction.plus(deduction.nonspecifiedDeduction) };
-  result.allLines.push(...(historicalLimit?.lines ?? []), ...deduction.lines);
+  result.allLines.push(...(historicalLimit?.lines ?? []), ...orderedAudit.getLines(), ...deduction.lines);
   return result;
 }
 
-type MarketplaceContext = { stage: "worksheet-w" } | { stage: "maximum"; historicalLimit?: MarketplaceHealthLimitResult } | { stage: "final"; deduction: MarketplaceHealthDeductionResult };
-interface MarketplaceInterim { groups: MarketplaceHealthPremiumGroup[]; credit: ReturnType<typeof calculatePremiumTaxCreditReturn> }
-function calculateFederalTaxCore(input: TaxYearInput, marketplace: { stage: "worksheet-w" } | { stage: "maximum"; historicalLimit?: MarketplaceHealthLimitResult }): MarketplaceInterim;
-function calculateFederalTaxCore(input: TaxYearInput, marketplace?: { stage: "final"; deduction: MarketplaceHealthDeductionResult }): TaxReturnResult;
+type MarketplaceOrderedKind = "ira" | "bond" | "studentLoan";
+interface MarketplaceOrderedState {
+  kinds: MarketplaceOrderedKind[];
+  calculating?: MarketplaceOrderedKind;
+  ira?: NonNullable<TaxReturnResult["iraDeductionWorksheet"]>;
+  bond?: Form8815Result;
+  studentLoan?: { result: ReturnType<typeof calculateStudentLoanInterestDeduction>; modifiedAgi: Decimal };
+}
+type MarketplaceContext = ({ stage: "worksheet-w" } | { stage: "maximum"; historicalLimit?: MarketplaceHealthLimitResult }
+  | { stage: "ordered" | "final"; deduction: MarketplaceHealthDeductionResult }) & { ordered?: MarketplaceOrderedState; orderedDeductionInterim?: boolean };
+interface MarketplaceInterim {
+  groups: MarketplaceHealthPremiumGroup[];
+  credit: ReturnType<typeof calculatePremiumTaxCreditReturn>;
+  deductions: Omit<MarketplaceOrderedState, "kinds" | "calculating">;
+}
+function calculateFederalTaxCore(input: TaxYearInput, marketplace: MarketplaceContext & { stage: "worksheet-w" | "maximum" | "ordered" }): MarketplaceInterim;
+function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceContext & { stage: "final" }): TaxReturnResult;
 function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceContext): TaxReturnResult | MarketplaceInterim {
+  const ordered = marketplace?.ordered;
+  const calculateOrdered = (kind: MarketplaceOrderedKind) => !ordered?.kinds.includes(kind) || ordered.calculating === kind || ordered[kind] !== undefined;
   const year = input.taxpayer.taxYear;
   const constants = getConstants(year);
   const filingStatus = input.taxpayer.filingStatus as FilingStatus;
@@ -1606,6 +1656,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     throw new Error("Student-loan deduction requires actual borrower and loan source facts for2026");
   }
   let studentLoanInterestWorksheetResult: ReturnType<typeof calculateStudentLoanInterestDeduction> | undefined;
+  let studentLoanWorksheetMagi: Decimal | undefined;
 
   // ── K-1 Form 1041: Estate/Trust Beneficiary Income ─────
   // Aggregate income items from trust/estate K-1s that route through
@@ -1702,7 +1753,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   }
   const incomeBeforeSocialSecurity = sum(totalWages,totalInterestBeforeSavingsBondExclusion,totalDividends,
     iraTaxable,pensionTaxable,capitalGainLoss,schedCNetProfit,schedFNetProfit,adjustedScheduleETotal,otherIncome);
-  if (input.iraDeductionWorksheet) {
+  if (input.iraDeductionWorksheet && calculateOrdered("ira")) {
     const hasNol = sum(d(input.priorYear?.nolCarryforward),d(input.priorYear?.excessBusinessLossNOL),k1Form1041FinalNOL).gt(0);
     if (hasNol) throw new Error("IRA and NOL coordination requires a supported completed source worksheet");
     const passiveInteraction = schedE.rentalProperties.some(p => p.netRentalIncome.lt(0))
@@ -1722,11 +1773,12 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     }).taxableBenefits : new Decimal(0);
     const iraMagi = sum(iraMagiBase,noIraSocialSecurity,form2555IncomeReduction,form2555HousingDeduction,
       adoptionBenefitResult?.allowableExclusion ?? new Decimal(0));
-    iraDeductionWorksheetResult = calculateIraReturnWorksheet(input,iraMagi);
+    iraDeductionWorksheetResult = ordered?.ira ?? calculateIraReturnWorksheet(input,iraMagi);
     audit.merge(iraDeductionWorksheetResult.primary.lines);
     if (iraDeductionWorksheetResult.spouse) audit.merge(iraDeductionWorksheetResult.spouse.lines);
-    audit.record("IRA MAGI Worksheet","total","Complete IRA modified adjusted gross income",iraMagi,
-      "Full pre-bond income less non-IRA/non-student-loan adjustments plus AppendixB benefits before IRA and actual foreign/adoption addbacks");
+    audit.record("IRA MAGI Worksheet","total","Complete IRA modified adjusted gross income",iraDeductionWorksheetResult.magi,
+      ordered?.ira ? "Retained Pub974 ordered IRA worksheet MAGI using its preceding Step3 health deduction"
+        : "Full pre-bond income less non-IRA/non-student-loan adjustments plus AppendixB benefits before IRA and actual foreign/adoption addbacks");
     sched1 = calculateSchedule1(sched1Input,{ ...sched1Context,iraDeductionOverride:iraDeductionWorksheetResult.totalDeduction,studentLoanDeductionOverride:new Decimal(0) },form4797);
   }
   const socialSecurityBenefitsWorksheet = socialSecurityBenefitsGross.greaterThan(0)
@@ -1829,7 +1881,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   // preliminaryAgi already has SLI subtracted, so we add it back for the MAGI.
   let form8815: Form8815Result | undefined;
   let savingsBondExclusion = new Decimal(0);
-  if (input.savingsBondRedemptions && input.savingsBondRedemptions.length > 0) {
+  if (input.savingsBondRedemptions && input.savingsBondRedemptions.length > 0 && calculateOrdered("bond")) {
     validateSavingsBondReturnIdentity({
       taxYear: year, filingStatus, primary: input.taxpayer.primary,
       spouse: input.taxpayer.spouse, dependents: input.taxpayer.dependents,
@@ -1850,7 +1902,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       adoptionBenefitResult?.allowableExclusion ?? new Decimal(0),
       d(bondMagiFacts?.americanSamoaIncomeExclusion), d(bondMagiFacts?.puertoRicoIncomeExclusion),
       d(bondMagiFacts?.royaltyInterestAdjustment));
-    form8815 = calculateForm8815(input.savingsBondRedemptions, form8815MAGI, filingStatus, { taxYear: year, facts: bondMagiFacts });
+    form8815 = ordered?.bond ?? calculateForm8815(input.savingsBondRedemptions, form8815MAGI, filingStatus, { taxYear: year, facts: bondMagiFacts });
     savingsBondExclusion = form8815.excludableSavingsBondInterest;
     if (form8815.sourceFactsVerified) {
       const remainingStatementInterest = sum(...input.form1099Int.map(form => d(form.usSavingsBondInterest)))
@@ -1862,7 +1914,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     }
     audit.merge(form8815.lines);
   }
-  if (input.adjustments?.educatorExpenseSources?.length) {
+  if (input.adjustments?.educatorExpenseSources?.length && (!marketplace || marketplace.stage === "final")) {
     const educatorExclusions = reconcileEducatorEducationExclusions({
       taxYear: year,
       filingStatus,
@@ -2007,15 +2059,16 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
 
   // Pub970 uses completed income after the bond exclusion and allowed passive
   // losses. Those upstream worksheets add back or exclude this deduction.
-  if (studentLoanSourceResult || d(combinedStudentLoanInterest ?? input.adjustments?.studentLoanInterest).gt(0)) {
+  if ((studentLoanSourceResult || d(combinedStudentLoanInterest ?? input.adjustments?.studentLoanInterest).gt(0)) && calculateOrdered("studentLoan")) {
     if (studentLoanSourceResult?.qualifiedInterest.gt(0)
       && sum(d(input.priorYear?.nolCarryforward), d(input.priorYear?.excessBusinessLossNOL), k1Form1041FinalNOL).gt(0)) {
       throw new Error("Actual student-loan and NOL claims require the coupled NOL and deduction source computation");
     }
-    const studentLoanMagi = sum(agi, sched1.studentLoanInterest, form2555IncomeReduction,
+    const studentLoanMagi = ordered?.studentLoan?.modifiedAgi ?? sum(agi, sched1.studentLoanInterest, form2555IncomeReduction,
       form2555HousingDeduction, studentLoanSourceResult?.possessionIncomeAddback ?? new Decimal(0));
+    studentLoanWorksheetMagi = studentLoanMagi;
     if (studentLoanSourceOptions) {
-      studentLoanInterestWorksheetResult = calculateStudentLoanInterestDeduction({
+      studentLoanInterestWorksheetResult = ordered?.studentLoan?.result ?? calculateStudentLoanInterestDeduction({
         ...studentLoanSourceOptions, modifiedAgi: studentLoanMagi,
       });
       if (!studentLoanInterestWorksheetResult.calculationComplete) throw new Error("Student-loan canonical MAGI calculation is incomplete");
@@ -2031,8 +2084,9 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     adjustments = adjustments.plus(change);
     agi = agi.minus(change);
     audit.record("Student Loan MAGI Worksheet", "magi", "Canonical student-loan modified AGI", studentLoanMagi,
-      "Complete income less non-student-loan adjustments plus actual foreign/housing and possession addbacks",
-      { "Income after bond and passive worksheets": totalIncome,
+      ordered?.studentLoan ? "Retained Pub974 ordered student-loan worksheet using its preceding Step3 health deduction"
+        : "Complete income less non-student-loan adjustments plus actual foreign/housing and possession addbacks",
+      ordered?.studentLoan ? { "Retained source MAGI": studentLoanMagi } : { "Income after bond and passive worksheets": totalIncome,
         "Other Schedule1 adjustments": adjustments.minus(sched1.studentLoanInterest),
         "Form2555 excluded income": form2555IncomeReduction, "Housing deduction": form2555HousingDeduction,
         "Actual possession exclusions": studentLoanSourceResult?.possessionIncomeAddback ?? new Decimal(0) });
@@ -2051,13 +2105,14 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       ? "SE deduction + other adjustments + K-1 1041 §67(e) excess deductions"
       : "SE deduction + other adjustments");
 
-  if (marketplace?.stage === "maximum" || marketplace?.stage === "worksheet-w") {
+  if (marketplace && marketplace.stage !== "final") {
     if (!actualHealthInsurance?.marketplacePremiums) throw new Error("Pub974 source calculation is incomplete.");
     if (sum(d(input.priorYear?.nolCarryforward), d(input.priorYear?.excessBusinessLossNOL), k1Form1041FinalNOL).gt(0)) throw new Error("Pub974 NOL coordination requires the actual circular taxable-income worksheet.");
     const credit = calculatePremiumTaxCreditReturn({ input, agi, taxExemptInterest,
       foreignIncomeReduction: form2555IncomeReduction, foreignHousingDeduction: form2555HousingDeduction,
-      socialSecurityBenefitsGross, socialSecurityBenefitsTaxable }, { method: year === 2025 ? "pub974-simplified-2025" : "pub974-simplified-2026", stage: marketplace.stage });
-    return { groups: actualHealthInsurance.marketplacePremiums.groups, credit };
+      socialSecurityBenefitsGross, socialSecurityBenefitsTaxable }, { method: year === 2025 ? "pub974-simplified-2025" : "pub974-simplified-2026", stage: marketplace.stage, orderedDeductionInterim: marketplace.orderedDeductionInterim });
+    return { groups: actualHealthInsurance.marketplacePremiums.groups, credit, deductions: { ira: iraDeductionWorksheetResult, bond: form8815,
+      studentLoan: studentLoanInterestWorksheetResult && studentLoanWorksheetMagi ? { result: studentLoanInterestWorksheetResult, modifiedAgi: studentLoanWorksheetMagi } : undefined } };
   }
 
   // ═══════════════════════════════════════════════════════════
@@ -3121,7 +3176,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       foreignHousingDeduction: form2555HousingDeduction,
       socialSecurityBenefitsGross, socialSecurityBenefitsTaxable,
     }, marketplace ? { method: year === 2025 ? "pub974-simplified-2025" : "pub974-simplified-2026", stage: marketplace.stage,
-      repaymentLimit: marketplace.deduction.historicalLimit?.repaymentLimit ?? undefined } : undefined);
+      repaymentLimit: marketplace.deduction.method.startsWith("ordinary-no-ptc-") ? undefined : marketplace.deduction.historicalLimit?.repaymentLimit ?? undefined } : undefined);
     netPremiumTaxCredit = form8962.netPTC;
     excessAPTCRepayment = form8962.excessAPTCRepayment;
     audit.merge(form8962.lines);

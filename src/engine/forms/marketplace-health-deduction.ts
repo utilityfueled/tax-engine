@@ -28,7 +28,7 @@ export function calculateMarketplaceHealthDeduction(params: {
   if (year === 2025) {
     if (!params.historicalLimit) throw new Error("Pub9742025 requires the actual completed W/X limit.");
     historicalLimit = calculateMarketplaceHealthLimit({ taxYear: year, filingStatus: input.taxpayer.filingStatus, groups,
-      householdIncomeAfterW: params.historicalLimit.householdIncomeAfterW, federalPovertyLine: params.historicalLimit.federalPovertyLine });
+      householdIncomeAfterW: params.historicalLimit.householdIncomeAfterW, federalPovertyLine: params.historicalLimit.federalPovertyLine, orderedDeductions: params.historicalLimit.orderedDeductions });
     if (!historicalLimit.maximumSpecifiedDeduction.eq(params.historicalLimit.maximumSpecifiedDeduction)
       || historicalLimit.repaymentLimit?.toFixed() !== params.historicalLimit.repaymentLimit?.toFixed()) throw new Error("Pub9742025 maximum contradicts its actual W/X sources.");
     if (!credit.taxpayerEligible && historicalLimit.specifiedAdvances.gt(0) && historicalLimit.repaymentLimit?.lt(historicalLimit.specifiedAdvances)) throw new Error("Pub9742025 ineligible coverage needs its actual capped-repayment ordinary-premium coordination.");
@@ -108,7 +108,7 @@ export function calculateMarketplaceHealthDeduction(params: {
     : (year === 2025 ? "ordinary-no-ptc-2025" as const : "ordinary-no-ptc-2026" as const);
   for (const [line, label, amount, formula] of [
     ["7", "Combined premiums after PTC", sum(...businesses.map(row => row.netPremiumsAfterCredit)), "Sum separate business line7"],
-    ["8", "Combined specified-premium maximum", maximumSpecifiedDeduction, year === 2025 ? "Actual WorksheetX30 or W16 if no attributable advances" : "2026 uncapped X30: min(total specified premiums, combined remaining W earned limit)"],
+    ["8", "Combined specified-premium maximum", maximumSpecifiedDeduction, year === 2025 ? "Actual completed Y/Z20, X30 or W16 when no attributable advances" : "2026 uncapped X30: min(total specified premiums, combined remaining W earned limit)"],
     ["9", "Specified health deduction", specifiedDeduction, credit.taxpayerEligible ? "min(combined line7,line8), once" : "Ineligible Step2: ordinary separate business limits"],
     ["10", "Nonspecified health deduction", nonspecifiedDeduction, "Actual completed nonspecified worksheets, once"],
     ["11", "Combined health deduction", specifiedDeduction.plus(nonspecifiedDeduction), "Line9+line10; round Schedule1 transfer once"],

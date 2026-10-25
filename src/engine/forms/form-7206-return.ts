@@ -19,7 +19,7 @@ interface Params {
   foreignIncomeExclusion: Decimal;
   selfEmploymentSourcesVerified: boolean;
   /** Engine-computed Pub974 stage; not a taxpayer amount or source fact. */
-  marketplace?: { stage: "worksheet-w" } | { stage: "maximum"; historicalLimit?: MarketplaceHealthLimitResult } | { stage: "final"; deduction: MarketplaceHealthDeductionResult };
+  marketplace?: { stage: "worksheet-w" } | { stage: "maximum"; historicalLimit?: MarketplaceHealthLimitResult } | { stage: "final" | "ordered"; deduction: MarketplaceHealthDeductionResult };
   /** Canonical gross income, never a taxpayer supplied profit override. */
   businessGrossIncomes?: { sourceId: string; amount: Decimal }[];
 }
@@ -144,7 +144,7 @@ export function calculateForm7206Return(params: Params) {
   const form7206 = calculateForm7206({ taxYear: year, filingStatus: input.taxpayer.filingStatus, facts, businesses, marketplaceHandling });
   if (form7206.deduction === undefined) throw new Error("Canonical Form7206 deduction is incomplete.");
   const marketplacePremiums = params.marketplace ? calculateMarketplaceHealthPremiums({ input, healthInsurance: form7206 }) : undefined;
-  const result = params.marketplace?.stage === "final" ? params.marketplace.deduction : undefined;
+  const result = params.marketplace?.stage === "final" || params.marketplace?.stage === "ordered" ? params.marketplace.deduction : undefined;
   const marketplaceAudit = new AuditTrail();
   const healthSources: QBIDeductionSourceAmount[] = form7206.businesses.map(row => ({ sourceId: row.businessSourceId,
     accountHolder: row.accountHolder, amount: row.deduction ?? d(0), nonQbi: row.kind === "s_corporation" }));
@@ -155,7 +155,7 @@ export function calculateForm7206Return(params: Params) {
     const uncappedMaximum = Decimal.min(sum(...specified.map(row => row.specifiedPremiums)), Decimal.max(0,sum(...specified.map(row => row.remainingEarnedIncome))));
     const suppliedLimit = params.marketplace?.stage === "maximum" ? params.marketplace.historicalLimit : result?.historicalLimit;
     const historicalLimit = year === 2025 ? calculateMarketplaceHealthLimit({ taxYear: year, filingStatus: input.taxpayer.filingStatus, groups,
-      stage: params.marketplace?.stage === "worksheet-w" ? "w" : "complete", householdIncomeAfterW: suppliedLimit?.householdIncomeAfterW, federalPovertyLine: suppliedLimit?.federalPovertyLine }) : undefined;
+      stage: params.marketplace?.stage === "worksheet-w" ? "w" : "complete", householdIncomeAfterW: suppliedLimit?.householdIncomeAfterW, federalPovertyLine: suppliedLimit?.federalPovertyLine, orderedDeductions: suppliedLimit?.orderedDeductions }) : undefined;
     const maximum = historicalLimit?.maximumSpecifiedDeduction ?? uncappedMaximum;
     if (suppliedLimit && (!historicalLimit || !suppliedLimit.maximumSpecifiedDeduction.eq(historicalLimit.maximumSpecifiedDeduction))) throw new Error("Pub974 maximum must reconcile the actual historical worksheet.");
     if (params.marketplace?.stage === "maximum" || params.marketplace?.stage === "worksheet-w") {

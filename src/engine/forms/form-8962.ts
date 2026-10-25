@@ -48,6 +48,8 @@ export interface Form8962Input {
   healthInsuranceCoordination?: "pub974-simplified-2025" | "pub974-simplified-2026";
   /** Computed WorksheetX/Y/Z result, never a taxpayer-provided Form8962 fact. */
   healthInsuranceRepaymentLimit?: Decimal;
+  /** Internal Pub974 auxiliary calculation while an ordered claim remains; never final. */
+  orderedDeductionInterim?: boolean;
 }
 
 export interface Form8962Result {
@@ -55,6 +57,8 @@ export interface Form8962Result {
   sourceFactsVerified: boolean;
   /** Derived eligibility explains officially skipped credit columns. */
   taxpayerEligible: boolean;
+  /** True only for the separately identified auxiliary Pub974 worksheet. */
+  orderedDeductionInterim?: true;
   calculationMethod: "annual" | "monthly";
   familySize: number;
   modifiedAGI: Decimal; // Household income, line 3
@@ -133,7 +137,9 @@ export function calculateForm8962(input: Form8962Input): Form8962Result {
   const dependentMAGI = facts ? dollars(facts.requiredFilingDependentsModifiedAGI, "required-filing dependents modified AGI", true) : new Decimal(0);
   const modifiedAGI = zeroFloor(taxpayerMAGI.plus(dependentMAGI));
   const fplPercentage = modifiedAGI.div(federalPovertyLine).times(100);
-  const fplPercentageForTable = modifiedAGI.gt(federalPovertyLine.times(4)) ? new Decimal(401) : fplPercentage.floor();
+  if (input.orderedDeductionInterim && (input.healthInsuranceCoordination !== `pub974-simplified-${year}` || !facts)) throw new Error("Pub974 auxiliary400 requires actual health-coordination sources.");
+  const fplPercentageForTable = modifiedAGI.gt(federalPovertyLine.times(4))
+    ? new Decimal(input.orderedDeductionInterim ? 400 : 401) : fplPercentage.floor();
 
   const sourceMonths = new Map<number, { premium: Decimal; slcsp: Decimal; advance: Decimal; policyCount: number }>();
   const policyIds = new Set<string>();
@@ -219,7 +225,7 @@ export function calculateForm8962(input: Form8962Input): Form8962Result {
   record("2b", "Required-filing dependents modified AGI", dependentMAGI, verified ? "Actual Worksheet 1-2" : "Unknown historical dependent MAGI; preview only");
   record("3", "Household income", modifiedAGI, "max(0, line 2a + line 2b)");
   record("4", "Federal poverty line", federalPovertyLine, `${year - 1} HHS ${region} guideline for actual family size`);
-  record("5", "Household income percentage for applicable figure", fplPercentageForTable, "401 if line 3 > 4 times line 4; otherwise drop fractional percentage");
+  record("5", "Household income percentage for applicable figure", fplPercentageForTable, input.orderedDeductionInterim ? "Pub974 ordered auxiliary worksheet only:400 above poverty threshold; actual household income retained" : "401 if line 3 > 4 times line 4; otherwise drop fractional percentage");
   // Keep calculated diagnostic contributions available, but do not print skipped form lines.
   if (taxpayerEligible) {
     record("7", "Applicable figure", rate, `${year} applicable figure at whole-number line 5, rounded to four decimals`);
@@ -277,7 +283,7 @@ export function calculateForm8962(input: Form8962Input): Form8962Result {
   record("27", "Excess advance premium tax credit before limitation", excessAPTC, "max(0, line 25 - line 24)");
   if (repaymentCap !== null && excessAPTC.gt(0)) record("28", "Historical repayment limitation", repaymentCap, worksheetLimit === undefined ? "2025 Table 5; no repayment limitation applies in 2026" : "Actual Pub974 WorksheetX/Y/Z limitation replaces Table5");
   record("29", "Excess advance premium tax credit repayment", excessAPTCRepayment, "Line 27 limited by line 28 where applicable -> Schedule 2 line 1a");
-  return { taxYear: year, sourceFactsVerified: verified, taxpayerEligible, calculationMethod, familySize, modifiedAGI,
+  return { taxYear: year, sourceFactsVerified: verified, taxpayerEligible, orderedDeductionInterim: input.orderedDeductionInterim ? true : undefined, calculationMethod, familySize, modifiedAGI,
     federalPovertyLine, fplPercentage, fplPercentageForTable, contributionRate: rate, expectedContribution, monthlyContribution,
     annualPremium, annualSLCSP, annualAdvancePTC, ptcAllowed, advancePTCTotal, netPTC, excessAPTC, repaymentCap, excessAPTCRepayment,
     lines: audit.getLines() };

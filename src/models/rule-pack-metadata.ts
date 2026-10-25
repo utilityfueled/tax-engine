@@ -27,12 +27,13 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.45",
+    ruleVersion: "2025.46",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
-      { url: "https://www.irs.gov/publications/p974", section: "Actual2025 W/X source maximum and repayment tiers; computed X25 retained on final8962line28 through the Simplified method", revision: "Final2025 Publication974 including Carla example; ordered Y/Z and partial forgiven-advance ordinary-cost methods remain internal work", retrievedAt: "2026-10-25" },
+      { url: "https://www.irs.gov/publications/p974", section: "Special instructions and Y/Z: covered IRA, bond exclusion and student-loan worksheets retained in order; auxiliary400 distinct from actual final eligibility; ordinary no-PTC branch refigures claims", revision: "Final2025 plus historical2020 cliff-year instruction and enacted2026 section36B; passive-loss and other source methods remain internal work", retrievedAt: "2026-10-25" },
+      { url: "https://www.irs.gov/publications/p974", section: "Actual2025 W/X source maximum and repayment tiers; computed X25 retained on final8962line28 through the Simplified method", revision: "Final2025 Publication974 including Carla example; passive ordering and partial forgiven-advance ordinary-cost methods remain internal work", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i8962", section: "Canonical Worksheet1-1 taxpayer MAGI from final return; child8814 exempt interest retained once in actual dependent Worksheet1-2, not parent1040line2a", revision: "Final2025 Form8962 and Form8814 instructions; positive Marketplace health coordination remains separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/irb/2026-18_IRB", section: "TD10044 actual employer/business reporting and net-income limits; section199A(c)(4)(D) allowable business-tip QBI exclusion", revision: "Final regulation plus2025 instructions and2026 reporting; reduced mixed-source allocation remains unsupported", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/pub/irs-pdf/f4137.pdf", section: "Actual employer and owner payroll sources, cash/noncash income distinction, separate spouse forms and canonical1040/Schedule2/SE/8959 routing", revision: "Final2025 Form4137 and official ScheduleSE/Form8959 instructions; RRTA Medicare coordination remains separate", retrievedAt: "2026-10-25" },
@@ -87,12 +88,13 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.41-law-integration-draft",
+    ruleVersion: "2026.42-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
-      { url: "https://www.irs.gov/publications/p974", section: "Actual2026 uncapped W/X bound, combined-business Simplified steps1-4, signed income, actual monthly premiums/credits and separate gross-income QBI attribution", revision: "Posted2025 publication plus enacted36B(f)(2) effective2026 and Reg1.199A-3(b)(1)(vi); ordered and mixed-owner methods remain internal work", retrievedAt: "2026-10-25" },
+      { url: "https://www.irs.gov/publications/p974", section: "Special instructions and Y/Z: covered IRA, bond exclusion and student-loan worksheets retained in order; auxiliary400 distinct from actual final eligibility; ordinary no-PTC branch refigures claims", revision: "Final2025 plus historical2020 cliff-year instruction and enacted2026 section36B; passive-loss and other source methods remain internal work", retrievedAt: "2026-10-25" },
+      { url: "https://www.irs.gov/publications/p974", section: "Actual2026 uncapped W/X bound, combined-business Simplified steps1-4, signed income, actual monthly premiums/credits and separate gross-income QBI attribution", revision: "Posted2025 publication plus enacted36B(f)(2) effective2026 and Reg1.199A-3(b)(1)(vi); passive ordering and mixed-owner methods remain internal work", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i8962", section: "Canonical Worksheet1-1 taxpayer MAGI from final return; child8814 exempt interest retained once in actual dependent Worksheet1-2, not parent1040line2a", revision: "Final2025 Form8962 and Form8814 instructions; positive Marketplace health coordination remains separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/irb/2026-18_IRB", section: "TD10044 actual employer/business reporting and net-income limits; section199A(c)(4)(D) allowable business-tip QBI exclusion", revision: "Final regulation plus2025 instructions and2026 reporting; reduced mixed-source allocation remains unsupported", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/pub/irs-pdf/f4137.pdf", section: "Actual separate-owner tip payroll and184500 indexed2026 SocialSecurity base; canonical income/Schedule2/SE/8959 routing", revision: "Final2025 source formulas plus indexed2026 wage base; final2026 forms and independent review pending; RRTA Medicare coordination separate", retrievedAt: "2026-10-25" },

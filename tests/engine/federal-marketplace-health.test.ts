@@ -54,7 +54,7 @@ it("keeps ineligible months and separate ordered worksheets explicit", () => {
   const result = calculateFederalTax(input);
   expect(result.schedule1?.seHealthInsurance.toFixed()).toBe("0");
   const special = marketplaceHealthInput(); special.savingsBondRedemptions = [{ proceeds: "1000", interest: "100", qualifiedExpenses: "1000" }];
-  expect(() => calculateFederalTax(special)).toThrow(/Pub974.*ordered|special.*deduction/i);
+  expect(() => calculateFederalTax(special)).toThrow(/Form 8815.*actual registered owner source/i);
   const prior = marketplaceHealthInput(); prior.taxpayer.taxYear = 2025;
   expect(() => calculateFederalTax(prior)).toThrow(/year/i); // A2026 source cannot become2025 by changing only the return.
 });
