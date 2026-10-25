@@ -185,3 +185,30 @@ Exact staged-tree verification (`90e27e7c9791c955980724cd7ddfcd07dd02fb5b`)
 also passes the same1,450 tests and root types. All3,504 staged spec references
 resolve, scoped lint reports zero errors/warnings, and staged diff checks pass.
 The worktree's concurrent HSA/energy/AMT changes were excluded from this snapshot.
+
+## Ohio withholding jurisdiction — 2026-10-25
+
+The final Ohio booklet's line14 and source examples require an actual Ohio
+state attribution. Previously, positive W2/W2G/1099 withholding with no source
+state silently disappeared from the Ohio total. The withholding module now
+rejects nonzero amounts without an actual two-letter jurisdiction. Actual
+other-state amounts are still excluded, actual Ohio amounts are retained, and
+explicit zero does not require an invented state. All supplied source amounts
+must be finite and nonnegative, including other-state records. OID rows retain
+their separate source and duplicate-row checks.
+
+The spec preceded two failing regressions across all ten ordinary document
+types; the first fixture run exposed three incorrect fixture field names,
+which were fixed before demonstrating the intended failures. All122focused
+checks now pass. Earlier fixtures that asserted silent omission now first prove
+the missing-source error and then supply an actual other-state jurisdiction;
+existing amount expectations remain unchanged. Root/state/PDF staged checks
+are recorded in the subsequent evidence entry. No tax year or filing gate is
+opened. Evidence: `.local/upgrade-evidence/oh-withholding-source-{red,green}.log`.
+
+Exact staged tree `f6f0f40069e929b651eef7796f63be74f08acf30` passes741tests
+in24files (all Ohio core, review PDF, workspace download and source routing),
+root types and all3,629spec references. Scoped lint reports zero errors and
+111pre-existing warnings in the large adapter fixture. The full scoped diff
+was reviewed. Evidence: `oh-withholding-source-staged-tests.log`; type/spec/lint
+output is retained in the task transcript. Independent human review is pending.

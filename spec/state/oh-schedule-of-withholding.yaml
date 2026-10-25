@@ -59,6 +59,11 @@ businessRuleValidation:
     testRef: "tests/pdf/fill-oh-reference-forms.test.ts::fillOhioReferenceForms includes the Ohio Schedule of Withholding reference summary only when Ohio withholding exists"
 
 lines:
+  - line: "actual-jurisdiction"
+    description: "Require actual jurisdiction for nonzero withholding and validate source money"
+    formula: "Every supplied amount must be finite and nonnegative. Nonzero W2/W2G/1099 withholding requires an actual two-letter source state; unknown state cannot silently become zero Ohio credit. Confirmed other-state amounts are excluded; explicit zero needs no invented state."
+    testRef: "tests/engine/state/oh-withholding-source-facts.test.ts::requires actual state for every nonzero source and preserves explicit zero"
+    notes: "Ohio2025 IT1040 instructions line14 and withholding schedules pages17,47-48; refreshed2026-10-25. This source gate does not qualify a final2026 form."
   - line: "1"
     description: "Ohio withholding from W-2 statements"
     formula: "Sum W-2 box 17 amounts where W-2 state = 'OH' (case-insensitive)"

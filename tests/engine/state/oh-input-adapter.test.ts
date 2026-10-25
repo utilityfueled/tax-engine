@@ -273,8 +273,10 @@ describe("Ohio Input Adapter — Ohio Withholding", () => {
     expect(extractOhioWithholding(w2s).toNumber()).toBe(0);
   });
 
-  it("Ohio withholding — W-2 with no state field excluded", () => {
+  it("Ohio withholding requires an actual W-2 source state", () => {
     const w2s = [makeW2({ stateTaxWithheld: "500" })];
+    expect(() => extractOhioWithholding(w2s)).toThrow(/actual source state/);
+    w2s[0].state = "PA";
     expect(extractOhioWithholding(w2s).toNumber()).toBe(0);
   });
 
@@ -287,7 +289,7 @@ describe("Ohio Input Adapter — Ohio Withholding", () => {
     expect(extractOhioWithholding(w2s).toNumber()).toBe(1800);
   });
 
-  it("Ohio withholding — statements with no Ohio state code are excluded", () => {
+  it("Ohio withholding requires actual states before excluding non-Ohio statements", () => {
     const w2s = [makeW2({ stateTaxWithheld: "500" })];
     const formW2G = [makeW2G({ stateWithheld: "75" })];
     const form1099G = [make1099G({ stateWithheld: "55" })];
@@ -295,6 +297,10 @@ describe("Ohio Input Adapter — Ohio Withholding", () => {
     const form1099R = [make1099R({ stateWithheld: "125" })];
     const form1099Nec = [make1099Nec({ stateWithheld: "85" })];
     const form1099Misc = [make1099Misc({ stateWithheld: "95" })];
+    expect(() => extractOhioWithholding(w2s, formW2G, form1099G, form1099K, form1099R, form1099Nec, form1099Misc)).toThrow(/actual source state/);
+    for (const entries of [w2s, formW2G, form1099G, form1099K, form1099R, form1099Nec, form1099Misc]) {
+      for (const entry of entries) entry.state = "PA";
+    }
     expect(
       extractOhioWithholding(
         w2s,

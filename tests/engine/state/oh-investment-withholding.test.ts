@@ -15,7 +15,7 @@ function sources() {
       { payer: "Ohio bank", interestIncome: "100", state: "OH", stateWithheld: "0.10" },
       { payer: "Ohio bank 2", interestIncome: "100", state: " oh ", stateWithheld: "0.20" },
       { payer: "PA bank", interestIncome: "100", state: "PA", stateWithheld: "100" },
-      { payer: "Unknown state", interestIncome: "100", stateWithheld: "100" },
+      { payer: "Actual New York bank", interestIncome: "100", state: "NY", stateWithheld: "100" },
     ],
     form1099Div: [
       { payer: "Ohio fund", ordinaryDividends: "100", state: "OH", stateWithheld: "1.01" },
@@ -23,7 +23,7 @@ function sources() {
     ],
     form1099B: [
       { broker: "Ohio broker", state: "OH", stateWithheld: "2.02", transactions: [] },
-      { broker: "Unknown broker state", stateWithheld: "100", transactions: [] },
+      { broker: "Actual New York broker", state: "NY", stateWithheld: "100", transactions: [] },
     ],
   });
 }

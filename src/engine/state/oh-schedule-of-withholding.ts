@@ -66,11 +66,16 @@ function sumOhioAmounts<T extends { state?: string }>(
   let total = new Decimal(0);
 
   for (const statement of statements ?? []) {
+    const amount = d(getAmount(statement));
+    if (!amount.isFinite() || amount.isNegative()) throw new Error("Ohio source withholding must be finite and nonnegative.");
+    if (!amount.isZero() && !/^[A-Z]{2}$/.test(statement.state?.trim().toUpperCase() ?? "")) {
+      throw new Error("Ohio withholding requires the actual source state for every nonzero amount.");
+    }
     if (!isOhioStateCode(statement.state)) {
       continue;
     }
 
-    total = total.plus(d(getAmount(statement)));
+    total = total.plus(amount);
   }
 
   return total;
@@ -184,6 +189,7 @@ export function calculateOhioScheduleOfWithholding(
     for (const row of rows) {
       const amount = d(row.stateWithheld);
       if (!amount.isFinite() || amount.isNegative()) throw new Error("Ohio OID withholding must be finite and nonnegative.");
+      if (!amount.isZero() && !/^[A-Z]{2}$/.test(row.state.trim().toUpperCase())) throw new Error("Ohio OID withholding requires the actual source state for every nonzero amount.");
       if (isOhioStateCode(row.state)) line5f = line5f.plus(amount);
     }
   }
