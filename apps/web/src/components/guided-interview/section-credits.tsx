@@ -12,6 +12,7 @@ import {
 } from "@/lib/guided-interview-flow";
 import { CurrencyField } from "./currency-field";
 import { EnergySourceDetails } from "./energy-source-details";
+import { VehicleSourceDetails } from "./vehicle-source-details";
 
 function EligibilityFact({ label, value, onChange }: { label: string; value: boolean | null | undefined; onChange: (value: boolean | null) => void }) {
   return <label className="guided-field"><span className="guided-field-label">{label}</span><select className="guided-input" value={value == null ? "" : String(value)} onChange={(event) => onChange(event.target.value === "" ? null : event.target.value === "true")}><option value="">Confirm from actual records</option><option value="true">Yes</option><option value="false">No</option></select></label>;
@@ -265,8 +266,8 @@ export function SectionCredits({
 
         <p className="guided-hint" style={{ marginTop: "8px", fontStyle: "italic" }}>
           Note: The Child Tax Credit and Earned Income Credit are computed automatically
-          from the dependents you entered in the Personal Info section
-          {hasDependents ? " — you're all set there" : ""}.
+          from the dependents you entered in the Personal Info section.
+          {hasDependents ? " Review the actual eligibility and identification answers there." : ""}
         </p>
 
         <div className="guided-w2-stack" style={{ marginTop: "16px" }}>
@@ -286,6 +287,7 @@ export function SectionCredits({
             data={current.energy}
             onChange={(next) => onDataChange({ ...current, energy: next })}
           />
+          <VehicleSourceDetails data={current.vehicles} filingStatus={filingStatus} onChange={(next) => onDataChange({ ...current, vehicles: next })} />
         </div>
       </div>
     </RetroShell>

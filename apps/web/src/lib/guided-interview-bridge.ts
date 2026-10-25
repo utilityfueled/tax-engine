@@ -10,6 +10,7 @@
 import Decimal from "decimal.js";
 import { parseGuidedCurrency, hasGuidedCurrency, formatGuidedDollars } from "./guided-currency";
 import { childCreditExclusionValues, dependentFactErrors, personalFactErrors } from "./guided-taxpayer-facts";
+import { buildVehicleCreditInput, vehicleFactErrors } from "./guided-vehicle-facts";
 import { allPaymentFactErrors, assertKnownFacts, deductionFactErrors, educationFactErrors, hasEnteredAmount, paymentFactErrors, retirementFactErrors } from "./guided-required-facts";
 import { adjustmentFactErrors, householdFactErrors, isDeductibleAlimony } from "./guided-adjustment-facts";
 import { statePaymentFactErrors, sumAdditionalStateWithholding } from "./guided-state-facts";
@@ -543,6 +544,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     assertKnownFacts(statePaymentFactErrors(stateReturnData, state.taxYear, segmentation.stateCode));
     assertKnownFacts(careFactErrors(creditsData?.dependentCare, segmentation.filingStatus));
     assertKnownFacts(energyFactErrors(creditsData?.energy, state.taxYear));
+    assertKnownFacts(vehicleFactErrors(creditsData?.vehicles, state.taxYear, segmentation.filingStatus));
   } catch { return null; }
 
   const stateCode = personalInfo?.state || segmentation.stateCode || null;
@@ -633,6 +635,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     dependentCare,
     educationExpenses,
     energyCredits,
+    form8936: buildVehicleCreditInput(creditsData?.vehicles, state.taxYear, segmentation.filingStatus),
     scheduleH,
     iraDeductionWorksheet,
     adjustments: adjustments

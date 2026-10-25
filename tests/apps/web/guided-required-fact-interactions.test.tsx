@@ -6,6 +6,8 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { SectionPersonalInfo } from "@/components/guided-interview/section-personal-info";
 import { HouseholdSourceDetails } from "@/components/guided-interview/household-source-details";
 import { DeductionSourceDetails } from "@/components/guided-interview/deduction-source-details";
+import { VehicleSourceDetails } from "@/components/guided-interview/vehicle-source-details";
+import { buildVehicleCreditInput, type VehicleCreditData } from "@/lib/guided-vehicle-facts";
 import { buildDonationsInput, buildForm1098Inputs, buildScheduleHInput } from "@/lib/guided-interview-bridge";
 import { personalFactErrors } from "@/lib/guided-taxpayer-facts";
 import { emptyDeductionData, emptyOtherTaxesData, type DeductionData, type OtherTaxesData, type PersonalInfoData } from "@/lib/guided-interview-flow";
@@ -37,6 +39,48 @@ beforeEach(() => {
 afterEach(async () => { await act(async () => root.unmount()); container.remove(); });
 
 describe("required fact interaction boundaries", () => {
+  it("collects an actual transferred vehicle with zero prior AGI and never fills unknown price facts", async () => {
+    let latest: VehicleCreditData = { entries: [] };
+    function Harness() { const [data, setData] = useState(latest); return <VehicleSourceDetails data={data} filingStatus="mfj" onChange={(next) => { latest = next; setData(next); }} />; }
+    await act(async () => root.render(<Harness />));
+    await click("Add vehicle");
+    expect(() => buildVehicleCreditInput(latest, 2026, "mfj")).toThrow();
+    await change("Vehicle purchase category", "used");
+    await change("Vehicle owner claiming the credit", "spouse");
+    await change("Vehicle identification number (VIN)", "1HGCM82633A004352");
+    await change("Actual vehicle acquisition date", "2025-09-30");
+    await change("Date you took possession (placed in service)", "2026-01-02");
+    await change("Written binding contract date", "2025-09-29");
+    await change("Date a payment was made under the contract", "2025-09-30");
+    await change("Do actual records establish a binding written contract and qualifying payment?", "true");
+    await change("Did you receive the seller report accepted by IRS Energy Credits Online?", "true");
+    await change("Credit amount on the accepted seller report", "4000");
+    await change("Do actual records establish all applicable vehicle and buyer eligibility requirements?", "false");
+    await change("Actual personal-use percentage (0–100)", "100");
+    await change("Actual previously owned vehicle sale price", "20000.01");
+    await change("Did you elect to transfer this credit to the dealer?", "true");
+    await change("Actual amount transferred to the dealer", "4000");
+    await change("Was the vehicle resold within 30 days?", "false");
+    await change("Was the vehicle returned to the seller within 30 days?", "true");
+    await change("Was the seller report updated and the transferred credit reconciled with the dealer?", "true");
+    await change("Current-year foreign earned income exclusion", "0");
+    await change("Current-year foreign housing deduction", "0");
+    await change("Current-year Puerto Rico / American Samoa exclusion", "0");
+    await change("Are all current-year vehicle MAGI adjustments confirmed from actual records?", "true");
+    await change("Prior-year adjusted gross income (optional if unknown)", "0");
+    expect(() => buildVehicleCreditInput(latest, 2026, "mfj")).toThrow();
+    await change("Actual prior-year filing status", "mfj");
+    await change("Prior-year foreign earned income exclusion", "0");
+    await change("Prior-year foreign housing deduction", "0");
+    await change("Prior-year Puerto Rico / American Samoa exclusion", "0");
+    await change("Are all prior-year vehicle MAGI adjustments confirmed from actual records?", "true");
+    expect(buildVehicleCreditInput(latest, 2026, "mfj")).toMatchObject({ priorYearAgi: "0", previouslyOwnedCleanVehicles: [{ owner: "spouse", salePrice: "20000.01", eligibilityConfirmed: false, sellerReportUpdatedForReturn: true }] });
+    await change("Vehicle purchase category", "new");
+    expect(control("Actual manufacturer suggested retail price").value).toBe("");
+    expect(() => buildVehicleCreditInput(latest, 2026, "mfj")).toThrow();
+    await click("Remove vehicle 1");
+    expect(buildVehicleCreditInput(latest, 2026, "mfj")).toBeUndefined();
+  });
   it("records child credit identity as unknown false and true without guessing from an SSN", async () => {
     let latest: PersonalInfoData = { ...completePersonalInfo, employmentValidSsnIssuedByDueDate: null, tinIssuedByDueDate: null, childTaxCredit: undefined, dependentCount: "1", dependents: [{ ...completeDependent, ctcSsnEligible: null }] };
     function Harness() { const [data, setData] = useState(latest); return <SectionPersonalInfo data={data} filingStatus="mfj" onDataChange={(next) => { latest = next; setData(next); }} />; }

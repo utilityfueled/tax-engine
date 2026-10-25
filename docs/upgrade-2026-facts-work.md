@@ -349,3 +349,24 @@ Source-year/document-fidelity package commit: `70f8d17`.
   confirmation, mortgage/noncash donation details and household Section B rate
   periods. Root/web types, scoped lint (zero errors), all 3,116 spec references and
   diff checks pass. Sparse source package: `81d6a37`.
+
+## Individual clean-vehicle records
+
+- Added guided new/used vehicle records with actual VIN, owner, acquisition and
+  possession dates, binding contract/payment, accepted seller report, qualified
+  amount, powertrain/component facts, personal use, transfer election/amount and
+  resale/return history. Unknown values remain unanswered; known false is kept
+  for the engine's disqualification or reconciliation logic.
+- Prior-year AGI is omitted when unknown. A supplied zero requires actual prior
+  filing status and confirmed adjustment amounts; an owner's separate prior MAGI
+  is collected independently. Duplicate VINs, conflicting dates/year, impossible
+  percentages and inconsistent transfer amounts block the adapter. All monetary
+  comparisons and forwarding preserve Decimal cents.
+- Refreshed [Form 8936 instructions](https://www.irs.gov/instructions/i8936) and
+  [IRS seller-report requirements](https://www.irs.gov/credits-deductions/clean-vehicle-credit-seller-or-dealer-requirements).
+  480 guided/DOM tests pass across 17 files, including model source-presence
+  validation and real interactions for a transferred used vehicle, explicit zero
+  prior AGI and switching to a new-vehicle category with unanswered price facts.
+  Root/web types, scoped lint and diff checks pass. All guided references resolve;
+  three in-progress Form 8863 references were reported to the federal owner.
+  Child-credit identification package: `49e607c`. Filing qualification stays closed.

@@ -95,3 +95,8 @@ lines:
     formula: "For either guided tax year, collect timely employment-valid filer SSN and timely filer TIN facts, each claimed child's CTC SSN or ODC TIN eligibility, Puerto Rico bona fide residence and possession income exclusion. A formatted tax ID is not eligibility evidence. Missing facts block the claim; actual false and zero remain facts, not inferred eligibility. One joint filer's valid SSN can establish the SSN condition, with both filers' timely TIN requirements retained."
     irsRef: "Schedule 8812 instructions taxpayer identification requirements and lines 1-3; IRC 24(h)(7) and 24(h)(9)"
     testRef: "tests/guided-interview/guided-child-credit-facts.test.ts::requires actual identity facts for claimed child credits in either guided year"
+  - line: "vehicle-source-records"
+    description: "Actual vehicle, seller report, transition and MAGI records"
+    formula: "Collect individual new or used vehicle identity, actual owner, source dates, binding contract/payment qualification, seller report, component and buyer eligibility, personal-use percentage, transfer election/amount and return/resale facts. Missing source facts block calculation, while known false and zero survive. Prior AGI remains unknown unless supplied with actual status and confirmed adjustment amounts; owner-specific prior MAGI is separate. Reject duplicate VINs, impossible date ordering and inconsistent transfer amounts."
+    irsRef: "Form 8936 instructions and Schedule A (Form 8936); IRC 30D and 25E transition under Public Law 119-21"
+    testRef: "tests/guided-interview/guided-vehicle-facts.test.ts::requires individual seller report and actual transition facts"
