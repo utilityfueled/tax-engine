@@ -397,7 +397,7 @@ describe("Single filer - W-2 only, standard deduction (simplest return)", () => 
 
   it("Form 1040 Lines 34/37 - refund or owed computed correctly", () => {
     const eq = result.totalPayments.minus(result.refund).plus(result.amountOwed);
-    expect(result.totalTax.toNumber()).toBe(eq.toNumber());
+    expect(result.totalTax.plus(result.estimatedTaxPenalty).toNumber()).toBe(eq.toNumber());
   });
 
   it("no SE tax, no AMT, no NIIT, no Additional Medicare Tax", () => {
@@ -775,7 +775,7 @@ describe("Single filer - education credits (AOTC)", () => {
 
   it("tax equation holds with education credits", () => {
     const eq = result.totalPayments.minus(result.refund).plus(result.amountOwed);
-    expect(result.totalTax.toNumber()).toBe(eq.toNumber());
+    expect(result.totalTax.plus(result.estimatedTaxPenalty).toNumber()).toBe(eq.toNumber());
   });
 });
 
@@ -839,7 +839,7 @@ describe("Single filer - with dependent child (CTC)", () => {
 
   it("tax equation holds with CTC", () => {
     const eq = result.totalPayments.minus(result.refund).plus(result.amountOwed);
-    expect(result.totalTax.toNumber()).toBe(eq.toNumber());
+    expect(result.totalTax.plus(result.estimatedTaxPenalty).toNumber()).toBe(eq.toNumber());
   });
 });
 
@@ -1051,8 +1051,10 @@ describe("Single filer - estimated tax payments and underpayment penalty", () =>
     expect(result.estimatedTaxPenalty.gte(0)).toBe(true);
   });
 
-  it("Sched 2 - penalty included in additional taxes", () => {
-    expect(result.totalAdditionalTaxes.gte(result.estimatedTaxPenalty)).toBe(true);
+  it("Form1040 line38 carries penalty outside Schedule2 additional taxes", () => {
+    expect(result.allLines.find(line => line.form === "1040" && line.line === "38")?.value.toString()).toBe(result.estimatedTaxPenalty.toString());
+    expect(result.schedule2?.lines.find(line => line.line === "19")?.value.toString()).toBe("0");
+    expect(result.totalAdditionalTaxes.toString()).toBe(result.schedule2?.partIITotal.toString());
   });
 
   it("Form 1040 Line 37 - amount owed (insufficient payments)", () => {
@@ -1299,7 +1301,7 @@ describe("Single filer - energy credits (Form 5695)", () => {
 
   it("tax equation holds with energy credits", () => {
     const eq = result.totalPayments.minus(result.refund).plus(result.amountOwed);
-    expect(result.totalTax.toNumber()).toBe(eq.toNumber());
+    expect(result.totalTax.plus(result.estimatedTaxPenalty).toNumber()).toBe(eq.toNumber());
   });
 });
 
@@ -1430,7 +1432,7 @@ describe("Single filer with business property sales", () => {
 
   it("tax equation holds", () => {
     const eq = result.totalPayments.minus(result.refund).plus(result.amountOwed);
-    expect(result.totalTax.toNumber()).toBe(eq.toNumber());
+    expect(result.totalTax.plus(result.estimatedTaxPenalty).toNumber()).toBe(eq.toNumber());
   });
 
   it("audit trail includes Form 4797 Part III entries", () => {

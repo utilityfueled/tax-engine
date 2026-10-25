@@ -981,7 +981,9 @@ describe("Form 2210 - federal pipeline", () => {
     const federal = calculateFederalTax(fixture);
 
     // Verify the excess APTC repayment was computed
-    expect(federal.totalAdditionalTaxes.greaterThan(0)).toBe(true);
+    expect(federal.schedule2?.excessAPTCRepayment.greaterThan(0)).toBe(true);
+    expect(federal.schedule2?.partITotal.gte(federal.schedule2.excessAPTCRepayment)).toBe(true);
+    expect(federal.totalAdditionalTaxes.toString()).toBe("0");
 
     // The penalty must exist — the excess APTC repayment ($2,400) pushes
     // taxShown above the $1K safe harbor threshold

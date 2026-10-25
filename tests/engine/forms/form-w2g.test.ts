@@ -298,9 +298,10 @@ describe("W-2G gambling income", () => {
       ],
     }));
     const withholdingLine = result.allLines.find(
-      (l) => l.form === "1040" && l.line === "25d"
+      (l) => l.form === "1040" && l.line === "25c"
     );
     expect(withholdingLine).toBeDefined();
     expect(withholdingLine!.formula).toContain("W-2G");
+    expect(withholdingLine?.value.toString()).toBe("1200");
   });
 });

@@ -440,3 +440,15 @@ whitespace checks pass. Scoped diff reviewed. Rule versions advanced to2025.8 an
 2026.3-law-integration-draft to identify changed calculations; qualification and
 incomplete2026 gates remain unchanged. Per-filer/per-employer excessSS calculation
 and actual dated Form2210 payment/rate calculation remain separate follow-up.
+
+### Historical routing regressions reconciled — 2026-10-25
+
+Reconciled the fifteen reported historical failures against the refreshed final
+1040/Schedules2/3 instructions. Schedule2line21 is PartII alone, APTC belongs in
+PartI, return balance equations include separate line38 penalty, and source
+withholding checks use1099line25b/W2Gline25c. Corrected the related single-return
+balance equations and strengthened penalty isolation/source amount assertions.
+No test was removed and no tolerance widened. All321 affected tests pass; the144
+cases with added assertions pass again. Typecheck,3,115spec refs and whitespace
+checks pass. Scoped diff reviewed; these fixes do not qualify the legacy2210
+short-method estimate or final tax tables.

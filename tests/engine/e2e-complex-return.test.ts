@@ -422,7 +422,7 @@ describe("E2E Complex MFJ Return", () => {
     const sched3Lines = federal.allLines.filter((l) => l.form === "Sched 3");
     expect(sched3Lines.length).toBeGreaterThan(0);
     // Line 7: total nonrefundable credits
-    const line7 = sched3Lines.find((l) => l.line === "7");
+    const line7 = sched3Lines.find((l) => l.line === "8");
     expect(line7).toBeDefined();
     expect(line7!.value.greaterThan(0)).toBe(true);
   });
@@ -1493,8 +1493,8 @@ describe("E2E Amount Owed Verification: underpayment produces balance due equal 
     expect(federal.refund.toNumber()).toBe(0);
   });
 
-  it("amountOwed equals totalTax minus totalPayments", () => {
-    const expectedOwed = federal.totalTax.minus(federal.totalPayments);
+  it("amountOwed equals totalTax plus line38 penalty minus totalPayments", () => {
+    const expectedOwed = federal.totalTax.plus(federal.estimatedTaxPenalty).minus(federal.totalPayments);
     expect(federal.amountOwed.toNumber()).toBe(expectedOwed.toNumber());
   });
 });
