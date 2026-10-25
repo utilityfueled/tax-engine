@@ -1969,17 +1969,59 @@ export const Form1098Schema = z.object({
   propertyTax: optionalDecimal,
 });
 
-export const Form1095ASchema = z.object({
+const nonnegativePremium = decimal.refine(value => !d(value).isNegative(), "Premium amount must be nonnegative");
+const uniqueCoverageMonths = (rows: Array<{month:number}>) => new Set(rows.map(row => row.month)).size === rows.length;
+export const Form1095ASchema = z.preprocess(value => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const record = value as Record<string,unknown>;
+  const rows = record.monthlyPremiums;
+  const complete = record.sourceFactsComplete !== false && record.taxYear !== undefined
+    && typeof record.marketplace === "string" && record.marketplace.trim().length > 0
+    && typeof record.policyNumber === "string" && record.policyNumber.trim().length > 0
+    && Array.isArray(rows) && rows.length > 0 && rows.every(row => row && typeof row === "object"
+      && ["month","enrolleePremium","slcsp","advancePremiumTaxCredit"].every(key => (row as Record<string,unknown>)[key] !== undefined));
+  return {...record,sourceFactsComplete:complete};
+}, z.object({
+  sourceFactsComplete: z.boolean().optional(),
+  taxYear: z.number().int().optional(),
   marketplace: z.string(),
   policyNumber: z.string(),
-  monthlyPremiums: z.array(
-    z.object({
-      month: z.number().int().min(1).max(12),
-      enrolleePremium: decimal,
-      slcsp: decimal, // Second lowest cost silver plan
-      advancePremiumTaxCredit: optionalDecimal,
-    })
-  ),
+  monthlyPremiums: z.array(z.object({
+    month: z.number().int().min(1).max(12),
+    enrolleePremium: nonnegativePremium,
+    slcsp: nonnegativePremium,
+    advancePremiumTaxCredit: nonnegativePremium.optional().default("0"),
+  })).min(1).refine(uniqueCoverageMonths, "Duplicate1095A source months must be reconciled"),
+}));
+
+export const Form8962Schema = z.object({
+  taxFamilySize: z.number().int().min(1).optional(),
+  fplRegion: z.enum(["contiguous","alaska","hawaii"]).optional(),
+  // Components may be negative; Form8962 line3 applies the household zero floor.
+  taxpayerModifiedAGI: optionalDecimalInput,
+  requiredFilingDependentsModifiedAGI: optionalDecimalInput,
+  householdFactsConfirmed: z.boolean().optional(),
+  canBeClaimedAsDependent: z.boolean().optional(),
+  marriedFilingSeparatelyExceptionConfirmed: z.boolean().optional(),
+  belowPovertyException: z.enum(["none","marketplace_estimate","lawfully_present_ineligible_medicaid"]).optional(),
+  marketplaceEstimatedIncomeWithinEligibilityRange: z.boolean().optional(),
+  marketplaceInformationAccurate: z.boolean().optional(),
+  coverageFactsConfirmed: z.boolean().optional(),
+  allocationRequired: z.boolean().optional(),
+  alternativeMarriageCalculationElected: z.boolean().optional(),
+  selfEmployedHealthInsuranceCoordinationRequired: z.boolean().optional(),
+  qsehraAffected: z.boolean().optional(),
+  lawfulPresenceReconciliationRequired: z.boolean().optional(),
+  monthlyReconciliation: z.array(z.object({
+    month: z.number().int().min(1).max(12),
+    enrolleePremium: nonnegativePremium,
+    slcsp: nonnegativePremium,
+    advancePremiumTaxCredit: nonnegativePremium,
+    coverageEligible: z.boolean(),
+    incomeBasedSepEnrollment: z.boolean(),
+    qsehraAffordable: z.boolean().optional(),
+    qsehraMonthlyPermittedBenefit: nonnegativePremium.optional(),
+  })).refine(uniqueCoverageMonths,"Duplicate PTC reconciliation months are not allowed").optional(),
 });
 
 export const CharitableDonationSchema = z.object({
@@ -2904,6 +2946,11 @@ export type Form8615Input = z.infer<typeof Form8615Schema>;
  */
 export const Form8839ChildSchema = z.preprocess(sourceFactPresence(["isSpecialNeeds", "isForeignAdoption", "employerBenefits", "priorYearCreditsClaimed", "priorYearExclusionsClaimed"]), z.object({
   sourceFactsComplete: z.boolean().optional(),
+  childFirstName: z.string().min(1).optional(),
+  childLastName: z.string().min(1).optional(),
+  childBirthYear: z.number().int().min(1900).optional(),
+  childIdentifyingNumber: z.string().regex(/^\d{3}-?\d{2}-?\d{4}$/).optional(),
+  childPermanentlyDisabled: z.boolean().optional(),
   adoptionFinalizedYear: z.number().int().nullable().optional(),
   expensesByYear: z.array(z.object({year: z.number().int(), amount: decimal})).optional(),
   employerPlanQualified: z.boolean().optional(),
@@ -4458,6 +4505,7 @@ export const TaxYearInputSchema = z.object({
   form1098: z.array(Form1098Schema).default([]),
   form1098E: z.array(Form1098ESchema).default([]),
   form1095A: z.array(Form1095ASchema).default([]),
+  form8962: Form8962Schema.optional(),
   donations: z.array(CharitableDonationSchema).default([]),
   rentalProperties: z.array(RentalPropertySchema).default([]),
   scheduleC: ScheduleCInputSchema.optional(),

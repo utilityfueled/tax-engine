@@ -487,3 +487,17 @@ resolve; the only3 global spec failures are the next package's newly written PTC
 model tests not yet implemented. No test removed or tolerance weakened. Final2026
 forms, complete institution PDF mapping, public-benefit rules and independent
 review remain separate qualification requirements.
+
+### PTC household and monthly source contract — 2026-10-25
+
+Implemented the parallel PTC owner's source-first schema contract. Actual household
+MAGI components retain signed values and unknown optional facts; monthly coverage
+reconciliation requires actual nonnegative premiums/APTC and eligibility answers,
+with duplicate months rejected. Form1095A completeness is calculated before
+legacy defaults, ignores claimed true markers, and preserves incomplete false
+through reparsing so a missing APTC cannot become verified zero. Actual statement
+year and policy identity are required for verified calculation; no household
+benchmark is inferred by summing policies. Three model regressions failed first;
+70 focused schema/historical-form tests, root types, all3,146 spec references and
+whitespace checks pass. Scoped diff reviewed. PTC calculation and federal routing
+are the next parallel integration package; this contract does not qualify filing.
