@@ -212,3 +212,22 @@ root types and all3,629spec references. Scoped lint reports zero errors and
 111pre-existing warnings in the large adapter fixture. The full scoped diff
 was reviewed. Evidence: `oh-withholding-source-staged-tests.log`; type/spec/lint
 output is retained in the task transcript. Independent human review is pending.
+
+## Pennsylvania withholding source validation — 2026-10-25
+
+Refreshed the [2025 PA-40 instructions](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf),
+printed page 21, line 13. Every nonzero ordinary withholding source now needs a
+two-letter source jurisdiction. Previously a spelled-out state silently disappeared
+from the PA total. Every supplied amount must also be finite and nonnegative before
+the jurisdiction filter, including amounts attributed to another state. Decimal
+preserves cents; explicit zero does not require an invented state. Separate OID
+and additional-withholding validations remain in place. The spec's W-2G source
+reference now correctly names Box 15.
+
+The spec preceded regressions across all ten ordinary statement categories.
+The first run had 19 failures and two passes; the focused repair run passed all
+297 tests. The expanded PA core, full-return and PA-40 PDF run passed 939 tests
+in 35 files. Root types, all 384 PA spec references and scoped lint pass with no
+errors or warnings. Logs: `.local/upgrade-evidence/pa-withholding-source-{red,green,expanded}.log`.
+The diff was reviewed. Final 2026 form qualification and independent human review
+remain outstanding; this change does not open a filing or tax-year gate.

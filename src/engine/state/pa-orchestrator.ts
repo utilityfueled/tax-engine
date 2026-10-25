@@ -1164,8 +1164,9 @@ function mapStateWithholding(input: TaxYearInput): Decimal {
   ];
   return sourceRows.reduce((total, row) => {
     const amount = d(row.amount);
+    if (!amount.isFinite() || amount.isNegative()) throw new Error("PA source withholding must be finite and nonnegative.");
     const actualState = row.state?.trim().toUpperCase();
-    if (!actualState && !amount.isZero()) throw new Error("PA withholding needs the actual source state for every nonzero statement amount.");
+    if (!amount.isZero() && !/^[A-Z]{2}$/.test(actualState ?? "")) throw new Error("PA withholding needs the actual source state for every nonzero statement amount.");
     return actualState === "PA" ? total.plus(amount) : total;
   }, new Decimal(0));
 }

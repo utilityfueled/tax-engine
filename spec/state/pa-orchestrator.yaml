@@ -50,7 +50,7 @@ notes: |
     qualified joint survivor annuities are included when the normalized
     1099-R input marks the beneficiary-survivor-annuity indicator.
 
-  State withholding: W-2 Box 17 (PA state) + W-2G Box 13 (PA state) + 1099-G Box 11
+  State withholding: W-2 Box 17 (PA state) + W-2G Box 15 (PA state) + 1099-G Box 11
 
 packetRules:
   packetBehavior: "filled-pa-40-pdf"
@@ -818,6 +818,29 @@ lines:
       - "Non-PA 1099-R/INT/DIV/MISC/NEC withholding excluded"
       - "Mixed PA and non-PA documents across all types"
     testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator sums PA state withholding from W-2s"
+
+  - line: "map-withholding-source-validation"
+    description: "Require actual jurisdiction and valid statement amounts before PA withholding exclusions"
+    formula: |
+      For each W-2, W-2G, 1099-G, 1099-K, 1099-R, 1099-INT, 1099-DIV,
+      1099-MISC, 1099-NEC and 1099-B statement, first require the supplied
+      withholding amount to be finite and nonnegative. For each nonzero amount,
+      require the actual two-letter state code after trimming and uppercasing.
+      Sum only PA amounts using Decimal; preserve exact cents until the return
+      line rounding rule. Explicit zero does not require a state assignment.
+    notes: |
+      PA-40 instructions (2025 revision, retrieved 2026-10-25), printed page21,
+      Line13 require PA tax withheld; residency cannot establish the source
+      jurisdiction. Validation must occur before filtering other jurisdictions
+      so malformed, negative or unknown values cannot silently disappear.
+      Source: https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf
+      This source does not qualify a final 2026 PA-40 form or filing export.
+    edgeCases:
+      - "All ten source categories reject nonzero withholding with missing, blank or spelled-out state"
+      - "Other-state amounts are excluded only after amount validation"
+      - "Negative, NaN and infinite amounts reject before the state filter"
+      - "Explicit zero without a state is preserved; PA cents aggregate exactly"
+    testRef: "tests/engine/state/pa-withholding-source-facts.test.ts::preserves explicit zero and sums PA cents while excluding actual other-state amounts"
 
   - line: "schedule-ue"
     description: "Compute Schedule UE (Unreimbursed Employee Business Expenses) when detailed input provided"
