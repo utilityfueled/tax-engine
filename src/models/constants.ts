@@ -1504,9 +1504,9 @@ export const TAX_CONSTANTS: Record<number, YearConstants> = {
       maxExclusionMFS: d(375000),
     },
     // IRC §408(d)(8)(A), SECURE 2.0 Act §307 — indexed for inflation starting 2024
-    // Rev. Proc. 2024-40 §3.27: $105,000 for 2025
+    // IRS Notice 2025-67 comparison: $108,000 for 2025; $111,000 for 2026.
     qcd: {
-      annualLimit: d(105000),
+      annualLimit: d("108000"),
     },
     // IRC §213(d)(10) — Qualified long-term care insurance premium limits by attained age
     // Rev. Proc. 2024-40 §3.18 for 2025

@@ -111,3 +111,15 @@ qualification, supporting-organization and donor-advised-fund facts. Invalid
 amounts/dates reject. This does not complete the separate itemized 0.5% floor,
 category carryover, PMI or overall limitation work, and the 2026 full-return gate
 still prevents public use of the incomplete rule pack.
+
+## Correction: 2025 QCD limit
+
+IRS Notice 2025-67 explicitly compares the $111,000 2026 QCD limit with
+$108,000 for 2025. The prior constant had used the 2024 $105,000 limit. A new
+published-limit regression failed first; the constant/spec and joint-return
+integration expectation now use $108,000 per owner. The older standalone tests
+that inject $105,000 remain useful parameterized historical-limit tests and do
+not select a tax year. Rule provenance advances to 2025.4. This numeric correction
+does not establish independent review or remedy every legacy QCD eligibility path.
+Checks: 601 focused retirement/federal tests, engine typecheck and spec validation
+pass. Scoped diff reviewed; the QCD change is independent of other 2026 law work.

@@ -138,11 +138,11 @@ notes: |
   reported with Box 7 codes J, Q, T, N, R, or Y. This slice therefore treats
   those codes as IRA reporting even when the checkbox is blank.
   For tax year 2025, the aggregate QCD exclusion per IRA owner is capped at
-  $105,000 (IRC §408(d)(8)(A), indexed for inflation under SECURE 2.0 Act §307,
-  Rev. Proc. 2024-40 §3.27). If total QCDs across all Forms 1099-R exceed the
-  annual limit, only the first $105,000 is excludable and the remainder is
+  $108,000 (IRC §408(d)(8)(A), indexed for inflation under SECURE 2.0 Act §307,
+  IRS Notice 2025-67 (2025 comparison amount)). If total QCDs across all Forms 1099-R exceed the
+  annual limit, only the first $108,000 is excludable and the remainder is
   taxable IRA income on Form 1040 Line 4b. On a joint return, each spouse has
-  their own $105,000 limit applied against their own IRA distributions. The
+  their own $108,000 limit applied against their own IRA distributions. The
   engine enforces the aggregate limit after per-form QCD resolution and before
   computing the final IRA taxable amount.
 
@@ -248,8 +248,8 @@ lines:
 
   - line: "qcdCap"
     description: "QCD annual limit enforcement"
-    formula: "If aggregate QCD exclusion across IRA Forms 1099-R exceeds the annual per-individual limit ($105,000 for 2025 under IRC §408(d)(8)(A), SECURE 2.0 Act §307, Rev. Proc. 2024-40 §3.27), cap the exclusion at the annual limit for each known IRA owner separately when all IRA Forms 1099-R are owner-attributed, otherwise cap the combined exclusion at one annual limit, and add any excess back to IRA taxable income on Line 4b; the capped QCD amount replaces the uncapped amount in the result so downstream consumers see only the allowable exclusion"
-    irsRef: "IRC §408(d)(8)(A); SECURE 2.0 Act §307; Rev. Proc. 2024-40 §3.27"
+    formula: "If aggregate QCD exclusion across IRA Forms 1099-R exceeds the annual per-individual limit ($108,000 for 2025 under IRC §408(d)(8)(A), SECURE 2.0 Act §307, IRS Notice 2025-67 (2025 comparison amount)), cap the exclusion at the annual limit for each known IRA owner separately when all IRA Forms 1099-R are owner-attributed, otherwise cap the combined exclusion at one annual limit, and add any excess back to IRA taxable income on Line 4b; the capped QCD amount replaces the uncapped amount in the result so downstream consumers see only the allowable exclusion"
+    irsRef: "IRC §408(d)(8)(A); SECURE 2.0 Act §307; IRS Notice 2025-67 (2025 comparison amount)"
     inputs:
       - "Aggregate QCD from all IRA Forms 1099-R"
       - "Annual QCD limit from tax-year constants"
@@ -259,8 +259,8 @@ lines:
       - "QCD over the annual limit: excess becomes taxable IRA income"
       - "Multiple QCDs from separate IRA custodians aggregating past the limit"
       - "Single large QCD exceeding the limit on one Form 1099-R"
-      - "MFJ returns: each spouse has their own $105,000 limit when per-owner Form 1099-R separation is available"
-    testRef: "tests/engine/forms/form-1099-r.test.ts::Form 1099-R QCD annual limit - QCDs exceeding $105,000 are capped and excess is taxable"
+      - "MFJ returns: each spouse has their own $108,000 limit when per-owner Form 1099-R separation is available"
+    testRef: "tests/engine/forms/qcd-year-limits.test.ts::Published QCD annual limits"
 
   - line: "simplifiedMethodCarryforward"
     description: "Per-payer Simplified Method cost recovery carryforward for automated year-over-year basis tracking"

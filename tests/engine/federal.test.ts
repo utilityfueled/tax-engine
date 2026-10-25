@@ -5821,11 +5821,11 @@ describe("Retirement distributions through federal pipeline", () => {
     const form1099RLine2 = result.allLines.find((line) => line.form === "Form 1099-R" && line.line === "2");
 
     expect(line4a?.value.toNumber()).toBe(240000);
-    expect(line4b?.value.toNumber()).toBe(30000);
+    expect(line4b?.value.toNumber()).toBe(24000);
     expect(result.iraDistributionsGross.toNumber()).toBe(240000);
-    expect(result.iraDistributionsTaxable.toNumber()).toBe(30000);
-    expect(result.totalIncome.toNumber()).toBe(30000);
-    expect(String(form1099RLine2?.inputs["Qualified charitable distributions (capped)"])).toBe("210000");
+    expect(result.iraDistributionsTaxable.toNumber()).toBe(24000);
+    expect(result.totalIncome.toNumber()).toBe(24000);
+    expect(String(form1099RLine2?.inputs["Qualified charitable distributions (capped)"])).toBe("216000");
   });
 
   it("Form 1040 Line 4b - inherited IRA code Y4 QCDs stay on 4a and do not leak onto the pension lines", () => {
