@@ -146,7 +146,7 @@ const singleFixture: TaxYearInput = {
   ],
   form1095A: [],
   donations: [
-    {
+    { qualifiedOrganization: true, isPrivateFoundation: false,
       organization: "Local NPO",
       type: "cash",
       amount: "2000",
@@ -704,8 +704,8 @@ describe("Single filer - large charitable deductions (itemized)", () => {
       },
     ],
     donations: [
-      { organization: "Red Cross", type: "cash", amount: "12000", dateOfDonation: "2025-03-01", costBasis: "0" },
-      { organization: "Hospital Fund", type: "cash", amount: "5000", dateOfDonation: "2025-06-15", costBasis: "0" },
+      { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Red Cross", type: "cash", amount: "12000", dateOfDonation: "2025-03-01", costBasis: "0" },
+      { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Hospital Fund", type: "cash", amount: "5000", dateOfDonation: "2025-06-15", costBasis: "0" },
     ],
   });
   const result = calculateFederalTax(input);
@@ -978,7 +978,7 @@ describe("Single filer - AMT triggered", () => {
       },
     ],
     donations: [
-      { organization: "Charity", type: "cash", amount: "5000", dateOfDonation: "2025-12-01", costBasis: "0" },
+      { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Charity", type: "cash", amount: "5000", dateOfDonation: "2025-12-01", costBasis: "0" },
     ],
   });
   const result = calculateFederalTax(input);

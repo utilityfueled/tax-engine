@@ -3,6 +3,21 @@ import Decimal from "decimal.js";
 import { redactReviewIdentifiers } from "@/pdf/redact-review-identifiers.js";
 
 describe("review-copy identifiers", () => {
+  it("removes taxpayer last-four source identifiers without changing original histories", () => {
+    const source = {
+      charitableCarryoverSources: { primaryTaxpayerIdLast4: "8384", spouseTaxpayerIdLast4: "9192", vintages: [{ openingCarryforward: "1000.25" }] },
+      netOperatingLoss: { primaryTaxpayerIdLast4: "8384", spouseTaxpayerIdLast4: "9192", vintages: [{ originalLoss: "12500.01" }] },
+    };
+    const original = JSON.stringify(source);
+    const review = redactReviewIdentifiers(source);
+    for (const packet of [review.charitableCarryoverSources, review.netOperatingLoss]) {
+      expect(packet.primaryTaxpayerIdLast4).toBe(""); expect(packet.spouseTaxpayerIdLast4).toBe("");
+    }
+    expect(JSON.stringify(review)).not.toMatch(/8384|9192/);
+    expect(review.charitableCarryoverSources.vintages[0].openingCarryforward).toBe("1000.25");
+    expect(review.netOperatingLoss.vintages[0].originalLoss).toBe("12500.01");
+    expect(JSON.stringify(source)).toBe(original);
+  });
   it("redacts actual account references from review copies without altering source records", () => {
     const actual = { form1099R: [{ accountReference: "Actual account 123456789", taxableAmount: "10000.25" }], form8960Sources: { annuities: [{ accountReference: "Actual account 123456789", sourceId: "form1099R:0" }] } };
     const backup = JSON.stringify(actual);

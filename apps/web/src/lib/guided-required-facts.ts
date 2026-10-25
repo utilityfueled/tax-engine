@@ -56,6 +56,8 @@ export function deductionFactErrors(data: DeductionData | undefined, taxYear?: n
     const error = amountError(entry.amount, "donation amount");
     if (error) errors[`donation-${index}-amount`] = error;
     if (!isActualDate(entry.date) || (taxYear != null && !entry.date.startsWith(`${taxYear}-`))) errors[`donation-${index}-date`] = "Enter the actual donation date in the selected tax year.";
+    if (typeof entry.qualifiedOrganization !== "boolean") errors[`donation-${index}-qualification`] = "Confirm the recipient's actual charitable qualification.";
+    if (entry.qualifiedOrganization === false) return;
     if (typeof entry.isPrivateFoundation !== "boolean") errors[`donation-${index}-classification`] = "Confirm the donation recipient's organization classification.";
     if (taxYear === 2026 && data.method === "standard") {
       for (const field of ["qualifiedOrganization", "supportingOrganization", "donorAdvisedFund"] as const) {
@@ -66,7 +68,7 @@ export function deductionFactErrors(data: DeductionData | undefined, taxYear?: n
       const basisError = amountError(entry.costBasis, "donated property's cost basis");
       if (basisError) errors[`donation-${index}-basis`] = basisError;
       if (typeof entry.isLongTermCapitalGain !== "boolean") errors[`donation-${index}-capital-gain`] = "Confirm whether the donated property is long-term capital gain property.";
-      if (taxYear === 2026 && entry.isPrivateFoundation && entry.isLongTermCapitalGain
+      if (entry.isPrivateFoundation && entry.isLongTermCapitalGain && entry.type === "appreciated_stock"
         && typeof entry.qualifiedAppreciatedStock !== "boolean") errors[`donation-${index}-qualified-stock`] = "Confirm whether this private-foundation gift is qualified appreciated stock.";
     }
   });

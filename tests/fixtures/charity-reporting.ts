@@ -1,5 +1,6 @@
 import { TaxYearInputSchema } from "@/models/inputs.js";
 import { simpleW2Fixture } from "./simple-w2.js";
+import { syntheticPublicCashHistory } from "./charitable-carryover.js";
 
 export function charityReportingFixture() {
   return TaxYearInputSchema.parse({ ...simpleW2Fixture,
@@ -10,5 +11,6 @@ export function charityReportingFixture() {
     ],
     priorYear: { ...simpleW2Fixture.priorYear, charitableCarryforward: "1234.49",
       charitableCarryforwardByYear: [{ taxYear: 2024, category: "cash_60", amount: "1234.49" }] },
+    charitableCarryoverSources: syntheticPublicCashHistory([{ taxYear: 2024, amount: "1234.49" }]),
   });
 }

@@ -1073,7 +1073,7 @@ describe("buildDonationsInput", () => {
       ...emptyDeductionData,
       method: "itemized",
       charitableContributions: "5000",
-      donationEntries: [{ organization: "Actual Charity", type: "cash", amount: "5000", date: "2025-10-01", costBasis: "", isLongTermCapitalGain: null, isPrivateFoundation: false }],
+      donationEntries: [{ qualifiedOrganization: true, organization: "Actual Charity", type: "cash", amount: "5000", date: "2025-10-01", costBasis: "", isLongTermCapitalGain: null, isPrivateFoundation: false }],
     });
     expect(result).toHaveLength(1);
     expect(result[0].amount).toBe("5000");
@@ -1108,7 +1108,7 @@ describe("itemized deductions in preview", () => {
       mortgageEntries: [{ ...completeMortgageSource, lender: "Actual Lender", mortgageInterest: "18000", interestPaidByReturnAmount: "18000", outstandingPrincipal: "250000", originationDate: "2019-06-01" }],
       mortgageWorksheet: { ...completeMortgageWorksheet },
       charitableContributions: "5000",
-      donationEntries: [{ organization: "Actual Charity", type: "cash", amount: "5000", date: "2025-10-01", costBasis: "", isLongTermCapitalGain: null, isPrivateFoundation: false }],
+      donationEntries: [{ qualifiedOrganization: true, organization: "Actual Charity", type: "cash", amount: "5000", date: "2025-10-01", costBasis: "", isLongTermCapitalGain: null, isPrivateFoundation: false }],
       stateLocalTaxes: "10000",
     });
     const previewItemized = computeGuidedPreview(state);

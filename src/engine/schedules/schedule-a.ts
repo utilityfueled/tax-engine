@@ -20,6 +20,9 @@ import { AuditTrail } from "@/utils/audit.js";
 import { calculateSALTLimit } from "@/utils/tax-math.js";
 import { calculateCharitableContributionWorksheet, type CharitableCategory, type CharitableContributionWorksheetInput } from "@/engine/forms/charitable-contribution-worksheet.js";
 import { charitableSourceDigest } from "@/utils/charitable-source-digest.js";
+import { eligibleCurrentCharitableDonations } from "@/engine/forms/charitable-current-sources.js";
+import { calculateCharitableCarryover } from "@/engine/forms/charitable-carryover.js";
+import type { SelectedCharitableCarryover } from "@/engine/forms/selected-charitable-carryover.js";
 // calculateDeductibleMortgageInterest is no longer used here — mortgage interest
 // is now computed with aggregate debt limits per IRS Pub 936 (see Lines 8a-8d section).
 
@@ -51,14 +54,20 @@ export interface ScheduleAInput {
 
 /** Per-year carryforward entry for charitable contribution vintage tracking (IRC §170(d)(1)) */
 export interface CharitableCarryforwardEntry {
+  sourceId?: string;
   taxYear: number;
   category?: CharitableCategory;
+  medium?: "cash" | "noncash";
   amount: Decimal;
 }
 
 /** Reconciliation detail for a single carryforward vintage year */
 export interface CharitableCarryforwardYearDetail {
+  sourceId?: string;
   taxYear: number;
+  category?: CharitableCategory;
+  medium?: "cash" | "noncash";
+  treatedAsPaid?: Decimal;
   amountAvailable: Decimal;
   amountUsed: Decimal;
   amountExpired: Decimal;
@@ -84,6 +93,7 @@ export interface ScheduleAResult {
   charitablePriorYearUsed: Decimal; // Reported line13; separate from current gifts.
   charitableTotal: Decimal; // Reported line14=sum11–13, transferred to17 and other deduction consumers.
   charitableSourceDigest: string; // Original charitable facts, excluding render-only identifiers.
+  charitableTreatment?: SelectedCharitableCarryover; // Set only after canonical deduction selection.
   gamblingLossDeduction: Decimal; // Component of line16
   bondPremiumDeduction: Decimal; // Actual allowable section171 excess
   oidOrdinaryLossDeduction: Decimal; // Actual allowable section1.1275-7(f)(1) ordinary loss
@@ -103,93 +113,7 @@ export interface ScheduleAResult {
   lines: CalculatedLine[];
 }
 
-/** Charitable carryforwards expire after 5 years per IRC §170(d)(1) */
-const CHARITABLE_CARRYFORWARD_YEARS = 5;
-
 const ZERO = new Decimal(0);
-
-/**
- * Resolve per-year carryforward entries from input.
- * If per-year entries are provided, use those (filtered for positive amounts).
- * Otherwise, convert the legacy single aggregate into a single entry from taxYear-1.
- */
-function resolveCharitableCarryforwardEntries(
-  input: TaxYearInput,
-): CharitableCarryforwardEntry[] {
-  const byYear = input.priorYear?.charitableCarryforwardByYear ?? [];
-  if (byYear.length > 0) {
-    return byYear
-      .filter((entry) => d(entry.amount).greaterThan(0))
-      .map((entry) => ({ taxYear: entry.taxYear, amount: d(entry.amount) }))
-      .sort((a, b) => a.taxYear - b.taxYear);
-  }
-
-  const legacy = d(input.priorYear?.charitableCarryforward);
-  if (legacy.isZero()) {
-    return [];
-  }
-
-  const currentTaxYear = input.taxpayer.taxYear;
-  return [{ taxYear: currentTaxYear - 1, amount: legacy }];
-}
-
-/**
- * Apply FIFO ordering to charitable carryforward entries against available capacity.
- * Entries older than 5 years from the current tax year expire (IRC §170(d)(1)).
- */
-function reconcileCharitableCarryforward(
-  entries: CharitableCarryforwardEntry[],
-  currentTaxYear: number,
-  availableCapacity: Decimal,
-): {
-  detail: CharitableCarryforwardYearDetail[];
-  totalUsed: Decimal;
-  totalExpired: Decimal;
-  remaining: CharitableCarryforwardEntry[];
-} {
-  const detail: CharitableCarryforwardYearDetail[] = [];
-  const remaining: CharitableCarryforwardEntry[] = [];
-  let capacity = Decimal.max(ZERO, availableCapacity);
-  let totalUsed = ZERO;
-  let totalExpired = ZERO;
-
-  // Process FIFO — entries already sorted oldest first
-  for (const entry of entries) {
-    const age = currentTaxYear - entry.taxYear;
-    const expired = age > CHARITABLE_CARRYFORWARD_YEARS;
-
-    if (expired) {
-      detail.push({
-        taxYear: entry.taxYear,
-        amountAvailable: entry.amount,
-        amountUsed: ZERO,
-        amountExpired: entry.amount,
-        amountRemaining: ZERO,
-      });
-      totalExpired = totalExpired.plus(entry.amount);
-      continue;
-    }
-
-    const used = Decimal.min(entry.amount, capacity);
-    const remainder = entry.amount.minus(used);
-    capacity = capacity.minus(used);
-    totalUsed = totalUsed.plus(used);
-
-    detail.push({
-      taxYear: entry.taxYear,
-      amountAvailable: entry.amount,
-      amountUsed: used,
-      amountExpired: ZERO,
-      amountRemaining: remainder,
-    });
-
-    if (remainder.greaterThan(0)) {
-      remaining.push({ taxYear: entry.taxYear, amount: remainder });
-    }
-  }
-
-  return { detail, totalUsed, totalExpired, remaining };
-}
 
 export function calculateScheduleA(
   input: TaxYearInput,
@@ -198,6 +122,12 @@ export function calculateScheduleA(
   constants: YearConstants,
   extra?: ScheduleAInput
 ): ScheduleAResult {
+  const eligibleDonations = eligibleCurrentCharitableDonations(input);
+  const legacyCharity = [d(input.priorYear?.charitableCarryforward), ...(input.priorYear?.charitableCarryforwardByYear ?? []).map(row => d(row.amount))];
+  if (legacyCharity.some(value => !value.isFinite() || value.lt(0))) throw new Error("Legacy charitable balances must be finite and nonnegative");
+  if (!input.charitableCarryoverSources && legacyCharity.some(value => value.gt(0))) {
+    throw new Error("Prior charitable carryover balances require an actual source history packet; their category and origin cannot be inferred");
+  }
   const audit = new AuditTrail();
 
   // ── Medical (Lines 1-4) ────────────────────────────────
@@ -350,7 +280,7 @@ export function calculateScheduleA(
   }
   if (input.taxpayer.taxYear === 2026) {
     let eligibleCash = ZERO;
-    for (const donation of input.donations) {
+    for (const donation of eligibleDonations) {
       const amount = d(donation.amount);
       if (!amount.isFinite() || amount.lt(0)) throw new Error("Charitable contribution must be finite and nonnegative");
       const date = new Date(`${donation.dateOfDonation}T00:00:00Z`);
@@ -372,43 +302,48 @@ export function calculateScheduleA(
   let charitableCarryforwards: CharitableCarryforwardEntry[];
   let charitableCarryforwardExpired = ZERO;
   let charitableCarryforwardDetail: CharitableCarryforwardYearDetail[] = [];
-  if (input.taxpayer.taxYear === 2026 || extra?.cryptoCharitableAmounts !== undefined) {
-    if (d(input.priorYear?.charitableCarryforward).gt(0) || input.priorYear?.charitableCarryforwardByYear.some(entry => d(entry.amount).gt(0))) {
-      throw new Error("Historical charitable carryover with the category worksheet requires actual category and applicable floor-transition treatment");
-    }
-    const crypto = extra?.cryptoCharitableAmounts;
-    const amounts = { cashPublic: (extra?.k1CashCharitable ?? ZERO).plus(crypto?.cashPublic ?? ZERO), noncashPublic: crypto?.noncashPublic ?? ZERO,
-      capitalGainPublic: (extra?.k1AppreciatedProperty30 ?? ZERO).plus(crypto?.capitalGainPublic ?? ZERO), cashPrivate: crypto?.cashPrivate ?? ZERO,
-      noncashPrivate: crypto?.noncashPrivate ?? ZERO, capitalGainPrivate: (extra?.k1AppreciatedProperty20 ?? ZERO).plus(crypto?.capitalGainPrivate ?? ZERO) };
-    for (const donation of input.donations) {
-      if (d(donation.amount).isZero()) continue;
-      if (input.taxpayer.taxYear === 2026 && donation.qualifiedOrganization === undefined) throw new Error("Charitable recipient qualification is unknown");
-      if (donation.qualifiedOrganization === false) continue;
-      let contributionValue = d(donation.amount);
-      if (donation.type !== "cash") {
-        if (input.taxpayer.taxYear === 2026 && donation.isLongTermCapitalGain === undefined) throw new Error("Charitable property long-term holding status is unknown");
-        if (!donation.isLongTermCapitalGain) {
-          if (donation.costBasis === undefined && input.taxpayer.taxYear === 2026) throw new Error("Charitable property cost basis is unknown or invalid");
-          if (donation.costBasis !== undefined) {
-            if (!d(donation.costBasis).isFinite() || d(donation.costBasis).lt(0)) throw new Error("Charitable property cost basis is unknown or invalid");
-            contributionValue = min(contributionValue, d(donation.costBasis));
-          }
-        } else if (donation.isPrivateFoundation && (donation.type !== "appreciated_stock" || donation.qualifiedAppreciatedStock !== true)) {
-          if (input.taxpayer.taxYear === 2026 && donation.type === "appreciated_stock" && donation.qualifiedAppreciatedStock === undefined) {
-            throw new Error("Private-foundation qualified appreciated stock status is unknown");
-          }
-          if (donation.costBasis === undefined || !d(donation.costBasis).isFinite() || d(donation.costBasis).lt(0)) throw new Error("Private-foundation capital gain gift requires qualified appreciated stock or actual basis-reduction qualification");
+  const crypto = extra?.cryptoCharitableAmounts;
+  const amounts = { cashPublic: (extra?.k1CashCharitable ?? ZERO).plus(crypto?.cashPublic ?? ZERO), noncashPublic: crypto?.noncashPublic ?? ZERO,
+    capitalGainPublic: (extra?.k1AppreciatedProperty30 ?? ZERO).plus(crypto?.capitalGainPublic ?? ZERO), cashPrivate: crypto?.cashPrivate ?? ZERO,
+    noncashPrivate: crypto?.noncashPrivate ?? ZERO, capitalGainPrivate: (extra?.k1AppreciatedProperty20 ?? ZERO).plus(crypto?.capitalGainPrivate ?? ZERO) };
+  for (const donation of eligibleDonations) {
+    if (d(donation.amount).isZero()) continue;
+    if (donation.qualifiedOrganization === undefined) throw new Error("Charitable recipient qualification is unknown");
+    if (donation.qualifiedOrganization === false) continue;
+    let contributionValue = d(donation.amount);
+    if (donation.type !== "cash") {
+      if (donation.isLongTermCapitalGain === undefined) throw new Error("Charitable property long-term holding status is unknown");
+      if (!donation.isLongTermCapitalGain) {
+        if (donation.costBasis === undefined) throw new Error("Charitable property cost basis is unknown or invalid");
+        if (donation.costBasis !== undefined) {
+          if (!d(donation.costBasis).isFinite() || d(donation.costBasis).lt(0)) throw new Error("Charitable property cost basis is unknown or invalid");
           contributionValue = min(contributionValue, d(donation.costBasis));
         }
+      } else if (donation.isPrivateFoundation && (donation.type !== "appreciated_stock" || donation.qualifiedAppreciatedStock !== true)) {
+        if (donation.type === "appreciated_stock" && donation.qualifiedAppreciatedStock === undefined) {
+          throw new Error("Private-foundation qualified appreciated stock status is unknown");
+        }
+        if (donation.costBasis === undefined || !d(donation.costBasis).isFinite() || d(donation.costBasis).lt(0)) throw new Error("Private-foundation capital gain gift requires qualified appreciated stock or actual basis-reduction qualification");
+        contributionValue = min(contributionValue, d(donation.costBasis));
       }
-      const category = donation.type === "cash"
-        ? donation.isPrivateFoundation ? "cashPrivate" : "cashPublic"
-        : donation.isLongTermCapitalGain
-          ? donation.isPrivateFoundation ? "capitalGainPrivate" : "capitalGainPublic"
-          : donation.isPrivateFoundation ? "noncashPrivate" : "noncashPublic";
-      amounts[category] = amounts[category].plus(contributionValue);
     }
-    if (nolCashLimit !== undefined) amounts.cashPublic = min(amounts.cashPublic, nolCashLimit);
+    const category = donation.type === "cash"
+      ? donation.isPrivateFoundation ? "cashPrivate" : "cashPublic"
+      : donation.isLongTermCapitalGain
+        ? donation.isPrivateFoundation ? "capitalGainPrivate" : "capitalGainPublic"
+        : donation.isPrivateFoundation ? "noncashPrivate" : "noncashPublic";
+    amounts[category] = amounts[category].plus(contributionValue);
+  }
+  if (nolCashLimit !== undefined) amounts.cashPublic = min(amounts.cashPublic, nolCashLimit);
+  if (input.charitableCarryoverSources) {
+    const charitable = calculateCharitableCarryover(input, { contributionBase, current: amounts, itemizes: true });
+    audit.merge(charitable.lines);
+    cashCharitable = charitable.currentCash.plus(charitable.priorCashDeduction);
+    nonCashCharitable = charitable.currentNoncash.plus(charitable.priorNoncashDeduction);
+    charitableCarryforwards = charitable.carryforwards;
+    charitableCarryforwardDetail = charitable.detail;
+    charitableCarryforwardExpired = charitable.expired;
+  } else {
     const charitable = calculateCharitableContributionWorksheet({ taxYear: input.taxpayer.taxYear, contributionBase, amounts });
     audit.merge(charitable.lines);
     const privateCashAllowed = min(amounts.cashPrivate, charitable.allowedAfterFloor.other_30);
@@ -416,148 +351,28 @@ export function calculateScheduleA(
     nonCashCharitable = sum(charitable.allowedAfterFloor.noncash_50, charitable.allowedAfterFloor.capital_gain_30,
       charitable.allowedAfterFloor.capital_gain_20, charitable.allowedAfterFloor.other_30.minus(privateCashAllowed));
     charitableCarryforwards = charitable.carryforwards;
-    const limitDescription = input.taxpayer.taxYear === 2026 ? "2026 category worksheet, including 0.5% floor" : "Final2025 Pub526 Worksheet2 current-contribution category limits";
-    audit.record("Charitable Computation", "cash", "Cash charitable after applicable limitations", cashCharitable, limitDescription);
-    audit.record("Charitable Computation", "noncash", "Noncash charitable after applicable limitations", nonCashCharitable, limitDescription);
-  } else {
-    // ── Historical charitable computation with stacked AGI limits ──
-    // Per IRC §170(b)(1), charitable contribution limits interact (stack):
-    // Non-cash donations:
-    // - LTCG property to supported public charities: 30% of AGI
-    // - LTCG property to validated private foundations / second-category orgs:
-    //   smallest of 20% of AGI, remaining 30% bucket headroom, and remaining
-    //   50% bucket headroom after the supported higher-priority categories
-    // - other non-cash property: 50% of AGI
-    // Cash: 60% minus total non-cash property under (G)
-    const rawPublicAppreciatedPropertyDirect = input.donations
-      .filter((don) => don.type !== "cash" && don.isLongTermCapitalGain && !don.isPrivateFoundation)
-      .reduce((acc, don) => acc.plus(d(don.amount)), new Decimal(0));
-    const rawPublicAppreciatedProperty = rawPublicAppreciatedPropertyDirect
-      .plus(extra?.k1AppreciatedProperty30 ?? new Decimal(0));
-    const rawPrivateFoundationAppreciatedPropertyDirect = input.donations
-      .filter((don) => don.type !== "cash" && don.isLongTermCapitalGain && don.isPrivateFoundation)
-      .reduce((acc, don) => acc.plus(d(don.amount)), new Decimal(0));
-    const rawPrivateFoundationAppreciatedProperty = rawPrivateFoundationAppreciatedPropertyDirect
-      .plus(extra?.k1AppreciatedProperty20 ?? new Decimal(0));
-    const rawOtherNonCash = input.donations
-      .filter((don) => don.type !== "cash" && !don.isLongTermCapitalGain)
-      .reduce((acc, don) => acc.plus(d(don.amount)), new Decimal(0));
-    // Section6102(c): intermediate percentage capacities remain exact. Only
-    // the completed physical lines are rounded after use/carry is computed.
-    const appreciatedLimit = contributionBase.times("0.3");
-    const privateFoundationAppreciatedLimit = contributionBase.times("0.2");
-    const overallNonCashLimit = contributionBase.times("0.5");
-    const deductiblePublicAppreciatedProperty = min(rawPublicAppreciatedProperty, appreciatedLimit);
-    // Other non-cash gets remaining 50% capacity after LTCG
-    const otherNonCashCapacity = zeroFloor(overallNonCashLimit.minus(deductiblePublicAppreciatedProperty));
-    const deductibleOtherNonCash = min(rawOtherNonCash, otherNonCashCapacity);
-
-    // Cash limited to 60% minus non-cash property already allowed (IRC §170(b)(1)(G))
-    const originalCashCharitableDirect = input.donations
-      .filter((don) => don.type === "cash")
-      .reduce((acc, don) => acc.plus(d(don.amount)), new Decimal(0));
-    const rawCashCharitableDirect = nolCashLimit === undefined ? originalCashCharitableDirect : min(originalCashCharitableDirect, nolCashLimit);
-    const rawCashCharitable = rawCashCharitableDirect
-      .plus(extra?.k1CashCharitable ?? new Decimal(0));
-    const cashAGILimit = contributionBase.times("0.6");
-    const preliminaryNonCash = deductiblePublicAppreciatedProperty.plus(deductibleOtherNonCash);
-    const cashCapacity = zeroFloor(cashAGILimit.minus(preliminaryNonCash));
-
-    // Resolve and reconcile per-year carryforward entries with FIFO and 5-year expiration
-    const currentTaxYear = input.taxpayer.taxYear;
-    const carryforwardEntries = resolveCharitableCarryforwardEntries(input);
-    const carryforwardCapacity = zeroFloor(cashCapacity.minus(rawCashCharitable));
-    const carryforwardReconciliation = reconcileCharitableCarryforward(
-      carryforwardEntries, currentTaxYear, carryforwardCapacity,
-    );
-    const carryforwardUsed = carryforwardReconciliation.totalUsed;
-
-    const totalCashCharitable = rawCashCharitable.plus(carryforwardUsed);
-    cashCharitable = min(totalCashCharitable, cashCapacity);
-    const k1CashNote = (extra?.k1CashCharitable ?? new Decimal(0)).isZero()
-      ? ""
-      : ` + K-1 Box 13 Code A ${extra!.k1CashCharitable}`;
-    const carryforwardAuditNote = carryforwardReconciliation.totalExpired.greaterThan(0)
-      ? ` (carryforward used ${carryforwardUsed}, expired ${carryforwardReconciliation.totalExpired})`
-      : ` + carryforward ${carryforwardUsed}`;
-    audit.record("Charitable Computation", "cash", "Cash charitable", cashCharitable,
-      `Sum cash donations ${rawCashCharitableDirect}${k1CashNote}${carryforwardAuditNote} (limited to 60% AGI = $${cashAGILimit})`);
-
-    const remainingThirtyPercentHeadroom = zeroFloor(appreciatedLimit.minus(deductiblePublicAppreciatedProperty));
-    const remainingFiftyPercentHeadroom = zeroFloor(
-      overallNonCashLimit
-        .minus(cashCharitable)
-        .minus(deductiblePublicAppreciatedProperty)
-        .minus(deductibleOtherNonCash)
-    );
-    const deductiblePrivateFoundationAppreciatedProperty = Decimal.min(
-      rawPrivateFoundationAppreciatedProperty,
-      privateFoundationAppreciatedLimit,
-      remainingThirtyPercentHeadroom,
-      remainingFiftyPercentHeadroom
-    );
-    nonCashCharitable = deductiblePublicAppreciatedProperty
-      .plus(deductiblePrivateFoundationAppreciatedProperty)
-      .plus(deductibleOtherNonCash);
-    audit.record("Charitable Computation", "noncash", "Non-cash charitable", nonCashCharitable,
-      "Supported public-charity LTCG property (30% AGI limit) + supported private-foundation LTCG property (20% AGI branch with remaining 30% and 50% headroom limits) + other non-cash property (50% AGI limit)" +
-      ((extra?.k1AppreciatedProperty30 ?? new Decimal(0)).isZero() && (extra?.k1AppreciatedProperty20 ?? new Decimal(0)).isZero()
-        ? ""
-        : " + K-1 Box 13 Code B/C pass-through"), {
-        "Raw public-charity LTCG property (direct)": rawPublicAppreciatedPropertyDirect,
-        "K-1 Box 13 Code B (30% limit)": extra?.k1AppreciatedProperty30 ?? new Decimal(0),
-        "Raw public-charity LTCG property (total)": rawPublicAppreciatedProperty,
-        "Raw private-foundation LTCG property (direct)": rawPrivateFoundationAppreciatedPropertyDirect,
-        "K-1 Box 13 Code C (20% limit)": extra?.k1AppreciatedProperty20 ?? new Decimal(0),
-        "Raw private-foundation LTCG property (total)": rawPrivateFoundationAppreciatedProperty,
-        "Raw other non-cash property": rawOtherNonCash,
-        "30% AGI limit": appreciatedLimit,
-        "20% AGI limit": privateFoundationAppreciatedLimit,
-        "50% AGI limit": overallNonCashLimit,
-        "Deductible public-charity LTCG property": deductiblePublicAppreciatedProperty,
-        "Remaining 30% headroom for private-foundation LTCG property": remainingThirtyPercentHeadroom,
-        "Remaining 50% headroom for private-foundation LTCG property": remainingFiftyPercentHeadroom,
-        "Deductible private-foundation LTCG property": deductiblePrivateFoundationAppreciatedProperty,
-        "Deductible other non-cash property": deductibleOtherNonCash,
-      });
-
-    // ── Charitable carryforward (IRC §170(d)) ───────────
-    // Track excess contributions that carry forward up to 5 years.
-    // Cash excess: current-year cash offered minus deductible cash (excluding carryforward used)
-    // Non-cash excess: total non-cash offered minus deductible non-cash
-    // Unused prior-year carryforward vintages carry forward via reconciliation remaining
-    const totalRawNonCash = rawPublicAppreciatedProperty.plus(rawOtherNonCash).plus(rawPrivateFoundationAppreciatedProperty);
-    const currentYearExcessCash = zeroFloor(rawCashCharitable.minus(cashCapacity));
-    const excessNonCash = zeroFloor(totalRawNonCash.minus(nonCashCharitable));
-    const currentYearExcess = currentYearExcessCash.plus(excessNonCash);
-
-    // Build per-year carryforward: remaining prior-year vintages + new current-year vintage
-    const carryforwardByYear: CharitableCarryforwardEntry[] = [
-      ...carryforwardReconciliation.remaining,
-    ];
-    if (currentYearExcess.greaterThan(0)) {
-      carryforwardByYear.push({ taxYear: currentTaxYear, amount: currentYearExcess });
-    }
-
-    // Aggregate carryforward for backward compatibility
-    charitableCarryforwards = carryforwardByYear;
-    charitableCarryforwardExpired = carryforwardReconciliation.totalExpired;
-    charitableCarryforwardDetail = carryforwardReconciliation.detail;
   }
+  const limitDescription = input.taxpayer.taxYear === 2026 ? "2026 category worksheet, including 0.5% floor" : "Final2025 Pub526 Worksheet2 current-contribution category limits";
+  audit.record("Charitable Computation", "cash", "Cash charitable after applicable limitations", cashCharitable, limitDescription);
+  audit.record("Charitable Computation", "noncash", "Noncash charitable after applicable limitations", nonCashCharitable, limitDescription);
+
   const newCharitableCarryforward = sum(...charitableCarryforwards.map(entry => entry.amount));
   const exactPriorUsed = sum(...charitableCarryforwardDetail.map(entry => entry.amountUsed));
-  const exactCurrentCash = cashCharitable.minus(exactPriorUsed);
-  if ([exactCurrentCash, nonCashCharitable, exactPriorUsed].some(value => !value.isFinite() || value.lt(0))) {
+  const exactPriorCash = sum(...charitableCarryforwardDetail.filter(entry => entry.medium === "cash").map(entry => entry.amountUsed));
+  const exactPriorNoncash = sum(...charitableCarryforwardDetail.filter(entry => entry.medium === "noncash").map(entry => entry.amountUsed));
+  const exactCurrentCash = cashCharitable.minus(exactPriorCash);
+  const exactCurrentNoncash = nonCashCharitable.minus(exactPriorNoncash);
+  if (!exactPriorUsed.eq(exactPriorCash.plus(exactPriorNoncash)) || [exactCurrentCash, exactCurrentNoncash, exactPriorUsed].some(value => !value.isFinite() || value.lt(0))) {
     throw new Error("Charitable current and prior computational groups must reconcile");
   }
   const charitableCurrentCash = roundDollar(exactCurrentCash);
-  const charitableCurrentNoncash = roundDollar(nonCashCharitable);
+  const charitableCurrentNoncash = roundDollar(exactCurrentNoncash);
   const charitablePriorYearUsed = roundDollar(exactPriorUsed);
   const charitableTotal = sum(charitableCurrentCash, charitableCurrentNoncash, charitablePriorYearUsed);
   audit.record("Sched A", "11", "Current cash charitable contributions", charitableCurrentCash,
     "Round the completed current-cash group after category limits; preserve original cents", { "Exact current cash": exactCurrentCash });
   audit.record("Sched A", "12", "Current noncash charitable contributions", charitableCurrentNoncash,
-    "Round the completed current-noncash group after category limits", { "Exact current noncash": nonCashCharitable });
+    "Round the completed current-noncash group after category limits", { "Exact current noncash": exactCurrentNoncash });
   audit.record("Sched A", "13", "Prior-year charitable carryover used", charitablePriorYearUsed,
     "Round actual prior-year use separately from current gifts", { "Exact prior carry used": exactPriorUsed });
   audit.record("Sched A", "14", "Total charitable contributions", charitableTotal, "Add reported lines11,12,13");

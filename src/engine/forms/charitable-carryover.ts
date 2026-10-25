@@ -1,0 +1,87 @@
+/** Actual prior charitable categories. Spec: spec/federal/charitable-carryover-sources.yaml */
+import Decimal from "decimal.js";
+import type { TaxYearInput } from "@/models/inputs.js";
+import type { CalculatedLine } from "@/models/outputs.js";
+import type { CharitableCategory, CharitableContributionWorksheetInput } from "./charitable-contribution-worksheet.js";
+import { AuditTrail } from "@/utils/audit.js";
+import { d, sum, zeroFloor } from "@/utils/decimal.js";
+import { validateCharitableCarryoverSources, type CharitableCarryoverBalance } from "./charitable-carryover-source-validation.js";
+const ZERO = d("0");
+type Medium = "cash" | "noncash";
+export type { CharitableCarryoverBalance } from "./charitable-carryover-source-validation.js";
+export interface CharitableCarryoverDetail {
+  sourceId: string; taxYear: number; category: CharitableCategory; medium: Medium;
+  amountAvailable: Decimal; treatedAsPaid: Decimal; amountUsed: Decimal; amountExpired: Decimal; amountRemaining: Decimal;
+}
+export interface CharitableCarryoverResult {
+  currentCash: Decimal; currentNoncash: Decimal; priorDeduction: Decimal; priorCashDeduction: Decimal; priorNoncashDeduction: Decimal;
+  priorTreatedAsPaid: Decimal; totalDeduction: Decimal; detail: CharitableCarryoverDetail[];
+  carryforwards: CharitableCarryoverBalance[]; expired: Decimal; lines: CalculatedLine[];
+}
+/** Current amounts already reflect actual qualification and valuation, not prior contributions. */
+export function calculateCharitableCarryover(input: TaxYearInput, context: {
+  contributionBase: Decimal; current: CharitableContributionWorksheetInput["amounts"]; itemizes: boolean;
+}): CharitableCarryoverResult {
+  const records = validateCharitableCarryoverSources(input).map(row => ({ ...row, used: ZERO }));
+  if (input.taxpayer.taxYear !== 2025) throw new Error("Charitable carryover 2026 floor/nonitemizer transition requires its separate source method");
+  if (!context.contributionBase.isFinite() || Object.values(context.current).some(value => !Decimal.isDecimal(value) || !value.isFinite() || value.lt(0))) {
+    throw new Error("Current charitable amounts and contribution base must be finite with nonnegative contributions");
+  }
+  const taxYear = input.taxpayer.taxYear;
+  const base = zeroFloor(context.contributionBase), fifty = base.times("0.50"), thirty = base.times("0.30"), twenty = base.times("0.20");
+  const raw = context.current;
+  const eligiblePublic = records.filter(row => row.taxYear + 5 >= taxYear && ["cash_60", "noncash_50", "capital_gain_30"].includes(row.category));
+  const allPublicFits = sum(raw.cashPublic, raw.noncashPublic, raw.capitalGainPublic, ...eligiblePublic.map(row => row.amount)).lte(fifty)
+    && raw.capitalGainPublic.plus(sum(...eligiblePublic.filter(row => row.category === "capital_gain_30").map(row => row.amount))).lte(thirty);
+  if (records.some(row => row.category === "cash_60" && row.amount.gt(0) && row.taxYear + 5 >= taxYear)
+    && (raw.noncashPublic.gt(0) || raw.capitalGainPublic.gt(0)) && !allPublicFits) throw new Error("Prior cash with binding current public property requires its separate modern category-ordering method");
+  const consume = (category: CharitableCategory, capacity: Decimal): Decimal => {
+    let remaining = zeroFloor(capacity), used = ZERO;
+    for (const row of records.filter(record => record.category === category && record.taxYear + 5 >= taxYear)) {
+      row.used = Decimal.min(row.amount, remaining);
+      remaining = remaining.minus(row.used); used = used.plus(row.used);
+    }
+    return used;
+  };
+  const g = Decimal.min(raw.cashPublic, base.times("0.60"));
+  const priorG = consume("cash_60", base.times("0.60").minus(g));
+  const a = Decimal.min(raw.noncashPublic, zeroFloor(fifty.minus(g).minus(priorG)));
+  const currentCForCarryCapacity = Decimal.min(raw.capitalGainPublic, thirty);
+  const priorA = consume("noncash_50", fifty.minus(g).minus(priorG).minus(a).minus(currentCForCarryCapacity));
+  const priorC = consume("capital_gain_30", Decimal.min(thirty.minus(currentCForCarryCapacity), fifty.minus(g).minus(priorG).minus(a).minus(priorA).minus(currentCForCarryCapacity)));
+  const b = Decimal.min(raw.cashPrivate.plus(raw.noncashPrivate), thirty,
+    zeroFloor(fifty.minus(raw.cashPublic).minus(raw.noncashPublic).minus(raw.capitalGainPublic).minus(priorG).minus(priorA).minus(priorC)));
+  const c = Decimal.min(raw.capitalGainPublic, zeroFloor(thirty.minus(priorC)), zeroFloor(fifty.minus(g).minus(priorG).minus(a).minus(priorA).minus(b).minus(priorC)));
+  const priorB = consume("other_30", Decimal.min(thirty.minus(b), fifty.minus(g).minus(priorG).minus(a).minus(priorA).minus(b).minus(c).minus(priorC)));
+  const dCapacity = Decimal.min(twenty, zeroFloor(thirty.minus(c).minus(priorC)), zeroFloor(thirty.minus(b).minus(priorB)), zeroFloor(fifty.minus(g).minus(priorG).minus(a).minus(priorA).minus(b).minus(priorB).minus(c).minus(priorC)));
+  const privateCapital = Decimal.min(raw.capitalGainPrivate, dCapacity);
+  consume("capital_gain_20", dCapacity.minus(privateCapital));
+  const privateCash = Decimal.min(raw.cashPrivate, b);
+  const currentCash = g.plus(privateCash), currentNoncash = sum(a, c, privateCapital, b.minus(privateCash));
+  const detail = records.map(row => {
+    const remainder = row.amount.minus(row.used), expires = row.taxYear + 5 <= taxYear;
+    return { sourceId: row.sourceId, taxYear: row.taxYear, category: row.category, medium: row.medium, amountAvailable: row.amount,
+      treatedAsPaid: row.used, amountUsed: context.itemizes ? row.used : ZERO, amountExpired: expires ? remainder : ZERO, amountRemaining: expires ? ZERO : remainder };
+  });
+  const carryforwards: CharitableCarryoverBalance[] = detail.filter(row => row.amountRemaining.gt(0)).map(row => ({ sourceId: row.sourceId, taxYear: row.taxYear, category: row.category, medium: row.medium, amount: row.amountRemaining }));
+  const newAmounts: [CharitableCategory, Medium, Decimal][] = [
+    ["cash_60", "cash", raw.cashPublic.minus(g)], ["noncash_50", "noncash", raw.noncashPublic.minus(a)],
+    ["capital_gain_30", "noncash", raw.capitalGainPublic.minus(c)], ["other_30", "cash", raw.cashPrivate.minus(privateCash)],
+    ["other_30", "noncash", raw.noncashPrivate.minus(b.minus(privateCash))], ["capital_gain_20", "noncash", raw.capitalGainPrivate.minus(privateCapital)],
+  ];
+  newAmounts.filter(([, , value]) => value.gt(0)).forEach(([category, medium, value]) => carryforwards.push({ sourceId: `current-${category}-${medium}`, taxYear, category, medium, amount: value }));
+  const priorCashDeduction = sum(...detail.filter(row => row.medium === "cash").map(row => row.amountUsed));
+  const priorNoncashDeduction = sum(...detail.filter(row => row.medium === "noncash").map(row => row.amountUsed));
+  const priorDeduction = priorCashDeduction.plus(priorNoncashDeduction), priorTreatedAsPaid = sum(...detail.map(row => row.treatedAsPaid));
+  const audit = new AuditTrail();
+  detail.forEach((row, index) => audit.record("Charitable Carryover", `prior-${index+1}`, "Actual prior charitable source reconciliation", row.amountUsed,
+    "Original category and year; current-category priority, FIFO, fifth-year expiry and standard-year absorption", {
+      opening: row.amountAvailable, treatedAsPaid: row.treatedAsPaid, expired: row.amountExpired, remaining: row.amountRemaining,
+    }));
+  const totalDeduction = context.itemizes ? sum(currentCash, currentNoncash, priorDeduction) : ZERO;
+  audit.record("Charitable Carryover", "total", "Actual current and prior deduction before physical reporting", totalDeduction,
+    "Current cash + current noncash + actual prior deduction; a standard year retains only carry absorption");
+  return { currentCash: context.itemizes ? currentCash : ZERO, currentNoncash: context.itemizes ? currentNoncash : ZERO,
+    priorDeduction, priorCashDeduction, priorNoncashDeduction, priorTreatedAsPaid, totalDeduction, detail,
+    carryforwards, expired: sum(...detail.map(row => row.amountExpired)), lines: audit.getLines() };
+}

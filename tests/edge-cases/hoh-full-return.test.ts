@@ -632,7 +632,7 @@ describe("HoH with itemized deductions exceeding standard deduction", () => {
       },
     ],
     donations: [
-      {
+      { qualifiedOrganization: true, isPrivateFoundation: false,
         organization: "Austin Food Bank",
         type: "cash",
         amount: "5000",

@@ -240,14 +240,14 @@ const complexE2EFixture: TaxYearInput = {
   ],
   form1095A: [],
   donations: [
-    {
+    { qualifiedOrganization: true, isPrivateFoundation: false,
       organization: "Red Cross",
       type: "cash",
       amount: "8000",
       dateOfDonation: "2025-12-20",
       costBasis: "0",
     },
-    {
+    { qualifiedOrganization: true, isPrivateFoundation: false,
       organization: "University Foundation",
       type: "appreciated_stock",
       amount: "15000",

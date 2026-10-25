@@ -113,7 +113,8 @@ export function calculateForm172Return(input: TaxYearInput, context?: Form172Ret
   }
   const capital = calculateForm172CapitalSources(input, context?.scheduleD);
   if (input.donations.length || !d(input.priorYear?.charitableCarryforward).isZero()
-    || input.priorYear?.charitableCarryforwardByYear?.some(row => !d(row.amount).isZero())) {
+    || input.priorYear?.charitableCarryforwardByYear?.some(row => !d(row.amount).isZero())
+    || input.charitableCarryoverSources?.vintages?.some(row => !d(row.openingCarryforward).isZero())) {
     throw new Error("Form172 current origin and charitable itemized carry require their separate regular and alternative coordination");
   }
   if (input.form461 && [input.form461.otherBusinessIncome, input.form461.otherBusinessDeductions,

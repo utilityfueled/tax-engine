@@ -1,3 +1,4 @@
+import { syntheticPublicCashHistory } from "../fixtures/charitable-carryover.js";
 /**
  * Edge case tests for Schedule A — Itemized Deductions
  * Tests SALT cap ($10K/$5K MFS), medical 7.5% threshold, mortgage
@@ -260,7 +261,7 @@ describe("Schedule A - total itemized deductions", () => {
         mortgageInsurancePremiums: "200",
       }],
       donations: [
-        { recipient: "Charity", amount: "5000", type: "cash" },
+        { qualifiedOrganization: true, isPrivateFoundation: false, dateOfDonation: "2025-12-01", organization: "Synthetic qualified charity", recipient: "Charity", amount: "5000", type: "cash" },
       ],
     }), d(100000), "single", c, { medicalExpenses: d(10000) });
     expect(result.medicalDeduction.toNumber()).toBe(2500);
@@ -400,7 +401,7 @@ describe("Schedule A - all categories simultaneously", () => {
         mortgageInsurancePremiums: "500",
       }],
       donations: [
-        { recipient: "Red Cross", amount: "7000", type: "cash" },
+        { qualifiedOrganization: true, isPrivateFoundation: false, dateOfDonation: "2025-12-01", organization: "Synthetic qualified charity", recipient: "Red Cross", amount: "7000", type: "cash" },
       ],
     }), d(150000), "single", c, { medicalExpenses: d(15000) });
 
@@ -421,7 +422,7 @@ describe("Schedule A - charitable deduction AGI limits", () => {
     // AGI $100K → 60% limit = $60K. Cash donations $20K → all deductible
     const result = calculateScheduleA(makeFixture({
       donations: [
-        { organization: "Red Cross", amount: "20000", type: "cash", dateOfDonation: "2025-06-01" },
+        { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Red Cross", amount: "20000", type: "cash", dateOfDonation: "2025-06-01" },
       ],
     }), d(100000), "single", c);
     expect(result.cashCharitable.toNumber()).toBe(20000);
@@ -431,7 +432,7 @@ describe("Schedule A - charitable deduction AGI limits", () => {
     // AGI $100K → 60% limit = $60K. Cash donations $75K → capped at $60K
     const result = calculateScheduleA(makeFixture({
       donations: [
-        { organization: "Foundation", amount: "75000", type: "cash", dateOfDonation: "2025-06-01" },
+        { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Foundation", amount: "75000", type: "cash", dateOfDonation: "2025-06-01" },
       ],
     }), d(100000), "single", c);
     expect(result.cashCharitable.toNumber()).toBe(60000);
@@ -441,7 +442,7 @@ describe("Schedule A - charitable deduction AGI limits", () => {
     // AGI $200K → 60% limit = $120K. Cash donations $120K → exactly at limit
     const result = calculateScheduleA(makeFixture({
       donations: [
-        { organization: "Charity", amount: "120000", type: "cash", dateOfDonation: "2025-06-01" },
+        { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Charity", amount: "120000", type: "cash", dateOfDonation: "2025-06-01" },
       ],
     }), d(200000), "single", c);
     expect(result.cashCharitable.toNumber()).toBe(120000);
@@ -451,7 +452,7 @@ describe("Schedule A - charitable deduction AGI limits", () => {
     // AGI $200K → 30% limit = $60K. Appreciated stock $25K → all deductible
     const result = calculateScheduleA(makeFixture({
       donations: [
-        { organization: "Museum", amount: "25000", type: "appreciated_stock", dateOfDonation: "2025-06-01", costBasis: "10000", isLongTermCapitalGain: true },
+        { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Museum", amount: "25000", type: "appreciated_stock", dateOfDonation: "2025-06-01", costBasis: "10000", isLongTermCapitalGain: true },
       ],
     }), d(200000), "single", c);
     expect(result.nonCashCharitable.toNumber()).toBe(25000);
@@ -461,24 +462,24 @@ describe("Schedule A - charitable deduction AGI limits", () => {
     // AGI $100K → 30% limit = $30K. Appreciated stock $50K → capped at $30K
     const result = calculateScheduleA(makeFixture({
       donations: [
-        { organization: "University", amount: "50000", type: "appreciated_stock", dateOfDonation: "2025-06-01", costBasis: "15000", isLongTermCapitalGain: true },
+        { qualifiedOrganization: true, isPrivateFoundation: false, organization: "University", amount: "50000", type: "appreciated_stock", dateOfDonation: "2025-06-01", costBasis: "15000", isLongTermCapitalGain: true },
       ],
     }), d(100000), "single", c);
     expect(result.nonCashCharitable.toNumber()).toBe(30000);
   });
 
   it("mix of cash and appreciated property: stacked per IRC §170(b)(1)", () => {
-    // AGI $100K. LTCG = min($40K, 30%=$30K) = $30K. Non-cash = $30K.
-    // Cash = min($70K, 60%=$60K - $30K = $30K) = $30K.
+    // Final2025 Pub526 Worksheet2: cash=min(70000,60000)=60000 first.
+    // Capital=min(40000,30000,max(50000-70000,0))=0; carry10000cash+40000capital.
     const result = calculateScheduleA(makeFixture({
       donations: [
-        { organization: "Red Cross", amount: "70000", type: "cash", dateOfDonation: "2025-06-01" },
-        { organization: "Art Museum", amount: "40000", type: "appreciated_stock", dateOfDonation: "2025-06-01", costBasis: "12000", isLongTermCapitalGain: true },
+        { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Red Cross", amount: "70000", type: "cash", dateOfDonation: "2025-06-01" },
+        { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Art Museum", amount: "40000", type: "appreciated_stock", dateOfDonation: "2025-06-01", costBasis: "12000", isLongTermCapitalGain: true },
       ],
     }), d(100000), "single", c);
-    expect(result.cashCharitable.toNumber()).toBe(30000);  // 60% - 30K = $30K
-    expect(result.nonCashCharitable.toNumber()).toBe(30000);
-    // Total = $30K + $30K = $60K = 60% of AGI
+    expect(result.cashCharitable.toNumber()).toBe(60000);
+    expect(result.nonCashCharitable.toNumber()).toBe(0);
+    expect(result.charitableCarryforward.toNumber()).toBe(50000);
     expect(result.totalItemized.toNumber()).toBe(60000);
   });
 
@@ -486,8 +487,8 @@ describe("Schedule A - charitable deduction AGI limits", () => {
     // AGI $0 → 60% = $0, 30% = $0
     const result = calculateScheduleA(makeFixture({
       donations: [
-        { organization: "Charity", amount: "5000", type: "cash", dateOfDonation: "2025-06-01" },
-        { organization: "Museum", amount: "3000", type: "appreciated_stock", dateOfDonation: "2025-06-01", costBasis: "1000", isLongTermCapitalGain: true },
+        { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Charity", amount: "5000", type: "cash", dateOfDonation: "2025-06-01" },
+        { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Museum", amount: "3000", type: "appreciated_stock", dateOfDonation: "2025-06-01", costBasis: "1000", isLongTermCapitalGain: true },
       ],
     }), d(0), "single", c);
     expect(result.cashCharitable.toNumber()).toBe(0);
@@ -496,9 +497,9 @@ describe("Schedule A - charitable deduction AGI limits", () => {
 
   it("charitable carryforward from prior year added to cash before AGI limit", () => {
     // AGI $100K → 60% limit = $60K. Cash $30K + carryforward $40K = $70K → capped at $60K
-    const result = calculateScheduleA(makeFixture({
+    const result = calculateScheduleA(makeFixture({ charitableCarryoverSources: syntheticPublicCashHistory([{ taxYear: 2024, amount: "40000" }]),
       donations: [
-        { organization: "Charity", amount: "30000", type: "cash", dateOfDonation: "2025-06-01" },
+        { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Charity", amount: "30000", type: "cash", dateOfDonation: "2025-06-01" },
       ],
       priorYear: { charitableCarryforward: "40000" },
     }), d(100000), "single", c);
@@ -933,7 +934,7 @@ describe("Schedule A - itemized vs standard deduction in federal pipeline", () =
       }],
       form1098: [],
       donations: [
-        { recipient: "Charity", amount: "3000", type: "cash" },
+        { qualifiedOrganization: true, isPrivateFoundation: false, dateOfDonation: "2025-12-01", organization: "Synthetic qualified charity", recipient: "Charity", amount: "3000", type: "cash" },
       ],
     };
     const result = calculateFederalTax(fixture);
@@ -1047,7 +1048,7 @@ describe("Schedule A - all categories simultaneously hitting caps and limits", (
         mortgageInsurancePremiums: "0",
       }],
       donations: [
-        { organization: "Foundation", amount: "120000", type: "cash", dateOfDonation: "2025-06-01" },
+        { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Foundation", amount: "120000", type: "cash", dateOfDonation: "2025-06-01" },
       ],
     }), d(200000), "single", c, { medicalExpenses: d(16500) });
 
@@ -1081,7 +1082,7 @@ describe("Schedule A - audit trail completeness", () => {
         mortgageInsurancePremiums: "300",
       }],
       donations: [
-        { organization: "Charity", amount: "4000", type: "cash", dateOfDonation: "2025-06-01" },
+        { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Charity", amount: "4000", type: "cash", dateOfDonation: "2025-06-01" },
       ],
     }), d(120000), "single", c, { medicalExpenses: d(10000) });
 
@@ -1118,7 +1119,7 @@ describe("Schedule A - audit trail completeness", () => {
       { medicalExpenses: d(10000) }
     );
     for (const line of result.lines) {
-      expect(["Sched A", "SALT WS", "SALT Income Tax WS", "Pub936 Table1", "OID Deduction Worksheet", "Educator Expense Worksheet", "Charitable Computation"]).toContain(line.form);
+      expect(["Sched A", "SALT WS", "SALT Income Tax WS", "Pub936 Table1", "OID Deduction Worksheet", "Educator Expense Worksheet", "Charitable Computation", "Charitable WS"]).toContain(line.form);
     }
     expect(result.lines.some(line => line.form === "SALT Income Tax WS" && line.line === "total")).toBe(true);
     const oidLoss = result.lines.filter(line => line.form === "OID Deduction Worksheet" && line.line === "ordinary-loss");
@@ -1127,6 +1128,11 @@ describe("Schedule A - audit trail completeness", () => {
     const educator = result.lines.filter(line => line.form === "Educator Expense Worksheet" && line.line === "itemized");
     expect(educator).toHaveLength(1);
     expect(educator[0].value.toString()).toBe("0");
+    for (const id of ["cash_60", "noncash_50", "capital_gain_30", "other_30", "capital_gain_20", "total"]) {
+      const category = result.lines.filter(line => line.form === "Charitable WS" && line.line === id);
+      expect(category).toHaveLength(1);
+      expect(category[0].value.toString()).toBe("0");
+    }
     for (const id of ["cash", "noncash"]) {
       const computational = result.lines.filter(line => line.form === "Charitable Computation" && line.line === id);
       expect(computational).toHaveLength(1);

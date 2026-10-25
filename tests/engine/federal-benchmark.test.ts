@@ -55,8 +55,8 @@ const complexFixture: TaxYearInput = {
   form1098: [{ lender: "Chase", mortgageInterestReceived: "22000", outstandingMortgagePrincipal: "550000", propertyTax: "9000", refundOfOverpaidInterest: "0", mortgageInsurancePremiums: "0", pointsPaid: "0" }],
   form1095A: [],
   donations: [
-    { organization: "Red Cross", type: "cash", amount: "8000", dateOfDonation: "2025-12-20", costBasis: "0" },
-    { organization: "University", type: "appreciated_stock", amount: "15000", costBasis: "5000", dateOfDonation: "2025-11-15", isLongTermCapitalGain: true },
+    { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Red Cross", type: "cash", amount: "8000", dateOfDonation: "2025-12-20", costBasis: "0" },
+    { qualifiedOrganization: true, isPrivateFoundation: false, organization: "University", type: "appreciated_stock", amount: "15000", costBasis: "5000", dateOfDonation: "2025-11-15", isLongTermCapitalGain: true },
   ],
   adjustments: {
     estimatedTaxPayments: [
@@ -181,7 +181,7 @@ function buildStressFixture(): TaxYearInput {
     scheduleK1,
     form1098: [{ lender: "Bank", mortgageInterestReceived: "30000", outstandingMortgagePrincipal: "600000", propertyTax: "15000", refundOfOverpaidInterest: "0", mortgageInsurancePremiums: "0", pointsPaid: "0" }],
     form1095A: [],
-    donations: [{ organization: "Charity", type: "cash", amount: "50000", dateOfDonation: "2025-12-01", costBasis: "0" }],
+    donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, organization: "Charity", type: "cash", amount: "50000", dateOfDonation: "2025-12-01", costBasis: "0" }],
     adjustments: { hsaDeduction: "8300" },
   };
 }

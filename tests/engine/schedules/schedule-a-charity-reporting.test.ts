@@ -18,7 +18,7 @@ describe("ScheduleA actual charity reporting", () => {
       ["privateCapital", "200.098", "9800.892"],
     ] as const) {
       const input = charityReportingFixture();
-      input.priorYear.charitableCarryforward = "0";
+      input.charitableCarryoverSources = undefined; input.priorYear.charitableCarryforward = "0";
       input.priorYear.charitableCarryforwardByYear = [];
       input.donations = [{ ...input.donations[kind === "cash" ? 0 : 1],
         amount: "10000.99", isLongTermCapitalGain: kind.endsWith("Capital"),
@@ -35,7 +35,7 @@ describe("ScheduleA actual charity reporting", () => {
   it("retains current category worksheet cents separately from reported charity lines", () => {
     const input = charityReportingFixture();
     input.taxpayer.taxYear = 2026;
-    input.priorYear.charitableCarryforward = "0";
+    input.charitableCarryoverSources = undefined; input.priorYear.charitableCarryforward = "0";
     input.priorYear.charitableCarryforwardByYear = [];
     input.donations = input.donations.map((row, index) => ({ ...row,
       dateOfDonation: "2026-05-01", amount: index === 0 ? "100.49" : "200.49",
@@ -77,7 +77,7 @@ describe("ScheduleA actual charity reporting", () => {
   });
   // Spec: schedule-a-charity-reporting.yaml rounding.
   it("rounds each completed charity line without changing original source cents", () => {
-    const input = charityReportingFixture(); input.priorYear.charitableCarryforward = "0"; input.priorYear.charitableCarryforwardByYear = [];
+    const input = charityReportingFixture(); input.charitableCarryoverSources = undefined; input.priorYear.charitableCarryforward = "0"; input.priorYear.charitableCarryforwardByYear = [];
     input.donations[0].amount = "100.49"; input.donations[1].amount = "200.49";
     const original = structuredClone(input);
     const result = calculateFederalTax(input);

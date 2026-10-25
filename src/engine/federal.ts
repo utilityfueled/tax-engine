@@ -64,6 +64,7 @@ import { calculateScheduleE } from "./schedules/schedule-e.js";
 import { calculateScheduleSE } from "./schedules/schedule-se.js";
 import { calculateHomeMortgageInterest } from "./forms/home-mortgage-interest.js";
 import { calculateScheduleA } from "./schedules/schedule-a.js";
+import { calculateSelectedCharitableCarryover } from "./forms/selected-charitable-carryover.js";
 import { calculateSchedule1AReturn } from "./forms/schedule-1-a-return.js";
 import { calculateItemizedDeductionLimit } from "./forms/itemized-deduction-limit.js";
 import { calculateStandardDeduction } from "./forms/standard-deduction.js";
@@ -2689,6 +2690,10 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     }
   }
   const { qbiDeduction, form8995Result, form8995AResult } = qbiCalculation;
+  if (input.charitableCarryoverSources) {
+    schedA.charitableTreatment = calculateSelectedCharitableCarryover({ taxYear: year, deductionMethod: deductionUsed, scheduleA: schedA });
+    audit.merge(schedA.charitableTreatment.lines);
+  }
   // A newly suspended SSTB loss retains this year's applicable percentage.
   // Future utilization must not substitute that future year's SSTB status.
   const originatingQbiTaxableIncome = form8995Result?.taxableIncomeBeforeQBI ?? form8995AResult?.taxableIncomeBeforeQBI

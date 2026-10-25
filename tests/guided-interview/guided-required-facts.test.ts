@@ -5,7 +5,7 @@ import { emptyCreditsData, emptyDeductionData, emptyEducationStudent, emptyRetir
 import { completePersonalInfo, startCompleteInterview, completeAocEligibility, completeEducationClaimant, completeMortgageSource, completeMortgageWorksheet, completeRetirementSource } from "./complete-facts";
 
 const mortgage = { ...completeMortgageSource, lender: "Actual Bank", mortgageInterest: "123.45", interestPaidByReturnAmount: "123.45", outstandingPrincipal: "0", originationDate: "2016-06-05" };
-const donation = { organization: "Actual Charity", type: "cash" as const, amount: "12.34", date: "2025-02-28", costBasis: "", isLongTermCapitalGain: null, isPrivateFoundation: false };
+const donation = { organization: "Actual Charity", type: "cash" as const, amount: "12.34", date: "2025-02-28", costBasis: "", isLongTermCapitalGain: null, isPrivateFoundation: false, qualifiedOrganization: true };
 const retirement = { ...completeRetirementSource, payer: "Actual Plan", grossDistribution: "1000", taxableAmount: "0", distributionCode: "7" };
 const stateWith = (section: string, data: unknown) => {
   const state = startCompleteInterview({ filingStatus: "single", incomeTypes: [], lifeEvents: [], stateCode: null });
@@ -13,6 +13,16 @@ const stateWith = (section: string, data: unknown) => {
 };
 
 describe("required guided source facts", () => {
+  it("requires actual charity qualification for 2025 without replacing false", () => {
+    const data = { ...emptyDeductionData, method: "itemized" as const, donationEntries: [{ ...donation, qualifiedOrganization: undefined }] };
+    expect(() => buildDonationsInput(data, 2025)).toThrow(/qualification|qualif/i);
+    const rejectedGift = { ...data, donationEntries: [{ ...donation, qualifiedOrganization: false }] };
+    expect(buildDonationsInput(rejectedGift, 2025)[0].qualifiedOrganization).toBe(false);
+    expect(buildTaxInputFromGuidedData(stateWith("deductions", rejectedGift))?.donations[0].qualifiedOrganization).toBe(false);
+    const privateStock = { ...data, donationEntries: [{ ...donation, type: "appreciated_stock" as const, amount: "5000", costBasis: "1000", qualifiedOrganization: true, isPrivateFoundation: true, isLongTermCapitalGain: true }] };
+    expect(() => buildDonationsInput(privateStock, 2025)).toThrow(/qualified appreciated stock/i);
+    expect(buildDonationsInput({ ...privateStock, donationEntries: [{ ...privateStock.donationEntries[0], qualifiedAppreciatedStock: false }] }, 2025)[0].qualifiedAppreciatedStock).toBe(false);
+  });
   it("does not manufacture mortgage or donation details from legacy totals", () => {
     expect(() => buildForm1098Inputs({ ...emptyDeductionData, method: "itemized", mortgageInterest: "100" })).toThrow(/mortgage/i);
     expect(() => buildDonationsInput({ ...emptyDeductionData, method: "itemized", charitableContributions: "100" })).toThrow(/donation/i);

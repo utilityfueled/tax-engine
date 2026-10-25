@@ -214,7 +214,7 @@ lines:
 
   - line: "carryforward"
     description: "Charitable contribution carryforward to next year (IRC §170(d))"
-    formula: "max(0, totalRawCash + priorCarryforward - deductibleCash) + max(0, totalRawNonCash - deductibleNonCash)"
+    formula: "Sum exact current category excess and each sourced prior vintage's remaining amount after actual treated-paid absorption and fifth-year expiry; preserve original category, medium and year."
     irsRef: "IRC §170(d)(1); Pub 526, Carryovers"
     notes: |
       Excess charitable contributions that exceed the AGI-based limits carry
@@ -223,12 +223,11 @@ lines:
       ScheduleAResult.charitableCarryforward and FederalTaxResult.carryforwards.
       The carryforward includes unused prior-year amounts that could not be
       absorbed in the current year.
-      When per-year carryforward entries are provided, the engine uses FIFO
-      ordering (oldest year first) and expires entries older than 5 years from
-      the current tax year. This matches the expected carryforward treatment in IRS Pub 526's
-      5-year carryover rule. When only a single aggregate carryforward is
-      provided (legacy mode), it is treated as originating in the prior year
-      for backward compatibility. The per-year remaining carryforward is
+      Complete actual per-year source histories use FIFO ordering within each
+      category. The fifth succeeding year is the final usable year, and its
+      unused remainder expires after that year's capacity is applied. This matches IRS Pub 526's
+      5-year carryover rule. A positive legacy aggregate or unclassified year list requires the separate
+      actual category/origin/history packet; its age and category are never inferred. The per-year remaining carryforward is
       returned alongside the aggregate amount so multi-year returns can track
       vintage expiration correctly.
     edgeCases:
@@ -240,7 +239,7 @@ lines:
       - "Carryforward entries older than 5 years expire and are not available for deduction"
       - "Partial use of a vintage year carries the remainder into the next year"
       - "Current-year excess creates a new carryforward vintage for the current tax year"
-      - "Legacy single aggregate carryforward is treated as prior-year vintage for backward compatibility"
+      - "A legacy aggregate requires the actual source packet before its original vintage can be used"
     testRef: "tests/engine/schedules/schedule-a.test.ts::Schedule A - Charitable Carryforward"
 
   - line: "5a-payment-year"

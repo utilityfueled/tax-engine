@@ -129,7 +129,7 @@ const mfsFixture: TaxYearInput = {
   ],
   form1095A: [],
   donations: [
-    {
+    { qualifiedOrganization: true, isPrivateFoundation: false,
       organization: "Red Cross",
       type: "cash",
       amount: "3000",

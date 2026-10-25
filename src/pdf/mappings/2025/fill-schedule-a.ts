@@ -1,5 +1,6 @@
 import { assertPdfExportAllowed } from "../../export-policy.js";
 import { charitableSourceDigest } from "@/utils/charitable-source-digest.js";
+import { assertCharitableReviewSource, type PreparedCharitableReview } from "../../charitable-review-context.js";
 /**
  * PDF filler for IRS Schedule A (Form 1040) — Itemized Deductions.
  *
@@ -113,14 +114,19 @@ export async function fillScheduleA(
   input: TaxYearInput,
   result: TaxReturnResult,
   blankPdfPath: string,
+  charitableReview?: PreparedCharitableReview,
 ): Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
+  assertCharitableReviewSource(input, charitableReview);
   const sa = result.scheduleA;
   if (!sa) throw new Error("Schedule A requires an actual calculation before tax audit mapping");
   if (sa.charitableSourceDigest !== charitableSourceDigest(input)) throw new Error("Schedule A charitable sources do not match the calculation");
   const exactPriorUsed = sa.charitableCarryforwardDetail.reduce((total, row) => total.plus(row.amountUsed), ZERO);
-  const exactCurrentCash = sa.cashCharitable.minus(exactPriorUsed);
-  if ([exactPriorUsed, exactCurrentCash, sa.nonCashCharitable].some(value => !value.isFinite() || value.lt(0))) {
+  const exactPriorCash = sa.charitableCarryforwardDetail.filter(row => row.medium === "cash").reduce((total, row) => total.plus(row.amountUsed), ZERO);
+  const exactPriorNoncash = sa.charitableCarryforwardDetail.filter(row => row.medium === "noncash").reduce((total, row) => total.plus(row.amountUsed), ZERO);
+  const exactCurrentCash = sa.cashCharitable.minus(exactPriorCash);
+  const exactCurrentNoncash = sa.nonCashCharitable.minus(exactPriorNoncash);
+  if (!exactPriorUsed.eq(exactPriorCash.plus(exactPriorNoncash)) || [exactPriorUsed, exactCurrentCash, exactCurrentNoncash].some(value => !value.isFinite() || value.lt(0))) {
     throw new Error("Schedule A charitable source groups do not reconcile");
   }
   for (const [number, expected] of [["cash", sa.cashCharitable], ["noncash", sa.nonCashCharitable]] as const) {
@@ -132,13 +138,13 @@ export async function fillScheduleA(
   }
   const exactCharityGroups: Record<string, { key: string; value: Decimal }> = {
     "11": { key: "Exact current cash", value: exactCurrentCash },
-    "12": { key: "Exact current noncash", value: sa.nonCashCharitable },
+    "12": { key: "Exact current noncash", value: exactCurrentNoncash },
     "13": { key: "Exact prior carry used", value: exactPriorUsed },
   };
   const charityExpected = { "11": sa.charitableCurrentCash, "12": sa.charitableCurrentNoncash,
     "13": sa.charitablePriorYearUsed, "14": sa.charitableTotal };
   if (!charityExpected["11"]?.eq(exactCurrentCash.toDecimalPlaces(0, Decimal.ROUND_HALF_UP))
-    || !charityExpected["12"]?.eq(sa.nonCashCharitable.toDecimalPlaces(0, Decimal.ROUND_HALF_UP))
+    || !charityExpected["12"]?.eq(exactCurrentNoncash.toDecimalPlaces(0, Decimal.ROUND_HALF_UP))
     || !charityExpected["13"]?.eq(exactPriorUsed.toDecimalPlaces(0, Decimal.ROUND_HALF_UP))
     || !charityExpected["14"]?.eq(charityExpected["11"].plus(charityExpected["12"]).plus(charityExpected["13"]))) {
     throw new Error("Schedule A charitable audit must reconcile exact source groups and reported subtotal");

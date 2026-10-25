@@ -92,7 +92,7 @@ it('invalidates current source edits without inventing a calculated loss', () =>
 it('preserves unsupported source methods and the closed year boundary', () => {
   const state = fixture();
   state.sectionData.deductions = { ...emptyDeductionData, method: 'itemized', charitableContributions: '5000',
-    donationEntries: [{ organization: 'Actual Charity', type: 'cash', amount: '5000', date: '2025-10-01', costBasis: '', isLongTermCapitalGain: null, isPrivateFoundation: false }] };
+    donationEntries: [{ qualifiedOrganization: true, organization: 'Actual Charity', type: 'cash', amount: '5000', date: '2025-10-01', costBasis: '', isLongTermCapitalGain: null, isPrivateFoundation: false }] };
   const input = buildTaxInputFromGuidedData(state); if (!input) throw new Error('Actual unsupported source should remain available for review');
   expect(input.donations?.[0]?.amount).toBe('5000');
   expect(() => calculateFederalTax(TaxYearInputSchema.parse(input))).toThrow(/charit/i);

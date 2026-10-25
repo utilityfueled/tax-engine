@@ -30,6 +30,7 @@ import { fillForm8863 } from "./fill-form-8863.js";
 import { fillForm6251 } from "./fill-form-6251.js";
 import { form8949ReviewCalculation, prepareForm8949Review, type PreparedForm8949Review } from "./form-8949-review-context.js";
 import { prepareCodNolReview, type PreparedCodNolReview } from "./cod-nol-review-context.js";
+import { prepareCharitableReview, type PreparedCharitableReview } from "./charitable-review-context.js";
 import { fillForm8880 } from "./fill-form-8880.js";
 import { fillForm5329 } from "./fill-form-5329.js";
 import { fillForm8606 } from "./fill-form-8606.js";
@@ -381,6 +382,8 @@ export interface FillReturnOptions {
   capitalGainReview?: PreparedForm8949Review;
   /** Original COD and loss records, validated before review identifier removal. */
   codNolReview?: PreparedCodNolReview;
+  /** Original prior-charity identity/history, validated before render redaction. */
+  charitableReview?: PreparedCharitableReview;
 }
 
 export interface FillReturnResult {
@@ -399,6 +402,8 @@ export async function fillReturn(
   options: FillReturnOptions,
 ): Promise<FillReturnResult> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear, options.purpose);
+  const charitableReview = input.charitableCarryoverSources
+    ? options.charitableReview ?? prepareCharitableReview(input) : undefined;
   const capitalGainReview = options.capitalGainReview ?? prepareForm8949Review(input);
   const capitalTransactions = form8949ReviewCalculation(input, capitalGainReview);
   const hasDigitalDispositions = [capitalTransactions.shortTermBoxG, capitalTransactions.shortTermBoxH, capitalTransactions.shortTermBoxI,
@@ -490,7 +495,7 @@ export async function fillReturn(
   // ── Schedule A (if applicable — only when itemizing) ──
   if (result.scheduleA && result.deductionUsed === "itemized") {
     const saPath = join(blankFormsDir, "f1040sa.pdf");
-    const docSA = await fillScheduleA(input, result, saPath);
+    const docSA = await fillScheduleA(input, result, saPath, charitableReview);
     if (flatten) await flattenForm(docSA.getForm());
     const outputPathSA = join(outputDir, "f1040sa-filled.pdf");
     await savePacketPdf(docSA, outputPathSA);

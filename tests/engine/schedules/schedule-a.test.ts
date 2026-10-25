@@ -1,3 +1,4 @@
+import { syntheticPublicCashHistory } from "../../fixtures/charitable-carryover.js";
 /**
  * Tests for Schedule A — Itemized Deductions
  * Spec: spec/federal/schedule-a.yaml
@@ -478,7 +479,7 @@ describe("Schedule A - Charitable donation categories", () => {
     const input = {
       ...simpleW2Fixture,
       donations: [
-        {
+        { qualifiedOrganization: true, isPrivateFoundation: false,
           organization: "Red Cross",
           type: "cash" as const,
           amount: "80000",
@@ -496,7 +497,7 @@ describe("Schedule A - Charitable donation categories", () => {
     const input = {
       ...simpleW2Fixture,
       donations: [
-        {
+        { qualifiedOrganization: true, isPrivateFoundation: false,
           organization: "Museum",
           type: "appreciated_stock" as const,
           amount: "50000",
@@ -515,7 +516,7 @@ describe("Schedule A - Charitable donation categories", () => {
     const input = {
       ...simpleW2Fixture,
       donations: [
-        {
+        { qualifiedOrganization: true,
           organization: "Smith Private Foundation",
           type: "appreciated_stock" as const,
           amount: "25000",
@@ -523,6 +524,7 @@ describe("Schedule A - Charitable donation categories", () => {
           dateOfDonation: "2025-06-15",
           isLongTermCapitalGain: true,
           isPrivateFoundation: true,
+          qualifiedAppreciatedStock: true,
         },
       ],
     };
@@ -535,7 +537,7 @@ describe("Schedule A - Charitable donation categories", () => {
     const input = {
       ...simpleW2Fixture,
       donations: [
-        {
+        { qualifiedOrganization: true, isPrivateFoundation: false,
           organization: "Goodwill",
           type: "property" as const,
           amount: "70000",
@@ -551,10 +553,10 @@ describe("Schedule A - Charitable donation categories", () => {
   });
 
   it("Schedule A Line 12 - cash charitable includes prior year carryforward", () => {
-    const input = {
+    const input = { charitableCarryoverSources: syntheticPublicCashHistory([{ taxYear: 2024, amount: "3000" }]),
       ...simpleW2Fixture,
       donations: [
-        {
+        { qualifiedOrganization: true, isPrivateFoundation: false,
           organization: "United Way",
           type: "cash" as const,
           amount: "5000",
@@ -609,7 +611,7 @@ describe("Schedule A - Itemized vs Standard Deduction comparison", () => {
       ...complexMFJFixture,
       form1098: [],
       donations: [
-        {
+        { qualifiedOrganization: true, isPrivateFoundation: false,
           organization: "Local charity",
           type: "cash" as const,
           amount: "2000",
@@ -1012,7 +1014,7 @@ describe("Schedule A - Total itemized with all deduction sections populated", ()
         mortgageInsurancePremiums: "0",
         pointsPaid: "2000",
       }],
-      donations: [{
+      donations: [{ qualifiedOrganization: true, isPrivateFoundation: false,
         organization: "Charity",
         type: "cash" as const,
         amount: "5000",
@@ -1045,7 +1047,7 @@ describe("Schedule A - Itemized less than standard deduction", () => {
     // Small charitable donation only: $2,000 itemized vs $15,000 standard
     const input = {
       ...simpleW2Fixture,
-      donations: [{
+      donations: [{ qualifiedOrganization: true, isPrivateFoundation: false,
         organization: "Local org",
         type: "cash" as const,
         amount: "2000",
@@ -1110,7 +1112,7 @@ describe("Schedule A - audit trail line values for each section", () => {
         mortgageInsurancePremiums: "1200",
         pointsPaid: "2500",
       }],
-      donations: [{
+      donations: [{ qualifiedOrganization: true, isPrivateFoundation: false,
         organization: "Food bank",
         type: "cash" as const,
         amount: "4000",
@@ -1156,7 +1158,7 @@ describe("Schedule A - audit trail line values for each section", () => {
 describe("Schedule A - Charitable Carryforward", () => {
   it("no carryforward when cash donations are under 60% AGI limit", () => {
     const result = calculateScheduleA(
-      { ...simpleW2Fixture, donations: [{ type: "cash", amount: "5000" }] },
+      { ...simpleW2Fixture, donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, dateOfDonation: "2025-12-01", organization: "Synthetic qualified charity", type: "cash", amount: "5000" }] },
       d(50000), "single", c
     );
     expect(result.charitableCarryforward.toNumber()).toBe(0);
@@ -1165,7 +1167,7 @@ describe("Schedule A - Charitable Carryforward", () => {
   it("carryforward equals excess when cash donations exceed 60% AGI limit", () => {
     // AGI $50K → 60% cash limit = $30K. Donate $40K → excess = $10K
     const result = calculateScheduleA(
-      { ...simpleW2Fixture, donations: [{ type: "cash", amount: "40000" }] },
+      { ...simpleW2Fixture, donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, dateOfDonation: "2025-12-01", organization: "Synthetic qualified charity", type: "cash", amount: "40000" }] },
       d(50000), "single", c
     );
     expect(result.cashCharitable.toNumber()).toBe(30000);
@@ -1175,9 +1177,9 @@ describe("Schedule A - Charitable Carryforward", () => {
   it("carryforward includes prior-year carryforward that cannot be used", () => {
     // AGI $50K → 60% cash limit = $30K. Donate $25K cash + $10K prior carryforward = $35K → deductible $30K, carryforward $5K
     const result = calculateScheduleA(
-      {
+      { charitableCarryoverSources: syntheticPublicCashHistory([{ taxYear: 2024, amount: "10000" }]),
         ...simpleW2Fixture,
-        donations: [{ type: "cash", amount: "25000" }],
+        donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, dateOfDonation: "2025-12-01", organization: "Synthetic qualified charity", type: "cash", amount: "25000" }],
         priorYear: { charitableCarryforward: "10000" },
       },
       d(50000), "single", c
@@ -1191,7 +1193,7 @@ describe("Schedule A - Charitable Carryforward", () => {
     const result = calculateScheduleA(
       {
         ...simpleW2Fixture,
-        donations: [{
+        donations: [{ qualifiedOrganization: true,
           type: "appreciated_stock",
           organization: "Public Charity",
           amount: "50000",
@@ -1226,9 +1228,12 @@ describe("Schedule A - Charitable Carryforward Vintage Tracking", () => {
     // Two prior-year vintages: 2022 ($6K) and 2023 ($8K)
     // FIFO: use 2022 first ($6K), then 2023 ($4K of $8K)
     const result = calculateScheduleA(
-      {
+      { charitableCarryoverSources: syntheticPublicCashHistory([
+            { taxYear: 2023, amount: "8000" },
+            { taxYear: 2022, amount: "6000" },
+          ]),
         ...simpleW2Fixture,
-        donations: [{ type: "cash", amount: "20000" }],
+        donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, dateOfDonation: "2025-12-01", organization: "Synthetic qualified charity", type: "cash", amount: "20000" }],
         priorYear: {
           charitableCarryforwardByYear: [
             { taxYear: 2023, amount: "8000" },
@@ -1250,9 +1255,12 @@ describe("Schedule A - Charitable Carryforward Vintage Tracking", () => {
     // Tax year 2025. Carryforward from 2019 is 6 years old → expired (>5)
     // Carryforward from 2020 is 5 years old → still valid
     const result = calculateScheduleA(
-      {
+      { charitableCarryoverSources: syntheticPublicCashHistory([
+            { taxYear: 2019, amount: "5000" },
+            { taxYear: 2020, amount: "3000" },
+          ]),
         ...simpleW2Fixture,
-        donations: [{ type: "cash", amount: "10000" }],
+        donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, dateOfDonation: "2025-12-01", organization: "Synthetic qualified charity", type: "cash", amount: "10000" }],
         priorYear: {
           charitableCarryforwardByYear: [
             { taxYear: 2019, amount: "5000" },
@@ -1276,9 +1284,11 @@ describe("Schedule A - Charitable Carryforward Vintage Tracking", () => {
   it("carryforward at exactly 5 years old is still valid (boundary test)", () => {
     // Tax year 2025. Carryforward from 2020 is exactly 5 years old → valid
     const result = calculateScheduleA(
-      {
+      { charitableCarryoverSources: syntheticPublicCashHistory([
+            { taxYear: 2020, amount: "7000" },
+          ]),
         ...simpleW2Fixture,
-        donations: [{ type: "cash", amount: "5000" }],
+        donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, dateOfDonation: "2025-12-01", organization: "Synthetic qualified charity", type: "cash", amount: "5000" }],
         priorYear: {
           charitableCarryforwardByYear: [
             { taxYear: 2020, amount: "7000" },
@@ -1300,9 +1310,11 @@ describe("Schedule A - Charitable Carryforward Vintage Tracking", () => {
     // Current-year cash = $15K, leaving $3K capacity for carryforward
     // Prior vintage 2023: $8K → use $3K, carry $5K
     const result = calculateScheduleA(
-      {
+      { charitableCarryoverSources: syntheticPublicCashHistory([
+            { taxYear: 2023, amount: "8000" },
+          ]),
         ...simpleW2Fixture,
-        donations: [{ type: "cash", amount: "15000" }],
+        donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, dateOfDonation: "2025-12-01", organization: "Synthetic qualified charity", type: "cash", amount: "15000" }],
         priorYear: {
           charitableCarryforwardByYear: [
             { taxYear: 2023, amount: "8000" },
@@ -1325,7 +1337,7 @@ describe("Schedule A - Charitable Carryforward Vintage Tracking", () => {
     const result = calculateScheduleA(
       {
         ...simpleW2Fixture,
-        donations: [{ type: "cash", amount: "40000" }],
+        donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, dateOfDonation: "2025-12-01", organization: "Synthetic qualified charity", type: "cash", amount: "40000" }],
       },
       d(50000), "single", c
     );
@@ -1344,9 +1356,13 @@ describe("Schedule A - Charitable Carryforward Vintage Tracking", () => {
     // FIFO: 2019 expired. 2021: use $4K (capacity left = $1K). 2024: use $1K (carry $5K).
     // Total deductible = $25K + $5K = $30K
     const result = calculateScheduleA(
-      {
+      { charitableCarryoverSources: syntheticPublicCashHistory([
+            { taxYear: 2019, amount: "3000" },
+            { taxYear: 2021, amount: "4000" },
+            { taxYear: 2024, amount: "6000" },
+          ]),
         ...simpleW2Fixture,
-        donations: [{ type: "cash", amount: "25000" }],
+        donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, dateOfDonation: "2025-12-01", organization: "Synthetic qualified charity", type: "cash", amount: "25000" }],
         priorYear: {
           charitableCarryforwardByYear: [
             { taxYear: 2019, amount: "3000" },
@@ -1369,9 +1385,13 @@ describe("Schedule A - Charitable Carryforward Vintage Tracking", () => {
 
   it("reconciliation detail tracks each vintage year individually", () => {
     const result = calculateScheduleA(
-      {
+      { charitableCarryoverSources: syntheticPublicCashHistory([
+            { taxYear: 2019, amount: "2000" },
+            { taxYear: 2022, amount: "5000" },
+            { taxYear: 2024, amount: "3000" },
+          ]),
         ...simpleW2Fixture,
-        donations: [{ type: "cash", amount: "20000" }],
+        donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, dateOfDonation: "2025-12-01", organization: "Synthetic qualified charity", type: "cash", amount: "20000" }],
         priorYear: {
           charitableCarryforwardByYear: [
             { taxYear: 2019, amount: "2000" },
@@ -1403,19 +1423,19 @@ describe("Schedule A - Charitable Carryforward Vintage Tracking", () => {
     expect(detail[2].amountRemaining.toNumber()).toBe(0);
   });
 
-  it("legacy single aggregate carryforward is treated as prior-year vintage", () => {
-    // When only charitableCarryforward is provided (no byYear), treat as taxYear-1
+  it("actual source history supplies the original vintage of a legacy aggregate", () => {
+    // Actual filed synthetic history establishes2024; the saved aggregate alone cannot.
     const result = calculateScheduleA(
-      {
+      { charitableCarryoverSources: syntheticPublicCashHistory([{ taxYear: 2024, amount: "8000" }]),
         ...simpleW2Fixture,
-        donations: [{ type: "cash", amount: "25000" }],
+        donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, dateOfDonation: "2025-12-01", organization: "Synthetic qualified charity", type: "cash", amount: "25000" }],
         priorYear: { charitableCarryforward: "8000" },
       },
       d(50000), "single", c
     );
 
     // 60% limit = $30K, current = $25K, capacity = $5K
-    // Legacy $8K treated as 2024 vintage → use $5K, carry $3K
+    // Confirmed actual2024 cash $8K → use $5K, carry $3K
     expect(result.cashCharitable.toNumber()).toBe(30000);
     expect(result.charitableCarryforwardByYear).toHaveLength(1);
     expect(result.charitableCarryforwardByYear[0].taxYear).toBe(2024);
@@ -1426,7 +1446,7 @@ describe("Schedule A - Charitable Carryforward Vintage Tracking", () => {
     const result = calculateScheduleA(
       {
         ...simpleW2Fixture,
-        donations: [{ type: "cash", amount: "5000" }],
+        donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, dateOfDonation: "2025-12-01", organization: "Synthetic qualified charity", type: "cash", amount: "5000" }],
       },
       d(100000), "single", c
     );
@@ -1438,9 +1458,12 @@ describe("Schedule A - Charitable Carryforward Vintage Tracking", () => {
 
   it("all carryforward vintages expire when every entry is older than 5 years", () => {
     const result = calculateScheduleA(
-      {
+      { charitableCarryoverSources: syntheticPublicCashHistory([
+            { taxYear: 2018, amount: "3000" },
+            { taxYear: 2019, amount: "4000" },
+          ]),
         ...simpleW2Fixture,
-        donations: [{ type: "cash", amount: "5000" }],
+        donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, dateOfDonation: "2025-12-01", organization: "Synthetic qualified charity", type: "cash", amount: "5000" }],
         priorYear: {
           charitableCarryforwardByYear: [
             { taxYear: 2018, amount: "3000" },
@@ -1462,7 +1485,7 @@ describe("Schedule A - Charitable Carryforward Vintage Tracking", () => {
     const result = calculateScheduleA(
       {
         ...simpleW2Fixture,
-        donations: [{
+        donations: [{ qualifiedOrganization: true,
           type: "appreciated_stock",
           organization: "Public Charity",
           amount: "50000",

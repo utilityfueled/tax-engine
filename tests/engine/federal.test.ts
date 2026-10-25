@@ -10208,7 +10208,7 @@ describe("K-1 Box 18 tax-exempt interest through federal pipeline", () => {
       form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0", payer: "Broker", interestIncome: "5000" }],
       form1099Div: [{ exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0", payer: "Fund", ordinaryDividends: "3000", qualifiedDividends: "2000" }],
       form1098: [{ lender: "Bank", mortgageInterestReceived: "12000", outstandingMortgagePrincipal: "300000", propertyTax: "8000" }],
-      donations: [{ type: "cash", amount: "5000" }],
+      donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, dateOfDonation: "2025-12-01", organization: "Synthetic qualified charity", type: "cash", amount: "5000" }],
       form4952: {
         investmentInterestExpense: "10000",
         priorYearDisallowed: "2000",
@@ -10241,7 +10241,7 @@ describe("K-1 Box 18 tax-exempt interest through federal pipeline", () => {
         federalWithheld: "30000",
       }],
       form1098: [{ lender: "Bank", mortgageInterestReceived: "8000", outstandingMortgagePrincipal: "200000", propertyTax: "6000" }],
-      donations: [{ type: "cash", amount: "3000" }],
+      donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, dateOfDonation: "2025-12-01", organization: "Synthetic qualified charity", type: "cash", amount: "3000" }],
       scheduleA: {
         investmentInterestExpense: "99999", // should be overridden by Form 4952
       },
@@ -10267,7 +10267,7 @@ describe("K-1 Box 18 tax-exempt interest through federal pipeline", () => {
         federalWithheld: "30000",
       }],
       form1098: [{ lender: "Bank", mortgageInterestReceived: "8000", outstandingMortgagePrincipal: "200000", propertyTax: "6000" }],
-      donations: [{ type: "cash", amount: "3000" }],
+      donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, dateOfDonation: "2025-12-01", organization: "Synthetic qualified charity", type: "cash", amount: "3000" }],
       scheduleA: {
         investmentInterestExpense: "4500",
       },
@@ -10325,7 +10325,7 @@ describe("Sub-result exposure in FederalTaxResult", () => {
       ...simpleW2Fixture,
       w2s: [{ ...simpleW2Fixture.w2s[0], wages: "150000", federalWithheld: "30000" }],
       form1098: [{ lender: "Bank", mortgageInterestReceived: "8000", outstandingMortgagePrincipal: "200000", propertyTax: "6000" }],
-      donations: [{ type: "cash", amount: "3000" }],
+      donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, dateOfDonation: "2025-12-01", organization: "Synthetic qualified charity", type: "cash", amount: "3000" }],
       form4952: {
         investmentInterestExpense: "10000",
         priorYearDisallowed: "2000",
@@ -10429,7 +10429,7 @@ describe("Sub-result exposure in FederalTaxResult", () => {
       ...simpleW2Fixture,
       w2s: [{ ...simpleW2Fixture.w2s[0], wages: "200000", federalWithheld: "40000" }],
       form1098: [{ lender: "Bank", mortgageInterestReceived: "8000", outstandingMortgagePrincipal: "200000", propertyTax: "6000" }],
-      donations: [{ type: "cash", amount: "3000" }],
+      donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, dateOfDonation: "2025-12-01", organization: "Synthetic qualified charity", type: "cash", amount: "3000" }],
       form4952: {
         investmentInterestExpense: "15000",
         grossInvestmentIncome: "5000",
@@ -10797,7 +10797,7 @@ describe("K-1 Box 13 code separation — charitable contributions to Schedule A"
   it("K-1 Box 13 Code A charitable cash flows to Schedule A", () => {
     const result = calculateFederalTax({
       ...simpleW2Fixture,
-      donations: [{ organization: "Local Charity", type: "cash", amount: "1000", dateOfDonation: "2025-06-15" }],
+      donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, organization: "Local Charity", type: "cash", amount: "1000", dateOfDonation: "2025-06-15" }],
       scheduleK1: [{
         partnershipName: "Acme LP",
         partnershipEIN: "11-1111111",
@@ -10864,7 +10864,7 @@ describe("K-1 Box 13 code separation — charitable contributions to Schedule A"
   it("K-1 Box 13 Codes A+B+C aggregate from multiple partnerships to Schedule A", () => {
     const result = calculateFederalTax({
       ...simpleW2Fixture,
-      donations: [{ organization: "Personal charity", type: "cash", amount: "2000", dateOfDonation: "2025-03-01" }],
+      donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, organization: "Personal charity", type: "cash", amount: "2000", dateOfDonation: "2025-03-01" }],
       scheduleK1: [
         {
           partnershipName: "Fund A",

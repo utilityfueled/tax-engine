@@ -511,7 +511,7 @@ describe("Federal orchestrator — sales tax deduction", () => {
         autoCompare: true,
       },
       scheduleA: { medicalExpenses: "0", personalPropertyTaxes: "0" },
-      donations: [{ type: "cash", amount: "5000", organization: "Charity", dateOfDonation: "2025-06-15" }],
+      donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, type: "cash", amount: "5000", organization: "Charity", dateOfDonation: "2025-06-15" }],
       form1098: [{ lender: "Bank", mortgageInterestReceived: "8000", outstandingMortgagePrincipal: "200000", propertyTax: "4000" }],
     }) as Parameters<typeof calculateFederalTax>[0]);
 
@@ -536,7 +536,7 @@ describe("Federal orchestrator — sales tax deduction", () => {
         autoCompare: true,
       },
       scheduleA: { medicalExpenses: "0", personalPropertyTaxes: "0" },
-      donations: [{ type: "cash", amount: "5000", organization: "Charity", dateOfDonation: "2025-06-15" }],
+      donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, type: "cash", amount: "5000", organization: "Charity", dateOfDonation: "2025-06-15" }],
       form1098: [{ lender: "Bank", mortgageInterestReceived: "12000", outstandingMortgagePrincipal: "300000", propertyTax: "5000" }],
     }) as Parameters<typeof calculateFederalTax>[0]);
 
@@ -558,7 +558,7 @@ describe("Federal orchestrator — sales tax deduction", () => {
         autoCompare: false,
       },
       scheduleA: { medicalExpenses: "0", personalPropertyTaxes: "0" },
-      donations: [{ type: "cash", amount: "3000", organization: "Charity", dateOfDonation: "2025-06-15" }],
+      donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, type: "cash", amount: "3000", organization: "Charity", dateOfDonation: "2025-06-15" }],
       form1098: [{ lender: "Bank", mortgageInterestReceived: "8000", outstandingMortgagePrincipal: "200000", propertyTax: "3000" }],
     }) as Parameters<typeof calculateFederalTax>[0]);
 
@@ -586,7 +586,7 @@ describe("Federal orchestrator — sales tax deduction", () => {
         autoCompare: true,
       },
       scheduleA: { medicalExpenses: "0", personalPropertyTaxes: "0" },
-      donations: [{ type: "cash", amount: "3000", organization: "Charity", dateOfDonation: "2025-06-15" }],
+      donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, type: "cash", amount: "3000", organization: "Charity", dateOfDonation: "2025-06-15" }],
       form1098: [{ lender: "Bank", mortgageInterestReceived: "8000", outstandingMortgagePrincipal: "200000", propertyTax: "6000" }],
     }) as Parameters<typeof calculateFederalTax>[0]);
 
@@ -618,7 +618,7 @@ describe("Federal orchestrator — sales tax deduction", () => {
         autoCompare: true,
       },
       scheduleA: { medicalExpenses: "0", personalPropertyTaxes: "0" },
-      donations: [{ type: "cash", amount: "3000", organization: "Charity", dateOfDonation: "2025-06-15" }],
+      donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, type: "cash", amount: "3000", organization: "Charity", dateOfDonation: "2025-06-15" }],
       form1098: [{ lender: "Bank", mortgageInterestReceived: "10000", outstandingMortgagePrincipal: "300000", propertyTax: "5000" }],
     }) as Parameters<typeof calculateFederalTax>[0]);
 

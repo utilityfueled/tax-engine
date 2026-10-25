@@ -1,3 +1,4 @@
+import { syntheticPublicCashHistory } from "../fixtures/charitable-carryover.js";
 /**
  * Edge case tests for charitable contribution AGI limits.
  * Cash: 60% AGI. Appreciated LTCG property: 30% AGI, or 20% AGI for the
@@ -19,7 +20,7 @@ function makeFixtureWithDonations(donations: TaxYearInput["donations"]): TaxYear
     taxpayer: {
       taxYear: 2025,
       filingStatus: "single",
-      primary: { firstName: "J", lastName: "D", ssn: "123", dateOfBirth: "1990-01-01" },
+      primary: { firstName: "J", lastName: "D", ssn: "123-45-6789", dateOfBirth: "1990-01-01" },
       address: { street: "1 Main", city: "NYC", state: "NY", zip: "10001" },
       dependents: [],
     },
@@ -39,7 +40,7 @@ function makeFixtureWithDonations(donations: TaxYearInput["donations"]): TaxYear
 describe("Charitable AGI limits", () => {
   it("cash donations under 60% AGI — fully deductible", () => {
     const input = makeFixtureWithDonations([
-      { organization: "Charity", type: "cash", amount: "5000", dateOfDonation: "2025-12-01", costBasis: "0" },
+      { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Charity", type: "cash", amount: "5000", dateOfDonation: "2025-12-01", costBasis: "0" },
     ]);
     const result = calculateScheduleA(input, d(100000), "single", c);
     expect(result.cashCharitable.toNumber()).toBe(5000);
@@ -48,7 +49,7 @@ describe("Charitable AGI limits", () => {
   it("cash donations over 60% AGI — capped", () => {
     // AGI = $100K. 60% = $60K. Donation = $70K
     const input = makeFixtureWithDonations([
-      { organization: "Charity", type: "cash", amount: "70000", dateOfDonation: "2025-12-01", costBasis: "0" },
+      { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Charity", type: "cash", amount: "70000", dateOfDonation: "2025-12-01", costBasis: "0" },
     ]);
     const result = calculateScheduleA(input, d(100000), "single", c);
     expect(result.cashCharitable.toNumber()).toBe(60000);
@@ -56,7 +57,7 @@ describe("Charitable AGI limits", () => {
 
   it("cash at exactly 60% AGI boundary", () => {
     const input = makeFixtureWithDonations([
-      { organization: "Charity", type: "cash", amount: "60000", dateOfDonation: "2025-12-01", costBasis: "0" },
+      { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Charity", type: "cash", amount: "60000", dateOfDonation: "2025-12-01", costBasis: "0" },
     ]);
     const result = calculateScheduleA(input, d(100000), "single", c);
     expect(result.cashCharitable.toNumber()).toBe(60000);
@@ -64,7 +65,7 @@ describe("Charitable AGI limits", () => {
 
   it("appreciated LTCG property under 30% AGI — fully deductible", () => {
     const input = makeFixtureWithDonations([
-      {
+      { qualifiedOrganization: true, isPrivateFoundation: false,
         organization: "Museum", type: "appreciated_stock", amount: "20000",
         dateOfDonation: "2025-11-01", costBasis: "5000", isLongTermCapitalGain: true,
       },
@@ -76,7 +77,7 @@ describe("Charitable AGI limits", () => {
   it("appreciated LTCG property over 30% AGI — capped", () => {
     // AGI = $100K. 30% = $30K. Donation = $50K
     const input = makeFixtureWithDonations([
-      {
+      { qualifiedOrganization: true, isPrivateFoundation: false,
         organization: "Museum", type: "appreciated_stock", amount: "50000",
         dateOfDonation: "2025-11-01", costBasis: "5000", isLongTermCapitalGain: true,
       },
@@ -87,7 +88,7 @@ describe("Charitable AGI limits", () => {
 
   it("other non-cash (not LTCG) under 50% AGI — fully deductible", () => {
     const input = makeFixtureWithDonations([
-      {
+      { qualifiedOrganization: true, isPrivateFoundation: false,
         organization: "Goodwill", type: "property", amount: "10000",
         dateOfDonation: "2025-06-01", costBasis: "10000", isLongTermCapitalGain: false,
       },
@@ -98,7 +99,7 @@ describe("Charitable AGI limits", () => {
 
   it("other non-cash over 50% AGI — capped", () => {
     const input = makeFixtureWithDonations([
-      {
+      { qualifiedOrganization: true, isPrivateFoundation: false,
         organization: "Goodwill", type: "property", amount: "60000",
         dateOfDonation: "2025-06-01", costBasis: "60000", isLongTermCapitalGain: false,
       },
@@ -108,26 +109,25 @@ describe("Charitable AGI limits", () => {
   });
 
   it("mixed cash and appreciated — stacked limits per IRC §170(b)(1)", () => {
-    // AGI $200K. Cash $130K. Appreciated $80K (30% limit = $60K).
-    // Step 1: LTCG = min($80K, 30%×$200K=$60K) = $60K
-    // Step 2: Non-cash total = $60K
-    // Step 3: Cash = min($130K, 60%×$200K=$120K - $60K = $60K) = $60K
+    // Final2025 Pub526 Worksheet2 lines13,17,30; property follows cash.
+    // Base200000; public cash130000 allows120000. Worksheet2 line28 is max(100000-130000,0)=0, so capital property80000 carries in full.
     const input = makeFixtureWithDonations([
-      { organization: "Red Cross", type: "cash", amount: "130000", dateOfDonation: "2025-12-01", costBasis: "0" },
-      {
+      { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Red Cross", type: "cash", amount: "130000", dateOfDonation: "2025-12-01", costBasis: "0" },
+      { qualifiedOrganization: true, isPrivateFoundation: false,
         organization: "Museum", type: "appreciated_stock", amount: "80000",
         dateOfDonation: "2025-11-01", costBasis: "20000", isLongTermCapitalGain: true,
       },
     ]);
     const result = calculateScheduleA(input, d(200000), "single", c);
-    expect(result.cashCharitable.toNumber()).toBe(60000); // 60% - non-cash = $60K
-    expect(result.nonCashCharitable.toNumber()).toBe(60000); // Capped at 30%
+    expect(result.cashCharitable.toNumber()).toBe(120000);
+    expect(result.nonCashCharitable.toNumber()).toBe(0);
     expect(result.totalItemized.toNumber()).toBe(120000); // 60K + 60K = 60% of AGI
+    expect(result.charitableCarryforward.toNumber()).toBe(90000);
   });
 
   it("zero AGI means zero charitable deduction", () => {
     const input = makeFixtureWithDonations([
-      { organization: "Charity", type: "cash", amount: "5000", dateOfDonation: "2025-12-01", costBasis: "0" },
+      { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Charity", type: "cash", amount: "5000", dateOfDonation: "2025-12-01", costBasis: "0" },
     ]);
     const result = calculateScheduleA(input, d(0), "single", c);
     expect(result.cashCharitable.toNumber()).toBe(0);
@@ -141,9 +141,9 @@ describe("Charitable AGI limits", () => {
   });
 
   it("charitable carryforward from prior year adds to cash donations", () => {
-    const input = {
+    const input = { charitableCarryoverSources: syntheticPublicCashHistory([{ taxYear: 2024, amount: "3000" }], { name: "J D", last4: "6789" }),
       ...makeFixtureWithDonations([
-        { organization: "Charity", type: "cash", amount: "5000", dateOfDonation: "2025-12-01", costBasis: "0" },
+        { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Charity", type: "cash", amount: "5000", dateOfDonation: "2025-12-01", costBasis: "0" },
       ]),
       priorYear: {
         charitableCarryforward: "3000",
@@ -155,9 +155,9 @@ describe("Charitable AGI limits", () => {
   });
 
   it("charitable carryforward still subject to 60% AGI limit", () => {
-    const input = {
+    const input = { charitableCarryoverSources: syntheticPublicCashHistory([{ taxYear: 2024, amount: "10000" }], { name: "J D", last4: "6789" }),
       ...makeFixtureWithDonations([
-        { organization: "Charity", type: "cash", amount: "55000", dateOfDonation: "2025-12-01", costBasis: "0" },
+        { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Charity", type: "cash", amount: "55000", dateOfDonation: "2025-12-01", costBasis: "0" },
       ]),
       priorYear: {
         charitableCarryforward: "10000",
@@ -169,7 +169,7 @@ describe("Charitable AGI limits", () => {
   });
 
   it("carryforward alone (no current donations) is deductible", () => {
-    const input = {
+    const input = { charitableCarryoverSources: syntheticPublicCashHistory([{ taxYear: 2024, amount: "5000" }], { name: "J D", last4: "6789" }),
       ...makeFixtureWithDonations([]),
       priorYear: {
         charitableCarryforward: "5000",
@@ -182,7 +182,7 @@ describe("Charitable AGI limits", () => {
   it("very low AGI ($100) with small cash donation — caps proportionally", () => {
     // AGI = $100. 60% limit = $60. Donation $50 is under the cap.
     const input = makeFixtureWithDonations([
-      { organization: "Charity", type: "cash", amount: "50", dateOfDonation: "2025-06-01", costBasis: "0" },
+      { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Charity", type: "cash", amount: "50", dateOfDonation: "2025-06-01", costBasis: "0" },
     ]);
     const result = calculateScheduleA(input, d(100), "single", c);
     expect(result.cashCharitable.toNumber()).toBe(50); // Under 60% of $100 = $60
@@ -191,7 +191,7 @@ describe("Charitable AGI limits", () => {
   it("very low AGI ($100) with donation exceeding cap — capped proportionally", () => {
     // AGI = $100. 60% limit = $60. Donation $90 is over the cap.
     const input = makeFixtureWithDonations([
-      { organization: "Charity", type: "cash", amount: "90", dateOfDonation: "2025-06-01", costBasis: "0" },
+      { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Charity", type: "cash", amount: "90", dateOfDonation: "2025-06-01", costBasis: "0" },
     ]);
     const result = calculateScheduleA(input, d(100), "single", c);
     expect(result.cashCharitable.toNumber()).toBe(60); // Capped at 60% of $100
@@ -200,41 +200,39 @@ describe("Charitable AGI limits", () => {
   it("multiple cash donations from different charities summed then capped", () => {
     // AGI = $50K. 60% = $30K. Three donations totalling $40K → capped at $30K.
     const input = makeFixtureWithDonations([
-      { organization: "Red Cross", type: "cash", amount: "15000", dateOfDonation: "2025-03-01", costBasis: "0" },
-      { organization: "Salvation Army", type: "cash", amount: "12000", dateOfDonation: "2025-06-01", costBasis: "0" },
-      { organization: "United Way", type: "cash", amount: "13000", dateOfDonation: "2025-09-01", costBasis: "0" },
+      { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Red Cross", type: "cash", amount: "15000", dateOfDonation: "2025-03-01", costBasis: "0" },
+      { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Salvation Army", type: "cash", amount: "12000", dateOfDonation: "2025-06-01", costBasis: "0" },
+      { qualifiedOrganization: true, isPrivateFoundation: false, organization: "United Way", type: "cash", amount: "13000", dateOfDonation: "2025-09-01", costBasis: "0" },
     ]);
     const result = calculateScheduleA(input, d(50000), "single", c);
     expect(result.cashCharitable.toNumber()).toBe(30000); // Sum $40K capped at 60% of $50K = $30K
   });
 
   it("mixed cash + appreciated LTCG + non-LTCG non-cash — stacked per IRC §170(b)(1)", () => {
-    // AGI = $100K.
-    // Step 1: LTCG = min($40K, 30%=$30K) = $30K
-    // Step 2: Other = min($60K, 50%-$30K=$20K) = $20K. Non-cash total = $50K
-    // Step 3: Cash = min($70K, 60%-$50K=$10K) = $10K
-    // Total = $60K = 60% of AGI (maximum effective deduction)
+    // Final2025 Pub526 Worksheet2 lines13,17,30; property follows cash.
+    // Base100000; public cash70000 allows60000. No50percent room remains for ordinary60000 or capital40000; carry is10000cash+100000property.
     const input = makeFixtureWithDonations([
-      { organization: "Cash Charity", type: "cash", amount: "70000", dateOfDonation: "2025-01-15", costBasis: "0" },
-      {
+      { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Cash Charity", type: "cash", amount: "70000", dateOfDonation: "2025-01-15", costBasis: "0" },
+      { qualifiedOrganization: true, isPrivateFoundation: false,
         organization: "Art Museum", type: "appreciated_stock", amount: "40000",
         dateOfDonation: "2025-04-01", costBasis: "8000", isLongTermCapitalGain: true,
       },
-      {
+      { qualifiedOrganization: true, isPrivateFoundation: false,
         organization: "Goodwill", type: "property", amount: "60000",
         dateOfDonation: "2025-07-01", costBasis: "60000", isLongTermCapitalGain: false,
       },
     ]);
     const result = calculateScheduleA(input, d(100000), "single", c);
-    expect(result.cashCharitable.toNumber()).toBe(10000);      // 60% - 50% non-cash = $10K
-    expect(result.nonCashCharitable.toNumber()).toBe(50000);   // 30K (LTCG) + 20K (other, stacked)
+    expect(result.cashCharitable.toNumber()).toBe(60000);
+    expect(result.nonCashCharitable.toNumber()).toBe(0);
     expect(result.totalItemized.toNumber()).toBe(60000);       // $60K = 60% of AGI
+    expect(result.charitableCarryforward.toNumber()).toBe(110000);
   });
 
   it("cash donation $1 over 60% AGI limit — capped to exact 60%", () => {
     // AGI = $100K. 60% = $60K. Donation = $60,001.
     const input = makeFixtureWithDonations([
-      { organization: "Charity", type: "cash", amount: "60001", dateOfDonation: "2025-12-01", costBasis: "0" },
+      { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Charity", type: "cash", amount: "60001", dateOfDonation: "2025-12-01", costBasis: "0" },
     ]);
     const result = calculateScheduleA(input, d(100000), "single", c);
     expect(result.cashCharitable.toNumber()).toBe(60000); // Exactly capped at $60K
@@ -243,7 +241,7 @@ describe("Charitable AGI limits", () => {
   it("appreciated stock exactly at 30% AGI boundary — fully deductible, not capped", () => {
     // AGI = $100K. 30% = $30K. Donation = exactly $30K.
     const input = makeFixtureWithDonations([
-      {
+      { qualifiedOrganization: true, isPrivateFoundation: false,
         organization: "Museum", type: "appreciated_stock", amount: "30000",
         dateOfDonation: "2025-08-01", costBasis: "5000", isLongTermCapitalGain: true,
       },
@@ -253,12 +251,12 @@ describe("Charitable AGI limits", () => {
   });
 
   it("MFJ filing status — stacked AGI limits same as single", () => {
-    // AGI = $200K. LTCG = min($80K, 30%=$60K) = $60K. Non-cash = $60K.
-    // Cash = min($150K, 60%=$120K - $60K) = $60K.
+    // Final2025 Pub526 Worksheet2 lines13,17,30; property follows cash.
+    // Base200000; public cash150000 allows120000. Cash exceeds the50percent capacity, so capital80000 carries in full.
     const input = {
       ...makeFixtureWithDonations([
-        { organization: "Red Cross", type: "cash", amount: "150000", dateOfDonation: "2025-12-01", costBasis: "0" },
-        {
+        { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Red Cross", type: "cash", amount: "150000", dateOfDonation: "2025-12-01", costBasis: "0" },
+        { qualifiedOrganization: true, isPrivateFoundation: false,
           organization: "Museum", type: "appreciated_stock", amount: "80000",
           dateOfDonation: "2025-11-01", costBasis: "10000", isLongTermCapitalGain: true,
         },
@@ -273,24 +271,26 @@ describe("Charitable AGI limits", () => {
       },
     };
     const result = calculateScheduleA(input, d(200000), "married_filing_jointly", c);
-    expect(result.cashCharitable.toNumber()).toBe(60000);  // 60% - 60K non-cash = $60K
-    expect(result.nonCashCharitable.toNumber()).toBe(60000); // Capped at 30% of $200K
+    expect(result.cashCharitable.toNumber()).toBe(120000);
+    expect(result.nonCashCharitable.toNumber()).toBe(0);
+    expect(result.charitableCarryforward.toNumber()).toBe(110000);
   });
 
   it("very large donation with $1M AGI — stacked limits cap total at 60%", () => {
-    // AGI = $1M. LTCG = min($500K, 30%=$300K) = $300K. Non-cash = $300K.
-    // Cash = min($800K, 60%=$600K - $300K) = $300K. Total = $600K = 60%.
+    // Final2025 Pub526 Worksheet2 lines13,17,30; property follows cash.
+    // Base1000000; public cash800000 allows600000; remaining50percent capacity is0. Carry is200000cash+500000capital.
     const input = makeFixtureWithDonations([
-      { organization: "Foundation", type: "cash", amount: "800000", dateOfDonation: "2025-12-01", costBasis: "0" },
-      {
+      { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Foundation", type: "cash", amount: "800000", dateOfDonation: "2025-12-01", costBasis: "0" },
+      { qualifiedOrganization: true, isPrivateFoundation: false,
         organization: "University Endowment", type: "appreciated_stock", amount: "500000",
         dateOfDonation: "2025-06-15", costBasis: "50000", isLongTermCapitalGain: true,
       },
     ]);
     const result = calculateScheduleA(input, d(1000000), "single", c);
-    expect(result.cashCharitable.toNumber()).toBe(300000);  // 60% - 300K non-cash = $300K
-    expect(result.nonCashCharitable.toNumber()).toBe(300000); // Capped at 30% of $1M
+    expect(result.cashCharitable.toNumber()).toBe(600000);
+    expect(result.nonCashCharitable.toNumber()).toBe(0);
     expect(result.totalItemized.toNumber()).toBe(600000);    // $600K = 60% of AGI
+    expect(result.charitableCarryforward.toNumber()).toBe(700000);
   });
 
   // ── New edge case tests ────────────────────────────────────
@@ -299,7 +299,7 @@ describe("Charitable AGI limits", () => {
     // AGI = $50K. 60% limit = $30K.
     // No current donations. Carryforward = $40K → deductible = $30K only.
     // The engine applies the cap; the carryforward creation is caller responsibility.
-    const input = {
+    const input = { charitableCarryoverSources: syntheticPublicCashHistory([{ taxYear: 2024, amount: "40000" }], { name: "J D", last4: "6789" }),
       ...makeFixtureWithDonations([]),
       priorYear: { charitableCarryforward: "40000" },
     };
@@ -311,15 +311,15 @@ describe("Charitable AGI limits", () => {
     // AGI = $100K. 30% limit = $30K.
     // Three stock donations: $12K + $10K + $15K = $37K total → capped at $30K.
     const input = makeFixtureWithDonations([
-      {
+      { qualifiedOrganization: true, isPrivateFoundation: false,
         organization: "University A", type: "appreciated_stock", amount: "12000",
         dateOfDonation: "2025-03-01", costBasis: "2000", isLongTermCapitalGain: true,
       },
-      {
+      { qualifiedOrganization: true, isPrivateFoundation: false,
         organization: "Museum B", type: "appreciated_stock", amount: "10000",
         dateOfDonation: "2025-06-15", costBasis: "3000", isLongTermCapitalGain: true,
       },
-      {
+      { qualifiedOrganization: true, isPrivateFoundation: false,
         organization: "Foundation C", type: "appreciated_stock", amount: "15000",
         dateOfDonation: "2025-09-01", costBasis: "1000", isLongTermCapitalGain: true,
       },
@@ -330,12 +330,12 @@ describe("Charitable AGI limits", () => {
   });
 
   it("HoH filing status — stacked limits same as single", () => {
-    // AGI = $100K. LTCG = min($45K, 30%=$30K) = $30K. Non-cash = $30K.
-    // Cash = min($75K, 60%=$60K - $30K) = $30K.
+    // Final2025 Pub526 Worksheet2 lines13,17,30; property follows cash.
+    // Base100000; public cash75000 allows60000; capital45000 has no remaining50percent capacity. Carry is15000cash+45000capital.
     const input = {
       ...makeFixtureWithDonations([
-        { organization: "Red Cross", type: "cash", amount: "75000", dateOfDonation: "2025-12-01", costBasis: "0" },
-        {
+        { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Red Cross", type: "cash", amount: "75000", dateOfDonation: "2025-12-01", costBasis: "0" },
+        { qualifiedOrganization: true, isPrivateFoundation: false,
           organization: "Museum", type: "appreciated_stock", amount: "45000",
           dateOfDonation: "2025-10-01", costBasis: "5000", isLongTermCapitalGain: true,
         },
@@ -351,14 +351,15 @@ describe("Charitable AGI limits", () => {
       },
     };
     const result = calculateScheduleA(input, d(100000), "head_of_household", c);
-    expect(result.cashCharitable.toNumber()).toBe(30000);     // 60% - 30K non-cash = $30K
-    expect(result.nonCashCharitable.toNumber()).toBe(30000);  // 30% of $100K
+    expect(result.cashCharitable.toNumber()).toBe(60000);
+    expect(result.nonCashCharitable.toNumber()).toBe(0);
+    expect(result.charitableCarryforward.toNumber()).toBe(60000);
   });
 
   it("donation type 'other' (non-LTCG) — subject to 50% AGI limit", () => {
     // AGI = $100K. 50% = $50K. "Other" donation $60K → capped at $50K.
     const input = makeFixtureWithDonations([
-      {
+      { qualifiedOrganization: true, isPrivateFoundation: false,
         organization: "Thrift Store", type: "other", amount: "60000",
         dateOfDonation: "2025-05-01", costBasis: "60000", isLongTermCapitalGain: false,
       },
@@ -371,7 +372,7 @@ describe("Charitable AGI limits", () => {
     // An "other" type with isLongTermCapitalGain=true falls into the appreciated bucket.
     // AGI = $100K. 30% = $30K. "Other LTCG" donation $40K → capped at $30K.
     const input = makeFixtureWithDonations([
-      {
+      { qualifiedOrganization: true, isPrivateFoundation: false,
         organization: "Art Collection", type: "other", amount: "40000",
         dateOfDonation: "2025-07-01", costBasis: "5000", isLongTermCapitalGain: true,
       },
@@ -383,26 +384,27 @@ describe("Charitable AGI limits", () => {
   it("cash donation of exactly $1 — minimal donation fully deductible", () => {
     // AGI = $50K. 60% = $30K. Donation = $1 → fully deductible (well under cap).
     const input = makeFixtureWithDonations([
-      { organization: "Penny Charity", type: "cash", amount: "1", dateOfDonation: "2025-01-01", costBasis: "0" },
+      { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Penny Charity", type: "cash", amount: "1", dateOfDonation: "2025-01-01", costBasis: "0" },
     ]);
     const result = calculateScheduleA(input, d(50000), "single", c);
     expect(result.cashCharitable.toNumber()).toBe(1);
   });
 
   it("very large AGI ($5M) — stacked limits cap total at 60%", () => {
-    // AGI = $5M. LTCG = min($2M, 30%=$1.5M) = $1.5M. Non-cash = $1.5M.
-    // Cash = min($3.5M, 60%=$3M - $1.5M) = $1.5M. Total = $3M = 60%.
+    // Final2025 Pub526 Worksheet2 lines13,17,30; property follows cash.
+    // Base5000000; public cash3500000 allows3000000; capital2000000 has no remaining50percent capacity. Carry is500000cash+2000000capital.
     const input = makeFixtureWithDonations([
-      { organization: "Mega Foundation", type: "cash", amount: "3500000", dateOfDonation: "2025-12-01", costBasis: "0" },
-      {
+      { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Mega Foundation", type: "cash", amount: "3500000", dateOfDonation: "2025-12-01", costBasis: "0" },
+      { qualifiedOrganization: true, isPrivateFoundation: false,
         organization: "University Endowment", type: "appreciated_stock", amount: "2000000",
         dateOfDonation: "2025-06-01", costBasis: "200000", isLongTermCapitalGain: true,
       },
     ]);
     const result = calculateScheduleA(input, d(5000000), "single", c);
-    expect(result.cashCharitable.toNumber()).toBe(1500000);   // 60% - 1.5M non-cash = $1.5M
-    expect(result.nonCashCharitable.toNumber()).toBe(1500000); // 30% of $5M
+    expect(result.cashCharitable.toNumber()).toBe(3000000);
+    expect(result.nonCashCharitable.toNumber()).toBe(0);
     expect(result.totalItemized.toNumber()).toBe(3000000);     // $3M = 60% of AGI
+    expect(result.charitableCarryforward.toNumber()).toBe(2500000);
   });
 
   it("non-cash donation with zero costBasis — FMV is deductible, LTCG bucket used when isLongTermCapitalGain=true", () => {
@@ -410,7 +412,7 @@ describe("Charitable AGI limits", () => {
     // isLongTermCapitalGain=true → appreciated bucket, 30% limit.
     // AGI = $100K. 30% = $30K. $25K < $30K → fully deductible.
     const input = makeFixtureWithDonations([
-      {
+      { qualifiedOrganization: true, isPrivateFoundation: false,
         organization: "Charity Zero Basis", type: "appreciated_stock", amount: "25000",
         dateOfDonation: "2025-08-15", costBasis: "0", isLongTermCapitalGain: true,
       },
@@ -421,12 +423,12 @@ describe("Charitable AGI limits", () => {
 
   it("zero AGI zeroes out all charitable categories — cash, appreciated, and other non-cash", () => {
     const input = makeFixtureWithDonations([
-      { organization: "Cash Org", type: "cash", amount: "10000", dateOfDonation: "2025-01-01", costBasis: "0" },
-      {
+      { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Cash Org", type: "cash", amount: "10000", dateOfDonation: "2025-01-01", costBasis: "0" },
+      { qualifiedOrganization: true, isPrivateFoundation: false,
         organization: "Stock Org", type: "appreciated_stock", amount: "5000",
         dateOfDonation: "2025-02-01", costBasis: "1000", isLongTermCapitalGain: true,
       },
-      {
+      { qualifiedOrganization: true, isPrivateFoundation: false,
         organization: "Property Org", type: "property", amount: "8000",
         dateOfDonation: "2025-03-01", costBasis: "8000", isLongTermCapitalGain: false,
       },
@@ -440,7 +442,7 @@ describe("Charitable AGI limits", () => {
   it("AGI of $1 retains the exact 60% capacity before reporting one dollar", () => {
     // Section6102(c): capacity0.60 remains exact; the completed cash line reports1.
     const input = makeFixtureWithDonations([
-      { organization: "Charity", type: "cash", amount: "500", dateOfDonation: "2025-06-01", costBasis: "0" },
+      { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Charity", type: "cash", amount: "500", dateOfDonation: "2025-06-01", costBasis: "0" },
     ]);
     const result = calculateScheduleA(input, d(1), "single", c);
     expect(result.cashCharitable.toString()).toBe("0.6");
@@ -451,7 +453,7 @@ describe("Charitable AGI limits", () => {
   it("fractional 60% capacity preserves the unreported carry cents", () => {
     // Exact capacity199.80; reported current cash200; actual unallowed carry0.20.
     const input = makeFixtureWithDonations([
-      { organization: "Charity", type: "cash", amount: "200", dateOfDonation: "2025-04-01", costBasis: "0" },
+      { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Charity", type: "cash", amount: "200", dateOfDonation: "2025-04-01", costBasis: "0" },
     ]);
     const result = calculateScheduleA(input, d(333), "single", c);
     expect(result.cashCharitable.toString()).toBe("199.8");
@@ -462,7 +464,7 @@ describe("Charitable AGI limits", () => {
   it("fractional 30% capacity preserves exact allowed property and carry", () => {
     // Exact capacity99.90; reported current property100; actual unallowed carry50.10.
     const input = makeFixtureWithDonations([
-      {
+      { qualifiedOrganization: true, isPrivateFoundation: false,
         organization: "Museum", type: "appreciated_stock", amount: "150",
         dateOfDonation: "2025-05-01", costBasis: "20", isLongTermCapitalGain: true,
       },
@@ -473,28 +475,29 @@ describe("Charitable AGI limits", () => {
     expect(result.charitableCarryforward.toString()).toBe("50.1");
   });
 
-  it("combined cash + appreciated — stacked limits reduce cash capacity", () => {
-    // AGI = $80K. LTCG = min($25K, 30%=$24K) = $24K. Non-cash = $24K.
-    // Cash = min($50K, 60%=$48K - $24K = $24K) = $24K.
+  it("combined cash + appreciated — current cash precedes capital property", () => {
+    // Final2025 Pub526 Worksheet2 lines13,17,30; property follows cash.
+    // Base80000; public cash50000 allows48000. Capital25000 has no remaining50percent capacity; carry2000cash+25000capital.
     const input = makeFixtureWithDonations([
-      { organization: "Cash Org", type: "cash", amount: "50000", dateOfDonation: "2025-01-15", costBasis: "0" },
-      {
+      { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Cash Org", type: "cash", amount: "50000", dateOfDonation: "2025-01-15", costBasis: "0" },
+      { qualifiedOrganization: true, isPrivateFoundation: false,
         organization: "Stock Org", type: "appreciated_stock", amount: "25000",
         dateOfDonation: "2025-06-15", costBasis: "5000", isLongTermCapitalGain: true,
       },
     ]);
     const result = calculateScheduleA(input, d(80000), "single", c);
-    expect(result.cashCharitable.toNumber()).toBe(24000);  // 60% - 24K = $24K
-    expect(result.nonCashCharitable.toNumber()).toBe(24000);
+    expect(result.cashCharitable.toNumber()).toBe(48000);
+    expect(result.nonCashCharitable.toNumber()).toBe(0);
     expect(result.totalItemized.toNumber()).toBe(48000); // 24K + 24K = 60% of AGI
+    expect(result.charitableCarryforward.toNumber()).toBe(27000);
   });
 
   it("carryforward excess — cash donations + carryforward exceed 60% limit, excess is not deductible", () => {
     // AGI = $100K. 60% = $60K. Current cash = $40K. Carryforward = $30K. Total = $70K → capped at $60K.
     // Excess $10K is not deductible this year.
-    const input = {
+    const input = { charitableCarryoverSources: syntheticPublicCashHistory([{ taxYear: 2024, amount: "30000" }], { name: "J D", last4: "6789" }),
       ...makeFixtureWithDonations([
-        { organization: "Charity A", type: "cash", amount: "40000", dateOfDonation: "2025-06-01", costBasis: "0" },
+        { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Charity A", type: "cash", amount: "40000", dateOfDonation: "2025-06-01", costBasis: "0" },
       ]),
       priorYear: { charitableCarryforward: "30000" },
     };
@@ -549,7 +552,7 @@ describe("Charitable AGI limits", () => {
       ],
       form1095A: [],
       donations: [
-        { organization: "Charity", type: "cash", amount: "50000", dateOfDonation: "2025-11-01", costBasis: "0" },
+        { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Charity", type: "cash", amount: "50000", dateOfDonation: "2025-11-01", costBasis: "0" },
       ],
     };
     const result = calculateScheduleA(input, d(200000), "single", c);
@@ -565,8 +568,8 @@ describe("Charitable AGI limits", () => {
     // AGI = $10M. 60% = $6M. Cash = $1000 → fully deductible (trivially under limit).
     // 30% = $3M. Appreciated stock = $500 → fully deductible.
     const input = makeFixtureWithDonations([
-      { organization: "Local Food Bank", type: "cash", amount: "1000", dateOfDonation: "2025-12-25", costBasis: "0" },
-      {
+      { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Local Food Bank", type: "cash", amount: "1000", dateOfDonation: "2025-12-25", costBasis: "0" },
+      { qualifiedOrganization: true, isPrivateFoundation: false,
         organization: "University", type: "appreciated_stock", amount: "500",
         dateOfDonation: "2025-12-25", costBasis: "50", isLongTermCapitalGain: true,
       },
@@ -578,12 +581,12 @@ describe("Charitable AGI limits", () => {
   });
 
   it("MFS filing status — stacked limits same as other statuses", () => {
-    // AGI = $150K. LTCG = min($50K, 30%=$45K) = $45K. Non-cash = $45K.
-    // Cash = min($100K, 60%=$90K - $45K = $45K) = $45K.
+    // Final2025 Pub526 Worksheet2 lines13,17,30; property follows cash.
+    // Base150000; public cash100000 allows90000. Capital50000 has no remaining50percent capacity; carry10000cash+50000capital.
     const input = {
       ...makeFixtureWithDonations([
-        { organization: "Red Cross", type: "cash", amount: "100000", dateOfDonation: "2025-12-01", costBasis: "0" },
-        {
+        { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Red Cross", type: "cash", amount: "100000", dateOfDonation: "2025-12-01", costBasis: "0" },
+        { qualifiedOrganization: true, isPrivateFoundation: false,
           organization: "Art Museum", type: "appreciated_stock", amount: "50000",
           dateOfDonation: "2025-11-01", costBasis: "10000", isLongTermCapitalGain: true,
         },
@@ -597,28 +600,29 @@ describe("Charitable AGI limits", () => {
       },
     };
     const result = calculateScheduleA(input, d(150000), "married_filing_separately", c);
-    expect(result.cashCharitable.toNumber()).toBe(45000);  // 60% - 45K = $45K
-    expect(result.nonCashCharitable.toNumber()).toBe(45000);
+    expect(result.cashCharitable.toNumber()).toBe(90000);
+    expect(result.nonCashCharitable.toNumber()).toBe(0);
     expect(result.totalItemized.toNumber()).toBe(90000);  // 60% of AGI
+    expect(result.charitableCarryforward.toNumber()).toBe(60000);
   });
 
   it("both non-cash categories at limits — stacked at 50% overall", () => {
     // AGI = $200K.
-    // Step 1: LTCG = min($60K, 30%=$60K) = $60K
-    // Step 2: Other = min($100K, 50%=$100K - $60K = $40K) = $40K
+    // Worksheet2 line17: ordinary property = min(100000, 50% of200000)=100000.
+    // Line30: capital property = min(60000,60000,max(100000-100000,0))=0.
     // Non-cash total = $100K = 50% of AGI (overall non-cash cap)
     const input = makeFixtureWithDonations([
-      {
+      { qualifiedOrganization: true, isPrivateFoundation: false,
         organization: "Museum", type: "appreciated_stock", amount: "60000",
         dateOfDonation: "2025-03-01", costBasis: "10000", isLongTermCapitalGain: true,
       },
-      {
+      { qualifiedOrganization: true, isPrivateFoundation: false,
         organization: "Goodwill", type: "property", amount: "100000",
         dateOfDonation: "2025-06-01", costBasis: "100000", isLongTermCapitalGain: false,
       },
     ]);
     const result = calculateScheduleA(input, d(200000), "single", c);
-    // LTCG $60K + other $40K = $100K = 50% of AGI
+    // Ordinary100000 + capital0 =100000; all60000 capital is carried.
     expect(result.nonCashCharitable.toNumber()).toBe(100000);
   });
 
@@ -628,7 +632,7 @@ describe("Charitable AGI limits", () => {
     // AGI = $99,999. 60% = $59,999.40 → roundDollar → $59,999.
     // Cash donation = $59,999 → exactly at rounded cap, fully deductible.
     const input = makeFixtureWithDonations([
-      { organization: "Precision Charity", type: "cash", amount: "59999", dateOfDonation: "2025-08-01", costBasis: "0" },
+      { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Precision Charity", type: "cash", amount: "59999", dateOfDonation: "2025-08-01", costBasis: "0" },
     ]);
     const result = calculateScheduleA(input, d(99999), "single", c);
     // Exact60% capacity59999.4; the59999 donation is below the cap.
@@ -638,7 +642,7 @@ describe("Charitable AGI limits", () => {
   it("appreciated property preserves the fractional 30% limit before reporting", () => {
     // Exact30% capacity29999.10; report29999 while preserving carry0.90.
     const input = makeFixtureWithDonations([
-      {
+      { qualifiedOrganization: true, isPrivateFoundation: false,
         organization: "University Endowment", type: "appreciated_stock", amount: "30000",
         dateOfDonation: "2025-09-01", costBasis: "1000", isLongTermCapitalGain: true,
       },
@@ -653,9 +657,9 @@ describe("Charitable AGI limits", () => {
     // IRS Pub. 526: capital gain property to certain private foundations is limited to 20% of AGI.
     // AGI = $100K. 20% = $20K. Donation = $25K → capped at $20K.
     const input = makeFixtureWithDonations([
-      {
+      { qualifiedOrganization: true,
         organization: "Smith Private Foundation", type: "appreciated_stock", amount: "25000",
-        dateOfDonation: "2025-06-15", costBasis: "3000", isLongTermCapitalGain: true, isPrivateFoundation: true,
+        dateOfDonation: "2025-06-15", costBasis: "3000", isLongTermCapitalGain: true, isPrivateFoundation: true, qualifiedAppreciatedStock: true,
       },
     ]);
     const result = calculateScheduleA(input, d(100000), "single", c);
@@ -669,13 +673,13 @@ describe("Charitable AGI limits", () => {
     // 20% AGI = $20K, remaining 30% headroom = $5K, remaining 50% headroom = $25K.
     // Deductible private-foundation amount = $5K, so total non-cash charitable = $30K.
     const input = makeFixtureWithDonations([
-      {
+      { qualifiedOrganization: true, isPrivateFoundation: false,
         organization: "City Museum", type: "appreciated_stock", amount: "25000",
         dateOfDonation: "2025-04-01", costBasis: "4000", isLongTermCapitalGain: true,
       },
-      {
+      { qualifiedOrganization: true,
         organization: "Smith Private Foundation", type: "appreciated_stock", amount: "25000",
-        dateOfDonation: "2025-06-15", costBasis: "3000", isLongTermCapitalGain: true, isPrivateFoundation: true,
+        dateOfDonation: "2025-06-15", costBasis: "3000", isLongTermCapitalGain: true, isPrivateFoundation: true, qualifiedAppreciatedStock: true,
       },
     ]);
     const result = calculateScheduleA(input, d(100000), "single", c);
@@ -683,27 +687,28 @@ describe("Charitable AGI limits", () => {
     expect(result.nonCashCharitable.toNumber()).toBe(30000);
   });
 
-  it("mixed cash + non-LTCG property — cash reduced by stacked non-cash", () => {
-    // AGI = $120K. Other = min($55K, 50%=$60K) = $55K. Non-cash = $55K.
-    // Cash = min($80K, 60%=$72K - $55K = $17K) = $17K.
+  it("mixed cash + non-LTCG property — current cash precedes ordinary property", () => {
+    // Final2025 Pub526 Worksheet2 lines13,17,30; property follows cash.
+    // Base120000; public cash80000 allows72000. Ordinary property55000 has no remaining50percent capacity; carry8000cash+55000property.
     const input = makeFixtureWithDonations([
-      { organization: "Food Bank", type: "cash", amount: "80000", dateOfDonation: "2025-02-01", costBasis: "0" },
-      {
+      { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Food Bank", type: "cash", amount: "80000", dateOfDonation: "2025-02-01", costBasis: "0" },
+      { qualifiedOrganization: true, isPrivateFoundation: false,
         organization: "Clothing Drive", type: "property", amount: "55000",
         dateOfDonation: "2025-07-15", costBasis: "55000", isLongTermCapitalGain: false,
       },
     ]);
     const result = calculateScheduleA(input, d(120000), "single", c);
-    expect(result.cashCharitable.toNumber()).toBe(17000);   // 60% - 55K non-cash = $17K
-    expect(result.nonCashCharitable.toNumber()).toBe(55000); // Under 50%, fully deductible
+    expect(result.cashCharitable.toNumber()).toBe(72000);
+    expect(result.nonCashCharitable.toNumber()).toBe(0);
     expect(result.totalItemized.toNumber()).toBe(72000);    // $72K = 60% of AGI
+    expect(result.charitableCarryforward.toNumber()).toBe(63000);
   });
 
   it("carryforward of excess charitable contributions — excess over 60% cap is non-deductible this year", () => {
     // AGI = $80K. 60% = $48K. Carryforward alone = $60K → only $48K deductible this year.
     // The remaining $12K is excess not reflected in the engine (caller tracks carryforward years).
     const excess = d(60000).minus(d(48000)); // $12K excess this year
-    const input = {
+    const input = { charitableCarryoverSources: syntheticPublicCashHistory([{ taxYear: 2024, amount: "60000" }], { name: "J D", last4: "6789" }),
       ...makeFixtureWithDonations([]),
       priorYear: { charitableCarryforward: "60000" },
     };
@@ -714,30 +719,29 @@ describe("Charitable AGI limits", () => {
   });
 
   it("donations exceeding 200% of AGI — all stacked limits triggered simultaneously", () => {
-    // AGI = $50K. LTCG = min($110K, 30%=$15K) = $15K.
-    // Other = min($105K, 50%=$25K - $15K = $10K) = $10K. Non-cash = $25K.
-    // Cash = min($120K, 60%=$30K - $25K = $5K) = $5K.
-    // Total = $30K = 60% of AGI.
+    // Final2025 Pub526 Worksheet2 lines13,17,30; property follows cash.
+    // Base50000; public cash120000 allows30000. No50percent capacity remains for105000ordinary or110000capital; total carry305000.
     const input = makeFixtureWithDonations([
-      { organization: "Cash Org", type: "cash", amount: "120000", dateOfDonation: "2025-01-15", costBasis: "0" },
-      {
+      { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Cash Org", type: "cash", amount: "120000", dateOfDonation: "2025-01-15", costBasis: "0" },
+      { qualifiedOrganization: true, isPrivateFoundation: false,
         organization: "Stock Org", type: "appreciated_stock", amount: "110000",
         dateOfDonation: "2025-04-01", costBasis: "10000", isLongTermCapitalGain: true,
       },
-      {
+      { qualifiedOrganization: true, isPrivateFoundation: false,
         organization: "Property Org", type: "property", amount: "105000",
         dateOfDonation: "2025-08-01", costBasis: "105000", isLongTermCapitalGain: false,
       },
     ]);
     const result = calculateScheduleA(input, d(50000), "single", c);
-    expect(result.cashCharitable.toNumber()).toBe(5000);     // 60% - 25K non-cash = $5K
-    expect(result.nonCashCharitable.toNumber()).toBe(25000); // 15K (LTCG) + 10K (other, stacked)
+    expect(result.cashCharitable.toNumber()).toBe(30000);
+    expect(result.nonCashCharitable.toNumber()).toBe(0);
     expect(result.totalItemized.toNumber()).toBe(30000);     // $30K = 60% of AGI
+    expect(result.charitableCarryforward.toNumber()).toBe(305000);
   });
 
   it("zero AGI with carryforward — carryforward is also zeroed out by the 60% cap", () => {
     // AGI = $0. 60% of $0 = $0. Carryforward = $10K. Result = $0.
-    const input = {
+    const input = { charitableCarryoverSources: syntheticPublicCashHistory([{ taxYear: 2024, amount: "10000" }], { name: "J D", last4: "6789" }),
       ...makeFixtureWithDonations([]),
       priorYear: { charitableCarryforward: "10000" },
     };
@@ -749,7 +753,7 @@ describe("Charitable AGI limits", () => {
   it("small cash donation of $0.01 (fractional cent) — fully deductible, no rounding distortion", () => {
     // AGI = $100K. 60% = $60K. Cash donation = $0.01 (one cent) → fully deductible.
     const input = makeFixtureWithDonations([
-      { organization: "Micro Charity", type: "cash", amount: "0.01", dateOfDonation: "2025-03-15", costBasis: "0" },
+      { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Micro Charity", type: "cash", amount: "0.01", dateOfDonation: "2025-03-15", costBasis: "0" },
     ]);
     const result = calculateScheduleA(input, d(100000), "single", c);
     expect(result.cashCharitable.toNumber()).toBe(0.01);
@@ -789,7 +793,7 @@ describe("Charitable AGI limits", () => {
       ],
       form1095A: [],
       donations: [
-        { organization: "Local Charity", type: "cash", amount: "30000", dateOfDonation: "2025-10-01", costBasis: "0" },
+        { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Local Charity", type: "cash", amount: "30000", dateOfDonation: "2025-10-01", costBasis: "0" },
       ],
     };
     const result = calculateScheduleA(input, d(150000), "single", c);
@@ -804,8 +808,8 @@ describe("Charitable AGI limits", () => {
     // Verify the audit trail records the charitable contribution lines correctly.
     // AGI = $100K. Cash $20K (under 60% limit). Appreciated stock $15K (under 30% limit).
     const input = makeFixtureWithDonations([
-      { organization: "Cash Charity", type: "cash", amount: "20000", dateOfDonation: "2025-05-01", costBasis: "0" },
-      {
+      { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Cash Charity", type: "cash", amount: "20000", dateOfDonation: "2025-05-01", costBasis: "0" },
+      { qualifiedOrganization: true, isPrivateFoundation: false,
         organization: "Stock Charity", type: "appreciated_stock", amount: "15000",
         dateOfDonation: "2025-08-01", costBasis: "2000", isLongTermCapitalGain: true,
       },
@@ -831,7 +835,7 @@ describe("Charitable AGI limits", () => {
   it("non-LTCG property donation at exactly 50% AGI boundary — fully deductible, not capped", () => {
     // AGI = $60K. 50% = $30K. Property donation = exactly $30K → at boundary, fully deductible.
     const input = makeFixtureWithDonations([
-      {
+      { qualifiedOrganization: true, isPrivateFoundation: false,
         organization: "Habitat for Humanity", type: "property", amount: "30000",
         dateOfDonation: "2025-04-15", costBasis: "30000", isLongTermCapitalGain: false,
       },
@@ -876,7 +880,7 @@ describe("Charitable AGI limits", () => {
       form1098: [],
       form1095A: [],
       donations: [
-        { organization: "Big Charity", type: "cash", amount: "200000", dateOfDonation: "2025-11-01", costBasis: "0" },
+        { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Big Charity", type: "cash", amount: "200000", dateOfDonation: "2025-11-01", costBasis: "0" },
       ],
     };
     const result = calculateFederalTax(input);
@@ -894,7 +898,7 @@ describe("Charitable AGI limits", () => {
   it("cash-only: full 60% available (no non-cash to reduce it)", () => {
     // AGI $100K. Cash $70K → min($70K, 60%=$60K - $0) = $60K. No stacking impact.
     const input = makeFixtureWithDonations([
-      { organization: "Charity", type: "cash", amount: "70000", dateOfDonation: "2025-01-01", costBasis: "0" },
+      { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Charity", type: "cash", amount: "70000", dateOfDonation: "2025-01-01", costBasis: "0" },
     ]);
     const result = calculateScheduleA(input, d(100000), "single", c);
     expect(result.cashCharitable.toNumber()).toBe(60000);
@@ -905,7 +909,7 @@ describe("Charitable AGI limits", () => {
   it("LTCG-only: 30% applies, no interaction needed", () => {
     // AGI $100K. LTCG $40K → min($40K, 30%=$30K) = $30K. No stacking impact.
     const input = makeFixtureWithDonations([
-      {
+      { qualifiedOrganization: true, isPrivateFoundation: false,
         organization: "Museum", type: "appreciated_stock", amount: "40000",
         dateOfDonation: "2025-01-01", costBasis: "5000", isLongTermCapitalGain: true,
       },
@@ -919,7 +923,7 @@ describe("Charitable AGI limits", () => {
   it("other non-cash only: 50% applies, no interaction needed", () => {
     // AGI $100K. Other $60K → min($60K, 50%=$50K - $0) = $50K.
     const input = makeFixtureWithDonations([
-      {
+      { qualifiedOrganization: true, isPrivateFoundation: false,
         organization: "Goodwill", type: "property", amount: "60000",
         dateOfDonation: "2025-01-01", costBasis: "60000", isLongTermCapitalGain: false,
       },
@@ -929,27 +933,25 @@ describe("Charitable AGI limits", () => {
     expect(result.totalItemized.toNumber()).toBe(50000);
   });
 
-  it("stacking: maximum effective total is always 60% of AGI", () => {
-    // AGI $100K. All three categories at maximum raw amounts.
-    // LTCG $30K (at 30% cap). Other = min($50K, 50%-30%=$20K) = $20K.
-    // Non-cash = $50K. Cash = min($60K, 60%-50%=$10K) = $10K.
-    // Total = $60K = exactly 60%.
+  it("current public cash at 60% leaves no deduction capacity for other current property", () => {
+    // Final2025 Pub526 Worksheet2 lines13,17,30; property follows cash.
+    // Base100000; cash60000 uses the60percent allowance. Ordinary50000 and capital30000 have no remaining50percent capacity and carry forward.
     const input = makeFixtureWithDonations([
-      { organization: "C", type: "cash", amount: "60000", dateOfDonation: "2025-01-01", costBasis: "0" },
-      {
+      { qualifiedOrganization: true, isPrivateFoundation: false, organization: "C", type: "cash", amount: "60000", dateOfDonation: "2025-01-01", costBasis: "0" },
+      { qualifiedOrganization: true, isPrivateFoundation: false,
         organization: "L", type: "appreciated_stock", amount: "30000",
         dateOfDonation: "2025-01-01", costBasis: "5000", isLongTermCapitalGain: true,
       },
-      {
+      { qualifiedOrganization: true, isPrivateFoundation: false,
         organization: "O", type: "property", amount: "50000",
         dateOfDonation: "2025-01-01", costBasis: "50000", isLongTermCapitalGain: false,
       },
     ]);
     const result = calculateScheduleA(input, d(100000), "single", c);
-    expect(result.cashCharitable.toNumber()).toBe(10000);
-    expect(result.nonCashCharitable.toNumber()).toBe(50000); // 30K + 20K
-    // Total deduction = 60% of AGI
+    expect(result.cashCharitable.toNumber()).toBe(60000);
+    expect(result.nonCashCharitable.toNumber()).toBe(0);
     const totalCharitable = result.cashCharitable.plus(result.nonCashCharitable);
     expect(totalCharitable.toNumber()).toBe(60000);
+    expect(result.charitableCarryforward.toNumber()).toBe(80000);
   });
 });

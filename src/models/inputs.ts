@@ -8,6 +8,7 @@ import { getNYIT201ResidentConstants } from "@/models/constants.js";
 import { d } from "@/utils/decimal.js";
 import { Form982NolSourcesSchema } from "@/models/cod-nol-sources.js";
 import { IraBasisSourcesSchema } from "@/models/ira-basis-sources.js";
+import { CharitableCarryoverSourcesSchema } from "@/models/charitable-carryover-sources.js";
 
 // Custom Zod type for decimal strings (validated as numbers, stored as strings for Decimal.js)
 const decimal = z.string().regex(/^-?\d+(\.\d+)?$/, "Must be a decimal number");
@@ -2549,7 +2550,7 @@ export const Form8962Schema = z.object({
 
 export const CharitableDonationSchema = z.object({
   organization: z.string(),
-  /** Actual qualification under IRC 170(b)(1)(A), required for 2026 nonitemizer gifts. */
+  /** Actual charitable qualification under IRC170(c); omission remains unknown in either supported year. */
   qualifiedOrganization: z.boolean().optional(),
   supportingOrganization: z.boolean().optional(),
   donorAdvisedFund: z.boolean().optional(),
@@ -5928,6 +5929,7 @@ export const TaxYearInputSchema = z.object({
   educationExpenses: EducationExpensesSchema.optional(),
   priorYear: PriorYearCarryforwardSchema.optional(),
   netOperatingLoss: NetOperatingLossSourcesSchema.optional(),
+  charitableCarryoverSources: CharitableCarryoverSourcesSchema.optional(),
   form172: Form172OriginSourcesSchema.optional(),
   adjustments: AdjustmentsSchema.optional(),
   form2210: Form2210Schema.optional(),

@@ -77,7 +77,7 @@ it("requires independent consistent carry sources and investment origins", () =>
   expect(() => calculateFederalTax(different)).toThrow(/AMT basis/);
 });
 it("rejects unresolved charity and current loss carry interactions", () => {
-  expect(() => calculateFederalTax(input("50000", { priorYear: {}, donations: [{ organization: "Actual public charity", type: "cash", amount: "30000", dateOfDonation: "2025-05-01" }] }))).toThrow(/Charitable carry requires actual current public qualification/);
+  expect(() => calculateFederalTax(input("50000", { priorYear: {}, donations: [{ organization: "Actual public charity", type: "cash", amount: "30000", dateOfDonation: "2025-05-01" }] }))).toThrow(/Charitable.*qualification/);
   expect(() => calculateFederalTax(input("0", { scheduleC: { businessName: "Actual loss business", grossReceipts: "0", expenses: { otherExpenses: "30000" } } }))).toThrow(/current.year.*loss/i);
   expect(() => calculateFederalTax(input("100000", { form1099C: [{ creditor: "Actual lender", amountDischarged: "1000" }], codExclusion: { bankruptcy: true } }))).toThrow(/vintage attribute/);
 });

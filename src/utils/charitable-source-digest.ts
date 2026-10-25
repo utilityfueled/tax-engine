@@ -9,6 +9,10 @@ export function charitableSourceDigest(input: TaxYearInput): string {
     donations: input.donations,
     priorAmount: input.priorYear?.charitableCarryforward,
     priorYears: input.priorYear?.charitableCarryforwardByYear,
+    priorSources: input.charitableCarryoverSources === undefined ? undefined : (() => {
+      const { primaryTaxpayerIdLast4: _primaryId, spouseTaxpayerIdLast4: _spouseId, ...sources } = input.charitableCarryoverSources;
+      return sources;
+    })(),
     partnership: input.scheduleK1?.map(row => ({ cash: row.charitableCash, capital30: row.charitableCapitalGain30, capital20: row.charitableCapitalGain20 })),
     crypto: input.cryptoIncome?.donations?.map(({ charityEIN: _identifier, ...facts }) => facts),
   };

@@ -806,7 +806,7 @@ describe("QSS with AMT triggered by large SALT", () => {
     ],
     form1095A: [],
     donations: [
-      {
+      { qualifiedOrganization: true, isPrivateFoundation: false,
         organization: "Denver Food Bank",
         type: "cash",
         amount: "5000",

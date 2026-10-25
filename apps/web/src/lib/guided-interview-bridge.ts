@@ -380,9 +380,9 @@ export function buildForm1098Inputs(deductionData: DeductionData | undefined, ta
 
 // ── Charitable donations converter ──────────────────────────────────────────
 
-export function buildDonationsInput(deductionData: DeductionData | undefined) {
+export function buildDonationsInput(deductionData: DeductionData | undefined, taxYear?: number | null) {
   if (!deductionData) return [];
-  assertKnownFacts(deductionFactErrors({ ...deductionData, mortgageInterest: "", mortgageEntries: [], mortgageWorksheet: undefined }));
+  assertKnownFacts(deductionFactErrors({ ...deductionData, mortgageInterest: "", mortgageEntries: [], mortgageWorksheet: undefined }, taxYear));
   return (deductionData.donationEntries ?? []).map((entry) => ({
     organization: entry.organization.trim(),
     type: entry.type as "cash" | "appreciated_stock" | "property" | "other",
@@ -688,7 +688,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
   const form1099G = buildUnemploymentInputs(unemploymentData);
   const scheduleA = buildScheduleAInput(deductionData, stateReturnData);
   const mortgageInputs = buildGuidedMortgageInputs(deductionData, state.taxYear, segmentation.filingStatus, personalInfo.spouse);
-  const donations = buildDonationsInput(deductionData);
+  const donations = buildDonationsInput(deductionData, state.taxYear);
   const adjustments = buildAdjustmentsInput(adjustmentData, state.segmentation.filingStatus, state.taxYear, loanEducation);
   const studentLoans = buildStudentLoanInputs(adjustmentData?.studentLoanFacts, segmentation.filingStatus, state.taxYear, loanEducation, adjustmentData?.studentLoanInterest);
   const ira = adjustmentData?.iraContributions;

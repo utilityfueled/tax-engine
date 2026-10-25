@@ -17,7 +17,7 @@ function stateAllocationInput() {
   const first = facts.incomeSources[0];
   return TaxYearInputSchema.parse({ ...base, scheduleA: undefined,
     w2s: [{ ...base.w2s[0], wages: '75000', stateWages: '75000', stateTaxWithheld: '6000' }],
-    donations: [{ organization: 'Synthetic public charity', type: 'cash', amount: '20000', dateOfDonation: '2025-10-15' }],
+    donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, organization: 'Synthetic public charity', type: 'cash', amount: '20000', dateOfDonation: '2025-10-15' }],
     form1099Int: [{ ...base.form1099Int[0], interestIncome: '15000' },
       { ...base.form1099Int[0], interestIncome: '10000', foreignTaxPaid: '0', foreignCountry: 'France', accountReference: 'Second private account' }],
     foreignTaxElection: { ...election, deductionYearCarryover: { ...facts,

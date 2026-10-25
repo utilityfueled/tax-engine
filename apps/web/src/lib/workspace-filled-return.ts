@@ -25,6 +25,7 @@ import { fillReturn } from "@/pdf/fill-return.js";
 import { redactReviewIdentifiers } from "@/pdf/redact-review-identifiers.js";
 import { prepareForm8949Review } from "@/pdf/form-8949-review-context.js";
 import { prepareCodNolReview } from "@/pdf/cod-nol-review-context.js";
+import { prepareCharitableReview } from "@/pdf/charitable-review-context.js";
 import { fillOhioReferenceForms } from "@/pdf/fill-oh-reference-forms.js";
 import { loadPdfDocumentQuietly } from "@/pdf/pdf-utils.js";
 import { assertPdfExportAllowed, markReviewPdf, REVIEW_PDF_NOTICE } from "@/pdf/export-policy.js";
@@ -613,6 +614,7 @@ export async function buildWorkspaceFilledReturnDownload(
   // intact through calculation, then redact only copies passed to renderers.
   const capitalGainReview = prepareForm8949Review(resolved.taxInput);
   const codNolReview = resolved.taxInput.form982NolSources ? prepareCodNolReview(resolved.taxInput) : undefined;
+  const charitableReview = resolved.taxInput.charitableCarryoverSources ? prepareCharitableReview(resolved.taxInput) : undefined;
   const redactedTaxInput = redactReviewIdentifiers(resolved.taxInput);
   const result = redactReviewIdentifiers(completeResult);
   const blankFormsDir = await resolveBlankFormsDir();
@@ -624,6 +626,7 @@ export async function buildWorkspaceFilledReturnDownload(
     const fillResult = await fillReturn(redactedTaxInput, result, {
       capitalGainReview,
       codNolReview,
+      charitableReview,
       blankFormsDir,
       outputDir,
       flatten: true,

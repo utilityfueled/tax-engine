@@ -736,7 +736,7 @@ describe("Credit stacking - AMT interaction with credits", () => {
         mortgageInsurancePremiums: "0",
         pointsPaid: "0",
       }],
-      donations: [{
+      donations: [{ qualifiedOrganization: true, isPrivateFoundation: false,
         organization: "Charity",
         type: "cash",
         amount: "10000",

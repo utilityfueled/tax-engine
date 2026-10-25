@@ -1200,7 +1200,7 @@ describe("QSS - itemized deductions exceeding $30K standard deduction", () => {
         stateTaxWithheld: "4000",
         stateWages: "85000",
       }],
-      donations: [{
+      donations: [{ qualifiedOrganization: true, isPrivateFoundation: false,
         organization: "Red Cross",
         type: "cash",
         amount: "5000",

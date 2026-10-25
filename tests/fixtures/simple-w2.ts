@@ -230,14 +230,14 @@ export const complexMFJFixture: TaxYearInput = {
   ],
   form1095A: [],
   donations: [
-    {
+    { qualifiedOrganization: true, isPrivateFoundation: false,
       organization: "United Way",
       type: "cash",
       amount: "5000",
       dateOfDonation: "2025-12-15",
       costBasis: "0",
     },
-    {
+    { qualifiedOrganization: true, isPrivateFoundation: false,
       organization: "Community Foundation",
       type: "appreciated_stock",
       amount: "20000",

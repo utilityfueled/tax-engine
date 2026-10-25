@@ -73,12 +73,13 @@ it("preserves original cents and requires actual current public-cash carry sourc
   expect(result.netOperatingLoss?.charitableCarryover?.sourceContributions.toFixed()).toBe("60000.49");
   expect(result.carryforwards.charitableContributions.toFixed()).toBe("3840");
   const unknown = charitableNolInput(); unknown.donations[0].qualifiedOrganization = undefined;
-  expect(() => calculateFederalTax(unknown)).toThrow(/charitable carry.*qualification/i);
+  expect(() => calculateFederalTax(unknown)).toThrow(/charitable.*qualification/i);
   const prior = charitableNolInput();
   if (!prior.priorYear) throw new Error("Missing synthetic prior source");
   prior.priorYear.charitableCarryforward = "1000";
   expect(() => calculateFederalTax(prior)).toThrow(/prior.*charit|charit.*prior/i);
   const property = charitableNolInput(); property.donations[0].type = "property";
+  property.donations[0].isLongTermCapitalGain = false; property.donations[0].costBasis = property.donations[0].amount;
   expect(() => calculateFederalTax(property)).toThrow(/current public.cash|mixed.*charit/i);
   const amt = charitableNolInput();
   if (!amt.netOperatingLoss?.alternativeTax || !amt.netOperatingLoss.vintages?.[0]) throw new Error("Missing synthetic loss");
@@ -90,4 +91,13 @@ it("preserves original cents and requires actual current public-cash carry sourc
   expect(() => calculateFederalTax(unknownAmt)).toThrow(/separate actual complete AMT/i);
   const standard2026 = charitableNolInput("100000", "60000", 2026); standard2026.deductionElection = "standard";
   expect(() => calculateFederalTax(standard2026)).toThrow(/standard.deduction charitable carry/i);
+});
+it("excludes known ineligible receipts from current charitable NOL coordination", () => {
+  const input = charitableNolInput();
+  input.donations.push({ ...input.donations[0], organization: "Synthetic nonqualified recipient", amount: "1000.10", qualifiedOrganization: false });
+  const original = JSON.stringify(input);
+  const result = calculateFederalTax(input);
+  expect(result.netOperatingLoss?.charitableCarryover?.sourceContributions.toString()).toBe("60000");
+  expect(result.carryforwards.charitableContributions.toString()).toBe("3840");
+  expect(JSON.stringify(input)).toBe(original);
 });

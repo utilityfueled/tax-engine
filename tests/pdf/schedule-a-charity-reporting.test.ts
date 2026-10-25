@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { PDFDocument } from "pdf-lib";
 import { calculateFederalTax } from "@/engine/federal.js";
 import { fillScheduleA, SCHEDULE_A_FIELDS as F } from "@/pdf/fill-schedule-a.js";
+import { prepareCharitableReview } from "@/pdf/charitable-review-context.js";
 import { redactReviewIdentifiers } from "@/pdf/redact-review-identifiers.js";
 import { REVIEW_PDF_NOTICE } from "@/pdf/export-policy.js";
 import { charityReportingFixture } from "../fixtures/charity-reporting.js";
@@ -43,7 +44,7 @@ describe("ScheduleA charity source reporting review", () => {
   // Spec: schedule-a-charity-reporting.yaml saved-review.
   it("preserves source-separated charity lines in reopened review fields and appearances", async () => {
     const input = charityReportingFixture(); const result = calculateFederalTax(input);
-    const doc = await fillScheduleA(redactReviewIdentifiers(input), result, blank);
+    const doc = await fillScheduleA(redactReviewIdentifiers(input), result, blank, prepareCharitableReview(input));
     const bytes = await doc.save(); const reopened = await PDFDocument.load(bytes);
     const expected = { [F.line11]: "20000", [F.line12]: "10001", [F.line13]: "1234", [F.line14]: "31235", [F.line17]: "31235" };
     for (const [key, value] of Object.entries(expected)) expect(reopened.getForm().getTextField(key).getText()).toBe(value);
