@@ -1793,11 +1793,12 @@
       "evidence": ".local/upgrade-evidence/form4952-candidate-staged-expanded.log"
     },
     "inventoryRefresh": {
-      "commit": "affeef42929db167043ac84de5b7a67331e99adf",
-      "entries": 270,
-      "status": "passed",
-      "evidence": ".local/upgrade-evidence/inventory-affeef4-refresh.log",
-      "limitation": "Generated from immutable committed source; structural inventory is not tax, final-form or human qualification."
+      "sourceCommit": "fab31fe2ad1faa176308650ee94d1644c9f400ca",
+      "entries": 396,
+      "status": "generated-and-freshness-check-passed",
+      "evidence": ".local/upgrade-evidence/inventory-fab31fe.log",
+      "inventorySha256": "7c21a0eb34ce0759ce0d7ea0e99c829d1ca5ce86be35f015187bc19609f826b3",
+      "qualification": "Conservative inventory metadata; statuses and filing gates unchanged."
     },
     "tickerKeyboardAndMortgageReview": {
       "commit": "603604b",
@@ -2582,6 +2583,15 @@
         "older exposure evidence explicitly attributed to c018 image"
       ],
       "humanSecurityQualification": false
+    },
+    "currentUnitRun": {
+      "sourceCommit": "fab31fe2ad1faa176308650ee94d1644c9f400ca",
+      "inventorySha256": "7c21a0eb34ce0759ce0d7ea0e99c829d1ca5ce86be35f015187bc19609f826b3",
+      "status": "running",
+      "directory": "/private/tmp/tax-engine-checks-50lb65f8",
+      "sessionId": 60794,
+      "evidence": ".local/upgrade-evidence/full-unit-fab31fe.log",
+      "scope": "Committed product source plus regenerated396-entry inventory; pinnedPython/pypdf, sample documents, disposable loopbackPostgreSQL. Excludes ongoing charity/COD guided edits."
     }
   },
   "historicalReleaseBlockers": {
