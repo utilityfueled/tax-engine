@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.62",
+    ruleVersion: "2025.63",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.ecfr.gov/current/title-26/section-1.170A-10", section: "Current public-cash charitable carry reduced only by refigured succeeding regular NOL carry increase; original receipts and independent known-empty ATNOL charitable carry retained", revision: "IRC170(d)(1)(B),172 and Reg1.172-5/1.55-1; current numerical examples are derived, prior/mixed/positive-ATNOL methods and independent qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i1116", section: "Actual ordinary passive source binding, regular and separate AMT limits, prescribed passive-group checks, prior carry use/expiry and actual carryback capacity", revision: "Final2025 Form1116/Form6251 and IRC59 applicable26/28percent source method; special sources and independent qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i1040sd", section: "Original source-qualified QSBS issuer/date exclusions on8949, full fund2a onScheduleD13, actual28percent netting and6251line2h; modified NOL restores full exclusion once", revision: "Current1202/57/172 and final2025 instructions; transfers, changing ownership, physical forms and independent qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/publications/p974", section: "Actual NOL recomputation at W/X maximum, ordered and final health contexts; separate final regular/AMT/1411 balances and actual temporary business attribution", revision: "Final2025 Pub974 plus IRC172/56 and Reg1.172-5/1.199A-3; synthetic derived cases, specialized coupled methods and independent qualification remain separate", retrievedAt: "2026-10-25" },
@@ -105,11 +106,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.58-law-integration-draft",
+    ruleVersion: "2026.59-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://uscode.house.gov/us/usc/119-118/t26/s170/", section: "Current public-cash170(d)(1)(B) NOL carry adjustment after eligible floor carry under(d)(1)(C); counterfactual removes source excess before reapplying modified floor", revision: "Derived current-law isolated calculation; separate AMT carry for known-empty ATNOL, positive ATNOL/standard-deduction coordination and full-year qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i1116", section: "Actual ordinary passive source binding, regular and separate AMT limits, prescribed passive-group checks, prior carry use/expiry and actual carryback capacity", revision: "Final2025 Form1116/Form6251 and IRC59 applicable26/28percent source method; special sources and independent qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i1040sd", section: "Original source-qualified QSBS acquisition cohorts, issuer limits,8949Q adjustments, actual28percent netting and pre2010 AMT preference", revision: "Current1202/57/172 and applicable final2025 source methods; full2026 and physical-form qualification remain closed", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/publications/p974", section: "Actual NOL recomputation through uncapped Marketplace and ordered health contexts, with actual final eligibility and independent regular/AMT/1411 ledgers", revision: "Applicable2025 source method plus enacted2026 section36B and indexed constants; isolated source tests do not open full-year or filing qualification", retrievedAt: "2026-10-25" },

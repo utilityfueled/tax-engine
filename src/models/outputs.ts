@@ -177,6 +177,9 @@ export interface TaxReturnResult {
     charitableContributions: Decimal;
     /** Per-year charitable contribution carryforward entries after FIFO reconciliation with 5-year expiration */
     charitableContributionsByYear: Array<{ taxYear: number; category?: import("@/engine/forms/charitable-contribution-worksheet.js").CharitableCategory; amount: Decimal }>;
+    /** Separate current charitable carry when a regular NOL adjustment and known-empty ATNOL history differ. */
+    amtCharitableContributions?: Decimal;
+    amtCharitableContributionsByYear?: Array<{ taxYear: number; category?: import("@/engine/forms/charitable-contribution-worksheet.js").CharitableCategory; amount: Decimal }>;
     /** NOL carryforward from excess business loss limitation (IRC §461(l)) */
     excessBusinessLossNOL: Decimal;
     /** Remaining NOL carryforward after the current-year IRC §172 deduction */

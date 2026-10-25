@@ -38,6 +38,8 @@ export interface ScheduleAInput {
   k1AppreciatedProperty20?: Decimal; // Code C: capital gain property to non-50% orgs (20% limit)
   /** Actual tentative crypto property values, before the common charitable limits. */
   cryptoCharitableAmounts?: CharitableContributionWorksheetInput["amounts"];
+  /** Internal170(d)(1)(B) counterfactual source amount; never a taxpayer override. */
+  nolPublicCashContributionLimit?: Decimal;
   /** Pre-computed sales tax deduction amount from the sales tax worksheet.
    *  When provided, Schedule A compares this to income taxes for Line 5a. */
   salesTaxDeduction?: Decimal;
@@ -334,6 +336,10 @@ export function calculateScheduleA(
 
   let nonitemizerCharitableDeduction = ZERO;
   const contributionBase = zeroFloor(agi);
+  const nolCashLimit = extra?.nolPublicCashContributionLimit;
+  if (nolCashLimit !== undefined && (!Decimal.isDecimal(nolCashLimit) || !nolCashLimit.isFinite() || nolCashLimit.lt(0))) {
+    throw new Error("Charitable NOL counterfactual requires a finite nonnegative source contribution limit");
+  }
   if (input.taxpayer.taxYear === 2026) {
     let eligibleCash = ZERO;
     for (const donation of input.donations) {
@@ -347,6 +353,7 @@ export function calculateScheduleA(
       if (donation.qualifiedOrganization === undefined || donation.supportingOrganization === undefined || donation.donorAdvisedFund === undefined) throw new Error("Nonitemizer charitable recipient qualification is unknown");
       if (donation.qualifiedOrganization && !donation.supportingOrganization && !donation.donorAdvisedFund && !donation.isPrivateFoundation) eligibleCash = eligibleCash.plus(amount);
     }
+    if (nolCashLimit !== undefined) eligibleCash = min(eligibleCash, nolCashLimit);
     nonitemizerCharitableDeduction = roundDollar(Decimal.min(eligibleCash, contributionBase.times("0.60"), filingStatus === "married_filing_jointly" ? "2000" : "1000"));
     audit.record("Charitable WS", "nonitemizer", "Nonitemizer charitable deduction candidate", nonitemizerCharitableDeduction,
       "2026 current eligible cash only: min(cash, 60% AGI, 1000 [2000 MFJ]); no floor or carryover");
@@ -393,6 +400,7 @@ export function calculateScheduleA(
           : donation.isPrivateFoundation ? "noncashPrivate" : "noncashPublic";
       amounts[category] = amounts[category].plus(contributionValue);
     }
+    if (nolCashLimit !== undefined) amounts.cashPublic = min(amounts.cashPublic, nolCashLimit);
     const charitable = calculateCharitableContributionWorksheet({ taxYear: input.taxpayer.taxYear, contributionBase, amounts });
     audit.merge(charitable.lines);
     cashCharitable = charitable.cashDeduction;
@@ -433,9 +441,10 @@ export function calculateScheduleA(
     const deductibleOtherNonCash = min(rawOtherNonCash, otherNonCashCapacity);
 
     // Cash limited to 60% minus non-cash property already allowed (IRC §170(b)(1)(G))
-    const rawCashCharitableDirect = input.donations
+    const originalCashCharitableDirect = input.donations
       .filter((don) => don.type === "cash")
       .reduce((acc, don) => acc.plus(d(don.amount)), new Decimal(0));
+    const rawCashCharitableDirect = nolCashLimit === undefined ? originalCashCharitableDirect : min(originalCashCharitableDirect, nolCashLimit);
     const rawCashCharitable = rawCashCharitableDirect
       .plus(extra?.k1CashCharitable ?? new Decimal(0));
     const cashAGILimit = roundDollar(contributionBase.times("0.6"));
