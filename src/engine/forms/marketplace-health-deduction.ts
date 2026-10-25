@@ -5,6 +5,7 @@ import type { Form8962Result } from "./form-8962.js";
 import type { MarketplaceHealthPremiumGroup } from "./marketplace-health-premiums.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { d, min, roundDollar, sum, zeroFloor } from "@/utils/decimal.js";
+import { calculateMarketplaceHealthLimit, type MarketplaceHealthLimitResult } from "./marketplace-health-limit.js";
 
 export interface MarketplaceHealthDeductionAmount {
   businessSourceId: string;
@@ -18,9 +19,20 @@ export interface MarketplaceHealthDeductionAmount {
 }
 export function calculateMarketplaceHealthDeduction(params: {
   input: TaxYearInput; groups: MarketplaceHealthPremiumGroup[]; credit: Form8962Result;
+  historicalLimit?: MarketplaceHealthLimitResult;
 }) {
   const { input, groups, credit } = params;
-  if (input.taxpayer.taxYear !== 2026 || credit.taxYear !== 2026 || !credit.sourceFactsVerified || credit.repaymentCap !== null) throw new Error("Pub9742026 requires actual uncapped Form8962 source results.");
+  const year = input.taxpayer.taxYear;
+  if (![2025,2026].includes(year) || credit.taxYear !== year || !credit.sourceFactsVerified || (year === 2026 && credit.repaymentCap !== null)) throw new Error("Pub974 requires actual matching-year Form8962 source results.");
+  let historicalLimit: MarketplaceHealthLimitResult | undefined;
+  if (year === 2025) {
+    if (!params.historicalLimit) throw new Error("Pub9742025 requires the actual completed W/X limit.");
+    historicalLimit = calculateMarketplaceHealthLimit({ taxYear: year, filingStatus: input.taxpayer.filingStatus, groups,
+      householdIncomeAfterW: params.historicalLimit.householdIncomeAfterW, federalPovertyLine: params.historicalLimit.federalPovertyLine });
+    if (!historicalLimit.maximumSpecifiedDeduction.eq(params.historicalLimit.maximumSpecifiedDeduction)
+      || historicalLimit.repaymentLimit?.toFixed() !== params.historicalLimit.repaymentLimit?.toFixed()) throw new Error("Pub9742025 maximum contradicts its actual W/X sources.");
+    if (!credit.taxpayerEligible && historicalLimit.specifiedAdvances.gt(0) && historicalLimit.repaymentLimit?.lt(historicalLimit.specifiedAdvances)) throw new Error("Pub9742025 ineligible coverage needs its actual capped-repayment ordinary-premium coordination.");
+  } else if (params.historicalLimit) throw new Error("Historical capped-repayment facts cannot change the2026 worksheet.");
   const months = input.form8962?.monthlyReconciliation;
   if (!months) throw new Error("Pub974 needs actual household monthly sources.");
   const creditAudit = (line: string, required: boolean): Decimal => {
@@ -87,19 +99,20 @@ export function calculateMarketplaceHealthDeduction(params: {
   });
   if (roundDollar(sum(...businesses.map(row => row.allocatedCredit))).gt(credit.ptcAllowed)) throw new Error("Pub974 source allocations duplicate the household credit.");
   const specifiedBusinesses = businesses.filter(row => groups.find(group => group.businessSourceId === row.businessSourceId)?.months.length);
-  const maximumSpecifiedDeduction = min(sum(...specifiedBusinesses.map(row => row.specifiedPremiums)), zeroFloor(sum(...specifiedBusinesses.map(row => row.remainingEarnedIncome))));
+  const maximumSpecifiedDeduction = historicalLimit?.maximumSpecifiedDeduction ?? min(sum(...specifiedBusinesses.map(row => row.specifiedPremiums)), zeroFloor(sum(...specifiedBusinesses.map(row => row.remainingEarnedIncome))));
   const specifiedDeduction = credit.taxpayerEligible
     ? min(sum(...businesses.map(row => row.netPremiumsAfterCredit)), maximumSpecifiedDeduction)
     : sum(...businesses.map(row => row.ordinaryDeduction));
   const nonspecifiedDeduction = sum(...businesses.map(row => row.nonspecifiedDeduction));
-  const method = credit.taxpayerEligible ? "pub974-simplified-2026" as const : "ordinary-no-ptc-2026" as const;
+  const method = credit.taxpayerEligible ? (year === 2025 ? "pub974-simplified-2025" as const : "pub974-simplified-2026" as const)
+    : (year === 2025 ? "ordinary-no-ptc-2025" as const : "ordinary-no-ptc-2026" as const);
   for (const [line, label, amount, formula] of [
     ["7", "Combined premiums after PTC", sum(...businesses.map(row => row.netPremiumsAfterCredit)), "Sum separate business line7"],
-    ["8", "Combined specified-premium maximum", maximumSpecifiedDeduction, "2026 uncapped X30: min(total specified premiums, combined remaining W earned limit)"],
+    ["8", "Combined specified-premium maximum", maximumSpecifiedDeduction, year === 2025 ? "Actual WorksheetX30 or W16 if no attributable advances" : "2026 uncapped X30: min(total specified premiums, combined remaining W earned limit)"],
     ["9", "Specified health deduction", specifiedDeduction, credit.taxpayerEligible ? "min(combined line7,line8), once" : "Ineligible Step2: ordinary separate business limits"],
     ["10", "Nonspecified health deduction", nonspecifiedDeduction, "Actual completed nonspecified worksheets, once"],
     ["11", "Combined health deduction", specifiedDeduction.plus(nonspecifiedDeduction), "Line9+line10; round Schedule1 transfer once"],
   ] as const) audit.record("Pub974 Simplified", line, label, amount, formula);
-  return { method, businesses, maximumSpecifiedDeduction, specifiedDeduction, nonspecifiedDeduction, lines: audit.getLines() };
+  return { method, businesses, maximumSpecifiedDeduction, specifiedDeduction, nonspecifiedDeduction, historicalLimit, lines: audit.getLines() };
 }
 export type MarketplaceHealthDeductionResult = ReturnType<typeof calculateMarketplaceHealthDeduction>;

@@ -1,0 +1,53 @@
+form: "Publication 974 Worksheets W and X"
+fullName: "2025 specified-premium limit and historical repayment limitation"
+taxYear: 2025
+irsReference: "https://www.irs.gov/publications/p974"
+notes: |
+  Refreshed2026-10-25. W4-13 use the canonical owner/business income,
+  SE-tax, retirement and foreign amounts already computed by Form7206.
+  Complete W4-13 separately, then aggregate13 and complete14-19 once.
+  X1-13 use actual canonical taxpayer MAGI with W17 deducted, plus the
+  required-filing dependent worksheet. No final MAGI or repayment override
+  is accepted from source input. Covered IRA/passive/bond/student-loan
+  deductions are ordered separately under the publication's instructions.
+lines:
+  - line: "W1-3"
+    description: "Actual specified premiums and attributable advances"
+    formula: "W1=sum specified premiums. W2=sum actual monthly APTC attributable to specified premiums using the same actual enrollment share. W3=W1-W2. Reject advances exceeding corresponding premium sources."
+    testRef: "tests/engine/forms/marketplace-health-limit.test.ts::reproduces Carla's published W and X maximum"
+  - line: "W4-13"
+    description: "Source-bound separate business earned income"
+    formula: "W4=actual plan-business net earnings; W5=same-owner positive business earnings; W6=W4/W5; W7=actual deductible SE tax times W6; W8=W4-W7; W9=attributable retirement; W10=W8-W9; shareholder W11=actual Medicare wages; W12=attributable2555line45; W13=W10 or11 minus12. Preserve signed losses before the combined limit."
+    testRef: "tests/engine/forms/marketplace-health-limit.test.ts::retains signed combined limits and skips X for actual zero advances"
+  - line: "W14-19"
+    description: "Combine the business income before the initial deduction"
+    formula: "W14=actual nonspecified deduction; W15=combined W13-W14; W16=min(W3,nonnegative remaining limit); W17=W14+W16. W18 skips X when actual attributable advances are zero. Otherwise W19=nonnegative remaining income-W16."
+    testRef: "tests/engine/forms/marketplace-health-limit.test.ts::retains signed combined limits and skips X for actual zero advances"
+  - line: "X1-14"
+    description: "Actual income before testing repayment tiers"
+    formula: "X1=1040lines2a+9+non-taxable SocialSecurity, with8814 dependent-source components counted once; X2=2555lines45+50; X3=X1+2; X4=allowed enumerated nonhealth adjustments excluding ordered special deductions; X5=W14; X6=W16; X7=X4+5+6; X8=X3-X7; X9-12=actual required-filing dependent AGI/exempt/foreign/nontaxableSS; X13=sum9-12; X14=X8+13. The canonical helper supplies this completed household amount, preserving signed components."
+    testRef: "tests/engine/forms/marketplace-health-limit.test.ts::reproduces Carla's published W and X maximum"
+  - line: "X15-25"
+    description: "Test the actual historical repayment tiers in order"
+    formula: "For each375/975/1625(single) or750/1950/3250(other) tier, subtract min(W19,tier) from X14 and floor the resulting FPL percentage. First result below200/300/400 selects that tier; otherwise select W2. X25 replaces ordinary Form8962Table5 when final line28 is required."
+    testRef: "tests/engine/forms/marketplace-health-limit.test.ts::tests repayment thresholds after the actual remaining-income reduction"
+  - line: "X26-31"
+    description: "Maximum deduction for the Simplified method"
+    formula: "X26=W16+X25; X27=W1; X28=min26/27; X29=W15; X30=min28/nonnegative29; X31=W14+X30. Return actual X25 separately from this maximum; no rounding of intermediate percentages to a more favorable tier."
+    testRef: "tests/engine/forms/marketplace-health-limit.test.ts::reproduces Carla's published W and X maximum"
+  - line: "source-integrity"
+    description: "Keep unknown and contradictory sources distinct"
+    formula: "Reject missing/nonfinite canonical household income or poverty line when X is required, repeated source identity, invalid monthly allocation, and unsupported years. A known zero amount remains valid."
+    testRef: "tests/engine/forms/marketplace-health-limit.test.ts::requires actual finite worksheet inputs and unique premium sources"
+  - line: "canonical"
+    description: "Use the actual W/X maximum before the 2025 credit calculation"
+    formula: "Compute canonical income with W17, derive X30/31 and X25, then repeat income with X31 for Step2 and complete Step3/final return. Carry computed X25 to final8962line28; do not replace it with ordinary Table5. Source input never supplies this override."
+    testRef: "tests/engine/federal-marketplace-health-2025.test.ts::uses W and X before the final2025 deduction and credit"
+  - line: "final-repayment"
+    description: "Retain the worksheet repayment limitation at the final income"
+    formula: "X25 remains the computed final8962line28 limitation even when the final income percentage enters another ordinary Table5 band; line29=min(actual excess advances,X25)."
+    testRef: "tests/engine/federal-marketplace-health-2025.test.ts::retains X25 when final income enters another Table5 band"
+  - line: "zero-advances"
+    description: "Skip X using actual zero and retain ordinary ineligible treatment"
+    formula: "When actual attributable APTC is zero, W17 supplies the maximum and no X repayment amount is created. Known ineligible coverage follows ordinary actual premium/business limits. Ineligible positive-advance capped-cost allocation remains a distinct method until represented."
+    testRef: "tests/engine/federal-marketplace-health-2025.test.ts::skips X for zero advances and handles ordinary no-credit premiums"

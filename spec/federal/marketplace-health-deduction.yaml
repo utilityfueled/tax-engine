@@ -11,7 +11,8 @@ notes: |
   facts; never replace actual coordination-required=true with false.
   Initial supported branch excludes the separate Pub974 ordered passive-loss,
   covered-IRA, savings-bond and student-loan special deduction calculations.
-  Those remain internal work, as do2025 capped-repayment worksheets.
+  Those remain internal work. Separate2025 capped W/X source calculation is
+  documented in marketplace-health-limit.yaml.
 lines:
   - line: "maximum"
     description: "Step1 maximum deduction and Step2 intermediate PTC"
@@ -27,7 +28,7 @@ lines:
     testRef: "tests/engine/federal-marketplace-health.test.ts::reconciles final MAGI and preserves actual coverage contradictions"
   - line: "boundaries"
     description: "Retain actual eligibility and explicit special worksheets"
-    formula: "Use actual employer-plan eligibility, source months and earned limits; zero Step2 PTC yields the ordinary source maximum. Historical capped repayment and positive ordered special deductions reject pending their own calculation, without claiming implementation."
+    formula: "Use actual employer-plan eligibility, source months and earned limits; ineligible2026 Step2 yields the ordinary source maximum. Actual source years must match. Positive ordered special deductions reject pending their own calculation, without claiming implementation."
     testRef: "tests/engine/federal-marketplace-health.test.ts::keeps ineligible months and separate ordered worksheets explicit"
   - line: "contradictory-no-credit"
     description: "A source label cannot create a second deduction for credited premiums"

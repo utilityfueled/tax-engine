@@ -56,7 +56,7 @@ it("keeps ineligible months and separate ordered worksheets explicit", () => {
   const special = marketplaceHealthInput(); special.savingsBondRedemptions = [{ proceeds: "1000", interest: "100", qualifiedExpenses: "1000" }];
   expect(() => calculateFederalTax(special)).toThrow(/Pub974.*ordered|special.*deduction/i);
   const prior = marketplaceHealthInput(); prior.taxpayer.taxYear = 2025;
-  expect(() => calculateFederalTax(prior)).toThrow(/2025.*repayment|historical.*repayment/i);
+  expect(() => calculateFederalTax(prior)).toThrow(/year/i); // A2026 source cannot become2025 by changing only the return.
 });
 it("rejects a no-credit plan declaration that would double benefit actual Marketplace premiums", () => {
   const input = marketplaceHealthInput();

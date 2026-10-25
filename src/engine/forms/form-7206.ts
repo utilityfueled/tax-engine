@@ -245,7 +245,7 @@ export function calculateForm7206(options: {
         const otherwiseEligible = currentYear && established && shareholder && payerEstablished && qualifiedInsurance && covered.get(id) && !months.get(month);
         const grossEligiblePremium = otherwiseEligible ? paid.plus(personAdvance).minus(funded) : new Decimal(0);
         const specified = marketplace && ptc;
-        if (grossEligiblePremium.gt(0) && specified && (options.marketplaceHandling === undefined || taxYear !== 2026)) throw new Error("Form7206 Marketplace premiums require actual Pub974 premium-tax-credit coordination.");
+        if (grossEligiblePremium.gt(0) && specified && options.marketplaceHandling === undefined) throw new Error("Form7206 Marketplace premiums require actual Pub974 premium-tax-credit coordination.");
         if (specified && plan.kind !== "medical") throw new Error("Form7206 specified Marketplace premiums require an actual qualified medical plan.");
         const marketplaceSpecifiedPremium = specified ? grossEligiblePremium : new Decimal(0);
         const eligiblePremium = specified && options.marketplaceHandling !== "ordinary-no-ptc" ? new Decimal(0) : grossEligiblePremium;

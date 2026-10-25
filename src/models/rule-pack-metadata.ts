@@ -27,12 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.44",
+    ruleVersion: "2025.45",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
-      { url: "https://www.irs.gov/publications/p974", section: "Actual Marketplace plan declarations cannot duplicate premium deductions and actual household credit; historical capped W/X worksheets remain a separate implementation", revision: "Posted2025 publication;2026 Simplified coordination is separately implemented without enabling2025 capped methods", retrievedAt: "2026-10-25" },
+      { url: "https://www.irs.gov/publications/p974", section: "Actual2025 W/X source maximum and repayment tiers; computed X25 retained on final8962line28 through the Simplified method", revision: "Final2025 Publication974 including Carla example; ordered Y/Z and partial forgiven-advance ordinary-cost methods remain internal work", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i8962", section: "Canonical Worksheet1-1 taxpayer MAGI from final return; child8814 exempt interest retained once in actual dependent Worksheet1-2, not parent1040line2a", revision: "Final2025 Form8962 and Form8814 instructions; positive Marketplace health coordination remains separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/irb/2026-18_IRB", section: "TD10044 actual employer/business reporting and net-income limits; section199A(c)(4)(D) allowable business-tip QBI exclusion", revision: "Final regulation plus2025 instructions and2026 reporting; reduced mixed-source allocation remains unsupported", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/pub/irs-pdf/f4137.pdf", section: "Actual employer and owner payroll sources, cash/noncash income distinction, separate spouse forms and canonical1040/Schedule2/SE/8959 routing", revision: "Final2025 Form4137 and official ScheduleSE/Form8959 instructions; RRTA Medicare coordination remains separate", retrievedAt: "2026-10-25" },
@@ -87,7 +87,7 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.40-law-integration-draft",
+    ruleVersion: "2026.41-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,

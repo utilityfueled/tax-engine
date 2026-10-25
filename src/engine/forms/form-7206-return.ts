@@ -7,6 +7,7 @@ import type { QBIDeductionSourceAmount } from "./qbi-source-deductions.js";
 import { calculateMarketplaceHealthPremiums } from "./marketplace-health-premiums.js";
 import type { MarketplaceHealthDeductionResult } from "./marketplace-health-deduction.js";
 import { AuditTrail } from "@/utils/audit.js";
+import { calculateMarketplaceHealthLimit, type MarketplaceHealthLimitResult } from "./marketplace-health-limit.js";
 
 type Owner = "primary" | "spouse";
 interface Params {
@@ -18,7 +19,7 @@ interface Params {
   foreignIncomeExclusion: Decimal;
   selfEmploymentSourcesVerified: boolean;
   /** Engine-computed Pub974 stage; not a taxpayer amount or source fact. */
-  marketplace?: { stage: "maximum" } | { stage: "final"; deduction: MarketplaceHealthDeductionResult };
+  marketplace?: { stage: "worksheet-w" } | { stage: "maximum"; historicalLimit?: MarketplaceHealthLimitResult } | { stage: "final"; deduction: MarketplaceHealthDeductionResult };
   /** Canonical gross income, never a taxpayer supplied profit override. */
   businessGrossIncomes?: { sourceId: string; amount: Decimal }[];
 }
@@ -151,8 +152,13 @@ export function calculateForm7206Return(params: Params) {
   if (marketplacePremiums) {
     const groups = marketplacePremiums.groups;
     const specified = groups.filter(row => row.months.length > 0);
-    const maximum = Decimal.min(sum(...specified.map(row => row.specifiedPremiums)), Decimal.max(0,sum(...specified.map(row => row.remainingEarnedIncome))));
-    if (params.marketplace?.stage === "maximum") {
+    const uncappedMaximum = Decimal.min(sum(...specified.map(row => row.specifiedPremiums)), Decimal.max(0,sum(...specified.map(row => row.remainingEarnedIncome))));
+    const suppliedLimit = params.marketplace?.stage === "maximum" ? params.marketplace.historicalLimit : result?.historicalLimit;
+    const historicalLimit = year === 2025 ? calculateMarketplaceHealthLimit({ taxYear: year, filingStatus: input.taxpayer.filingStatus, groups,
+      stage: params.marketplace?.stage === "worksheet-w" ? "w" : "complete", householdIncomeAfterW: suppliedLimit?.householdIncomeAfterW, federalPovertyLine: suppliedLimit?.federalPovertyLine }) : undefined;
+    const maximum = historicalLimit?.maximumSpecifiedDeduction ?? uncappedMaximum;
+    if (suppliedLimit && (!historicalLimit || !suppliedLimit.maximumSpecifiedDeduction.eq(historicalLimit.maximumSpecifiedDeduction))) throw new Error("Pub974 maximum must reconcile the actual historical worksheet.");
+    if (params.marketplace?.stage === "maximum" || params.marketplace?.stage === "worksheet-w") {
       // This amount is used only to compute AGI/PTC. No interim QBI attribution.
       deductionToSchedule1 = roundDollar(form7206.deduction.plus(maximum));
     } else {
@@ -163,10 +169,10 @@ export function calculateForm7206Return(params: Params) {
         if (!recorded || recorded.accountHolder !== group.accountHolder || !recorded.specifiedPremiums.eq(group.specifiedPremiums)
           || !recorded.remainingEarnedIncome.eq(group.remainingEarnedIncome) || !recorded.nonspecifiedDeduction.eq(group.nonspecifiedDeduction)) throw new Error("Pub974 computed deduction contradicts actual business sources.");
       }
-      const limit = result.method === "ordinary-no-ptc-2026" ? sum(...result.businesses.map(row => row.ordinaryDeduction)) : maximum;
+      const limit = result.method.startsWith("ordinary-no-ptc-") ? sum(...result.businesses.map(row => row.ordinaryDeduction)) : maximum;
       if (!result.specifiedDeduction.isFinite() || result.specifiedDeduction.lt(0) || result.specifiedDeduction.gt(limit)) throw new Error("Pub974 specified deduction exceeds the actual method limit.");
       const candidates = specified;
-      if (result.method === "ordinary-no-ptc-2026") {
+      if (result.method.startsWith("ordinary-no-ptc-")) {
         for (const group of result.businesses) {
           const target = healthSources.find(row => row.sourceId === group.businessSourceId);
           if (!target) throw new Error("Ordinary health deduction has no actual business source.");
@@ -210,8 +216,8 @@ export function calculateForm7206Return(params: Params) {
     for (const row of healthSources) row.amount = roundDollar(row.amount);
     deductionToSchedule1 = sum(...healthSources.map(row => row.amount));
   }
-  const printed = result?.method === "ordinary-no-ptc-2026"
+  const printed = result?.method.startsWith("ordinary-no-ptc-")
     ? calculateForm7206({ taxYear: year, filingStatus: input.taxpayer.filingStatus, facts, businesses, marketplaceHandling: "ordinary-no-ptc" }) : form7206;
-  if (result?.method === "ordinary-no-ptc-2026" && (printed.deduction === undefined || !roundDollar(printed.deduction).eq(deductionToSchedule1))) throw new Error("Ordinary no-PTC Form7206 must reconcile the final source deduction.");
+  if (result?.method.startsWith("ordinary-no-ptc-") && (printed.deduction === undefined || !roundDollar(printed.deduction).eq(deductionToSchedule1))) throw new Error("Ordinary no-PTC Form7206 must reconcile the final source deduction.");
   return { form7206: { ...printed, lines: [...printed.lines, ...marketplaceAudit.getLines()], deductionToSchedule1 }, healthSources, retirementSources, marketplacePremiums };
 }

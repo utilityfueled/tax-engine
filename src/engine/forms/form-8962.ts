@@ -45,7 +45,9 @@ export interface Form8962Input {
   filingStatus: FilingStatus;
   form1095A: TaxYearInput["form1095A"];
   /** Canonical engine context; never a TaxYearInput source flag or supplied amount. */
-  healthInsuranceCoordination?: "pub974-simplified-2026";
+  healthInsuranceCoordination?: "pub974-simplified-2025" | "pub974-simplified-2026";
+  /** Computed WorksheetX/Y/Z result, never a taxpayer-provided Form8962 fact. */
+  healthInsuranceRepaymentLimit?: Decimal;
 }
 
 export interface Form8962Result {
@@ -114,7 +116,7 @@ export function calculateForm8962(input: Form8962Input): Form8962Result {
   if (facts) {
     if (facts.householdFactsConfirmed !== true || facts.coverageFactsConfirmed !== true) throw new Error("Form 8962 household and coverage facts must be confirmed");
     for (const flag of ["allocationRequired", "alternativeMarriageCalculationElected", "selfEmployedHealthInsuranceCoordinationRequired", "lawfulPresenceReconciliationRequired"] as const) {
-      if (flag === "selfEmployedHealthInsuranceCoordinationRequired" && facts[flag] === true && year === 2026 && input.healthInsuranceCoordination === "pub974-simplified-2026") continue;
+      if (flag === "selfEmployedHealthInsuranceCoordinationRequired" && facts[flag] === true && input.healthInsuranceCoordination === `pub974-simplified-${year}`) continue;
       if (facts[flag] !== false) throw new Error(`Form 8962 requires completed ${flag} worksheets or confirmed absence`);
     }
     if (typeof facts.canBeClaimedAsDependent !== "boolean" || typeof facts.qsehraAffected !== "boolean") throw new Error("Form 8962 dependency and QSEHRA facts must be confirmed");
@@ -265,13 +267,15 @@ export function calculateForm8962(input: Form8962Input): Form8962Result {
   const netPTC = zeroFloor(ptcAllowed.minus(advancePTCTotal));
   const excessAPTC = zeroFloor(advancePTCTotal.minus(ptcAllowed));
   const capAmounts = input.filingStatus === "single" ? ["375", "975", "1625"] as const : ["750", "1950", "3250"] as const;
-  const repaymentCap = year === 2026 || fplPercentageForTable.gte(400) ? null : new Decimal(capAmounts[fplPercentageForTable.lt(200) ? 0 : fplPercentageForTable.lt(300) ? 1 : 2]);
+  const worksheetLimit = input.healthInsuranceRepaymentLimit;
+  if (worksheetLimit !== undefined && (year !== 2025 || input.healthInsuranceCoordination !== "pub974-simplified-2025" || !Decimal.isDecimal(worksheetLimit) || !worksheetLimit.isFinite() || worksheetLimit.lt(0))) throw new Error("Form8962 requires an actual computed2025 Pub974 repayment limit.");
+  const repaymentCap = worksheetLimit ?? (year === 2026 || fplPercentageForTable.gte(400) ? null : new Decimal(capAmounts[fplPercentageForTable.lt(200) ? 0 : fplPercentageForTable.lt(300) ? 1 : 2]));
   const excessAPTCRepayment = repaymentCap === null ? excessAPTC : min(excessAPTC, repaymentCap);
   record("24", "Allowed premium tax credit", ptcAllowed, "Annual column e or sum of monthly column e");
   record("25", "Advance premium tax credit", advancePTCTotal, "Annual column f or sum of monthly column f");
   record("26", "Net premium tax credit", netPTC, "max(0, line 24 - line 25) -> Schedule 3 line 9");
   record("27", "Excess advance premium tax credit before limitation", excessAPTC, "max(0, line 25 - line 24)");
-  if (repaymentCap !== null && excessAPTC.gt(0)) record("28", "Historical repayment limitation", repaymentCap, "2025 Table 5; no repayment limitation applies in 2026");
+  if (repaymentCap !== null && excessAPTC.gt(0)) record("28", "Historical repayment limitation", repaymentCap, worksheetLimit === undefined ? "2025 Table 5; no repayment limitation applies in 2026" : "Actual Pub974 WorksheetX/Y/Z limitation replaces Table5");
   record("29", "Excess advance premium tax credit repayment", excessAPTCRepayment, "Line 27 limited by line 28 where applicable -> Schedule 2 line 1a");
   return { taxYear: year, sourceFactsVerified: verified, taxpayerEligible, calculationMethod, familySize, modifiedAGI,
     federalPovertyLine, fplPercentage, fplPercentageForTable, contributionRate: rate, expectedContribution, monthlyContribution,

@@ -25,7 +25,7 @@ function remainingIncome(business: Form7206Result["businesses"][number]): Decima
 }
 export function calculateMarketplaceHealthPremiums(params: { input: TaxYearInput; healthInsurance: Form7206Result }) {
   const { input, healthInsurance } = params;
-  if (input.taxpayer.taxYear !== 2026 || !input.form7206 || !input.form8962 || !healthInsurance.calculationComplete) throw new Error("Actual2026 Marketplace premium coordination requires completed source and business worksheets.");
+  if (![2025,2026].includes(input.taxpayer.taxYear) || !input.form7206 || !input.form8962 || !healthInsurance.calculationComplete) throw new Error("Actual Marketplace premium coordination requires completed2025 or2026 source and business worksheets.");
   const facts = input.form8962;
   if (facts.selfEmployedHealthInsuranceCoordinationRequired !== true || facts.coverageFactsConfirmed !== true || facts.allocationRequired !== false || facts.qsehraAffected !== false) throw new Error("Marketplace source coordination requires actual coverage facts and separate special allocations when applicable.");
   const groups = new Map<string, MarketplaceHealthPremiumGroup>();

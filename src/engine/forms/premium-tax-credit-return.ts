@@ -13,7 +13,7 @@ export function calculatePremiumTaxCreditReturn(params: {
   foreignHousingDeduction: Decimal;
   socialSecurityBenefitsGross: Decimal;
   socialSecurityBenefitsTaxable: Decimal;
-}, coordination?: { method: "pub974-simplified-2026"; stage: "maximum" | "final" }) {
+}, coordination?: { method: "pub974-simplified-2025" | "pub974-simplified-2026"; stage: "worksheet-w" | "maximum" | "final"; repaymentLimit?: Decimal }) {
   const { input } = params;
   for (const [name, amount] of Object.entries(params)) {
     if (name === "input") continue;
@@ -25,7 +25,7 @@ export function calculatePremiumTaxCreditReturn(params: {
   const nontaxableBenefits = zeroFloor(params.socialSecurityBenefitsGross.minus(params.socialSecurityBenefitsTaxable));
   const taxpayerMagi = sum(params.agi, params.taxExemptInterest, foreign, nontaxableBenefits);
   const sourceMagi = input.form8962?.taxpayerModifiedAGI;
-  if (sourceMagi !== undefined && (!d(sourceMagi).isFinite() || (coordination?.stage !== "maximum" && !d(sourceMagi).eq(taxpayerMagi)))) throw new Error("Form8962 supplied taxpayer modified income must reconcile with canonical return MAGI.");
+  if (sourceMagi !== undefined && (!d(sourceMagi).isFinite() || ((!coordination || coordination.stage === "final") && !d(sourceMagi).eq(taxpayerMagi)))) throw new Error("Form8962 supplied taxpayer modified income must reconcile with canonical return MAGI.");
   const audit = new AuditTrail();
   audit.record("Form8962 Worksheet1-1", "1", "Actual adjusted gross income", params.agi, "Final Form1040line11");
   audit.record("Form8962 Worksheet1-1", "2", "Actual tax-exempt interest", params.taxExemptInterest, "Form1040line2a");
@@ -41,6 +41,7 @@ export function calculatePremiumTaxCreditReturn(params: {
     filingStatus: input.taxpayer.filingStatus,
     form1095A: input.form1095A,
     healthInsuranceCoordination: coordination?.method,
+    healthInsuranceRepaymentLimit: coordination?.repaymentLimit,
   });
-  return { ...result, lines: [...audit.getLines(), ...result.lines] };
+  return { ...result, canonicalTaxpayerModifiedAGI: taxpayerMagi, lines: [...audit.getLines(), ...result.lines] };
 }
