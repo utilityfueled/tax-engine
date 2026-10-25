@@ -315,3 +315,25 @@ until the brief's criteria pass or only external actions remain.
   inventory. Native amd64 image build, health smoke, previous-image build and
   actual Compose upgrade/recovery/rollback passed; browser/SBOM/scan remained
   running when inspected. Final exact-code checks are still required.
+
+## Current source/PDF integration and stable rerun — 2026-10-25
+
+- `5d0ef3e` collects actual dependent-care providers/persons; `8f7f172` and
+  `131a8f2` preserve audited amounts and source continuations. `f23a13a` fixes
+  the required provider notice in the official constrained field. All 81 focused
+  PDF/credit checks, types and lint pass; saved canonical values and rendered
+  pages were checked. The care work document corrects an earlier premature
+  success claim. Benefits Part III remains active separately.
+- `91b4cd7` collects actual mortgage qualification/allocation facts; `5bfcfcf`
+  preserves the actual IRA checkbox. Remaining retirement facts continue.
+- `a269a9f`, `a656859`, `fe2ea81` integrate dated Form 2210 payments, audited
+  physical fields and reconciled legacy fixtures. `d84d890` uses official AMT
+  line identities; `a6ebd97` aggregates estate deductions once on Schedule A.
+- The inventory was regenerated and its freshness check passed in an isolated
+  archive of `f23a13a`, with 229 entries. This is traceability, not qualification.
+- A full one-worker coverage run from that exact commit is active, using the
+  disposable local PostgreSQL16 instance. The log is
+  `.local/upgrade-evidence/stable-coverage-f23a13a.log`; no result is claimed yet.
+- Remaining internal work includes tax-table/IRA rules, retirement and care
+  benefits, PA/OH verified OID and rental ownership, full checks/browser runs,
+  and final image/recovery evidence. All external inputs above remain pending.

@@ -204,7 +204,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "8ca3655",
+    "lastRecordedCommit": "f23a13a",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -308,7 +308,7 @@
       "hosted staging and independent human reviews",
       "repeated live synthetic AI evaluation and account availability"
     ],
-    "latestIntegratedCommit": "8ca3655",
+    "latestIntegratedCommit": "f23a13a",
     "latestCoverageDiagnostic": {
       "status": "failed-tests-coverage-thresholds-met",
       "commit": "05ec24e10716cd6c4c8ccd8d2b6e3effc6e18d94",
@@ -391,7 +391,20 @@
       "w2TipsAndSpousePayroll": "b072884",
       "datedInstallmentPenalty": "44793ac",
       "careActualAudit": "8262f40",
-      "qbiSourceDeductions": "8ca3655"
+      "qbiSourceDeductions": "8ca3655",
+      "paBusinessAndSpecFixtures": "bc532ed",
+      "careAuditedPdf": "8f7f172",
+      "careActualProviders": "5d0ef3e",
+      "careProviderPdf": "131a8f2",
+      "careProviderNoticeFix": "f23a13a",
+      "datedPenaltyIntegration": "a269a9f",
+      "datedPenaltyPdf": "a656859",
+      "datedPenaltyFixtures": "fe2ea81",
+      "mortgageActualFacts": "91b4cd7",
+      "retirementIraCheckbox": "5bfcfcf",
+      "amtPrintedAudit": "d84d890",
+      "estateItemizedAudit": "a6ebd97",
+      "nonW2SaltAllocationFacts": "a266046"
     },
     "remoteCi": {
       "commit": "a2f62e217f846a479701b3393606228c366d3410",
@@ -415,16 +428,11 @@
       "amd64": "local QEMU Next.js compilation failed with signal11; native CI rehearsal now configured"
     },
     "currentStableCoverageRun": {
-      "commit": "c0871d37884275baa960fba5ae2d7d5a21987a05",
+      "commit": "f23a13aab52f45ed3aa659c278421d7b21cea9c9",
       "workers": 1,
-      "status": "failed-tests-no-fresh-coverage-report",
-      "passed": 16241,
-      "failed": 14,
-      "filesPassed": 576,
-      "filesFailed": 7,
-      "evidence": ".local/upgrade-evidence/stable-coverage-c0871d3.log",
-      "evidenceSha256": "4482510b966224eae5cfec7f4f12ea3aa7ec3c529d47706ef2f58922abc58384",
-      "limitation": "No fresh coverage percentages were emitted after test failure. Eleven tax failures corrected by 8ca3655; guided malformed source parser corrected by fce3094; PA complete-source fixture and spec literal-name checker corrected in next parent commit. Fresh stable full run still required."
+      "status": "running",
+      "evidence": ".local/upgrade-evidence/stable-coverage-f23a13a.log",
+      "scope": "immutable tracked-file archive with matching installed dependencies and disposable local PostgreSQL16; reportOnFailure enabled; no changed thresholds"
     },
     "remainingInternalWork": [
       "Form2441 actual source facts and audited physical fields; 5695 source/physical gaps",

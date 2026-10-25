@@ -457,3 +457,14 @@ and spec literal-name checker now pass their focused checks. The care core is
 `8262f40`. Native amd64 build/smoke and actual Compose recovery passed at
 `a2f62e2`; browser and scan results still need inspection. No final release
 qualification, staging or independent human review is claimed.
+
+## Continued source integration — 2026-10-25
+
+Commits through `f23a13a` add actual care providers/persons and audited review
+PDFs, complete mortgage source facts, actual IRA status, dated installment
+penalties, canonical AMT lines and single aggregation of estate deductions.
+The care exception follow-up passes all 81 focused tests and canonical/render
+checks; `upgrade-2026-care-work.md` records the initial field-length failure
+and corrected evidence. The 229-entry inventory was refreshed from this exact
+commit. A new immutable coverage run is in progress; it is not yet a passing
+gate. Tax-table, retirement, care benefits and state-source packages continue.
