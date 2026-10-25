@@ -8,7 +8,7 @@ import Decimal from "decimal.js";
 import { parseGuidedCurrency, hasGuidedCurrency } from "./guided-currency";
 import { personalFactErrors } from "./guided-taxpayer-facts";
 
-import { formatPendingW2SuggestionValueLabel } from "@/lib/document-fixture-copy";
+import { formatPendingW2SuggestionValueLabel, isOfficialFixtureSourceType } from "@/lib/document-fixture-copy";
 
 // ── Filing status ──────────────────────────────────────────────────────────
 
@@ -1357,7 +1357,8 @@ function validateW2Section(data: { entries: W2EntryData[] } | undefined): Sectio
 
   if (pendingSuggestionConfirmations.length > 0) {
     const containsFixtureSuggestions = pendingSuggestions.some((suggestion) =>
-      suggestion.sourceLabel.toLowerCase().includes("official info-copy pdf")
+      isOfficialFixtureSourceType(suggestion.sourceType)
+      || suggestion.sourceLabel.toLowerCase().includes("official info-copy pdf")
     );
 
     return {

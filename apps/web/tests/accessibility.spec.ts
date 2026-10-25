@@ -1,10 +1,13 @@
+import { fillRequiredTaxpayerFacts, reachFilingStatus } from "./guided-fixtures";
 import { expect, test } from "@playwright/test";
 
 /** Complete segmentation with Single / W-2 wages / no events / no state. */
 async function completeSegmentation(page: import("@playwright/test").Page) {
-  await expect(page.getByText(/let's figure out your tax situation/i)).toBeVisible();
+  await expect(page.getByText(/let's tailor your return/i)).toBeVisible();
 
+  await reachFilingStatus(page);
   await page.getByRole("radio", { name: /single/i }).click();
+  await page.getByRole("button", { name: "Continue" }).click();
   await expect(page.getByText(/what types of income/i)).toBeVisible({ timeout: 5000 });
 
   await page.getByRole("checkbox", { name: /w-2 wages/i }).check();
@@ -23,7 +26,7 @@ async function completeSegmentation(page: import("@playwright/test").Page) {
 async function createReturn(page: import("@playwright/test").Page) {
   await page.goto("/");
   await page.getByRole("button", { name: /start your tax return/i }).click();
-  await expect(page).toHaveURL(/\/returns\/[a-z0-9-]+/i);
+  await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+/i);
 }
 
 test.describe("ARIA landmarks", () => {
@@ -128,6 +131,7 @@ test.describe("Progress bar accessibility", () => {
     await completeSegmentation(page);
 
     // Advance past personal info
+    await fillRequiredTaxpayerFacts(page);
     await page.getByRole("textbox", { name: /first name/i }).fill("A11y");
     await page.getByRole("textbox", { name: /last name/i }).fill("Test");
     await page.getByRole("button", { name: "Continue" }).click();
@@ -149,7 +153,8 @@ test.describe("Progress bar accessibility", () => {
     const progressBar = page.getByRole("progressbar");
     const initialValue = Number(await progressBar.getAttribute("aria-valuenow"));
 
-    // Advance past personal info
+    // Complete personal info to increase completion progress.
+    await fillRequiredTaxpayerFacts(page);
     await page.getByRole("button", { name: "Continue" }).click();
     const skipBtn = page.getByRole("button", { name: /skip this section/i });
     if (await skipBtn.isVisible({ timeout: 1000 }).catch(() => false)) {
@@ -235,9 +240,10 @@ test.describe("Segmentation form accessibility", () => {
   test("filing status uses radiogroup role", async ({ page }) => {
     await createReturn(page);
 
-    await expect(page.getByText(/let's figure out your tax situation/i)).toBeVisible();
+    await expect(page.getByText(/let's tailor your return/i)).toBeVisible();
 
     // Filing status options should be in a radiogroup
+    await reachFilingStatus(page);
     const radios = page.getByRole("radio");
     const count = await radios.count();
     expect(count).toBeGreaterThanOrEqual(3);
@@ -251,8 +257,10 @@ test.describe("Segmentation form accessibility", () => {
   test("income types uses checkbox group with labeled options", async ({ page }) => {
     await createReturn(page);
 
-    await expect(page.getByText(/let's figure out your tax situation/i)).toBeVisible();
+    await expect(page.getByText(/let's tailor your return/i)).toBeVisible();
+    await reachFilingStatus(page);
     await page.getByRole("radio", { name: /single/i }).click();
+    await page.getByRole("button", { name: "Continue" }).click();
     await expect(page.getByText(/what types of income/i)).toBeVisible({ timeout: 5000 });
 
     // Income type checkboxes should each have accessible names
@@ -261,11 +269,13 @@ test.describe("Segmentation form accessibility", () => {
     await expect(page.getByRole("checkbox", { name: /investment income/i })).toBeVisible();
   });
 
-  test("state selection uses radiogroup with accessible name", async ({ page }) => {
+  test("state selection uses a select with an accessible name", async ({ page }) => {
     await createReturn(page);
 
-    await expect(page.getByText(/let's figure out your tax situation/i)).toBeVisible();
+    await expect(page.getByText(/let's tailor your return/i)).toBeVisible();
+    await reachFilingStatus(page);
     await page.getByRole("radio", { name: /single/i }).click();
+    await page.getByRole("button", { name: "Continue" }).click();
     await expect(page.getByText(/what types of income/i)).toBeVisible({ timeout: 5000 });
 
     await page.getByRole("checkbox", { name: /w-2 wages/i }).check();
@@ -277,17 +287,17 @@ test.describe("Segmentation form accessibility", () => {
     await expect(page.getByText(/what state did you live in/i)).toBeVisible();
 
     // State selection should be a radiogroup with an accessible name
-    const stateGroup = page.getByRole("radiogroup", { name: /state of residence/i });
+    const stateGroup = page.getByRole("combobox", { name: /state of residence/i });
     await expect(stateGroup).toBeVisible();
   });
 
   test("segmentation progress indicator has progressbar role", async ({ page }) => {
     await createReturn(page);
 
-    await expect(page.getByText(/let's figure out your tax situation/i)).toBeVisible();
+    await expect(page.getByText(/let's tailor your return/i)).toBeVisible();
 
     // Segmentation screen should show step progress
-    await expect(page.getByText(/step 1 of 4/i)).toBeVisible();
+    await expect(page.getByText("STEP 1 OF 5", { exact: true })).toBeVisible();
   });
 });
 
@@ -319,11 +329,11 @@ test.describe("Keyboard navigation", () => {
     for (let i = 0; i < 15; i++) {
       await page.keyboard.press("Tab");
       const focused = page.locator(":focus");
-      const text = await focused.innerText().catch(() => "");
+      const text = await page.evaluate(() => document.activeElement?.textContent ?? "");
       if (/start your tax return/i.test(text)) {
         foundButton = true;
         await page.keyboard.press("Enter");
-        await expect(page).toHaveURL(/\/returns\/[a-z0-9-]+/i);
+        await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+/i);
         break;
       }
     }
@@ -335,7 +345,7 @@ test.describe("Keyboard navigation", () => {
     await page.goto("/help");
 
     let foundSummary = false;
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < 60; i++) {
       await page.keyboard.press("Tab");
       const focused = page.locator(":focus");
       const tagName = await focused.evaluate((el) => el.tagName.toLowerCase()).catch(() => "");
@@ -385,10 +395,10 @@ test.describe("Keyboard navigation", () => {
     await completeSegmentation(page);
 
     let foundContinue = false;
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < 60; i++) {
       await page.keyboard.press("Tab");
       const focused = page.locator(":focus");
-      const text = await focused.innerText().catch(() => "");
+      const text = await page.evaluate(() => document.activeElement?.textContent ?? "");
       if (/^continue$/i.test(text.trim())) {
         foundContinue = true;
         break;
@@ -400,7 +410,7 @@ test.describe("Keyboard navigation", () => {
 
   test("filing status radio buttons are navigable with arrow keys", async ({ page }) => {
     await createReturn(page);
-    await expect(page.getByText(/let's figure out your tax situation/i)).toBeVisible();
+    await reachFilingStatus(page);
 
     // Tab to the first radio button
     let foundRadio = false;

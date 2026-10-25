@@ -1,5 +1,6 @@
-import { copyFile, readFile } from "node:fs/promises";
+import { copyFile, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { PDFDocument, StandardFonts } from "pdf-lib";
 import { fileURLToPath } from "node:url";
 import { expect, test, type Locator } from "@playwright/test";
 
@@ -7,7 +8,7 @@ const testDir = path.dirname(fileURLToPath(import.meta.url));
 const sampleDocsDir = path.resolve(testDir, "../../../sample-documents/downloads");
 
 function summaryStat(panel: Locator, label: RegExp) {
-  return panel.locator(".summary-stat").filter({ hasText: label });
+  return panel.locator(".summary-stat").filter({ has: panel.page().locator(".summary-label").filter({ hasText: label }) });
 }
 
 /** Set advanced mode in localStorage so the workspace skips guided interview. */
@@ -22,22 +23,22 @@ test("local workspace stores uploaded official IRS fixtures across reloads", asy
   await enableAdvancedMode(page);
 
   await page.getByRole("button", { name: /start your tax return/i }).click();
-  await expect(page).toHaveURL(/\/returns\/[a-z0-9-]+(?:\?create=1)?$/i);
+  await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+(?:\?create=1)?$/i);
   await expect(page.getByRole("heading", { name: /tax return/i })).toBeVisible();
 
-  const nativeIrsW2Path = testInfo.outputPath("fw2.pdf");
-  await copyFile(path.join(sampleDocsDir, "irs-w2-2026.pdf"), nativeIrsW2Path);
+  const nativeIrsW2Path = testInfo.outputPath("fw2--2025.pdf");
+  await copyFile(path.join(sampleDocsDir, "irs-w2-2025.pdf"), nativeIrsW2Path);
 
   await page.locator('input[type="file"]').setInputFiles([
     nativeIrsW2Path,
     path.join(sampleDocsDir, "irs-1099-int-2024.pdf")
   ]);
 
-  await expect(page.getByRole("listitem").filter({ hasText: /^2 documents stored locally$/ })).toBeVisible();
+  await expect(page.getByRole("listitem").filter({ hasText: /^2 uploaded documents stored locally$/ })).toBeVisible();
   await expect(page.getByText(/2 irs sample documents loaded/i)).toBeVisible();
-  await expect(page.getByText("2026 Form W-2 (official info-copy PDF)", { exact: true })).toBeVisible();
+  await expect(page.getByText("2025 Form W-2", { exact: true })).toBeVisible();
   await expect(page.getByText("Form 1099-INT (Rev. January 2024)", { exact: true })).toBeVisible();
-  await expect(page.getByText("fw2.pdf", { exact: true })).toBeVisible();
+  await expect(page.getByText("fw2--2025.pdf", { exact: true })).toBeVisible();
   await expect(page.getByText(/data found: Wages, Federal withholding/i)).toBeVisible();
   const interviewLoop = page.locator("section.panel").filter({
     has: page.getByRole("heading", { name: /questions/i })
@@ -56,11 +57,11 @@ test("local workspace stores uploaded official IRS fixtures across reloads", asy
   const auditTrail = page.locator("section.panel").filter({
     has: page.getByRole("heading", { name: /activity log/i })
   });
-  await expect(summaryStat(returnSummary, /^documents$/i)).toContainText("Ready for questions");
-  await expect(summaryStat(returnSummary, /return status/i)).toContainText("Needs review");
-  await expect(wagesFactCard.getByText("2026 Form W-2 (official info-copy PDF) · fw2.pdf", { exact: true })).toBeVisible();
+  await expect(summaryStat(returnSummary, /^documents$/i)).toContainText("Ready to continue");
+  await expect(summaryStat(returnSummary, /return status/i)).toContainText("Questions remaining");
+  await expect(wagesFactCard.getByText("2025 Form W-2 · fw2--2025.pdf", { exact: true })).toBeVisible();
   await expect(
-    auditTrail.getByText("2026 Form W-2 (official info-copy PDF) · fw2.pdf", { exact: true })
+    auditTrail.getByText("2025 Form W-2 · fw2--2025.pdf", { exact: true })
   ).toBeVisible();
   await expect(
     auditTrail.getByText("Form 1099-INT (Rev. January 2024) · irs-1099-int-2024.pdf", { exact: true })
@@ -68,12 +69,12 @@ test("local workspace stores uploaded official IRS fixtures across reloads", asy
 
   await page.reload();
 
-  await expect(page.getByRole("listitem").filter({ hasText: /^2 documents stored locally$/ })).toBeVisible();
+  await expect(page.getByRole("listitem").filter({ hasText: /^2 uploaded documents stored locally$/ })).toBeVisible();
   await expect(page.getByText(/matched irs sample document/i).first()).toBeVisible();
   await expect(uploadPanel.getByText(/2 uploaded documents stored locally/i)).toBeVisible();
   await expect(uploadPanel.getByText(/^no uploads yet\.$/i)).toHaveCount(0);
-  await expect(summaryStat(returnSummary, /^documents$/i)).toContainText("Ready for questions");
-  await expect(wagesFactCard.getByText("2026 Form W-2 (official info-copy PDF) · fw2.pdf", { exact: true })).toBeVisible();
+  await expect(summaryStat(returnSummary, /^documents$/i)).toContainText("Ready to continue");
+  await expect(wagesFactCard.getByText("2025 Form W-2 · fw2--2025.pdf", { exact: true })).toBeVisible();
   await expect(
     auditTrail.getByText("Form 1099-INT (Rev. January 2024) · irs-1099-int-2024.pdf", { exact: true })
   ).toBeVisible();
@@ -84,7 +85,7 @@ test("resumed returns keep the upload status aligned with persisted documents", 
   await enableAdvancedMode(page);
 
   await page.getByRole("button", { name: /start your tax return/i }).click();
-  await expect(page).toHaveURL(/\/returns\/[a-z0-9-]+(?:\?create=1)?$/i);
+  await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+(?:\?create=1)?$/i);
 
   await page.locator('input[type="file"]').setInputFiles(path.join(sampleDocsDir, "irs-w2-2025.pdf"));
 
@@ -107,7 +108,7 @@ test("empty returns keep AI summary disabled until the filer uploads a document"
   await enableAdvancedMode(page);
 
   await page.getByRole("button", { name: /start your tax return/i }).click();
-  await expect(page).toHaveURL(/\/returns\/[a-z0-9-]+(?:\?create=1)?$/i);
+  await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+(?:\?create=1)?$/i);
 
   const aiSummaryPanel = page.locator("section.panel").filter({
     has: page.getByRole("heading", { name: /ai summary/i })
@@ -124,12 +125,12 @@ test("incomplete returns label the export as a draft packet until interview bloc
   await enableAdvancedMode(page);
 
   await page.getByRole("button", { name: /start your tax return/i }).click();
-  await expect(page).toHaveURL(/\/returns\/[a-z0-9-]+$/i);
+  await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+$/i);
 
   await page.locator('input[type="file"]').setInputFiles(path.join(sampleDocsDir, "irs-w2-2025.pdf"));
 
   const filingPackPanel = page.locator("section.panel").filter({
-    has: page.getByRole("heading", { name: /draft return packet/i })
+    has: page.getByRole("heading", { name: /draft return bundle/i })
   });
   const returnSummary = page.locator("section.panel").filter({
     has: page.getByRole("heading", { name: /return summary/i })
@@ -137,7 +138,7 @@ test("incomplete returns label the export as a draft packet until interview bloc
 
   await expect(summaryStat(returnSummary, /return status/i)).toContainText("Questions remaining");
   await expect(filingPackPanel).toContainText(/not filing-ready yet/i);
-  await expect(filingPackPanel.getByRole("button", { name: /download draft return packet/i })).toBeEnabled();
+  await expect(filingPackPanel.getByRole("button", { name: /download draft return bundle/i })).toBeEnabled();
   await expect(page.getByRole("heading", { name: /^completed return$/i })).toHaveCount(0);
 });
 
@@ -146,14 +147,14 @@ test("unknown uploads stay flagged for manual review across reloads", async ({ p
   await enableAdvancedMode(page);
 
   await page.getByRole("button", { name: /start your tax return/i }).click();
-  await expect(page).toHaveURL(/\/returns\/[a-z0-9-]+$/i);
+  await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+$/i);
 
   const unsupportedPath = testInfo.outputPath("broker-export.pdf");
-  await copyFile(path.join(sampleDocsDir, "irs-1099-div-2024.pdf"), unsupportedPath);
+  await writeUnknownPdf(unsupportedPath);
 
   await page.locator('input[type="file"]').setInputFiles(unsupportedPath);
 
-  await expect(page.getByText(/1 docs stored locally\./i)).toBeVisible();
+  await expect(page.getByRole("listitem").filter({ hasText: /^1 uploaded document stored locally$/ })).toBeVisible();
   await expect(page.getByText(/1 documents need review/i)).toBeVisible();
   const returnSummary = page.locator("section.panel").filter({
     has: page.getByRole("heading", { name: /return summary/i })
@@ -163,7 +164,10 @@ test("unknown uploads stay flagged for manual review across reloads", async ({ p
   });
 
   await expect(summaryStat(returnSummary, /^documents$/i)).toContainText("Needs review");
-  await expect(page.getByText("Unclassified upload", { exact: true })).toBeVisible();
+  if (await documentPanel.getByRole("button", { name: "Expand", exact: true }).isVisible()) {
+      await documentPanel.getByRole("button", { name: "Expand", exact: true }).click();
+    }
+  await expect(documentPanel.getByText("Unclassified upload", { exact: true })).toBeVisible();
   await expect(documentPanel.getByText(/^unsupported$/i)).toBeVisible();
   await expect(page.getByText(/unrecognized/i).first()).toBeVisible();
   await expect(page.getByText(/no data found yet/i)).toBeVisible();
@@ -172,7 +176,10 @@ test("unknown uploads stay flagged for manual review across reloads", async ({ p
 
   await page.reload();
 
-  await expect(page.getByText("Unclassified upload", { exact: true })).toBeVisible();
+  if (await documentPanel.getByRole("button", { name: "Expand", exact: true }).isVisible()) {
+      await documentPanel.getByRole("button", { name: "Expand", exact: true }).click();
+    }
+  await expect(documentPanel.getByText("Unclassified upload", { exact: true })).toBeVisible();
   await expect(documentPanel.getByText(/^unsupported$/i)).toBeVisible();
   await expect(page.getByText(/unrecognized/i).first()).toBeVisible();
   await expect(summaryStat(returnSummary, /^documents$/i)).toContainText("Needs review");
@@ -184,7 +191,7 @@ test("1099-B uploads seed capital gains interview prompts across reloads", async
   await enableAdvancedMode(page);
 
   await page.getByRole("button", { name: /start your tax return/i }).click();
-  await expect(page).toHaveURL(/\/returns\/[a-z0-9-]+$/i);
+  await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+$/i);
 
   await page.locator('input[type="file"]').setInputFiles(path.join(sampleDocsDir, "irs-1099-b-2025.pdf"));
 
@@ -193,18 +200,18 @@ test("1099-B uploads seed capital gains interview prompts across reloads", async
     has: page.getByRole("heading", { name: /return summary/i })
   });
 
-  await expect(summaryStat(returnSummary, /^documents$/i)).toContainText("Ready for questions");
+  await expect(summaryStat(returnSummary, /^documents$/i)).toContainText("Ready to continue");
   await expect(page.getByText("2025 Form 1099-B", { exact: true })).toBeVisible();
   await expect(page.getByText(/matched irs sample document/i).first()).toBeVisible();
   await expect(page.getByText(/data found: Broker sale proceeds, Cost basis and adjustments review/i)).toBeVisible();
-  await expect(page.getByText(/Confirm whether every broker sale belongs on Form 8949/i)).toBeVisible();
-  await expect(page.getByText(/Confirm basis reporting, wash sale adjustments, and holding periods/i)).toBeVisible();
+  await expect(page.getByRole("region", { name: "Questions", exact: true }).getByText(/Confirm whether every broker sale belongs on Form 8949/i)).toBeVisible();
+  await expect(page.getByRole("region", { name: "Questions", exact: true }).getByText(/Confirm basis reporting, wash sale adjustments, and holding periods/i)).toBeVisible();
 
   await page.reload();
 
   await expect(page.getByText("2025 Form 1099-B", { exact: true })).toBeVisible();
   await expect(page.getByText(/matched irs sample document/i).first()).toBeVisible();
-  await expect(summaryStat(returnSummary, /^documents$/i)).toContainText("Ready for questions");
+  await expect(summaryStat(returnSummary, /^documents$/i)).toContainText("Ready to continue");
 });
 
 test("1099-NEC uploads seed deterministic Schedule C follow-up prompts", async ({ page }) => {
@@ -212,7 +219,7 @@ test("1099-NEC uploads seed deterministic Schedule C follow-up prompts", async (
   await enableAdvancedMode(page);
 
   await page.getByRole("button", { name: /start your tax return/i }).click();
-  await expect(page).toHaveURL(/\/returns\/[a-z0-9-]+$/i);
+  await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+$/i);
 
   await page.locator('input[type="file"]').setInputFiles(path.join(sampleDocsDir, "irs-1099-nec-2025.pdf"));
 
@@ -221,18 +228,18 @@ test("1099-NEC uploads seed deterministic Schedule C follow-up prompts", async (
     has: page.getByRole("heading", { name: /return summary/i })
   });
 
-  await expect(summaryStat(returnSummary, /^documents$/i)).toContainText("Ready for questions");
+  await expect(summaryStat(returnSummary, /^documents$/i)).toContainText("Ready to continue");
   await expect(page.getByText("Form 1099-NEC (Rev. April 2025)", { exact: true })).toBeVisible();
   await expect(page.getByText(/matched irs sample document/i).first()).toBeVisible();
   await expect(page.getByText(/data found: 1099-nec income classification, schedule c expense review/i)).toBeVisible();
-  await expect(page.getByText(/Confirm whether each Form 1099-NEC amount belongs on Schedule C/i)).toBeVisible();
-  await expect(page.getByText(/Confirm the business expenses, mileage, and home office records/i)).toBeVisible();
+  await expect(page.getByRole("region", { name: "Questions", exact: true }).getByText(/Confirm whether each Form 1099-NEC amount belongs on Schedule C/i)).toBeVisible();
+  await expect(page.getByRole("region", { name: "Questions", exact: true }).getByText(/Confirm the business expenses, mileage, and home office records/i)).toBeVisible();
 
   await page.reload();
 
   await expect(page.getByText("Form 1099-NEC (Rev. April 2025)", { exact: true })).toBeVisible();
   await expect(page.getByText(/matched irs sample document/i).first()).toBeVisible();
-  await expect(summaryStat(returnSummary, /^documents$/i)).toContainText("Ready for questions");
+  await expect(summaryStat(returnSummary, /^documents$/i)).toContainText("Ready to continue");
 });
 
 test("answered interview prompts persist across reloads and can be reopened", async ({ page }) => {
@@ -242,9 +249,9 @@ test("answered interview prompts persist across reloads and can be reopened", as
   await enableAdvancedMode(page);
 
   await page.getByRole("button", { name: /start your tax return/i }).click();
-  await expect(page).toHaveURL(/\/returns\/[a-z0-9-]+$/i);
+  await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+$/i);
 
-  await page.locator('input[type="file"]').setInputFiles(path.join(sampleDocsDir, "irs-w2-2026.pdf"));
+  await page.locator('input[type="file"]').setInputFiles(path.join(sampleDocsDir, "irs-w2-2025.pdf"));
 
   const returnSummary = page.locator("section.panel").filter({
     has: page.getByRole("heading", { name: /return summary/i })
@@ -304,10 +311,10 @@ test("workspace screen can send a provider-safe summary through the redaction bo
   await enableAdvancedMode(page);
 
   await page.getByRole("button", { name: /start your tax return/i }).click();
-  await expect(page).toHaveURL(/\/returns\/[a-z0-9-]+$/i);
+  await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+$/i);
 
-  const piiNamedW2Path = testInfo.outputPath("irs-w2-2026-jane-doe-123-45-6789.pdf");
-  await copyFile(path.join(sampleDocsDir, "irs-w2-2026.pdf"), piiNamedW2Path);
+  const piiNamedW2Path = testInfo.outputPath("irs-w2-2025-jane-doe-123-45-6789.pdf");
+  await copyFile(path.join(sampleDocsDir, "irs-w2-2025.pdf"), piiNamedW2Path);
 
   await page.locator('input[type="file"]').setInputFiles(piiNamedW2Path);
 
@@ -318,24 +325,24 @@ test("workspace screen can send a provider-safe summary through the redaction bo
   await aiSummary.getByRole("button", { name: /get ai summary/i }).click();
 
   await expect(summaryStat(aiSummary, /powered by/i)).toContainText("mock-local");
-  await expect(summaryStat(aiSummary, /info protected/i)).toContainText("2");
-  await expect(summaryStat(aiSummary, /open questions/i)).toContainText("2");
-  await expect(summaryStat(aiSummary, /ready to calculate/i)).toContainText("no");
+  await expect(summaryStat(aiSummary, /details protected/i)).toContainText("5");
+  await expect(summaryStat(aiSummary, /questions left/i)).toContainText("2");
+  await expect(summaryStat(aiSummary, /return bundle ready/i)).toContainText("no");
   await expect(
     aiSummary.getByText(
-      /Workspace still needs 2 interview confirmation\(s\) before deterministic recompute can run\./i
+      /workspace has 3 active unsupported route/i
     )
   ).toBeVisible();
-  await expect(aiSummary.getByText("[person-name-1]", { exact: true })).toBeVisible();
-  await expect(aiSummary.getByText("[ssn-1]", { exact: true })).toBeVisible();
+  await expect(aiSummary.getByText("Name (1)", { exact: true })).toBeVisible();
+  await expect(aiSummary.getByText("SSN (1)", { exact: true })).toBeVisible();
 });
 
-test("fully answered supported facts flip the recompute summary to ready", async ({ page }) => {
+test("confirmed document answers still require explicit taxpayer facts", async ({ page }) => {
   await page.goto("/");
   await enableAdvancedMode(page);
 
   await page.getByRole("button", { name: /start your tax return/i }).click();
-  await expect(page).toHaveURL(/\/returns\/[a-z0-9-]+$/i);
+  await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+$/i);
 
   await page.locator('input[type="file"]').setInputFiles(path.join(sampleDocsDir, "irs-1099-b-2025.pdf"));
 
@@ -360,36 +367,31 @@ test("fully answered supported facts flip the recompute summary to ready", async
     has: page.getByRole("heading", { name: /show your work/i })
   });
 
-  await expect(summaryStat(returnSummary, /return status/i)).toContainText("Ready to calculate");
+  await expect(summaryStat(returnSummary, /return status/i)).toContainText("Ready to review");
   await expect(summaryStat(returnSummary, /target tax year/i)).toContainText("2025");
   await expect(returnSummary.getByText(/facts confirmed: 2\/2/i)).toBeVisible();
   await expect(returnSummary.getByText(/Form 8949/i)).toBeVisible();
   await expect(returnSummary.getByText(/Schedule D/i)).toBeVisible();
   await expect(returnSummary.getByText(/Form 1040 Line 7/i)).toBeVisible();
-  await expect(page.getByText(/status: ready to calculate/i)).toBeVisible();
-  await expect(showYourWork.getByText(/filing method/i)).toBeVisible();
-  await expect(showYourWork.getByText(/engine-recompute/i)).toBeVisible();
-  await expect(summaryStat(showYourWork, /based on/i)).toContainText("1 document");
-  await expect(showYourWork.getByText(/uploaded PDFs are not parsed yet/i)).toBeVisible();
-  await expect(showYourWork.getByText("total tax", { exact: true })).toBeVisible();
-  await expect(showYourWork.getByText("$1,660", { exact: true }).first()).toBeVisible();
-  await expect(showYourWork.getByText(/1040 Line 24/i)).toBeVisible();
-  await expect(showYourWork.getByText(/Tax after credits \+ additional taxes/i)).toBeVisible();
+  await expect(page.getByText(/status: ready to review/i)).toBeVisible();
+  await expect(returnSummary.getByText(/a calculation requires complete taxpayer facts for the selected year/i)).toBeVisible();
+  await expect(showYourWork.getByText(/engine-recompute/i)).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /download.*pdf/i })).toHaveCount(0);
 
   await page.reload();
 
-  await expect(summaryStat(returnSummary, /return status/i)).toContainText("Ready to calculate");
+  await expect(summaryStat(returnSummary, /return status/i)).toContainText("Ready to review");
   await expect(summaryStat(returnSummary, /target tax year/i)).toContainText("2025");
-  await expect(showYourWork.getByText(/engine-recompute/i)).toBeVisible();
-  await expect(showYourWork.getByText("$1,660", { exact: true }).first()).toBeVisible();
+  await expect(showYourWork.getByText(/engine-recompute/i)).toHaveCount(0);
+  await expect(returnSummary.getByText(/a calculation requires complete taxpayer facts for the selected year/i)).toBeVisible();
 });
 
-test("supported 2025 W-2 uploads can reach deterministic recompute after interview confirmation", async ({ page }) => {
+test("confirmed W-2 amounts cannot create a synthetic taxpayer estimate", async ({ page }) => {
   await page.goto("/");
   await enableAdvancedMode(page);
 
   await page.getByRole("button", { name: /start your tax return/i }).click();
-  await expect(page).toHaveURL(/\/returns\/[a-z0-9-]+$/i);
+  await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+$/i);
 
   await page.locator('input[type="file"]').setInputFiles(path.join(sampleDocsDir, "irs-w2-2025.pdf"));
 
@@ -417,90 +419,40 @@ test("supported 2025 W-2 uploads can reach deterministic recompute after intervi
 
   await expect(page.getByText("2025 Form W-2", { exact: true })).toBeVisible();
   await expect(page.getByText(/matched irs sample document/i).first()).toBeVisible();
-  await expect(summaryStat(returnSummary, /return status/i)).toContainText("Ready to calculate");
+  await expect(summaryStat(returnSummary, /return status/i)).toContainText("Ready to review");
   await expect(summaryStat(returnSummary, /target tax year/i)).toContainText("2025");
   await expect(returnSummary.getByText(/facts confirmed: 2\/2/i)).toBeVisible();
-  await expect(showYourWork.getByText(/filing method/i)).toBeVisible();
-  await expect(showYourWork.getByText(/engine-recompute/i)).toBeVisible();
-  await expect(summaryStat(showYourWork, /based on/i)).toContainText("1 document");
-  await expect(showYourWork.getByText("total tax", { exact: true })).toBeVisible();
-  await expect(showYourWork.getByText("$4,202", { exact: true }).first()).toBeVisible();
-  await expect(showYourWork.getByText("$798", { exact: true }).first()).toBeVisible();
+  await expect(returnSummary.getByText(/a calculation requires complete taxpayer facts for the selected year/i)).toBeVisible();
+  await expect(showYourWork.getByText(/engine-recompute/i)).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /download.*pdf/i })).toHaveCount(0);
 
   await page.reload();
 
-  await expect(summaryStat(returnSummary, /return status/i)).toContainText("Ready to calculate");
+  await expect(summaryStat(returnSummary, /return status/i)).toContainText("Ready to review");
   await expect(summaryStat(returnSummary, /target tax year/i)).toContainText("2025");
-  await expect(showYourWork.getByText(/engine-recompute/i)).toBeVisible();
-  await expect(showYourWork.getByText("$4,202", { exact: true }).first()).toBeVisible();
-  await expect(showYourWork.getByText("$798", { exact: true }).first()).toBeVisible();
+  await expect(showYourWork.getByText(/engine-recompute/i)).toHaveCount(0);
+  await expect(returnSummary.getByText(/a calculation requires complete taxpayer facts for the selected year/i)).toBeVisible();
 });
 
-test("unsupported tax years stay reviewable with traced next actions after answers are complete", async ({ page }) => {
+test("a future-year sample cannot populate or calculate a 2025 workspace", async ({ page }) => {
   await page.goto("/");
   await enableAdvancedMode(page);
-
   await page.getByRole("button", { name: /start your tax return/i }).click();
-  await expect(page).toHaveURL(/\/returns\/[a-z0-9-]+$/i);
-
+  await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+$/i);
   await page.locator('input[type="file"]').setInputFiles(path.join(sampleDocsDir, "irs-w2-2026.pdf"));
-
-  await page.getByRole("listitem").filter({
-    hasText: /Confirm whether every W-2 is final and whether any boxes require follow-up questions\./i
-  }).getByLabel(/your answer/i).fill("Employer confirmed the final W-2 is complete.");
-  await page.getByRole("listitem").filter({
-    hasText: /Confirm whether every W-2 is final and whether any boxes require follow-up questions\./i
-  }).getByRole("button", { name: /save answer/i }).click();
-
-  const withholdingPrompt = page.getByRole("listitem").filter({
-    hasText: /Confirm federal and state withholding amounts from each wage statement\./i
-  });
-  await withholdingPrompt.getByLabel(/your answer/i).fill(
-    "Federal withholding matches the taxpayer copy."
-  );
-  await withholdingPrompt.getByRole("button", { name: /save answer/i }).click();
-
-  const returnSummary = page.locator("section.panel").filter({
-    has: page.getByRole("heading", { name: /return summary/i })
-  });
-  const actionRouter = page.locator("section.panel").filter({
-    has: page.getByRole("heading", { name: /action needed/i })
-  });
-  const filingPackPanel = page.locator("section.panel").filter({
-    has: page.getByRole("heading", { name: /completed return/i })
-  });
-
-  await expect(summaryStat(returnSummary, /return status/i)).toContainText("Needs review");
-  await expect(summaryStat(returnSummary, /target tax year/i)).toContainText("2026");
-  await expect(returnSummary.getByText(/Tax year 2026 is not available for deterministic recompute yet\./i)).toBeVisible();
-  await expect(actionRouter.getByText(/download your completed return/i)).toBeVisible();
-  await expect(actionRouter.getByText(/consider outside review/i)).toBeVisible();
-  await expect(actionRouter.getByText(/^Wages$/i)).toHaveCount(2);
-  await expect(actionRouter.getByText(/^Federal withholding$/i)).toHaveCount(2);
-  await expect(
-    actionRouter.getByText("2026 Form W-2 (official info-copy PDF) · irs-w2-2026.pdf", { exact: true })
-  ).toHaveCount(2);
-  await expect(actionRouter.getByRole("button", { name: /go to completed return/i })).toBeVisible();
-  await expect(filingPackPanel.getByText(/situations to review outside this product/i)).toBeVisible();
-  await expect(page.getByText(/engine-recompute/i)).toHaveCount(0);
-
+  await expect(page.getByRole("status", { name: /return status/i })).toContainText(/can't drive a 2025 return yet/i);
+  await expect(page.getByRole("listitem").filter({ hasText: /^0 uploaded documents stored locally$/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /download.*pdf/i })).toHaveCount(0);
   await page.reload();
-
-  await expect(summaryStat(returnSummary, /return status/i)).toContainText("Needs review");
-  await expect(actionRouter.getByText(/^Wages$/i)).toHaveCount(2);
-  await expect(actionRouter.getByText(/^Federal withholding$/i)).toHaveCount(2);
-  await expect(
-    actionRouter.getByText("2026 Form W-2 (official info-copy PDF) · irs-w2-2026.pdf", { exact: true })
-  ).toHaveCount(2);
-  await expect(page.getByText(/engine-recompute/i)).toHaveCount(0);
+  await expect(page.getByRole("listitem").filter({ hasText: /^0 uploaded documents stored locally$/ })).toBeVisible();
 });
 
-test("workspace can download a deterministic filing pack after recompute is ready", async ({ page }) => {
+test("workspace can download a local JSON review bundle after recompute", async ({ page }) => {
   await page.goto("/");
   await enableAdvancedMode(page);
 
   await page.getByRole("button", { name: /start your tax return/i }).click();
-  await expect(page).toHaveURL(/\/returns\/[a-z0-9-]+$/i);
+  await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+$/i);
 
   await page.locator('input[type="file"]').setInputFiles(path.join(sampleDocsDir, "irs-w2-2025.pdf"));
 
@@ -520,15 +472,15 @@ test("workspace can download a deterministic filing pack after recompute is read
   await withholdingPrompt.getByRole("button", { name: /save answer/i }).click();
 
   const filingPackPanel = page.locator("section.panel").filter({
-    has: page.getByRole("heading", { name: /completed return/i })
+    has: page.getByRole("heading", { name: /^(?:draft )?return bundle$/i })
   });
 
-  await expect(filingPackPanel.getByText(/ready to calculate/i)).toBeVisible();
+  await expect(filingPackPanel).toContainText(/filing exports are not yet qualified|not filing-ready yet/i);
   await expect(filingPackPanel.getByText(/included in your download/i)).toBeVisible();
   await expect(filingPackPanel.getByText(/filing instructions/i)).toBeVisible();
 
   const downloadPromise = page.waitForEvent("download");
-  await filingPackPanel.getByRole("button", { name: /download completed return/i }).click();
+  await filingPackPanel.getByRole("button", { name: /download (?:draft )?return bundle/i }).click();
   const download = await downloadPromise;
   const downloadPath = await download.path();
   const downloadContents = downloadPath ? await readFile(downloadPath, "utf8") : "";
@@ -546,10 +498,10 @@ test("unsupported uploads keep the workspace out of deterministic recompute even
   await enableAdvancedMode(page);
 
   await page.getByRole("button", { name: /start your tax return/i }).click();
-  await expect(page).toHaveURL(/\/returns\/[a-z0-9-]+$/i);
+  await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+$/i);
 
   const unsupportedPath = testInfo.outputPath("broker-export.pdf");
-  await copyFile(path.join(sampleDocsDir, "irs-1099-div-2024.pdf"), unsupportedPath);
+  await writeUnknownPdf(unsupportedPath);
 
   await page.locator('input[type="file"]').setInputFiles([
     path.join(sampleDocsDir, "irs-1099-b-2025.pdf"),
@@ -574,11 +526,11 @@ test("unsupported uploads keep the workspace out of deterministic recompute even
   await expect(page.getByText(/1 documents need review/i)).toBeVisible();
   await expect(returnSummary.getByText(/1 uploaded document still needs manual coverage review before deterministic recompute can run\./i)).toBeVisible();
   await expect(actionRouter.getByText(/answer remaining questions/i)).toBeVisible();
-  await expect(actionRouter.getByText(/download your completed return/i)).toBeVisible();
-  await expect(actionRouter.getByText(/consider outside review/i)).toBeVisible();
+  await expect(actionRouter.getByText(/download your draft return packet/i)).toBeVisible();
+  await expect(actionRouter.getByText(/consider a professional review/i)).toBeVisible();
   await expect(actionRouter.getByText(/Confirm basis reporting, wash sale adjustments, and holding periods from each Form 1099-B\./i)).toBeVisible();
   await expect(actionRouter.getByRole("button", { name: /go to questions/i })).toBeVisible();
-  await expect(actionRouter.getByRole("button", { name: /go to completed return/i })).toBeVisible();
+  await expect(actionRouter.getByRole("button", { name: /go to draft return bundle/i })).toBeVisible();
   await expect(page.getByText(/engine-recompute/i)).toHaveCount(0);
 
   await page.reload();
@@ -586,7 +538,7 @@ test("unsupported uploads keep the workspace out of deterministic recompute even
   await expect(summaryStat(returnSummary, /return status/i)).toContainText("Needs review");
   await expect(returnSummary.getByText(/1 uploaded document still needs manual coverage review before deterministic recompute can run\./i)).toBeVisible();
   await expect(actionRouter.getByText(/answer remaining questions/i)).toBeVisible();
-  await expect(actionRouter.getByText(/consider outside review/i)).toBeVisible();
+  await expect(actionRouter.getByText(/consider a professional review/i)).toBeVisible();
   await expect(page.getByText(/engine-recompute/i)).toHaveCount(0);
 });
 
@@ -595,10 +547,10 @@ test("unsupported workspaces can capture consent and download a local partner-re
   await enableAdvancedMode(page);
 
   await page.getByRole("button", { name: /start your tax return/i }).click();
-  await expect(page).toHaveURL(/\/returns\/[a-z0-9-]+$/i);
+  await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+$/i);
 
   const unsupportedPath = testInfo.outputPath("broker-export.pdf");
-  await copyFile(path.join(sampleDocsDir, "irs-1099-div-2024.pdf"), unsupportedPath);
+  await writeUnknownPdf(unsupportedPath);
 
   await page.locator('input[type="file"]').setInputFiles([
     path.join(sampleDocsDir, "irs-1099-b-2025.pdf"),
@@ -619,9 +571,9 @@ test("unsupported workspaces can capture consent and download a local partner-re
     has: page.getByRole("heading", { name: /outside review bundle/i })
   });
 
-  await expect(actionRouter.getByText(/consider outside review/i)).toBeVisible();
+  await expect(actionRouter.getByText(/consider a professional review/i)).toBeVisible();
   await actionRouter.getByRole("button", { name: /go to outside review bundle/i }).click();
-  await expect(partnerReviewPanel).toContainText(/this app does not contact, assign, or engage a reviewer/i);
+  await expect(partnerReviewPanel).toContainText(/Viva La Tax does not contact, assign, or supervise any reviewer/i);
 
   const downloadButton = partnerReviewPanel.getByRole("button", { name: /download review bundle/i });
   await expect(downloadButton).toBeDisabled();
@@ -643,7 +595,7 @@ test("unsupported workspaces can capture consent and download a local partner-re
   expect(downloadContents).toContain("\"shareRedactedDataWithPartner\": true");
   expect(downloadContents).toContain("\"acknowledgeSoftwareOnlyService\": true");
   expect(downloadContents).toContain("\"acknowledgeSeparateProfessionalEngagement\": true");
-  await expect(partnerReviewPanel).toContainText(/this app does not contact, assign, or engage a reviewer on your behalf\./i);
+  await expect(partnerReviewPanel).toContainText(/Viva La Tax does not contact, assign, or supervise any reviewer for you\./i);
   await expect(partnerReviewPanel).toContainText(/downloaded .*partner-review-request\.json/i);
 });
 
@@ -652,31 +604,31 @@ test("removing one uploaded document recomputes the local workspace across reloa
   await enableAdvancedMode(page);
 
   await page.getByRole("button", { name: /start your tax return/i }).click();
-  await expect(page).toHaveURL(/\/returns\/[a-z0-9-]+$/i);
+  await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+$/i);
 
   await page.locator('input[type="file"]').setInputFiles([
-    path.join(sampleDocsDir, "irs-w2-2026.pdf"),
+    path.join(sampleDocsDir, "irs-w2-2025.pdf"),
     path.join(sampleDocsDir, "irs-1099-int-2024.pdf")
   ]);
   const documentPanel = page.locator("section.panel").filter({
     has: page.getByRole("heading", { name: /your documents/i })
   });
 
-  await expect(page.getByRole("listitem").filter({ hasText: /^2 documents stored locally$/ })).toBeVisible();
+  await expect(page.getByRole("listitem").filter({ hasText: /^2 uploaded documents stored locally$/ })).toBeVisible();
   await page.getByRole("button", { name: /remove form 1099-int/i }).click();
 
   await expect(
     page.getByRole("status", { name: /return status/i })
   ).toHaveText(/removed form 1099-int \(rev\. january 2024\)\./i);
-  await expect(page.getByRole("listitem").filter({ hasText: /^1 documents stored locally$/ })).toBeVisible();
+  await expect(page.getByRole("listitem").filter({ hasText: /^1 uploaded document stored locally$/ })).toBeVisible();
   await expect(page.getByText(/1 irs sample document loaded/i)).toBeVisible();
   await expect(page.getByText(/taxable interest/i)).toHaveCount(0);
   await expect(page.getByText(/confirm whether any tax-exempt interest or early withdrawal penalties also apply\./i)).toHaveCount(0);
-  await expect(page.getByText("2026 Form W-2 (official info-copy PDF)", { exact: true })).toBeVisible();
+  await expect(page.getByText("2025 Form W-2", { exact: true })).toBeVisible();
 
   await page.reload();
 
-  await expect(page.getByRole("listitem").filter({ hasText: /^1 documents stored locally$/ })).toBeVisible();
+  await expect(page.getByRole("listitem").filter({ hasText: /^1 uploaded document stored locally$/ })).toBeVisible();
   await expect(page.getByText(/matched irs sample document/i).first()).toBeVisible();
   await expect(documentPanel.getByText(/form 1099-int \(rev\. january 2024\)/i)).toHaveCount(0);
 });
@@ -686,25 +638,32 @@ test("duplicate uploads keep separate document cards and remove one copy at a ti
   await enableAdvancedMode(page);
 
   await page.getByRole("button", { name: /start your tax return/i }).click();
-  await expect(page).toHaveURL(/\/returns\/[a-z0-9-]+$/i);
+  await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+$/i);
 
   await page.locator('input[type="file"]').setInputFiles([
-    path.join(sampleDocsDir, "irs-w2-2026.pdf"),
-    path.join(sampleDocsDir, "irs-w2-2026.pdf")
+    path.join(sampleDocsDir, "irs-w2-2025.pdf"),
+    path.join(sampleDocsDir, "irs-w2-2025.pdf")
   ]);
 
-  await expect(page.getByRole("listitem").filter({ hasText: /^2 documents stored locally$/ })).toBeVisible();
-  await expect(page.getByText(/^irs-w2-2026\.pdf$/i)).toHaveCount(2);
+  await expect(page.getByRole("listitem").filter({ hasText: /^2 uploaded documents stored locally$/ })).toBeVisible();
+  await expect(page.getByText(/^irs-w2-2025\.pdf$/i)).toHaveCount(2);
   await expect(page.getByText(/data found: wages, federal withholding/i)).toHaveCount(2);
 
-  await page.getByRole("button", { name: /remove 2026 form w-2/i }).first().click();
+  await page.getByRole("button", { name: /remove 2025 form w-2/i }).first().click();
 
-  await expect(page.getByRole("listitem").filter({ hasText: /^1 documents stored locally$/ })).toBeVisible();
-  await expect(page.getByText(/^irs-w2-2026\.pdf$/i)).toHaveCount(1);
+  await expect(page.getByRole("listitem").filter({ hasText: /^1 uploaded document stored locally$/ })).toBeVisible();
+  await expect(page.getByText(/^irs-w2-2025\.pdf$/i)).toHaveCount(1);
   await expect(page.getByText(/data found: wages, federal withholding/i)).toHaveCount(1);
 
   await page.reload();
 
-  await expect(page.getByRole("listitem").filter({ hasText: /^1 documents stored locally$/ })).toBeVisible();
-  await expect(page.getByText(/^irs-w2-2026\.pdf$/i)).toHaveCount(1);
+  await expect(page.getByRole("listitem").filter({ hasText: /^1 uploaded document stored locally$/ })).toBeVisible();
+  await expect(page.getByText(/^irs-w2-2025\.pdf$/i)).toHaveCount(1);
 });
+
+async function writeUnknownPdf(filePath: string) {
+  const pdf = await PDFDocument.create();
+  const font = await pdf.embedFont(StandardFonts.Helvetica);
+  pdf.addPage().drawText("Synthetic document: a fictional equipment instruction manual.", { x: 40, y: 700, size: 12, font });
+  await writeFile(filePath, await pdf.save());
+}

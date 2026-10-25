@@ -1,3 +1,4 @@
+import { fillRequiredTaxpayerFacts, reachFilingStatus } from "./guided-fixtures";
 import { expect, test } from "@playwright/test";
 
 /**
@@ -12,10 +13,12 @@ async function completeSegmentation(
   page: import("@playwright/test").Page,
   filingStatus: "single" | "married filing jointly" | "head of household" = "single"
 ) {
-  await expect(page.getByText(/let's figure out your tax situation/i)).toBeVisible();
+  await expect(page.getByText(/let's tailor your return/i)).toBeVisible();
 
   // Step 1: Filing status
+  await reachFilingStatus(page);
   await page.getByRole("radio", { name: new RegExp(filingStatus, "i") }).click();
+  await page.getByRole("button", { name: "Continue" }).click();
   await expect(page.getByText(/what types of income/i)).toBeVisible({ timeout: 5000 });
 
   // Step 2: W-2 wages
@@ -37,7 +40,7 @@ async function completeSegmentation(
 async function createReturn(page: import("@playwright/test").Page): Promise<string> {
   await page.goto("/");
   await page.getByRole("button", { name: /start your tax return/i }).click();
-  await expect(page).toHaveURL(/\/returns\/[a-z0-9-]+/i);
+  await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+/i);
   const id = new URL(page.url()).pathname.split("/").at(-1)!;
   return id;
 }
@@ -62,6 +65,7 @@ test.describe("Return workspace lifecycle", () => {
     await completeSegmentation(page);
 
     // Fill in personal info
+    await fillRequiredTaxpayerFacts(page);
     await page.getByRole("textbox", { name: /first name/i }).fill("Alice");
     await page.getByRole("textbox", { name: /last name/i }).fill("Testington");
 
@@ -81,6 +85,7 @@ test.describe("Return workspace lifecycle", () => {
     await completeSegmentation(page);
 
     // Fill in personal info
+    await fillRequiredTaxpayerFacts(page);
     await page.getByRole("textbox", { name: /first name/i }).fill("Bob");
     await page.getByRole("textbox", { name: /last name/i }).fill("Builder");
 
@@ -109,8 +114,8 @@ test.describe("Return workspace lifecycle", () => {
     await page.getByRole("link", { name: /create this return/i }).click();
     await expect(page).toHaveURL(/\/returns\/multi-test-second$/i);
 
-    // Wait for workspace page to fully render and persist to localStorage
-    await page.waitForLoadState("networkidle");
+    // A return becomes visible after an answer or upload, not an empty visit.
+    await completeSegmentation(page);
 
     // Navigate to home
     await page.goto("/");
@@ -136,10 +141,10 @@ test.describe("Return workspace lifecycle", () => {
 
     // Click continue on the return card
     const card = page.getByRole("listitem").filter({ hasText: new RegExp(`Tax Return ${id}`, "i") });
-    await card.getByRole("link", { name: /continue return/i }).click();
+    await card.getByRole("link", { name: /continue tax return/i }).click();
 
     // Should be on the return page in guided mode
-    await expect(page).toHaveURL(new RegExp(`/returns/${id}$`, "i"));
+    await expect(page).toHaveURL(new RegExp(`/returns/${id}(?:\\?local=1)?$`, "i"));
     await expect(page.getByText(/let's start with the basics/i)).toBeVisible({ timeout: 5000 });
 
     // Data should persist
@@ -173,10 +178,12 @@ test.describe("Guided interview — filing status variations", () => {
   test("Married Filing Jointly segmentation flow completes", async ({ page }) => {
     await createReturn(page);
 
-    await expect(page.getByText(/let's figure out your tax situation/i)).toBeVisible();
+    await expect(page.getByText(/let's tailor your return/i)).toBeVisible();
 
     // Select MFJ
+    await reachFilingStatus(page);
     await page.getByRole("radio", { name: /married filing jointly/i }).click();
+    await page.getByRole("button", { name: "Continue" }).click();
     await expect(page.getByText(/what types of income/i)).toBeVisible({ timeout: 5000 });
 
     // Complete remaining segmentation steps
@@ -200,10 +207,12 @@ test.describe("Guided interview — filing status variations", () => {
   test("Head of Household segmentation flow completes", async ({ page }) => {
     await createReturn(page);
 
-    await expect(page.getByText(/let's figure out your tax situation/i)).toBeVisible();
+    await expect(page.getByText(/let's tailor your return/i)).toBeVisible();
 
     // Select HoH
+    await reachFilingStatus(page);
     await page.getByRole("radio", { name: /head of household/i }).click();
+    await page.getByRole("button", { name: "Continue" }).click();
     await expect(page.getByText(/what types of income/i)).toBeVisible({ timeout: 5000 });
 
     // Complete remaining segmentation steps
@@ -226,10 +235,12 @@ test.describe("Guided interview — filing status variations", () => {
   test("changing filing status during segmentation updates selection", async ({ page }) => {
     await createReturn(page);
 
-    await expect(page.getByText(/let's figure out your tax situation/i)).toBeVisible();
+    await expect(page.getByText(/let's tailor your return/i)).toBeVisible();
 
     // Select Single first
+    await reachFilingStatus(page);
     await page.getByRole("radio", { name: /single/i }).click();
+    await page.getByRole("button", { name: "Continue" }).click();
     await expect(page.getByText(/what types of income/i)).toBeVisible({ timeout: 5000 });
 
     // Go back and change to MFJ
@@ -240,7 +251,9 @@ test.describe("Guided interview — filing status variations", () => {
     await expect(page.getByRole("radio", { name: /single/i })).toBeChecked();
 
     // Change to MFJ
+    await reachFilingStatus(page);
     await page.getByRole("radio", { name: /married filing jointly/i }).click();
+    await page.getByRole("button", { name: "Continue" }).click();
     await expect(page.getByText(/what types of income/i)).toBeVisible({ timeout: 5000 });
 
     // Go back again — MFJ should be checked
@@ -256,6 +269,7 @@ test.describe("Self-hosted data persistence", () => {
     await completeSegmentation(page);
 
     // Fill personal info
+    await fillRequiredTaxpayerFacts(page);
     await page.getByRole("textbox", { name: /first name/i }).fill("DataTest");
     await page.getByRole("textbox", { name: /last name/i }).fill("Persister");
 

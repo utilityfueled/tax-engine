@@ -1,3 +1,4 @@
+import { reachFilingStatus } from "./guided-fixtures";
 import { expect, test } from "@playwright/test";
 
 test.describe("Responsive layout — mobile (375px)", () => {
@@ -15,7 +16,7 @@ test.describe("Responsive layout — mobile (375px)", () => {
 
   test("Local Mode badge visible on mobile", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByText("Local Mode")).toBeVisible();
+    await expect(page.getByText("Local Mode", { exact: true })).toBeVisible();
   });
 
   test("hero section is visible and CTA button works on mobile", async ({ page }) => {
@@ -28,7 +29,7 @@ test.describe("Responsive layout — mobile (375px)", () => {
     const cta = page.getByRole("button", { name: /start your tax return/i });
     await expect(cta).toBeVisible();
     await cta.click();
-    await expect(page).toHaveURL(/\/returns\/[a-z0-9-]+/i);
+    await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+/i);
   });
 
   test("footer renders and is accessible on mobile", async ({ page }) => {
@@ -58,13 +59,15 @@ test.describe("Responsive layout — mobile (375px)", () => {
   test("guided interview segmentation works on mobile", async ({ page }) => {
     await page.goto("/");
     await page.getByRole("button", { name: /start your tax return/i }).click();
-    await expect(page).toHaveURL(/\/returns\/[a-z0-9-]+/i);
+    await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+/i);
 
     // Segmentation should render on mobile
-    await expect(page.getByText(/let's figure out your tax situation/i)).toBeVisible();
+    await expect(page.getByText(/let's tailor your return/i)).toBeVisible();
 
     // Filing status radios should be tappable
+    await reachFilingStatus(page);
     await page.getByRole("radio", { name: /single/i }).click();
+    await page.getByRole("button", { name: "Continue" }).click();
     await expect(page.getByText(/what types of income/i)).toBeVisible({ timeout: 5000 });
   });
 });
@@ -152,11 +155,12 @@ test.describe("Responsive layout — desktop (1280px)", () => {
   test("guided interview is usable at desktop width", async ({ page }) => {
     await page.goto("/");
     await page.getByRole("button", { name: /start your tax return/i }).click();
-    await expect(page).toHaveURL(/\/returns\/[a-z0-9-]+/i);
+    await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+/i);
 
-    await expect(page.getByText(/let's figure out your tax situation/i)).toBeVisible();
+    await expect(page.getByText(/let's tailor your return/i)).toBeVisible();
 
     // All filing status options visible and clickable
+    await reachFilingStatus(page);
     await expect(page.getByRole("radio", { name: /single/i })).toBeVisible();
     await expect(page.getByRole("radio", { name: /married filing jointly/i })).toBeVisible();
     await expect(page.getByRole("radio", { name: /head of household/i })).toBeVisible();

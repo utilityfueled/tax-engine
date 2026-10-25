@@ -1,3 +1,4 @@
+import { fillRequiredTaxpayerFacts } from "./guided-fixtures";
 import { randomUUID } from "node:crypto";
 import { Pool } from "pg";
 import Stripe from "stripe";
@@ -23,7 +24,7 @@ const hasHostedAiTopUpE2eConfig = hasHostedE2eConfig && Boolean(aiTopUpPriceId);
 const normalizedDatabaseUrl = normalizeDatabaseUrl(databaseUrl);
 const stripe = hasHostedE2eConfig
   ? new Stripe(stripeSecretKey, {
-      apiVersion: "2026-03-25.dahlia"
+      apiVersion: "2026-09-30.endive"
     })
   : null;
 const pool = hasHostedE2eConfig
@@ -662,6 +663,7 @@ async function completeHostedGuidedReturnSmoke(
   }
 
   await expect(personalInfoHeading).toBeVisible();
+  await fillRequiredTaxpayerFacts(page);
   await page.getByRole("textbox", { name: /first name/i }).fill("Ari");
   await page.getByRole("textbox", { name: /last name/i }).fill("Example");
   await page.getByRole("button", { name: "Continue" }).click();

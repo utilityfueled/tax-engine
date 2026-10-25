@@ -290,3 +290,19 @@ and matching spec references; no assertion or timeout was weakened. All 15,141
 tests pass under coverage after this split. Branch coverage remains **81.52%
 (16,261 / 19,946)**, below the unchanged 85% gate; the coverage command therefore
 fails. Statements 91.29%, lines 91.83% and functions 90.61% pass their gates.
+
+## Browser baseline and exact display amounts
+
+The production-build Chromium suite now has **293 passes, zero failures and
+five hosted tests skipped**, with retries disabled. It exercises upload and
+confirmation, missing birth dates, year mismatch, navigation, keyboard/mobile
+layouts, review bundle export, reopening and deletion with synthetic data and
+provider/billing credentials disabled. Hosted skips are not hosted-service proof.
+
+Browser failures exposed a real guided-section remount race that discarded the
+first edit after navigation; sections now use a stable section ID key. Required
+fact failures clear the estimate rather than reusing a stale workspace preview.
+Fixture confirmations use the source type, not only a human-readable label.
+Ticker aggregation, formatting and animation preserve Decimal amounts; large
+cent-value regressions now pass. Browser tests use explicit taxpayer fixtures
+and actual field labels and assert review-only output.

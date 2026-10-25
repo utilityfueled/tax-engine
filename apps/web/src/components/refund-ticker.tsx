@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Decimal from "decimal.js";
 import type { WorkspaceEnginePreview } from "@tax-engine/contracts";
 import { RetroShell } from "@/components/retro-shell";
 
@@ -24,51 +25,49 @@ export function formatFilingStatus(status: string): string {
   return FILING_STATUS_LABELS[status] ?? status;
 }
 
-export function formatTickerCurrency(value: string | number | undefined): string {
+export function formatTickerCurrency(value: Decimal.Value | undefined): string {
   if (value === undefined) return "—";
-  const num = Number(value);
-  if (Number.isNaN(num)) return "—";
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(num);
+  try {
+    const amount = new Decimal(value);
+    if (!amount.isFinite()) return "—";
+    const rounded = amount.abs().toFixed(0, Decimal.ROUND_HALF_UP).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return `${amount.isNegative() && !amount.isZero() ? "-" : ""}$${rounded}`;
+  } catch { return "—"; }
 }
 
 export function computeRawTarget(
   preview: RefundTickerPreviewData | null
-): number {
-  if (!preview) return 0;
-  const refund = Number(preview.metrics.refund);
-  if (refund > 0) return refund;
-  const owed = Number(preview.metrics.amountOwed);
-  if (owed > 0) return -owed;
-  return 0;
+): string {
+  if (!preview) return "0";
+  const refund = new Decimal(preview.metrics.refund);
+  if (refund.gt(0)) return refund.toFixed();
+  const owed = new Decimal(preview.metrics.amountOwed);
+  return owed.gt(0) ? owed.negated().toFixed() : "0";
 }
 
 export function computeTickerLabel(
   preview: RefundTickerPreviewData
 ): string {
-  const refund = Number(preview.metrics.refund);
-  const owed = Number(preview.metrics.amountOwed);
-  if (refund > 0) return "Estimated Refund";
-  if (owed > 0) return "Estimated Balance Due";
+  const refund = new Decimal(preview.metrics.refund);
+  const owed = new Decimal(preview.metrics.amountOwed);
+  if (refund.gt(0)) return "Estimated Refund";
+  if (owed.gt(0)) return "Estimated Balance Due";
   return "Estimated Result";
 }
 
-export function computeTickerClass(animatedValue: number): string {
-  if (animatedValue > 0) return "guided-ticker-positive";
-  if (animatedValue < 0) return "guided-ticker-negative";
+export function computeTickerClass(animatedValue: Decimal.Value): string {
+  if (new Decimal(animatedValue).gt(0)) return "guided-ticker-positive";
+  if (new Decimal(animatedValue).lt(0)) return "guided-ticker-negative";
   return "";
 }
 
 export function computeTickerDisplayValue(
-  animatedValue: number,
-  refund: number,
-  owed: number
+  animatedValue: Decimal.Value,
+  refund: Decimal.Value,
+  owed: Decimal.Value
 ): string {
-  const displayAbsolute = Math.abs(animatedValue);
-  if (displayAbsolute === 0 && refund === 0 && owed === 0) return "$0";
+  const displayAbsolute = new Decimal(animatedValue).abs();
+  if (displayAbsolute.isZero() && new Decimal(refund).isZero() && new Decimal(owed).isZero()) return "$0";
   return formatTickerCurrency(displayAbsolute);
 }
 
@@ -81,17 +80,17 @@ export interface FederalTickerInfo {
 export function computeFederalTickerInfo(
   metrics: RefundTickerPreviewData["metrics"]
 ): FederalTickerInfo {
-  const refund = Number(metrics.refund);
-  const owed = Number(metrics.amountOwed);
+  const refund = new Decimal(metrics.refund);
+  const owed = new Decimal(metrics.amountOwed);
 
-  if (refund > 0) {
+  if (refund.gt(0)) {
     return {
       label: "Federal Refund",
       value: formatTickerCurrency(refund),
       className: "guided-ticker-sub guided-ticker-positive",
     };
   }
-  if (owed > 0) {
+  if (owed.gt(0)) {
     return {
       label: "Federal Balance Due",
       value: formatTickerCurrency(owed),
@@ -110,32 +109,32 @@ export interface StateTickerInfo {
   label: string;
   value: string;
   className: string;
-  rawTarget: number;
+  rawTarget: string;
 }
 
 export function computeStateTickerInfo(
   stateMetrics: NonNullable<RefundTickerPreviewData["stateMetrics"]>
 ): StateTickerInfo {
-  const refund = Number(stateMetrics.refund);
-  const owed = Number(stateMetrics.amountOwed);
+  const refund = new Decimal(stateMetrics.refund);
+  const owed = new Decimal(stateMetrics.amountOwed);
   const code = stateMetrics.stateCode.toUpperCase();
 
-  if (refund > 0) {
+  if (refund.gt(0)) {
     return {
       stateCode: code,
       label: `${code} Refund`,
       value: formatTickerCurrency(refund),
       className: "guided-ticker-sub guided-ticker-positive",
-      rawTarget: refund,
+      rawTarget: refund.toFixed(),
     };
   }
-  if (owed > 0) {
+  if (owed.gt(0)) {
     return {
       stateCode: code,
       label: `${code} Balance Due`,
       value: formatTickerCurrency(owed),
       className: "guided-ticker-sub guided-ticker-negative",
-      rawTarget: -owed,
+      rawTarget: owed.negated().toFixed(),
     };
   }
   return {
@@ -143,7 +142,7 @@ export function computeStateTickerInfo(
     label: `${code} Result`,
     value: "$0",
     className: "guided-ticker-sub",
-    rawTarget: 0,
+    rawTarget: "0",
   };
 }
 
@@ -151,26 +150,26 @@ export function computeStateTickerInfo(
 
 export interface CombinedTickerInput {
   /** Federal refund amount (>= 0) */
-  federalRefund: number;
+  federalRefund: Decimal.Value;
   /** Federal amount owed (>= 0) */
-  federalOwed: number;
+  federalOwed: Decimal.Value;
   /** State refund amount (>= 0), or null if no state */
-  stateRefund: number | null;
+  stateRefund: Decimal.Value | null;
   /** State amount owed (>= 0), or null if no state */
-  stateOwed: number | null;
+  stateOwed: Decimal.Value | null;
 }
 
 /**
  * Compute the net result across federal and (optionally) state returns.
  * Positive = net refund, negative = net owed.
  */
-export function computeNetResult(input: CombinedTickerInput): number {
-  const fed = input.federalRefund - input.federalOwed;
+export function computeNetResult(input: CombinedTickerInput): string {
+  const fed = new Decimal(input.federalRefund).minus(input.federalOwed);
   const state =
     input.stateRefund !== null && input.stateOwed !== null
-      ? input.stateRefund - input.stateOwed
-      : 0;
-  return fed + state;
+      ? new Decimal(input.stateRefund).minus(input.stateOwed)
+      : new Decimal(0);
+  return fed.plus(state).toFixed();
 }
 
 /**
@@ -178,16 +177,16 @@ export function computeNetResult(input: CombinedTickerInput): number {
  * When a state return is present, shows the combined absolute value;
  * otherwise shows the federal-only amount.
  */
-export function computeHeroAmount(input: CombinedTickerInput): number {
+export function computeHeroAmount(input: CombinedTickerInput): string {
   const hasState = input.stateRefund !== null && input.stateOwed !== null;
   if (hasState) {
-    return Math.abs(computeNetResult(input));
+    return new Decimal(computeNetResult(input)).abs().toFixed();
   }
-  return input.federalRefund > 0
-    ? input.federalRefund
-    : input.federalOwed > 0
-      ? input.federalOwed
-      : 0;
+  return new Decimal(input.federalRefund).gt(0)
+    ? new Decimal(input.federalRefund).toFixed()
+    : new Decimal(input.federalOwed).gt(0)
+      ? new Decimal(input.federalOwed).toFixed()
+      : "0";
 }
 
 /**
@@ -196,13 +195,13 @@ export function computeHeroAmount(input: CombinedTickerInput): number {
 export function computeCombinedTickerLabel(input: CombinedTickerInput): string {
   const hasState = input.stateRefund !== null && input.stateOwed !== null;
   if (hasState) {
-    const net = computeNetResult(input);
-    if (net > 0) return "Total Estimated Refund";
-    if (net < 0) return "Total Estimated Balance Due";
+    const net = new Decimal(computeNetResult(input));
+    if (net.gt(0)) return "Total Estimated Refund";
+    if (net.lt(0)) return "Total Estimated Balance Due";
     return "Estimated Result";
   }
-  if (input.federalRefund > 0) return "Estimated Refund";
-  if (input.federalOwed > 0) return "Estimated Balance Due";
+  if (new Decimal(input.federalRefund).gt(0)) return "Estimated Refund";
+  if (new Decimal(input.federalOwed).gt(0)) return "Estimated Balance Due";
   return "Estimated Result";
 }
 
@@ -212,13 +211,13 @@ export function computeCombinedTickerLabel(input: CombinedTickerInput): string {
 export function computeCombinedTickerClass(input: CombinedTickerInput): string {
   const hasState = input.stateRefund !== null && input.stateOwed !== null;
   if (hasState) {
-    const net = computeNetResult(input);
-    if (net > 0) return "guided-ticker-positive";
-    if (net < 0) return "guided-ticker-negative";
+    const net = new Decimal(computeNetResult(input));
+    if (net.gt(0)) return "guided-ticker-positive";
+    if (net.lt(0)) return "guided-ticker-negative";
     return "";
   }
-  if (input.federalRefund > 0) return "guided-ticker-positive";
-  if (input.federalOwed > 0) return "guided-ticker-negative";
+  if (new Decimal(input.federalRefund).gt(0)) return "guided-ticker-positive";
+  if (new Decimal(input.federalOwed).gt(0)) return "guided-ticker-negative";
   return "";
 }
 
@@ -231,18 +230,18 @@ export interface TickerBreakdownRow {
 export function computeBreakdownRows(
   metrics: RefundTickerPreviewData["metrics"]
 ): TickerBreakdownRow[] {
-  const refund = Number(metrics.refund);
-  const owed = Number(metrics.amountOwed);
+  const refund = new Decimal(metrics.refund);
+  const owed = new Decimal(metrics.amountOwed);
 
-  const resultLabel = refund > 0 ? "Refund" : owed > 0 ? "Balance Due" : "Result";
-  const resultValue = refund > 0
+  const resultLabel = refund.gt(0) ? "Refund" : owed.gt(0) ? "Balance Due" : "Result";
+  const resultValue = refund.gt(0)
     ? formatTickerCurrency(metrics.refund)
-    : owed > 0
+    : owed.gt(0)
       ? formatTickerCurrency(metrics.amountOwed)
       : "—";
-  const resultClass = refund > 0
+  const resultClass = refund.gt(0)
     ? "guided-ticker-breakdown-refund"
-    : owed > 0
+    : owed.gt(0)
       ? "guided-ticker-breakdown-owed"
       : "";
 
@@ -260,18 +259,18 @@ export function computeStateBreakdownRows(
   stateMetrics: NonNullable<RefundTickerPreviewData["stateMetrics"]>
 ): TickerBreakdownRow[] {
   const code = stateMetrics.stateCode.toUpperCase();
-  const refund = Number(stateMetrics.refund);
-  const owed = Number(stateMetrics.amountOwed);
+  const refund = new Decimal(stateMetrics.refund);
+  const owed = new Decimal(stateMetrics.amountOwed);
 
-  const resultLabel = refund > 0 ? "Refund" : owed > 0 ? "Balance Due" : "Result";
-  const resultValue = refund > 0
+  const resultLabel = refund.gt(0) ? "Refund" : owed.gt(0) ? "Balance Due" : "Result";
+  const resultValue = refund.gt(0)
     ? formatTickerCurrency(stateMetrics.refund)
-    : owed > 0
+    : owed.gt(0)
       ? formatTickerCurrency(stateMetrics.amountOwed)
       : "—";
-  const resultClass = refund > 0
+  const resultClass = refund.gt(0)
     ? "guided-ticker-breakdown-refund"
-    : owed > 0
+    : owed.gt(0)
       ? "guided-ticker-breakdown-owed"
       : "";
 
@@ -287,7 +286,7 @@ export function computeStateBreakdownRows(
  * Returns a boolean that flips to true for one animation cycle when the
  * watched value changes, driving the CSS ticker-pulse animation.
  */
-export function usePulse(value: number): boolean {
+export function usePulse(value: string | number): boolean {
   const [pulsing, setPulsing] = useState(false);
   const prevValue = useRef(value);
 
@@ -309,12 +308,8 @@ function easeOutCubic(t: number): number {
   return 1 - Math.pow(1 - t, 3);
 }
 
-export function formatAnimatedCurrency(value: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(value);
+export function formatAnimatedCurrency(value: Decimal.Value): string {
+  return formatTickerCurrency(value);
 }
 
 /**
@@ -322,7 +317,8 @@ export function formatAnimatedCurrency(value: number): string {
  * returning the current display value on each frame.
  * Respects prefers-reduced-motion: jumps instantly when enabled.
  */
-export function useAnimatedValue(target: number, duration = DEFAULT_ANIMATION_DURATION_MS): number {
+export function useAnimatedValue(targetValue: Decimal.Value, duration = DEFAULT_ANIMATION_DURATION_MS): string {
+  const target = new Decimal(targetValue).toFixed();
   const [display, setDisplay] = useState(target);
   const prevTarget = useRef(target);
   const rafId = useRef<number>(0);
@@ -340,13 +336,13 @@ export function useAnimatedValue(target: number, duration = DEFAULT_ANIMATION_DU
     }
 
     const start = performance.now();
-    const delta = target - from;
+    const delta = new Decimal(target).minus(from);
 
     function tick(now: number) {
       const elapsed = now - start;
       const progress = Math.min(elapsed / duration, 1);
       const eased = easeOutCubic(progress);
-      setDisplay(Math.round(from + delta * eased));
+      setDisplay(progress === 1 ? target : new Decimal(from).plus(delta.times(String(eased))).toFixed(0, Decimal.ROUND_HALF_UP));
 
       if (progress < 1) {
         rafId.current = requestAnimationFrame(tick);
@@ -365,16 +361,16 @@ export function useAnimatedValue(target: number, duration = DEFAULT_ANIMATION_DU
 export function buildCombinedInputFromPreview(
   preview: RefundTickerPreviewData
 ): CombinedTickerInput {
-  const fedRefund = Number(preview.metrics.refund);
-  const fedOwed = Number(preview.metrics.amountOwed);
+  const fedRefund = preview.metrics.refund;
+  const fedOwed = preview.metrics.amountOwed;
   if (!preview.stateMetrics) {
     return { federalRefund: fedRefund, federalOwed: fedOwed, stateRefund: null, stateOwed: null };
   }
   return {
     federalRefund: fedRefund,
     federalOwed: fedOwed,
-    stateRefund: Number(preview.stateMetrics.refund),
-    stateOwed: Number(preview.stateMetrics.amountOwed),
+    stateRefund: preview.stateMetrics.refund,
+    stateOwed: preview.stateMetrics.amountOwed,
   };
 }
 
@@ -409,7 +405,7 @@ export function computeTickerHeroText(
     case "needs-review":
       return "Review flagged items to see your estimate";
     case "ready-to-recompute":
-      return "Preparing your estimate…";
+      return "Complete taxpayer facts in the guided interview";
     default:
       return "Upload tax documents to get an estimate";
   }
@@ -508,7 +504,7 @@ export function RefundTicker({
   const tickerLabel = hasState
     ? computeCombinedTickerLabel(combinedInput as CombinedTickerInput)
     : computeTickerLabel(activePreview);
-  const tickerValue = formatTickerCurrency(Math.abs(animatedValue));
+  const tickerValue = formatTickerCurrency(new Decimal(animatedValue).abs());
   const tickerClass = hasState
     ? computeCombinedTickerClass(combinedInput as CombinedTickerInput)
     : computeTickerClass(animatedValue);

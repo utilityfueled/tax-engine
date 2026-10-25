@@ -117,7 +117,7 @@ test.describe("Empty state handling", () => {
 
     // Click the Start button from empty state
     await page.getByRole("button", { name: /start your tax return/i }).click();
-    await expect(page).toHaveURL(/\/returns\/[a-z0-9-]+/i);
+    await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+/i);
   });
 });
 

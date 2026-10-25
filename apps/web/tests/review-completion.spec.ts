@@ -1,3 +1,4 @@
+import { fillRequiredTaxpayerFacts, reachFilingStatus } from "./guided-fixtures";
 import { expect, test } from "@playwright/test";
 
 /**
@@ -22,9 +23,11 @@ async function completeSegmentation(
 ) {
   const { filingStatus = "single", incomeTypes = ["w-2 wages"] } = options;
 
-  await expect(page.getByText(/let's figure out your tax situation/i)).toBeVisible();
+  await expect(page.getByText(/let's tailor your return/i)).toBeVisible();
 
+  await reachFilingStatus(page);
   await page.getByRole("radio", { name: new RegExp(filingStatus, "i") }).click();
+  await page.getByRole("button", { name: "Continue" }).click();
   await expect(page.getByText(/what types of income/i)).toBeVisible({ timeout: 5000 });
 
   for (const type of incomeTypes) {
@@ -45,7 +48,7 @@ async function completeSegmentation(
 async function createReturn(page: import("@playwright/test").Page) {
   await page.goto("/");
   await page.getByRole("button", { name: /start your tax return/i }).click();
-  await expect(page).toHaveURL(/\/returns\/[a-z0-9-]+/i);
+  await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+/i);
 }
 
 /** Skip a section by clicking Continue and then Skip if prompted. */
@@ -103,6 +106,7 @@ test.describe("Review section — layout and content", () => {
   test("review section shows result banner with financial breakdown", async ({ page }) => {
     await createReturn(page);
     await completeSegmentation(page);
+    await fillRequiredTaxpayerFacts(page);
     await skipToReview(page);
 
     // The result banner should be present with financial details
@@ -117,14 +121,11 @@ test.describe("Review section — layout and content", () => {
     await expect(banner.getByText("Total payments")).toBeVisible();
   });
 
-  test("review section shows Estimated Result label when no refund or balance due", async ({ page }) => {
+  test("review hides tax results while required facts are missing", async ({ page }) => {
     await createReturn(page);
     await completeSegmentation(page);
     await skipToReview(page);
-
-    // With no data entered, result should show "Estimated Result"
-    const banner = page.locator(".guided-review-result-banner");
-    await expect(banner.getByText("Estimated Result")).toBeVisible();
+    await expect(page.locator(".guided-review-result-banner")).toHaveCount(0);
   });
 });
 
@@ -133,7 +134,8 @@ test.describe("Review section — with W-2 data", () => {
     await createReturn(page);
     await completeSegmentation(page);
 
-    // Skip personal info
+    // Supply the required facts before calculating.
+    await fillRequiredTaxpayerFacts(page);
     await skipSection(page);
     await expect(page.getByText(/w-2 #1/i)).toBeVisible();
 
@@ -164,15 +166,15 @@ test.describe("Review section — with W-2 data", () => {
 
     // Should show either "Estimated Refund" or "Estimated Balance Due"
     const label = banner.locator(".guided-ticker-label");
-    const labelText = await label.innerText();
-    expect(["Estimated Refund", "Estimated Balance Due"]).toContain(labelText);
+    await expect(label).toHaveText(/Estimated (Refund|Balance Due)/i);
   });
 
   test("review section total payments reflects withholding", async ({ page }) => {
     await createReturn(page);
     await completeSegmentation(page);
 
-    // Skip personal info
+    // Supply the required facts before calculating.
+    await fillRequiredTaxpayerFacts(page);
     await skipSection(page);
     await expect(page.getByText(/w-2 #1/i)).toBeVisible();
 
@@ -237,7 +239,7 @@ test.describe("Completion screen", () => {
 
     // Completion screen should show
     await expect(
-      page.getByRole("heading", { name: /your return is ready for review/i })
+      page.getByRole("heading", { name: /some guided sections still need review/i })
     ).toBeVisible({ timeout: 5000 });
   });
 
@@ -245,7 +247,8 @@ test.describe("Completion screen", () => {
     await createReturn(page);
     await completeSegmentation(page);
 
-    // Enter some W-2 data for meaningful metrics
+    // Enter explicit facts and W-2 data for meaningful metrics.
+    await fillRequiredTaxpayerFacts(page);
     await skipSection(page);
     await expect(page.getByText(/w-2 #1/i)).toBeVisible();
 
@@ -262,59 +265,58 @@ test.describe("Completion screen", () => {
     await page.getByRole("button", { name: "Continue" }).click();
 
     await expect(
-      page.getByRole("heading", { name: /your return is ready for review/i })
+      page.getByRole("heading", { name: /your return is ready to review/i })
     ).toBeVisible({ timeout: 5000 });
 
     // Summary should show Total Income and Total Tax
-    await expect(page.getByText("Total Income")).toBeVisible();
-    await expect(page.getByText("Total Tax")).toBeVisible();
-    await expect(page.getByText("Sections Completed")).toBeVisible();
+    await expect(page.getByText("Total Income", { exact: true }).last()).toBeVisible();
+    await expect(page.getByText("Total Tax", { exact: true }).last()).toBeVisible();
+    await expect(page.getByText("Sections Complete")).toBeVisible();
   });
 
-  test("completion screen has Start Over and Review Full Return buttons", async ({ page }) => {
+  test("final review has Back and Open Full Return buttons", async ({ page }) => {
     await createReturn(page);
     await completeSegmentation(page);
     await skipToReview(page);
     await page.getByRole("button", { name: "Continue" }).click();
 
     await expect(
-      page.getByRole("heading", { name: /your return is ready for review/i })
+      page.getByRole("heading", { name: /some guided sections still need review/i })
     ).toBeVisible({ timeout: 5000 });
 
-    await expect(page.getByRole("button", { name: /start over/i })).toBeVisible();
-    await expect(page.getByRole("button", { name: /review full return/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Back", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: /open full return/i })).toBeVisible();
   });
 
-  test("Start Over button returns to segmentation", async ({ page }) => {
+  test("Back returns from final review to the section summary", async ({ page }) => {
     await createReturn(page);
     await completeSegmentation(page);
     await skipToReview(page);
     await page.getByRole("button", { name: "Continue" }).click();
 
     await expect(
-      page.getByRole("heading", { name: /your return is ready for review/i })
+      page.getByRole("heading", { name: /some guided sections still need review/i })
     ).toBeVisible({ timeout: 5000 });
 
-    await page.getByRole("button", { name: /start over/i }).click();
+    await page.getByRole("button", { name: "Back", exact: true }).click();
 
-    // Should return to segmentation
-    await expect(page.getByText(/let's figure out your tax situation/i)).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText(/here's everything at a glance/i)).toBeVisible();
   });
 
-  test("Review Full Return button switches to advanced workspace", async ({ page }) => {
+  test("Open Full Return button switches to advanced workspace", async ({ page }) => {
     await createReturn(page);
     await completeSegmentation(page);
     await skipToReview(page);
     await page.getByRole("button", { name: "Continue" }).click();
 
     await expect(
-      page.getByRole("heading", { name: /your return is ready for review/i })
+      page.getByRole("heading", { name: /some guided sections still need review/i })
     ).toBeVisible({ timeout: 5000 });
 
-    await page.getByRole("button", { name: /review full return/i }).click();
+    await page.getByRole("button", { name: /open full return/i }).click();
 
     // Should switch to the advanced workspace view
-    await expect(page.getByRole("button", { name: /switch to guided interview/i })).toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole("button", { name: /start guided interview/i })).toBeVisible({ timeout: 5000 });
   });
 });
 
@@ -358,7 +360,7 @@ test.describe("Responsive layout", () => {
     await page.goto("/");
 
     // Core content should still be visible
-    await expect(page.getByRole("heading", { name: /file your taxes with confidence/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /build draft returns. verify every step/i })).toBeVisible();
     await expect(page.getByRole("button", { name: /start your tax return/i })).toBeVisible();
     await expect(page.getByRole("navigation", { name: /main navigation/i })).toBeVisible();
     await expect(page.getByRole("contentinfo")).toBeVisible();
@@ -368,7 +370,7 @@ test.describe("Responsive layout", () => {
     await page.setViewportSize({ width: 768, height: 1024 });
     await page.goto("/");
 
-    await expect(page.getByRole("heading", { name: /file your taxes with confidence/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /build draft returns. verify every step/i })).toBeVisible();
     await expect(page.getByRole("button", { name: /start your tax return/i })).toBeVisible();
     await expect(page.getByRole("navigation", { name: /main navigation/i })).toBeVisible();
     await expect(page.getByRole("contentinfo")).toBeVisible();
@@ -379,7 +381,8 @@ test.describe("Responsive layout", () => {
     await createReturn(page);
 
     // Segmentation should be usable on mobile
-    await expect(page.getByText(/let's figure out your tax situation/i)).toBeVisible();
+    await expect(page.getByText(/let's tailor your return/i)).toBeVisible();
+    await reachFilingStatus(page);
     await expect(page.getByText("Single")).toBeVisible();
     await expect(page.getByText("Married Filing Jointly")).toBeVisible();
   });

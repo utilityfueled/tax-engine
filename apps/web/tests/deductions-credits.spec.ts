@@ -1,3 +1,4 @@
+import { reachFilingStatus } from "./guided-fixtures";
 import { expect, test } from "@playwright/test";
 
 /**
@@ -10,9 +11,11 @@ import { expect, test } from "@playwright/test";
 
 /** Complete segmentation with Single / W-2 wages / no events / no state. */
 async function completeSegmentation(page: import("@playwright/test").Page) {
-  await expect(page.getByText(/let's figure out your tax situation/i)).toBeVisible();
+  await expect(page.getByText(/let's tailor your return/i)).toBeVisible();
 
+  await reachFilingStatus(page);
   await page.getByRole("radio", { name: /single/i }).click();
+  await page.getByRole("button", { name: "Continue" }).click();
   await expect(page.getByText(/what types of income/i)).toBeVisible({ timeout: 5000 });
 
   await page.getByRole("checkbox", { name: /w-2 wages/i }).check();
@@ -25,13 +28,14 @@ async function completeSegmentation(page: import("@playwright/test").Page) {
   await page.getByRole("button", { name: /start my return/i }).click();
 
   await expect(page.getByText(/let's start with the basics/i)).toBeVisible({ timeout: 5000 });
+  await page.getByRole("combobox", { name: "Tax year for this interview", exact: true }).selectOption("2025");
 }
 
 /** Create a new return and complete segmentation. */
 async function createReturn(page: import("@playwright/test").Page) {
   await page.goto("/");
   await page.getByRole("button", { name: /start your tax return/i }).click();
-  await expect(page).toHaveURL(/\/returns\/[a-z0-9-]+/i);
+  await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+/i);
   await completeSegmentation(page);
 }
 
@@ -76,7 +80,7 @@ test.describe("Deductions section — layout and defaults", () => {
 
   test("standard deduction callout shows amount for Single filing status", async ({ page }) => {
     // Single filer should see the standard deduction amount callout
-    await expect(page.getByText(/your standard deduction is/i)).toBeVisible();
+    await expect(page.getByText(/base standard deduction before/i)).toBeVisible();
     // The amount should be a formatted USD value (e.g. "$15,000" or similar)
     await expect(page.locator(".guided-deduction-standard-callout")).toBeVisible();
   });
@@ -167,11 +171,11 @@ test.describe("Deductions section — itemized deductions", () => {
 
     // Comparison display should appear with the itemized total
     await expect(page.locator(".guided-deduction-comparison")).toBeVisible();
-    await expect(page.getByText(/itemized total/i)).toBeVisible();
+    await expect(page.getByText(/expenses entered/i)).toBeVisible();
     await expect(page.getByText(/standard deduction/i).last()).toBeVisible();
   });
 
-  test("comparison recommends standard when itemized total is lower", async ({ page }) => {
+  test("raw expenses do not claim a tax-saving recommendation", async ({ page }) => {
     await page.getByRole("radio", { name: /^itemize deductions/i }).click();
 
     // Enter a small amount (well below standard deduction)
@@ -179,9 +183,8 @@ test.describe("Deductions section — itemized deductions", () => {
     await charityInput.fill("500");
     await charityInput.blur();
 
-    // Should recommend standard deduction
-    await expect(page.getByText(/the standard deduction is .* higher/i)).toBeVisible();
-    await expect(page.getByText(/you may want to switch back to standard/i)).toBeVisible();
+    await expect(page.getByText(/expenses entered/i)).toBeVisible();
+    await expect(page.getByText(/you may want to switch back to standard/i)).toHaveCount(0);
   });
 
   test("switching back to standard hides Schedule A fields", async ({ page }) => {
@@ -234,11 +237,13 @@ test.describe("Deductions section — MFJ filing status", () => {
   test("MFJ filer sees higher standard deduction amount", async ({ page }) => {
     await page.goto("/");
     await page.getByRole("button", { name: /start your tax return/i }).click();
-    await expect(page).toHaveURL(/\/returns\/[a-z0-9-]+/i);
+    await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+/i);
 
     // Complete segmentation with MFJ
-    await expect(page.getByText(/let's figure out your tax situation/i)).toBeVisible();
+    await expect(page.getByText(/let's tailor your return/i)).toBeVisible();
+    await reachFilingStatus(page);
     await page.getByRole("radio", { name: /married filing jointly/i }).click();
+    await page.getByRole("button", { name: "Continue" }).click();
     await expect(page.getByText(/what types of income/i)).toBeVisible({ timeout: 5000 });
 
     await page.getByRole("checkbox", { name: /w-2 wages/i }).check();
@@ -251,6 +256,7 @@ test.describe("Deductions section — MFJ filing status", () => {
     await page.getByRole("button", { name: /start my return/i }).click();
 
     await expect(page.getByText(/let's start with the basics/i)).toBeVisible({ timeout: 5000 });
+  await page.getByRole("combobox", { name: "Tax year for this interview", exact: true }).selectOption("2025");
 
     // Navigate to deductions
     await skipSection(page);
@@ -259,7 +265,7 @@ test.describe("Deductions section — MFJ filing status", () => {
     await expect(page.getByText(/standard or itemized deduction/i)).toBeVisible({ timeout: 5000 });
 
     // MFJ standard deduction should be displayed (higher than Single)
-    await expect(page.getByText(/your standard deduction is/i)).toBeVisible();
+    await expect(page.getByText(/base standard deduction before/i)).toBeVisible();
 
     // The standard deduction radio label should show the MFJ amount
     const standardRadioLabel = page.locator(".guided-option-card").filter({ hasText: /standard deduction/i });
@@ -338,10 +344,10 @@ test.describe("Credits section — layout and subsections", () => {
     await expect(page.getByText(/american opportunity credit/i).first()).toBeVisible();
 
     // No students by default — "Add a student" button should be visible
-    await expect(page.getByRole("button", { name: /add a student/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /add another student/i })).toBeVisible();
 
     // Add a student to see the card
-    await page.getByRole("button", { name: /add a student/i }).click();
+    await page.getByRole("button", { name: /add another student/i }).click();
     await expect(page.getByText(/student #1/i)).toBeVisible();
     await expect(page.getByText(/student name/i)).toBeVisible();
     await expect(page.getByText(/qualified tuition & expenses/i)).toBeVisible();
@@ -350,18 +356,14 @@ test.describe("Credits section — layout and subsections", () => {
 
   test("can add and remove education student cards", async ({ page }) => {
     // Add first student
-    await page.getByRole("button", { name: /add a student/i }).click();
+    await page.getByRole("button", { name: /add another student/i }).click();
     await expect(page.getByText(/student #1/i)).toBeVisible();
 
     // Add a second student
-    await page.getByRole("button", { name: /add a student/i }).click();
+    await page.getByRole("button", { name: /add another student/i }).click();
     await expect(page.getByText(/student #2/i)).toBeVisible();
 
-    // Each student card header has the Remove button next to the title
-    // Get all Remove buttons in the education section
-    const removeButtons = page.getByRole("button", { name: /^remove$/i });
-    // The second Remove button corresponds to Student #2
-    await removeButtons.nth(1).click();
+    await page.getByRole("button", { name: /^remove student #2/i }).click();
     await expect(page.getByText(/student #2/i)).not.toBeVisible();
 
     // Student #1 should still be present
@@ -408,7 +410,7 @@ test.describe("Credits — student card interactions", () => {
     await createReturn(page);
     await navigateToCredits(page);
     // Add the first student (starts with empty array)
-    await page.getByRole("button", { name: /add a student/i }).click();
+    await page.getByRole("button", { name: /add another student/i }).click();
     await expect(page.getByText(/student #1/i)).toBeVisible();
   });
 
@@ -444,10 +446,10 @@ test.describe("Credits — student card interactions", () => {
 
   test("adding multiple students shows correct numbering", async ({ page }) => {
     // Student #1 already added in beforeEach
-    await page.getByRole("button", { name: /add a student/i }).click();
+    await page.getByRole("button", { name: /add another student/i }).click();
     await expect(page.getByText(/student #2/i)).toBeVisible();
 
-    await page.getByRole("button", { name: /add a student/i }).click();
+    await page.getByRole("button", { name: /add another student/i }).click();
     await expect(page.getByText(/student #3/i)).toBeVisible();
 
     // All three should be visible
@@ -458,6 +460,22 @@ test.describe("Credits — student card interactions", () => {
 });
 
 test.describe("Credits — energy credit fields", () => {
+  test("the first credit edit survives repeated section transitions", async ({ page }) => {
+    await createReturn(page);
+    await navigateToCredits(page);
+    for (const amount of ["25000", "26000", "27000"]) {
+      await page.getByRole("button", { name: "Deductions", exact: true }).click();
+      await page.getByRole("button", { name: "Continue", exact: true }).click();
+      const input = page.getByRole("textbox", { name: /^Solar electric system/ });
+      await input.fill(amount);
+      await expect(input).toHaveValue(amount);
+      await input.blur();
+      await expect(input).toHaveValue(`${amount.slice(0, 2)},000`);
+    }
+    await page.reload();
+    await expect(page.getByRole("textbox", { name: /^Solar electric system/ })).toHaveValue("27,000");
+  });
+
   test("solar electric system field accepts and formats currency", async ({ page }) => {
     await createReturn(page);
     await navigateToCredits(page);

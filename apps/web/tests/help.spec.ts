@@ -7,7 +7,7 @@ test.describe("Help page", () => {
 
   test("help page renders hero section", async ({ page }) => {
     await expect(page.getByRole("heading", { name: /help center/i })).toBeVisible();
-    await expect(page.getByText(/everything you need to know about filing your taxes/i)).toBeVisible();
+    await expect(page.getByText(/using Viva La Tax as experimental tax software/i)).toBeVisible();
     await expect(page.getByRole("link", { name: /back to home/i })).toBeVisible();
   });
 
@@ -62,7 +62,7 @@ test.describe("Help page", () => {
     // Click to expand
     await faqItem.locator("summary").click();
     await expect(faqItem.locator("p.help-faq-answer")).toBeVisible();
-    await expect(faqItem.getByText(/may charge separately for hosted convenience/i)).toBeVisible();
+    await expect(faqItem.getByText(/paid hosted plans/i)).toBeVisible();
 
     // Click again to collapse
     await faqItem.locator("summary").click();
@@ -86,6 +86,17 @@ test.describe("Help page", () => {
   test("Need More Help section has correct external links", async ({ page }) => {
     await expect(page.getByRole("heading", { name: /need more help/i })).toBeVisible();
     await expect(page.getByText(/check the README for setup, contribution, and support guidance/i)).toBeVisible();
-    await expect(page.getByText(/contact the operator of the hosted deployment/i)).toBeVisible();
+    await expect(page.getByText(/contact your own deployment operator/i).first()).toBeVisible();
   });
+});
+
+
+test("support page distinguishes saving 2026 facts from qualified filing output", async ({ page }) => {
+  await page.goto("/support");
+  await expect(page.getByRole("heading", { name: "Year and scenario support" })).toBeVisible();
+  await expect(page.getByText(/no scenario is enabled for filing/i)).toBeVisible();
+  const federal2026 = page.getByRole("row").filter({ hasText: /2026Federal/ });
+  await expect(federal2026).toContainText("calculation and PDF unavailable");
+  await expect(federal2026).toContainText("Unavailable");
+  await expect(page.getByText(/review PDFs omit taxpayer IDs/i)).toBeVisible();
 });

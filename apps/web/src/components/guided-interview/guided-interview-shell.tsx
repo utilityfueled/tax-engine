@@ -1,5 +1,6 @@
 "use client";
 
+import Decimal from "decimal.js";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ReturnWorkspaceRecord } from "@tax-engine/contracts";
 import {
@@ -245,7 +246,7 @@ function SectionPlaceholder({
 
 function RefundTicker({
   guidedPreview,
-  workspace,
+  workspace: _workspace,
   progress,
 }: {
   guidedPreview: GuidedPreviewMetrics | null;
@@ -255,17 +256,18 @@ function RefundTicker({
   const [breakdownOpen, setBreakdownOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(true);
 
-  const workspacePreview = workspace.enginePreview;
-  const metrics = guidedPreview ?? (workspacePreview ? workspacePreview.metrics : null);
+  // A missing guided preview can mean missing facts, an unsupported year or a
+  // workspace-year mismatch. An older workspace estimate cannot satisfy that gate.
+  const metrics = guidedPreview;
   const hasMetrics = metrics !== null;
-  const refund = hasMetrics ? Number(metrics.refund) : 0;
-  const owed = hasMetrics ? Number(metrics.amountOwed) : 0;
+  const refund = new Decimal(hasMetrics ? metrics.refund : "0");
+  const owed = new Decimal(hasMetrics ? metrics.amountOwed : "0");
 
   // State metrics — only available from the guided preview, not the workspace engine preview
   const stateMetrics: StatePreviewMetrics | null = guidedPreview?.state ?? null;
-  const stateRefund = stateMetrics ? Number(stateMetrics.stateRefund) : 0;
-  const stateOwed = stateMetrics ? Number(stateMetrics.stateAmountOwed) : 0;
-  const stateRawAmount = stateRefund > 0 ? stateRefund : stateOwed > 0 ? stateOwed : 0;
+  const stateRefund = new Decimal(stateMetrics ? stateMetrics.stateRefund : "0");
+  const stateOwed = new Decimal(stateMetrics ? stateMetrics.stateAmountOwed : "0");
+  const stateRawAmount = stateRefund.gt(0) ? stateRefund : stateOwed.gt(0) ? stateOwed : 0;
 
   const hasBothFederalAndState = hasMetrics && stateMetrics !== null;
 
@@ -366,18 +368,18 @@ function RefundTicker({
           ) : (
             <>
               {hasBothFederalAndState && (
-                <div className={`guided-ticker-item guided-ticker-sub ${refund > 0 ? "guided-ticker-positive" : owed > 0 ? "guided-ticker-negative" : ""}`}>
+                <div className={`guided-ticker-item guided-ticker-sub ${refund.gt(0) ? "guided-ticker-positive" : owed.gt(0) ? "guided-ticker-negative" : ""}`}>
                   <span className="guided-ticker-label">Federal</span>
                   <strong className="guided-ticker-value">
-                    {refund > 0 ? "+" : owed > 0 ? "-" : ""}{formatTickerCurrency(refund > 0 ? metrics.refund : metrics.amountOwed)}
+                    {refund.gt(0) ? "+" : owed.gt(0) ? "-" : ""}{formatTickerCurrency(refund.gt(0) ? metrics.refund : metrics.amountOwed)}
                   </strong>
                 </div>
               )}
               {hasBothFederalAndState && stateMetrics && (
-                <div className={`guided-ticker-item guided-ticker-sub ${stateRefund > 0 ? "guided-ticker-positive" : stateOwed > 0 ? "guided-ticker-negative" : ""}`}>
+                <div className={`guided-ticker-item guided-ticker-sub ${stateRefund.gt(0) ? "guided-ticker-positive" : stateOwed.gt(0) ? "guided-ticker-negative" : ""}`}>
                   <span className="guided-ticker-label">{stateMetrics.stateCode}</span>
                   <strong className="guided-ticker-value">
-                    {stateRefund > 0 ? "+" : stateOwed > 0 ? "-" : ""}{formatAnimatedCurrency(animatedStateAmount)}
+                    {stateRefund.gt(0) ? "+" : stateOwed.gt(0) ? "-" : ""}{formatAnimatedCurrency(animatedStateAmount)}
                   </strong>
                 </div>
               )}
@@ -434,12 +436,12 @@ function RefundTicker({
                   <span className="guided-ticker-breakdown-label">State Withholding</span>
                   <span className="guided-ticker-breakdown-value">{formatTickerCurrency(stateMetrics.stateWithholding)}</span>
                 </div>
-                <div className={`guided-ticker-breakdown-row guided-ticker-breakdown-result ${stateRefund > 0 ? "guided-ticker-breakdown-refund" : stateOwed > 0 ? "guided-ticker-breakdown-owed" : ""}`}>
+                <div className={`guided-ticker-breakdown-row guided-ticker-breakdown-result ${stateRefund.gt(0) ? "guided-ticker-breakdown-refund" : stateOwed.gt(0) ? "guided-ticker-breakdown-owed" : ""}`}>
                   <span className="guided-ticker-breakdown-label">
-                    State {stateRefund > 0 ? "Refund" : stateOwed > 0 ? "Balance Due" : "Result"}
+                    State {stateRefund.gt(0) ? "Refund" : stateOwed.gt(0) ? "Balance Due" : "Result"}
                   </span>
                   <span className="guided-ticker-breakdown-value">
-                    {stateRefund > 0 ? formatTickerCurrency(stateMetrics.stateRefund) : stateOwed > 0 ? formatTickerCurrency(stateMetrics.stateAmountOwed) : "—"}
+                    {stateRefund.gt(0) ? formatTickerCurrency(stateMetrics.stateRefund) : stateOwed.gt(0) ? formatTickerCurrency(stateMetrics.stateAmountOwed) : "—"}
                   </span>
                 </div>
               </>
@@ -694,7 +696,6 @@ function InterviewPhase({
   const progress = computeFlowProgress(state);
   const currentSection = progress.currentSection;
   const sectionRef = useRef<HTMLDivElement>(null);
-  const [sectionKey, setSectionKey] = useState(0);
   const prevSectionIndex = useRef(state.currentSectionIndex);
   const [skipPromptOpen, setSkipPromptOpen] = useState(false);
   const skipPrompt = skipPromptOpen ? shouldPromptBeforeAdvance(state) : null;
@@ -746,7 +747,6 @@ function InterviewPhase({
   useEffect(() => {
     if (prevSectionIndex.current !== state.currentSectionIndex) {
       prevSectionIndex.current = state.currentSectionIndex;
-      setSectionKey((k) => k + 1);
       setSkipPromptOpen(false);
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
@@ -810,7 +810,7 @@ function InterviewPhase({
 
       <RefundTicker guidedPreview={guidedPreview} workspace={workspace} progress={progress} />
 
-      <div key={sectionKey} className="guided-section-transition">
+      <div key={currentSection?.id} className="guided-section-transition">
         {currentSection ? (
           <SectionContent
             sectionId={currentSection.id as InterviewSectionId}
@@ -952,7 +952,7 @@ function CompletionScreen({
 
 function CompletionSummaryContent({
   guidedPreview,
-  workspace,
+  workspace: _workspace,
   requiresFollowUp,
   followUpSections,
   completion,
@@ -963,14 +963,14 @@ function CompletionSummaryContent({
   followUpSections: number;
   completion: FlowCompletionSummary;
 }) {
-  const metrics = guidedPreview ?? workspace.enginePreview?.metrics ?? null;
+  const metrics = guidedPreview;
   const hasMetrics = metrics !== null;
-  const refund = hasMetrics ? Number(metrics.refund) : 0;
-  const owed = hasMetrics ? Number(metrics.amountOwed) : 0;
+  const refund = new Decimal(hasMetrics ? metrics.refund : "0");
+  const owed = new Decimal(hasMetrics ? metrics.amountOwed : "0");
   const stateMetrics: StatePreviewMetrics | null = guidedPreview?.state ?? null;
-  const stateRefund = stateMetrics ? Number(stateMetrics.stateRefund) : 0;
-  const stateOwed = stateMetrics ? Number(stateMetrics.stateAmountOwed) : 0;
-  const netResult = (refund - owed) + (stateRefund - stateOwed);
+  const stateRefund = new Decimal(stateMetrics ? stateMetrics.stateRefund : "0");
+  const stateOwed = new Decimal(stateMetrics ? stateMetrics.stateAmountOwed : "0");
+  const netResult = refund.minus(owed).plus(stateRefund).minus(stateOwed);
 
   return (
     <>
@@ -987,36 +987,36 @@ function CompletionSummaryContent({
       <RetroShell title="Summary" eyebrow="REVIEW">
         <div className="guided-ticker-grid">
           {hasMetrics && (
-            <div className={`guided-ticker-item guided-ticker-item-hero ${stateMetrics ? (netResult > 0 ? "guided-ticker-positive" : netResult < 0 ? "guided-ticker-negative" : "") : (refund > 0 ? "guided-ticker-positive" : owed > 0 ? "guided-ticker-negative" : "")}`}>
+            <div className={`guided-ticker-item guided-ticker-item-hero ${stateMetrics ? (netResult.gt(0) ? "guided-ticker-positive" : netResult.lt(0) ? "guided-ticker-negative" : "") : (refund.gt(0) ? "guided-ticker-positive" : owed.gt(0) ? "guided-ticker-negative" : "")}`}>
               <span className="guided-ticker-label">
                 {stateMetrics
-                  ? netResult > 0 ? "Total Refund" : netResult < 0 ? "Total Balance Due" : "Result"
-                  : refund > 0 ? "Your Refund" : owed > 0 ? "Balance Due" : "Result"}
+                  ? netResult.gt(0) ? "Total Refund" : netResult.lt(0) ? "Total Balance Due" : "Result"
+                  : refund.gt(0) ? "Your Refund" : owed.gt(0) ? "Balance Due" : "Result"}
               </span>
               <strong className="guided-ticker-value guided-ticker-value-hero">
                 {stateMetrics
-                  ? formatTickerCurrency(String(Math.abs(netResult)))
-                  : refund > 0
+                  ? formatTickerCurrency(netResult.abs().toFixed())
+                  : refund.gt(0)
                     ? formatTickerCurrency(metrics.refund)
-                    : owed > 0
+                    : owed.gt(0)
                       ? formatTickerCurrency(metrics.amountOwed)
                       : "—"}
               </strong>
             </div>
           )}
           {hasMetrics && stateMetrics && (
-            <div className={`guided-ticker-item guided-ticker-sub ${refund > 0 ? "guided-ticker-positive" : owed > 0 ? "guided-ticker-negative" : ""}`}>
+            <div className={`guided-ticker-item guided-ticker-sub ${refund.gt(0) ? "guided-ticker-positive" : owed.gt(0) ? "guided-ticker-negative" : ""}`}>
               <span className="guided-ticker-label">Federal</span>
               <strong className="guided-ticker-value">
-                {refund > 0 ? formatTickerCurrency(metrics.refund) : owed > 0 ? formatTickerCurrency(metrics.amountOwed) : "—"}
+                {refund.gt(0) ? formatTickerCurrency(metrics.refund) : owed.gt(0) ? formatTickerCurrency(metrics.amountOwed) : "—"}
               </strong>
             </div>
           )}
           {hasMetrics && stateMetrics && (
-            <div className={`guided-ticker-item guided-ticker-sub ${stateRefund > 0 ? "guided-ticker-positive" : stateOwed > 0 ? "guided-ticker-negative" : ""}`}>
+            <div className={`guided-ticker-item guided-ticker-sub ${stateRefund.gt(0) ? "guided-ticker-positive" : stateOwed.gt(0) ? "guided-ticker-negative" : ""}`}>
               <span className="guided-ticker-label">{stateMetrics.stateCode}</span>
               <strong className="guided-ticker-value">
-                {stateRefund > 0 ? formatTickerCurrency(stateMetrics.stateRefund) : stateOwed > 0 ? formatTickerCurrency(stateMetrics.stateAmountOwed) : "—"}
+                {stateRefund.gt(0) ? formatTickerCurrency(stateMetrics.stateRefund) : stateOwed.gt(0) ? formatTickerCurrency(stateMetrics.stateAmountOwed) : "—"}
               </strong>
             </div>
           )}

@@ -1,0 +1,39 @@
+import { expect, type Page } from "@playwright/test";
+
+/** Navigate the optional document step through the same controls as a user. */
+export async function reachFilingStatus(page: Page) {
+  await expect(page.getByRole("heading", { name: /let's tailor your return/i })).toBeVisible();
+  if (await page.getByRole("heading", { name: /^upload documents$/i }).isVisible()) {
+    await page.locator(".guided-segmentation .guided-nav").getByRole("button", { name: "Continue", exact: true }).click();
+  }
+  await expect(page.getByText(/what's your filing status/i)).toBeVisible();
+}
+
+/** Explicit fictional facts for browser calculation fixtures, never app defaults. */
+export async function fillRequiredTaxpayerFacts(page: Page) {
+  await page.getByRole("combobox", { name: "Tax year for this interview", exact: true }).selectOption("2025");
+  await page.getByLabel("First name", { exact: true }).fill("Jane");
+  await page.getByLabel("Last name", { exact: true }).fill("Example");
+  await page.getByRole("textbox", { name: /^Social Security number/ }).fill("900-70-0001");
+  await page.getByLabel("Your date of birth", { exact: true }).fill("1990-06-15");
+  await page.getByLabel("Months of U.S. residency", { exact: true }).fill("12");
+  await page.getByRole("combobox", { name: "State residency", exact: true }).selectOption("full-year");
+  await page.getByLabel("Address line 1", { exact: true }).fill("123 Example St");
+  await page.getByLabel("City", { exact: true }).fill("Austin");
+  await page.getByLabel("State", { exact: true }).fill("TX");
+  await page.getByLabel("ZIP", { exact: true }).fill("78701");
+  if (await page.getByLabel("Spouse first name", { exact: true }).isVisible()) {
+    await page.getByLabel("Spouse first name", { exact: true }).fill("Alex");
+    await page.getByLabel("Spouse last name", { exact: true }).fill("Example");
+    await page.getByLabel("Spouse taxpayer ID", { exact: true }).fill("900-70-0002");
+    await page.getByLabel("Spouse date of birth", { exact: true }).fill("1989-03-20");
+    await page.getByLabel("Spouse months of U.S. residency", { exact: true }).fill("12");
+    await page.getByRole("combobox", { name: "Did you live with your spouse at any time during the year?", exact: true }).selectOption("true");
+  }
+}
+
+export const taxpayerFacts2025 = {
+  firstName: "Jane", lastName: "Example", ssn: "900-70-0001", dateOfBirth: "1990-06-15",
+  usResidencyMonths: "12", stateResidency: "full-year", addressLine1: "123 Example St",
+  addressLine2: "", city: "Austin", state: "TX", zip: "78701", dependentCount: "0", dependents: [],
+} as const;

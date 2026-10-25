@@ -2502,7 +2502,10 @@ describe("shouldPromptBeforeAdvance", () => {
     expect(result?.status).toBe("partial");
   });
 
-  it("requires confirming sample W-2 values before advancing", () => {
+  it.each([
+    { sourceLabel: "2026 Form W-2 (official info-copy PDF)", sourceType: undefined },
+    { sourceLabel: "2025 Form W-2", sourceType: "official-fixture" },
+  ])("requires confirming sample W-2 values before advancing: $sourceLabel", (source) => {
     let state = startInterview({ filingStatus: "single", incomeTypes: ["w2-wages"], lifeEvents: [], stateCode: null });
     state = updateSectionData(state, "personal-info", {
       ...emptyPersonalInfo,
@@ -2520,19 +2523,19 @@ describe("shouldPromptBeforeAdvance", () => {
           federalWithheld: "5000",
           aiSuggestedFields: {
             employerName: {
-              sourceLabel: "2026 Form W-2 (official info-copy PDF)",
+              ...source,
               status: "pending-confirmation",
             },
             employerEin: {
-              sourceLabel: "2026 Form W-2 (official info-copy PDF)",
+              ...source,
               status: "pending-confirmation",
             },
             wages: {
-              sourceLabel: "2026 Form W-2 (official info-copy PDF)",
+              ...source,
               status: "pending-confirmation",
             },
             federalWithheld: {
-              sourceLabel: "2026 Form W-2 (official info-copy PDF)",
+              ...source,
               status: "pending-confirmation",
             },
           },

@@ -1,3 +1,4 @@
+import { fillRequiredTaxpayerFacts, reachFilingStatus, taxpayerFacts2025 } from "./guided-fixtures";
 import { copyFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -21,14 +22,17 @@ function getWorkspaceIdFromUrl(url: string) {
 test.describe("Guided interview flow", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/returns/new");
-    await expect(page).toHaveURL(/\/returns\/[a-z0-9-]+(?:\?create=1)?$/i);
+    await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+(?:\?create=1)?$/i);
   });
 
-  test("segmentation screen renders with all four steps", async ({ page }) => {
+  test("segmentation screen renders with all five steps", async ({ page }) => {
     // The guided interview shell should show the segmentation screen
     await expect(page.getByText(/let's tailor your return/i)).toBeVisible();
     await expect(page.getByText(/filing status/i).first()).toBeVisible();
-    await expect(page.getByText(/step 1 of 4/i)).toBeVisible();
+    await expect(page.getByText("STEP 1 OF 5", { exact: true })).toBeVisible();
+
+    await expect(page.getByText("Upload your tax documents.", { exact: true })).toBeVisible();
+    await reachFilingStatus(page);
 
     // Filing status options should be present
     await expect(page.getByText("Single")).toBeVisible();
@@ -40,10 +44,12 @@ test.describe("Guided interview flow", () => {
     await expect(page.getByText(/let's tailor your return/i)).toBeVisible();
 
     // Continue button should be disabled when no filing status is selected
+    await reachFilingStatus(page);
     const continueBtn = page.getByRole("button", { name: "Continue" });
     await expect(continueBtn).toBeDisabled();
 
     // Selecting a filing status should enable Continue without auto-advancing
+    await reachFilingStatus(page);
     await page.getByRole("radio", { name: /single/i }).click();
     await expect(continueBtn).toBeEnabled();
     await expect(page.getByText(/what's your filing status/i)).toBeVisible();
@@ -53,6 +59,8 @@ test.describe("Guided interview flow", () => {
   test("mobile setup keeps the help launcher out of the filing-status choices", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await expect(page.getByRole("heading", { name: /let's tailor your return/i })).toBeVisible();
+
+    await reachFilingStatus(page);
 
     const helpButton = page.getByRole("button", { name: /need help\?/i });
     const firstChoice = page.locator(".guided-option-card").first();
@@ -110,18 +118,22 @@ test.describe("Guided interview flow", () => {
               aiSuggestedFields: {
                 employerName: {
                   sourceLabel: "2026 Form W-2 (official info-copy PDF)",
+                  sourceType: "official-fixture",
                   status: "pending-confirmation",
                 },
                 employerEin: {
                   sourceLabel: "2026 Form W-2 (official info-copy PDF)",
+                  sourceType: "official-fixture",
                   status: "pending-confirmation",
                 },
                 wages: {
                   sourceLabel: "2026 Form W-2 (official info-copy PDF)",
+                  sourceType: "official-fixture",
                   status: "pending-confirmation",
                 },
                 federalWithheld: {
                   sourceLabel: "2026 Form W-2 (official info-copy PDF)",
+                  sourceType: "official-fixture",
                   status: "pending-confirmation",
                 },
               },
@@ -135,7 +147,8 @@ test.describe("Guided interview flow", () => {
     await page.reload();
 
     await expect(page.getByText(/sample values from 2026 form w-2 \(official info-copy pdf\)\./i).first()).toBeVisible();
-    await expect(page.getByRole("button", { name: /review w-2 suggestions/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /no w-2 suggestions yet/i })).toBeDisabled();
+    await expect(page.getByRole("button", { name: /confirm value/i })).toHaveCount(4);
   });
 
   test("confirmed sample W-2 values dismiss the blocking review prompt", async ({ page }) => {
@@ -157,6 +170,7 @@ test.describe("Guided interview flow", () => {
   });
 
   test("new returns do not inherit guided progress from a different return", async ({ page }) => {
+    await reachFilingStatus(page);
     await page.getByRole("radio", { name: /single/i }).click();
     await page.getByRole("button", { name: "Continue" }).click();
     await expect(page.getByText(/what types of income/i)).toBeVisible();
@@ -172,17 +186,18 @@ test.describe("Guided interview flow", () => {
     const secondWorkspaceId = getWorkspaceIdFromUrl(page.url());
     expect(secondWorkspaceId).not.toBe(firstWorkspaceId);
     await expect(page.getByRole("heading", { name: /let's tailor your return/i })).toBeVisible();
-    await expect(page.getByText(/step 1 of 4/i)).toBeVisible();
+    await expect(page.getByText("STEP 1 OF 5", { exact: true })).toBeVisible();
     await expect(page.getByRole("heading", { name: /about you/i })).toHaveCount(0);
 
     await page.goto(`/returns/${firstWorkspaceId}`);
     await expect(page.getByRole("heading", { name: /about you/i })).toBeVisible();
   });
 
-  test("full segmentation flow advances through all four steps", async ({ page }) => {
+  test("full segmentation flow advances through all five steps", async ({ page }) => {
     await expect(page.getByText(/let's tailor your return/i)).toBeVisible();
 
     // Step 1: Filing status — select Single
+    await reachFilingStatus(page);
     await page.getByRole("radio", { name: /single/i }).click();
     await page.getByRole("button", { name: "Continue" }).click();
     await expect(page.getByText(/what types of income/i)).toBeVisible();
@@ -206,6 +221,7 @@ test.describe("Guided interview flow", () => {
   });
 
   test("w-2 labels render punctuation instead of escaped unicode sequences", async ({ page }) => {
+    await reachFilingStatus(page);
     await page.getByRole("radio", { name: /single/i }).click();
     await page.getByRole("button", { name: "Continue" }).click();
     await page.getByRole("checkbox", { name: /w-2 wages/i }).check();
@@ -236,6 +252,7 @@ test.describe("Guided interview flow", () => {
   test("mobile onboarding uses a compact state picker and still routes to a state return", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
 
+    await reachFilingStatus(page);
     await page.getByRole("radio", { name: /single/i }).click();
     await page.getByRole("button", { name: "Continue" }).click();
     await page.getByRole("checkbox", { name: /w-2 wages/i }).check();
@@ -313,6 +330,7 @@ test.describe("Guided interview flow", () => {
     await page.getByRole("button", { name: /start your tax return/i }).click();
     await expect(page.getByText(/let's tailor your return/i)).toBeVisible();
 
+    await reachFilingStatus(page);
     await page.getByRole("radio", { name: /single/i }).click();
     await page.getByRole("button", { name: "Continue" }).click();
     await expect(page.getByText(/what types of income/i)).toBeVisible();
@@ -348,7 +366,7 @@ test.describe("Guided interview flow", () => {
 
     // SSN field
     await expect(page.getByRole("textbox", { name: /social security/i })).toBeVisible();
-    await expect(page.getByText(/never sent to any server/i)).toBeVisible();
+    await expect(page.getByText(/review downloads omit it/i)).toBeVisible();
   });
 
   test("W-2 section allows entering wages and shows refund ticker", async ({ page }) => {
@@ -356,6 +374,7 @@ test.describe("Guided interview flow", () => {
     await completeSegmentation(page);
 
     // Navigate past personal info
+    await fillRequiredTaxpayerFacts(page);
     await page.getByRole("textbox", { name: /first name/i }).fill("Jane");
     await page.getByRole("textbox", { name: /last name/i }).fill("Doe");
     await page.getByRole("button", { name: "Continue" }).click();
@@ -378,7 +397,7 @@ test.describe("Guided interview flow", () => {
     await page.getByRole("button", { name: /skip this section/i }).click();
     await expect(page.getByText(/w-2 #1/i)).toBeVisible();
 
-    const w2Path = testInfo.outputPath("fw2.pdf");
+    const w2Path = testInfo.outputPath("fw2--2026.pdf");
     await copyFile(path.join(sampleDocsDir, "irs-w2-2026.pdf"), w2Path);
 
     const fileChooserPromise = page.waitForEvent("filechooser");
@@ -472,6 +491,7 @@ test.describe("Guided interview flow", () => {
   test("dependent care expenses do not change the estimate until a qualifying count is chosen", async ({ page }) => {
     await completeSegmentation(page);
 
+    await fillRequiredTaxpayerFacts(page);
     await page.getByRole("textbox", { name: /first name/i }).fill("Jane");
     await page.getByRole("textbox", { name: /last name/i }).fill("Doe");
     await page.getByRole("textbox", { name: /social security/i }).fill("123-45-6789");
@@ -491,13 +511,14 @@ test.describe("Guided interview flow", () => {
     const heroValue = ticker.locator(".guided-ticker-item-hero .guided-ticker-value-hero");
     const qualifyingIndividuals = page.getByRole("combobox", { name: /qualifying individuals/i });
 
-    await expect(heroValue).toHaveText("$1,038");
+    // 2025 single taxable wages: $50,000 - $15,750. Tax-table tax $3,872; withholding $5,000.
+    await expect(heroValue).toHaveText("$1,128");
     await expect(qualifyingIndividuals).toHaveValue("");
 
     await page.getByRole("textbox", { name: /total care expenses paid/i }).fill("3000");
 
     await expect(page.getByText(/choose how many qualifying people received care before we estimate this credit/i)).toBeVisible();
-    await expect(heroValue).toHaveText("$1,038");
+    await expect(heroValue).toHaveText("$1,128");
   });
 
   test("navigation: back button returns to previous section", async ({ page }) => {
@@ -511,6 +532,7 @@ test.describe("Guided interview flow", () => {
     await expect(backBtn).toBeDisabled();
 
     // Fill personal info and advance
+    await fillRequiredTaxpayerFacts(page);
     await page.getByRole("textbox", { name: /first name/i }).fill("Jane");
     await page.getByRole("textbox", { name: /last name/i }).fill("Doe");
     await page.getByRole("button", { name: "Continue" }).click();
@@ -561,6 +583,7 @@ test.describe("Guided interview flow", () => {
     await page.goto("/returns/new");
     await completeSegmentation(page);
 
+    await fillRequiredTaxpayerFacts(page);
     await page.getByRole("textbox", { name: /first name/i }).fill("Jane");
     await page.getByRole("textbox", { name: /last name/i }).fill("Doe");
     await page.getByRole("button", { name: "Continue" }).click();
@@ -577,12 +600,12 @@ test.describe("Guided interview flow", () => {
     await expect(page.getByText(/ready to resume at w-2 wages/i).first()).toBeVisible();
   });
 
-  test("completed guided W-2 flow keeps skipped sections visible in the advanced workspace", async ({ page }) => {
+  test("completed guided W-2 flow preserves its estimate and review-only output in the advanced workspace", async ({ page }) => {
     await page.evaluate(() => {
       window.localStorage.clear();
     });
     await page.goto("/returns/new");
-    await expect(page).toHaveURL(/\/returns\/[a-z0-9-]+(?:\?create=1)?$/i);
+    await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+(?:\?create=1)?$/i);
 
     await completeSegmentation(page);
     await page.getByRole("button", { name: /switch to advanced mode/i }).click();
@@ -591,6 +614,7 @@ test.describe("Guided interview flow", () => {
     await expect(page.getByText(/1 irs sample document loaded/i)).toBeVisible();
 
     await page.getByRole("button", { name: /get step-by-step help/i }).click();
+    await fillRequiredTaxpayerFacts(page);
     await page.getByRole("textbox", { name: /first name/i }).fill("Jane");
     await page.getByRole("textbox", { name: /last name/i }).fill("Doe");
     await page.getByRole("textbox", { name: /social security/i }).fill("123-45-6789");
@@ -608,7 +632,7 @@ test.describe("Guided interview flow", () => {
     await page.getByRole("button", { name: "Continue" }).click();
     await page.getByRole("button", { name: "Continue" }).click();
     await page.getByRole("button", { name: /skip this section/i }).click();
-    await page.getByRole("button", { name: /finish review/i }).click();
+    await page.getByRole("button", { name: /^continue$/i }).click();
     await page.getByRole("button", { name: /open full return/i }).click();
 
     const ticker = page.locator("section.panel").filter({
@@ -618,21 +642,19 @@ test.describe("Guided interview flow", () => {
     await expect(page.getByText(/preparing your estimate/i)).toHaveCount(0);
     await expect(page.getByText(/waiting on data/i)).toHaveCount(0);
     await expect(page.getByText(/upload or answer/i)).toHaveCount(0);
-    await expect(page.getByText(/questions remaining/i).first()).toBeVisible();
-    await expect(page.getByText(/1 guided section still needs review/i).first()).toBeVisible();
+    await expect(page.getByText(/status: ready to review/i)).toBeVisible();
     await expect(page.getByText(/1 upload \+ guided answers synced/i)).toBeVisible();
     await expect(page.getByText(/guided answers synced from the interview/i)).toBeVisible();
-    await expect(
-      page.getByText(/1 section was skipped or still needs review before this return is ready\./i).first()
-    ).toBeVisible();
     await expect(page.getByRole("button", { name: /download completed return/i })).toHaveCount(0);
-    await expect(page.getByRole("heading", { name: /draft return packet/i })).toBeVisible();
-    await expect(page.getByRole("button", { name: /download draft return packet/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /^return bundle$/i })).toBeVisible();
+    await expect(page.getByText(/filing exports are not yet qualified/i)).toBeVisible();
     await expect(ticker.getByText("Estimated Refund", { exact: true })).toBeVisible();
-    await expect(ticker.locator(".guided-ticker-item-hero .guided-ticker-value-hero")).toHaveText("$798");
+    await expect(ticker.locator(".guided-ticker-item-hero .guided-ticker-value-hero")).toHaveText("$888");
     await expect(ticker.getByText("Single", { exact: true })).toBeVisible();
     await expect(ticker.getByText("2025", { exact: true })).toBeVisible();
 
+    await page.getByRole("region", { name: "Your Documents", exact: true })
+      .getByRole("button", { name: "Expand", exact: true }).click();
     const guidedDocument = page.getByRole("listitem").filter({
       has: page.getByText("W-2 (guided interview)", { exact: true })
     });
@@ -645,6 +667,7 @@ test.describe("Guided interview flow", () => {
     await expect(page.getByText(/let's tailor your return/i)).toBeVisible();
 
     // Select filing status
+    await reachFilingStatus(page);
     await page.getByRole("radio", { name: /single/i }).click();
     await page.getByRole("button", { name: "Continue" }).click();
     await expect(page.getByText(/what types of income/i)).toBeVisible();
@@ -681,8 +704,8 @@ test.describe("Guided interview flow", () => {
 
     await expect(page.getByRole("heading", { name: /some guided sections still need review/i })).toBeVisible();
     await expect(page.getByText(/your return is ready to review/i)).toHaveCount(0);
-    await expect(page.locator(".guided-ticker-item").filter({ hasText: /sections complete/i })).toContainText("4");
-    await expect(page.locator(".guided-ticker-item").filter({ hasText: /sections skipped/i })).toContainText("2");
+    await expect(page.locator(".guided-ticker-item").filter({ hasText: /sections complete/i })).toContainText("5");
+    await expect(page.locator(".guided-ticker-item").filter({ hasText: /sections skipped/i })).toContainText("1");
   });
 
   test("full return copy separates guided review from unanswered document questions", async ({ page }) => {
@@ -699,10 +722,10 @@ test.describe("Guided interview flow", () => {
       has: page.getByRole("heading", { name: /^checklist$/i }),
     });
 
-    await expect(page.getByText(/2 guided sections still need review/i).first()).toBeVisible();
+    await expect(page.getByText(/1 guided section still needs review/i).first()).toBeVisible();
     await expect(page.getByText(/status: needs review/i)).toBeVisible();
     await expect(questionsPanel.getByText(/all current document questions answered/i)).toBeVisible();
-    await expect(questionsPanel.getByText(/your guided interview answers are synced, but 2 sections were skipped or still need review before this return is ready\./i)).toBeVisible();
+    await expect(questionsPanel.getByText(/your guided interview answers are synced, but 1 section was skipped or still needs review before this return is ready\./i)).toBeVisible();
     await expect(checklistPanel.getByText(/review guided sections/i)).toBeVisible();
     await expect(checklistPanel.getByText(/answer missing questions/i)).toHaveCount(0);
   });
@@ -752,6 +775,7 @@ async function completeSegmentation(page: import("@playwright/test").Page) {
   await expect(page.getByText(/let's tailor your return/i)).toBeVisible();
 
   // Step 1: Single
+  await reachFilingStatus(page);
   await page.getByRole("radio", { name: /single/i }).click();
   await page.getByRole("button", { name: "Continue" }).click();
   await expect(page.getByText(/what types of income/i)).toBeVisible();
@@ -786,6 +810,7 @@ async function seedPendingGuidedW2State(
     workspaceId,
     state: {
       phase: "interview",
+      taxYear: 2025,
       segmentation: {
         filingStatus: "single",
         incomeTypes: ["w2-wages"],
@@ -795,6 +820,7 @@ async function seedPendingGuidedW2State(
       currentSectionIndex: 1,
       completedSections: ["personal-info"],
       sectionData: {
+        "personal-info": taxpayerFacts2025,
         "income-w2": {
           entries: [
             {
@@ -810,19 +836,23 @@ async function seedPendingGuidedW2State(
               stateWithheld: "",
               aiSuggestedFields: {
                 employerName: {
-                  sourceLabel: "2026 Form W-2 (official info-copy PDF)",
+                  sourceLabel: "2025 Form W-2 (official info-copy PDF)",
+                  sourceType: "official-fixture",
                   status: "pending-confirmation",
                 },
                 employerEin: {
-                  sourceLabel: "2026 Form W-2 (official info-copy PDF)",
+                  sourceLabel: "2025 Form W-2 (official info-copy PDF)",
+                  sourceType: "official-fixture",
                   status: "pending-confirmation",
                 },
                 wages: {
-                  sourceLabel: "2026 Form W-2 (official info-copy PDF)",
+                  sourceLabel: "2025 Form W-2 (official info-copy PDF)",
+                  sourceType: "official-fixture",
                   status: "pending-confirmation",
                 },
                 federalWithheld: {
-                  sourceLabel: "2026 Form W-2 (official info-copy PDF)",
+                  sourceLabel: "2025 Form W-2 (official info-copy PDF)",
+                  sourceType: "official-fixture",
                   status: "pending-confirmation",
                 },
               },
