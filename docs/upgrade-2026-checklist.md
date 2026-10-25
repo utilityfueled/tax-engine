@@ -7,10 +7,52 @@ complete a checkbox.
 
 ## Current integration — 2026-10-25
 
-`7441a20` is the latest integration (push accompanies this record) on `upgrade/2026-baseline`. The goal remains active and the
+`13cb428` is the latest pushed integration on `upgrade/2026-baseline`. The goal remains active and the
 upgrade is **not release-ready**. Unanswered external inputs are listed below;
 internal implementation and review continue in parallel.
 
+- `13cb428`: saved guided progress and final-review exit. Tree cf15c75b passes
+  246 unit cases in 4 files, web types/build, 4,229 spec refs, lint 0 errors,
+  and all 38 cases in both affected browser suites. Independent agent review
+  passes 210 adjacent cases. All five remote Web regressions reproduced first;
+  actual readiness and source-year gates remain intact. See
+  `upgrade-2026-browser-progress-work.md`.
+- `65241a1`: ordinary aggregate state-source foreign deduction allocation.
+  Tree 194447c9 passes 752 tests in 73 files, root/web types, 4,235 spec refs
+  and lint 0 errors. Independent 6-case review and reopened/rendered 3-page
+  reference pass. Actual no-tax/exempt jurisdictions and history are required.
+- `2cfe47c`: preserve general and estate NOL carry sources and omitted-versus-zero
+  selection. Tree aa48d9bf passes 541 tests in 5 files, root types, 4,227 spec refs
+  and lint 0 errors. Independent 3-case review passes. Actual vintage limits
+  and modified-income absorption remain a separate uncommitted implementation.
+- `731c6f7`: reconcile raw foreign-income cents before display rounding. Prior
+  source tree passes 577 tests in 10 files; final tree 23912aa3 passes 6 focused
+  calculation/metadata cases, root types and 4,224 spec refs. Versions now advance
+  through 2025.54 / 2026.50 with the NOL prerequisite; filing gates stay closed.
+- `bd83a40`: Form8814 rounded ratios and signed line12/NIIT/4952 transfers.
+  Exact tree7a333580 passes584tests in10files plus3rule-pack checks, root types,
+  4217spec refs and lint0errors/1existingwarning. Independent agent4case review
+  and reopened/rendered negative-remainder reference PDF pass. See
+  `upgrade-2026-child-rounding-work.md`.
+- `d6ef0e0`: actual8949A/B/D/E columns and ScheduleD4/5/6/11/12/14subtotals,
+  printed decision flow and unknownQOF answer. Tree52b0b201 passes1320tests in
+  124files, root types/4217refs/lint0errors. Four rendered pages, reopened fields
+  and widget appearances pass. See`upgrade-2026-schedule-d-mapping-work.md`.
+- `8bbeef2`: bounded saved-file PDF inspection replaces an observed stdin-EOF
+  stall. All8existing Marketplace PDF cases pass with assertions preserved.
+- `4c7152c`: ordinary rental allowance precedes the remaining Pub974 ordered
+  deductions, with ordinary recomputation after final ineligibility. Exact
+  treea33c5b9e passes779tests in24files plus3metadata cases, root types/4213refs.
+  Parent independently passes8literal source cases; lint0errors/4existingwarnings.
+- `085a0bf`: compare actual state taxable income with taxable US residual before
+  state deduction. Tree291c016f passes576tests/15files, root/web types/4205refs,
+  lint0errors; independent8case review and saved2page PDF pass. The earlier
+  charity fixture in3598c47 is superseded: coherent state70000/foreign15000
+  source now yields country1029/257, limit3590, absorption2990, remaining1010.
+  Unsupported state/federal differences reject; aggregate-state work continues.
+- `0e68dc0`: actual2555owner/year/original source binding. Treea7583ad8 passes
+  574tests/9files, root types/4202refs/lint0errors; independent8case review passes.
+  The rounding correction is now731c6f7; guided intake remains active.
 - `7441a20`: ordinary passive losses are limited before Social Security, IRA
   and savings-bond worksheets. Tree779fc74a passes788tests in11files, root types
   and4,194spec references. Parent independently verifies four income/allowance
@@ -24,7 +66,8 @@ internal implementation and review continue in parallel.
 - `3598c47`: actual single-state/country foreign carryover deduction allocation.
   Tree71334841 passes737tests in69files, root/web types and4,184spec references;
   independent review passes24source cases plus the canonical saved-PDF case.
-  Actual country amounts800/200 yield3632limit,3032absorption and968remaining.
+  Its original charity comparator and3632/3032/968artifact are superseded by
+  085a0bfabove; those historical values must not be used as current evidence.
   Multi-state/nonoverlap methods remain internal work.
 - `65336f7`: original suspended QBI vintage and SSTB/loss ordering corrections.
   Treeb5e2bd30 passes1,050tests in19files, root types and4,177spec references;

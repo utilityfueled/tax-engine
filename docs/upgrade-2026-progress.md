@@ -2,26 +2,29 @@
 
 ## Current checkpoint
 
-Execution remains active and **not release-ready**. Latest recorded
-integration is `7441a20` (push accompanies this record) on `upgrade/2026-baseline`. Resume from
+Execution remains active and **not release-ready**. Latest recorded pushed
+integration is `13cb428` on `upgrade/2026-baseline`. Resume from
 [the durable checklist](upgrade-2026-checklist.md) and `ongoingExecution` in the
-machine checkpoint; older evidence below is scoped to its recorded code.
+machine checkpoint; older evidence below applies only to its recorded code.
 
-New packages cover child investment/Alaska character and capital netting, passive
-QBI vintages and SSTB ordering, actual2210/8801intake, foreign deduction-year
-carryovers and actual state/country allocation. The child package's isolated tree
-67523f93 passes17,326tests in797files, all three typechecks and4,184spec references.
-Independent agent review and saved/rendered review-PDF checks pass. The complete
-current tree still needs final coverage, inventory, all builds and browser gates.
+Recent separate packages cover Form2555 source binding and rounding, foreign
+single/aggregate state allocation, passive-first Marketplace ordering,
+ScheduleD physical mapping, Form8814 signed transfers, and preservation of old
+NOL balances. Exact trees, source references and bounded reviews are in their
+package ledgers and the checklist. Actual NOL vintage and modified-income
+methods are still under source review and are not enabled by that prerequisite.
 
-Remote0f408af CI40210148315/Web40210148259 were observed running. Prior runs were
-cancelled by subsequent pushes. The14PA failures on remote b3f0362 were corrected
-in60d61d3 and focused tests pass; no final remote green result is claimed.
+The five failures from remote Web run40210512815 were reproduced and fixed in
+13cb428. Both affected browser suites pass38cases on immutable treecf15c75b,
+including mobile saved returns and review-only W2 output;246unit and210agent
+review cases also pass. See`upgrade-2026-browser-progress-work.md`. This is
+local synthetic evidence; current full remote CI remains unverified.
 
-Immediate internal work includes ScheduleD18/19and PDF source routing, child4952
-binding and intake, passive/Marketplace/NOL methods,2555source facts/intake and
-foreign multi-state allocation. Final native release images, scans and recovery
-rehearsal remain required. The earlier passing coverage86.59%is historical.
+Immediate internal work includes ScheduleD18/19 netting and source binding,
+actual section1202 history, child4952 sources, remaining Marketplace/NOL methods,
+2555 intake/QOF facts and additional ordinary foreign-tax methods. Final coverage,
+inventory, all builds/browser gates, native release images, scans and recovery
+rehearsal remain required. Earlier17,326tests and86.59%coverage are historical.
 
 Staging credentials/authorization, synthetic provider budget/account access,
 independent human reviewers, launch-state demand and final forms remain external

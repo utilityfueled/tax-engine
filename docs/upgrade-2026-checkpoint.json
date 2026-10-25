@@ -204,7 +204,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "7441a20",
+    "lastRecordedCommit": "13cb428",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -490,15 +490,15 @@
       "final multi-platform release images"
     ],
     "workInProgress": [
-      "ScheduleD actual subtotals/PDF and18/19special-gain netting",
-      "Child4952source binding, positivecharacter intake, foreigndisclosures and ratioprecision",
-      "Passive-first income ordering, Marketplace/NOL/reentry and source methods",
-      "Actual2555owner/original source binding, rounding and guided intake",
-      "Foreign multi-state/nonoverlap deduction carryover sources",
+      "ScheduleD18/19 special-gain source netting and actual section1202 history",
+      "Child4952 source binding, positive-character intake and foreign disclosures",
+      "Actual NOL vintage modified-income methods and remaining Marketplace methods in finite federal matrix",
+      "Actual Form2555 guided intake and QOF disposition facts",
+      "Ordinary foreign simplified-credit threshold and source election methods",
       "Current integrated coverage/inventory/all required checks and native runtime release rehearsal",
       "External staging/provider/review/state-demand/final-form inputs"
     ],
-    "latestIntegratedCommit": "36e0b728c7dd445490d0f20e93e67a4ccfb5a708",
+    "latestIntegratedCommit": "13cb428",
     "latestCoverageDiagnostic": {
       "status": "failed-tests-coverage-thresholds-met",
       "commit": "e8e169a39a4917744c634378628f717af748759b",
@@ -711,7 +711,17 @@
       "foreignCarryoverCore": "f4ce992",
       "actual2210Intake": "1c83819",
       "paPassiveSourceFixtures": "60d61d3",
-      "ordinaryPassiveIncomeOrdering": "7441a20"
+      "ordinaryPassiveIncomeOrdering": "7441a20",
+      "actualForeignIncomeBinding": "0e68dc0",
+      "foreignStateTaxableResidual": "085a0bf",
+      "marketplacePassiveOrdering": "4c7152c",
+      "boundedMarketplacePdfInspection": "8bbeef2",
+      "scheduleDActualMapping": "d6ef0e0",
+      "childAllocationRounding": "bd83a40",
+      "form2555DisplayRounding": "731c6f7",
+      "nolCarrySourcePreservation": "2cfe47c",
+      "foreignAggregateStateSources": "65241a1",
+      "guidedProgressAndFinalVisit": "13cb428"
     },
     "remoteCi": {
       "commit": "054cd59f9d0c8a53fb5794bbebcfd10e110f213b",
@@ -790,7 +800,7 @@
       "scope": "immutable tracked-file archive, locked dependencies, disposable local PostgreSQL16; unchanged coverage thresholds",
       "limitation": "Two PDF aggregate tests exceeded unchanged5000ms timeouts; no numeric tax failure. Commit76bb3a6 isolates identical template/state assertions into named independent cases. Its exact staged tree passes62tests and3682spec refs; fresh full gate required after newer packages."
     },
-    "lastPushedCommit": "a79959abb552ac0072b8159eae0199612e6b5f24",
+    "lastPushedCommit": "13cb428",
     "currentBrowserRun": {
       "commit": "ed915c1708cedc02e99ca12fb7383331a7f99bea",
       "status": "passed-with-hosted-skips",
@@ -866,13 +876,14 @@
       "limitation": "Actual React DOM callback checks; final production browser rerun required."
     },
     "remoteCiLatestObserved": {
-      "commit": "55c07e7",
+      "commit": "bd83a40",
       "date": "2026-10-25",
-      "ciRun": 40207012368,
-      "ciStatus": "in_progress before newer push",
-      "webRun": 40207012431,
-      "webStatus": "in_progress before newer push",
-      "boundary": "Not final passing evidence; a79959a subsequently pushed"
+      "ciRun": 40212463624,
+      "ciStatus": "in_progress",
+      "webRun": 40212463646,
+      "webStatus": "in_progress",
+      "historicalFailedWeb": 40210512815,
+      "boundary": "Not final passing evidence; historicalWebfailure inspection active"
     },
     "remoteCi6b07529": {
       "run": 40176974652,
@@ -1498,6 +1509,105 @@
       "typesContractsLintBuild": "pass",
       "evidence": ".local/upgrade-evidence/ci-b3f0362-failed-unit.log",
       "evidenceSha256": "13a6680667acb6a7234fe41bd17428026d1cb1dfd21a8eb8697dd91b7b16224b"
+    },
+    "scheduleDActualMapping": {
+      "commit": "d6ef0e0",
+      "sourceTree": "52b0b2019e8ced0317fa438374b8f541e5550d26",
+      "testsPassed": 1320,
+      "files": 124,
+      "rootTypes": "passed",
+      "specReferences": 4217,
+      "lintErrors": 0,
+      "lintWarnings": 17,
+      "renderedPages": 4,
+      "fieldWidgetAppearanceChecks": "passed",
+      "independentAgentReview": "147 focused cases and source/code review; no actionable finding",
+      "boundary": "2025 reference mapping only; no filing or2026physical qualification"
+    },
+    "childAllocationRounding": {
+      "commit": "bd83a40",
+      "sourceTree": "7a333580edfa308e5d6f36afd7576668bf7241ae",
+      "testsPassed": 584,
+      "files": 10,
+      "additionalRulePackCases": 3,
+      "rootTypes": "passed",
+      "specReferences": 4217,
+      "lintErrors": 0,
+      "independentAgentReview": "4 new cases pass with source/code review",
+      "renderedPages": 1,
+      "pdfSha256": "6d9ad0bec96e4c9399a5d7ccb5269d7066ac0bbc160239185300c0a6c33f5797",
+      "boundary": "Source cents retained; narrow ratio/signed remainder correction, not human qualification"
+    },
+    "foreignStateTaxableResidual": {
+      "commit": "085a0bf",
+      "sourceTree": "291c016f",
+      "testsPassed": 576,
+      "files": 15,
+      "rootAndWebTypes": "passed",
+      "specReferences": 4205,
+      "independentAgentCases": 8,
+      "supersedes": "3598c47 charity comparator fixture and3632/3032/968artifact",
+      "actualCountryDeductions": [
+        "1029",
+        "257"
+      ],
+      "hypotheticalCreditLimit": "3590",
+      "absorbedCarry": "2990",
+      "remainingCarry": "1010",
+      "boundary": "Actual ordinary single-state method; aggregate state allocation still in progress"
+    },
+    "marketplacePassiveOrdering": {
+      "commit": "4c7152c",
+      "sourceTree": "a33c5b9eca2dc8de9bb9f8fa206d096976d8cd97",
+      "testsPassed": 779,
+      "files": 24,
+      "rulePackCases": 3,
+      "rootTypes": "passed",
+      "specReferences": 4213,
+      "independentParentCases": 8,
+      "boundary": "Ordinary rental method; NOL and specialized source coordination remain in progress"
+    },
+    "guidedProgressAndFinalVisit": {
+      "commit": "13cb428",
+      "tree": "cf15c75b7ef1fb2839fbf03a793511f3de656f0f",
+      "base": "2cfe47c",
+      "unitTests": 246,
+      "unitFiles": 4,
+      "browserTests": 38,
+      "browserFiles": 2,
+      "independentAgentTests": 210,
+      "checks": "web types/build;4229spec refs;lint0errors26existingwarnings",
+      "evidence": ".local/upgrade-evidence/browser-status-fixed-playwright.log",
+      "review": ".local/upgrade-evidence/agent-browser-status-review.log",
+      "boundary": "local synthetic; all five remote failures reproduced; full current remote/release evidence not established"
+    },
+    "form2555DisplayRounding": {
+      "commit": "731c6f7",
+      "tree": "23912aa3",
+      "testsPriorSourceTree": 577,
+      "filesPriorSourceTree": 10,
+      "finalFocusedTests": 6,
+      "checks": "root types;4224spec refs",
+      "boundary": "retain raw source cents for conservation before display rounding"
+    },
+    "nolCarrySourcePreservation": {
+      "commit": "2cfe47c",
+      "tree": "aa48d9bf0b5c07a584c9a4a8f3cd2924210fb409",
+      "tests": 541,
+      "files": 5,
+      "checks": "root types;4227spec refs;lint0errors4existingwarnings",
+      "independentAgentTests": 3,
+      "boundary": "preserves legacy carry source; actual vintage deduction and absorption still being implemented"
+    },
+    "foreignAggregateStateSources": {
+      "commit": "65241a1",
+      "tree": "194447c9",
+      "tests": 752,
+      "files": 73,
+      "checks": "root/web types;4235spec refs;lint0errors",
+      "independentAgentTests": 6,
+      "pdfPagesReopenedAndInspected": 3,
+      "boundary": "ordinary confirmed nonoverlapping jurisdiction method only; no inferred no-tax history or elective safe harbor"
     }
   }
 }
