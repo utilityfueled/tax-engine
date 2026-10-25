@@ -237,6 +237,10 @@ export function SectionSelfEmployment({
   const [analysisMessage, setAnalysisMessage] = useState<string | null>(null);
   const [incomeAnalysisPending, setIncomeAnalysisPending] = useState(false);
   const [incomeAnalysisMessage, setIncomeAnalysisMessage] = useState<string | null>(null);
+  const [aiReviewAllowed, setAiReviewAllowed] = useState(false);
+  const reviewJobs = useRef<Partial<Record<"income" | "expense", { controller: AbortController; workspaceId: string }>>>({});
+  const latestSection = useRef({ workspaceId: workspace.id, aiReviewAllowed, onSectionChange, value: { necEntries: currentEntries, manualGrossReceipts, expenses: currentExpenses, bankStatementAnalyses: currentAnalyses, incomeDocumentAnalyses: currentIncomeAnalyses, qbiMateriallyParticipated } });
+  latestSection.current = { workspaceId: workspace.id, aiReviewAllowed, onSectionChange, value: { necEntries: currentEntries, manualGrossReceipts, expenses: currentExpenses, bankStatementAnalyses: currentAnalyses, incomeDocumentAnalyses: currentIncomeAnalyses, qbiMateriallyParticipated } };
   const [cachedAttachedIncomeDocumentIds, setCachedAttachedIncomeDocumentIds] = useState<Set<string>>(new Set());
   const [selectedAttachedIncomeDocumentIds, setSelectedAttachedIncomeDocumentIds] = useState<string[]>(
     [],
@@ -255,6 +259,38 @@ export function SectionSelfEmployment({
     () => filterAttachedIncomeReviewDocuments(workspace.documents, cachedAttachedIncomeDocumentIds),
     [workspace.documents, cachedAttachedIncomeDocumentIds],
   );
+
+  useEffect(() => {
+    setAiReviewAllowed(false);
+    setAnalysisPending(false);
+    setIncomeAnalysisPending(false);
+    setAnalysisMessage(null);
+    setIncomeAnalysisMessage(null);
+    setCurrentIncomeSuggestionIndex(0);
+    setCurrentExpenseSuggestionIndex(0);
+    return () => {
+      reviewJobs.current.income?.controller.abort();
+      reviewJobs.current.expense?.controller.abort();
+      reviewJobs.current = {};
+    };
+  }, [workspace.id]);
+
+  function cancelReview(kind: "income" | "expense") {
+    reviewJobs.current[kind]?.controller.abort();
+    delete reviewJobs.current[kind];
+    if (kind === "income") { setIncomeAnalysisPending(false); setIncomeAnalysisMessage("Income review cancelled."); }
+    else { setAnalysisPending(false); setAnalysisMessage("Expense review cancelled."); }
+  }
+  function startReview(kind: "income" | "expense") {
+    if (!latestSection.current.aiReviewAllowed) return undefined;
+    reviewJobs.current[kind]?.controller.abort();
+    const job = { controller: new AbortController(), workspaceId: workspace.id };
+    reviewJobs.current[kind] = job;
+    return job;
+  }
+  function ownsReview(kind: "income" | "expense", job: { controller: AbortController; workspaceId: string }) {
+    return !job.controller.signal.aborted && reviewJobs.current[kind] === job && latestSection.current.workspaceId === job.workspaceId && latestSection.current.aiReviewAllowed;
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -295,14 +331,9 @@ export function SectionSelfEmployment({
     incomeDocumentAnalyses: SelfEmploymentIncomeDocumentAnalysis[];
     qbiMateriallyParticipated?: boolean | null;
   }>) {
-    onSectionChange({
-      necEntries: next.necEntries ?? currentEntries,
-      manualGrossReceipts: next.manualGrossReceipts ?? manualGrossReceipts,
-      expenses: next.expenses ?? currentExpenses,
-      bankStatementAnalyses: next.bankStatementAnalyses ?? currentAnalyses,
-      incomeDocumentAnalyses: next.incomeDocumentAnalyses ?? currentIncomeAnalyses,
-      qbiMateriallyParticipated: "qbiMateriallyParticipated" in next ? next.qbiMateriallyParticipated : qbiMateriallyParticipated,
-    });
+    const value = { ...latestSection.current.value, ...next };
+    latestSection.current.value = value;
+    latestSection.current.onSectionChange(value);
   }
 
   function updateEntry(index: number, field: keyof NecEntryData, value: string) {
@@ -439,6 +470,7 @@ export function SectionSelfEmployment({
   }
 
   async function reviewSelectedAttachedIncomeDocuments() {
+    if (!latestSection.current.aiReviewAllowed) return;
     const selectedDocuments = attachedIncomeReviewDocuments.filter((document) =>
       selectedAttachedIncomeDocumentIds.includes(document.id),
     );
@@ -447,6 +479,9 @@ export function SectionSelfEmployment({
       setIncomeAnalysisMessage("Select at least one attached paystub or invoice first.");
       return;
     }
+
+    const job = startReview("income");
+    if (!job) return;
 
     setIncomeAnalysisPending(true);
     setIncomeAnalysisMessage(null);
@@ -457,6 +492,7 @@ export function SectionSelfEmployment({
 
       for (const document of selectedDocuments) {
         const file = await getCachedWorkspaceDocumentFile(workspace.id, document.id);
+        if (!ownsReview("income", job)) return;
         if (file) {
           files.push(file);
         } else {
@@ -473,10 +509,11 @@ export function SectionSelfEmployment({
         return;
       }
 
-      const analyses = await analyzeSelfEmploymentIncomeDocuments(files);
+      const analyses = await analyzeSelfEmploymentIncomeDocuments(files, { signal: job.controller.signal });
+      if (!ownsReview("income", job)) return;
       commitSection({
         incomeDocumentAnalyses: [
-          ...currentIncomeAnalyses,
+          ...latestSection.current.value.incomeDocumentAnalyses,
           ...analyses.map((analysis, index) => ({
             ...analysis,
             id: `${analysis.id}-${Date.now()}-${index}`,
@@ -490,13 +527,14 @@ export function SectionSelfEmployment({
           : `Reviewed ${files.length} attached income document${files.length === 1 ? "" : "s"} with AI.`,
       );
     } catch (error) {
+      if (!ownsReview("income", job)) return;
       setIncomeAnalysisMessage(
         error instanceof Error
           ? error.message
           : "Could not analyze the selected attached documents.",
       );
     } finally {
-      setIncomeAnalysisPending(false);
+      if (ownsReview("income", job)) { delete reviewJobs.current.income; setIncomeAnalysisPending(false); }
     }
   }
 
@@ -507,15 +545,18 @@ export function SectionSelfEmployment({
     if (files.length === 0) {
       return;
     }
+    const job = startReview("income");
+    if (!job) return;
 
     setIncomeAnalysisPending(true);
     setIncomeAnalysisMessage(null);
 
     try {
-      const analyses = await analyzeSelfEmploymentIncomeDocuments(files);
+      const analyses = await analyzeSelfEmploymentIncomeDocuments(files, { signal: job.controller.signal });
+      if (!ownsReview("income", job)) return;
       commitSection({
         incomeDocumentAnalyses: [
-          ...currentIncomeAnalyses,
+          ...latestSection.current.value.incomeDocumentAnalyses,
           ...analyses.map((analysis, index) => ({
             ...analysis,
             id: `${analysis.id}-${Date.now()}-${index}`,
@@ -524,13 +565,14 @@ export function SectionSelfEmployment({
       });
       setIncomeAnalysisMessage(`Reviewed ${files.length} income document${files.length === 1 ? "" : "s"} with AI.`);
     } catch (error) {
+      if (!ownsReview("income", job)) return;
       setIncomeAnalysisMessage(
         error instanceof Error
           ? error.message
           : "Could not analyze the uploaded paystubs or invoices.",
       );
     } finally {
-      setIncomeAnalysisPending(false);
+      if (ownsReview("income", job)) { delete reviewJobs.current.income; setIncomeAnalysisPending(false); }
     }
   }
 
@@ -541,15 +583,18 @@ export function SectionSelfEmployment({
     if (files.length === 0) {
       return;
     }
+    const job = startReview("expense");
+    if (!job) return;
 
     setAnalysisPending(true);
     setAnalysisMessage(null);
 
     try {
-      const analyses = await analyzeBusinessExpenseStatements(files);
+      const analyses = await analyzeBusinessExpenseStatements(files, { signal: job.controller.signal });
+      if (!ownsReview("expense", job)) return;
       commitSection({
         bankStatementAnalyses: [
-          ...currentAnalyses,
+          ...latestSection.current.value.bankStatementAnalyses,
           ...analyses.map((analysis, index) => ({
             ...analysis,
             id: `${analysis.id}-${Date.now()}-${index}`,
@@ -558,13 +603,14 @@ export function SectionSelfEmployment({
       });
       setAnalysisMessage(`Reviewed ${files.length} statement${files.length === 1 ? "" : "s"} with AI.`);
     } catch (error) {
+      if (!ownsReview("expense", job)) return;
       setAnalysisMessage(
         error instanceof Error
           ? error.message
           : "Could not analyze the uploaded statement.",
       );
     } finally {
-      setAnalysisPending(false);
+      if (ownsReview("expense", job)) { delete reviewJobs.current.expense; setAnalysisPending(false); }
     }
   }
 
@@ -611,6 +657,15 @@ export function SectionSelfEmployment({
           without a 1099. Then we&apos;ll capture your business expenses for Schedule C.
           The difference is your net self-employment income.
         </p>
+        <label className="guided-field">
+          <span><input type="checkbox" aria-label="Allow AI review of selected business documents" checked={aiReviewAllowed} onChange={(event) => {
+            const allowed = event.target.checked;
+            setAiReviewAllowed(allowed);
+            latestSection.current.aiReviewAllowed = allowed;
+            if (!allowed) { cancelReview("income"); cancelReview("expense"); }
+          }} /> Allow AI review of selected business documents</span>
+          <span className="guided-field-hint">When you request a review, locally redacted document text is sent for AI analysis. Suggestions require your acceptance. This permission resets when you leave this section or change returns.</span>
+        </label>
 
         <div className="guided-w2-card">
           <CurrencyField
@@ -637,7 +692,7 @@ export function SectionSelfEmployment({
                 type="button"
                 className="utility-button utility-button-small guided-doc-upload-button"
                 onClick={() => incomeUploadInputRef.current?.click()}
-                disabled={incomeAnalysisPending}
+                disabled={incomeAnalysisPending || !aiReviewAllowed}
               >
                 {incomeAnalysisPending ? "Analyzing..." : "Upload paystubs or invoices"}
               </button>
@@ -648,7 +703,9 @@ export function SectionSelfEmployment({
                 accept="application/pdf"
                 multiple
                 onChange={handleIncomeDocumentUpload}
+                disabled={!aiReviewAllowed || incomeAnalysisPending}
               />
+              {incomeAnalysisPending && <button type="button" className="utility-button" onClick={() => cancelReview("income")}>Cancel income review</button>}
             </div>
           </div>
 
@@ -699,7 +756,7 @@ export function SectionSelfEmployment({
                   type="button"
                   className="utility-button utility-button-small guided-doc-upload-button"
                   onClick={() => void reviewSelectedAttachedIncomeDocuments()}
-                  disabled={incomeAnalysisPending || selectedAttachedIncomeDocumentIds.length === 0}
+                  disabled={!aiReviewAllowed || incomeAnalysisPending || selectedAttachedIncomeDocumentIds.length === 0}
                 >
                   {incomeAnalysisPending ? "Analyzing attached docs..." : "Review selected attached docs"}
                 </button>
@@ -916,7 +973,7 @@ export function SectionSelfEmployment({
                   type="button"
                   className="utility-button utility-button-small guided-doc-upload-button"
                   onClick={() => uploadInputRef.current?.click()}
-                  disabled={analysisPending}
+                  disabled={analysisPending || !aiReviewAllowed}
                 >
                   {analysisPending ? "Analyzing..." : "Upload bank statements"}
                 </button>
@@ -924,10 +981,12 @@ export function SectionSelfEmployment({
                   ref={uploadInputRef}
                   className="guided-doc-upload-input"
                   type="file"
-                  accept="application/pdf,image/*"
+                  accept="application/pdf"
                   multiple
                   onChange={handleStatementUpload}
+                  disabled={!aiReviewAllowed || analysisPending}
                 />
+                {analysisPending && <button type="button" className="utility-button" onClick={() => cancelReview("expense")}>Cancel expense review</button>}
               </div>
             </div>
 
