@@ -1400,7 +1400,8 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   if (input.taxableRefundWorksheet) {
     taxableRefundWorksheetResult = calculateTaxableRefundWorksheet(
       input.form1099G ?? [],
-      input.taxableRefundWorksheet
+      input.taxableRefundWorksheet,
+      input.taxpayer.taxYear,
     );
     audit.merge(taxableRefundWorksheetResult.lines);
     taxableStateRefund = taxableRefundWorksheetResult.taxableRefund;

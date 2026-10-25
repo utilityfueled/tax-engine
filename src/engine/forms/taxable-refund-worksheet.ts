@@ -11,17 +11,28 @@
 
 import Decimal from "decimal.js";
 import type { TaxableRefundWorksheetInput } from "@/models/inputs.js";
-import type { FilingStatus } from "@/models/constants.js";
 import type { CalculatedLine } from "@/models/outputs.js";
-import { d, min, sum, zeroFloor } from "@/utils/decimal.js";
+import { d, min, sum, zeroFloor, roundDollar } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
 
 const ZERO = new Decimal(0);
 const GENERAL_SALT_CAP = new Decimal(10000);
 const MFS_SALT_CAP = new Decimal(5000);
 
-function getSaltCap(filingStatus: FilingStatus): Decimal {
-  return filingStatus === "married_filing_separately" ? MFS_SALT_CAP : GENERAL_SALT_CAP;
+function getSaltCap(worksheet: TaxableRefundWorksheetInput): Decimal {
+  const year = worksheet.priorTaxYear;
+  if (!Number.isInteger(year) || year < 2018 || year > 2026) {
+    throw new Error("Taxable refund requires an explicitly supported origin tax year (2018–2026).");
+  }
+  const mfs = worksheet.priorYearFilingStatus === "married_filing_separately";
+  if (year <= 2024) return mfs ? MFS_SALT_CAP : GENERAL_SALT_CAP;
+  if (worksheet.priorYearSaltMagi === undefined) {
+    throw new Error(`Historical SALT MAGI is required for origin tax year ${year}.`);
+  }
+  const maximum = d(year === 2025 ? "40000" : "40400");
+  const threshold = d(year === 2025 ? "500000" : "505000").dividedBy(mfs ? 2 : 1);
+  const reduction = zeroFloor(d(worksheet.priorYearSaltMagi).minus(threshold)).times("0.30");
+  return roundDollar(Decimal.max(GENERAL_SALT_CAP, maximum.minus(reduction)).dividedBy(mfs ? 2 : 1));
 }
 
 export interface TaxableRefundWorksheetResult {
@@ -46,10 +57,22 @@ export interface TaxableRefundWorksheetResult {
 }
 
 export function calculateTaxableRefundWorksheet(
-  form1099Gs: Array<{ stateLocalIncomeTaxRefund?: string }>,
-  worksheet: TaxableRefundWorksheetInput
+  form1099Gs: Array<{ stateLocalIncomeTaxRefund?: string; refundTaxYear?: number }>,
+  worksheet: TaxableRefundWorksheetInput,
+  receivedTaxYear?: number,
 ): TaxableRefundWorksheetResult {
   const audit = new AuditTrail();
+  const saltCap = getSaltCap(worksheet);
+  if (receivedTaxYear !== undefined && worksheet.priorTaxYear >= receivedTaxYear) {
+    throw new Error("A taxable refund's origin tax year must be before its receipt year; same-year recoveries reduce the deduction.");
+  }
+  for (const form of form1099Gs) {
+    if (d(form.stateLocalIncomeTaxRefund).isNegative()) throw new Error("Tax refunds cannot be negative.");
+    if (d(form.stateLocalIncomeTaxRefund).greaterThan(0) && form.refundTaxYear !== undefined && form.refundTaxYear !== worksheet.priorTaxYear) {
+      throw new Error("Form 1099-G refund tax year does not match the worksheet origin year; mixed-year recoveries require separate worksheets.");
+    }
+  }
+  audit.record("Taxable Refund WS", "origin_year", "Tax deduction origin year", d(worksheet.priorTaxYear), `Historical SALT limit $${saltCap}; receipt year ${receivedTaxYear ?? "not provided"}`);
 
   // Line 1: Aggregate all 1099-G Box 2 amounts
   const totalRefund = sum(
@@ -107,7 +130,7 @@ export function calculateTaxableRefundWorksheet(
     `min(refund ${totalRefund}, excess ${excessItemized})`);
 
   // Lines 8-13: SALT cap adjustment
-  const priorTaxesPaid = d(worksheet.priorYearStateLocalTaxesPaid);
+  const priorTaxesPaid = d(worksheet.priorYearStateLocalTaxesPaid).plus(d(worksheet.priorYearPropertyTaxesPaid));
   if (priorTaxesPaid.isZero()) {
     // No SALT cap adjustment data — result is Line 7
     const uncappedResult = finalizeTaxableRefund(
@@ -133,12 +156,9 @@ export function calculateTaxableRefundWorksheet(
     "Total state/local income taxes actually paid in prior year");
 
   // Line 9: SALT cap
-  const saltCap = getSaltCap(worksheet.priorYearFilingStatus);
   audit.record("Taxable Refund WS", "9", "SALT deduction cap",
     saltCap,
-    worksheet.priorYearFilingStatus === "married_filing_separately"
-      ? "$5,000 (MFS)"
-      : "$10,000 (IRC §164(b)(6))");
+    `Origin tax year ${worksheet.priorTaxYear}, filing status ${worksheet.priorYearFilingStatus}; IRC §164(b)(6)`);
 
   // Line 10: Excess over cap
   const excessOverCap = zeroFloor(priorTaxesPaid.minus(saltCap));
@@ -254,9 +274,9 @@ function finalizeTaxableRefund(
   let taxableRefund = provisionalTaxableRefund;
 
   if (salesTaxAlternative.greaterThan(0) && priorTaxesPaid.greaterThan(0)) {
-    const saltCap = getSaltCap(worksheet.priorYearFilingStatus);
+    const saltCap = getSaltCap(worksheet);
     const chosenIncomeTaxDeduction = min(priorTaxesPaid, saltCap);
-    const alternativeSalesTaxDeduction = min(salesTaxAlternative, saltCap);
+    const alternativeSalesTaxDeduction = min(salesTaxAlternative.plus(d(worksheet.priorYearPropertyTaxesPaid)), saltCap);
     alternativeSalesTaxCap = zeroFloor(
       chosenIncomeTaxDeduction.minus(alternativeSalesTaxDeduction)
     );

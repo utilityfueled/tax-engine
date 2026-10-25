@@ -11,6 +11,22 @@ purpose: |
   reduced the prior-year deduction.
 
 lines:
+  - line: "origin_year"
+    description: Explicit origin year controls the historical SALT limitation
+    formula: require priorTaxYear in 2018..2026 and priorTaxYear < receipt year; reject a Form 1099-G Box 3 year that differs
+    reference: IRC 111; Publication 525 (2025), Recoveries for 2 or more years; IRC 164(b)(6)
+    note: |
+      Never assume the refund relates to the immediately preceding year. One
+      worksheet supports one origin year. Mixed-year refunds require separate
+      worksheets and are rejected until that orchestration is implemented.
+      For 2018-2024 the limit is 10000 (5000 MFS). For 2025 the pre-MFS limit
+      is max(10000, 40000 - 30% * max(0, priorYearSaltMagi - threshold)), where
+      threshold is 500000 (250000 MFS); divide the result by two for MFS.
+      For 2026 use 40400 and threshold 505000 (252500 MFS). Round to whole
+      dollars after the MFS division. MAGI is required for 2025 and 2026.
+      Sources refreshed 2026-10-24; independently reviewed expectations pending.
+    testRef: "tests/engine/forms/taxable-refund-years.test.ts::Taxable refunds retain their origin year"
+
   - line: "1"
     description: Total state/local income tax refunds from Form(s) 1099-G Box 2
     formula: sum(form1099G[].stateLocalIncomeTaxRefund)

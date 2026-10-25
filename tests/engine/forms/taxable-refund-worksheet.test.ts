@@ -17,6 +17,7 @@ import type { TaxableRefundWorksheetInput } from "@/models/inputs.js";
 
 function makeWorksheet(overrides: Partial<TaxableRefundWorksheetInput> = {}): TaxableRefundWorksheetInput {
   return {
+    priorTaxYear: 2024,
     priorYearItemized: true,
     priorYearItemizedTotal: "20000",
     priorYearStandardDeduction: "14600",
@@ -489,7 +490,7 @@ describe("Taxable Refund Worksheet — audit trail", () => {
       makeWorksheet({ priorYearItemized: false })
     );
     const auditForms = result.lines.filter(l => l.form === "Taxable Refund WS");
-    // Should have Line 1, Line 3, and result — but not Lines 4-13
-    expect(auditForms.length).toBeLessThanOrEqual(4);
+    // Origin provenance and refund/standard/itemization checks, with no later calculation lines.
+    expect(auditForms.map(line => line.line)).toEqual(["origin_year", "1", "2", "3", "result"]);
   });
 });

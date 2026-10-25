@@ -1,0 +1,43 @@
+# Federal 2026 work ledger
+
+Status: implementation in progress; **not tax-review qualified or filing ready**.
+Full 2026 return calculation remains gated. Expected outputs below are manually
+derived synthetic literals, not independent human-reviewed evidence.
+
+## Scope audit (2026-10-24)
+
+- [x] Refresh IRS Rev. Proc. 2025-32, Schedule A instructions, Publication 525,
+  and the final 2025 Schedule 1-A form. Current Schedule A/Pub. 525 instructions
+  are still labeled 2025. Do not represent them as final 2026 form qualification.
+- [x] Historical refund SALT rules and explicit origin-year validation.
+- [ ] Independent complete immutable 2026 data, provenance and payroll checks.
+- [ ] Schedule 1-A eligibility, phase-downs and orchestration.
+- [ ] CTC/ACTC eligibility, three-child/SS tax branch and exclusions.
+- [ ] Charitable floor/nonitemizer deduction, itemized cap, gambling rules.
+- [ ] Dependent care, adoption refundability and expense coordination.
+- [ ] Education/529, QBI minimum deduction, PTC/APTC and energy transitions.
+- [ ] Carryforward year validation and historical computation audit.
+- [ ] Independent human review, independently derived expected outputs and
+  final form qualification (external requirements; no substitution by agents).
+
+## Package: taxable refunds preserve their deduction year
+
+Sources refreshed 2026-10-24:
+- https://www.irs.gov/publications/p525 — Recoveries; recovery for multiple years;
+  sales-tax alternative and SALT tax benefit.
+- https://www.irs.gov/instructions/i1040sca — 2025 SALT deduction worksheet,
+  including MFS division after phase-down.
+- https://www.irs.gov/publications/p505 — 2026 SALT amount and MAGI thresholds.
+
+Spec was updated first; 19 new boundary/unknown/mismatch tests ran with 15
+failures before implementation. Exact historical years 2018–2026 are supported
+for this worksheet, with 2025/2026 MAGI explicitly required. The receipt year
+cannot be the same as or precede the deduction year. Conflicting 1099-G Box 3
+years and negative refunds reject. Property taxes consume the same SALT cap
+under both income- and sales-tax alternatives. Existing 2025 fixtures now state
+their known 2024 deduction year; absent years do not silently migrate.
+
+Checks: 537 tests pass across the federal orchestrator, refund unit/boundary and
+PDF reference-summary suites; engine typecheck passes; spec validation passes
+(2,961 references at this checkpoint). Scoped diff reviewed; no filing gates
+changed. Mixed-origin-year batches reject pending separate-workbook orchestration.

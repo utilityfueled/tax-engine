@@ -2879,6 +2879,10 @@ export type SEHealthInsuranceWorksheetInput = z.infer<typeof SEHealthInsuranceWo
  * Ref: IRS Schedule 1 Instructions, Worksheet 1; IRC §111; Pub 525.
  */
 export const TaxableRefundWorksheetSchema = z.object({
+  /** Year of the tax deduction being recovered, not the year the refund arrived. */
+  priorTaxYear: z.number().int().min(2018).max(2026),
+  /** Actual historical SALT MAGI, including exclusions; required from 2025. */
+  priorYearSaltMagi: optionalDecimalInput,
   /** Whether the taxpayer itemized deductions on the prior-year return */
   priorYearItemized: z.boolean(),
   /** Prior-year Schedule A Line 17 total itemized deductions */
@@ -2887,6 +2891,8 @@ export const TaxableRefundWorksheetSchema = z.object({
   priorYearStandardDeduction: decimal,
   /** Total state/local income taxes actually paid in the prior year (before SALT cap) */
   priorYearStateLocalTaxesPaid: optionalDecimal,
+  /** Historical state/local real and personal property taxes; preserve unknown. */
+  priorYearPropertyTaxesPaid: optionalDecimalInput,
   /** Alternative prior-year general sales tax deduction that could have been
    *  claimed instead of state/local income taxes. When provided, Pub. 525 caps
    *  the taxable refund at the excess of the chosen income-tax deduction over
@@ -2894,6 +2900,10 @@ export const TaxableRefundWorksheetSchema = z.object({
   priorYearAlternativeGeneralSalesTaxDeduction: optionalDecimal,
   /** Prior-year filing status (for SALT cap: $10K general, $5K MFS) */
   priorYearFilingStatus: FilingStatusSchema,
+}).superRefine((value, ctx) => {
+  if (value.priorTaxYear >= 2025 && value.priorYearSaltMagi === undefined) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["priorYearSaltMagi"], message: "Historical SALT MAGI is required for tax years 2025 and 2026" });
+  }
 });
 export type TaxableRefundWorksheetInput = z.infer<typeof TaxableRefundWorksheetSchema>;
 

@@ -37,6 +37,7 @@ describe("Taxable Refund Worksheet packet reference summary", () => {
         },
       ],
       taxableRefundWorksheet: {
+        priorTaxYear: 2024,
         priorYearItemized: true,
         priorYearItemizedTotal: "20000",
         priorYearStandardDeduction: "14600",
@@ -163,7 +164,7 @@ describe("Taxable Refund Worksheet packet reference summary", () => {
             line: "9",
             description: "SALT deduction cap",
             value: "10000",
-            formula: "$10,000 (IRC §164(b)(6))",
+            formula: "Origin tax year 2024, filing status single; IRC §164(b)(6)",
           },
           {
             line: "10",
@@ -251,6 +252,7 @@ describe("Taxable Refund Worksheet packet reference summary", () => {
           },
         ],
         taxableRefundWorksheet: {
+        priorTaxYear: 2024,
           priorYearItemized: true,
           priorYearItemizedTotal: "20000",
           priorYearStandardDeduction: "14600",

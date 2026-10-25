@@ -21,6 +21,7 @@ const d = (v: string | number) => new Decimal(v);
 
 function makeWorksheet(overrides: Partial<TaxableRefundWorksheetInput> = {}): TaxableRefundWorksheetInput {
   return {
+    priorTaxYear: 2024,
     priorYearItemized: true,
     priorYearItemizedTotal: "20000",
     priorYearStandardDeduction: "14600",
