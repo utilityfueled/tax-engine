@@ -37,3 +37,14 @@ Evidence: `.local/upgrade-evidence/browser-fixture-repair-frozen.json`,
 `browser-fixture-lint.log`. This verifies repair cases on an earlier runtime;
 a fresh full browser run on the current committed application remains required.
 Hosted skips do not establish staging readiness.
+
+## Animation frame boundary
+
+A browser frame timestamp can precede the effect's start time within the same
+frame. The ticker's unclamped negative elapsed time briefly displayed a negative
+value while animating toward a positive balance. Progress is now bounded to zero
+through one; monetary interpolation still uses Decimal. Three regressions failed
+before the change, covering positive, negative and above-safe-integer targets.
+All four new DOM cases, including reduced motion, and 99 adjacent ticker checks
+pass. Web types and scoped lint pass. Logs: `ticker-animation-{red,green}.log`.
+This changes only the animation, not any tax amount or preview qualification.

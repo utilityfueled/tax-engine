@@ -340,7 +340,8 @@ export function useAnimatedValue(targetValue: Decimal.Value, duration = DEFAULT_
 
     function tick(now: number) {
       const elapsed = now - start;
-      const progress = Math.min(elapsed / duration, 1);
+      // A frame's timestamp can precede this effect's start within the same frame.
+      const progress = Math.max(0, Math.min(elapsed / duration, 1));
       const eased = easeOutCubic(progress);
       setDisplay(progress === 1 ? target : new Decimal(from).plus(delta.times(String(eased))).toFixed(0, Decimal.ROUND_HALF_UP));
 
