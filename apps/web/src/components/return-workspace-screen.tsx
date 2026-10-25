@@ -1132,7 +1132,7 @@ export function ReturnWorkspaceScreen({
   const partnerReviewRoute = unsupportedRoutes.find((route) => route.id === "partner-review-later") ?? null;
   const unsupportedTaxYear = hasUnsupportedTaxYear(workspace.returnSummary);
   const unsupportedTaxYearNotice = formatUnsupportedTaxYearNotice(workspace.returnSummary);
-  const filingPackDownload = workspace.documents.length > 0
+  const filingPackDownload = workspace.documents.length > 0 || persistedGuidedFlowState !== null
     ? buildWorkspaceFilingPackDownload(workspace)
     : null;
   const canPresentCompletedBundle = canPresentCompletedReturnDownload({
@@ -1147,13 +1147,14 @@ export function ReturnWorkspaceScreen({
     guidedReviewIssueCount: guidedReviewIssues.length
   });
   const canDownloadFilledReturnPdf = persistedGuidedFlowState?.taxYear === 2025
-    && workspace.returnSummary.targetTaxYear === 2025;
+    && workspace.returnSummary.targetTaxYear === 2025
+    && workspace.returnSummary.taxYearState === "single";
   const filingPackPanelTitle = canPresentCompletedBundle ? "Return Bundle" : "Draft Return Bundle";
   const filingPackJumpLabel = canPresentCompletedBundle ? "Go to Return Bundle" : "Go to Draft Return Bundle";
   const filingPackIntroCopy = canPresentCompletedBundle
-    ? "Download a review PDF with taxpayer IDs removed, or save the local JSON bundle with your structured data and audit notes. Filing exports are not yet qualified."
+    ? "Download a review PDF with taxpayer IDs removed, or save the workspace summary and audit notes as JSON. Filing exports are not yet qualified."
     : canDownloadFilledReturnPdf
-      ? "You can download a review PDF after completing the required taxpayer facts. It is not a filing copy. Save the JSON bundle to retain your structured data and audit notes."
+      ? "You can download a review PDF after completing the required taxpayer facts. It is not a filing copy. Save the workspace summary and audit notes as JSON."
       : "Your return is not filing-ready yet. Download a local draft return bundle with the current forms data, checklist, and review notes.";
   const filingPackButtonLabel = canPresentCompletedBundle ? "Download Return Bundle (.json)" : "Download Draft Return Bundle (.json)";
   const missingItemsMemoIncluded = filingPackDownload?.filingPack.files.some(
@@ -1360,6 +1361,9 @@ export function ReturnWorkspaceScreen({
               <strong>{filingPackDownload.filingPack.manifest.localOnly ? "yes" : "no"}</strong>
             </article>
           </div>
+          {persistedGuidedFlowState ? (
+            <p className="answer-note">The JSON summary does not include your private guided answers. Use the encrypted recovery backup to save and restore those answers and original files.</p>
+          ) : null}
           <div className="inline-actions">
             {canDownloadFilledReturnPdf ? (
               <button
@@ -1418,7 +1422,7 @@ export function ReturnWorkspaceScreen({
         </>
       ) : (
         <p className="panel-text">
-          Upload at least one document to generate your return bundle.
+          Enter guided return facts or upload a document to generate your return bundle.
         </p>
       )}
     </RetroShell>

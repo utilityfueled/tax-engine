@@ -6,6 +6,7 @@ import { buildSectionRoute, saveGuidedFlowState, type GuidedFlowState } from "@/
 import { buildGuidedFactAnswers, buildGuidedSyntheticDocuments } from "@/lib/guided-interview-bridge";
 import { formatWorkspaceTaxYearSummary, summarizeWorkspaceGuidedCompletion } from "@/lib/workspace-status-copy";
 import { completeW2Entry, startCompleteInterview } from "../../guided-interview/complete-facts";
+import { buildWorkspaceFilingPackDownload } from "@/lib/workspace-filing-pack";
 
 function memoryStorage(): Storage {
   const values = new Map<string, string>();
@@ -19,6 +20,21 @@ function completeFlow(): GuidedFlowState {
   state.currentSectionIndex = state.completedSections.length - 1;
   return state;
 }
+
+// Spec: workspace-guided-bundle.yaml#guided-summary.
+it("builds the guided-only summary bundle without inventing source documents or serializing private answers", () => {
+  const flow = completeFlow(); const original = structuredClone(flow);
+  const workspace = reconcileWorkspaceGuidedState(createWorkspaceRecord("guided-bundle"), flow);
+  const download = buildWorkspaceFilingPackDownload(workspace);
+  expect(download.fileName).toBe("guided-bundle-2025-tax-return.json");
+  expect(download.filingPack.manifest).toMatchObject({ targetTaxYear: 2025, returnStatus: "ready-to-recompute", localOnly: true });
+  const audit = JSON.parse(download.filingPack.files.find(file => file.path === "07-audit-trail.json")!.contents);
+  expect(audit).toMatchObject({ documents: [], structuredFacts: [] });
+  const summary = JSON.parse(download.filingPack.files.find(file => file.path === "01-return-summary.json")!.contents);
+  expect(summary.enginePreview).toBeNull();
+  expect(download.contents).not.toContain(flow.sectionData["personal-info"]!.ssn);
+  expect(flow).toEqual(original);
+});
 
 it("restores the actual guided year and completed facts after a cached workspace was read", () => {
   const storage = memoryStorage(); const workspace = ensureWorkspace(storage, "guided-year"); const flow = completeFlow();

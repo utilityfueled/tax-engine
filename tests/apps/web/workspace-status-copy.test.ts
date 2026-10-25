@@ -42,6 +42,21 @@ function createReturnSummary(overrides: Partial<WorkspaceReturnSummary> = {}): W
 }
 
 describe("workspace status copy", () => {
+  // Spec: workspace-guided-bundle.yaml#draft-boundaries.
+  it("keeps missing conflicting unsupported and incomplete guided bundles labeled as drafts", () => {
+    const completed = { phase: "complete" } as GuidedFlowState;
+    for (const summary of [
+      createReturnSummary(),
+      createReturnSummary({ targetTaxYear: null, taxYearState: "missing", blockers: [] }),
+      createReturnSummary({ targetTaxYear: 2025, taxYearState: "multiple", blockers: [] }),
+      createReturnSummary({ targetTaxYear: 2025, blockers: [{ id: "guided:incomplete-facts", message: "Actual source facts are missing.", relatedFactIds: [], sourceDocumentIds: [] }] }),
+      createReturnSummary({ targetTaxYear: 2025, blockers: [{ id: "guided:unknown-document-year", message: "Original source year is unknown.", relatedFactIds: [], sourceDocumentIds: [] }] }),
+    ]) {
+      expect(canPresentCompletedReturnDownload({ returnSummary: summary, guidedFlowState: completed,
+        pendingInterviewQuestionCount: 0, guidedReviewIssueCount: 0, hasEnginePreview: true })).toBe(false);
+    }
+  });
+
   it("surfaces unsupported tax-year warnings in filer-facing copy", () => {
     const returnSummary = createReturnSummary();
 

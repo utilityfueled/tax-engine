@@ -1,4 +1,5 @@
 import {
+  isSupportedEngineTaxYear,
   latestEngineTargetYear,
   type WorkspaceGuidedCompletion,
   type WorkspaceDocumentRecord,
@@ -45,6 +46,13 @@ export function canPresentCompletedReturnDownload({
   hasEnginePreview: boolean;
 }) {
   if (pendingInterviewQuestionCount > 0 || guidedReviewIssueCount > 0) {
+    return false;
+  }
+
+  if (returnSummary.targetTaxYear === null
+    || !isSupportedEngineTaxYear(returnSummary.targetTaxYear)
+    || returnSummary.taxYearState !== "single"
+    || returnSummary.blockers.some(blocker => blocker.id === "unsupported-tax-year" || blocker.id.startsWith("guided:"))) {
     return false;
   }
 
