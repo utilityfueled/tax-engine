@@ -26,6 +26,7 @@ import {
 } from "./rate-limit";
 import { safeParseJsonBody } from "./safe-body-parser";
 import { resolveHostedAppBaseUrl } from "./hosted-runtime-safety";
+import { canPurchaseHostedAiCredits } from "./hosted-ai-availability";
 
 type BillingEnvironment = Record<string, string | undefined>;
 
@@ -670,6 +671,13 @@ export function createHostedAiCreditCheckoutRouteHandlers(
         return NextResponse.json(
           { error: "Invalid hosted billing checkout request." },
           { status: 400 }
+        );
+      }
+
+      if (!canPurchaseHostedAiCredits(undefined, env)) {
+        return NextResponse.json(
+          { error: "AI credit purchases are unavailable while the production helper is awaiting qualification.", code: "ai_qualification_pending" },
+          { status: 503, headers: { "Cache-Control": "no-store, private" } }
         );
       }
 

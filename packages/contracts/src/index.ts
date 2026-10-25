@@ -73,10 +73,10 @@ export const hostedPlanCatalog: HostedPlanDefinition[] = [
     featureBullets: [
       "Hosted account and billing",
       "Privacy-safe workspace shells across devices",
-      "Paid AI helper with workspace-aware explanations and a $10 included usage budget per cycle",
+      "AI explanations are planned and unavailable pending qualification",
       "Deadline tracking (coming soon)",
       "Quarterly deadline reminder emails (coming soon)",
-      "AI-generated draft-return summary with raw files kept out of durable server storage"
+      "Draft-return AI summaries are unavailable pending qualification"
     ]
   },
   {
@@ -111,15 +111,15 @@ export const hostedAffordanceCatalog: HostedAffordanceDefinition[] = [
     id: "provider-summary",
     label: "AI-powered return summary",
     minimumPlanId: "starter",
-    rollout: "preview",
-    summary: "Generate a privacy-safe summary of your draft return that you can review yourself or share externally."
+    rollout: "coming-soon",
+    summary: "AI summaries remain unavailable until independent evaluation and production qualification pass."
   },
   {
     id: "filing-pack-history",
-    label: "Saved return history",
+    label: "Saved return metadata",
     minimumPlanId: "plus",
     rollout: "preview",
-    summary: "Keep completed return downloads saved to your account instead of relying on browser-local downloads only."
+    summary: "See saved return metadata across devices. Original documents, private answers and review downloads remain on your device."
   },
   {
     id: "partner-review",

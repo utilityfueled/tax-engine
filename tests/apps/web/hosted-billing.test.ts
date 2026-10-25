@@ -1,4 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
+// Synthetic availability lets this suite exercise Stripe adapter behavior.
+// The real disabled production gate is covered in ai-credit-sales-readiness.
+vi.mock("../../../apps/web/src/lib/hosted-ai-availability", () => ({ canPurchaseHostedAiCredits: () => true }));
 import {
   createHostedAiCreditCheckoutRouteHandlers,
   createHostedBillingCheckoutRouteHandlers,

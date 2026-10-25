@@ -29,6 +29,7 @@ import {
   type RateLimitStore
 } from "./rate-limit";
 import { safeParseJsonBody } from "./safe-body-parser";
+import { PRODUCTION_WORKSPACE_AI_EXECUTION } from "./production-ai-config";
 
 const requestShape = z.object({
   task: z.enum(["workspace-summary", "workspace-help"]), requestId: z.string().trim().min(1).max(256),
@@ -80,7 +81,8 @@ function buildAuthRequiredResponse() {
 export function createProviderWorkspaceRouteHandlers(
   dependencies: ProviderWorkspaceRouteDependencies = {}
 ) {
-  const respond = createProviderWorkspaceResponder(dependencies);
+  const execution = dependencies.execution ?? PRODUCTION_WORKSPACE_AI_EXECUTION;
+  const respond = createProviderWorkspaceResponder({ ...dependencies, execution });
   const store = dependencies.rateLimitStore ?? createRateLimitStore();
 
   if (!dependencies.rateLimitStore) {
@@ -189,8 +191,8 @@ export function createProviderWorkspaceRouteHandlers(
           }), includedBudgetCents: resolveHostedAiIncludedBudgetCents(subscription?.planId, env) };
           accounting = (dependencies.accounting ?? hostedAiTaskAccounting)({ ...budgetInput,
             requestId: parsed.data.requestId, requestPayload: parsed.data }, env);
-          if (dependencies.execution?.productionRollout) {
-            accounting.productionRollout = { ...dependencies.execution.productionRollout, ownerScope: actor.id };
+          if (execution.productionRollout) {
+            accounting.productionRollout = { ...execution.productionRollout, ownerScope: actor.id };
           }
         }
 

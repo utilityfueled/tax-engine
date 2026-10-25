@@ -208,3 +208,28 @@ The combined saved-return/status/persistence/recovery run passes 61 tests. Web
 types and scoped lint pass. Evidence: `.local/upgrade-evidence/recent-workspaces-green.log`
 and `.local/upgrade-evidence/ui-package-types.log`. These are local DOM/storage
 tests, not multi-tenant staging evidence.
+
+## Qualified AI credit sales and billing display — 2026-10-25
+
+Extra-credit checkout and its button now require the actual production workspace
+executor configuration, a fully rolled-out current summary route, valid independent
+qualification evidence, a cohort secret and credentials for that selected provider.
+The gate follows the executor's first matching route and credential precedence;
+duplicate later approvals, limited rollouts, previous-only evidence, request
+flags and evaluation mode cannot enable purchases. The shipped configuration has
+no rollout, so purchases remain disabled. No model was promoted or live request made.
+
+Public plan/account copy now says AI is awaiting qualification and accurately
+describes hosted metadata versus browser-local facts, files and downloads.
+Existing recorded balances remain visible without implying service availability.
+Credit display divides cents with Decimal, preserving exact large integer values.
+Synthetic approved fixtures keep payment adapter/failure paths exercised without
+enabling production evidence or payment activity.
+
+The final combined run passes 316 tests across 17 suites, including saved-return
+and recovery checks. Contract/web types and scoped lint pass (zero errors, four
+test non-null warnings). Evidence: `.local/upgrade-evidence/ui-sales-final-green.log`
+and `ui-sales-final-lint.log`. Two additional red regressions reproduced missing
+provider credentials and duplicate-route approval; both are now green. Required
+independent human evaluation, account capability verification, live-budget
+authorization and staging reconciliation remain external release requirements.

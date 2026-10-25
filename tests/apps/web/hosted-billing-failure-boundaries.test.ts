@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+// Synthetic qualification for payment failure paths; no production gate is enabled.
+vi.mock("../../../apps/web/src/lib/hosted-ai-availability", () => ({ canPurchaseHostedAiCredits: () => true }));
 
 const mocks = vi.hoisted(() => ({
   actor: vi.fn(), subscription: vi.fn(), entitlement: vi.fn(), rate: vi.fn(),

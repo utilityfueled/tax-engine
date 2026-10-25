@@ -26,12 +26,12 @@ describe("deployment mode config", () => {
     expect(modeState.summary).toContain("workspace shells");
     expect(modeState.statusNotes[0]).toContain("Sign in");
     expect(modeState.affordances.map((affordance) => affordance.badgeLabel)).toEqual([
-      "Starter",
+      "Coming Soon",
       "Plus"
     ]);
     expect(modeState.affordances.map((affordance) => affordance.label)).toEqual([
       "AI-powered return summary",
-      "Saved return history"
+      "Saved return metadata"
     ]);
     expect(getHostedPlanCatalog().map((plan) => plan.name)).toEqual([
       "Starter",

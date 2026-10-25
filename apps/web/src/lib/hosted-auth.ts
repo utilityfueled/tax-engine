@@ -823,11 +823,11 @@ export async function getHostedWorkspaceEntryGate({
     state: "hosted-auth-required",
     canCreateWorkspace: false,
     title: "Choose a hosted plan",
-    summary: "Create an account or sign in to unlock hosted software features like synced workspaces, reminders, and AI helper access.",
+    summary: "Create an account or sign in to use hosted workspace metadata. AI helpers remain unavailable pending qualification; planned reminder features are marked coming soon.",
     statusNotes: [
       "You're not signed in yet.",
       "Create an account or sign in to manage billing and hosted access.",
-      "Starter is for synced workspace shells and AI helper budgets. Plus adds reminder and continuity tools.",
+      "Starter is for synced workspace shells. Planned AI and reminder features remain subject to their stated availability.",
       "Raw uploads and extracted tax form contents are processed transiently and are not stored in durable hosted storage.",
       "Prefer to keep storage local? Use local mode instead."
     ],

@@ -12,6 +12,7 @@ import {
 import { resolveHostedWorkspaceActor } from "@/lib/hosted-auth";
 import { getHostedEntitlementByOwnerId } from "@/lib/hosted-billing-db";
 import { resolveDeploymentMode } from "@/lib/deployment-mode";
+import { canPurchaseHostedAiCredits } from "@/lib/hosted-ai-availability";
 
 export const metadata: Metadata = {
   title: "Billing — Viva La Tax"
@@ -68,6 +69,7 @@ export default async function BillingPage() {
   }
 
   const { subscription } = await getHostedEntitlementByOwnerId(process.env, actor.id);
+  const aiHelperAvailable = canPurchaseHostedAiCredits();
   const aiBudget = subscription?.planId
     ? await getHostedAiBudgetSnapshot(process.env, {
         ownerId: actor.id,
@@ -90,7 +92,8 @@ export default async function BillingPage() {
         aiBudget={aiBudget}
         aiTopUpPriceCents={resolveHostedAiTopUpPriceCents(process.env)}
         aiTopUpCreditCents={resolveHostedAiTopUpCreditCents(process.env)}
-        aiTopUpEnabled={Boolean(process.env.STRIPE_PRICE_ID_AI_HELPER_TOP_UP?.trim())}
+        aiHelperAvailable={aiHelperAvailable}
+        aiTopUpEnabled={aiHelperAvailable && Boolean(process.env.STRIPE_PRICE_ID_AI_HELPER_TOP_UP?.trim())}
       />
     </div>
   );
