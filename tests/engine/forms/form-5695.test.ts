@@ -770,3 +770,104 @@ describe("Form 5695 - federal pipeline", () => {
     expect(result.totalTax.greaterThanOrEqualTo(0)).toBe(true);
   });
 });
+
+
+// Spec: spec/federal/form-5695.yaml transition2026 and carryforward2025.
+describe("Form 5695 year transition", () => {
+  const options = (changes: Partial<import("@/engine/forms/form-5695.js").Form5695Options> = {}) => ({
+    taxYear:2026, priorYearCarryforward:new Decimal("9000"), carryforwardSourceTaxYear:2025,
+    carryforwardConfirmed:true, taxLiabilityLimit:new Decimal("2500"), ...changes,
+  });
+  it("2026 applies only the confirmed prior-year carryforward", () => {
+    const r=calculateForm5695({},options());
+    expect(r.residentialCleanEnergyCredit.toString()).toBe("2500");
+    expect(r.residentialCleanEnergyCarryforward.toString()).toBe("6500");
+    expect(r.carryforwardTaxYear).toBe(2027);
+    expect(r.lines.map(l=>l.line)).toEqual(["1","2","3","4","terminated-new-costs"]);
+    for(const changes of [{priorYearCarryforward:undefined},{carryforwardSourceTaxYear:2024},{carryforwardConfirmed:undefined},{taxLiabilityLimit:undefined},{taxYear:2027},{priorYearCarryforward:new Decimal("-1")}]) {
+      expect(()=>calculateForm5695({},options(changes))).toThrow();
+    }
+  });
+  it("2026 zero tax liability preserves the entire carryforward", () => {
+    const r=calculateForm5695({},options({taxLiabilityLimit:new Decimal(0)}));
+    expect(r.residentialCleanEnergyCredit.toString()).toBe("0");
+    expect(r.residentialCleanEnergyCarryforward.toString()).toBe("9000");
+  });
+  it("2026 new energy costs cannot generate credits or carryforwards", () => {
+    const r=calculateForm5695({solarElectricCost:"30000",energyPropertyCost:"10000"},options({priorYearCarryforward:new Decimal(0)}));
+    expect(r.disallowedNewEnergyCosts.toString()).toBe("40000");
+    expect(r.residentialCleanEnergyCredit.toString()).toBe("0");
+    expect(r.residentialCleanEnergyCarryforward.toString()).toBe("0");
+    expect(r.energyImprovementCredit.toString()).toBe("0");
+  });
+  it("2025 preserves unused clean credit without carrying improvement credit", () => {
+    const r=calculateForm5695({solarElectricCost:"20000",energyPropertyCost:"10000"},{taxYear:2025,
+      priorYearCarryforward:new Decimal("1000"),carryforwardSourceTaxYear:2024,carryforwardConfirmed:true,
+      taxLiabilityLimit:new Decimal("3000"),improvementTaxLiabilityLimit:new Decimal("100")});
+    expect(r.residentialCleanEnergyCreditBeforeLimit.toString()).toBe("7000");
+    expect(r.residentialCleanEnergyCredit.toString()).toBe("3000");
+    expect(r.residentialCleanEnergyCarryforward.toString()).toBe("4000");
+    expect(r.energyImprovementCredit.toString()).toBe("100");
+    expect(r.carryforwardTaxYear).toBe(2026);
+    expect(()=>calculateForm5695({solarElectricCost:"-1"})).toThrow();
+  });
+});
+
+// Spec: spec/federal/form-5695.yaml detailed2025.
+describe("Form 5695 detailed source facts", () => {
+  const limits = {taxYear:2025,taxLiabilityLimit:new Decimal(100000),improvementTaxLiabilityLimit:new Decimal(100000)};
+  const improvement = (category: NonNullable<import("@/models/inputs.js").EnergyCredits["qualifiedImprovements"]>[number]["category"], qualifiedCost="10000") => ({
+    category,qualifiedCost,installationCompletedDate:"2025-12-31",qualificationConfirmed:true,manufacturerQualifiedId:"A1B2",
+  });
+  const clean = (category: NonNullable<import("@/models/inputs.js").EnergyCredits["cleanEnergyProperties"]>[number]["category"], qualifiedCost="10000") => ({
+    category,qualifiedCost,installationCompletedDate:"2025-12-31",qualificationConfirmed:true,
+  });
+  it("detailed clean energy caps fuel cells by actual capacity", () => {
+    const r=calculateForm5695({residenceEligibilityConfirmed:true,cleanEnergyProperties:[
+      clean("solar_electric"),clean("solar_water","2000"),clean("small_wind","1000"),clean("geothermal","3000"),clean("battery","4000"),
+      {...clean("fuel_cell","30000"),fuelCellKilowattCapacity:"1.5"},
+    ]},{...limits,taxLiabilityLimit:new Decimal(2000)});
+    expect(r.totalCleanEnergyCosts.toString()).toBe("50000");
+    expect(r.residentialCleanEnergyCreditBeforeLimit.toString()).toBe("7500");
+    expect(r.residentialCleanEnergyCredit.toString()).toBe("2000");
+    expect(r.residentialCleanEnergyCarryforward.toString()).toBe("5500");
+    const values=Object.fromEntries(r.lines.map(l=>[l.line,l.value.toString()]));
+    expect(values).toMatchObject({"1":"10000","2":"2000","3":"1000","4":"3000","5b":"4000","6a":"20000","6b":"6000","8":"30000","9":"9000","10":"1500","11":"1500","12":"0","13":"7500","14":"2000","15":"2000","16":"5500"});
+  });
+  it("detailed improvements apply every category cap before shared pools", () => {
+    const r=calculateForm5695({residenceEligibilityConfirmed:true,qualifiedImprovements:[
+      improvement("insulation"),improvement("exterior_door","2000"),improvement("exterior_door","100"),improvement("windows_skylights"),
+      improvement("central_ac"),improvement("central_ac"),improvement("gas_water_heater"),improvement("furnace_boiler"),improvement("electrical_panel"),
+      improvement("home_energy_audit"),improvement("heat_pump"),improvement("heat_pump_water_heater"),improvement("biomass"),
+    ]},{...limits,improvementTaxLiabilityLimit:new Decimal(3100)});
+    const values=Object.fromEntries(r.lines.map(l=>[l.line,l.value.toString()]));
+    expect(values).toMatchObject({"18b":"1200","19h":"280","20d":"600","22d":"600","23d":"600","24d":"600","25e":"600","26c":"150","28":"1200","29h":"2000","30":"3200","31":"3100","32":"3100"});
+    expect(r.energyImprovementCredit.toString()).toBe("3100");
+    expect(r.residentialCleanEnergyCarryforward.toString()).toBe("0");
+    expect(calculateForm5695({residenceEligibilityConfirmed:true,qualifiedImprovements:[improvement("central_ac"),improvement("central_ac")]},limits).energyImprovementCredit.toString()).toBe("600");
+    expect(calculateForm5695({residenceEligibilityConfirmed:true,qualifiedImprovements:[improvement("exterior_door"),improvement("exterior_door"),improvement("exterior_door")]},limits).energyImprovementCredit.toString()).toBe("500");
+  });
+  it("detailed records reject missing facts and preserve known ineligibility", () => {
+    const base={residenceEligibilityConfirmed:true,qualifiedImprovements:[improvement("central_ac")]};
+    expect(()=>calculateForm5695({...base,residenceEligibilityConfirmed:undefined},limits)).toThrow(/residence/);
+    expect(()=>calculateForm5695(base,{taxYear:2025})).toThrow(/tax-liability/);
+    expect(()=>calculateForm5695({...base,energyPropertyCost:"100"},limits)).toThrow(/legacy/);
+    expect(()=>calculateForm5695({...base,qualifiedImprovements:[{...improvement("central_ac"),manufacturerQualifiedId:undefined}]},limits)).toThrow(/manufacturer/);
+    expect(()=>calculateForm5695({...base,qualifiedImprovements:[{...improvement("central_ac"),installationCompletedDate:"2025-02-30"}]},limits)).toThrow(/date/);
+    expect(()=>calculateForm5695({...base,qualifiedImprovements:[improvement("central_ac","-1")]},limits)).toThrow(/nonnegative/);
+    expect(()=>calculateForm5695({residenceEligibilityConfirmed:true,cleanEnergyProperties:[clean("fuel_cell")]},limits)).toThrow(/capacity/);
+    for(const changes of [{residenceEligibilityConfirmed:false},{qualifiedImprovements:[{...improvement("central_ac"),qualificationConfirmed:false}]},{qualifiedImprovements:[{...improvement("central_ac"),installationCompletedDate:"2026-01-01"}]}]) {
+      const r=calculateForm5695({...base,...changes},limits);
+      expect(r.energyImprovementCredit.toString()).toBe("0");
+      expect(r.disallowedNewEnergyCosts.toString()).toBe("10000");
+    }
+    expect(calculateForm5695({residenceEligibilityConfirmed:true,qualifiedImprovements:[{...improvement("insulation","100"),manufacturerQualifiedId:undefined}]},limits).energyImprovementCredit.toString()).toBe("30");
+  });
+  it("2026 itemized installations remain terminated and carryforward inputs stay exact", () => {
+    const r=calculateForm5695({residenceEligibilityConfirmed:true,cleanEnergyProperties:[{...clean("solar_electric"),installationCompletedDate:"2026-01-01"}],qualifiedImprovements:[improvement("heat_pump")],priorYearCarryforward:"800",carryforwardSourceTaxYear:2025,carryforwardConfirmed:true},{taxYear:2026,taxLiabilityLimit:new Decimal(200)});
+    expect(r.disallowedNewEnergyCosts.toString()).toBe("20000");
+    expect(r.residentialCleanEnergyCredit.toString()).toBe("200");
+    expect(r.residentialCleanEnergyCarryforward.toString()).toBe("600");
+    expect(r.energyImprovementCredit.toString()).toBe("0");
+  });
+});

@@ -71,8 +71,37 @@ Calculation evidence is separate from final-form qualification. The current 2026
   adoption credit is not simply erased when the aggregate refunded benefit is
   restricted. Independent human tax review is pending.
 
+## Residential energy (Form 5695)
+
+- Refreshed [final 2025 instructions](https://www.irs.gov/instructions/i5695),
+  [IRC 25C](https://uscode.house.gov/us/usc/119-118/t26/s25C/) and
+  [IRC 25D](https://uscode.house.gov/us/usc/119-118/t26/s25D/). The
+  [2026 draft form](https://www.irs.gov/pub/irs-dft/f5695--dft.pdf) corroborates
+  the four-line carryforward calculation; it supplies no filing qualification.
+- 2026 creates no credit from new costs, including prepaid installations completed
+  in 2026. Actual confirmed prior-year clean-energy carryforward is limited by the
+  tax-liability worksheet; the entire unused balance continues to 2027. Supplied
+  energy facts require a known carryforward, including explicit confirmed zero.
+- Detailed 2025 records use actual property categories, valid dates, known residence
+  and qualification facts, manufacturer IDs and fuel-cell capacity. Individual door,
+  window, AC, heater, furnace, panel, audit and shared heat-pump caps are applied
+  before the general pool and tax limits. Known false facts produce zero; unknown
+  facts reject. Positive legacy aggregates cannot accompany detailed records.
+- Both actual credit-limit worksheets are required for the detailed 2025 path.
+  Federal ordering integration is a separately owned change. Legacy scalar input
+  compatibility remains review-only and cannot establish detailed qualification.
+  Joint-occupancy/multiple-household allocation and additional attachment facts
+  still require an extended source contract; nothing infers those facts here.
+- Red evidence: `.local/upgrade-evidence/energy-detailed-red.log` (four new failures).
+  Green evidence: `energy-detailed-green.log`, 73/73 tests; root typecheck;
+  38/38 current spec entries have valid test references. Scoped ESLint has no
+  errors and four preexisting non-null assertion warnings. Reviewed category caps,
+  line formulas, dates, unknown/false distinctions, and carryforward conservation.
+- Review PDF mapping is being updated separately to consume these audited lines;
+  the existing scalar recomputation cannot be used for detailed records.
+
 ## Remaining assigned work
 
-- Residential energy 2026 termination and prior-year carryforward/credit limits.
+- Map Form 5695 review PDF from audited values and actual source facts.
 - Vehicle acquisition/service-year transition, known-zero prior AGI, confirmed
   qualification and transferred-credit reconciliation behavior.
