@@ -204,7 +204,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "dec193d",
+    "lastRecordedCommit": "1791979c3413516df211e3109d05d78ee0084a40",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -616,6 +616,174 @@
         "independentAgentCases": 14,
         "review": "Child confirmation blank-source insertion reproduced and corrected with assertions preserved",
         "boundary": "Local synthetic actual regular/AMT sources and review copies; not staging"
+      },
+      "qsbsCanonicalReturn": {
+        "commit": "5a3aab539a41d27ba95feda27df1d6170e8db381",
+        "tree": "e4991d78f3356e4f42146a9affaaf965f5a408f6",
+        "testsPassed": 2195,
+        "files": 54,
+        "rootTypes": "passed",
+        "specReferences": 4384,
+        "lintErrors": 0,
+        "lintWarnings": 0,
+        "agentReview": "21 cases plus two independent multi-lot probes; no remaining actionable finding",
+        "evidence": ".local/upgrade-evidence/section1202-return-exact-tests.log",
+        "boundary": "Local synthetic and bounded agent review; not human or filing qualification"
+      },
+      "marketplaceNolCoordination": {
+        "commit": "1f771ba",
+        "tree": "d8640c1319f21a604b51ea9815e5008b478f12c2",
+        "testsPassed": 1165,
+        "files": 75,
+        "rootTypes": "passed",
+        "specReferences": 4371,
+        "independentParentTests": 11,
+        "reviewEvidence": ".local/upgrade-evidence/parent-marketplace-nol-review.log"
+      },
+      "actualNolIntake": {
+        "commit": "4925ce18914417599d15f046866b47906888c4dc",
+        "productionSourceTree": "684fce1f",
+        "finalTree": "22358e53",
+        "guidedTestsPassed": 745,
+        "consumerTestsPassed": 20,
+        "finalFocusedTestsPassed": 12,
+        "browserPassed": 2,
+        "browserRetries": 0,
+        "independentAgentTests": 5,
+        "boundary": "Synthetic local desktop/mobile; no staging"
+      },
+      "ordinaryForeignCredit": {
+        "commit": "8638b5ec2f02b6ca7a9cc7c59d2982562924fa4b",
+        "reviewedTree": "56b3659ae2f45a12340d050dbad91351ef2c1169",
+        "broadTestsPassed": 1886,
+        "finalTestedTree": "1feaef7b",
+        "finalFocusedTestsPassed": 49,
+        "specReferences": 4404,
+        "independentParentTests": 12,
+        "reviewEvidence": ".local/upgrade-evidence/parent-foreign-ordinary-source-review.log",
+        "boundary": "Bounded ordinary passive-source method; no live provider or human tax qualification"
+      },
+      "actualQsbsIntake": {
+        "commit": "3aed6e8faa8b1b1af179e32c16c4d7103924f5e9",
+        "productionSourceTree": "48022d71",
+        "finalTree": "47070a59",
+        "testsPassed": 773,
+        "files": 73,
+        "finalFocusedTestsPassed": 12,
+        "finalSpecReferences": 4410,
+        "rootAndWebTypes": "passed",
+        "productionBuild": "passed",
+        "browserPassed": 2,
+        "browserRetries": 0,
+        "independentAgentTests": 5,
+        "boundary": "Synthetic original issuer and constant fund ownership only; broader methods remain internal work"
+      },
+      "qsbsCompleteReviewPdf": {
+        "commit": "cc10a79",
+        "tree": "b7b564b7d9bdf0ee337363583b9104ba965f373f",
+        "tests": 1174,
+        "files": 133,
+        "rootWebTypes": "passed",
+        "specReferences": 4437,
+        "build": "passed",
+        "browserTests": 2,
+        "browserRetries": 0,
+        "agentReview": "passed after changed-identity regression/fix",
+        "evidence": "docs/upgrade-2026-qsbs-pdf-work.md",
+        "humanQualification": false,
+        "filingQualified": false
+      },
+      "ordinaryForeignCreditIntake": {
+        "commit": "ce607a2",
+        "finalTree": "4ffff1fd",
+        "focusedTests": 30,
+        "priorProductionTests": 802,
+        "rootWebTypesSpecLintBuild": "passed",
+        "browserTests": 2,
+        "browserRetries": 0,
+        "independentAgentCases": 6,
+        "evidence": "docs/upgrade-2026-ai-work.md"
+      },
+      "currentCharitableNolCarry": {
+        "commit": "c58a59d",
+        "calculationTree": "b4d5945b",
+        "tests": 877,
+        "files": 21,
+        "rootTypes": "passed",
+        "specReferences": 4417,
+        "independentParentCases": 8,
+        "evidence": "docs/upgrade-2026-federal-work.md"
+      },
+      "continuingRentalCarryIntake": {
+        "commit": "f7745f3",
+        "finalTree": "23f1a441",
+        "tests": 762,
+        "files": 78,
+        "specReferencesPriorIdenticalProduct": 4423,
+        "rootWebTypesBuildLint": "passed",
+        "browserTests": 2,
+        "browserRetries": 0,
+        "independentAgentCases": 5,
+        "evidence": "docs/upgrade-2026-facts-work.md"
+      },
+      "form172OriginArithmetic": {
+        "commit": "d5d148b",
+        "tree": "9fb209af",
+        "tests": 71,
+        "rootTypes": "passed",
+        "specReferences": 4454,
+        "independentAgentCases": 4,
+        "publishedIrsNolExample": "1775",
+        "canonicalIntegration": "active"
+      },
+      "representativeAiCorpus": {
+        "commit": "1791979",
+        "tree": "40b251b08dfa22a95c8bc63ade38de306b5296a9",
+        "draftCases": 240,
+        "heldOut": 80,
+        "humanReviewed": 0,
+        "liveRuns": 0,
+        "tests": 34,
+        "files": 4,
+        "independentParentCases": 28,
+        "webTypes": "passed",
+        "specReferences": 4464,
+        "productionPromotion": false
+      },
+      "pdfPacketSubprocessRepair": {
+        "commit": "3629ce0",
+        "tests": 2,
+        "sameAssertions": true,
+        "broaderFinalPdfTests": 1174,
+        "boundary": "Interrupted earlier stdin read is not a passing run."
+      },
+      "latestPackageAudit": {
+        "sourceCommit": "1791979c3413516df211e3109d05d78ee0084a40",
+        "date": "2026-10-25",
+        "dependencies": 521,
+        "advisories": 0,
+        "evidence": ".local/upgrade-evidence/audit-2026-10-25-1791979.json"
+      },
+      "currentIntegrationVerification": {
+        "sourceCommit": "1791979c3413516df211e3109d05d78ee0084a40",
+        "archive": "/private/tmp/tax-engine-checks-aa3mhamr",
+        "status": "running",
+        "inventoryEntries": 365,
+        "boundary": "No current full-pass claim until logs complete; regenerated inventory is the only change in this archive.",
+        "passedChecks": [
+          "typecheck",
+          "typecheck:contracts",
+          "typecheck:web",
+          "spec:validate",
+          "spec:inventory:check",
+          "build",
+          "lint"
+        ],
+        "lintErrors": 0,
+        "lintWarnings": 4315,
+        "inventoryAdded": 95,
+        "inventoryRemoved": 0,
+        "existingSupportStatusChanges": 0
       }
     },
     "externalInputsStillPending": [
@@ -632,12 +800,12 @@
       "final multi-platform release images"
     ],
     "workInProgress": [
-      "Canonical QSBS Form8949/ScheduleD/AMT source integration, actual intake and complete review mapping",
-      "Pub974/NOL income coupling, remaining federal methods and actual regular/AMT NOL intake",
-      "Ordinary source-bound regular/AMT foreign tax credit and remaining allocation methods",
-      "Remaining advanced source intake, canonical preview/export and cross-document audit",
-      "Current integrated coverage/inventory/all required checks and native runtime release rehearsal",
-      "External staging/provider/review/state-demand/final-form inputs"
+      "Actual mortgage balance methods and represented debt/refinance/points/recovery source collectors",
+      "Form8606 whole-dollar rounding, actual owner-specific positive traditional basis/history and remaining retirement methods",
+      "Canonical current-year Form172 source/regular-AMT-NIIT origin integration and remaining federal coordination methods",
+      "Guarded AI evaluation executor, actual application-schema bindings, official catalog/price refresh; all240cases still pending human review",
+      "Current full tests/coverage/types/build/lint/browser, regenerated inventory, remoteCI and final native runtime/recovery/SBOM rehearsal",
+      "External staging/provider-budget/human-review/state-demand/final-form inputs remain unanswered"
     ],
     "latestIntegratedCommit": "13cb428",
     "latestCoverageDiagnostic": {
@@ -941,7 +1109,7 @@
       "scope": "Exact isolated f8c6222 plus single-write PDF package; locked dependencies, Node24.22.1, pinned pypdf and disposable local PostgreSQL16. Thresholds unchanged.",
       "limitation": "Excludes newer in-kind education, Ohio and agent changes. Current integrated and final release gates still require a fresh run. Synthetic local evidence only."
     },
-    "lastPushedCommit": "dec193d3e75c9756970629cf6934f850338adbb8",
+    "lastPushedCommit": "1791979c3413516df211e3109d05d78ee0084a40",
     "currentBrowserRun": {
       "commit": "ed915c1708cedc02e99ca12fb7383331a7f99bea",
       "status": "passed-with-hosted-skips",
@@ -1017,14 +1185,91 @@
       "limitation": "Actual React DOM callback checks; final production browser rerun required."
     },
     "remoteCiLatestObserved": {
-      "commit": "bd83a40",
       "date": "2026-10-25",
-      "ciRun": 40212463624,
-      "ciStatus": "in_progress",
-      "webRun": 40212463646,
-      "webStatus": "in_progress",
-      "historicalFailedWeb": 40210512815,
-      "boundary": "Not final passing evidence; historicalWebfailure inspection active"
+      "commit": "cc10a79",
+      "runs": [
+        {
+          "conclusion": "",
+          "databaseId": 40224863824,
+          "headSha": "cc10a79469cefbf2c7426cde468020559e1545ca",
+          "name": "CI",
+          "status": "queued",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40224863824"
+        },
+        {
+          "conclusion": "",
+          "databaseId": 40224863809,
+          "headSha": "cc10a79469cefbf2c7426cde468020559e1545ca",
+          "name": "Web",
+          "status": "in_progress",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40224863809"
+        },
+        {
+          "conclusion": "cancelled",
+          "databaseId": 40224142386,
+          "headSha": "3629ce005187934a9c4f26ceafb6a17c258f03cc",
+          "name": "CI",
+          "status": "completed",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40224142386"
+        },
+        {
+          "conclusion": "cancelled",
+          "databaseId": 40224142354,
+          "headSha": "3629ce005187934a9c4f26ceafb6a17c258f03cc",
+          "name": "Web",
+          "status": "completed",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40224142354"
+        },
+        {
+          "conclusion": "cancelled",
+          "databaseId": 40224131757,
+          "headSha": "f7745f3b03d65d82d3c36d57b33f46c331ea397b",
+          "name": "CI",
+          "status": "completed",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40224131757"
+        },
+        {
+          "conclusion": "cancelled",
+          "databaseId": 40224131775,
+          "headSha": "f7745f3b03d65d82d3c36d57b33f46c331ea397b",
+          "name": "Web",
+          "status": "completed",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40224131775"
+        },
+        {
+          "conclusion": "cancelled",
+          "databaseId": 40223736640,
+          "headSha": "c58a59d028c114b395e5be617d8e0c1db021afa8",
+          "name": "CI",
+          "status": "completed",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40223736640"
+        },
+        {
+          "conclusion": "cancelled",
+          "databaseId": 40223736530,
+          "headSha": "c58a59d028c114b395e5be617d8e0c1db021afa8",
+          "name": "Web",
+          "status": "completed",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40223736530"
+        },
+        {
+          "conclusion": "cancelled",
+          "databaseId": 40223591402,
+          "headSha": "0825893e6a2311ef90057e5cf7f7c27a4d96b7a0",
+          "name": "Web",
+          "status": "completed",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40223591402"
+        },
+        {
+          "conclusion": "cancelled",
+          "databaseId": 40223591370,
+          "headSha": "0825893e6a2311ef90057e5cf7f7c27a4d96b7a0",
+          "name": "CI",
+          "status": "completed",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40223591370"
+        }
+      ],
+      "boundary": "Queued/running/cancelled states are not passing completion evidence."
     },
     "remoteCi6b07529": {
       "run": 40176974652,

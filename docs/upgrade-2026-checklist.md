@@ -7,15 +7,84 @@ complete a checkbox.
 
 ## Current integration — 2026-10-25
 
-`dec193d` is the latest confirmed pushed integration on `upgrade/2026-baseline`. The goal remains active and the
+`1791979` is the latest confirmed pushed integration on `upgrade/2026-baseline`. The goal remains active and the
 upgrade is **not release-ready**. Unanswered external inputs are listed below;
 internal implementation and review continue in parallel.
 
+- `cc10a79`: complete QSBS Form 8949 categories and continuation pages, fund-only
+  Schedule D line 10 and verified 6251 preference, original-or-redacted identity
+  context. Final tree `b7b564b7` passes 1,174 tests in 133 files, root/web types,
+  4,437 references, production build and two desktop/mobile downloads with zero
+  retries. Separate agent review and rendered-page checks pass. Human/final 2026
+  form qualification remains closed. See `upgrade-2026-qsbs-pdf-work.md`.
+- `d5d148b`: standalone Form 172 origin arithmetic. Exact `9fb209af` passes 71
+  tests, root types and 4,454 references. Separate source/agent review passes
+  four cases, including the published $1,775 NOL example. Canonical current-origin
+  source integration remains active.
+- `1791979`: 240 distinct synthetic draft AI cases replace the template
+  cross-product, 30 per task and 80 fixed published held-out. Exact `40b251b0`
+  passes 34 tests in four files, web types and 4,464 references; parent independently
+  passes 28 cases. All 240 remain human-unreviewed, with zero live measurements.
+  Guarded executor and actual application-schema bindings remain active.
+- `ce607a2`: ordinary foreign-credit intake and separate regular/AMT review
+  ledgers. Final tree `4ffff1fd` passes 30 tests, root/web types, spec/lint/build
+  and two desktop/mobile cases with zero retries; prior production source tree
+  passes 802 tests. Separate review passes six cases. Broader foreign methods remain.
+- `c58a59d`: current charitable carry coordination with actual NOL absorption.
+  Final calculation tree `b4d5945b` passes 877 tests in 21 files, root types and
+  4,417 references. Parent independently verifies eight cases against section 170,
+  regulations and literal counterfactuals. Positive ATNOL, prior/mixed charity
+  and 2026 nonitemizer methods remain separate.
+- `f7745f3`: actual continuing-rental passive carry intake. Final tree `23f1a441`
+  passes 762 tests in 78 files; identical product source passes root/web types,
+  4,423 references, production build/lint and two desktop/mobile cases with zero
+  retries. Independent five-case review passes. Unknown AMT facts and source
+  privacy remain intact.
+- `91d2d56`, `0825893` and `3629ce0`: test-only repairs for literal browser spec
+  names, four stale Schedule D audit strings and Python PDF reopening. Respectively
+  six strict-reference checks, 56 workspace cases and two flatten variants pass;
+  the PDF repair also passes in the 1,174-case final QSBS suite. No assertions,
+  thresholds or readiness controls were weakened.
+- Full unit tests run on immutable `1791979`; all three type checks, spec validation,
+  regenerated inventory check, engine build and lint pass (zero errors; 4,315
+  warnings). Its 365-entry inventory adds 95 entries, removes none and changes
+  no existing support status. The latest full green coverage remains `7695387`
+  below until current verification completes. Fresh package audit reports zero
+  advisories across 521 locked entries. Remote CI/Web on `cc10a79` were queued or
+  running at refresh; superseded runs were cancelled, not passed.
+- `5a3aab5`: canonical original-source QSBS exclusions on Form 8949, Schedule D,
+  AMT and modified NOL income. Exact calculation tree `e4991d78` passes 2,195
+  tests in 54 files, root types, 4,384 spec references and clean scoped lint.
+  Separate agent review passes 21 cases plus two multi-lot probes. Review-PDF
+  pagination/source privacy is now in `cc10a79`; filing stays closed.
+- `3aed6e8`: actual QSBS issuer and lot intake. Production source tree `48022d71`
+  passes 773 tests in 73 files, root/web types, 4,390 references, build/lint and
+  both desktop/mobile persistence cases with retries zero. Final tree `47070a59`
+  passes 12 source/canonical cases, root types and 4,410 references. Separate
+  five-case agent review passes. Original unknown values remain unknown.
+- `8638b5e`: actual ordinary passive foreign credits with independent regular/AMT
+  allocations and carry histories. Reviewed tree `56b3659a` passes 1,886 tests;
+  final `1feaef7b` passes 49 focused/metadata cases, root types and 4,404 references.
+  Parent independently verifies 12 source cases and four allocation probes.
+  Saved 6251 credit fields and rendered pages pass; intake/reference is in `ce607a2`.
+- `1f771ba`: recompute actual NOL through ordered Marketplace health contexts.
+  Exact tree `d8640c13` passes 1,165 tests in 75 files, root types, 4,371 references
+  and lint with zero errors. Parent independently passes 11 cases, including
+  retained IRA deductions, source preservation and the closed 2026 gate.
+- `4925ce1`: actual regular/AMT NOL intake. Production source tree `684fce1f`
+  passes 745 guided tests plus 20 consumers, root/web types, build/spec and both
+  desktop/mobile cases with retries zero. Final tree `22358e53` passes 12 focused
+  cases; separate five-case review passes. No loss origin or history is inferred.
+- Remote CI at `8638b5e` reports four stale Schedule D audit-formula expectations,
+  two browser test labels that do not resolve as literal spec references, and a
+  stale inventory. Exact failure log: `.local/upgrade-evidence/remote-ci-8638b5-failed.log`.
+  Audit/spec-label repairs are committed above; inventory is refreshed from
+  `1791979`. No final remote pass is claimed.
 - `65a9e9f` and `9889cba`: actual original QSBS sources and per-issuer,
   acquisition-date arithmetic. Source tree42d168bd passes121 tests in15 files,
   root types/4,356 refs/lint0; separate source review passes14 cases. Arithmetic
-  tree0e28340c passes14 tests/root types/4,325 refs/lint0. Canonical8949,
-  ScheduleD, AMT and review exports are the next dependent package. Original
+  tree0e28340c passes14 tests/root types/4,325 refs/lint0. Canonical 8949,
+  Schedule D and AMT are now in `5a3aab5`; review exports remain active. Original
   transfer/changing-ownership methods remain explicit implementation work.
 - `d89cbe5`: actual NOL income replays, separate regular/AMT vintages and NIIT
   origin fractions. Treee0798760 passes1,079 tests/59 files, root types,
@@ -33,7 +102,7 @@ internal implementation and review continue in parallel.
   retries0. Final ownedfd037cf9 passes types/4,356 refs/scoped lint0 and6 smoke
   cases. Agent review passes14 cases. Browser verification found and drove a
   red-first fix for child confirmation inserting untouched blank source cards.
-  Actual NOL intake is the next independent facts package.
+  Actual NOL intake is now in `4925ce1`.
 - `8da947a`: actual child income in regular/AMT investment interest. Final tree
   40f8bebbf passes69 tests, root types,4,311 spec refs and lint0errors/four
   existing warnings; prior source tree passes104 tests and independent agent

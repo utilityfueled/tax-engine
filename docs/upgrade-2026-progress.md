@@ -572,3 +572,31 @@ and child confirmation inserting blank source cards. QSBS canonical integration,
 Pub974/NOL coupling, ordinary foreign credits and advanced source intake remain
 active. Current remote CI is pending; no final integrated, staging, human,
 provider, filing or release qualification is claimed.
+
+
+Pushed through `3aed6e8`: canonical QSBS regular/AMT/NOL integration (`5a3aab5`),
+actual QSBS intake (`3aed6e8`), ordinary regular/AMT foreign credits (`8638b5e`),
+Marketplace/NOL coordination (`1f771ba`) and actual regular/AMT NOL intake
+(`4925ce1`). The checklist records exact isolated trees, test counts and bounded
+agent reviews. QSBS PDF work reproduced omitted categories/overflow/fund-only
+forms and a source-context identifier mismatch; the latter now has a failing
+regression and correction. Broader PDF checks pass 623 cases on the initial
+source tree; final post-review checks and visual verification remain active.
+Current remote CI identified stale audit text, browser spec labels and inventory;
+those repairs remain internal work. Charity/NOL coordination and advanced facts
+continue. No staging, human, provider, filing or release qualification is claimed.
+
+
+Pushed through `1791979`: QSBS review pagination/source privacy (`cc10a79`),
+ordinary foreign-credit intake (`ce607a2`), current charity/NOL coordination
+(`c58a59d`), continuing rental carry (`f7745f3`), standalone Form172 origin
+(`d5d148b`) and 240 distinct draft AI cases (`1791979`). Each package has exact
+immutable checks and bounded agent review in its ledger. The final QSBS suite
+passes 1,174 tests and both desktop/mobile downloads. Audit-text/spec-label and
+PDF subprocess repairs are separate test commits. Full checks on `1791979` are
+running; its 365-entry inventory and package advisories are refreshed. The
+current package audit reports zero advisories across 521 locked dependencies.
+Mortgage source methods, 8606 rounding/positive-basis facts, canonical current
+NOL origin, AI executor/application bindings and final integration continue.
+All 240 AI cases remain human-unreviewed and no live measurements, staging,
+filing, final forms or release qualification are claimed.
