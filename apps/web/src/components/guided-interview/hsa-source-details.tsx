@@ -4,6 +4,7 @@ import type { AdjustmentData, FilingStatus } from "@/lib/guided-interview-flow";
 import { emptyHsaAccount, type HsaAccountData, type HsaCoverageFact } from "@/lib/guided-hsa-facts";
 import { CurrencyField } from "./currency-field";
 import { BooleanFact, TextFact } from "./fact-fields";
+import { HsaDistributionDetails } from "./hsa-distribution-details";
 
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const moneyFields = [
@@ -63,6 +64,7 @@ export function HsaSourceDetails({ data, filingStatus, taxYear, onChange }: { da
           <BooleanFact label={label("Use the last-month rule instead of only monthly eligibility")} value={account.useLastMonthRule} onChange={useLastMonthRule => update(index, { useLastMonthRule })} />
           {account.useLastMonthRule === true && <BooleanFact label={label("I understand the last-month-rule testing period through December of the following year")} value={account.lastMonthRuleAcknowledged} onChange={lastMonthRuleAcknowledged => update(index, { lastMonthRuleAcknowledged })} />}
           <BooleanFact label={label("Any HSA distributions during this year")} value={account.hasDistributions} onChange={hasDistributions => update(index, { hasDistributions })} />
+          {(account.hasDistributions === true || !!account.distributions?.length) && <HsaDistributionDetails records={account.distributions ?? []} labelPrefix={`HSA ${index + 1}`} onChange={distributions => update(index, { distributions })} />}
           <BooleanFact label={label("Any returned contributions or correction relief requiring a worksheet")} value={account.correctionsRequired} onChange={correctionsRequired => update(index, { correctionsRequired })} />
           <BooleanFact label={label("A last-month-rule or IRA-funding testing period failed during this year")} value={account.testingPeriodFailure} onChange={testingPeriodFailure => update(index, { testingPeriodFailure })} />
           {account.testingPeriodFailure === true && <>

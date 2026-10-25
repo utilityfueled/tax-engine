@@ -523,11 +523,27 @@ export function calculateForm8889(
   );
   const line15 = ordinaryQualifiedMedicalExpenseOffset.plus(beneficiaryPostDeathMedicalExpenseOffset);
   const line16 = Decimal.max(new Decimal(0), line14c.minus(line15));
+  const actualDisabilityTaxableAmount = input.disabilityExceptionTaxableDistributions === undefined
+    ? undefined : d(input.disabilityExceptionTaxableDistributions);
+  if (actualDisabilityTaxableAmount !== undefined && (!actualDisabilityTaxableAmount.isFinite()
+    || actualDisabilityTaxableAmount.lt(0) || actualDisabilityTaxableAmount.gt(supported1099SADisabilityExceptionDistributions)
+    || actualDisabilityTaxableAmount.gt(line16))) {
+    throw new Error("Actual disability exception amount must be nonnegative and no greater than supported code 3 gross or total taxable HSA distributions");
+  }
+  if (taxpayer.taxYear >= 2026 && !age65OrOlderOnFirstDayOfYear && line16.gt(0)
+    && supported1099SADisabilityExceptionDistributions.gt(0)
+    && supported1099SAGrossDistributions.gt(supported1099SADisabilityExceptionDistributions)
+    && actualDisabilityTaxableAmount === undefined) {
+    throw new Error("Actual taxable disability distribution allocation is required for mixed HSA source codes");
+  }
+  const supportedTaxableExceptionAmount = actualDisabilityTaxableAmount === undefined
+    ? supported1099SAAutomaticExceptionDistributions
+    : supported1099SAAutomaticExceptionDistributions.minus(supported1099SADisabilityExceptionDistributions).plus(actualDisabilityTaxableAmount);
   const supportedPostAge65Distributions = age65OrOlderOnFirstDayOfYear
     ? new Decimal(0)
     : Decimal.max(new Decimal(0), d(input.distributionsAfterAge65));
   const line17aInputAmount = Decimal.max(new Decimal(0), d(input.distributionsNotSubjectToAdditionalTax));
-  const line17aSupportedExceptionAmount = supported1099SAAutomaticExceptionDistributions.plus(
+  const line17aSupportedExceptionAmount = supportedTaxableExceptionAmount.plus(
     supportedPostAge65Distributions
   );
   const line17aInputIncludesSupportedAmount = line17aInputAmount.greaterThanOrEqualTo(
@@ -761,6 +777,7 @@ export function calculateForm8889(
       "Line 17a input amount before Line 16 cap": line17aInputAmount,
       "Validated post-age-65 distributions": supportedPostAge65Distributions,
       "Supported Form 1099-SA disability exception distributions": supported1099SADisabilityExceptionDistributions,
+      "Actual taxable disability exception amount": actualDisabilityTaxableAmount?.toString() ?? "unknown legacy allocation",
       "Supported Form 1099-SA death-distribution exception amount":
         supported1099SADeathDistributionDateOfDeathValue,
       "Supported Form 1099-SA automatic exception distributions": supported1099SAAutomaticExceptionDistributions,

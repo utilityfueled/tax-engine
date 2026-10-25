@@ -429,7 +429,9 @@ export function mergeForm1099SAIntoForm8889Input(
     ? addOwnerSupport(requestedOwnerSupport, normalizeOwnerSupport(form1099SA.unattributedSupport))
     : requestedOwnerSupport;
   const supportedAutomaticExceptionAmount = ownerSupport.hsaDeathDistributionDateOfDeathValue
-    .plus(ownerSupport.hsaDisabilityExceptionDistributions);
+    .plus(input?.disabilityExceptionTaxableDistributions === undefined
+      ? ownerSupport.hsaDisabilityExceptionDistributions
+      : d(input.disabilityExceptionTaxableDistributions));
   const requestedExceptionAmount = Decimal.max(
     new Decimal(0),
     d(input?.distributionsNotSubjectToAdditionalTax)
@@ -468,6 +470,7 @@ export function mergeForm1099SAIntoForm8889Input(
       input?.decedentQualifiedMedicalExpensesPaidWithinOneYearAfterDeath ?? "0",
     distributionsNotSubjectToAdditionalTax: autoExceptionAmount.toString(),
     distributionsAfterAge65: input?.distributionsAfterAge65 ?? "0",
+    disabilityExceptionTaxableDistributions: input?.disabilityExceptionTaxableDistributions,
     lastMonthRuleContributions: input?.lastMonthRuleContributions ?? "0",
     lastMonthRuleRedeterminedLimit: input?.lastMonthRuleRedeterminedLimit,
     priorYearRedeterminedLimitWorksheet: input?.priorYearRedeterminedLimitWorksheet,

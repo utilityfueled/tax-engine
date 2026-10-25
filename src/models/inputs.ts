@@ -1452,6 +1452,7 @@ export const Form8889Schema = z.object({
   decedentQualifiedMedicalExpensesPaidWithinOneYearAfterDeath: optionalDecimal, // Line 15 beneficiary-only post-death branch for supported non-estate HSA death distributions
   distributionsNotSubjectToAdditionalTax: optionalDecimal, // Line 17a/17b exception amount
   distributionsAfterAge65: optionalDecimal, // Line 17a/17b validated taxable distributions made after turning age 65 during the year
+  disabilityExceptionTaxableDistributions: optionalDecimalInput, // Actual taxable code 3 amount after its medical/rollover allocations; omission is unknown.
   lastMonthRuleContributions: optionalDecimal, // Part III Line 18 input
   lastMonthRuleRedeterminedLimit: decimal.optional(), // Part III Line 18 manual override; absence lets the engine use the supported worksheet path
   priorYearRedeterminedLimitWorksheet: Form8889PriorYearRedeterminedLimitWorksheetSchema.optional(), // Part III Line 18 supported auto-recompute inputs

@@ -83,7 +83,7 @@ export const lifeEventOptions: { value: LifeEvent; label: string; hint: string }
   { value: "got-divorced", label: "Got divorced", hint: "Filing status change, alimony considerations" },
   { value: "started-business", label: "Started a business", hint: "Schedule C, self-employment tax" },
   { value: "student-loans", label: "Paid student loan interest", hint: "Above-the-line deduction up to $2,500" },
-  { value: "hsa-contributions", label: "Contributed to an HSA", hint: "Above-the-line deduction" },
+  { value: "hsa-contributions", label: "HSA contributions or distributions", hint: "Actual HSA statements and eligibility" },
 ];
 
 // ── State of residence ─────────────────────────────────────────────────────

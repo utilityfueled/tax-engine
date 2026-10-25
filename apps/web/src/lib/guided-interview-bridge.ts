@@ -713,7 +713,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
       dependents: buildDependents(personalInfo?.dependentCount, personalInfo?.dependents),
     },
     w2s,
-    ...buildHsaInputs(adjustmentData?.hsaAccounts),
+    ...buildHsaInputs(adjustmentData?.hsaAccounts, personalInfo),
     form1099Nec: necs,
     scheduleC: scheduleC ?? undefined,
     form1099Int,
