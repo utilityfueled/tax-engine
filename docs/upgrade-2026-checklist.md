@@ -7,25 +7,51 @@ complete a checkbox.
 
 ## Current integration — 2026-10-25
 
-Current additions: `ea2f422` fixes all five unchanged charitable review failures
-and delivers actual2025 category/vintage history (3,662tests/81files); `4332623`
-adds the actual collector (807tests,215rebase cases, two browser flows and
-nine separate review cases). `fcedf57` completes wagering-expense intake
-(834tests/82files,61rebase cases, two browser flows and four review cases).
-`2fdbb03` fixes the physical2025 ScheduleA itemization-election checkbox, with
-24PDF tests and separate five-boundary saved-PDF review.
+Current additions through `d153020` complete actual historical refund intake
+(`2c4ddfe`, strict-spec correction `cd08895`), 2025 public-cash carry ordering
+(`9ce1686`), bounded private cash/property histories (`6cf0463`), ordinary vehicle
+refinancing (`2baa03c`) and its guided source collector (`da7fc1c`), plus historical
+foreign-adoption benefits (`998d55a`) and their guided collector (`d153020`).
+Each package has separate source/software review and scoped checks in its ledger.
+The regenerated inventory contains 413 entries and passes freshness validation on
+committed `d153020`. Marketplace re-entry and adoption review packets are under
+independent review; educator in-kind coordination and 2026 nonitemized charity
+are in progress. These are not yet included in the committed evidence.
 
-The full production browser run on exact`907b6db` now passes348cases, with
-five hosted skips, zero failures/retries in13.0minutes using the default pinned
-PDF reader. It excludes the subsequent packages and supplies no hosted evidence.
-The [named method audit](upgrade-2026-remaining-methods.md) records unfinished
-refinancing, Marketplace, adoption, charity, mixed-tip, education and QBI methods
-with current ownership. Unsupported guards do not count as implementation.
+The full production browser run on exact `907b6db` passes 348 cases, with five
+hosted skips, zero failures/retries in 13.0 minutes using the default pinned PDF
+reader. It excludes the subsequent packages and supplies no hosted evidence.
+The [named method audit](upgrade-2026-remaining-methods.md) records the remaining
+Marketplace, charity, mixed-tip, education and QBI methods and current ownership.
+Unsupported guards do not count as implementation.
 
-`2fdbb03` is the latest confirmed pushed commit on `upgrade/2026-baseline`. The goal remains active and the
-upgrade is **not release-ready**. Unanswered external inputs are listed below;
-internal implementation and review continue in parallel.
+`d153020` is the latest confirmed pushed application commit on
+`upgrade/2026-baseline`. The goal remains active and the upgrade is **not
+release-ready**. External inputs remain unanswered; internal implementation and
+review continue. CI and Web runs for this commit were still in progress when
+observed; no completed remote result is inferred.
 
+- Actual refund intake passes 903 tests in 90 files, root/web types, 4,732 spec
+  references, build and both desktop/mobile flows. Independent 11-case review
+  includes the corrected prior-recovery and prior-NOL omissions. See
+  [the refund ledger](upgrade-2026-refund-intake-work.md).
+- `9ce1686` passes 228 charitable tests in 27 files and 21 metadata cases;
+  `6cf0463` passes 460 tests in 44 files and 32 final integration cases. Eight
+  independent mixed-media cases and saved-PDF reopening/rendering pass. Partial
+  mixed-media, 2026 prior/nonitemizer/floor and prior/mixed-NOL methods remain.
+- Vehicle core `2baa03c` passes 72 final cases with exact Decimal source
+  conservation and separate source review. Guided `da7fc1c` passes 795 adjacent
+  cases, 52 final cases, root/web types, build and two browser flows without
+  retries; separate five-case review passes. See the
+  [core](upgrade-2026-vehicle-refinancing-work.md) and
+  [intake](upgrade-2026-vehicle-refinancing-intake.md) ledgers.
+- Adoption core `998d55a` passes 151 final focused/strict/metadata cases and
+  separate 15-case canonical review. Guided `d153020` passes 389 final cases,
+  root/web types, 4,769 spec references and separate 11-case review; its earlier
+  broader snapshot passes 889 cases, build and two browser flows without retries.
+  Benefits-only PDF/context integration remains under review. See the
+  [history](upgrade-2026-adoption-history-work.md) and
+  [intake](upgrade-2026-adoption-intake-work.md) ledgers.
 - `f006285`: actual debt-cancellation intake passes795tests/84files, both
   type checks,4,678spec references, production build, two desktop/mobile flows
   and11independent review cases. All source/year/readiness gates are retained.
@@ -163,9 +189,12 @@ internal implementation and review continue in parallel.
   pass; no assertions, timeout or production code changed. See
   [the repair evidence](upgrade-2026-pdf-reader-repair.md).
 
-The remaining finite internal queue is actual prior/mixed charity and
-2026 nonitemizer carry. Actual guided COD sources are committed. Then close the enabled-scenario facts/calculation/review/
-readiness audit and run final integration, native images and recovery checks.
+The remaining internal queue includes ordinary Marketplace re-entry and shared
+policy/marriage/owner methods, adoption review output, partial mixed-media and
+2026 prior/nonitemizer/floor charity, prior/mixed NOL coordination, partial
+in-kind education, mixed tips and non-rental/post-EBL QBI character. Then close
+the enabled-scenario facts/calculation/review/readiness audit and run final
+integration, native images and recovery checks.
 The negative-net1202/Form172 overlap is a specifically unresolved interpretation,
 not an invented zero or completed method. The user has no interpretation to
 supply; the required next action is a qualified tax reviewer resolving the

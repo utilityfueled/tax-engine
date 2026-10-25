@@ -2,25 +2,31 @@
 
 ## Current checkpoint
 
-Current additions: `ea2f422` fixes all five unchanged charitable review failures
-and delivers actual2025 category/vintage history (3,662tests/81files); `4332623`
-adds the actual collector (807tests,215rebase cases, two browser flows and
-nine separate review cases). `fcedf57` completes wagering-expense intake
-(834tests/82files,61rebase cases, two browser flows and four review cases).
-`2fdbb03` fixes the physical2025 ScheduleA itemization-election checkbox, with
-24PDF tests and separate five-boundary saved-PDF review.
+Current additions through `d153020` complete actual historical refund intake
+(`2c4ddfe`, strict-spec correction `cd08895`), 2025 public-cash carry ordering
+(`9ce1686`), bounded private cash/property histories (`6cf0463`), ordinary vehicle
+refinancing (`2baa03c`) and its guided source collector (`da7fc1c`), plus historical
+foreign-adoption benefits (`998d55a`) and their guided collector (`d153020`).
+Each package has separate source/software review and scoped checks in its ledger.
+The regenerated inventory contains 413 entries and passes freshness validation on
+committed `d153020`. Marketplace re-entry and adoption review packets are under
+independent review; educator in-kind coordination and 2026 nonitemized charity
+are in progress. These are not yet included in the committed evidence.
 
-The full production browser run on exact`907b6db` now passes348cases, with
-five hosted skips, zero failures/retries in13.0minutes using the default pinned
-PDF reader. It excludes the subsequent packages and supplies no hosted evidence.
-The [named method audit](upgrade-2026-remaining-methods.md) records unfinished
-refinancing, Marketplace, adoption, charity, mixed-tip, education and QBI methods
-with current ownership. Unsupported guards do not count as implementation.
+The full production browser run on exact `907b6db` passes 348 cases, with five
+hosted skips, zero failures/retries in 13.0 minutes using the default pinned PDF
+reader. It excludes the subsequent packages and supplies no hosted evidence.
+The [named method audit](upgrade-2026-remaining-methods.md) records the remaining
+Marketplace, charity, mixed-tip, education and QBI methods and current ownership.
+Unsupported guards do not count as implementation.
 
 Execution remains active and **not release-ready**. Latest confirmed pushed
-commit is `2fdbb03` on `upgrade/2026-baseline`. Resume from
+application commit is `d153020` on `upgrade/2026-baseline`. Resume from
 [the durable checklist](upgrade-2026-checklist.md) and `ongoingExecution` in the
-machine checkpoint. Older evidence applies only to its recorded code.
+machine checkpoint. Older full-suite, coverage, browser and runtime evidence
+applies only to its recorded code. Package ledgers contain the exact source
+boundaries, tests, independent agent reviews and remaining methods; agent review
+does not establish human tax qualification.
 
 Recent packages add actual current-loss intake (`8cf0e8e`), ordinary investment
 capital origins (`3ff896c`), original digital-asset sources (`e7bd6e8`) and all

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "assessedDate": "2026-10-24",
+  "assessedDate": "2026-10-25",
   "baseCommit": "f1f79ec5c38a770cc1f4989e67a12d6ac44f3fda",
   "applicationCommit": "d32cb8cf3d607c643c4c7f7e1b845fcace61563f",
   "branch": "upgrade/2026-baseline",
@@ -194,17 +194,17 @@
     "testContainerRemoved": true
   },
   "releaseBlockers": [
-    "Final current-head verification remains pending after source packages; committed4aef633passes17754tests and86.98percentbranches against unchanged85percentgate, plus types/spec/inventory/build/lint. Browser and native artifacts remain in progress.",
-    "The2026 rule pack and named federal/source methods remain incomplete; full2026 calculation is blocked.",
-    "Remaining enabled-source queue includes DA guided/preview integration, capital-origin intake, actual prior/mixed charity and2026nonitemizer carry, source-bound COD and guided intake. Positive1202reconciled-net and current-public-cash positiveATNOL paths are reviewed and committed; negative-net1202 interpretation remains disabled.",
-    "Independent human tax review, selected-state demand/qualification and final versioned forms are outstanding; filing stays disabled and PDFs are review-only.",
-    "AI application/scorer bindings are reviewed and corrected;240draftcases still have zero human reviews/live results, unverified provider account availability and no modelpromotion.",
-    "Hosted auth/security/billing/Redis/provider/DB/recovery operations require authorized staging credentials and evidence; local synthetic checks do not establish staging readiness.",
+    "Final current-head verification remains pending after source packages. Historical4aef633 full coverage passes86.98percent against unchanged85percent gate;907b6db browser passes348 with five hosted skips. Later packages require integrated checks.",
+    "The2026 rule pack and named Marketplace, charity, education, mixed-tip and QBI source methods remain incomplete; full2026 calculation stays blocked.",
+    "Adoption review output is under review. Actual ordinary refund, vehicle refinancing, historical adoption, wagering, DA, capital-origin and COD intake are committed. Remaining partial/prior/mixed methods must be implemented or explicitly resolved; guards are not completion.",
+    "Independent human tax review, selected-state demand/qualification and final versioned forms are outstanding; filing stays disabled and PDFs are review-only. Negative-net1202/Form172 controlling interpretation remains unresolved.",
+    "AI application/scorer bindings are reviewed and corrected;240draftcases have zero human reviews/live results, unverified provider account availability and no model promotion.",
+    "Hosted auth/security/billing/Redis/provider/DB/recovery requires authorized staging credentials and evidence; local synthetic checks do not establish staging readiness.",
     "Final native release images, SBOMs/scans/rollback/recovery and advisory owner acceptance remain pending; full-fidelity local backup/import is implemented and needs final artifact rehearsal."
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "4aef633349dbb39c2481b914730c309785cc8c41",
+    "lastRecordedCommit": "d153020860157dab99f63de97b55869a001b5dc5",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -1312,11 +1312,11 @@
       "final multi-platform release images"
     ],
     "workInProgress": [
-      "Actual prior/mixed charitable history,2026 nonitemizer carry and guided COD collector. DA/capital-origin intake are committed in a66b5de and9d71c5f; COD source core is bb5cbe6.",
-      "Actual prior/mixed charitable history and2026 nonitemizer carry, including confirmed2025 current-gift eligibility/year defects.",
-      "Final enabled-scenario source/calculation/review/readiness audit; deliberately unsupported methods stay explicit.",
-      "Full4aef633coverage/types/spec/inventory/build/lint pass. Browser found a pinned-PDF-runtime setup omission; isolated affected rerun passes. Final full browser/remoteCI/native images/recovery remain.",
-      "External staging/providerbudget/humanreview/state-demand/final-form inputs remain unanswered; all240 AIcases human-unreviewed with zero live results/promotion."
+      "Marketplace ordinary re-entry and adoption review packets await independent review; educator full in-kind coordination and2026 explicit nonitemized charity are in progress.",
+      "Partial mixed charitable media,2026 prior/nonitemizer/floor carries and prior/mixed regular/AMT NOL coordination remain internal implementation work.",
+      "Partial in-kind education/mixed-owner coordination, reduced mixed employee/business tips and non-rental/postEBL QBI character remain named source-method work.",
+      "Final enabled-scenario facts/calculation/review/readiness audit and full current-head checks, remoteCI, native images/SBOM/scans/recovery remain.",
+      "External staging/provider budget/human review/state demand/final-form inputs remain unanswered;240 AIcases are human-unreviewed with zero live results or promotion."
     ],
     "latestIntegratedCommit": "4aef633349dbb39c2481b914730c309785cc8c41",
     "activeIntegrationRun": {
@@ -1638,7 +1638,7 @@
       "thresholdChanged": false,
       "evidence": ".local/upgrade-evidence/full-coverage-1791979.log"
     },
-    "lastPushedCommit": "2fdbb03710017cce5bcb389bfb5e6e6b6ea12a0e",
+    "lastPushedCommit": "d153020860157dab99f63de97b55869a001b5dc5",
     "currentBrowserRun": {
       "commit": "907b6dbb431767cfa64452bfb75151179ff818e2",
       "status": "passed-local-self-hosted",
@@ -2613,17 +2613,19 @@
       "evidenceSha256": "df287c8516aa0838e1719ba5e6e67349b20c0f2bdb1a1a027f9fefb8b55d4e43"
     },
     "currentRemoteRuns": {
-      "commit": "2fdbb03710017cce5bcb389bfb5e6e6b6ea12a0e",
+      "commit": "d153020860157dab99f63de97b55869a001b5dc5",
       "ci": {
-        "run": 40242413319,
-        "status": "in_progress-when-observed"
+        "run": 40245320622,
+        "status": "in_progress-when-observed",
+        "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40245320622"
       },
       "web": {
-        "run": 40242413334,
-        "status": "in_progress-when-observed"
+        "run": 40245321550,
+        "status": "in_progress-when-observed",
+        "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40245321550"
       },
       "qualification": false,
-      "limitation": "Preceding4332623/fcedf57 runs were cancelled by subsequent pushes. No completed remote result inferred."
+      "limitation": "Preceding998d55a andda7fc1c runs cancelled by subsequent pushes. No completed remote result inferred."
     },
     "charityHistoryParentReview": {
       "tree": "7dac725be8526c9d18ce326b84187807cab03958",
@@ -2671,10 +2673,9 @@
       "boundedAgentReview": "passed",
       "humanQualification": false,
       "remainingMethods": [
-        "binding2025priorG/current-property",
-        "same-year mixed-mediumother30 history",
-        "2026 floor/nonitemizer carry",
-        "prior/mixed NOL coordination"
+        "partial same-year positive mixed-media allocation",
+        "2026 prior/floor/nonitemizer carry",
+        "prior/mixed regular and AMT NOL coordination"
       ]
     },
     "guidedCharitableHistory": {
@@ -2707,19 +2708,104 @@
     },
     "namedMethodQueue": {
       "audit": "docs/upgrade-2026-remaining-methods.md",
+      "delivered": {
+        "ordinaryRefundIntake": [
+          "2c4ddfe",
+          "cd08895"
+        ],
+        "vehicleRefinancing": [
+          "2baa03c",
+          "da7fc1c"
+        ],
+        "foreignAdoptionHistory": [
+          "998d55a",
+          "d153020"
+        ],
+        "boundedCharityHistories": [
+          "9ce1686",
+          "6cf0463"
+        ]
+      },
       "owners": {
-        "vehicleRefinancing": "parent",
-        "ordinaryRefundIntake": "federal_law",
         "marketplaceMethods": "federal_law",
-        "foreignAdoptionHistory": "complete_facts",
-        "charityMethods": "ai_billing"
+        "adoptionReviewOutput": "complete_facts",
+        "charityMethods": "ai_billing",
+        "educatorInKind": "parent"
       },
       "subsequent": [
-        "mixed-reducedemployee/business tips-to-QBI allocation",
-        "partial/in-kind529 and education coordination",
+        "mixed reduced employee/business tips-to-QBI allocation",
+        "partial in-kind529 and mixed-owner education coordination",
         "non-rental suspendedQBI and postEBL character"
       ],
       "unsupportedIsComplete": false
+    },
+    "recentSourcePackages": {
+      "historicalRefundIntake": {
+        "commits": [
+          "2c4ddfe558f9e452eba9bef13b207938722ad7d2",
+          "cd088957810efbc42b12f83418fcbacb050b4382"
+        ],
+        "tests": 903,
+        "files": 90,
+        "independentAgentCases": 11,
+        "browserPassed": 2,
+        "browserRetries": 0,
+        "evidenceDocument": "docs/upgrade-2026-refund-intake-work.md"
+      },
+      "publicCashCarry2025": {
+        "commit": "9ce1686334a5ea40dceec8e85a577d4cadeef902",
+        "tests": 228,
+        "files": 27,
+        "metadataTests": 21
+      },
+      "privateCharitableMedia": {
+        "commit": "6cf0463c2ccfb3bf236899d16d1db7c8cdaf83fe",
+        "tests": 460,
+        "files": 44,
+        "finalTests": 32,
+        "independentAgentTests": 8,
+        "savedPdfReopenedAndRendered": true,
+        "evidenceDocument": "docs/upgrade-2026-charitable-private-media-work.md"
+      },
+      "vehicleRefinancing": {
+        "coreCommit": "2baa03c6ca7922ebdd16b91454b1fa236a4ebdc2",
+        "intakeCommit": "da7fc1ce2035e09b0ee26125da7554a75e808465",
+        "coreFinalTests": 72,
+        "intakeAdjacentTests": 795,
+        "intakeFinalTests": 52,
+        "independentIntakeTests": 5,
+        "browserPassed": 2,
+        "browserRetries": 0,
+        "evidenceDocuments": [
+          "docs/upgrade-2026-vehicle-refinancing-work.md",
+          "docs/upgrade-2026-vehicle-refinancing-intake.md"
+        ]
+      },
+      "historicalAdoptionBenefits": {
+        "coreCommit": "998d55ac49abe399e2ede0cf0c7a803844ca9295",
+        "intakeCommit": "d153020860157dab99f63de97b55869a001b5dc5",
+        "coreFinalTests": 151,
+        "coreIndependentTests": 15,
+        "intakeFinalTests": 389,
+        "intakeBroaderTests": 889,
+        "intakeIndependentTests": 11,
+        "browserPassed": 2,
+        "browserRetries": 0,
+        "reviewPdfStatus": "under-independent-review",
+        "evidenceDocuments": [
+          "docs/upgrade-2026-adoption-history-work.md",
+          "docs/upgrade-2026-adoption-intake-work.md"
+        ]
+      },
+      "boundary": "Package-specific local synthetic source/software evidence and separate agent review only. No human, final form, staging, live provider or final integrated qualification."
+    },
+    "currentInventory": {
+      "sourceCommit": "d153020860157dab99f63de97b55869a001b5dc5",
+      "entries": 413,
+      "generation": "passed",
+      "freshness": "passed",
+      "sha256": "9e75b738a1a9eb3ad5ee93645dd9bbf0731f161b34caf2f22700a5fb8073b2c3",
+      "evidence": ".local/upgrade-evidence/inventory-d153020.log"
     }
   },
   "historicalReleaseBlockers": {

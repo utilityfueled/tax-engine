@@ -46,8 +46,32 @@ Final 2026 enablement still needs the complete parameter/rule review, final phys
 
 ## Current ownership and delivered follow-through
 
-- Actual wagering intake is committed in`fcedf57`:834adjacent cases,61rebase cases,types/build and two production desktop/mobile flows pass; separate four-case source review passes.
-- Actual2025 charitable history/current-source correction is committed in`ea2f422`, and the actual history collector in`4332623`. Five unchanged parent regression probes now pass. Binding cash/property, mixed-medium history,2026 floor/nonitemizer and prior/mixedNOL methods remain assigned to`ai_billing`.
-- Parent owns qualified vehicle refinancing. `federal_law` owns ordinary refund intake then Marketplace re-entry/shared-policy/two-owner/marriage. `complete_facts` owns historical foreign-adoption employer-benefit sources and calculation.
-- Reduced mixed employee/business tips, partial in-kind529/education coordination and non-rental/postEBL QBI character remain internal implementation/research work for subsequent packages. An unsupported guard is not completion.
-- Local full browser evidence at907b6db is348passes,5hosted skips,0failures/0retries; later packages remain outside that exact run. Human review, staging, provider qualification and final forms are separate external requirements.
+The original audit above is dated to `907b6db`; these subsequent deliveries
+supersede its specific missing-route observations, not its qualification limits.
+
+- Actual refund intake is committed in `2c4ddfe` with strict-spec repair
+  `cd08895`: 903 adjacent cases, two browser flows and corrected 11-case
+  independent review pass. Actual wagering intake is committed in `fcedf57`.
+- Actual 2025 charitable histories and their collector are committed in
+  `ea2f422`/`4332623`; `9ce1686` adds public-cash carry ordering and `6cf0463`
+  preserves bounded cash/property histories. Partial mixed-medium allocation,
+  2026 prior/nonitemizer/floor carry and prior/mixed NOL coordination remain
+  assigned to `ai_billing`. The explicit 2026 nonitemized election is in progress.
+- Ordinary vehicle refinancing core and actual guided source collector are
+  committed in `2baa03c`/`da7fc1c`, with exact source conservation and independent
+  agent review. Changed borrowers, further advances and unusual timing retain
+  their separately documented method boundaries.
+- Historical foreign-adoption employer-benefit sources, signed canonical
+  transfer and guided collection are committed in `998d55a`/`d153020`.
+  `complete_facts` owns the benefits-only review packet and original-identity
+  context, now under independent review.
+- `federal_law` owns Marketplace ordinary re-entry (under independent review),
+  then historical capped repayment/shared-policy/two-owner/marriage methods.
+- Parent owns full in-kind QTP/educator coordination (under independent review)
+  and subsequent partial in-kind, mixed-owner education, reduced mixed tips and
+  non-rental/post-EBL QBI source-method work. These remain internal work.
+- Inventory regeneration on committed `d153020` passes with 413 entries. The
+  local full browser run at `907b6db` remains 348 passes, five hosted skips,
+  zero failures/retries; later packages are outside that exact run. Human
+  review, staging, provider qualification and final forms remain external
+  requirements. Unsupported guards and agent reviews do not complete them.
