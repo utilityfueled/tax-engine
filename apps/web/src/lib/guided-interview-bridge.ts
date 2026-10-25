@@ -2,6 +2,7 @@ import { buildHsaInputs, hsaFactErrors } from "./guided-hsa-facts";
 import { buildEducatorSources, educatorFactErrors } from "./guided-educator-facts";
 import { buildStandardDeductionFacts } from "./guided-standard-deduction-facts";
 import { buildActualEducationInput } from "./guided-education-facts";
+import { buildEducationDistributionInputs, educationDistributionFactErrors } from "./guided-education-distributions";
 /**
  * Bridge between guided interview section data and the tax engine.
  *
@@ -627,6 +628,8 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     assertKnownFacts(socialSecurityFactErrors(socialSecurityData, segmentation.filingStatus, state.taxYear, personalInfo, adjustmentData));
     assertKnownFacts(unemploymentFactErrors(unemploymentData, segmentation.filingStatus, state.taxYear, personalInfo, stateReturnData));
     assertKnownFacts(educationFactErrors(creditsData, state.taxYear, segmentation.filingStatus, personalInfo));
+    assertKnownFacts(educationDistributionFactErrors(creditsData?.educationDistributions, state.taxYear, segmentation.filingStatus,
+      buildActualEducationInput(creditsData, state.taxYear, segmentation.filingStatus, personalInfo)));
     assertKnownFacts(adjustmentFactErrors(adjustmentData, segmentation.filingStatus, state.taxYear));
     assertKnownFacts(educatorFactErrors(adjustmentData, segmentation.filingStatus, state.taxYear, segmentation.lifeEvents.includes("educator-expenses")));
     assertKnownFacts(hsaFactErrors(adjustmentData?.hsaAccounts, segmentation.filingStatus, state.taxYear, w2Data?.entries ?? [], personalInfo, segmentation.lifeEvents.includes("hsa-contributions")));
@@ -677,6 +680,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
   const dependentCare = buildDependentCareInput(creditsData, segmentation.filingStatus, state.taxYear, careBenefitSources);
   const dependentCareBenefits = buildCareBenefitsInput(creditsData?.dependentCareBenefits, state.taxYear, segmentation.filingStatus, careBenefitSources);
   const educationExpenses = buildActualEducationInput(creditsData, state.taxYear, segmentation.filingStatus, personalInfo);
+  const educationDistributions = buildEducationDistributionInputs(creditsData?.educationDistributions, state.taxYear, segmentation.filingStatus, educationExpenses);
   const energyCredits = buildEnergyCreditsInput(creditsData, state.taxYear, segmentation.filingStatus);
   const scheduleH = buildScheduleHInput(otherTaxesData);
   const estimatedPayments = [
@@ -745,6 +749,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     standardDeductionFacts: buildStandardDeductionFacts(personalInfo?.standardDeductionFacts, segmentation.filingStatus, state.taxYear, personalInfo),
     deductionElection: deductionData?.method ?? "automatic",
     educationExpenses,
+    ...educationDistributions,
     energyCredits,
     form8936: buildVehicleCreditInput(creditsData?.vehicles, state.taxYear, segmentation.filingStatus),
     form8839: buildAdoptionInput(creditsData?.adoption, state.taxYear, segmentation.filingStatus),

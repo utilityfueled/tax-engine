@@ -12,6 +12,7 @@ import { EnergySourceDetails } from "./energy-source-details";
 import { VehicleSourceDetails } from "./vehicle-source-details";
 import { AdoptionSourceDetails } from "./adoption-source-details";
 import { EducationSourceDetails } from "./education-source-details";
+import { EducationDistributionDetails } from "./education-distribution-details";
 import { CareBenefitsDetails } from "./care-benefits-details";
 import type { CareBenefitSource } from "@/lib/guided-dependent-care-benefits";
 import { CareSourceDetails } from "./care-source-details";
@@ -130,6 +131,8 @@ export function SectionCredits({
             data={current.education}
             onChange={(next) => onDataChange({ ...current, education: next })}
           />
+
+          <EducationDistributionDetails data={current.educationDistributions} onChange={educationDistributions => onDataChange({ ...current, educationDistributions })} />
 
           <EnergySourceDetails
             filingStatus={filingStatus}

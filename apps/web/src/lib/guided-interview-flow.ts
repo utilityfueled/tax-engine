@@ -29,6 +29,9 @@ import { socialSecurityFactErrors, socialSecurityEntries, isStartedSocialSecurit
 import type { RetirementSourceData } from "./guided-retirement-facts";
 import { vehicleFactErrors, type VehicleCreditData } from "./guided-vehicle-facts";
 import { adoptionFactErrors, type AdoptionCreditData } from "./guided-adoption-facts";
+import { educationDistributionFactErrors, type EducationDistributionData } from "./guided-education-distributions";
+import { buildActualEducationInput } from "./guided-education-facts";
+import { guidedSourceValuesChanged } from "./guided-source-confirmation";
 
 import { formatPendingW2SuggestionValueLabel, isOfficialFixtureSourceType } from "@/lib/document-fixture-copy";
 
@@ -1122,6 +1125,7 @@ export interface CreditsData {
   dependentCare: DependentCareData;
   dependentCareBenefits?: CareBenefitsData;
   education: EducationCreditData;
+  educationDistributions?: EducationDistributionData;
   energy: EnergyCreditData;
   vehicles?: VehicleCreditData;
   adoption?: AdoptionCreditData;
@@ -1453,6 +1457,11 @@ export function updateSectionData(
   const hsaSourcesChanged = ["income-w2", "personal-info"].includes(sectionId) && adjustments?.hsaAccounts;
   const educatorSourcesChanged = ["income-w2", "personal-info", "credits", "income-investments"].includes(sectionId) && adjustments?.educatorExpenseSources;
   const benefitSourcesChanged = (sectionId === "income-w2" || sectionId === "income-self-employment") && credits?.dependentCareBenefits;
+  const nextCredits = sectionId === "credits" ? data as CreditsData : credits;
+  const educationSourcesChanged = !!nextCredits?.educationDistributions && (
+    ((sectionId === "personal-info" || sectionId === "adjustments") && guidedSourceValuesChanged(state.sectionData[sectionId], data)) ||
+    (sectionId === "credits" && guidedSourceValuesChanged(credits?.education, nextCredits.education))
+  );
   const ohioStateReturn = state.sectionData["state-return"];
   const ohioInterestChanged = sectionId === "income-investments" && ohioStateReturn?.ohioInterestAllocation;
   return {
@@ -1464,6 +1473,7 @@ export function updateSectionData(
       ...((iraSourcesChanged || hsaSourcesChanged || educatorSourcesChanged) && adjustments ? { adjustments: { ...adjustments, ...(iraSourcesChanged ? { iraContributions: { ...iraSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(hsaSourcesChanged ? { hsaAccounts: hsaSourcesChanged.map(account => ({ ...account, sourceFactsConfirmed: null })) } : {}), ...(educatorSourcesChanged ? { educatorExpenseSources: educatorSourcesChanged.map(source => ({ ...source, sourceFactsConfirmed: null })) } : {}) } } : {}),
       ...(benefitSourcesChanged ? { credits: { ...credits, dependentCareBenefits: { ...credits.dependentCareBenefits,
         sourceFactsConfirmed: null, earnedIncomeWorksheetConfirmed: null, creditExpenseCoordinationConfirmed: null } } } : {}),
+      ...(educationSourcesChanged && nextCredits ? { credits: { ...nextCredits, educationDistributions: { ...nextCredits.educationDistributions, sourceFactsConfirmed: null } } } : {}),
     },
   };
 }
@@ -1788,9 +1798,19 @@ export function validateSection(
     }
     case "credits": {
       const credits = getSectionData(state, "credits");
+      const personal = getSectionData(state, "personal-info");
+      const educationErrors = educationFactErrors(credits, state.taxYear, state.segmentation.filingStatus, personal);
+      let distributionErrors: Record<string, string> = {};
+      try {
+        const actualEducation = Object.keys(educationErrors).length ? undefined : buildActualEducationInput(credits, state.taxYear, state.segmentation.filingStatus, personal);
+        distributionErrors = educationDistributionFactErrors(credits?.educationDistributions, state.taxYear, state.segmentation.filingStatus, actualEducation);
+      } catch {
+        distributionErrors.educationDistributions = "Complete the actual education credit facts before confirming distribution allocations.";
+      }
       const sources = guidedCareBenefitSources(getSectionData(state, "income-w2")?.entries, getSectionData(state, "income-self-employment")?.businessFacts, getSectionData(state, "income-self-employment")?.expenses);
       return validateRequiredFacts({
-        ...educationFactErrors(credits, state.taxYear, state.segmentation.filingStatus, getSectionData(state, "personal-info")),
+        ...educationErrors,
+        ...distributionErrors,
         ...careBenefitsFactErrors(credits?.dependentCareBenefits, state.taxYear, state.segmentation.filingStatus, sources),
         ...careFactErrors(credits?.dependentCare, state.segmentation.filingStatus, { data: credits?.dependentCareBenefits, year: state.taxYear, sources }),
         ...energyFactErrors(credits?.energy, state.taxYear, state.segmentation.filingStatus),

@@ -8,7 +8,7 @@ Official sources refreshed 2026-10-25: [Pub. 970](https://www.irs.gov/publicatio
 - [x] Write source-first specification covering identities, expense allocation, K12/credential changes, account worksheets, actual transfers and additional tax.
 - [x] Red-first ordinary distribution/source/schema calculations and Decimal implementation; source edge cases below remain explicitly blocked.
 - [x] Federal actual-recipient and final education-credit allocation reconciliation (6b07529); loan and educator source reconciliation remains coordinated separately.
-- [ ] Guided source collection and actual credit/distribution expense coordination.
+- [x] Guided source collection and actual credit/distribution expense coordination; source UI package evidence below.
 - [ ] Audited reference summary and actual Form5329 PartII owner integration.
 - [ ] Relevant suites, diff review, saved-PDF inspection, scoped commits.
 
@@ -99,3 +99,36 @@ Red-first per-expense regression failed on the missing vector, then passed with
 Root types and scoped lint passed. Logs: `education-loan-source-red.log`,
 `education-loan-source-green.log`, `education-guided-types.log`, and
 `education-guided-lint.log`. No changes to the rounding or exclusion formula.
+
+
+## Guided source intake (2026-10-25)
+
+Added actual statement, beneficiary, expense, allocation, transfer, loan-history,
+Coverdell-basis and exception controls. Blanks remain unknown; explicit empty-list
+confirmation is required. Currency retains exact Decimal source strings. Edits
+clear source confirmation while retaining values and local opaque links. No
+provider or external transport was added.
+
+Parent agent review found a section-validation gap: the engine bridge checked
+actual linked education-credit students, but the section validator did not pass
+those inputs. A failing-first regression now covers mismatched students,
+excessive credit expense allocations and missing student inputs; both paths
+reject them. A second failing-first regression prevents confirmation-only edits
+from repeatedly invalidating linked sections. The shared comparison omits only
+sourceFactsConfirmed metadata; actual qualification answers remain substantive.
+The reciprocal student-loan/educator integration is owned by the facts agent.
+
+Validation:614 guided/DOM tests across42 files passed before the review correction;
+8 focused intake/credit/DOM tests passed after it;14 focused intake/PDF tests
+passed after confirmation-cycle correction. Root/web types and scoped lint are
+recorded in education-guided and education-intake-pdf logs. Shared bridge lint
+has nine existing non-null-assertion warnings, zero errors; new owned files have
+no warnings. The review is software review by an agent, not human tax approval.
+
+The source-link follow-up is committed as `2f8abd7`; federal recipient/final-credit
+integration is `6b07529`. Source/reference PDF and returned-contribution/deemed
+transaction cases remain separate internal work. No2026 mapping or filing gate
+was enabled.
+
+Immutable staged UI tree `5cd7883e` passed all8 targeted intake/credit/DOM tests,
+root types and all3682 spec references. The full working UI also passed web types.

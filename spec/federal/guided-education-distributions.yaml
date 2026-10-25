@@ -1,0 +1,30 @@
+form: "Guided education distributions"
+fullName: "Actual Form1099-Q statements and education-expense coordination"
+taxYear: 2026
+irsReference: "https://www.irs.gov/publications/p970"
+notes: |
+  Uses the source rules in form-1099-q-source.yaml. No monetary amount, transfer
+  answer, expense allocation or exception is inferred from a blank control.
+  User confirmation follows source edits; local opaque links identify statements,
+  beneficiaries and expenses. Source facts remain local to the guided return.
+lines:
+  - line: "unknown-and-source"
+    description: "Preserve blanks and validate actual sources"
+    formula: "Absent distribution section emits no statements; started but incomplete records block calculation; normalize only actual entered currency and branch facts"
+    testRef: "tests/guided-interview/guided-education-distributions.test.ts::preserves unknown distribution sources and exact entered amounts"
+  - line: "bridge-coordination"
+    description: "Carry actual statements and expense allocations to federal calculation"
+    formula: "Forward actual year, statement identities, recipient ownership, complete expense ledger and selected credit allocations without creating zeros or replacing existing education credits"
+    testRef: "tests/guided-interview/guided-education-distributions.test.ts::forwards actual education distributions and validates the linked source ledger"
+  - line: "credit-link-validation"
+    description: "Section completion and engine bridge share actual credit coordination"
+    formula: "When source records claim credit expenses, require actual matching eligible-credit student inputs and enforce per-student and return limits before marking the section complete; missing student facts remain errors"
+    testRef: "tests/guided-interview/guided-education-distributions.test.ts::rejects unlinked or excessive education credits during section validation"
+  - line: "source-invalidation"
+    description: "Reconfirm changed source coordination"
+    formula: "Substantive edits to education-credit facts, taxpayer identity or adjustment inputs invalidate saved distribution-source confirmation while retaining amounts and links; sourceFactsConfirmed metadata alone does not invalidate linked sections"
+    testRef: "tests/guided-interview/guided-education-distributions.test.ts::invalidates distribution confirmation when coordinated facts change"
+  - line: "actual-controls"
+    description: "Editable source records without assumed facts"
+    formula: "Statement, beneficiary, expense, allocation, transfer, loan, account-basis and exception controls retain actual entered values; edits invalidate confirmation; explicit none supplies empty lists"
+    testRef: "tests/apps/web/education-distribution-interactions.test.tsx::collects actual education distribution records and invalidates edited facts"
