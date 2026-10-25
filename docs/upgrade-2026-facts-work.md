@@ -256,3 +256,19 @@ Source-year/document-fidelity package commit: `70f8d17`.
   credit/self-employment tests in 15 files pass, including exact large totals,
   explicit-zero spouse income and unknown/false eligibility rendering.
 - State and deduction source package commit: `f5acf56`.
+
+## Regression alignment with corrected federal routing
+
+- Rechecked remaining Schedule H edge fixtures against the source-backed payroll
+  rules in `2fb8e5c`. A $2,799 worker has no Social Security/Medicare wages but
+  remains in an established FUTA base. Actual withholding from below-threshold
+  workers remains on line 7. Unrelated minor wages remain subject to FUTA.
+- Section B fixtures now supply independently explicit state/rate periods,
+  contribution timing and credit reductions. A null assigned experience rate is
+  a known absence of an assigned rate, not an inferred zero rate. Parent employee
+  exemption fixtures explicitly answer the childcare exception.
+- Updated workspace assertions for the independently corrected Form 1040 payment
+  routing: line 24 excludes the existing Form 2210 penalty; line 37 still includes
+  it. The single and double broker balances due remain $1,534 and $12,458, while
+  total tax is $1,472 and $11,957. All source-trace assertions remain enforced.
+- Both affected files pass: 61 tests. Care and QBI fact commit: `e5f3014`.

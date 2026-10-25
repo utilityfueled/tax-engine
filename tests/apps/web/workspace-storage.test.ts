@@ -919,7 +919,7 @@ describe("workspace storage", () => {
         totalIncome: "55000",
         agi: "55000",
         taxableIncome: "39250",
-        totalTax: "1534",
+        totalTax: "1472",
         totalPayments: "0",
         refund: "0",
         amountOwed: "1534"
@@ -930,7 +930,7 @@ describe("workspace storage", () => {
           form: "1040",
           line: "24",
           label: "Total tax",
-          value: "1534",
+          value: "1472",
           formula: expect.stringContaining("Line 22"),
           sourceFactIds: [
             "broker-proceeds:document-detected",
@@ -947,7 +947,7 @@ describe("workspace storage", () => {
           line: "37",
           label: "Amount you owe",
           value: "1534",
-          formula: "Total tax - Total payments (if positive)",
+          formula: "max(0, total tax - total payments + line 38 penalty)",
           sourceFactIds: [
             "broker-proceeds:document-detected",
             "broker-proceeds:fixture-long-term-sale",
@@ -1241,9 +1241,9 @@ describe("workspace storage", () => {
           id: "1040:34",
           form: "1040",
           line: "34",
-          label: "Overpayment (refund)",
+          label: "Overpayment before estimated-tax penalty",
           value: "0",
-          formula: "Total payments - Total tax (if positive)",
+          formula: "max(0, total payments - total tax)",
           sourceFactIds: [
             "taxable-interest:document-detected",
             "taxable-interest:fixture-interest-income",
@@ -1265,7 +1265,7 @@ describe("workspace storage", () => {
           line: "37",
           label: "Amount you owe",
           value: "525",
-          formula: "Total tax - Total payments (if positive)",
+          formula: "max(0, total tax - total payments + line 38 penalty)",
           sourceFactIds: [
             "taxable-interest:document-detected",
             "taxable-interest:fixture-interest-income",
@@ -1346,7 +1346,7 @@ describe("workspace storage", () => {
         totalIncome: "110000",
         agi: "110000",
         taxableIncome: "94250",
-        totalTax: "12458",
+        totalTax: "11957",
         totalPayments: "0",
         refund: "0",
         amountOwed: "12458"
@@ -1393,7 +1393,7 @@ describe("workspace storage", () => {
           form: "1040",
           line: "24",
           label: "Total tax",
-          value: "12458",
+          value: "11957",
           formula: expect.stringContaining("Line 22"),
           sourceFactIds: [
             "broker-proceeds:document-detected",
@@ -1412,7 +1412,7 @@ describe("workspace storage", () => {
           line: "37",
           label: "Amount you owe",
           value: "12458",
-          formula: "Total tax - Total payments (if positive)",
+          formula: "max(0, total tax - total payments + line 38 penalty)",
           sourceFactIds: [
             "broker-proceeds:document-detected",
             "broker-proceeds:fixture-long-term-sale:irs-1099-b-2025:f1099b--2025.pdf:12",
