@@ -313,7 +313,7 @@
       "hosted staging and independent human reviews",
       "repeated live synthetic AI evaluation and account availability"
     ],
-    "latestIntegratedCommit": "df1562b",
+    "latestIntegratedCommit": "ec225fe",
     "latestCoverageDiagnostic": {
       "status": "failed-tests-coverage-thresholds-met",
       "commit": "05ec24e10716cd6c4c8ccd8d2b6e3effc6e18d94",
@@ -422,7 +422,32 @@
       "socialSecurityAdapterPlacement": "003609d",
       "publishedTableResidualFixtures": "ca3b62c",
       "workspaceTableExpectations": "dc1e900",
-      "documentPreviewTableExpectations": "914a692"
+      "documentPreviewTableExpectations": "914a692",
+      "form4952SourceAudit": "d1b26ef",
+      "form4952ReturnElection": "9e6d794",
+      "careBenefitsPdf": "fd8658c",
+      "w2SparseSourceBoxes": "3c057f6",
+      "iraCompensationRules": "c3fa9b4",
+      "iraCanonicalReturn": "fa37e8d",
+      "iraActualGuidedSources": "6eb3747",
+      "paActualExpenseWorksheet": "ff761dd",
+      "officialFederalFormAvailability": "70f96ad",
+      "governmentActualGuidedSources": "d90addb",
+      "actualHsaOwnership": "b9071db",
+      "energyActualSources": "30fc3dd",
+      "amtActualInvestmentSources": "58d2a3e",
+      "energyFilingStatus": "cac5a87",
+      "hsaActualLimitRecapture": "b1488d4",
+      "iraOfficialWorksheetFixtures": "dd1b0a7",
+      "pdfReviewNoticeFinalization": "28b0cd7",
+      "guidedEnergySources": "b84205d",
+      "energyPrintedCap": "190af2c",
+      "canonicalSchedule1": "1f4a614",
+      "educator2026Cap": "472a190",
+      "energyPhysicalSources": "24cbcf7",
+      "guidedOidSources": "e49e1d0",
+      "hsaOwnerExcessSources": "104bca4",
+      "selectedStateDedicatedPreview": "ec225fe"
     },
     "remoteCi": {
       "commit": "a2f62e217f846a479701b3393606228c366d3410",
@@ -446,6 +471,32 @@
       "amd64": "local QEMU Next.js compilation failed with signal11; native CI rehearsal now configured"
     },
     "currentStableCoverageRun": {
+      "commit": "ff761dde6b7a2305cbf1adaafa0ad2609c0f3eef",
+      "workers": 1,
+      "status": "failed-tests-coverage-thresholds-met",
+      "evidence": ".local/upgrade-evidence/stable-coverage-ff761dd.log",
+      "scope": "immutable tracked-file archive with matching dependencies and disposable local PostgreSQL16; reportOnFailure; unchanged thresholds",
+      "limitation": "Full command failed. Seven independently source-verified IRA fixture expectations corrected by dd1b0a7. Four PDF timeouts pass unchanged in the exact same archive (five tests/two files in 8.03 seconds); this does not replace a fresh passing full run.",
+      "passed": 16494,
+      "failed": 11,
+      "filesPassed": 632,
+      "filesFailed": 3,
+      "skipped": 0,
+      "branchesPercent": "86.31",
+      "functionsPercent": "91.88",
+      "statementsPercent": "92.76",
+      "linesPercent": "94.12",
+      "durationSeconds": "460.45",
+      "evidenceSha256": "1d955b475471541d5b838688a71d6cdeda540ac771b6f8659e94084310a85868",
+      "timeoutRerunEvidence": ".local/upgrade-evidence/stable-ff761dd-timeout-rerun.log"
+    },
+    "remainingInternalWork": [
+      "Remaining federal and complete-facts checklists including HSA event allocation, education/529, mortgage/charitable source integration and special source coordination",
+      "Actual Ohio municipal-interest allocation and remaining dedicated-state source gaps",
+      "Fresh full-suite/coverage/all exact-code gates, regenerated inventory, browser and native amd64 CI",
+      "Final exact-code arm64 image, SBOM, scan and recovery rerun"
+    ],
+    "previousStableCoverageRun": {
       "commit": "99fc4c25d4fa65e0b535085302bfd489190ab1e1",
       "workers": 1,
       "status": "failed-tests-coverage-thresholds-met",
@@ -464,12 +515,6 @@
       "durationSeconds": "521.39",
       "limitation": "Full command failed. Twenty-three published-table fixture expectations corrected in dc1e900, ca3b62c and 914a692; Ohio missing audit fixture corrected separately; PDF timeout passed isolated unchanged. Newer complete source code requires fresh full checks."
     },
-    "remainingInternalWork": [
-      "Form4952 actual source/printed audit and election integration; newly available final2026 blank retained unqualified",
-      "Remaining federal and complete facts checklists, including IRA compensation and special source coordination",
-      "Care PartIII PDF and actual benefit sources",
-      "Fresh full-suite/coverage/all exact-code gates, inventory, browser and native amd64 CI",
-      "Final exact-code arm64 image, SBOM, scan and recovery rerun"
-    ]
+    "lastPushedCommit": "e49e1d0"
   }
 }

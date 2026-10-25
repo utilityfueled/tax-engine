@@ -377,3 +377,62 @@ No external qualification or production readiness is implied.
   exact hash are being recorded in the Form4952 package. This updates prior
   availability evidence for this specific form, not the qualification registry.
   Filing,2026 PDF exports,AI promotion and release claims remain gated.
+
+## Actual-source integration through ff761dd — 2026-10-25
+
+Pushed the Form4952 printed-line/source/PDF correction `d1b26ef`, regular-return
+and election integration `9e6d794`, IRA core `c3fa9b4`, return `fa37e8d` and actual
+source UI `6eb3747`, sparse actual W2 boxes `3c057f6`, care PartIII PDF `fd8658c`,
+and independent PA expense worksheet `ff761dd`. The PA staged tree passes1,450
+state/PDF/guided/DOM tests, types and3,504 spec references; see its work document.
+The Form4952 package passed76 focused tests after an independent agent review
+identified and verified repair of a missing-calculation export path; this does
+not substitute for human qualification.
+
+A fresh immutable full coverage run is underway at exact
+`ff761dde6b7a2305cbf1adaafa0ad2609c0f3eef`, with the disposable local PostgreSQL
+ledger service and unchanged thresholds. Its evidence path is
+`.local/upgrade-evidence/stable-coverage-ff761dd.log`. No outcome is claimed yet.
+Further AMT source, HSA, energy,529, export and final release checks continue.
+
+## Immutable coverage outcome and next source packages — 2026-10-25
+
+The `ff761dd` archive completed with16,494 pass,11 fail,zero skip across635 files
+(632 pass,3 fail). Thresholds remain unchanged and pass:86.31% branches,
+91.88% functions,92.76% statements,94.12% lines. The command is failed.
+Seven IRA expectations were independently checked against Publication590-A and
+corrected in `dd1b0a7`: deduction rounding, nonparticipant QSS and excess
+contribution treatment. Four PDF timeouts passed unchanged on the exact same
+archive (5 tests/2 files,8.03seconds); no timeout or assertion was relaxed.
+This focused result does not establish a passing global run.
+
+Integrated follow-ups include actual HSA ownership `b9071db`, energy installation
+sources `30fc3dd`, separate AMT investment sources/PartIII `58d2a3e`, energy filing
+status `cac5a87` and actual HSA limit/recapture sources `b1488d4`. Their package
+documents retain source and focused check evidence. Guided HSA/energy,529,
+canonical Schedule1,OID intake and final export/release work remain active.
+
+## Review PDF, source intake and return integration — 2026-10-25
+
+Pushed through`e49e1d0`: visible review notices survive template loads, appended
+pages and merges (`28b0cd7`,1,028PDF/workspace checks); actual energy UI
+`b84205d`, corrected printed insulation cap`190af2c`, canonical Schedule1/1040
+source totals`1f4a614`,2026educator cap`472a190`, and actual physical5695sources
+`24cbcf7` (1,021PDF tests/99files,114focused source/core/workspace checks).
+Actual OID interview`e49e1d0` passed592isolated guided/DOM checks, root/web types
+and3,593spec references; independent agent review ran57checks with no actionable
+findings. That is not independent human tax qualification.
+
+Individual HSA excess/core and review forms are committed locally as`104bca4`
+with921focused checks and3,614spec references; the next push will include it.
+State selection/payment consistency and dedicated PA/OH preview verification is
+active. Whole-suite/coverage, final release artifacts, nativeamd64CI and the
+external inputs above remain outstanding. All filing/promotion gates stay closed.
+
+State package`ec225fe` passed1,496isolated tests/88files, root/web types and3,608
+spec references. It separates selected jurisdiction from mailing address, keeps
+explicit federal-only output federal-only, uses dedicatedPA/OH previews, shares
+actual payment inputs with downloads and requires actual state for nonzeroPA
+withholding. PA/OH part-year selections no longer print a resident calculation
+without actual allocation inputs. Package evidence is in the guided-state work
+document. Actual Ohio exempt-interest allocation intake is the next state slice.
