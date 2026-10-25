@@ -11,6 +11,7 @@ import { calculateHomeMortgageInterest, type HomeMortgageInterestResult } from "
 import { calculateEducatorExpensesDeduction } from "../forms/educator-expenses.js";
 import { calculateForm1099OID } from "../forms/form-1099-oid.js";
 import { calculateStateLocalIncomeTaxDeduction } from "../forms/state-local-income-tax-deduction.js";
+import { resolveForeignTaxElection, type ForeignTaxElectionResult } from "../forms/foreign-tax-election.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import type { FilingStatus, YearConstants } from "@/models/constants.js";
@@ -64,6 +65,8 @@ export interface CharitableCarryforwardYearDetail {
 export interface ScheduleAResult {
   medicalDeduction: Decimal; // Line 4
   saltDeduction: Decimal; // Line 5e
+  foreignIncomeTaxDeduction: Decimal; // Line 6: actual annual deduction election, outside SALT cap.
+  foreignTaxElection: ForeignTaxElectionResult;
   /** Whether the general sales tax election was used for Line 5a (vs income taxes) */
   salesTaxElected: boolean;
   mortgageInterest: Decimal; // Interest only; reported and unreported
@@ -256,6 +259,13 @@ export function calculateScheduleA(
     "Line 5a + line 5b + line 5c");
   audit.record("Sched A", "5e", "SALT deduction (capped)", saltDeduction,
     `min(${saltTotal}, $${saltCap})`);
+
+  const foreignTaxElection = resolveForeignTaxElection(input);
+  audit.merge(foreignTaxElection.lines);
+  const foreignIncomeTaxDeduction = roundDollar(foreignTaxElection.scheduleAForeignIncomeTaxes);
+  audit.record("Sched A", "6", "Foreign income taxes", foreignIncomeTaxDeduction,
+    "Actual annual deduction election: eligible paid source taxes, outside the state/local tax cap");
+  audit.record("Sched A", "7", "Total deductible taxes", saltDeduction.plus(foreignIncomeTaxDeduction), "Line5e+line6");
 
   // Actual Pub936 sources supply interest and points without reusing Box2 as an average.
   const mortgageWorksheet = calculateHomeMortgageInterest({...input,taxpayer:{...input.taxpayer,filingStatus}});
@@ -553,6 +563,7 @@ export function calculateScheduleA(
   const totalItemized = sum(
     medicalDeduction,
     saltDeduction,
+    foreignIncomeTaxDeduction,
     mortgageInterest,
     pointsPaid,
     mortgageInsurancePremiums,
@@ -563,12 +574,14 @@ export function calculateScheduleA(
     otherItemizedDeductions
   );
   audit.record("Sched A", "17", "Total itemized deductions", totalItemized,
-    "Medical + SALT + mortgage + investment interest + casualty losses + charitable + other itemized deductions");
+    "Medical + SALT + foreign income taxes + mortgage + investment interest + casualty losses + charitable + other itemized deductions");
 
 
   return {
     medicalDeduction,
     saltDeduction,
+    foreignIncomeTaxDeduction,
+    foreignTaxElection,
     salesTaxElected: hasSalesTaxElection,
     mortgageInterest,
     mortgageWorksheet,

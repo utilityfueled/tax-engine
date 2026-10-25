@@ -1,0 +1,97 @@
+form: "Foreign income tax election worksheet"
+fullName: "Actual annual foreign income tax deduction and NIIT coordination"
+taxYear: 2026
+irsReference: "https://www.irs.gov/publications/p514"
+sources:
+  - url: "https://www.irs.gov/publications/p514"
+    section: "Choosing To Take Credit or Deduction; Choice Applies to All Qualified Foreign Taxes; Unused taxes carried to deduction year"
+    retrieved: "2026-10-25"
+  - url: "https://uscode.house.gov/us/usc/119-118/t26/s164/"
+    section: "164(a)(3), (b)(6): foreign income taxes and state/local cap"
+    retrieved: "2026-10-25"
+  - url: "https://uscode.house.gov/us/usc/119-118/t26/s275/"
+    section: "275(a)(4): no deduction when section901 credit chosen"
+    retrieved: "2026-10-25"
+  - url: "https://www.irs.gov/instructions/i1040sca"
+    section: "Final2025 ScheduleA line6, foreign income taxes"
+    retrieved: "2026-10-25"
+  - url: "https://www.irs.gov/instructions/i8960"
+    section: "Final2025 line9b; actual taxes deducted for regular tax; no foreign tax deduction with credit"
+    retrieved: "2026-10-25"
+  - url: "https://www.ecfr.gov/current/title-26/section-1.1411-4"
+    section: "(f)(3)(iii), (g)(1): foreign taxes and reasonable actual allocation"
+    retrieved: "2026-10-25"
+  - url: "https://www.irs.gov/instructions/i6251"
+    section: "Final2025 line2a restores actual ScheduleA7 taxes"
+    retrieved: "2026-10-25"
+reviewStatus: "Implementation in progress; independent human tax review and final2026 qualification remain pending"
+notes: |
+  Applies to2025 historical corrections and the isolated2026 candidate without
+  enabling either a filing map or a production year. This first source branch
+  supports an actual annual deduction election for qualified foreign income
+  taxes paid in the return year on actual1099INT/DIV statements. All positive
+  statement foreign taxes must be accounted for, with actual owner, payer,
+  account identity, country, dated USD payments and completed source amounts.
+  Do not assume an election, date, foreign exchange rate, deductible amount,
+  investment allocation or source zero. A foreign tax on excluded income is
+  not deductible. Paid-tax sources with a prior accrued-credit election,
+  pass-through taxes, other external taxes, deduction claimed elsewhere,
+  foreign-tax redeterminations and deduction-year carryover absorption require
+  their separate source methods; the first bounded branch rejects them.
+  The carryover restriction is an internal method boundary, not an approval:
+  Pub514 requires a hypothetical credit limit and deemed absorption in a
+  deduction year. Never leave positive carries unchanged or deduct them.
+  Legacy absent election retains existing unverified credit behavior; it does
+  not establish actual annual election or qualify a source. An explicit credit
+  choice produces no foreign deduction. Current-year deduction cannot generate
+  a new credit carryforward. Foreign income taxes are outside the SALT cap;
+  the final itemized limitation still applies to NIIT deductions once.
+lines:
+  - line: "source-presence"
+    description: "Unknown-preserving annual election and source contract"
+    formula: "No defaults for election, year, method, completeness, actual source identity, dates or amounts"
+    testRef: "tests/engine/forms/foreign-tax-election.test.ts::preserves unknown annual election and source facts"
+  - line: "actual-current-deduction"
+    description: "Source-bound foreign income tax deduction"
+    formula: "Require confirmed complete annual paid-tax election; sum(actual current-year USD payments minus actual tax on excluded income) after exact1099INT/DIV identity and reported-tax reconciliation"
+    testRef: "tests/engine/forms/foreign-tax-election.test.ts::reconciles the actual annual paid-tax deduction and investment allocation"
+  - line: "mutual-exclusion"
+    description: "One annual credit or deduction choice"
+    formula: "Explicit credit or unverified legacy credit yields no foreign deduction; deduction choice suppresses current credit and new credit carryforward"
+    testRef: "tests/engine/forms/foreign-tax-election.test.ts::keeps annual credit and deduction mutually exclusive"
+  - line: "source-rejection"
+    description: "Reject missing conflicting duplicate or stale actual records"
+    formula: "Require complete source list, finite nonnegative amounts, correct year/owner/payer/account/country and exact payment sum; investment allocation cannot exceed eligible paid tax"
+    testRef: "tests/engine/forms/foreign-tax-election.test.ts::rejects missing conflicting duplicate and stale tax sources"
+  - line: "separate-methods"
+    description: "Preserve unresolved historical tax methods"
+    formula: "Reject paid-tax deduction with accrued-credit history, positive existing foreign-tax carryover, pass-through or external tax sources, or previously deducted tax until those actual methods are supported"
+    testRef: "tests/engine/forms/foreign-tax-election.test.ts::requires the separate carryover accrual and passthrough methods"
+  - line: "schedule-a-6-7"
+    description: "Actual foreign income taxes outside the state/local cap"
+    formula: "ScheduleA6=roundDollar(sum eligible source foreign income taxes); ScheduleA7=5e+6; total itemized includes6 once"
+    testRef: "tests/engine/federal-foreign-tax-election.test.ts::routes the deduction once to Schedule A and combines NIIT tax source cents"
+  - line: "niit-9b"
+    description: "One combined source amount subject to actual itemized allowance"
+    formula: "NIIT9b=roundDollar(sum actual local and foreign investment tax allocations), only when itemizing, subject to final shared itemized limit; foreign deduction election suppresses all current FTC and new FTC carry"
+    testRef: "tests/engine/federal-foreign-tax-election.test.ts::routes the deduction once to Schedule A and combines NIIT tax source cents"
+  - line: "standard-choice"
+    description: "A foreign deduction election does not force itemizing or create a credit"
+    formula: "When standard deduction is used, NIIT tax deductions are0 and annual deduction election still yields no foreign credit or new carry"
+    testRef: "tests/engine/federal-foreign-tax-election.test.ts::retains the annual election when the standard deduction is used"
+  - line: "review-pdf"
+    description: "Historical Schedule A tax fields use the actual canonical audit"
+    formula: "Fill5a–7 from unique canonical ScheduleA lines; require6/7 to reconcile annual-election result and5e; retain source year gate, visible review notice, canonical field values and widget appearances"
+    testRef: "tests/pdf/schedule-a-foreign-tax.test.ts::preserves actual tax audit values in saved canonical fields and widget appearances"
+  - line: "review-audit-rejection"
+    description: "No empty or fabricated Schedule A tax output"
+    formula: "Reject missing/duplicate/nonfinite/mismatched tax audit before filling; redacted review source copy remains supported because calculations occurred on complete facts"
+    testRef: "tests/pdf/schedule-a-foreign-tax.test.ts::rejects missing duplicate and conflicting tax audits"
+  - line: "amt-2a"
+    description: "Actual foreign income-tax deduction is restored for AMT"
+    formula: "When itemizing, Form6251line2a receives ScheduleAline7 including6; otherwise only the actual standard deduction. Final2025 i6251 line2a requires all ScheduleA7 taxes except generation-skipping transfer tax."
+    testRef: "tests/engine/federal-foreign-tax-election.test.ts::restores actual foreign taxes in the AMT tax add-back"
+  - line: "credit-source-conflicts"
+    description: "Explicit credit cannot ignore an actual same-year deduction or ineligible source fact"
+    formula: "Reject positive taxDeductedElsewhere or investment allocation with credit choice. A nonempty deduction-source ledger requires its separate credit-source reconciliation rather than entering the unverified legacy credit estimate."
+    testRef: "tests/engine/forms/foreign-tax-election.test.ts::rejects known deductions and unprocessed source facts in a credit election"

@@ -114,10 +114,23 @@ export async function fillScheduleA(
   blankPdfPath: string,
 ): Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
+  const sa = result.scheduleA;
+  if (!sa) throw new Error("Schedule A requires an actual calculation before tax audit mapping");
+  const taxLines = Object.fromEntries((["5a", "5b", "5c", "5d", "5e", "6", "7"] as const).map(number => {
+    const lines = sa.lines.filter(line => line.form === "Sched A" && line.line === number);
+    const value = lines[0]?.value;
+    if (lines.length !== 1 || !value?.isFinite() || value.lt(0)) throw new Error(`Schedule A tax audit ${number} must be unique and nonnegative`);
+    return [number, value];
+  })) as Record<"5a" | "5b" | "5c" | "5d" | "5e" | "6" | "7", Decimal>;
+  if (!taxLines["5d"].eq(taxLines["5a"].plus(taxLines["5b"]).plus(taxLines["5c"]))
+    || !taxLines["5e"].eq(sa.saltDeduction) || taxLines["5e"].gt(taxLines["5d"].toDecimalPlaces(0, Decimal.ROUND_HALF_UP))
+    || !taxLines["6"].eq(sa.foreignIncomeTaxDeduction)
+    || !sa.foreignTaxElection?.scheduleAForeignIncomeTaxes.isFinite()
+    || !taxLines["6"].eq(sa.foreignTaxElection.scheduleAForeignIncomeTaxes.toDecimalPlaces(0, Decimal.ROUND_HALF_UP))
+    || !taxLines["7"].eq(taxLines["5e"].plus(taxLines["6"]))) throw new Error("Schedule A tax audit must reconcile actual totals and annual election");
   const doc = await loadReviewTemplate(blankPdfPath, 2025);
   const form = doc.getForm();
   const F = FIELDS;
-  const sa = result.scheduleA;
 
   // ── Header ──
   const name = input.taxpayer.spouse
@@ -125,8 +138,6 @@ export async function fillScheduleA(
     : `${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName}`;
   setTextField(form, F.name, name);
   setTextField(form, F.ssn, input.taxpayer.primary.ssn.replace(/-/g, ""));
-
-  if (!sa) return doc;
 
   // ── Medical and Dental Expenses (Lines 1-4) ──
   const medicalExpenses = d(input.scheduleA?.medicalExpenses);
@@ -140,46 +151,9 @@ export async function fillScheduleA(
   // ── Taxes You Paid (Lines 5a-5e, 6-7) ──
   setCheckBox(form, F.salesTaxCheckbox, sa.salesTaxElected);
 
-  // Recompute Line 5a components from input (same logic as engine)
-  let line5aValue: Decimal;
-  if (sa.salesTaxElected) {
-    // Sales tax amount — derive from audit trail or recompute
-    line5aValue = findAuditValue(sa.lines, "5a");
-  } else {
-    // State/local income taxes from W-2s + estimated payments
-    const stateTaxes = input.w2s.reduce(
-      (acc, w2) => acc.plus(d(w2.stateTaxWithheld)), ZERO,
-    );
-    const localTaxes = input.w2s.reduce(
-      (acc, w2) => acc.plus(d(w2.localTaxWithheld)), ZERO,
-    );
-    const stateEstimatedPayments = input.adjustments?.estimatedTaxPayments
-      ?.filter((p) => p.type === "state")
-      .reduce((acc, p) => acc.plus(d(p.amount)), ZERO) ?? ZERO;
-    line5aValue = stateTaxes.plus(localTaxes).plus(stateEstimatedPayments);
-  }
-  setCurrencyField(form, F.line5a, line5aValue);
-
-  // Line 5b: Real estate taxes (from Form 1098)
-  const realEstateTaxes = input.form1098.reduce(
-    (acc, f) => acc.plus(d(f.propertyTax)), ZERO,
-  );
-  setCurrencyField(form, F.line5b, realEstateTaxes);
-
-  // Line 5c: Personal property taxes
-  const personalPropertyTaxes = d(input.scheduleA?.personalPropertyTaxes);
-  setCurrencyField(form, F.line5c, personalPropertyTaxes);
-
-  // Line 5d: Sum 5a + 5b + 5c
-  const line5d = line5aValue.plus(realEstateTaxes).plus(personalPropertyTaxes);
-  setCurrencyField(form, F.line5d, line5d);
-
-  // Line 5e: Capped SALT
-  setCurrencyField(form, F.line5e, sa.saltDeduction);
-
-  // Line 6/7: Other taxes (not commonly used — leave blank unless engine provides)
-  // Line 7: Total taxes = Line 5e + Line 6
-  setCurrencyField(form, F.line7, sa.saltDeduction);
+  // Tax computations already used complete facts before render-only identifiers were removed.
+  for (const [number, value] of Object.entries(taxLines)) setCurrencyField(form, F[`line${number}` as keyof typeof F], value);
+  setTextField(form, F.line6Desc, taxLines["6"].gt(0) ? "Foreign income taxes" : "");
 
   // Copy canonical audited amounts only after source/result reconciliation.
   const mortgage = calculateHomeMortgageInterest(input);
@@ -239,17 +213,6 @@ export async function fillScheduleA(
   setCurrencyField(form, F.line17, sa.totalItemized);
 
   return doc;
-}
-
-// ─── Helpers ───────────────────────────────────────────────────────────────
-
-/** Extract a value from the Schedule A audit trail by line number. */
-function findAuditValue(
-  lines: Array<{ form: string; line: string; value: Decimal }>,
-  lineNumber: string,
-): Decimal {
-  const entry = lines.find((l) => l.form === "Sched A" && l.line === lineNumber);
-  return entry?.value ?? ZERO;
 }
 
 /** Exported field map for testing and inspection. */

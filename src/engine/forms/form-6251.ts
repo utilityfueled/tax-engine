@@ -20,7 +20,7 @@ export interface Form6251Input {
   standardDeductionAmount?: Decimal; // Actual standard deduction selected on Form 1040
   seniorDeduction?: Decimal; // Schedule 1-A line 37; personal exemption for AMT
   specifiedPrivateActivityBondInterest?: Decimal; // Actual line2g preference
-  saltDeduction: Decimal; // Line 2a: SALT claimed on Sched A (add back)
+  saltDeduction: Decimal; // Legacy name: actual Schedule A line7 taxes, including elected foreign income taxes.
   investmentInterestAdjustment?: Decimal; // Actual signed regular-minus-AMT deduction on2c
   depletionAdjustment?: Decimal; // Line 2d: Depletion (excess over adjusted basis)
   dispositionAdjustment?: Decimal; // Line 2k: Adjusted gain/loss on property dispositions
@@ -28,7 +28,7 @@ export interface Form6251Input {
   otherAdjustments?: Decimal; // Line 3: Other AMT adjustments
   regularTax: Decimal; // Regular tax (before credits) for comparison
   filingStatus: FilingStatus;
-  isItemizing: boolean; // Only add back SALT if itemizing
+  isItemizing: boolean; // Only add back Schedule A taxes if itemizing
   qualifiedDividends?: Decimal; // Part III preferential-income path
   netLongTermCapitalGain?: Decimal; // Part III preferential-income path
   section1250Gain?: Decimal; // Special 25% rate portion

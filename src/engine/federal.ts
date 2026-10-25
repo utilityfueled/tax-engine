@@ -2906,7 +2906,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       totalDeductions: totalDeduction,
       standardDeductionAmount: deductionUsed === "standard" ? deductionAmount : d("0"),
       seniorDeduction: schedule1A?.seniorDeduction,
-      saltDeduction: schedA.saltDeduction,
+      saltDeduction: schedA.saltDeduction.plus(schedA.foreignIncomeTaxDeduction),
       investmentInterestAdjustment: form4952Amt && form4952
         ? deductionUsed === "itemized" ? form4952.line8.minus(form4952Amt.line8) : d("0")
         : undefined,
@@ -3061,7 +3061,9 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   const hasForeignTaxActivity = foreignTaxPaid.greaterThan(0) || hasLegacyCarryforward
     || hasPassiveActivity || hasGeneralActivity;
 
-  if (!hasForeignTaxActivity) {
+  if (schedA.foreignTaxElection.election === "deduction" || !hasForeignTaxActivity) {
+    // The validated annual deduction choice applies to all current qualified taxes.
+    // Positive existing carryovers require the separate hypothetical-limit method.
     foreignTaxCredit = new Decimal(0);
   } else if (!isMultiCategory) {
     // Single category — backward-compatible path
@@ -3675,6 +3677,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       saltDeduction: schedA.saltDeduction, incomeOrSalesTaxes: niitTaxSource("5a"),
       realPropertyTaxes: niitTaxSource("5b"), personalPropertyTaxes: niitTaxSource("5c"),
       salesTaxElected: schedA.salesTaxElected,
+      foreignIncomeTaxes: schedA.foreignIncomeTaxDeduction,
+      foreignInvestmentTaxes: schedA.foreignTaxElection.niitForeignIncomeTaxes,
     },
   });
   audit.merge(niitOrdinarySources.lines);

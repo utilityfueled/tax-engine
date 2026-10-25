@@ -133,6 +133,7 @@ const PrivateActivityBondFactsSchema = z.object({
 
 export const Form1099IntSchema = z.object({
   payer: z.string(),
+  accountReference: z.string().trim().min(1).optional(), // Actual local account identity for source-bound tax elections; omission remains unknown.
   payerTin: z.string().optional(), // Payer TIN shown on the recipient copy; used for IL Schedule IL-WIT Column B auto-attachment
   accountHolder: z.enum(["primary", "spouse"]).optional(), // Local owner tag for taxpayer vs spouse on shared state returns
   interestIncome: decimal, // Box 1
@@ -151,6 +152,7 @@ export const Form1099IntSchema = z.object({
 
 export const Form1099DivSchema = z.object({
   payer: z.string(),
+  accountReference: z.string().trim().min(1).optional(), // Actual local account identity for source-bound tax elections; omission remains unknown.
   payerTin: z.string().optional(), // Payer TIN shown on the recipient copy; used for IL Schedule IL-WIT Column B auto-attachment
   accountHolder: z.enum(["primary", "spouse"]).optional(), // Local owner tag for taxpayer vs spouse on shared state returns
   ordinaryDividends: decimal, // Box 1a
@@ -4179,6 +4181,33 @@ export const Form6252Schema = z.object({
 });
 export type Form6252Input = z.infer<typeof Form6252Schema>;
 
+/** Actual annual foreign income-tax choice and paid-tax deduction records. */
+export const ForeignTaxElectionSchema = z.object({
+  taxYear: z.number().int().optional(),
+  election: z.enum(["credit", "deduction"]).optional(),
+  accountingMethod: z.enum(["paid", "accrued"]).optional(),
+  priorAccruedCreditElection: z.boolean().optional(),
+  sourceReference: z.string().optional(),
+  sourceFactsConfirmed: z.boolean().optional(),
+  allQualifiedForeignTaxesIncludedConfirmed: z.boolean().optional(),
+  noUnusedCreditCarryoversConfirmed: z.boolean().optional(),
+  noRedeterminationsConfirmed: z.boolean().optional(),
+  sources: z.array(z.object({
+    sourceId: z.string().optional(), // Actual form1099Int:index or form1099Div:index.
+    payerName: z.string().optional(), payerTin: z.string().optional(), accountReference: z.string().optional(),
+    owner: z.enum(["primary", "spouse"]).optional(),
+    foreignCountry: z.string().optional(), jurisdictionType: z.enum(["foreign_country", "us_territory"]).optional(),
+    reportedTaxAmount: decimal.optional(),
+    qualifiedIncomeTaxConfirmed: z.boolean().optional(),
+    taxOnExcludedIncome: decimal.optional(),
+    taxDeductedElsewhere: decimal.optional(),
+    payments: z.array(z.object({ date: z.string(), amountUsd: decimal }).strict()).optional(),
+    investmentAllocableAmount: decimal.optional(),
+    allocationMethodDescription: z.string().optional(),
+    sourceReference: z.string().optional(),
+  }).strict()).optional(),
+}).strict();
+
 /** Actual completed NIIT worksheet components that cannot be inferred from income totals. */
 export const Form8960SourcesSchema = z.object({
   sourceTaxYear: z.number().int().optional(),
@@ -5528,6 +5557,7 @@ export const TaxYearInputSchema = z.object({
   scheduleR: ScheduleRInputSchema.optional(),
   scheduleH: ScheduleHSchema.optional(),
   form2555: Form2555Schema.optional(),
+  foreignTaxElection: ForeignTaxElectionSchema.optional(),
   form8960Sources: Form8960SourcesSchema.optional(),
   form4684: Form4684Schema.optional(),
   form461: Form461SourceSchema.optional(),

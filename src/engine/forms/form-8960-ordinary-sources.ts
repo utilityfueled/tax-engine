@@ -21,6 +21,8 @@ export interface Form8960OrdinaryContext {
     realPropertyTaxes: Decimal;
     personalPropertyTaxes: Decimal;
     salesTaxElected: boolean;
+    foreignIncomeTaxes?: Decimal; // Actual ScheduleA6 from the reconciled annual deduction election.
+    foreignInvestmentTaxes?: Decimal; // Exact source allocation; combined with local cents before9b rounding.
   };
 }
 export interface Form8960OrdinarySourceResult {
@@ -126,7 +128,7 @@ export function resolveForm8960OrdinarySources(input: Pick<TaxYearInput, 'form10
     audit.record('Form8960 source WS', `${sourceId}:taxable-annuity`, 'Actual taxable nonqualified annuity income', resolvedTaxable, 'Form1099R actual taxable amount; Form8960 instructions line3, without adding ordinary income again');
   }
 
-  let taxDeduction = d('0');
+  let allocableTaxTotal = d('0');
   const taxes = sources?.ordinaryTaxAllocation;
   if (taxes) {
     if (!taxes.allocationMethodDescription?.trim() || taxes.noDuplicateDeductionConfirmed !== true) throw new Error('Form8960 tax allocation requires its actual documented method and confirmation that no deduction is used twice');
@@ -145,9 +147,16 @@ export function resolveForm8960OrdinarySources(input: Pick<TaxYearInput, 'form10
       audit.record('Form8960 source WS', `taxes:${key}:investment`, 'Actual tax expense allocable to investment income', allocable, 'Documented reasonable source allocation under Regulations1.1411-4(g)(1)');
     }
     if (!roundDollar(regularTotal).eq(deductions.saltDeduction)) throw new Error('Form8960 regular tax allocations must reconcile to actual ScheduleA5e');
-    audit.record('Form8960 source WS', 'taxes:allocable-before-rounding', 'Actual tax allocations before reporting rounding', allocableTotal, 'Sum actual source cents before physical-line rounding');
-    taxDeduction = roundDollar(allocableTotal);
+    allocableTaxTotal = allocableTotal;
   }
+  const foreignRegular = deductions.foreignIncomeTaxes ?? d('0');
+  const foreignAllocable = deductions.foreignInvestmentTaxes ?? d('0');
+  if ((deductions.foreignIncomeTaxes === undefined) !== (deductions.foreignInvestmentTaxes === undefined)
+    || roundDollar(foreignAllocable).gt(foreignRegular)) throw new Error('Form8960 foreign tax allocation requires the actual reconciled regular deduction');
+  allocableTaxTotal = allocableTaxTotal.plus(foreignAllocable);
+  if (taxes || foreignAllocable.gt(0)) audit.record('Form8960 source WS', 'taxes:allocable-before-rounding', 'Actual tax allocations before reporting rounding', allocableTaxTotal,
+    'Sum actual local and elected foreign source cents before physical-line rounding');
+  const taxDeduction = roundDollar(allocableTaxTotal);
   let interest = deductions.itemized ? deductions.investmentInterest : d('0');
   let loss = deductions.itemized ? deductions.ordinaryLoss : d('0');
   let taxesAllowed = deductions.itemized ? taxDeduction : d('0');
