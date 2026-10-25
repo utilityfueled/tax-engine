@@ -42,7 +42,7 @@ lines:
       All foreign tax from qualified payee statements only, passive category
       only, no disqualifying K-1 or other nonqualified-source foreign tax
       sources,
-      and total ≤ $300 (single/HoH/MFS) or ≤ $600 (MFJ/QSS)
+      and total ≤ $300 (single/HoH/MFS/QSS) or ≤ $600 (MFJ)
     irsRef: "Form 1116 Instructions, Who Can Take the Credit Without Filing Form 1116"
     notes: "The returned simplifiedEligible audit flag must incorporate both the filing-status threshold and any source-based disqualifiers supplied to the calculation. Qualified payee statements include Form 1099-DIV and Form 1099-INT in the supported statement-source slice, so the threshold test must aggregate foreign tax reported on both forms before deciding whether the no-Form-1116 election is available."
     edgeCases:
@@ -52,6 +52,13 @@ lines:
       - "Combined 1099-DIV and 1099-INT foreign tax over the threshold makes simplifiedEligible false even when each form alone is under the limit"
       - "Returned simplifiedEligible is false when K-1 foreign tax exists even if total foreign tax is under the filing-status threshold"
     testRef: "tests/engine/forms/form-1116.test.ts::simplified method - eligible when under threshold"
+
+  - line: "simplified-joint-threshold"
+    description: "Only an actual married joint return receives the $600 no-form election threshold"
+    formula: "The source eligibility flag uses exact creditable tax ≤ 600 only for married_filing_jointly; every other filing status, including qualifying_surviving_spouse, uses ≤ 300."
+    irsRef: "2025 Form 1116 Instructions, Who Can Take the Credit Without Filing Form 1116; IRC 904(j)(2)(B)"
+    notes: "The joint-return rate schedule available to a qualifying surviving spouse does not make that return a joint return for this election. Test exact cents before physical-line rounding. This corrects the historical eligibility flag only; it does not supply or infer the annual election or the other source conditions."
+    testRef: "tests/engine/forms/form-1116.test.ts::simplified threshold uses $300 for surviving spouse and $600 only for a joint return"
 
   - line: "k1-foreign-tax"
     description: "K-1 foreign tax aggregation"

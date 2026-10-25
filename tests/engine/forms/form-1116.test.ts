@@ -33,6 +33,28 @@ function makeInput(overrides?: Partial<Form1116Input>): Form1116Input {
 // ═══════════════════════════════════════════════════════════
 
 describe("Form 1116 - Simplified Method", () => {
+  it("simplified threshold uses $300 for surviving spouse and $600 only for a joint return", () => {
+    // Spec: form-1116.yaml simplified-joint-threshold. The IRS condition
+    // is an actual joint return, not use of the joint tax rate schedule.
+    for (const [filingStatus, tax, expected] of [
+      ["qualifying_surviving_spouse", "300", true],
+      ["qualifying_surviving_spouse", "300.01", false],
+      ["qualifying_surviving_spouse", "600", false],
+      ["married_filing_jointly", "600", true],
+      ["married_filing_jointly", "600.01", false],
+    ] as const) {
+      const source = { ...simpleW2Fixture, form1099Int: [{
+        payer: "Synthetic foreign bank", interestIncome: "1000",
+        federalWithheld: "0", foreignTaxPaid: tax, foreignCountry: "Canada",
+      }] };
+      expect(isSimplifiedEligible(source, filingStatus)).toBe(expected);
+      const result = calculateForm1116(makeInput({ filingStatus, foreignTaxesPaid: d(tax) }));
+      expect(result.simplifiedEligible).toBe(expected);
+      expect(result.lines.find((line) => line.line === "simplified_eligible")?.value.toString())
+        .toBe(expected ? "1" : "0");
+    }
+  });
+
   it("simplified method - eligible when under threshold", () => {
     // Single filer with $150 foreign tax from 1099-DIV → eligible
     const eligible = isSimplifiedEligible(

@@ -146,3 +146,15 @@ Remaining foreign methods are internal implementation/source scope: nonordinary/
 Exact implementation tree `194447c9b94b3b1e4db0dfbbddf4cb7b22bf6318`, based on `2cfe47c`, passed752 tests across73 files. Root and web types passed, all4,235 spec references resolved, and scoped lint had zero errors/warnings (`foreign-multiple-state-staged-{tests,types,webtypes,spec,lint}.log`). The isolated tree contains18 owned paths and only the foreign carryover schema block in the shared model; unrelated NOL/2555 and parent changes were excluded.
 
 The actual synthetic saved record under `.local/upgrade-evidence/foreign-multiple-state-review/` was reopened with pypdf and rendered. All three pages have exactly one review notice; separate bottom-of-page crops verified the continued-page notices. Pooled70000/6000, exact country12000.01/2999.99 and final1029/257/3590/2990/1010 values are present; private references, accounts and TIN are absent. The first ad-hoc text probe used an incorrect notice spelling and failed; rerunning with the unchanged repository notice text passed. The committed regression uses the repository constant and passed throughout.
+
+Aggregate state-source package committed as `65241a18c0ea81502c77f52b44d0724cc096af93`.
+
+## No-form credit election threshold correction
+
+The refreshed final2025 [Form1116 instructions](https://www.irs.gov/instructions/i1116), Who Can Take the Credit Without Filing Form1116, and [IRC904(j)](https://uscode.house.gov/us/usc/119-118/t26/s904/) allow the600 threshold only for an actual married joint return. A qualifying surviving spouse uses300 even though the joint tax rate schedule may apply. The prior600 QSS eligibility flag was incorrect.
+
+The spec was corrected before a new boundary test reproduced the error at300.01 (`foreign-credit-joint-threshold-red.log`). Five literal cases now check300/300.01/600 for QSS and600/600.01 for MFJ, in both statement eligibility and the calculation's audit. All80 existing core/reference cases pass (`foreign-credit-joint-threshold-green.log`). This changes eligibility only; it does not infer an election, qualify the legacy foreign-income estimate, alter current credit arithmetic or enable filing. The separate elected, source-verified credit path remains internal implementation work.
+
+Parent independently refreshed the instructions and reviewed the three-file source/spec/test change with no actionable finding. Its focused recheck is recorded in `parent-foreign-joint-threshold-review.log`; this remains agent source/software review, not human tax qualification. Exact scoped-tree verification follows before commit.
+
+Implementation tree `df5f53e4704f6717e8a82cfe02ad600796dc6745`, based on `7695387`, passed80 core/reference tests, root types and all4,238 spec references. Scoped lint has zero errors and11 existing non-null-assertion warnings in unchanged tests. Logs are `foreign-credit-threshold-staged-{tests,types,spec,lint}.log`. No shared model, federal orchestration or UI files are included.
