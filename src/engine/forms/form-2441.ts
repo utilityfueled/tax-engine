@@ -23,6 +23,8 @@ export interface Form2441Input {
   spouseEarnedIncome?: Decimal;
   /** Qualifying person, provider, work-related and residence requirements confirmed. */
   eligibilityConfirmed?: boolean;
+  /** Completed credit-limit worksheet, after foreign tax credit. */
+  taxLiabilityLimit?: Decimal;
   careExpenses: Decimal;
   qualifyingIndividuals: number; // 1 or 2+
   earnedIncome: Decimal; // taxpayer; historical callers may supply the already-limited lower spouse amount
@@ -33,7 +35,7 @@ export interface Form2441Result {
   qualifyingExpenses: Decimal; // Line 3
   earnedIncomeLimit: Decimal; // Line 4
   creditPercentage: Decimal; // Line 8
-  credit: Decimal; // Line 9
+  credit: Decimal; // Line 11 when the tax-liability worksheet is provided
   lines: CalculatedLine[];
 }
 
@@ -101,9 +103,17 @@ export function calculateForm2441(input: Form2441Input): Form2441Result {
       : "35% - 1% per $2K or fraction thereof over $15K AGI");
 
   // Line 9: Credit amount
-  const credit = roundDollar(earnedIncomeLimit.times(percentage));
-  audit.record("Form 2441", "9", "Dependent care credit", credit,
+  const tentativeCredit = roundDollar(earnedIncomeLimit.times(percentage));
+  const limit = input.taxLiabilityLimit;
+  if (limit !== undefined && (!limit.isFinite() || limit.isNegative())) throw new Error("Care credit tax-liability limit must be finite and nonnegative");
+  const credit = limit === undefined ? tentativeCredit : min(tentativeCredit, roundDollar(limit));
+  audit.record("Form 2441", "9", "Dependent care credit", tentativeCredit,
     `${earnedIncomeLimit} × ${percentage.times(100)}%`);
+
+  if (limit !== undefined) {
+    audit.record("Form 2441", "10", "Credit tax-liability limit", roundDollar(limit), "Completed credit-limit worksheet after foreign tax credit");
+    audit.record("Form 2441", "11", "Allowed dependent care credit", credit, "Lesser of lines 9 and 10");
+  }
 
   return {
     qualifyingExpenses,

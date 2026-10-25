@@ -28,6 +28,10 @@ Calculation evidence is separate from final-form qualification. The current 2026
   must pass its own end-to-end tests before this package is treated as integrated.
 
 - Commits: `e2d93f0` calculation and `cffa574` reviewed input validation.
+- Credit-ordering follow-up adds the actual nonrefundable worksheet limit with
+  separate tentative/limit/allowed audit lines 9/10/11. Red-before-green regression,
+  68/68 focused tests and 6/6 spec references passed; legacy omitted standalone
+  limits retain their prior API while federal integration supplies actual limits.
 
 ## Adoption (Form 8839)
 
@@ -72,6 +76,8 @@ Calculation evidence is separate from final-form qualification. The current 2026
   restricted. Independent human tax review is pending.
 
 ## Residential energy (Form 5695)
+
+- Calculation commit: `9639aa2`.
 
 - Refreshed [final 2025 instructions](https://www.irs.gov/instructions/i5695),
   [IRC 25C](https://uscode.house.gov/us/usc/119-118/t26/s25C/) and

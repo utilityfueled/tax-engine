@@ -81,6 +81,17 @@ lines:
     irsRef: "Form 2441 Instructions, Line 9"
     testRef: "tests/engine/forms/form-2441.test.ts::Form 2441 Line 9 - credit amount calculated correctly"
 
+  - line: "10"
+    description: "Nonrefundable credit tax-liability limit"
+    formula: "Actual Form 1040 line 18 minus foreign tax credit, floored at zero; no inferred tax balance in federal integration."
+    irsRef: "Form 2441 credit limit worksheet"
+    testRef: "tests/engine/forms/form-2441.test.ts::care credit preserves tentative amount and applies actual tax limit"
+  - line: "11"
+    description: "Allowed dependent care credit"
+    formula: "min(line 9,line 10); unused credit is not refundable and has no carryforward"
+    irsRef: "Form 2441 line 11"
+    testRef: "tests/engine/forms/form-2441.test.ts::care credit preserves tentative amount and applies actual tax limit"
+
 edgeCases:
   - description: "Zero expenses yields zero credit"
     testRef: "tests/engine/forms/form-2441.test.ts::Form 2441 Line 9 - zero expenses means zero credit"

@@ -693,3 +693,14 @@ describe("Form 2441 2026", () => {
     expect(() => calculateForm2441(current({ excludedDependentCareBenefits: d("-1") }))).toThrow();
   });
 });
+
+// Spec: spec/federal/form-2441.yaml lines 10–11.
+it("care credit preserves tentative amount and applies actual tax limit", () => {
+  const result = calculateForm2441(make({agi:d("15000"),taxLiabilityLimit:d("123")}));
+  expect(result.credit.toString()).toBe("123");
+  expect(result.lines.find(line=>line.line==="9")?.value.toString()).toBe("1050");
+  expect(result.lines.find(line=>line.line==="10")?.value.toString()).toBe("123");
+  expect(result.lines.find(line=>line.line==="11")?.value.toString()).toBe("123");
+  expect(calculateForm2441(make({taxLiabilityLimit:d("0")})).credit.toString()).toBe("0");
+  for(const amount of ["-1","NaN","Infinity"]) expect(()=>calculateForm2441(make({taxLiabilityLimit:d(amount)}))).toThrow();
+});
