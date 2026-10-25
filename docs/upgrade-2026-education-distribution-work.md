@@ -276,3 +276,51 @@ without changing its assertion or gate. Final logs:
 `education-corrections-immutable-final-tests.log`,
 `education-corrections-immutable-final-types.log`,
 `education-corrections-immutable-final-spec.log`.
+
+## Ordinary Coverdell basis and rounding (2026-10-25)
+
+The returned-contribution package above is committed as `affeef4`. The next
+source review reopened [Publication970 Worksheet6-3](https://www.irs.gov/publications/p970)
+and [Form1040 whole-dollar rounding](https://www.irs.gov/instructions/i1040gi).
+Four red tests exposed negative ending basis from combining exact input cents
+with rounded distributed basis, and mislabeled current rollover adjustments on
+official prior-basis line2. Worksheet input amounts now round consistently;
+multiple amounts for one line aggregate before rounding. Separate source audits
+retain every exact account value. Current rollover adjustments use a distinctly
+labeled reconciliation worksheet, with unchanged actual prior-year basis on
+line2. A fifth red test showed individual rounding could lose transferred basis
+across small statements; allocation now preserves the rounded account total.
+An exact or rounded negative available-basis contradiction rejects explicitly.
+
+The reference validates source history, account/beneficiary identity, worksheet
+identity and rounded source-input lines against their canonical audits. A
+mutation regression first failed, then passed after altered worksheet inputs
+were rejected. The broad adjacent run passed123 tests across13 files; root
+types, scoped lint and all3765 working-tree spec references passed. Logs:
+`coverdell-basis-red.log`, `coverdell-rollover-rounding-red.log`,
+`coverdell-basis-reference-red/green.log`, `coverdell-basis-broad.log`,
+`coverdell-basis-types.log`, `coverdell-basis-lint.log`, `coverdell-basis-spec.log`.
+Saved/reopened two-page synthetic reference:
+`.local/upgrade-evidence/coverdell-basis-2025/f1099q-reference-filled.pdf`.
+Rendered page2 and its separate footer show the rollover labels and one visible
+review notice. Exact incoming basis200.49 remains distinct from rounded200.
+
+Separately, reviewed the parent's government-payment source package against
+current IRS1099-G instructions12/2026, Publication525 and Rev.Rul.2025-4.
+No actionable findings within the supported routes. Its9 tests passed in
+`ai-1099g-source-review.log`. This was an agent software/source review.
+
+Remaining internal education work: actual prohibited-transaction source capture
+and separately identified unsupported treatment, plus final educator/distribution
+coordination. No human qualification, filing enablement or live evidence is
+implied by these local checks.
+
+Parent independently reopened Worksheet6-3 and the whole-dollar instructions,
+reviewed the ordinary-basis/source/PDF diff and reran all5 new tests. No
+actionable findings; `parent-coverdell-basis-review.log` records the passing
+agent review. The rollover interpretation remains subject to independent human
+qualification. The final rounded-source input mutation checks also passed.
+Immutable staged tree `1a7a6b7e` passed all123 adjacent tests, root types and
+all3765 spec references, with code6 work excluded. Logs:
+`coverdell-basis-immutable-tests.log`, `coverdell-basis-immutable-types.log`,
+`coverdell-basis-immutable-spec.log`.

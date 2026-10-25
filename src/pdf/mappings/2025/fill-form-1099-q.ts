@@ -99,13 +99,41 @@ export function buildForm1099QReferenceSummary(forms: Form1099Q[], result: Form1
     const sumRows = (field: "grossDistribution" | "earnings" | "basis") => result.perDistribution.reduce((sum, row) => sum.plus(row[field]), new Decimal(0));
     if (!sumRows("grossDistribution").eq(result.grossDistribution) || !sumRows("earnings").eq(result.totalEarnings) || !sumRows("basis").eq(result.totalBasis)) throw new Error("Education source audit totals do not reconcile");
     if (result.perDistribution.some(source => result.perRecipient.filter(recipient => recipient.owner === source.recipientOwner && recipient.recipientId === source.recipientId).length !== 1)) throw new Error("Education reference recipient source audits are missing or duplicated");
+    const ordinaryCoverdellSources = result.perDistribution.filter(row => row.accountType === "coverdell_esa" && row.treatment === "ordinary");
+    const accountIds = new Set(ordinaryCoverdellSources.map(row => row.accountId));
+    if (accountIds.size !== result.coverdellAccounts.length || result.coverdellAccounts.some(row => !accountIds.delete(row.accountId))) throw new Error("Education reference Coverdell account source audits do not reconcile");
     for (const [index, row] of result.coverdellAccounts.entries()) {
+      const histories = (qeeSummary.sourceFacts.coverdellAccounts ?? []).filter(history => history.accountId === row.accountId);
+      const history = histories[0];
+      if (!history || histories.length !== 1) throw new Error("Education reference requires one actual Coverdell account history");
+      const accountSources = ordinaryCoverdellSources.filter(source => source.accountId === row.accountId);
+      if (accountSources.some(source => source.beneficiaryId !== row.beneficiaryId)) throw new Error("Education reference Coverdell beneficiary source does not reconcile");
+      const sourceAmount = (value: string | undefined) => {
+        if (value === undefined) throw new Error("Education reference actual Coverdell source amount is missing");
+        const amount = new Decimal(value);
+        if (!amount.isFinite() || amount.lt(0)) throw new Error("Education reference actual Coverdell source amount is invalid");
+        return amount;
+      };
+      const incoming = sourceAmount(history.rolloverBasisReceived);
+      const outgoing = accountSources.reduce((total, source) => source.validTransfers.isZero() ? total : total.plus(sourceAmount(forms.find(form => form.sourceId === source.sourceId)?.transfer?.coverdellTransferredBasis)), new Decimal(0));
+      const expectedAuditForm = incoming.gt(0) || outgoing.gt(0) ? "Coverdell rollover worksheet" : "Pub970 WS6-3";
+      if (row.auditForm !== expectedAuditForm) throw new Error("Education reference Coverdell worksheet identity disagrees with actual rollover sources");
+      const priorBasis = sourceAmount(history.priorYearBasis), contributions = sourceAmount(history.currentYearContributions);
+      const gross = accountSources.reduce((total, source) => total.plus(source.grossDistribution).minus(source.validTransfers), new Decimal(0));
+      const yearEndValue = sourceAmount(history.yearEndValue), outstandingRollovers = sourceAmount(history.outstandingRollovers);
+      for (const [line, amount] of [["prior-basis", priorBasis], ["current-contributions", contributions], ["rollover-basis-in", incoming], ["rollover-basis-out", outgoing], ["gross-distributions", gross], ["year-end-value", yearEndValue], ["outstanding-rollovers", outstandingRollovers]] as const) sourceLines.push(describe(requireAudit("Coverdell source", `${row.accountId}:${line}`, amount), `Coverdell account ${index + 1}, source: `));
+      const sourceInputLines = new Map<string, Decimal>([["1", roundDollar(contributions)], ["2", roundDollar(priorBasis)], ["3", roundDollar(priorBasis).plus(roundDollar(contributions)).plus(roundDollar(incoming)).minus(roundDollar(outgoing))], ["4", roundDollar(gross)], ["7", roundDollar(yearEndValue.plus(outstandingRollovers))], ["rollover-basis-in", roundDollar(incoming)], ["rollover-basis-out", roundDollar(outgoing)]]);
+      const worksheetLabel = row.auditForm === "Coverdell rollover worksheet" ? "rollover reconciliation" : "worksheet";
       for (const line of ["rollover-basis-in", "rollover-basis-out", "F", "G", "H", ...Array.from({ length: 15 }, (_, i) => String(i + 1))]) {
-        const expected = line === "10" ? row.distributedBasis : line === "11" ? row.earnings : line === "15" ? row.endingBasis : undefined;
-        sourceLines.push({ ...describe(requireAudit("Pub970 WS6-3", `${row.accountId}:${line}`, expected), `Coverdell account ${index + 1}, worksheet ${line}: `), ...(["H", "9", "12"].includes(line) ? { isRatio: true as const } : {}) });
+        const expected = line === "10" ? row.distributedBasis : line === "11" ? row.earnings : line === "15" ? row.endingBasis : sourceInputLines.get(line);
+        sourceLines.push({ ...describe(requireAudit(row.auditForm, `${row.accountId}:${line}`, expected), `Coverdell account ${index + 1}, ${worksheetLabel} ${line}: `), ...(["H", "9", "12"].includes(line) ? { isRatio: true as const } : {}) });
       }
     }
-    if (result.coverdellAccounts.length) sourceLines.push(describe(requireAudit("Pub970 WS6-3", "16"), "Coverdell worksheet line 16: "));
+    if (result.coverdellAccounts.length) {
+      const hasRolloverWorksheet = result.coverdellAccounts.some(row => row.auditForm === "Coverdell rollover worksheet");
+      const taxable = ordinaryCoverdellSources.reduce((total, row) => total.plus(row.taxableEarnings), new Decimal(0));
+      sourceLines.push(describe(requireAudit(hasRolloverWorksheet ? "Coverdell rollover worksheet" : "Pub970 WS6-3", "16", taxable), `Coverdell ${hasRolloverWorksheet ? "rollover reconciliation" : "worksheet"} line 16: `));
+    }
     for (const [index, row] of result.perRecipient.entries()) {
       const label = row.owner === "other" ? `Recipient outside this return ${index + 1}` : row.owner === "spouse" ? "Spouse" : "Primary taxpayer";
       const key = `${row.owner}:${row.recipientId}`;

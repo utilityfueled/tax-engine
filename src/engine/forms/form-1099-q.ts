@@ -30,7 +30,7 @@ export interface Form1099QResult {
   perDistribution: EducationDistributionResult[];
   perRecipient: EducationRecipientResult[];
   returnedContributions: ReturnedEducationContribution[];
-  coverdellAccounts: Array<{ accountId: string; beneficiaryId: string; distributedBasis: Decimal; earnings: Decimal; endingBasis: Decimal }>;
+  coverdellAccounts: Array<{ accountId: string; beneficiaryId: string; auditForm: "Pub970 WS6-3" | "Coverdell rollover worksheet"; distributedBasis: Decimal; earnings: Decimal; endingBasis: Decimal }>;
   /** Opaque beneficiary links only; personal tax identifiers are not calculation output. */
   creditAllocations: Array<{ beneficiaryId: string; amount: Decimal; taxableEarningsCausedByCredit: Decimal }>;
   loanInterestSourceAdjustments: Array<{ expenseId: string; borrowerId: string; owner: "primary" | "spouse" | "other"; interestPaid: Decimal; taxFreeEarningsUsedForInterest: Decimal; interestClaimedElsewhere: Decimal }>;
@@ -642,9 +642,9 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
     if (group.some(item => item.beneficiaryId !== first.beneficiaryId)) throw new Error("Form1099Q Coverdell account beneficiary must reconcile");
     const history = coverdellFacts.get(accountId);
     if (!history) throw new Error("Form1099Q actual Coverdell account basis and year-end history required");
-    const previousBasis = actualAmount(history.priorYearBasis, "Coverdell prior basis");
-    const contributions = actualAmount(history.currentYearContributions, "Coverdell current contributions");
-    const incomingBasis = actualAmount(history.rolloverBasisReceived, "Coverdell incoming rollover basis");
+    const sourcePreviousBasis = actualAmount(history.priorYearBasis, "Coverdell prior basis");
+    const sourceContributions = actualAmount(history.currentYearContributions, "Coverdell current contributions");
+    const sourceIncomingBasis = actualAmount(history.rolloverBasisReceived, "Coverdell incoming rollover basis");
     const rolloverBases = group.map(item => {
       const transferred = transfers.get(item.sourceId) ?? ZERO;
       if (transferred.isZero()) return ZERO;
@@ -652,17 +652,23 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
       if (basis.gt(transferred)) throw new Error("Form1099Q Coverdell transferred basis exceeds rollover amount");
       return basis;
     });
-    const outgoingBasis = sum(...rolloverBases);
+    const sourceOutgoingBasis = sum(...rolloverBases);
+    if (sourcePreviousBasis.plus(sourceContributions).plus(sourceIncomingBasis).lt(sourceOutgoingBasis)) throw new Error("Form1099Q Coverdell outgoing rollover basis exceeds actual available basis");
+    const previousBasis = roundDollar(sourcePreviousBasis), contributions = roundDollar(sourceContributions);
+    const incomingBasis = roundDollar(sourceIncomingBasis), outgoingBasis = roundDollar(sourceOutgoingBasis);
     const basis = previousBasis.plus(contributions).plus(incomingBasis).minus(outgoingBasis);
-    if (basis.lt(0)) throw new Error("Form1099Q Coverdell outgoing rollover basis exceeds actual available basis");
+    if (basis.lt(0)) throw new Error("Form1099Q Coverdell rounded source basis does not reconcile; retain actual amounts for separate source reconciliation");
     const grossAmounts = group.map(item => actualAmount(item.grossDistribution, "Coverdell Box1").minus(transfers.get(item.sourceId) ?? ZERO));
-    const gross = sum(...grossAmounts);
-    const value = actualAmount(history.yearEndValue, "Coverdell year-end value").plus(actualAmount(history.outstandingRollovers, "Coverdell outstanding rollovers"));
+    const sourceGross = sum(...grossAmounts);
+    const sourceYearEndValue = actualAmount(history.yearEndValue, "Coverdell year-end value");
+    const sourceOutstandingRollovers = actualAmount(history.outstandingRollovers, "Coverdell outstanding rollovers");
+    const gross = roundDollar(sourceGross);
+    const value = roundDollar(sourceYearEndValue.plus(sourceOutstandingRollovers));
     const allBeneficiaryForms = ordinaryForms.filter(item => item.accountType === "coverdell_esa" && item.beneficiaryId === first.beneficiaryId);
-    const allGross = sum(...allBeneficiaryForms.map(item => actualAmount(item.grossDistribution, "Coverdell distribution").minus(transfers.get(item.sourceId) ?? ZERO)));
+    const allGross = roundDollar(sum(...allBeneficiaryForms.map(item => actualAmount(item.grossDistribution, "Coverdell distribution").minus(transfers.get(item.sourceId) ?? ZERO))));
     const allAllocations = allocations.filter(item => item.form.accountType === "coverdell_esa" && item.form.beneficiaryId === first.beneficiaryId);
-    const allAQEE = sum(...allAllocations.map(item => item.allowed));
-    const allCredit = sum(...allAllocations.map(item => item.credit));
+    const allAQEE = roundDollar(sum(...allAllocations.map(item => item.allowed)));
+    const allCredit = roundDollar(sum(...allAllocations.map(item => item.credit)));
     const ratio = allGross.isZero() ? ZERO : Decimal.min(1, allAQEE.div(allGross));
     const beforeCreditRatio = allGross.isZero() ? ZERO : Decimal.min(1, allAQEE.plus(allCredit).div(allGross));
     const accountAQEE = roundDollar(gross.mul(ratio));
@@ -670,7 +676,7 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
     const denominator = gross.plus(value);
     const basisRatio = denominator.isZero() ? ZERO : Decimal.min(1, basis.div(denominator));
     const distributedBasis = roundDollar(gross.mul(basisRatio));
-    const earnings = roundDollar(gross).minus(distributedBasis);
+    const earnings = gross.minus(distributedBasis);
     const exemptRatio = gross.isZero() ? ZERO : Decimal.min(1, accountAQEE.div(gross));
     const taxFree = roundDollar(earnings.mul(exemptRatio));
     const taxFreeBeforeCredit = roundDollar(gross.isZero() ? ZERO : earnings.mul(Decimal.min(1, accountBeforeCredit.div(gross))));
@@ -681,21 +687,26 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
     const creditParts = proportionalDollars(creditException, earningsParts.map((amount, index) => amount.minus(taxFreeParts[index] ?? ZERO)));
     const allocatedParts = proportionalDollars(accountAQEE, grossAmounts);
     const creditGrossParts = proportionalDollars(accountBeforeCredit.minus(accountAQEE), grossAmounts);
+    const transferredBasisParts = proportionalDollars(outgoingBasis, rolloverBases);
+    const transferredAmounts = group.map(item => transfers.get(item.sourceId) ?? ZERO);
+    const transferredEarningsParts = proportionalDollars(roundDollar(sum(...transferredAmounts)).minus(outgoingBasis), transferredAmounts.map((amount, index) => amount.minus(rolloverBases[index] ?? ZERO)));
     group.forEach((item, index) => {
-      const transferredBasis = roundDollar(rolloverBases[index] ?? ZERO);
-      const transferredEarnings = roundDollar(transfers.get(item.sourceId) ?? ZERO).minus(transferredBasis);
+      const transferredBasis = transferredBasisParts[index] ?? ZERO;
+      const transferredEarnings = transferredEarningsParts[index] ?? ZERO;
       derived.set(item.sourceId, { basis: (basisParts[index] ?? ZERO).plus(transferredBasis), earnings: (earningsParts[index] ?? ZERO).plus(transferredEarnings),
         taxFree: (taxFreeParts[index] ?? ZERO).plus(transferredEarnings), transferTaxFree: transferredEarnings,
         creditException: creditParts[index] ?? ZERO, allocated: allocatedParts[index] ?? ZERO, creditGross: creditGrossParts[index] ?? ZERO });
     });
-    accountResults.push({ accountId, beneficiaryId: first.beneficiaryId, distributedBasis, earnings, endingBasis: basis.minus(distributedBasis) });
-    for (const [line, description, amount] of [["rollover-basis-in", "Actual rollover basis received", incomingBasis], ["rollover-basis-out", "Actual rollover basis transferred", outgoingBasis], ["F", "Beneficiary Coverdell AQEE after actual QTP coordination", allAQEE], ["G", "Beneficiary Coverdell distributions excluding rollovers", allGross], ["H", "Beneficiary qualified expense ratio", ratio],
-      ["1", "Coverdell current contributions", contributions], ["2", "Coverdell previous year basis adjusted for actual rollover basis", previousBasis.plus(incomingBasis).minus(outgoingBasis)], ["3", "Coverdell basis plus contributions", basis], ["4", "Coverdell account distributions", gross],
+    const auditForm = sourceIncomingBasis.gt(0) || sourceOutgoingBasis.gt(0) ? "Coverdell rollover worksheet" : "Pub970 WS6-3";
+    accountResults.push({ accountId, beneficiaryId: first.beneficiaryId, auditForm, distributedBasis, earnings, endingBasis: basis.minus(distributedBasis) });
+    for (const [line, description, amount] of [["prior-basis", "Exact prior-year basis source", sourcePreviousBasis], ["current-contributions", "Exact current contributions source", sourceContributions], ["rollover-basis-in", "Exact incoming rollover basis source", sourceIncomingBasis], ["rollover-basis-out", "Exact outgoing rollover basis source", sourceOutgoingBasis], ["gross-distributions", "Exact nonrollover distribution sources", sourceGross], ["year-end-value", "Exact year-end account value source", sourceYearEndValue], ["outstanding-rollovers", "Exact outstanding rollover source", sourceOutstandingRollovers]] as const) audit.record("Coverdell source", `${accountId}:${line}`, description, amount, "Actual source amount before consistent whole-dollar worksheet rounding");
+    for (const [line, description, amount] of [["rollover-basis-in", "Rounded rollover basis received", incomingBasis], ["rollover-basis-out", "Rounded rollover basis transferred", outgoingBasis], ["F", "Beneficiary Coverdell AQEE after actual QTP coordination", allAQEE], ["G", "Beneficiary Coverdell distributions excluding rollovers", allGross], ["H", "Beneficiary qualified expense ratio", ratio],
+      ["1", "Coverdell current contributions", contributions], ["2", "Coverdell actual previous year basis", previousBasis], ["3", auditForm === "Pub970 WS6-3" ? "Coverdell basis plus contributions" : "Available basis after current contributions and actual rollover adjustments", basis], ["4", "Coverdell account distributions", gross],
       ["5", "Account allocated qualified expenses", accountAQEE], ["6", "Account distributions exceeding qualified expenses", zeroFloor(gross.minus(accountAQEE))], ["7", "Coverdell year-end value and outstanding rollovers", value],
       ["8", "Account distributions plus year-end value", denominator], ["9", "Account basis ratio", basisRatio], ["10", "Coverdell distributed basis", distributedBasis], ["11", "Coverdell distributed earnings", earnings],
-      ["12", "Account qualified expense ratio", exemptRatio], ["13", "Account tax-free earnings", taxFree], ["14", "Account taxable earnings", earnings.minus(taxFree)], ["15", "Coverdell ending basis", basis.minus(distributedBasis)]] as const) audit.record("Pub970 WS6-3", `${accountId}:${line}`, description, amount, "Actual account history and beneficiary Worksheet6-3 expense ratio; computed once per account");
+      ["12", "Account qualified expense ratio", exemptRatio], ["13", "Account tax-free earnings", taxFree], ["14", "Account taxable earnings", earnings.minus(taxFree)], ["15", "Coverdell ending basis", basis.minus(distributedBasis)]] as const) audit.record(auditForm, `${accountId}:${line}`, description, amount, auditForm === "Pub970 WS6-3" ? "Actual account history and beneficiary Worksheet6-3 expense ratio; computed once per account" : "Separate rollover reconciliation: line3=line1+line2+incoming basis-outgoing basis; other account ratios follow Worksheet6-3");
   }
-  audit.record("Pub970 WS6-3", "16", "Total taxable Coverdell earnings", sum(...[...derived.values()].map(item => item.earnings.minus(item.taxFree))), "Sum each account line14 once; preserve statement split totals");
+  audit.record(accountResults.some(row => row.auditForm === "Coverdell rollover worksheet") ? "Coverdell rollover worksheet" : "Pub970 WS6-3", "16", "Total taxable Coverdell earnings", sum(...[...derived.values()].map(item => item.earnings.minus(item.taxFree))), "Sum each account line14 once; preserve statement split totals");
   const perDistribution: EducationDistributionResult[] = verifiedForms.map(form => {
     const gross = actualAmount(form.grossDistribution, "Box1");
     const correction = returnedBySource.get(form.sourceId);
