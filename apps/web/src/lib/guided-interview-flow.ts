@@ -10,6 +10,7 @@ import { personalFactErrors } from "./guided-taxpayer-facts";
 import { allPaymentFactErrors, deductionFactErrors, educationFactErrors, retirementFactErrors } from "./guided-required-facts";
 import { adjustmentFactErrors, householdFactErrors } from "./guided-adjustment-facts";
 import { statePaymentFactErrors } from "./guided-state-facts";
+import { careFactErrors } from "./guided-credit-facts";
 
 import { formatPendingW2SuggestionValueLabel, isOfficialFixtureSourceType } from "@/lib/document-fixture-copy";
 
@@ -859,6 +860,10 @@ export const emptyPaymentData: PaymentData = {
 export interface DependentCareData {
   expenses: string;
   qualifyingIndividuals: string;
+  primaryEarnedIncome?: string;
+  spouseEarnedIncome?: string;
+  excludedDependentCareBenefits?: string;
+  eligibilityConfirmed?: boolean | null;
 }
 
 export const emptyDependentCareData: DependentCareData = {
@@ -1014,6 +1019,7 @@ export interface SectionDataMap {
     expenses: ScheduleCExpenseData;
     bankStatementAnalyses?: ScheduleCBankStatementAnalysis[];
     incomeDocumentAnalyses?: SelfEmploymentIncomeDocumentAnalysis[];
+    qbiMateriallyParticipated?: boolean | null;
   };
   "income-investments"?: {
     interestEntries: InterestEntryData[];
@@ -1354,6 +1360,7 @@ export interface RentalPropertyEntryData {
   utilities: string;
   depreciation: string;
   otherExpenses: string;
+  qbiMateriallyParticipated?: boolean | null;
 }
 
 export const emptyRentalPropertyEntry: RentalPropertyEntryData = {
@@ -1752,7 +1759,7 @@ export function validateSection(
     case "adjustments":
       return validateAdjustmentsSection(getSectionData(state, "adjustments"), state.segmentation.filingStatus, state.taxYear);
     case "credits":
-      return validateRequiredFacts(educationFactErrors(getSectionData(state, "credits"), state.taxYear, state.segmentation.filingStatus));
+      return validateRequiredFacts({ ...educationFactErrors(getSectionData(state, "credits"), state.taxYear, state.segmentation.filingStatus), ...careFactErrors(getSectionData(state, "credits")?.dependentCare, state.segmentation.filingStatus) });
     case "other-taxes":
       return validateRequiredFacts(householdFactErrors(getSectionData(state, "other-taxes"), state.taxYear));
     case "payments":

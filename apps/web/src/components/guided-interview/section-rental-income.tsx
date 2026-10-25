@@ -8,6 +8,7 @@ import {
   rentalPropertyTypeOptions,
 } from "@/lib/guided-interview-flow";
 import { CurrencyField } from "./currency-field";
+import { BooleanFact } from "./fact-fields";
 
 function RentalPropertyCard({
   entry,
@@ -88,7 +89,9 @@ function RentalPropertyCard({
       </div>
 
       <details className="guided-expand">
-          <summary className="guided-expand-trigger">Rental expenses</summary>
+          <summary className="guided-expand-trigger">Rental expenses and participation</summary>
+          <BooleanFact label="Did you materially participate in this rental activity under the section 469 rules?" value={entry.qbiMateriallyParticipated} onChange={(value) => onEntryChange({ ...entry, qbiMateriallyParticipated: value })} />
+          <p className="guided-hint">Material participation does not by itself establish that a rental is a qualified business for QBI.</p>
           <div className="guided-expand-body guided-form-grid guided-form-grid-3">
             <CurrencyField
               label="Mortgage interest"

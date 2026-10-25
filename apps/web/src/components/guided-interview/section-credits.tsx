@@ -7,6 +7,7 @@ import {
   type EducationCreditData,
   type EducationStudentData,
   type EnergyCreditData,
+  type FilingStatus,
   emptyCreditsData,
   emptyEducationStudent,
 } from "@/lib/guided-interview-flow";
@@ -18,9 +19,11 @@ function EligibilityFact({ label, value, onChange }: { label: string; value: boo
 
 function DependentCareSection({
   data,
+  filingStatus,
   onChange,
 }: {
   data: DependentCareData;
+  filingStatus?: FilingStatus | null;
   onChange: (data: DependentCareData) => void;
 }) {
   const needsQualifyingIndividuals = data.expenses.trim() !== "" && data.qualifyingIndividuals === "";
@@ -45,16 +48,16 @@ function DependentCareSection({
         />
         <label className="guided-field">
           <span className="guided-field-label">Qualifying individuals</span>
-          <select
+          <input
+            type="number"
+            min="1"
+            max="20"
+            step="1"
             className="guided-input guided-input-narrow"
             value={data.qualifyingIndividuals}
             onChange={(e) => onChange({ ...data, qualifyingIndividuals: e.target.value })}
             aria-describedby="qualifying-individuals-hint"
-          >
-            <option value="">Select count</option>
-            <option value="1">1</option>
-            <option value="2">2 or more</option>
-          </select>
+          />
           <span className="guided-field-hint" id="qualifying-individuals-hint">
             Children under 13, or a disabled spouse/dependent who lived with you.
           </span>
@@ -65,6 +68,11 @@ function DependentCareSection({
           ) : null}
         </label>
       </div>
+      <EligibilityFact label="Do the qualifying-person, work-related care and eligible-provider requirements in Form 2441 apply?" value={data.eligibilityConfirmed} onChange={(value) => onChange({ ...data, eligibilityConfirmed: value })} />
+      <CurrencyField label="Your earned income for Form 2441 line 4" hint="Use the worksheet amount after applicable self-employment adjustments, exclusions and substantiated student/incapacity rules." value={data.primaryEarnedIncome ?? ""} onChange={(value) => onChange({ ...data, primaryEarnedIncome: value })} />
+      {filingStatus === "mfj" && <CurrencyField label="Spouse's earned income for Form 2441 line 5" hint="Use your spouse's own worksheet amount, including substantiated deemed income where applicable. Enter 0 only when zero is established." value={data.spouseEarnedIncome ?? ""} onChange={(value) => onChange({ ...data, spouseEarnedIncome: value })} />}
+      <CurrencyField label="Excluded dependent-care benefits from Form 2441 Part III" hint="Use the amount determined excludable, not simply W-2 box 10. Confirm 0 when no benefits were excluded." value={data.excludedDependentCareBenefits ?? ""} onChange={(value) => onChange({ ...data, excludedDependentCareBenefits: value })} />
+      <p className="guided-hint">Provider and qualifying-person details still require form review before filing.</p>
     </div>
   );
 }
@@ -321,10 +329,12 @@ function EnergySection({
 export function SectionCredits({
   data,
   hasDependents,
+  filingStatus,
   onDataChange,
 }: {
   data: CreditsData | undefined;
   hasDependents: boolean;
+  filingStatus?: FilingStatus | null;
   onDataChange: (data: CreditsData) => void;
 }) {
   const current = data ?? emptyCreditsData;
@@ -348,6 +358,7 @@ export function SectionCredits({
         <div className="guided-w2-stack" style={{ marginTop: "16px" }}>
           <DependentCareSection
             data={current.dependentCare}
+            filingStatus={filingStatus}
             onChange={(next) => onDataChange({ ...current, dependentCare: next })}
           />
 

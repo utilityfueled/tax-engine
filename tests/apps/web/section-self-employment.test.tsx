@@ -96,6 +96,15 @@ function createWorkspace(): ReturnWorkspaceRecord {
 }
 
 describe("section self-employment", () => {
+  it("shows an unanswered participation choice and exact large monetary totals", () => {
+    const html = renderToStaticMarkup(<SectionSelfEmployment workspace={createWorkspace()} necEntries={[]} manualGrossReceipts="9007199254740993.01" expenses={emptyScheduleCExpenses} bankStatementAnalyses={[]} incomeDocumentAnalyses={[]} onSectionChange={() => {}} />);
+    expect(html).toContain("9,007,199,254,740,993");
+    expect(html).toContain('<option value="" selected="">Confirm from actual records</option>');
+    expect(html).not.toContain('<option value="true" selected="">');
+    const knownNo = renderToStaticMarkup(<SectionSelfEmployment workspace={createWorkspace()} necEntries={[]} manualGrossReceipts="0" expenses={emptyScheduleCExpenses} bankStatementAnalyses={[]} incomeDocumentAnalyses={[]} qbiMateriallyParticipated={false} onSectionChange={() => {}} />);
+    expect(knownNo).toContain('<option value="false" selected="">No</option>');
+  });
+
   it("filters out attached income documents whose raw files are no longer cached", () => {
     const workspace = createWorkspace();
 

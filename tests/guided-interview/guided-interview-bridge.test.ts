@@ -1285,12 +1285,15 @@ describe("buildDependentCareInput", () => {
   it("converts dependent care expenses and qualifying count", () => {
     const data = {
       ...emptyCreditsData,
-      dependentCare: { expenses: "5,000", qualifyingIndividuals: "2" },
+      dependentCare: { expenses: "5,000", qualifyingIndividuals: "2", primaryEarnedIncome: "30000", excludedDependentCareBenefits: "0", eligibilityConfirmed: true },
     };
     const result = buildDependentCareInput(data);
     expect(result).toEqual({
       expenses: "5000",
       qualifyingIndividuals: 2,
+      primaryEarnedIncome: "30000",
+      excludedDependentCareBenefits: "0",
+      eligibilityConfirmed: true,
     });
   });
 
@@ -1299,7 +1302,7 @@ describe("buildDependentCareInput", () => {
       ...emptyCreditsData,
       dependentCare: { expenses: "3000", qualifyingIndividuals: "" },
     };
-    expect(buildDependentCareInput(data)).toBeUndefined();
+    expect(() => buildDependentCareInput(data)).toThrow(/qualifying individuals/);
   });
 });
 
@@ -1454,12 +1457,15 @@ describe("buildTaxInputFromGuidedData — credits", () => {
     });
     state = updateSectionData(state, "credits", {
       ...emptyCreditsData,
-      dependentCare: { expenses: "6000", qualifyingIndividuals: "1" },
+      dependentCare: { expenses: "6000", qualifyingIndividuals: "1", primaryEarnedIncome: "30000", excludedDependentCareBenefits: "0", eligibilityConfirmed: true },
     });
     const input = buildTaxInputFromGuidedData(state);
     expect(input!.dependentCare).toEqual({
       expenses: "6000",
       qualifyingIndividuals: 1,
+      primaryEarnedIncome: "30000",
+      excludedDependentCareBenefits: "0",
+      eligibilityConfirmed: true,
     });
   });
 

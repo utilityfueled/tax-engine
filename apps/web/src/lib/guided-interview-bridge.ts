@@ -13,6 +13,7 @@ import { dependentFactErrors, personalFactErrors } from "./guided-taxpayer-facts
 import { allPaymentFactErrors, assertKnownFacts, deductionFactErrors, educationFactErrors, hasEnteredAmount, paymentFactErrors, retirementFactErrors } from "./guided-required-facts";
 import { adjustmentFactErrors, householdFactErrors, isDeductibleAlimony } from "./guided-adjustment-facts";
 import { statePaymentFactErrors, sumAdditionalStateWithholding } from "./guided-state-facts";
+import { careFactErrors } from "./guided-credit-facts";
 
 import type {
   AdjustmentData,
@@ -150,6 +151,7 @@ export function buildScheduleCInput(
   necEntries: NecEntryData[] | undefined,
   manualGrossReceipts: string | undefined,
   expenses: ScheduleCExpenseData | undefined,
+  qbiMateriallyParticipated?: boolean | null,
 ) {
   const necGross = (necEntries ?? []).reduce((sum, entry) => sum.plus(parseGuidedCurrency(entry.nonemployeeCompensation)), new Decimal(0));
   const totalGross = necGross.plus(parseGuidedCurrency(manualGrossReceipts));
@@ -157,6 +159,7 @@ export function buildScheduleCInput(
 
   return {
     grossReceipts: totalGross.toFixed(),
+    qbiMateriallyParticipated: qbiMateriallyParticipated ?? undefined,
     expenses: expenses
       ? {
           advertising: toDecimalString(expenses.advertising),
@@ -398,6 +401,7 @@ export function buildRentalPropertyInputs(entries: RentalPropertyEntryData[] | u
       utilities: toDecimalString(e.utilities),
       depreciation: toDecimalString(e.depreciation),
       otherExpenses: toDecimalString(e.otherExpenses),
+      qbiMateriallyParticipated: e.qbiMateriallyParticipated ?? undefined,
     }));
 }
 
@@ -406,6 +410,7 @@ export function buildRentalPropertyInputs(entries: RentalPropertyEntryData[] | u
 export function buildDependentCareInput(creditsData: CreditsData | undefined) {
   if (!creditsData) return undefined;
   const { dependentCare } = creditsData;
+  assertKnownFacts(careFactErrors(dependentCare));
   if (!hasValue(dependentCare.expenses)) return undefined;
 
   const qualifyingIndividuals = Number.parseInt(dependentCare.qualifyingIndividuals, 10);
@@ -413,7 +418,11 @@ export function buildDependentCareInput(creditsData: CreditsData | undefined) {
 
   return {
     expenses: toDecimalString(dependentCare.expenses),
-    qualifyingIndividuals: qualifyingIndividuals >= 2 ? 2 : 1,
+    qualifyingIndividuals,
+    primaryEarnedIncome: toDecimalString(dependentCare.primaryEarnedIncome),
+    ...(hasEnteredAmount(dependentCare.spouseEarnedIncome) ? { spouseEarnedIncome: toDecimalString(dependentCare.spouseEarnedIncome) } : {}),
+    excludedDependentCareBenefits: toDecimalString(dependentCare.excludedDependentCareBenefits),
+    eligibilityConfirmed: dependentCare.eligibilityConfirmed as boolean,
   };
 }
 
@@ -515,7 +524,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
   if (!personalInfo?.dateOfBirth || Object.keys(personalFactErrors(personalInfo, segmentation.filingStatus, state.taxYear)).length) return null;
   const w2Data = sectionData["income-w2"] as { entries: W2EntryData[] } | undefined;
   const seData = sectionData["income-self-employment"] as
-    | { necEntries: NecEntryData[]; manualGrossReceipts: string; expenses: ScheduleCExpenseData }
+    | { necEntries: NecEntryData[]; manualGrossReceipts: string; expenses: ScheduleCExpenseData; qbiMateriallyParticipated?: boolean | null }
     | undefined;
   const investData = sectionData["income-investments"] as
     | { interestEntries: InterestEntryData[]; dividendEntries: DividendEntryData[]; brokerageEntries: BrokerageEntryData[] }
@@ -539,12 +548,13 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     assertKnownFacts(adjustmentFactErrors(adjustmentData, segmentation.filingStatus, state.taxYear));
     assertKnownFacts(householdFactErrors(otherTaxesData, state.taxYear));
     assertKnownFacts(statePaymentFactErrors(stateReturnData, state.taxYear, segmentation.stateCode));
+    assertKnownFacts(careFactErrors(creditsData?.dependentCare, segmentation.filingStatus));
   } catch { return null; }
 
   const stateCode = personalInfo?.state || segmentation.stateCode || null;
   const w2s = buildW2Inputs(w2Data?.entries, stateCode);
   const necs = buildNecInputs(seData?.necEntries);
-  const scheduleC = buildScheduleCInput(seData?.necEntries, seData?.manualGrossReceipts, seData?.expenses);
+  const scheduleC = buildScheduleCInput(seData?.necEntries, seData?.manualGrossReceipts, seData?.expenses, seData?.qbiMateriallyParticipated);
   const form1099Int = buildInterestInputs(investData?.interestEntries);
   const form1099Div = buildDividendInputs(investData?.dividendEntries);
   const form1099B = buildBrokerageInputs(investData?.brokerageEntries);

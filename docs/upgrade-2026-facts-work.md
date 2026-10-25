@@ -240,3 +240,19 @@ Source-year/document-fidelity package commit: `70f8d17`.
   pass. Schedule H correction commit: `2fb8e5c`.
 - The federal owner separately handles calendar-year SALT timing for the dated
   state payments. Final 2026 law/form qualification and human review stay pending.
+
+## Care and business qualification facts
+
+- Added separate primary/spouse Form 2441 earned-income amounts, excluded Part III
+  benefits and explicit eligibility. Missing worksheet facts block a positive
+  claim; confirmed zero and false survive. An MFS care claim is explicitly blocked
+  until the separated-spouse exception is modeled. Provider/person identity for a
+  complete Form 2441 remains a separate unresolved form contract.
+- Added actual section 469 material-participation answers for guided Schedule C
+  and rental records, preserving unknown rather than inheriting an active-business
+  default. The engine owns the conditional 2026 QBI minimum test.
+- Refreshed [Form 2441 instructions](https://www.irs.gov/instructions/i2441).
+  Three new regressions were red before implementation. 462 guided and rendered
+  credit/self-employment tests in 15 files pass, including exact large totals,
+  explicit-zero spouse income and unknown/false eligibility rendering.
+- State and deduction source package commit: `f5acf56`.

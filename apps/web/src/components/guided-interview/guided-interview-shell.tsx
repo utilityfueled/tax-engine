@@ -512,6 +512,7 @@ function SectionContent({
           expenses={expenses}
           bankStatementAnalyses={bankStatementAnalyses}
           incomeDocumentAnalyses={incomeDocumentAnalyses}
+          qbiMateriallyParticipated={seData?.qbiMateriallyParticipated}
           onSectionChange={(next) =>
             onStateChange(updateSectionData(state, "income-self-employment", next))
           }
@@ -613,6 +614,7 @@ function SectionContent({
         <SectionCredits
           data={getSectionData(state, "credits")}
           hasDependents={depCount > 0}
+          filingStatus={state.segmentation.filingStatus}
           onDataChange={(data: CreditsData) =>
             onStateChange(updateSectionData(state, "credits", data))
           }

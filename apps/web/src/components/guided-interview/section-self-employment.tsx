@@ -31,6 +31,7 @@ import {
 } from "@/lib/workspace-document-file-cache";
 import { isGuidedSyntheticDocument } from "@/lib/workspace-status-copy";
 import { CurrencyField } from "./currency-field";
+import { BooleanFact } from "./fact-fields";
 
 function toCurrencyInput(value: string | undefined) {
   if (!value) {
@@ -212,6 +213,7 @@ export function SectionSelfEmployment({
   expenses,
   bankStatementAnalyses,
   incomeDocumentAnalyses,
+  qbiMateriallyParticipated,
   onSectionChange,
 }: {
   workspace: ReturnWorkspaceRecord;
@@ -220,12 +222,14 @@ export function SectionSelfEmployment({
   expenses: ScheduleCExpenseData;
   bankStatementAnalyses: ScheduleCBankStatementAnalysis[];
   incomeDocumentAnalyses: SelfEmploymentIncomeDocumentAnalysis[];
+  qbiMateriallyParticipated?: boolean | null;
   onSectionChange: (next: {
     necEntries: NecEntryData[];
     manualGrossReceipts: string;
     expenses: ScheduleCExpenseData;
     bankStatementAnalyses: ScheduleCBankStatementAnalysis[];
     incomeDocumentAnalyses: SelfEmploymentIncomeDocumentAnalysis[];
+    qbiMateriallyParticipated?: boolean | null;
   }) => void;
 }) {
   const currentEntries = necEntries.length > 0 ? necEntries : [emptyNecEntry];
@@ -294,6 +298,7 @@ export function SectionSelfEmployment({
     expenses: ScheduleCExpenseData;
     bankStatementAnalyses: ScheduleCBankStatementAnalysis[];
     incomeDocumentAnalyses: SelfEmploymentIncomeDocumentAnalysis[];
+    qbiMateriallyParticipated?: boolean | null;
   }>) {
     onSectionChange({
       necEntries: next.necEntries ?? currentEntries,
@@ -301,6 +306,7 @@ export function SectionSelfEmployment({
       expenses: next.expenses ?? currentExpenses,
       bankStatementAnalyses: next.bankStatementAnalyses ?? currentAnalyses,
       incomeDocumentAnalyses: next.incomeDocumentAnalyses ?? currentIncomeAnalyses,
+      qbiMateriallyParticipated: "qbiMateriallyParticipated" in next ? next.qbiMateriallyParticipated : qbiMateriallyParticipated,
     });
   }
 
@@ -889,6 +895,8 @@ export function SectionSelfEmployment({
 
         <details className="guided-expand" style={{ marginTop: "16px" }}>
           <summary className="guided-expand-trigger">Schedule C — Business Expenses</summary>
+          <BooleanFact label="Did you materially participate in this business under the section 469 rules?" value={qbiMateriallyParticipated} onChange={(value) => commitSection({ qbiMateriallyParticipated: value })} />
+          <p className="guided-hint">This actual participation answer is used when testing the 2026 minimum QBI deduction. Owning a business alone does not establish material participation.</p>
           <div className="guided-expand-body">
             <p className="guided-hint">
               Enter your business expenses by category. Only include amounts that are

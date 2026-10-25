@@ -75,3 +75,8 @@ lines:
     formula: "State estimated payments retain actual date, amount and state; source withholding retains payer, form, source tax year and state. Require reconciliation of legacy additional-withholding totals. Missing or conflicting state/year facts block calculation. Carry dated state estimates into the engine separately from federal payments; additional withholding enters income-tax SALT only once. Sum monetary overlays with Decimal."
     irsRef: "Schedule A line 5a instructions, state and local income taxes paid during the tax year; Form 1040 line 26 instructions"
     testRef: "tests/guided-interview/guided-deduction-state-facts.test.ts::forwards dated state estimates and classified withholding with exact zero-preserving amounts"
+  - line: "care-and-qbi-qualification"
+    description: "Preserve care-credit and QBI participation facts"
+    formula: "A care expense claim requires actual qualifying count, eligibility, separately determined primary/spouse earned income and excluded benefits from the Form 2441 worksheet. Do not infer spouse income from combined wages or treat unknown excluded benefits as zero. QBI material participation is a separate actual answer for each activity; false remains false and omission remains unknown for the engine's conditional 2026 minimum test."
+    irsRef: "Form 2441 instructions lines 4-5 and Part III; IRC 199A(i) and 469 material participation"
+    testRef: "tests/guided-interview/guided-credit-business-facts.test.ts::preserves actual care earned income benefits and ineligibility without household-income inference"
