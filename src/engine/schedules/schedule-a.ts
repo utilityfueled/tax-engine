@@ -218,7 +218,7 @@ export function calculateScheduleA(
   } else {
     // Default: income taxes
     stateLocalTaxes = stateLocalIncomeTaxes;
-    line5aDescription = `Sum W-2 Box 17 (state ${stateTaxes}) + Box 19 (local ${localTaxes}) + state estimated (${stateEstimatedPayments}) + other qualified income-tax payments (${additionalStateLocalIncomeTaxes})`;
+    line5aDescription = `Sum W-2 Box 17 (state ${stateTaxes}) + Box 19 (local ${localTaxes}) + in-year state payments and applied credits (${statePaymentsInYear}) + other qualified income-tax payments (${additionalStateLocalIncomeTaxes})`;
     if (salesTaxAmount.greaterThan(0)) {
       line5aDescription += ` (income taxes $${stateLocalIncomeTaxes} used over sales taxes $${salesTaxAmount})`;
     }
