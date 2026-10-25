@@ -1,5 +1,6 @@
 "use client";
 
+import { ForeignIncomeDetails } from "./foreign-income-details";
 import { HealthInsuranceSourceDetails } from "./health-insurance-source-details";
 import type { HealthInsuranceSourceOption } from "@/lib/guided-health-insurance-facts";
 import type { MarketplacePolicyOption } from "@/lib/guided-marketplace-health-facts";
@@ -24,6 +25,7 @@ export function SectionAdjustments({
   filingStatus,
   taxYear,
   educationDistributions,
+  foreignIncomeSources,
   healthInsuranceSources,
   marketplacePolicies,
   hasHealthInsurance,
@@ -36,12 +38,15 @@ export function SectionAdjustments({
   filingStatus?: FilingStatus | null;
   taxYear?: number | null;
   educationDistributions?: EducationDistributionData;
+  foreignIncomeSources?: { sourceId: string; label: string }[];
   healthInsuranceSources?: HealthInsuranceSourceOption[];
   marketplacePolicies?: MarketplacePolicyOption[];
   hasHealthInsurance?: boolean;
   onDataChange: (data: AdjustmentData) => void;
 }) {
-  const current = data ?? emptyAdjustmentData;
+  // Older or source-only saved sections may omit the legacy aggregate inputs.
+  // Keep those amounts unknown (blank) while preserving every actual source.
+  const current = { ...emptyAdjustmentData, ...data };
 
   function update(field: keyof AdjustmentData, value: string) {
     onDataChange({ ...current, [field]: value });
@@ -88,6 +93,8 @@ export function SectionAdjustments({
         {(hasStudentLoans || current.studentLoanFacts || current.studentLoanInterest.trim()) && <StudentLoanSourceDetails data={current.studentLoanFacts} filingStatus={filingStatus} educationDistributions={educationDistributions} onChange={studentLoanFacts => onDataChange({ ...current, studentLoanFacts })} />}
 
         {(hasHealthInsurance || hasSelfEmployment || healthInsuranceSources?.length || current.healthInsuranceFacts || current.selfEmployedHealthInsurance.trim()) && <HealthInsuranceSourceDetails data={current.healthInsuranceFacts} sources={healthInsuranceSources} marketplacePolicies={marketplacePolicies} onChange={healthInsuranceFacts => onDataChange({ ...current, healthInsuranceFacts })} />}
+
+        <ForeignIncomeDetails data={current.foreignIncome} sources={foreignIncomeSources} onChange={foreignIncome => onDataChange({ ...current, foreignIncome })} />
 
         <EducatorSourceDetails sources={current.educatorExpenseSources} taxYear={taxYear} onChange={educatorExpenseSources => onDataChange({ ...current, educatorExpenseSources })} />
 

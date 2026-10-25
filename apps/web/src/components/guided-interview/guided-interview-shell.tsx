@@ -1,5 +1,6 @@
 "use client";
 
+import { foreignIncomeSourceOptions } from "@/lib/guided-foreign-income";
 import { marketplacePolicyOptions } from "@/lib/guided-marketplace-health-facts";
 
 import { healthInsuranceSourceOptions } from "@/lib/guided-health-insurance-facts";
@@ -620,6 +621,7 @@ function SectionContent({
           hasHealthInsurance={state.segmentation.lifeEvents.includes("self-employed-health-insurance")}
           filingStatus={state.segmentation.filingStatus}
           educationDistributions={getSectionData(state, "credits")?.educationDistributions}
+          foreignIncomeSources={foreignIncomeSourceOptions(state)}
           healthInsuranceSources={healthInsuranceSourceOptions(getSectionData(state, "income-self-employment"), getSectionData(state, "income-w2")?.entries)}
           marketplacePolicies={marketplacePolicyOptions(getSectionData(state, "credits")?.premiumTaxCredit?.policies)}
           onDataChange={(data: AdjustmentData) =>

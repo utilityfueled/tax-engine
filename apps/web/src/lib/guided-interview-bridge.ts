@@ -1,3 +1,4 @@
+import { buildForeignIncomeInput, foreignIncomeFactErrors } from "./guided-foreign-income";
 import { buildEstimatedTaxFacts, estimatedTaxFactErrors } from "./guided-estimated-tax-facts";
 import { buildMinimumTaxCreditInput, minimumTaxCreditFactErrors } from "./guided-minimum-tax-credit";
 import { buildGuidedForeignTaxElection, guidedForeignTaxFactErrors } from "./guided-foreign-tax-election";
@@ -650,6 +651,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     if (adjustmentData?.studentLoanFacts) loanEducation = studentLoanEducationSources(creditsData, segmentation.filingStatus, state.taxYear, personalInfo, adjustmentData.studentLoanFacts);
     assertKnownFacts(studentLoanFactErrors(adjustmentData, segmentation.filingStatus, state.taxYear, loanEducation, segmentation.lifeEvents.includes("student-loans")));
     assertKnownFacts(healthInsuranceSourceErrors(state));
+    assertKnownFacts(foreignIncomeFactErrors(state));
     assertKnownFacts(premiumTaxCreditFactErrors(state));
     assertKnownFacts(adjustmentFactErrors(adjustmentData, segmentation.filingStatus, state.taxYear, loanEducation));
     assertKnownFacts(educatorFactErrors(adjustmentData, segmentation.filingStatus, state.taxYear, segmentation.lifeEvents.includes("educator-expenses")));
@@ -747,6 +749,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     },
     w2s,
     form2210: buildEstimatedTaxFacts(paymentData, state.taxYear),
+    form2555: buildForeignIncomeInput(adjustmentData?.foreignIncome, state),
     form8801: buildMinimumTaxCreditInput(creditsData?.minimumTaxCredit, state.taxYear, segmentation.filingStatus, personalInfo),
     schedule1A: buildSchedule1AInput(sectionData["additional-deductions"]?.schedule1A, state),
     form4137ByOwner: buildTipIncomeInputs(sectionData["additional-deductions"]?.tipIncomeAccounts, segmentation.filingStatus, state.taxYear, w2Data?.entries),

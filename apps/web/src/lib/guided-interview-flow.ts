@@ -1,3 +1,4 @@
+import { foreignIncomeFactErrors, type ForeignIncomeData } from "./guided-foreign-income";
 import { estimatedTaxFactErrors, type EstimatedTaxFactsData } from "./guided-estimated-tax-facts";
 import { minimumTaxCreditFactErrors, type MinimumTaxCreditData } from "./guided-minimum-tax-credit";
 import { guidedForeignTaxFactErrors, type ForeignTaxElectionData } from "./guided-foreign-tax-election";
@@ -92,9 +93,11 @@ export type LifeEvent =
   | "hsa-contributions"
   | "educator-expenses"
   | "self-employed-health-insurance"
-  | "additional-deductions";
+  | "additional-deductions"
+  | "foreign-earned-income";
 
 export const lifeEventOptions: { value: LifeEvent; label: string; hint: string }[] = [
+  { value: "foreign-earned-income", label: "Worked abroad", hint: "Actual foreign earnings, tax home and qualification records" },
   { value: "additional-deductions", label: "Tips, overtime, vehicle loan interest or senior deduction", hint: "Actual tip records and Schedule 1-A eligibility" },
   { value: "bought-home", label: "Bought a home", hint: "Mortgage interest deduction may apply" },
   { value: "sold-home", label: "Sold a home", hint: "Capital gains exclusion may apply" },
@@ -424,7 +427,8 @@ export function buildSectionRoute(segmentation: SegmentationAnswers): InterviewS
     segmentation.lifeEvents.includes("student-loans") ||
     segmentation.lifeEvents.includes("hsa-contributions") ||
     segmentation.lifeEvents.includes("educator-expenses") ||
-    segmentation.lifeEvents.includes("self-employed-health-insurance");
+    segmentation.lifeEvents.includes("self-employed-health-insurance") ||
+    segmentation.lifeEvents.includes("foreign-earned-income");
   if (needsAdjustments) {
     const adj = allSections.find((s) => s.id === "adjustments");
     if (adj) sections.push(adj);
@@ -920,6 +924,7 @@ export const emptyDeductionData: DeductionData = {
 // ── Adjustments data ──────────────────────────────────────────────────────
 
 export interface AdjustmentData {
+  foreignIncome?: ForeignIncomeData;
   hsaAccounts?: HsaAccountData[];
   hsaDeduction: string;
   studentLoanInterest: string;
@@ -1507,6 +1512,7 @@ export function updateSectionData(
   const nextAdditional = sectionId === "additional-deductions" ? data as AdditionalDeductionsData : state.sectionData["additional-deductions"];
   const additionalSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-social-security", "adjustments", "credits", "deductions", "additional-deductions"].includes(sectionId) && nextAdditional?.schedule1A;
   const nextAdjustments = sectionId === "adjustments" ? data as AdjustmentData : adjustments;
+  const foreignIncomeSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "adjustments", "credits", "deductions"].includes(sectionId) && nextAdjustments?.foreignIncome;
   const healthSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "credits", "adjustments"].includes(sectionId) && nextAdjustments?.healthInsuranceFacts;
   const mortgageSourcesChanged = sourceValuesChanged && sectionId === "personal-info" && state.sectionData.deductions?.mortgageEntries?.length ? state.sectionData.deductions : undefined;
   const educatorSourcesChanged = sourceValuesChanged && ["income-w2", "personal-info", "credits", "income-investments"].includes(sectionId) && adjustments?.educatorExpenseSources;
@@ -1536,7 +1542,7 @@ export function updateSectionData(
       ...((tipSourcesChanged || additionalSourcesChanged) && nextAdditional ? { "additional-deductions": { ...nextAdditional, ...(tipSourcesChanged ? { tipIncomeAccounts: nextAdditional.tipIncomeAccounts?.map(account => ({ ...account, sourceFactsConfirmed: null })) } : {}), ...(additionalSourcesChanged ? { schedule1A: { ...additionalSourcesChanged, sourceFactsConfirmed: null } } : {}) } } : {}),
       ...(mortgageSourcesChanged ? { deductions: { ...mortgageSourcesChanged, mortgageEntries: mortgageSourcesChanged.mortgageEntries?.map(entry => ({ ...entry, sourceFactsConfirmed: null })), ...(mortgageSourcesChanged.mortgageWorksheet ? { mortgageWorksheet: { ...mortgageSourcesChanged.mortgageWorksheet, sourceFactsConfirmed: null } } : {}) } } : {}),
       ...(ohioInterestChanged && ohioStateReturn ? { "state-return": { ...ohioStateReturn, ohioInterestAllocation: { ...ohioInterestChanged, sourceFactsConfirmed: null } } } : {}),
-      ...((iraSourcesChanged || hsaSourcesChanged || educatorSourcesChanged || studentLoanSourcesChanged || healthSourcesChanged) && nextAdjustments ? { adjustments: { ...nextAdjustments, ...(healthSourcesChanged ? { healthInsuranceFacts: { ...healthSourcesChanged, sourceFactsConfirmed: null, ...(healthSourcesChanged.incomeDeductions ? { incomeDeductions: { ...healthSourcesChanged.incomeDeductions, sourceFactsConfirmed: null } } : {}) } } : {}), ...(studentLoanSourcesChanged ? { studentLoanFacts: { ...studentLoanSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(iraSourcesChanged ? { iraContributions: { ...iraSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(hsaSourcesChanged ? { hsaAccounts: hsaSourcesChanged.map(account => ({ ...account, sourceFactsConfirmed: null })) } : {}), ...(educatorSourcesChanged ? { educatorExpenseSources: educatorSourcesChanged.map(source => ({ ...source, sourceFactsConfirmed: null })) } : {}) } } : {}),
+      ...((iraSourcesChanged || hsaSourcesChanged || educatorSourcesChanged || studentLoanSourcesChanged || healthSourcesChanged || foreignIncomeSourcesChanged) && nextAdjustments ? { adjustments: { ...nextAdjustments, ...(foreignIncomeSourcesChanged ? { foreignIncome: { ...foreignIncomeSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(healthSourcesChanged ? { healthInsuranceFacts: { ...healthSourcesChanged, sourceFactsConfirmed: null, ...(healthSourcesChanged.incomeDeductions ? { incomeDeductions: { ...healthSourcesChanged.incomeDeductions, sourceFactsConfirmed: null } } : {}) } } : {}), ...(studentLoanSourcesChanged ? { studentLoanFacts: { ...studentLoanSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(iraSourcesChanged ? { iraContributions: { ...iraSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(hsaSourcesChanged ? { hsaAccounts: hsaSourcesChanged.map(account => ({ ...account, sourceFactsConfirmed: null })) } : {}), ...(educatorSourcesChanged ? { educatorExpenseSources: educatorSourcesChanged.map(source => ({ ...source, sourceFactsConfirmed: null })) } : {}) } } : {}),
       ...((benefitSourcesChanged || educationSourcesChanged || bondSourcesChanged || premiumTaxCreditSourcesChanged || minimumTaxCreditSourcesChanged) && nextCredits ? { credits: { ...nextCredits,
         ...(minimumTaxCreditSourcesChanged ? { minimumTaxCredit: { ...minimumTaxCreditSourcesChanged, sourceFactsConfirmed: null } } : {}),
         ...(benefitSourcesChanged ? { dependentCareBenefits: { ...nextCredits.dependentCareBenefits, sourceFactsConfirmed: null, earnedIncomeWorksheetConfirmed: null, creditExpenseCoordinationConfirmed: null } } : {}),
@@ -1822,7 +1828,7 @@ function validateAdjustmentsSection(data: AdjustmentData | undefined, filingStat
   if (!data) return EMPTY_SECTION("adjustments info", true);
   const errors = adjustmentFactErrors(data, filingStatus, taxYear, education);
   if (Object.keys(errors).length) return validateRequiredFacts(errors);
-  if (data.iraContributions || data.hsaAccounts?.length || data.educatorExpenseSources?.length || data.studentLoanFacts || data.healthInsuranceFacts) return VALID_SECTION;
+  if (data.iraContributions || data.hsaAccounts?.length || data.educatorExpenseSources?.length || data.studentLoanFacts || data.healthInsuranceFacts || data.foreignIncome) return VALID_SECTION;
   const hasAny = Object.values(data).some((v) => typeof v === "string" && hasNumericValue(v));
   if (!hasAny) return EMPTY_SECTION("adjustments info", true);
   return VALID_SECTION;
@@ -1866,7 +1872,7 @@ export function validateSection(
     case "deductions":
       return validateDeductionsSection(getSectionData(state, "deductions"), state.taxYear, nonW2TaxAllocationErrors(state), state.segmentation.filingStatus, state.sectionData["personal-info"]?.spouse);
     case "adjustments": {
-      const errors = { ...healthInsuranceSourceErrors(state), ...hsaFactErrors(getSectionData(state, "adjustments")?.hsaAccounts, state.segmentation.filingStatus, state.taxYear, getSectionData(state, "income-w2")?.entries ?? [], getSectionData(state, "personal-info"), state.segmentation.lifeEvents.includes("hsa-contributions")), ...educatorFactErrors(getSectionData(state, "adjustments"), state.segmentation.filingStatus, state.taxYear, state.segmentation.lifeEvents.includes("educator-expenses")) };
+      const errors = { ...foreignIncomeFactErrors(state), ...healthInsuranceSourceErrors(state), ...hsaFactErrors(getSectionData(state, "adjustments")?.hsaAccounts, state.segmentation.filingStatus, state.taxYear, getSectionData(state, "income-w2")?.entries ?? [], getSectionData(state, "personal-info"), state.segmentation.lifeEvents.includes("hsa-contributions")), ...educatorFactErrors(getSectionData(state, "adjustments"), state.segmentation.filingStatus, state.taxYear, state.segmentation.lifeEvents.includes("educator-expenses")) };
       let loanEducation: StudentLoanEducationSources = [];
       try {
         if (state.sectionData.adjustments?.studentLoanFacts) loanEducation = studentLoanEducationSources(state.sectionData.credits, state.segmentation.filingStatus, state.taxYear, state.sectionData["personal-info"], state.sectionData.adjustments.studentLoanFacts);

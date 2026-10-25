@@ -3,7 +3,14 @@ import Decimal from "decimal.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import { AuditTrail } from "@/utils/audit.js";
 
-type SourceInput = Pick<TaxYearInput, "taxpayer" | "form2555" | "w2s" | "scheduleC" | "form1099Nec">;
+/** Only actual consumed source fields; callers need not manufacture taxpayer IDs. */
+export interface Form2555SourceContext {
+  taxpayer: Pick<TaxYearInput["taxpayer"], "taxYear" | "filingStatus"> & { spouse?: object };
+  form2555?: TaxYearInput["form2555"];
+  w2s: { employer: { name: string; ein: string }; accountHolder?: string; taxYear?: number; wages?: string }[];
+  scheduleC?: { accountHolder?: string; businessName?: string; ein?: string; grossReceipts?: string; returnsAndAllowances?: string; costOfGoodsSold?: string; otherIncome?: string };
+  form1099Nec: { accountHolder?: string; nonemployeeCompensation?: string }[];
+}
 const incomeKeys = ["foreignEmploymentIncomeIncludedOnW2", "foreignEmploymentIncomeNotOnW2", "foreignBusinessIncomeAlreadyReported", "foreignPartnershipIncomeAlreadyReported", "otherForeignIncomeAlreadyReported"] as const;
 function amount(value: string | undefined, label: string): Decimal {
   if (value === undefined || !value.trim()) throw new Error(`Form2555 requires actual ${label}, including known zero`);
@@ -14,7 +21,7 @@ function amount(value: string | undefined, label: string): Decimal {
 const sameName = (left: string, right: string | undefined) => !!right?.trim() && left.trim().replace(/\s+/g, " ").toLowerCase() === right.trim().replace(/\s+/g, " ").toLowerCase();
 const ein = (value: string | undefined) => value?.replace(/-/g, "");
 
-export function resolveForm2555Sources(input: SourceInput) {
+export function resolveForm2555Sources(input: Form2555SourceContext) {
   const audit = new AuditTrail();
   const facts = input.form2555;
   const empty = { sourceFactsVerified: false, currentForeignIncome: new Decimal(0), priorYearIncomeReceived: new Decimal(0), lines: audit.getLines() };
