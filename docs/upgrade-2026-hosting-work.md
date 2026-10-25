@@ -77,3 +77,18 @@ contents, same-ID tenant isolation for read/list/upsert/delete, safe legacy read
 and retention of the previous row on rejected updates. Web types and scoped lint
 pass. The database tests use a uniquely named temporary schema, never a normal
 or staging `DATABASE_URL`. These results do not establish hosted staging readiness.
+
+## Browser document-analysis transport
+
+Income and expense analysis now share the same local preparation boundary:
+extract/redact text on the device, reject empty or still-identifying text, and
+send random upload names instead of original filenames. Responses must identify
+one unique upload; original filenames are restored only in the local result.
+This prevents a private filename from bypassing text redaction and prevents a
+duplicate or unrelated response from becoming another upload's facts. Raw files
+remain absent from these requests.
+
+Eight regressions first failed. All 44 focused transport, parser and grounded
+document-task tests now pass, including both analysis flows, local parse errors,
+invalid formats, server failures, repeated response IDs and unknown response IDs.
+Web typecheck and scoped lint pass. No live model/provider request was made.

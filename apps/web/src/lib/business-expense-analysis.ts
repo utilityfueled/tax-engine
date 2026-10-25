@@ -1,4 +1,5 @@
 import { redactTextForAiAnalysis } from "@/lib/ai-document-redaction";
+import { containsUnsafeDirectIdentifier } from "@/lib/provider-request-privacy";
 import Decimal from "decimal.js";
 import { parseGuidedCurrency } from "./guided-currency";
 import type {
@@ -641,42 +642,51 @@ export function summarizeBankStatementSuggestionsByCategory(
   }));
 }
 
-export async function analyzeBusinessExpenseStatements(files: File[]) {
-  if (files.length === 0) {
-    return [];
-  }
-
+/** Keep the original filename on the device, including when it contains a name or SSN. */
+async function analyzeRedactedDocumentUploads<T extends { fileName: string; label: string }>(
+  files: File[], endpoint: string, failureLabel: string,
+): Promise<T[]> {
+  if (files.length === 0) return [];
+  const originals = new Map<string, File>();
   const documents = await Promise.all(files.map(async (file) => {
     const looksLikePdf = /\.pdf$/i.test(file.name) || /pdf/i.test(file.type || "");
-
     if (!looksLikePdf) {
       throw new Error(`${file.name} must be a PDF so we can redact sensitive text locally before AI analysis.`);
     }
-
     const extractedText = await extractPdfTextFromFile(file);
     const { redactedText } = redactTextForAiAnalysis(extractedText);
-
-    return {
-      fileName: file.name,
-      redactedText,
-    };
+    if (!redactedText.trim()) throw new Error("Document did not produce readable text.");
+    if (containsUnsafeDirectIdentifier(redactedText)) {
+      throw new Error("Document analysis was blocked because direct identifiers remain.");
+    }
+    const fileName = `upload-${crypto.randomUUID()}.pdf`;
+    originals.set(fileName, file);
+    return { fileName, redactedText };
   }));
-
-  const response = await fetch("/api/business-expense-analysis", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+  const response = await fetch(endpoint, {
+    method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ documents }),
   });
-
   if (!response.ok) {
     const payload = await response.json().catch(() => null) as { error?: string } | null;
-    throw new Error(payload?.error || `Business expense analysis failed with status ${response.status}.`);
+    throw new Error(payload?.error || `${failureLabel} failed with status ${response.status}.`);
   }
+  const payload = await response.json() as { analyses?: T[] };
+  if (!Array.isArray(payload.analyses)) return [];
+  const seen = new Set<string>();
+  return payload.analyses.map((analysis) => {
+    const original = originals.get(analysis.fileName);
+    if (!original) throw new Error("Document analysis response could not be matched to an upload.");
+    if (seen.has(analysis.fileName)) throw new Error("Document analysis response contains duplicate upload results.");
+    seen.add(analysis.fileName);
+    return { ...analysis, fileName: original.name,
+      label: analysis.label === analysis.fileName ? original.name : analysis.label };
+  });
+}
 
-  const payload = await response.json() as { analyses?: ScheduleCBankStatementAnalysis[] };
-  return Array.isArray(payload.analyses) ? payload.analyses : [];
+export async function analyzeBusinessExpenseStatements(files: File[]) {
+  return analyzeRedactedDocumentUploads<ScheduleCBankStatementAnalysis>(files,
+    "/api/business-expense-analysis", "Business expense analysis");
 }
 
 export function summarizeSelfEmploymentIncomeSuggestions(
@@ -698,39 +708,6 @@ export function summarizeSelfEmploymentIncomeSuggestions(
 }
 
 export async function analyzeSelfEmploymentIncomeDocuments(files: File[]) {
-  if (files.length === 0) {
-    return [];
-  }
-
-  const documents = await Promise.all(files.map(async (file) => {
-    const looksLikePdf = /\.pdf$/i.test(file.name) || /pdf/i.test(file.type || "");
-
-    if (!looksLikePdf) {
-      throw new Error(`${file.name} must be a PDF so we can redact sensitive text locally before AI analysis.`);
-    }
-
-    const extractedText = await extractPdfTextFromFile(file);
-    const { redactedText } = redactTextForAiAnalysis(extractedText);
-
-    return {
-      fileName: file.name,
-      redactedText,
-    };
-  }));
-
-  const response = await fetch("/api/self-employment-income-analysis", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ documents }),
-  });
-
-  if (!response.ok) {
-    const payload = await response.json().catch(() => null) as { error?: string } | null;
-    throw new Error(payload?.error || `Income document analysis failed with status ${response.status}.`);
-  }
-
-  const payload = await response.json() as { analyses?: SelfEmploymentIncomeDocumentAnalysis[] };
-  return Array.isArray(payload.analyses) ? payload.analyses : [];
+  return analyzeRedactedDocumentUploads<SelfEmploymentIncomeDocumentAnalysis>(files,
+    "/api/self-employment-income-analysis", "Income document analysis");
 }
