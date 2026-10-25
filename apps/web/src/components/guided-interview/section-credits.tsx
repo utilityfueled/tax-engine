@@ -13,6 +13,7 @@ import {
 import { CurrencyField } from "./currency-field";
 import { EnergySourceDetails } from "./energy-source-details";
 import { VehicleSourceDetails } from "./vehicle-source-details";
+import { AdoptionSourceDetails } from "./adoption-source-details";
 
 function EligibilityFact({ label, value, onChange }: { label: string; value: boolean | null | undefined; onChange: (value: boolean | null) => void }) {
   return <label className="guided-field"><span className="guided-field-label">{label}</span><select className="guided-input" value={value == null ? "" : String(value)} onChange={(event) => onChange(event.target.value === "" ? null : event.target.value === "true")}><option value="">Confirm from actual records</option><option value="true">Yes</option><option value="false">No</option></select></label>;
@@ -287,6 +288,7 @@ export function SectionCredits({
             data={current.energy}
             onChange={(next) => onDataChange({ ...current, energy: next })}
           />
+          <AdoptionSourceDetails data={current.adoption} onChange={(next) => onDataChange({ ...current, adoption: next })} />
           <VehicleSourceDetails data={current.vehicles} filingStatus={filingStatus} onChange={(next) => onDataChange({ ...current, vehicles: next })} />
         </div>
       </div>

@@ -13,6 +13,7 @@ import { statePaymentFactErrors } from "./guided-state-facts";
 import { careFactErrors } from "./guided-credit-facts";
 import { energyFactErrors } from "./guided-energy-facts";
 import { vehicleFactErrors, type VehicleCreditData } from "./guided-vehicle-facts";
+import { adoptionFactErrors, type AdoptionCreditData } from "./guided-adoption-facts";
 
 import { formatPendingW2SuggestionValueLabel, isOfficialFixtureSourceType } from "@/lib/document-fixture-copy";
 
@@ -967,6 +968,7 @@ export interface CreditsData {
   education: EducationCreditData;
   energy: EnergyCreditData;
   vehicles?: VehicleCreditData;
+  adoption?: AdoptionCreditData;
 }
 
 export const emptyCreditsData: CreditsData = {
@@ -1799,7 +1801,7 @@ export function validateSection(
     case "adjustments":
       return validateAdjustmentsSection(getSectionData(state, "adjustments"), state.segmentation.filingStatus, state.taxYear);
     case "credits":
-      return validateRequiredFacts({ ...educationFactErrors(getSectionData(state, "credits"), state.taxYear, state.segmentation.filingStatus), ...careFactErrors(getSectionData(state, "credits")?.dependentCare, state.segmentation.filingStatus), ...energyFactErrors(getSectionData(state, "credits")?.energy, state.taxYear), ...vehicleFactErrors(getSectionData(state, "credits")?.vehicles, state.taxYear, state.segmentation.filingStatus) });
+      return validateRequiredFacts({ ...educationFactErrors(getSectionData(state, "credits"), state.taxYear, state.segmentation.filingStatus), ...careFactErrors(getSectionData(state, "credits")?.dependentCare, state.segmentation.filingStatus), ...energyFactErrors(getSectionData(state, "credits")?.energy, state.taxYear), ...vehicleFactErrors(getSectionData(state, "credits")?.vehicles, state.taxYear, state.segmentation.filingStatus), ...adoptionFactErrors(getSectionData(state, "credits")?.adoption, state.taxYear, state.segmentation.filingStatus) });
     case "other-taxes":
       return validateRequiredFacts(householdFactErrors(getSectionData(state, "other-taxes"), state.taxYear));
     case "payments":

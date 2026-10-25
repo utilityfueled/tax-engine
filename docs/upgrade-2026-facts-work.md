@@ -370,3 +370,10 @@ Source-year/document-fidelity package commit: `70f8d17`.
   Root/web types, scoped lint and diff checks pass. All guided references resolve;
   three in-progress Form 8863 references were reported to the federal owner.
   Child-credit identification package: `49e607c`. Filing qualification stays closed.
+
+## Actual adoption records (2026-10-25)
+
+- Source refresh: final 2025 [Form 8839 instructions](https://www.irs.gov/instructions/i8839) and [physical form](https://www.irs.gov/pub/irs-pdf/f8839.pdf), Part I identity and Parts II/III expense/benefit timing and carryforwards. No final-2026 form qualification is claimed.
+- Guided collection now records actual child first/last name, birth year, SSN/ATIN/ITIN and disability; finality, foreign/special-needs classification, complete annual unreimbursed expenses, actual benefit/credit/exclusion usage, plan qualification, MAGI adjustments and carryforward origin years. Unknown answers do not become false or zero. Annual expense and carryforward edits require renewed history confirmation. Decimal strings survive adapter/model boundaries exactly.
+- Child identity model fields are in federal shared contract commit `4fecf37`; physical Part I mapping is parent-owned and remains a distinct qualification task. Positive historical foreign-adoption benefits and MFS exceptions remain explicitly unsupported, without manufacturing worksheet evidence. A qualified special-needs plan or positive employer benefits requires the actual exclusion-MAGI worksheet value.
+- Spec and red test written before implementation (missing adapter failed as expected). Final scoped run: 549 tests in 21 files passed, including all guided tests, actual DOM interactions, adoption calculation tests and 12 workspace PDF export regressions (`.local/upgrade-evidence/adoption-facts-tests.log`). Root/web type checks and scoped ESLint passed; all 3,146 spec references resolve. These are automated/synthetic checks, not an independent tax-professional review or release qualification.

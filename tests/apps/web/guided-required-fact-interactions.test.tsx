@@ -7,6 +7,8 @@ import { SectionPersonalInfo } from "@/components/guided-interview/section-perso
 import { HouseholdSourceDetails } from "@/components/guided-interview/household-source-details";
 import { DeductionSourceDetails } from "@/components/guided-interview/deduction-source-details";
 import { VehicleSourceDetails } from "@/components/guided-interview/vehicle-source-details";
+import { AdoptionSourceDetails } from "@/components/guided-interview/adoption-source-details";
+import { buildAdoptionInput, type AdoptionCreditData } from "@/lib/guided-adoption-facts";
 import { buildVehicleCreditInput, type VehicleCreditData } from "@/lib/guided-vehicle-facts";
 import { buildDonationsInput, buildForm1098Inputs, buildScheduleHInput } from "@/lib/guided-interview-bridge";
 import { personalFactErrors } from "@/lib/guided-taxpayer-facts";
@@ -39,6 +41,43 @@ beforeEach(() => {
 afterEach(async () => { await act(async () => root.unmount()); container.remove(); });
 
 describe("required fact interaction boundaries", () => {
+  it("requires reconfirmation after editing annual adoption expenses and carries actual child identity", async () => {
+    let latest: AdoptionCreditData = { children: [] };
+    function Harness() { const [data, setData] = useState(latest); return <AdoptionSourceDetails data={data} onChange={(next) => { latest = next; setData(next); }} />; }
+    await act(async () => root.render(<Harness />));
+    await click("Add adopted child");
+    expect(() => buildAdoptionInput(latest, 2026, "single")).toThrow();
+    for (const [label, value] of [
+      ["Child's actual first name", "Sam"], ["Child's actual last name", "Example"], ["Child's actual birth year", "2020"], ["Child's SSN, ATIN or ITIN", "123-45-6789"],
+      ["Was the child physically or mentally incapable of self-care?", "false"], ["Is this a foreign adoption under the IRS rules?", "false"], ["Does the child have the required special-needs determination?", "false"], ["Was this adoption finalized by the end of this tax year?", "true"], ["Actual year the adoption became final", "2026"],
+      ["Current-year employer adoption benefits for this child", "0"], ["Prior adoption credit limit already used for this child", "0"], ["Prior employer-benefit exclusion limit already used for this child", "0"], ["Does the employer adoption assistance plan meet the IRS qualification requirements?", "false"],
+      ["Do actual records establish taxpayer, child and expense eligibility under Form 8839?", "true"], ["Adoption MAGI foreign earned income exclusion", "0"], ["Adoption MAGI foreign housing exclusion", "0"], ["Adoption MAGI Puerto Rico / American Samoa exclusion", "0"], ["Have all prior adoption-credit carryforwards been reviewed, including none if applicable?", "true"],
+    ]) await change(label, value);
+    await click("Add expense year for child 1");
+    await change("Expense year 1", "2025");
+    await change("Qualified unreimbursed expenses 1", "9007199254740993.01");
+    await change("Is the complete unreimbursed expense history confirmed, including no expenses if applicable?", "true");
+    expect(buildAdoptionInput(latest, 2026, "single")?.children[0]).toMatchObject({ childFirstName: "Sam", childBirthYear: 2020, childPermanentlyDisabled: false, employerBenefits: "0", expensesByYear: [{ year: 2025, amount: "9007199254740993.01" }] });
+    await change("Qualified unreimbursed expenses 1", "0.20");
+    expect(control("Is the complete unreimbursed expense history confirmed, including no expenses if applicable?").value).toBe("");
+    expect(() => buildAdoptionInput(latest, 2026, "single")).toThrow();
+    await click("Remove expense year 1");
+    await change("Is the complete unreimbursed expense history confirmed, including no expenses if applicable?", "true");
+    await click("Add adoption carryforward");
+    await change("Carryforward origin year 1", "2025");
+    await change("Unused adoption credit 1", "100.01");
+    await change("Have all prior adoption-credit carryforwards been reviewed, including none if applicable?", "true");
+    expect(() => buildAdoptionInput(latest, 2026, "single")).toThrow();
+    await change("Do carryforwards reconcile to the corrected 2025 refundable-credit worksheet?", "true");
+    expect(buildAdoptionInput(latest, 2026, "single")?.carryforwards).toEqual([{ originTaxYear: 2025, amount: "100.01" }]);
+    await click("Remove adoption carryforward 1");
+    expect(latest.carryforwardHistoryConfirmed).toBeNull();
+    await change("Is this a foreign adoption under the IRS rules?", "true");
+    expect(control("Prior-year foreign-adoption employer benefits").value).toBe("");
+    await change("Prior-year foreign-adoption employer benefits", "0");
+    await click("Remove adopted child 1");
+    expect(buildAdoptionInput(latest, 2026, "single")).toBeUndefined();
+  });
   it("collects an actual transferred vehicle with zero prior AGI and never fills unknown price facts", async () => {
     let latest: VehicleCreditData = { entries: [] };
     function Harness() { const [data, setData] = useState(latest); return <VehicleSourceDetails data={data} filingStatus="mfj" onChange={(next) => { latest = next; setData(next); }} />; }
