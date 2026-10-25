@@ -787,3 +787,71 @@ scoped lint (`bond-community-staged-{tests,types,web-types,spec,lint}.log`).
 The staged model diff contains only the community-history optional field;
 concurrent Marketplace health inputs and federal work are excluded. No test
 assertion, coverage threshold or readiness gate was weakened.
+
+Community-property ownership was committed as `efbbb6a`.
+
+### Actual in-kind QTP benefits and remaining expenses (2026-10-25)
+
+[IRC529(c)(3)(B)(i), (ii), (iv), (v) and (vi)](https://uscode.house.gov/us/usc/119-118/t26/s529/)
+distinguish benefits supplied by a QTP from cash distributions, designate the
+beneficiary as the in-kind recipient and require their costs to reduce expenses
+available for cash. Current [Form1099-Q instructions](https://www.irs.gov/instructions/i1099q)
+include the value of the benefit in Box1; [Pub970](https://www.irs.gov/publications/p970)
+requires actual education-credit and ESA coordination. These sources were
+refreshed before the spec and failing tests.
+
+The new optional `sourceFacts.inKindBenefits` list captures the actual benefit,
+statement and expense links, provided date, amount, known qualification and
+source reference. Unknown records remain unknown. Ordinary in-kind529 statements
+require a reconciled beneficiary recipient and exact benefit total equal to
+Box1. Benefits and tax allocations are separate records. For this bounded method,
+the supplying statement must consume its entire actual benefit cost; other
+cash/ESA allocations must fit the expense remaining after refunds, assistance,
+credits, other tax benefits and the in-kind costs. The method does not select an
+election. Known fully ineligible benefits yield no exclusion; partially excluded
+benefits from category limits or elected allocations remain explicitly blocked.
+The separate prepaid educator-reduction interpretation remains unresolved.
+
+Independent synthetic arithmetic: 10000 tuition less 4000 in-kind benefit leaves
+6000 for an 8000 cash distribution. With 1600 cash earnings, 1200 is excluded and
+400 is taxable; the additional tax is 40. The benefit's 800 earnings are fully
+excluded. Canonical 2025 and 2026 returns retain one Schedule1 line8z source and
+50400 AGI from 50000 wages. Separate benefits of 1500.25 and 2499.75 sum to4000;
+an actual ESA6000 distribution with4800 basis can use the remaining6000 and
+exclude1200 earnings. An extra cent of allocation rejects. Benefit source cents
+are retained independently from report earnings rounding.
+
+The guided form collects source records and clears confirmation on substantive
+edits. The review reference requires the same actual sources and audit values,
+rejects changed allocations or expenses, and displays actual provided cost and
+remaining expense without internal source references or beneficiary tax IDs.
+The saved two-page reference was reopened and text-checked, rendered and visually
+inspected; both pages show the review-only notice (including a separate page2
+footer crop). No final2026 form or filing qualification is introduced.
+
+Red-first logs are `education-in-kind-{red,guided-red,pdf-red}.log` under
+`.local/upgrade-evidence/`. The related cohort initially passed162 tests across17
+files; later core/reference/canonical checks passed17 tests across3 files and
+the additional source-conservation checks passed9 tests across2 files. Current
+web types, all3988 spec references and scoped lint passed before the final two
+boundary entries. Final immutable verification and independent agent review
+will be recorded below before committing this package. Rendered artifacts are
+under `education-in-kind-visual/`; the initial renderer emitted Fontconfig
+warnings, then the configured font file produced a clean footer verification.
+
+Exact staged code tree `0b3de469` passes all167 tests across18 related files,
+root/web type checks, all3977 committed spec references and scoped lint. Logs
+are `education-in-kind-staged-{tests,types,web-types,spec,lint}.log`. The immutable
+archive excludes concurrent Marketplace health, document-preview and PDF
+serialization work. Its only model change is the optional six-line benefit
+source list. The first selective staging attempt reported a missing patch
+newline; the corrected patch applied and the staged model hunk was inspected
+before the archive and checks. No tests or readiness conditions were relaxed.
+
+The parent independently reopened current §529(c)(3)(B) and the IRS1099-Q
+recipient/Box1 instructions, reviewed the source-consumption and audit-bound
+reference changes, and ran nine core/PDF tests on this exact tree successfully
+(`parent-in-kind-review.log`). No actionable finding remained in the supported
+full-benefit or known-ineligible branch. Its initial archive prerequisite probe
+needed the configured Node24.22.1 and pypdf6.10 paths; the rerun passed. This is
+agent source/software review, not independent human tax or filing qualification.

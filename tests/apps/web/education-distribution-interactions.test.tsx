@@ -49,3 +49,35 @@ it("collects actual education distribution records and invalidates edited facts"
     await click("Remove education distribution records"); expect(latest).toBeUndefined();
   } finally { await act(async () => root.unmount()); container.remove(); }
 });
+
+it("collects actual in-kind benefit records and invalidates source confirmation", async () => {
+  (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+  const container = document.createElement("div"); document.body.appendChild(container); const root = createRoot(container);
+  let latest: EducationDistributionData | undefined;
+  function Harness() { const [data, setData] = useState<EducationDistributionData>({ sourceFactsConfirmed: true, forms: [{ fields: { sourceId: "actual-source", payerName: "Actual Prepaid Plan" }, transfer: {} }], expenses: [{ id: "actual-expense" }] }); return <EducationDistributionDetails data={data} onChange={next => { latest = next; if (next) setData(next); }} />; }
+  async function change(label: string, value: string) {
+    const field = [...container.querySelectorAll("label")].find(item => item.querySelector(".guided-field-label")?.textContent === label)?.querySelector<HTMLInputElement | HTMLSelectElement>("input,select");
+    if (!field) throw new Error(`Missing field ${label}`);
+    const setter = Object.getOwnPropertyDescriptor(field.tagName === "SELECT" ? HTMLSelectElement.prototype : HTMLInputElement.prototype, "value")?.set;
+    if (!setter) throw new Error("Missing setter");
+    await act(async () => { setter.call(field, value); field.dispatchEvent(new Event(field.tagName === "SELECT" ? "change" : "input", { bubbles: true })); });
+  }
+  try {
+    await act(async () => root.render(<Harness />));
+    const add = [...container.querySelectorAll("button")].find(item => item.textContent === "Add in-kind benefit");
+    if (!add) throw new Error("Missing in-kind benefit collection");
+    await act(async () => add.click());
+    expect(latest?.inKindBenefits?.[0]?.qualificationConfirmed).toBeUndefined();
+    await change("Statement providing this benefit", "actual-source");
+    await change("Expense supplied by this benefit", "actual-expense");
+    await change("Actual benefit cost", "4000.01");
+    await change("Benefit provided date", "2025-08-15");
+    await change("Benefit source record reference", "actual-plan-record");
+    await change("Benefit qualifies as the linked education expense", "false");
+    expect(latest?.inKindBenefits?.[0]).toMatchObject({ sourceId: "actual-source", expenseId: "actual-expense", amount: "4000.01", providedDate: "2025-08-15", sourceReference: "actual-plan-record", qualificationConfirmed: false });
+    await change("All education sources and allocations checked after the last edit", "true");
+    expect(latest?.sourceFactsConfirmed).toBe(true);
+    await change("Actual benefit cost", "4000.02");
+    expect(latest?.sourceFactsConfirmed).toBeNull();
+  } finally { await act(async () => root.unmount()); container.remove(); }
+});

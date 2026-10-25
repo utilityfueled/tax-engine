@@ -745,6 +745,12 @@ const EducationDistributionSourceFactsSchema = z.object({
     /** Actual interest portion of this loan-payment allocation, before statutory caps. */
     loanInterestAmount: optionalDecimalInput,
   })).max(1000).optional(),
+  /** Actual benefits provided by prepaid QTP statements, separate from elected tax allocations. */
+  inKindBenefits: z.array(z.object({
+    id: z.string().trim().min(1), sourceId: z.string().trim().min(1), expenseId: z.string().trim().min(1),
+    amount: optionalDecimalInput, providedDate: z.string().optional(),
+    qualificationConfirmed: z.boolean().optional(), sourceReference: z.string().trim().optional(),
+  })).max(500).optional(),
   loanBorrowers: z.array(z.object({
     id: z.string().trim().min(1), owner: z.enum(["primary", "spouse", "other"]).optional(),
     priorQualifiedDistributions: optionalDecimalInput,

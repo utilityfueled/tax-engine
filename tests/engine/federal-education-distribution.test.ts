@@ -18,6 +18,19 @@ const education={primarySsnEligible:true,primaryTinEligible:true,claimedAsDepend
 const raw=(year=2026)=>({...simpleW2Fixture,taxpayer:{...simpleW2Fixture.taxpayer,taxYear:year},w2s:[{...simpleW2Fixture.w2s[0],wages:"50000",socialSecurityWages:"50000",socialSecurityWithheld:"3100",socialSecurityTips:"0",medicareWages:"50000",medicareWithheld:"725",box12:[]}],form1099Q:[statement(year)],qualifiedEducationExpenses:{sourceFacts:facts(year)},educationExpenses:education});
 const calculate=(value:unknown)=>calculateFederalTax(TaxYearInputSchema.parse(value));
 describe("Federal education distribution source integration",()=>{
+  it("routes actual in-kind benefits and remaining cash expenses without duplicating income",()=>{
+    for (const year of [2025,2026]) {
+      const sourceFacts=facts(year,{expenses:[expense(year,{amount:"10000",taxFreeAssistance:"0",educationCreditAmount:"0"})],allocations:[{sourceId:"q1",expenseId:"e1",amount:"4000",creditAmount:"0"},{sourceId:"cash",expenseId:"e1",amount:"6000",creditAmount:"0"}],inKindBenefits:[{id:"provided1",sourceId:"q1",expenseId:"e1",amount:"4000",providedDate:`${year}-08-15`,qualificationConfirmed:true,sourceReference:"actual-plan-benefit"}]});
+      const input={...raw(year),educationExpenses:undefined,form1099Q:[statement(year,{distributionMedium:"in_kind_prepaid_tuition",grossDistribution:"4000",earnings:"800",basis:"3200"}),statement(year,{sourceId:"cash",accountId:"cash-account",distributionMedium:"cash",grossDistribution:"8000",earnings:"1600",basis:"6400"})],qualifiedEducationExpenses:{sourceFacts}};
+      const result=calculate(input);
+      expect(result.form1099Q?.taxableEarnings.toFixed()).toBe("400");
+      expect(result.form1099Q?.netPenalty.toFixed()).toBe("40");
+      expect(result.agi.toFixed()).toBe("50400");
+      expect(result.allLines.filter(line=>line.form==="Sched 1"&&line.line==="8z")).toHaveLength(1);
+      expect(result.allLines.find(line=>line.form==="Sched 1"&&line.line==="8z")?.value.toFixed()).toBe("400");
+      expect(()=>calculate({...input,qualifiedEducationExpenses:{sourceFacts:{...sourceFacts,inKindBenefits:undefined}}})).toThrow(/actual in-kind benefit source/i);
+    }
+  });
   it("routes bounded whole-account disqualification once for actual recipients",()=>{
     for (const year of [2025,2026]) {
       const input={...raw(year),educationExpenses:undefined,form1099Q:[disqualifiedEducationSource({taxYear:year,prohibitedTransactionDate:`${year}-06-01`})],qualifiedEducationExpenses:disqualifiedEducationSummary({taxYear:year})};

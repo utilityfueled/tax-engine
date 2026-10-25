@@ -591,6 +591,36 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
     if (item.distributionCode !== "6" && Object.entries(item).some(([key, value]) => key.startsWith("prohibitedTransaction") && value !== undefined)) throw new Error("Form1099Q prohibited transaction source facts require actual code6 reconciliation");
     return { ...item, sourceId: item.sourceId, accountId: item.accountId, beneficiaryId: item.beneficiaryId, recipientOwner: item.recipientOwner };
   });
+  const verifiedById = new Map(verifiedForms.map(item => [item.sourceId, item]));
+  const inKindSources = verifiedForms.filter(item => item.distributionMedium === "in_kind_prepaid_tuition");
+  for (const form of inKindSources) {
+    if (form.accountType !== "529" || form.recipientNotBeneficiary || form.isTrusteeToTrustee || form.isQtpToRoth
+      || form.transfer?.kind !== "none" || isReturnedContribution(form) || form.distributionCode === "6") throw new Error("Form1099Q in-kind benefits require an ordinary QTP benefit to its designated beneficiary without a transfer or correction");
+  }
+  if (inKindSources.length && facts.inKindBenefits === undefined) throw new Error("Form1099Q actual in-kind benefit source records are required");
+  const rawBenefits = facts.inKindBenefits ?? [];
+  uniqueBy(rawBenefits, item => item.id, "in-kind benefit");
+  const inKindBenefits = rawBenefits.map(item => {
+    const form = verifiedById.get(item.sourceId), expense = expenses.get(item.expenseId);
+    if (!form || !expense) throw new Error("Form1099Q in-kind benefit references a missing source or expense");
+    if (form.distributionMedium !== "in_kind_prepaid_tuition") throw new Error("Form1099Q in-kind benefits must link to an actual in-kind statement");
+    if (expense.beneficiaryId !== form.beneficiaryId) throw new Error("Form1099Q in-kind benefit beneficiary does not match its expense");
+    if (!item.sourceReference?.trim()) throw new Error("Form1099Q actual in-kind benefit source reference is required");
+    const providedDate = actualDate(item.providedDate, "in-kind benefit provided");
+    if (providedDate.getUTCFullYear() !== options.taxYear) throw new Error("Form1099Q in-kind benefit year must match the return year");
+    const qualified = actualBoolean(item.qualificationConfirmed, "in-kind benefit qualification");
+    if (qualified !== actualBoolean(expense.qualificationConfirmed, "in-kind expense qualification")) throw new Error("Form1099Q in-kind benefit and expense qualification facts conflict");
+    const amount = actualAmount(item.amount, "in-kind benefit amount");
+    audit.record("Form1099-Q", `${form.sourceId}:in-kind-benefit:${item.id}`, "Actual provided benefit cost", amount, "Actual source benefit, separate from the tax allocation", {
+      "Expense source": expense.id, "Provided date": providedDate.toISOString().slice(0, 10), "Qualification": qualified ? "yes" : "no", "Source reference": item.sourceReference.trim(),
+    });
+    return { form, expense, amount };
+  });
+  for (const form of inKindSources) {
+    const provided = sum(...inKindBenefits.filter(item => item.form.sourceId === form.sourceId).map(item => item.amount));
+    if (!provided.eq(actualAmount(form.grossDistribution, "in-kind Box1"))) throw new Error("Form1099Q actual in-kind benefit amounts must reconcile exactly to Box1");
+    audit.record("Form1099-Q", `${form.sourceId}:in-kind-provided`, "Actual in-kind QTP benefit costs", provided, "Sum actual linked benefits provided to the designated beneficiary; reconcile to source Box1");
+  }
   const disqualifiedBySource = new Map<string, { earnings: Decimal; basis: Decimal }>();
   for (const form of verifiedForms.filter(item => item.distributionCode === "6")) {
     const amounts = actualDisqualification(form, options.taxYear);
@@ -621,7 +651,6 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
       || originals.some(item => !actualAmount(item.returnedContributionOriginalAmount, "original contribution amount").eq(original) || item.returnedContributionDate !== originals[0]?.returnedContributionDate)
       || sum(...group.map(item => item.returnedPrincipal)).gt(original)) throw new Error("Form1099Q returned contribution identity or total exceeds the reconciled original contribution");
   }
-  const verifiedById = new Map(verifiedForms.map(item => [item.sourceId, item]));
   const allocationKeys = new Set<string>();
   const allocations: SourceAllocation[] = rawAllocations.map(item => {
     const expense = expenses.get(item.expenseId), form = verifiedById.get(item.sourceId);
@@ -636,6 +665,13 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
     if (loanInterest.gt(amount)) throw new Error("Form1099Q allocated loan interest exceeds the payment allocation");
     return { expense, form, amount, credit: actualAmount(item.creditAmount, "credit expense allocation"), allowed: ZERO, loanInterest };
   });
+  const inKindPairs = new Set(inKindBenefits.map(item => `${item.form.sourceId}\u0000${item.expense.id}`));
+  for (const item of allocations.filter(item => item.form.distributionMedium === "in_kind_prepaid_tuition")) inKindPairs.add(`${item.form.sourceId}\u0000${item.expense.id}`);
+  for (const key of inKindPairs) {
+    const benefits = inKindBenefits.filter(item => `${item.form.sourceId}\u0000${item.expense.id}` === key);
+    const allocation = allocations.find(item => `${item.form.sourceId}\u0000${item.expense.id}` === key);
+    if (!benefits.length || !allocation || !allocation.amount.eq(sum(...benefits.map(item => item.amount))) || !allocation.credit.isZero()) throw new Error("Form1099Q in-kind allocation must consume its actual benefit cost; partial or credit-reduced in-kind allocation requires a separate method");
+  }
   for (const expense of expenses.values()) {
     if (!beneficiaries.has(expense.beneficiaryId)) throw new Error("Form1099Q expense beneficiary source is missing");
     const amount = actualAmount(expense.amount, "expense amount");
@@ -647,6 +683,8 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
     if (available.lt(0)) throw new Error("Form1099Q expense reductions exceed actual expense");
     const linked = allocations.filter(item => item.expense.id === expense.id);
     if (sum(...linked.map(item => item.amount)).gt(available) || sum(...linked.map(item => item.credit)).gt(credit)) throw new Error("Form1099Q allocations exceed available expense or credit reduction");
+    const benefits = inKindBenefits.filter(item => item.expense.id === expense.id);
+    if (benefits.length) audit.record("Form1099-Q", `${expense.id}:after-in-kind`, "Expense remaining after actual in-kind benefit costs", available.minus(sum(...benefits.map(item => item.amount))), "Paid expense less actual reductions and costs supplied as in-kind benefits; other allocations must fit the remainder");
     if (expense.category === "student_loan" && sum(...linked.map(item => item.loanInterest)).gt(actualAmount(expense.studentLoanInterestAmount, "actual paid loan interest"))) throw new Error("Form1099Q allocations exceed actual paid loan interest");
     const paid = actualDate(expense.paidDate, "expense paid");
     if (paid.getUTCFullYear() !== options.taxYear) throw new Error("Form1099Q expense year must match distribution year");
@@ -677,6 +715,9 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
     const requested = sum(...group.map(item => item.allowed));
     if (requested.gt(remaining)) for (const item of group) item.allowed = item.allowed.mul(remaining).div(requested);
     audit.record("Form1099-Q", `${borrower.id}:loan-qualified`, "Qualified loan repayments after lifetime borrower limit", sum(...group.map(item => item.allowed)), "10000 lifetime limit less actual prior and other current qualified distributions", { "Remaining limit": remaining });
+  }
+  for (const item of allocations.filter(item => item.form.distributionMedium === "in_kind_prepaid_tuition")) {
+    if (item.expense.qualificationConfirmed && !item.allowed.eq(item.amount)) throw new Error("Form1099Q partial in-kind exclusion after category limits requires a separate supported allocation method");
   }
   const transferState: TransferState = { capacities: new Map(), baselines: new Map(), rolloverDates: new Map() };
   const transfers = new Map<string, Decimal>();

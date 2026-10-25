@@ -61,12 +61,43 @@ export function buildForm1099QReferenceSummary(forms: Form1099Q[], result: Form1
   const qualifiedEducationExpenseInputs: Form1099QReferenceSummaryValue[] = [];
   if (result.sourceFactsVerified) {
     if (!qeeSummary?.sourceFacts || qeeSummary.sourceFacts.sourceFactsConfirmed !== true || qeeSummary.sourceFacts.allDistributionsReconciled !== true || qeeSummary.sourceFacts.taxYear !== result.taxYear || forms.length !== result.perDistribution.length) throw new Error("Education reference source confirmation, year or statement count is inconsistent");
+    const benefitSources = qeeSummary.sourceFacts.inKindBenefits ?? [];
+    if (new Set(benefitSources.map(benefit => benefit.id)).size !== benefitSources.length || benefitSources.some(benefit => !forms.some(form => form.sourceId === benefit.sourceId && form.distributionMedium === "in_kind_prepaid_tuition"))) throw new Error("Education reference in-kind benefit sources are duplicated or unlinked");
+    const sourceMoney = (value: string | undefined): Decimal => {
+      if (value === undefined) throw new Error("Education reference actual in-kind source amount is missing");
+      const amount = new Decimal(value);
+      if (!amount.isFinite() || amount.lt(0)) throw new Error("Education reference actual in-kind source amount is invalid");
+      return amount;
+    };
     if (result.returnedContributions.length !== result.perDistribution.filter(row => row.treatment === "returned_contribution").length) throw new Error("Education reference correction source count does not reconcile");
     const seen = new Set<string>();
     for (const [index, row] of result.perDistribution.entries()) {
       const matches = forms.filter(form => form.sourceId === row.sourceId);
       const form = matches[0];
-      if (!form || matches.length !== 1 || seen.has(row.sourceId) || form.sourceFactsConfirmed !== true || form.sourceFactsComplete === false || form.taxYear !== row.sourceTaxYear || form.accountId !== row.accountId || form.beneficiaryId !== row.beneficiaryId || form.accountType !== row.accountType || form.recipientOwner !== row.recipientOwner || (form.recipientOwner === "other" ? form.recipientId : form.recipientOwner) !== row.recipientId || !new Decimal(form.grossDistribution).eq(row.grossDistribution)) throw new Error("Education reference statement identity or source amount disagrees with the calculation");
+      if (!form || matches.length !== 1 || seen.has(row.sourceId) || form.sourceFactsConfirmed !== true || form.sourceFactsComplete === false || form.taxYear !== row.sourceTaxYear || form.accountId !== row.accountId || form.beneficiaryId !== row.beneficiaryId || form.accountType !== row.accountType || form.distributionMedium !== row.distributionMedium || form.recipientOwner !== row.recipientOwner || (form.recipientOwner === "other" ? form.recipientId : form.recipientOwner) !== row.recipientId || !new Decimal(form.grossDistribution).eq(row.grossDistribution)) throw new Error("Education reference statement identity or source amount disagrees with the calculation");
+      if (row.distributionMedium === "in_kind_prepaid_tuition") {
+        if (!qeeSummary.sourceFacts.inKindBenefits || row.treatment !== "ordinary" || form.accountType !== "529" || form.recipientNotBeneficiary !== false || form.isTrusteeToTrustee !== false || form.isQtpToRoth !== false || form.transfer?.kind !== "none") throw new Error("Education reference in-kind benefit source boundary is incomplete");
+        const benefits = benefitSources.filter(benefit => benefit.sourceId === row.sourceId);
+        const provided = benefits.reduce((total, benefit) => total.plus(sourceMoney(benefit.amount)), new Decimal(0));
+        if (!provided.eq(row.grossDistribution)) throw new Error("Education reference in-kind benefits do not reconcile to Box1");
+        sourceLines.push(describe(requireAudit("Form1099-Q", `${row.sourceId}:in-kind-provided`, provided), `Statement ${index + 1}: `));
+        for (const [benefitIndex, benefit] of benefits.entries()) {
+          const expenseMatches = qeeSummary.sourceFacts.expenses?.filter(expense => expense.id === benefit.expenseId) ?? [];
+          const expense = expenseMatches[0];
+          if (expenseMatches.length !== 1 || !expense || expense.beneficiaryId !== row.beneficiaryId || typeof benefit.qualificationConfirmed !== "boolean" || expense.qualificationConfirmed !== benefit.qualificationConfirmed || !benefit.sourceReference?.trim()) throw new Error("Education reference in-kind benefit expense or qualification source is inconsistent");
+          const entry = requireAudit("Form1099-Q", `${row.sourceId}:in-kind-benefit:${benefit.id}`, sourceMoney(benefit.amount));
+          if (entry.inputs["Expense source"] !== expense.id || entry.inputs["Provided date"] !== benefit.providedDate || entry.inputs["Qualification"] !== (benefit.qualificationConfirmed ? "yes" : "no") || entry.inputs["Source reference"] !== benefit.sourceReference.trim()) throw new Error("Education reference in-kind benefit source disagrees with its audit");
+          sourceLines.push(describe(entry, `Statement ${index + 1}, benefit ${benefitIndex + 1}: `));
+        }
+        const allocations = qeeSummary.sourceFacts.allocations?.filter(allocation => allocation.sourceId === row.sourceId) ?? [];
+        const expenseIds = new Set([...benefits.map(benefit => benefit.expenseId), ...allocations.map(allocation => allocation.expenseId)]);
+        for (const expenseId of expenseIds) {
+          const matches = allocations.filter(allocation => allocation.expenseId === expenseId);
+          const linked = benefits.filter(benefit => benefit.expenseId === expenseId);
+          if (matches.length !== 1 || !linked.length || !sourceMoney(matches[0]?.amount).eq(linked.reduce((total, benefit) => total.plus(sourceMoney(benefit.amount)), new Decimal(0))) || !sourceMoney(matches[0]?.creditAmount).isZero()) throw new Error("Education reference in-kind benefit allocation source disagrees with the calculation");
+        }
+        if (!benefits.reduce((total, benefit) => benefit.qualificationConfirmed ? total.plus(sourceMoney(benefit.amount)) : total, new Decimal(0)).eq(row.adjustedQEE)) throw new Error("Education reference in-kind qualified cost disagrees with its audit");
+      }
       const correction = result.returnedContributions.find(item => item.sourceId === row.sourceId);
       if (row.treatment === "returned_contribution") {
         if (!correction || !["2", "3"].includes(form.distributionCode ?? "") || correction.incomeTaxYear !== correction.sourceTaxYear - (form.distributionCode === "3" ? 1 : 0) || result.returnedContributions.filter(item => item.sourceId === row.sourceId).length !== 1 || form.returnedContributionNetIncomeConfirmed !== true || form.returnedContributionBasisReconciled !== true
@@ -170,6 +201,12 @@ export function buildForm1099QReferenceSummary(forms: Form1099Q[], result: Form1
     if (!ownRecipients.reduce((sum, row) => sum.plus(row.taxableEarnings), new Decimal(0)).eq(result.taxableEarnings) || !ownRecipients.reduce((sum, row) => sum.plus(row.additionalTax), new Decimal(0)).eq(result.netPenalty)) throw new Error("Education recipient audit totals do not reconcile");
     for (const [index, expense] of (qeeSummary.sourceFacts.expenses ?? []).entries()) {
       for (const [field, label] of [["amount", "Actual paid expense"], ["refundedAmount", "Refund"], ["taxFreeAssistance", "Tax-free assistance"], ["educationCreditAmount", "Expense used for education credit"], ["otherTaxBenefitAmount", "Expense used for another benefit"]] as const) qualifiedEducationExpenseInputs.push({ label: `Expense ${index + 1}: ${label}`, value: knownAmount(expense[field]) });
+      const benefits = benefitSources.filter(benefit => benefit.expenseId === expense.id);
+      if (benefits.length) {
+        const remaining = sourceMoney(expense.amount).minus(sourceMoney(expense.refundedAmount)).minus(sourceMoney(expense.taxFreeAssistance)).minus(sourceMoney(expense.educationCreditAmount)).minus(sourceMoney(expense.otherTaxBenefitAmount)).minus(benefits.reduce((total, benefit) => total.plus(sourceMoney(benefit.amount)), new Decimal(0)));
+        if (remaining.lt(0)) throw new Error("Education reference in-kind benefit costs exceed remaining actual expense");
+        sourceLines.push(describe(requireAudit("Form1099-Q", `${expense.id}:after-in-kind`, remaining), `Expense ${index + 1}: `));
+      }
     }
     for (const [index, row] of result.loanInterestSourceAdjustments.entries()) sourceLines.push(describe(requireAudit("Form1099-Q", `loan-expense:${row.expenseId}:loan-interest-reduction`, row.taxFreeEarningsUsedForInterest), `Loan expense ${index + 1}: `));
   } else {

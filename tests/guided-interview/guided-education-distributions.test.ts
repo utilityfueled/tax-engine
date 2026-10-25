@@ -86,3 +86,19 @@ it("collects actual returned contribution years and signed source amounts", () =
   data.forms[0].fields.returnedContributionNetIncomeConfirmed = undefined;
   expect(() => buildEducationDistributionInputs(data, 2025, "single")).toThrow(/actual|net-income/i);
 });
+
+it("collects linked in-kind benefits without inventing source evidence", () => {
+  const data = actualEducationDistribution();
+  const statement = data.forms?.[0];
+  if (!statement) throw new Error("Missing actual synthetic statement");
+  statement.fields.distributionMedium = "in_kind_prepaid_tuition";
+  statement.fields.recipientNotBeneficiary = false;
+  expect(() => buildEducationDistributionInputs(data, 2025, "single")).toThrow(/in-kind.*benefit/i);
+  data.inKindBenefits = [{ id: "provided1", sourceId: "q1", expenseId: "e1", amount: "4,000.00", providedDate: "2025-08-15", qualificationConfirmed: true, sourceReference: "actual-plan-tuition-application" }];
+  const input = buildEducationDistributionInputs(data, 2025, "single");
+  expect(input.qualifiedEducationExpenses?.sourceFacts?.inKindBenefits?.[0]).toEqual({
+    id: "provided1", sourceId: "q1", expenseId: "e1", amount: "4000", providedDate: "2025-08-15", qualificationConfirmed: true, sourceReference: "actual-plan-tuition-application",
+  });
+  data.inKindBenefits[0].qualificationConfirmed = null;
+  expect(() => buildEducationDistributionInputs(data, 2025, "single")).toThrow(/actual.*qualification/i);
+});

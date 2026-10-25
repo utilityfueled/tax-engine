@@ -1,0 +1,72 @@
+form: "Form1099-Q in-kind QTP benefits"
+fullName: "Actual prepaid education benefits and remaining expense coordination"
+taxYear: 2026
+irsReference: "https://uscode.house.gov/us/usc/119-118/t26/s529/"
+sources:
+  - "https://www.irs.gov/instructions/i1099q"
+  - "https://www.irs.gov/publications/p970"
+notes: |
+  Refreshed2026-10-25. Section529(c)(3)(B)(i) excludes actual qualifying
+  benefits; (ii) reduces expenses available for cash distributions by those
+  benefit costs; (iv) makes the beneficiary the recipient. Clauses(v)/(vi)
+  retain education-credit/assistance reductions and elected ESA coordination.
+  The actual benefit is separate from the tax allocation. A medium label alone
+  does not prove the beneficiary received an eligible benefit.
+
+  This bounded method supports benefits whose entire actual eligible cost is
+  allocated to their supplying statement. Known fully ineligible benefits give
+  no exclusion. It retains other actual cash/ESA/credit allocations only within
+  the remaining expense, without choosing them for the taxpayer. A partly
+  excluded in-kind benefit caused by credit/assistance/category limits or an
+  election needs a separate supported tax method and is explicitly blocked.
+  Prepaid educator expense reduction remains a separate interpretation; this
+  source method does not choose gross benefits versus earnings for that rule.
+lines:
+  - line: "benefit-source"
+    description: "Actual beneficiary benefit records and unknown preservation"
+    formula: "Preserve optional inKindBenefits; each provided benefit needs id, sourceId, expenseId, exact amount, actual year date, known eligibility and source reference; explicit in-kind statements require the list; do not infer from an ordinary expense allocation"
+    testRef: "tests/engine/forms/form-1099-q-in-kind.test.ts::preserves actual in-kind source records and rejects missing benefit evidence"
+  - line: "benefit-identity"
+    description: "Bind physical benefits to actual statement and beneficiary"
+    formula: "Each source is ordinary529 in_kind_prepaid_tuition with beneficiary recipient, no transfer/correction; expense and statement beneficiaries and years match; benefit amounts sum exactly to Box1 per statement; duplicate benefit IDs and unknown or conflicting links reject"
+    testRef: "tests/engine/forms/form-1099-q-in-kind.test.ts::rejects mismatched benefit identity dates amounts and recipient facts"
+  - line: "benefit-ordering"
+    description: "Consume actual benefit costs before other distributions"
+    formula: "For each expense/source pair, actual allocation equals the summed benefit costs and credit allocation is0; existing expense conservation then limits cash/ESA allocations to paid-refunds-assistance-credit-other-benefit-in-kind costs; preserve actual source cents and report earnings rounding"
+    testRef: "tests/engine/forms/form-1099-q-in-kind.test.ts::excludes actual qualified benefits before cash uses the remaining expense"
+  - line: "no-silent-election"
+    description: "Do not make unused in-kind costs available to cash"
+    formula: "Reject missing, partial or differently linked benefit allocations even if combined allocations stay below the expense; reject positive credit allocation against the same benefit statement; never reassign costs automatically"
+    testRef: "tests/engine/forms/form-1099-q-in-kind.test.ts::rejects omitted or partial benefit allocations instead of reallocating expenses"
+  - line: "known-eligibility"
+    description: "Keep known ineligibility distinct from missing or reduced qualification"
+    formula: "Actual benefit and linked expense eligibility must reconcile; both false give0 qualified cost; missing eligibility rejects; true requires final allowed benefit allocation equal actual cost after category caps, otherwise reject the unsupported partial-benefit method"
+    testRef: "tests/engine/forms/form-1099-q-in-kind.test.ts::preserves known ineligible benefits and blocks unsupported partial exclusions"
+  - line: "guided-benefit-sources"
+    description: "Collect actual benefit links without defaulting an empty source list"
+    formula: "Guided collection preserves actual source/expense/date/reference/amount and unknown eligibility; absent benefit evidence blocks in-kind calculation; editing benefit records clears source confirmation"
+    testRef: "tests/guided-interview/guided-education-distributions.test.ts::collects linked in-kind benefits without inventing source evidence"
+  - line: "benefit-source-conservation"
+    description: "Aggregate several actual benefits without reusing expense for ESA"
+    formula: "Two benefits1500.25+2499.75 consume4000 of10000tuition; an actual ESA6000allocation fits the remainder and excludes its1200earnings; one extra cent rejects; a zero-gross in-kind statement requires an explicit empty benefit list"
+    testRef: "tests/engine/forms/form-1099-q-in-kind.test.ts::conserves multiple provided benefits and actual Coverdell expenses"
+  - line: "guided-benefit-edit"
+    description: "Actual benefit source entry and review invalidation"
+    formula: "Expose a benefit-source collection with actual source and expense choices; a new record has no manufactured qualification; substantive amount changes invalidate the overall education source confirmation"
+    testRef: "tests/apps/web/education-distribution-interactions.test.tsx::collects actual in-kind benefit records and invalidates source confirmation"
+  - line: "return-handoff"
+    description: "Canonical return retains actual benefit ordering"
+    formula: "Forward the source ledger unchanged;10000tuition less4000provided benefit leaves6000for8000cash whose1600earnings yield400taxable and40additional tax; retain one Schedule1 8z source and reject missing benefit evidence"
+    testRef: "tests/engine/federal-education-distribution.test.ts::routes actual in-kind benefits and remaining cash expenses without duplicating income"
+  - line: "reference-source-audit"
+    description: "Reference export binds actual benefits to their calculation audit"
+    formula: "Require the same distribution medium and actual benefit identity/date/reference/eligibility/amount as the source audit; reconcile provided and remaining expense totals; reject missing/stale audits without recalculating tax"
+    testRef: "tests/pdf/form-1099-q-in-kind-summary.test.ts::binds actual in-kind benefit sources to the reference audit"
+  - line: "reference-visibility"
+    description: "Visible review reference without private source keys"
+    formula: "Saved reference includes actual provided and remaining cost audit, hides internal source references and taxpayer IDs, and stamps every page as review-only; no2026template or filing qualification"
+    testRef: "tests/pdf/form-1099-q-in-kind-summary.test.ts::prints in-kind cost ordering with a review notice on every page"
+  - line: "reference-conservation"
+    description: "Reject stale source allocation and remaining cost records"
+    formula: "Duplicate benefit IDs, edited linked allocation amounts or credits and changed expense reductions cannot be printed with the old calculation audit; an unrelated private key is never substituted for the recorded source"
+    testRef: "tests/pdf/form-1099-q-in-kind-summary.test.ts::rejects changed allocation and remaining expense source records"

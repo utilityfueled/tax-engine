@@ -54,6 +54,11 @@ it("preserves actual distribution medium without inferring cash", () => {
   for (const distributionMedium of [undefined, "cash", "in_kind_prepaid_tuition"] as const) {
     const form = source({ accountType: "529", grossDistribution: "1000", earnings: "200", basis: "800", distributionMedium });
     expect(form).toMatchObject({ distributionMedium });
+    if (distributionMedium === "in_kind_prepaid_tuition") {
+      // The medium is retained; it cannot establish an actual supplied benefit.
+      expect(() => calculateForm1099Q([form], summary())).toThrow(/actual in-kind benefit source/i);
+      continue;
+    }
     const result = calculateForm1099Q([form], summary());
     expect(result.perDistribution[0]).toMatchObject({ distributionMedium });
     expect(result.taxableEarnings.toFixed()).toBe("200");

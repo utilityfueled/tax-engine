@@ -15,11 +15,12 @@ export interface EducationDistributionData {
   beneficiaries?: EducationSourceRecord[];
   expenses?: EducationSourceRecord[];
   allocations?: EducationSourceRecord[];
+  inKindBenefits?: EducationSourceRecord[];
   loanBorrowers?: EducationSourceRecord[];
   coverdellAccounts?: EducationSourceRecord[];
   penaltyExceptions?: EducationSourceRecord[];
 }
-export type EducationSourceCollection = "beneficiaries" | "expenses" | "allocations" | "loanBorrowers" | "coverdellAccounts" | "penaltyExceptions";
+export type EducationSourceCollection = "beneficiaries" | "expenses" | "allocations" | "inKindBenefits" | "loanBorrowers" | "coverdellAccounts" | "penaltyExceptions";
 export interface EducationSourceField {
   key: string; label: string; kind: "text" | "date" | "money" | "integer" | "boolean" | "choice";
   choices?: ReadonlyArray<readonly [string, string]>; signed?: boolean;
@@ -40,7 +41,7 @@ const owners = [["primary", "You"], ["spouse", "Spouse"], ["other", "Someone out
 export const educationStatementFields: EducationSourceField[] = [
   text("payerName", "Plan or custodian name"), text("accountId", "Account label (use the same label for the same account)"),
   integer("taxYear", "Statement tax year"), choice("accountType", "Program type", [["529", "529 qualified tuition program"], ["coverdell_esa", "Coverdell ESA"]]),
-  only(choice("distributionMedium", "Actual 529 distribution form (needed for educator coordination)", [["cash", "Cash distribution"], ["in_kind_prepaid_tuition", "Prepaid tuition or in-kind benefit"]]), record => record.accountType === "529"),
+  only(choice("distributionMedium", "Actual 529 distribution form", [["cash", "Cash distribution"], ["in_kind_prepaid_tuition", "Prepaid tuition or in-kind benefit"]]), record => record.accountType === "529"),
   link("beneficiaryId", "Statement designated beneficiary", "beneficiary"), choice("recipientOwner", "Statement recipient", owners),
   only(text("recipientId", "Other recipient label (no tax identification number)"), record => record.recipientOwner === "other"),
   money("grossDistribution", "Box 1 gross distribution"), money("earnings", "Box 2 earnings (leave blank if not reported)", true), money("basis", "Box 3 basis (leave blank if not reported)"),
@@ -81,6 +82,7 @@ export const educationCollectionFields: Record<EducationSourceCollection, Educat
     only(text("destinationAccountId", "Destination 529 account label"), category("qtp_contribution")),
     ...[link("borrowerId", "Loan borrower", "borrower"), bool("beneficiaryOrSibling", "Borrower is the beneficiary or an eligible sibling"), money("studentLoanInterestAmount", "Actual interest included in this loan payment"), money("studentLoanInterestDeducted", "Interest claimed for deduction before income phase-out")].map(field => only(field, category("student_loan")))],
   allocations: [link("expenseId", "Expense to allocate", "expense"), link("sourceId", "Distribution funding this expense", "source"), money("amount", "Net expense allocated to this distribution"), money("creditAmount", "Separate credit expense affecting this distribution"), money("loanInterestAmount", "Actual interest in this loan-payment allocation (loans only)")],
+  inKindBenefits: [link("sourceId", "Statement providing this benefit", "source"), link("expenseId", "Expense supplied by this benefit", "expense"), money("amount", "Actual benefit cost"), date("providedDate", "Benefit provided date"), bool("qualificationConfirmed", "Benefit qualifies as the linked education expense"), text("sourceReference", "Benefit source record reference")],
   loanBorrowers: [text("name", "Loan borrower label"), choice("owner", "Loan borrower on this return", owners), money("priorQualifiedDistributions", "Prior qualified 529 payments toward this borrower's loans"), money("otherCurrentQualifiedDistributions", "Other current qualified 529 payments toward this borrower's loans")],
   coverdellAccounts: [text("accountId", "Coverdell account label (must match statements)"), money("priorYearBasis", "Actual prior-year account basis"), money("currentYearContributions", "Current-year contributions, excluding rollovers and returned excess"), money("yearEndValue", "Actual year-end account value"), money("outstandingRollovers", "Outstanding year-end rollovers"), money("rolloverBasisReceived", "Actual basis received in rollovers (0 if none)")],
   penaltyExceptions: [link("sourceId", "Distribution with an additional-tax exception", "source"), choice("kind", "Exception reason", [["scholarship", "Scholarship or other eligible assistance"], ["military_academy", "Eligible military academy attendance"], ["death", "Beneficiary death"], ["disability", "Beneficiary disability"]]), money("qualifyingAmount", "Actual qualifying source amount"), money("distributionAmount", "Distinct nonqualified distribution allocated to this exception"), bool("eligibilityConfirmed", "Exception eligibility checked"), only(date("eventDate", "Beneficiary death date"), record => record.kind === "death"), only(bool("paidToBeneficiaryOrEstate", "Death distribution paid to an eligible beneficiary or estate"), record => record.kind === "death")],
