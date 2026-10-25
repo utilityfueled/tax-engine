@@ -63,12 +63,15 @@ describe("Form 1116 simplified method threshold boundaries", () => {
     expect(result.simplifiedEligible).toBe(false);
   });
 
-  it("Form 1116 simplified_eligible - QSS uses $600 MFJ threshold", () => {
-    const result = calculateForm1116(makeInput({
-      foreignTaxesPaid: d(600),
-      filingStatus: "qualifying_surviving_spouse",
-    }));
-    expect(result.simplifiedEligible).toBe(true);
+  it("Form 1116 simplified_eligible - QSS uses the exact $300 threshold", () => {
+    for (const [tax, expected] of [["300", true], ["300.01", false], ["600", false]] as const) {
+      const result = calculateForm1116(makeInput({ foreignTaxesPaid: d(tax), filingStatus: "qualifying_surviving_spouse" }));
+      expect(result.simplifiedEligible).toBe(expected);
+    }
+    for (const [tax, expected] of [["600", true], ["600.01", false]] as const) {
+      const result = calculateForm1116(makeInput({ foreignTaxesPaid: d(tax), filingStatus: "married_filing_jointly" }));
+      expect(result.simplifiedEligible).toBe(expected);
+    }
   });
 
   it("Form 1116 simplified_eligible - disqualifying sources make ineligible even under threshold", () => {

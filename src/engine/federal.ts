@@ -51,6 +51,7 @@ import {
   type FTCCarryforwardEntry,
 } from "./forms/form-1116.js";
 import { calculateForeignTaxDeductionCarryover, type ForeignTaxHypotheticalContext } from "./forms/foreign-tax-deduction-carryover.js";
+import { calculateForeignTaxDirectCredit } from "./forms/foreign-tax-direct-credit.js";
 import { validateForeignTaxDeductionScope } from "./forms/foreign-tax-deduction-scope.js";
 import { calculateScheduleB } from "./schedules/schedule-b.js";
 import { calculateScheduleC } from "./schedules/schedule-c.js";
@@ -3021,7 +3022,23 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
 
   // Form 6251 feeds Schedule 2 Line 2, which in turn increases Form 1040 Line 18
   // before the saver's credit limitation on Form 8880 Line 11 is applied.
-  const form6251 = calculateForm6251(
+  // Actual business-credit sources also determine whether no-AMT returns need
+  // net statutory TMT; the optional6251line8 skip must not reduce later credits.
+  const hasK1Box15Credits = input.scheduleK1.some((k1) =>
+    d(k1.lowIncomeHousingCredit42j5).greaterThan(0) ||
+    d(k1.lowIncomeHousingCreditOther).greaterThan(0) ||
+    d(k1.qualifiedRehabilitationExpenditures).greaterThan(0) ||
+    d(k1.otherRentalRealEstateCredits).greaterThan(0) ||
+    d(k1.otherRentalCredits).greaterThan(0) ||
+    d(k1.otherCredits).greaterThan(0)
+  );
+  const hasForm3800Input = input.form3800 !== undefined && (
+    d(input.form3800.currentYearCredits).greaterThan(0) ||
+    d(input.form3800.passiveActivityCredits).greaterThan(0) ||
+    d(input.form3800.carryforward).greaterThan(0)
+  );
+  const hasGBCCarryforward = d(input.priorYear?.generalBusinessCreditCarryforward).greaterThan(0);
+  const calculateReturnAMT = (directCredit?: Decimal, directElectionPartI = d("0")) => calculateForm6251(
     {
       // Form 6251 starts from AGI less deductions even when Form 1040 floors at zero.
       taxableIncome: rawTaxableIncome.minus(nolDeduction),
@@ -3042,7 +3059,9 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       // Per Form 6251 instructions: if Schedule J is used, Form 6251 must
       // use the tax computed WITHOUT Schedule J (income averaging does not
       // apply to AMT).
-      regularTax: taxWithoutScheduleJ,
+      regularTax: taxWithoutScheduleJ.plus(directElectionPartI),
+      directCreditElectionForeignTaxCredit: directCredit,
+      requiresTentativeMinimumTaxForCredits: input.form8801 !== undefined || hasK1Box15Credits || hasForm3800Input || hasGBCCarryforward,
       filingStatus,
       isItemizing: deductionUsed === "itemized",
       qualifiedDividends,
@@ -3053,9 +3072,6 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     },
     constants
   );
-  const amt = form6251.amt;
-  audit.merge(form6251.lines);
-  audit.record("Sched 2", "2", "Alternative Minimum Tax", amt, "Form 6251 Line 11");
 
   // ── Form 8959: Additional Medicare Tax ────────────────
   // Form 8959 Line 8 requires each person's Schedule SE line6 after the filing threshold.
@@ -3180,11 +3196,17 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   let foreignTaxCredit: Decimal;
   let foreignTaxCreditCarryforward = new Decimal(0);
   let foreignTaxDeductionCarryover: TaxReturnResult["foreignTaxDeductionCarryover"];
+  let foreignTaxDirectCredit: TaxReturnResult["foreignTaxDirectCredit"];
+  const directCreditSources = schedA.foreignTaxElection.directCreditSources;
   const foreignTaxCreditCarryforwardByCategory: Record<string, Array<{ taxYear: number; amount: Decimal }>> = {};
   const hasForeignTaxActivity = foreignTaxPaid.greaterThan(0) || hasLegacyCarryforward
     || hasPassiveActivity || hasGeneralActivity;
 
-  if (schedA.foreignTaxElection.election === "deduction" || !hasForeignTaxActivity) {
+  if (directCreditSources) {
+    // The exact elected credit requires actual PartI additions, computed below.
+    // Do not run the legacy foreign-income estimate or consume any prior carry.
+    foreignTaxCredit = d("0");
+  } else if (schedA.foreignTaxElection.election === "deduction" || !hasForeignTaxActivity) {
     // The actual annual election remains a deduction, including when standard
     // deduction is better. Only prior balances can be absorbed or expire here.
     foreignTaxCredit = new Decimal(0);
@@ -3348,6 +3370,18 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   const newVehicleTransferRepayment = vehicleReconciliation?.transferredNewVehicleCreditRepayment ?? new Decimal(0);
   const usedVehicleTransferRepayment = vehicleReconciliation?.transferredPreviouslyOwnedCreditRepayment ?? new Decimal(0);
   const partIAdditions = sum(excessAPTCRepayment, newVehicleTransferRepayment, usedVehicleTransferRepayment);
+
+  if (directCreditSources) {
+    foreignTaxDirectCredit = calculateForeignTaxDirectCredit(directCreditSources, incomeTax.plus(partIAdditions));
+    foreignTaxCredit = foreignTaxDirectCredit.creditAllowed;
+    foreignTaxCreditCarryforward = foreignTaxDirectCredit.carryforward;
+    Object.assign(foreignTaxCreditCarryforwardByCategory, foreignTaxDirectCredit.carryforwardByCategory);
+    audit.merge(foreignTaxDirectCredit.lines);
+  }
+  const form6251 = calculateReturnAMT(directCreditSources ? foreignTaxCredit : undefined, directCreditSources ? partIAdditions : d("0"));
+  const amt = form6251.amt;
+  audit.merge(form6251.lines);
+  audit.record("Sched 2", "2", "Alternative Minimum Tax", amt, "Form 6251 Line 11");
 
   // ── Line 17-18: Tax before credits includes Schedule 2 Part I ──
   // Per IRS Form 1040: Line 17 = AMT + excess APTC (Schedule 2 Part I)
@@ -3588,21 +3622,6 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   // ── Form 3800: General Business Credit ──────────────────
   // Computed after CTC so the limitation can use CTC + other personal credits.
   // K-1 Box 15 credits and form3800 input are the sources.
-  const hasK1Box15Credits = input.scheduleK1.some((k1) =>
-    d(k1.lowIncomeHousingCredit42j5).greaterThan(0) ||
-    d(k1.lowIncomeHousingCreditOther).greaterThan(0) ||
-    d(k1.qualifiedRehabilitationExpenditures).greaterThan(0) ||
-    d(k1.otherRentalRealEstateCredits).greaterThan(0) ||
-    d(k1.otherRentalCredits).greaterThan(0) ||
-    d(k1.otherCredits).greaterThan(0)
-  );
-  const hasForm3800Input = input.form3800 !== undefined && (
-    d(input.form3800.currentYearCredits).greaterThan(0) ||
-    d(input.form3800.passiveActivityCredits).greaterThan(0) ||
-    d(input.form3800.carryforward).greaterThan(0)
-  );
-  const hasGBCCarryforward = d(input.priorYear?.generalBusinessCreditCarryforward).greaterThan(0);
-
   let form3800: ReturnType<typeof calculateForm3800> | undefined;
   let generalBusinessCredit = new Decimal(0);
   if (hasK1Box15Credits || hasForm3800Input || hasGBCCarryforward) {
@@ -4136,6 +4155,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
           .map((p) => ({ partnershipName: p.name, amount: p.netSuspended })),
         foreignTaxCreditCarryforward: cfFtc,
         foreignTaxCreditCarryforwardByCategory,
+        ...(foreignTaxDirectCredit ? { amtForeignTaxCreditCarryforwardByCategory: foreignTaxDirectCredit.amtCarryforwardByCategory } : {}),
         qbiLossCarryforward: form8995Result?.qbiLossCarryforward ?? form8995AResult?.qbiLossCarryforward ?? new Decimal(0),
         investmentInterestExpense: form4952?.disallowedCarryforward ?? new Decimal(0),
         minimumTaxCredit: cfMtc,
@@ -4178,6 +4198,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
 
     // Sub-results
     foreignTaxDeductionCarryover,
+    foreignTaxDirectCredit,
     scheduleA: schedA,
     schedule1: sched1,
     scheduleB: schedB,

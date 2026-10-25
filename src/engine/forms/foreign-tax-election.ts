@@ -4,12 +4,14 @@ import type { TaxYearInput } from '@/models/inputs.js';
 import type { CalculatedLine } from '@/models/outputs.js';
 import { AuditTrail } from '@/utils/audit.js';
 import { d, sum } from '@/utils/decimal.js';
+import { resolveForeignTaxDirectSources, type ForeignTaxDirectSources } from './foreign-tax-direct-sources.js';
 
 export interface ForeignTaxElectionResult {
   election: 'credit' | 'deduction' | 'unverified_credit';
   sourceFactsVerified: boolean;
   scheduleAForeignIncomeTaxes: Decimal;
   niitForeignIncomeTaxes: Decimal;
+  directCreditSources?: ForeignTaxDirectSources;
   lines: CalculatedLine[];
 }
 function amount(value: string | undefined, label: string): Decimal {
@@ -27,11 +29,16 @@ const normalize = (value: string | undefined) => value?.trim().toUpperCase();
 const tin = (value: string | undefined) => value?.replace(/-/g, '').trim();
 const territoryNames = new Set(['PR', 'PUERTO RICO', 'VI', 'US VIRGIN ISLANDS', 'U.S. VIRGIN ISLANDS', 'GU', 'GUAM', 'MP', 'NORTHERN MARIANA ISLANDS', 'AS', 'AMERICAN SAMOA']);
 
-export type ForeignTaxElectionInput = Pick<TaxYearInput, 'foreignTaxElection' | 'form1099Int' | 'form1099Div' | 'priorYear' | 'scheduleK1' | 'scheduleK1Form1041'>
+export type ForeignTaxElectionInput = Pick<TaxYearInput, 'foreignTaxElection' | 'form1099Int' | 'form1099Div' | 'priorYear' | 'scheduleK1' | 'scheduleK1Form1041'
+  | 'standardDeductionFacts' | 'educationExpenses' | 'form2555'>
   & { taxpayer: Pick<TaxYearInput['taxpayer'], 'taxYear' | 'filingStatus'> };
 
 export function resolveForeignTaxElection(input: ForeignTaxElectionInput): ForeignTaxElectionResult {
   const facts = input.foreignTaxElection;
+  if (!facts?.creditWithoutForm1116 && Object.values(input.priorYear?.amtForeignTaxCreditCarryforwardByCategory ?? {}).flat()
+    .some(row => !amount(row.amount, 'saved AMT credit carryover').isZero())) {
+    throw new Error('Actual AMT foreign-credit carryovers require a supported source method; another election cannot discard them');
+  }
   const audit = new AuditTrail();
   const empty = (election: ForeignTaxElectionResult['election']): ForeignTaxElectionResult => ({ election, sourceFactsVerified: false,
     scheduleAForeignIncomeTaxes: d('0'), niitForeignIncomeTaxes: d('0'), lines: audit.getLines() });
@@ -47,10 +54,16 @@ export function resolveForeignTaxElection(input: ForeignTaxElectionInput): Forei
     if ((facts.sources ?? []).some(source => source.taxDeductedElsewhere !== undefined && !amount(source.taxDeductedElsewhere, 'credit-year deduction').isZero())) {
       throw new Error('A foreign tax credit election cannot retain a same-year qualified foreign tax deduction elsewhere');
     }
+    if (facts.creditWithoutForm1116) {
+      const directCreditSources = resolveForeignTaxDirectSources(input);
+      audit.record('Foreign Tax Election WS', 'deduction', 'Actual credit election: no foreign income tax deduction', d('0'), 'IRC275(a)(4); actual904j source election');
+      return { ...empty('credit'), sourceFactsVerified: true, directCreditSources };
+    }
     if (facts.sources?.length) throw new Error('Foreign tax credit source reconciliation needs its separate actual worksheet; deduction-source records cannot enter the unverified legacy credit estimate');
     audit.record('Foreign Tax Election WS', 'deduction', 'Annual credit choice: no foreign income tax deduction', d('0'), 'IRC275(a)(4); existing credit calculation remains separately subject to its source rules');
     return empty('credit');
   }
+  if (facts.creditWithoutForm1116) throw new Error('A deduction election cannot retain an elected direct-credit worksheet');
   if (facts.accountingMethod !== 'paid' || facts.priorAccruedCreditElection !== false) throw new Error('Foreign tax deduction requires actual paid-tax method; accrued-credit history needs its separate source method');
   if (facts.allQualifiedForeignTaxesIncludedConfirmed !== true || !facts.sources) throw new Error('Foreign tax deduction requires all actual qualified foreign taxes and complete source records');
   if (facts.noRedeterminationsConfirmed !== true) throw new Error('Foreign tax redeterminations require their actual separate historical source method');

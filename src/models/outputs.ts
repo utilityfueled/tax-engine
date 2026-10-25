@@ -129,6 +129,8 @@ export interface TaxReturnResult {
   foreignTaxCredit: Decimal;
   /** Actual deduction-year prior-credit absorption; grants no current credit. */
   foreignTaxDeductionCarryover?: import("@/engine/forms/foreign-tax-deduction-carryover.js").ForeignTaxDeductionCarryoverResult;
+  /** Actual904(j) election, including preserved regular and AMT prior histories. */
+  foreignTaxDirectCredit?: import("@/engine/forms/foreign-tax-direct-credit.js").ForeignTaxDirectCreditResult;
   otherCredits: Decimal;
   totalCredits: Decimal;
 
@@ -166,6 +168,7 @@ export interface TaxReturnResult {
     /** Per-category FTC carryforward for multi-category IRC §904(d) tracking.
      *  Each category has independent per-year FIFO reconciliation. */
     foreignTaxCreditCarryforwardByCategory: Record<string, Array<{ taxYear: number; amount: Decimal }>>;
+    amtForeignTaxCreditCarryforwardByCategory?: Record<string, Array<{ taxYear: number; amount: Decimal }>>;
     qbiLossCarryforward: Decimal;
     investmentInterestExpense: Decimal;
     minimumTaxCredit: Decimal;

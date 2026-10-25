@@ -141,6 +141,15 @@ export async function fillForm6251(
     ["9", f6251.tentativeMinimumTax], ["11", f6251.amt]] as const) {
     if (!required(id).eq(value)) throw new Error(`Form6251 line${id} audit does not reconcile with its result`);
   }
+  const directCredit = result.foreignTaxDirectCredit;
+  if (directCredit) {
+    if (!directCredit.creditAllowed.eq(result.foreignTaxCredit)) throw new Error("Form6251 elected foreign credit does not reconcile with its canonical source result");
+    if (result.form8801 || result.form3800 || required("10").lt(required("7"))) required("8");
+    if ((audited.has("8") && !required("8").eq(directCredit.creditAllowed))
+      || !required("9").eq(Decimal.max(0, required("7").minus(audited.get("8") ?? new Decimal(0))))) {
+      throw new Error("Form6251 elected foreign credit does not reconcile with its AMT audit");
+    }
+  }
   const auditSenior = result.schedule1A?.seniorDeduction ?? new Decimal(0);
   if (!required("1b").eq(f6251.taxableIncome.plus(auditSenior))) {
     throw new Error("Form6251 line1b does not match its signed source income and senior deduction");
@@ -165,8 +174,15 @@ export async function fillForm6251(
   const notes = [
     "FORM 6251 REVIEW LIMITATIONS - NOT FOR FILING",
     "Printed amounts copy the calculation audit; this attachment does not qualify an AMT return.",
-    "AMT foreign-tax credit and its actual source worksheet are not implemented. Line8 is blank.",
-    "The preview assumes no AMT foreign-tax credit. Do not treat a blank field as a confirmed zero.",
+    ...(directCredit ? [
+      "Actual elected section904(j) foreign credit is reconciled to the source calculation.",
+      audited.has("8") ? "Lines8 and9 retain the actual elected AMT credit and net tentative minimum tax."
+        : "The optional no-AMT line8 skip applies; no later credit needs tentative minimum tax.",
+      "Other AMT foreign-credit methods remain unavailable without their actual worksheets.",
+    ] : [
+      "General AMT foreign-tax credit source worksheets are not implemented. Line8 is blank.",
+      "The preview assumes no AMT foreign-tax credit. Do not treat a blank field as a confirmed zero.",
+    ]),
     "Foreign-income stacking, MFS additional AMTI, AMT NOL and full PartIII source worksheets",
     "remain unqualified. PartIII is blank when no actual audited worksheet is available.",
     "Regular-tax comparison copies the supplied audit; the mapper does not derive it from AMT.",

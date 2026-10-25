@@ -2524,6 +2524,11 @@ export const PriorYearCarryforwardSchema = z.object({
       amount: decimal,
     }))
   ).optional(),
+  /** Actual separately computed AMT foreign-credit records; omission is unknown. */
+  amtForeignTaxCreditCarryforwardByCategory: z.partialRecord(
+    z.enum(["passive", "general"]),
+    z.array(z.object({ taxYear: z.number().int(), amount: decimal }))
+  ).optional(),
   qbiLossCarryforward: optionalDecimal,
   /** Actual active portion of the QBI loss carryover; unknown is not zero. */
   activeQbiLossCarryforward: optionalDecimalInput,
@@ -4279,6 +4284,25 @@ export const ForeignTaxElectionSchema = z.object({
   allQualifiedForeignTaxesIncludedConfirmed: z.boolean().optional(),
   noUnusedCreditCarryoversConfirmed: z.boolean().optional(),
   deductionYearCarryover: ForeignTaxDeductionCarryoverSchema.optional(),
+  /** Actual section904(j) election; no source eligibility or history defaults. */
+  creditWithoutForm1116: z.object({
+    electionConfirmed: z.boolean().optional(), filingContext: z.enum(["original_return", "amended_return"]).optional(),
+    sourceFactsConfirmed: z.boolean().optional(), sourceReference: z.string().optional(),
+    allForeignGrossIncomePassiveConfirmed: z.boolean().optional(),
+    allForeignIncomeOnQualifiedPayeeStatementsConfirmed: z.boolean().optional(),
+    noRequiredTaxReductionsConfirmed: z.boolean().optional(),
+    taxpayers: z.array(z.object({ owner: z.enum(["primary", "spouse"]).optional(),
+      status: z.enum(["us_citizen", "full_year_resident_alien", "other"]).optional(), sourceReference: z.string().optional(),
+    }).strict()).optional(),
+    carryoverHistoryConfirmed: z.boolean().optional(), adjustedThroughTaxYear: z.number().int().optional(),
+    filingHistory: z.enum(["continuous_individual", "continuous_joint_same_spouse", "changed"]).optional(),
+    carryovers: z.array(z.object({ originTaxYear: z.number().int().optional(), category: z.enum(["passive", "general"]).optional(),
+      amount: decimal.optional(), sourceReference: z.string().optional(),
+    }).strict()).optional(),
+    amtCarryovers: z.array(z.object({ originTaxYear: z.number().int().optional(), category: z.enum(["passive", "general"]).optional(),
+      amount: decimal.optional(), sourceReference: z.string().optional(),
+    }).strict()).optional(),
+  }).strict().optional(),
   noRedeterminationsConfirmed: z.boolean().optional(),
   sources: z.array(z.object({
     sourceId: z.string().optional(), // Actual form1099Int:index or form1099Div:index.
@@ -4287,6 +4311,11 @@ export const ForeignTaxElectionSchema = z.object({
     foreignCountry: z.string().optional(), jurisdictionType: z.enum(["foreign_country", "us_territory"]).optional(),
     reportedTaxAmount: decimal.optional(),
     qualifiedIncomeTaxConfirmed: z.boolean().optional(),
+    creditEligibility: z.object({
+      passiveIncomeConfirmed: z.boolean().optional(), legalTaxLiabilityConfirmed: z.boolean().optional(),
+      noRefundOrSubsidyConfirmed: z.boolean().optional(), holdingPeriodRequirementMetConfirmed: z.boolean().optional(),
+      noRelatedPaymentsConfirmed: z.boolean().optional(), noDisallowedCountryOrBoycottConfirmed: z.boolean().optional(),
+    }).strict().optional(),
     taxOnExcludedIncome: decimal.optional(),
     taxDeductedElsewhere: decimal.optional(),
     payments: z.array(z.object({ date: z.string(), amountUsd: decimal }).strict()).optional(),

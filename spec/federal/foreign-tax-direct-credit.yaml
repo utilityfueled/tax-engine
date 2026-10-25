@@ -1,0 +1,90 @@
+form: "Foreign tax credit without Form 1116"
+fullName: "Actual section 904(j) election and retained carryover records"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i1116"
+sources:
+  - url: "https://uscode.house.gov/us/usc/119-118/t26/s904/"
+    section: "904(j): qualified passive income, qualified payee statements, 300/600 joint limit, no election-year carry use"
+    retrieved: "2026-10-25"
+  - url: "https://www.irs.gov/instructions/i1116"
+    section: "Final2025 election without Form1116; creditability; lines10,12,20"
+    retrieved: "2026-10-25"
+  - url: "https://www.irs.gov/instructions/i6251"
+    section: "Final2025 lines8 and10: elected regular credit also AMT credit, PartI regular-tax comparison"
+    retrieved: "2026-10-25"
+  - url: "https://uscode.house.gov/us/usc/119-118/t26/s55/"
+    section: "55(b)(1)(A): tentative minimum tax is reduced by AMT foreign tax credit"
+    retrieved: "2026-10-25"
+  - url: "https://www.irs.gov/pub/irs-pdf/f8801.pdf"
+    section: "Final2025 lines22-24: actual regular tax after credits less current6251line9"
+    retrieved: "2026-10-25"
+reviewStatus: "Agent source review required; independent human review and final2026 qualification pending"
+notes: |
+  Applies to2025 correction and the isolated2026 candidate. No filing gate or
+  production-year promotion. An eligibility indicator is not an election.
+  Support actual original individual returns, paid taxes on1099INT/DIV and
+  confirmed full-year U.S. citizen/resident status for every return taxpayer.
+  The complete foreign gross income must be passive and on qualified payee
+  statements. Reconcile every positive actual statement tax by owner, payer,
+  account, foreign-country identity and dated USD payment. Qualification and
+  holding-period answers are actual source facts, never inferred from a1099.
+  This branch requires fully creditable legal tax with no refund, subsidy,
+  related payment, sanctioned-country or line12 reduction. Amended returns,
+  resident elections, accrual history, pass-through or territory sources and
+  partial-creditability/reduction methods require separate implementation.
+  Keep those source facts and reject unsupported combinations.
+  Preserve actual regular and AMT carryover ledgers without absorption or use.
+  The ten-year period continues; unused tenth-year balances expire. Prior
+  adjusted balances require actual year/category/history and source references,
+  including explicit empty ledgers when none. Current unused tax never creates
+  a credit carryforward in an election year. Private source identifiers stay
+  out of calculation audits and redacted review output.
+lines:
+  - line: "source-contract"
+    description: "No implicit election or qualified status"
+    formula: "Preserve absent answers; require confirmed original-year904j choice, all-return status, passive/payee completeness, actual creditability and source identity"
+    testRef: "tests/engine/forms/foreign-tax-direct-credit.test.ts::requires actual election eligibility and source facts without defaults"
+  - line: "source-reconciliation"
+    description: "Actual paid statement taxes before reporting rounding"
+    formula: "Sum reconciled current-year USD taxes; reject stale owner/payer/account/country, missing positive statements, conflicting deductions, reductions and actual nonpassive foreign income"
+    testRef: "tests/engine/forms/foreign-tax-direct-credit.test.ts::rejects stale inconsistent and unsupported direct credit sources"
+  - line: "threshold"
+    description: "Exact qualification threshold before dollar rounding"
+    formula: "Total creditable tax <=600 only for married_filing_jointly; otherwise <=300, including qualifying_surviving_spouse; preserve cents for eligibility"
+    testRef: "tests/engine/forms/foreign-tax-direct-credit.test.ts::applies exact joint-only thresholds before combined reporting rounding"
+  - line: "credit"
+    description: "Election bypasses the foreign-income ratio"
+    formula: "Allowed=min(roundDollar(combined actual creditable taxes), actual regular tax per i1116line20); current unused=max(0,rounded tax-credit), with no new carry"
+    testRef: "tests/engine/forms/foreign-tax-direct-credit.test.ts::uses actual regular tax without a foreign income ratio or current carry creation"
+  - line: "prior-records"
+    description: "No actual or hypothetical use of prior regular or AMT carries"
+    formula: "For each actual origin/category adjusted through prior year, used=0; expired=amount only in tenth succeeding year; remaining=amount-expired; reconcile saved regular balances"
+    testRef: "tests/engine/forms/foreign-tax-direct-credit.test.ts::preserves actual prior regular and AMT vintages without use and expires the tenth year"
+  - line: "source-boundaries"
+    description: "Known signed pass-through income and saved AMT records cannot disappear"
+    formula: "Any actual nonzero unsupported foreign K1 income rejects; validate missing, duplicate and expired vintage sources; preserve optional saved AMT ledger and reconcile its actual year/category balances exactly; positive saved AMT carry cannot enter another method that would discard it"
+    testRef: "tests/engine/forms/foreign-tax-direct-credit.test.ts::reconciles actual saved carryovers and rejects unresolved source histories"
+  - line: "6251-8-10"
+    description: "Same elected credit for regular tax and AMT"
+    formula: "Line10=max(0,regular tax without ScheduleJ plus actual Schedule2PartI1z minus allowed direct credit); when line10<line7 or a later credit requires actual tentative minimum tax, line8=direct credit and line9=max(0,line7-line8); otherwise permit optional physical skip8; line11=max(0,line9-line10)"
+    testRef: "tests/engine/forms/form-6251-direct-credit.test.ts::uses the elected credit in AMT lines eight through eleven"
+  - line: "6251-credit-consumer"
+    description: "No-AMT skip cannot overstate tentative minimum tax used by8801 or3800"
+    formula: "With an actual later credit consumer, retain net statutory TMT and populate8/9 even if10>=7; actual1000 tax before AMTFTC minus200 gives800 TMT, so1800 regular after credits allows1000 MTC capacity"
+    testRef: "tests/engine/forms/form-6251-direct-credit.test.ts::retains actual net tentative minimum tax for a later minimum tax credit"
+  - line: "canonical-credit-consumer"
+    description: "Actual minimum-tax credit uses the same net current6251 audit"
+    formula: "Source-verified direct credit reduces both regular tax and currentTMT; canonical8801line23 copies6251line9, without subtracting FTC twice from credit capacity"
+    testRef: "tests/engine/federal-foreign-tax-direct-credit.test.ts::preserves minimum tax credit capacity after the elected foreign credit"
+  - line: "canonical"
+    description: "One credit after actual regular tax and PartI additions"
+    formula: "Resolve complete sources before deduction choice; compute allowed credit after actual PartI additions, replace6251 comparison once, transfer credit toSchedule3line1; no Form1116 ratio or current carry"
+    testRef: "tests/engine/federal-foreign-tax-direct-credit.test.ts::routes the elected source credit and AMT comparison once in both supported years"
+  - line: "canonical-part-i"
+    description: "Actual PartI tax is available to the regular credit"
+    formula: "Regular credit limit includes actual excessAPTC or verified vehicle transfer repayment, excludes AMT/NIIT/SEtax; no fabricated regular-tax input"
+    testRef: "tests/engine/federal-foreign-tax-direct-credit.test.ts::includes actual Part I additions in the elected regular tax limit"
+  - line: "review-6251"
+    description: "Audited elected AMT credit in the historical review form"
+    formula: "Print actual8/9/10 without recomputation; reconcile elected credit to the canonical source result and7-minus8; describe supported904j separately from unimplemented general AMTFTC; keep all review notices and year gates"
+    testRef: "tests/pdf/form-6251-direct-credit.test.ts::prints audited elected AMT credit and accurate limitations in a saved review form"
