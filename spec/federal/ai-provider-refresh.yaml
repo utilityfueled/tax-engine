@@ -1,0 +1,37 @@
+form: "AI-Provider-Refresh"
+fullName: "Dated public provider sources and retired-model execution boundaries"
+taxYear: 2026
+reference: "https://developers.openai.com/api/docs/pricing; https://developers.openai.com/api/docs/deprecations; https://ai.google.dev/gemini-api/docs/pricing; https://ai.google.dev/gemini-api/docs/deprecations"
+notes: |
+  Public model documentation is not evidence of actual account access, retention
+  settings, quality or availability. Preserve the requested baseline even when
+  retired; do not silently substitute or weaken qualification gates. Published
+  shutdown dates have no stated hour, so new requests stop from 00:00 UTC that day.
+  Historical usage remains priced; January projections for a retired model are
+  explicitly hypothetical. The known December 11, 2026 GPT-5 Mini shutdown
+  applies to both alias and its documented August 7, 2025 snapshot.
+lines:
+  - line: "public-facts"
+    description: "Refresh documentation without inventing account capability results"
+    formula: "Record official model IDs, endpoint/schema/effort documentation and lifecycle sources as retrieved October 25, 2026; every actual account availability remains unverified."
+    testRef: "tests/engine/ai-provider-refresh.test.ts::keeps public capabilities separate from actual account evidence"
+  - line: "retired-plan"
+    description: "A retired baseline cannot start a new approved request plan"
+    formula: "Reject plans created on or after the published shutdown date while preserving the existing pre-shutdown baseline and its historical price."
+    testRef: "tests/engine/ai-provider-refresh.test.ts::rejects a retired baseline plan without replacing the requested model"
+  - line: "retired-dispatch"
+    description: "An active run stops when its model reaches shutdown"
+    formula: "Check the actual dispatch date before every durable paid dispatch, including a run crossing midnight; keep completed capability usage and do not dispatch the next case."
+    testRef: "tests/engine/ai-provider-refresh.test.ts::stops at the shutdown boundary while retaining earlier charges"
+  - line: "retired-measurement"
+    description: "Imported records cannot qualify a post-shutdown request"
+    formula: "A post-shutdown measurement remains nonqualifying while known recorded attempt cost is retained; pre-shutdown records remain separately eligible for ordinary review."
+    testRef: "tests/engine/ai-provider-refresh.test.ts::retains historical cost but rejects post-shutdown quality evidence"
+  - line: "dated-costs"
+    description: "Current and filing-season prices remain exact and explicitly dated"
+    formula: "Preserve October 24 effective prices and the announced January 1 Gemini rate change; refresh retrieval date only and label retired-baseline January cost as historical-price projection."
+    testRef: "tests/engine/ai-provider-refresh.test.ts::preserves exact effective prices and labels retired January projections"
+  - line: "unsupported-region"
+    description: "A price source URL is not the provider identity"
+    formula: "Reject unconfigured Google regional charges for both current and legacy Flash models using the explicit price provider, even when their documentation URLs differ."
+    testRef: "tests/engine/ai-provider-refresh.test.ts::rejects unpriced Google regional usage regardless of the source URL"

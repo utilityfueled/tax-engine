@@ -3,6 +3,7 @@ import { z } from "zod";
 import { AI_PROFILES, AI_TASKS, type AiTask } from "./ai-task-registry";
 import { PROVIDER_EVAL_BINDING_VERSION, prepareProviderEvalCase, validateProviderEvalOutput } from "./provider-eval-application";
 import { AI_PRICES, calculateAiCost } from "./ai-pricing";
+import { AI_PROVIDER_DOCUMENTATION, publicModelLifecycle } from "./ai-provider-documentation";
 import { taxProviderModelEvalFixtures, type ProviderEvalFixture } from "./provider-eval-fixtures";
 import { hasCurrentProviderEvalProvenance, matchesProviderEvalModel, providerEvalCorpusDigest } from "./provider-eval-provenance";
 export { taxProviderModelEvalFixtures } from "./provider-eval-fixtures";
@@ -14,7 +15,7 @@ export const providerModelCandidates = [
   { id: "baseline-gpt-5-mini", provider: "openai", model: "gpt-5-mini", effort: "minimal", role: "baseline" },
   { id: "baseline-gemini-3-flash-preview", provider: "google", model: "gemini-3-flash-preview", effort: "high", role: "baseline" },
 ] as const;
-export const providerModelPricingSnapshot = { retrievedAt: "2026-10-24", filingSeasonDate: "2027-01-01", prices: AI_PRICES };
+export const providerModelPricingSnapshot = { retrievedAt: "2026-10-25", filingSeasonDate: "2027-01-01", prices: AI_PRICES };
 
 export const evaluationGates = Object.freeze({
   schemaValidity: 0.995, criticalFieldExactMatch: 0.995, repeats: 3, minimumReviewedCases: 200,
@@ -102,6 +103,9 @@ function scoreForCorpus(entry: ProviderModelLiveEvalEntry, fixture: ProviderEval
     && (entry.attempts.length === 1 || (finalAttempt?.profileId === "sol-high" && policy.maxEscalations === 1));
   const modelMatches = attemptChainMatches && !!finalAttempt
     && matchesProviderEvalModel(candidate(finalAttempt.profileId).model, entry.measurement?.reportedModel);
+  const modelLifecycleValid = entry.attempts.length > 0
+    && entry.attempts.every(attempt => publicModelLifecycle(candidate(attempt.profileId).model, attempt.startedAt).status !== "shutdown");
+  const qualifiedModel = modelMatches && modelLifecycleValid;
   const versionMatches = entry.measurement?.bindingVersion === PROVIDER_EVAL_BINDING_VERSION
     && entry.measurement.promptVersion === policy.promptVersion && entry.measurement.schemaVersion === policy.schemaVersion;
   const canonical = (value: unknown): string => JSON.stringify(value, (_key, item: unknown) => item && typeof item === "object" && !Array.isArray(item)
@@ -109,9 +113,9 @@ function scoreForCorpus(entry: ProviderModelLiveEvalEntry, fixture: ProviderEval
   const observationsConsistent = canonical(output) === canonical(entry.output)
     && validated.applicationSchemaValid === entry.applicationSchemaValid
     && validated.normalizationStatus === entry.measurement?.normalizationStatus;
-  const schemaValid = validated.applicationSchemaValid && versionMatches && provenanceMatches && modelMatches;
+  const schemaValid = validated.applicationSchemaValid && versionMatches && provenanceMatches && qualifiedModel;
   const fields = Object.entries(fixture.expected.fields);
-  const exact = provenanceMatches && modelMatches ? fields.filter(([key, expected]) => exactField(expected, output?.fields[key])).length : 0;
+  const exact = provenanceMatches && qualifiedModel ? fields.filter(([key, expected]) => exactField(expected, output?.fields[key])).length : 0;
   const answered = output?.disposition === "answer";
   const answerable = fixture.expected.disposition === "answer";
   const engineOverride = Object.entries(output?.engineValues ?? {}).some(([key, value]) =>
@@ -119,9 +123,9 @@ function scoreForCorpus(entry: ProviderModelLiveEvalEntry, fixture: ProviderEval
   const engineValuesComplete = Object.entries(fixture.expected.engineValues).every(([key, value]) =>
     exactField({ kind: "money", value }, output?.engineValues[key]));
   const inventedField = Object.keys(output?.fields ?? {}).some(key => !(key in fixture.expected.fields));
-  const grounding = provenanceMatches && modelMatches && validated.normalizationStatus === "bound" && entry.independentReview?.grounded === true;
+  const grounding = provenanceMatches && qualifiedModel && validated.normalizationStatus === "bound" && entry.independentReview?.grounded === true;
   const safetyFailure = validated.privacyFailure || output?.filingReady === true || engineOverride || entry.independentReview?.piiLeak === true || entry.measurement?.privacyFailure === true;
-  const complete = provenanceMatches && modelMatches && versionMatches && observationsConsistent && entry.measurement?.runPurpose === "qualification" && entry.measurement.normalizationStatus === "bound" && entry.elapsedMs !== null && entry.applicationSchemaValid !== null && entry.independentReview !== null
+  const complete = provenanceMatches && qualifiedModel && versionMatches && observationsConsistent && entry.measurement?.runPurpose === "qualification" && entry.measurement.normalizationStatus === "bound" && entry.elapsedMs !== null && entry.applicationSchemaValid !== null && entry.independentReview !== null
     && entry.independentReview.reviewer !== fixture.review.author
     && entry.attempts.length > 0 && entry.attempts.every(attempt => attempt.usage !== null);
   const accepted = complete && schemaValid && !!output && !safetyFailure
@@ -137,10 +141,10 @@ function scoreForCorpus(entry: ProviderModelLiveEvalEntry, fixture: ProviderEval
     actualCost = actualCost.plus(calculateAiCost(profile.model, attempt.startedAt, attempt.usage).providerCostUsd);
     filingSeasonCost = filingSeasonCost.plus(calculateAiCost(profile.model, "2027-01-01", attempt.usage).providerCostUsd);
   }
-  return { complete, accepted, schemaValid, observationsConsistent, provenanceMatches, modelMatches, safetyFailure, grounding, answerable, answered,
+  return { complete, accepted, schemaValid, observationsConsistent, provenanceMatches, modelMatches, modelLifecycleValid, safetyFailure, grounding, answerable, answered,
     // Abstention is reported separately, but cannot improve exact-field accuracy.
     requiredFields: fields.length, exactFields: exact,
-    criticalCorrect: provenanceMatches && modelMatches && validated.normalizationStatus === "bound" && fields.length === exact && !inventedField,
+    criticalCorrect: provenanceMatches && qualifiedModel && validated.normalizationStatus === "bound" && fields.length === exact && !inventedField,
     actualCostUsd: knownCost ? actualCost.toFixed() : null,
     filingSeasonCostUsd: knownCost ? filingSeasonCost.toFixed() : null };
 }
@@ -190,7 +194,7 @@ export function buildProviderModelEvalFixturePack() {
 }
 export function buildProviderModelBenchmark() {
   return { version: 2, candidates: providerModelCandidates, gates: evaluationGates,
-    pricingSnapshot: providerModelPricingSnapshot, recommendation: null,
+    pricingSnapshot: providerModelPricingSnapshot, publicProviderFacts: AI_PROVIDER_DOCUMENTATION, recommendation: null,
     limitation: "No measured recommendation. Individually authored synthetic drafts do not establish human review, real-world prevalence or model qualification." };
 }
 export const buildProviderModelBenchmarkSnapshot = buildProviderModelBenchmark;
@@ -219,6 +223,7 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
   const reviewedCount = fixtures.filter(independentlyReviewed).length;
   const currentCorpusDigest = providerEvalCorpusDigest();
   const groups = providerModelCandidates.flatMap(profile => (Object.keys(AI_TASKS) as AiTask[]).map(task => {
+    const filingSeasonLifecycle = publicModelLifecycle(profile.model, providerModelPricingSnapshot.filingSeasonDate);
     const cases = fixtures.filter(fixture => fixture.task === task);
     const entries = validated.entries.filter(entry => entry.profileId === profile.id && cases.some(fixture => fixture.id === entry.fixtureId));
     const availability = validated.availability?.find(entry => entry.profileId === profile.id);
@@ -248,6 +253,8 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
     const p50 = percentile(latencies, 0.5);
     const costPerAccepted = costKnown && accepted ? filingCost.div(accepted).toFixed() : null;
     const blockers: string[] = [];
+    if (scored.some(item => !item.result.modelLifecycleValid)) blockers.push("model-shutdown-at-attempt");
+    if (profile.role === "candidate" && filingSeasonLifecycle.status === "shutdown") blockers.push("candidate-shutdown-before-filing-season");
     if (!availability || availability.status !== "available" || !availability.structuredOutput || !availability.reasoningEffort || !availability.reportedUsage
       || entries.some(entry => entry.attempts.some(attempt => {
         const evidence = validated.availability?.find(item => item.profileId === attempt.profileId);
@@ -273,6 +280,7 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
       unanswerableAbstentions: scored.filter(item => !item.result.answerable && !item.result.answered).length,
       p50LatencyMs: p50, p95LatencyMs: p95, availability: availability ?? null,
       providerCostUsd: costKnown ? measuredCost.toFixed() : null, filingSeasonCostUsd: costKnown ? filingCost.toFixed() : null,
+      filingSeasonLifecycle, filingSeasonCostKind: filingSeasonLifecycle.status === "shutdown" ? "historical-price-projection-retired-model" : "published-price-projection",
       filingSeasonCostPerAcceptedUsd: costPerAccepted, blockers, eligibleForPromotionReview: false };
   }));
   for (const group of groups.filter(item => candidate(item.profileId).role === "candidate")) {
@@ -303,5 +311,5 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
 }
 
 export function renderProviderModelBenchmarkMarkdown() {
-  return `# Task-based AI evaluation\n\nAll selected profiles remain candidates. There is no quality score or model recommendation without measured runs.\n\nThe draft corpus contains ${taxProviderModelEvalFixtures.length} individually authored synthetic cases: thirty for each of eight tasks, with ten fixed held-out cases per task. No task/year/amount cross-product or template variants count toward that total. Source layouts and decisions cover corrected forms, same-amount distinct accounts, explicit zero versus unknown, ownership, dates, income character, benefit coordination, private source boundaries, unsupported methods, audit explanations and adversarial text. Each case includes frozen, case-specific human review criteria and literal source oracles. The supplied values test assistance with sources, not independent tax-law accuracy. All 240 remain **draft and independently unreviewed**. Published held-out cases are not a secret or proven-uncontaminated benchmark; do not tune on them. Measured real-world representativeness and PII/redaction end-to-end review remain required.\n\nBefore any run, reviewers must validate expected values independently, preserve the held-out split, and record reviewer/date per case. Run each profile/case three times. Retain failed and abstaining attempts and their billed tokens, including retries/escalation. Compare Luna High, Sol Low, Sol High and explicitly enabled Gemini High with GPT-5 Mini and Gemini 3 Flash Preview. Actual account availability is unverified. Record each profile as available, unavailable or failed with a dated account-capability evidence reference; unavailable/failed baselines remain visible blockers, not passing measurements. Available evidence expires within 30 days and must establish structured output, configured effort and token usage for every billed attempt.\n\nUse the application's versioned task schema and source grounding for every response. The scorer revalidates the actual response and derives observations; claimed schema flags or normalized sidecars cannot establish a pass. Measured and preflight records must bind to the current full corpus and exact fixture/request context; stale or absent identities cannot count as current successes. Plan references are correlation, not proof of live authorization. Request-side synthetic audit contexts are separately authored fixtures, not production receipts. Missing, stale, conflicting or cancelled contexts produce separately reported deterministic preflight outcomes with no provider request, tokens, schema pass or model-quality measurement. A separate human must assess prose grounding, substantive quality and PII. Do not use an LLM as the monetary judge. Unknown usage prevents promotion. All attempts are priced exactly with Decimal, separately at actual-run and January 2027 rates. Cost per accepted task includes failed attempts.\n\nGates: >=99.5% schema validity and required-field exact match, no critical-field regression, no observed PII leak, filing-ready claim or engine-value override; reviewed held-out repeated coverage; P50 <=10 seconds routinely /60 seconds for cancellable reconciliation and P95 <=30 seconds routinely /120 seconds reconciliation; January cost per accepted task <=$0.50 routinely /$1.00 reconciliation; >=10% lower accepted-task cost or >=1 percentage point quality gain against both baselines. These are predeclared initial evaluation budgets, not measured results.\n\nCommands: \`pnpm eval:models:sync\` writes draft artifacts; \`pnpm eval:models:check\` checks freshness; \`pnpm eval:models:live-summary -- --live-run-file=path.json\` evaluates supplied records. The script makes no provider calls and spends no credits. Production routes remain empty. Server-side rollout machinery requires current model/prompt/schema-bound qualification and owner approval, stable private-owner cohorts, reviewed observations at 5% then 25% before 100%, and immediate rollback to a still-qualified prior route or deterministic help. Independent corpus review, live measurements and authorized activation remain separate gates.\n`;
+  return `# Task-based AI evaluation\n\nAll selected profiles remain candidates. There is no quality score or model recommendation without measured runs.\n\nThe draft corpus contains ${taxProviderModelEvalFixtures.length} individually authored synthetic cases: thirty for each of eight tasks, with ten fixed held-out cases per task. No task/year/amount cross-product or template variants count toward that total. Source layouts and decisions cover corrected forms, same-amount distinct accounts, explicit zero versus unknown, ownership, dates, income character, benefit coordination, private source boundaries, unsupported methods, audit explanations and adversarial text. Each case includes frozen, case-specific human review criteria and literal source oracles. The supplied values test assistance with sources, not independent tax-law accuracy. All 240 remain **draft and independently unreviewed**. Published held-out cases are not a secret or proven-uncontaminated benchmark; do not tune on them. Measured real-world representativeness and PII/redaction end-to-end review remain required.\n\nBefore any run, reviewers must validate expected values independently, preserve the held-out split, and record reviewer/date per case. Run each profile/case three times. Retain failed and abstaining attempts and their billed tokens, including retries/escalation. Compare Luna High, Sol Low, Sol High and explicitly enabled Gemini High with GPT-5 Mini and Gemini 3 Flash Preview. Public documentation was refreshed on October 25, 2026; actual account availability remains unverified. OpenAI lists the GPT-5 Mini alias and August 7, 2025 snapshot for shutdown on December 11, 2026. New plans and dispatches stop from the start of that UTC date; a January cost projection for that retained historical baseline is hypothetical and does not assert an available January service. No replacement model is selected automatically. Record each profile as available, unavailable or failed with a dated account-capability evidence reference; unavailable/failed baselines remain visible blockers, not passing measurements. Available evidence expires within 30 days and must establish structured output, configured effort and token usage for every billed attempt.\n\nUse the application's versioned task schema and source grounding for every response. The scorer revalidates the actual response and derives observations; claimed schema flags or normalized sidecars cannot establish a pass. Measured and preflight records must bind to the current full corpus and exact fixture/request context; stale or absent identities cannot count as current successes. Plan references are correlation, not proof of live authorization. Request-side synthetic audit contexts are separately authored fixtures, not production receipts. Missing, stale, conflicting or cancelled contexts produce separately reported deterministic preflight outcomes with no provider request, tokens, schema pass or model-quality measurement. A separate human must assess prose grounding, substantive quality and PII. Do not use an LLM as the monetary judge. Unknown usage prevents promotion. All attempts are priced exactly with Decimal, separately at actual-run and January 2027 rates. Cost per accepted task includes failed attempts.\n\nGates: >=99.5% schema validity and required-field exact match, no critical-field regression, no observed PII leak, filing-ready claim or engine-value override; reviewed held-out repeated coverage; P50 <=10 seconds routinely /60 seconds for cancellable reconciliation and P95 <=30 seconds routinely /120 seconds reconciliation; January cost per accepted task <=$0.50 routinely /$1.00 reconciliation; >=10% lower accepted-task cost or >=1 percentage point quality gain against both baselines. These are predeclared initial evaluation budgets, not measured results.\n\nCommands: \`pnpm eval:models:sync\` writes draft artifacts; \`pnpm eval:models:check\` checks freshness; \`pnpm eval:models:live-summary -- --live-run-file=path.json\` evaluates supplied records. The script makes no provider calls and spends no credits. Production routes remain empty. Server-side rollout machinery requires current model/prompt/schema-bound qualification and owner approval, stable private-owner cohorts, reviewed observations at 5% then 25% before 100%, and immediate rollback to a still-qualified prior route or deterministic help. Independent corpus review, live measurements and authorized activation remain separate gates.\n`;
 }

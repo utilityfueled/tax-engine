@@ -63,14 +63,15 @@
     "maximumEscalationCostPerAcceptedUsd": "1.00"
   },
   "pricingSnapshot": {
-    "retrievedAt": "2026-10-24",
+    "retrievedAt": "2026-10-25",
     "filingSeasonDate": "2027-01-01",
     "prices": [
       {
         "model": "gpt-5.2",
+        "provider": "openai",
         "effectiveFrom": "2026-10-24",
-        "retrievedAt": "2026-10-24",
-        "source": "https://developers.openai.com/api/docs/models/gpt-5.2",
+        "retrievedAt": "2026-10-25",
+        "source": "https://developers.openai.com/api/docs/pricing",
         "input": "1.75",
         "output": "14",
         "cachedInput": "0.175",
@@ -78,9 +79,10 @@
       },
       {
         "model": "gemini-3-flash-preview",
+        "provider": "google",
         "effectiveFrom": "2026-10-24",
-        "retrievedAt": "2026-10-24",
-        "source": "https://ai.google.dev/gemini-api/docs/pricing.md",
+        "retrievedAt": "2026-10-25",
+        "source": "https://ai.google.dev/gemini-api/docs/pricing",
         "input": "0.50",
         "output": "3",
         "cachedInput": "0.05",
@@ -89,8 +91,9 @@
       },
       {
         "model": "gpt-6-luna",
+        "provider": "openai",
         "effectiveFrom": "2026-10-24",
-        "retrievedAt": "2026-10-24",
+        "retrievedAt": "2026-10-25",
         "source": "https://developers.openai.com/api/docs/pricing",
         "input": "0.10",
         "output": "0.50",
@@ -102,8 +105,9 @@
       },
       {
         "model": "gpt-6.1-sol",
+        "provider": "openai",
         "effectiveFrom": "2026-10-24",
-        "retrievedAt": "2026-10-24",
+        "retrievedAt": "2026-10-25",
         "source": "https://developers.openai.com/api/docs/pricing",
         "input": "2",
         "output": "10",
@@ -115,8 +119,9 @@
       },
       {
         "model": "gemini-3.8-flash",
+        "provider": "google",
         "effectiveFrom": "2026-10-24",
-        "retrievedAt": "2026-10-24",
+        "retrievedAt": "2026-10-25",
         "source": "https://ai.google.dev/gemini-api/docs/pricing",
         "input": "0.75",
         "output": "3.75",
@@ -126,8 +131,9 @@
       },
       {
         "model": "gemini-3.8-flash",
+        "provider": "google",
         "effectiveFrom": "2027-01-01",
-        "retrievedAt": "2026-10-24",
+        "retrievedAt": "2026-10-25",
         "source": "https://ai.google.dev/gemini-api/docs/pricing",
         "input": "1.50",
         "output": "7.50",
@@ -137,9 +143,10 @@
       },
       {
         "model": "gpt-5-mini",
+        "provider": "openai",
         "effectiveFrom": "2026-10-24",
-        "retrievedAt": "2026-10-24",
-        "source": "https://developers.openai.com/api/docs/models/gpt-5-mini",
+        "retrievedAt": "2026-10-25",
+        "source": "https://developers.openai.com/api/docs/pricing",
         "input": "0.25",
         "output": "2",
         "cachedInput": "0.025",
@@ -147,6 +154,89 @@
       }
     ]
   },
+  "publicProviderFacts": [
+    {
+      "model": "gpt-6-luna",
+      "provider": "openai",
+      "modelSource": "https://developers.openai.com/api/docs/models/gpt-6-luna",
+      "effortSource": "https://developers.openai.com/api/docs/models/gpt-6-luna",
+      "lifecycleSource": "https://developers.openai.com/api/docs/deprecations",
+      "endpoint": "responses",
+      "configuredEfforts": [
+        "high"
+      ],
+      "releaseChannel": "stable",
+      "shutdownDate": null,
+      "retrievedAt": "2026-10-25",
+      "structuredOutputsDocumented": true,
+      "accountAvailability": "unverified"
+    },
+    {
+      "model": "gpt-6.1-sol",
+      "provider": "openai",
+      "modelSource": "https://developers.openai.com/api/docs/models/gpt-6.1-sol",
+      "effortSource": "https://developers.openai.com/api/docs/models/gpt-6.1-sol",
+      "lifecycleSource": "https://developers.openai.com/api/docs/deprecations",
+      "endpoint": "responses",
+      "configuredEfforts": [
+        "low",
+        "high"
+      ],
+      "releaseChannel": "stable",
+      "shutdownDate": null,
+      "retrievedAt": "2026-10-25",
+      "structuredOutputsDocumented": true,
+      "accountAvailability": "unverified"
+    },
+    {
+      "model": "gpt-5-mini",
+      "provider": "openai",
+      "modelSource": "https://developers.openai.com/api/docs/models/gpt-5-mini",
+      "effortSource": "https://developers.openai.com/api/docs/changelog",
+      "lifecycleSource": "https://developers.openai.com/api/docs/deprecations",
+      "endpoint": "responses",
+      "configuredEfforts": [
+        "minimal"
+      ],
+      "releaseChannel": "stable",
+      "shutdownDate": "2026-12-11",
+      "retrievedAt": "2026-10-25",
+      "structuredOutputsDocumented": true,
+      "accountAvailability": "unverified"
+    },
+    {
+      "model": "gemini-3.8-flash",
+      "provider": "google",
+      "modelSource": "https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash",
+      "effortSource": "https://ai.google.dev/gemini-api/docs/thinking",
+      "lifecycleSource": "https://ai.google.dev/gemini-api/docs/deprecations",
+      "endpoint": "generateContent",
+      "configuredEfforts": [
+        "high"
+      ],
+      "releaseChannel": "stable",
+      "shutdownDate": null,
+      "retrievedAt": "2026-10-25",
+      "structuredOutputsDocumented": true,
+      "accountAvailability": "unverified"
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "provider": "google",
+      "modelSource": "https://ai.google.dev/gemini-api/docs/models/gemini-3-flash-preview",
+      "effortSource": "https://ai.google.dev/gemini-api/docs/thinking",
+      "lifecycleSource": "https://ai.google.dev/gemini-api/docs/deprecations",
+      "endpoint": "generateContent",
+      "configuredEfforts": [
+        "high"
+      ],
+      "releaseChannel": "preview",
+      "shutdownDate": null,
+      "retrievedAt": "2026-10-25",
+      "structuredOutputsDocumented": true,
+      "accountAvailability": "unverified"
+    }
+  ],
   "recommendation": null,
   "limitation": "No measured recommendation. Individually authored synthetic drafts do not establish human review, real-world prevalence or model qualification."
 }

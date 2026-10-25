@@ -5,6 +5,7 @@ const Money = Decimal.clone({ precision: 80 });
 
 export interface AiPrice {
   model: string;
+  provider: "openai" | "google";
   effectiveFrom: string;
   retrievedAt: string;
   source: string;
@@ -19,22 +20,22 @@ export interface AiPrice {
 }
 const openai = "https://developers.openai.com/api/docs/pricing";
 const google = "https://ai.google.dev/gemini-api/docs/pricing";
-export const AI_PRICES: readonly AiPrice[] = Object.freeze([
-  { model: "gpt-5.2", effectiveFrom: "2026-10-24", retrievedAt: "2026-10-24", source: "https://developers.openai.com/api/docs/models/gpt-5.2",
+export const AI_PRICES: readonly AiPrice[] = Object.freeze(([
+  { model: "gpt-5.2", provider: "openai", effectiveFrom: "2026-10-24", retrievedAt: "2026-10-25", source: openai,
     input: "1.75", output: "14", cachedInput: "0.175", regionalUplift: "1" },
-  { model: "gemini-3-flash-preview", effectiveFrom: "2026-10-24", retrievedAt: "2026-10-24", source: "https://ai.google.dev/gemini-api/docs/pricing.md",
+  { model: "gemini-3-flash-preview", provider: "google", effectiveFrom: "2026-10-24", retrievedAt: "2026-10-25", source: google,
     input: "0.50", output: "3", cachedInput: "0.05", storagePerMillionTokenHours: "1", regionalUplift: "1" },
-  { model: "gpt-6-luna", effectiveFrom: "2026-10-24", retrievedAt: "2026-10-24", source: openai,
+  { model: "gpt-6-luna", provider: "openai", effectiveFrom: "2026-10-24", retrievedAt: "2026-10-25", source: openai,
     input: "0.10", output: "0.50", cachedInput: "0.01", cacheWrite30m: "0.125", cacheWrite12h: "0.25", longContextThreshold: 272000, regionalUplift: "1.10" },
-  { model: "gpt-6.1-sol", effectiveFrom: "2026-10-24", retrievedAt: "2026-10-24", source: openai,
+  { model: "gpt-6.1-sol", provider: "openai", effectiveFrom: "2026-10-24", retrievedAt: "2026-10-25", source: openai,
     input: "2", output: "10", cachedInput: "0.10", cacheWrite30m: "2.50", cacheWrite12h: "5", longContextThreshold: 272000, regionalUplift: "1.10" },
-  { model: "gemini-3.8-flash", effectiveFrom: "2026-10-24", retrievedAt: "2026-10-24", source: google,
+  { model: "gemini-3.8-flash", provider: "google", effectiveFrom: "2026-10-24", retrievedAt: "2026-10-25", source: google,
     input: "0.75", output: "3.75", cachedInput: "0.075", storagePerMillionTokenHours: "0.50", regionalUplift: "1" },
-  { model: "gemini-3.8-flash", effectiveFrom: "2027-01-01", retrievedAt: "2026-10-24", source: google,
+  { model: "gemini-3.8-flash", provider: "google", effectiveFrom: "2027-01-01", retrievedAt: "2026-10-25", source: google,
     input: "1.50", output: "7.50", cachedInput: "0.15", storagePerMillionTokenHours: "1", regionalUplift: "1" },
-  { model: "gpt-5-mini", effectiveFrom: "2026-10-24", retrievedAt: "2026-10-24", source: "https://developers.openai.com/api/docs/models/gpt-5-mini",
+  { model: "gpt-5-mini", provider: "openai", effectiveFrom: "2026-10-24", retrievedAt: "2026-10-25", source: openai,
     input: "0.25", output: "2", cachedInput: "0.025", regionalUplift: "1" },
-].map(price => Object.freeze(price)));
+] satisfies AiPrice[]).map(price => Object.freeze(price)));
 
 export function getAiPrice(model: string, at: string): AiPrice {
   if (!/^\d{4}-\d{2}-\d{2}(?:T.*)?$/.test(at) || !Number.isFinite(Date.parse(at))) throw new Error("Invalid pricing date.");
@@ -59,7 +60,7 @@ export interface AiTokenUsage {
 /** Standard text pricing only. Tools, images and other service tiers are not enabled. */
 export function calculateAiCost(model: string, at: string, usage: AiTokenUsage) {
   const price = getAiPrice(model, at);
-  if (usage.regionalProcessing && price.source === google) throw new Error("Regional Google pricing is not configured.");
+  if (usage.regionalProcessing && price.provider === "google") throw new Error("Regional Google pricing is not configured.");
   const tokenCounts = [usage.inputTokens, usage.outputTokens, usage.cachedInputTokens ?? 0, usage.cacheWrite30mTokens ?? 0, usage.cacheWrite12hTokens ?? 0];
   if (tokenCounts.some(value => !Number.isSafeInteger(value) || value < 0)) throw new Error("Token usage must be nonnegative safe integers.");
   const [input, output, cached, write30m, write12h] = tokenCounts;

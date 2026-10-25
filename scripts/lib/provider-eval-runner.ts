@@ -2,6 +2,7 @@ import Decimal from "decimal.js";
 import { z } from "zod";
 import { AI_PRICES, calculateAiCost, getAiPrice, type AiTokenUsage } from "../../packages/engine/src/ai-pricing";
 import { AI_TASKS, type AiTask } from "../../packages/engine/src/ai-task-registry";
+import { AI_PROVIDER_DOCUMENTATION, publicModelLifecycle } from "../../packages/engine/src/ai-provider-documentation";
 import { providerModelCandidates, summarizeProviderModelLiveEvalTemplate,
   type ProviderModelLiveEvalTemplate } from "../../packages/engine/src/provider-model-eval";
 import { taxProviderModelEvalFixtures, type ProviderEvalFixture } from "../../packages/engine/src/provider-eval-fixtures";
@@ -55,7 +56,7 @@ function profile(id: string): EvalProfile {
 }
 export function providerEvalExecutionContract(profileIds: readonly string[]) {
   return z.json().parse({ profiles: profileIds.map(id => ({ ...profile(id) })), taskPolicies: AI_TASKS,
-    request: PROVIDER_EVAL_CONTRACT, modelIdentities: PROVIDER_EVAL_MODEL_IDENTITIES, applicationInstructions: AI_APPLICATION_INSTRUCTIONS, responseSchemas: providerEvalBindingManifest });
+    request: PROVIDER_EVAL_CONTRACT, modelIdentities: PROVIDER_EVAL_MODEL_IDENTITIES, publicProviderFacts: AI_PROVIDER_DOCUMENTATION, applicationInstructions: AI_APPLICATION_INSTRUCTIONS, responseSchemas: providerEvalBindingManifest });
 }
 function assertReviewed(fixtures: ProviderEvalFixture[]) {
   const summary = summarizeProviderModelLiveEvalTemplate({ version: 2, entries: [], availability: [] }, fixtures);
@@ -83,6 +84,7 @@ export function createProviderEvalPlan(input: {
 }
 export function validatePlan(value: unknown): ProviderEvalPlan {
   const plan = planSchema.parse(value);
+  if (plan.profileIds.some(id => publicModelLifecycle(profile(id).model, plan.createdAt).status === "shutdown")) throw new Error("Evaluation model shutdown prevents a new plan; no substitute is selected.");
   if (new Set(plan.profileIds).size !== plan.profileIds.length || new Set(plan.fixtureIds).size !== plan.fixtureIds.length) throw new Error("Duplicate plan profiles or cases.");
   plan.profileIds.forEach(profile);
   if (plan.executionDigest !== providerEvalDigest(plan.executionContract)
@@ -228,6 +230,7 @@ export async function executeProviderEval(input: { plan: unknown; approval: unkn
       if (input.signal?.aborted) return finish("cancelled");
       const startedAt = now();
       approval = approved(plan, input.approval, startedAt);
+      if (publicModelLifecycle(item.model, startedAt).status === "shutdown") return finish("model-shutdown");
       if (fixture) {
         const capability = state.template.availability?.find(evidence => evidence.profileId === profileId && evidence.status === "available");
         if (!capability) break;

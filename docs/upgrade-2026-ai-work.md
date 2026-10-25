@@ -256,3 +256,28 @@ The parent's four extra identity/cost controls passed; no remaining scoped issue
 was found (`parent-ai-eval-4490-{review,model-probe,final-probes}.log`). This is
 agent software review, not independent human tax/AI review or provider evidence.
 This final append changes evidence documentation only.
+
+## Final provider refresh and finite scope
+
+Actual application/corpus/model provenance is committed and pushed as `f4da2a6`.
+The separate [October 25 provider refresh](upgrade-2026-provider-refresh.md)
+preserves rates/effective dates, captures public model capability sources and the
+December 11 GPT-5 Mini shutdown, and closes the confirmed legacy Google regional
+pricing guard. Actual account availability remains unverified for every profile.
+
+The final refresh tree `4b2808c96814c5bcf200ed54bd41917a7603314e` passes106
+tests across13 files, all three typechecks,4,584 spec references, generated
+freshness, scoped lint with no warnings/errors and the production webpack build.
+Parent's independent18-test rerun and separate lifecycle/cost/immutability probes
+pass with no scoped finding; exact evidence is in the linked refresh ledger.
+The finite internal AI queue is now the reviewed refresh's scoped commit and the
+parent's final-head integration/release checks. No unresolved extraction schema,
+context transport, corpus construction or guarded-executor TODO is being labeled
+external. Agent review does not constitute human or live provider qualification.
+
+External completion evidence remains: approved provider project/account access
+and spend cap; actual capability/usage results; independent human review of 240
+drafts and repeated held-out results; authenticated staging Stripe/account/DB
+failure, restore and rollback evidence; and explicit owner approval before any
+model rollout. Local PostgreSQL/concurrency, synthetic transport, privacy and
+browser checks are recorded separately above. They do not replace those results.

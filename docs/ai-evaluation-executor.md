@@ -60,6 +60,13 @@ qualify. The allowlist is part of the frozen execution policy. Known attempt
 usage and its recorded profile cost remain visible after an identity failure;
 that retention does not authenticate the responding model or its true invoice.
 
+The public provider documentation snapshot is separate from account evidence and
+is included in the approved request contract. GPT-5 Mini's published shutdown is
+December 11, 2026; new plans and each paid dispatch reject from 00:00 UTC that day.
+Pre-shutdown costs remain recorded. January baseline costs are labeled historical
+projections for a retired model, with no silent replacement or gate relaxation.
+See [the current provider refresh](upgrade-2026-provider-refresh.md).
+
 Corpus r4 keeps240 cases and the fixed80 held-out split. It adds separately
 authored synthetic application-context literals for explanation/reconciliation,
 including explicit stale/conflicting/missing/cancelled contexts. These are test
