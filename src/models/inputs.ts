@@ -231,6 +231,42 @@ export const ScheduleDSpecialGainSourcesSchema = z.object({
   })),
 });
 
+// Actual Section1202 source records; amounts are original, before any exclusion.
+export const Section1202SourcesSchema = z.object({
+  taxYear: z.number().int(), sourceReference: z.string().trim().min(1), sourceFactsConfirmed: z.boolean(),
+  allSourcesIncluded: z.boolean(), preExclusionAmountsConfirmed: z.boolean(),
+  primary: ScheduleDCapitalSourceIdentitySchema, spouse: ScheduleDCapitalSourceIdentitySchema.optional(),
+  issuers: z.array(z.object({
+    issuerId: z.string().trim().min(1), issuerName: z.string().trim().min(1), sourceReference: z.string().trim().min(1),
+    allPriorUseAndCurrentDispositionsConfirmed: z.boolean(), membershipUnchangedConfirmed: z.boolean(),
+    priorEligibleGainUsed: decimal, historySourceReference: z.string().trim().min(1),
+    priorReturns: z.array(z.object({
+      taxYear: z.number().int(), sourceReference: z.string().trim().min(1), filingStatus: FilingStatusSchema,
+      primary: ScheduleDCapitalSourceIdentitySchema, spouse: ScheduleDCapitalSourceIdentitySchema.optional(), eligibleGainUsed: decimal,
+    })),
+    eligibleGainAllocations: z.array(z.object({ sourceId: z.string().trim().min(1), ordinaryEligibleGain: decimal, empowermentEligibleGain: decimal })).optional(),
+  })),
+  lots: z.array(z.object({
+    lotId: z.string().trim().min(1), sourceId: z.string().trim().min(1), issuerId: z.string().trim().min(1), sourceReference: z.string().trim().min(1),
+    accountHolder: z.enum(['primary', 'spouse']), payerName: z.string().trim().min(1), securityDescription: z.string().trim().min(1),
+    acquisitionMethod: z.enum(['original_issue', 'gift', 'inheritance', 'partnership_distribution', 'conversion', 'section351_or_368']),
+    originalIssueDate: z.string(), effectiveAcquiredDate: z.string(), dateSold: z.string(),
+    recognizedGain: decimal, basisIgnoringPostIssueAdditions: decimal, empowermentZoneGainThrough2018: decimal,
+    empowermentQualificationAndAttributionConfirmed: z.boolean(),
+    proceeds: decimal.optional(), costBasis: decimal.optional(), adjustments: decimal.optional(), washSale: z.boolean().optional(), washSaleDisallowed: decimal.optional(),
+    qualification: z.object({
+      domesticCCorporationAtIssue: z.boolean(), consideration: z.enum(['money', 'property_not_stock', 'services_not_underwriter', 'stock', 'other']),
+      allPredecessorAndControlledGroupAssetsIncluded: z.boolean(), maxGrossAssetsBeforeIssue: decimal, grossAssetsImmediatelyAfterIssue: decimal,
+      cCorporationThroughoutHolding: z.boolean(), activeBusinessRequirementSatisfied: z.boolean(), redemptionRestrictionsSatisfied: z.boolean(), offsettingPositionPresent: z.boolean(),
+    }),
+    passThrough: z.object({
+      ownerInterestAcquiredDate: z.string(), heldContinuouslyThroughSale: z.boolean(), unchangedOwnershipProportionConfirmed: z.boolean(),
+      ownershipPercentage: decimal, entityRecognizedGain: decimal, entityBasisIgnoringPostIssueAdditions: decimal,
+      fundCapitalGainDistributions: decimal, fundSection1202Gain: decimal,
+    }).optional(),
+  })),
+});
+
 // ── Form 1099-DA: Digital Asset Proceeds from Broker Transactions ──
 // Per IRS Form 1099-DA (2025+), brokers report digital asset dispositions.
 // Mirrors 1099-B structure with crypto-specific fields.
@@ -5775,6 +5811,7 @@ export const TaxYearInputSchema = z.object({
   form8615: Form8615Schema.optional(),
   form8814: z.array(Form8814ChildSchema).default([]),
   scheduleDSpecialGainSources: ScheduleDSpecialGainSourcesSchema.optional(),
+  section1202Sources: Section1202SourcesSchema.optional(),
   form8839: Form8839Schema.optional(),
   form3800: Form3800Schema.optional(),
   form3903: Form3903Schema.optional(),

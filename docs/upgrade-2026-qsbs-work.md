@@ -47,3 +47,32 @@ Remaining internal sequence:
    do not infer predecessor eligibility or a qualifying acquisition date.
 4. Collect positive-source facts in the guided path and qualify review records
    separately from complete-data filing exports.
+
+## Original brokerage and constant-proportion fund sources
+
+The source binder now verifies actual household/owner, canonical original trade
+identity and dates, complete per-issuer prior eligible-gain history, original
+corporate/active-business/redemption facts and assets including predecessors
+and controlled groups. Broker amounts reconcile before exclusion; fund lots
+partition every actual2c source and verify original constant ownership shares
+against entity gain and basis. Missing values stay unknown; known failures to
+qualify produce no exclusion. Changed ownership, transfers and offsetting
+positions retain explicit method requirements.
+
+Seven source tests exercise signed/cents amounts, multi-issuer fund partitions,
+prior cap use, asset thresholds and business eligibility, late/interrupted fund
+ownership, actual empowerment attribution and conflicting/aliased sources.
+The spec and absent-module red case preceded implementation. A separate red
+regression caught a noncanonical index alias before rejecting it and checking
+the transaction's holding period against its actual dates.
+
+Independent agent review refreshed1202(g), inspected the source/schema/core and
+ran14cases without a finding in the original-issue/constant-fund-share slice.
+The later alias/holding-period assertions and multi-issuer partition probe add
+source validation without broadening the qualified method. Canonical integration
+and positive-source guided collection are still the next internal work.
+
+Exact source tree `42d168bd02ce6bc26e23f27c916f5341015b62d5` (base `9889cba`)
+passes121tests in15files, root types, all4,356spec references and scoped lint
+with zero errors/warnings. The immutable snapshot isolates the input-schema
+addition from parallel foreign/NOL work. No canonical tax behavior changed.
