@@ -51,7 +51,7 @@ cache is not a backup of return facts or documents.
 pnpm self-host:up
 ```
 
-4. Open `http://127.0.0.1:3000`.
+4. Open the `TAX_ENGINE_APP_URL` configured in step 2.
 5. Create a workspace and upload supported sample forms.
 
 To stop the stack:
@@ -77,7 +77,7 @@ pnpm self-host:logs
 - `TAX_ENGINE_DEPLOYMENT_MODE=self-host` is the default local path. In this mode, workspace creation stays browser-local and the Better Auth route at `/api/auth` is bypassed intentionally.
 - `BETTER_AUTH_SECRET` and `BETTER_AUTH_TRUSTED_ORIGINS` can stay blank for self-host development. They only matter when testing the hosted preview boundary.
 - If you switch to `TAX_ENGINE_DEPLOYMENT_MODE=hosted`, new workspace entry stops at the Better Auth gate instead of creating an anonymous local draft. Hosted preview now defaults to the in-memory adapter boundary when `TAX_ENGINE_HOSTED_PERSISTENCE_BACKEND=preview-memory`.
-- Set `TAX_ENGINE_HOSTED_PERSISTENCE_BACKEND=postgres-s3` only when you are also registering or injecting a real hosted workspace store and blob adapter. Self-host mode ignores this setting completely.
+- With `TAX_ENGINE_HOSTED_PERSISTENCE_BACKEND=postgres-s3`, the hosted route creates the built-in PostgreSQL workspace-shell store using `DATABASE_URL`. The stored shell contains allowlisted progress metadata; original documents and guided taxpayer facts remain in the browser. A separate blob-store injection is not required for this shell path, and the setting does not enable durable document uploads. Self-host mode ignores it.
 
 ## Sample documents
 
@@ -98,7 +98,7 @@ The downloaded PDFs land in `sample-documents/downloads/` and are ignored by git
 - Use **Restore an encrypted backup** to restore on another browser/device as a new local return. Recovery verifies the encrypted contents and file hashes, requires durable document storage, preserves known or unknown years, and clears cached calculation previews for fresh review. It does not overwrite an existing return.
 - Keep both your backup and password: server Postgres backups and redacted review bundles cannot recover browser-only facts or original files. The encrypted recovery payload is limited to 64 MiB (96 MiB input file). No account or AI service is needed. Deleting a return also removes its cached original files, guided answers and preference on that device.
 - All available outputs remain experimental or review-only. Tax year 2026 calculation, filing PDFs and e-filing are unavailable; see `/support`.
-- Hosted preview keeps using the in-memory adapter until a real Postgres/S3-backed store factory is registered or injected behind the hosted persistence boundary.
+- Hosted preview uses the in-memory adapter when `preview-memory` is selected. Hosted production requires the configured PostgreSQL shell store, authentication, billing and shared rate limiting. A working local database does not establish those staging checks.
 - The Better Auth route is present for hosted preview work, but self-host mode bypasses it completely so local use never depends on hosted account setup.
 - No raw direct identifiers should cross the provider boundary; the provider route stays behind the existing redaction layer in both Docker and local dev modes.
 

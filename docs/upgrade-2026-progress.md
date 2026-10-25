@@ -30,8 +30,13 @@ The actual PA/OH digital-source handoff (`4aef633`) passes4,264 tests/154files,
 roottypes,4,634 references, lint and separate12-case review. Three reference
 pages are rendered/inspected. Guided intake remains active. `b5a0675` removes
 repeated PDF test field scans with all assertions and deadlines retained; both
-independent four-case runs pass. Full coverage on committed`4aef633` is running,
-and its regenerated392-entry coverage inventory passes freshness validation.
+independent four-case runs pass. Full coverage on committed`4aef633` passes
+17,754 tests in918files, with86.98%branches against the unchanged85%gate.
+All three type checks,4,634spec references, both builds and lint pass; its
+regenerated392-entry inventory passes freshness validation. Full browser checks
+are running. Native arm64 image`535c87589d0d`built after cleanup of two proven
+task-owned obsolete build caches resolved a layer-commit disk failure. Runtime,
+SBOM/scan and recovery checks remain pending.
 
 Full unit integration at `5006088` passes 17,723 tests in 907 files with no
 failures or skips (382.79 seconds). This excludes later packages and is separate
@@ -48,9 +53,17 @@ provide no staging evidence. Later packages need another full integrated run.
 CI at `9da0bab` passes17,725 cases but fails one fourteen-page PDF timeout
 and stale inventory. The measured lookup repair is committed in`b5a0675`; inventory392entries
 are regenerated from committed`4aef633`.
-Latest `4aef633` workflows are pending; no current remote green is claimed. Package advisories were refreshed for the separately
-committed browser-safe hashing dependency (`d078cf4`):
+Latest observed `71a2536` workflows are pending; they superseded`4aef633`.
+No current remote green is claimed. A fresh package audit at`71a2536` reports
 zero findings across521 locked entries; OS advisories remain separately tracked.
+
+The [public capability and entry-path audit](upgrade-2026-enabled-scenario-audit.md)
+passes64focused gate cases and corrects stale self-host persistence instructions.
+Review reproduced a missingDA ScheduleD copy action and generic-state DA
+withholding omission; the facts package is correcting both. Separate charity
+review reproduced early percentage rounding and changed exact amounts surviving
+PDF checks. The corrected immutable package passes27parent review cases; its
+broader checks and source-history work continue.
 
 The finite internal queue continues with ordinaryDA guided
 intake, capital-origin intake, actual prior/mixed charity,2026 nonitemizer carry

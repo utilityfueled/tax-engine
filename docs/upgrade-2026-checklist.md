@@ -18,8 +18,18 @@ internal implementation and review continue in parallel.
 - `b5a0675`: indexed reopened PDF fields remove repeated tree traversal while
   retaining every original assertion, field-type check and deadline. Four
   exact cases and four independent cases pass with types/lint.
-- Full immutable coverage on`4aef633` is running with pinnedPython/pypdf, sample
-  documents and disposable PostgreSQL; the regenerated392-entry inventory passes.
+- Full immutable coverage on`4aef633` passes17,754tests/918files with zero
+  failures/skips and86.98%branches against the unchanged85%gate. All three type
+  checks,4,634spec references,392-entry inventory, both builds and lint pass.
+  Full production browser checks are running. Arm64 image`535c87589d0d`built
+  after two proven task-owned obsolete build caches were removed to resolve
+  disk exhaustion. Runtime, SBOM/scan and recovery checks remain pending.
+- The [entry-path audit](upgrade-2026-enabled-scenario-audit.md) passes64gate
+  cases and corrects stale self-host persistence instructions. Review caught
+  omittedDA records in the ScheduleD copy action and generic-state withholding;
+  both are with the facts owner. Corrected charity reporting passes27parent
+  review cases after reproducing early rounding and exact-cent conservation
+  defects. Its broad package checks and actual history work continue.
 - `678fe38`: source-bound positive1202 current origins where the printed and
   statutory traces reconcile. Final12 affected cases,571 adjacent cases, root/web
   types and4,614 references pass after the separate reader repair; parent13-case
@@ -97,7 +107,8 @@ internal implementation and review continue in parallel.
   and the refreshed package audit pass with zero findings across521 entries.
 - CI at `9da0bab` passes17,725 cases but fails one fourteen-page PDF timeout
   and stale inventory. The test lookup repair is committed in`b5a0675`; the regenerated inventory
-  has392entries on`4aef633`. Current remote revalidation remains pending. Final-head full verification,
+  has392entries on`4aef633`. Observed`71a2536`CI/Web remain pending; its fresh
+  package audit has zero findings across521entries. Final-head full verification,
   runtime-image advisories/rehearsal and external qualification remain required.
   Full synthetic unit integration on isolated committed `5006088` passed
   17,723 tests in 907 files, zero failures/skips, in 382.79 seconds, with pinned
