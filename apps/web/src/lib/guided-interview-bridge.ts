@@ -12,6 +12,7 @@ import { parseGuidedCurrency, hasGuidedCurrency, formatGuidedDollars } from "./g
 import { dependentFactErrors, personalFactErrors } from "./guided-taxpayer-facts";
 import { allPaymentFactErrors, assertKnownFacts, deductionFactErrors, educationFactErrors, hasEnteredAmount, paymentFactErrors, retirementFactErrors } from "./guided-required-facts";
 import { adjustmentFactErrors, householdFactErrors, isDeductibleAlimony } from "./guided-adjustment-facts";
+import { statePaymentFactErrors, sumAdditionalStateWithholding } from "./guided-state-facts";
 
 import type {
   AdjustmentData,
@@ -32,6 +33,7 @@ import type {
   RetirementEntryData,
   ScheduleCExpenseData,
   SocialSecurityData,
+  StateReturnData,
   UnemploymentData,
   W2SuggestedField,
   W2EntryData,
@@ -244,28 +246,23 @@ export function buildDependents(
 
 // ── Schedule A (itemized deductions) converter ──────────────────────────────
 
-export function buildScheduleAInput(deductionData: DeductionData | undefined) {
-  if (!deductionData || deductionData.method !== "itemized") return undefined;
-
-  const medicalExpenses = toDecimalString(deductionData.medicalExpenses);
-  const stateLocalTaxes = toDecimalString(deductionData.stateLocalTaxes);
-  const realEstateTaxes = toDecimalString(deductionData.realEstateTaxes);
-  const personalPropertyTaxes = new Decimal(stateLocalTaxes).plus(realEstateTaxes).toFixed();
-  const investmentInterestExpense = toDecimalString(deductionData.otherItemized);
-
-  if (
-    medicalExpenses === "0" &&
-    personalPropertyTaxes === "0" &&
-    investmentInterestExpense === "0"
-  ) {
-    return undefined;
-  }
-
-  return {
-    medicalExpenses,
-    personalPropertyTaxes,
-    investmentInterestExpense,
+export function buildScheduleAInput(deductionData: DeductionData | undefined, stateReturnData?: StateReturnData) {
+  if (!deductionData) return undefined;
+  assertKnownFacts(deductionFactErrors(deductionData));
+  const fields = {
+    gamblingWinnings: deductionData.gamblingWinnings,
+    ...(deductionData.method === "itemized" ? {
+      medicalExpenses: deductionData.medicalExpenses,
+      additionalStateLocalIncomeTaxes: hasEnteredAmount(deductionData.stateLocalTaxes) || stateReturnData?.additionalStateWithholdingEntries?.length
+        ? parseGuidedCurrency(deductionData.stateLocalTaxes).plus(sumAdditionalStateWithholding(stateReturnData)).toFixed() : undefined,
+      realEstateTaxes: deductionData.realEstateTaxes,
+      personalPropertyTaxes: deductionData.personalPropertyTaxes,
+      investmentInterestExpense: deductionData.investmentInterestExpense,
+      gamblingLosses: deductionData.gamblingLosses,
+    } : {}),
   };
+  const values = Object.fromEntries(Object.entries(fields).filter(([, value]) => hasEnteredAmount(value)).map(([key, value]) => [key, toDecimalString(value)])) as Partial<Record<keyof typeof fields, string>>;
+  return Object.keys(values).length ? values : undefined;
 }
 
 // ── Mortgage interest (Form 1098) converter ──────────────────────────────────
@@ -532,6 +529,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
   const creditsData = sectionData["credits"] as CreditsData | undefined;
   const otherTaxesData = sectionData["other-taxes"] as OtherTaxesData | undefined;
   const paymentData = sectionData["payments"] as PaymentData | undefined;
+  const stateReturnData = sectionData["state-return"] as StateReturnData | undefined;
 
   try {
     assertKnownFacts(deductionFactErrors(deductionData, state.taxYear));
@@ -540,6 +538,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     assertKnownFacts(educationFactErrors(creditsData, state.taxYear, segmentation.filingStatus));
     assertKnownFacts(adjustmentFactErrors(adjustmentData, segmentation.filingStatus, state.taxYear));
     assertKnownFacts(householdFactErrors(otherTaxesData, state.taxYear));
+    assertKnownFacts(statePaymentFactErrors(stateReturnData, state.taxYear, segmentation.stateCode));
   } catch { return null; }
 
   const stateCode = personalInfo?.state || segmentation.stateCode || null;
@@ -553,7 +552,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
   const rentalProperties = buildRentalPropertyInputs(rentalData?.entries);
   const formSSA1099 = buildSocialSecurityInputs(socialSecurityData);
   const form1099G = buildUnemploymentInputs(unemploymentData);
-  const scheduleA = buildScheduleAInput(deductionData);
+  const scheduleA = buildScheduleAInput(deductionData, stateReturnData);
   const form1098 = buildForm1098Inputs(deductionData);
   const donations = buildDonationsInput(deductionData);
   const adjustments = buildAdjustmentsInput(adjustmentData);
@@ -572,7 +571,10 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
   const educationExpenses = buildEducationInput(creditsData);
   const energyCredits = buildEnergyCreditsInput(creditsData);
   const scheduleH = buildScheduleHInput(otherTaxesData);
-  const estimatedPayments = buildEstimatedPaymentsInput(paymentData);
+  const estimatedPayments = [
+    ...buildEstimatedPaymentsInput(paymentData),
+    ...(stateReturnData?.stateEstimatedPayments ?? []).map((entry) => ({ date: entry.date, amount: toDecimalString(entry.amount), type: "state" as const, state: entry.state })),
+  ];
   const extensionPayments = (paymentData?.extensionPayments ?? []).map((entry) => ({ date: entry.date, amount: toDecimalString(entry.amount), type: "federal" as const }));
   const priorYearAppliedCredits = (paymentData?.priorYearAppliedCredits ?? []).map((entry) => ({ sourceTaxYear: Number(entry.sourceTaxYear), amount: toDecimalString(entry.amount), type: "federal" as const }));
   const paymentAdjustments = { estimatedTaxPayments: estimatedPayments, extensionPayments, priorYearAppliedCredits };

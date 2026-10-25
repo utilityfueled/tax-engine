@@ -51,6 +51,7 @@ import {
   emptySocialSecurityData,
   emptyUnemploymentData,
   emptyStateReturnData,
+  type StateReturnData,
   emptyDependentEntry,
   updateSectionData,
 } from "@/lib/guided-interview-flow";
@@ -1005,8 +1006,9 @@ describe("buildScheduleAInput", () => {
     });
     expect(result).not.toBeUndefined();
     expect(result!.medicalExpenses).toBe("5000");
-    // State + real estate combined into personalPropertyTaxes
-    expect(result!.personalPropertyTaxes).toBe("11000");
+    expect(result!.additionalStateLocalIncomeTaxes).toBe("8000");
+    expect(result!.realEstateTaxes).toBe("3000");
+    expect(result!.personalPropertyTaxes).toBeUndefined();
   });
 });
 
@@ -2020,10 +2022,7 @@ describe("computeGuidedPreview — rental income", () => {
 // ── State return — preview with state estimated payments ────────────────────
 
 describe("computeGuidedPreview with state return data", () => {
-  function buildStateFlowState(stateReturnData?: {
-    stateEstimatedPayments: { date: string; amount: string }[];
-    additionalStateWithholding: string;
-  }): GuidedFlowState {
+  function buildStateFlowState(stateReturnData?: StateReturnData): GuidedFlowState {
     let state = startInterview({
       filingStatus: "single",
       incomeTypes: ["w2-wages"],
@@ -2066,6 +2065,7 @@ describe("computeGuidedPreview with state return data", () => {
     const state = buildStateFlowState({
       stateEstimatedPayments: [],
       additionalStateWithholding: "500",
+      additionalStateWithholdingEntries: [{ payer: "Example Pension", documentType: "1099-R", state: "PA", taxYear: "2025", amount: "500" }],
     });
     const preview = computeGuidedPreview(state);
     expect(preview).not.toBeNull();
@@ -2081,8 +2081,8 @@ describe("computeGuidedPreview with state return data", () => {
     });
     const stateWithPayments = buildStateFlowState({
       stateEstimatedPayments: [
-        { date: "2025-04-15", amount: "1000" },
-        { date: "2025-06-15", amount: "1000" },
+        { state: "PA", date: "2025-04-15", amount: "1000" },
+        { state: "PA", date: "2025-06-15", amount: "1000" },
       ],
       additionalStateWithholding: "",
     });

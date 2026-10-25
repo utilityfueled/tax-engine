@@ -22,10 +22,28 @@ export function amountError(value: string | undefined, label: string): string | 
 export function deductionFactErrors(data: DeductionData | undefined, taxYear?: number | null): Record<string, string> {
   if (!data) return {};
   const errors: Record<string, string> = {};
+  const deductionFields = data.method === "itemized"
+    ? ["medicalExpenses", "stateLocalTaxes", "realEstateTaxes", "personalPropertyTaxes", "mortgageInterest", "casualtyLosses", "otherItemized", "investmentInterestExpense", "gamblingLosses", "gamblingWinnings", "charitableContributions"] as const
+    : ["gamblingWinnings", "charitableContributions"] as const;
+  for (const field of deductionFields) {
+    if (hasEnteredAmount(data[field])) {
+      const error = amountError(data[field], "deduction or income amount");
+      if (error) errors[field] = error;
+    }
+  }
+  const hasPositiveAmount = (field: typeof deductionFields[number]) => hasEnteredAmount(data[field]) && !errors[field] && parseGuidedCurrency(data[field]).gt(0);
+  if (data.method === "itemized") {
+    if (hasPositiveAmount("casualtyLosses")) errors.casualtyLosses = "Casualty and theft losses need the event, property and reimbursement facts from Form 4684; this aggregate alone cannot be calculated.";
+    if (hasEnteredAmount(data.gamblingLosses) && !hasEnteredAmount(data.gamblingWinnings)) errors.gamblingWinnings = "Enter actual gambling winnings, including an explicit zero, before claiming wagering losses.";
+    if (hasEnteredAmount(data.otherItemized) && !errors.otherItemized && !errors.investmentInterestExpense && !errors.gamblingLosses) {
+      const classified = parseGuidedCurrency(data.investmentInterestExpense).plus(parseGuidedCurrency(data.gamblingLosses));
+      if (!classified.eq(parseGuidedCurrency(data.otherItemized))) errors.otherItemized = "Classify and reconcile the saved other-deduction total as investment interest or wagering losses. Other deductions need their supporting forms.";
+    }
+  }
   const mortgages = data.method === "itemized" ? data.mortgageEntries ?? [] : [];
   const donations = data.donationEntries ?? [];
-  if (data.method === "itemized" && hasEnteredAmount(data.mortgageInterest) && !parseGuidedCurrency(data.mortgageInterest).isZero() && !mortgages.length) errors.mortgages = "Enter the mortgage lender, principal and origination date for the saved mortgage interest.";
-  if (hasEnteredAmount(data.charitableContributions) && !parseGuidedCurrency(data.charitableContributions).isZero() && !donations.length) errors.donations = "Enter donation recipient, type and date for the saved charitable contributions.";
+  if (data.method === "itemized" && hasPositiveAmount("mortgageInterest") && !mortgages.length) errors.mortgages = "Enter the mortgage lender, principal and origination date for the saved mortgage interest.";
+  if (hasPositiveAmount("charitableContributions") && !donations.length) errors.donations = "Enter donation recipient, type and date for the saved charitable contributions.";
   mortgages.forEach((entry, index) => {
     if (!entry.lender.trim()) errors[`mortgage-${index}-lender`] = "Enter the actual mortgage lender.";
     for (const [field, label] of [["mortgageInterest", "mortgage interest"], ["outstandingPrincipal", "mortgage principal"]] as const) {

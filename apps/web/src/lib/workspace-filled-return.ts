@@ -1,4 +1,7 @@
 import "server-only";
+import Decimal from "decimal.js";
+import { parseGuidedCurrency } from "@/lib/guided-currency";
+import { sumAdditionalStateWithholding } from "@/lib/guided-state-facts";
 
 import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from "fs/promises";
 import { tmpdir } from "os";
@@ -406,16 +409,6 @@ function buildPacketSummary(
   };
 }
 
-function parseCurrencyAmount(value: string | undefined) {
-  const normalized = value?.trim().replace(/,/g, "") ?? "";
-  if (!normalized) {
-    return 0;
-  }
-
-  const parsed = Number(normalized);
-  return Number.isFinite(parsed) ? parsed : 0;
-}
-
 function buildOhioOverlayFromGuidedState(
   taxInput: TaxYearInput,
   guidedFlowState?: GuidedFlowState | null,
@@ -426,10 +419,10 @@ function buildOhioOverlayFromGuidedState(
     return {};
   }
 
-  const additionalWithholding = parseCurrencyAmount(stateReturnData.additionalStateWithholding);
+  const additionalWithholding = sumAdditionalStateWithholding(stateReturnData);
   const estimatedPayments = stateReturnData.stateEstimatedPayments.reduce(
-    (sum, entry) => sum + parseCurrencyAmount(entry.amount),
-    0,
+    (sum, entry) => sum.plus(parseGuidedCurrency(entry.amount)),
+    new Decimal(0),
   );
   const baseOhioWithholding = extractOhioWithholding(
     taxInput.w2s,
@@ -439,16 +432,16 @@ function buildOhioOverlayFromGuidedState(
     taxInput.form1099R,
     taxInput.form1099Nec,
     taxInput.form1099Misc,
-  ).toNumber();
+  );
 
   const overlay: OhioOverlayInput = {};
 
-  if (additionalWithholding > 0) {
-    overlay.ohioWithholdingOverride = baseOhioWithholding + additionalWithholding;
+  if (stateReturnData.additionalStateWithholdingEntries?.length) {
+    overlay.ohioWithholdingOverride = baseOhioWithholding.plus(additionalWithholding).toFixed();
   }
 
-  if (estimatedPayments > 0) {
-    overlay.estimatedPayments = estimatedPayments;
+  if (stateReturnData.stateEstimatedPayments.length) {
+    overlay.estimatedPayments = estimatedPayments.toFixed();
   }
 
   return overlay;

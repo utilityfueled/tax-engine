@@ -5,6 +5,7 @@
  */
 
 import Decimal from "decimal.js";
+import { sumAdditionalStateWithholding } from "./guided-state-facts";
 import { parseGuidedCurrency } from "./guided-currency";
 import { calculateFederalTax } from "@/engine/federal";
 import {
@@ -79,9 +80,7 @@ function collectStateWithholding(state: GuidedFlowState): Decimal {
     }
   }
 
-  if (stateReturnData?.additionalStateWithholding) {
-    total = total.plus(parseGuidedCurrency(stateReturnData.additionalStateWithholding));
-  }
+  total = total.plus(sumAdditionalStateWithholding(stateReturnData));
 
   return total;
 }

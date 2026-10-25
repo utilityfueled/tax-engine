@@ -9,6 +9,7 @@ import { parseGuidedCurrency, hasGuidedCurrency } from "./guided-currency";
 import { personalFactErrors } from "./guided-taxpayer-facts";
 import { allPaymentFactErrors, deductionFactErrors, educationFactErrors, retirementFactErrors } from "./guided-required-facts";
 import { adjustmentFactErrors, householdFactErrors } from "./guided-adjustment-facts";
+import { statePaymentFactErrors } from "./guided-state-facts";
 
 import { formatPendingW2SuggestionValueLabel, isOfficialFixtureSourceType } from "@/lib/document-fixture-copy";
 
@@ -186,10 +187,13 @@ export function computeDeductionComparison(
     data.medicalExpenses,
     data.stateLocalTaxes,
     data.realEstateTaxes,
+    data.personalPropertyTaxes ?? "",
     data.mortgageInterest,
     data.charitableContributions,
     data.casualtyLosses,
-    data.otherItemized,
+    ...(data.investmentInterestExpense !== undefined || data.gamblingLosses !== undefined
+      ? [data.investmentInterestExpense ?? "", data.gamblingLosses ?? ""]
+      : [data.otherItemized]),
   ];
 
   const itemizedTotal = fields.reduce((sum, value) => sum.plus(parseGuidedCurrency(value)), new Decimal(0));
@@ -770,6 +774,10 @@ export interface DeductionData {
   charitableContributions: string;
   casualtyLosses: string;
   otherItemized: string;
+  personalPropertyTaxes?: string;
+  investmentInterestExpense?: string;
+  gamblingWinnings?: string;
+  gamblingLosses?: string;
   mortgageEntries?: MortgageEntryData[];
   donationEntries?: DonationEntryData[];
 }
@@ -966,6 +974,7 @@ export const emptyOtherTaxesData: OtherTaxesData = {
 export interface StateEstimatedPaymentEntry {
   date: string;
   amount: string;
+  state?: string;
 }
 
 export const emptyStateEstimatedPayment: StateEstimatedPaymentEntry = {
@@ -976,7 +985,18 @@ export const emptyStateEstimatedPayment: StateEstimatedPaymentEntry = {
 export interface StateReturnData {
   stateEstimatedPayments: StateEstimatedPaymentEntry[];
   additionalStateWithholding: string;
+  additionalStateWithholdingEntries?: StateWithholdingEntry[];
 }
+
+export interface StateWithholdingEntry {
+  payer: string;
+  documentType: string;
+  state: string;
+  taxYear: string;
+  amount: string;
+}
+
+export const emptyStateWithholdingEntry: StateWithholdingEntry = { payer: "", documentType: "", state: "", taxYear: "", amount: "" };
 
 export const emptyStateReturnData: StateReturnData = {
   stateEstimatedPayments: [],
@@ -1740,7 +1760,7 @@ export function validateSection(
     case "review":
       return VALID_SECTION; // Review is always valid
     case "state-return":
-      return VALID_SECTION; // State return is optional
+      return validateRequiredFacts(statePaymentFactErrors(getSectionData(state, "state-return"), state.taxYear, state.segmentation.stateCode));
     case "final-review":
       return VALID_SECTION; // Final review is always available
     default:

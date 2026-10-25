@@ -10,7 +10,7 @@ describe("guided input fact fidelity", () => {
   it("aggregates cents and large monetary values exactly", () => {
     expect(buildScheduleCInput([{ ...emptyNecEntry, nonemployeeCompensation: "0.10" }], "0.20", undefined)?.grossReceipts).toBe("0.3");
     expect(buildScheduleCInput([{ ...emptyNecEntry, nonemployeeCompensation: "90071992547409.91" }], "0.09", undefined)?.grossReceipts).toBe("90071992547410");
-    expect(buildScheduleAInput({ ...emptyDeductionData, method: "itemized", stateLocalTaxes: "0.10", realEstateTaxes: "0.20" })?.personalPropertyTaxes).toBe("0.3");
+    expect(buildScheduleAInput({ ...emptyDeductionData, method: "itemized", stateLocalTaxes: "0.10", realEstateTaxes: "0.20" })).toEqual({ additionalStateLocalIncomeTaxes: "0.1", realEstateTaxes: "0.20" });
     expect(() => buildScheduleCInput([{ ...emptyNecEntry, nonemployeeCompensation: "Infinity" }], "", undefined)).toThrow();
     expect(() => buildScheduleCInput([], "1,2,3", undefined)).toThrow();
     expect(buildScheduleCInput([], "-0.20", undefined)?.grossReceipts).toBe("-0.2");

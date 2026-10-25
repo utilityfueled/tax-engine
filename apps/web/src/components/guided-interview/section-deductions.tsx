@@ -28,7 +28,9 @@ export function SectionDeductions({
 }) {
   const current = data ?? emptyDeductionData;
   const standardAmount = getStandardDeductionAmount(filingStatus, taxYear);
-  const comparison = computeDeductionComparison(filingStatus, current, taxYear);
+  let comparison: ReturnType<typeof computeDeductionComparison> | null = null;
+  try { comparison = computeDeductionComparison(filingStatus, current, taxYear); }
+  catch { /* Incomplete edits stay visible and are validated before calculation. */ }
 
   function setMethod(method: DeductionMethod) {
     onDataChange({ ...current, method });
@@ -95,6 +97,8 @@ export function SectionDeductions({
 
         {current.method === "standard" && taxYear === 2026 && <DeductionSourceDetails data={current} onChange={onDataChange} includeMortgages={false} />}
 
+        <CurrencyField label="Gambling winnings not already reported on an entered W-2G" hint="Enter actual winnings regardless of deduction method. Enter 0 only when known to be zero." value={current.gamblingWinnings ?? ""} onChange={(value) => update("gamblingWinnings", value)} />
+
         {current.method === "itemized" && (
           <div className="guided-w2-card" style={{ marginTop: "16px" }}>
             <div className="guided-w2-card-header">
@@ -110,16 +114,18 @@ export function SectionDeductions({
 
             <div className="guided-form-grid">
               <CurrencyField
-                label="State and local income taxes"
-                hint="W-2 Box 17 amounts are already included from your W-2 entries."
+                label="Additional state and local income taxes paid"
+                hint="Only amounts paid during this tax year, excluding withholding and estimates already entered elsewhere."
                 value={current.stateLocalTaxes}
                 onChange={(v) => update("stateLocalTaxes", v)}
               />
               <CurrencyField
                 label="Real estate taxes"
+                hint="Qualified real estate taxes paid this year, excluding amounts already reported on an entered Form 1098."
                 value={current.realEstateTaxes}
                 onChange={(v) => update("realEstateTaxes", v)}
               />
+              <CurrencyField label="Personal property taxes" hint="Only the annual tax based on property value, such as the value-based part of vehicle registration." value={current.personalPropertyTaxes ?? ""} onChange={(value) => update("personalPropertyTaxes", value)} />
             </div>
 
             <DeductionSourceDetails data={current} onChange={onDataChange} />
@@ -131,21 +137,19 @@ export function SectionDeductions({
                   <legend className="sr-only">Less common itemized deductions</legend>
                   <CurrencyField
                     label="Casualty and theft losses"
-                    hint="Only federally declared disaster losses are deductible."
+                    hint="A saved total is insufficient. Calculation requires the specific Form 4684 event, property and reimbursement facts; this guided branch is not yet supported."
                     value={current.casualtyLosses}
                     onChange={(v) => update("casualtyLosses", v)}
                   />
-                  <CurrencyField
-                    label="Other itemized deductions"
-                    hint="Gambling losses (up to winnings), investment interest, etc."
-                    value={current.otherItemized}
-                    onChange={(v) => update("otherItemized", v)}
-                  />
+                  <CurrencyField label="Investment interest expense" hint="Interest on money borrowed for taxable investments. The engine applies the Form 4952 investment-income limit." value={current.investmentInterestExpense ?? ""} onChange={(value) => update("investmentInterestExpense", value)} />
+                  <CurrencyField label="Wagering losses" hint="Enter actual losses supported by records. The engine applies the year's deduction limit against winnings." value={current.gamblingLosses ?? ""} onChange={(value) => update("gamblingLosses", value)} />
+                  {current.otherItemized.trim() && <CurrencyField label="Saved other-deduction total to reconcile" hint="Classify this total in the investment-interest and wagering-loss fields. Other deductions require their specific supporting forms." value={current.otherItemized} onChange={(value) => update("otherItemized", value)} />}
                 </fieldset>
               </div>
             </details>
 
-            {parseGuidedDisplayAmount(comparison.itemizedTotal).gt(0) && (
+            {!comparison && <p className="guided-hint" role="status">Correct incomplete amounts to compare your expenses.</p>}
+            {comparison && parseGuidedDisplayAmount(comparison.itemizedTotal).gt(0) && (
               <div className="guided-deduction-comparison" style={{ marginTop: "16px" }} role="status" aria-live="polite">
                 <div className="guided-ticker-grid">
                   <div className="guided-ticker-item">

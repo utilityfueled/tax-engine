@@ -215,3 +215,28 @@ Source-year/document-fidelity package commit: `70f8d17`.
   exposed three stale expectations from the concurrent federal penalty separation
   (line 24 excludes the penalty; line 37 still includes it); those are tracked
   separately and were not changed to mask a Schedule H failure.
+
+## Deduction categories and state payment sources
+
+- Refreshed [Schedule A instructions](https://www.irs.gov/instructions/i1040sca),
+  currently titled 2025. Additional income taxes, real estate taxes and annual
+  value-based personal property taxes now reach their distinct input fields.
+  Investment interest and wagering losses no longer come from an ambiguous total.
+  A saved casualty aggregate requires actual Form 4684 facts and is explicitly
+  blocked; it is not silently discarded. Gambling winnings survive either method.
+- State estimates retain their actual state/date/amount. Additional withholding
+  requires payer, form, state and source year, with Decimal reconciliation of saved
+  totals. Unknown or conflicting facts block previews and PDF exports. No W-2 is
+  fabricated. Ohio review overlays preserve exact Decimal sums and explicit zero.
+- Four new regressions failed before implementation. Malformed deduction editing
+  now renders a correction prompt instead of crashing. Classified review totals
+  remain visible; unclassified legacy withholding is labeled for confirmation.
+- Checked the separate Form 2210 routing correction against the official
+  [Form 1040 instructions](https://www.irs.gov/instructions/i1040gi), line 37. Updated
+  the three stale source-preview assertions: total tax excludes the existing
+  penalty; amount owed still includes it and remains unchanged.
+- 477 tests in 14 guided, source-preview and Ohio packet files pass. Root/web
+  typechecks, scoped ESLint, spec validation (3,022/3,022 references) and diff checks
+  pass. Schedule H correction commit: `2fb8e5c`.
+- The federal owner separately handles calendar-year SALT timing for the dated
+  state payments. Final 2026 law/form qualification and human review stay pending.

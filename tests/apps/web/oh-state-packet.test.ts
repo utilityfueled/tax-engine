@@ -12,6 +12,7 @@ import type {
 import { buildWorkspaceStructuredFacts } from "@tax-engine/engine";
 import { buildWorkspaceFilledReturnDownload } from "../../../apps/web/src/lib/workspace-filled-return";
 import type { GuidedFlowState } from "../../../apps/web/src/lib/guided-interview-flow";
+import * as ohioReferenceForms from "../../../src/pdf/fill-oh-reference-forms";
 
 vi.mock("server-only", () => ({}));
 
@@ -243,6 +244,31 @@ print("\\n".join((page.extract_text() or "") for page in reader.pages))
 }
 
 describe("Ohio workspace packet disclosure", () => {
+  // Spec: spec/federal/guided-input.yaml, state-payment-sources
+  it("passes exact classified state amounts to the review packet overlay", async () => {
+    const guidedState = createGuidedFlowStateWithOhioStateSelection();
+    guidedState.sectionData["state-return"] = {
+      additionalStateWithholding: "0.3",
+      additionalStateWithholdingEntries: [
+        { payer: "Example Pension", documentType: "1099-R", state: "OH", taxYear: "2025", amount: "0.1" },
+        { payer: "Example Bank", documentType: "1099-INT", state: "OH", taxYear: "2025", amount: "0.2" },
+      ],
+      stateEstimatedPayments: [{ state: "OH", date: "2025-04-15", amount: "9007199254740993.01" }, { state: "OH", date: "2025-06-15", amount: "0.09" }],
+    };
+    const packet = vi.spyOn(ohioReferenceForms, "fillOhioReferenceForms").mockResolvedValue({ filledForms: [] });
+    try {
+      await buildWorkspaceFilledReturnDownload(createWorkspace(), guidedState);
+      expect(packet.mock.calls[0]?.[3]).toEqual({ ohioWithholdingOverride: "3750.3", estimatedPayments: "9007199254740993.1" });
+    } finally { packet.mockRestore(); }
+  });
+
+  // Spec: spec/federal/guided-input.yaml, state-payment-sources
+  it("blocks review export when legacy state withholding lacks actual source facts", async () => {
+    const guidedState = createGuidedFlowStateWithOhioStateSelection();
+    guidedState.sectionData["state-return"] = { additionalStateWithholding: "100", stateEstimatedPayments: [] };
+    await expect(buildWorkspaceFilledReturnDownload(createWorkspace(), guidedState)).rejects.toThrow("Complete the required taxpayer facts");
+  });
+
   it("buildWorkspaceFilledReturnDownload keeps Ohio packet disclosures honest when only reference-summary state forms are attached", async () => {
     const download = await buildWorkspaceFilledReturnDownload(
       createWorkspace(),

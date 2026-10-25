@@ -246,6 +246,7 @@ function DeductionsSummary({ data, filingStatus, taxYear }: { data: DeductionDat
           <span className="guided-review-label">Method</span>
           <span className="guided-review-value">Standard deduction{stdAmount > 0 ? ` (${formatCurrency(stdAmount)})` : ""}</span>
         </div>
+        {current.gamblingWinnings?.trim() && <div className="guided-review-row"><span className="guided-review-label">Gambling winnings (income)</span><span className="guided-review-value">{formatCurrency(current.gamblingWinnings)}</span></div>}
       </div>
     );
   }
@@ -254,6 +255,10 @@ function DeductionsSummary({ data, filingStatus, taxYear }: { data: DeductionDat
     { label: "Medical expenses", value: current.medicalExpenses },
     { label: "State/local taxes", value: current.stateLocalTaxes },
     { label: "Real estate taxes", value: current.realEstateTaxes },
+    { label: "Personal property taxes", value: current.personalPropertyTaxes ?? "" },
+    { label: "Investment interest", value: current.investmentInterestExpense ?? "" },
+    { label: "Wagering losses", value: current.gamblingLosses ?? "" },
+    { label: "Gambling winnings (income)", value: current.gamblingWinnings ?? "" },
     { label: "Mortgage interest", value: current.mortgageInterest },
     { label: "Charitable contributions", value: current.charitableContributions },
   ].filter((item) => hasValue(item.value));
@@ -546,12 +551,13 @@ function StateReturnSummary({
           <span className="guided-review-value">{formatCurrency(totalEstimated)}</span>
         </div>
       )}
-      {hasValue(data?.additionalStateWithholding ?? "") && (
+      {(data?.additionalStateWithholdingEntries?.length ?? 0) > 0 && (
         <div className="guided-review-row">
           <span className="guided-review-label">Additional state withholding</span>
-          <span className="guided-review-value">{formatCurrency(data?.additionalStateWithholding)}</span>
+          <span className="guided-review-value">{formatCurrency(sumGuidedDisplayAmounts((data?.additionalStateWithholdingEntries ?? []).map((entry) => entry.amount)))}</span>
         </div>
       )}
+      {data?.additionalStateWithholding.trim() && !data.additionalStateWithholdingEntries?.length && <div className="guided-review-row"><span className="guided-review-label">Saved state withholding — source confirmation needed</span><span className="guided-review-value">{formatCurrency(data.additionalStateWithholding)}</span></div>}
     </div>
   );
 }

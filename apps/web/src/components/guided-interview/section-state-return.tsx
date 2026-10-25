@@ -7,13 +7,21 @@ import {
   type StateEstimatedPaymentEntry,
   emptyStateEstimatedPayment,
   emptyStateReturnData,
+  emptyStateWithholdingEntry,
+  type StateWithholdingEntry,
   supportedStates,
   type SupportedStateCode,
 } from "@/lib/guided-interview-flow";
 import { CurrencyField } from "./currency-field";
 import { formatGuidedCurrency, parseGuidedDisplayAmount } from "@/lib/guided-currency";
+import { stateWithholdingDocumentTypes } from "@/lib/guided-state-facts";
+import { TextFact } from "./fact-fields";
 
 const formatCurrency = formatGuidedCurrency;
+
+function PaymentState({ value, onChange }: { value: string | undefined; onChange: (value: string) => void }) {
+  return <label className="guided-field"><span className="guided-field-label">State shown in the payment or withholding record</span><select className="guided-input" value={value ?? ""} onChange={(event) => onChange(event.target.value)}><option value="">Confirm actual state</option>{supportedStates.map((state) => <option key={state.code} value={state.code}>{state.name}</option>)}</select></label>;
+}
 
 function StateEstimatedPaymentCard({
   index,
@@ -44,6 +52,7 @@ function StateEstimatedPaymentCard({
         )}
       </div>
       <div className="guided-form-grid">
+        <PaymentState value={entry.state} onChange={(value) => onUpdate("state", value)} />
         <label className="guided-field">
           <span className="guided-field-label">Date paid</span>
           <input
@@ -109,6 +118,11 @@ export function SectionStateReturn({
 
   const stateRefund = parseGuidedDisplayAmount(stateMetrics?.stateRefund);
   const stateOwed = parseGuidedDisplayAmount(stateMetrics?.stateAmountOwed);
+  const withholdingEntries = current.additionalStateWithholdingEntries ?? [];
+
+  function updateWithholding(index: number, field: keyof StateWithholdingEntry, value: string) {
+    onDataChange({ ...current, additionalStateWithholdingEntries: withholdingEntries.map((entry, entryIndex) => entryIndex === index ? { ...entry, [field]: value } : entry) });
+  }
 
   function handleAddPayment() {
     onDataChange({
@@ -180,14 +194,23 @@ export function SectionStateReturn({
           (e.g., 1099 withholding, backup withholding), enter the total here.
           W-2 state withholding is already included automatically.
         </p>
-        <div className="guided-form-grid">
+        {withholdingEntries.map((entry, index) => <div className="guided-card" key={index}>
+          <div className="guided-card-header"><h3 className="guided-card-title">Additional state withholding {index + 1}</h3><button type="button" className="utility-button" onClick={() => onDataChange({ ...current, additionalStateWithholdingEntries: withholdingEntries.filter((_, entryIndex) => entryIndex !== index) })}>Remove</button></div>
+          <TextFact label="Payer from source form" value={entry.payer} onChange={(value) => updateWithholding(index, "payer", value)} />
+          <label className="guided-field"><span className="guided-field-label">Source form</span><select className="guided-input" value={entry.documentType} onChange={(event) => updateWithholding(index, "documentType", event.target.value)}><option value="">Choose actual form</option>{stateWithholdingDocumentTypes.map((type) => <option key={type} value={type}>{type}</option>)}</select></label>
+          <PaymentState value={entry.state} onChange={(value) => updateWithholding(index, "state", value)} />
+          <TextFact label="Source form tax year" value={entry.taxYear} onChange={(value) => updateWithholding(index, "taxYear", value)} />
+          <CurrencyField label="State withholding on this form" hint="Exclude any amount already entered in another source form or in additional income taxes." value={entry.amount} onChange={(value) => updateWithholding(index, "amount", value)} />
+        </div>)}
+        <button type="button" className="utility-button" onClick={() => onDataChange({ ...current, additionalStateWithholdingEntries: [...withholdingEntries, { ...emptyStateWithholdingEntry }] })}>+ Add withholding source</button>
+        {current.additionalStateWithholding.trim() && <div className="guided-form-grid">
           <CurrencyField
-            label="Additional state withholding"
-            hint="From 1099s or other sources (not W-2s)"
+            label="Saved additional withholding total to reconcile"
+            hint="Identify the actual source forms above; this total alone cannot establish the payment source."
             value={current.additionalStateWithholding}
             onChange={(v) => onDataChange({ ...current, additionalStateWithholding: v })}
           />
-        </div>
+        </div>}
 
         <h3 className="guided-section-subheading" style={{ marginTop: "24px" }}>
           State Estimated Tax Payments
