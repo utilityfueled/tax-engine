@@ -367,3 +367,14 @@ amount ($50,000 minus $32,200, times 10%). Final 2026 tax tables remain unqualif
 625 focused tests/typecheck/whitespace checks pass; all our spec references resolve.
 Global spec validation temporarily sees eight references in the concurrently
 edited Form 8936 specification, reported to its owner. Scoped diff reviewed.
+
+### Personal credit limit worksheets A/B — 2026-10-25
+
+Refreshed IRS Schedule 8812, Form 8839 and Form 5695 instructions. Added a pure
+Decimal allocation helper: reserve Worksheet B line 14 where applicable, allocate
+adoption before residential clean energy, then return the actual remaining CTC
+limit. Form 2555 and claims without qualifying children use ordinary CTC priority.
+Six spec-linked tests were absent/red before implementation and now pass, including
+$1,000 tax/$2,200 CTC/$1,700 refundable potential -> $500 adoption and $500 CTC.
+72 focused tests, typecheck, spec validation and whitespace checks pass. Reviewed
+scoped diff. Integration follows separately; this helper does not qualify a form.
