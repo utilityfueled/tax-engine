@@ -697,14 +697,17 @@ export async function fillReturn(
   const hsa5329Owners = (Object.keys(result.form5329HsaByOwner ?? {}) as Array<"primary" | "spouse">)
     .filter(owner => result.form5329HsaByOwner?.[owner]?.requiresForm5329
       || (owner === "primary" && result.form5329?.totalAdditionalTax.gt(0)));
-  for (const owner of hsa5329Owners) {
+  const education5329Owners = result.form1099Q?.sourceFactsVerified
+    ? result.form1099Q.perRecipient.flatMap(row => row.owner !== "other" && row.taxableEarnings.gt(0) ? [row.owner] : []) : [];
+  const source5329Owners = [...new Set([...hsa5329Owners, ...education5329Owners])];
+  for (const owner of source5329Owners) {
     const doc5329 = await fillForm5329(input, result, join(blankFormsDir, "f5329.pdf"), owner);
     if (flatten) await flattenForm(doc5329.getForm());
     const outputPath5329 = join(outputDir, `f5329-${owner}-filled.pdf`);
     await savePdf(doc5329, outputPath5329);
     filledForms.push(outputPath5329);
   }
-  if (hsa5329Owners.length === 0 && result.form5329 && result.form5329.totalAdditionalTax.gt(0)) {
+  if (source5329Owners.length === 0 && result.form5329 && result.form5329.totalAdditionalTax.gt(0)) {
     const f5329Path = join(blankFormsDir, "f5329.pdf");
     const doc5329 = await fillForm5329(input, result, f5329Path);
     if (flatten) await flattenForm(doc5329.getForm());

@@ -1,0 +1,30 @@
+form: "Form 5329 education owner review"
+fullName: "Actual per-recipient Part II review mapping"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i5329"
+notes: |
+  Individuals filing jointly use separate Forms5329. Verified education source
+  results already separate each recipient; the review mapping copies audited
+  lines5-8 and merges the same owner's actual HSA PartVII only. Other-recipient
+  amounts never enter this taxpayer's physical form. No2026 qualification.
+lines:
+  - line: "owner-part-ii"
+    description: "Source-linked education income and exceptions"
+    formula: "Copy owner audit5=taxable earnings,6=exception earnings,7=5-6,8=rounded10%of7; require matching canonical merged audit and actual owner identity before template loading"
+    testRef: "tests/pdf/form-5329-education-owner.test.ts::copies each education recipient audit and merges only the same owners HSA part"
+  - line: "owner-packet"
+    description: "Separate actual individual forms"
+    formula: "Emit one form per own-return recipient with taxable distributions, including zero additional tax due to exceptions; union with actual HSA owners, without a duplicate combined form"
+    testRef: "tests/pdf/form-5329-education-owner.test.ts::includes individual education forms once and preserves zero-tax exception filing"
+  - line: "owner-validation"
+    description: "Reject ambiguous and tampered source ownership"
+    formula: "Reject duplicate owners, altered canonical audits, missing actual identity and legacy unassigned joint-return parts including prior-excess absorption with zero tax; never assign another recipients amount to primary"
+    testRef: "tests/pdf/form-5329-education-owner.test.ts::rejects missing owner identity and inconsistent or unassigned education audits"
+  - line: "single-owner-parts"
+    description: "Preserve other parts with known single taxpayer ownership"
+    formula: "For a single taxpayer, actual education PartII and legacy IRA excess PartIII share one individual form; source PartII must not be overwritten by absent legacy education totals"
+    testRef: "tests/pdf/form-5329-education-owner.test.ts::preserves the single taxpayers other parts alongside actual education income"
+  - line: "source-owner-union"
+    description: "One attachment for each actual owner across source parts"
+    formula: "Union the HSA and education owner sets, copy each canonical source part and emit exactly one individual Form5329 per owner"
+    testRef: "tests/pdf/form-5329-education-owner.test.ts::unions education and HSA packet owners without duplicate forms"

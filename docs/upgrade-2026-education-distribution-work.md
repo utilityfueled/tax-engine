@@ -169,3 +169,33 @@ qualification, independent human tax review and release evidence remain external
 Immutable staged reference tree `31246d3d` passed14 focused tests, root types and
 all3692 spec references. Logs: `education-reference-immutable-tests.log`,
 `education-reference-immutable-types.log`, `education-reference-immutable-spec.log`.
+
+## Individual Form5329 education review (2026-10-25)
+
+Reference mapping committed as `05fd72a`. Reopened official2025 Form5329 and its
+instructions: PartII is required when taxable education distributions are
+included in income, including amounts fully excepted from additional tax; a
+joint return uses a separate form for each affected individual. The packet now
+unions actual education and HSA owners and copies the canonical source audits
+into one form per individual. Other recipients remain outside the return.
+Unresolved legacy joint-return parts are rejected rather than assigned to one
+spouse, including prior excess absorbed with zero additional tax. A single
+actual taxpayer can retain other legacy parts alongside source PartII.
+
+Red-first owner tests initially failed all three cases. Final28 focused tests
+across4 files passed, covering source audits, identities, zero-tax exception
+attachment, single-owner other parts, HSA/education union and existing HSA/legacy
+mappings. Root types and scoped lint passed. Logs: education-5329-owner-red.log,
+education-5329-final-tests.log, education-5329-types.log, education-5329-lint.log.
+Saved PDFs in `.local/upgrade-evidence/education-5329-2025/` were reopened and
+checked: primary line5/8/49=200/20/6, spouse=400/40/42. Rendered PartII and HSA
+PartVII fields occupy the official physical lines and retain review notices.
+All values and identities are synthetic; no2026 filing qualification is claimed.
+
+Parent agent independently reviewed the owner5329 diff and reran all5 new source
+owner tests, with no actionable findings. Evidence:
+`.local/upgrade-evidence/parent-5329-owner-review.log`. This is software review by
+an agent, not independent human tax or filing qualification.
+
+Immutable owner-review tree `11c6cc90` passed28 focused tests, root types and
+all3708 spec references (education-5329-immutable-* logs).

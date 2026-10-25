@@ -22,6 +22,7 @@ import Decimal from "decimal.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import { calculateForm5329Hsa } from "@/engine/forms/form-5329-hsa.js";
+import { buildForm1099QReferenceSummary } from "./fill-form-1099-q.js";
 import { roundDollar } from "@/utils/decimal.js";
 import {
   loadReviewTemplate,
@@ -145,18 +146,42 @@ export async function fillForm5329(
   input: TaxYearInput,
   result: TaxReturnResult,
   blankPdfPath: string,
-  hsaOwner?: "primary" | "spouse",
+  owner?: "primary" | "spouse",
 ): Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
-  const hsa = hsaOwner ? result.form5329HsaByOwner?.[hsaOwner] : undefined;
-  if (hsaOwner) {
-    const facts = input.form5329HsaByOwner?.[hsaOwner];
-    if (!facts || !hsa || hsa.owner !== hsaOwner || hsa.taxYear !== result.taxYear) throw new Error("Form5329 HSA review requires the actual owner's source and result");
-    const actual8889 = result.form8889ByOwner?.[hsaOwner]
-      ?? (input.form8889?.accountOwner === hsaOwner ? result.form8889 : undefined);
+  const individual = owner === "spouse" ? input.taxpayer.spouse : input.taxpayer.primary;
+  if (owner && (!individual || !individual.firstName.trim() || !individual.lastName.trim())) throw new Error("Form5329 review requires the actual individual identity");
+  const sourceEducation = result.form1099Q?.sourceFactsVerified ? result.form1099Q : undefined;
+  const education = sourceEducation?.perRecipient.filter(row => row.owner === owner);
+  if (!owner && sourceEducation?.perRecipient.some(row => row.owner !== "other" && row.taxableEarnings.gt(0))) throw new Error("Form5329 education review requires an actual individual owner");
+  if (owner === "spouse" && input.taxpayer.filingStatus !== "married_filing_jointly") throw new Error("Form5329 spouse ownership requires an actual joint return");
+  const legacy = result.form5329;
+  const unassignedLegacyPart = legacy && [legacy.line1, legacy.line5, legacy.line9, legacy.line15, legacy.line18, legacy.line23,
+    legacy.line26, legacy.line31, legacy.line34, legacy.line39, legacy.line42, legacy.line47, legacy.line50, legacy.line52,
+    legacy.line56, legacy.totalAdditionalTax].some(value => value.gt(0));
+  if (owner && input.taxpayer.filingStatus === "married_filing_jointly" && unassignedLegacyPart) throw new Error("Form5329 joint review cannot assign unassigned legacy parts without actual ownership");
+  if (education?.length && result.form5329 && (result.form5329.line5.gt(0) || result.form5329.line6.gt(0))) throw new Error("Form5329 education source conflicts with unassigned legacy PartII amounts");
+  const educationLines: Array<{ line: "5" | "6" | "7" | "8"; value: Decimal }> = [];
+  if (sourceEducation) buildForm1099QReferenceSummary(input.form1099Q, sourceEducation, input.qualifiedEducationExpenses);
+  if (sourceEducation && education?.length) {
+    if (education.length !== 1 || education[0].recipientId !== owner) throw new Error("Form5329 education requires unique actual owner identity");
+    const row = education[0];
+    for (const [line, value] of [["5", row.taxableEarnings], ["6", row.penaltyException], ["7", row.taxableEarnings.minus(row.penaltyException)], ["8", row.additionalTax]] as const) {
+      const merged = result.allLines.filter(entry => entry.form === "Form5329 education" && entry.line === `${owner}:${owner}:${line}`);
+      if (merged.length !== 1 || !Decimal.isDecimal(merged[0].value) || !merged[0].value.isFinite() || !merged[0].value.eq(value)) throw new Error("Form5329 education canonical audit does not reconcile");
+      educationLines.push({ line, value });
+    }
+  }
+  const hsa = owner ? result.form5329HsaByOwner?.[owner] : undefined;
+  const hsaFacts = owner ? input.form5329HsaByOwner?.[owner] : undefined;
+  if (owner && (hsa || hsaFacts)) {
+    const facts = input.form5329HsaByOwner?.[owner];
+    if (!facts || !hsa || hsa.owner !== owner || hsa.taxYear !== result.taxYear) throw new Error("Form5329 HSA review requires the actual owner's source and result");
+    const actual8889 = result.form8889ByOwner?.[owner]
+      ?? (input.form8889?.accountOwner === owner ? result.form8889 : undefined);
     if (!actual8889) throw new Error("Form5329 HSA review requires the actual owner's Form8889");
     const baseDeduction = Decimal.min(actual8889.line2, actual8889.line12);
-    const source = calculateForm5329Hsa({ taxYear: result.taxYear, owner: hsaOwner, facts,
+    const source = calculateForm5329Hsa({ taxYear: result.taxYear, owner, facts,
       form8889: { ...actual8889, line13: baseDeduction,
         lines: actual8889.lines.map(line => line.line === "13" ? { ...line, value: baseDeduction } : line) } });
     if (hsa.sourceFactsVerified !== true || hsa.requiresForm5329 !== source.requiresForm5329 || hsa.lines.length !== source.lines.length) {
@@ -177,22 +202,21 @@ export async function fillForm5329(
   const doc = await loadReviewTemplate(blankPdfPath, 2025);
   const form = doc.getForm();
   const F = FORM_5329_FIELDS;
-  const f5329 = hsaOwner && input.taxpayer.filingStatus === "married_filing_jointly" ? undefined : result.form5329;
+  const f5329 = owner && input.taxpayer.filingStatus === "married_filing_jointly" ? undefined : result.form5329;
 
   // ── Header ──
-  const individual = hsaOwner === "spouse" ? input.taxpayer.spouse : input.taxpayer.primary;
-  if (hsaOwner && !individual) throw new Error("Form5329 HSA review requires actual individual identity");
-  const name = hsaOwner && individual ? `${individual.firstName} ${individual.lastName}` : input.taxpayer.spouse
+  const name = owner && individual ? `${individual.firstName} ${individual.lastName}` : input.taxpayer.spouse
     ? `${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName} & ${input.taxpayer.spouse.firstName} ${input.taxpayer.spouse.lastName}`
     : `${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName}`;
   setTextField(form, F.name, name);
-  setTextField(form, F.ssn, (hsaOwner && individual ? individual.ssn : input.taxpayer.primary.ssn).replace(/-/g, ""));
+  setTextField(form, F.ssn, (owner && individual ? individual.ssn : input.taxpayer.primary.ssn).replace(/-/g, ""));
 
   if (hsa) for (const line of hsa.lines) {
     const key = `line${line.line}` as keyof typeof F;
     setCurrencyField(form, F[key], roundDollar(line.value));
   }
 
+  for (const line of educationLines) setCurrencyField(form, F[`line${line.line}`], roundDollar(line.value));
   if (!f5329) return doc;
 
   // ── Part I: Early Distributions (Lines 1–4) ──
@@ -205,10 +229,12 @@ export async function fillForm5329(
   setCurrencyField(form, F.line4, f5329.line4);
 
   // ── Part II: Education/ABLE Distributions (Lines 5–8) ──
-  setCurrencyField(form, F.line5, f5329.line5);
-  setCurrencyField(form, F.line6, f5329.line6);
-  setCurrencyField(form, F.line7, f5329.line7);
-  setCurrencyField(form, F.line8, f5329.line8);
+  if (educationLines.length === 0) {
+    setCurrencyField(form, F.line5, f5329.line5);
+    setCurrencyField(form, F.line6, f5329.line6);
+    setCurrencyField(form, F.line7, f5329.line7);
+    setCurrencyField(form, F.line8, f5329.line8);
+  }
 
   // ── Part III: Excess Traditional IRA Contributions (Lines 9–17) ──
   setCurrencyField(form, F.line9, f5329.line9);
