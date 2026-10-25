@@ -7,9 +7,25 @@ complete a checkbox.
 
 ## Current integration — 2026-10-25
 
-`13cb428` is the latest pushed integration on `upgrade/2026-baseline`. The goal remains active and the
+`ae7512d` is the latest confirmed pushed integration on `upgrade/2026-baseline`. The goal remains active and the
 upgrade is **not release-ready**. Unanswered external inputs are listed below;
 internal implementation and review continue in parallel.
+
+- Full coverage at `7695387` passes all 17,381 tests in 811 files, with zero
+  failures/skips: branches 86.84%, statements 92.61%, functions 91.82%, lines
+  94.81%. Thresholds are unchanged. Exact log/hash are in the checkpoint;
+  later source packages still require fresh integrated checks.
+- `ae7512d`: standalone Schedule D special-gain arithmetic. Exact source tree
+  3fb202d5 passes 69 tests, root types, 4,259 spec refs and lint with no errors
+  or warnings. Independent agent source/code review and seven cases pass.
+  Source binding and canonical integration are active separate work.
+- `1ca69d0`: actual NOL vintage helper. Exact tree d8184932 passes 55 tests,
+  root types, 4,252 spec refs and clean lint. Parent review passes 14 cases.
+  Actual modified-income, AMT and NIIT integration remains active.
+- `f2d018d`: simplified foreign credit threshold uses $600 only for MFJ and
+  $300 for surviving-spouse returns. Exact tree df5f53e4 passes 80 cases,
+  types/spec/lint; parent verified five cent-boundary scenarios. An explicit
+  annual election and original source integration remain separate work.
 
 - `13cb428`: saved guided progress and final-review exit. Tree cf15c75b passes
   246 unit cases in 4 files, web types/build, 4,229 spec refs, lint 0 errors,
@@ -96,12 +112,11 @@ The previous65336f7/4d85eb0 runs were cancelled by newer pushes. No final remote
 success is claimed. Generated inventory still needs regeneration. Parent owns
 all final integrated checks and native runtime release rehearsal.
 
-Last completed passing full coverage belongs to the earlier single-write PDF
-source tree77675b7:17,100cases and86.59%branches with the85%gate unchanged. The
-new17,326-test run is a unit run, not coverage. Package audit refreshed2026-10-25
-reports zero advisories across521entries. Older runtime images have157matches
-and67advisory records, owner roles and2026-11-07expiry; maintainer disposition
-and scans of final images remain pending.
+The latest completed full coverage is the fixed `7695387` run above. Package
+checks after that commit are scoped evidence until a fresh full run. Package
+audit refreshed 2026-10-25 reports zero advisories across 521 entries. Older
+runtime images have 157 matches and 67 advisory records, owner roles and a
+2026-11-07 expiry; maintainer disposition and final-image scans remain pending.
 
 Immediate internal work: ScheduleD audit/PDF subtotals and actual18/19worksheets;
 child4952 source binding, positive character intake and ratio rounding; passive

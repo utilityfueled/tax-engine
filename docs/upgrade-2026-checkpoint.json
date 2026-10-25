@@ -204,7 +204,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "13cb428",
+    "lastRecordedCommit": "b741741",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -753,6 +753,33 @@
       "amd64": "local QEMU Next.js compilation failed with signal11; native CI rehearsal now configured"
     },
     "currentStableCoverageRun": {
+      "commit": "76953875c01d7341cbd7ffaf272273524256c1c9",
+      "directory": "/private/tmp/tax-engine-checks-kl5ok04b",
+      "command": "pnpm test:coverage --maxWorkers=1",
+      "status": "passed",
+      "testsPassed": 17381,
+      "filesPassed": 811,
+      "failures": 0,
+      "skips": 0,
+      "statementsPercent": "92.61",
+      "branchesPercent": "86.84",
+      "functionsPercent": "91.82",
+      "linesPercent": "94.81",
+      "branchThresholdPercent": "85",
+      "durationSeconds": "545.02",
+      "evidence": ".local/upgrade-evidence/coverage-7695387.log",
+      "sha256": "5f0919cc333d3044cfa2b93974b56a25182d0708c24aba122f589b5c42ec070b",
+      "boundary": "Exact committed snapshot; later source packages need a fresh integrated run. Local synthetic and disposable PostgreSQL, not staging."
+    },
+    "remainingInternalWork": [
+      "Finish remaining canonical federal source/method tasks listed in federal-work and education-method-decisions; completed source gates are not substitutes for implementation.",
+      "Finish advanced source intake and actual review-PDF handoffs; preserve unknowns, exact Decimal and year/readiness gates.",
+      "Finish selected-state candidate integration and support matrix within documented demand/final-form boundaries.",
+      "Regenerate inventory and run all current full tests/coverage/types/spec/builds/lint/browser checks; repair integration failures.",
+      "Inspect current remote CI and verify final native amd64/arm64 runtime images, SBOMs/current scans, upgrades and recovery.",
+      "Reconcile actual artifact/support claims and advisory ownership/disposition while external human, provider, staging and final-form evidence remains pending."
+    ],
+    "previousStableCoverageRun": {
       "status": "passed",
       "baseCommit": "f8c6222a4e771a98c5e956f5724e899956863d6b",
       "stagedTree": "77675b7487e023266807eff840774698d1b2c52b",
@@ -772,33 +799,6 @@
       "evidenceSha256": "a2a2334a2f8ca8022ec791a9d4d664b0a28c08b7a7e7a4ec456965aa10627d8d",
       "scope": "Exact isolated f8c6222 plus single-write PDF package; locked dependencies, Node24.22.1, pinned pypdf and disposable local PostgreSQL16. Thresholds unchanged.",
       "limitation": "Excludes newer in-kind education, Ohio and agent changes. Current integrated and final release gates still require a fresh run. Synthetic local evidence only."
-    },
-    "remainingInternalWork": [
-      "Finish remaining canonical federal source/method tasks listed in federal-work and education-method-decisions; completed source gates are not substitutes for implementation.",
-      "Finish advanced source intake and actual review-PDF handoffs; preserve unknowns, exact Decimal and year/readiness gates.",
-      "Finish selected-state candidate integration and support matrix within documented demand/final-form boundaries.",
-      "Regenerate inventory and run all current full tests/coverage/types/spec/builds/lint/browser checks; repair integration failures.",
-      "Inspect current remote CI and verify final native amd64/arm64 runtime images, SBOMs/current scans, upgrades and recovery.",
-      "Reconcile actual artifact/support claims and advisory ownership/disposition while external human, provider, staging and final-form evidence remains pending."
-    ],
-    "previousStableCoverageRun": {
-      "commit": "2f8abd71206dd8483c167861f35c4c0bbecdad7a",
-      "workers": 1,
-      "status": "failed-tests-coverage-thresholds-met",
-      "passed": 16677,
-      "failed": 2,
-      "skipped": 0,
-      "filesPassed": 667,
-      "filesFailed": 2,
-      "durationSeconds": "476.95",
-      "branchesPercent": "86.41",
-      "functionsPercent": "92.03",
-      "statementsPercent": "92.76",
-      "linesPercent": "94.33",
-      "evidence": ".local/upgrade-evidence/stable-coverage-2f8abd7.log",
-      "evidenceSha256": "29fb6a52ea276976bf491ccc039281f66eb3696b14fa156edd091d10b7a97ba3",
-      "scope": "immutable tracked-file archive, locked dependencies, disposable local PostgreSQL16; unchanged coverage thresholds",
-      "limitation": "Two PDF aggregate tests exceeded unchanged5000ms timeouts; no numeric tax failure. Commit76bb3a6 isolates identical template/state assertions into named independent cases. Its exact staged tree passes62tests and3682spec refs; fresh full gate required after newer packages."
     },
     "lastPushedCommit": "13cb428",
     "currentBrowserRun": {
@@ -1608,6 +1608,23 @@
       "independentAgentTests": 6,
       "pdfPagesReopenedAndInspected": 3,
       "boundary": "ordinary confirmed nonoverlapping jurisdiction method only; no inferred no-tax history or elective safe harbor"
+    },
+    "scheduleDSpecialGainArithmetic": {
+      "commit": "ae7512d",
+      "sourceTree": "3fb202d53b49c8800267d52a3a200581ec21497c",
+      "tests": 69,
+      "files": 2,
+      "checks": "Root types;4259spec references;lint zero errors and warnings",
+      "independentReview": "Source/code and7literal cases passed; agent review only",
+      "boundary": "Standalone arithmetic; actual source binding and canonical use are a separate package in progress."
+    },
+    "nolVintageArithmetic": {
+      "commit": "1ca69d0",
+      "sourceTree": "d81849326cdeb6042cd6c0811c41b648194a2dbb",
+      "tests": 55,
+      "checks": "Root types;4252spec refs;lint zero errors/warnings",
+      "independentParentCases": 14,
+      "boundary": "Actual source vintage helper; full canonical income, AMT and NIIT integration remains in progress."
     }
   }
 }

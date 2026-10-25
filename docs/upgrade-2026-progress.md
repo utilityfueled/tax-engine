@@ -552,3 +552,13 @@ final-HEAD runtime verification remain. The durable checklist records exact
 commits, trees, logs and limitations. Remaining law/facts integration and private
 AI audit transport continue; no human, staging, model, filing or release
 qualification is claimed.
+
+
+The fixed `7695387` coverage run passes all 17,381 tests across 811 files with
+86.84% branches and all other unchanged thresholds. This result is local
+synthetic evidence for that exact commit. Later packages add standalone NOL
+vintage arithmetic (`1ca69d0`), the corrected joint-only simplified foreign
+credit threshold (`f2d018d`), and Schedule D special-gain worksheet arithmetic
+(`ae7512d`). Each has focused checks and separate agent review. Actual canonical
+source integrations remain active; the full later code, remote CI, final runtime
+images and external qualification criteria still need verification.
