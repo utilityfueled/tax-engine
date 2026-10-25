@@ -942,25 +942,30 @@ describe("MFS Restrictions — Bracket Compression at Various Income Levels", ()
 });
 
 describe("MFS Restrictions — PTC Eligibility", () => {
-  it("MFS filer is treated like single for PTC repayment caps (Form 8962 Table 5)", () => {
+  it("MFS filer uses the other-status PTC repayment cap with no credit absent an exception", () => {
     // Build a scenario with APTC > PTC to trigger repayment
     const result = calculateForm8962({
       taxFamilySize: 1,
       modifiedAGI: d(40000),
       filingStatus: "married_filing_separately",
       form1095A: [{
-        marketplaceId: "MP-001",
-        monthlyPremiums: Array.from({ length: 12 }, () => ({
+        marketplace: "Synthetic Marketplace",
+        policyNumber: "SYNTHETIC-MP-001",
+        monthlyPremiums: Array.from({ length: 12 }, (_, index) => ({
+          month: index+1,
           enrolleePremium: "400",
           slcsp: "500",
           advancePremiumTaxCredit: "450", // APTC exceeds actual PTC
         })),
       }],
     });
-    // Total APTC = $5,400; MFS treated like single for repayment cap
+    // Official2025 Table5:40,000/15,060=265% FPL; MFS is "any other
+    // filing status", so cap1950. With no separated-spouse exception PTC is0.
     expect(result.advancePTCTotal.toNumber()).toBe(5400);
-    // Verify result has a capped repayment (single/MFS use same column)
-    expect(result.excessAPTCRepayment.toNumber()).toBeGreaterThanOrEqual(0);
+    expect(result.ptcAllowed.toString()).toBe("0");
+    expect(result.fplPercentageForTable.toString()).toBe("265");
+    expect(result.repaymentCap?.toString()).toBe("1950");
+    expect(result.excessAPTCRepayment.toString()).toBe("1950");
   });
 });
 

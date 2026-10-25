@@ -603,3 +603,17 @@ fixture now asserts6000line5a/8000SALT because its next-January1000payment belon
 to2026.587 focused tests, root types and all3,192spec refs pass; scopedlint has
 zeroerrors. Scoped diff/whitespace reviewed. Non-W2 withholding classification
 and amounts already deducted on business schedules remain a separate audit gap.
+
+### Stable-suite source assertions reconciled — 2026-10-25
+
+Addressed five law-owned failures from the parent's15929pass/6fail snapshot.
+Final Form8863line14 is MAGI, line8 is refundableAOC, and line18 is LLC after
+phaseout; the regression now asserts exact independent line values. Final8962
+Table5 puts MFS in the other-status column:40000/15060 floors to265% FPL and
+1950repayment cap, with noPTC absent an exception. Its synthetic1095A now has
+actual policy identity/months. Three joint-return comparison fixtures now have
+actual synthetic spouse identities; surtax/bracket/AMT expectations stay intact.
+230 affected tests pass, scopedlint has noerrors, and diff/whitespace reviewed.
+The remaining workspace1095A expected-source-marker failure is with the facts
+owner. SALT audit-label typo after the earlier rename was separately corrected
+in8c459ce; all587 tests and root types were rerun successfully after that fix.

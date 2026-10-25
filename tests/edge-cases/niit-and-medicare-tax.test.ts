@@ -9,7 +9,7 @@ import { calculateForm8959 } from "@/engine/forms/form-8959.js";
 import { calculateForm8960, type Form8960Input } from "@/engine/forms/form-8960.js";
 import { calculateFederalTax } from "@/engine/federal.js";
 import { getConstants, type FilingStatus } from "@/models/constants.js";
-import { simpleW2Fixture } from "../fixtures/simple-w2.js";
+import { simpleW2Fixture, complexMFJFixture } from "../fixtures/simple-w2.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 
 const d = (n: number | string) => new Decimal(n);
@@ -575,7 +575,7 @@ describe("MFJ exact $250K boundary - wages at threshold + investment income abov
   it("wages exactly at $250K MFJ threshold: zero Additional Medicare Tax", () => {
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
-      taxpayer: { ...simpleW2Fixture.taxpayer, filingStatus: "married_filing_jointly" },
+      taxpayer: { ...simpleW2Fixture.taxpayer, filingStatus: "married_filing_jointly", spouse: complexMFJFixture.taxpayer.spouse },
       w2s: [{
         ...simpleW2Fixture.w2s[0],
         wages: "250000",
@@ -1001,7 +1001,7 @@ describe("Combined NIIT + Additional Medicare as share of total tax at high inco
   it("combined surtax ($4,390) is material share of total tax for high-income MFJ filer", () => {
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
-      taxpayer: { ...simpleW2Fixture.taxpayer, filingStatus: "married_filing_jointly" },
+      taxpayer: { ...simpleW2Fixture.taxpayer, filingStatus: "married_filing_jointly", spouse: complexMFJFixture.taxpayer.spouse },
       w2s: [{
         ...simpleW2Fixture.w2s[0],
         wages: "400000",

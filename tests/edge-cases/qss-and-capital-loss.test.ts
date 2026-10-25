@@ -7,7 +7,7 @@
 import { describe, it, expect } from "vitest";
 import Decimal from "decimal.js";
 import { calculateFederalTax } from "@/engine/federal.js";
-import { simpleW2Fixture } from "../fixtures/simple-w2.js";
+import { simpleW2Fixture, complexMFJFixture } from "../fixtures/simple-w2.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 
 const d = (n: number | string) => new Decimal(n);
@@ -878,7 +878,7 @@ describe("QSS - additional edge cases", () => {
     };
     const mfjFix: TaxYearInput = {
       ...simpleW2Fixture,
-      taxpayer: { ...simpleW2Fixture.taxpayer, filingStatus: "married_filing_jointly" },
+      taxpayer: { ...simpleW2Fixture.taxpayer, filingStatus: "married_filing_jointly", spouse: complexMFJFixture.taxpayer.spouse },
       w2s: [{
         ...simpleW2Fixture.w2s[0],
         wages: "200000",
@@ -984,7 +984,7 @@ describe("QSS - AMT exemption matches MFJ", () => {
     };
     const mfjFix: TaxYearInput = {
       ...simpleW2Fixture,
-      taxpayer: { ...simpleW2Fixture.taxpayer, filingStatus: "married_filing_jointly" },
+      taxpayer: { ...simpleW2Fixture.taxpayer, filingStatus: "married_filing_jointly", spouse: complexMFJFixture.taxpayer.spouse },
       w2s: [{
         ...simpleW2Fixture.w2s[0],
         wages: "300000",
