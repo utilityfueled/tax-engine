@@ -4,6 +4,12 @@ taxYear: 2025
 irsReference: "https://www.irs.gov/instructions/i8606"
 
 notes: |
+  Whole-dollar calculation follows Form1040 instructions, Rounding Off to Whole
+  Dollars: retain cents while combining source amounts for one monetary line,
+  round that line once, and use completed lines in downstream calculations.
+  Form8606 line10 retains its separate three-decimal HALF_UP ratio rule.
+  See form-8606-rounding.yaml for source aggregation, allocation boundaries and
+  the currently published line15c examples refreshed2026-10-25.
   This slice implements the traditional IRA basis-allocation math needed to
   determine the taxable and nontaxable portions of IRA distributions and Roth
   conversions for Form 1040 Line 4b. It covers the Part I and Part II lines
@@ -188,7 +194,7 @@ lines:
 
   - line: "11"
     description: "Nontaxable portion of Roth conversions"
-    formula: "Line 8 × Line 10"
+    formula: "Round(Line 8 × Line 10) to the nearest dollar"
     irsRef: "Form 8606 Instructions, Line 11"
     inputs:
       - "Form 8606 Line 8"
@@ -197,7 +203,7 @@ lines:
 
   - line: "12"
     description: "Nontaxable portion of traditional IRA distributions"
-    formula: "Line 7 × Line 10"
+    formula: "Round(Line 7 × Line 10) to the nearest dollar"
     irsRef: "Form 8606 Instructions, Line 12"
     inputs:
       - "Form 8606 Line 7"

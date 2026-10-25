@@ -10,7 +10,7 @@
 import Decimal from "decimal.js";
 import type { Form8606Input } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
-import { d } from "@/utils/decimal.js";
+import { d, roundDollar } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
 
 export interface RothContributionBasisYearEntry {
@@ -106,22 +106,24 @@ export function calculateForm8606(input: Form8606Input): Form8606Result {
   const audit = new AuditTrail();
 
   const qualifiedReservistDistributionRepayments = d(input.qualifiedReservistDistributionRepayments);
-  const line1 = d(input.nondeductibleContributions).plus(qualifiedReservistDistributionRepayments);
-  const line2 = d(input.priorYearBasis);
+  // Preserve source cents until a complete form line has been assembled. The
+  // return uses whole-dollar monetary lines; line10 is the separate ratio rule.
+  const line1 = roundDollar(d(input.nondeductibleContributions).plus(qualifiedReservistDistributionRepayments));
+  const line2 = roundDollar(d(input.priorYearBasis));
   const line3 = line1.plus(line2);
-  const line4 = d(input.contributionsMadeNextYear);
+  const line4 = roundDollar(d(input.contributionsMadeNextYear));
   const line5 = Decimal.max(new Decimal(0), line3.minus(line4));
   const outstandingRollovers = Decimal.max(new Decimal(0), d(input.outstandingRollovers));
   const currentYearRepaymentsTreatedAsRollovers = clampExclusion(
     d(input.currentYearRepaymentsTreatedAsRollovers),
     d(input.yearEndValue).plus(outstandingRollovers)
   );
-  const line6 = Decimal.max(
+  const line6 = roundDollar(Decimal.max(
     new Decimal(0),
     d(input.yearEndValue)
       .plus(outstandingRollovers)
       .minus(currentYearRepaymentsTreatedAsRollovers)
-  );
+  ));
   const traditionalDistributions = Decimal.max(new Decimal(0), d(input.traditionalDistributions));
   const qualifiedCharitableDistributions = clampExclusion(
     d(input.qualifiedCharitableDistributions),
@@ -158,40 +160,40 @@ export function calculateForm8606(input: Form8606Input): Form8606Result {
     .plus(returnedContributionsByDueDate)
     .plus(returnedExcessContributions)
     .plus(qualifiedHsaFundingDistributions);
-  const line7 = Decimal.max(new Decimal(0), traditionalDistributions.minus(line7Exclusions));
-  const line8 = d(input.rothConversions);
+  const line7 = roundDollar(Decimal.max(new Decimal(0), traditionalDistributions.minus(line7Exclusions)));
+  const line8 = roundDollar(d(input.rothConversions));
   const line9 = line6.plus(line7).plus(line8);
   const line10 = line9.isZero()
     ? new Decimal(0)
     : Decimal.min(new Decimal(1), line5.dividedBy(line9)).toDecimalPlaces(3, Decimal.ROUND_HALF_UP);
-  const line11 = line8.times(line10);
-  const line12 = line7.times(line10);
+  const line11 = roundDollar(line8.times(line10));
+  const line12 = roundDollar(line7.times(line10));
   const line13 = line11.plus(line12);
-  const priorYearLine15cBasisAdjustment = Decimal.max(new Decimal(0), d(input.priorYearLine15cBasisAdjustment));
+  const priorYearLine15cBasisAdjustment = roundDollar(Decimal.max(new Decimal(0), d(input.priorYearLine15cBasisAdjustment)));
   const line14 = Decimal.max(new Decimal(0), line3.minus(line13)).plus(priorYearLine15cBasisAdjustment);
   const line15a = Decimal.max(new Decimal(0), line7.minus(line12));
-  const qualifiedDisasterDistributions = clampExclusion(
+  const qualifiedDisasterDistributions = roundDollar(clampExclusion(
     d(input.qualifiedDisasterDistributions),
     line7
-  );
+  ));
   const line15b = line7.isZero()
     ? new Decimal(0)
-    : line15a.times(qualifiedDisasterDistributions.dividedBy(line7));
+    : roundDollar(line15a.times(qualifiedDisasterDistributions.dividedBy(line7)));
   const line15cBase = Decimal.max(new Decimal(0), line15a.minus(line15b));
-  const repaymentEligibleDistributions = clampExclusion(
+  const repaymentEligibleDistributions = roundDollar(clampExclusion(
     d(input.repaymentEligibleDistributions),
     line7
-  );
+  ));
   const line15cExceptionNumber = repaymentEligibleDistributions.greaterThan(0)
     ? input.repaymentDistributionExceptionNumber
     : undefined;
-  const repaymentWithin3YearWindow = clampExclusion(
+  const repaymentWithin3YearWindow = roundDollar(clampExclusion(
     d(input.repaymentWithin3YearWindow),
     repaymentEligibleDistributions
-  );
+  ));
   const line15cRepaymentEligibleTaxableShare = line7.isZero()
     ? new Decimal(0)
-    : line15a.times(repaymentEligibleDistributions.dividedBy(line7));
+    : roundDollar(line15a.times(repaymentEligibleDistributions.dividedBy(line7)));
   const line15cRepaymentReduction = Decimal.min(
     line15cRepaymentEligibleTaxableShare,
     repaymentWithin3YearWindow
@@ -250,7 +252,7 @@ export function calculateForm8606(input: Form8606Input): Form8606Result {
     .plus(rothReturnedContributionsByDueDate)
     .plus(rothReturnedExcessContributions)
     .plus(rothQualifiedHsaFundingDistributions);
-  const line19 = Decimal.max(new Decimal(0), rothDistributions.minus(line19Exclusions));
+  const line19 = roundDollar(Decimal.max(new Decimal(0), rothDistributions.minus(line19Exclusions)));
   const priorQualifiedFirstTimeHomebuyerDistributions = clampExclusion(
     d(input.priorQualifiedFirstTimeHomebuyerDistributions),
     new Decimal(10000)
@@ -259,10 +261,10 @@ export function calculateForm8606(input: Form8606Input): Form8606Result {
     new Decimal(0),
     new Decimal(10000).minus(priorQualifiedFirstTimeHomebuyerDistributions)
   );
-  const line20 = clampExclusion(
+  const line20 = roundDollar(clampExclusion(
     d(input.qualifiedFirstTimeHomebuyerExpenses),
     Decimal.min(line19, remainingFirstTimeHomebuyerLimit)
-  );
+  ));
   const line21 = Decimal.max(new Decimal(0), line19.minus(line20));
   const priorYearLine25cBasisAdjustment = Decimal.max(new Decimal(0), d(input.priorYearLine25cBasisAdjustment));
   // Line 22: Per-year contribution basis chart takes precedence over single value when provided
@@ -284,7 +286,7 @@ export function calculateForm8606(input: Form8606Input): Form8606Result {
   const rothContributionBasis = hasContribPerYearChart
     ? sortedContribChart!.reduce((sum, entry) => sum.plus(entry.basisRemaining), new Decimal(0))
     : Decimal.max(new Decimal(0), d(input.rothContributionBasis));
-  const line22 = rothContributionBasis.plus(priorYearLine25cBasisAdjustment);
+  const line22 = roundDollar(rothContributionBasis.plus(priorYearLine25cBasisAdjustment));
   const line23 = Decimal.max(new Decimal(0), line21.minus(line22));
   // Line 24: Per-year chart takes precedence over single value when provided
   const perYearChart = input.rothConversionBasisByYear;
@@ -305,31 +307,31 @@ export function calculateForm8606(input: Form8606Input): Form8606Result {
   const rothConversionBasis = hasPerYearChart
     ? sortedChart!.reduce((sum, entry) => sum.plus(entry.basisRemaining), new Decimal(0))
     : Decimal.max(new Decimal(0), d(input.rothConversionBasis));
-  const line24 = rothConversionBasis;
+  const line24 = roundDollar(rothConversionBasis);
   const line25a = Decimal.max(new Decimal(0), line23.minus(line24));
-  const rothQualifiedDisasterDistributions = clampExclusion(
+  const rothQualifiedDisasterDistributions = roundDollar(clampExclusion(
     d(input.rothQualifiedDisasterDistributions),
     line21
-  );
+  ));
   const line25b = line21.isZero()
     ? new Decimal(0)
-    : line25a.times(rothQualifiedDisasterDistributions.dividedBy(line21));
+    : roundDollar(line25a.times(rothQualifiedDisasterDistributions.dividedBy(line21)));
   const line25cBase = Decimal.max(new Decimal(0), line25a.minus(line25b));
-  const rothRepaymentEligibleDistributions = clampExclusion(
+  const rothRepaymentEligibleDistributions = roundDollar(clampExclusion(
     d(input.rothRepaymentEligibleDistributions),
     line21
-  );
+  ));
   const line25cExceptionNumber = rothRepaymentEligibleDistributions.greaterThan(0)
     ? input.rothRepaymentDistributionExceptionNumber
     : undefined;
   const line25cRepaymentEligibleTaxableShare = line21.isZero()
     ? new Decimal(0)
-    : line25a.times(rothRepaymentEligibleDistributions.dividedBy(line21));
+    : roundDollar(line25a.times(rothRepaymentEligibleDistributions.dividedBy(line21)));
   const rothRepaymentEligibleRepaymentCap = rothRepaymentEligibleDistributions;
-  const rothRepaymentsWithin3YearWindow = clampExclusion(
+  const rothRepaymentsWithin3YearWindow = roundDollar(clampExclusion(
     d(input.rothRepaymentsWithin3YearWindow),
     rothRepaymentEligibleRepaymentCap
-  );
+  ));
   const line25cRepaymentEligibleRemainingTaxableShare = Decimal.max(
     new Decimal(0),
     line25cRepaymentEligibleTaxableShare.minus(
