@@ -46,6 +46,7 @@ describe("guided investment source records", () => {
   });
   it("preserves source-state withholding once and requires reconciliation of duplicate additional records", () => {
     const state = interview();
+    state.sectionData.deductions!.nonW2IncomeTaxesDeductedElsewhere = "0";
     state.sectionData["income-investments"] = { interestEntries: [{ ...completeInterestSource, interestIncome: "100", stateTaxReporting: "single", state: "NY", stateWithheld: "0.01" }], dividendEntries: [], brokerageEntries: [] };
     expect(buildTaxInputFromGuidedData(state)?.form1099Int[0]).toMatchObject({ state: "NY", stateWithheld: "0.01" });
     state.sectionData["state-return"] = { ...emptyStateReturnData, additionalStateWithholdingEntries: [{ payer: "Actual bank", documentType: "1099-INT", state: "NY", taxYear: "2025", amount: "0.01" }] };
@@ -74,6 +75,7 @@ describe("guided investment source records", () => {
   });
   it("credits only matching source-state investment withholding with exact cents", () => {
     const state = interview();
+    state.sectionData.deductions!.nonW2IncomeTaxesDeductedElsewhere = "0";
     state.segmentation.stateCode = "PA";
     state.sectionData["income-investments"] = { interestEntries: [{ ...completeInterestSource, stateTaxReporting: "single", state: "PA", stateWithheld: "0.10" }], dividendEntries: [{ ...completeDividendSource, stateTaxReporting: "single", state: "PA", stateWithheld: "0.20" }], brokerageEntries: [{ ...completeBrokerageSource, stateTaxReporting: "single", state: "NY", stateWithheld: "400" }] };
     expect(computeGuidedPreview(state)?.state?.stateWithholding).toBe("0.3");

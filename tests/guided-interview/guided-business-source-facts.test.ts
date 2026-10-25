@@ -91,6 +91,7 @@ describe("guided business source records", () => {
   });
   it("counts only actual matching state withholding and rejects duplicate source entries", () => {
     const state = flow();
+    state.sectionData.deductions!.nonW2IncomeTaxesDeductedElsewhere = "0";
     state.segmentation.stateCode = "PA";
     state.sectionData["income-self-employment"]!.necEntries = [{ ...source, stateWithheld: "0.10" }, { ...source, payerName: "Other client", state: "NY", stateWithheld: "0.20" }];
     expect(computeGuidedPreview(state)?.state?.stateWithholding).toBe("0.1");
