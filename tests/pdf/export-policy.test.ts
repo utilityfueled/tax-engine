@@ -4,6 +4,8 @@ import { fillReturn } from "@/pdf/fill-return.js";
 import { fillForm1040 } from "@/pdf/fill-form-1040.js";
 import { calculateFederalTax } from "@/engine/federal.js";
 import { simpleW2Fixture } from "../fixtures/simple-w2.js";
+import { QUALIFIED_FILING_SCENARIOS } from "@/pdf/filing-registry.js";
+import { buildFilingReturn } from "@/pdf/filing-return.js";
 
 describe("PDF year and filing qualification", () => {
   it("rejects filing requests and unknown or incomplete mapping years", () => {
@@ -19,5 +21,12 @@ describe("PDF year and filing qualification", () => {
     const result = calculateFederalTax(simpleW2Fixture);
     await expect(fillReturn(simpleW2Fixture, result, { purpose: "filing", blankFormsDir: "/missing", outputDir: "/missing" })).rejects.toThrow(/Filing exports/);
     await expect(fillForm1040(simpleW2Fixture, { ...result, taxYear: 2026 }, "/missing.pdf")).rejects.toThrow(/years must match/);
+  });
+
+  it("ships no qualified filing scenario or implicit fallback to review mappings", async () => {
+    expect(Object.isFrozen(QUALIFIED_FILING_SCENARIOS)).toBe(true);
+    expect(Object.keys(QUALIFIED_FILING_SCENARIOS)).toEqual([]);
+    await expect(buildFilingReturn(simpleW2Fixture, "2025-federal", "/missing")).rejects.toThrow(/unavailable/);
+    await expect(buildFilingReturn({ taxpayer: { taxYear: 2026 } }, "2026-federal", "/missing")).rejects.toThrow(/unavailable/);
   });
 });

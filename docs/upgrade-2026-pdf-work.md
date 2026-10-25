@@ -20,3 +20,26 @@ run passed 39 tests, engine types and scoped lint. These checks establish mappin
 agreement with audited results, not independent tax-law review or filing
 qualification. Evidence: `.local/upgrade-evidence/credit-audit-pdf-{red,green,types}.log`.
 Both years remain unavailable for filing; 2026 review mappings remain unavailable.
+
+## Separate complete-data filing pipeline
+
+`src/pdf/filing-return.ts` provides a distinct library pipeline that retains
+complete identifiers, requires scenario-specific fact validation, recalculates
+the return, and assembles only the scenario's complete, unique final-form list.
+It checks year/rule-version parity, tax/security/release evidence, each mapping
+review and the SHA-256 of every template before any renderer runs. Empty and
+review-marked documents are rejected. It never falls back to a review mapping.
+
+The compiled `QUALIFIED_FILING_SCENARIOS` registry is empty and frozen. No request,
+environment variable, AI result or caller-supplied manifest can register a
+scenario. Current rule packs independently block filing. The public review route
+still rejects a filing purpose; no filing button or enabled endpoint is added.
+Registering final forms, their complete-fact validators and dedicated renderers,
+and connecting the qualified scenario to the public download flow require the
+missing independent qualification and release authorization.
+
+Twenty-seven focused pipeline/policy tests pass, plus engine types and scoped
+lint. A mocked synthetic renderer exercises the future complete-data path and
+failure cases; it is explicitly not an official form, tax calculation oracle or
+independent review. The unmocked production-registry test proves both 2025 and
+2026 filing requests remain unavailable. No usable filing packet is claimed.
