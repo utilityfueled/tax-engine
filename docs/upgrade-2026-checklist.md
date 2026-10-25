@@ -190,3 +190,35 @@ until the brief's criteria pass or only external actions remain.
   final image/Compose recovery. User demand, secure staging access, approved live
   provider budget, final official forms and independent human reviews remain
   external inputs; no promotion, filing, production deployment or publication.
+
+## Stable snapshot and new packages — 2026-10-25
+
+- Fixed commit `2cb61b3`, isolated tracked-file archive, Node24, two workers and
+  disposable PostgreSQL16: **15,929 passed / six failed**, 545 passing files and
+  five failing files. Coverage: branches **84.06%**, functions **89.81%**,
+  statements 91.85%, lines 92.93%. Both branch/function gates still fail.
+  Evidence: `.local/upgrade-evidence/stable-coverage-2cb61b3.log` and snapshot
+  metadata; this supersedes concurrent-source diagnostics for that commit only.
+- `edd564b` reconciles five official-source fixture assertions. The remaining
+  workspace PTC marker is in the facts package. Newer remote CI also exposed
+  legacy state W-2 inputs without EINs; federal owner is correcting 2025 handling.
+- `ea95c66` renders all Form8863 students/institutions from exact audit amounts;
+  `2cb61b3` redacts review identifiers only after full-fact calculation. Seventy-six
+  focused checks pass, with four rendered synthetic pages inspected and notices
+  on every page. Historical 2025 review output remains unqualified for filing.
+- `7a2a95b`, `cddec72`, `632452b` add standard-deduction law, federal integration
+  and actual eligibility/election facts. `ec59e76` separates excess Social
+  Security by employer and owner. `5a5c6b3`/`8c459ce` use actual state payment year.
+- `a44adbb`, `93f336c`, `45bb211` add actual-source prior minimum tax credit,
+  audited Form8801 reference pages and federal integration. Focused module/PDF
+  run: 92 passes; federal integration: 549 passes. Independent review pending.
+- `935e0cc` hardens document/review-PDF requests (89 focused passes, web types,
+  lint); `0eab56e` fixes stale recovery UI success after cancellation/unmount/
+  return changes (33 focused passes, web types, lint). No staging evidence implied.
+- `0c935f7` excludes isolated pnpm caches from container context; 48 checks pass.
+- Remote `edd564b` CI failed unit regressions and inventory freshness. Current
+  pushed `0eab56e` CI queued: https://github.com/utilityfueled/tax-engine/actions/runs/40160576899.
+- Immediate parent work: request-stream cleanup, meaningful recovery/saved-return/
+  billing UI checks, paid AI availability claims/purchase gating, then a stable
+  rerun and final image/Compose rehearsal. Tax agents continue FEIE, credits and
+  remaining actual income/source facts. All external inputs above remain pending.

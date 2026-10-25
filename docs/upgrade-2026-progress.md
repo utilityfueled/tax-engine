@@ -419,3 +419,11 @@ freshness. Additional privacy, audited PDF forwarding and billing outage package
 passed their focused checks; see the checklist and machine checkpoint for exact
 commit/evidence references. Staging, human review, live provider evaluation and
 final release qualification remain unproven. The goal is still active.
+
+The isolated `2cb61b3` snapshot now provides a stable diagnostic: 15,929 tests
+passed and six failed, with 84.06% branch and 89.81% function coverage. Both
+unchanged coverage gates remain unmet. New audited education/minimum-tax PDFs,
+post-calculation identifier redaction, document request guards and recovery UI
+cancellation packages passed focused checks. The checklist and `ongoingExecution`
+record their exact commits. Remote CI at `edd564b` still failed unit regressions
+and inventory freshness; further implementation and full verification continue.

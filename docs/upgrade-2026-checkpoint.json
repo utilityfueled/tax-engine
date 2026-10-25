@@ -204,7 +204,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "5e0822a",
+    "lastRecordedCommit": "0eab56e",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -255,6 +255,19 @@
       },
       "premiumCreditIntegration": {
         "passed": 73
+      },
+      "documentRequestBoundaries": {
+        "passed": 89,
+        "scope": "synthetic local guards, dependency failures, PDF generation and transport; no live provider calls"
+      },
+      "recoveryUiCancellation": {
+        "passed": 33,
+        "scope": "mocked UI interactions plus local core crypto/storage checks"
+      },
+      "educationPdfAndReviewPrivacy": {
+        "passed": 76,
+        "renderedPages": 4,
+        "scope": "synthetic 2025 review copies; no filing qualification"
       }
     },
     "externalInputsStillPending": [
@@ -272,22 +285,28 @@
     ],
     "workInProgress": [
       "remaining federal law and complete facts",
-      "audited multi-student education PDF and review identifier privacy",
-      "state demand and final form qualification",
-      "full-suite coverage and release rehearsal",
+      "stable full-suite coverage with meaningful failure and UI tests",
+      "request-body cancellation and billing availability claims",
+      "selected-state demand and final form qualification",
+      "final multi-platform release and recovery rehearsal",
       "hosted staging and independent human reviews",
       "repeated live synthetic AI evaluation and account availability"
     ],
-    "latestIntegratedCommit": "9c2fa0c",
+    "latestIntegratedCommit": "0eab56e",
     "latestCoverageDiagnostic": {
       "status": "failed",
-      "passed": 15745,
-      "failed": 30,
-      "skipped": 19,
-      "filesPassed": 525,
-      "filesFailed": 11,
-      "evidence": ".local/upgrade-evidence/coverage-after-credit-integration.log",
-      "limitation": "Concurrent source edits and PDF timeouts. No fresh coverage report generated. Prior percentages remain failed historical diagnostics; stable run required."
+      "commit": "2cb61b339de231ba74cedc2fd20853626dd5a4ec",
+      "passed": 15929,
+      "failed": 6,
+      "skipped": 0,
+      "filesPassed": 545,
+      "filesFailed": 5,
+      "branchesPercent": "84.06",
+      "functionsPercent": "89.81",
+      "statementsPercent": "91.85",
+      "linesPercent": "92.93",
+      "evidence": ".local/upgrade-evidence/stable-coverage-2cb61b3.log",
+      "limitation": "Isolated committed snapshot, bounded workers and disposable local PostgreSQL16. Six fixture/source regressions, plus unchanged 85% branch and 90% function gates failed. Newer commits require a new full run."
     },
     "recentPackages": {
       "privacyHeaderRedaction": "2d16a94",
@@ -310,25 +329,34 @@
       "premiumCreditLaw": "ca8c1e5",
       "premiumCreditIntegration": "5e0822a",
       "vehicleSourceFacts": "4dd6ebf",
-      "adoptionSourceFacts": "a0a4e21"
+      "adoptionSourceFacts": "a0a4e21",
+      "auditedEducationPdf": "ea95c66",
+      "reviewIdentifiersAfterCalculation": "2cb61b3",
+      "standardDeductionLaw": "7a2a95b",
+      "standardDeductionIntegration": "cddec72",
+      "standardDeductionFacts": "632452b",
+      "excessSocialSecurity": "ec59e76",
+      "actualStatePaymentYear": "5a5c6b3",
+      "statePaymentAuditFix": "8c459ce",
+      "minimumTaxCreditLaw": "a44adbb",
+      "minimumTaxCreditPdf": "93f336c",
+      "minimumTaxCreditIntegration": "45bb211",
+      "documentRequestBoundaries": "935e0cc",
+      "recoveryUiCancellation": "0eab56e",
+      "containerContext": "0c935f7"
     },
     "remoteCi": {
-      "commit": "e910507",
-      "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40156586696",
+      "commit": "edd564b",
+      "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40160293322",
       "status": "failed",
-      "passed": [
-        "frozen install",
-        "engine build",
-        "engine and contracts types",
-        "lint",
-        "spec references"
-      ],
       "failed": [
-        "unit test assertions",
+        "legacy state input missing employer EIN",
+        "other unit regressions",
         "generated inventory freshness"
       ],
-      "coverage": "not reached",
-      "evidence": ".local/upgrade-evidence/ci-e910507-failed.log"
+      "evidence": ".local/upgrade-evidence/ci-edd564b-failed.log",
+      "latestQueuedCommit": "0eab56e",
+      "latestQueuedUrl": "https://github.com/utilityfueled/tax-engine/actions/runs/40160576899"
     }
   }
 }
