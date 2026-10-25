@@ -6,6 +6,7 @@ import type { CharitableCategory, CharitableContributionWorksheetInput } from ".
 import { AuditTrail } from "@/utils/audit.js";
 import { d, sum, zeroFloor } from "@/utils/decimal.js";
 import { validateCharitableCarryoverSources, type CharitableCarryoverBalance } from "./charitable-carryover-source-validation.js";
+import { allocateCharitablePrivateMedia } from "./charitable-private-media.js";
 const ZERO = d("0");
 type Medium = "cash" | "noncash";
 export type { CharitableCarryoverBalance } from "./charitable-carryover-source-validation.js";
@@ -32,9 +33,17 @@ export function calculateCharitableCarryover(input: TaxYearInput, context: {
   const raw = context.current;
   const consume = (category: CharitableCategory, capacity: Decimal): Decimal => {
     let remaining = zeroFloor(capacity), used = ZERO;
-    for (const row of records.filter(record => record.category === category && record.taxYear + 5 >= taxYear)) {
-      row.used = Decimal.min(row.amount, remaining);
-      remaining = remaining.minus(row.used); used = used.plus(row.used);
+    const eligible = records.filter(record => record.category === category && record.taxYear + 5 >= taxYear);
+    // Source validation permits one row per actual year/category/medium. The
+    // shared B cap applies to a year's group before FIFO advances to another year.
+    for (const year of new Set(eligible.map(record => record.taxYear))) {
+      const group = eligible.filter(record => record.taxYear === year);
+      const groupUse = Decimal.min(sum(...group.map(row => row.amount)), remaining);
+      const allocation = allocateCharitablePrivateMedia(
+        sum(...group.filter(row => row.medium === "cash").map(row => row.amount)),
+        sum(...group.filter(row => row.medium === "noncash").map(row => row.amount)), groupUse);
+      group.forEach(row => { row.used = allocation[row.medium]; });
+      remaining = remaining.minus(groupUse); used = used.plus(groupUse);
     }
     return used;
   };
@@ -54,7 +63,7 @@ export function calculateCharitableCarryover(input: TaxYearInput, context: {
   const dCapacity = Decimal.min(twenty, zeroFloor(thirty.minus(c).minus(priorC)), zeroFloor(thirty.minus(b).minus(priorB)), zeroFloor(fifty.minus(g).minus(priorG).minus(a).minus(priorA).minus(b).minus(priorB).minus(c).minus(priorC)));
   const privateCapital = Decimal.min(raw.capitalGainPrivate, dCapacity);
   consume("capital_gain_20", dCapacity.minus(privateCapital));
-  const privateCash = Decimal.min(raw.cashPrivate, b);
+  const privateCash = allocateCharitablePrivateMedia(raw.cashPrivate, raw.noncashPrivate, b).cash;
   const currentCash = g.plus(privateCash), currentNoncash = sum(a, c, privateCapital, b.minus(privateCash));
   const detail = records.map(row => {
     const remainder = row.amount.minus(row.used), expires = row.taxYear + 5 <= taxYear;

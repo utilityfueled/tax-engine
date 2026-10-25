@@ -346,10 +346,8 @@ export function calculateScheduleA(
   } else {
     const charitable = calculateCharitableContributionWorksheet({ taxYear: input.taxpayer.taxYear, contributionBase, amounts });
     audit.merge(charitable.lines);
-    const privateCashAllowed = min(amounts.cashPrivate, charitable.allowedAfterFloor.other_30);
-    cashCharitable = charitable.allowedAfterFloor.cash_60.plus(privateCashAllowed);
-    nonCashCharitable = sum(charitable.allowedAfterFloor.noncash_50, charitable.allowedAfterFloor.capital_gain_30,
-      charitable.allowedAfterFloor.capital_gain_20, charitable.allowedAfterFloor.other_30.minus(privateCashAllowed));
+    cashCharitable = charitable.exactCashDeduction;
+    nonCashCharitable = charitable.exactNonCashDeduction;
     charitableCarryforwards = charitable.carryforwards;
   }
   const limitDescription = input.taxpayer.taxYear === 2026 ? "2026 category worksheet, including 0.5% floor" : "Final2025 Pub526 Worksheet2 current-contribution category limits";

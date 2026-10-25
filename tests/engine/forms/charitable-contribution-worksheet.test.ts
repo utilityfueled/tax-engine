@@ -21,7 +21,8 @@ it("retains exact percentage floor and carry values in both supported years", ()
       expect(result.allowedBeforeFloor[category].toString()).toBe(beforeFloor);
       expect(result.floorDisallowed).toEqual(expectedFloor);
       expect(result.allowedAfterFloor[category]).toEqual(expectedAllowed);
-      expect(result.carryforwards).toEqual([{ taxYear, category, amount: d("10000.99").minus(expectedAllowed) }]);
+      expect(result.carryforwards).toEqual([{ taxYear, category,
+        ...(category === "other_30" ? { medium: "cash" } : {}), amount: d("10000.99").minus(expectedAllowed) }]);
       expect(result.totalDeduction).toEqual(expectedAllowed.toDecimalPlaces(0, Decimal.ROUND_HALF_UP));
     }
   }
@@ -38,7 +39,7 @@ describe("2026 charitable category limits", () => {
   it("applies the new 10% cash adjustment to second-category headroom", () => {
     const result = calc({ cashPublic: d("50000"), cashPrivate: d("20000") });
     expect(result.cashDeduction.toString()).toBe("59500");
-    expect(result.carryforwards).toEqual([{ taxYear: 2026, category: "other_30", amount: d("10500") }]);
+    expect(result.carryforwards).toEqual([{ taxYear: 2026, category: "other_30", medium: "cash", amount: d("10500") }]);
   });
   it("preserves separate 30% and 20% capital-gain categories", () => {
     const result = calc({ capitalGainPublic: d("10000"), capitalGainPrivate: d("30000") });

@@ -26,8 +26,9 @@ lines:
       min(B,30% base,max(0,50% base-G-A-reserveC+min(G,10% base))).
       C public capital-gain property: min(C,30% base,max(0,50% base-G-A-B)). D second-category capital-gain
       property: min(D,20% base,30% base-C,30% base-B,
-      max(0,50% base-G-A-C-B+min(G,10% base))). Cash within B is allocated first
-      only to distinguish cash/noncash reporting, without changing its common cap.
+      max(0,50% base-G-A-C-B+min(G,10% base))). B's cash/noncash split requires
+      the uniquely determined source method in charitable-private-media.yaml;
+      no cash-first partial reporting or carry allocation is inferred.
       Base=max(0,AGI); intermediate capacities, category use, floor and carry retain exact
       Decimal values under6102(c). Only completed cash/noncash reporting groups round
       to dollars. K-1 categories retain

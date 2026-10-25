@@ -67,7 +67,7 @@ describe("Crypto charitable source integration", () => {
     } });
     expect(published.cashDeduction.toString()).toBe("2000");
     expect(published.nonCashDeduction.toString()).toBe("15000");
-    expect(published.carryforwards).toEqual([{ taxYear: 2025, category: "capital_gain_30", amount: d("13000") }, { taxYear: 2025, category: "other_30", amount: d("5000") }]);
+    expect(published.carryforwards).toEqual([{ taxYear: 2025, category: "capital_gain_30", amount: d("13000") }, { taxYear: 2025, category: "other_30", medium: "cash", amount: d("5000") }]);
     const result = calculateFederalTax(input(2025, [gift({ dateDonated: "2025-06-01" })], {
       donations: [{ organization: "Actual public charity", qualifiedOrganization: true, isPrivateFoundation: false, type: "cash", amount: "30000", dateOfDonation: "2025-05-01" }],
     }));

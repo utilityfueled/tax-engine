@@ -13,6 +13,8 @@ notes: |
   changed filing units and conservation/election changes remain separate methods,
   with all source facts retained. The historical2025 G carry/property order is
   specified separately in charitable-public-cash-carry-2025.yaml.
+  Actual same-year private cash/noncash histories and their bounded zero/full
+  allowance method are specified in charitable-private-media.yaml.
 lines:
   - line: "history"
     description: "Actual source history conserves original excess"

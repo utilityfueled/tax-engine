@@ -3,6 +3,7 @@ import Decimal from "decimal.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { d, sum, min, zeroFloor, roundDollar } from "@/utils/decimal.js";
+import { allocateCharitablePrivateMedia } from "./charitable-private-media.js";
 export type CharitableCategory = "cash_60" | "noncash_50" | "capital_gain_30" | "other_30" | "capital_gain_20";
 export interface CharitableContributionWorksheetInput {
   taxYear: number;
@@ -13,10 +14,12 @@ export interface CharitableContributionWorksheetResult {
   allowedBeforeFloor: Record<CharitableCategory, Decimal>;
   allowedAfterFloor: Record<CharitableCategory, Decimal>;
   floorDisallowed: Decimal;
+  exactCashDeduction: Decimal;
+  exactNonCashDeduction: Decimal;
   cashDeduction: Decimal;
   nonCashDeduction: Decimal;
   totalDeduction: Decimal;
-  carryforwards: { taxYear: number; category: CharitableCategory; amount: Decimal }[];
+  carryforwards: { taxYear: number; category: CharitableCategory; medium?: "cash" | "noncash"; amount: Decimal }[];
   lines: CalculatedLine[];
 }
 export function calculateCharitableContributionWorksheet(input: CharitableContributionWorksheetInput): CharitableContributionWorksheetResult {
@@ -53,16 +56,24 @@ export function calculateCharitableContributionWorksheet(input: CharitableContri
     audit.record("Charitable WS", category, "Contribution after applicable limits", allowedAfterFloor[category], input.taxYear === 2026 ? "Percentage limit followed by floor in D,C,B,A,G order" : "Final2025 Pub526 Worksheet2 category limit; no2026floor", { offered: raw[category], beforeFloor: allowedBeforeFloor[category], floorDisallowed: disallowed });
   }
   const floorDisallowed = sum(...Object.values(allowedBeforeFloor)).minus(sum(...Object.values(allowedAfterFloor)));
-  const privateCashAllowed = min(cashPrivate, allowedAfterFloor.other_30);
-  const cashDeduction = roundDollar(allowedAfterFloor.cash_60.plus(privateCashAllowed));
-  const nonCashDeduction = roundDollar(sum(allowedAfterFloor.noncash_50, allowedAfterFloor.capital_gain_30, allowedAfterFloor.capital_gain_20, allowedAfterFloor.other_30.minus(privateCashAllowed)));
+  const privateAllowed = allocateCharitablePrivateMedia(cashPrivate, noncashPrivate, allowedAfterFloor.other_30);
+  const exactCashDeduction = allowedAfterFloor.cash_60.plus(privateAllowed.cash);
+  const exactNonCashDeduction = sum(allowedAfterFloor.noncash_50, allowedAfterFloor.capital_gain_30, allowedAfterFloor.capital_gain_20, privateAllowed.noncash);
+  const cashDeduction = roundDollar(exactCashDeduction);
+  const nonCashDeduction = roundDollar(exactNonCashDeduction);
   const totalDeduction = cashDeduction.plus(nonCashDeduction);
-  const carryforwards = categories.flatMap(category => {
+  const carryforwards = categories.flatMap<CharitableContributionWorksheetResult["carryforwards"][number]>(category => {
     const percentageExcess = raw[category].minus(allowedBeforeFloor[category]);
     const eligibleFloor = hasPercentageExcess ? allowedBeforeFloor[category].minus(allowedAfterFloor[category]) : d("0");
     const amount = percentageExcess.plus(eligibleFloor);
+    if (category === "other_30") {
+      const carry = allocateCharitablePrivateMedia(cashPrivate, noncashPrivate, amount);
+      return (["cash", "noncash"] as const).flatMap(medium => carry[medium].gt(0)
+        ? [{ taxYear: input.taxYear, category, medium, amount: carry[medium] }] : []);
+    }
     return amount.gt(0) ? [{ taxYear: input.taxYear, category, amount }] : [];
   });
   audit.record("Charitable WS", "total", "Charitable deduction after floor", totalDeduction, "Sum allowed categories after percentage limits and 0.5% floor");
-  return { allowedBeforeFloor, allowedAfterFloor, floorDisallowed, cashDeduction, nonCashDeduction, totalDeduction, carryforwards, lines: audit.getLines() };
+  return { allowedBeforeFloor, allowedAfterFloor, floorDisallowed, exactCashDeduction, exactNonCashDeduction,
+    cashDeduction, nonCashDeduction, totalDeduction, carryforwards, lines: audit.getLines() };
 }

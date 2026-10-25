@@ -60,8 +60,8 @@ export function validateCharitableCarryoverSources(input: CharitableSourceValida
     const category = source.category as CharitableCategory;
     if (source.ordinaryPercentageMethodConfirmed !== true) throw new Error("Charitable history requires actual ordinary-percentage method confirmation");
     if (!source.medium || (category === "cash_60" && source.medium !== "cash") || (["noncash_50", "capital_gain_30", "capital_gain_20"].includes(category) && source.medium !== "noncash")) throw new Error("Charitable history category and actual contribution medium must reconcile");
-    const key = `${year}:${category}`;
-    if (vintageKeys.has(key)) throw new Error("Duplicate charitable year/category requires a single reconciled source vintage");
+    const key = `${year}:${category}:${source.medium}`;
+    if (vintageKeys.has(key)) throw new Error("Duplicate charitable year/category/medium requires a single reconciled source vintage");
     vintageKeys.add(key);
     if (source.allHistoryIncluded !== true || source.adjustedThroughTaxYear !== taxYear - 1 || !Array.isArray(source.history)) throw new Error("Charitable vintage requires complete actual intervening history through the prior year");
     let remaining = amount(source.originalExcess, "original excess").minus(amount(source.originNolReduction, "origin NOL reduction"));
