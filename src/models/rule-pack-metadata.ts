@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.48",
+    ruleVersion: "2025.49",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i8814", section: "Actual child income character, Alaska allocation for NIIT, and capital distributions netted inside ScheduleD before parent loss limits", revision: "Final2025 source method and year-specific indexed thresholds; special gain netting and final forms remain gated", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i8995", section: "Actual suspended rental loss vintages, fixed originating qualified percentage, FIFO and separate released prior qualified loss", revision: "Final2025 instructions and Reg1.199A-3(b)(1)(iv); source and independent review gates retained", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i8995a", section: "Schedule A current SSTB qualification before Schedule C loss netting, nonnegative business components and retained qualified carry", revision: "Final2025 instructions and continuous-use Schedules A/C; separate PTP and detailed physical mapping remain unqualified", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i8582", section: "Official current/prior loss columns, net passive MAGI, special allowance capacity, PartsVI-VIII allocation and signed ScheduleE transfer", revision: "Final2025 form and instructions; passive Marketplace ordering and specialized source methods remain internal work", retrievedAt: "2026-10-25" },
@@ -91,11 +92,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.44-law-integration-draft",
+    ruleVersion: "2026.45-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i8814", section: "Actual child income character, Alaska allocation for NIIT, and capital distributions netted inside ScheduleD before parent loss limits", revision: "Final2025 source method and year-specific indexed thresholds; special gain netting and final forms remain gated", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i8995", section: "Actual suspended rental loss vintages, fixed originating qualified percentage, FIFO and separate released prior qualified loss", revision: "Applicable current-law source method; final2026 form and independent qualification remain pending", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i8995a", section: "Schedule A current SSTB qualification before Schedule C loss netting, nonnegative business components and retained qualified carry", revision: "Applicable current-law source method with indexed2026 thresholds; separate PTP and detailed physical mapping remain unqualified", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i8582", section: "Official current/prior loss columns, net passive MAGI, special allowance capacity, PartsVI-VIII allocation and signed ScheduleE transfer", revision: "Final2025 form and instructions; passive Marketplace ordering and specialized source methods remain internal work", retrievedAt: "2026-10-25" },

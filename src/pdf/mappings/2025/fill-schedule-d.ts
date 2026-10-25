@@ -109,7 +109,7 @@ const FIELDS = {
   line11: p1("f1_39[0]"),
   // Line 12: Net long-term gain from partnerships/S-corps/estates/trusts
   line12: p1("f1_40[0]"),
-  // Line 13: Capital gain distributions (1099-DIV Box 2a) / QSBS exclusion
+  // Line 13: Capital gain distributions (1099-DIV Box 2a and child8814Line10)
   line13: p1("f1_41[0]"),
   // Line 14: Long-term capital loss carryover
   line14: p1("f1_42[0]"),
@@ -222,7 +222,7 @@ export async function fillScheduleD(
   const line12 = getLineValue(result, "Sched D", "12");
   if (line12) setCurrencyField(form, F.line12, line12);
 
-  // Line 13: Capital gain distributions / QSBS exclusion
+  // Line 13: Actual parent and child capital gain distributions, before netting
   const line13 = getLineValue(result, "Sched D", "13");
   if (line13) setCurrencyField(form, F.line13, line13);
 

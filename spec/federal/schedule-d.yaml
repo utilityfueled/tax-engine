@@ -27,7 +27,7 @@ lines:
       - "Form 4797 Line 9 section 1231 long-term capital gain"
       - "1099-DIV Box 2a (capital gain distributions)"
       - "Prior year long-term capital loss carryforward"
-      - "Section 1202 QSBS exclusion (Line 13, subtracted)"
+      - "Section 1202 QSBS exclusion (separate Form8949 adjustment, subtracted)"
       - "Home sale taxable gain after IRC §121 exclusion (from home-sale-exclusion module)"
       - "Form 6781 long-term (Line 9 + Line 11b + Line 13b)"
       - "Form 6252 long-term capital gain (installment sales with gainCharacter = long_term_capital)"
@@ -82,9 +82,15 @@ lines:
     testRef: "tests/engine/schedules/schedule-d.test.ts::Schedule D - IRS carryover worksheet cross-netting"
 
   - line: "13"
+    description: "Capital gain distributions"
+    formula: "Sum parent1099DIVBox2a plus actual childForm8814line10 distributions, before capital loss netting; exclusions are separate adjustments"
+    irsRef: "ScheduleD2025 instructions Capital Gain Distributions and Line13; Form8814 Line10; retrieved2026-10-25"
+    testRef: "tests/pdf/schedule-d-child-distributions.test.ts::writes child and parent capital distributions to saved ScheduleD line13"
+
+  - line: "1202-adjustment"
     description: "Section 1202 gain exclusion (QSBS)"
     formula: "Up to 100% exclusion for qualified small business stock held 5+ years"
-    irsRef: "Schedule D Instructions, Line 13; IRC §1202"
+    irsRef: "Schedule D Instructions, Gain from Form1099DIV, Form8949 adjustment; IRC §1202"
     notes: |
       For stock acquired after Sept 27, 2010: 100% exclusion.
       Subject to per-issuer limit of greater of $10M or 10× adjusted basis.
@@ -94,4 +100,4 @@ lines:
       - "$10M lifetime per-issuer cap"
       - "Only applies to C-corporation stock held 5+ years"
       - "MFS filers get $5M per-issuer cap"
-    testRef: "tests/engine/schedules/schedule-d.test.ts::Schedule D Line 13 - QSBS exclusion reduces long-term gain"
+    testRef: "tests/engine/schedules/schedule-d.test.ts::Schedule D QSBS adjustment - QSBS exclusion reduces long-term gain"

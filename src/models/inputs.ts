@@ -4354,6 +4354,14 @@ export type Form2555Input = z.infer<typeof Form2555Schema>;
 
 const Form8814ElectionFactsSchema = z.object({
   taxYear: z.number().int(), sourceReference: z.string().trim().min(1), sourceFactsConfirmed: z.boolean(),
+  /** Actual subsets of the child totals; Alaska is already included in line2a. */
+  incomeCharacter: z.object({
+    sourceReference: z.string().optional(),
+    alaskaPermanentFundDividends: optionalDecimalInput,
+    collectiblesGain: optionalDecimalInput,
+    unrecapturedSection1250Gain: optionalDecimalInput,
+    section1202Gain: optionalDecimalInput,
+  }).optional(),
   child: z.object({ firstName: z.string().trim().min(1), lastName: z.string().trim().min(1), ssn: z.string(), dateOfBirth: z.string() }),
   electionRequested: z.boolean(), timelyElectionStatus: z.enum(["planned_timely", "filed_timely", "late"]),
   childRequiredToFile: z.boolean(), childFilesJointReturn: z.boolean(),

@@ -1183,6 +1183,7 @@ describe("Schedule D - audit trail records all key lines", () => {
 
     const line7 = result.lines.find((l) => l.line === "7" && l.form === "Sched D");
     const line13 = result.lines.find((l) => l.line === "13" && l.form === "Sched D");
+    const qsbsAdjustment = result.lines.find((l) => l.line === "1202-adjustment" && l.form === "Sched D");
     const line15 = result.lines.find((l) => l.line === "15" && l.form === "Sched D");
     const line16 = result.lines.find((l) => l.line === "16" && l.form === "Sched D");
     const line21 = result.lines.find((l) => l.line === "21" && l.form === "Sched D");
@@ -1195,7 +1196,9 @@ describe("Schedule D - audit trail records all key lines", () => {
     expect((line7!.inputs["Prior year ST carryforward"] as Decimal).toNumber()).toBe(0);
 
     expect(line13).toBeDefined();
-    expect((line13!.inputs["1099-DIV Box 2c eligible gain"] as Decimal).toNumber()).toBe(200);
+    expect(line13?.value.toFixed()).toBe("300");
+    expect((line13?.inputs["1099-DIV Box 2a"] as Decimal).toFixed()).toBe("300");
+    expect((qsbsAdjustment?.inputs["1099-DIV Box 2c eligible gain"] as Decimal).toFixed()).toBe("200");
 
     expect(line15).toBeDefined();
     expect((line15!.inputs["Form 8949 Part II"] as Decimal).toNumber()).toBe(2000);

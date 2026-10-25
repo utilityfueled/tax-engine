@@ -1,0 +1,43 @@
+form: "Form 8814 income character"
+fullName: "Actual child income character and parent worksheet transfers"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i8814"
+notes: |
+  Sources retrieved2026-10-25: final2025Form8814 lines2a/7-12 and special
+  capital gain instructions; Pub550 Child's Alaska Permanent Fund dividends;
+  Form8960 instructions line7. The2026 indexed limits remain from the separate
+  immutable rule pack; this source review does not qualify final2026 forms.
+  Original child ordinary dividends include Alaska PFD once. Character amounts
+  are subsets, never additional income. Unknown character remains unknown.
+  Positive section1202 requires the separate acquisition/issuer exclusion method.
+lines:
+  - line: "actual-character"
+    description: "Actual child income classifications"
+    formula: "Require confirmed election-year source with explicit Alaska, collectibles, unrecaptured1250 and1202 amounts; validate nonnegative finite subsets and preserve unknowns"
+    irsRef: "Form8814 General Instructions, printed2a and Types of capital gain distributions"
+    testRef: "tests/engine/forms/form-8814-income-character.test.ts::requires actual character and rejects contradictory source subsets"
+  - line: "alaska-allocation"
+    description: "Child Alaska amount included on parent return"
+    formula: "round(line6 * AlaskaPFD / line4); ordinary investment portion=max(0,line12-Alaska allocation)"
+    irsRef: "Pub550 Child's Alaska Permanent Fund dividends,4000interest/2000PFD example"
+    testRef: "tests/engine/forms/form-8814-income-character.test.ts::reproduces the IRS Alaska example without adding child income twice"
+  - line: "special-gains"
+    description: "Child special capital gain transfers"
+    formula: "Collectibles=round(line10*actual collectibles/line3);1250=round(line10*actual1250/line3); preserve capital distribution total"
+    irsRef: "Form8814 Types of capital gain distributions; ScheduleD worksheets18/19"
+    testRef: "tests/engine/forms/form-8814-income-character.test.ts::allocates special gains using the child amount reported on parent ScheduleD"
+  - line: "parent-capital-netting"
+    description: "Net child distributions inside ScheduleD"
+    formula: "Include child line10 in ScheduleD long-term distributions before netting parent short/long losses, capital loss deduction and carryforward; do not add again to1040 or preferential gains"
+    irsRef: "Form8814 line10 and ScheduleD13-21"
+    testRef: "tests/engine/federal-child-income-character.test.ts::nets child distributions with parent capital losses before the annual loss limit"
+  - line: "parent-niit"
+    description: "Child ordinary investment income on8960line7"
+    formula: "Add child line12 less its proportionate Alaska allocation to8960line7; full line12 stays in parentAGI; qualified dividends and gains use their existing income lines once"
+    irsRef: "Form8960 instructions Form8814 election, line7"
+    testRef: "tests/engine/federal-child-income-character.test.ts::includes child ordinary investment income in NIIT while excluding Alaska"
+  - line: "special-return-source"
+    description: "Special child gain worksheet boundary"
+    formula: "Require the completed ScheduleD18/19 gain-and-loss source method before a positive child collectibles or1250 distribution can enter a canonical return; gross classifications are not completed worksheets"
+    irsRef: "ScheduleD2025 instructions 28percent Rate Gain Worksheet and Unrecaptured1250 Gain Worksheet"
+    testRef: "tests/engine/federal-child-income-character.test.ts::requires the special gain netting method before returning child special-rate income"

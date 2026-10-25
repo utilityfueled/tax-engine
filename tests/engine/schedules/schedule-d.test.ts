@@ -289,7 +289,7 @@ describe("Schedule D - Carryforward", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("Schedule D - QSBS exclusion", () => {
-  it("Schedule D Line 13 - QSBS exclusion reduces long-term gain", () => {
+  it("Schedule D QSBS adjustment - QSBS exclusion reduces long-term gain", () => {
     const input: TaxYearInput = {
       ...simpleW2Fixture,
       form1099B: [{
@@ -329,7 +329,7 @@ describe("Schedule D - QSBS exclusion", () => {
     expect(result.netLongTerm.toNumber()).toBe(0);
   });
 
-  it("Schedule D Line 13 - QSBS capped at $10M for non-MFS", () => {
+  it("Schedule D QSBS adjustment - QSBS capped at $10M for non-MFS", () => {
     const input: TaxYearInput = {
       ...simpleW2Fixture,
       form1099Div: [{
@@ -350,7 +350,7 @@ describe("Schedule D - QSBS exclusion", () => {
     expect(result.section1202Exclusion.toNumber()).toBe(10000000);
   });
 
-  it("Schedule D Line 13 - QSBS capped at $5M for MFS", () => {
+  it("Schedule D QSBS adjustment - QSBS capped at $5M for MFS", () => {
     const input: TaxYearInput = {
       ...simpleW2Fixture,
       form1099Div: [{
@@ -371,7 +371,7 @@ describe("Schedule D - QSBS exclusion", () => {
     expect(result.section1202Exclusion.toNumber()).toBe(5000000);
   });
 
-  it("Schedule D Line 13 - no QSBS when section1202Gain is zero", () => {
+  it("Schedule D QSBS adjustment - no QSBS when section1202Gain is zero", () => {
     const result = calculateScheduleD(simpleW2Fixture, "single", c);
     expect(result.section1202Exclusion.toNumber()).toBe(0);
   });
@@ -394,9 +394,10 @@ describe("Schedule D - QSBS exclusion", () => {
       }],
     };
     const result = calculateScheduleD(input, "single", c);
-    const line13 = result.lines.find((l) => l.line === "13");
-    expect(line13).toBeDefined();
-    expect(line13?.value.toNumber()).toBe(200000);
+    const adjustment = result.lines.find((l) => l.line === "1202-adjustment");
+    expect(adjustment).toBeDefined();
+    expect(adjustment?.value.toNumber()).toBe(200000);
+    expect(result.lines.find((l) => l.line === "13")?.value.toNumber()).toBe(0);
   });
 });
 

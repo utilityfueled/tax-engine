@@ -59,6 +59,7 @@ export function buildGuidedChildElections(entries: ChildElectionData[] | undefin
     const amtStarted = parseGuidedCurrency(amounts.taxExemptInterest).gt(0) || entry.amtFactsConfirmed != null || !!entry.amtStatements?.length || !!entry.otherwiseAllowableDeduction?.trim() || !!entry.deductionSourceReference?.trim();
     const parsed = Form8814ChildSchema.safeParse({ ...amounts, electionFacts: {
       taxYear, sourceReference: text(entry.sourceReference, 'child election worksheet reference'), sourceFactsConfirmed: true,
+      incomeCharacter: { sourceReference: text(entry.sourceReference, 'child income character worksheet reference'), alaskaPermanentFundDividends: '0', collectiblesGain: '0', unrecapturedSection1250Gain: '0', section1202Gain: '0' },
       child: { firstName: text(entry.firstName, 'child first name'), lastName: text(entry.lastName, 'child last name'), ssn, dateOfBirth: text(entry.dateOfBirth, 'child birth date') },
       electionRequested: bool(entry.electionRequested, 'affirmative election choice'), timelyElectionStatus: entry.timelyElectionStatus,
       childRequiredToFile: bool(entry.childRequiredToFile, 'child required-return determination'), childFilesJointReturn: bool(entry.childFilesJointReturn, 'child joint-return answer'),

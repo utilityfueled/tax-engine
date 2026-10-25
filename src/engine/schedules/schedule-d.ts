@@ -21,7 +21,7 @@ import { calculateForm6252, aggregateForm6252Results, type Form6252AggregateResu
 
 export interface ScheduleDResult {
   netShortTerm: Decimal; // Line 7
-  section1202Exclusion: Decimal; // Line 13
+  section1202Exclusion: Decimal; // Separate Form8949 adjustment; not Line13 distributions
   netLongTerm: Decimal; // Line 15
   netCapitalGainLoss: Decimal; // Line 16
   capitalLossDeduction: Decimal; // Line 21 (capped loss or full gain)
@@ -33,6 +33,8 @@ export interface ScheduleDResult {
 
 export interface ScheduleDExtraInput {
   form8824CapitalGainLoss?: Decimal;
+  /** Canonical actual Form8814 line10 transfers, before capital-loss netting. */
+  childCapitalGainDistributions?: Decimal;
 }
 
 export function calculateScheduleD(
@@ -44,6 +46,8 @@ export function calculateScheduleD(
 ): ScheduleDResult {
   const audit = new AuditTrail();
   const form8824CapitalGainLoss = extra?.form8824CapitalGainLoss ?? new Decimal(0);
+  const childCapitalGainDistributions = extra?.childCapitalGainDistributions ?? new Decimal(0);
+  if (!childCapitalGainDistributions.isFinite() || childCapitalGainDistributions.lt(0)) throw new Error("ScheduleD child distributions must be finite and nonnegative");
 
   // ── Form 8949: Transaction detail ─────────────────────
   const form8949 = calculateForm8949(input);
@@ -103,7 +107,7 @@ export function calculateScheduleD(
       "Form 6252 short-term": form6252ShortTerm,
     });
 
-  // ── Line 13: Section 1202 QSBS exclusion ──────────────
+  // ── Separate Section 1202 QSBS adjustment ────────────
   // IRC §1202: 100% exclusion for qualified small business stock held 5+ years
   // 1099-DIV Box 2c reports the §1202 gain eligible for exclusion
   // Per-issuer cap: greater of $10M or 10× adjusted basis (we apply $10M cap here)
@@ -115,7 +119,7 @@ export function calculateScheduleD(
     ? new Decimal(5000000)
     : new Decimal(10000000);
   const section1202Exclusion = min(qbsGainFromDiv, QSBS_CAP);
-  audit.record("Sched D", "13", "Section 1202 exclusion (QSBS)", section1202Exclusion,
+  audit.record("Sched D", "1202-adjustment", "Section 1202 exclusion (QSBS)", section1202Exclusion,
     `min(${qbsGainFromDiv} eligible gain, $${QSBS_CAP} cap)`, {
       "1099-DIV Box 2c eligible gain": qbsGainFromDiv,
       "Section 1202 cap": QSBS_CAP,
@@ -150,10 +154,15 @@ export function calculateScheduleD(
     (acc, f) => acc.plus(d(f.totalCapitalGainDistributions)),
     new Decimal(0)
   );
+  audit.record("Sched D", "13", "Capital gain distributions", capGainDistributions.plus(childCapitalGainDistributions),
+    "Parent1099DIVBox2a + childForm8814Line10; exclusions are separate adjustments", {
+      "1099-DIV Box 2a": capGainDistributions,
+      "Form8814 Line10": childCapitalGainDistributions,
+    });
   const priorLongTermLoss = d(input.priorYear?.longTermCapitalLoss);
   const netLongTerm = sum(
     form8949.totalLongTermGainLoss, k1LongTerm, k1Form1041LongTerm, k1Form1041FinalLTLoss,
-    form4797LongTermGain, capGainDistributions,
+    form4797LongTermGain, capGainDistributions, childCapitalGainDistributions,
     priorLongTermLoss, section1202Exclusion.negated(), homeSaleTaxableGain, form6781LongTerm, form6252LongTerm,
     form8824CapitalGainLoss
   );
@@ -161,13 +170,14 @@ export function calculateScheduleD(
     ? "Form 8949 Part II + K-1 Box 9a + K-1 1041 Box 4a + K-1 1041 Box 11D + Form 4797 Line 9 + 1099-DIV Box 2a + prior LT carryforward - §1202 exclusion + home sale gain + Form 6781 long-term + Form 6252 long-term"
     : "Form 8949 Part II + K-1 Box 9a + K-1 1041 Box 4a + K-1 1041 Box 11D + Form 4797 Line 9 + 1099-DIV Box 2a + prior LT carryforward - §1202 exclusion + home sale gain + Form 6781 long-term + Form 6252 long-term + capital-route Form 8824 recognized gain/loss";
   audit.record("Sched D", "15", "Net long-term capital gain/loss", netLongTerm,
-    longTermFormula, {
+    childCapitalGainDistributions.gt(0) ? `${longTermFormula} + Form8814 line10 distributions` : longTermFormula, {
       "Form 8949 Part II": form8949.totalLongTermGainLoss,
       "K-1 Box 9a": k1LongTerm,
       "K-1 1041 Box 4a": k1Form1041LongTerm,
       "K-1 1041 Box 11 Code D": k1Form1041FinalLTLoss,
       "Form 4797 Line 9": form4797LongTermGain,
       "1099-DIV Box 2a": capGainDistributions,
+      "Form8814 Line10": childCapitalGainDistributions,
       "Prior year LT carryforward": priorLongTermLoss,
       "Section 1202 exclusion": section1202Exclusion,
       "Home sale taxable gain (IRC §121)": homeSaleTaxableGain,

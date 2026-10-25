@@ -122,6 +122,7 @@ import { calculateForm8615 } from "./forms/form-8615.js";
 import { aggregateForm8814Results } from "./forms/form-8814.js";
 import { calculateForm8814AmtSources } from "./forms/form-8814-amt-sources.js";
 import { calculateForm8814Election } from "./forms/form-8814-election.js";
+import { calculateForm8814IncomeCharacter } from "./forms/form-8814-income-character.js";
 import { calculateForm6251BondSources } from "./forms/form-6251-bond-sources.js";
 import { calculateScheduleF } from "./schedules/schedule-f.js";
 import { calculateForm461 } from "./forms/form-461.js";
@@ -578,6 +579,11 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     parentTaxableIncomeWithoutChild = calculateFederalTax(counterfactual).taxableIncome;
   }
   audit.merge(calculateForm8814Election(input.form8814 ?? [], input.taxpayer, constants, parentTaxableIncomeWithoutChild).lines);
+  const form8814IncomeCharacter = calculateForm8814IncomeCharacter(input.form8814 ?? [], constants);
+  audit.merge(form8814IncomeCharacter.lines);
+  if (form8814IncomeCharacter.collectiblesGain.gt(0) || form8814IncomeCharacter.unrecapturedSection1250Gain.gt(0)) {
+    throw new Error("Child special gain netting requires the completed ScheduleD18/19 source worksheets");
+  }
   const form8814: AggregatedForm8814 | undefined = (input.form8814?.length ?? 0) > 0
     ? aggregateForm8814Results(input.form8814, constants)
     : undefined;
@@ -1218,6 +1224,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   // Line 7: Capital gains/losses via Schedule D (includes Form 8949)
   const schedD = calculateScheduleD(inputWithCrypto, filingStatus, constants, form4797, {
     form8824CapitalGainLoss: form8824?.totalCapitalRecognizedGainOrLoss ?? new Decimal(0),
+    childCapitalGainDistributions: form8814?.totalCapitalGains ?? new Decimal(0),
   });
   audit.merge(schedD.lines);
   // Track wash sale carryforward for crypto dispositions (IRC §1091)
@@ -1236,12 +1243,11 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     audit.merge(washSaleCarryforward.lines);
   }
 
-  // Form 8814 Line 10 capital gain distributions add to Schedule D Line 13 / Line 7
-  const form8814CapitalGains = form8814?.totalCapitalGains ?? new Decimal(0);
-  const capitalGainLoss = schedD.capitalLossDeduction.plus(form8814CapitalGains);
+  // Child line10 is already netted inside ScheduleD before losses/carryovers.
+  const capitalGainLoss = schedD.capitalLossDeduction;
   audit.record("1040", "7", "Capital gain or loss", capitalGainLoss,
-    form8814CapitalGains.greaterThan(0)
-      ? `Schedule D Line 21 + Form 8814 Line 10 capital gain distributions $${form8814CapitalGains}`
+    form8814?.totalCapitalGains.gt(0)
+      ? "Schedule D Line 21, including child election distributions once"
       : "Schedule D Line 21");
 
   // Schedule C: Self-employment income (net profit)
@@ -2745,12 +2751,13 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   // and only the net capital gain enters the preferential rate computation.
   // Form 8814 Line 10 capital gain distributions are long-term and must enter
   // the QDCG preferential-rate computation alongside Schedule D amounts.
-  const netLTCG = zeroFloor(min(schedD.netLongTerm, schedD.netCapitalGainLoss)).plus(form8814CapitalGains);
+  const netLTCG = zeroFloor(min(schedD.netLongTerm, schedD.netCapitalGainLoss));
 
   // Aggregate special-rate capital gains from 1099-DIV, K-1, home sale depreciation recapture,
   // and Form 4797 Part III unrecaptured section 1250 gain from business property sales
   const homeSaleDepreciationRecapture = schedD.homeSales?.totalDepreciationRecapture ?? new Decimal(0);
   const section1250Gain = sum(
+    form8814IncomeCharacter.unrecapturedSection1250Gain,
     divAgg.section1250Gain,
     k1Agg.unrecapturedSection1250Gain,
     ...(input.scheduleK1Form1041 ?? []).map((k) => d(k.unrecapturedSection1250Gain)),
@@ -2758,6 +2765,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     form4797.totalUnrecapturedSection1250Gain
   );
   const collectiblesGain = sum(
+    form8814IncomeCharacter.collectiblesGain,
     divAgg.collectiblesGain,
     k1Agg.collectiblesGain,
     ...(input.scheduleK1Form1041 ?? []).map((k) => d(k.collectiblesGain))
@@ -3795,6 +3803,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       investmentInterestExpense: niitOrdinarySources.investmentInterestExpense,
       investmentIncomeTaxes: niitOrdinarySources.investmentIncomeTaxes,
       additionalModifications: niitOrdinarySources.ordinaryLossDeduction,
+      otherModifications: form8814IncomeCharacter.ordinaryInvestmentIncome,
       magi: niitMagi,
     },
     filingStatus,
