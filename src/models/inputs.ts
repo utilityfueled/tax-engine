@@ -2241,6 +2241,51 @@ export const DependentCareSchema = z.object({
   qualifyingIndividuals: z.number().int().min(1).default(1),
 });
 
+/** Actual Form 2441 Part III sources. Omission is unknown, including empty arrays and zero amounts. */
+export const DependentCareBenefitsSchema = z.object({
+  sourceFactsConfirmed: z.boolean().optional(),
+  exclusionEligibilityConfirmed: z.boolean().optional(),
+  employeeBenefits: z.array(z.object({
+    sourceId: z.string().trim().min(1).optional(),
+    owner: z.enum(["primary", "spouse"]).optional(),
+    benefitsReported: optionalDecimalInput,
+    alreadyIncludedInWages: optionalDecimalInput,
+    priorYearCarryoverUsed: optionalDecimalInput,
+    forfeited: optionalDecimalInput,
+    carriedForward: optionalDecimalInput,
+  })).max(100).optional(),
+  selfEmployedBenefits: z.array(z.object({
+    sourceId: z.string().trim().min(1).optional(),
+    owner: z.enum(["primary", "spouse"]).optional(),
+    schedule: z.enum(["schedule-c", "schedule-e", "schedule-f"]).optional(),
+    /** Actual received benefits; amounts not received are not manufactured as line 14 forfeitures. */
+    benefitsReceived: optionalDecimalInput,
+    priorYearCarryoverUsed: optionalDecimalInput,
+  })).max(100).optional(),
+  deductionAllocations: z.array(z.object({
+    sourceId: z.string().trim().min(1).optional(),
+    owner: z.enum(["primary", "spouse"]).optional(),
+    schedule: z.enum(["schedule-c", "schedule-e", "schedule-f"]).optional(),
+    /** Actual whole-dollar allocation of calculated line 24 to this activity. */
+    amount: optionalDecimalInput,
+  })).max(100).optional(),
+  planExclusionLimit: optionalDecimalInput,
+  qualifiedExpensesIncurred: optionalDecimalInput,
+  /** Signed completed Part III worksheets, excluding line 12 benefits; not combined household earnings. */
+  primaryEarnedIncome: optionalDecimalInput,
+  spouseEarnedIncome: optionalDecimalInput,
+  earnedIncomeWorksheetConfirmed: z.boolean().optional(),
+  spouseLivedApartLast6Months: z.boolean().optional(),
+  paidOverHalfHomeCost: z.boolean().optional(),
+  qualifyingPersonMainHomeOverHalfYear: z.boolean().optional(),
+  spouseDiedDuringYear: z.boolean().optional(),
+  useDeceasedSpouseEarnedIncome: z.boolean().optional(),
+  qualifyingIndividuals: z.number().int().min(0).optional(),
+  /** Actual line 30 paid expenses after excluding line 28 benefits and expenses claimed elsewhere. */
+  qualifiedExpensesPaidForCredit: optionalDecimalInput,
+  creditExpenseCoordinationConfirmed: z.boolean().optional(),
+});
+
 const EducationInstitutionSchema = z.object({
   name: z.string().min(1),
   address: z.string().min(1),
@@ -4762,6 +4807,7 @@ export const TaxYearInputSchema = z.object({
   scheduleF: ScheduleFInputSchema.optional(),
   qbiDeductionAllocations: QBIDeductionAllocationsSchema.optional(),
   dependentCare: DependentCareSchema.optional(),
+  dependentCareBenefits: DependentCareBenefitsSchema.optional(),
   standardDeductionFacts: StandardDeductionFactsSchema.optional(),
   deductionElection: z.enum(["automatic", "standard", "itemized"]).optional(),
   educationExpenses: EducationExpensesSchema.optional(),
@@ -5016,6 +5062,7 @@ export type PriorYearCarryforward = z.infer<typeof PriorYearCarryforwardSchema>;
 export type Adjustments = z.infer<typeof AdjustmentsSchema>;
 export type RentalProperty = z.infer<typeof RentalPropertySchema>;
 export type DependentCare = z.infer<typeof DependentCareSchema>;
+export type DependentCareBenefits = z.infer<typeof DependentCareBenefitsSchema>;
 export type EducationExpenses = z.infer<typeof EducationExpensesSchema>;
 export type EnergyCredits = z.infer<typeof EnergyCreditsSchema>;
 export type SavingsBondRedemption = z.infer<typeof SavingsBondRedemptionSchema>;
