@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.54",
+    ruleVersion: "2025.55",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i1040sd", section: "Actual source-bound 28percent and unrecaptured1250 worksheets; loss netting before regular and confirmed same-basis AMT capital-rate computation", revision: "Final2025 ScheduleD instructions; ordinary direct assets and reported DIV/K1/1041/child cohort; additional property/QSBS/foreign histories remain separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i172", section: "Preserve omitted versus actual-zero general NOL carry and conserve the selected prior general/estate source plus only current EBL", revision: "Legacy2025 source-preservation prerequisite only; actual vintage, modified-income absorption and deduction ordering remain separate internal work", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i1040gi", section: "Form2555 exact PartIV and Section119 source totals before whole-dollar display; consistent raw employer numerator/net-income denominator for line35", revision: "General whole-dollar source convention and final2025 Form2555; subtraction/ratio precision is documented implementation interpretation, independent qualification pending", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/pub/irs-pdf/f8814.pdf", section: "Lines7/8 six-place rounded ratios and signed line12 subtraction retained in parent income and investment sources", revision: "Final2025 form created2025-03-19; source cents retained; year-specific thresholds and qualification gates unchanged", retrievedAt: "2026-10-25" },
@@ -96,11 +97,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.50-law-integration-draft",
+    ruleVersion: "2026.51-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i1040sd", section: "Actual source-bound 28percent and unrecaptured1250 worksheets; loss netting before regular and confirmed same-basis AMT capital-rate computation", revision: "Final2025 ScheduleD instructions; ordinary direct assets and reported DIV/K1/1041/child cohort; additional property/QSBS/foreign histories remain separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i172", section: "Preserve actual versus omitted prior NOL sources;2026 positive NOL calculation remains gated pending actual vintage and modified-income coordination", revision: "Shared input-source preservation only; no current-year calculation or filing qualification added", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i1040gi", section: "Form2555 exact PartIV and Section119 source totals before whole-dollar display; consistent raw employer numerator/net-income denominator for line35", revision: "General whole-dollar source convention and final2025 Form2555; subtraction/ratio precision is documented implementation interpretation, independent qualification pending", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/pub/irs-pdf/f8814.pdf", section: "Lines7/8 six-place rounded ratios and signed line12 subtraction retained in parent income and investment sources", revision: "Final2025 form created2025-03-19; source cents retained; year-specific thresholds and qualification gates unchanged", retrievedAt: "2026-10-25" },

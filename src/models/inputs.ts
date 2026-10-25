@@ -197,6 +197,32 @@ export const Form1099BSchema = z.object({
   transactions: z.array(CapitalTransactionSchema),
 });
 
+// Actual local source facts for the Schedule D line 18/19 worksheets.
+const ScheduleDCapitalSourceIdentitySchema = z.object({
+  firstName: z.string().trim().min(1), lastName: z.string().trim().min(1), ssnLast4: z.string().regex(/^\d{4}$/),
+});
+const ScheduleDCapitalSourceRowSchema = z.object({
+  sourceId: z.string().trim().min(1), sourceTaxYear: z.number().int(), sourceReference: z.string().trim().min(1),
+  accountHolder: z.enum(["primary", "spouse"]), payerName: z.string().trim().min(1),
+});
+export const ScheduleDSpecialGainSourcesSchema = z.object({
+  taxYear: z.number().int(), sourceReference: z.string().trim().min(1),
+  sourceFactsConfirmed: z.literal(true), allSourcesIncluded: z.literal(true),
+  primary: ScheduleDCapitalSourceIdentitySchema, spouse: ScheduleDCapitalSourceIdentitySchema.optional(),
+  priorShortTermCapitalLoss: decimal, priorLongTermCapitalLoss: decimal, section1231Lookback: decimal,
+  amtBasisAndCarryoversSameAsRegularConfirmed: z.boolean(),
+  form2439Present: z.boolean(), partnershipInterestDispositionPresent: z.boolean(), other1250DispositionPresent: z.boolean(),
+  longTermAssets: z.array(ScheduleDCapitalSourceRowSchema.extend({
+    description: z.string().trim().min(1), dateAcquired: z.string().min(1), dateSold: z.string().min(1),
+    proceeds: decimal, costBasis: decimal, adjustments: decimal, washSale: z.boolean(), washSaleDisallowed: decimal,
+    character: z.enum(["ordinary", "collectible"]),
+  })),
+  reportedGains: z.array(ScheduleDCapitalSourceRowSchema.extend({
+    netLongTermCapitalGain: decimal, collectiblesGain: decimal, unrecapturedSection1250Gain: decimal, section1202Gain: decimal,
+    section1231Gain: decimal.optional(), isFinalK1: z.boolean().optional(), finalYearLongTermCapitalLoss: decimal.optional(),
+  })),
+});
+
 // ── Form 1099-DA: Digital Asset Proceeds from Broker Transactions ──
 // Per IRS Form 1099-DA (2025+), brokers report digital asset dispositions.
 // Mirrors 1099-B structure with crypto-specific fields.
@@ -5675,6 +5701,7 @@ export const TaxYearInputSchema = z.object({
   form6781: Form6781Schema.optional(),
   form8615: Form8615Schema.optional(),
   form8814: z.array(Form8814ChildSchema).default([]),
+  scheduleDSpecialGainSources: ScheduleDSpecialGainSourcesSchema.optional(),
   form8839: Form8839Schema.optional(),
   form3800: Form3800Schema.optional(),
   form3903: Form3903Schema.optional(),

@@ -11,13 +11,16 @@ import Decimal from "decimal.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import type { FilingStatus, YearConstants } from "@/models/constants.js";
-import { d, sum, zeroFloor, max, min } from "@/utils/decimal.js";
+import { d, sum, zeroFloor, max, min, roundDollar } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { calculateForm8949 } from "../forms/form-8949.js";
 import { calculateForm4797, type Form4797Result } from "../forms/form-4797.js";
 import { calculateHomeSales, type HomeSaleAggregateResult } from "../forms/home-sale-exclusion.js";
 import { calculateForm6781, type Form6781Result } from "../forms/form-6781.js";
 import { calculateForm6252, aggregateForm6252Results, type Form6252AggregateResult } from "../forms/form-6252.js";
+
+import { calculateScheduleDSourceBinding } from "./schedule-d-source-binding.js";
+import type { ScheduleDSpecialGainResult } from "./schedule-d-special-gains.js";
 
 export interface ScheduleDResult {
   netShortTerm: Decimal; // Line 7
@@ -28,6 +31,7 @@ export interface ScheduleDResult {
   carryforwardShortTerm: Decimal;
   carryforwardLongTerm: Decimal;
   homeSales?: HomeSaleAggregateResult;
+  specialGainWorksheets?: ScheduleDSpecialGainResult;
   lines: CalculatedLine[];
 }
 
@@ -35,6 +39,8 @@ export interface ScheduleDExtraInput {
   form8824CapitalGainLoss?: Decimal;
   /** Canonical actual Form8814 line10 transfers, before capital-loss netting. */
   childCapitalGainDistributions?: Decimal;
+  childCollectiblesGain?: Decimal;
+  childUnrecapturedSection1250Gain?: Decimal;
 }
 
 export function calculateScheduleD(
@@ -208,6 +214,25 @@ export function calculateScheduleD(
       "Line 15": netLongTerm,
     });
 
+  const sourceWorksheets = calculateScheduleDSourceBinding(input, {
+    form4797, netShortTerm, longTermLossCarryover: sum(priorLongTermLoss, k1Form1041FinalLTLoss),
+    childCollectiblesGain: extra?.childCollectiblesGain ?? new Decimal(0),
+    childUnrecapturedSection1250Gain: extra?.childUnrecapturedSection1250Gain ?? new Decimal(0),
+  });
+  const gainCondition = netLongTerm.gt(0) && netCapitalGainLoss.gt(0);
+  const specialGainWorksheets = sourceWorksheets ? {
+    ...sourceWorksheets,
+    collectiblesGain: gainCondition ? roundDollar(sourceWorksheets.collectiblesGain) : new Decimal(0),
+    unrecapturedSection1250Gain: gainCondition ? roundDollar(sourceWorksheets.unrecapturedSection1250Gain) : new Decimal(0),
+  } : undefined;
+  if (specialGainWorksheets) {
+    audit.merge(specialGainWorksheets.lines);
+    if (gainCondition) {
+      audit.record("Sched D", "18", "28 percent rate gain", specialGainWorksheets.collectiblesGain, "Completed actual 28 percent rate gain worksheet, rounded once");
+      audit.record("Sched D", "19", "Unrecaptured section1250 gain", specialGainWorksheets.unrecapturedSection1250Gain, "Completed actual unrecaptured1250 gain worksheet, rounded once");
+    }
+  }
+
   // ── Line 21: Capital loss deduction ────────────────────
   // MFS: limited to $1,500; others: $3,000
   const lossLimit = filingStatus === "married_filing_separately"
@@ -289,6 +314,7 @@ export function calculateScheduleD(
     carryforwardShortTerm,
     carryforwardLongTerm,
     homeSales,
+    specialGainWorksheets,
     lines: audit.getLines(),
   };
 }

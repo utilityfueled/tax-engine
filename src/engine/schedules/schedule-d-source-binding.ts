@@ -1,0 +1,125 @@
+/** Bind original Schedule D sources before computing line 18/19. Spec: schedule-d-source-binding.yaml. */
+import Decimal from 'decimal.js';
+import type { TaxYearInput } from '@/models/inputs.js';
+import type { Form4797Result } from '../forms/form-4797.js';
+import { calculateForm8949 } from '../forms/form-8949.js';
+import { calculateScheduleDSpecialGains } from './schedule-d-special-gains.js';
+import { d, sum } from '@/utils/decimal.js';
+
+type Facts = NonNullable<TaxYearInput['scheduleDSpecialGainSources']>;
+const normalized = (value: string) => value.trim().replace(/\s+/g, ' ').toLowerCase();
+function actualDate(value: string) {
+  const parsed = new Date(`${value}T00:00:00Z`);
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) && Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+}
+function reconcile(actual: string | undefined, source: string | undefined, label: string) {
+  if (source === undefined || !source.trim() || !d(source).isFinite() || !d(actual).eq(source)) {
+    throw new Error(`ScheduleD actual ${label} source must reconcile; missing facts remain unknown`);
+  }
+}
+function owner(input: TaxYearInput, row: Facts['reportedGains'][number] | Facts['longTermAssets'][number], originalOwner?: string) {
+  if (row.sourceTaxYear !== input.taxpayer.taxYear || !row.sourceReference.trim()) throw new Error('ScheduleD source year or original reference is missing or conflicting');
+  if (row.accountHolder === 'spouse' && (input.taxpayer.filingStatus !== 'married_filing_jointly' || !input.taxpayer.spouse)) throw new Error('ScheduleD source spouse is absent from the actual joint household');
+  // The new source contract can establish a previously unknown local owner; it
+  // cannot replace an existing contradictory owner tag.
+  if (originalOwner !== undefined && originalOwner !== row.accountHolder) throw new Error('ScheduleD original source owner is conflicting');
+}
+function identity(actual: TaxYearInput['taxpayer']['primary'], source: Facts['primary'] | undefined) {
+  if (!source || normalized(source.firstName) !== normalized(actual.firstName) || normalized(source.lastName) !== normalized(actual.lastName)
+    || source.ssnLast4 !== actual.ssn.replace(/-/g, '').slice(-4)) throw new Error('ScheduleD source household identity does not match the actual return');
+}
+
+export function calculateScheduleDSourceBinding(input: TaxYearInput, context: {
+  form4797: Form4797Result; netShortTerm: Decimal; longTermLossCarryover: Decimal;
+  childCollectiblesGain: Decimal; childUnrecapturedSection1250Gain: Decimal;
+}) {
+  const facts = input.scheduleDSpecialGainSources;
+  if (!facts) return undefined;
+  if (facts.taxYear !== input.taxpayer.taxYear || facts.sourceFactsConfirmed !== true || facts.allSourcesIncluded !== true || !facts.sourceReference.trim()) {
+    throw new Error('ScheduleD requires complete confirmed actual source facts for the return year');
+  }
+  identity(input.taxpayer.primary, facts.primary);
+  if (input.taxpayer.filingStatus === 'married_filing_jointly') {
+    if (!input.taxpayer.spouse) throw new Error('ScheduleD actual joint household spouse is required');
+    identity(input.taxpayer.spouse, facts.spouse);
+  } else if (facts.spouse) throw new Error('ScheduleD source spouse requires a joint household');
+  reconcile(input.priorYear?.shortTermCapitalLoss, facts.priorShortTermCapitalLoss, 'short-term carry');
+  reconcile(input.priorYear?.longTermCapitalLoss, facts.priorLongTermCapitalLoss, 'long-term carry');
+  if (d(facts.priorShortTermCapitalLoss).gt(0) || d(facts.priorLongTermCapitalLoss).gt(0)) throw new Error('ScheduleD actual loss carry must be zero or negative');
+  reconcile(input.form4797?.nonrecapturedNetSection1231Losses, facts.section1231Lookback, 'section1231 lookback');
+  if (d(facts.section1231Lookback).lt(0)) throw new Error('ScheduleD section1231 lookback must be nonnegative');
+  if (facts.form2439Present || facts.partnershipInterestDispositionPresent || facts.other1250DispositionPresent
+    || (input.homeSales?.length ?? 0) > 0 || (input.form4797?.propertySales.length ?? 0) > 0
+    || (input.form6252?.length ?? 0) > 0 || input.form6781 || input.form4684 || (input.form8824?.length ?? 0) > 0
+    || input.form2555 || (input.form1099DA?.length ?? 0) > 0 || input.cryptoIncome) {
+    throw new Error('ScheduleD additional property, foreign, digital or other-form sources require their separate complete source method');
+  }
+  if (!facts.amtBasisAndCarryoversSameAsRegularConfirmed && !input.amtCapitalGains) throw new Error('ScheduleD requires actual separate AMT capital-gain sources when basis or carry differs');
+  if (facts.amtBasisAndCarryoversSameAsRegularConfirmed && input.scheduleK1.some(source => !d(source.amtAdjustedGainOrLoss).isZero())) {
+    throw new Error('ScheduleD same-basis confirmation conflicts with an actual AMT disposition adjustment');
+  }
+  const assets = new Map<string, Facts['longTermAssets'][number]>();
+  for (const row of facts.longTermAssets) {
+    if (assets.has(row.sourceId)) throw new Error('ScheduleD duplicate original asset source');
+    assets.set(row.sourceId, row);
+  }
+  const collectibleForms = input.form1099B.map((form, formIndex) => ({ ...form, transactions: form.transactions.filter((transaction, transactionIndex) => {
+    if (transaction.holdingPeriod !== 'long') return false;
+    const id = `form1099B:${formIndex}:transaction:${transactionIndex}`;
+    const row = assets.get(id);
+    if (!row) throw new Error('ScheduleD every actual long-term asset requires its complete original source classification');
+    assets.delete(id); owner(input, row, form.accountHolder);
+    if (normalized(row.payerName) !== normalized(form.broker) || row.description !== transaction.description || row.dateAcquired !== transaction.dateAcquired || row.dateSold !== transaction.dateSold
+      || row.washSale !== transaction.washSale) throw new Error('ScheduleD asset identity or original dates are stale or conflicting');
+    if (!actualDate(row.dateSold) || (row.dateAcquired !== 'VARIOUS' && !actualDate(row.dateAcquired))) throw new Error('ScheduleD original acquisition and sale dates must be actual calendar dates');
+    if (!row.dateSold.startsWith(`${input.taxpayer.taxYear}-`)) throw new Error('ScheduleD asset sale year conflicts with the actual source year');
+    for (const key of ['proceeds', 'costBasis', 'adjustments', 'washSaleDisallowed'] as const) reconcile(transaction[key], row[key], `asset ${key}`);
+    return row.character === 'collectible';
+  }) }));
+  if (assets.size > 0) throw new Error('ScheduleD original asset source is missing, duplicated or not a long-term asset');
+  const reported = new Map<string, Facts['reportedGains'][number]>();
+  for (const row of facts.reportedGains) {
+    if (reported.has(row.sourceId)) throw new Error('ScheduleD duplicate reported gain source');
+    reported.set(row.sourceId, row);
+  }
+  let collectibles = context.childCollectiblesGain;
+  let reported1250 = context.childUnrecapturedSection1250Gain;
+  let partnership1250 = d('0');
+  const bind = (id: string, payer: string, original: { accountHolder?: string; netLongTermCapitalGain?: string; collectiblesGain?: string; unrecapturedSection1250Gain?: string; section1202Gain?: string }) => {
+    const row = reported.get(id);
+    if (!row) throw new Error('ScheduleD every reported capital source requires complete actual gain components');
+    reported.delete(id); owner(input, row, original.accountHolder);
+    if (normalized(row.payerName) !== normalized(payer)) throw new Error('ScheduleD reported original payer identity is conflicting');
+    for (const key of ['netLongTermCapitalGain', 'collectiblesGain', 'unrecapturedSection1250Gain', 'section1202Gain'] as const) reconcile(original[key], row[key], `reported ${key}`);
+    if (d(row.section1202Gain).gt(0)) throw new Error('ScheduleD section1202 QSBS requires actual issuer and acquisition exclusion history');
+    if (d(row.section1202Gain).lt(0) || d(row.unrecapturedSection1250Gain).lt(0)) throw new Error('ScheduleD special reported gain source must be nonnegative');
+    collectibles = collectibles.plus(row.collectiblesGain);
+    return row;
+  };
+  input.form1099Div.forEach((source, index) => {
+    const row = bind(`form1099Div:${index}`, source.payer, { ...source, netLongTermCapitalGain: source.totalCapitalGainDistributions, unrecapturedSection1250Gain: source.section1250Gain });
+    if (d(row.collectiblesGain).lt(0) || sum(d(row.collectiblesGain), d(row.unrecapturedSection1250Gain), d(row.section1202Gain)).gt(d(row.netLongTermCapitalGain))) throw new Error('ScheduleD DIV special gain components exceed actual total capital distributions');
+    reported1250 = reported1250.plus(row.unrecapturedSection1250Gain);
+  });
+  input.scheduleK1.forEach((source, index) => {
+    const row = bind(`scheduleK1:${index}`, source.partnershipName, source);
+    reconcile(source.section1231Gain, row.section1231Gain, 'partnership section1231 gain');
+    partnership1250 = partnership1250.plus(row.unrecapturedSection1250Gain);
+  });
+  (input.scheduleK1Form1041 ?? []).forEach((source, index) => {
+    const row = bind(`scheduleK1Form1041:${index}`, source.estateTrustName, source);
+    if (row.isFinalK1 !== source.isFinalK1) throw new Error('ScheduleD actual final estate statement status must reconcile');
+    reconcile(source.finalYearLongTermCapitalLoss, row.finalYearLongTermCapitalLoss, 'final estate long-term loss');
+    if (d(row.finalYearLongTermCapitalLoss).gt(0) || (!row.isFinalK1 && !d(row.finalYearLongTermCapitalLoss).isZero())) throw new Error('ScheduleD final estate long-term loss source is conflicting');
+    reported1250 = reported1250.plus(row.unrecapturedSection1250Gain);
+  });
+  if (reported.size > 0) throw new Error('ScheduleD reported original gain source is missing or aliased');
+  return calculateScheduleDSpecialGains({
+    form8949CollectiblesGainLoss: calculateForm8949({ ...input, form1099B: collectibleForms }).totalLongTermGainLoss,
+    section1202WorksheetComponent: d('0'), otherCollectiblesGainLoss: d('0'), reportedCollectiblesGainLoss: collectibles,
+    shortTermNetGainLoss: context.netShortTerm, longTermLossCarryover: context.longTermLossCarryover,
+    form4797Gain: context.form4797.line7, form4797Lookback: context.form4797.line8, businessProperties: [],
+    businessInstallment1250Gain: d('0'), passThrough1250Gain: partnership1250,
+    partnershipSale1250Gain: d('0'), reported1250Gain: reported1250, other1250Gain: d('0'),
+  });
+}

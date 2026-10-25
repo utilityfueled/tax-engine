@@ -594,7 +594,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   audit.merge(calculateForm8814Election(input.form8814 ?? [], input.taxpayer, constants, parentTaxableIncomeWithoutChild).lines);
   const form8814IncomeCharacter = calculateForm8814IncomeCharacter(input.form8814 ?? [], constants);
   audit.merge(form8814IncomeCharacter.lines);
-  if (form8814IncomeCharacter.collectiblesGain.gt(0) || form8814IncomeCharacter.unrecapturedSection1250Gain.gt(0)) {
+  if ((form8814IncomeCharacter.collectiblesGain.gt(0) || form8814IncomeCharacter.unrecapturedSection1250Gain.gt(0)) && !input.scheduleDSpecialGainSources) {
     throw new Error("Child special gain netting requires the completed ScheduleD18/19 source worksheets");
   }
   const form8814: AggregatedForm8814 | undefined = (input.form8814?.length ?? 0) > 0
@@ -1238,6 +1238,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   const schedD = calculateScheduleD(inputWithCrypto, filingStatus, constants, form4797, {
     form8824CapitalGainLoss: form8824?.totalCapitalRecognizedGainOrLoss ?? new Decimal(0),
     childCapitalGainDistributions: form8814?.totalCapitalGains ?? new Decimal(0),
+    childCollectiblesGain: form8814IncomeCharacter.collectiblesGain,
+    childUnrecapturedSection1250Gain: form8814IncomeCharacter.unrecapturedSection1250Gain,
   });
   audit.merge(schedD.lines);
   // Track wash sale carryforward for crypto dispositions (IRC §1091)
@@ -2771,7 +2773,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   // Aggregate special-rate capital gains from 1099-DIV, K-1, home sale depreciation recapture,
   // and Form 4797 Part III unrecaptured section 1250 gain from business property sales
   const homeSaleDepreciationRecapture = schedD.homeSales?.totalDepreciationRecapture ?? new Decimal(0);
-  const section1250Gain = sum(
+  const section1250Gain = schedD.specialGainWorksheets?.unrecapturedSection1250Gain ?? sum(
     form8814IncomeCharacter.unrecapturedSection1250Gain,
     divAgg.section1250Gain,
     k1Agg.unrecapturedSection1250Gain,
@@ -2779,7 +2781,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     homeSaleDepreciationRecapture,
     form4797.totalUnrecapturedSection1250Gain
   );
-  const collectiblesGain = sum(
+  const collectiblesGain = schedD.specialGainWorksheets?.collectiblesGain ?? sum(
     form8814IncomeCharacter.collectiblesGain,
     divAgg.collectiblesGain,
     k1Agg.collectiblesGain,
@@ -2963,7 +2965,11 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   const k1AmtOther = k1Agg.amtOtherItems;
 
   let amtCapitalGainsSources: Form6251Input["capitalGainsSources"];
-  const amtGainFacts = input.amtCapitalGains;
+  const amtGainFacts = input.amtCapitalGains ?? (schedD.specialGainWorksheets && input.scheduleDSpecialGainSources?.amtBasisAndCarryoversSameAsRegularConfirmed && qualifiedDividends.plus(netLTCG).gt(0) ? {
+    sourceFactsConfirmed: true, sourceTaxYear: year, sourceReference: "Verified same-basis ScheduleD source worksheets",
+    qualifiedDividends: qualifiedDividends.toFixed(), netCapitalGain: netLTCG.toFixed(),
+    section1250Gain: section1250Gain.toFixed(), collectiblesGain: collectiblesGain.toFixed(),
+  } : undefined);
   if (amtGainFacts) {
     if (amtGainFacts.sourceFactsConfirmed !== true || amtGainFacts.sourceTaxYear !== year || !amtGainFacts.sourceReference?.trim()) {
       throw new Error("Actual AMT capital-gain source confirmation and matching source year are required");
@@ -2981,6 +2987,11 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     const amtNetCapitalGain = amount("netCapitalGain");
     const amt1250 = amount("section1250Gain");
     const amtCollectibles = amount("collectiblesGain");
+    if (schedD.specialGainWorksheets && input.scheduleDSpecialGainSources?.amtBasisAndCarryoversSameAsRegularConfirmed
+      && (!amtQualifiedDividends.eq(roundDollar(qualifiedDividends)) || !amtNetCapitalGain.eq(roundDollar(netLTCG))
+        || !amt1250.eq(section1250Gain) || !amtCollectibles.eq(collectiblesGain))) {
+      throw new Error("Actual AMT gain sources conflict with the confirmed same-basis ScheduleD worksheets");
+    }
     if (form4952Amt?.line4b.gt(amtQualifiedDividends)) {
       throw new Error("AMT Form4952 dividend source exceeds the actual AMT gain worksheet");
     }

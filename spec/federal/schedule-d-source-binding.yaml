@@ -1,0 +1,62 @@
+form: "Schedule D source binding"
+fullName: "Actual source identity and complete special-gain worksheets"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i1040sd"
+sources:
+  - url: "https://www.irs.gov/instructions/i1040sd"
+    section: "Lines 18 and 19; 28% and unrecaptured section 1250 worksheets"
+    retrieved: "2026-10-25"
+notes: |
+  An actual source contract binds the return year and household. Every original
+  long-term Form 8949 asset and every DIV/partnership/estate reported gain source
+  has its own confirmed original identity and explicit monetary components.
+  Missing classifications or components are unknown, not ordinary gain or zero.
+  Recompute collectible transaction gain through the same Form 8949 function.
+  Keep the legacy path separate when no actual contract is supplied; positive
+  child special gains still require this complete source method. Never infer
+  QSBS exclusion, installment history, additional unreported gain sources or
+  the foreign-earned-income worksheet modification from a supplied subtotal.
+  The initial bounded contract rejects those separate methods and property
+  dispositions until their actual source adapters are connected. This is an
+  implementation boundary, not independent filing qualification.
+lines:
+  - line: "source-year-household"
+    description: "Bind the actual source worksheet to the return"
+    formula: "Require year, primary identity and joint spouse identity, complete-source confirmation, and explicit prior short/long losses. Reject stale year, owner or source amounts."
+    testRef: "tests/engine/schedules/schedule-d-source-binding.test.ts::rejects unknown stale and conflicting source identities"
+  - line: "long-term-assets"
+    description: "Classify every original long-term transaction once"
+    formula: "Match each actual broker and transaction by sourceId, owner, description, dates, proceeds, basis, adjustments and wash loss; require ordinary or collectible classification. Recompute signed collectible gain through Form8949."
+    testRef: "tests/engine/schedules/schedule-d-source-binding.test.ts::binds every actual long-term asset and recomputes signed collectibles"
+  - line: "reported-sources"
+    description: "Bind actual DIV and K1 gain components"
+    formula: "Every DIV/K1/1041 source must be represented exactly once with actual identity, year and monetary components; reported collectible amounts feed28percentline4. Partnership1250feedsline5; DIV/1041/child1250feedsline11. Final1041longloss enters ScheduleD14 once."
+    testRef: "tests/engine/schedules/schedule-d-source-binding.test.ts::routes actual reported gain sources and final estate loss once"
+  - line: "unsupported-history"
+    description: "Preserve separate methods until their complete sources are connected"
+    formula: "Reject positiveQSBS, property/installment/otherform dispositions, transformedcrypto sources, additional2439/partnershipsale/other1250history, and Form2555 from this source cohort. No fabricated zero component or classification."
+    testRef: "tests/engine/schedules/schedule-d-source-binding.test.ts::preserves separate source methods instead of assuming their amounts"
+  - line: "canonical-netting"
+    description: "Use completed source worksheets in the tax calculation"
+    formula: "Child6000capital/10000gross with2700base transfers4380; actual child1000collectible and20001250 portions become730/1460. Parent1000shortloss leavesD18=0,D19=1190. Compute final whole-dollar lines once. Use verified same-basis/carry confirmation for actual AMT source worksheets, rejecting conflicting disposition adjustments; otherwise require separate actual AMT gain sources."
+    testRef: "tests/engine/federal-schedule-d-special-gains.test.ts::uses the completed child source worksheets in regular and AMT capital rates"
+  - line: "physical-lines"
+    description: "Show only completed applicable Schedule D lines"
+    formula: "When bothD15andD16arepositive, emit verified whole-dollar18/19; otherwise skip those physical lines. Existing mapping follows the printed decision flow; unknown source contract remains unavailable for positive child special gains."
+    testRef: "tests/engine/federal-schedule-d-special-gains.test.ts::keeps special worksheet lines blank when the printed gain condition fails"
+  - line: "same-basis-conflicts"
+    description: "Reject conflicting AMT source answers"
+    formula: "When the taxpayer confirms identical AMT bases and capital carries, compare any separately supplied AMT worksheet against the computed regular amounts. A contradictory1250amount cannot override the source worksheet."
+    testRef: "tests/engine/federal-schedule-d-special-gains.test.ts::rejects contradictory same-basis AMT sources rather than overriding actual gains"
+  - line: "actual-source-dates"
+    description: "Validate original dates and joint household identity"
+    formula: "Source dates must be real calendar dates in the reporting year; actual VARIOUS acquisition dates remain allowed. Joint source facts require the actual spouse name and taxpayer-ID last4."
+    testRef: "tests/engine/schedules/schedule-d-source-binding.test.ts::requires real original trade dates and actual spouse identity"
+  - line: "partnership1250"
+    description: "Apply section1231 and lookback limits to partnership1250 once"
+    formula: "Actual K1section1231gain1000and1250component500with100lookbackproduceD15=900andD19=400. Do not route the K1component through DIV/estate worksheetline11."
+    testRef: "tests/engine/schedules/schedule-d-source-binding.test.ts::limits partnership1250 by actual section1231 gain and lookback before reported distributions"
+  - line: "saved-pdf"
+    description: "Map actual canonical child source results to the final 2025 review form"
+    formula: "Reopen saved PDF bytes and verify line13=4380,line16=3380,line18blankzero,line19=1190,line17Yes,line20No. Loss return skips18/19. Preserve redacted identity and unqualified review markings."
+    testRef: "tests/pdf/schedule-d-special-gain-sources.test.ts::reopens the saved canonical special-gain worksheet lines and printed decisions"

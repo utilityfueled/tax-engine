@@ -43,3 +43,46 @@ Evidence is in `.local/upgrade-evidence/schedule-d-special-exact-{green,types,sp
 The independent agent review log is
 `.local/upgrade-evidence/agent-schedule-d-special-gains-review.log`.
 The subsequent change to this paragraph only records those results.
+
+## Actual source integration
+
+The next package binds the source year and actual household identity, every
+long-term original trade and every DIV/partnership/estate capital component.
+Missing sources and asset classifications remain unknown. Original facts are
+compared with their referenced return records; collectible gain is recomputed
+through Form 8949. Partnership 1250 gain receives the actual section 1231 and
+lookback limit before DIV/estate/child sources enter the other-source subtotal.
+The final estate capital-loss carry is included once.
+
+The six initial tests failed before implementation. Subsequent conflict tests
+also reproduced an invalid calendar date and a contradictory AMT source being
+accepted; both are corrected. The actual child example supplies Schedule D
+18/19 = 0/1190 and AMT Part III 13/14/15 = 2190/1190/3380. A same-basis/carry
+confirmation is required before deriving AMT sources; conflicting actual AMT
+facts reject. This is independently derived arithmetic, not an IRS example.
+The independent agent also verified a distinct K1/estate case (business 1250
+3000 plus estate 2000 = 5000) from the official worksheets.
+
+This initial contract is bounded to original classified capital assets and
+reported DIV/K1/1041/child sources. Property sales, transformed digital assets,
+installments, other-form sources, QSBS exclusion history and foreign-income
+worksheet modifications still require their separate complete source methods.
+These are internal implementation tasks. Guided intake and final qualification
+remain separate; no filing gate or year-readiness status changes.
+
+The isolated code tree `7f19cab20ff0a11583e346ffbe1288b417eac276` passes
+162 tests across nine source, canonical, AMT, metadata and saved-PDF suites.
+Root TypeScript and all 4,284 spec references pass; ESLint reports no errors
+and four pre-existing federal non-null assertion warnings. Evidence is in
+`.local/upgrade-evidence/schedule-d-source-{final-tests,exact-types,exact-spec,exact-lint}.log`.
+Independent agent code/source review and a separate K1/estate arithmetic probe
+found no actionable issue; these are agent checks, not human qualification.
+
+The saved review PDF was reopened and both pages were rendered and inspected.
+It uses the actual review identifier-redaction path, leaves the SSN blank and
+retains the review-only footer. Schedule D contains the actual 4,380/3,380 gains
+and line 19 amount 1,190; zero line 18 and the loss-branch special-rate fields
+remain blank. The saved artifact is
+`.local/upgrade-evidence/schedule-d-special-source-reference.pdf`, SHA-256
+`3db59e3b30d10d99806b96dd59442ba5fd4c0ecb8edf3b516a4e104b75ccb152`.
+Source references are not printed in the PDF. Filing qualification remains open.
