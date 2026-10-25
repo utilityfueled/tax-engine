@@ -1,5 +1,5 @@
 "use client";
-import { formatGuidedDollars, parseGuidedDisplayAmount, sumGuidedDisplayAmounts } from "@/lib/guided-currency";
+import { formatGuidedDollars, parseGuidedDisplayAmount } from "@/lib/guided-currency";
 
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import type { ReturnWorkspaceRecord } from "@tax-engine/contracts";
@@ -31,27 +31,29 @@ import {
 } from "@/lib/workspace-document-file-cache";
 import { isGuidedSyntheticDocument } from "@/lib/workspace-status-copy";
 import { CurrencyField } from "./currency-field";
-import { BooleanFact } from "./fact-fields";
+import { BooleanFact, TextFact } from "./fact-fields";
+import { BusinessSourceDetails } from "./business-source-details";
+import { isStartedNec, sumKnownBusinessAmounts, type BusinessSourceData } from "@/lib/guided-business-facts";
 
 function toCurrencyInput(value: string | undefined) {
   return value?.trim() ?? "";
 }
 
 function hasNecEntryContent(entry: NecEntryData) {
-  return Boolean(
-    entry.payerName.trim()
-    || entry.payerTin.trim()
-    || entry.nonemployeeCompensation.trim()
-    || entry.federalWithheld.trim()
-  );
+  return isStartedNec(entry);
 }
 
 function buildNecEntryFromSuggestion(suggestion: NecDocumentSuggestion): NecEntryData {
   return {
     payerName: suggestion.summary.payer,
-    payerTin: "",
+    payerTin: suggestion.summary.payerTin ?? "",
+    accountHolder: suggestion.summary.accountHolder,
     nonemployeeCompensation: toCurrencyInput(suggestion.summary.nonemployeeCompensation),
     federalWithheld: toCurrencyInput(suggestion.summary.federalWithheld),
+    stateTaxReporting: suggestion.summary.stateTaxReporting,
+    state: suggestion.summary.state,
+    stateIncome: suggestion.summary.stateIncome,
+    stateWithheld: suggestion.summary.stateWithheld,
   };
 }
 
@@ -144,11 +146,16 @@ function NecCard({
         />
         <CurrencyField
           label="Box 4 — Federal income tax withheld"
-          hint="Usually $0 for 1099-NEC, but check your form."
+          hint="Enter the actual amount, including zero. A blank is unknown."
           value={entry.federalWithheld}
           onChange={(v) => onUpdate("federalWithheld", v)}
         />
       </div>
+      <label className="guided-field"><span className="guided-field-label">Actual 1099-NEC recipient</span><select className="guided-input" value={entry.accountHolder ?? ""} onChange={event => onUpdate("accountHolder", event.target.value)}><option value="">Not answered</option><option value="primary">Primary taxpayer</option><option value="spouse">Spouse on a joint return</option></select></label>
+      <label className="guided-field"><span className="guided-field-label">State reporting on this 1099-NEC</span><select className="guided-input" value={entry.stateTaxReporting ?? ""} onChange={event => onUpdate("stateTaxReporting", event.target.value)}><option value="">Not answered</option><option value="none">No state section reported</option><option value="single">One state reported</option><option value="multiple">Multiple states requiring allocation</option></select></label>
+      <TextFact label="Box 6 actual source state" value={entry.state ?? ""} onChange={value => onUpdate("state", value.toUpperCase())} />
+      <CurrencyField label="Box 5 state income tax withheld" value={entry.stateWithheld ?? ""} onChange={value => onUpdate("stateWithheld", value)} />
+      <CurrencyField label="Box 7 state income" value={entry.stateIncome ?? ""} onChange={value => onUpdate("stateIncome", value)} />
     </div>
   );
 }
@@ -209,6 +216,7 @@ export function SectionSelfEmployment({
   bankStatementAnalyses,
   incomeDocumentAnalyses,
   qbiMateriallyParticipated,
+  businessFacts,
   onSectionChange,
 }: {
   workspace: ReturnWorkspaceRecord;
@@ -218,6 +226,7 @@ export function SectionSelfEmployment({
   bankStatementAnalyses: ScheduleCBankStatementAnalysis[];
   incomeDocumentAnalyses: SelfEmploymentIncomeDocumentAnalysis[];
   qbiMateriallyParticipated?: boolean | null;
+  businessFacts?: BusinessSourceData;
   onSectionChange: (next: {
     necEntries: NecEntryData[];
     manualGrossReceipts: string;
@@ -225,6 +234,7 @@ export function SectionSelfEmployment({
     bankStatementAnalyses: ScheduleCBankStatementAnalysis[];
     incomeDocumentAnalyses: SelfEmploymentIncomeDocumentAnalysis[];
     qbiMateriallyParticipated?: boolean | null;
+    businessFacts?: BusinessSourceData;
   }) => void;
 }) {
   const currentEntries = necEntries.length > 0 ? necEntries : [emptyNecEntry];
@@ -239,8 +249,8 @@ export function SectionSelfEmployment({
   const [incomeAnalysisMessage, setIncomeAnalysisMessage] = useState<string | null>(null);
   const [aiReviewAllowed, setAiReviewAllowed] = useState(false);
   const reviewJobs = useRef<Partial<Record<"income" | "expense", { controller: AbortController; workspaceId: string }>>>({});
-  const latestSection = useRef({ workspaceId: workspace.id, aiReviewAllowed, onSectionChange, value: { necEntries: currentEntries, manualGrossReceipts, expenses: currentExpenses, bankStatementAnalyses: currentAnalyses, incomeDocumentAnalyses: currentIncomeAnalyses, qbiMateriallyParticipated } });
-  latestSection.current = { workspaceId: workspace.id, aiReviewAllowed, onSectionChange, value: { necEntries: currentEntries, manualGrossReceipts, expenses: currentExpenses, bankStatementAnalyses: currentAnalyses, incomeDocumentAnalyses: currentIncomeAnalyses, qbiMateriallyParticipated } };
+  const latestSection = useRef({ workspaceId: workspace.id, aiReviewAllowed, onSectionChange, value: { necEntries: currentEntries, manualGrossReceipts, expenses: currentExpenses, bankStatementAnalyses: currentAnalyses, incomeDocumentAnalyses: currentIncomeAnalyses, qbiMateriallyParticipated, businessFacts } });
+  latestSection.current = { workspaceId: workspace.id, aiReviewAllowed, onSectionChange, value: { necEntries: currentEntries, manualGrossReceipts, expenses: currentExpenses, bankStatementAnalyses: currentAnalyses, incomeDocumentAnalyses: currentIncomeAnalyses, qbiMateriallyParticipated, businessFacts } };
   const [cachedAttachedIncomeDocumentIds, setCachedAttachedIncomeDocumentIds] = useState<Set<string>>(new Set());
   const [selectedAttachedIncomeDocumentIds, setSelectedAttachedIncomeDocumentIds] = useState<string[]>(
     [],
@@ -330,8 +340,16 @@ export function SectionSelfEmployment({
     bankStatementAnalyses: ScheduleCBankStatementAnalysis[];
     incomeDocumentAnalyses: SelfEmploymentIncomeDocumentAnalysis[];
     qbiMateriallyParticipated?: boolean | null;
+    businessFacts?: BusinessSourceData;
   }>) {
     const value = { ...latestSection.current.value, ...next };
+    if (next.necEntries !== undefined || next.manualGrossReceipts !== undefined || next.expenses !== undefined) {
+      value.businessFacts = {
+        ...value.businessFacts,
+        ...(next.necEntries !== undefined || next.manualGrossReceipts !== undefined ? { incomeReconciled: null } : {}),
+        ...(next.expenses !== undefined ? { expensesReconciled: null } : {}),
+      };
+    }
     latestSection.current.value = value;
     latestSection.current.onSectionChange(value);
   }
@@ -614,11 +632,11 @@ export function SectionSelfEmployment({
     }
   }
 
-  const necIncome = sumGuidedDisplayAmounts(currentEntries.map((entry) => entry.nonemployeeCompensation));
-  const manualIncome = parseGuidedDisplayAmount(manualGrossReceipts);
-  const totalIncome = necIncome.plus(manualIncome);
-  const totalExpenses = sumGuidedDisplayAmounts(Object.values(currentExpenses));
-  const netProfit = totalIncome.minus(totalExpenses);
+  const necIncome = sumKnownBusinessAmounts(currentEntries.filter(isStartedNec).map(entry => entry.nonemployeeCompensation));
+  const manualIncome = sumKnownBusinessAmounts([manualGrossReceipts]);
+  const totalIncome = necIncome !== null && manualIncome !== null ? necIncome.plus(manualIncome) : null;
+  const totalExpenses = sumKnownBusinessAmounts([...Object.values(currentExpenses), businessFacts?.contractLabor, businessFacts?.depreciation, businessFacts?.legalAndProfessional]);
+  const sourceAmount = (value: ReturnType<typeof sumKnownBusinessAmounts>) => value === null ? "Unknown — review source amounts" : `$${formatSuggestedAmount(value.toFixed())}`;
   const suggestedTotals = summarizeBankStatementSuggestionsByCategory(currentAnalyses);
   const suggestedIncomeTotal = summarizeSelfEmploymentIncomeSuggestions(currentIncomeAnalyses);
   const allIncomeSuggestionSteps = currentIncomeAnalyses.flatMap((analysis) => (
@@ -888,7 +906,7 @@ export function SectionSelfEmployment({
                           {[suggestion.summary.payer, `$${formatSuggestedAmount(suggestion.summary.nonemployeeCompensation)}`].join(" · ")}
                         </p>
                         <p className="guided-hint">
-                          {parseGuidedDisplayAmount(suggestion.summary.federalWithheld).gt(0)
+                          {!suggestion.summary.federalWithheld?.trim() ? "Federal withholding is unknown; check the actual form." : parseGuidedDisplayAmount(suggestion.summary.federalWithheld).gt(0)
                             ? `Federal withholding $${formatSuggestedAmount(suggestion.summary.federalWithheld)} is available too.`
                             : "No federal withholding detected on this attached 1099-NEC."}
                         </p>
@@ -933,18 +951,19 @@ export function SectionSelfEmployment({
         <div className="guided-review-card" style={{ marginTop: "16px" }}>
           <div className="guided-review-row">
             <span className="guided-review-label">Total 1099-NEC income</span>
-            <span className="guided-review-value">{`$${formatSuggestedAmount(String(necIncome))}`}</span>
+            <span className="guided-review-value">{sourceAmount(necIncome)}</span>
           </div>
           <div className="guided-review-row">
             <span className="guided-review-label">Other business income</span>
-            <span className="guided-review-value">{`$${formatSuggestedAmount(String(manualIncome))}`}</span>
+            <span className="guided-review-value">{sourceAmount(manualIncome)}</span>
           </div>
           <div className="guided-review-row guided-review-row-total">
             <span className="guided-review-label">Total gross receipts</span>
-            <span className="guided-review-value">{`$${formatSuggestedAmount(String(totalIncome))}`}</span>
+            <span className="guided-review-value">{sourceAmount(totalIncome)}</span>
           </div>
         </div>
 
+        <BusinessSourceDetails data={businessFacts} onChange={value => commitSection({ businessFacts: value })} />
         <details className="guided-expand" style={{ marginTop: "16px" }}>
           <summary className="guided-expand-trigger">Schedule C — Business Expenses</summary>
           <BooleanFact label="Did you materially participate in this business under the section 469 rules?" value={qbiMateriallyParticipated} onChange={(value) => commitSection({ qbiMateriallyParticipated: value })} />
@@ -952,8 +971,8 @@ export function SectionSelfEmployment({
           <div className="guided-expand-body">
             <p className="guided-hint">
               Enter your business expenses by category. Only include amounts that are
-              ordinary and necessary for your business. Leave categories at $0 if they
-              don&apos;t apply.
+              ordinary and necessary for your business. Enter an actual zero for categories
+              you have checked and that do not apply; a blank remains unknown.
             </p>
 
             <div className="guided-doc-helper" style={{ marginBottom: "16px" }}>
@@ -1126,28 +1145,11 @@ export function SectionSelfEmployment({
           </div>
         </details>
 
-        {(totalIncome.gt(0) || totalExpenses.gt(0)) && (
-          <div className="guided-ticker-grid" style={{ marginTop: "16px" }}>
-            <div className="guided-ticker-item">
-              <span className="guided-ticker-label">Gross Income</span>
-              <strong className="guided-ticker-value">
-                ${formatSuggestedAmount(totalIncome.toFixed())}
-              </strong>
-            </div>
-            <div className="guided-ticker-item">
-              <span className="guided-ticker-label">Total Expenses</span>
-              <strong className="guided-ticker-value">
-                ${formatSuggestedAmount(totalExpenses.toFixed())}
-              </strong>
-            </div>
-            <div className={`guided-ticker-item ${netProfit.gte(0) ? "" : "guided-ticker-negative"}`}>
-              <span className="guided-ticker-label">Net Profit</span>
-              <strong className="guided-ticker-value">
-                ${formatSuggestedAmount(netProfit.toFixed())}
-              </strong>
-            </div>
-          </div>
-        )}
+        <div className="guided-ticker-grid" style={{ marginTop: "16px" }}>
+          <div className="guided-ticker-item"><span className="guided-ticker-label">Entered gross receipts</span><strong className="guided-ticker-value">{sourceAmount(totalIncome)}</strong></div>
+          <div className="guided-ticker-item"><span className="guided-ticker-label">Entered expense amounts before tax limits</span><strong className="guided-ticker-value">{sourceAmount(totalExpenses)}</strong></div>
+        </div>
+
       </div>
     </RetroShell>
   );

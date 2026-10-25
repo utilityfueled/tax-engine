@@ -15,6 +15,7 @@ import { careFactErrors } from "./guided-credit-facts";
 import { energyFactErrors } from "./guided-energy-facts";
 import { isStartedW2, w2FactErrors } from "./guided-w2-facts";
 import { investmentFactErrors, isStartedInvestment, type InvestmentSourceData } from "./guided-investment-facts";
+import { businessFactErrors, hasBusinessSourceData, type BusinessSourceData } from "./guided-business-facts";
 import { vehicleFactErrors, type VehicleCreditData } from "./guided-vehicle-facts";
 import { adoptionFactErrors, type AdoptionCreditData } from "./guided-adoption-facts";
 
@@ -614,6 +615,11 @@ export interface NecEntryData {
   payerTin: string;
   nonemployeeCompensation: string;
   federalWithheld: string;
+  accountHolder?: "primary" | "spouse" | "";
+  stateTaxReporting?: "none" | "single" | "multiple" | "";
+  state?: string;
+  stateIncome?: string;
+  stateWithheld?: string;
 }
 
 export const emptyNecEntry: NecEntryData = {
@@ -1131,6 +1137,7 @@ export interface SectionDataMap {
     bankStatementAnalyses?: ScheduleCBankStatementAnalysis[];
     incomeDocumentAnalyses?: SelfEmploymentIncomeDocumentAnalysis[];
     qbiMateriallyParticipated?: boolean | null;
+    businessFacts?: BusinessSourceData;
   };
   "income-investments"?: {
     interestEntries: InterestEntryData[];
@@ -1199,6 +1206,7 @@ export function acceptSelfEmploymentIncomeSuggestion(
   return {
     ...section,
     manualGrossReceipts: addCurrencyStrings(section.manualGrossReceipts, suggestion.amount),
+    ...(section.businessFacts ? { businessFacts: { ...section.businessFacts, incomeReconciled: null } } : {}),
     incomeDocumentAnalyses: section.incomeDocumentAnalyses?.map((entry) => (
       entry.id !== analysisId
         ? entry
@@ -1586,41 +1594,14 @@ function validateW2Section(data: { entries: W2EntryData[] } | undefined, filingS
 }
 
 function validateSelfEmploymentSection(
-  data: { necEntries: NecEntryData[]; manualGrossReceipts: string; expenses: ScheduleCExpenseData } | undefined,
+  data: SelfEmploymentSectionData | undefined,
+  filingStatus?: FilingStatus | null,
+  w2s?: W2EntryData[],
+  stateData?: StateReturnData,
 ): SectionValidationResult {
-  if (!data) return EMPTY_SECTION("self-employment info");
-
-  const startedNec = data.necEntries.filter(
-    (entry) =>
-      hasNumericValue(entry.nonemployeeCompensation)
-      || hasNumericValue(entry.federalWithheld)
-      || hasTextValue(entry.payerName)
-      || hasTextValue(entry.payerTin)
-  );
-  const hasManualGrossReceipts = hasNumericValue(data.manualGrossReceipts);
-  const hasScheduleCExpenses = Object.values(data.expenses).some((value) => hasNumericValue(value));
-
-  if (startedNec.length === 0 && !hasManualGrossReceipts && !hasScheduleCExpenses) {
-    return EMPTY_SECTION("self-employment info");
-  }
-
-  const errors: Record<string, string> = {};
-  startedNec.forEach((entry, index) => {
-    if (!hasNumericValue(entry.nonemployeeCompensation)) {
-      errors[`nec-${index}-compensation`] = `1099-NEC #${index + 1} needs a nonemployee compensation amount.`;
-    }
-  });
-
-  if (Object.keys(errors).length > 0) {
-    return {
-      status: "partial",
-      message: "Some self-employment entries were started but still need income amounts.",
-      fieldErrors: errors,
-      allowSkip: true,
-    };
-  }
-
-  return VALID_SECTION;
+  if (!hasBusinessSourceData(data)) return EMPTY_SECTION("self-employment info");
+  const errors = businessFactErrors(data, filingStatus, w2s, stateData);
+  return Object.keys(errors).length ? { status: "partial", message: "Complete the actual business ownership, source income and qualified expenses.", fieldErrors: errors, allowSkip: true } : VALID_SECTION;
 }
 
 function validateInvestmentSection(
@@ -1762,7 +1743,7 @@ export function validateSection(
     case "income-w2":
       return validateW2Section(getSectionData(state, "income-w2"), state.segmentation.filingStatus);
     case "income-self-employment":
-      return validateSelfEmploymentSection(getSectionData(state, "income-self-employment"));
+      return validateSelfEmploymentSection(getSectionData(state, "income-self-employment"), state.segmentation.filingStatus, getSectionData(state, "income-w2")?.entries, getSectionData(state, "state-return"));
     case "income-investments":
       return validateInvestmentSection(getSectionData(state, "income-investments"), state.segmentation.filingStatus, state.taxYear, getSectionData(state, "state-return"));
     case "income-rental":

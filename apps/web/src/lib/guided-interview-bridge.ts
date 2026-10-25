@@ -20,6 +20,7 @@ import { statePaymentFactErrors, sumAdditionalStateWithholding } from "./guided-
 import { careFactErrors } from "./guided-credit-facts";
 import { energyFactErrors } from "./guided-energy-facts";
 import { w2FactErrors } from "./guided-w2-facts";
+import { businessFactErrors, hasBusinessSourceData, isStartedNec, sumKnownBusinessAmounts, type BusinessSourceData } from "./guided-business-facts";
 import { investmentFactErrors, isStartedInvestment, type InvestmentSourceData } from "./guided-investment-facts";
 
 import type {
@@ -149,13 +150,16 @@ export function buildW2Inputs(
 export function buildNecInputs(entries: NecEntryData[] | undefined) {
   if (!entries || entries.length === 0) return [];
   return entries
-    .filter((e) => hasValue(e.nonemployeeCompensation))
+    .filter(isStartedNec)
     .map((e) => ({
-      payer: e.payerName || "Client",
+      payer: e.payerName.trim(),
+      accountHolder: e.accountHolder || undefined,
       payerTin: e.payerTin || undefined,
-      nonemployeeCompensation: toDecimalString(e.nonemployeeCompensation),
-      federalWithheld: toDecimalString(e.federalWithheld),
-      stateWithheld: "0",
+      nonemployeeCompensation: toOptionalDecimalString(e.nonemployeeCompensation),
+      federalWithheld: toOptionalDecimalString(e.federalWithheld),
+      state: e.state?.trim().toUpperCase() || undefined,
+      stateWithheld: e.stateTaxReporting === "none" ? "0" : toOptionalDecimalString(e.stateWithheld),
+      stateIncome: e.stateTaxReporting === "none" ? "0" : toOptionalDecimalString(e.stateIncome),
     }));
 }
 
@@ -164,25 +168,43 @@ export function buildScheduleCInput(
   manualGrossReceipts: string | undefined,
   expenses: ScheduleCExpenseData | undefined,
   qbiMateriallyParticipated?: boolean | null,
+  businessFacts?: BusinessSourceData,
 ) {
-  const necGross = (necEntries ?? []).reduce((sum, entry) => sum.plus(parseGuidedCurrency(entry.nonemployeeCompensation)), new Decimal(0));
-  const totalGross = necGross.plus(parseGuidedCurrency(manualGrossReceipts));
-  if (totalGross.isZero() && !expenses) return undefined;
+  const sources = (necEntries ?? []).filter(isStartedNec);
+  if (!sources.length && !hasEnteredAmount(manualGrossReceipts) && !Object.values(expenses ?? {}).some(hasEnteredAmount) && !businessFacts) return undefined;
+  const totalGross = sumKnownBusinessAmounts([...sources.map(entry => entry.nonemployeeCompensation), manualGrossReceipts]);
 
   return {
-    grossReceipts: totalGross.toFixed(),
+    grossReceipts: totalGross?.toFixed(),
+    accountHolder: businessFacts?.accountHolder === "primary" || businessFacts?.accountHolder === "spouse" ? businessFacts.accountHolder : undefined,
+    principalBusinessActivity: businessFacts?.activityDescription?.trim() || undefined,
+    allInvestmentAtRisk: businessFacts?.allInvestmentAtRisk ?? undefined,
+    otherExpenseDescription: businessFacts?.otherExpenseDescription?.trim() || undefined,
+    businessName: businessFacts?.businessName?.trim() || undefined,
+    businessCode: businessFacts?.businessCode || undefined,
+    ein: businessFacts?.ein?.trim() || undefined,
+    accountingMethod: businessFacts?.accountingMethod || undefined,
+    returnsAndAllowances: toOptionalDecimalString(businessFacts?.returnsAndAllowances),
+    costOfGoodsSold: toOptionalDecimalString(businessFacts?.costOfGoodsSold),
+    otherIncome: toOptionalDecimalString(businessFacts?.otherIncome),
+    w2WagesPaid: toOptionalDecimalString(businessFacts?.w2WagesPaid),
+    ubiaQualifiedProperty: toOptionalDecimalString(businessFacts?.ubiaQualifiedProperty),
+    isSST: businessFacts?.isSST ?? undefined,
     qbiMateriallyParticipated: qbiMateriallyParticipated ?? undefined,
     expenses: expenses
       ? {
-          advertising: toDecimalString(expenses.advertising),
-          carAndTruck: toDecimalString(expenses.carAndTruck),
-          insurance: toDecimalString(expenses.insurance),
-          officeExpense: toDecimalString(expenses.officeExpense),
-          supplies: toDecimalString(expenses.supplies),
-          travel: toDecimalString(expenses.travel),
-          meals: toDecimalString(expenses.meals),
-          utilities: toDecimalString(expenses.utilities),
-          otherExpenses: toDecimalString(expenses.otherExpenses),
+          contractLabor: toOptionalDecimalString(businessFacts?.contractLabor),
+          depreciation: toOptionalDecimalString(businessFacts?.depreciation),
+          legalAndProfessional: toOptionalDecimalString(businessFacts?.legalAndProfessional),
+          advertising: toOptionalDecimalString(expenses.advertising),
+          carAndTruck: toOptionalDecimalString(expenses.carAndTruck),
+          insurance: toOptionalDecimalString(expenses.insurance),
+          officeExpense: toOptionalDecimalString(expenses.officeExpense),
+          supplies: toOptionalDecimalString(expenses.supplies),
+          travel: toOptionalDecimalString(expenses.travel),
+          meals: toOptionalDecimalString(expenses.meals),
+          utilities: toOptionalDecimalString(expenses.utilities),
+          otherExpenses: toOptionalDecimalString(expenses.otherExpenses),
         }
       : undefined,
   };
@@ -500,9 +522,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
   const personalInfo = sectionData["personal-info"] as PersonalInfoData | undefined;
   if (!personalInfo?.dateOfBirth || Object.keys(personalFactErrors(personalInfo, segmentation.filingStatus, state.taxYear)).length) return null;
   const w2Data = sectionData["income-w2"] as { entries: W2EntryData[] } | undefined;
-  const seData = sectionData["income-self-employment"] as
-    | { necEntries: NecEntryData[]; manualGrossReceipts: string; expenses: ScheduleCExpenseData; qbiMateriallyParticipated?: boolean | null }
-    | undefined;
+  const seData = sectionData["income-self-employment"];
   const investData = sectionData["income-investments"] as
     | { interestEntries: InterestEntryData[]; dividendEntries: DividendEntryData[]; brokerageEntries: BrokerageEntryData[] }
     | undefined;
@@ -520,6 +540,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
   try {
     assertKnownFacts(w2FactErrors(w2Data?.entries, segmentation.filingStatus));
     assertKnownFacts(investmentFactErrors(investData, segmentation.filingStatus, state.taxYear, stateReturnData));
+    assertKnownFacts(businessFactErrors(seData, segmentation.filingStatus, w2Data?.entries, stateReturnData));
     assertKnownFacts(deductionFactErrors(deductionData, state.taxYear));
     assertKnownFacts(allPaymentFactErrors(paymentData, state.taxYear));
     assertKnownFacts(retirementFactErrors(retirementData?.entries));
@@ -536,7 +557,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
   const stateCode = personalInfo?.state || segmentation.stateCode || null;
   const w2s = buildW2Inputs(w2Data?.entries);
   const necs = buildNecInputs(seData?.necEntries);
-  const scheduleC = buildScheduleCInput(seData?.necEntries, seData?.manualGrossReceipts, seData?.expenses, seData?.qbiMateriallyParticipated);
+  const scheduleC = buildScheduleCInput(seData?.necEntries, seData?.manualGrossReceipts, seData?.expenses, seData?.qbiMateriallyParticipated, seData?.businessFacts);
   const form1099Int = buildInterestInputs(investData?.interestEntries);
   const form1099Div = buildDividendInputs(investData?.dividendEntries);
   const form1099B = buildBrokerageInputs(investData?.brokerageEntries);
@@ -694,40 +715,11 @@ export function buildGuidedFactAnswers(
     }
   }
 
-  // 1099-NEC → "nonemployee-compensation" and "schedule-c-expense-review"
-  const seData = state.sectionData["income-self-employment"] as
-    | { necEntries: NecEntryData[]; manualGrossReceipts: string; expenses: ScheduleCExpenseData }
-    | undefined;
-  if (seData) {
-    const filled = seData.necEntries.filter((e) => hasValue(e.nonemployeeCompensation));
-    const necTotal = filled.reduce((sum, e) => sum.plus(numVal(e.nonemployeeCompensation)), new Decimal(0));
-    const manualGross = numVal(seData.manualGrossReceipts);
-
-    if (filled.length > 0 || manualGross.gt(0)) {
-      const summaryParts: string[] = [];
-
-      if (filled.length > 0) {
-        summaryParts.push(`${filled.length} 1099-NEC(s) confirmed: $${fmtNum(necTotal)}`);
-      }
-
-      if (manualGross.gt(0)) {
-        summaryParts.push(`manual Schedule C gross receipts: $${fmtNum(manualGross)}`);
-      }
-
-      answers.push({
-        factId: "nonemployee-compensation",
-        answerText: `${summaryParts.join("; ")}.`,
-      });
-      answers.push({
-        factId: "schedule-c-expense-review",
-        answerText: "Schedule C expenses entered via guided interview.",
-      });
-    } else if (Object.values(seData.expenses).some((value) => hasValue(value))) {
-      answers.push({
-        factId: "schedule-c-expense-review",
-        answerText: "Schedule C expenses entered via guided interview.",
-      });
-    }
+  const seData = state.sectionData["income-self-employment"];
+  if (seData && hasBusinessSourceData(seData)) {
+    const receipts = sumKnownBusinessAmounts([seData.manualGrossReceipts, ...seData.necEntries.filter(isStartedNec).map(entry => entry.nonemployeeCompensation)]);
+    answers.push({ factId: "nonemployee-compensation", answerText: receipts === null ? "Business income source amounts still need review." : `Business gross receipts entered: $${fmtNum(receipts)}.` });
+    answers.push({ factId: "schedule-c-expense-review", answerText: seData.businessFacts?.expensesReconciled === true ? "Business expense amounts and qualification checked against source records." : "Business expense amounts and qualification still need source review." });
   }
 
   // Record source totals only when every contributing amount is known.
@@ -822,31 +814,29 @@ export function buildGuidedSyntheticDocuments(
     });
   }
 
-  const seData = state.sectionData["income-self-employment"] as
-    | { necEntries: NecEntryData[]; manualGrossReceipts: string; expenses: ScheduleCExpenseData }
-    | undefined;
-  if (seData?.necEntries?.some((e) => hasValue(e.nonemployeeCompensation))) {
+  const seData = state.sectionData["income-self-employment"];
+  if (seData?.necEntries?.some(isStartedNec)) {
     docs.push({
       id: "guided:1099-nec",
       name: "Guided Interview — 1099-NEC",
       size: 0,
       uploadedAt: now,
       kind: "1099-nec",
-      coverage: "supported",
+      coverage: Object.keys(businessFactErrors(seData, state.segmentation.filingStatus, state.sectionData["income-w2"]?.entries, state.sectionData["state-return"])).length ? "partially-supported" : "supported",
       label: "1099-NEC (guided interview)",
       notes: "Entered via guided interview.",
       matchedFixtureId: null,
       seededFactIds: ["nonemployee-compensation", "schedule-c-expense-review"],
     });
   }
-  if (seData && (hasValue(seData.manualGrossReceipts) || Object.values(seData.expenses).some((value) => hasValue(value)))) {
+  if (seData && (hasEnteredAmount(seData.manualGrossReceipts) || Object.values(seData.expenses).some(hasEnteredAmount) || seData.businessFacts)) {
     docs.push({
       id: "guided:schedule-c",
       name: "Guided Interview — Schedule C",
       size: 0,
       uploadedAt: now,
       kind: "schedule-c-support",
-      coverage: "supported",
+      coverage: Object.keys(businessFactErrors(seData, state.segmentation.filingStatus, state.sectionData["income-w2"]?.entries, state.sectionData["state-return"])).length ? "partially-supported" : "supported",
       label: "Schedule C (guided interview)",
       notes: "Manual Schedule C gross receipts and expenses entered via guided interview.",
       matchedFixtureId: null,

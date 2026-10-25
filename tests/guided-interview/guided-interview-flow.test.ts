@@ -1,3 +1,4 @@
+import { completeNecSource, completeBusinessSection, completeBusinessExpenses } from "./complete-facts";
 import { completeInterestSource } from "./complete-facts";
 import { completePersonalInfo, completeW2Entry } from "./complete-facts";
 import { describe, it, expect } from "vitest";
@@ -557,9 +558,10 @@ describe("summarizeFlowCompletion", () => {
           lastName: "Doe",
         },
         "income-self-employment": {
+          ...completeBusinessSection,
           necEntries: [],
           manualGrossReceipts: "12000",
-          expenses: emptyScheduleCExpenses,
+          expenses: completeBusinessExpenses,
         },
         deductions: emptyDeductionData,
       },
@@ -950,14 +952,15 @@ describe("self-employment section routing", () => {
           lastName: "Doe",
         },
         "income-self-employment": {
+          ...completeBusinessSection,
           necEntries: [
             {
-              ...emptyNecEntry,
+              ...completeNecSource,
               payerName: "Client Co",
               nonemployeeCompensation: "12000",
             },
           ],
-          expenses: emptyScheduleCExpenses,
+          expenses: completeBusinessExpenses,
         },
       },
     };
@@ -2307,9 +2310,10 @@ describe("validateSection", () => {
   it("returns complete for self-employment with NEC data", () => {
     let state = startInterview({ filingStatus: "single", incomeTypes: ["self-employment"], lifeEvents: [], stateCode: null });
     state = updateSectionData(state, "income-self-employment", {
-      necEntries: [{ ...emptyNecEntry, nonemployeeCompensation: "5000" }],
-      manualGrossReceipts: "",
-      expenses: emptyScheduleCExpenses,
+      ...completeBusinessSection,
+      necEntries: [{ ...completeNecSource, nonemployeeCompensation: "5000" }],
+      manualGrossReceipts: "0",
+      expenses: completeBusinessExpenses,
     });
     const result = validateSection(state, "income-self-employment");
     expect(result.status).toBe("complete");
@@ -2318,9 +2322,10 @@ describe("validateSection", () => {
   it("returns complete for self-employment with manual gross receipts and no 1099-NEC", () => {
     let state = startInterview({ filingStatus: "single", incomeTypes: ["self-employment"], lifeEvents: [], stateCode: null });
     state = updateSectionData(state, "income-self-employment", {
+      ...completeBusinessSection,
       necEntries: [emptyNecEntry],
       manualGrossReceipts: "7200",
-      expenses: emptyScheduleCExpenses,
+      expenses: completeBusinessExpenses,
     });
     const result = validateSection(state, "income-self-employment");
     expect(result.status).toBe("complete");

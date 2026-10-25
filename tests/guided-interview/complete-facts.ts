@@ -1,4 +1,4 @@
-import { emptyPersonalInfo, emptyW2Entry, emptyInterestEntry, emptyDividendEntry, emptyCapitalGainTransaction, startInterview, type PersonalInfoData, type SegmentationAnswers, type DependentEntryData, type W2EntryData } from "@/lib/guided-interview-flow";
+import { emptyPersonalInfo, emptyW2Entry, emptyNecEntry, emptyScheduleCExpenses, emptyInterestEntry, emptyDividendEntry, emptyCapitalGainTransaction, startInterview, type PersonalInfoData, type SegmentationAnswers, type DependentEntryData, type W2EntryData } from "@/lib/guided-interview-flow";
 
 /** Explicit synthetic W-2 source facts; blank application fields stay unknown. */
 export const completeW2Entry: W2EntryData = { ...emptyW2Entry, employerName: "Synthetic Employer", employerEin: "12-3456789", accountHolder: "primary", wages: "0", federalWithheld: "0", socialSecurityWages: "0", socialSecurityWithheld: "0", medicareWages: "0", medicareWithheld: "0", stateTaxReporting: "none" };
@@ -58,3 +58,9 @@ export const completeBrokerageSource = { ...sourceIdentity, broker: "Actual brok
 
 export const completeInterestEntry = completeInterestSource;
 export const completeDividendEntry = completeDividendSource;
+
+/** Explicit synthetic business source answers; application blanks stay unknown. */
+export const completeNecSource = { ...emptyNecEntry, payerName: "Synthetic client", payerTin: "12-3456789", accountHolder: "primary" as const, nonemployeeCompensation: "0", federalWithheld: "0", stateTaxReporting: "none" as const, state: "", stateIncome: "0", stateWithheld: "0" };
+export const completeBusinessExpenses = Object.fromEntries(Object.keys(emptyScheduleCExpenses).map(key => [key, "0"])) as typeof emptyScheduleCExpenses;
+export const completeBusinessFacts = { accountHolder: "primary" as const, activityDescription: "Independent design services", businessCode: "541430", accountingMethod: "cash" as const, singleBusinessConfirmed: true, incomeReconciled: true, expensesReconciled: true, returnsAndAllowances: "0", costOfGoodsSold: "0", otherIncome: "0", contractLabor: "0", depreciation: "0", legalAndProfessional: "0", w2WagesPaid: "0", ubiaQualifiedProperty: "0", isSST: false, allInvestmentAtRisk: true, priorYearUnallowedLoss: "0", additionalWorksheetRequired: false, otherExpenseDescription: "Fictional qualified business expense", mealsEligibilityConfirmed: true, carExpenseWorksheetConfirmed: true, depreciationWorksheetConfirmed: true };
+export const completeBusinessSection = { necEntries: [], manualGrossReceipts: "0", expenses: completeBusinessExpenses, businessFacts: completeBusinessFacts, qbiMateriallyParticipated: true };

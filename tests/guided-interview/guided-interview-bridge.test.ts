@@ -1,3 +1,4 @@
+import { completeNecSource, completeBusinessSection, completeBusinessExpenses } from "./complete-facts";
 import { completeBrokerageSource, completeDividendSource, completeInterestSource, completeTransactionSource } from "./complete-facts";
 import { completeW2Entry, startCompleteInterview as startInterview, completePersonalInfo, completeDependent, completeAocEligibility, completeEducationClaimant, completeHouseholdEmployee } from "./complete-facts";
 import { describe, it, expect } from "vitest";
@@ -230,7 +231,7 @@ describe("buildNecInputs", () => {
     expect(buildNecInputs(undefined)).toEqual([]);
   });
 
-  it("skips entries with zero compensation", () => {
+  it("skips untouched entries without inventing a zero amount", () => {
     expect(buildNecInputs([emptyNecEntry])).toEqual([]);
   });
 
@@ -240,7 +241,7 @@ describe("buildNecInputs", () => {
     expect(result).toHaveLength(1);
     expect(result[0].payer).toBe("Client A");
     expect(result[0].nonemployeeCompensation).toBe("10000");
-    expect(result[0].stateWithheld).toBe("0");
+    expect(result[0].stateWithheld).toBeUndefined();
   });
 });
 
@@ -257,7 +258,7 @@ describe("buildScheduleCInput", () => {
       { ...emptyNecEntry, nonemployeeCompensation: "5000" },
       { ...emptyNecEntry, nonemployeeCompensation: "3000" },
     ];
-    const result = buildScheduleCInput(entries, undefined, emptyScheduleCExpenses);
+    const result = buildScheduleCInput(entries, "0", emptyScheduleCExpenses);
     expect(result?.grossReceipts).toBe("8000");
   });
 
@@ -273,7 +274,7 @@ describe("buildScheduleCInput", () => {
     const result = buildScheduleCInput(entries, undefined, expenses);
     expect(result?.expenses?.officeExpense).toBe("500");
     expect(result?.expenses?.travel).toBe("1200");
-    expect(result?.expenses?.advertising).toBe("0");
+    expect(result?.expenses?.advertising).toBeUndefined();
   });
 });
 
@@ -567,9 +568,10 @@ describe("buildTaxInputFromGuidedData", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-self-employment", {
-      necEntries: [{ ...emptyNecEntry, payerName: "Client", nonemployeeCompensation: "50000" }],
-      manualGrossReceipts: "",
-      expenses: { ...emptyScheduleCExpenses, officeExpense: "1000" },
+      ...completeBusinessSection,
+      necEntries: [{ ...completeNecSource, payerName: "Client", nonemployeeCompensation: "50000" }],
+      manualGrossReceipts: "0",
+      expenses: { ...completeBusinessExpenses, officeExpense: "1000" },
     });
     const input = buildTaxInputFromGuidedData(state);
     expect(input!.form1099Nec).toHaveLength(1);
@@ -585,9 +587,10 @@ describe("buildTaxInputFromGuidedData", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-self-employment", {
+      ...completeBusinessSection,
       necEntries: [emptyNecEntry],
       manualGrossReceipts: "18500",
-      expenses: { ...emptyScheduleCExpenses, supplies: "250" },
+      expenses: { ...completeBusinessExpenses, supplies: "250" },
     });
     const input = buildTaxInputFromGuidedData(state);
     expect(input!.form1099Nec).toEqual([]);
@@ -822,8 +825,9 @@ describe("computeGuidedPreview", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-self-employment", {
-      necEntries: [{ ...emptyNecEntry, nonemployeeCompensation: "50000" }],
-      expenses: { ...emptyScheduleCExpenses, officeExpense: "5000" },
+      ...completeBusinessSection,
+      necEntries: [{ ...completeNecSource, nonemployeeCompensation: "50000" }],
+      expenses: { ...completeBusinessExpenses, officeExpense: "5000" },
     });
     const preview = computeGuidedPreview(state);
     expect(preview).not.toBeNull();
@@ -842,8 +846,9 @@ describe("computeGuidedPreview", () => {
       entries: [{ ...completeW2Entry, wages: "60000", federalWithheld: "8000" }],
     });
     state = updateSectionData(state, "income-self-employment", {
-      necEntries: [{ ...emptyNecEntry, nonemployeeCompensation: "30000" }],
-      expenses: emptyScheduleCExpenses,
+      ...completeBusinessSection,
+      necEntries: [{ ...completeNecSource, nonemployeeCompensation: "30000" }],
+      expenses: completeBusinessExpenses,
     });
     const preview = computeGuidedPreview(state);
     expect(preview).not.toBeNull();
@@ -938,8 +943,9 @@ describe("computeGuidedPreview", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-self-employment", {
-      necEntries: [{ ...emptyNecEntry, nonemployeeCompensation: "100000" }],
-      expenses: emptyScheduleCExpenses,
+      ...completeBusinessSection,
+      necEntries: [{ ...completeNecSource, nonemployeeCompensation: "100000" }],
+      expenses: completeBusinessExpenses,
     });
     state = updateSectionData(state, "payments", {
       estimatedPayments: [
@@ -961,8 +967,9 @@ describe("computeGuidedPreview", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-self-employment", {
-      necEntries: [{ ...emptyNecEntry, nonemployeeCompensation: "80000" }],
-      expenses: emptyScheduleCExpenses,
+      ...completeBusinessSection,
+      necEntries: [{ ...completeNecSource, nonemployeeCompensation: "80000" }],
+      expenses: completeBusinessExpenses,
     });
     // First compute without adjustments
     const previewWithout = computeGuidedPreview(state);
@@ -2182,9 +2189,10 @@ describe("buildGuidedFactAnswers", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-self-employment", {
-      necEntries: [{ ...emptyNecEntry, nonemployeeCompensation: "25000" }],
-      manualGrossReceipts: "",
-      expenses: emptyScheduleCExpenses,
+      ...completeBusinessSection,
+      necEntries: [{ ...completeNecSource, nonemployeeCompensation: "25000" }],
+      manualGrossReceipts: "0",
+      expenses: completeBusinessExpenses,
     });
     const answers = buildGuidedFactAnswers(state);
     const factIds = answers.map((a) => a.factId);
@@ -2200,15 +2208,16 @@ describe("buildGuidedFactAnswers", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-self-employment", {
+      ...completeBusinessSection,
       necEntries: [emptyNecEntry],
       manualGrossReceipts: "9300",
-      expenses: emptyScheduleCExpenses,
+      expenses: completeBusinessExpenses,
     });
     const answers = buildGuidedFactAnswers(state);
     expect(answers).toEqual(expect.arrayContaining([
       expect.objectContaining({
         factId: "nonemployee-compensation",
-        answerText: expect.stringContaining("manual Schedule C gross receipts: $9,300"),
+        answerText: expect.stringContaining("Business gross receipts entered: $9,300"),
       }),
       expect.objectContaining({
         factId: "schedule-c-expense-review",
@@ -2330,8 +2339,9 @@ describe("buildGuidedFactAnswers", () => {
       entries: [{ ...completeW2Entry, wages: "80000", federalWithheld: "12000" }],
     });
     state = updateSectionData(state, "income-self-employment", {
-      necEntries: [{ ...emptyNecEntry, nonemployeeCompensation: "40000" }],
-      expenses: emptyScheduleCExpenses,
+      ...completeBusinessSection,
+      necEntries: [{ ...completeNecSource, nonemployeeCompensation: "40000" }],
+      expenses: completeBusinessExpenses,
     });
     state = updateSectionData(state, "income-investments", {
       interestEntries: [{ ...completeInterestSource, interestIncome: "1000" }],
@@ -2439,13 +2449,13 @@ describe("buildGuidedSyntheticDocuments", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-self-employment", {
-      necEntries: [{ ...emptyNecEntry, nonemployeeCompensation: "25000" }],
-      manualGrossReceipts: "",
-      expenses: emptyScheduleCExpenses,
+      ...completeBusinessSection,
+      necEntries: [{ ...completeNecSource, nonemployeeCompensation: "25000" }],
+      manualGrossReceipts: "0",
+      expenses: completeBusinessExpenses,
     });
     const docs = buildGuidedSyntheticDocuments(state);
-    expect(docs).toHaveLength(1);
-    expect(docs[0].id).toBe("guided:1099-nec");
+    expect(docs.map(document => document.id)).toEqual(["guided:1099-nec", "guided:schedule-c"]);
     expect(docs[0].kind).toBe("1099-nec");
   });
 
@@ -2457,9 +2467,10 @@ describe("buildGuidedSyntheticDocuments", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-self-employment", {
+      ...completeBusinessSection,
       necEntries: [emptyNecEntry],
       manualGrossReceipts: "12000",
-      expenses: emptyScheduleCExpenses,
+      expenses: completeBusinessExpenses,
     });
     const docs = buildGuidedSyntheticDocuments(state);
     expect(docs).toEqual(expect.arrayContaining([
@@ -2548,8 +2559,9 @@ describe("buildGuidedSyntheticDocuments", () => {
       entries: [{ ...completeW2Entry, wages: "80000" }],
     });
     state = updateSectionData(state, "income-self-employment", {
-      necEntries: [{ ...emptyNecEntry, nonemployeeCompensation: "40000" }],
-      expenses: emptyScheduleCExpenses,
+      ...completeBusinessSection,
+      necEntries: [{ ...completeNecSource, nonemployeeCompensation: "40000" }],
+      expenses: completeBusinessExpenses,
     });
     state = updateSectionData(state, "income-investments", {
       interestEntries: [{ ...completeInterestSource, interestIncome: "1000" }],

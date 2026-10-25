@@ -1,5 +1,6 @@
 "use client";
 
+import { isStartedNec, sumKnownBusinessAmounts, type BusinessSourceData } from "@/lib/guided-business-facts";
 import { isStartedInvestment } from "@/lib/guided-investment-facts";
 import { hasEnteredAmount } from "@/lib/guided-required-facts";
 import { formatGuidedCurrency, parseGuidedDisplayAmount, sumGuidedDisplayAmounts } from "@/lib/guided-currency";
@@ -18,7 +19,6 @@ import {
   type PersonalInfoData,
   type RentalPropertyEntryData,
   type RetirementEntryData,
-  type ScheduleCBankStatementAnalysis,
   type ScheduleCExpenseData,
   type SocialSecurityData,
   type StateReturnData,
@@ -123,67 +123,26 @@ function W2Summary({ entries }: { entries: W2EntryData[] | undefined }) {
   );
 }
 
-function SelfEmploymentSummary({
-  necEntries,
-  manualGrossReceipts,
-  expenses,
-  bankStatementAnalyses,
-  incomeDocumentAnalyses,
-}: {
+function SelfEmploymentSummary({ necEntries, manualGrossReceipts, expenses, businessFacts }: {
   necEntries: NecEntryData[] | undefined;
   manualGrossReceipts: string | undefined;
   expenses: ScheduleCExpenseData | undefined;
-  bankStatementAnalyses: ScheduleCBankStatementAnalysis[] | undefined;
-  incomeDocumentAnalyses: import("@/lib/guided-interview-flow").SelfEmploymentIncomeDocumentAnalysis[] | undefined;
+  businessFacts: BusinessSourceData | undefined;
 }) {
-  const filledEntries = (necEntries ?? []).filter((e) => hasValue(e.nonemployeeCompensation));
-  const manualIncome = parseGuidedDisplayAmount(manualGrossReceipts);
-  if (filledEntries.length === 0 && manualIncome.isZero()) return <p className="guided-review-empty">No self-employment income entered.</p>;
-  const totalIncome = sumGuidedDisplayAmounts(filledEntries.map((entry) => entry.nonemployeeCompensation)).plus(manualIncome);
-  const totalExpenses = sumGuidedDisplayAmounts(Object.values(expenses ?? {}));
-
-  return (
-    <div className="guided-review-card">
-      {filledEntries.map((entry, i) => (
-        <div key={i} className="guided-review-row">
-          <span className="guided-review-label">
-            {entry.payerName || `1099-NEC #${i + 1}`}
-          </span>
-          <span className="guided-review-value">
-            {formatCurrency(entry.nonemployeeCompensation)}
-          </span>
-        </div>
-      ))}
-      {manualIncome.gt(0) && (
-        <div className="guided-review-row">
-          <span className="guided-review-label">Income without 1099-NEC</span>
-          <span className="guided-review-value">{formatCurrency(String(manualIncome))}</span>
-        </div>
-      )}
-      {totalExpenses.gt(0) && (
-        <div className="guided-review-row">
-          <span className="guided-review-label">Business expenses</span>
-          <span className="guided-review-value">{formatCurrency(totalExpenses)}</span>
-        </div>
-      )}
-      {(bankStatementAnalyses?.length ?? 0) > 0 && (
-        <div className="guided-review-row">
-          <span className="guided-review-label">AI-reviewed statements</span>
-          <span className="guided-review-value">{bankStatementAnalyses?.length}</span>
-        </div>
-      )}
-      {(incomeDocumentAnalyses?.length ?? 0) > 0 && (
-        <div className="guided-review-row">
-          <span className="guided-review-label">AI-reviewed income documents</span>
-          <span className="guided-review-value">{incomeDocumentAnalyses?.length}</span>
-        </div>
-      )}
-      <div className="guided-review-row guided-review-row-total">
-        <span className="guided-review-label">Net self-employment</span>
-        <span className="guided-review-value">{formatCurrency(totalIncome.minus(totalExpenses))}</span>
-      </div>
-    </div>
-  );
+  const entries = (necEntries ?? []).filter(isStartedNec);
+  if (!entries.length && !hasEnteredAmount(manualGrossReceipts) && !Object.values(expenses ?? {}).some(hasEnteredAmount)) return <p className="guided-review-empty">No self-employment source amounts entered.</p>;
+  const rows: Array<[string, Array<string | undefined>]> = [
+    ["1099-NEC receipts", entries.map(entry => entry.nonemployeeCompensation)],
+    ["Receipts not already reported on 1099-NEC", [manualGrossReceipts]],
+    ["Returns and allowances", [businessFacts?.returnsAndAllowances]],
+    ["Cost of goods sold", [businessFacts?.costOfGoodsSold]],
+    ["Schedule C other income", [businessFacts?.otherIncome]],
+    ["Entered expenses before tax limits", [...Object.values(expenses ?? {}), businessFacts?.contractLabor, businessFacts?.depreciation, businessFacts?.legalAndProfessional]],
+  ];
+  return <div className="guided-review-card">{rows.map(([label, values]) => {
+    const total = sumKnownBusinessAmounts(values);
+    return <div key={label} className="guided-review-row"><span className="guided-review-label">{label}</span><span className="guided-review-value">{total === null ? "Unknown — review source amounts" : formatCurrency(total)}</span></div>;
+  })}</div>;
 }
 
 function InvestmentSummary({
@@ -641,8 +600,7 @@ export function SectionReview({
               necEntries={seData?.necEntries}
               manualGrossReceipts={seData?.manualGrossReceipts}
               expenses={seData?.expenses}
-              bankStatementAnalyses={seData?.bankStatementAnalyses}
-              incomeDocumentAnalyses={seData?.incomeDocumentAnalyses}
+              businessFacts={seData?.businessFacts}
             />
         );
       }

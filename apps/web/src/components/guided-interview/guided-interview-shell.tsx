@@ -513,6 +513,7 @@ function SectionContent({
           bankStatementAnalyses={bankStatementAnalyses}
           incomeDocumentAnalyses={incomeDocumentAnalyses}
           qbiMateriallyParticipated={seData?.qbiMateriallyParticipated}
+          businessFacts={seData?.businessFacts}
           onSectionChange={(next) =>
             onStateChange(updateSectionData(state, "income-self-employment", next))
           }

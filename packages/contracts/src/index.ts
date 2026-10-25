@@ -624,8 +624,14 @@ export interface WorkspaceStructuredFactMachineValue1098ESummary {
 export interface WorkspaceStructuredFactMachineValue1099NecSummary {
   entryKind: "1099-nec-summary";
   payer: string;
+  payerTin?: string;
+  accountHolder?: "primary" | "spouse";
   nonemployeeCompensation: string;
   federalWithheld: string;
+  stateTaxReporting?: "none" | "single" | "multiple";
+  state?: string;
+  stateIncome?: string;
+  stateWithheld?: string;
 }
 
 export interface WorkspaceStructuredFactMachineValue1099RSummary {
