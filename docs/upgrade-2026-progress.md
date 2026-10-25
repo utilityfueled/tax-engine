@@ -2,49 +2,31 @@
 
 ## Current checkpoint
 
-Execution continues beyond the historical checkpoint below. The current work
-and package evidence are tracked in [the durable checklist](upgrade-2026-checklist.md)
-and `ongoingExecution` in the machine checkpoint. Recent packages include actual
-credit source facts, education/PTC reconciliation, local PostgreSQL recovery,
-document consent/cancellation and an inactive complete-data export pipeline.
-None of these supersedes the required full coverage, independent review, staging
-or final-form qualification gates.
+Execution remains active and **not release-ready**. Latest recorded
+integration is `7441a20` (push accompanies this record) on `upgrade/2026-baseline`. Resume from
+[the durable checklist](upgrade-2026-checklist.md) and `ongoingExecution` in the
+machine checkpoint; older evidence below is scoped to its recorded code.
 
-Latest recorded integration is `a79959a`, pushed on `upgrade/2026-baseline`.
-Execution remains active and **not release-ready**. New separate packages cover
-actual child election eligibility/intake, child-only PDF amounts, passive-source
-routing, continuing PTP carry losses, foreign-tax deduction sources and actual
-Marketplace review worksheets. Child core isolated tests pass17,241cases; child
-intake passes696cases plus desktop/mobile production browser checks. Exact tree,
-source and review evidence is in the checklist and package ledgers.
+New packages cover child investment/Alaska character and capital netting, passive
+QBI vintages and SSTB ordering, actual2210/8801intake, foreign deduction-year
+carryovers and actual state/country allocation. The child package's isolated tree
+67523f93 passes17,326tests in797files, all three typechecks and4,184spec references.
+Independent agent review and saved/rendered review-PDF checks pass. The complete
+current tree still needs final coverage, inventory, all builds and browser gates.
 
-Remote b3f0362 passed17,241cases and failed14PA integration cases on missing
-passive activity names; coverage was skipped. That regression is assigned for
-correction, and inventory requires regeneration. Child special sources, remaining
-Marketplace methods, rental QBI vintages, foreign-tax carryover methods and
-advanced source intake remain active internal work.
+Remote0f408af CI40210148315/Web40210148259 were observed running. Prior runs were
+cancelled by subsequent pushes. The14PA failures on remote b3f0362 were corrected
+in60d61d3 and focused tests pass; no final remote green result is claimed.
 
-The prior single-write PDF tree passes 17,100 coverage tests with 86.59% branches.
-Remote c9e057c passes 17,119 unit tests but fails 12 coverage cases, mostly timeout
-failures; generated inventory is stale. CI now uses one coverage worker without
-changing deadlines or thresholds. The later 67e1d94 coverage/browser jobs were
-cancelled by another push, not counted as passing. A fresh integrated run remains
-required, as do final native runtime images and hosted staging qualification.
+Immediate internal work includes ScheduleD18/19and PDF source routing, child4952
+binding and intake, passive/Marketplace/NOL methods,2555source facts/intake and
+foreign multi-state allocation. Final native release images, scans and recovery
+rehearsal remain required. The earlier passing coverage86.59%is historical.
 
-Historical starting checkpoint `d32cb8cf3d607c643c4c7f7e1b845fcace61563f`
-recorded15,141 passing
-unit tests and 293 passing Chromium tests against both the local production
-build and the ARM64 runtime image; each browser run skips five hosted cases.
-Engine/contracts/web type checks, both builds, spec checks and lint pass.
-Branch coverage is 81.52%, below the unchanged 85% gate. The package audit has
-zero reported advisories; this does not cover operating-system vulnerabilities.
-
-The 2026 pack is incomplete, filing exports are disabled, and AI candidates are
-not promoted. Independent tax review, remaining facts/law/forms, live AI
-evaluation, atomic billing and staging/recovery rehearsal remain outstanding.
-The [machine-readable checkpoint](upgrade-2026-checkpoint.json) records command
-results, local evidence hashes, image identity and the runtime SBOM digest.
-The sections below record each work package and its limitations chronologically.
+Staging credentials/authorization, synthetic provider budget/account access,
+independent human reviewers, launch-state demand and final forms remain external
+inputs. Human review, filing, live AI promotion and production gates stay closed.
+A blocker in one package does not stop other authorized implementation work.
 
 ## Starting point
 

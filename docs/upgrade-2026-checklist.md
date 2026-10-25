@@ -7,103 +7,65 @@ complete a checkbox.
 
 ## Current integration — 2026-10-25
 
-`a79959a` is pushed. The goal remains active and the upgrade is not release-ready.
-The external inputs below remain unanswered. Internal work continues on child
-special sources, remaining Marketplace passive/NOL methods, rental QBI loss
-vintages, foreign-tax carryovers and advanced guided sources/PDF handoffs.
+`7441a20` is the latest integration (push accompanies this record) on `upgrade/2026-baseline`. The goal remains active and the
+upgrade is **not release-ready**. Unanswered external inputs are listed below;
+internal implementation and review continue in parallel.
 
-- `b3f0362`: actual child election age/student/payment/parent eligibility, including
-  canonical parent taxable income without elected child income. Isolated tree
-  667f1f85 passes17,241tests in775files; root types and4,098spec references pass.
-  Independent review reproduced and fixed a caller-supplied parent-income error.
-  This tree preceded the later passive-source integration failures described below.
-- `55c07e7`: actual child election intake and confirmation invalidation; tree
-  594b2d20 passes696tests, root/web types,4,126spec references, production build
-  and two desktop/mobile Chromium cases. Child records survive parent edits and
-  reopening; request bodies exclude the child SSN. Four agent-review cases pass.
-- `a79959a`: child-exempt PDF amounts remain child worksheet information;
-  tree d0365055 passes46tests/root types/4,129spec references. Independent agent
-  review, reopened PDF text assertions and final one-page visual inspection pass.
-- `0a7398a`: actual passive sources and corrected Form8582 lines/routing;
-  tree f2271616 passes1,089tests. Subsequent remote PA integration exposed14
-  missing-name failures; correction remains active internal work.
-- `fc39cf3`: continuing PTP prior losses offset that PTP once before regular
-  income/MAGI; tree233ffd9e passes555tests, root types and4,124spec references.
-- `9a302c0` / `e3e8ed0`: actual annual foreign-tax deduction core/intake;
-  source evidence is in the AI work ledger. Deduction-year carryover absorption
-  and its review worksheet remain a separate active package.
-- `242e3ea`: actual Marketplace health-policy coordination intake.
-- `b1fab71`: actual7206/Pub974 review records and fresh business-source binding;
-  tree c7c8758b passes1,169tests in124files, root types and4,115spec references.
-  Parent review reproduced stale business income and the source binder fixes it;
-  four rendered pages and16fields were inspected. No form qualification implied.
+- `7441a20`: ordinary passive losses are limited before Social Security, IRA
+  and savings-bond worksheets. Tree779fc74a passes788tests in11files, root types
+  and4,194spec references. Parent independently verifies four income/allowance
+  examples and three regressions. Pub974 passive coordination stays separate.
+- `0f408af`: actual child Alaska/investment character and child capital
+  distributions netted before parent loss limits/carryovers. Immutable tree
+  `67523f93` on base65336f7 passes17,326tests in797files, root/web/contracts types
+  and4,184spec references. Independent agent review passes70cases. A saved
+  two-page review PDF was reopened and visually inspected. Positive child
+  special gains remain gated until actual ScheduleD18/19 netting is complete.
+- `3598c47`: actual single-state/country foreign carryover deduction allocation.
+  Tree71334841 passes737tests in69files, root/web types and4,184spec references;
+  independent review passes24source cases plus the canonical saved-PDF case.
+  Actual country amounts800/200 yield3632limit,3032absorption and968remaining.
+  Multi-state/nonoverlap methods remain internal work.
+- `65336f7`: original suspended QBI vintage and SSTB/loss ordering corrections.
+  Treeb5e2bd30 passes1,050tests in19files, root types and4,177spec references;
+  focused coverage93.97%branches/100%functions. Parent independently passes94
+  cases. Qualified prior losses are not multiplied by the current SSTB fraction.
+- `4d85eb0`: actual8801source intake. Tree09e0d210 passes848tests in66files,
+  root/web types and4,164spec references; independent review passes6cases.
+- `c20a6c2`: foreign deduction-year carryover intake and review record. Tree
+  50e350a passes720tests in63files, root/web types and4,158spec references;
+  independent review passes10cases. Saved PDF confirms127remaining/73absorbed.
+- `f4ce992`: foreign deduction-year carryover calculation.900focused cases and
+  61independent review cases pass; source/evidence is in the foreign-tax ledger.
+- `1c83819`: actual2210source intake.890focused cases pass; actual dated payment
+  and worksheet evidence stays separate from inferred annual payment amounts.
+- `60d61d3`: PA fixtures and explicit missing-activity-name diagnostics correct
+  the14PA integration failures from remote b3f0362;186focused cases pass.
+- Earlier child packages b3f0362/55c07e7/a79959a cover actual election eligibility,
+  intake and child-only PDF source labels. Intake includes two desktop/mobile
+  production Chromium checks. Source and limitations remain in their ledgers.
+- Earlier NIIT, Marketplace, passive/PTP and education packages remain recorded
+  in the federal/facts/AI ledgers and historical sections below. Agent review
+  never substitutes for independent human qualification.
 
-- `6d533d2`: actual parent INT/DIV/OID bond preferences use one parent floor;
-  isolated tree 5c5f0e4 passes all 17,201 tests across 764 files, root types and
-  4,058 spec references. Independent review reproduced and fixed a split-source
-  flooring error. Existing fixture tax assertions remain unchanged.
-- `36e0b72`: actual parent bond source intake; isolated tree fd739f0 passes
-  672 guided/DOM tests, root/web types, production build and both desktop/mobile
-  Chromium cases without retries. Nine independent review cases pass.
-- `a6c5f3d` / `45d3839`: ordinary NIIT source calculation and actual intake;
-  exact trees pass 2,879 core and 687 guided tests respectively. Foreign-tax
-  elections and deduction-year carryover absorption remain separate work.
-- `c21b6ae`: ordered Marketplace IRA, bond and student-loan Y/Z worksheets;
-  2,652 isolated tests pass. Review corrected the final no-credit IRA refigure.
-  Passive/NOL, re-entry and other source boundaries remain in the federal ledger.
-- `bcb3a92`: actual Marketplace PTC intake, original/corrected benchmark and
-  household sources; 746 isolated tests and eight independent review cases pass.
-- `2f009c5`: guided-only redacted JSON/PDF review downloads retain year gates.
-- `894f7b9`: actual in-kind 529 distribution ordering; 167 exact-tree tests pass.
-  Remaining education attribution decisions are in
-  [the method memo](upgrade-2026-education-method-decisions.md).
-- `3adb1f0`: single-write review PDFs. Exact tree 77675b7 passes 1,103 PDF tests
-  and 17,100 coverage tests with 86.59% branches against the unchanged 85% gate.
-- `c9e057c`: isolated enacted Ohio 2026 baseline; 181 tests and independent agent
-  review pass. Demand, full state return, final forms and human review remain.
-- `c499cab`: actual 2026 Marketplace health deduction/PTC coupling; 2,583 tests.
-- `c0b9c33`: historical Marketplace W/X repayment method, including the official
-  Carla example; 2,590 tests and independent source review pass. Ordered special
-  deductions and passive/NOL interactions remain active work.
-- `cd54eb4`: complete actual document context; 765 tests and root/web types pass.
-- `67e1d94`: exact container origin and persisted-state browser synchronization;
-  42 security checks and 42 actual ARM64 container browser cases pass.
-- `9cf5518`: bounded 64 MiB image-cache tmpfs. A real read-only container writes
-  optimized image cache files as UID 1001; the root remains read-only. Independent
-  review passes. Exact evidence is in [the container record](upgrade-2026-container-origin-work.md).
-- `961f290`: saved guided tax year and actual readiness reconciliation; 801 unit
-  tests, root/web types, spec references and two production browser cases pass.
-  Parent review independently passes seven cases. Guided-only bundle controls
-  subsequently landed in `2f009c5`.
-- `3ae750e`: actual child Form 8814 bond preferences reach parent AMT. Isolated
-  tree 8702728 passes all 17,158 tests across 753 files, root types, 4,013 spec
-  references and scoped lint. Independent agent source review passes; broader
-  election eligibility and human qualification remain open.
-- `d6b8f5f`: one coverage worker in CI; every test, five-second deadline and
-  coverage threshold remains unchanged. YAML parses and the diff was reviewed.
-  A fresh remote result is required.
-- Latest completed remote `c9e057c`: 17,119 unit tests pass; coverage fails 12
-  cases (11 timeouts plus one state-packet assertion), and inventory is stale.
-  Native amd64 smoke/recovery and standalone browsers pass; runtime browsers
-  pass 300, fail two consent-origin cases fixed in 67e1d94, and skip five hosted
-  cases. The later 67e1d94 coverage/browser runs were cancelled by a subsequent
-  push; its other completed checks and native recovery pass.
-- Refreshed package audit on 2026-10-25: zero advisories across 521 entries.
-  Image exposure is separate: 157 matches and 67 advisory records, with owner
-  roles and a 2026-11-07 review deadline; maintainer disposition remains pending.
+Current remote0f408af CI40210148315 and Web40210148259 were observed running.
+The previous65336f7/4d85eb0 runs were cancelled by newer pushes. No final remote
+success is claimed. Generated inventory still needs regeneration. Parent owns
+all final integrated checks and native runtime release rehearsal.
 
-Latest completed remote `b3f0362` CI40206165887 passes17,241unit cases and
-fails14PA full-return cases at passive activity name validation; coverage did not
-run. Type/contracts, lint and engine build pass. Spec references pass but generated
-inventory is stale. The current fix is assigned to the passive-source owner. Runs
-for fc39cf3 were cancelled by a newer push. 55c07e7 CI40207012368/Web40207012431
-were observed running before a79959a was pushed; no incomplete run establishes
-final qualification. Parent owns inventory refresh and final integrated checks.
+Last completed passing full coverage belongs to the earlier single-write PDF
+source tree77675b7:17,100cases and86.59%branches with the85%gate unchanged. The
+new17,326-test run is a unit run, not coverage. Package audit refreshed2026-10-25
+reports zero advisories across521entries. Older runtime images have157matches
+and67advisory records, owner roles and2026-11-07expiry; maintainer disposition
+and scans of final images remain pending.
 
-Next: finish the source/UI packages, regenerate inventory and run every brief
-command against integrated code. Verify final native amd64/arm64 images, scans,
-browser flows and recovery. Human, provider, staging, state-demand and final-form
-gates remain closed. Agent review never replaces independent human qualification.
+Immediate internal work: ScheduleD audit/PDF subtotals and actual18/19worksheets;
+child4952 source binding, positive character intake and ratio rounding; passive
+ordering/Marketplace/NOL methods;2555actual owner/source binding and intake;
+foreign multi-state carryover allocation; qualified form/export gaps; integrated
+coverage, inventory, builds, browsers, recovery, native images and current scans.
+External staging/provider/human-review/state-demand/final-form gates stay closed.
 
 ## Refreshed baseline — 2026-10-24
 

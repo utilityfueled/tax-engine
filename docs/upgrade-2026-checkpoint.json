@@ -204,7 +204,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "a79959abb552ac0072b8159eae0199612e6b5f24",
+    "lastRecordedCommit": "7441a20",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -385,7 +385,7 @@
         "tests": 1089,
         "rootTypes": "pass",
         "specReferences": 4106,
-        "remainingRegression": "14remote PAfullreturn missing-name failures"
+        "remainingRegression": "PA missing-name regression corrected in60d61d3;186focused cases pass. Final remote run pending."
       },
       "continuingPtpCarry": {
         "commit": "fc39cf3",
@@ -405,6 +405,75 @@
         "mappedFields": 16,
         "reviewFix": "Fresh canonical business source binder rejects stale income",
         "filingQualified": false
+      },
+      "childIncomeCharacter": {
+        "commit": "0f408af",
+        "tree": "67523f93c8d91150a4d11818c003268d9f4c1eba",
+        "base": "65336f7274dfefe580493c04dfdeee9a7d2e6ebd",
+        "testsPassed": 17326,
+        "files": 797,
+        "rootWebContractsTypes": "pass",
+        "specReferences": 4184,
+        "lintErrors": 0,
+        "lintWarnings": 18,
+        "independentAgentReviewCases": 70,
+        "renderedPages": 2,
+        "reopenedPdf": "pass",
+        "evidence": "docs/upgrade-2026-child-income-character-work.md",
+        "unitLogSha256": "b55c4fc0ad2edce558dc3b0a76666b7b985ef119c0f7a78e48bd53801c7a0427",
+        "pdfSha256": "f17d46244ab90c10ff98ceeab6026f9c539dbcb5be70c4c55bf0d56aa01e35ce",
+        "boundary": "Isolated package unit run; not current integrated coverage, human or release qualification."
+      },
+      "passiveQbiVintages": {
+        "commit": "65336f7",
+        "treePrefix": "b5e2bd30",
+        "testsPassed": 1050,
+        "files": 19,
+        "rootTypes": "pass",
+        "specReferences": 4177,
+        "targetedBranchesPercent": "93.97",
+        "independentAgentReviewCases": 94
+      },
+      "foreignStateAllocation": {
+        "commit": "3598c47",
+        "treePrefix": "71334841",
+        "testsPassed": 737,
+        "files": 69,
+        "rootWebTypes": "pass",
+        "specReferences": 4184,
+        "independentAgentReviewCases": 25,
+        "reopenedRenderedPdf": "pass",
+        "boundary": "Single-state actual country method; multi-state remains internal work."
+      },
+      "actual8801Intake": {
+        "commit": "4d85eb0",
+        "treePrefix": "09e0d210",
+        "testsPassed": 848,
+        "files": 66,
+        "rootWebTypes": "pass",
+        "specReferences": 4164,
+        "independentAgentReviewCases": 6
+      },
+      "foreignCarryoverIntake": {
+        "commit": "c20a6c2",
+        "treePrefix": "50e350a",
+        "testsPassed": 720,
+        "files": 63,
+        "rootWebTypes": "pass",
+        "specReferences": 4158,
+        "independentAgentReviewCases": 10,
+        "renderedPages": 2
+      },
+      "ordinaryPassiveIncomeOrdering": {
+        "commit": "7441a20",
+        "treePrefix": "779fc74a",
+        "testsPassed": 788,
+        "files": 11,
+        "rootTypes": "pass",
+        "specReferences": 4194,
+        "independentParentLiteralCases": 4,
+        "independentParentRegressionCases": 3,
+        "boundary": "Ordinary ordering only; Pub974passive method remains separate."
       }
     },
     "externalInputsStillPending": [
@@ -421,11 +490,12 @@
       "final multi-platform release images"
     ],
     "workInProgress": [
-      "Child8814 actual election eligibility and complete income sources",
-      "Marketplace passive/NOL ordering, re-entry, forgiven-advance and mixed-owner/family methods",
-      "Foreign-tax annual election and carryover absorption sources",
-      "Advanced guided2210/8801/2555 sources and actual Pub974 review pages",
-      "Current integrated coverage/inventory/all commands and native runtime release rehearsal",
+      "ScheduleD actual subtotals/PDF and18/19special-gain netting",
+      "Child4952source binding, positivecharacter intake, foreigndisclosures and ratioprecision",
+      "Passive-first income ordering, Marketplace/NOL/reentry and source methods",
+      "Actual2555owner/original source binding, rounding and guided intake",
+      "Foreign multi-state/nonoverlap deduction carryover sources",
+      "Current integrated coverage/inventory/all required checks and native runtime release rehearsal",
       "External staging/provider/review/state-demand/final-form inputs"
     ],
     "latestIntegratedCommit": "36e0b728c7dd445490d0f20e93e67a4ccfb5a708",
@@ -632,7 +702,16 @@
       "orderedMarketplaceDeductions": "c21b6ae",
       "actualMarketplacePtcIntake": "bcb3a92",
       "parentBondPreferences": "6d533d2",
-      "parentBondIntake": "36e0b72"
+      "parentBondIntake": "36e0b72",
+      "childIncomeCharacter": "0f408af",
+      "foreignStateAllocation": "3598c47",
+      "passiveQbiVintages": "65336f7",
+      "actual8801Intake": "4d85eb0",
+      "foreignCarryoverIntake": "c20a6c2",
+      "foreignCarryoverCore": "f4ce992",
+      "actual2210Intake": "1c83819",
+      "paPassiveSourceFixtures": "60d61d3",
+      "ordinaryPassiveIncomeOrdering": "7441a20"
     },
     "remoteCi": {
       "commit": "054cd59f9d0c8a53fb5794bbebcfd10e110f213b",
@@ -1260,12 +1339,12 @@
       "scope": "Native amd64 intermediate CI; not final release or staging."
     },
     "remoteRunsInProgress": {
-      "commit": "67e1d94671996549194207cdfed9e0f6d293bac1",
-      "ci": 40198847185,
-      "web": 40198847103,
-      "status": "cancelled-by-subsequent-push",
       "observed": "2026-10-25",
-      "completedChecks": "Unit tests, root/contracts/web types, spec references, lint, both builds, native image smoke and six-phase recovery pass; coverage and browser jobs cancelled. Inventory stale."
+      "head": "0f408af4238a04290469e1bb84f4c68a3f2f873c",
+      "CI": 40210148315,
+      "Web": 40210148259,
+      "status": "in_progress",
+      "boundary": "Earlier65336f7/4d85eb0 cancelled; no final green claim."
     },
     "containerOriginVerification": {
       "commit": "67e1d94",
