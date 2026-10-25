@@ -234,38 +234,25 @@ describe("Form 4137 PDF fill — no form 4137 result", () => {
 });
 
 describe("Form 4137 packet inclusion", () => {
-  it("fillReturn attaches Form 4137 only when supported unreported tips produce additional tax", async () => {
+  it.each([["included", true], ["omitted", false]] as const)("fillReturn attaches Form 4137 only when supported unreported tips produce additional tax: %s", async (_scenario, included) => {
+    const input: TaxYearInput = included ? form4137Fixture : {
+      ...form4137Fixture, form4137: { unreportedTipIncome: "0" },
+    };
     const outputDir = await makeOutputDir();
-
     try {
-      const supportedResult = calculateFederalTax(form4137Fixture);
-      const supportedPacket = await fillReturn(form4137Fixture, supportedResult, {
-        blankFormsDir: "forms/blank",
-        outputDir,
-      });
-
-      const supportedPath = supportedPacket.filledForms.find((path) => path.endsWith("f4137-filled.pdf"));
-
-      expect(supportedResult.form4137?.line13.toNumber()).toBeGreaterThan(0);
-      expect(supportedPath).toBeDefined();
-      await access(supportedPath!);
-      const pdfBytes = await readFile(supportedPath!);
-      expect(pdfBytes.length).toBeGreaterThan(0);
-
-      const zeroTaxFixture: TaxYearInput = {
-        ...form4137Fixture,
-        form4137: {
-          unreportedTipIncome: "0",
-        },
-      };
-      const zeroTaxResult = calculateFederalTax(zeroTaxFixture);
-      const suppressedPacket = await fillReturn(zeroTaxFixture, zeroTaxResult, {
-        blankFormsDir: "forms/blank",
-        outputDir,
-      });
-
-      expect(zeroTaxResult.form4137?.line13.toNumber()).toBe(0);
-      expect(suppressedPacket.filledForms.some((path) => path.endsWith("f4137-filled.pdf"))).toBe(false);
+      const result = calculateFederalTax(input);
+      const packet = await fillReturn(input, result, { blankFormsDir: "forms/blank", outputDir });
+      if (included) expect(result.form4137?.line13.toNumber()).toBeGreaterThan(0);
+      else expect(result.form4137?.line13.toNumber()).toBe(0);
+      if (included) {
+        const referencePath = packet.filledForms.find((path) => path.endsWith("f4137-filled.pdf"));
+        expect(referencePath).toBeDefined();
+        await access(referencePath!);
+        const pdfBytes = await readFile(referencePath!);
+        expect(pdfBytes.length).toBeGreaterThan(0);
+      } else {
+        expect(packet.filledForms.some((path) => path.endsWith("f4137-filled.pdf"))).toBe(false);
+      }
     } finally {
       await rm(outputDir, { recursive: true, force: true });
     }

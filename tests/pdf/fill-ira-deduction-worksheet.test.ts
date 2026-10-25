@@ -97,43 +97,27 @@ describe("IRA deduction worksheet packet reference summary", () => {
     ]);
   });
 
-  it("fillReturn includes the IRA deduction worksheet reference summary only when worksheet inputs are present", async () => {
-    const outputDirWithWorksheet = await makeOutputDir();
-    const outputDirWithoutWorksheet = await makeOutputDir();
-
+  it.each([["included", true], ["omitted", false]] as const)("fillReturn includes the IRA deduction worksheet reference summary only when worksheet inputs are present: %s", async (_scenario, included) => {
+    const input = included ? {
+      ...simpleW2Fixture,
+      iraDeductionWorksheet: { primaryContributions: "7000", primaryIsActiveParticipant: true },
+    } : simpleW2Fixture;
+    const outputDir = await makeOutputDir();
     try {
-      const iraDeductionFixture = {
-        ...simpleW2Fixture,
-        iraDeductionWorksheet: {
-          primaryContributions: "7000",
-          primaryIsActiveParticipant: true,
-        },
-      };
+      const result = calculateFederalTax(input);
+      const packet = await fillReturn(input, result, { blankFormsDir: "forms/blank", outputDir });
 
-      const resultWithWorksheet = calculateFederalTax(iraDeductionFixture);
-      const withWorksheetPacket = await fillReturn(iraDeductionFixture, resultWithWorksheet, {
-        blankFormsDir: "forms/blank",
-        outputDir: outputDirWithWorksheet,
-      });
-
-      const referencePath = withWorksheetPacket.filledForms.find((path) => path.endsWith(IRA_DEDUCTION_WORKSHEET_REFERENCE_FILENAME));
-      expect(referencePath).toBeDefined();
-      await access(referencePath!);
-      const pdfBytes = await readFile(referencePath!);
-      expect(pdfBytes.length).toBeGreaterThan(0);
-
-      const resultWithoutWorksheet = calculateFederalTax(simpleW2Fixture);
-      const withoutWorksheetPacket = await fillReturn(simpleW2Fixture, resultWithoutWorksheet, {
-        blankFormsDir: "forms/blank",
-        outputDir: outputDirWithoutWorksheet,
-      });
-
-      expect(
-        withoutWorksheetPacket.filledForms.some((path) => path.endsWith(IRA_DEDUCTION_WORKSHEET_REFERENCE_FILENAME)),
-      ).toBe(false);
+      if (included) {
+        const referencePath = packet.filledForms.find((path) => path.endsWith(IRA_DEDUCTION_WORKSHEET_REFERENCE_FILENAME));
+        expect(referencePath).toBeDefined();
+        await access(referencePath!);
+        const pdfBytes = await readFile(referencePath!);
+        expect(pdfBytes.length).toBeGreaterThan(0);
+      } else {
+        expect(packet.filledForms.some((path) => path.endsWith(IRA_DEDUCTION_WORKSHEET_REFERENCE_FILENAME))).toBe(false);
+      }
     } finally {
-      await rm(outputDirWithWorksheet, { recursive: true, force: true });
-      await rm(outputDirWithoutWorksheet, { recursive: true, force: true });
+      await rm(outputDir, { recursive: true, force: true });
     }
   });
 });

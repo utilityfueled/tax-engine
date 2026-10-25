@@ -46,7 +46,7 @@ notes: |
 businessRuleValidation:
   - rule: "packet-inclusion-supported-basis-schedules"
     description: "Inventory support counts this module as business-rule validated only when regression coverage proves the draft packet emits the partner/shareholder basis reference summary exactly for supported Schedule K-1 entries that provide beginning basis data and suppresses the packet artifact when no supported basis schedule applies."
-    testRef: "tests/pdf/fill-partner-basis-schedule.test.ts::fillReturn includes the partner basis reference summary only when supported Schedule K-1 basis inputs are present"
+    testRef: "tests/pdf/fill-partner-basis-schedule.test.ts::fillReturn includes the partner basis reference summary only when supported Schedule K-1 basis inputs are present: %s"
 
 lines:
   # ── Beginning Basis ──────────────────────────────────────────

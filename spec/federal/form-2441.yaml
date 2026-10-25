@@ -25,7 +25,7 @@ notes: |
 businessRuleValidation:
   - rule: "packet-inclusion-supported-credit"
     description: "Inventory support counts this form as business-rule validated only when regression coverage proves the emitted packet attaches the official Form 2441 PDF only for supported dependent-care-credit scenarios that compute a positive credit and suppresses the form when the credit is unsupported or not allowed."
-    testRef: "tests/pdf/fill-form-2441.test.ts::fillReturn attaches Form 2441 only for supported credit-bearing scenarios"
+    testRef: "tests/pdf/fill-form-2441.test.ts::fillReturn attaches Form 2441 only for supported credit-bearing scenarios: %s"
 
 lines:
   - line: "part-iii-handoff"

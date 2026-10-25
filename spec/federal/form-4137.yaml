@@ -20,7 +20,7 @@ notes: |
 businessRuleValidation:
   - rule: "official-form-packet"
     description: "Inventory support counts this form as business-rule validated only when regression coverage proves the draft packet attaches the official Form 4137 PDF for supported unreported-tip scenarios that compute additional Social Security or Medicare tax and suppresses the form when the supported line 13 tax is zero."
-    testRef: "tests/pdf/fill-form-4137-8919.test.ts::fillReturn attaches Form 4137 only when supported unreported tips produce additional tax"
+    testRef: "tests/pdf/fill-form-4137-8919.test.ts::fillReturn attaches Form 4137 only when supported unreported tips produce additional tax: %s"
 
 lines:
   - line: "1040-1"

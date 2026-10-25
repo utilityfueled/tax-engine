@@ -133,4 +133,4 @@ businessRuleValidation:
     testRef: "tests/pdf/fill-ira-deduction-worksheet.test.ts::buildIraDeductionWorksheetReferenceSummary keeps the packet artifact reference-only and limited to supported IRA worksheet outputs"
   - scenario: "Reference summary inclusion rule"
     description: "Inventory support counts this worksheet as business-rule validated only when regression coverage proves the draft packet emits the IRA deduction worksheet reference summary when worksheet inputs are provided and suppresses it when no worksheet is present."
-    testRef: "tests/pdf/fill-ira-deduction-worksheet.test.ts::fillReturn includes the IRA deduction worksheet reference summary only when worksheet inputs are present"
+    testRef: "tests/pdf/fill-ira-deduction-worksheet.test.ts::fillReturn includes the IRA deduction worksheet reference summary only when worksheet inputs are present: %s"

@@ -34,3 +34,20 @@ The diff was reviewed. Evidence: `pdf-case-isolation-green.log` and
 Newer implementation packages and the case split require a fresh full run.
 Hosted staging, final forms, independent human review and live AI qualification
 remain separate unmet requirements.
+
+## Remaining remote packet cases — 2026-10-25
+
+Remote CI at6b07529 passed all16,678unit tests/669files in176.99s, then its
+coverage command failed9PDFaggregate-case timeouts (16,669pass,9fail,307.83s).
+The run is https://github.com/utilityfueled/tax-engine/actions/runs/40176974652.
+Three cases are addressed by76bb3a6. The remaining six paired packet tests for
+2441,4137,6198,IRA deduction,partner basis andSEhealth now run inclusion and
+omission as separate named cases, each with its own temporary directory. The
+same inputs, numeric assertions, attachment checks, file reads and suppression
+checks remain. Default timeout, production logic and coverage gates are unchanged.
+
+All55tests across the six files pass in12.82s. Scoped lint has zero errors and
+24 existing-style non-null warnings. The source diff was checked assertion by
+assertion. Evidence:`.local/upgrade-evidence/pdf-packet-case-isolation.log` and
+`pdf-packet-case-lint.log`. Full coverage and current-code browser verification
+remain required; a scoped pass does not establish either release gate.

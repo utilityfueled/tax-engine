@@ -32,7 +32,7 @@ businessRuleValidation:
     testRef: "tests/pdf/fill-se-health-insurance-worksheet.test.ts::buildSEHealthInsuranceWorksheetReferenceSummary keeps the packet artifact reference-only and limited to supported worksheet outputs"
   - scenario: "Reference summary inclusion rule"
     description: "Inventory support counts this worksheet as business-rule validated only when regression coverage proves the draft packet emits the self-employed health insurance worksheet reference summary when worksheet inputs are provided and suppresses it when no worksheet result is present."
-    testRef: "tests/pdf/fill-se-health-insurance-worksheet.test.ts::fillReturn includes the SE health insurance worksheet reference summary only when worksheet inputs are present"
+    testRef: "tests/pdf/fill-se-health-insurance-worksheet.test.ts::fillReturn includes the SE health insurance worksheet reference summary only when worksheet inputs are present: %s"
 
 lines:
   - line: "1"
