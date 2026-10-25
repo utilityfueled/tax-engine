@@ -1,4 +1,5 @@
 import { estimatedTaxFactErrors, type EstimatedTaxFactsData } from "./guided-estimated-tax-facts";
+import { minimumTaxCreditFactErrors, type MinimumTaxCreditData } from "./guided-minimum-tax-credit";
 import { guidedForeignTaxFactErrors, type ForeignTaxElectionData } from "./guided-foreign-tax-election";
 import { premiumTaxCreditFactErrors, type PremiumTaxCreditData } from "./guided-premium-tax-credit-facts";
 import { schedule1AFactErrors } from "./guided-schedule-1-a-facts";
@@ -1153,6 +1154,7 @@ export const emptyEnergyCreditData: EnergyCreditData = {
 };
 
 export interface CreditsData {
+  minimumTaxCredit?: MinimumTaxCreditData;
   premiumTaxCredit?: PremiumTaxCreditData;
   dependentCare: DependentCareData;
   dependentCareBenefits?: CareBenefitsData;
@@ -1511,6 +1513,7 @@ export function updateSectionData(
   const studentLoanSourcesChanged = sourceValuesChanged && ["income-w2", "personal-info", "credits"].includes(sectionId) && adjustments?.studentLoanFacts;
   const benefitSourcesChanged = (sectionId === "income-w2" || sectionId === "income-self-employment") && credits?.dependentCareBenefits;
   const nextCredits = sectionId === "credits" ? data as CreditsData : credits;
+  const minimumTaxCreditSourcesChanged = sourceValuesChanged && ["personal-info", "credits"].includes(sectionId) && nextCredits?.minimumTaxCredit;
   const premiumTaxCreditSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-social-security", "income-unemployment", "adjustments", "credits", "additional-deductions"].includes(sectionId) && nextCredits?.premiumTaxCredit;
   const educationSourcesChanged = !!nextCredits?.educationDistributions && (
     ((sectionId === "personal-info" || sectionId === "adjustments") && guidedSourceValuesChanged(state.sectionData[sectionId], data)) ||
@@ -1534,7 +1537,8 @@ export function updateSectionData(
       ...(mortgageSourcesChanged ? { deductions: { ...mortgageSourcesChanged, mortgageEntries: mortgageSourcesChanged.mortgageEntries?.map(entry => ({ ...entry, sourceFactsConfirmed: null })), ...(mortgageSourcesChanged.mortgageWorksheet ? { mortgageWorksheet: { ...mortgageSourcesChanged.mortgageWorksheet, sourceFactsConfirmed: null } } : {}) } } : {}),
       ...(ohioInterestChanged && ohioStateReturn ? { "state-return": { ...ohioStateReturn, ohioInterestAllocation: { ...ohioInterestChanged, sourceFactsConfirmed: null } } } : {}),
       ...((iraSourcesChanged || hsaSourcesChanged || educatorSourcesChanged || studentLoanSourcesChanged || healthSourcesChanged) && nextAdjustments ? { adjustments: { ...nextAdjustments, ...(healthSourcesChanged ? { healthInsuranceFacts: { ...healthSourcesChanged, sourceFactsConfirmed: null, ...(healthSourcesChanged.incomeDeductions ? { incomeDeductions: { ...healthSourcesChanged.incomeDeductions, sourceFactsConfirmed: null } } : {}) } } : {}), ...(studentLoanSourcesChanged ? { studentLoanFacts: { ...studentLoanSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(iraSourcesChanged ? { iraContributions: { ...iraSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(hsaSourcesChanged ? { hsaAccounts: hsaSourcesChanged.map(account => ({ ...account, sourceFactsConfirmed: null })) } : {}), ...(educatorSourcesChanged ? { educatorExpenseSources: educatorSourcesChanged.map(source => ({ ...source, sourceFactsConfirmed: null })) } : {}) } } : {}),
-      ...((benefitSourcesChanged || educationSourcesChanged || bondSourcesChanged || premiumTaxCreditSourcesChanged) && nextCredits ? { credits: { ...nextCredits,
+      ...((benefitSourcesChanged || educationSourcesChanged || bondSourcesChanged || premiumTaxCreditSourcesChanged || minimumTaxCreditSourcesChanged) && nextCredits ? { credits: { ...nextCredits,
+        ...(minimumTaxCreditSourcesChanged ? { minimumTaxCredit: { ...minimumTaxCreditSourcesChanged, sourceFactsConfirmed: null } } : {}),
         ...(benefitSourcesChanged ? { dependentCareBenefits: { ...nextCredits.dependentCareBenefits, sourceFactsConfirmed: null, earnedIncomeWorksheetConfirmed: null, creditExpenseCoordinationConfirmed: null } } : {}),
         ...(educationSourcesChanged ? { educationDistributions: { ...nextCredits.educationDistributions, sourceFactsConfirmed: null } } : {}),
         ...(premiumTaxCreditSourcesChanged ? { premiumTaxCredit: { ...premiumTaxCreditSourcesChanged, sourceFactsConfirmed: null } } : {}),
@@ -1886,6 +1890,7 @@ export function validateSection(
         ...educationErrors,
         ...distributionErrors,
         ...premiumTaxCreditFactErrors(state),
+        ...minimumTaxCreditFactErrors(credits?.minimumTaxCredit, state.taxYear, state.segmentation.filingStatus, personal),
         ...savingsBondFactErrors(credits?.savingsBondEducation, state.taxYear, state.segmentation.filingStatus, getSectionData(state, "income-investments")?.interestEntries, personal),
         ...careBenefitsFactErrors(credits?.dependentCareBenefits, state.taxYear, state.segmentation.filingStatus, sources),
         ...careFactErrors(credits?.dependentCare, state.segmentation.filingStatus, { data: credits?.dependentCareBenefits, year: state.taxYear, sources }),

@@ -1,4 +1,5 @@
 import { buildEstimatedTaxFacts, estimatedTaxFactErrors } from "./guided-estimated-tax-facts";
+import { buildMinimumTaxCreditInput, minimumTaxCreditFactErrors } from "./guided-minimum-tax-credit";
 import { buildGuidedForeignTaxElection, guidedForeignTaxFactErrors } from "./guided-foreign-tax-election";
 import { buildGuidedPrivateActivityFacts } from "./guided-private-activity-facts";
 import { buildPremiumTaxCreditInputs, premiumTaxCreditFactErrors } from "./guided-premium-tax-credit-facts";
@@ -638,6 +639,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     assertKnownFacts(nonW2TaxAllocationErrors(state));
     assertKnownFacts(allPaymentFactErrors(paymentData, state.taxYear));
     assertKnownFacts(estimatedTaxFactErrors(paymentData, state.taxYear));
+    assertKnownFacts(minimumTaxCreditFactErrors(creditsData?.minimumTaxCredit, state.taxYear, segmentation.filingStatus, personalInfo));
     assertKnownFacts(retirementFactErrors(retirementData?.entries, true, segmentation.filingStatus, state.taxYear, stateReturnData));
     assertKnownFacts(socialSecurityFactErrors(socialSecurityData, segmentation.filingStatus, state.taxYear, personalInfo, adjustmentData));
     assertKnownFacts(unemploymentFactErrors(unemploymentData, segmentation.filingStatus, state.taxYear, personalInfo, stateReturnData));
@@ -745,6 +747,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     },
     w2s,
     form2210: buildEstimatedTaxFacts(paymentData, state.taxYear),
+    form8801: buildMinimumTaxCreditInput(creditsData?.minimumTaxCredit, state.taxYear, segmentation.filingStatus, personalInfo),
     schedule1A: buildSchedule1AInput(sectionData["additional-deductions"]?.schedule1A, state),
     form4137ByOwner: buildTipIncomeInputs(sectionData["additional-deductions"]?.tipIncomeAccounts, segmentation.filingStatus, state.taxYear, w2Data?.entries),
     ...buildHsaInputs(adjustmentData?.hsaAccounts, personalInfo),
