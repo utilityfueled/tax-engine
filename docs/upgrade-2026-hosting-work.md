@@ -162,3 +162,20 @@ W-2 owner/state via the separately owned taxpayer-facts package. Deterministic
 analysis still has no model charge; candidates remain unqualified. These are
 local synthetic tests and dependency-failure mocks, not hosted staging evidence.
 Logs: `.local/upgrade-evidence/document-routes-{red,green,types}.log`.
+
+## Recovery UI cancellation — 2026-10-25
+
+Four interaction regressions reproduced late archive downloads/restored-return
+links after cancellation, and an export continuing after switching returns.
+Recovery now checks its abort signal after lazy loading and after asynchronous
+archive work. Return changes/unmount abort the old operation; its completion
+cannot clear a newer operation's state or expose its result. Passwords are cleared
+on completion and return changes. Core recovery still performs its separate
+transactional import/rollback checks.
+
+All 33 focused UI/core recovery tests pass, including encrypted export/import,
+wrong-password/storage failures, file clearing, return changes and late completion.
+Web types and scoped lint pass (eight existing-style test non-null warnings, zero
+errors). Evidence: `.local/upgrade-evidence/recovery-ui-{red,green}.log`. UI tests
+use synthetic dependency stubs; core crypto/storage and previously recorded
+Chromium evidence remain separate from external security approval.

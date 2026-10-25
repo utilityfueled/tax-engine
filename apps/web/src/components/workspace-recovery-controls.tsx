@@ -14,7 +14,11 @@ export function WorkspaceRecoveryControls({ workspaceId }: { workspaceId?: strin
   const [restoredId, setRestoredId] = useState<string | null>(null);
   const controller = useRef<AbortController | null>(null);
   const fileInput = useRef<HTMLInputElement | null>(null);
-  useEffect(() => () => controller.current?.abort(), []);
+  useEffect(() => {
+    setPassword(""); setFile(null); setBusy(false); setMessage(null); setRestoredId(null);
+    if (fileInput.current) fileInput.current.value = "";
+    return () => { controller.current?.abort(); controller.current = null; };
+  }, [workspaceId]);
 
   async function run() {
     const abort = new AbortController();
@@ -23,8 +27,10 @@ export function WorkspaceRecoveryControls({ workspaceId }: { workspaceId?: strin
     try {
       const storage = requireBrowserStorage();
       const { exportWorkspaceRecovery, importWorkspaceRecovery } = await import("@/lib/workspace-recovery");
+      abort.signal.throwIfAborted();
       if (workspaceId) {
         const archive = await exportWorkspaceRecovery(storage, workspaceId, password, { signal: abort.signal });
+        abort.signal.throwIfAborted();
         const url = URL.createObjectURL(archive);
         const anchor = document.createElement("a");
         anchor.href = url; anchor.download = `tax-return-${workspaceId}.recovery.json`;
@@ -34,15 +40,20 @@ export function WorkspaceRecoveryControls({ workspaceId }: { workspaceId?: strin
       } else {
         if (!file) throw new Error("Choose an encrypted recovery file.");
         const restored = await importWorkspaceRecovery(storage, file, password, { signal: abort.signal });
+        abort.signal.throwIfAborted();
         setRestoredId(restored.workspaceId);
         setMessage(`Restored ${restored.documentCount} original document(s) into a new local return. Review its facts before recalculating.`);
         setFile(null);
         if (fileInput.current) fileInput.current.value = "";
       }
     } catch (error) {
-      setMessage(abort.signal.aborted ? "Recovery operation cancelled." : error instanceof Error ? error.message : "Recovery could not finish. Your existing returns were not replaced.");
+      if (controller.current === abort) {
+        setMessage(abort.signal.aborted ? "Recovery operation cancelled." : error instanceof Error ? error.message : "Recovery could not finish. Your existing returns were not replaced.");
+      }
     } finally {
-      setPassword(""); setBusy(false); controller.current = null;
+      if (controller.current === abort) {
+        setPassword(""); setBusy(false); controller.current = null;
+      }
     }
   }
   return (
