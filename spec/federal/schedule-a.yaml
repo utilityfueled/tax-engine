@@ -24,7 +24,7 @@ lines:
   - line: "5a"
     description: "State and local income taxes OR general sales taxes"
     formula: |
-      Income tax path: Sum of W-2 Box 17 (state) + W-2 Box 19 (local) + state estimated tax payments.
+      Income tax path: Sum of W-2 Box17(state)+Box19(local) plus actual state estimated/extension payments made during the calendar return year and actual immediately prior-year state credits applied to this year.
       Sales tax path: IRS Optional State Sales Tax Table amount (by AGI, state, exemptions, local rate)
         + actual sales tax on specific large purchases (vehicles, boats, etc.).
       When autoCompare is enabled, use whichever is larger.
@@ -32,7 +32,7 @@ lines:
     inputs:
       - "W-2 Box 17 (state tax withheld)"
       - "W-2 Box 19 (local tax withheld)"
-      - "State estimated tax payments (input.adjustments.estimatedTaxPayments where type='state')"
+      - "State estimated/extension payment records with actual date in the calendar return year; next-January installment excluded even if for the same state return"
       - "salesTaxDeduction.state (for IRS table lookup)"
       - "salesTaxDeduction.localSalesTaxRate"
       - "salesTaxDeduction.specificPurchaseSalesTax (motor vehicles, boats, etc.)"
@@ -252,3 +252,9 @@ lines:
       - "Current-year excess creates a new carryforward vintage for the current tax year"
       - "Legacy single aggregate carryforward is treated as prior-year vintage for backward compatibility"
     testRef: "tests/engine/schedules/schedule-a.test.ts::Schedule A - Charitable Carryforward"
+
+  - line: "5a-payment-year"
+    description: "State income tax deductions use payment calendar year"
+    formula: "Sum actual state estimated and extension records paid Jan1-Dec31 of return year, plus state credits explicitly applied from immediately prior-year return; exclude federal records and other calendar years. Invalid or unknown dates/amounts reject. Sales-tax auto-comparison uses the same sum."
+    irsRef: "https://www.irs.gov/instructions/i1040sca"
+    testRef: "tests/engine/forms/state-tax-payment-year.test.ts::deducts state payments by actual calendar year and preserves applied prior credits"

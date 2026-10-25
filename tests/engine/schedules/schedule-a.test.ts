@@ -744,7 +744,8 @@ describe("Schedule A - State income tax + local tax + property tax combined unde
 
 describe("Schedule A - State estimated tax payments in SALT", () => {
   it("Schedule A Line 5a - state estimated tax payments included in SALT", () => {
-    // State withholding $3K + state estimated $4K + property $2K = $9K (under $10K cap)
+    // State withholding $3K + $3K paid this calendar year + property $2K = $8K.
+    // The January2026 installment is deducted in2026, even if for2025 state tax.
     const input = {
       ...simpleW2Fixture,
       w2s: [{
@@ -771,8 +772,8 @@ describe("Schedule A - State estimated tax payments in SALT", () => {
       },
     };
     const result = calculateScheduleA(input, d(150000), "single", c);
-    // $3K withholding + $4K estimated + $2K property = $9K
-    expect(result.saltDeduction.toNumber()).toBe(9000);
+    expect(result.lines.find(line => line.line === "5a")?.value.toString()).toBe("6000");
+    expect(result.saltDeduction.toNumber()).toBe(8000);
   });
 
   it("Schedule A Line 5a - estimated payments are included in 2025 SALT of $14K", () => {

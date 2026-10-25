@@ -7,6 +7,7 @@
  */
 
 import Decimal from "decimal.js";
+import { calculateStateTaxPaymentsInYear } from "../forms/state-tax-payment-year.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import type { FilingStatus, YearConstants } from "@/models/constants.js";
@@ -197,13 +198,11 @@ export function calculateScheduleA(
   );
   // Per IRS Schedule A Instructions Line 5a, state estimated tax payments
   // made during the year are deductible as state/local income taxes.
-  const stateEstimatedPayments = input.adjustments?.estimatedTaxPayments
-    ?.filter((p) => p.type === "state")
-    .reduce((acc, p) => acc.plus(d(p.amount)), new Decimal(0)) ?? new Decimal(0);
+  const statePaymentsInYear = calculateStateTaxPaymentsInYear(input);
   const additionalStateLocalIncomeTaxes = d(input.scheduleA?.additionalStateLocalIncomeTaxes);
   const additionalRealEstateTaxes = d(input.scheduleA?.realEstateTaxes);
   if ([additionalStateLocalIncomeTaxes, additionalRealEstateTaxes].some(amount => !amount.isFinite() || amount.lt(0))) throw new Error("Additional SALT payments must be finite and nonnegative");
-  const stateLocalIncomeTaxes = stateTaxes.plus(localTaxes).plus(stateEstimatedPayments).plus(additionalStateLocalIncomeTaxes);
+  const stateLocalIncomeTaxes = stateTaxes.plus(localTaxes).plus(statePaymentsInYear).plus(additionalStateLocalIncomeTaxes);
 
   // Determine whether to use income taxes or sales taxes for Line 5a
   const salesTaxAmount = extra?.salesTaxDeduction ?? new Decimal(0);

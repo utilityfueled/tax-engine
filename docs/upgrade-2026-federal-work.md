@@ -588,3 +588,18 @@ is being completed by the facts owner. RRTA source support remains separate.
 Two new source-linked tests failed before implementation.591 focused return,
 Schedule3 and stacking tests, root types and all3,191spec refs pass. Scopedlint,
 diff and whitespace reviewed; no filing gate changed.
+
+### State income tax payment-year deduction — 2026-10-25
+
+Refreshed final ScheduleAline5a instructions at
+https://www.irs.gov/instructions/i1040sca: estimated and prior-year income taxes
+are deductible when paid in the calendar year. Added one shared payment-year
+calculator for ScheduleA and the income-versus-sales-tax comparison. It includes
+actual in-year state estimated/extension payments and actual immediately
+prior-year state credits applied, excludes federal/out-of-year payments, and
+rejects invalid dates, amounts and ambiguous older applied-credit source years.
+The source-linked regression failed first; the existing four-installment
+fixture now asserts6000line5a/8000SALT because its next-January1000payment belongs
+to2026.587 focused tests, root types and all3,192spec refs pass; scopedlint has
+zeroerrors. Scoped diff/whitespace reviewed. Non-W2 withholding classification
+and amounts already deducted on business schedules remain a separate audit gap.
