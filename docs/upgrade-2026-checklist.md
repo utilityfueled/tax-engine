@@ -436,3 +436,32 @@ actual payment inputs with downloads and requires actual state for nonzeroPA
 withholding. PA/OH part-year selections no longer print a resident calculation
 without actual allocation inputs. Package evidence is in the guided-state work
 document. Actual Ohio exempt-interest allocation intake is the next state slice.
+
+## Current full run and actual HSA/Ohio sources — 2026-10-25
+
+Pushed through `7a337a0`: actual HSA contribution/history sources `ed5cae9`,
+actual distribution events and net exception allocation `b8e995a`, crypto gifts
+through charitable limits/floor `ca323c5`, and actual Ohio issuer allocation
+`7a337a0`. HSA distribution checks passed 1,257 isolated tests/49 files; crypto
+passed 759 focused/adjacent checks. Ohio passed 1,326 isolated tests/60 files,
+then 18 final guard/DOM/PDF checks, root/web types and 3,628 spec references.
+See the package work documents for sources and exact boundaries.
+
+The immutable `10be1de2e11362eb57fbfa26d871c64f30764fde` coverage command failed:
+16,590 pass, 10 fail, zero skip, 654 files (648 passing), 432.56 seconds.
+It produced no coverage report; the prior 86.31% branch result remains historical.
+Six HSA source/oracle failures are addressed in `ed5cae9` and `4b5cacb` (118
+focused checks); three audit-label and one Form461 source expectation failure
+are assigned to the federal package. The Form461 investigation found a real
+employee-wage exclusion issue requiring a separate source-first correction.
+No new passing global gate is claimed.
+
+Independent agent review of `ec225fe` found no actionable issues and passed
+8 focused tests. Review of the new Ohio allocation package is pending. Neither
+is human tax qualification. The fresh package audit reports zero advisories for
+519 dependencies; runtime images still need a final-code scan.
+
+A new production Chromium suite is running against immutable `4b5cacb` with
+synthetic sample documents and self-host mode, no retries. Evidence:
+`.local/upgrade-evidence/stable-browser-4b5cacb.log`. Remaining federal/facts/state
+work continues in parallel. This run does not establish hosted staging evidence.

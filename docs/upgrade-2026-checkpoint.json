@@ -313,7 +313,7 @@
       "hosted staging and independent human reviews",
       "repeated live synthetic AI evaluation and account availability"
     ],
-    "latestIntegratedCommit": "ec225fe",
+    "latestIntegratedCommit": "4b5cacb",
     "latestCoverageDiagnostic": {
       "status": "failed-tests-coverage-thresholds-met",
       "commit": "05ec24e10716cd6c4c8ccd8d2b6e3effc6e18d94",
@@ -447,7 +447,12 @@
       "energyPhysicalSources": "24cbcf7",
       "guidedOidSources": "e49e1d0",
       "hsaOwnerExcessSources": "104bca4",
-      "selectedStateDedicatedPreview": "ec225fe"
+      "selectedStateDedicatedPreview": "ec225fe",
+      "hsaActualGuidedContributions": "ed5cae9",
+      "hsaActualGuidedDistributions": "b8e995a",
+      "cryptoActualCharitableIntegration": "ca323c5",
+      "ohioActualInterestAllocation": "7a337a0",
+      "hsaActualSourceFixtureReconciliation": "4b5cacb"
     },
     "remoteCi": {
       "commit": "a2f62e217f846a479701b3393606228c366d3410",
@@ -471,6 +476,28 @@
       "amd64": "local QEMU Next.js compilation failed with signal11; native CI rehearsal now configured"
     },
     "currentStableCoverageRun": {
+      "commit": "10be1de2e11362eb57fbfa26d871c64f30764fde",
+      "workers": 1,
+      "status": "failed-tests",
+      "evidence": ".local/upgrade-evidence/stable-coverage-10be1de.log",
+      "evidenceSha256": "7922d3d489558493b396dcef9ce349e23713ab2175c75b26541a0d179d1f16a6",
+      "scope": "immutable tracked-file archive; matching locked dependencies; disposable local PostgreSQL16; unchanged thresholds",
+      "passed": 16590,
+      "failed": 10,
+      "skipped": 0,
+      "filesPassed": 648,
+      "filesFailed": 6,
+      "durationSeconds": "432.56",
+      "coverageReportProduced": false,
+      "limitation": "Full command failed and produced no coverage report. Six HSA source/oracle failures addressed in ed5cae9 and 4b5cacb; three audit-label and one Form461 source/expectation failure assigned to federal package. New code requires a fresh full run; focused success is not a global pass."
+    },
+    "remainingInternalWork": [
+      "Remaining bounded federal and complete-facts matrices including actual education/529, mortgage/points, adjustment sources, Form461 source routing and specialized source coordination",
+      "Remaining dedicated-state source gaps and independent review of Ohio allocation package",
+      "Fresh full-suite/coverage/all exact-code gates, regenerated inventory, browser and native amd64 CI",
+      "Final exact-code arm64 image, SBOM, scan and recovery rerun"
+    ],
+    "previousStableCoverageRun": {
       "commit": "ff761dde6b7a2305cbf1adaafa0ad2609c0f3eef",
       "workers": 1,
       "status": "failed-tests-coverage-thresholds-met",
@@ -490,31 +517,31 @@
       "evidenceSha256": "1d955b475471541d5b838688a71d6cdeda540ac771b6f8659e94084310a85868",
       "timeoutRerunEvidence": ".local/upgrade-evidence/stable-ff761dd-timeout-rerun.log"
     },
-    "remainingInternalWork": [
-      "Remaining federal and complete-facts checklists including HSA event allocation, education/529, mortgage/charitable source integration and special source coordination",
-      "Actual Ohio municipal-interest allocation and remaining dedicated-state source gaps",
-      "Fresh full-suite/coverage/all exact-code gates, regenerated inventory, browser and native amd64 CI",
-      "Final exact-code arm64 image, SBOM, scan and recovery rerun"
-    ],
-    "previousStableCoverageRun": {
-      "commit": "99fc4c25d4fa65e0b535085302bfd489190ab1e1",
-      "workers": 1,
-      "status": "failed-tests-coverage-thresholds-met",
-      "evidence": ".local/upgrade-evidence/stable-coverage-99fc4c2.log",
-      "scope": "immutable tracked-file archive with matching dependencies and disposable local PostgreSQL16; reportOnFailure; unchanged thresholds",
-      "passed": 16384,
-      "failed": 25,
-      "filesPassed": 603,
-      "filesFailed": 10,
-      "skipped": 0,
-      "branchesPercent": "86.06",
-      "functionsPercent": "91.70",
-      "statementsPercent": "92.75",
-      "linesPercent": "94.05",
-      "evidenceSha256": "8d0c616ebe01b2de8570495edb658e732e6a594495ace0a54b3b4842df73ad90",
-      "durationSeconds": "521.39",
-      "limitation": "Full command failed. Twenty-three published-table fixture expectations corrected in dc1e900, ca3b62c and 914a692; Ohio missing audit fixture corrected separately; PDF timeout passed isolated unchanged. Newer complete source code requires fresh full checks."
+    "lastPushedCommit": "7a337a0",
+    "currentBrowserRun": {
+      "commit": "4b5cacb7c5f2f0a04bedc1f11032c2ca61c9dfbb",
+      "status": "running",
+      "evidence": ".local/upgrade-evidence/stable-browser-4b5cacb.log",
+      "scope": "immutable local production build, Chromium, synthetic fixture documents, self-host mode; retries disabled; no live providers or staging"
     },
-    "lastPushedCommit": "e49e1d0"
+    "currentPackageAudit": {
+      "date": "2026-10-25",
+      "evidence": ".local/upgrade-evidence/advisories-2026-10-25-refresh.json",
+      "evidenceSha256": "75faac6935b02775451d386906298aeeacdbf1fc7fe15565de68098e8d5f3724",
+      "metadata": {
+        "vulnerabilities": {
+          "info": 0,
+          "low": 0,
+          "moderate": 0,
+          "high": 0,
+          "critical": 0
+        },
+        "dependencies": 519,
+        "devDependencies": 0,
+        "optionalDependencies": 0,
+        "totalDependencies": 519
+      },
+      "scope": "519 dependencies; npm advisories only, not image or independent security qualification"
+    }
   }
 }
