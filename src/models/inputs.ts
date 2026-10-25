@@ -6,6 +6,7 @@
 import { z } from "zod";
 import { getNYIT201ResidentConstants } from "@/models/constants.js";
 import { d } from "@/utils/decimal.js";
+import { IraBasisSourcesSchema } from "@/models/ira-basis-sources.js";
 
 // Custom Zod type for decimal strings (validated as numbers, stored as strings for Decimal.js)
 const decimal = z.string().regex(/^-?\d+(\.\d+)?$/, "Must be a decimal number");
@@ -917,6 +918,9 @@ export const CodExclusionSchema = z.object({
 });
 
 export const Form1099RSchema = z.object({
+  taxYear: z.number().int().optional(), // Preserve actual source year; ordinary basis binding requires an exact match.
+  trumpAccount: z.boolean().optional(), // Actual2026 Box7c; absence is unknown.
+  excessContributionEarnings: decimal.optional(), // Actual2026 Box7d; retain known zero separately from absence.
   payer: z.string(),
   payerTin: z.string().optional(), // Payer TIN shown on the recipient copy; required for IL Schedule IL-WIT Column B auto-attachment
   accountReference: z.string().trim().min(1).optional(), // Actual local account identity; never inferred from payer or statement order.
@@ -5800,6 +5804,7 @@ export const TaxYearInputSchema = z.object({
   form5329HsaByOwner: Form5329HsaByOwnerSchema.optional(),
   form8606: Form8606Schema.optional(),
   form8606ByOwner: Form8606ByOwnerSchema.optional(),
+  iraBasisSources: IraBasisSourcesSchema.optional(),
   form8889: Form8889Schema.optional(),
   form8889ByOwner: Form8889ByOwnerSchema.optional(),
   paScheduleGLStatements: z.array(PAScheduleGLStatementSchema).optional(),

@@ -112,6 +112,7 @@ import {
   mergeW2RetirementContributionsIntoForm8880Input,
 } from "./forms/form-8880.js";
 import { calculateForm8606 } from "./forms/form-8606.js";
+import { calculateIraBasisSources } from "./forms/ira-basis-sources.js";
 import type { Form8606Result } from "./forms/form-8606.js";
 import { calculateSocialSecurityBenefitsWorksheet } from "./forms/social-security-benefits-worksheet.js";
 import type { QBISource } from "./forms/form-8995.js";
@@ -682,7 +683,12 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   const form1099SA = calculateForm1099SA(input.form1099SA ?? []);
   audit.merge(form1099SA.lines);
   // ── Form 8606 calculation ──────────────────────────────────────────
-  // Supports three modes:
+  // Actual source packets bind each owner's prior basis and every IRA account
+  // before entering the existing separate-owner calculation.
+  const iraBasisSources = calculateIraBasisSources(input);
+  if (iraBasisSources) audit.merge(iraBasisSources.lines);
+  const ownerForm8606Inputs = iraBasisSources?.form8606ByOwner ?? input.form8606ByOwner;
+  // Legacy source modes remain available:
   // 1. form8606ByOwner: Per-spouse Form 8606 on MFJ returns (each spouse's IRA basis computed independently)
   // 2. form8606: Single combined Form 8606 (backward-compatible, used for single filers or pre-split MFJ)
   // 3. Neither: No Form 8606, IRA taxable amounts come directly from Form 1099-R
@@ -705,7 +711,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   let ownerAmbiguousJointReturnIraGrossOutsideForm8606 = new Decimal(0);
   let ownerAmbiguousJointReturnIraTaxableOutsideForm8606 = new Decimal(0);
 
-  if (input.form8606ByOwner !== undefined) {
+  if (ownerForm8606Inputs !== undefined) {
     // ── Per-owner Form 8606 path ──────────────────────────────────
     const allForms = input.form1099R ?? [];
     const ownerSpecificMfJPath =
@@ -719,8 +725,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     const spouseForms = allForms.filter((f) => f.accountHolder === "spouse");
     form8606ByOwnerResults = {};
 
-    const primaryInput = input.form8606ByOwner.primary;
-    const spouseInput = input.form8606ByOwner.spouse;
+    const primaryInput = ownerForm8606Inputs.primary;
+    const spouseInput = ownerForm8606Inputs.spouse;
 
     if (primaryInput !== undefined) {
       const primaryHsa = input.form8889ByOwner?.primary ?? (input.form8889 ?? undefined);

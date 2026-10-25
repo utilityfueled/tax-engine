@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.64",
+    ruleVersion: "2025.65",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i8606", section: "Completed whole-dollar lines; separate-owner actual prior basis and all traditional/SEP/SIMPLE accounts; Roth basis history and actual line25c repayments", revision: "Final2025 instructions and Total Basis Chart; source-bound ordinary code7 method, whole-dollar derived controls and published repayment examples; professional and broader-source qualification remain pending", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i172", section: "Actual current active ScheduleC origin, independent regular/AMT/1411 PartI and current EBL once; prior ledgers and source cents retained", revision: "Final Form172/i6251 with IRC172/56 and Reg1.1411-4(h); ordinary standard-deduction method only, other origin methods and professional qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://uscode.house.gov/us/usc/119-118/t26/s213/", section: "Medical deduction cannot exceed actual paid expenses at negative AGI; preserve signed AGI and floor only the7.5percent threshold", revision: "Section213(a), Publication502 and ScheduleA; negative-income numerical tests are derived, not published IRS examples", retrievedAt: "2026-10-25" },
       { url: "https://www.ecfr.gov/current/title-26/section-1.170A-10", section: "Current public-cash charitable carry reduced only by refigured succeeding regular NOL carry increase; original receipts and independent known-empty ATNOL charitable carry retained", revision: "IRC170(d)(1)(B),172 and Reg1.172-5/1.55-1; current numerical examples are derived, prior/mixed/positive-ATNOL methods and independent qualification remain separate", retrievedAt: "2026-10-25" },
@@ -108,11 +109,13 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.60-law-integration-draft",
+    ruleVersion: "2026.61-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i8606", section: "Actual separate-owner basis/history with exact source-year and account binding; completed whole-dollar lines and corrected Roth historical/repayment treatment", revision: "Applicable final2025 source method; final2026 Form8606 and full-year/filing qualification remain unavailable", retrievedAt: "2026-10-25" },
+      { url: "https://www.irs.gov/instructions/i1099r", section: "Actual2026 source year, code7 and Boxes7c/7d retained without defaulting unknown values", revision: "Final2026 information-return instructions, Distribution Codes and Trump account/excess-earnings boxes; specialized distributions require their separate source methods", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i172", section: "Current ordinary origin source validation and independent regular/alternative/investment worksheets, with current EBL origin kept separate", revision: "Applicable current law and final Form172 source method; full2026 calculation and filing remain unavailable, broader source methods remain internal work", retrievedAt: "2026-10-25" },
       { url: "https://uscode.house.gov/us/usc/119-118/t26/s213/", section: "Actual paid-medical ceiling at negative AGI", revision: "Current213(a); only the medical threshold is floored, signed AGI and existing readiness gates are preserved", retrievedAt: "2026-10-25" },
       { url: "https://uscode.house.gov/us/usc/119-118/t26/s170/", section: "Current public-cash170(d)(1)(B) NOL carry adjustment after eligible floor carry under(d)(1)(C); counterfactual removes source excess before reapplying modified floor", revision: "Derived current-law isolated calculation; separate AMT carry for known-empty ATNOL, positive ATNOL/standard-deduction coordination and full-year qualification remain separate", retrievedAt: "2026-10-25" },

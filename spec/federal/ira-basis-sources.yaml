@@ -1,0 +1,55 @@
+form: "Form 8606 ordinary source binding"
+fullName: "Separate-owner actual traditional IRA basis and year-end accounts"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i8606"
+notes: |
+  Official final 2025 Form8606 and its instructions refreshed 2026-10-25, lines
+  2, 6 and 7, Total Basis Chart, What Records Must I Keep, and separate-spouse
+  instructions. This source method applies existing ordinary basis arithmetic
+  to 2025/2026 source records; it does not qualify a final physical 2026 form.
+  Include every traditional, SEP and SIMPLE account for each owner separately.
+  A confirmed zero balance is allowed; a missing balance is unknown. Require
+  actual current-year 1099-R links, actual owners and household identity, the
+  most recent Form8606 line14 from 2001 or later and applicable worksheet line6
+  adjustment, or explicitly reviewed zero basis. Earlier historical line methods,
+  intervening basis changes, inherited accounts, contributions, conversions,
+  rollovers, QCD/HSA funding and special distributions remain separate methods.
+  Never use a payer's unknown Box2a as a gross-distribution taxability shortcut.
+  All monetary aggregation uses Decimal and preserves original source cents.
+lines:
+  - line: "owner-basis"
+    description: "Actual basis and all year-end account sources stay separate by owner"
+    formula: "For each actual owner, prior basis is confirmed zero or the most recent supported Form8606 line14 plus its actual line15c worksheet6 adjustment. Sum all current Dec31 traditional/SEP/SIMPLE account values with Decimal. A closed account with an actual zero remains present."
+    testRef: "tests/engine/forms/ira-basis-sources.test.ts::binds separate owners and aggregates exact original account and distribution cents"
+  - line: "original-distributions"
+    description: "Match original current-year Forms1099-R without inferring taxability"
+    formula: "Each ordinary source must match its original index, year, owner, payer/TIN/account identity, code7, IRA checkbox, gross and printed Box2a/2b facts exactly. Code7 must be consistent with actual age59.5 by year end. Include every original IRA1099-R once; aggregate gross before Form8606 line rounding. Missing printed taxable amount is allowed only when the actual unknown flag is true."
+    testRef: "tests/engine/forms/ira-basis-sources.test.ts::rejects stale missing duplicate or conflicting original distribution sources"
+  - line: "complete-history"
+    description: "Missing confirmation, identity, amounts and history never become zero"
+    formula: "Require explicit complete-source confirmations, valid owner name/date/SSN suffix matching the complete original household, current statement years and unique actual accounts. Prior return must precede the return year, be the most recent applicable record, and have no unreported basis changes. Pre2024 worksheet adjustments must be zero."
+    testRef: "tests/engine/forms/ira-basis-sources.test.ts::rejects incomplete household account and prior-basis histories"
+  - line: "additional-methods"
+    description: "Contradictory advanced sources cannot enter the ordinary method"
+    formula: "Reject affirmative additional-method facts, legacy combined/per-owner Form8606 overrides, positive current IRA contributions/deductions, SEP contributions, HSA funding and original distribution conversion/QCD/return metadata. Preserve these sources for their separate method rather than silently clearing them."
+    testRef: "tests/engine/forms/ira-basis-sources.test.ts::requires separate methods for advanced or contradictory retirement facts"
+  - line: "audit"
+    description: "Return private source bindings and source-free monetary audit entries"
+    formula: "Return typed owner-specific Form8606 inputs and generic owner-labelled audit sums. Do not mutate original source records or place account references, payer TINs or household identifiers in audit entries."
+    testRef: "tests/engine/forms/ira-basis-sources.test.ts::preserves input records and keeps private identity out of the public audit"
+  - line: "zero-and-year"
+    description: "Confirmed zero and historical source years stay explicit"
+    formula: "A source-confirmed zero basis is distinct from an absent prior record. For 2026 retain current sources2026 and the actual prior return year2025; never relabel either. Reconcile multiple ordinary statements for one physical account before calculation."
+    testRef: "tests/engine/forms/ira-basis-sources.test.ts::preserves confirmed zero basis and exact current and prior source years"
+  - line: "canonical-return"
+    description: "Actual original sources feed separate owner calculations before the joint total"
+    formula: "Validate and bind the packet before calculating each existing owner Form8606. Retain original gross and unknown printed taxable amounts; combine only calculated taxable income for1040. A stale packet must fail the canonical return, and a complete2026 packet cannot open the existing public-year gate."
+    testRef: "tests/engine/federal-ira-basis-sources.test.ts::uses actual separate-owner basis to resolve unknown printed taxable amounts"
+  - line: "review-copy"
+    description: "Separate owner review forms retain exact computed values and redact identifiers"
+    formula: "After canonical calculation, render each owner's own line2/6/7/10/14/15c with the2025 reference map. Redact full and partial SSNs, custodian TINs and account references from the render copy without altering the source packet. Review mapping does not qualify filing or2026 forms."
+    testRef: "tests/pdf/ira-basis-sources.test.ts::reopens separate owner review forms with literal tax and carry values and no identifiers"
+  - line: "current-source-boxes"
+    description: "Preserve actual2026 Trump account and excess-earnings source boxes"
+    formula: "Current2026 ordinary sources require an actual false Box7c and actual zero Box7d. Missing and positive answers require the separate source method. Preserve both values on the original1099-R model; never strip them as unknown schema keys. Code7 also requires actual age59.5 by year end."
+    testRef: "tests/engine/forms/ira-basis-sources.test.ts::requires actual2026 additional source boxes and a consistent ordinary distribution age"

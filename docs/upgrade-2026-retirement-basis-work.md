@@ -76,3 +76,62 @@ exception 1,000/0, additional tax 600/500 and no false basis carry. Logs:
 `roth-history-dc0e-*`, `federal-review-roth-history.log` and
 `federal-review-roth-canonical.log`. No human qualification or wider source
 intake is claimed.
+
+## Ordinary traditional IRA original-source binding
+
+Refreshed the official final2025 [Form8606 instructions](https://www.irs.gov/instructions/i8606)
+and final2026 [Forms1099-R/5498 instructions](https://www.irs.gov/instructions/i1099r)
+on2026-10-25. The source packet requires separate actual owners, matching original
+1099-R year/payer/account/gross/printed2a/2b facts, all traditional/SEP/SIMPLE
+year-end accounts and the most recent applicable basis history. Known zero has
+an explicit reviewed-history method. Missing identity, balances, history or
+confirmations cannot become zero. Code7 is checked against actual age, and
+2026 original Trump-account/excess-earnings boxes remain explicit values.
+
+The spec preceded the original missing-module failure and a reproduced duplicate
+account statement failure. Canonical integration then produced five expected
+failures: the old return ignored basis sources/stale histories, omitted the owner
+review forms, and retained partial SSNs in render copies. The new binder routes
+validated owner inputs through the existing Form8606 calculation. Each owner's
+gross is aggregated with Decimal before completed-line rounding. Original source
+cents, unknown printed taxable amounts and source identifiers remain unchanged.
+Review copies redact full/partial SSNs, custodian TINs and account references.
+
+Literal separate-owner controls produce taxable668/carry667 and taxable1600/
+carry1600, hence joint taxable2268 and AGI87268 on the synthetic85000W2 case.
+An owner with no current distribution retains their independent2000basis. Two
+owner PDFs are saved/reopened and checked against literal amounts, ratio digits,
+names, blank identifiers and review notices. A separate2026-box test failed
+before preserving/requiring the actual source values. The final focused working
+cohort passes19cases across5files and root types. Evidence is under
+`.local/upgrade-evidence/ira-basis-{canonical-red,canonical-green-final,2026-boxes-red,2026-boxes-green,types-final}.log`.
+
+Versions2025.65/2026.61 also record the preceding whole-dollar and Roth corrections.
+Current contributions, conversions, rollovers, QCD/HSA funding, inherited and
+special distributions remain explicitly separate source methods. Guided intake
+and immutable broader/independent verification continue below; this package
+does not open2026 calculation, filing or independent-human-review gates.
+
+The first immutable adjacent run passes318cases and reports one stale QSBS
+error-text expectation: redacting the SSN suffix now rejects the missing identity
+at its source schema before the later household check. The test still requires
+rejection and now names both identity diagnostics; no tax or readiness assertion
+was removed. Root/web types, all4527spec references and scoped lint pass on that
+tree (zero errors, ten warnings). Its test log is `ira-basis-3e75-tests.log`.
+
+Final immutable tree `c52980603b27f893124c99b5ec95aa41730a787d` passes all319
+cases across27 retirement, canonical, guided and adjacent privacy/PDF suites
+(`ira-basis-c529-tests.log`). Its executable source is identical to3e753977,
+whose root/web types and4527spec references pass. Both owner PDFs were reopened
+and all four pages rendered/inspected; literal fields, empty SSNs and visible
+review notices are retained. Artifacts are in `ira-basis-pdfs/` under the ignored
+evidence directory.
+
+Independent agent review refreshed the original IRS sources and passed13focused
+cases plus3additional probes with no actionable finding. The actual2024
+worksheet adjustment produces334tax/1333carry; an actual zero closing account
+produces1tax without using the spouse's basis; cross-owner duplicate accounts
+and noncanonical original indices reject. Logs: `facts-review-ira-basis.log`
+and `facts-review-ira-probes.log`. This remains bounded software/source review,
+not independent professional or final-form qualification. Guided collection is
+the next internal retirement package.

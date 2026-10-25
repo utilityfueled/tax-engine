@@ -129,7 +129,9 @@ it('keeps missing-source and year qualification gates closed', async () => {
   const source = qsbsReturnInput('fund');
   expect(() => prepareForm8949Review({ ...source, section1202Sources: undefined })).toThrow(/source/);
   const prepared = prepareForm8949Review(source);
-  expect(() => prepareForm8949Review(redactReviewIdentifiers(source))).toThrow(/identity/);
+  // Render copies now remove the SSN suffix too, so the missing identity can
+  // fail at either the source schema or the original-household reconciliation.
+  expect(() => prepareForm8949Review(redactReviewIdentifiers(source))).toThrow(/identity|ssnLast4/);
   await expect(fillForm8949({ ...source, taxpayer: { ...source.taxpayer, taxYear: 2026 } }, blank, prepared)).rejects.toThrow(/2026|qualified/);
   await expect(fillReturn(source, calculateFederalTax(source), { outputDir, blankFormsDir: 'forms/blank/2025', purpose: 'filing', capitalGainReview: prepared })).rejects.toThrow(/Filing exports/);
 });
