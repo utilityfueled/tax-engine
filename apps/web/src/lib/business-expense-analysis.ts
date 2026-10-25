@@ -239,7 +239,9 @@ export function compactRedactedAiDocumentText(text: string, options?: {
   const includeAmountsOnly = options?.includeAmountsOnly ?? false;
   const maxLines = options?.maxLines ?? 220;
   const maxChars = options?.maxChars ?? 22000;
-  const lines = uniqueNonEmptyLines(text);
+  // Repeated merchants, dates and amounts may be separate purchases or refunds.
+  // Preserve them so reconciliation can inspect the original sequence.
+  const lines = nonEmptyLinesPreserveOrder(text);
   const kept: string[] = [];
   let totalChars = 0;
 

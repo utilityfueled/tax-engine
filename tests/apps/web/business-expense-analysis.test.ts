@@ -12,6 +12,10 @@ import {
 } from "../../../apps/web/src/lib/business-expense-analysis";
 
 describe("business expense analysis helpers", () => {
+  it("preserves repeated transaction lines for duplicate and refund reconciliation", () => {
+    const text = "2025-01-08\nOFFICE SUPPLIES\n$20.00\n2025-01-09\nOFFICE SUPPLIES\n$20.00\nREFUND\n$20.00";
+    expect(compactRedactedAiDocumentText(text)).toBe(text);
+  });
   it("aggregates cents without converting through binary floating point", () => {
     expect(addAmountToCurrencyValue("9007199254740993.01", "0.02")).toBe("9007199254740993.03");
     expect(addAmountToCurrencyValue("1,000.10", "0.20")).toBe("1000.30");

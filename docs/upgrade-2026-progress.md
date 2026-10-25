@@ -228,3 +228,10 @@ pass for dependent care and solar fields.
 This replaces the document path, not the legacy live workspace responder or
 hand-scored benchmark. Exact cost persistence, atomic credit reservation,
 independent evaluation/review, and production rollout remain unfinished.
+
+## Statement duplicate preservation
+
+The redacted text adapter preserves repeated transaction lines in source order.
+Removing duplicate lines could erase separate purchases, refunds or transfers.
+The added regression failed before the change and passes afterward; this is a
+local deterministic check, not a provider extraction evaluation.
