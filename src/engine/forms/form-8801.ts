@@ -1,377 +1,235 @@
-/**
- * Form 8801 — Credit for Prior Year Minimum Tax
- * Spec: spec/federal/form-8801.yaml
- *
- * Allows taxpayers who paid AMT in a prior year due to deferral items
- * (ISO exercises, depreciation, depletion, disposition adjustments) to
- * claim a nonrefundable credit in the current year, limited to the
- * excess of current-year regular tax over current-year TMT.
- *
- * Parts I, II, and III are implemented. Part III recomputes the
- * exclusion-only TMT using maximum capital gains rates when the prior
- * year had qualified dividends or net capital gains, producing a lower
- * TMT (and thus a higher credit) by applying 0%/15%/20%/25%/28%
- * capital gains rates to the preferential portion of the AMT base.
- */
-
+/** Form8801. Source lines and year-specific rules: spec/federal/form-8801.yaml. */
 import Decimal from "decimal.js";
 import type { FilingStatus } from "@/models/constants.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { d, min, roundDollar, zeroFloor } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
 
-// ── Prior year (2024) capital gains rate thresholds (Rev. Proc. 2023-34) ─
-const PRIOR_YEAR_CG_2024 = {
-  zeroThreshold: {
-    single: new Decimal(47025),
-    married_filing_jointly: new Decimal(94050),
-    married_filing_separately: new Decimal(47025),
-    head_of_household: new Decimal(63000),
-    qualifying_surviving_spouse: new Decimal(94050),
-  } as Record<FilingStatus, Decimal>,
-  fifteenThreshold: {
-    single: new Decimal(518900),
-    married_filing_jointly: new Decimal(583750),
-    married_filing_separately: new Decimal(291850),
-    head_of_household: new Decimal(551350),
-    qualifying_surviving_spouse: new Decimal(583750),
-  } as Record<FilingStatus, Decimal>,
+interface PriorYearTable {
+  exemption: Record<FilingStatus, string>;
+  phaseout: Record<FilingStatus, string>;
+  zeroRate: Record<FilingStatus, string>;
+  fifteenRate: Record<FilingStatus, string>;
+  breakpoint: string;
+  mfsBreakpoint: string;
+  mfsAdditionThreshold: string;
+}
+function statuses(single: string, joint: string, separate: string, head = single): Record<FilingStatus, string> {
+  return { single, married_filing_jointly: joint, married_filing_separately: separate, head_of_household: head, qualifying_surviving_spouse: joint };
+}
+const PRIOR_YEAR_TABLES: Record<2024 | 2025, PriorYearTable> = {
+  2024: {
+    exemption: statuses("85700", "133300", "66650"), phaseout: statuses("609350", "1218700", "609350"),
+    zeroRate: statuses("47025", "94050", "47025", "63000"), fifteenRate: statuses("518900", "583750", "291850", "551350"),
+    breakpoint: "232600", mfsBreakpoint: "116300", mfsAdditionThreshold: "875950",
+  },
+  2025: {
+    exemption: statuses("88100", "137000", "68500"), phaseout: statuses("626350", "1252700", "626350"),
+    zeroRate: statuses("48350", "96700", "48350", "64750"), fifteenRate: statuses("533400", "600050", "300000", "566700"),
+    breakpoint: "239100", mfsBreakpoint: "119550", mfsAdditionThreshold: "900350",
+  },
 };
 
-// ── Prior year (2024) AMT constants (Rev. Proc. 2023-34) ──────────
-
-const PRIOR_YEAR_AMT_2024 = {
-  exemption: {
-    single: new Decimal(85700),
-    married_filing_jointly: new Decimal(133300),
-    married_filing_separately: new Decimal(66650),
-    head_of_household: new Decimal(85700),
-    qualifying_surviving_spouse: new Decimal(133300),
-  } as Record<FilingStatus, Decimal>,
-  phaseOutThreshold: {
-    single: new Decimal(609350),
-    married_filing_jointly: new Decimal(1218700),
-    married_filing_separately: new Decimal(609350),
-    head_of_household: new Decimal(609350),
-    qualifying_surviving_spouse: new Decimal(1218700),
-  } as Record<FilingStatus, Decimal>,
-  rate26Limit: {
-    single: new Decimal(232600),
-    married_filing_jointly: new Decimal(232600),
-    married_filing_separately: new Decimal(116300),
-    head_of_household: new Decimal(232600),
-    qualifying_surviving_spouse: new Decimal(232600),
-  } as Record<FilingStatus, Decimal>,
-};
-
-// ── Input/output interfaces ────────────────────────────────────────
-
+export interface Form8801CapitalGainsWorksheet {
+  method: "qualified_dividends" | "schedule_d";
+  /** Prior QD/CG Tax Worksheet line4 or ScheduleD Tax Worksheet line13, as adjusted for AMT. */
+  preferentialIncome: Decimal;
+  /** Actual prior QD/CG line5 or ScheduleD Tax Worksheet line14. */
+  ordinaryIncomeForZeroRate: Decimal;
+  /** Actual prior QD/CG line5 or ScheduleD Tax Worksheet line21. */
+  ordinaryIncomeForFifteenRate: Decimal;
+  /** Actual prior ScheduleD line19. Required for ScheduleD method, including known0. */
+  section1250Gain?: Decimal;
+  scheduleDTaxWorksheetLine10?: Decimal;
+}
 export interface Form8801Input {
-  /** Prior year filing status (for exemption, phase-out, and rate bracket lookup) */
+  taxYear?: number;
+  priorYear?: number;
+  sourceFactsConfirmed?: boolean;
+  /** Raw-input completeness marker, computed before legacy schema defaults. */
+  sourceFactsComplete?: boolean;
   priorYearFilingStatus: FilingStatus;
-  /** Prior year Form 1040 Line 15 — taxable income */
+  /** Legacy2025 alias; source-backed calculations use actual6251 line1+2e. */
   priorYearTaxableIncome: Decimal;
-  /** Sum of prior year Form 6251 adjustments that are exclusion items (SALT add-back, medical, private activity bonds, etc.) */
   priorYearExclusionItemAdjustments: Decimal;
-  /** Prior year Form 6251 Line 11 — the actual AMT paid */
   priorYearAMT: Decimal;
-  /** Prior year regular tax liability before credits */
+  /** Legacy2025 alias; source-backed calculations use actual6251 line10. */
   priorYearRegularTax: Decimal;
-  /** Unused minimum tax credit carryforward from years before the prior year */
   unusedMinimumTaxCreditCarryforward?: Decimal;
-  /** Current year Form 1040 Line 16 — regular tax before credits */
-  currentYearRegularTaxBeforeCredits: Decimal;
-  /** Current year Form 6251 Line 10 — tentative minimum tax */
+  /** Legacy2025 name; caller must already subtract the line22 allowable credits. */
+  currentYearRegularTaxBeforeCredits?: Decimal;
+  currentYearRegularTaxAfterCredits?: Decimal;
+  /** Actual current Form6251 line9. */
   currentYearTMT: Decimal;
-  // Part III inputs — prior year capital gains for maximum capital gains rate recomputation
-  /** Prior year qualified dividends */
+  priorYearForm6251Line1And2e?: Decimal;
+  priorYearMinimumTaxCreditNOLDeduction?: Decimal;
+  priorYearMinimumTaxForeignTaxCredit?: Decimal;
+  priorYearForm6251Line10?: Decimal;
+  priorYearUnallowedQualifiedElectricVehicleCredit?: Decimal;
+  priorYearFiledForm2555?: boolean;
+  priorYearFiledForm1040NR?: boolean;
+  priorYearNetUSRealPropertyGain?: Decimal;
+  priorYearCapitalGainsRequired?: boolean;
+  priorYearCapitalGainsWorksheet?: Form8801CapitalGainsWorksheet;
+  priorYearForeignEarnedIncome?: {
+    form2555Lines45And50: Decimal;
+    disallowedDeductions: Decimal;
+    /** Confirms actual worksheet modifications for regular/AMT capital gain excess. */
+    capitalGainAdjustmentsConfirmed?: boolean;
+  };
+  /** Legacy source amounts do not establish the required tax worksheet. */
   priorYearQualifiedDividends?: Decimal;
-  /** Prior year net long-term capital gain (zero-floored) */
   priorYearNetLTCG?: Decimal;
-  /** Prior year unrecaptured section 1250 gain (25% max rate) */
   priorYearUnrecapturedSection1250Gain?: Decimal;
-  /** Prior year collectibles/§1202 gain (28% max rate) */
   priorYearCollectiblesGain?: Decimal;
 }
-
 export interface Form8801Result {
-  // Part I outputs
-  exclusionOnlyAMTI: Decimal;         // Line 3
-  exemption: Decimal;                  // Line 9
-  amtBaseOnExclusions: Decimal;        // Line 10
-  exclusionOnlyTMT: Decimal;           // Line 11
-  netMinTaxOnExclusionItems: Decimal;  // Line 13
-
-  // Part II outputs
-  minTaxCreditFromPriorYear: Decimal;  // Line 16
-  totalAvailableCredit: Decimal;       // Line 18
-  currentYearLimitation: Decimal;      // Line 24
-  creditAllowed: Decimal;              // Line 25 → Schedule 3 Line 6a
-  carryforwardToNextYear: Decimal;     // Line 26
-
+  taxYear: number;
+  priorYear: number;
+  sourceFactsVerified: boolean;
+  exclusionOnlyAMTI: Decimal; //4
+  exemption: Decimal; //9
+  amtBaseOnExclusions: Decimal; //10
+  exclusionOnlyTMT: Decimal; //11, before MTFTCE
+  tentativeMinimumTaxOnExclusionItems: Decimal; //13, after MTFTCE
+  netMinTaxOnExclusionItems: Decimal; //15
+  minTaxCreditFromPriorYear: Decimal; //18, SIGNED
+  totalAvailableCredit: Decimal; //positive portion of21
+  currentYearLimitation: Decimal; //24
+  creditAllowed: Decimal; //25 -> Schedule3 line6b
+  carryforwardToNextYear: Decimal; //26
   lines: CalculatedLine[];
 }
 
-// ── Calculation ────────────────────────────────────────────────────
-
-export function calculateForm8801(input: Form8801Input): Form8801Result {
-  const audit = new AuditTrail();
-  const py = PRIOR_YEAR_AMT_2024;
-  const fs = input.priorYearFilingStatus;
-
-  // ── Part I: Net Minimum Tax on Exclusion Items ───────────
-
-  // Line 1: Exclusion item adjustments from prior year
-  audit.record("Form 8801", "1", "Exclusion item adjustments from prior year Form 6251",
-    input.priorYearExclusionItemAdjustments,
-    "SALT add-back, medical, private activity bonds, standard deduction, other permanent AMT adjustments");
-
-  // Line 3: Exclusion-only AMTI = prior year taxable income + exclusion items
-  // This is the AMTI that would have resulted if only exclusion (permanent) items
-  // were preferences — all deferral (timing) items are backed out.
-  const exclusionOnlyAMTI = input.priorYearTaxableIncome
-    .plus(input.priorYearExclusionItemAdjustments);
-  audit.record("Form 8801", "3", "Exclusion-only AMTI", exclusionOnlyAMTI,
-    "Prior year taxable income + exclusion item adjustments",
-    {
-      "Prior year taxable income": input.priorYearTaxableIncome,
-      "Exclusion items": input.priorYearExclusionItemAdjustments,
-    });
-
-  // Lines 5-6: AMT exemption and phase-out threshold for prior year filing status
-  const baseExemption = py.exemption[fs];
-  const phaseOutThreshold = py.phaseOutThreshold[fs];
-
-  // Line 7: Excess of exclusion-only AMTI over phase-out threshold
-  const excessOverThreshold = zeroFloor(exclusionOnlyAMTI.minus(phaseOutThreshold));
-
-  // Line 8: Exemption reduction at 25 cents per dollar over threshold
-  const exemptionReduction = roundDollar(excessOverThreshold.times(new Decimal(0.25)));
-
-  // Line 9: Allowed exemption
-  const exemption = zeroFloor(baseExemption.minus(exemptionReduction));
-  audit.record("Form 8801", "9", "AMT exemption on exclusion-only AMTI", exemption,
-    `Base ${baseExemption} − reduction ${exemptionReduction} (${fs})`,
-    {
-      "Base exemption": baseExemption,
-      "Phase-out threshold": phaseOutThreshold,
-      "Excess over threshold": excessOverThreshold,
-      "Reduction (25%)": exemptionReduction,
-    });
-
-  // Line 10: AMT base on exclusion items
-  const amtBaseOnExclusions = zeroFloor(exclusionOnlyAMTI.minus(exemption));
-  audit.record("Form 8801", "10", "AMT base on exclusion items", amtBaseOnExclusions,
-    "max(0, exclusion-only AMTI − exemption)");
-
-  // Line 11: TMT on exclusion items using 26%/28% rates with prior year breakpoint
-  const rate26Limit = py.rate26Limit[fs];
-  const flatTMT = computeAMTTax(amtBaseOnExclusions, rate26Limit);
-
-  // ── Part III: Maximum Capital Gains Rate Recomputation ─────────
-  // When the prior year had qualified dividends or net LTCG, recompute
-  // the TMT using capital gains rates for the preferential portion.
-  // Use the lesser of the flat TMT and the Part III TMT.
-  const priorQD = input.priorYearQualifiedDividends ?? new Decimal(0);
-  const priorLTCG = input.priorYearNetLTCG ?? new Decimal(0);
-  const totalPreferentialAvailable = priorQD.plus(priorLTCG);
-
-  let exclusionOnlyTMT: Decimal;
-
-  if (totalPreferentialAvailable.greaterThan(0) && amtBaseOnExclusions.greaterThan(0)) {
-    // Preferential portion = min(AMT base, qualified dividends + net LTCG)
-    const preferential = min(amtBaseOnExclusions, totalPreferentialAvailable);
-    const ordinaryPortion = amtBaseOnExclusions.minus(preferential);
-
-    // Ordinary portion at 26%/28% AMT rates
-    const ordinaryTMT = computeAMTTax(ordinaryPortion, rate26Limit);
-
-    // Preferential portion at capital gains rates, stacked above ordinary
-    const section1250 = input.priorYearUnrecapturedSection1250Gain ?? new Decimal(0);
-    const collectibles = input.priorYearCollectiblesGain ?? new Decimal(0);
-    const cgThresholds = PRIOR_YEAR_CG_2024;
-    const zeroThreshold = cgThresholds.zeroThreshold[fs];
-    const fifteenThreshold = cgThresholds.fifteenThreshold[fs];
-
-    let prefTax = new Decimal(0);
-    let remaining = preferential;
-    let currentStack = ordinaryPortion;
-
-    // 0% bracket
-    if (currentStack.lessThan(zeroThreshold)) {
-      const roomAtZero = zeroThreshold.minus(currentStack);
-      const atZero = min(remaining, roomAtZero);
-      remaining = remaining.minus(atZero);
-      currentStack = currentStack.plus(atZero);
-    }
-
-    // 15% bracket
-    if (remaining.greaterThan(0) && currentStack.lessThan(fifteenThreshold)) {
-      const roomAtFifteen = fifteenThreshold.minus(currentStack);
-      const atFifteen = min(remaining, roomAtFifteen);
-      prefTax = prefTax.plus(atFifteen.times(d("0.15")));
-      remaining = remaining.minus(atFifteen);
-    }
-
-    // Above 15%: 28% collectibles, then 25% §1250, then 20%
-    if (remaining.greaterThan(0)) {
-      const collectiblesPortion = min(collectibles, remaining);
-      if (collectiblesPortion.greaterThan(0)) {
-        prefTax = prefTax.plus(collectiblesPortion.times(d("0.28")));
-        remaining = remaining.minus(collectiblesPortion);
-      }
-
-      const section1250Portion = min(section1250, remaining);
-      if (section1250Portion.greaterThan(0)) {
-        prefTax = prefTax.plus(section1250Portion.times(d("0.25")));
-        remaining = remaining.minus(section1250Portion);
-      }
-
-      if (remaining.greaterThan(0)) {
-        prefTax = prefTax.plus(remaining.times(d("0.20")));
-      }
-    }
-
-    const partIIITMT = ordinaryTMT.plus(roundDollar(prefTax));
-
-    // Use the lesser of the flat TMT and the Part III TMT
-    exclusionOnlyTMT = min(flatTMT, partIIITMT);
-
-    audit.record("Form 8801", "11", "Tentative minimum tax on exclusion items",
-      exclusionOnlyTMT,
-      exclusionOnlyTMT.equals(partIIITMT)
-        ? "Part III capital gains rates produce lower TMT"
-        : `26% on first ${rate26Limit}, 28% on remainder (Part III did not reduce)`,
-      {
-        "AMT base": amtBaseOnExclusions,
-        "26% bracket limit": rate26Limit,
-        "Flat TMT (26%/28%)": flatTMT,
-        "Part III TMT (CG rates)": partIIITMT,
-        "Preferential portion": preferential,
-        "Ordinary portion": ordinaryPortion,
-      });
-  } else {
-    exclusionOnlyTMT = flatTMT;
-    audit.record("Form 8801", "11", "Tentative minimum tax on exclusion items",
-      exclusionOnlyTMT,
-      `26% on first ${rate26Limit}, 28% on remainder`,
-      {
-        "AMT base": amtBaseOnExclusions,
-        "26% bracket limit": rate26Limit,
-      });
-  }
-
-  // Line 12: Prior year regular tax
-  audit.record("Form 8801", "12", "Prior year regular tax",
-    input.priorYearRegularTax, "From prior year Form 1040 Line 16");
-
-  // Line 13: Net minimum tax on exclusion items = max(0, TMT − regular tax)
-  const netMinTaxOnExclusionItems = zeroFloor(
-    exclusionOnlyTMT.minus(input.priorYearRegularTax)
-  );
-  audit.record("Form 8801", "13", "Net minimum tax on exclusion items",
-    netMinTaxOnExclusionItems,
-    "max(0, TMT on exclusion items − prior year regular tax)",
-    {
-      "TMT on exclusion items": exclusionOnlyTMT,
-      "Prior year regular tax": input.priorYearRegularTax,
-    });
-
-  // ── Part II: Minimum Tax Credit and Carryforward ─────────
-
-  // Line 14: Prior year AMT
-  audit.record("Form 8801", "14", "Prior year AMT", input.priorYearAMT,
-    "From prior year Form 6251 Line 11");
-
-  // Line 15: Net minimum tax on exclusion items (copy of Line 13)
-  audit.record("Form 8801", "15", "Net minimum tax on exclusion items",
-    netMinTaxOnExclusionItems, "From Part I Line 13");
-
-  // Line 16: Minimum tax credit from prior year = AMT attributable to deferral items
-  const minTaxCreditFromPriorYear = zeroFloor(
-    input.priorYearAMT.minus(netMinTaxOnExclusionItems)
-  );
-  audit.record("Form 8801", "16", "Minimum tax credit from prior year",
-    minTaxCreditFromPriorYear,
-    "max(0, prior year AMT − net min tax on exclusion items)",
-    {
-      "Prior year AMT": input.priorYearAMT,
-      "Net min tax on exclusion items": netMinTaxOnExclusionItems,
-    });
-
-  // Line 17: Carryforward from earlier years
-  const carryforward = input.unusedMinimumTaxCreditCarryforward ?? new Decimal(0);
-  audit.record("Form 8801", "17", "Unused minimum tax credit carryforward",
-    carryforward, "From prior Form 8801 Line 26");
-
-  // Line 18: Total available credit
-  const totalAvailableCredit = minTaxCreditFromPriorYear.plus(carryforward);
-  audit.record("Form 8801", "18", "Total available minimum tax credit",
-    totalAvailableCredit, "Line 16 + Line 17");
-
-  // Line 22: Current year regular tax
-  audit.record("Form 8801", "22", "Current year regular tax before credits",
-    input.currentYearRegularTaxBeforeCredits, "From Form 1040 Line 16");
-
-  // Line 23: Current year TMT
-  audit.record("Form 8801", "23", "Current year tentative minimum tax",
-    input.currentYearTMT, "From Form 6251 Line 10");
-
-  // Line 24: Current year limitation = max(0, regular tax − TMT)
-  const currentYearLimitation = zeroFloor(
-    input.currentYearRegularTaxBeforeCredits.minus(input.currentYearTMT)
-  );
-  audit.record("Form 8801", "24", "Current year limitation",
-    currentYearLimitation,
-    "max(0, regular tax − TMT)",
-    {
-      "Regular tax": input.currentYearRegularTaxBeforeCredits,
-      "TMT": input.currentYearTMT,
-    });
-
-  // Line 25: Credit allowed = min(total available, limitation)
-  const creditAllowed = totalAvailableCredit.greaterThan(0)
-    ? min(totalAvailableCredit, currentYearLimitation)
-    : new Decimal(0);
-  audit.record("Form 8801", "25", "Minimum tax credit allowed this year",
-    creditAllowed,
-    "min(total available, current year limitation) → Schedule 3 Line 6a",
-    {
-      "Total available": totalAvailableCredit,
-      "Limitation": currentYearLimitation,
-    });
-
-  // Line 26: Carryforward to next year
-  const carryforwardToNextYear = totalAvailableCredit.greaterThan(0)
-    ? zeroFloor(totalAvailableCredit.minus(creditAllowed))
-    : new Decimal(0);
-  audit.record("Form 8801", "26", "Carryforward to next year",
-    carryforwardToNextYear, "Total available − credit used");
-
-  return {
-    exclusionOnlyAMTI,
-    exemption,
-    amtBaseOnExclusions,
-    exclusionOnlyTMT,
-    netMinTaxOnExclusionItems,
-    minTaxCreditFromPriorYear,
-    totalAvailableCredit,
-    currentYearLimitation,
-    creditAllowed,
-    carryforwardToNextYear,
-    lines: audit.getLines(),
-  };
+function amount(value: Decimal | undefined, name: string, signed = false): Decimal {
+  if (!Decimal.isDecimal(value) || !value.isFinite()) throw new Error(`Form 8801 ${name} requires an actual finite amount`);
+  if (!signed && value.isNegative()) throw new Error(`Form 8801 ${name} must be nonnegative`);
+  return roundDollar(value);
+}
+function computeAMTTax(base: Decimal, breakpoint: Decimal): Decimal {
+  return roundDollar(min(base, breakpoint).times(d("0.26")).plus(zeroFloor(base.minus(breakpoint)).times(d("0.28"))));
 }
 
-/**
- * Compute AMT tax using 26%/28% rates with the given breakpoint.
- */
-function computeAMTTax(amtBase: Decimal, rate26Limit: Decimal): Decimal {
-  if (amtBase.lte(0)) return new Decimal(0);
-  if (amtBase.lte(rate26Limit)) {
-    return roundDollar(amtBase.times(new Decimal(0.26)));
+export function calculateForm8801(input: Form8801Input): Form8801Result {
+  const taxYear = input.taxYear ?? 2025;
+  if (taxYear !== 2025 && taxYear !== 2026) throw new Error("Form 8801 supports tax years2025 and2026 only");
+  const priorYear = taxYear === 2026 ? 2025 : 2024;
+  if (input.priorYear !== undefined && input.priorYear !== priorYear) throw new Error("Form 8801 prior year must immediately precede the tax year");
+  const sourceFactsVerified = input.sourceFactsConfirmed === true;
+  const strict = taxYear === 2026 || input.sourceFactsConfirmed !== undefined || input.priorYearForm6251Line1And2e !== undefined;
+  if (strict) {
+    if (!sourceFactsVerified || input.sourceFactsComplete === false) throw new Error("Form 8801 requires confirmed complete original source facts");
+    if (input.priorYear !== priorYear) throw new Error("Form 8801 requires the actual prior source year");
+    for (const key of ["priorYearFiledForm2555", "priorYearFiledForm1040NR", "priorYearCapitalGainsRequired"] as const) {
+      if (typeof input[key] !== "boolean") throw new Error(`Form 8801 requires known ${key}`);
+    }
   }
-  const at26 = roundDollar(rate26Limit.times(new Decimal(0.26)));
-  const at28 = roundDollar(amtBase.minus(rate26Limit).times(new Decimal(0.28)));
-  return at26.plus(at28);
+  const table = PRIOR_YEAR_TABLES[priorYear];
+  const status = input.priorYearFilingStatus;
+  if (!(status in table.exemption)) throw new Error("Form 8801 requires an individual filing status");
+  const line1 = amount(strict ? input.priorYearForm6251Line1And2e : input.priorYearTaxableIncome, "prior Form6251 line1 and2e", true);
+  const exclusions = amount(input.priorYearExclusionItemAdjustments, "exclusion adjustments", true);
+  const nol = amount(input.priorYearMinimumTaxCreditNOLDeduction ?? (strict ? undefined : d(0)), "minimum tax credit NOL deduction");
+  const mtftce = amount(input.priorYearMinimumTaxForeignTaxCredit ?? (strict ? undefined : d(0)), "minimum tax foreign credit");
+  const priorRegularTax = amount(strict ? input.priorYearForm6251Line10 : input.priorYearRegularTax, "prior Form6251 line10");
+  const priorAMT = amount(input.priorYearAMT, "prior AMT");
+  const carry = amount(input.unusedMinimumTaxCreditCarryforward ?? (strict ? undefined : d(0)), "prior credit carryforward");
+  const legacyVehicle = amount(input.priorYearUnallowedQualifiedElectricVehicleCredit ?? (strict ? undefined : d(0)), "legacy qualified electric vehicle credit");
+  const regularAfterCredits = amount(input.currentYearRegularTaxAfterCredits ?? (strict ? undefined : input.currentYearRegularTaxBeforeCredits), "current regular tax after allowable credits");
+  const currentTMT = amount(input.currentYearTMT, "current tentative minimum tax");
+  const legacyCapitalAmounts = [input.priorYearQualifiedDividends, input.priorYearNetLTCG, input.priorYearUnrecapturedSection1250Gain, input.priorYearCollectiblesGain];
+  const hasLegacyCapital = legacyCapitalAmounts.map(value => value === undefined ? d(0) : amount(value, "prior capital income")).some(value => value.gt(0));
+  const capitalRequired = input.priorYearCapitalGainsRequired ?? (hasLegacyCapital || input.priorYearCapitalGainsWorksheet !== undefined);
+  if (!capitalRequired && (hasLegacyCapital || input.priorYearCapitalGainsWorksheet !== undefined)) throw new Error("Form 8801 capital-gain facts contradict stated applicability");
+  if (capitalRequired && input.priorYearCapitalGainsWorksheet === undefined) throw new Error("Form 8801 requires actual prior capital-gains worksheet sources");
+  const foreign = input.priorYearForeignEarnedIncome;
+  if (input.priorYearFiledForm2555 === true && foreign === undefined) throw new Error("Form 8801 requires actual foreign earned income worksheet facts");
+  if (foreign !== undefined && input.priorYearFiledForm2555 !== true) throw new Error("Form 8801 foreign earned income facts require known Form2555 applicability");
+  let foreignStack = d(0);
+  if (foreign !== undefined) {
+    foreignStack = zeroFloor(amount(foreign.form2555Lines45And50, "Form2555 exclusions").minus(amount(foreign.disallowedDeductions, "foreign income disallowed deductions")));
+    if (capitalRequired && foreign.capitalGainAdjustmentsConfirmed !== true) throw new Error("Form 8801 requires confirmed capital gain excess adjustments for Form2555 worksheets");
+  }
+  const realPropertyGain = input.priorYearFiledForm1040NR === true ? amount(input.priorYearNetUSRealPropertyGain, "nonresident net U.S. real-property gain") : d(0);
+  if (input.priorYearNetUSRealPropertyGain !== undefined && input.priorYearFiledForm1040NR !== true && amount(input.priorYearNetUSRealPropertyGain, "net U.S. real-property gain").gt(0)) throw new Error("Form 8801 real-property floor requires known Form1040-NR applicability");
+
+  const audit = new AuditTrail();
+  const record = (line: string, description: string, value: Decimal, formula: string) => audit.record("Form 8801", line, description, value, formula);
+  record("1", "Prior-year Form6251 income and NOL-source sum", line1, `Actual ${priorYear} Form6251 line${priorYear === 2025 ? "1b" : "1"} plus2e`);
+  record("2", "Exclusion-item adjustments", exclusions, "Actual prior-year exclusion items only");
+  record("3", "Minimum tax credit NOL deduction", nol, "Actual exclusion-only section172 worksheet deduction");
+  const preliminaryAMTI = zeroFloor(line1.plus(exclusions).minus(nol));
+  const baseExemption = d(table.exemption[status]);
+  const mfsAddition = status === "married_filing_separately" ? roundDollar(min(baseExemption, zeroFloor(preliminaryAMTI.minus(d(table.mfsAdditionThreshold))).times(d("0.25")))) : d(0);
+  const exclusionOnlyAMTI = record("4", "Exclusion-only AMTI", preliminaryAMTI.plus(mfsAddition), "max(0,line1 + line2 - line3) + applicable MFS addition");
+  record("5", "Prior-year AMT exemption", baseExemption, `${priorYear} individual exemption`);
+  const threshold = record("6", "Prior-year exemption phaseout threshold", d(table.phaseout[status]), `${priorYear} phaseout threshold`);
+  const excess = record("7", "Excess over exemption phaseout threshold", zeroFloor(exclusionOnlyAMTI.minus(threshold)), "max(0,line4 - line6)");
+  const reduction = record("8", "Exemption reduction", roundDollar(excess.times(d("0.25"))), "RoundDollar(line7 * 25%)");
+  const exemption = record("9", "Allowed prior-year AMT exemption", zeroFloor(baseExemption.minus(reduction)), "max(0,line5 - line8)");
+  const amtBaseOnExclusions = record("10", "AMT base on exclusion items", Decimal.max(zeroFloor(exclusionOnlyAMTI.minus(exemption)), min(realPropertyGain, exclusionOnlyAMTI)), "max(0,line4 - line9), subject to actual nonresident real-property floor");
+  const breakpoint = d(status === "married_filing_separately" ? table.mfsBreakpoint : table.breakpoint);
+  const taxBase = amtBaseOnExclusions.plus(foreignStack);
+  let computedTax = computeAMTTax(taxBase, breakpoint);
+  if (capitalRequired) {
+    const worksheet = input.priorYearCapitalGainsWorksheet;
+    if (!worksheet) throw new Error("Form 8801 requires a capital-gains worksheet");
+    if (worksheet.method !== "qualified_dividends" && worksheet.method !== "schedule_d") throw new Error("Form 8801 capital-gain worksheet method is unsupported");
+    const preferential = amount(worksheet.preferentialIncome, "capital-gain preferential income");
+    const ordinaryZero = amount(worksheet.ordinaryIncomeForZeroRate, "zero-rate worksheet ordinary income");
+    const ordinaryFifteen = amount(worksheet.ordinaryIncomeForFifteenRate, "fifteen-rate worksheet ordinary income");
+    const section1250 = worksheet.method === "schedule_d" ? amount(worksheet.section1250Gain, "Schedule D section1250 gain") : d(0);
+    const scheduleDCap = worksheet.method === "schedule_d" ? amount(worksheet.scheduleDTaxWorksheetLine10, "Schedule D Tax Worksheet line10") : preferential;
+    if (worksheet.method === "schedule_d" && ordinaryFifteen.gt(ordinaryZero)) throw new Error("Form 8801 Schedule D line21 cannot exceed its line14 ordinary income");
+    if (scheduleDCap.lt(preferential)) throw new Error("Form 8801 Schedule D worksheet gain cap cannot be below preferential income");
+    if (worksheet.method === "qualified_dividends" && (!ordinaryZero.eq(ordinaryFifteen) || (worksheet.section1250Gain !== undefined && amount(worksheet.section1250Gain, "section1250 gain").gt(0)) || worksheet.scheduleDTaxWorksheetLine10 !== undefined)) throw new Error("Form 8801 qualified-dividends worksheet uses the same ordinary income source and excludes Schedule D special-gain inputs");
+    record("27", "PartIII tax base", taxBase, "line10, or Foreign Earned Income Tax Worksheet line3");
+    record("28", "Actual preferential-income worksheet source", preferential, "Prior QD/CG Tax Worksheet line4 or ScheduleD Tax Worksheet line13");
+    record("29", "Actual section1250 gain", section1250, "Prior ScheduleD line19; zero for QD/CG method");
+    const gainCap = record("30", "Preferential gain cap", min(preferential.plus(section1250), scheduleDCap), "QD method line28; otherwise min(line28+line29, ScheduleD Tax Worksheet line10)");
+    const gain = record("31", "Gain limited by tax base", min(taxBase, gainCap), "min(line27,line30)");
+    const ordinary = record("32", "Ordinary AMT portion", taxBase.minus(gain), "line27 - line31");
+    const ordinaryTax = record("33", "Ordinary AMT tax", computeAMTTax(ordinary, breakpoint), "Prior-year26%/28% AMT tax on line32");
+    const zeroThreshold = record("34", "Prior-year zero-rate threshold", d(table.zeroRate[status]), `${priorYear} capital-gain zero-rate threshold`);
+    record("35", "Actual regular-tax ordinary income for zero rate", ordinaryZero, "Prior QD/CG worksheet line5 or ScheduleD Tax Worksheet line14");
+    const zeroCapacity = record("36", "Zero-rate capacity", zeroFloor(zeroThreshold.minus(ordinaryZero)), "max(0,line34 - line35)");
+    const taxablePreference = record("37", "Preferential income limited by tax base", min(taxBase, preferential), "min(line27,line28)");
+    const zeroGain = record("38", "Zero-rate gain", min(zeroCapacity, taxablePreference), "min(line36,line37)");
+    const remainingPreference = record("39", "Preferential income above zero rate", taxablePreference.minus(zeroGain), "line37 - line38");
+    const fifteenThreshold = record("40", "Prior-year fifteen-percent threshold", d(table.fifteenRate[status]), `${priorYear} capital-gain15% threshold`);
+    record("41", "Zero-rate capacity", zeroCapacity, "Copy line36");
+    record("42", "Actual regular-tax ordinary income for fifteen percent", ordinaryFifteen, "Prior QD/CG worksheet line5 or ScheduleD Tax Worksheet line21");
+    const consumed = record("43", "Income consuming fifteen-percent capacity", zeroCapacity.plus(ordinaryFifteen), "line41 + line42");
+    const fifteenCapacity = record("44", "Fifteen-percent capacity", zeroFloor(fifteenThreshold.minus(consumed)), "max(0,line40 - line43)");
+    const fifteenGain = record("45", "Fifteen-percent gain", min(remainingPreference, fifteenCapacity), "min(line39,line44)");
+    const fifteenTax = record("46", "Fifteen-percent tax", roundDollar(fifteenGain.times(d("0.15"))), "RoundDollar(line45 * 15%)");
+    const lowerRateGain = record("47", "Zero- and fifteen-percent gain", zeroGain.plus(fifteenGain), "line38 + line45");
+    const twentyGain = record("48", "Twenty-percent gain", taxablePreference.minus(lowerRateGain), "line37 - line47");
+    const twentyTax = record("49", "Twenty-percent tax", roundDollar(twentyGain.times(d("0.20"))), "RoundDollar(line48 * 20%)");
+    const subtotal = record("50", "Ordinary and preferential income subtotal", ordinary.plus(lowerRateGain).plus(twentyGain), "line32 + line47 + line48");
+    const specialGain = record("51", "Section1250 gain at maximum25%", taxBase.minus(subtotal), "line27 - line50");
+    const specialTax = record("52", "Section1250 tax", roundDollar(specialGain.times(d("0.25"))), "RoundDollar(line51 * 25%)");
+    const capitalTax = record("53", "Maximum capital-gain rate tax", ordinaryTax.plus(fifteenTax).plus(twentyTax).plus(specialTax), "line33 + line46 + line49 + line52");
+    record("54", "All-income AMT comparison", computedTax, "Prior-year26%/28% tax on line27");
+    computedTax = record("55", "Lower capital-gain or ordinary AMT tax", min(capitalTax, computedTax), "min(line53,line54)");
+  }
+  const exclusionOnlyTMT = record("11", "Tax on exclusion items before MTFTCE", zeroFloor(computedTax.minus(computeAMTTax(foreignStack, breakpoint))), foreign ? "Foreign Earned Income Tax Worksheet line4 - line5" : capitalRequired ? "PartIII line55" : "Prior-year26%/28% tax on line10");
+  if (mtftce.gt(exclusionOnlyTMT)) throw new Error("Form 8801 minimum tax foreign credit cannot exceed tax on exclusion items");
+  record("12", "Minimum tax foreign credit on exclusion items", mtftce, "Actual completed MTFTCE worksheet");
+  const tentativeMinimumTaxOnExclusionItems = record("13", "Tentative minimum tax on exclusion items", exclusionOnlyTMT.minus(mtftce), "line11 - line12");
+  record("14", "Prior-year comparison tax", priorRegularTax, `Actual ${priorYear} Form6251 line10`);
+  const netMinTaxOnExclusionItems = record("15", "Net minimum tax on exclusion items", zeroFloor(tentativeMinimumTaxOnExclusionItems.minus(priorRegularTax)), "max(0,line13 - line14)");
+  record("16", "Prior-year AMT", priorAMT, `Actual ${priorYear} Form6251 line11`);
+  record("17", "Net minimum tax on exclusion items", netMinTaxOnExclusionItems, "Copy line15");
+  const minTaxCreditFromPriorYear = record("18", "Signed prior-year credit adjustment", priorAMT.minus(netMinTaxOnExclusionItems), "line16 - line17; retain negative amounts");
+  record("19", "Prior-year credit carryforward", carry, `Actual ${priorYear} Form8801 line26`);
+  record("20", "Unallowed legacy qualified electric vehicle credit", legacyVehicle, "Actual pre-2009 section30 credit limitation carryforward");
+  const combined = record("21", "Combined credit pool before zero floor", minTaxCreditFromPriorYear.plus(carry).plus(legacyVehicle), "line18 + line19 + line20; if nonpositive no credit or carryforward");
+  const totalAvailableCredit = zeroFloor(combined);
+  record("22", "Current regular income tax after allowable credits", regularAfterCredits, "1040line16 + Schedule2line1z - 1040line19 - Schedule3lines1..6z (excluding6b and6k)");
+  record("23", "Current tentative minimum tax", currentTMT, "Current Form6251 line9");
+  const currentYearLimitation = record("24", "Current-year limitation", zeroFloor(regularAfterCredits.minus(currentTMT)), "max(0,line22 - line23)");
+  const creditAllowed = record("25", "Allowed minimum tax credit", min(totalAvailableCredit, currentYearLimitation), "min(max(0,line21),line24) -> Schedule 3 line 6b");
+  const carryforwardToNextYear = record("26", "Credit carryforward to next year", totalAvailableCredit.minus(creditAllowed), "max(0,line21) - line25");
+  return { taxYear, priorYear, sourceFactsVerified, exclusionOnlyAMTI, exemption, amtBaseOnExclusions, exclusionOnlyTMT, tentativeMinimumTaxOnExclusionItems, netMinTaxOnExclusionItems, minTaxCreditFromPriorYear, totalAvailableCredit, currentYearLimitation, creditAllowed, carryforwardToNextYear, lines: audit.getLines() };
 }

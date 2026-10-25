@@ -1,265 +1,261 @@
 form: "Form 8801"
-fullName: "Credit for Prior Year Minimum Tax — Individuals, Estates, and Trusts"
-taxYear: 2025
-irsReference: "https://www.irs.gov/forms-pubs/about-form-8801"
-
+fullName: "Credit for Prior Year Minimum Tax — Individuals"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i8801"
+sources:
+  - "https://www.irs.gov/pub/irs-pdf/f8801.pdf (final2025; prior2024 computation)"
+  - "https://www.irs.gov/pub/irs-dft/f8801--dft.pdf (draft2026 created May27; NOT filing qualification)"
+  - "https://www.irs.gov/pub/irs-drop/rp-24-40.pdf (prior2025 AMT and capital gains indexing)"
+  - "https://www.irs.gov/pub/irs-drop/rp-23-34.pdf (prior2024 indexing)"
 notes: |
-  Form 8801 allows taxpayers who paid AMT in a prior year due to deferral items
-  (timing differences such as ISO exercises, depreciation, depletion, or
-  disposition adjustments) to claim a credit in the current year. The credit is
-  limited to the amount by which the current year's regular tax exceeds the
-  current year's tentative minimum tax.
-
-  Key concepts:
-  - Exclusion items: permanent AMT differences (SALT add-back, medical
-    threshold, private activity bond interest, standard deduction). These do NOT
-    generate a minimum tax credit because the preference is permanent.
-  - Deferral items: timing AMT differences (depreciation, depletion, ISO
-    exercises, disposition basis differences, passive activity adjustments).
-    These DO generate a minimum tax credit because the preference reverses.
-
-  Part I recomputes the prior year's TMT using only exclusion items.
-  Part II calculates the allowable credit and any carryforward.
-  Part III recomputes the exclusion-only TMT using maximum capital gains
-  rates (0%/15%/20%/25%/28%) for the preferential-income portion of the
-  AMT base when the prior year had qualified dividends or net capital gains.
-  The resulting TMT is often lower than the flat 26%/28% AMT rates, which
-  increases the minimum tax credit by attributing more of the prior year
-  AMT to deferral items rather than exclusion items. If Part III produces
-  a lower TMT than Part I Line 11, the lower amount is used.
-
-  Prior year (2024) AMT constants used in Part I (Rev. Proc. 2023-34):
-  - Exemption: Single/HOH $85,700; MFJ/QSS $133,300; MFS $66,650
-  - Phase-out threshold: Single/HOH $609,350; MFJ/QSS $1,218,700; MFS $609,350
-  - 26% rate limit: $232,600 ($116,300 MFS)
-
+  Only individual filing statuses are supported. A tax2026 credit uses prior2025
+  AMT rules, not the new current2026 phaseout. Every amount uses Decimal and IRS
+  whole-dollar rounding. Final2026 instructions, form qualification and independent
+  tax review remain required. The draft is calculation research, not filing evidence.
+  Actual MTFTCE and MTCNOLD worksheets are supplied source facts; this module does
+  not calculate those ancillary worksheets. Foreign-earned-income PartIII source
+  amounts must explicitly confirm the required capital-gain-excess adjustments.
+  Tax2026 requires actual source year, all applicable source amounts and known
+  Form2555/1040NR/capital-gain applicability; omitted amounts are not assumed zero.
+  Legacy tax2025 simple inputs remain unverified compatibility calculations. Positive
+  legacy capital-gain amounts require actual worksheet inputs, never AMT-base stacking.
+  Strict source fields: priorYear, sourceFactsConfirmed, priorYearForm6251Line1And2e,
+  priorYearMinimumTaxCreditNOLDeduction, priorYearMinimumTaxForeignTaxCredit,
+  priorYearForm6251Line10, priorYearUnallowedQualifiedElectricVehicleCredit,
+  priorYearFiledForm2555, priorYearFiledForm1040NR, priorYearCapitalGainsRequired,
+  plus actual priorYearAMT/exclusion adjustments/carryforward. Optional conditional
+  fields preserve unknown: priorYearNetUSRealPropertyGain, priorYearForeignEarnedIncome
+  {form2555Lines45And50, disallowedDeductions, capitalGainAdjustmentsConfirmed},
+  priorYearCapitalGainsWorksheet {method, preferentialIncome, ordinaryIncomeForZeroRate,
+  ordinaryIncomeForFifteenRate, section1250Gain, scheduleDTaxWorksheetLine10}.
 businessRuleValidation:
+  - rule: "original-source-presence"
+    description: "Preserve missing actual facts and keep original defaultable amounts unverified across reparsing."
+    testRef: "tests/models/form-8801-source-facts.test.ts::preserves unknown actual worksheet facts and original-source completeness"
+  - rule: "source-facts"
+    description: "Require source year, complete known facts and applicable worksheets; reject invalid or contradictory facts."
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::rejects missing and contradictory actual source facts"
   - rule: "reference-summary-packet"
-    description: "Inventory support counts this form as business-rule validated only when regression coverage proves the emitted packet artifact stays labeled as a non-filing reference summary and only surfaces the supported Form 8801 prior-year AMT credit computation lines, the allowable current-year credit that flows to Schedule 3, and the tracked carryforward."
+    description: "The summary is review-only, never an IRS filing form or a qualified2026 artifact."
     testRef: "tests/pdf/fill-form-8801.test.ts::buildForm8801ReferenceSummary keeps the packet artifact reference-only and limited to supported prior-year minimum-tax-credit outputs"
-
 lines:
   - line: "1"
-    description: "Exclusion items from prior year Form 6251"
-    formula: "Sum of prior year Form 6251 lines 2a-3 that are exclusion items (SALT add-back, medical threshold difference, private activity bond interest, standard deduction if applicable, other permanent AMT adjustments)"
-    inputs:
-      - "Prior year Form 6251 exclusion items total"
-    edgeCases:
-      - "SALT add-back is the most common exclusion item post-TCJA"
-      - "If the filer used the standard deduction in the prior year, the standard deduction itself is an exclusion item when it was an AMT adjustment"
-    testRef: "tests/engine/forms/form-8801.test.ts::Part I Line 3 - exclusion-only AMTI equals taxable income plus exclusion items"
-
+    description: "Prior-year Form 6251 taxable-income and NOL-source sum"
+    formula: "Actual prior-year Form 6251 line 1 (line 1b for 2025) plus line 2e; never substitute current-year income."
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::uses actual prior return lines and the 2025 tables for a 2026 credit"
   - line: "2"
-    description: "Prior year taxable income"
-    formula: "Enter prior year Form 1040 Line 15"
-    inputs:
-      - "Prior year Form 1040 Line 15 taxable income"
-    testRef: "tests/engine/forms/form-8801.test.ts::Part I Line 3 - exclusion-only AMTI equals taxable income plus exclusion items"
-
+    description: "Prior-year exclusion adjustments"
+    formula: "Actual exclusion-only Form 6251 adjustments and preferences; signed amounts are retained."
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::uses actual prior return lines and the 2025 tables for a 2026 credit"
   - line: "3"
-    description: "Exclusion-only AMTI"
-    formula: "Prior year taxable income + Line 1 exclusion items"
-    inputs:
-      - "Prior year taxable income"
-      - "Form 8801 Line 1"
-    notes: "This is the AMTI that would have resulted if only exclusion items were preferences. Equals AMTI minus deferral items."
-    testRef: "tests/engine/forms/form-8801.test.ts::Part I Line 3 - exclusion-only AMTI when no exclusion items equals taxable income"
-
+    description: "Minimum tax credit net operating loss deduction"
+    formula: "Actual separately computed MTCNOLD under section 172, taking account only of exclusion items; enter deduction as positive source amount."
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::subtracts actual MTCNOLD and applies the nonresident real-property floor"
+  - line: "4"
+    description: "Exclusion-only alternative minimum taxable income"
+    formula: "max(0, line1 + line2 - line3); MFS adds min(prior exemption, 25% * max(0, preliminary line4 - complete-phaseout threshold)). Prior2024 MFS threshold875950 cap66650; prior2025 threshold900350 cap68500."
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::applies the MFS additional amount at its prior-year boundaries"
   - line: "5"
-    description: "AMT exemption amount for prior year filing status"
-    formula: "Use the published 2024 AMT exemption for the prior year filing status: Single/HOH $85,700; MFJ/QSS $133,300; MFS $66,650"
-    inputs:
-      - "Prior year filing status"
-    testRef: "tests/engine/forms/form-8801.test.ts::Part I Line 9 - full exemption for single filer below phase-out"
-
+    description: "Prior-year exemption"
+    formula: "Prior2024 S/HOH85700 MFJ/QSS133300 MFS66650; prior2025 S/HOH88100 MFJ/QSS137000 MFS68500."
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::uses actual prior return lines and the 2025 tables for a 2026 credit"
   - line: "6"
-    description: "Phase-out threshold for prior year filing status"
-    formula: "2024 phase-out thresholds: Single/HOH $609,350; MFJ/QSS $1,218,700; MFS $609,350"
-    inputs:
-      - "Prior year filing status"
-    testRef: "tests/engine/forms/form-8801.test.ts::Part I Line 9 - exemption phases out at 25 cents per dollar over threshold"
-
+    description: "Prior-year exemption phaseout threshold"
+    formula: "Prior2024 S/HOH/MFS609350 MFJ/QSS1218700; prior2025 S/HOH/MFS626350 MFJ/QSS1252700."
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::uses actual prior return lines and the 2025 tables for a 2026 credit"
   - line: "7"
-    description: "Excess of exclusion-only AMTI over phase-out threshold"
-    formula: "max(0, Line 3 - Line 6)"
-    inputs:
-      - "Form 8801 Line 3"
-      - "Form 8801 Line 6"
-    testRef: "tests/engine/forms/form-8801.test.ts::Part I Line 9 - exemption phases out at 25 cents per dollar over threshold"
-
+    description: "Excess over phaseout threshold"
+    formula: "max(0, line4 - line6)"
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::phases out the exemption and uses the prior-year AMT breakpoints"
   - line: "8"
     description: "Exemption reduction"
-    formula: "Line 7 × 25%"
-    inputs:
-      - "Form 8801 Line 7"
-    testRef: "tests/engine/forms/form-8801.test.ts::Part I Line 9 - exemption phases out at 25 cents per dollar over threshold"
-
+    formula: "RoundDollar(line7 * 0.25). The 2026 current-year 50% rule does not replace the prior2025 rule."
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::phases out the exemption and uses the prior-year AMT breakpoints"
   - line: "9"
-    description: "Allowed AMT exemption on exclusion-only AMTI"
-    formula: "max(0, Line 5 - Line 8)"
-    inputs:
-      - "Form 8801 Line 5"
-      - "Form 8801 Line 8"
-    edgeCases:
-      - "Exemption fully phases out when exclusion-only AMTI exceeds threshold by 4× the base exemption"
-    testRef: "tests/engine/forms/form-8801.test.ts::Part I Line 9 - exemption fully phases out for very high AMTI"
-
+    description: "Allowed exemption"
+    formula: "max(0, line5 - line8)"
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::phases out the exemption and uses the prior-year AMT breakpoints"
   - line: "10"
-    description: "AMT base on exclusion items"
-    formula: "max(0, Line 3 - Line 9)"
-    inputs:
-      - "Form 8801 Line 3"
-      - "Form 8801 Line 9"
-    testRef: "tests/engine/forms/form-8801.test.ts::Part I Line 11 - TMT uses 26 percent rate below breakpoint"
-
+    description: "Taxable excess on exclusion items"
+    formula: "max(0, line4 - line9); for actual prior Form1040-NR filers, at least min(actual net U.S. real-property gain, line4)."
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::subtracts actual MTCNOLD and applies the nonresident real-property floor"
   - line: "11"
-    description: "Tentative minimum tax on exclusion items"
-    formula: "26% on the first $232,600 ($116,300 MFS) of Line 10, plus 28% on any remainder. Round to the nearest dollar."
-    inputs:
-      - "Form 8801 Line 10"
-      - "Prior year filing status"
-    edgeCases:
-      - "MFS filers use $116,300 as the 26%/28% breakpoint"
-      - "If the taxpayer had qualified dividends or net capital gains, Part III produces a lower TMT using capital gains rates"
-    testRef: "tests/engine/forms/form-8801.test.ts::Part I Line 11 - TMT uses 26 percent and 28 percent rates with prior year breakpoint"
-
+    description: "Tax on exclusion items before foreign tax credit"
+    formula: "RoundDollar(26% first prior-year breakpoint + 28% excess); prior2024 breakpoint232600/MFS116300; prior2025 239100/MFS119550. If PartIII required, use line55. Form2555 uses actual Foreign Earned Income Tax Worksheet."
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::computes the foreign earned income worksheet from actual excluded income"
   - line: "12"
-    description: "Prior year regular tax"
-    formula: "Enter prior year regular tax liability (before credits)"
-    inputs:
-      - "Prior year regular tax before credits"
-    testRef: "tests/engine/forms/form-8801.test.ts::Part I Line 13 - net minimum tax on exclusion items is TMT minus regular tax floored at zero"
-
+    description: "Minimum tax foreign tax credit on exclusion items"
+    formula: "Actual completed MTFTCE worksheet amount, not ordinary FTC or silently assumed zero; cannot exceed line11."
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::subtracts actual MTFTCE before the prior Form6251 comparison tax"
   - line: "13"
-    description: "Net minimum tax on exclusion items"
-    formula: "max(0, Line 11 - Line 12)"
-    inputs:
-      - "Form 8801 Line 11"
-      - "Form 8801 Line 12"
-    notes: "This is the AMT that would have been owed if only exclusion items were preferences. It represents the 'permanent' portion of prior year AMT."
-    testRef: "tests/engine/forms/form-8801.test.ts::Part I Line 13 - net minimum tax positive when exclusion TMT exceeds regular tax"
-
+    description: "Tentative minimum tax on exclusion items"
+    formula: "line11 - line12"
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::subtracts actual MTFTCE before the prior Form6251 comparison tax"
   - line: "14"
-    description: "Prior year AMT"
-    formula: "Enter prior year Form 6251 line 11 (the actual AMT paid)"
-    inputs:
-      - "Prior year Form 6251 line 11"
-    testRef: "tests/engine/forms/form-8801.test.ts::Part II Line 16 - minimum tax credit equals prior year AMT minus net exclusion-item AMT"
-
+    description: "Prior-year comparison regular tax"
+    formula: "Actual prior-year Form6251 line10, which is not simply Form1040 line16."
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::subtracts actual MTFTCE before the prior Form6251 comparison tax"
   - line: "15"
     description: "Net minimum tax on exclusion items"
-    formula: "Enter Line 13 from Part I"
-    inputs:
-      - "Form 8801 Line 13"
-    testRef: "tests/engine/forms/form-8801.test.ts::Part II Line 16 - minimum tax credit equals prior year AMT minus net exclusion-item AMT"
-
+    formula: "max(0, line13 - line14)"
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::subtracts actual MTFTCE before the prior Form6251 comparison tax"
   - line: "16"
-    description: "Minimum tax credit from prior year"
-    formula: "max(0, Line 14 - Line 15)"
-    inputs:
-      - "Form 8801 Line 14"
-      - "Form 8801 Line 15"
-    notes: "This is the AMT attributable to deferral items — the amount that generates a credit."
-    edgeCases:
-      - "Zero when all of the prior year AMT was due to exclusion items"
-    testRef: "tests/engine/forms/form-8801.test.ts::Part II Line 16 - minimum tax credit is zero when all AMT was from exclusion items"
-
+    description: "Prior-year alternative minimum tax"
+    formula: "Actual prior-year Form6251 line11."
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::retains a negative line18 to reduce existing carryforward"
   - line: "17"
-    description: "Unused minimum tax credit carryforward"
-    formula: "Enter unused minimum tax credit from years before the prior year (carryforward from prior Form 8801 Line 26)"
-    inputs:
-      - "Unused minimum tax credit carryforward from earlier years"
-    testRef: "tests/engine/forms/form-8801.test.ts::Part II Line 18 - carryforward adds to current-year available credit"
-
+    description: "Net minimum tax on exclusion items"
+    formula: "Copy line15."
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::retains a negative line18 to reduce existing carryforward"
   - line: "18"
-    description: "Total available minimum tax credit"
-    formula: "Line 16 + Line 17"
-    inputs:
-      - "Form 8801 Line 16"
-      - "Form 8801 Line 17"
-    testRef: "tests/engine/forms/form-8801.test.ts::Part II Line 18 - carryforward adds to current-year available credit"
-
+    description: "Signed prior-year credit adjustment"
+    formula: "line16 - line17; preserve negative amount before combining carryforward."
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::retains a negative line18 to reduce existing carryforward"
+  - line: "19"
+    description: "Credit carryforward from prior return"
+    formula: "Actual prior-year Form8801 line26."
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::retains a negative line18 to reduce existing carryforward"
+  - line: "20"
+    description: "Unallowed legacy qualified electric vehicle credit"
+    formula: "Actual prior-year section30(b)(3)(B) credit under pre-2009 law; this is not a modern clean vehicle credit."
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::combines the actual legacy electric vehicle credit and after-credit limit"
+  - line: "21"
+    description: "Combined credit pool"
+    formula: "line18 + line19 + line20; if zero or negative, no credit or carryforward and stop physical form."
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::retains a negative line18 to reduce existing carryforward"
   - line: "22"
-    description: "Current year regular tax before credits"
-    formula: "Enter current year Form 1040 Line 16"
-    inputs:
-      - "Current year regular tax (Form 1040 Line 16)"
-    testRef: "tests/engine/forms/form-8801.test.ts::Part II Line 24 - current year limitation is regular tax minus TMT"
-
+    description: "Current-year regular income tax minus allowable credits"
+    formula: "Current Form1040 line16 + Schedule2 line1z minus Form1040 line19 and Schedule3 lines1 through6z excluding line6b MTC and line6k Form8912; floor0. Supplied as actual computed currentYearRegularTaxAfterCredits."
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::combines the actual legacy electric vehicle credit and after-credit limit"
   - line: "23"
-    description: "Current year tentative minimum tax"
-    formula: "Enter current year Form 6251 Line 10"
-    inputs:
-      - "Current year Form 6251 Line 10 tentative minimum tax"
-    testRef: "tests/engine/forms/form-8801.test.ts::Part II Line 24 - current year limitation is regular tax minus TMT"
-
+    description: "Current-year tentative minimum tax"
+    formula: "Actual current Form6251 line9."
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::combines the actual legacy electric vehicle credit and after-credit limit"
   - line: "24"
-    description: "Current year limitation"
-    formula: "max(0, Line 22 - Line 23)"
-    inputs:
-      - "Form 8801 Line 22"
-      - "Form 8801 Line 23"
-    notes: "The credit cannot exceed the amount by which current year regular tax exceeds current year TMT."
-    edgeCases:
-      - "Zero when current year TMT exceeds regular tax (meaning the taxpayer is in AMT this year)"
-    testRef: "tests/engine/forms/form-8801.test.ts::Part II Line 24 - limitation is zero when TMT exceeds regular tax"
-
+    description: "Current-year credit limitation"
+    formula: "max(0, line22 - line23)"
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::combines the actual legacy electric vehicle credit and after-credit limit"
   - line: "25"
-    description: "Minimum tax credit allowed this year"
-    formula: "min(Line 18, Line 24)"
-    inputs:
-      - "Form 8801 Line 18"
-      - "Form 8801 Line 24"
-    notes: "Flows to Schedule 3 Line 6a as a nonrefundable credit."
-    testRef: "tests/engine/forms/form-8801.test.ts::Part II Line 25 - credit limited when available exceeds limitation"
-
+    description: "Allowed minimum tax credit"
+    formula: "min(max(0,line21),line24), flows to Schedule3 line6b."
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::combines the actual legacy electric vehicle credit and after-credit limit"
   - line: "26"
     description: "Carryforward to next year"
-    formula: "Line 18 - Line 25"
-    inputs:
-      - "Form 8801 Line 18"
-      - "Form 8801 Line 25"
-    notes: "Unused minimum tax credit carries forward indefinitely."
-    testRef: "tests/engine/forms/form-8801.test.ts::Part II Line 26 - unused credit carries forward to next year"
-
-  - line: "packet"
-    description: "Draft packet inclusion rule for supported Form 8801 prior-year minimum tax credit outputs"
-    formula: "When the return includes supported Form 8801 input, include a non-filing reference-summary PDF in the packet that lists the supported prior-year exclusion-item recomputation lines, the current-year limitation and allowed minimum tax credit, and the carryforward to next year."
-    irsRef: "Form 8801 Instructions; Schedule 3 prior-year minimum tax credit line"
-    notes: "This packet slice intentionally emits a deterministic reference summary instead of attempting to recreate the official filed Form 8801, so the draft packet stays honest about what the product computed."
-    testRef: "tests/pdf/fill-form-8801.test.ts::fillReturn includes a Form 8801 reference summary when prior-year minimum tax credit input is present"
-
-  # ── Part III: Tax on Exclusion Items Using Maximum Capital Gains Rates ──
-
-  - line: "partIII"
-    description: "TMT on exclusion items recomputed using maximum capital gains rates"
-    formula: >
-      When the prior year had qualified dividends or net long-term capital gain,
-      separate the AMT base (Line 10) into ordinary and preferential portions.
-      Apply 26%/28% AMT rates to the ordinary portion. Apply 0%/15%/20%/25%/28%
-      capital gains rates to the preferential portion using the prior year
-      capital gains rate thresholds. Take the lesser of this mixed-rate TMT and
-      the flat-rate Line 11 TMT. Use the lower TMT for Line 13 onward, which
-      increases the minimum tax credit.
-    irsRef: "Form 8801 Instructions, Part III; IRC §1(h); Schedule D Tax Worksheet"
-    inputs:
-      - "Form 8801 Line 10 (AMT base on exclusion items)"
-      - "Prior year qualified dividends"
-      - "Prior year net long-term capital gain"
-      - "Prior year unrecaptured section 1250 gain"
-      - "Prior year collectibles (28% rate) gain"
-      - "Prior year capital gains rate thresholds"
-    notes: >
-      The preferential income for this computation is the smaller of the AMT base
-      (Line 10) and the sum of prior year qualified dividends plus net LTCG.
-      The ordinary portion (AMT base minus preferential) uses 26%/28% AMT rates.
-      The preferential portion stacks through 0%/15% brackets first, then 25%
-      (unrecaptured section 1250), 28% (collectibles), and 20% (remainder).
-      The 0% and 15% bracket thresholds are the prior year published thresholds.
-    edgeCases:
-      - "No prior year qualified dividends or LTCG: Part III does not apply, Line 11 is used as-is"
-      - "All AMT base is preferential income: ordinary portion is zero, entire amount uses capital gains rates"
-      - "Low AMT base within the 0% bracket: Part III TMT may be zero, significantly increasing the credit"
-      - "Unrecaptured section 1250 gain at 25% max rate is still lower than the 26% AMT rate"
-      - "Part III can never produce a TMT higher than Line 11 because of the lesser-of check"
-    testRef: "tests/engine/forms/form-8801.test.ts::Part III - capital gains rates produce lower TMT when prior year had qualified dividends"
+    formula: "max(0,line21) - line25; no invented expiration."
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::retains a negative line18 to reduce existing carryforward"
+  - line: "27"
+    description: "PartIII tax base"
+    formula: "line10, or actual Foreign Earned Income Tax Worksheet line3"
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::follows every PartIII line using actual regular-tax worksheet sources"
+  - line: "28"
+    description: "Preferential-income worksheet source"
+    formula: "Actual prior QD/CG Tax Worksheet line4 or ScheduleD Tax Worksheet line13, refigured for AMT where necessary"
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::follows every PartIII line using actual regular-tax worksheet sources"
+  - line: "29"
+    description: "Unrecaptured section1250 gain"
+    formula: "Actual prior ScheduleD line19; skipped for qualified-dividends worksheet method"
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::follows every PartIII line using actual regular-tax worksheet sources"
+  - line: "30"
+    description: "Preferential and section1250 gain cap"
+    formula: "QD method line28; ScheduleD method min(line28 + line29, actual ScheduleD Tax Worksheet line10)"
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::follows every PartIII line using actual regular-tax worksheet sources"
+  - line: "31"
+    description: "Gain subject to preferential computation"
+    formula: "min(line27,line30)"
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::follows every PartIII line using actual regular-tax worksheet sources"
+  - line: "32"
+    description: "Ordinary AMT portion"
+    formula: "line27 - line31"
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::follows every PartIII line using actual regular-tax worksheet sources"
+  - line: "33"
+    description: "Ordinary AMT tax"
+    formula: "Prior-year 26%/28% tax on line32, rounded once"
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::follows every PartIII line using actual regular-tax worksheet sources"
+  - line: "34"
+    description: "Zero-rate threshold"
+    formula: "Prior2024 S/MFS47025 MFJ/QSS94050 HOH63000; prior2025 S/MFS48350 MFJ/QSS96700 HOH64750"
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::follows every PartIII line using actual regular-tax worksheet sources"
+  - line: "35"
+    description: "Actual regular-tax ordinary income for zero-rate capacity"
+    formula: "Prior QD/CG worksheet line5 or ScheduleD Tax Worksheet line14; not line32 AMT ordinary portion"
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::follows every PartIII line using actual regular-tax worksheet sources"
+  - line: "36"
+    description: "Zero-rate capacity"
+    formula: "max(0,line34 - line35)"
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::follows every PartIII line using actual regular-tax worksheet sources"
+  - line: "37"
+    description: "Preferential income limited by base"
+    formula: "min(line27,line28)"
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::follows every PartIII line using actual regular-tax worksheet sources"
+  - line: "38"
+    description: "Zero-rate capital gain"
+    formula: "min(line36,line37)"
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::follows every PartIII line using actual regular-tax worksheet sources"
+  - line: "39"
+    description: "Remaining preferential income"
+    formula: "line37 - line38"
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::follows every PartIII line using actual regular-tax worksheet sources"
+  - line: "40"
+    description: "Fifteen-percent threshold"
+    formula: "Prior2024 S518900 MFS291850 MFJ/QSS583750 HOH551350; prior2025 S533400 MFS300000 MFJ/QSS600050 HOH566700"
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::follows every PartIII line using actual regular-tax worksheet sources"
+  - line: "41"
+    description: "Copy zero-rate capacity"
+    formula: "line36"
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::follows every PartIII line using actual regular-tax worksheet sources"
+  - line: "42"
+    description: "Actual regular-tax ordinary income for fifteen-percent capacity"
+    formula: "Prior QD/CG worksheet line5 or ScheduleD Tax Worksheet line21, with applicable Form2555 adjustments"
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::follows every PartIII line using actual regular-tax worksheet sources"
+  - line: "43"
+    description: "Income consuming fifteen-percent capacity"
+    formula: "line41 + line42"
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::follows every PartIII line using actual regular-tax worksheet sources"
+  - line: "44"
+    description: "Fifteen-percent capacity"
+    formula: "max(0,line40 - line43)"
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::follows every PartIII line using actual regular-tax worksheet sources"
+  - line: "45"
+    description: "Fifteen-percent gain"
+    formula: "min(line39,line44)"
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::follows every PartIII line using actual regular-tax worksheet sources"
+  - line: "46"
+    description: "Fifteen-percent tax"
+    formula: "RoundDollar(line45 * 0.15)"
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::follows every PartIII line using actual regular-tax worksheet sources"
+  - line: "47"
+    description: "Zero- and fifteen-percent gains"
+    formula: "line38 + line45"
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::follows every PartIII line using actual regular-tax worksheet sources"
+  - line: "48"
+    description: "Twenty-percent gain"
+    formula: "line37 - line47"
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::follows every PartIII line using actual regular-tax worksheet sources"
+  - line: "49"
+    description: "Twenty-percent tax"
+    formula: "RoundDollar(line48 * 0.20)"
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::follows every PartIII line using actual regular-tax worksheet sources"
+  - line: "50"
+    description: "Ordinary and preferential gain subtotal"
+    formula: "line32 + line47 + line48; only applicable with section1250 gain"
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::follows every PartIII line using actual regular-tax worksheet sources"
+  - line: "51"
+    description: "Section1250 gain at maximum25%"
+    formula: "line27 - line50"
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::follows every PartIII line using actual regular-tax worksheet sources"
+  - line: "52"
+    description: "Section1250 tax"
+    formula: "RoundDollar(line51 * 0.25)"
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::follows every PartIII line using actual regular-tax worksheet sources"
+  - line: "53"
+    description: "Capital-gain method tax"
+    formula: "line33 + line46 + line49 + line52"
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::follows every PartIII line using actual regular-tax worksheet sources"
+  - line: "54"
+    description: "All-income AMT comparison"
+    formula: "Prior-year 26%/28% tax on line27"
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::follows every PartIII line using actual regular-tax worksheet sources"
+  - line: "55"
+    description: "Maximum-rate method result"
+    formula: "min(line53,line54); use on line11 or Foreign Earned Income Tax Worksheet line4"
+    testRef: "tests/engine/forms/form-8801-2026.test.ts::follows every PartIII line using actual regular-tax worksheet sources"

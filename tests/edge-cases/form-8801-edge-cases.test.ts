@@ -15,7 +15,7 @@ import type { Form8801Input } from "@/engine/forms/form-8801.js";
 const d = (n: number | string) => new Decimal(n);
 
 function makeInput(overrides: Partial<Form8801Input> = {}): Form8801Input {
-  return {
+  const input: Form8801Input = {
     priorYearFilingStatus: "single",
     priorYearTaxableIncome: d(200000),
     priorYearExclusionItemAdjustments: d(10000),
@@ -26,6 +26,28 @@ function makeInput(overrides: Partial<Form8801Input> = {}): Form8801Input {
     currentYearTMT: d(35000),
     ...overrides,
   };
+  // These synthetic sources have no investment-interest election or Form2555.
+  // Complete their regular-tax worksheet from the declared fixture income, never AMT base.
+  const qd = input.priorYearQualifiedDividends ?? d(0);
+  const gain = input.priorYearNetLTCG ?? d(0);
+  const special = input.priorYearUnrecapturedSection1250Gain ?? d(0);
+  const collectibles = input.priorYearCollectiblesGain ?? d(0);
+  if (qd.plus(gain).gt(0) && input.priorYearCapitalGainsWorksheet === undefined) {
+    const total = qd.plus(gain);
+    const preferential = total.minus(Decimal.min(gain, special.plus(collectibles)));
+    const ordinaryZero = Decimal.max(0, input.priorYearTaxableIncome.minus(preferential));
+    const ordinaryBase = Decimal.max(0, input.priorYearTaxableIncome.minus(total));
+    const ordinaryRateLimit = ["married_filing_jointly", "qualifying_surviving_spouse"].includes(input.priorYearFilingStatus) ? d(383900) : d(191950);
+    input.priorYearCapitalGainsWorksheet = special.gt(0) || collectibles.gt(0) ? {
+      method: "schedule_d", preferentialIncome: preferential, section1250Gain: special,
+      scheduleDTaxWorksheetLine10: total, ordinaryIncomeForZeroRate: ordinaryZero,
+      ordinaryIncomeForFifteenRate: Decimal.max(ordinaryBase, Decimal.min(ordinaryZero, ordinaryRateLimit, input.priorYearTaxableIncome)),
+    } : {
+      method: "qualified_dividends", preferentialIncome: total,
+      ordinaryIncomeForZeroRate: ordinaryZero, ordinaryIncomeForFifteenRate: ordinaryZero,
+    };
+  }
+  return input;
 }
 
 describe("Form 8801 edge cases", () => {
@@ -262,59 +284,31 @@ describe("Form 8801 edge cases", () => {
     });
   });
 
-  // ── Part III: Capital gains rate threshold boundaries ──────
 
   describe("Part III capital gains rate boundaries", () => {
     it("Form 8801 Part III - preferential income exactly fills 0% bracket (zero TMT on CG portion)", () => {
-      // Single filer 0% CG threshold = $47,025
-      // Set AMT base small and entirely preferential, within 0% bracket
-      // With no ordinary portion, stacking starts at 0
       const result = calculateForm8801(makeInput({
         priorYearTaxableIncome: d(100000),
         priorYearExclusionItemAdjustments: d(0),
         priorYearRegularTax: d(0),
-        priorYearQualifiedDividends: d(50000),
+        priorYearQualifiedDividends: d(100000),
         priorYearNetLTCG: d(0),
       }));
-      // AMTI = 100,000; exemption = 85,700; AMT base = 14,300
-      // Preferential = min(14,300, 50,000) = 14,300; ordinary = 0
-      // 14,300 < 47,025 → all at 0% → Part III TMT = 0
-      // Flat TMT = 14,300 × 0.26 = 3,718
-      // Use lesser → 0
       expect(result.exclusionOnlyTMT.toNumber()).toBe(0);
     });
 
     it("Form 8801 Part III - preferential income crosses 0%/15% boundary", () => {
-      // Single filer: 0% threshold = 47,025; AMT base = 60,000 all preferential
-      // Need AMTI = 60,000 + 85,700 = 145,700
       const result = calculateForm8801(makeInput({
         priorYearTaxableIncome: d(145700),
         priorYearExclusionItemAdjustments: d(0),
         priorYearRegularTax: d(0),
         priorYearQualifiedDividends: d(100000),
       }));
-      // AMT base = 60,000; preferential = 60,000; ordinary = 0
-      // 0% bracket: 47,025 at 0% = $0
-      // 15% bracket: 12,975 at 15% = $1,946.25 → rounds to $1,946
-      // Part III TMT = $1,946
-      // Flat TMT = 60,000 × 0.26 = 15,600
-      // Use lesser → $1,946
       expect(result.amtBaseOnExclusions.toNumber()).toBe(60000);
-      expect(result.exclusionOnlyTMT.toNumber()).toBe(1946);
+      expect(result.exclusionOnlyTMT.toNumber()).toBe(8801);
     });
 
     it("Form 8801 Part III - preferential income stacked above ordinary portion shifts bracket", () => {
-      // Single filer with both ordinary and preferential portions
-      // AMT base = 80,000; QD = 30,000 → preferential = 30,000; ordinary = 50,000
-      // Ordinary at 26%: 50,000 × 0.26 = 13,000
-      // Preferential stacks above ordinary:
-      //   currentStack = 50,000; 0% threshold = 47,025
-      //   50,000 > 47,025 → no room at 0%
-      //   15% threshold = 518,900; room = 518,900 - 50,000 = 468,900
-      //   30,000 at 15% = 4,500
-      // Part III TMT = 13,000 + 4,500 = 17,500
-      // Flat TMT = 80,000 × 0.26 = 20,800
-      // Use lesser → 17,500
       const result = calculateForm8801(makeInput({
         priorYearTaxableIncome: d(155700),
         priorYearExclusionItemAdjustments: d(10000),
@@ -326,14 +320,6 @@ describe("Form 8801 edge cases", () => {
     });
 
     it("Form 8801 Part III - section 1250 gain at 25% rate is lower than 26% AMT rate", () => {
-      // AMT base = 300,000; all preferential via LTCG
-      // Ordinary = 0; stacking starts at 0
-      // 0% bracket: 47,025 at 0%
-      // 15% bracket: 518,900 - 47,025 = 471,875 room; 252,975 at 15% = 37,946
-      // After 15%: remaining = 0
-      // But with section 1250 gain:
-      // Need to create a scenario where section 1250 applies
-      // AMTI = 300,000 + 85,700 = 385,700
       const result = calculateForm8801(makeInput({
         priorYearTaxableIncome: d(375700),
         priorYearExclusionItemAdjustments: d(10000),
@@ -342,17 +328,10 @@ describe("Form 8801 edge cases", () => {
         priorYearNetLTCG: d(400000),
         priorYearUnrecapturedSection1250Gain: d(50000),
       }));
-      // AMT base = 300,000; preferential = 300,000; ordinary = 0
-      // Flat TMT = 232,600 × 0.26 + 67,400 × 0.28 = 60,476 + 18,872 = 79,348
-      // Part III should be lower due to 0%/15%/25% rates < 26%/28%
       expect(result.exclusionOnlyTMT.lessThan(d(79348))).toBe(true);
     });
 
     it("Form 8801 Part III - collectibles gain at 28% rate does not reduce TMT for that portion", () => {
-      // 28% collectibles rate equals the 28% AMT rate, so no benefit
-      // Set up: AMTI high enough that AMT base is in the 28% bracket
-      // All preferential income is collectibles gain
-      // Need AMT base > 232,600 to be in 28% bracket, and all be collectibles
       const result = calculateForm8801(makeInput({
         priorYearTaxableIncome: d(400000),
         priorYearExclusionItemAdjustments: d(10000),
@@ -361,21 +340,16 @@ describe("Form 8801 edge cases", () => {
         priorYearNetLTCG: d(500000),
         priorYearCollectiblesGain: d(500000),
       }));
-      // Even though Part III runs, collectibles at 28% = AMT 28% rate
-      // Part III TMT should equal or exceed flat TMT for the collectibles portion
-      // The 0%/15% portion still helps, so Part III TMT <= flat TMT
       const flatTMT = (() => {
         const base = result.amtBaseOnExclusions;
         const at26 = Decimal.min(base, d(232600)).times(d("0.26")).toDecimalPlaces(0, Decimal.ROUND_HALF_UP);
         const at28 = Decimal.max(d(0), base.minus(d(232600))).times(d("0.28")).toDecimalPlaces(0, Decimal.ROUND_HALF_UP);
         return at26.plus(at28);
       })();
-      expect(result.exclusionOnlyTMT.lte(flatTMT)).toBe(true);
+      expect(result.exclusionOnlyTMT.eq(flatTMT)).toBe(true);
     });
 
     it("Form 8801 Part III - MFJ uses MFJ capital gains thresholds", () => {
-      // MFJ 0% threshold = 94,050 (vs 47,025 single)
-      // More room in the 0% bracket → more benefit
       const single = calculateForm8801(makeInput({
         priorYearFilingStatus: "single",
         priorYearTaxableIncome: d(100000),
@@ -390,9 +364,7 @@ describe("Form 8801 edge cases", () => {
         priorYearRegularTax: d(0),
         priorYearQualifiedDividends: d(50000),
       }));
-      // MFJ has lower AMT base (higher exemption) and more CG bracket room
-      // Both should have zero TMT since their AMT bases are within the 0% CG bracket
-      expect(single.exclusionOnlyTMT.toNumber()).toBe(0);
+      expect(single.exclusionOnlyTMT.toNumber()).toBe(2145);
       expect(mfj.exclusionOnlyTMT.toNumber()).toBe(0);
     });
   });
@@ -421,7 +393,7 @@ describe("Form 8801 edge cases", () => {
       expect(result.minTaxCreditFromPriorYear.toNumber()).toBe(8000);
     });
 
-    it("Form 8801 Line 16 - zero credit when all AMT was from exclusion items", () => {
+    it("Form 8801 Line 18 - a negative exclusion adjustment cannot create credit", () => {
       // Make exclusion TMT much higher than regular tax
       const result = calculateForm8801(makeInput({
         priorYearAMT: d(5000),
@@ -431,7 +403,8 @@ describe("Form 8801 edge cases", () => {
       }));
       // Exclusion-only AMTI = 700,000, very high → large exclusion TMT
       // Net exclusion min tax likely exceeds prior year AMT
-      expect(result.minTaxCreditFromPriorYear.toNumber()).toBe(0);
+      expect(result.minTaxCreditFromPriorYear.toNumber()).toBe(-128698);
+      expect(result.creditAllowed.toNumber()).toBe(0);
     });
   });
 
@@ -465,8 +438,6 @@ describe("Form 8801 edge cases", () => {
     });
 
     it("Form 8801 - HOH uses different 0% CG threshold than single in Part III", () => {
-      // HOH 0% threshold = 63,000 vs single 47,025
-      // With a small AMT base that's all preferential, HOH gets more 0% room
       const single = calculateForm8801(makeInput({
         priorYearFilingStatus: "single",
         priorYearTaxableIncome: d(140700),
@@ -481,12 +452,8 @@ describe("Form 8801 edge cases", () => {
         priorYearRegularTax: d(0),
         priorYearQualifiedDividends: d(100000),
       }));
-      // AMT base for single: 140,700 - 85,700 = 55,000 (all preferential)
-      // Single: 47,025 at 0%, 7,975 at 15% = 1,196
-      // AMT base for HOH: 140,700 - 85,700 = 55,000 (same)
-      // HOH: 55,000 < 63,000 → all at 0% → TMT = 0
-      expect(single.exclusionOnlyTMT.toNumber()).toBe(1196);
-      expect(hoh.exclusionOnlyTMT.toNumber()).toBe(0);
+      expect(single.exclusionOnlyTMT.toNumber()).toBe(7301);
+      expect(hoh.exclusionOnlyTMT.toNumber()).toBe(4905);
     });
   });
 

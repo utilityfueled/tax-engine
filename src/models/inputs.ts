@@ -1292,19 +1292,49 @@ export const Form5329Schema = z.object({
   rmdShortfallCorrectedWithinWindow: z.boolean().default(false), // Part IX Line 57 - whether the shortfall was corrected within the IRC 4974(d) correction window (reduces rate from 25% to 10%)
 });
 
-export const Form8801Schema = z.object({
+export const Form8801Schema = z.preprocess(value => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const record = value as Record<string, unknown>;
+  const required = ["priorYearFilingStatus", "priorYearAMT", "priorYearExclusionItemAdjustments", "unusedMinimumTaxCreditCarryforward"];
+  return { ...record, sourceFactsComplete: record.sourceFactsComplete !== false && required.every(key => record[key] !== undefined) };
+}, z.object({
+  sourceFactsComplete: z.boolean().optional(),
   priorYearFilingStatus: FilingStatusSchema,
-  priorYearTaxableIncome: decimal, // Prior year Form 1040 Line 15
-  priorYearExclusionItemAdjustments: optionalDecimal, // Sum of prior year 6251 exclusion items (SALT, etc.)
-  priorYearAMT: optionalDecimal, // Prior year Form 6251 Line 11
-  priorYearRegularTax: decimal, // Prior year regular tax before credits
-  unusedMinimumTaxCreditCarryforward: optionalDecimal, // Carryforward from earlier years
-  // Part III inputs — prior year capital gains for maximum capital gains rate recomputation
-  priorYearQualifiedDividends: optionalDecimal, // Prior year qualified dividends
-  priorYearNetLTCG: optionalDecimal, // Prior year net long-term capital gain (Schedule D Line 15, zero-floored)
-  priorYearUnrecapturedSection1250Gain: optionalDecimal, // Prior year unrecaptured §1250 gain (25% max rate)
-  priorYearCollectiblesGain: optionalDecimal, // Prior year collectibles/§1202 gain (28% max rate)
-});
+  priorYearTaxableIncome: decimal, // Legacy2025 alias only; verified path uses actual6251 sources.
+  priorYearExclusionItemAdjustments: optionalDecimal,
+  priorYearAMT: optionalDecimal,
+  priorYearRegularTax: decimal, // Legacy2025 alias only; verified path uses actual6251 line10.
+  unusedMinimumTaxCreditCarryforward: optionalDecimal,
+  priorYearQualifiedDividends: optionalDecimal,
+  priorYearNetLTCG: optionalDecimal,
+  priorYearUnrecapturedSection1250Gain: optionalDecimal,
+  priorYearCollectiblesGain: optionalDecimal,
+  // Unknown source facts remain absent. Current-year limitations are calculated by the engine.
+  priorYear: z.number().int().optional(),
+  sourceFactsConfirmed: z.boolean().optional(),
+  priorYearForm6251Line1And2e: decimal.optional(),
+  priorYearMinimumTaxCreditNOLDeduction: decimal.optional(),
+  priorYearMinimumTaxForeignTaxCredit: decimal.optional(),
+  priorYearForm6251Line10: decimal.optional(),
+  priorYearUnallowedQualifiedElectricVehicleCredit: decimal.optional(),
+  priorYearFiledForm2555: z.boolean().optional(),
+  priorYearFiledForm1040NR: z.boolean().optional(),
+  priorYearNetUSRealPropertyGain: decimal.optional(),
+  priorYearCapitalGainsRequired: z.boolean().optional(),
+  priorYearForeignEarnedIncome: z.object({
+    form2555Lines45And50: decimal,
+    disallowedDeductions: decimal,
+    capitalGainAdjustmentsConfirmed: z.boolean().optional(),
+  }).optional(),
+  priorYearCapitalGainsWorksheet: z.object({
+    method: z.enum(["qualified_dividends", "schedule_d"]),
+    preferentialIncome: decimal,
+    ordinaryIncomeForZeroRate: decimal,
+    ordinaryIncomeForFifteenRate: decimal,
+    section1250Gain: decimal.optional(),
+    scheduleDTaxWorksheetLine10: decimal.optional(),
+  }).optional(),
+}));
 
 export const Form8880Schema = z.object({
   primaryElectiveDeferrals: optionalDecimal, // Line 1 column (a)
