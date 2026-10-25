@@ -30,11 +30,11 @@ function findLine(result: ReturnType<typeof calculateFederalTax>, form: string, 
   return result.allLines.find((l) => l.form === form && l.line === line);
 }
 
-function make1098E(lender: string, amount: string, includesCapitalized = false): Form1098E {
+function make1098E(lender: string, amount: string, excludesCapitalized = false): Form1098E {
   return {
     lender,
     studentLoanInterestReceived: amount,
-    includesOriginationFeesOrCapitalizedInterest: includesCapitalized,
+    box2ExcludesOriginationFeesOrCapitalizedInterest: excludesCapitalized,
   };
 }
 
@@ -140,7 +140,7 @@ describe("Form 1098-E aggregation", () => {
     expect(aggLine).toBeUndefined();
   });
 
-  test("Box 2 capitalized interest flag appears in audit trail", () => {
+  test("actual Box 2 exclusion appears in audit trail", () => {
     const result = calculateForm1098E([
       make1098E("Navient", "1800", true),
     ]);
@@ -148,7 +148,7 @@ describe("Form 1098-E aggregation", () => {
       (l) => l.form === "Form 1098-E" && l.line === "1"
     );
     expect(line).toBeDefined();
-    expect(line!.formula).toContain("capitalized");
+    expect(line!.formula).toContain("does not include origination fees and/or capitalized interest");
   });
 
   test("combined audit line is produced when both 1098-E and manual exist", () => {
@@ -501,7 +501,7 @@ describe("Form 1098-E edge cases", () => {
     expect(withDeduction.totalTax.toNumber()).toBeLessThan(withoutDeduction.totalTax.toNumber());
   });
 
-  test("1098-E with capitalized interest flag is correctly reported in results", () => {
+  test("1098-E with actual Box2 exclusion is correctly reported in results", () => {
     const result = calculateFederalTax(makeInput({
       form1098E: [make1098E("Navient", "1500", true)],
     }));
@@ -509,12 +509,12 @@ describe("Form 1098-E edge cases", () => {
     expect(result.form1098ESummary).toBeDefined();
     expect(result.form1098ESummary!.totalForm1098EInterest.toNumber()).toBe(1500);
 
-    // Audit trail should mention capitalized interest
+    // The checked source excludes certain interest; no additional amount is invented.
     const form1098ELines = result.allLines.filter(
       (l) => l.form === "Form 1098-E"
     );
     const capitalizedLine = form1098ELines.find(
-      (l) => l.formula.includes("capitalized")
+      (l) => l.formula.includes("does not include origination fees and/or capitalized interest")
     );
     expect(capitalizedLine).toBeDefined();
   });

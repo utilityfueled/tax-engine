@@ -2129,7 +2129,7 @@ describe("workspace engine preview", () => {
     expect(preview?.metrics.refund).toBe("0");
     expect(preview?.assumptions).toEqual(expect.arrayContaining([
       "The confirmed 2025 Form 1098-E upload contributes $2,100 of student loan interest.",
-      "This student loan preview keeps any uploaded capitalized-interest indicator attached to Form 1098-E before Schedule 1 Line 21 is recomputed.",
+      "Actual Form 1098-E Box 2 status is preserved when supplied; a legacy inclusion flag does not establish that checkbox or additional interest.",
       "This student loan preview assumes no additional below-threshold interest needs manual entry beyond the uploaded statements."
     ]));
     expect(preview?.highlightedLines).toEqual(expect.arrayContaining([

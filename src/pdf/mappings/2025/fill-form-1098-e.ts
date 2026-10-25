@@ -23,7 +23,8 @@ export const FORM_1098_E_REFERENCE_FILENAME = "f1098e-reference-filled.pdf";
 export interface Form1098EReferenceSummaryForm {
   lender: string;
   box1StudentLoanInterest: string;
-  includesOriginationFeesOrCapitalizedInterest: boolean;
+  box2ExcludesOriginationFeesOrCapitalizedInterest?: boolean;
+  box2Description: string;
 }
 
 export interface Form1098EReferenceSummaryTotal {
@@ -120,8 +121,12 @@ export function buildForm1098EReferenceSummary(
     forms: forms.map((form) => ({
       lender: form.lender,
       box1StudentLoanInterest: form.studentLoanInterestReceived.toString(),
-      includesOriginationFeesOrCapitalizedInterest:
-        form.includesOriginationFeesOrCapitalizedInterest ?? false,
+      box2ExcludesOriginationFeesOrCapitalizedInterest: form.box2ExcludesOriginationFeesOrCapitalizedInterest,
+      box2Description: form.box2ExcludesOriginationFeesOrCapitalizedInterest === true
+        ? "Box 2 checked: Box 1 does not include origination fees and/or capitalized interest for a loan made before September 1, 2004."
+        : form.box2ExcludesOriginationFeesOrCapitalizedInterest === false
+          ? "Box 2 unchecked on the actual statement."
+          : "Box 2 status unknown; any legacy inclusion flag remains unverified.",
     })),
     totals: [
       {
@@ -210,7 +215,10 @@ export async function fillForm1098EReference(
   y -= 16;
 
   for (const form of summary.forms) {
-    if (y < 90) {
+    const requiredHeight = wrapText(`Lender: ${form.lender}`, bold, BODY_FONT_SIZE, PAGE_WIDTH - PAGE_MARGIN * 2).length * 14
+      + wrapText(`Box 1 student loan interest: ${formatAmountString(form.box1StudentLoanInterest)}`, regular, BODY_FONT_SIZE, PAGE_WIDTH - PAGE_MARGIN * 2 - 12).length * 13
+      + wrapText(form.box2Description, regular, BODY_FONT_SIZE, PAGE_WIDTH - PAGE_MARGIN * 2 - 12).length * 13 + 10;
+    if (y - requiredHeight < PAGE_MARGIN) {
       newPage();
     }
 
@@ -232,16 +240,14 @@ export async function fillForm1098EReference(
       lineHeight: 13,
     });
 
-    if (form.includesOriginationFeesOrCapitalizedInterest) {
-      y = drawWrappedText(page, "Box 2 indicator: includes origination fees and/or capitalized interest.", {
-        font: regular,
-        size: BODY_FONT_SIZE,
-        x: PAGE_MARGIN + 12,
-        y: y - 2,
-        maxWidth: PAGE_WIDTH - PAGE_MARGIN * 2 - 12,
-        lineHeight: 13,
-      });
-    }
+    y = drawWrappedText(page, form.box2Description, {
+      font: regular,
+      size: BODY_FONT_SIZE,
+      x: PAGE_MARGIN + 12,
+      y: y - 2,
+      maxWidth: PAGE_WIDTH - PAGE_MARGIN * 2 - 12,
+      lineHeight: 13,
+    });
 
     y -= 6;
   }

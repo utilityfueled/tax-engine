@@ -493,10 +493,15 @@ function collectStudentLoanInterestPreviewSources(
   const entriesByDocument = sourceDocuments.map((document) =>
     extract1098ESummariesFromStructuredFacts(structuredFacts, document.id).map((summary) =>
       Form1098ESchema.parse({
+        sourceId: summary.sourceId,
+        taxYear: summary.taxYear,
+        borrowerId: summary.borrowerId,
+        accountHolder: summary.accountHolder,
         lender: summary.lender,
         studentLoanInterestReceived: summary.studentLoanInterestReceived,
+        box2ExcludesOriginationFeesOrCapitalizedInterest: summary.box2ExcludesOriginationFeesOrCapitalizedInterest,
         includesOriginationFeesOrCapitalizedInterest:
-          summary.includesOriginationFeesOrCapitalizedInterest ?? false,
+          summary.includesOriginationFeesOrCapitalizedInterest,
       })
     )
   );
@@ -1041,20 +1046,13 @@ function buildStudentLoanInterestContribution(
   const uploadLabel = previewSources.sourceDocumentIds.length === 1 ? "upload" : "uploads";
   const contributionVerb = previewSources.sourceDocumentIds.length === 1 ? "contributes" : "contribute";
   const interestAmount = sumMonetaryValues(totalInterest).toFixed();
-  const includesCapitalizedInterest = previewSources.entries.some(
-    (entry) => entry.includesOriginationFeesOrCapitalizedInterest
-  );
 
   return {
     kind: "adjustments",
     itemId: item.id,
     assumptions: [
       `The confirmed ${taxYear} Form 1098-E ${uploadLabel} ${contributionVerb} $${formatCurrencyAmount(interestAmount)} of student loan interest.`,
-      ...(includesCapitalizedInterest
-        ? [
-          "This student loan preview keeps any uploaded capitalized-interest indicator attached to Form 1098-E before Schedule 1 Line 21 is recomputed."
-        ]
-        : []),
+      "Actual Form 1098-E Box 2 status is preserved when supplied; a legacy inclusion flag does not establish that checkbox or additional interest.",
       "This student loan preview assumes no additional below-threshold interest needs manual entry beyond the uploaded statements."
     ],
     sourceDocumentIds: previewSources.sourceDocumentIds,

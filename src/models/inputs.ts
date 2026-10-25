@@ -2159,12 +2159,18 @@ export type ScheduleK1Form1041 = z.infer<typeof ScheduleK1Form1041Schema>;
  * Ref: IRS Form 1098-E Instructions; IRC §221; Pub 970 Chapter 4.
  */
 export const Form1098ESchema = z.object({
+  sourceId: z.string().optional(),
+  taxYear: z.number().int().optional(),
+  borrowerId: z.string().optional(),
+  accountHolder: z.enum(["primary", "spouse"]).optional(),
   /** Name of the lender or loan servicer */
   lender: z.string(),
   /** Box 1: Student loan interest received by lender */
   studentLoanInterestReceived: decimal,
-  /** Box 2: Checked if Box 1 includes loan origination fees and/or capitalized interest (informational) */
-  includesOriginationFeesOrCapitalizedInterest: z.boolean().default(false),
+  /** Actual Box2: Box1 excludes these amounts for a loan made before September1,2004. */
+  box2ExcludesOriginationFeesOrCapitalizedInterest: z.boolean().optional(),
+  /** @deprecated Incorrect historical label. Preserved as unverified, never an actual Box2 answer. */
+  includesOriginationFeesOrCapitalizedInterest: z.boolean().optional(),
 });
 export type Form1098E = z.infer<typeof Form1098ESchema>;
 

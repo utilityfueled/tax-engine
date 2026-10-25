@@ -619,8 +619,14 @@ export interface WorkspaceStructuredFactMachineValue1095ASummary {
 
 export interface WorkspaceStructuredFactMachineValue1098ESummary {
   entryKind: "1098-e-summary";
+  sourceId?: string;
+  taxYear?: number;
+  borrowerId?: string;
+  accountHolder?: "primary" | "spouse";
   lender: string;
   studentLoanInterestReceived: string;
+  box2ExcludesOriginationFeesOrCapitalizedInterest?: boolean;
+  /** Historical wrong label; not an actual Box2 checkbox. */
   includesOriginationFeesOrCapitalizedInterest?: boolean;
 }
 

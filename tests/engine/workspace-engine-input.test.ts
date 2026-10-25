@@ -1305,6 +1305,20 @@ describe("workspace engine input", () => {
     ]);
   });
 
+  it("preserves actual student loan source metadata without reversing legacy Box2", () => {
+    const documents = [createStudentLoanDocument({})];
+    const structuredFacts = buildWorkspaceStructuredFacts(documents, createStudentLoanSeededReturn({}));
+    const fact = structuredFacts.find(row => row.machineValue?.entryKind === "1098-e-summary");
+    expect(fact?.machineValue?.entryKind).toBe("1098-e-summary");
+    if (!fact || fact.machineValue?.entryKind !== "1098-e-summary") throw new Error("Missing test source");
+    fact.machineValue = { ...fact.machineValue, sourceId: "lender-statement", taxYear: 2025, borrowerId: "actual-borrower", accountHolder: "primary", box2ExcludesOriginationFeesOrCapitalizedInterest: false };
+    const preview = buildWorkspaceEngineInput(documents, createStudentLoanReturnSummary({}), structuredFacts, workspaceTaxpayerFixture());
+    expect(preview?.taxInput.form1098E[0]).toMatchObject({ sourceId: "lender-statement", taxYear: 2025, borrowerId: "actual-borrower", accountHolder: "primary", box2ExcludesOriginationFeesOrCapitalizedInterest: false, includesOriginationFeesOrCapitalizedInterest: true });
+    delete fact.machineValue.box2ExcludesOriginationFeesOrCapitalizedInterest;
+    const legacy = buildWorkspaceEngineInput(documents, createStudentLoanReturnSummary({}), structuredFacts, workspaceTaxpayerFixture());
+    expect(legacy?.taxInput.form1098E[0]?.box2ExcludesOriginationFeesOrCapitalizedInterest).toBeUndefined();
+  });
+
   it("builds student loan interest preview input from confirmed Form 1098-E fixture facts", () => {
     const documents = [createStudentLoanDocument({})];
     const structuredFacts = buildWorkspaceStructuredFacts(
@@ -1331,7 +1345,7 @@ describe("workspace engine input", () => {
       "The confirmed 2025 Form 1098-E upload contributes $2,100 of student loan interest."
     );
     expect(previewInput?.assumptions).toContain(
-      "This student loan preview keeps any uploaded capitalized-interest indicator attached to Form 1098-E before Schedule 1 Line 21 is recomputed."
+      "Actual Form 1098-E Box 2 status is preserved when supplied; a legacy inclusion flag does not establish that checkbox or additional interest."
     );
     expect(previewInput?.assumptions).toContain(
       "This student loan preview assumes no additional below-threshold interest needs manual entry beyond the uploaded statements."
