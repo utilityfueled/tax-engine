@@ -549,6 +549,8 @@ export interface WorkspaceStructuredFactMachineValueW2Summary {
   medicareWithheld?: string;
   stateWages?: string;
   stateWithheld?: string;
+  state?: string;
+  stateTaxReporting?: "none" | "single" | "multiple";
   box12CodeW?: string;
   accountHolder?: "primary" | "spouse";
 }
